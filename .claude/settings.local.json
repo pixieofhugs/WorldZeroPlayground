@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(mkdir -p docs)",
+      "Bash(cp ../WorldZero_Spec_v3.md docs/SPEC.md)",
+      "Read(//c/Users/pixie/**)"
+    ]
+  }
+}
