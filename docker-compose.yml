@@ -1,0 +1,33 @@
+services:
+  db:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: worldzero
+      POSTGRES_USER: worldzero
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U worldzero -d worldzero"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - ./media:/media
+    env_file:
+      - .env
+    ports:
+      - "8000:8000"
+
+volumes:
+  postgres_data:
