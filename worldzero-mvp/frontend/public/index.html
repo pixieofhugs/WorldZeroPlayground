@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>World Zero</title>
+    <style>
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+      body {
+        font-family: 'Courier New', Courier, monospace;
+        background: #0a0a0a;
+        color: #e8e8e8;
+        min-height: 100vh;
+      }
+      a { color: #7ecfff; text-decoration: none; }
+      a:hover { text-decoration: underline; }
+      button {
+        cursor: pointer;
+        border: none;
+        border-radius: 4px;
+        padding: 8px 16px;
+        font-family: inherit;
+        font-size: 14px;
+        font-weight: bold;
+        transition: opacity 0.15s;
+      }
+      button:hover { opacity: 0.85; }
+      button:disabled { opacity: 0.4; cursor: default; }
+      input, textarea, select {
+        background: #1a1a1a;
+        color: #e8e8e8;
+        border: 1px solid #333;
+        border-radius: 4px;
+        padding: 8px 12px;
+        font-family: inherit;
+        font-size: 14px;
+        width: 100%;
+      }
+      input:focus, textarea:focus { outline: none; border-color: #7ecfff; }
+      label { display: block; margin-bottom: 4px; font-size: 13px; color: #aaa; }
+      .card {
+        background: #141414;
+        border: 1px solid #222;
+        border-radius: 8px;
+        padding: 20px;
+        margin-bottom: 16px;
+      }
+      .btn-primary { background: #7ecfff; color: #0a0a0a; }
+      .btn-danger { background: #ff4f4f; color: #fff; }
+      .btn-secondary { background: #333; color: #e8e8e8; }
+      .btn-sm { padding: 4px 10px; font-size: 12px; }
+      .badge {
+        display: inline-block;
+        padding: 2px 8px;
+        border-radius: 12px;
+        font-size: 11px;
+        font-weight: bold;
+        background: #222;
+        color: #7ecfff;
+        border: 1px solid #7ecfff;
+      }
+      .page { max-width: 860px; margin: 0 auto; padding: 24px 16px; }
+      .error { color: #ff4f4f; margin: 8px 0; font-size: 13px; }
+      .muted { color: #666; font-size: 13px; }
+      .form-group { margin-bottom: 16px; }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+  </body>
+</html>
