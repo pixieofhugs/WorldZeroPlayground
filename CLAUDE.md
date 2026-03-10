@@ -1,92 +1,69 @@
-# CLAUDE.md
-
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+# World Zero — Agent Instructions
 
 ## Project
-
-WorldZero is a community game (FastAPI + React) where players create Characters, complete real-world Tasks, post proof submissions ("Praxis"), and earn points through community star-rating votes. A modern rebuild of sf0.org.
+A community game built with FastAPI (Python) + React. Players create Characters (public personas),
+complete real-world tasks, post proof ("praxis"), and earn points through community star-rating votes.
 
 ## Identity Model (critical)
-
-- **Account** = private login identity (Google OAuth). Never expose `account_id` or `email` in public API responses.
-- **Character** = public game persona. Multiple per Account (level-gated at level 3).
-- All game actions use Character IDs. Anti-self-vote is enforced at the **Account** level.
+- Account = private login identity (Google OAuth). Never exposed publicly.
+- Character = public game persona. Multiple per Account (level-gated at level 3).
+- All game logic uses Character IDs. Votes enforce account-level anti-self-voting.
+- Never expose account_id or email in public API responses.
 
 ## Config Architecture (critical)
-
-- `backend/game_config.py` is the single source of truth for all game rules.
-- `EraConfig` defines mechanics: task limits, vote budget formula, level thresholds, faction rules, reset behaviour.
-- `CURRENT_ERA` is the one variable that switches live game mechanics.
-- The DB `Era` table stores `config_key` to record history; it does not own rules.
+- game_config.py is the single source of truth for all game rules.
+- EraConfig defines mechanics for one era: task limits, vote budget formula, level thresholds,
+  faction rules, and reset behaviour.
+- CURRENT_ERA is the one variable that controls live game mechanics.
+- The DB Era table stores config_key to record which era was active — it does not own rules.
 - All service functions accept `era: EraConfig = CURRENT_ERA` for testability.
 
 ## Stack
-
 - Backend: FastAPI, SQLAlchemy (async), Alembic, PostgreSQL
 - Frontend: React, React Router, Axios
-- Auth: Google OAuth2 via Authlib -> JWT (provider-agnostic design)
-- Media: Local filesystem v1 (`/media/{character_id}/{submission_id}/`), relative paths only
+- Auth: Google OAuth2 via Authlib → JWT (provider-agnostic)
+- Media: Local filesystem (v1), relative paths only
 - Testing: pytest + pytest-cov, GitHub Actions CI
 
-## Common Commands
-
-```bash
-# Start the database
-docker-compose up -d db
-
-# Run the backend locally
-cd backend
-uvicorn main:app --reload
-
-# Database migrations
-cd backend
-alembic upgrade head
-alembic downgrade base
-
-# Tests
-cd backend
-pytest --cov=. --cov-fail-under=80
-
-# Install dependencies (local dev)
-cd backend && python -m venv .venv && .venv/Scripts/pip install -r requirements.txt
-```
-
-## Environment Setup
-
-Copy `.env.example` to `.env` and fill in values. `DATABASE_URL` must use the `postgresql+asyncpg://` scheme.
-
-## Key Conventions
-
+## Python conventions
 - async/await throughout all FastAPI routes
-- Pydantic schemas for all request/response bodies (in `schemas/`)
-- SQLAlchemy models in `models/` � columns only, no business logic
-- Business logic in `services/` � accept `era: EraConfig = CURRENT_ERA`, never import `CURRENT_ERA` inside a service body
-- All migrations via Alembic only; never modify the schema manually
+- Pydantic schemas for all request/response bodies
+- SQLAlchemy models in models/, business logic in services/
+- Never put business logic in route handlers
+- Services accept EraConfig parameter; never import CURRENT_ERA inside a service function body
 
-## Key Business Rules (all driven by EraConfig)
+## Key business rules (all driven by CURRENT_ERA / EraConfig)
+- Max task signups: era.max_task_signups (default 20)
+- Task level gate: character.level >= task.level_required to sign up
+- Submission level gap: can submit up to era.task_submit_level_gap levels above own level
+- Vote budget: era.vote_budget_base + floor(era.vote_budget_multiplier × score)
+- First vote cast costs 1 from votes_available; updates are free
+- Cannot vote if voter_account_id == submission author's account_id
+- Character creation beyond first requires level >= 3
 
-- Vote budget: `era.vote_budget_base + floor(era.vote_budget_multiplier * score)`
-- First vote costs 1 from `votes_available`; updating an existing vote is free
-- Cannot vote if `voter_account_id == submission.character.account_id`
-- Max task signups: `era.max_task_signups` (enforced at API layer)
-- Character creation beyond first requires `level >= 3`
+## Testing
+- Unit tests: no DB required, test services directly with EraConfig instances
+- Integration tests: use test DB via conftest.py fixtures
+- Tests assert against config values, not hardcoded magic numbers
+- Run: pytest --cov=. --cov-fail-under=80 from /backend
 
-## Project Structure
+## Database
+- PostgreSQL via docker-compose
+- All migrations via Alembic only
+- Run: alembic upgrade head after pulling
 
-```
-backend/
-  game_config.py   # EraConfig, FactionConfig, ERA_1, CURRENT_ERA
-  config.py        # env vars and secrets (not game rules)
-  db.py            # async SQLAlchemy engine + session factory
-  models/          # SQLAlchemy mapped classes, one file per model
-  schemas/         # Pydantic request/response schemas
-  services/        # pure game logic, all accept EraConfig param
-  routers/         # FastAPI route handlers (no business logic here)
-  alembic/         # migrations
-frontend/
-  src/pages/
-  src/components/
-  src/api/
-  src/auth/
-.github/workflows/test.yml  # CI: postgres service + pytest --cov
-```
+## Running locally
+- Backend: uvicorn main:app --reload from /backend
+- Frontend: npm start from /frontend
+- DB: docker-compose up -d
+- Tests: pytest from /backend
+
+## Do NOT
+- Put secrets or game rules in the same file (config.py = secrets, game_config.py = rules)
+- Hardcode magic numbers from EraConfig in service logic
+- Write sync SQLAlchemy in async routes
+- Store absolute media paths
+- Expose account_id or email in public API responses
+- Put business logic in route handlers
+
+Complete project specification is in docs/SPEC.md. Read it before starting any feature.
