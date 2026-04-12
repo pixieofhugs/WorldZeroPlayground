@@ -3,7 +3,7 @@ import os
 import re
 from typing import Optional
 
-from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
+from fastapi import APIRouter, Depends, File, Form, HTTPException, Response, UploadFile
 
 logger = logging.getLogger(__name__)
 from sqlalchemy import select
@@ -167,6 +167,33 @@ async def upload_media(
     await session.commit()
     await session.refresh(media_item)
     return MediaItemOut.model_validate(media_item)
+
+
+@router.delete("/{submission_id}/media/{media_id}", status_code=204)
+async def delete_media(
+    submission_id: int,
+    media_id: int,
+    character: Character = Depends(get_current_character),
+    session: AsyncSession = Depends(get_db),
+):
+    sub = await session.get(Submission, submission_id)
+    if sub is None:
+        raise HTTPException(status_code=404, detail="Submission not found.")
+    if sub.character_id != character.id:
+        raise HTTPException(status_code=403, detail="Cannot delete media from another character's submission.")
+    media_item = await session.get(MediaItem, media_id)
+    if media_item is None or media_item.submission_id != submission_id:
+        raise HTTPException(status_code=404, detail="Media item not found.")
+
+    abs_path = os.path.join(settings.MEDIA_ROOT, media_item.file_path)
+    try:
+        os.remove(abs_path)
+    except OSError:
+        pass  # File already gone — proceed with DB cleanup
+
+    await session.delete(media_item)
+    await session.commit()
+    return Response(status_code=204)
 
 
 @router.post("/{submission_id}/flag", response_model=SubmissionOut)

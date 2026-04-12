@@ -65,9 +65,16 @@ export default function SubmissionDetail() {
       <div className="card p-5 my-4">
         <div className="flex items-start justify-between gap-4">
           <h1 className="font-display text-3xl font-bold leading-tight">{submission.title}</h1>
-          <Link to={`/characters/${submission.character_id}`} className="font-body text-xs text-muted shrink-0 hover:underline">
-            by #{submission.character_id}
-          </Link>
+          <div className="flex items-center gap-3 shrink-0">
+            <Link to={`/characters/${submission.character_id}`} className="font-body text-xs text-muted hover:underline">
+              by #{submission.character_id}
+            </Link>
+            {user?.character?.id === submission.character_id && (
+              <Link to={`/submissions/${submission.id}/edit`} className="font-body text-xs hover:underline">
+                edit
+              </Link>
+            )}
+          </div>
         </div>
 
         {submission.body_text && (

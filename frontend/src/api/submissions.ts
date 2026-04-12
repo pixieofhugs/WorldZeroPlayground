@@ -57,3 +57,7 @@ export async function flagSubmission(submissionId: number, reason: string): Prom
   const { data } = await api.post<SubmissionOut>(`/submissions/${submissionId}/flag`, { reason })
   return data
 }
+
+export async function deleteMedia(submissionId: number, mediaId: number): Promise<void> {
+  await api.delete(`/submissions/${submissionId}/media/${mediaId}`)
+}

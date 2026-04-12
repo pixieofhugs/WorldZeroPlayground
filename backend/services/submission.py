@@ -7,7 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from models.character import Character
 from models.flag import Flag
 from models.submission import Submission
-from models.task import Task
+from models.task import CharacterTask, CharacterTaskStatus, Task
 from models.vote import Vote
 from schemas.submission import SubmissionCreate
 from services.era import get_current_era_row, get_or_create_stats
@@ -20,6 +20,17 @@ async def create_submission(
     data: SubmissionCreate,
     session: AsyncSession,
 ) -> Submission:
+    character_task_result = await session.execute(
+        select(CharacterTask).where(
+            CharacterTask.character_id == character.id,
+            CharacterTask.task_id == task.id,
+            CharacterTask.status != CharacterTaskStatus.abandoned,
+        )
+    )
+    character_task = character_task_result.scalar_one_or_none()
+    if character_task is None:
+        raise HTTPException(status_code=403, detail="Must be signed up for this task to submit proof.")
+
     submission = Submission(
         task_id=task.id,
         character_id=character.id,
@@ -27,6 +38,7 @@ async def create_submission(
         body_text=data.body_text or "",
     )
     session.add(submission)
+    character_task.status = CharacterTaskStatus.submitted
     await session.commit()
     await session.refresh(submission)
     return submission

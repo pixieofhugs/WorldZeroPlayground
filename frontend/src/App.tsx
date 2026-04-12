@@ -6,6 +6,7 @@ import Tasks from './pages/Tasks'
 import TaskDetail from './pages/TaskDetail'
 import SubmitProof from './pages/SubmitProof'
 import SubmissionDetail from './pages/SubmissionDetail'
+import EditSubmission from './pages/EditSubmission'
 import CharacterProfile from './pages/CharacterProfile'
 import Leaderboard from './pages/Leaderboard'
 import Factions from './pages/Factions'
@@ -36,6 +37,14 @@ export default function App() {
         />
         <Route path="/submissions" element={<Submissions />} />
         <Route path="/submissions/:id" element={<SubmissionDetail />} />
+        <Route
+          path="/submissions/:id/edit"
+          element={
+            <ProtectedRoute>
+              <EditSubmission />
+            </ProtectedRoute>
+          }
+        />
         <Route path="/characters/:id" element={<CharacterProfile />} />
         <Route path="/leaderboard" element={<Leaderboard />} />
         <Route path="/factions" element={<Factions />} />
