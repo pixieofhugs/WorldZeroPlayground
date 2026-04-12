@@ -12,6 +12,7 @@ class Settings(BaseSettings):
     MEDIA_ROOT: str = "/media"
     FRONTEND_URL: str = "http://localhost:3000"
     COOKIE_DOMAIN: str | None = None
+    ADMIN_CLI_SECRET: str = ""
 
     model_config = {"env_file": ".env", "extra": "ignore"}
 
