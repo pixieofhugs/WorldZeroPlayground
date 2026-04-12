@@ -191,3 +191,24 @@ async def drop_task_route(
     if ct is None:
         raise HTTPException(status_code=404, detail="Signup not found.")
     await drop_task(ct, session)
+
+
+@router.get("/my-tasks", response_model=list[CharacterTaskOut])
+async def list_my_tasks(
+    status: Optional[str] = None,
+    character: Character = Depends(get_current_character),
+    session: AsyncSession = Depends(get_db),
+):
+    """List the authenticated character's task signups, optionally filtered by status."""
+    query = select(CharacterTask).where(CharacterTask.character_id == character.id)
+    if status:
+        try:
+            query = query.where(CharacterTask.status == CharacterTaskStatus[status])
+        except KeyError:
+            raise HTTPException(status_code=422, detail=f"Invalid status: {status}")
+    else:
+        query = query.where(CharacterTask.status == CharacterTaskStatus.in_progress)
+    query = query.order_by(CharacterTask.signed_up_at.desc())
+    result = await session.execute(query)
+    character_tasks = result.scalars().all()
+    return [await _build_character_task_out(ct, session) for ct in character_tasks]

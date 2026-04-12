@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { listSubmissions, type SubmissionOut } from '../api/submissions'
 import { getMessages, type MessageOut } from '../api/messages'
+import { getMyTasks, type CharacterTaskOut } from '../api/tasks'
 import SubmissionCard from '../components/SubmissionCard'
 import { useAuth } from '../auth/AuthContext'
 import { formatTimestamp } from '../utils/dates'
@@ -10,6 +12,7 @@ export default function Updates() {
   const { user } = useAuth()
   const [submissions, setSubmissions] = useState<SubmissionOut[]>([])
   const [messages, setMessages] = useState<MessageOut[]>([])
+  const [inProgressTasks, setInProgressTasks] = useState<CharacterTaskOut[]>([])
   const [loading, setLoading] = useState(true)
   const [fetchError, setFetchError] = useState<string | null>(null)
 
@@ -17,8 +20,9 @@ export default function Updates() {
     Promise.all([
       listSubmissions(user?.character ? { character_id: user.character.id } : {}),
       getMessages(),
+      getMyTasks('in_progress'),
     ])
-      .then(([s, m]) => { setSubmissions(s); setMessages(m) })
+      .then(([s, m, t]) => { setSubmissions(s); setMessages(m); setInProgressTasks(t) })
       .catch((err) => setFetchError(extractError(err, "Couldn't load your updates.")))
       .finally(() => setLoading(false))
   }, [user])
@@ -57,6 +61,30 @@ export default function Updates() {
           </div>
         </section>
       )}
+
+      <section className="mb-8">
+        <h2 className="font-display text-2xl font-bold mb-3">Tasks in Progress</h2>
+        {inProgressTasks.length === 0 ? (
+          <p className="font-body text-muted">No tasks in progress. <Link to="/tasks" className="underline">Browse tasks</Link> to sign up.</p>
+        ) : (
+          <div className="flex flex-col gap-2">
+            {inProgressTasks.map((ct) => (
+              <div key={ct.id} className="card px-4 py-3 flex items-center justify-between gap-4">
+                <div>
+                  <p className="font-body font-semibold">{ct.task.title}</p>
+                  <p className="font-body text-xs text-muted">{ct.task.point_value} pts · signed up {formatTimestamp(ct.signed_up_at)}</p>
+                </div>
+                <Link
+                  to={`/tasks/${ct.task.id}/submit`}
+                  className="font-body text-sm border-2 border-current px-3 py-1 hover:bg-ua hover:text-white hover:border-ua transition-colors whitespace-nowrap"
+                >
+                  Submit Proof
+                </Link>
+              </div>
+            ))}
+          </div>
+        )}
+      </section>
 
       <section>
         <h2 className="font-display text-2xl font-bold mb-3">Your Praxis</h2>

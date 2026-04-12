@@ -57,3 +57,8 @@ export async function proposeTask(body: TaskCreate): Promise<TaskOut> {
   const { data } = await api.post<TaskOut>('/tasks', body)
   return data
 }
+
+export async function getMyTasks(status?: string): Promise<CharacterTaskOut[]> {
+  const { data } = await api.get<CharacterTaskOut[]>('/tasks/my-tasks', { params: status ? { status } : undefined })
+  return data
+}
