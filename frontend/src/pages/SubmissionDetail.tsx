@@ -5,7 +5,7 @@ import { getSubmission, flagSubmission, type SubmissionOut } from '../api/submis
 import { getVotes, type VoteSummary } from '../api/votes'
 import MediaGallery from '../components/MediaGallery'
 import { formatTimestamp } from '../utils/dates'
-import StarRating from '../components/StarRating'
+import VoteStamps from '../components/ui/VoteStamps'
 import { useAuth } from '../auth/AuthContext'
 import { extractError } from '../utils/errors'
 
@@ -190,7 +190,7 @@ export default function SubmissionDetail() {
             </span>
           )}
         </div>
-        <StarRating
+        <VoteStamps
           submissionId={submission.id}
           averageStars={votes?.average_stars}
           totalVotes={votes?.total_votes}
