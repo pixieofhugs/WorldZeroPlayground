@@ -23,85 +23,387 @@ World Zero is a whimsical real-world game. The UI should feel like a **handmade 
 
 ---
 
-## 2. Color System
+## 2. Color System & CSS Variables
 
-### 2.1 Base Palette
+### 2.1 CSS Custom Properties — Complete Reference
 
-All colors defined as CSS custom properties. Components reference variables only — never hardcode hex values.
+All colors, spacing, and theming values are CSS custom properties. **Components must reference variables only — never hardcode hex values.** This is enforced so palette changes can be made in one place.
+
+Add to `src/styles/globals.css`:
 
 ```css
 :root {
-  /* Background layers */
-  --color-bg-page:        #F7F4EE;   /* warm off-white paper */
-  --color-bg-surface:     rgba(255, 255, 255, 0.72);  /* frosted card surfaces */
-  --color-bg-surface-alt: #F0EDE6;   /* stat cells, secondary surfaces */
+  /* ── PAGE BACKGROUNDS ── */
+  --color-bg-page:           #F7F4EE;
+  --color-bg-surface:        rgba(255, 255, 255, 0.72);
+  --color-bg-surface-alt:    #F0EDE6;
+  --color-bg-surface-hover:  rgba(255, 255, 255, 0.85);
+  --color-bg-overlay:        rgba(0, 0, 0, 0.45);
 
-  /* Text */
-  --color-text-primary:   #1a1209;   /* near-black ink */
-  --color-text-secondary: #6b6050;   /* muted ink */
-  --color-text-tertiary:  #9b8e7d;   /* labels, eyebrows */
+  /* ── TEXT ── */
+  --color-text-primary:      #1a1209;
+  --color-text-secondary:    #6b6050;
+  --color-text-tertiary:     #9b8e7d;
+  --color-text-disabled:     #c8c0b0;
+  --color-text-on-dark:      #F7F4EE;
+  --color-text-body:         #2a1e10;
 
-  /* Borders */
-  --color-border:         rgba(0, 0, 0, 0.07);
-  --color-border-strong:  rgba(0, 0, 0, 0.15);
+  /* ── BORDERS ── */
+  --color-border:            rgba(0, 0, 0, 0.07);
+  --color-border-medium:     rgba(0, 0, 0, 0.12);
+  --color-border-strong:     rgba(0, 0, 0, 0.20);
+  --color-border-focus:      #14532d;
 
-  /* Accent — used sparingly for interactive states */
-  --color-accent-primary: #be185d;   /* pink/rose — logo dot, highlights */
+  /* ── INTERACTIVE SURFACES ── */
+  --color-stamp-bg:          rgba(255, 255, 255, 0.6);
+  --color-stamp-active-bg:   #1a1209;
+  --color-stamp-active-text: #F7F4EE;
+  --color-input-border:      rgba(0, 0, 0, 0.12);
+  --color-input-border-focus: #14532d;
+
+  /* ── NAV ── */
+  --color-nav-bg:            rgba(247, 244, 238, 0.90);
+  --color-nav-border:        rgba(0, 0, 0, 0.07);
+
+  /* ── SIDEBAR CARDS ── */
+  --color-sidebar-bg:        rgba(255, 255, 255, 0.72);
+  --color-sidebar-border:    rgba(0, 0, 0, 0.06);
+  --color-sidebar-alt:       #F0EDE6;
+
+  /* ── ACCENT ── */
+  --color-accent:            #be185d;
+  --color-logo-underline:    linear-gradient(90deg, #4f46e5, #be185d, #f97316, #16a34a);
+
+  /* ── PROPOSE / SUBMIT BUTTONS (ink stamp) ── */
+  --color-btn-primary-bg:    #1a1209;
+  --color-btn-primary-text:  #F7F4EE;
+  --color-btn-outline-border: rgba(0, 0, 0, 0.15);
+  --color-btn-outline-text:  #6b6050;
+
+  /* ── FUNCTIONAL COLORS ── */
+  --color-success:           #14532d;
+  --color-success-light:     rgba(20, 83, 45, 0.10);
+  --color-success-border:    rgba(20, 83, 45, 0.25);
+  --color-danger:            #dc2626;
+  --color-danger-light:      rgba(220, 38, 38, 0.07);
+  --color-danger-border:     rgba(220, 38, 38, 0.25);
+  --color-warning:           #b45309;
+  --color-warning-light:     rgba(251, 191, 36, 0.15);
+  --color-warning-border:    rgba(251, 191, 36, 0.30);
+
+  /* ── FACTION COLORS — light mode ── */
+  --faction-ua:              #6b6a7a;
+  --faction-ua-light:        rgba(107, 106, 122, 0.10);
+  --faction-ua-border:       rgba(107, 106, 122, 0.25);
+
+  --faction-analog:          #15803d;
+  --faction-analog-light:    rgba(21, 128, 61, 0.10);
+  --faction-analog-border:   rgba(21, 128, 61, 0.25);
+
+  --faction-gestalt:         #14532d;
+  --faction-gestalt-light:   #f0fdf4;
+  --faction-gestalt-border:  rgba(20, 83, 45, 0.20);
+
+  --faction-snide:           #8a6a20;
+  --faction-snide-light:     #fef9ee;
+  --faction-snide-border:    #c49a3a;
+
+  --faction-journeymen:      #c49a3a;
+  --faction-journeymen-light: #fef9ee;
+  --faction-journeymen-border: rgba(196, 154, 58, 0.40);
+
+  --faction-singularity:     #7c3aed;
+  --faction-singularity-light: rgba(124, 58, 237, 0.08);
+  --faction-singularity-border: rgba(124, 58, 237, 0.25);
+
+  --faction-ua-masters:      #555555;
+  --faction-ua-masters-light: #f5f0e0;
+  --faction-ua-masters-border: rgba(196, 154, 58, 0.40);
+
+  /* ── WATERCOLOR SPLASH OPACITIES ── */
+  --wc-opacity-blob:         0.30;
+  --wc-opacity-drip:         0.22;
+  --wc-opacity-drop:         0.18;
+
+  /* ── FOE TAUNT NOTES ── */
+  --color-taunt-ahead-bg:    #fef9ee;
+  --color-taunt-ahead-border: #c49a3a;
+  --color-taunt-ahead-text:  #8a6a20;
+  --color-taunt-behind-bg:   #fff8f8;
+  --color-taunt-behind-border: #dc2626;
+  --color-taunt-behind-text: #9f1239;
+
+  /* ── ERA ANNOUNCEMENT ── */
+  --color-era-bg:            #1a1209;
+  --color-era-text:          #F7F4EE;
+  --color-era-accent:        #fbbf24;
+
+  /* ── SINGULARITY CARD (always dark) ── */
+  --color-sing-bg:           #050f08;
+  --color-sing-border:       #1a3a22;
+  --color-sing-text:         #4ade80;
+  --color-sing-text-muted:   #1f6b34;
+
+  /* ── PRAXIS BODY TEXT ── */
+  --color-prose-text:        #2a1e10;
+  --color-prose-drop-cap:    #14532d;
+
+  /* ── TYPE SCALE ── */
+  --text-xs:                 8px;
+  --text-sm:                 9px;
+  --text-base:               10px;
+  --text-md:                 11px;
+  --text-lg:                 12px;
+  --text-xl:                 14px;
+  --text-2xl:                18px;
+  --text-3xl:                28px;
+  --text-4xl:                34px;
+
+  /* ── TITLE UNDERLINE COLORS (cycling order) ── */
+  --underline-1:             #fbbf24;
+  --underline-2:             #be185d;
+  --underline-3:             #4f46e5;
+  --underline-4:             #0e7490;
+  --underline-5:             #16a34a;
+  --underline-6:             #f97316;
+
+  /* ── VOTE STAMP COLORS ── */
+  --vote-1:                  #9b8e7d;
+  --vote-2:                  #0e7490;
+  --vote-3:                  #4f46e5;
+  --vote-4:                  #be185d;
+  --vote-5:                  #14532d;
+
+  /* ── RADIUS ── */
+  --radius-sm:               4px;
+  --radius-md:               8px;
+  --radius-lg:               12px;
+  --radius-xl:               14px;
+  --radius-full:             9999px;
 }
 
+/* ════════════════════════════════════════════
+   DARK MODE OVERRIDES
+   Applied via [data-theme="dark"] on <html>
+   ════════════════════════════════════════════ */
+
 [data-theme="dark"] {
-  --color-bg-page:        #13121a;   /* deep dark */
-  --color-bg-surface:     rgba(255, 255, 255, 0.04);
-  --color-bg-surface-alt: rgba(255, 255, 255, 0.06);
+  /* ── PAGE BACKGROUNDS ── */
+  --color-bg-page:           #13121a;
+  --color-bg-surface:        rgba(255, 255, 255, 0.04);
+  --color-bg-surface-alt:    rgba(255, 255, 255, 0.06);
+  --color-bg-surface-hover:  rgba(255, 255, 255, 0.08);
+  --color-bg-overlay:        rgba(0, 0, 0, 0.65);
 
-  --color-text-primary:   #f0e6d0;   /* warm cream */
-  --color-text-secondary: #7a7060;
-  --color-text-tertiary:  #4a4860;
+  /* ── TEXT ── */
+  --color-text-primary:      #f0e6d0;
+  --color-text-secondary:    #7a7060;
+  --color-text-tertiary:     #4a4860;
+  --color-text-disabled:     #3a3850;
+  --color-text-on-dark:      #f0e6d0;
+  --color-text-body:         #d4c8b0;
 
-  --color-border:         rgba(255, 255, 255, 0.07);
-  --color-border-strong:  rgba(255, 255, 255, 0.15);
+  /* ── BORDERS ── */
+  --color-border:            rgba(255, 255, 255, 0.07);
+  --color-border-medium:     rgba(255, 255, 255, 0.12);
+  --color-border-strong:     rgba(255, 255, 255, 0.20);
+  --color-border-focus:      #4ade80;
 
-  --color-accent-primary: #be185d;
+  /* ── INTERACTIVE SURFACES ── */
+  --color-stamp-bg:          rgba(255, 255, 255, 0.05);
+  --color-stamp-active-bg:   #f0e6d0;
+  --color-stamp-active-text: #13121a;
+  --color-input-border:      rgba(255, 255, 255, 0.15);
+  --color-input-border-focus: #4ade80;
+
+  /* ── NAV ── */
+  --color-nav-bg:            rgba(19, 18, 26, 0.92);
+  --color-nav-border:        rgba(255, 255, 255, 0.06);
+
+  /* ── SIDEBAR CARDS ── */
+  --color-sidebar-bg:        rgba(255, 255, 255, 0.04);
+  --color-sidebar-border:    rgba(255, 255, 255, 0.07);
+  --color-sidebar-alt:       rgba(255, 255, 255, 0.05);
+
+  /* ── ACCENT ── */
+  --color-accent:            #be185d;
+
+  /* ── BUTTONS ── */
+  --color-btn-primary-bg:    #f0e6d0;
+  --color-btn-primary-text:  #13121a;
+  --color-btn-outline-border: rgba(255, 255, 255, 0.15);
+  --color-btn-outline-text:  #7a7060;
+
+  /* ── FUNCTIONAL COLORS ── */
+  --color-success:           #4ade80;
+  --color-success-light:     rgba(74, 222, 128, 0.10);
+  --color-success-border:    rgba(74, 222, 128, 0.25);
+  --color-danger:            #f87171;
+  --color-danger-light:      rgba(248, 113, 113, 0.08);
+  --color-danger-border:     rgba(248, 113, 113, 0.25);
+  --color-warning:           #fbbf24;
+  --color-warning-light:     rgba(251, 191, 36, 0.12);
+  --color-warning-border:    rgba(251, 191, 36, 0.25);
+
+  /* ── FACTION COLORS — dark mode ── */
+  --faction-ua:              #a78bfa;
+  --faction-ua-light:        rgba(167, 139, 250, 0.12);
+  --faction-ua-border:       rgba(167, 139, 250, 0.30);
+
+  --faction-analog:          #15803d;
+  --faction-analog-light:    rgba(21, 128, 61, 0.12);
+  --faction-analog-border:   rgba(21, 128, 61, 0.30);
+
+  --faction-gestalt:         #4ade80;
+  --faction-gestalt-light:   rgba(74, 222, 128, 0.10);
+  --faction-gestalt-border:  rgba(74, 222, 128, 0.25);
+
+  --faction-snide:           #c49a3a;
+  --faction-snide-light:     rgba(196, 154, 58, 0.10);
+  --faction-snide-border:    rgba(196, 154, 58, 0.35);
+
+  --faction-journeymen:      #c49a3a;
+  --faction-journeymen-light: rgba(196, 154, 58, 0.10);
+  --faction-journeymen-border: rgba(196, 154, 58, 0.35);
+
+  --faction-singularity:     #4ade80;
+  --faction-singularity-light: rgba(74, 222, 128, 0.08);
+  --faction-singularity-border: rgba(74, 222, 128, 0.25);
+
+  --faction-ua-masters:      #c49a3a;
+  --faction-ua-masters-light: rgba(196, 154, 58, 0.10);
+  --faction-ua-masters-border: rgba(196, 154, 58, 0.30);
+
+  /* ── WATERCOLOR SPLASH OPACITIES (dimmer in dark) ── */
+  --wc-opacity-blob:         0.15;
+  --wc-opacity-drip:         0.11;
+  --wc-opacity-drop:         0.08;
+
+  /* ── FOE TAUNT NOTES — dark mode ── */
+  --color-taunt-ahead-bg:    #1c1a10;
+  --color-taunt-ahead-border: #c49a3a;
+  --color-taunt-ahead-text:  #c49a3a;
+  --color-taunt-behind-bg:   #1a1010;
+  --color-taunt-behind-border: #f87171;
+  --color-taunt-behind-text: #f87171;
+
+  /* ── ERA ANNOUNCEMENT — unchanged (always dark) ── */
+  --color-era-bg:            #1a1209;
+  --color-era-text:          #F7F4EE;
+  --color-era-accent:        #fbbf24;
+
+  /* ── SINGULARITY CARD — unchanged (always dark) ── */
+  --color-sing-bg:           #050f08;
+  --color-sing-border:       #1a3a22;
+  --color-sing-text:         #4ade80;
+  --color-sing-text-muted:   #1f6b34;
+
+  /* ── PRAXIS BODY TEXT ── */
+  --color-prose-text:        #d4c8b0;
+  --color-prose-drop-cap:    #4ade80;
+
+  /* ── TITLE UNDERLINES — same in dark, they pop against dark bg ── */
+  /* (no overrides needed — same cycling colors work in both modes) */
+
+  /* ── VOTE STAMPS — same colors, they're always punchy ── */
+  /* (no overrides needed) */
 }
 ```
 
-### 2.2 Faction Colors
+### 2.2 Faction Color Usage Pattern
 
-Each faction has a canonical color used for: card accents, filter tabs, task dot indicators in sidebar, and level pill backgrounds.
+Always reference faction colors via the CSS variable system. In React components, use a `getFactionVars(faction)` utility that returns the correct variable names:
 
-| Faction       | Light mode hex | Dark mode hex  | Usage notes                        |
-|---------------|---------------|----------------|-----------------------------------|
-| UA            | `#6b6a7a`     | `#a78bfa`      | Muted — they have no identity yet |
-| Analog        | `#15803d`     | `#15803d`      | Forest green                      |
-| Gestalt       | `#14532d`     | `#4ade80`      | Deep green light / bright green dark |
-| S.N.I.D.E.   | `#8a6a20`     | `#c49a3a`      | Aged gold / newspaper gold        |
-| Journeymen    | `#c49a3a`     | `#c49a3a`      | Warm leather gold                 |
-| Singularity   | `#7c3aed`     | `#4ade80`      | Purple light / terminal green dark |
-| UA Masters    | `#555555`     | `#c49a3a`      | Neutral / aged gold               |
+```js
+// src/utils/factionVars.js
+export const FACTION_KEYS = {
+  'ua':          'ua',
+  'analog':      'analog',
+  'gestalt':     'gestalt',
+  'snide':       'snide',
+  'journeymen':  'journeymen',
+  'singularity': 'singularity',
+  'ua-masters':  'ua-masters',
+};
+
+// Returns CSS var strings for a given faction
+export function factionVar(faction, variant = '') {
+  const key = FACTION_KEYS[faction] ?? 'ua';
+  const suffix = variant ? `-${variant}` : '';
+  return `var(--faction-${key}${suffix})`;
+}
+
+// Usage in component:
+// style={{ color: factionVar('gestalt') }}
+// style={{ background: factionVar('gestalt', 'light') }}
+// style={{ border: `1px solid ${factionVar('gestalt', 'border')}` }}
+```
+
+Each faction exposes three variants:
+- `--faction-{name}` — primary color (text, accents, badges)
+- `--faction-{name}-light` — background tint (card backgrounds, highlight areas)
+- `--faction-{name}-border` — border/ring color
 
 ### 2.3 Watercolor Splash Colors
 
-The page background uses SVG watercolor splashes in the four corners. These are the color families per corner — they stay consistent across all pages.
+Fixed per corner — same SVG positions on all pages, opacity controlled by CSS variables so dark mode dims them automatically.
 
-| Corner       | Light mode colors             | Dark mode colors (deep, low opacity) |
-|--------------|-------------------------------|---------------------------------------|
-| Top-left     | Blue, indigo, violet          | `#4f46e5`, `#7c3aed`, `#be185d`      |
-| Top-right    | Orange, amber, lime green     | `#b45309`, `#d97706`, `#16a34a`      |
-| Bottom-left  | Rose, pink, orange            | `#9f1239`, `#7c3aed`                 |
-| Bottom-right | Teal, cyan, sky blue          | `#0f766e`, `#0e7490`                 |
+| Corner       | Light mode colors             | Dark mode colors              |
+|--------------|-------------------------------|-------------------------------|
+| Top-left     | Blue `#60a5fa`, indigo `#818cf8`, violet `#c084fc` | `#4f46e5`, `#7c3aed`, `#be185d` |
+| Top-right    | Orange `#fb923c`, amber `#fbbf24`, lime `#4ade80`  | `#b45309`, `#d97706`, `#16a34a` |
+| Bottom-left  | Rose `#f43f5e`, pink `#e879f9`, orange `#fb923c`   | `#9f1239`, `#7c3aed`          |
+| Bottom-right | Teal `#34d399`, cyan `#22d3ee`, sky `#60a5fa`      | `#0f766e`, `#0e7490`          |
 
-**Implementation:** SVG `<ellipse>` elements with `feGaussianBlur` (stdDeviation 26–30) and `feTurbulence` + `feDisplacementMap` for paint-bleed distortion. Opacity 0.28–0.38 in light mode, 0.11–0.18 in dark mode. See `WatercolorBackground.jsx` component.
+Use `var(--wc-opacity-blob)`, `var(--wc-opacity-drip)`, `var(--wc-opacity-drop)` for SVG element opacities so dark mode automatically dims them.
 
 ### 2.4 Page Title Underline Colors
 
-The page title treatment (see Section 5.2) uses colored underline bars. The four colors cycle and must always appear in this order:
+Use `var(--underline-1)` through `var(--underline-6)` cycling in order. Same values work in both modes — they're vivid enough to pop on dark backgrounds without adjustment.
 
-1. `#fbbf24` — amber
-2. `#be185d` — rose
-3. `#4f46e5` — indigo
-4. `#0e7490` — teal
-5. `#16a34a` — green  *(for longer titles with 5+ letters)*
-6. `#f97316` — orange *(for longer titles)*
+### 2.5 Dark Mode — Page-by-Page Coverage
+
+Every page and component must be verified against this checklist. The CSS variable system handles most cases automatically, but the following components have **manually specified dark variants** that must be implemented explicitly (they cannot be achieved by variable substitution alone):
+
+| Component / Page | Dark mode approach | Notes |
+|---|---|---|
+| Nav | `var(--color-nav-bg)` + `var(--color-nav-border)` | Auto via variables |
+| Watercolor background | Same SVG, `var(--wc-opacity-*)` | Opacity dims automatically |
+| Page title underlines | No change needed | Same colors work on dark bg |
+| Sidebar cards | `var(--color-sidebar-bg/border)` | Auto via variables |
+| Stamp filters (status, level nodes) | `var(--color-stamp-*)` | Active state inverts: cream on dark |
+| Faction filter tabs | Faction vars, `opacity: 0.35` inactive | Auto via faction vars |
+| **UA card** | Dark: `#211d35` bg, `#a78bfa` pin, `#ddd6fe` text | Manually specified in Section 6.1 |
+| **Analog card** | Dark: `#1e1a10` bg, `#e8dcc8` text, same rules | Manually specified in Section 6.2 |
+| **Gestalt card** | Dark: `#132318 / #0d1a10 / #091209` scraps, `#4ade80` text | Manually specified in Section 6.3 |
+| **S.N.I.D.E. card** | Dark: `#1a1710` newsprint, `#c49a3a` gold accents | Manually specified in Section 6.4 |
+| **Journeymen card** | Dark: `#1c1610` leather, `#c49a3a` gold | Manually specified in Section 6.5 |
+| **Singularity card** | Unchanged — always dark | No dark variant needed |
+| **UA Masters card** | Dark: `#1a1710` bg, `#f0e6d0` headline, `#c49a3a` masthead rule | Manually specified in Section 6.7 |
+| Profile header | Uses faction card archetype — inherits card dark spec | No additional work |
+| Level track | `var(--faction-*)` for done nodes, `rgba(255,255,255,0.04)` locked | Auto via variables |
+| Praxis body text | `var(--color-prose-text)`, `var(--color-prose-drop-cap)` | Auto via variables |
+| Vote stamp buttons | Same colors — vivid enough for dark | No override needed |
+| Voter tiles | Faction gradients work on dark bg | No override needed |
+| Flag block | `var(--color-danger-*)` | Auto via variables |
+| **Foe taunt note** | Dark: `var(--color-taunt-ahead-*)` / `var(--color-taunt-behind-*)` | Dark bg, gold/red borders |
+| **Era announcement** | Unchanged — always dark bg `#1a1209` | No dark variant needed |
+| Praxis gallery cards | `var(--color-bg-surface)` | Auto via variables |
+| Podium cards | Faction card archetype — inherits card dark spec | No additional work |
+| Players table | `var(--color-bg-surface)` container, `var(--color-border)` rows | Auto via variables |
+| Faction standings bars | Faction primary colors | Auto via faction vars |
+| Feed items | `var(--color-bg-surface)` + type-specific border | Auto via variables |
+| Collab invite field | `var(--color-border)` | Auto |
+| Form fields (title, RTE, textarea) | `var(--color-input-border)` focus → `var(--color-input-border-focus)` | Auto via variables |
+| Media upload zone | `var(--color-border-medium)` dashed, hover → `var(--faction-*-border)` | Auto |
+| Meta task checkboxes | `var(--faction-*)` checked bg | Auto via faction vars |
+| Collab / duel note strip | `var(--faction-*-light)` bg, `var(--faction-*-border)` border | Auto via faction vars |
+| Submit / Propose buttons | `var(--color-btn-primary-*)` | Inverts to cream-on-dark |
+| Tips cards (editorial) | `var(--color-bg-surface)` | Auto |
+| Task preview strip | `var(--faction-*-light)` bg, `var(--faction-*-border)` | Auto |
+
+**Implementation rule:** If a value doesn't appear in the variables list and you find yourself hardcoding a hex value, stop and add it to `:root` first. The only exception is the manually-specified faction card dark backgrounds in Section 6, which use fixed hex values because they represent specific paper/material colors rather than semantic UI colors.
+
 
 ---
 
@@ -1307,5 +1609,133 @@ These panels are editorial, not functional. They should feel like a soft nudge f
 ### 18.6 Active Task Highlight
 
 In the active tasks panel (if shown anywhere on this page — on mobile it may appear collapsed in a bottom drawer), the task currently being submitted is highlighted with faction-color background tint and "Submitting now" as the meta text.
+
+---
+
+---
+
+## 19. Submit Proof Form — Layout Note
+
+*(Spec documented in Section 18 above. Key addition: this is the only logged-in page with NO right-hand sidebar panels. Full-width writing environment. The watercolor background and nav remain.)*
+
+---
+
+## 20. Propose a Task Form
+
+### 20.1 Layout — No Sidebar Panels
+
+Same as Submit Proof — no character card, no active tasks panel, no activity feed. The user is in creative/proposal mode. Give them space.
+
+Layout: two-column grid — main form left (flex: 1), tips column right (~280px). The tips column is editorial context, not functional UI. On mobile, tips column collapses below the form.
+
+Breadcrumb: `Tasks › Propose a Task`
+
+### 20.2 Faction Selector — Step 1
+
+The faction selection happens **before** the form appears, because the faction determines the aesthetic of the proposal card wrapper.
+
+**Display:** Row of faction choice tiles, each containing:
+- Diagonal pennant tab (faction color, faction name)
+- Small descriptor label below (8px muted: "Collective", "Document", "Mischief", etc.)
+- `border: 2px solid rgba(0,0,0,0.1); background: rgba(255,255,255,0.55)`
+- Selected state: `border-color: faction-color; background: light faction tint`
+- Hover: `transform: translateY(-2px)`
+
+**Faction descriptors:**
+| Faction | One-word descriptor |
+|---------|-------------------|
+| UA / Unaffiliated | Unaffiliated |
+| Gestalt | Collective |
+| Analog | Document |
+| S.N.I.D.E. | Mischief |
+| Journeymen | Explore |
+| Singularity | Discover |
+| UA Masters | Chronicle |
+
+### 20.3 Proposal Card — Faction Aesthetic Wrapper
+
+The form fields live inside a card that uses the **selected faction's card archetype** expanded to full width. This is the same system as task cards and profile headers — the faction identity wraps the content.
+
+The masthead / header area of each faction wrapper:
+- **UA/Unaffiliated:** Large sticky note, no masthead
+- **Analog:** Journal page with margin rule, "Field Notes" header
+- **Gestalt:** Collage with tape, no formal masthead
+- **S.N.I.D.E.:** Newspaper clipping with "The Dispatch · S.N.I.D.E. Task Proposal" masthead, "PENDING ADMIN REVIEW" classification stamp
+- **Journeymen:** Luggage tag, "Task Proposal Filed" header stripe
+- **Singularity:** Terminal window, `> TASK_PROPOSAL_INIT` header
+- **UA Masters:** Gazette article with proper masthead
+
+Inside the card wrapper, the form sections (task name, description, difficulty) are frosted sub-cards in the same frosted style as other form sections.
+
+### 20.4 Form Fields
+
+#### Task Name
+- Font: faction-appropriate (Special Elite for newspaper/journal factions, Share Tech Mono for Singularity, Courier Prime for others)
+- Size: 22px
+- Bottom-border only input, `2px solid rgba(0,0,0,0.12)`, focus transitions to faction color
+- Placeholder: "What do you want people to do?"
+
+#### Task Description
+- Rich text editor — same minimal toolbar as Submit Proof form (Bold, Italic | H1, Quote | List)
+- Font: faction-appropriate, 13px, 1.7 line-height
+- Min-height: 120px
+- Placeholder: "Write the task description here. What exactly should the player do? What counts as completing it? What makes a good proof post?"
+- No word limit.
+
+#### Suggested Difficulty — Two Fields
+
+**Base point value:** Free text number input.
+- `font-family: Courier Prime; font-size: 20px; font-weight: 700; width: 80px`
+- Plain number input, no spinner arrows, no min/max enforced in UI
+- Players can type any number — admins edit/handle outliers
+- Label below: "Admin may adjust — this is a suggestion"
+- Placeholder: "pts"
+
+**Minimum level:** Connected node selector (same as filter nodes on task page, levels 0–5)
+- Nodes: 32px circles, `border: 2px solid rgba(0,0,0,0.15)`
+- Selected: `background: #1a1209; color: white; transform: scale(1.12)`
+- Label below: "Level 0 = anyone can attempt"
+
+### 20.5 Notes to Admin (Optional)
+
+Textarea field below the faction card.
+- `border: 1px solid rgba(0,0,0,0.1); border-radius: 6px; padding: 0.6rem 0.7rem`
+- Focus: `border-color: faction-color`
+- Placeholder: "Why do you want this task to exist? What inspired it? Any concerns about how it could be misused?"
+- Font: Courier Prime 11px
+
+### 20.6 Task Preview Strip
+
+Below the notes field, above the submit button. Shows exactly how the task will appear in the task list once approved.
+
+- Background: light faction tint with faction-color border
+- "Task preview — [Faction] · Pending" label in faction color
+- Renders a read-only version of the task card at reduced scale: faction tab + task name + description excerpt + pills (pts / level / "Pending review" status)
+- Updates live as the user types the task name and description
+
+### 20.7 Submit Row
+
+- **"Submit proposal"** button: faction color background, Courier Prime 12px bold uppercase, rectangular stamp style with inner dashed border
+- **"Cancel"** button: outline style
+- Note (inline, 8px muted): "Your proposal goes to admin for review. You'll be notified when it's approved, edited, or declined."
+
+### 20.8 Tips Column (Right, Always Visible on Desktop)
+
+Three cards:
+
+**"What makes a good task"** (bulleted, 9px):
+- It should be doable by someone with no money and no special skills.
+- The proof post should be interesting to read even if you didn't do the task.
+- It should have a clear pass/fail — did they do the thing or not?
+- It should feel like it belongs to its faction.
+- If it could only be done once ever, it's too specific. If anyone could do it anywhere, it's probably right.
+
+**"Your previous proposals"** — list of player's past proposals with:
+- Task name (10px bold)
+- Faction + suggested pts (8px muted)
+- Status pill: "Approved — now active" (green) or "Pending review · N days" (amber) or "Declined" (red, with note link)
+- Note: "Admins typically review proposals within 1–2 weeks."
+
+**"What happens next"** — 9px prose explaining the pipeline: admin review → pending task list → Level 5+ players vote to activate.
 
 ---

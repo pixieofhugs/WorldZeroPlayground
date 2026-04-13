@@ -64,15 +64,15 @@ Replace current chip-based filters with three distinct visual types. See style g
 - [x] Update Factions page cards to use sidebar-card + faction colors
 - [x] Remove remaining `hover:-translate` sketch effects from all components (Groups, Factions, SubmissionCard, Leaderboard)
 
-## Phase 7: Praxis Submission Page (§12)
+## ~~Phase 7: Praxis Submission Page (§12)~~ DONE
 
-- [ ] **Breadcrumb** — `Tasks › [faction dot] [Task Name] › Praxis`
-- [ ] **Byline block** — Author's faction card aesthetic as framing (collage, notebook, newsprint, etc.). Avatar orb + name + faction meta + vote score.
-- [ ] **Praxis title** — Lora italic 30px + full-width rainbow underline bar (8 segments, NOT per-letter)
-- [ ] **Task context strip** — Faction-color left border, frosted bg, task name + points + level pill
-- [ ] **Media gallery** — Main image 16:9, thumbnail strip, active thumb faction-color border, "+N more" overflow
-- [ ] **Body text** — Lora 15px, line-height 1.75, drop cap first letter in faction color 58px, italic emphasis in faction color
-- [ ] **Collaboration strip** — Overlapping avatar orbs, badge pill (Collab/Duel)
+- [x] **Breadcrumb** — `Tasks › [faction dot] [Task Name] › Praxis`
+- [x] **Byline block** — Author's faction card aesthetic as framing (collage, notebook, newsprint, etc.). Avatar orb + name + faction meta + vote score.
+- [x] **Praxis title** — Lora italic 30px + full-width rainbow underline bar (8 segments, NOT per-letter)
+- [x] **Task context strip** — Faction-color left border, frosted bg, task name + points + level pill
+- [x] **Media gallery** — Main image 16:9, thumbnail strip, active thumb faction-color border, "+N more" overflow
+- [x] **Body text** — Lora 15px, line-height 1.75, drop cap first letter in faction color 58px, italic emphasis in faction color
+- [x] **Collaboration strip** — Overlapping avatar orbs, badge pill (Collab/Duel)
 
 ## Phase 8: Voting System (§13)
 
@@ -123,3 +123,16 @@ Replace current chip-based filters with three distinct visual types. See style g
 - [ ] **Meta tasks section** — Checkboxes with faction-color checked state + bonus amounts
 - [ ] **Submit row** — "Publish proof" faction-color stamp button + "Save draft" outline button
 - [ ] **Contextual panels** — "What makes a good proof post" tips + "Other proofs for this task" peek
+
+## Phase 14: Propose a Task Form (§20)
+
+- [ ] **No sidebar layout** — Two-column grid: form left, tips column right (~280px). No sidebar panels.
+- [ ] **Faction selector** — Row of faction choice tiles with diagonal pennants. Selection determines card wrapper aesthetic.
+- [ ] **Proposal card wrapper** — Form fields inside faction card archetype expanded to full width (sticky note, journal, collage, newspaper, etc.)
+- [ ] **Task name input** — Faction-appropriate font, 22px, bottom-border only, focus transitions to faction color
+- [ ] **Task description** — Rich text editor, faction-appropriate font, 13px
+- [ ] **Suggested difficulty** — Point value number input + connected node level selector (0–5)
+- [ ] **Notes to admin** — Optional textarea with faction-color focus border
+- [ ] **Task preview strip** — Live preview of how the task card will look, updates as user types
+- [ ] **Submit row** — "Submit proposal" faction-color stamp button + "Cancel" outline button
+- [ ] **Tips column** — "What makes a good task" + "Your previous proposals" + "What happens next"
