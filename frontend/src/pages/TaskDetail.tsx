@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
-import { getTask, signupTask, type TaskOut } from '../api/tasks'
+import { getTask, getMyTasks, signupTask, type TaskOut } from '../api/tasks'
 import { listSubmissions, type SubmissionOut } from '../api/submissions'
 import SubmissionCard from '../components/SubmissionCard'
 import { useAuth } from '../auth/AuthContext'
@@ -12,24 +12,35 @@ export default function TaskDetail() {
   const { user } = useAuth()
   const [task, setTask] = useState<TaskOut | null>(null)
   const [submissions, setSubmissions] = useState<SubmissionOut[]>([])
+  const [isInProgress, setIsInProgress] = useState(false)
   const [loading, setLoading] = useState(true)
   const [fetchError, setFetchError] = useState<string | null>(null)
   const [signupError, setSignupError] = useState<string | null>(null)
-  const [signupSuccess, setSignupSuccess] = useState(false)
 
   useEffect(() => {
     if (!id) return
     const taskId = parseInt(id, 10)
-    Promise.all([getTask(taskId), listSubmissions({ task_id: taskId })])
-      .then(([t, s]) => { setTask(t); setSubmissions(s) })
+    const fetches: Promise<unknown>[] = [getTask(taskId), listSubmissions({ task_id: taskId })]
+    if (user) fetches.push(getMyTasks('in_progress'))
+    Promise.all(fetches)
+      .then(([t, s, myTasks]) => {
+        setTask(t as TaskOut)
+        setSubmissions(s as SubmissionOut[])
+        if (myTasks) {
+          setIsInProgress((myTasks as { task: { id: number } }[]).some((ct) => ct.task.id === taskId))
+        }
+      })
       .catch((err) => setFetchError(extractError(err, "Couldn't load this task.")))
       .finally(() => setLoading(false))
-  }, [id])
+  }, [id, user])
+
+  const mySubmission = user?.character
+    ? submissions.find((s) => s.character_id === user.character!.id)
+    : undefined
 
   const handleSignup = async () => {
     if (!task) return
     setSignupError(null)
-    setSignupSuccess(false)
     try {
       await signupTask(task.id)
       navigate(`/tasks/${task.id}/submit`)
@@ -61,11 +72,18 @@ export default function TaskDetail() {
             </p>
             <h1 className="font-display text-4xl font-bold leading-tight">{task.title}</h1>
           </div>
-          {user && !signupSuccess && (
-            <button onClick={handleSignup} className="btn-primary shrink-0">sign up</button>
+          {user && mySubmission && (
+            <Link to={`/submissions/${mySubmission.id}/edit`} className="btn-primary shrink-0">
+              submitted ✓ — edit
+            </Link>
           )}
-          {signupSuccess && (
-            <span className="font-body text-sm text-muted shrink-0">signed up ✓</span>
+          {user && !mySubmission && isInProgress && (
+            <Link to={`/tasks/${task.id}/submit`} className="btn-primary shrink-0">
+              in progress → submit
+            </Link>
+          )}
+          {user && !mySubmission && !isInProgress && (
+            <button onClick={handleSignup} className="btn-primary shrink-0">sign up</button>
           )}
         </div>
 
@@ -83,11 +101,6 @@ export default function TaskDetail() {
       <div className="flex items-baseline gap-3 mt-8 mb-4 border-b-2 border-border pb-2">
         <h2 className="font-display text-2xl font-bold">Praxis</h2>
         <span className="font-body text-sm text-muted">{submissions.length} submissions</span>
-        {user && (
-          <Link to={`/tasks/${task.id}/submit`} className="btn-primary ml-auto text-sm">
-            Submit Proof
-          </Link>
-        )}
       </div>
 
       {submissions.length === 0 ? (
