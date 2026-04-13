@@ -10,7 +10,7 @@ import { useAuth } from '../auth/AuthContext'
 import { useTheme } from '../hooks/useTheme'
 import { factionColor } from '../utils/factions'
 import { relativeTime } from '../utils/dates'
-import { extractError } from '../utils/errors'
+// Individual fetches fail silently — no global error state needed
 
 type FeedFilter = 'All' | 'Friends' | 'Foes' | 'Your stuff' | 'Global'
 
@@ -36,38 +36,25 @@ export default function Updates() {
   const [foes, setFoes] = useState<RelationshipListItem[]>([])
   const [filter, setFilter] = useState<FeedFilter>('All')
   const [loading, setLoading] = useState(true)
-  const [fetchError, setFetchError] = useState<string | null>(null)
 
   useEffect(() => {
-    Promise.all([
-      listSubmissions(user?.character ? { character_id: user.character.id } : {}),
-      getMessages(),
-      getMyTasks('in_progress'),
-      listRelationships({ type: 'friend' }),
-      listRelationships({ type: 'foe' }),
-    ])
-      .then(([s, m, t, fr, fo]) => {
-        setSubmissions(s)
-        setMessages(m)
-        setInProgressTasks(t)
-        setFriends(fr.filter((r) => r.status === 'active'))
-        setFoes(fo.filter((r) => r.status === 'active'))
-      })
-      .catch((err) => setFetchError(extractError(err, "Couldn't load your updates.")))
-      .finally(() => setLoading(false))
+    // Fetch each data source independently so one failure doesn't break the page
+    const fetches = [
+      listSubmissions(user?.character ? { character_id: user.character.id } : {})
+        .then(setSubmissions).catch(() => {}),
+      getMessages()
+        .then(setMessages).catch(() => {}),
+      getMyTasks('in_progress')
+        .then(setInProgressTasks).catch(() => {}),
+      listRelationships({ type: 'friend' })
+        .then((fr) => setFriends(fr.filter((r) => r.status === 'active'))).catch(() => {}),
+      listRelationships({ type: 'foe' })
+        .then((fo) => setFoes(fo.filter((r) => r.status === 'active'))).catch(() => {}),
+    ]
+    Promise.all(fetches).finally(() => setLoading(false))
   }, [user])
 
   if (loading) return <div className="py-8 font-body text-muted">Loading...</div>
-
-  if (fetchError) return (
-    <div className="py-8">
-      <PageTitle title="Updates" />
-      <p className="font-body text-sm text-red-600 border-2 border-red-300 px-3 py-2">
-        {fetchError}{' '}
-        <button onClick={() => window.location.reload()} className="underline">Try refreshing.</button>
-      </p>
-    </div>
-  )
 
   const showMessages = filter === 'All' || filter === 'Your stuff'
   const showTasks = filter === 'All' || filter === 'Your stuff'
