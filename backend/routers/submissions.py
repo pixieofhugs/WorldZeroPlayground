@@ -42,6 +42,11 @@ async def _build_submission_out(sub: Submission, session: AsyncSession) -> Submi
     task_title = task.title if task else ""
     task_point_value = task.point_value if task else 0
 
+    partner_display_name = None
+    if sub.partner_character_id:
+        partner = await session.get(Character, sub.partner_character_id)
+        partner_display_name = partner.display_name if partner else None
+
     return SubmissionOut(
         id=sub.id,
         task_id=sub.task_id,
@@ -52,6 +57,9 @@ async def _build_submission_out(sub: Submission, session: AsyncSession) -> Submi
         title=sub.title,
         body_text=sub.body_text,
         is_flagged=sub.is_flagged,
+        collaboration_mode=sub.collaboration_mode.value,
+        partner_character_id=sub.partner_character_id,
+        partner_display_name=partner_display_name,
         created_at=sub.created_at,
         updated_at=sub.updated_at,
         media=media,

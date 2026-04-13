@@ -7,7 +7,7 @@ from dependencies import get_current_character
 from models.character import Character
 from models.submission import Submission
 from models.vote import Vote
-from schemas.vote import VoteIn, VoteOut, VoteSummary
+from schemas.vote import VoterDetail, VoteIn, VoteOut, VoteSummary
 from services.submission import compute_submission_score_from_db
 from services.vote import cast_or_update_vote
 
@@ -60,3 +60,30 @@ async def get_vote_summary(
         average_stars=avg_stars,
         total_score=total_score,
     )
+
+
+@router.get("/submissions/{submission_id}/voters", response_model=list[VoterDetail])
+async def list_voters(
+    submission_id: int,
+    session: AsyncSession = Depends(get_db),
+):
+    sub = await session.get(Submission, submission_id)
+    if sub is None:
+        raise HTTPException(status_code=404, detail="Submission not found.")
+
+    result = await session.execute(
+        select(Vote, Character)
+        .join(Character, Character.id == Vote.voter_character_id)
+        .where(Vote.submission_id == submission_id)
+        .order_by(Vote.created_at.desc())
+    )
+    return [
+        VoterDetail(
+            character_id=character.id,
+            display_name=character.display_name,
+            avatar_url=character.avatar_url,
+            faction_slug=character.faction_slug,
+            stars=vote.stars,
+        )
+        for vote, character in result.all()
+    ]

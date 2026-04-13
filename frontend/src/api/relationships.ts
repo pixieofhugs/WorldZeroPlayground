@@ -1,25 +1,37 @@
 import api from './axios'
 
+/** Matches backend RelationshipListItem (enriched list response) */
+export interface RelationshipListItem {
+  id: number
+  from_character_id: number
+  to_character_id: number
+  type: 'friend' | 'foe'
+  status: 'active' | 'blocked'
+  created_at: string
+  to_display_name: string
+  to_avatar_url: string
+  to_faction_slug: string
+  reverse_type: string | null
+  display_status: string
+}
+
+/** Matches backend RelationshipOut (basic create/update response) */
 export interface RelationshipOut {
   id: number
   from_character_id: number
   to_character_id: number
   type: 'friend' | 'foe'
-  status: 'pending' | 'accepted' | 'blocked'
+  status: 'active' | 'blocked'
   created_at: string
-  from_character_display_name: string
-  from_character_faction_slug: string | null
-  to_character_display_name: string
-  to_character_faction_slug: string | null
 }
 
 export interface RelationshipFilters {
-  status?: 'pending' | 'accepted' | 'blocked'
-  type?: 'friend' | 'foe'
+  status?: string
+  type?: string
 }
 
-export async function listRelationships(filters?: RelationshipFilters): Promise<RelationshipOut[]> {
-  const { data } = await api.get<RelationshipOut[]>('/relationships', { params: filters })
+export async function listRelationships(filters?: RelationshipFilters): Promise<RelationshipListItem[]> {
+  const { data } = await api.get<RelationshipListItem[]>('/relationships', { params: filters })
   return data
 }
 
@@ -28,8 +40,9 @@ export async function createRelationship(to_character_id: number, type: 'friend'
   return data
 }
 
-export async function updateRelationship(id: number, action: 'accept' | 'decline' | 'block'): Promise<RelationshipOut> {
-  const { data } = await api.put<RelationshipOut>(`/relationships/${id}`, { action })
+/** Block a relationship. Either party can block. */
+export async function blockRelationship(id: number): Promise<RelationshipOut> {
+  const { data } = await api.put<RelationshipOut>(`/relationships/${id}`)
   return data
 }
 

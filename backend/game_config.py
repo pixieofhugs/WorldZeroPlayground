@@ -14,6 +14,7 @@ class FactionConfig:
     slug: str
     name: str
     description: str
+    color: str                       # hex color for UI display (e.g. "#6b6a7a")
     point_multiplier: float          # applied to all task earnings
     duel_bonus_multiplier: float     # extra % on duel wins (0.0 if not applicable)
     is_selectable: bool              # can players choose this faction at level 3?
@@ -57,6 +58,7 @@ ERA_1_FACTIONS = {
         slug="ua",
         name="UA",
         description="The default starting faction. Full points on all tasks. Must leave at level 3.",
+        color="#6b6a7a",
         point_multiplier=1.0,
         duel_bonus_multiplier=0.0,
         is_selectable=False,          # assigned automatically; not a choosable destination
@@ -67,6 +69,7 @@ ERA_1_FACTIONS = {
         slug="ua_masters",
         name="UA Masters",
         description="Veterans who aged out of UA. Can sign up for any task at reduced points.",
+        color="#555555",
         point_multiplier=0.8,
         duel_bonus_multiplier=0.0,
         is_selectable=True,
@@ -75,8 +78,9 @@ ERA_1_FACTIONS = {
     ),
     "snide": FactionConfig(
         slug="snide",
-        name="Snide",
+        name="S.N.I.D.E.",
         description="Specialists in one-on-one competition. Bonus points for winning duels.",
+        color="#8a6a20",
         point_multiplier=1.0,
         duel_bonus_multiplier=0.1,    # +10% on duel wins
         is_selectable=True,
@@ -87,6 +91,7 @@ ERA_1_FACTIONS = {
         slug="gestalt",
         name="Gestalt",
         description="Collective-minded. Excel at their own faction's tasks; reduced elsewhere.",
+        color="#14532d",
         point_multiplier=1.0,
         duel_bonus_multiplier=0.0,
         is_selectable=True,
@@ -97,6 +102,7 @@ ERA_1_FACTIONS = {
         slug="journeymen",
         name="Journeymen",
         description="Explorers with access to select retired tasks (Task Vision ability).",
+        color="#c49a3a",
         point_multiplier=1.0,
         duel_bonus_multiplier=0.0,
         is_selectable=True,
@@ -107,6 +113,7 @@ ERA_1_FACTIONS = {
         slug="analog",
         name="Analog",
         description="Depth over breadth. Can repeat one task per level for points (Double Dipper).",
+        color="#15803d",
         point_multiplier=1.0,
         duel_bonus_multiplier=0.0,
         is_selectable=True,
@@ -117,6 +124,7 @@ ERA_1_FACTIONS = {
         slug="singularity",
         name="Singularity",
         description="TBD",
+        color="#7c3aed",
         point_multiplier=1.0,
         duel_bonus_multiplier=0.0,
         is_selectable=True,
@@ -127,6 +135,7 @@ ERA_1_FACTIONS = {
         slug="albescent",
         name="/Albescent",
         description="Full points and any meta tasks from any group. Unlock-only.",
+        color="#6b6a7a",
         point_multiplier=1.0,
         duel_bonus_multiplier=0.0,
         is_selectable=False,          # only available as additional character unlock
@@ -137,6 +146,7 @@ ERA_1_FACTIONS = {
         slug="aged_out",
         name="AgedOutOfUA",
         description="Placeholder faction for characters who hit level 3 while offline.",
+        color="#6b6a7a",
         point_multiplier=1.0,
         duel_bonus_multiplier=0.0,
         is_selectable=False,
@@ -147,6 +157,7 @@ ERA_1_FACTIONS = {
         slug="na",
         name="None",
         description="Sentinel value for tasks with no specific faction affiliation.",
+        color="#a9a9a9",
         point_multiplier=1.0,
         duel_bonus_multiplier=0.0,
         is_selectable=False,
@@ -186,3 +197,88 @@ ERA_1 = EraConfig(
 
 # -- The one lever that controls live game mechanics -------------------------
 CURRENT_ERA: EraConfig = ERA_1
+
+
+# -- Taunt templates ---------------------------------------------------------
+# Keyed by faction slug → trigger type → list of template strings.
+# Use {from_name} and {to_name} as placeholders.
+# A generic "default" key provides fallbacks for factions without custom taunts.
+
+TAUNT_TEMPLATES: dict[str, dict[str, list[str]]] = {
+    "default": {
+        "score_overtake": [
+            "{from_name} just passed {to_name} on the leaderboard. Awkward.",
+            "{to_name}, meet {from_name}'s dust.",
+            "{from_name} overtook {to_name}. The scoreboard doesn't lie.",
+        ],
+        "level_up": [
+            "{from_name} leveled up while {to_name} was napping.",
+            "{from_name} hit a new level. {to_name} remains where they are.",
+        ],
+        "submission_complete": [
+            "{from_name} just completed a task. {to_name} is still thinking about it.",
+            "{from_name} submitted praxis. {to_name}... did not.",
+        ],
+    },
+    "snide": {
+        "score_overtake": [
+            "{from_name} danced past {to_name} on the scoreboard. Elegant, really.",
+            "Oh, {to_name}. {from_name} just made you look silly.",
+            "{from_name} sends their regards from above {to_name} on the leaderboard.",
+        ],
+        "level_up": [
+            "{from_name} ascended. {to_name} can see them from down there.",
+        ],
+        "submission_complete": [
+            "{from_name} finished what {to_name} couldn't start.",
+        ],
+    },
+    "gestalt": {
+        "score_overtake": [
+            "The collective lifts {from_name} above {to_name}. Together, always.",
+            "{from_name} rose past {to_name}. The whole is greater than the parts.",
+        ],
+        "level_up": [
+            "{from_name} grew stronger through community. {to_name} walks alone.",
+        ],
+        "submission_complete": [
+            "{from_name} contributed to the whole. {to_name} remained apart.",
+        ],
+    },
+    "journeymen": {
+        "score_overtake": [
+            "{from_name} found a path past {to_name}. The road provides.",
+            "{from_name} wandered ahead of {to_name}. Not all who wander are lost.",
+        ],
+        "level_up": [
+            "{from_name} discovered a new horizon. {to_name} hasn't packed yet.",
+        ],
+        "submission_complete": [
+            "{from_name} returned from the journey with proof. {to_name} stayed home.",
+        ],
+    },
+    "analog": {
+        "score_overtake": [
+            "{from_name} carved past {to_name} by hand. No shortcuts.",
+            "{from_name} overtook {to_name} the old-fashioned way.",
+        ],
+        "level_up": [
+            "{from_name} leveled up through repetition. {to_name} got bored.",
+        ],
+        "submission_complete": [
+            "{from_name} made something real. {to_name} is still scrolling.",
+        ],
+    },
+    "singularity": {
+        "score_overtake": [
+            "{from_name} computed a path past {to_name}. Inevitable.",
+            "{from_name} surpassed {to_name}. The algorithm does not care.",
+        ],
+        "level_up": [
+            "{from_name} optimized beyond {to_name}'s level.",
+        ],
+        "submission_complete": [
+            "{from_name} executed. {to_name} is still in the queue.",
+        ],
+    },
+}

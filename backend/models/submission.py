@@ -14,6 +14,12 @@ class MediaType(enum.Enum):
     audio = "audio"
 
 
+class CollaborationMode(enum.Enum):
+    solo = "solo"
+    collab = "collab"
+    duel = "duel"
+
+
 class Submission(Base):
     __tablename__ = "submission"
 
@@ -30,6 +36,12 @@ class Submission(Base):
     )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+    collaboration_mode: Mapped[CollaborationMode] = mapped_column(
+        Enum(CollaborationMode), nullable=False, server_default="solo"
+    )
+    partner_character_id: Mapped[Optional[int]] = mapped_column(
+        ForeignKey("character.id"), nullable=True
     )
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=func.now(), onupdate=func.now()

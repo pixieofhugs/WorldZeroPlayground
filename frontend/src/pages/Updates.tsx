@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import { listSubmissions, type SubmissionOut } from '../api/submissions'
 import { getMessages, type MessageOut } from '../api/messages'
 import { getMyTasks, type CharacterTaskOut } from '../api/tasks'
-import { listRelationships, updateRelationship, type RelationshipOut } from '../api/relationships'
+import { listRelationships, type RelationshipListItem } from '../api/relationships'
 import SubmissionCard from '../components/SubmissionCard'
 import PageTitle from '../components/ui/PageTitle'
 import { useAuth } from '../auth/AuthContext'
@@ -12,9 +12,9 @@ import { factionColor } from '../utils/factions'
 import { relativeTime } from '../utils/dates'
 import { extractError } from '../utils/errors'
 
-type FeedFilter = 'All' | 'Friends' | 'Foes' | 'Your stuff' | 'Global' | 'Requests'
+type FeedFilter = 'All' | 'Friends' | 'Foes' | 'Your stuff' | 'Global'
 
-const FILTER_OPTIONS: FeedFilter[] = ['All', 'Friends', 'Foes', 'Your stuff', 'Global', 'Requests']
+const FILTER_OPTIONS: FeedFilter[] = ['All', 'Friends', 'Foes', 'Your stuff', 'Global']
 
 /** Feed item accent colors by type (§17.3) */
 const TYPE_COLORS: Record<string, string> = {
@@ -32,58 +32,30 @@ export default function Updates() {
   const [submissions, setSubmissions] = useState<SubmissionOut[]>([])
   const [messages, setMessages] = useState<MessageOut[]>([])
   const [inProgressTasks, setInProgressTasks] = useState<CharacterTaskOut[]>([])
-  const [pendingRequests, setPendingRequests] = useState<RelationshipOut[]>([])
-  const [friends, setFriends] = useState<RelationshipOut[]>([])
-  const [foes, setFoes] = useState<RelationshipOut[]>([])
+  const [friends, setFriends] = useState<RelationshipListItem[]>([])
+  const [foes, setFoes] = useState<RelationshipListItem[]>([])
   const [filter, setFilter] = useState<FeedFilter>('All')
   const [loading, setLoading] = useState(true)
   const [fetchError, setFetchError] = useState<string | null>(null)
-
-  const myCharId = user?.character?.id
 
   useEffect(() => {
     Promise.all([
       listSubmissions(user?.character ? { character_id: user.character.id } : {}),
       getMessages(),
       getMyTasks('in_progress'),
-      listRelationships({ status: 'pending' }),
-      listRelationships({ status: 'accepted', type: 'friend' }),
-      listRelationships({ status: 'accepted', type: 'foe' }),
+      listRelationships({ type: 'friend' }),
+      listRelationships({ type: 'foe' }),
     ])
-      .then(([s, m, t, pending, fr, fo]) => {
+      .then(([s, m, t, fr, fo]) => {
         setSubmissions(s)
         setMessages(m)
         setInProgressTasks(t)
-        // Only show incoming pending requests (where I'm the recipient)
-        setPendingRequests(pending.filter((r) => r.to_character_id === myCharId))
-        setFriends(fr)
-        setFoes(fo)
+        setFriends(fr.filter((r) => r.status === 'active'))
+        setFoes(fo.filter((r) => r.status === 'active'))
       })
       .catch((err) => setFetchError(extractError(err, "Couldn't load your updates.")))
       .finally(() => setLoading(false))
   }, [user])
-
-  const handleAccept = async (id: number) => {
-    try {
-      await updateRelationship(id, 'accept')
-      setPendingRequests((prev) => prev.filter((r) => r.id !== id))
-    } catch { /* ignore */ }
-  }
-
-  const handleDecline = async (id: number) => {
-    try {
-      await updateRelationship(id, 'decline')
-      setPendingRequests((prev) => prev.filter((r) => r.id !== id))
-    } catch { /* ignore */ }
-  }
-
-  /** Get the "other" character info from a relationship */
-  const otherChar = (rel: RelationshipOut) => {
-    if (rel.from_character_id === myCharId) {
-      return { id: rel.to_character_id, name: rel.to_character_display_name, faction: rel.to_character_faction_slug }
-    }
-    return { id: rel.from_character_id, name: rel.from_character_display_name, faction: rel.from_character_faction_slug }
-  }
 
   if (loading) return <div className="py-8 font-body text-muted">Loading...</div>
 
@@ -102,7 +74,6 @@ export default function Updates() {
   const showPraxis = filter === 'All' || filter === 'Your stuff'
   const showFriends = filter === 'All' || filter === 'Friends'
   const showFoes = filter === 'All' || filter === 'Foes'
-  const showRequests = filter === 'Requests'
   const showGlobal = filter === 'Global'
 
   return (
@@ -117,9 +88,8 @@ export default function Updates() {
           const count = option === 'All' ? null
             : option === 'Friends' ? friends.length || null
             : option === 'Foes' ? foes.length || null
-            : option === 'Requests' ? pendingRequests.length || null
             : null
-          const hasRedBadge = option === 'Requests' && pendingRequests.length > 0
+          const hasRedBadge = false
 
           return (
             <button
@@ -154,67 +124,6 @@ export default function Updates() {
         })}
       </div>
 
-      {/* ── Pending Requests Section (§17.7) ── */}
-      {(showRequests || (filter === 'All' && pendingRequests.length > 0)) && pendingRequests.length > 0 && (
-        <section className="mb-6">
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
-            <div style={{ flex: 1, height: 1, background: 'var(--color-border)' }} />
-            <span className="eyebrow">Pending requests · {pendingRequests.length}</span>
-            <div style={{ flex: 1, height: 1, background: 'var(--color-border)' }} />
-          </div>
-
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            {pendingRequests.map((req) => {
-              const other = otherChar(req)
-              const color = factionColor(other.faction)
-              const isFriend = req.type === 'friend'
-              return (
-                <div
-                  key={req.id}
-                  className="sidebar-card"
-                  style={{ padding: '10px 14px', display: 'flex', alignItems: 'center', gap: 10 }}
-                >
-                  {/* Avatar orb */}
-                  <Link to={`/characters/${other.id}`}>
-                    <div style={{ width: 24, height: 24, borderRadius: '50%', background: `linear-gradient(135deg, ${color}, ${color}88)`, flexShrink: 0 }} />
-                  </Link>
-                  <div className="flex-1 min-w-0">
-                    <Link to={`/characters/${other.id}`} className="font-body" style={{ fontSize: 10, fontWeight: 700, color: 'var(--color-text-primary)', textDecoration: 'none' }}>
-                      {other.name}
-                    </Link>
-                    <span className="font-body" style={{ fontSize: 8, color: isFriend ? '#14532d' : '#dc2626', marginLeft: 6, textTransform: 'uppercase' }}>
-                      {req.type} request
-                    </span>
-                  </div>
-                  <button
-                    onClick={() => handleAccept(req.id)}
-                    style={{
-                      background: isFriend ? '#14532d' : '#dc2626', color: 'white',
-                      fontFamily: "'Courier Prime', monospace", fontSize: 8,
-                      textTransform: 'uppercase', padding: '3px 10px',
-                      border: 'none', cursor: 'pointer', borderRadius: 2,
-                    }}
-                  >
-                    Accept
-                  </button>
-                  <button
-                    onClick={() => handleDecline(req.id)}
-                    style={{
-                      background: 'none', color: 'var(--color-text-tertiary)',
-                      fontFamily: "'Courier Prime', monospace", fontSize: 8,
-                      border: '1px solid var(--color-border-strong)', padding: '3px 8px',
-                      cursor: 'pointer', borderRadius: 2,
-                    }}
-                  >
-                    ✕
-                  </button>
-                </div>
-              )
-            })}
-          </div>
-        </section>
-      )}
-
       {/* ── Friends Activity ── */}
       {showFriends && friends.length > 0 && (
         <section className="mb-6">
@@ -225,22 +134,21 @@ export default function Updates() {
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             {friends.map((rel) => {
-              const other = otherChar(rel)
-              const color = factionColor(other.faction)
+              const color = factionColor(rel.to_faction_slug)
               return (
                 <div
                   key={rel.id}
                   className="sidebar-card"
-                  style={{ borderLeft: `4px solid ${TYPE_COLORS.friend}`, padding: '10px 14px', display: 'flex', alignItems: 'center', gap: 10 }}
+                  style={{ borderLeft: `4px solid ${TYPE_COLORS.friend}`, padding: '10px 14px', display: 'flex', alignItems: 'center', gap: 10, position: 'relative' }}
                 >
-                  <Link to={`/characters/${other.id}`}>
+                  <Link to={`/characters/${rel.to_character_id}`}>
                     <div style={{ width: 28, height: 28, borderRadius: '50%', background: `linear-gradient(135deg, ${color}, ${color}88)`, flexShrink: 0 }} />
                   </Link>
-                  <Link to={`/characters/${other.id}`} className="font-body" style={{ fontSize: 11, fontWeight: 700, color, textDecoration: 'none' }}>
-                    {other.name}
+                  <Link to={`/characters/${rel.to_character_id}`} className="font-body" style={{ fontSize: 11, fontWeight: 700, color, textDecoration: 'none' }}>
+                    {rel.to_display_name}
                   </Link>
                   <span style={{ position: 'absolute', top: 8, right: 10, fontSize: 7, textTransform: 'uppercase', letterSpacing: '0.1em', color: TYPE_COLORS.friend, fontFamily: "'Courier Prime', monospace", fontWeight: 700 }}>
-                    friend
+                    {rel.display_status}
                   </span>
                 </div>
               )
@@ -259,19 +167,18 @@ export default function Updates() {
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             {foes.map((rel) => {
-              const other = otherChar(rel)
-              const color = factionColor(other.faction)
+              const color = factionColor(rel.to_faction_slug)
               return (
                 <div
                   key={rel.id}
                   className="sidebar-card"
                   style={{ borderLeft: `4px solid ${TYPE_COLORS.foe}`, padding: '10px 14px', display: 'flex', alignItems: 'center', gap: 10 }}
                 >
-                  <Link to={`/characters/${other.id}`}>
+                  <Link to={`/characters/${rel.to_character_id}`}>
                     <div style={{ width: 28, height: 28, borderRadius: '50%', background: `linear-gradient(135deg, ${color}, ${color}88)`, flexShrink: 0 }} />
                   </Link>
-                  <Link to={`/characters/${other.id}`} className="font-body" style={{ fontSize: 11, fontWeight: 700, color: '#dc2626', textDecoration: 'none' }}>
-                    {other.name}
+                  <Link to={`/characters/${rel.to_character_id}`} className="font-body" style={{ fontSize: 11, fontWeight: 700, color: '#dc2626', textDecoration: 'none' }}>
+                    {rel.to_display_name}
                   </Link>
                 </div>
               )
@@ -368,10 +275,15 @@ export default function Updates() {
         </div>
       )}
 
-      {/* Requests empty state */}
-      {showRequests && pendingRequests.length === 0 && (
+      {/* Friends empty state */}
+      {filter === 'Friends' && friends.length === 0 && (
         <div className="sidebar-card" style={{ padding: 20, textAlign: 'center' }}>
-          <p className="font-body" style={{ fontSize: 10, color: 'var(--color-text-tertiary)' }}>No pending requests.</p>
+          <p className="font-body" style={{ fontSize: 10, color: 'var(--color-text-tertiary)' }}>No friends yet. Visit a player's profile to add them.</p>
+        </div>
+      )}
+      {filter === 'Foes' && foes.length === 0 && (
+        <div className="sidebar-card" style={{ padding: 20, textAlign: 'center' }}>
+          <p className="font-body" style={{ fontSize: 10, color: 'var(--color-text-tertiary)' }}>No foes yet.</p>
         </div>
       )}
     </div>

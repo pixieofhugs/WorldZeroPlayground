@@ -7,7 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from game_config import CURRENT_ERA, EraConfig
 from models.character import Character
 from models.flag import Flag
-from models.submission import Submission
+from models.submission import CollaborationMode, Submission
 from models.task import CharacterTask, CharacterTaskStatus, Task
 from models.vote import Vote
 from schemas.submission import SubmissionCreate
@@ -33,11 +33,25 @@ async def create_submission(
     if character_task is None:
         raise HTTPException(status_code=403, detail="Must be signed up for this task to submit proof.")
 
+    collab_mode = CollaborationMode(data.collaboration_mode or "solo")
+    partner_id = data.partner_character_id
+
+    if collab_mode != CollaborationMode.solo:
+        if partner_id is None:
+            raise HTTPException(status_code=422, detail="Partner character required for collab/duel mode.")
+        if partner_id == character.id:
+            raise HTTPException(status_code=422, detail="Cannot partner with yourself.")
+        partner = await session.get(Character, partner_id)
+        if partner is None:
+            raise HTTPException(status_code=404, detail="Partner character not found.")
+
     submission = Submission(
         task_id=task.id,
         character_id=character.id,
         title=data.title,
         body_text=data.body_text or "",
+        collaboration_mode=collab_mode,
+        partner_character_id=partner_id,
     )
     session.add(submission)
     character_task.status = CharacterTaskStatus.submitted

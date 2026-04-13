@@ -13,8 +13,7 @@ class RelationshipType(enum.Enum):
 
 
 class RelationshipStatus(enum.Enum):
-    pending = "pending"
-    accepted = "accepted"
+    active = "active"
     blocked = "blocked"
 
 

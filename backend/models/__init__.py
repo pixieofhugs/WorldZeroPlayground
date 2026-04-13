@@ -13,6 +13,7 @@ from models.relationship import Relationship
 from models.message import Message
 from models.meta_task import MetaTask, SubmissionMetaTask
 from models.contact import ContactMessage
+from models.taunt_message import TauntMessage
 
 __all__ = [
     "Faction",
@@ -35,4 +36,5 @@ __all__ = [
     "MetaTask",
     "SubmissionMetaTask",
     "ContactMessage",
+    "TauntMessage",
 ]

@@ -23,3 +23,13 @@ class VoteSummary(BaseModel):
     total_votes: int
     average_stars: float
     total_score: float
+
+
+class VoterDetail(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    character_id: int
+    display_name: str
+    avatar_url: str
+    faction_slug: str
+    stars: int

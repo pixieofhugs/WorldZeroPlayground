@@ -1,7 +1,7 @@
 # World Zero — Build State
 
-> Last updated: 2026-04-03
-> Updated by: Claude Code — Session 4 complete
+> Last updated: 2026-04-13
+> Updated by: Claude Code — Backend Gaps session complete
 
 This file is the source of truth for what has been built, what is in progress, and what hasn't been started yet. Claude Code agents should read this before beginning any session and update it when tasks are complete.
 
@@ -16,14 +16,15 @@ This file is the source of truth for what has been built, what is in progress, a
   - `era.py` — Era DB record (stores config_key, not rules)
   - `faction.py` — Faction (FK reference table; rules live in game_config.py)
   - `task.py` — Task, TaskFaction (join), CharacterTask (signup tracking)
-  - `submission.py` — Submission (praxis) + MediaItem
+  - `submission.py` — Submission (praxis) + MediaItem + CollaborationMode (solo/collab/duel)
   - `vote.py` — Vote with voter_account_id for anti-self-vote
-  - `relationship.py` — friend/foe/rival relationships
+  - `relationship.py` — friend/foe relationships (instant declarations, active/blocked status) ✅ redesigned 2026-04-13
   - `message.py` — direct messages between characters
+  - `taunt_message.py` — foe taunt messages with trigger types ✅ 2026-04-13
   - `flag.py` — submission flags
   - `meta_task.py` — meta tasks (stretch goal)
   - `roles.py` — Role + AccountRole for admin
-- `backend/game_config.py` — Complete. EraConfig, FactionConfig, ERA_1 (all 9 factions), CURRENT_ERA
+- `backend/game_config.py` — Complete. EraConfig, FactionConfig (with color), ERA_1 (all 10 factions), CURRENT_ERA, TAUNT_TEMPLATES
 - `backend/db.py` — Async SQLAlchemy engine + session
 - `backend/config.py` — Settings via env vars
 - `backend/alembic/` — Migration scaffolding + initial schema migration applied ✅
@@ -62,6 +63,8 @@ This file is the source of truth for what has been built, what is in progress, a
 - `services/submission.py` — create_submission, edit_submission, flag_submission, compute_submission_score_from_db ✅ 2026-04-01
 - `services/vote.py` — cast_or_update_vote (budget deduction, anti-self-vote, update-is-free logic) ✅ 2026-04-01
 - `services/era.py` — apply_era_reset (driven by EraConfig flags) — reset logic unit-tested via test_era_reset.py; DB service deferred to Session 2
+- `services/relationship_service.py` — create, block, list relationships with display_status computation ✅ 2026-04-13
+- `services/taunt_service.py` — generate_taunt, get_taunts_for_character ✅ 2026-04-13
 
 ### Backend — Layer 4: Routers ✅ 2026-04-02
 `backend/routers/` created. All 40 routes registered and importing cleanly.
@@ -69,10 +72,12 @@ This file is the source of truth for what has been built, what is in progress, a
 - `routers/__init__.py` ✅
 - `routers/auth.py` — GET /auth/google, GET /auth/google/callback, GET /auth/me, POST /auth/logout ✅
 - `routers/characters.py` — GET /characters, GET /characters/{id}, POST /characters, PUT /characters/{id}, DELETE /characters/{id}, GET /characters/{id}/submissions, GET /characters/{id}/relationships ✅
-- `routers/tasks.py` — GET /tasks, GET /tasks/{id}, POST /tasks, PUT /tasks/{id}, POST /tasks/{id}/signup, DELETE /tasks/{id}/signup ✅
+- `routers/tasks.py` — GET /tasks, GET /tasks/{id}, GET /tasks/{id}/signups, POST /tasks, PUT /tasks/{id}, POST /tasks/{id}/signup, DELETE /tasks/{id}/signup ✅
 - `routers/submissions.py` — GET /submissions, GET /submissions/{id}, POST /submissions, PUT /submissions/{id}, POST /submissions/{id}/media, POST /submissions/{id}/flag ✅
-- `routers/votes.py` — POST /submissions/{id}/vote, GET /submissions/{id}/votes ✅
-- `routers/relationships.py` — POST /relationships, PUT /relationships/{id}, DELETE /relationships/{id} ✅
+- `routers/votes.py` — POST /submissions/{id}/vote, GET /submissions/{id}/votes, GET /submissions/{id}/voters ✅
+- `routers/relationships.py` — GET /relationships, POST /relationships, PUT /relationships/{id} (block), DELETE /relationships/{id} ✅ (redesigned: instant declarations, display status)
+- `routers/game_config.py` — GET /game-config (era config, faction colors, level thresholds) ✅ 2026-04-13
+- `routers/meta_tasks.py` — GET /meta-tasks?task_id=X (applicable meta tasks per task) ✅ 2026-04-13
 - `routers/messages.py` — GET /messages, POST /messages, GET /messages/{id} ✅
 - `routers/admin.py` — task approval/retire, submission delete, character ban, admin task create ✅
 - `routers/leaderboard.py` — GET /leaderboard ✅

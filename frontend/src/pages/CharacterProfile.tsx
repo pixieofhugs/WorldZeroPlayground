@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { getCharacter, type CharacterOut } from '../api/characters'
 import { listSubmissions, type SubmissionOut } from '../api/submissions'
-import { listRelationships, createRelationship, deleteRelationship, type RelationshipOut } from '../api/relationships'
+import { listRelationships, createRelationship, deleteRelationship, type RelationshipListItem } from '../api/relationships'
 import SubmissionCard from '../components/SubmissionCard'
 import PageTitle from '../components/ui/PageTitle'
 import LevelPill from '../components/ui/LevelPill'
@@ -22,7 +22,7 @@ export default function CharacterProfile() {
   const dark = theme === 'dark'
   const [character, setCharacter] = useState<CharacterOut | null>(null)
   const [submissions, setSubmissions] = useState<SubmissionOut[]>([])
-  const [relationship, setRelationship] = useState<RelationshipOut | null>(null)
+  const [relationship, setRelationship] = useState<RelationshipListItem | null>(null)
   const [relationshipLoading, setRelationshipLoading] = useState(false)
   const [loading, setLoading] = useState(true)
   const [fetchError, setFetchError] = useState<string | null>(null)
@@ -44,7 +44,7 @@ export default function CharacterProfile() {
     listRelationships()
       .then((rels) => {
         const match = rels.find(
-          (r) => (r.from_character_id === cid || r.to_character_id === cid) && r.status !== 'blocked'
+          (r) => r.to_character_id === cid && r.status !== 'blocked'
         )
         setRelationship(match ?? null)
       })
@@ -160,7 +160,7 @@ export default function CharacterProfile() {
                         padding: '4px 0', textAlign: 'center', borderRadius: 2,
                       }}
                     >
-                      {relationship.status === 'pending' ? `${relationship.type} request pending` : relationship.type === 'friend' ? 'Friends' : 'Foe'}
+                      {relationship.type === 'friend' ? 'Friends' : 'Foe'}
                     </div>
                     <button
                       onClick={handleRemoveRelationship}

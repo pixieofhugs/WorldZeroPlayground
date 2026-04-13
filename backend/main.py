@@ -10,7 +10,7 @@ from sqlalchemy.exc import IntegrityError
 from starlette.middleware.sessions import SessionMiddleware
 
 from config import settings
-from routers import admin, auth, characters, factions, leaderboard, messages, relationships, submissions, tasks, votes
+from routers import admin, auth, characters, factions, game_config, leaderboard, messages, meta_tasks, relationships, submissions, tasks, votes
 from routers import contact
 
 logger = logging.getLogger(__name__)
@@ -18,8 +18,16 @@ logger = logging.getLogger(__name__)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Ensure media directory exists
-    os.makedirs(settings.MEDIA_ROOT, exist_ok=True)
+    # Ensure media directory exists and log diagnostic info
+    media_path = settings.MEDIA_ROOT
+    os.makedirs(media_path, exist_ok=True)
+    file_count = sum(len(files) for _, _, files in os.walk(media_path))
+    logger.info(
+        "Media storage: MEDIA_ROOT=%s exists=%s file_count=%d",
+        media_path,
+        os.path.isdir(media_path),
+        file_count,
+    )
     yield
 
 
@@ -77,6 +85,8 @@ app.include_router(messages.router, prefix="/messages", tags=["messages"])
 app.include_router(leaderboard.router, prefix="/leaderboard", tags=["leaderboard"])
 app.include_router(admin.router, prefix="/admin", tags=["admin"])
 app.include_router(factions.router, prefix="/factions", tags=["factions"])
+app.include_router(game_config.router, prefix="/game-config", tags=["game-config"])
+app.include_router(meta_tasks.router, prefix="/meta-tasks", tags=["meta-tasks"])
 app.include_router(contact.router, prefix="/contact", tags=["contact"])
 
 

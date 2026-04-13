@@ -34,3 +34,12 @@ class CharacterTaskOut(BaseModel):
     task: TaskOut
     status: str
     signed_up_at: datetime
+
+
+class TaskSignupOut(BaseModel):
+    character_id: int
+    display_name: str
+    avatar_url: str
+    faction_slug: str
+    status: str
+    signed_up_at: datetime

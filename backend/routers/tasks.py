@@ -9,7 +9,7 @@ from dependencies import get_current_character
 from models.character import Character
 from models.faction import Faction, FactionStatus
 from models.task import CharacterTask, CharacterTaskStatus, Task, TaskStatus
-from schemas.task import CharacterTaskOut, TaskCreate, TaskOut
+from schemas.task import CharacterTaskOut, TaskCreate, TaskOut, TaskSignupOut
 from services.task import drop_task, propose_task, signup_for_task
 
 router = APIRouter()
@@ -122,6 +122,37 @@ async def list_my_tasks(
     result = await session.execute(query)
     character_tasks = result.scalars().all()
     return [await _build_character_task_out(ct, session) for ct in character_tasks]
+
+
+@router.get("/{task_id}/signups", response_model=list[TaskSignupOut])
+async def list_task_signups(
+    task_id: int,
+    session: AsyncSession = Depends(get_db),
+):
+    task = await session.get(Task, task_id)
+    if task is None:
+        raise HTTPException(status_code=404, detail="Task not found.")
+
+    result = await session.execute(
+        select(CharacterTask, Character)
+        .join(Character, Character.id == CharacterTask.character_id)
+        .where(
+            CharacterTask.task_id == task_id,
+            CharacterTask.status.in_([CharacterTaskStatus.in_progress, CharacterTaskStatus.submitted]),
+        )
+        .order_by(CharacterTask.signed_up_at.asc())
+    )
+    return [
+        TaskSignupOut(
+            character_id=character.id,
+            display_name=character.display_name,
+            avatar_url=character.avatar_url,
+            faction_slug=character.faction_slug,
+            status=character_task.status.value,
+            signed_up_at=character_task.signed_up_at,
+        )
+        for character_task, character in result.all()
+    ]
 
 
 @router.get("/{task_id}", response_model=TaskOut)
