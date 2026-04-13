@@ -6,6 +6,7 @@ interface Props {
   media: MediaItemOut[]
 }
 
+/** Media gallery with rounded images and clean borders (Style Guide §12.5). */
 export default function MediaGallery({ media }: Props) {
   if (media.length === 0) return null
 
@@ -21,7 +22,13 @@ export default function MediaGallery({ media }: Props) {
               key={item.id}
               src={src}
               alt=""
-              className="w-full border-2 border-border object-cover max-h-96"
+              style={{
+                width: '100%',
+                borderRadius: 8,
+                objectFit: 'cover',
+                maxHeight: 384,
+                border: '1px solid var(--color-border)',
+              }}
             />
           )
         }
@@ -31,7 +38,11 @@ export default function MediaGallery({ media }: Props) {
               key={item.id}
               src={src}
               controls
-              className="w-full border-2 border-border"
+              style={{
+                width: '100%',
+                borderRadius: 8,
+                border: '1px solid var(--color-border)',
+              }}
             />
           )
         }
