@@ -1,5 +1,5 @@
 from game_config import ERA_1
-from services.scoring import compute_level, compute_submission_score, compute_vote_budget
+from services.scoring import compute_faction_multiplier, compute_level, compute_submission_score, compute_vote_budget
 
 
 def test_vote_budget_base():
@@ -50,18 +50,41 @@ def test_level_max():
     assert compute_level(score=ERA_1.level_thresholds[-1] + 10000, era=ERA_1) == max_level
 
 
-def test_submission_score_basic():
-    assert compute_submission_score(avg_stars=3.0, task_point_value=10) == 30.0
+def test_submission_score_no_votes():
+    # Base points awarded on submission even with zero votes
+    assert compute_submission_score(task_point_value=10, faction_multiplier=1.0, total_stars=0) == 10.0
 
 
-def test_submission_score_max_stars():
-    assert compute_submission_score(avg_stars=5.0, task_point_value=20) == 100.0
+def test_submission_score_with_votes():
+    # 10 base + 3 stars from one vote
+    assert compute_submission_score(task_point_value=10, faction_multiplier=1.0, total_stars=3) == 13.0
 
 
-def test_submission_score_fractional_stars():
-    result = compute_submission_score(avg_stars=2.5, task_point_value=4)
-    assert result == 10.0
+def test_submission_score_multiple_votes():
+    # 20 base + 5+4 = 9 total stars from two votes
+    assert compute_submission_score(task_point_value=20, faction_multiplier=1.0, total_stars=9) == 29.0
 
 
-def test_submission_score_zero_votes():
-    assert compute_submission_score(avg_stars=0.0, task_point_value=10) == 0.0
+def test_submission_score_with_multiplier():
+    # ua_masters gets 0.8 multiplier: 10 * 0.8 + 5 stars = 13.0
+    assert compute_submission_score(task_point_value=10, faction_multiplier=0.8, total_stars=5) == 13.0
+
+
+def test_faction_multiplier_unaffiliated_task():
+    # "na" tasks use point_multiplier
+    assert compute_faction_multiplier("ua_masters", "na", ERA_1) == ERA_1.factions["ua_masters"].point_multiplier
+
+
+def test_faction_multiplier_own_faction():
+    # gestalt doing a gestalt task gets own_faction_multiplier
+    assert compute_faction_multiplier("gestalt", "gestalt", ERA_1) == ERA_1.factions["gestalt"].own_faction_multiplier
+
+
+def test_faction_multiplier_other_faction():
+    # gestalt doing a ua task gets other_faction_multiplier
+    assert compute_faction_multiplier("gestalt", "ua", ERA_1) == ERA_1.factions["gestalt"].other_faction_multiplier
+
+
+def test_faction_multiplier_unknown_faction():
+    # Unknown faction slug falls back to 1.0
+    assert compute_faction_multiplier("nonexistent", "ua", ERA_1) == 1.0

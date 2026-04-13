@@ -4,6 +4,7 @@ from fastapi import HTTPException
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from game_config import CURRENT_ERA, EraConfig
 from models.character import Character
 from models.flag import Flag
 from models.submission import Submission
@@ -11,7 +12,7 @@ from models.task import CharacterTask, CharacterTaskStatus, Task
 from models.vote import Vote
 from schemas.submission import SubmissionCreate
 from services.era import get_current_era_row, get_or_create_stats
-from services.scoring import compute_submission_score
+from services.scoring import compute_faction_multiplier, compute_submission_score
 
 
 async def create_submission(
@@ -90,14 +91,19 @@ async def flag_submission(
 
 
 async def compute_submission_score_from_db(
-    submission_id: int,
-    task_point_value: int,
+    submission: Submission,
     session: AsyncSession,
+    era: EraConfig = CURRENT_ERA,
 ) -> float:
-    result = await session.execute(
-        select(func.avg(Vote.stars)).where(Vote.submission_id == submission_id)
-    )
-    avg_stars = result.scalar_one_or_none()
-    if avg_stars is None:
+    task = await session.get(Task, submission.task_id)
+    if task is None:
         return 0.0
-    return compute_submission_score(float(avg_stars), task_point_value)
+    author = await session.get(Character, submission.character_id)
+    character_faction_slug = author.faction_slug if author else "na"
+    task_faction_slug = task.primary_faction_slug or "na"
+    faction_multiplier = compute_faction_multiplier(character_faction_slug, task_faction_slug, era)
+    sum_result = await session.execute(
+        select(func.sum(Vote.stars)).where(Vote.submission_id == submission.id)
+    )
+    total_stars = int(sum_result.scalar_one_or_none() or 0)
+    return compute_submission_score(task.point_value, faction_multiplier, total_stars)

@@ -8,7 +8,7 @@ from models.submission import Submission
 from models.task import Task
 from models.vote import Vote
 from services.era import get_current_era_row, get_or_create_stats
-from services.scoring import compute_level, compute_submission_score, compute_vote_budget
+from services.scoring import compute_faction_multiplier, compute_level, compute_submission_score, compute_vote_budget
 
 
 async def _recalculate_author_stats(
@@ -18,6 +18,9 @@ async def _recalculate_author_stats(
 ) -> None:
     """Recompute and persist score, level, and vote budget for a submission author."""
     era_row = await get_current_era_row(session)
+
+    author = await session.get(Character, author_id)
+    character_faction_slug = author.faction_slug if author else "na"
 
     submissions_result = await session.execute(
         select(Submission).where(Submission.character_id == author_id)
@@ -29,12 +32,13 @@ async def _recalculate_author_stats(
         task = await session.get(Task, sub.task_id)
         if task is None:
             continue
-        avg_result = await session.execute(
-            select(func.avg(Vote.stars)).where(Vote.submission_id == sub.id)
+        task_faction_slug = task.primary_faction_slug or "na"
+        faction_multiplier = compute_faction_multiplier(character_faction_slug, task_faction_slug, era)
+        sum_result = await session.execute(
+            select(func.sum(Vote.stars)).where(Vote.submission_id == sub.id)
         )
-        avg_stars = avg_result.scalar_one_or_none()
-        if avg_stars is not None:
-            total_score += compute_submission_score(float(avg_stars), task.point_value)
+        total_stars = int(sum_result.scalar_one_or_none() or 0)
+        total_score += compute_submission_score(task.point_value, faction_multiplier, total_stars)
 
     new_score = int(total_score)
     stats = await get_or_create_stats(session, author_id, era_row.id)

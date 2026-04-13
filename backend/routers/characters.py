@@ -181,9 +181,7 @@ async def get_character_submissions(
     submissions = result.scalars().all()
     out = []
     for sub in submissions:
-        task_result = await session.get(Task, sub.task_id)
-        point_value = task_result.point_value if task_result else 0
-        score = await compute_submission_score_from_db(sub.id, point_value, session)
+        score = await compute_submission_score_from_db(sub, session)
         media_result = await session.execute(
             select(MediaItem)
             .where(MediaItem.submission_id == sub.id)

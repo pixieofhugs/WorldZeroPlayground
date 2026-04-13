@@ -27,9 +27,7 @@ router = APIRouter()
 
 
 async def _build_submission_out(sub: Submission, session: AsyncSession) -> SubmissionOut:
-    task = await session.get(Task, sub.task_id)
-    point_value = task.point_value if task else 0
-    score = await compute_submission_score_from_db(sub.id, point_value, session)
+    score = await compute_submission_score_from_db(sub, session)
     media_result = await session.execute(
         select(MediaItem)
         .where(MediaItem.submission_id == sub.id)

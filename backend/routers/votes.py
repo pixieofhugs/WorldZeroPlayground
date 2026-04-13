@@ -43,10 +43,6 @@ async def get_vote_summary(
     if sub is None:
         raise HTTPException(status_code=404, detail="Submission not found.")
 
-    from models.task import Task
-    task = await session.get(Task, sub.task_id)
-    point_value = task.point_value if task else 0
-
     count_result = await session.execute(
         select(func.count()).select_from(Vote).where(Vote.submission_id == submission_id)
     )
@@ -56,7 +52,7 @@ async def get_vote_summary(
         select(func.avg(Vote.stars)).where(Vote.submission_id == submission_id)
     )
     avg_stars = float(avg_result.scalar_one_or_none() or 0.0)
-    total_score = await compute_submission_score_from_db(submission_id, point_value, session)
+    total_score = await compute_submission_score_from_db(sub, session)
 
     return VoteSummary(
         submission_id=submission_id,
