@@ -3,16 +3,7 @@ import { getFactions } from '../api/factions'
 import type { FactionOut } from '../api/factions'
 import PageTitle from '../components/ui/PageTitle'
 import { extractError } from '../utils/errors'
-
-const FACTION_COLORS: Record<string, string> = {
-  ua: '#6b6a7a',
-  analog: '#15803d',
-  gestalt: '#14532d',
-  snide: '#8a6a20',
-  journeymen: '#c49a3a',
-  singularity: '#7c3aed',
-  ua_masters: '#555555',
-}
+import { factionColor } from '../utils/factions'
 
 export default function Factions() {
   const [factions, setFactions] = useState<FactionOut[]>([])
@@ -41,7 +32,7 @@ export default function Factions() {
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
         {factions.map((f) => {
-          const color = FACTION_COLORS[f.slug] ?? '#6b6a7a'
+          const color = factionColor(f.slug)
           return (
             <div
               key={f.slug}

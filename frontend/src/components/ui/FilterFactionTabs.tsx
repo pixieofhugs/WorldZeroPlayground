@@ -1,22 +1,10 @@
 import type { FactionOut } from '../../api/factions'
+import { factionColor } from '../../utils/factions'
 
 /**
  * Faction filter — Diagonal Banner Tabs (Style Guide §5.3).
  * Pennant shape via clip-path, faction-colored, inactive: desaturated + low opacity.
  */
-
-/** Faction slug → color mapping */
-const FACTION_COLORS: Record<string, string> = {
-  ua: '#6b6a7a',
-  analog: '#15803d',
-  gestalt: '#14532d',
-  snide: '#8a6a20',
-  journeymen: '#c49a3a',
-  singularity: '#7c3aed',
-  ua_masters: '#555555',
-  albescent: '#6b6a7a',
-  aged_out: '#6b6a7a',
-}
 
 interface Props {
   factions: FactionOut[]
@@ -30,7 +18,7 @@ export default function FilterFactionTabs({ factions, value, onChange }: Props) 
       <span className="eyebrow">faction:</span>
       {factions.map((faction) => {
         const active = value === faction.slug
-        const color = FACTION_COLORS[faction.slug] ?? '#6b6a7a'
+        const color = factionColor(faction.slug)
         return (
           <button
             key={faction.slug}

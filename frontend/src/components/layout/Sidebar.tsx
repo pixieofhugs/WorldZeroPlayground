@@ -4,28 +4,7 @@ import { useAuth } from '../../auth/AuthContext'
 import { getMyTasks, type CharacterTaskOut } from '../../api/tasks'
 import { listSubmissions, type SubmissionOut } from '../../api/submissions'
 import { relativeTime } from '../../utils/dates'
-
-/** Faction display names keyed by slug */
-const FACTION_NAMES: Record<string, string> = {
-  ua: 'UA',
-  analog: 'Analog',
-  gestalt: 'Gestalt',
-  snide: 'S.N.I.D.E.',
-  journeymen: 'Journeymen',
-  singularity: 'Singularity',
-  ua_masters: 'UA Masters',
-}
-
-/** Faction color for the avatar orb gradient and accents */
-const FACTION_COLORS: Record<string, string> = {
-  ua: '#6b6a7a',
-  analog: '#15803d',
-  gestalt: '#14532d',
-  snide: '#8a6a20',
-  journeymen: '#c49a3a',
-  singularity: '#7c3aed',
-  ua_masters: '#555555',
-}
+import { factionColor, factionName } from '../../utils/factions'
 
 const MAX_TASK_SLOTS = 20
 
@@ -42,7 +21,7 @@ export default function Sidebar() {
 
   useEffect(() => {
     if (!user) return
-    getMyTasks('active').then(setActiveTasks).catch(() => {})
+    getMyTasks('in_progress').then(setActiveTasks).catch(() => {})
     listSubmissions().then((submissions) => setRecentActivity(submissions.slice(0, 3))).catch(() => {})
   }, [user])
 
@@ -60,7 +39,7 @@ export default function Sidebar() {
               style={{
                 width: 40,
                 height: 40,
-                background: `linear-gradient(135deg, ${FACTION_COLORS[character.faction_slug ?? ''] ?? '#6b6a7a'}, ${FACTION_COLORS[character.faction_slug ?? ''] ?? '#6b6a7a'}88)`,
+                background: `linear-gradient(135deg, ${factionColor(character.faction_slug)}, ${factionColor(character.faction_slug)}88)`,
               }}
             />
             <div className="min-w-0">
@@ -76,10 +55,10 @@ export default function Sidebar() {
                 style={{
                   fontSize: 9,
                   letterSpacing: '0.12em',
-                  color: FACTION_COLORS[character.faction_slug ?? ''] ?? 'var(--color-text-tertiary)',
+                  color: factionColor(character.faction_slug),
                 }}
               >
-                {FACTION_NAMES[character.faction_slug ?? ''] ?? 'Unaffiliated'} · Level {character.level}
+                {factionName(character.faction_slug)} · Level {character.level}
               </span>
             </div>
           </div>
@@ -122,13 +101,13 @@ export default function Sidebar() {
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
             {activeTasks.map((characterTask) => {
-              const factionColor = FACTION_COLORS[characterTask.task.primary_faction_slug ?? ''] ?? '#6b6a7a'
-              const factionName = FACTION_NAMES[characterTask.task.primary_faction_slug ?? ''] ?? 'UA'
+              const taskFactionColor = factionColor(characterTask.task.primary_faction_slug)
+              const taskFactionName = factionName(characterTask.task.primary_faction_slug)
               return (
                 <div
                   key={characterTask.id}
                   style={{
-                    borderLeft: `3px solid ${factionColor}`,
+                    borderLeft: `3px solid ${taskFactionColor}`,
                     paddingLeft: 8,
                   }}
                 >
@@ -140,7 +119,7 @@ export default function Sidebar() {
                     {characterTask.task.title}
                   </Link>
                   <span className="font-body" style={{ fontSize: 8, color: 'var(--color-text-tertiary)' }}>
-                    {factionName} · lvl {characterTask.task.level_required} · {relativeTime(characterTask.signed_up_at)}
+                    {taskFactionName} · lvl {characterTask.task.level_required} · {relativeTime(characterTask.signed_up_at)}
                   </span>
                 </div>
               )
