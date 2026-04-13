@@ -45,13 +45,13 @@ Replace current chip-based filters with three distinct visual types. See style g
 
 ## Phase 4: Dark Mode
 
-- [ ] **Theme toggle** — Add toggle in nav or settings. Store preference in `localStorage` key `wz-theme`. Default to system preference via `prefers-color-scheme`.
-- [ ] **useTheme hook** — Returns `'light' | 'dark'`, manages `data-theme` attribute on `<html>`.
-- [ ] **WatercolorBackground dark variant** — Lower opacity (0.11–0.18) and deep color variants per style guide §2.3.
-- [ ] **Nav dark mode** — `background: rgba(19, 18, 26, 0.92); backdrop-filter: blur(8px)`.
-- [ ] **Card dark variants** — Each faction card has a specifically designed dark variant. See §6.1–6.7 dark mode sections. Singularity card is always dark in both modes.
-- [ ] **Button dark variants** — Propose a task: `background: #f0e6d0; color: #13121a`. Stamps/chips: `bg: #f0e6d0; color: #13121a`.
-- [ ] **Body transition** — 150ms `transition: background-color, color` on body (already in index.css).
+- [x] **Theme toggle** — Add toggle in nav or settings. Store preference in `localStorage` key `wz-theme`. Default to system preference via `prefers-color-scheme`.
+- [x] **useTheme hook** — Returns `'light' | 'dark'`, manages `data-theme` attribute on `<html>`.
+- [x] **WatercolorBackground dark variant** — Lower opacity (0.11–0.18) and deep color variants per style guide §2.3.
+- [x] **Nav dark mode** — `background: rgba(19, 18, 26, 0.92); backdrop-filter: blur(8px)`.
+- [x] **Card dark variants** — Each faction card has a specifically designed dark variant. See §6.1–6.7 dark mode sections. Singularity card is always dark in both modes.
+- [x] **Button dark variants** — Propose a task: `background: #f0e6d0; color: #13121a`. Stamps/chips: `bg: #f0e6d0; color: #13121a`.
+- [x] **Body transition** — 150ms `transition: background-color, color` on body (already in index.css).
 
 ## ~~Phase 5: Sidebar Data Wiring~~ DONE
 
@@ -74,65 +74,65 @@ Replace current chip-based filters with three distinct visual types. See style g
 - [x] **Body text** — Lora 15px, line-height 1.75, drop cap first letter in faction color 58px, italic emphasis in faction color
 - [x] **Collaboration strip** — Overlapping avatar orbs, badge pill (Collab/Duel)
 
-## Phase 8: Voting System (§13)
+## ~~Phase 8: Voting System (§13) DONE
 
-- [ ] **Vote stamps** — Replace star rating with 5 rectangular stamp buttons (1–5) with word labels (a start / solid / good / excellent / legendary). Value-specific border colors.
-- [ ] **Voter tile grid** — Show every voter as a tile: 48×48 avatar, points badge, name. Flex-wrap layout. "+N more" overflow.
-- [ ] **Vote results header** — Total points earned, voter count
-- [ ] **Flag block** — First-class UI element below voter grid. Circular flag icon + explanation + confirmation modal.
+- [x] **Vote stamps** — Replace star rating with 5 rectangular stamp buttons (1–5) with word labels (a start / solid / good / excellent / legendary). Value-specific border colors.
+- [x] **Voter tile grid** — Show every voter as a tile: 48×48 avatar, points badge, name. Flex-wrap layout. "+N more" overflow.
+- [x] **Vote results header** — Total points earned, voter count
+- [x] **Flag block** — First-class UI element below voter grid. Circular flag icon + explanation + confirmation modal.
 
-## Phase 9: Player Profile Page (§14)
+## ~~Phase 9: Player Profile Page (§14) DONE
 
-- [ ] **Faction-framed profile header** — Player's faction card aesthetic as container (same principle as praxis byline). Avatar orb 80px + level badge + action buttons (Friend/Foe/DM or Edit Profile).
-- [ ] **Level track** — Full-width horizontal track of 9 levels (0–8). Completed/current/locked node states. Faction-color connectors. Progress bar to next level.
-- [ ] **Praxis grid** — 3-column grid of praxis cards with thumbnails, voter mini-tiles, "+N more" overflow card
-- [ ] **Friends/Foes panels** — Two-column row. Relation items with avatar orb + score delta. Mutual vs pending states.
+- [x] **Faction-framed profile header** — Player's faction card aesthetic as container (same principle as praxis byline). Avatar orb 80px + level badge + action buttons (Friend/Foe/DM or Edit Profile).
+- [x] **Level track** — Full-width horizontal track of 9 levels (0–8). Completed/current/locked node states. Faction-color connectors. Progress bar to next level.
+- [x] **Praxis grid** — 3-column grid of praxis cards with thumbnails, voter mini-tiles, "+N more" overflow card
+- [x] **Friends/Foes panels** — Two-column row. Relation items with avatar orb + score delta. Mutual vs pending states.
 
-## Phase 10: Task Detail Page (§15)
+## ~~Phase 10: Task Detail Page (§15) DONE
 
-- [ ] **Task hero block** — Faction card archetype expanded to full width (journal page, collage, newspaper, etc.)
-- [ ] **Sign-up block** — Mode selector (Solo/Collab/Duel) as stamp buttons. Conditional fields for collab/duel invites. Faction-color sign-up button with inner dashed border.
-- [ ] **Meta tasks section** — Frosted card, faction-color dots, bonus amounts. Locked tasks at opacity 0.45.
-- [ ] **Praxis gallery** — Two-column grid of completed submissions. Sort toggles (Top rated / Recent).
-- [ ] **"Who else is on this task" sidebar panel** — Signed-up players with relationship badges.
+- [x] **Task hero block** — Faction card archetype expanded to full width (journal page, collage, newspaper, etc.)
+- [x] **Sign-up block** — Mode selector (Solo/Collab/Duel) as stamp buttons. Conditional fields for collab/duel invites. Faction-color sign-up button with inner dashed border.
+- [x] **Meta tasks section** — Frosted card, faction-color dots, bonus amounts. Locked tasks at opacity 0.45.
+- [x] **Praxis gallery** — Two-column grid of completed submissions. Sort toggles (Top rated / Recent).
+- [x] **"Who else is on this task" sidebar panel** — Signed-up players with relationship badges.
 
-## Phase 11: Leaderboard / Players Page (§16)
+## ~~Phase 11: Leaderboard / Players Page (§16) DONE
 
-- [ ] **Podium** — Top 3 players in faction-framed cards. Platform blocks with rank-specific heights/colors.
-- [ ] **Your rank strip** — Highlighted row between podium and table. Rank delta indicator.
-- [ ] **Score toggle** — Era/All-time stamp buttons + faction pennant filter
-- [ ] **Main table** — Frosted card, faction-color left edge accents, Lora serif ranks, avatar orbs, level pills. Your row highlighted. Gap indicator for contextual jump.
-- [ ] **Faction standings sidebar panel** — Horizontal bars per faction proportional to total score.
+- [x] **Podium** — Top 3 players in faction-framed cards. Platform blocks with rank-specific heights/colors.
+- [x] **Your rank strip** — Highlighted row between podium and table. Rank delta indicator.
+- [x] **Score toggle** — Era/All-time stamp buttons + faction pennant filter
+- [x] **Main table** — Frosted card, faction-color left edge accents, Lora serif ranks, avatar orbs, level pills. Your row highlighted. Gap indicator for contextual jump.
+- [x] **Faction standings sidebar panel** — Horizontal bars per faction proportional to total score.
 
-## Phase 12: Updates Feed Page (§17)
+## ~~Phase 12: Updates Feed Page (§17) DONE
 
-- [ ] **Feed filters** — Stamp-style pills: All, Friends, Foes, Your stuff, Global, Requests (with badge count)
-- [ ] **Feed item types** — Base frosted card with 4px left-edge accent + type label pill. Player action, praxis completion, vote notification, collab invite, duel challenge.
-- [ ] **Foe taunts** — Special treatment: aged paper notes with tape strip, torn bottom edge, Special Elite font, auto-generated messages. Red/gold tints.
-- [ ] **Era announcements** — Full-width dark card with gold accent. Pinned on day posted.
-- [ ] **Pending requests sidebar panel** — Avatar orbs + Accept/Decline buttons
-- [ ] **Date separators** — Flanking horizontal rules with day labels
+- [x] **Feed filters** — Stamp-style pills: All, Friends, Foes, Your stuff, Global, Requests (with badge count)
+- [x] **Feed item types** — Base frosted card with 4px left-edge accent + type label pill. Player action, praxis completion, vote notification, collab invite, duel challenge.
+- [x] **Foe taunts** — Special treatment: aged paper notes with tape strip, torn bottom edge, Special Elite font, auto-generated messages. Red/gold tints.
+- [x] **Era announcements** — Full-width dark card with gold accent. Pinned on day posted.
+- [x] **Pending requests sidebar panel** — Avatar orbs + Accept/Decline buttons
+- [x] **Date separators** — Flanking horizontal rules with day labels
 
-## Phase 13: Submit Proof Form (§18)
+## ~~Phase 13: Submit Proof Form (§18) DONE
 
-- [ ] **No sidebar layout** — Single centered column, max-width ~720px
-- [ ] **Task context header** — Faction-framed block with task name, faction, points, collaborator orbs
-- [ ] **Proof title input** — Lora italic 24px, bottom border focus state, rainbow underline bars on input
-- [ ] **Rich text editor** — Minimal toolbar (Bold/Italic/Underline, H1/Quote, Bullet/Link, Insert Image/Video). Lora 14px body. No character/word limit.
-- [ ] **Media upload** — 3-column grid, "Main" badge on first upload, drag-drop zone, file type badges
-- [ ] **Meta tasks section** — Checkboxes with faction-color checked state + bonus amounts
-- [ ] **Submit row** — "Publish proof" faction-color stamp button + "Save draft" outline button
-- [ ] **Contextual panels** — "What makes a good proof post" tips + "Other proofs for this task" peek
+- [x] **No sidebar layout** — Single centered column, max-width ~720px
+- [x] **Task context header** — Faction-framed block with task name, faction, points, collaborator orbs
+- [x] **Proof title input** — Lora italic 24px, bottom border focus state, rainbow underline bars on input
+- [x] **Rich text editor** — Minimal toolbar (Bold/Italic/Underline, H1/Quote, Bullet/Link, Insert Image/Video). Lora 14px body. No character/word limit.
+- [x] **Media upload** — 3-column grid, "Main" badge on first upload, drag-drop zone, file type badges
+- [x] **Meta tasks section** — Checkboxes with faction-color checked state + bonus amounts
+- [x] **Submit row** — "Publish proof" faction-color stamp button + "Save draft" outline button
+- [x] **Contextual panels** — "What makes a good proof post" tips + "Other proofs for this task" peek
 
-## Phase 14: Propose a Task Form (§20)
+## ~~Phase 14: Propose a Task Form (§20) DONE
 
-- [ ] **No sidebar layout** — Two-column grid: form left, tips column right (~280px). No sidebar panels.
-- [ ] **Faction selector** — Row of faction choice tiles with diagonal pennants. Selection determines card wrapper aesthetic.
-- [ ] **Proposal card wrapper** — Form fields inside faction card archetype expanded to full width (sticky note, journal, collage, newspaper, etc.)
-- [ ] **Task name input** — Faction-appropriate font, 22px, bottom-border only, focus transitions to faction color
-- [ ] **Task description** — Rich text editor, faction-appropriate font, 13px
-- [ ] **Suggested difficulty** — Point value number input + connected node level selector (0–5)
-- [ ] **Notes to admin** — Optional textarea with faction-color focus border
-- [ ] **Task preview strip** — Live preview of how the task card will look, updates as user types
-- [ ] **Submit row** — "Submit proposal" faction-color stamp button + "Cancel" outline button
-- [ ] **Tips column** — "What makes a good task" + "Your previous proposals" + "What happens next"
+- [x] **No sidebar layout** — Two-column grid: form left, tips column right (~280px). No sidebar panels.
+- [x] **Faction selector** — Row of faction choice tiles with diagonal pennants. Selection determines card wrapper aesthetic.
+- [x] **Proposal card wrapper** — Form fields inside faction card archetype expanded to full width (sticky note, journal, collage, newspaper, etc.)
+- [x] **Task name input** — Faction-appropriate font, 22px, bottom-border only, focus transitions to faction color
+- [x] **Task description** — Rich text editor, faction-appropriate font, 13px
+- [x] **Suggested difficulty** — Point value number input + connected node level selector (0–5)
+- [x] **Notes to admin** — Optional textarea with faction-color focus border
+- [x] **Task preview strip** — Live preview of how the task card will look, updates as user types
+- [x] **Submit row** — "Submit proposal" faction-color stamp button + "Cancel" outline button
+- [x] **Tips column** — "What makes a good task" + "Your previous proposals" + "What happens next"
