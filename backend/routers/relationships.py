@@ -1,15 +1,17 @@
 import enum
+from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel
-from sqlalchemy import select
+from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import aliased
 
 from db import get_db
 from dependencies import get_current_character
 from models.character import Character
 from models.relationship import Relationship, RelationshipStatus, RelationshipType
-from schemas.relationship import RelationshipCreate, RelationshipOut
+from schemas.relationship import RelationshipCreate, RelationshipDetailOut, RelationshipOut
 
 router = APIRouter()
 
@@ -22,6 +24,61 @@ class RelationshipAction(str, enum.Enum):
 
 class RelationshipUpdate(BaseModel):
     action: RelationshipAction
+
+
+@router.get("", response_model=list[RelationshipDetailOut])
+async def list_relationships(
+    status: Optional[str] = Query(None, description="Filter by status: pending, accepted, blocked"),
+    type: Optional[str] = Query(None, description="Filter by type: friend, foe"),
+    character: Character = Depends(get_current_character),
+    session: AsyncSession = Depends(get_db),
+):
+    """List all relationships where the current character is either sender or recipient."""
+    from_char = aliased(Character, name="from_char")
+    to_char = aliased(Character, name="to_char")
+
+    query = (
+        select(
+            Relationship,
+            from_char.display_name.label("from_display_name"),
+            from_char.faction_slug.label("from_faction_slug"),
+            to_char.display_name.label("to_display_name"),
+            to_char.faction_slug.label("to_faction_slug"),
+        )
+        .join(from_char, Relationship.from_character_id == from_char.id)
+        .join(to_char, Relationship.to_character_id == to_char.id)
+        .where(
+            or_(
+                Relationship.from_character_id == character.id,
+                Relationship.to_character_id == character.id,
+            )
+        )
+    )
+
+    if status:
+        query = query.where(Relationship.status == RelationshipStatus[status])
+    if type:
+        query = query.where(Relationship.type == RelationshipType[type])
+
+    query = query.order_by(Relationship.created_at.desc())
+    result = await session.execute(query)
+    rows = result.all()
+
+    return [
+        RelationshipDetailOut(
+            id=row.Relationship.id,
+            from_character_id=row.Relationship.from_character_id,
+            to_character_id=row.Relationship.to_character_id,
+            type=row.Relationship.type.value,
+            status=row.Relationship.status.value,
+            created_at=row.Relationship.created_at,
+            from_character_display_name=row.from_display_name,
+            from_character_faction_slug=row.from_faction_slug,
+            to_character_display_name=row.to_display_name,
+            to_character_faction_slug=row.to_faction_slug,
+        )
+        for row in rows
+    ]
 
 
 @router.post("", response_model=RelationshipOut, status_code=201)

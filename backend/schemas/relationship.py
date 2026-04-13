@@ -1,5 +1,6 @@
 import enum
 from datetime import datetime
+from typing import Optional
 
 from pydantic import BaseModel, ConfigDict
 
@@ -18,6 +19,21 @@ class RelationshipOut(BaseModel):
     type: str
     status: str
     created_at: datetime
+
+
+class RelationshipDetailOut(BaseModel):
+    """Enriched relationship with character display data — avoids N+1 on frontend."""
+
+    id: int
+    from_character_id: int
+    to_character_id: int
+    type: str
+    status: str
+    created_at: datetime
+    from_character_display_name: str
+    from_character_faction_slug: Optional[str]
+    to_character_display_name: str
+    to_character_faction_slug: Optional[str]
 
 
 class RelationshipCreate(BaseModel):

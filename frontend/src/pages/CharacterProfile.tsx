@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { getCharacter, type CharacterOut } from '../api/characters'
 import { listSubmissions, type SubmissionOut } from '../api/submissions'
+import { listRelationships, createRelationship, deleteRelationship, type RelationshipOut } from '../api/relationships'
 import SubmissionCard from '../components/SubmissionCard'
 import PageTitle from '../components/ui/PageTitle'
 import LevelPill from '../components/ui/LevelPill'
@@ -21,6 +22,8 @@ export default function CharacterProfile() {
   const dark = theme === 'dark'
   const [character, setCharacter] = useState<CharacterOut | null>(null)
   const [submissions, setSubmissions] = useState<SubmissionOut[]>([])
+  const [relationship, setRelationship] = useState<RelationshipOut | null>(null)
+  const [relationshipLoading, setRelationshipLoading] = useState(false)
   const [loading, setLoading] = useState(true)
   const [fetchError, setFetchError] = useState<string | null>(null)
 
@@ -32,6 +35,41 @@ export default function CharacterProfile() {
       .catch((err) => setFetchError(extractError(err, "Couldn't load this character.")))
       .finally(() => setLoading(false))
   }, [id])
+
+  // Fetch relationship with this character (if logged in and not own profile)
+  useEffect(() => {
+    if (!id || !user?.character) return
+    const cid = parseInt(id, 10)
+    if (user.character.id === cid) return
+    listRelationships()
+      .then((rels) => {
+        const match = rels.find(
+          (r) => (r.from_character_id === cid || r.to_character_id === cid) && r.status !== 'blocked'
+        )
+        setRelationship(match ?? null)
+      })
+      .catch(() => {})
+  }, [id, user])
+
+  const handleAddRelationship = async (type: 'friend' | 'foe') => {
+    if (!character) return
+    setRelationshipLoading(true)
+    try {
+      const rel = await createRelationship(character.id, type)
+      setRelationship(rel)
+    } catch { /* ignore — may already exist */ }
+    finally { setRelationshipLoading(false) }
+  }
+
+  const handleRemoveRelationship = async () => {
+    if (!relationship) return
+    setRelationshipLoading(true)
+    try {
+      await deleteRelationship(relationship.id)
+      setRelationship(null)
+    } catch { /* ignore */ }
+    finally { setRelationshipLoading(false) }
+  }
 
   if (loading) return <div className="py-8 font-body text-muted">Loading...</div>
   if (fetchError) return (
@@ -108,6 +146,62 @@ export default function CharacterProfile() {
               >
                 Edit Profile
               </Link>
+            ) : user?.character ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 4, width: '100%' }}>
+                {relationship ? (
+                  <>
+                    {/* Show relationship status */}
+                    <div
+                      style={{
+                        background: relationship.type === 'friend' ? '#14532d' : '#dc2626',
+                        color: 'white',
+                        fontFamily: "'Courier Prime', monospace",
+                        fontSize: 8, textTransform: 'uppercase', letterSpacing: '0.1em',
+                        padding: '4px 0', textAlign: 'center', borderRadius: 2,
+                      }}
+                    >
+                      {relationship.status === 'pending' ? `${relationship.type} request pending` : relationship.type === 'friend' ? 'Friends' : 'Foe'}
+                    </div>
+                    <button
+                      onClick={handleRemoveRelationship}
+                      disabled={relationshipLoading}
+                      className="eyebrow"
+                      style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-text-tertiary)', textAlign: 'center' }}
+                    >
+                      remove
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <button
+                      onClick={() => handleAddRelationship('friend')}
+                      disabled={relationshipLoading}
+                      style={{
+                        background: charFactionColor, color: 'white',
+                        fontFamily: "'Courier Prime', monospace",
+                        fontSize: 8, textTransform: 'uppercase', letterSpacing: '0.1em',
+                        padding: '4px 0', border: 'none', cursor: 'pointer', borderRadius: 2,
+                        opacity: relationshipLoading ? 0.5 : 1,
+                      }}
+                    >
+                      Friend
+                    </button>
+                    <button
+                      onClick={() => handleAddRelationship('foe')}
+                      disabled={relationshipLoading}
+                      style={{
+                        background: 'none', color: '#dc2626',
+                        fontFamily: "'Courier Prime', monospace",
+                        fontSize: 8, textTransform: 'uppercase', letterSpacing: '0.1em',
+                        padding: '3px 0', border: '1.5px solid #dc2626', cursor: 'pointer', borderRadius: 2,
+                        opacity: relationshipLoading ? 0.5 : 1,
+                      }}
+                    >
+                      Foe
+                    </button>
+                  </>
+                )}
+              </div>
             ) : null}
           </div>
 
