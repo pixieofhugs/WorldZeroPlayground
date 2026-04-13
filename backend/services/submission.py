@@ -11,6 +11,7 @@ from models.submission import Submission
 from models.task import CharacterTask, CharacterTaskStatus, Task
 from models.vote import Vote
 from schemas.submission import SubmissionCreate
+from services.character_stats import recalculate_character_stats
 from services.era import get_current_era_row, get_or_create_stats
 from services.scoring import compute_faction_multiplier, compute_submission_score
 
@@ -42,6 +43,8 @@ async def create_submission(
     character_task.status = CharacterTaskStatus.submitted
     await session.commit()
     await session.refresh(submission)
+    await recalculate_character_stats(character.id, session)
+    await session.commit()
     return submission
 
 

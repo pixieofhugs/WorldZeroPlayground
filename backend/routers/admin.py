@@ -38,6 +38,7 @@ from services.admin_service import (
     set_character_stats,
     suspend_account,
 )
+from services.character_stats import recalculate_character_stats
 from services.auth import create_jwt
 
 router = APIRouter()
@@ -149,6 +150,26 @@ async def admin_patch_character_stats(
         level=stats.level,
         votes_available=stats.votes_available,
     )
+
+
+@router.post("/characters/backfill-stats", status_code=200)
+async def backfill_all_character_stats(
+    _: Account = Depends(require_admin),
+    session: AsyncSession = Depends(get_db),
+) -> dict:
+    """Recompute CharacterStats for every character using current vote data.
+
+    Safe to call repeatedly. Use after a scoring formula change to bring all
+    persisted scores in sync.
+    """
+    result = await session.execute(
+        select(Character).where(Character.status != CharacterStatus.banned)
+    )
+    characters = result.scalars().all()
+    for character in characters:
+        await recalculate_character_stats(character.id, session)
+    await session.commit()
+    return {"recalculated": len(characters)}
 
 
 @router.post("/tasks/{task_id}/reactivate", response_model=TaskOut)
