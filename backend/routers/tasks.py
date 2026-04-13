@@ -63,7 +63,7 @@ async def list_tasks(
     else:
         query = query.where(Task.status == TaskStatus.active)
     if level is not None:
-        query = query.where(Task.level_required <= level)
+        query = query.where(Task.level_required >= level)
     if faction:
         query = query.where(Task.primary_faction_slug == faction)
     if min_points is not None:

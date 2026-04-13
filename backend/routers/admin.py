@@ -1,5 +1,7 @@
+from datetime import datetime
+
 from fastapi import APIRouter, Depends, Header, HTTPException
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -8,6 +10,7 @@ from db import get_db
 from dependencies import require_admin
 from models.account import Account
 from models.character import Character, CharacterStatus
+from models.contact import ContactMessage
 from models.roles import AccountRole, Role
 from models.submission import Submission
 from models.task import Task, TaskStatus
@@ -48,6 +51,16 @@ class BanAction(BaseModel):
     banned: bool
 
 
+class ContactMessageOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    name: str
+    email: str
+    message: str
+    created_at: datetime
+
+
 # ---------------------------------------------------------------------------
 # Read / Inspect
 # ---------------------------------------------------------------------------
@@ -59,6 +72,17 @@ async def admin_overview(
     session: AsyncSession = Depends(get_db),
 ) -> OverviewStats:
     return await game_overview(session)
+
+
+@router.get("/messages", response_model=list[ContactMessageOut])
+async def admin_list_messages(
+    _: Account = Depends(require_admin),
+    session: AsyncSession = Depends(get_db),
+) -> list[ContactMessageOut]:
+    result = await session.execute(
+        select(ContactMessage).order_by(ContactMessage.created_at.desc())
+    )
+    return [ContactMessageOut.model_validate(m) for m in result.scalars().all()]
 
 
 @router.get("/accounts", response_model=list[AccountSummary])
@@ -268,17 +292,24 @@ async def admin_cli_token(
 # ---------------------------------------------------------------------------
 
 
-@router.get("/tasks/pending", response_model=list[TaskOut])
+class PendingTaskOut(TaskOut):
+    created_by_name: str = ""
+
+
+@router.get("/tasks/pending", response_model=list[PendingTaskOut])
 async def list_pending_tasks(
     _: Account = Depends(require_admin),
     session: AsyncSession = Depends(get_db),
 ):
     result = await session.execute(
-        select(Task).where(Task.status == TaskStatus.pending).order_by(Task.created_at)
+        select(Task, Character.display_name)
+        .outerjoin(Character, Character.id == Task.created_by)
+        .where(Task.status == TaskStatus.pending)
+        .order_by(Task.created_at)
     )
-    tasks = result.scalars().all()
+    rows = result.all()
     return [
-        TaskOut(
+        PendingTaskOut(
             id=task.id,
             title=task.title,
             description=task.description,
@@ -289,8 +320,9 @@ async def list_pending_tasks(
             primary_faction_slug=task.primary_faction_slug,
             is_task_vision_eligible=task.is_task_vision_eligible,
             created_at=task.created_at,
+            created_by_name=display_name or "",
         )
-        for task in tasks
+        for task, display_name in rows
     ]
 
 
@@ -359,7 +391,7 @@ async def delete_submission(
     sub = await session.get(Submission, submission_id)
     if sub is None:
         raise HTTPException(status_code=404, detail="Submission not found.")
-    await session.delete(sub)
+    sub.is_deleted = True
     await session.commit()
 
 

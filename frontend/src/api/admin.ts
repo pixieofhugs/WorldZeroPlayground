@@ -2,8 +2,25 @@ import api from './axios'
 import type { TaskOut } from './tasks'
 import type { SubmissionOut } from './submissions'
 
-export async function getPendingTasks(): Promise<TaskOut[]> {
-  const { data } = await api.get<TaskOut[]>('/admin/tasks/pending')
+export interface PendingTaskOut extends TaskOut {
+  created_by_name: string
+}
+
+export interface ContactMessageOut {
+  id: number
+  name: string
+  email: string
+  message: string
+  created_at: string
+}
+
+export async function getPendingTasks(): Promise<PendingTaskOut[]> {
+  const { data } = await api.get<PendingTaskOut[]>('/admin/tasks/pending')
+  return data
+}
+
+export async function getMessages(): Promise<ContactMessageOut[]> {
+  const { data } = await api.get<ContactMessageOut[]>('/admin/messages')
   return data
 }
 

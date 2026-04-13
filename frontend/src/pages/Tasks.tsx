@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { listTasks, signupTask, type TaskOut } from '../api/tasks'
 import { getFactions, type FactionOut } from '../api/factions'
 import TaskCard from '../components/TaskCard'
@@ -13,6 +14,7 @@ const LEVEL_FILTERS = [0, 1, 2, 3, 4, 5]
 
 export default function Tasks() {
   const { user } = useAuth()
+  const navigate = useNavigate()
   const characterLevel = user?.character?.level ?? 0
   const characterId = user?.character?.id
 
@@ -48,8 +50,7 @@ export default function Tasks() {
     setSignupMsg(null)
     try {
       await signupTask(id)
-      setSignupMsg({ id, msg: "You're signed up!", ok: true })
-      setTasks((prev) => prev.filter((t) => t.id !== id))
+      navigate(`/tasks/${id}/submit`)
     } catch (err) {
       setSignupMsg({ id, msg: extractError(err, 'Could not sign up — make sure you are logged in.'), ok: false })
     }
@@ -90,7 +91,7 @@ export default function Tasks() {
         /* Flex-wrap container — NOT a grid. Varied card sizes and rotations are intentional (Style Guide §6). */
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', alignItems: 'flex-start' }}>
           {tasks.map((t) => (
-            <TaskCard key={t.id} task={t} onSignup={handleSignup} />
+            <TaskCard key={t.id} task={t} onSignup={user && characterLevel >= t.level_required ? handleSignup : undefined} />
           ))}
         </div>
       )}

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
-import { useParams, Link, useNavigate } from 'react-router-dom'
-import { getTask, getMyTasks, signupTask, type TaskOut } from '../api/tasks'
+import { useParams, Link, useNavigate, useLocation } from 'react-router-dom'
+import { getTask, getMyTasks, signupTask, dropTask, type TaskOut } from '../api/tasks'
 import { listSubmissions, type SubmissionOut } from '../api/submissions'
 import SubmissionCard from '../components/SubmissionCard'
 import { useAuth } from '../auth/AuthContext'
@@ -9,6 +9,7 @@ import { extractError } from '../utils/errors'
 export default function TaskDetail() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
+  const location = useLocation()
   const { user } = useAuth()
   const [task, setTask] = useState<TaskOut | null>(null)
   const [submissions, setSubmissions] = useState<SubmissionOut[]>([])
@@ -19,6 +20,8 @@ export default function TaskDetail() {
 
   useEffect(() => {
     if (!id) return
+    setLoading(true)
+    setIsInProgress(false)
     const taskId = parseInt(id, 10)
     const fetches: Promise<unknown>[] = [getTask(taskId), listSubmissions({ task_id: taskId })]
     if (user) fetches.push(getMyTasks('in_progress'))
@@ -32,7 +35,7 @@ export default function TaskDetail() {
       })
       .catch((err) => setFetchError(extractError(err, "Couldn't load this task.")))
       .finally(() => setLoading(false))
-  }, [id, user])
+  }, [id, location.key])
 
   const mySubmission = user?.character
     ? submissions.find((s) => s.character_id === user.character!.id)
@@ -46,6 +49,17 @@ export default function TaskDetail() {
       navigate(`/tasks/${task.id}/submit`)
     } catch (err) {
       setSignupError(extractError(err, 'Could not sign up for this task.'))
+    }
+  }
+
+  const handleDrop = async () => {
+    if (!task || !window.confirm('Drop this task? You can sign up again later.')) return
+    setSignupError(null)
+    try {
+      await dropTask(task.id)
+      setIsInProgress(false)
+    } catch (err) {
+      setSignupError(extractError(err, 'Could not drop this task.'))
     }
   }
 
@@ -78,11 +92,16 @@ export default function TaskDetail() {
             </Link>
           )}
           {user && !mySubmission && isInProgress && (
-            <Link to={`/tasks/${task.id}/submit`} className="btn-primary shrink-0">
-              in progress → submit
-            </Link>
+            <div className="flex gap-2 shrink-0">
+              <Link to={`/tasks/${task.id}/submit`} className="btn-primary">
+                in progress → submit
+              </Link>
+              <button onClick={handleDrop} className="font-body text-xs text-muted hover:underline">
+                drop
+              </button>
+            </div>
           )}
-          {user && !mySubmission && !isInProgress && (
+          {user && !mySubmission && !isInProgress && (user.character?.level ?? 0) >= task.level_required && (
             <button onClick={handleSignup} className="btn-primary shrink-0">sign up</button>
           )}
         </div>

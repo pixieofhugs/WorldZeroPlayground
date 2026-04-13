@@ -1,7 +1,10 @@
+import io
 import logging
 import os
 import re
 from typing import Optional
+
+from PIL import Image
 
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
 
@@ -230,21 +233,29 @@ async def upload_avatar(
 
     rel_dir = os.path.join(str(character_id), "avatar")
     abs_dir = os.path.join(settings.MEDIA_ROOT, rel_dir)
-    raw_name = os.path.basename(file.filename or "avatar")
-    filename = re.sub(r"[^\w.\-]", "_", raw_name)[:100] or "avatar"
+    filename = "avatar.jpg"
     abs_path = os.path.join(abs_dir, filename)
     rel_path = os.path.join(rel_dir, filename)
+
+    AVATAR_MAX_SIZE = 512
+    AVATAR_JPEG_QUALITY = 85
 
     try:
         os.makedirs(abs_dir, exist_ok=True)
         contents = await file.read()
         if len(contents) > 10 * 1024 * 1024:
             raise HTTPException(status_code=413, detail="Avatar too large (max 10 MB).")
+
+        img = Image.open(io.BytesIO(contents))
+        img = img.convert("RGB")
+        img.thumbnail((AVATAR_MAX_SIZE, AVATAR_MAX_SIZE), Image.LANCZOS)
+        buffer = io.BytesIO()
+        img.save(buffer, format="JPEG", quality=AVATAR_JPEG_QUALITY, optimize=True)
         with open(abs_path, "wb") as f:
-            f.write(contents)
+            f.write(buffer.getvalue())
     except HTTPException:
         raise
-    except OSError:
+    except Exception:
         logger.exception("Failed to save avatar for character %s", character_id)
         raise HTTPException(
             status_code=500,

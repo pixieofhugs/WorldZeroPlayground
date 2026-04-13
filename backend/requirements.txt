@@ -9,6 +9,7 @@ python-jose[cryptography]
 authlib
 itsdangerous
 python-multipart
+Pillow
 httpx
 pytest
 pytest-asyncio

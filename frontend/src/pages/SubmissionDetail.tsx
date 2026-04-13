@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
+import ReactMarkdown from 'react-markdown'
 import { getSubmission, flagSubmission, type SubmissionOut } from '../api/submissions'
 import { getVotes, type VoteSummary } from '../api/votes'
 import MediaGallery from '../components/MediaGallery'
@@ -61,9 +62,6 @@ export default function SubmissionDetail() {
   if (!submission) return <div className="py-8 font-body text-muted">Not found.</div>
 
   const canFlag = (user?.character?.level ?? 0) >= 4 && user?.character?.id !== submission.character_id
-  const bodyText = submission.body_text ?? ''
-  const firstLetter = bodyText.charAt(0)
-  const restOfBody = bodyText.slice(1)
 
   return (
     <div className="py-8 max-w-2xl">
@@ -83,7 +81,6 @@ export default function SubmissionDetail() {
         className="sidebar-card flex items-center gap-3 mb-4"
         style={{ padding: '10px 14px' }}
       >
-        {/* Avatar orb */}
         <Link to={`/characters/${submission.character_id}`}>
           <div
             className="rounded-full shrink-0"
@@ -172,29 +169,13 @@ export default function SubmissionDetail() {
         </div>
       )}
 
-      {/* ── Body Text (§12.6) ── */}
-      {bodyText && (
+      {/* ── Body Text (§12.6) — uses ReactMarkdown for rich content ── */}
+      {submission.body_text && (
         <div
-          className="font-display mb-6"
+          className="font-display mb-6 markdown-preview"
           style={{ fontSize: 15, lineHeight: 1.75, color: '#2a1e10' }}
         >
-          {/* Drop cap */}
-          {firstLetter && (
-            <span
-              style={{
-                float: 'left',
-                fontSize: 58,
-                fontWeight: 700,
-                color: ACCENT,
-                lineHeight: 0.8,
-                marginRight: 6,
-                marginTop: 4,
-              }}
-            >
-              {firstLetter}
-            </span>
-          )}
-          <span style={{ whiteSpace: 'pre-wrap' }}>{restOfBody}</span>
+          <ReactMarkdown>{submission.body_text}</ReactMarkdown>
         </div>
       )}
 
@@ -232,7 +213,6 @@ export default function SubmissionDetail() {
           className="sidebar-card flex items-center gap-3"
           style={{ padding: '10px 14px' }}
         >
-          {/* Flag icon */}
           <div
             style={{
               width: 32,
@@ -244,7 +224,7 @@ export default function SubmissionDetail() {
               justifyContent: 'center',
               fontSize: 14,
               color: 'rgba(220,38,38,0.5)',
-              shrink: 0,
+              flexShrink: 0,
             }}
           >
             ⚑

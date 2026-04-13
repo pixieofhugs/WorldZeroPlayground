@@ -68,7 +68,7 @@ async def list_submissions(
     offset: int = 0,
     session: AsyncSession = Depends(get_db),
 ):
-    query = select(Submission)
+    query = select(Submission).where(Submission.is_deleted == False)
     if task_id:
         query = query.where(Submission.task_id == task_id)
     if character_id:
@@ -83,7 +83,7 @@ async def list_submissions(
 @router.get("/{submission_id}", response_model=SubmissionOut)
 async def get_submission(submission_id: int, session: AsyncSession = Depends(get_db)):
     sub = await session.get(Submission, submission_id)
-    if sub is None:
+    if sub is None or sub.is_deleted:
         raise HTTPException(status_code=404, detail="Submission not found.")
     return await _build_submission_out(sub, session)
 
@@ -153,8 +153,8 @@ async def upload_media(
     try:
         os.makedirs(abs_dir, exist_ok=True)
         contents = await file.read()
-        if len(contents) > 50 * 1024 * 1024:
-            raise HTTPException(status_code=413, detail="File too large (max 50 MB).")
+        if len(contents) > 100 * 1024 * 1024:
+            raise HTTPException(status_code=413, detail="File too large (max 100 MB).")
         with open(abs_path, "wb") as f:
             f.write(contents)
     except HTTPException:

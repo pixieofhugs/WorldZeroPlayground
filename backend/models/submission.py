@@ -22,6 +22,7 @@ class Submission(Base):
     character_id: Mapped[int] = mapped_column(ForeignKey("character.id"), nullable=False)
     title: Mapped[str] = mapped_column(String, nullable=False)
     body_text: Mapped[str] = mapped_column(Text, nullable=False, server_default="")
+    is_deleted: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False, server_default="false")
     is_flagged: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     # flagged_at is nullable: NULL means "not yet flagged" — semantic NULL, not missing data
     flagged_at: Mapped[Optional[datetime]] = mapped_column(

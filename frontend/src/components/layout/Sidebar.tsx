@@ -222,7 +222,7 @@ export default function Sidebar() {
 
       {/* ── Propose a Task Button ── */}
       <Link
-        to="/contact"
+        to="/propose-task"
         className="btn-primary text-center w-full block"
       >
         Propose a Task

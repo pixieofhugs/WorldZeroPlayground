@@ -1,16 +1,18 @@
 import { useEffect, useState } from 'react'
-import { getPendingTasks, approveTask, retireTask, getFlaggedSubmissions, deleteSubmission } from '../api/admin'
+import { getPendingTasks, approveTask, retireTask, getFlaggedSubmissions, deleteSubmission, getMessages } from '../api/admin'
+import type { PendingTaskOut, ContactMessageOut } from '../api/admin'
 import { getFactions, updateFaction } from '../api/factions'
 import type { FactionOut } from '../api/factions'
-import type { TaskOut } from '../api/tasks'
 import type { SubmissionOut } from '../api/submissions'
+import { formatTimestamp } from '../utils/dates'
 import { extractError } from '../utils/errors'
 import PageTitle from '../components/ui/PageTitle'
 
 export default function Admin() {
-  const [pending, setPending] = useState<TaskOut[]>([])
+  const [pending, setPending] = useState<PendingTaskOut[]>([])
   const [flagged, setFlagged] = useState<SubmissionOut[]>([])
   const [factions, setFactions] = useState<FactionOut[]>([])
+  const [messages, setMessages] = useState<ContactMessageOut[]>([])
   const [loading, setLoading] = useState(true)
   const [fetchError, setFetchError] = useState<string | null>(null)
   const [actionError, setActionError] = useState<string | null>(null)
@@ -23,8 +25,8 @@ export default function Admin() {
 
   const refresh = () => {
     setFetchError(null)
-    Promise.all([getPendingTasks(), getFlaggedSubmissions(), getFactions()])
-      .then(([p, f, fa]) => { setPending(p); setFlagged(f); setFactions(fa) })
+    Promise.all([getPendingTasks(), getFlaggedSubmissions(), getFactions(), getMessages()])
+      .then(([p, f, fa, m]) => { setPending(p); setFlagged(f); setFactions(fa); setMessages(m) })
       .catch((err) => setFetchError(extractError(err, "Couldn't load admin data.")))
       .finally(() => setLoading(false))
   }
@@ -128,6 +130,7 @@ export default function Admin() {
                   <p className="font-display text-lg font-bold">{t.title}</p>
                   <p className="font-body text-xs text-muted">
                     {t.point_value} pts · lvl {t.level_required}+ · {t.primary_faction_slug ?? 'unaffiliated'}
+                    {t.created_by_name && ` · by ${t.created_by_name}`}
                   </p>
                 </div>
                 <button onClick={() => void handleApprove(t.id)} className="btn-primary text-xs">approve</button>
@@ -197,7 +200,7 @@ export default function Admin() {
       </section>
 
       {/* Flagged submissions */}
-      <section>
+      <section className="mb-10">
         <h2 className="font-display text-2xl font-bold mb-3 border-b-2 border-border pb-1">
           Flagged Submissions <span className="text-muted text-lg">({flagged.length})</span>
         </h2>
@@ -209,7 +212,7 @@ export default function Admin() {
               <div key={s.id} className="card px-4 py-3 flex items-center gap-4">
                 <div className="flex-1">
                   <p className="font-display text-lg font-bold">{s.title}</p>
-                  <p className="font-body text-xs text-muted">by #{s.character_id}</p>
+                  <p className="font-body text-xs text-muted">by {s.character_display_name || `#${s.character_id}`}</p>
                 </div>
                 {deleteTarget === s.id ? (
                   <div className="flex items-center gap-2 font-body text-xs">
@@ -222,6 +225,30 @@ export default function Admin() {
                     delete
                   </button>
                 )}
+              </div>
+            ))}
+          </div>
+        )}
+      </section>
+
+      {/* Contact Messages */}
+      <section>
+        <h2 className="font-display text-2xl font-bold mb-3 border-b-2 border-border pb-1">
+          Messages <span className="text-muted text-lg">({messages.length})</span>
+        </h2>
+        {messages.length === 0 ? (
+          <p className="font-body text-sm text-muted">No messages.</p>
+        ) : (
+          <div className="flex flex-col gap-3">
+            {messages.map((m) => (
+              <div key={m.id} className="card px-4 py-3">
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex-1">
+                    <p className="font-display text-lg font-bold">{m.name}</p>
+                    <p className="font-body text-xs text-muted">{m.email} · {formatTimestamp(m.created_at)}</p>
+                  </div>
+                </div>
+                <p className="font-body text-sm text-ink mt-2 whitespace-pre-wrap">{m.message}</p>
               </div>
             ))}
           </div>
