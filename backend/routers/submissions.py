@@ -14,7 +14,7 @@ from db import get_db
 from dependencies import get_current_character
 from models.character import Character
 from models.submission import MediaItem, MediaType, Submission
-from models.task import Task
+from models.task import CharacterTask, Task
 from schemas.submission import MediaItemOut, SubmissionCreate, SubmissionOut
 from services.submission import (
     compute_submission_score_from_db,
@@ -34,10 +34,21 @@ async def _build_submission_out(sub: Submission, session: AsyncSession) -> Submi
         .order_by(MediaItem.display_order)
     )
     media = [MediaItemOut.model_validate(media_item) for media_item in media_result.scalars().all()]
+
+    character = await session.get(Character, sub.character_id)
+    character_display_name = character.display_name if character else ""
+
+    task = await session.get(Task, sub.task_id)
+    task_title = task.title if task else ""
+    task_point_value = task.point_value if task else 0
+
     return SubmissionOut(
         id=sub.id,
         task_id=sub.task_id,
         character_id=sub.character_id,
+        character_display_name=character_display_name,
+        task_title=task_title,
+        task_point_value=task_point_value,
         title=sub.title,
         body_text=sub.body_text,
         is_flagged=sub.is_flagged,

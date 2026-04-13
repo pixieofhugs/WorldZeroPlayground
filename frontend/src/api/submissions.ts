@@ -11,6 +11,9 @@ export interface SubmissionOut {
   id: number
   task_id: number
   character_id: number
+  character_display_name: string
+  task_title: string
+  task_point_value: number
   title: string
   body_text: string | null
   is_flagged: boolean

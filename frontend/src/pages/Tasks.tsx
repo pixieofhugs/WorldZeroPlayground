@@ -1,28 +1,30 @@
 import { useEffect, useState } from 'react'
 import { listTasks, signupTask, type TaskOut } from '../api/tasks'
+import { getFactions, type FactionOut } from '../api/factions'
 import TaskCard from '../components/TaskCard'
 import { extractError } from '../utils/errors'
+import { useAuth } from '../auth/AuthContext'
 
-const STATUS_FILTERS = ['All', 'active', 'pending', 'retired']
-const FACTION_FILTERS = [
-  { slug: 'ua', label: 'UA' },
-  { slug: 'ua_masters', label: 'UA Masters' },
-  { slug: 'journeymen', label: 'Journeymen' },
-  { slug: 'gestalt', label: 'Gestalt' },
-  { slug: 'analog', label: 'Analog' },
-  { slug: 'snide', label: 'S.N.I.D.E.' },
-  { slug: 'singularity', label: 'Singularity' },
-]
 const LEVEL_FILTERS = [0, 1, 2, 3, 4, 5]
 
 export default function Tasks() {
+  const { user } = useAuth()
+  const characterLevel = user?.character?.level ?? 0
+  const characterId = user?.character?.id
+
   const [tasks, setTasks] = useState<TaskOut[]>([])
+  const [factions, setFactions] = useState<FactionOut[]>([])
   const [status, setStatus] = useState('All')
   const [faction, setFaction] = useState('')
   const [level, setLevel] = useState<number | ''>('')
   const [loading, setLoading] = useState(true)
   const [fetchError, setFetchError] = useState<string | null>(null)
   const [signupMsg, setSignupMsg] = useState<{ id: number; msg: string; ok: boolean } | null>(null)
+
+  // Fetch factions once for filter chips
+  useEffect(() => {
+    getFactions().then(setFactions).catch(() => {})
+  }, [])
 
   useEffect(() => {
     setLoading(true)
@@ -31,21 +33,29 @@ export default function Tasks() {
       status: status === 'All' ? undefined : status,
       faction: faction || undefined,
       level: level === '' ? undefined : level,
+      exclude_character_id: characterId,
     })
       .then(setTasks)
       .catch((err) => setFetchError(extractError(err, "Couldn't load tasks.")))
       .finally(() => setLoading(false))
-  }, [status, faction, level])
+  }, [status, faction, level, characterId])
 
   const handleSignup = async (id: number) => {
     setSignupMsg(null)
     try {
       await signupTask(id)
       setSignupMsg({ id, msg: "You're signed up!", ok: true })
+      // Remove the task from the list since they just signed up
+      setTasks((prev) => prev.filter((t) => t.id !== id))
     } catch (err) {
       setSignupMsg({ id, msg: extractError(err, 'Could not sign up — make sure you are logged in.'), ok: false })
     }
   }
+
+  // Build status filters based on character level
+  const statusFilters = ['All', 'active']
+  if (characterLevel >= 2) statusFilters.push('retired')
+  if (characterLevel >= 3) statusFilters.push('pending')
 
   return (
     <div className="page">
@@ -57,7 +67,7 @@ export default function Tasks() {
       {/* Filters */}
       <div className="flex flex-wrap gap-2 items-center mb-6">
         <span className="font-body text-xs text-muted">status:</span>
-        {STATUS_FILTERS.map((s) => (
+        {statusFilters.map((s) => (
           <button
             key={s}
             onClick={() => setStatus(s)}
@@ -70,13 +80,13 @@ export default function Tasks() {
         <div className="w-px h-5 bg-border/30 mx-1" />
 
         <span className="font-body text-xs text-muted">faction:</span>
-        {FACTION_FILTERS.map((f) => (
+        {factions.map((f) => (
           <button
             key={f.slug}
             onClick={() => setFaction(faction === f.slug ? '' : f.slug)}
             className={`chip ${faction === f.slug ? 'chip-active' : ''}`}
           >
-            {f.label}
+            {f.name}
           </button>
         ))}
 

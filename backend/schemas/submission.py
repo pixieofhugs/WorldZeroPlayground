@@ -19,6 +19,9 @@ class SubmissionOut(BaseModel):
     id: int
     task_id: int
     character_id: int
+    character_display_name: str = ""
+    task_title: str = ""
+    task_point_value: int = 0
     title: str
     body_text: Optional[str]
     is_flagged: bool

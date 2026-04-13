@@ -7,6 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from db import get_db
 from dependencies import get_current_character
 from models.character import Character
+from models.faction import Faction, FactionStatus
 from models.task import CharacterTask, CharacterTaskStatus, Task, TaskStatus
 from schemas.task import CharacterTaskOut, TaskCreate, TaskOut
 from services.task import drop_task, propose_task, signup_for_task
@@ -42,10 +43,17 @@ async def list_tasks(
     faction: Optional[str] = None,
     min_points: Optional[int] = None,
     max_points: Optional[int] = None,
+    exclude_character_id: Optional[int] = None,
     limit: int = 50,
     offset: int = 0,
     session: AsyncSession = Depends(get_db),
 ):
+    # Collect hidden faction slugs to exclude their tasks
+    hidden_result = await session.execute(
+        select(Faction.slug).where(Faction.status != FactionStatus.visible)
+    )
+    hidden_slugs = [row[0] for row in hidden_result.all()]
+
     query = select(Task)
     if status:
         try:
@@ -62,7 +70,20 @@ async def list_tasks(
         query = query.where(Task.point_value >= min_points)
     if max_points is not None:
         query = query.where(Task.point_value <= max_points)
-    query = query.order_by(Task.created_at.desc()).limit(limit).offset(offset)
+
+    # Exclude tasks from hidden/deprecated factions
+    if hidden_slugs:
+        query = query.where(Task.primary_faction_slug.notin_(hidden_slugs))
+
+    # Exclude tasks the character has already signed up for or completed
+    if exclude_character_id is not None:
+        active_task_ids = select(CharacterTask.task_id).where(
+            CharacterTask.character_id == exclude_character_id,
+            CharacterTask.status.in_([CharacterTaskStatus.in_progress, CharacterTaskStatus.submitted]),
+        )
+        query = query.where(Task.id.notin_(active_task_ids))
+
+    query = query.order_by(Task.level_required.asc(), Task.point_value.desc()).limit(limit).offset(offset)
     result = await session.execute(query)
     tasks = result.scalars().all()
     return [
@@ -191,6 +212,11 @@ async def signup_for_task_route(
         raise HTTPException(status_code=404, detail="Task not found.")
     if task.status != TaskStatus.active:
         raise HTTPException(status_code=422, detail="Can only sign up for active tasks.")
+    # Block signup for tasks belonging to hidden factions
+    if task.primary_faction_slug:
+        faction = await session.get(Faction, task.primary_faction_slug)
+        if faction and faction.status != FactionStatus.visible:
+            raise HTTPException(status_code=422, detail="Cannot sign up for tasks from a hidden faction.")
     ct = await signup_for_task(character, task, session)
     return await _build_character_task_out(ct, session)
 

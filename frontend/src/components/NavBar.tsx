@@ -63,10 +63,10 @@ export default function NavBar() {
             <>
               {user.character ? (
                 <NavLink
-                  to={`/characters/${user.character.id}`}
+                  to={`/characters/${user.character.id}/edit`}
                   className="font-body text-sm text-muted hover:text-ink transition-colors"
                 >
-                  {user.character.username}
+                  {user.character.display_name}
                 </NavLink>
               ) : (
                 <NavLink

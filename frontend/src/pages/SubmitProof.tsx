@@ -1,17 +1,25 @@
-import { useState, useRef } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useState, useRef, useEffect } from 'react'
+import { useParams, useNavigate, Link } from 'react-router-dom'
 import ReactMarkdown from 'react-markdown'
 import { createSubmission, uploadMedia } from '../api/submissions'
+import { getTask, type TaskOut } from '../api/tasks'
 
 export default function SubmitProof() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
+  const [task, setTask] = useState<TaskOut | null>(null)
   const [title, setTitle] = useState('')
   const [body, setBody] = useState('')
   const [files, setFiles] = useState<FileList | null>(null)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
   const fileRef = useRef<HTMLInputElement>(null)
+
+  useEffect(() => {
+    if (id) {
+      getTask(parseInt(id, 10)).then(setTask).catch(() => {})
+    }
+  }, [id])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -36,6 +44,20 @@ export default function SubmitProof() {
   return (
     <div className="page max-w-6xl">
       <h1 className="page-heading">Submit Proof</h1>
+
+      {task && (
+        <div className="card p-4 mb-4">
+          <Link to={`/tasks/${task.id}`} className="font-display text-lg font-bold hover:underline">
+            {task.title}
+          </Link>
+          {task.description && (
+            <p className="font-body text-sm text-muted mt-1 leading-relaxed">{task.description}</p>
+          )}
+          <p className="font-body text-xs text-muted mt-2">
+            Level {task.level_required} &middot; {task.point_value} points
+          </p>
+        </div>
+      )}
 
       <form onSubmit={handleSubmit} className="flex flex-col gap-5">
         {/* Title */}

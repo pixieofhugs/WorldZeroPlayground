@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import type { CharacterOut } from '../api/auth'
+import { mediaUrl } from '../utils/media'
 
 interface Props {
   character: CharacterOut
@@ -15,7 +16,7 @@ export default function CharacterBadge({ character, size = 'md' }: Props) {
     >
       {character.avatar_url ? (
         <img
-          src={character.avatar_url}
+          src={mediaUrl(character.avatar_url)}
           alt={character.username}
           className={`rounded-full border-2 border-border object-cover ${isSmall ? 'w-6 h-6' : 'w-8 h-8'}`}
         />

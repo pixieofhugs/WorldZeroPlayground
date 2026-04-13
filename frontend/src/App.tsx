@@ -14,6 +14,7 @@ import Updates from './pages/Updates'
 import Submissions from './pages/Submissions'
 import Admin from './pages/Admin'
 import CreateCharacter from './pages/CreateCharacter'
+import EditCharacter from './pages/EditCharacter'
 import About from './pages/About'
 import Contact from './pages/Contact'
 import Disclaimer from './pages/Disclaimer'
@@ -46,6 +47,14 @@ export default function App() {
           }
         />
         <Route path="/characters/:id" element={<CharacterProfile />} />
+        <Route
+          path="/characters/:id/edit"
+          element={
+            <ProtectedRoute>
+              <EditCharacter />
+            </ProtectedRoute>
+          }
+        />
         <Route path="/leaderboard" element={<Leaderboard />} />
         <Route path="/factions" element={<Factions />} />
         <Route

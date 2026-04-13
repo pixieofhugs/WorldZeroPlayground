@@ -59,15 +59,18 @@ export default function SubmissionDetail() {
   return (
     <div className="page max-w-2xl">
       <Link to={`/tasks/${submission.task_id}`} className="font-body text-xs text-muted hover:underline">
-        ← back to task
+        ← {submission.task_title || 'back to task'}
       </Link>
+      <p className="font-body text-sm text-muted mt-1 mb-2">
+        Task worth <strong className="text-ink">{submission.task_point_value}</strong> points
+      </p>
 
       <div className="card p-5 my-4">
         <div className="flex items-start justify-between gap-4">
           <h1 className="font-display text-3xl font-bold leading-tight">{submission.title}</h1>
           <div className="flex items-center gap-3 shrink-0">
             <Link to={`/characters/${submission.character_id}`} className="font-body text-xs text-muted hover:underline">
-              by #{submission.character_id}
+              by {submission.character_display_name || `#${submission.character_id}`}
             </Link>
             {user?.character?.id === submission.character_id && (
               <Link to={`/submissions/${submission.id}/edit`} className="font-body text-xs hover:underline">

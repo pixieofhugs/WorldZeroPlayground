@@ -32,6 +32,7 @@ export interface TaskFilters {
   status?: string
   faction?: string
   level?: number
+  exclude_character_id?: number
 }
 
 export async function listTasks(filters?: TaskFilters): Promise<TaskOut[]> {

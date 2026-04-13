@@ -20,9 +20,13 @@ export default function SubmissionCard({ submission }: Props) {
         </p>
       )}
 
+      <Link to={`/tasks/${submission.task_id}`} className="font-body text-xs text-muted hover:underline">
+        {submission.task_title}
+      </Link>
+
       <div className="flex justify-between items-center pt-2 border-t border-dashed border-border/40 font-body text-xs text-muted mt-auto">
         <Link to={`/characters/${submission.character_id}`} className="hover:underline">
-          #{submission.character_id}
+          {submission.character_display_name || `#${submission.character_id}`}
         </Link>
         {submission.score !== null && (
           <span className="font-display text-sm font-bold text-ink">

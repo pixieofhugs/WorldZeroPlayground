@@ -4,6 +4,7 @@ import { getCharacter, type CharacterOut } from '../api/characters'
 import { listSubmissions, type SubmissionOut } from '../api/submissions'
 import SubmissionCard from '../components/SubmissionCard'
 import { extractError } from '../utils/errors'
+import { mediaUrl } from '../utils/media'
 
 export default function CharacterProfile() {
   const { id } = useParams<{ id: string }>()
@@ -37,7 +38,7 @@ export default function CharacterProfile() {
       <div className="card p-6 mb-6 flex gap-5 items-start">
         {character.avatar_url ? (
           <img
-            src={character.avatar_url}
+            src={mediaUrl(character.avatar_url)}
             alt={character.username}
             className="w-20 h-20 rounded-full border-2 border-border shadow-sketch-sm object-cover shrink-0"
           />
