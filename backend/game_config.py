@@ -10,6 +10,17 @@ from dataclasses import dataclass, field
 
 
 @dataclass(frozen=True)
+class TaskDef:
+    """Definition of a single task within an era."""
+    title: str
+    description: str
+    faction_slug: str
+    level_required: int
+    point_value: int
+    is_task_vision_eligible: bool = False
+
+
+@dataclass(frozen=True)
 class FactionConfig:
     slug: str
     name: str
@@ -53,265 +64,28 @@ class EraConfig:
     # Faction configs, keyed by slug
     factions: dict
 
+    # Task definitions for this era
+    tasks: tuple = ()                # tuple[TaskDef, ...]
 
-# -- Faction definitions for Era 1 ------------------------------------------
-
-ERA_1_FACTIONS = {
-    "ua": FactionConfig(
-        slug="ua",
-        name="UA",
-        description="The default starting faction. Full points on all tasks. Must leave at level 3.",
-        color="#6b6a7a",
-        is_selectable=False,          # assigned automatically; not a choosable destination
-        can_always_rejoin=False,
-        own_task_modifier=1.0,
-        other_task_modifier=1.0,
-        collab_own_modifier=1.0,
-        collab_other_modifier=1.0,
-        duel_win_modifier=1.0,
-        duel_loss_modifier=1.0,
-    ),
-    "ua_masters": FactionConfig(
-        slug="ua_masters",
-        name="UA Masters",
-        description="Veterans who aged out of UA. Can sign up for any task at reduced points.",
-        color="#555555",
-        is_selectable=True,
-        can_always_rejoin=True,       # can always be rejoined after defecting
-        own_task_modifier=0.8,
-        other_task_modifier=0.8,
-        collab_own_modifier=0.8,
-        collab_other_modifier=0.8,
-        duel_win_modifier=0.8,
-        duel_loss_modifier=0.8,
-    ),
-    "snide": FactionConfig(
-        slug="snide",
-        name="S.N.I.D.E.",
-        description="Specialists in one-on-one competition. Bonus points for winning duels.",
-        color="#8a6a20",
-        is_selectable=True,
-        can_always_rejoin=False,
-        own_task_modifier=1.0,
-        other_task_modifier=0.7,
-        collab_own_modifier=1.0,
-        collab_other_modifier=0.7,
-        duel_win_modifier=1.5,        # duel win: 150% of base
-        duel_loss_modifier=0.5,       # duel loss: 50% of base
-    ),
-    "gestalt": FactionConfig(
-        slug="gestalt",
-        name="Gestalt",
-        description="Collective-minded. Excel at their own faction's tasks; reduced elsewhere.",
-        color="#14532d",
-        is_selectable=True,
-        can_always_rejoin=False,
-        own_task_modifier=1.1,        # +10% on solo own-faction
-        other_task_modifier=0.7,      # -30% on solo other-faction
-        collab_own_modifier=1.1,      # +10% on collab own-faction
-        collab_other_modifier=0.9,    # -10% on collab other-faction (less penalty)
-        duel_win_modifier=1.0,
-        duel_loss_modifier=1.0,
-    ),
-    "journeymen": FactionConfig(
-        slug="journeymen",
-        name="Journeymen",
-        description="Explorers with access to select retired tasks (Task Vision ability).",
-        color="#c49a3a",
-        is_selectable=True,
-        can_always_rejoin=False,
-        own_task_modifier=1.0,
-        other_task_modifier=0.7,
-        collab_own_modifier=1.0,
-        collab_other_modifier=0.7,
-        duel_win_modifier=1.0,
-        duel_loss_modifier=1.0,
-    ),
-    "analog": FactionConfig(
-        slug="analog",
-        name="Analog",
-        description="Depth over breadth. Can repeat one task per level for points (Double Dipper).",
-        color="#15803d",
-        is_selectable=True,
-        can_always_rejoin=False,
-        own_task_modifier=1.0,
-        other_task_modifier=0.7,
-        collab_own_modifier=1.0,
-        collab_other_modifier=0.7,
-        duel_win_modifier=1.0,
-        duel_loss_modifier=1.0,
-    ),
-    "singularity": FactionConfig(
-        slug="singularity",
-        name="Singularity",
-        description="TBD",
-        color="#7c3aed",
-        is_selectable=True,
-        can_always_rejoin=False,
-        own_task_modifier=1.0,
-        other_task_modifier=1.0,
-        collab_own_modifier=1.0,
-        collab_other_modifier=1.0,
-        duel_win_modifier=1.0,
-        duel_loss_modifier=1.0,
-    ),
-    "albescent": FactionConfig(
-        slug="albescent",
-        name="/Albescent",
-        description="Full points and any meta tasks from any group. Unlock-only.",
-        color="#6b6a7a",
-        is_selectable=False,          # only available as additional character unlock
-        can_always_rejoin=True,       # can always be rejoined after defecting
-        own_task_modifier=1.0,
-        other_task_modifier=1.0,
-        collab_own_modifier=1.0,
-        collab_other_modifier=1.0,
-        duel_win_modifier=1.0,
-        duel_loss_modifier=1.0,
-    ),
-    "aged_out": FactionConfig(
-        slug="aged_out",
-        name="AgedOutOfUA",
-        description="Placeholder faction for characters who hit level 3 while offline.",
-        color="#6b6a7a",
-        is_selectable=False,
-        can_always_rejoin=False,
-        own_task_modifier=1.0,
-        other_task_modifier=1.0,
-        collab_own_modifier=1.0,
-        collab_other_modifier=1.0,
-        duel_win_modifier=1.0,
-        duel_loss_modifier=1.0,
-    ),
-    "na": FactionConfig(
-        slug="na",
-        name="None",
-        description="Sentinel value for tasks with no specific faction affiliation.",
-        color="#a9a9a9",
-        is_selectable=False,
-        can_always_rejoin=False,
-        own_task_modifier=1.0,
-        other_task_modifier=1.0,
-        collab_own_modifier=1.0,
-        collab_other_modifier=1.0,
-        duel_win_modifier=1.0,
-        duel_loss_modifier=1.0,
-    ),
-}
+    # Taunt templates for this era
+    taunt_templates: dict = field(default_factory=dict)  # faction slug → trigger → templates
 
 
-# -- Era definitions ---------------------------------------------------------
-
-ERA_1 = EraConfig(
-    name="Era 1",
-    config_key="era_1",
-    max_task_signups=20,
-    task_submit_level_gap=2,
-    vote_budget_base=100,
-    vote_budget_multiplier=2.0,
-    level_thresholds=(0, 10, 70, 170, 330, 610, 1090, 1840, 3040),
-    reset_score=True,
-    reset_level=True,
-    reset_faction=True,
-    reset_vote_budget=True,
-    reset_all_time_score=False,
-    factions=ERA_1_FACTIONS,
-)
-
-# Future era example -- different mechanics, same structure
-# ERA_2 = EraConfig(
-#     name="Foo Era",
-#     config_key="era_2",
-#     max_task_signups=3,
-#     vote_budget_base=20,
-#     vote_budget_multiplier=3.0,
-#     ...
-# )
-
-# -- The one lever that controls live game mechanics -------------------------
-CURRENT_ERA: EraConfig = ERA_1
+# -- Era configs live in backend/eras/ (one file per era) --------------------
+# To create a new era, copy eras/_template.py and fill it in.
+#
+# Era instances (ERA_1, CURRENT_ERA, etc.) are loaded lazily via __getattr__
+# to avoid circular imports with eras/ package files.
 
 
-# -- Taunt templates ---------------------------------------------------------
-# Keyed by faction slug → trigger type → list of template strings.
-# Use {from_name} and {to_name} as placeholders.
-# A generic "default" key provides fallbacks for factions without custom taunts.
-
-TAUNT_TEMPLATES: dict[str, dict[str, list[str]]] = {
-    "default": {
-        "score_overtake": [
-            "{from_name} just passed {to_name} on the leaderboard. Awkward.",
-            "{to_name}, meet {from_name}'s dust.",
-            "{from_name} overtook {to_name}. The scoreboard doesn't lie.",
-        ],
-        "level_up": [
-            "{from_name} leveled up while {to_name} was napping.",
-            "{from_name} hit a new level. {to_name} remains where they are.",
-        ],
-        "submission_complete": [
-            "{from_name} just completed a task. {to_name} is still thinking about it.",
-            "{from_name} submitted praxis. {to_name}... did not.",
-        ],
-    },
-    "snide": {
-        "score_overtake": [
-            "{from_name} danced past {to_name} on the scoreboard. Elegant, really.",
-            "Oh, {to_name}. {from_name} just made you look silly.",
-            "{from_name} sends their regards from above {to_name} on the leaderboard.",
-        ],
-        "level_up": [
-            "{from_name} ascended. {to_name} can see them from down there.",
-        ],
-        "submission_complete": [
-            "{from_name} finished what {to_name} couldn't start.",
-        ],
-    },
-    "gestalt": {
-        "score_overtake": [
-            "The collective lifts {from_name} above {to_name}. Together, always.",
-            "{from_name} rose past {to_name}. The whole is greater than the parts.",
-        ],
-        "level_up": [
-            "{from_name} grew stronger through community. {to_name} walks alone.",
-        ],
-        "submission_complete": [
-            "{from_name} contributed to the whole. {to_name} remained apart.",
-        ],
-    },
-    "journeymen": {
-        "score_overtake": [
-            "{from_name} found a path past {to_name}. The road provides.",
-            "{from_name} wandered ahead of {to_name}. Not all who wander are lost.",
-        ],
-        "level_up": [
-            "{from_name} discovered a new horizon. {to_name} hasn't packed yet.",
-        ],
-        "submission_complete": [
-            "{from_name} returned from the journey with proof. {to_name} stayed home.",
-        ],
-    },
-    "analog": {
-        "score_overtake": [
-            "{from_name} carved past {to_name} by hand. No shortcuts.",
-            "{from_name} overtook {to_name} the old-fashioned way.",
-        ],
-        "level_up": [
-            "{from_name} leveled up through repetition. {to_name} got bored.",
-        ],
-        "submission_complete": [
-            "{from_name} made something real. {to_name} is still scrolling.",
-        ],
-    },
-    "singularity": {
-        "score_overtake": [
-            "{from_name} computed a path past {to_name}. Inevitable.",
-            "{from_name} surpassed {to_name}. The algorithm does not care.",
-        ],
-        "level_up": [
-            "{from_name} optimized beyond {to_name}'s level.",
-        ],
-        "submission_complete": [
-            "{from_name} executed. {to_name} is still in the queue.",
-        ],
-    },
-}
+def __getattr__(name: str):
+    """Lazy-load era instances to avoid circular imports with eras/ package."""
+    if name in ("ERA_1", "ERA_1_FACTIONS", "CURRENT_ERA", "TAUNT_TEMPLATES"):
+        from eras.era_1 import ERA_1 as _era_1
+        from eras.era_1 import ERA_1_FACTIONS as _factions
+        globals()["ERA_1"] = _era_1
+        globals()["ERA_1_FACTIONS"] = _factions
+        globals()["CURRENT_ERA"] = _era_1
+        globals()["TAUNT_TEMPLATES"] = _era_1.taunt_templates
+        return globals()[name]
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")

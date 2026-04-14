@@ -104,3 +104,50 @@ def test_task_submit_level_gap_non_negative():
 def test_reset_all_time_score_is_false():
     # Per spec: reset_all_time_score is almost always False
     assert ERA_1.reset_all_time_score is False
+
+
+# ---------------------------------------------------------------------------
+# Task definitions
+# ---------------------------------------------------------------------------
+
+
+def test_era1_has_tasks():
+    assert len(ERA_1.tasks) > 0
+
+
+def test_era1_task_count():
+    assert len(ERA_1.tasks) == 45
+
+
+def test_era1_task_faction_slugs_valid():
+    for task_def in ERA_1.tasks:
+        assert task_def.faction_slug in ERA_1.factions, (
+            f"Task '{task_def.title}' references unknown faction '{task_def.faction_slug}'"
+        )
+
+
+def test_era1_task_level_requirements_positive():
+    for task_def in ERA_1.tasks:
+        assert task_def.level_required >= 0, (
+            f"Task '{task_def.title}' has negative level_required"
+        )
+
+
+def test_era1_task_point_values_positive():
+    for task_def in ERA_1.tasks:
+        assert task_def.point_value > 0, (
+            f"Task '{task_def.title}' has non-positive point_value"
+        )
+
+
+# ---------------------------------------------------------------------------
+# Taunt templates
+# ---------------------------------------------------------------------------
+
+
+def test_era1_has_taunt_templates():
+    assert len(ERA_1.taunt_templates) > 0
+
+
+def test_era1_taunt_templates_has_default():
+    assert "default" in ERA_1.taunt_templates

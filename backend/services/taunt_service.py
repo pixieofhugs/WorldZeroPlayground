@@ -9,7 +9,7 @@ from typing import Optional
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from game_config import TAUNT_TEMPLATES
+from game_config import CURRENT_ERA, EraConfig
 from models.character import Character
 from models.taunt_message import TauntMessage, TauntTriggerType
 
@@ -19,13 +19,15 @@ DEFAULT_FACTION = "default"
 def pick_taunt_template(
     faction_slug: str,
     trigger_type: str,
+    era: EraConfig = CURRENT_ERA,
 ) -> Optional[str]:
     """Select a random template string for the given faction and trigger."""
-    faction_templates = TAUNT_TEMPLATES.get(faction_slug, {})
+    templates_dict = era.taunt_templates
+    faction_templates = templates_dict.get(faction_slug, {})
     templates = faction_templates.get(trigger_type)
 
     if not templates:
-        fallback_templates = TAUNT_TEMPLATES.get(DEFAULT_FACTION, {})
+        fallback_templates = templates_dict.get(DEFAULT_FACTION, {})
         templates = fallback_templates.get(trigger_type)
 
     if not templates:
@@ -39,11 +41,13 @@ async def generate_taunt(
     to_character: Character,
     trigger_type: TauntTriggerType,
     session: AsyncSession,
+    era: EraConfig = CURRENT_ERA,
 ) -> Optional[TauntMessage]:
     """Generate and persist a taunt message between foes."""
     template = pick_taunt_template(
         from_character.faction_slug,
         trigger_type.value,
+        era=era,
     )
     if template is None:
         return None
