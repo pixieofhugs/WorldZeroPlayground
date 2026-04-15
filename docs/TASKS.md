@@ -10,26 +10,11 @@
 
 ---
 
-## 🎨 SESSION — Frontend Style Polish
+## 🎨 SESSION — Frontend Style Polish (remaining)
 
-> Migrated from `STYLE_MIGRATION_NOTES.md` (deleted 2026-04-14). The original style migration is
-> structurally complete (CSS variables, faction archetypes, dark mode, custom fonts all shipped).
-> These are the remaining polish items.
+> All high and medium priority items are complete. One low-priority item remains.
 >
 > **Read before starting:** `WORLD_ZERO_STYLE.md`, `frontend/src/index.css`, `frontend/src/utils/factions.ts`.
-
-### High priority
-
-- ✅ **Migrate remaining inline styles to Tailwind / CSS classes.** — 2026-04-15. NavBar, Sidebar, FilterStamps, FilterFactionTabs, FilterLevelNodes, Tasks page, Layout.
-- ✅ **Add responsive breakpoints.** — 2026-04-15. Sidebar hidden below `lg` breakpoint; card container already uses `flex-wrap`.
-- ✅ **Audit non-card components for hardcoded hex.** — 2026-04-15. NavBar, Sidebar, Leaderboard, CharacterProfile, all feed card components cleaned up; new CSS vars added to index.css.
-
-### Medium priority
-
-- ✅ **Switch frontend to consume faction colors from API.** — 2026-04-15. `factionRegistry` in `utils/factions.ts` now populated from `GET /game-config` via `useGameConfig`; hardcoded values remain as initial fallback only.
-- ✅ **Consolidate dark mode in non-card components.** — 2026-04-15. All `dark ? x : y` color ternaries replaced with CSS variable cascades in Updates, TaskDetail, SubmitProof, ProposeTask, CharacterProfile, Leaderboard, and filter components.
-
-### Low priority
 
 - **Full inline-style → Tailwind migration.** Convert all remaining `style={{}}` to Tailwind utilities where practical. Large effort, low urgency.
 
@@ -239,8 +224,6 @@ contradiction.
 
 ## 🟣 SESSION 5+ — Ambitious Frontend (post-launch)
 
-## Completed Sessions
-
 > Do not start until the site is live on worldzero.org and the MVP frontend is stable.
 
 **Vision:** Faction-specific UI themes — each faction gets its own color palette, typography, background textures, and layout variations driven by a `data-faction` attribute on `<body>` + CSS custom properties.
@@ -258,3 +241,15 @@ contradiction.
 
 - **Render deploy config** — not started
 - **GoDaddy DNS config** (external — worldzero.org) — not started
+
+---
+
+## ✅ Completed
+
+### 🎨 Frontend Style Polish — 2026-04-15
+
+- ✅ **Migrate remaining inline styles to Tailwind / CSS classes.** NavBar, Sidebar, FilterStamps, FilterFactionTabs, FilterLevelNodes, Tasks page, Layout.
+- ✅ **Add responsive breakpoints.** Sidebar hidden below `lg` breakpoint; card container already uses `flex-wrap`.
+- ✅ **Audit non-card components for hardcoded hex.** NavBar, Sidebar, Leaderboard, CharacterProfile, all feed card components cleaned up; new CSS vars added to index.css.
+- ✅ **Switch frontend to consume faction colors from API.** `factionRegistry` in `utils/factions.ts` now populated from `GET /game-config` via `useGameConfig`; hardcoded values remain as initial fallback only.
+- ✅ **Consolidate dark mode in non-card components.** All `dark ? x : y` color ternaries replaced with CSS variable cascades in Updates, TaskDetail, SubmitProof, ProposeTask, CharacterProfile, Leaderboard, and filter components.
