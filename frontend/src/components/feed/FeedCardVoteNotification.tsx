@@ -55,7 +55,7 @@ export default function FeedCardVoteNotification({ item }: Props) {
             width: 28,
             height: 28,
             borderRadius: 4,
-            background: '#14532d',
+            background: 'var(--badge-friend)',
             color: '#fff',
             fontFamily: "'Courier Prime', monospace",
             fontSize: 14,
@@ -80,7 +80,7 @@ export default function FeedCardVoteNotification({ item }: Props) {
             fontFamily: "'Courier Prime', monospace",
             fontSize: 10,
             fontWeight: 700,
-            color: '#14532d',
+            color: 'var(--badge-friend)',
           }}
         >
           +{points_earned} pts

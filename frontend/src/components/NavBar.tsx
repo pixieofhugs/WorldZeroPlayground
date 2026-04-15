@@ -45,7 +45,7 @@ export default function NavBar() {
               color: 'var(--color-text-primary)',
               display: 'inline-block',
               borderBottom: '2px solid transparent',
-              backgroundImage: 'linear-gradient(var(--color-bg-page), var(--color-bg-page)), linear-gradient(90deg, #4f46e5, #be185d, #f97316, #16a34a)',
+              backgroundImage: 'linear-gradient(var(--color-bg-page), var(--color-bg-page)), linear-gradient(90deg, var(--underline-3), var(--underline-2), var(--underline-6), var(--underline-5))',
               backgroundSize: '100% calc(100% - 2px), 100% 2px',
               backgroundPosition: 'top, bottom',
               backgroundRepeat: 'no-repeat',
