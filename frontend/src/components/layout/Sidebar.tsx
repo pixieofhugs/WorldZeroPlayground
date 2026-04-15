@@ -40,11 +40,11 @@ export default function Sidebar() {
   const slotPercent = Math.min((slotCount / maxTaskSlots) * 100, 100)
 
   return (
-    <aside className="flex flex-col gap-3" style={{ width: 256 }}>
+    <aside className="flex flex-col gap-3 w-64">
       {/* ── Character Card ── */}
       {character ? (
         <div className="sidebar-card">
-          <div className="eyebrow" style={{ fontSize: 8, marginBottom: 8, color: 'var(--color-text-tertiary)' }}>
+          <div className="eyebrow mb-2" style={{ fontSize: 8, color: 'var(--color-text-tertiary)' }}>
             Your Character
           </div>
           <div className="flex items-center gap-3 mb-3">
@@ -119,32 +119,28 @@ export default function Sidebar() {
           <p className="eyebrow mb-2">
             Pending Requests · {pendingRequests.length}
           </p>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+          <div className="flex flex-col gap-1.5">
             {pendingRequests.map((item, index) => {
               const actorColor = factionColor(item.actor_faction_slug)
               const isCollab = item.type === 'collab_invite'
               return (
                 <div
                   key={`${item.type}-${index}`}
+                  className="flex items-center gap-2 py-1.5"
                   style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 8,
-                    padding: '6px 0',
                     borderTop: index > 0 ? '1px dashed var(--color-border)' : undefined,
                   }}
                 >
                   <div
+                    className="shrink-0 rounded-full"
                     style={{
                       width: 24,
                       height: 24,
-                      borderRadius: '50%',
                       background: `linear-gradient(135deg, ${actorColor}, ${actorColor}88)`,
-                      flexShrink: 0,
                     }}
                   />
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <span className="font-body" style={{ fontSize: 10, fontWeight: 700, color: 'var(--color-text-primary)', display: 'block' }}>
+                  <div className="flex-1 min-w-0">
+                    <span className="font-body block" style={{ fontSize: 10, fontWeight: 700, color: 'var(--color-text-primary)' }}>
                       {item.actor_display_name}
                     </span>
                     <span className="eyebrow" style={{ color: 'var(--color-text-tertiary)' }}>
@@ -167,26 +163,24 @@ export default function Sidebar() {
             No active tasks
           </p>
         ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+          <div className="flex flex-col gap-1.5">
             {activeTasks.map((characterTask) => {
               const taskFactionColor = factionColor(characterTask.task.primary_faction_slug)
               const taskFactionName = factionName(characterTask.task.primary_faction_slug)
               return (
                 <div
                   key={characterTask.id}
+                  className="flex items-start justify-between"
                   style={{
                     borderLeft: `3px solid ${taskFactionColor}`,
                     paddingLeft: 8,
-                    display: 'flex',
-                    alignItems: 'flex-start',
-                    justifyContent: 'space-between',
                   }}
                 >
-                  <div style={{ minWidth: 0 }}>
+                  <div className="min-w-0">
                     <Link
                       to={`/tasks/${characterTask.task.id}/submit`}
-                      className="font-body"
-                      style={{ fontSize: 10, fontWeight: 700, color: 'var(--color-text-primary)', textDecoration: 'none', display: 'block', lineHeight: 1.3 }}
+                      className="font-body block"
+                      style={{ fontSize: 10, fontWeight: 700, color: 'var(--color-text-primary)', textDecoration: 'none', lineHeight: 1.3 }}
                     >
                       {characterTask.task.title}
                     </Link>
@@ -202,20 +196,20 @@ export default function Sidebar() {
         )}
 
         {/* Progress bar */}
-        <div style={{ marginTop: 8 }}>
+        <div className="mt-2">
           <div
+            className="overflow-hidden"
             style={{
               height: 4,
               borderRadius: 2,
               background: 'var(--color-bg-surface-alt)',
-              overflow: 'hidden',
             }}
           >
             <div
               style={{
                 height: '100%',
                 width: `${slotPercent}%`,
-                background: '#4f46e5',
+                background: 'var(--faction-singularity)',
                 borderRadius: 2,
                 transition: 'width 300ms',
               }}
@@ -236,21 +230,21 @@ export default function Sidebar() {
             No activity yet
           </p>
         ) : (
-          <div style={{ display: 'flex', flexDirection: 'column' }}>
+          <div className="flex flex-col">
             {globalActivity.map((item, index) => {
               const isTask = item.type === 'global_task'
               const isEra = item.type === 'era_announcement'
               return (
                 <div
                   key={`${item.type}-${index}`}
+                  className="py-1"
                   style={{
-                    padding: '5px 0',
                     borderTop: index > 0 ? '1px dashed var(--color-border)' : undefined,
                   }}
                 >
                   <div className="font-body" style={{ fontSize: 9, lineHeight: 1.4 }}>
                     {isEra ? (
-                      <span style={{ fontWeight: 700, color: '#c49a3a' }}>
+                      <span style={{ fontWeight: 700, color: 'var(--faction-journeymen)' }}>
                         {item.payload.era_name} has begun
                       </span>
                     ) : isTask ? (

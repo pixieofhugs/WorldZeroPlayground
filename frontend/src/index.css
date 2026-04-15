@@ -134,6 +134,10 @@
   --radius-md:  8px;
   --radius-lg:  12px;
   --radius-xl:  14px;
+
+  /* ── Filter stamp dashed-border (inverts with active state bg) ── */
+  --stamp-active-dashed:   rgba(255, 255, 255, 0.20);
+  --stamp-inactive-dashed: rgba(0, 0, 0, 0.15);
 }
 
 /* ══════════════════════════════════════════
@@ -241,6 +245,10 @@
 
   /* ── Shared tokens ── */
   --nav-blur: 8px;
+
+  /* ── Filter stamp dashed-border (dark-mode inversions) ── */
+  --stamp-active-dashed:   rgba(0, 0, 0, 0.15);
+  --stamp-inactive-dashed: rgba(255, 255, 255, 0.10);
 }
 
 /* ── Type Scale ── */
@@ -391,6 +399,16 @@
     @apply font-display text-4xl font-bold mb-6;
     font-style: italic;
     color: var(--color-text-primary);
+  }
+
+  /* ── Nav links (Courier Prime 10px uppercase — Style Guide §5.1) ── */
+
+  .nav-link {
+    @apply font-body transition-colors;
+    font-size: var(--text-base);
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    padding-bottom: 2px;
   }
 
   /* ── Markdown preview ── */

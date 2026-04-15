@@ -66,7 +66,7 @@ export default function Tasks() {
       <PageTitle title="Tasks" eyebrow={`${tasks.length} shown`} />
 
       {/* Filters — three distinct visual types (Style Guide §5.3) */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 24 }}>
+      <div className="flex flex-col gap-2.5 mb-6">
         <FilterStamps options={statusFilters} value={status} onChange={setStatus} />
         <FilterFactionTabs factions={factions} value={faction} onChange={setFaction} />
         <FilterLevelNodes levels={LEVEL_FILTERS} value={level} onChange={setLevel} />
@@ -89,7 +89,7 @@ export default function Tasks() {
         <p className="font-body text-muted">No tasks match your filters.</p>
       ) : (
         /* Flex-wrap container — NOT a grid. Varied card sizes and rotations are intentional (Style Guide §6). */
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', alignItems: 'flex-start' }}>
+        <div className="flex flex-wrap gap-4 items-start">
           {tasks.map((t) => (
             <TaskCard key={t.id} task={t} onSignup={user && characterLevel >= t.level_required ? handleSignup : undefined} />
           ))}
