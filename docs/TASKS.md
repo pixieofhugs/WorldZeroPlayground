@@ -20,14 +20,14 @@
 
 ### High priority
 
-- **Migrate remaining inline styles to Tailwind / CSS classes.** Components outside `cards/` still use extensive `style={{}}` objects. Priority order: `NavBar`, `Sidebar`, `FilterStamps`, `FilterFactionTabs`, `FilterLevelNodes`.
-- **Add responsive breakpoints.** No media queries currently exist — mobile and tablet views are unhandled. Add Tailwind responsive classes for the layout grid, sidebar collapse, and card wrapping.
-- **Audit non-card components for hardcoded hex.** `NavBar`, `Sidebar`, feed items, profile, leaderboard may still have hardcoded colors that should reference CSS variables.
+- ✅ **Migrate remaining inline styles to Tailwind / CSS classes.** — 2026-04-15. NavBar, Sidebar, FilterStamps, FilterFactionTabs, FilterLevelNodes, Tasks page, Layout.
+- ✅ **Add responsive breakpoints.** — 2026-04-15. Sidebar hidden below `lg` breakpoint; card container already uses `flex-wrap`.
+- ✅ **Audit non-card components for hardcoded hex.** — 2026-04-15. NavBar, Sidebar, Leaderboard, CharacterProfile, all feed card components cleaned up; new CSS vars added to index.css.
 
 ### Medium priority
 
-- **Switch frontend to consume faction colors from API.** Backend already returns colors via `GET /game-config`. `frontend/src/utils/factions.ts` still has hardcoded config — replace with API response.
-- **Consolidate dark mode in non-card components.** Audit `NavBar`, `FilterStamps`, `FilterLevelNodes`, and page components for any remaining `dark ? x : y` ternaries — those should be CSS variable cascades instead.
+- ✅ **Switch frontend to consume faction colors from API.** — 2026-04-15. `factionRegistry` in `utils/factions.ts` now populated from `GET /game-config` via `useGameConfig`; hardcoded values remain as initial fallback only.
+- ✅ **Consolidate dark mode in non-card components.** — 2026-04-15. All `dark ? x : y` color ternaries replaced with CSS variable cascades in Updates, TaskDetail, SubmitProof, ProposeTask, CharacterProfile, Leaderboard, and filter components.
 
 ### Low priority
 
