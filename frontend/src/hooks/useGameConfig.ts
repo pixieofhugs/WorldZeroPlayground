@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { getGameConfig, type GameConfigOut } from '../api/gameConfig'
+import { populateFactionRegistry } from '../utils/factions'
 
 let cachedConfig: GameConfigOut | null = null
 let fetchPromise: Promise<GameConfigOut> | null = null
@@ -20,6 +21,7 @@ export function useGameConfig() {
       fetchPromise = getGameConfig()
         .then((data) => {
           cachedConfig = data
+          populateFactionRegistry(data.factions)
           return data
         })
         .catch(() => {

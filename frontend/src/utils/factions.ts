@@ -9,8 +9,10 @@
  * Use factionCssVar() when you need the CSS variable reference (preferred for styles).
  * Use factionColor() when you need the raw hex value in JS (canvas, SVG generation, etc.).
  *
- * TODO: Replace with API response from GET /factions once the backend returns
- * color fields. Until then, these must be kept in sync manually.
+ * The faction registry is seeded with hardcoded fallback values on startup and overwritten
+ * from GET /game-config via populateFactionRegistry() once the API responds. This means
+ * all components automatically see live API values after the first fetch without any
+ * component-level changes.
  */
 
 export interface FactionConfig {
@@ -20,16 +22,34 @@ export interface FactionConfig {
   color: string
 }
 
-export const FACTIONS: Record<string, FactionConfig> = {
+/** Hardcoded fallback — matches index.css --faction-* values exactly. Used on first render
+ *  before the API response arrives. Do not use these values directly; call factionColor(). */
+const FACTION_FALLBACKS: Record<string, FactionConfig> = {
   ua:          { slug: 'ua',          name: 'UA',          color: '#6b6a7a' },
   analog:      { slug: 'analog',      name: 'Analog',      color: '#15803d' },
   gestalt:     { slug: 'gestalt',     name: 'Gestalt',     color: '#14532d' },
   snide:       { slug: 'snide',       name: 'S.N.I.D.E.',  color: '#8a6a20' },
   journeymen:  { slug: 'journeymen',  name: 'Journeymen',  color: '#c49a3a' },
-  singularity: { slug: 'singularity', name: 'Singularity',  color: '#7c3aed' },
-  ua_masters:  { slug: 'ua_masters',  name: 'UA Masters',   color: '#555555' },
-  albescent:   { slug: 'albescent',   name: '/Albescent',   color: '#6b6a7a' },
-  aged_out:    { slug: 'aged_out',    name: 'Aged Out',     color: '#6b6a7a' },
+  singularity: { slug: 'singularity', name: 'Singularity', color: '#7c3aed' },
+  ua_masters:  { slug: 'ua_masters',  name: 'UA Masters',  color: '#555555' },
+  albescent:   { slug: 'albescent',   name: '/Albescent',  color: '#6b6a7a' },
+  aged_out:    { slug: 'aged_out',    name: 'Aged Out',    color: '#6b6a7a' },
+}
+
+/** Live registry — starts as the fallback, overwritten by populateFactionRegistry(). */
+let factionRegistry: Record<string, FactionConfig> = { ...FACTION_FALLBACKS }
+
+/**
+ * Called once by useGameConfig when the API response arrives.
+ * Updates the runtime registry so all subsequent factionColor() / factionName()
+ * calls return API-sourced values without any component changes.
+ */
+export function populateFactionRegistry(
+  apiFactions: Array<{ slug: string; name: string; color: string }>
+) {
+  for (const f of apiFactions) {
+    factionRegistry[f.slug] = { slug: f.slug, name: f.name, color: f.color }
+  }
 }
 
 /**
@@ -53,13 +73,13 @@ const CSS_KEY: Record<string, string> = {
  * Use this in inline styles: `style={{ background: factionCssVar('analog', 'card-bg') }}`
  *
  * Available suffixes:
- *   (none)       — primary color
- *   'light'      — background tint
- *   'border'     — border color
- *   'card-bg'    — card background
- *   'card-text'  — card text
+ *   (none)        — primary color
+ *   'light'       — background tint
+ *   'border'      — border color
+ *   'card-bg'     — card background
+ *   'card-text'   — card text
  *   'card-accent' — card accent (meta text, decorations)
- *   'card-muted' — card secondary/description text
+ *   'card-muted'  — card secondary/description text
  */
 export function factionCssVar(slug: string | null | undefined, suffix?: string): string {
   const key = CSS_KEY[slug ?? ''] ?? 'ua'
@@ -69,10 +89,15 @@ export function factionCssVar(slug: string | null | undefined, suffix?: string):
 
 /** Get faction color by slug, with fallback (raw hex — light mode only) */
 export function factionColor(slug: string | null | undefined): string {
-  return FACTIONS[slug ?? '']?.color ?? '#6b6a7a'
+  return factionRegistry[slug ?? '']?.color ?? '#6b6a7a'
 }
 
 /** Get faction display name by slug, with fallback */
 export function factionName(slug: string | null | undefined): string {
-  return FACTIONS[slug ?? '']?.name ?? 'Unaffiliated'
+  return factionRegistry[slug ?? '']?.name ?? 'Unaffiliated'
+}
+
+/** Get all factions from the live registry (populated from API after useGameConfig loads) */
+export function getAllFactions(): FactionConfig[] {
+  return Object.values(factionRegistry)
 }

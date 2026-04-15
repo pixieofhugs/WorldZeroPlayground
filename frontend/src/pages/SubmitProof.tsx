@@ -6,7 +6,6 @@ import { getTask, dropTask, type TaskOut } from '../api/tasks'
 import { listCharacters, type CharacterOut } from '../api/characters'
 import LevelPill from '../components/ui/LevelPill'
 import { useAuth } from '../auth/AuthContext'
-import { useTheme } from '../hooks/useTheme'
 import { factionColor, factionName } from '../utils/factions'
 
 const RAINBOW_COLORS = ['#fbbf24', '#be185d', '#4f46e5', '#0e7490', '#16a34a', '#f97316', '#fbbf24', '#be185d']
@@ -29,8 +28,6 @@ export default function SubmitProof() {
   const navigate = useNavigate()
   const location = useLocation()
   const { user, refetch } = useAuth()
-  const { theme } = useTheme()
-  const dark = theme === 'dark'
   const [task, setTask] = useState<TaskOut | null>(null)
   const [title, setTitle] = useState('')
   const [body, setBody] = useState('')
@@ -222,17 +219,17 @@ export default function SubmitProof() {
                 style={{
                   flex: 1,
                   position: 'relative',
-                  border: `2.5px solid ${active ? (dark ? '#f0e6d0' : '#1a1209') : 'var(--color-border)'}`,
+                  border: `2.5px solid ${active ? 'var(--color-text-primary)' : 'var(--color-border)'}`,
                   borderRadius: 0,
-                  background: active ? (dark ? '#f0e6d0' : '#1a1209') : 'var(--color-bg-surface-alt)',
-                  color: active ? (dark ? '#13121a' : '#F7F4EE') : 'var(--color-text-primary)',
+                  background: active ? 'var(--color-text-primary)' : 'var(--color-bg-surface-alt)',
+                  color: active ? 'var(--color-bg-page)' : 'var(--color-text-primary)',
                   fontFamily: "'Courier Prime', monospace",
                   fontSize: 9, fontWeight: 700, textTransform: 'uppercase',
                   letterSpacing: '0.08em', padding: '10px 8px',
                   cursor: 'pointer', textAlign: 'center',
                 }}
               >
-                {active && <span style={{ position: 'absolute', inset: 2, border: '1px dashed rgba(255,255,255,0.2)', pointerEvents: 'none' }} />}
+                {active && <span style={{ position: 'absolute', inset: 2, border: '1px dashed var(--stamp-active-dashed)', pointerEvents: 'none' }} />}
                 <span style={{ display: 'block', fontSize: 18, marginBottom: 4 }}>{icon}</span>
                 <span style={{ display: 'block', marginBottom: 2 }}>{label}</span>
                 <span style={{ display: 'block', fontSize: 7, fontWeight: 400, opacity: 0.7, textTransform: 'none', letterSpacing: '0.02em' }}>{desc}</span>
@@ -255,7 +252,7 @@ export default function SubmitProof() {
                   flex: 1,
                   fontFamily: "'Courier Prime', monospace",
                   fontSize: 12, padding: '8px 12px',
-                  background: dark ? '#1a1209' : '#F7F4EE',
+                  background: 'var(--color-bg-page)',
                   color: 'var(--color-text-primary)',
                   border: '2px solid var(--color-border)',
                   outline: 'none',
@@ -382,12 +379,12 @@ export default function SubmitProof() {
               fontFamily: "'Lora', serif", fontStyle: 'italic', fontSize: 24,
               color: 'var(--color-text-primary)',
               background: 'transparent', border: 'none',
-              borderBottom: `2px solid ${title ? color : (dark ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.12)')}`,
+              borderBottom: `2px solid ${title ? color : 'var(--color-border-strong)'}`,
               outline: 'none', paddingBottom: 6,
               transition: 'border-color 150ms',
             }}
             onFocus={(e) => { e.currentTarget.style.borderBottomColor = color }}
-            onBlur={(e) => { if (!title) e.currentTarget.style.borderBottomColor = dark ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.12)' }}
+            onBlur={(e) => { if (!title) e.currentTarget.style.borderBottomColor = 'var(--color-border-strong)' }}
           />
           {/* Rainbow underline — visible when title has text */}
           {title && (
@@ -416,7 +413,7 @@ export default function SubmitProof() {
               placeholder="Describe what you did..."
               style={{
                 width: '100%',
-                fontFamily: "'Lora', serif", fontSize: 14, color: dark ? '#e8dcc8' : '#2a1e10',
+                fontFamily: "'Lora', serif", fontSize: 14, color: 'var(--color-text-primary)',
                 lineHeight: 1.75, minHeight: 180,
                 background: 'transparent', border: 'none', outline: 'none',
                 resize: 'vertical',
@@ -431,7 +428,7 @@ export default function SubmitProof() {
           {body.trim() && (
             <div style={{ borderTop: '1px dashed var(--color-border)', marginTop: 10, paddingTop: 10 }}>
               <span className="eyebrow" style={{ marginBottom: 6, display: 'block' }}>Preview</span>
-              <div className="markdown-preview font-display" style={{ fontSize: 14, lineHeight: 1.75, color: dark ? '#e8dcc8' : '#2a1e10' }}>
+              <div className="markdown-preview font-display" style={{ fontSize: 14, lineHeight: 1.75, color: 'var(--color-text-primary)' }}>
                 <ReactMarkdown>{body}</ReactMarkdown>
               </div>
             </div>
