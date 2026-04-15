@@ -62,6 +62,29 @@ GET  /submissions/{id}/votes   → VoteSummary { total_votes, average_stars, tot
 GET  /submissions/{id}/voters  → list[VoterDetail]
 ```
 
+### Collaborations (`/collaborations`)
+```
+POST /collaborations                                       → CollaborationCreate { task_id, mode } → CollaborationOut — auth required
+GET  /collaborations/{id}                                  → CollaborationOut (members, document, invite list for members)
+POST /collaborations/{id}/document                         → { body_text } → CollaborationOut (any member)
+POST /collaborations/{id}/invite                           → CollaborationInviteCreate { invitee_character_id } → CollaborationInviteOut (any member)
+POST /collaborations/{id}/invites/{invite_id}/respond      → InviteResponse { accept, drop_task_id? } → CollaborationOut (invitee only)
+POST /collaborations/{id}/submit                           → CollaborationOut (any member; marks caller as submitted)
+POST /collaborations/{id}/edit                             → CollaborationOut (any member; resets all submit states, status → in_progress)
+POST /collaborations/{id}/kick/{character_id}              → CollaborationOut (any member; removes target member)
+GET  /collaborations/{id}/votes                            → list[DuelVoteSummary] (duel only)
+POST /collaborations/{id}/vote                             → CollaborationVoteIn { target_character_id, stars: 1-5 } → VoteOut (duel only; non-members only)
+```
+*Creating a collaboration requires the character to have the task in-progress.*
+*Collaborations require level ≥ 1; duels require level ≥ 2.*
+*Task-list-full (20 tasks): respond with drop_task_id to drop a task and accept in one request.*
+
+### Task Drop (`/tasks`)
+```
+POST /tasks/{id}/drop          → drop an in-progress task to free a slot — auth required
+```
+*(Alias for DELETE /tasks/{id}/signup; added for the invite-accept task-list-full flow.)*
+
 ### Relationships (`/relationships`)
 ```
 GET    /relationships          → list[RelationshipListItem] (query: type, status) — auth required
@@ -175,12 +198,35 @@ level, score, all_time_score,  ← from CharacterStats join
 faction_slug, status, created_at
 ```
 
-### SubmissionOut
+### PraxisOut (solo submissions)
 ```
 id, task_id, character_id, character_display_name, task_title, task_point_value,
 title, body_text, moderation_status, is_withdrawn, admin_note,
-collaboration_mode, partner_character_id, partner_display_name,
 created_at, updated_at, media: list[MediaItemOut], score
+```
+
+### CollaborationOut
+```
+id, task_id, task_title, task_point_value, mode, status, body_text,
+created_by_id, created_at, updated_at,
+members: list[CollaborationMemberOut],
+invites: list[CollaborationInviteOut]  ← only included for members
+```
+
+### CollaborationMemberOut
+```
+character_id, display_name, faction_slug, has_submitted, joined_at
+```
+
+### CollaborationInviteOut
+```
+id, collaboration_id, inviter_id, inviter_display_name,
+invitee_id, invitee_display_name, type, status, created_at
+```
+
+### DuelVoteSummary
+```
+character_id, display_name, total_stars, is_winning
 ```
 
 ### TaskOut

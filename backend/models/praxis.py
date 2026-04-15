@@ -20,18 +20,6 @@ class MediaType(enum.Enum):
     audio = "audio"
 
 
-class CollaborationMode(enum.Enum):
-    solo = "solo"
-    collab = "collab"
-    duel = "duel"
-
-
-class InviteStatus(enum.Enum):
-    pending = "pending"
-    accepted = "accepted"
-    declined = "declined"
-
-
 class ModerationStatus(enum.Enum):
     visible = "visible"
     flagged = "flagged"
@@ -40,6 +28,8 @@ class ModerationStatus(enum.Enum):
 
 
 class Praxis(Base):
+    """Solo praxis (submission). Collaboration and duel submissions use models/collaboration.py."""
+
     __tablename__ = "praxis"
 
     id: Mapped[int] = mapped_column(primary_key=True)
@@ -59,15 +49,6 @@ class Praxis(Base):
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=func.now()
     )
-    collaboration_mode: Mapped[CollaborationMode] = mapped_column(
-        Enum(CollaborationMode, create_type=False), nullable=False, server_default="solo"
-    )
-    partner_character_id: Mapped[Optional[int]] = mapped_column(
-        ForeignKey("character.id"), nullable=True
-    )
-    invite_status: Mapped[Optional[InviteStatus]] = mapped_column(
-        Enum(InviteStatus, create_type=False), nullable=True
-    )
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=func.now(), onupdate=func.now()
     )
@@ -78,16 +59,14 @@ class Praxis(Base):
         back_populates="praxes",
         lazy="selectin",
     )
-    partner: Mapped[Optional["Character"]] = relationship(
-        "Character",
-        foreign_keys=[partner_character_id],
-        lazy="selectin",
-    )
     task: Mapped["Task"] = relationship(
         "Task", back_populates="praxes", lazy="selectin"
     )
     votes: Mapped[List["Vote"]] = relationship(
-        "Vote", back_populates="praxis", lazy="selectin"
+        "Vote",
+        foreign_keys="Vote.praxis_id",
+        back_populates="praxis",
+        lazy="selectin",
     )
     media_items: Mapped[List["MediaItem"]] = relationship(
         "MediaItem",

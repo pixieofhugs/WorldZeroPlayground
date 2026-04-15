@@ -3,6 +3,7 @@ from services.scoring import (
     COLLABORATION_MODE_COLLAB,
     COLLABORATION_MODE_DUEL,
     COLLABORATION_MODE_SOLO,
+    compute_duel_multiplier,
     compute_faction_multiplier,
     compute_level,
     compute_praxis_score,
@@ -77,6 +78,16 @@ def test_praxis_score_with_multiplier():
     assert compute_praxis_score(task_point_value=10, faction_multiplier=0.8, total_stars=5) == 13.0
 
 
+def test_praxis_score_with_meta_task_points():
+    # (10 + 5) * 1.0 * 1.0 + 3 = 18.0
+    assert compute_praxis_score(task_point_value=10, faction_multiplier=1.0, total_stars=3, meta_task_points=5) == 18.0
+
+
+def test_praxis_score_with_duel_multiplier():
+    # (10 + 0) * 1.0 * 1.5 + 4 = 19.0
+    assert compute_praxis_score(task_point_value=10, faction_multiplier=1.0, total_stars=4, duel_multiplier=1.5) == 19.0
+
+
 # ---------------------------------------------------------------------------
 # Solo mode faction multiplier tests
 # ---------------------------------------------------------------------------
@@ -141,44 +152,60 @@ def test_collab_unaffiliated_task():
 
 
 # ---------------------------------------------------------------------------
-# Duel mode faction multiplier tests
+# Duel multiplier tests (compute_duel_multiplier)
 # ---------------------------------------------------------------------------
 
 
-def test_duel_win():
-    result = compute_faction_multiplier(
-        "snide", "ua", ERA_1,
-        collaboration_mode=COLLABORATION_MODE_DUEL,
-        is_duel_winner=True,
-    )
+def test_duel_win_snide():
+    result = compute_duel_multiplier("snide", "gestalt", is_winner=True, is_tied=False, era=ERA_1)
     assert result == ERA_1.factions["snide"].duel_win_modifier
+    assert result == 2.0
+
+
+def test_duel_loss_snide():
+    result = compute_duel_multiplier("snide", "gestalt", is_winner=False, is_tied=False, era=ERA_1)
+    assert result == ERA_1.factions["snide"].duel_loss_modifier
+    assert result == 0.0
+
+
+def test_duel_win_standard():
+    result = compute_duel_multiplier("gestalt", "snide", is_winner=True, is_tied=False, era=ERA_1)
+    assert result == ERA_1.factions["gestalt"].duel_win_modifier
     assert result == 1.5
 
 
-def test_duel_loss():
-    result = compute_faction_multiplier(
-        "snide", "ua", ERA_1,
-        collaboration_mode=COLLABORATION_MODE_DUEL,
-        is_duel_winner=False,
-    )
-    assert result == ERA_1.factions["snide"].duel_loss_modifier
+def test_duel_loss_standard():
+    result = compute_duel_multiplier("gestalt", "snide", is_winner=False, is_tied=False, era=ERA_1)
+    assert result == ERA_1.factions["gestalt"].duel_loss_modifier
     assert result == 0.5
 
 
-def test_duel_non_snide_faction():
-    # Non-duel-specialist factions get 1.0 on both win and loss
-    result_win = compute_faction_multiplier(
-        "gestalt", "ua", ERA_1,
-        collaboration_mode=COLLABORATION_MODE_DUEL,
-        is_duel_winner=True,
-    )
-    result_loss = compute_faction_multiplier(
-        "gestalt", "ua", ERA_1,
-        collaboration_mode=COLLABORATION_MODE_DUEL,
-        is_duel_winner=False,
-    )
-    assert result_win == 1.0
-    assert result_loss == 1.0
+def test_duel_tie_no_snide():
+    # No Snide involved → both get 1.0
+    result_a = compute_duel_multiplier("gestalt", "journeymen", is_winner=False, is_tied=True, era=ERA_1)
+    result_b = compute_duel_multiplier("journeymen", "gestalt", is_winner=False, is_tied=True, era=ERA_1)
+    assert result_a == 1.0
+    assert result_b == 1.0
+
+
+def test_duel_tie_one_snide_snide_wins():
+    # Tie with one Snide: Snide gets win rate (2.0), other gets loss rate (0.5)
+    snide_result = compute_duel_multiplier("snide", "gestalt", is_winner=False, is_tied=True, era=ERA_1)
+    other_result = compute_duel_multiplier("gestalt", "snide", is_winner=False, is_tied=True, era=ERA_1)
+    assert snide_result == ERA_1.factions["snide"].duel_win_modifier
+    assert other_result == ERA_1.factions["gestalt"].duel_loss_modifier
+
+
+def test_duel_tie_both_snide():
+    # Both Snide → both get 1.0 (not one-is-snide rule)
+    result = compute_duel_multiplier("snide", "snide", is_winner=False, is_tied=True, era=ERA_1)
+    assert result == 1.0
+
+
+def test_duel_faction_multiplier_ignores_duel_mode():
+    # compute_faction_multiplier with duel context uses own/other task logic (not duel win/loss)
+    result = compute_faction_multiplier("gestalt", "gestalt", ERA_1)
+    assert result == ERA_1.factions["gestalt"].own_task_modifier
 
 
 # ---------------------------------------------------------------------------

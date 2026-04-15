@@ -23,8 +23,8 @@ ERA_1_FACTIONS = {
         other_task_modifier=1.0,
         collab_own_modifier=1.0,
         collab_other_modifier=1.0,
-        duel_win_modifier=1.0,
-        duel_loss_modifier=1.0,
+        duel_win_modifier=1.5,
+        duel_loss_modifier=0.5,
     ),
     "ua_masters": FactionConfig(
         slug="ua_masters",
@@ -51,8 +51,8 @@ ERA_1_FACTIONS = {
         other_task_modifier=0.7,
         collab_own_modifier=1.0,
         collab_other_modifier=0.7,
-        duel_win_modifier=1.5,        # duel win: 150% of base
-        duel_loss_modifier=0.5,       # duel loss: 50% of base
+        duel_win_modifier=2.0,        # duel win: 200% of base (Snide high-risk bonus)
+        duel_loss_modifier=0.0,       # duel loss: 0% of base (Snide high-risk penalty)
     ),
     "gestalt": FactionConfig(
         slug="gestalt",
@@ -65,8 +65,8 @@ ERA_1_FACTIONS = {
         other_task_modifier=0.7,      # -30% on solo other-faction
         collab_own_modifier=1.1,      # +10% on collab own-faction
         collab_other_modifier=0.9,    # -10% on collab other-faction (less penalty)
-        duel_win_modifier=1.0,
-        duel_loss_modifier=1.0,
+        duel_win_modifier=1.5,
+        duel_loss_modifier=0.5,
     ),
     "journeymen": FactionConfig(
         slug="journeymen",
@@ -79,8 +79,8 @@ ERA_1_FACTIONS = {
         other_task_modifier=0.7,
         collab_own_modifier=1.0,
         collab_other_modifier=0.7,
-        duel_win_modifier=1.0,
-        duel_loss_modifier=1.0,
+        duel_win_modifier=1.5,
+        duel_loss_modifier=0.5,
     ),
     "analog": FactionConfig(
         slug="analog",
@@ -93,8 +93,8 @@ ERA_1_FACTIONS = {
         other_task_modifier=0.7,
         collab_own_modifier=1.0,
         collab_other_modifier=0.7,
-        duel_win_modifier=1.0,
-        duel_loss_modifier=1.0,
+        duel_win_modifier=1.5,
+        duel_loss_modifier=0.5,
     ),
     "singularity": FactionConfig(
         slug="singularity",
@@ -107,8 +107,8 @@ ERA_1_FACTIONS = {
         other_task_modifier=1.0,
         collab_own_modifier=1.0,
         collab_other_modifier=1.0,
-        duel_win_modifier=1.0,
-        duel_loss_modifier=1.0,
+        duel_win_modifier=1.5,
+        duel_loss_modifier=0.5,
     ),
     "albescent": FactionConfig(
         slug="albescent",
@@ -121,8 +121,8 @@ ERA_1_FACTIONS = {
         other_task_modifier=1.0,
         collab_own_modifier=1.0,
         collab_other_modifier=1.0,
-        duel_win_modifier=1.0,
-        duel_loss_modifier=1.0,
+        duel_win_modifier=1.5,
+        duel_loss_modifier=0.5,
     ),
     "aged_out": FactionConfig(
         slug="aged_out",
@@ -135,8 +135,8 @@ ERA_1_FACTIONS = {
         other_task_modifier=1.0,
         collab_own_modifier=1.0,
         collab_other_modifier=1.0,
-        duel_win_modifier=1.0,
-        duel_loss_modifier=1.0,
+        duel_win_modifier=1.5,
+        duel_loss_modifier=0.5,
     ),
     "na": FactionConfig(
         slug="na",
@@ -149,8 +149,8 @@ ERA_1_FACTIONS = {
         other_task_modifier=1.0,
         collab_own_modifier=1.0,
         collab_other_modifier=1.0,
-        duel_win_modifier=1.0,
-        duel_loss_modifier=1.0,
+        duel_win_modifier=1.5,
+        duel_loss_modifier=0.5,
     ),
 }
 

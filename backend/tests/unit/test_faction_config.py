@@ -17,8 +17,8 @@ def test_gestalt_collab_modifiers():
 
 def test_snide_duel_modifiers():
     config = ERA_1.factions["snide"]
-    assert config.duel_win_modifier == 1.5
-    assert config.duel_loss_modifier == 0.5
+    assert config.duel_win_modifier == 2.0   # Snide high-risk bonus
+    assert config.duel_loss_modifier == 0.0  # Snide high-risk penalty
 
 
 def test_snide_other_faction_penalty():

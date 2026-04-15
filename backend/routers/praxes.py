@@ -17,10 +17,8 @@ from models.praxis import MediaItem, MediaType, ModerationStatus, Praxis
 from models.task import CharacterTask, Task
 from schemas.praxis import MediaItemOut, PraxisCreate, PraxisOut
 from services.praxis import (
-    accept_invite,
     build_praxis_out,
     create_praxis,
-    decline_invite,
     edit_praxis,
     flag_praxis,
     resubmit_praxis,
@@ -213,25 +211,6 @@ async def delete_media(
     await session.commit()
     return Response(status_code=204)
 
-
-@router.post("/{praxis_id}/accept-invite", response_model=PraxisOut)
-async def accept_invite_route(
-    praxis_id: int,
-    character: Character = Depends(get_current_character),
-    session: AsyncSession = Depends(get_db),
-):
-    praxis = await accept_invite(praxis_id, character.id, session)
-    return await build_praxis_out(praxis, session)
-
-
-@router.post("/{praxis_id}/decline-invite", response_model=PraxisOut)
-async def decline_invite_route(
-    praxis_id: int,
-    character: Character = Depends(get_current_character),
-    session: AsyncSession = Depends(get_db),
-):
-    praxis = await decline_invite(praxis_id, character.id, session)
-    return await build_praxis_out(praxis, session)
 
 
 @router.post("/{praxis_id}/flag", response_model=PraxisOut)

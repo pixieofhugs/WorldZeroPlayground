@@ -218,15 +218,14 @@ Do not "fix" them — they are deliberately parked until v2. See
 
 | Feature | What exists | What's missing |
 |---|---|---|
-| MetaTask scoring | `models/meta_task.py`, `SubmissionMetaTask` schema | No service applies meta-task bonuses. |
-| Duel resolution | `Vote.duel_vote_for` column, `FactionConfig.duel_win_modifier`/`duel_loss_modifier`, `CollaborationMode.duel` | No service decides the duel winner or awards points. |
 | Multi-faction tasks | `TaskFaction` junction table | Unused. `Task.primary_faction_slug` is the only faction link in live code. |
 | Task Vision (Journeymen) | `Task.is_task_vision_eligible` column | No service exposes retired tasks to Journeymen. |
 | Double Dipper (Analog) | `models/analog_double_dipper.py` | No service tracks per-level task repeats. |
 
-**Already implemented — do not confuse with the above:** faction multipliers
-*are* applied by `services/character_stats.py::recalculate_character_stats`
-via `compute_faction_multiplier`. Only the exotic cases above are deferred.
+**Already implemented — do not confuse with the above:** faction multipliers, MetaTask scoring,
+Collaboration, and Duel resolution are *all* live. `services/scoring.py::compute_praxis_score`
+applies meta-task bonuses and duel multipliers. `services/collaboration.py` handles the full
+collab/duel lifecycle. Only the exotic cases in the table above remain deferred.
 
 ---
 

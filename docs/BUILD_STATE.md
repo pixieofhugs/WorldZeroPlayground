@@ -1,7 +1,7 @@
 # World Zero — Build State
 
-> Last updated: 2026-04-13
-> Updated by: Claude Code — Backend Gaps session complete
+> Last updated: 2026-04-15
+> Updated by: Claude Code — Collaboration & Duel feature complete
 
 This file is the source of truth for what has been built, what is in progress, and what hasn't been started yet. Claude Code agents should read this before beginning any session and update it when tasks are complete.
 
@@ -145,6 +145,35 @@ All migrations use `create_type=False` on `sa.Enum()` in `add_column`/`create_ta
 - `frontend/src/api/taunts.ts` — Taunts API client ✅ 2026-04-14
 - NavBar links verified (Tasks, Praxis /submissions, Players /leaderboard, Groups, Updates) ✅
 - Dev server running on port 5173 (`npm run dev`) ✅
+- **Collaboration & Duel feature ✅ 2026-04-15**
+  - `backend/models/collaboration.py` — Collaboration, CollaborationMember, CollaborationInvite models ✅
+  - `backend/models/praxis.py` — Removed legacy partner/invite collab fields ✅
+  - `backend/models/vote.py` — praxis_id nullable, collaboration_id FK added, uq_vote_solo + uq_vote_duel constraints ✅
+  - `backend/alembic/versions/0005_collaboration_and_duel.py` — Migration ✅
+  - `backend/schemas/collaboration.py` — All collab/duel schemas ✅
+  - `backend/schemas/praxis.py` — Removed legacy collab fields ✅
+  - `backend/schemas/vote.py` — VoteOut updated for duel votes ✅
+  - `backend/services/collaboration.py` — Full business logic (create, invite, respond, submit, reopen, kick, document, vote summary) ✅
+  - `backend/services/scoring.py` — compute_duel_multiplier, meta_task_points in compute_praxis_score ✅
+  - `backend/services/character_stats.py` — Scores both solo praxes and published collaborations/duels ✅
+  - `backend/services/vote.py` — cast_or_update_duel_vote ✅
+  - `backend/services/praxis.py` — Removed accept_invite/decline_invite ✅
+  - `backend/services/activity_feed.py` — Updated to use CollaborationInvite ✅
+  - `backend/routers/collaborations.py` — 10 endpoints ✅
+  - `backend/routers/praxes.py` — Removed legacy invite routes ✅
+  - `backend/routers/tasks.py` — Added POST /tasks/{id}/drop ✅
+  - `backend/main.py` — Collaboration router registered ✅
+  - `backend/eras/era_1.py` — Snide duel 2.0/0.0; standard factions 1.5/0.5; ua_masters 0.8/0.8 ✅
+  - `frontend/src/api/collaborations.ts` — Full collaboration API client ✅
+  - `frontend/src/api/votes.ts` — VoteOut updated for nullable praxis_id + collaboration fields ✅
+  - `frontend/src/api/praxis.ts` — Removed legacy collab fields and invite functions ✅
+  - `frontend/src/pages/CollaborationDetail.tsx` — Shared document, members, submit controls, duel vote widget ✅
+  - `frontend/src/pages/SubmitProof.tsx` — Collab/duel mode creates Collaboration and redirects ✅
+  - `frontend/src/components/feed/FeedCardCollabInvite.tsx` — Uses new collaboration API + task-list-full modal ✅
+  - `frontend/src/components/feed/FeedCardDuelChallenge.tsx` — Uses new collaboration API + task-list-full modal ✅
+  - `frontend/src/App.tsx` — /collaborations/:id route added ✅
+  - Spec files updated (SPEC-backend-architecture.md, SPEC-deployment.md, SPEC-game-rules.md, SPEC-data-models.md, SPEC-api.md) ✅
+  - 105 unit tests passing ✅
 
 Seed data:
 - `backend/seed.py` — 9 factions, 8 accounts/characters, 14 tasks, 24 submissions, ~101 votes ✅

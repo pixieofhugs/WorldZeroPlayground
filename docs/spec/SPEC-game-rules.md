@@ -6,14 +6,24 @@ All formulas are driven by `CURRENT_ERA` (or a passed `EraConfig` in tests).
 
 ### Praxis Score (computed on-the-fly)
 ```
-praxis_score = task.point_value × faction_multiplier + total_stars
+praxis_score = (task.point_value + meta_task_points) × faction_multiplier × duel_multiplier + total_stars
 ```
-- `faction_multiplier` — determined by the character's faction relative to the task's faction,
-  the collaboration mode (solo/collab/duel), and duel outcome. See `scoring.py::compute_faction_multiplier`.
+- `meta_task_points` — flat bonus from any attached meta task (0 if none). Applied per-member for
+  collaborations and duels. See `services/scoring.py::compute_meta_task_points`.
+- `faction_multiplier` — determined by the character's faction relative to the task's faction and
+  the collaboration mode (solo/collab). See `scoring.py::compute_faction_multiplier`. For duels,
+  always 1.0 — the duel outcome is captured separately in `duel_multiplier`.
+- `duel_multiplier` — 1.0 for solo and collaboration; outcome-based for duels. See
+  `scoring.py::compute_duel_multiplier`. Win/loss/tie rates are per the Duel Multipliers table:
+  standard Win 1.5×, Loss 0.5×; Snide Win 2.0×, Loss 0.0×; tie with one Snide: Snide wins (2.0×/0.5×);
+  tie with no Snide or both Snide: both 1.0×.
 - `total_stars` — the **sum** of raw star ratings across all votes on this praxis (not an average).
   Each star adds flat to the score regardless of the number of voters.
-- Base points (`task.point_value × faction_multiplier`) are awarded immediately on praxis creation,
-  not deferred until voting. Stars accumulate as votes arrive.
+- Base points are awarded on **publication**: solo praxes publish on creation; collab/duel publish
+  when all current members have submitted. Stars accumulate as votes arrive.
+
+Each participant in a collaboration or duel has this formula applied **individually**, using their
+own `faction_multiplier` and (for duels) their own `duel_multiplier`.
 
 ### Character Score
 ```

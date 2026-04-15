@@ -36,8 +36,6 @@
 
 ## 17. Out of Scope (v1)
 
-- Meta tasks (DB schema included; UI and enforcement deferred)
-- Duels (Vote.duel_vote_for column present; full flow deferred)
 - Faction multiplier enforcement (FactionConfig values present; application deferred)
 - Task Vision (Journeymen), Double Dipper (Analog)
 - Cloud media storage

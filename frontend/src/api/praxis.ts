@@ -30,8 +30,6 @@ export interface PraxisCreate {
   task_id: number
   title: string
   body_text?: string
-  collaboration_mode?: string
-  partner_character_id?: number
 }
 
 export async function listPraxes(params?: { task_id?: number; character_id?: number }): Promise<PraxisOut[]> {
@@ -80,12 +78,3 @@ export async function resubmitPraxis(praxisId: number): Promise<PraxisOut> {
   return data
 }
 
-export async function acceptInvite(praxisId: number): Promise<PraxisOut> {
-  const { data } = await api.post<PraxisOut>(`/praxes/${praxisId}/accept-invite`)
-  return data
-}
-
-export async function declineInvite(praxisId: number): Promise<PraxisOut> {
-  const { data } = await api.post<PraxisOut>(`/praxes/${praxisId}/decline-invite`)
-  return data
-}

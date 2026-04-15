@@ -29,10 +29,6 @@ class PraxisOut(BaseModel):
     moderation_status: str = "visible"
     is_withdrawn: bool = False
     admin_note: Optional[str] = None
-    collaboration_mode: str = "solo"
-    partner_character_id: Optional[int] = None
-    partner_display_name: Optional[str] = None
-    invite_status: Optional[str] = None
     created_at: datetime
     updated_at: datetime
     media: list[MediaItemOut] = []
@@ -43,5 +39,3 @@ class PraxisCreate(BaseModel):
     task_id: int
     title: str = Field(..., max_length=200)
     body_text: Optional[str] = Field(None, max_length=10000)
-    collaboration_mode: Optional[str] = "solo"
-    partner_character_id: Optional[int] = None

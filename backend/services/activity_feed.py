@@ -15,7 +15,8 @@ from models.era import Era
 from models.faction_defection_history import FactionDefectionHistory
 from models.invitation_letter import InvitationLetter
 from models.relationship import Relationship, RelationshipStatus, RelationshipType
-from models.praxis import CollaborationMode, InviteStatus, Praxis
+from models.collaboration import CollaborationInvite, CollaborationInviteStatus, CollaborationMode
+from models.praxis import Praxis
 from models.task import CharacterTask, CharacterTaskStatus, Task, TaskStatus
 from models.taunt_message import TauntMessage
 from models.vote import Vote
@@ -385,13 +386,15 @@ async def _fetch_collab_invites(
     pending_only: bool = False,
 ) -> list[ActivityFeedItem]:
     """Collab invites sent to the current character."""
+    from models.collaboration import Collaboration
+
     query = (
         select(
-            Praxis.id,
-            Praxis.title,
-            Praxis.created_at,
-            Praxis.invite_status,
-            Praxis.character_id,
+            CollaborationInvite.id,
+            CollaborationInvite.created_at,
+            CollaborationInvite.status,
+            CollaborationInvite.inviter_id,
+            CollaborationInvite.collaboration_id,
             Task.title.label("task_title"),
             Task.point_value.label("task_point_value"),
             Task.primary_faction_slug.label("task_faction_slug"),
@@ -400,23 +403,23 @@ async def _fetch_collab_invites(
             Character.faction_slug.label("inviter_faction_slug"),
             Character.avatar_url.label("inviter_avatar_url"),
         )
-        .join(Task, Praxis.task_id == Task.id)
-        .join(Character, Praxis.character_id == Character.id)
+        .join(Collaboration, CollaborationInvite.collaboration_id == Collaboration.id)
+        .join(Task, Collaboration.task_id == Task.id)
+        .join(Character, CollaborationInvite.inviter_id == Character.id)
         .where(
-            Praxis.partner_character_id == character_id,
-            Praxis.collaboration_mode == CollaborationMode.collab,
+            CollaborationInvite.invitee_id == character_id,
+            CollaborationInvite.type == CollaborationMode.collaboration,
         )
     )
     if pending_only:
-        query = query.where(Praxis.invite_status == InviteStatus.pending)
+        query = query.where(CollaborationInvite.status == CollaborationInviteStatus.pending)
     if before is not None:
-        query = query.where(Praxis.created_at < before)
-    query = query.order_by(Praxis.created_at.desc()).limit(SUB_QUERY_LIMIT)
+        query = query.where(CollaborationInvite.created_at < before)
+    query = query.order_by(CollaborationInvite.created_at.desc()).limit(SUB_QUERY_LIMIT)
 
     result = await session.execute(query)
     items: list[ActivityFeedItem] = []
     for row in result.all():
-        invite_status = row.invite_status.value if row.invite_status else None
         items.append(ActivityFeedItem(
             type=FEED_ITEM_TYPE_COLLAB_INVITE,
             timestamp=row.created_at,
@@ -424,14 +427,14 @@ async def _fetch_collab_invites(
             actor_faction_slug=row.inviter_faction_slug,
             actor_avatar_url=row.inviter_avatar_url,
             payload={
-                "praxis_id": row.id,
-                "praxis_title": row.title,
+                "invite_id": row.id,
+                "collaboration_id": row.collaboration_id,
                 "task_title": row.task_title,
                 "task_point_value": row.task_point_value,
                 "task_faction_slug": row.task_faction_slug,
                 "task_level_required": row.task_level_required,
-                "invite_status": invite_status,
-                "inviter_character_id": row.character_id,
+                "invite_status": row.status.value,
+                "inviter_character_id": row.inviter_id,
             },
         ))
     return items
@@ -444,13 +447,15 @@ async def _fetch_duel_challenges(
     pending_only: bool = False,
 ) -> list[ActivityFeedItem]:
     """Duel challenges sent to the current character."""
+    from models.collaboration import Collaboration
+
     query = (
         select(
-            Praxis.id,
-            Praxis.title,
-            Praxis.created_at,
-            Praxis.invite_status,
-            Praxis.character_id,
+            CollaborationInvite.id,
+            CollaborationInvite.created_at,
+            CollaborationInvite.status,
+            CollaborationInvite.inviter_id,
+            CollaborationInvite.collaboration_id,
             Task.title.label("task_title"),
             Task.point_value.label("task_point_value"),
             Task.primary_faction_slug.label("task_faction_slug"),
@@ -458,23 +463,23 @@ async def _fetch_duel_challenges(
             Character.faction_slug.label("challenger_faction_slug"),
             Character.avatar_url.label("challenger_avatar_url"),
         )
-        .join(Task, Praxis.task_id == Task.id)
-        .join(Character, Praxis.character_id == Character.id)
+        .join(Collaboration, CollaborationInvite.collaboration_id == Collaboration.id)
+        .join(Task, Collaboration.task_id == Task.id)
+        .join(Character, CollaborationInvite.inviter_id == Character.id)
         .where(
-            Praxis.partner_character_id == character_id,
-            Praxis.collaboration_mode == CollaborationMode.duel,
+            CollaborationInvite.invitee_id == character_id,
+            CollaborationInvite.type == CollaborationMode.duel,
         )
     )
     if pending_only:
-        query = query.where(Praxis.invite_status == InviteStatus.pending)
+        query = query.where(CollaborationInvite.status == CollaborationInviteStatus.pending)
     if before is not None:
-        query = query.where(Praxis.created_at < before)
-    query = query.order_by(Praxis.created_at.desc()).limit(SUB_QUERY_LIMIT)
+        query = query.where(CollaborationInvite.created_at < before)
+    query = query.order_by(CollaborationInvite.created_at.desc()).limit(SUB_QUERY_LIMIT)
 
     result = await session.execute(query)
     items: list[ActivityFeedItem] = []
     for row in result.all():
-        invite_status = row.invite_status.value if row.invite_status else None
         items.append(ActivityFeedItem(
             type=FEED_ITEM_TYPE_DUEL_CHALLENGE,
             timestamp=row.created_at,
@@ -482,13 +487,13 @@ async def _fetch_duel_challenges(
             actor_faction_slug=row.challenger_faction_slug,
             actor_avatar_url=row.challenger_avatar_url,
             payload={
-                "praxis_id": row.id,
-                "praxis_title": row.title,
+                "invite_id": row.id,
+                "collaboration_id": row.collaboration_id,
                 "task_title": row.task_title,
                 "task_point_value": row.task_point_value,
                 "task_faction_slug": row.task_faction_slug,
-                "invite_status": invite_status,
-                "challenger_character_id": row.character_id,
+                "invite_status": row.status.value,
+                "challenger_character_id": row.inviter_id,
             },
         ))
     return items
@@ -741,13 +746,8 @@ async def _compute_counts(
         """Votes on mine + collab invites + duel challenges + invitation letters."""
         collab_result = await session.execute(
             select(func.count())
-            .select_from(Praxis)
-            .where(
-                Praxis.partner_character_id == character_id,
-                Praxis.collaboration_mode.in_([
-                    CollaborationMode.collab, CollaborationMode.duel,
-                ]),
-            )
+            .select_from(CollaborationInvite)
+            .where(CollaborationInvite.invitee_id == character_id)
         )
         collab_count = collab_result.scalar_one()
         votes_count = await count_votes_on_mine()
@@ -768,13 +768,10 @@ async def _compute_counts(
     async def count_requests() -> int:
         result = await session.execute(
             select(func.count())
-            .select_from(Praxis)
+            .select_from(CollaborationInvite)
             .where(
-                Praxis.partner_character_id == character_id,
-                Praxis.collaboration_mode.in_([
-                    CollaborationMode.collab, CollaborationMode.duel,
-                ]),
-                Praxis.invite_status == InviteStatus.pending,
+                CollaborationInvite.invitee_id == character_id,
+                CollaborationInvite.status == CollaborationInviteStatus.pending,
             )
         )
         return result.scalar_one()

@@ -21,6 +21,7 @@ import ProposeTask from './pages/ProposeTask'
 import Disclaimer from './pages/Disclaimer'
 import Attributions from './pages/Attributions'
 import Donate from './pages/Donate'
+import CollaborationDetail from './pages/CollaborationDetail'
 
 export default function App() {
   return (
@@ -37,6 +38,7 @@ export default function App() {
             </ProtectedRoute>
           }
         />
+        <Route path="/collaborations/:id" element={<CollaborationDetail />} />
         <Route path="/praxes" element={<Praxes />} />
         <Route path="/praxes/:id" element={<PraxisDetail />} />
         <Route

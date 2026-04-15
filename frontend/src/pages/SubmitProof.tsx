@@ -2,6 +2,7 @@ import { useState, useRef, useEffect, useCallback } from 'react'
 import { useParams, useNavigate, useLocation, Link } from 'react-router-dom'
 import ReactMarkdown from 'react-markdown'
 import { createPraxis, uploadMedia } from '../api/praxis'
+import { createCollaboration, inviteMember } from '../api/collaborations'
 import { getTask, dropTask, type TaskOut } from '../api/tasks'
 import { listCharacters, type CharacterOut } from '../api/characters'
 import LevelPill from '../components/ui/LevelPill'
@@ -57,24 +58,38 @@ export default function SubmitProof() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!id || !title.trim()) { setError('Title is required.'); return }
+    if (!id) return
     setSaving(true)
     setError('')
     try {
-      const praxis = await createPraxis({
-        task_id: parseInt(id, 10),
-        title,
-        body_text: body || undefined,
-        collaboration_mode: selectedMode !== 'solo' ? selectedMode : undefined,
-        partner_character_id: invitedPartners.length > 0 ? invitedPartners[0].id : undefined,
-      })
-      for (const file of files) {
-        await uploadMedia(praxis.id, file)
+      if (selectedMode !== 'solo') {
+        // Collaboration or duel: create a Collaboration, send invites, redirect to collab page
+        const mode = selectedMode === 'duel' ? 'duel' : 'collaboration'
+        const collab = await createCollaboration(parseInt(id, 10), mode)
+        // Send invites to all selected partners
+        for (const partner of invitedPartners) {
+          try {
+            await inviteMember(collab.id, partner.id)
+          } catch { /* best-effort */ }
+        }
+        void refetch()
+        navigate(`/collaborations/${collab.id}`)
+      } else {
+        // Solo submission: create praxis as before
+        if (!title.trim()) { setError('Title is required.'); setSaving(false); return }
+        const praxis = await createPraxis({
+          task_id: parseInt(id, 10),
+          title,
+          body_text: body || undefined,
+        })
+        for (const file of files) {
+          await uploadMedia(praxis.id, file)
+        }
+        void refetch()
+        navigate(`/praxes/${praxis.id}`)
       }
-      void refetch()
-      navigate(`/praxes/${praxis.id}`)
-    } catch {
-      setError('Could not submit. Check you are signed up for this task.')
+    } catch (err: any) {
+      setError(err?.response?.data?.detail ?? 'Could not submit. Check you are signed up for this task.')
     } finally {
       setSaving(false)
     }
@@ -542,7 +557,10 @@ export default function SubmitProof() {
             }}
           >
             <span style={{ position: 'absolute', inset: 3, border: '1px dashed rgba(255,255,255,0.25)', pointerEvents: 'none' }} />
-            {saving ? 'Publishing...' : 'Publish proof'}
+            {saving
+              ? (selectedMode !== 'solo' ? 'Creating...' : 'Publishing...')
+              : (selectedMode === 'duel' ? 'Start duel' : selectedMode === 'collab' ? 'Start collaboration' : 'Publish proof')
+            }
           </button>
           <button
             type="button"

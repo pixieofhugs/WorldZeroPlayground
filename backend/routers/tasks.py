@@ -226,3 +226,27 @@ async def drop_task_route(
     if ct is None:
         raise HTTPException(status_code=404, detail="Signup not found.")
     await drop_task(ct, session)
+
+
+@router.post("/{task_id}/drop", status_code=204)
+async def drop_task_post_route(
+    task_id: int,
+    character: Character = Depends(get_current_character),
+    session: AsyncSession = Depends(get_db),
+):
+    """Drop an in-progress task to free a slot.
+
+    Alias for DELETE /{task_id}/signup, available as POST for the invite-accept
+    task-list-full flow where DELETE semantics are inconvenient for clients.
+    """
+    result = await session.execute(
+        select(CharacterTask).where(
+            CharacterTask.character_id == character.id,
+            CharacterTask.task_id == task_id,
+            CharacterTask.status == CharacterTaskStatus.in_progress,
+        )
+    )
+    ct = result.scalar_one_or_none()
+    if ct is None:
+        raise HTTPException(status_code=404, detail="Signup not found.")
+    await drop_task(ct, session)

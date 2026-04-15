@@ -5,14 +5,19 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from game_config import CURRENT_ERA, EraConfig
+from models.character import Character
 from models.flag import Flag
-from models.praxis import CollaborationMode, InviteStatus, ModerationStatus, Praxis
+from models.praxis import ModerationStatus, Praxis
 from models.task import CharacterTask, CharacterTaskStatus, Task
 from schemas.praxis import MediaItemOut, PraxisCreate, PraxisOut
 from services.character_stats import recalculate_character_stats
 from services.era import get_current_era_row, get_or_create_stats
 from services.faction_service import check_and_deliver_invitations
-from services.scoring import compute_faction_multiplier, compute_praxis_score
+from services.scoring import (
+    COLLABORATION_MODE_SOLO,
+    compute_faction_multiplier,
+    compute_praxis_score,
+)
 
 
 async def create_praxis(
@@ -20,6 +25,7 @@ async def create_praxis(
     task: Task,
     data: PraxisCreate,
     session: AsyncSession,
+    era: EraConfig = CURRENT_ERA,
 ) -> Praxis:
     character_task_result = await session.execute(
         select(CharacterTask).where(
@@ -32,34 +38,17 @@ async def create_praxis(
     if character_task is None:
         raise HTTPException(status_code=403, detail="Must be signed up for this task to submit proof.")
 
-    collab_mode = CollaborationMode(data.collaboration_mode or "solo")
-    partner_id = data.partner_character_id
-
-    if collab_mode != CollaborationMode.solo:
-        if partner_id is None:
-            raise HTTPException(status_code=422, detail="Partner character required for collab/duel mode.")
-        if partner_id == character.id:
-            raise HTTPException(status_code=422, detail="Cannot partner with yourself.")
-        partner = await session.get(Character, partner_id)
-        if partner is None:
-            raise HTTPException(status_code=404, detail="Partner character not found.")
-
-    invite_status = InviteStatus.pending if collab_mode != CollaborationMode.solo else None
-
     praxis = Praxis(
         task_id=task.id,
         character_id=character.id,
         title=data.title,
         body_text=data.body_text or "",
-        collaboration_mode=collab_mode,
-        partner_character_id=partner_id,
-        invite_status=invite_status,
     )
     session.add(praxis)
     character_task.status = CharacterTaskStatus.submitted
     await session.commit()
     await session.refresh(praxis)
-    await recalculate_character_stats(character.id, session)
+    await recalculate_character_stats(character.id, session, era)
     await check_and_deliver_invitations(character, task, session)
     await session.commit()
     return praxis
@@ -180,46 +169,6 @@ async def flag_praxis(
     return praxis
 
 
-async def accept_invite(
-    praxis_id: int,
-    character_id: int,
-    session: AsyncSession,
-) -> Praxis:
-    """Partner accepts a collab/duel invite."""
-    praxis = await session.get(Praxis, praxis_id)
-    if praxis is None:
-        raise HTTPException(status_code=404, detail="Praxis not found.")
-    if praxis.partner_character_id != character_id:
-        raise HTTPException(status_code=403, detail="Only the invited partner can accept.")
-    if praxis.invite_status != InviteStatus.pending:
-        raise HTTPException(status_code=422, detail="Invite is no longer pending.")
-
-    praxis.invite_status = InviteStatus.accepted
-    await session.commit()
-    await session.refresh(praxis)
-    return praxis
-
-
-async def decline_invite(
-    praxis_id: int,
-    character_id: int,
-    session: AsyncSession,
-) -> Praxis:
-    """Partner declines a collab/duel invite."""
-    praxis = await session.get(Praxis, praxis_id)
-    if praxis is None:
-        raise HTTPException(status_code=404, detail="Praxis not found.")
-    if praxis.partner_character_id != character_id:
-        raise HTTPException(status_code=403, detail="Only the invited partner can decline.")
-    if praxis.invite_status != InviteStatus.pending:
-        raise HTTPException(status_code=422, detail="Invite is no longer pending.")
-
-    praxis.invite_status = InviteStatus.declined
-    await session.commit()
-    await session.refresh(praxis)
-    return praxis
-
-
 async def compute_praxis_score_from_db(
     praxis: Praxis,
     session: AsyncSession,
@@ -234,7 +183,7 @@ async def compute_praxis_score_from_db(
         character_faction_slug,
         task_faction_slug,
         era,
-        collaboration_mode=praxis.collaboration_mode.value,
+        collaboration_mode=COLLABORATION_MODE_SOLO,
     )
     total_stars = int(sum(vote.stars for vote in praxis.votes))
     return compute_praxis_score(task.point_value, faction_multiplier, total_stars)
@@ -252,16 +201,9 @@ async def build_praxis_out(
     media = [MediaItemOut.model_validate(item) for item in praxis.media_items]
 
     character_display_name = praxis.character.display_name if praxis.character else ""
-
     task_title = praxis.task.title if praxis.task else ""
     task_point_value = praxis.task.point_value if praxis.task else 0
     task_faction_slug = praxis.task.primary_faction_slug if praxis.task else None
-
-    partner_display_name = praxis.partner.display_name if praxis.partner else None
-
-    invite_status_value = None
-    if praxis.invite_status is not None:
-        invite_status_value = praxis.invite_status.value
 
     return PraxisOut(
         id=praxis.id,
@@ -276,10 +218,6 @@ async def build_praxis_out(
         moderation_status=praxis.moderation_status.value,
         is_withdrawn=praxis.is_withdrawn,
         admin_note=praxis.admin_note,
-        collaboration_mode=praxis.collaboration_mode.value,
-        partner_character_id=praxis.partner_character_id,
-        partner_display_name=partner_display_name,
-        invite_status=invite_status_value,
         created_at=praxis.created_at,
         updated_at=praxis.updated_at,
         media=media,

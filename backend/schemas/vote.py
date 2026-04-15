@@ -1,4 +1,5 @@
 from datetime import datetime
+from typing import Optional
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -11,7 +12,9 @@ class VoteOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     id: int
-    praxis_id: int
+    praxis_id: Optional[int] = None        # None for duel votes
+    collaboration_id: Optional[int] = None  # Set for duel votes
+    duel_vote_for: Optional[int] = None     # Set for duel votes
     voter_character_id: int
     stars: int
     created_at: datetime
