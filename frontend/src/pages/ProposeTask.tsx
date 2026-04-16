@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { proposeTask } from '../api/tasks'
+import { createMetaTask } from '../api/metaTasks'
 import { getFactions, type FactionOut } from '../api/factions'
 import PageTitle from '../components/ui/PageTitle'
 import FilterLevelNodes from '../components/ui/FilterLevelNodes'
@@ -31,6 +32,8 @@ export default function ProposeTask() {
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
+  const [isMetaTask, setIsMetaTask] = useState(false)
+  const [metaBonusValue, setMetaBonusValue] = useState('10')
 
   useEffect(() => {
     getFactions().then(setFactions).catch(() => {})
@@ -65,8 +68,19 @@ export default function ProposeTask() {
       <div className="py-8" style={{ maxWidth: 720, margin: '0 auto' }}>
         <PageTitle title="Propose a Task" />
         <div className="sidebar-card" style={{ padding: 24, textAlign: 'center' }}>
-          <p className="font-display italic" style={{ fontSize: 22, color, marginBottom: 6 }}>Task proposed!</p>
-          <p className="font-body" style={{ fontSize: 10, color: 'var(--color-text-secondary)' }}>An admin will review it soon.</p>
+          {isMetaTask ? (
+            <>
+              <p className="font-display italic" style={{ fontSize: 22, color, marginBottom: 6 }}>Meta task created!</p>
+              <p className="font-body" style={{ fontSize: 10, color: 'var(--color-text-secondary)' }}>
+                Players can now select it as a bonus when submitting {factionName(factionSlug)} praxis.
+              </p>
+            </>
+          ) : (
+            <>
+              <p className="font-display italic" style={{ fontSize: 22, color, marginBottom: 6 }}>Task proposed!</p>
+              <p className="font-body" style={{ fontSize: 10, color: 'var(--color-text-secondary)' }}>An admin will review it soon.</p>
+            </>
+          )}
         </div>
       </div>
     )
@@ -77,16 +91,30 @@ export default function ProposeTask() {
     setSubmitting(true)
     setError(null)
     try {
-      await proposeTask({
-        title,
-        description: description || undefined,
-        point_value: parseInt(pointValue) || 10,
-        level_required: levelRequired === '' ? 0 : levelRequired,
-        primary_faction_slug: factionSlug || undefined,
-      })
+      if (isMetaTask) {
+        if (!factionSlug || factionSlug === 'na') {
+          setError('Meta tasks must belong to a specific faction.')
+          return
+        }
+        await createMetaTask({
+          name: title,
+          description,
+          faction_slug: factionSlug,
+          bonus_value: parseInt(metaBonusValue) || 10,
+          level_required: levelRequired === '' ? 0 : levelRequired,
+        })
+      } else {
+        await proposeTask({
+          title,
+          description: description || undefined,
+          point_value: parseInt(pointValue) || 10,
+          level_required: levelRequired === '' ? 0 : levelRequired,
+          primary_faction_slug: factionSlug || undefined,
+        })
+      }
       setSuccess(true)
     } catch (err) {
-      setError(extractError(err, 'Could not propose task.'))
+      setError(extractError(err, isMetaTask ? 'Could not create meta task.' : 'Could not propose task.'))
     } finally {
       setSubmitting(false)
     }
@@ -207,26 +235,50 @@ export default function ProposeTask() {
 
               {/* Suggested Difficulty (§20.4) */}
               <div style={{ display: 'flex', gap: 24, alignItems: 'flex-start', marginBottom: 12 }}>
-                <div>
-                  <span className="eyebrow" style={{ display: 'block', marginBottom: 6 }}>Base points</span>
-                  <input
-                    type="text"
-                    inputMode="numeric"
-                    value={pointValue}
-                    onChange={(e) => setPointValue(e.target.value.replace(/[^0-9]/g, ''))}
-                    disabled={submitting}
-                    placeholder="pts"
-                    style={{
-                      width: 80,
-                      fontFamily: "'Courier Prime', monospace", fontSize: 20, fontWeight: 700,
-                      color: 'var(--color-text-primary)',
-                      background: 'transparent', border: 'none',
-                      borderBottom: `2px solid ${dark ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.12)'}`,
-                      outline: 'none', textAlign: 'center',
-                    }}
-                  />
-                  <span className="eyebrow" style={{ display: 'block', marginTop: 4, fontSize: 7 }}>Admin may adjust</span>
-                </div>
+                {!isMetaTask && (
+                  <div>
+                    <span className="eyebrow" style={{ display: 'block', marginBottom: 6 }}>Base points</span>
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      value={pointValue}
+                      onChange={(e) => setPointValue(e.target.value.replace(/[^0-9]/g, ''))}
+                      disabled={submitting}
+                      placeholder="pts"
+                      style={{
+                        width: 80,
+                        fontFamily: "'Courier Prime', monospace", fontSize: 20, fontWeight: 700,
+                        color: 'var(--color-text-primary)',
+                        background: 'transparent', border: 'none',
+                        borderBottom: `2px solid ${dark ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.12)'}`,
+                        outline: 'none', textAlign: 'center',
+                      }}
+                    />
+                    <span className="eyebrow" style={{ display: 'block', marginTop: 4, fontSize: 7 }}>Admin may adjust</span>
+                  </div>
+                )}
+                {isMetaTask && (
+                  <div>
+                    <span className="eyebrow" style={{ display: 'block', marginBottom: 6 }}>Bonus points</span>
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      value={metaBonusValue}
+                      onChange={(e) => setMetaBonusValue(e.target.value.replace(/[^0-9]/g, ''))}
+                      disabled={submitting}
+                      placeholder="pts"
+                      style={{
+                        width: 80,
+                        fontFamily: "'Courier Prime', monospace", fontSize: 20, fontWeight: 700,
+                        color: 'var(--color-text-primary)',
+                        background: 'transparent', border: 'none',
+                        borderBottom: `2px solid ${color}`,
+                        outline: 'none', textAlign: 'center',
+                      }}
+                    />
+                    <span className="eyebrow" style={{ display: 'block', marginTop: 4, fontSize: 7 }}>Flat bonus added to score</span>
+                  </div>
+                )}
                 <div>
                   <span className="eyebrow" style={{ display: 'block', marginBottom: 6 }}>Minimum level</span>
                   <FilterLevelNodes
@@ -237,32 +289,57 @@ export default function ProposeTask() {
                   <span className="eyebrow" style={{ display: 'block', marginTop: 4, fontSize: 7 }}>Level 0 = anyone can attempt</span>
                 </div>
               </div>
+
+              {/* Meta Task Toggle — level 5+ or admin only */}
+              {(characterLevel >= 5 || user?.is_admin) && (
+                <div style={{
+                  borderTop: '1px dashed var(--color-border)',
+                  paddingTop: 12, marginTop: 4,
+                }}>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
+                    <input
+                      type="checkbox"
+                      checked={isMetaTask}
+                      onChange={(e) => setIsMetaTask(e.target.checked)}
+                      style={{ accentColor: color, width: 14, height: 14, cursor: 'pointer' }}
+                    />
+                    <span className="font-body" style={{ fontSize: 11, color: 'var(--color-text-primary)', fontWeight: isMetaTask ? 700 : 400 }}>
+                      Create as meta task
+                    </span>
+                    <span className="eyebrow" style={{ fontSize: 7, color: 'var(--color-text-tertiary)' }}>
+                      applies as a bonus to all {factionSlug !== 'na' ? factionName(factionSlug) : ''} submissions
+                    </span>
+                  </label>
+                </div>
+              )}
             </div>
 
-            {/* Notes to Admin (§20.5) */}
-            <div style={{ marginBottom: 16 }}>
-              <span className="eyebrow" style={{ display: 'block', marginBottom: 6 }}>Notes to admin (optional)</span>
-              <textarea
-                rows={3}
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
-                disabled={submitting}
-                placeholder="Why do you want this task to exist? What inspired it?"
-                style={{
-                  width: '100%',
-                  fontFamily: "'Courier Prime', monospace", fontSize: 11,
-                  color: 'var(--color-text-primary)',
-                  background: 'transparent',
-                  border: `1px solid ${dark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'}`,
-                  borderRadius: 6, padding: '0.6rem 0.7rem',
-                  outline: 'none', resize: 'vertical',
-                }}
-                onFocus={(e) => { e.currentTarget.style.borderColor = color }}
-                onBlur={(e) => { e.currentTarget.style.borderColor = dark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)' }}
-              />
-            </div>
+            {/* Notes to Admin (§20.5) — hidden for meta tasks */}
+            {!isMetaTask && (
+              <div style={{ marginBottom: 16 }}>
+                <span className="eyebrow" style={{ display: 'block', marginBottom: 6 }}>Notes to admin (optional)</span>
+                <textarea
+                  rows={3}
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value)}
+                  disabled={submitting}
+                  placeholder="Why do you want this task to exist? What inspired it?"
+                  style={{
+                    width: '100%',
+                    fontFamily: "'Courier Prime', monospace", fontSize: 11,
+                    color: 'var(--color-text-primary)',
+                    background: 'transparent',
+                    border: `1px solid ${dark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'}`,
+                    borderRadius: 6, padding: '0.6rem 0.7rem',
+                    outline: 'none', resize: 'vertical',
+                  }}
+                  onFocus={(e) => { e.currentTarget.style.borderColor = color }}
+                  onBlur={(e) => { e.currentTarget.style.borderColor = dark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)' }}
+                />
+              </div>
+            )}
 
-            {/* Task Preview Strip (§20.6) */}
+            {/* Task / Meta Task Preview Strip (§20.6) */}
             {title && (
               <div
                 style={{
@@ -271,7 +348,7 @@ export default function ProposeTask() {
                 }}
               >
                 <span className="eyebrow" style={{ color, marginBottom: 4, display: 'block' }}>
-                  Task preview — {fname} · Pending
+                  {isMetaTask ? `Meta task preview — ${fname}` : `Task preview — ${fname} · Pending`}
                 </span>
                 <p className="font-body" style={{ fontSize: 12, fontWeight: 700, color: 'var(--color-text-primary)', marginBottom: 2 }}>
                   {title}
@@ -282,9 +359,12 @@ export default function ProposeTask() {
                   </p>
                 )}
                 <div style={{ display: 'flex', gap: 6, marginTop: 6 }}>
-                  <span className="eyebrow">{pointValue || '?'} pts</span>
+                  {isMetaTask
+                    ? <span className="eyebrow" style={{ color: '#15803d' }}>+{metaBonusValue || '?'} bonus pts</span>
+                    : <span className="eyebrow">{pointValue || '?'} pts</span>
+                  }
                   <span className="eyebrow">lvl {levelRequired === '' ? 0 : levelRequired}+</span>
-                  <span className="eyebrow" style={{ color }}>Pending review</span>
+                  {!isMetaTask && <span className="eyebrow" style={{ color }}>Pending review</span>}
                 </div>
               </div>
             )}
@@ -308,13 +388,13 @@ export default function ProposeTask() {
                 }}
               >
                 <span style={{ position: 'absolute', inset: 3, border: '1px dashed rgba(255,255,255,0.25)', pointerEvents: 'none' }} />
-                {submitting ? 'Submitting...' : 'Submit proposal'}
+                {submitting ? 'Submitting...' : isMetaTask ? 'Create meta task' : 'Submit proposal'}
               </button>
               <button type="button" onClick={() => navigate(-1)} className="btn-outline" style={{ fontSize: 10, padding: '8px 16px' }}>
                 Cancel
               </button>
               <span className="font-body" style={{ fontSize: 8, color: 'var(--color-text-tertiary)', marginLeft: 'auto' }}>
-                Your proposal goes to admin for review.
+                {isMetaTask ? 'Goes live immediately.' : 'Your proposal goes to admin for review.'}
               </span>
             </div>
           </form>

@@ -22,8 +22,13 @@ from services.scoring import (
 )
 
 
-async def _get_meta_task_points(praxis_id: int, session: AsyncSession) -> int:
-    """Return flat bonus points from any meta task attached to a solo praxis."""
+async def _get_meta_task_points(
+    praxis_id: int, character_level: int, session: AsyncSession
+) -> int:
+    """Return flat bonus points from any meta task attached to a solo praxis.
+
+    Returns 0 if the character does not meet the meta task's level_required.
+    """
     from models.meta_task import MetaTask, PraxisMetaTask
 
     result = await session.execute(
@@ -34,6 +39,8 @@ async def _get_meta_task_points(praxis_id: int, session: AsyncSession) -> int:
         return 0
     meta_task = await session.get(MetaTask, praxis_meta_task.meta_task_id)
     if meta_task is None:
+        return 0
+    if character_level < meta_task.level_required:
         return 0
     # bonus_type "flat" adds bonus_value directly; "percentage" is not yet implemented.
     if meta_task.bonus_type.value == "flat":
@@ -93,7 +100,9 @@ async def recalculate_character_stats(
             era,
             collaboration_mode=COLLABORATION_MODE_SOLO,
         )
-        meta_task_points = await _get_meta_task_points(praxis.id, session)
+        meta_task_points = await _get_meta_task_points(
+            praxis.id, author.level if author else 0, session
+        )
         sum_result = await session.execute(
             select(func.sum(Vote.stars)).where(Vote.praxis_id == praxis.id)
         )

@@ -5,6 +5,7 @@ import { createPraxis, uploadMedia } from '../api/praxis'
 import { createCollaboration, inviteMember } from '../api/collaborations'
 import { getTask, dropTask, type TaskOut } from '../api/tasks'
 import { listCharacters, type CharacterOut } from '../api/characters'
+import { getMetaTasks, type MetaTaskOut } from '../api/metaTasks'
 import LevelPill from '../components/ui/LevelPill'
 import { useAuth } from '../auth/AuthContext'
 import { useTheme } from '../hooks/useTheme'
@@ -39,6 +40,8 @@ export default function SubmitProof() {
   const [files, setFiles] = useState<File[]>([])
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
+  const [metaTasks, setMetaTasks] = useState<MetaTaskOut[]>([])
+  const [selectedMetaTaskId, setSelectedMetaTaskId] = useState<number | null>(null)
   const fileRef = useRef<HTMLInputElement>(null)
 
   // Collab/duel state — initialize from location state if navigated from TaskDetail
@@ -54,8 +57,16 @@ export default function SubmitProof() {
   const [showSearch, setShowSearch] = useState(false)
 
   useEffect(() => {
-    if (id) getTask(parseInt(id, 10)).then(setTask).catch(() => {})
-  }, [id])
+    if (!id) return
+    const taskId = parseInt(id, 10)
+    getTask(taskId).then(setTask).catch(() => {})
+    getMetaTasks(taskId)
+      .then((all) => {
+        const characterLevel = user?.character?.level ?? 0
+        setMetaTasks(all.filter((mt) => characterLevel >= mt.level_required))
+      })
+      .catch(() => {})
+  }, [id, user?.character?.level])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -82,6 +93,7 @@ export default function SubmitProof() {
           task_id: parseInt(id, 10),
           title,
           body_text: body || undefined,
+          meta_task_id: selectedMetaTaskId ?? undefined,
         })
         for (const file of files) {
           await uploadMedia(praxis.id, file)
@@ -376,6 +388,64 @@ export default function SubmitProof() {
           </div>
         )}
       </div>
+
+      {/* ── Meta Task Selection (solo only; hidden when no applicable meta tasks) ── */}
+      {selectedMode === 'solo' && metaTasks.length > 0 && (
+        <div className="sidebar-card mb-5" style={{ padding: '16px 18px' }}>
+          <p className="eyebrow mb-3">Optional meta task bonus</p>
+          <div style={{ display: 'flex', flexDirection: 'column' }}>
+            {metaTasks.map((mt, index) => {
+              const mtColor = factionColor(mt.faction_slug)
+              const selected = selectedMetaTaskId === mt.id
+              return (
+                <button
+                  key={mt.id}
+                  type="button"
+                  onClick={() => setSelectedMetaTaskId(selected ? null : mt.id)}
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: 10,
+                    padding: '10px 12px',
+                    borderTop: index === 0 ? 'none' : '1px dashed var(--color-border)',
+                    background: selected ? `${mtColor}12` : 'transparent',
+                    border: selected ? `1.5px solid ${mtColor}60` : 'none',
+                    borderRadius: selected ? 4 : 0,
+                    cursor: 'pointer', textAlign: 'left', width: '100%',
+                    marginBottom: selected ? 2 : 0,
+                  }}
+                >
+                  <span style={{
+                    width: 10, height: 10, borderRadius: '50%',
+                    background: selected ? mtColor : 'var(--color-border)',
+                    flexShrink: 0, transition: 'background 120ms',
+                  }} />
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <span className="font-body" style={{ fontSize: 11, fontWeight: 700, color: 'var(--color-text-primary)', display: 'block' }}>
+                      {mt.name}
+                    </span>
+                    <span className="font-body" style={{ fontSize: 9, color: 'var(--color-text-secondary)' }}>
+                      {mt.description}
+                    </span>
+                  </div>
+                  <span style={{
+                    fontFamily: "'Courier Prime', monospace",
+                    fontSize: 11, fontWeight: 700,
+                    color: selected ? '#15803d' : 'var(--color-text-tertiary)',
+                    whiteSpace: 'nowrap',
+                  }}>
+                    +{mt.bonus_value} pts
+                  </span>
+                  {mt.level_required > 0 && <LevelPill level={mt.level_required} />}
+                </button>
+              )
+            })}
+          </div>
+          {selectedMetaTaskId !== null && (
+            <p className="eyebrow" style={{ marginTop: 8, fontSize: 8, color: 'var(--color-text-tertiary)' }}>
+              Click again to deselect
+            </p>
+          )}
+        </div>
+      )}
 
       <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.1rem' }}>
         {/* ── Section 1: Proof Title (§18.3) ── */}

@@ -28,6 +28,7 @@ from models.character import Character
 from models.character_stats import CharacterStats
 from models.era import Era
 from models.faction import Faction, FactionStatus
+from models.meta_task import BonusType, MetaTask
 from models.roles import AccountRole, Role
 from models.task import Task, TaskStatus
 
@@ -192,6 +193,26 @@ async def seed(env: str, yes: bool) -> None:
                 ))
         else:
             print(f"  >Tasks already exist ({task_count}) — skipping")
+
+        # ------------------------------------------------------------------
+        # Phase 4: Meta Tasks (placeholder)
+        # ------------------------------------------------------------------
+        from sqlalchemy import func as sqlfunc
+        meta_task_count = (
+            await session.execute(select(sqlfunc.count()).select_from(MetaTask))
+        ).scalar()
+        if meta_task_count == 0:
+            print("  >Meta tasks (1 placeholder)")
+            session.add(MetaTask(
+                name="Upside Down",
+                description="Do this task upside down",
+                faction_slug="ua_masters",
+                bonus_type=BonusType.flat,
+                bonus_value=100.0,
+                level_required=0,
+            ))
+        else:
+            print(f"  >Meta tasks already exist ({meta_task_count}) — skipping")
 
         await session.commit()
         print("\nSeed complete!\n")

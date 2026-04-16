@@ -40,3 +40,4 @@ class PraxisCreate(BaseModel):
     task_id: int
     title: str = Field(..., max_length=200)
     body_text: Optional[str] = Field(None, max_length=10000)
+    meta_task_id: Optional[int] = None

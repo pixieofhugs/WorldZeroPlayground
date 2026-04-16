@@ -13,6 +13,7 @@ from config import settings
 from db import get_db
 from dependencies import get_current_character
 from models.character import Character
+from models.meta_task import MetaTask, PraxisMetaTask
 from models.praxis import MediaItem, MediaType, ModerationStatus, Praxis
 from models.task import CharacterTask, Task
 from schemas.praxis import MediaItemOut, PraxisCreate, PraxisOut
@@ -78,7 +79,24 @@ async def create_praxis_route(
     task = await session.get(Task, data.task_id)
     if task is None:
         raise HTTPException(status_code=404, detail="Task not found.")
+
+    meta_task: Optional[MetaTask] = None
+    if data.meta_task_id is not None:
+        meta_task = await session.get(MetaTask, data.meta_task_id)
+        if meta_task is None:
+            raise HTTPException(status_code=404, detail="Meta task not found.")
+        if character.level < meta_task.level_required:
+            raise HTTPException(
+                status_code=403,
+                detail=f"Meta task requires level {meta_task.level_required}.",
+            )
+
     praxis = await create_praxis(character, task, data, session)
+
+    if meta_task is not None:
+        session.add(PraxisMetaTask(praxis_id=praxis.id, meta_task_id=meta_task.id))
+        await session.commit()
+
     return await build_praxis_out(praxis, session)
 
 

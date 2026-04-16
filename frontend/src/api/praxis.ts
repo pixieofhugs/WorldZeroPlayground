@@ -31,6 +31,7 @@ export interface PraxisCreate {
   task_id: number
   title: string
   body_text?: string
+  meta_task_id?: number
 }
 
 export async function listPraxes(params?: { task_id?: number; character_id?: number }): Promise<PraxisOut[]> {
