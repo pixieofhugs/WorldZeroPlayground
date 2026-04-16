@@ -121,7 +121,7 @@ export default function FeedCardCollabInvite({ item }: Props) {
                 fontWeight: 700,
                 textTransform: 'uppercase',
                 letterSpacing: '0.1em',
-                background: '#14532d',
+                background: 'var(--badge-collab)',
                 color: '#fff',
                 border: 'none',
                 padding: '5px 14px',
@@ -156,7 +156,7 @@ export default function FeedCardCollabInvite({ item }: Props) {
 
         {status === 'accepted' && (
           <div style={{ marginTop: 8, marginLeft: 38 }}>
-            <Link to={`/collaborations/${collaboration_id}`} className="eyebrow" style={{ color: '#14532d', textDecoration: 'none' }}>
+            <Link to={`/collaborations/${collaboration_id}`} className="eyebrow" style={{ color: 'var(--badge-collab)', textDecoration: 'none' }}>
               Accepted — view collaboration
             </Link>
           </div>

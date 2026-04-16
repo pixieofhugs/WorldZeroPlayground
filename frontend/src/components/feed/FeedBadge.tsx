@@ -1,12 +1,12 @@
 /** Reusable badge chip for feed items (FRIEND, YOUR STUFF, GLOBAL, DUEL, etc.) */
 
 const BADGE_STYLES: Record<string, { bg: string; color: string }> = {
-  friend:    { bg: '#14532d', color: '#fff' },
-  your_stuff: { bg: '#8a6a20', color: '#fff' },
-  global:    { bg: '#6b6a7a', color: '#fff' },
-  duel:      { bg: '#dc2626', color: '#fff' },
-  collab:    { bg: '#15803d', color: '#fff' },
-  admin:     { bg: '#1a1209', color: '#F7F4EE' },
+  friend:    { bg: 'var(--badge-friend)',     color: '#fff' },
+  your_stuff: { bg: 'var(--badge-your-stuff)', color: '#fff' },
+  global:    { bg: 'var(--badge-global)',     color: '#fff' },
+  duel:      { bg: 'var(--badge-duel)',       color: '#fff' },
+  collab:    { bg: 'var(--badge-collab)',     color: '#fff' },
+  admin:     { bg: 'var(--badge-admin-bg)',   color: 'var(--badge-admin-text)' },
 }
 
 interface FeedBadgeProps {

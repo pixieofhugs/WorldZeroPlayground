@@ -5,17 +5,19 @@ import type { CharacterOut } from '../api/auth'
 import PageTitle from '../components/ui/PageTitle'
 import LevelPill from '../components/ui/LevelPill'
 import { useAuth } from '../auth/AuthContext'
-import { useTheme } from '../hooks/useTheme'
 import { factionColor, factionName } from '../utils/factions'
 import { extractError } from '../utils/errors'
 import { mediaUrl } from '../utils/media'
 
-const RANK_COLORS = ['#f59e0b', '#c49a3a', '#888'] // gold, silver, bronze
+// Rank colors reference CSS vars defined in index.css (--rank-gold, --rank-silver, --rank-bronze)
+const RANK_STYLES = [
+  { color: 'var(--rank-gold)',   bgSubtle: 'rgba(245,158,11,0.08)',   textFaint: 'rgba(245,158,11,0.13)' },
+  { color: 'var(--rank-silver)', bgSubtle: 'rgba(196,154,58,0.08)',   textFaint: 'rgba(196,154,58,0.13)' },
+  { color: 'var(--rank-bronze)', bgSubtle: 'rgba(136,136,136,0.08)', textFaint: 'rgba(136,136,136,0.13)' },
+]
 
 export default function Leaderboard() {
   const { user } = useAuth()
-  const { theme } = useTheme()
-  const dark = theme === 'dark'
   const [characters, setCharacters] = useState<CharacterOut[]>([])
   const [scoreMode, setScoreMode] = useState<'era' | 'alltime'>('era')
   const [loading, setLoading] = useState(true)
@@ -72,7 +74,7 @@ export default function Leaderboard() {
                       className="sidebar-card"
                       style={{
                         width: cardWidth,
-                        borderLeft: `${isFirst ? 3 : 2}px solid ${isFirst ? '#fbbf24' : color}`,
+                        borderLeft: `${isFirst ? 3 : 2}px solid ${isFirst ? 'var(--rank-gold)' : color}`,
                         padding: '12px 10px',
                         textAlign: 'center',
                         position: 'relative',
@@ -83,7 +85,7 @@ export default function Leaderboard() {
                         style={{
                           position: 'absolute', top: -8, right: -8,
                           width: 22, height: 22, borderRadius: '50%',
-                          background: RANK_COLORS[rank],
+                          background: RANK_STYLES[rank].color,
                           color: 'white', fontFamily: "'Courier Prime', monospace",
                           fontSize: 10, fontWeight: 700,
                           display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -154,11 +156,11 @@ export default function Leaderboard() {
                       style={{
                         width: cardWidth,
                         height: platformHeight,
-                        background: `${RANK_COLORS[rank]}15`,
+                        background: RANK_STYLES[rank].bgSubtle,
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
                         fontFamily: "'Lora', serif", fontStyle: 'italic',
                         fontSize: platformHeight * 0.7, fontWeight: 700,
-                        color: `${RANK_COLORS[rank]}20`,
+                        color: RANK_STYLES[rank].textFaint,
                         borderRadius: '0 0 8px 8px',
                       }}
                     >
@@ -174,15 +176,15 @@ export default function Leaderboard() {
           {myRank >= 0 && myCharId && (
             <div
               style={{
-                background: dark ? 'rgba(79,70,229,0.12)' : 'rgba(79,70,229,0.08)',
-                border: '2px solid rgba(79,70,229,0.25)',
+                background: 'var(--rank-strip-bg)',
+                border: '2px solid var(--rank-strip-border)',
                 borderRadius: 8,
                 padding: '10px 16px',
                 marginBottom: 16,
                 display: 'flex', alignItems: 'center', gap: 12,
               }}
             >
-              <span className="font-display italic" style={{ fontSize: 20, fontWeight: 700, color: '#4f46e5', minWidth: 32, textAlign: 'right' }}>
+              <span className="font-display italic" style={{ fontSize: 20, fontWeight: 700, color: 'var(--color-rank-accent)', minWidth: 32, textAlign: 'right' }}>
                 {myRank + 1}
               </span>
               {user?.character?.avatar_url ? (
@@ -200,14 +202,14 @@ export default function Leaderboard() {
                 />
               )}
               <div className="flex-1">
-                <span className="font-display italic" style={{ fontSize: 12, color: '#4f46e5' }}>
+                <span className="font-display italic" style={{ fontSize: 12, color: 'var(--color-rank-accent)' }}>
                   {user?.character?.display_name}
                 </span>
                 <span className="eyebrow" style={{ marginLeft: 6 }}>
                   {factionName(user?.character?.faction_slug)} · Level {user?.character?.level}
                 </span>
               </div>
-              <span className="font-display italic" style={{ fontSize: 16, fontWeight: 700, color: '#4f46e5' }}>
+              <span className="font-display italic" style={{ fontSize: 16, fontWeight: 700, color: 'var(--color-rank-accent)' }}>
                 {scoreMode === 'era' ? user?.character?.score : user?.character?.all_time_score}
               </span>
               <span className="eyebrow">{scoreMode === 'era' ? 'era pts' : 'all-time'}</span>
@@ -224,17 +226,17 @@ export default function Leaderboard() {
                   onClick={() => setScoreMode(mode)}
                   style={{
                     position: 'relative',
-                    border: `2px solid ${active ? (dark ? '#f0e6d0' : '#1a1209') : (dark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.2)')}`,
+                    border: `2px solid ${active ? 'var(--color-text-primary)' : 'var(--color-border-strong)'}`,
                     borderRadius: 0,
-                    background: active ? (dark ? '#f0e6d0' : '#1a1209') : (dark ? 'rgba(255,255,255,0.06)' : 'rgba(255,255,255,0.6)'),
-                    color: active ? (dark ? '#13121a' : '#F7F4EE') : 'var(--color-text-primary)',
+                    background: active ? 'var(--color-text-primary)' : 'var(--color-bg-surface)',
+                    color: active ? 'var(--color-bg-page)' : 'var(--color-text-primary)',
                     fontFamily: "'Courier Prime', monospace",
                     fontSize: 10, fontWeight: 700, textTransform: 'uppercase',
                     letterSpacing: '0.1em', padding: '5px 12px',
                     cursor: 'pointer',
                   }}
                 >
-                  {active && <span style={{ position: 'absolute', inset: 2, border: '1px dashed rgba(255,255,255,0.2)', pointerEvents: 'none' }} />}
+                  {active && <span style={{ position: 'absolute', inset: 2, border: '1px dashed var(--stamp-active-dashed)', pointerEvents: 'none' }} />}
                   {mode === 'era' ? 'Era Score' : 'All-time'}
                 </button>
               )
@@ -280,7 +282,7 @@ export default function Leaderboard() {
                     background: isMe ? `${color}0F` : 'transparent',
                     transition: 'background 120ms',
                   }}
-                  onMouseEnter={(e) => { if (!isMe) e.currentTarget.style.background = dark ? 'rgba(255,255,255,0.03)' : 'rgba(255,255,255,0.55)' }}
+                  onMouseEnter={(e) => { if (!isMe) e.currentTarget.style.background = 'var(--leaderboard-row-hover)' }}
                   onMouseLeave={(e) => { if (!isMe) e.currentTarget.style.background = 'transparent' }}
                 >
                   {/* Faction left accent */}

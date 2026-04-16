@@ -7,7 +7,6 @@ import PraxisCard from '../components/PraxisCard'
 import PageTitle from '../components/ui/PageTitle'
 import LevelPill from '../components/ui/LevelPill'
 import { useAuth } from '../auth/AuthContext'
-import { useTheme } from '../hooks/useTheme'
 import { extractError } from '../utils/errors'
 import { factionColor, factionName } from '../utils/factions'
 import { mediaUrl } from '../utils/media'
@@ -18,8 +17,6 @@ const LEVEL_THRESHOLDS = [0, 10, 70, 170, 330, 610, 1090, 1840, 3040]
 export default function CharacterProfile() {
   const { id } = useParams<{ id: string }>()
   const { user } = useAuth()
-  const { theme } = useTheme()
-  const dark = theme === 'dark'
   const [character, setCharacter] = useState<CharacterOut | null>(null)
   const [submissions, setSubmissions] = useState<PraxisOut[]>([])
   const [relationship, setRelationship] = useState<RelationshipListItem | null>(null)
@@ -182,7 +179,7 @@ export default function CharacterProfile() {
                     {/* Show relationship status */}
                     <div
                       style={{
-                        background: relationship.type === 'friend' ? '#14532d' : '#dc2626',
+                        background: relationship.type === 'friend' ? 'var(--badge-friend)' : 'var(--color-danger)',
                         color: 'white',
                         fontFamily: "'Courier Prime', monospace",
                         fontSize: 8, textTransform: 'uppercase', letterSpacing: '0.1em',
@@ -219,10 +216,10 @@ export default function CharacterProfile() {
                       onClick={() => handleAddRelationship('foe')}
                       disabled={relationshipLoading}
                       style={{
-                        background: 'none', color: '#dc2626',
+                        background: 'none', color: 'var(--color-danger)',
                         fontFamily: "'Courier Prime', monospace",
                         fontSize: 8, textTransform: 'uppercase', letterSpacing: '0.1em',
-                        padding: '3px 0', border: '1.5px solid #dc2626', cursor: 'pointer', borderRadius: 2,
+                        padding: '3px 0', border: '1.5px solid var(--color-danger)', cursor: 'pointer', borderRadius: 2,
                         opacity: relationshipLoading ? 0.5 : 1,
                       }}
                     >
@@ -233,7 +230,7 @@ export default function CharacterProfile() {
               </div>
             ) : null}
             {relationshipError && (
-              <p className="font-body" style={{ fontSize: 8, color: '#dc2626', marginTop: 4, textAlign: 'center' }}>{relationshipError}</p>
+              <p className="font-body" style={{ fontSize: 8, color: 'var(--color-danger)', marginTop: 4, textAlign: 'center' }}>{relationshipError}</p>
             )}
           </div>
 
@@ -327,10 +324,10 @@ export default function CharacterProfile() {
                   style={{
                     width: current ? 32 : 26, height: current ? 32 : 26,
                     borderRadius: '50%',
-                    background: completed ? charFactionColor : current ? `${charFactionColor}20` : (dark ? 'rgba(255,255,255,0.06)' : 'rgba(255,255,255,0.5)'),
+                    background: completed ? charFactionColor : current ? `${charFactionColor}20` : 'var(--level-node-incomplete)',
                     border: current ? `3px solid ${charFactionColor}` : `2px solid ${completed ? charFactionColor : 'rgba(0,0,0,0.12)'}`,
                     boxShadow: current ? `0 0 0 3px ${charFactionColor}33` : 'none',
-                    color: completed ? 'white' : current ? charFactionColor : '#c8c0b0',
+                    color: completed ? 'white' : current ? charFactionColor : 'var(--color-level-inactive)',
                     fontFamily: "'Courier Prime', monospace",
                     fontSize: current ? 10 : 8, fontWeight: 700,
                     display: 'flex', alignItems: 'center', justifyContent: 'center',

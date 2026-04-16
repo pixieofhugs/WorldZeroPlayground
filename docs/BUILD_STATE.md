@@ -174,6 +174,12 @@ All migrations use `create_type=False` on `sa.Enum()` in `add_column`/`create_ta
   - `frontend/src/App.tsx` — /collaborations/:id route added ✅
   - Spec files updated (SPEC-backend-architecture.md, SPEC-deployment.md, SPEC-game-rules.md, SPEC-data-models.md, SPEC-api.md) ✅
   - 105 unit tests passing ✅
+- **Style polish (SESSION Frontend) ✅ 2026-04-15**
+  - Dark mode ternaries replaced with CSS vars across all non-card components (NavBar, Sidebar, FilterStamps, FilterLevelNodes, Leaderboard, Updates, TaskDetail, SubmitProof, ProposeTask, CharacterProfile, feed cards)
+  - Inline layout styles → Tailwind classes (Sidebar, FilterFactionTabs, FilterStamps, FilterLevelNodes, Tasks page, Layout)
+  - Responsive breakpoints added: sidebar collapses below `lg`, card wrap via `flex-wrap` already in place
+  - Hardcoded hex audited and replaced with CSS vars in all targeted components; new vars added to index.css (rank, badge, level track, stamp dashed)
+  - Faction colors wired to API: `factionRegistry` in `utils/factions.ts` populated from `GET /game-config` via `useGameConfig`; `getAllFactions()` exposed for component fallback use
 
 Seed data:
 - `backend/seed.py` — 9 factions, 8 accounts/characters, 14 tasks, 24 submissions, ~101 votes ✅

@@ -9,19 +9,21 @@ interface Props {
 export default function FeedCardEraAnnouncement({ item }: Props) {
   const { era_name, era_notes } = item.payload
 
+  /* Era announcement is intentionally always-dark (Style Guide §8).
+     Uses --badge-admin-bg/text (stable across themes) for consistent dark-card treatment. */
   return (
     <div
       className="sidebar-card"
       style={{
-        background: '#1a1209',
-        color: '#F7F4EE',
+        background: 'var(--badge-admin-bg)',
+        color: 'var(--badge-admin-text)',
         padding: '20px 24px',
         position: 'relative',
       }}
     >
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
         <span style={{ fontSize: 20 }}>&#x1F310;</span>
-        <span className="eyebrow" style={{ color: '#c49a3a', fontSize: 8 }}>
+        <span className="eyebrow" style={{ color: 'var(--rank-silver)', fontSize: 8 }}>
           Era Announcement
         </span>
         <span style={{ marginLeft: 'auto' }}>
@@ -31,7 +33,7 @@ export default function FeedCardEraAnnouncement({ item }: Props) {
 
       <h3
         className="font-display italic"
-        style={{ fontSize: 18, color: '#F7F4EE', marginBottom: 8, lineHeight: 1.3 }}
+        style={{ fontSize: 18, color: 'var(--badge-admin-text)', marginBottom: 8, lineHeight: 1.3 }}
       >
         {era_name} is now active.
       </h3>
@@ -51,8 +53,8 @@ export default function FeedCardEraAnnouncement({ item }: Props) {
             fontWeight: 700,
             textTransform: 'uppercase',
             letterSpacing: '0.1em',
-            background: '#F7F4EE',
-            color: '#1a1209',
+            background: 'var(--badge-admin-text)',
+            color: 'var(--badge-admin-bg)',
             padding: '8px 16px',
             textDecoration: 'none',
           }}
@@ -68,7 +70,7 @@ export default function FeedCardEraAnnouncement({ item }: Props) {
             textTransform: 'uppercase',
             letterSpacing: '0.1em',
             border: '1px solid rgba(247,244,238,0.4)',
-            color: '#F7F4EE',
+            color: 'var(--badge-admin-text)',
             padding: '8px 16px',
             textDecoration: 'none',
           }}

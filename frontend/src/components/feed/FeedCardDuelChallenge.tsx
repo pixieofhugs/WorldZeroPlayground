@@ -127,7 +127,7 @@ export default function FeedCardDuelChallenge({ item }: Props) {
                 fontWeight: 700,
                 textTransform: 'uppercase',
                 letterSpacing: '0.1em',
-                background: '#dc2626',
+                background: 'var(--badge-duel)',
                 color: '#fff',
                 border: 'none',
                 padding: '5px 14px',
@@ -162,7 +162,7 @@ export default function FeedCardDuelChallenge({ item }: Props) {
 
         {status === 'accepted' && (
           <div style={{ marginTop: 8, marginLeft: 38 }}>
-            <Link to={`/collaborations/${collaboration_id}`} className="eyebrow" style={{ color: '#dc2626', textDecoration: 'none' }}>
+            <Link to={`/collaborations/${collaboration_id}`} className="eyebrow" style={{ color: 'var(--badge-duel)', textDecoration: 'none' }}>
               Duel Accepted — view duel
             </Link>
           </div>

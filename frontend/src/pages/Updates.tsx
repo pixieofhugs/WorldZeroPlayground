@@ -3,7 +3,6 @@ import { getActivityFeed, type ActivityFeedItem, type FeedCounts } from '../api/
 import PageTitle from '../components/ui/PageTitle'
 import FeedCardRouter from '../components/feed/FeedCardRouter'
 import FeedDateDivider, { getDateLabel } from '../components/feed/FeedDateDivider'
-import { useTheme } from '../hooks/useTheme'
 
 type FeedFilter = 'All' | 'Friends' | 'Foes' | 'Your Stuff' | 'Global' | 'Requests'
 
@@ -33,9 +32,6 @@ function getCount(filter: FeedFilter, counts: FeedCounts): number {
 }
 
 export default function Updates() {
-  const { theme } = useTheme()
-  const dark = theme === 'dark'
-
   const [items, setItems] = useState<ActivityFeedItem[]>([])
   const [counts, setCounts] = useState<FeedCounts>({ all: 0, friends: 0, foes: 0, your_stuff: 0, global_count: 0, requests: 0 })
   const [filter, setFilter] = useState<FeedFilter>('All')
@@ -111,10 +107,10 @@ export default function Updates() {
         onClick={() => setFilter(option)}
         style={{
           position: 'relative',
-          border: `2px solid ${active ? (dark ? '#f0e6d0' : '#1a1209') : (dark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.2)')}`,
+          border: `2px solid ${active ? 'var(--color-text-primary)' : 'var(--color-border-strong)'}`,
           borderRadius: 0,
-          background: active ? (dark ? '#f0e6d0' : '#1a1209') : (dark ? 'rgba(255,255,255,0.06)' : 'rgba(255,255,255,0.6)'),
-          color: active ? (dark ? '#13121a' : '#F7F4EE') : 'var(--color-text-primary)',
+          background: active ? 'var(--color-text-primary)' : 'var(--color-bg-surface)',
+          color: active ? 'var(--color-bg-page)' : 'var(--color-text-primary)',
           fontFamily: "'Courier Prime', monospace",
           fontSize: 10, fontWeight: 700, textTransform: 'uppercase',
           letterSpacing: '0.1em', padding: '5px 10px',
@@ -122,11 +118,11 @@ export default function Updates() {
           display: 'flex', alignItems: 'center', gap: 5,
         }}
       >
-        {active && <span style={{ position: 'absolute', inset: 2, border: '1px dashed rgba(255,255,255,0.2)', pointerEvents: 'none' }} />}
+        {active && <span style={{ position: 'absolute', inset: 2, border: '1px dashed var(--stamp-active-dashed)', pointerEvents: 'none' }} />}
         {option}
         {count > 0 && (
           <span style={{
-            background: hasRedBadge ? '#dc2626' : (active ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.1)'),
+            background: hasRedBadge ? 'var(--color-danger)' : (active ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.1)'),
             color: hasRedBadge ? 'white' : 'inherit',
             fontSize: 8, padding: '0 5px', borderRadius: 8, minWidth: 16, textAlign: 'center',
           }}>

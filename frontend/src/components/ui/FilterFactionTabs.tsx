@@ -14,7 +14,7 @@ interface Props {
 
 export default function FilterFactionTabs({ factions, value, onChange }: Props) {
   return (
-    <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
+    <div className="flex gap-1 items-center">
       <span className="eyebrow">faction:</span>
       {factions.map((faction) => {
         const active = value === faction.slug

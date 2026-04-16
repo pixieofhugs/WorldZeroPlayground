@@ -13,18 +13,6 @@ const links = [
   { to: '/updates', label: 'Updates' },
 ]
 
-/** Nav link style — Courier Prime 10px uppercase (Style Guide §5.1) */
-const NAV_LINK_BASE = {
-  fontFamily: "'Courier Prime', monospace",
-  fontSize: 10,
-  textTransform: 'uppercase' as const,
-  letterSpacing: '0.12em',
-  paddingBottom: 2,
-}
-
-const NAV_BG_LIGHT = 'rgba(247, 244, 238, 0.88)'
-const NAV_BG_DARK = 'rgba(19, 18, 26, 0.92)'
-
 export default function NavBar() {
   const { user, refetch } = useAuth()
   const { theme, toggle } = useTheme()
@@ -41,8 +29,8 @@ export default function NavBar() {
       className="sticky top-0"
       style={{
         zIndex: 10,
-        background: dark ? NAV_BG_DARK : NAV_BG_LIGHT,
-        backdropFilter: dark ? 'blur(8px)' : 'blur(6px)',
+        background: 'var(--color-nav-bg)',
+        backdropFilter: 'blur(var(--nav-blur))',
         borderBottom: '1px solid var(--color-border)',
         transition: 'background 150ms',
       }}
@@ -57,7 +45,7 @@ export default function NavBar() {
               color: 'var(--color-text-primary)',
               display: 'inline-block',
               borderBottom: '2px solid transparent',
-              backgroundImage: 'linear-gradient(var(--color-bg-page), var(--color-bg-page)), linear-gradient(90deg, #4f46e5, #be185d, #f97316, #16a34a)',
+              backgroundImage: 'linear-gradient(var(--color-bg-page), var(--color-bg-page)), linear-gradient(90deg, var(--underline-3), var(--underline-2), var(--underline-6), var(--underline-5))',
               backgroundSize: '100% calc(100% - 2px), 100% 2px',
               backgroundPosition: 'top, bottom',
               backgroundRepeat: 'no-repeat',
@@ -75,9 +63,8 @@ export default function NavBar() {
               <NavLink
                 to={to}
                 end={end}
-                className="transition-colors"
+                className="nav-link"
                 style={({ isActive }) => ({
-                  ...NAV_LINK_BASE,
                   color: isActive ? 'var(--color-text-primary)' : 'var(--color-text-secondary)',
                   borderBottom: isActive ? '1.5px solid var(--color-text-primary)' : '1.5px solid transparent',
                 })}
@@ -90,9 +77,8 @@ export default function NavBar() {
             <li>
               <NavLink
                 to="/admin"
-                className="transition-colors"
+                className="nav-link"
                 style={({ isActive }) => ({
-                  ...NAV_LINK_BASE,
                   color: isActive ? 'var(--color-text-primary)' : 'var(--color-text-secondary)',
                   borderBottom: isActive ? '1.5px solid var(--color-text-primary)' : '1.5px solid transparent',
                 })}
@@ -146,24 +132,16 @@ export default function NavBar() {
               {user.character ? (
                 <NavLink
                   to={`/characters/${user.character.id}/edit`}
-                  className="font-body transition-colors"
-                  style={{
-                    fontSize: 10,
-                    color: 'var(--color-text-secondary)',
-                    letterSpacing: '0.08em',
-                  }}
+                  className="nav-link transition-colors"
+                  style={{ color: 'var(--color-text-secondary)' }}
                 >
                   {user.character.display_name}
                 </NavLink>
               ) : (
                 <NavLink
                   to="/characters/create"
-                  className="font-body transition-colors"
-                  style={{
-                    fontSize: 10,
-                    color: 'var(--color-text-secondary)',
-                    letterSpacing: '0.08em',
-                  }}
+                  className="nav-link transition-colors"
+                  style={{ color: 'var(--color-text-secondary)' }}
                 >
                   create character
                 </NavLink>

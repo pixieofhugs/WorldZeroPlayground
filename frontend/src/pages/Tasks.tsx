@@ -98,7 +98,7 @@ export default function Tasks() {
       />
 
       {/* Filters — three distinct visual types (Style Guide §5.3) */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 24 }}>
+      <div className="flex flex-col gap-2.5 mb-6">
         {!showMetaTasks && (
           <FilterStamps options={statusFilters} value={status} onChange={setStatus} />
         )}

@@ -134,6 +134,36 @@
   --radius-md:  8px;
   --radius-lg:  12px;
   --radius-xl:  14px;
+
+  /* ── Filter stamp dashed-border (inverts with active state bg) ── */
+  --stamp-active-dashed:   rgba(255, 255, 255, 0.20);
+  --stamp-inactive-dashed: rgba(0, 0, 0, 0.15);
+
+  /* ── Leaderboard rank colors (podium — stable across themes) ── */
+  --rank-gold:   #f59e0b;
+  --rank-silver: #c49a3a;
+  --rank-bronze: #888888;
+
+  /* ── Leaderboard rank accent (your-rank strip + score highlight) ── */
+  --color-rank-accent:  #4f46e5;
+  --rank-strip-bg:      rgba(79, 70, 229, 0.08);
+  --rank-strip-border:  rgba(79, 70, 229, 0.25);
+
+  /* ── Leaderboard table row hover ── */
+  --leaderboard-row-hover: rgba(255, 255, 255, 0.55);
+
+  /* ── Level track node colors ── */
+  --color-level-inactive: #c8c0b0;
+  --level-node-incomplete: rgba(255, 255, 255, 0.50);
+
+  /* ── Feed badge colors (stable — white text always legible) ── */
+  --badge-friend:     #14532d;
+  --badge-your-stuff: #8a6a20;
+  --badge-global:     #6b6a7a;
+  --badge-duel:       #dc2626;
+  --badge-collab:     #15803d;
+  --badge-admin-bg:   #1a1209;
+  --badge-admin-text: #F7F4EE;
 }
 
 /* ══════════════════════════════════════════
@@ -241,6 +271,22 @@
 
   /* ── Shared tokens ── */
   --nav-blur: 8px;
+
+  /* ── Filter stamp dashed-border (dark-mode inversions) ── */
+  --stamp-active-dashed:   rgba(0, 0, 0, 0.15);
+  --stamp-inactive-dashed: rgba(255, 255, 255, 0.10);
+
+  /* ── Leaderboard rank accent (dark) ── */
+  --color-rank-accent:  #818cf8;
+  --rank-strip-bg:      rgba(129, 140, 248, 0.12);
+  --rank-strip-border:  rgba(129, 140, 248, 0.30);
+
+  /* ── Leaderboard table row hover (dark) ── */
+  --leaderboard-row-hover: rgba(255, 255, 255, 0.03);
+
+  /* ── Level track node colors (dark) ── */
+  --color-level-inactive: rgba(255, 255, 255, 0.30);
+  --level-node-incomplete: rgba(255, 255, 255, 0.06);
 }
 
 /* ── Type Scale ── */
@@ -391,6 +437,16 @@
     @apply font-display text-4xl font-bold mb-6;
     font-style: italic;
     color: var(--color-text-primary);
+  }
+
+  /* ── Nav links (Courier Prime 10px uppercase — Style Guide §5.1) ── */
+
+  .nav-link {
+    @apply font-body transition-colors;
+    font-size: var(--text-base);
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    padding-bottom: 2px;
   }
 
   /* ── Markdown preview ── */

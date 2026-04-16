@@ -9,7 +9,6 @@ import LevelPill from '../components/ui/LevelPill'
 import PageTitle from '../components/ui/PageTitle'
 import FeedBadge from '../components/feed/FeedBadge'
 import { useAuth } from '../auth/AuthContext'
-import { useTheme } from '../hooks/useTheme'
 import { factionColor, factionName } from '../utils/factions'
 import { extractError } from '../utils/errors'
 import { mediaUrl } from '../utils/media'
@@ -23,9 +22,6 @@ export default function TaskDetail() {
   const navigate = useNavigate()
   const location = useLocation()
   const { user } = useAuth()
-  const { theme } = useTheme()
-  const dark = theme === 'dark'
-
   const [task, setTask] = useState<TaskOut | null>(null)
   const [submissions, setSubmissions] = useState<PraxisOut[]>([])
   const [signups, setSignups] = useState<TaskSignupOut[]>([])
@@ -202,8 +198,8 @@ export default function TaskDetail() {
                 style={{
                   fontSize: 8, textTransform: 'uppercase', letterSpacing: '0.1em',
                   padding: '2px 8px', borderRadius: 4,
-                  background: task.status === 'active' ? (dark ? 'rgba(74,222,128,0.15)' : 'rgba(21,128,61,0.1)') : 'var(--color-bg-surface-alt)',
-                  color: task.status === 'active' ? '#15803d' : 'var(--color-text-tertiary)',
+                  background: task.status === 'active' ? 'var(--faction-analog-light)' : 'var(--color-bg-surface-alt)',
+                  color: task.status === 'active' ? 'var(--faction-analog)' : 'var(--color-text-tertiary)',
                 }}
               >
                 {task.status}
@@ -401,8 +397,8 @@ export default function TaskDetail() {
                       fontFamily: "'Courier Prime', monospace",
                       fontSize: 8, fontWeight: 700, textTransform: 'uppercase',
                       letterSpacing: '0.1em', padding: '4px 10px',
-                      background: submissionSort === sort ? (dark ? '#f0e6d0' : '#1a1209') : 'transparent',
-                      color: submissionSort === sort ? (dark ? '#13121a' : '#F7F4EE') : 'var(--color-text-tertiary)',
+                      background: submissionSort === sort ? 'var(--color-text-primary)' : 'transparent',
+                      color: submissionSort === sort ? 'var(--color-bg-page)' : 'var(--color-text-tertiary)',
                       border: `1px solid ${submissionSort === sort ? 'transparent' : 'var(--color-border)'}`,
                       cursor: 'pointer',
                     }}

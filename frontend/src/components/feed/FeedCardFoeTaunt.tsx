@@ -32,7 +32,7 @@ export default function FeedCardFoeTaunt({ item }: Props) {
         <span style={{ fontSize: 14 }}>&#x1F43A;</span>
         <span
           className="eyebrow"
-          style={{ color: '#c49a3a', fontSize: 8 }}
+          style={{ color: 'var(--faction-journeymen)', fontSize: 8 }}
         >
           From Your Foe
         </span>
@@ -75,7 +75,7 @@ export default function FeedCardFoeTaunt({ item }: Props) {
             fontFamily: "'Courier Prime', monospace",
             fontSize: 9,
             fontWeight: 700,
-            color: '#dc2626',
+            color: 'var(--color-danger)',
           }}
         >
           {/* Score comparison would need additional data — placeholder */}

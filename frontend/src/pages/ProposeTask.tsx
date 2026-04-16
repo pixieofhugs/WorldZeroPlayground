@@ -6,8 +6,7 @@ import { getFactions, type FactionOut } from '../api/factions'
 import PageTitle from '../components/ui/PageTitle'
 import FilterLevelNodes from '../components/ui/FilterLevelNodes'
 import { useAuth } from '../auth/AuthContext'
-import { useTheme } from '../hooks/useTheme'
-import { factionColor, factionName, FACTIONS } from '../utils/factions'
+import { factionColor, factionName, getAllFactions } from '../utils/factions'
 import { extractError } from '../utils/errors'
 
 const LEVEL_OPTIONS = [0, 1, 2, 3, 4, 5, 6, 7, 8]
@@ -20,8 +19,6 @@ const FACTION_DESCRIPTORS: Record<string, string> = {
 export default function ProposeTask() {
   const { user } = useAuth()
   const navigate = useNavigate()
-  const { theme } = useTheme()
-  const dark = theme === 'dark'
   const [factions, setFactions] = useState<FactionOut[]>([])
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
@@ -139,7 +136,7 @@ export default function ProposeTask() {
           <div style={{ marginBottom: 16 }}>
             <span className="eyebrow" style={{ display: 'block', marginBottom: 8 }}>Choose a faction for this task</span>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-              {(factions.length > 0 ? factions : Object.values(FACTIONS)).map((f) => {
+              {(factions.length > 0 ? factions : getAllFactions()).map((f) => {
                 const slug = 'slug' in f ? f.slug : (f as { slug: string }).slug
                 const active = factionSlug === slug
                 const fc = factionColor(slug)
@@ -150,7 +147,7 @@ export default function ProposeTask() {
                     onClick={() => setFactionSlug(slug)}
                     style={{
                       border: `2px solid ${active ? fc : 'var(--color-border)'}`,
-                      background: active ? `${fc}15` : (dark ? 'rgba(255,255,255,0.04)' : 'rgba(255,255,255,0.55)'),
+                      background: active ? `${fc}15` : 'var(--color-bg-surface)',
                       borderRadius: 6, padding: '8px 14px',
                       cursor: 'pointer', textAlign: 'center',
                       transition: 'all 120ms',
@@ -202,12 +199,12 @@ export default function ProposeTask() {
                     fontFamily: "'Courier Prime', monospace", fontSize: 22, fontWeight: 700,
                     color: 'var(--color-text-primary)',
                     background: 'transparent', border: 'none',
-                    borderBottom: `2px solid ${title ? color : (dark ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.12)')}`,
+                    borderBottom: `2px solid ${title ? color : 'var(--color-border-strong)'}`,
                     outline: 'none', paddingBottom: 6,
                     transition: 'border-color 150ms',
                   }}
                   onFocus={(e) => { e.currentTarget.style.borderBottomColor = color }}
-                  onBlur={(e) => { if (!title) e.currentTarget.style.borderBottomColor = dark ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.12)' }}
+                  onBlur={(e) => { if (!title) e.currentTarget.style.borderBottomColor = 'var(--color-border-strong)' }}
                 />
                 <span className={`eyebrow self-end ${title.length >= 180 ? 'text-red-600' : ''}`} style={{ fontSize: 7, marginTop: 4 }}>{title.length}/200</span>
               </div>
@@ -250,7 +247,7 @@ export default function ProposeTask() {
                         fontFamily: "'Courier Prime', monospace", fontSize: 20, fontWeight: 700,
                         color: 'var(--color-text-primary)',
                         background: 'transparent', border: 'none',
-                        borderBottom: `2px solid ${dark ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.12)'}`,
+                        borderBottom: '2px solid var(--color-border-strong)',
                         outline: 'none', textAlign: 'center',
                       }}
                     />
@@ -329,12 +326,12 @@ export default function ProposeTask() {
                     fontFamily: "'Courier Prime', monospace", fontSize: 11,
                     color: 'var(--color-text-primary)',
                     background: 'transparent',
-                    border: `1px solid ${dark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'}`,
+                    border: '1px solid var(--color-border)',
                     borderRadius: 6, padding: '0.6rem 0.7rem',
                     outline: 'none', resize: 'vertical',
                   }}
                   onFocus={(e) => { e.currentTarget.style.borderColor = color }}
-                  onBlur={(e) => { e.currentTarget.style.borderColor = dark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)' }}
+                  onBlur={(e) => { e.currentTarget.style.borderColor = 'var(--color-border)' }}
                 />
               </div>
             )}
