@@ -47,9 +47,13 @@ async def get_or_create_stats(
     session: AsyncSession,
     character_id: int,
     era_id: int,
-    initial_votes: int = 0,
 ) -> CharacterStats:
-    """Fetch or create the CharacterStats row for a given (character, era) pair."""
+    """Fetch or create the CharacterStats row for a given (character, era) pair.
+
+    Vote budget is computed on read from score + votes_spent_this_era
+    (see services.scoring.compute_votes_available), so new rows start with
+    votes_spent_this_era = 0 — no explicit seeding of the budget is required.
+    """
     result = await session.execute(
         select(CharacterStats).where(
             CharacterStats.character_id == character_id,
@@ -61,7 +65,7 @@ async def get_or_create_stats(
         stats = CharacterStats(
             character_id=character_id,
             era_id=era_id,
-            votes_available=initial_votes,
+            votes_spent_this_era=0,
         )
         session.add(stats)
         await session.flush()
@@ -89,14 +93,18 @@ async def apply_era_reset(
         prev_stats = prev_result.scalar_one_or_none()
         prev_all_time = prev_stats.all_time_score if prev_stats else 0
 
+        # Vote budget is computed on read. On era reset with reset_vote_budget=True
+        # we zero votes_spent_this_era so the on-read budget reflects the full
+        # formula against the (possibly reset) score. Otherwise we carry over
+        # the previous era's spend count.
         new_stats = CharacterStats(
             character_id=character.id,
             era_id=new_era_row.id,
             score=0 if era.reset_score else (prev_stats.score if prev_stats else 0),
             all_time_score=0 if era.reset_all_time_score else prev_all_time,
             level=0 if era.reset_level else (prev_stats.level if prev_stats else 0),
-            votes_available=era.vote_budget_base if era.reset_vote_budget else (
-                prev_stats.votes_available if prev_stats else era.vote_budget_base
+            votes_spent_this_era=0 if era.reset_vote_budget else (
+                prev_stats.votes_spent_this_era if prev_stats else 0
             ),
         )
         session.add(new_stats)

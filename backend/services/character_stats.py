@@ -21,7 +21,6 @@ from services.scoring import (
     compute_faction_multiplier,
     compute_level,
     compute_praxis_score,
-    compute_vote_budget,
 )
 
 
@@ -209,14 +208,10 @@ async def recalculate_character_stats(
 
     new_score = int(total_score)
     stats = current_stats
-    old_score = stats.score
 
-    old_budget_capacity = compute_vote_budget(old_score, era)
-    new_budget_capacity = compute_vote_budget(new_score, era)
-    budget_delta = new_budget_capacity - old_budget_capacity
-    if budget_delta > 0:
-        stats.votes_available += budget_delta
-
+    # Vote budget is computed on read (services.scoring.compute_votes_available)
+    # from stats.score and stats.votes_spent_this_era, so no bookkeeping is
+    # needed here when score changes.
     stats.score = new_score
     stats.all_time_score = max(stats.all_time_score, new_score)
     stats.level = compute_level(new_score, era)

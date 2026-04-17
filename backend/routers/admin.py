@@ -53,6 +53,7 @@ from services.admin_service import (
 )
 from services.character_stats import recalculate_character_stats
 from services.era import apply_era_reset, get_current_era_row
+from services.scoring import compute_votes_available
 from services.auth import create_jwt
 
 router = APIRouter()
@@ -196,7 +197,7 @@ async def admin_patch_character_stats(
         score=stats.score,
         all_time_score=stats.all_time_score,
         level=stats.level,
-        votes_available=stats.votes_available,
+        votes_available=compute_votes_available(stats),
     )
 
 

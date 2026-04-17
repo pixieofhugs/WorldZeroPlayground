@@ -171,7 +171,7 @@ async def seed(env: str, yes: bool) -> None:
                 score=0,
                 all_time_score=0,
                 level=0,
-                votes_available=era.vote_budget_base,
+                votes_spent_this_era=0,
             ))
             await session.flush()
 

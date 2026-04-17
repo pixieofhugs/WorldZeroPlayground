@@ -26,6 +26,7 @@ from schemas.admin import (
     OverviewStats,
 )
 from services.era import get_current_era_row, get_or_create_stats
+from services.scoring import compute_votes_available
 
 
 # ---------------------------------------------------------------------------
@@ -85,6 +86,7 @@ async def list_characters(
     session: AsyncSession,
     faction: str | None = None,
     status: str | None = None,
+    era: EraConfig = CURRENT_ERA,
 ) -> list[CharacterSummary]:
     era_row = await get_current_era_row(session)
 
@@ -119,7 +121,7 @@ async def list_characters(
             status=character.status.value,
             score=stats.score if stats else 0,
             level=stats.level if stats else 0,
-            votes_available=stats.votes_available if stats else 0,
+            votes_available=compute_votes_available(stats, era) if stats else era.vote_budget_base,
             created_at=character.created_at,
         )
         for character, stats in rows
@@ -213,7 +215,6 @@ async def admin_create_character(
         session,
         character_id=character.id,
         era_id=era_row.id,
-        initial_votes=era.vote_budget_base,
     )
 
     await session.commit()
@@ -238,7 +239,6 @@ async def set_character_stats(
         session,
         character_id=character_id,
         era_id=era_row.id,
-        initial_votes=era.vote_budget_base,
     )
 
     if patch.level is not None:
@@ -248,7 +248,12 @@ async def set_character_stats(
     if patch.all_time_score is not None:
         stats.all_time_score = patch.all_time_score
     if patch.votes_available is not None:
-        stats.votes_available = patch.votes_available
+        # Translate a desired `votes_available` into `votes_spent_this_era`
+        # so the on-read formula lands on the requested value.
+        # votes_spent = cap - desired (clamped at 0).
+        score_for_cap = patch.score if patch.score is not None else stats.score
+        cap = era.vote_budget_base + int(era.vote_budget_multiplier * score_for_cap)
+        stats.votes_spent_this_era = max(0, cap - patch.votes_available)
 
     await session.commit()
     await session.refresh(stats)

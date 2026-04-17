@@ -41,7 +41,8 @@ class Character(Base):
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=func.now(), onupdate=func.now()
     )
-    # score, level, votes_available, all_time_score live in CharacterStats (star schema split)
+    # score, level, votes_spent_this_era, all_time_score live in CharacterStats (star schema split)
+    # votes_available is computed on read: services.scoring.compute_votes_available
 
     account: Mapped["Account"] = relationship(
         "Account", back_populates="characters", lazy="raise"

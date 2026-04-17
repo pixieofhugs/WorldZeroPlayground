@@ -8,6 +8,7 @@ from models.praxis import Praxis, PraxisMember, PraxisType
 from models.vote import Vote
 from services.character_stats import recalculate_character_stats
 from services.era import get_current_era_row, get_or_create_stats
+from services.scoring import compute_votes_available
 
 
 async def cast_or_update_vote(
@@ -38,11 +39,11 @@ async def cast_or_update_vote(
         await session.refresh(existing)
         return existing
 
-    # New vote — deduct from budget via CharacterStats
+    # New vote — deduct from budget via CharacterStats (on-read recomputation)
     era_row = await get_current_era_row(session)
     stats = await get_or_create_stats(session, voter.id, era_row.id)
 
-    if stats.votes_available <= 0:
+    if compute_votes_available(stats, era) <= 0:
         raise HTTPException(status_code=403, detail="No votes remaining in your budget.")
 
     vote = Vote(
@@ -51,7 +52,7 @@ async def cast_or_update_vote(
         voter_account_id=voter.account_id,
         stars=stars,
     )
-    stats.votes_available -= 1
+    stats.votes_spent_this_era += 1
     session.add(vote)
     await session.flush()
     await recalculate_character_stats(praxis.created_by_id, session, era)
@@ -123,11 +124,11 @@ async def cast_or_update_duel_vote(
         await session.refresh(existing)
         return existing
 
-    # New vote — deduct from budget
+    # New vote — deduct from budget (on-read recomputation)
     era_row = await get_current_era_row(session)
     stats = await get_or_create_stats(session, voter.id, era_row.id)
 
-    if stats.votes_available <= 0:
+    if compute_votes_available(stats, era) <= 0:
         raise HTTPException(status_code=403, detail="No votes remaining in your budget.")
 
     # Look up the character_id for the targeted member
@@ -145,7 +146,7 @@ async def cast_or_update_duel_vote(
         stars=stars,
         praxis_member_id=praxis_member_id,
     )
-    stats.votes_available -= 1
+    stats.votes_spent_this_era += 1
     session.add(vote)
     await session.flush()
     for member_id in member_ids:

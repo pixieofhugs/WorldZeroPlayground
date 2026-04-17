@@ -376,7 +376,7 @@ legacy `praxis` (old table), `collaboration`, `collaboration_member`,
 
 ---
 
-### TASK R.5 — Vote budget: on-read recomputation
+### TASK R.5 ✅ 2026-04-17 — Vote budget: on-read recomputation
 
 **Problem:** `votes_available` is stored as a running counter and decremented on each vote. It drifts from the formula if score changes (era reset, stat patch, etc.) and does not grow as the character earns points.
 

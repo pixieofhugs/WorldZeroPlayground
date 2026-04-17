@@ -188,7 +188,7 @@ async def character(db_session: AsyncSession, account: Account, era: Era, factio
         score=0,
         all_time_score=0,
         level=0,
-        votes_available=10,
+        votes_spent_this_era=0,
     )
     db_session.add(stats)
     await db_session.commit()
@@ -214,7 +214,7 @@ async def character2(db_session: AsyncSession, account2: Account, era: Era, fact
         score=500,
         all_time_score=500,
         level=5,
-        votes_available=10,
+        votes_spent_this_era=0,
     )
     db_session.add(stats)
     await db_session.commit()
