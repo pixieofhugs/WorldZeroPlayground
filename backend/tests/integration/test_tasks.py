@@ -3,6 +3,7 @@ import pytest
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from models.account import Account
 from models.character import Character
 from models.character_stats import CharacterStats
 from models.faction import Faction, FactionStatus
