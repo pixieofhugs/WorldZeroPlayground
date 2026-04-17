@@ -57,7 +57,7 @@ legacy `praxis` (old table), `collaboration`, `collaboration_member`,
 
 ---
 
-### TASK P.1 — Alembic migration: unify to single Praxis table
+### TASK P.1 ✅ 2026-04-17 — Alembic migration: unify to single Praxis table
 
 **Scope:** Database only. No Python model/service code changes yet.
 
@@ -90,7 +90,7 @@ legacy `praxis` (old table), `collaboration`, `collaboration_member`,
 
 ---
 
-### TASK P.2 — Backend models: rewrite to unified Praxis
+### TASK P.2 ✅ 2026-04-17 — Backend models: rewrite to unified Praxis
 
 **Depends on:** P.1
 
@@ -123,7 +123,7 @@ legacy `praxis` (old table), `collaboration`, `collaboration_member`,
 
 ---
 
-### TASK P.3 — Backend schemas: rewrite to unified Praxis
+### TASK P.3 ✅ 2026-04-17 — Backend schemas: rewrite to unified Praxis
 
 **Depends on:** P.2
 
@@ -151,7 +151,7 @@ legacy `praxis` (old table), `collaboration`, `collaboration_member`,
 
 ---
 
-### TASK P.4 — Backend services: rewrite to unified Praxis
+### TASK P.4 ✅ 2026-04-17 — Backend services: rewrite to unified Praxis
 
 **Depends on:** P.3
 
@@ -193,7 +193,7 @@ legacy `praxis` (old table), `collaboration`, `collaboration_member`,
 
 ---
 
-### TASK P.5 — Backend routes: single unified praxes router
+### TASK P.5 ✅ 2026-04-17 — Backend routes: single unified praxes router
 
 **Depends on:** P.4
 
@@ -230,7 +230,7 @@ legacy `praxis` (old table), `collaboration`, `collaboration_member`,
 
 ---
 
-### TASK P.6 — Frontend API: single unified praxis client
+### TASK P.6 ✅ 2026-04-17 — Frontend API: single unified praxis client
 
 **Depends on:** P.5 (backend must be running with new routes)
 
@@ -255,7 +255,7 @@ legacy `praxis` (old table), `collaboration`, `collaboration_member`,
 
 ---
 
-### TASK P.7 — Frontend pages + components: wire to new API
+### TASK P.7 ✅ 2026-04-17 — Frontend pages + components: wire to new API
 
 **Depends on:** P.6
 
@@ -279,7 +279,7 @@ legacy `praxis` (old table), `collaboration`, `collaboration_member`,
 
 ---
 
-### TASK P.8 — Tests and spec docs
+### TASK P.8 ✅ 2026-04-17 — Tests and spec docs
 
 **Depends on:** P.5
 
