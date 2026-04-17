@@ -164,34 +164,27 @@ export default function Sidebar() {
           </p>
         ) : (
           <div className="flex flex-col gap-1.5">
-            {activeTasks.map((characterTask) => {
-              const taskFactionColor = factionColor(characterTask.task.primary_faction_slug)
-              const taskFactionName = factionName(characterTask.task.primary_faction_slug)
-              return (
-                <div
-                  key={characterTask.id}
-                  className="flex items-start justify-between"
-                  style={{
-                    borderLeft: `3px solid ${taskFactionColor}`,
-                    paddingLeft: 8,
-                  }}
-                >
-                  <div className="min-w-0">
-                    <Link
-                      to={`/tasks/${characterTask.task.id}/submit`}
-                      className="font-body block"
-                      style={{ fontSize: 10, fontWeight: 700, color: 'var(--color-text-primary)', textDecoration: 'none', lineHeight: 1.3 }}
-                    >
-                      {characterTask.task.title}
-                    </Link>
-                    <span className="font-body" style={{ fontSize: 8, color: 'var(--color-text-tertiary)' }}>
-                      {taskFactionName} · lvl {characterTask.task.level_required}
-                    </span>
-                  </div>
-                  <FeedBadge type="global" label="Solo" />
+            {activeTasks.map((praxis) => (
+              <div
+                key={praxis.id}
+                className="flex items-start justify-between"
+                style={{
+                  borderLeft: `3px solid var(--color-border)`,
+                  paddingLeft: 8,
+                }}
+              >
+                <div className="min-w-0">
+                  <Link
+                    to={`/praxes/${praxis.id}/edit`}
+                    className="font-body block"
+                    style={{ fontSize: 10, fontWeight: 700, color: 'var(--color-text-primary)', textDecoration: 'none', lineHeight: 1.3 }}
+                  >
+                    {praxis.task_title}
+                  </Link>
                 </div>
-              )
-            })}
+                <FeedBadge type="global" label="Solo" />
+              </div>
+            ))}
           </div>
         )}
 
