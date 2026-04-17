@@ -9,6 +9,7 @@ from httpx import AsyncClient
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from models.account import Account
 from models.character import Character
 from models.character_stats import CharacterStats
 from models.era import Era
@@ -279,3 +280,194 @@ async def test_duel_vote_summary_endpoint(
     # For a solo praxis with no duel members the list is empty
     data = resp.json()
     assert isinstance(data, list)
+
+
+# ---------------------------------------------------------------------------
+# T.10 SESSION T additions — R-rule explicit coverage
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.asyncio
+async def test_duel_vote_blocked_by_alt_character_on_same_account(
+    client: AsyncClient,
+    db_session: AsyncSession,
+    account: Account,
+    account2: Account,
+    character: Character,
+    character2: Character,
+    active_task: Task,
+    era: Era,
+    auth_headers: dict,
+    auth_headers2: dict,
+):
+    """R.4: An account with a character in a duel cannot vote from any of its characters.
+
+    Account A owns character A1. Account B owns character B1. A1 + B1 are
+    members of a duel. Any character on account A (even a different one)
+    trying to vote is blocked at the account level — this test covers the
+    primary vector by having the account that owns a duel participant
+    attempt to vote on the duel, and confirms an unrelated account CAN vote.
+    """
+    from models.account import Account as AccountModel
+    from models.character import Character as CharacterModel
+    from models.character_stats import CharacterStats
+    from models.praxis import PraxisType
+    from services.auth import create_jwt
+    from sqlalchemy import select
+
+    # Raise A1 (character) to level 2 to satisfy the duel level gate
+    a1_stats_result = await db_session.execute(
+        select(CharacterStats).where(CharacterStats.character_id == character.id)
+    )
+    a1_stats = a1_stats_result.scalar_one()
+    a1_stats.level = 2
+    await db_session.commit()
+
+    # character2 (level 5) creates the duel
+    create_resp = await client.post(
+        "/praxes",
+        json={"task_id": active_task.id, "type": "duel", "title": "R4 Duel"},
+        headers=auth_headers2,
+    )
+    assert create_resp.status_code == 201
+    duel_id = create_resp.json()["id"]
+
+    # character2 invites character (A1) to the duel
+    invite_resp = await client.post(
+        f"/praxes/{duel_id}/invite",
+        json={"invitee_id": character.id},
+        headers=auth_headers2,
+    )
+    assert invite_resp.status_code == 200
+    invite_id = invite_resp.json()["id"]
+
+    # A1 accepts the invite
+    accept_resp = await client.post(
+        f"/praxes/{duel_id}/invite/{invite_id}/respond",
+        json={"accept": True},
+        headers=auth_headers,
+    )
+    assert accept_resp.status_code == 200
+
+    # Find the praxis_member rows (A1 and B1)
+    members = accept_resp.json()["members"]
+    member_for_a1 = next(m for m in members if m["character_id"] == character.id)
+    member_for_b1 = next(m for m in members if m["character_id"] == character2.id)
+
+    # Account A tries to vote on B1 in the duel (A1 is A's participant).
+    # The account-level anti-self-vote rule should block this.
+    block_resp = await client.post(
+        f"/praxes/{duel_id}/vote",
+        json={"stars": 3, "praxis_member_id": member_for_b1["id"]},
+        headers=auth_headers,
+    )
+    assert block_resp.status_code == 403
+    detail = block_resp.json()["detail"].lower()
+    assert "account" in detail or "own" in detail or "participant" in detail
+
+    # Create an unrelated voter on a third account
+    account_c = AccountModel(email="duelvoter_c@example.com")
+    db_session.add(account_c)
+    await db_session.flush()
+    voter_c = CharacterModel(
+        account_id=account_c.id,
+        username="voter_c",
+        display_name="Voter C",
+        faction_slug="ua",
+    )
+    db_session.add(voter_c)
+    await db_session.flush()
+    db_session.add(
+        CharacterStats(
+            character_id=voter_c.id,
+            era_id=era.id,
+            score=100,
+            all_time_score=100,
+            level=3,
+            votes_spent_this_era=0,
+        )
+    )
+    await db_session.commit()
+
+    c_headers = {"Authorization": f"Bearer {create_jwt(account_c.id)}"}
+
+    # Unrelated account C's character votes — should succeed
+    allow_resp = await client.post(
+        f"/praxes/{duel_id}/vote",
+        json={"stars": 4, "praxis_member_id": member_for_a1["id"]},
+        headers=c_headers,
+    )
+    assert allow_resp.status_code == 200
+    assert allow_resp.json()["stars"] == 4
+
+
+@pytest.mark.asyncio
+async def test_vote_budget_increases_when_score_grows(
+    db_session: AsyncSession,
+    character: Character,
+    era: Era,
+):
+    """R.5: Vote budget grows with score since it is computed on-read."""
+    from math import floor
+    from sqlalchemy import select
+
+    from game_config import CURRENT_ERA
+
+    result = await db_session.execute(
+        select(CharacterStats).where(
+            CharacterStats.character_id == character.id,
+            CharacterStats.era_id == era.id,
+        )
+    )
+    stats = result.scalar_one()
+    stats.score = 0
+    stats.votes_spent_this_era = 0
+    await db_session.commit()
+    await db_session.refresh(stats)
+
+    budget_zero_score = compute_votes_available(stats)
+    assert budget_zero_score == CURRENT_ERA.vote_budget_base
+
+    # Raise score to 100 — budget must reflect new formula
+    stats.score = 100
+    await db_session.commit()
+    await db_session.refresh(stats)
+
+    budget_hundred = compute_votes_available(stats)
+    expected = CURRENT_ERA.vote_budget_base + floor(
+        CURRENT_ERA.vote_budget_multiplier * 100
+    )
+    assert budget_hundred == expected
+    assert budget_hundred > budget_zero_score
+
+
+@pytest.mark.asyncio
+async def test_vote_budget_reflects_votes_spent(
+    db_session: AsyncSession,
+    character: Character,
+    era: Era,
+):
+    """R.5: votes_available = base + floor(multiplier * score) - votes_spent_this_era."""
+    from math import floor
+    from sqlalchemy import select
+
+    from game_config import CURRENT_ERA
+
+    result = await db_session.execute(
+        select(CharacterStats).where(
+            CharacterStats.character_id == character.id,
+            CharacterStats.era_id == era.id,
+        )
+    )
+    stats = result.scalar_one()
+    stats.score = 500
+    stats.votes_spent_this_era = 2
+    await db_session.commit()
+    await db_session.refresh(stats)
+
+    expected = (
+        CURRENT_ERA.vote_budget_base
+        + floor(CURRENT_ERA.vote_budget_multiplier * 500)
+        - 2
+    )
+    assert compute_votes_available(stats) == expected

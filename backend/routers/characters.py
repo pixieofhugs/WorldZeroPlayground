@@ -33,12 +33,16 @@ from services.character import (
 )
 from services.era import get_current_era_row
 from services.praxis import build_praxis_out
+from services.scoring import compute_votes_available
 
 router = APIRouter()
 
 
 def _build_character_out(character: Character, stats: Optional[CharacterStats]) -> CharacterOut:
-    """Build a flat CharacterOut from a Character row and its optional CharacterStats."""
+    """Build a flat CharacterOut from a Character row and its optional CharacterStats.
+
+    votes_available is computed on-read from stats (see R.5).
+    """
     return CharacterOut(
         id=character.id,
         username=character.username,
@@ -52,6 +56,7 @@ def _build_character_out(character: Character, stats: Optional[CharacterStats]) 
         score=stats.score if stats else 0,
         all_time_score=stats.all_time_score if stats else 0,
         level=stats.level if stats else 0,
+        votes_available=compute_votes_available(stats) if stats else 0,
     )
 
 

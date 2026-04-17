@@ -963,7 +963,7 @@ check to pass.
 
 > **Rescoped 2026-04-17** after auditing the suite against the SESSION R rules changes. Most of T.5–T.9 turned out to be largely done already. The remaining work is: (a) cover the new R rules with explicit tests, (b) rename a couple of test functions whose names now lie about what they test, and (c) fill small gaps. T.10 is new and is the highest-value item here.
 
-### TASK T.5 — Integration tests: characters routes (coverage ~57%)
+### TASK T.5 ✅ 2026-04-17 — Integration tests: characters routes (coverage ~57%)
 
 **Current state:** 31 tests cover CRUD, list filters (search, faction, pagination), stats exposure, avatar upload (including 403 cases), relationships, votes-received, and the second-character level gate. The gate test functions correctly check the **level 5** threshold from R.7, but their names still say "level3".
 
@@ -978,7 +978,7 @@ check to pass.
 
 ---
 
-### TASK T.6 — Integration tests: tasks routes (coverage ~65%)
+### TASK T.6 ✅ 2026-04-17 — Integration tests: tasks routes (coverage ~65%)
 
 **Current state:** 31 tests cover list filters (status, faction, level, points, exclude_character_id), propose at level-3, edit pending tasks, signup lists, hidden-faction exclusion, response field shape.
 
@@ -992,7 +992,7 @@ check to pass.
 
 ---
 
-### TASK T.7 — Integration tests: auth routes (coverage ~60%)
+### TASK T.7 ✅ 2026-04-17 — Integration tests: auth routes (coverage ~60%)
 
 **Current state:** 15 tests cover `/auth/me` (authenticated / unauthenticated / no character / with stats / no email leak / not-admin-by-default), logout + cookie clear, and token validation (expired, malformed, wrong signature, missing Bearer prefix).
 
@@ -1004,7 +1004,7 @@ check to pass.
 
 ---
 
-### TASK T.8 — Integration tests: admin routes (coverage ~60%, no regressions under R.5)
+### TASK T.8 ✅ 2026-04-17 — Integration tests: admin routes (coverage ~60%, no regressions under R.5)
 
 **Current state:** 46 tests including task management, praxis moderation, character stats patching, account management, era reset, role management, and 403 coverage on every endpoint. `test_admin_patch_character_stats` still passes under R.5 because `set_character_stats` translates the `votes_available` patch into `votes_spent_this_era = max(0, cap - desired)` at the service layer.
 
@@ -1029,7 +1029,7 @@ factions.py (8 tests), leaderboard.py (7 tests), messages.py (10 tests), relatio
 
 ---
 
-### TASK T.10 — Cover the new R rules with explicit integration tests (NEW)
+### TASK T.10 ✅ 2026-04-17 — Cover the new R rules with explicit integration tests (NEW)
 
 Each rule that shipped in PRs #105 and #106 deserves a dedicated integration test so a future regression surfaces in CI instead of prod.
 

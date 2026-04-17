@@ -604,3 +604,134 @@ async def test_list_task_signups_only_in_progress(
     assert resp.status_code == 200
     character_ids = [entry["character_id"] for entry in resp.json()]
     assert character.id not in character_ids
+
+
+# ---------------------------------------------------------------------------
+# T.6 SESSION T additions — admin bypass and my-tasks (praxes) status filter
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.asyncio
+async def test_admin_bypass_propose_level_gate(
+    client: AsyncClient,
+    account: Account,
+    character: Character,
+    auth_headers: dict,
+    db_session: AsyncSession,
+):
+    """Admin character at level 0 can propose a task despite the level gate (B.5)."""
+    from models.roles import AccountRole, Role
+
+    # character is level 0; grant the owning account admin role
+    role = Role(name="admin", description="Administrator")
+    db_session.add(role)
+    await db_session.flush()
+    account_role = AccountRole(
+        account_id=account.id, role_id=role.id, granted_by=account.id
+    )
+    db_session.add(account_role)
+    await db_session.commit()
+
+    resp = await client.post(
+        "/tasks",
+        json={"title": "Admin Level 0 Task", "point_value": 5, "level_required": 0},
+        headers=auth_headers,
+    )
+    # Without admin bypass this would be 403; with it we expect 201
+    assert resp.status_code == 201, f"Expected 201 but got {resp.status_code}: {resp.json()}"
+    assert resp.json()["title"] == "Admin Level 0 Task"
+
+
+@pytest.mark.asyncio
+async def test_my_tasks_with_status_filter(
+    client: AsyncClient,
+    db_session: AsyncSession,
+    character2: Character,
+    auth_headers2: dict,
+):
+    """GET /praxes?character_id=X with status filter returns the right subset.
+
+    The new praxis model has no `abandoned` status — the closest analog is
+    `is_withdrawn=True` on an in_progress praxis. This test covers the two
+    real statuses exposed by PraxisStatus: in_progress and submitted, plus
+    the withdrawal flag.
+    """
+    from models.task import TaskStatus
+
+    # Seed three active tasks for character2
+    tasks = []
+    for index in range(3):
+        task = Task(
+            title=f"MyTask {index}",
+            description="",
+            point_value=5,
+            level_required=0,
+            status=TaskStatus.active,
+            created_by=character2.id,
+            primary_faction_slug="ua",
+        )
+        db_session.add(task)
+        tasks.append(task)
+    await db_session.commit()
+    for task in tasks:
+        await db_session.refresh(task)
+
+    # character2 creates three solo praxes, one per task
+    praxis_ids = []
+    for task in tasks:
+        create_resp = await client.post(
+            "/praxes",
+            json={"task_id": task.id, "type": "solo"},
+            headers=auth_headers2,
+        )
+        assert create_resp.status_code == 201, create_resp.json()
+        praxis_ids.append(create_resp.json()["id"])
+
+    # Submit the first praxis
+    submit_resp = await client.post(
+        f"/praxes/{praxis_ids[0]}/submit",
+        headers=auth_headers2,
+    )
+    assert submit_resp.status_code == 200
+
+    # Withdraw the second praxis
+    withdraw_resp = await client.post(
+        f"/praxes/{praxis_ids[1]}/withdraw",
+        headers=auth_headers2,
+    )
+    assert withdraw_resp.status_code == 200
+
+    # status=submitted returns only the first praxis
+    resp_submitted = await client.get(
+        "/praxes",
+        params={"character_id": character2.id, "status": "submitted"},
+    )
+    assert resp_submitted.status_code == 200
+    submitted_ids = [p["id"] for p in resp_submitted.json()]
+    assert praxis_ids[0] in submitted_ids
+    assert praxis_ids[1] not in submitted_ids
+    assert praxis_ids[2] not in submitted_ids
+
+    # status=in_progress returns the remaining two (withdrawn one stays
+    # in_progress but has is_withdrawn=True; third is fresh in_progress)
+    resp_ip = await client.get(
+        "/praxes",
+        params={"character_id": character2.id, "status": "in_progress"},
+    )
+    assert resp_ip.status_code == 200
+    ip_ids = [p["id"] for p in resp_ip.json()]
+    assert praxis_ids[0] not in ip_ids
+    assert praxis_ids[2] in ip_ids
+    # The withdrawn praxis should also still appear under in_progress
+    # because PraxisStatus doesn't change on withdraw.
+    assert praxis_ids[1] in ip_ids
+
+    # No status filter returns all three
+    resp_all = await client.get(
+        "/praxes",
+        params={"character_id": character2.id},
+    )
+    assert resp_all.status_code == 200
+    all_ids = [p["id"] for p in resp_all.json()]
+    for praxis_id in praxis_ids:
+        assert praxis_id in all_ids

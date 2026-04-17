@@ -995,3 +995,174 @@ async def test_admin_edit_active_task_rejected(
         headers=auth_headers,
     )
     assert resp.status_code == 400
+
+
+# ---------------------------------------------------------------------------
+# T.8 SESSION T additions — vote budget recompute + era reset semantics (R.5)
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.asyncio
+async def test_admin_patch_stats_recomputes_votes_available(
+    client: AsyncClient,
+    account: Account,
+    character: Character,
+    auth_headers: dict,
+    db_session: AsyncSession,
+    era: Era,
+):
+    """PATCH /admin/characters/{id}/stats with votes_available=5 stores the
+    equivalent votes_spent_this_era so the on-read budget lands at 5 (R.5)."""
+    from math import floor
+    from sqlalchemy import select
+
+    from game_config import CURRENT_ERA
+
+    await _make_admin(account, db_session)
+
+    # Set a known score so we can predict votes_available
+    patch_resp = await client.patch(
+        f"/admin/characters/{character.id}/stats",
+        json={"score": 0, "votes_available": 5},
+        headers=auth_headers,
+    )
+    assert patch_resp.status_code == 200
+    assert patch_resp.json()["votes_available"] == 5
+
+    # The service should have stored votes_spent_this_era = cap - 5
+    result = await db_session.execute(
+        select(CharacterStats).where(
+            CharacterStats.character_id == character.id,
+            CharacterStats.era_id == era.id,
+        )
+    )
+    stats = result.scalar_one()
+    await db_session.refresh(stats)
+    cap = CURRENT_ERA.vote_budget_base + floor(CURRENT_ERA.vote_budget_multiplier * 0)
+    assert stats.votes_spent_this_era == max(0, cap - 5)
+
+    # Re-reading via /admin/characters confirms the computed value
+    list_resp = await client.get(
+        f"/admin/characters?faction={character.faction_slug}",
+        headers=auth_headers,
+    )
+    assert list_resp.status_code == 200
+    matching = [c for c in list_resp.json() if c["id"] == character.id]
+    assert len(matching) == 1
+    assert matching[0]["votes_available"] == 5
+
+
+@pytest.mark.asyncio
+async def test_admin_era_reset_zeros_votes_spent_this_era(
+    client: AsyncClient,
+    account: Account,
+    character: Character,
+    character2: Character,
+    auth_headers: dict,
+    db_session: AsyncSession,
+    era: Era,
+):
+    """Era reset with reset_vote_budget=True zeros votes_spent_this_era (R.5)."""
+    from sqlalchemy import select
+    from math import floor
+
+    from game_config import CURRENT_ERA
+
+    await _make_admin(account, db_session)
+
+    # Pre-reset: force character to have votes_spent_this_era > 0
+    result = await db_session.execute(
+        select(CharacterStats).where(
+            CharacterStats.character_id == character.id,
+            CharacterStats.era_id == era.id,
+        )
+    )
+    stats = result.scalar_one()
+    stats.votes_spent_this_era = 7
+    stats.score = 50
+    await db_session.commit()
+
+    # Sanity: ERA_1 has reset_vote_budget=True, so the helper won't run
+    # against a different config.
+    assert CURRENT_ERA.reset_vote_budget is True
+
+    reset_resp = await client.put("/admin/era/reset", headers=auth_headers)
+    assert reset_resp.status_code == 200
+    new_era_id = reset_resp.json()["era_id"]
+
+    # Fetch the new-era stats row
+    new_result = await db_session.execute(
+        select(CharacterStats).where(
+            CharacterStats.character_id == character.id,
+            CharacterStats.era_id == new_era_id,
+        )
+    )
+    new_stats = new_result.scalar_one()
+    await db_session.refresh(new_stats)
+    assert new_stats.votes_spent_this_era == 0
+
+    # With reset_score=True on ERA_1, score is 0 in the new era, so budget == base.
+    expected_budget = CURRENT_ERA.vote_budget_base + floor(
+        CURRENT_ERA.vote_budget_multiplier * new_stats.score
+    )
+    # compute_votes_available should equal the expected budget
+    from services.scoring import compute_votes_available
+    assert compute_votes_available(new_stats, CURRENT_ERA) == expected_budget
+
+
+@pytest.mark.asyncio
+async def test_admin_era_reset_preserves_votes_spent_without_flag(
+    client: AsyncClient,
+    account: Account,
+    character: Character,
+    auth_headers: dict,
+    db_session: AsyncSession,
+    era: Era,
+):
+    """With reset_vote_budget=False the new era carries over votes_spent_this_era (R.5)."""
+    from dataclasses import replace
+
+    from game_config import CURRENT_ERA
+    from models.era import Era as EraModel
+    from services.era import apply_era_reset
+    from sqlalchemy import select
+
+    await _make_admin(account, db_session)
+
+    # Pre-reset spend
+    result = await db_session.execute(
+        select(CharacterStats).where(
+            CharacterStats.character_id == character.id,
+            CharacterStats.era_id == era.id,
+        )
+    )
+    stats = result.scalar_one()
+    stats.votes_spent_this_era = 9
+    await db_session.commit()
+
+    # Build a new era row and trigger reset directly through the service
+    # with a custom EraConfig that disables reset_vote_budget. The public
+    # /admin/era/reset endpoint uses CURRENT_ERA unconditionally, so to
+    # exercise the preservation branch we invoke the service with an
+    # overridden EraConfig.
+    new_era_row = EraModel(
+        name=CURRENT_ERA.name,
+        config_key=CURRENT_ERA.config_key,
+        started_by=account.id,
+    )
+    db_session.add(new_era_row)
+    await db_session.flush()
+
+    preserving_era = replace(CURRENT_ERA, reset_vote_budget=False)
+    await apply_era_reset([character], new_era_row, db_session, era=preserving_era)
+
+    # Load the new-era stats row
+    new_result = await db_session.execute(
+        select(CharacterStats).where(
+            CharacterStats.character_id == character.id,
+            CharacterStats.era_id == new_era_row.id,
+        )
+    )
+    new_stats = new_result.scalar_one()
+    await db_session.refresh(new_stats)
+    assert new_stats.votes_spent_this_era == 9

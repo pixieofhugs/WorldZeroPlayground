@@ -4,6 +4,7 @@ from datetime import datetime, timedelta, timezone
 import pytest
 from httpx import AsyncClient
 from jose import jwt
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from config import settings
 from models.account import Account
@@ -207,3 +208,77 @@ async def test_auth_me_with_character_faction(
     assert resp.status_code == 200
     char = resp.json()["character"]
     assert char["faction_slug"] == character.faction_slug
+
+
+@pytest.mark.asyncio
+async def test_auth_me_exposes_votes_available(
+    client: AsyncClient,
+    account: Account,
+    character: Character,
+    auth_headers: dict,
+    db_session: AsyncSession,
+    era,
+):
+    """GET /auth/me surfaces the on-read computed vote budget (R.5).
+
+    votes_available = base + floor(multiplier * score) - votes_spent_this_era
+    """
+    from math import floor
+    from sqlalchemy import select
+
+    from game_config import CURRENT_ERA
+    from models.character_stats import CharacterStats
+
+    # Seed a known score on the character
+    result = await db_session.execute(
+        select(CharacterStats).where(
+            CharacterStats.character_id == character.id,
+            CharacterStats.era_id == era.id,
+        )
+    )
+    stats = result.scalar_one()
+    stats.score = 100
+    stats.votes_spent_this_era = 0
+    await db_session.commit()
+
+    resp = await client.get("/auth/me", headers=auth_headers)
+    assert resp.status_code == 200
+    char = resp.json()["character"]
+    assert char is not None
+    assert "votes_available" in char
+
+    expected = (
+        CURRENT_ERA.vote_budget_base
+        + floor(CURRENT_ERA.vote_budget_multiplier * 100)
+        - 0
+    )
+    assert char["votes_available"] == expected
+
+    # Admin patches votes_available lower; re-fetch /auth/me and confirm update.
+    # (Uses the admin service layer directly; emulates an admin patch.)
+    from schemas.admin import CharacterStatsPatch
+    from services.admin_service import set_character_stats
+    from models.roles import AccountRole, Role
+
+    # Grant admin to this account so we can call the admin endpoint
+    role = Role(name="admin", description="Administrator")
+    db_session.add(role)
+    await db_session.flush()
+    db_session.add(
+        AccountRole(account_id=account.id, role_id=role.id, granted_by=account.id)
+    )
+    await db_session.commit()
+
+    # Patch votes_available to 42 via the admin service
+    await set_character_stats(
+        character.id,
+        CharacterStatsPatch(votes_available=42),
+        db_session,
+    )
+
+    # Re-fetch /auth/me
+    resp2 = await client.get("/auth/me", headers=auth_headers)
+    assert resp2.status_code == 200
+    updated_char = resp2.json()["character"]
+    # The computed value must reflect the admin patch
+    assert updated_char["votes_available"] == 42

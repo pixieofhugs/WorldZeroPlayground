@@ -694,3 +694,193 @@ async def test_list_praxes_excludes_hidden(
     assert resp.status_code == 200
     ids = [item["id"] for item in resp.json()]
     assert praxis_id not in ids
+
+
+# ---------------------------------------------------------------------------
+# T.10 SESSION T additions — R-rule explicit coverage
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.asyncio
+async def test_create_praxis_below_required_level_returns_403(
+    client: AsyncClient,
+    db_session: AsyncSession,
+    character: Character,
+    auth_headers: dict,
+):
+    """R.1: POST /praxes returns 403 when character.level < task.level_required."""
+    from models.task import Task, TaskStatus
+
+    # character is level 0 by default; seed a task with level_required=5
+    high_task = Task(
+        title="Level 5 Only",
+        description="",
+        point_value=10,
+        level_required=5,
+        status=TaskStatus.active,
+        created_by=character.id,
+        primary_faction_slug="ua",
+    )
+    db_session.add(high_task)
+    await db_session.commit()
+    await db_session.refresh(high_task)
+
+    resp = await client.post(
+        "/praxes",
+        json={"task_id": high_task.id, "type": "solo", "title": "Gate Test"},
+        headers=auth_headers,
+    )
+    assert resp.status_code == 403
+    # Error message must name the required level
+    assert "5" in resp.json()["detail"]
+
+
+@pytest.mark.asyncio
+async def test_collab_invite_accept_at_cap_returns_400(
+    client: AsyncClient,
+    db_session: AsyncSession,
+    account: Account,
+    account2: Account,
+    character: Character,
+    character2: Character,
+    active_task: Task,
+    auth_headers: dict,
+    auth_headers2: dict,
+    era: Era,
+):
+    """R.3: Accepting a collab invite that would exceed era.max_collab_participants returns 400."""
+    from game_config import CURRENT_ERA
+    from models.account import Account as AccountModel
+    from models.character import Character as CharacterModel
+    from models.character_stats import CharacterStats
+    from models.praxis import PraxisMember, PraxisType
+    from services.auth import create_jwt
+    from sqlalchemy import func, select
+
+    cap = CURRENT_ERA.max_collab_participants
+    assert cap > 0
+
+    # character2 (level 5) creates the collab praxis and is member #1
+    create_resp = await client.post(
+        "/praxes",
+        json={"task_id": active_task.id, "type": "collab", "title": "Cap Test"},
+        headers=auth_headers2,
+    )
+    assert create_resp.status_code == 201
+    praxis_id = create_resp.json()["id"]
+
+    # Seed cap-2 filler members to bring total to cap-1 (creator counts as 1).
+    # This leaves room to issue one legitimate invite to `character`, after
+    # which we will fill the last slot via DB seeding and then try to have
+    # `character` accept — which must fail because the cap is reached at
+    # accept time.
+    filler_accounts: list[AccountModel] = []
+    filler_characters: list[CharacterModel] = []
+    for index in range(cap - 2):
+        filler_account = AccountModel(email=f"filler{index}@example.com")
+        db_session.add(filler_account)
+        await db_session.flush()
+        filler_accounts.append(filler_account)
+
+        filler_character = CharacterModel(
+            account_id=filler_account.id,
+            username=f"filler_char_{index}",
+            display_name=f"Filler {index}",
+            faction_slug="ua",
+        )
+        db_session.add(filler_character)
+        await db_session.flush()
+        filler_characters.append(filler_character)
+
+        db_session.add(
+            CharacterStats(
+                character_id=filler_character.id,
+                era_id=era.id,
+                score=100,
+                all_time_score=100,
+                level=5,
+                votes_spent_this_era=0,
+            )
+        )
+        db_session.add(
+            PraxisMember(
+                praxis_id=praxis_id,
+                character_id=filler_character.id,
+                has_submitted=False,
+            )
+        )
+    await db_session.commit()
+
+    # Confirm the praxis is at cap-1 members (still one slot open for invite)
+    count_result = await db_session.execute(
+        select(func.count()).select_from(PraxisMember).where(
+            PraxisMember.praxis_id == praxis_id
+        )
+    )
+    assert count_result.scalar_one() == cap - 1
+
+    # Issue an invite while under capacity (should succeed)
+    invite_resp = await client.post(
+        f"/praxes/{praxis_id}/invite",
+        json={"invitee_id": character.id},
+        headers=auth_headers2,
+    )
+    assert invite_resp.status_code == 200
+    invite_id = invite_resp.json()["id"]
+
+    # Fill the last slot with a direct-DB filler to bring total to `cap`.
+    final_account = AccountModel(email="finalfiller@example.com")
+    db_session.add(final_account)
+    await db_session.flush()
+    final_character = CharacterModel(
+        account_id=final_account.id,
+        username="final_filler",
+        display_name="Final Filler",
+        faction_slug="ua",
+    )
+    db_session.add(final_character)
+    await db_session.flush()
+    db_session.add(
+        CharacterStats(
+            character_id=final_character.id,
+            era_id=era.id,
+            score=100,
+            all_time_score=100,
+            level=5,
+            votes_spent_this_era=0,
+        )
+    )
+    db_session.add(
+        PraxisMember(
+            praxis_id=praxis_id,
+            character_id=final_character.id,
+            has_submitted=False,
+        )
+    )
+    await db_session.commit()
+
+    # Confirm we are exactly at cap
+    count_at_cap = await db_session.execute(
+        select(func.count()).select_from(PraxisMember).where(
+            PraxisMember.praxis_id == praxis_id
+        )
+    )
+    assert count_at_cap.scalar_one() == cap
+
+    # character accepts the invite → should fail because the cap is reached
+    accept_resp = await client.post(
+        f"/praxes/{praxis_id}/invite/{invite_id}/respond",
+        json={"accept": True},
+        headers=auth_headers,
+    )
+    assert accept_resp.status_code == 400
+    assert str(cap) in accept_resp.json()["detail"]
+
+    # Verify the extra member was NOT added
+    count_result2 = await db_session.execute(
+        select(func.count()).select_from(PraxisMember).where(
+            PraxisMember.praxis_id == praxis_id,
+            PraxisMember.character_id == character.id,
+        )
+    )
+    assert count_result2.scalar_one() == 0

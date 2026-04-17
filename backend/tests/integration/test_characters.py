@@ -288,24 +288,39 @@ async def test_faction_change_via_choose_endpoint(
 
 
 @pytest.mark.asyncio
-async def test_second_character_blocked_below_level3(
+async def test_second_character_blocked_below_level5(
     client: AsyncClient,
+    db_session: AsyncSession,
     character: Character,
     era: Era,
     faction_ua: Faction,
     auth_headers: dict,
 ):
-    """Account with a level-0 character cannot create a second character."""
+    """Account with a level-4 first character cannot create a second character (R.7)."""
+    # Raise the first character's level to 4 — still below the level-5 gate
+    from sqlalchemy import select
+    result = await db_session.execute(
+        select(CharacterStats).where(
+            CharacterStats.character_id == character.id,
+            CharacterStats.era_id == era.id,
+        )
+    )
+    stats = result.scalar_one()
+    stats.level = 4
+    await db_session.commit()
+
     resp = await client.post(
         "/characters",
         json={"username": "secondchar", "display_name": "Second"},
         headers=auth_headers,
     )
     assert resp.status_code == 403
+    # The error message must explicitly name the level-5 requirement
+    assert "5" in resp.json()["detail"]
 
 
 @pytest.mark.asyncio
-async def test_second_character_allowed_at_level3(
+async def test_second_character_allowed_at_level5(
     client: AsyncClient,
     db_session: AsyncSession,
     account2: Account,
@@ -313,7 +328,7 @@ async def test_second_character_allowed_at_level3(
     faction_ua: Faction,
     auth_headers2: dict,
 ):
-    """Account whose first character is level 5 can create a second character."""
+    """Account whose first character is level 5 can create a second character (R.7)."""
     # character2 from conftest already exists with level 5; auth_headers2 belongs to account2
     resp = await client.post(
         "/characters",
@@ -324,6 +339,126 @@ async def test_second_character_allowed_at_level3(
     data = resp.json()
     assert data["username"] == "secondcharacter2"
     assert "account_id" not in data
+
+
+@pytest.mark.asyncio
+async def test_albescent_requires_level8_character_on_account(
+    client: AsyncClient,
+    db_session: AsyncSession,
+    account2: Account,
+    character2: Character,
+    era: Era,
+    faction_ua: Faction,
+    auth_headers2: dict,
+):
+    """Creating an Albescent second character requires a level-8 character on the account (R.7)."""
+    from models.faction import FactionStatus
+    from sqlalchemy import select
+
+    # Ensure the albescent faction exists (required FK)
+    result = await db_session.execute(select(Faction).where(Faction.slug == "albescent"))
+    if result.scalar_one_or_none() is None:
+        albescent = Faction(
+            slug="albescent",
+            name="Albescent",
+            description="Albescent faction",
+            status=FactionStatus.visible,
+        )
+        db_session.add(albescent)
+        await db_session.commit()
+
+    # character2 is level 5 — raise to 7 (still below 8)
+    stats_result = await db_session.execute(
+        select(CharacterStats).where(
+            CharacterStats.character_id == character2.id,
+            CharacterStats.era_id == era.id,
+        )
+    )
+    stats = stats_result.scalar_one()
+    stats.level = 7
+    await db_session.commit()
+
+    # Level 7 — Albescent should be blocked
+    resp_blocked = await client.post(
+        "/characters",
+        json={
+            "username": "alb_second",
+            "display_name": "Alb Second",
+            "faction_slug": "albescent",
+        },
+        headers=auth_headers2,
+    )
+    assert resp_blocked.status_code == 403
+    assert "8" in resp_blocked.json()["detail"]
+
+    # Raise to level 8 — Albescent should succeed
+    stats.level = 8
+    await db_session.commit()
+
+    resp_allowed = await client.post(
+        "/characters",
+        json={
+            "username": "alb_second2",
+            "display_name": "Alb Second 2",
+            "faction_slug": "albescent",
+        },
+        headers=auth_headers2,
+    )
+    assert resp_allowed.status_code == 201
+    assert resp_allowed.json()["faction_slug"] == "albescent"
+
+
+@pytest.mark.asyncio
+async def test_albescent_character_starts_in_albescent_faction(
+    client: AsyncClient,
+    db_session: AsyncSession,
+    account2: Account,
+    character2: Character,
+    era: Era,
+    faction_ua: Faction,
+    auth_headers2: dict,
+):
+    """A second character created as Albescent has faction_slug='albescent' (R.8), not 'ua'."""
+    from models.faction import FactionStatus
+    from sqlalchemy import select
+
+    # Ensure the albescent faction exists
+    result = await db_session.execute(select(Faction).where(Faction.slug == "albescent"))
+    if result.scalar_one_or_none() is None:
+        albescent = Faction(
+            slug="albescent",
+            name="Albescent",
+            description="Albescent faction",
+            status=FactionStatus.visible,
+        )
+        db_session.add(albescent)
+        await db_session.commit()
+
+    # Raise character2 to level 8 so Albescent is unlocked
+    stats_result = await db_session.execute(
+        select(CharacterStats).where(
+            CharacterStats.character_id == character2.id,
+            CharacterStats.era_id == era.id,
+        )
+    )
+    stats = stats_result.scalar_one()
+    stats.level = 8
+    await db_session.commit()
+
+    resp = await client.post(
+        "/characters",
+        json={
+            "username": "alb_starter",
+            "display_name": "Alb Starter",
+            "faction_slug": "albescent",
+        },
+        headers=auth_headers2,
+    )
+    assert resp.status_code == 201
+    data = resp.json()
+    # Must land directly in Albescent, not UA
+    assert data["faction_slug"] == "albescent"
+    assert data["faction_slug"] != "ua"
 
 
 @pytest.mark.asyncio

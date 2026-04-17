@@ -4,7 +4,12 @@ from pydantic import BaseModel, ConfigDict, Field
 
 
 class CharacterOut(BaseModel):
-    """Public character response. Stats (score, level, all_time_score) come from CharacterStats."""
+    """Public character response. Stats (score, level, all_time_score) come from CharacterStats.
+
+    votes_available is the on-read computed vote budget for the current era
+    (see services.scoring.compute_votes_available); it reflects score growth
+    and spent votes without a stored counter.
+    """
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -17,6 +22,7 @@ class CharacterOut(BaseModel):
     level: int
     score: int
     all_time_score: int
+    votes_available: int = 0
     faction_slug: str
     status: str
     created_at: datetime
