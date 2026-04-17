@@ -617,7 +617,7 @@ legacy `praxis` (old table), `collaboration`, `collaboration_member`,
 
 ---
 
-### TASK B.4 — Admin can edit fields on pending/retired tasks
+### TASK B.4 ✅ 2026-04-17 — Admin can edit fields on pending/retired tasks
 
 **Problem:** No admin endpoint or UI exists to edit task title, description, point_value, or level_required after a task is created. `PUT /tasks/{id}` rejects everyone except the original proposer on pending-only tasks.
 
@@ -634,7 +634,7 @@ legacy `praxis` (old table), `collaboration`, `collaboration_member`,
 
 ---
 
-### TASK B.5 — Admin can propose tasks regardless of level
+### TASK B.5 ✅ 2026-04-17 — Admin can propose tasks regardless of level
 
 **Problem:** `services/task.py` gates proposals behind `stats.level < 3`. `ProposeTask.tsx` shows a hard error page for any character below level 3. Admins should bypass both gates.
 
