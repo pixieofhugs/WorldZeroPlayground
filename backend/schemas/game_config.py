@@ -22,5 +22,4 @@ class GameConfigOut(BaseModel):
     max_task_signups: int
     vote_budget_base: int
     vote_budget_multiplier: float
-    task_submit_level_gap: int
     factions: list[FactionConfigOut]

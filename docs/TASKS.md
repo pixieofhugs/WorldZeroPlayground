@@ -318,7 +318,7 @@ legacy `praxis` (old table), `collaboration`, `collaboration_member`,
 >
 > Items are independent — they can be done in any order unless noted.
 
-### TASK R.1 — Enforce task signup level gate
+### TASK R.1 ✅ 2026-04-17 — Enforce task signup level gate
 
 **Problem:** Praxis creation does not check whether `character.level ≥ task.level_required`.
 
@@ -332,7 +332,7 @@ legacy `praxis` (old table), `collaboration`, `collaboration_member`,
 
 ---
 
-### TASK R.2 — Remove `task_submit_level_gap` from EraConfig
+### TASK R.2 ✅ 2026-04-17 — Remove `task_submit_level_gap` from EraConfig
 
 **Problem:** `task_submit_level_gap` is a dead field — once a character signs up, they can always submit regardless of level. The field adds confusion.
 
@@ -347,7 +347,7 @@ legacy `praxis` (old table), `collaboration`, `collaboration_member`,
 
 ---
 
-### TASK R.3 — Add `max_collab_participants` to EraConfig; enforce on collab invite
+### TASK R.3 ✅ 2026-04-17 — Add `max_collab_participants` to EraConfig; enforce on collab invite
 
 **Problem:** Collab praxes have no participant cap. The intended limit is 20.
 
@@ -362,7 +362,7 @@ legacy `praxis` (old table), `collaboration`, `collaboration_member`,
 
 ---
 
-### TASK R.4 — Switch duel anti-self-vote to account-level
+### TASK R.4 ✅ 2026-04-17 — Switch duel anti-self-vote to account-level
 
 **Problem:** Duel vote validation checks `voter.character_id not in duel members` (character-level). It should check `voter.account_id not in duel participants' account_ids` — a voter cannot use *any* of their characters to rate either side of a duel they participate in.
 
@@ -397,7 +397,7 @@ legacy `praxis` (old table), `collaboration`, `collaboration_member`,
 
 ---
 
-### TASK R.6 — Fix Snide tie rule: opponent uses own faction's loss modifier
+### TASK R.6 ✅ 2026-04-17 — Fix Snide tie rule: opponent uses own faction's loss modifier
 
 **Problem:** `backend/services/scoring.py::compute_duel_multiplier` applies Snide's `duel_loss_modifier` (0.0×) to the non-Snide player in a tie. The correct behavior: the non-Snide player receives **their own faction's** `duel_loss_modifier`.
 
@@ -410,7 +410,7 @@ legacy `praxis` (old table), `collaboration`, `collaboration_member`,
 
 ---
 
-### TASK R.7 — Second character level gate (level 5) + Albescent faction gate (level 8)
+### TASK R.7 ✅ 2026-04-17 — Second character level gate (level 5) + Albescent faction gate (level 8)
 
 **Problem:** Creating a second character currently requires level 3 on any existing character. Target: level 5. Additionally, choosing Albescent as the starting faction for a new character requires the account to have at least one character at level 8.
 
@@ -428,7 +428,7 @@ legacy `praxis` (old table), `collaboration`, `collaboration_member`,
 
 ---
 
-### TASK R.8 — Albescent onboarding: start in Albescent, skip UA
+### TASK R.8 ✅ 2026-04-17 — Albescent onboarding: start in Albescent, skip UA
 
 **Depends on:** R.7
 
@@ -464,7 +464,7 @@ legacy `praxis` (old table), `collaboration`, `collaboration_member`,
 
 ---
 
-### TASK R.10 — Remove "group welcome letters" from level-2 frontend display
+### TASK R.10 ✅ 2026-04-17 — Remove "group welcome letters" from level-2 frontend display
 
 **Problem:** The level privileges table in the frontend shows "group welcome letters" under level 2. Letters are part of the faction flow, not a level unlock — this is a display error.
 

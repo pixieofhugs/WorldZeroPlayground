@@ -87,10 +87,17 @@ async def cast_or_update_duel_vote(
 
     member_ids = {m.character_id for m in praxis.members}
     member_row_ids = {m.id for m in praxis.members}
+    member_account_ids = {
+        m.character.account_id for m in praxis.members if m.character is not None
+    }
 
-    # Anti-self-vote: members cannot vote on their own duel
-    if voter.id in member_ids:
-        raise HTTPException(status_code=403, detail="Duel participants cannot vote on their own duel.")
+    # Anti-self-vote: enforced at account level so alt characters on the same
+    # account cannot vote on a duel their other character is in.
+    if voter.account_id in member_account_ids:
+        raise HTTPException(
+            status_code=403,
+            detail="You cannot vote on a duel where your account owns a participant.",
+        )
 
     # praxis_member_id must refer to a member of this duel
     if praxis_member_id not in member_row_ids:

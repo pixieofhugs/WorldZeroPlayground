@@ -33,6 +33,5 @@ async def get_game_config() -> GameConfigOut:
         max_task_signups=CURRENT_ERA.max_task_signups,
         vote_budget_base=CURRENT_ERA.vote_budget_base,
         vote_budget_multiplier=CURRENT_ERA.vote_budget_multiplier,
-        task_submit_level_gap=CURRENT_ERA.task_submit_level_gap,
         factions=factions,
     )

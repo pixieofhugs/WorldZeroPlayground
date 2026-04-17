@@ -28,6 +28,11 @@ async def get_character_by_id(character_id: int, session: AsyncSession) -> Chara
     return result.scalar_one_or_none()
 
 
+SECOND_CHARACTER_LEVEL_REQUIRED = 5
+ALBESCENT_FACTION_SLUG = "albescent"
+ALBESCENT_LEVEL_REQUIRED = 8
+
+
 async def create_character(
     account_id: int,
     data: CharacterCreate,
@@ -35,6 +40,8 @@ async def create_character(
     era: EraConfig = CURRENT_ERA,
 ) -> CharacterCreationResult:
     era_row = await get_current_era_row(session)
+
+    requested_faction_slug = (data.faction_slug or "").strip().lower() or None
 
     # Count existing active characters for this account
     result = await session.execute(
@@ -46,8 +53,8 @@ async def create_character(
     existing_count = result.scalar_one()
 
     if existing_count > 0:
-        # Need level >= 3 on at least one character to create another.
-        # Check via CharacterStats join.
+        # Need level >= SECOND_CHARACTER_LEVEL_REQUIRED on at least one
+        # character to create another. Check via CharacterStats join.
         level_check = await session.execute(
             select(Character)
             .join(
@@ -58,14 +65,53 @@ async def create_character(
             .where(
                 Character.account_id == account_id,
                 Character.status == CharacterStatus.active,
-                CharacterStats.level >= 3,
+                CharacterStats.level >= SECOND_CHARACTER_LEVEL_REQUIRED,
             )
         )
         if level_check.scalar_one_or_none() is None:
             raise HTTPException(
                 status_code=403,
-                detail="Must reach level 3 before creating additional characters.",
+                detail=(
+                    f"Must reach level {SECOND_CHARACTER_LEVEL_REQUIRED} "
+                    "before creating additional characters."
+                ),
             )
+
+    # Albescent unlock gate: requires at least one level-8 character on the account.
+    if requested_faction_slug == ALBESCENT_FACTION_SLUG:
+        albescent_check = await session.execute(
+            select(Character)
+            .join(
+                CharacterStats,
+                (CharacterStats.character_id == Character.id)
+                & (CharacterStats.era_id == era_row.id),
+            )
+            .where(
+                Character.account_id == account_id,
+                Character.status == CharacterStatus.active,
+                CharacterStats.level >= ALBESCENT_LEVEL_REQUIRED,
+            )
+        )
+        if albescent_check.scalar_one_or_none() is None:
+            raise HTTPException(
+                status_code=403,
+                detail=(
+                    f"Albescent characters require a level-{ALBESCENT_LEVEL_REQUIRED} "
+                    "character on the account."
+                ),
+            )
+        starting_faction_slug = ALBESCENT_FACTION_SLUG
+    elif requested_faction_slug in (None, "", "ua"):
+        # Default onboarding: everyone starts in UA.
+        starting_faction_slug = "ua"
+    else:
+        raise HTTPException(
+            status_code=400,
+            detail=(
+                "New characters must start in UA (or Albescent, if unlocked). "
+                "Other factions are joined later via faction graduation."
+            ),
+        )
 
     character = Character(
         account_id=account_id,
@@ -74,7 +120,7 @@ async def create_character(
         bio=data.bio or "",
         avatar_url=data.avatar_url or "",
         location=data.location or "",
-        faction_slug="ua",
+        faction_slug=starting_faction_slug,
     )
     session.add(character)
     await session.flush()  # get character.id before creating stats

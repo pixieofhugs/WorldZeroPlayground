@@ -9,6 +9,12 @@ export interface CharacterCreate {
   bio?: string
   avatar_url?: string
   location?: string
+  /**
+   * Optional starting faction. Omit for the default (new accounts always start in UA).
+   * Only "albescent" is a valid non-default choice, and only when the account has a
+   * level-8 character (enforced server-side).
+   */
+  faction_slug?: string
 }
 
 export interface CharacterUpdate {

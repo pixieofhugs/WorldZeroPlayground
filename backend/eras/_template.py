@@ -187,8 +187,8 @@ ERA_N = EraConfig(
     config_key="era_n",                  # TODO: Unique key stored in DB (lowercase, underscored)
 
     max_task_signups=20,                 # Max active task signups per character
-    task_submit_level_gap=2,             # Can submit up to N levels above own level
     max_duel_participants=2,             # Max members in a duel praxis
+    max_collab_participants=20,          # Max members in a collab praxis
 
     vote_budget_base=100,                # Starting vote budget
     vote_budget_multiplier=2.0,          # Extra votes per point of score

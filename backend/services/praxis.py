@@ -599,8 +599,11 @@ async def invite_to_praxis(
         )
 
     # Collaborations: max capacity from era config
-    if praxis.type == PraxisType.collab and len(praxis.members) >= era.max_task_signups:
-        raise HTTPException(status_code=400, detail="This collaboration is already at max capacity.")
+    if praxis.type == PraxisType.collab and len(praxis.members) >= era.max_collab_participants:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Collaboration is full (max {era.max_collab_participants} participants).",
+        )
 
     if invitee_id == inviter_id:
         raise HTTPException(status_code=400, detail="Cannot invite yourself.")
@@ -700,6 +703,14 @@ async def respond_to_invite(
 
     if praxis.status == PraxisStatus.submitted:
         raise HTTPException(status_code=400, detail="Cannot join a submitted praxis.")
+
+    # Collab capacity cap (enforced at accept, not just invite — avoids races
+    # where multiple pending invites push the praxis past its max).
+    if praxis.type == PraxisType.collab and len(praxis.members) >= era.max_collab_participants:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Collaboration is full (max {era.max_collab_participants} participants).",
+        )
 
     # Check bank capacity
     in_progress_count = await _count_in_progress_praxes(character_id, session)
