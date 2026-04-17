@@ -89,7 +89,7 @@ themselves are frozen dataclasses.
   through its own service function.** This keeps invariants provable in
   isolation.
 - **Aggregate-internal consistency can be enforced in the service that owns
-  it.** E.g. `create_submission` is free to write both `Submission` and its
+  it.** E.g. `create_praxis` is free to write both `Praxis` and its
   `MediaItem` children in one transaction.
 
 ### What we deliberately skip
