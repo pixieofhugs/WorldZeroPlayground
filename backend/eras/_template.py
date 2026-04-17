@@ -180,7 +180,8 @@ ERA_N_TAUNT_TEMPLATES: dict[str, dict[str, list[str]]] = {
 # Reset flags: what happens to characters when THIS era begins.
 #   reset_all_time_score should almost always be False.
 #
-# Vote budget formula: votes_available = base + floor(multiplier x score)
+# Vote budget formula (on-read, see services/scoring.compute_votes_available):
+#   votes_available = base + floor(multiplier x score) - votes_spent_this_era
 
 ERA_N = EraConfig(
     name="Era N",                        # TODO: Human-readable era name

@@ -57,7 +57,7 @@ status               -- enum: active | paused | banned (CharacterStatus)
 created_at
 updated_at
 ```
-*Score, level, votes_available, and all_time_score live in CharacterStats (star schema split).*
+*Score, level, votes_spent_this_era, and all_time_score live in CharacterStats (star schema split).*
 *Faction graduation (level >= 3 to pick a real faction) is enforced at API layer, not DB.*
 
 ### CharacterStats
@@ -68,7 +68,10 @@ era_id               -- FK -> Era
 score                -- sum of non-flagged praxis scores for this era (default 0)
 all_time_score       -- cumulative, never resets (default 0)
 level                -- integer 0-8; derived from score (default 0)
-votes_available      -- spendable budget; formula from EraConfig (default 0)
+votes_spent_this_era -- monotonic count of first-cast votes this era (default 0)
+                       spendable `votes_available` is computed on read from
+                       era.vote_budget_base + floor(era.vote_budget_multiplier * score)
+                       - votes_spent_this_era (see services.scoring.compute_votes_available).
 updated_at
 CONSTRAINT: unique(character_id, era_id)
 ```

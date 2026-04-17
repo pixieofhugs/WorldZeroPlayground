@@ -1,7 +1,10 @@
 from math import floor
-from typing import Optional
+from typing import TYPE_CHECKING, Optional
 
 from game_config import CURRENT_ERA, EraConfig
+
+if TYPE_CHECKING:
+    from models.character_stats import CharacterStats
 
 COLLABORATION_MODE_SOLO = "solo"
 COLLABORATION_MODE_COLLAB = "collab"
@@ -11,7 +14,33 @@ SNIDE_FACTION_SLUG = "snide"
 
 
 def compute_vote_budget(score: int, era: EraConfig = CURRENT_ERA) -> int:
+    """Return the total vote budget capacity for a given score.
+
+    This is the *cap* before any spending. Spendable votes are computed by
+    subtracting `votes_spent_this_era`; use `compute_votes_available` for that.
+    """
     return era.vote_budget_base + floor(era.vote_budget_multiplier * score)
+
+
+def compute_votes_available(
+    stats: "CharacterStats", era: EraConfig = CURRENT_ERA
+) -> int:
+    """Compute the spendable vote count for a character from persisted stats.
+
+    Formula:
+        era.vote_budget_base + floor(era.vote_budget_multiplier * stats.score)
+        - stats.votes_spent_this_era
+
+    The stored column is `votes_spent_this_era` (monotonic per era). The
+    returned budget is always on-read — it grows as `stats.score` grows and
+    shrinks as more first-cast votes are spent. Clamped at zero: if the
+    character has spent more than the formula currently allows (possible
+    after a score rollback / stat patch), the helper returns 0 rather than
+    a negative value. Callers should treat `<= 0` as "no votes remaining".
+    """
+    cap = era.vote_budget_base + floor(era.vote_budget_multiplier * stats.score)
+    remaining = cap - stats.votes_spent_this_era
+    return remaining if remaining > 0 else 0
 
 
 def compute_level(score: int, era: EraConfig = CURRENT_ERA) -> int:

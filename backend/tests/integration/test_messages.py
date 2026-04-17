@@ -187,7 +187,7 @@ async def test_read_message_not_party(
         score=0,
         all_time_score=0,
         level=0,
-        votes_available=10,
+        votes_spent_this_era=0,
     )
     db_session.add(stats3)
     await db_session.commit()

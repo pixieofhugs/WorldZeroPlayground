@@ -1,3 +1,5 @@
+from dataclasses import dataclass
+
 from game_config import ERA_1
 from services.scoring import (
     COLLABORATION_MODE_COLLAB,
@@ -8,7 +10,15 @@ from services.scoring import (
     compute_level,
     compute_praxis_score,
     compute_vote_budget,
+    compute_votes_available,
 )
+
+
+@dataclass
+class _StatsStub:
+    """Minimal CharacterStats-shaped stub for scoring unit tests."""
+    score: int
+    votes_spent_this_era: int
 
 
 def test_vote_budget_base():
@@ -19,6 +29,66 @@ def test_vote_budget_with_score():
     score = 50
     expected = ERA_1.vote_budget_base + int(ERA_1.vote_budget_multiplier * score)
     assert compute_vote_budget(score=score, era=ERA_1) == expected
+
+
+# ---------------------------------------------------------------------------
+# compute_votes_available — on-read recomputation (R.5)
+# ---------------------------------------------------------------------------
+
+
+def test_votes_available_zero_score_no_spend():
+    """score=0, votes_spent=0 → vote_budget_base."""
+    stats = _StatsStub(score=0, votes_spent_this_era=0)
+    assert compute_votes_available(stats, era=ERA_1) == ERA_1.vote_budget_base
+
+
+def test_votes_available_formula():
+    """base=10, multiplier=0.1, score=100, spent=3 → 10 + 10 - 3 = 17."""
+    from game_config import EraConfig, ERA_1_FACTIONS
+    era = EraConfig(
+        name="test",
+        config_key="test",
+        max_task_signups=20,
+        max_duel_participants=2,
+        max_collab_participants=20,
+        vote_budget_base=10,
+        vote_budget_multiplier=0.1,
+        level_thresholds=ERA_1.level_thresholds,
+        reset_score=False,
+        reset_level=False,
+        reset_faction=False,
+        reset_vote_budget=False,
+        reset_all_time_score=False,
+        factions=ERA_1_FACTIONS,
+        tasks=(),
+        taunt_templates={},
+    )
+    stats = _StatsStub(score=100, votes_spent_this_era=3)
+    assert compute_votes_available(stats, era=era) == 17
+
+
+def test_votes_available_clamps_at_zero_when_overspent():
+    """votes_spent > cap → 0 (never negative).
+
+    Can occur after a score rollback or admin stat patch. Callers treat 0
+    as 'no votes remaining'.
+    """
+    # base=100, multiplier=2.0, score=0 → cap=100; spent=500 → would be -400
+    stats = _StatsStub(score=0, votes_spent_this_era=500)
+    assert compute_votes_available(stats, era=ERA_1) == 0
+
+
+def test_votes_available_grows_with_score():
+    """Budget grows as score grows without any explicit refresh."""
+    low = _StatsStub(score=10, votes_spent_this_era=0)
+    high = _StatsStub(score=100, votes_spent_this_era=0)
+    assert compute_votes_available(high, era=ERA_1) > compute_votes_available(low, era=ERA_1)
+
+
+def test_votes_available_matches_compute_vote_budget_when_no_spend():
+    """When nothing has been spent, available == cap."""
+    stats = _StatsStub(score=50, votes_spent_this_era=0)
+    assert compute_votes_available(stats, era=ERA_1) == compute_vote_budget(50, era=ERA_1)
 
 
 def test_vote_budget_floors_fractional():

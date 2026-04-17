@@ -13,6 +13,7 @@ from models.character import Character
 from models.character_stats import CharacterStats
 from models.era import Era
 from models.task import Task
+from services.scoring import compute_votes_available
 
 
 @pytest.mark.asyncio
@@ -101,7 +102,7 @@ async def test_update_vote_is_free(
     )
     stats = result.scalar_one()
     await db_session.refresh(stats)
-    budget_before = stats.votes_available
+    budget_before = compute_votes_available(stats)
 
     # Initial vote
     resp1 = await client.post(
@@ -110,7 +111,7 @@ async def test_update_vote_is_free(
     assert resp1.status_code == 200
 
     await db_session.refresh(stats)
-    budget_after_first = stats.votes_available
+    budget_after_first = compute_votes_available(stats)
     assert budget_after_first == budget_before - 1
 
     # Update vote (no additional cost)
@@ -121,7 +122,7 @@ async def test_update_vote_is_free(
     assert resp2.json()["stars"] == 5
 
     await db_session.refresh(stats)
-    assert stats.votes_available == budget_after_first  # unchanged
+    assert compute_votes_available(stats) == budget_after_first  # unchanged
 
 
 @pytest.mark.asyncio

@@ -129,7 +129,6 @@ async def create_character(
         session,
         character_id=character.id,
         era_id=era_row.id,
-        initial_votes=era.vote_budget_base,
     )
 
     await session.commit()
