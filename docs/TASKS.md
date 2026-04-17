@@ -310,6 +310,270 @@ legacy `praxis` (old table), `collaboration`, `collaboration_member`,
 
 ---
 
+## ⚖️ SESSION R — Rules Reconciliation Fixes
+
+> Implements the open items from the April 17 rules reconciliation (see `docs/spec/SPEC-game-rules.md` backend fix list).
+> **Start after SESSION P is complete.**
+> **Read before starting:** `CLAUDE.md`, `docs/spec/SPEC-game-rules.md`, `backend/game_config.py`, `backend/eras/era_1.py`.
+>
+> Items are independent — they can be done in any order unless noted.
+
+### TASK R.1 — Enforce task signup level gate
+
+**Problem:** Praxis creation does not check whether `character.level ≥ task.level_required`.
+
+**Fix:**
+1. In `backend/services/praxis.py::create_praxis`, load the task's `level_required` and raise 403 if the character's level is below it.
+2. Return a clear error message: `"Character level {n} is below the required level {m} for this task."`
+
+**Files:** `backend/services/praxis.py`
+
+**Acceptance:** A character below `task.level_required` gets a 403 on `POST /praxes`; a character at or above it succeeds.
+
+---
+
+### TASK R.2 — Remove `task_submit_level_gap` from EraConfig
+
+**Problem:** `task_submit_level_gap` is a dead field — once a character signs up, they can always submit regardless of level. The field adds confusion.
+
+**Fix:**
+1. Remove `task_submit_level_gap` from the `EraConfig` dataclass in `backend/game_config.py`.
+2. Remove it from `backend/eras/era_1.py`.
+3. Remove any service code that reads it.
+
+**Files:** `backend/game_config.py`, `backend/eras/era_1.py`, any service that references `task_submit_level_gap`
+
+**Acceptance:** `grep -r "task_submit_level_gap" backend/` returns no hits; tests pass.
+
+---
+
+### TASK R.3 — Add `max_collab_participants` to EraConfig; enforce on collab invite
+
+**Problem:** Collab praxes have no participant cap. The intended limit is 20.
+
+**Fix:**
+1. Add `max_collab_participants: int = 20` to `EraConfig` in `backend/game_config.py`.
+2. Set the value in `backend/eras/era_1.py`.
+3. In `backend/services/praxis.py::respond_to_invite`, when the invitee accepts a collab praxis, count current members and reject with 400 if `count >= era.max_collab_participants`.
+
+**Files:** `backend/game_config.py`, `backend/eras/era_1.py`, `backend/services/praxis.py`
+
+**Acceptance:** Accepting an invite that would push a collab over 20 members returns 400; under 20 succeeds.
+
+---
+
+### TASK R.4 — Switch duel anti-self-vote to account-level
+
+**Problem:** Duel vote validation checks `voter.character_id not in duel members` (character-level). It should check `voter.account_id not in duel participants' account_ids` — a voter cannot use *any* of their characters to rate either side of a duel they participate in.
+
+**Fix:**
+1. In `backend/services/praxis.py::cast_duel_vote`, load the account IDs of both duel members and compare against `voter_account_id`.
+2. Reject with 403 if the voter's account owns any member character.
+
+**Files:** `backend/services/praxis.py`
+
+**Acceptance:** A voter whose alt-character is in a duel cannot vote on that duel from any character; an unrelated voter can.
+
+---
+
+### TASK R.5 — Vote budget: on-read recomputation
+
+**Problem:** `votes_available` is stored as a running counter and decremented on each vote. It drifts from the formula if score changes (era reset, stat patch, etc.) and does not grow as the character earns points.
+
+**Fix:**
+1. In `CharacterStats`, replace the stored `votes_available` column with `votes_spent_this_era` (count of distinct first-casts this era). **Alembic migration required.**
+2. Add a `compute_votes_available(stats, era)` helper in `backend/services/scoring.py`:
+   ```python
+   return era.vote_budget_base + floor(era.vote_budget_multiplier * stats.score) - stats.votes_spent_this_era
+   ```
+3. Everywhere `votes_available` was read, call the helper instead.
+4. On first vote cast on a praxis, increment `votes_spent_this_era` (not decrement a counter).
+5. On era reset with `reset_vote_budget=True`, zero `votes_spent_this_era` (not restore a fixed value).
+6. Update `CharacterOut` / `CharacterStatsOut` schemas to expose the computed value, not the raw column.
+
+**Files:** `backend/models/character.py` (or wherever CharacterStats lives), `backend/services/scoring.py`, `backend/services/praxis.py`, `backend/services/character_stats.py`, `backend/schemas/character.py`, `backend/alembic/versions/XXXX_vote_budget_recompute.py`
+
+**Acceptance:** After earning points, a character's displayed vote budget reflects the new score without any explicit budget refresh; era reset zeroes `votes_spent_this_era` and the budget recalculates correctly from the new score.
+
+---
+
+### TASK R.6 — Fix Snide tie rule: opponent uses own faction's loss modifier
+
+**Problem:** `backend/services/scoring.py::compute_duel_multiplier` applies Snide's `duel_loss_modifier` (0.0×) to the non-Snide player in a tie. The correct behavior: the non-Snide player receives **their own faction's** `duel_loss_modifier`.
+
+**Fix:**
+1. In `compute_duel_multiplier`, when resolving a tie where exactly one participant is Snide: apply `snide_config.duel_win_modifier` to Snide and `opponent_faction_config.duel_loss_modifier` to the opponent (not `snide_config.duel_loss_modifier`).
+
+**Files:** `backend/services/scoring.py`
+
+**Acceptance:** A UA character tied against Snide receives 0.5× (UA's loss modifier), not 0.0×; Snide still receives 2.0×.
+
+---
+
+### TASK R.7 — Second character level gate (level 5) + Albescent faction gate (level 8)
+
+**Problem:** Creating a second character currently requires level 3 on any existing character. Target: level 5. Additionally, choosing Albescent as the starting faction for a new character requires the account to have at least one character at level 8.
+
+**Backend:**
+1. In `backend/services/character.py::create_character`, raise the existing level check from 3 → 5.
+2. If the new character's requested faction is `"albescent"`, additionally verify that at least one of the account's existing characters has `stats.level >= 8`. Reject with 403 and a clear message if not.
+
+**Frontend:**
+3. Update any frontend copy or gate checks that reference "level 3" for second character creation to "level 5".
+4. In the character creation flow, only show Albescent as a choosable starting faction if the account has a character at level 8.
+
+**Files:** `backend/services/character.py`, relevant frontend character creation component
+
+**Acceptance:** Creating a second character at level 4 returns 403; at level 5 succeeds. Choosing Albescent without a level-8 character returns 403; with one succeeds.
+
+---
+
+### TASK R.8 — Albescent onboarding: start in Albescent, skip UA
+
+**Depends on:** R.7
+
+**Problem:** New characters always start in `"ua"`. An Albescent second character should start in `"albescent"` at level 1 and never be assigned to UA.
+
+**Fix:**
+1. In `backend/services/character.py::create_character`, if `faction_slug = "albescent"`, set `character.faction_slug = "albescent"` directly instead of the default `"ua"` assignment.
+2. Skip the faction graduation check (UA → aged_out) for Albescent characters — they are never in UA.
+
+**Files:** `backend/services/character.py`
+
+**Acceptance:** A second character created as Albescent has `faction_slug = "albescent"` immediately; `GET /characters/{id}` shows faction as Albescent, not UA.
+
+---
+
+### TASK R.9 — Metatask level privileges
+
+**Problem:** The level table has stale metatask access rows (level 4 "meta task access"). Correct model: level 6 = see list + propose; level 7 = apply own faction's metatasks; Albescent = apply any faction.
+
+**Backend:**
+1. In `backend/services/meta_task.py` (or wherever metatask access is gated), remove any level-4 gate.
+2. Gate "see metatask list" and "propose metatask" behind `character.level >= 6`.
+3. Gate "apply metatask to praxis" behind `character.level >= 7` OR `character.faction_slug == "albescent"`.
+4. For Albescent: allow applying metatasks from any faction; for level-7 characters: only their own faction's metatasks.
+
+**Frontend:**
+5. Remove metatask UI elements for characters below level 6.
+6. Show "propose" controls at level 6+; show "apply" controls at level 7+ (or Albescent).
+
+**Files:** `backend/services/meta_task.py`, relevant frontend metatask components
+
+**Acceptance:** Level 5 character sees no metatask UI; level 6 sees list and propose button; level 7 can apply own-faction metatasks; Albescent character can apply any-faction metatasks.
+
+---
+
+### TASK R.10 — Remove "group welcome letters" from level-2 frontend display
+
+**Problem:** The level privileges table in the frontend shows "group welcome letters" under level 2. Letters are part of the faction flow, not a level unlock — this is a display error.
+
+**Fix:** Remove the "group welcome letters" entry from whatever component renders the level privileges table.
+
+**Files:** Whichever frontend component renders level unlocks (search for "welcome letters" or "group welcome")
+
+**Acceptance:** Level 2 row no longer mentions welcome letters anywhere in the UI.
+
+---
+
+## 🧩 SESSION M — Metatask as Task Type
+
+> Rebuild metatasks as a task type rather than a separate model.
+> **Start after SESSION P is complete** (SESSION P unifies the Praxis model which metatasks attach to).
+> **Read before starting:** `CLAUDE.md`, `docs/spec/SPEC-game-rules.md` (Metatask access section), `docs/spec/SPEC-data-models.md`.
+>
+> A metatask is a task with `task_type = "metatask"`. It cannot be done standalone — it must be
+> associated with another (non-metatask) praxis. When applied, its `point_value` is added as a flat
+> bonus to the praxis score before faction multipliers.
+
+### TASK M.1 — Add `task_type` to Task model and seed metatask tasks
+
+**Do:**
+1. Add `task_type: TaskType` enum column to the `Task` model (`TaskType.standard | TaskType.metatask`). Default `standard`. **Alembic migration required.**
+2. Add `metatask_faction_slug: Optional[str]` to `Task` — the faction this metatask belongs to (used for access gating at level 7).
+3. Add `TaskType` enum to `backend/models/task.py`.
+4. Update `TaskOut` schema to include `task_type` and `metatask_faction_slug`.
+5. Update `backend/eras/era_1.py` `TaskDef` definitions to include `task_type` (existing tasks are `standard`; add initial metatask definitions).
+6. Update `backend/game_config.py::TaskDef` to include `task_type` and `metatask_faction_slug` fields.
+
+**Files:** `backend/models/task.py`, `backend/schemas/task.py`, `backend/game_config.py`, `backend/eras/era_1.py`, migration file
+
+**Acceptance:** `GET /tasks?task_type=metatask` returns only metatask tasks; `GET /tasks` (no filter) returns all; migration runs clean.
+
+---
+
+### TASK M.2 — Metatask association on Praxis
+
+**Depends on:** M.1, P.1 (praxis unification migration)
+
+**Problem:** Currently `PraxisMetaTask` stores a link between a praxis and an old-model metatask. After M.1, a metatask is just a Task row with `task_type = "metatask"`. The association table needs to point to the task (not a separate metatask model).
+
+**Do:**
+1. Rename/rewrite `praxis_meta_task` table: `praxis_id` (FK praxis) + `task_id` (FK task, must have `task_type = "metatask"`). **Alembic migration required.**
+2. Drop any separate `meta_task` or `metatask` model/table that is not the unified `Task` table.
+3. Add a DB check or service-level guard: only tasks with `task_type = "metatask"` can be linked via `praxis_meta_task`.
+4. Update `build_praxis_out` in `backend/services/praxis.py` to compute `meta_task_points` by summing `task.point_value` for all linked metatask tasks.
+
+**Files:** `backend/models/meta_task.py` (or wherever the join table lives), `backend/services/praxis.py`, migration file
+
+**Acceptance:** Linking a standard task as a metatask on a praxis returns 400; linking a metatask task succeeds and adds its points to the praxis score.
+
+---
+
+### TASK M.3 — Metatask apply/remove service + routes
+
+**Depends on:** M.2
+
+**Do:**
+1. Add `apply_metatask(praxis_id, task_id, character_id, session, era)` to `backend/services/praxis.py`:
+   - Verify `task.task_type == TaskType.metatask`.
+   - Verify character's level/faction access (level 7 + own faction, or Albescent + any faction).
+   - Verify the praxis is in `in_progress` status.
+   - Insert `praxis_meta_task` row; trigger `recalculate_character_stats`.
+2. Add `remove_metatask(praxis_id, task_id, character_id, session)` — removes the link; recalculates stats.
+3. Add routes to `backend/routers/praxes.py`:
+   - `POST /praxes/{id}/metatasks` — body: `{ task_id: int }`
+   - `DELETE /praxes/{id}/metatasks/{task_id}`
+
+**Files:** `backend/services/praxis.py`, `backend/routers/praxes.py`
+
+**Acceptance:** A level-7 Gestalt character can apply a Gestalt metatask but not a Snide one; an Albescent character can apply either; applying adds the points; removing subtracts them.
+
+---
+
+### TASK M.4 — Metatask propose + admin approve routes
+
+**Depends on:** M.1
+
+**Do:**
+1. Level-6+ characters can propose a new metatask task via `POST /tasks` with `task_type = "metatask"` and `metatask_faction_slug`. Proposed metatasks start in `pending` status like any other task.
+2. Admin approves via existing `POST /admin/tasks/{id}/activate` (or equivalent) — no new route needed if the task activation flow already handles `task_type = "metatask"`.
+3. Update `GET /tasks` to support `?task_type=metatask` filter.
+4. Ensure `propose_task` service enforces level-6 gate for metatask proposals (not the standard level-3 gate).
+
+**Files:** `backend/services/task.py`, `backend/routers/tasks.py`
+
+**Acceptance:** A level-6 character can propose a metatask; a level-5 character cannot; admin can activate it; activated metatask appears in `GET /tasks?task_type=metatask`.
+
+---
+
+### TASK M.5 — Frontend: metatask list, apply/remove UI
+
+**Depends on:** M.3, M.4
+
+**Do:**
+1. Add `listMetatasks()` to `frontend/src/api/tasks.ts` (or `praxis.ts`) — calls `GET /tasks?task_type=metatask`.
+2. Add `applyMetatask(praxisId, taskId)` and `removeMetatask(praxisId, taskId)` to `frontend/src/api/praxis.ts`.
+3. On the praxis detail page (for in-progress praxes), show a "Add metatask" panel for eligible characters (level 7+ or Albescent). List available metatasks filtered by access rules. Show applied metatasks with a remove button.
+4. Level-6 characters see the metatask list (read-only) but no apply button.
+5. Characters below level 6 see no metatask UI.
+
+**Files:** `frontend/src/api/tasks.ts`, `frontend/src/api/praxis.ts`, `frontend/src/pages/PraxisDetail.tsx` (or equivalent)
+
+**Acceptance:** Eligible characters see and can use the metatask panel; ineligible characters see nothing; applying a metatask updates the displayed score.
+
+---
+
 ## 🐛 SESSION B — Small Bug Fixes
 
 > Five independent fixes identified 2026-04-15. Each is self-contained.
