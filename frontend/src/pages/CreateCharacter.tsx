@@ -4,14 +4,32 @@ import { useAuth } from '../auth/AuthContext'
 import { createCharacter, uploadCharacterAvatar } from '../api/characters'
 import { extractError } from '../utils/errors'
 
+// Rules gates (mirrors backend enforcement — backend is authoritative).
+// See docs/TASKS.md R.7: second character requires a level-5 character on the
+// account; Albescent as a starting faction additionally requires level-8.
+const SECOND_CHARACTER_LEVEL = 5
+const ALBESCENT_LEVEL = 8
+
 export default function CreateCharacter() {
-  const { refetch } = useAuth()
+  const { user, refetch } = useAuth()
   const navigate = useNavigate()
+
+  // The auth context exposes only the account's oldest active character, which
+  // IS the account's only existing character when a second character is being
+  // created (brand-new accounts have at most one). That character's level
+  // drives the gates here.
+  const existingCharacter = user?.character ?? null
+  const isSecondCharacter = existingCharacter !== null
+  const existingLevel = existingCharacter?.level ?? 0
+  const belowSecondCharacterGate =
+    isSecondCharacter && existingLevel < SECOND_CHARACTER_LEVEL
+  const canChooseAlbescent = existingLevel >= ALBESCENT_LEVEL
 
   const [username, setUsername] = useState('')
   const [displayName, setDisplayName] = useState('')
   const [bio, setBio] = useState('')
   const [location, setLocation] = useState('')
+  const [factionSlug, setFactionSlug] = useState<string>('')
   const [avatarFile, setAvatarFile] = useState<File | null>(null)
   const [avatarUrl, setAvatarUrl] = useState('')
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null)
@@ -75,6 +93,7 @@ export default function CreateCharacter() {
         bio: bio || undefined,
         location: location || undefined,
         avatar_url: avatarUrl || undefined,
+        faction_slug: factionSlug || undefined,
       })
 
       if (avatarFile) {
@@ -88,6 +107,20 @@ export default function CreateCharacter() {
     } finally {
       setSubmitting(false)
     }
+  }
+
+  if (belowSecondCharacterGate) {
+    return (
+      <div className="py-8 max-w-xl mx-auto py-10">
+        <h1 className="font-display text-4xl font-bold mb-6">Create your character</h1>
+        <div className="border-2 border-border p-4 bg-card font-body text-sm leading-relaxed">
+          <p>
+            You need a character at level {SECOND_CHARACTER_LEVEL} before you can create
+            another one. Your current character is level {existingLevel}.
+          </p>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -237,6 +270,30 @@ export default function CreateCharacter() {
             <span className={`font-body text-xs ${location.length >= 90 ? 'text-red-600' : 'text-muted'}`}>{location.length}/100</span>
           </div>
         </div>
+
+        {/* Starting faction — only surfaced when Albescent is an option.
+            Per convention, hide controls the user cannot use: if the account
+            doesn't qualify for Albescent, we don't show a picker at all and
+            the backend defaults the new character into UA. */}
+        {isSecondCharacter && canChooseAlbescent && (
+          <div className="flex flex-col gap-1">
+            <label className="font-body text-sm font-semibold">
+              Starting faction <span className="text-muted font-normal text-xs">optional</span>
+            </label>
+            <select
+              value={factionSlug}
+              onChange={(e) => setFactionSlug(e.target.value)}
+              className="border-2 border-border bg-card px-3 py-2 font-body text-sm focus:outline-none focus:border-ink"
+            >
+              <option value="">University of Aesthematics (default)</option>
+              <option value="albescent">/Albescent</option>
+            </select>
+            <p className="font-body text-xs text-muted">
+              Albescent is only available because one of your characters has reached
+              level {ALBESCENT_LEVEL}.
+            </p>
+          </div>
+        )}
 
         {error && (
           <p className="font-body text-sm text-red-600 border-2 border-red-300 px-3 py-2">

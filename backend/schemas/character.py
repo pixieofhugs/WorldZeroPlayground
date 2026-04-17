@@ -28,6 +28,9 @@ class CharacterCreate(BaseModel):
     bio: str = Field(default="", max_length=500)
     avatar_url: str = Field(default="", max_length=500)
     location: str = Field(default="", max_length=100)
+    # Optional starting faction. Only "albescent" is accepted as a non-default
+    # starting faction, and it requires a level-8 character on the account.
+    faction_slug: str | None = Field(default=None, max_length=50)
 
 
 class CharacterUpdate(BaseModel):

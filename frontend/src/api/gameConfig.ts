@@ -21,7 +21,6 @@ export interface GameConfigOut {
   max_task_signups: number
   vote_budget_base: number
   vote_budget_multiplier: number
-  task_submit_level_gap: number
   factions: FactionConfigOut[]
 }
 

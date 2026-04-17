@@ -97,10 +97,6 @@ def test_max_task_signups_positive():
     assert ERA_1.max_task_signups > 0
 
 
-def test_task_submit_level_gap_non_negative():
-    assert ERA_1.task_submit_level_gap >= 0
-
-
 def test_reset_all_time_score_is_false():
     # Per spec: reset_all_time_score is almost always False
     assert ERA_1.reset_all_time_score is False
