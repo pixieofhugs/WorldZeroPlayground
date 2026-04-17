@@ -579,7 +579,7 @@ legacy `praxis` (old table), `collaboration`, `collaboration_member`,
 > Five independent fixes identified 2026-04-15. Each is self-contained.
 > **Read before starting:** `CLAUDE.md`. No spec file required for these.
 
-### TASK B.1 — Fix praxis hide/fail buttons in PraxisCard
+### TASK B.1 ✅ 2026-04-17 — Fix praxis hide/fail buttons in PraxisCard
 
 **Problem:** `PraxisCard.tsx` reads `praxis` as a read-only prop and never updates it after a moderation action. None of the callers pass `onModerated`, so the refresh callback is always a no-op. Errors are silently swallowed.
 
@@ -593,7 +593,7 @@ legacy `praxis` (old table), `collaboration`, `collaboration_member`,
 
 ---
 
-### TASK B.2 — Level selector: extend from 5 to 8
+### TASK B.2 ✅ 2026-04-17 — Level selector: extend from 5 to 8
 
 **Problem:** `ProposeTask.tsx:12` has `const LEVEL_OPTIONS = [0, 1, 2, 3, 4, 5]`. Tasks in era_1 go up to `level_required=7` and the era has 9 level thresholds (0–8).
 
@@ -605,7 +605,7 @@ legacy `praxis` (old table), `collaboration`, `collaboration_member`,
 
 ---
 
-### TASK B.3 — Rename era to "TestEra"
+### TASK B.3 ✅ 2026-04-17 — Rename era to "TestEra"
 
 **Problem:** `backend/eras/era_1.py:488` has `name="Era 1"`. Should be `"TestEra"`.
 

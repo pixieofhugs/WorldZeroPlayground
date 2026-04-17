@@ -323,13 +323,17 @@ export default function PraxisCard({ praxis, onModerated }: Props) {
   const [localPraxis, setLocalPraxis] = useState(praxis)
   const [moderateError, setModerateError] = useState<string | null>(null)
 
+  const applyModeration = (status: 'hidden' | 'failed' | 'visible' | 'flagged') => {
+    setLocalPraxis((prev) => ({ ...prev, moderation_status: status }))
+  }
+
   const handleHide = async (e: React.MouseEvent) => {
     e.preventDefault()
     e.stopPropagation()
     setModerateError(null)
     try {
       const updated = await moderatePraxis(localPraxis.id, 'hidden')
-      setLocalPraxis(updated as unknown as PraxisCardOut)
+      applyModeration(updated.moderation_status)
       onModerated?.()
     } catch (err) {
       setModerateError(extractError(err, 'Failed to hide.'))
@@ -342,7 +346,7 @@ export default function PraxisCard({ praxis, onModerated }: Props) {
     setModerateError(null)
     try {
       const updated = await moderatePraxis(localPraxis.id, 'failed')
-      setLocalPraxis(updated as unknown as PraxisCardOut)
+      applyModeration(updated.moderation_status)
       onModerated?.()
     } catch (err) {
       setModerateError(extractError(err, 'Failed to fail.'))
