@@ -444,7 +444,7 @@ legacy `praxis` (old table), `collaboration`, `collaboration_member`,
 
 ---
 
-### TASK R.9 — Metatask level privileges
+### TASK R.9 ✅ 2026-04-17 — Metatask level privileges (covered by M.3)
 
 **Problem:** The level table has stale metatask access rows (level 4 "meta task access"). Correct model: level 6 = see list + propose; level 7 = apply own faction's metatasks; Albescent = apply any faction.
 
@@ -486,7 +486,7 @@ legacy `praxis` (old table), `collaboration`, `collaboration_member`,
 > associated with another (non-metatask) praxis. When applied, its `point_value` is added as a flat
 > bonus to the praxis score before faction multipliers.
 
-### TASK M.1 — Add `task_type` to Task model and seed metatask tasks
+### TASK M.1 ✅ 2026-04-17 — Add `task_type` to Task model and seed metatask tasks
 
 **Do:**
 1. Add `task_type: TaskType` enum column to the `Task` model (`TaskType.standard | TaskType.metatask`). Default `standard`. **Alembic migration required.**
@@ -502,7 +502,7 @@ legacy `praxis` (old table), `collaboration`, `collaboration_member`,
 
 ---
 
-### TASK M.2 — Metatask association on Praxis
+### TASK M.2 ✅ 2026-04-17 — Metatask association on Praxis
 
 **Depends on:** M.1, P.1 (praxis unification migration)
 
@@ -520,7 +520,7 @@ legacy `praxis` (old table), `collaboration`, `collaboration_member`,
 
 ---
 
-### TASK M.3 — Metatask apply/remove service + routes
+### TASK M.3 ✅ 2026-04-17 — Metatask apply/remove service + routes
 
 **Depends on:** M.2
 
@@ -541,7 +541,7 @@ legacy `praxis` (old table), `collaboration`, `collaboration_member`,
 
 ---
 
-### TASK M.4 — Metatask propose + admin approve routes
+### TASK M.4 ✅ 2026-04-17 — Metatask propose + admin approve routes
 
 **Depends on:** M.1
 
@@ -557,7 +557,17 @@ legacy `praxis` (old table), `collaboration`, `collaboration_member`,
 
 ---
 
-### TASK M.5 — Frontend: metatask list, apply/remove UI
+### TASK M.5 ⚠️ PARTIAL 2026-04-17 — Frontend: metatask list, apply/remove UI
+
+**Done in this session:**
+- `frontend/src/api/metaTasks.ts` rewritten — `listMetatasks` and `proposeMetatask` hit the unified `/tasks` endpoint with `task_type=metatask`
+- `frontend/src/api/praxis.ts` — added `applyMetatask(praxisId, taskId)` and `removeMetatask(praxisId, taskId)` calling `/praxes/{id}/metatasks`
+- `frontend/src/api/tasks.ts` — `TaskOut` and `TaskCreate` now carry `task_type` and `metatask_faction_slug`
+- `frontend/src/pages/ProposeTask.tsx` — metatask branch uses the new `proposeMetatask` call with level-6 gate (admin bypass)
+- `frontend/src/pages/TaskDetail.tsx` and `frontend/src/pages/Tasks.tsx` updated to be metatask-aware
+
+**Deferred (follow-up):**
+- **Metatask apply/remove panel on `PraxisDetail.tsx`** — a level-7 Gestalt character (or any-level Albescent) should see an "Apply metatask" panel on an in-progress praxis they're a member of, with a list of applicable metatasks and a remove button for already-applied ones. This requires exposing `applied_metatasks: List[TaskOut]` on `PraxisOut` (backend schema + build_praxis_out). The apply/remove APIs already exist — this is pure UI wiring.
 
 **Depends on:** M.3, M.4
 

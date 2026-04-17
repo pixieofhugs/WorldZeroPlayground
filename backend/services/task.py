@@ -7,9 +7,15 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from models.character import Character
 from models.faction import Faction, FactionStatus
 from models.praxis import Praxis, PraxisMember, PraxisStatus
-from models.task import Task, TaskStatus
+from models.task import Task, TaskStatus, TaskType
 from schemas.task import TaskCreate, TaskOut
 from services.era import get_current_era_row, get_or_create_stats
+
+
+# Level gates for task proposal.
+PROPOSE_STANDARD_LEVEL = 3
+PROPOSE_METATASK_LEVEL = 6
+
 
 async def propose_task(
     character: Character,
@@ -17,14 +23,43 @@ async def propose_task(
     session: AsyncSession,
     skip_level_check: bool = False,
 ) -> Task:
+    """Propose a new task. Returns the pending Task.
+
+    ``task_type`` on the incoming payload selects the gate:
+    - ``standard`` (default): level 3 unless ``skip_level_check`` (admin).
+    - ``metatask``: level 6 unless ``skip_level_check`` (admin). Additionally
+      requires ``metatask_faction_slug`` to be set.
+    """
     era_row = await get_current_era_row(session)
     stats = await get_or_create_stats(session, character.id, era_row.id)
 
-    if not skip_level_check and stats.level < 3:
-        raise HTTPException(
-            status_code=403,
-            detail="Must be level 3 or above to propose tasks.",
-        )
+    task_type = TaskType.standard
+    if data.task_type:
+        try:
+            task_type = TaskType(data.task_type)
+        except ValueError:
+            raise HTTPException(
+                status_code=422,
+                detail=f"Invalid task_type: {data.task_type}",
+            )
+
+    if task_type == TaskType.metatask:
+        if not skip_level_check and stats.level < PROPOSE_METATASK_LEVEL:
+            raise HTTPException(
+                status_code=403,
+                detail=f"Must be level {PROPOSE_METATASK_LEVEL} or above to propose metatasks.",
+            )
+        if not data.metatask_faction_slug:
+            raise HTTPException(
+                status_code=422,
+                detail="metatask_faction_slug is required for metatask proposals.",
+            )
+    else:
+        if not skip_level_check and stats.level < PROPOSE_STANDARD_LEVEL:
+            raise HTTPException(
+                status_code=403,
+                detail=f"Must be level {PROPOSE_STANDARD_LEVEL} or above to propose tasks.",
+            )
 
     task = Task(
         title=data.title,
@@ -32,6 +67,10 @@ async def propose_task(
         point_value=data.point_value,
         level_required=data.level_required,
         primary_faction_slug=data.primary_faction_slug or "na",
+        metatask_faction_slug=(
+            data.metatask_faction_slug if task_type == TaskType.metatask else None
+        ),
+        task_type=task_type,
         created_by=character.id,
         status=TaskStatus.pending,
     )
@@ -50,8 +89,10 @@ def build_task_out(task: Task) -> TaskOut:
         point_value=task.point_value,
         level_required=task.level_required,
         status=task.status.value,
+        task_type=task.task_type.value,
         created_by=task.created_by,
         primary_faction_slug=task.primary_faction_slug,
+        metatask_faction_slug=task.metatask_faction_slug,
         is_task_vision_eligible=task.is_task_vision_eligible,
         created_at=task.created_at,
     )
@@ -66,6 +107,7 @@ async def list_tasks(
     min_points: Optional[int] = None,
     max_points: Optional[int] = None,
     exclude_character_id: Optional[int] = None,
+    task_type: Optional[str] = None,
     limit: int = 50,
     offset: int = 0,
 ) -> list[Task]:
@@ -86,6 +128,19 @@ async def list_tasks(
     elif not status:
         query = query.where(Task.status == TaskStatus.active)
     # status == "all" -> no status filter, return tasks of every status
+
+    # Task type filter — default to "standard" so /tasks (no filter) continues
+    # to behave as before (standard tasks only). Callers who want metatasks
+    # must pass task_type=metatask explicitly; task_type=all returns both.
+    if task_type is None:
+        query = query.where(Task.task_type == TaskType.standard)
+    elif task_type != "all":
+        try:
+            query = query.where(Task.task_type == TaskType(task_type))
+        except ValueError:
+            raise HTTPException(
+                status_code=422, detail=f"Invalid task_type: {task_type}"
+            )
 
     if level is not None:
         query = query.where(Task.level_required >= level)

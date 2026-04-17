@@ -11,10 +11,14 @@ from models.character import Character
 from models.faction import Faction, FactionStatus
 from models.praxis import Praxis, PraxisMember, PraxisStatus, PraxisType
 from models.roles import AccountRole, Role
-from models.task import Task, TaskStatus
+from models.task import Task, TaskStatus, TaskType
 from schemas.task import TaskCreate, TaskOut
 from services.auth import get_current_account
-from services.task import build_task_out, list_tasks as service_list_tasks, propose_task
+from services.task import (
+    build_task_out,
+    list_tasks as service_list_tasks,
+    propose_task,
+)
 
 router = APIRouter()
 
@@ -27,6 +31,7 @@ async def list_tasks(
     min_points: Optional[int] = None,
     max_points: Optional[int] = None,
     exclude_character_id: Optional[int] = None,
+    task_type: Optional[str] = None,
     limit: int = 50,
     offset: int = 0,
     session: AsyncSession = Depends(get_db),
@@ -39,6 +44,7 @@ async def list_tasks(
         min_points=min_points,
         max_points=max_points,
         exclude_character_id=exclude_character_id,
+        task_type=task_type,
         limit=limit,
         offset=offset,
     )
@@ -85,18 +91,7 @@ async def get_task(task_id: int, session: AsyncSession = Depends(get_db)):
     task = await session.get(Task, task_id)
     if task is None:
         raise HTTPException(status_code=404, detail="Task not found.")
-    return TaskOut(
-        id=task.id,
-        title=task.title,
-        description=task.description,
-        point_value=task.point_value,
-        level_required=task.level_required,
-        status=task.status.value,
-        created_by=task.created_by,
-        primary_faction_slug=task.primary_faction_slug,
-        is_task_vision_eligible=task.is_task_vision_eligible,
-        created_at=task.created_at,
-    )
+    return build_task_out(task)
 
 
 @router.post("", response_model=TaskOut, status_code=201)
@@ -113,18 +108,7 @@ async def propose_task_route(
     )
     is_admin = admin_result.scalar_one_or_none() is not None
     task = await propose_task(character, data, session, skip_level_check=is_admin)
-    return TaskOut(
-        id=task.id,
-        title=task.title,
-        description=task.description,
-        point_value=task.point_value,
-        level_required=task.level_required,
-        status=task.status.value,
-        created_by=task.created_by,
-        primary_faction_slug=task.primary_faction_slug,
-        is_task_vision_eligible=task.is_task_vision_eligible,
-        created_at=task.created_at,
-    )
+    return build_task_out(task)
 
 
 @router.put("/{task_id}", response_model=TaskOut)
@@ -148,17 +132,9 @@ async def update_task_route(
     task.point_value = data.point_value
     task.level_required = data.level_required
     task.primary_faction_slug = data.primary_faction_slug or "na"
+    # Only allow editing metatask_faction_slug for metatasks.
+    if task.task_type == TaskType.metatask and data.metatask_faction_slug is not None:
+        task.metatask_faction_slug = data.metatask_faction_slug
     await session.commit()
     await session.refresh(task)
-    return TaskOut(
-        id=task.id,
-        title=task.title,
-        description=task.description,
-        point_value=task.point_value,
-        level_required=task.level_required,
-        status=task.status.value,
-        created_by=task.created_by,
-        primary_faction_slug=task.primary_faction_slug,
-        is_task_vision_eligible=task.is_task_vision_eligible,
-        created_at=task.created_at,
-    )
+    return build_task_out(task)

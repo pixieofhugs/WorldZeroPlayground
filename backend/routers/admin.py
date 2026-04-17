@@ -15,7 +15,7 @@ from models.contact import ContactMessage
 from models.era import Era
 from models.roles import AccountRole, Role
 from models.praxis import ModerationStatus, Praxis
-from models.task import Task, TaskStatus
+from models.task import Task, TaskStatus, TaskType
 from schemas.admin import (
     AccountDetail,
     AccountSummary,
@@ -36,6 +36,7 @@ from schemas.admin import (
 from schemas.task import TaskCreate, TaskOut
 from schemas.praxis import PraxisOut
 from services.praxis import build_praxis_out, moderate_praxis
+from services.task import build_task_out
 from services.admin_service import (
     admin_create_character,
     admin_edit_task,
@@ -254,18 +255,7 @@ async def admin_reactivate_task(
     session: AsyncSession = Depends(get_db),
 ) -> TaskOut:
     task = await reactivate_task(task_id, session)
-    return TaskOut(
-        id=task.id,
-        title=task.title,
-        description=task.description,
-        point_value=task.point_value,
-        level_required=task.level_required,
-        status=task.status.value,
-        created_by=task.created_by,
-        primary_faction_slug=task.primary_faction_slug,
-        is_task_vision_eligible=task.is_task_vision_eligible,
-        created_at=task.created_at,
-    )
+    return build_task_out(task)
 
 
 # ---------------------------------------------------------------------------
@@ -377,18 +367,7 @@ async def admin_patch_task(
     session: AsyncSession = Depends(get_db),
 ):
     task = await admin_edit_task(task_id, data, session)
-    return TaskOut(
-        id=task.id,
-        title=task.title,
-        description=task.description,
-        point_value=task.point_value,
-        level_required=task.level_required,
-        status=task.status.value,
-        created_by=task.created_by,
-        primary_faction_slug=task.primary_faction_slug,
-        is_task_vision_eligible=task.is_task_vision_eligible,
-        created_at=task.created_at,
-    )
+    return build_task_out(task)
 
 
 @router.put("/tasks/{task_id}/status", response_model=TaskOut)
@@ -400,18 +379,7 @@ async def admin_update_task_status(
 ):
     new_status = TaskStatus(data.status)
     task = await update_task_status(task_id, new_status, session)
-    return TaskOut(
-        id=task.id,
-        title=task.title,
-        description=task.description,
-        point_value=task.point_value,
-        level_required=task.level_required,
-        status=task.status.value,
-        created_by=task.created_by,
-        primary_faction_slug=task.primary_faction_slug,
-        is_task_vision_eligible=task.is_task_vision_eligible,
-        created_at=task.created_at,
-    )
+    return build_task_out(task)
 
 
 # ---------------------------------------------------------------------------
@@ -443,8 +411,10 @@ async def list_pending_tasks(
             point_value=task.point_value,
             level_required=task.level_required,
             status=task.status.value,
+            task_type=task.task_type.value,
             created_by=task.created_by,
             primary_faction_slug=task.primary_faction_slug,
+            metatask_faction_slug=task.metatask_faction_slug,
             is_task_vision_eligible=task.is_task_vision_eligible,
             created_at=task.created_at,
             created_by_name=display_name or "",
@@ -467,18 +437,7 @@ async def approve_task(
     task.status = TaskStatus.active
     await session.commit()
     await session.refresh(task)
-    return TaskOut(
-        id=task.id,
-        title=task.title,
-        description=task.description,
-        point_value=task.point_value,
-        level_required=task.level_required,
-        status=task.status.value,
-        created_by=task.created_by,
-        primary_faction_slug=task.primary_faction_slug,
-        is_task_vision_eligible=task.is_task_vision_eligible,
-        created_at=task.created_at,
-    )
+    return build_task_out(task)
 
 
 @router.put("/tasks/{task_id}/retire", response_model=TaskOut)
@@ -495,18 +454,7 @@ async def retire_task(
     task.status = TaskStatus.retired
     await session.commit()
     await session.refresh(task)
-    return TaskOut(
-        id=task.id,
-        title=task.title,
-        description=task.description,
-        point_value=task.point_value,
-        level_required=task.level_required,
-        status=task.status.value,
-        created_by=task.created_by,
-        primary_faction_slug=task.primary_faction_slug,
-        is_task_vision_eligible=task.is_task_vision_eligible,
-        created_at=task.created_at,
-    )
+    return build_task_out(task)
 
 
 class TaskVisionToggle(BaseModel):
@@ -527,18 +475,7 @@ async def admin_toggle_task_vision(
     task.is_task_vision_eligible = data.is_task_vision_eligible
     await session.commit()
     await session.refresh(task)
-    return TaskOut(
-        id=task.id,
-        title=task.title,
-        description=task.description,
-        point_value=task.point_value,
-        level_required=task.level_required,
-        status=task.status.value,
-        created_by=task.created_by,
-        primary_faction_slug=task.primary_faction_slug,
-        is_task_vision_eligible=task.is_task_vision_eligible,
-        created_at=task.created_at,
-    )
+    return build_task_out(task)
 
 
 @router.delete("/praxes/{praxis_id}", status_code=204)
@@ -588,27 +525,34 @@ async def admin_create_task(
     if character is None:
         raise HTTPException(status_code=422, detail="Admin must have an active character.")
 
+    # Resolve task_type; admins can create metatask rows directly.
+    task_type = TaskType.standard
+    if data.task_type:
+        try:
+            task_type = TaskType(data.task_type)
+        except ValueError:
+            raise HTTPException(
+                status_code=422, detail=f"Invalid task_type: {data.task_type}"
+            )
+    if task_type == TaskType.metatask and not data.metatask_faction_slug:
+        raise HTTPException(
+            status_code=422,
+            detail="metatask_faction_slug is required for metatask creation.",
+        )
     task = Task(
         title=data.title,
         description=data.description or "",
         point_value=data.point_value,
         level_required=data.level_required,
         primary_faction_slug=data.primary_faction_slug or "na",
+        metatask_faction_slug=(
+            data.metatask_faction_slug if task_type == TaskType.metatask else None
+        ),
+        task_type=task_type,
         created_by=character.id,
         status=TaskStatus.active,
     )
     session.add(task)
     await session.commit()
     await session.refresh(task)
-    return TaskOut(
-        id=task.id,
-        title=task.title,
-        description=task.description,
-        point_value=task.point_value,
-        level_required=task.level_required,
-        status=task.status.value,
-        created_by=task.created_by,
-        primary_faction_slug=task.primary_faction_slug,
-        is_task_vision_eligible=task.is_task_vision_eligible,
-        created_at=task.created_at,
-    )
+    return build_task_out(task)

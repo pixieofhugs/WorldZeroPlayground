@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { proposeTask } from '../api/tasks'
-import { createMetaTask } from '../api/metaTasks'
+import { proposeMetatask } from '../api/metaTasks'
 import { getFactions, type FactionOut } from '../api/factions'
 import PageTitle from '../components/ui/PageTitle'
 import FilterLevelNodes from '../components/ui/FilterLevelNodes'
@@ -67,9 +67,9 @@ export default function ProposeTask() {
         <div className="sidebar-card" style={{ padding: 24, textAlign: 'center' }}>
           {isMetaTask ? (
             <>
-              <p className="font-display italic" style={{ fontSize: 22, color, marginBottom: 6 }}>Meta task created!</p>
+              <p className="font-display italic" style={{ fontSize: 22, color, marginBottom: 6 }}>Meta task proposed!</p>
               <p className="font-body" style={{ fontSize: 10, color: 'var(--color-text-secondary)' }}>
-                Players can now select it as a bonus when submitting {factionName(factionSlug)} praxis.
+                An admin will review it. Once activated, {factionName(factionSlug)} players can apply it to their praxes for a points bonus.
               </p>
             </>
           ) : (
@@ -87,19 +87,26 @@ export default function ProposeTask() {
     e.preventDefault()
     if (title.length > 200) { setError('Task name must be 200 characters or fewer.'); return }
     if (description.length > 5000) { setError('Description must be 5000 characters or fewer.'); return }
+    // Metatask proposals require level 6 (admin bypass). Standard proposals
+    // only require the page-level gate of 3. Check here so the error surfaces
+    // inline before hitting the wire.
+    if (isMetaTask && !user?.is_admin && characterLevel < 6) {
+      setError(`Meta tasks require level 6 or higher. You are level ${characterLevel}.`)
+      return
+    }
+    if (isMetaTask && (!factionSlug || factionSlug === 'na' || factionSlug === 'ua')) {
+      setError('Meta tasks must belong to a specific faction.')
+      return
+    }
     setSubmitting(true)
     setError(null)
     try {
       if (isMetaTask) {
-        if (!factionSlug || factionSlug === 'na') {
-          setError('Meta tasks must belong to a specific faction.')
-          return
-        }
-        await createMetaTask({
-          name: title,
+        await proposeMetatask({
+          title,
           description,
-          faction_slug: factionSlug,
-          bonus_value: parseInt(metaBonusValue) || 10,
+          metatask_faction_slug: factionSlug,
+          point_value: parseInt(metaBonusValue) || 10,
           level_required: levelRequired === '' ? 0 : levelRequired,
         })
       } else {
@@ -294,8 +301,8 @@ export default function ProposeTask() {
                 </div>
               </div>
 
-              {/* Meta Task Toggle — level 5+ or admin only */}
-              {(characterLevel >= 5 || user?.is_admin) && (
+              {/* Meta Task Toggle — level 6+ or admin only */}
+              {(characterLevel >= 6 || user?.is_admin) && (
                 <div style={{
                   borderTop: '1px dashed var(--color-border)',
                   paddingTop: 12, marginTop: 4,
@@ -392,13 +399,13 @@ export default function ProposeTask() {
                 }}
               >
                 <span style={{ position: 'absolute', inset: 3, border: '1px dashed rgba(255,255,255,0.25)', pointerEvents: 'none' }} />
-                {submitting ? 'Submitting...' : isMetaTask ? 'Create meta task' : 'Submit proposal'}
+                {submitting ? 'Submitting...' : isMetaTask ? 'Propose meta task' : 'Submit proposal'}
               </button>
               <button type="button" onClick={() => navigate(-1)} className="btn-outline" style={{ fontSize: 10, padding: '8px 16px' }}>
                 Cancel
               </button>
               <span className="font-body" style={{ fontSize: 8, color: 'var(--color-text-tertiary)', marginLeft: 'auto' }}>
-                {isMetaTask ? 'Goes live immediately.' : 'Your proposal goes to admin for review.'}
+                Your proposal goes to admin for review.
               </span>
             </div>
           </form>

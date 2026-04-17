@@ -27,27 +27,28 @@ from services.scoring import (
 async def _get_meta_task_points(
     praxis_id: int, character_level: int, session: AsyncSession
 ) -> int:
-    """Return flat bonus points from any meta task attached to a solo praxis.
+    """Return flat bonus points from metatask tasks attached to a praxis.
 
-    Returns 0 if the character does not meet the meta task's level_required.
+    Metatasks are Task rows with ``task_type == TaskType.metatask`` whose
+    ``point_value`` is the flat bonus. Each metatask is only counted when the
+    character's level meets the metatask's own ``level_required``.
     """
-    from models.meta_task import MetaTask, PraxisMetaTask
+    from models.meta_task import PraxisMetaTask
+    from models.task import TaskType
 
     result = await session.execute(
-        select(PraxisMetaTask).where(PraxisMetaTask.praxis_id == praxis_id)
+        select(Task)
+        .join(PraxisMetaTask, PraxisMetaTask.task_id == Task.id)
+        .where(PraxisMetaTask.praxis_id == praxis_id)
     )
-    praxis_meta_task = result.scalar_one_or_none()
-    if praxis_meta_task is None:
-        return 0
-    meta_task = await session.get(MetaTask, praxis_meta_task.meta_task_id)
-    if meta_task is None:
-        return 0
-    if character_level < meta_task.level_required:
-        return 0
-    # bonus_type "flat" adds bonus_value directly; "percentage" is not yet implemented.
-    if meta_task.bonus_type.value == "flat":
-        return int(meta_task.bonus_value)
-    return 0
+    total = 0
+    for task in result.scalars().all():
+        if task.task_type != TaskType.metatask:
+            continue
+        if character_level < task.level_required:
+            continue
+        total += int(task.point_value)
+    return total
 
 
 async def _get_duel_vote_totals_by_member(

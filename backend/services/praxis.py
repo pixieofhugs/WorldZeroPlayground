@@ -24,7 +24,7 @@ from models.praxis import (
     PraxisStatus,
     PraxisType,
 )
-from models.task import Task
+from models.task import Task, TaskType
 from models.vote import Vote
 from schemas.praxis import (
     DuelVoteSummary,
@@ -49,6 +49,8 @@ from services.scoring import (
 DUEL_LEVEL_REQUIRED = 2
 COLLABORATION_LEVEL_REQUIRED = 1
 ANALOG_FACTION_SLUG = "analog"
+ALBESCENT_FACTION_SLUG = "albescent"
+METATASK_APPLY_LEVEL = 7
 
 
 # ---------------------------------------------------------------------------
@@ -83,26 +85,29 @@ def _build_invite_out(invite: PraxisInvite) -> PraxisInviteOut:
 async def _get_meta_task_points(
     praxis_id: int, character_level: int, session: AsyncSession
 ) -> int:
-    """Return flat bonus points from any meta task attached to a solo praxis.
+    """Return flat bonus points from metatask tasks attached to a praxis.
 
-    Returns 0 if the character does not meet the meta task's level_required.
+    A metatask is a Task row with ``task_type == TaskType.metatask``. Its flat
+    bonus is ``task.point_value``. Applied only when the viewing character
+    meets the metatask's own ``level_required``. Sums across every attached
+    metatask; standard tasks should never be linked here (service guards
+    prevent that) but are defensively skipped if encountered.
     """
-    from models.meta_task import MetaTask, PraxisMetaTask
+    from models.meta_task import PraxisMetaTask
 
     result = await session.execute(
-        select(PraxisMetaTask).where(PraxisMetaTask.praxis_id == praxis_id)
+        select(Task)
+        .join(PraxisMetaTask, PraxisMetaTask.task_id == Task.id)
+        .where(PraxisMetaTask.praxis_id == praxis_id)
     )
-    praxis_meta_task = result.scalar_one_or_none()
-    if praxis_meta_task is None:
-        return 0
-    meta_task = await session.get(MetaTask, praxis_meta_task.meta_task_id)
-    if meta_task is None:
-        return 0
-    if character_level < meta_task.level_required:
-        return 0
-    if meta_task.bonus_type.value == "flat":
-        return int(meta_task.bonus_value)
-    return 0
+    total = 0
+    for task in result.scalars().all():
+        if task.task_type != TaskType.metatask:
+            continue
+        if character_level < task.level_required:
+            continue
+        total += int(task.point_value)
+    return total
 
 
 async def _count_in_progress_praxes(character_id: int, session: AsyncSession) -> int:
@@ -852,7 +857,146 @@ async def moderate_praxis(
     return praxis
 
 
+# ---------------------------------------------------------------------------
+# Metatasks
+# ---------------------------------------------------------------------------
+
+
+async def apply_metatask(
+    praxis_id: int,
+    task_id: int,
+    character_id: int,
+    session: AsyncSession,
+    era: EraConfig = CURRENT_ERA,
+) -> Praxis:
+    """Attach a metatask (Task with task_type=metatask) to a praxis.
+
+    Gates (R.9):
+    - The task must be ``TaskType.metatask`` (else 400).
+    - The applying character must be a member of the praxis (else 403).
+    - The praxis must be ``in_progress`` (else 422).
+    - Faction gate:
+        * Albescent characters may apply any faction's metatask.
+        * Otherwise the character must be at least ``METATASK_APPLY_LEVEL``
+          AND their ``faction_slug`` must match ``task.metatask_faction_slug``.
+    """
+    from models.meta_task import PraxisMetaTask
+
+    praxis = await get_praxis(praxis_id, session)
+    task = await session.get(Task, task_id)
+    if task is None:
+        raise HTTPException(status_code=404, detail="Task not found.")
+    if task.task_type != TaskType.metatask:
+        raise HTTPException(
+            status_code=400,
+            detail="Only tasks with task_type='metatask' can be applied as metatasks.",
+        )
+
+    member_ids = {member.character_id for member in praxis.members}
+    if character_id not in member_ids:
+        raise HTTPException(
+            status_code=403,
+            detail="Only members of this praxis can apply metatasks.",
+        )
+
+    if praxis.status != PraxisStatus.in_progress:
+        raise HTTPException(
+            status_code=422,
+            detail="Metatasks can only be applied to in-progress praxes.",
+        )
+
+    character = await session.get(Character, character_id)
+    if character is None:
+        raise HTTPException(status_code=404, detail="Character not found.")
+
+    era_row = await get_current_era_row(session)
+    stats = await get_or_create_stats(session, character_id, era_row.id)
+
+    if character.faction_slug != ALBESCENT_FACTION_SLUG:
+        if stats.level < METATASK_APPLY_LEVEL:
+            raise HTTPException(
+                status_code=403,
+                detail=(
+                    f"Must be level {METATASK_APPLY_LEVEL} or above "
+                    "to apply metatasks."
+                ),
+            )
+        if character.faction_slug != task.metatask_faction_slug:
+            raise HTTPException(
+                status_code=403,
+                detail=(
+                    "This metatask belongs to a different faction. "
+                    "Only Albescent characters can apply any faction's metatask."
+                ),
+            )
+
+    # Reject duplicate links up front — a metatask can only be applied once
+    # to the same praxis.
+    existing = await session.execute(
+        select(PraxisMetaTask).where(
+            PraxisMetaTask.praxis_id == praxis_id,
+            PraxisMetaTask.task_id == task_id,
+        )
+    )
+    if existing.scalar_one_or_none() is not None:
+        raise HTTPException(
+            status_code=409,
+            detail="This metatask is already applied to the praxis.",
+        )
+
+    session.add(PraxisMetaTask(praxis_id=praxis_id, task_id=task_id))
+    await session.commit()
+
+    from services.character_stats import recalculate_character_stats
+    for member in praxis.members:
+        await recalculate_character_stats(member.character_id, session, era)
+    await session.commit()
+    await session.refresh(praxis)
+    return praxis
+
+
+async def remove_metatask(
+    praxis_id: int,
+    task_id: int,
+    character_id: int,
+    session: AsyncSession,
+    era: EraConfig = CURRENT_ERA,
+) -> Praxis:
+    """Remove a metatask from a praxis. Any praxis member can remove."""
+    from models.meta_task import PraxisMetaTask
+
+    praxis = await get_praxis(praxis_id, session)
+
+    member_ids = {member.character_id for member in praxis.members}
+    if character_id not in member_ids:
+        raise HTTPException(
+            status_code=403,
+            detail="Only members of this praxis can remove metatasks.",
+        )
+
+    result = await session.execute(
+        select(PraxisMetaTask).where(
+            PraxisMetaTask.praxis_id == praxis_id,
+            PraxisMetaTask.task_id == task_id,
+        )
+    )
+    link = result.scalar_one_or_none()
+    if link is None:
+        raise HTTPException(status_code=404, detail="Metatask is not applied to this praxis.")
+
+    await session.delete(link)
+    await session.commit()
+
+    from services.character_stats import recalculate_character_stats
+    for member in praxis.members:
+        await recalculate_character_stats(member.character_id, session, era)
+    await session.commit()
+    await session.refresh(praxis)
+    return praxis
+
+
 __all__ = [
+    "apply_metatask",
     "build_praxis_out",
     "build_praxis_card_out",
     "compute_praxis_score_from_db",
@@ -864,6 +1008,7 @@ __all__ = [
     "kick_member",
     "list_praxes",
     "moderate_praxis",
+    "remove_metatask",
     "reopen_praxis",
     "resubmit_praxis",
     "respond_to_invite",

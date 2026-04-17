@@ -5,7 +5,7 @@ from models.roles import Role, AccountRole
 from models.character import Character
 from models.era import Era
 from models.character_stats import CharacterStats
-from models.task import Task, TaskFaction
+from models.task import Task, TaskFaction, TaskStatus, TaskType
 from models.praxis import (
     Praxis,
     PraxisMember,
@@ -21,7 +21,7 @@ from models.vote import Vote
 from models.flag import Flag
 from models.relationship import Relationship
 from models.message import Message
-from models.meta_task import MetaTask, PraxisMetaTask
+from models.meta_task import PraxisMetaTask
 from models.contact import ContactMessage
 from models.taunt_message import TauntMessage
 from models.faction_defection_history import FactionDefectionHistory
@@ -39,6 +39,8 @@ __all__ = [
     "CharacterStats",
     "Task",
     "TaskFaction",
+    "TaskStatus",
+    "TaskType",
     "Praxis",
     "PraxisMember",
     "PraxisInvite",
@@ -52,7 +54,6 @@ __all__ = [
     "Flag",
     "Relationship",
     "Message",
-    "MetaTask",
     "PraxisMetaTask",
     "ContactMessage",
     "TauntMessage",

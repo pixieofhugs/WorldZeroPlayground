@@ -13,8 +13,10 @@ class TaskOut(BaseModel):
     point_value: int
     level_required: int
     status: str
+    task_type: str
     created_by: int
     primary_faction_slug: str
+    metatask_faction_slug: Optional[str] = None
     is_task_vision_eligible: bool
     created_at: datetime
 
@@ -25,6 +27,9 @@ class TaskCreate(BaseModel):
     point_value: int = Field(..., gt=0)
     level_required: int = Field(0, ge=0)
     primary_faction_slug: Optional[str] = None
+    # Metatask fields — optional; defaults to a standard task.
+    task_type: Optional[str] = None
+    metatask_faction_slug: Optional[str] = None
 
 
 class CharacterTaskOut(BaseModel):

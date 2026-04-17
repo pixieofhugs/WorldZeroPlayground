@@ -213,6 +213,22 @@ export async function kickMember(praxisId: number, memberId: number): Promise<vo
 }
 
 // ---------------------------------------------------------------------------
+// Metatasks — metatasks are Task rows with task_type='metatask' attached
+// to a praxis via POST /praxes/{id}/metatasks.
+// ---------------------------------------------------------------------------
+
+export async function applyMetatask(praxisId: number, taskId: number): Promise<PraxisOut> {
+  const { data } = await api.post<PraxisOut>(`/praxes/${praxisId}/metatasks`, {
+    task_id: taskId,
+  })
+  return data
+}
+
+export async function removeMetatask(praxisId: number, taskId: number): Promise<void> {
+  await api.delete(`/praxes/${praxisId}/metatasks/${taskId}`)
+}
+
+// ---------------------------------------------------------------------------
 // Voting
 // ---------------------------------------------------------------------------
 

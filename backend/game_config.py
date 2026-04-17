@@ -11,13 +11,21 @@ from dataclasses import dataclass, field
 
 @dataclass(frozen=True)
 class TaskDef:
-    """Definition of a single task within an era."""
+    """Definition of a single task within an era.
+
+    ``task_type`` distinguishes a standard task from a metatask.
+    ``metatask_faction_slug`` is only meaningful when ``task_type == "metatask"``
+    and identifies which faction's level-7+ members are permitted to apply it
+    (Albescent characters can apply any metatask regardless).
+    """
     title: str
     description: str
     faction_slug: str
     level_required: int
     point_value: int
     is_task_vision_eligible: bool = False
+    task_type: str = "standard"
+    metatask_faction_slug: str | None = None
 
 
 @dataclass(frozen=True)

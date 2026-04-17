@@ -33,9 +33,14 @@ from schemas.praxis import (
 
 class InviteResponse(BaseModel):
     accept: bool
+
+
+class MetataskApply(BaseModel):
+    task_id: int
 from schemas.vote import VoteOut
 from services.praxis import (
     _build_invite_out,
+    apply_metatask,
     build_praxis_card_out,
     build_praxis_out,
     create_praxis,
@@ -44,6 +49,7 @@ from services.praxis import (
     invite_to_praxis,
     kick_member,
     list_praxes,
+    remove_metatask,
     reopen_praxis,
     resubmit_praxis,
     respond_to_invite,
@@ -466,3 +472,47 @@ async def get_vote_summary_route(
     if praxis is None:
         raise HTTPException(status_code=404, detail="Praxis not found.")
     return await _build_duel_vote_summary(praxis, session)
+
+
+# ---------------------------------------------------------------------------
+# Metatask apply / remove
+# ---------------------------------------------------------------------------
+
+
+@router.post("/{praxis_id}/metatasks", response_model=PraxisOut, status_code=201)
+async def apply_metatask_route(
+    praxis_id: int,
+    data: MetataskApply,
+    character: Character = Depends(get_current_character),
+    session: AsyncSession = Depends(get_db),
+):
+    """Attach a metatask (task with task_type='metatask') to a praxis.
+
+    Access gates are enforced in the service — see ``apply_metatask``.
+    """
+    praxis = await apply_metatask(
+        praxis_id=praxis_id,
+        task_id=data.task_id,
+        character_id=character.id,
+        session=session,
+        era=CURRENT_ERA,
+    )
+    return await build_praxis_out(praxis, session, viewer_character_id=character.id)
+
+
+@router.delete("/{praxis_id}/metatasks/{task_id}", status_code=204)
+async def remove_metatask_route(
+    praxis_id: int,
+    task_id: int,
+    character: Character = Depends(get_current_character),
+    session: AsyncSession = Depends(get_db),
+):
+    """Detach a previously applied metatask from a praxis."""
+    await remove_metatask(
+        praxis_id=praxis_id,
+        task_id=task_id,
+        character_id=character.id,
+        session=session,
+        era=CURRENT_ERA,
+    )
+    return Response(status_code=204)

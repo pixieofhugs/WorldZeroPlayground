@@ -1,5 +1,7 @@
 import api from './axios'
 
+export type TaskType = 'standard' | 'metatask'
+
 export interface TaskOut {
   id: number
   title: string
@@ -7,8 +9,10 @@ export interface TaskOut {
   point_value: number
   level_required: number
   status: string
+  task_type: TaskType
   created_by: number
   primary_faction_slug: string | null
+  metatask_faction_slug: string | null
   is_task_vision_eligible: boolean
   created_at: string
 }
@@ -19,6 +23,10 @@ export interface TaskCreate {
   point_value: number
   level_required: number
   primary_faction_slug?: string
+  // Metatask branch — optional; when task_type='metatask' the backend
+  // expects metatask_faction_slug too.
+  task_type?: TaskType
+  metatask_faction_slug?: string
 }
 
 export interface TaskFilters {
@@ -26,6 +34,7 @@ export interface TaskFilters {
   faction?: string
   level?: number
   exclude_character_id?: number
+  task_type?: TaskType
 }
 
 export async function listTasks(filters?: TaskFilters): Promise<TaskOut[]> {

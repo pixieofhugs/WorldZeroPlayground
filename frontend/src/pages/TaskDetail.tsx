@@ -3,7 +3,6 @@ import { useParams, Link, useNavigate, useLocation } from 'react-router-dom'
 import { getTask, getTaskSignups, type TaskOut, type TaskSignupOut } from '../api/tasks'
 import { listPraxes, createPraxis, withdrawPraxis, type PraxisCardOut } from '../api/praxis'
 import { listRelationships } from '../api/relationships'
-import { getMetaTasks, type MetaTaskOut } from '../api/metaTasks'
 import PraxisCard from '../components/PraxisCard'
 import LevelPill from '../components/ui/LevelPill'
 import PageTitle from '../components/ui/PageTitle'
@@ -25,7 +24,6 @@ export default function TaskDetail() {
   const [task, setTask] = useState<TaskOut | null>(null)
   const [submissions, setSubmissions] = useState<PraxisCardOut[]>([])
   const [signups, setSignups] = useState<TaskSignupOut[]>([])
-  const [metaTasks, setMetaTasks] = useState<MetaTaskOut[]>([])
   const [isInProgress, setIsInProgress] = useState(false)
   const [taskSlotCount, setTaskSlotCount] = useState(0)
   const [loading, setLoading] = useState(true)
@@ -53,7 +51,6 @@ export default function TaskDetail() {
       getTask(taskId),
       listPraxes({ task_id: taskId, status: 'submitted' }),
       getTaskSignups(taskId),
-      getMetaTasks(taskId).catch(() => []),
     ]
     if (user) {
       fetches.push(listPraxes({ character_id: user.character?.id, status: 'in_progress' }))
@@ -70,11 +67,10 @@ export default function TaskDetail() {
     }
 
     Promise.all(fetches)
-      .then(([t, s, sg, mt, myTasks, friendSet, foeSet]) => {
+      .then(([t, s, sg, myTasks, friendSet, foeSet]) => {
         setTask(t as TaskOut)
         setSubmissions(s as PraxisCardOut[])
         setSignups(sg as TaskSignupOut[])
-        setMetaTasks(mt as MetaTaskOut[])
         if (myTasks) {
           const praxes = myTasks as PraxisCardOut[]
           setIsInProgress(praxes.some((p) => p.task_id === taskId && !p.is_withdrawn))
@@ -338,49 +334,6 @@ export default function TaskDetail() {
               <button onClick={handleDrop} className="eyebrow" style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-text-tertiary)' }}>
                 drop
               </button>
-            </div>
-          )}
-
-          {/* ── Meta Tasks Panel ── */}
-          {metaTasks.length > 0 && (
-            <div className="sidebar-card mb-5" style={{ padding: '16px 20px' }}>
-              <p className="eyebrow mb-3">Meta tasks available for this task</p>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                {metaTasks.map((mt) => {
-                  const bonusLabel = mt.bonus_type === 'percentage' ? `+${mt.bonus_value}%` : `+${mt.bonus_value} flat`
-                  return (
-                    <div
-                      key={mt.id}
-                      style={{
-                        display: 'flex', alignItems: 'center', gap: 10,
-                        padding: '8px 0',
-                        borderTop: '1px dashed var(--color-border)',
-                      }}
-                    >
-                      <span style={{ width: 8, height: 8, borderRadius: '50%', background: factionCssVar(mt.faction_slug), flexShrink: 0 }} />
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <span className="font-body" style={{ fontSize: 11, fontWeight: 700, color: 'var(--color-text-primary)', display: 'block' }}>
-                          {mt.name}
-                        </span>
-                        <span className="font-body" style={{ fontSize: 9, color: 'var(--color-text-secondary)' }}>
-                          {mt.description}
-                        </span>
-                      </div>
-                      <span
-                        style={{
-                          fontFamily: "'Courier Prime', monospace",
-                          fontSize: 10, fontWeight: 700,
-                          color: 'var(--color-success)',
-                          whiteSpace: 'nowrap',
-                        }}
-                      >
-                        {bonusLabel}
-                      </span>
-                      {mt.level_required > 0 && <LevelPill level={mt.level_required} />}
-                    </div>
-                  )
-                })}
-              </div>
             </div>
           )}
 

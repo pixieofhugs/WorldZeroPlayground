@@ -28,9 +28,8 @@ from models.character import Character
 from models.character_stats import CharacterStats
 from models.era import Era
 from models.faction import Faction, FactionStatus
-from models.meta_task import BonusType, MetaTask
 from models.roles import AccountRole, Role
-from models.task import Task, TaskStatus
+from models.task import Task, TaskStatus, TaskType
 
 
 # ---------------------------------------------------------------------------
@@ -196,23 +195,33 @@ async def seed(env: str, yes: bool) -> None:
 
         # ------------------------------------------------------------------
         # Phase 4: Meta Tasks (placeholder)
+        # A metatask is a Task row with task_type=metatask. See SESSION M
+        # migration (0006) for the unification. Seed a single placeholder
+        # metatask so the UI has something to render.
         # ------------------------------------------------------------------
         from sqlalchemy import func as sqlfunc
-        meta_task_count = (
-            await session.execute(select(sqlfunc.count()).select_from(MetaTask))
+        metatask_count = (
+            await session.execute(
+                select(sqlfunc.count())
+                .select_from(Task)
+                .where(Task.task_type == TaskType.metatask)
+            )
         ).scalar()
-        if meta_task_count == 0:
-            print("  >Meta tasks (1 placeholder)")
-            session.add(MetaTask(
-                name="Upside Down",
+        if metatask_count == 0:
+            print("  >Metatasks (1 placeholder)")
+            session.add(Task(
+                title="Upside Down",
                 description="Do this task upside down",
-                faction_slug="ua_masters",
-                bonus_type=BonusType.flat,
-                bonus_value=100.0,
+                point_value=100,
                 level_required=0,
+                status=TaskStatus.active,
+                task_type=TaskType.metatask,
+                created_by=pixie_char.id,
+                primary_faction_slug="ua_masters",
+                metatask_faction_slug="ua_masters",
             ))
         else:
-            print(f"  >Meta tasks already exist ({meta_task_count}) — skipping")
+            print(f"  >Metatasks already exist ({metatask_count}) — skipping")
 
         await session.commit()
         print("\nSeed complete!\n")
