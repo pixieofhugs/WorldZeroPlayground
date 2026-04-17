@@ -951,73 +951,102 @@ check to pass.
 **File:** `backend/tests/integration/test_submissions.py`
 **Target:** raise `routers/praxes.py` from 36% → 70%+
 
-### TASK T.5 — Integration tests: characters routes (coverage: 42%)
+> **Rescoped 2026-04-17** after auditing the suite against the SESSION R rules changes. Most of T.5–T.9 turned out to be largely done already. The remaining work is: (a) cover the new R rules with explicit tests, (b) rename a couple of test functions whose names now lie about what they test, and (c) fill small gaps. T.10 is new and is the highest-value item here.
 
-`routers/characters.py` has many untested paths:
+### TASK T.5 — Integration tests: characters routes (coverage ~57%)
 
-- `GET /characters` with search/filter params
-- `GET /characters/{id}` with stats, praxis count, level display
-- `GET /characters/{id}/praxes` — character's praxis list
-- `PUT /characters/{id}/faction` — faction change (defection flow)
-- Faction age-out logic (UA → aged_out at level 3)
-- Second character creation (requires level 3 on first)
+**Current state:** 31 tests cover CRUD, list filters (search, faction, pagination), stats exposure, avatar upload (including 403 cases), relationships, votes-received, and the second-character level gate. The gate test functions correctly check the **level 5** threshold from R.7, but their names still say "level3".
+
+**Remaining work:**
+1. Rename `test_second_character_blocked_below_level3` → `test_second_character_blocked_below_level5`
+2. Rename `test_second_character_allowed_at_level3` → `test_second_character_allowed_at_level5`
+3. Add `test_albescent_requires_level8_character_on_account` (R.7) — account with only a level-7 character cannot create an Albescent second character; with a level-8 character it can
+4. Add `test_albescent_character_starts_in_albescent_faction` (R.8) — newly-created Albescent character's `faction_slug == "albescent"` (not `"ua"`)
 
 **File:** `backend/tests/integration/test_characters.py`
-**Target:** raise `routers/characters.py` from 42% → 70%+
+**Target:** raise `routers/characters.py` to 70%+
 
-### TASK T.6 — Integration tests: tasks routes (coverage: 50%)
+---
 
-`routers/tasks.py` has these gaps:
+### TASK T.6 — Integration tests: tasks routes (coverage ~65%)
 
-- `GET /tasks` with filters (`status`, `level`, `faction`, `min_points`,
-  `max_points`, `exclude_character_id`)
-- `POST /tasks` — task proposal by level 3+ character
-- `PUT /tasks/{id}` — edit a pending task
-- `GET /tasks/{id}/signups` — list players signed up for a task
-- `GET /my-tasks` with status filter (`submitted`, `abandoned`)
-- Hidden-faction filtering (tasks from hidden factions excluded from listing)
+**Current state:** 31 tests cover list filters (status, faction, level, points, exclude_character_id), propose at level-3, edit pending tasks, signup lists, hidden-faction exclusion, response field shape.
+
+**Remaining work:**
+1. Add `test_my_tasks_with_status_filter` — `GET /my-tasks?status=submitted` and `?status=abandoned` return the right subsets
+2. Add `test_admin_bypass_propose_level_gate` (B.5) — admin character at level 0 can propose a task
+3. Add `test_propose_metatask_requires_level6` once SESSION M lands (defer; note here as a dependency)
 
 **File:** `backend/tests/integration/test_tasks.py`
-**Target:** raise `routers/tasks.py` from 50% → 75%+
+**Target:** raise `routers/tasks.py` to 75%+
 
-### TASK T.7 — Integration tests: auth routes (coverage: 55%)
+---
 
-`routers/auth.py` OAuth flow is hard to integration-test, but we can test:
+### TASK T.7 — Integration tests: auth routes (coverage ~60%)
 
-- `GET /auth/me` — returns user with character + stats
-- `POST /auth/logout` — clears session
-- Error cases (expired token, malformed token)
+**Current state:** 15 tests cover `/auth/me` (authenticated / unauthenticated / no character / with stats / no email leak / not-admin-by-default), logout + cookie clear, and token validation (expired, malformed, wrong signature, missing Bearer prefix).
+
+**Remaining work:**
+1. Add `test_auth_me_exposes_votes_available` — the computed `votes_available` field from R.5 is present in the returned CharacterStats and equals `base + floor(multiplier * score) - votes_spent_this_era`
 
 **File:** `backend/tests/integration/test_auth.py`
-**Target:** raise `routers/auth.py` from 55% → 70%+
+**Target:** raise `routers/auth.py` to 70%+
 
-### TASK T.8 — Integration tests: admin routes (coverage: 54%)
+---
 
-`routers/admin.py` has many untested admin operations:
+### TASK T.8 — Integration tests: admin routes (coverage ~60%, no regressions under R.5)
 
-- `PUT /admin/praxes/{id}/hide` — hide a praxis
-- `PUT /admin/praxes/{id}/unhide` — restore a hidden praxis
-- `GET /admin/characters` — admin character list
-- `PUT /admin/characters/{id}/stats` — set character stats
-- `PUT /admin/era/reset` — era reset (complex, high-value test)
+**Current state:** 46 tests including task management, praxis moderation, character stats patching, account management, era reset, role management, and 403 coverage on every endpoint. `test_admin_patch_character_stats` still passes under R.5 because `set_character_stats` translates the `votes_available` patch into `votes_spent_this_era = max(0, cap - desired)` at the service layer.
+
+**Remaining work:**
+1. Add `test_admin_patch_stats_recomputes_votes_available` — PATCH with `votes_available=5`, read back, confirm the computed value matches `base + floor(multiplier * new_score) - spent` where `spent` was set to `max(0, cap - 5)`
+2. Add `test_admin_era_reset_zeros_votes_spent_this_era` (R.5) — before reset a character has `votes_spent_this_era > 0`; after reset with `reset_vote_budget=True`, it's `0`; budget recalculates from the new score
+3. Add `test_admin_era_reset_preserves_votes_spent_without_flag` — reset with `reset_vote_budget=False` carries over `votes_spent_this_era`
 
 **File:** `backend/tests/integration/test_admin.py`
-**Target:** raise `routers/admin.py` from 54% → 70%+
+**Target:** raise `routers/admin.py` to 70%+
 
-### TASK T.9 — Integration tests: remaining routes
+---
 
-Lower-priority routes with partial coverage (note: collaborations coverage is superseded by P.8):
+### TASK T.9 ✅ MOSTLY DONE — Integration tests: remaining routes
 
-- `routers/collaborations.py` (55%) — ⛔ covered by P.8
-- `routers/factions.py` (52%) — list factions, defect, faction details
-- `routers/leaderboard.py` (47%) — top scores, faction leaderboard
-- `routers/messages.py` (44%) — send message, list messages
-- `routers/relationships.py` (58%) — friend/foe requests
+factions.py (8 tests), leaderboard.py (7 tests), messages.py (10 tests), relationships.py (11 tests), votes.py (10 tests) each have solid coverage of happy paths and key error cases. collaborations.py is ⛔ superseded by P.8.
 
-Each needs 2–4 tests to cover the happy path + key error cases.
+**Remaining (optional, pick up only if overall coverage is below target):**
+- One or two tests each for leaderboard era-specific queries and message list filtering if coverage % still lags.
 
-**Target:** raise overall coverage from 59% → 80%+. This is the
-milestone where the `--cov-fail-under` threshold can be raised back.
+**Target:** raise overall coverage from 59% → 80%+ after T.5 + T.7 + T.8 + T.10 land. This is the milestone where `--cov-fail-under` in `backend/pytest.ini` can be raised back from 60 → 80.
+
+---
+
+### TASK T.10 — Cover the new R rules with explicit integration tests (NEW)
+
+Each rule that shipped in PRs #105 and #106 deserves a dedicated integration test so a future regression surfaces in CI instead of prod.
+
+**File placement follows the rule's primary router.**
+
+1. **R.1 — Level gate on create_praxis** → `test_create_praxis_below_required_level_returns_403` in `test_praxes.py`. Character at level 0 attempts to create a praxis for a task with `level_required=5`; expect 403 with a message naming the required level.
+
+2. **R.3 — max_collab_participants cap (20)** → `test_collab_invite_accept_at_cap_returns_400` in `test_praxes.py`. Seed a collab praxis with 20 members; 21st invitee accepts; expect 400 and the new member is NOT added. (Use `era.max_collab_participants` — do not hardcode 20.)
+
+3. **R.4 — Account-level duel anti-self-vote** → `test_duel_vote_blocked_by_alt_character_on_same_account` in `test_votes.py`. Account A owns character A1, character A1 is a duel member; account A's other character A2 tries to cast a duel vote; expect 403. Also confirm an unrelated account's character CAN vote.
+
+4. **R.5 — Vote budget on-read** → two tests in `test_votes.py`:
+   - `test_vote_budget_increases_when_score_grows` — stats with `score=0, votes_spent=0` → budget = base. Admin patches score up by 100 → `compute_votes_available(stats, era)` reflects the new base + `floor(multiplier * 100)`.
+   - `test_vote_budget_unaffected_by_old_drift` — set `score=500` and `votes_spent_this_era=2`; confirm `votes_available = base + floor(multiplier * 500) - 2`, regardless of prior-era state.
+
+5. **R.7 + R.8 tests are already part of T.5** — do NOT duplicate them here.
+
+**Acceptance:** 5 new tests pass locally and in CI. `pytest backend/tests/integration/ -k "level_gate or collab_cap or duel_vote_blocked_by_alt or vote_budget"` returns all 5.
+
+---
+
+### Overall SESSION T finish line
+
+After T.5 + T.6 + T.7 + T.8 + T.10 merge:
+- Overall backend coverage should reach 80%+
+- Raise `--cov-fail-under` from 60 → 80 in `backend/pytest.ini`
+- Enable branch protection on `main` requiring the Test status check (T.3)
 
 ---
 
