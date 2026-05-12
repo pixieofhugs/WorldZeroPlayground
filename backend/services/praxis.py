@@ -14,6 +14,8 @@ from sqlalchemy.orm import selectinload
 
 from game_config import CURRENT_ERA, EraConfig
 from models.character import Character
+from models.character_stats import CharacterStats
+from models.era import Era
 from models.flag import Flag
 from models.meta_task import PraxisMetaTask
 from models.praxis import (
@@ -401,7 +403,14 @@ async def _check_create_preconditions(
     character = await session.get(Character, character_id)
     if character is None:
         raise HTTPException(status_code=404, detail="Character not found.")
-    if not await can_submit_praxis_for_task(character, task, session):
+    if not await can_submit_praxis_for_task(
+        character,
+        task,
+        session,
+        era,
+        era_row=era_row,
+        character_stats=stats,
+    ):
         raise HTTPException(
             status_code=409,
             detail="You have already submitted a praxis for this task.",
@@ -578,22 +587,76 @@ async def can_submit_praxis_for_task(
     character: Optional[Character],
     task: Task,
     session: AsyncSession,
+    era: EraConfig = CURRENT_ERA,
+    *,
+    era_row: Optional[Era] = None,
+    character_stats: Optional[CharacterStats] = None,
 ) -> bool:
     """Return True if ``character`` may create a new praxis for ``task``.
 
-    Mirrors the duplicate-submission rule enforced in :func:`create_praxis`:
-    - Anonymous viewers never see the submit affordance (False).
-    - A character that already authors a non-withdrawn ``Praxis`` for this
-      ``task`` cannot submit again, except for the Analog faction (Double
-      Dipper perk). Withdrawn prior praxes do not block a fresh submission.
+    Combines every gate the frontend "Sign up" affordance needs to reflect, so
+    the button can be hidden truthfully (per the "hide unusable controls" rule)
+    rather than shown disabled. Returns False if any of the following holds:
 
-    This helper intentionally stays focused on the one-praxis-per-task rule.
-    Level gates, bank-cap checks, and faction-visibility are handled by the
-    caller or :func:`create_praxis` itself.
+    - **Anonymous viewer**: no character is authenticated.
+    - **Level gate**: the character's current-era level is below
+      ``task.level_required``.
+    - **Faction eligibility**: for metatask rows, the character must belong to
+      the same faction as the metatask. Standard tasks pass this check
+      unconditionally. Delegated to :func:`is_task_eligible_for_character` so
+      the rule is single-sourced.
+    - **Duplicate authorship**: the character already authors a non-withdrawn
+      ``Praxis`` for this task. The Analog faction (Double Dipper perk) is
+      exempt from this gate. Withdrawn prior praxes do not block a fresh
+      submission.
+    - **Active membership in another character's praxis**: the character is a
+      non-submitted member of an in-flight ``Praxis`` for this task that they
+      did not author (covers being invited to a collab/duel they have not yet
+      completed). Membership in their own authored praxis is handled by the
+      duplicate-authorship gate so the Analog Double Dipper carve-out applies
+      uniformly.
+
+    Bank-cap checks and other run-time guards remain in :func:`create_praxis`.
+
+    ``era_row`` and ``character_stats`` are accepted as optional pre-fetched
+    values so callers that iterate over many tasks (e.g. the ``/tasks`` list
+    endpoint) can avoid the N+1 of re-fetching the same per-viewer rows on
+    every iteration. When omitted, this helper fetches them itself so the
+    function remains usable standalone.
     """
     if character is None:
         return False
 
+    # Level + faction eligibility (single-sourced via is_task_eligible_for_character).
+    if era_row is None:
+        era_row = await get_current_era_row(session)
+    if character_stats is None:
+        character_stats = await get_or_create_stats(session, character.id, era_row.id)
+    if not is_task_eligible_for_character(character, task, character_stats.level):
+        return False
+
+    # Active-membership gate: blocks characters from being members of someone
+    # else's in-flight praxis on this task (covers the invited-to-collab/duel
+    # case). Analog is exempted ONLY for membership in their OWN authored
+    # praxes — Double Dipper is about authorship, not being roped into another
+    # character's praxis. We narrow the query to praxes NOT authored by the
+    # character so the Analog carve-out below is the sole owner of the
+    # duplicate-authorship rule.
+    member_result = await session.execute(
+        select(PraxisMember.id)
+        .join(Praxis, PraxisMember.praxis_id == Praxis.id)
+        .where(
+            PraxisMember.character_id == character.id,
+            PraxisMember.has_submitted == False,  # noqa: E712
+            Praxis.task_id == task.id,
+            Praxis.created_by_id != character.id,
+            Praxis.is_withdrawn == False,  # noqa: E712
+        )
+    )
+    if member_result.first() is not None:
+        return False
+
+    # Duplicate-authorship gate, with the Analog Double Dipper carve-out.
     if character.faction_slug == ANALOG_FACTION_SLUG:
         return True
 

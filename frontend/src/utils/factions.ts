@@ -90,6 +90,51 @@ export function factionCssVar(
   return `var(${prop})`;
 }
 
+/**
+ * Bundle of CSS variable references for all faction tokens used by themed pages.
+ * Centralizes the repeated 6+ line destructure of factionCssVar() calls.
+ * Each value is a `var(--faction-*)` reference, theme-aware via the cascade.
+ */
+export interface FactionTokens {
+  /** primary base color (no suffix) */
+  primary: string;
+  /** card-bg */
+  surface: string;
+  /** card-text */
+  text: string;
+  /** card-muted */
+  muted: string;
+  /** card-accent */
+  accent: string;
+  /** card-font */
+  font: string;
+  /** light tint */
+  light: string;
+  /** border */
+  border: string;
+}
+
+/**
+ * Get all common faction CSS variable references for a slug in one call.
+ * Use this in themed pages instead of calling factionCssVar() repeatedly:
+ *   const tokens = getFactionTokens(slug);
+ *   // ... tokens.surface, tokens.text, tokens.accent, etc.
+ */
+export function getFactionTokens(
+  slug: string | null | undefined,
+): FactionTokens {
+  return {
+    primary: factionCssVar(slug),
+    surface: factionCssVar(slug, "card-bg"),
+    text: factionCssVar(slug, "card-text"),
+    muted: factionCssVar(slug, "card-muted"),
+    accent: factionCssVar(slug, "card-accent"),
+    font: factionCssVar(slug, "card-font"),
+    light: factionCssVar(slug, "light"),
+    border: factionCssVar(slug, "border"),
+  };
+}
+
 /** Get faction color by slug, with fallback (raw hex — light mode only) */
 export function factionColor(slug: string | null | undefined): string {
   return factionRegistry[slug ?? ""]?.color ?? "#6b6a7a";

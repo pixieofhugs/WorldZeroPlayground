@@ -17,7 +17,12 @@ import {
   TitleCounter,
   formatAutosave,
 } from "./shared";
-import { FilePicker, InviteSearch, MetatasksList } from "./controls";
+import {
+  DropButton,
+  FilePicker,
+  InviteSearch,
+  MetatasksList,
+} from "./controls";
 import type { EditPraxisState } from "../useEditPraxis";
 
 interface Props {
@@ -555,6 +560,21 @@ export default function EditPraxisLuggageManifest({ state }: Props) {
             >
               {state.saving ? "SAVING..." : "SAVE DRAFT"}
             </button>
+            <DropButton
+              onCancel={state.cancel}
+              disabled={
+                state.saving || state.submitting || state.switchingMode !== null
+              }
+              skin={{
+                label: "✗ VOID TICKET",
+                color: "#b91c1c",
+                fontFamily: "'Bebas Neue', sans-serif",
+                fontSize: 13,
+                letterSpacing: "0.18em",
+                border: `1.5px dashed #b91c1c`,
+                padding: "10px 18px",
+              }}
+            />
             <div style={{ flex: 1 }} />
             <span
               style={{

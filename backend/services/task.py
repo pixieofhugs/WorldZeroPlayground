@@ -6,6 +6,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from game_config import CURRENT_ERA, EraConfig
 from models.character import Character
+from models.character_stats import CharacterStats
+from models.era import Era
 from models.faction import Faction, FactionStatus
 from models.praxis import Praxis, PraxisMember, PraxisStatus
 from models.task import Task, TaskStatus, TaskType
@@ -111,6 +113,9 @@ async def build_task_out_for_viewer(
     viewer: Optional[Character],
     session: AsyncSession,
     era: EraConfig = CURRENT_ERA,
+    *,
+    era_row: Optional[Era] = None,
+    character_stats: Optional[CharacterStats] = None,
 ) -> TaskOut:
     """Build a :class:`TaskOut` with viewer-relative capability flags.
 
@@ -118,19 +123,33 @@ async def build_task_out_for_viewer(
     ``eligible_for_current_user`` using the authenticated viewer's character
     (``None`` for anonymous callers). All three flags default to the same
     safe values as :func:`build_task_out` when ``viewer`` is ``None``.
+
+    ``era_row`` and ``character_stats`` may be supplied by callers that
+    iterate over many tasks for the same viewer (e.g. the ``/tasks`` list
+    endpoint) so the per-viewer fetches happen once per request rather than
+    once per task. When omitted, they are fetched here.
     """
     base = build_task_out(task)
 
     if viewer is None:
         return base
 
-    era_row = await get_current_era_row(session)
-    stats = await get_or_create_stats(session, viewer.id, era_row.id)
+    if era_row is None:
+        era_row = await get_current_era_row(session)
+    if character_stats is None:
+        character_stats = await get_or_create_stats(session, viewer.id, era_row.id)
 
-    base.can_submit_praxis = await can_submit_praxis_for_task(viewer, task, session)
-    base.allowed_modes = allowed_praxis_modes(viewer, task, stats.level, era)
+    base.can_submit_praxis = await can_submit_praxis_for_task(
+        viewer,
+        task,
+        session,
+        era,
+        era_row=era_row,
+        character_stats=character_stats,
+    )
+    base.allowed_modes = allowed_praxis_modes(viewer, task, character_stats.level, era)
     base.eligible_for_current_user = is_task_eligible_for_character(
-        viewer, task, stats.level
+        viewer, task, character_stats.level
     )
     return base
 

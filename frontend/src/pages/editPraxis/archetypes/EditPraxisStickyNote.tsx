@@ -17,7 +17,12 @@ import {
   TitleCounter,
   formatAutosave,
 } from "./shared";
-import { FilePicker, InviteSearch, MetatasksList } from "./controls";
+import {
+  DropButton,
+  FilePicker,
+  InviteSearch,
+  MetatasksList,
+} from "./controls";
 import type { EditPraxisState } from "../useEditPraxis";
 
 interface Props {
@@ -620,6 +625,21 @@ export default function EditPraxisStickyNote({ state }: Props) {
           >
             {state.saving ? "saving..." : "save for later"}
           </button>
+          <DropButton
+            onCancel={state.cancel}
+            disabled={
+              state.saving || state.submitting || state.switchingMode !== null
+            }
+            skin={{
+              label: "✗ rip it down",
+              color: "#dc2626",
+              fontFamily: "'Permanent Marker', cursive",
+              fontSize: 15,
+              padding: "10px 14px",
+              border: `2px dashed #dc2626`,
+              transform: "rotate(-1.4deg)",
+            }}
+          />
           <div style={{ flex: 1 }} />
           <span
             style={{

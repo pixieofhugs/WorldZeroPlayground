@@ -14,6 +14,7 @@ from models.character import Character
 from models.task import Task, TaskStatus, TaskType
 from schemas.task import TaskCreate, TaskOut
 from services.auth import get_current_account
+from services.era import get_current_era_row, get_or_create_stats
 from services.task import (
     build_task_out,
     build_task_out_for_viewer,
@@ -51,8 +52,24 @@ async def list_tasks(
         limit=limit,
         offset=offset,
     )
+    # Fetch viewer-scoped rows ONCE per request and pass them through to
+    # build_task_out_for_viewer for each task. Without this, every task in
+    # the list would re-fetch the same era row and the same character stats
+    # row, producing an N+1 (2 redundant queries per task).
+    era_row = None
+    viewer_stats = None
+    if viewer is not None:
+        era_row = await get_current_era_row(session)
+        viewer_stats = await get_or_create_stats(session, viewer.id, era_row.id)
     return [
-        await build_task_out_for_viewer(task, viewer, session) for task in tasks
+        await build_task_out_for_viewer(
+            task,
+            viewer,
+            session,
+            era_row=era_row,
+            character_stats=viewer_stats,
+        )
+        for task in tasks
     ]
 
 

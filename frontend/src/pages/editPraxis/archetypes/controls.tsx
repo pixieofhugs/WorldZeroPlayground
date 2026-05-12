@@ -206,6 +206,56 @@ export function FilePicker({
   );
 }
 
+export interface DropButtonSkin {
+  label: string;
+  color: string;
+  fontFamily?: string;
+  fontStyle?: CSSProperties["fontStyle"];
+  fontSize?: number | string;
+  background?: string;
+  border?: string;
+  padding?: string;
+  textDecoration?: string;
+  textTransform?: CSSProperties["textTransform"];
+  letterSpacing?: string;
+  transform?: string;
+}
+
+export function DropButton({
+  onCancel,
+  disabled,
+  skin,
+}: {
+  onCancel: () => void;
+  disabled?: boolean;
+  skin: DropButtonSkin;
+}) {
+  return (
+    <button
+      type="button"
+      disabled={disabled}
+      onClick={() => void onCancel()}
+      style={{
+        background: skin.background ?? "transparent",
+        color: skin.color,
+        fontFamily: skin.fontFamily,
+        fontStyle: skin.fontStyle,
+        fontSize: skin.fontSize,
+        border: skin.border ?? "none",
+        padding: skin.padding,
+        textDecoration: skin.textDecoration,
+        textTransform: skin.textTransform,
+        letterSpacing: skin.letterSpacing,
+        transform: skin.transform,
+        cursor: disabled ? "not-allowed" : "pointer",
+        opacity: disabled ? 0.5 : 1,
+      }}
+    >
+      {skin.label}
+    </button>
+  );
+}
+
 export interface MetataskListSkin {
   containerStyle?: CSSProperties;
   rowStyle?: (selected: boolean) => CSSProperties;

@@ -8,7 +8,12 @@ import { mediaUrl } from "../../../utils/media";
 import { type PraxisType } from "../../../api/praxis";
 import MarkdownPreview from "../blocks/MarkdownPreview";
 import { Breadcrumb, ErrorBanner, TitleCounter, formatClock } from "./shared";
-import { FilePicker, InviteSearch, MetatasksList } from "./controls";
+import {
+  DropButton,
+  FilePicker,
+  InviteSearch,
+  MetatasksList,
+} from "./controls";
 import type { EditPraxisState } from "../useEditPraxis";
 
 interface Props {
@@ -714,21 +719,22 @@ export default function EditPraxisTerminal({ state }: Props) {
             {state.saving ? ":saving" : ":w (save draft)"}
           </button>
           <div style={{ flex: 1 }} />
-          <button
-            type="button"
-            onClick={state.cancel}
-            style={{
-              background: "transparent",
-              color: dim,
+          <DropButton
+            onCancel={state.cancel}
+            disabled={
+              state.saving || state.submitting || state.switchingMode !== null
+            }
+            skin={{
+              label: "$ rm -rf ./draft",
+              color: "#f87171",
               fontFamily: "'Share Tech Mono', monospace",
-              fontSize: 9,
-              border: "none",
-              cursor: "pointer",
-              textDecoration: "underline",
+              fontSize: 11,
+              letterSpacing: "0.1em",
+              padding: "10px 16px",
+              border: `1px solid #f87171`,
+              textTransform: "uppercase",
             }}
-          >
-            [esc] :q
-          </button>
+          />
         </div>
       </div>
     </div>

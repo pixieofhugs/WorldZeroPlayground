@@ -18,6 +18,7 @@ import {
   TitleCounter,
   formatAutosave,
 } from "./shared";
+import { DropButton } from "./controls";
 import type { EditPraxisState } from "../useEditPraxis";
 
 interface Props {
@@ -601,21 +602,19 @@ export default function EditPraxisFieldJournal({ state }: Props) {
             {state.saving ? "saving..." : "save draft"}
           </button>
           <div style={{ flex: 1 }} />
-          <button
-            type="button"
-            onClick={state.cancel}
-            style={{
-              background: "transparent",
-              color: muted,
+          <DropButton
+            onCancel={state.cancel}
+            disabled={
+              state.saving || state.submitting || state.switchingMode !== null
+            }
+            skin={{
+              label: "scrap it",
+              color: ruleRed,
               fontFamily: "'Special Elite', serif",
               fontSize: 11,
               textDecoration: "underline",
-              border: "none",
-              cursor: "pointer",
             }}
-          >
-            cancel
-          </button>
+          />
         </div>
       </div>
     </div>

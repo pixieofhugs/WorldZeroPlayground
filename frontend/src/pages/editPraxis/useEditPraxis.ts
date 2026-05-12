@@ -81,7 +81,7 @@ export interface EditPraxisState {
   submitting: boolean;
   save: (event?: React.FormEvent) => Promise<void>;
   publish: () => Promise<void>;
-  cancel: () => void;
+  cancel: () => Promise<void>;
 
   // Autosave
   autosaveAt: Date | null;
@@ -314,7 +314,11 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
       const praxisId = parseInt(idParam, 10);
       await persistEdits(praxisId);
       await submitPraxis(praxisId);
-      await refetch();
+      try {
+        await refetch();
+      } catch {
+        // refetch failure must not block navigation; the praxis is already submitted.
+      }
       navigate(`/praxes/${idParam}`);
     } catch (err) {
       setError(extractError(err, "Could not publish proof."));
@@ -323,9 +327,21 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
     }
   }, [idParam, title, persistEdits, navigate, refetch]);
 
-  const cancel = useCallback(() => {
-    if (idParam) navigate(`/praxes/${idParam}`);
-  }, [idParam, navigate]);
+  const cancel = useCallback(async () => {
+    if (!praxis) return;
+    if (
+      !window.confirm(
+        "Drop this task? Your draft will be lost and you'll be able to sign up again later.",
+      )
+    )
+      return;
+    try {
+      await deletePraxis(praxis.id);
+      navigate("/tasks");
+    } catch (err) {
+      setError(extractError(err, "Could not drop this task."));
+    }
+  }, [praxis, navigate]);
 
   // ---- Mode switching ----
   const hasDraftContent = useCallback((): boolean => {
@@ -358,11 +374,13 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
   const changeMode = useCallback(
     async (next: PraxisType) => {
       if (!praxis || praxis.type === next) return;
-      if (praxis.members.length > 1) {
-        setError("Mode is locked once co-authors have joined.");
-        return;
-      }
-      if (hasDraftContent()) {
+      const hasJoinedCollaborators = praxis.members.length > 1;
+      if (hasJoinedCollaborators) {
+        const confirmed = window.confirm(
+          "Drop the collaboration? Your co-authors will be removed and the draft will be discarded.",
+        );
+        if (!confirmed) return;
+      } else if (hasDraftContent()) {
         const confirmed = window.confirm(
           "Changing mode will discard your current draft (title, body, media, metatasks). Continue?",
         );
@@ -469,10 +487,7 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
     praxis?.moderation_status === "hidden" ||
     praxis?.moderation_status === "failed";
   const controlsLocked = !!(isPublished || isModerated || praxis?.is_withdrawn);
-  const modeIsLocked = !!(
-    controlsLocked ||
-    (praxis && praxis.members.length > 1)
-  );
+  const modeIsLocked = controlsLocked;
   const duelSlotFull = !!(
     praxis &&
     praxis.type === "duel" &&
@@ -537,7 +552,7 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
     autosaveAt,
     saveStatus,
 
-    isPublished: !!isPublished,
+    isPublished,
     controlsLocked,
     modeIsLocked,
     showCollabInvite,

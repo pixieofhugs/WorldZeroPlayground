@@ -17,7 +17,12 @@ import {
   TitleCounter,
   formatAutosave,
 } from "./shared";
-import { FilePicker, InviteSearch, MetatasksList } from "./controls";
+import {
+  DropButton,
+  FilePicker,
+  InviteSearch,
+  MetatasksList,
+} from "./controls";
 import type { EditPraxisState } from "../useEditPraxis";
 
 interface Props {
@@ -712,21 +717,20 @@ export default function EditPraxisPunkZine({ state }: Props) {
             {state.saving ? "saving..." : "save draft"}
           </button>
           <div style={{ flex: 1 }} />
-          <button
-            type="button"
-            onClick={state.cancel}
-            style={{
-              background: "transparent",
-              color: muted,
-              fontFamily: "'Special Elite', serif",
-              fontSize: 11,
-              border: "none",
-              cursor: "pointer",
-              textDecoration: "underline",
+          <DropButton
+            onCancel={state.cancel}
+            disabled={
+              state.saving || state.submitting || state.switchingMode !== null
+            }
+            skin={{
+              label: "BURN IT",
+              color: hot,
+              fontFamily: "'Permanent Marker', cursive",
+              fontSize: 13,
+              textDecoration: "line-through",
+              transform: "rotate(-1.5deg)",
             }}
-          >
-            cancel
-          </button>
+          />
         </div>
 
         <div
