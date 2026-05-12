@@ -335,6 +335,12 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
       )
     )
       return;
+    // Cancel any queued autosave so it can't race the delete and 404
+    // against a praxis that no longer exists.
+    if (autosaveTimerRef.current) {
+      clearTimeout(autosaveTimerRef.current);
+      autosaveTimerRef.current = null;
+    }
     try {
       await deletePraxis(praxis.id);
       navigate("/tasks");
@@ -358,6 +364,11 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
       if (!praxis) return;
       setError("");
       setSwitchingMode(next);
+      // Cancel any queued autosave so it can't 404 against the deleted praxis.
+      if (autosaveTimerRef.current) {
+        clearTimeout(autosaveTimerRef.current);
+        autosaveTimerRef.current = null;
+      }
       try {
         const taskId = praxis.task_id;
         await deletePraxis(praxis.id);
