@@ -1,7 +1,7 @@
 /**
  * THE EPHEMERISTS — shared codex atoms.
  *
- * Reusable primitives for the Ephemerist (journeymen-slug) surfaces: the sigil,
+ * Reusable primitives for the Ephemerist (ephemerists-slug) surfaces: the sigil,
  * sacred-geometry rosettes, age-foxing, the header lockup, and the "concordance"
  * (the faction's reframe of the 1–5 vote). Ported from the Ephemerists design kit.
  *

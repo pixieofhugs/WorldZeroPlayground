@@ -13,22 +13,22 @@ function MoonGlyph({ size, color }: { size: number; color: string }) {
 }
 
 /**
- * Gestalt avatar — the standard circle with a pink "coven" moon membership
+ * Warriors of Whimsy avatar — the standard circle with a pink "coven" moon membership
  * badge clipped to the lower-right.
  */
-export default function GestaltAvatar({ character, size }: FactionAvatarProps) {
+export default function WowAvatar({ character, size }: FactionAvatarProps) {
   return (
     <BadgedAvatar
       character={character}
       size={size}
       circle={{
-        borderColor: 'var(--faction-gestalt-win-border)',
-        bg: 'var(--faction-gestalt-notepad-bg)',
-        textColor: 'var(--faction-gestalt-card-text)',
-        fontFamily: 'var(--faction-gestalt-card-font)',
+        borderColor: 'var(--faction-wow-win-border)',
+        bg: 'var(--faction-wow-notepad-bg)',
+        textColor: 'var(--faction-wow-card-text)',
+        fontFamily: 'var(--faction-wow-card-font)',
       }}
-      badgeBg="var(--faction-gestalt)"
-      badgeRing="var(--faction-gestalt-notepad-bg)"
+      badgeBg="var(--faction-wow)"
+      badgeRing="var(--faction-wow-notepad-bg)"
       glyph={(s, color) => <MoonGlyph size={s} color={color} />}
     />
   )

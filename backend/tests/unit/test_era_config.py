@@ -62,7 +62,7 @@ def test_can_always_rejoin_factions():
     assert ERA_1.factions["ua_masters"].can_always_rejoin is True
     assert ERA_1.factions["albescent"].can_always_rejoin is True
     assert ERA_1.factions["snide"].can_always_rejoin is False
-    assert ERA_1.factions["gestalt"].can_always_rejoin is False
+    assert ERA_1.factions["wow"].can_always_rejoin is False
 
 
 def test_ua_faction_exists_and_not_selectable():

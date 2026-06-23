@@ -3,12 +3,12 @@ import type { TaskOut } from "../../api/tasks";
 import { EphEyebrow, LapisLastWord, toRoman } from "./ephemeristsAtoms";
 
 /**
- * The Ephemerists — THE DISCORDANT MAP (task card, journeymen slug).
+ * The Ephemerists — THE DISCORDANT MAP (task card, ephemerists slug).
  * One place, three irreconcilable coordinate grids (cartesian, perspective,
  * polar) all claim the same sheet and disagree about where the point is.
  * House-of-Leaves apparatus crawls the margin; one title word is pulled into
  * the lapis-blue; a self-referential footnote points back at itself.
- * Colors via the --eph-* / --faction-journeymen-* tokens (theme-aware).
+ * Colors via the --eph-* / --faction-ephemerists-* tokens (theme-aware).
  */
 
 interface Props {

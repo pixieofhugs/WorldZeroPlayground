@@ -39,7 +39,7 @@ def sample_character():
     return {
         "score": 500,
         "level": 4,
-        "faction_slug": "gestalt",
+        "faction_slug": "wow",
         "votes_spent_this_era": 50,
         "all_time_score": 2000,
     }

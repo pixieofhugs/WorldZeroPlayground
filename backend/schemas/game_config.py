@@ -5,7 +5,6 @@ class FactionConfigOut(BaseModel):
     slug: str
     name: str
     description: str
-    color: str
     is_selectable: bool
     can_always_rejoin: bool
     own_task_modifier: float

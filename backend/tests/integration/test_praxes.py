@@ -1143,23 +1143,23 @@ async def test_create_praxis_duplicate_allowed_for_analog(
     from models.faction import Faction, FactionStatus
     from sqlalchemy import select as sa_select
 
-    # Ensure the analog faction row exists for the FK constraint
+    # Ensure the everymen faction row exists for the FK constraint
     existing = await db_session.execute(
-        sa_select(Faction).where(Faction.slug == "analog")
+        sa_select(Faction).where(Faction.slug == "everymen")
     )
     if existing.scalar_one_or_none() is None:
         db_session.add(
             Faction(
-                slug="analog",
-                name="Analog",
+                slug="everymen",
+                name="Everymen",
                 description="Double Dipper perk",
                 status=FactionStatus.visible,
             )
         )
         await db_session.commit()
 
-    # Flip character's faction to analog
-    character.faction_slug = "analog"
+    # Flip character's faction to everymen
+    character.faction_slug = "everymen"
     await db_session.commit()
 
     first_resp = await client.post(

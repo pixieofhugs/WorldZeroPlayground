@@ -498,11 +498,6 @@ async def _fetch_invitation_letters(
             if letter.faction_slug in CURRENT_ERA.factions
             else letter.faction_slug
         )
-        faction_color = (
-            CURRENT_ERA.factions[letter.faction_slug].color
-            if letter.faction_slug in CURRENT_ERA.factions
-            else None
-        )
         items.append(ActivityFeedItemDC(
             type=FEED_ITEM_TYPE_INVITATION_LETTER,
             timestamp=letter.delivered_at,
@@ -513,7 +508,6 @@ async def _fetch_invitation_letters(
                 "letter_id": letter.id,
                 "faction_slug": letter.faction_slug,
                 "faction_name": faction_name,
-                "faction_color": faction_color,
             },
         ))
     return items

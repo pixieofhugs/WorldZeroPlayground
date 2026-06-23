@@ -51,7 +51,7 @@ from services.scoring import (
 )
 
 
-ANALOG_FACTION_SLUG = "analog"
+ANALOG_FACTION_SLUG = "everymen"
 ALBESCENT_FACTION_SLUG = "albescent"
 
 

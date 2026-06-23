@@ -32,7 +32,7 @@ export default function FeedCardFoeTaunt({ item }: Props) {
         <span className="eyebrow">FOE</span>
         <span
           className="eyebrow"
-          style={{ color: 'var(--faction-journeymen)', fontSize: 8 }}
+          style={{ color: 'var(--faction-ephemerists)', fontSize: 8 }}
         >
           From Your Foe
         </span>

@@ -921,20 +921,20 @@ async def test_get_task_can_submit_true_for_analog_with_existing_praxis(
     from sqlalchemy import select as sa_select
 
     existing = await db_session.execute(
-        sa_select(Faction).where(Faction.slug == "analog")
+        sa_select(Faction).where(Faction.slug == "everymen")
     )
     if existing.scalar_one_or_none() is None:
         db_session.add(
             Faction(
-                slug="analog",
-                name="Analog",
+                slug="everymen",
+                name="Everymen",
                 description="Double Dipper",
                 status=FactionStatus.visible,
             )
         )
         await db_session.commit()
 
-    character.faction_slug = "analog"
+    character.faction_slug = "everymen"
     await db_session.commit()
 
     create_resp = await client.post(

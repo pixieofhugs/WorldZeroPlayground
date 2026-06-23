@@ -26,12 +26,10 @@ export interface FactionConfig {
  *  before the API response arrives. Do not use these values directly; call factionColor(). */
 const FACTION_FALLBACKS: Record<string, FactionConfig> = {
   ua: { slug: "ua", name: "UA", color: "#7c3aed" },
-  // Analog is reskinned/rebranded as Everymen (slug kept to avoid new-faction plumbing).
-  analog: { slug: "analog", name: "Everymen", color: "#c1272d" },
-  gestalt: { slug: "gestalt", name: "Gestalt", color: "#ec5f99" },
+  everymen: { slug: "everymen", name: "Everymen", color: "#c1272d" },
+  wow: { slug: "wow", name: "Warriors of Whimsy", color: "#ec5f99" },
   snide: { slug: "snide", name: "S.N.I.D.E.", color: "#6fae00" },
-  // Journeymen is reskinned/rebranded as The Ephemerists (slug kept to avoid new-faction plumbing).
-  journeymen: { slug: "journeymen", name: "The Ephemerists", color: "#1d6e72" },
+  ephemerists: { slug: "ephemerists", name: "The Ephemerists", color: "#1d6e72" },
   singularity: { slug: "singularity", name: "Singularity", color: "#2563eb" },
   ua_masters: { slug: "ua_masters", name: "UA Masters", color: "#c2410c" },
   albescent: { slug: "albescent", name: "/Albescent", color: "#7c3aed" },
@@ -47,10 +45,16 @@ let factionRegistry: Record<string, FactionConfig> = { ...FACTION_FALLBACKS };
  * calls return API-sourced values without any component changes.
  */
 export function populateFactionRegistry(
-  apiFactions: Array<{ slug: string; name: string; color: string }>,
+  apiFactions: Array<{ slug: string; name: string }>,
 ) {
   for (const f of apiFactions) {
-    factionRegistry[f.slug] = { slug: f.slug, name: f.name, color: f.color };
+    // Preserve the existing fallback color — the API no longer sends color
+    // (ADR-0003: the frontend owns faction color). Only the name is updated.
+    factionRegistry[f.slug] = {
+      ...factionRegistry[f.slug],
+      slug: f.slug,
+      name: f.name,
+    };
   }
 }
 
@@ -72,18 +76,17 @@ export const FACTION_ALIASES: Record<string, string> = {
  */
 const CSS_KEY: Record<string, string> = {
   ua: "ua",
-  analog: "analog",
-  gestalt: "gestalt",
-  snide: "snide",
-  journeymen: "journeymen",
-  singularity: "singularity",
   everymen: "everymen",
+  wow: "wow",
+  snide: "snide",
+  ephemerists: "ephemerists",
+  singularity: "singularity",
   ua_masters: "ua-masters",
 };
 
 /**
  * Get a CSS variable reference for a faction property.
- * Use this in inline styles: `style={{ background: factionCssVar('analog', 'card-bg') }}`
+ * Use this in inline styles: `style={{ background: factionCssVar('everymen', 'card-bg') }}`
  *
  * Available suffixes:
  *   (none)        — primary color

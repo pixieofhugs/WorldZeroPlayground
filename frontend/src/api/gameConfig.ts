@@ -4,7 +4,6 @@ export interface FactionConfigOut {
   slug: string
   name: string
   description: string
-  color: string
   is_selectable: boolean
   can_always_rejoin: boolean
   own_task_modifier: number

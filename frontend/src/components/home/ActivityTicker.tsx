@@ -146,14 +146,14 @@ export default function ActivityTicker() {
       >
         <div
           className="eyebrow"
-          style={{ display: 'flex', alignItems: 'center', gap: 7, color: 'var(--faction-gestalt)' }}
+          style={{ display: 'flex', alignItems: 'center', gap: 7, color: 'var(--faction-wow)' }}
         >
           <span
             style={{
               width: 7,
               height: 7,
               borderRadius: '50%',
-              background: 'var(--faction-gestalt)',
+              background: 'var(--faction-wow)',
               display: 'inline-block',
               animation: 'wz-blink 1.4s ease-in-out infinite',
             }}

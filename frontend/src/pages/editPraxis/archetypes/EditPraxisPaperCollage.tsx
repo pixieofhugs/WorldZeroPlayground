@@ -1,5 +1,5 @@
 /**
- * gestalt.exe — Gestalt faction edit-praxis form.
+ * wow.exe — Warriors of Whimsy faction edit-praxis form.
  * Lo-fi computer-witch desktop window: pastel pink chrome, dotted grid body,
  * notepad panels, window-tab mode chips, lo-fi pink buttons, ivy + sticker charms.
  */
@@ -185,23 +185,23 @@ export default function EditPraxisPaperCollage({ state }: Props) {
   const praxis = state.praxis!;
   const task = state.task;
 
-  const pink = factionCssVar("gestalt");
-  const pinkDeep = factionCssVar("gestalt", "card-accent");
-  const ink = factionCssVar("gestalt", "card-text");
-  const muted = factionCssVar("gestalt", "card-muted");
-  const lightBg = factionCssVar("gestalt", "light");
-  const cardFont = factionCssVar("gestalt", "card-font");
+  const pink = factionCssVar("wow");
+  const pinkDeep = factionCssVar("wow", "card-accent");
+  const ink = factionCssVar("wow", "card-text");
+  const muted = factionCssVar("wow", "card-muted");
+  const lightBg = factionCssVar("wow", "light");
+  const cardFont = factionCssVar("wow", "card-font");
 
-  const winBorder = factionCssVar("gestalt", "win-border");
-  const titleFrom = factionCssVar("gestalt", "title-from");
-  const titleTo = factionCssVar("gestalt", "title-to");
-  const titleText = factionCssVar("gestalt", "title-text");
-  const bodyBg = factionCssVar("gestalt", "body-bg");
-  const notepadBg = factionCssVar("gestalt", "notepad-bg");
-  const notepadBorder = factionCssVar("gestalt", "notepad-border");
-  const dot = factionCssVar("gestalt", "dot");
-  const ivy = factionCssVar("gestalt", "ivy");
-  const ivyLeaf = factionCssVar("gestalt", "ivy-leaf");
+  const winBorder = factionCssVar("wow", "win-border");
+  const titleFrom = factionCssVar("wow", "title-from");
+  const titleTo = factionCssVar("wow", "title-to");
+  const titleText = factionCssVar("wow", "title-text");
+  const bodyBg = factionCssVar("wow", "body-bg");
+  const notepadBg = factionCssVar("wow", "notepad-bg");
+  const notepadBorder = factionCssVar("wow", "notepad-border");
+  const dot = factionCssVar("wow", "dot");
+  const ivy = factionCssVar("wow", "ivy");
+  const ivyLeaf = factionCssVar("wow", "ivy-leaf");
 
   const allowedModes = task?.allowed_modes ?? ["solo", "collab", "duel"];
 
@@ -318,7 +318,7 @@ export default function EditPraxisPaperCollage({ state }: Props) {
                 gap: 5,
               }}
             >
-              <Sparkle size={11} color={titleText} /> gestalt.exe — edit praxis
+              <Sparkle size={11} color={titleText} /> wow.exe — edit praxis
             </span>
             <span
               style={{
@@ -476,14 +476,14 @@ export default function EditPraxisPaperCollage({ state }: Props) {
             {/* Title — notepad panel */}
             <div style={{ ...notepadPanel, marginBottom: 18 }}>
               <span style={{ ...eyebrowStyle, marginBottom: 8 }}>
-                title · what gestalt arose?
+                title · what whimsy arose?
               </span>
               <input
                 type="text"
                 maxLength={200}
                 value={state.title}
                 onChange={(event) => state.setTitle(event.target.value)}
-                placeholder="What gestalt arose?"
+                placeholder="What whimsy arose?"
                 style={{
                   width: "100%",
                   fontFamily: cardFont,

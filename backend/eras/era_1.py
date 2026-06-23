@@ -16,7 +16,6 @@ ERA_1_FACTIONS = {
         slug="ua",
         name="UA",
         description="The default starting faction. Full points on all tasks. Must leave at level 3.",
-        color="#6b6a7a",
         is_selectable=False,          # assigned automatically; not a choosable destination
         can_always_rejoin=False,
         own_task_modifier=1.0,
@@ -30,7 +29,6 @@ ERA_1_FACTIONS = {
         slug="ua_masters",
         name="UA Masters",
         description="Veterans who aged out of UA. Can sign up for any task at reduced points.",
-        color="#555555",
         is_selectable=True,
         can_always_rejoin=True,       # can always be rejoined after defecting
         own_task_modifier=0.8,
@@ -44,7 +42,6 @@ ERA_1_FACTIONS = {
         slug="snide",
         name="S.N.I.D.E.",
         description="Specialists in one-on-one competition. Bonus points for winning duels.",
-        color="#6fae00",
         is_selectable=True,
         can_always_rejoin=False,
         own_task_modifier=1.0,
@@ -54,11 +51,10 @@ ERA_1_FACTIONS = {
         duel_win_modifier=2.0,        # duel win: 200% of base (Snide high-risk bonus)
         duel_loss_modifier=0.0,       # duel loss: 0% of base (Snide high-risk penalty)
     ),
-    "gestalt": FactionConfig(
-        slug="gestalt",
-        name="Gestalt",
+    "wow": FactionConfig(
+        slug="wow",
+        name="Warriors of Whimsy",
         description="Collective-minded. Excel at their own faction's tasks; reduced elsewhere.",
-        color="#ec5f99",              # redesign pink (light); dark var is #f472b6 in index.css
         is_selectable=True,
         can_always_rejoin=False,
         own_task_modifier=1.1,        # +10% on solo own-faction
@@ -68,14 +64,10 @@ ERA_1_FACTIONS = {
         duel_win_modifier=1.5,
         duel_loss_modifier=0.5,
     ),
-    "journeymen": FactionConfig(
-        # Reskinned/rebranded as The Ephemerists. The slug stays "journeymen" so
-        # existing DB rows, tasks, members, and the Task Vision ability carry over
-        # with no new-faction plumbing (mirrors the Analog→Everymen reskin below).
-        slug="journeymen",
+    "ephemerists": FactionConfig(
+        slug="ephemerists",
         name="The Ephemerists",
         description="Wanderers who set down fleeting truths before the road moves on. Task Vision — access to select retired tasks.",
-        color="#1d6e72",
         is_selectable=True,
         can_always_rejoin=False,
         own_task_modifier=1.0,
@@ -85,16 +77,11 @@ ERA_1_FACTIONS = {
         duel_win_modifier=1.5,
         duel_loss_modifier=0.5,
     ),
-    "analog": FactionConfig(
-        # Reskinned/rebranded as Everymen. The slug stays "analog" so existing DB
-        # rows, tasks, members, and the Double Dipper ability carry over with no
-        # new-faction plumbing. TODO: confirm whether Everymen should keep Analog's
-        # Double Dipper ability (keyed on ANALOG_FACTION_SLUG="analog").
-        slug="analog",
+    "everymen": FactionConfig(
+        slug="everymen",
         name="Everymen",
         description="No inner circle, no waiting to be chosen. Reliable hands who "
         "do the work in front of them and finish what they start.",
-        color="#c1272d",              # the missing red
         is_selectable=True,
         can_always_rejoin=False,
         own_task_modifier=1.0,
@@ -108,7 +95,6 @@ ERA_1_FACTIONS = {
         slug="singularity",
         name="Singularity",
         description="TBD",
-        color="#7c3aed",
         is_selectable=True,
         can_always_rejoin=False,
         own_task_modifier=1.0,
@@ -122,7 +108,6 @@ ERA_1_FACTIONS = {
         slug="albescent",
         name="/Albescent",
         description="Full points and any meta tasks from any group. Unlock-only.",
-        color="#6b6a7a",
         is_selectable=False,          # only available as additional character unlock
         can_always_rejoin=True,       # can always be rejoined after defecting
         own_task_modifier=1.0,
@@ -136,7 +121,6 @@ ERA_1_FACTIONS = {
         slug="aged_out",
         name="AgedOutOfUA",
         description="Placeholder faction for characters who hit level 3 while offline.",
-        color="#6b6a7a",
         is_selectable=False,
         can_always_rejoin=False,
         own_task_modifier=1.0,
@@ -150,7 +134,6 @@ ERA_1_FACTIONS = {
         slug="na",
         name="None",
         description="Sentinel value for tasks with no specific faction affiliation.",
-        color="#a9a9a9",
         is_selectable=False,
         can_always_rejoin=False,
         own_task_modifier=1.0,
@@ -176,27 +159,27 @@ ERA_1_TASKS = (
     TaskDef(
         title="Permaculture Shock",
         description='Install a community garden (ideally in secret, or somewhere a garden may not be expected).\nTo qualify for the "community" modifier prefix, it must be in an area where you can share its bounty and responsibility, though you need not involve anyone else in its care if you believe your own thumbs to be the greenest.\nCrop variety and size is your choice, but it must yield a harvest to feed at least 3 people one meal.\nPlayers: 1 to 20',
-        faction_slug="analog", level_required=6, point_value=100,
+        faction_slug="everymen", level_required=6, point_value=100,
     ),
     TaskDef(
         title="Somewhere No One Needs To Be",
         description="There are many places people have physically passed through: along a path, in a store, on a game field. There are also many places people have not passed through in quite some time: the bark dust beside a building, the inside of a sewer, a random patch of grass \nHow long did a human last occupy these spaces? What could it mean for a place to exist beside humanity, not dangerous or necessarily forbidden, but ordinary and nondescript, without humanities touch for so long? What does it mean, to you?\nin a large and empty field.\nExist somewhere no one has existed in for a long time, and consider what that means.",
-        faction_slug="journeymen", level_required=1, point_value=10,
+        faction_slug="ephemerists", level_required=1, point_value=10,
     ),
     TaskDef(
         title="Lacunae",
         description="Share something which exemplifies emptiness.\nSee also: https://en.wikipedia.org/wiki/4%E2%80%B233%E2%80%B3",
-        faction_slug="analog", level_required=2, point_value=10,
+        faction_slug="everymen", level_required=2, point_value=10,
     ),
     TaskDef(
         title="Knowledge Is Free",
         description="You have skills and knowledge. This is true even if you don't know it, whether by way of your unique experience of the world or by the time you've spent on something that someone else hasn't. There's more to do and know than there are years for anyone to learn it all, so everyone brings with themselves a piece of truth looking to be more whole.\nVolunteer your time teaching someone or someone's something. A skill, a practice, some amount of a field of knowledge, etc.\nLibraries are a good place for this, as a place of knowledge and creativity most libraries support workshops and other learning opportunities, which you can have a hand in leading.",
-        faction_slug="gestalt", level_required=4, point_value=40,
+        faction_slug="wow", level_required=4, point_value=40,
     ),
     TaskDef(
         title="The L Word",
         description="Find someone you love. Tell them you love them.",
-        faction_slug="gestalt", level_required=1, point_value=5,
+        faction_slug="wow", level_required=1, point_value=5,
     ),
     TaskDef(
         title="The Rotation Of Cubes In Your Mind",
@@ -206,12 +189,12 @@ ERA_1_TASKS = (
     TaskDef(
         title="Feed the Animals",
         description="Find some animals and feed them. Human is an acceptable type of animal.",
-        faction_slug="gestalt", level_required=1, point_value=5,
+        faction_slug="wow", level_required=1, point_value=5,
     ),
     TaskDef(
         title="It's for all of us",
         description="Make something more accessible.\nInstalling a ramp where one is missing, place/install a seat/bench somewhere, make signage larger and easier to read, install a sign where one is missing, update software with color blind options. The world is an oyster.",
-        faction_slug="gestalt", level_required=5, point_value=75,
+        faction_slug="wow", level_required=5, point_value=75,
     ),
     TaskDef(
         title="A little something special",
@@ -231,7 +214,7 @@ ERA_1_TASKS = (
     TaskDef(
         title="Stronger Together",
         description="Start a Union.",
-        faction_slug="gestalt", level_required=7, point_value=500,
+        faction_slug="wow", level_required=7, point_value=500,
     ),
     TaskDef(
         title="The Seed",
@@ -281,12 +264,12 @@ ERA_1_TASKS = (
     TaskDef(
         title="There",
         description="Pick some place to travel to at random (dart thrown at a map, random wikipedia article selection, etc.). Travel there.",
-        faction_slug="journeymen", level_required=4, point_value=50,
+        faction_slug="ephemerists", level_required=4, point_value=50,
     ),
     TaskDef(
         title="Invisible White Elephant",
         description="Give someone a gift, anonymously.",
-        faction_slug="gestalt", level_required=2, point_value=10,
+        faction_slug="wow", level_required=2, point_value=10,
     ),
     TaskDef(
         title="What if the curtains were red",
@@ -301,32 +284,32 @@ ERA_1_TASKS = (
     TaskDef(
         title="You deserve it.",
         description="Forgive yourself.",
-        faction_slug="gestalt", level_required=1, point_value=5,
+        faction_slug="wow", level_required=1, point_value=5,
     ),
     TaskDef(
         title="Patron of the arts",
         description="Commission art from an artist",
-        faction_slug="gestalt", level_required=3, point_value=25,
+        faction_slug="wow", level_required=3, point_value=25,
     ),
     TaskDef(
         title="Expanding your world",
         description="Learn a stranger's name",
-        faction_slug="gestalt", level_required=1, point_value=5,
+        faction_slug="wow", level_required=1, point_value=5,
     ),
     TaskDef(
         title="Closer, together",
         description="learn about and share a friend's hobby",
-        faction_slug="gestalt", level_required=2, point_value=10,
+        faction_slug="wow", level_required=2, point_value=10,
     ),
     TaskDef(
         title="Become a Villager",
         description="Advertise and provide a skill or good to your community",
-        faction_slug="gestalt", level_required=4, point_value=50,
+        faction_slug="wow", level_required=4, point_value=50,
     ),
     TaskDef(
         title="One of many Cultural Bridges",
         description="Learn a new language",
-        faction_slug="gestalt", level_required=4, point_value=40,
+        faction_slug="wow", level_required=4, point_value=40,
     ),
     TaskDef(
         title="Trash Transformation",
@@ -336,12 +319,12 @@ ERA_1_TASKS = (
     TaskDef(
         title="When The Sun Blinks",
         description="Experience a Solar Eclipse. Write about your experience.",
-        faction_slug="journeymen", level_required=3, point_value=25,
+        faction_slug="ephemerists", level_required=3, point_value=25,
     ),
     TaskDef(
         title="A Very Human Thing",
         description="Create a ritual to be kind to yourself. Document it.",
-        faction_slug="analog", level_required=1, point_value=5,
+        faction_slug="everymen", level_required=1, point_value=5,
     ),
     TaskDef(
         title="Understanding through Data",
@@ -361,12 +344,12 @@ ERA_1_TASKS = (
     TaskDef(
         title="Improv Fixture",
         description="Take an item with a logo or brand on it that you use every day. Study the item, and how it was made. Compare it to other, similar interpretations of that item made by other people. After this, throw it away and make your own version of the item.",
-        faction_slug="analog", level_required=3, point_value=25,
+        faction_slug="everymen", level_required=3, point_value=25,
     ),
     TaskDef(
         title="Why did you do that",
         description="break something. Write down your thoughts (what did you break, why did you choose to break it, do you feel better or worse for breaking it, is it worth fixing or replacing or putting behind you, etc.)",
-        faction_slug="journeymen", level_required=2, point_value=10,
+        faction_slug="ephemerists", level_required=2, point_value=10,
     ),
     TaskDef(
         title="Why do I even have this actually",
@@ -376,7 +359,7 @@ ERA_1_TASKS = (
     TaskDef(
         title="A key to many locks",
         description="If you don't have a passport already, get one.",
-        faction_slug="journeymen", level_required=2, point_value=10,
+        faction_slug="ephemerists", level_required=2, point_value=10,
     ),
     TaskDef(
         title="Tierlist of Me",
@@ -386,12 +369,12 @@ ERA_1_TASKS = (
     TaskDef(
         title="Cultural Exchange",
         description="Interview someone from another country",
-        faction_slug="gestalt", level_required=3, point_value=25,
+        faction_slug="wow", level_required=3, point_value=25,
     ),
     TaskDef(
         title="Depth through Repetition",
         description="Have a meal, and try to identify each ingredient. Then, make that meal yourself, and then try again to identify each ingredient again",
-        faction_slug="analog", level_required=2, point_value=10,
+        faction_slug="everymen", level_required=2, point_value=10,
     ),
     TaskDef(
         title="FLIP THE SYSTEM",
@@ -437,7 +420,7 @@ ERA_1_TAUNT_TEMPLATES: dict[str, dict[str, list[str]]] = {
             "{from_name} finished what {to_name} couldn't start.",
         ],
     },
-    "gestalt": {
+    "wow": {
         "score_overtake": [
             "The collective lifts {from_name} above {to_name}. Together, always.",
             "{from_name} rose past {to_name}. The whole is greater than the parts.",
@@ -449,7 +432,7 @@ ERA_1_TAUNT_TEMPLATES: dict[str, dict[str, list[str]]] = {
             "{from_name} contributed to the whole. {to_name} remained apart.",
         ],
     },
-    "journeymen": {
+    "ephemerists": {
         "score_overtake": [
             "{from_name} recorded a truth past {to_name}. Nothing keeps; the record does.",
             "{from_name} triangulated a way past {to_name}. The map and the road disagree — {from_name} sided with the road.",
@@ -461,7 +444,7 @@ ERA_1_TAUNT_TEMPLATES: dict[str, dict[str, list[str]]] = {
             "{from_name} filed the finding before it could pass. {to_name} let it slip.",
         ],
     },
-    "analog": {
+    "everymen": {
         "score_overtake": [
             "{from_name} carved past {to_name} by hand. No shortcuts.",
             "{from_name} overtook {to_name} the old-fashioned way.",

@@ -32,7 +32,7 @@ export interface FactionHeroProps {
 }
 
 const FACTION_HEROES: Record<string, ComponentType<FactionHeroProps>> = {
-  journeymen: EphemeristsFactionHero,
+  ephemerists: EphemeristsFactionHero,
   snide: SnideFactionHero,
 };
 

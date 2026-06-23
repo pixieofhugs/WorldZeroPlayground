@@ -2,7 +2,7 @@ import type { ComponentType } from 'react'
 import { pickVariant } from '../../utils/factionDispatch'
 import VoteStamps from '../ui/VoteStamps'
 import EverymenVote from './EverymenVote'
-import GestaltVote from './GestaltVote'
+import WowVote from './WowVote'
 import SnideVote from './SnideVote'
 import EphemeristsVote from './EphemeristsVote'
 
@@ -20,10 +20,10 @@ export interface VoteUIProps {
 }
 
 const FACTION_VOTE: Record<string, ComponentType<VoteUIProps>> = {
-  analog: EverymenVote,
-  gestalt: GestaltVote,
+  everymen: EverymenVote,
+  wow: WowVote,
   snide: SnideVote,
-  journeymen: EphemeristsVote,
+  ephemerists: EphemeristsVote,
 }
 
 export default function VoteUI({

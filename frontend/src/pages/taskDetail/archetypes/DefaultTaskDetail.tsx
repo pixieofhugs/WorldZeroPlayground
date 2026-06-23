@@ -62,7 +62,7 @@ export default function DefaultTaskDetail({
       >
         <Link
           to="/tasks"
-          style={{ color: "var(--faction-journeymen)", textDecoration: "none" }}
+          style={{ color: "var(--faction-ephemerists)", textDecoration: "none" }}
         >
           Tasks
         </Link>
@@ -115,11 +115,11 @@ export default function DefaultTaskDetail({
                   borderRadius: 4,
                   background:
                     task.status === "active"
-                      ? "var(--faction-analog-light)"
+                      ? "var(--faction-everymen-light)"
                       : "var(--color-bg-surface-alt)",
                   color:
                     task.status === "active"
-                      ? "var(--faction-analog)"
+                      ? "var(--faction-everymen)"
                       : "var(--color-text-tertiary)",
                 }}
               >
@@ -477,7 +477,7 @@ export default function DefaultTaskDetail({
                         fontWeight: 700,
                         textTransform: "uppercase",
                         letterSpacing: "0.1em",
-                        color: "var(--faction-journeymen)",
+                        color: "var(--faction-ephemerists)",
                         textDecoration: "none",
                       }}
                     >

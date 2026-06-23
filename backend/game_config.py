@@ -33,7 +33,6 @@ class FactionConfig:
     slug: str
     name: str
     description: str
-    color: str                       # hex color for UI display (e.g. "#6b6a7a")
     is_selectable: bool              # can players choose this faction at level 3?
     can_always_rejoin: bool          # True for UA Masters and Albescent
     own_task_modifier: float         # solo own-faction task multiplier

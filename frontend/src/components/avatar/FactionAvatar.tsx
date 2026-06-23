@@ -3,7 +3,7 @@ import type { CharacterOut } from '../../api/auth'
 import { mediaUrl } from '../../utils/media'
 import { pickVariant } from '../../utils/factionDispatch'
 import EverymenAvatar from './EverymenAvatar'
-import GestaltAvatar from './GestaltAvatar'
+import WowAvatar from './WowAvatar'
 import SnideAvatar from './SnideAvatar'
 import EphemeristsAvatar from './EphemeristsAvatar'
 
@@ -141,10 +141,10 @@ export function BadgedAvatar({
 }
 
 const FACTION_AVATARS: Record<string, ComponentType<FactionAvatarProps>> = {
-  analog: EverymenAvatar,
-  gestalt: GestaltAvatar,
+  everymen: EverymenAvatar,
+  wow: WowAvatar,
   snide: SnideAvatar,
-  journeymen: EphemeristsAvatar,
+  ephemerists: EphemeristsAvatar,
 }
 
 export default function FactionAvatar({ character, size }: FactionAvatarProps) {

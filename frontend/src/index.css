@@ -42,73 +42,65 @@
 
   /* ── Faction primary colors (rainbow palette) ── */
   --faction-ua: #7c3aed; /* purple */
-  --faction-analog: #ca8a04; /* yellow */
-  --faction-gestalt: #ec5f99; /* redesign pink */
+  --faction-wow: #ec5f99; /* redesign pink */
   --faction-snide: #6fae00; /* acid green (deep — legible on light chrome) */
-  --faction-journeymen: #1d6e72; /* lapis-verdigris — Ephemerists reskin of the teal slot */
+  --faction-ephemerists: #1d6e72; /* lapis-verdigris — Ephemerists reskin of the teal slot */
   --faction-singularity: #2563eb; /* blue */
   --faction-ua-masters: #c2410c; /* orange */
 
   /* ── Faction tints (backgrounds, highlights) ── */
   --faction-ua-light: rgba(124, 58, 237, 0.08);
-  --faction-analog-light: rgba(202, 138, 4, 0.1);
-  --faction-gestalt-light: rgba(236, 95, 153, 0.1);
+  --faction-wow-light: rgba(236, 95, 153, 0.1);
   --faction-snide-light: rgba(182, 255, 46, 0.16);
-  --faction-journeymen-light: rgba(29, 110, 114, 0.1);
+  --faction-ephemerists-light: rgba(29, 110, 114, 0.1);
   --faction-singularity-light: rgba(37, 99, 235, 0.1);
   --faction-ua-masters-light: rgba(194, 65, 12, 0.1);
 
   /* ── Faction borders ── */
   --faction-ua-border: rgba(124, 58, 237, 0.3);
-  --faction-analog-border: rgba(202, 138, 4, 0.3);
-  --faction-gestalt-border: rgba(236, 95, 153, 0.3);
+  --faction-wow-border: rgba(236, 95, 153, 0.3);
   --faction-snide-border: rgba(111, 174, 0, 0.45);
-  --faction-journeymen-border: rgba(29, 110, 114, 0.35);
+  --faction-ephemerists-border: rgba(29, 110, 114, 0.35);
   --faction-singularity-border: rgba(37, 99, 235, 0.35);
   --faction-ua-masters-border: rgba(194, 65, 12, 0.35);
 
   /* ── Faction card backgrounds (light mode) ── */
   --faction-ua-card-bg: #f3eefc; /* faded lavender */
-  --faction-analog-card-bg: #fdf6d8; /* cream notebook */
-  --faction-gestalt-card-bg: #fdeef3; /* blush collage */
+  --faction-wow-card-bg: #fdeef3; /* blush collage */
   --faction-snide-card-bg: #14110b; /* photocopier ink (dark-in-light, Singularity precedent) */
-  --faction-journeymen-card-bg: var(--eph-vellum); /* Ephemerists: aged manuscript stock */
+  --faction-ephemerists-card-bg: var(--eph-vellum); /* Ephemerists: aged manuscript stock */
   --faction-singularity-card-bg: #050f08; /* terminal black */
   --faction-ua-masters-card-bg: #f5e9d6; /* aged newsprint */
 
   /* ── Faction card text (light mode) ── */
   --faction-ua-card-text: #1a1209;
-  --faction-analog-card-text: #1a1209;
-  --faction-gestalt-card-text: #581c39;
+  --faction-wow-card-text: #581c39;
   --faction-snide-card-text: #f4f1e8; /* warm xerox paper on ink */
-  --faction-journeymen-card-text: var(--eph-vellum-text);
+  --faction-ephemerists-card-text: var(--eph-vellum-text);
   --faction-singularity-card-text: #4ade80;
   --faction-ua-masters-card-text: #1a1209;
 
   /* ── Faction card accents (light mode) ── */
   --faction-ua-card-accent: #7c3aed;
-  --faction-analog-card-accent: #a16207;
-  --faction-gestalt-card-accent: #ec5f99;
+  --faction-wow-card-accent: #ec5f99;
   --faction-snide-card-accent: #b6ff2e; /* toxic acid */
-  --faction-journeymen-card-accent: var(--eph-rubric);
+  --faction-ephemerists-card-accent: var(--eph-rubric);
   --faction-singularity-card-accent: #4ade80; /* terminal green */
   --faction-ua-masters-card-accent: #c2410c;
 
   /* ── Faction card secondary text (descriptions, metadata) ── */
   --faction-ua-card-muted: #4a3a6a;
-  --faction-analog-card-muted: #555;
-  --faction-gestalt-card-muted: #831843;
+  --faction-wow-card-muted: #831843;
   --faction-snide-card-muted: #d8d6c8; /* faded newsprint grey on ink */
-  --faction-journeymen-card-muted: var(--eph-muted);
+  --faction-ephemerists-card-muted: var(--eph-muted);
   --faction-singularity-card-muted: #60a5fa; /* blue brand chrome */
   --faction-ua-masters-card-muted: #333;
 
   /* ── Faction headline fonts (per-faction display) ── */
   --faction-ua-card-font: var(--font-faction-old);
-  --faction-analog-card-font: var(--font-faction-typewriter);
-  --faction-gestalt-card-font: var(--font-faction-script);
+  --faction-wow-card-font: var(--font-faction-script);
   --faction-snide-card-font: var(--font-faction-marker);
-  --faction-journeymen-card-font: var(--eph-display);
+  --faction-ephemerists-card-font: var(--eph-display);
   --faction-singularity-card-font: var(--font-faction-terminal);
   --faction-ua-masters-card-font: var(--font-faction-blackletter);
 
@@ -138,7 +130,7 @@
   /* ── Singularity terminal border (blue brand) ── */
   --faction-singularity-border-hard: #2563eb;
 
-  /* ══ Ephemerists illuminated-codex palette (the journeymen slot) ══
+  /* ══ Ephemerists illuminated-codex palette (the ephemerists slot) ══
      The card contract above rebinds to these. CONSTANTS (gold/rubric/
      lapis/verdigris/ink) keep their role in both themes; the VELLUM
      surface + its text FLIP in dark (see [data-theme="dark"]). */
@@ -163,22 +155,22 @@
   --eph-serif: "EB Garamond", Georgia, serif;
   --eph-script: "Cormorant Garamond", Georgia, serif;
 
-  /* ── Gestalt collage scrap layers (legacy — kept for back-compat) ── */
-  --faction-gestalt-scrap-deep: #fbcfe0;
-  --faction-gestalt-scrap-mid: #fce7ef;
-  --faction-gestalt-tape: rgba(250, 230, 130, 0.7);
+  /* ── Warriors of Whimsy collage scrap layers (legacy — kept for back-compat) ── */
+  --faction-wow-scrap-deep: #fbcfe0;
+  --faction-wow-scrap-mid: #fce7ef;
+  --faction-wow-tape: rgba(250, 230, 130, 0.7);
 
-  /* ── Gestalt lo-fi ".exe" window chrome (redesign) ── */
-  --faction-gestalt-win-border: #e487b5;
-  --faction-gestalt-title-from: #fbcfe2;
-  --faction-gestalt-title-to: #f3a6cb;
-  --faction-gestalt-title-text: #8e2f5c;
-  --faction-gestalt-body-bg: #fdeef6;
-  --faction-gestalt-notepad-bg: #fffdfa;
-  --faction-gestalt-notepad-border: #f3b6d2;
-  --faction-gestalt-dot: rgba(214, 90, 150, 0.2);
-  --faction-gestalt-ivy: #7cbf99;
-  --faction-gestalt-ivy-leaf: #9ad3b1;
+  /* ── Warriors of Whimsy lo-fi ".exe" window chrome (redesign) ── */
+  --faction-wow-win-border: #e487b5;
+  --faction-wow-title-from: #fbcfe2;
+  --faction-wow-title-to: #f3a6cb;
+  --faction-wow-title-text: #8e2f5c;
+  --faction-wow-body-bg: #fdeef6;
+  --faction-wow-notepad-bg: #fffdfa;
+  --faction-wow-notepad-border: #f3b6d2;
+  --faction-wow-dot: rgba(214, 90, 150, 0.2);
+  --faction-wow-ivy: #7cbf99;
+  --faction-wow-ivy-leaf: #9ad3b1;
 
   /* ══ Everymen — the rainbow's missing red (union/WW2 poster) ══
      Constants (cream/gold/ink) keep their role in both themes; the paper
@@ -205,17 +197,6 @@
   --faction-everymen-card-accent: var(--everymen-red);
   --faction-everymen-card-muted: var(--everymen-muted);
   --faction-everymen-card-font: var(--font-accent); /* Bebas Neue */
-
-  /* ── Analog is reskinned as Everymen: alias its tokens to the everymen
-        palette (slug kept; later declaration wins over the originals above) ── */
-  --faction-analog: var(--faction-everymen);
-  --faction-analog-light: var(--faction-everymen-light);
-  --faction-analog-border: var(--faction-everymen-border);
-  --faction-analog-card-bg: var(--faction-everymen-card-bg);
-  --faction-analog-card-text: var(--faction-everymen-card-text);
-  --faction-analog-card-accent: var(--faction-everymen-card-accent);
-  --faction-analog-card-muted: var(--faction-everymen-card-muted);
-  --faction-analog-card-font: var(--faction-everymen-card-font);
 
   /* ── Vote stamp colors (orange → yellow → green → blue → magenta) ── */
   --vote-1: #c2410c;
@@ -313,60 +294,53 @@
 
   /* ── Faction primary colors (dark — brightened rainbow) ── */
   --faction-ua: #a78bfa; /* purple */
-  --faction-analog: #fbbf24; /* yellow */
-  --faction-gestalt: #f472b6; /* magenta */
+  --faction-wow: #f472b6; /* magenta */
   --faction-snide: #b6ff2e; /* acid green (bright — pops on dark) */
-  --faction-journeymen: #3aa0a4; /* lapis-verdigris lifted for dark — Ephemerists */
+  --faction-ephemerists: #3aa0a4; /* lapis-verdigris lifted for dark — Ephemerists */
   --faction-singularity: #60a5fa; /* blue */
   --faction-ua-masters: #fb923c; /* orange */
 
   /* ── Faction tints (dark) ── */
   --faction-ua-light: rgba(167, 139, 250, 0.12);
-  --faction-analog-light: rgba(251, 191, 36, 0.1);
-  --faction-gestalt-light: rgba(244, 114, 182, 0.08);
+  --faction-wow-light: rgba(244, 114, 182, 0.08);
   --faction-snide-light: rgba(182, 255, 46, 0.12);
-  --faction-journeymen-light: rgba(58, 160, 164, 0.1);
+  --faction-ephemerists-light: rgba(58, 160, 164, 0.1);
   --faction-singularity-light: rgba(96, 165, 250, 0.1);
   --faction-ua-masters-light: rgba(251, 146, 60, 0.1);
 
   /* ── Faction borders (dark) ── */
   --faction-ua-border: rgba(167, 139, 250, 0.3);
-  --faction-analog-border: rgba(251, 191, 36, 0.3);
-  --faction-gestalt-border: rgba(244, 114, 182, 0.25);
+  --faction-wow-border: rgba(244, 114, 182, 0.25);
   --faction-snide-border: rgba(182, 255, 46, 0.3);
-  --faction-journeymen-border: rgba(58, 160, 164, 0.35);
+  --faction-ephemerists-border: rgba(58, 160, 164, 0.35);
   --faction-singularity-border: rgba(96, 165, 250, 0.25);
   --faction-ua-masters-border: rgba(251, 146, 60, 0.3);
 
   /* ── Faction card backgrounds (dark mode) ── */
   --faction-ua-card-bg: #1d1530;
-  --faction-analog-card-bg: #1f1a0a;
-  --faction-gestalt-card-bg: #2a0d1c;
+  --faction-wow-card-bg: #2a0d1c;
   --faction-snide-card-bg: #0c0a07; /* deeper ink */
-  /* journeymen card-bg inherits the :root var(--eph-vellum) rebind (flips below) */
+  /* ephemerists card-bg inherits the :root var(--eph-vellum) rebind (flips below) */
   --faction-singularity-card-bg: #050f08;
   --faction-ua-masters-card-bg: #1f1208;
 
   /* ── Faction card text (dark mode) ── */
   --faction-ua-card-text: #ddd6fe;
-  --faction-analog-card-text: #fde68a;
-  --faction-gestalt-card-text: #fbcfe0;
+  --faction-wow-card-text: #fbcfe0;
   --faction-snide-card-text: #f4f1e8;
   --faction-singularity-card-text: #4ade80;
   --faction-ua-masters-card-text: #fed7aa;
 
   /* ── Faction card accents (dark mode) ── */
   --faction-ua-card-accent: #a78bfa;
-  --faction-analog-card-accent: #fbbf24;
-  --faction-gestalt-card-accent: #f472b6;
+  --faction-wow-card-accent: #f472b6;
   --faction-snide-card-accent: #b6ff2e;
   --faction-singularity-card-accent: #4ade80; /* terminal green */
   --faction-ua-masters-card-accent: #fb923c;
 
   /* ── Faction card secondary text (dark mode) ── */
   --faction-ua-card-muted: #a8a0c0;
-  --faction-analog-card-muted: #c9a93a;
-  --faction-gestalt-card-muted: #c4648a;
+  --faction-wow-card-muted: #c4648a;
   --faction-snide-card-muted: #cfcdbf;
   /* SNIDE flyposted wall flips to concrete-at-night */
   --faction-snide-wall: #141310;
@@ -395,22 +369,22 @@
   --eph-field: #102a3a; /* celestial field deepens */
   --eph-field-deep: #0a1d2a;
 
-  /* ── Gestalt collage scrap layers (dark) ── */
-  --faction-gestalt-scrap-deep: #091209;
-  --faction-gestalt-scrap-mid: #0d1a10;
-  --faction-gestalt-tape: rgba(250, 230, 130, 0.12);
+  /* ── Warriors of Whimsy collage scrap layers (dark) ── */
+  --faction-wow-scrap-deep: #091209;
+  --faction-wow-scrap-mid: #0d1a10;
+  --faction-wow-tape: rgba(250, 230, 130, 0.12);
 
-  /* ── Gestalt ".exe" window chrome (dark) ── */
-  --faction-gestalt-win-border: #f472b6;
-  --faction-gestalt-title-from: #5e2a46;
-  --faction-gestalt-title-to: #41203a;
-  --faction-gestalt-title-text: #fbd6e8;
-  --faction-gestalt-body-bg: #2a0d1c;
-  --faction-gestalt-notepad-bg: #39152a;
-  --faction-gestalt-notepad-border: #7a3358;
-  --faction-gestalt-dot: rgba(244, 114, 182, 0.16);
-  --faction-gestalt-ivy: #5fa882;
-  --faction-gestalt-ivy-leaf: #7fc59e;
+  /* ── Warriors of Whimsy ".exe" window chrome (dark) ── */
+  --faction-wow-win-border: #f472b6;
+  --faction-wow-title-from: #5e2a46;
+  --faction-wow-title-to: #41203a;
+  --faction-wow-title-text: #fbd6e8;
+  --faction-wow-body-bg: #2a0d1c;
+  --faction-wow-notepad-bg: #39152a;
+  --faction-wow-notepad-border: #7a3358;
+  --faction-wow-dot: rgba(244, 114, 182, 0.16);
+  --faction-wow-ivy: #5fa882;
+  --faction-wow-ivy-leaf: #7fc59e;
 
   /* ── Watercolor splash opacities (dimmer in dark) ── */
   --wc-opacity-blob: 0.15;
@@ -452,15 +426,6 @@
   --everymen-muted: #b6a079;
   --everymen-field: #3c1416;
   --everymen-field-deep: #5a1d20;
-
-  /* ── Analog→Everymen alias (dark): override the original analog dark values ── */
-  --faction-analog: var(--faction-everymen);
-  --faction-analog-light: var(--faction-everymen-light);
-  --faction-analog-border: var(--faction-everymen-border);
-  --faction-analog-card-bg: var(--faction-everymen-card-bg);
-  --faction-analog-card-text: var(--faction-everymen-card-text);
-  --faction-analog-card-accent: var(--faction-everymen-card-accent);
-  --faction-analog-card-muted: var(--faction-everymen-card-muted);
 }
 
 /* ══ Everymen poster-wall backdrop (faction-context pages; theme-aware) ══ */
@@ -487,24 +452,24 @@
   background: radial-gradient(120% 90% at 50% 8%, transparent 40%, color-mix(in srgb, var(--everymen-paper-deep) 55%, transparent));
 }
 
-/* ══ Gestalt lo-fi desktop backdrop (faction-context pages; theme-aware) ══ */
-.gestalt-backdrop {
+/* ══ Warriors of Whimsy lo-fi desktop backdrop (faction-context pages; theme-aware) ══ */
+.wow-backdrop {
   position: fixed;
   inset: 0;
   z-index: 0;
   pointer-events: none;
-  background-color: var(--faction-gestalt-body-bg);
+  background-color: var(--faction-wow-body-bg);
   background-image:
-    radial-gradient(46% 36% at 0% 0%, color-mix(in srgb, var(--faction-gestalt) 12%, transparent), transparent 70%),
-    radial-gradient(50% 40% at 100% 100%, color-mix(in srgb, var(--faction-gestalt-ivy) 12%, transparent), transparent 70%),
-    radial-gradient(var(--faction-gestalt-dot) 1.4px, transparent 1.6px);
+    radial-gradient(46% 36% at 0% 0%, color-mix(in srgb, var(--faction-wow) 12%, transparent), transparent 70%),
+    radial-gradient(50% 40% at 100% 100%, color-mix(in srgb, var(--faction-wow-ivy) 12%, transparent), transparent 70%),
+    radial-gradient(var(--faction-wow-dot) 1.4px, transparent 1.6px);
   background-size: 100% 100%, 100% 100%, 14px 14px;
 }
-.gestalt-backdrop::after {
+.wow-backdrop::after {
   content: "";
   position: absolute;
   inset: 0;
-  background: radial-gradient(120% 95% at 50% 0%, transparent 45%, color-mix(in srgb, var(--faction-gestalt-body-bg) 70%, transparent));
+  background: radial-gradient(120% 95% at 50% 0%, transparent 45%, color-mix(in srgb, var(--faction-wow-body-bg) 70%, transparent));
 }
 
 /* ══ S.N.I.D.E. flyposted-wall backdrop (faction-context pages; theme-aware) ══ */
@@ -873,7 +838,7 @@
    EPHEMERISTS CODEX BACKDROP — the page as a sheet of the ephemeris:
    aged vellum, faint foxing, two sets of astrolabe rings bleeding from
    opposite corners, and ghost scribe-lines. Rendered behind the page
-   by the journeymen FactionBackdrop variant. Theme-aware via --eph-*.
+   by the ephemerists FactionBackdrop variant. Theme-aware via --eph-*.
    ══════════════════════════════════════════════════════════════ */
 .eph-backdrop {
   position: fixed;

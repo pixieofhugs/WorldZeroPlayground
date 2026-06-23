@@ -124,21 +124,21 @@ function UAPraxisCard({ praxis, adminProps }: ArchetypeProps) {
   );
 }
 
-function AnalogPraxisCard({ praxis, adminProps }: ArchetypeProps) {
+function EverymenPraxisCard({ praxis, adminProps }: ArchetypeProps) {
   return (
     <div
       style={{
         width: "100%",
         flex: "1 1 280px",
         minWidth: 280,
-        background: factionCssVar("analog", "card-bg"),
+        background: factionCssVar("everymen", "card-bg"),
         border: "1px solid var(--color-border)",
         clipPath:
           "polygon(0 0, 100% 0, 100% 90%, 92% 100%, 80% 95%, 68% 100%, 56% 93%, 44% 100%, 32% 94%, 20% 100%, 8% 94%, 0 100%)",
         position: "relative",
         padding: "14px 16px 28px 28px",
         fontFamily: "'Special Elite', serif",
-        color: factionCssVar("analog", "card-text"),
+        color: factionCssVar("everymen", "card-text"),
         backgroundImage:
           "repeating-linear-gradient(to bottom, transparent, transparent 17px, rgba(100,140,200,0.08) 17px, rgba(100,140,200,0.08) 18px)",
         transition: "background 150ms, color 150ms",
@@ -158,14 +158,14 @@ function AnalogPraxisCard({ praxis, adminProps }: ArchetypeProps) {
       <AdminOverlay {...adminProps} />
       <PlaceholderPraxisBody
         praxis={praxis}
-        tint={factionCssVar("analog", "card-accent")}
-        muted={factionCssVar("analog", "card-muted")}
+        tint={factionCssVar("everymen", "card-accent")}
+        muted={factionCssVar("everymen", "card-muted")}
       />
     </div>
   );
 }
 
-function GestaltPraxisCard({ praxis, adminProps }: ArchetypeProps) {
+function WowPraxisCard({ praxis, adminProps }: ArchetypeProps) {
   return (
     <div
       style={{
@@ -184,7 +184,7 @@ function GestaltPraxisCard({ praxis, adminProps }: ArchetypeProps) {
           left: -4,
           right: -4,
           height: 24,
-          background: "var(--faction-gestalt-scrap-deep)",
+          background: "var(--faction-wow-scrap-deep)",
           border: "1.5px solid rgba(0,0,0,0.12)",
           transform: "rotate(-4deg)",
           borderRadius: 1,
@@ -197,7 +197,7 @@ function GestaltPraxisCard({ praxis, adminProps }: ArchetypeProps) {
           left: -2,
           right: -2,
           height: 36,
-          background: "var(--faction-gestalt-scrap-mid)",
+          background: "var(--faction-wow-scrap-mid)",
           border: "1.5px solid rgba(0,0,0,0.12)",
           transform: "rotate(3deg)",
           borderRadius: 1,
@@ -206,12 +206,12 @@ function GestaltPraxisCard({ praxis, adminProps }: ArchetypeProps) {
       <div
         style={{
           position: "relative",
-          background: factionCssVar("gestalt", "card-bg"),
+          background: factionCssVar("wow", "card-bg"),
           border: "1.5px solid rgba(0,0,0,0.12)",
           transform: "rotate(-2deg)",
           padding: "22px 14px 16px",
           fontFamily: "'Courier Prime', monospace",
-          color: factionCssVar("gestalt", "card-text"),
+          color: factionCssVar("wow", "card-text"),
           zIndex: 2,
           transition: "background 150ms, color 150ms",
           boxSizing: "border-box",
@@ -225,15 +225,15 @@ function GestaltPraxisCard({ praxis, adminProps }: ArchetypeProps) {
             transform: "translateX(-50%) rotate(-1deg)",
             width: 48,
             height: 14,
-            background: "var(--faction-gestalt-tape)",
+            background: "var(--faction-wow-tape)",
             borderRadius: 1,
           }}
         />
         <AdminOverlay {...adminProps} />
         <PlaceholderPraxisBody
           praxis={praxis}
-          tint={factionCssVar("gestalt", "card-accent")}
-          muted={factionCssVar("gestalt", "card-muted")}
+          tint={factionCssVar("wow", "card-accent")}
+          muted={factionCssVar("wow", "card-muted")}
         />
       </div>
     </div>
@@ -295,7 +295,7 @@ function SnidePraxisCard({ praxis, adminProps }: ArchetypeProps) {
 }
 
 /**
- * The Ephemerists (journeymen slug) — a sealed ephemeris entry. A foxed vellum
+ * The Ephemerists (ephemerists slug) — a sealed ephemeris entry. A foxed vellum
  * leaf with a lapis-ruled running head, the sigil, and rubric-accented text.
  */
 function EphemeristsPraxisCard({ praxis, adminProps }: ArchetypeProps) {
@@ -565,10 +565,10 @@ export function DefaultPraxisCard({ praxis, adminProps }: ArchetypeProps) {
 
 export const PRAXIS_CARD_BY_SLUG: Record<string, ComponentType<ArchetypeProps>> = {
   ua: UAPraxisCard,
-  analog: AnalogPraxisCard,
-  gestalt: GestaltPraxisCard,
+  everymen: EverymenPraxisCard,
+  wow: WowPraxisCard,
   snide: SnidePraxisCard,
-  journeymen: EphemeristsPraxisCard,
+  ephemerists: EphemeristsPraxisCard,
   singularity: SingularityPraxisCard,
   ua_masters: UAMastersPraxisCard,
 };

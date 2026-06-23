@@ -8,10 +8,10 @@ const LEVEL_OPTIONS = [0, 1, 2, 3, 4, 5, 6, 7, 8];
 
 const FACTION_DESCRIPTORS: Record<string, string> = {
   ua: "Unaffiliated",
-  gestalt: "Collective",
-  analog: "Mobilize",
+  wow: "Collective",
+  everymen: "Mobilize",
   snide: "Mischief",
-  journeymen: "Record",
+  ephemerists: "Record",
   singularity: "Discover",
   ua_masters: "Chronicle",
 };

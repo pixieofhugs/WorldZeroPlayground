@@ -3,7 +3,7 @@ import type { TaskOut } from "../../api/tasks";
 import LevelPill from "../ui/LevelPill";
 
 /**
- * Gestalt — gestalt.exe.
+ * Warriors of Whimsy — wow.exe.
  * Lo-fi computer-witch window: pastel title bar with window dots, a faint
  * dotted-grid body, and an inner "notepad" panel holding the task in the
  * Caveat headline font. Visuals only — same prop contract as the other cards.
@@ -48,7 +48,7 @@ function WindowDot({ color }: { color: string }) {
   );
 }
 
-export default function TaskCardGestalt({
+export default function TaskCardWow({
   task,
   displayPoints,
   onSignup,
@@ -61,7 +61,7 @@ export default function TaskCardGestalt({
         flex: "0 1 196px",
         borderRadius: 12,
         overflow: "hidden",
-        border: "2px solid var(--faction-gestalt-win-border)",
+        border: "2px solid var(--faction-wow-win-border)",
         fontFamily: "var(--font-body)",
         transition: "border-color 150ms",
       }}
@@ -74,8 +74,8 @@ export default function TaskCardGestalt({
           gap: 7,
           padding: "6px 9px",
           background:
-            "linear-gradient(180deg, var(--faction-gestalt-title-from), var(--faction-gestalt-title-to))",
-          borderBottom: "2px solid var(--faction-gestalt-win-border)",
+            "linear-gradient(180deg, var(--faction-wow-title-from), var(--faction-wow-title-to))",
+          borderBottom: "2px solid var(--faction-wow-win-border)",
         }}
       >
         <div style={{ display: "flex", gap: 4 }}>
@@ -90,11 +90,11 @@ export default function TaskCardGestalt({
             gap: 4,
             fontSize: 10,
             letterSpacing: "0.03em",
-            color: "var(--faction-gestalt-title-text)",
+            color: "var(--faction-wow-title-text)",
           }}
         >
-          <Sparkle size={9} color="var(--faction-gestalt-title-text)" />
-          gestalt.exe
+          <Sparkle size={9} color="var(--faction-wow-title-text)" />
+          wow.exe
         </span>
         <span
           style={{
@@ -102,7 +102,7 @@ export default function TaskCardGestalt({
             fontSize: 10,
             opacity: 0.75,
             letterSpacing: "1.5px",
-            color: "var(--faction-gestalt-title-text)",
+            color: "var(--faction-wow-title-text)",
           }}
         >
           ▭ ✕
@@ -114,9 +114,9 @@ export default function TaskCardGestalt({
         style={
           {
             padding: "12px 12px 11px",
-            background: "var(--faction-gestalt-body-bg)",
+            background: "var(--faction-wow-body-bg)",
             backgroundImage:
-              "radial-gradient(var(--faction-gestalt-dot) 1.4px, transparent 1.4px)",
+              "radial-gradient(var(--faction-wow-dot) 1.4px, transparent 1.4px)",
             backgroundSize: "13px 13px",
           } as React.CSSProperties
         }
@@ -124,8 +124,8 @@ export default function TaskCardGestalt({
         {/* notepad panel */}
         <div
           style={{
-            background: "var(--faction-gestalt-notepad-bg)",
-            border: "1.5px solid var(--faction-gestalt-notepad-border)",
+            background: "var(--faction-wow-notepad-bg)",
+            border: "1.5px solid var(--faction-wow-notepad-border)",
             borderRadius: 7,
             padding: "9px 11px",
             marginBottom: 10,
@@ -133,7 +133,7 @@ export default function TaskCardGestalt({
         >
           <div
             className="card-meta"
-            style={{ color: "var(--faction-gestalt-card-accent)" }}
+            style={{ color: "var(--faction-wow-card-accent)" }}
           >
             new quest · {displayPoints} pts
           </div>
@@ -144,12 +144,12 @@ export default function TaskCardGestalt({
           >
             <div
               style={{
-                fontFamily: "var(--faction-gestalt-card-font)",
+                fontFamily: "var(--faction-wow-card-font)",
                 fontSize: 22,
                 fontWeight: 700,
                 lineHeight: 1.05,
                 marginBottom: 4,
-                color: "var(--faction-gestalt-card-text)",
+                color: "var(--faction-wow-card-text)",
                 overflowWrap: "anywhere",
               }}
             >
@@ -160,7 +160,7 @@ export default function TaskCardGestalt({
           {task.description && (
             <div
               className="card-description"
-              style={{ color: "var(--faction-gestalt-card-muted)" }}
+              style={{ color: "var(--faction-wow-card-muted)" }}
             >
               {task.description}
             </div>
@@ -179,12 +179,12 @@ export default function TaskCardGestalt({
 
         {/* status row */}
         <div className="card-footer">
-          <LevelPill level={task.level_required} factionSlug="gestalt" />
+          <LevelPill level={task.level_required} factionSlug="wow" />
           <span
             style={{
               fontSize: 9,
               letterSpacing: "0.1em",
-              color: "var(--faction-gestalt-card-accent)",
+              color: "var(--faction-wow-card-accent)",
             }}
           >
             ◆ {displayPoints} pts

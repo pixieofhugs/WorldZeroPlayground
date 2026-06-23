@@ -195,14 +195,14 @@ def test_faction_multiplier_unaffiliated_task():
 
 
 def test_faction_multiplier_own_faction():
-    result = compute_faction_multiplier("gestalt", "gestalt", ERA_1)
-    assert result == ERA_1.factions["gestalt"].own_task_modifier
+    result = compute_faction_multiplier("wow", "wow", ERA_1)
+    assert result == ERA_1.factions["wow"].own_task_modifier
     assert result == 1.1
 
 
 def test_faction_multiplier_other_faction():
-    result = compute_faction_multiplier("gestalt", "ua", ERA_1)
-    assert result == ERA_1.factions["gestalt"].other_task_modifier
+    result = compute_faction_multiplier("wow", "ua", ERA_1)
+    assert result == ERA_1.factions["wow"].other_task_modifier
     assert result == 0.7
 
 
@@ -222,28 +222,28 @@ def test_faction_multiplier_empty_task_faction():
 
 def test_collab_own_faction():
     result = compute_faction_multiplier(
-        "gestalt", "gestalt", ERA_1,
+        "wow", "wow", ERA_1,
         collaboration_mode=COLLABORATION_MODE_COLLAB,
     )
-    assert result == ERA_1.factions["gestalt"].collab_own_modifier
+    assert result == ERA_1.factions["wow"].collab_own_modifier
     assert result == 1.1
 
 
 def test_collab_other_faction():
     result = compute_faction_multiplier(
-        "gestalt", "snide", ERA_1,
+        "wow", "snide", ERA_1,
         collaboration_mode=COLLABORATION_MODE_COLLAB,
     )
-    assert result == ERA_1.factions["gestalt"].collab_other_modifier
+    assert result == ERA_1.factions["wow"].collab_other_modifier
     assert result == 0.9
 
 
 def test_collab_unaffiliated_task():
     result = compute_faction_multiplier(
-        "gestalt", "na", ERA_1,
+        "wow", "na", ERA_1,
         collaboration_mode=COLLABORATION_MODE_COLLAB,
     )
-    assert result == ERA_1.factions["gestalt"].collab_own_modifier
+    assert result == ERA_1.factions["wow"].collab_own_modifier
 
 
 # ---------------------------------------------------------------------------
@@ -252,43 +252,43 @@ def test_collab_unaffiliated_task():
 
 
 def test_duel_win_snide():
-    result = compute_duel_multiplier("snide", "gestalt", is_winner=True, is_tied=False, era=ERA_1)
+    result = compute_duel_multiplier("snide", "wow", is_winner=True, is_tied=False, era=ERA_1)
     assert result == ERA_1.factions["snide"].duel_win_modifier
     assert result == 2.0
 
 
 def test_duel_loss_snide():
-    result = compute_duel_multiplier("snide", "gestalt", is_winner=False, is_tied=False, era=ERA_1)
+    result = compute_duel_multiplier("snide", "wow", is_winner=False, is_tied=False, era=ERA_1)
     assert result == ERA_1.factions["snide"].duel_loss_modifier
     assert result == 0.0
 
 
 def test_duel_win_standard():
-    result = compute_duel_multiplier("gestalt", "snide", is_winner=True, is_tied=False, era=ERA_1)
-    assert result == ERA_1.factions["gestalt"].duel_win_modifier
+    result = compute_duel_multiplier("wow", "snide", is_winner=True, is_tied=False, era=ERA_1)
+    assert result == ERA_1.factions["wow"].duel_win_modifier
     assert result == 1.5
 
 
 def test_duel_loss_standard():
-    result = compute_duel_multiplier("gestalt", "snide", is_winner=False, is_tied=False, era=ERA_1)
-    assert result == ERA_1.factions["gestalt"].duel_loss_modifier
+    result = compute_duel_multiplier("wow", "snide", is_winner=False, is_tied=False, era=ERA_1)
+    assert result == ERA_1.factions["wow"].duel_loss_modifier
     assert result == 0.5
 
 
 def test_duel_tie_no_snide():
     # No Snide involved → both get 1.0
-    result_a = compute_duel_multiplier("gestalt", "journeymen", is_winner=False, is_tied=True, era=ERA_1)
-    result_b = compute_duel_multiplier("journeymen", "gestalt", is_winner=False, is_tied=True, era=ERA_1)
+    result_a = compute_duel_multiplier("wow", "ephemerists", is_winner=False, is_tied=True, era=ERA_1)
+    result_b = compute_duel_multiplier("ephemerists", "wow", is_winner=False, is_tied=True, era=ERA_1)
     assert result_a == 1.0
     assert result_b == 1.0
 
 
 def test_duel_tie_one_snide_snide_wins():
     # Tie with one Snide: Snide gets win rate (2.0), other gets loss rate (0.5)
-    snide_result = compute_duel_multiplier("snide", "gestalt", is_winner=False, is_tied=True, era=ERA_1)
-    other_result = compute_duel_multiplier("gestalt", "snide", is_winner=False, is_tied=True, era=ERA_1)
+    snide_result = compute_duel_multiplier("snide", "wow", is_winner=False, is_tied=True, era=ERA_1)
+    other_result = compute_duel_multiplier("wow", "snide", is_winner=False, is_tied=True, era=ERA_1)
     assert snide_result == ERA_1.factions["snide"].duel_win_modifier
-    assert other_result == ERA_1.factions["gestalt"].duel_loss_modifier
+    assert other_result == ERA_1.factions["wow"].duel_loss_modifier
 
 
 def test_duel_tie_both_snide():
@@ -299,8 +299,8 @@ def test_duel_tie_both_snide():
 
 def test_duel_faction_multiplier_ignores_duel_mode():
     # compute_faction_multiplier with duel context uses own/other task logic (not duel win/loss)
-    result = compute_faction_multiplier("gestalt", "gestalt", ERA_1)
-    assert result == ERA_1.factions["gestalt"].own_task_modifier
+    result = compute_faction_multiplier("wow", "wow", ERA_1)
+    assert result == ERA_1.factions["wow"].own_task_modifier
 
 
 # ---------------------------------------------------------------------------
@@ -310,16 +310,16 @@ def test_duel_faction_multiplier_ignores_duel_mode():
 
 def test_cross_faction_collab_example():
     """Spec example: Gestalt + Journeymen collaborate on a Snide task."""
-    gestalt_mult = compute_faction_multiplier(
-        "gestalt", "snide", ERA_1,
+    wow_mult = compute_faction_multiplier(
+        "wow", "snide", ERA_1,
         collaboration_mode=COLLABORATION_MODE_COLLAB,
     )
-    journeymen_mult = compute_faction_multiplier(
-        "journeymen", "snide", ERA_1,
+    ephemerists_mult = compute_faction_multiplier(
+        "ephemerists", "snide", ERA_1,
         collaboration_mode=COLLABORATION_MODE_COLLAB,
     )
-    assert gestalt_mult == 0.9   # collab_other_modifier for gestalt
-    assert journeymen_mult == 0.7  # collab_other_modifier for journeymen
+    assert wow_mult == 0.9   # collab_other_modifier for wow
+    assert ephemerists_mult == 0.7  # collab_other_modifier for ephemerists
 
 
 def test_ua_masters_uniform_modifier():
@@ -351,9 +351,9 @@ def test_albescent_no_penalties():
     assert config.collab_other_modifier == 1.0
 
 
-def test_journeymen_other_faction_penalty():
+def test_ephemerists_other_faction_penalty():
     """Journeymen get 0.7 on other-faction tasks."""
-    config = ERA_1.factions["journeymen"]
+    config = ERA_1.factions["ephemerists"]
     assert config.own_task_modifier == 1.0
     assert config.other_task_modifier == 0.7
     assert config.collab_own_modifier == 1.0
@@ -362,6 +362,6 @@ def test_journeymen_other_faction_penalty():
 
 def test_analog_other_faction_penalty():
     """Analog get 0.7 on other-faction tasks."""
-    config = ERA_1.factions["analog"]
+    config = ERA_1.factions["everymen"]
     assert config.own_task_modifier == 1.0
     assert config.other_task_modifier == 0.7

@@ -26,11 +26,11 @@ type Archetype = (props: { state: EditPraxisState }) => JSX.Element;
 // they need no explicit rows here. ua is listed for documentation even though it
 // matches the fallback.
 const ARCHETYPE_BY_SLUG: Record<string, Archetype> = {
-  analog: EditPraxisEverymen,
+  everymen: EditPraxisEverymen,
   snide: EditPraxisPunkZine,
   singularity: EditPraxisTerminal,
-  gestalt: EditPraxisPaperCollage,
-  journeymen: EditPraxisEphemeris,
+  wow: EditPraxisPaperCollage,
+  ephemerists: EditPraxisEphemeris,
   ua_masters: EditPraxisGazette,
   ua: EditPraxisStickyNote,
 };

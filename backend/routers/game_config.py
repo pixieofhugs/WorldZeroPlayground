@@ -14,7 +14,6 @@ async def get_game_config() -> GameConfigOut:
             slug=faction.slug,
             name=faction.name,
             description=faction.description,
-            color=faction.color,
             is_selectable=faction.is_selectable,
             can_always_rejoin=faction.can_always_rejoin,
             own_task_modifier=faction.own_task_modifier,

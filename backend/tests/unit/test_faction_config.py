@@ -4,13 +4,13 @@ from game_config import ERA_1
 
 
 def test_gestalt_solo_modifiers():
-    config = ERA_1.factions["gestalt"]
+    config = ERA_1.factions["wow"]
     assert config.own_task_modifier == 1.1
     assert config.other_task_modifier == 0.7
 
 
 def test_gestalt_collab_modifiers():
-    config = ERA_1.factions["gestalt"]
+    config = ERA_1.factions["wow"]
     assert config.collab_own_modifier == 1.1
     assert config.collab_other_modifier == 0.9
 
@@ -52,15 +52,15 @@ def test_ua_baseline():
     assert config.is_selectable is False
 
 
-def test_journeymen_penalties():
-    config = ERA_1.factions["journeymen"]
+def test_ephemerists_penalties():
+    config = ERA_1.factions["ephemerists"]
     assert config.own_task_modifier == 1.0
     assert config.other_task_modifier == 0.7
     assert config.collab_other_modifier == 0.7
 
 
-def test_analog_penalties():
-    config = ERA_1.factions["analog"]
+def test_everymen_penalties():
+    config = ERA_1.factions["everymen"]
     assert config.own_task_modifier == 1.0
     assert config.other_task_modifier == 0.7
     assert config.collab_other_modifier == 0.7
@@ -84,7 +84,7 @@ def test_selectable_factions_count():
         slug for slug, config in ERA_1.factions.items()
         if config.is_selectable
     ]
-    # ua_masters, snide, gestalt, journeymen, analog, singularity = 6
+    # ua_masters, snide, wow, ephemerists, everymen, singularity = 6
     assert len(selectable) == 6
 
 

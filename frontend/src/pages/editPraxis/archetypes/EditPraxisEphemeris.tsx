@@ -1,5 +1,5 @@
 /**
- * Ephemeris Entry — The Ephemerists faction (journeymen slug).
+ * Ephemeris Entry — The Ephemerists faction (ephemerists slug).
  * World Zero's praxis form in the faction's voice: filing AN ENTRY IN THE
  * EPHEMERIS. A hairline-bracketed masthead, an "EDIT PRAXIS" title with one
  * word in the lapis, a ledger-ruled observed-task leaf, the METHOD selector
@@ -370,7 +370,7 @@ export default function EditPraxisEphemeris({ state }: Props) {
               skin={{
                 rowStyle: (selected) => ({
                   padding: "8px 6px",
-                  background: selected ? factionCssVar("journeymen", "light") : "transparent",
+                  background: selected ? factionCssVar("ephemerists", "light") : "transparent",
                   border: selected ? `1.5px solid ${GOLD}` : "1.5px solid transparent",
                   marginBottom: 4,
                 }),

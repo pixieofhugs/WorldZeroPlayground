@@ -332,17 +332,10 @@ function UACard({
   );
 }
 
-// Analog is reskinned as Everymen (the Analog identity is being deprecated).
-// The slug stays "analog" so no new DB row / registration is needed; it just
-// renders the Everymen faction card.
-function AnalogCard(props: FactionCardProps) {
-  return <EverymenCard {...props} />;
-}
+// ─── Warriors of Whimsy ".exe" window atoms ──────────────────────────────────────────────
 
-// ─── Gestalt ".exe" window atoms ──────────────────────────────────────────────
-
-/** A small sparkle glyph used in the gestalt.exe title bar. */
-function GestaltSparkle({
+/** A small sparkle glyph used in the wow.exe title bar. */
+function WowSparkle({
   size = 10,
   color,
 }: {
@@ -360,7 +353,7 @@ function GestaltSparkle({
 }
 
 /** A tiny white die-cut ivy sticker peeking off the window corner. */
-function GestaltIvySticker({
+function WowIvySticker({
   stem,
   leaf,
 }: {
@@ -382,7 +375,7 @@ function GestaltIvySticker({
   );
 }
 
-function GestaltCard({
+function WowCard({
   faction,
   status,
   invitationNote,
@@ -392,7 +385,7 @@ function GestaltCard({
     ? faction.description.slice(0, 100) +
       (faction.description.length > 100 ? "…" : "")
     : "";
-  const titleText = "var(--faction-gestalt-title-text)";
+  const titleText = "var(--faction-wow-title-text)";
   return (
     <div
       style={
@@ -411,7 +404,7 @@ function GestaltCard({
             position: "relative",
             borderRadius: 12,
             overflow: "hidden",
-            border: "2px solid var(--faction-gestalt-win-border)",
+            border: "2px solid var(--faction-wow-win-border)",
             transition: "background 150ms, color 150ms",
             boxSizing: "border-box",
           } as React.CSSProperties
@@ -426,8 +419,8 @@ function GestaltCard({
               gap: 8,
               padding: "7px 11px",
               background:
-                "linear-gradient(180deg, var(--faction-gestalt-title-from), var(--faction-gestalt-title-to))",
-              borderBottom: "2px solid var(--faction-gestalt-win-border)",
+                "linear-gradient(180deg, var(--faction-wow-title-from), var(--faction-wow-title-to))",
+              borderBottom: "2px solid var(--faction-wow-win-border)",
             } as React.CSSProperties
           }
         >
@@ -470,7 +463,7 @@ function GestaltCard({
               letterSpacing: "0.03em",
             }}
           >
-            <GestaltSparkle size={10} color={titleText} /> gestalt.exe
+            <WowSparkle size={10} color={titleText} /> wow.exe
           </span>
           <span
             style={{
@@ -490,9 +483,9 @@ function GestaltCard({
             {
               position: "relative",
               padding: "14px 14px 13px",
-              background: "var(--faction-gestalt-body-bg)",
+              background: "var(--faction-wow-body-bg)",
               backgroundImage:
-                "radial-gradient(var(--faction-gestalt-dot) 1.4px, transparent 1.4px)",
+                "radial-gradient(var(--faction-wow-dot) 1.4px, transparent 1.4px)",
               backgroundSize: "13px 13px",
             } as React.CSSProperties
           }
@@ -508,9 +501,9 @@ function GestaltCard({
               pointerEvents: "none",
             }}
           >
-            <GestaltIvySticker
-              stem="var(--faction-gestalt-ivy)"
-              leaf="var(--faction-gestalt-ivy-leaf)"
+            <WowIvySticker
+              stem="var(--faction-wow-ivy)"
+              leaf="var(--faction-wow-ivy-leaf)"
             />
           </span>
           {invitationNote && (
@@ -522,8 +515,8 @@ function GestaltCard({
               {
                 position: "relative",
                 zIndex: 2,
-                background: "var(--faction-gestalt-notepad-bg)",
-                border: "1.5px solid var(--faction-gestalt-notepad-border)",
+                background: "var(--faction-wow-notepad-bg)",
+                border: "1.5px solid var(--faction-wow-notepad-border)",
                 borderRadius: 7,
                 padding: "11px 13px",
                 marginBottom: 11,
@@ -533,19 +526,19 @@ function GestaltCard({
             <div
               className="card-meta"
               style={{
-                color: factionCssVar("gestalt", "card-accent"),
+                color: factionCssVar("wow", "card-accent"),
                 marginBottom: 4,
               }}
             >
-              <StatusBadge status={status} slug="gestalt" />
+              <StatusBadge status={status} slug="wow" />
             </div>
             <div
               style={{
-                fontFamily: factionCssVar("gestalt", "card-font"),
+                fontFamily: factionCssVar("wow", "card-font"),
                 fontSize: 26,
                 fontWeight: 700,
                 lineHeight: 1.05,
-                color: factionCssVar("gestalt", "card-text"),
+                color: factionCssVar("wow", "card-text"),
                 marginBottom: 4,
               }}
             >
@@ -556,7 +549,7 @@ function GestaltCard({
                 style={{
                   fontSize: 10,
                   lineHeight: 1.5,
-                  color: factionCssVar("gestalt", "card-muted"),
+                  color: factionCssVar("wow", "card-muted"),
                 }}
               >
                 {desc}
@@ -763,7 +756,7 @@ function EphemeristsCard({
           className="card-meta"
           style={{ color: "var(--eph-rubric)", marginBottom: 6 }}
         >
-          <StatusBadge status={status} slug="journeymen" />
+          <StatusBadge status={status} slug="ephemerists" />
         </div>
         {desc && (
           <div
@@ -1065,13 +1058,11 @@ export default function FactionCard(props: FactionCardProps) {
   switch (props.faction.slug) {
     case "ua":
       return <UACard {...props} />;
-    case "analog":
-      return <AnalogCard {...props} />;
-    case "gestalt":
-      return <GestaltCard {...props} />;
+    case "wow":
+      return <WowCard {...props} />;
     case "snide":
       return <SnideCard {...props} />;
-    case "journeymen":
+    case "ephemerists":
       return <EphemeristsCard {...props} />;
     case "singularity":
       return <SingularityCard {...props} />;

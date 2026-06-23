@@ -236,7 +236,7 @@ export default function Sidebar() {
                 >
                   <div className="font-body" style={{ fontSize: 9, lineHeight: 1.4 }}>
                     {isEra ? (
-                      <span style={{ fontWeight: 700, color: 'var(--faction-journeymen)' }}>
+                      <span style={{ fontWeight: 700, color: 'var(--faction-ephemerists)' }}>
                         {item.payload.era_name} has begun
                       </span>
                     ) : isTask ? (

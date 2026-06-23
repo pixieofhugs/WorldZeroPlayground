@@ -3,7 +3,7 @@ import { useVote } from './useVote'
 import { VoteLoginGate, VoteSummary } from './VoteShell'
 
 /**
- * Gestalt faction vote UI — the 1-5 rating rendered as filled hearts in the
+ * Warriors of Whimsy faction vote UI — the 1-5 rating rendered as filled hearts in the
  * pink computer-witch language. Empty hearts are outline-only; filled hearts
  * climb an escalating pastel-pink ramp left-to-right, each in a soft rounded
  * stamp tile with tiny uppercase word labels (Caveat script numerals elsewhere
@@ -19,7 +19,7 @@ interface HeartConfig {
   fill: string
 }
 
-/** Escalating pink heart-fill ramp (from gestalt-kit.jsx voteFills). */
+/** Escalating pink heart-fill ramp (from wow-kit.jsx voteFills). */
 const VOTE_FILLS = ['#f6b8cf', '#f489b0', '#ec5f99', '#df3f86', '#c52470'] as const
 
 const HEART_TILE = 40
@@ -39,7 +39,7 @@ function HeartGlyph({ filled, color }: { filled: boolean; color: string }) {
       <path
         d="M18 31C7 23 3 17 6.5 11 9 6.8 14 6.5 16 10c.9 1.5 1.6 2.7 2 3.4.4-.7 1.1-1.9 2-3.4 2-3.5 7-3.2 9.5 1C33 17 29 23 18 31Z"
         fill={filled ? color : 'none'}
-        stroke={filled ? '#fff' : 'var(--faction-gestalt-border)'}
+        stroke={filled ? '#fff' : 'var(--faction-wow-border)'}
         strokeWidth={filled ? 2.2 : 2}
         strokeLinejoin="round"
       />
@@ -47,7 +47,7 @@ function HeartGlyph({ filled, color }: { filled: boolean; color: string }) {
   )
 }
 
-export default function GestaltVote({ praxisId, currentStars, averageStars, totalVotes }: VoteUIProps) {
+export default function WowVote({ praxisId, currentStars, averageStars, totalVotes }: VoteUIProps) {
   const { user, selected, saving, error, vote } = useVote(praxisId, currentStars)
 
   if (!user) {
@@ -78,9 +78,9 @@ export default function GestaltVote({ praxisId, currentStars, averageStars, tota
                   cursor: saving ? 'default' : 'pointer',
                   padding: 0,
                   borderRadius: 9,
-                  border: `1.5px solid ${filled ? 'var(--faction-gestalt)' : 'var(--faction-gestalt-border)'}`,
-                  background: filled ? 'var(--faction-gestalt-notepad-bg)' : 'transparent',
-                  boxShadow: filled ? '0 3px 7px var(--faction-gestalt-light)' : 'none',
+                  border: `1.5px solid ${filled ? 'var(--faction-wow)' : 'var(--faction-wow-border)'}`,
+                  background: filled ? 'var(--faction-wow-notepad-bg)' : 'transparent',
+                  boxShadow: filled ? '0 3px 7px var(--faction-wow-light)' : 'none',
                   transform: active ? 'scale(1.08)' : 'none',
                   transition: 'all 120ms',
                 } as React.CSSProperties}
@@ -93,7 +93,7 @@ export default function GestaltVote({ praxisId, currentStars, averageStars, tota
                   fontSize: 7,
                   textTransform: 'uppercase',
                   letterSpacing: '0.04em',
-                  color: filled ? heart.fill : 'var(--faction-gestalt-card-muted)',
+                  color: filled ? heart.fill : 'var(--faction-wow-card-muted)',
                   maxWidth: HEART_TILE + 2,
                   textAlign: 'center',
                   lineHeight: 1.2,
@@ -112,9 +112,9 @@ export default function GestaltVote({ praxisId, currentStars, averageStars, tota
         totalVotes={totalVotes}
         error={error}
         theme={{
-          muted: 'var(--faction-gestalt-card-muted)',
-          accent: 'var(--faction-gestalt)',
-          accentFont: 'var(--faction-gestalt-card-font)',
+          muted: 'var(--faction-wow-card-muted)',
+          accent: 'var(--faction-wow)',
+          accentFont: 'var(--faction-wow-card-font)',
           avgFontSize: 16,
           errorColor: 'var(--color-danger)',
         }}
