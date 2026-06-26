@@ -1,0 +1,39 @@
+/* ══════════════════════════════════════════════════════════════
+   TYPOGRAPHY — World Zero
+   Three system roles (display / body / accent) plus per-faction
+   display faces. The type scale is deliberately TINY — World Zero
+   renders like a printed field journal, so 8–14px is the working
+   range and 28–34px is reserved for page titles & wordmark.
+   ══════════════════════════════════════════════════════════════ */
+:root {
+  /* ── Type scale (px) ── */
+  --text-xs: 8px;
+  --text-sm: 9px;
+  --text-base: 10px;
+  --text-md: 11px;
+  --text-lg: 12px;
+  --text-xl: 14px;
+  --text-2xl: 18px;
+  --text-3xl: 28px;
+  --text-4xl: 34px;
+
+  /* ── System font families ── */
+  --font-display: "Lora", Georgia, serif; /* wordmark, page & praxis titles (italic) */
+  --font-body: "Courier Prime", "Courier New", monospace; /* ALL body, UI, labels */
+  --font-accent: "Bebas Neue", Impact, sans-serif; /* reserved special use */
+
+  /* ── Per-faction headline faces ── */
+  --font-faction-gilt: "Playfair Display", Georgia, serif; /* UA — gilt salon (didone, italic) */
+  --font-faction-engraved-caps: "Marcellus SC", "Marcellus", Georgia, serif; /* UA regalia — engraved caps */
+  --font-faction-script: "Caveat", cursive; /* Gestalt — gestalt.exe */
+  --font-faction-marker: "Permanent Marker", "Marker Felt", cursive; /* S.N.I.D.E. scrawl */
+  --font-faction-anton: "Anton", Impact, sans-serif; /* S.N.I.D.E. + display headlines */
+  --font-faction-black: "Archivo Black", Impact, sans-serif; /* S.N.I.D.E. ransom block */
+  --font-faction-typewriter: "Special Elite", "Courier New", serif; /* S.N.I.D.E. body type */
+  --font-faction-terminal: "Share Tech Mono", monospace; /* Singularity */
+  --font-faction-engraved: "Cinzel", "Trajan Pro", Georgia, serif; /* Ephemerists display */
+  --font-faction-codex: "EB Garamond", Georgia, serif; /* Ephemerists body / italics */
+  --font-faction-codex-script: "Cormorant Garamond", Georgia, serif; /* Ephemerists flourish */
+  --font-faction-poster: "Bebas Neue", Impact, sans-serif; /* Everymen — union poster */
+  --font-faction-vellum: "Cormorant Garamond", Georgia, serif; /* Albescent — vellum correspondence */
+}
