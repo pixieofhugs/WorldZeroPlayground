@@ -1,4 +1,5 @@
 import dataclasses
+import re
 from typing import Optional
 
 from fastapi import HTTPException
@@ -7,13 +8,22 @@ from sqlalchemy.sql import Select, false as sa_false
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from game_config import CURRENT_ERA, EraConfig
+from models.account import Account
 from models.character import Character, CharacterStatus
 from models.character_stats import CharacterStats
+from models.invitation_letter import InvitationLetter
 from models.praxis import ModerationStatus, Praxis, PraxisStatus
 from models.task import Task
 from schemas.character import CharacterCreate, CharacterOut, CharacterUpdate
 from services.era import get_current_era_row, get_current_era_row_safe, get_or_create_stats
 from services.scoring import compute_level, compute_vote_budget, compute_votes_available
+
+# Status set for the account-scoped roster: a player's own lives, excluding banned.
+_ROSTER_STATUSES: frozenset[CharacterStatus] = frozenset(
+    {CharacterStatus.active, CharacterStatus.paused}
+)
+_DEFAULT_HANDLE = "wanderer"
+_HANDLE_MAX_LEN = 14
 
 
 def build_character_out(
@@ -162,6 +172,124 @@ async def can_start_as_albescent(
     return False
 
 
+async def get_account_invited_faction_slugs(
+    account_id: int,
+    session: AsyncSession,
+    era: EraConfig = CURRENT_ERA,
+) -> list[str]:
+    """Faction slugs the account holds a current-era invitation for (ADR-0019).
+
+    Account-pooled: an invite on *any* of the account's characters counts. Sentinels
+    (``na``, ``aged_out``) and ``albescent`` are excluded — they are never invite-joinable.
+    Returns ``[]`` when the era is unseeded or no invites exist (the norm until #272
+    delivers invitations).
+    """
+    era_row = await get_current_era_row_safe(session)
+    if era_row is None:
+        return []
+    result = await session.execute(
+        select(InvitationLetter.faction_slug)
+        .distinct()
+        .join(Character, Character.id == InvitationLetter.character_id)
+        .where(
+            Character.account_id == account_id,
+            InvitationLetter.era_id == era_row.id,
+            InvitationLetter.faction_slug.notin_(list(_ALBESCENT_SENTINEL_SLUGS)),
+        )
+    )
+    return sorted(row[0] for row in result.all())
+
+
+async def _derive_unique_username(display_name: str, session: AsyncSession) -> str:
+    """Lowercase + strip non-alphanumerics + slice; ``wanderer`` fallback; auto-suffix
+    (``wren``, ``wren2``, …) until globally unique."""
+    base = re.sub(r"[^a-z0-9]", "", display_name.lower())[:_HANDLE_MAX_LEN] or _DEFAULT_HANDLE
+    candidate = base
+    suffix = 2
+    # ponytail: serial probe; the username UNIQUE constraint is the real backstop
+    # against a concurrent-create race. Loop handles the common (sequential) case.
+    while await session.scalar(
+        select(Character.id).where(Character.username == candidate)
+    ) is not None:
+        candidate = f"{base}{suffix}"
+        suffix += 1
+    return candidate
+
+
+async def resolve_active_character(
+    account: Account,
+    session: AsyncSession,
+) -> Character | None:
+    """The account's "carried" life: ``active_character_id`` when it points at an
+    owned active character, else the most-recently-created active one, else None."""
+    if account.active_character_id is not None:
+        active = await session.scalar(
+            select(Character).where(
+                Character.id == account.active_character_id,
+                Character.account_id == account.id,
+                Character.status == CharacterStatus.active,
+            )
+        )
+        if active is not None:
+            return active
+    return await session.scalar(
+        select(Character)
+        .where(
+            Character.account_id == account.id,
+            Character.status == CharacterStatus.active,
+        )
+        .order_by(Character.created_at.desc())
+        .limit(1)
+    )
+
+
+async def set_active_character(
+    account: Account,
+    character_id: int,
+    session: AsyncSession,
+) -> None:
+    """Point the account at a different owned, active life. 404 if not owned/missing,
+    409 if the target life is paused/banned (can't carry a non-active life)."""
+    character = await session.get(Character, character_id)
+    if character is None or character.account_id != account.id:
+        raise HTTPException(status_code=404, detail="Character not found.")
+    if character.status != CharacterStatus.active:
+        raise HTTPException(status_code=409, detail="That life is not active.")
+    account.active_character_id = character_id
+    await session.flush()
+
+
+async def list_account_roster(
+    account: Account,
+    session: AsyncSession,
+) -> list[tuple[Character, CharacterStats | None]]:
+    """The account's own lives (active + paused, not banned) with current-era stats,
+    carried life first then newest-first."""
+    era_row = await get_current_era_row_safe(session)
+    era_id = era_row.id if era_row else None
+    join_condition = (
+        (CharacterStats.character_id == Character.id) & sa_false()
+        if era_id is None
+        else (CharacterStats.character_id == Character.id)
+        & (CharacterStats.era_id == era_id)
+    )
+    result = await session.execute(
+        select(Character, CharacterStats)
+        .outerjoin(CharacterStats, join_condition)
+        .where(
+            Character.account_id == account.id,
+            Character.status.in_(list(_ROSTER_STATUSES)),
+        )
+        .order_by(Character.created_at.desc())
+    )
+    rows = list(result.all())
+    active = await resolve_active_character(account, session)
+    active_id = active.id if active else None
+    # Carried life first; created_at desc otherwise (already ordered by the query).
+    rows.sort(key=lambda row: row[0].id != active_id)
+    return rows
+
+
 async def create_character(
     account_id: int,
     data: CharacterCreate,
@@ -169,6 +297,10 @@ async def create_character(
     era: EraConfig = CURRENT_ERA,
 ) -> CharacterCreationResult:
     era_row = await get_current_era_row(session)
+
+    display_name = (data.display_name or "").strip()
+    if not display_name:
+        raise HTTPException(status_code=400, detail="A chosen name is required.")
 
     requested_faction_slug = (data.faction_slug or "").strip().lower() or None
 
@@ -193,33 +325,31 @@ async def create_character(
                 ),
             )
 
-    # Albescent unlock gate: requires at least one character at era.albescent_level_required.
-    if requested_faction_slug == ALBESCENT_FACTION_SLUG:
-        if not await can_start_as_albescent(account_id, session, era):
-            raise HTTPException(
-                status_code=403,
-                detail=(
-                    f"Albescent characters require a level-{era.albescent_level_required} "
-                    "character on the account who has completed a task from each faction."
-                ),
-            )
-        starting_faction_slug = ALBESCENT_FACTION_SLUG
-    elif requested_faction_slug in (None, "", "ua"):
-        # Default onboarding: everyone starts in UA.
-        starting_faction_slug = "ua"
-    else:
+    # ADR-0019: born unaffiliated by default. A non-None faction must be one the
+    # account holds an invitation for. Albescent is never a creation option.
+    if requested_faction_slug is None:
+        starting_faction_slug = "na"
+    elif requested_faction_slug == ALBESCENT_FACTION_SLUG:
         raise HTTPException(
             status_code=400,
-            detail=(
-                "New characters must start in UA (or Albescent, if unlocked). "
-                "Other factions are joined later via faction graduation."
-            ),
+            detail="Albescent is joined in the field, not chosen at creation.",
         )
+    else:
+        invited = await get_account_invited_faction_slugs(account_id, session, era)
+        if requested_faction_slug not in invited:
+            raise HTTPException(
+                status_code=400,
+                detail="You don't hold an invitation for that faction.",
+            )
+        starting_faction_slug = requested_faction_slug
+
+    explicit_username = (data.username or "").strip() or None
+    username = explicit_username or await _derive_unique_username(display_name, session)
 
     character = Character(
         account_id=account_id,
-        username=data.username,
-        display_name=data.display_name,
+        username=username,
+        display_name=display_name,
         bio=data.bio or "",
         avatar_url=data.avatar_url or "",
         location=data.location or "",
@@ -233,6 +363,10 @@ async def create_character(
         character_id=character.id,
         era_id=era_row.id,
     )
+
+    # Carry the new life: it becomes the account's active character.
+    account = await session.get(Account, account_id)
+    account.active_character_id = character.id
 
     await session.flush()
     await session.refresh(character)

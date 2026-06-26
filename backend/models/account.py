@@ -25,9 +25,21 @@ class Account(TimestampMixin, Base):
     status: Mapped[AccountStatus] = mapped_column(
         Enum(AccountStatus, create_type=False), nullable=False, default=AccountStatus.active
     )
+    # The "last carried life" — which character this account is currently playing as.
+    # Nullable: a 0-life account, or one that has not switched yet. use_alter avoids a
+    # chicken-and-egg DDL cycle with character.account_id → account.id.
+    active_character_id: Mapped[int | None] = mapped_column(
+        ForeignKey("character.id", use_alter=True, name="fk_account_active_character"),
+        nullable=True,
+    )
 
+    # foreign_keys pins this to character.account_id — active_character_id adds a
+    # second FK path between the tables that would otherwise be ambiguous.
     characters: Mapped[List["Character"]] = relationship(
-        "Character", back_populates="account", lazy="raise"
+        "Character",
+        back_populates="account",
+        lazy="raise",
+        foreign_keys="Character.account_id",
     )
     oauth_providers: Mapped[List["OAuthProvider"]] = relationship(
         "OAuthProvider", back_populates="account", lazy="raise"

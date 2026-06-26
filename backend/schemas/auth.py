@@ -22,6 +22,10 @@ class CurrentUser(BaseModel):
     # the propose/see flags to True; the eligibility flags have their own rules.
     can_create_additional_character: bool = False
     can_start_as_albescent: bool = False
+    # FieldDesk "locked dossier" gate copy reads these (#270/#274): the level an
+    # existing life must reach to unlock a second life, and the live era's name.
+    second_character_level_required: int = 0
+    era_name: str = ""
     can_propose_task: bool = False
     can_propose_metatask: bool = False
     can_see_retired_tasks: bool = False

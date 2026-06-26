@@ -1,25 +1,14 @@
-from dataclasses import asdict
-
 from authlib.integrations.starlette_client import OAuth
 from fastapi import APIRouter, Depends, Response
 from fastapi import Request
-from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from config import settings
 from db import get_db
-from dependencies import account_has_admin_role
 from models.account import Account
-from models.character import Character, CharacterStatus
 from schemas.auth import CurrentUser
 from services.auth import create_jwt, create_or_get_account, get_current_account
-from services.character import (
-    build_character_out,
-    can_create_additional_character,
-    can_start_as_albescent,
-)
-from services.character_capabilities import compute_capabilities
-from services.era import load_current_era_stats
+from services.current_user import build_current_user
 
 router = APIRouter()
 
@@ -79,51 +68,13 @@ async def auth_me(
     account: Account = Depends(get_current_account),
     session: AsyncSession = Depends(get_db),
 ):
-    """Return the current account and its first active character.
+    """Return the current account and its carried (active) character.
 
     Exposes account_id — this is intentional and the single authorized exception to the
     "never leak account_id publicly" rule. Caller is authenticated; they receive only their
     own id. See SPEC-backend-architecture.md §4.
     """
-    result = await session.execute(
-        select(Character)
-        .where(
-            Character.account_id == account.id,
-            Character.status == CharacterStatus.active,
-        )
-        .order_by(Character.created_at)
-        .limit(1)
-    )
-    character = result.scalar_one_or_none()
-
-    char_out = None
-    character_level: int | None = None
-    if character:
-        stats = await load_current_era_stats(character.id, session)
-        char_out = build_character_out(character, stats)
-        character_level = stats.level if stats else 0
-
-    is_admin = await account_has_admin_role(account.id, session)
-
-    # Eligibility flags depend on the era being seeded. Fall back to False in
-    # fresh test environments where no era row exists yet.
-    try:
-        can_create_more = await can_create_additional_character(account.id, session)
-        can_albescent = await can_start_as_albescent(account.id, session)
-    except Exception:
-        can_create_more = False
-        can_albescent = False
-
-    capabilities = compute_capabilities(character_level, is_admin)
-
-    return CurrentUser(
-        account_id=account.id,
-        character=char_out,
-        is_admin=is_admin,
-        can_create_additional_character=can_create_more,
-        can_start_as_albescent=can_albescent,
-        **asdict(capabilities),
-    )
+    return await build_current_user(account, session)
 
 
 @router.post("/logout")

@@ -39,7 +39,10 @@ class Character(TimestampMixin, Base):
     # votes_available is computed on read: services.scoring.compute_votes_available
 
     account: Mapped["Account"] = relationship(
-        "Account", back_populates="characters", lazy="raise"
+        "Account",
+        back_populates="characters",
+        lazy="raise",
+        foreign_keys="Character.account_id",
     )
     praxes: Mapped[List["Praxis"]] = relationship(
         "Praxis",

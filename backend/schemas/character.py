@@ -29,14 +29,21 @@ class CharacterOut(BaseModel):
 
 
 class CharacterCreate(BaseModel):
-    username: str = Field(..., min_length=3, max_length=30)
-    display_name: str = Field(..., max_length=50)
+    # username is optional: the server derives a unique @handle from display_name
+    # when absent (ADR-0019). An explicit one is still accepted for back-compat.
+    username: str | None = Field(default=None, min_length=3, max_length=30)
+    display_name: str = Field(..., min_length=1, max_length=50)
     bio: str = Field(default="", max_length=500)
     avatar_url: str = Field(default="", max_length=500)
     location: str = Field(default="", max_length=100)
-    # Optional starting faction. Only "albescent" is accepted as a non-default
-    # starting faction, and it requires a level-8 character on the account.
+    # Optional starting faction. Born unaffiliated ("na") by default; a non-None
+    # slug must be one the account holds an invitation for. "albescent" is never
+    # a creation option (join-in-the-field only).
     faction_slug: str | None = Field(default=None, max_length=50)
+
+
+class ActiveCharacterIn(BaseModel):
+    character_id: int
 
 
 class CharacterUpdate(BaseModel):
