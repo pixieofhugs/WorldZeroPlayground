@@ -8,6 +8,7 @@ import DefaultFactionBody from "./factionDetail/archetypes/DefaultFactionBody";
 import EphemeristsFactionHero from "../components/cards/EphemeristsFactionHero";
 import SnideFactionHero from "../components/cards/SnideFactionHero";
 import SingularityFactionHero from "../components/cards/SingularityFactionHero";
+import EverymenFactionHero from "../components/cards/EverymenFactionHero";
 
 /**
  * Faction detail page (`/factions/:slug`). Per-faction surface #13 in
@@ -36,6 +37,8 @@ const FACTION_HEROES: Record<string, ComponentType<FactionHeroProps>> = {
   ephemerists: EphemeristsFactionHero,
   snide: SnideFactionHero,
   singularity: SingularityFactionHero,
+  everymen: EverymenFactionHero,
+  // wow: undesigned — falls through to the shared title/description chrome.
 };
 
 export default function FactionDetail() {
