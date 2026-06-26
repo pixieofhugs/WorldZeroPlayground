@@ -13,12 +13,24 @@
 import type { ComponentType, ReactNode } from 'react'
 
 import { pickVariant } from '../../utils/factionDispatch'
+import EverymenFeedFrame from './EverymenFeedFrame'
+import EphemeristsFeedFrame from './EphemeristsFeedFrame'
+import WowFeedFrame from './WowFeedFrame'
+import SnideFeedFrame from './SnideFeedFrame'
+import SingularityFeedFrame from './SingularityFeedFrame'
 
 type FrameProps = { children: ReactNode }
 
-/** Per-faction frames. Empty until design delivers them; each row makes that
- *  faction's feed cards bespoke. albescent/aged_out inherit ua via pickVariant. */
-const FACTION_FEED_FRAMES: Record<string, ComponentType<FrameProps>> = {}
+/** Per-faction frames. Each row makes that faction's feed cards bespoke.
+ *  albescent/aged_out inherit ua via pickVariant. UA feed is undesigned, so
+ *  ua falls through to the neutral DefaultFeedFrame (#224). */
+const FACTION_FEED_FRAMES: Record<string, ComponentType<FrameProps>> = {
+  everymen: EverymenFeedFrame,
+  ephemerists: EphemeristsFeedFrame,
+  wow: WowFeedFrame,
+  snide: SnideFeedFrame,
+  singularity: SingularityFeedFrame,
+}
 
 /** Neutral fallback: render the card unchanged (today's behaviour — the event
  *  cards carry their own tint, so the default frame adds no chrome). */
