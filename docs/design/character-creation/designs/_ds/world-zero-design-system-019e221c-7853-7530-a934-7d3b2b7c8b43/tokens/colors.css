@@ -1,0 +1,422 @@
+/* ══════════════════════════════════════════════════════════════
+   COLOR SYSTEM — World Zero · Single source of truth
+   Mirrors frontend/src/index.css. Faction card colors are synced
+   with utils/factions.ts. Light mode on :root, dark mode under
+   [data-theme="dark"] — every component reads var(--…) so the
+   theme switch is automatic through the cascade.
+
+   THE SIX FACTIONS (rainbow spine):
+     ua          purple   · sticky note
+     gestalt     pink     · gestalt.exe desktop window
+     snide       green    · ransom dispatch (acid + photocopier ink)
+     ephemerists teal     · illuminated codex / discordant map  (was Journeymen)
+     singularity blue     · terminal printout
+     everymen    red      · union / victory poster   (the missing red)
+   ══════════════════════════════════════════════════════════════ */
+:root {
+  /* ── Page backgrounds ── */
+  --color-bg-page: #f7f4ee;
+  --color-bg-surface: rgba(255, 255, 255, 0.72);
+  --color-bg-surface-alt: #f0ede6;
+
+  /* ── Text ── */
+  --color-text-primary: #1a1209;
+  --color-text-secondary: #6b6050;
+  --color-text-tertiary: #9b8e7d;
+
+  /* ── Borders ── */
+  --color-border: rgba(0, 0, 0, 0.07);
+  --color-border-strong: rgba(0, 0, 0, 0.15);
+
+  /* ── Accent ── */
+  --color-accent-primary: #be185d;
+
+  /* ── Nav ── */
+  --color-nav-bg: rgba(247, 244, 238, 0.9);
+
+  /* ── Functional ── */
+  --color-success: #14532d;
+  --color-danger: #dc2626;
+  --color-warning: #b45309;
+  --color-warning-light: #fef3c7;
+
+  /* ── Shared neutrals ── */
+  --color-text-on-accent: #ffffff;
+  --color-overlay-weak: rgba(0, 0, 0, 0.08);
+  --color-overlay-medium: rgba(0, 0, 0, 0.15);
+  --color-overlay-strong: rgba(0, 0, 0, 0.25);
+  --color-surface-scrim: rgba(255, 255, 255, 0.9);
+
+  /* ── Faction primary colors (rainbow palette) ── */
+  --faction-ua: #c2541f; /* burnt amber — gilt salon */
+  --faction-gestalt: #be185d; /* magenta */
+  --faction-snide: #16a34a; /* green */
+  --faction-ephemerists: #1d6e72; /* teal — lapis/verdigris */
+  --faction-singularity: #2563eb; /* blue */
+  --faction-everymen: #c1272d; /* red — the missing rainbow slot */
+  --faction-albescent: #1c1c1a; /* no hue — near-black ink on white (always-light) */
+
+  /* ── Faction tints (backgrounds, highlights) ── */
+  --faction-ua-light: rgba(194, 84, 31, 0.08);
+  --faction-gestalt-light: rgba(190, 24, 93, 0.08);
+  --faction-snide-light: rgba(22, 163, 74, 0.1);
+  --faction-ephemerists-light: rgba(29, 110, 114, 0.1);
+  --faction-singularity-light: rgba(37, 99, 235, 0.1);
+  --faction-everymen-light: rgba(193, 39, 45, 0.1);
+  --faction-albescent-light: rgba(28, 28, 26, 0.05);
+
+  /* ── Faction borders ── */
+  --faction-ua-border: rgba(194, 84, 31, 0.3);
+  --faction-gestalt-border: rgba(190, 24, 93, 0.3);
+  --faction-snide-border: rgba(22, 163, 74, 0.35);
+  --faction-ephemerists-border: rgba(29, 110, 114, 0.35);
+  --faction-singularity-border: rgba(37, 99, 235, 0.35);
+  --faction-everymen-border: rgba(193, 39, 45, 0.35);
+  --faction-albescent-border: rgba(28, 28, 26, 0.12);
+
+  /* ════════════════════════════════════════════════════════════
+     FACTION EXTENSION PALETTES
+     Each redesigned faction owns a named palette its surfaces draw
+     from. These flip in dark where noted; the card-contract tokens
+     below point at them so dark mode resolves through the cascade.
+     ════════════════════════════════════════════════════════════ */
+
+  /* ── UA · gilt salon (art academy; always-light — never dims) ── */
+  --ua-orange: #c2541f;       /* burnt amber — the accent */
+  --ua-orange-deep: #a8431a;
+  --ua-gold: #9c6a1a;          /* old gold — frames & regalia */
+  --ua-gold-lt: #dd9322;
+  --ua-gold-pale: #eec06a;
+  --ua-ink: #3d2410;           /* brown ink — all text */
+  --ua-sub: #8f6a3a;           /* secondary serif text */
+  --ua-muted: #a8895a;         /* mono labels / metadata */
+  --ua-paper: #fdf6ea;         /* sheet / card surface */
+  --ua-paper-warm: #fef7ea;
+  --ua-wall: #ece4d2;          /* page wall */
+  --ua-line: #cdab63;          /* hairline borders */
+  --ua-line-soft: #e3cb98;
+  --ua-gilt: linear-gradient(135deg,#eec06a 0%,#9c6a1a 24%,#f0c878 50%,#9c6a1a 76%,#dd9322 100%); /* @kind color */
+
+  /* ── GESTALT · gestalt.exe (pink computer-witch desktop) ── */
+  --gestalt-panel-bg: #fbeef5;
+  --gestalt-card-bg: #fffdfa;
+  --gestalt-ink: #a83a6e;
+  --gestalt-ink-soft: #b5588a;
+  --gestalt-label: #a8728e;
+  --gestalt-border: #f3b6d2;
+  --gestalt-border-soft: rgba(214, 90, 150, 0.28);
+  --gestalt-pink: #ec5f99;
+  --gestalt-pink-deep: #d23b7e;
+  --gestalt-pink-lt: #fbcfe2;
+  --gestalt-gold: #f0b94a;
+  --gestalt-green: #7cbf99;
+  --gestalt-leaf: #9ad3b1;
+  --gestalt-glow: rgba(236, 95, 153, 0.32);
+  --gestalt-title-from: #fbcfe2;
+  --gestalt-title-to: #f3a6cb;
+  --gestalt-title-text: #8e2f5c;
+  --gestalt-win-border: #e487b5;
+  --gestalt-moon-lit: #f6c75e;
+  --gestalt-moon-shadow: #fbe1ee;
+
+  /* ── S.N.I.D.E. · ransom / xerox punk ── */
+  --snide-acid: #b6ff2e; /* toxic green — the spot color */
+  --snide-acid-deep: #6fae00;
+  --snide-ink: #14110b; /* photocopier black */
+  --snide-paper: #f4f1e8; /* warm xerox stock */
+  --snide-paper-cool: #e7e9e2;
+  --snide-pink: #ff2d8b; /* hot zine pink */
+  --snide-pink-deep: #be185d;
+  --snide-accent: #15803d; /* muted system green */
+  --snide-tape: rgba(228, 214, 120, 0.62);
+  --snide-tape-grey: rgba(200, 200, 190, 0.5);
+  --snide-wall: #efece3; /* flyposted-wall backdrop (flips) */
+  --snide-wall-deep: #e0ddd1;
+  --snide-wall-text: #14110b;
+
+  /* ── EPHEMERISTS · illuminator's pigments on vellum ── */
+  --eph-gold: #b0863a; /* gold leaf / ochre */
+  --eph-gold-light: #d4ab55;
+  --eph-gold-deep: #8a6622;
+  --eph-rubric: #9c3622; /* vermilion rubrication red */
+  --eph-rubric-deep: #7c2718;
+  --eph-lapis: #1d4f6e; /* deep celestial blue */
+  --eph-lapis-deep: #143b54;
+  --eph-verdigris: #4a7d70; /* aged copper / astrolabe patina */
+  --eph-ink: #2a1d12; /* iron-gall ink — stays dark */
+  --eph-vellum: #e9dcbf; /* aged manuscript stock (flips) */
+  --eph-vellum-deep: #dccba2;
+  --eph-vellum-text: #2a1d12; /* text on vellum (flips) */
+  --eph-muted: #6f5c3e; /* faded marginalia ink (flips) */
+  --eph-parchment: #f1e8cf; /* bright text on dark elements */
+  --eph-field: #1d4f6e; /* celestial-diagram field (flips) */
+  --eph-field-deep: #143b54;
+
+  /* ── EVERYMEN · union / victory poster ── */
+  --everymen-cream: #f4ecd6; /* light stock / text-on-dark */
+  --everymen-gold: #d99a2b;
+  --everymen-gold-deep: #a9741a;
+  --everymen-olive: #5b6238;
+  --everymen-ink: #221a12; /* press ink — stays dark */
+  --everymen-red: #c1272d; /* propaganda red (flips brighter) */
+  --everymen-red-deep: #8d1c20;
+  --everymen-paper: #ece1c6; /* manila poster stock (flips) */
+  --everymen-paper-deep: #ddceac;
+  --everymen-paper-text: #221a12; /* text on paper (flips) */
+  --everymen-muted: #6c5a40;
+  --everymen-field: #c1272d; /* Mobilize poster field (flips oxblood) */
+  --everymen-field-deep: #8d1c20;
+
+  /* ── ALBESCENT · vellum correspondence (always-light; no hue) ── */
+  --al-surface: #ffffff;
+  --al-surface-warm: #faf9f7;
+  --al-text: #1c1c1a;
+  --al-text-muted: rgba(28, 28, 26, 0.44);
+  --al-text-faint: rgba(28, 28, 26, 0.22);
+  --al-ink: rgba(28, 28, 26, 0.72);
+  --al-border: rgba(0, 0, 0, 0.10);
+  --al-border-faint: rgba(0, 0, 0, 0.055);
+  --al-shadow: 0 2px 18px rgba(0,0,0,0.055), 0 1px 3px rgba(0,0,0,0.04);
+
+  /* ── Faction card backgrounds (light mode) ── */
+  --faction-ua-card-bg: var(--ua-paper); /* parchment sheet */
+  --faction-gestalt-card-bg: var(--gestalt-card-bg);
+  --faction-snide-card-bg: var(--snide-ink); /* always-dark dispatch */
+  --faction-ephemerists-card-bg: var(--eph-vellum);
+  --faction-singularity-card-bg: #050f08; /* terminal black */
+  --faction-everymen-card-bg: var(--everymen-paper);
+  --faction-albescent-card-bg: var(--al-surface); /* white in both themes */
+
+  /* ── Faction card text ── */
+  --faction-ua-card-text: var(--ua-ink);
+  --faction-gestalt-card-text: var(--gestalt-ink);
+  --faction-snide-card-text: var(--snide-paper);
+  --faction-ephemerists-card-text: var(--eph-vellum-text);
+  --faction-singularity-card-text: #4ade80;
+  --faction-everymen-card-text: var(--everymen-paper-text);
+  --faction-albescent-card-text: var(--al-text);
+
+  /* ── Faction card accents ── */
+  --faction-ua-card-accent: var(--ua-orange);
+  --faction-gestalt-card-accent: var(--gestalt-pink);
+  --faction-snide-card-accent: var(--snide-acid);
+  --faction-ephemerists-card-accent: var(--eph-rubric);
+  --faction-singularity-card-accent: #4ade80; /* terminal green */
+  --faction-everymen-card-accent: var(--everymen-red);
+  --faction-albescent-card-accent: var(--al-ink);
+
+  /* ── Faction card secondary text (descriptions, metadata) ── */
+  --faction-ua-card-muted: var(--ua-sub);
+  --faction-gestalt-card-muted: var(--gestalt-ink-soft);
+  --faction-snide-card-muted: #b7b5a7;
+  --faction-ephemerists-card-muted: var(--eph-muted);
+  --faction-singularity-card-muted: #60a5fa; /* blue brand chrome */
+  --faction-everymen-card-muted: var(--everymen-muted);
+  --faction-albescent-card-muted: var(--al-text-muted);
+
+  /* ── Faction headline fonts (per-faction display) ── */
+  --faction-ua-card-font: var(--font-faction-gilt);
+  --faction-gestalt-card-font: var(--font-faction-script);
+  --faction-snide-card-font: var(--font-faction-anton);
+  --faction-ephemerists-card-font: var(--font-faction-engraved);
+  --faction-singularity-card-font: var(--font-faction-terminal);
+  --faction-everymen-card-font: var(--font-faction-poster);
+  --faction-albescent-card-font: var(--font-faction-vellum);
+
+  /* ── Singularity terminal border (blue brand) ── */
+  --faction-singularity-border-hard: #2563eb;
+
+  /* ── Vote stamp colors (orange → yellow → green → blue → magenta) ── */
+  --vote-1: #c2410c;
+  --vote-2: #ca8a04;
+  --vote-3: #16a34a;
+  --vote-4: #2563eb;
+  --vote-5: #be185d;
+
+  /* ── Title underline colors (cycling) ── */
+  --underline-1: #fbbf24;
+  --underline-2: #be185d;
+  --underline-3: #4f46e5;
+  --underline-4: #1d6e72;
+  --underline-5: #16a34a;
+  --underline-6: #c1272d;
+
+  /* ── Watercolor splash opacities ── */
+  --wc-opacity-blob: 0.3; /* @kind other */
+  --wc-opacity-drip: 0.22; /* @kind other */
+  --wc-opacity-drop: 0.18; /* @kind other */
+
+  /* ── Filter stamp dashed-border (inverts with active state bg) ── */
+  --stamp-active-dashed: rgba(255, 255, 255, 0.2);
+  --stamp-inactive-dashed: rgba(0, 0, 0, 0.15);
+  --stamp-inactive-bg: rgba(255, 255, 255, 0.8);
+
+  /* ── Leaderboard rank colors (podium — stable across themes) ── */
+  --rank-gold: #f59e0b;
+  --rank-silver: #c49a3a;
+  --rank-bronze: #888888;
+
+  /* ── Leaderboard rank accent (your-rank strip + score highlight) ── */
+  --color-rank-accent: #4f46e5;
+  --rank-strip-bg: rgba(79, 70, 229, 0.08);
+  --rank-strip-border: rgba(79, 70, 229, 0.25);
+  --leaderboard-row-hover: rgba(255, 255, 255, 0.55);
+
+  /* ── Level track node colors ── */
+  --color-level-inactive: #c8c0b0;
+  --level-node-incomplete: rgba(255, 255, 255, 0.5);
+
+  /* ── Feed badge colors (stable — white text always legible) ── */
+  --badge-friend: #14532d;
+  --badge-your-stuff: #8a6a20;
+  --badge-global: #6b6a7a;
+  --badge-duel: #dc2626;
+  --badge-collab: #15803d;
+  --badge-admin-bg: #1a1209;
+  --badge-admin-text: #f7f4ee;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   DARK MODE OVERRIDES — applied via [data-theme="dark"] on <html>
+   ══════════════════════════════════════════════════════════════ */
+[data-theme="dark"] {
+  --color-bg-page: #13121a;
+  --color-bg-surface: rgba(255, 255, 255, 0.04);
+  --color-bg-surface-alt: rgba(255, 255, 255, 0.06);
+
+  --color-text-primary: #f0e6d0;
+  --color-text-secondary: #7a7060;
+  --color-text-tertiary: #4a4860;
+
+  --color-border: rgba(255, 255, 255, 0.07);
+  --color-border-strong: rgba(255, 255, 255, 0.15);
+
+  --color-accent-primary: #be185d;
+  --color-nav-bg: rgba(19, 18, 26, 0.92);
+
+  --color-success: #4ade80;
+  --color-danger: #f87171;
+  --color-warning: #fbbf24;
+  --color-warning-light: #1c0a00;
+
+  --color-surface-scrim: rgba(19, 18, 26, 0.85);
+
+  /* ── Faction primary colors (dark — brightened rainbow) ── */
+  --faction-ua: #c2541f;
+  --faction-gestalt: #f472b6;
+  --faction-snide: #4ade80;
+  --faction-ephemerists: #3aa0a4;
+  --faction-singularity: #60a5fa;
+  --faction-everymen: #ef5350;
+  --faction-albescent: #1c1c1a; /* no hue — stays near-black (always-light faction) */
+
+  --faction-ua-light: rgba(194, 84, 31, 0.12);
+  --faction-gestalt-light: rgba(244, 114, 182, 0.08);
+  --faction-snide-light: rgba(74, 222, 128, 0.1);
+  --faction-ephemerists-light: rgba(58, 160, 164, 0.1);
+  --faction-singularity-light: rgba(96, 165, 250, 0.1);
+  --faction-everymen-light: rgba(239, 83, 80, 0.1);
+  --faction-albescent-light: rgba(28, 28, 26, 0.05);
+
+  --faction-ua-border: rgba(194, 84, 31, 0.3);
+  --faction-gestalt-border: rgba(244, 114, 182, 0.25);
+  --faction-snide-border: rgba(74, 222, 128, 0.3);
+  --faction-ephemerists-border: rgba(58, 160, 164, 0.35);
+  --faction-singularity-border: rgba(96, 165, 250, 0.25);
+  --faction-everymen-border: rgba(239, 83, 80, 0.3);
+  --faction-albescent-border: rgba(28, 28, 26, 0.12);
+
+  /* ── GESTALT extension (dark) ── */
+  --gestalt-panel-bg: #1a0e15;
+  --gestalt-card-bg: #2a0d1c;
+  --gestalt-ink: #fbcfe0;
+  --gestalt-ink-soft: #e58cb6;
+  --gestalt-label: #c78aa6;
+  --gestalt-border: #7a3358;
+  --gestalt-border-soft: rgba(244, 114, 182, 0.32);
+  --gestalt-pink: #f472b6;
+  --gestalt-pink-deep: #f9b6d4;
+  --gestalt-pink-lt: #5e2a46;
+  --gestalt-gold: #f0d98f;
+  --gestalt-green: #5fa882;
+  --gestalt-leaf: #7fc59e;
+  --gestalt-glow: rgba(244, 114, 182, 0.45);
+  --gestalt-title-from: #5e2a46;
+  --gestalt-title-to: #41203a;
+  --gestalt-title-text: #fbd6e8;
+  --gestalt-win-border: #f472b6;
+  --gestalt-moon-lit: #f0d98f;
+  --gestalt-moon-shadow: #2a0d1c;
+
+  /* ── S.N.I.D.E. extension (dark) — acid/ink/pink are constants ── */
+  --snide-wall: #141310; /* concrete-at-night */
+  --snide-wall-deep: #0b0a08;
+  --snide-wall-text: #e9e6da;
+
+  /* ── EPHEMERISTS extension (dark) ── */
+  --eph-gold: #cda24a;
+  --eph-gold-light: #e6c267;
+  --eph-gold-deep: #9c7626;
+  --eph-rubric: #c0533a;
+  --eph-rubric-deep: #93341f;
+  --eph-lapis: #4f8fb0;
+  --eph-lapis-deep: #2d6285;
+  --eph-verdigris: #6aa597;
+  --eph-ink: #0c0a06;
+  --eph-vellum: #211a10; /* aged tobacco */
+  --eph-vellum-deep: #181208;
+  --eph-vellum-text: #efe3c6;
+  --eph-muted: #b6a079;
+  --eph-parchment: #efe3c6;
+  --eph-field: #102a3a;
+  --eph-field-deep: #0a1d2a;
+
+  /* ── EVERYMEN extension (dark) ── */
+  --everymen-cream: #f3e7ce;
+  --everymen-gold: #e7b94f;
+  --everymen-gold-deep: #b3852a;
+  --everymen-olive: #8a955a;
+  --everymen-ink: #0d0907;
+  --everymen-red: #e2433f;
+  --everymen-red-deep: #b32a28;
+  --everymen-paper: #221a16; /* dark manila */
+  --everymen-paper-deep: #17110d;
+  --everymen-paper-text: #f3e7ce;
+  --everymen-muted: #b6a079;
+  --everymen-field: #3c1416; /* deep oxblood */
+  --everymen-field-deep: #5a1d20;
+
+  /* ── Faction card backgrounds (dark mode) — singularity explicit;
+        ua stays always-light (the salon never dims) via its --ua-* tokens;
+        gestalt/snide/ephemerists/everymen resolve via extension tokens ── */
+  --faction-ua-card-bg: var(--ua-paper);
+  --faction-singularity-card-bg: #050f08;
+
+  /* ── Faction card text (dark mode) ── */
+  --faction-ua-card-text: var(--ua-ink);
+  --faction-singularity-card-text: #4ade80;
+
+  /* ── Faction card accents (dark mode) ── */
+  --faction-ua-card-accent: var(--ua-orange);
+  --faction-singularity-card-accent: #4ade80;
+
+  /* ── Faction card secondary text (dark mode) ── */
+  --faction-ua-card-muted: var(--ua-sub);
+  --faction-singularity-card-muted: #60a5fa;
+
+  --wc-opacity-blob: 0.15; /* @kind other */
+  --wc-opacity-drip: 0.11; /* @kind other */
+  --wc-opacity-drop: 0.08; /* @kind other */
+
+  --stamp-active-dashed: rgba(0, 0, 0, 0.15);
+  --stamp-inactive-dashed: rgba(255, 255, 255, 0.1);
+  --stamp-inactive-bg: rgba(255, 255, 255, 0.06);
+
+  --color-rank-accent: #818cf8;
+  --rank-strip-bg: rgba(129, 140, 248, 0.12);
+  --rank-strip-border: rgba(129, 140, 248, 0.3);
+  --leaderboard-row-hover: rgba(255, 255, 255, 0.03);
+
+  --color-level-inactive: rgba(255, 255, 255, 0.3);
+  --level-node-incomplete: rgba(255, 255, 255, 0.06);
+}

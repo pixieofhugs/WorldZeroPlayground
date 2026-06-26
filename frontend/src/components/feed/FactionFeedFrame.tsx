@@ -13,6 +13,7 @@
 import type { ComponentType, ReactNode } from 'react'
 
 import { pickVariant } from '../../utils/factionDispatch'
+import { factionCssVar } from '../../utils/factions'
 import EverymenFeedFrame from './EverymenFeedFrame'
 import EphemeristsFeedFrame from './EphemeristsFeedFrame'
 import WowFeedFrame from './WowFeedFrame'
@@ -32,10 +33,24 @@ const FACTION_FEED_FRAMES: Record<string, ComponentType<FrameProps>> = {
   singularity: SingularityFeedFrame,
 }
 
-/** Neutral fallback: render the card unchanged (today's behaviour — the event
- *  cards carry their own tint, so the default frame adds no chrome). */
-function DefaultFeedFrame({ children }: FrameProps) {
-  return <>{children}</>
+/** Neutral fallback. Owns the per-faction tint that the event cards used to
+ *  hand-roll (card-bg fill + accent border), so a faction with a bespoke frame
+ *  never double-skins. A null/neutral slug (e.g. era_announcement, which brings
+ *  its own dark chrome) stays a true passthrough. */
+function DefaultFeedFrame({ slug, children }: { slug?: string | null; children: ReactNode }) {
+  if (!slug) return <>{children}</>
+  return (
+    <div
+      className="sidebar-card"
+      style={{
+        padding: 0,
+        background: factionCssVar(slug, 'card-bg'),
+        borderLeft: `4px solid ${factionCssVar(slug, 'card-accent')}`,
+      }}
+    >
+      {children}
+    </div>
+  )
 }
 
 interface Props {
@@ -45,6 +60,8 @@ interface Props {
 
 export default function FactionFeedFrame({ slug, children }: Props) {
   const Frame = pickVariant(FACTION_FEED_FRAMES, slug, DefaultFeedFrame)
+  // Only the default frame needs the slug (to tint); bespoke frames are slug-blind.
+  if (Frame === DefaultFeedFrame) return <DefaultFeedFrame slug={slug}>{children}</DefaultFeedFrame>
   return <Frame>{children}</Frame>
 }
 

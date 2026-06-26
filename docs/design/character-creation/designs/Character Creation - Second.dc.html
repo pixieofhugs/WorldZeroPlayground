@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="_ds/world-zero-design-system-019e221c-7853-7530-a934-7d3b2b7c8b43/tokens/fonts.css">
+  <link rel="stylesheet" href="_ds/world-zero-design-system-019e221c-7853-7530-a934-7d3b2b7c8b43/tokens/colors.css">
+  <link rel="stylesheet" href="_ds/world-zero-design-system-019e221c-7853-7530-a934-7d3b2b7c8b43/tokens/typography.css">
+  <link rel="stylesheet" href="_ds/world-zero-design-system-019e221c-7853-7530-a934-7d3b2b7c8b43/tokens/spacing.css">
+  <link rel="stylesheet" href="_ds/world-zero-design-system-019e221c-7853-7530-a934-7d3b2b7c8b43/tokens/patterns.css">
+  <link rel="stylesheet" href="_ds/world-zero-design-system-019e221c-7853-7530-a934-7d3b2b7c8b43/styles.css">
+  <script src="_ds/world-zero-design-system-019e221c-7853-7530-a934-7d3b2b7c8b43/_ds_bundle.js"></script>
+</helmet>
+<div data-screen-label="Character Creation — Second" style="position:relative; width:1280px; height:820px; overflow:hidden; background:var(--color-bg-page); background-image:radial-gradient(rgba(0,0,0,0.035) 1px, transparent 1px); background-size:5px 5px; font-family:var(--font-body); color:var(--color-text-primary);">
+
+  <!-- World Zero watercolor backdrop -->
+  <x-import component-from-global-scope="WorldZeroDesignSystem_019e22.WatercolorBackground" fixed="{{ falseVal }}" hint-size="100%,100%" style="position:absolute; inset:0; z-index:0;"></x-import>
+
+  <!-- top bar -->
+  <div style="position:relative; z-index:1; display:flex; align-items:center; justify-content:space-between; padding:16px 40px 0;">
+    <span style="font-size:9px; color:var(--color-text-secondary); cursor:pointer;">‹ back to your lives</span>
+    <div style="display:flex; align-items:baseline; gap:10px;">
+      <span style="font-family:var(--font-display); font-style:italic; font-weight:700; font-size:18px;">World Zero</span>
+      <span style="font-size:8px; letter-spacing:0.3em; text-transform:uppercase; color:var(--color-text-tertiary);">second life</span>
+    </div>
+  </div>
+
+  <!-- body: form | preview -->
+  <div style="position:relative; z-index:1; display:flex; gap:52px; padding:26px 56px 0; height:calc(100% - 56px);">
+
+    <!-- ░░ LEFT — the form ░░ -->
+    <div style="width:600px; flex:0 0 600px; padding-top:10px;">
+      <div style="font-size:8.5px; letter-spacing:0.26em; text-transform:uppercase; color:var(--color-text-secondary);">A second life · World Zero</div>
+      <div style="font-family:var(--font-display); font-style:italic; font-weight:700; font-size:38px; line-height:1.02; margin-top:6px;">Who are you becoming?</div>
+      <svg width="264" height="11" viewBox="0 0 264 11" style="display:block; margin:8px 0 0;"><defs><linearGradient id="cc2-rainbow" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#c1272d"/><stop offset="20%" stop-color="#c2541f"/><stop offset="40%" stop-color="#16a34a"/><stop offset="60%" stop-color="#1d6e72"/><stop offset="80%" stop-color="#2563eb"/><stop offset="100%" stop-color="#be185d"/></linearGradient></defs><path d="M3 7 C 60 2, 112 9, 162 4 S 244 9, 261 4" fill="none" stroke="url(#cc2-rainbow)" stroke-width="3.4" stroke-linecap="round"/></svg>
+
+      <!-- steps -->
+      <div style="display:flex; gap:10px; margin-top:20px;">
+        <div style="flex:0 0 200px; border-top:2px solid var(--color-text-primary); padding-top:8px; opacity:0.55;">
+          <div style="font-size:8px; letter-spacing:0.14em; text-transform:uppercase; color:var(--color-text-primary);">✓ Step 1 — Name &amp; likeness</div>
+        </div>
+        <div style="flex:1; border-top:2px solid var(--color-text-primary); padding-top:8px;">
+          <div style="font-size:8px; letter-spacing:0.14em; text-transform:uppercase; color:var(--color-text-primary);">Step 2 — Choose your faction</div>
+          <div style="font-size:9px; color:var(--color-text-secondary); margin-top:2px;">A second life starts already affiliated — pick where you belong</div>
+        </div>
+      </div>
+
+      <!-- name + bio compact row -->
+      <div style="display:flex; gap:24px; margin-top:20px;">
+        <div style="flex:0 0 230px;">
+          <label style="font-size:8px; letter-spacing:0.16em; text-transform:uppercase; color:var(--color-text-secondary);">Chosen name</label>
+          <input value="{{ name }}" onInput="{{ onName }}" maxlength="22" placeholder="Wanderer" style="display:block; width:100%; margin-top:6px; background:transparent; border:none; border-bottom:1.5px solid var(--color-text-primary); outline:none; font-family:var(--font-display); font-style:italic; font-size:24px; color:var(--color-text-primary); padding:2px 0 7px;" />
+          <span style="font-size:8px; color:var(--color-text-tertiary);">@{{ handle }}</span>
+        </div>
+        <div style="flex:1;">
+          <label style="font-size:8px; letter-spacing:0.16em; text-transform:uppercase; color:var(--color-text-secondary);">About — shown on your profile</label>
+          <textarea value="{{ bio }}" onInput="{{ onBio }}" maxlength="160" placeholder="A line or two about who they are…" style="display:block; width:100%; margin-top:6px; box-sizing:border-box; resize:none; height:50px; background:var(--color-bg-surface); border:1px solid var(--color-border-strong); border-radius:5px; outline:none; font-family:var(--font-body); font-size:10px; line-height:1.55; color:var(--color-text-primary); padding:8px 10px;"></textarea>
+        </div>
+      </div>
+
+      <!-- faction picker -->
+      <div style="margin-top:22px;">
+        <label style="font-size:8px; letter-spacing:0.16em; text-transform:uppercase; color:var(--color-text-secondary);">Your faction</label>
+        <div style="font-size:8.5px; color:var(--color-text-tertiary); margin-top:3px;">Pick one — your credential takes on its colours as you choose.</div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:12px;">
+
+          <div onClick="{{ selEverymen }}" style="display:flex; align-items:center; gap:10px; padding:9px 12px; cursor:pointer; border:1.5px solid var(--faction-everymen); border-radius:7px; background:var(--faction-everymen-light); box-shadow:{{ everymenRing }};">
+            <span style="width:11px; height:11px; border-radius:50%; background:var(--faction-everymen); flex:0 0 auto;"></span>
+            <span style="flex:1;"><span style="display:block; font-family:var(--font-faction-poster); font-size:17px; line-height:1; letter-spacing:0.02em; color:var(--color-text-primary);">The Everymen</span><span style="font-size:7.5px; letter-spacing:0.1em; text-transform:uppercase; color:var(--color-text-tertiary);">Union Poster</span></span>
+          </div>
+
+          <div onClick="{{ selUA }}" style="display:flex; align-items:center; gap:10px; padding:9px 12px; cursor:pointer; border:1.5px solid var(--faction-ua); border-radius:7px; background:var(--faction-ua-light); box-shadow:{{ uaRing }};">
+            <span style="width:11px; height:11px; border-radius:50%; background:var(--faction-ua); flex:0 0 auto;"></span>
+            <span style="flex:1;"><span style="display:block; font-family:var(--font-faction-gilt); font-style:italic; font-weight:700; font-size:16px; line-height:1; color:var(--color-text-primary);">UA</span><span style="font-size:7.5px; letter-spacing:0.1em; text-transform:uppercase; color:var(--color-text-tertiary);">Gilt Salon</span></span>
+          </div>
+
+          <div onClick="{{ selSnide }}" style="display:flex; align-items:center; gap:10px; padding:9px 12px; cursor:pointer; border:1.5px solid var(--faction-snide); border-radius:7px; background:var(--faction-snide-light); box-shadow:{{ snideRing }};">
+            <span style="width:11px; height:11px; border-radius:50%; background:var(--faction-snide); flex:0 0 auto;"></span>
+            <span style="flex:1;"><span style="display:block; font-family:var(--font-faction-anton); font-size:16px; line-height:1; letter-spacing:0.04em; color:var(--color-text-primary);">S.N.I.D.E.</span><span style="font-size:7.5px; letter-spacing:0.1em; text-transform:uppercase; color:var(--color-text-tertiary);">Ransom Dispatch</span></span>
+          </div>
+
+          <div onClick="{{ selEph }}" style="display:flex; align-items:center; gap:10px; padding:9px 12px; cursor:pointer; border:1.5px solid var(--faction-ephemerists); border-radius:7px; background:var(--faction-ephemerists-light); box-shadow:{{ ephRing }};">
+            <span style="width:11px; height:11px; border-radius:50%; background:var(--faction-ephemerists); flex:0 0 auto;"></span>
+            <span style="flex:1;"><span style="display:block; font-family:var(--font-faction-engraved); font-weight:600; font-size:14px; line-height:1; letter-spacing:0.04em; color:var(--color-text-primary);">The Ephemerists</span><span style="font-size:7.5px; letter-spacing:0.1em; text-transform:uppercase; color:var(--color-text-tertiary);">Discordant Map</span></span>
+          </div>
+
+          <div onClick="{{ selSing }}" style="display:flex; align-items:center; gap:10px; padding:9px 12px; cursor:pointer; border:1.5px solid var(--faction-singularity); border-radius:7px; background:var(--faction-singularity-light); box-shadow:{{ singRing }};">
+            <span style="width:11px; height:11px; border-radius:50%; background:var(--faction-singularity); flex:0 0 auto;"></span>
+            <span style="flex:1;"><span style="display:block; font-family:var(--font-faction-terminal); font-size:14px; line-height:1; color:var(--color-text-primary);">Singularity</span><span style="font-size:7.5px; letter-spacing:0.1em; text-transform:uppercase; color:var(--color-text-tertiary);">Terminal</span></span>
+          </div>
+
+          <div onClick="{{ selWow }}" style="display:flex; align-items:center; gap:10px; padding:9px 12px; cursor:pointer; border:1.5px solid var(--faction-gestalt); border-radius:7px; background:var(--faction-gestalt-light); box-shadow:{{ wowRing }};">
+            <span style="width:11px; height:11px; border-radius:50%; background:var(--faction-gestalt); flex:0 0 auto;"></span>
+            <span style="flex:1;"><span style="display:block; font-family:var(--font-faction-script); font-size:21px; line-height:0.8; color:var(--color-text-primary);">Warriors of Whimsy</span><span style="font-size:7.5px; letter-spacing:0.1em; text-transform:uppercase; color:var(--color-text-tertiary);">Whimsy.exe</span></span>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- actions -->
+      <div style="display:flex; align-items:center; gap:18px; margin-top:22px;">
+        <button style="cursor:pointer; font-family:var(--font-body); font-size:10px; letter-spacing:0.12em; text-transform:uppercase; color:var(--color-bg-page); background:var(--color-text-primary); border:none; padding:12px 24px; border-radius:5px;">Create &amp; step out ▸</button>
+        <button style="cursor:pointer; background:none; border:none; font-family:var(--font-body); font-size:9px; letter-spacing:0.1em; text-transform:uppercase; color:var(--color-text-secondary);">Cancel</button>
+        <span style="margin-left:auto; font-size:8px; color:var(--color-text-tertiary);">starts at Lvl 1 · 0 pts</span>
+      </div>
+    </div>
+
+    <!-- ░░ RIGHT — live faction-skinned credential preview ░░ -->
+    <div style="flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; position:relative;">
+      <div style="font-size:8px; letter-spacing:0.24em; text-transform:uppercase; color:var(--color-text-tertiary); margin-bottom:16px;">— your credential, as {{ facName }} —</div>
+
+      <div style="position:relative; transform:rotate(-1.4deg);">
+        <!-- paperclip -->
+        <div style="position:absolute; top:-12px; left:34px; width:18px; height:46px; border:2.5px solid var(--color-text-tertiary); border-radius:9px; opacity:0.5; z-index:6;"></div>
+
+        <div style="{{ cardStyle }}">
+          <div style="display:flex; justify-content:space-between; align-items:center; font-size:7px; letter-spacing:0.12em; text-transform:uppercase; color:var(--fc-muted);">
+            <span>World Zero</span><span>{{ facArchetype }}</span>
+          </div>
+
+          <!-- photo ring (faction accent) -->
+          <div style="display:flex; justify-content:center; margin:16px 0 6px;">
+            <div style="position:relative; width:112px; height:112px; border-radius:50%; padding:4px; box-sizing:border-box; background:var(--fc-accent); box-shadow:0 4px 14px rgba(0,0,0,0.2);">
+              <div style="position:relative; width:100%; height:100%; border-radius:50%; overflow:hidden; background:rgba(245,242,236,0.92);">
+                <x-import component-from-global-scope="image-slot" from="./image-slot.js" id="cc2-portrait-img" shape="circle" placeholder="Drop a photo · or click" hint-size="104px,104px" style="position:absolute; inset:0; width:100%; height:100%;"></x-import>
+              </div>
+              <span style="position:absolute; right:-5px; bottom:-5px; width:32px; height:32px; border-radius:50%; background:var(--fc-accent); border:2px solid var(--fc-bg); display:flex; align-items:center; justify-content:center; z-index:3; box-shadow:0 2px 6px rgba(0,0,0,0.25);"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--fc-bg)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4h-5L8 6H4a1 1 0 0 0-1 1v11a1 1 0 0 0 1 1h16a1 1 0 0 0 1-1V7a1 1 0 0 0-1-1h-4l-1.5-2Z"/><circle cx="12" cy="12.5" r="3.2"/></svg></span>
+            </div>
+          </div>
+          <div style="font-size:8px; letter-spacing:0.04em; color:var(--fc-muted); margin-bottom:12px;">drag a photo onto the ring, or click</div>
+
+          <div style="font-family:var(--fc-font); font-size:30px; line-height:1.04; color:var(--fc-text); overflow-wrap:anywhere;">{{ displayName }}</div>
+          <div style="font-family:var(--font-body); font-size:8px; line-height:1.55; color:var(--fc-muted); margin:7px auto 0; max-width:210px; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;">{{ cardBio }}</div>
+
+          <div style="display:flex; justify-content:center; align-items:center; gap:11px; border-top:1px solid var(--fc-muted); margin-top:14px; padding-top:12px;">
+            <span style="background:var(--fc-accent); color:var(--fc-bg); font-family:var(--fc-font); font-size:11px; padding:3px 10px; border-radius:4px; line-height:1.3;">{{ facName }}</span>
+            <span style="font-size:7.5px; letter-spacing:0.1em; text-transform:uppercase; color:var(--fc-muted);">lvl 1</span>
+            <span style="font-family:var(--fc-font); font-size:17px; color:var(--fc-accent);">0<span style="font-family:var(--font-body); font-size:8px; margin-left:3px; color:var(--fc-muted); letter-spacing:0.06em;">pts</span></span>
+          </div>
+          <div style="font-family:var(--font-display); font-style:italic; font-size:9.5px; color:var(--fc-muted); margin-top:9px;">“{{ facBlurb }}”</div>
+        </div>
+      </div>
+
+      <div style="font-size:8.5px; line-height:1.6; color:var(--color-text-tertiary); margin-top:20px; max-width:300px; text-align:center; font-style:italic; font-family:var(--font-display);">A second life begins where the first left clues. Choose well — factions remember.</div>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1280,&quot;height&quot;:820}}">
+class Component extends DCLogic {
+  state = { name: "Marlow Quill", bio: "Came back for the doors the first one left ajar.", fac: "ua" };
+  cfg = {
+    everymen: { key: "everymen", name: "The Everymen", arch: "Union Poster", blurb: "Mobilize — no one stands alone." },
+    ua: { key: "ua", name: "UA", arch: "Gilt Salon", blurb: "Ars longa, spiritus brevis." },
+    snide: { key: "snide", name: "S.N.I.D.E.", arch: "Ransom Dispatch", blurb: "Your assignment, should you ignore it." },
+    ephemerists: { key: "ephemerists", name: "The Ephemerists", arch: "Discordant Map", blurb: "There is no single here." },
+    singularity: { key: "singularity", name: "Singularity", arch: "Terminal Printout", blurb: "The signal does not sleep." },
+    wow: { key: "gestalt", name: "Warriors of Whimsy", arch: "Whimsy.exe", blurb: "A little magic, a lot of mischief." },
+  };
+  renderVals() {
+    const fac = this.state.fac;
+    const c = this.cfg[fac] || this.cfg.ua;
+    const k = c.key;
+    const v = (s) => `var(--faction-${k}-card-${s})`;
+    const raw = this.state.name || "";
+    const display = raw.trim() || "Wanderer";
+    const handle = (display.toLowerCase().replace(/[^a-z0-9]+/g, "").slice(0, 14)) || "wanderer";
+    const bio = this.state.bio || "";
+    const sel = (s) => () => this.setState({ fac: s });
+    const ring = (s) => (fac === s ? `0 0 0 2px var(--faction-${this.cfg[s].key}), 0 5px 12px rgba(0,0,0,0.14)` : "none");
+    return {
+      name: this.state.name,
+      displayName: display,
+      handle,
+      bio,
+      cardBio: bio.trim() || "No notes yet — your story writes itself in the field.",
+      facName: c.name,
+      facArchetype: c.arch,
+      facBlurb: c.blurb,
+      falseVal: false,
+      onName: (e) => this.setState({ name: e.target.value }),
+      onBio: (e) => this.setState({ bio: e.target.value }),
+      selEverymen: sel("everymen"),
+      selUA: sel("ua"),
+      selSnide: sel("snide"),
+      selEph: sel("ephemerists"),
+      selSing: sel("singularity"),
+      selWow: sel("wow"),
+      everymenRing: ring("everymen"),
+      uaRing: ring("ua"),
+      snideRing: ring("snide"),
+      ephRing: ring("ephemerists"),
+      singRing: ring("singularity"),
+      wowRing: ring("wow"),
+      cardStyle: {
+        "--fc-bg": v("bg"),
+        "--fc-text": v("text"),
+        "--fc-accent": v("accent"),
+        "--fc-muted": v("muted"),
+        "--fc-font": v("font"),
+        position: "relative",
+        width: 266,
+        background: "var(--fc-bg)",
+        color: "var(--fc-text)",
+        border: "2px solid var(--fc-accent)",
+        boxShadow: "0 16px 34px rgba(0,0,0,0.22)",
+        padding: "18px 20px 16px",
+        textAlign: "center",
+        overflow: "hidden",
+        transition: "background 220ms ease, border-color 220ms ease",
+      },
+    };
+  }
+}
+</script>
+</body>
+</html>

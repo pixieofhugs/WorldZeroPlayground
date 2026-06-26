@@ -34,15 +34,28 @@ describe("FactionFeedFrame dispatch", () => {
     expect(REGISTERED_AT_LOAD.has("ua"), "ua feed undesigned").toBe(false);
   });
 
-  it("passes the card through unchanged for an unregistered slug", () => {
-    // Run after a clear so the map is empty — guards the neutral passthrough.
-    for (const key of Object.keys(FACTION_FEED_FRAMES)) delete FACTION_FEED_FRAMES[key];
-    for (const slug of [null, undefined, "", "ua", "aged_out"]) {
+  it("passes the card through unchanged for a neutral (slug-less) card", () => {
+    // Neutral cards (era_announcement etc.) bring their own chrome — the default
+    // frame must add nothing.
+    for (const slug of [null, undefined, ""]) {
       const html = renderToStaticMarkup(
         <FactionFeedFrame slug={slug}>{CARD}</FactionFeedFrame>,
       );
       expect(html).toBe("<span>card-body</span>");
     }
+  });
+
+  it("tints (does not swallow) a non-null unregistered faction card", () => {
+    // The default frame owns the faction tint lifted off the cards: ua/aged_out
+    // have no bespoke frame, so they get the neutral tinted chrome here — but the
+    // card body must still render inside it.
+    for (const key of Object.keys(FACTION_FEED_FRAMES)) delete FACTION_FEED_FRAMES[key];
+    const html = renderToStaticMarkup(
+      <FactionFeedFrame slug="ua">{CARD}</FactionFeedFrame>,
+    );
+    expect(html).not.toBe("<span>card-body</span>");
+    expect(html).toContain("<span>card-body</span>");
+    expect(html).toContain("card-bg");
   });
 
   it("wraps the card in a registered faction frame (design drop-in)", () => {

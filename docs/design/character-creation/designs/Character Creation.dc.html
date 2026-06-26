@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="_ds/world-zero-design-system-019e221c-7853-7530-a934-7d3b2b7c8b43/tokens/fonts.css">
+  <link rel="stylesheet" href="_ds/world-zero-design-system-019e221c-7853-7530-a934-7d3b2b7c8b43/tokens/colors.css">
+  <link rel="stylesheet" href="_ds/world-zero-design-system-019e221c-7853-7530-a934-7d3b2b7c8b43/tokens/typography.css">
+  <link rel="stylesheet" href="_ds/world-zero-design-system-019e221c-7853-7530-a934-7d3b2b7c8b43/tokens/spacing.css">
+  <link rel="stylesheet" href="_ds/world-zero-design-system-019e221c-7853-7530-a934-7d3b2b7c8b43/tokens/patterns.css">
+  <link rel="stylesheet" href="_ds/world-zero-design-system-019e221c-7853-7530-a934-7d3b2b7c8b43/styles.css">
+  <script src="_ds/world-zero-design-system-019e221c-7853-7530-a934-7d3b2b7c8b43/_ds_bundle.js"></script>
+</helmet>
+<div data-screen-label="Character Creation" style="position:relative; width:1280px; height:820px; overflow:hidden; background:var(--color-bg-page); background-image:radial-gradient(rgba(0,0,0,0.035) 1px, transparent 1px); background-size:5px 5px; font-family:var(--font-body); color:var(--color-text-primary);">
+
+  <!-- World Zero watercolor backdrop -->
+  <x-import component-from-global-scope="WorldZeroDesignSystem_019e22.WatercolorBackground" fixed="{{ falseVal }}" hint-size="100%,100%" style="position:absolute; inset:0; z-index:0;"></x-import>
+
+  <!-- top bar -->
+  <div style="position:relative; z-index:1; display:flex; align-items:center; justify-content:space-between; padding:16px 40px 0;">
+    <div style="display:flex; align-items:baseline; gap:10px;">
+      <span style="font-size:9px; color:var(--color-text-secondary); cursor:pointer;">‹ back to your lives</span>
+    </div>
+    <div style="display:flex; align-items:baseline; gap:10px;">
+      <span style="font-family:var(--font-display); font-style:italic; font-weight:700; font-size:18px;">World Zero</span>
+      <span style="font-size:8px; letter-spacing:0.3em; text-transform:uppercase; color:var(--color-text-tertiary);">new credential</span>
+    </div>
+  </div>
+
+  <!-- body: form | preview -->
+  <div style="position:relative; z-index:1; display:flex; gap:56px; padding:30px 56px 0; height:calc(100% - 56px);">
+
+    <!-- ░░ LEFT — the form ░░ -->
+    <div style="width:580px; flex:0 0 580px; padding-top:14px;">
+      <div style="font-size:8.5px; letter-spacing:0.26em; text-transform:uppercase; color:var(--color-text-secondary);">A new life · World Zero</div>
+      <div style="font-family:var(--font-display); font-style:italic; font-weight:700; font-size:42px; line-height:1.02; margin-top:8px;">Who are you<br>becoming?</div>
+      <svg width="264" height="11" viewBox="0 0 264 11" style="display:block; margin:9px 0 0;"><defs><linearGradient id="cc-rainbow" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#c1272d"/><stop offset="20%" stop-color="#c2541f"/><stop offset="40%" stop-color="#16a34a"/><stop offset="60%" stop-color="#1d6e72"/><stop offset="80%" stop-color="#2563eb"/><stop offset="100%" stop-color="#be185d"/></linearGradient></defs><path d="M3 7 C 60 2, 112 9, 162 4 S 244 9, 261 4" fill="none" stroke="url(#cc-rainbow)" stroke-width="3.4" stroke-linecap="round"/></svg>
+
+      <!-- name field -->
+      <div style="margin-top:28px;">
+        <label style="font-size:8px; letter-spacing:0.16em; text-transform:uppercase; color:var(--color-text-secondary);">Chosen name</label>
+        <input value="{{ name }}" onInput="{{ onName }}" maxlength="22" placeholder="Wanderer" style="display:block; width:100%; margin-top:8px; background:transparent; border:none; border-bottom:1.5px solid var(--color-text-primary); outline:none; font-family:var(--font-display); font-style:italic; font-size:30px; color:var(--color-text-primary); padding:2px 0 8px;" />
+        <div style="display:flex; justify-content:space-between; margin-top:6px;">
+          <span style="font-size:8px; color:var(--color-text-tertiary);">field handle · @{{ handle }}</span>
+          <span style="font-size:8px; color:var(--color-text-tertiary);">{{ remaining }} left</span>
+        </div>
+      </div>
+
+      <!-- about / bio for profile -->
+      <div style="margin-top:24px;">
+        <label style="font-size:8px; letter-spacing:0.16em; text-transform:uppercase; color:var(--color-text-secondary);">About — shown on your profile</label>
+        <textarea value="{{ bio }}" onInput="{{ onBio }}" maxlength="160" placeholder="A line or two about who they are…" style="display:block; width:100%; margin-top:8px; box-sizing:border-box; resize:none; height:74px; background:var(--color-bg-surface); border:1px solid var(--color-border-strong); border-radius:5px; outline:none; font-family:var(--font-body); font-size:11px; line-height:1.6; color:var(--color-text-primary); padding:10px 12px;"></textarea>
+        <div style="display:flex; justify-content:flex-end; margin-top:5px;"><span style="font-size:8px; color:var(--color-text-tertiary);">{{ bioRemaining }} left</span></div>
+      </div>
+
+      <!-- faction info callout -->
+      <div style="margin-top:26px; border:1.5px dashed var(--color-border-strong); padding:14px 16px; background:var(--color-bg-surface);">
+        <div style="font-size:8.5px; letter-spacing:0.12em; text-transform:uppercase; color:var(--color-text-primary); margin-bottom:7px;">⌖ No faction at creation</div>
+        <div style="font-size:9.5px; line-height:1.7; color:var(--color-text-secondary);">You begin <b style="color:var(--color-text-primary);">unaffiliated</b>. Your credential wears the plain field colors until one of the seven factions courts you — or you court them — out on a quest. It's a choice you grow into, not one you make blind.</div>
+        <div style="display:flex; align-items:center; gap:9px; margin-top:12px;">
+          <span style="font-size:8px; color:var(--color-text-tertiary); letter-spacing:0.08em;">might one day join</span>
+          <span title="The Everymen" style="width:12px; height:12px; border-radius:50%; background:var(--faction-everymen);"></span>
+          <span title="UA" style="width:12px; height:12px; border-radius:50%; background:var(--faction-ua);"></span>
+          <span title="S.N.I.D.E." style="width:12px; height:12px; border-radius:50%; background:var(--faction-snide);"></span>
+          <span title="The Ephemerists" style="width:12px; height:12px; border-radius:50%; background:var(--faction-ephemerists);"></span>
+          <span title="Singularity" style="width:12px; height:12px; border-radius:50%; background:var(--faction-singularity);"></span>
+          <span title="Warriors of Whimsy" style="width:12px; height:12px; border-radius:50%; background:var(--faction-gestalt);"></span>
+          <span title="Albescent — by invitation only" style="position:relative; width:15px; height:15px; border-radius:50%; background:var(--faction-albescent); display:inline-flex; align-items:center; justify-content:center; font-size:8px; line-height:1; color:#fff; margin-left:2px;">🔒</span>
+        </div>
+      </div>
+
+      <!-- actions -->
+      <div style="display:flex; align-items:center; gap:18px; margin-top:26px;">
+        <button style="cursor:pointer; font-family:var(--font-body); font-size:10px; letter-spacing:0.12em; text-transform:uppercase; color:var(--color-bg-page); background:var(--color-text-primary); border:none; padding:13px 26px; border-radius:5px;">Create &amp; step out ▸</button>
+        <button style="cursor:pointer; background:none; border:none; font-family:var(--font-body); font-size:9px; letter-spacing:0.1em; text-transform:uppercase; color:var(--color-text-secondary);">Cancel</button>
+        <span style="margin-left:auto; font-size:8px; color:var(--color-text-tertiary);">starts at Lvl 1 · 0 pts</span>
+      </div>
+    </div>
+
+    <!-- ░░ RIGHT — live factionless credential preview ░░ -->
+    <div style="flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; position:relative;">
+      <div style="font-size:8px; letter-spacing:0.24em; text-transform:uppercase; color:var(--color-text-tertiary); margin-bottom:18px;">— your credential, for now —</div>
+
+      <div style="position:relative; transform:rotate(-1.6deg);">
+        <!-- paperclip -->
+        <div style="position:absolute; top:-12px; left:34px; width:18px; height:46px; border:2.5px solid var(--color-text-tertiary); border-radius:9px; opacity:0.55; z-index:5;"></div>
+
+        <div style="position:relative; width:260px; background:var(--color-bg-surface-alt); border:1px solid var(--color-border-strong); box-shadow:0 16px 30px rgba(0,0,0,0.16); padding:20px 20px 16px; text-align:center; overflow:hidden;">
+          <!-- UNAFFILIATED stamp -->
+          <div style="position:absolute; top:30px; right:-26px; transform:rotate(-13deg); border:2px solid {{ accent }}; color:{{ accent }}; opacity:0.42; font-family:var(--font-body); font-size:9px; letter-spacing:0.18em; padding:4px 30px; text-transform:uppercase;">Unaffiliated</div>
+
+          <div style="display:flex; justify-content:space-between; align-items:center; font-size:7px; letter-spacing:0.12em; text-transform:uppercase; color:var(--color-text-tertiary);">
+            <span>World Zero</span><span>Field credential №—</span>
+          </div>
+
+          <!-- monogram medallion -->
+          <div style="display:flex; justify-content:center; margin:18px 0 14px;">
+            <div style="{{ ringStyle }}">
+              <div style="position:relative; width:100%; height:100%; border-radius:50%; overflow:hidden; background:radial-gradient(120% 120% at 50% 25%, var(--color-bg-page), var(--color-bg-surface-alt)); box-shadow:inset 0 2px 8px rgba(0,0,0,0.12);">
+                <x-import component-from-global-scope="image-slot" from="./image-slot.js" id="cc-portrait-img" shape="circle" placeholder="Drop a photo · or click" hint-size="104px,104px" style="position:absolute; inset:0; width:100%; height:100%;"></x-import>
+              </div>
+              <span title="Drag a photo here, or click to upload" style="position:absolute; right:-5px; bottom:-5px; width:32px; height:32px; border-radius:50%; background:var(--color-text-primary); border:2px solid var(--color-bg-page); display:flex; align-items:center; justify-content:center; z-index:3; box-shadow:0 2px 6px rgba(0,0,0,0.25);"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--color-bg-page)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4h-5L8 6H4a1 1 0 0 0-1 1v11a1 1 0 0 0 1 1h16a1 1 0 0 0 1-1V7a1 1 0 0 0-1-1h-4l-1.5-2Z"/><circle cx="12" cy="12.5" r="3.2"/></svg></span>
+            </div>
+          </div>
+          <div style="text-align:center; font-size:8px; letter-spacing:0.04em; color:var(--color-text-tertiary); margin:-6px 0 12px; display:flex; align-items:center; justify-content:center; gap:5px;"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4M7 9l5-5 5 5"/><path d="M5 20h14"/></svg> drag a photo onto the ring, or click to upload</div>
+
+          <div style="font-family:var(--font-display); font-style:italic; font-weight:700; font-size:27px; line-height:1.05; color:var(--color-text-primary); overflow-wrap:anywhere;">{{ displayName }}</div>
+          <div style="font-family:var(--font-display); font-style:italic; font-size:11px; color:var(--color-text-secondary); margin-top:3px;">Unaffiliated wanderer · faction pending</div>
+          <div style="font-family:var(--font-body); font-size:8px; line-height:1.55; color:var(--color-text-tertiary); margin:7px auto 0; max-width:200px; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;">{{ cardBio }}</div>
+
+          <!-- empty faction slot -->
+          <div style="margin:14px 8px 0; border:1px dashed var(--color-border-strong); border-radius:4px; padding:8px; display:flex; align-items:center; justify-content:center; gap:8px;">
+            <span style="font-size:7.5px; letter-spacing:0.14em; text-transform:uppercase; color:var(--color-text-tertiary);">faction</span>
+            <span style="font-size:8.5px; font-style:italic; font-family:var(--font-display); color:var(--color-text-tertiary);">— to be chosen —</span>
+          </div>
+
+          <div style="display:flex; justify-content:center; align-items:center; gap:14px; border-top:1px solid var(--color-border-strong); margin-top:14px; padding-top:11px;">
+            <span style="background:var(--color-text-primary); color:var(--color-bg-page); font-size:7px; padding:2px 7px; border-radius:6px; text-transform:uppercase; letter-spacing:0.08em;">lvl 1</span>
+            <span style="font-family:var(--font-display); font-style:italic; font-weight:700; font-size:17px; color:{{ accent }};">0<span style="font-family:var(--font-body); font-size:8px; margin-left:3px; color:var(--color-text-secondary); letter-spacing:0.06em;">pts</span></span>
+            <span style="font-size:7.5px; font-style:italic; font-family:var(--font-display); color:var(--color-text-tertiary);">joined today</span>
+          </div>
+        </div>
+      </div>
+
+      <div style="font-size:8.5px; line-height:1.6; color:var(--color-text-tertiary); margin-top:22px; max-width:300px; text-align:center; font-style:italic; font-family:var(--font-display);">A blank passport waiting for its first stamp. Your faction reveals itself in the field.</div>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1280,&quot;height&quot;:820}}">
+class Component extends DCLogic {
+  state = { name: "Wren Aldercross", bio: "Keeps a field notebook of doors that shouldn't open." };
+  renderVals() {
+    const raw = this.state.name || "";
+    const display = raw.trim() || "Wanderer";
+    const handle = (display.toLowerCase().replace(/[^a-z0-9]+/g, "").slice(0, 14)) || "wanderer";
+    const bio = this.state.bio || "";
+    return {
+      name: this.state.name,
+      displayName: display,
+      handle,
+      remaining: 22 - raw.length,
+      bio,
+      cardBio: bio.trim() || "No notes yet — your story writes itself in the field.",
+      bioRemaining: 160 - bio.length,
+      accent: "var(--color-text-primary)",
+      falseVal: false,
+      onName: (e) => this.setState({ name: e.target.value }),
+      onBio: (e) => this.setState({ bio: e.target.value }),
+      ringStyle: {
+        position: "relative",
+        width: 112,
+        height: 112,
+        borderRadius: "50%",
+        padding: "4px",
+        boxSizing: "border-box",
+        background: "conic-gradient(from 210deg, var(--faction-ua), var(--faction-everymen), var(--faction-gestalt), var(--faction-singularity), var(--faction-ephemerists), var(--faction-snide), var(--faction-ua))",
+        boxShadow: "0 4px 14px rgba(0,0,0,0.16)",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+      },
+    };
+  }
+}
+</script>
+</body>
+</html>

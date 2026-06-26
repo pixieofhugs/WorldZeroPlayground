@@ -1,0 +1,10 @@
+/* ══════════════════════════════════════════════════════════════
+   World Zero — Design System entry point
+   Consumers link THIS file only. It is an @import manifest; all
+   tokens, fonts and shared patterns live in tokens/*.css.
+   ══════════════════════════════════════════════════════════════ */
+@import "tokens/fonts.css";
+@import "tokens/colors.css";
+@import "tokens/typography.css";
+@import "tokens/spacing.css";
+@import "tokens/patterns.css";

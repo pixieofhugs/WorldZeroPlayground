@@ -1,0 +1,177 @@
+/* ══════════════════════════════════════════════════════════════
+   PATTERNS — World Zero shared classes
+   Plain-CSS port of the app's @layer components (index.css). These
+   are the reusable "glue" classes the faction cards, filters, nav
+   and sidebars all lean on. Every value references a token.
+   ══════════════════════════════════════════════════════════════ */
+
+/* ── Base ── */
+body {
+  background-color: var(--color-bg-page);
+  color: var(--color-text-primary);
+  font-family: var(--font-body);
+  min-height: 100vh;
+  transition: background-color 150ms, color 150ms;
+}
+h1, h2, h3, h4 {
+  font-family: var(--font-display);
+}
+
+/* ── Eyebrow / label text ── */
+.eyebrow {
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-eyebrow);
+  color: var(--color-text-tertiary);
+}
+
+/* ── Surfaces (frosted glass) ── */
+.sidebar-card {
+  background: var(--color-bg-surface);
+  border-radius: var(--radius-xl);
+  padding: 0.9rem;
+  border: 1px solid var(--color-border);
+  backdrop-filter: blur(var(--card-blur));
+}
+.card {
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  backdrop-filter: blur(var(--card-blur));
+}
+
+/* ── Task-card shared patterns (faction cards reuse these) ── */
+.card-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-top: 1px dashed var(--color-border-strong);
+  padding-top: 5px;
+  margin-top: auto;
+}
+.card-meta {
+  font-size: var(--text-xs);
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-label);
+  margin-bottom: 6px;
+}
+.card-description {
+  font-size: var(--text-xs);
+  line-height: 1.4;
+  margin-bottom: 8px;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+}
+
+/* ── Buttons ── */
+.btn-primary {
+  font-family: var(--font-body);
+  background: var(--color-text-primary);
+  color: var(--color-bg-page);
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  padding: 0.5rem 1rem;
+  border: none;
+  cursor: pointer;
+  transition: opacity 150ms;
+}
+.btn-primary:hover { opacity: 0.85; }
+
+.btn-outline {
+  font-family: var(--font-body);
+  background: var(--color-bg-surface);
+  color: var(--color-text-primary);
+  border: 1px solid var(--color-border-strong);
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  transition: opacity 150ms;
+}
+.btn-outline:hover { opacity: 0.85; }
+
+/* ── Filter chips ── */
+.chip {
+  font-family: var(--font-body);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-label);
+  background: var(--color-bg-surface);
+  color: var(--color-text-primary);
+  border: 1px solid var(--color-border-strong);
+  padding: 0.25rem 0.625rem;
+  cursor: pointer;
+  transition: all 150ms;
+}
+.chip:hover { background: var(--color-bg-surface-alt); }
+.chip-active {
+  background: var(--color-text-primary);
+  color: var(--color-bg-page);
+  border-color: var(--color-text-primary);
+}
+
+/* ── Vote stamps (1–5 rating buttons) ── */
+.vote-stamp {
+  position: relative;
+  width: 44px;
+  height: 44px;
+  border: 2.5px solid var(--stamp-color);
+  border-radius: 0;
+  background: var(--stamp-inactive-bg);
+  color: var(--stamp-color);
+  font-family: var(--font-body);
+  font-size: 18px;
+  font-weight: 900;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 120ms;
+}
+.vote-stamp:hover:not(.vote-stamp-active):not(:disabled) {
+  background: color-mix(in srgb, var(--stamp-color) 10%, transparent);
+}
+.vote-stamp-active {
+  background: var(--stamp-color);
+  color: var(--color-text-on-accent);
+}
+.vote-stamp:disabled { opacity: 0.5; cursor: default; }
+[data-theme="dark"] .vote-stamp:not(.vote-stamp-active) {
+  color: var(--color-text-primary);
+}
+
+/* ── Pennant shape (faction filter tabs) ── */
+.pennant-shape {
+  clip-path: polygon(0 0, 100% 0, 95% 100%, 5% 100%);
+}
+
+/* ── Nav links ── */
+.nav-link {
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  padding-bottom: 2px;
+  text-decoration: none;
+  transition: color 150ms;
+}
+
+/* ── Page wrapper + heading ── */
+.page {
+  max-width: 64rem;
+  margin: 0 auto;
+  padding: 2rem 1rem;
+}
+.page-heading {
+  font-family: var(--font-display);
+  font-size: var(--text-4xl);
+  font-weight: 700;
+  font-style: italic;
+  margin-bottom: 1.5rem;
+  color: var(--color-text-primary);
+}

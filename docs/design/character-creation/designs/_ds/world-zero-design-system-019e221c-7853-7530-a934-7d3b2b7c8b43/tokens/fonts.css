@@ -1,0 +1,15 @@
+/* ══════════════════════════════════════════════════════════════
+   FONTS — World Zero
+   All fonts are loaded from Google Fonts. These are the REAL brand
+   fonts used by the World Zero app (frontend/src/index.css), not
+   substitutes. Each faction owns its own display face.
+     · System:      Lora, Courier Prime, Bebas Neue
+     · UA:          Playfair Display + Marcellus (gilt salon)
+     · Gestalt:     Caveat
+     · S.N.I.D.E.:  Anton + Permanent Marker + Special Elite + Archivo Black
+     · Ephemerists: Cinzel + EB Garamond + Cormorant Garamond
+     · Singularity: Share Tech Mono
+     · Everymen:    Bebas Neue (system accent)
+   ══════════════════════════════════════════════════════════════ */
+
+@import url("https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600;1,700&family=Courier+Prime:ital,wght@0,400;0,700;1,400;1,700&family=Bebas+Neue&family=Special+Elite&family=Share+Tech+Mono&family=Permanent+Marker&family=Caveat:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,500;0,600;0,700;0,800;1,500;1,600;1,700&family=Marcellus&family=Marcellus+SC&family=Anton&family=Archivo+Black&family=Cinzel:wght@400;500;600;700;800&family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500;1,600&display=swap");
