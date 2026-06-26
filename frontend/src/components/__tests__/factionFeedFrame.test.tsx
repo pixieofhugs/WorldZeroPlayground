@@ -14,6 +14,10 @@ import FactionFeedFrame, {
 
 const CARD = <span>card-body</span>;
 
+// Snapshot the real registrations at module load — the manual drop-in test's
+// afterEach mutates the live map, so capture before anything clears it.
+const REGISTERED_AT_LOAD = new Set(Object.keys(FACTION_FEED_FRAMES));
+
 afterEach(() => {
   // Frames are registered into a module-level map; keep tests isolated.
   for (const key of Object.keys(FACTION_FEED_FRAMES)) {
@@ -22,8 +26,18 @@ afterEach(() => {
 });
 
 describe("FactionFeedFrame dispatch", () => {
-  it("passes the card through unchanged when no frame is registered", () => {
-    for (const slug of [null, undefined, "", "ua", "everymen"]) {
+  it("registers the five designed faction frames (ua undesigned)", () => {
+    for (const slug of ["everymen", "ephemerists", "wow", "snide", "singularity"]) {
+      expect(REGISTERED_AT_LOAD.has(slug), `${slug} frame registered`).toBe(true);
+    }
+    // UA feed is undesigned — it must fall through to the neutral default.
+    expect(REGISTERED_AT_LOAD.has("ua"), "ua feed undesigned").toBe(false);
+  });
+
+  it("passes the card through unchanged for an unregistered slug", () => {
+    // Run after a clear so the map is empty — guards the neutral passthrough.
+    for (const key of Object.keys(FACTION_FEED_FRAMES)) delete FACTION_FEED_FRAMES[key];
+    for (const slug of [null, undefined, "", "ua", "aged_out"]) {
       const html = renderToStaticMarkup(
         <FactionFeedFrame slug={slug}>{CARD}</FactionFeedFrame>,
       );
