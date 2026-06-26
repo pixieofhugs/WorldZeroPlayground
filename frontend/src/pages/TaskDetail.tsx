@@ -17,19 +17,20 @@ import TaskDetailEverymen from "./taskDetail/archetypes/TaskDetailEverymen";
 import TaskDetailWow from "./taskDetail/archetypes/TaskDetailWow";
 import TaskDetailEphemerists from "./taskDetail/archetypes/TaskDetailEphemerists";
 import TaskDetailSingularity from "./taskDetail/archetypes/TaskDetailSingularity";
+import TaskDetailUA from "./taskDetail/archetypes/TaskDetailUA";
 import CommentThread from "../components/comments/CommentThread";
 
 type Archetype = (props: { state: TaskDetailState }) => JSX.Element | null;
 
 // Only factions with a bespoke archetype are listed; everything else (incl.
-// albescent / aged_out / ua — pending their recolors) falls through to
-// DefaultTaskDetail below.
+// albescent / aged_out) falls through to DefaultTaskDetail below.
 export const ARCHETYPE_BY_SLUG: Record<string, Archetype> = {
   snide: TaskDetailSNIDE,
   everymen: TaskDetailEverymen,
   wow: TaskDetailWow,
   ephemerists: TaskDetailEphemerists,
   singularity: TaskDetailSingularity,
+  ua: TaskDetailUA,
 };
 
 export default function TaskDetail() {
