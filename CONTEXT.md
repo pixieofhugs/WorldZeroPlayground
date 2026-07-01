@@ -329,6 +329,17 @@ score/level, holds a faction, casts votes, and is publicly identified (`username
 the Account.
 _Avoid_: profile, user, player.
 
+**Active character (the carried life)** *(ADR-0025; "life" in the UI)*:
+The one character an account is currently **stepped into** (`account.active_character_id`,
+resolved by `resolve_active_character`). It is the **actor** for every authenticated write
+path and the **viewer** for read-time, viewer-relative fields — you act *as* the life you
+carry, switch to carry another (`POST /me/active-character`; FieldDesk `enterLife`). A second
+life is a **sock puppet**: fully independent — own identity, score, faction, praxes, votes —
+**except** the account-scoped anti-cheat guards (no voting on a sibling's praxis; no ganging
+to flag). Edit/delete is **carried-character-only**: you manage only the life you're wearing.
+_Avoid_: acting as "the first/oldest character" (the pre-ADR-0025 bug); an account-wide edit
+path (rejected — lives stay independent); renaming "life" to "sock puppet" in code/UI.
+
 **Unaffiliated** *(`na`)*:
 A character belonging to **no faction** — the **universal starting state** for every new
 character. (The old "everyone starts in UA" rule is retired: ADR-0019. UA is now an
