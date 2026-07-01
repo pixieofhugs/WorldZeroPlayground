@@ -24,7 +24,6 @@ import {
   MetatasksList,
   ModePicker,
   PublishButton,
-  SaveButton,
   TitleField,
 } from "./controls";
 import type { EditPraxisState } from "../useEditPraxis";
@@ -603,23 +602,6 @@ export default function EditPraxisStickyNote({ state }: Props) {
                 transform: "rotate(-2deg)",
                 boxShadow: "4px 5px 8px rgba(0,0,0,.3)",
                 position: "relative",
-              },
-            }}
-          />
-          <SaveButton
-            state={state}
-            skin={{
-              idleLabel: "save for later",
-              busyLabel: "saving...",
-              style: {
-                background: STICKY_PAPER,
-                color: SLATE_DEEP,
-                fontFamily: "'Permanent Marker', cursive",
-                fontSize: 16,
-                padding: "10px 18px",
-                border: `2px solid ${SLATE_DEEP}`,
-                cursor: state.saving ? "wait" : "pointer",
-                transform: "rotate(1deg)",
               },
             }}
           />

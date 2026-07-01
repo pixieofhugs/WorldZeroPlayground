@@ -24,7 +24,6 @@ import {
   DropButton,
   ModePicker,
   PublishButton,
-  SaveButton,
   TitleField,
 } from "./controls";
 import type { EditPraxisState } from "../useEditPraxis";
@@ -596,26 +595,6 @@ export default function EditPraxisEverymen({ state }: Props) {
                 whiteSpace: "nowrap",
                 boxShadow: `5px 5px 0 ${INK}`,
                 transition: "background 150ms",
-              },
-            }}
-          />
-          <SaveButton
-            state={state}
-            skin={{
-              lockOnSwitch: true,
-              idleLabel: "Save Draft",
-              busyLabel: "Saving…",
-              style: {
-                cursor: state.saving ? "wait" : "pointer",
-                border: `2px solid ${INK}`,
-                background: "transparent",
-                color: PAPER_TEXT,
-                fontFamily: BODY_FONT,
-                fontSize: 12,
-                fontWeight: 700,
-                letterSpacing: "0.12em",
-                textTransform: "uppercase",
-                padding: "13px 20px",
               },
             }}
           />

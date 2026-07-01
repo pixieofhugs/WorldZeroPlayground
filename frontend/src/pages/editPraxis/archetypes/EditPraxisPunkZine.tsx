@@ -26,7 +26,6 @@ import {
   MetatasksList,
   ModePicker,
   PublishButton,
-  SaveButton,
   TitleField,
 } from "./controls";
 import type { EditPraxisState } from "../useEditPraxis";
@@ -694,26 +693,6 @@ export default function EditPraxisPunkZine({ state }: Props) {
                 position: "relative",
                 transform: "rotate(-1.8deg)",
                 boxShadow: `4px 4px 0 ${ink}`,
-              },
-            }}
-          />
-          <SaveButton
-            state={state}
-            skin={{
-              idleLabel: "save draft",
-              busyLabel: "saving...",
-              style: {
-                background: surface,
-                color: accentDeep,
-                fontFamily: "'Special Elite', serif",
-                fontSize: 12,
-                fontWeight: 700,
-                textTransform: "uppercase",
-                letterSpacing: "0.12em",
-                padding: "10px 18px",
-                border: `2px solid ${accentDeep}`,
-                cursor: state.saving ? "wait" : "pointer",
-                transform: "rotate(0.6deg)",
               },
             }}
           />

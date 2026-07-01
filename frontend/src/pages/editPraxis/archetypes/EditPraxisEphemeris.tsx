@@ -24,7 +24,6 @@ import {
   MetatasksList,
   ModePicker,
   PublishButton,
-  SaveButton,
   TitleField,
 } from "./controls";
 import { EphMark, Foxing, LapisLastWord, toRoman } from "../../../components/cards/ephemeristsAtoms";
@@ -421,25 +420,6 @@ export default function EditPraxisEphemeris({ state }: Props) {
                 whiteSpace: "nowrap",
                 boxShadow:
                   "inset 0 2px 4px rgba(255,255,255,0.16), inset 0 -4px 7px rgba(0,0,0,0.38), 0 2px 5px rgba(0,0,0,0.25)",
-              },
-            }}
-          />
-          <SaveButton
-            state={state}
-            skin={{
-              idleLabel: "Keep as marginalia",
-              busyLabel: "saving…",
-              style: {
-                cursor: state.saving ? "wait" : "pointer",
-                border: `1px solid ${INK}`,
-                background: "transparent",
-                color: TEXT,
-                fontFamily: "var(--eph-serif)",
-                fontSize: 12,
-                fontWeight: 600,
-                letterSpacing: "0.1em",
-                textTransform: "uppercase",
-                padding: "13px 20px",
               },
             }}
           />

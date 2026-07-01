@@ -24,7 +24,6 @@ import {
   MetatasksList,
   ModePicker,
   PublishButton,
-  SaveButton,
   TitleField,
 } from "./controls";
 import type { EditPraxisState } from "../useEditPraxis";
@@ -729,25 +728,6 @@ export default function EditPraxisPaperCollage({ state }: Props) {
                     borderRadius: 9,
                     cursor: state.submitting ? "wait" : "pointer",
                     boxShadow: "0 4px 12px rgba(236,95,153,.32)",
-                  },
-                }}
-              />
-              <SaveButton
-                state={state}
-                skin={{
-                  idleLabel: "save draft",
-                  busyLabel: "saving...",
-                  style: {
-                    background: notepadBg,
-                    color: ink,
-                    fontFamily: "var(--font-body)",
-                    fontSize: 11,
-                    textTransform: "uppercase",
-                    letterSpacing: "0.1em",
-                    border: `1.5px solid ${notepadBorder}`,
-                    borderRadius: 7,
-                    padding: "10px 18px",
-                    cursor: state.saving ? "wait" : "pointer",
                   },
                 }}
               />

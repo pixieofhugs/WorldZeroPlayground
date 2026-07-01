@@ -16,7 +16,6 @@ import {
   MetatasksList,
   ModePicker,
   PublishButton,
-  SaveButton,
   TitleField,
 } from "./controls";
 import type { EditPraxisState } from "../useEditPraxis";
@@ -691,24 +690,6 @@ export default function EditPraxisTerminal({ state }: Props) {
                 cursor: state.submitting ? "wait" : "pointer",
                 textTransform: "uppercase",
                 position: "relative",
-              },
-            }}
-          />
-          <SaveButton
-            state={state}
-            skin={{
-              idleLabel: ":w (save draft)",
-              busyLabel: ":saving",
-              style: {
-                background: "transparent",
-                color: term,
-                fontFamily: "'Share Tech Mono', monospace",
-                fontSize: 11,
-                letterSpacing: "0.1em",
-                padding: "10px 16px",
-                border: `1px solid ${term}`,
-                cursor: state.saving ? "wait" : "pointer",
-                textTransform: "uppercase",
               },
             }}
           />

@@ -77,9 +77,7 @@ export interface EditPraxisState {
   toggleMetatask: (mt: TaskOut) => Promise<void>;
 
   // Save / publish / drop
-  saving: boolean;
   submitting: boolean;
-  save: (event?: React.FormEvent) => Promise<void>;
   publish: () => Promise<void>;
   cancel: () => Promise<void>;
 
@@ -135,7 +133,6 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
   const [media, setMedia] = useState<MediaItemOut[]>([]);
   const [newFiles, setNewFiles] = useState<File[]>([]);
   const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [fileError, setFileError] = useState("");
@@ -243,7 +240,7 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
 
   // ---- Files ----
   const handleFileChange = useCallback(
-    (event: React.ChangeEvent<HTMLInputElement>) => {
+    async (event: React.ChangeEvent<HTMLInputElement>) => {
       if (!event.target.files) return;
       const incoming = Array.from(event.target.files);
       const tooLarge = incoming.filter((f) => f.size > MAX_FILE_SIZE);
@@ -255,10 +252,22 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
         setFileError("");
       }
       const valid = incoming.filter((f) => f.size <= MAX_FILE_SIZE);
-      if (valid.length > 0) setNewFiles((previous) => [...previous, ...valid]);
       event.target.value = "";
+      if (!idParam || valid.length === 0) return;
+      // Upload immediately so a draft's media persists without a manual save
+      // (the Save Draft button was removed in #297; autosave covers title/body,
+      // and media now lands the moment it's picked — instant visual feedback too).
+      const praxisId = parseInt(idParam, 10);
+      for (const file of valid) {
+        try {
+          const uploaded = await uploadPraxisMedia(praxisId, file);
+          setMedia((previous) => [...previous, uploaded]);
+        } catch (err) {
+          setError(extractError(err, `Could not upload ${file.name}.`));
+        }
+      }
     },
-    [],
+    [idParam],
   );
 
   const removeNewFile = useCallback((index: number) => {
@@ -296,28 +305,6 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
       setNewFiles([]);
     },
     [title, body, newFiles],
-  );
-
-  const save = useCallback(
-    async (event?: React.FormEvent) => {
-      if (event) event.preventDefault();
-      if (!idParam || !title.trim()) {
-        setError("Title is required.");
-        return;
-      }
-      setSaving(true);
-      setError("");
-      try {
-        const praxisId = parseInt(idParam, 10);
-        await persistEdits(praxisId);
-        navigate(`/praxes/${idParam}`);
-      } catch (err) {
-        setError(extractError(err, "Could not save changes."));
-      } finally {
-        setSaving(false);
-      }
-    },
-    [idParam, title, persistEdits, navigate],
   );
 
   const publish = useCallback(async () => {
@@ -559,9 +546,7 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
     applyingMetatask,
     toggleMetatask,
 
-    saving,
     submitting,
-    save,
     publish,
     cancel,
 

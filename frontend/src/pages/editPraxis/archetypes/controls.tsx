@@ -459,11 +459,11 @@ export function ModePicker<O extends { key: PraxisType }>({
 }
 
 /* -------------------------------------------------------------------------- */
-/* PublishButton / SaveButton — the seal-and-save pair. Each owns its own      */
-/* guard: PublishButton renders nothing once published and is disabled while   */
-/* saving / submitting / switching mode; SaveButton is disabled while saving / */
-/* submitting (optionally also while switching). The archetype arranges them   */
-/* inside its bespoke file bar and supplies faction-voiced labels via skin.    */
+/* PublishButton — renders nothing once published and is disabled while        */
+/* saving / submitting / switching mode. The archetype arranges it inside its   */
+/* bespoke file bar and supplies faction-voiced labels via skin. (The old       */
+/* Save Draft button was removed in #297 — autosave persists title/body and     */
+/* media uploads on pick, so no manual draft-save control is needed.)           */
 /* -------------------------------------------------------------------------- */
 export interface PublishButtonSkin {
   style: CSSProperties;
@@ -484,7 +484,7 @@ export function PublishButton({
     <button
       type="button"
       onClick={() => void state.publish()}
-      disabled={state.saving || state.submitting || state.switchingMode !== null}
+      disabled={state.submitting || state.switchingMode !== null}
       style={skin.style}
     >
       {skin.ornament}
@@ -493,34 +493,3 @@ export function PublishButton({
   );
 }
 
-export interface SaveButtonSkin {
-  style: CSSProperties;
-  idleLabel: ReactNode;
-  busyLabel: ReactNode;
-  /** When true, also disable while a mode switch is in flight (matches the
-   * archetypes that guarded save on `switchingMode`). */
-  lockOnSwitch?: boolean;
-}
-
-export function SaveButton({
-  state,
-  skin,
-}: {
-  state: EditPraxisState;
-  skin: SaveButtonSkin;
-}) {
-  const disabled =
-    state.saving ||
-    state.submitting ||
-    (skin.lockOnSwitch ? state.switchingMode !== null : false);
-  return (
-    <button
-      type="button"
-      onClick={() => void state.save()}
-      disabled={disabled}
-      style={skin.style}
-    >
-      {state.saving ? skin.busyLabel : skin.idleLabel}
-    </button>
-  );
-}
