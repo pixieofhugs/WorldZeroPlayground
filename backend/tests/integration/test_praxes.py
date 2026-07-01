@@ -1855,3 +1855,104 @@ async def test_everymen_can_be_invited_despite_active_collab(
         headers=headers_b,
     )
     assert reinvite.status_code == 200
+
+
+# ---------------------------------------------------------------------------
+# change-type — solo <-> collab in place (#321)
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.asyncio
+async def test_change_type_solo_to_collab_preserves_id_and_content(
+    client: AsyncClient,
+    character2: Character,
+    active_task: Task,
+    auth_headers2: dict,
+):
+    """solo → collab flips in place: same id, title, and body preserved (#321)."""
+    create = await client.post(
+        "/praxes",
+        json={"task_id": active_task.id, "type": "solo", "title": "Keep me", "body_text": "and me"},
+        headers=auth_headers2,
+    )
+    assert create.status_code == 201
+    pid = create.json()["id"]
+
+    resp = await client.post(
+        f"/praxes/{pid}/change-type", json={"type": "collab"}, headers=auth_headers2
+    )
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["id"] == pid  # same praxis, not a recreate
+    assert body["type"] == "collab"
+    assert body["title"] == "Keep me"
+    assert body["body_text"] == "and me"
+
+
+@pytest.mark.asyncio
+async def test_change_type_collab_to_solo_is_a_takeover(
+    client: AsyncClient,
+    character: Character,
+    character2: Character,
+    active_task: Task,
+    auth_headers: dict,
+    auth_headers2: dict,
+    db_session: AsyncSession,
+):
+    """collab → solo by a co-author is a takeover: actor becomes sole owner,
+    other members dropped, content kept (grill 2026-07-01, #321)."""
+    # character2 (level 5) creates the collab; content lives on it.
+    create = await client.post(
+        "/praxes",
+        json={"task_id": active_task.id, "type": "collab", "title": "Shared work"},
+        headers=auth_headers2,
+    )
+    assert create.status_code == 201, create.text
+    pid = create.json()["id"]
+
+    # character joins as a co-author.
+    db_session.add(PraxisMember(praxis_id=pid, character_id=character.id, has_submitted=False))
+    await db_session.commit()
+
+    # character (a non-creator member) takes it over → solo.
+    resp = await client.post(
+        f"/praxes/{pid}/change-type", json={"type": "solo"}, headers=auth_headers
+    )
+    assert resp.status_code == 200, resp.text
+    body = resp.json()
+    assert body["type"] == "solo"
+    assert body["title"] == "Shared work"  # content kept
+    assert body["created_by_id"] == character.id  # ownership transferred to the actor
+    member_ids = {m["character_id"] for m in body["members"]}
+    assert member_ids == {character.id}  # co-authors (incl. original creator) dropped
+
+
+@pytest.mark.asyncio
+async def test_change_type_rejects_duel_side(
+    client: AsyncClient,
+    character: Character,
+    character2: Character,
+    active_task: Task,
+    auth_headers2: dict,
+    db_session: AsyncSession,
+):
+    """A duel side can't switch mode — dissolve the duel first (409)."""
+    from models.duel import Duel, DuelStatus
+
+    create = await client.post(
+        "/praxes", json={"task_id": active_task.id, "type": "solo"}, headers=auth_headers2
+    )
+    assert create.status_code == 201
+    pid = create.json()["id"]
+    db_session.add(Duel(
+        task_id=active_task.id,
+        challenger_praxis_id=pid,
+        opponent_character_id=character.id,
+        status=DuelStatus.pending,
+    ))
+    await db_session.commit()
+
+    resp = await client.post(
+        f"/praxes/{pid}/change-type", json={"type": "collab"}, headers=auth_headers2
+    )
+    assert resp.status_code == 409

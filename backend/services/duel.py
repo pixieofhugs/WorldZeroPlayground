@@ -303,23 +303,40 @@ async def cancel_duel_challenge(
     duel_id: int,
     character_id: int,
     session: AsyncSession,
+    era: EraConfig = CURRENT_ERA,
 ) -> Duel:
-    """Challenger cancels a pending duel challenge.
+    """Dissolve a pending *or* active duel — any participant may (ADR-0011 §Forfeit grill).
 
-    Transitions Duel → declined. Challenger's praxis remains as a plain solo
-    praxis (convert-to-solo).
+    Transitions Duel → declined; both sides remain plain ``type=solo`` praxes
+    (convert-to-solo, no penalty). "If they don't want it to be a duel, it
+    becomes a single task for both parties." An *active* duel may already have a
+    submitted side scored with the duel multiplier, so both participants are
+    recalculated to revert to plain-solo scoring.
     """
     duel = await get_duel(duel_id, session)
 
-    challenger_praxis = await session.get(Praxis, duel.challenger_praxis_id)
-    if challenger_praxis is None or challenger_praxis.created_by_id != character_id:
-        raise HTTPException(status_code=403, detail="Only the challenger can cancel.")
+    if duel.status not in (DuelStatus.pending, DuelStatus.active):
+        raise HTTPException(status_code=400, detail="Duel has already been resolved.")
 
-    if duel.status != DuelStatus.pending:
-        raise HTTPException(status_code=400, detail="Challenge has already been resolved.")
+    challenger_praxis = await session.get(Praxis, duel.challenger_praxis_id)
+    challenger_character_id = (
+        challenger_praxis.created_by_id if challenger_praxis is not None else None
+    )
+    if character_id not in (challenger_character_id, duel.opponent_character_id):
+        raise HTTPException(status_code=403, detail="Only a duel participant can end it.")
 
     duel.status = DuelStatus.declined
     duel.declined_at = datetime.now(timezone.utc)
+    await session.flush()
+
+    # An active duel may have a submitted side scored with the duel multiplier;
+    # recalc both participants so they revert to plain-solo scoring.
+    era_row = await get_current_era_row(session)
+    for participant_id in {challenger_character_id, duel.opponent_character_id}:
+        if participant_id is not None:
+            await recalculate_character_stats(
+                participant_id, session, era, era_row=era_row
+            )
     await session.flush()
     return duel
 

@@ -46,6 +46,7 @@ from services.praxis import (
     build_praxis_out,
     can_view_praxis,
     cancel_pending_publish_on_edit,
+    change_praxis_type,
     create_praxis,
     delete_praxis,
     flag_praxis,
@@ -214,6 +215,28 @@ async def submit_praxis_route(
 ):
     praxis = await submit_praxis(
         praxis_id=praxis_id,
+        character_id=character.id,
+        session=session,
+        era=CURRENT_ERA,
+    )
+    return await build_praxis_out(praxis, session, viewer=character)
+
+
+class PraxisTypeChange(BaseModel):
+    type: PraxisType
+
+
+@router.post("/{praxis_id}/change-type", response_model=PraxisOut)
+async def change_praxis_type_route(
+    praxis_id: int,
+    data: PraxisTypeChange,
+    character: Character = Depends(get_current_character),
+    session: AsyncSession = Depends(get_db),
+):
+    """Flip a praxis between solo and collab in place (#321) — content/id/media kept."""
+    praxis = await change_praxis_type(
+        praxis_id=praxis_id,
+        new_type=data.type,
         character_id=character.id,
         session=session,
         era=CURRENT_ERA,

@@ -608,6 +608,77 @@ async def withdraw_praxis(
     return await get_praxis(praxis_id, session)
 
 
+async def change_praxis_type(
+    praxis_id: int,
+    new_type: PraxisType,
+    character_id: int,
+    session: AsyncSession,
+    era: EraConfig = CURRENT_ERA,
+) -> Praxis:
+    """Flip a praxis between ``solo`` and ``collab`` in place (#321).
+
+    Preserves content, **id**, and media — never delete+recreate. Guards: the
+    praxis must be ``in_progress``; the actor must be a member; a duel side
+    (it has a live ``Duel`` row) must dissolve the duel first; ``collab``
+    requires ``era.collaboration_level_required``. ``duel`` is not a target here
+    — a duel is a solo praxis + ``Duel`` row (ADR-0011), issued via the challenge
+    endpoint.
+
+    ``collab → solo`` is an intentional **takeover** (grill 2026-07-01): any
+    member may do it and becomes the sole owner — ``created_by_id`` is reassigned
+    to the actor, every other member and pending invite is dropped, content is
+    kept. Trust has stakes.
+    """
+    if new_type not in (PraxisType.solo, PraxisType.collab):
+        raise HTTPException(
+            status_code=400, detail="Can only switch between solo and collab."
+        )
+
+    praxis = await get_praxis(praxis_id, session)
+    _require_member(praxis, character_id, "change the mode of")
+    if praxis.status != PraxisStatus.in_progress:
+        raise HTTPException(
+            status_code=422, detail="Can only change mode while the praxis is in editing."
+        )
+    if praxis.type == new_type:
+        return praxis
+
+    # A duel side is a solo praxis + Duel row; dissolve the duel before switching.
+    from services.duel import get_duel_for_praxis
+
+    if await get_duel_for_praxis(praxis_id, session) is not None:
+        raise HTTPException(
+            status_code=409, detail="End the duel before changing this praxis's mode."
+        )
+
+    if new_type == PraxisType.collab:
+        era_row = await get_current_era_row(session)
+        stats = await get_or_create_stats(session, character_id, era_row.id)
+        if stats.level < era.collaboration_level_required:
+            raise HTTPException(
+                status_code=403,
+                detail=f"Collaborations require level {era.collaboration_level_required}.",
+            )
+        praxis.type = PraxisType.collab
+    else:
+        # collab → solo: the actor takes it over as their own solo praxis.
+        # Mutate the loaded collections so the delete-orphan cascade fires *and*
+        # the returned/serialized praxis reflects the drop (session.delete alone
+        # would leave the selectin-cached collections stale).
+        praxis.type = PraxisType.solo
+        praxis.created_by_id = character_id
+        for member in list(praxis.members):
+            if member.character_id != character_id:
+                praxis.members.remove(member)
+        for invite in list(praxis.invites):
+            if invite.status == PraxisInviteStatus.pending:
+                praxis.invites.remove(invite)
+
+    # in_progress praxes aren't scored, so no stat recalc is needed here.
+    await session.flush()
+    return await get_praxis(praxis_id, session)
+
+
 async def delete_praxis(
     praxis_id: int,
     character_id: int,

@@ -927,6 +927,53 @@ async def test_duel_detail_returns_both_sides_with_tallies(
 
 
 @pytest.mark.asyncio
+async def test_either_participant_dissolves_active_duel(
+    client: AsyncClient,
+    db_session: AsyncSession,
+    character: Character,
+    character2: Character,
+    active_task: Task,
+    auth_headers: dict,
+    auth_headers2: dict,
+    era: Era,
+):
+    """An active (accepted) duel can be dissolved by either participant → declined;
+    both sides revert to plain solo, no penalty (grill 2026-07-01)."""
+    from models.character_stats import CharacterStats
+
+    # Raise the opponent (character) to the duel level so they can accept.
+    stats = (await db_session.execute(
+        select(CharacterStats).where(CharacterStats.character_id == character.id)
+    )).scalar_one()
+    stats.level = 2
+    await db_session.commit()
+
+    _pid, challenge_resp = await _challenge_from_new_praxis(
+        client, auth_headers2, active_task.id, character.id
+    )
+    assert challenge_resp.status_code == 201
+    duel = challenge_resp.json()
+    duel_id = duel["id"]
+
+    accept = await client.post(
+        f"/duels/{duel_id}/respond", json={"accept": True}, headers=auth_headers
+    )
+    assert accept.status_code == 200
+    assert accept.json()["status"] == "active"
+
+    # The OPPONENT (not the challenger) dissolves the active duel.
+    dissolve = await client.post(f"/duels/{duel_id}/cancel", headers=auth_headers)
+    assert dissolve.status_code == 200
+    assert dissolve.json()["status"] == "declined"
+
+    # Both sides are now plain solo praxes (the Duel is unlinked).
+    from services.duel import get_duel_for_praxis
+
+    assert await get_duel_for_praxis(duel["challenger_praxis_id"], db_session) is None
+    assert await get_duel_for_praxis(accept.json()["opponent_praxis_id"], db_session) is None
+
+
+@pytest.mark.asyncio
 async def test_duel_detail_marks_forfeited_side(
     client: AsyncClient,
     db_session: AsyncSession,

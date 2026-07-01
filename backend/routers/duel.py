@@ -95,10 +95,11 @@ async def cancel_challenge_route(
     character: Character = Depends(get_current_character),
     session: AsyncSession = Depends(get_db),
 ):
-    """Challenger cancels a pending duel challenge."""
+    """Dissolve a pending or active duel — any participant. Both sides revert to plain solo."""
     duel = await cancel_duel_challenge(
         duel_id=duel_id,
         character_id=character.id,
         session=session,
+        era=CURRENT_ERA,
     )
     return DuelOut.model_validate(duel)
