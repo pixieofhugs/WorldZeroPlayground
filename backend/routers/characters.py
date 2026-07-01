@@ -9,7 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from db import get_db
-from dependencies import get_current_character
+from dependencies import get_current_character, get_current_character_optional
 from models.account import Account
 from models.character import Character, CharacterStatus
 from models.relationship import Relationship
@@ -29,7 +29,7 @@ from services.character import (
 )
 from services.era import load_current_era_stats
 from services.media import process_and_save_avatar
-from services.praxis import build_praxis_out
+from services.praxis import build_praxis_out, praxis_visibility_condition
 
 router = APIRouter()
 
@@ -109,11 +109,17 @@ async def get_character_praxes(
     limit: int = 50,
     offset: int = 0,
     session: AsyncSession = Depends(get_db),
+    viewer: Optional[Character] = Depends(get_current_character_optional),
 ):
+    # ADR-0024: an in_progress praxis is member-only, so a profile grid shows
+    # another character's drafts only when the viewer is a member.
     result = await session.execute(
         select(Praxis)
         .options(selectinload(Praxis.invites), selectinload(Praxis.media_items))
-        .where(Praxis.created_by_id == character_id)
+        .where(
+            Praxis.created_by_id == character_id,
+            praxis_visibility_condition(viewer.id if viewer else None),
+        )
         .order_by(Praxis.created_at.desc())
         .limit(limit)
         .offset(offset)

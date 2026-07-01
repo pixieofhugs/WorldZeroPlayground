@@ -36,7 +36,7 @@ from models.character import Character
 from models.character_stats import CharacterStats
 from models.era import Era
 from models.faction import Faction
-from models.praxis import Praxis, PraxisMember, PraxisType
+from models.praxis import Praxis, PraxisMember, PraxisStatus, PraxisType
 from models.task import Task
 from models.vote import Vote
 from services.auth import create_jwt
@@ -347,15 +347,23 @@ async def signed_up_task2(
 async def praxis_solo(
     db_session: AsyncSession, active_task: Task, character: Character
 ) -> Praxis:
-    """Minimal solo Praxis authored by ``character`` on ``active_task``."""
+    """Minimal *submitted* solo Praxis authored by ``character`` on ``active_task``.
+
+    Submitted (with the creator's PraxisMember row) so it is publicly visible —
+    in_progress praxes are member-only (ADR-0024), and a realistic solo praxis
+    always has its creator as a member.
+    """
     praxis = Praxis(
         task_id=active_task.id,
         created_by_id=character.id,
         type=PraxisType.solo,
+        status=PraxisStatus.submitted,
         title="Solo Praxis",
         body_text="proof",
     )
     db_session.add(praxis)
+    await db_session.flush()
+    db_session.add(PraxisMember(praxis_id=praxis.id, character_id=character.id))
     await db_session.commit()
     await db_session.refresh(praxis)
     return praxis

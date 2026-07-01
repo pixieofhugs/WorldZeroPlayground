@@ -361,6 +361,9 @@ async def test_second_life_governs_viewer_flags_on_read(
     assert create.status_code == 201, create.text
     praxis_id = create.json()["id"]
     assert create.json()["created_by_id"] == character.id
+    # Submit so the (non-member) second life can view it — in_progress praxes are
+    # member-only (ADR-0024); the viewer-flag flip is what's under test here.
+    await client.post(f"/praxes/{praxis_id}/submit", headers=auth_headers)
 
     # Viewed as the author (first life): cannot flag your own praxis.
     as_author = await client.get(f"/praxes/{praxis_id}", headers=auth_headers)

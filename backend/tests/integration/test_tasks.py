@@ -696,6 +696,7 @@ async def test_my_tasks_with_status_filter(
     resp_submitted = await client.get(
         "/praxes",
         params={"character_id": character2.id, "status": "submitted"},
+        headers=auth_headers2,
     )
     assert resp_submitted.status_code == 200
     submitted_ids = [p["id"] for p in resp_submitted.json()]
@@ -703,10 +704,12 @@ async def test_my_tasks_with_status_filter(
     assert praxis_ids[1] not in submitted_ids
     assert praxis_ids[2] not in submitted_ids
 
-    # status=in_progress returns the remaining two
+    # status=in_progress returns the remaining two. Read as character2 — the owner
+    # (a member) — since in_progress praxes are member-only (ADR-0024).
     resp_ip = await client.get(
         "/praxes",
         params={"character_id": character2.id, "status": "in_progress"},
+        headers=auth_headers2,
     )
     assert resp_ip.status_code == 200
     ip_ids = [p["id"] for p in resp_ip.json()]
@@ -714,10 +717,11 @@ async def test_my_tasks_with_status_filter(
     assert praxis_ids[1] in ip_ids
     assert praxis_ids[2] in ip_ids
 
-    # No status filter returns all three
+    # No status filter returns all three (read as the owner so in_progress shows).
     resp_all = await client.get(
         "/praxes",
         params={"character_id": character2.id},
+        headers=auth_headers2,
     )
     assert resp_all.status_code == 200
     all_ids = [p["id"] for p in resp_all.json()]

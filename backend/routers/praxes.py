@@ -44,6 +44,7 @@ from services.praxis import (
     apply_metatask,
     build_praxis_card_out,
     build_praxis_out,
+    can_view_praxis,
     cancel_pending_publish_on_edit,
     create_praxis,
     delete_praxis,
@@ -83,6 +84,7 @@ async def list_praxes_route(
     limit: int = 50,
     offset: int = 0,
     session: AsyncSession = Depends(get_db),
+    viewer: Optional[Character] = Depends(get_current_character_optional),
 ):
     praxis_type: Optional[PraxisType] = None
     if type is not None:
@@ -107,6 +109,7 @@ async def list_praxes_route(
         status=praxis_status,
         moderation_status=moderation_status,
         faction=faction,
+        viewer_id=viewer.id if viewer else None,
         limit=limit,
         offset=offset,
     )
@@ -122,7 +125,9 @@ async def get_praxis_route(
     # Route through the service loader so the lazy-on-access publish timeout
     # (ADR-0012) fires on this read path.
     praxis = await get_praxis(praxis_id, session)
-    if praxis.moderation_status == ModerationStatus.hidden:
+    # 404 (not 403) when not viewable — don't reveal existence of hidden or
+    # of another character's in_progress draft (ADR-0024).
+    if not can_view_praxis(viewer, praxis):
         raise HTTPException(status_code=404, detail="Praxis not found.")
     return await build_praxis_out(praxis, session, viewer=viewer)
 

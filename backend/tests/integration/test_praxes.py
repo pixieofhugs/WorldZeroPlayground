@@ -85,7 +85,8 @@ async def test_get_praxis(
     assert create_resp.status_code == 201
     praxis_id = create_resp.json()["id"]
 
-    resp = await client.get(f"/praxes/{praxis_id}")
+    # in_progress praxes are member-only (ADR-0024); read as the author-member.
+    resp = await client.get(f"/praxes/{praxis_id}", headers=auth_headers)
     assert resp.status_code == 200
     data = resp.json()
     assert data["id"] == praxis_id
@@ -115,7 +116,10 @@ async def test_list_praxes_filter_by_task_id(
     )
     assert create_resp.status_code == 201
 
-    resp = await client.get("/praxes", params={"task_id": active_task.id})
+    # Read as the author-member so the in_progress praxis is visible (ADR-0024).
+    resp = await client.get(
+        "/praxes", params={"task_id": active_task.id}, headers=auth_headers
+    )
     assert resp.status_code == 200
     data = resp.json()
     assert isinstance(data, list)
@@ -186,15 +190,16 @@ async def test_list_praxes_filter_by_faction(
     assert wow_resp.status_code == 201
     wow_praxis_id = wow_resp.json()["id"]
 
-    # Filter to UA — only the UA praxis comes back.
-    ua_list = await client.get("/praxes", params={"faction": "ua"})
+    # Filter to UA — only the UA praxis comes back. Read as the author-member so
+    # the in_progress praxes are visible (ADR-0024).
+    ua_list = await client.get("/praxes", params={"faction": "ua"}, headers=auth_headers)
     assert ua_list.status_code == 200
     ua_ids = {item["id"] for item in ua_list.json()}
     assert ua_praxis_id in ua_ids
     assert wow_praxis_id not in ua_ids
 
     # Filter to Wow — only the Wow praxis comes back.
-    wow_list = await client.get("/praxes", params={"faction": "wow"})
+    wow_list = await client.get("/praxes", params={"faction": "wow"}, headers=auth_headers)
     assert wow_list.status_code == 200
     wow_ids = {item["id"] for item in wow_list.json()}
     assert wow_praxis_id in wow_ids
@@ -1100,6 +1105,8 @@ async def test_get_praxis_can_flag_true_for_level_4_non_author(
     )
     assert create_resp.status_code == 201
     praxis_id = create_resp.json()["id"]
+    # Submit so the non-author can view it (in_progress is member-only, ADR-0024).
+    await client.post(f"/praxes/{praxis_id}/submit", headers=auth_headers)
 
     # Force character2's level to exactly era.flag_level_required (4)
     result = await db_session.execute(
@@ -1136,6 +1143,8 @@ async def test_get_praxis_can_flag_false_for_level_3_non_author(
     )
     assert create_resp.status_code == 201
     praxis_id = create_resp.json()["id"]
+    # Submit so the non-author can view it (in_progress is member-only, ADR-0024).
+    await client.post(f"/praxes/{praxis_id}/submit", headers=auth_headers)
 
     # Force character2's level to 3 (one below era.flag_level_required)
     result = await db_session.execute(
@@ -1203,6 +1212,8 @@ async def test_get_praxis_can_flag_false_for_anonymous(
     )
     assert create_resp.status_code == 201
     praxis_id = create_resp.json()["id"]
+    # Submit so anonymous can view it (in_progress is member-only, ADR-0024).
+    await client.post(f"/praxes/{praxis_id}/submit", headers=auth_headers)
 
     # Hit the detail endpoint without auth headers
     resp = await client.get(f"/praxes/{praxis_id}")
@@ -1501,7 +1512,8 @@ async def test_praxis_card_includes_new_fields(
     assert create_resp.status_code == 201
     praxis_id = create_resp.json()["id"]
 
-    list_resp = await client.get("/praxes")
+    # Read as the author-member so the in_progress card is visible (ADR-0024).
+    list_resp = await client.get("/praxes", headers=auth_headers)
     assert list_resp.status_code == 200
     cards = list_resp.json()
     card = next((c for c in cards if c["id"] == praxis_id), None)
@@ -1531,7 +1543,8 @@ async def test_submitted_at_set_on_submit(
     assert create_resp.status_code == 201
     praxis_id = create_resp.json()["id"]
 
-    pre_list = await client.get("/praxes")
+    # Read as the author-member so the in_progress card is visible (ADR-0024).
+    pre_list = await client.get("/praxes", headers=auth_headers)
     pre_card = next(c for c in pre_list.json() if c["id"] == praxis_id)
     assert pre_card["submitted_at"] is None
 
@@ -1562,6 +1575,8 @@ async def test_voter_count_and_score_after_vote(
     )
     assert create_resp.status_code == 201
     praxis_id = create_resp.json()["id"]
+    # Submit so the praxis is publicly listable (in_progress is member-only, ADR-0024).
+    await client.post(f"/praxes/{praxis_id}/submit", headers=auth_headers2)
 
     # character votes 4
     vote_resp = await client.post(

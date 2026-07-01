@@ -8,7 +8,7 @@ from datetime import datetime, timedelta, timezone
 from typing import Optional
 
 from fastapi import HTTPException
-from sqlalchemy import func, select
+from sqlalchemy import func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -334,6 +334,22 @@ async def get_praxis(
     return praxis
 
 
+def praxis_visibility_condition(viewer_id: Optional[int]):
+    """SQL predicate for who may see a praxis (ADR-0024).
+
+    ``submitted`` praxes are public; an ``in_progress`` praxis is visible only to
+    its members (character-scoped, matching ``_require_member``). Push this into
+    the query so pagination stays honest instead of post-filtering a page.
+    """
+    visible = Praxis.status == PraxisStatus.submitted
+    if viewer_id is not None:
+        member_praxis_ids = select(PraxisMember.praxis_id).where(
+            PraxisMember.character_id == viewer_id
+        )
+        visible = or_(visible, Praxis.id.in_(member_praxis_ids))
+    return visible
+
+
 async def list_praxes(
     session: AsyncSession,
     *,
@@ -343,12 +359,17 @@ async def list_praxes(
     status: Optional[PraxisStatus] = None,
     moderation_status: Optional[str] = None,
     faction: Optional[str] = None,
+    viewer_id: Optional[int] = None,
     limit: int = 50,
     offset: int = 0,
     era: EraConfig = CURRENT_ERA,
 ) -> list[Praxis]:
-    """List praxes with optional filters."""
-    query = select(Praxis)
+    """List praxes with optional filters.
+
+    ``in_progress`` praxes are member-only (ADR-0024): pass ``viewer_id`` to
+    include the viewer's own drafts; everyone else sees only ``submitted``.
+    """
+    query = select(Praxis).where(praxis_visibility_condition(viewer_id))
 
     if faction is not None:
         # Praxis has no faction of its own; it inherits the linked task's faction.
@@ -540,13 +561,32 @@ async def withdraw_praxis(
     if praxis.status == PraxisStatus.in_progress:
         raise HTTPException(status_code=422, detail="Praxis is already in editing mode.")
 
+    # ADR-0024: a *settled* duel side can't simply unsubmit — that would erase a
+    # decided contest. Temporary guard; #307 replaces it with real forfeit
+    # semantics (opponent wins by default, duel stays settled).
+    from services.duel import get_duel_for_praxis
+
+    duel = await get_duel_for_praxis(praxis_id, session)
+    if duel is not None and duel.status == DuelStatus.settled:
+        raise HTTPException(
+            status_code=422,
+            detail="Cannot unsubmit a settled duel side.",
+        )
+
     praxis.status = PraxisStatus.in_progress
     praxis.submit_proposed_at = None
     for member in praxis.members:
         member.has_submitted = False
     await session.flush()
 
-    await recalculate_character_stats(character_id, session, era)
+    # Recalc *every* member: on a collab, co-authors' scores also counted this
+    # praxis while it was submitted, so all of them must drop (the submit paths
+    # already recalc all members — this fixes the prior single-actor under-recalc).
+    era_row = await get_current_era_row(session)
+    for member in praxis.members:
+        await recalculate_character_stats(
+            member.character_id, session, era, era_row=era_row
+        )
     await session.flush()
     return await get_praxis(praxis_id, session)
 
@@ -567,6 +607,25 @@ async def delete_praxis(
         )
     await session.delete(praxis)
     await session.flush()
+
+
+def can_view_praxis(viewer: Optional[Character], praxis: Praxis) -> bool:
+    """Whether ``viewer`` may see ``praxis`` (ADR-0024).
+
+    - ``hidden`` (moderation) → never (mirror the existing hidden branch: 404).
+    - ``submitted`` → public.
+    - ``in_progress`` → members only (character-scoped, matching ``_require_member``;
+      the account-vs-character question in #293 is deliberately not entangled here).
+
+    Reads only always-loaded columns/relationships (``members``), so it stays sync.
+    """
+    if praxis.moderation_status == ModerationStatus.hidden:
+        return False
+    if praxis.status == PraxisStatus.submitted:
+        return True
+    if viewer is None:
+        return False
+    return viewer.id in {member.character_id for member in praxis.members}
 
 
 async def can_flag_praxis(
@@ -1183,6 +1242,7 @@ __all__ = [
     "cancel_pending_publish_on_edit",
     "can_flag_praxis",
     "can_submit_praxis_for_task",
+    "can_view_praxis",
     "create_praxis",
     "delete_praxis",
     "flag_praxis",
@@ -1193,6 +1253,7 @@ __all__ = [
     "kick_member",
     "leave_praxis",
     "list_praxes",
+    "praxis_visibility_condition",
     "moderate_praxis",
     "remove_metatask",
     "respond_to_invite",

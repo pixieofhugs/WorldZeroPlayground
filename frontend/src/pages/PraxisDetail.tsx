@@ -8,7 +8,7 @@
  * not-found guards live here so archetypes can assume a non-null praxis.
  */
 import type { ComponentType } from 'react'
-import { useParams } from 'react-router-dom'
+import { Navigate, useParams } from 'react-router-dom'
 import { usePraxisDetail } from './praxisDetail/usePraxisDetail'
 import type { PraxisDetailState } from './praxisDetail/usePraxisDetail'
 import { pickVariant } from '../utils/factionDispatch'
@@ -52,6 +52,13 @@ export default function PraxisDetail() {
     </div>
   )
   if (!state.praxis) return <div className="py-8 font-body text-muted">Not found.</div>
+
+  // ADR-0024: the public detail view never renders a draft. Only members reach
+  // here (the API 404s everyone else) — route them to the editor, the sole
+  // surface for in_progress work.
+  if (state.praxis.status === 'in_progress') {
+    return <Navigate to={`/praxes/${state.praxis.id}/edit`} replace />
+  }
 
   const Archetype = pickVariant(ARCHETYPE_BY_SLUG, state.praxis.task_faction_slug, DefaultPraxisDetail)
   return (
