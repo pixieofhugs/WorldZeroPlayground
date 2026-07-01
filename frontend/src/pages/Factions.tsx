@@ -69,9 +69,10 @@ export default function Factions() {
     return entry?.status ?? STATUS_NOT_INVITED
   }
 
-  const needsFactionChoice =
-    character?.faction_slug === AGED_OUT_SLUG ||
-    character?.faction_slug === NA_SLUG
+  // Unaffiliated = no faction to lose, so no "can't rejoin" warning on join.
+  const isUnaffiliated =
+    character?.faction_slug === NA_SLUG ||
+    character?.faction_slug === AGED_OUT_SLUG
 
   const handleJoin = async (slug: string) => {
     setJoining(true)
@@ -119,26 +120,6 @@ export default function Factions() {
 
       {error && (
         <p className="font-body text-sm text-red-600 border-2 border-red-300 px-3 py-2 mb-4">{error}</p>
-      )}
-
-      {/* Graduation prompt for aged_out / na characters */}
-      {character && needsFactionChoice && (
-        <div
-          className="sidebar-card mb-6"
-          style={{
-            padding: '20px 24px',
-            borderLeft: '4px solid var(--color-warning)',
-            background: 'var(--color-warning-light)',
-          }}
-        >
-          <p className="font-display italic" style={{ fontSize: 16, color: 'var(--color-text-primary)', marginBottom: 6 }}>
-            You've graduated from UA — choose your faction below.
-          </p>
-          <p className="font-body" style={{ fontSize: 11, color: 'var(--color-text-secondary)' }}>
-            Each faction has unique modifiers and abilities. Choose wisely — you can defect later, but you
-            won't be able to rejoin most factions once you leave.
-          </p>
-        </div>
       )}
 
       {/* Invitation letters — collapsible; each card also surfaces its own prompt below */}
@@ -200,7 +181,7 @@ export default function Factions() {
       {/* Logged-out hint */}
       {!character && (
         <p className="font-body text-sm text-muted mb-6">
-          Factions are chosen at level 3. Until then, you start in UA.
+          Everyone starts unaffiliated. Earn an invitation through task work to join a faction.
         </p>
       )}
 
@@ -211,17 +192,16 @@ export default function Factions() {
           const isDefected = status === STATUS_DEFECTED
           const canReturn = status === STATUS_CAN_RETURN
           const hasInvitationLetter = Boolean(invitationBySlug[f.slug])
-          // Any signal that the player is welcome here: explicit status,
-          // an open invitation letter, or the graduation moment.
+          // Any signal that the player is welcome here: explicit status or an
+          // open invitation letter (invite-gated per ADR-0019).
           const canJoin =
             status === STATUS_INVITED ||
             canReturn ||
-            hasInvitationLetter ||
-            (needsFactionChoice && status !== STATUS_DEFECTED && status !== STATUS_MEMBER)
+            hasInvitationLetter
           const isConfirming = confirmSlug === f.slug
 
           // Derive card-level props from page state
-          // "eligible" is passed when the character can join (via invitation, return, or graduation)
+          // "eligible" is passed when the character can join (via invitation or return)
           const cardStatus = isConfirming
             ? status
             : status === STATUS_CAN_RETURN
@@ -263,7 +243,7 @@ export default function Factions() {
                     }}
                   >
                     <p className="font-body" style={{ fontSize: 11, color: 'var(--color-text-primary)', marginBottom: 8 }}>
-                      {needsFactionChoice
+                      {isUnaffiliated
                         ? `Join ${f.name}?`
                         : `Join ${f.name}? You won't be able to rejoin ${factionName(character?.faction_slug)} after leaving.`
                       }
@@ -339,7 +319,7 @@ export default function Factions() {
               </Link>
 
               {/* Not-invited hint */}
-              {character && status === STATUS_NOT_INVITED && !needsFactionChoice && (
+              {character && status === STATUS_NOT_INVITED && (
                 <p className="font-body" style={{ fontSize: 10, color: 'var(--color-text-tertiary)', marginTop: 6, fontStyle: 'italic' }}>
                   Complete tasks from this faction to unlock an invitation.
                 </p>

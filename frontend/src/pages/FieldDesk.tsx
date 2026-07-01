@@ -4,6 +4,7 @@ import { useAuth } from '../auth/AuthContext'
 import { getMyCharacters, setActiveCharacter } from '../api/me'
 import type { CharacterOut } from '../api/auth'
 import CredentialCard from '../components/CredentialCard'
+import { mediaUrl } from '../utils/media'
 
 /**
  * FieldDesk roster — the authenticated account home (#274). "Whose shoes today?":
@@ -53,7 +54,7 @@ export default function FieldDesk() {
         {active && (
           <div style={pillStyle}>
             {active.avatar_url ? (
-              <img src={active.avatar_url} alt={active.display_name} style={pillAvatar} />
+              <img src={mediaUrl(active.avatar_url)} alt={active.display_name} style={pillAvatar} />
             ) : (
               <span style={{ ...pillAvatar, display: 'inline-block' }} />
             )}
@@ -91,7 +92,7 @@ export default function FieldDesk() {
                 factionSlug={life.faction_slug}
                 level={life.level}
                 score={life.score}
-                avatarUrl={life.avatar_url}
+                avatarUrl={mediaUrl(life.avatar_url)}
                 rotation={TILTS[index % TILTS.length]}
               />
             </button>
