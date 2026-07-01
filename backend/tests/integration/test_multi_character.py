@@ -11,11 +11,11 @@ Covers two readings of "a second character":
 Each test asserts the *intended* behaviour (the second character acts as itself),
 so any broken write path shows up as a failing test rather than a silent no-op.
 
-Known gap under test: every write endpoint resolves the acting character through
-``dependencies.get_current_character``, which returns the **oldest active
-character by created_at** and ignores ``account.active_character_id``. The
-same-account-second-life tests below therefore pin down whether switching the
-carried life actually governs task signup, collaboration, and profile edits.
+Active character is the actor (ADR-0025): every write endpoint resolves the acting
+character through ``dependencies.get_current_character``, which honours
+``account.active_character_id`` (falling back to the newest active character). The
+same-account-second-life tests below pin down that switching the carried life
+actually governs task signup, collaboration, profile edits, and viewer flags.
 """
 import pytest
 from httpx import AsyncClient
@@ -197,20 +197,9 @@ async def test_other_account_character_cannot_edit_someone_elses_profile(
 # B. Same-account second life (the multi-life surface)
 # ===========================================================================
 
-# Known gap: write endpoints resolve the actor via
-# ``dependencies.get_current_character``, which returns the OLDEST active
-# character and ignores ``account.active_character_id``. So after switching the
-# carried life, task signup / collaboration / profile edits still act as the
-# account's first life. The three tests below assert the *intended* behaviour and
-# are marked xfail(strict=True) — when the resolver is fixed to honour the carried
-# life, they will xpass and force these markers to be removed.
-_CARRIED_LIFE_NOT_HONOURED = pytest.mark.xfail(
-    reason=(
-        "get_current_character ignores account.active_character_id, so write "
-        "paths act as the account's first life rather than the carried second life."
-    ),
-    strict=True,
-)
+# Write endpoints resolve the actor via ``dependencies.get_current_character``,
+# which now honours ``account.active_character_id`` (ADR-0025). So after switching
+# the carried life, task signup / collaboration / profile edits act as *that* life.
 
 
 @pytest.mark.asyncio
@@ -254,7 +243,6 @@ async def test_second_life_views_own_profile(
     assert resp.json()["id"] == second.id
 
 
-@_CARRIED_LIFE_NOT_HONOURED
 @pytest.mark.asyncio
 async def test_second_life_signs_up_for_task_as_itself(
     client: AsyncClient,
@@ -291,7 +279,6 @@ async def test_second_life_signs_up_for_task_as_itself(
     assert member_ids == [second.id]
 
 
-@_CARRIED_LIFE_NOT_HONOURED
 @pytest.mark.asyncio
 async def test_second_life_edits_own_profile(
     client: AsyncClient,
@@ -323,7 +310,79 @@ async def test_second_life_edits_own_profile(
     assert after.json()["bio"] == "Second life bio"
 
 
-@_CARRIED_LIFE_NOT_HONOURED
+@pytest.mark.asyncio
+async def test_second_life_carried_cannot_edit_sibling_first_life(
+    client: AsyncClient,
+    db_session: AsyncSession,
+    account: Account,
+    character: Character,
+    era: Era,
+    faction_ua: Faction,
+    auth_headers: dict,
+):
+    """Carrying the second life must NOT unlock editing a *sibling* life on the
+    same account — profile edits stay carried-character-only (ADR-0025 decision 3)."""
+    second = await _add_character(db_session, account, era, username="secondlife", level=5)
+    await client.post(
+        "/me/active-character",
+        json={"character_id": second.id},
+        headers=auth_headers,
+    )
+
+    resp = await client.put(
+        f"/characters/{character.id}",
+        json={"display_name": "Hijacked sibling"},
+        headers=auth_headers,
+    )
+    assert resp.status_code == 403, resp.text
+
+
+@pytest.mark.asyncio
+async def test_second_life_governs_viewer_flags_on_read(
+    client: AsyncClient,
+    db_session: AsyncSession,
+    account: Account,
+    character: Character,
+    era: Era,
+    faction_ua: Faction,
+    active_task: Task,
+    auth_headers: dict,
+):
+    """The optional viewer resolver (public detail reads) also honours the carried
+    life: ``can_flag`` on the *first* life's own praxis flips to True once the
+    second life is carried (a life may flag a sibling's praxis; anti-self-flag is
+    character-scoped today — see #328)."""
+    # First life authors a praxis while it is still the only (newest) active life.
+    create = await client.post(
+        "/praxes",
+        json={"task_id": active_task.id, "type": "solo", "title": "First life work"},
+        headers=auth_headers,
+    )
+    assert create.status_code == 201, create.text
+    praxis_id = create.json()["id"]
+    assert create.json()["created_by_id"] == character.id
+
+    # Viewed as the author (first life): cannot flag your own praxis.
+    as_author = await client.get(f"/praxes/{praxis_id}", headers=auth_headers)
+    assert as_author.json()["can_flag"] is False
+
+    # Carry a second life at/above the flag level, then view again.
+    second = await _add_character(
+        db_session, account, era, username="secondlife",
+        level=CURRENT_ERA.flag_level_required,
+    )
+    await client.post(
+        "/me/active-character",
+        json={"character_id": second.id},
+        headers=auth_headers,
+    )
+    as_second = await client.get(f"/praxes/{praxis_id}", headers=auth_headers)
+    assert as_second.json()["can_flag"] is True, (
+        "Optional viewer resolver ignored the carried life: can_flag should reflect "
+        "the second life (a non-author) once it is carried."
+    )
+
+
 @pytest.mark.asyncio
 async def test_second_life_collaborates_on_praxis(
     client: AsyncClient,

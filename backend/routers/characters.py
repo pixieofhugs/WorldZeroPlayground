@@ -126,19 +126,12 @@ async def get_character_praxes(
 async def upload_avatar(
     character_id: int,
     file: UploadFile = File(...),
-    account: Account = Depends(get_current_account),
+    current_character: Character = Depends(get_current_character),
     session: AsyncSession = Depends(get_db),
 ):
-    character = await session.scalar(
-        select(Character).where(
-            Character.id == character_id,
-            Character.status == CharacterStatus.active,
-        )
-    )
-    if character is None:
-        raise HTTPException(status_code=404, detail="Character not found.")
-    if character.account_id != account.id:
+    if current_character.id != character_id:
         raise HTTPException(status_code=403, detail="Cannot update another character's avatar.")
+    character = current_character
     character.avatar_url = await process_and_save_avatar(file, character_id)
     await session.flush()
     await session.refresh(character)
