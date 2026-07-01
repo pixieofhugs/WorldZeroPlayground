@@ -1,17 +1,20 @@
 """Duel router — challenge flow for two-linked-praxes duels (ADR-0011)."""
 
+from typing import Optional
+
 from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from db import get_db
-from dependencies import get_current_character
+from dependencies import get_current_character, get_current_character_optional
 from game_config import CURRENT_ERA
 from models.character import Character
-from schemas.duel import DuelChallengeIn, DuelOut, DuelRespondIn
+from schemas.duel import DuelChallengeIn, DuelDetailOut, DuelOut, DuelRespondIn
 from schemas.praxis import PraxisOut
 from services.duel import (
     cancel_duel_challenge,
     get_duel,
+    get_duel_detail,
     issue_duel_challenge,
     list_pending_duel_challenges_for_character,
     respond_to_duel_challenge,
@@ -46,6 +49,17 @@ async def issue_challenge_route(
         era=CURRENT_ERA,
     )
     return DuelOut.model_validate(duel)
+
+
+@router.get("/{duel_id}/detail", response_model=DuelDetailOut)
+async def get_duel_detail_route(
+    duel_id: int,
+    viewer: Optional[Character] = Depends(get_current_character_optional),
+    session: AsyncSession = Depends(get_db),
+):
+    """Read-oriented duel view for the praxis read page: both sides' display
+    info + live vote points + ``viewer_is_participant`` in one round trip (#308)."""
+    return await get_duel_detail(duel_id, viewer, session)
 
 
 @router.get("/{duel_id}", response_model=DuelOut)

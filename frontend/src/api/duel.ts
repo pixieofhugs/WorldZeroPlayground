@@ -27,6 +27,26 @@ export interface DuelRespondIn {
   accept: boolean
 }
 
+export interface DuelSideOut {
+  praxis_id: number | null
+  character_id: number
+  display_name: string
+  faction_slug: string
+  avatar_url: string
+  points_from_votes: number
+  is_submitted: boolean
+}
+
+export interface DuelDetailOut {
+  id: number
+  task_id: number
+  status: DuelStatus
+  forfeited_by_character_id: number | null
+  challenger: DuelSideOut
+  opponent: DuelSideOut
+  viewer_is_participant: boolean
+}
+
 // ---------------------------------------------------------------------------
 // API functions
 // ---------------------------------------------------------------------------
@@ -38,6 +58,11 @@ export async function issueChallenge(data: DuelChallengeIn): Promise<DuelOut> {
 
 export async function getDuel(duelId: number): Promise<DuelOut> {
   const { data } = await api.get<DuelOut>(`/duels/${duelId}`)
+  return data
+}
+
+export async function getDuelDetail(duelId: number): Promise<DuelDetailOut> {
+  const { data } = await api.get<DuelDetailOut>(`/duels/${duelId}/detail`)
   return data
 }
 

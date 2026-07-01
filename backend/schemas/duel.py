@@ -27,3 +27,30 @@ class DuelOut(BaseModel):
     created_at: datetime
 
     model_config = {"from_attributes": True}
+
+
+class DuelSideOut(BaseModel):
+    """One side of a duel, shaped for the read page (#308).
+
+    Display metadata + live vote points only — never the praxis body. A
+    forfeited / unsubmitted side still renders (name, avatar) but ``is_submitted``
+    is False; its body stays behind the normal in_progress 404 (ADR-0024).
+    """
+    praxis_id: Optional[int]
+    character_id: int
+    display_name: str
+    faction_slug: str
+    avatar_url: str
+    points_from_votes: int
+    is_submitted: bool
+
+
+class DuelDetailOut(BaseModel):
+    """Read-oriented duel view: both sides' display info + tallies in one call."""
+    id: int
+    task_id: int
+    status: DuelStatus
+    forfeited_by_character_id: Optional[int]
+    challenger: DuelSideOut
+    opponent: DuelSideOut
+    viewer_is_participant: bool

@@ -26,8 +26,9 @@ from models.praxis import (
     PraxisType,
 )
 from models.task import Task
-from schemas.duel import DuelOut
+from schemas.duel import DuelDetailOut, DuelOut, DuelSideOut
 from services.character_stats import recalculate_character_stats
+from services.vote_tally import get_tally, tally_votes
 from services.era import get_current_era_row, get_or_create_stats
 from services.praxis import (
     _count_in_progress_praxes,
@@ -67,6 +68,73 @@ async def get_duel_for_praxis(praxis_id: int, session: AsyncSession) -> Optional
         )
     )
     return result.scalar_one_or_none()
+
+
+async def get_duel_detail(
+    duel_id: int,
+    viewer: Optional[Character],
+    session: AsyncSession,
+) -> DuelDetailOut:
+    """Read-oriented duel view for the praxis read page (#308).
+
+    Returns both sides' display info + live vote points in one round trip, plus
+    ``viewer_is_participant`` (account-level, mirroring #309) which drives the
+    opponent-side anti-vote UI. Never returns a praxis body — a forfeited or
+    unsubmitted side still renders name/avatar but ``is_submitted`` is False.
+    """
+    duel = await get_duel(duel_id, session)
+
+    challenger_praxis = await session.get(Praxis, duel.challenger_praxis_id)
+    opponent_praxis = (
+        await session.get(Praxis, duel.opponent_praxis_id)
+        if duel.opponent_praxis_id is not None
+        else None
+    )
+    challenger_character = (
+        await session.get(Character, challenger_praxis.created_by_id)
+        if challenger_praxis is not None
+        else None
+    )
+    opponent_character = await session.get(Character, duel.opponent_character_id)
+
+    praxis_ids = [
+        pid
+        for pid in (duel.challenger_praxis_id, duel.opponent_praxis_id)
+        if pid is not None
+    ]
+    tallies = await tally_votes(praxis_ids, session)
+
+    def _side(character: Optional[Character], praxis: Optional[Praxis], praxis_id: Optional[int]) -> DuelSideOut:
+        return DuelSideOut(
+            praxis_id=praxis_id,
+            character_id=character.id if character is not None else 0,
+            display_name=character.display_name if character is not None else "",
+            faction_slug=(character.faction_slug or "na") if character is not None else "na",
+            avatar_url=character.avatar_url if character is not None else "",
+            points_from_votes=(
+                get_tally(tallies, praxis_id).points_from_votes if praxis_id is not None else 0
+            ),
+            is_submitted=praxis is not None and praxis.status == PraxisStatus.submitted,
+        )
+
+    participant_account_ids = {
+        character.account_id
+        for character in (challenger_character, opponent_character)
+        if character is not None
+    }
+    viewer_is_participant = (
+        viewer is not None and viewer.account_id in participant_account_ids
+    )
+
+    return DuelDetailOut(
+        id=duel.id,
+        task_id=duel.task_id,
+        status=duel.status,
+        forfeited_by_character_id=duel.forfeited_by_character_id,
+        challenger=_side(challenger_character, challenger_praxis, duel.challenger_praxis_id),
+        opponent=_side(opponent_character, opponent_praxis, duel.opponent_praxis_id),
+        viewer_is_participant=viewer_is_participant,
+    )
 
 
 async def issue_duel_challenge(

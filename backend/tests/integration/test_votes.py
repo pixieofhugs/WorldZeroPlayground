@@ -842,3 +842,127 @@ async def test_ban_forfeits_settled_duels(
         [challenger_praxis], character, CURRENT_ERA, db_session
     )
     assert contribs[challenger_pid].duel_multiplier == win
+
+
+# ---------------------------------------------------------------------------
+# Read-oriented duel detail (#308) — GET /duels/{id}/detail
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.asyncio
+async def test_duel_detail_returns_both_sides_with_tallies(
+    client: AsyncClient,
+    db_session: AsyncSession,
+    character: Character,
+    character2: Character,
+    active_task: Task,
+    era: Era,
+    faction_ua,
+    auth_headers: dict,
+    auth_headers2: dict,
+):
+    """Settled-duel detail: both sides' display info + live vote points in one call.
+
+    ``viewer_is_participant`` is True for a side's account, False for a third
+    party and for anonymous. No praxis body is ever included.
+    """
+    from models.duel import Duel, DuelStatus
+    from services.auth import create_jwt
+
+    challenger_pid = await _create_and_submit_solo(client, active_task, auth_headers)
+    opponent_pid = await _create_and_submit_solo(client, active_task, auth_headers2)
+    duel = Duel(
+        task_id=active_task.id,
+        challenger_praxis_id=challenger_pid,
+        opponent_character_id=character2.id,
+        opponent_praxis_id=opponent_pid,
+        status=DuelStatus.settled,
+    )
+    db_session.add(duel)
+    await db_session.commit()
+
+    # A non-participant third party votes on the challenger side.
+    third = Account(email="duel_detail_voter@example.com")
+    db_session.add(third)
+    await db_session.flush()
+    third_char = Character(
+        account_id=third.id,
+        username="duel_detail_voter",
+        display_name="DD Voter",
+        faction_slug="ua",
+    )
+    db_session.add(third_char)
+    await db_session.flush()
+    db_session.add(CharacterStats(
+        character_id=third_char.id, era_id=era.id, score=100,
+        all_time_score=100, level=3, votes_spent_this_era=0,
+    ))
+    await db_session.commit()
+    third_headers = {"Authorization": f"Bearer {create_jwt(third.id)}"}
+    assert (await client.post(
+        f"/praxes/{challenger_pid}/vote", json={"value": 4}, headers=third_headers
+    )).status_code == 200
+
+    resp = await client.get(f"/duels/{duel.id}/detail", headers=auth_headers)
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["status"] == "settled"
+    assert body["forfeited_by_character_id"] is None
+    assert body["viewer_is_participant"] is True
+    assert body["challenger"]["character_id"] == character.id
+    assert body["challenger"]["display_name"] == character.display_name
+    assert body["challenger"]["is_submitted"] is True
+    assert body["challenger"]["points_from_votes"] > 0
+    assert body["opponent"]["character_id"] == character2.id
+    assert body["opponent"]["points_from_votes"] == 0
+    assert "body_text" not in body["challenger"]  # never leak the praxis body
+
+    # Third party and anonymous are not participants.
+    assert (await client.get(
+        f"/duels/{duel.id}/detail", headers=third_headers
+    )).json()["viewer_is_participant"] is False
+    anon = await client.get(f"/duels/{duel.id}/detail")
+    assert anon.status_code == 200
+    assert anon.json()["viewer_is_participant"] is False
+
+
+@pytest.mark.asyncio
+async def test_duel_detail_marks_forfeited_side(
+    client: AsyncClient,
+    db_session: AsyncSession,
+    character: Character,
+    character2: Character,
+    active_task: Task,
+    auth_headers: dict,
+    auth_headers2: dict,
+    era: Era,
+):
+    """A forfeited duel: winner renders fully, thrown side marked unsubmitted, no body leak."""
+    from models.duel import Duel, DuelStatus
+    from services.praxis import withdraw_praxis
+
+    challenger_pid = await _create_and_submit_solo(client, active_task, auth_headers)
+    opponent_pid = await _create_and_submit_solo(client, active_task, auth_headers2)
+    duel = Duel(
+        task_id=active_task.id,
+        challenger_praxis_id=challenger_pid,
+        opponent_character_id=character2.id,
+        opponent_praxis_id=opponent_pid,
+        status=DuelStatus.settled,
+    )
+    db_session.add(duel)
+    await db_session.commit()
+
+    # character2 forfeits by unsubmitting their side; commit so the API view sees it.
+    await withdraw_praxis(opponent_pid, character2.id, db_session)
+    await db_session.commit()
+
+    resp = await client.get(f"/duels/{duel.id}/detail")
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["status"] == "settled"
+    assert body["forfeited_by_character_id"] == character2.id
+    assert body["challenger"]["is_submitted"] is True
+    assert body["opponent"]["is_submitted"] is False
+    assert body["opponent"]["display_name"] == character2.display_name
+    assert "body_text" not in body["opponent"]
