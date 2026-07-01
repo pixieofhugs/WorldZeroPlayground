@@ -123,11 +123,13 @@ export default function Sidebar() {
             {pendingRequests.map((item, index) => {
               const isCollab = item.type === 'collab_invite'
               return (
-                <div
+                <Link
                   key={`${item.type}-${index}`}
+                  to="/updates?filter=requests"
                   className="flex items-center gap-2 py-1.5"
                   style={{
                     borderTop: index > 0 ? '1px dashed var(--color-border)' : undefined,
+                    textDecoration: 'none',
                   }}
                 >
                   <div
@@ -146,7 +148,7 @@ export default function Sidebar() {
                       {isCollab ? 'Collab Invite' : 'Duel Challenge'}
                     </span>
                   </div>
-                </div>
+                </Link>
               )
             })}
           </div>

@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { getActivityFeed, type ActivityFeedItem, type FeedCounts } from '../api/activityFeed'
 import PageTitle from '../components/ui/PageTitle'
 import FeedCardRouter from '../components/feed/FeedCardRouter'
@@ -33,9 +34,16 @@ function getCount(filter: FeedFilter, counts: FeedCounts): number {
 }
 
 export default function Updates() {
+  const [searchParams] = useSearchParams()
   const [items, setItems] = useState<ActivityFeedItem[]>([])
   const [counts, setCounts] = useState<FeedCounts>({ all: 0, friends: 0, foes: 0, your_stuff: 0, global_count: 0, requests: 0 })
-  const [filter, setFilter] = useState<FeedFilter>('All')
+  // Deep-link the initial tab from ?filter=<api value> (e.g. Sidebar → Requests).
+  const [filter, setFilter] = useState<FeedFilter>(() => {
+    const apiFilter = searchParams.get('filter')
+    return (Object.keys(FILTER_API_MAP) as FeedFilter[]).find(
+      (name) => FILTER_API_MAP[name] === apiFilter,
+    ) ?? 'All'
+  })
   const [loading, setLoading] = useState(true)
   const [loadingMore, setLoadingMore] = useState(false)
   const [nextCursor, setNextCursor] = useState<string | null>(null)
