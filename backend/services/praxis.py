@@ -5,7 +5,7 @@ Replaces the old services/submission.py and services/collaboration.py.
 """
 
 from dataclasses import dataclass
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timezone
 from enum import Enum
 from typing import Optional
 
@@ -38,6 +38,7 @@ from schemas.praxis import (
     PraxisOut,
     PraxisUpdate,
 )
+from services import collab_consensus
 from services.character_stats import recalculate_character_stats
 from services.era import get_current_era_row, get_or_create_stats
 from models.duel import Duel, DuelStatus
@@ -53,72 +54,15 @@ ALBESCENT_FACTION_SLUG = "albescent"
 # ---------------------------------------------------------------------------
 
 
-async def _publish_collab(praxis: Praxis, session: AsyncSession, era: EraConfig) -> None:
-    """Seal a collab to Live: status=submitted, mark everyone submitted, recalc members.
-
-    Shared by the all-submitted path, the lazy-on-access timeout, and the leave path.
-    """
-    praxis.status = PraxisStatus.submitted
-    praxis.submitted_at = datetime.now(timezone.utc)
-    praxis.submit_proposed_at = None
-    for member in praxis.members:
-        member.has_submitted = True
-    await session.flush()
-    era_row = await get_current_era_row(session)
-    for member in praxis.members:
-        await recalculate_character_stats(member.character_id, session, era, era_row=era_row)
-    await session.flush()
-
-
-async def _publish_if_window_lapsed(
-    praxis: Praxis, session: AsyncSession, era: EraConfig
-) -> None:
-    """Lazy-on-access timeout (ADR-0012): auto-publish a pending collab whose window elapsed.
-
-    Called from the read paths (:func:`get_praxis`, :func:`list_praxes`) so no scheduler
-    is needed. Cheap no-op for everything except a collab with an open, lapsed window.
-
-    ponytail: a collab nobody ever reads stays in_progress until first touch (members'
-    scores understated); self-heals on next read of any kind. Upgrade path if deterministic
-    timing is ever needed: an in-process periodic sweep calling this same helper.
-    """
-    if (
-        praxis.type != PraxisType.collab
-        or praxis.status != PraxisStatus.in_progress
-        or praxis.submit_proposed_at is None
-    ):
-        return
-    deadline = praxis.submit_proposed_at + timedelta(days=era.collab_auto_submit_days)
-    if datetime.now(timezone.utc) < deadline:
-        return
-    await _publish_collab(praxis, session, era)
-
-
 async def cancel_pending_publish_on_edit(
     praxis: Praxis, session: AsyncSession, era: EraConfig = CURRENT_ERA
 ) -> None:
-    """Hard reset on a collab edit (ADR-0012): an edit means "we're not done".
+    """Backwards-compatible alias for :func:`collab_consensus.on_member_edit`.
 
-    Cancels the pending-publish window, clears *everyone's* ``has_submitted``, and
-    returns the collab to drafting. No-op for solo/duel, or a collab that is neither
-    pending nor Live. Used by title/body edits and media add/remove.
+    Kept so the media/edit routes keep their existing import; the ADR-0012 window
+    logic now lives in ``services.collab_consensus`` (#331).
     """
-    if praxis.type != PraxisType.collab:
-        return
-    if praxis.submit_proposed_at is None and praxis.status != PraxisStatus.submitted:
-        return
-    was_live = praxis.status == PraxisStatus.submitted
-    praxis.submit_proposed_at = None
-    praxis.status = PraxisStatus.in_progress
-    for member in praxis.members:
-        member.has_submitted = False
-    await session.flush()
-    if was_live:
-        # Leaving Live changes scoring — recompute every member's stats.
-        era_row = await get_current_era_row(session)
-        for member in praxis.members:
-            await recalculate_character_stats(member.character_id, session, era, era_row=era_row)
-        await session.flush()
+    await collab_consensus.on_member_edit(praxis, session, era)
 
 
 def _require_member(praxis: Praxis, character_id: int, action: str) -> None:
@@ -332,7 +276,7 @@ async def get_praxis(
     praxis = result.scalar_one_or_none()
     if praxis is None:
         raise HTTPException(status_code=404, detail="Praxis not found.")
-    await _publish_if_window_lapsed(praxis, session, era)
+    await collab_consensus.settle_if_window_lapsed(praxis, session, era)
     return praxis
 
 
@@ -404,7 +348,7 @@ async def list_praxes(
     result = await session.execute(query)
     praxes = list(result.scalars().all())
     for praxis in praxes:
-        await _publish_if_window_lapsed(praxis, session, era)
+        await collab_consensus.settle_if_window_lapsed(praxis, session, era)
     return praxes
 
 
@@ -1047,14 +991,8 @@ async def kick_member(
     # identity-mapped praxis to build its response.
     praxis.members.remove(kickee_member)
 
-    # A kick resets everyone back to drafting (ADR-0013): cancel any pending-publish
-    # window and clear submissions so the changed group must re-consent.
-    for member in praxis.members:
-        member.has_submitted = False
-    praxis.status = PraxisStatus.in_progress
-    praxis.submit_proposed_at = None
-
-    await session.flush()
+    # A kick resets the changed group back to drafting (ADR-0013).
+    await collab_consensus.on_member_kicked(praxis, session)
 
 
 async def leave_praxis(
@@ -1078,14 +1016,8 @@ async def leave_praxis(
     praxis.members.remove(leaver)
     await session.flush()
 
-    remaining = praxis.members
-    if (
-        remaining
-        and praxis.status != PraxisStatus.submitted
-        and all(m.has_submitted for m in remaining)
-    ):
-        # Departure can complete the consensus among those who stayed.
-        await _publish_collab(praxis, session, era)
+    # A departure can complete the consensus among those who stayed.
+    await collab_consensus.on_member_leave(praxis, session, era)
 
     # The leaver's stake is gone — recompute their stats regardless.
     await recalculate_character_stats(character_id, session, era)
@@ -1112,20 +1044,11 @@ async def submit_praxis(
     if character_id not in member_ids:
         raise HTTPException(status_code=403, detail="You are not a member of this praxis.")
 
-    for member in praxis.members:
-        if member.character_id == character_id:
-            member.has_submitted = True
-            break
-
-    await session.flush()
-    await session.refresh(praxis)
-
-    if all(m.has_submitted for m in praxis.members):
-        praxis.status = PraxisStatus.submitted
-        praxis.submitted_at = datetime.now(timezone.utc)
-        praxis.submit_proposed_at = None
-        await session.flush()
-        # Settle the duel if both sides have now submitted (ADR-0011).
+    went_live = await collab_consensus.on_submit(praxis, character_id, session, era)
+    if went_live:
+        # Settle any duel BEFORE the stats recalc — the outcome feeds the duel
+        # multiplier. Kept here (not in collab_consensus) because it depends on
+        # services.duel, which imports services.praxis (import-cycle avoidance).
         from services.duel import maybe_settle_duel
         await maybe_settle_duel(praxis_id, session)
         era_row = await get_current_era_row(session)
@@ -1133,11 +1056,7 @@ async def submit_praxis(
             await recalculate_character_stats(
                 member.character_id, session, era, era_row=era_row
             )
-    elif praxis.type == PraxisType.collab and praxis.submit_proposed_at is None:
-        # First member to submit opens the silence-is-consent countdown.
-        praxis.submit_proposed_at = datetime.now(timezone.utc)
-
-    await session.flush()
+        await session.flush()
     return await get_praxis(praxis_id, session)
 
 
