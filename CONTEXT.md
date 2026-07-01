@@ -352,3 +352,29 @@ character can be born into a faction a sibling already holds an invite for.
 _Avoid_: treating "completed ≥1 task" as a separate join gate (it is *how* an invite is
 earned, not a parallel rule); per-character invite scoping at creation (the gate is
 account-pooled).
+
+## Praxis lifecycle & visibility
+
+**Submitted** *(`status = submitted`)*:
+A **sealed, public** praxis. Its votes count toward score; it appears on every public
+surface (lists, detail, task/faction pages, activity feed). The only publicly visible
+praxis state. _Avoid_: "published"/"Live" as distinct states — they are this one.
+
+**In editing** *(`status = in_progress`)*:
+A praxis being worked on — a never-submitted **draft** *or* one that was **unsubmitted**.
+The two are indistinguishable by design (ADR-0007): no "was previously submitted" flag.
+Votes are **preserved but paused** (do not count until resubmitted). **Private:** visible
+only to its members, and only in edit mode (ADR-0024). _Avoid_: "draft" vs "withdrawn" as
+different states; treating in-progress as publicly viewable.
+
+**Unsubmit** *(canonical UI term; API/service: `withdraw`)*:
+The action that moves a `submitted` praxis back to `in_progress` — pausing its score,
+demoting the author if the drop crosses a level, and hiding it from everyone but its
+members (ADR-0024). Endpoint is `POST /praxes/{id}/withdraw`; ADR-0007 also calls it
+"back to editing". The reverse is **submit**. _Avoid_: "delete" (that removes the praxis
+entirely); "reopen"/"resubmit" as separate operations (retired in ADR-0007).
+
+**Member** *(of a praxis)*:
+A co-owner. Solo/duel praxes have exactly one (the creator); a collab has all its
+collaborators (ADR-0013). Membership — not authorship — is the visibility and edit key for
+an `in_progress` praxis. _Avoid_: "owner"/"creator" when the rule is really "any member".
