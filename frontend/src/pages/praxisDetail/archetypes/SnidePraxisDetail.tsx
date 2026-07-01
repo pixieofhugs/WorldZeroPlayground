@@ -18,7 +18,7 @@ import MediaGallery from '../../../components/MediaGallery'
 import SnideVote from '../../../components/vote/SnideVote'
 import { factionCssVar } from '../../../utils/factions'
 import { formatTimestamp } from '../../../utils/dates'
-import { PraxisAdminBar, PraxisStatusBanners, PraxisOwnerActions, PraxisFlagBlock } from '../shared'
+import { PraxisAdminBar, PraxisStatusBanners, PraxisOwnerActions, PraxisFlagBlock, PraxisVoterBreakdown } from '../shared'
 import type { PraxisDetailState } from '../usePraxisDetail'
 
 // Always-dark dossier tokens (scoped to this archetype's container).
@@ -426,6 +426,8 @@ export default function SnidePraxisDetail({ state }: { state: PraxisDetailState 
 
         {/* ── Flag block ── */}
         <PraxisFlagBlock state={state} />
+
+        <PraxisVoterBreakdown state={state} />
 
       </div>
     </div>

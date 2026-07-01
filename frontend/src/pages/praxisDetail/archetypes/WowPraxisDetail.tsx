@@ -19,7 +19,7 @@ import MediaGallery from '../../../components/MediaGallery'
 import WowVote from '../../../components/vote/WowVote'
 import { factionCssVar } from '../../../utils/factions'
 import { formatTimestamp } from '../../../utils/dates'
-import { PraxisAdminBar, PraxisStatusBanners, PraxisOwnerActions, PraxisFlagBlock } from '../shared'
+import { PraxisAdminBar, PraxisStatusBanners, PraxisOwnerActions, PraxisFlagBlock, PraxisVoterBreakdown } from '../shared'
 import type { PraxisDetailState } from '../usePraxisDetail'
 
 // ── whimsy.exe token vocabulary (same as TaskDetailWow) ──────────────────────
@@ -441,6 +441,8 @@ export default function WowPraxisDetail({ state }: { state: PraxisDetailState })
 
         {/* ── 7 · flag block (invariant) ── */}
         <PraxisFlagBlock state={state} />
+
+        <PraxisVoterBreakdown state={state} />
       </div>
     </div>
   )

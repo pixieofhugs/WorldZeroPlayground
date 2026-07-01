@@ -1,3 +1,5 @@
+import { FACTION_ALIASES } from '../../utils/factions'
+
 export interface ReframeTier {
   value: number
   label: string
@@ -66,4 +68,16 @@ export const VOTE_REFRAMES: Record<string, VoteReframe> = {
       { value: 5, label: 'Acquired' },
     ],
   },
+}
+
+/**
+ * Label a vote value in a task faction's vocabulary (alias-aware, mirroring
+ * pickVariant). Falls back to the arabic number when no reframe exists
+ * (factionless / unknown slug).
+ */
+export function reframeLabel(factionSlug: string | null | undefined, value: number): string {
+  const reframe =
+    VOTE_REFRAMES[factionSlug ?? ''] ??
+    VOTE_REFRAMES[FACTION_ALIASES[factionSlug ?? ''] ?? '']
+  return reframe?.tiers.find((tier) => tier.value === value)?.label ?? String(value)
 }
