@@ -37,10 +37,10 @@ async def issue_challenge_route(
     character: Character = Depends(get_current_character),
     session: AsyncSession = Depends(get_db),
 ):
-    """Issue a duel challenge. Body: ``{task_id, opponent_character_id}``."""
+    """Attach a duel to an existing praxis. Body: ``{challenger_praxis_id, opponent_character_id}``."""
     _praxis, duel = await issue_duel_challenge(
         challenger_character_id=character.id,
-        task_id=data.task_id,
+        challenger_praxis_id=data.challenger_praxis_id,
         opponent_character_id=data.opponent_character_id,
         session=session,
         era=CURRENT_ERA,

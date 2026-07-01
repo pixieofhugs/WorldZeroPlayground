@@ -19,7 +19,7 @@ export interface DuelOut {
 }
 
 export interface DuelChallengeIn {
-  task_id: number
+  challenger_praxis_id: number
   opponent_character_id: number
 }
 

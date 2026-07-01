@@ -30,7 +30,6 @@ from schemas.duel import DuelOut
 from services.character_stats import recalculate_character_stats
 from services.era import get_current_era_row, get_or_create_stats
 from services.praxis import (
-    _check_create_preconditions,
     _count_in_progress_praxes,
     get_praxis,
     is_active_member_of_task,
@@ -72,31 +71,43 @@ async def get_duel_for_praxis(praxis_id: int, session: AsyncSession) -> Optional
 
 async def issue_duel_challenge(
     challenger_character_id: int,
-    task_id: int,
+    challenger_praxis_id: int,
     opponent_character_id: int,
     session: AsyncSession,
     era: EraConfig = CURRENT_ERA,
 ) -> tuple[Praxis, Duel]:
-    """Issue a duel challenge: create the challenger's praxis + a pending Duel row.
+    """Attach a duel challenge to the challenger's existing in_progress praxis.
 
-    The challenger must meet all create-praxis preconditions (level, bank cap,
-    task eligibility). The opponent must not already have an active praxis for
-    this task (Everymen exempt). The challenger and opponent cannot be the same.
+    The challenger signs up solo first, then attaches an opponent (ADR-0011).
+    This does NOT create a praxis — it loads the challenger's existing one and
+    creates only the pending Duel row pointing at it. The opponent must not
+    already have an active praxis for this task (Everymen exempt); challenger
+    and opponent cannot be the same.
     """
     if challenger_character_id == opponent_character_id:
         raise HTTPException(status_code=400, detail="Cannot challenge yourself.")
 
-    challenger = await session.get(Character, challenger_character_id)
-    if challenger is None:
-        raise HTTPException(status_code=404, detail="Character not found.")
+    challenger_praxis = await get_praxis(challenger_praxis_id, session)
+    if challenger_praxis.created_by_id != challenger_character_id:
+        raise HTTPException(status_code=403, detail="You do not own this praxis.")
+    if challenger_praxis.status != PraxisStatus.in_progress:
+        raise HTTPException(
+            status_code=422,
+            detail="A duel can only start from an in-progress praxis.",
+        )
+    if await get_duel_for_praxis(challenger_praxis_id, session) is not None:
+        raise HTTPException(
+            status_code=409,
+            detail="This praxis is already part of a duel.",
+        )
+
+    task = await session.get(Task, challenger_praxis.task_id)
+    if task is None:
+        raise HTTPException(status_code=404, detail="Task no longer exists.")
 
     opponent = await session.get(Character, opponent_character_id)
     if opponent is None:
         raise HTTPException(status_code=404, detail="Opponent character not found.")
-
-    task = await _check_create_preconditions(
-        task_id, PraxisType.solo, challenger_character_id, session, era
-    )
 
     # Opponent eligibility: must not already have an active praxis for this task.
     if await is_active_member_of_task(opponent, task, session):
@@ -114,37 +125,16 @@ async def issue_duel_challenge(
             detail=f"Duels require level {era.duel_level_required}.",
         )
 
-    # Create the challenger's solo praxis.
-    praxis = Praxis(
-        task_id=task_id,
-        type=PraxisType.solo,
-        status=PraxisStatus.in_progress,
-        body_text="",
-        moderation_status=ModerationStatus.visible,
-        created_by_id=challenger_character_id,
-    )
-    session.add(praxis)
-    await session.flush()
-
-    member = PraxisMember(
-        praxis_id=praxis.id,
-        character_id=challenger_character_id,
-        has_submitted=False,
-    )
-    session.add(member)
-    await session.flush()
-
-    # Create the pending Duel row.
+    # Create only the pending Duel row, pointing at the existing praxis.
     duel = Duel(
-        task_id=task_id,
-        challenger_praxis_id=praxis.id,
+        task_id=challenger_praxis.task_id,
+        challenger_praxis_id=challenger_praxis.id,
         opponent_character_id=opponent_character_id,
         status=DuelStatus.pending,
     )
     session.add(duel)
     await session.flush()
 
-    challenger_praxis = await get_praxis(praxis.id, session)
     return challenger_praxis, duel
 
 

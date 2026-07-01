@@ -5,8 +5,8 @@ from models.duel import DuelStatus
 
 
 class DuelChallengeIn(BaseModel):
-    """Body for POST /duels/challenge — issue a duel challenge."""
-    task_id: int
+    """Body for POST /duels/challenge — attach a duel to an existing praxis."""
+    challenger_praxis_id: int
     opponent_character_id: int
 
 

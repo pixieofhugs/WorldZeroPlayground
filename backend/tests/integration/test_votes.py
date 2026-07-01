@@ -205,6 +205,24 @@ async def test_vote_updates_author_stats(
 # ---------------------------------------------------------------------------
 
 
+async def _challenge_from_new_praxis(client, headers, task_id, opponent_id):
+    """Sign up solo, then attach a duel to that praxis (ADR-0011 challenge flow).
+
+    Returns ``(challenger_praxis_id, challenge_response)``.
+    """
+    create = await client.post(
+        "/praxes", json={"task_id": task_id, "type": "solo"}, headers=headers
+    )
+    assert create.status_code == 201
+    praxis_id = create.json()["id"]
+    resp = await client.post(
+        "/duels/challenge",
+        json={"challenger_praxis_id": praxis_id, "opponent_character_id": opponent_id},
+        headers=headers,
+    )
+    return praxis_id, resp
+
+
 @pytest.mark.asyncio
 async def test_creating_type_duel_praxis_is_rejected(
     client: AsyncClient,
@@ -238,10 +256,8 @@ async def test_duel_challenge_issue_and_cancel(
 
     # character2 already has level 5 from fixture — meets duel level gate
     # Issue challenge
-    challenge_resp = await client.post(
-        "/duels/challenge",
-        json={"task_id": active_task.id, "opponent_character_id": character.id},
-        headers=auth_headers2,
+    _challenger_praxis_id, challenge_resp = await _challenge_from_new_praxis(
+        client, auth_headers2, active_task.id, character.id
     )
     assert challenge_resp.status_code == 201
     duel = challenge_resp.json()
@@ -285,10 +301,8 @@ async def test_duel_challenge_accept_creates_opponent_praxis(
     await db_session.commit()
 
     # Issue challenge from character2
-    challenge_resp = await client.post(
-        "/duels/challenge",
-        json={"task_id": active_task.id, "opponent_character_id": character.id},
-        headers=auth_headers2,
+    _challenger_praxis_id, challenge_resp = await _challenge_from_new_praxis(
+        client, auth_headers2, active_task.id, character.id
     )
     assert challenge_resp.status_code == 201
     duel_id = challenge_resp.json()["id"]
@@ -308,6 +322,79 @@ async def test_duel_challenge_accept_creates_opponent_praxis(
     get_resp = await client.get(f"/duels/{duel_id}")
     assert get_resp.status_code == 200
     assert get_resp.json()["status"] == "active"
+
+
+@pytest.mark.asyncio
+async def test_duel_challenge_from_praxis_you_do_not_own_is_forbidden(
+    client: AsyncClient,
+    character: Character,
+    character2: Character,
+    active_task: Task,
+    auth_headers: dict,
+    auth_headers2: dict,
+):
+    """Attaching a duel to a praxis you don't own → 403."""
+    # character owns this praxis; character2 tries to duel with it.
+    create = await client.post(
+        "/praxes", json={"task_id": active_task.id, "type": "solo"}, headers=auth_headers
+    )
+    assert create.status_code == 201
+    resp = await client.post(
+        "/duels/challenge",
+        json={
+            "challenger_praxis_id": create.json()["id"],
+            "opponent_character_id": character.id,
+        },
+        headers=auth_headers2,
+    )
+    assert resp.status_code == 403
+
+
+@pytest.mark.asyncio
+async def test_duel_challenge_from_submitted_praxis_is_unprocessable(
+    client: AsyncClient,
+    character: Character,
+    character2: Character,
+    active_task: Task,
+    auth_headers2: dict,
+):
+    """A duel can only start from an in_progress praxis → submitted gives 422."""
+    create = await client.post(
+        "/praxes",
+        json={"task_id": active_task.id, "type": "solo", "body_text": "done"},
+        headers=auth_headers2,
+    )
+    assert create.status_code == 201
+    praxis_id = create.json()["id"]
+    submit = await client.post(f"/praxes/{praxis_id}/submit", headers=auth_headers2)
+    assert submit.status_code == 200
+    resp = await client.post(
+        "/duels/challenge",
+        json={"challenger_praxis_id": praxis_id, "opponent_character_id": character.id},
+        headers=auth_headers2,
+    )
+    assert resp.status_code == 422
+
+
+@pytest.mark.asyncio
+async def test_duel_challenge_on_already_dueled_praxis_conflicts(
+    client: AsyncClient,
+    character: Character,
+    character2: Character,
+    active_task: Task,
+    auth_headers2: dict,
+):
+    """A second challenge on a praxis already linked to a Duel → 409."""
+    praxis_id, first = await _challenge_from_new_praxis(
+        client, auth_headers2, active_task.id, character.id
+    )
+    assert first.status_code == 201
+    resp = await client.post(
+        "/duels/challenge",
+        json={"challenger_praxis_id": praxis_id, "opponent_character_id": character.id},
+        headers=auth_headers2,
+    )
+    assert resp.status_code == 409
 
 
 @pytest.mark.asyncio
@@ -336,10 +423,8 @@ async def test_vote_on_duel_side_praxis(
     await db_session.commit()
 
     # Issue and accept the duel
-    challenge_resp = await client.post(
-        "/duels/challenge",
-        json={"task_id": active_task.id, "opponent_character_id": character.id},
-        headers=auth_headers2,
+    _challenger_praxis_id, challenge_resp = await _challenge_from_new_praxis(
+        client, auth_headers2, active_task.id, character.id
     )
     assert challenge_resp.status_code == 201
     duel_data = challenge_resp.json()
