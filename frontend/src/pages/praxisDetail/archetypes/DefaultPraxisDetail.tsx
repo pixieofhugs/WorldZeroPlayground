@@ -5,7 +5,7 @@ import { formatTimestamp } from '../../../utils/dates'
 import VoteUI from '../../../components/vote/VoteUI'
 import { factionCssVar } from '../../../utils/factions'
 import type { PraxisDetailState } from '../usePraxisDetail'
-import { PraxisAdminBar, PraxisStatusBanners, PraxisOwnerActions, PraxisFlagBlock } from '../shared'
+import { PraxisAdminBar, PraxisStatusBanners, PraxisOwnerActions, PraxisFlagBlock, PraxisVoterBreakdown } from '../shared'
 
 /** Style Guide §12.3 */
 const RAINBOW_COLORS = ['var(--underline-1)', 'var(--underline-2)', 'var(--underline-3)', 'var(--underline-4)', 'var(--underline-5)', 'var(--underline-6)', 'var(--underline-1)', 'var(--underline-2)']
@@ -166,6 +166,8 @@ export default function DefaultPraxisDetail({
       </div>
 
       <PraxisFlagBlock state={state} />
+
+      <PraxisVoterBreakdown state={state} />
 
       {/* -- Metatask Panel -- */}
       {(() => {

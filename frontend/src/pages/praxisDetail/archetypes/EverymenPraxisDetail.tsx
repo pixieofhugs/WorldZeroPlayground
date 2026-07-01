@@ -21,7 +21,7 @@ import MediaGallery from '../../../components/MediaGallery'
 import EverymenVote from '../../../components/vote/EverymenVote'
 import { factionCssVar } from '../../../utils/factions'
 import { formatTimestamp } from '../../../utils/dates'
-import { PraxisAdminBar, PraxisStatusBanners, PraxisOwnerActions, PraxisFlagBlock } from '../shared'
+import { PraxisAdminBar, PraxisStatusBanners, PraxisOwnerActions, PraxisFlagBlock, PraxisVoterBreakdown } from '../shared'
 import type { PraxisDetailState } from '../usePraxisDetail'
 
 const POSTER = 'var(--font-accent)' // Bebas Neue
@@ -264,6 +264,8 @@ export default function EverymenPraxisDetail({ state }: { state: PraxisDetailSta
 
         {/* ── Flag block ── */}
         <PraxisFlagBlock state={state} />
+
+        <PraxisVoterBreakdown state={state} />
       </div>
     </div>
   )

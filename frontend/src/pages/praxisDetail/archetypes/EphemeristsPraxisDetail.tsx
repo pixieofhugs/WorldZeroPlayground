@@ -16,7 +16,7 @@ import EphemeristsVote from '../../../components/vote/EphemeristsVote'
 import { EphMark, EphEyebrow, Foxing, LapisLastWord, toRoman } from '../../../components/cards/ephemeristsAtoms'
 import { factionCssVar } from '../../../utils/factions'
 import { formatTimestamp } from '../../../utils/dates'
-import { PraxisAdminBar, PraxisStatusBanners, PraxisOwnerActions, PraxisFlagBlock } from '../shared'
+import { PraxisAdminBar, PraxisStatusBanners, PraxisOwnerActions, PraxisFlagBlock, PraxisVoterBreakdown } from '../shared'
 import type { PraxisDetailState } from '../usePraxisDetail'
 
 export default function EphemeristsPraxisDetail({ state }: { state: PraxisDetailState }) {
@@ -367,6 +367,8 @@ export default function EphemeristsPraxisDetail({ state }: { state: PraxisDetail
 
         {/* ── Flag block ── */}
         <PraxisFlagBlock state={state} />
+
+        <PraxisVoterBreakdown state={state} />
 
         {/* Backer ledger slot — per-voter breakdown; filled by #195 */}
         {/* Comments slot — actor-scoped surface, see CONTEXT.md; built separately (#167) */}

@@ -19,7 +19,7 @@ import MediaGallery from '../../../components/MediaGallery'
 import VoteUI from '../../../components/vote/VoteUI'
 import { factionCssVar } from '../../../utils/factions'
 import { formatTimestamp } from '../../../utils/dates'
-import { PraxisAdminBar, PraxisStatusBanners, PraxisOwnerActions, PraxisFlagBlock } from '../shared'
+import { PraxisAdminBar, PraxisStatusBanners, PraxisOwnerActions, PraxisFlagBlock, PraxisVoterBreakdown } from '../shared'
 import type { PraxisDetailState } from '../usePraxisDetail'
 
 const INK = 'var(--faction-albescent-card-text)'
@@ -229,6 +229,8 @@ export default function AlbescentPraxisDetail({ state }: { state: PraxisDetailSt
 
         {/* ── Flag block ── */}
         <PraxisFlagBlock state={state} />
+
+        <PraxisVoterBreakdown state={state} />
 
         {/* Backer ledger slot — per-voter breakdown; reserved (#195) */}
         {/* Comments slot — neutral chrome rendered by the dispatcher (#167) */}

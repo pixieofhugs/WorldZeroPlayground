@@ -12,6 +12,7 @@
  *   - Flag block
  */
 import { Link } from 'react-router-dom'
+import { reframeLabel } from '../../components/vote/voteReframes'
 import type { PraxisDetailState } from './usePraxisDetail'
 
 // ── Admin moderation bar ─────────────────────────────────────────────────────
@@ -220,6 +221,46 @@ export function PraxisFlagBlock({ state }: { state: PraxisDetailState }) {
           {flagError && <p className="font-body text-xs" style={{ color: 'var(--color-danger)', marginTop: 6 }}>{flagError}</p>}
         </div>
       )}
+    </div>
+  )
+}
+
+// ── Voter breakdown (who voted + their value) ─────────────────────────────────
+//
+// Task-scoped surface: every voter's value is labelled in the *task* faction's
+// vocabulary (one reframe), not each voter's own. Read-only; faction-agnostic
+// structure, so it lives here and every archetype renders it identically.
+
+export function PraxisVoterBreakdown({ state }: { state: PraxisDetailState }) {
+  const { praxis, voters } = state
+  if (!praxis || voters.length === 0) return null
+
+  return (
+    <div className="sidebar-card mb-4" style={{ padding: '14px 16px' }}>
+      <div className="flex items-baseline justify-between mb-3">
+        <span className="eyebrow">Who voted</span>
+        <span className="eyebrow">{voters.length} {voters.length === 1 ? 'vote' : 'votes'}</span>
+      </div>
+      <ul style={{ listStyle: 'none', margin: 0, padding: 0 }}>
+        {voters.map((voter) => (
+          <li
+            key={voter.character_id}
+            className="flex items-center justify-between"
+            style={{ padding: '5px 0', borderTop: '1px solid var(--color-border)' }}
+          >
+            <Link
+              to={`/characters/${voter.character_id}`}
+              className="font-body"
+              style={{ fontSize: 12, color: 'var(--color-text-primary)', textDecoration: 'none' }}
+            >
+              {voter.display_name}
+            </Link>
+            <span className="font-body" style={{ fontSize: 11, fontWeight: 700, color: 'var(--color-text-secondary)' }}>
+              {reframeLabel(praxis.task_faction_slug, voter.value)}
+            </span>
+          </li>
+        ))}
+      </ul>
     </div>
   )
 }

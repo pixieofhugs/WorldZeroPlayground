@@ -19,7 +19,7 @@ import {
   removeMetatask,
   type PraxisOut,
 } from "../../api/praxis";
-import { getVotes, type VoteSummary } from "../../api/votes";
+import { getVotes, getVoters, type VoteSummary, type VoterDetail } from "../../api/votes";
 import { useAuth } from "../../auth/AuthContext";
 import { useAdminMode } from "../../auth/AdminModeContext";
 import { moderatePraxis } from "../../api/admin";
@@ -35,6 +35,7 @@ export interface PraxisDetailState {
 
   // Entities
   votes: VoteSummary | null;
+  voters: VoterDetail[];
 
   // Derived
   isOwner: boolean;
@@ -88,6 +89,7 @@ export function usePraxisDetail(idParam: string | undefined): PraxisDetailState 
 
   const [praxis, setPraxis] = useState<PraxisOut | null>(null);
   const [votes, setVotes] = useState<VoteSummary | null>(null);
+  const [voters, setVoters] = useState<VoterDetail[]>([]);
   const [metatasks, setMetatasks] = useState<TaskOut[]>([]);
   const [metataskLoading, setMetataskLoading] = useState(false);
   const [metataskError, setMetataskError] = useState<string | null>(null);
@@ -130,10 +132,11 @@ export function usePraxisDetail(idParam: string | undefined): PraxisDetailState 
   useEffect(() => {
     if (!idParam) return;
     const pid = parseInt(idParam, 10);
-    Promise.all([getPraxis(pid), getVotes(pid)])
-      .then(([p, v]) => {
+    Promise.all([getPraxis(pid), getVotes(pid), getVoters(pid)])
+      .then(([p, v, vr]) => {
         setPraxis(p);
         setVotes(v);
+        setVoters(vr);
       })
       .catch((err) =>
         setFetchError(extractError(err, "Couldn't load this praxis.")),
@@ -240,6 +243,7 @@ export function usePraxisDetail(idParam: string | undefined): PraxisDetailState 
     fetchError,
 
     votes,
+    voters,
 
     user,
 

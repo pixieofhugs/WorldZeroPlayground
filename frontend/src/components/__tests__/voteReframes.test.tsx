@@ -8,7 +8,7 @@
  */
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, it, expect, vi } from 'vitest'
-import { VOTE_REFRAMES } from '../vote/voteReframes'
+import { VOTE_REFRAMES, reframeLabel } from '../vote/voteReframes'
 import EverymenVote from '../vote/EverymenVote'
 
 // useVote and useAuth use browser hooks — stub them so server rendering works.
@@ -65,5 +65,23 @@ describe('EverymenVote renders from registry', () => {
         `Rate ${tier.value} — ${tier.label}`
       )
     }
+  })
+})
+
+// ── reframeLabel resolver (#195 voter breakdown) ─────────────────────────────
+
+describe('reframeLabel', () => {
+  it('labels a value in the task faction vocabulary', () => {
+    expect(reframeLabel('ua', 5)).toBe('Acquired')
+    expect(reframeLabel('snide', 1)).toBe('meh')
+  })
+
+  it('resolves the albescent→ua alias', () => {
+    expect(reframeLabel('albescent', 3)).toBe('Hung')
+  })
+
+  it('falls back to the arabic number when no reframe exists', () => {
+    expect(reframeLabel(null, 4)).toBe('4')
+    expect(reframeLabel('nonexistent', 2)).toBe('2')
   })
 })

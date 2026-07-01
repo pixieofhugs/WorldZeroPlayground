@@ -21,7 +21,7 @@ import MediaGallery from '../../../components/MediaGallery'
 import SingularityVote from '../../../components/vote/SingularityVote'
 import { factionCssVar } from '../../../utils/factions'
 import { formatTimestamp } from '../../../utils/dates'
-import { PraxisAdminBar, PraxisStatusBanners, PraxisOwnerActions, PraxisFlagBlock } from '../shared'
+import { PraxisAdminBar, PraxisStatusBanners, PraxisOwnerActions, PraxisFlagBlock, PraxisVoterBreakdown } from '../shared'
 import type { PraxisDetailState } from '../usePraxisDetail'
 
 // ── Terminal atoms (presentation only — no shared behavior) ──────────────────
@@ -438,6 +438,8 @@ export default function SingularityPraxisDetail({ state }: { state: PraxisDetail
 
           {/* ── Flag block ── */}
           <PraxisFlagBlock state={state} />
+
+          <PraxisVoterBreakdown state={state} />
         </div>
 
         {/* ── Bottom perforation ── */}
