@@ -201,16 +201,6 @@ export async function respondToInvite(
   return data
 }
 
-export async function kickMember(praxisId: number, memberId: number): Promise<void> {
-  await api.post(`/praxes/${praxisId}/kick/${memberId}`)
-}
-
-/** Remove your own membership from a collab (ADR-0012). Distinct from kick/withdraw. */
-export async function leavePraxis(praxisId: number): Promise<PraxisOut> {
-  const { data } = await api.post<PraxisOut>(`/praxes/${praxisId}/leave`)
-  return data
-}
-
 // ---------------------------------------------------------------------------
 // Metatasks — metatasks are Task rows with task_type='metatask' attached
 // to a praxis via POST /praxes/{id}/metatasks.

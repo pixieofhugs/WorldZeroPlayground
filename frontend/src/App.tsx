@@ -23,8 +23,6 @@ import ProposeTask from './pages/ProposeTask'
 import Disclaimer from './pages/Disclaimer'
 import Attributions from './pages/Attributions'
 import Donate from './pages/Donate'
-import CollaborationDetail from './pages/CollaborationDetail'
-import EditCollaboration from './pages/EditCollaboration'
 
 /** `/` is the FieldDesk for an authenticated account, the marketing Home otherwise. */
 function RootLanding() {
@@ -40,15 +38,6 @@ export default function App() {
         <Route path="/" element={<RootLanding />} />
         <Route path="/tasks" element={<Tasks />} />
         <Route path="/tasks/:id" element={<TaskDetail />} />
-        <Route path="/collaborations/:id" element={<CollaborationDetail />} />
-        <Route
-          path="/collaborations/:id/edit"
-          element={
-            <ProtectedRoute>
-              <EditCollaboration />
-            </ProtectedRoute>
-          }
-        />
         <Route path="/praxes" element={<Praxes />} />
         <Route path="/praxes/:id" element={<PraxisDetail />} />
         <Route
