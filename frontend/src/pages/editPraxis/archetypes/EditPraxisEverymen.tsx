@@ -11,7 +11,7 @@ import { mediaUrl } from "../../../utils/media";
 import { type PraxisType } from "../../../api/praxis";
 import type { MediaItemOut } from "../../../api/praxis";
 import MediaArt from "../blocks/MediaArt";
-import { mediaArtKeysFromFile, pickArtKey } from "../blocks/useMediaArt";
+import { pickArtKey } from "../blocks/useMediaArt";
 import {
   Breadcrumb,
   ErrorBanner,
@@ -151,7 +151,7 @@ export default function EditPraxisEverymen({ state }: Props) {
 
   const allowedModes = task?.allowed_modes ?? ["solo", "collab", "duel"];
   const reportNo = String(praxis.id).padStart(4, "0");
-  const totalProof = state.newFiles.length + state.media.length;
+  const totalProof = state.media.length;
 
   return (
     <div
@@ -498,15 +498,6 @@ export default function EditPraxisEverymen({ state }: Props) {
               alignItems: "flex-start",
             }}
           >
-            {state.newFiles.map((file, index) => (
-              <ProofSlip
-                key={index}
-                caption={file.name}
-                onRemove={() => state.removeNewFile(index)}
-              >
-                <MediaArt art={mediaArtKeysFromFile(file)} />
-              </ProofSlip>
-            ))}
             <button
               type="button"
               onClick={() => fileRef.current?.click()}

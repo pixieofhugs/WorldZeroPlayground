@@ -5,7 +5,7 @@
 import { mediaUrl } from "../../../utils/media";
 import { type PraxisType } from "../../../api/praxis";
 import MediaArt from "../blocks/MediaArt";
-import { mediaArtKeysFromFile, pickArtKey } from "../blocks/useMediaArt";
+import { pickArtKey } from "../blocks/useMediaArt";
 import {
   Breadcrumb,
   ErrorBanner,
@@ -476,16 +476,6 @@ export default function EditPraxisStickyNote({ state }: Props) {
               </PolaroidStickie>
             );
           })}
-          {state.newFiles.map((file, index) => (
-            <PolaroidStickie
-              key={index}
-              rotation={index % 2 ? -2.5 : 2.2}
-              caption={file.name}
-              onRemove={() => state.removeNewFile(index)}
-            >
-              <MediaArt art={mediaArtKeysFromFile(file)} />
-            </PolaroidStickie>
-          ))}
           <FilePicker
             state={state}
             skin={{

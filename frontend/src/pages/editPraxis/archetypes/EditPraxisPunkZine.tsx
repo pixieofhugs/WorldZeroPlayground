@@ -7,7 +7,7 @@ import { factionCssVar } from "../../../utils/factions";
 import { mediaUrl } from "../../../utils/media";
 import { type PraxisType } from "../../../api/praxis";
 import MediaArt from "../blocks/MediaArt";
-import { mediaArtKeysFromFile, pickArtKey } from "../blocks/useMediaArt";
+import { pickArtKey } from "../blocks/useMediaArt";
 import {
   Breadcrumb,
   ErrorBanner,
@@ -524,72 +524,6 @@ export default function EditPraxisPunkZine({ state }: Props) {
           >
             ↳ glue in proof · photos / audio / receipts
           </span>
-          <div
-            style={{
-              display: "flex",
-              gap: 14,
-              flexWrap: "wrap",
-              marginBottom: 8,
-            }}
-          >
-            {state.newFiles.map((file, index) => (
-              <div
-                key={index}
-                style={{
-                  position: "relative",
-                  border: `2px solid ${accentDeep}`,
-                  padding: 6,
-                  background: surface,
-                  transform: `rotate(${index % 2 ? 2 : -2.4}deg)`,
-                  boxShadow: `2px 2px 0 ${accentDeep}`,
-                }}
-              >
-                <div
-                  style={{
-                    width: 140,
-                    height: 100,
-                    overflow: "hidden",
-                    filter: "contrast(1.15)",
-                  }}
-                >
-                  <MediaArt art={mediaArtKeysFromFile(file)} />
-                </div>
-                <div
-                  style={{
-                    fontSize: 9,
-                    marginTop: 4,
-                    color: accentDeep,
-                    fontStyle: "italic",
-                  }}
-                >
-                  FIG. {state.media.length + index + 1} · {file.name}
-                </div>
-                <button
-                  type="button"
-                  onClick={() => state.removeNewFile(index)}
-                  aria-label={`Remove ${file.name}`}
-                  style={{
-                    position: "absolute",
-                    top: -8,
-                    right: -8,
-                    width: 22,
-                    height: 22,
-                    background: lightBg,
-                    border: `2px solid ${ink}`,
-                    color: ink,
-                    fontSize: 12,
-                    fontWeight: 700,
-                    cursor: "pointer",
-                    lineHeight: 1,
-                    padding: 0,
-                    borderRadius: "50%",
-                  }}
-                >
-                  ×
-                </button>
-              </div>
-            ))}
-          </div>
           <FilePicker
             state={state}
             skin={{

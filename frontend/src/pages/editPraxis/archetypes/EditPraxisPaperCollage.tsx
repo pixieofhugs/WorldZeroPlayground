@@ -7,7 +7,7 @@ import { factionCssVar } from "../../../utils/factions";
 import { mediaUrl } from "../../../utils/media";
 import { type PraxisType } from "../../../api/praxis";
 import MediaArt from "../blocks/MediaArt";
-import { mediaArtKeysFromFile, pickArtKey } from "../blocks/useMediaArt";
+import { pickArtKey } from "../blocks/useMediaArt";
 import {
   Breadcrumb,
   ErrorBanner,
@@ -570,7 +570,7 @@ export default function EditPraxisPaperCollage({ state }: Props) {
             <div style={{ ...notepadPanel, marginBottom: 18 }}>
               <span style={{ ...eyebrowStyle, marginBottom: 12 }}>
                 scraps &amp; specimens ·{" "}
-                {state.media.length + state.newFiles.length} pasted
+                {state.media.length} pasted
               </span>
               <div style={{ display: "flex", flexWrap: "wrap", gap: 14 }}>
                 {state.media.map((item) => {
@@ -611,18 +611,6 @@ export default function EditPraxisPaperCollage({ state }: Props) {
                     </MediaTile>
                   );
                 })}
-                {state.newFiles.map((file, index) => (
-                  <MediaTile
-                    key={index}
-                    caption={file.name}
-                    borderColor={notepadBorder}
-                    tileBg={notepadBg}
-                    removeColor={pink}
-                    onRemove={() => state.removeNewFile(index)}
-                  >
-                    <MediaArt art={mediaArtKeysFromFile(file)} />
-                  </MediaTile>
-                ))}
               </div>
               <div style={{ marginTop: 14 }}>
                 <FilePicker

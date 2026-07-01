@@ -51,10 +51,8 @@ export interface EditPraxisState {
 
   // Media
   media: MediaItemOut[];
-  newFiles: File[];
   fileError: string;
   handleFileChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
-  removeNewFile: (index: number) => void;
   removeMedia: (item: MediaItemOut) => Promise<void>;
 
   // Mode switching
@@ -131,7 +129,6 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
   const [media, setMedia] = useState<MediaItemOut[]>([]);
-  const [newFiles, setNewFiles] = useState<File[]>([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
@@ -270,10 +267,6 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
     [idParam],
   );
 
-  const removeNewFile = useCallback((index: number) => {
-    setNewFiles((previous) => previous.filter((_, i) => i !== index));
-  }, []);
-
   const removeMedia = useCallback(
     async (item: MediaItemOut) => {
       if (!idParam) return;
@@ -298,13 +291,8 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
       await updatePraxis(praxisId, { title, body_text: body || undefined });
       lastSavedTitleRef.current = title;
       lastSavedBodyRef.current = body;
-      for (const file of newFiles) {
-        const uploaded = await uploadPraxisMedia(praxisId, file);
-        setMedia((previous) => [...previous, uploaded]);
-      }
-      setNewFiles([]);
     },
-    [title, body, newFiles],
+    [title, body],
   );
 
   const publish = useCallback(async () => {
@@ -359,10 +347,9 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
     if (title.trim().length > 0) return true;
     if (body.trim().length > 0) return true;
     if (media.length > 0) return true;
-    if (newFiles.length > 0) return true;
     if (appliedMetatasks.size > 0) return true;
     return false;
-  }, [title, body, media, newFiles, appliedMetatasks]);
+  }, [title, body, media, appliedMetatasks]);
 
   const performModeSwitch = useCallback(
     async (next: PraxisType) => {
@@ -524,10 +511,8 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
     wordCount,
 
     media,
-    newFiles,
     fileError,
     handleFileChange,
-    removeNewFile,
     removeMedia,
 
     switchingMode,

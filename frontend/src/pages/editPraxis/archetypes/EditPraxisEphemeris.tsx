@@ -13,7 +13,7 @@ import { factionCssVar } from "../../../utils/factions";
 import { mediaUrl } from "../../../utils/media";
 import { type PraxisType } from "../../../api/praxis";
 import MediaArt from "../blocks/MediaArt";
-import { mediaArtKeysFromFile, pickArtKey } from "../blocks/useMediaArt";
+import { pickArtKey } from "../blocks/useMediaArt";
 import { Breadcrumb, ErrorBanner, formatAutosave } from "./shared";
 import {
   BodyPreview,
@@ -309,7 +309,7 @@ export default function EditPraxisEphemeris({ state }: Props) {
 
         {/* the evidence */}
         <div style={{ marginBottom: 30 }}>
-          <FieldLabel meta={`${state.media.length + state.newFiles.length} pinned`}>THE EVIDENCE</FieldLabel>
+          <FieldLabel meta={`${state.media.length} pinned`}>THE EVIDENCE</FieldLabel>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 16, marginBottom: 14 }}>
             {state.media.map((item, index) => {
               const filename = item.file_path.split("/").pop() ?? item.file_path;
@@ -331,16 +331,6 @@ export default function EditPraxisEphemeris({ state }: Props) {
                 </Specimen>
               );
             })}
-            {state.newFiles.map((file, index) => (
-              <Specimen
-                key={index}
-                rotation={[1.8, -2.4, 1.2, -1.6][index % 4]}
-                caption={file.name}
-                onRemove={() => state.removeNewFile(index)}
-              >
-                <MediaArt art={mediaArtKeysFromFile(file)} />
-              </Specimen>
-            ))}
           </div>
           <FilePicker
             state={state}
