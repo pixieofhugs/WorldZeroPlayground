@@ -19,7 +19,14 @@ Each era defines:
   - Taunt templates: the faction-flavored trash talk between foes
   - Game rules: task limits, vote budget formula, level thresholds, reset behavior
 """
-from game_config import EraConfig, FactionConfig, TaskDef
+from game_config import (
+    EraConfig,
+    FactionConfig,
+    LevelProfile,
+    LevelUnlock,
+    LevelUnlockKind,
+    TaskDef,
+)
 
 
 # =============================================================================
@@ -164,6 +171,30 @@ ERA_N_TAUNT_TEMPLATES: dict[str, dict[str, list[str]]] = {
 
 
 # =============================================================================
+# LEVEL PROFILES
+# =============================================================================
+# Rank + unlocks shown by the level-up pop-up, indexed by level like
+# level_thresholds (index 0 = start state, never shown). Every "ability"
+# unlock must match a real gate constant above at that same level — don't
+# invent one. "sense" unlocks are pure whimsy, no mechanics required.
+
+ERA_N_LEVEL_PROFILES = (
+    LevelProfile(rank="", unlocks=()),  # index 0 = start state, never shown
+    # TODO: One LevelProfile per real level. Example:
+    #
+    # LevelProfile(
+    #     rank="Your Rank Title",
+    #     unlocks=(
+    #         LevelUnlock(LevelUnlockKind.ability, "Ability name",
+    #                     "One sentence describing the unlocked capability."),
+    #         LevelUnlock(LevelUnlockKind.sense, "Curious sense name",
+    #                     "One sentence of whimsical flavor, no mechanics."),
+    #     ),
+    # ),
+)
+
+
+# =============================================================================
 # ERA DEFINITION
 # =============================================================================
 # Combine everything above into a single EraConfig instance.
@@ -222,5 +253,6 @@ ERA_N = EraConfig(
 
     factions=ERA_N_FACTIONS,
     tasks=ERA_N_TASKS,
+    level_profiles=ERA_N_LEVEL_PROFILES,
     taunt_templates=ERA_N_TAUNT_TEMPLATES,
 )

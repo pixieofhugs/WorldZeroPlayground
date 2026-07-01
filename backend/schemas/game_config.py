@@ -15,6 +15,17 @@ class FactionConfigOut(BaseModel):
     duel_loss_modifier: float
 
 
+class LevelUnlockOut(BaseModel):
+    kind: str
+    name: str
+    desc: str
+
+
+class LevelProfileOut(BaseModel):
+    rank: str
+    unlocks: list[LevelUnlockOut]
+
+
 class GameConfigOut(BaseModel):
     era_name: str
     level_thresholds: list[int]
@@ -22,3 +33,4 @@ class GameConfigOut(BaseModel):
     vote_budget_base: int
     vote_budget_multiplier: float
     factions: list[FactionConfigOut]
+    level_profiles: list[LevelProfileOut]

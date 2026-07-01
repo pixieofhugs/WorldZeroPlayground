@@ -1,7 +1,12 @@
 from fastapi import APIRouter
 
 from game_config import CURRENT_ERA
-from schemas.game_config import FactionConfigOut, GameConfigOut
+from schemas.game_config import (
+    FactionConfigOut,
+    GameConfigOut,
+    LevelProfileOut,
+    LevelUnlockOut,
+)
 
 router = APIRouter()
 
@@ -26,6 +31,17 @@ async def get_game_config() -> GameConfigOut:
         for faction in CURRENT_ERA.factions.values()
     ]
 
+    level_profiles = [
+        LevelProfileOut(
+            rank=profile.rank,
+            unlocks=[
+                LevelUnlockOut(kind=unlock.kind.value, name=unlock.name, desc=unlock.desc)
+                for unlock in profile.unlocks
+            ],
+        )
+        for profile in CURRENT_ERA.level_profiles
+    ]
+
     return GameConfigOut(
         era_name=CURRENT_ERA.name,
         level_thresholds=list(CURRENT_ERA.level_thresholds),
@@ -33,4 +49,5 @@ async def get_game_config() -> GameConfigOut:
         vote_budget_base=CURRENT_ERA.vote_budget_base,
         vote_budget_multiplier=CURRENT_ERA.vote_budget_multiplier,
         factions=factions,
+        level_profiles=level_profiles,
     )

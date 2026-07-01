@@ -7,6 +7,27 @@ owns the rules themselves. Changing CURRENT_ERA is the one lever that
 switches all live game mechanics.
 """
 from dataclasses import dataclass, field
+from enum import Enum
+
+
+class LevelUnlockKind(str, Enum):
+    """Whether a level unlock is a rules-backed capability or pure flavor."""
+    ability = "ability"   # rules-backed capability, must match a real gate constant
+    sense = "sense"        # whimsical flavor, no mechanics
+
+
+@dataclass(frozen=True)
+class LevelUnlock:
+    kind: LevelUnlockKind
+    name: str
+    desc: str
+
+
+@dataclass(frozen=True)
+class LevelProfile:
+    """Rank title + unlocks announced by the level-up pop-up at a given level."""
+    rank: str
+    unlocks: tuple[LevelUnlock, ...]
 
 
 @dataclass(frozen=True)
@@ -107,6 +128,10 @@ class EraConfig:
 
     # Task definitions for this era
     tasks: tuple = ()                # tuple[TaskDef, ...]
+
+    # Rank + unlocks shown by the level-up pop-up, indexed by level like
+    # level_thresholds (index 0 = start state, never shown).
+    level_profiles: tuple = ()       # tuple[LevelProfile, ...]
 
     # Taunt templates for this era
     taunt_templates: dict = field(default_factory=dict)  # faction slug → trigger → templates

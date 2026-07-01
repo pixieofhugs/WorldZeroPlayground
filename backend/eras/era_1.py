@@ -4,7 +4,14 @@ Era 1 — the founding era of World Zero.
 This file is the complete, self-contained configuration for Era 1.
 Everything needed to start this era lives here: factions, tasks, taunts, and rules.
 """
-from game_config import EraConfig, FactionConfig, TaskDef
+from game_config import (
+    EraConfig,
+    FactionConfig,
+    LevelProfile,
+    LevelUnlock,
+    LevelUnlockKind,
+    TaskDef,
+)
 
 
 # =============================================================================
@@ -461,6 +468,107 @@ ERA_1_TAUNT_TEMPLATES: dict[str, dict[str, list[str]]] = {
 
 
 # =============================================================================
+# LEVEL PROFILES
+# =============================================================================
+# Rank + unlocks announced by the level-up pop-up ("Field Stamp", #244/#287).
+# Indexed by level, same convention as level_thresholds. Grounded ability
+# entries are checked against the real gate constants below them; sense
+# entries are pure whimsy. Bot-drafted copy — Molly may revise later
+# (config-only, no code change).
+#
+# NOTE: issue #287's table paired level 3 with "choose a faction"
+# (`faction_graduation_level`), but that field is DORMANT (see game_config.py)
+# and `services/faction_service.py::defect_to_faction` has no level check at
+# all — faction choice is gated purely by invitation, not by level. Dropped
+# from the grounded abilities below rather than citing a gate that isn't
+# actually enforced.
+
+ERA_1_LEVEL_PROFILES = (
+    LevelProfile(rank="", unlocks=()),  # index 0 = start state, never shown
+    LevelProfile(
+        rank="Trailhead",
+        unlocks=(
+            LevelUnlock(LevelUnlockKind.ability, "Sign up for a task",
+                        "Pick a task from the board and begin your first praxis."),
+            LevelUnlock(LevelUnlockKind.ability, "Start a collaboration",
+                        "Pool a task with other questers and split the work."),
+            LevelUnlock(LevelUnlockKind.sense, "Notice the paths already worn",
+                        "Well-trodden ground hums faintly underfoot. You'll learn to trust it."),
+        ),
+    ),
+    LevelProfile(
+        rank="Ranger",
+        unlocks=(
+            LevelUnlock(LevelUnlockKind.ability, "Challenge a duel",
+                        "Stake reputation against another quester and settle it in the field."),
+            LevelUnlock(LevelUnlockKind.ability, "Leave a comment",
+                        "Weigh in on any praxis with a word of your own."),
+            LevelUnlock(LevelUnlockKind.ability, "See retired tasks",
+                        "The archive opens — browse tasks the board has since retired."),
+            LevelUnlock(LevelUnlockKind.sense, "Read weather a day early",
+                        "Clouds tell you their plans before the sky commits to them."),
+        ),
+    ),
+    LevelProfile(
+        rank="Surveyor",
+        unlocks=(
+            LevelUnlock(LevelUnlockKind.ability, "Propose a task",
+                        "Draft a task of your own and submit it to the board."),
+            LevelUnlock(LevelUnlockKind.ability, "See pending tasks",
+                        "Watch proposals move through review before they go live."),
+            LevelUnlock(LevelUnlockKind.sense, "Sense a shortcut before taking it",
+                        "Some routes simply feel correct. You've started to notice which."),
+        ),
+    ),
+    LevelProfile(
+        rank="Warden",
+        unlocks=(
+            LevelUnlock(LevelUnlockKind.ability, "Flag a praxis",
+                        "Send questionable praxis to moderation review."),
+            LevelUnlock(LevelUnlockKind.ability, "Create a second character",
+                        "Start a new character on this account, independent of this one."),
+            LevelUnlock(LevelUnlockKind.sense, "Hear a lie land wrong",
+                        "Untrue words ring a half-step flat. Useful, if unsettling."),
+        ),
+    ),
+    LevelProfile(
+        rank="Voyager",
+        unlocks=(
+            LevelUnlock(LevelUnlockKind.sense, "Taste distance in the air",
+                        "Far-off places have a flavor. You're close enough now to notice."),
+        ),
+    ),
+    LevelProfile(
+        rank="Chronicler",
+        unlocks=(
+            LevelUnlock(LevelUnlockKind.ability, "Propose a metatask",
+                        "Draft a task built for your whole faction to apply to."),
+            LevelUnlock(LevelUnlockKind.sense, "Remember a place you've never been",
+                        "Certain rooms feel already-visited. You've stopped questioning it."),
+        ),
+    ),
+    LevelProfile(
+        rank="Luminary",
+        unlocks=(
+            LevelUnlock(LevelUnlockKind.ability, "Apply your faction's metatasks",
+                        "Take on the metatasks your faction has published."),
+            LevelUnlock(LevelUnlockKind.sense, "Hold three plans at once without confusion",
+                        "Your mind now files contingencies the way it once filed excuses."),
+        ),
+    ),
+    LevelProfile(
+        rank="Paragon",
+        unlocks=(
+            LevelUnlock(LevelUnlockKind.ability, "Start an Albescent character",
+                        "Unlock /Albescent as a starting faction for a future character."),
+            LevelUnlock(LevelUnlockKind.sense, "See the underline before it's drawn",
+                        "You've read enough field stamps to know how this sentence ends."),
+        ),
+    ),
+)
+
+
+# =============================================================================
 # ERA DEFINITION
 # =============================================================================
 
@@ -499,6 +607,7 @@ ERA_1 = EraConfig(
     reset_all_time_score=False,
     factions=ERA_1_FACTIONS,
     tasks=ERA_1_TASKS,
+    level_profiles=ERA_1_LEVEL_PROFILES,
     taunt_templates=ERA_1_TAUNT_TEMPLATES,
     # Ephemerists' Task Vision perk: they may create praxes on retired tasks.
     allow_praxis_on_retired_task_factions=frozenset({"ephemerists"}),

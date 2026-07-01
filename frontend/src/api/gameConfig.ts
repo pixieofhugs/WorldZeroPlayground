@@ -14,6 +14,19 @@ export interface FactionConfigOut {
   duel_loss_modifier: number
 }
 
+export type LevelUnlockKind = 'ability' | 'sense'
+
+export interface LevelUnlock {
+  kind: LevelUnlockKind
+  name: string
+  desc: string
+}
+
+export interface LevelProfile {
+  rank: string
+  unlocks: LevelUnlock[]
+}
+
 export interface GameConfigOut {
   era_name: string
   level_thresholds: number[]
@@ -21,6 +34,7 @@ export interface GameConfigOut {
   vote_budget_base: number
   vote_budget_multiplier: number
   factions: FactionConfigOut[]
+  level_profiles: LevelProfile[]
 }
 
 export async function getGameConfig(): Promise<GameConfigOut> {
