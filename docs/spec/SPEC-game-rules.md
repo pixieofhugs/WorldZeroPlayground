@@ -209,6 +209,7 @@ Each member's score is computed independently using their own faction's collab m
 - Votes are **per-member** (`praxis_member_id` required). Voters may vote for one or both members — each is a separate `Vote` row.
 - Duel participants cannot vote on **either side** of a duel they're in, at the **account level** — a voter cannot use any of their characters to rate the challenger's *or* the opponent's side. Enforced per-praxis in `services/vote.py`: the account-level anti-self-vote blocks the participant's own side, and when the target praxis is a duel side, the vote is additionally rejected (403) if the voter's account owns either side of that duel (#309).
 - Winner is determined by the highest `total_stars` across each member's votes.
+- **Forfeit (sticky).** Unsubmitting a `settled` duel side, or having your character banned, forfeits the contest: the opponent wins by default — win/loss faction modifiers apply and vote tallies are ignored — and the duel stays `settled`. Recorded once in `Duel.forfeited_by_character_id`; resubmitting does not restore the contest (ADR-0011 §Forfeit). Scored in `services/praxis_scoring.py::compute_contributions`; triggered by `withdraw_praxis` / `soft_delete_character`.
 
 ### Duel outcome multipliers (Era 1)
 

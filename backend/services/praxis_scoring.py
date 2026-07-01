@@ -176,15 +176,26 @@ async def compute_contributions(
                 character_faction, task_faction, era,
                 collaboration_mode=COLLABORATION_MODE_SOLO,
             )
-            own_pts = own_tally.points_from_votes
-            opp_pts = opp_tally.points_from_votes
-            duel_multiplier = compute_duel_multiplier(
-                character_faction,
-                opponent_faction,
-                is_winner=own_pts > opp_pts,
-                is_tied=own_pts == opp_pts,
-                era=era,
-            )
+            if duel.forfeited_by_character_id is not None:
+                # ADR-0011 §Forfeit: the opponent wins by default; vote tallies
+                # don't decide the outcome. The forfeiter takes the loss modifier.
+                duel_multiplier = compute_duel_multiplier(
+                    character_faction,
+                    opponent_faction,
+                    is_winner=character.id != duel.forfeited_by_character_id,
+                    is_tied=False,
+                    era=era,
+                )
+            else:
+                own_pts = own_tally.points_from_votes
+                opp_pts = opp_tally.points_from_votes
+                duel_multiplier = compute_duel_multiplier(
+                    character_faction,
+                    opponent_faction,
+                    is_winner=own_pts > opp_pts,
+                    is_tied=own_pts == opp_pts,
+                    era=era,
+                )
 
         else:
             # Plain solo praxis

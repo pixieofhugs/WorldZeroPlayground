@@ -41,6 +41,24 @@ A duel is **two separate praxes that compete**, joined by a new `Duel` row.
   always-live-on-read scoring model; there is no per-duel voting window or freeze. The
   duel win/loss multiplier is applied per side at scoring time from the current tally.
 
+### Forfeit
+
+Once a duel is `settled`, backing out of it forfeits the contest rather than reopening it.
+
+- **Triggers.** Unsubmitting a `settled` duel side (`withdraw_praxis`), or the ban /
+  soft-delete of a side's character (`soft_delete_character`), forfeits that side.
+- **Opponent wins by default.** The forfeiter takes their faction **loss** modifier; the
+  opponent takes their **win** modifier. Vote tallies no longer decide the outcome — the
+  duel-side scoring branch reads `Duel.forfeited_by_character_id` and skips the tally
+  comparison. The winner is scored even if the forfeited side is now `in_progress` or the
+  forfeiter is banned.
+- **Sticky.** `forfeited_by_character_id` is recorded on the first forfeit and never
+  overwritten; the duel **stays `settled`**. Resubmitting the thrown side does not restore
+  the contest — the forfeiter keeps the loss modifier on resubmit.
+- **No body leak.** A forfeited-by-unsubmit side is `in_progress`, so its read link 404s
+  for non-members exactly like any editing praxis (ADR-0024); read surfaces show only
+  "forfeited — won by default".
+
 ## Consequences
 
 - Scoring must determine "is this praxis a side of a duel?" via the `Duel` table

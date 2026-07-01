@@ -556,23 +556,35 @@ async def withdraw_praxis(
     Votes are preserved but stop contributing to score until resubmitted via
     ``submit_praxis``. For collabs/duels, member submission flags are reset so
     the full group must re-submit.
+
+    Unsubmitting a *settled* duel side forfeits the contest (ADR-0011 §Forfeit):
+    the opponent wins by default, the duel stays ``settled``, and the forfeit is
+    permanent — resubmitting does not restore it.
     """
     praxis = await get_praxis(praxis_id, session)
     _require_member(praxis, character_id, "reopen")
     if praxis.status == PraxisStatus.in_progress:
         raise HTTPException(status_code=422, detail="Praxis is already in editing mode.")
 
-    # ADR-0024: a *settled* duel side can't simply unsubmit — that would erase a
-    # decided contest. Temporary guard; #307 replaces it with real forfeit
-    # semantics (opponent wins by default, duel stays settled).
+    # ADR-0011 §Forfeit (#307): unsubmitting a *settled* duel side forfeits the
+    # contest. Mark the forfeit (first one sticks) and recalc the winner below so
+    # their guaranteed-win modifier lands immediately.
     from services.duel import get_duel_for_praxis
 
     duel = await get_duel_for_praxis(praxis_id, session)
+    forfeit_winner_character_id: Optional[int] = None
     if duel is not None and duel.status == DuelStatus.settled:
-        raise HTTPException(
-            status_code=422,
-            detail="Cannot unsubmit a settled duel side.",
+        if duel.forfeited_by_character_id is None:
+            duel.forfeited_by_character_id = character_id
+        winner_praxis_id = (
+            duel.opponent_praxis_id
+            if duel.challenger_praxis_id == praxis_id
+            else duel.challenger_praxis_id
         )
+        if winner_praxis_id is not None:
+            winner_praxis = await session.get(Praxis, winner_praxis_id)
+            if winner_praxis is not None:
+                forfeit_winner_character_id = winner_praxis.created_by_id
 
     praxis.status = PraxisStatus.in_progress
     praxis.submit_proposed_at = None
@@ -587,6 +599,10 @@ async def withdraw_praxis(
     for member in praxis.members:
         await recalculate_character_stats(
             member.character_id, session, era, era_row=era_row
+        )
+    if forfeit_winner_character_id is not None:
+        await recalculate_character_stats(
+            forfeit_winner_character_id, session, era, era_row=era_row
         )
     await session.flush()
     return await get_praxis(praxis_id, session)

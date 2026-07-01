@@ -212,7 +212,7 @@ async def test_withdraw_collab_recalculates_every_member(
 
 
 @pytest.mark.asyncio
-async def test_withdraw_settled_duel_side_returns_422(
+async def test_withdraw_settled_duel_side_forfeits(
     client: AsyncClient,
     db_session: AsyncSession,
     character: Character,
@@ -220,19 +220,26 @@ async def test_withdraw_settled_duel_side_returns_422(
     active_task: Task,
     auth_headers: dict,
 ):
-    """Unsubmitting a *settled* duel side is blocked with 422 (temporary; #307 replaces it)."""
+    """Unsubmitting a *settled* duel side forfeits it (ADR-0011 §Forfeit, #307).
+
+    No 422: the withdraw succeeds, the duel stays ``settled``, and the actor is
+    recorded as the forfeiter.
+    """
     praxis_id = await _create_solo(client, active_task, auth_headers)
     assert (await client.post(f"/praxes/{praxis_id}/submit", headers=auth_headers)).status_code == 200
 
-    db_session.add(
-        Duel(
-            task_id=active_task.id,
-            challenger_praxis_id=praxis_id,
-            opponent_character_id=character2.id,
-            status=DuelStatus.settled,
-        )
+    duel = Duel(
+        task_id=active_task.id,
+        challenger_praxis_id=praxis_id,
+        opponent_character_id=character2.id,
+        status=DuelStatus.settled,
     )
+    db_session.add(duel)
     await db_session.commit()
 
     resp = await client.post(f"/praxes/{praxis_id}/withdraw", headers=auth_headers)
-    assert resp.status_code == 422
+    assert resp.status_code == 200
+
+    await db_session.refresh(duel)
+    assert duel.status == DuelStatus.settled
+    assert duel.forfeited_by_character_id == character.id

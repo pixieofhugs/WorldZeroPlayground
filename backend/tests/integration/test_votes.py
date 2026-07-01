@@ -735,3 +735,110 @@ async def test_non_participant_can_vote_on_duel_side(
         f"/praxes/{challenger_pid}/vote", json={"value": 4}, headers=third_headers
     )
     assert resp.status_code == 200
+
+
+# ---------------------------------------------------------------------------
+# Duel forfeit (#307) — unsubmit / ban → opponent wins by default (ADR-0011)
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.asyncio
+async def test_forfeit_by_unsubmit_gives_opponent_win_regardless_of_votes(
+    client: AsyncClient,
+    db_session: AsyncSession,
+    character: Character,
+    character2: Character,
+    active_task: Task,
+    auth_headers: dict,
+    auth_headers2: dict,
+    era: Era,
+):
+    """Unsubmitting a settled duel side forfeits it: the opponent scores the win
+    modifier (not the 1.0x tie), the forfeiter the loss modifier, votes ignored;
+    resubmitting does not restore the contest (ADR-0011 §Forfeit)."""
+    from game_config import CURRENT_ERA
+    from models.duel import Duel, DuelStatus
+    from services.praxis import get_praxis, withdraw_praxis
+    from services.praxis_scoring import compute_contributions
+
+    challenger_pid = await _create_and_submit_solo(client, active_task, auth_headers)
+    opponent_pid = await _create_and_submit_solo(client, active_task, auth_headers2)
+    db_session.add(Duel(
+        task_id=active_task.id,
+        challenger_praxis_id=challenger_pid,
+        opponent_character_id=character2.id,
+        opponent_praxis_id=opponent_pid,
+        status=DuelStatus.settled,
+    ))
+    await db_session.commit()
+
+    win = CURRENT_ERA.factions[character.faction_slug].duel_win_modifier
+    loss = CURRENT_ERA.factions[character.faction_slug].duel_loss_modifier
+
+    # No votes cast on either side → without forfeit this is a 1.0x tie for both.
+    # character2 forfeits by unsubmitting their side.
+    await withdraw_praxis(opponent_pid, character2.id, db_session)
+
+    challenger_praxis = await get_praxis(challenger_pid, db_session)
+    contribs = await compute_contributions(
+        [challenger_praxis], character, CURRENT_ERA, db_session
+    )
+    assert contribs[challenger_pid].duel_multiplier == win
+
+    # Resubmit does not restore: the forfeiter keeps the loss modifier and the
+    # opponent keeps the win modifier.
+    assert (await client.post(f"/praxes/{opponent_pid}/submit", headers=auth_headers2)).status_code == 200
+    opponent_praxis = await get_praxis(opponent_pid, db_session)
+    contribs_loser = await compute_contributions(
+        [opponent_praxis], character2, CURRENT_ERA, db_session
+    )
+    assert contribs_loser[opponent_pid].duel_multiplier == loss
+    contribs_winner = await compute_contributions(
+        [challenger_praxis], character, CURRENT_ERA, db_session
+    )
+    assert contribs_winner[challenger_pid].duel_multiplier == win
+
+
+@pytest.mark.asyncio
+async def test_ban_forfeits_settled_duels(
+    client: AsyncClient,
+    db_session: AsyncSession,
+    character: Character,
+    character2: Character,
+    active_task: Task,
+    auth_headers: dict,
+    auth_headers2: dict,
+    era: Era,
+):
+    """Banning a character forfeits their settled duels; the opponent wins by default."""
+    from game_config import CURRENT_ERA
+    from models.duel import Duel, DuelStatus
+    from services.character import soft_delete_character
+    from services.praxis import get_praxis
+    from services.praxis_scoring import compute_contributions
+
+    challenger_pid = await _create_and_submit_solo(client, active_task, auth_headers)
+    opponent_pid = await _create_and_submit_solo(client, active_task, auth_headers2)
+    duel = Duel(
+        task_id=active_task.id,
+        challenger_praxis_id=challenger_pid,
+        opponent_character_id=character2.id,
+        opponent_praxis_id=opponent_pid,
+        status=DuelStatus.settled,
+    )
+    db_session.add(duel)
+    await db_session.commit()
+
+    # Ban character2 (the opponent side).
+    await soft_delete_character(character2.id, db_session)
+    await db_session.refresh(duel)
+    assert duel.status == DuelStatus.settled
+    assert duel.forfeited_by_character_id == character2.id
+
+    # The challenger (still active) wins by default.
+    win = CURRENT_ERA.factions[character.faction_slug].duel_win_modifier
+    challenger_praxis = await get_praxis(challenger_pid, db_session)
+    contribs = await compute_contributions(
+        [challenger_praxis], character, CURRENT_ERA, db_session
+    )
+    assert contribs[challenger_pid].duel_multiplier == win

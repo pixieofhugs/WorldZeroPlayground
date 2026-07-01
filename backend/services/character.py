@@ -393,12 +393,58 @@ async def update_character(
     return character
 
 
-async def soft_delete_character(character_id: int, session: AsyncSession) -> None:
+async def soft_delete_character(
+    character_id: int,
+    session: AsyncSession,
+    era: EraConfig = CURRENT_ERA,
+) -> None:
     character = await get_character_by_id(character_id, session)
     if character is None:
         raise HTTPException(status_code=404, detail="Character not found.")
     character.status = CharacterStatus.banned
+
+    # ADR-0011 §Forfeit (#307): a ban forfeits every *settled* duel the banned
+    # character is a side of — the opponent wins by default. Sticky: leave duels
+    # already forfeited untouched. Recalc the winners so their win modifier lands
+    # (the banned side's own score is never read, so we don't recalc it).
+    from models.duel import Duel, DuelStatus
+    from services.character_stats import recalculate_character_stats
+
+    own_praxis_ids = select(Praxis.id).where(Praxis.created_by_id == character_id)
+    duels = (await session.execute(
+        select(Duel).where(
+            Duel.status == DuelStatus.settled,
+            Duel.forfeited_by_character_id.is_(None),
+            or_(
+                Duel.opponent_character_id == character_id,
+                Duel.challenger_praxis_id.in_(own_praxis_ids),
+            ),
+        )
+    )).scalars().all()
+
+    winner_ids: set[int] = set()
+    for duel in duels:
+        duel.forfeited_by_character_id = character_id
+        challenger_praxis = await session.get(Praxis, duel.challenger_praxis_id)
+        challenger_character_id = (
+            challenger_praxis.created_by_id if challenger_praxis else None
+        )
+        winner_id = (
+            duel.opponent_character_id
+            if challenger_character_id == character_id
+            else challenger_character_id
+        )
+        if winner_id is not None:
+            winner_ids.add(winner_id)
     await session.flush()
+
+    if winner_ids:
+        era_row = await get_current_era_row(session)
+        for winner_id in winner_ids:
+            await recalculate_character_stats(
+                winner_id, session, era, era_row=era_row
+            )
+        await session.flush()
 
 
 def _character_stats_era_join(era_id: int | None) -> Select:

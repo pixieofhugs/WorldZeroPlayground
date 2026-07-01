@@ -53,6 +53,12 @@ class Duel(CreatedAtMixin, Base):
     declined_at: Mapped[Optional[datetime]] = mapped_column(
         DateTime(timezone=True), nullable=True
     )
+    # Set when a *settled* duel is forfeited (unsubmit or ban). Sticky: the
+    # opponent wins by default, the duel stays settled, and resubmitting does
+    # not restore the contest (ADR-0011 §Forfeit, #307).
+    forfeited_by_character_id: Mapped[Optional[int]] = mapped_column(
+        ForeignKey("character.id"), nullable=True
+    )
 
     challenger_praxis: Mapped["Praxis"] = relationship(
         "Praxis", foreign_keys=[challenger_praxis_id], lazy="selectin"
