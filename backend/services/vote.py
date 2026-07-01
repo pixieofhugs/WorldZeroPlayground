@@ -52,6 +52,31 @@ async def cast_or_update_vote(
     if author is not None and author.account_id == voter.account_id:
         raise HTTPException(status_code=403, detail="Cannot vote on your own praxis.")
 
+    # Duel anti-participation (#309): a duel participant — any life on their
+    # account — cannot rate EITHER side of a duel they're in, not just their own.
+    # Account-level anti-self-vote above only blocks the participant's own side.
+    from services.duel import get_duel_for_praxis
+
+    duel = await get_duel_for_praxis(praxis.id, session)
+    if duel is not None:
+        challenger_praxis = await session.get(Praxis, duel.challenger_praxis_id)
+        challenger = (
+            await session.get(Character, challenger_praxis.created_by_id)
+            if challenger_praxis is not None
+            else None
+        )
+        opponent = await session.get(Character, duel.opponent_character_id)
+        participant_account_ids = {
+            participant.account_id
+            for participant in (challenger, opponent)
+            if participant is not None
+        }
+        if voter.account_id in participant_account_ids:
+            raise HTTPException(
+                status_code=403,
+                detail="Cannot vote on a duel you're a participant in.",
+            )
+
     result = await session.execute(
         select(Vote).where(
             Vote.praxis_id == praxis.id,

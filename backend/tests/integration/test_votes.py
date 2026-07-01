@@ -541,3 +541,112 @@ async def test_anti_self_vote_fallback_allows_unrelated_voter(
     assert vote.value == 3
     assert vote.voter_character_id == character2.id
     assert vote.praxis_id == praxis_solo.id
+
+
+# ---------------------------------------------------------------------------
+# Duel anti-participation (#309) — a participant cannot rate either side.
+# ---------------------------------------------------------------------------
+
+
+async def _create_and_submit_solo(
+    client: AsyncClient, task: Task, headers: dict
+) -> int:
+    create = await client.post(
+        "/praxes",
+        json={"task_id": task.id, "type": "solo", "title": "Duel side"},
+        headers=headers,
+    )
+    assert create.status_code == 201, create.text
+    praxis_id = create.json()["id"]
+    submit = await client.post(f"/praxes/{praxis_id}/submit", headers=headers)
+    assert submit.status_code == 200, submit.text
+    return praxis_id
+
+
+@pytest.mark.asyncio
+async def test_duel_participant_cannot_vote_on_either_side(
+    client: AsyncClient,
+    db_session: AsyncSession,
+    character: Character,
+    character2: Character,
+    active_task: Task,
+    auth_headers: dict,
+    auth_headers2: dict,
+):
+    """A duel participant (any life on their account) cannot rate either side (403)."""
+    from models.duel import Duel, DuelStatus
+
+    challenger_pid = await _create_and_submit_solo(client, active_task, auth_headers)
+    opponent_pid = await _create_and_submit_solo(client, active_task, auth_headers2)
+    db_session.add(
+        Duel(
+            task_id=active_task.id,
+            challenger_praxis_id=challenger_pid,
+            opponent_character_id=character2.id,
+            opponent_praxis_id=opponent_pid,
+            status=DuelStatus.settled,
+        )
+    )
+    await db_session.commit()
+
+    # Challenger's account voting on the OPPONENT's side — the gap this fixes.
+    on_opponent = await client.post(
+        f"/praxes/{opponent_pid}/vote", json={"value": 1}, headers=auth_headers
+    )
+    assert on_opponent.status_code == 403
+
+    # Opponent's account voting on the CHALLENGER's side — symmetric.
+    on_challenger = await client.post(
+        f"/praxes/{challenger_pid}/vote", json={"value": 1}, headers=auth_headers2
+    )
+    assert on_challenger.status_code == 403
+
+
+@pytest.mark.asyncio
+async def test_non_participant_can_vote_on_duel_side(
+    client: AsyncClient,
+    db_session: AsyncSession,
+    character: Character,
+    character2: Character,
+    active_task: Task,
+    era: Era,
+    faction_ua,
+    auth_headers: dict,
+):
+    """A third party who isn't in the duel can still rate a duel side (200)."""
+    from models.duel import Duel, DuelStatus
+    from services.auth import create_jwt
+
+    challenger_pid = await _create_and_submit_solo(client, active_task, auth_headers)
+    db_session.add(
+        Duel(
+            task_id=active_task.id,
+            challenger_praxis_id=challenger_pid,
+            opponent_character_id=character2.id,
+            status=DuelStatus.settled,
+        )
+    )
+    await db_session.commit()
+
+    # A fresh third account/character — not a participant in the duel.
+    third = Account(email="third@example.com")
+    db_session.add(third)
+    await db_session.flush()
+    third_char = Character(
+        account_id=third.id,
+        username="thirdchar",
+        display_name="Third Char",
+        faction_slug="ua",
+    )
+    db_session.add(third_char)
+    await db_session.flush()
+    db_session.add(
+        CharacterStats(character_id=third_char.id, era_id=era.id, votes_spent_this_era=0)
+    )
+    await db_session.commit()
+    third_headers = {"Authorization": f"Bearer {create_jwt(third.id)}"}
+
+    resp = await client.post(
+        f"/praxes/{challenger_pid}/vote", json={"value": 4}, headers=third_headers
+    )
+    assert resp.status_code == 200
