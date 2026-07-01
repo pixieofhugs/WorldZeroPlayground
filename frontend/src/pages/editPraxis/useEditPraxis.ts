@@ -391,7 +391,11 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
     let cancelled = false;
     void (async () => {
       try {
-        const results = await listCharacters({ search: inviteQuery, limit: 8 });
+        const results = await listCharacters({
+          search: inviteQuery,
+          exclude_active_task_id: praxis.task_id,
+          limit: 8,
+        });
         if (cancelled) return;
         const memberIds = new Set(praxis.members.map((m) => m.character_id));
         const pendingInviteIds = new Set(

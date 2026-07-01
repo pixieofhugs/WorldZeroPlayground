@@ -12,7 +12,7 @@ from models.account import Account
 from models.character import Character, CharacterStatus
 from models.character_stats import CharacterStats
 from models.invitation_letter import InvitationLetter
-from models.praxis import ModerationStatus, Praxis, PraxisStatus
+from models.praxis import ModerationStatus, Praxis, PraxisMember, PraxisStatus
 from models.task import Task
 from schemas.character import CharacterCreate, CharacterOut, CharacterUpdate
 from services.era import get_current_era_row, get_current_era_row_safe, get_or_create_stats
@@ -473,10 +473,20 @@ async def list_characters_for_viewer(
     *,
     search: Optional[str] = None,
     faction_slug: Optional[str] = None,
+    exclude_active_task_id: Optional[int] = None,
     limit: int = 50,
     offset: int = 0,
 ) -> list[tuple[Character, CharacterStats | None]]:
-    """List active characters with current-era stats. Optional name/faction filters."""
+    """List active characters with current-era stats. Optional name/faction filters.
+
+    ``exclude_active_task_id`` drops characters who already hold an active
+    (in_progress or submitted) praxis membership for that task — so the invite
+    search doesn't surface players the backend would 409 (#320). Everymen are
+    never excluded (Double Dipper perk: they may hold multiple memberships per
+    task), mirroring :func:`services.praxis.is_active_member_of_task`.
+    """
+    from services.praxis import EVERYMEN_FACTION_SLUG
+
     era_row = await get_current_era_row_safe(session)
     era_id = era_row.id if era_row else None
 
@@ -492,6 +502,21 @@ async def list_characters_for_viewer(
         )
     if faction_slug:
         query = query.where(Character.faction_slug == faction_slug)
+    if exclude_active_task_id is not None:
+        active_member_ids = (
+            select(PraxisMember.character_id)
+            .join(Praxis, PraxisMember.praxis_id == Praxis.id)
+            .where(
+                Praxis.task_id == exclude_active_task_id,
+                Praxis.status.in_([PraxisStatus.in_progress, PraxisStatus.submitted]),
+            )
+        )
+        query = query.where(
+            or_(
+                Character.faction_slug == EVERYMEN_FACTION_SLUG,
+                Character.id.notin_(active_member_ids),
+            )
+        )
     query = (
         query.order_by(CharacterStats.score.desc().nulls_last())
         .limit(limit)

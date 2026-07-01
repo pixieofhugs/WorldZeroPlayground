@@ -38,13 +38,23 @@ router = APIRouter()
 async def list_characters(
     search: Optional[str] = None,
     faction: Optional[str] = None,
+    exclude_active_task_id: Optional[int] = None,
     limit: int = 50,
     offset: int = 0,
     session: AsyncSession = Depends(get_db),
 ):
-    """List all active characters. Optionally filter by name or faction."""
+    """List all active characters. Optionally filter by name or faction.
+
+    ``exclude_active_task_id`` hides players already active on that task (invite
+    search pre-filter, #320).
+    """
     rows = await list_characters_for_viewer(
-        session, search=search, faction_slug=faction, limit=limit, offset=offset
+        session,
+        search=search,
+        faction_slug=faction,
+        exclude_active_task_id=exclude_active_task_id,
+        limit=limit,
+        offset=offset,
     )
     return [build_character_out(character, stats) for character, stats in rows]
 

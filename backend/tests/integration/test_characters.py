@@ -163,6 +163,32 @@ async def test_list_characters_faction_no_match(client: AsyncClient, character: 
 
 
 @pytest.mark.asyncio
+async def test_list_characters_excludes_players_active_on_task(
+    client: AsyncClient,
+    character: Character,
+    character2: Character,
+    active_task: Task,
+    auth_headers2: dict,
+):
+    """exclude_active_task_id hides players already active on that task (#320)."""
+    # character2 signs up solo on the task → active member for it.
+    create = await client.post(
+        "/praxes",
+        json={"task_id": active_task.id, "type": "solo"},
+        headers=auth_headers2,
+    )
+    assert create.status_code == 201
+
+    resp = await client.get(
+        "/characters", params={"exclude_active_task_id": active_task.id}
+    )
+    assert resp.status_code == 200
+    ids = [c["id"] for c in resp.json()]
+    assert character2.id not in ids  # active on the task → hidden
+    assert character.id in ids  # not active → still listed
+
+
+@pytest.mark.asyncio
 async def test_list_characters_limit_offset(
     client: AsyncClient, character: Character, character2: Character
 ):

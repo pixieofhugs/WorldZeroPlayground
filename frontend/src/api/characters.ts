@@ -25,7 +25,13 @@ export interface CharacterUpdate {
   location?: string
 }
 
-export async function listCharacters(params?: { search?: string; faction?: string; limit?: number }): Promise<CharacterOut[]> {
+export async function listCharacters(params?: {
+  search?: string
+  faction?: string
+  /** Hide players already active on this task (invite-search pre-filter, #320). */
+  exclude_active_task_id?: number
+  limit?: number
+}): Promise<CharacterOut[]> {
   const { data } = await api.get<CharacterOut[]>('/characters', { params })
   return data
 }
