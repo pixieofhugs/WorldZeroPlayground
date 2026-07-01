@@ -532,18 +532,22 @@ async def test_upload_avatar_wrong_owner(
 
 
 @pytest.mark.asyncio
-async def test_upload_avatar_not_found(
+async def test_upload_avatar_not_active_character(
     client: AsyncClient,
     auth_headers: dict,
 ):
-    """Uploading an avatar for a nonexistent character returns 404."""
+    """Uploading to an id that isn't the caller's active character returns 403.
+
+    The avatar guard is identity-based, matching edit/delete (ADR-0025): a
+    mismatched id (here, a nonexistent one) is rejected as 403, not 404.
+    """
     jpeg_bytes = _make_jpeg_bytes()
     resp = await client.post(
         "/characters/99999/avatar",
         files={"file": ("avatar.jpg", jpeg_bytes, "image/jpeg")},
         headers=auth_headers,
     )
-    assert resp.status_code == 404
+    assert resp.status_code == 403
 
 
 @pytest.mark.asyncio

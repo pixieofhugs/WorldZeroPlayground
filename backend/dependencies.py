@@ -8,9 +8,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from db import get_db
 from models.account import Account, AccountStatus
-from models.character import Character, CharacterStatus
+from models.character import Character
 from models.roles import AccountRole, Role
 from services.auth import decode_jwt, get_current_account
+from services.character import resolve_active_character
 
 _OPTIONAL_BEARER = HTTPBearer(auto_error=False)
 
@@ -19,20 +20,13 @@ async def get_current_character(
     account: Account = Depends(get_current_account),
     session: AsyncSession = Depends(get_db),
 ) -> Character:
-    """Return the first active character for the authenticated account.
+    """Return the account's active (carried) character — the actor for every write path.
 
+    Honours ``account.active_character_id`` (the life the player is currently
+    carrying); falls back to the most-recently-created active character.
     Raises 403 if the account has no active character yet.
     """
-    result = await session.execute(
-        select(Character)
-        .where(
-            Character.account_id == account.id,
-            Character.status == CharacterStatus.active,
-        )
-        .order_by(Character.created_at)
-        .limit(1)
-    )
-    character = result.scalar_one_or_none()
+    character = await resolve_active_character(account, session)
     if character is None:
         raise HTTPException(
             status_code=403,
@@ -76,16 +70,7 @@ async def get_current_character_optional(
     if account is None or account.status != AccountStatus.active:
         return None
 
-    char_result = await session.execute(
-        select(Character)
-        .where(
-            Character.account_id == account.id,
-            Character.status == CharacterStatus.active,
-        )
-        .order_by(Character.created_at)
-        .limit(1)
-    )
-    return char_result.scalar_one_or_none()
+    return await resolve_active_character(account, session)
 
 
 async def require_admin(
