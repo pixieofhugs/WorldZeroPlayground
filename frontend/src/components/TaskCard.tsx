@@ -7,7 +7,6 @@ import TaskCardWow from './cards/TaskCardWow'
 import TaskCardSNIDE from './cards/TaskCardSNIDE'
 import TaskCardEphemerists from './cards/TaskCardEphemerists'
 import TaskCardSingularity from './cards/TaskCardSingularity'
-import TaskCardUAMasters from './cards/TaskCardUAMasters'
 import TaskCardEverymen from './cards/TaskCardEverymen'
 import { factionCssVar, factionName } from '../utils/factions'
 import { pickVariant } from '../utils/factionDispatch'
@@ -27,7 +26,6 @@ export const CARD_COMPONENTS: Record<string, ComponentType<CardProps>> = {
   snide: TaskCardSNIDE,
   ephemerists: TaskCardEphemerists,
   singularity: TaskCardSingularity,
-  ua_masters: TaskCardUAMasters,
 }
 
 export const DEFAULT_CARD = TaskCardUA

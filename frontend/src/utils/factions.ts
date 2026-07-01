@@ -31,7 +31,6 @@ const FACTION_FALLBACKS: Record<string, FactionConfig> = {
   snide: { slug: "snide", name: "S.N.I.D.E.", color: "#6fae00" },
   ephemerists: { slug: "ephemerists", name: "The Ephemerists", color: "#1d6e72" },
   singularity: { slug: "singularity", name: "Singularity", color: "#2563eb" },
-  ua_masters: { slug: "ua_masters", name: "UA Masters", color: "#c2410c" },
   albescent: { slug: "albescent", name: "/Albescent", color: "#7c3aed" },
   aged_out: { slug: "aged_out", name: "Aged Out", color: "#7c3aed" },
 };
@@ -81,7 +80,6 @@ const CSS_KEY: Record<string, string> = {
   snide: "snide",
   ephemerists: "ephemerists",
   singularity: "singularity",
-  ua_masters: "ua-masters",
 };
 
 /**

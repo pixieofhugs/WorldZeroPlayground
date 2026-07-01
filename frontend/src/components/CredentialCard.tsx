@@ -36,7 +36,6 @@ const CARD_KEY: Record<string, string> = {
   snide: 'snide',
   ephemerists: 'ephemerists',
   singularity: 'singularity',
-  ua_masters: 'ua-masters',
   albescent: 'albescent',
 }
 

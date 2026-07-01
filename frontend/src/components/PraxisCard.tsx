@@ -494,46 +494,6 @@ function SingularityPraxisCard({ praxis, adminProps }: ArchetypeProps) {
   );
 }
 
-function UAMastersPraxisCard({ praxis, adminProps }: ArchetypeProps) {
-  return (
-    <div
-      style={{
-        width: "100%",
-        flex: "1 1 280px",
-        minWidth: 280,
-        background: factionCssVar("ua_masters", "card-bg"),
-        border: "1px solid var(--color-border)",
-        clipPath:
-          "polygon(0 0, 98% 0, 100% 2%, 100% 98%, 98% 100%, 2% 100%, 0 98%, 0 2%)",
-        padding: "12px 14px 16px",
-        fontFamily: "'Special Elite', serif",
-        color: factionCssVar("ua_masters", "card-text"),
-        position: "relative",
-        transition: "background 150ms, color 150ms",
-        boxSizing: "border-box",
-      }}
-    >
-      <div
-        style={{
-          fontSize: 7,
-          textTransform: "uppercase",
-          letterSpacing: "0.2em",
-          color: factionCssVar("ua_masters", "card-muted"),
-          borderBottom: `2px solid ${factionCssVar("ua_masters", "card-accent")}`,
-          paddingBottom: 4,
-          marginBottom: 6,
-        }}
-      >
-        The UA Masters Gazette
-      </div>
-      <AdminOverlay {...adminProps} />
-      <PraxisContent
-        praxis={praxis}
-        metaStyle={{ color: factionCssVar("ua_masters", "card-muted") }}
-      />
-    </div>
-  );
-}
 
 /** Fallback card for `na` / unknown task factions — a plain accent-bordered slab. */
 export function DefaultPraxisCard({ praxis, adminProps }: ArchetypeProps) {
@@ -570,7 +530,6 @@ export const PRAXIS_CARD_BY_SLUG: Record<string, ComponentType<ArchetypeProps>> 
   snide: SnidePraxisCard,
   ephemerists: EphemeristsPraxisCard,
   singularity: SingularityPraxisCard,
-  ua_masters: UAMastersPraxisCard,
 };
 
 export default function PraxisCard({ praxis, onModerated }: Props) {

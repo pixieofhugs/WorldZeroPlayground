@@ -13,7 +13,6 @@ const FACTION_DESCRIPTORS: Record<string, string> = {
   snide: "Mischief",
   ephemerists: "Record",
   singularity: "Discover",
-  ua_masters: "Chronicle",
 };
 
 /**

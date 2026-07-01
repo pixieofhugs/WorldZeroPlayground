@@ -948,109 +948,6 @@ function SingularityCard({
   );
 }
 
-function UAMastersCard({
-  faction,
-  status,
-  invitationNote,
-  ...actions
-}: FactionCardProps) {
-  const desc = faction.description
-    ? faction.description.slice(0, 100) +
-      (faction.description.length > 100 ? "…" : "")
-    : "";
-  const words = desc.split(" ");
-  const mid = Math.ceil(words.length / 2);
-  const col1 = words.slice(0, mid).join(" ");
-  const col2 = words.slice(mid).join(" ");
-  return (
-    <div
-      style={{
-        width: "100%",
-        background: factionCssVar("ua_masters", "card-bg"),
-        border: "1px solid var(--color-border)",
-        clipPath:
-          "polygon(0 0, 98% 0, 100% 2%, 100% 98%, 98% 100%, 2% 100%, 0 98%, 0 2%)",
-        padding: "12px 14px 16px",
-        fontFamily: factionCssVar("ua_masters", "card-font"),
-        color: factionCssVar("ua_masters", "card-text"),
-        transition: "background 150ms, color 150ms",
-        boxSizing: "border-box",
-      }}
-    >
-      {/* Masthead */}
-      <div
-        style={{
-          fontSize: 7,
-          textTransform: "uppercase",
-          letterSpacing: "0.2em",
-          color: factionCssVar("ua_masters", "card-muted"),
-          borderBottom: `2px solid ${factionCssVar("ua_masters", "card-accent")}`,
-          paddingBottom: 4,
-          marginBottom: 6,
-        }}
-      >
-        The UA Masters Gazette
-      </div>
-      {invitationNote && (
-        <InvitationNote slug={faction.slug} note={invitationNote} />
-      )}
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "flex-start",
-          marginBottom: 4,
-        }}
-      >
-        <div style={{ fontSize: "var(--text-lg)", lineHeight: 1.2 }}>
-          {faction.name}
-        </div>
-        <StatusBadge status={status} slug="ua_masters" />
-      </div>
-      <div
-        style={{
-          fontSize: 8,
-          fontStyle: "italic",
-          color: factionCssVar("ua_masters", "card-muted"),
-          marginBottom: 8,
-        }}
-      >
-        UA Masters Chronicle
-      </div>
-      {desc && (
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "1fr 1px 1fr",
-            gap: 4,
-            marginBottom: 10,
-          }}
-        >
-          <div
-            style={{
-              fontSize: 8,
-              color: factionCssVar("ua_masters", "card-muted"),
-              lineHeight: 1.5,
-            }}
-          >
-            {col1}
-          </div>
-          <div style={{ background: "var(--color-border)" }} />
-          <div
-            style={{
-              fontSize: 8,
-              color: factionCssVar("ua_masters", "card-muted"),
-              lineHeight: 1.5,
-            }}
-          >
-            {col2}
-          </div>
-        </div>
-      )}
-      <ActionRow faction={faction} status={status} {...actions} />
-    </div>
-  );
-}
 
 // ─── Switcher ─────────────────────────────────────────────────────────────────
 
@@ -1068,8 +965,6 @@ export default function FactionCard(props: FactionCardProps) {
       return <SingularityCard {...props} />;
     case "everymen":
       return <EverymenCard {...props} />;
-    case "ua_masters":
-      return <UAMastersCard {...props} />;
     default:
       // Fallback: generic styled card using faction CSS vars
       return (

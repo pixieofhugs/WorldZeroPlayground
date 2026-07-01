@@ -46,7 +46,6 @@
   --faction-snide: #6fae00; /* acid green (deep — legible on light chrome) */
   --faction-ephemerists: #1d6e72; /* lapis-verdigris — Ephemerists reskin of the teal slot */
   --faction-singularity: #2563eb; /* blue */
-  --faction-ua-masters: #c2410c; /* orange */
 
   /* ── Faction tints (backgrounds, highlights) ── */
   --faction-ua-light: rgba(194, 84, 31, 0.08);
@@ -54,7 +53,6 @@
   --faction-snide-light: rgba(182, 255, 46, 0.16);
   --faction-ephemerists-light: rgba(29, 110, 114, 0.1);
   --faction-singularity-light: rgba(37, 99, 235, 0.1);
-  --faction-ua-masters-light: rgba(194, 65, 12, 0.1);
 
   /* ── Faction borders ── */
   --faction-ua-border: rgba(194, 84, 31, 0.3);
@@ -62,7 +60,6 @@
   --faction-snide-border: rgba(111, 174, 0, 0.45);
   --faction-ephemerists-border: rgba(29, 110, 114, 0.35);
   --faction-singularity-border: rgba(37, 99, 235, 0.35);
-  --faction-ua-masters-border: rgba(194, 65, 12, 0.35);
 
   /* ── Faction card backgrounds (light mode) ── */
   --faction-ua-card-bg: var(--ua-paper); /* parchment sheet */
@@ -70,7 +67,6 @@
   --faction-snide-card-bg: #14110b; /* photocopier ink (dark-in-light, Singularity precedent) */
   --faction-ephemerists-card-bg: var(--eph-vellum); /* Ephemerists: aged manuscript stock */
   --faction-singularity-card-bg: #050f08; /* terminal black */
-  --faction-ua-masters-card-bg: #f5e9d6; /* aged newsprint */
 
   /* ── Faction card text (light mode) ── */
   --faction-ua-card-text: var(--ua-ink);
@@ -78,7 +74,6 @@
   --faction-snide-card-text: #f4f1e8; /* warm xerox paper on ink */
   --faction-ephemerists-card-text: var(--eph-vellum-text);
   --faction-singularity-card-text: #4ade80;
-  --faction-ua-masters-card-text: #1a1209;
 
   /* ── Faction card accents (light mode) ── */
   --faction-ua-card-accent: var(--ua-orange);
@@ -86,7 +81,6 @@
   --faction-snide-card-accent: #b6ff2e; /* toxic acid */
   --faction-ephemerists-card-accent: var(--eph-rubric);
   --faction-singularity-card-accent: #4ade80; /* terminal green */
-  --faction-ua-masters-card-accent: #c2410c;
 
   /* ── Faction card secondary text (descriptions, metadata) ── */
   --faction-ua-card-muted: var(--ua-sub);
@@ -94,7 +88,6 @@
   --faction-snide-card-muted: #d8d6c8; /* faded newsprint grey on ink */
   --faction-ephemerists-card-muted: var(--eph-muted);
   --faction-singularity-card-muted: #60a5fa; /* blue brand chrome */
-  --faction-ua-masters-card-muted: #333;
 
   /* ── Faction headline fonts (per-faction display) ── */
   --faction-ua-card-font: var(--font-faction-old);
@@ -102,7 +95,6 @@
   --faction-snide-card-font: var(--font-faction-marker);
   --faction-ephemerists-card-font: var(--eph-display);
   --faction-singularity-card-font: var(--font-faction-terminal);
-  --faction-ua-masters-card-font: var(--font-faction-blackletter);
 
   /* ── S.N.I.D.E. punk extension — ransom/xerox/spray pigments + font set ──
      Extra named pigments beyond the standard suffix set, namespaced to the
@@ -325,7 +317,6 @@
   --faction-snide: #b6ff2e; /* acid green (bright — pops on dark) */
   --faction-ephemerists: #3aa0a4; /* lapis-verdigris lifted for dark — Ephemerists */
   --faction-singularity: #60a5fa; /* blue */
-  --faction-ua-masters: #fb923c; /* orange */
 
   /* ── Faction tints (dark) ── */
   --faction-ua-light: rgba(194, 84, 31, 0.08);
@@ -333,7 +324,6 @@
   --faction-snide-light: rgba(182, 255, 46, 0.12);
   --faction-ephemerists-light: rgba(58, 160, 164, 0.1);
   --faction-singularity-light: rgba(96, 165, 250, 0.1);
-  --faction-ua-masters-light: rgba(251, 146, 60, 0.1);
 
   /* ── Faction borders (dark) ── */
   --faction-ua-border: rgba(194, 84, 31, 0.3);
@@ -341,7 +331,6 @@
   --faction-snide-border: rgba(182, 255, 46, 0.3);
   --faction-ephemerists-border: rgba(58, 160, 164, 0.35);
   --faction-singularity-border: rgba(96, 165, 250, 0.25);
-  --faction-ua-masters-border: rgba(251, 146, 60, 0.3);
 
   /* ── Faction card backgrounds (dark mode) ── */
   --faction-ua-card-bg: var(--ua-paper); /* salon never dims (#240) */
@@ -349,21 +338,18 @@
   --faction-snide-card-bg: #0c0a07; /* deeper ink */
   /* ephemerists card-bg inherits the :root var(--eph-vellum) rebind (flips below) */
   --faction-singularity-card-bg: #050f08;
-  --faction-ua-masters-card-bg: #1f1208;
 
   /* ── Faction card text (dark mode) ── */
   --faction-ua-card-text: var(--ua-ink);
   --faction-wow-card-text: #fbcfe0;
   --faction-snide-card-text: #f4f1e8;
   --faction-singularity-card-text: #4ade80;
-  --faction-ua-masters-card-text: #fed7aa;
 
   /* ── Faction card accents (dark mode) ── */
   --faction-ua-card-accent: var(--ua-orange);
   --faction-wow-card-accent: #f472b6;
   --faction-snide-card-accent: #b6ff2e;
   --faction-singularity-card-accent: #4ade80; /* terminal green */
-  --faction-ua-masters-card-accent: #fb923c;
 
   /* ── Faction card secondary text (dark mode) ── */
   --faction-ua-card-muted: var(--ua-sub);
@@ -374,7 +360,6 @@
   --faction-snide-wall-deep: #0b0a08;
   --faction-snide-wall-text: #e9e6da;
   --faction-singularity-card-muted: #60a5fa; /* blue brand chrome */
-  --faction-ua-masters-card-muted: #b06040;
 
   /* Albescent — always-light: identical to the :root values so the vellum
      register never dims, regardless of the global theme (#231). */
