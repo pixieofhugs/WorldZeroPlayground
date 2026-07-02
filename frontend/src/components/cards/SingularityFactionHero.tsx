@@ -66,7 +66,9 @@ export default function SingularityFactionHero({
   tasks,
   praxes,
 }: FactionHeroProps) {
-  // The faction labels its own counts — page passes raw numbers only.
+  // The faction labels its own counts — page passes raw numbers only. Per the
+  // standardization rule these sit in a side "system readout" column beside the
+  // sigil, never a full-width band under the blurb.
   const stats = [
     { value: members, label: "nodes online" },
     { value: tasks, label: "open protocols" },
@@ -129,9 +131,9 @@ export default function SingularityFactionHero({
           zIndex: 2,
           padding: "36px 40px 40px",
           display: "grid",
-          gridTemplateColumns: "1fr auto",
+          gridTemplateColumns: "1fr 240px",
           gap: 32,
-          alignItems: "center",
+          alignItems: "start",
         }}
       >
         <div>
@@ -188,78 +190,99 @@ export default function SingularityFactionHero({
               lineHeight: 1.7,
               color: phosphor(60),
               maxWidth: 520,
-              margin: "0 0 28px",
+              margin: 0,
             }}
           >
             {description ??
               "We watch the noise floor for the pattern that shouldn't exist."}
           </p>
+        </div>
 
-          {/* stats */}
-          <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
+        {/* right column: spinning sigil + side "system readout" stats */}
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            gap: 20,
+            alignItems: "center",
+          }}
+        >
+          <div style={{ position: "relative", flexShrink: 0, width: 120, height: 120 }}>
+            <div
+              aria-hidden="true"
+              className="sg-pulse"
+              style={{
+                position: "absolute",
+                inset: -20,
+                borderRadius: "50%",
+                background: `radial-gradient(circle, ${phosphor(28)}, transparent 70%)`,
+                opacity: 0.2,
+                pointerEvents: "none",
+              }}
+            />
+            <div className="sg-rotate">
+              <SingularityMark size={120} color={phosphor(55)} />
+            </div>
+            <div
+              style={{
+                position: "absolute",
+                inset: 0,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <SingularityMark size={44} color={PHOSPHOR} />
+            </div>
+          </div>
+
+          {/* system readout — stats stacked in a side panel */}
+          <div
+            style={{
+              alignSelf: "stretch",
+              border: `1px solid ${BORDER}`,
+              background: "var(--faction-singularity-light)",
+            }}
+          >
+            <div
+              style={{
+                fontSize: 7,
+                letterSpacing: "0.2em",
+                color: signal(55),
+                textTransform: "uppercase",
+                padding: "7px 12px 5px",
+                borderBottom: `1px solid ${signal(28)}`,
+              }}
+            >
+              SYSTEM READOUT
+            </div>
             {stats.map((s) => (
               <div
                 key={s.label}
                 style={{
-                  border: `1px solid ${BORDER}`,
-                  background: "var(--faction-singularity-light)",
-                  padding: "10px 18px",
-                  textAlign: "center",
-                  minWidth: 96,
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "baseline",
+                  gap: 10,
+                  padding: "7px 12px",
+                  borderBottom: `1px solid ${signal(14)}`,
                 }}
               >
-                <div
+                <span
                   style={{
-                    fontSize: 26,
-                    lineHeight: 1,
-                    color: PHOSPHOR,
-                    marginBottom: 4,
-                  }}
-                >
-                  {s.value}
-                </div>
-                <div
-                  style={{
-                    fontSize: 7,
-                    letterSpacing: "0.2em",
-                    color: signal(55),
+                    fontSize: 7.5,
+                    letterSpacing: "0.14em",
+                    color: signal(50),
                     textTransform: "uppercase",
                   }}
                 >
                   {s.label}
-                </div>
+                </span>
+                <span style={{ fontSize: 20, lineHeight: 1, color: PHOSPHOR }}>
+                  {s.value}
+                </span>
               </div>
             ))}
-          </div>
-        </div>
-
-        {/* spinning sigil */}
-        <div style={{ position: "relative", flexShrink: 0 }}>
-          <div
-            aria-hidden="true"
-            className="sg-pulse"
-            style={{
-              position: "absolute",
-              inset: -20,
-              borderRadius: "50%",
-              background: `radial-gradient(circle, ${phosphor(28)}, transparent 70%)`,
-              opacity: 0.2,
-              pointerEvents: "none",
-            }}
-          />
-          <div className="sg-rotate">
-            <SingularityMark size={120} color={phosphor(55)} />
-          </div>
-          <div
-            style={{
-              position: "absolute",
-              inset: 0,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
-            <SingularityMark size={44} color={PHOSPHOR} />
           </div>
         </div>
       </div>

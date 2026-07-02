@@ -141,13 +141,14 @@ export default function UAFactionHero({
               backgroundSize: "5px 5px",
               padding: "34px 38px 30px",
               display: "flex",
+              flexWrap: "wrap",
               gap: 30,
               alignItems: "center",
             }}
           >
             <UACrest width={150} height={180} />
 
-            <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ flex: 1, minWidth: 260 }}>
               {/* engraved house line */}
               <div
                 style={{
@@ -227,46 +228,46 @@ export default function UAFactionHero({
                   "Any medium, any madness. The Salon decides what endures."}
               </p>
 
-              {/* engraved regalia plaques */}
-              <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
-                {stats.map((s) => (
-                  <div
-                    key={s.label}
+            </div>
+
+            {/* stats on the side — engraved regalia stacked in a side column */}
+            <div style={{ flexShrink: 0, width: 168, display: "flex", flexDirection: "column", gap: 11 }}>
+              {stats.map((s) => (
+                <div
+                  key={s.label}
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "baseline",
+                    borderTop: `1px solid ${LINE}`,
+                    paddingTop: 9,
+                  }}
+                >
+                  <span
                     style={{
-                      display: "flex",
-                      flexDirection: "column",
-                      gap: 3,
-                      padding: "9px 18px",
-                      border: `1px solid ${LINE}`,
-                      background: PAPER,
+                      fontFamily: ENGRAVED,
+                      fontSize: 8.5,
+                      letterSpacing: "0.12em",
+                      textTransform: "uppercase",
+                      color: MUTED,
                     }}
                   >
-                    <span
-                      style={{
-                        fontFamily: DISPLAY,
-                        fontStyle: "italic",
-                        fontWeight: 700,
-                        fontSize: 26,
-                        lineHeight: 0.9,
-                        color: INK,
-                      }}
-                    >
-                      {s.value}
-                    </span>
-                    <span
-                      style={{
-                        fontFamily: ENGRAVED,
-                        fontSize: 8,
-                        letterSpacing: "0.16em",
-                        textTransform: "uppercase",
-                        color: MUTED,
-                      }}
-                    >
-                      {s.label}
-                    </span>
-                  </div>
-                ))}
-              </div>
+                    {s.label}
+                  </span>
+                  <span
+                    style={{
+                      fontFamily: DISPLAY,
+                      fontStyle: "italic",
+                      fontWeight: 700,
+                      fontSize: 23,
+                      lineHeight: 1,
+                      color: ACCENT,
+                    }}
+                  >
+                    {s.value}
+                  </span>
+                </div>
+              ))}
             </div>
           </div>
         </div>

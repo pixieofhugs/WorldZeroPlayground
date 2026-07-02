@@ -546,6 +546,28 @@
   --font-faction-script: "Caveat", cursive;
   --font-faction-old: "IM Fell English", Georgia, serif;
   --font-faction-engraved: "Cinzel", serif;
+
+  /* Shared faction-page body grid — main column + right rail; collapses to one
+     column on narrow viewports (rule below). Every faction skin reuses this. */
+
+  /* ── Faction Distinction Laurel ── the single cross-faction high-score mark.
+     Fixed brand rainbow; the medallion's inner disc + glyph are recoloured
+     per-faction by the caller (see components/cards/FdlLaurel.tsx). */
+  --fdl-rainbow: conic-gradient(from 90deg, #fbbf24, #f97316, #be185d, #4f46e5, #0e7490, #16a34a, #fbbf24);
+}
+
+/* Faction-page body: main column + fixed right rail, collapsing to one column
+   on narrow viewports. Shared by every faction skin (see factionDetail bodies). */
+.wz-faction-grid {
+  display: grid;
+  grid-template-columns: 1fr 322px;
+  gap: 34px;
+  align-items: start;
+}
+@media (max-width: 860px) {
+  .wz-faction-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 @layer base {

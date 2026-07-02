@@ -3,13 +3,20 @@ import { useParams, Link } from "react-router-dom";
 import PageTitle from "../components/ui/PageTitle";
 import { factionCssVar } from "../utils/factions";
 import { pickVariant } from "../utils/factionDispatch";
-import { useFactionDetail } from "./factionDetail/useFactionDetail";
+import { useFactionDetail, type FactionDetailState } from "./factionDetail/useFactionDetail";
 import DefaultFactionBody from "./factionDetail/archetypes/DefaultFactionBody";
+import EverymenFactionBody from "./factionDetail/archetypes/EverymenFactionBody";
+import UaFactionBody from "./factionDetail/archetypes/UaFactionBody";
+import SingularityFactionBody from "./factionDetail/archetypes/SingularityFactionBody";
+import SnideFactionBody from "./factionDetail/archetypes/SnideFactionBody";
+import EphemeristsFactionBody from "./factionDetail/archetypes/EphemeristsFactionBody";
+import WowFactionBody from "./factionDetail/archetypes/WowFactionBody";
 import EphemeristsFactionHero from "../components/cards/EphemeristsFactionHero";
 import SnideFactionHero from "../components/cards/SnideFactionHero";
 import SingularityFactionHero from "../components/cards/SingularityFactionHero";
 import EverymenFactionHero from "../components/cards/EverymenFactionHero";
 import UAFactionHero from "../components/cards/UAFactionHero";
+import WowFactionHero from "../components/cards/WowFactionHero";
 
 /**
  * Faction detail page (`/factions/:slug`). Per-faction surface #13 in
@@ -40,7 +47,19 @@ const FACTION_HEROES: Record<string, ComponentType<FactionHeroProps>> = {
   singularity: SingularityFactionHero,
   everymen: EverymenFactionHero,
   ua: UAFactionHero,
-  // wow: undesigned — falls through to the shared title/description chrome.
+  wow: WowFactionHero,
+};
+
+// The standardized six-section body, dispatched per faction. albescent is not
+// registered: it aliases to ua (FACTION_ALIASES) and so inherits the UA body
+// via pickVariant until its own vellum skin lands with the alias removal.
+const FACTION_BODIES: Record<string, ComponentType<{ state: FactionDetailState }>> = {
+  everymen: EverymenFactionBody,
+  ua: UaFactionBody,
+  singularity: SingularityFactionBody,
+  snide: SnideFactionBody,
+  ephemerists: EphemeristsFactionBody,
+  wow: WowFactionBody,
 };
 
 export default function FactionDetail() {
@@ -77,6 +96,7 @@ export default function FactionDetail() {
   // (Hero is undefined) the shared title + description chrome is used. The page
   // backdrop is themed per-faction by useFactionDetail either way.
   const Hero = pickVariant(FACTION_HEROES, faction.slug);
+  const Body = pickVariant(FACTION_BODIES, faction.slug, DefaultFactionBody);
 
   return (
     <div className="py-8">
@@ -104,7 +124,7 @@ export default function FactionDetail() {
         </>
       )}
 
-      <DefaultFactionBody state={state} />
+      <Body state={state} />
     </div>
   );
 }

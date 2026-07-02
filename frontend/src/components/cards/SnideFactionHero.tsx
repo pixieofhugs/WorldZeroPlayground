@@ -4,8 +4,10 @@ import { SnideSigil } from "../snide/snideAtoms";
  * S.N.I.D.E. faction-page hero — a flyposted wall (NOT a tidy poster): a
  * photocopier-black field with faint pasted-flyer ghosts, halftone + grain, a
  * torn acid strip, a slapped sigil sticker, a skewed acid wordmark with a pink
- * drop-shadow, the motto on a strip, and staggered acid stat chits. Ported from
- * the SNIDE design kit (SnideHero); conforms to {@link FactionHeroProps}.
+ * drop-shadow, the motto on a strip, and — per the faction-page standardization
+ * — the acid stat chits stacked on the SIDE of the sigil (stats live on the side
+ * of the hero, never a full-width band). Ported from the SNIDE design kit
+ * (SnideHero); conforms to {@link FactionHeroProps}.
  *
  * The page passes raw counts; the faction labels them in its own voice. Motto +
  * full name are faction constants (not backend fields).
@@ -94,180 +96,189 @@ export default function SnideFactionHero({
         }}
       />
 
-      {/* slapped sigil sticker, tilted */}
-      <div
-        style={{
-          position: "absolute",
-          top: 34,
-          right: 42,
-          zIndex: 3,
-          transform: "rotate(9deg)",
-        }}
-      >
-        <div
-          style={{
-            position: "relative",
-            width: 104,
-            height: 104,
-            borderRadius: "50%",
-            background: "var(--faction-snide-paper)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            border: "2px solid var(--faction-snide)",
-            boxShadow: "0 0 0 4px var(--faction-snide-ink), 3px 4px 0 rgba(0,0,0,0.4)",
-          }}
-        >
-          <div
-            className="ht-dots"
-            style={{
-              position: "absolute",
-              inset: 0,
-              color: "rgba(20,17,11,0.06)",
-              borderRadius: "50%",
-              pointerEvents: "none",
-            }}
-          />
-          <SnideSigil size={60} color="var(--faction-snide)" />
-        </div>
-        <div
-          style={{
-            position: "absolute",
-            top: -9,
-            left: "50%",
-            marginLeft: -26,
-            width: 52,
-            height: 18,
-            background: "var(--faction-snide-tape)",
-            transform: "rotate(-7deg)",
-          }}
-        />
-      </div>
-
-      <div style={{ position: "relative", zIndex: 2, padding: "26px 38px 2px", maxWidth: 770 }}>
-        {/* eyebrow on tape */}
-        <div
-          style={{
-            display: "inline-block",
-            width: "fit-content",
-            whiteSpace: "nowrap",
-            background: "var(--faction-snide-tape)",
-            color: "var(--faction-snide-ink)",
-            fontFamily: "var(--faction-snide-font-type)",
-            fontSize: 10,
-            letterSpacing: "0.05em",
-            padding: "3px 12px",
-            transform: "rotate(-1.5deg)",
-            boxShadow: "1px 1px 0 rgba(0,0,0,0.3)",
-          }}
-        >
-          World Zero · faction no. 4
-        </div>
-        {/* wordmark */}
-        <h1
-          style={{
-            fontFamily: "var(--faction-snide-font-impact)",
-            fontSize: 86,
-            lineHeight: 0.8,
-            letterSpacing: "0.02em",
-            margin: "14px 0 0",
-            color: "var(--faction-snide-acid)",
-            textShadow: "4px 4px 0 var(--faction-snide-pink)",
-            transform: "skewX(-5deg) rotate(-1.5deg)",
-          }}
-        >
-          {name}
-        </h1>
-        <div
-          style={{
-            fontFamily: "var(--font-body)",
-            fontSize: 10,
-            letterSpacing: "0.16em",
-            textTransform: "uppercase",
-            color: "#b7b5a7",
-            margin: "12px 0 0",
-            transform: "rotate(-0.4deg)",
-          }}
-        >
-          {FULL_NAME}
-        </div>
-        {/* motto */}
-        <div
-          style={{
-            display: "inline-block",
-            marginTop: 14,
-            background: "var(--faction-snide-acid)",
-            color: "var(--faction-snide-ink)",
-            fontFamily: "var(--faction-snide-font-black)",
-            fontSize: 15,
-            letterSpacing: "0.02em",
-            padding: "6px 15px",
-            transform: "rotate(-2deg)",
-            boxShadow: "2px 3px 0 var(--faction-snide-pink)",
-          }}
-        >
-          {MOTTO}
-        </div>
-        <p
-          style={{
-            fontFamily: "var(--font-body)",
-            fontSize: 12.5,
-            lineHeight: 1.6,
-            maxWidth: 600,
-            margin: "16px 0 0",
-            color: "#e7e4d8",
-          }}
-        >
-          {description ?? "Nothing matters. We do it anyway."}
-        </p>
-      </div>
-
-      {/* staggered stat chits — not a clean band */}
+      {/* identity + side stat column — stats sit on the SIDE, never a band */}
       <div
         style={{
           position: "relative",
           zIndex: 2,
           display: "flex",
-          gap: 16,
+          alignItems: "flex-start",
           flexWrap: "wrap",
-          padding: "24px 38px 28px",
+          gap: 30,
+          padding: "26px 38px 30px",
         }}
       >
-        {stats.map((s, i) => (
+        {/* identity — eyebrow + wordmark + motto + blurb */}
+        <div style={{ flex: 1, minWidth: 300 }}>
+          {/* eyebrow on tape */}
           <div
-            key={s.label}
             style={{
-              background: "rgba(0,0,0,0.34)",
-              border: "2px solid var(--faction-snide-acid)",
-              padding: "8px 16px 7px",
-              transform: `rotate(${CHIT_ROT[i % CHIT_ROT.length]}deg)`,
-              boxShadow: "2px 3px 0 rgba(0,0,0,0.4)",
+              display: "inline-block",
+              width: "fit-content",
+              whiteSpace: "nowrap",
+              background: "var(--faction-snide-tape)",
+              color: "var(--faction-snide-ink)",
+              fontFamily: "var(--faction-snide-font-type)",
+              fontSize: 10,
+              letterSpacing: "0.05em",
+              padding: "3px 12px",
+              transform: "rotate(-1.5deg)",
+              boxShadow: "1px 1px 0 rgba(0,0,0,0.3)",
             }}
           >
-            <div
-              style={{
-                fontFamily: "var(--faction-snide-font-impact)",
-                fontSize: 34,
-                lineHeight: 0.85,
-                color: "var(--faction-snide-acid)",
-                whiteSpace: "nowrap",
-              }}
-            >
-              {s.value}
-            </div>
-            <div
-              style={{
-                fontFamily: "var(--font-body)",
-                fontSize: 9,
-                letterSpacing: "0.12em",
-                textTransform: "uppercase",
-                color: "#cfcdbf",
-              }}
-            >
-              {s.label}
-            </div>
+            World Zero · faction no. 4
           </div>
-        ))}
+          {/* wordmark */}
+          <h1
+            style={{
+              fontFamily: "var(--faction-snide-font-impact)",
+              fontSize: 82,
+              lineHeight: 0.8,
+              letterSpacing: "0.02em",
+              margin: "16px 0 0",
+              color: "var(--faction-snide-acid)",
+              textShadow: "4px 4px 0 var(--faction-snide-pink)",
+              transform: "skewX(-5deg) rotate(-1.5deg)",
+            }}
+          >
+            {name}
+          </h1>
+          <div
+            style={{
+              fontFamily: "var(--font-body)",
+              fontSize: 10,
+              letterSpacing: "0.16em",
+              textTransform: "uppercase",
+              color: "#b7b5a7",
+              margin: "12px 0 0",
+              transform: "rotate(-0.4deg)",
+            }}
+          >
+            {FULL_NAME}
+          </div>
+          {/* motto */}
+          <div
+            style={{
+              display: "inline-block",
+              marginTop: 14,
+              background: "var(--faction-snide-acid)",
+              color: "var(--faction-snide-ink)",
+              fontFamily: "var(--faction-snide-font-black)",
+              fontSize: 15,
+              letterSpacing: "0.02em",
+              padding: "6px 15px",
+              transform: "rotate(-2deg)",
+              boxShadow: "2px 3px 0 var(--faction-snide-pink)",
+            }}
+          >
+            {MOTTO}
+          </div>
+          <p
+            style={{
+              fontFamily: "var(--font-body)",
+              fontSize: 12.5,
+              lineHeight: 1.6,
+              maxWidth: 560,
+              margin: "16px 0 0",
+              color: "#e7e4d8",
+            }}
+          >
+            {description ?? "Nothing matters. We do it anyway."}
+          </p>
+        </div>
+
+        {/* right: slapped sigil + acid stat chits stacked on the side */}
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "flex-end",
+            gap: 13,
+            flexShrink: 0,
+            width: 196,
+          }}
+        >
+          {/* slapped sigil sticker, tilted */}
+          <div style={{ position: "relative", transform: "rotate(9deg)", margin: "2px 10px 6px 0" }}>
+            <div
+              style={{
+                position: "relative",
+                width: 94,
+                height: 94,
+                borderRadius: "50%",
+                background: "var(--faction-snide-paper)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                border: "2px solid var(--faction-snide)",
+                boxShadow: "0 0 0 4px var(--faction-snide-ink), 3px 4px 0 rgba(0,0,0,0.4)",
+              }}
+            >
+              <div
+                className="ht-dots"
+                style={{
+                  position: "absolute",
+                  inset: 0,
+                  color: "rgba(20,17,11,0.06)",
+                  borderRadius: "50%",
+                  pointerEvents: "none",
+                }}
+              />
+              <SnideSigil size={54} color="var(--faction-snide)" />
+            </div>
+            <div
+              style={{
+                position: "absolute",
+                top: -9,
+                left: "50%",
+                marginLeft: -26,
+                width: 52,
+                height: 18,
+                background: "var(--faction-snide-tape)",
+                transform: "rotate(-7deg)",
+              }}
+            />
+          </div>
+
+          {/* staggered acid stat chits — not a clean band */}
+          {stats.map((s, i) => (
+            <div
+              key={s.label}
+              style={{
+                alignSelf: "stretch",
+                textAlign: "right",
+                background: "rgba(0,0,0,0.34)",
+                border: "2px solid var(--faction-snide-acid)",
+                padding: "7px 14px 6px",
+                transform: `rotate(${CHIT_ROT[i % CHIT_ROT.length]}deg)`,
+                boxShadow: "2px 3px 0 rgba(0,0,0,0.4)",
+              }}
+            >
+              <div
+                style={{
+                  fontFamily: "var(--faction-snide-font-impact)",
+                  fontSize: 30,
+                  lineHeight: 0.85,
+                  color: "var(--faction-snide-acid)",
+                  whiteSpace: "nowrap",
+                }}
+              >
+                {s.value}
+              </div>
+              <div
+                style={{
+                  fontFamily: "var(--font-body)",
+                  fontSize: 8.5,
+                  letterSpacing: "0.1em",
+                  textTransform: "uppercase",
+                  color: "#cfcdbf",
+                }}
+              >
+                {s.label}
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
     </header>
   );

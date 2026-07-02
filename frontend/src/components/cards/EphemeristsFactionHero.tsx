@@ -4,7 +4,7 @@ import { EphSeal, LapisLastWord } from "./ephemeristsAtoms";
  * The Ephemerists faction-page hero — a codex frontispiece. A lapis celestial
  * field behind ghost survey grids + astrolabe rings, the sigil seal, a Cinzel
  * wordmark with one word in the blue, the motto, a running gloss, and a
- * gold-ruled stat band. Colors via the --eph-* tokens (theme-aware).
+ * gold-ruled stat ledger on the side. Colors via the --eph-* tokens (theme-aware).
  *
  * Takes raw counts and labels them in the faction's own voice — the page stays
  * vocabulary-agnostic (see FactionHeroProps in FactionDetail).
@@ -73,9 +73,8 @@ export default function EphemeristsFactionHero({
     >
       <HeroGrids />
       <div style={{ height: 5, background: "var(--eph-gold)", position: "relative", zIndex: 2 }} />
-      <div style={{ position: "relative", zIndex: 2, display: "flex", alignItems: "center", gap: 28, padding: "26px 32px 24px", flexWrap: "wrap" }}>
-        <EphSeal size={104} bg="var(--eph-vellum)" eye="var(--eph-lapis)" />
-        <div style={{ flex: 1, minWidth: 220 }}>
+      <div style={{ position: "relative", zIndex: 2, display: "flex", alignItems: "center", gap: 32, padding: "26px 32px 26px", flexWrap: "wrap" }}>
+        <div style={{ flex: "1 1 300px", minWidth: 220 }}>
           <div
             style={{
               fontFamily: "var(--eph-serif)",
@@ -143,35 +142,34 @@ export default function EphemeristsFactionHero({
             </span>
           </p>
         </div>
-      </div>
-      {/* stat band */}
-      <div
-        style={{
-          position: "relative",
-          zIndex: 2,
-          display: "flex",
-          alignItems: "center",
-          flexWrap: "wrap",
-          background: "var(--eph-field-deep)",
-          borderTop: "2px solid var(--eph-gold)",
-          padding: "13px 32px",
-        }}
-      >
-        {stats.map((s, i) => (
-          <div key={s.label} style={{ display: "flex", alignItems: "center" }}>
-            {i > 0 && (
-              <div style={{ width: 1, height: 30, margin: "0 24px", background: "color-mix(in srgb, var(--eph-gold) 40%, transparent)" }} />
-            )}
-            <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
-              <span style={{ fontFamily: "var(--eph-display)", fontWeight: 700, fontSize: 30, lineHeight: 0.85, color: "var(--eph-gold-light)" }}>
-                {s.value}
-              </span>
-              <span style={{ fontFamily: "var(--eph-serif)", fontSize: 9, letterSpacing: "0.18em", textTransform: "uppercase", color: "var(--eph-parchment)", opacity: 0.82 }}>
-                {s.label}
-              </span>
-            </div>
+
+        {/* Right column: seal + a stat ledger on the side (standardization:
+            stats sit beside the seal, never a full-width band). */}
+        <div style={{ display: "flex", flexDirection: "column", gap: 22, alignItems: "center", flex: "0 0 232px", minWidth: 200 }}>
+          <EphSeal size={112} bg="var(--eph-vellum)" eye="var(--eph-lapis)" />
+          <div style={{ alignSelf: "stretch", border: "1px solid color-mix(in srgb, var(--eph-gold-light) 40%, transparent)", background: "color-mix(in srgb, var(--eph-field-deep) 55%, transparent)" }}>
+            {stats.map((s, i) => (
+              <div
+                key={s.label}
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "baseline",
+                  gap: 10,
+                  padding: "9px 14px",
+                  borderTop: i > 0 ? "1px solid color-mix(in srgb, var(--eph-gold-light) 18%, transparent)" : undefined,
+                }}
+              >
+                <span style={{ fontFamily: "var(--eph-serif)", fontSize: 9, letterSpacing: "0.14em", textTransform: "uppercase", color: "color-mix(in srgb, var(--eph-parchment) 75%, transparent)" }}>
+                  {s.label}
+                </span>
+                <span style={{ fontFamily: "var(--eph-display)", fontWeight: 700, fontSize: 24, lineHeight: 0.85, color: "var(--eph-gold-light)" }}>
+                  {s.value}
+                </span>
+              </div>
+            ))}
           </div>
-        ))}
+        </div>
       </div>
     </header>
   );
