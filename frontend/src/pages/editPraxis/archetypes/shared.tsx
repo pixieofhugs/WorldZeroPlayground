@@ -155,8 +155,8 @@ export function TaskMetaInline({
       <span>{factionName(slug)}</span>
       {task && <span>· {task.point_value} pts</span>}
       {task && showLevelPill && <LevelPill level={task.level_required} />}
-      {praxis.type !== "solo" && (
-        <span>· {praxis.type === "duel" ? "duel" : "collab"}</span>
+      {(praxis.type === "collab" || praxis.duel_id != null) && (
+        <span>· {praxis.duel_id != null ? "duel" : "collab"}</span>
       )}
     </span>
   );

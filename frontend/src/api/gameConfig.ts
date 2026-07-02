@@ -30,6 +30,8 @@ export interface LevelProfile {
 export interface GameConfigOut {
   era_name: string
   level_thresholds: number[]
+  duel_level_required: number
+  collaboration_level_required: number
   max_task_signups: number
   vote_budget_base: number
   vote_budget_multiplier: number

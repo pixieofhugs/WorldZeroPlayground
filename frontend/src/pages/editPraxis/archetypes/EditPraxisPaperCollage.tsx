@@ -448,8 +448,7 @@ export default function EditPraxisPaperCollage({ state }: Props) {
             )}
 
             {/* Invite */}
-            {state.showCollabInvite &&
-              !(praxis.type === "duel" && state.duelSlotFull) && (
+            {state.showInviteBox && (
                 <div
                   style={{
                     ...notepadPanel,
@@ -458,7 +457,7 @@ export default function EditPraxisPaperCollage({ state }: Props) {
                   }}
                 >
                   <span style={{ ...eyebrowStyle, marginBottom: 10 }}>
-                    ↳ {praxis.type === "duel" ? "racing" : "walking together"}
+                    ↳ {state.duelMode ? "racing" : "walking together"}
                   </span>
                   <InviteSearch
                     state={state}

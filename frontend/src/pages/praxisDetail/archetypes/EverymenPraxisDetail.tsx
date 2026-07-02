@@ -53,7 +53,7 @@ export default function EverymenPraxisDetail({ state }: { state: PraxisDetailSta
   if (!praxis) return null
 
   const sealedDate = praxis.submitted_at ?? praxis.created_at
-  const modeLabel = praxis.type === 'collab' ? 'COLLAB' : praxis.type === 'duel' ? 'DUEL' : 'SOLO'
+  const modeLabel = praxis.type === 'collab' ? 'COLLAB' : 'SOLO'
 
   return (
     <div
@@ -185,7 +185,7 @@ export default function EverymenPraxisDetail({ state }: { state: PraxisDetailSta
               {praxis.created_by_display_name || `#${praxis.created_by_id}`}
             </Link>
             <div style={{ fontSize: 9, letterSpacing: '0.06em', color: 'var(--everymen-muted)', marginTop: 3 }}>
-              {praxis.type === 'collab' ? 'all hands' : praxis.type === 'duel' ? 'head to head' : 'one pair of hands'}
+              {praxis.type === 'collab' ? 'all hands' : 'one pair of hands'}
             </div>
           </div>
           {/* base points from the task */}

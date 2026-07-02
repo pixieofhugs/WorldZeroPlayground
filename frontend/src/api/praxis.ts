@@ -149,6 +149,12 @@ export async function deletePraxis(id: number): Promise<void> {
   await api.delete(`/praxes/${id}`)
 }
 
+/** Flip a praxis between solo and collab in place, preserving id/content/media (#321). */
+export async function changePraxisType(id: number, type: PraxisType): Promise<PraxisOut> {
+  const { data } = await api.post<PraxisOut>(`/praxes/${id}/change-type`, { type })
+  return data
+}
+
 // ---------------------------------------------------------------------------
 // Lifecycle transitions
 // ---------------------------------------------------------------------------

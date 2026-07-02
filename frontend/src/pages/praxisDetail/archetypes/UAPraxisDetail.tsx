@@ -22,8 +22,10 @@ import MediaGallery from '../../../components/MediaGallery'
 import VoteUI from '../../../components/vote/VoteUI'
 import { factionCssVar } from '../../../utils/factions'
 import { formatTimestamp } from '../../../utils/dates'
-import { PraxisAdminBar, PraxisStatusBanners, PraxisOwnerActions, PraxisFlagBlock, PraxisVoterBreakdown } from '../shared'
+import { PraxisAdminBar, PraxisStatusBanners, PraxisOwnerActions, PraxisFlagBlock } from '../shared'
 import type { PraxisDetailState } from '../usePraxisDetail'
+import type { PraxisOut } from '../../../api/praxis'
+import type { VoteSummary, VoterDetail } from '../../../api/votes'
 
 const DISPLAY = "'Playfair Display', serif"
 const REGALIA = "'Marcellus SC', serif"
@@ -36,8 +38,136 @@ function modeLabel(type: string): string {
   return 'a dueling acquisition'
 }
 
+function initials(name: string): string {
+  return (
+    name
+      .trim()
+      .split(/\s+/)
+      .map((word) => word[0])
+      .slice(0, 2)
+      .join('')
+      .toUpperCase() || '·'
+  )
+}
+
+/**
+ * "The Standing" — the salon ledger. Two honest metrics from the live vote
+ * model: total_score (points earned) + total_votes (appraisal headcount), then
+ * a gilt roster of who appraised the work and at what rung (value / 5). The UA
+ * skin of the shared voter-breakdown surface — same real data, gilt language.
+ *
+ * NOTE: the design handoff also sketched a "give points / applaud" stepper and
+ * a per-appraiser variable-points ledger (the old ADR-0005 dual-currency
+ * model). The live backend is a single 1–5 appraisal per voter, so those are
+ * omitted — casting an appraisal is "The Patronage" caster below. A real
+ * points-currency ledger would need a new backend model (its own issue).
+ */
+function TheStanding({
+  votes,
+  voters,
+}: {
+  praxis: PraxisOut
+  votes: VoteSummary | null
+  voters: VoterDetail[]
+}) {
+  if (!votes || votes.total_votes === 0) return null
+
+  return (
+    <div
+      style={{
+        marginTop: 8,
+        marginBottom: 24,
+        background: 'var(--ua-paper)',
+        border: '1px solid var(--ua-line)',
+        boxShadow: 'inset 0 0 0 4px var(--ua-paper), inset 0 0 0 5px var(--ua-line-soft)',
+        padding: '22px 24px',
+      }}
+    >
+      <div style={{ fontFamily: REGALIA, fontSize: 10, letterSpacing: '0.2em', color: 'var(--ua-gold)', marginBottom: 18 }}>
+        The Standing
+      </div>
+
+      {/* Headline: points earned · appraisal headcount */}
+      <div style={{ display: 'flex', marginBottom: voters.length ? 20 : 0 }}>
+        <div style={{ flex: 1, paddingRight: 16 }}>
+          <div style={{ fontFamily: DISPLAY, fontStyle: 'italic', fontWeight: 700, fontSize: 42, lineHeight: 0.85, color: 'var(--ua-orange)' }}>
+            {votes.total_score}
+          </div>
+          <div style={{ fontFamily: MONO, fontSize: 8, letterSpacing: '0.16em', textTransform: 'uppercase', color: 'var(--ua-sub)', marginTop: 7 }}>
+            points earned
+          </div>
+        </div>
+        <div style={{ flex: 1, paddingLeft: 16, borderLeft: '1px solid var(--ua-line)' }}>
+          <div style={{ fontFamily: DISPLAY, fontStyle: 'italic', fontWeight: 700, fontSize: 42, lineHeight: 0.85, color: 'var(--ua-ink)', display: 'flex', alignItems: 'center', gap: 8 }}>
+            <span style={{ fontSize: 20, color: 'var(--ua-gold)' }}>✦</span>
+            {votes.total_votes}
+          </div>
+          <div style={{ fontFamily: MONO, fontSize: 8, letterSpacing: '0.16em', textTransform: 'uppercase', color: 'var(--ua-sub)', marginTop: 7 }}>
+            {votes.total_votes === 1 ? 'appraisal' : 'appraisals'}
+          </div>
+        </div>
+      </div>
+
+      {/* Appraisers' ledger — each patron + the rung they gave (value / 5) */}
+      {voters.length > 0 && (
+        <>
+          <div style={{ borderTop: '1px dashed var(--ua-line-soft)', paddingTop: 15, fontFamily: MONO, fontSize: 8, letterSpacing: '0.16em', textTransform: 'uppercase', color: 'var(--ua-sub)', marginBottom: 13 }}>
+            Appraised by
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 11 }}>
+            {voters.map((voter) => (
+              <div key={voter.character_id} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <Link to={`/characters/${voter.character_id}`} style={{ textDecoration: 'none', flexShrink: 0 }}>
+                  <span
+                    style={{
+                      width: 26,
+                      height: 26,
+                      borderRadius: '50%',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      background: 'color-mix(in srgb, var(--ua-gold-pale) 28%, var(--ua-paper))',
+                      border: '1.5px solid var(--ua-line)',
+                      fontFamily: MONO,
+                      fontWeight: 700,
+                      fontSize: 9,
+                      color: 'var(--ua-orange)',
+                    }}
+                  >
+                    {initials(voter.display_name)}
+                  </span>
+                </Link>
+                <Link
+                  to={`/characters/${voter.character_id}`}
+                  style={{ width: 96, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontFamily: SERIF, fontSize: 12.5, color: 'var(--ua-ink)', textDecoration: 'none' }}
+                >
+                  {voter.display_name}
+                </Link>
+                <div style={{ flex: 1, height: 9, background: 'color-mix(in srgb, var(--ua-gold-pale) 20%, var(--ua-paper))', border: '1px solid var(--ua-line-soft)', position: 'relative', overflow: 'hidden' }}>
+                  <div style={{ position: 'absolute', inset: 0, width: `${(voter.value / 5) * 100}%`, background: 'var(--ua-orange)', opacity: 0.9 }} />
+                </div>
+                <span style={{ width: 40, textAlign: 'right', whiteSpace: 'nowrap', fontFamily: DISPLAY, fontStyle: 'italic', fontWeight: 700, fontSize: 14, color: 'var(--ua-orange)' }}>
+                  {voter.value === 5 ? '✦' : `№${voter.value}`}
+                </span>
+              </div>
+            ))}
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', borderTop: '1px solid var(--ua-line)', marginTop: 12, paddingTop: 10 }}>
+            <span style={{ fontFamily: MONO, fontSize: 8, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--ua-sub)' }}>
+              {voters.length} {voters.length === 1 ? 'patron' : 'patrons'} · total
+            </span>
+            <span style={{ fontFamily: DISPLAY, fontStyle: 'italic', fontWeight: 700, fontSize: 17, color: 'var(--ua-orange)' }}>
+              {votes.total_score} pts
+            </span>
+          </div>
+        </>
+      )}
+    </div>
+  )
+}
+
 export default function UAPraxisDetail({ state }: { state: PraxisDetailState }) {
-  const { praxis, votes } = state
+  const { praxis, votes, voters } = state
   if (!praxis) return null
 
   const sealedDate = praxis.submitted_at ?? praxis.created_at
@@ -285,50 +415,15 @@ export default function UAPraxisDetail({ state }: { state: PraxisDetailState }) 
           </div>
         )}
 
-        {/* ── The critique (vote caster) ── */}
+        {/* ── The Standing — points, appraisals & the salon ledger ── */}
+        <TheStanding praxis={praxis} votes={votes} voters={voters} />
+
+        {/* ── The Patronage (cast your appraisal) ── */}
         <div style={{ marginBottom: 18 }}>
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'baseline',
-              justifyContent: 'space-between',
-              gap: 12,
-              marginBottom: 14,
-              paddingTop: 16,
-              borderTop: '1px solid var(--ua-line-soft)',
-            }}
-          >
+          <div style={{ marginBottom: 14, paddingTop: 16, borderTop: '1px solid var(--ua-line-soft)' }}>
             <span style={{ fontFamily: REGALIA, fontSize: 10, letterSpacing: '0.2em', color: 'var(--ua-gold)' }}>
               The Patronage
             </span>
-            {/* Points earned from votes */}
-            {votes && votes.total_votes > 0 && (
-              <div style={{ textAlign: 'right' }}>
-                <span
-                  style={{
-                    fontFamily: DISPLAY,
-                    fontStyle: 'italic',
-                    fontWeight: 700,
-                    fontSize: 22,
-                    color: 'var(--ua-orange)',
-                  }}
-                >
-                  +{votes.total_score}
-                </span>
-                <span
-                  style={{
-                    fontFamily: REGALIA,
-                    fontSize: 8,
-                    letterSpacing: '0.12em',
-                    textTransform: 'uppercase',
-                    color: 'var(--ua-muted)',
-                    marginLeft: 6,
-                  }}
-                >
-                  points returned
-                </span>
-              </div>
-            )}
           </div>
           <VoteUI
             factionSlug={praxis.task_faction_slug}
@@ -341,8 +436,6 @@ export default function UAPraxisDetail({ state }: { state: PraxisDetailState }) 
 
         {/* ── Flag block ── */}
         <PraxisFlagBlock state={state} />
-
-        <PraxisVoterBreakdown state={state} />
       </div>
     </div>
   )

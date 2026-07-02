@@ -11,7 +11,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   applyMetatask,
-  createPraxis,
+  changePraxisType,
   deletePraxis,
   deletePraxisMedia,
   getPraxis,
@@ -24,6 +24,14 @@ import {
   type PraxisOut,
   type PraxisType,
 } from "../../api/praxis";
+import {
+  cancelChallenge,
+  getDuelDetail,
+  issueChallenge,
+  type DuelDetailOut,
+} from "../../api/duel";
+import { getGameConfig } from "../../api/gameConfig";
+import { listRelationships } from "../../api/relationships";
 import { getTask, type TaskOut } from "../../api/tasks";
 import { listCharacters, type CharacterOut } from "../../api/characters";
 import { listMetatasks } from "../../api/metaTasks";
@@ -59,7 +67,7 @@ export interface EditPraxisState {
   switchingMode: PraxisType | null;
   changeMode: (next: PraxisType) => Promise<void>;
 
-  // Invites (collab/duel)
+  // Invites (collab) / challenge (duel) — shared search box
   inviteQuery: string;
   setInviteQuery: (value: string) => void;
   inviteResults: CharacterOut[];
@@ -67,6 +75,12 @@ export interface EditPraxisState {
   setInviteOpen: (value: boolean) => void;
   inviting: boolean;
   sendInvite: (character: CharacterOut) => Promise<void>;
+
+  // Duel challenge (#311) — selecting duel attaches a challenge to this praxis;
+  // the praxis stays type='solo' and gains a duel_id.
+  duel: DuelDetailOut | null;
+  sendChallenge: (character: CharacterOut) => Promise<void>;
+  cancelDuel: () => Promise<void>;
 
   // Metatasks
   metaTasks: TaskOut[];
@@ -87,9 +101,13 @@ export interface EditPraxisState {
   isPublished: boolean;
   controlsLocked: boolean;
   modeIsLocked: boolean;
-  showCollabInvite: boolean;
+  /** Show the invite/challenge box: collab members, or an open duel pane. */
+  showInviteBox: boolean;
   showMetatasks: boolean;
-  duelSlotFull: boolean;
+  /** The duel chip is selected (a challenge is attached or the pane is open). */
+  duelMode: boolean;
+  /** The duel chip is available to this viewer (level ≥ duel_level_required). */
+  duelChipVisible: boolean;
 
   // Identity helpers
   currentCharacterId: number | null;
@@ -101,27 +119,29 @@ const AUTOSAVE_DEBOUNCE_MS = 2000;
  * Decide whether switching to a new mode needs a confirm, and with what prompt.
  * Returns the message to confirm, or null to proceed silently.
  *
- * A mode switch tears down and recreates the praxis (see `performModeSwitch`),
- * so the destructive cases warn first instead of locking the control (#155):
- *  - co-authors present  → they'll be dropped
- *  - else unsaved draft  → it'll be discarded
+ * Mode switches are now in-place (#321 solo↔collab, #311 duel), so the draft is
+ * always preserved — only genuinely destructive transitions warn:
+ *  - leaving a pending/active duel  → the challenge is cancelled
+ *  - collab → solo with co-authors  → they're dropped (content stays)
  */
 export function modeSwitchPrompt(
+  next: PraxisType,
+  currentType: PraxisType,
   memberCount: number,
-  hasDraftContent: boolean,
+  inDuel: boolean,
 ): string | null {
-  if (memberCount > 1) {
-    return "Switching mode will drop the collaboration — your co-authors will be removed and the current draft replaced. Continue?";
+  if (inDuel && next !== "duel") {
+    return "Switching mode will cancel your duel challenge. Continue?";
   }
-  if (hasDraftContent) {
-    return "Changing mode will discard your current draft (title, body, media, metatasks). Continue?";
+  if (next === "solo" && currentType === "collab" && memberCount > 1) {
+    return "Switching to solo will remove your co-authors — your draft stays. Continue?";
   }
   return null;
 }
 
 export function useEditPraxis(idParam: string | undefined): EditPraxisState {
   const navigate = useNavigate();
-  const { user, refetch } = useAuth();
+  const { user, refetch, loading: authLoading } = useAuth();
 
   // ---- Core state ----
   const [praxis, setPraxis] = useState<PraxisOut | null>(null);
@@ -147,6 +167,12 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
 
   const [switchingMode, setSwitchingMode] = useState<PraxisType | null>(null);
 
+  // Duel challenge (#311)
+  const [duelPaneOpen, setDuelPaneOpen] = useState(false);
+  const [duel, setDuel] = useState<DuelDetailOut | null>(null);
+  const [duelLevelRequired, setDuelLevelRequired] = useState<number | null>(null);
+  const [foeIds, setFoeIds] = useState<Set<number>>(new Set());
+
   const [autosaveAt, setAutosaveAt] = useState<Date | null>(null);
   const [saveStatus, setSaveStatus] = useState<SaveStatus>("idle");
 
@@ -159,11 +185,22 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
   // ---- Initial load ----
   useEffect(() => {
     if (!idParam) return;
+    // Wait for auth to resolve before the membership guard — otherwise a
+    // still-loading `user` would bounce to the read page, which redirects
+    // in_progress praxes right back here (infinite loop).
+    if (authLoading) return;
     const praxisId = parseInt(idParam, 10);
     setLoading(true);
     getPraxis(praxisId)
       .then(async (loaded) => {
-        if (user?.character?.id !== loaded.created_by_id) {
+        // A collab is co-owned — any member may edit (ADR-0013), not just the
+        // creator. Gating on created_by_id looped non-creator members between
+        // this page and the read page's in_progress → edit redirect.
+        const viewerId = user?.character?.id;
+        const isMember =
+          viewerId != null &&
+          loaded.members.some((member) => member.character_id === viewerId);
+        if (!isMember) {
           navigate(`/praxes/${idParam}`, { replace: true });
           return;
         }
@@ -192,7 +229,45 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
       })
       .catch(() => setError("Couldn't load this praxis."))
       .finally(() => setLoading(false));
-  }, [idParam, user, navigate]);
+  }, [idParam, user, authLoading, navigate]);
+
+  // ---- Duel gating: level required + the viewer's foes (surfaced first) ----
+  useEffect(() => {
+    getGameConfig()
+      .then((cfg) => setDuelLevelRequired(cfg.duel_level_required))
+      .catch(() => {
+        /* non-fatal; chip stays hidden until known */
+      });
+  }, []);
+
+  useEffect(() => {
+    if (!user?.character) return;
+    listRelationships({ type: "foe", status: "active" })
+      .then((rels) => setFoeIds(new Set(rels.map((r) => r.to_character_id))))
+      .catch(() => {
+        /* foes-first ordering is a nicety; ignore failures */
+      });
+  }, [user?.character?.id]);
+
+  // ---- Duel detail (opponent chip + status) whenever this praxis is a duel side ----
+  useEffect(() => {
+    const duelId = praxis?.duel_id ?? null;
+    if (duelId == null) {
+      setDuel(null);
+      return;
+    }
+    let cancelled = false;
+    getDuelDetail(duelId)
+      .then((d) => {
+        if (!cancelled) setDuel(d);
+      })
+      .catch(() => {
+        /* non-fatal */
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [praxis?.duel_id]);
 
   // ---- Debounced autosave for title + body ----
   useEffect(() => {
@@ -343,40 +418,89 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
   }, [praxis, navigate]);
 
   // ---- Mode switching ----
-  const hasDraftContent = useCallback((): boolean => {
-    if (title.trim().length > 0) return true;
-    if (body.trim().length > 0) return true;
-    if (media.length > 0) return true;
-    if (appliedMetatasks.size > 0) return true;
-    return false;
-  }, [title, body, media, appliedMetatasks]);
-
-  const performModeSwitch = useCallback(
+  const changeMode = useCallback(
     async (next: PraxisType) => {
       if (!praxis) return;
+
+      // Duel is not a type flip — it reveals the challenge box (#311). The praxis
+      // stays type='solo' and only gains a duel_id once an opponent is picked.
+      if (next === "duel") {
+        if (praxis.duel_id != null) return; // already dueling
+        // A duel side must be solo (ADR-0011). Coming from collab drops the crew.
+        if (praxis.type === "collab") {
+          if (
+            praxis.members.length > 1 &&
+            !window.confirm(
+              "Switching to a duel will remove your co-authors — your draft stays. Continue?",
+            )
+          ) {
+            return;
+          }
+          setError("");
+          setSwitchingMode("solo");
+          try {
+            const updated = await changePraxisType(praxis.id, "solo");
+            setPraxis(updated);
+            setMedia(updated.media_items);
+          } catch (err) {
+            setError(extractError(err, "Could not change mode."));
+            setSwitchingMode(null);
+            return;
+          }
+          setSwitchingMode(null);
+        }
+        setDuelPaneOpen(true);
+        return;
+      }
+
+      // next is solo|collab. Clicking the current mode with no duel open is a no-op.
+      const inDuel = praxis.duel_id != null;
+      if (!inDuel && next === praxis.type) {
+        setDuelPaneOpen(false);
+        return;
+      }
+
+      // Only a *pending* challenge can be cancelled (the backend forbids
+      // unilaterally cancelling an accepted duel). Once the opponent has
+      // accepted, the challenger can't switch away.
+      if (inDuel && duel && duel.status !== "pending") {
+        setError(
+          "This duel is already underway — it can't be cancelled from here.",
+        );
+        return;
+      }
+
+      const prompt = modeSwitchPrompt(
+        next,
+        praxis.type,
+        praxis.members.length,
+        inDuel,
+      );
+      if (prompt && !window.confirm(prompt)) return;
+
       setError("");
       setSwitchingMode(next);
       try {
-        const taskId = praxis.task_id;
-        await deletePraxis(praxis.id);
-        const fresh = await createPraxis({ task_id: taskId, type: next });
-        navigate(`/praxes/${fresh.id}/edit`, { replace: true });
+        if (inDuel && praxis.duel_id != null) {
+          await cancelChallenge(praxis.duel_id);
+        }
+        // During a duel the praxis type is already 'solo', so switching to solo
+        // just reloads; any real solo↔collab flip goes through change-type in place.
+        const updated =
+          next === praxis.type
+            ? await getPraxis(praxis.id)
+            : await changePraxisType(praxis.id, next);
+        setPraxis(updated);
+        setMedia(updated.media_items);
+        setDuelPaneOpen(false);
+        setDuel(null);
       } catch (err) {
         setError(extractError(err, "Could not change mode."));
+      } finally {
         setSwitchingMode(null);
       }
     },
-    [praxis, navigate],
-  );
-
-  const changeMode = useCallback(
-    async (next: PraxisType) => {
-      if (!praxis || praxis.type === next) return;
-      const prompt = modeSwitchPrompt(praxis.members.length, hasDraftContent());
-      if (prompt && !window.confirm(prompt)) return;
-      await performModeSwitch(next);
-    },
-    [praxis, hasDraftContent, performModeSwitch],
+    [praxis, duel],
   );
 
   // ---- Invite search (debounced via input change handler in caller, but
@@ -409,6 +533,13 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
             !memberIds.has(c.id) &&
             !pendingInviteIds.has(c.id),
         );
+        // In duel mode, surface the viewer's foes first (soft ordering; anyone
+        // eligible can still be challenged).
+        if (praxis.duel_id == null && duelPaneOpen && foeIds.size > 0) {
+          filtered.sort(
+            (a, b) => Number(foeIds.has(b.id)) - Number(foeIds.has(a.id)),
+          );
+        }
         setInviteResults(filtered);
         setInviteOpen(filtered.length > 0);
       } catch {
@@ -420,7 +551,7 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
     return () => {
       cancelled = true;
     };
-  }, [inviteQuery, praxis, user]);
+  }, [inviteQuery, praxis, user, duelPaneOpen, foeIds]);
 
   const sendInvite = useCallback(
     async (character: CharacterOut) => {
@@ -444,6 +575,48 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
     },
     [praxis],
   );
+
+  // ---- Duel challenge (#311): pick an opponent, cancel a pending challenge ----
+  const sendChallenge = useCallback(
+    async (character: CharacterOut) => {
+      if (!praxis) return;
+      setInviting(true);
+      setError("");
+      setInviteQuery("");
+      setInviteOpen(false);
+      setInviteResults([]);
+      try {
+        await issueChallenge({
+          challenger_praxis_id: praxis.id,
+          opponent_character_id: character.id,
+        });
+        // Reload so the praxis carries its new duel_id; the effect fetches detail.
+        const refreshed = await getPraxis(praxis.id);
+        setPraxis(refreshed);
+      } catch (err) {
+        setError(
+          extractError(err, `Could not challenge ${character.display_name}.`),
+        );
+      } finally {
+        setInviting(false);
+      }
+    },
+    [praxis],
+  );
+
+  const cancelDuel = useCallback(async () => {
+    if (!praxis?.duel_id) return;
+    setError("");
+    try {
+      await cancelChallenge(praxis.duel_id);
+      const refreshed = await getPraxis(praxis.id);
+      setPraxis(refreshed);
+      setDuel(null);
+      setDuelPaneOpen(false);
+    } catch (err) {
+      setError(extractError(err, "Could not cancel the challenge."));
+    }
+  }, [praxis]);
 
   // ---- Metatasks ----
   const toggleMetatask = useCallback(
@@ -482,21 +655,21 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
   // Locked only once sealed/moderated — co-authors no longer lock the picker;
   // switching with members joined confirms-then-drops instead (#155).
   const modeIsLocked = controlsLocked;
-  const duelSlotFull = !!(
-    praxis &&
-    praxis.type === "duel" &&
-    praxis.members.length +
-      praxis.invites.filter((i) => i.status === "pending").length >=
-      2
-  );
-  const showCollabInvite =
+  // A duel side stays type='solo' + a duel_id (ADR-0011); the chip is "selected"
+  // once a challenge is attached or the viewer has opened the challenge pane.
+  const duelMode = !!praxis && (praxis.duel_id != null || duelPaneOpen);
+  const viewerLevel = user?.character?.level ?? 0;
+  const duelChipVisible =
     !controlsLocked &&
-    !!praxis &&
-    (praxis.type === "collab" || praxis.type === "duel");
+    duelLevelRequired != null &&
+    viewerLevel >= duelLevelRequired;
+  const showInviteBox =
+    !controlsLocked && !!praxis && (praxis.type === "collab" || duelMode);
   const showMetatasks =
     !controlsLocked &&
     !!praxis &&
     praxis.type === "solo" &&
+    !duelMode &&
     metaTasks.length > 0;
 
   const wordCount = body.trim() ? body.trim().split(/\s+/).length : 0;
@@ -530,6 +703,10 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
     inviting,
     sendInvite,
 
+    duel,
+    sendChallenge,
+    cancelDuel,
+
     metaTasks,
     appliedMetatasks,
     applyingMetatask,
@@ -545,9 +722,10 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
     isPublished: !!isPublished,
     controlsLocked,
     modeIsLocked,
-    showCollabInvite,
+    showInviteBox,
     showMetatasks,
-    duelSlotFull,
+    duelMode,
+    duelChipVisible,
 
     currentCharacterId: user?.character?.id ?? null,
   };

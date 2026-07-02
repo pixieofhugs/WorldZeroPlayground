@@ -545,6 +545,86 @@ async def update_praxis(
     return await get_praxis(praxis_id, session)
 
 
+async def change_praxis_type(
+    praxis_id: int,
+    new_type: PraxisType,
+    character_id: int,
+    session: AsyncSession,
+    era: EraConfig = CURRENT_ERA,
+) -> Praxis:
+    """Flip a praxis between solo and collab in place, preserving id/content/media (#321).
+
+    A collab is just a ``type=solo`` praxis + members; recreation is unnecessary
+    and destructive (the old flow ``delete_praxis`` + ``create_praxis`` discarded
+    the draft). This flips ``Praxis.type`` instead.
+
+    Guards:
+    - Only the author may change mode.
+    - Praxis must be ``in_progress``.
+    - Target must be solo or collab — duels are issued via the challenge endpoint
+      (ADR-0011), never a direct type change.
+    - solo → collab requires ``era.collaboration_level_required``.
+    - A duel side (a solo praxis linked by a live Duel row) cannot change type.
+
+    solo → collab flips the type; collab → solo drops every non-author member and
+    any pending invites (the caller confirms this loss first).
+    """
+    if new_type not in (PraxisType.solo, PraxisType.collab):
+        raise HTTPException(
+            status_code=400,
+            detail="Only solo and collab modes can be switched in place; duels use the challenge endpoint (ADR-0011).",
+        )
+
+    praxis = await get_praxis(praxis_id, session)
+    if praxis.created_by_id != character_id:
+        raise HTTPException(status_code=403, detail="Only the author can change the praxis mode.")
+    if praxis.status != PraxisStatus.in_progress:
+        raise HTTPException(status_code=422, detail="Only an in-progress praxis can change mode.")
+
+    # A duel side is a solo praxis linked by a Duel row; never let it morph.
+    duel_result = await session.execute(
+        select(Duel.id).where(
+            or_(
+                Duel.challenger_praxis_id == praxis_id,
+                Duel.opponent_praxis_id == praxis_id,
+            ),
+            Duel.status.in_([DuelStatus.pending, DuelStatus.active, DuelStatus.settled]),
+        )
+    )
+    if duel_result.scalar_one_or_none() is not None:
+        raise HTTPException(
+            status_code=409,
+            detail="This praxis is part of a duel and cannot change mode.",
+        )
+
+    if praxis.type == new_type:
+        return praxis
+
+    if new_type == PraxisType.collab:
+        era_row = await get_current_era_row(session)
+        stats = await get_or_create_stats(session, character_id, era_row.id)
+        if stats.level < era.collaboration_level_required:
+            raise HTTPException(
+                status_code=403,
+                detail=f"Collaborations require level {era.collaboration_level_required}.",
+            )
+    else:
+        # collab → solo: drop everyone but the author + any pending invites.
+        # delete-orphan cascades the row DELETEs (see models/praxis.py).
+        for member in list(praxis.members):
+            if member.character_id != character_id:
+                praxis.members.remove(member)
+        for invite in list(praxis.invites):
+            if invite.status == PraxisInviteStatus.pending:
+                praxis.invites.remove(invite)
+
+    praxis.type = new_type
+    await session.flush()
+    # A type change is a structural edit — reset any collab pending-publish window.
+    await cancel_pending_publish_on_edit(praxis, session, era)
+    return await get_praxis(praxis_id, session)
+
+
 async def withdraw_praxis(
     praxis_id: int,
     character_id: int,

@@ -271,8 +271,7 @@ export default function EditPraxisPunkZine({ state }: Props) {
         )}
 
         {/* Invite */}
-        {state.showCollabInvite &&
-          !(praxis.type === "duel" && state.duelSlotFull) && (
+        {state.showInviteBox && (
             <div
               style={{
                 marginBottom: 22,
@@ -285,7 +284,7 @@ export default function EditPraxisPunkZine({ state }: Props) {
                 className="eyebrow"
                 style={{ color: hot, display: "block", marginBottom: 8 }}
               >
-                {praxis.type === "duel" ? "✗ THE OPPOSITION ✗" : "WHO ELSE"}
+                {state.duelMode ? "✗ THE OPPOSITION ✗" : "WHO ELSE"}
               </span>
               <InviteSearch
                 state={state}
@@ -294,10 +293,9 @@ export default function EditPraxisPunkZine({ state }: Props) {
                   inputBg: surface,
                   inputColor: ink,
                   inputBorder: `2px dashed ${accentDeep}`,
-                  placeholder:
-                    praxis.type === "duel"
-                      ? "@ who are you fighting?"
-                      : "@ who else?",
+                  placeholder: state.duelMode
+                    ? "@ who are you fighting?"
+                    : "@ who else?",
                   pillBg: lightBg,
                   acceptedBg: accentDeep,
                   acceptedColor: "var(--color-text-on-accent)",

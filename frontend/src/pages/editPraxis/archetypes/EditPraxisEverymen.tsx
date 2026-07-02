@@ -22,6 +22,7 @@ import {
   BodyPreview,
   BodyTextarea,
   DropButton,
+  InviteSearch,
   ModePicker,
   PublishButton,
   TitleField,
@@ -376,11 +377,8 @@ export default function EditPraxisEverymen({ state }: Props) {
           </div>
         )}
 
-        {/* Collab / duel invite */}
-        {state.showCollabInvite &&
-          !(praxis.type === "duel" && state.duelSlotFull) && (
-            <InviteBlock state={state} />
-          )}
+        {/* Collab invite / duel challenge */}
+        {state.showInviteBox && <InviteBlock state={state} />}
 
         {/* The job (headline) */}
         <div style={{ marginBottom: 28 }}>
@@ -714,7 +712,8 @@ function ExistingProof({ state }: { state: EditPraxisState }) {
 }
 
 function InviteBlock({ state }: { state: EditPraxisState }) {
-  const praxis = state.praxis!;
+  // Delegates to the shared InviteSearch so collab-invite and duel-challenge (#311)
+  // behaviour stay identical across archetypes; the crew-frame chrome stays bespoke.
   return (
     <div
       style={{
@@ -725,115 +724,23 @@ function InviteBlock({ state }: { state: EditPraxisState }) {
       }}
     >
       <FieldLabel>
-        {praxis.type === "duel" ? "YOUR OPPONENT" : "THE CREW ROSTER"}
+        {state.duelMode ? "YOUR OPPONENT" : "THE CREW ROSTER"}
       </FieldLabel>
-      <div
-        style={{
-          display: "flex",
-          gap: 8,
-          flexWrap: "wrap",
-          marginBottom: 10,
+      <InviteSearch
+        state={state}
+        skin={{
+          fontFamily: BODY_FONT,
+          inputBg: CREAM,
+          inputColor: INK,
+          inputBorder: `1.5px solid ${INK}`,
+          dropdownBg: PAPER,
+          dropdownBorder: `1.5px solid ${INK}`,
+          acceptedBg: OLIVE,
+          acceptedColor: CREAM,
+          pendingColor: PAPER_TEXT,
+          placeholder: "search by name or @handle",
         }}
-      >
-        {praxis.members
-          .filter((m) => m.character_id !== state.currentCharacterId)
-          .map((member) => (
-            <span
-              key={member.id}
-              style={{
-                background: OLIVE,
-                color: CREAM,
-                fontFamily: BODY_FONT,
-                fontSize: 11,
-                fontWeight: 700,
-                padding: "3px 10px",
-              }}
-            >
-              {member.character_display_name}
-            </span>
-          ))}
-        {praxis.invites
-          .filter((invite) => invite.status === "pending")
-          .map((invite) => (
-            <span
-              key={invite.id}
-              style={{
-                background: "transparent",
-                border: `1px dashed ${INK}`,
-                color: PAPER_TEXT,
-                fontFamily: BODY_FONT,
-                fontSize: 11,
-                padding: "3px 10px",
-              }}
-            >
-              {invite.invitee_display_name}{" "}
-              <span style={{ fontStyle: "italic", color: MUTED }}>
-                · pending
-              </span>
-            </span>
-          ))}
-      </div>
-      <div style={{ position: "relative" }}>
-        <input
-          type="text"
-          value={state.inviteQuery}
-          onChange={(event) => state.setInviteQuery(event.target.value)}
-          placeholder="search by name or @handle"
-          style={{
-            width: "100%",
-            fontFamily: BODY_FONT,
-            fontSize: 13,
-            padding: "9px 12px",
-            background: CREAM,
-            color: INK,
-            border: `1.5px solid ${INK}`,
-            outline: "none",
-          }}
-          onFocus={() => {
-            if (state.inviteResults.length > 0) state.setInviteOpen(true);
-          }}
-          onBlur={() => setTimeout(() => state.setInviteOpen(false), 200)}
-        />
-        {state.inviteOpen && (
-          <div
-            style={{
-              position: "absolute",
-              top: "100%",
-              left: 0,
-              right: 0,
-              zIndex: 10,
-              background: PAPER,
-              border: `1.5px solid ${INK}`,
-              boxShadow: `4px 4px 0 ${INK}`,
-              maxHeight: 220,
-              overflowY: "auto",
-            }}
-          >
-            {state.inviteResults.map((character) => (
-              <button
-                key={character.id}
-                type="button"
-                disabled={state.inviting}
-                onMouseDown={() => void state.sendInvite(character)}
-                style={{
-                  display: "block",
-                  width: "100%",
-                  padding: "9px 12px",
-                  background: "transparent",
-                  border: "none",
-                  cursor: state.inviting ? "wait" : "pointer",
-                  textAlign: "left",
-                  fontFamily: BODY_FONT,
-                  fontSize: 12,
-                  color: PAPER_TEXT,
-                }}
-              >
-                {character.display_name}
-              </button>
-            ))}
-          </div>
-        )}
-      </div>
+      />
     </div>
   );
 }

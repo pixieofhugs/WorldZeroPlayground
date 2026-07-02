@@ -35,10 +35,10 @@ const SCRIPT = 'var(--faction-wow-card-font)' // Caveat
 const BODY = 'var(--font-body)' // Courier Prime
 const ON_ACCENT = 'var(--color-text-on-accent)'
 
-/** Party-voiced label for the filing mode. */
+/** Party-voiced label for the filing mode. A duel side is a solo praxis
+ * (ADR-0011) — its duel context is shown by the shared DuelCrossLink, not here. */
 function modeVoice(type: string): string {
   if (type === 'collab') return 'cast together'
-  if (type === 'duel') return 'cast in a duel'
   return 'filed solo'
 }
 

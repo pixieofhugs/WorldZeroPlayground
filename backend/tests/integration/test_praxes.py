@@ -981,6 +981,117 @@ async def test_solo_submit_opens_no_window(
 
 
 # ---------------------------------------------------------------------------
+# Change type (in-place solo↔collab, #321)
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.asyncio
+async def test_change_type_solo_to_collab_preserves_content(
+    client: AsyncClient,
+    character2: Character,
+    active_task: Task,
+    auth_headers2: dict,
+):
+    """solo → collab keeps the same id, title, and body (no delete+recreate).
+
+    Actor is character2 (level 5) to clear the collaboration level gate.
+    """
+    create_resp = await client.post(
+        "/praxes",
+        json={
+            "task_id": active_task.id,
+            "type": "solo",
+            "title": "Keep me",
+            "body_text": "draft body",
+        },
+        headers=auth_headers2,
+    )
+    praxis_id = create_resp.json()["id"]
+
+    resp = await client.post(
+        f"/praxes/{praxis_id}/change-type",
+        json={"type": "collab"},
+        headers=auth_headers2,
+    )
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["id"] == praxis_id
+    assert data["type"] == "collab"
+    assert data["title"] == "Keep me"
+    assert data["body_text"] == "draft body"
+
+
+@pytest.mark.asyncio
+async def test_change_type_collab_to_solo_drops_members_keeps_content(
+    client: AsyncClient,
+    character: Character,
+    character2: Character,
+    active_task: Task,
+    auth_headers: dict,
+    auth_headers2: dict,
+):
+    """collab → solo drops the co-author but preserves id/title (author = level-5 character2)."""
+    praxis_id = await _two_member_collab(
+        client, active_task, auth_headers2, character.id, auth_headers
+    )
+    resp = await client.post(
+        f"/praxes/{praxis_id}/change-type",
+        json={"type": "solo"},
+        headers=auth_headers2,
+    )
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["id"] == praxis_id
+    assert data["type"] == "solo"
+    assert {m["character_id"] for m in data["members"]} == {character2.id}
+
+
+@pytest.mark.asyncio
+async def test_change_type_to_duel_rejected(
+    client: AsyncClient,
+    character2: Character,
+    active_task: Task,
+    auth_headers2: dict,
+):
+    """Duels are issued via the challenge endpoint, not a direct type change."""
+    create_resp = await client.post(
+        "/praxes",
+        json={"task_id": active_task.id, "type": "solo", "title": "x"},
+        headers=auth_headers2,
+    )
+    praxis_id = create_resp.json()["id"]
+    resp = await client.post(
+        f"/praxes/{praxis_id}/change-type",
+        json={"type": "duel"},
+        headers=auth_headers2,
+    )
+    assert resp.status_code == 400
+
+
+@pytest.mark.asyncio
+async def test_collab_cannot_issue_duel_challenge(
+    client: AsyncClient,
+    character: Character,
+    character2: Character,
+    active_task: Task,
+    auth_headers2: dict,
+):
+    """A duel side must be solo (ADR-0011) — a collab praxis can't challenge."""
+    create_resp = await client.post(
+        "/praxes",
+        json={"task_id": active_task.id, "type": "collab", "title": "crew"},
+        headers=auth_headers2,
+    )
+    collab_id = create_resp.json()["id"]
+    resp = await client.post(
+        "/duels/challenge",
+        json={"challenger_praxis_id": collab_id, "opponent_character_id": character.id},
+        headers=auth_headers2,
+    )
+    assert resp.status_code == 422
+
+
+# ---------------------------------------------------------------------------
 # Moderation
 # ---------------------------------------------------------------------------
 

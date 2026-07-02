@@ -76,6 +76,7 @@ function state(): PraxisDetailState {
     fetchError: null,
     votes: VOTES,
     voters: [],
+    duel: null,
     isOwner: false,
     showAdminBar: false,
     user: null,

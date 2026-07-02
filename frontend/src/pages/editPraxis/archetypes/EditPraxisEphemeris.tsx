@@ -227,10 +227,10 @@ export default function EditPraxisEphemeris({ state }: Props) {
         )}
 
         {/* invite (collab / duel) */}
-        {state.showCollabInvite && !(praxis.type === "duel" && state.duelSlotFull) && (
+        {state.showInviteBox && (
           <div style={{ marginBottom: 28 }}>
-            <FieldLabel meta={praxis.type === "duel" ? "name the disputant" : "name the co-witness"}>
-              {praxis.type === "duel" ? "IN DISPUTE WITH" : "IN CONCORD WITH"}
+            <FieldLabel meta={state.duelMode ? "name the disputant" : "name the co-witness"}>
+              {state.duelMode ? "IN DISPUTE WITH" : "IN CONCORD WITH"}
             </FieldLabel>
             <InviteSearch
               state={state}

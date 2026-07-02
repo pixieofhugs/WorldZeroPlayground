@@ -110,6 +110,12 @@ class PraxisUpdate(BaseModel):
     body_text: Optional[str] = None
 
 
+class PraxisTypeChange(BaseModel):
+    """Body for the in-place solo↔collab mode switch (#321)."""
+
+    type: PraxisType
+
+
 class PraxisInviteCreate(BaseModel):
     invitee_id: int
 

@@ -29,6 +29,8 @@ class LevelProfileOut(BaseModel):
 class GameConfigOut(BaseModel):
     era_name: str
     level_thresholds: list[int]
+    duel_level_required: int
+    collaboration_level_required: int
     max_task_signups: int
     vote_budget_base: int
     vote_budget_multiplier: float

@@ -21,6 +21,7 @@ import WowPraxisDetail from './praxisDetail/archetypes/WowPraxisDetail'
 import UAPraxisDetail from './praxisDetail/archetypes/UAPraxisDetail'
 import AlbescentPraxisDetail from './praxisDetail/archetypes/AlbescentPraxisDetail'
 import CommentThread from '../components/comments/CommentThread'
+import DuelCrossLink from './praxisDetail/DuelCrossLink'
 
 /**
  * Per-faction praxis-read archetype map. Keyed by task faction slug.
@@ -63,6 +64,9 @@ export default function PraxisDetail() {
   const Archetype = pickVariant(ARCHETYPE_BY_SLUG, state.praxis.task_faction_slug, DefaultPraxisDetail)
   return (
     <>
+      {/* Duel cross-link is neutral chrome above every archetype (#313); one
+          shared faction-tokened widget, per the grilled #310 decision. */}
+      {state.duel && <DuelCrossLink praxis={state.praxis} duel={state.duel} />}
       <Archetype state={state} />
       {/* Comments are neutral chrome below every archetype (ADR-0006); a thread
           renders on a visible praxis only. Mounted at the dispatcher so it covers

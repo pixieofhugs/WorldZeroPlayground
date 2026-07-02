@@ -259,8 +259,7 @@ export default function EditPraxisTerminal({ state }: Props) {
         )}
 
         {/* Invite */}
-        {state.showCollabInvite &&
-          !(praxis.type === "duel" && state.duelSlotFull) && (
+        {state.showInviteBox && (
             <div style={{ marginBottom: 22 }}>
               <div style={{ fontSize: 10, color: dim, marginBottom: 8 }}>
                 <span style={{ color: term }}>$ </span>wz praxis invite

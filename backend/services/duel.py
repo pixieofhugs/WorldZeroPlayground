@@ -163,6 +163,12 @@ async def issue_duel_challenge(
             status_code=422,
             detail="A duel can only start from an in-progress praxis.",
         )
+    # A duel side is a solo praxis (ADR-0011); duel and collab are mutually exclusive.
+    if challenger_praxis.type != PraxisType.solo:
+        raise HTTPException(
+            status_code=422,
+            detail="Only a solo praxis can issue a duel challenge.",
+        )
     if await get_duel_for_praxis(challenger_praxis_id, session) is not None:
         raise HTTPException(
             status_code=409,
