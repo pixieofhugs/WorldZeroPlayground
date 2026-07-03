@@ -4,6 +4,7 @@ import { useAuth } from '../auth/AuthContext'
 import { getMyCharacters, setActiveCharacter } from '../api/me'
 import type { CharacterOut } from '../api/auth'
 import CredentialCard from '../components/CredentialCard'
+import AlbescentInvitation from '../components/AlbescentInvitation'
 import { mediaUrl } from '../utils/media'
 
 /**
@@ -107,6 +108,19 @@ export default function FieldDesk() {
             onBegin={() => navigate('/characters/create')}
           />
         </div>
+      )}
+
+      {/* The order's correspondence (#395) — account-collective invitation
+          (ADR-0021), shown only while the server flag holds. Deliberately no
+          link to any faction surface (ADR-0027 secrecy). */}
+      {!loading && (user?.can_start_as_albescent ?? false) && (
+        <AlbescentInvitation
+          lives={lives}
+          onJoined={async () => {
+            await refetch()
+            setLives(await getMyCharacters())
+          }}
+        />
       )}
 
       <p style={footerHint}>

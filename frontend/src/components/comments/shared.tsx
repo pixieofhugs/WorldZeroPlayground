@@ -48,6 +48,7 @@ export function authorToCharacter(
     level: 0,
     score: 0,
     all_time_score: 0,
+    status: 'active',
     created_at: '',
   }
 }

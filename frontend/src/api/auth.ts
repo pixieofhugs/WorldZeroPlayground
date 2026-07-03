@@ -11,6 +11,8 @@ export interface CharacterOut {
   score: number
   all_time_score: number
   faction_slug: string | null
+  /** "active" | "paused" | "banned" — the roster includes paused lives (#270). */
+  status: string
   created_at: string
 }
 

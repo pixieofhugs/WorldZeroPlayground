@@ -130,6 +130,121 @@ async def test_choose_faction_from_ua(
     assert resp.json()["slug"] == "wow"
 
 
+# ---------------------------------------------------------------------------
+# Albescent join gate (ADR-0021, #395)
+# ---------------------------------------------------------------------------
+
+
+async def _seed_faction(session: AsyncSession, slug: str) -> None:
+    """Seed a Faction row (FK target) if it doesn't already exist."""
+    from sqlalchemy import select
+
+    existing = await session.execute(select(Faction).where(Faction.slug == slug))
+    if existing.scalar_one_or_none() is None:
+        session.add(Faction(
+            slug=slug,
+            name=slug,
+            description=f"{slug} test faction",
+            status=FactionStatus.visible,
+        ))
+        await session.flush()
+
+
+async def _make_account_albescent_eligible(
+    session: AsyncSession,
+    character: Character,
+    era: Era,
+) -> None:
+    """Meet the ADR-0021 bar: level 8 + a submitted praxis in every non-sentinel faction."""
+    from sqlalchemy import select
+
+    from game_config import CURRENT_ERA
+    from models.character_stats import CharacterStats
+    from models.praxis import Praxis, PraxisStatus, PraxisType
+    from models.task import Task, TaskStatus
+
+    result = await session.execute(
+        select(CharacterStats).where(
+            CharacterStats.character_id == character.id,
+            CharacterStats.era_id == era.id,
+        )
+    )
+    stats = result.scalar_one()
+    stats.level = CURRENT_ERA.albescent_level_required
+
+    sentinel_slugs = frozenset({"na", "aged_out", "albescent"})
+    for faction_slug in CURRENT_ERA.factions:
+        if faction_slug in sentinel_slugs:
+            continue
+        await _seed_faction(session, faction_slug)
+        task = Task(
+            title=f"Albescent gate task: {faction_slug}",
+            description="test",
+            point_value=5,
+            level_required=0,
+            status=TaskStatus.active,
+            created_by=character.id,
+            primary_faction_slug=faction_slug,
+        )
+        session.add(task)
+        await session.flush()
+        session.add(Praxis(
+            task_id=task.id,
+            created_by_id=character.id,
+            type=PraxisType.solo,
+            title=f"Albescent gate praxis: {faction_slug}",
+            body_text="proof",
+            status=PraxisStatus.submitted,
+        ))
+    await session.commit()
+
+
+@pytest.mark.asyncio
+async def test_choose_albescent_ineligible_forbidden(
+    client: AsyncClient,
+    character: Character,
+    auth_headers: dict,
+    era: Era,
+    db_session: AsyncSession,
+):
+    """An account that hasn't met the ADR-0021 bar gets 403 defecting to Albescent.
+
+    Albescent is is_selectable=False + can_always_rejoin=True, which slips the
+    selectability guard — the eligibility guard must still refuse the join.
+    """
+    await _seed_faction(db_session, "albescent")
+    await db_session.commit()
+
+    resp = await client.post(
+        "/factions/choose",
+        json={"faction_slug": "albescent"},
+        headers=auth_headers,
+    )
+    assert resp.status_code == 403
+    assert character.faction_slug == "ua"
+
+
+@pytest.mark.asyncio
+async def test_choose_albescent_eligible_succeeds(
+    client: AsyncClient,
+    character: Character,
+    auth_headers: dict,
+    era: Era,
+    db_session: AsyncSession,
+):
+    """An eligible account (level 8 + full faction coverage) may defect to Albescent."""
+    await _seed_faction(db_session, "albescent")
+    await _make_account_albescent_eligible(db_session, character, era)
+
+    resp = await client.post(
+        "/factions/choose",
+        json={"faction_slug": "albescent"},
+        headers=auth_headers,
+    )
+    assert resp.status_code == 200
+    assert resp.json()["slug"] == "albescent"
+
+
 @pytest.mark.asyncio
 async def test_choose_nonexistent_faction(
     client: AsyncClient,

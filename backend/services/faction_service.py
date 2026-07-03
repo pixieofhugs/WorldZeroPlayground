@@ -12,6 +12,7 @@ from models.faction_defection_history import FactionDefectionHistory
 from models.invitation_letter import InvitationLetter
 from models.task import Task
 from schemas.faction import FactionUpdate
+from services.character import ALBESCENT_FACTION_SLUG, can_start_as_albescent
 from services.era import clear_defection_history_for_era, get_current_era_row, get_or_create_stats
 
 UA_FACTION_SLUG: str = "ua"
@@ -61,7 +62,8 @@ async def defect_to_faction(
     Works for both initial faction choice (from aged_out) and later defections.
     Raises 422 if the target is the current faction, 404 if the target doesn't
     exist or isn't selectable, and 403 if the player previously left this faction
-    and it doesn't allow rejoining.
+    and it doesn't allow rejoining, or if the target is Albescent and the account
+    has not met the ADR-0021 eligibility bar (level + full faction coverage).
     """
     if character.faction_slug == target_slug:
         raise HTTPException(
@@ -86,6 +88,17 @@ async def defect_to_faction(
         raise HTTPException(
             status_code=403,
             detail="Cannot rejoin a faction you have left.",
+        )
+
+    # ADR-0021: Albescent is joined in the field via defection, but only once the
+    # *account* (not this character) has met the eligibility bar. Albescent's
+    # can_always_rejoin=True slips the selectability guard above, so enforce here.
+    if target_slug == ALBESCENT_FACTION_SLUG and not await can_start_as_albescent(
+        character.account_id, session, era
+    ):
+        raise HTTPException(
+            status_code=403,
+            detail="The order has not extended its hand to you.",
         )
 
     # Record defection from current faction (if it's a real faction, not na)

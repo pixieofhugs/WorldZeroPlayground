@@ -117,7 +117,10 @@ async def can_start_as_albescent(
     session: AsyncSession,
     era: EraConfig = CURRENT_ERA,
 ) -> bool:
-    """True when this account may create a new character in the Albescent faction.
+    """True when this account may move a character into the Albescent faction.
+
+    Albescent is joined in the field via defection (``defect_to_faction``) —
+    it is never a starting faction and never a character-creation option.
 
     Both conditions must hold on the *same* character:
     (a) active and at level ``era.albescent_level_required`` or above, and

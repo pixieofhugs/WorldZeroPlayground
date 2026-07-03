@@ -559,8 +559,9 @@ ERA_1_LEVEL_PROFILES = (
     LevelProfile(
         rank="Paragon",
         unlocks=(
-            LevelUnlock(LevelUnlockKind.ability, "Start an Albescent character",
-                        "Unlock /Albescent as a starting faction for a future character."),
+            LevelUnlock(LevelUnlockKind.ability, "Join /Albescent",
+                        "Defect a life you carry to /Albescent — the order is "
+                        "joined in the field, never picked at creation."),
             LevelUnlock(LevelUnlockKind.sense, "See the underline before it's drawn",
                         "You've read enough field stamps to know how this sentence ends."),
         ),
