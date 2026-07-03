@@ -41,6 +41,8 @@ export interface PraxisDetailState {
   duel: DuelDetailOut | null;
 
   // Derived
+  /** True when the viewer is a MEMBER of this praxis (ADR-0013 co-ownership) —
+   *  gates the edit/submit/withdraw actions, matching the backend _require_member guard. */
   isOwner: boolean;
   showAdminBar: boolean;
   // Authenticated viewer character (null when anonymous)
@@ -84,6 +86,22 @@ export interface PraxisDetailState {
   removingMetataskId: number | null;
   handleApplyMetatask: (taskId: number) => Promise<void>;
   handleRemoveMetatask: (taskId: number) => Promise<void>;
+}
+
+/**
+ * Ownership mirrors the backend guard (_require_member): any praxis MEMBER may
+ * edit/submit/withdraw (ADR-0013 co-ownership), not just the creator. The
+ * creator is always seeded as a member, so solo and duel praxes are unchanged;
+ * this only widens collab praxes so invited members see the owner actions (#348).
+ */
+export function isViewerMember(
+  praxis: PraxisOut | null,
+  viewerCharacterId: number | null | undefined,
+): boolean {
+  if (!praxis || viewerCharacterId == null) return false;
+  return praxis.members.some(
+    (member) => member.character_id === viewerCharacterId,
+  );
 }
 
 export function usePraxisDetail(idParam: string | undefined): PraxisDetailState {
@@ -258,8 +276,7 @@ export function usePraxisDetail(idParam: string | undefined): PraxisDetailState 
     }
   };
 
-  const isOwner =
-    !!user?.character && !!praxis && user.character.id === praxis.created_by_id;
+  const isOwner = isViewerMember(praxis, user?.character?.id);
 
   return {
     loading,
