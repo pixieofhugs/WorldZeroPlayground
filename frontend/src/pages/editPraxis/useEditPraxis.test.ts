@@ -4,7 +4,31 @@
  * transitions warn: leaving a live duel, or collab→solo dropping co-authors.
  */
 import { describe, it, expect } from "vitest";
-import { modeSwitchPrompt } from "./useEditPraxis";
+import { hasUnsavedEdits, modeSwitchPrompt } from "./useEditPraxis";
+
+/**
+ * Dirty-check gating the pre-submit PUT (#360). persistEdits only fires
+ * updatePraxis when this returns true — on a collab an unconditional PUT
+ * reset every member's has_submitted (ADR-0012), so consensus was never
+ * reachable through the UI.
+ */
+describe("hasUnsavedEdits", () => {
+  it("is false when title and body match the last-persisted values → no PUT on submit", () => {
+    expect(hasUnsavedEdits("Title", "Body", "Title", "Body")).toBe(false);
+  });
+
+  it("is true when the title changed → PUT fires (and resets collab consensus, per ADR-0012)", () => {
+    expect(hasUnsavedEdits("New title", "Body", "Title", "Body")).toBe(true);
+  });
+
+  it("is true when the body changed", () => {
+    expect(hasUnsavedEdits("Title", "New body", "Title", "Body")).toBe(true);
+  });
+
+  it("is true before hydration (refs still null), preserving the old always-save behavior", () => {
+    expect(hasUnsavedEdits("Title", "", null, null)).toBe(true);
+  });
+});
 
 describe("modeSwitchPrompt", () => {
   it("warns that co-authors will be dropped on collab → solo with a crew (#155)", () => {

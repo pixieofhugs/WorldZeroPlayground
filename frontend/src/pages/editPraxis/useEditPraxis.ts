@@ -139,6 +139,25 @@ export function modeSwitchPrompt(
   return null;
 }
 
+/**
+ * Dirty-check gate for the pre-submit save (#360).
+ *
+ * On a collab, ANY praxis PUT hard-resets every member's has_submitted
+ * (ADR-0012 — "an edit means we're not done"). If Submit always fired a PUT,
+ * the last member's submit would reset everyone else's, so
+ * all(has_submitted) could never be reached through the UI. Only persist
+ * when the form actually differs from the last-persisted values; a genuine
+ * edit still resets consensus, which is correct per ADR-0012.
+ */
+export function hasUnsavedEdits(
+  title: string,
+  body: string,
+  lastSavedTitle: string | null,
+  lastSavedBody: string | null,
+): boolean {
+  return title !== lastSavedTitle || body !== lastSavedBody;
+}
+
 export function useEditPraxis(idParam: string | undefined): EditPraxisState {
   const navigate = useNavigate();
   const { user, refetch, loading: authLoading } = useAuth();
@@ -362,6 +381,18 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
       if (autosaveTimerRef.current) {
         clearTimeout(autosaveTimerRef.current);
         autosaveTimerRef.current = null;
+      }
+      // Nothing changed since the last save → skip the PUT entirely (#360).
+      // On a collab the PUT would reset every member's has_submitted.
+      if (
+        !hasUnsavedEdits(
+          title,
+          body,
+          lastSavedTitleRef.current,
+          lastSavedBodyRef.current,
+        )
+      ) {
+        return;
       }
       await updatePraxis(praxisId, { title, body_text: body || undefined });
       lastSavedTitleRef.current = title;
