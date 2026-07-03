@@ -62,8 +62,9 @@ const FACTION_BODIES: Record<string, ComponentType<{ state: FactionDetailState }
   wow: WowFactionBody,
 };
 
-export default function FactionDetail() {
-  const { slug } = useParams<{ slug: string }>();
+export default function FactionDetail({ slug: slugProp }: { slug?: string } = {}) {
+  const { slug: slugParam } = useParams<{ slug: string }>();
+  const slug = slugProp ?? slugParam;
   const state = useFactionDetail(slug);
   const { loading, faction, fetchError, members, tasks, recentPraxis } = state;
 

@@ -42,7 +42,7 @@ function RootLanding() {
 function AlbescentGate() {
   const { user, loading } = useAuth()
   if (loading) return <div className="page font-body text-muted">Loading...</div>
-  return user?.albescent_revealed ? <FactionDetail /> : <AlbescentSecretPlaceholder />
+  return user?.albescent_revealed ? <FactionDetail slug="albescent" /> : <AlbescentSecretPlaceholder />
 }
 
 export default function App() {
