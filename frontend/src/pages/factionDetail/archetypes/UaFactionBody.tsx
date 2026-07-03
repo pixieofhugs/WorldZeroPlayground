@@ -2,7 +2,7 @@ import { useState, type CSSProperties, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 import TaskCard from "../../../components/TaskCard";
 import PraxisCard from "../../../components/PraxisCard";
-import { FdlLaurel, topPraxisIndex } from "../../../components/cards/FdlLaurel";
+import { TaskCrown } from "../../../components/cards/TaskCrown";
 import { toRoman } from "../../../components/cards/ephemeristsAtoms";
 import { computeDisplayPoints } from "../../../utils/points";
 import { factionName } from "../../../utils/factions";
@@ -121,7 +121,6 @@ export default function UaFactionBody({ state }: { state: FactionDetailState }) 
   if (!faction) return null;
 
   const paragraphs = (faction.description ?? "").split(/\n\s*\n/).map((p) => p.trim()).filter(Boolean);
-  const topIdx = topPraxisIndex(recentPraxis.map((p) => p.score));
   const ranked = [...members].sort((a, b) => b.all_time_score - a.all_time_score);
   const spot: CharacterOut | undefined = ranked[0];
   const register = ranked.slice(1);
@@ -184,10 +183,12 @@ export default function UaFactionBody({ state }: { state: FactionDetailState }) 
             <p style={{ fontFamily: DISPLAY, fontStyle: "italic", fontSize: 14, color: SUB }}>Nothing exhibited yet.</p>
           ) : (
             <div style={{ display: "flex", flexWrap: "wrap", gap: 16, alignItems: "flex-start" }}>
-              {recentPraxis.map((praxis, i) => (
+              {recentPraxis.map((praxis) => (
                 <div key={praxis.id} style={{ position: "relative", flex: "1 1 280px", minWidth: 280 }}>
-                  {i === topIdx && (
-                    <FdlLaurel
+                  {/* Task Crown (ADR-0028) — the skin's own corner medallion,
+                      so the card's built-in stamp is suppressed. */}
+                  {praxis.is_top_for_task && (
+                    <TaskCrown
                       size={42}
                       innerBg={PAPER_WARM}
                       glyphColor={INK}
@@ -196,7 +197,7 @@ export default function UaFactionBody({ state }: { state: FactionDetailState }) 
                       style={{ position: "absolute", top: -12, right: -8, zIndex: 5 }}
                     />
                   )}
-                  <PraxisCard praxis={praxis} />
+                  <PraxisCard praxis={praxis} showCrown={false} />
                 </div>
               ))}
             </div>

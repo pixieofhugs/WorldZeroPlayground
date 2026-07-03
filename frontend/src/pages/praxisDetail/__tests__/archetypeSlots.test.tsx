@@ -56,6 +56,7 @@ const PRAXIS: PraxisOut = {
   invites: [],
   media_items: [],
   score: 42,
+  is_top_for_task: false,
   duel_id: null,
   can_flag: true,
   applied_metatasks: [],
@@ -123,6 +124,21 @@ describe("praxis-read content-slot invariant", () => {
       expect(text, "account-body slot").toContain("Seedlings");
       expect(html, "re-task-link slot").toContain('href="/tasks/7"');
       expect(html, "author-byline slot").toContain('href="/characters/3"');
+    });
+  }
+});
+
+// ─── Task Crown hero (ADR-0028) ──────────────────────────────────────────────
+// The crown banner lives in the shared PraxisStatusBanners chrome, so every
+// archetype shows it on a crowned praxis and hides it otherwise.
+
+describe("praxis-read Task Crown hero", () => {
+  for (const [slug, Archetype] of Object.entries(archetypes)) {
+    it(`${slug} shows the crown hero iff is_top_for_task`, () => {
+      const crowned = state();
+      crowned.praxis = { ...PRAXIS, is_top_for_task: true };
+      expect(render(<Archetype state={crowned} />).text).toContain("TASK CROWN");
+      expect(render(<Archetype state={state()} />).text).not.toContain("TASK CROWN");
     });
   }
 });

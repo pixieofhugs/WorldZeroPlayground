@@ -64,6 +64,7 @@ from services.praxis import (
 )
 from services.media import process_and_save_media
 from services.vote import cast_vote_on_praxis
+from services.vote_tally import crowned_praxis_ids
 
 logger = logging.getLogger(__name__)
 
@@ -115,7 +116,12 @@ async def list_praxes_route(
         limit=limit,
         offset=offset,
     )
-    return [await build_praxis_card_out(praxis, session) for praxis in praxes]
+    # Task Crown (ADR-0028): one windowed query for the whole page — not per card.
+    crowned = await crowned_praxis_ids({praxis.task_id for praxis in praxes}, session)
+    return [
+        await build_praxis_card_out(praxis, session, crowned_ids=crowned)
+        for praxis in praxes
+    ]
 
 
 @router.get("/{praxis_id}", response_model=PraxisOut)

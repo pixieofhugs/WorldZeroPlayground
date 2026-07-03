@@ -550,9 +550,10 @@
   /* Shared faction-page body grid — main column + right rail; collapses to one
      column on narrow viewports (rule below). Every faction skin reuses this. */
 
-  /* ── Faction Distinction Laurel ── the single cross-faction high-score mark.
-     Fixed brand rainbow; the medallion's inner disc + glyph are recoloured
-     per-faction by the caller (see components/cards/FdlLaurel.tsx). */
+  /* ── Task Crown ── the per-task top-praxis mark (ADR-0028; the retired
+     Faction Distinction Laurel's medallion, re-glyphed). Fixed brand rainbow;
+     the medallion's inner disc + glyph are recoloured per-faction by the
+     caller (see components/cards/TaskCrown.tsx). */
   --fdl-rainbow: conic-gradient(from 90deg, #fbbf24, #f97316, #be185d, #4f46e5, #0e7490, #16a34a, #fbbf24);
 }
 

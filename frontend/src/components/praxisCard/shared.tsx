@@ -1,6 +1,7 @@
 import type { CSSProperties, MouseEvent } from "react";
 import { Link } from "react-router-dom";
 import type { PraxisCardOut } from "../../api/praxis";
+import { TaskCrown } from "../cards/TaskCrown";
 
 /**
  * Praxis-card shared building blocks.
@@ -102,17 +103,25 @@ export function PraxisScoreHero({
   praxis,
   color,
   border,
+  paper,
+  showCrown,
 }: {
   praxis: PraxisCardOut;
   color?: string;
   border?: string;
+  /** The card's paper colour — the crown medallion's inner disc (ADR-0028). */
+  paper?: string;
+  /** Set false when the surface renders its own TaskCrown (the faction pages). */
+  showCrown?: boolean;
 }) {
   if (praxis.score === null || praxis.score === undefined) return null;
   const base = praxis.task_point_value;
   const votePoints = Math.max(0, Math.round(praxis.score - base));
+  const crowned = praxis.is_top_for_task && showCrown !== false;
   return (
     <div
       style={{
+        position: "relative",
         display: "inline-flex",
         flexDirection: "column",
         alignItems: "center",
@@ -127,6 +136,17 @@ export function PraxisScoreHero({
         lineHeight: 1,
       }}
     >
+      {/* Task Crown (ADR-0028) — stamped over the score stamp's corner. */}
+      {crowned && (
+        <TaskCrown
+          size={26}
+          ringInset={3}
+          innerBg={paper}
+          glyphColor={color ?? "currentColor"}
+          rotate="8deg"
+          style={{ position: "absolute", top: -13, right: -12, zIndex: 3 }}
+        />
+      )}
       <span className="font-display" style={{ fontWeight: 800, fontSize: "var(--text-lg)", whiteSpace: "nowrap" }}>
         {base}
         <span style={{ opacity: 0.55, margin: "0 2px" }}>+</span>

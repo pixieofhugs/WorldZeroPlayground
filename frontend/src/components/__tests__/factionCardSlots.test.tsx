@@ -51,6 +51,7 @@ const PRAXIS: PraxisCardOut = {
   member_count: 1,
   score: 4.2,
   voter_count: 0,
+  is_top_for_task: false,
   task_faction_slug: "ua",
 };
 
@@ -77,6 +78,39 @@ describe("praxis-card content-slot invariant", () => {
       expect(text, "title slot").toContain("Photosynthesis"); // PraxisTitle
       expect(html, "task-link slot").toContain('href="/tasks/7"'); // PraxisTaskLink
       expect(html, "score slot").toContain("4.2"); // PraxisByline score
+    });
+  }
+});
+
+// ─── Task Crown stamp (ADR-0028) ─────────────────────────────────────────────
+// Every archetype must stamp the crown on a crowned praxis, must not stamp an
+// uncrowned one, and must yield when the surface (a faction page) renders its
+// own corner medallion via showCrown={false}.
+
+const CROWN_TITLE = "Task Crown — top praxis for this task";
+const CROWNED = { ...PRAXIS, is_top_for_task: true };
+
+describe("praxis-card Task Crown stamp", () => {
+  for (const [slug, Card] of Object.entries(praxisArchetypes)) {
+    it(`${slug} stamps the crown iff is_top_for_task`, () => {
+      const crowned = markup(
+        <Card praxis={CROWNED} adminProps={{ ...PRAXIS_ADMIN, praxis: CROWNED }} />,
+      );
+      expect(crowned.html, "crowned card").toContain(CROWN_TITLE);
+
+      const plain = markup(<Card praxis={PRAXIS} adminProps={PRAXIS_ADMIN} />);
+      expect(plain.html, "uncrowned card").not.toContain(CROWN_TITLE);
+
+      const suppressed = markup(
+        <Card
+          praxis={CROWNED}
+          adminProps={{ ...PRAXIS_ADMIN, praxis: CROWNED }}
+          showCrown={false}
+        />,
+      );
+      expect(suppressed.html, "surface renders its own crown").not.toContain(
+        CROWN_TITLE,
+      );
     });
   }
 });

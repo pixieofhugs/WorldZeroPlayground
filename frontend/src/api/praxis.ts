@@ -66,6 +66,8 @@ export interface PraxisOut {
   invites: PraxisInviteOut[]
   media_items: MediaItemOut[]
   score: number
+  /** Task Crown — top-scoring submitted praxis for its task (ADR-0028). */
+  is_top_for_task: boolean
   /** Set when this praxis is one side of a duel (ADR-0011). */
   duel_id: number | null
   can_flag: boolean
@@ -90,6 +92,8 @@ export interface PraxisCardOut {
   member_count: number
   score: number
   voter_count: number
+  /** Task Crown — top-scoring submitted praxis for its task (ADR-0028). */
+  is_top_for_task: boolean
   task_faction_slug: string | null
 }
 

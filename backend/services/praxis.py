@@ -42,7 +42,7 @@ from services import collab_consensus
 from services.character_stats import recalculate_character_stats
 from services.era import get_current_era_row, get_or_create_stats
 from models.duel import Duel, DuelStatus
-from services.vote_tally import get_tally, tally_votes
+from services.vote_tally import crowned_praxis_ids, get_tally, tally_votes
 
 
 EVERYMEN_FACTION_SLUG = "everymen"
@@ -123,11 +123,17 @@ async def build_praxis_out(
     session: AsyncSession,
     era: EraConfig = CURRENT_ERA,
     viewer: Optional[Character] = None,
+    *,
+    crowned_ids: Optional[set[int]] = None,
 ) -> PraxisOut:
     """Build a PraxisOut for any praxis type.
 
     ``viewer`` is the authenticated viewer's character, used to compute
     viewer-relative flags such as ``can_flag`` and invite visibility.
+
+    ``crowned_ids`` are the Task Crown holders (ADR-0028); list routes
+    precompute them once via :func:`~services.vote_tally.crowned_praxis_ids`
+    to avoid an N+1, single-praxis routes leave the default.
     """
     task_title = praxis.task.title if praxis.task else ""
     task_point_value = praxis.task.point_value if praxis.task else 0
@@ -159,6 +165,10 @@ async def build_praxis_out(
     duel_id: Optional[int] = duel_row.id if duel_row is not None else None
 
     can_flag = await can_flag_praxis(viewer, praxis, session, era)
+
+    # Task Crown (ADR-0028): top submitted praxis for this task, computed live.
+    if crowned_ids is None:
+        crowned_ids = await crowned_praxis_ids([praxis.task_id], session)
 
     created_by_display_name = praxis.created_by.display_name if praxis.created_by else ""
     created_by_faction_slug = praxis.created_by.faction_slug if praxis.created_by else None
@@ -200,6 +210,7 @@ async def build_praxis_out(
         media_items=media_items,
         score=score,
         voter_count=tally.voter_count,
+        is_top_for_task=praxis.id in crowned_ids,
         duel_id=duel_id,
         can_flag=can_flag,
         applied_metatasks=applied_metatasks,
@@ -210,10 +221,16 @@ async def build_praxis_card_out(
     praxis: Praxis,
     session: AsyncSession,
     era: EraConfig = CURRENT_ERA,
+    *,
+    crowned_ids: Optional[set[int]] = None,
 ) -> PraxisCardOut:
     """Lightweight card for list views.
 
     score = Merit = task base + points_from_votes (viewer-independent; ADR-0014).
+
+    ``crowned_ids`` are the Task Crown holders (ADR-0028); list routes
+    precompute them once via :func:`~services.vote_tally.crowned_praxis_ids`
+    so the crown never becomes a per-card query.
     """
     task_title = praxis.task.title if praxis.task else ""
     task_point_value = praxis.task.point_value if praxis.task else 0
@@ -223,6 +240,10 @@ async def build_praxis_card_out(
     tally_map = await tally_votes([praxis.id], session)
     tally = get_tally(tally_map, praxis.id)
     score = float(task_point_value + tally.points_from_votes)
+
+    # Task Crown (ADR-0028): top submitted praxis for this task, computed live.
+    if crowned_ids is None:
+        crowned_ids = await crowned_praxis_ids([praxis.task_id], session)
 
     return PraxisCardOut(
         id=praxis.id,
@@ -242,6 +263,7 @@ async def build_praxis_card_out(
         member_count=len(praxis.members),
         score=score,
         voter_count=tally.voter_count,
+        is_top_for_task=praxis.id in crowned_ids,
         task_faction_slug=praxis.task.primary_faction_slug if praxis.task else None,
     )
 

@@ -2,7 +2,7 @@ import { useState, type CSSProperties, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 import TaskCard from "../../../components/TaskCard";
 import PraxisCard from "../../../components/PraxisCard";
-import { FdlLaurel, topPraxisIndex } from "../../../components/cards/FdlLaurel";
+import { TaskCrown } from "../../../components/cards/TaskCrown";
 import { computeDisplayPoints } from "../../../utils/points";
 import { factionName } from "../../../utils/factions";
 import type { CharacterOut } from "../../../api/auth";
@@ -126,9 +126,6 @@ export default function EverymenFactionBody({ state }: { state: FactionDetailSta
   // ② manifesto paragraphs — split the single description on blank lines.
   const paragraphs = (faction.description ?? "").split(/\n\s*\n/).map((p) => p.trim()).filter(Boolean);
 
-  // ⑤ FDL goes to the single highest-scoring praxis.
-  const topIdx = topPraxisIndex(recentPraxis.map((p) => p.score));
-
   // ⑥ spotlight = highest all-time score; roster = the rest.
   const ranked = [...members].sort((a, b) => b.all_time_score - a.all_time_score);
   const spot: CharacterOut | undefined = ranked[0];
@@ -194,10 +191,12 @@ export default function EverymenFactionBody({ state }: { state: FactionDetailSta
             <p style={{ fontFamily: MONO, fontSize: 11, color: MUTED }}>No reports filed yet.</p>
           ) : (
             <div style={{ display: "flex", flexWrap: "wrap", gap: 16, alignItems: "flex-start" }}>
-              {recentPraxis.map((praxis, i) => (
+              {recentPraxis.map((praxis) => (
                 <div key={praxis.id} style={{ position: "relative", flex: "1 1 280px", minWidth: 280 }}>
-                  {i === topIdx && (
-                    <FdlLaurel
+                  {/* ⑤ Task Crown (ADR-0028) — the skin's own corner medallion,
+                      so the card's built-in stamp is suppressed. */}
+                  {praxis.is_top_for_task && (
+                    <TaskCrown
                       size={44}
                       innerBg={CREAM}
                       glyphColor={INK}
@@ -206,7 +205,7 @@ export default function EverymenFactionBody({ state }: { state: FactionDetailSta
                       style={{ position: "absolute", top: -14, right: -10, zIndex: 5 }}
                     />
                   )}
-                  <PraxisCard praxis={praxis} />
+                  <PraxisCard praxis={praxis} showCrown={false} />
                 </div>
               ))}
             </div>

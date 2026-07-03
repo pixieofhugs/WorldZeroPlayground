@@ -71,6 +71,7 @@ const MY_PRAXIS: PraxisCardOut = {
   member_count: 1,
   score: 4.2,
   voter_count: 0,
+  is_top_for_task: false,
   task_faction_slug: "snide",
 };
 

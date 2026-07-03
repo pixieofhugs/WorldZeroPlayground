@@ -36,6 +36,7 @@ from schemas.task import TaskCreate, TaskOut
 from schemas.praxis import PraxisOut
 from schemas.comment import CommentModerationIn, CommentOut
 from services.praxis import build_praxis_out, moderate_praxis
+from services.vote_tally import crowned_praxis_ids
 from services.comment import build_comment_out, list_flagged_comments, moderate_comment
 from services.task import build_task_out
 from services.admin_service import (
@@ -315,7 +316,14 @@ async def admin_list_flagged_praxes(
         .order_by(Praxis.created_at.desc())
     )
     praxis_list = result.scalars().all()
-    return [await build_praxis_out(praxis, session) for praxis in praxis_list]
+    # Task Crown (ADR-0028): one windowed query for the whole list — not per card.
+    crowned = await crowned_praxis_ids(
+        {praxis.task_id for praxis in praxis_list}, session
+    )
+    return [
+        await build_praxis_out(praxis, session, crowned_ids=crowned)
+        for praxis in praxis_list
+    ]
 
 
 @router.patch("/praxes/{praxis_id}/moderate", response_model=PraxisOut)

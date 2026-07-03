@@ -18,6 +18,12 @@ import { usePraxisCard } from "./praxisCard/usePraxisCard";
 interface Props {
   praxis: PraxisCardOut;
   onModerated?: () => void;
+  /**
+   * Task Crown display (ADR-0028) — on by default. The six faction-page bodies
+   * pass false because they stamp their own larger corner medallion over the
+   * card; every other surface keeps the built-in stamp.
+   */
+  showCrown?: boolean;
 }
 
 /**
@@ -27,7 +33,11 @@ interface Props {
  * moderation + the optimistic local praxis come from usePraxisCard; the frame is
  * selected by task faction via pickVariant.
  */
-export type ArchetypeProps = { praxis: PraxisCardOut; adminProps: AdminProps };
+export type ArchetypeProps = {
+  praxis: PraxisCardOut;
+  adminProps: AdminProps;
+  showCrown?: boolean;
+};
 
 // ─── Per-faction archetypes ───────────────────────────────────────────────────
 
@@ -43,12 +53,17 @@ function PraxisBody({
   praxis,
   tint,
   muted,
+  paper,
   titleStyle,
+  showCrown,
 }: {
   praxis: PraxisCardOut;
   tint: string;
   muted: string;
+  /** The frame's paper colour — inner disc of the Task Crown (ADR-0028). */
+  paper?: string;
   titleStyle?: CSSProperties;
+  showCrown?: boolean;
 }) {
   return (
     <>
@@ -64,7 +79,13 @@ function PraxisBody({
           <PraxisTitle praxis={praxis} style={titleStyle} />
           <PraxisTaskLink praxis={praxis} style={{ color: muted }} />
         </div>
-        <PraxisScoreHero praxis={praxis} color={tint} border={tint} />
+        <PraxisScoreHero
+          praxis={praxis}
+          color={tint}
+          border={tint}
+          paper={paper}
+          showCrown={showCrown}
+        />
       </div>
       <PraxisStats praxis={praxis} style={{ color: muted, marginTop: 8 }} />
       <PraxisByline praxis={praxis} style={{ color: muted }} />
@@ -78,7 +99,7 @@ function PraxisBody({
  * "Acquisition · filed" regalia line. Matches the UA praxis-read sheet, UAVote,
  * and the DS FactionPraxisCard reference. All colors via --ua-* tokens.
  */
-function UAPraxisCard({ praxis, adminProps }: ArchetypeProps) {
+function UAPraxisCard({ praxis, adminProps, showCrown }: ArchetypeProps) {
   return (
     // Gilt frame: gold-leaf gradient border, then the parchment plate.
     <div
@@ -123,14 +144,16 @@ function UAPraxisCard({ praxis, adminProps }: ArchetypeProps) {
           praxis={praxis}
           tint={factionCssVar("ua", "card-accent")}
           muted={factionCssVar("ua", "card-muted")}
+          paper={factionCssVar("ua", "card-bg")}
           titleStyle={{ fontFamily: "'Playfair Display', serif", fontStyle: "italic" }}
+          showCrown={showCrown}
         />
       </div>
     </div>
   );
 }
 
-function EverymenPraxisCard({ praxis, adminProps }: ArchetypeProps) {
+function EverymenPraxisCard({ praxis, adminProps, showCrown }: ArchetypeProps) {
   return (
     <div
       style={{
@@ -166,12 +189,14 @@ function EverymenPraxisCard({ praxis, adminProps }: ArchetypeProps) {
         praxis={praxis}
         tint={factionCssVar("everymen", "card-accent")}
         muted={factionCssVar("everymen", "card-muted")}
+        paper={factionCssVar("everymen", "card-bg")}
+        showCrown={showCrown}
       />
     </div>
   );
 }
 
-function WowPraxisCard({ praxis, adminProps }: ArchetypeProps) {
+function WowPraxisCard({ praxis, adminProps, showCrown }: ArchetypeProps) {
   return (
     <div
       style={{
@@ -240,6 +265,8 @@ function WowPraxisCard({ praxis, adminProps }: ArchetypeProps) {
           praxis={praxis}
           tint={factionCssVar("wow", "card-accent")}
           muted={factionCssVar("wow", "card-muted")}
+          paper={factionCssVar("wow", "card-bg")}
+          showCrown={showCrown}
         />
       </div>
     </div>
@@ -249,7 +276,7 @@ function WowPraxisCard({ praxis, adminProps }: ArchetypeProps) {
 const SNIDE_TORN_CLIP =
   "polygon(0% 0%, 4% 100%, 8% 20%, 12% 90%, 16% 10%, 20% 80%, 24% 0%, 28% 100%, 32% 15%, 36% 85%, 40% 5%, 44% 95%, 48% 20%, 52% 80%, 56% 0%, 60% 100%, 64% 15%, 68% 90%, 72% 5%, 76% 85%, 80% 0%, 84% 100%, 88% 20%, 92% 80%, 96% 10%, 100% 0%)";
 
-function SnidePraxisCard({ praxis, adminProps }: ArchetypeProps) {
+function SnidePraxisCard({ praxis, adminProps, showCrown }: ArchetypeProps) {
   return (
     <div
       style={{
@@ -294,6 +321,8 @@ function SnidePraxisCard({ praxis, adminProps }: ArchetypeProps) {
         praxis={praxis}
         tint={factionCssVar("snide", "card-accent")}
         muted={factionCssVar("snide", "card-muted")}
+        paper={factionCssVar("snide", "card-bg")}
+        showCrown={showCrown}
       />
     </div>
   );
@@ -303,7 +332,7 @@ function SnidePraxisCard({ praxis, adminProps }: ArchetypeProps) {
  * The Ephemerists (ephemerists slug) — a sealed ephemeris entry. A foxed vellum
  * leaf with a lapis-ruled running head, the sigil, and rubric-accented text.
  */
-function EphemeristsPraxisCard({ praxis, adminProps }: ArchetypeProps) {
+function EphemeristsPraxisCard({ praxis, adminProps, showCrown }: ArchetypeProps) {
   return (
     <div
       style={{
@@ -354,7 +383,9 @@ function EphemeristsPraxisCard({ praxis, adminProps }: ArchetypeProps) {
           praxis={praxis}
           tint="var(--eph-rubric)"
           muted="var(--eph-muted)"
+          paper="var(--eph-vellum)"
           titleStyle={{ fontFamily: "var(--eph-display)", color: "var(--eph-vellum-text)" }}
+          showCrown={showCrown}
         />
       </div>
     </div>
@@ -388,7 +419,7 @@ function SingularityHoles() {
   );
 }
 
-function SingularityPraxisCard({ praxis, adminProps }: ArchetypeProps) {
+function SingularityPraxisCard({ praxis, adminProps, showCrown }: ArchetypeProps) {
   return (
     <div
       style={{
@@ -489,6 +520,8 @@ function SingularityPraxisCard({ praxis, adminProps }: ArchetypeProps) {
           praxis={praxis}
           tint="var(--faction-singularity-card-text)"
           muted="var(--faction-singularity-card-muted)"
+          paper="var(--faction-singularity-card-bg)"
+          showCrown={showCrown}
         />
       </div>
       <SingularityHoles />
@@ -499,7 +532,7 @@ function SingularityPraxisCard({ praxis, adminProps }: ArchetypeProps) {
 
 
 /** Fallback card for `na` / unknown task factions — a plain accent-bordered slab. */
-export function DefaultPraxisCard({ praxis, adminProps }: ArchetypeProps) {
+export function DefaultPraxisCard({ praxis, adminProps, showCrown }: ArchetypeProps) {
   const slug = praxis.task_faction_slug ?? "ua";
   return (
     <div
@@ -520,6 +553,8 @@ export function DefaultPraxisCard({ praxis, adminProps }: ArchetypeProps) {
         praxis={praxis}
         tint={factionCssVar(slug, "card-accent")}
         muted={factionCssVar(slug, "card-muted")}
+        paper={factionCssVar(slug, "card-bg")}
+        showCrown={showCrown}
       />
     </div>
   );
@@ -536,12 +571,12 @@ export const PRAXIS_CARD_BY_SLUG: Record<string, ComponentType<ArchetypeProps>> 
   singularity: SingularityPraxisCard,
 };
 
-export default function PraxisCard({ praxis, onModerated }: Props) {
+export default function PraxisCard({ praxis, onModerated, showCrown = true }: Props) {
   const { localPraxis, adminProps } = usePraxisCard(praxis, onModerated);
   const Card = pickVariant(
     PRAXIS_CARD_BY_SLUG,
     localPraxis.task_faction_slug,
     DefaultPraxisCard,
   );
-  return <Card praxis={localPraxis} adminProps={adminProps} />;
+  return <Card praxis={localPraxis} adminProps={adminProps} showCrown={showCrown} />;
 }

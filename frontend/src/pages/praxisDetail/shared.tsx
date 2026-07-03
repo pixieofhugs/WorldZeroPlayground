@@ -13,6 +13,7 @@
  */
 import { Link } from 'react-router-dom'
 import { reframeLabel } from '../../components/vote/voteReframes'
+import { TaskCrown } from '../../components/cards/TaskCrown'
 import type { PraxisDetailState } from './usePraxisDetail'
 
 // ── Admin moderation bar ─────────────────────────────────────────────────────
@@ -94,6 +95,30 @@ export function PraxisStatusBanners({ state }: { state: PraxisDetailState }) {
 
   return (
     <>
+      {/* Task Crown hero (ADR-0028) — this praxis is the task's top submitted
+          entry, computed live. Invariant chrome, so every archetype shows it. */}
+      {praxis.is_top_for_task && (
+        <div
+          style={{
+            border: '2px solid var(--color-border)',
+            borderRadius: 8,
+            padding: '8px 14px',
+            marginBottom: 12,
+            display: 'flex',
+            alignItems: 'center',
+            gap: 10,
+            background: 'var(--color-bg-card)',
+          }}
+        >
+          <TaskCrown size={34} ringInset={3} />
+          <div>
+            <span className="eyebrow" style={{ display: 'block' }}>TASK CROWN</span>
+            <span className="font-body" style={{ fontSize: 11, color: 'var(--color-text-secondary)' }}>
+              The top-scoring praxis for this task — held until another entry out-votes it.
+            </span>
+          </div>
+        </div>
+      )}
       {praxis.status === 'in_progress' && (
         <div style={{ background: 'rgba(245,158,11,0.1)', border: '2px solid rgba(245,158,11,0.3)', borderRadius: 8, padding: '8px 14px', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 8 }}>
           <span className="eyebrow">IN EDITING</span>

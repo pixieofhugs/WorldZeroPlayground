@@ -30,6 +30,7 @@ from services.character import (
 from services.era import load_current_era_stats
 from services.media import process_and_save_avatar
 from services.praxis import build_praxis_out, praxis_visibility_condition
+from services.vote_tally import crowned_praxis_ids
 
 router = APIRouter()
 
@@ -135,7 +136,14 @@ async def get_character_praxes(
         .offset(offset)
     )
     praxis_list = result.scalars().all()
-    return [await build_praxis_out(praxis, session) for praxis in praxis_list]
+    # Task Crown (ADR-0028): one windowed query for the whole grid — not per card.
+    crowned = await crowned_praxis_ids(
+        {praxis.task_id for praxis in praxis_list}, session
+    )
+    return [
+        await build_praxis_out(praxis, session, crowned_ids=crowned)
+        for praxis in praxis_list
+    ]
 
 
 @router.post("/{character_id}/avatar", response_model=CharacterOut)
