@@ -11,6 +11,7 @@ import { describe, it, expect, afterEach } from "vitest";
 import FactionFeedFrame, {
   FACTION_FEED_FRAMES,
 } from "../feed/FactionFeedFrame";
+import AlbescentFeedFrame from "../feed/AlbescentFeedFrame";
 
 const CARD = <span>card-body</span>;
 
@@ -26,10 +27,20 @@ afterEach(() => {
 });
 
 describe("FactionFeedFrame dispatch", () => {
-  it("registers all six designed faction frames", () => {
-    for (const slug of ["everymen", "ephemerists", "wow", "snide", "singularity", "ua"]) {
+  it("registers all seven designed faction frames", () => {
+    for (const slug of ["everymen", "ephemerists", "wow", "snide", "singularity", "ua", "albescent"]) {
       expect(REGISTERED_AT_LOAD.has(slug), `${slug} frame registered`).toBe(true);
     }
+  });
+
+  it("wraps the card in the Albescent Record frame without swallowing it (#232)", () => {
+    // The explicit `albescent` row beats the albescent→ua alias, so an albescent
+    // card gets its own frame — the card body survives inside the chrome.
+    const html = renderToStaticMarkup(
+      <AlbescentFeedFrame>{CARD}</AlbescentFeedFrame>,
+    );
+    expect(html).toContain("<span>card-body</span>");
+    expect(html).toContain("the standing record");
   });
 
   it("passes the card through unchanged for a neutral (slug-less) card", () => {

@@ -20,11 +20,14 @@ import WowFeedFrame from './WowFeedFrame'
 import SnideFeedFrame from './SnideFeedFrame'
 import SingularityFeedFrame from './SingularityFeedFrame'
 import UaFeedFrame from './UaFeedFrame'
+import AlbescentFeedFrame from './AlbescentFeedFrame'
 
 type FrameProps = { children: ReactNode }
 
 /** Per-faction frames. Each row makes that faction's feed cards bespoke.
- *  albescent/aged_out inherit ua via pickVariant. */
+ *  The explicit `albescent` row beats the albescent→ua alias in pickVariant, so
+ *  Albescent renders its own "Record" frame now (#232 slice 2); aged_out still
+ *  inherits ua via the alias. */
 const FACTION_FEED_FRAMES: Record<string, ComponentType<FrameProps>> = {
   everymen: EverymenFeedFrame,
   ephemerists: EphemeristsFeedFrame,
@@ -32,6 +35,7 @@ const FACTION_FEED_FRAMES: Record<string, ComponentType<FrameProps>> = {
   snide: SnideFeedFrame,
   singularity: SingularityFeedFrame,
   ua: UaFeedFrame,
+  albescent: AlbescentFeedFrame,
 }
 
 /** Neutral fallback. Owns the per-faction tint that the event cards used to
