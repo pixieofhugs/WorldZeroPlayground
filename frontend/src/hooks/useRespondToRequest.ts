@@ -68,6 +68,12 @@ export interface RespondResult {
   ok: boolean
   /** Praxis to navigate to after a successful accept (null on decline/failure). */
   praxisId: number | null
+  /**
+   * Raw backend `detail` string on failure (undefined on success). Lets callers
+   * branch on a specific reason — e.g. the duel/collab cards detect the
+   * task-bank-full message to open their drop modal (#314/#322).
+   */
+  detail?: string
 }
 
 export function useRespondToRequest(item: ActivityFeedItem) {
@@ -90,8 +96,14 @@ export function useRespondToRequest(item: ActivityFeedItem) {
       // of a generic swallow. (#318)
       const noun = item.type === 'duel_challenge' ? 'duel' : 'invite'
       const verb = acceptRequest ? 'accept' : 'decline'
-      setError(extractError(err, `Could not ${verb} ${noun}. Please try again.`))
-      return { ok: false, praxisId: null }
+      const message = extractError(
+        err,
+        `Could not ${verb} ${noun}. Please try again.`,
+      )
+      setError(message)
+      // extractError returns the backend `detail` verbatim when present, so
+      // callers can substring-match a specific reason (e.g. bank-full).
+      return { ok: false, praxisId: null, detail: message }
     } finally {
       setLoading(false)
     }

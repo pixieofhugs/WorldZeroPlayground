@@ -249,28 +249,6 @@ async def submit_praxis_route(
     return await build_praxis_out(praxis, session, viewer=character)
 
 
-class PraxisTypeChange(BaseModel):
-    type: PraxisType
-
-
-@router.post("/{praxis_id}/change-type", response_model=PraxisOut)
-async def change_praxis_type_route(
-    praxis_id: int,
-    data: PraxisTypeChange,
-    character: Character = Depends(get_current_character),
-    session: AsyncSession = Depends(get_db),
-):
-    """Flip a praxis between solo and collab in place (#321) — content/id/media kept."""
-    praxis = await change_praxis_type(
-        praxis_id=praxis_id,
-        new_type=data.type,
-        character_id=character.id,
-        session=session,
-        era=CURRENT_ERA,
-    )
-    return await build_praxis_out(praxis, session, viewer=character)
-
-
 # ---------------------------------------------------------------------------
 # Media
 # ---------------------------------------------------------------------------
