@@ -32,6 +32,19 @@ function RootLanding() {
   return user ? <FieldDesk /> : <Home />
 }
 
+/**
+ * Albescent secrecy gate (#390, ADR-0027). Albescent is a secret society: an
+ * account only sees the real faction page once it has ever had a character join
+ * Albescent (sticky `albescent_revealed`). Everyone else — including anonymous
+ * visitors — gets the in-world sealed placeholder. Albescent stays ua-aliased
+ * visually until #232; here we only route to the existing FactionDetail.
+ */
+function AlbescentGate() {
+  const { user, loading } = useAuth()
+  if (loading) return <div className="page font-body text-muted">Loading...</div>
+  return user?.albescent_revealed ? <FactionDetail /> : <AlbescentSecretPlaceholder />
+}
+
 export default function App() {
   return (
     <Layout>
@@ -60,11 +73,11 @@ export default function App() {
         />
         <Route path="/leaderboard" element={<Leaderboard />} />
         <Route path="/factions" element={<Factions />} />
-        {/* Albescent is sealed: outsiders get an in-world dead end, not the
-            faction page. Static segment outranks `:slug`, so this intercepts.
-            TODO(#390): gate on account.albescent_revealed — show real faction
-            page once revealed. */}
-        <Route path="/factions/albescent" element={<AlbescentSecretPlaceholder />} />
+        {/* Albescent is sealed until revealed (#390, ADR-0027). Static segment
+            outranks `:slug`, so this intercepts. AlbescentGate shows the real
+            faction page to revealed accounts, the in-world dead end to everyone
+            else. */}
+        <Route path="/factions/albescent" element={<AlbescentGate />} />
         <Route path="/factions/:slug" element={<FactionDetail />} />
         <Route
           path="/updates"

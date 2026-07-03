@@ -3,7 +3,11 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from db import get_db
-from dependencies import get_current_character, require_admin
+from dependencies import (
+    get_current_account_optional,
+    get_current_character,
+    require_admin,
+)
 from game_config import CURRENT_ERA
 from models.account import Account
 from models.character import Character
@@ -17,6 +21,8 @@ from schemas.faction import (
     FactionUpdate,
     InvitationLetterOut,
 )
+from services.auth import get_current_account
+from services.character import ALBESCENT_FACTION_SLUG
 from services.era import get_current_era_row
 from services.faction_service import (
     defect_to_faction,
@@ -30,12 +36,26 @@ router = APIRouter()
 
 
 @router.get("", response_model=list[FactionOut])
-async def list_factions(session: AsyncSession = Depends(get_db)):
-    """Return all non-hidden factions."""
+async def list_factions(
+    account: Account | None = Depends(get_current_account_optional),
+    session: AsyncSession = Depends(get_db),
+):
+    """Return all non-hidden factions.
+
+    Albescent is a secret society (ADR-0027, #390): it is omitted unless the
+    current account has been revealed to it. Optional auth — anonymous callers
+    stay anonymous and never see Albescent.
+    """
     result = await session.execute(
         select(Faction).where(Faction.status == FactionStatus.visible).order_by(Faction.slug)
     )
-    return [FactionOut.model_validate(faction) for faction in result.scalars().all()]
+    factions = result.scalars().all()
+    reveal_albescent = account is not None and account.albescent_revealed
+    return [
+        FactionOut.model_validate(faction)
+        for faction in factions
+        if faction.slug != ALBESCENT_FACTION_SLUG or reveal_albescent
+    ]
 
 
 @router.put("/{slug}", response_model=FactionOut)
@@ -73,10 +93,15 @@ async def choose_faction(
 
 @router.get("/status", response_model=FactionPageOut)
 async def get_faction_status(
+    account: Account = Depends(get_current_account),
     character: Character = Depends(get_current_character),
     session: AsyncSession = Depends(get_db),
 ):
-    """Return faction page data: current faction and status of all factions."""
+    """Return faction page data: current faction and status of all factions.
+
+    Albescent (ADR-0027, #390) is omitted from ``all_factions`` unless this
+    account has been revealed to the secret society.
+    """
     era_row = await get_current_era_row(session)
     status_map = await get_invitation_status(
         character.id, era_row.id, session
@@ -88,6 +113,7 @@ async def get_faction_status(
             status=status,
         )
         for slug, status in status_map.items()
+        if slug != ALBESCENT_FACTION_SLUG or account.albescent_revealed
     ]
     return FactionPageOut(
         current_faction_slug=character.faction_slug,

@@ -1,7 +1,7 @@
 import enum
 from typing import TYPE_CHECKING, List
 
-from sqlalchemy import Enum, ForeignKey, String
+from sqlalchemy import Boolean, Enum, ForeignKey, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from models.base import Base
@@ -31,6 +31,13 @@ class Account(TimestampMixin, Base):
     active_character_id: Mapped[int | None] = mapped_column(
         ForeignKey("character.id", use_alter=True, name="fk_account_active_character"),
         nullable=True,
+    )
+    # Sticky reveal flag for the Albescent secret society (ADR-0027, #390): flips
+    # True the first time any character on this account joins Albescent, and is
+    # never unset. Gates whether the faction listing/page surfaces Albescent at
+    # all. Do NOT derive from live membership — it survives age-out and switches.
+    albescent_revealed: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, default=False, server_default="false"
     )
 
     # foreign_keys pins this to character.account_id — active_character_id adds a

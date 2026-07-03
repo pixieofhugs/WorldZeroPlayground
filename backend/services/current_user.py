@@ -54,6 +54,7 @@ async def build_current_user(
         is_admin=is_admin,
         can_create_additional_character=can_create_more,
         can_start_as_albescent=can_albescent,
+        albescent_revealed=account.albescent_revealed,
         second_character_level_required=era.second_character_level_required,
         era_name=era.name,
         **asdict(capabilities),

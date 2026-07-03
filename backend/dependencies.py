@@ -35,6 +35,40 @@ async def get_current_character(
     return character
 
 
+async def get_current_account_optional(
+    credentials: Optional[HTTPAuthorizationCredentials] = Depends(_OPTIONAL_BEARER),
+    access_token: Optional[str] = Cookie(default=None),
+    session: AsyncSession = Depends(get_db),
+) -> Optional[Account]:
+    """Resolve the current account when a token is present, else ``None``.
+
+    Mirror of :func:`services.auth.get_current_account` that never raises — used
+    by public endpoints (e.g. the faction listing) that stay anonymous-friendly
+    but tailor their response for a logged-in caller when a token is supplied.
+    """
+    token = None
+    if credentials:
+        token = credentials.credentials
+    elif access_token:
+        token = access_token
+    if not token:
+        return None
+
+    try:
+        payload = decode_jwt(token)
+        account_id = int(payload["sub"])
+    except Exception:
+        return None
+
+    account_result = await session.execute(
+        select(Account).where(Account.id == account_id)
+    )
+    account = account_result.scalar_one_or_none()
+    if account is None or account.status != AccountStatus.active:
+        return None
+    return account
+
+
 async def get_current_character_optional(
     credentials: Optional[HTTPAuthorizationCredentials] = Depends(_OPTIONAL_BEARER),
     access_token: Optional[str] = Cookie(default=None),

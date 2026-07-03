@@ -22,6 +22,10 @@ class CurrentUser(BaseModel):
     # the propose/see flags to True; the eligibility flags have their own rules.
     can_create_additional_character: bool = False
     can_start_as_albescent: bool = False
+    # Sticky Albescent secret-society reveal (ADR-0027, #390). True once any
+    # character on this account has ever joined Albescent; gates whether the
+    # frontend shows the real faction page vs. the sealed placeholder.
+    albescent_revealed: bool = False
     # FieldDesk "locked dossier" gate copy reads these (#270/#274): the level an
     # existing life must reach to unlock a second life, and the live era's name.
     second_character_level_required: int = 0

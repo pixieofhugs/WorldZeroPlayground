@@ -262,6 +262,125 @@ async def test_choose_nonexistent_faction(
 
 
 # ---------------------------------------------------------------------------
+# Albescent secret-society reveal gate (ADR-0027, #390)
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.asyncio
+async def test_list_factions_hides_albescent_when_unrevealed(
+    client: AsyncClient,
+    account: Account,
+    auth_headers: dict,
+    faction_ua: Faction,
+    db_session: AsyncSession,
+):
+    """Albescent is a secret society: an account with no albescent history never
+    sees it in GET /factions, even though the row is a visible faction."""
+    await _seed_faction(db_session, "albescent")
+    await db_session.commit()
+
+    resp = await client.get("/factions", headers=auth_headers)
+    assert resp.status_code == 200
+    slugs = [f["slug"] for f in resp.json()]
+    assert "albescent" not in slugs
+    # Non-secret visible factions still show.
+    assert "ua" in slugs
+
+
+@pytest.mark.asyncio
+async def test_list_factions_hides_albescent_when_anonymous(
+    client: AsyncClient,
+    faction_ua: Faction,
+    db_session: AsyncSession,
+):
+    """Anonymous callers stay anonymous and never see the secret society."""
+    await _seed_faction(db_session, "albescent")
+    await db_session.commit()
+
+    resp = await client.get("/factions")
+    assert resp.status_code == 200
+    slugs = [f["slug"] for f in resp.json()]
+    assert "albescent" not in slugs
+
+
+@pytest.mark.asyncio
+async def test_albescent_join_reveals_and_lists(
+    client: AsyncClient,
+    character: Character,
+    account: Account,
+    auth_headers: dict,
+    era: Era,
+    db_session: AsyncSession,
+):
+    """A successful Albescent defect flips albescent_revealed and unlocks the
+    faction in GET /factions for that account."""
+    await _seed_faction(db_session, "albescent")
+    await _make_account_albescent_eligible(db_session, character, era)
+
+    # Pre-join: hidden.
+    before = await client.get("/factions", headers=auth_headers)
+    assert "albescent" not in [f["slug"] for f in before.json()]
+
+    resp = await client.post(
+        "/factions/choose",
+        json={"faction_slug": "albescent"},
+        headers=auth_headers,
+    )
+    assert resp.status_code == 200
+
+    # The sticky flag is now set on the account.
+    await db_session.refresh(account)
+    assert account.albescent_revealed is True
+
+    # And the faction now surfaces for this account.
+    after = await client.get("/factions", headers=auth_headers)
+    assert "albescent" in [f["slug"] for f in after.json()]
+
+
+@pytest.mark.asyncio
+async def test_albescent_reveal_is_sticky_not_derived_from_membership(
+    client: AsyncClient,
+    character: Character,
+    account: Account,
+    auth_headers: dict,
+    era: Era,
+    db_session: AsyncSession,
+):
+    """Reveal survives leaving Albescent — it is not derived from live membership.
+
+    After joining (which reveals), the character defects back to a real faction;
+    the flag stays True and the faction stays listed."""
+    await _seed_faction(db_session, "albescent")
+    await _make_account_albescent_eligible(db_session, character, era)
+
+    join = await client.post(
+        "/factions/choose",
+        json={"faction_slug": "albescent"},
+        headers=auth_headers,
+    )
+    assert join.status_code == 200
+
+    # Leave Albescent for a real faction (albescent can_always_rejoin, and the
+    # target is one covered by the eligibility seeding).
+    leave = await client.post(
+        "/factions/choose",
+        json={"faction_slug": "wow"},
+        headers=auth_headers,
+    )
+    assert leave.status_code == 200
+
+    await db_session.refresh(character)
+    assert character.faction_slug != "albescent"
+
+    # Flag persists even with no live Albescent membership.
+    await db_session.refresh(account)
+    assert account.albescent_revealed is True
+
+    listed = await client.get("/factions", headers=auth_headers)
+    assert "albescent" in [f["slug"] for f in listed.json()]
+
+
+# ---------------------------------------------------------------------------
 # Update faction (admin-only)
 # ---------------------------------------------------------------------------
 

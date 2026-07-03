@@ -5,6 +5,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from game_config import CURRENT_ERA, EraConfig
+from models.account import Account
 from models.character import Character
 from models.character_stats import CharacterStats
 from models.faction import Faction
@@ -112,6 +113,15 @@ async def defect_to_faction(
         session.add(defection)
 
     character.faction_slug = target_slug
+
+    # ADR-0027 / #390: joining Albescent permanently reveals the secret society to
+    # this account. Sticky/monotonic — set once, never unset. Do NOT derive from
+    # live membership; it must survive age-out, death, and active-character switch.
+    if target_slug == ALBESCENT_FACTION_SLUG:
+        account = await session.get(Account, character.account_id)
+        if account is not None:
+            account.albescent_revealed = True
+
     await session.flush()
     await session.refresh(character)
     return character

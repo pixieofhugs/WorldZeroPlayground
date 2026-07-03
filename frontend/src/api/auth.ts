@@ -24,6 +24,10 @@ export interface CurrentUser {
   // flags to true. Drive UI off these instead of comparing character.level.
   can_create_additional_character: boolean
   can_start_as_albescent: boolean
+  // Sticky Albescent secret-society reveal (ADR-0027, #390). True once any
+  // character on this account has ever joined Albescent; gates the real faction
+  // page vs. the sealed placeholder at /factions/albescent.
+  albescent_revealed: boolean
   can_propose_task: boolean
   can_propose_metatask: boolean
   can_see_retired_tasks: boolean
