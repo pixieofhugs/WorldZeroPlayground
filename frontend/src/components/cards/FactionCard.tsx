@@ -7,19 +7,16 @@ import { EphSeal, LapisLastWord } from "./ephemeristsAtoms";
 /**
  * FactionCard — faction-archetype switcher.
  *
- * Renders a visually distinct card per faction slug, mirroring the task card
- * archetypes but showing faction info (name, description, status, actions).
+ * Renders a visually distinct PREVIEW card per faction slug, mirroring the task
+ * card archetypes but showing faction info (name, description, status). It is a
+ * pure preview: the whole grid card is a link to the faction's detail page, and
+ * ALL membership actions (Join / Leave / Accept / Decline) live on that page's
+ * membership block (issue #347). The card carries no interactive controls.
  */
 
 export interface FactionCardProps {
   faction: FactionOut;
   status: string;
-  onJoin?: () => void;
-  onLeave?: () => void;
-  onConfirm?: () => void;
-  onDecline?: () => void;
-  confirmPending?: boolean;
-  leavePending?: boolean;
   /** When set, renders a "NEW INVITATION" eyebrow above the card content. */
   invitationNote?: string | null;
 }
@@ -89,148 +86,6 @@ function StatusBadge({ status, slug }: { status: string; slug: string }) {
   return null;
 }
 
-// ─── Action footer ────────────────────────────────────────────────────────────
-
-function ActionRow({
-  faction,
-  status,
-  onJoin,
-  onLeave,
-  onConfirm,
-  onDecline,
-  confirmPending,
-  leavePending,
-}: Pick<
-  FactionCardProps,
-  | "faction"
-  | "status"
-  | "onJoin"
-  | "onLeave"
-  | "onConfirm"
-  | "onDecline"
-  | "confirmPending"
-  | "leavePending"
->) {
-  if (status === "member") {
-    if (!onLeave) return null;
-    return (
-      <button
-        onClick={onLeave}
-        disabled={leavePending}
-        style={{
-          background: "transparent",
-          border: "none",
-          fontSize: 9,
-          color: "var(--color-text-tertiary)",
-          cursor: leavePending ? "not-allowed" : "pointer",
-          padding: 0,
-          fontFamily: "var(--font-body)",
-          textTransform: "uppercase",
-          letterSpacing: "0.08em",
-        }}
-      >
-        {leavePending ? "Leaving..." : "Leave"}
-      </button>
-    );
-  }
-  if (status === "invited") {
-    // Explicit Accept/Decline mode (when Factions.tsx wires onConfirm/onDecline)
-    if (onConfirm || onDecline) {
-      return (
-        <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-          {onConfirm && (
-            <button
-              onClick={onConfirm}
-              disabled={confirmPending}
-              className="btn-primary"
-              style={{ fontSize: 9, padding: "3px 10px" }}
-            >
-              {confirmPending ? "Joining..." : "Accept"}
-            </button>
-          )}
-          {onDecline && (
-            <button
-              onClick={onDecline}
-              style={{
-                background: "transparent",
-                border: "none",
-                fontSize: 9,
-                color: "var(--color-text-tertiary)",
-                cursor: "pointer",
-                padding: 0,
-                fontFamily: "var(--font-body)",
-                textTransform: "uppercase",
-                letterSpacing: "0.08em",
-              }}
-            >
-              Decline
-            </button>
-          )}
-        </div>
-      );
-    }
-    // Simple single-button mode (confirmation dialog lives outside the card)
-    if (onJoin) {
-      return (
-        <button
-          onClick={onJoin}
-          className="btn-primary"
-          style={{ fontSize: 9, padding: "3px 10px" }}
-        >
-          Join {faction.name}
-        </button>
-      );
-    }
-    return null;
-  }
-  if (
-    status === "eligible" ||
-    status === "can_return" ||
-    status === "welcome_back"
-  ) {
-    if (!onJoin) return null;
-    return (
-      <button
-        onClick={onJoin}
-        className="btn-primary"
-        style={{ fontSize: 9, padding: "3px 10px" }}
-      >
-        {status === "can_return" || status === "welcome_back"
-          ? `Rejoin ${faction.name}`
-          : `Join ${faction.name}`}
-      </button>
-    );
-  }
-  if (status === "burned" || status === "defected") {
-    return (
-      <div
-        className="font-body"
-        style={{
-          fontSize: 10,
-          lineHeight: 1.45,
-          color: factionCssVar(faction.slug, "card-muted"),
-          fontStyle: "italic",
-        }}
-      >
-        You defected from {faction.name}. They won't take you back.
-      </div>
-    );
-  }
-  // For not_invited with onJoin provided (e.g. needsFactionChoice)
-  if (onJoin) {
-    return (
-      <button
-        onClick={onJoin}
-        className="btn-primary"
-        style={{ fontSize: 9, padding: "3px 10px" }}
-      >
-        Join {faction.name}
-      </button>
-    );
-  }
-  return null;
-}
-
 // ─── Invitation note ──────────────────────────────────────────────────────────
 
 function InvitationNote({ slug, note }: { slug: string; note: string }) {
@@ -264,7 +119,6 @@ function UACard({
   faction,
   status,
   invitationNote,
-  ...actions
 }: FactionCardProps) {
   const rotation = ROTATIONS[faction.slug.length % ROTATIONS.length];
   const desc = faction.description
@@ -327,7 +181,6 @@ function UACard({
           {desc}
         </div>
       )}
-      <ActionRow faction={faction} status={status} {...actions} />
     </div>
   );
 }
@@ -379,7 +232,6 @@ function WowCard({
   faction,
   status,
   invitationNote,
-  ...actions
 }: FactionCardProps) {
   const desc = faction.description
     ? faction.description.slice(0, 100) +
@@ -556,10 +408,6 @@ function WowCard({
               </div>
             )}
           </div>
-          {/* action footer */}
-          <div style={{ position: "relative", zIndex: 2 }}>
-            <ActionRow faction={faction} status={status} {...actions} />
-          </div>
         </div>
       </div>
     </div>
@@ -573,7 +421,6 @@ function SnideCard({
   faction,
   status,
   invitationNote,
-  ...actions
 }: FactionCardProps) {
   const desc = faction.description
     ? faction.description.slice(0, 100) +
@@ -666,7 +513,6 @@ function SnideCard({
           </div>
         </div>
       )}
-      <ActionRow faction={faction} status={status} {...actions} />
     </div>
   );
 }
@@ -680,7 +526,6 @@ function EphemeristsCard({
   faction,
   status,
   invitationNote,
-  ...actions
 }: FactionCardProps) {
   const desc = faction.description
     ? faction.description.slice(0, 110) +
@@ -766,7 +611,6 @@ function EphemeristsCard({
             {desc}
           </div>
         )}
-        <ActionRow faction={faction} status={status} {...actions} />
       </div>
     </div>
   );
@@ -803,7 +647,6 @@ function SingularityCard({
   faction,
   status,
   invitationNote,
-  ...actions
 }: FactionCardProps) {
   const desc = faction.description
     ? faction.description.slice(0, 100) +
@@ -933,14 +776,6 @@ function SingularityCard({
             {desc}
           </div>
         )}
-        <div
-          style={{
-            borderTop: "1px solid var(--faction-singularity-border-hard)",
-            paddingTop: 8,
-          }}
-        >
-          <ActionRow faction={faction} status={status} {...actions} />
-        </div>
       </div>
       <SingularityHoles />
       <style>{`@keyframes blink { 50% { opacity: 0; } }`}</style>
@@ -1009,16 +844,6 @@ export default function FactionCard(props: FactionCardProps) {
               {props.faction.description.slice(0, 100)}
             </div>
           )}
-          <ActionRow
-            faction={props.faction}
-            status={props.status}
-            onJoin={props.onJoin}
-            onLeave={props.onLeave}
-            onConfirm={props.onConfirm}
-            onDecline={props.onDecline}
-            confirmPending={props.confirmPending}
-            leavePending={props.leavePending}
-          />
         </div>
       );
   }
