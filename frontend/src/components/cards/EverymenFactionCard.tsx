@@ -1,11 +1,12 @@
 import type { FactionCardProps } from "./FactionCard";
 
 /**
- * EverymenFactionCard — the Everymen faction-SELECTION card.
+ * EverymenFactionCard — the Everymen faction PREVIEW card.
  *
- * A union "ENLIST" recruitment poster: a masthead with the faction name in a
- * big Bebas headline, the motto/blurb pulled from faction.description, and an
- * enlist CTA wired to the real join/leave/accept/decline handlers.
+ * A union recruitment poster: a masthead with the faction name in a big Bebas
+ * headline and the motto/blurb pulled from faction.description. Pure preview —
+ * the whole card is a link to the faction detail page, where the enlist / leave
+ * membership block lives (issue #347). No interactive controls here.
  *
  * Self-contained: the SVG poster atoms (CogMark sigil, Halftone, Sunburst) are
  * declared locally so this file has no external dependencies beyond the
@@ -81,162 +82,11 @@ function Sunburst({
   );
 }
 
-// ─── Enlist action footer ──────────────────────────────────────────────────────
-
-const ENLIST_STATES = new Set(["eligible", "can_return", "welcome_back", "invited", "not_invited"]);
-
-function EnlistAction({
-  faction,
-  status,
-  onJoin,
-  onLeave,
-  onConfirm,
-  onDecline,
-  confirmPending,
-  leavePending,
-}: Pick<
-  FactionCardProps,
-  | "faction"
-  | "status"
-  | "onJoin"
-  | "onLeave"
-  | "onConfirm"
-  | "onDecline"
-  | "confirmPending"
-  | "leavePending"
->) {
-  const enlistButton = (label: string, onClick: () => void, pending?: boolean) => (
-    <button
-      onClick={onClick}
-      disabled={pending}
-      style={
-        {
-          marginTop: 26,
-          width: "100%",
-          maxWidth: 380,
-          border: "2px solid var(--everymen-ink)",
-          cursor: pending ? "not-allowed" : "pointer",
-          fontFamily: "var(--faction-everymen-card-font)",
-          fontSize: 26,
-          letterSpacing: "0.12em",
-          padding: "12px",
-          background: "var(--everymen-gold)",
-          color: "var(--everymen-ink)",
-          transition: "background 150ms",
-        } as React.CSSProperties
-      }
-    >
-      {label}
-    </button>
-  );
-
-  // Already enlisted — show member state + a quiet "stand down" (leave).
-  if (status === "member") {
-    return (
-      <div style={{ marginTop: 26, display: "flex", flexDirection: "column", alignItems: "center", gap: 11 }}>
-        <div
-          style={
-            {
-              display: "inline-block",
-              background: "var(--everymen-olive)",
-              border: "2px solid var(--everymen-ink)",
-              color: "var(--everymen-ink)",
-              fontFamily: "var(--faction-everymen-card-font)",
-              fontSize: 22,
-              letterSpacing: "0.12em",
-              padding: "10px 22px",
-            } as React.CSSProperties
-          }
-        >
-          ✓ ON THE LINE
-        </div>
-        {onLeave && (
-          <button
-            onClick={onLeave}
-            disabled={leavePending}
-            style={{
-              background: "transparent",
-              border: "none",
-              fontFamily: "var(--font-body)",
-              fontSize: 9.5,
-              letterSpacing: "0.14em",
-              textTransform: "uppercase",
-              color: "var(--everymen-cream)",
-              opacity: 0.8,
-              cursor: leavePending ? "not-allowed" : "pointer",
-              padding: 0,
-            }}
-          >
-            {leavePending ? "Standing down…" : "Stand down"}
-          </button>
-        )}
-      </div>
-    );
-  }
-
-  // Explicit invitation: accept/decline wired to onConfirm/onDecline.
-  if (status === "invited" && (onConfirm || onDecline)) {
-    return (
-      <div style={{ marginTop: 26, display: "flex", flexDirection: "column", alignItems: "center", gap: 11 }}>
-        {onConfirm && enlistButton(confirmPending ? "ENLISTING…" : "ENLIST NOW ▸", onConfirm, confirmPending)}
-        {onDecline && (
-          <button
-            onClick={onDecline}
-            style={{
-              background: "transparent",
-              border: "none",
-              fontFamily: "var(--font-body)",
-              fontSize: 9.5,
-              letterSpacing: "0.14em",
-              textTransform: "uppercase",
-              color: "var(--everymen-cream)",
-              opacity: 0.8,
-              cursor: "pointer",
-              padding: 0,
-            }}
-          >
-            Not this time
-          </button>
-        )}
-      </div>
-    );
-  }
-
-  // Eligible / returning / open enlistment — single ENLIST button → onJoin.
-  if (ENLIST_STATES.has(status) && onJoin) {
-    const rejoining = status === "can_return" || status === "welcome_back";
-    return enlistButton(rejoining ? "RE-ENLIST ▸" : "ENLIST NOW ▸", onJoin);
-  }
-
-  // Defected/burned — the line is closed to them.
-  if (status === "burned" || status === "defected") {
-    return (
-      <p
-        style={{
-          fontFamily: "var(--font-body)",
-          fontSize: 11,
-          fontStyle: "italic",
-          lineHeight: 1.5,
-          color: "var(--everymen-muted)",
-          margin: "22px auto 0",
-          maxWidth: 380,
-        }}
-      >
-        You walked off the {faction.name} line. They won't sign you back on.
-      </p>
-    );
-  }
-
-  return null;
-}
-
 // ─── Card ──────────────────────────────────────────────────────────────────────
 
 export default function EverymenCard({
   faction,
-  status,
   invitationNote,
-  ...actions
 }: FactionCardProps) {
   const blurb =
     faction.description ??
@@ -406,9 +256,6 @@ export default function EverymenCard({
             </div>
           ))}
         </div>
-
-        {/* enlist CTA — wired to the real handlers */}
-        <EnlistAction faction={faction} status={status} {...actions} />
       </div>
     </div>
   );

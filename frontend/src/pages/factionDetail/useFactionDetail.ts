@@ -160,13 +160,21 @@ export function useFactionDetail(
     };
   }, [slug, characterId]);
 
+  // UA has no chosen-join flow — membership is graduation-gated, not earned by
+  // tasking, and has no join design (#200/#243). So UA never surfaces an
+  // "eligible" Join CTA nor the "keep tasking" gate: a non-member viewer sees no
+  // join block at all ("none"), per the "hide unusable controls" convention.
+  const isGraduationGated = slug === "ua"
+
   const membershipState: MembershipState = !characterId
     ? "none"
     : rawStatus === "member"
       ? "member"
-      : rawStatus === "invited" || rawStatus === "can_return" || hasInvite
-        ? "eligible"
-        : "gate";
+      : isGraduationGated
+        ? "none"
+        : rawStatus === "invited" || rawStatus === "can_return" || hasInvite
+          ? "eligible"
+          : "gate";
 
   const join = useCallback(async () => {
     if (!slug) return;

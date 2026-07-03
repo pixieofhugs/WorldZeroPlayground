@@ -19,7 +19,7 @@ import MediaGallery from '../../../components/MediaGallery'
 import VoteUI from '../../../components/vote/VoteUI'
 import { factionCssVar } from '../../../utils/factions'
 import { formatTimestamp } from '../../../utils/dates'
-import { PraxisAdminBar, PraxisStatusBanners, PraxisOwnerActions, PraxisFlagBlock, PraxisVoterBreakdown } from '../shared'
+import { PraxisAdminBar, PraxisStatusBanners, PraxisOwnerActions, PraxisFlagBlock, PraxisVoterBreakdown, MemberByline } from '../shared'
 import type { PraxisDetailState } from '../usePraxisDetail'
 
 const INK = 'var(--faction-albescent-card-text)'
@@ -167,12 +167,10 @@ export default function AlbescentPraxisDetail({ state }: { state: PraxisDetailSt
             />
           </Link>
           <div style={{ minWidth: 0 }}>
-            <Link
-              to={`/characters/${praxis.created_by_id}`}
-              style={{ fontFamily: FONT, fontStyle: 'italic', fontWeight: 300, fontSize: 15, color: ink(72), textDecoration: 'none', display: 'block' }}
-            >
-              {praxis.created_by_display_name || `#${praxis.created_by_id}`}
-            </Link>
+            <MemberByline
+              praxis={praxis}
+              linkStyle={{ fontFamily: FONT, fontStyle: 'italic', fontWeight: 300, fontSize: 15, color: ink(72), textDecoration: 'none' }}
+            />
             <span style={{ fontSize: 7.5, letterSpacing: '0.06em', color: ink(34) }}>{mode}</span>
           </div>
           <div style={{ marginLeft: 'auto', textAlign: 'right', flexShrink: 0 }}>

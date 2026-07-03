@@ -21,7 +21,7 @@ import MediaGallery from '../../../components/MediaGallery'
 import SingularityVote from '../../../components/vote/SingularityVote'
 import { factionCssVar } from '../../../utils/factions'
 import { formatTimestamp } from '../../../utils/dates'
-import { PraxisAdminBar, PraxisStatusBanners, PraxisOwnerActions, PraxisFlagBlock, PraxisVoterBreakdown } from '../shared'
+import { PraxisAdminBar, PraxisStatusBanners, PraxisOwnerActions, PraxisFlagBlock, PraxisVoterBreakdown, MemberByline } from '../shared'
 import type { PraxisDetailState } from '../usePraxisDetail'
 
 // ── Terminal atoms (presentation only — no shared behavior) ──────────────────
@@ -323,20 +323,15 @@ export default function SingularityPraxisDetail({ state }: { state: PraxisDetail
               </div>
             </Link>
             <div style={{ flex: 1, minWidth: 0, lineHeight: 1.4 }}>
-              <Link
-                to={`/characters/${praxis.created_by_id}`}
-                style={{
+              <MemberByline
+                praxis={praxis}
+                linkStyle={{
                   fontSize: 13,
                   textDecoration: 'none',
                   color: 'var(--faction-singularity-card-accent)',
-                  display: 'block',
-                  whiteSpace: 'nowrap',
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
                 }}
-              >
-                NODE_{praxis.created_by_display_name || `#${praxis.created_by_id}`}
-              </Link>
+                renderName={(name) => `NODE_${name}`}
+              />
               <span
                 style={{
                   fontSize: 8,

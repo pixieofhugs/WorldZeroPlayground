@@ -21,7 +21,7 @@ import MediaGallery from '../../../components/MediaGallery'
 import EverymenVote from '../../../components/vote/EverymenVote'
 import { factionCssVar } from '../../../utils/factions'
 import { formatTimestamp } from '../../../utils/dates'
-import { PraxisAdminBar, PraxisStatusBanners, PraxisOwnerActions, PraxisFlagBlock, PraxisVoterBreakdown } from '../shared'
+import { PraxisAdminBar, PraxisStatusBanners, PraxisOwnerActions, PraxisFlagBlock, PraxisVoterBreakdown, MemberByline } from '../shared'
 import type { PraxisDetailState } from '../usePraxisDetail'
 
 const POSTER = 'var(--font-accent)' // Bebas Neue
@@ -168,22 +168,16 @@ export default function EverymenPraxisDetail({ state }: { state: PraxisDetailSta
             />
           </Link>
           <div style={{ lineHeight: 1.35, minWidth: 0, flex: 1 }}>
-            <Link
-              to={`/characters/${praxis.created_by_id}`}
-              style={{
+            <MemberByline
+              praxis={praxis}
+              linkStyle={{
                 fontFamily: POSTER,
                 fontSize: 22,
                 color: 'var(--everymen-paper-text)',
                 lineHeight: 1,
                 textDecoration: 'none',
-                display: 'block',
-                whiteSpace: 'nowrap',
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
               }}
-            >
-              {praxis.created_by_display_name || `#${praxis.created_by_id}`}
-            </Link>
+            />
             <div style={{ fontSize: 9, letterSpacing: '0.06em', color: 'var(--everymen-muted)', marginTop: 3 }}>
               {praxis.type === 'collab' ? 'all hands' : 'one pair of hands'}
             </div>

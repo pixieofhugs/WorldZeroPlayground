@@ -5,7 +5,7 @@ import { formatTimestamp } from '../../../utils/dates'
 import VoteUI from '../../../components/vote/VoteUI'
 import { factionCssVar } from '../../../utils/factions'
 import type { PraxisDetailState } from '../usePraxisDetail'
-import { PraxisAdminBar, PraxisStatusBanners, PraxisOwnerActions, PraxisFlagBlock, PraxisVoterBreakdown } from '../shared'
+import { PraxisAdminBar, PraxisStatusBanners, PraxisOwnerActions, PraxisFlagBlock, PraxisVoterBreakdown, MemberByline } from '../shared'
 
 /** Style Guide §12.3 */
 const RAINBOW_COLORS = ['var(--underline-1)', 'var(--underline-2)', 'var(--underline-3)', 'var(--underline-4)', 'var(--underline-5)', 'var(--underline-6)', 'var(--underline-1)', 'var(--underline-2)']
@@ -58,13 +58,11 @@ export default function DefaultPraxisDetail({
           />
         </Link>
         <div className="flex-1 min-w-0">
-          <Link
-            to={`/characters/${praxis.created_by_id}`}
-            className="font-display italic block truncate"
-            style={{ fontSize: 14, color: factionCssVar(null, 'card-accent'), textDecoration: 'none' }}
-          >
-            {praxis.created_by_display_name || `#${praxis.created_by_id}`}
-          </Link>
+          <MemberByline
+            praxis={praxis}
+            linkClassName="font-display italic"
+            linkStyle={{ fontSize: 14, color: factionCssVar(null, 'card-accent'), textDecoration: 'none' }}
+          />
           <span className="eyebrow">{formatTimestamp(praxis.created_at)}</span>
         </div>
         {/* Vote score */}
