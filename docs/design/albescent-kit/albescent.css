@@ -1,0 +1,208 @@
+/* ══════════════════════════════════════════════════════════════
+   ALBESCENT — World Zero faction
+   A sacred secret society. They task for the sake of tasking:
+   not competition, not accumulation, not record. The faction
+   exists outside the leaderboard; it refuses the rainbow palette;
+   it leaves no trace. Every task is an act of devotion with no
+   audience.
+
+   Physical card archetype: VELLUM CORRESPONDENCE — pure white
+   cotton paper, hairline borders, Cormorant Garamond italic,
+   a surveyor's mark as the only sigil. The card whispers.
+
+   Style: MINIMAL · SACRED · SILENT · PRECISE · WHITE
+   The signature artifact is THE MARK: a surveyor's cross-hair
+   sigil that asks only: where are you, exactly?
+
+   TOKEN MODEL: Albescent is always light — no dark mode flip.
+   White is the card surface in both themes. Near-black ink is
+   all text. No faction hue anywhere.
+   ══════════════════════════════════════════════════════════════ */
+
+@import url("https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400;1,500&family=Courier+Prime:ital,wght@0,400;1,400&family=Lora:ital,wght@1,400;1,700&display=swap");
+
+:root {
+  /* ── Core palette ── */
+  --al-surface:       #ffffff;
+  --al-surface-warm:  #faf9f7;
+  --al-text:          #1c1c1a;
+  --al-text-muted:    rgba(28, 28, 26, 0.44);
+  --al-text-faint:    rgba(28, 28, 26, 0.22);
+  --al-ink:           rgba(28, 28, 26, 0.72);
+
+  /* ── Structural ── */
+  --al-border:        rgba(0, 0, 0, 0.10);
+  --al-border-faint:  rgba(0, 0, 0, 0.055);
+  --al-border-rule:   rgba(0, 0, 0, 0.07);
+  --al-shadow:        0 2px 18px rgba(0,0,0,0.055), 0 1px 3px rgba(0,0,0,0.04);
+
+  /* ── Typography ── */
+  --al-font: "Cormorant Garamond", Georgia, serif;
+  --al-mono: "Courier Prime", "Courier New", monospace;
+
+  /* ── Card contract — mirrors --faction-albescent-card-* ── */
+  --faction-albescent-card-bg:     #ffffff;
+  --faction-albescent-card-text:   #1c1c1a;
+  --faction-albescent-card-accent: rgba(28, 28, 26, 0.72);
+  --faction-albescent-card-muted:  rgba(28, 28, 26, 0.42);
+  --faction-albescent-card-font:   var(--al-font);
+}
+
+/* ══════════════════════════════════════════════════════════════
+   ALBESCENT BACKDROP
+   Near-white cream with barely-visible ruled paper lines.
+   Not a dramatic backdrop — a surface already present,
+   whether anyone looks or not.
+   ══════════════════════════════════════════════════════════════ */
+.al-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-color: #f7f4ee;
+  background-image:
+    radial-gradient(ellipse 72% 58% at 50% 38%,
+      rgba(255, 255, 255, 0.58) 0%, transparent 100%),
+    repeating-linear-gradient(
+      to bottom,
+      transparent 0 27px,
+      rgba(0, 0, 0, 0.016) 27px 28px);
+}
+
+/* ══════════════════════════════════════════════════════════════
+   ANIMATIONS — everything slow, deliberate, no urgency
+   ══════════════════════════════════════════════════════════════ */
+@keyframes al-breathe { 0%,100%{ opacity:1; }        50%{ opacity:0.58; }        }
+@keyframes al-drift   { 0%,100%{ transform:scale(1); } 50%{ transform:scale(1.016); } }
+
+@media (prefers-reduced-motion: no-preference) {
+  .al-breathe { animation: al-breathe 5.5s ease-in-out infinite; }
+  .al-drift   { animation: al-drift   14s  ease-in-out infinite; }
+}
+
+/* ══════════════════════════════════════════════════════════════
+   SHARED LAYOUT — nav
+   ══════════════════════════════════════════════════════════════ */
+.al-nav {
+  position: relative;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 28px;
+  padding: 14px 32px;
+  background: rgba(247, 244, 238, 0.92);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--al-border-faint);
+}
+
+/* ══════════════════════════════════════════════════════════════
+   SHEET — the primary white surface
+   ══════════════════════════════════════════════════════════════ */
+.al-sheet {
+  position: relative;
+  background: var(--al-surface);
+  border: 1px solid var(--al-border);
+  box-shadow: var(--al-shadow);
+}
+/* subtle inset architectural border */
+.al-sheet::before {
+  content: "";
+  position: absolute;
+  inset: 6px;
+  border: 1px solid var(--al-border-faint);
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   PAGE
+   ══════════════════════════════════════════════════════════════ */
+.al-page {
+  position: relative;
+  z-index: 5;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 28px 32px 80px;
+}
+
+/* section heading with flanking rules */
+.al-section {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin: 38px 0 16px;
+}
+.al-section h2 {
+  font-family: var(--al-mono);
+  font-size: 10px;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: var(--al-text-faint);
+  white-space: nowrap;
+  margin: 0;
+  font-weight: 400;
+}
+.al-section .rule  { flex: 1; height: 1px; background: var(--al-border-rule); }
+.al-section .count {
+  font-family: var(--al-mono);
+  font-size: 8px;
+  letter-spacing: 0.14em;
+  color: var(--al-text-faint);
+  white-space: nowrap;
+}
+
+/* task card grid */
+.al-task-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+/* two-col record/witness layout */
+.al-dispatch-layout {
+  display: grid;
+  grid-template-columns: 1fr 320px;
+  gap: 24px;
+  align-items: start;
+}
+@media (max-width: 900px) {
+  .al-dispatch-layout { grid-template-columns: 1fr; }
+}
+
+/* ══════════════════════════════════════════════════════════════
+   ACTIVITY RECORD
+   ══════════════════════════════════════════════════════════════ */
+.al-activity-card {
+  border-bottom: 1px solid var(--al-border-faint);
+  padding: 14px 0;
+}
+.al-activity-card:last-child { border-bottom: none; }
+
+/* ══════════════════════════════════════════════════════════════
+   ASSET SHOWCASE
+   ══════════════════════════════════════════════════════════════ */
+.al-assets {
+  margin-top: 52px;
+  padding-top: 24px;
+  border-top: 1px solid var(--al-border-faint);
+}
+.al-acard {
+  border: 1px solid var(--al-border-faint);
+  background: rgba(255, 255, 255, 0.6);
+  padding: 14px 16px;
+}
+.al-acard .h {
+  font-family: var(--al-mono);
+  font-size: 7px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--al-text-faint);
+  margin-bottom: 12px;
+}
+.al-acard .cap {
+  font-family: var(--al-mono);
+  font-size: 7.5px;
+  letter-spacing: 0.06em;
+  color: var(--al-text-faint);
+  margin-top: 10px;
+}

@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>World Zero — Choose Your Faction · S.N.I.D.E.</title>
+<link rel="stylesheet" href="../../styles.css" />
+<link rel="stylesheet" href="snide.css" />
+<style>
+  html, body { margin: 0; }
+  body { background: #efece3; color: var(--color-text-primary); font-family: var(--font-body); min-height: 100vh; }
+  [data-theme="dark"] body { background: #141310; }
+  a { color: inherit; text-decoration: none; }
+  .nav { position: relative; z-index: 10; display: flex; align-items: center; gap: 30px; padding: 16px 34px;
+    background: var(--color-nav-bg); backdrop-filter: blur(8px); border-bottom: 1px solid var(--color-border); }
+  .wordmark { font-family: var(--font-display); font-style: italic; font-weight: 500; font-size: 25px; line-height: 1;
+    border-bottom: 3px solid; border-image: linear-gradient(90deg,#fbbf24,#be185d,#4f46e5,#0e7490,#16a34a,#f97316) 1; padding-bottom: 2px; }
+  .nav-links { display: flex; gap: 22px; flex: 1; }
+  .nav-links a { font-size: 11px; letter-spacing: 0.13em; text-transform: uppercase; color: var(--color-text-tertiary); }
+  .nav-ctl { display: flex; align-items: center; gap: 16px; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--color-text-tertiary); }
+  .nav-box { border: 1px solid var(--color-border-strong); padding: 6px 12px; color: var(--color-text-primary); }
+  .nav-toggle { background: none; border: none; cursor: pointer; font: inherit; letter-spacing: 0.12em; text-transform: uppercase; color: var(--color-text-tertiary); padding: 0; }
+
+  .page { position: relative; z-index: 5; max-width: 1180px; margin: 0 auto; padding: 40px 34px 80px; }
+
+  .kicker { font-family: var(--f-cond); font-size: 11px; letter-spacing: 0.32em; text-transform: uppercase;
+    color: var(--color-text-tertiary); margin-bottom: 28px; text-align: center; }
+  .layout { display: grid; grid-template-columns: 1fr 340px; gap: 34px; align-items: start; }
+  @media (max-width: 900px) { .layout { grid-template-columns: 1fr; } }
+
+  /* faction chooser (neutral right-side chrome) */
+  .chooser { display: flex; flex-direction: column; gap: 8px; }
+  .fchip { display: flex; align-items: center; gap: 13px; padding: 11px 14px;
+    border: 1px solid var(--color-border); background: var(--color-bg-surface); cursor: pointer;
+    text-align: left; font-family: var(--font-body); width: 100%; transition: transform 100ms; }
+  .fchip:hover { border-color: var(--color-border-strong); transform: translateX(2px); }
+  .fchip.sel { border-color: var(--snide-green); box-shadow: 3px 3px 0 var(--snide-green); }
+  .fchip .dot { width: 28px; height: 28px; border-radius: 50%; flex-shrink: 0; }
+  .fchip .nm { display: block; font-size: 12px; font-weight: 700; color: var(--color-text-primary); }
+  .fchip .ds { display: block; font-size: 9.5px; color: var(--color-text-tertiary); margin-top: 2px; }
+  .fchip .arrow { margin-left: auto; font-size: 14px; color: var(--color-text-tertiary); }
+  .fchip.sel .arrow { color: var(--snide-green); font-family: var(--f-marker); }
+  .chooser-note { font-size: 10px; line-height: 1.6; color: var(--color-text-tertiary); margin-top: 10px; }
+</style>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script type="text/babel" src="snide-cards.jsx"></script>
+<script type="text/babel" src="snide-faction.jsx"></script>
+<script type="text/babel">
+const { Ransom, SnideSigil } = window;
+
+/* SNIDE ransom-note recruitment demand */
+function SnideRecruitPoster({ onJoin }) {
+  const [joined, setJoined] = React.useState(false);
+  const ink = "var(--ink)";
+  const TORN_TOP = "polygon(0 100%,3% 0,7% 70%,11% 10%,15% 80%,19% 20%,23% 90%,27% 5%,31% 75%,35% 15%,39% 95%,43% 20%,47% 70%,51% 0,55% 85%,59% 20%,63% 80%,67% 10%,71% 90%,75% 20%,79% 80%,83% 5%,87% 70%,91% 20%,95% 85%,100% 0,100% 100%)";
+  const TORN_BOT = "polygon(0 0,100% 0,97% 100%,93% 30%,89% 90%,85% 10%,81% 80%,77% 20%,73% 100%,68% 25%,63% 85%,58% 10%,53% 90%,48% 20%,43% 80%,38% 5%,33% 95%,28% 25%,23% 80%,18% 10%,13% 90%,8% 20%,4% 75%,0 10%)";
+
+  const FACTS = [
+    { label: "membership fee", val: "none (we're broke)" },
+    { label: "required skills", val: "none (we're serious)" },
+    { label: "expected output", val: "whatever. honestly." },
+    { label: "season rank", val: "last. always last." },
+  ];
+
+  return (
+    <div style={{ position: "relative", maxWidth: 600 }}>
+      {/* outer demand envelope — photocopier black */}
+      <div style={{ position: "relative", background: ink, padding: "28px 28px 32px", overflow: "hidden",
+        boxShadow: "8px 10px 0 rgba(0,0,0,0.35)", transform: "rotate(-1deg)" }}>
+        <div className="ht-dots" style={{ position: "absolute", inset: 0, color: "rgba(182,255,46,0.06)", pointerEvents: "none" }} />
+        <div style={{ position: "absolute", inset: 0, filter: "url(#snide-grain)", opacity: 0.35, mixBlendMode: "screen", pointerEvents: "none" }} />
+
+        {/* torn acid strip top */}
+        <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 8, background: "var(--acid)", clipPath: TORN_BOT }} />
+        {/* torn acid strip bottom */}
+        <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: 8, background: "var(--acid)", clipPath: TORN_TOP }} />
+
+        {/* masthead */}
+        <div style={{ position: "relative", display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
+            <SnideSigil size={22} color="var(--acid)" />
+            <span style={{ fontFamily: "var(--f-cond)", fontSize: 15, letterSpacing: "0.18em", color: "var(--acid)" }}>S.N.I.D.E.</span>
+          </div>
+          <span style={{ fontFamily: "var(--font-body)", fontSize: 8, letterSpacing: "0.16em", textTransform: "uppercase", color: "#6b6d60" }}>official demand · do not ignore</span>
+        </div>
+
+        {/* the demand */}
+        <div style={{ position: "relative", marginBottom: 18 }}>
+          <div style={{ fontFamily: "var(--f-marker)", fontSize: 14, color: "var(--pink)", marginBottom: 10, transform: "rotate(-1deg)" }}>attention: you — yes, you</div>
+          <div style={{ marginBottom: 12 }}><Ransom text="WE NEED YOU" size={34} /></div>
+          <div style={{ fontFamily: "var(--font-body)", fontSize: 12, lineHeight: 1.6, color: "#d4d0c0", marginTop: 14, maxWidth: 480 }}>
+            The Society for Nihilistic Intent &amp; Disruptive Efforts is expanding operations.
+            This is not an invitation. It's more of a strongly-worded suggestion.
+            <span style={{ fontFamily: "var(--f-marker)", color: "var(--pink)", fontSize: 14, marginLeft: 5 }}>join us, or don't — see if we care.</span>
+          </div>
+        </div>
+
+        {/* cream "terms" slip taped over the demand */}
+        <div style={{ position: "relative", background: "var(--paper)", color: ink, padding: "14px 16px 16px",
+          transform: "rotate(1.2deg)", boxShadow: "3px 4px 0 rgba(0,0,0,0.35)", marginBottom: 22 }}>
+          <div className="ht-dots" style={{ position: "absolute", inset: 0, color: "rgba(20,17,11,0.05)", pointerEvents: "none" }} />
+          <div className="tape" style={{ top: -9, left: "50%", marginLeft: -28, width: 56, height: 17, transform: "rotate(-3deg)" }} />
+          <div style={{ position: "relative", fontFamily: "var(--f-type)", fontSize: 10.5, letterSpacing: "0.02em", color: "#3a342a", marginBottom: 3, textTransform: "uppercase", letterSpacing: "0.12em" }}>terms &amp; conditions (abbreviated)</div>
+          <div style={{ position: "relative", display: "grid", gridTemplateColumns: "1fr 1fr", gap: "4px 16px", marginTop: 10 }}>
+            {FACTS.map(f => (
+              <div key={f.label} style={{ borderBottom: "1px dashed rgba(20,17,11,0.2)", paddingBottom: 6, paddingTop: 6 }}>
+                <div style={{ fontSize: 8, letterSpacing: "0.14em", textTransform: "uppercase", color: "#8a7c6a" }}>{f.label}</div>
+                <div style={{ fontFamily: "var(--f-cond)", fontSize: 15, color: ink, marginTop: 2 }}>{f.val}</div>
+              </div>
+            ))}
+          </div>
+          <div style={{ position: "relative", marginTop: 12, fontFamily: "var(--f-marker)", fontSize: 13, color: "var(--snide-accent)", transform: "rotate(-1deg)" }}>by clicking below you agree to nothing in particular</div>
+        </div>
+
+        {/* CTA */}
+        <div style={{ position: "relative", display: "flex", alignItems: "center", gap: 18, flexWrap: "wrap" }}>
+          {!joined ? (
+            <button onClick={() => { setJoined(true); if (onJoin) onJoin(); }} style={{
+              cursor: "pointer", background: "var(--pink)", color: "#fff",
+              border: "2px solid #fff", fontFamily: "var(--f-black)", fontSize: 20,
+              letterSpacing: "0.04em", padding: "15px 28px", transform: "rotate(-1.5deg)",
+              boxShadow: "5px 6px 0 rgba(0,0,0,0.5)" }}>★ YEAH I'M IN ★</button>
+          ) : (
+            <div style={{ background: "var(--snide-green)", color: "#fff", fontFamily: "var(--f-black)",
+              fontSize: 20, letterSpacing: "0.04em", padding: "15px 28px", transform: "rotate(-1.5deg)",
+              boxShadow: "5px 6px 0 rgba(0,0,0,0.5)" }}>✓ WELCOME TO THE CHAOS</div>
+          )}
+          <div style={{ fontFamily: "var(--f-marker)", fontSize: 13, color: "#8a9080", transform: "rotate(-1deg)" }}>
+            {joined ? "we never doubted you (we did)" : "or don't. this poster self-destructs in 9 minutes."}
+          </div>
+        </div>
+      </div>
+      {/* tape corners on the outer poster */}
+      <div className="tape" style={{ top: -9, left: 22, width: 60, height: 20, transform: "rotate(-9deg)" }} />
+      <div className="tape" style={{ top: -7, right: 38, width: 60, height: 20, transform: "rotate(7deg)" }} />
+    </div>
+  );
+}
+
+const FACTIONS = [
+  { c: "#7c3aed", nm: "Untitled Anonymous",  ds: "Mystery · misdirection" },
+  { c: "#ca8a04", nm: "The Analog",          ds: "Craft · the physical world" },
+  { c: "#be185d", nm: "Gestalt",             ds: "Systems · the big picture" },
+  { c: "#16a34a", nm: "S.N.I.D.E.",          ds: "Wit · sharp edges" },
+  { c: "#0e7490", nm: "The Journeymen",      ds: "Mastery · the long road" },
+  { c: "#2563eb", nm: "Singularity",         ds: "Futures · acceleration" },
+  { c: "#c2410c", nm: "UA Masters",          ds: "Legacy · the inner circle" },
+];
+
+/* wrong-faction decoy poster (grey-toned placeholder) */
+function WrongPoster({ name }) {
+  return (
+    <div style={{ maxWidth: 600, background: "var(--color-bg-surface)", border: "2px dashed var(--color-border-strong)",
+      padding: "40px 32px", color: "var(--color-text-tertiary)", fontFamily: "var(--font-body)" }}>
+      <div style={{ fontFamily: "var(--f-cond)", fontSize: 28, letterSpacing: "0.08em", color: "var(--color-text-secondary)", marginBottom: 12 }}>
+        {name.toUpperCase()} RECRUITMENT POSTER
+      </div>
+      <p style={{ fontSize: 12, lineHeight: 1.6, margin: "0 0 20px" }}>
+        Each faction owns its enlistment treatment. This is where the {name} poster would live.
+        But you're here, looking at S.N.I.D.E.'s page.
+      </p>
+      <div style={{ fontFamily: "var(--f-marker)", fontSize: 18, color: "var(--pink)", transform: "rotate(-1.5deg)" }}>
+        wrong choice, but it's your life →
+      </div>
+    </div>
+  );
+}
+
+function JoinPage() {
+  const [sel, setSel] = React.useState("S.N.I.D.E.");
+  return (
+    <div>
+      <div className="kicker">World Zero · Enlistment · Choose Your Faction</div>
+      <div className="layout">
+        <div>
+          {sel === "S.N.I.D.E." ? <SnideRecruitPoster /> : <WrongPoster name={sel} />}
+        </div>
+        <div>
+          <div style={{ fontFamily: "var(--font-body)", fontSize: 9.5, letterSpacing: "0.16em", textTransform: "uppercase",
+            color: "var(--color-text-tertiary)", marginBottom: 10 }}>All factions</div>
+          <div className="chooser">
+            {FACTIONS.map(f => (
+              <button key={f.nm} className={"fchip" + (sel === f.nm ? " sel" : "")} onClick={() => setSel(f.nm)}>
+                <span className="dot" style={{ background: f.c, boxShadow: "inset 0 0 0 2px rgba(255,255,255,0.2)" }} />
+                <span><span className="nm">{f.nm}</span><span className="ds">{f.ds}</span></span>
+                <span className="arrow">{sel === f.nm ? "★" : "→"}</span>
+              </button>
+            ))}
+          </div>
+          <p className="chooser-note">Selecting a faction shows its recruitment poster. Each faction owns its own enlistment treatment — swapping to another faction would replace the S.N.I.D.E. ransom note with theirs.</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<JoinPage />);
+const tog = document.getElementById("theme-toggle");
+tog.addEventListener("click", () => {
+  const dark = document.documentElement.getAttribute("data-theme") === "dark";
+  document.documentElement.setAttribute("data-theme", dark ? "light" : "dark");
+  tog.textContent = dark ? "Dark" : "Light";
+});
+</script>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <filter id="snide-grain"><feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" stitchTiles="stitch" result="n"/><feColorMatrix in="n" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 -1.7 1.05"/></filter>
+  <filter id="snide-spray"><feTurbulence type="fractalNoise" baseFrequency="0.62" numOctaves="2" seed="4" result="t"/><feDisplacementMap in="SourceGraphic" in2="t" scale="3.4" xChannelSelector="R" yChannelSelector="G"/></filter>
+</defs></svg>
+<div class="snide-backdrop"></div>
+<nav class="nav">
+  <span class="wordmark">World Zero</span>
+  <div class="nav-links">
+    <a href="#">Home</a><a href="#">Tasks</a><a href="#">Praxis</a>
+    <a href="#">Players</a><a href="SNIDE Faction Page.dc.html">Factions</a><a href="#">Updates</a>
+  </div>
+  <div class="nav-ctl">
+    <span class="nav-box">Mod</span>
+    <button class="nav-toggle" id="theme-toggle">Dark</button>
+    <span class="nav-box">Logout</span>
+  </div>
+</nav>
+<div class="page"><div id="root"></div></div>
+</body>
+</html>

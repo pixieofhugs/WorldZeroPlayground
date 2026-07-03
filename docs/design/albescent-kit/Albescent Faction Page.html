@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>World Zero — Albescent</title>
+<link rel="stylesheet" href="albescent.css">
+<style>
+  *, *::before, *::after { box-sizing: border-box; }
+  html, body { margin: 0; }
+  body {
+    background: #f7f4ee;
+    color: #1c1c1a;
+    font-family: "Courier Prime", "Courier New", monospace;
+    min-height: 100vh;
+  }
+  a { color: inherit; text-decoration: none; }
+
+  .wordmark {
+    font-family: "Lora", Georgia, serif;
+    font-style: italic;
+    font-weight: 700;
+    font-size: 22px;
+    line-height: 1;
+    color: #1c1c1a;
+    border-bottom: 3px solid;
+    padding-bottom: 2px;
+    border-image: linear-gradient(90deg,#fbbf24,#be185d,#4f46e5,#0e7490,#16a34a,#f97316) 1;
+  }
+
+  .nav-links { display:flex; gap:20px; flex:1; }
+  .nav-links a {
+    font-family: var(--al-mono);
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: rgba(28,28,26,0.35);
+    padding-bottom: 3px;
+    transition: color 120ms;
+  }
+  .nav-links a.active {
+    color: rgba(28,28,26,0.72);
+    border-bottom: 1px solid rgba(28,28,26,0.42);
+  }
+  .nav-links a:hover { color: rgba(28,28,26,0.58); }
+
+  .nav-ctl {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    font-family: var(--al-mono);
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: rgba(28,28,26,0.35);
+  }
+  .nav-box {
+    border: 1px solid var(--al-border);
+    padding: 5px 11px;
+    cursor: pointer;
+    transition: background 120ms;
+  }
+  .nav-box:hover { background: rgba(0,0,0,0.04); }
+</style>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script type="text/babel" src="albescent-cards.jsx"></script>
+<script type="text/babel" src="albescent-faction.jsx"></script>
+</head>
+<body>
+
+<div class="al-backdrop"></div>
+
+<!-- ── Nav ── -->
+<nav class="al-nav">
+  <span class="wordmark">World Zero</span>
+  <div class="nav-links">
+    <a href="#">Home</a>
+    <a href="#">Tasks</a>
+    <a href="#">Praxis</a>
+    <a href="#">Players</a>
+    <a href="Albescent Faction Page.html" class="active">Factions</a>
+    <a href="#">Updates</a>
+    <a href="#">Admin</a>
+  </div>
+  <div class="nav-ctl">
+    <span class="nav-box">Keeper</span>
+    <span id="nav-badge-mount"></span>
+    <span class="nav-box">Leave</span>
+  </div>
+</nav>
+
+<!-- ── Page ── -->
+<div class="al-page">
+
+  <!-- hero -->
+  <div id="hero"></div>
+
+  <!-- open tasks -->
+  <div class="al-section">
+    <h2>Open Tasks</h2>
+    <span class="rule"></span>
+    <span class="count">3 open</span>
+  </div>
+  <div class="al-task-grid" id="tasks"></div>
+
+  <!-- the record -->
+  <div class="al-section">
+    <h2>The Record</h2>
+    <span class="rule"></span>
+    <a href="#" style="font-size:8px;letter-spacing:0.14em;color:rgba(28,28,26,0.3);">
+      view all →
+    </a>
+  </div>
+  <div class="al-dispatch-layout">
+    <div id="record"></div>
+    <div id="witness"></div>
+  </div>
+
+  <!-- isolated asset states -->
+  <div class="al-assets">
+    <div style="font-family:var(--al-mono);font-size:10px;letter-spacing:0.24em;text-transform:uppercase;color:rgba(28,28,26,0.3);margin-bottom:6px;">
+      Faction Assets — Isolated States
+    </div>
+    <p style="font-size:8.5px;line-height:1.65;color:rgba(28,28,26,0.38);max-width:600px;margin:0 0 20px;font-family:var(--al-mono);">
+      Reusable components shown on their own for review. Everything above is these same pieces composed into the live page.
+    </p>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:14px;">
+
+      <div class="al-acard">
+        <div class="h">Nav badge</div>
+        <div id="a-badge"></div>
+        <div class="cap">Marks the viewer's faction in the top bar</div>
+      </div>
+
+      <div class="al-acard">
+        <div class="h">Albescent Mark — faction sigil</div>
+        <div id="a-sigil"></div>
+        <div class="cap">Surveyor's cross-hair · scales 12–120px</div>
+      </div>
+
+      <div class="al-acard">
+        <div class="h">Witness marks — 1 through 5</div>
+        <div id="a-witness"></div>
+        <div class="cap">Unseeing · Glimpsed · Witnessed · Verified · Inscribed</div>
+      </div>
+
+      <div class="al-acard">
+        <div class="h">Task card — Vellum archetype</div>
+        <div id="a-card"></div>
+        <div class="cap">Full card for the faction page · 224px</div>
+      </div>
+
+    </div>
+  </div>
+
+</div><!-- /.al-page -->
+
+<script type="text/babel">
+const {
+  AlHero, AlNavBadge, AlActivityCard, AlWitnessWidget,
+  AlbescentCard, AlbescentMark,
+  AL_ACTIVITY, AL_TASKS, AL_WITNESS,
+} = window;
+
+/* ── Hero ── */
+ReactDOM.createRoot(document.getElementById("hero")).render(
+  <AlHero
+    name="Albescent"
+    motto="The Work Is the Way"
+    blurb="We exist outside the leaderboard. We have no rank, no color, no record in the system that matters. Every task undertaken is an act of devotion with no audience — returned quietly, without signature, before anyone thought to look."
+    stats={[
+      { value:"47",       label:"Keepers"  },
+      { value:"312",      label:"Returned" },
+      { value:"Unranked", label:"By design" },
+    ]}
+  />
+);
+
+/* ── Nav badge ── */
+ReactDOM.createRoot(document.getElementById("nav-badge-mount")).render(<AlNavBadge/>);
+
+/* ── Task cards ── */
+ReactDOM.createRoot(document.getElementById("tasks")).render(
+  <React.Fragment>
+    {AL_TASKS.map(t => <AlbescentCard key={t.title} {...t}/>)}
+  </React.Fragment>
+);
+
+/* ── Record feed — first 4 ── */
+ReactDOM.createRoot(document.getElementById("record")).render(
+  <React.Fragment>
+    {AL_ACTIVITY.slice(0,4).map(item => <AlActivityCard key={item.id} item={item}/>)}
+  </React.Fragment>
+);
+
+/* ── Witness widget ── */
+ReactDOM.createRoot(document.getElementById("witness")).render(
+  <AlWitnessWidget
+    taskId="archive-silence"
+    taskLabel="Tend the Archive in Silence"
+    baseDist={[0, 1, 8, 14, 9]}
+  />
+);
+
+/* ── Isolated asset states ── */
+ReactDOM.createRoot(document.getElementById("a-badge")).render(<AlNavBadge/>);
+
+ReactDOM.createRoot(document.getElementById("a-sigil")).render(
+  <div style={{display:"flex",gap:16,alignItems:"center"}}>
+    {[14, 22, 36, 54].map(s => <AlbescentMark key={s} size={s}/>)}
+  </div>
+);
+
+const WITNESS_SHADES = [
+  "rgba(0,0,0,0.16)","rgba(0,0,0,0.30)","rgba(0,0,0,0.48)",
+  "rgba(0,0,0,0.66)","rgba(0,0,0,0.84)",
+];
+ReactDOM.createRoot(document.getElementById("a-witness")).render(
+  <div style={{display:"flex",gap:10,alignItems:"flex-start"}}>
+    {AL_WITNESS.map((s, i) => {
+      const shade = WITNESS_SHADES[i];
+      const filled = i <= 2; /* show first 3 as filled for illustration */
+      return (
+        <div key={s.v} style={{display:"flex",flexDirection:"column",alignItems:"center",gap:6}}>
+          <div style={{
+            width:28,height:28,borderRadius:"50%",
+            border:`1.5px solid ${shade}`,
+            background: filled ? shade : "transparent",
+            display:"flex",alignItems:"center",justifyContent:"center",
+          }}>
+            {i===2&&<div style={{width:7,height:7,borderRadius:"50%",background:"#fff"}}/>}
+          </div>
+          <span style={{fontSize:5.5,letterSpacing:"0.06em",textAlign:"center",color:"rgba(28,28,26,0.3)",fontFamily:"var(--al-mono)"}}>
+            {s.label}
+          </span>
+        </div>
+      );
+    })}
+  </div>
+);
+
+ReactDOM.createRoot(document.getElementById("a-card")).render(
+  <AlbescentCard
+    title="Tend the Archive in Silence"
+    description="Retrieve, restore, and return. No record of your work need remain."
+    level={3}
+    points={40}
+  />
+);
+</script>
+</body>
+</html>

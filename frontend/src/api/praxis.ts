@@ -120,6 +120,7 @@ export interface PraxisVoteIn {
 export async function listPraxes(filters?: {
   task_id?: number
   character_id?: number
+  member_id?: number
   type?: PraxisType
   status?: PraxisStatus
   faction?: string

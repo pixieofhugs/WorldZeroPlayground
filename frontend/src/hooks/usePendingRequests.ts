@@ -1,17 +1,18 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { getActivityFeed, type ActivityFeedItem } from '../api/activityFeed'
 import { useAuth } from '../auth/AuthContext'
 
 /**
  * Hook to fetch pending collab invites and duel challenges.
- * Re-fetches when the authenticated user changes.
+ * Re-fetches when the authenticated user changes; `refetch` lets callers
+ * refresh after responding to a request (#346).
  */
 export function usePendingRequests() {
   const { user } = useAuth()
   const [pendingRequests, setPendingRequests] = useState<ActivityFeedItem[]>([])
   const [loading, setLoading] = useState(true)
 
-  useEffect(() => {
+  const refetch = useCallback(() => {
     if (!user) {
       setPendingRequests([])
       setLoading(false)
@@ -24,5 +25,9 @@ export function usePendingRequests() {
       .finally(() => setLoading(false))
   }, [user])
 
-  return { pendingRequests, loading } as const
+  useEffect(() => {
+    refetch()
+  }, [refetch])
+
+  return { pendingRequests, loading, refetch } as const
 }

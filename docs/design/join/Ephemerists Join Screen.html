@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>World Zero — Choose Your Faction · The Ephemerists</title>
+<link rel="stylesheet" href="../../styles.css" />
+<link rel="stylesheet" href="ephemerists.css" />
+<style>
+  html, body { margin: 0; }
+  body { background: var(--eph-vellum); color: var(--color-text-primary); font-family: var(--font-faction-codex); min-height: 100vh; }
+  a { color: inherit; text-decoration: none; }
+  .nav { position: relative; z-index: 10; display: flex; align-items: center; gap: 22px; padding: 14px 34px;
+    background: var(--color-nav-bg); backdrop-filter: blur(8px); border-bottom: 1px solid var(--color-border); }
+  .wordmark { font-family: var(--font-display); font-style: italic; font-weight: 500; font-size: 25px; line-height: 1;
+    border-bottom: 3px solid; border-image: linear-gradient(90deg,#fbbf24,#be185d,#4f46e5,#0e7490,#16a34a,#f97316) 1; padding-bottom: 2px; }
+  .nav-links { display: flex; gap: 20px; flex: 1; }
+  .nav-links a { font-size: 11px; letter-spacing: 0.13em; text-transform: uppercase; color: var(--color-text-tertiary); }
+  .nav-ctl { display: flex; align-items: center; gap: 14px; }
+  .nav-box { border: 1px solid var(--color-border-strong); padding: 6px 12px; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--color-text-primary); }
+  .page { position: relative; z-index: 5; max-width: 1160px; margin: 0 auto; padding: 40px 34px 80px; }
+  .kicker { font-family: var(--font-faction-codex); font-style: italic; font-size: 12px; letter-spacing: 0.14em; color: var(--eph-muted); margin-bottom: 26px; text-align: center; }
+  .layout { display: grid; grid-template-columns: 1fr 320px; gap: 34px; align-items: start; }
+  @media (max-width: 900px) { .layout { grid-template-columns: 1fr; } }
+  .chooser { display: flex; flex-direction: column; gap: 8px; }
+  .fchip { display: flex; align-items: center; gap: 13px; padding: 11px 14px; border: 1px solid var(--eph-gold-deep);
+    background: color-mix(in srgb, var(--eph-vellum) 70%, transparent); cursor: pointer; text-align: left; font-family: var(--font-faction-codex); width: 100%; transition: transform 100ms; }
+  .fchip:hover { transform: translateX(2px); }
+  .fchip.sel { border-color: var(--eph-lapis); box-shadow: 3px 3px 0 var(--eph-lapis); }
+  .fchip .dot { width: 28px; height: 28px; border-radius: 50%; flex-shrink: 0; box-shadow: inset 0 0 0 2px rgba(255,255,255,0.2); }
+  .fchip .nm { display: block; font-family: var(--font-faction-engraved); font-weight: 700; font-size: 13px; color: var(--eph-vellum-text); }
+  .fchip .ds { display: block; font-size: 9.5px; font-style: italic; color: var(--eph-muted); margin-top: 2px; }
+  .fchip .arrow { margin-left: auto; font-size: 14px; color: var(--eph-muted); }
+  .fchip.sel .arrow { color: var(--eph-lapis); }
+  .chooser-note { font-size: 10px; line-height: 1.6; font-style: italic; color: var(--eph-muted); margin-top: 10px; }
+</style>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="../../_ds_bundle.js"></script>
+</head>
+<body>
+<div class="eph-backdrop"></div>
+<nav class="nav">
+  <span class="wordmark">World Zero</span>
+  <div class="nav-links">
+    <a href="#">Home</a><a href="#">Tasks</a><a href="#">Praxis</a><a href="#">Players</a>
+    <a href="Ephemerists Faction Page.dc.html">Factions</a><a href="#">Updates</a>
+  </div>
+  <div class="nav-ctl">
+    <button class="nav-box" id="theme-toggle" style="background:none;cursor:pointer;font:inherit;">Dark</button>
+    <span class="nav-box">Logout</span>
+  </div>
+</nav>
+<div class="page"><div id="root"></div></div>
+
+<script type="text/babel">
+const { EphemeristsSigil } = window.WorldZeroDesignSystem_019e22;
+
+// ── the join contract for the Ephemerists (join-contract.json shape) ──
+const DATA = {
+  slug: "ephemerists", name: "The Ephemerists", archetype: "illuminated codex",
+  recruit: {
+    kicker: "the codex lies open —",
+    headline: "Walk with the keepers",
+    pitch: "The Ephemerists are World Zero's cartographers of the impermanent. There are no members here, only keepers of the road. Take a survey, triangulate what you find, and file the truth before the world revises it.",
+    terms: [
+      { label: "toll of entry", value: "one truth, filed by hand" },
+      { label: "required skills", value: "none — only a steady eye" },
+      { label: "expected output", value: "surveys, sealed as praxis" },
+      { label: "season rank", value: "#5 · the road is long" },
+    ],
+    perks: [
+      "A codex that outlives the thing recorded",
+      "Surveys that turn a walk into a finding",
+      "Your praxis, sealed and weighed by the concordance",
+    ],
+    cta: { join: "Take the road ▸", joined: "✦ your name is in the codex" },
+  },
+  viewer: {
+    state: "prospective", eligible: true,
+    requirement: {
+      summary: "One survey away from the codex",
+      detail: "File a single triangulated finding and the codex opens. Keep walking — the record is made in the doing.",
+      have: 2, needed: 3, unit: "surveys filed",
+    },
+  },
+  social: { memberCount: 642, recentJoiners: [ { name: "Corvin", initial: "C" }, { name: "Lune", initial: "L" }, { name: "Bram", initial: "B" } ] },
+};
+
+const FACTIONS = [
+  { slug: "ua", name: "UA", color: "#c2541f", tagline: "the gilt salon" },
+  { slug: "wow", name: "Warriors of Whimsy", color: "#be185d", tagline: "a little magic" },
+  { slug: "snide", name: "S.N.I.D.E.", color: "#16a34a", tagline: "gleeful disorder" },
+  { slug: "ephemerists", name: "The Ephemerists", color: "#1d4f6e", tagline: "the long road" },
+  { slug: "singularity", name: "Singularity", color: "#2563eb", tagline: "the signal" },
+  { slug: "everymen", name: "The Everymen", color: "#c1272d", tagline: "the common good" },
+  { slug: "albescent", name: "Albescent", color: "#1c1c1a", tagline: "quiet witness" },
+];
+
+// ── the recruitment frontispiece — a codex leaf pinned open ──
+function EphRecruit({ data }) {
+  const [joined, setJoined] = React.useState(data.viewer.state === "member");
+  const eligible = data.viewer.eligible;
+  const r = data.recruit;
+  const req = data.viewer.requirement;
+  return (
+    <div style={{ position: "relative", maxWidth: 640, border: "2px solid var(--eph-gold)", background: "radial-gradient(120% 140% at 82% 0%, var(--eph-lapis), var(--eph-lapis-deep) 60%, #05131c 100%)", color: "var(--eph-parchment)", boxShadow: "0 0 0 3px var(--eph-vellum), 0 0 0 4px var(--eph-ink), 0 18px 44px rgba(20,40,50,.35)", overflow: "hidden" }}>
+      <div style={{ position: "absolute", inset: 0, pointerEvents: "none", opacity: 0.12, backgroundImage: "repeating-linear-gradient(0deg,var(--eph-parchment) 0 1px,transparent 1px 26px),repeating-linear-gradient(90deg,var(--eph-parchment) 0 1px,transparent 1px 26px)" }} />
+      <div style={{ height: 5, background: "var(--eph-gold)" }} />
+      <div style={{ position: "relative", padding: "30px 36px 34px" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 18 }}>
+          <EphemeristsSigil size={22} color="var(--eph-gold-light)" />
+          <span style={{ fontFamily: "var(--font-faction-engraved)", fontWeight: 600, fontSize: 13, letterSpacing: "0.2em", textTransform: "uppercase", color: "var(--eph-gold-light)" }}>The Ephemerists</span>
+          <span style={{ marginLeft: "auto", fontFamily: "var(--font-faction-codex)", fontStyle: "italic", fontSize: 10, color: "rgba(241,232,207,.6)" }}>faction no. 5 · enlistment</span>
+        </div>
+        <div style={{ fontFamily: "var(--font-faction-codex)", fontStyle: "italic", fontSize: 13, color: "var(--eph-gold-light)", marginBottom: 6 }}>{r.kicker}</div>
+        <h1 style={{ fontFamily: "var(--font-faction-engraved)", fontWeight: 800, fontSize: 44, lineHeight: 0.94, margin: 0, color: "var(--eph-parchment)", textShadow: "2px 2px 0 var(--eph-lapis-deep)" }}>{r.headline}</h1>
+        <p style={{ fontFamily: "var(--font-faction-codex)", fontSize: 13, lineHeight: 1.65, color: "rgba(241,232,207,.9)", margin: "14px 0 0", maxWidth: 500 }}>{r.pitch}</p>
+
+        {/* the terms slip — a vellum leaf laid over the codex */}
+        <div style={{ position: "relative", background: "var(--eph-vellum)", color: "var(--eph-vellum-text)", padding: "16px 18px 18px", marginTop: 22, boxShadow: "0 6px 20px rgba(0,0,0,.35)", border: "1px solid var(--eph-ink)" }}>
+          <div style={{ fontFamily: "var(--font-faction-engraved)", fontWeight: 700, fontSize: 9, letterSpacing: "0.16em", textTransform: "uppercase", color: "var(--eph-rubric)", marginBottom: 10 }}>the toll, abbreviated</div>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "4px 18px" }}>
+            {r.terms.map((t) => (
+              <div key={t.label} style={{ borderBottom: "1px dashed color-mix(in srgb, var(--eph-vellum-text) 22%, transparent)", padding: "6px 0" }}>
+                <div style={{ fontSize: 8, letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--eph-muted)" }}>{t.label}</div>
+                <div style={{ fontFamily: "var(--font-faction-engraved)", fontWeight: 700, fontSize: 14, color: "var(--eph-vellum-text)", marginTop: 2 }}>{t.value}</div>
+              </div>
+            ))}
+          </div>
+          <div style={{ marginTop: 12, display: "flex", flexWrap: "wrap", gap: "4px 14px" }}>
+            {r.perks.map((p) => (
+              <div key={p} style={{ fontFamily: "var(--font-faction-codex)", fontSize: 10.5, color: "var(--eph-muted)", display: "flex", alignItems: "baseline", gap: 6 }}>
+                <span style={{ color: "var(--eph-lapis)" }}>✦</span>{p}
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* the enlist state */}
+        <div style={{ marginTop: 22 }}>
+          {joined ? (
+            <div style={{ display: "inline-block", background: "var(--eph-gold)", color: "var(--eph-ink)", fontFamily: "var(--font-faction-engraved)", fontWeight: 700, fontSize: 15, letterSpacing: "0.08em", padding: "13px 24px" }}>{r.cta.joined}</div>
+          ) : eligible ? (
+            <div style={{ display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap" }}>
+              <button onClick={() => setJoined(true)} style={{ cursor: "pointer", background: "var(--eph-gold)", color: "var(--eph-ink)", border: "1px solid var(--eph-gold-light)", fontFamily: "var(--font-faction-engraved)", fontWeight: 700, fontSize: 15, letterSpacing: "0.1em", padding: "14px 26px", boxShadow: "0 6px 16px rgba(20,50,70,.4)" }}>{r.cta.join}</button>
+              <span style={{ fontFamily: "var(--font-faction-codex)", fontStyle: "italic", fontSize: 12, color: "rgba(241,232,207,.7)" }}>the road forks often — that's the point.</span>
+            </div>
+          ) : (
+            <div style={{ background: "rgba(20,40,50,.4)", border: "1px solid rgba(212,171,85,.4)", padding: "16px 18px" }}>
+              <div style={{ fontFamily: "var(--font-faction-engraved)", fontWeight: 700, fontSize: 17, color: "var(--eph-gold-light)", marginBottom: 6 }}>{req.summary}</div>
+              <div style={{ fontFamily: "var(--font-faction-codex)", fontSize: 12.5, lineHeight: 1.6, color: "rgba(241,232,207,.85)", marginBottom: 12 }}>{req.detail}</div>
+              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                <div style={{ flex: 1, height: 8, background: "rgba(241,232,207,.15)", position: "relative" }}>
+                  <div style={{ position: "absolute", inset: 0, width: `${(req.have / req.needed) * 100}%`, background: "var(--eph-gold)" }} />
+                </div>
+                <span style={{ fontFamily: "var(--font-faction-codex)", fontSize: 10, color: "var(--eph-gold-light)", whiteSpace: "nowrap" }}>{req.have} / {req.needed} {req.unit}</span>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function WrongPoster({ faction }) {
+  return (
+    <div style={{ maxWidth: 640, background: "color-mix(in srgb, var(--eph-vellum) 70%, transparent)", border: "2px dashed var(--eph-gold-deep)", padding: "40px 32px", color: "var(--eph-muted)" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
+        <span style={{ width: 26, height: 26, borderRadius: "50%", background: faction.color }} />
+        <div style={{ fontFamily: "var(--font-faction-engraved)", fontWeight: 700, fontSize: 24, color: "var(--eph-vellum-text)" }}>{faction.name} · enlistment</div>
+      </div>
+      <p style={{ fontFamily: "var(--font-faction-codex)", fontSize: 13, lineHeight: 1.6, margin: "0 0 16px" }}>
+        Each faction owns its own recruitment surface. This is where the {faction.name} poster — "{faction.tagline}" — would open. But you are reading the Ephemerists' codex.
+      </p>
+      <div style={{ fontFamily: "var(--font-faction-codex)", fontStyle: "italic", fontSize: 15, color: "var(--eph-rubric)" }}>a different road, but yours to choose →</div>
+    </div>
+  );
+}
+
+function JoinPage() {
+  const [sel, setSel] = React.useState("ephemerists");
+  const current = FACTIONS.find((f) => f.slug === sel);
+  return (
+    <div>
+      <div className="kicker">World Zero · Enlistment · Choose Your Faction</div>
+      <div className="layout">
+        <div>{sel === "ephemerists" ? <EphRecruit data={DATA} /> : <WrongPoster faction={current} />}</div>
+        <div>
+          <div style={{ fontFamily: "var(--font-faction-engraved)", fontWeight: 700, fontSize: 9.5, letterSpacing: "0.16em", textTransform: "uppercase", color: "var(--eph-rubric)", marginBottom: 10 }}>All factions</div>
+          <div className="chooser">
+            {FACTIONS.map((f) => (
+              <button key={f.slug} className={"fchip" + (sel === f.slug ? " sel" : "")} onClick={() => setSel(f.slug)}>
+                <span className="dot" style={{ background: f.color }} />
+                <span><span className="nm">{f.name}</span><span className="ds">{f.tagline}</span></span>
+                <span className="arrow">{sel === f.slug ? "✦" : "→"}</span>
+              </button>
+            ))}
+          </div>
+          <p className="chooser-note">Selecting a faction opens its recruitment surface. Each faction owns its own enlistment treatment — the shared chooser rail is the only common chrome.</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<JoinPage />);
+const tog = document.getElementById("theme-toggle");
+tog.addEventListener("click", () => {
+  const dark = document.documentElement.getAttribute("data-theme") === "dark";
+  document.documentElement.setAttribute("data-theme", dark ? "light" : "dark");
+  tog.textContent = dark ? "Dark" : "Light";
+});
+</script>
+</body>
+</html>

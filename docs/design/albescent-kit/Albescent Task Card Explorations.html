@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Albescent — Task Card Explorations</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400;1,500&family=Courier+Prime:ital,wght@0,400;1,400&family=Lora:ital,wght@1,400;1,700&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+  <style>
+    :root {
+      --color-bg-page: #f7f4ee;
+      --color-text-primary: #1a1209;
+      --color-text-secondary: #6b6050;
+      --color-text-tertiary: #9b8e7d;
+      --font-body: "Courier Prime", "Courier New", monospace;
+      --font-display: "Lora", Georgia, serif;
+      --al-font: "Cormorant Garamond", Georgia, serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--color-bg-page);
+      font-family: var(--font-body);
+      color: var(--color-text-primary);
+      min-height: 100vh;
+    }
+    @keyframes al-breathe {
+      0%, 100% { opacity: 1; }
+      50%       { opacity: 0.6; }
+    }
+  </style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+
+const { useState } = React;
+
+/* ═══════════════════════════════════════════════════
+   SAMPLE TASK DATA
+═══════════════════════════════════════════════════ */
+const TASK = {
+  title: "Tend the archive in silence",
+  description: "Retrieve, restore, and return. No record of your work need remain.",
+  level: 3,
+  points: 40
+};
+
+/* ═══════════════════════════════════════════════════
+   ALBESCENT MARK
+   Surveyor's cross-hair: outer ring · inner ring ·
+   4 cardinal ticks · center dot.
+   Precise, purposeful, sacred-geometric.
+═══════════════════════════════════════════════════ */
+function AlbescentMark({ size = 20, color = "#1c1c1a", breathe = false, opacity = 1 }) {
+  const c = size / 2;
+  const rO = size * 0.43; // outer ring
+  const rI = size * 0.235; // inner ring
+  const rD = size * 0.044; // center dot
+  const tS = rI + size * 0.025; // tick start (just outside inner ring)
+  const tE = tS + size * 0.13; // tick end
+
+  const line = (deg) => {
+    const a = deg * Math.PI / 180;
+    return {
+      x1: c + tS * Math.cos(a), y1: c + tS * Math.sin(a),
+      x2: c + tE * Math.cos(a), y2: c + tE * Math.sin(a)
+    };
+  };
+
+  return (
+    <svg
+      width={size} height={size} viewBox={`0 0 ${size} ${size}`} fill="none"
+      style={{
+        display: "block", flexShrink: 0, opacity,
+        animation: breathe ? "al-breathe 5s ease-in-out infinite" : "none"
+      }}>
+      
+      <circle cx={c} cy={c} r={rO} stroke={color} strokeWidth={size * 0.022} opacity={0.18} />
+      <circle cx={c} cy={c} r={rI} stroke={color} strokeWidth={size * 0.038} opacity={0.5} />
+      {[0, 90, 180, 270].map((deg, i) => {
+        const { x1, y1, x2, y2 } = line(deg);
+        return <line key={i} x1={x1} y1={y1} x2={x2} y2={y2} stroke={color} strokeWidth={size * 0.038} />;
+      })}
+      <circle cx={c} cy={c} r={rD} fill={color} />
+    </svg>);
+
+}
+
+/* ═══════════════════════════════════════════════════
+   WAX SEAL  (used in Card III)
+═══════════════════════════════════════════════════ */
+function WaxSeal({ size = 32 }) {
+  const c = size / 2;
+  const r = size * 0.44;
+  const ri = r * 0.72;
+  const rm = r * 0.38;
+  const tr = r * 0.48;
+
+  return (
+    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} fill="none">
+      <circle cx={c} cy={c} r={r} fill="rgba(0,0,0,0.055)" stroke="rgba(0,0,0,0.12)" strokeWidth={0.7} />
+      <circle cx={c} cy={c} r={ri} stroke="rgba(0,0,0,0.08)" strokeWidth={0.5} fill="none" />
+      <circle cx={c} cy={c} r={rm} stroke="rgba(0,0,0,0.14)" strokeWidth={0.5} fill="none" />
+      {[0, 90, 180, 270].map((d, i) => {
+        const a = d * Math.PI / 180;
+        return (
+          <line key={i}
+          x1={c + rm * Math.cos(a)} y1={c + rm * Math.sin(a)}
+          x2={c + tr * Math.cos(a)} y2={c + tr * Math.sin(a)}
+          stroke="rgba(0,0,0,0.14)" strokeWidth={0.7} />);
+
+
+      })}
+      <circle cx={c} cy={c} r={2.5} fill="rgba(0,0,0,0.24)" />
+    </svg>);
+
+}
+
+/* ═══════════════════════════════════════════════════
+   I · VELLUM
+   Pure white correspondence card. Centered sigil,
+   hairline border, Cormorant italic title.
+   CTA: "acknowledge" — language fits the order.
+═══════════════════════════════════════════════════ */
+function CardVellum({ title, description, level, points }) {
+  const [ack, setAck] = useState(false);
+  return (
+    <div style={{
+      width: 204,
+      background: "#fff",
+      border: "1px solid rgba(0,0,0,0.09)",
+      boxShadow: "0 2px 18px rgba(0,0,0,0.055), 0 1px 3px rgba(0,0,0,0.04)",
+      padding: "22px 18px 16px",
+      fontFamily: "var(--al-font)"
+    }}>
+      {/* Centered sigil */}
+      <div style={{ display: "flex", justifyContent: "center", marginBottom: 14 }}>
+        <AlbescentMark size={20} breathe />
+      </div>
+
+      {/* Top rule */}
+      <div style={{ height: 1, background: "rgba(0,0,0,0.07)", marginBottom: 12 }} />
+
+      {/* Eyebrow */}
+      <div style={{
+        fontSize: 6, letterSpacing: "0.32em", textTransform: "uppercase",
+        color: "rgba(0,0,0,0.26)", fontFamily: "var(--font-body)", marginBottom: 9
+      }}>Albescent</div>
+
+      {/* Title */}
+      <div style={{
+        fontSize: 17, fontStyle: "italic", fontWeight: 300,
+        lineHeight: 1.28, color: "#1c1c1a", marginBottom: 10
+      }}>{title}</div>
+
+      {/* Description */}
+      <div style={{
+        fontSize: 7.5, color: "rgba(28,28,26,0.42)", lineHeight: 1.6,
+        fontFamily: "var(--font-body)", marginBottom: 14
+      }}>{description}</div>
+
+      {/* CTA */}
+      <div style={{ marginBottom: 13 }}>
+        <button
+          onClick={() => setAck((a) => !a)}
+          style={{
+            background: "none", border: "none", padding: 0, cursor: "pointer",
+            fontSize: 7, letterSpacing: "0.22em", textTransform: "uppercase",
+            color: ack ? "rgba(0,0,0,0.55)" : "rgba(0,0,0,0.35)",
+            fontFamily: "var(--font-body)",
+            borderBottom: `1px solid ${ack ? "rgba(0,0,0,0.45)" : "rgba(0,0,0,0.18)"}`,
+            paddingBottom: 1, transition: "all 250ms ease"
+          }}>
+          {ack ? "acknowledged" : "acknowledge"}</button>
+      </div>
+
+      {/* Footer */}
+      <div style={{
+        borderTop: "1px solid rgba(0,0,0,0.07)", paddingTop: 10,
+        display: "flex", justifyContent: "space-between", alignItems: "center"
+      }}>
+        <span style={{
+          fontSize: 6.5, letterSpacing: "0.2em", textTransform: "uppercase",
+          color: "rgba(0,0,0,0.24)", fontFamily: "var(--font-body)"
+        }}>Lvl {level}</span>
+        <span style={{ fontSize: 14, fontWeight: 300, color: "rgba(28,28,26,0.5)" }}>
+          {points}<span style={{ fontSize: 6.5, marginLeft: 3, letterSpacing: "0.1em", textTransform: "uppercase", fontFamily: "var(--font-body)" }}>pts</span>
+        </span>
+      </div>
+    </div>);
+
+}
+
+/* ═══════════════════════════════════════════════════
+   II · PALIMPSEST
+   Warm white, ruled lines, faint ghost text of past
+   tasks showing through. The surface persists.
+   Left margin rule (barely visible).
+═══════════════════════════════════════════════════ */
+function CardPalimpsest({ title, description, level, points }) {
+  const ghosts = [
+  "transcribe the morning observations",
+  "walk the perimeter at dusk",
+  "index the unmarked volumes",
+  "verify the catalogue entry",
+  "seal and store before departing",
+  "attend the hour without speaking",
+  "count the objects without touching"];
+
+
+  return (
+    <div style={{
+      width: 200,
+      background: "#faf9f7",
+      border: "1px solid rgba(0,0,0,0.08)",
+      padding: "14px 16px 13px",
+      position: "relative",
+      fontFamily: "var(--al-font)",
+      overflow: "hidden",
+      backgroundImage: "repeating-linear-gradient(to bottom, transparent, transparent 18px, rgba(0,0,0,0.026) 18px, rgba(0,0,0,0.026) 19px)"
+    }}>
+      {/* Ghost text layer */}
+      <div style={{
+        position: "absolute", inset: 0, padding: "14px 16px",
+        pointerEvents: "none", overflow: "hidden"
+      }}>
+        {ghosts.map((g, i) =>
+        <div key={i} style={{
+          fontSize: 10, lineHeight: "18px", fontStyle: "italic", fontWeight: 300,
+          color: "rgba(0,0,0,0.046)",
+          transform: i % 2 ? "translateX(4px)" : "none"
+        }}>{g}</div>
+        )}
+      </div>
+
+      {/* Left margin rule */}
+      <div style={{
+        position: "absolute", left: 26, top: 0, bottom: 0,
+        width: 1, background: "rgba(0,0,0,0.04)"
+      }} />
+
+      {/* Foreground content */}
+      <div style={{ position: "relative", zIndex: 1, paddingLeft: 8 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 11 }}>
+          <AlbescentMark size={11} />
+          <span style={{
+            fontSize: 5.5, letterSpacing: "0.32em", textTransform: "uppercase",
+            color: "rgba(0,0,0,0.2)", fontFamily: "var(--font-body)"
+          }}>Albescent</span>
+        </div>
+
+        <div style={{
+          fontSize: 16.5, fontStyle: "italic", fontWeight: 300,
+          lineHeight: 1.3, color: "#1a1a18", marginBottom: 9
+        }}>{title}</div>
+
+        <div style={{
+          fontSize: 7.5, color: "rgba(28,28,26,0.44)", lineHeight: 1.58,
+          fontFamily: "var(--font-body)", marginBottom: 12
+        }}>{description}</div>
+
+        <div style={{
+          display: "flex", justifyContent: "space-between", alignItems: "center",
+          borderTop: "1px solid rgba(0,0,0,0.06)", paddingTop: 8
+        }}>
+          {/* Roman numeral level */}
+          <span style={{
+            fontSize: 8, letterSpacing: "0.16em",
+            color: "rgba(0,0,0,0.22)", fontFamily: "var(--al-font)",
+            fontWeight: 300
+          }}>III</span>
+          <span style={{ fontSize: 14, fontWeight: 300, color: "rgba(28,28,26,0.46)" }}>{points}</span>
+        </div>
+      </div>
+    </div>);
+
+}
+
+/* ═══════════════════════════════════════════════════
+   III · THE SEALED
+   "Eyes of the Order only." Dispatch header,
+   visible title, description withheld (sealed bars).
+   Wax seal mark in corner.
+═══════════════════════════════════════════════════ */
+function CardSealed({ title, description, level, points }) {
+  return (
+    <div style={{
+      width: 204,
+      background: "#fff",
+      border: "1px solid rgba(0,0,0,0.1)",
+      fontFamily: "var(--al-font)",
+      overflow: "hidden"
+    }}>
+      {/* Header band */}
+      <div style={{
+        padding: "7px 14px",
+        borderBottom: "1px solid rgba(0,0,0,0.07)",
+        background: "rgba(0,0,0,0.018)",
+        display: "flex", justifyContent: "space-between", alignItems: "center"
+      }}>
+        <span style={{
+          fontSize: 5.5, letterSpacing: "0.32em", textTransform: "uppercase",
+          color: "rgba(0,0,0,0.22)", fontFamily: "var(--font-body)"
+        }}>Eyes of the Order</span>
+        <AlbescentMark size={10} />
+      </div>
+
+      <div style={{ padding: "16px 14px 14px" }}>
+        {/* Sub-label */}
+        <div style={{
+          fontSize: 6.5, letterSpacing: "0.2em", textTransform: "uppercase",
+          color: "rgba(0,0,0,0.18)", fontFamily: "var(--font-body)", marginBottom: 8
+        }}>Dispatch · Sealed</div>
+
+        {/* Title — visible */}
+        <div style={{
+          fontSize: 17, fontStyle: "italic", fontWeight: 300,
+          lineHeight: 1.28, color: "#1a1a18", marginBottom: 12
+        }}>{title}</div>
+
+        {/* Sealed description area */}
+        <div style={{ position: "relative", marginBottom: 14, minHeight: 38, overflow: "hidden" }}>
+          {/* Ghost text beneath */}
+          <div style={{
+            fontSize: 7.5, color: "rgba(0,0,0,0.055)", lineHeight: 1.58,
+            fontFamily: "var(--font-body)", userSelect: "none"
+          }}>{description}</div>
+          {/* Overlay redaction bars */}
+          <div style={{
+            position: "absolute", inset: 0,
+            display: "flex", flexDirection: "column",
+            justifyContent: "space-evenly", padding: "1px 0"
+          }}>
+            {[94, 80, 60].map((w, i) =>
+            <div key={i} style={{
+              height: 3.5, width: `${w}%`,
+              background: "rgba(0,0,0,0.048)", borderRadius: 0.5
+            }} />
+            )}
+          </div>
+        </div>
+
+        {/* Footer: level + wax seal */}
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end" }}>
+          <div style={{
+            fontSize: 5.5, letterSpacing: "0.24em", textTransform: "uppercase",
+            color: "rgba(0,0,0,0.2)", fontFamily: "var(--font-body)", lineHeight: 1.9
+          }}>
+            <div>Lvl {level}</div>
+            <div style={{ color: "rgba(0,0,0,0.13)", fontSize: 5 }}>Sealed</div>
+          </div>
+          <WaxSeal size={32} />
+        </div>
+      </div>
+    </div>);
+
+}
+
+/* ═══════════════════════════════════════════════════
+   IV · CARTOUCHE
+   Outer border + inset inner border, all centered.
+   Architectural, monumental, Roman-inscription feel.
+   Double-rule dividers. Everything aligned to center.
+═══════════════════════════════════════════════════ */
+function CardCartouche({ title, description, level, points }) {
+  return (
+    <div style={{
+      width: 200,
+      background: "#fff",
+      border: "1px solid rgba(0,0,0,0.12)",
+      padding: 8,
+      fontFamily: "var(--al-font)"
+    }}>
+      <div style={{
+        border: "1px solid rgba(0,0,0,0.07)",
+        padding: "20px 14px 16px",
+        display: "flex", flexDirection: "column",
+        alignItems: "center", textAlign: "center",
+        gap: 10
+      }}>
+        <AlbescentMark size={22} breathe />
+
+        <div style={{
+          fontSize: 5.5, letterSpacing: "0.42em", textTransform: "uppercase",
+          color: "rgba(0,0,0,0.22)", fontFamily: "var(--font-body)"
+        }}>Albescent</div>
+
+        {/* Divider rule */}
+        <div style={{ width: "38%", height: 1, background: "rgba(0,0,0,0.09)" }} />
+
+        <div style={{
+          fontSize: 17, fontStyle: "italic", fontWeight: 300,
+          lineHeight: 1.28, color: "#1a1a18"
+        }}>{title}</div>
+
+        <div style={{
+          fontSize: 7.5, color: "rgba(28,28,26,0.38)",
+          lineHeight: 1.55, fontFamily: "var(--font-body)"
+        }}>{description}</div>
+
+        {/* Divider rule */}
+        <div style={{ width: "38%", height: 1, background: "rgba(0,0,0,0.09)" }} />
+
+        <div style={{ display: "flex", gap: 14, alignItems: "center" }}>
+          <span style={{
+            fontSize: 6, letterSpacing: "0.22em", textTransform: "uppercase",
+            color: "rgba(0,0,0,0.24)", fontFamily: "var(--font-body)"
+          }}>Lvl {level}</span>
+          <span style={{ fontSize: 7, color: "rgba(0,0,0,0.14)", fontFamily: "var(--font-body)" }}>·</span>
+          <span style={{ fontSize: 14.5, fontWeight: 300, color: "rgba(28,28,26,0.48)" }}>
+            {points}<span style={{ fontSize: 6.5, marginLeft: 3, fontFamily: "var(--font-body)", letterSpacing: "0.1em", textTransform: "uppercase" }}>pts</span>
+          </span>
+        </div>
+      </div>
+    </div>);
+
+}
+
+/* ═══════════════════════════════════════════════════
+   V · TABULA RASA
+   Nearly blank at rest — large faint watermark sigil,
+   all text nearly invisible. Hover: everything gently
+   emerges. The task exists whether seen or not.
+   (Hover the card to reveal.)
+═══════════════════════════════════════════════════ */
+function CardTabulaRasa({ title, description, level, points }) {
+  const [hov, setHov] = useState(false);
+
+  return (
+    <div
+      onMouseEnter={() => setHov(true)}
+      onMouseLeave={() => setHov(false)}
+      style={{
+        width: 200,
+        background: "#fff",
+        border: "1px solid rgba(0,0,0,0.08)",
+        boxShadow: hov ?
+        "0 6px 28px rgba(0,0,0,0.08)" :
+        "0 1px 6px rgba(0,0,0,0.04)",
+        padding: "20px 18px 16px",
+        fontFamily: "var(--al-font)",
+        position: "relative", overflow: "hidden",
+        transition: "box-shadow 600ms ease",
+        cursor: "default"
+      }}>
+      
+      {/* Watermark sigil — large, centered */}
+      <div style={{
+        position: "absolute", top: "50%", left: "50%",
+        transform: "translate(-50%, -50%)",
+        opacity: hov ? 0.04 : 0.11,
+        transition: "opacity 800ms ease",
+        pointerEvents: "none"
+      }}>
+        <AlbescentMark size={120} />
+      </div>
+
+      <div style={{ position: "relative", zIndex: 1 }}>
+        {/* Eyebrow + mark */}
+        <div style={{
+          display: "flex", justifyContent: "space-between", alignItems: "center",
+          marginBottom: 12,
+          opacity: hov ? 0.38 : 0.13,
+          transition: "opacity 500ms ease"
+        }}>
+          <span style={{
+            fontSize: 5.5, letterSpacing: "0.32em", textTransform: "uppercase",
+            color: "#1c1c1a", fontFamily: "var(--font-body)"
+          }}>Albescent</span>
+          <AlbescentMark size={11} />
+        </div>
+
+        {/* Title */}
+        <div style={{
+          fontSize: 17, fontStyle: "italic", fontWeight: 300,
+          lineHeight: 1.28, marginBottom: 10,
+          color: hov ? "#1a1a18" : "rgba(28,28,26,0.18)",
+          transition: "color 600ms ease"
+        }}>{title}</div>
+
+        {/* Description */}
+        <div style={{
+          fontSize: 7.5, lineHeight: 1.58, fontFamily: "var(--font-body)",
+          marginBottom: 14,
+          color: hov ? "rgba(28,28,26,0.42)" : "rgba(28,28,26,0.03)",
+          transition: "color 750ms ease"
+        }}>{description}</div>
+
+        {/* Footer */}
+        <div style={{
+          borderTop: "1px solid rgba(0,0,0,0.06)", paddingTop: 10,
+          display: "flex", justifyContent: "space-between", alignItems: "center",
+          opacity: hov ? 0.55 : 0.1,
+          transition: "opacity 500ms ease"
+        }}>
+          <span style={{
+            fontSize: 6.5, letterSpacing: "0.2em", textTransform: "uppercase",
+            color: "#1c1c1a", fontFamily: "var(--font-body)"
+          }}>Lvl {level}</span>
+          <span style={{ fontSize: 14, fontWeight: 300 }}>
+            {points}<span style={{ fontSize: 6.5, marginLeft: 3, letterSpacing: "0.1em", textTransform: "uppercase", fontFamily: "var(--font-body)" }}>pts</span>
+          </span>
+        </div>
+      </div>
+    </div>);
+
+}
+
+/* ═══════════════════════════════════════════════════
+   PAGE
+═══════════════════════════════════════════════════ */
+const CARDS = [
+{
+  id: "vellum",
+  name: "I · Vellum",
+  sub: "Pure white correspondence. Centered sigil, hairline border. CTA: acknowledge.",
+  C: CardVellum
+},
+{
+  id: "palimpsest",
+  name: "II · Palimpsest",
+  sub: "Past tasks show through the current. The surface persists; the task does not.",
+  C: CardPalimpsest
+},
+{
+  id: "sealed",
+  name: "III · The Sealed",
+  sub: "Eyes of the Order only. Title visible, description withheld by the faction.",
+  C: CardSealed
+},
+{
+  id: "cartouche",
+  name: "IV · Cartouche",
+  sub: "Double-frame, centered, architectural. Like a Roman inscription. Monumental.",
+  C: CardCartouche
+},
+{
+  id: "rasa",
+  name: "V · Tabula Rasa",
+  sub: "Hover to reveal. Present whether seen or not — the task exists for itself.",
+  C: CardTabulaRasa
+}];
+
+
+function App() {
+  return (
+    <div style={{ minHeight: "100vh", padding: "52px 48px 80px" }}>
+
+      {/* ── Page header ── */}
+      <div style={{ maxWidth: 1240, margin: "0 auto 56px" }}>
+        <div style={{
+          fontSize: 8.5, letterSpacing: "0.32em", textTransform: "uppercase",
+          color: "var(--color-text-tertiary)", fontFamily: "var(--font-body)", marginBottom: 12
+        }}>
+          World Zero · Faction Design · Task Card Exploration
+        </div>
+        <h1 style={{
+          fontFamily: "var(--font-display)", fontStyle: "italic",
+          fontSize: 34, fontWeight: 700, color: "var(--color-text-primary)",
+          marginBottom: 10, lineHeight: 1.1
+        }}>Albescent</h1>
+        <p style={{
+          fontSize: 10, color: "var(--color-text-secondary)",
+          lineHeight: 1.8, maxWidth: 540, fontFamily: "var(--font-body)"
+        }}>
+          A sacred secret society. Color: white. Aesthetic: minimalist. Philosophy: tasking for
+          its own sake — not competition, not accumulation, not record. Five archetype directions
+          for the task card. <strong style="font-weight:400;color:var(--color-text-primary)">Vellum (I) is the selected direction</strong> &mdash;
+          now Albescent&rsquo;s task card in the World Zero design system.
+        </p>
+      </div>
+
+      {/* ── Five cards ── */}
+      <div style={{
+        maxWidth: 1240, margin: "0 auto",
+        display: "flex", flexWrap: "wrap", gap: 44, alignItems: "flex-start"
+      }}>
+        {CARDS.map(({ id, name, sub, C }) => {
+        const selected = id === "vellum";
+        return (
+        <div key={id} style={{ display: "flex", flexDirection: "column", gap: 18 }}>
+            <div style={{ position: "relative" }}>
+              {selected &&
+              <div style={{
+                position: "absolute", top: -11, left: -7, zIndex: 2,
+                display: "inline-flex", alignItems: "center", gap: 5,
+                background: "#1c1c1a", color: "#fff",
+                fontSize: 6.5, letterSpacing: "0.22em", textTransform: "uppercase",
+                fontFamily: "var(--font-body)", padding: "4px 9px"
+              }}>✓ Going with this</div>}
+              <div style={{
+                outline: selected ? "1px solid rgba(28,28,26,0.5)" : "none",
+                outlineOffset: selected ? 9 : 0
+              }}>
+                <C {...TASK} />
+              </div>
+            </div>
+            <div style={{ maxWidth: 204 }}>
+              <div style={{
+              fontSize: 9, fontFamily: "var(--font-body)", letterSpacing: "0.1em",
+              textTransform: "uppercase", color: selected ? "var(--color-text-primary)" : "var(--color-text-tertiary)", marginBottom: 5
+            }}>{name}{selected && " — selected"}</div>
+              <div style={{
+              fontSize: 8.5, color: "var(--color-text-secondary)",
+              lineHeight: 1.65, fontFamily: "var(--font-body)"
+            }}>{sub}</div>
+            </div>
+          </div>
+        );
+        })}
+      </div>
+
+      {/* ── Design notes ── */}
+      <div style={{
+        maxWidth: 1240, margin: "64px auto 0",
+        paddingTop: 36, borderTop: "1px solid rgba(0,0,0,0.08)"
+      }}>
+        <div style={{
+          fontSize: 7.5, letterSpacing: "0.3em", textTransform: "uppercase",
+          color: "var(--color-text-tertiary)", fontFamily: "var(--font-body)", marginBottom: 24
+        }}>Design Notes</div>
+
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 28 }}>
+          {[
+          {
+            label: "Faction Font",
+            val: "Cormorant Garamond · Light Italic",
+            note: "Ultra-thin high-contrast serif. Sacred, devotional quality. Fully distinct from all 7 existing faction fonts."
+          },
+          {
+            label: "Color System",
+            val: "Monochromatic — no faction hue",
+            note: "White card, near-black type only. Albescent refuses the rainbow palette. The absence of color is the statement."
+          },
+          {
+            label: "Sigil",
+            val: "Surveyor's cross-hair mark",
+            note: "Outer ring · inner ring · 4 cardinal ticks · center dot. Precise and purposeful without aggression."
+          },
+          {
+            label: "CTA Language",
+            val: "Acknowledge, not Join",
+            note: "The faction doesn't recruit — it receives. Dispatch language fits: acknowledge, attend, receive, return."
+          }].
+          map(({ label, val, note }) =>
+          <div key={label} style={{ paddingTop: 14, borderTop: "1px solid rgba(0,0,0,0.07)" }}>
+              <div style={{
+              fontSize: 7, letterSpacing: "0.24em", textTransform: "uppercase",
+              color: "var(--color-text-tertiary)", fontFamily: "var(--font-body)", marginBottom: 6
+            }}>{label}</div>
+              <div style={{
+              fontSize: 10, color: "var(--color-text-primary)",
+              fontFamily: "var(--font-body)", marginBottom: 6
+            }}>{val}</div>
+              <div style={{
+              fontSize: 8.5, color: "var(--color-text-secondary)",
+              lineHeight: 1.65, fontFamily: "var(--font-body)"
+            }}>{note}</div>
+            </div>
+          )}
+        </div>
+      </div>
+
+    </div>);
+
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+</script>
+</body>
+</html>
