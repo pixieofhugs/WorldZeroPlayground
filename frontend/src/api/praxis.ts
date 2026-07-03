@@ -174,6 +174,15 @@ export async function submitPraxis(id: number): Promise<PraxisOut> {
   return data
 }
 
+/**
+ * Leave a collab praxis you joined (not authored). Frees a task-bank slot —
+ * unlike withdraw, which keeps the membership. Backend: POST /praxes/{id}/leave.
+ */
+export async function leavePraxis(id: number): Promise<PraxisOut> {
+  const { data } = await api.post<PraxisOut>(`/praxes/${id}/leave`)
+  return data
+}
+
 // ---------------------------------------------------------------------------
 // Media
 // ---------------------------------------------------------------------------

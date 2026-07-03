@@ -2,19 +2,33 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import type { ActivityFeedItem } from "../../api/activityFeed";
 import { useRespondToRequest } from "../../hooks/useRespondToRequest";
+import { useMyActiveTasks } from "../../hooks/useMyActiveTasks";
+import { useGameConfig } from "../../hooks/useGameConfig";
+import { useAuth } from "../../auth/AuthContext";
+import { deletePraxis, leavePraxis } from "../../api/praxis";
+import { respondToChallenge } from "../../api/duel";
 import { factionColor } from "../../utils/factions";
 import { relativeTime } from "../../utils/dates";
+import { extractError } from "../../utils/errors";
 import FeedBadge from "./FeedBadge";
 
 interface Props {
   item: ActivityFeedItem;
 }
 
+// Duel accept returns 400 "Task bank is full (N in-progress praxes)." when the
+// accepter has no free slot — NOT 409 (the collab twin #322 returns 409). Detect
+// on the detail substring, not the status code.
+const BANK_FULL_MARKER = "Task bank is full";
+
+const DEFAULT_MAX_TASK_SLOTS = 20;
+
 export default function FeedCardDuelChallenge({ item }: Props) {
   // Duel payload carries duel_id / challenger_praxis_id / duel_status — NOT
   // the collab invite_id / praxis_id / invite_status fields. The shared hook
   // owns the endpoint switch (#346).
   const {
+    duel_id,
     challenger_praxis_id,
     task_title,
     task_point_value,
@@ -25,33 +39,74 @@ export default function FeedCardDuelChallenge({ item }: Props) {
   const actorColor = factionColor(item.actor_faction_slug);
   const navigate = useNavigate();
 
-  const { accept, decline, loading, status, error } = useRespondToRequest(item);
-  // Task-list-full modal state — dormant skeleton, wired by #322/#314.
-  const [showDropModal, setShowDropModal] = useState(false);
-  const [myTasks] = useState<
-    { id: number; task: { id: number; title: string } }[]
-  >([]);
+  const { user } = useAuth();
+  const gameConfig = useGameConfig();
+  const maxTaskSlots = gameConfig?.max_task_signups ?? DEFAULT_MAX_TASK_SLOTS;
 
-  const doAccept = async (drop_task_id?: number) => {
+  const { accept, decline, loading, status, error } = useRespondToRequest(item);
+  // In-progress praxes the viewer can drop to free a bank slot (#314).
+  const { activeTasks, refetch: refetchActiveTasks } = useMyActiveTasks();
+  const [showDropModal, setShowDropModal] = useState(false);
+  // Local error surface: the bank-full path swallows the hook error and opens
+  // the modal instead, so we need our own channel for drop/retry failures.
+  const [dropError, setDropError] = useState("");
+  const [busy, setBusy] = useState(false);
+
+  const landOnPraxis = (praxisId: number | null) => {
+    // Accepting creates the opponent's fresh praxis server-side — land the
+    // responder on its editor so they can start working (mirrors collab).
+    navigate(
+      praxisId ? `/praxes/${praxisId}/edit` : `/praxes/${challenger_praxis_id}`,
+    );
+  };
+
+  const handleAccept = async () => {
+    setDropError("");
     const result = await accept();
     if (result.ok) {
-      if (drop_task_id) {
-        // Drop task was selected from modal — handled server-side via the task list
-      }
-      setShowDropModal(false);
-      // Accepting creates the opponent's fresh praxis server-side — land the
-      // responder on its editor so they can start working (mirrors collab).
-      navigate(
-        result.praxisId
-          ? `/praxes/${result.praxisId}/edit`
-          : `/praxes/${challenger_praxis_id}`,
-      );
+      landOnPraxis(result.praxisId);
+      return;
+    }
+    // The hook already set `error` from the backend detail. If the accept
+    // failed because the viewer's task bank is full, surface the drop modal
+    // instead of the generic message; any other error falls through to the
+    // inline `error` the hook exposes.
+    if (result.detail?.includes(BANK_FULL_MARKER)) {
+      refetchActiveTasks();
+      setShowDropModal(true);
     }
   };
 
-  const handleAccept = () => doAccept();
-
   const handleDecline = () => decline();
+
+  // Drop the chosen in-progress praxis to free a slot, then retry the accept.
+  //   authored solo  → deletePraxis  (removes the praxis)
+  //   joined collab  → leavePraxis   (drops your membership)
+  // NEVER withdrawPraxis — it keeps the membership and does not free a slot.
+  const dropAndRetry = async (praxis: {
+    id: number;
+    created_by_id: number;
+  }) => {
+    if (busy) return;
+    setBusy(true);
+    setDropError("");
+    try {
+      const mine = user?.character?.id;
+      if (mine !== undefined && praxis.created_by_id === mine) {
+        await deletePraxis(praxis.id);
+      } else {
+        await leavePraxis(praxis.id);
+      }
+      // Slot freed — retry the accept directly (the hook has no drop path).
+      const duel = await respondToChallenge(duel_id, { accept: true });
+      setShowDropModal(false);
+      landOnPraxis(duel.opponent_praxis_id);
+    } catch (err) {
+      setDropError(extractError(err, "Could not drop that task. Try another."));
+    } finally {
+      setBusy(false);
+    }
+  };
 
   const isPending = status === "pending";
 
@@ -166,7 +221,7 @@ export default function FeedCardDuelChallenge({ item }: Props) {
           >
             <button
               onClick={handleAccept}
-              disabled={loading}
+              disabled={loading || busy}
               style={{
                 fontFamily: "'Courier Prime', monospace",
                 fontSize: 9,
@@ -177,14 +232,14 @@ export default function FeedCardDuelChallenge({ item }: Props) {
                 color: "var(--color-text-on-accent)",
                 border: "none",
                 padding: "5px 14px",
-                cursor: loading ? "not-allowed" : "pointer",
+                cursor: loading || busy ? "not-allowed" : "pointer",
               }}
             >
               Accept Duel
             </button>
             <button
               onClick={handleDecline}
-              disabled={loading}
+              disabled={loading || busy}
               style={{
                 fontFamily: "'Courier Prime', monospace",
                 fontSize: 9,
@@ -195,12 +250,12 @@ export default function FeedCardDuelChallenge({ item }: Props) {
                 color: "var(--color-text-secondary)",
                 border: "1px solid var(--color-border)",
                 padding: "5px 14px",
-                cursor: loading ? "not-allowed" : "pointer",
+                cursor: loading || busy ? "not-allowed" : "pointer",
               }}
             >
               Decline
             </button>
-            {error && (
+            {error && !showDropModal && (
               <span
                 className="eyebrow"
                 style={{ color: "var(--color-danger)" }}
@@ -270,7 +325,8 @@ export default function FeedCardDuelChallenge({ item }: Props) {
                 color: "var(--color-text-secondary)",
               }}
             >
-              You have 20 in-progress tasks. Drop one to accept this duel:
+              You have {maxTaskSlots} in-progress tasks. Drop one to accept this
+              duel:
             </p>
             <div
               style={{
@@ -281,26 +337,34 @@ export default function FeedCardDuelChallenge({ item }: Props) {
                 overflowY: "auto",
               }}
             >
-              {myTasks.map((ct) => (
+              {activeTasks.map((praxis) => (
                 <button
-                  key={ct.id}
-                  onClick={() => doAccept(ct.task.id)}
-                  disabled={loading}
+                  key={praxis.id}
+                  onClick={() => dropAndRetry(praxis)}
+                  disabled={busy}
                   style={{
                     background: "var(--color-bg-surface-alt)",
                     border: "1px solid var(--color-border)",
                     padding: "8px 12px",
-                    cursor: "pointer",
+                    cursor: busy ? "not-allowed" : "pointer",
                     textAlign: "left",
                     fontFamily: "'Courier Prime', monospace",
                     fontSize: 10,
                     color: "var(--color-text-primary)",
                   }}
                 >
-                  Drop: {ct.task.title}
+                  Drop: {praxis.title || praxis.task_title}
                 </button>
               ))}
             </div>
+            {dropError && (
+              <p
+                className="eyebrow"
+                style={{ color: "var(--color-danger)", marginTop: 10 }}
+              >
+                {dropError}
+              </p>
+            )}
             <button
               onClick={() => setShowDropModal(false)}
               style={{
