@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { getCharacter, type CharacterOut } from "../api/characters";
 import { listPraxes, type PraxisCardOut } from "../api/praxis";
+import { listTasks, type TaskOut } from "../api/tasks";
 import {
   listRelationships,
   createRelationship,
@@ -10,6 +11,7 @@ import {
   type RelationshipListItem,
 } from "../api/relationships";
 import PraxisCard from "../components/PraxisCard";
+import TaskCard from "../components/TaskCard";
 import PageTitle from "../components/ui/PageTitle";
 import { useAuth } from "../auth/AuthContext";
 import { useGameConfig } from "../hooks/useGameConfig";
@@ -24,6 +26,7 @@ export default function CharacterProfile() {
   const gameConfig = useGameConfig();
   const [character, setCharacter] = useState<CharacterOut | null>(null);
   const [submissions, setSubmissions] = useState<PraxisCardOut[]>([]);
+  const [proposedTasks, setProposedTasks] = useState<TaskOut[]>([]);
   const [relationship, setRelationship] = useState<RelationshipListItem | null>(
     null,
   );
@@ -38,10 +41,15 @@ export default function CharacterProfile() {
   useEffect(() => {
     if (!id) return;
     const cid = parseInt(id, 10);
-    Promise.all([getCharacter(cid), listPraxes({ character_id: cid })])
-      .then(([c, s]) => {
+    Promise.all([
+      getCharacter(cid),
+      listPraxes({ character_id: cid }),
+      listTasks({ created_by: cid }),
+    ])
+      .then(([c, s, t]) => {
         setCharacter(c);
         setSubmissions(s);
+        setProposedTasks(t);
       })
       .catch((err) =>
         setFetchError(extractError(err, "Couldn't load this character.")),
@@ -607,6 +615,30 @@ export default function CharacterProfile() {
           <div className="flex flex-wrap gap-4 items-start">
             {submissions.map((s) => (
               <PraxisCard key={s.id} praxis={s} />
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* ── Proposed Tasks (#419) — approved tasks this character created ── */}
+      <div className="mb-5">
+        <div className="flex items-baseline justify-between mb-3">
+          <PageTitle
+            title="Proposed tasks"
+            eyebrow={`${proposedTasks.length} total`}
+          />
+        </div>
+
+        {proposedTasks.length === 0 ? (
+          <p className="font-body text-muted">No proposed tasks yet.</p>
+        ) : (
+          <div className="flex flex-wrap gap-4 items-start">
+            {proposedTasks.map((task) => (
+              <TaskCard
+                key={task.id}
+                task={task}
+                displayPoints={task.point_value}
+              />
             ))}
           </div>
         )}

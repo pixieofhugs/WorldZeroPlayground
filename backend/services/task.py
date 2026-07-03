@@ -197,6 +197,7 @@ async def list_tasks(
     min_points: Optional[int] = None,
     max_points: Optional[int] = None,
     exclude_character_id: Optional[int] = None,
+    created_by: Optional[int] = None,
     task_type: Optional[str] = None,
     sort: Optional[str] = None,
     limit: int = 50,
@@ -218,13 +219,21 @@ async def list_tasks(
 
     query = select(Task)
 
+    if created_by is not None:
+        query = query.where(Task.created_by == created_by)
+
     if status and status != "all":
         try:
             query = query.where(Task.status == TaskStatus[status])
         except KeyError:
             raise HTTPException(status_code=422, detail=f"Invalid status: {status}")
     elif not status:
-        query = query.where(Task.status == TaskStatus.active)
+        if created_by is not None:
+            # Proposer's profile: show approved tasks (active + retired); pending
+            # rows are admin-review submissions and stay hidden from all viewers.
+            query = query.where(Task.status != TaskStatus.pending)
+        else:
+            query = query.where(Task.status == TaskStatus.active)
     # status == "all" -> no status filter, return tasks of every status
 
     # Task type filter — default (None) and "all" both return every task type.
