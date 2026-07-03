@@ -47,6 +47,7 @@ function praxis(members: PraxisMemberOut[]): PraxisOut {
     invites: [],
     media_items: [],
     score: 0,
+    is_top_for_task: false,
     duel_id: null,
     can_flag: true,
     applied_metatasks: [],
