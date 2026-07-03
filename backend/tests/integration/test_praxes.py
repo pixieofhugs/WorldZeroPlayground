@@ -571,6 +571,63 @@ async def test_collab_invite_and_accept(
 
 
 @pytest.mark.asyncio
+async def test_list_praxes_member_of_includes_invitee(
+    client: AsyncClient,
+    character: Character,
+    character2: Character,
+    active_task: Task,
+    auth_headers: dict,
+    auth_headers2: dict,
+):
+    """GET /praxes?member_of=X returns a joined collab draft even though X
+    didn't create it — unlike character_id, which matches the creator only
+    (the active-tasks sidebar bug, #386)."""
+    create_resp = await client.post(
+        "/praxes",
+        json={"task_id": active_task.id, "type": "collab", "title": "Shared Draft"},
+        headers=auth_headers2,
+    )
+    assert create_resp.status_code == 201
+    praxis_id = create_resp.json()["id"]
+
+    invite_resp = await client.post(
+        f"/praxes/{praxis_id}/invite",
+        json={"invitee_id": character.id},
+        headers=auth_headers2,
+    )
+    invite_id = invite_resp.json()["id"]
+    await client.post(
+        f"/praxes/{praxis_id}/invite/{invite_id}/respond",
+        json={"accept": True},
+        headers=auth_headers,
+    )
+
+    # The invitee is a member but not the creator: character_id excludes them...
+    by_creator = await client.get(
+        "/praxes",
+        params={"character_id": character.id, "status": "in_progress"},
+        headers=auth_headers,
+    )
+    assert praxis_id not in [item["id"] for item in by_creator.json()]
+
+    # ...while member_of includes them.
+    by_member = await client.get(
+        "/praxes",
+        params={"member_of": character.id, "status": "in_progress"},
+        headers=auth_headers,
+    )
+    assert praxis_id in [item["id"] for item in by_member.json()]
+
+    # The creator also still shows up under member_of.
+    creator_by_member = await client.get(
+        "/praxes",
+        params={"member_of": character2.id, "status": "in_progress"},
+        headers=auth_headers2,
+    )
+    assert praxis_id in [item["id"] for item in creator_by_member.json()]
+
+
+@pytest.mark.asyncio
 async def test_collab_invite_decline(
     client: AsyncClient,
     character: Character,

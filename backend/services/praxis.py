@@ -301,6 +301,7 @@ async def list_praxes(
     *,
     task_id: Optional[int] = None,
     character_id: Optional[int] = None,
+    member_of: Optional[int] = None,
     praxis_type: Optional[PraxisType] = None,
     status: Optional[PraxisStatus] = None,
     moderation_status: Optional[str] = None,
@@ -314,6 +315,11 @@ async def list_praxes(
 
     ``in_progress`` praxes are member-only (ADR-0024): pass ``viewer_id`` to
     include the viewer's own drafts; everyone else sees only ``submitted``.
+
+    ``character_id`` matches the *creator* (authored lists, e.g. a character's
+    profile). ``member_of`` matches any :class:`PraxisMember`, including
+    invitees who joined a collab — use it for "this character's active
+    drafts" views, where co-owners must see a shared praxis too.
     """
     query = select(Praxis).where(praxis_visibility_condition(viewer_id))
 
@@ -340,6 +346,12 @@ async def list_praxes(
 
     if character_id is not None:
         query = query.where(Praxis.created_by_id == character_id)
+
+    if member_of is not None:
+        member_praxis_ids = select(PraxisMember.praxis_id).where(
+            PraxisMember.character_id == member_of
+        )
+        query = query.where(Praxis.id.in_(member_praxis_ids))
 
     if status is not None:
         query = query.where(Praxis.status == status)

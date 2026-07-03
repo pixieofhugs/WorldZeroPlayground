@@ -183,7 +183,10 @@ export default function Sidebar() {
                     {praxis.task_title}
                   </Link>
                 </div>
-                <FeedBadge type="global" label="Solo" />
+                <FeedBadge
+                  type="global"
+                  label={praxis.type === 'collab' ? 'Collab' : praxis.type === 'duel' ? 'Duel' : 'Solo'}
+                />
               </div>
             ))}
           </div>
