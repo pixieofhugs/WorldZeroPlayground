@@ -1,10 +1,8 @@
-import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import type { ActivityFeedItem } from "../../api/activityFeed";
-import { respondToInvite } from "../../api/praxis";
+import { useRespondToRequest } from "../../hooks/useRespondToRequest";
 import { factionColor } from "../../utils/factions";
 import { relativeTime } from "../../utils/dates";
-import { extractError } from "../../utils/errors";
 import FeedBadge from "./FeedBadge";
 
 interface Props {
@@ -13,53 +11,31 @@ interface Props {
 
 export default function FeedCardCollabInvite({ item }: Props) {
   const {
-    invite_id,
     praxis_id,
     task_title,
     task_point_value,
     task_faction_slug,
     task_level_required,
-    invite_status,
     inviter_character_id,
   } = item.payload;
   const taskColor = factionColor(task_faction_slug);
   const actorColor = factionColor(item.actor_faction_slug);
   const navigate = useNavigate();
 
-  const [status, setStatus] = useState<string | null>(invite_status);
-  const [loading, setLoading] = useState(false);
-  const [acceptError, setAcceptError] = useState("");
+  const { accept, decline, loading, status, error } = useRespondToRequest(item);
 
   const handleAccept = async () => {
-    setLoading(true);
-    setAcceptError("");
-    try {
-      await respondToInvite(praxis_id, invite_id, true);
-      setStatus("accepted");
+    const result = await accept();
+    if (result.ok) {
       // New members land on the editor so they can contribute; the editor
       // self-locks if the collab is already submitted (controlsLocked). (#298)
-      navigate(`/praxes/${praxis_id}/edit`);
-    } catch (err) {
-      // Surface the real backend reason (e.g. 400 "Cannot join a submitted
-      // praxis" after lazy-consensus auto-publish, or 409 bank-full) instead of
-      // a generic swallow. (#318)
-      setAcceptError(extractError(err, "Could not accept invite. Please try again."));
+      navigate(`/praxes/${result.praxisId ?? praxis_id}/edit`);
     }
-    setLoading(false);
   };
 
-  const handleDecline = async () => {
-    setLoading(true);
-    try {
-      await respondToInvite(praxis_id, invite_id, false);
-      setStatus("declined");
-    } catch {
-      /* swallow */
-    }
-    setLoading(false);
-  };
+  const handleDecline = () => decline();
 
-  const isPending = status === "pending" || status === null;
+  const isPending = status === "pending";
 
   return (
     <div style={{ padding: "12px 16px" }}>
@@ -202,9 +178,9 @@ export default function FeedCardCollabInvite({ item }: Props) {
           >
             Decline
           </button>
-          {acceptError && (
+          {error && (
             <span className="eyebrow" style={{ color: "var(--color-danger)" }}>
-              {acceptError}
+              {error}
             </span>
           )}
         </div>

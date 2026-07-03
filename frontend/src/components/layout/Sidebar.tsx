@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, type CSSProperties } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../../auth/AuthContext'
 import { getActivityFeed, type ActivityFeedItem } from '../../api/activityFeed'
@@ -10,6 +10,7 @@ import { useMyActiveTasks } from '../../hooks/useMyActiveTasks'
 import type { PraxisType } from '../../api/praxis'
 import { useMyCharacterStats } from '../../hooks/useMyCharacterStats'
 import { usePendingRequests } from '../../hooks/usePendingRequests'
+import { useRespondToRequest } from '../../hooks/useRespondToRequest'
 import { useGameConfig } from '../../hooks/useGameConfig'
 
 const DEFAULT_MAX_TASK_SLOTS = 20
@@ -28,9 +29,9 @@ export default function Sidebar() {
   const { user } = useAuth()
   const character = user?.character
 
-  const { activeTasks } = useMyActiveTasks()
+  const { activeTasks, refetch: refetchActiveTasks } = useMyActiveTasks()
   const { votesReceived } = useMyCharacterStats(character?.id)
-  const { pendingRequests } = usePendingRequests()
+  const { pendingRequests, refetch: refetchPendingRequests } = usePendingRequests()
   const gameConfig = useGameConfig()
   const [globalActivity, setGlobalActivity] = useState<ActivityFeedItem[]>([])
 
@@ -127,37 +128,19 @@ export default function Sidebar() {
             Pending Requests · {pendingRequests.length}
           </p>
           <div className="flex flex-col gap-1.5">
-            {pendingRequests.map((item, index) => {
-              const isCollab = item.type === 'collab_invite'
-              return (
-                <Link
-                  key={`${item.type}-${index}`}
-                  to="/updates?filter=requests"
-                  className="flex items-center gap-2 py-1.5"
-                  style={{
-                    borderTop: index > 0 ? '1px dashed var(--color-border)' : undefined,
-                    textDecoration: 'none',
-                  }}
-                >
-                  <div
-                    className="shrink-0 rounded-full"
-                    style={{
-                      width: 24,
-                      height: 24,
-                      background: `linear-gradient(135deg, ${factionCssVar(item.actor_faction_slug, 'light')}, ${factionCssVar(item.actor_faction_slug)})`,
-                    }}
-                  />
-                  <div className="flex-1 min-w-0">
-                    <span className="font-body block" style={{ fontSize: 10, fontWeight: 700, color: 'var(--color-text-primary)' }}>
-                      {item.actor_display_name}
-                    </span>
-                    <span className="eyebrow" style={{ color: 'var(--color-text-tertiary)' }}>
-                      {isCollab ? 'Collab Invite' : 'Duel Challenge'}
-                    </span>
-                  </div>
-                </Link>
-              )
-            })}
+            {pendingRequests.map((item, index) => (
+              <PendingRequestRow
+                key={`${item.type}-${index}`}
+                item={item}
+                isFirst={index === 0}
+                onResolved={() => {
+                  // An accepted collab/duel becomes an in-progress praxis —
+                  // refresh both panels so the request moves bars (#346).
+                  refetchPendingRequests()
+                  refetchActiveTasks()
+                }}
+              />
+            ))}
           </div>
         </div>
       )}
@@ -288,5 +271,112 @@ export default function Sidebar() {
         Propose a Task
       </Link>
     </aside>
+  )
+}
+
+const REQUEST_BUTTON_BASE: CSSProperties = {
+  fontFamily: "'Courier Prime', monospace",
+  fontSize: 8,
+  fontWeight: 700,
+  textTransform: 'uppercase',
+  letterSpacing: '0.08em',
+  padding: '3px 8px',
+}
+
+/**
+ * One actionable row in the Pending Requests panel: accept/decline inline via
+ * the shared request hook (#346) — same logic the feed cards use.
+ */
+function PendingRequestRow({
+  item,
+  isFirst,
+  onResolved,
+}: {
+  item: ActivityFeedItem
+  isFirst: boolean
+  onResolved: () => void
+}) {
+  const isCollab = item.type === 'collab_invite'
+  const actorId = isCollab
+    ? item.payload.inviter_character_id
+    : item.payload.challenger_character_id
+  const badgeVar = isCollab ? 'var(--badge-collab)' : 'var(--badge-duel)'
+  const { accept, decline, loading, error } = useRespondToRequest(item)
+
+  const respond = async (action: typeof accept) => {
+    const result = await action()
+    if (result.ok) onResolved()
+  }
+
+  return (
+    <div
+      className="py-1.5"
+      style={{ borderTop: !isFirst ? '1px dashed var(--color-border)' : undefined }}
+    >
+      <div className="flex items-center gap-2">
+        <Link to={`/characters/${actorId}`} className="shrink-0">
+          <div
+            className="rounded-full"
+            style={{
+              width: 24,
+              height: 24,
+              background: `linear-gradient(135deg, ${factionCssVar(item.actor_faction_slug, 'light')}, ${factionCssVar(item.actor_faction_slug)})`,
+            }}
+          />
+        </Link>
+        <div className="flex-1 min-w-0">
+          <Link
+            to={`/characters/${actorId}`}
+            className="font-body block truncate"
+            style={{ fontSize: 10, fontWeight: 700, color: 'var(--color-text-primary)', textDecoration: 'none' }}
+          >
+            {item.actor_display_name}
+          </Link>
+          <Link
+            to="/updates?filter=requests"
+            className="eyebrow block"
+            style={{ color: 'var(--color-text-tertiary)', textDecoration: 'none' }}
+          >
+            {isCollab ? 'Collab Invite' : 'Duel Challenge'}
+          </Link>
+        </div>
+      </div>
+      <div className="flex items-center gap-1.5" style={{ marginTop: 4, marginLeft: 32 }}>
+        <button
+          onClick={() => respond(accept)}
+          disabled={loading}
+          style={{
+            ...REQUEST_BUTTON_BASE,
+            background: badgeVar,
+            color: 'var(--color-text-on-accent)',
+            border: 'none',
+            cursor: loading ? 'not-allowed' : 'pointer',
+          }}
+        >
+          Accept
+        </button>
+        <button
+          onClick={() => respond(decline)}
+          disabled={loading}
+          style={{
+            ...REQUEST_BUTTON_BASE,
+            background: 'transparent',
+            color: 'var(--color-text-secondary)',
+            border: '1px solid var(--color-border)',
+            cursor: loading ? 'not-allowed' : 'pointer',
+          }}
+        >
+          Decline
+        </button>
+      </div>
+      {error && (
+        <span
+          className="eyebrow block"
+          style={{ color: 'var(--color-danger)', marginTop: 3, marginLeft: 32 }}
+        >
+          {error}
+        </span>
+      )}
+    </div>
   )
 }
