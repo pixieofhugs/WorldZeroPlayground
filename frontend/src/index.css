@@ -962,3 +962,62 @@
 .fielddesk-life { transition: transform 160ms ease; }
 .fielddesk-life:hover { transform: translateY(-6px); }
 .fielddesk-life:disabled { cursor: default; }
+
+/* ── Faction display-font tokens referenced by FactionSelectCard (design
+   select.card). Aliased to families already loaded in index.html. ── */
+:root {
+  --font-faction-gilt: "Cormorant Garamond", Georgia, serif;
+  --font-faction-engraved-caps: "Cinzel", serif;
+  --font-faction-anton: "Anton", Impact, sans-serif;
+  --font-faction-codex: "Cinzel", serif;
+  --font-faction-codex-script: "EB Garamond", Georgia, serif;
+  --font-faction-poster: "Bebas Neue", Impact, sans-serif;
+  --font-faction-vellum: "Cormorant Garamond", Georgia, serif;
+}
+
+/* ── Bare faction extension tokens consumed by FactionSelectCard (design
+   select.card). Values from the design system's tokens/colors.css. The repo
+   already carries these hues under the --faction-<slug>-* namespace; the
+   select cards reference the bare names, so alias them here. ── */
+:root {
+  /* GESTALT · whimsy.exe (light) */
+  --gestalt-card-bg: #fffdfa;
+  --gestalt-ink: #a83a6e;
+  --gestalt-ink-soft: #b5588a;
+  --gestalt-label: #a8728e;
+  --gestalt-pink: #ec5f99;
+  --gestalt-pink-lt: #fbcfe2;
+  --gestalt-glow: rgba(236, 95, 153, 0.32);
+  --gestalt-title-from: #fbcfe2;
+  --gestalt-title-to: #f3a6cb;
+  --gestalt-title-text: #8e2f5c;
+  --gestalt-win-border: #e487b5;
+  /* S.N.I.D.E. · ransom dispatch (always-dark constants) */
+  --snide-acid: #b6ff2e;
+  --snide-ink: #14110b;
+  --snide-paper: #f4f1e8;
+  --snide-pink: #ff2d8b;
+  --snide-tape: rgba(228, 214, 120, 0.62);
+  /* ALBESCENT · vellum correspondence (always-light) */
+  --al-surface: #ffffff;
+  --al-text: #1c1c1a;
+  --al-text-muted: rgba(28, 28, 26, 0.44);
+  --al-ink: rgba(28, 28, 26, 0.72);
+  --al-border: rgba(0, 0, 0, 0.1);
+  --al-border-faint: rgba(0, 0, 0, 0.055);
+  --al-shadow: 0 2px 18px rgba(0, 0, 0, 0.055), 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+[data-theme="dark"] {
+  /* GESTALT flips in dark; snide + albescent stay put */
+  --gestalt-card-bg: #2a0d1c;
+  --gestalt-ink: #fbcfe0;
+  --gestalt-ink-soft: #e58cb6;
+  --gestalt-label: #c78aa6;
+  --gestalt-pink: #f472b6;
+  --gestalt-pink-lt: #5e2a46;
+  --gestalt-glow: rgba(244, 114, 182, 0.45);
+  --gestalt-title-from: #5e2a46;
+  --gestalt-title-to: #41203a;
+  --gestalt-title-text: #fbd6e8;
+  --gestalt-win-border: #f472b6;
+}
