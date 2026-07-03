@@ -12,6 +12,7 @@ import CharacterProfile from './pages/CharacterProfile'
 import Leaderboard from './pages/Leaderboard'
 import Factions from './pages/Factions'
 import FactionDetail from './pages/FactionDetail'
+import AlbescentSecretPlaceholder from './pages/AlbescentSecretPlaceholder'
 import Updates from './pages/Updates'
 import Praxes from './pages/Praxes'
 import Admin from './pages/Admin'
@@ -59,6 +60,11 @@ export default function App() {
         />
         <Route path="/leaderboard" element={<Leaderboard />} />
         <Route path="/factions" element={<Factions />} />
+        {/* Albescent is sealed: outsiders get an in-world dead end, not the
+            faction page. Static segment outranks `:slug`, so this intercepts.
+            TODO(#390): gate on account.albescent_revealed — show real faction
+            page once revealed. */}
+        <Route path="/factions/albescent" element={<AlbescentSecretPlaceholder />} />
         <Route path="/factions/:slug" element={<FactionDetail />} />
         <Route
           path="/updates"
