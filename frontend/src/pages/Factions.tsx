@@ -19,8 +19,9 @@ const STATUS_NOT_INVITED = 'not_invited'
 const STATUS_DEFECTED = 'defected'
 const STATUS_CAN_RETURN = 'can_return'
 
-/** Factions that should be hidden from the player-facing grid */
-const HIDDEN_SLUGS = new Set([NA_SLUG, AGED_OUT_SLUG, 'ua'])
+/** System slugs hidden from the player-facing grid (not real factions). UA is
+ *  shown — the design's select.card set includes its gilt-salon tile. */
+const HIDDEN_SLUGS = new Set([NA_SLUG, AGED_OUT_SLUG])
 
 /**
  * Factions grid — a directory of pure PREVIEW tiles (the design select.card

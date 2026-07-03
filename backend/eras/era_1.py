@@ -22,8 +22,9 @@ ERA_1_FACTIONS = {
     "ua": FactionConfig(
         slug="ua",
         name="UA",
-        description="The default starting faction. Full points on all tasks. Must leave at level 3.",
-        is_selectable=False,          # assigned automatically; not a choosable destination
+        description="The Gilt Salon — a regal academy. Full points on all tasks.",
+        is_selectable=False,          # VESTIGIAL: is_selectable is read nowhere; join is
+                                      # invite-gated (ADR-0019/0030). UA is ordinary-joinable.
         can_always_rejoin=False,
         own_task_modifier=1.0,
         other_task_modifier=1.0,
