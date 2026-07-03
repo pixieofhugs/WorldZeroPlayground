@@ -14,6 +14,7 @@ import {
   changePraxisType,
   deletePraxis,
   deletePraxisMedia,
+  cancelInvite as cancelInviteApi,
   getPraxis,
   inviteToPraxis,
   removeMetatask,
@@ -75,6 +76,7 @@ export interface EditPraxisState {
   setInviteOpen: (value: boolean) => void;
   inviting: boolean;
   sendInvite: (character: CharacterOut) => Promise<void>;
+  cancelInvite: (inviteId: number) => Promise<void>;
 
   // Duel challenge (#311) — selecting duel attaches a challenge to this praxis;
   // the praxis stays type='solo' and gains a duel_id.
@@ -607,6 +609,22 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
     [praxis],
   );
 
+  // Inviter rescinds a still-pending invite (#421).
+  const cancelInvite = useCallback(
+    async (inviteId: number) => {
+      if (!praxis) return;
+      setError("");
+      try {
+        await cancelInviteApi(praxis.id, inviteId);
+        const refreshed = await getPraxis(praxis.id);
+        setPraxis(refreshed);
+      } catch (err) {
+        setError(extractError(err, "Could not rescind the invite."));
+      }
+    },
+    [praxis],
+  );
+
   // ---- Duel challenge (#311): pick an opponent, cancel a pending challenge ----
   const sendChallenge = useCallback(
     async (character: CharacterOut) => {
@@ -733,6 +751,7 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
     setInviteOpen,
     inviting,
     sendInvite,
+    cancelInvite,
 
     duel,
     sendChallenge,

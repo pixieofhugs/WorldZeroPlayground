@@ -300,6 +300,22 @@ Metatasks are a task type (see SESSION M). Access is level- and faction-gated:
 
 Metatask bonuses are flat point values, added before faction multipliers. Multiple metatasks stack additively.
 
+### Faction gating — the single seam
+
+Every "does a faction rule change whether this character may act on this task?"
+decision routes through **one** game-logic predicate,
+`services.faction_service.faction_permits(character, task, era) -> bool`
+(ADR-0029, #171). A new faction rule is a one-function edit there; every call
+site inherits it. Callers must never re-implement a faction check inline.
+
+Today the only faction rule is the metatask gate above: standard tasks are
+faction-open, a metatask requires the character's faction to match
+`task.metatask_faction_slug`, and /Albescent may act on any faction's metatask.
+The apply-time level gate and the task-bank cap are *separate axes* and stay
+where they are. Listing visibility (hidden/deprecated factions are excluded
+from task lists) is a faction-*status* axis, not a per-character permit, so it
+lives beside the seam as `faction_service.hidden_faction_slugs(session)`.
+
 ---
 
 ## Bank cap (task signups)

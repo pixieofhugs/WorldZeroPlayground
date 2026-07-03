@@ -571,6 +571,84 @@ async def test_collab_invite_and_accept(
 
 
 @pytest.mark.asyncio
+async def test_cancel_pending_invite(
+    client: AsyncClient,
+    character: Character,
+    character2: Character,
+    active_task: Task,
+    auth_headers: dict,
+    auth_headers2: dict,
+):
+    """Inviter rescinds a pending invite; only the inviter may, and the row is
+    gone afterwards (#421)."""
+    create_resp = await client.post(
+        "/praxes",
+        json={"task_id": active_task.id, "type": "collab", "title": "Cancel Me"},
+        headers=auth_headers2,
+    )
+    praxis_id = create_resp.json()["id"]
+
+    invite_resp = await client.post(
+        f"/praxes/{praxis_id}/invite",
+        json={"invitee_id": character.id},
+        headers=auth_headers2,
+    )
+    invite_id = invite_resp.json()["id"]
+
+    # A non-inviter (the invitee) cannot rescind.
+    forbidden = await client.delete(
+        f"/praxes/{praxis_id}/invite/{invite_id}", headers=auth_headers
+    )
+    assert forbidden.status_code == 403
+
+    # The inviter rescinds → 204, and the row is gone (re-delete → 404).
+    ok = await client.delete(
+        f"/praxes/{praxis_id}/invite/{invite_id}", headers=auth_headers2
+    )
+    assert ok.status_code == 204
+    gone = await client.delete(
+        f"/praxes/{praxis_id}/invite/{invite_id}", headers=auth_headers2
+    )
+    assert gone.status_code == 404
+
+
+@pytest.mark.asyncio
+async def test_cannot_cancel_accepted_invite(
+    client: AsyncClient,
+    character: Character,
+    character2: Character,
+    active_task: Task,
+    auth_headers: dict,
+    auth_headers2: dict,
+):
+    """An already-accepted invite cannot be rescinded → 409 (#421)."""
+    create_resp = await client.post(
+        "/praxes",
+        json={"task_id": active_task.id, "type": "collab", "title": "Accepted"},
+        headers=auth_headers2,
+    )
+    praxis_id = create_resp.json()["id"]
+
+    invite_resp = await client.post(
+        f"/praxes/{praxis_id}/invite",
+        json={"invitee_id": character.id},
+        headers=auth_headers2,
+    )
+    invite_id = invite_resp.json()["id"]
+
+    await client.post(
+        f"/praxes/{praxis_id}/invite/{invite_id}/respond",
+        json={"accept": True},
+        headers=auth_headers,
+    )
+
+    conflict = await client.delete(
+        f"/praxes/{praxis_id}/invite/{invite_id}", headers=auth_headers2
+    )
+    assert conflict.status_code == 409
+
+
+@pytest.mark.asyncio
 async def test_collab_draft_visible_to_invitee_active_tasks(
     client: AsyncClient,
     character: Character,

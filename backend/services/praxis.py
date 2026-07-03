@@ -40,6 +40,7 @@ from schemas.praxis import (
 )
 from services import collab_consensus
 from services.character_stats import recalculate_character_stats
+from services.faction_service import faction_permits
 from services.era import get_current_era_row, get_or_create_stats
 from models.duel import Duel, DuelStatus
 from services.vote_tally import crowned_praxis_ids, get_tally, tally_votes
@@ -404,6 +405,19 @@ async def list_praxes(
     return praxes
 
 
+def meets_task_level(character_level: int, task: Task) -> bool:
+    """Whether ``character_level`` clears the task's own level bar (#292).
+
+    The single home for the **task-level** gate — the "level half" that used to
+    be ANDed inline into :func:`is_task_eligible_for_character` and the sign-up
+    predicate. A distinct axis from :func:`~services.faction_service.faction_permits`
+    (the faction half, #171) and from the era-config thresholds
+    (collab/flag/comment/metatask-apply), which each already sit in their own
+    purpose-named predicate and share a single ``era.*`` source for their value.
+    """
+    return character_level >= task.level_required
+
+
 class SignupDenialReason(str, Enum):
     """Why the type-agnostic sign-up gates reject a claim (ADR-0008)."""
 
@@ -441,7 +455,7 @@ async def evaluate_signup(
     era_row = await get_current_era_row(session)
     stats = await get_or_create_stats(session, character.id, era_row.id)
 
-    if stats.level < task.level_required:
+    if not meets_task_level(stats.level, task):
         return SignupEligibility(False, SignupDenialReason.below_level)
 
     if task.status == TaskStatus.retired and character.faction_slug not in era.allow_praxis_on_retired_task_factions:
@@ -917,8 +931,10 @@ def is_task_eligible_for_character(
     """Return True if ``character`` is eligible to act on ``task``.
 
     For standard tasks the gate is only ``task.level_required``. For metatask
-    rows the character must also belong to the same faction as the metatask
-    (``task.metatask_faction_slug``). Anonymous viewers are never eligible.
+    rows the character's faction must also permit it — see
+    :func:`services.faction_service.faction_permits` (same faction as the
+    metatask, or Albescent, who may act on any). Anonymous viewers are never
+    eligible.
 
     Note this mirrors the metatask scoring gate in
     :func:`services.meta_task.get_meta_task_points`
@@ -929,13 +945,11 @@ def is_task_eligible_for_character(
     """
     if character is None:
         return False
-    if character_level < task.level_required:
+    # Two named single-purpose gates, no bundled inline checks (#171, #292).
+    if not meets_task_level(character_level, task):
         return False
-    if task.task_type == TaskType.metatask:
-        if task.metatask_faction_slug is None:
-            return False
-        if character.faction_slug != task.metatask_faction_slug:
-            return False
+    if not faction_permits(character, task):
+        return False
     return True
 
 
@@ -1105,6 +1119,29 @@ async def respond_to_invite(
     return invite
 
 
+async def cancel_invite(
+    praxis_id: int,
+    invite_id: int,
+    inviter_id: int,
+    session: AsyncSession,
+) -> None:
+    """Rescind a pending invite. Only the inviter may cancel, and only while
+    the invite is still pending (removing an accepted member is a separate
+    concern). Deletes the invite row (#421)."""
+    invite = await session.get(PraxisInvite, invite_id)
+    if invite is None or invite.praxis_id != praxis_id:
+        raise HTTPException(status_code=404, detail="Invite not found.")
+
+    if invite.inviter_id != inviter_id:
+        raise HTTPException(status_code=403, detail="Only the inviter can rescind this invite.")
+
+    if invite.status != PraxisInviteStatus.pending:
+        raise HTTPException(status_code=409, detail="Only a pending invite can be rescinded.")
+
+    await session.delete(invite)
+    await session.flush()
+
+
 async def kick_member(
     praxis_id: int,
     member_id: int,
@@ -1242,6 +1279,9 @@ def _check_metatask_eligibility(
     era: EraConfig,
 ) -> Optional[str]:
     """Return a 403 reason string if this character can't apply ``task``, else None."""
+    # Albescent bypasses both the level and faction gates (its charter). The
+    # level gate is a separate axis; the faction decision routes through the
+    # single seam (ADR-0029, #171) — for non-Albescent it reduces to a slug match.
     if character.faction_slug == ALBESCENT_FACTION_SLUG:
         return None
     if character_level < era.metatask_apply_level:
@@ -1249,7 +1289,7 @@ def _check_metatask_eligibility(
             f"Must be level {era.metatask_apply_level} or above "
             "to apply metatasks."
         )
-    if character.faction_slug != task.metatask_faction_slug:
+    if not faction_permits(character, task, era):
         return (
             "This metatask belongs to a different faction. "
             "Only Albescent characters can apply any faction's metatask."

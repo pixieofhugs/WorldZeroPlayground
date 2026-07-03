@@ -6,11 +6,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from game_config import CURRENT_ERA, EraConfig
 from models.character import Character
-from models.faction import Faction, FactionStatus
 from models.praxis import Praxis, PraxisMember, PraxisStatus
 from models.task import Task, TaskStatus, TaskType
 from schemas.task import TaskCreate, TaskOut
 from services.era import get_current_era_row, get_or_create_stats
+from services.faction_service import hidden_faction_slugs
 from services.praxis import (
     active_member_task_ids_subquery,
     allowed_praxis_modes,
@@ -197,6 +197,7 @@ async def list_tasks(
     min_points: Optional[int] = None,
     max_points: Optional[int] = None,
     exclude_character_id: Optional[int] = None,
+    created_by: Optional[int] = None,
     task_type: Optional[str] = None,
     sort: Optional[str] = None,
     limit: int = 50,
@@ -210,13 +211,13 @@ async def list_tasks(
     ``sort='newest'`` orders by creation time (newest first); the default
     ordering surfaces the easiest, highest-value tasks first.
     """
-    # Collect hidden faction slugs to exclude their tasks
-    hidden_result = await session.execute(
-        select(Faction.slug).where(Faction.status != FactionStatus.visible)
-    )
-    hidden_slugs = [row[0] for row in hidden_result.all()]
+    # Collect hidden faction slugs to exclude their tasks (faction-rules seam, #171)
+    hidden_slugs = await hidden_faction_slugs(session)
 
     query = select(Task)
+
+    if created_by is not None:
+        query = query.where(Task.created_by == created_by)
 
     if status and status != "all":
         try:
@@ -224,7 +225,12 @@ async def list_tasks(
         except KeyError:
             raise HTTPException(status_code=422, detail=f"Invalid status: {status}")
     elif not status:
-        query = query.where(Task.status == TaskStatus.active)
+        if created_by is not None:
+            # Proposer's profile: show approved tasks (active + retired); pending
+            # rows are admin-review submissions and stay hidden from all viewers.
+            query = query.where(Task.status != TaskStatus.pending)
+        else:
+            query = query.where(Task.status == TaskStatus.active)
     # status == "all" -> no status filter, return tasks of every status
 
     # Task type filter — default (None) and "all" both return every task type.

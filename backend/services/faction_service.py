@@ -8,16 +8,67 @@ from game_config import CURRENT_ERA, EraConfig
 from models.account import Account
 from models.character import Character
 from models.character_stats import CharacterStats
-from models.faction import Faction
+from models.faction import Faction, FactionStatus
 from models.faction_defection_history import FactionDefectionHistory
 from models.invitation_letter import InvitationLetter
-from models.task import Task
+from models.task import Task, TaskType
 from schemas.faction import FactionUpdate
 from services.character import ALBESCENT_FACTION_SLUG, can_start_as_albescent
 from services.era import clear_defection_history_for_era, get_current_era_row, get_or_create_stats
 
 UA_FACTION_SLUG: str = "ua"
 UNAFFILIATED_FACTION_SLUG: str = "na"
+
+
+# ---------------------------------------------------------------------------
+# Faction gating — the single seam for "does a faction rule change this?" (#171)
+# ---------------------------------------------------------------------------
+
+
+def faction_permits(
+    character: Character,
+    task: Task,
+    era: EraConfig = CURRENT_ERA,
+) -> bool:
+    """The one home for every faction gate on acting on a task (ADR-0029).
+
+    Ask this predicate — never re-implement a faction check at a call site —
+    whenever a decision might be changed by the actor's or the task's faction.
+    A new faction rule is then a one-function edit that every caller inherits.
+
+    Today the only faction rule concerns metatasks:
+
+    * Standard tasks are faction-open — always permitted.
+    * A metatask requires the character's faction to match
+      ``task.metatask_faction_slug``, **except** Albescent characters, who may
+      act on any faction's metatask.
+
+    This is the *faction* axis only. Level gates, the task-bank cap, and
+    listing visibility (see :func:`hidden_faction_slugs`) are separate axes and
+    live elsewhere. If a future rule needs to vary by action (sign-up vs. vote
+    vs. flag), add an ``action`` parameter here — not a second predicate.
+    """
+    if task.task_type != TaskType.metatask:
+        return True
+    # Albescent's charter lets it act on any faction's metatask.
+    if character.faction_slug == ALBESCENT_FACTION_SLUG:
+        return True
+    if task.metatask_faction_slug is None:
+        return False
+    return character.faction_slug == task.metatask_faction_slug
+
+
+async def hidden_faction_slugs(session: AsyncSession) -> list[str]:
+    """Slugs of factions that are not ``visible`` (hidden/deprecated).
+
+    Listing visibility is a faction-*status* axis, not a per-character permit,
+    so it can't route through :func:`faction_permits`; it lives here so all
+    faction-rule knowledge still has one home. Task listings exclude these.
+    """
+    result = await session.execute(
+        select(Faction.slug).where(Faction.status != FactionStatus.visible)
+    )
+    return [row[0] for row in result.all()]
 
 
 # ---------------------------------------------------------------------------
