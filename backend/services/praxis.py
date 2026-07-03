@@ -405,6 +405,19 @@ async def list_praxes(
     return praxes
 
 
+def meets_task_level(character_level: int, task: Task) -> bool:
+    """Whether ``character_level`` clears the task's own level bar (#292).
+
+    The single home for the **task-level** gate — the "level half" that used to
+    be ANDed inline into :func:`is_task_eligible_for_character` and the sign-up
+    predicate. A distinct axis from :func:`~services.faction_service.faction_permits`
+    (the faction half, #171) and from the era-config thresholds
+    (collab/flag/comment/metatask-apply), which each already sit in their own
+    purpose-named predicate and share a single ``era.*`` source for their value.
+    """
+    return character_level >= task.level_required
+
+
 class SignupDenialReason(str, Enum):
     """Why the type-agnostic sign-up gates reject a claim (ADR-0008)."""
 
@@ -442,7 +455,7 @@ async def evaluate_signup(
     era_row = await get_current_era_row(session)
     stats = await get_or_create_stats(session, character.id, era_row.id)
 
-    if stats.level < task.level_required:
+    if not meets_task_level(stats.level, task):
         return SignupEligibility(False, SignupDenialReason.below_level)
 
     if task.status == TaskStatus.retired and character.faction_slug not in era.allow_praxis_on_retired_task_factions:
@@ -932,9 +945,9 @@ def is_task_eligible_for_character(
     """
     if character is None:
         return False
-    if character_level < task.level_required:
+    # Two named single-purpose gates, no bundled inline checks (#171, #292).
+    if not meets_task_level(character_level, task):
         return False
-    # Faction gating routes through the single seam (ADR-0029, #171).
     if not faction_permits(character, task):
         return False
     return True
