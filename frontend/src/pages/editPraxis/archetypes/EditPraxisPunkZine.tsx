@@ -53,19 +53,19 @@ const MODE_OPTIONS: Array<{
 }> = [
   {
     key: "solo",
-    label: "SOLO",
+    label: "LONE WOLF",
     desc: "just me",
     font: "'Permanent Marker', cursive",
   },
   {
     key: "collab",
-    label: "COLLAB",
+    label: "THE GANG",
     desc: "a gang of us",
     font: "'UnifrakturCook', serif",
   },
   {
     key: "duel",
-    label: "D U E L",
+    label: "BEEF",
     desc: "me v. them",
     font: "'Bebas Neue', sans-serif",
   },
@@ -186,6 +186,11 @@ export default function EditPraxisPunkZine({ state }: Props) {
           <div style={{ fontSize: 18, lineHeight: 1.25, marginTop: 6 }}>
             {praxis.task_title}
           </div>
+          {task?.description && (
+            <div style={{ fontSize: 12, lineHeight: 1.45, color: muted, marginTop: 6 }}>
+              {task.description}
+            </div>
+          )}
           <div style={{ marginTop: 8 }}>
             <TaskMetaInline
               praxis={praxis}
@@ -600,8 +605,8 @@ export default function EditPraxisPunkZine({ state }: Props) {
           <PublishButton
             state={state}
             skin={{
-              idleLabel: "xerox & staple",
-              busyLabel: "xeroxing...",
+              idleLabel: "FILE IT & RUN",
+              busyLabel: "running...",
               ornament: (
                 <span
                   aria-hidden

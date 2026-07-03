@@ -7,11 +7,18 @@ import { factionCssVar, factionName } from '../../utils/factions'
 import { mediaUrl } from '../../utils/media'
 import FeedBadge from '../feed/FeedBadge'
 import { useMyActiveTasks } from '../../hooks/useMyActiveTasks'
+import type { PraxisType } from '../../api/praxis'
 import { useMyCharacterStats } from '../../hooks/useMyCharacterStats'
 import { usePendingRequests } from '../../hooks/usePendingRequests'
 import { useGameConfig } from '../../hooks/useGameConfig'
 
 const DEFAULT_MAX_TASK_SLOTS = 20
+
+const PRAXIS_TYPE_LABEL: Record<PraxisType, string> = {
+  solo: 'Solo',
+  collab: 'Collab',
+  duel: 'Duel',
+}
 
 /**
  * Always-on right sidebar (Style Guide §4.2).
@@ -183,10 +190,7 @@ export default function Sidebar() {
                     {praxis.task_title}
                   </Link>
                 </div>
-                <FeedBadge
-                  type="global"
-                  label={praxis.type === 'collab' ? 'Collab' : praxis.type === 'duel' ? 'Duel' : 'Solo'}
-                />
+                <FeedBadge type="global" label={PRAXIS_TYPE_LABEL[praxis.type]} />
               </div>
             ))}
           </div>

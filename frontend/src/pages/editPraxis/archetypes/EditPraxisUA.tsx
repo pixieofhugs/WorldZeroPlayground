@@ -147,6 +147,11 @@ export default function EditPraxisUA({ state }: Props) {
                 <div style={{ fontFamily: DISPLAY, fontStyle: "italic", fontSize: 20, color: "var(--ua-ink)", lineHeight: 1.15, overflowWrap: "anywhere" }}>
                   {praxis.task_title}
                 </div>
+                {task?.description && (
+                  <div style={{ fontFamily: MONO, fontSize: 10, lineHeight: 1.45, color: "var(--ua-muted)", marginTop: 6, overflowWrap: "anywhere" }}>
+                    {task.description}
+                  </div>
+                )}
                 <div style={{ fontFamily: REGALIA, fontSize: 10, letterSpacing: "0.12em", color: "var(--ua-gold)", marginTop: 4 }}>
                   {praxis.task_point_value} pts
                 </div>

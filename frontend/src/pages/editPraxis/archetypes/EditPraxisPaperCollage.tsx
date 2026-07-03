@@ -34,8 +34,8 @@ interface Props {
 
 const MODE_OPTIONS: Array<{ key: PraxisType; label: string; desc: string }> = [
   { key: "solo", label: "solo", desc: "one set of footprints" },
-  { key: "collab", label: "collab", desc: "in step with others" },
-  { key: "duel", label: "duel", desc: "two paths, one prize" },
+  { key: "collab", label: "w/ friends", desc: "in step with others" },
+  { key: "duel", label: "witch duel", desc: "two paths, one prize" },
 ];
 
 /* ───────── sticker + ivy atoms (inlined from the redesign kit) ───────── */
@@ -388,6 +388,11 @@ export default function EditPraxisPaperCollage({ state }: Props) {
               >
                 {praxis.task_title}
               </div>
+              {task?.description && (
+                <div style={{ fontFamily: cardFont, fontSize: 13, lineHeight: 1.5, color: muted, marginBottom: 8 }}>
+                  {task.description}
+                </div>
+              )}
               <TaskMetaInline praxis={praxis} task={task} textColor={pinkDeep} />
             </div>
 
@@ -697,8 +702,8 @@ export default function EditPraxisPaperCollage({ state }: Props) {
                   ornament: (
                     <Sparkle size={12} color="var(--color-text-on-accent)" />
                   ),
-                  idleLabel: "publish",
-                  busyLabel: "publishing...",
+                  idleLabel: "cast it into the world",
+                  busyLabel: "casting...",
                   style: {
                     display: "inline-flex",
                     alignItems: "center",

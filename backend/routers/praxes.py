@@ -79,7 +79,6 @@ router = APIRouter()
 async def list_praxes_route(
     task_id: Optional[int] = None,
     character_id: Optional[int] = None,
-    member_of: Optional[int] = None,
     type: Optional[str] = None,
     status: Optional[str] = None,
     moderation_status: Optional[str] = None,
@@ -108,7 +107,6 @@ async def list_praxes_route(
         session=session,
         task_id=task_id,
         character_id=character_id,
-        member_of=member_of,
         praxis_type=praxis_type,
         status=praxis_status,
         moderation_status=moderation_status,

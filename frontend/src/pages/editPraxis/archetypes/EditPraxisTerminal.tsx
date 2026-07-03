@@ -28,10 +28,10 @@ const MODE_OPTIONS: Array<{ key: PraxisType; flag: string; desc: string }> = [
   { key: "solo", flag: "--solo", desc: "one author. all credit accrues." },
   {
     key: "collab",
-    flag: "--collab",
+    flag: "--networked",
     desc: "fork. multiple authors. all earn full pts.",
   },
-  { key: "duel", flag: "--duel", desc: "pvp. winner-take-all on vote median." },
+  { key: "duel", flag: "--adversarial", desc: "pvp. winner-take-all on vote median." },
 ];
 
 export default function EditPraxisTerminal({ state }: Props) {
@@ -175,6 +175,12 @@ export default function EditPraxisTerminal({ state }: Props) {
               <span style={{ color: dim }}>&gt; </span>
               {praxis.task_title}
             </div>
+            {task?.description && (
+              <div style={{ fontSize: 12, color: dim, lineHeight: 1.5, marginTop: 6, whiteSpace: "pre-wrap" }}>
+                <span style={{ color: accent }}># </span>
+                {task.description}
+              </div>
+            )}
             <div
               style={{
                 display: "flex",
@@ -629,8 +635,8 @@ export default function EditPraxisTerminal({ state }: Props) {
           <PublishButton
             state={state}
             skin={{
-              idleLabel: '$ git commit -m "publish"',
-              busyLabel: "$ committing...",
+              idleLabel: "SEAL & TRANSMIT",
+              busyLabel: "$ transmitting...",
               ornament: (
                 <span
                   aria-hidden

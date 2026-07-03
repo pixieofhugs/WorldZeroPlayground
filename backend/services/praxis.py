@@ -301,7 +301,6 @@ async def list_praxes(
     *,
     task_id: Optional[int] = None,
     character_id: Optional[int] = None,
-    member_of: Optional[int] = None,
     praxis_type: Optional[PraxisType] = None,
     status: Optional[PraxisStatus] = None,
     moderation_status: Optional[str] = None,
@@ -315,11 +314,6 @@ async def list_praxes(
 
     ``in_progress`` praxes are member-only (ADR-0024): pass ``viewer_id`` to
     include the viewer's own drafts; everyone else sees only ``submitted``.
-
-    ``character_id`` matches the *creator* (authored lists, e.g. a character's
-    profile). ``member_of`` matches any :class:`PraxisMember`, including
-    invitees who joined a collab — use it for "this character's active
-    drafts" views, where co-owners must see a shared praxis too.
     """
     query = select(Praxis).where(praxis_visibility_condition(viewer_id))
 
@@ -345,13 +339,20 @@ async def list_praxes(
         query = query.where(Praxis.task_id == task_id)
 
     if character_id is not None:
-        query = query.where(Praxis.created_by_id == character_id)
-
-    if member_of is not None:
-        member_praxis_ids = select(PraxisMember.praxis_id).where(
-            PraxisMember.character_id == member_of
-        )
-        query = query.where(Praxis.id.in_(member_praxis_ids))
+        if status == PraxisStatus.in_progress:
+            # ADR-0013: in-progress praxes are co-owned; surface any member's
+            # active draft, not just the creator's (bank cap already counts
+            # memberships — see _count_in_progress_praxes). Published/authored
+            # lists keep creator semantics below.
+            query = query.where(
+                Praxis.id.in_(
+                    select(PraxisMember.praxis_id).where(
+                        PraxisMember.character_id == character_id
+                    )
+                )
+            )
+        else:
+            query = query.where(Praxis.created_by_id == character_id)
 
     if status is not None:
         query = query.where(Praxis.status == status)

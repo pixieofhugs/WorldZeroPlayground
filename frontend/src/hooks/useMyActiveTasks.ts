@@ -3,9 +3,7 @@ import { listPraxes, type PraxisCardOut } from '../api/praxis'
 import { useAuth } from '../auth/AuthContext'
 
 /**
- * Hook to fetch the current character's in-progress praxes — anything they're
- * a member of, not just ones they created, so a joined collab draft shows up
- * for every co-owner (ADR-0013).
+ * Hook to fetch the current character's in-progress praxes.
  * Re-fetches when the authenticated user changes.
  */
 export function useMyActiveTasks() {
@@ -20,7 +18,7 @@ export function useMyActiveTasks() {
       return
     }
     setLoading(true)
-    listPraxes({ member_of: user.character.id, status: 'in_progress' })
+    listPraxes({ character_id: user.character.id, status: 'in_progress' })
       .then((praxes) => setActiveTasks(praxes))
       .catch(() => {})
       .finally(() => setLoading(false))

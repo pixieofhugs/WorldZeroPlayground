@@ -296,6 +296,11 @@ export default function EditPraxisEverymen({ state }: Props) {
             >
               {praxis.task_title}
             </div>
+            {task?.description && (
+              <div style={{ fontFamily: ACCENT_FONT, fontSize: 13, lineHeight: 1.5, color: MUTED, marginBottom: 8 }}>
+                {task.description}
+              </div>
+            )}
             <TaskMetaInline praxis={praxis} task={task} textColor={RED} />
           </div>
         </div>

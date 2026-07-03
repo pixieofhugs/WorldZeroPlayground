@@ -170,6 +170,11 @@ export default function EditPraxisStickyNote({ state }: Props) {
             </span>
             {praxis.task_title}
           </div>
+          {task?.description && (
+            <div style={{ fontSize: 12, lineHeight: 1.5, color: SLATE, marginTop: 8 }}>
+              {task.description}
+            </div>
+          )}
           <div style={{ marginTop: 8 }}>
             <TaskMetaInline praxis={praxis} task={task} textColor={SLATE} />
           </div>

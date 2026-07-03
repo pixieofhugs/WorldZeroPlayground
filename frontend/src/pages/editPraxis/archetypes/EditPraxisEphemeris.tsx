@@ -171,6 +171,11 @@ export default function EditPraxisEphemeris({ state }: Props) {
             <div style={{ fontFamily: "var(--eph-display)", fontWeight: 700, fontSize: 30, lineHeight: 0.96, color: TEXT }}>
               <LapisLastWord text={praxis.task_title} />
             </div>
+            {task?.description && (
+              <div style={{ fontSize: 11, fontStyle: "italic", lineHeight: 1.5, color: MUTED, marginTop: 8 }}>
+                {task.description}
+              </div>
+            )}
             <div style={{ display: "flex", alignItems: "center", gap: 12, marginTop: 8, flexWrap: "wrap" }}>
               <span style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 9.5, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--eph-lapis)", fontWeight: 600 }}>
                 <EphMark size={12} color="var(--eph-lapis)" /> Ephemerists
