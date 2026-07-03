@@ -1,0 +1,63 @@
+{
+  "_doc": "World Zero — canonical JOIN / recruitment data contract. The full-surface enlistment screen ('Choose Your Faction') renders from ONE object of this shape per faction. Faction-agnostic: every faction returns the same keys; all per-faction decoration (ransom cut-letters, whimsy stickers, gilt frames, terminal glyphs) is derived CLIENT-SIDE from `slug`, never stored here. This is the FULL recruitment surface — distinct from the in-page join block on the faction page (that uses faction-contract.json's `viewer`, and shares the SAME `viewer` sub-shape as below so one resolver serves both). Example values are the Warriors of Whimsy instance.",
+
+  "slug": "wow",
+  "name": "Warriors of Whimsy",
+  "archetype": "whimsy.exe",
+
+  "recruit": {
+    "_doc": "The recruitment pitch — all copy is faction-authored, in-voice (like faction-contract.json's `requirement`/`membership`), NOT generic backend strings. `kicker` = small overline. `headline` = the big call to enlist. `pitch` = 1–2 sentences of why. `terms` = the abbreviated 'what you're signing up for' facts (label/value pairs, shown as a slip/ledger). `perks` = short bullets of what a member gets. `cta` labels the enlist button in both states.",
+    "kicker": "the circle is recruiting",
+    "headline": "Come be a little magic",
+    "pitch": "Warriors of Whimsy is World Zero's coven for the soft and the strange. No spectators here — only witches mid-spell. Take a quest, do the tiny brave thing, and let the circle cheer you on.",
+    "terms": [
+      { "label": "membership fee", "value": "one act of everyday magic" },
+      { "label": "required skills", "value": "none — only nerve" },
+      { "label": "expected output", "value": "small, brave, strange things" },
+      { "label": "season rank", "value": "#3 and rising ✦" }
+    ],
+    "perks": [
+      "A coven that cheers every tiny victory",
+      "Quests that make a Tuesday enchanted",
+      "Your praxis, sealed and hearted by the circle"
+    ],
+    "cta": { "join": "Join the coven ✦", "joined": "✦ welcome home, witch" }
+  },
+
+  "viewer": {
+    "_doc": "Who is looking — the SAME sub-shape as faction-contract.json's `viewer`, so one client resolver drives both the in-page join block and this full screen. `state` = 'prospective' | 'member'. When prospective + eligible → the enlist CTA is live. When prospective + !eligible → the `requirement` gate shows a soft, encouraging path (never a dead-end). When member → a 'you're already in' confirmation + a keep-tasking nudge replace the CTA.",
+    "state": "prospective",
+    "eligible": true,
+    "requirement": {
+      "_doc": "Only meaningful when state=prospective && eligible=false. `have`/`needed` render a progress bar; `summary` is the headline, `detail` the encouragement.",
+      "summary": "Two quests away from an invitation",
+      "detail": "Complete 2 more whimsy quests and the circle opens. Keep going — the magic is in the doing.",
+      "have": 6,
+      "needed": 8,
+      "unit": "quests done"
+    }
+  },
+
+  "social": {
+    "_doc": "Optional social proof for the recruitment surface. `memberCount` is the headline number; `recentJoiners` are the last few names/initials to enlist (avatar chips). Purely presentational — safe to omit.",
+    "memberCount": 2418,
+    "recentJoiners": [
+      { "name": "Willow", "initial": "W" },
+      { "name": "Cricket", "initial": "C" },
+      { "name": "B4ndit", "initial": "B" }
+    ]
+  },
+
+  "factions": {
+    "_doc": "SHARED / GLOBAL list, NOT per-faction data — the roster the enlistment chooser rail renders so a prospect can switch which faction's poster they're viewing. Same list for every faction's join screen. `current` marks the one whose recruitment surface is showing.",
+    "_items": [
+      { "slug": "ua",          "name": "UA",                 "color": "#c2541f", "tagline": "the gilt salon" },
+      { "slug": "wow",         "name": "Warriors of Whimsy", "color": "#be185d", "tagline": "a little magic", "current": true },
+      { "slug": "snide",       "name": "S.N.I.D.E.",         "color": "#16a34a", "tagline": "gleeful disorder" },
+      { "slug": "ephemerists", "name": "The Ephemerists",    "color": "#1d6e72", "tagline": "the long road" },
+      { "slug": "singularity", "name": "Singularity",        "color": "#2563eb", "tagline": "the signal" },
+      { "slug": "everymen",    "name": "The Everymen",       "color": "#c1272d", "tagline": "the common good" },
+      { "slug": "albescent",   "name": "Albescent",          "color": "#1c1c1a", "tagline": "quiet witness" }
+    ]
+  }
+}

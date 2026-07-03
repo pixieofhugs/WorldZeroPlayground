@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="../../styles.css">
+<script src="../../_ds_bundle.js"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; }
+  html, body { margin: 0; }
+  body { background: #f4f3f0; }
+  a { color: inherit; text-decoration: none; }
+  .al-link:hover { color: #1c1c1a !important; }
+  .al-body p { font-family:'Cormorant Garamond',serif; font-size:20px; line-height:1.62; color:#2a2a27; margin:0 0 16px; }
+  .al-body p:last-child { margin-bottom:0; }
+  .al-body em { font-style:italic; color:#1c1c1a; }
+  .al-body a { color:#1c1c1a; border-bottom:1px solid rgba(28,28,26,0.4); }
+</style>
+</helmet>
+
+<div style="min-height:100vh;font-family:'Courier Prime',monospace;color:#1c1c1a;position:relative;background:#f4f3f0;">
+
+  <!-- NAV -->
+  <nav style="position:relative;z-index:10;display:flex;align-items:center;gap:30px;padding:16px 40px;background:rgba(244,243,240,0.88);backdrop-filter:blur(8px);border-bottom:1px solid rgba(0,0,0,0.08);">
+    <span style="font-family:'Lora',serif;font-style:italic;font-weight:600;font-size:25px;line-height:1;border-bottom:3px solid;border-image:linear-gradient(90deg,#fbbf24,#be185d,#4f46e5,#0e7490,#16a34a,#f97316) 1;padding-bottom:2px;">World Zero</span>
+    <div style="display:flex;gap:22px;flex:1;">
+      <a class="al-link" href="#" style="font-size:11px;letter-spacing:0.13em;text-transform:uppercase;color:rgba(28,28,26,0.45);">Tasks</a>
+      <a class="al-link" href="#" style="font-size:11px;letter-spacing:0.13em;text-transform:uppercase;color:#1c1c1a;border-bottom:2px solid #1c1c1a;padding-bottom:2px;">Correspondence</a>
+      <a class="al-link" href="#" style="font-size:11px;letter-spacing:0.13em;text-transform:uppercase;color:rgba(28,28,26,0.45);">Praxes</a>
+      <a class="al-link" href="#" style="font-size:11px;letter-spacing:0.13em;text-transform:uppercase;color:rgba(28,28,26,0.45);">Register</a>
+    </div>
+    <span style="display:inline-flex;align-items:center;gap:8px;font-family:'Cormorant Garamond',serif;font-style:italic;font-size:14px;letter-spacing:0.04em;color:rgba(28,28,26,0.6);">— admitted, in confidence</span>
+  </nav>
+
+  <!-- PAGE -->
+  <div style="position:relative;z-index:5;max-width:880px;margin:0 auto;padding:26px 40px 96px;">
+    <div style="font-size:10px;letter-spacing:0.16em;text-transform:uppercase;color:rgba(28,28,26,0.4);margin-bottom:24px;">
+      <a class="al-link" href="#">Tasks</a><span style="opacity:0.5;margin:0 8px;">/</span><span>Albescent</span><span style="opacity:0.5;margin:0 8px;">/</span><span style="color:#1c1c1a;">{{ task.title }}</span>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:34px;">
+
+      <!-- HERO — the letter -->
+      <div style="background:#fdfdfc;border:1px solid rgba(0,0,0,0.1);box-shadow:0 2px 24px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.04);padding:54px 60px 48px;text-align:center;">
+        <div style="display:flex;justify-content:center;margin-bottom:24px;">
+          <svg width="44" height="44" viewBox="0 0 44 44" fill="none">
+            <circle cx="22" cy="22" r="19" stroke="#1c1c1a" stroke-width="1" opacity="0.18"/>
+            <circle cx="22" cy="22" r="10.3" stroke="#1c1c1a" stroke-width="1.7" opacity="0.5"/>
+            <line x1="32.3" y1="22" x2="38" y2="22" stroke="#1c1c1a" stroke-width="1.7"/>
+            <line x1="6" y1="22" x2="11.7" y2="22" stroke="#1c1c1a" stroke-width="1.7"/>
+            <line x1="22" y1="32.3" x2="22" y2="38" stroke="#1c1c1a" stroke-width="1.7"/>
+            <line x1="22" y1="6" x2="22" y2="11.7" stroke="#1c1c1a" stroke-width="1.7"/>
+            <circle cx="22" cy="22" r="1.9" fill="#1c1c1a"/>
+          </svg>
+        </div>
+        <div style="font-size:9px;letter-spacing:0.34em;text-transform:uppercase;color:rgba(28,28,26,0.45);margin-bottom:6px;">Albescent</div>
+        <div style="font-size:8px;letter-spacing:0.28em;text-transform:uppercase;color:rgba(28,28,26,0.3);margin-bottom:26px;">Correspondence №{{ task.no }} · in confidence</div>
+        <div style="width:54px;height:1px;background:rgba(0,0,0,0.12);margin:0 auto 26px;"></div>
+        <h1 style="font-family:'Cormorant Garamond',serif;font-style:italic;font-weight:500;font-size:46px;line-height:1.16;color:#1c1c1a;margin:0 auto 22px;max-width:560px;overflow-wrap:anywhere;">{{ task.title }}</h1>
+        <div style="width:54px;height:1px;background:rgba(0,0,0,0.12);margin:0 auto 28px;"></div>
+        <div style="display:flex;justify-content:center;gap:48px;flex-wrap:wrap;">
+          <div>
+            <div style="font-size:8px;letter-spacing:0.22em;text-transform:uppercase;color:rgba(28,28,26,0.4);margin-bottom:6px;">Standing</div>
+            <div style="font-family:'Cormorant Garamond',serif;font-style:italic;font-size:22px;color:#1c1c1a;">Lvl {{ task.level }}</div>
+          </div>
+          <div style="border-left:1px solid rgba(0,0,0,0.1);"></div>
+          <div>
+            <div style="font-size:8px;letter-spacing:0.22em;text-transform:uppercase;color:rgba(28,28,26,0.4);margin-bottom:6px;">Worth</div>
+            <div style="font-family:'Cormorant Garamond',serif;font-style:italic;font-size:22px;color:#1c1c1a;">{{ task.points }} pts</div>
+          </div>
+          <div style="border-left:1px solid rgba(0,0,0,0.1);"></div>
+          <div>
+            <div style="font-size:8px;letter-spacing:0.22em;text-transform:uppercase;color:rgba(28,28,26,0.4);margin-bottom:6px;">Witnessed</div>
+            <div style="font-family:'Cormorant Garamond',serif;font-style:italic;font-size:22px;color:#1c1c1a;">31 times</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CTA bar -->
+      <div style="display:flex;align-items:center;gap:18px;flex-wrap:wrap;background:#fdfdfc;border:1px solid rgba(0,0,0,0.1);box-shadow:0 1px 3px rgba(0,0,0,0.04);padding:16px 22px;">
+        <sc-if value="{{ notSigned }}" hint-placeholder-val="{{ true }}"><button onClick="{{ onSign }}" style="cursor:pointer;font-family:'Courier Prime',monospace;font-size:9px;letter-spacing:0.22em;text-transform:uppercase;color:#1c1c1a;background:transparent;border:1px solid #1c1c1a;padding:13px 26px;">Acknowledge</button></sc-if><sc-if value="{{ signed }}" hint-placeholder-val="{{ false }}"><button onClick="{{ onSign }}" style="cursor:pointer;font-family:'Courier Prime',monospace;font-size:9px;letter-spacing:0.22em;text-transform:uppercase;color:#fdfdfc;background:#1c1c1a;border:1px solid #1c1c1a;padding:13px 26px;">✓ Taken in confidence</button></sc-if>
+        <div style="font-family:'Cormorant Garamond',serif;font-style:italic;font-size:15px;color:rgba(28,28,26,0.55);">{{ signNote }}</div>
+        <div style="margin-left:auto;font-size:8px;letter-spacing:0.18em;text-transform:uppercase;color:rgba(28,28,26,0.4);">44 taken · 31 inscribed · 4.3 credence</div>
+      </div>
+
+      <!-- THE ASK (user-written body) -->
+      <div>
+        <div style="display:flex;align-items:center;gap:14px;margin-bottom:16px;">
+          <h2 style="font-family:'Cormorant Garamond',serif;font-style:italic;font-weight:600;font-size:22px;margin:0;color:#1c1c1a;white-space:nowrap;">The Ask</h2>
+          <span style="flex:1;height:1px;background:rgba(0,0,0,0.08);"></span>
+          <span style="font-family:'Cormorant Garamond',serif;font-style:italic;font-size:13px;color:rgba(28,28,26,0.45);">in the hand of The Archivist</span>
+        </div>
+        <div class="al-body" style="background:#fdfdfc;border:1px solid rgba(0,0,0,0.1);box-shadow:0 1px 3px rgba(0,0,0,0.04);padding:34px 40px;max-width:640px;">
+          <p>Spend one ordinary day attending to a single small thing the world has agreed not to see — the way a stranger holds a door a half-second too long, a repair someone made and never mentioned, a kindness performed for <em>no audience</em>.</p>
+          <p>Choose nothing in advance; let the day present the thing to you. When you notice it, stay with it a moment longer than is comfortable. Then write it down in the fewest words that keep it true.</p>
+          <p>Inscribe it in the register, unsigned. Claim nothing. To witness is enough — that is the whole of the practice. <a href="#">— the full correspondence ↗</a></p>
+        </div>
+      </div>
+
+      <!-- THE REGISTER (completions) -->
+      <div>
+        <div style="display:flex;align-items:center;gap:14px;margin-bottom:20px;">
+          <h2 style="font-family:'Cormorant Garamond',serif;font-style:italic;font-weight:600;font-size:22px;margin:0;color:#1c1c1a;white-space:nowrap;">Inscribed in the Register</h2>
+          <span style="flex:1;height:1px;background:rgba(0,0,0,0.08);"></span>
+          <span style="font-family:'Cormorant Garamond',serif;font-style:italic;font-size:13px;color:rgba(28,28,26,0.45);">{{ praxisCount }} accounts returned</span>
+        </div>
+        <div style="display:flex;flex-wrap:wrap;gap:30px 24px;align-items:flex-start;">
+          <sc-for list="{{ praxis }}" as="p" hint-placeholder-count="3">
+            <div style="position:relative;padding-top:22px;">
+              <sc-if value="{{ p.top }}" hint-placeholder-val="{{ true }}">
+                <div style="position:absolute;top:0;left:50%;transform:translateX(-50%);z-index:3;display:inline-flex;align-items:center;gap:6px;white-space:nowrap;background:#1c1c1a;color:#fdfdfc;font-family:'Cormorant Garamond',serif;font-style:italic;font-size:13px;letter-spacing:0.04em;padding:3px 14px;"><span style="font-size:13px;line-height:1;">⚜</span> most witnessed</div>
+              </sc-if>
+              <x-import component-from-global-scope="WorldZeroDesignSystem_019e22.FactionPraxisCard" faction="albescent" dc-props="{{ p }}" hint-size="224px,240px"></x-import>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+
+      <!-- THE REGISTER SPEAKS (discussion) -->
+      <div>
+        <div style="display:flex;align-items:center;gap:14px;margin-bottom:20px;">
+          <h2 style="font-family:'Cormorant Garamond',serif;font-style:italic;font-weight:600;font-size:22px;margin:0;color:#1c1c1a;white-space:nowrap;">In the Margin</h2>
+          <span style="flex:1;height:1px;background:rgba(0,0,0,0.08);"></span>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:18px;max-width:680px;">
+          <sc-for list="{{ comments }}" as="c" hint-placeholder-count="2">
+            <x-import component-from-global-scope="WorldZeroDesignSystem_019e22.FactionCommentBox" faction="albescent" dc-props="{{ c }}" hint-size="100%,86px"></x-import>
+          </sc-for>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<template id="__bundler_thumbnail"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200"><rect width="200" height="200" fill="#e8e6e1"/><circle cx="100" cy="100" r="34" fill="none" stroke="#1c1c1a" stroke-width="5"/><line x1="100" y1="50" x2="100" y2="66" stroke="#1c1c1a" stroke-width="5"/><line x1="100" y1="134" x2="100" y2="150" stroke="#1c1c1a" stroke-width="5"/><line x1="50" y1="100" x2="66" y2="100" stroke="#1c1c1a" stroke-width="5"/><line x1="134" y1="100" x2="150" y2="100" stroke="#1c1c1a" stroke-width="5"/><circle cx="100" cy="100" r="6" fill="#1c1c1a"/></svg></template></x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { signed: false };
+
+  avatar(seed) {
+    const svg = '<svg xmlns="http://www.w3.org/2000/svg" width="80" height="80"><rect width="80" height="80" fill="#e8e6e1"/><text x="50%" y="60%" font-size="30" text-anchor="middle" fill="#1c1c1a" font-family="Georgia,serif" font-style="italic">' + seed + '</text></svg>';
+    return 'data:image/svg+xml;utf8,' + encodeURIComponent(svg);
+  }
+
+  markTop(list) {
+    let bi = 0;
+    list.forEach((p, i) => { if (p.rating > list[bi].rating) bi = i; });
+    return list.map((p, i) => ({ ...p, top: i === bi }));
+  }
+
+  renderVals() {
+    const signed = this.state.signed;
+    const praxis = this.markTop([
+      { task: "Notice What No One Did", finding: "The parking meter", author: "The Archivist", excerpt: "A man refilled a stranger's meter and walked on without looking back. I was the only one who saw.", rating: 5, marks: 26, points: 35, level: 3 },
+      { task: "Notice What No One Did", finding: "The mended fence", author: "M.", excerpt: "Someone repaired the gap in the school fence overnight. No note, no name. Children pass through it daily.", rating: 4, marks: 14, points: 35, level: 3 },
+      { task: "Notice What No One Did", finding: "The held elevator", author: "A Witness", excerpt: "She held the door for a man still three floors away, by the stairs. He never knew she waited.", rating: 4, marks: 11, points: 35, level: 3 },
+    ]);
+    return {
+      task: { title: "Notice What No One Else Did", no: "0089", points: 35, level: 3 },
+      praxis,
+      praxisCount: praxis.length,
+      comments: [
+        { name: "The Archivist", meta: "proposed · 3w ago", body: "I watched a man refill a stranger's parking meter and walk on without looking back. @Quietly is right — some things are diminished by being told.", avatar: this.avatar("A") },
+        { name: "Quietly", meta: "2d ago", body: "And yet here we are, telling. Gently. Only to each other.", avatar: this.avatar("Q") },
+      ],
+      signed,
+      signLabel: signed ? "✓ Taken in confidence" : "Acknowledge",
+      signBg: signed ? "#1c1c1a" : "transparent",
+      signColor: signed ? "#fdfdfc" : "#1c1c1a",
+      signNote: signed ? "you carry it now. quietly." : "no portfolio. no announcement.",
+      notSigned: !signed,
+      onSign: () => this.setState((s) => ({ signed: !s.signed })),
+    };
+  }
+}
+</script>
+</body>
+</html>

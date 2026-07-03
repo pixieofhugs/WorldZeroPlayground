@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400;1,500&family=Courier+Prime:ital,wght@0,400;0,700;1,400&family=Lora:ital,wght@1,400;1,700&display=swap" rel="stylesheet">
+<script src="./ds-base.js"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #f7f4ee; }
+  a { color: inherit; text-decoration: none; }
+  ::selection { background: rgba(28,28,26,0.10); }
+  input::placeholder, textarea::placeholder { color: rgba(28,28,26,0.26); font-style: italic; }
+  input:focus, textarea:focus { border-color: rgba(28,28,26,0.5) !important; }
+</style>
+</helmet>
+
+<svg width="0" height="0" style="position:absolute;" aria-hidden="true">
+  <symbol id="al-mark" viewBox="0 0 20 20">
+    <circle cx="10" cy="10" r="8.6" fill="none" stroke="#1c1c1a" stroke-width="0.44" opacity="0.18"/>
+    <circle cx="10" cy="10" r="4.7" fill="none" stroke="#1c1c1a" stroke-width="0.76" opacity="0.5"/>
+    <line x1="15.2" y1="10" x2="17.8" y2="10" stroke="#1c1c1a" stroke-width="0.76"/>
+    <line x1="10" y1="15.2" x2="10" y2="17.8" stroke="#1c1c1a" stroke-width="0.76"/>
+    <line x1="4.8" y1="10" x2="2.2" y2="10" stroke="#1c1c1a" stroke-width="0.76"/>
+    <line x1="10" y1="4.8" x2="10" y2="2.2" stroke="#1c1c1a" stroke-width="0.76"/>
+    <circle cx="10" cy="10" r="0.88" fill="#1c1c1a"/>
+  </symbol>
+</svg>
+
+<div style="min-height:100vh;background-color:#f7f4ee;background-image:radial-gradient(ellipse 72% 58% at 50% 38%, rgba(255,255,255,0.58) 0%, transparent 100%), repeating-linear-gradient(to bottom, transparent 0 27px, rgba(0,0,0,0.016) 27px 28px);font-family:'Courier Prime',monospace;color:#1c1c1a;">
+
+  <!-- NAV -->
+  <nav style="position:relative;z-index:10;display:flex;align-items:center;gap:28px;padding:14px 32px;background:rgba(247,244,238,0.92);backdrop-filter:blur(8px);border-bottom:1px solid rgba(0,0,0,0.055);">
+    <span style="font-family:'Lora',Georgia,serif;font-style:italic;font-weight:700;font-size:22px;line-height:1;border-bottom:3px solid;padding-bottom:2px;border-image:linear-gradient(90deg,#fbbf24,#be185d,#4f46e5,#0e7490,#16a34a,#f97316) 1;">World Zero</span>
+    <div style="display:flex;gap:20px;flex:1;">
+      <a href="#" style="font-family:'Courier Prime',monospace;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:rgba(28,28,26,0.35);">Home</a>
+      <a href="#" style="font-family:'Courier Prime',monospace;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:rgba(28,28,26,0.35);">Tasks</a>
+      <a href="#" style="font-family:'Courier Prime',monospace;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:rgba(28,28,26,0.72);border-bottom:1px solid rgba(28,28,26,0.42);padding-bottom:3px;">The Register</a>
+      <a href="#" style="font-family:'Courier Prime',monospace;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:rgba(28,28,26,0.35);">Players</a>
+      <a href="#" style="font-family:'Courier Prime',monospace;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:rgba(28,28,26,0.35);">Factions</a>
+    </div>
+    <div style="display:flex;align-items:center;gap:14px;font-family:'Courier Prime',monospace;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:rgba(28,28,26,0.35);">
+      <span style="border:1px solid rgba(0,0,0,0.10);padding:5px 11px;">Keeper Vane</span>
+      <span style="border:1px solid rgba(0,0,0,0.10);padding:5px 11px;cursor:pointer;">Leave</span>
+    </div>
+  </nav>
+
+  <!-- BREADCRUMBS -->
+  <div style="position:relative;z-index:5;max-width:780px;margin:0 auto;padding:20px 32px 0;font-family:'Courier Prime',monospace;font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:rgba(28,28,26,0.28);">
+    <a href="#">The Register</a> &nbsp;/&nbsp; <a href="#">Tend the Archive in Silence</a> &nbsp;/&nbsp; <span style="color:rgba(28,28,26,0.55);">File an Account</span>
+  </div>
+
+  <!-- SHEET -->
+  <div style="position:relative;z-index:5;max-width:780px;margin:0 auto;padding:22px 32px 90px;">
+    <div style="position:relative;background:#ffffff;border:1px solid rgba(0,0,0,0.10);box-shadow:0 2px 18px rgba(0,0,0,0.055),0 1px 3px rgba(0,0,0,0.04);padding:40px 46px 44px;">
+      <div style="position:absolute;inset:6px;border:1px solid rgba(0,0,0,0.055);pointer-events:none;"></div>
+
+      <!-- masthead -->
+      <div style="position:relative;display:flex;align-items:center;justify-content:space-between;gap:14px;padding-bottom:18px;border-bottom:1px solid rgba(0,0,0,0.07);">
+        <span style="display:inline-flex;align-items:center;gap:9px;font-family:'Courier Prime',monospace;font-size:8.5px;letter-spacing:.24em;text-transform:uppercase;color:rgba(28,28,26,0.3);">
+          <svg viewBox="0 0 20 20" style="width:13px;height:13px;display:block;"><use href="#al-mark"></use></svg>
+          Albescent · Account № XV
+        </span>
+        <span style="font-family:'Courier Prime',monospace;font-size:7.5px;letter-spacing:.16em;text-transform:uppercase;color:rgba(28,28,26,0.26);border-bottom:1px solid rgba(28,28,26,0.18);padding-bottom:1px;">unfiled draft</span>
+      </div>
+
+      <!-- title -->
+      <h1 style="position:relative;font-family:'Cormorant Garamond',serif;font-style:italic;font-weight:300;font-size:62px;line-height:1.0;color:#1c1c1a;margin:26px 0 8px;">File an Account</h1>
+      <p style="position:relative;font-family:'Cormorant Garamond',serif;font-style:italic;font-weight:300;font-size:16px;line-height:1.5;color:rgba(28,28,26,0.5);max-width:480px;margin-bottom:30px;">A returned task is entered into the Register as a plain account — no more than was done. The keepers will bear witness; you need not persuade them.</p>
+
+      <!-- reference slip -->
+      <div style="position:relative;display:flex;gap:16px;align-items:center;border:1px solid rgba(0,0,0,0.07);background:#faf9f7;padding:15px 18px;margin-bottom:34px;">
+        <svg viewBox="0 0 20 20" style="width:38px;height:38px;flex-shrink:0;"><use href="#al-mark"></use></svg>
+        <div style="flex:1;min-width:0;">
+          <div style="font-family:'Courier Prime',monospace;font-size:7.5px;letter-spacing:.2em;text-transform:uppercase;color:rgba(28,28,26,0.3);margin-bottom:5px;">Returning · Ref. XV</div>
+          <div style="font-family:'Cormorant Garamond',serif;font-style:italic;font-weight:400;font-size:24px;line-height:1.05;color:#1c1c1a;margin-bottom:7px;">Tend the Archive in Silence</div>
+          <div style="display:flex;align-items:center;gap:14px;font-family:'Courier Prime',monospace;font-size:8px;letter-spacing:.08em;color:rgba(28,28,26,0.4);">
+            <span>Third House</span>
+            <span style="color:rgba(28,28,26,0.18);">·</span>
+            <span>40 pts on return</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- THE MANNER -->
+      <div style="position:relative;margin-bottom:32px;">
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:13px;">
+          <span style="font-family:'Courier Prime',monospace;font-size:8px;letter-spacing:.26em;text-transform:uppercase;color:rgba(28,28,26,0.3);white-space:nowrap;">The Manner</span>
+          <span style="font-family:'Cormorant Garamond',serif;font-style:italic;font-size:13px;color:rgba(28,28,26,0.4);white-space:nowrap;">how was it attended?</span>
+          <span style="flex:1;height:1px;background:rgba(0,0,0,0.07);"></span>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;">
+          <sc-for list="{{ manners }}" as="m" hint-placeholder-count="3">
+            <sc-if value="{{ m.on }}" hint-placeholder-val="{{ false }}"><button onClick="{{ m.onClick }}" style="cursor:pointer;text-align:left;padding:14px 16px;background:#1c1c1a;color:#f7f4ee;border:1px solid #1c1c1a;transition:all 160ms;width:100%;">
+              <div style="font-family:'Cormorant Garamond',serif;font-style:italic;font-weight:400;font-size:22px;line-height:1;">{{ m.name }}</div>
+              <div style="font-family:'Courier Prime',monospace;font-size:7.5px;letter-spacing:.06em;margin-top:6px;opacity:.7;">{{ m.sub }}</div>
+            </button></sc-if>
+            <sc-if value="{{ m.off }}" hint-placeholder-val="{{ true }}"><button onClick="{{ m.onClick }}" style="cursor:pointer;text-align:left;padding:14px 16px;background:#ffffff;color:#1c1c1a;border:1px solid rgba(0,0,0,0.12);transition:all 160ms;width:100%;">
+              <div style="font-family:'Cormorant Garamond',serif;font-style:italic;font-weight:400;font-size:22px;line-height:1;">{{ m.name }}</div>
+              <div style="font-family:'Courier Prime',monospace;font-size:7.5px;letter-spacing:.06em;margin-top:6px;opacity:.7;">{{ m.sub }}</div>
+            </button>
+          </sc-for>
+        </div>
+      </div>
+
+      <!-- THE ACCOUNT -->
+      <div style="position:relative;margin-bottom:32px;">
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:13px;">
+          <span style="font-family:'Courier Prime',monospace;font-size:8px;letter-spacing:.26em;text-transform:uppercase;color:rgba(28,28,26,0.3);white-space:nowrap;">The Account</span>
+          <span style="font-family:'Cormorant Garamond',serif;font-style:italic;font-size:13px;color:rgba(28,28,26,0.4);white-space:nowrap;">{{ accountMeta }}</span>
+          <span style="flex:1;height:1px;background:rgba(0,0,0,0.07);"></span>
+        </div>
+        <textarea value="{{ accountValue }}" onChange="{{ onAccount }}" rows="7" placeholder="Set down what was done, one line at a time. Leave nothing out; add nothing in." style="width:100%;resize:vertical;border:1px solid rgba(0,0,0,0.10);background:#fffefb;font-family:'Cormorant Garamond',serif;font-size:18px;line-height:1.75;color:#1c1c1a;padding:16px 18px;outline:none;background-image:repeating-linear-gradient(to bottom,transparent 0 30px,rgba(0,0,0,0.03) 30px 31px);"></textarea>
+      </div>
+
+      <!-- THE CLOSING LINE -->
+      <div style="position:relative;margin-bottom:36px;">
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:13px;">
+          <span style="font-family:'Courier Prime',monospace;font-size:8px;letter-spacing:.26em;text-transform:uppercase;color:rgba(28,28,26,0.3);white-space:nowrap;">The Closing Line</span>
+          <span style="font-family:'Cormorant Garamond',serif;font-style:italic;font-size:13px;color:rgba(28,28,26,0.4);white-space:nowrap;">the one line the Register keeps</span>
+          <span style="flex:1;height:1px;background:rgba(0,0,0,0.07);"></span>
+        </div>
+        <input value="{{ closingValue }}" onChange="{{ onClosing }}" placeholder="what remains, now that it is done" style="width:100%;border:none;border-bottom:1px solid rgba(0,0,0,0.18);background:transparent;font-family:'Cormorant Garamond',serif;font-style:italic;font-weight:400;font-size:26px;color:#1c1c1a;padding:4px 2px 10px;outline:none;" />
+      </div>
+
+      <!-- FILE BAR -->
+      <div style="position:relative;border-top:1px solid rgba(0,0,0,0.07);padding-top:24px;display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
+        <sc-if value="{{ notFiled }}" hint-placeholder-val="{{ true }}"><button onClick="{{ onFile }}" style="cursor:pointer;border:1px solid #1c1c1a;background:#ffffff;color:#1c1c1a;font-family:'Cormorant Garamond',serif;font-style:italic;font-weight:500;font-size:20px;letter-spacing:.02em;padding:12px 30px;white-space:nowrap;transition:all 200ms;">{{ fileLabel }}</button></sc-if><sc-if value="{{ filed }}" hint-placeholder-val="{{ false }}"><button onClick="{{ onFile }}" style="cursor:pointer;border:1px solid #1c1c1a;background:#1c1c1a;color:#f7f4ee;font-family:'Cormorant Garamond',serif;font-style:italic;font-weight:500;font-size:20px;letter-spacing:.02em;padding:12px 30px;white-space:nowrap;transition:all 200ms;">{{ fileLabel }}</button></sc-if>
+        <button style="cursor:pointer;border:1px solid rgba(0,0,0,0.12);background:transparent;color:rgba(28,28,26,0.5);font-family:'Courier Prime',monospace;font-size:9px;letter-spacing:.12em;text-transform:uppercase;padding:14px 18px;">Keep as draft</button>
+        <sc-if value="{{ dropCold }}" hint-placeholder-val="{{ true }}"><button onClick="{{ onDrop }}" style="cursor:pointer;border:1px solid rgba(0,0,0,0.12);background:transparent;color:rgba(28,28,26,0.5);font-family:'Courier Prime',monospace;font-size:9px;letter-spacing:.12em;text-transform:uppercase;padding:14px 18px;transition:all 160ms;">{{ dropLabel }}</button></sc-if><sc-if value="{{ dropHot }}" hint-placeholder-val="{{ false }}"><button onClick="{{ onDrop }}" style="cursor:pointer;border:1px solid rgba(154,47,47,0.5);background:transparent;color:#9a2f2f;font-family:'Courier Prime',monospace;font-size:9px;letter-spacing:.12em;text-transform:uppercase;padding:14px 18px;transition:all 160ms;">{{ dropLabel }}</button></sc-if>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:844,&quot;height&quot;:1180}}">
+class Component extends DCLogic {
+  constructor() {
+    super();
+    this.MANNERS = [
+      { id: "alone",      name: "Alone",        sub: "no witness present" },
+      { id: "observed",   name: "Observed",     sub: "a keeper looked on" },
+      { id: "confidence", name: "In Confidence", sub: "told to one only" },
+    ];
+    this.WITNESS = [
+      { label: "Unseeing",  fill: "rgba(0,0,0,0.16)" },
+      { label: "Glimpsed",  fill: "rgba(0,0,0,0.30)" },
+      { label: "Witnessed", fill: "rgba(0,0,0,0.48)" },
+      { label: "Verified",  fill: "rgba(0,0,0,0.66)" },
+      { label: "Inscribed", fill: "rgba(0,0,0,0.84)" },
+    ];
+    this.state = { manner: "alone", account: "", closing: "", filed: false, dropArmed: false, dropped: false };
+  }
+
+  setManner(id) { this.setState({ manner: id, filed: false }); }
+  onAccount(e) { this.setState({ account: e.target.value, filed: false }); }
+  onClosing(e) { this.setState({ closing: e.target.value.slice(0, 90), filed: false }); }
+  file() { this.setState({ filed: !this.state.filed, dropArmed: false, dropped: false }); }
+  drop() {
+    if (this.state.dropped) { this.setState({ dropped: false, dropArmed: false }); return; }
+    if (this.state.dropArmed) { this.setState({ dropped: true, dropArmed: false, filed: false }); }
+    else { this.setState({ dropArmed: true }); }
+  }
+
+  renderVals() {
+    const { manner, account, closing, filed, dropArmed, dropped } = this.state;
+    const lines = account.split("\n").filter(l => l.trim()).length;
+
+    const manners = this.MANNERS.map((m) => {
+      const on = manner === m.id;
+      return {
+        name: m.name,
+        sub: m.sub,
+        on: on,
+        off: !on,
+        onClick: () => this.setManner(m.id),
+      };
+    });
+
+    return {
+      manners,
+      accountValue: account,
+      closingValue: closing,
+      accountMeta: lines + (lines === 1 ? " line set down" : " lines set down"),
+      onAccount: (e) => this.onAccount(e),
+      onClosing: (e) => this.onClosing(e),
+      onFile: () => this.file(),
+      onDrop: () => this.drop(),
+      fileLabel: filed ? "✓ Entered into the Register" : "Enter into the Register",
+      notFiled: !filed,
+      dropLabel: dropped ? "Withdrawn" : dropArmed ? "Confirm — withdraw" : "Withdraw",
+      dropHot: (dropArmed || dropped),
+      dropCold: !(dropArmed || dropped),
+      statusText: dropped ? "withdrawn from the Register" : filed ? "filed · awaiting witness" : "Not yet",
+    };
+  }
+}
+</script>
+</body>
+</html>

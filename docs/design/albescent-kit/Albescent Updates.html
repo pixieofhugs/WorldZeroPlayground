@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>World Zero — The Record · Albescent</title>
+<link rel="stylesheet" href="albescent.css">
+<style>
+  *, *::before, *::after { box-sizing: border-box; }
+  html, body { margin: 0; }
+  body {
+    background: #f7f4ee;
+    color: #1c1c1a;
+    font-family: "Courier Prime", "Courier New", monospace;
+    min-height: 100vh;
+  }
+  a { color: inherit; text-decoration: none; }
+
+  .wordmark {
+    font-family: "Lora", Georgia, serif;
+    font-style: italic; font-weight: 700;
+    font-size: 22px; line-height: 1;
+    color: #1c1c1a;
+    border-bottom: 3px solid; padding-bottom: 2px;
+    border-image: linear-gradient(90deg,#fbbf24,#be185d,#4f46e5,#0e7490,#16a34a,#f97316) 1;
+  }
+  .nav-links { display: flex; gap: 20px; flex: 1; }
+  .nav-links a {
+    font-family: var(--al-mono); font-size: 10px;
+    letter-spacing: 0.14em; text-transform: uppercase;
+    color: rgba(28,28,26,0.35); padding-bottom: 3px;
+    transition: color 120ms;
+  }
+  .nav-links a.active {
+    color: rgba(28,28,26,0.72);
+    border-bottom: 1px solid rgba(28,28,26,0.42);
+  }
+  .nav-links a:hover { color: rgba(28,28,26,0.58); }
+  .nav-ctl {
+    display: flex; align-items: center; gap: 14px;
+    font-family: var(--al-mono); font-size: 10px;
+    letter-spacing: 0.12em; text-transform: uppercase;
+    color: rgba(28,28,26,0.35);
+  }
+  .nav-box {
+    border: 1px solid var(--al-border);
+    padding: 5px 11px; cursor: pointer;
+    transition: background 120ms;
+  }
+  .nav-box:hover { background: rgba(0,0,0,0.04); }
+
+  .crumbs {
+    position: relative; z-index: 5;
+    max-width: 1100px; margin: 0 auto;
+    padding: 18px 32px 0;
+    font-family: var(--al-mono);
+    font-size: 9px; letter-spacing: 0.16em;
+    text-transform: uppercase; color: rgba(28,28,26,0.28);
+  }
+  .crumbs a:hover { color: rgba(28,28,26,0.55); }
+
+  .rec-layout { display: grid; grid-template-columns: 1fr 268px; gap: 30px; align-items: start; }
+  @media (max-width: 880px) { .rec-layout { grid-template-columns: 1fr; } }
+</style>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script type="text/babel" src="albescent-cards.jsx"></script>
+<script type="text/babel" src="albescent-faction.jsx"></script>
+</head>
+<body>
+
+<div class="al-backdrop"></div>
+
+<nav class="al-nav">
+  <span class="wordmark">World Zero</span>
+  <div class="nav-links">
+    <a href="#">Home</a>
+    <a href="Albescent Faction Page.html">Tasks</a>
+    <a href="Albescent Faction Page.html">Praxis</a>
+    <a href="#">Players</a>
+    <a href="Albescent Faction Page.html">Factions</a>
+    <a href="Albescent Updates.html" class="active">Updates</a>
+    <a href="#">Admin</a>
+  </div>
+  <div class="nav-ctl">
+    <span class="nav-box">Keeper</span>
+    <span id="nav-badge"></span>
+    <span class="nav-box">Leave</span>
+  </div>
+</nav>
+
+<div class="crumbs">
+  <a href="Albescent Faction Page.html">Factions</a>
+  &nbsp;/&nbsp;
+  <a href="Albescent Faction Page.html">Albescent</a>
+  &nbsp;/&nbsp;
+  <span style="color:rgba(28,28,26,0.55)">The Record</span>
+</div>
+
+<div class="al-page" data-screen-label="Albescent · The Record">
+  <div class="rec-layout">
+
+    <div>
+      <!-- masthead -->
+      <div style="padding-bottom:22px;margin-bottom:18px;border-bottom:1px solid rgba(0,0,0,0.07);">
+        <div style="font-family:var(--al-mono);font-size:7.5px;letter-spacing:0.28em;text-transform:uppercase;color:rgba(28,28,26,0.22);margin-bottom:9px;">
+          Albescent · the standing record · fourth season
+        </div>
+        <div style="font-family:var(--al-font);font-style:italic;font-weight:300;font-size:40px;line-height:1;color:rgba(28,28,26,0.82);margin-bottom:7px;">
+          The Record
+        </div>
+        <div style="height:1px;width:56px;background:rgba(0,0,0,0.12);margin-bottom:13px;"></div>
+        <p style="font-family:var(--al-mono);font-size:8.5px;line-height:1.7;color:rgba(28,28,26,0.4);max-width:440px;margin:0;">
+          Everything the faction has attended, kept in order. Acknowledged, attended,
+          returned, witnessed — entered quietly, without ceremony, whether or not
+          anyone is reading.
+        </p>
+      </div>
+
+      <div class="al-sheet">
+        <div style="padding:22px 26px 26px;" id="feed"></div>
+      </div>
+    </div>
+
+    <!-- quiet aside -->
+    <aside style="position:sticky;top:24px;">
+      <div class="al-sheet">
+        <div style="padding:24px 22px;display:flex;flex-direction:column;align-items:center;text-align:center;">
+          <div class="al-breathe" style="margin-bottom:16px;"><span id="aside-mark"></span></div>
+          <div style="font-family:var(--al-font);font-style:italic;font-weight:300;font-size:19px;line-height:1.3;color:rgba(28,28,26,0.6);margin-bottom:10px;">
+            No trace need remain.
+          </div>
+          <div style="font-family:var(--al-mono);font-size:7.5px;letter-spacing:0.06em;line-height:1.7;color:rgba(28,28,26,0.36);">
+            The Record exists for those who keep it, not for those who watch.
+            Entries are never ranked, never compared, never scored against another.
+          </div>
+        </div>
+      </div>
+      <div id="counts" style="margin-top:14px;"></div>
+    </aside>
+
+  </div>
+</div>
+
+<script type="text/babel">
+const { AlActivityFeed, AL_ACTIVITY, AlNavBadge, AlbescentMark } = window;
+
+ReactDOM.createRoot(document.getElementById("nav-badge")).render(<AlNavBadge/>);
+ReactDOM.createRoot(document.getElementById("aside-mark")).render(<AlbescentMark size={48} breathe/>);
+
+ReactDOM.createRoot(document.getElementById("feed")).render(
+  <AlActivityFeed items={AL_ACTIVITY}/>
+);
+
+/* small tally of kinds */
+function Counts() {
+  const kinds = ["acknowledged","attended","returned","witnessed"];
+  const tally = kinds.map(k => ({ k, n: AL_ACTIVITY.filter(i => i.kind === k).length }));
+  const shade = { acknowledged:"rgba(28,28,26,0.28)", attended:"rgba(28,28,26,0.46)", returned:"rgba(28,28,26,0.64)", witnessed:"rgba(28,28,26,0.82)" };
+  return (
+    <div className="al-sheet">
+      <div style={{padding:"18px 22px",fontFamily:"var(--al-mono)"}}>
+        <div style={{fontSize:7,letterSpacing:"0.26em",textTransform:"uppercase",color:"rgba(28,28,26,0.24)",marginBottom:13}}>This season</div>
+        {tally.map(t => (
+          <div key={t.k} style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"6px 0",borderBottom:"1px solid rgba(0,0,0,0.045)"}}>
+            <span style={{display:"inline-flex",alignItems:"center",gap:8}}>
+              <span style={{width:7,height:7,borderRadius:"50%",background:shade[t.k]}}/>
+              <span style={{fontSize:8,letterSpacing:"0.14em",textTransform:"uppercase",color:"rgba(28,28,26,0.5)"}}>{t.k}</span>
+            </span>
+            <span style={{fontFamily:"var(--al-font)",fontStyle:"italic",fontSize:16,color:"rgba(28,28,26,0.55)"}}>{t.n}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+ReactDOM.createRoot(document.getElementById("counts")).render(<Counts/>);
+</script>
+</body>
+</html>
