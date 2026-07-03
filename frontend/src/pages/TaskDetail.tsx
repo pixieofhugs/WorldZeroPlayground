@@ -18,12 +18,15 @@ import TaskDetailWow from "./taskDetail/archetypes/TaskDetailWow";
 import TaskDetailEphemerists from "./taskDetail/archetypes/TaskDetailEphemerists";
 import TaskDetailSingularity from "./taskDetail/archetypes/TaskDetailSingularity";
 import TaskDetailUA from "./taskDetail/archetypes/TaskDetailUA";
+import AlbescentTaskDetail from "./taskDetail/archetypes/AlbescentTaskDetail";
 import CommentThread from "../components/comments/CommentThread";
 
 type Archetype = (props: { state: TaskDetailState }) => JSX.Element | null;
 
 // Only factions with a bespoke archetype are listed; everything else (incl.
-// albescent / aged_out) falls through to DefaultTaskDetail below.
+// aged_out) falls through to DefaultTaskDetail below. albescent is now a
+// FIRST-CLASS identity (#232 slice 1) — its explicit entry beats the
+// albescent→ua alias in pickVariant.
 export const ARCHETYPE_BY_SLUG: Record<string, Archetype> = {
   snide: TaskDetailSNIDE,
   everymen: TaskDetailEverymen,
@@ -31,6 +34,7 @@ export const ARCHETYPE_BY_SLUG: Record<string, Archetype> = {
   ephemerists: TaskDetailEphemerists,
   singularity: TaskDetailSingularity,
   ua: TaskDetailUA,
+  albescent: AlbescentTaskDetail,
 };
 
 export default function TaskDetail() {

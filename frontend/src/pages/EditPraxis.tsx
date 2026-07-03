@@ -19,11 +19,13 @@ import EditPraxisEphemeris from "./editPraxis/archetypes/EditPraxisEphemeris";
 import EditPraxisStickyNote from "./editPraxis/archetypes/EditPraxisStickyNote";
 import EditPraxisEverymen from "./editPraxis/archetypes/EditPraxisEverymen";
 import EditPraxisUA from "./editPraxis/archetypes/EditPraxisUA";
+import AlbescentEditPraxis from "./editPraxis/archetypes/AlbescentEditPraxis";
 
 type Archetype = (props: { state: EditPraxisState }) => JSX.Element;
 
-// ua owns the gilt-salon Atelier archetype. albescent / aged_out inherit it via
-// pickVariant's alias rule, so they need no explicit rows. StickyNote remains
+// ua owns the gilt-salon Atelier archetype; aged_out inherits it via pickVariant's
+// alias rule (no explicit row). albescent is now a FIRST-CLASS identity (#232
+// slice 1) — its explicit entry beats the albescent→ua alias. StickyNote remains
 // the fallback for `na` / unknown factions.
 const ARCHETYPE_BY_SLUG: Record<string, Archetype> = {
   everymen: EditPraxisEverymen,
@@ -32,6 +34,7 @@ const ARCHETYPE_BY_SLUG: Record<string, Archetype> = {
   wow: EditPraxisPaperCollage,
   ephemerists: EditPraxisEphemeris,
   ua: EditPraxisUA,
+  albescent: AlbescentEditPraxis,
 };
 
 export default function EditPraxis() {

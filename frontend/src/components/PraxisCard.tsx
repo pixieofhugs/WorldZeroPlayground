@@ -3,6 +3,7 @@ import type { PraxisCardOut } from "../api/praxis";
 import { factionCssVar } from "../utils/factions";
 import { pickVariant } from "../utils/factionDispatch";
 import SnideMasthead from "./cards/SnideMasthead";
+import AlbescentMark from "./cards/AlbescentMark";
 import { EphMark, Foxing } from "./cards/ephemeristsAtoms";
 import {
   AdminOverlay,
@@ -531,6 +532,87 @@ function SingularityPraxisCard({ praxis, adminProps, showCrown }: ArchetypeProps
 }
 
 
+/**
+ * Albescent — a filed account in the Register. Vellum correspondence: pure white
+ * sheet, a hairline architectural inset border, the surveyor's Mark and a quiet
+ * "Account · filed" running head in mono, then the shared body in Cormorant
+ * Garamond italic. Always-light — never dims. First-class identity: the explicit
+ * PRAXIS_CARD_BY_SLUG['albescent'] entry beats the albescent→ua alias in
+ * pickVariant, so it renders immediately. Reads its own --faction-albescent-*
+ * tokens directly (not factionCssVar('albescent', …), which resolves to ua until
+ * the alias drops in slice 2 of #232). Ported from docs/design/albescent-kit.
+ */
+function AlbescentPraxisCard({ praxis, adminProps, showCrown }: ArchetypeProps) {
+  const ink = (pct: number) =>
+    `color-mix(in srgb, var(--faction-albescent-card-text) ${pct}%, transparent)`;
+  return (
+    <div
+      style={{
+        position: "relative",
+        width: "100%",
+        flex: "1 1 280px",
+        minWidth: 280,
+        boxSizing: "border-box",
+        background: "var(--faction-albescent-card-bg)",
+        color: "var(--faction-albescent-card-text)",
+        border: `1px solid ${ink(10)}`,
+        fontFamily: "var(--faction-albescent-card-font)",
+        boxShadow: "0 2px 18px rgba(0,0,0,0.055), 0 1px 3px rgba(0,0,0,0.04)",
+      }}
+    >
+      {/* architectural inset hairline — the sheet's quiet frame */}
+      <div
+        style={{
+          position: "absolute",
+          inset: 5,
+          border: `1px solid ${ink(5)}`,
+          pointerEvents: "none",
+        }}
+      />
+      {/* running head — sigil + "Account · filed" */}
+      <div
+        style={{
+          position: "relative",
+          display: "flex",
+          alignItems: "center",
+          gap: 8,
+          padding: "9px 15px 7px",
+          borderBottom: `1px solid ${ink(7)}`,
+        }}
+      >
+        <AlbescentMark size={13} />
+        <span
+          style={{
+            fontFamily: "var(--faction-albescent-mono)",
+            fontSize: 8,
+            letterSpacing: "0.22em",
+            textTransform: "uppercase",
+            color: ink(30),
+          }}
+        >
+          Account · filed
+        </span>
+      </div>
+      <div style={{ position: "relative", padding: "12px 15px 14px" }}>
+        <AdminOverlay {...adminProps} />
+        <PraxisBody
+          praxis={praxis}
+          tint={ink(60)}
+          muted={ink(42)}
+          paper="var(--faction-albescent-card-bg)"
+          titleStyle={{
+            fontFamily: "var(--faction-albescent-card-font)",
+            fontStyle: "italic",
+            fontWeight: 300,
+            color: "var(--faction-albescent-card-text)",
+          }}
+          showCrown={showCrown}
+        />
+      </div>
+    </div>
+  );
+}
+
 /** Fallback card for `na` / unknown task factions — a plain accent-bordered slab. */
 export function DefaultPraxisCard({ praxis, adminProps, showCrown }: ArchetypeProps) {
   const slug = praxis.task_faction_slug ?? "ua";
@@ -569,6 +651,8 @@ export const PRAXIS_CARD_BY_SLUG: Record<string, ComponentType<ArchetypeProps>> 
   snide: SnidePraxisCard,
   ephemerists: EphemeristsPraxisCard,
   singularity: SingularityPraxisCard,
+  // First-class Albescent identity (#232 slice 1) — beats the albescent→ua alias.
+  albescent: AlbescentPraxisCard,
 };
 
 export default function PraxisCard({ praxis, onModerated, showCrown = true }: Props) {

@@ -209,13 +209,29 @@
   --faction-everymen-card-font: var(--font-accent); /* Bebas Neue */
 
   /* ── Albescent · vellum register (always-light — identical in both themes,
-     same mechanism Singularity uses to stay always-dark; #231). First-class
-     read-surface identity; the global albescent→ua alias stays until #232. ── */
+     same mechanism Singularity uses to stay always-dark; #231/#232). First-class
+     content identity across four surfaces (task card, praxis card, edit praxis,
+     task detail) + the read page. The global albescent→ua alias stays until the
+     second slice of #232, so these components read these tokens directly rather
+     than via factionCssVar('albescent', …) (which resolves the alias to ua).
+     Values ported from docs/design/albescent-kit/albescent.css. ── */
   --faction-albescent-card-bg: #ffffff;
   --faction-albescent-card-text: #1c1c1a; /* near-black ink, no hue */
   --faction-albescent-card-accent: rgba(28, 28, 26, 0.72);
   --faction-albescent-card-muted: rgba(28, 28, 26, 0.44);
   --faction-albescent-card-font: "Cormorant Garamond", Georgia, serif;
+  /* Full vellum-correspondence set — the whole palette is one near-black hue. */
+  --faction-albescent-primary: #1c1c1a; /* near-black ink */
+  --faction-albescent-light: #faf9f7; /* warm off-white sheet */
+  --faction-albescent-border: rgba(0, 0, 0, 0.1);
+  --faction-albescent-surface: #ffffff; /* the sheet */
+  --faction-albescent-surface-warm: #faf9f7;
+  --faction-albescent-ink: rgba(28, 28, 26, 0.72);
+  --faction-albescent-text-faint: rgba(28, 28, 26, 0.22);
+  --faction-albescent-border-faint: rgba(0, 0, 0, 0.055);
+  --faction-albescent-border-rule: rgba(0, 0, 0, 0.07);
+  --faction-albescent-page: #f7f4ee; /* cream backdrop */
+  --faction-albescent-mono: "Courier Prime", "Courier New", monospace;
 
   /* ── Vote stamp colors (orange → yellow → green → blue → magenta) ── */
   --vote-1: #c2410c;
@@ -362,12 +378,23 @@
   --faction-singularity-card-muted: #60a5fa; /* blue brand chrome */
 
   /* Albescent — always-light: identical to the :root values so the vellum
-     register never dims, regardless of the global theme (#231). */
+     register never dims, regardless of the global theme (#231/#232). */
   --faction-albescent-card-bg: #ffffff;
   --faction-albescent-card-text: #1c1c1a;
   --faction-albescent-card-accent: rgba(28, 28, 26, 0.72);
   --faction-albescent-card-muted: rgba(28, 28, 26, 0.44);
   --faction-albescent-card-font: "Cormorant Garamond", Georgia, serif;
+  --faction-albescent-primary: #1c1c1a;
+  --faction-albescent-light: #faf9f7;
+  --faction-albescent-border: rgba(0, 0, 0, 0.1);
+  --faction-albescent-surface: #ffffff;
+  --faction-albescent-surface-warm: #faf9f7;
+  --faction-albescent-ink: rgba(28, 28, 26, 0.72);
+  --faction-albescent-text-faint: rgba(28, 28, 26, 0.22);
+  --faction-albescent-border-faint: rgba(0, 0, 0, 0.055);
+  --faction-albescent-border-rule: rgba(0, 0, 0, 0.07);
+  --faction-albescent-page: #f7f4ee;
+  --faction-albescent-mono: "Courier Prime", "Courier New", monospace;
 
   /* ══ Ephemerists palette (dark) — pigments stay vivid; vellum darkens
      to aged tobacco and its text flips ink→parchment. The card contract

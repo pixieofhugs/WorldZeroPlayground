@@ -8,6 +8,7 @@ import TaskCardSNIDE from './cards/TaskCardSNIDE'
 import TaskCardEphemerists from './cards/TaskCardEphemerists'
 import TaskCardSingularity from './cards/TaskCardSingularity'
 import TaskCardEverymen from './cards/TaskCardEverymen'
+import AlbescentTaskCard from './cards/AlbescentTaskCard'
 import { factionCssVar, factionName } from '../utils/factions'
 import { pickVariant } from '../utils/factionDispatch'
 import type { ComponentType } from 'react'
@@ -26,6 +27,9 @@ export const CARD_COMPONENTS: Record<string, ComponentType<CardProps>> = {
   snide: TaskCardSNIDE,
   ephemerists: TaskCardEphemerists,
   singularity: TaskCardSingularity,
+  // First-class Albescent identity (#232 slice 1). The explicit entry beats the
+  // albescent→ua alias in pickVariant, so it renders immediately.
+  albescent: AlbescentTaskCard,
 }
 
 export const DEFAULT_CARD = TaskCardUA
