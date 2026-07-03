@@ -80,6 +80,47 @@ def test_current_era_is_defined():
     assert CURRENT_ERA.config_key != ""
 ```
 
+### Running e2e (Playwright lifecycle suites)
+
+Browser end-to-end tests live in `frontend/e2e/` (`playwright.config.ts` next to
+them). They log in via the dev-only `POST /auth/dev-login` bypass and drive real
+pages, so they need a live backend + frontend + Postgres.
+
+**One command, isolated database (recommended):**
+
+```bash
+bash frontend/e2e/run-e2e.sh                        # full suite
+bash frontend/e2e/run-e2e.sh collaboration.spec.ts  # one spec
+```
+
+The script resets a dedicated `worldzero_e2e` database on the compose Postgres
+(never the dev `worldzero` database — the reset script refuses any name not
+ending in `_e2e`), runs `alembic upgrade head` (fails loudly on drift), seeds
+via `seed.py`, starts the *branch* backend on **:8001** (so the docker-compose
+backend image on :8000 can't shadow the code under test), then runs Playwright,
+which starts the frontend dev server on **:5174** with `VITE_API_URL` pointed at
+:8001. Specs run serially (`workers: 1`) because lifecycle tests share DB-level
+gates. Prereqs: Postgres up (`docker-compose up -d db`), `backend/.env` present
+(fresh worktrees: copy it from the main checkout), `npm ci` +
+`npx playwright install chromium` done once in `frontend/`.
+
+**The DATABASE_URL / alembic gotcha:** `backend/alembic/env.py` reads
+`DATABASE_URL` from `os.environ`, **not** from `backend/.env`. Running
+`alembic upgrade head` by hand without it exported dies with
+`Can't load plugin: sqlalchemy.dialects:driver`. The runner script exports it
+for you; export it yourself for manual alembic runs. Because pydantic-settings
+gives real env vars precedence over `.env`, that same exported `DATABASE_URL`
+also repoints the backend and `seed.py` at the e2e database — isolation is
+env-var-only, no code changes.
+
+**Ad-hoc mode** (`npm run e2e` from `frontend/`) still works: it assumes a
+backend already up on :8000 and runs against whatever database that backend
+uses — fine for quick iteration, but it leaves bot accounts behind in the dev DB.
+
+**CI:** `.github/workflows/e2e.yml` runs the same `run-e2e.sh` nightly and on
+manual `workflow_dispatch`, and uploads the Playwright HTML report as an
+artifact. It is deliberately not on the PR-blocking path.
+
 ### GitHub Actions CI
 
 ```yaml

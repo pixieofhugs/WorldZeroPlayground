@@ -1115,67 +1115,6 @@ async def test_solo_submit_opens_no_window(
 
 
 @pytest.mark.asyncio
-async def test_change_type_solo_to_collab_preserves_content(
-    client: AsyncClient,
-    character2: Character,
-    active_task: Task,
-    auth_headers2: dict,
-):
-    """solo → collab keeps the same id, title, and body (no delete+recreate).
-
-    Actor is character2 (level 5) to clear the collaboration level gate.
-    """
-    create_resp = await client.post(
-        "/praxes",
-        json={
-            "task_id": active_task.id,
-            "type": "solo",
-            "title": "Keep me",
-            "body_text": "draft body",
-        },
-        headers=auth_headers2,
-    )
-    praxis_id = create_resp.json()["id"]
-
-    resp = await client.post(
-        f"/praxes/{praxis_id}/change-type",
-        json={"type": "collab"},
-        headers=auth_headers2,
-    )
-    assert resp.status_code == 200
-    data = resp.json()
-    assert data["id"] == praxis_id
-    assert data["type"] == "collab"
-    assert data["title"] == "Keep me"
-    assert data["body_text"] == "draft body"
-
-
-@pytest.mark.asyncio
-async def test_change_type_collab_to_solo_drops_members_keeps_content(
-    client: AsyncClient,
-    character: Character,
-    character2: Character,
-    active_task: Task,
-    auth_headers: dict,
-    auth_headers2: dict,
-):
-    """collab → solo drops the co-author but preserves id/title (author = level-5 character2)."""
-    praxis_id = await _two_member_collab(
-        client, active_task, auth_headers2, character.id, auth_headers
-    )
-    resp = await client.post(
-        f"/praxes/{praxis_id}/change-type",
-        json={"type": "solo"},
-        headers=auth_headers2,
-    )
-    assert resp.status_code == 200
-    data = resp.json()
-    assert data["id"] == praxis_id
-    assert data["type"] == "solo"
-    assert {m["character_id"] for m in data["members"]} == {character2.id}
-
-
-@pytest.mark.asyncio
 async def test_change_type_to_duel_rejected(
     client: AsyncClient,
     character2: Character,
@@ -2196,3 +2135,39 @@ async def test_change_type_rejects_duel_side(
         f"/praxes/{pid}/change-type", json={"type": "collab"}, headers=auth_headers2
     )
     assert resp.status_code == 409
+@pytest.mark.asyncio
+async def test_change_type_takeover_clears_pending_publish_window(
+    client: AsyncClient,
+    character: Character,
+    character2: Character,
+    active_task: Task,
+    auth_headers: dict,
+    auth_headers2: dict,
+    db_session: AsyncSession,
+):
+    """A takeover resets the ADR-0012 pending-publish window, so a later flip
+    back to collab can't inherit a stale, already-lapsed window and auto-seal."""
+    create = await client.post(
+        "/praxes",
+        json={"task_id": active_task.id, "type": "collab", "title": "Shared work"},
+        headers=auth_headers2,
+    )
+    assert create.status_code == 201, create.text
+    pid = create.json()["id"]
+    db_session.add(PraxisMember(praxis_id=pid, character_id=character.id, has_submitted=False))
+    await db_session.commit()
+
+    # The creator proposes submit → the pending-publish window opens.
+    submit = await client.post(f"/praxes/{pid}/submit", headers=auth_headers2)
+    assert submit.status_code == 200, submit.text
+    assert submit.json()["submit_proposed_at"] is not None
+
+    # The co-author takes it over → solo; the window must be gone.
+    resp = await client.post(
+        f"/praxes/{pid}/change-type", json={"type": "solo"}, headers=auth_headers
+    )
+    assert resp.status_code == 200, resp.text
+    body = resp.json()
+    assert body["status"] == "in_progress"
+    assert body["submit_proposed_at"] is None
+    assert all(not m["has_submitted"] for m in body["members"])

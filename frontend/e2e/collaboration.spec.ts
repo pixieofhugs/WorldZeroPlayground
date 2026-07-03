@@ -16,7 +16,7 @@ import { test, expect, type Browser, type BrowserContext } from '@playwright/tes
  * Prereqs: backend on :8000 (seeded dev DB at head), frontend on :5173.
  */
 
-const API = 'http://localhost:8000'
+const API = process.env.E2E_API_URL ?? 'http://localhost:8000'
 // Unique per run so every test gets fresh accounts — no cross-run state bleed
 // (a character that already holds a praxis on the task can't create/join another).
 const RUN = Date.now().toString(36)
@@ -33,7 +33,7 @@ async function login(browser: Browser, key: string, name: string, level: number)
   const res = await ctx.request.post(
     `${API}/auth/dev-login?key=${encodeURIComponent(key)}&name=${encodeURIComponent(name)}&level=${level}`,
   )
-  expect(res.ok(), `dev-login failed for ${key} — is the backend up on :8000?`).toBeTruthy()
+  expect(res.ok(), `dev-login failed for ${key} — is the backend up on ${API}?`).toBeTruthy()
   const body = await res.json()
   return { ctx, characterId: body.character_id, name }
 }
