@@ -114,6 +114,55 @@ async def test_list_tasks_filter_by_status_all(
 
 
 @pytest.mark.asyncio
+async def test_list_tasks_filter_by_created_by(
+    client: AsyncClient,
+    db_session: AsyncSession,
+    character: Character,
+    character2: Character,
+    active_task: Task,
+):
+    """created_by returns the creator's approved tasks (active + retired),
+    omitting their pending submissions and other creators' tasks (#419)."""
+    retired_task = Task(
+        title="Retired Task",
+        description="",
+        point_value=5,
+        level_required=0,
+        status=TaskStatus.retired,
+        created_by=character.id,
+        primary_faction_slug="ua",
+    )
+    pending_task = Task(
+        title="Pending Task",
+        description="",
+        point_value=5,
+        level_required=0,
+        status=TaskStatus.pending,
+        created_by=character.id,
+        primary_faction_slug="ua",
+    )
+    other_task = Task(
+        title="Other Creator Task",
+        description="",
+        point_value=5,
+        level_required=0,
+        status=TaskStatus.active,
+        created_by=character2.id,
+        primary_faction_slug="ua",
+    )
+    db_session.add_all([retired_task, pending_task, other_task])
+    await db_session.commit()
+
+    resp = await client.get("/tasks", params={"created_by": character.id})
+    assert resp.status_code == 200
+    ids = {t["id"] for t in resp.json()}
+    assert active_task.id in ids  # active, this creator
+    assert retired_task.id in ids  # retired, this creator
+    assert pending_task.id not in ids  # pending is hidden from all viewers
+    assert other_task.id not in ids  # different creator
+
+
+@pytest.mark.asyncio
 async def test_list_tasks_filter_invalid_status(client: AsyncClient):
     """Invalid status value returns 422."""
     resp = await client.get("/tasks", params={"status": "bogus_status"})

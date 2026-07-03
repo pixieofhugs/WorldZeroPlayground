@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { getFactions, getFactionStatus, getInvitations } from '../api/factions'
 import type { FactionOut, FactionPageOut, InvitationLetterOut } from '../api/factions'
 import PageTitle from '../components/ui/PageTitle'
-import FactionCard from '../components/cards/FactionCard'
+import FactionSelectCard from '../components/cards/FactionSelectCard'
+import type { SelectState } from '../components/cards/FactionSelectCard'
 import { extractError } from '../utils/errors'
 import { factionCssVar } from '../utils/factions'
 import { relativeTime } from '../utils/dates'
@@ -22,15 +23,17 @@ const STATUS_CAN_RETURN = 'can_return'
 const HIDDEN_SLUGS = new Set([NA_SLUG, AGED_OUT_SLUG, 'ua'])
 
 /**
- * Factions grid — a directory of pure PREVIEW cards. Each whole card is a link
- * to the faction's detail page (`/factions/:slug`), where ALL membership actions
- * (Join / Leave / Accept / Decline) now live (issue #347). The grid itself
- * carries no interactive controls; it only previews name, description, and the
- * viewer's status, and orders the cards by that status.
+ * Factions grid — a directory of pure PREVIEW tiles (the design select.card
+ * archetypes). Each tile's CTA links to the faction's detail page
+ * (`/factions/:slug`), where ALL membership actions (Join / Leave / Accept /
+ * Decline) now live (issue #347). The grid itself carries no membership
+ * controls; it only previews each faction's archetype + the viewer's status,
+ * and orders the cards by that status.
  */
 export default function Factions() {
   const { user } = useAuth()
   const character = user?.character ?? null
+  const navigate = useNavigate()
 
   const [factions, setFactions] = useState<FactionOut[]>([])
   const [factionPage, setFactionPage] = useState<FactionPageOut | null>(null)
@@ -95,6 +98,15 @@ export default function Factions() {
     const sb = statusPriority[statusFor(b.slug)] ?? 3
     return sa - sb
   })
+
+  // Map the invite-gated status (+ any open letter) to the select-card's
+  // three-state model. Joining itself happens on the faction detail page.
+  const selectState = (slug: string): SelectState => {
+    const status = statusFor(slug)
+    if (status === STATUS_MEMBER) return 'member'
+    if (status === STATUS_INVITED || status === STATUS_CAN_RETURN || invitationBySlug[slug]) return 'eligible'
+    return 'locked'
+  }
 
   return (
     <div className="py-8">
@@ -167,59 +179,21 @@ export default function Factions() {
         </p>
       )}
 
-      {/* Faction grid — each whole card links to the faction's detail page,
-          where the membership actions live (issue #347). */}
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 20, alignItems: 'flex-start' }}>
-        {sortedFactions.map((f) => {
-          const status = statusFor(f.slug)
-          const isDefected = status === STATUS_DEFECTED
-
-          // "welcome_back" reads better than the raw "can_return" status badge.
-          const cardStatus = status === STATUS_CAN_RETURN ? 'welcome_back' : status
-
-          // Compact per-card invitation marker (when an open letter exists).
-          // Skip for current-member / defected states where it would be noise.
-          const invitation = invitationBySlug[f.slug]
-          const invitationNote =
-            invitation && status !== STATUS_MEMBER && status !== STATUS_DEFECTED
-              ? relativeTime(invitation.delivered_at)
-              : null
-
-          return (
-            <div
-              key={f.slug}
-              style={{
-                flex: '1 1 280px',
-                minWidth: 260,
-                maxWidth: 420,
-                opacity: isDefected ? 0.5 : 1,
-              }}
-            >
-              <Link
-                to={`/factions/${f.slug}`}
-                aria-label={`View ${f.name}`}
-                style={{
-                  display: 'block',
-                  textDecoration: 'none',
-                  color: 'inherit',
-                }}
-              >
-                <FactionCard
-                  faction={f}
-                  status={cardStatus}
-                  invitationNote={invitationNote}
-                />
-              </Link>
-
-              {/* Not-invited hint */}
-              {character && status === STATUS_NOT_INVITED && (
-                <p className="font-body" style={{ fontSize: 10, color: 'var(--color-text-tertiary)', marginTop: 6, fontStyle: 'italic' }}>
-                  Complete tasks from this faction to unlock an invitation.
-                </p>
-              )}
-            </div>
-          )
-        })}
+      {/* Faction directory grid — one uniform 360×300 archetype tile per faction.
+          The tile's CTA visits the faction's detail page, which owns the Join block. */}
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 28, alignItems: 'flex-start' }}>
+        {sortedFactions.map((f) => (
+          <div
+            key={f.slug}
+            style={{ opacity: statusFor(f.slug) === STATUS_DEFECTED ? 0.5 : 1 }}
+          >
+            <FactionSelectCard
+              faction={f.slug}
+              state={selectState(f.slug)}
+              onVisit={() => navigate(`/factions/${f.slug}`)}
+            />
+          </div>
+        ))}
       </div>
     </div>
   )

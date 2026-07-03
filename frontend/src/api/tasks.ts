@@ -40,6 +40,7 @@ export interface TaskFilters {
   faction?: string
   level?: number
   exclude_character_id?: number
+  created_by?: number
   task_type?: TaskType
   /** 'newest' orders by creation time (newest first); default sorts by level/points. */
   sort?: string
