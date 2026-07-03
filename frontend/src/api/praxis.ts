@@ -212,6 +212,16 @@ export async function respondToInvite(
   return data
 }
 
+/**
+ * Leave a collab praxis you joined (frees a task-bank slot). Distinct from
+ * withdrawPraxis, which reverts your own praxis to edit and does NOT free a
+ * slot. Used by the bank-full drop-to-accept flow (#322).
+ */
+export async function leavePraxis(id: number): Promise<PraxisOut> {
+  const { data } = await api.post<PraxisOut>(`/praxes/${id}/leave`)
+  return data
+}
+
 // ---------------------------------------------------------------------------
 // Metatasks — metatasks are Task rows with task_type='metatask' attached
 // to a praxis via POST /praxes/{id}/metatasks.
