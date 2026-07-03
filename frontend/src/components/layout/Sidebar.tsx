@@ -164,11 +164,11 @@ export default function Sidebar() {
 
       {/* ── Active Tasks Panel ── */}
       <div className="sidebar-card">
-        <p className="eyebrow mb-2">Your active tasks</p>
+        <p className="eyebrow mb-2">In progress tasks</p>
 
         {activeTasks.length === 0 ? (
           <p className="font-body text-xs" style={{ color: 'var(--color-text-tertiary)' }}>
-            No active tasks
+            No in progress tasks
           </p>
         ) : (
           <div className="flex flex-col gap-1.5">
@@ -190,7 +190,10 @@ export default function Sidebar() {
                     {praxis.task_title}
                   </Link>
                 </div>
-                <FeedBadge type="global" label={PRAXIS_TYPE_LABEL[praxis.type]} />
+                <FeedBadge
+                  type={praxis.type === 'solo' ? 'global' : praxis.type}
+                  label={PRAXIS_TYPE_LABEL[praxis.type]}
+                />
               </div>
             ))}
           </div>

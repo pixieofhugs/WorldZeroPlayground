@@ -620,6 +620,86 @@ async def test_collab_draft_visible_to_invitee_active_tasks(
 
 
 @pytest.mark.asyncio
+async def test_list_praxes_member_id_filters_by_membership(
+    client: AsyncClient,
+    db_session: AsyncSession,
+    character: Character,
+    character2: Character,
+    active_task: Task,
+    auth_headers: dict,
+    auth_headers2: dict,
+):
+    """#344/#349: ``member_id`` filters by PraxisMember, mirroring the slot count.
+
+    A praxis where the character is a member but NOT the creator shows up;
+    a praxis the character is not a member of does not.
+    """
+    # character2 creates a collab; character is invited and accepts (member, not creator).
+    create_resp = await client.post(
+        "/praxes",
+        json={"task_id": active_task.id, "type": "collab", "title": "Member Filter Collab"},
+        headers=auth_headers2,
+    )
+    assert create_resp.status_code == 201
+    collab_id = create_resp.json()["id"]
+    invite_resp = await client.post(
+        f"/praxes/{collab_id}/invite",
+        json={"invitee_id": character.id},
+        headers=auth_headers2,
+    )
+    invite_id = invite_resp.json()["id"]
+    await client.post(
+        f"/praxes/{collab_id}/invite/{invite_id}/respond",
+        json={"accept": True},
+        headers=auth_headers,
+    )
+
+    # character2 also creates a solo praxis (on a second task — one active
+    # membership per task) that character has no membership in.
+    second_task = Task(
+        title="Second Task",
+        description="Another test task",
+        point_value=10,
+        level_required=0,
+        status=TaskStatus.active,
+        created_by=character2.id,
+        primary_faction_slug="ua",
+    )
+    db_session.add(second_task)
+    await db_session.commit()
+    await db_session.refresh(second_task)
+
+    solo_resp = await client.post(
+        "/praxes",
+        json={"task_id": second_task.id, "type": "solo", "title": "Not Yours Solo"},
+        headers=auth_headers2,
+    )
+    assert solo_resp.status_code == 201
+    solo_id = solo_resp.json()["id"]
+
+    # Membership list for character: the joined collab appears...
+    member_list = await client.get(
+        "/praxes",
+        params={"member_id": character.id, "status": "in_progress"},
+        headers=auth_headers,
+    )
+    assert member_list.status_code == 200
+    member_ids = [p["id"] for p in member_list.json()]
+    assert collab_id in member_ids
+    assert solo_id not in member_ids
+
+    # ...and filtering by a non-member's id excludes the praxis even when the
+    # viewer could otherwise see it (character2 is a member of both).
+    non_member_list = await client.get(
+        "/praxes",
+        params={"member_id": character.id, "status": "in_progress"},
+        headers=auth_headers2,
+    )
+    assert non_member_list.status_code == 200
+    assert solo_id not in [p["id"] for p in non_member_list.json()]
+
+
+@pytest.mark.asyncio
 async def test_collab_invite_decline(
     client: AsyncClient,
     character: Character,
