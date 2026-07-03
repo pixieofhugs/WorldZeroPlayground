@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import type { ActivityFeedItem } from "../../api/activityFeed";
-import { respondToInvite } from "../../api/praxis";
+import { useRespondToRequest } from "../../hooks/useRespondToRequest";
 import { factionColor } from "../../utils/factions";
 import { relativeTime } from "../../utils/dates";
 import FeedBadge from "./FeedBadge";
@@ -11,58 +11,49 @@ interface Props {
 }
 
 export default function FeedCardDuelChallenge({ item }: Props) {
+  // Duel payload carries duel_id / challenger_praxis_id / duel_status — NOT
+  // the collab invite_id / praxis_id / invite_status fields. The shared hook
+  // owns the endpoint switch (#346).
   const {
-    invite_id,
-    praxis_id,
+    challenger_praxis_id,
     task_title,
     task_point_value,
     task_faction_slug,
-    invite_status,
     challenger_character_id,
   } = item.payload;
   const taskColor = factionColor(task_faction_slug);
   const actorColor = factionColor(item.actor_faction_slug);
   const navigate = useNavigate();
 
-  const [status, setStatus] = useState<string | null>(invite_status);
-  const [loading, setLoading] = useState(false);
-  // Task-list-full modal state
+  const { accept, decline, loading, status, error } = useRespondToRequest(item);
+  // Task-list-full modal state — dormant skeleton, wired by #322/#314.
   const [showDropModal, setShowDropModal] = useState(false);
   const [myTasks] = useState<
     { id: number; task: { id: number; title: string } }[]
   >([]);
-  const [dropError, setDropError] = useState("");
 
   const doAccept = async (drop_task_id?: number) => {
-    setLoading(true);
-    try {
-      await respondToInvite(praxis_id, invite_id, true);
+    const result = await accept();
+    if (result.ok) {
       if (drop_task_id) {
         // Drop task was selected from modal — handled server-side via the task list
       }
-      setStatus("accepted");
       setShowDropModal(false);
-      navigate(`/praxes/${praxis_id}`);
-    } catch {
-      setDropError("Could not accept duel. Please try again.");
+      // Accepting creates the opponent's fresh praxis server-side — land the
+      // responder on its editor so they can start working (mirrors collab).
+      navigate(
+        result.praxisId
+          ? `/praxes/${result.praxisId}/edit`
+          : `/praxes/${challenger_praxis_id}`,
+      );
     }
-    setLoading(false);
   };
 
   const handleAccept = () => doAccept();
 
-  const handleDecline = async () => {
-    setLoading(true);
-    try {
-      await respondToInvite(praxis_id, invite_id, false);
-      setStatus("declined");
-    } catch {
-      /* swallow */
-    }
-    setLoading(false);
-  };
+  const handleDecline = () => decline();
 
-  const isPending = status === "pending" || status === null;
+  const isPending = status === "pending";
 
   return (
     <>
@@ -209,12 +200,12 @@ export default function FeedCardDuelChallenge({ item }: Props) {
             >
               Decline
             </button>
-            {dropError && (
+            {error && (
               <span
                 className="eyebrow"
                 style={{ color: "var(--color-danger)" }}
               >
-                {dropError}
+                {error}
               </span>
             )}
           </div>
@@ -223,7 +214,7 @@ export default function FeedCardDuelChallenge({ item }: Props) {
         {status === "accepted" && (
           <div style={{ marginTop: 8, marginLeft: 38 }}>
             <Link
-              to={`/praxes/${praxis_id}`}
+              to={`/praxes/${challenger_praxis_id}`}
               className="eyebrow"
               style={{ color: "var(--badge-duel)", textDecoration: "none" }}
             >

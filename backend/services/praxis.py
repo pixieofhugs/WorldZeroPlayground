@@ -301,6 +301,7 @@ async def list_praxes(
     *,
     task_id: Optional[int] = None,
     character_id: Optional[int] = None,
+    member_id: Optional[int] = None,
     praxis_type: Optional[PraxisType] = None,
     status: Optional[PraxisStatus] = None,
     moderation_status: Optional[str] = None,
@@ -314,6 +315,11 @@ async def list_praxes(
 
     ``in_progress`` praxes are member-only (ADR-0024): pass ``viewer_id`` to
     include the viewer's own drafts; everyone else sees only ``submitted``.
+
+    ``character_id`` filters by authorship (``created_by_id``); ``member_id``
+    filters by *membership* (``PraxisMember``), mirroring
+    :func:`_count_in_progress_praxes` so a membership-based list (the sidebar's
+    in-progress tasks) can never disagree with the slot count.
     """
     query = select(Praxis).where(praxis_visibility_condition(viewer_id))
 
@@ -353,6 +359,17 @@ async def list_praxes(
             )
         else:
             query = query.where(Praxis.created_by_id == character_id)
+
+    if member_id is not None:
+        # Membership filter: any praxis the character holds a PraxisMember row
+        # on, regardless of who created it (accepted collab invites included).
+        query = query.where(
+            Praxis.id.in_(
+                select(PraxisMember.praxis_id).where(
+                    PraxisMember.character_id == member_id
+                )
+            )
+        )
 
     if status is not None:
         query = query.where(Praxis.status == status)

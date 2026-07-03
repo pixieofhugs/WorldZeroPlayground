@@ -1,5 +1,8 @@
 import type { FactionOut } from "../../api/factions";
-import { factionCssVar } from "../../utils/factions";
+import {
+  factionCssVar,
+  sortFactionsByRainbowOrder,
+} from "../../utils/factions";
 
 /**
  * Faction filter — Diagonal Banner Tabs (Style Guide §5.3).
@@ -20,7 +23,7 @@ export default function FilterFactionTabs({
   return (
     <div className="flex gap-1 items-center">
       <span className="eyebrow">faction:</span>
-      {factions.map((faction) => {
+      {sortFactionsByRainbowOrder(factions).map((faction) => {
         const active = value === faction.slug;
         return (
           <button
