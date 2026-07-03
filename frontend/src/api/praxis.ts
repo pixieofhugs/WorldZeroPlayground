@@ -221,6 +221,14 @@ export async function respondToInvite(
   return data
 }
 
+/** Inviter rescinds a still-pending invite (#421). */
+export async function cancelInvite(
+  praxisId: number,
+  inviteId: number,
+): Promise<void> {
+  await api.delete(`/praxes/${praxisId}/invite/${inviteId}`)
+}
+
 // ---------------------------------------------------------------------------
 // Metatasks — metatasks are Task rows with task_type='metatask' attached
 // to a praxis via POST /praxes/{id}/metatasks.

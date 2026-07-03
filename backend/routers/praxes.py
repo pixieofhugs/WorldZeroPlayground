@@ -46,6 +46,7 @@ from services.praxis import (
     build_praxis_card_out,
     build_praxis_out,
     can_view_praxis,
+    cancel_invite,
     cancel_pending_publish_on_edit,
     change_praxis_type,
     create_praxis,
@@ -351,6 +352,22 @@ async def respond_to_invite_route(
     if praxis is None:
         raise HTTPException(status_code=404, detail="Praxis not found.")
     return await build_praxis_out(praxis, session, viewer=character)
+
+
+@router.delete("/{praxis_id}/invite/{invite_id}", status_code=204)
+async def cancel_invite_route(
+    praxis_id: int,
+    invite_id: int,
+    character: Character = Depends(get_current_character),
+    session: AsyncSession = Depends(get_db),
+):
+    await cancel_invite(
+        praxis_id=praxis_id,
+        invite_id=invite_id,
+        inviter_id=character.id,
+        session=session,
+    )
+    return Response(status_code=204)
 
 
 @router.post("/{praxis_id}/kick/{member_id}", response_model=PraxisOut)

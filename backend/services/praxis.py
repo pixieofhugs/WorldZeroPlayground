@@ -1105,6 +1105,29 @@ async def respond_to_invite(
     return invite
 
 
+async def cancel_invite(
+    praxis_id: int,
+    invite_id: int,
+    inviter_id: int,
+    session: AsyncSession,
+) -> None:
+    """Rescind a pending invite. Only the inviter may cancel, and only while
+    the invite is still pending (removing an accepted member is a separate
+    concern). Deletes the invite row (#421)."""
+    invite = await session.get(PraxisInvite, invite_id)
+    if invite is None or invite.praxis_id != praxis_id:
+        raise HTTPException(status_code=404, detail="Invite not found.")
+
+    if invite.inviter_id != inviter_id:
+        raise HTTPException(status_code=403, detail="Only the inviter can rescind this invite.")
+
+    if invite.status != PraxisInviteStatus.pending:
+        raise HTTPException(status_code=409, detail="Only a pending invite can be rescinded.")
+
+    await session.delete(invite)
+    await session.flush()
+
+
 async def kick_member(
     praxis_id: int,
     member_id: int,

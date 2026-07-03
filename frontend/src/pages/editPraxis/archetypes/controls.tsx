@@ -122,6 +122,24 @@ export function InviteSearch({
                     }}
                   >
                     {invite.invitee_display_name} <em>· pending</em>
+                    {/* Inviter rescinds a still-pending invite (#421). */}
+                    <button
+                      type="button"
+                      onClick={() => void state.cancelInvite(invite.id)}
+                      aria-label={`rescind invite to ${invite.invitee_display_name}`}
+                      style={{
+                        background: "transparent",
+                        border: "none",
+                        color: "inherit",
+                        cursor: "pointer",
+                        fontSize: 14,
+                        lineHeight: 1,
+                        padding: 0,
+                        marginLeft: 6,
+                      }}
+                    >
+                      ×
+                    </button>
                   </span>
                 )),
             ]}
