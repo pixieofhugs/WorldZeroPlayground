@@ -119,3 +119,33 @@ export function factionName(slug: string | null | undefined): string {
 export function getAllFactions(): FactionConfig[] {
   return Object.values(factionRegistry);
 }
+
+/**
+ * Canonical rainbow display order for faction strips/pennants (issue #352):
+ * Everymen → UA → S.N.I.D.E. → Ephemerists → Singularity → Albescent → Warriors of Whimsy.
+ */
+export const FACTION_RAINBOW_ORDER: readonly string[] = [
+  "everymen",
+  "ua",
+  "snide",
+  "ephemerists",
+  "singularity",
+  "albescent",
+  "wow",
+];
+
+/**
+ * Sort factions into canonical rainbow order without mutating the input.
+ * Unknown slugs sort last, preserving their relative (arrival) order.
+ */
+export function sortFactionsByRainbowOrder<T extends { slug: string }>(
+  factions: T[],
+): T[] {
+  const rankOf = (slug: string): number => {
+    const index = FACTION_RAINBOW_ORDER.indexOf(slug);
+    return index === -1 ? FACTION_RAINBOW_ORDER.length : index;
+  };
+  return [...factions].sort(
+    (first, second) => rankOf(first.slug) - rankOf(second.slug),
+  );
+}

@@ -139,13 +139,9 @@ test.describe('collaboration lifecycle', () => {
     }
   })
 
-  // KNOWN GAP (bug): useMyActiveTasks -> GET /praxes?character_id= filters on
-  // Praxis.created_by_id (creator), not membership (backend/services/praxis.py:342),
-  // so an invitee who JOINED the draft never sees it in their sidebar. This test
-  // encodes the intended behaviour and is expected to fail until that filter
-  // matches PraxisMember. When it starts passing, remove test.fail().
+  // Fixed (#344/#349): useMyActiveTasks now filters by membership
+  // (GET /praxes?member_id=), so an invitee who JOINED the draft sees it too.
   test('the invitee ALSO sees the shared draft in their active-tasks sidebar', async ({ browser }) => {
-    test.fail()
     const seed = await seedCollabDraft(browser, 'side-b')
     try {
       const page = await seed.bob.ctx.newPage()
