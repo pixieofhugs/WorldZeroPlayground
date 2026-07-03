@@ -23,11 +23,10 @@ invitation letter pop-ups).
 
 - `Everymen Join Screen.html` — union enlistment poster (from the 2026-06-26
   local export of the cloud project; may lag the cloud copy slightly).
-
-## Not vendored (exist in the cloud project, fetch if needed)
-
-- `templates/ephemerists/Ephemerists Join Screen.html`
-- `templates/singularity/Singularity Join Screen.html`
+- `Ephemerists Join Screen.html` — codex-leaf frontispiece "Walk with the
+  keepers" (contract-shaped, fresh).
+- `Singularity Join Screen.html` — terminal enlist printout "JOIN THE ARRAY"
+  (contract-shaped, fresh, always-dark).
 
 Same pattern as the above: one in-voice recruit poster per faction rendering
 from the join contract, plus a shared chooser rail. For repo builds, compose the
