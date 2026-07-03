@@ -11,10 +11,88 @@
  *   - Owner actions (edit / withdraw / resubmit)
  *   - Flag block
  */
+import type { CSSProperties, ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import { reframeLabel } from '../../components/vote/voteReframes'
 import { TaskCrown } from '../../components/cards/TaskCrown'
 import type { PraxisDetailState } from './usePraxisDetail'
+import type { PraxisMemberOut, PraxisOut } from '../../api/praxis'
+
+// ── Egalitarian byline (#387) ────────────────────────────────────────────────
+//
+// A published collab praxis credits every co-author, not just the creator.
+// `orderedMembers` returns the praxis members with the creator first, then the
+// rest by join order; `MemberByline` renders each name as a link to that
+// character, joined Oxford-style (Ada / Ada & Beth / Ada, Beth & Cy). Every
+// archetype keeps its own byline styling by passing its own `linkStyle` — the
+// list logic lives here once. Solo/duel praxes have a single member (the
+// creator is always seeded), so they render exactly one name as before.
+
+/**
+ * Members ordered for display: the creator (member whose `character_id`
+ * matches `created_by_id`) first, then remaining members by `joined_at`
+ * ascending. Members without a matching creator still render in join order.
+ */
+export function orderedMembers(praxis: PraxisOut): PraxisMemberOut[] {
+  const rest = praxis.members
+    .filter((member) => member.character_id !== praxis.created_by_id)
+    .sort((a, b) => a.joined_at.localeCompare(b.joined_at))
+  const creator = praxis.members.find(
+    (member) => member.character_id === praxis.created_by_id,
+  )
+  return creator ? [creator, ...rest] : rest
+}
+
+export function MemberByline({
+  praxis,
+  linkStyle,
+  linkClassName,
+  separatorStyle,
+  renderName,
+}: {
+  praxis: PraxisOut
+  /** Per-archetype link styling so each faction voice stays distinct. */
+  linkStyle?: CSSProperties
+  linkClassName?: string
+  /** Falls back to `linkStyle` so `, ` / ` & ` inherit the byline's look. */
+  separatorStyle?: CSSProperties
+  /** Optional wrapper for each display name (e.g. Singularity's `NODE_` prefix). */
+  renderName?: (name: string) => ReactNode
+}) {
+  const members = orderedMembers(praxis)
+  const sepStyle = separatorStyle ?? linkStyle
+
+  return (
+    <span
+      style={{
+        display: 'block',
+        whiteSpace: 'nowrap',
+        overflow: 'hidden',
+        textOverflow: 'ellipsis',
+      }}
+    >
+      {members.map((member, index) => {
+        const name = member.character_display_name || `#${member.character_id}`
+        return (
+          <span key={member.character_id}>
+            {index > 0 && (
+              <span style={sepStyle}>
+                {index === members.length - 1 ? ' & ' : ', '}
+              </span>
+            )}
+            <Link
+              to={`/characters/${member.character_id}`}
+              className={linkClassName}
+              style={linkStyle}
+            >
+              {renderName ? renderName(name) : name}
+            </Link>
+          </span>
+        )
+      })}
+    </span>
+  )
+}
 
 // ── Admin moderation bar ─────────────────────────────────────────────────────
 

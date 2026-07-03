@@ -22,7 +22,7 @@ import MediaGallery from '../../../components/MediaGallery'
 import VoteUI from '../../../components/vote/VoteUI'
 import { factionCssVar } from '../../../utils/factions'
 import { formatTimestamp } from '../../../utils/dates'
-import { PraxisAdminBar, PraxisStatusBanners, PraxisOwnerActions, PraxisFlagBlock } from '../shared'
+import { PraxisAdminBar, PraxisStatusBanners, PraxisOwnerActions, PraxisFlagBlock, MemberByline } from '../shared'
 import type { PraxisDetailState } from '../usePraxisDetail'
 import type { PraxisOut } from '../../../api/praxis'
 import type { VoteSummary, VoterDetail } from '../../../api/votes'
@@ -302,23 +302,17 @@ export default function UAPraxisDetail({ state }: { state: PraxisDetailState }) 
             />
           </Link>
           <div style={{ flex: 1, minWidth: 0 }}>
-            <Link
-              to={`/characters/${praxis.created_by_id}`}
-              style={{
+            <MemberByline
+              praxis={praxis}
+              linkStyle={{
                 fontFamily: SERIF,
                 fontStyle: 'italic',
                 fontWeight: 500,
                 fontSize: 15,
                 color: 'var(--ua-ink)',
                 textDecoration: 'none',
-                display: 'block',
-                whiteSpace: 'nowrap',
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
               }}
-            >
-              {praxis.created_by_display_name || `#${praxis.created_by_id}`}
-            </Link>
+            />
             <span
               style={{
                 fontFamily: MONO,

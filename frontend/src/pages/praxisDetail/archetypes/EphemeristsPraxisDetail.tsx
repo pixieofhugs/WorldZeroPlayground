@@ -16,7 +16,7 @@ import EphemeristsVote from '../../../components/vote/EphemeristsVote'
 import { EphMark, EphEyebrow, Foxing, LapisLastWord, toRoman } from '../../../components/cards/ephemeristsAtoms'
 import { factionCssVar } from '../../../utils/factions'
 import { formatTimestamp } from '../../../utils/dates'
-import { PraxisAdminBar, PraxisStatusBanners, PraxisOwnerActions, PraxisFlagBlock, PraxisVoterBreakdown } from '../shared'
+import { PraxisAdminBar, PraxisStatusBanners, PraxisOwnerActions, PraxisFlagBlock, PraxisVoterBreakdown, MemberByline } from '../shared'
 import type { PraxisDetailState } from '../usePraxisDetail'
 
 export default function EphemeristsPraxisDetail({ state }: { state: PraxisDetailState }) {
@@ -166,22 +166,16 @@ export default function EphemeristsPraxisDetail({ state }: { state: PraxisDetail
             />
           </Link>
           <div style={{ flex: 1, minWidth: 0 }}>
-            <Link
-              to={`/characters/${praxis.created_by_id}`}
-              style={{
+            <MemberByline
+              praxis={praxis}
+              linkStyle={{
                 fontFamily: 'var(--eph-serif)',
                 fontStyle: 'italic',
                 fontSize: 13,
                 color: 'var(--eph-lapis)',
                 textDecoration: 'none',
-                display: 'block',
-                whiteSpace: 'nowrap',
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
               }}
-            >
-              {praxis.created_by_display_name || `#${praxis.created_by_id}`}
-            </Link>
+            />
             <span
               style={{
                 fontFamily: 'var(--eph-display)',

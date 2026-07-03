@@ -19,7 +19,7 @@ import MediaGallery from '../../../components/MediaGallery'
 import WowVote from '../../../components/vote/WowVote'
 import { factionCssVar } from '../../../utils/factions'
 import { formatTimestamp } from '../../../utils/dates'
-import { PraxisAdminBar, PraxisStatusBanners, PraxisOwnerActions, PraxisFlagBlock, PraxisVoterBreakdown } from '../shared'
+import { PraxisAdminBar, PraxisStatusBanners, PraxisOwnerActions, PraxisFlagBlock, PraxisVoterBreakdown, MemberByline } from '../shared'
 import type { PraxisDetailState } from '../usePraxisDetail'
 
 // ── whimsy.exe token vocabulary (same as TaskDetailWow) ──────────────────────
@@ -287,22 +287,16 @@ export default function WowPraxisDetail({ state }: { state: PraxisDetailState })
                 </span>
               </Link>
               <div style={{ lineHeight: 1.4, minWidth: 0 }}>
-                <Link
-                  to={`/characters/${praxis.created_by_id}`}
-                  style={{
+                <MemberByline
+                  praxis={praxis}
+                  linkStyle={{
                     fontFamily: SCRIPT,
                     fontSize: 22,
                     color: TITLE_TEXT,
                     lineHeight: 1,
                     textDecoration: 'none',
-                    display: 'block',
-                    whiteSpace: 'nowrap',
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
                   }}
-                >
-                  {praxis.created_by_display_name || `#${praxis.created_by_id}`}
-                </Link>
+                />
                 <div
                   style={{ fontSize: 9, color: CARD_MUTED, letterSpacing: '0.06em', marginTop: 2 }}
                 >

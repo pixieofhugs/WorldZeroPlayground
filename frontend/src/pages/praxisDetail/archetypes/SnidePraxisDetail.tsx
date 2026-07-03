@@ -18,7 +18,7 @@ import MediaGallery from '../../../components/MediaGallery'
 import SnideVote from '../../../components/vote/SnideVote'
 import { factionCssVar } from '../../../utils/factions'
 import { formatTimestamp } from '../../../utils/dates'
-import { PraxisAdminBar, PraxisStatusBanners, PraxisOwnerActions, PraxisFlagBlock, PraxisVoterBreakdown } from '../shared'
+import { PraxisAdminBar, PraxisStatusBanners, PraxisOwnerActions, PraxisFlagBlock, PraxisVoterBreakdown, MemberByline } from '../shared'
 import type { PraxisDetailState } from '../usePraxisDetail'
 
 // Always-dark dossier tokens (scoped to this archetype's container).
@@ -231,21 +231,15 @@ export default function SnidePraxisDetail({ state }: { state: PraxisDetailState 
             />
           </Link>
           <div style={{ flex: 1, minWidth: 0 }}>
-            <Link
-              to={`/characters/${praxis.created_by_id}`}
-              style={{
+            <MemberByline
+              praxis={praxis}
+              linkStyle={{
                 fontFamily: F_MARKER,
                 fontSize: 22,
                 color: PINK,
                 textDecoration: 'none',
-                display: 'block',
-                whiteSpace: 'nowrap',
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
               }}
-            >
-              {praxis.created_by_display_name || `#${praxis.created_by_id}`}
-            </Link>
+            />
             <span
               style={{
                 fontFamily: F_BODY,
