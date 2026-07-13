@@ -23,10 +23,9 @@ import AlbescentEditPraxis from "./editPraxis/archetypes/AlbescentEditPraxis";
 
 type Archetype = (props: { state: EditPraxisState }) => JSX.Element;
 
-// ua owns the gilt-salon Atelier archetype; aged_out inherits it via pickVariant's
-// alias rule (no explicit row). albescent is now a FIRST-CLASS identity (#232
-// slice 1) — its explicit entry beats the albescent→ua alias. StickyNote remains
-// the fallback for `na` / unknown factions.
+// ua owns the gilt-salon Atelier archetype. albescent is a FIRST-CLASS
+// identity (#232 slice 1) with its own entry. StickyNote remains the fallback
+// for `na` / unknown factions.
 const ARCHETYPE_BY_SLUG: Record<string, Archetype> = {
   everymen: EverymenEditPraxis,
   snide: SNIDEEditPraxis,

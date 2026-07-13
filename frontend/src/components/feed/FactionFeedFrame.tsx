@@ -25,9 +25,7 @@ import AlbescentFeedFrame from './AlbescentFeedFrame'
 type FrameProps = { children: ReactNode }
 
 /** Per-faction frames. Each row makes that faction's feed cards bespoke.
- *  The explicit `albescent` row beats the albescent→ua alias in pickVariant, so
- *  Albescent renders its own "Record" frame now (#232 slice 2); aged_out still
- *  inherits ua via the alias. */
+ *  Albescent renders its own "Record" frame (#232 slice 2). */
 const FACTION_FEED_FRAMES: Record<string, ComponentType<FrameProps>> = {
   everymen: EverymenFeedFrame,
   ephemerists: EphemeristsFeedFrame,

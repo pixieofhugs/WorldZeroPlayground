@@ -251,8 +251,7 @@ export default function UaFactionBody({ state }: { state: FactionDetailState }) 
                 <div>
                   <div style={{ fontFamily: DISPLAY, fontStyle: "italic", fontSize: 13, lineHeight: 1.6, color: INK, marginBottom: 14 }}>
                     {membership.currentFactionSlug &&
-                    membership.currentFactionSlug !== "na" &&
-                    membership.currentFactionSlug !== "aged_out"
+                    membership.currentFactionSlug !== "na"
                       ? `Enroll in ${faction.name}? You won't be able to rejoin ${factionName(membership.currentFactionSlug)} after leaving.`
                       : `Enroll in ${faction.name}?`}
                   </div>
