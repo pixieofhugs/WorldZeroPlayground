@@ -32,6 +32,7 @@ class CurrentUser(BaseModel):
     era_name: str = ""
     can_propose_task: bool = False
     can_propose_metatask: bool = False
+    can_see_metatasks: bool = False
     can_see_retired_tasks: bool = False
     can_see_pending_tasks: bool = False
     can_comment: bool = False

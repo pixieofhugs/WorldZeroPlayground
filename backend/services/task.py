@@ -202,11 +202,20 @@ async def list_tasks(
     sort: Optional[str] = None,
     limit: int = 50,
     offset: int = 0,
+    viewer: Optional[Character] = None,
+    skip_level_check: bool = False,
+    era: EraConfig = CURRENT_ERA,
 ) -> list[Task]:
     """Query tasks with optional filters, excluding hidden-faction tasks.
 
     If ``task_type`` is None or 'all', both standard and metatask rows are
     returned. Pass 'standard' or 'metatask' to filter.
+
+    Metatask rows are additionally gated by ``era.level_to_see_metatasks``
+    (#453): ``viewer`` (the authenticated character, ``None`` for anonymous
+    callers) must be at or above the gate to receive them, mirroring the
+    spec's "below level 6 cannot see the metatask list". ``skip_level_check``
+    is the admin escape hatch, mirroring :func:`propose_task`.
 
     ``sort='newest'`` orders by creation time (newest first); the default
     ordering surfaces the easiest, highest-value tasks first.
@@ -242,6 +251,17 @@ async def list_tasks(
             raise HTTPException(
                 status_code=422, detail=f"Invalid task_type: {task_type}"
             )
+
+    # Metatask visibility gate (#453): the metatask list only opens at
+    # era.level_to_see_metatasks. Anonymous viewers are always below the gate.
+    if not skip_level_check:
+        viewer_sees_metatasks = False
+        if viewer is not None:
+            era_row = await get_current_era_row(session)
+            stats = await get_or_create_stats(session, viewer.id, era_row.id)
+            viewer_sees_metatasks = stats.level >= era.level_to_see_metatasks
+        if not viewer_sees_metatasks:
+            query = query.where(Task.task_type != TaskType.metatask)
 
     if level is not None:
         query = query.where(Task.level_required >= level)

@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from db import get_db
 from dependencies import (
     account_has_admin_role,
+    get_current_account_optional,
     get_current_character,
     get_current_character_optional,
 )
@@ -41,7 +42,11 @@ async def list_tasks(
     offset: int = 0,
     session: AsyncSession = Depends(get_db),
     viewer: Optional[Character] = Depends(get_current_character_optional),
+    account: Optional[Account] = Depends(get_current_account_optional),
 ):
+    is_admin = account is not None and await account_has_admin_role(
+        account.id, session
+    )
     tasks = await service_list_tasks(
         session,
         status=status,
@@ -55,6 +60,8 @@ async def list_tasks(
         sort=sort,
         limit=limit,
         offset=offset,
+        viewer=viewer,
+        skip_level_check=is_admin,
     )
     return [
         await build_task_out_for_viewer(task, viewer, session) for task in tasks

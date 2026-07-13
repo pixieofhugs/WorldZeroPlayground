@@ -3,11 +3,29 @@ import pytest
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from game_config import CURRENT_ERA
 from models.account import Account
 from models.character import Character
 from models.character_stats import CharacterStats
 from models.faction import Faction, FactionStatus
 from models.task import Task, TaskStatus
+
+
+async def _set_character_level(
+    db_session: AsyncSession, character_id: int, era_id: int, level: int
+) -> None:
+    """Bump a character's current-era level directly on CharacterStats."""
+    from sqlalchemy import select as sa_select
+
+    result = await db_session.execute(
+        sa_select(CharacterStats).where(
+            CharacterStats.character_id == character_id,
+            CharacterStats.era_id == era_id,
+        )
+    )
+    stats = result.scalar_one()
+    stats.level = level
+    await db_session.commit()
 
 
 @pytest.mark.asyncio
@@ -788,8 +806,14 @@ async def test_list_tasks_default_returns_both_types(
     client: AsyncClient,
     db_session: AsyncSession,
     character: Character,
+    auth_headers: dict,
+    era,
 ):
-    """GET /tasks with no task_type filter returns both standard and metatasks."""
+    """GET /tasks with no task_type filter returns both standard and metatasks.
+
+    The viewer sits at ``era.level_to_see_metatasks`` — below the gate the
+    metatask row would be filtered out (#453, covered separately below).
+    """
     from models.task import TaskType
 
     standard_task = Task(
@@ -819,7 +843,11 @@ async def test_list_tasks_default_returns_both_types(
     await db_session.refresh(standard_task)
     await db_session.refresh(meta_task)
 
-    resp = await client.get("/tasks")
+    await _set_character_level(
+        db_session, character.id, era.id, CURRENT_ERA.level_to_see_metatasks
+    )
+
+    resp = await client.get("/tasks", headers=auth_headers)
     assert resp.status_code == 200
     data = resp.json()
     ids = {t["id"] for t in data}
@@ -882,8 +910,10 @@ async def test_list_tasks_metatask_filter(
     client: AsyncClient,
     db_session: AsyncSession,
     character: Character,
+    auth_headers: dict,
+    era,
 ):
-    """GET /tasks?task_type=metatask returns only metatasks."""
+    """GET /tasks?task_type=metatask returns only metatasks (viewer at the see-gate)."""
     from models.task import TaskType
 
     standard_task = Task(
@@ -913,7 +943,13 @@ async def test_list_tasks_metatask_filter(
     await db_session.refresh(standard_task)
     await db_session.refresh(meta_task)
 
-    resp = await client.get("/tasks", params={"task_type": "metatask"})
+    await _set_character_level(
+        db_session, character.id, era.id, CURRENT_ERA.level_to_see_metatasks
+    )
+
+    resp = await client.get(
+        "/tasks", params={"task_type": "metatask"}, headers=auth_headers
+    )
     assert resp.status_code == 200
     data = resp.json()
     for task_data in data:
@@ -921,6 +957,118 @@ async def test_list_tasks_metatask_filter(
     ids = {t["id"] for t in data}
     assert meta_task.id in ids
     assert standard_task.id not in ids
+
+
+# ---------------------------------------------------------------------------
+# #453 — metatask-list visibility gate (era.level_to_see_metatasks)
+# ---------------------------------------------------------------------------
+
+
+async def _seed_standard_and_metatask(
+    db_session: AsyncSession, character: Character
+) -> tuple[Task, Task]:
+    """Seed one active standard task and one active metatask."""
+    from models.task import TaskType
+
+    standard_task = Task(
+        title="Gate Standard Task",
+        description="",
+        point_value=10,
+        level_required=0,
+        status=TaskStatus.active,
+        task_type=TaskType.standard,
+        created_by=character.id,
+        primary_faction_slug="ua",
+    )
+    meta_task = Task(
+        title="Gate Metatask",
+        description="",
+        point_value=5,
+        level_required=0,
+        status=TaskStatus.active,
+        task_type=TaskType.metatask,
+        created_by=character.id,
+        primary_faction_slug="ua",
+        metatask_faction_slug="ua",
+    )
+    db_session.add(standard_task)
+    db_session.add(meta_task)
+    await db_session.commit()
+    await db_session.refresh(standard_task)
+    await db_session.refresh(meta_task)
+    return standard_task, meta_task
+
+
+@pytest.mark.asyncio
+async def test_metatask_list_hidden_below_see_gate(
+    client: AsyncClient,
+    db_session: AsyncSession,
+    character: Character,
+    auth_headers: dict,
+    era,
+):
+    """A character one level below era.level_to_see_metatasks gets no metatasks."""
+    standard_task, meta_task = await _seed_standard_and_metatask(db_session, character)
+    await _set_character_level(
+        db_session, character.id, era.id, CURRENT_ERA.level_to_see_metatasks - 1
+    )
+
+    resp = await client.get("/tasks", headers=auth_headers)
+    assert resp.status_code == 200
+    ids = {t["id"] for t in resp.json()}
+    assert standard_task.id in ids
+    assert meta_task.id not in ids
+
+    # Explicitly requesting the metatask list yields nothing below the gate.
+    resp_meta = await client.get(
+        "/tasks", params={"task_type": "metatask"}, headers=auth_headers
+    )
+    assert resp_meta.status_code == 200
+    assert resp_meta.json() == []
+
+
+@pytest.mark.asyncio
+async def test_metatask_list_visible_at_see_gate(
+    client: AsyncClient,
+    db_session: AsyncSession,
+    character: Character,
+    auth_headers: dict,
+    era,
+):
+    """A character at era.level_to_see_metatasks sees metatask rows."""
+    standard_task, meta_task = await _seed_standard_and_metatask(db_session, character)
+    await _set_character_level(
+        db_session, character.id, era.id, CURRENT_ERA.level_to_see_metatasks
+    )
+
+    resp = await client.get("/tasks", headers=auth_headers)
+    assert resp.status_code == 200
+    ids = {t["id"] for t in resp.json()}
+    assert standard_task.id in ids
+    assert meta_task.id in ids
+
+    resp_meta = await client.get(
+        "/tasks", params={"task_type": "metatask"}, headers=auth_headers
+    )
+    assert resp_meta.status_code == 200
+    meta_ids = {t["id"] for t in resp_meta.json()}
+    assert meta_ids == {meta_task.id}
+
+
+@pytest.mark.asyncio
+async def test_metatask_list_hidden_for_anonymous(
+    client: AsyncClient,
+    db_session: AsyncSession,
+    character: Character,
+):
+    """Anonymous viewers are always below the see-gate — no metatask rows."""
+    standard_task, meta_task = await _seed_standard_and_metatask(db_session, character)
+
+    resp = await client.get("/tasks")
+    assert resp.status_code == 200
+    ids = {t["id"] for t in resp.json()}
+    assert standard_task.id in ids
+    assert meta_task.id not in ids
 
 
 # ---------------------------------------------------------------------------

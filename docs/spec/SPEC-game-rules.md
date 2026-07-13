@@ -388,5 +388,5 @@ Items flagged ⚠️ above, consolidated for engineering:
 6. ~~Snide tie rule: opponent gets **own** faction's `duel_loss_modifier`, not Snide's. Update `compute_duel_multiplier`.~~ — ✅ **done** (`services/scoring.py::compute_duel_multiplier`).
 7. Second character level gate: raise from 3 → **4**. Gate the Albescent faction choice for new characters behind "account has at least one character at level 8 who has completed at least one task from each faction."
 8. Albescent second-character onboarding: when a second-or-later character is created as Albescent, start them in `albescent` at level 1, skip UA assignment.
-9. Metatask level privileges: remove any level-4 metatask access; implement level-6 "see list + propose", level-7 "apply own faction", Albescent "apply any faction".
+9. ~~Metatask level privileges: remove any level-4 metatask access; implement level-6 "see list + propose", level-7 "apply own faction", Albescent "apply any faction".~~ — ✅ **done** — L6 see-gate `era.level_to_see_metatasks` enforced in `services/task.py::list_tasks` (#453); L6 propose in `services/task.py::propose_task`; L7 apply-own + Albescent any-faction in `services/praxis.py`.
 10. Level table display: remove "group welcome letters" from level-2 frontend display (letters flow lives in Faction spec, not level table).

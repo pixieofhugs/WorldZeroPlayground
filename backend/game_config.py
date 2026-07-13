@@ -86,6 +86,7 @@ class EraConfig:
     # instead of hardcoding integers.
     level_to_propose_task: int
     level_to_propose_metatask: int
+    level_to_see_metatasks: int
     level_to_see_retired_tasks: int
     level_to_see_pending_tasks: int
 

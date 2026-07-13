@@ -12,6 +12,7 @@ GATE_ATTRS = [
     "flag_level_required",
     "second_character_level_required",
     "level_to_propose_metatask",
+    "level_to_see_metatasks",
     "metatask_apply_level",
     "albescent_level_required",
 ]

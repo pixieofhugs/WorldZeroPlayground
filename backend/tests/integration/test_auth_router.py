@@ -54,6 +54,7 @@ async def test_auth_me_capabilities_no_character(
     data = resp.json()
     assert data["can_propose_task"] is False
     assert data["can_propose_metatask"] is False
+    assert data["can_see_metatasks"] is False
     assert data["can_see_retired_tasks"] is False
     assert data["can_see_pending_tasks"] is False
 
@@ -75,6 +76,7 @@ async def test_auth_me_capabilities_level_1(
     data = resp.json()
     assert data["can_propose_task"] is False
     assert data["can_propose_metatask"] is False
+    assert data["can_see_metatasks"] is False
     assert data["can_see_retired_tasks"] is False
     assert data["can_see_pending_tasks"] is False
 
@@ -96,6 +98,7 @@ async def test_auth_me_capabilities_level_2(
     data = resp.json()
     assert data["can_propose_task"] is False
     assert data["can_propose_metatask"] is False
+    assert data["can_see_metatasks"] is False
     assert data["can_see_retired_tasks"] is True
     assert data["can_see_pending_tasks"] is False
 
@@ -117,6 +120,7 @@ async def test_auth_me_capabilities_level_3(
     data = resp.json()
     assert data["can_propose_task"] is True
     assert data["can_propose_metatask"] is False
+    assert data["can_see_metatasks"] is False
     assert data["can_see_retired_tasks"] is True
     assert data["can_see_pending_tasks"] is True
 
@@ -138,6 +142,7 @@ async def test_auth_me_capabilities_level_6(
     data = resp.json()
     assert data["can_propose_task"] is True
     assert data["can_propose_metatask"] is True
+    assert data["can_see_metatasks"] is True
     assert data["can_see_retired_tasks"] is True
     assert data["can_see_pending_tasks"] is True
 
@@ -161,5 +166,6 @@ async def test_auth_me_capabilities_admin_short_circuit(
     assert data["is_admin"] is True
     assert data["can_propose_task"] is True
     assert data["can_propose_metatask"] is True
+    assert data["can_see_metatasks"] is True
     assert data["can_see_retired_tasks"] is True
     assert data["can_see_pending_tasks"] is True

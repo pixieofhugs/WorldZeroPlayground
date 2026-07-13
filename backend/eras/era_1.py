@@ -524,6 +524,8 @@ ERA_1_LEVEL_PROFILES = (
     LevelProfile(
         rank="Chronicler",
         unlocks=(
+            LevelUnlock(LevelUnlockKind.ability, "See the metatask list",
+                        "The metatask board unseals — read what the factions are rallying around."),
             LevelUnlock(LevelUnlockKind.ability, "Propose a metatask",
                         "Draft a task built for your whole faction to apply to."),
             LevelUnlock(LevelUnlockKind.sense, "Remember a place you've never been",
@@ -567,6 +569,7 @@ ERA_1 = EraConfig(
     # Capability level gates (see SPEC-game-rules.md "Level privileges")
     level_to_propose_task=3,
     level_to_propose_metatask=6,
+    level_to_see_metatasks=6,
     level_to_see_retired_tasks=2,
     level_to_see_pending_tasks=3,
     # Praxis / moderation / metatask gates

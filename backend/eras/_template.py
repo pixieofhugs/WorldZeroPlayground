@@ -211,6 +211,7 @@ ERA_N = EraConfig(
     # Capability level gates — minimum level to unlock each action.
     level_to_propose_task=3,
     level_to_propose_metatask=6,
+    level_to_see_metatasks=6,
     level_to_see_retired_tasks=2,
     level_to_see_pending_tasks=3,
 
