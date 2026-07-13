@@ -346,8 +346,7 @@ export default function WowFactionBody({ state }: { state: FactionDetailState })
                   <div>
                     <div style={{ fontFamily: BODY, fontSize: 10.5, lineHeight: 1.6, color: INK, marginBottom: 14 }}>
                       {membership.currentFactionSlug &&
-                      membership.currentFactionSlug !== "na" &&
-                      membership.currentFactionSlug !== "aged_out"
+                      membership.currentFactionSlug !== "na"
                         ? `Join ${faction.name}? You won't be able to rejoin ${factionName(membership.currentFactionSlug)} after leaving.`
                         : `Join ${faction.name}?`}
                     </div>

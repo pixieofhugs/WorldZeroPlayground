@@ -26,7 +26,7 @@ export interface CredentialCardProps {
 }
 
 /** Faction slugs with a bespoke `--faction-<key>-card-*` token set in index.css.
- *  Everything else (na, aged_out, factionless, unknown) → neutral field treatment.
+ *  Everything else (na, factionless, unknown) → neutral field treatment.
  *  NB: do not route through factions.ts FACTION_ALIASES — albescent keeps its own
  *  identity here, and na must stay neutral (not aliased to ua). */
 const CARD_KEY: Record<string, string> = {

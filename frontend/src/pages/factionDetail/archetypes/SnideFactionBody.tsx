@@ -343,8 +343,7 @@ export default function SnideFactionBody({ state }: { state: FactionDetailState 
                   <div>
                     <div style={{ fontFamily: TYPE, fontSize: 11, lineHeight: 1.6, color: "#e7e4d8", marginBottom: 14 }}>
                       {membership.currentFactionSlug &&
-                      membership.currentFactionSlug !== "na" &&
-                      membership.currentFactionSlug !== "aged_out"
+                      membership.currentFactionSlug !== "na"
                         ? `Join ${faction.name}? You won't be able to rejoin ${factionName(membership.currentFactionSlug)} after leaving.`
                         : `Join ${faction.name}?`}
                     </div>

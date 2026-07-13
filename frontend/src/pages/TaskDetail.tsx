@@ -24,9 +24,8 @@ import CommentThread from "../components/comments/CommentThread";
 type Archetype = (props: { state: TaskDetailState }) => JSX.Element | null;
 
 // Only factions with a bespoke archetype are listed; everything else (incl.
-// aged_out) falls through to DefaultTaskDetail below. albescent is now a
-// FIRST-CLASS identity (#232 slice 1) — its explicit entry beats the
-// albescent→ua alias in pickVariant.
+// na) falls through to DefaultTaskDetail below. albescent is a FIRST-CLASS
+// identity (#232 slice 1) with its own entry.
 export const ARCHETYPE_BY_SLUG: Record<string, Archetype> = {
   snide: SNIDETaskDetail,
   everymen: EverymenTaskDetail,

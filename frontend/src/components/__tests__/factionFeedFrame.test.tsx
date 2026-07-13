@@ -55,8 +55,8 @@ describe("FactionFeedFrame dispatch", () => {
   });
 
   it("tints (does not swallow) a non-null unregistered faction card", () => {
-    // The default frame owns the faction tint lifted off the cards: ua/aged_out
-    // have no bespoke frame, so they get the neutral tinted chrome here — but the
+    // The default frame owns the faction tint lifted off the cards: a faction
+    // with no bespoke frame gets the neutral tinted chrome here — but the
     // card body must still render inside it.
     for (const key of Object.keys(FACTION_FEED_FRAMES)) delete FACTION_FEED_FRAMES[key];
     const html = renderToStaticMarkup(
