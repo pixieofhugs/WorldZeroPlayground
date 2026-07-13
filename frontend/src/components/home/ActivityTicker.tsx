@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { getActivityFeed, type ActivityFeedItem } from '../../api/activityFeed'
 import { factionCssVar } from '../../utils/factions'
 
@@ -12,40 +13,44 @@ import { factionCssVar } from '../../utils/factions'
  */
 
 // Feed types we know how to phrase. Anything not listed is skipped so the
-// ticker never renders a half-built entry. Values mirror FEED_ITEM_TYPE_* in
-// backend/services/activity_feed.py.
-const VERBS: Record<string, string> = {
-  friend_completion: 'completed',
-  foe_completion: 'completed',
-  friend_signup: 'signed up for',
-  global_task: 'new task',
-  vote_on_mine: 'voted on',
-  collab_invite: 'started a collab on',
-  duel_challenge: 'challenged a duel on',
-  era_announcement: 'new era',
-}
+// ticker never renders a half-built entry. Map keys mirror FEED_ITEM_TYPE_*
+// in backend/services/activity_feed.py; values are home.json copy keys.
+const VERB_KEYS = {
+  friend_completion: 'ticker.verbs.friend_completion',
+  foe_completion: 'ticker.verbs.foe_completion',
+  friend_signup: 'ticker.verbs.friend_signup',
+  global_task: 'ticker.verbs.global_task',
+  vote_on_mine: 'ticker.verbs.vote_on_mine',
+  collab_invite: 'ticker.verbs.collab_invite',
+  duel_challenge: 'ticker.verbs.duel_challenge',
+  era_announcement: 'ticker.verbs.era_announcement',
+} as const
+
+type VerbKey = (typeof VERB_KEYS)[keyof typeof VERB_KEYS]
 
 interface TickerEntry {
-  player: string
-  verb: string
+  /** null → the system actor ("World Zero") — translated at render time. */
+  player: string | null
+  verbKey: VerbKey
   subject: string
   faction: string | null
 }
 
 function toEntry(item: ActivityFeedItem): TickerEntry | null {
-  const verb = VERBS[item.type]
-  if (!verb) return null
-  const player = item.actor_display_name ?? 'World Zero'
+  const verbKey =
+    item.type in VERB_KEYS ? VERB_KEYS[item.type as keyof typeof VERB_KEYS] : null
+  if (!verbKey) return null
   const subject =
     item.payload?.task_title ??
     item.payload?.title ??
     item.payload?.praxis_title ??
     item.payload?.era_name ??
     ''
-  return { player, verb, subject, faction: item.actor_faction_slug }
+  return { player: item.actor_display_name ?? null, verbKey, subject, faction: item.actor_faction_slug }
 }
 
 function TickerCard({ entry }: { entry: TickerEntry }) {
+  const { t } = useTranslation('home')
   const accent = factionCssVar(entry.faction)
   return (
     <div
@@ -71,13 +76,13 @@ function TickerCard({ entry }: { entry: TickerEntry }) {
           textOverflow: 'ellipsis',
         }}
       >
-        {entry.player}
+        {entry.player ?? t('ticker.defaultActor')}
       </div>
       <div
         className="font-body"
         style={{ fontSize: 9, color: 'var(--color-text-tertiary)', lineHeight: 1 }}
       >
-        {entry.verb}
+        {t(entry.verbKey)}
       </div>
       {entry.subject && (
         <div
@@ -100,6 +105,7 @@ function TickerCard({ entry }: { entry: TickerEntry }) {
 }
 
 export default function ActivityTicker() {
+  const { t } = useTranslation('home')
   const [entries, setEntries] = useState<TickerEntry[]>([])
 
   useEffect(() => {
@@ -158,7 +164,7 @@ export default function ActivityTicker() {
               animation: 'wz-blink 1.4s ease-in-out infinite',
             }}
           />
-          Live
+          {t('ticker.live')}
         </div>
       </div>
 
@@ -186,7 +192,7 @@ export default function ActivityTicker() {
         }}
       >
         {doubled.map((entry, i) => (
-          <TickerCard key={`${i}-${entry.player}`} entry={entry} />
+          <TickerCard key={`${i}-${entry.player ?? 'wz'}`} entry={entry} />
         ))}
       </div>
     </div>

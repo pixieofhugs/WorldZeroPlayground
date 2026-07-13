@@ -1,5 +1,6 @@
 import { useEffect, useState, type CSSProperties } from 'react'
 import { useSearchParams, useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { useAuth } from '../auth/AuthContext'
 import { listPraxes, createPraxis, type PraxisCardOut } from '../api/praxis'
 import { listTasks, type TaskOut } from '../api/tasks'
@@ -47,6 +48,7 @@ const markerButton: CSSProperties = {
 }
 
 export default function Home() {
+  const { t } = useTranslation('home')
   const { user, refetch } = useAuth()
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
@@ -71,7 +73,7 @@ export default function Home() {
       const praxis = await createPraxis({ task_id: id, type: 'solo' })
       navigate(`/praxes/${praxis.id}/edit`)
     } catch (err) {
-      setSignupMsg(extractError(err, 'Could not sign up — make sure you are logged in.'))
+      setSignupMsg(extractError(err, t('signup.error')))
     }
   }
 
@@ -98,7 +100,7 @@ export default function Home() {
     <div className="pb-12">
       {loginRequired && (
         <p className="font-body text-sm text-muted mt-6 border-2 border-border px-4 py-2 inline-block">
-          You need to log in to access that page.
+          {t('loginRequired')}
         </p>
       )}
 
@@ -119,7 +121,7 @@ export default function Home() {
           className="relative"
           style={{ fontFamily: 'var(--font-faction-script)', fontSize: 20, color: 'var(--color-text-secondary)', marginBottom: 16, letterSpacing: '0.06em' }}
         >
-          players · tasks · praxis · score · city · factions · chaos
+          {t('hero.eyebrow')}
         </div>
         <div className="relative" style={{ marginBottom: 18 }}>
           <span
@@ -137,21 +139,21 @@ export default function Home() {
               backgroundRepeat: 'no-repeat',
             }}
           >
-            World Zero
+            {t('hero.wordmark')}
           </span>
         </div>
         <div
           className="relative mx-auto"
           style={{ fontFamily: 'var(--font-faction-script)', fontSize: 28, lineHeight: 1.4, color: 'var(--color-text-secondary)', marginBottom: 40, maxWidth: 560 }}
         >
-          a collaborative production game played in the real world
+          {t('hero.tagline')}
         </div>
         <button
           onClick={handlePrimaryCta}
           className="btn-primary relative"
           style={{ ...markerButton, padding: '14px 48px' }}
         >
-          {user ? 'Find a Task' : 'Sign Up Here'}
+          {user ? t('hero.cta.loggedIn') : t('hero.cta.loggedOut')}
         </button>
         {!user && import.meta.env.DEV && (
           <div className="relative" style={{ marginTop: 14 }}>
@@ -160,7 +162,7 @@ export default function Home() {
               className="btn-outline"
               style={{ padding: '0.25rem 0.75rem' }}
             >
-              dev login (no OAuth)
+              {t('hero.devLogin')}
             </button>
           </div>
         )}
@@ -181,9 +183,9 @@ export default function Home() {
 
       {/* ── FEATURED PRAXIS ── */}
       <section style={{ paddingTop: 48 }}>
-        <SectionHeader title="Featured Praxis" href="/praxes" linkLabel="see all" />
+        <SectionHeader title={t('sections.featuredPraxis.title')} href="/praxes" linkLabel={t('sections.featuredPraxis.link')} />
         {feed.length === 0 ? (
-          <p className="font-body text-muted">No praxis yet. Be the first!</p>
+          <p className="font-body text-muted">{t('sections.featuredPraxis.empty')}</p>
         ) : (
           <div className="flex flex-wrap gap-5 items-start">
             {feed.map((p) => <PraxisCard key={p.id} praxis={p} />)}
@@ -193,7 +195,7 @@ export default function Home() {
 
       {/* ── NEWEST TASK ── */}
       <section style={{ paddingTop: 48 }}>
-        <SectionHeader title="Newest Task" href="/tasks" linkLabel="more tasks" />
+        <SectionHeader title={t('sections.newestTask.title')} href="/tasks" linkLabel={t('sections.newestTask.link')} />
         {newestTask ? (
           <TaskCard
             task={newestTask}
@@ -206,7 +208,7 @@ export default function Home() {
             onSignup={user && newestTask.can_submit_praxis ? handleSignup : undefined}
           />
         ) : (
-          <p className="font-body text-muted">No tasks yet.</p>
+          <p className="font-body text-muted">{t('sections.newestTask.empty')}</p>
         )}
       </section>
 
@@ -215,14 +217,14 @@ export default function Home() {
         <div
           style={{ fontFamily: 'var(--font-faction-marker)', fontSize: 36, lineHeight: 1.1, color: 'var(--color-text-primary)', marginBottom: 24, transform: 'rotate(-1.2deg)' }}
         >
-          not sure where to start?
+          {t('closing.prompt')}
         </div>
         <button
           onClick={handleRandomTask}
           className="btn-outline"
           style={{ ...markerButton, padding: '14px 52px' }}
         >
-          → grab a random task ←
+          {t('closing.randomTask')}
         </button>
       </section>
     </div>
