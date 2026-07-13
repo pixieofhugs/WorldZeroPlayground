@@ -1,1 +1,46 @@
-{}
+{
+  "loginRequired": "You need to log in to access that page.",
+  "signup": {
+    "error": "Could not sign up — make sure you are logged in."
+  },
+  "hero": {
+    "eyebrow": "players · tasks · praxis · score · city · factions · chaos",
+    "wordmark": "World Zero",
+    "tagline": "a collaborative production game played in the real world",
+    "cta": {
+      "loggedIn": "Find a Task",
+      "loggedOut": "Sign Up Here"
+    },
+    "devLogin": "dev login (no OAuth)"
+  },
+  "sections": {
+    "featuredPraxis": {
+      "title": "Featured Praxis",
+      "link": "see all",
+      "empty": "No praxis yet. Be the first!"
+    },
+    "newestTask": {
+      "title": "Newest Task",
+      "link": "more tasks",
+      "empty": "No tasks yet."
+    }
+  },
+  "closing": {
+    "prompt": "not sure where to start?",
+    "randomTask": "→ grab a random task ←"
+  },
+  "ticker": {
+    "live": "Live",
+    "defaultActor": "World Zero",
+    "verbs": {
+      "friend_completion": "completed",
+      "foe_completion": "completed",
+      "friend_signup": "signed up for",
+      "global_task": "new task",
+      "vote_on_mine": "voted on",
+      "collab_invite": "started a collab on",
+      "duel_challenge": "challenged a duel on",
+      "era_announcement": "new era"
+    }
+  }
+}
