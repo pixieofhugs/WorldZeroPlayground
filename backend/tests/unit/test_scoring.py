@@ -207,7 +207,7 @@ def test_faction_multiplier_own_faction():
 def test_faction_multiplier_other_faction():
     result = compute_faction_multiplier("wow", "ua", ERA_1)
     assert result == ERA_1.factions["wow"].other_task_modifier
-    assert result == 0.7
+    assert result == 1.0  # flattened for Era 1 (issue #452)
 
 
 def test_faction_multiplier_unknown_faction():
@@ -239,7 +239,7 @@ def test_collab_other_faction():
         collaboration_mode=COLLABORATION_MODE_COLLAB,
     )
     assert result == ERA_1.factions["wow"].collab_other_modifier
-    assert result == 0.9
+    assert result == 1.0  # flattened for Era 1 (issue #452)
 
 
 def test_collab_unaffiliated_task():
@@ -322,8 +322,8 @@ def test_cross_faction_collab_example():
         "ephemerists", "snide", ERA_1,
         collaboration_mode=COLLABORATION_MODE_COLLAB,
     )
-    assert wow_mult == 0.9   # collab_other_modifier for wow
-    assert ephemerists_mult == 0.7  # collab_other_modifier for ephemerists
+    assert wow_mult == 1.0   # collab_other_modifier for wow (flattened, #452)
+    assert ephemerists_mult == 1.0  # collab_other_modifier for ephemerists (flattened, #452)
 
 
 def test_ua_full_points():
@@ -344,17 +344,17 @@ def test_albescent_no_penalties():
     assert config.collab_other_modifier == 1.0
 
 
-def test_ephemerists_other_faction_penalty():
-    """Ephemerists get 0.7 on other-faction tasks."""
+def test_ephemerists_no_other_faction_penalty():
+    """Ephemerists get full points on other-faction tasks (flattened, #452)."""
     config = ERA_1.factions["ephemerists"]
     assert config.own_task_modifier == 1.0
-    assert config.other_task_modifier == 0.7
+    assert config.other_task_modifier == 1.0
     assert config.collab_own_modifier == 1.0
-    assert config.collab_other_modifier == 0.7
+    assert config.collab_other_modifier == 1.0
 
 
-def test_everymen_other_faction_penalty():
-    """Everymen get 0.7 on other-faction tasks."""
+def test_everymen_no_other_faction_penalty():
+    """Everymen get full points on other-faction tasks (flattened, #452)."""
     config = ERA_1.factions["everymen"]
     assert config.own_task_modifier == 1.0
-    assert config.other_task_modifier == 0.7
+    assert config.other_task_modifier == 1.0

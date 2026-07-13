@@ -18,6 +18,9 @@ from game_config import (
 # FACTIONS
 # =============================================================================
 
+# Cross-faction modifiers (other_task_modifier / collab_other_modifier) are
+# deliberately flattened to 1.0 for Era 1 — no faction is penalized for working
+# a task outside its own faction (issue #452). Re-tune in a future era if desired.
 ERA_1_FACTIONS = {
     "ua": FactionConfig(
         slug="ua",
@@ -40,9 +43,9 @@ ERA_1_FACTIONS = {
         description="Specialists in one-on-one competition. Bonus points for winning duels.",
         can_always_rejoin=False,
         own_task_modifier=1.0,
-        other_task_modifier=0.7,
+        other_task_modifier=1.0,
         collab_own_modifier=1.0,
-        collab_other_modifier=0.7,
+        collab_other_modifier=1.0,
         duel_win_modifier=2.0,        # duel win: 200% of base (Snide high-risk bonus)
         duel_loss_modifier=0.0,       # duel loss: 0% of base (Snide high-risk penalty)
     ),
@@ -52,9 +55,9 @@ ERA_1_FACTIONS = {
         description="Collective-minded. Excel at their own faction's tasks; reduced elsewhere.",
         can_always_rejoin=False,
         own_task_modifier=1.1,        # +10% on solo own-faction
-        other_task_modifier=0.7,      # -30% on solo other-faction
+        other_task_modifier=1.0,
         collab_own_modifier=1.1,      # +10% on collab own-faction
-        collab_other_modifier=0.9,    # -10% on collab other-faction (less penalty)
+        collab_other_modifier=1.0,
         duel_win_modifier=1.5,
         duel_loss_modifier=0.5,
     ),
@@ -64,9 +67,9 @@ ERA_1_FACTIONS = {
         description="Wanderers who set down fleeting truths before the road moves on. Task Vision — access to select retired tasks.",
         can_always_rejoin=False,
         own_task_modifier=1.0,
-        other_task_modifier=0.7,
+        other_task_modifier=1.0,
         collab_own_modifier=1.0,
-        collab_other_modifier=0.7,
+        collab_other_modifier=1.0,
         duel_win_modifier=1.5,
         duel_loss_modifier=0.5,
     ),
@@ -77,9 +80,9 @@ ERA_1_FACTIONS = {
         "do the work in front of them and finish what they start.",
         can_always_rejoin=False,
         own_task_modifier=1.0,
-        other_task_modifier=0.7,
+        other_task_modifier=1.0,
         collab_own_modifier=1.0,
-        collab_other_modifier=0.7,
+        collab_other_modifier=1.0,
         duel_win_modifier=1.5,
         duel_loss_modifier=0.5,
     ),

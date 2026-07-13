@@ -150,18 +150,20 @@ Level is recalculated synchronously every time score changes (via `recalculate_c
 
 Multipliers are applied based on the character's faction and the task's `primary_faction_slug`. A task with `primary_faction_slug = "na"` is treated as own-faction for all characters (no penalty).
 
+**Era 1 balance decision (issue #452):** all cross-faction (other-faction) modifiers are flattened to 1.0× — no faction is penalized for working a task outside its own faction. These values are era-configurable and may be re-tuned in a later era.
+
 ### Solo and duel (use `own_task_modifier` / `other_task_modifier`)
 
 | Faction | Own-faction task | Other-faction task |
 |---|---|---|
 | UA | 1.0× | 1.0× |
-| UA Masters | 0.8× | 0.8× |
-| S.N.I.D.E. | 1.0× | 0.7× |
-| Gestalt | 1.1× | 0.7× |
-| Ephemerists | 1.0× | 0.7× |
-| Analog | 1.0× | 0.7× |
-| Singularity | 1.0× | 0.7× |
+| S.N.I.D.E. | 1.0× | 1.0× |
+| Warriors of Whimsy | 1.1× | 1.0× |
+| Ephemerists | 1.0× | 1.0× |
+| Everymen | 1.0× | 1.0× |
+| Singularity | 1.0× | 1.0× |
 | /Albescent | 1.0× | 1.0× |
+| None (`na`) | 1.0× | 1.0× |
 
 For duels, `faction_multiplier` uses the solo own/other modifiers, and `duel_multiplier` is applied on top.
 
@@ -172,13 +174,13 @@ Each member's score is computed independently using their own faction's collab m
 | Faction | Own-faction collab | Other-faction collab |
 |---|---|---|
 | UA | 1.0× | 1.0× |
-| UA Masters | 0.8× | 0.8× |
-| S.N.I.D.E. | 1.0× | 0.7× |
-| Gestalt | 1.1× | 0.9× (less penalty than solo) |
-| Ephemerists | 1.0× | 0.7× |
-| Analog | 1.0× | 0.7× |
-| Singularity | 1.0× | 0.7× |
+| S.N.I.D.E. | 1.0× | 1.0× |
+| Warriors of Whimsy | 1.1× | 1.0× |
+| Ephemerists | 1.0× | 1.0× |
+| Everymen | 1.0× | 1.0× |
+| Singularity | 1.0× | 1.0× |
 | /Albescent | 1.0× | 1.0× |
+| None (`na`) | 1.0× | 1.0× |
 
 ---
 
@@ -267,10 +269,10 @@ Point thresholds come from `era.level_thresholds` and vary per era.
 |---|---|---|
 | `ua_masters` | UA Masters | Veterans aged out of UA. Flat 0.8× on everything. |
 | `snide` | S.N.I.D.E. | High-risk duel specialists. 2.0× wins, 0.0× losses. |
-| `gestalt` | Gestalt | Collective-minded. Bonus on own tasks, penalty on other. |
+| `gestalt` | Gestalt | Collective-minded. Bonus on own tasks; no cross-faction penalty in Era 1 (#452). |
 | `journeymen` | The Ephemerists | Wanderers recording fleeting truths. Task Vision (access to select retired tasks — deferred v2). |
 | `analog` | Analog | Depth over breadth. Double Dipper (repeat one task per level — deferred v2). |
-| `singularity` | Singularity | Hidden/lurker faction. Currently 1.0× own / 0.7× other. Lurker ability (vote bank +100 on trigger) — deferred. |
+| `singularity` | Singularity | Hidden/lurker faction. Currently 1.0× own / 1.0× other. Lurker ability (vote bank +100 on trigger) — deferred. |
 
 ### Special / non-selectable factions
 
