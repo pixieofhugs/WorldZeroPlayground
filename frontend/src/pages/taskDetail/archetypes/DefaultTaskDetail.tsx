@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import PraxisCard from "../../../components/PraxisCard";
 import LevelPill from "../../../components/ui/LevelPill";
 import FeedBadge from "../../../components/feed/FeedBadge";
@@ -20,6 +21,7 @@ export default function DefaultTaskDetail({
 }: {
   state: TaskDetailState;
 }) {
+  const { t } = useTranslation("tasks");
   const {
     task,
     submissions,
@@ -68,7 +70,7 @@ export default function DefaultTaskDetail({
           to="/tasks"
           style={{ color: "var(--faction-ephemerists)", textDecoration: "none" }}
         >
-          Tasks
+          {t("default.breadcrumb")}
         </Link>
         {" › "}
         <span style={{ color: "var(--color-text-primary)" }}>{task.title}</span>
@@ -145,7 +147,7 @@ export default function DefaultTaskDetail({
                     textShadow: "0 1px 2px rgba(0,0,0,0.3)",
                   }}
                 >
-                  META
+                  {t("default.meta")}
                 </span>
               )}
               <LevelPill level={task.level_required} />
@@ -173,7 +175,9 @@ export default function DefaultTaskDetail({
                   color: factionCssVar(task.metatask_faction_slug),
                 }}
               >
-                Metatask for {factionName(task.metatask_faction_slug)}
+                {t("default.metataskFor", {
+                  faction: factionName(task.metatask_faction_slug),
+                })}
               </p>
             )}
 
@@ -187,18 +191,20 @@ export default function DefaultTaskDetail({
               }}
             >
               {[
-                { label: "Base Pts", value: task.point_value },
+                { label: t("default.stats.basePoints"), value: task.point_value },
                 ...(showMultiplierTile
                   ? [
                       {
-                        label: `Your Pts (×${factionMultiplier})`,
+                        label: t("default.stats.yourPoints", {
+                          multiplier: factionMultiplier,
+                        }),
                         value: modifiedPoints,
                       },
                     ]
                   : []),
-                { label: "Completed", value: submissions.length },
-                { label: "In Progress", value: signups.length },
-                { label: "Top Score", value: topScore },
+                { label: t("default.stats.completed"), value: submissions.length },
+                { label: t("default.stats.inProgress"), value: signups.length },
+                { label: t("default.stats.topScore"), value: topScore },
               ].map((stat) => (
                 <div
                   key={stat.label}
@@ -265,7 +271,7 @@ export default function DefaultTaskDetail({
                     pointerEvents: "none",
                   }}
                 />
-                Sign up · earn up to {modifiedPoints} pts
+                {t("default.signup.cta", { points: modifiedPoints })}
               </button>
 
               <div
@@ -277,11 +283,16 @@ export default function DefaultTaskDetail({
                 }}
               >
                 <span>
-                  You have {slotsOpen} of {maxTaskSlots} task slots open
+                  {t("default.signup.slots", {
+                    open: slotsOpen,
+                    max: maxTaskSlots,
+                  })}
                 </span>
                 <span>
-                  Level {task.level_required} required{" "}
-                  <span className="eyebrow">MET</span>
+                  {t("default.signup.levelRequired", {
+                    level: task.level_required,
+                  })}{" "}
+                  <span className="eyebrow">{t("default.signup.met")}</span>
                 </span>
               </div>
 
@@ -327,13 +338,13 @@ export default function DefaultTaskDetail({
                 }}
               >
                 <span className="eyebrow" style={{ color }}>
-                  DONE
+                  {t("default.submitted.badge")}
                 </span>
                 <span
                   className="font-body"
                   style={{ fontSize: 11, color: "var(--color-text-primary)" }}
                 >
-                  You've submitted praxis for this task
+                  {t("default.submitted.text")}
                 </span>
               </div>
               <Link
@@ -341,7 +352,7 @@ export default function DefaultTaskDetail({
                 className="btn-outline"
                 style={{ fontSize: 8, padding: "4px 12px" }}
               >
-                edit
+                {t("default.submitted.edit")}
               </Link>
             </div>
           )}
@@ -369,13 +380,13 @@ export default function DefaultTaskDetail({
                 }}
               >
                 <span className="eyebrow" style={{ color }}>
-                  IN PROGRESS
+                  {t("default.inProgress.badge")}
                 </span>
                 <span
                   className="font-body"
                   style={{ fontSize: 11, color: "var(--color-text-primary)" }}
                 >
-                  You're on this task
+                  {t("default.inProgress.text")}
                 </span>
               </div>
               <Link
@@ -401,7 +412,7 @@ export default function DefaultTaskDetail({
                     pointerEvents: "none",
                   }}
                 />
-                Continue editing
+                {t("default.inProgress.continue")}
               </Link>
               <button
                 onClick={handleDrop}
@@ -413,7 +424,7 @@ export default function DefaultTaskDetail({
                   color: "var(--color-text-tertiary)",
                 }}
               >
-                drop
+                {t("default.inProgress.drop")}
               </button>
             </div>
           )}
@@ -429,7 +440,7 @@ export default function DefaultTaskDetail({
               }}
             >
               <span className="eyebrow">
-                {submissions.length} Completed Praxis
+                {t("default.completedHeading", { count: submissions.length })}
               </span>
               <div style={{ display: "flex", gap: 0 }}>
                 {(["score", "recent"] as const).map((sort) => (
@@ -455,16 +466,16 @@ export default function DefaultTaskDetail({
                       cursor: "pointer",
                     }}
                   >
-                    {sort === "score" ? "Top Rated" : "Recent"}
+                    {sort === "score"
+                      ? t("default.sort.topRated")
+                      : t("default.sort.recent")}
                   </button>
                 ))}
               </div>
             </div>
 
             {sortedSubmissions.length === 0 ? (
-              <p className="font-body text-muted">
-                No submissions yet. Be the first.
-              </p>
+              <p className="font-body text-muted">{t("default.empty")}</p>
             ) : (
               <>
                 <div className="flex flex-wrap gap-4 items-start">
@@ -486,7 +497,7 @@ export default function DefaultTaskDetail({
                         textDecoration: "none",
                       }}
                     >
-                      View all {submissions.length} praxis &rarr;
+                      {t("default.viewAll", { count: submissions.length })}
                     </Link>
                   </div>
                 )}
@@ -499,7 +510,9 @@ export default function DefaultTaskDetail({
         <div style={{ width: 240, flexShrink: 0 }}>
           {/* Players in Progress */}
           <div className="sidebar-card mb-3">
-            <p className="eyebrow mb-2">{signups.length} Players in Progress</p>
+            <p className="eyebrow mb-2">
+              {t("default.playersInProgress", { count: signups.length })}
+            </p>
             <div
               style={{ display: "flex", flexDirection: "column", gap: 6 }}
             >
@@ -552,8 +565,10 @@ export default function DefaultTaskDetail({
                     >
                       {signup.display_name}
                     </Link>
-                    {isFriend && <FeedBadge type="friend" label="Friend" />}
-                    {isFoe && <FeedBadge type="duel" label="Foe" />}
+                    {isFriend && (
+                      <FeedBadge type="friend" label={t("default.friend")} />
+                    )}
+                    {isFoe && <FeedBadge type="duel" label={t("default.foe")} />}
                   </div>
                 );
               })}
@@ -563,7 +578,9 @@ export default function DefaultTaskDetail({
                 className="eyebrow"
                 style={{ marginTop: 6, color: "var(--color-text-tertiary)" }}
               >
-                +{signups.length - VISIBLE_SIGNUPS} more &rarr;
+                {t("default.moreSignups", {
+                  count: signups.length - VISIBLE_SIGNUPS,
+                })}
               </p>
             )}
           </div>

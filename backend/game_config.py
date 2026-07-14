@@ -18,15 +18,21 @@ class LevelUnlockKind(str, Enum):
 
 @dataclass(frozen=True)
 class LevelUnlock:
+    # ADR-0031: the backend emits a copy KEY, not prose. The frontend
+    # progression.json catalog owns the name/desc words:
+    # t('progression:unlocks.<key>.name' | '.desc').
     kind: LevelUnlockKind
-    name: str
-    desc: str
+    key: str
 
 
 @dataclass(frozen=True)
 class LevelProfile:
-    """Rank title + unlocks announced by the level-up pop-up at a given level."""
-    rank: str
+    """Rank + unlocks announced by the level-up pop-up at a given level.
+
+    ADR-0031: ``rank_key`` is a copy KEY, not prose — the frontend resolves
+    ``t('progression:ranks.<rank_key>')``.
+    """
+    rank_key: str
     unlocks: tuple[LevelUnlock, ...]
 
 
@@ -133,8 +139,10 @@ class EraConfig:
     # level_thresholds (index 0 = start state, never shown).
     level_profiles: tuple = ()       # tuple[LevelProfile, ...]
 
-    # Taunt templates for this era
-    taunt_templates: dict = field(default_factory=dict)  # faction slug → trigger → templates
+    # NOTE: taunt copy is no longer config-owned. Per ADR-0031 the taunt
+    # template strings live in frontend/src/locales/en/taunts.json; the backend
+    # persists a structured (faction_slug, trigger_type) reference and the
+    # frontend catalog resolves the words. There is no taunt_templates field.
 
     # Faction slugs allowed to create praxes for retired / pending tasks respectively.
     # Kept separate because granting access to pending (admin-review) tasks is a
@@ -153,12 +161,11 @@ class EraConfig:
 
 def __getattr__(name: str):
     """Lazy-load era instances to avoid circular imports with eras/ package."""
-    if name in ("ERA_1", "ERA_1_FACTIONS", "CURRENT_ERA", "TAUNT_TEMPLATES"):
+    if name in ("ERA_1", "ERA_1_FACTIONS", "CURRENT_ERA"):
         from eras.era_1 import ERA_1 as _era_1
         from eras.era_1 import ERA_1_FACTIONS as _factions
         globals()["ERA_1"] = _era_1
         globals()["ERA_1_FACTIONS"] = _factions
         globals()["CURRENT_ERA"] = _era_1
-        globals()["TAUNT_TEMPLATES"] = _era_1.taunt_templates
         return globals()[name]
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")

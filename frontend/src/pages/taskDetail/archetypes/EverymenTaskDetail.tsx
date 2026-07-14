@@ -1,5 +1,6 @@
 import type { CSSProperties, ReactNode } from "react";
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import PraxisCard from "../../../components/PraxisCard";
 import { mediaUrl } from "../../../utils/media";
 import { ErrorBanner, relationOf } from "./shared";
@@ -100,6 +101,7 @@ function HandsRow({
   friends: Set<number>;
   foes: Set<number>;
 }) {
+  const { t } = useTranslation("tasks");
   return (
     <div
       style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}
@@ -178,7 +180,7 @@ function HandsRow({
           marginLeft: 4,
         }}
       >
-        on the job
+        {t("everymen.onTheJob")}
       </span>
     </div>
   );
@@ -189,6 +191,7 @@ export default function EverymenTaskDetail({
 }: {
   state: TaskDetailState;
 }) {
+  const { t } = useTranslation("tasks");
   const {
     task,
     signups,
@@ -217,7 +220,7 @@ export default function EverymenTaskDetail({
 
   // Status in the union's voice: active reads as an open call for hands.
   const statusVoice =
-    task.status === "active" ? "Open · accepting hands" : task.status;
+    task.status === "active" ? t("everymen.statusOpen") : task.status;
 
   // Top-rated work report wears the fleur-de-lis.
   const topId = submissions.length
@@ -240,10 +243,10 @@ export default function EverymenTaskDetail({
         }}
       >
         <Link to="/tasks" style={{ color: RED, textDecoration: "none" }}>
-          Tasks
+          {t("everymen.breadcrumb")}
         </Link>
         <span style={{ opacity: 0.5, margin: "0 8px" }}>›</span>
-        <span>The Everymen</span>
+        <span>{t("everymen.faction")}</span>
         <span style={{ opacity: 0.5, margin: "0 8px" }}>›</span>
         <span style={{ color: RED }}>{task.title}</span>
       </nav>
@@ -311,7 +314,7 @@ export default function EverymenTaskDetail({
                     letterSpacing: "0.2em",
                   }}
                 >
-                  THE EVERYMEN
+                  {t("everymen.masthead")}
                 </span>
               </div>
               <span
@@ -378,7 +381,7 @@ export default function EverymenTaskDetail({
                     padding: "6px 16px",
                   }}
                 >
-                  LVL {task.level_required}
+                  {t("everymen.levelValue", { level: task.level_required })}
                 </span>
                 <span
                   style={{
@@ -390,7 +393,7 @@ export default function EverymenTaskDetail({
                     padding: "6px 16px",
                   }}
                 >
-                  {modifiedPoints} PTS
+                  {t("everymen.pointsValue", { points: modifiedPoints })}
                 </span>
                 <span
                   style={{
@@ -400,7 +403,10 @@ export default function EverymenTaskDetail({
                     color: CREAM,
                   }}
                 >
-                  {signups.length} on the job · {submissions.length} delivered
+                  {t("everymen.onView", {
+                    signups: signups.length,
+                    completed: submissions.length,
+                  })}
                 </span>
               </div>
             </div>
@@ -434,11 +440,14 @@ export default function EverymenTaskDetail({
                   color: CREAM,
                 }}
               >
-                Report for duty ▸
+                {t("everymen.signup.cta")}
               </button>
               <div style={{ fontSize: 11, color: MUTED }}>
-                earn up to {modifiedPoints} pts · {slotsOpen} of {maxTaskSlots}{" "}
-                slots open
+                {t("everymen.signup.meta", {
+                  points: modifiedPoints,
+                  open: slotsOpen,
+                  max: maxTaskSlots,
+                })}
               </div>
               <div
                 style={{
@@ -449,7 +458,9 @@ export default function EverymenTaskDetail({
                   color: RED,
                 }}
               >
-                Level {task.level_required} required · met
+                {t("everymen.signup.levelRequired", {
+                  level: task.level_required,
+                })}
               </div>
               <ErrorBanner
                 message={signupError}
@@ -483,7 +494,7 @@ export default function EverymenTaskDetail({
                   color: OLIVE,
                 }}
               >
-                ✓ Your report is filed
+                {t("everymen.submitted.text")}
               </span>
               <Link
                 to={`/praxes/${mySubmission.id}/edit`}
@@ -500,7 +511,7 @@ export default function EverymenTaskDetail({
                   textDecoration: "none",
                 }}
               >
-                edit
+                {t("everymen.submitted.edit")}
               </Link>
             </div>
           )}
@@ -525,7 +536,7 @@ export default function EverymenTaskDetail({
                   color: RED,
                 }}
               >
-                You're on the job
+                {t("everymen.inProgress.text")}
               </span>
               <Link
                 to={`/praxes/${inProgressPraxisId}/edit`}
@@ -542,7 +553,7 @@ export default function EverymenTaskDetail({
                   textDecoration: "none",
                 }}
               >
-                continue
+                {t("everymen.inProgress.continue")}
               </Link>
               <button
                 onClick={handleDrop}
@@ -557,7 +568,7 @@ export default function EverymenTaskDetail({
                   color: MUTED,
                 }}
               >
-                drop
+                {t("everymen.inProgress.drop")}
               </button>
               <ErrorBanner
                 message={signupError}
@@ -573,7 +584,7 @@ export default function EverymenTaskDetail({
 
           {/* ── THE ORDER — the work-order body ── */}
           <section>
-            <SectionHead title="The Order" />
+            <SectionHead title={t("everymen.orderHeading")} />
             <div
               style={{
                 border: `1.5px solid ${INK}`,
@@ -592,8 +603,7 @@ export default function EverymenTaskDetail({
                   whiteSpace: "pre-wrap",
                 }}
               >
-                {task.description ||
-                  "No order posted yet. The work outlasts the worker — figure out what needs doing and report for duty."}
+                {task.description || t("everymen.orderEmpty")}
               </p>
             </div>
           </section>
@@ -601,14 +611,14 @@ export default function EverymenTaskDetail({
           {/* ── Hands signed on ── */}
           {signups.length > 0 && (
             <section>
-              <SectionHead title="Hands On The Job" />
+              <SectionHead title={t("everymen.handsHeading")} />
               <HandsRow signups={signups} friends={friends} foes={foes} />
             </section>
           )}
 
           {/* ── Hall verdict (read-only aggregate) ── */}
           <section>
-            <SectionHead title="The Hall's Verdict" />
+            <SectionHead title={t("everymen.verdictHeading")} />
             {voteCount > 0 ? (
               <div style={{ display: "flex", alignItems: "flex-end", gap: 12 }}>
                 <span
@@ -630,7 +640,7 @@ export default function EverymenTaskDetail({
                       color: INK,
                     }}
                   >
-                    TOP MARK
+                    {t("everymen.verdict.topMark")}
                   </div>
                   <div
                     style={{
@@ -640,7 +650,7 @@ export default function EverymenTaskDetail({
                       color: MUTED,
                     }}
                   >
-                    {voteCount} report{voteCount === 1 ? "" : "s"} on the books
+                    {t("everymen.verdict.reports", { count: voteCount })}
                   </div>
                 </div>
               </div>
@@ -652,7 +662,7 @@ export default function EverymenTaskDetail({
                   color: MUTED,
                 }}
               >
-                No verdict yet. The hall hasn't weighed in — be the first to deliver.
+                {t("everymen.verdict.none")}
               </p>
             )}
           </section>
@@ -660,7 +670,7 @@ export default function EverymenTaskDetail({
           {/* ── Work reports filed (completions) ── */}
           <section>
             <SectionHead
-              title="Work Reports Filed"
+              title={t("everymen.reportsHeading")}
               trailing={
                 <div style={{ display: "flex", gap: 0 }}>
                   {(["score", "recent"] as const).map((sort) => {
@@ -686,7 +696,9 @@ export default function EverymenTaskDetail({
                           cursor: "pointer",
                         }}
                       >
-                        {sort === "score" ? "Top Rated" : "Recent"}
+                        {sort === "score"
+                          ? t("everymen.sort.topRated")
+                          : t("everymen.sort.recent")}
                       </button>
                     );
                   })}
@@ -701,7 +713,7 @@ export default function EverymenTaskDetail({
                   color: MUTED,
                 }}
               >
-                No reports filed yet. Be the first hand to deliver.
+                {t("everymen.empty")}
               </p>
             ) : (
               <>
@@ -739,8 +751,8 @@ export default function EverymenTaskDetail({
                             boxShadow: "0 3px 8px rgba(0,0,0,0.3)",
                           }}
                         >
-                          <span style={{ fontSize: 13, lineHeight: 1 }}>⚜</span> BEST IN
-                          HALL
+                          <span style={{ fontSize: 13, lineHeight: 1 }}>⚜</span>{" "}
+                          {t("everymen.bestInHall")}
                         </div>
                       )}
                       <PraxisCard praxis={s} />
@@ -759,7 +771,7 @@ export default function EverymenTaskDetail({
                         textDecoration: "none",
                       }}
                     >
-                      View all {submissions.length} reports &rarr;
+                      {t("everymen.viewAll", { count: submissions.length })}
                     </Link>
                   </div>
                 )}

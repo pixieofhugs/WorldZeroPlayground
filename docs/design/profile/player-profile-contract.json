@@ -1,0 +1,38 @@
+{
+  "_doc": "World Zero — canonical PLAYER-PROFILE data contract. A player profile is a person's public identity surface — distinct from the small credential passport (which it REUSES as its identity header). ONE faction-agnostic shape renders 7 faction skins + the unaffiliated (default / NA) look; the `faction` selector picks the costume. Every profile lays out the SAME sections in the SAME locked order — only the skin changes, and the skin is derived CLIENT-SIDE from `faction`, never stored. This is a PUBLIC view (someone else looking at a player); there is no self-edit affordance here. The example values are a Warriors of Whimsy instance.",
+
+  "faction": "wow",
+
+  "player": {
+    "_doc": "The faction-agnostic USER record the profile consumes — the SAME player object World Zero already carries (the credential reads a subset of it). Every field is optional; the page always renders (name → 'Wanderer', empty praxis/achievements → a graceful empty state).",
+    "name": { "_doc": "Display name. Falls back to 'Wanderer'. Rendered large in the faction's headline font AND passed straight through to the credential header.", "type": "string", "required": false, "example": "Pixie" },
+    "bio": { "_doc": "SHORT profile line — the one the credential passport shows (it clamps to two lines). Send the full string; the credential truncates. Distinct from `about`.", "type": "string", "required": false, "example": "Witch of the first circle. Believes the smallest gesture is the real magic." },
+    "about": { "_doc": "The player's own longer 'about me' — one entry per paragraph, rendered in full (NOT clamped) in the ② About block. Omit / empty → the About block is skipped.", "type": "string[]", "required": false },
+    "role": { "_doc": "The player's STANDING within their faction. Rendered beside the name and in the credential. NULL when the player is unaffiliated. NOTE (#459): role/standing is OUT OF SCOPE for the repo build — the game has no rank system.", "type": "string | null", "required": false, "example": "witch · first circle" },
+    "level": { "_doc": "Member level. Default 1. Drives the ① progression ring + the credential footer.", "type": "integer", "required": false, "example": 12 },
+    "points": { "_doc": "Lifetime points, printed in the faction accent. Default 0.", "type": "integer", "required": false, "example": 4210 },
+    "joined": { "_doc": "Display-ready join string. Unaffiliated → typically 'joined today'.", "type": "string", "required": false, "example": "joined Mar 2021" },
+    "progress": { "_doc": "① PROGRESSION toward the next level. `into` = points earned into the CURRENT level; `toNext` = points the current level requires. The bar fills into/toNext and the next level reads level+1. Omit → progression bar is hidden (level number still shows).", "type": "{ into: number, toNext: number }", "required": false, "example": { "into": 210, "toNext": 500 } }
+  },
+
+  "recentPraxis": { "_doc": "⑤ The player's OWN recent completed work (show ~3). SAME shape as praxis-card-contract.json — the profile renders each row with the faction's live <Faction>PraxisRow/PraxisCard. `author` is the profile owner (pass player.name); the single top entry (by points+votePoints) gets the FDL laurel. Empty → a gentle empty state." },
+
+  "achievements": { "_doc": "③ Earned badges (show all). In the REPO build these are the code-registry badges from #459 (key+name, image mapped client-side by key). SLOT-DRIVEN — one medallion frame reskins every badge kind; the icon is NOT in the payload. Empty → the block is skipped." },
+
+  "selector": {
+    "_doc": "Which skin renders. Passed as `faction`. NULL / omitted → the unaffiliated (default / NA) spectrum-band profile: neutral, NO recruitment nudge. Legacy aliases resolve through canonicalSlug().",
+    "field": "faction",
+    "values": ["ua", "wow", "snide", "ephemerists", "singularity", "everymen", "albescent", null],
+    "aliases": { "gestalt": "wow", "journeymen": "ephemerists", "aged_out": "ua", "na": null, "none": null, "unaffiliated": null }
+  },
+
+  "sections": {
+    "_doc": "The locked section order, every faction, top to bottom.",
+    "①": "Identity + progression — the shared FactionCredentialCard pinned as the header, beside a progression panel: level ring, points-into-level bar toward level+1, joined date.",
+    "②": "About — SKIPPED in the repo build (no about field exists yet, per #459).",
+    "③": "Achievements/Badges — the earned-badge board (slot-driven medallions, faction-reskinned). Hidden when empty.",
+    "⑤": "Praxis — the player's own recent completed work, rendered with the live faction PraxisCard; the top entry gets the FDL laurel."
+  },
+
+  "verdict": "The shape is UNIFORM. Adding a faction needs only its kit tokens + a registry entry + one skin page — zero new profile fields. The credential header + praxis rows are the SAME shared components the rest of the system uses."
+}

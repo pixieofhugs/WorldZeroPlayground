@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import PraxisCard from "../../../components/PraxisCard";
 import AlbescentMark from "../../../components/cards/AlbescentMark";
 import { mediaUrl } from "../../../utils/media";
@@ -55,6 +56,7 @@ function SectionHead({ title, trailing }: { title: string; trailing?: ReactNode 
 }
 
 export default function AlbescentTaskDetail({ state }: { state: TaskDetailState }) {
+  const { t } = useTranslation("tasks");
   const {
     task,
     signups,
@@ -109,10 +111,10 @@ export default function AlbescentTaskDetail({ state }: { state: TaskDetailState 
         }}
       >
         <Link to="/tasks" style={{ color: "inherit", textDecoration: "none" }}>
-          Tasks
+          {t("default.breadcrumb")}
         </Link>
         <span style={{ opacity: 0.5, margin: "0 8px" }}>/</span>
-        <span>Albescent</span>
+        <span>{t("albescent.faction")}</span>
         <span style={{ opacity: 0.5, margin: "0 8px" }}>/</span>
         <span style={{ color: INK }}>{task.title}</span>
       </nav>
@@ -142,7 +144,7 @@ export default function AlbescentTaskDetail({ state }: { state: TaskDetailState 
                 marginBottom: 6,
               }}
             >
-              Albescent
+              {t("albescent.faction")}
             </div>
             <div
               style={{
@@ -154,7 +156,7 @@ export default function AlbescentTaskDetail({ state }: { state: TaskDetailState 
                 marginBottom: 26,
               }}
             >
-              Correspondence №{correspondenceNo} · in confidence
+              {t("albescent.correspondence", { number: correspondenceNo })}
             </div>
             <div style={{ width: 54, height: 1, background: ink(12), margin: "0 auto 26px" }} />
             <h1
@@ -175,9 +177,22 @@ export default function AlbescentTaskDetail({ state }: { state: TaskDetailState 
             <div style={{ width: 54, height: 1, background: ink(12), margin: "0 auto 28px" }} />
             <div style={{ display: "flex", justifyContent: "center", gap: 48, flexWrap: "wrap" }}>
               {[
-                { label: "Standing", value: `Lvl ${task.level_required}` },
-                { label: "Worth", value: `${modifiedPoints} pts` },
-                { label: "Returned", value: `${submissions.length}` },
+                {
+                  label: t("albescent.stats.standing"),
+                  value: t("albescent.stats.standingValue", {
+                    level: task.level_required,
+                  }),
+                },
+                {
+                  label: t("albescent.stats.worth"),
+                  value: t("albescent.stats.worthValue", {
+                    points: modifiedPoints,
+                  }),
+                },
+                {
+                  label: t("albescent.stats.returned"),
+                  value: `${submissions.length}`,
+                },
               ].map((stat, index) => (
                 <div key={stat.label} style={{ display: "flex", gap: 48 }}>
                   {index > 0 && <div style={{ borderLeft: `1px solid ${ink(10)}` }} />}
@@ -229,10 +244,10 @@ export default function AlbescentTaskDetail({ state }: { state: TaskDetailState 
                   padding: "13px 26px",
                 }}
               >
-                Acknowledge · earn up to {modifiedPoints} pts
+                {t("albescent.signup.cta", { points: modifiedPoints })}
               </button>
               <div style={{ fontFamily: FONT, fontStyle: "italic", fontSize: 15, color: ink(55) }}>
-                no portfolio. no announcement.
+                {t("albescent.signup.note")}
               </div>
               <div
                 style={{
@@ -244,7 +259,11 @@ export default function AlbescentTaskDetail({ state }: { state: TaskDetailState 
                   color: ink(40),
                 }}
               >
-                {slotsOpen} of {maxTaskSlots} slots open · Lvl {task.level_required} standing met
+                {t("albescent.signup.meta", {
+                  open: slotsOpen,
+                  max: maxTaskSlots,
+                  level: task.level_required,
+                })}
               </div>
               <ErrorBanner
                 message={signupError}
@@ -272,7 +291,7 @@ export default function AlbescentTaskDetail({ state }: { state: TaskDetailState 
               }}
             >
               <span style={{ fontFamily: FONT, fontStyle: "italic", fontSize: 17, color: ink(65) }}>
-                ⚜ Your account is inscribed in the Register
+                {t("albescent.submitted.text")}
               </span>
               <Link
                 to={`/praxes/${mySubmission.id}/edit`}
@@ -288,7 +307,7 @@ export default function AlbescentTaskDetail({ state }: { state: TaskDetailState 
                   textDecoration: "none",
                 }}
               >
-                edit
+                {t("albescent.submitted.edit")}
               </Link>
             </div>
           )}
@@ -306,7 +325,7 @@ export default function AlbescentTaskDetail({ state }: { state: TaskDetailState 
               }}
             >
               <span style={{ fontFamily: FONT, fontStyle: "italic", fontSize: 17, color: ink(65) }}>
-                Your account is unfiled, still in hand
+                {t("albescent.inProgress.text")}
               </span>
               <Link
                 to={`/praxes/${inProgressPraxisId}/edit`}
@@ -322,7 +341,7 @@ export default function AlbescentTaskDetail({ state }: { state: TaskDetailState 
                   textDecoration: "none",
                 }}
               >
-                continue
+                {t("albescent.inProgress.continue")}
               </Link>
               <button
                 onClick={handleDrop}
@@ -337,7 +356,7 @@ export default function AlbescentTaskDetail({ state }: { state: TaskDetailState 
                   color: ink(40),
                 }}
               >
-                withdraw
+                {t("albescent.inProgress.drop")}
               </button>
               <ErrorBanner
                 message={signupError}
@@ -355,10 +374,10 @@ export default function AlbescentTaskDetail({ state }: { state: TaskDetailState 
           {/* THE ASK — the user-written brief */}
           <section>
             <SectionHead
-              title="The Ask"
+              title={t("albescent.askHeading")}
               trailing={
                 <span style={{ fontFamily: FONT, fontStyle: "italic", fontSize: 13, color: ink(45), whiteSpace: "nowrap" }}>
-                  in the hand of the keeper
+                  {t("albescent.askGloss")}
                 </span>
               }
             />
@@ -381,8 +400,7 @@ export default function AlbescentTaskDetail({ state }: { state: TaskDetailState 
                   whiteSpace: "pre-wrap",
                 }}
               >
-                {task.description ||
-                  "No correspondence entered yet. The Register waits for the ask to be set down — plainly, in the fewest words that keep it true."}
+                {task.description || t("albescent.askEmpty")}
               </p>
             </div>
           </section>
@@ -390,7 +408,7 @@ export default function AlbescentTaskDetail({ state }: { state: TaskDetailState 
           {/* Hands — signups (quiet avatar row) */}
           {signups.length > 0 && (
             <section>
-              <SectionHead title="Taken in Confidence" />
+              <SectionHead title={t("albescent.inConfidenceHeading")} />
               <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
                 {signups.map((hand) => {
                   const rel = relationOf(hand.character_id, friends, foes);
@@ -440,7 +458,7 @@ export default function AlbescentTaskDetail({ state }: { state: TaskDetailState 
                     marginLeft: 4,
                   }}
                 >
-                  in hand
+                  {t("albescent.inHand")}
                 </span>
               </div>
             </section>
@@ -449,7 +467,7 @@ export default function AlbescentTaskDetail({ state }: { state: TaskDetailState 
           {/* INSCRIBED IN THE REGISTER — returned accounts */}
           <section>
             <SectionHead
-              title="Inscribed in the Register"
+              title={t("albescent.registerHeading")}
               trailing={
                 <div style={{ display: "flex", gap: 0 }}>
                   {(["score", "recent"] as const).map((sort) => {
@@ -470,7 +488,9 @@ export default function AlbescentTaskDetail({ state }: { state: TaskDetailState 
                           cursor: "pointer",
                         }}
                       >
-                        {sort === "score" ? "most witnessed" : "recent"}
+                        {sort === "score"
+                          ? t("albescent.sort.mostWitnessed")
+                          : t("albescent.sort.recent")}
                       </button>
                     );
                   })}
@@ -479,7 +499,7 @@ export default function AlbescentTaskDetail({ state }: { state: TaskDetailState 
             />
             {sortedSubmissions.length === 0 ? (
               <p style={{ fontFamily: FONT, fontStyle: "italic", fontSize: 16, color: ink(45) }}>
-                The Register holds no accounts against this correspondence. Be the first to return one, unsigned.
+                {t("albescent.empty")}
               </p>
             ) : (
               <>
@@ -507,7 +527,8 @@ export default function AlbescentTaskDetail({ state }: { state: TaskDetailState 
                             padding: "3px 14px",
                           }}
                         >
-                          <span style={{ fontSize: 13, lineHeight: 1 }}>⚜</span> most witnessed
+                          <span style={{ fontSize: 13, lineHeight: 1 }}>⚜</span>{" "}
+                          {t("albescent.mostWitnessed")}
                         </div>
                       )}
                       <PraxisCard praxis={s} />
@@ -529,7 +550,7 @@ export default function AlbescentTaskDetail({ state }: { state: TaskDetailState 
                         paddingBottom: 2,
                       }}
                     >
-                      all {submissions.length} accounts &rarr;
+                      {t("albescent.viewAll", { count: submissions.length })}
                     </Link>
                   </div>
                 )}

@@ -1,5 +1,6 @@
 import type { CSSProperties } from "react";
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import PraxisCard from "../../../components/PraxisCard";
 import { mediaUrl } from "../../../utils/media";
 import { ErrorBanner, relationOf } from "./shared";
@@ -86,11 +87,6 @@ function SectionHead({ children }: { children: React.ReactNode }) {
   );
 }
 
-/** Party-voiced status phrasing — active reads as a playful "open" line. */
-function statusVoice(status: string): string {
-  return status === "active" ? "open · the party's still gathering" : status;
-}
-
 /** Real signup avatars as a little coven row, tilted, with friend/foe charms. */
 function PartyRow({
   signups,
@@ -101,6 +97,7 @@ function PartyRow({
   friends: Set<number>;
   foes: Set<number>;
 }) {
+  const { t } = useTranslation("tasks");
   return (
     <div
       style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}
@@ -178,13 +175,14 @@ function PartyRow({
           marginLeft: 6,
         }}
       >
-        in the party
+        {t("wow.inTheParty")}
       </span>
     </div>
   );
 }
 
 export default function WowTaskDetail({ state }: { state: TaskDetailState }) {
+  const { t } = useTranslation("tasks");
   const {
     task,
     signups,
@@ -247,11 +245,11 @@ export default function WowTaskDetail({ state }: { state: TaskDetailState }) {
         }}
       >
         <Link to="/tasks" style={{ color: PINK, textDecoration: "none" }}>
-          Tasks
+          {t("wow.breadcrumb")}
         </Link>
         <span style={{ opacity: 0.5, margin: "0 8px" }}>›</span>
         <span style={{ fontFamily: SCRIPT, fontSize: 18 }}>
-          Warriors of Whimsy
+          {t("wow.faction")}
         </span>
         <span style={{ opacity: 0.5, margin: "0 8px" }}>›</span>
         <span style={{ color: PINK }}>{task.title}</span>
@@ -302,7 +300,7 @@ export default function WowTaskDetail({ state }: { state: TaskDetailState }) {
                 textShadow: `1px 1px 0 ${TITLE_TEXT}`,
               }}
             >
-              quest.exe
+              {t("wow.window")}
             </span>
           </div>
 
@@ -345,7 +343,7 @@ export default function WowTaskDetail({ state }: { state: TaskDetailState }) {
                 marginBottom: 8,
               }}
             >
-              {statusVoice(task.status)}
+              {task.status === "active" ? t("wow.statusOpen") : task.status}
             </div>
             <div
               style={{
@@ -368,7 +366,8 @@ export default function WowTaskDetail({ state }: { state: TaskDetailState }) {
               }}
             >
               <span style={pill}>
-                <Sparkle size={11} color={PINK} /> level {task.level_required}
+                <Sparkle size={11} color={PINK} />{" "}
+                {t("wow.level", { level: task.level_required })}
               </span>
               <span
                 style={{
@@ -389,10 +388,13 @@ export default function WowTaskDetail({ state }: { state: TaskDetailState }) {
                     strokeLinejoin="round"
                   />
                 </svg>
-                {modifiedPoints} sparks
+                {t("wow.sparks", { points: modifiedPoints })}
               </span>
               <span style={pill}>
-                {signups.length} tried · {submissions.length} pulled it off
+                {t("wow.onView", {
+                  signups: signups.length,
+                  completed: submissions.length,
+                })}
               </span>
             </div>
           </div>
@@ -430,10 +432,10 @@ export default function WowTaskDetail({ state }: { state: TaskDetailState }) {
                   boxShadow: `0 4px 10px color-mix(in srgb, ${PINK} 35%, transparent)`,
                 }}
               >
-                join the party ✦ earn up to {modifiedPoints} pts
+                {t("wow.signup.cta", { points: modifiedPoints })}
               </button>
               <div style={{ fontFamily: SCRIPT, fontSize: 20, color: PINK }}>
-                no experience with magic required
+                {t("wow.signup.note")}
               </div>
               <div
                 style={{
@@ -445,9 +447,11 @@ export default function WowTaskDetail({ state }: { state: TaskDetailState }) {
                 }}
               >
                 <div>
-                  {slotsOpen} of {maxTaskSlots} slots open
+                  {t("wow.signup.slots", { open: slotsOpen, max: maxTaskSlots })}
                 </div>
-                <div>level {task.level_required} required · met</div>
+                <div>
+                  {t("wow.signup.levelRequired", { level: task.level_required })}
+                </div>
               </div>
             </div>
             <ErrorBanner message={signupError} />
@@ -469,7 +473,7 @@ export default function WowTaskDetail({ state }: { state: TaskDetailState }) {
             }}
           >
             <span style={{ fontFamily: SCRIPT, fontSize: 22, color: TITLE_TEXT }}>
-              ✦ your spell is cast
+              {t("wow.submitted.text")}
             </span>
             <Link
               to={`/praxes/${mySubmission.id}/edit`}
@@ -486,7 +490,7 @@ export default function WowTaskDetail({ state }: { state: TaskDetailState }) {
                 textDecoration: "none",
               }}
             >
-              edit
+              {t("wow.submitted.edit")}
             </Link>
           </div>
         )}
@@ -506,7 +510,7 @@ export default function WowTaskDetail({ state }: { state: TaskDetailState }) {
             }}
           >
             <span style={{ fontFamily: SCRIPT, fontSize: 22, color: TITLE_TEXT }}>
-              ✦ your spell is half-woven
+              {t("wow.inProgress.text")}
             </span>
             <Link
               to={`/praxes/${inProgressPraxisId}/edit`}
@@ -523,7 +527,7 @@ export default function WowTaskDetail({ state }: { state: TaskDetailState }) {
                 textDecoration: "none",
               }}
             >
-              continue
+              {t("wow.inProgress.continue")}
             </Link>
             <button
               onClick={handleDrop}
@@ -536,7 +540,7 @@ export default function WowTaskDetail({ state }: { state: TaskDetailState }) {
                 color: CARD_MUTED,
               }}
             >
-              leave the party
+              {t("wow.inProgress.drop")}
             </button>
           </div>
         )}
@@ -544,14 +548,14 @@ export default function WowTaskDetail({ state }: { state: TaskDetailState }) {
         {/* ── The party so far (signups) ── */}
         {signups.length > 0 && (
           <section>
-            <SectionHead>the party so far</SectionHead>
+            <SectionHead>{t("wow.partyHeading")}</SectionHead>
             <PartyRow signups={signups} friends={friends} foes={foes} />
           </section>
         )}
 
         {/* ── What we're asking (description) ── */}
         <section>
-          <SectionHead>what we're asking</SectionHead>
+          <SectionHead>{t("wow.askingHeading")}</SectionHead>
           <div
             style={{
               border: `2px solid ${NOTEPAD_BORDER}`,
@@ -571,15 +575,14 @@ export default function WowTaskDetail({ state }: { state: TaskDetailState }) {
                 whiteSpace: "pre-wrap",
               }}
             >
-              {task.description ||
-                "No spell written yet. Trust the pull and conjure something kind."}
+              {task.description || t("wow.askingEmpty")}
             </p>
           </div>
         </section>
 
         {/* ── The love so far (vote aggregate) ── */}
         <section>
-          <SectionHead>the love so far</SectionHead>
+          <SectionHead>{t("wow.loveHeading")}</SectionHead>
           {voteCount > 0 ? (
             <div style={{ display: "flex", alignItems: "flex-end", gap: 12 }}>
               <span
@@ -600,16 +603,16 @@ export default function WowTaskDetail({ state }: { state: TaskDetailState }) {
                     color: TITLE_TEXT,
                   }}
                 >
-                  top love
+                  {t("wow.love.top")}
                 </div>
                 <div style={{ fontSize: 10, color: CARD_MUTED }}>
-                  {voteCount} {voteCount === 1 ? "spell" : "spells"} adored
+                  {t("wow.love.adored", { count: voteCount })}
                 </div>
               </div>
             </div>
           ) : (
             <p style={{ fontFamily: SCRIPT, fontSize: 22, color: PINK }}>
-              no love yet — be the first to cast a little wonder.
+              {t("wow.love.none")}
             </p>
           )}
         </section>
@@ -637,7 +640,7 @@ export default function WowTaskDetail({ state }: { state: TaskDetailState }) {
                   whiteSpace: "nowrap",
                 }}
               >
-                spells cast so far · {submissions.length}
+                {t("wow.spellsHeading", { count: submissions.length })}
               </h2>
             </div>
             <div style={{ display: "flex", gap: 0 }}>
@@ -660,7 +663,9 @@ export default function WowTaskDetail({ state }: { state: TaskDetailState }) {
                       cursor: "pointer",
                     }}
                   >
-                    {sort === "score" ? "most loved" : "recent"}
+                    {sort === "score"
+                      ? t("wow.sort.mostLoved")
+                      : t("wow.sort.recent")}
                   </button>
                 );
               })}
@@ -669,7 +674,7 @@ export default function WowTaskDetail({ state }: { state: TaskDetailState }) {
 
           {sortedSubmissions.length === 0 ? (
             <p style={{ fontFamily: SCRIPT, fontSize: 22, color: PINK }}>
-              no spells cast yet. nobody's pulled it off.
+              {t("wow.empty")}
             </p>
           ) : (
             <>
@@ -705,7 +710,7 @@ export default function WowTaskDetail({ state }: { state: TaskDetailState }) {
                         }}
                       >
                         <span style={{ fontSize: 13, lineHeight: 1 }}>⚜</span>{" "}
-                        most loved
+                        {t("wow.mostLoved")}
                       </div>
                     )}
                     <PraxisCard praxis={s} />
@@ -723,7 +728,7 @@ export default function WowTaskDetail({ state }: { state: TaskDetailState }) {
                       textDecoration: "none",
                     }}
                   >
-                    see all {submissions.length} spells ✦
+                    {t("wow.viewAll", { count: submissions.length })}
                   </Link>
                 </div>
               )}

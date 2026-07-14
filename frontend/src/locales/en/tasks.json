@@ -1,1 +1,360 @@
-{}
+{
+  "detail": {
+    "loading": "Loading...",
+    "fetchError": "<0>Try refreshing.</0>",
+    "notFound": "Task not found.",
+    "pageTitle": "Task",
+    "pageEyebrow": "Tasks · Detail"
+  },
+  "propose": {
+    "pageTitle": "Propose a Task",
+    "loginRequired": "You need to be logged in to propose a task.",
+    "levelGate": "You must be level 3 or higher to propose tasks. You are currently level {{level}}."
+  },
+  "default": {
+    "breadcrumb": "Tasks",
+    "metataskFor": "Metatask for {{faction}}",
+    "meta": "META",
+    "stats": {
+      "basePoints": "Base Pts",
+      "yourPoints": "Your Pts (×{{multiplier}})",
+      "completed": "Completed",
+      "inProgress": "In Progress",
+      "topScore": "Top Score"
+    },
+    "signup": {
+      "cta": "Sign up · earn up to {{points}} pts",
+      "slots": "You have {{open}} of {{max}} task slots open",
+      "levelRequired": "Level {{level}} required",
+      "met": "MET"
+    },
+    "submitted": {
+      "badge": "DONE",
+      "text": "You've submitted praxis for this task",
+      "edit": "edit"
+    },
+    "inProgress": {
+      "badge": "IN PROGRESS",
+      "text": "You're on this task",
+      "continue": "Continue editing",
+      "drop": "drop"
+    },
+    "completedHeading": "{{count}} Completed Praxis",
+    "sort": {
+      "topRated": "Top Rated",
+      "recent": "Recent"
+    },
+    "empty": "No submissions yet. Be the first.",
+    "viewAll": "View all {{count}} praxis →",
+    "playersInProgress": "{{count}} Players in Progress",
+    "moreSignups": "+{{count}} more →",
+    "friend": "Friend",
+    "foe": "Foe"
+  },
+  "snide": {
+    "breadcrumb": "Tasks",
+    "faction": "S.N.I.D.E.",
+    "jobFile": "JOB FILE",
+    "openCase": "OPEN CASE",
+    "caseFile": "S.N.I.D.E. Case File · job no. {{number}}",
+    "metataskFor": "↳ metatask for {{faction}}",
+    "evidence": {
+      "points": "Points",
+      "level": "Level",
+      "levelValue": "LVL {{level}}",
+      "filed": "Filed",
+      "closed": "Closed"
+    },
+    "signup": {
+      "cta": "★ PULL THIS JOB ★",
+      "warning": "↳ no take-backs once it's filed",
+      "meta": "earn up to {{points}} pts · {{open}} of {{max}} slots open · lvl {{level}} met"
+    },
+    "submitted": {
+      "edit": "→ EDIT THE RAP SHEET",
+      "note": "↳ filed. on the record."
+    },
+    "inProgress": {
+      "continue": "→ CONTINUE THE RAP SHEET",
+      "drop": "↳ ditch the job"
+    },
+    "verdict": {
+      "closed": "{{count}} CLOSED · TOP {{top}}",
+      "none": "NO VERDICT YET"
+    },
+    "brief": "the brief",
+    "briefEmpty": "No brief on file. Figure it out.",
+    "accomplices": "accomplices on file",
+    "onTheJob": "on the job",
+    "casesClosed": "cases closed · {{count}}",
+    "sort": {
+      "topMarks": "top marks",
+      "recent": "recent"
+    },
+    "empty": "no files yet. nobody's pulled it off.",
+    "topMarks": "TOP MARKS",
+    "viewAll": "open all {{count}} files →"
+  },
+  "everymen": {
+    "breadcrumb": "Tasks",
+    "faction": "The Everymen",
+    "masthead": "THE EVERYMEN",
+    "statusOpen": "Open · accepting hands",
+    "levelValue": "LVL {{level}}",
+    "pointsValue": "{{points}} PTS",
+    "onView": "{{signups}} on the job · {{completed}} delivered",
+    "signup": {
+      "cta": "Report for duty ▸",
+      "meta": "earn up to {{points}} pts · {{open}} of {{max}} slots open",
+      "levelRequired": "Level {{level}} required · met"
+    },
+    "submitted": {
+      "text": "✓ Your report is filed",
+      "edit": "edit"
+    },
+    "inProgress": {
+      "text": "You're on the job",
+      "continue": "continue",
+      "drop": "drop"
+    },
+    "orderHeading": "The Order",
+    "orderEmpty": "No order posted yet. The work outlasts the worker — figure out what needs doing and report for duty.",
+    "handsHeading": "Hands On The Job",
+    "onTheJob": "on the job",
+    "verdictHeading": "The Hall's Verdict",
+    "verdict": {
+      "topMark": "TOP MARK",
+      "reports_one": "{{count}} report on the books",
+      "reports_other": "{{count}} reports on the books",
+      "none": "No verdict yet. The hall hasn't weighed in — be the first to deliver."
+    },
+    "reportsHeading": "Work Reports Filed",
+    "sort": {
+      "topRated": "Top Rated",
+      "recent": "Recent"
+    },
+    "empty": "No reports filed yet. Be the first hand to deliver.",
+    "bestInHall": "BEST IN HALL",
+    "viewAll": "View all {{count}} reports →"
+  },
+  "wow": {
+    "breadcrumb": "Tasks",
+    "faction": "Warriors of Whimsy",
+    "window": "quest.exe",
+    "statusOpen": "open · the party's still gathering",
+    "level": "level {{level}}",
+    "sparks": "{{points}} sparks",
+    "onView": "{{signups}} tried · {{completed}} pulled it off",
+    "signup": {
+      "cta": "join the party ✦ earn up to {{points}} pts",
+      "note": "no experience with magic required",
+      "slots": "{{open}} of {{max}} slots open",
+      "levelRequired": "level {{level}} required · met"
+    },
+    "submitted": {
+      "text": "✦ your spell is cast",
+      "edit": "edit"
+    },
+    "inProgress": {
+      "text": "✦ your spell is half-woven",
+      "continue": "continue",
+      "drop": "leave the party"
+    },
+    "partyHeading": "the party so far",
+    "inTheParty": "in the party",
+    "askingHeading": "what we're asking",
+    "askingEmpty": "No spell written yet. Trust the pull and conjure something kind.",
+    "loveHeading": "the love so far",
+    "love": {
+      "top": "top love",
+      "adored_one": "{{count}} spell adored",
+      "adored_other": "{{count}} spells adored",
+      "none": "no love yet — be the first to cast a little wonder."
+    },
+    "spellsHeading": "spells cast so far · {{count}}",
+    "sort": {
+      "mostLoved": "most loved",
+      "recent": "recent"
+    },
+    "empty": "no spells cast yet. nobody's pulled it off.",
+    "mostLoved": "most loved",
+    "viewAll": "see all {{count}} spells ✦"
+  },
+  "ephemerists": {
+    "breadcrumb": "Tasks",
+    "faction": "The Ephemerists",
+    "masthead": "THE EPHEMERISTS",
+    "statusOpen": "open commission",
+    "statusLine": "{{status}} · commission {{number}}",
+    "metataskFor": "↳ metatask for {{faction}}",
+    "grade": "▦ GRADE {{level}}",
+    "puncta": "PVNCTA",
+    "onView": "{{signups}} triangulating · {{completed}} sealed",
+    "footnote": "† the road does not return you to where you began — <0>see †</0>",
+    "commissionHeading": "The Commission",
+    "commissionEmpty": "No commission is scribed. Walk the ground and let the contradictions guide you.",
+    "signup": {
+      "cta": "Triangulate the truth ▸ earn up to {{points}} pts",
+      "note": "bring no certainty. only instruments.",
+      "meta": "{{open}} of {{max}} leaves open · grade {{level}} met"
+    },
+    "submitted": {
+      "text": "your leaf is filed against this exhibit.",
+      "edit": "edit"
+    },
+    "inProgress": {
+      "text": "your readings are unsealed — the survey is unfinished.",
+      "continue": "continue",
+      "drop": "drop"
+    },
+    "cartographersHeading": "The Cartographers",
+    "cartographersGloss": "{{count}} on the ground",
+    "triangulating": "triangulating",
+    "credenceHeading": "The Credence",
+    "credence": {
+      "highest": "HIGHEST",
+      "weighed": "weighed across {{count}} sealed leaves",
+      "none": "no credence yet. the concordance awaits its first leaf."
+    },
+    "ephemeridesHeading": "Sealed Ephemerides",
+    "ephemeridesGloss": "{{count}} leaves filed",
+    "sort": {
+      "mostCanonical": "Most Canonical",
+      "recent": "Recent"
+    },
+    "empty": "no leaves sealed yet. be the first to file your contradictions.",
+    "mostCanonical": "MOST CANONICAL",
+    "viewAll": "view all {{count}} ephemerides ↗"
+  },
+  "singularity": {
+    "faction": "SINGULARITY",
+    "statusOpen": "ACCEPTING NODES",
+    "consensusOpen": "OPEN",
+    "protocol": "> OPEN PROTOCOL #{{number}}",
+    "class": "> CLASS: OBSERVATION · LVL {{level}} · {{points}} CR",
+    "statusLine": "> STATUS: {{status}}",
+    "consensusLine": "CONSENSUS:",
+    "stats": {
+      "credits": "credits",
+      "level": "level",
+      "arrays": "arrays",
+      "sealed": "sealed"
+    },
+    "observationHeading": "// the_observation",
+    "observationEmpty": "No protocol logged. Find the signal yourself; the array interprets, you only witness.",
+    "signup": {
+      "cta": "> JOIN ARRAY — earn up to {{points}} pts",
+      "note": "no credentials. only signal. · {{open}} of {{max}} arrays open",
+      "levelRequired": "LVL {{level}} REQUIRED · MET"
+    },
+    "submitted": {
+      "edit": "> EDIT SIGNAL LOG",
+      "note": "◉ your log is sealed against this protocol."
+    },
+    "inProgress": {
+      "continue": "> CONTINUE OBSERVATION",
+      "drop": "> abort array"
+    },
+    "rosterHeading": "// array_roster",
+    "rosterSynced": "{{count}} nodes synced",
+    "nodesOnArray": "nodes on array",
+    "consensusHeading": "// consensus_signal",
+    "consensus": {
+      "peakSignal": "peak signal",
+      "sealed": "{{count}} logs sealed",
+      "none": "> no consensus yet. the array is silent. seal the first signal."
+    },
+    "sealedHeading": "// sealed_praxis",
+    "sealedCount": "{{count}} logs sealed",
+    "sort": {
+      "highestSignal": "highest signal",
+      "recent": "recent"
+    },
+    "empty": "> no logs sealed. no node has witnessed this yet.",
+    "highestSignal": "HIGHEST SIGNAL",
+    "viewAll": "> view all {{count}} logs →"
+  },
+  "ua": {
+    "faction": "UA",
+    "masthead": "University of Asthmatics",
+    "commissionLine": "COMMISSION №{{number}} · EST · MMXX",
+    "statusOpen": "On View · Open Salon",
+    "stats": {
+      "anno": "ANNO",
+      "honoraria": "HONORARIA",
+      "honorariaUnit": "pts",
+      "onView": "ON VIEW",
+      "onViewValue": "{{signups}} sitting · {{completed}} hung"
+    },
+    "signup": {
+      "cta": "Matriculate ▸ earn up to {{points}} pts",
+      "meta": "{{open}} of {{max}} easels reserved · Anno {{level}} standing met"
+    },
+    "submitted": {
+      "text": "✦ Your work hangs on the Salon Wall",
+      "edit": "edit"
+    },
+    "inProgress": {
+      "text": "Your easel is at the salon",
+      "continue": "continue",
+      "drop": "drop"
+    },
+    "commissionHeading": "The Commission",
+    "commissionEmpty": "No commission posted yet. The Salon awaits its brief — render the light before it leaves and pin your work to the wall.",
+    "matriculatedHeading": "Matriculated",
+    "matriculated": "matriculated",
+    "critiqueHeading": "The Critique",
+    "critique": {
+      "finest": "Finest Critique",
+      "appraised_one": "{{count}} work appraised",
+      "appraised_other": "{{count}} works appraised",
+      "none": "The Salon has rendered no verdict yet. Be the first hand to hang a work."
+    },
+    "salonWallHeading": "The Salon Wall",
+    "sort": {
+      "finest": "Finest",
+      "recent": "recent"
+    },
+    "empty": "The wall is bare. Be the first hand to file a work against this commission.",
+    "finestHand": "FINEST HAND",
+    "viewAll": "View all {{count}} works →"
+  },
+  "albescent": {
+    "faction": "Albescent",
+    "correspondence": "Correspondence №{{number}} · in confidence",
+    "stats": {
+      "standing": "Standing",
+      "standingValue": "Lvl {{level}}",
+      "worth": "Worth",
+      "worthValue": "{{points}} pts",
+      "returned": "Returned"
+    },
+    "signup": {
+      "cta": "Acknowledge · earn up to {{points}} pts",
+      "note": "no portfolio. no announcement.",
+      "meta": "{{open}} of {{max}} slots open · Lvl {{level}} standing met"
+    },
+    "submitted": {
+      "text": "⚜ Your account is inscribed in the Register",
+      "edit": "edit"
+    },
+    "inProgress": {
+      "text": "Your account is unfiled, still in hand",
+      "continue": "continue",
+      "drop": "withdraw"
+    },
+    "askHeading": "The Ask",
+    "askGloss": "in the hand of the keeper",
+    "askEmpty": "No correspondence entered yet. The Register waits for the ask to be set down — plainly, in the fewest words that keep it true.",
+    "inConfidenceHeading": "Taken in Confidence",
+    "inHand": "in hand",
+    "registerHeading": "Inscribed in the Register",
+    "sort": {
+      "mostWitnessed": "most witnessed",
+      "recent": "recent"
+    },
+    "empty": "The Register holds no accounts against this correspondence. Be the first to return one, unsigned.",
+    "mostWitnessed": "most witnessed",
+    "viewAll": "all {{count}} accounts →"
+  }
+}

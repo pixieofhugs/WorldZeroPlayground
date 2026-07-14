@@ -8,6 +8,7 @@
  * docs/spec/SPEC-faction-ui-profile.md.
  */
 import { useParams } from "react-router-dom";
+import { Trans, useTranslation } from "react-i18next";
 import PageTitle from "../components/ui/PageTitle";
 import { pickVariant } from "../utils/factionDispatch";
 import { useTaskDetail, type TaskDetailState } from "./taskDetail/useTaskDetail";
@@ -38,35 +39,43 @@ export const ARCHETYPE_BY_SLUG: Record<string, Archetype> = {
 
 export default function TaskDetail() {
   const { id } = useParams<{ id: string }>();
+  const { t } = useTranslation("tasks");
   const state = useTaskDetail(id);
 
   if (state.loading)
-    return <div className="py-8 font-body text-muted">Loading...</div>;
+    return <div className="py-8 font-body text-muted">{t("detail.loading")}</div>;
 
   if (state.fetchError)
     return (
       <div className="py-8">
         <p className="font-body text-sm text-red-600 border-2 border-red-300 px-3 py-2">
           {state.fetchError}{" "}
-          <button
-            onClick={() => window.location.reload()}
-            className="underline"
-          >
-            Try refreshing.
-          </button>
+          <Trans
+            t={t}
+            i18nKey="detail.fetchError"
+            components={[
+              <button
+                key="0"
+                onClick={() => window.location.reload()}
+                className="underline"
+              />,
+            ]}
+          />
         </p>
       </div>
     );
 
   if (!state.task)
-    return <div className="py-8 font-body text-muted">Task not found.</div>;
+    return (
+      <div className="py-8 font-body text-muted">{t("detail.notFound")}</div>
+    );
 
   const slug = state.task.primary_faction_slug ?? null;
   const Archetype = pickVariant(ARCHETYPE_BY_SLUG, slug, DefaultTaskDetail);
 
   return (
     <>
-      <PageTitle title="Task" eyebrow="Tasks · Detail" />
+      <PageTitle title={t("detail.pageTitle")} eyebrow={t("detail.pageEyebrow")} />
       <Archetype state={state} />
       {/* Comments below every archetype (ADR-0006); tasks are commentable while active. */}
       {state.task.status === "active" && (

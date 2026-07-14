@@ -2,9 +2,9 @@
  * Player-profile body dispatch + badge-board guards (#459, ADR-0033).
  *
  * The profile is one faction-agnostic contract; the skin is derived
- * client-side from faction_slug. Until the per-faction skins land (#460),
- * EVERY slug — including null/na — must fall back to the default
- * spectrum-band body, and ③ Badges must render only when badges exist.
+ * client-side from faction_slug. The seven faction skins landed in #460; the
+ * default spectrum-band body remains the fallback for null / na / unknown, and
+ * ③ Badges must render only when badges exist regardless of skin.
  */
 import { renderToStaticMarkup } from "react-dom/server";
 import { MemoryRouter } from "react-router-dom";
@@ -56,8 +56,18 @@ function renderBody(overrides: Partial<CharacterOut> = {}) {
 }
 
 describe("FactionProfileBody dispatch", () => {
-  it("starts with no bespoke skins registered — #460 fills the map", () => {
-    expect(Object.keys(FACTION_PROFILE_BODIES)).toHaveLength(0);
+  it("registers the seven bespoke faction skins (#460)", () => {
+    expect(Object.keys(FACTION_PROFILE_BODIES).sort()).toEqual(
+      [
+        "albescent",
+        "ephemerists",
+        "everymen",
+        "singularity",
+        "snide",
+        "ua",
+        "wow",
+      ].sort(),
+    );
   });
 
   it("renders the default skin for an unaffiliated (null) character", () => {
@@ -67,7 +77,7 @@ describe("FactionProfileBody dispatch", () => {
     expect(html).toContain("No praxis sealed yet");
   });
 
-  it("falls back to the default skin for every faction slug until #460", () => {
+  it("renders a profile for every faction slug (bespoke skin or default)", () => {
     for (const slug of [
       "ua",
       "wow",

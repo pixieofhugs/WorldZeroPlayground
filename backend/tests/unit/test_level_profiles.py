@@ -18,9 +18,9 @@ GATE_ATTRS = [
 ]
 
 
-def _ability_names(level: int) -> set[str]:
+def _ability_keys(level: int) -> set[str]:
     return {
-        unlock.name
+        unlock.key
         for unlock in ERA_1.level_profiles[level].unlocks
         if unlock.kind == LevelUnlockKind.ability
     }
@@ -37,7 +37,7 @@ def test_level_0_is_a_placeholder_never_shown():
 @pytest.mark.parametrize("level", range(1, len(ERA_1.level_thresholds)))
 def test_every_real_level_has_a_rank_and_an_unlock(level):
     profile = ERA_1.level_profiles[level]
-    assert profile.rank
+    assert profile.rank_key
     assert len(profile.unlocks) >= 1
 
 
@@ -45,7 +45,7 @@ def test_every_real_level_has_a_rank_and_an_unlock(level):
 def test_grounded_ability_sits_at_its_gate_constants_level(gate_attr):
     """Each capability gate must have a matching ability unlock at that exact level."""
     gate_level = getattr(ERA_1, gate_attr)
-    assert _ability_names(gate_level), f"no ability unlock at level {gate_level} for {gate_attr}"
+    assert _ability_keys(gate_level), f"no ability unlock at level {gate_level} for {gate_attr}"
 
 
 def test_level_5_has_no_hard_gate_sense_only():
@@ -61,4 +61,5 @@ def test_faction_choice_is_not_a_grounded_ability_anywhere():
     for profile in ERA_1.level_profiles:
         for unlock in profile.unlocks:
             if unlock.kind == LevelUnlockKind.ability:
-                assert "choose" not in unlock.name.lower()
+                assert "choose_faction" not in unlock.key
+                assert "pick_faction" not in unlock.key

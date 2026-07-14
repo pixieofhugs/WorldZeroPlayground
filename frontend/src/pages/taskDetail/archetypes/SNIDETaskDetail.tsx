@@ -1,5 +1,6 @@
 import type { CSSProperties } from "react";
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import PraxisCard from "../../../components/PraxisCard";
 import { mediaUrl } from "../../../utils/media";
 import { factionName } from "../../../utils/factions";
@@ -183,6 +184,7 @@ function AccompliceRow({
   friends: Set<number>;
   foes: Set<number>;
 }) {
+  const { t } = useTranslation("tasks");
   return (
     <div
       style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}
@@ -263,7 +265,7 @@ function AccompliceRow({
           marginLeft: 6,
         }}
       >
-        on the job
+        {t("snide.onTheJob")}
       </span>
     </div>
   );
@@ -274,6 +276,7 @@ export default function SNIDETaskDetail({
 }: {
   state: TaskDetailState;
 }) {
+  const { t } = useTranslation("tasks");
   const {
     task,
     signups,
@@ -328,11 +331,11 @@ export default function SNIDETaskDetail({
           to="/tasks"
           style={{ color: "var(--faction-snide)", textDecoration: "none" }}
         >
-          Tasks
+          {t("snide.breadcrumb")}
         </Link>
         <span style={{ opacity: 0.5, margin: "0 8px" }}>›</span>
         <span style={{ fontFamily: "var(--faction-snide-font-cond)", letterSpacing: "0.12em" }}>
-          S.N.I.D.E.
+          {t("snide.faction")}
         </span>
         <span style={{ opacity: 0.5, margin: "0 8px" }}>›</span>
         <span style={{ color: wall }}>{task.title}</span>
@@ -395,7 +398,7 @@ export default function SNIDETaskDetail({
                   marginTop: 12,
                 }}
               >
-                JOB FILE
+                {t("snide.jobFile")}
               </div>
               <div
                 style={{
@@ -406,7 +409,7 @@ export default function SNIDETaskDetail({
                   marginTop: 3,
                 }}
               >
-                OPEN CASE
+                {t("snide.openCase")}
               </div>
             </div>
             {/* case details */}
@@ -428,7 +431,7 @@ export default function SNIDETaskDetail({
                   marginBottom: 10,
                 }}
               >
-                S.N.I.D.E. Case File · job no. {caseNo}
+                {t("snide.caseFile", { number: caseNo })}
               </div>
               {/* Ransom-note title cut from the real task.title */}
               <h1
@@ -455,7 +458,9 @@ export default function SNIDETaskDetail({
                     marginBottom: 12,
                   }}
                 >
-                  ↳ metatask for {factionName(task.metatask_faction_slug)}
+                  {t("snide.metataskFor", {
+                    faction: factionName(task.metatask_faction_slug),
+                  })}
                 </div>
               )}
               <div
@@ -465,11 +470,26 @@ export default function SNIDETaskDetail({
                   flexWrap: "wrap",
                 }}
               >
-                <EvidenceTag label="Points" value={modifiedPoints} accent />
-                <EvidenceTag label="Level" value={`LVL ${task.level_required}`} />
+                <EvidenceTag
+                  label={t("snide.evidence.points")}
+                  value={modifiedPoints}
+                  accent
+                />
+                <EvidenceTag
+                  label={t("snide.evidence.level")}
+                  value={t("snide.evidence.levelValue", {
+                    level: task.level_required,
+                  })}
+                />
                 {/* Honest counts (kit's "filed N times" → real in-progress / closed) */}
-                <EvidenceTag label="Filed" value={`${signups.length}`} />
-                <EvidenceTag label="Closed" value={`${submissions.length}`} />
+                <EvidenceTag
+                  label={t("snide.evidence.filed")}
+                  value={`${signups.length}`}
+                />
+                <EvidenceTag
+                  label={t("snide.evidence.closed")}
+                  value={`${submissions.length}`}
+                />
               </div>
               {/* OPEN CASE / real-status stamp */}
               <span
@@ -486,7 +506,9 @@ export default function SNIDETaskDetail({
                   transform: "rotate(-7deg)",
                 }}
               >
-                {task.status === "active" ? "OPEN CASE" : task.status.toUpperCase()}
+                {task.status === "active"
+                  ? t("snide.openCase")
+                  : task.status.toUpperCase()}
               </span>
             </div>
           </div>
@@ -508,7 +530,7 @@ export default function SNIDETaskDetail({
           {canSignUp && (
             <>
               <button onClick={handleSignup} style={rapSheetStyle("var(--faction-snide-acid-deep)", true)}>
-                ★ PULL THIS JOB ★
+                {t("snide.signup.cta")}
               </button>
               <div
                 style={{
@@ -518,7 +540,7 @@ export default function SNIDETaskDetail({
                   transform: "rotate(-1deg)",
                 }}
               >
-                ↳ no take-backs once it's filed
+                {t("snide.signup.warning")}
               </div>
               <div
                 style={{
@@ -529,8 +551,12 @@ export default function SNIDETaskDetail({
                   width: "100%",
                 }}
               >
-                earn up to {modifiedPoints} pts · {slotsOpen} of {maxTaskSlots}{" "}
-                slots open · lvl {task.level_required} met
+                {t("snide.signup.meta", {
+                  points: modifiedPoints,
+                  open: slotsOpen,
+                  max: maxTaskSlots,
+                  level: task.level_required,
+                })}
               </div>
             </>
           )}
@@ -541,7 +567,7 @@ export default function SNIDETaskDetail({
                 to={`/praxes/${mySubmission.id}/edit`}
                 style={rapSheetStyle(PINK)}
               >
-                → EDIT THE RAP SHEET
+                {t("snide.submitted.edit")}
               </Link>
               <div
                 style={{
@@ -551,7 +577,7 @@ export default function SNIDETaskDetail({
                   transform: "rotate(-1deg)",
                 }}
               >
-                ↳ filed. on the record.
+                {t("snide.submitted.note")}
               </div>
             </>
           )}
@@ -562,7 +588,7 @@ export default function SNIDETaskDetail({
                 to={`/praxes/${inProgressPraxisId}/edit`}
                 style={rapSheetStyle("var(--faction-snide-acid-deep)")}
               >
-                → CONTINUE THE RAP SHEET
+                {t("snide.inProgress.continue")}
               </Link>
               <button
                 onClick={handleDrop}
@@ -576,7 +602,7 @@ export default function SNIDETaskDetail({
                   transform: "rotate(-1deg)",
                 }}
               >
-                ↳ ditch the job
+                {t("snide.inProgress.drop")}
               </button>
             </>
           )}
@@ -592,8 +618,11 @@ export default function SNIDETaskDetail({
             }}
           >
             {voteCount > 0
-              ? `${submissions.length} CLOSED · TOP ${topScore}`
-              : "NO VERDICT YET"}
+              ? t("snide.verdict.closed", {
+                  count: submissions.length,
+                  top: topScore,
+                })
+              : t("snide.verdict.none")}
           </div>
         </div>
         <ErrorBanner
@@ -606,7 +635,7 @@ export default function SNIDETaskDetail({
 
         {/* ── The brief (lined paper) ── */}
         <section>
-          <MarkerTab text="the brief" rot={-1.5} />
+          <MarkerTab text={t("snide.brief")} rot={-1.5} />
           <div
             style={{
               position: "relative",
@@ -635,7 +664,7 @@ export default function SNIDETaskDetail({
                 whiteSpace: "pre-wrap",
               }}
             >
-              {task.description || "No brief on file. Figure it out."}
+              {task.description || t("snide.briefEmpty")}
             </p>
           </div>
         </section>
@@ -643,7 +672,7 @@ export default function SNIDETaskDetail({
         {/* ── Accomplices on file ── */}
         {signups.length > 0 && (
           <section>
-            <MarkerTab text="accomplices on file" rot={1} />
+            <MarkerTab text={t("snide.accomplices")} rot={1} />
             <AccompliceRow signups={signups} friends={friends} foes={foes} />
           </section>
         )}
@@ -659,7 +688,10 @@ export default function SNIDETaskDetail({
               gap: 8,
             }}
           >
-            <MarkerTab text={`cases closed · ${submissions.length}`} rot={1} />
+            <MarkerTab
+              text={t("snide.casesClosed", { count: submissions.length })}
+              rot={1}
+            />
             <div style={{ display: "flex", gap: 0, marginBottom: 14 }}>
               {(["score", "recent"] as const).map((sort) => {
                 const on = submissionSort === sort;
@@ -679,7 +711,9 @@ export default function SNIDETaskDetail({
                       cursor: "pointer",
                     }}
                   >
-                    {sort === "score" ? "top marks" : "recent"}
+                    {sort === "score"
+                      ? t("snide.sort.topMarks")
+                      : t("snide.sort.recent")}
                   </button>
                 );
               })}
@@ -694,7 +728,7 @@ export default function SNIDETaskDetail({
                 color: PINK,
               }}
             >
-              no files yet. nobody's pulled it off.
+              {t("snide.empty")}
             </p>
           ) : (
             <>
@@ -722,7 +756,8 @@ export default function SNIDETaskDetail({
                           boxShadow: `2px 3px 0 ${INK}`,
                         }}
                       >
-                        <span style={{ fontSize: 12, lineHeight: 1 }}>⚜</span> TOP MARKS
+                        <span style={{ fontSize: 12, lineHeight: 1 }}>⚜</span>{" "}
+                        {t("snide.topMarks")}
                       </div>
                     )}
                     <PraxisCard praxis={s} />
@@ -740,7 +775,7 @@ export default function SNIDETaskDetail({
                       textDecoration: "none",
                     }}
                   >
-                    open all {submissions.length} files &rarr;
+                    {t("snide.viewAll", { count: submissions.length })}
                   </Link>
                 </div>
               )}

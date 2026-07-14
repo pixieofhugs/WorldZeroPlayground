@@ -1,0 +1,26 @@
+<!-- SKIN BRIEF (trimmed from the cloud .dc.html — costume only; structure = repo DefaultProfileBody).
+     WOW = Warriors of Whimsy. THEME: supports light/dark toggle (scope to container, don't touch global [data-theme]).
+     FONTS: var(--font-faction-script) for names/headings (big, 56px name), var(--font-body) for meta/notes.
+     PALETTE (use repo --faction-wow-* / --faction-wow-card-* vars; these hexes are the design reference only):
+       accent magenta #a83a6e / #ec5f99, cork-board mat #eeb4ce (radial dot texture), card #fffdfa→#fde7f1,
+       border #e487b5, gradient bars gold #f6c75e → magenta #ec5f99 → lilac #b79ad8.
+     IDIOM: scrapbook/cork-board — push-pin dots at card corners, slight rotate(-.4deg..2deg) tilts,
+       washi-tape strips on the about/badge cards, ".exe window" chrome on the progression panel
+       (title bar with 3 colored dots + "progress.exe" label). Charm stickers: sparkle/heart/star/mushroom SVGs. -->
+
+<!-- ① IDENTITY + PROGRESSION: pinned banner, rotate(-.4deg), push-pin dots top-left/right.
+     Card gradient #fffdfa→#fde7f1, border #e487b5, radius 16px.
+     - shared FactionCredentialCard(faction=wow), tilted rotate(-1.4deg) with drop-shadow.
+     - name in --font-faction-script 56px #a83a6e; joined line. (role/standing = OUT per #459 — drop the star chip.)
+     - progression = ".exe window": title bar (3 dots + "progress.exe") over a conic ring (accent #ec5f99) showing level,
+       + points-into-level bar (gold→magenta→lilac) toward level+1. -->
+
+<!-- ② ABOUT: SKIP per #459 (no about field). (design was a taped lined index card.) -->
+
+<!-- ⑤ PRAXIS: heading "Praxis" in script font on a tilted tan tag; "sealed by {name}" eyebrow.
+     Rows = live faction WOW PraxisCard; TOP entry overlaid with the spectrum conic-ring FDL laurel (magenta fleur center), rotate(-8deg).
+     EMPTY STATE: dashed magenta border, sparkle icon, "No spells sealed yet" / "The first bit of mischief is always the hardest ✦". -->
+
+<!-- ③ BADGES ("charms earned"): hidden when empty. Featured badge = polaroid card (rotate(-2deg), push-pin, magenta gradient
+     photo area + icon), "Proudest charm". Others = sticker rows on lined/washi-taped paper: 34px radial-pink disc + icon,
+     name in script font, note in body. Icons cycle star/heart/sparkle/mushroom; in the repo, map badge image by badge key. -->

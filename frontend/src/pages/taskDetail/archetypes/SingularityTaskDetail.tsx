@@ -1,5 +1,6 @@
 import type { CSSProperties } from "react";
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import PraxisCard from "../../../components/PraxisCard";
 import { mediaUrl } from "../../../utils/media";
 import { ErrorBanner, relationOf } from "./shared";
@@ -97,6 +98,7 @@ function ArrayRoster({
   friends: Set<number>;
   foes: Set<number>;
 }) {
+  const { t } = useTranslation("tasks");
   return (
     <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
       {signups.map((member) => {
@@ -165,7 +167,7 @@ function ArrayRoster({
           marginLeft: 6,
         }}
       >
-        nodes on array
+        {t("singularity.nodesOnArray")}
       </span>
     </div>
   );
@@ -176,6 +178,7 @@ export default function SingularityTaskDetail({
 }: {
   state: TaskDetailState;
 }) {
+  const { t } = useTranslation("tasks");
   const {
     task,
     signups,
@@ -204,8 +207,13 @@ export default function SingularityTaskDetail({
 
   // Terminal-voiced status: an active job is a RUNNING/OPEN protocol; else the real status.
   const statusVoice =
-    task.status === "active" ? "ACCEPTING NODES" : task.status.toUpperCase();
-  const consensusVoice = task.status === "active" ? "OPEN" : task.status.toUpperCase();
+    task.status === "active"
+      ? t("singularity.statusOpen")
+      : task.status.toUpperCase();
+  const consensusVoice =
+    task.status === "active"
+      ? t("singularity.consensusOpen")
+      : task.status.toUpperCase();
   // Highest-signal log wears the fleur-de-lis.
   const topId = submissions.length
     ? submissions.reduce((a, b) => ((b.score ?? 0) > (a.score ?? 0) ? b : a)).id
@@ -238,10 +246,10 @@ export default function SingularityTaskDetail({
           }}
         >
           <Link to="/tasks" style={{ color: BLUE, textDecoration: "none" }}>
-            Tasks
+            {t("default.breadcrumb")}
           </Link>
           <span style={{ opacity: 0.5, margin: "0 8px" }}>/</span>
-          <span>SINGULARITY</span>
+          <span>{t("singularity.faction")}</span>
           <span style={{ opacity: 0.5, margin: "0 8px" }}>/</span>
           <span style={{ color: GREEN }}>{task.title}</span>
         </nav>
@@ -276,12 +284,20 @@ export default function SingularityTaskDetail({
                   marginBottom: 18,
                 }}
               >
-                <div>&gt; OPEN PROTOCOL #{String(task.id).padStart(4, "0")}</div>
                 <div>
-                  &gt; CLASS: OBSERVATION · LVL {task.level_required} · {modifiedPoints} CR
+                  {t("singularity.protocol", {
+                    number: String(task.id).padStart(4, "0"),
+                  })}
                 </div>
                 <div>
-                  &gt; STATUS: {statusVoice} &nbsp;·&nbsp; CONSENSUS:{" "}
+                  {t("singularity.class", {
+                    level: task.level_required,
+                    points: modifiedPoints,
+                  })}
+                </div>
+                <div>
+                  {t("singularity.statusLine", { status: statusVoice })}{" "}
+                  &nbsp;·&nbsp; {t("singularity.consensusLine")}{" "}
                   <span style={{ color: GREEN }}>{consensusVoice}</span>
                 </div>
               </div>
@@ -313,25 +329,25 @@ export default function SingularityTaskDetail({
                   <div style={{ fontSize: 26, lineHeight: 1, color: GREEN }}>
                     {modifiedPoints}
                   </div>
-                  <div style={statLabel}>credits</div>
+                  <div style={statLabel}>{t("singularity.stats.credits")}</div>
                 </div>
                 <div style={statBox}>
                   <div style={{ fontSize: 26, lineHeight: 1, color: GREEN }}>
                     {task.level_required}
                   </div>
-                  <div style={statLabel}>level</div>
+                  <div style={statLabel}>{t("singularity.stats.level")}</div>
                 </div>
                 <div style={statBox}>
                   <div style={{ fontSize: 26, lineHeight: 1, color: BLUE }}>
                     {signups.length}
                   </div>
-                  <div style={statLabel}>arrays</div>
+                  <div style={statLabel}>{t("singularity.stats.arrays")}</div>
                 </div>
                 <div style={statBox}>
                   <div style={{ fontSize: 26, lineHeight: 1, color: GREEN }}>
                     {submissions.length}
                   </div>
-                  <div style={statLabel}>sealed</div>
+                  <div style={statLabel}>{t("singularity.stats.sealed")}</div>
                 </div>
               </div>
             </div>
@@ -350,7 +366,7 @@ export default function SingularityTaskDetail({
           {/* ── The observation (task body) ── */}
           <section>
             <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 14 }}>
-              <h2 style={sectionH2}>// the_observation</h2>
+              <h2 style={sectionH2}>{t("singularity.observationHeading")}</h2>
               <span style={sectionRule} />
             </div>
             <div
@@ -371,8 +387,7 @@ export default function SingularityTaskDetail({
                   whiteSpace: "pre-wrap",
                 }}
               >
-                {task.description ||
-                  "No protocol logged. Find the signal yourself; the array interprets, you only witness."}
+                {task.description || t("singularity.observationEmpty")}
               </p>
             </div>
           </section>
@@ -404,7 +419,7 @@ export default function SingularityTaskDetail({
                   padding: "13px 24px",
                 }}
               >
-                &gt; JOIN ARRAY — earn up to {modifiedPoints} pts
+                {t("singularity.signup.cta", { points: modifiedPoints })}
               </button>
               <div
                 style={{
@@ -414,7 +429,10 @@ export default function SingularityTaskDetail({
                   fontStyle: "italic",
                 }}
               >
-                no credentials. only signal. · {slotsOpen} of {maxTaskSlots} arrays open
+                {t("singularity.signup.note", {
+                  open: slotsOpen,
+                  max: maxTaskSlots,
+                })}
               </div>
               <div
                 style={{
@@ -424,7 +442,9 @@ export default function SingularityTaskDetail({
                   color: BLUE_DIM,
                 }}
               >
-                LVL {task.level_required} REQUIRED · MET
+                {t("singularity.signup.levelRequired", {
+                  level: task.level_required,
+                })}
               </div>
             </div>
           )}
@@ -455,10 +475,10 @@ export default function SingularityTaskDetail({
                   textDecoration: "none",
                 }}
               >
-                &gt; EDIT SIGNAL LOG
+                {t("singularity.submitted.edit")}
               </Link>
               <div style={{ fontSize: 8, letterSpacing: "0.06em", color: GREEN_DIM, fontStyle: "italic" }}>
-                ◉ your log is sealed against this protocol.
+                {t("singularity.submitted.note")}
               </div>
             </div>
           )}
@@ -489,7 +509,7 @@ export default function SingularityTaskDetail({
                   textDecoration: "none",
                 }}
               >
-                &gt; CONTINUE OBSERVATION
+                {t("singularity.inProgress.continue")}
               </Link>
               <button
                 onClick={handleDrop}
@@ -504,7 +524,7 @@ export default function SingularityTaskDetail({
                   color: BLUE_DIM,
                 }}
               >
-                &gt; abort array
+                {t("singularity.inProgress.drop")}
               </button>
             </div>
           )}
@@ -522,10 +542,10 @@ export default function SingularityTaskDetail({
           {signups.length > 0 && (
             <section>
               <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 14 }}>
-                <h2 style={sectionH2}>// array_roster</h2>
+                <h2 style={sectionH2}>{t("singularity.rosterHeading")}</h2>
                 <span style={sectionRule} />
                 <span style={{ fontSize: 7, letterSpacing: "0.12em", color: BLUE_DIM }}>
-                  {signups.length} nodes synced
+                  {t("singularity.rosterSynced", { count: signups.length })}
                 </span>
               </div>
               <ArrayRoster signups={signups} friends={friends} foes={foes} />
@@ -535,7 +555,7 @@ export default function SingularityTaskDetail({
           {/* ── Mob verdict (read-only vote aggregate) ── */}
           <section>
             <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 14 }}>
-              <h2 style={sectionH2}>// consensus_signal</h2>
+              <h2 style={sectionH2}>{t("singularity.consensusHeading")}</h2>
               <span style={sectionRule} />
             </div>
             {voteCount > 0 ? (
@@ -553,16 +573,16 @@ export default function SingularityTaskDetail({
                       textTransform: "uppercase",
                     }}
                   >
-                    peak signal
+                    {t("singularity.consensus.peakSignal")}
                   </div>
                   <div style={{ fontSize: 8, letterSpacing: "0.1em", color: BLUE_DIM }}>
-                    {voteCount} logs sealed
+                    {t("singularity.consensus.sealed", { count: voteCount })}
                   </div>
                 </div>
               </div>
             ) : (
               <p style={{ fontFamily: TERM_FONT, fontSize: 11, color: GREEN_DIM, margin: 0 }}>
-                &gt; no consensus yet. the array is silent. seal the first signal.
+                {t("singularity.consensus.none")}
               </p>
             )}
           </section>
@@ -578,10 +598,10 @@ export default function SingularityTaskDetail({
                 flexWrap: "wrap",
               }}
             >
-              <h2 style={sectionH2}>// sealed_praxis</h2>
+              <h2 style={sectionH2}>{t("singularity.sealedHeading")}</h2>
               <span style={sectionRule} />
               <span style={{ fontSize: 7, letterSpacing: "0.12em", color: BLUE_DIM }}>
-                {submissions.length} logs sealed
+                {t("singularity.sealedCount", { count: submissions.length })}
               </span>
               <div style={{ display: "flex", gap: 0 }}>
                 {(["score", "recent"] as const).map((sort) => {
@@ -602,7 +622,9 @@ export default function SingularityTaskDetail({
                         cursor: "pointer",
                       }}
                     >
-                      {sort === "score" ? "highest signal" : "recent"}
+                      {sort === "score"
+                        ? t("singularity.sort.highestSignal")
+                        : t("singularity.sort.recent")}
                     </button>
                   );
                 })}
@@ -611,7 +633,7 @@ export default function SingularityTaskDetail({
 
             {sortedSubmissions.length === 0 ? (
               <p style={{ fontFamily: TERM_FONT, fontSize: 11, color: GREEN_DIM, margin: 0 }}>
-                &gt; no logs sealed. no node has witnessed this yet.
+                {t("singularity.empty")}
               </p>
             ) : (
               <>
@@ -640,7 +662,8 @@ export default function SingularityTaskDetail({
                             boxShadow: "0 0 12px rgba(74,222,128,0.4)",
                           }}
                         >
-                          <span style={{ fontSize: 12, lineHeight: 1 }}>⚜</span> HIGHEST SIGNAL
+                          <span style={{ fontSize: 12, lineHeight: 1 }}>⚜</span>{" "}
+                          {t("singularity.highestSignal")}
                         </div>
                       )}
                       <PraxisCard praxis={s} />
@@ -660,7 +683,7 @@ export default function SingularityTaskDetail({
                         textDecoration: "none",
                       }}
                     >
-                      &gt; view all {submissions.length} logs &rarr;
+                      {t("singularity.viewAll", { count: submissions.length })}
                     </Link>
                   </div>
                 )}
