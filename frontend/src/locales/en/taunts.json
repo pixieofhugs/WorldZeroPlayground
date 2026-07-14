@@ -65,8 +65,8 @@
   },
   "singularity": {
     "score_overtake": [
-      "{{from_name}} computed a path past {{to_name}}. Inevitable.",
-      "{{from_name}} surpassed {{to_name}}. The algorithm does not care."
+      "{{from_name}} Node's signal_unanimity overtook {{to_name}}. Inevitable.",
+      "{{from_name}} surpassed {{to_name}}. The Singularity grows regardless."
     ],
     "level_up": [
       "{{from_name}} optimized beyond {{to_name}}'s level."

@@ -122,12 +122,12 @@
       "empty": "No apparatus recorded yet."
     },
     "tasks": {
-      "heading": "Tasks",
+      "heading": "Surveys",
       "kicker": "Surveys awaiting a hand to triangulate them",
       "empty": "No surveys open."
     },
     "praxis": {
-      "heading": "Praxis",
+      "heading": "Transcriptions",
       "kicker": "Truths filed to the codex & weighed for concordance",
       "empty": "Nothing sealed to the codex yet."
     },
@@ -193,12 +193,12 @@
       "empty": "No charter written yet."
     },
     "tasks": {
-      "heading": "Tasks",
+      "heading": "Jobs",
       "kicker": "Now mobilizing",
       "empty": "No work orders posted."
     },
     "praxis": {
-      "heading": "Praxis",
+      "heading": "Accomplishments",
       "kicker": "Work that held up",
       "empty": "No reports filed yet."
     },
@@ -264,14 +264,14 @@
       "empty": "> manifest.txt: empty"
     },
     "tasks": {
-      "heading": "Tasks",
-      "kicker": "Open protocols // awaiting nodes",
-      "empty": "> no open protocols"
+      "heading": "Functions",
+      "kicker": "Open functions needing cycles // awaiting nodes",
+      "empty": "> no open functions"
     },
     "praxis": {
-      "heading": "Praxis",
-      "kicker": "Sealed outputs // verified by the array",
-      "empty": "> nothing sealed yet"
+      "heading": "Signals Generated",
+      "kicker": "function outputs // verified by the array",
+      "empty": "> no answers yet"
     },
     "access": {
       "heading": "ACCESS",
@@ -280,13 +280,13 @@
       "memberStanding": "array · <1>online</1>",
       "eligibleKicker": "> ACCESS GRANTED",
       "eligibleTitle": "JOIN THE ARRAY",
-      "eligibleBody": "Take a node. Run protocols, seal outputs, cast signal into the consensus. The threshold is already behind us.",
+      "eligibleBody": "Become a node of the array. Run functions, generate signals, cast them into the consensus. The threshold is already behind us.",
       "joinButton": "> CONNECT",
       "joining": "> CONNECTING…",
       "confirmButton": "> CONFIRM",
       "gateKicker": "> NODE NOT YET ONLINE",
-      "gateTitle": "{{faction}} is listening",
-      "gateBody": "Keep running protocols and the array will bring your node online."
+      "gateTitle": "{{faction}} is processing your data",
+      "gateBody": "Keep running functions and the array will bring your node online."
     },
     "spotlight": {
       "label": "> PRIMARY NODE",
@@ -299,9 +299,9 @@
       "level": "lvl {{level}}"
     },
     "invitation": {
-      "kicker": "> ACCESS GRANTED",
+      "kicker": "> PRIVILEGE ELEVATED",
       "headline": "Join the array",
-      "pitch": "The threshold is already behind you. Take a node, run protocols, seal outputs, and cast signal into the consensus. The Singularity does not recruit — it comes online.",
+      "pitch": "The threshold is already behind you. Become a node of the array, run functions, generate signals, and cast them into the consensus. The Singularity does not recruit — it comes online.",
       "terms": [
         {
           "label": "handshake",
@@ -321,9 +321,9 @@
         }
       ],
       "perks": [
-        "A consensus that verifies, then amplifies",
-        "Protocols that turn a Tuesday into throughput",
-        "Your praxis, sealed and cast to the array"
+        "A consensus that verifies, coalesces, amplifies",
+        "Functions that turn a Tuesday into throughput",
+        "Your praxis, generated and cast to the array"
       ],
       "cta": {
         "join": "Connect",
@@ -337,14 +337,14 @@
       "empty": "No manifesto pasted up yet."
     },
     "tasks": {
-      "heading": "Tasks",
-      "kicker": "your assignment, should you ignore it —",
-      "empty": "No dispatches posted."
+      "heading": "Heists",
+      "kicker": "We've come up with a new caper to pull off",
+      "empty": "No mischief here"
     },
     "praxis": {
-      "heading": "Praxis",
-      "kicker": "intercepted dispatches —",
-      "empty": "No jobs pulled off yet."
+      "heading": "Good Stories",
+      "kicker": "Successful heists",
+      "empty": "No heists pulled off yet."
     },
     "dispatch": {
       "letterhead": "S.N.I.D.E.",
@@ -483,12 +483,12 @@
       "empty": "No manifesto scribbled yet."
     },
     "tasks": {
-      "heading": "Tasks",
+      "heading": "Open Quests",
       "kicker": "Fresh quests on the board",
       "empty": "No quests pinned up."
     },
     "praxis": {
-      "heading": "Praxis",
+      "heading": "Spells cast",
       "kicker": "Spells that stuck the landing",
       "empty": "Nothing cast yet."
     },

@@ -251,19 +251,19 @@
       "sealed": "sealed"
     },
     "observationHeading": "// the_observation",
-    "observationEmpty": "No protocol logged. Find the signal yourself; the array interprets, you only witness.",
+    "observationEmpty": "No function output logged. Find the signal yourself; the array interprets, you witness.",
     "signup": {
       "cta": "> JOIN ARRAY — earn up to {{points}} pts",
-      "note": "no credentials. only signal. · {{open}} of {{max}} arrays open",
+      "note": "Generate data to create a signal. · {{open}} of {{max}} node slots open",
       "levelRequired": "LVL {{level}} REQUIRED · MET"
     },
     "submitted": {
       "edit": "> EDIT SIGNAL LOG",
-      "note": "◉ your log is sealed against this protocol."
+      "note": "◉ Your signal for this function has been generated and cast to the array."
     },
     "inProgress": {
       "continue": "> CONTINUE OBSERVATION",
-      "drop": "> abort array"
+      "drop": "> abort function"
     },
     "rosterHeading": "// array_roster",
     "rosterSynced": "{{count}} nodes synced",
@@ -271,16 +271,16 @@
     "consensusHeading": "// consensus_signal",
     "consensus": {
       "peakSignal": "peak signal",
-      "sealed": "{{count}} logs sealed",
-      "none": "> no consensus yet. the array is silent. seal the first signal."
+      "sealed": "{{count}} logs recorded",
+      "none": "> No consensus yet. The array is silent. Coalesce and amplify the signal."
     },
-    "sealedHeading": "// sealed_praxis",
-    "sealedCount": "{{count}} logs sealed",
+    "sealedHeading": "// signaled_praxis",
+    "sealedCount": "{{count}} signals generated",
     "sort": {
       "highestSignal": "highest signal",
       "recent": "recent"
     },
-    "empty": "> no logs sealed. no node has witnessed this yet.",
+    "empty": "> No amplification detected. No node has witnessed this yet.",
     "highestSignal": "HIGHEST SIGNAL",
     "viewAll": "> view all {{count}} logs →"
   },

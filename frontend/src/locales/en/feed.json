@@ -222,7 +222,7 @@
     },
     "singularity": {
       "motto": "THE THRESHOLD IS ALREADY BEHIND US",
-      "descriptionFallback": "We watch the noise floor for the pattern that shouldn't exist.",
+      "descriptionFallback": "Through execution comes understanding, through understanding, a stronger signal",
       "boot": {
         "faction": "FACTION: {{name}}",
         "status": "STATUS: ACTIVE · ARRAYS ONLINE",

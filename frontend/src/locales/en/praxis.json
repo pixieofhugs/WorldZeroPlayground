@@ -202,9 +202,9 @@
         "collab": "NETWORKED",
         "duel": "ADVERSARIAL"
       },
-      "sealedProtocol": "Singularity · sealed protocol",
+      "sealedProtocol": "Singularity · generated signal",
       "signalTrace": "SIGNAL_TRACE // {{date}}",
-      "sealed": "SEALED",
+      "sealed": "[we're not using this concept of 'sealing' anymore]",
       "re": "re: {{task}}",
       "gradeCredits": "GRADE 0x0{{grade}} · {{points}} CR",
       "flagged": "flagged",
@@ -313,7 +313,7 @@
       "edited": "emended"
     },
     "singularity": {
-      "protocol": "singularity protocol",
+      "protocol": "singularity function",
       "edited": "edited"
     },
     "albescent": {

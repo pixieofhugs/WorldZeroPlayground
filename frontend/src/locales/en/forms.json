@@ -255,7 +255,7 @@
         "sessionPath": "singularity://praxis/draft.md · session 0x{{session}}",
         "whoami": "$ wz auth --whoami",
         "whoamiResult": "> @{{name}} · faction:singularity",
-        "editCommand": "$ wz praxis edit ./draft-{{id}}.md --live --rainbow=on",
+        "editCommand": "$ wz praxis edit ./draft-{{id}}.md --live --raibow=on",
         "factionLabel": "FACTION:",
         "factionValue": "singularity",
         "ptsLabel": "PTS:",
@@ -280,7 +280,7 @@
       "invitePlaceholder": "search handle...",
       "titlePlaceholder": "title_goes_here.md",
       "bodyMeta": "{{words}} words · {{lines}} lines",
-      "bodyPlaceholder": "# what did you do?\n\nwrite here. supports markdown.\n\n--INSERT--",
+      "bodyPlaceholder": "# Cycles Spent\n\n# Data Generated\n\nSupports Markdown Syntax for optimal signal generation\n\n--INSERT--",
       "saveState": {
         "saving": "saving...",
         "saved": "[saved {{time}}]",
@@ -290,7 +290,7 @@
       "mediaHelper": "// max 50mb/file · accepts: image/* video/* audio/*",
       "fileButton": "+ attach",
       "removeButton": "rm",
-      "publishIdle": "SEAL & TRANSMIT",
+      "publishIdle": "TRANSMIT SIGNAL",
       "publishBusy": "$ transmitting...",
       "dropLabel": "[esc] :q"
     },
