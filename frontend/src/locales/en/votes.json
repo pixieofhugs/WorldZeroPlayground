@@ -40,5 +40,45 @@
     "accomplished": "accomplished",
     "distinguished": "distinguished",
     "masterwork": "masterwork"
+  },
+  "albescent": {
+    "unseeing": "Unseeing",
+    "glimpsed": "Glimpsed",
+    "witnessed": "Witnessed",
+    "verified": "Verified",
+    "inscribed": "Inscribed"
+  },
+  "chrome": {
+    "loginGate": "Log in to vote",
+    "voted": "Voted {{stars}} pts",
+    "tally_one": "{{count}} vote · <1>{{points}}</1> pts",
+    "tally_other": "{{count}} votes · <1>{{points}}</1> pts",
+    "saveError": "Could not save your vote. Please try again.",
+    "ephemerists": {
+      "rateAria": "Mark {{value}} — {{label}}"
+    },
+    "everymen": {
+      "rateAria": "Rate {{value}} — {{label}}"
+    },
+    "wow": {
+      "rateAria": "Rate {{value}} — {{label}}"
+    },
+    "snide": {
+      "rateAria": "Rate {{value}} — {{label}}"
+    },
+    "singularity": {
+      "rateAria": "Cast {{value}} — {{label}}",
+      "prompt": "Cast Signal",
+      "promptHint": "how confidently does this output hold?"
+    },
+    "ua": {
+      "rateAria": "Appraise {{value}} — {{label}}",
+      "plateNumber": "№{{value}}",
+      "plateTopMark": "✦"
+    },
+    "albescent": {
+      "rateAria": "Witness {{value}} — {{label}}",
+      "prompt": "Bear Witness"
+    }
   }
 }

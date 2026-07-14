@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import type { VoteUIProps } from './VoteUI'
 import { useVote } from './useVote'
 import { VoteLoginGate, VoteSummary } from './VoteShell'
@@ -27,6 +28,7 @@ const STAMP_SIZE = 40
 const TIERS = VOTE_REFRAMES['everymen'].tiers
 
 export default function EverymenVote({ praxisId, currentValue, points, totalVotes }: VoteUIProps) {
+  const { t } = useTranslation('votes')
   const { user, selected, saving, error, vote } = useVote(praxisId, currentValue)
 
   if (!user) {
@@ -48,7 +50,7 @@ export default function EverymenVote({ praxisId, currentValue, points, totalVote
               <button
                 disabled={saving}
                 onClick={() => void vote(tier.value)}
-                aria-label={`Rate ${tier.value} — ${tier.label}`}
+                aria-label={t('chrome.everymen.rateAria', { value: tier.value, label: tier.label })}
                 style={{
                   position: 'relative',
                   width: STAMP_SIZE,

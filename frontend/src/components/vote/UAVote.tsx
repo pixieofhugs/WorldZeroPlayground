@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import type { VoteUIProps } from './VoteUI'
 import { useVote } from './useVote'
 import { VoteLoginGate, VoteSummary } from './VoteShell'
@@ -25,6 +26,7 @@ export default function UAVote({
   points,
   totalVotes,
 }: VoteUIProps) {
+  const { t } = useTranslation('votes')
   const { user, selected, saving, error, vote } = useVote(praxisId, currentValue)
 
   if (!user) {
@@ -46,7 +48,7 @@ export default function UAVote({
               <button
                 disabled={saving}
                 onClick={() => void vote(tier.value)}
-                aria-label={`Appraise ${tier.value} — ${tier.label}`}
+                aria-label={t('chrome.ua.rateAria', { value: tier.value, label: tier.label })}
                 style={{
                   minWidth: 60,
                   height: 40,
@@ -87,7 +89,9 @@ export default function UAVote({
                   textTransform: 'uppercase',
                 }}
               >
-                {tier.value === 5 ? '✦' : `№${tier.value}`}
+                {tier.value === 5
+                  ? t('chrome.ua.plateTopMark')
+                  : t('chrome.ua.plateNumber', { value: tier.value })}
               </span>
             </div>
           )

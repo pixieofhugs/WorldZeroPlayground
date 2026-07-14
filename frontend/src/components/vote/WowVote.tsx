@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import type { VoteUIProps } from './VoteUI'
 import { useVote } from './useVote'
 import { VoteLoginGate, VoteSummary } from './VoteShell'
@@ -42,6 +43,7 @@ function HeartGlyph({ filled, color, size = 30 }: { filled: boolean; color: stri
 }
 
 export default function WowVote({ praxisId, currentValue, points, totalVotes }: VoteUIProps) {
+  const { t } = useTranslation('votes')
   const { user, selected, saving, error, vote } = useVote(praxisId, currentValue)
 
   if (!user) {
@@ -63,7 +65,7 @@ export default function WowVote({ praxisId, currentValue, points, totalVotes }: 
               <button
                 disabled={saving}
                 onClick={() => void vote(tier.value)}
-                aria-label={`Rate ${tier.value} — ${tier.label}`}
+                aria-label={t('chrome.wow.rateAria', { value: tier.value, label: tier.label })}
                 style={{
                   width: HEART_TILE,
                   height: HEART_TILE,

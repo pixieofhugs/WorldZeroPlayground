@@ -1,13 +1,17 @@
+import { Trans, useTranslation } from 'react-i18next'
+
 /**
  * Shared chrome for per-faction vote UIs. The 1-5 control itself is faction-
  * specific (ink stamps, hearts, …), but the logged-out gate and the
  * points/"voted"/error summary are identical in structure — only their theme
- * colors differ. These two helpers keep that chrome in one place.
+ * colors differ. These two helpers keep that chrome in one place. Copy lives
+ * in the votes:chrome catalog branch (ADR-0032).
  */
 
 /** Logged-out gate shown in place of the vote control. */
 export function VoteLoginGate() {
-  return <p className="eyebrow">Log in to vote</p>
+  const { t } = useTranslation('votes')
+  return <p className="eyebrow">{t('chrome.loginGate')}</p>
 }
 
 export interface VoteSummaryTheme {
@@ -33,11 +37,13 @@ export function VoteSummary({
   error: string
   theme: VoteSummaryTheme
 }) {
+  const { t } = useTranslation('votes')
+
   return (
     <>
       {selected > 0 && (
         <p className="font-body" style={{ fontSize: 8, color: theme.muted, margin: '8px 0 0' }}>
-          Voted {selected} pts
+          {t('chrome.voted', { stars: selected })}
         </p>
       )}
 
@@ -51,11 +57,23 @@ export function VoteSummary({
             letterSpacing: theme.avgLetterSpacing,
           }}
         >
-          {totalVotes ?? 0} votes ·{' '}
-          <b style={{ color: theme.accent, fontFamily: theme.accentFont, fontSize: theme.avgFontSize }}>
-            {points}
-          </b>{' '}
-          pts
+          <Trans
+            t={t}
+            i18nKey="chrome.tally"
+            count={totalVotes ?? 0}
+            values={{ points }}
+            components={{
+              1: (
+                <b
+                  style={{
+                    color: theme.accent,
+                    fontFamily: theme.accentFont,
+                    fontSize: theme.avgFontSize,
+                  }}
+                />
+              ),
+            }}
+          />
         </p>
       )}
 

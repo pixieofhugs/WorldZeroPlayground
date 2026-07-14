@@ -1,3 +1,4 @@
+import i18n from '../../i18n'
 import { FACTION_ALIASES } from '../../utils/factions'
 
 export interface ReframeTier {
@@ -11,72 +12,77 @@ export interface VoteReframe {
   tiers: ReframeTier[]
 }
 
-/** Per-faction tier vocabulary (structure + words only; visual tokens stay in each archetype). */
+/**
+ * Per-faction tier vocabulary (structure only; the words live in the copy
+ * catalog at locales/en/votes.json and visual tokens stay in each archetype).
+ * Labels are resolved through i18n at module load — the catalog is bundled and
+ * initialized synchronously, and the app is single-locale (ADR-0032).
+ */
 export const VOTE_REFRAMES: Record<string, VoteReframe> = {
   ephemerists: {
     numeral: 'roman',
     tiers: [
-      { value: 1, label: 'apocryphal' },
-      { value: 2, label: 'disputed' },
-      { value: 3, label: 'plausible' },
-      { value: 4, label: 'corroborated' },
-      { value: 5, label: 'canonical' },
+      { value: 1, label: i18n.t('votes:ephemerists.apocryphal') },
+      { value: 2, label: i18n.t('votes:ephemerists.disputed') },
+      { value: 3, label: i18n.t('votes:ephemerists.plausible') },
+      { value: 4, label: i18n.t('votes:ephemerists.corroborated') },
+      { value: 5, label: i18n.t('votes:ephemerists.canonical') },
     ],
   },
   everymen: {
     tiers: [
-      { value: 1, label: 'a start' },
-      { value: 2, label: 'solid' },
-      { value: 3, label: 'good' },
-      { value: 4, label: 'excellent' },
-      { value: 5, label: 'legendary' },
+      { value: 1, label: i18n.t('votes:everymen.a-start') },
+      { value: 2, label: i18n.t('votes:everymen.solid') },
+      { value: 3, label: i18n.t('votes:everymen.good') },
+      { value: 4, label: i18n.t('votes:everymen.excellent') },
+      { value: 5, label: i18n.t('votes:everymen.legendary') },
     ],
   },
   wow: {
     tiers: [
-      { value: 1, label: 'a start' },
-      { value: 2, label: 'solid' },
-      { value: 3, label: 'good' },
-      { value: 4, label: 'excellent' },
-      { value: 5, label: 'legendary' },
+      { value: 1, label: i18n.t('votes:wow.a-start') },
+      { value: 2, label: i18n.t('votes:wow.solid') },
+      { value: 3, label: i18n.t('votes:wow.good') },
+      { value: 4, label: i18n.t('votes:wow.excellent') },
+      { value: 5, label: i18n.t('votes:wow.legendary') },
     ],
   },
   snide: {
     tiers: [
-      { value: 1, label: 'meh' },
-      { value: 2, label: 'not bad' },
-      { value: 3, label: 'rad' },
-      { value: 4, label: 'sick' },
-      { value: 5, label: 'ANARCHY' },
+      { value: 1, label: i18n.t('votes:snide.meh') },
+      { value: 2, label: i18n.t('votes:snide.not-bad') },
+      { value: 3, label: i18n.t('votes:snide.rad') },
+      { value: 4, label: i18n.t('votes:snide.sick') },
+      { value: 5, label: i18n.t('votes:snide.anarchy') },
     ],
   },
   singularity: {
     tiers: [
-      { value: 1, label: 'NOISE' },
-      { value: 2, label: 'WEAK' },
-      { value: 3, label: 'SIGNAL' },
-      { value: 4, label: 'CLEAR' },
-      { value: 5, label: 'VERIFIED' },
+      { value: 1, label: i18n.t('votes:singularity.noise') },
+      { value: 2, label: i18n.t('votes:singularity.weak') },
+      { value: 3, label: i18n.t('votes:singularity.signal') },
+      { value: 4, label: i18n.t('votes:singularity.clear') },
+      { value: 5, label: i18n.t('votes:singularity.verified') },
     ],
   },
   ua: {
     tiers: [
-      { value: 1, label: 'rough sketch' },
-      { value: 2, label: 'study' },
-      { value: 3, label: 'accomplished' },
-      { value: 4, label: 'distinguished' },
-      { value: 5, label: 'masterwork' },
+      { value: 1, label: i18n.t('votes:ua.rough-sketch') },
+      { value: 2, label: i18n.t('votes:ua.study') },
+      { value: 3, label: i18n.t('votes:ua.accomplished') },
+      { value: 4, label: i18n.t('votes:ua.distinguished') },
+      { value: 5, label: i18n.t('votes:ua.masterwork') },
     ],
   },
   // Albescent "bear witness" vocabulary (#232) — how completely a task was
   // attended, Unseeing → Inscribed. Words from docs/design/albescent-kit.
   albescent: {
     tiers: [
-      { value: 1, label: 'Unseeing' },
-      { value: 2, label: 'Glimpsed' },
-      { value: 3, label: 'Witnessed' },
-      { value: 4, label: 'Verified' },
-      { value: 5, label: 'Inscribed' },
+      { value: 1, label: i18n.t('votes:albescent.unseeing') },
+      { value: 2, label: i18n.t('votes:albescent.glimpsed') },
+      { value: 3, label: i18n.t('votes:albescent.witnessed') },
+      { value: 4, label: i18n.t('votes:albescent.verified') },
+      { value: 5, label: i18n.t('votes:albescent.inscribed') },
     ],
   },
 }

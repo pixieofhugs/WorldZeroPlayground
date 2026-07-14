@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import type { VoteUIProps } from './VoteUI'
 import { useVote } from './useVote'
 import { VoteLoginGate, VoteSummary } from './VoteShell'
@@ -33,6 +34,7 @@ const KEY_SIZE = 42
 const TIERS = VOTE_REFRAMES['singularity'].tiers
 
 export default function SingularityVote({ praxisId, currentValue, points, totalVotes }: VoteUIProps) {
+  const { t } = useTranslation('votes')
   const { user, selected, saving, error, vote } = useVote(praxisId, currentValue)
 
   if (!user) {
@@ -50,7 +52,7 @@ export default function SingularityVote({ praxisId, currentValue, points, totalV
           marginBottom: 3,
         }}
       >
-        Cast Signal
+        {t('chrome.singularity.prompt')}
       </div>
       <div
         style={{
@@ -60,7 +62,7 @@ export default function SingularityVote({ praxisId, currentValue, points, totalV
           marginBottom: 12,
         }}
       >
-        how confidently does this output hold?
+        {t('chrome.singularity.promptHint')}
       </div>
 
       <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
@@ -73,7 +75,7 @@ export default function SingularityVote({ praxisId, currentValue, points, totalV
               <button
                 disabled={saving}
                 onClick={() => void vote(tier.value)}
-                aria-label={`Cast ${tier.value} — ${tier.label}`}
+                aria-label={t('chrome.singularity.rateAria', { value: tier.value, label: tier.label })}
                 style={{
                   position: 'relative',
                   width: KEY_SIZE,

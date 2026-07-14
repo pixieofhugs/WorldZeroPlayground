@@ -5,8 +5,17 @@ import praxis from '../en/praxis.json'
 import votes from '../en/votes.json'
 
 // Factions with a vote voice (per-faction tier labels). Kept as an explicit
-// list, mirroring the seed catalog this test was ported from.
-const FACTION_SLUGS = ['ephemerists', 'everymen', 'wow', 'snide', 'singularity', 'ua'] as const
+// list, mirroring the seed catalog this test was ported from. Albescent joined
+// with its first-class "bear witness" vocabulary in the #443 sweep.
+const FACTION_SLUGS = [
+  'ephemerists',
+  'everymen',
+  'wow',
+  'snide',
+  'singularity',
+  'ua',
+  'albescent',
+] as const
 const EXPECTED_TIER_COUNT = 5
 
 describe('en copy catalog shape', () => {

@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import type { VoteUIProps } from './VoteUI'
 import { useVote } from './useVote'
 import { VoteLoginGate, VoteSummary } from './VoteShell'
@@ -33,6 +34,7 @@ export default function AlbescentVote({
   points,
   totalVotes,
 }: VoteUIProps) {
+  const { t } = useTranslation('votes')
   const { user, selected, saving, error, vote } = useVote(praxisId, currentValue)
 
   if (!user) {
@@ -51,7 +53,7 @@ export default function AlbescentVote({
           marginBottom: 10,
         }}
       >
-        Bear Witness
+        {t('chrome.albescent.prompt')}
       </div>
 
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, alignItems: 'flex-start' }}>
@@ -67,7 +69,7 @@ export default function AlbescentVote({
               <button
                 disabled={saving}
                 onClick={() => void vote(tier.value)}
-                aria-label={`Witness ${tier.value} — ${tier.label}`}
+                aria-label={t('chrome.albescent.rateAria', { value: tier.value, label: tier.label })}
                 style={{
                   width: 32,
                   height: 32,

@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import type { VoteUIProps } from './VoteUI'
 import { useVote } from './useVote'
 import { VoteLoginGate, VoteSummary } from './VoteShell'
@@ -36,6 +37,7 @@ const SNIDE_VISUALS: Record<number, StampVisual> = {
 const TIERS = VOTE_REFRAMES['snide'].tiers
 
 export default function SnideVote({ praxisId, currentValue, points, totalVotes }: VoteUIProps) {
+  const { t } = useTranslation('votes')
   const { user, selected, saving, error, vote } = useVote(praxisId, currentValue)
 
   if (!user) {
@@ -54,7 +56,7 @@ export default function SnideVote({ praxisId, currentValue, points, totalVotes }
               key={tier.value}
               disabled={saving}
               onClick={() => void vote(tier.value)}
-              aria-label={`Rate ${tier.value} — ${tier.label}`}
+              aria-label={t('chrome.snide.rateAria', { value: tier.value, label: tier.label })}
               style={{
                 minWidth: 46,
                 height: 40,

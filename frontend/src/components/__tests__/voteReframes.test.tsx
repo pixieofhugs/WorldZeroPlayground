@@ -21,7 +21,15 @@ vi.mock('../../auth/AuthContext', () => ({
 
 // ── Registry structure ────────────────────────────────────────────────────────
 
-const REGISTERED_SLUGS = ['ephemerists', 'everymen', 'wow', 'snide', 'singularity', 'ua'] as const
+const REGISTERED_SLUGS = [
+  'ephemerists',
+  'everymen',
+  'wow',
+  'snide',
+  'singularity',
+  'ua',
+  'albescent',
+] as const
 
 describe('VOTE_REFRAMES registry', () => {
   for (const slug of REGISTERED_SLUGS) {

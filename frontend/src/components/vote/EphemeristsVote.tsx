@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import type { VoteUIProps } from "./VoteUI";
 import { useVote } from "./useVote";
 import { VoteLoginGate, VoteSummary } from "./VoteShell";
@@ -25,6 +26,7 @@ export default function EphemeristsVote({
   points,
   totalVotes,
 }: VoteUIProps) {
+  const { t } = useTranslation("votes");
   const { user, selected, saving, error, vote } = useVote(praxisId, currentValue);
 
   if (!user) {
@@ -43,7 +45,7 @@ export default function EphemeristsVote({
               <button
                 disabled={saving}
                 onClick={() => void vote(tier.value)}
-                aria-label={`Mark ${tier.value} — ${tier.label}`}
+                aria-label={t("chrome.ephemerists.rateAria", { value: tier.value, label: tier.label })}
                 style={{
                   position: "relative",
                   width: SEAL_SIZE,
