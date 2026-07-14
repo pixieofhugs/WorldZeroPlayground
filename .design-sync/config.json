@@ -1,0 +1,159 @@
+{
+  "projectId": "11486504-5815-4db4-b388-26d1cb494917",
+  "shape": "package",
+  "pkg": "worldzero-frontend",
+  "globalName": "WZ",
+  "entry": "./frontend/.ds-kit/index.tsx",
+  "srcDir": "src",
+  "cssEntry": ".ds-kit/kit.css",
+  "provider": {
+    "component": "DSProvider"
+  },
+  "componentSrcMap": {
+    "AlbescentAvatar": "src/components/avatar/AlbescentAvatar.tsx",
+    "AlbescentBackdrop": "src/components/backdrop/AlbescentBackdrop.tsx",
+    "AlbescentComment": "src/components/comments/voices/AlbescentComment.tsx",
+    "AlbescentFactionHero": "src/components/cards/AlbescentFactionHero.tsx",
+    "AlbescentFeedFrame": "src/components/feed/AlbescentFeedFrame.tsx",
+    "AlbescentInvitation": "src/components/AlbescentInvitation.tsx",
+    "AlbescentMark": "src/components/cards/AlbescentMark.tsx",
+    "AlbescentTaskCard": "src/components/cards/AlbescentTaskCard.tsx",
+    "AlbescentVote": "src/components/vote/AlbescentVote.tsx",
+    "CharacterBadge": "src/components/CharacterBadge.tsx",
+    "CollaborationCard": "src/components/CollaborationCard.tsx",
+    "CommentThread": "src/components/comments/CommentThread.tsx",
+    "CredentialCard": "src/components/CredentialCard.tsx",
+    "DefaultSigil": "src/components/cards/DefaultSigil.tsx",
+    "DefaultTaskCard": "src/components/cards/DefaultTaskCard.tsx",
+    "EphemeristsAvatar": "src/components/avatar/EphemeristsAvatar.tsx",
+    "EphemeristsBackdrop": "src/components/backdrop/EphemeristsBackdrop.tsx",
+    "EphemeristsComment": "src/components/comments/voices/EphemeristsComment.tsx",
+    "EphemeristsFactionHero": "src/components/cards/EphemeristsFactionHero.tsx",
+    "EphemeristsFeedFrame": "src/components/feed/EphemeristsFeedFrame.tsx",
+    "EphemeristsTaskCard": "src/components/cards/EphemeristsTaskCard.tsx",
+    "EphemeristsVote": "src/components/vote/EphemeristsVote.tsx",
+    "EverymenAvatar": "src/components/avatar/EverymenAvatar.tsx",
+    "EverymenBackdrop": "src/components/backdrop/EverymenBackdrop.tsx",
+    "EverymenCard": "src/components/cards/EverymenFactionCard.tsx",
+    "EverymenComment": "src/components/comments/voices/EverymenComment.tsx",
+    "EverymenFactionHero": "src/components/cards/EverymenFactionHero.tsx",
+    "EverymenFeedFrame": "src/components/feed/EverymenFeedFrame.tsx",
+    "EverymenTaskCard": "src/components/cards/EverymenTaskCard.tsx",
+    "EverymenVote": "src/components/vote/EverymenVote.tsx",
+    "FactionAvatar": "src/components/avatar/FactionAvatar.tsx",
+    "FactionBackdrop": "src/components/backdrop/FactionBackdrop.tsx",
+    "FactionCard": "src/components/cards/FactionCard.tsx",
+    "FactionFeedFrame": "src/components/feed/FactionFeedFrame.tsx",
+    "FactionSelectCard": "src/components/cards/FactionSelectCard.tsx",
+    "FeedBadge": "src/components/feed/FeedBadge.tsx",
+    "FeedCardCollabInvite": "src/components/feed/FeedCardCollabInvite.tsx",
+    "FeedCardDuelChallenge": "src/components/feed/FeedCardDuelChallenge.tsx",
+    "FeedCardEraAnnouncement": "src/components/feed/FeedCardEraAnnouncement.tsx",
+    "FeedCardInvitationLetter": "src/components/feed/FeedCardInvitationLetter.tsx",
+    "FeedCardRouter": "src/components/feed/FeedCardRouter.tsx",
+    "FeedDateDivider": "src/components/feed/FeedDateDivider.tsx",
+    "FilterFactionTabs": "src/components/ui/FilterFactionTabs.tsx",
+    "FilterLevelNodes": "src/components/ui/FilterLevelNodes.tsx",
+    "FilterStamps": "src/components/ui/FilterStamps.tsx",
+    "InvitationLetterPopup": "src/components/InvitationLetterPopup.tsx",
+    "LevelPill": "src/components/ui/LevelPill.tsx",
+    "LevelUpPopup": "src/components/LevelUpPopup.tsx",
+    "MediaGallery": "src/components/MediaGallery.tsx",
+    "NavBar": "src/components/NavBar.tsx",
+    "PageTitle": "src/components/ui/PageTitle.tsx",
+    "PraxisCard": "src/components/PraxisCard.tsx",
+    "SingularityAvatar": "src/components/avatar/SingularityAvatar.tsx",
+    "SingularityBackdrop": "src/components/backdrop/SingularityBackdrop.tsx",
+    "SingularityComment": "src/components/comments/voices/SingularityComment.tsx",
+    "SingularityFactionHero": "src/components/cards/SingularityFactionHero.tsx",
+    "SingularityFeedFrame": "src/components/feed/SingularityFeedFrame.tsx",
+    "SingularityTaskCard": "src/components/cards/SingularityTaskCard.tsx",
+    "SingularityVote": "src/components/vote/SingularityVote.tsx",
+    "SnideAvatar": "src/components/avatar/SnideAvatar.tsx",
+    "SnideBackdrop": "src/components/backdrop/SnideBackdrop.tsx",
+    "SnideComment": "src/components/comments/voices/SnideComment.tsx",
+    "SnideFactionHero": "src/components/cards/SnideFactionHero.tsx",
+    "SnideFeedFrame": "src/components/feed/SnideFeedFrame.tsx",
+    "SnideMasthead": "src/components/cards/SnideMasthead.tsx",
+    "SNIDETaskCard": "src/components/cards/SNIDETaskCard.tsx",
+    "SnideVote": "src/components/vote/SnideVote.tsx",
+    "TaskCard": "src/components/TaskCard.tsx",
+    "TaskCrown": "src/components/cards/TaskCrown.tsx",
+    "UAAvatar": "src/components/avatar/UAAvatar.tsx",
+    "UABackdrop": "src/components/backdrop/UABackdrop.tsx",
+    "UAComment": "src/components/comments/voices/UAComment.tsx",
+    "UACrest": "src/components/cards/UACrest.tsx",
+    "UAFactionHero": "src/components/cards/UAFactionHero.tsx",
+    "UAFeedFrame": "src/components/feed/UAFeedFrame.tsx",
+    "UATaskCard": "src/components/cards/UATaskCard.tsx",
+    "UAVote": "src/components/vote/UAVote.tsx",
+    "VoteStamps": "src/components/ui/VoteStamps.tsx",
+    "VoteUI": "src/components/vote/VoteUI.tsx",
+    "WowAvatar": "src/components/avatar/WowAvatar.tsx",
+    "WowBackdrop": "src/components/backdrop/WowBackdrop.tsx",
+    "WowComment": "src/components/comments/voices/WowComment.tsx",
+    "WowFactionHero": "src/components/cards/WowFactionHero.tsx",
+    "WowFeedFrame": "src/components/feed/WowFeedFrame.tsx",
+    "WowTaskCard": "src/components/cards/WowTaskCard.tsx",
+    "WowVote": "src/components/vote/WowVote.tsx"
+  },
+  "overrides": {
+    "FactionBackdrop": {
+      "cardMode": "single",
+      "viewport": "480x320"
+    },
+    "UABackdrop": {
+      "cardMode": "single",
+      "viewport": "480x320"
+    },
+    "WowBackdrop": {
+      "cardMode": "single",
+      "viewport": "480x320"
+    },
+    "SnideBackdrop": {
+      "cardMode": "single",
+      "viewport": "480x320"
+    },
+    "EphemeristsBackdrop": {
+      "cardMode": "single",
+      "viewport": "480x320"
+    },
+    "SingularityBackdrop": {
+      "cardMode": "single",
+      "viewport": "480x320"
+    },
+    "EverymenBackdrop": {
+      "cardMode": "single",
+      "viewport": "480x320"
+    },
+    "AlbescentBackdrop": {
+      "cardMode": "single",
+      "viewport": "480x320"
+    },
+    "LevelUpPopup": {
+      "cardMode": "single",
+      "viewport": "460x600"
+    },
+    "InvitationLetterPopup": {
+      "cardMode": "single",
+      "viewport": "460x600"
+    },
+    "AlbescentInvitation": {
+      "cardMode": "single",
+      "viewport": "460x600"
+    },
+    "NavBar": {
+      "cardMode": "column"
+    },
+    "FilterFactionTabs": {
+      "cardMode": "column"
+    },
+    "FilterLevelNodes": {
+      "cardMode": "column"
+    },
+    "FilterStamps": {
+      "cardMode": "column"
+    }
+  },
+  "readmeHeader": ".design-sync/conventions.md"
+}

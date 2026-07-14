@@ -21,3 +21,13 @@ frontend/test-results/
 frontend/playwright-report/
 frontend/blob-report/
 backend/uvicorn.log
+
+# design-sync build apparatus (not committed)
+.ds-sync/
+ds-bundle/
+.design-sync/.cache/
+.design-sync/learnings/
+.design-sync/node_modules
+frontend/.ds-kit/_srcmap.json
+frontend/.ds-kit/kit.css
+frontend/.ds-kit/index.compiled.css
