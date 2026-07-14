@@ -1,6 +1,7 @@
 import api from './axios'
 import type { TaskOut } from './tasks'
 import type { PraxisOut } from './praxis'
+import type { CommentOut } from './comments'
 
 export interface PendingTaskOut extends TaskOut {
   created_by_name: string
@@ -44,6 +45,38 @@ export interface AccountDetail extends AccountSummary {
   characters: CharacterBrief[]
 }
 
+/** Full admin character row — matches backend schemas/admin.py CharacterSummary. */
+export interface AdminCharacterSummary {
+  id: number
+  account_id: number
+  username: string
+  display_name: string
+  faction_slug: string
+  status: string
+  score: number
+  level: number
+  votes_available: number
+  created_at: string
+}
+
+/** One flag row on a queue item (#237, ADR-0031). `reason` is a vocabulary key;
+ *  legacy free text / `other` notes surface via `reason_detail`. */
+export interface FlagOut {
+  reason: string
+  reason_detail: string | null
+  flagged_by_id: number
+  flagged_by_name: string
+  created_at: string
+}
+
+export interface FlaggedPraxisOut extends PraxisOut {
+  flags: FlagOut[]
+}
+
+export interface FlaggedCommentOut extends CommentOut {
+  flags: FlagOut[]
+}
+
 // ---------------------------------------------------------------------------
 // Read / Inspect
 // ---------------------------------------------------------------------------
@@ -63,8 +96,20 @@ export async function getMessages(archived = false): Promise<ContactMessageOut[]
   return data
 }
 
-export async function getFlaggedPraxes(): Promise<PraxisOut[]> {
-  const { data } = await api.get<PraxisOut[]>('/admin/praxes/flagged')
+export async function getFlaggedPraxes(): Promise<FlaggedPraxisOut[]> {
+  const { data } = await api.get<FlaggedPraxisOut[]>('/admin/praxes/flagged')
+  return data
+}
+
+export async function getFlaggedComments(): Promise<FlaggedCommentOut[]> {
+  const { data } = await api.get<FlaggedCommentOut[]>('/admin/comments/flagged')
+  return data
+}
+
+export async function getAdminCharacters(status?: string): Promise<AdminCharacterSummary[]> {
+  const { data } = await api.get<AdminCharacterSummary[]>('/admin/characters', {
+    params: status ? { status } : {},
+  })
   return data
 }
 
@@ -122,6 +167,16 @@ export async function moderatePraxis(
   const { data } = await api.patch<PraxisOut>(`/admin/praxes/${id}/moderate`, {
     status,
     admin_note: adminNote || null,
+  })
+  return data
+}
+
+export async function moderateComment(
+  id: number,
+  status: 'visible' | 'hidden' | 'deleted',
+): Promise<CommentOut> {
+  const { data } = await api.patch<CommentOut>(`/admin/comments/${id}/moderate`, {
+    status,
   })
   return data
 }

@@ -269,7 +269,7 @@ async def test_admin_list_flagged_praxes(
     # character2 (level 5) flags it
     await client.post(
         f"/praxes/{praxis_id}/flag",
-        params={"reason": "inappropriate"},
+        json={"reason": "harassment"},
         headers=auth_headers2,
     )
 
@@ -277,6 +277,98 @@ async def test_admin_list_flagged_praxes(
     assert resp.status_code == 200
     ids = [p["id"] for p in resp.json()]
     assert praxis_id in ids
+
+    # Flag rows ride along for the moderator queue (#237, ADR-0031).
+    row = next(p for p in resp.json() if p["id"] == praxis_id)
+    assert [flag["reason"] for flag in row["flags"]] == ["harassment"]
+    assert row["flags"][0]["reason_detail"] is None
+    assert row["flags"][0]["flagged_by_name"] == character2.display_name
+
+
+@pytest.mark.asyncio
+async def test_flag_reason_outside_vocabulary_rejected(
+    client: AsyncClient,
+    character: Character,
+    character2: Character,
+    signed_up_task: Task,
+    auth_headers: dict,
+    auth_headers2: dict,
+):
+    """Free-text reasons are rejected at the trust boundary (ADR-0031)."""
+    sub_resp = await client.post(
+        "/praxes",
+        json={"task_id": signed_up_task.id, "title": "Flaggable"},
+        headers=auth_headers,
+    )
+    praxis_id = sub_resp.json()["id"]
+
+    resp = await client.post(
+        f"/praxes/{praxis_id}/flag",
+        json={"reason": "inappropriate"},
+        headers=auth_headers2,
+    )
+    assert resp.status_code == 422
+
+
+@pytest.mark.asyncio
+async def test_admin_list_flagged_comments_includes_flags(
+    client: AsyncClient,
+    account: Account,
+    character: Character,
+    character2: Character,
+    signed_up_task: Task,
+    era: Era,
+    auth_headers: dict,
+    auth_headers2: dict,
+    db_session: AsyncSession,
+):
+    """Flagged comments surface with normalized flag rows; an `other` note is
+    preserved as reason_detail (#237, ADR-0031)."""
+    await _make_admin(account, db_session)
+
+    sub_resp = await client.post(
+        "/praxes",
+        json={"task_id": signed_up_task.id, "title": "Host praxis"},
+        headers=auth_headers,
+    )
+    praxis_id = sub_resp.json()["id"]
+    await client.post(f"/praxes/{praxis_id}/submit", headers=auth_headers)
+
+    # Commenting is level-gated (era.comment_level_required); lift the author
+    # after praxis submit — the submit path recalculates level from score and
+    # would clobber an earlier lift.
+    stats_result = await db_session.execute(
+        select(CharacterStats).where(
+            CharacterStats.character_id == character.id,
+            CharacterStats.era_id == era.id,
+        )
+    )
+    stats = stats_result.scalar_one()
+    stats.level = 5
+    await db_session.commit()
+
+    created = await client.post(
+        f"/praxes/{praxis_id}/comments",
+        json={"body_text": "questionable remark"},
+        headers=auth_headers,
+    )
+    assert created.status_code == 201, created.text
+    comment_id = created.json()["id"]
+
+    # character2 (level 5) flags it with the `other` free-text escape hatch.
+    flag_resp = await client.post(
+        f"/comments/{comment_id}/flag",
+        json={"reason": "other", "reason_detail": "reads like an ad"},
+        headers=auth_headers2,
+    )
+    assert flag_resp.status_code == 200, flag_resp.text
+
+    resp = await client.get("/admin/comments/flagged", headers=auth_headers)
+    assert resp.status_code == 200
+    row = next(c for c in resp.json() if c["id"] == comment_id)
+    assert row["flags"][0]["reason"] == "other"
+    assert row["flags"][0]["reason_detail"] == "reads like an ad"
+    assert row["flags"][0]["flagged_by_name"] == character2.display_name
 
 
 # ---------------------------------------------------------------------------
