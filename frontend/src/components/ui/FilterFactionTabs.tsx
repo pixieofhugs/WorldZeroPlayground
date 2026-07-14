@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import type { FactionOut } from "../../api/factions";
 import {
   factionCssVar,
@@ -20,9 +21,10 @@ export default function FilterFactionTabs({
   value,
   onChange,
 }: Props) {
+  const { t } = useTranslation('common');
   return (
     <div className="flex gap-1 items-center">
-      <span className="eyebrow">faction:</span>
+      <span className="eyebrow">{t("filters.faction")}</span>
       {sortFactionsByRainbowOrder(factions).map((faction) => {
         const active = value === faction.slug;
         return (

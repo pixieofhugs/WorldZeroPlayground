@@ -1,5 +1,6 @@
 import { useEffect, useState, type CSSProperties } from 'react'
 import { Link } from 'react-router-dom'
+import { Trans, useTranslation } from 'react-i18next'
 import { useAuth } from '../../auth/AuthContext'
 import { getActivityFeed, type ActivityFeedItem } from '../../api/activityFeed'
 import { relativeTime } from '../../utils/dates'
@@ -15,17 +16,12 @@ import { useGameConfig } from '../../hooks/useGameConfig'
 
 const DEFAULT_MAX_TASK_SLOTS = 20
 
-const PRAXIS_TYPE_LABEL: Record<PraxisType, string> = {
-  solo: 'Solo',
-  collab: 'Collab',
-  duel: 'Duel',
-}
-
 /**
  * Always-on right sidebar (Style Guide §4.2).
  * Character card + pending requests + active tasks + recent global activity + propose button.
  */
 export default function Sidebar() {
+  const { t } = useTranslation('common')
   const { user } = useAuth()
   const character = user?.character
 
@@ -34,6 +30,12 @@ export default function Sidebar() {
   const { pendingRequests, refetch: refetchPendingRequests } = usePendingRequests()
   const gameConfig = useGameConfig()
   const [globalActivity, setGlobalActivity] = useState<ActivityFeedItem[]>([])
+
+  const praxisTypeLabel: Record<PraxisType, string> = {
+    solo: t('praxisType.solo'),
+    collab: t('praxisType.collab'),
+    duel: t('praxisType.duel'),
+  }
 
   useEffect(() => {
     if (!user) return
@@ -53,7 +55,7 @@ export default function Sidebar() {
       {character ? (
         <div className="sidebar-card">
           <div className="eyebrow mb-2" style={{ fontSize: 8, color: 'var(--color-text-tertiary)' }}>
-            Your Character
+            {t('sidebar.characterCard.eyebrow')}
           </div>
           <div className="flex items-center gap-3 mb-3">
             {character.avatar_url ? (
@@ -89,16 +91,19 @@ export default function Sidebar() {
                   color: factionCssVar(character.faction_slug),
                 }}
               >
-                {factionName(character.faction_slug)} · Level {character.level}
+                {t('sidebar.characterCard.factionLevel', {
+                  faction: factionName(character.faction_slug),
+                  level: character.level,
+                })}
               </span>
             </div>
           </div>
 
           <div className="grid grid-cols-3 gap-1">
             {[
-              { label: 'Score', value: character.score?.toLocaleString() ?? '0' },
-              { label: 'Votes', value: votesReceived.toLocaleString() },
-              { label: 'Current', value: `Era 3`, sublabel: true },
+              { label: t('sidebar.stats.score'), value: character.score?.toLocaleString() ?? '0' },
+              { label: t('sidebar.stats.votes'), value: votesReceived.toLocaleString() },
+              { label: t('sidebar.stats.current'), value: t('sidebar.stats.currentValue') },
             ].map((stat) => (
               <div
                 key={stat.label}
@@ -117,7 +122,7 @@ export default function Sidebar() {
         </div>
       ) : (
         <div className="sidebar-card">
-          <p className="eyebrow text-center">No character yet</p>
+          <p className="eyebrow text-center">{t('sidebar.characterCard.noCharacter')}</p>
         </div>
       )}
 
@@ -125,7 +130,7 @@ export default function Sidebar() {
       {pendingRequests.length > 0 && (
         <div className="sidebar-card">
           <p className="eyebrow mb-2">
-            Pending Requests · {pendingRequests.length}
+            {t('sidebar.pendingRequests.heading', { count: pendingRequests.length })}
           </p>
           <div className="flex flex-col gap-1.5">
             {pendingRequests.map((item, index) => (
@@ -147,11 +152,11 @@ export default function Sidebar() {
 
       {/* ── Active Tasks Panel ── */}
       <div className="sidebar-card">
-        <p className="eyebrow mb-2">In progress tasks</p>
+        <p className="eyebrow mb-2">{t('sidebar.activeTasks.heading')}</p>
 
         {activeTasks.length === 0 ? (
           <p className="font-body text-xs" style={{ color: 'var(--color-text-tertiary)' }}>
-            No in progress tasks
+            {t('sidebar.activeTasks.empty')}
           </p>
         ) : (
           <div className="flex flex-col gap-1.5">
@@ -175,7 +180,7 @@ export default function Sidebar() {
                 </div>
                 <FeedBadge
                   type={praxis.type === 'solo' ? 'global' : praxis.type}
-                  label={PRAXIS_TYPE_LABEL[praxis.type]}
+                  label={praxisTypeLabel[praxis.type]}
                 />
               </div>
             ))}
@@ -203,18 +208,18 @@ export default function Sidebar() {
             />
           </div>
           <p className="font-body" style={{ fontSize: 8, color: 'var(--color-text-tertiary)', marginTop: 3 }}>
-            {slotCount} / {maxTaskSlots} slots
+            {t('sidebar.activeTasks.slots', { count: slotCount, max: maxTaskSlots })}
           </p>
         </div>
       </div>
 
       {/* ── Recent Global Activity Panel ── */}
       <div className="sidebar-card">
-        <p className="eyebrow mb-2">Recent global activity</p>
+        <p className="eyebrow mb-2">{t('sidebar.globalActivity.heading')}</p>
 
         {globalActivity.length === 0 ? (
           <p className="font-body text-xs" style={{ color: 'var(--color-text-tertiary)' }}>
-            No activity yet
+            {t('sidebar.globalActivity.empty')}
           </p>
         ) : (
           <div className="flex flex-col">
@@ -232,28 +237,35 @@ export default function Sidebar() {
                   <div className="font-body" style={{ fontSize: 9, lineHeight: 1.4 }}>
                     {isEra ? (
                       <span style={{ fontWeight: 700, color: 'var(--faction-ephemerists)' }}>
-                        {item.payload.era_name} has begun
+                        {t('sidebar.globalActivity.eraBegun', { eraName: item.payload.era_name })}
                       </span>
                     ) : isTask ? (
-                      <>
-                        <span style={{ fontWeight: 700, color: 'var(--color-text-primary)' }}>New task: </span>
-                        <Link
-                          to={`/tasks/${item.payload.task_id}`}
-                          style={{ color: 'var(--color-text-secondary)', textDecoration: 'none' }}
-                        >
-                          {item.payload.task_title}
-                        </Link>
-                      </>
+                      <Trans
+                        i18nKey="sidebar.globalActivity.newTask"
+                        values={{ title: item.payload.task_title }}
+                        components={[
+                          <span style={{ fontWeight: 700, color: 'var(--color-text-primary)' }} />,
+                          <Link
+                            to={`/tasks/${item.payload.task_id}`}
+                            style={{ color: 'var(--color-text-secondary)', textDecoration: 'none' }}
+                          />,
+                        ]}
+                      />
                     ) : (
-                      <>
-                        <span style={{ fontWeight: 700, color: 'var(--color-text-primary)' }}>
-                          {item.actor_display_name}
-                        </span>
-                        {' completed '}
-                        <span style={{ color: 'var(--color-text-secondary)' }}>
-                          {item.payload.task_title || item.payload.praxis_title || 'a task'}
-                        </span>
-                      </>
+                      <Trans
+                        i18nKey="sidebar.globalActivity.completedTask"
+                        values={{
+                          actor: item.actor_display_name,
+                          title:
+                            item.payload.task_title ||
+                            item.payload.praxis_title ||
+                            t('sidebar.globalActivity.fallbackTaskTitle'),
+                        }}
+                        components={[
+                          <span style={{ fontWeight: 700, color: 'var(--color-text-primary)' }} />,
+                          <span style={{ color: 'var(--color-text-secondary)' }} />,
+                        ]}
+                      />
                     )}
                   </div>
                   <span className="font-body" style={{ fontSize: 7, color: 'var(--color-text-tertiary)' }}>
@@ -271,7 +283,7 @@ export default function Sidebar() {
         to="/propose-task"
         className="btn-primary text-center w-full block"
       >
-        Propose a Task
+        {t('actions.proposeTask')}
       </Link>
     </aside>
   )
@@ -299,6 +311,7 @@ function PendingRequestRow({
   isFirst: boolean
   onResolved: () => void
 }) {
+  const { t } = useTranslation('common')
   const isCollab = item.type === 'collab_invite'
   const actorId = isCollab
     ? item.payload.inviter_character_id
@@ -340,7 +353,7 @@ function PendingRequestRow({
             className="eyebrow block"
             style={{ color: 'var(--color-text-tertiary)', textDecoration: 'none' }}
           >
-            {isCollab ? 'Collab Invite' : 'Duel Challenge'}
+            {isCollab ? t('requests.collabInvite') : t('requests.duelChallenge')}
           </Link>
         </div>
       </div>
@@ -356,7 +369,7 @@ function PendingRequestRow({
             cursor: loading ? 'not-allowed' : 'pointer',
           }}
         >
-          Accept
+          {t('actions.accept')}
         </button>
         <button
           onClick={() => respond(decline)}
@@ -369,7 +382,7 @@ function PendingRequestRow({
             cursor: loading ? 'not-allowed' : 'pointer',
           }}
         >
-          Decline
+          {t('actions.decline')}
         </button>
       </div>
       {error && (

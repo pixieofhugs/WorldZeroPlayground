@@ -1,23 +1,25 @@
 import { NavLink } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { useAuth } from '../auth/AuthContext'
 import { useAdminMode } from '../auth/AdminModeContext'
 import { loginWithGoogle, logout } from '../api/auth'
 import { useTheme } from '../hooks/useTheme'
 
-const links = [
-  { to: '/', label: 'Home', end: true },
-  { to: '/tasks', label: 'Tasks' },
-  { to: '/praxes', label: 'Praxis' },
-  { to: '/leaderboard', label: 'Players' },
-  { to: '/factions', label: 'Factions' },
-  { to: '/updates', label: 'Updates' },
-]
-
 export default function NavBar() {
+  const { t } = useTranslation('common')
   const { user, refetch } = useAuth()
   const { theme, toggle } = useTheme()
   const { adminMode, toggleAdminMode } = useAdminMode()
   const dark = theme === 'dark'
+
+  const links = [
+    { to: '/', label: t('nav.home'), end: true },
+    { to: '/tasks', label: t('nav.tasks') },
+    { to: '/praxes', label: t('nav.praxis') },
+    { to: '/leaderboard', label: t('nav.players') },
+    { to: '/factions', label: t('nav.factions') },
+    { to: '/updates', label: t('nav.updates') },
+  ]
 
   const handleLogout = async () => {
     await logout()
@@ -52,7 +54,7 @@ export default function NavBar() {
               paddingBottom: 2,
             }}
           >
-            World Zero
+            {t('brand')}
           </span>
         </NavLink>
 
@@ -83,7 +85,7 @@ export default function NavBar() {
                   borderBottom: isActive ? '1.5px solid var(--color-text-primary)' : '1.5px solid transparent',
                 })}
               >
-                Admin
+                {t('nav.admin')}
               </NavLink>
             </li>
           )}
@@ -93,7 +95,7 @@ export default function NavBar() {
         {user?.is_admin && (
           <button
             onClick={toggleAdminMode}
-            title={adminMode ? 'Admin mode ON — click to disable' : 'Enable admin mode'}
+            title={adminMode ? t('nav.adminMode.disableTitle') : t('nav.adminMode.enableTitle')}
             className="eyebrow"
             style={{
               background: 'none',
@@ -105,7 +107,7 @@ export default function NavBar() {
               borderRadius: 2,
             }}
           >
-            MOD
+            {t('nav.adminMode.badge')}
           </button>
         )}
 
@@ -122,7 +124,7 @@ export default function NavBar() {
             transition: 'color 150ms',
           }}
         >
-          {dark ? 'light' : 'dark'}
+          {dark ? t('nav.themeToggle.toLight') : t('nav.themeToggle.toDark')}
         </button>
 
         {/* User area */}
@@ -133,7 +135,7 @@ export default function NavBar() {
                 <NavLink
                   to="/"
                   end
-                  title="Your FieldDesk — switch lives or begin a new one"
+                  title={t('nav.fieldDeskTitle')}
                   className="nav-link transition-colors"
                   style={{ color: 'var(--color-text-secondary)' }}
                 >
@@ -145,16 +147,16 @@ export default function NavBar() {
                   className="nav-link transition-colors"
                   style={{ color: 'var(--color-text-secondary)' }}
                 >
-                  create character
+                  {t('nav.createCharacter')}
                 </NavLink>
               )}
               <button onClick={handleLogout} className="btn-outline" style={{ padding: '0.25rem 0.75rem' }}>
-                logout
+                {t('nav.logout')}
               </button>
             </>
           ) : (
             <button onClick={loginWithGoogle} className="btn-primary">
-              Login
+              {t('nav.login')}
             </button>
           )}
         </div>

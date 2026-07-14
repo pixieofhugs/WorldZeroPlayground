@@ -1,4 +1,5 @@
 import { Routes, Route } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import Layout from './components/Layout'
 import ProtectedRoute from './auth/ProtectedRoute'
 import { useAuth } from './auth/AuthContext'
@@ -27,8 +28,9 @@ import Donate from './pages/Donate'
 
 /** `/` is the FieldDesk for an authenticated account, the marketing Home otherwise. */
 function RootLanding() {
+  const { t } = useTranslation('common')
   const { user, loading } = useAuth()
-  if (loading) return <div className="page font-body text-muted">Loading...</div>
+  if (loading) return <div className="page font-body text-muted">{t('loading')}</div>
   return user ? <FieldDesk /> : <Home />
 }
 
@@ -40,8 +42,9 @@ function RootLanding() {
  * visually until #232; here we only route to the existing FactionDetail.
  */
 function AlbescentGate() {
+  const { t } = useTranslation('common')
   const { user, loading } = useAuth()
-  if (loading) return <div className="page font-body text-muted">Loading...</div>
+  if (loading) return <div className="page font-body text-muted">{t('loading')}</div>
   return user?.albescent_revealed ? <FactionDetail slug="albescent" /> : <AlbescentSecretPlaceholder />
 }
 

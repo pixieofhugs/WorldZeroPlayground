@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { factionCssVar } from "../../utils/factions";
 
 /**
@@ -14,6 +15,7 @@ export default function LevelPill({
   level: number;
   factionSlug?: string | null;
 }) {
+  const { t } = useTranslation('common');
   const bg = factionSlug
     ? factionCssVar(factionSlug, "card-accent")
     : "var(--color-text-primary)";
@@ -34,7 +36,7 @@ export default function LevelPill({
         letterSpacing: "0.08em",
       }}
     >
-      lvl {level}
+      {t("level.short", { level })}
     </span>
   );
 }

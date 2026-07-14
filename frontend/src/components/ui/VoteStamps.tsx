@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { castVote } from '../../api/votes'
 import { useAuth } from '../../auth/AuthContext'
 import { extractError } from '../../utils/errors'
@@ -14,14 +15,6 @@ interface StampConfig {
   color: string
 }
 
-const STAMPS: StampConfig[] = [
-  { value: 1, label: 'a start', color: 'var(--vote-1)' },
-  { value: 2, label: 'solid',   color: 'var(--vote-2)' },
-  { value: 3, label: 'good',    color: 'var(--vote-3)' },
-  { value: 4, label: 'excellent', color: 'var(--vote-4)' },
-  { value: 5, label: 'legendary', color: 'var(--vote-5)' },
-]
-
 interface Props {
   praxisId: number
   currentValue?: number
@@ -31,10 +24,19 @@ interface Props {
 }
 
 export default function VoteStamps({ praxisId, currentValue, points, totalVotes }: Props) {
+  const { t } = useTranslation('common')
   const { user, refetch } = useAuth()
   const [selected, setSelected] = useState(currentValue ?? 0)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
+
+  const stamps: StampConfig[] = [
+    { value: 1, label: t('voteStamps.a-start'), color: 'var(--vote-1)' },
+    { value: 2, label: t('voteStamps.solid'), color: 'var(--vote-2)' },
+    { value: 3, label: t('voteStamps.good'), color: 'var(--vote-3)' },
+    { value: 4, label: t('voteStamps.excellent'), color: 'var(--vote-4)' },
+    { value: 5, label: t('voteStamps.legendary'), color: 'var(--vote-5)' },
+  ]
 
   const handleVote = async (stars: number) => {
     setSaving(true)
@@ -45,7 +47,7 @@ export default function VoteStamps({ praxisId, currentValue, points, totalVotes 
       // Refresh sidebar character stats (score/level may have changed)
       void refetch()
     } catch (err) {
-      setError(extractError(err, 'Could not save your vote. Please try again.'))
+      setError(extractError(err, t('voteStamps.saveError')))
     } finally {
       setSaving(false)
     }
@@ -55,10 +57,10 @@ export default function VoteStamps({ praxisId, currentValue, points, totalVotes 
     <div>
       {/* Stamp buttons — hidden for logged-out users */}
       {!user ? (
-        <p className="eyebrow">Log in to vote</p>
+        <p className="eyebrow">{t('voteStamps.loginPrompt')}</p>
       ) : (
         <div style={{ display: 'flex', gap: 8, marginBottom: 10 }}>
-          {STAMPS.map((stamp) => {
+          {stamps.map((stamp) => {
             const active = selected === stamp.value
             return (
               <div key={stamp.value} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3 }}>
@@ -67,7 +69,7 @@ export default function VoteStamps({ praxisId, currentValue, points, totalVotes 
                   onClick={() => void handleVote(stamp.value)}
                   className={active ? 'vote-stamp vote-stamp-active' : 'vote-stamp'}
                   style={{ '--stamp-color': stamp.color } as React.CSSProperties}
-                  aria-label={`Rate ${stamp.value} — ${stamp.label}`}
+                  aria-label={t('voteStamps.rateAria', { value: stamp.value, label: stamp.label })}
                 >
                   {/* Inner dashed border on selected */}
                   {active && (
@@ -105,14 +107,14 @@ export default function VoteStamps({ praxisId, currentValue, points, totalVotes 
       {/* Vote economy info */}
       {selected > 0 && (
         <p className="font-body" style={{ fontSize: 8, color: 'var(--color-text-tertiary)', marginBottom: 8 }}>
-          Voted {selected} pts
+          {t('voteStamps.voted', { count: selected })}
         </p>
       )}
 
       {/* Summary */}
       {points != null && (
         <p className="font-body" style={{ fontSize: 9, color: 'var(--color-text-secondary)' }}>
-          {totalVotes ?? 0} votes · {points} pts
+          {t('voteStamps.summary', { count: totalVotes ?? 0, points })}
         </p>
       )}
 

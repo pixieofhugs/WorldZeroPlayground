@@ -1,3 +1,5 @@
+import { useTranslation } from 'react-i18next'
+
 /**
  * Status filter — Rubber Stamps (Style Guide §5.3).
  * Rectangular, no border-radius, inner dashed border, bold uppercase.
@@ -11,9 +13,10 @@ interface Props {
 }
 
 export default function FilterStamps({ options, value, onChange }: Props) {
+  const { t } = useTranslation('common')
   return (
     <div className="flex gap-1.5 items-center">
-      <span className="eyebrow">status:</span>
+      <span className="eyebrow">{t('filters.status')}</span>
       {options.map((option) => {
         const active = value === option
         return (
