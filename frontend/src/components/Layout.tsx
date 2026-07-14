@@ -6,6 +6,7 @@ import NavBar from './NavBar'
 import { BackdropProvider } from './backdrop/BackdropContext'
 import FactionBackdrop from './backdrop/FactionBackdrop'
 import LevelUpWatcher from './LevelUpWatcher'
+import InvitationWatcher from './InvitationWatcher'
 import Sidebar from './layout/Sidebar'
 
 export default function Layout({ children }: { children: ReactNode }) {
@@ -29,6 +30,7 @@ export default function Layout({ children }: { children: ReactNode }) {
     <div className="min-h-screen flex flex-col relative">
       <FactionBackdrop />
       <LevelUpWatcher />
+      <InvitationWatcher />
 
       <NavBar />
 

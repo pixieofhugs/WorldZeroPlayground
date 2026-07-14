@@ -40,6 +40,38 @@
       "kicker": "Attended To",
       "title": "Lately Returned",
       "empty": "Nothing returned yet. The Record waits."
+    },
+    "invitation": {
+      "kicker": "the Record is attended —",
+      "headline": "Keep the quiet work",
+      "pitch": "/Albescent asks no colours and keeps no banners. There is only the Record, and the work of tending it — returned to, quietly, again and again. If word has reached you, the Houses already know your hand.",
+      "terms": [
+        {
+          "label": "obligation",
+          "value": "one thing, returned to"
+        },
+        {
+          "label": "required skills",
+          "value": "discretion, and care"
+        },
+        {
+          "label": "expected output",
+          "value": "work, attended and returned"
+        },
+        {
+          "label": "your standing",
+          "value": "keeper, on record"
+        }
+      ],
+      "perks": [
+        "A Record that remembers what was tended",
+        "Work that turns a Tuesday into an attending",
+        "Your praxis, entered to the ledger without fanfare"
+      ],
+      "cta": {
+        "join": "Attend the Record",
+        "joined": "your name is on record"
+      }
     }
   },
   "ephemerists": {
@@ -79,6 +111,38 @@
       "heading": "The keepers",
       "emptyWithSpotlight": "No other names in the codex yet.",
       "level": "grade {{grade}}"
+    },
+    "invitation": {
+      "kicker": "the codex lies open —",
+      "headline": "Walk with the keepers",
+      "pitch": "The Ephemerists keep the record of what's true, and true only for now. Take a survey, triangulate what you find, and file it to the codex. The road is long and forks often — walk it with us.",
+      "terms": [
+        {
+          "label": "toll",
+          "value": "one survey, triangulated"
+        },
+        {
+          "label": "required skills",
+          "value": "a steady hand, an open eye"
+        },
+        {
+          "label": "expected output",
+          "value": "truths, filed to the codex"
+        },
+        {
+          "label": "your standing",
+          "value": "keeper of the road"
+        }
+      ],
+      "perks": [
+        "A codex that weighs your findings for concordance",
+        "Surveys that turn a Tuesday into a reckoning",
+        "Your praxis, sealed to the record and remembered"
+      ],
+      "cta": {
+        "join": "Take the road",
+        "joined": "your name is in the codex"
+      }
     }
   },
   "everymen": {
@@ -118,6 +182,38 @@
       "heading": "The roster",
       "emptyWithSpotlight": "No others on the roll yet.",
       "level": "lvl {{level}}"
+    },
+    "invitation": {
+      "kicker": "doors are open —",
+      "headline": "Join the ranks",
+      "pitch": "Anyone willing to put in the shift belongs with the Everymen. No credentials, no gatekeeping — pick up the work in front of you and finish what you start. The roll always has room for one more.",
+      "terms": [
+        {
+          "label": "dues",
+          "value": "one shift, seen through"
+        },
+        {
+          "label": "required skills",
+          "value": "the willingness to show up"
+        },
+        {
+          "label": "expected output",
+          "value": "honest work, finished"
+        },
+        {
+          "label": "your standing",
+          "value": "card-carrying"
+        }
+      ],
+      "perks": [
+        "A roll that has your back on every shift",
+        "Work orders that turn a Tuesday into a day's honest wage",
+        "Your praxis, logged and counted with the rest"
+      ],
+      "cta": {
+        "join": "Enlist",
+        "joined": "you're on the roll"
+      }
     }
   },
   "singularity": {
@@ -159,6 +255,38 @@
       "empty": "> no nodes online",
       "emptyWithSpotlight": "> no other nodes online",
       "level": "lvl {{level}}"
+    },
+    "invitation": {
+      "kicker": "> ACCESS GRANTED",
+      "headline": "Join the array",
+      "pitch": "The threshold is already behind you. Take a node, run protocols, seal outputs, and cast signal into the consensus. The Singularity does not recruit — it comes online.",
+      "terms": [
+        {
+          "label": "handshake",
+          "value": "one sealed output"
+        },
+        {
+          "label": "required skills",
+          "value": "none — the array compiles"
+        },
+        {
+          "label": "expected output",
+          "value": "signal, into consensus"
+        },
+        {
+          "label": "node status",
+          "value": "awaiting connect"
+        }
+      ],
+      "perks": [
+        "A consensus that verifies, then amplifies",
+        "Protocols that turn a Tuesday into throughput",
+        "Your praxis, sealed and cast to the array"
+      ],
+      "cta": {
+        "join": "Connect",
+        "joined": "node online"
+      }
     }
   },
   "snide": {
@@ -200,6 +328,38 @@
       "heading": "the rap sheet",
       "emptyWithSpotlight": "No other names on file yet.",
       "level": "lvl {{level}}"
+    },
+    "invitation": {
+      "kicker": "the door's open —",
+      "headline": "Come cause trouble",
+      "pitch": "No forms. No gods. No managers. S.N.I.D.E. runs on nerve and mischief — you pull off a job, you mean it, and the crew has your back. Show up and make some noise.",
+      "terms": [
+        {
+          "label": "cover charge",
+          "value": "one job, pulled off clean"
+        },
+        {
+          "label": "required skills",
+          "value": "nerve, mostly"
+        },
+        {
+          "label": "expected output",
+          "value": "trouble, well-made"
+        },
+        {
+          "label": "your standing",
+          "value": "accomplice, pending"
+        }
+      ],
+      "perks": [
+        "A crew that covers for you, not on you",
+        "Jobs worth the risk and the story after",
+        "Your praxis, stamped and filed under 'us'"
+      ],
+      "cta": {
+        "join": "I'm in",
+        "joined": "you're on the inside"
+      }
     }
   },
   "ua": {
@@ -241,6 +401,38 @@
       "heading": "The register",
       "emptyWithSpotlight": "No other names on the wall yet.",
       "level": "Anno {{anno}}"
+    },
+    "invitation": {
+      "kicker": "the salon is enrolling",
+      "headline": "Take up the brush",
+      "pitch": "The University of Asthmatics keeps World Zero's easels warm. Every task is a commission, every submission an acquisition — hung in the Salon and put to the gentlest possible Critique. Bring nerve. Bring an inhaler. Bring something made.",
+      "terms": [
+        {
+          "label": "matriculation fee",
+          "value": "one honest piece"
+        },
+        {
+          "label": "required skills",
+          "value": "none — talent optional"
+        },
+        {
+          "label": "expected output",
+          "value": "work, hung & signed"
+        },
+        {
+          "label": "season seat",
+          "value": "#2 in the roster"
+        }
+      ],
+      "perks": [
+        "A Salon that critiques kindly, and honestly",
+        "Commissions that turn a Tuesday into a sitting",
+        "Your praxis framed in gilt and exhibited"
+      ],
+      "cta": {
+        "join": "Matriculate",
+        "joined": "your easel is reserved"
+      }
     }
   },
   "wow": {
@@ -278,6 +470,43 @@
       "heading": "the coven roster",
       "emptyWithSpotlight": "No other witches in the circle yet.",
       "level": "lvl {{level}}"
+    },
+    "invitation": {
+      "kicker": "the circle is recruiting",
+      "headline": "Come be a little magic",
+      "pitch": "Warriors of Whimsy is World Zero's coven for the soft and the strange. No spectators here — only witches mid-spell. Take a quest, do the tiny brave thing, and let the circle cheer you on.",
+      "terms": [
+        {
+          "label": "membership fee",
+          "value": "one act of everyday magic"
+        },
+        {
+          "label": "required skills",
+          "value": "none — only nerve"
+        },
+        {
+          "label": "expected output",
+          "value": "small, brave, strange things"
+        },
+        {
+          "label": "season rank",
+          "value": "#3 and rising"
+        }
+      ],
+      "perks": [
+        "A coven that cheers every tiny victory",
+        "Quests that make a Tuesday enchanted",
+        "Your praxis, sealed and hearted by the circle"
+      ],
+      "cta": {
+        "join": "Join the coven",
+        "joined": "welcome home, witch"
+      }
     }
+  },
+  "invitation": {
+    "prospectus": "a prospectus",
+    "termsHeading": "Terms of matriculation",
+    "dismiss": "Maybe later"
   }
 }

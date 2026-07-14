@@ -1,0 +1,35 @@
+<!-- UA Join Screen "prospectus" — the structural reference for the #243 invitation-letter popup.
+     (Trimmed from the design .html: dropped the React/Babel boilerplate + faction chooser rail;
+      kept the SalonProspectus layout + UA verbatim copy.) Fonts/colours shown are UA's; in the
+      repo, render via --faction-<slug>-* tokens + FactionSigil so every faction's letter is skinned. -->
+
+<!-- UA recruit copy (VERBATIM — port into factions.json ua.invitation.*):
+     kicker:   "the salon is enrolling"
+     headline: "Take up the brush"
+     pitch:    "The University of Asthmatics keeps World Zero's easels warm. Every task is a
+                commission, every submission an acquisition — hung in the Salon and put to the
+                gentlest possible Critique. Bring nerve. Bring an inhaler. Bring something made."
+     terms: [ {matriculation fee, one honest piece}, {required skills, none — talent optional},
+              {expected output, work, hung & signed}, {season seat, #2 in the roster} ]
+     perks: [ "A Salon that critiques kindly, and honestly",
+              "Commissions that turn a Tuesday into a sitting",
+              "Your praxis framed in gilt and exhibited" ]
+     cta: { join: "Matriculate", joined: "your easel is reserved" } -->
+
+<!-- LAYOUT (the "prospectus" card — the popup body):
+  [ faction frame/border in faction tokens ]
+    masthead row:  <FactionSigil faction=slug size=30/>  •  FACTION NAME (engraved caps)   ....   "a prospectus · est · MMXX" (muted, right)
+    kicker         (small uppercase overline, faction accent)
+    headline       (large display, faction display font)
+    pitch          (serif body, 1-2 sentences)
+    terms slip:    inset panel, "Terms of matriculation" heading, then a 2-col grid of
+                   { label (mono uppercase muted) / value (display italic) } pairs, dashed dividers
+    perks:         list rows, each: faction-accent bullet ("✦") + italic serif line
+    CTA row:       [ Join button — faction accent bg, hard offset shadow ]   +  a small dismiss/"maybe later"
+                   (member/joined state swaps the button for a confirmation)
+-->
+
+<!-- For #243 the popup is a MODAL (overlay + centered card), mirroring LevelUpPopup.tsx's shell
+     (Escape to close, autofocus the primary action, no focus trap). The "join" CTA should route to
+     the faction's join flow (faction detail page / the existing join action) for the invited faction;
+     dismiss just closes. One popup per newly-earned invitation, queued (see LevelUpWatcher). -->

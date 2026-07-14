@@ -24,6 +24,10 @@ export interface CharacterOut {
   /** Populated only by the single-character GET /characters/{id} (ADR-0033);
    *  list responses leave it empty. */
   badges?: BadgeOut[]
+  /** Faction slugs this life holds a current-era invitation letter for (#243).
+   *  Populated only by /auth/me (the carried life); the InvitationWatcher diffs
+   *  it to fire a recruitment-prospectus popup. Empty elsewhere. */
+  invitations?: string[]
 }
 
 export interface CurrentUser {

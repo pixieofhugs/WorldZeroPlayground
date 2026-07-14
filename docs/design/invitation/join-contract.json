@@ -1,0 +1,28 @@
+{
+  "_doc": "World Zero — canonical JOIN / recruitment data contract. The recruitment surface (and the #243 invitation-letter pop-up) renders from ONE object of this shape per faction. Faction-agnostic: every faction returns the same keys; all per-faction decoration is derived CLIENT-SIDE from `slug`, never stored. Example values below are the Warriors of Whimsy instance (verbatim from design). UA copy is in ua-join-screen-reference.html.",
+
+  "slug": "wow",
+  "name": "Warriors of Whimsy",
+  "archetype": "whimsy.exe",
+
+  "recruit": {
+    "_doc": "The recruitment pitch — all copy is faction-authored, in-voice. In the repo this copy lives in frontend/src/locales/en/factions.json under `<slug>.invitation.*` (editable by writers per the i18n epic). kicker=small overline; headline=big call to enlist; pitch=1-2 sentences; terms=label/value facts shown as a slip/ledger; perks=short membership bullets; cta labels the enlist button in both states.",
+    "kicker": "the circle is recruiting",
+    "headline": "Come be a little magic",
+    "pitch": "Warriors of Whimsy is World Zero's coven for the soft and the strange. No spectators here — only witches mid-spell. Take a quest, do the tiny brave thing, and let the circle cheer you on.",
+    "terms": [
+      { "label": "membership fee", "value": "one act of everyday magic" },
+      { "label": "required skills", "value": "none — only nerve" },
+      { "label": "expected output", "value": "small, brave, strange things" },
+      { "label": "season rank", "value": "#3 and rising" }
+    ],
+    "perks": [
+      "A coven that cheers every tiny victory",
+      "Quests that make a Tuesday enchanted",
+      "Your praxis, sealed and hearted by the circle"
+    ],
+    "cta": { "join": "Join the coven", "joined": "welcome home, witch" }
+  },
+
+  "note_for_243": "For the pop-up: `viewer.state`/`eligible`/`requirement`/`social` from the full join screen are NOT needed — by definition the popup fires only when the character has ALREADY EARNED the invitation (state is effectively 'eligible, invited'). The popup shows recruit.{kicker,headline,pitch,terms,perks} + a join CTA (deep-links to the faction detail/join flow) and a dismiss. The chooser-rail `factions` list is NOT part of the popup."
+}
