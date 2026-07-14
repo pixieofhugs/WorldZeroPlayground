@@ -14,7 +14,7 @@ from models.character_stats import CharacterStats
 from models.invitation_letter import InvitationLetter
 from models.praxis import ModerationStatus, Praxis, PraxisMember, PraxisStatus
 from models.task import Task
-from schemas.character import CharacterCreate, CharacterOut, CharacterUpdate
+from schemas.character import BadgeOut, CharacterCreate, CharacterOut, CharacterUpdate
 from services.era import get_current_era_row, get_current_era_row_safe, get_or_create_stats
 from services.scoring import compute_level, compute_vote_budget, compute_votes_available
 
@@ -29,10 +29,13 @@ _HANDLE_MAX_LEN = 14
 def build_character_out(
     character: Character,
     stats: CharacterStats | None,
+    badges: list[BadgeOut] | None = None,
 ) -> CharacterOut:
     """Flatten a Character row plus its (optional) CharacterStats into CharacterOut.
 
     votes_available is computed on read from stats.score and votes_spent_this_era.
+    badges (ADR-0033) is supplied only by the single-character read path; list
+    serializers omit it and the field defaults to empty.
     """
     return CharacterOut(
         id=character.id,
@@ -48,6 +51,7 @@ def build_character_out(
         all_time_score=stats.all_time_score if stats else 0,
         level=stats.level if stats else 0,
         votes_available=compute_votes_available(stats) if stats else 0,
+        badges=badges or [],
     )
 
 

@@ -1,5 +1,12 @@
 import api from './axios'
 
+/** A badge the character currently holds (ADR-0033). Evaluated on read by the
+ *  backend; the image is a bundled frontend asset mapped by `key`. */
+export interface BadgeOut {
+  key: string
+  name: string
+}
+
 export interface CharacterOut {
   id: number
   username: string
@@ -14,6 +21,9 @@ export interface CharacterOut {
   /** "active" | "paused" | "banned" — the roster includes paused lives (#270). */
   status: string
   created_at: string
+  /** Populated only by the single-character GET /characters/{id} (ADR-0033);
+   *  list responses leave it empty. */
+  badges?: BadgeOut[]
 }
 
 export interface CurrentUser {

@@ -3,12 +3,24 @@ from datetime import datetime
 from pydantic import BaseModel, ConfigDict, Field
 
 
+class BadgeOut(BaseModel):
+    """A badge a character currently holds (ADR-0033). The image is a frontend
+    asset keyed by ``key`` — never part of the payload."""
+
+    key: str
+    name: str
+
+
 class CharacterOut(BaseModel):
     """Public character response. Stats (score, level, all_time_score) come from CharacterStats.
 
     votes_available is the on-read computed vote budget for the current era
     (see services.scoring.compute_votes_available); it reflects score growth
     and spent votes without a stored counter.
+
+    badges is evaluated on read (ADR-0033) and populated ONLY by the
+    single-character GET /characters/{id} — list serializers leave it empty
+    to avoid N+1 sibling queries. account_id / email never leave the backend.
     """
 
     model_config = ConfigDict(from_attributes=True)
@@ -26,6 +38,7 @@ class CharacterOut(BaseModel):
     faction_slug: str
     status: str
     created_at: datetime
+    badges: list[BadgeOut] = Field(default_factory=list)
 
 
 class CharacterCreate(BaseModel):

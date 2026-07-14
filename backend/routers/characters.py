@@ -19,6 +19,7 @@ from schemas.character import CharacterCreate, CharacterOut, CharacterUpdate
 from schemas.relationship import RelationshipOut
 from schemas.praxis import PraxisOut
 from services.auth import get_current_account
+from services.badge import list_badges_for_character
 from services.character import (
     CharacterCreationResult,
     build_character_out,
@@ -76,7 +77,9 @@ async def get_character(
         raise HTTPException(status_code=404, detail="Character not found.")
 
     stats = await load_current_era_stats(character_id, session)
-    return build_character_out(character, stats)
+    # Badges are evaluated on read, single-character path only (ADR-0033).
+    badges = await list_badges_for_character(character, session)
+    return build_character_out(character, stats, badges=badges)
 
 
 @router.post("", response_model=CharacterOut, status_code=201)
