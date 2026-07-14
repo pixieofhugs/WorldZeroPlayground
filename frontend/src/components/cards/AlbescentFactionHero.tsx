@@ -1,4 +1,5 @@
 import type { FactionHeroProps } from "../../pages/FactionDetail";
+import i18n from "../../i18n";
 import AlbescentMark from "./AlbescentMark";
 
 /**
@@ -22,8 +23,6 @@ const MONO = "var(--faction-albescent-mono)"; // Courier Prime
 
 const ink = (pct: number): string => `color-mix(in srgb, ${INK} ${pct}%, transparent)`;
 
-const MOTTO = "The work is the work";
-
 export default function AlbescentFactionHero({
   name,
   description,
@@ -32,9 +31,9 @@ export default function AlbescentFactionHero({
   praxes,
 }: FactionHeroProps) {
   const stats = [
-    { value: members, label: "Keepers" },
-    { value: tasks, label: "Open Work" },
-    { value: praxes, label: "Returned" },
+    { value: members, label: i18n.t("feed:factionHero.albescent.stats.members") },
+    { value: tasks, label: i18n.t("feed:factionHero.albescent.stats.tasks") },
+    { value: praxes, label: i18n.t("feed:factionHero.albescent.stats.praxes") },
   ];
 
   return (
@@ -87,8 +86,8 @@ export default function AlbescentFactionHero({
               lineHeight: 1.9,
             }}
           >
-            <div>Faction · {name}</div>
-            <div>Unranked · By design</div>
+            <div>{i18n.t("feed:factionHero.albescent.factionLine", { name })}</div>
+            <div>{i18n.t("feed:factionHero.albescent.unrankedLine")}</div>
           </div>
 
           {/* Faction name */}
@@ -118,7 +117,7 @@ export default function AlbescentFactionHero({
               marginBottom: 18,
             }}
           >
-            {MOTTO}
+            {i18n.t("feed:factionHero.albescent.motto")}
           </div>
 
           {/* Blurb — the faction's own description */}

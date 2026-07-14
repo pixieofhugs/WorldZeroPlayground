@@ -1,5 +1,7 @@
 import { Link } from "react-router-dom";
+import { Trans } from "react-i18next";
 import type { TaskOut } from "../../api/tasks";
+import i18n from "../../i18n";
 import { EphEyebrow, LapisLastWord, toRoman } from "./ephemeristsAtoms";
 
 /**
@@ -36,7 +38,7 @@ export default function EphemeristsTaskCard({ task, displayPoints, onSignup }: P
       }}
     >
       <div style={{ position: "relative", zIndex: 5, padding: "9px 0 4px" }}>
-        <EphEyebrow motto="exhibit C · no single here" dark />
+        <EphEyebrow motto={i18n.t("feed:taskCard.ephemerists.motto")} dark />
       </div>
 
       {/* The contested field — three grids disagreeing about one point */}
@@ -119,11 +121,11 @@ export default function EphemeristsTaskCard({ task, displayPoints, onSignup }: P
           r 47 · θ 31°
         </div>
         <div style={{ position: "absolute", top: "6%", left: "68%", fontSize: 7.5, letterSpacing: "0.04em", color: "var(--eph-lapis)", background: "color-mix(in srgb, var(--eph-vellum) 82%, transparent)", padding: "1px 4px" }}>
-          ∞ · vanishing
+          {i18n.t("feed:taskCard.ephemerists.vanishingLabel")}
         </div>
         {/* marginal apparatus climbing the gutter */}
         <div style={{ position: "absolute", left: 2, bottom: 7, transformOrigin: "left bottom", transform: "rotate(-90deg)", whiteSpace: "nowrap", fontSize: 6, letterSpacing: "0.05em", color: "var(--eph-muted)", opacity: 0.85 }}>
-          ¼″ wider within than without †
+          {i18n.t("feed:taskCard.ephemerists.marginalia")}
         </div>
       </div>
 
@@ -152,15 +154,21 @@ export default function EphemeristsTaskCard({ task, displayPoints, onSignup }: P
           </div>
         )}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 7, fontSize: 7.5 }}>
-          <span style={{ color: "var(--eph-vellum-text)" }}>▦ grade {toRoman(task.level_required)}</span>
+          <span style={{ color: "var(--eph-vellum-text)" }}>
+            ▦ {i18n.t("feed:taskCard.ephemerists.grade", { grade: toRoman(task.level_required) })}
+          </span>
           <span style={{ color: "var(--eph-gold-deep)" }}>·</span>
           <span style={{ fontFamily: "var(--eph-display)", fontWeight: 700, fontSize: 13, color: "var(--eph-rubric)" }}>
-            {displayPoints} pvncta
+            {i18n.t("feed:taskCard.ephemerists.points", { points: displayPoints })}
           </span>
         </div>
         <div style={{ fontSize: 6.5, fontStyle: "italic", color: "var(--eph-muted)", marginTop: 6, lineHeight: 1.35 }}>
-          † the road does not return you to where you began —{" "}
-          <span style={{ color: "var(--eph-lapis)" }}>see †</span>
+          {/* The self-referential footnote is one <Trans> unit; "see †" is tag <1>. */}
+          <Trans
+            ns="feed"
+            i18nKey="taskCard.ephemerists.footnote"
+            components={{ 1: <span style={{ color: "var(--eph-lapis)" }} /> }}
+          />
         </div>
       </div>
 
@@ -182,7 +190,7 @@ export default function EphemeristsTaskCard({ task, displayPoints, onSignup }: P
             zIndex: 6,
           }}
         >
-          Triangulate the truth ▸
+          {i18n.t("feed:taskCard.ephemerists.signup")}
         </button>
       )}
     </div>

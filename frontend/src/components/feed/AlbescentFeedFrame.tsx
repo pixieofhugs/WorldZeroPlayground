@@ -1,5 +1,7 @@
 import type { ReactNode } from 'react'
 
+import i18n from '../../i18n'
+
 /**
  * Albescent per-faction feed frame (surface #12, SPEC-faction-ui-profile.md;
  * #232 slice 2 — the read/content archetypes landed in slice 1 / #417).
@@ -49,7 +51,7 @@ export default function AlbescentFeedFrame({ children }: { children: ReactNode }
             color: TEXT_FAINT,
           }}
         >
-          Albescent · the standing record
+          {i18n.t('feed:frame.albescent.masthead')}
         </div>
         <div aria-hidden="true" style={{ height: 1, width: 56, margin: '9px 0 12px', background: BORDER_RULE }} />
 

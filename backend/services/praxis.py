@@ -16,7 +16,7 @@ from sqlalchemy.orm import selectinload
 
 from game_config import CURRENT_ERA, EraConfig
 from models.character import Character
-from models.flag import Flag
+from models.flag import Flag, FlagReason, stored_flag_reason
 from models.meta_task import PraxisMetaTask
 from models.praxis import (
     MediaItem,
@@ -956,8 +956,9 @@ def is_task_eligible_for_character(
 async def flag_praxis(
     praxis_id: int,
     flagged_by: Character,
-    reason: str,
+    reason: FlagReason,
     session: AsyncSession,
+    reason_detail: Optional[str] = None,
     era: EraConfig = CURRENT_ERA,
 ) -> Praxis:
     """Flag a praxis for moderation review. Requires ``era.flag_level_required`` or above."""
@@ -989,7 +990,7 @@ async def flag_praxis(
     flag = Flag(
         praxis_id=praxis.id,
         flagged_by=flagged_by.id,
-        reason=reason or "",
+        reason=stored_flag_reason(reason, reason_detail),
     )
     session.add(flag)
     await session.flush()

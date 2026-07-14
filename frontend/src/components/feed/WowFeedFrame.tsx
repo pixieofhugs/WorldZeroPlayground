@@ -1,5 +1,7 @@
 import type { ReactNode } from 'react'
 
+import i18n from '../../i18n'
+
 /**
  * Warriors of Whimsy feed frame — the neutral feed card dressed as a tiny
  * "whimsy.exe" desktop window. A pink title bar (traffic-light dots + a script
@@ -77,7 +79,7 @@ export default function WowFeedFrame({ children }: { children: ReactNode }) {
             color: TITLE_TEXT,
           }}
         >
-          whimsy.exe
+          {i18n.t('feed:identity.wow.windowTitle')}
           <Sparkle size={12} />
         </span>
       </div>

@@ -7,6 +7,7 @@
  * Theme-aware through the --everymen* / --faction-everymen* token cascade.
  */
 import { useRef } from "react";
+import { useTranslation } from "react-i18next";
 import { mediaUrl } from "../../../utils/media";
 import { type PraxisType } from "../../../api/praxis";
 import type { MediaItemOut } from "../../../api/praxis";
@@ -46,12 +47,6 @@ const BODY_FONT = "var(--font-body)";
 
 const RED_GOLD_RULE =
   "repeating-linear-gradient(90deg, var(--everymen-red) 0 16px, var(--everymen-gold) 16px 26px)";
-
-const MODE_OPTIONS: Array<{ key: PraxisType; name: string; sub: string }> = [
-  { key: "solo", name: "SOLO", sub: "one pair of hands" },
-  { key: "collab", name: "COLLAB", sub: "all hands" },
-  { key: "duel", name: "DUEL", sub: "head to head" },
-];
 
 /** Union cog sigil. Inlined poster atom from the Everymen kit. */
 function CogMark({
@@ -146,11 +141,20 @@ function FieldLabel({
 }
 
 export default function EverymenEditPraxis({ state }: Props) {
+  const { t } = useTranslation("forms");
   const fileRef = useRef<HTMLInputElement>(null);
   const praxis = state.praxis!;
   const task = state.task;
 
   const allowedModes = task?.allowed_modes ?? ["solo", "collab", "duel"];
+
+  const modeOptions: Array<{ key: PraxisType; name: string; sub: string }> = (
+    ["solo", "collab", "duel"] as const
+  ).map((key) => ({
+    key,
+    name: t(`editPraxis.everymen.mode.${key}.label`),
+    sub: t(`editPraxis.everymen.mode.${key}.desc`),
+  }));
   const reportNo = String(praxis.id).padStart(4, "0");
   const totalProof = state.media.length;
 
@@ -196,7 +200,7 @@ export default function EverymenEditPraxis({ state }: Props) {
               whiteSpace: "nowrap",
             }}
           >
-            THE EVERYMEN · WORK REPORT {reportNo}
+            {t("editPraxis.everymen.masthead", { number: reportNo })}
           </span>
         </div>
 
@@ -219,7 +223,7 @@ export default function EverymenEditPraxis({ state }: Props) {
               color: PAPER_TEXT,
             }}
           >
-            EDIT PRAXIS
+            {t("editPraxis.everymen.pageTitle")}
           </div>
           <div
             style={{
@@ -234,12 +238,16 @@ export default function EverymenEditPraxis({ state }: Props) {
             }}
           >
             <div>
-              {state.saveStatus === "saving" ? "filing carbon copy…" : ""}
+              {state.saveStatus === "saving"
+                ? t("editPraxis.everymen.savingStatus")
+                : ""}
             </div>
             <div>
               {state.autosaveAt
-                ? `autosaved ${formatAutosave(state.autosaveAt)}`
-                : "not yet filed"}
+                ? t("editPraxis.everymen.autosaveSaved", {
+                    ago: formatAutosave(state.autosaveAt),
+                  })
+                : t("editPraxis.everymen.autosaveUnsaved")}
             </div>
           </div>
         </div>
@@ -283,7 +291,7 @@ export default function EverymenEditPraxis({ state }: Props) {
                 marginBottom: 4,
               }}
             >
-              Re: completion of
+              {t("editPraxis.everymen.taskRefLabel")}
             </div>
             <div
               style={{
@@ -308,7 +316,7 @@ export default function EverymenEditPraxis({ state }: Props) {
         {/* The crew (mode selector) */}
         {!state.controlsLocked && (
           <div style={{ marginBottom: 28 }}>
-            <FieldLabel>THE CREW</FieldLabel>
+            <FieldLabel>{t("editPraxis.everymen.modeLabel")}</FieldLabel>
             <ModePicker
               state={state}
               skin={{
@@ -317,7 +325,7 @@ export default function EverymenEditPraxis({ state }: Props) {
                   gridTemplateColumns: "repeat(3, 1fr)",
                   gap: 12,
                 },
-                options: MODE_OPTIONS,
+                options: modeOptions,
                 allowedModes,
                 renderOption: (opt, { active, disabled, onSelect }) => (
                   <button
@@ -387,11 +395,17 @@ export default function EverymenEditPraxis({ state }: Props) {
 
         {/* The job (headline) */}
         <div style={{ marginBottom: 28 }}>
-          <FieldLabel meta={`${state.title.length}/200`}>THE JOB</FieldLabel>
+          <FieldLabel
+            meta={t("editPraxis.everymen.titleMeta", {
+              length: state.title.length,
+            })}
+          >
+            {t("editPraxis.everymen.titleLabel")}
+          </FieldLabel>
           <TitleField
             state={state}
             skin={{
-              placeholder: "name the work in one line",
+              placeholder: t("editPraxis.everymen.titlePlaceholder"),
               inputStyle: {
                 width: "100%",
                 border: "none",
@@ -417,23 +431,27 @@ export default function EverymenEditPraxis({ state }: Props) {
             }}
           >
             {state.saveStatus === "saved"
-              ? "↳ carbon copy on file"
+              ? t("editPraxis.everymen.saveState.saved")
               : state.saveStatus === "saving"
-                ? "↳ filing…"
-                : "↳ not yet filed"}
+                ? t("editPraxis.everymen.saveState.saving")
+                : t("editPraxis.everymen.saveState.idle")}
           </div>
         </div>
 
         {/* The report (body) */}
         <div style={{ marginBottom: 28 }}>
-          <FieldLabel meta={`${state.wordCount} words · markdown ok`}>
-            THE REPORT
+          <FieldLabel
+            meta={t("editPraxis.everymen.bodyMeta", {
+              words: state.wordCount,
+            })}
+          >
+            {t("editPraxis.everymen.bodyLabel")}
           </FieldLabel>
           <BodyTextarea
             state={state}
             skin={{
               rows: 9,
-              placeholder: "Clocked in at…",
+              placeholder: t("editPraxis.everymen.bodyPlaceholder"),
               textareaStyle: {
                 width: "100%",
                 resize: "vertical",
@@ -468,7 +486,7 @@ export default function EverymenEditPraxis({ state }: Props) {
                     marginBottom: 6,
                   }}
                 >
-                  Foreman's preview
+                  {t("editPraxis.everymen.previewLabel")}
                 </div>
               ),
               markdownStyle: {
@@ -489,9 +507,9 @@ export default function EverymenEditPraxis({ state }: Props) {
         {/* Proof of work */}
         <div style={{ marginBottom: 30 }}>
           <FieldLabel
-            meta={`${totalProof} pinned · images · video · audio · max 50mb each`}
+            meta={t("editPraxis.everymen.filesMeta", { pinned: totalProof })}
           >
-            PROOF OF WORK
+            {t("editPraxis.everymen.filesLabel")}
           </FieldLabel>
           <div
             style={{
@@ -530,7 +548,7 @@ export default function EverymenEditPraxis({ state }: Props) {
               >
                 +
               </span>{" "}
-              Pin Proof
+              {t("editPraxis.everymen.fileButton")}
             </button>
             <input
               ref={fileRef}
@@ -575,8 +593,8 @@ export default function EverymenEditPraxis({ state }: Props) {
           <PublishButton
             state={state}
             skin={{
-              idleLabel: "★ STAMP & FILE ★",
-              busyLabel: "✓ FILING…",
+              idleLabel: t("editPraxis.everymen.publishIdle"),
+              busyLabel: t("editPraxis.everymen.publishBusy"),
               style: {
                 cursor: state.submitting ? "wait" : "pointer",
                 border: `2px solid ${INK}`,
@@ -595,7 +613,7 @@ export default function EverymenEditPraxis({ state }: Props) {
           <DropButton
             state={state}
             skin={{
-              label: "cancel",
+              label: t("editPraxis.everymen.dropLabel"),
               style: {
                 marginLeft: "auto",
                 background: "transparent",
@@ -623,6 +641,7 @@ interface ProofSlipProps {
 
 /** A stamped proof slip — the Everymen take on a pinned attachment. */
 function ProofSlip({ children, caption, onRemove }: ProofSlipProps) {
+  const { t } = useTranslation("forms");
   return (
     <div
       style={{
@@ -654,7 +673,7 @@ function ProofSlip({ children, caption, onRemove }: ProofSlipProps) {
       <button
         type="button"
         onClick={onRemove}
-        aria-label={`Remove ${caption}`}
+        aria-label={t("media.removeAria", { name: caption })}
         style={{
           position: "absolute",
           top: -8,
@@ -678,9 +697,10 @@ function ProofSlip({ children, caption, onRemove }: ProofSlipProps) {
 }
 
 function ExistingProof({ state }: { state: EditPraxisState }) {
+  const { t } = useTranslation("forms");
   return (
     <div style={{ marginBottom: 28 }}>
-      <FieldLabel>ON FILE</FieldLabel>
+      <FieldLabel>{t("editPraxis.everymen.onFileLabel")}</FieldLabel>
       <div style={{ display: "flex", flexWrap: "wrap", gap: 14 }}>
         {state.media.map((item: MediaItemOut) => {
           const src = mediaUrl(item.file_path);
@@ -717,6 +737,7 @@ function ExistingProof({ state }: { state: EditPraxisState }) {
 }
 
 function InviteBlock({ state }: { state: EditPraxisState }) {
+  const { t } = useTranslation("forms");
   // Delegates to the shared InviteSearch so collab-invite and duel-challenge (#311)
   // behaviour stay identical across archetypes; the crew-frame chrome stays bespoke.
   return (
@@ -729,7 +750,9 @@ function InviteBlock({ state }: { state: EditPraxisState }) {
       }}
     >
       <FieldLabel>
-        {state.duelMode ? "YOUR OPPONENT" : "THE CREW ROSTER"}
+        {state.duelMode
+          ? t("editPraxis.everymen.inviteLabelDuel")
+          : t("editPraxis.everymen.inviteLabel")}
       </FieldLabel>
       <InviteSearch
         state={state}
@@ -743,7 +766,7 @@ function InviteBlock({ state }: { state: EditPraxisState }) {
           acceptedBg: OLIVE,
           acceptedColor: CREAM,
           pendingColor: PAPER_TEXT,
-          placeholder: "search by name or @handle",
+          placeholder: t("editPraxis.everymen.invitePlaceholder"),
         }}
       />
     </div>
@@ -751,6 +774,7 @@ function InviteBlock({ state }: { state: EditPraxisState }) {
 }
 
 function MetatasksBlock({ state }: { state: EditPraxisState }) {
+  const { t } = useTranslation("forms");
   return (
     <div
       style={{
@@ -760,7 +784,9 @@ function MetatasksBlock({ state }: { state: EditPraxisState }) {
         border: `1.5px solid ${INK}`,
       }}
     >
-      <FieldLabel meta="optional · extra credit">SIDE WORK</FieldLabel>
+      <FieldLabel meta={t("editPraxis.everymen.metatasksMeta")}>
+        {t("editPraxis.everymen.metatasksLabel")}
+      </FieldLabel>
       {state.metaTasks.map((mt) => {
         const selected = state.appliedMetatasks.has(mt.id);
         const busy = state.applyingMetatask === mt.id;
@@ -833,7 +859,9 @@ function MetatasksBlock({ state }: { state: EditPraxisState }) {
                 whiteSpace: "nowrap",
               }}
             >
-              +{mt.point_value} PTS
+              {t("editPraxis.everymen.metatasksPoints", {
+                points: mt.point_value,
+              })}
             </span>
           </button>
         );

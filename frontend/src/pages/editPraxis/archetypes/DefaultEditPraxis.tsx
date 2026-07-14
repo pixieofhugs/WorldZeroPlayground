@@ -2,6 +2,7 @@
  * Sticky Note — UA / Albescent / Aged Out / fallback.
  * Cork board, big yellow sticky as the editor surface, mini-stickies for modes.
  */
+import { useTranslation } from "react-i18next";
 import { mediaUrl } from "../../../utils/media";
 import { type PraxisType } from "../../../api/praxis";
 import MediaArt from "../blocks/MediaArt";
@@ -32,16 +33,11 @@ interface Props {
   state: EditPraxisState;
 }
 
-const MODE_OPTIONS: Array<{
-  key: PraxisType;
-  label: string;
-  desc: string;
-  bg: string;
-}> = [
-  { key: "solo", label: "solo", desc: "just me", bg: "#fb7185" },
-  { key: "collab", label: "collab", desc: "a few of us", bg: "#4ade80" },
-  { key: "duel", label: "duel", desc: "me v. you", bg: "#c084fc" },
-];
+const MODE_BG: Record<PraxisType, string> = {
+  solo: "#fb7185",
+  collab: "#4ade80",
+  duel: "#c084fc",
+};
 
 const STICKY_YELLOW = "#fde68a";
 const STICKY_PAPER = "#fffefa";
@@ -51,10 +47,23 @@ const SLATE = "#475569";
 const SLATE_DEEP = "#1e293b";
 
 export default function DefaultEditPraxis({ state }: Props) {
+  const { t } = useTranslation("forms");
   const praxis = state.praxis!;
   const task = state.task;
 
   const allowedModes = task?.allowed_modes ?? ["solo", "collab", "duel"];
+
+  const modeOptions: Array<{
+    key: PraxisType;
+    label: string;
+    desc: string;
+    bg: string;
+  }> = (["solo", "collab", "duel"] as const).map((key) => ({
+    key,
+    label: t(`editPraxis.na.mode.${key}.label`),
+    desc: t(`editPraxis.na.mode.${key}.desc`),
+    bg: MODE_BG[key],
+  }));
 
   return (
     <div
@@ -112,7 +121,7 @@ export default function DefaultEditPraxis({ state }: Props) {
               letterSpacing: "0.05em",
             }}
           >
-            casual proof board
+            {t("editPraxis.na.masthead")}
           </div>
         </div>
 
@@ -141,11 +150,17 @@ export default function DefaultEditPraxis({ state }: Props) {
             }}
           >
             {state.autosaveAt
-              ? `saved ${formatAutosave(state.autosaveAt)}!`
-              : "unsaved"}
+              ? t("editPraxis.na.autosaveSaved", {
+                  ago: formatAutosave(state.autosaveAt),
+                })
+              : t("editPraxis.na.autosaveUnsaved")}
           </div>
           <div style={{ marginBottom: 6 }}>
-            <RainbowTitle text="edit praxis" size={42} color={SLATE_DEEP} />
+            <RainbowTitle
+              text={t("editPraxis.na.pageTitle")}
+              size={42}
+              color={SLATE_DEEP}
+            />
           </div>
           <div
             style={{
@@ -166,7 +181,7 @@ export default function DefaultEditPraxis({ state }: Props) {
                 marginRight: 8,
               }}
             >
-              re:
+              {t("editPraxis.na.taskRefLabel")}
             </span>
             {praxis.task_title}
           </div>
@@ -201,13 +216,13 @@ export default function DefaultEditPraxis({ state }: Props) {
                 textShadow: "1px 1px 2px rgba(0,0,0,.4)",
               }}
             >
-              how →
+              {t("editPraxis.na.modeLabel")}
             </div>
             <ModePicker
               state={state}
               skin={{
                 containerStyle: { display: "contents" },
-                options: MODE_OPTIONS,
+                options: modeOptions,
                 allowedModes,
                 renderOption: (opt, { active, disabled, onSelect, index }) => (
                   <button
@@ -284,7 +299,9 @@ export default function DefaultEditPraxis({ state }: Props) {
                   marginBottom: 6,
                 }}
               >
-                ↳ {state.duelMode ? "me v." : "who else?"}
+                {state.duelMode
+                  ? t("editPraxis.na.inviteLabelDuel")
+                  : t("editPraxis.na.inviteLabel")}
               </div>
               <InviteSearch
                 state={state}
@@ -295,7 +312,7 @@ export default function DefaultEditPraxis({ state }: Props) {
                   inputBorder: `1.5px dashed ${SLATE}`,
                   acceptedBg: "#4ade80",
                   acceptedColor: SLATE_DEEP,
-                  placeholder: "name or @handle",
+                  placeholder: t("editPraxis.na.invitePlaceholder"),
                 }}
               />
             </div>
@@ -320,12 +337,12 @@ export default function DefaultEditPraxis({ state }: Props) {
               letterSpacing: "0.05em",
             }}
           >
-            ↳ what'd you call it?
+            {t("editPraxis.na.titleLabel")}
           </div>
           <TitleField
             state={state}
             skin={{
-              placeholder: "give it a name",
+              placeholder: t("editPraxis.na.titlePlaceholder"),
               inputStyle: {
                 width: "100%",
                 fontFamily: "'Caveat', cursive",
@@ -380,13 +397,13 @@ export default function DefaultEditPraxis({ state }: Props) {
               marginBottom: 10,
             }}
           >
-            ↓ what happened ({state.wordCount} words · md ok)
+            {t("editPraxis.na.bodyLabel", { words: state.wordCount })}
           </div>
           <BodyTextarea
             state={state}
             skin={{
               rows: 10,
-              placeholder: "just write whatever...",
+              placeholder: t("editPraxis.na.bodyPlaceholder"),
               textareaStyle: {
                 width: "100%",
                 fontFamily: "'Caveat', cursive",
@@ -418,7 +435,7 @@ export default function DefaultEditPraxis({ state }: Props) {
                     marginBottom: 6,
                   }}
                 >
-                  preview ↓
+                  {t("editPraxis.na.previewLabel")}
                 </div>
               ),
               markdownStyle: {
@@ -451,7 +468,7 @@ export default function DefaultEditPraxis({ state }: Props) {
               textShadow: "1px 1px 2px rgba(0,0,0,.4)",
             }}
           >
-            stick anything →
+            {t("editPraxis.na.filesLabel")}
           </div>
           {state.media.map((item, index) => {
             const filename = item.file_path.split("/").pop() ?? item.file_path;
@@ -499,9 +516,9 @@ export default function DefaultEditPraxis({ state }: Props) {
                 gap: 4,
                 transform: "rotate(1.4deg)",
               },
-              buttonLabel: "+ tack it up",
+              buttonLabel: t("editPraxis.na.fileButton"),
               errorColor: "#dc2626",
-              helperText: "images · video · audio · max 50mb",
+              helperText: t("editPraxis.na.fileHelper"),
               helperStyle: {
                 fontSize: 12,
                 color: "#fef3c7",
@@ -532,7 +549,7 @@ export default function DefaultEditPraxis({ state }: Props) {
                 marginBottom: 8,
               }}
             >
-              ★ bonus?
+              {t("editPraxis.na.metatasksLabel")}
             </div>
             <MetatasksList
               state={state}
@@ -570,8 +587,8 @@ export default function DefaultEditPraxis({ state }: Props) {
           <PublishButton
             state={state}
             skin={{
-              idleLabel: "tack it up →",
-              busyLabel: "tacking...",
+              idleLabel: t("editPraxis.na.publishIdle"),
+              busyLabel: t("editPraxis.na.publishBusy"),
               ornament: (
                 <span
                   aria-hidden
@@ -602,7 +619,7 @@ export default function DefaultEditPraxis({ state }: Props) {
           <DropButton
             state={state}
             skin={{
-              label: "throw it away",
+              label: t("editPraxis.na.dropLabel"),
               style: {
                 background: "transparent",
                 border: "none",
@@ -627,7 +644,7 @@ export default function DefaultEditPraxis({ state }: Props) {
               transform: "rotate(-1deg)",
             }}
           >
-            ✦ small thing, badly. that's the whole point.
+            {t("editPraxis.na.footer")}
           </span>
         </div>
       </div>
@@ -648,6 +665,7 @@ function PolaroidStickie({
   rotation,
   onRemove,
 }: PolaroidStickieProps) {
+  const { t } = useTranslation("forms");
   return (
     <div
       style={{
@@ -690,7 +708,7 @@ function PolaroidStickie({
       <button
         type="button"
         onClick={onRemove}
-        aria-label={`Remove ${caption}`}
+        aria-label={t("media.removeAria", { name: caption })}
         style={{
           position: "absolute",
           top: -8,

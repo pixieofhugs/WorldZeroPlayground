@@ -1,5 +1,6 @@
 import type { FactionHeroProps } from "../../pages/FactionDetail";
-import { UACrest, MottoRibbon, UA_FULL_NAME } from "./UACrest";
+import i18n from "../../i18n";
+import { UACrest, MottoRibbon } from "./UACrest";
 
 /**
  * UA (University of Asthmatics) faction-page hero — a gilt-salon frontispiece.
@@ -99,7 +100,7 @@ export default function UAFactionHero({
                   marginBottom: 3,
                 }}
               >
-                {UA_FULL_NAME}
+                {i18n.t("feed:identity.ua.fullName")}
               </div>
               {/* eyebrow — engraved metadata */}
               <div
@@ -112,7 +113,7 @@ export default function UAFactionHero({
                   marginBottom: 14,
                 }}
               >
-                World Zero · The Salon · Est · MMXX
+                {i18n.t("feed:factionHero.ua.eyebrow")}
               </div>
 
               {/* regal wordmark */}
@@ -150,7 +151,7 @@ export default function UAFactionHero({
                 }}
               >
                 {description ??
-                  "Any medium, any madness. The Salon decides what endures."}
+                  i18n.t("feed:factionHero.ua.descriptionFallback")}
               </p>
 
             </div>

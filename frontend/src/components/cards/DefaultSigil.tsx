@@ -6,6 +6,8 @@
  * with the seven faction sigils; consumed by the default task/praxis cards,
  * DefaultAvatar, and the Edit Character retheme (#434).
  */
+import i18n from "../../i18n";
+
 interface DefaultSigilProps {
   /** px diameter */
   size?: number;
@@ -21,7 +23,7 @@ export default function DefaultSigil({ size = 48, hole = 0.4 }: DefaultSigilProp
   return (
     <div
       role="img"
-      aria-label="Unaffiliated — all paths open"
+      aria-label={i18n.t("feed:identity.na.sigilLabel")}
       style={{
         width: size,
         height: size,

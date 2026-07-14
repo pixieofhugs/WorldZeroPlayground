@@ -1,4 +1,5 @@
 import type { ActivityFeedItem } from '../../api/activityFeed'
+import i18n from '../../i18n'
 import { factionName } from '../../utils/factions'
 import { relativeTime } from '../../utils/dates'
 
@@ -10,6 +11,11 @@ import { relativeTime } from '../../utils/dates'
  * duel challenge, collab invite) keep their bespoke companion cards (the design's
  * factionless announcement + interactive challenge cards), routed in
  * FeedCardRouter — so accept/decline handlers are never collapsed into slots.
+ *
+ * Copy comes from the `feed` catalog (#447). This module is plain TS (no hook
+ * context), so it reads the singleton `i18n.t` directly — importing the
+ * singleton also guarantees the catalog is initialized wherever the normalizer
+ * is used (app or test).
  */
 
 /** Event types the faction owns as a slot-driven row (no bespoke card). */
@@ -57,14 +63,17 @@ export function normalizeFeedItem(item: ActivityFeedItem): FeedRow | null {
         slug,
         actor,
         actorHref: p.character_id != null ? `/characters/${p.character_id}` : null,
-        action: 'completed a task',
+        action: i18n.t('feed:row.action.completedTask'),
         badge: friend
-          ? { type: 'friend', label: 'Friend' }
-          : { type: 'duel', label: 'Foe' },
+          ? { type: 'friend', label: i18n.t('feed:badge.friend') }
+          : { type: 'duel', label: i18n.t('feed:badge.foe') },
         headline: p.task_title ?? null,
         headlineHref: p.praxis_id != null ? `/praxes/${p.praxis_id}` : null,
         headlineQuoted: false,
-        points: p.task_point_value != null ? `${p.task_point_value} pts` : null,
+        points:
+          p.task_point_value != null
+            ? i18n.t('feed:row.points', { points: p.task_point_value })
+            : null,
         level: null,
         time,
       }
@@ -74,12 +83,15 @@ export function normalizeFeedItem(item: ActivityFeedItem): FeedRow | null {
         slug,
         actor,
         actorHref: p.character_id != null ? `/characters/${p.character_id}` : null,
-        action: "signed up for a task you're doing",
-        badge: { type: 'friend', label: 'Friend' },
+        action: i18n.t('feed:row.action.signedUpSharedTask'),
+        badge: { type: 'friend', label: i18n.t('feed:badge.friend') },
         headline: p.task_title ?? null,
         headlineHref: p.task_id != null ? `/tasks/${p.task_id}` : null,
         headlineQuoted: false,
-        points: p.task_point_value != null ? `${p.task_point_value} pts` : null,
+        points:
+          p.task_point_value != null
+            ? i18n.t('feed:row.points', { points: p.task_point_value })
+            : null,
         level: p.task_level_required ?? null,
         time,
       }
@@ -88,12 +100,15 @@ export function normalizeFeedItem(item: ActivityFeedItem): FeedRow | null {
         slug,
         actor,
         actorHref: null,
-        action: 'voted on your praxis',
-        badge: { type: 'your_stuff', label: 'Your Stuff' },
+        action: i18n.t('feed:row.action.votedOnYourPraxis'),
+        badge: { type: 'your_stuff', label: i18n.t('feed:badge.yourStuff') },
         headline: p.praxis_title ?? null,
         headlineHref: p.praxis_id != null ? `/praxes/${p.praxis_id}` : null,
         headlineQuoted: false,
-        points: p.points_earned != null ? `+${p.points_earned} pts` : null,
+        points:
+          p.points_earned != null
+            ? i18n.t('feed:row.pointsEarned', { points: p.points_earned })
+            : null,
         level: null,
         time,
       }
@@ -102,8 +117,8 @@ export function normalizeFeedItem(item: ActivityFeedItem): FeedRow | null {
         slug,
         actor,
         actorHref: p.from_character_id != null ? `/characters/${p.from_character_id}` : null,
-        action: 'taunts you',
-        badge: { type: 'duel', label: 'Foe' },
+        action: i18n.t('feed:row.action.tauntsYou'),
+        badge: { type: 'duel', label: i18n.t('feed:badge.foe') },
         headline: p.message ?? null,
         headlineHref: null,
         headlineQuoted: true,
@@ -116,8 +131,11 @@ export function normalizeFeedItem(item: ActivityFeedItem): FeedRow | null {
         slug,
         actor,
         actorHref: p.character_id != null ? `/characters/${p.character_id}` : null,
-        action: `defected from ${p.old_faction_name ?? factionName(p.old_faction_slug)} to ${p.new_faction_name ?? factionName(p.new_faction_slug)}`,
-        badge: { type: 'friend', label: 'Friend' },
+        action: i18n.t('feed:row.action.defected', {
+          oldFaction: p.old_faction_name ?? factionName(p.old_faction_slug),
+          newFaction: p.new_faction_name ?? factionName(p.new_faction_slug),
+        }),
+        badge: { type: 'friend', label: i18n.t('feed:badge.friend') },
         headline: null,
         headlineHref: null,
         headlineQuoted: false,
@@ -130,12 +148,15 @@ export function normalizeFeedItem(item: ActivityFeedItem): FeedRow | null {
         slug,
         actor: null,
         actorHref: null,
-        action: 'A new task has been activated',
-        badge: { type: 'global', label: 'Global' },
+        action: i18n.t('feed:row.action.globalTaskActivated'),
+        badge: { type: 'global', label: i18n.t('feed:badge.global') },
         headline: p.task_title ?? null,
         headlineHref: p.task_id != null ? `/tasks/${p.task_id}` : null,
         headlineQuoted: false,
-        points: p.task_point_value != null ? `${p.task_point_value} pts` : null,
+        points:
+          p.task_point_value != null
+            ? i18n.t('feed:row.points', { points: p.task_point_value })
+            : null,
         level: p.task_level_required ?? null,
         time,
       }

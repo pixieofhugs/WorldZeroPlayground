@@ -12,6 +12,7 @@
  * the shared control primitives; this archetype owns only presentation. All
  * colors via --ua-* tokens (index.css) — never hardcode hex (CLAUDE.md).
  */
+import { useTranslation } from "react-i18next";
 import { mediaUrl } from "../../../utils/media";
 import { type PraxisType } from "../../../api/praxis";
 import type { CSSProperties, ReactNode } from "react";
@@ -46,12 +47,6 @@ const REGALIA = "'Marcellus SC', serif";
 const SERIF = "'EB Garamond', serif";
 const MONO = "'Courier Prime', monospace";
 
-const MODE_OPTIONS: Array<{ key: PraxisType; label: string; desc: string }> = [
-  { key: "solo", label: "Alone", desc: "a sole acquisition" },
-  { key: "collab", label: "Atelier", desc: "a joint acquisition" },
-  { key: "duel", label: "Salon Duel", desc: "a contested acquisition" },
-];
-
 /** A gilt-framed card — the recurring salon surface for each editor region. */
 function Plate({ children, style }: { children: ReactNode; style?: CSSProperties }) {
   return (
@@ -84,9 +79,18 @@ function RegaliaLabel({ children }: { children: ReactNode }) {
 }
 
 export default function UAEditPraxis({ state }: Props) {
+  const { t } = useTranslation("forms");
   const praxis = state.praxis!;
   const task = state.task;
   const allowedModes = task?.allowed_modes ?? ["solo", "collab", "duel"];
+
+  const modeOptions: Array<{ key: PraxisType; label: string; desc: string }> = (
+    ["solo", "collab", "duel"] as const
+  ).map((key) => ({
+    key,
+    label: t(`editPraxis.ua.mode.${key}.label`),
+    desc: t(`editPraxis.ua.mode.${key}.desc`),
+  }));
 
   return (
     <div
@@ -124,16 +128,20 @@ export default function UAEditPraxis({ state }: Props) {
             <span style={{ display: "inline-flex", alignItems: "center", gap: 10, minWidth: 0 }}>
               <UACrest width={22} height={26} />
               <span style={{ fontFamily: REGALIA, fontSize: 10, letterSpacing: "0.14em", color: "var(--ua-paper-warm)" }}>
-                University of Asthmatics · Salon Submission №{praxis.id}
+                {t("editPraxis.ua.masthead", { number: praxis.id })}
               </span>
             </span>
             <span style={{ fontFamily: MONO, fontSize: 8, letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--ua-paper-warm)", fontStyle: "italic", whiteSpace: "nowrap" }}>
-              {state.autosaveAt ? `sketched ${formatAutosave(state.autosaveAt)}` : "unsaved"}
+              {state.autosaveAt
+                ? t("editPraxis.ua.autosaveSaved", {
+                    ago: formatAutosave(state.autosaveAt),
+                  })
+                : t("editPraxis.ua.autosaveUnsaved")}
             </span>
           </div>
           <div style={{ padding: "22px 24px 22px" }}>
             <h1 style={{ fontFamily: DISPLAY, fontStyle: "italic", fontWeight: 600, fontSize: 50, lineHeight: 1.04, color: "var(--ua-ink)", margin: "0 0 14px" }}>
-              Submit to the Salon
+              {t("editPraxis.ua.pageTitle")}
             </h1>
             {/* red/gold dashed rule */}
             <div style={{ height: 0, borderTop: "1.5px dashed var(--ua-gold)", marginBottom: 18 }} />
@@ -142,7 +150,7 @@ export default function UAEditPraxis({ state }: Props) {
               <UACrest width={50} height={60} />
               <div style={{ minWidth: 0 }}>
                 <div style={{ fontFamily: MONO, fontSize: 8, letterSpacing: "0.2em", textTransform: "uppercase", color: "var(--ua-muted)", marginBottom: 4 }}>
-                  Commission · Anno III
+                  {t("editPraxis.ua.commissionLabel")}
                 </div>
                 <div style={{ fontFamily: DISPLAY, fontStyle: "italic", fontSize: 20, color: "var(--ua-ink)", lineHeight: 1.15, overflowWrap: "anywhere" }}>
                   {praxis.task_title}
@@ -153,7 +161,9 @@ export default function UAEditPraxis({ state }: Props) {
                   </div>
                 )}
                 <div style={{ fontFamily: REGALIA, fontSize: 10, letterSpacing: "0.12em", color: "var(--ua-gold)", marginTop: 4 }}>
-                  {praxis.task_point_value} pts
+                  {t("editPraxis.ua.pointsLabel", {
+                    points: praxis.task_point_value,
+                  })}
                 </div>
               </div>
             </div>
@@ -163,12 +173,12 @@ export default function UAEditPraxis({ state }: Props) {
         {/* Mode — engraved plates */}
         {!state.controlsLocked && (
           <div style={{ marginBottom: 24 }}>
-            <RegaliaLabel>The Hand</RegaliaLabel>
+            <RegaliaLabel>{t("editPraxis.ua.modeLabel")}</RegaliaLabel>
             <ModePicker
               state={state}
               skin={{
                 containerStyle: { display: "flex", gap: 12, flexWrap: "wrap" },
-                options: MODE_OPTIONS,
+                options: modeOptions,
                 allowedModes,
                 renderOption: (opt, { active, disabled, onSelect }) => (
                   <button
@@ -205,7 +215,11 @@ export default function UAEditPraxis({ state }: Props) {
         {/* Invite — the other hands */}
         {state.showInviteBox && (
           <Plate>
-            <RegaliaLabel>{praxis.type === "duel" ? "The challenger" : "The other hands"}</RegaliaLabel>
+            <RegaliaLabel>
+              {praxis.type === "duel"
+                ? t("editPraxis.ua.inviteLabelDuel")
+                : t("editPraxis.ua.inviteLabel")}
+            </RegaliaLabel>
             <InviteSearch
               state={state}
               skin={{
@@ -217,7 +231,7 @@ export default function UAEditPraxis({ state }: Props) {
                 dropdownBorder: "1px solid var(--ua-line)",
                 acceptedBg: "var(--ua-orange)",
                 acceptedColor: "var(--ua-paper)",
-                placeholder: "name or @handle",
+                placeholder: t("editPraxis.ua.invitePlaceholder"),
               }}
             />
           </Plate>
@@ -225,11 +239,11 @@ export default function UAEditPraxis({ state }: Props) {
 
         {/* Title */}
         <Plate>
-          <RegaliaLabel>The Title of the Work</RegaliaLabel>
+          <RegaliaLabel>{t("editPraxis.ua.titleLabel")}</RegaliaLabel>
           <TitleField
             state={state}
             skin={{
-              placeholder: "name this acquisition",
+              placeholder: t("editPraxis.ua.titlePlaceholder"),
               inputStyle: {
                 width: "100%",
                 fontFamily: DISPLAY,
@@ -252,12 +266,14 @@ export default function UAEditPraxis({ state }: Props) {
 
         {/* Body — the process */}
         <Plate>
-          <RegaliaLabel>The Statement · {state.wordCount} words · markdown</RegaliaLabel>
+          <RegaliaLabel>
+            {t("editPraxis.ua.bodyLabel", { words: state.wordCount })}
+          </RegaliaLabel>
           <BodyTextarea
             state={state}
             skin={{
               rows: 10,
-              placeholder: "an account of the work…",
+              placeholder: t("editPraxis.ua.bodyPlaceholder"),
               textareaStyle: {
                 width: "100%",
                 fontFamily: SERIF,
@@ -279,7 +295,7 @@ export default function UAEditPraxis({ state }: Props) {
               wrapperStyle: { borderTop: "1px solid var(--ua-line-soft)", marginTop: 14, paddingTop: 12 },
               label: (
                 <div style={{ fontFamily: REGALIA, fontSize: 9, letterSpacing: "0.2em", color: "var(--ua-gold)", marginBottom: 8 }}>
-                  As it will read
+                  {t("editPraxis.ua.previewLabel")}
                 </div>
               ),
               markdownStyle: { fontFamily: SERIF, fontSize: 14, lineHeight: 1.85, color: "var(--ua-sub)" },
@@ -289,7 +305,7 @@ export default function UAEditPraxis({ state }: Props) {
 
         {/* The plates — media */}
         <div style={{ marginBottom: 22 }}>
-          <RegaliaLabel>The Plate</RegaliaLabel>
+          <RegaliaLabel>{t("editPraxis.ua.filesLabel")}</RegaliaLabel>
           <div style={{ display: "flex", gap: 16, flexWrap: "wrap", alignItems: "flex-start" }}>
             {state.media.map((item) => {
               const filename = item.file_path.split("/").pop() ?? item.file_path;
@@ -326,9 +342,9 @@ export default function UAEditPraxis({ state }: Props) {
                   flexDirection: "column",
                   gap: 4,
                 },
-                buttonLabel: "+ affix a plate",
+                buttonLabel: t("editPraxis.ua.fileButton"),
                 errorColor: "var(--ua-orange-deep)",
-                helperText: "images · video · audio · max 50mb",
+                helperText: t("editPraxis.ua.fileHelper"),
                 helperStyle: { fontFamily: MONO, fontSize: 8, letterSpacing: "0.08em", color: "var(--ua-muted)", marginTop: 8, fontStyle: "italic" },
               }}
             />
@@ -338,7 +354,7 @@ export default function UAEditPraxis({ state }: Props) {
         {/* Metatasks */}
         {state.showMetatasks && (
           <Plate>
-            <RegaliaLabel>Further merit</RegaliaLabel>
+            <RegaliaLabel>{t("editPraxis.ua.metatasksLabel")}</RegaliaLabel>
             <MetatasksList
               state={state}
               skin={{
@@ -365,8 +381,8 @@ export default function UAEditPraxis({ state }: Props) {
           <PublishButton
             state={state}
             skin={{
-              idleLabel: "✦ Hang it in the Salon ✦",
-              busyLabel: "hanging…",
+              idleLabel: t("editPraxis.ua.publishIdle"),
+              busyLabel: t("editPraxis.ua.publishBusy"),
               style: {
                 background: "var(--ua-orange)",
                 color: "var(--ua-paper)",
@@ -384,7 +400,7 @@ export default function UAEditPraxis({ state }: Props) {
           <DropButton
             state={state}
             skin={{
-              label: "Withdraw Work",
+              label: t("editPraxis.ua.dropLabel"),
               style: {
                 background: "transparent",
                 border: "none",
@@ -413,6 +429,7 @@ function GiltPlate({
   caption: string;
   onRemove: () => void;
 }) {
+  const { t } = useTranslation("forms");
   return (
     <div style={{ position: "relative", background: "var(--ua-gilt)", padding: 5, boxShadow: "0 8px 18px color-mix(in srgb, var(--ua-ink) 20%, transparent)" }}>
       <div style={{ background: "var(--ua-paper)", padding: 4 }}>
@@ -424,7 +441,7 @@ function GiltPlate({
       <button
         type="button"
         onClick={onRemove}
-        aria-label={`Remove ${caption}`}
+        aria-label={t("media.removeAria", { name: caption })}
         style={{
           position: "absolute",
           top: -8,

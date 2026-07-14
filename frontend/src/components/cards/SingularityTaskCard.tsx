@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import type { TaskOut } from "../../api/tasks";
+import i18n from "../../i18n";
 import { factionCssVar } from "../../utils/factions";
 
 /**
@@ -135,7 +136,7 @@ export default function SingularityTaskCard({
             marginBottom: 6,
           }}
         >
-          singularity protocol
+          {i18n.t("feed:identity.singularity.protocol")}
           <span
             style={{
               display: "inline-block",
@@ -175,7 +176,7 @@ export default function SingularityTaskCard({
           }}
         >
           <div>
-            PTS:{" "}
+            {i18n.t("feed:taskCard.singularity.pointsLabel")}{" "}
             <span
               style={{
                 color: "var(--faction-singularity-card-text)",
@@ -186,7 +187,11 @@ export default function SingularityTaskCard({
               {displayPoints}
             </span>
           </div>
-          <div>LVL: {task.level_required}</div>
+          <div>
+            {i18n.t("feed:taskCard.singularity.levelLabel", {
+              level: task.level_required,
+            })}
+          </div>
         </div>
 
         {task.description && (
@@ -222,7 +227,7 @@ export default function SingularityTaskCard({
               marginBottom: 4,
             }}
           >
-            {">"} sign up
+            {">"} {i18n.t("feed:taskCard.singularity.signup")}
           </button>
         )}
 
@@ -244,7 +249,9 @@ export default function SingularityTaskCard({
               textTransform: "uppercase",
             }}
           >
-            lvl {task.level_required}
+            {i18n.t("feed:taskCard.singularity.levelPill", {
+              level: task.level_required,
+            })}
           </span>
         </div>
       </div>

@@ -17,6 +17,7 @@ import { proposeMetatask } from "../../api/metaTasks";
 import { getFactions, type FactionOut } from "../../api/factions";
 import { useAuth } from "../../auth/AuthContext";
 import { extractError } from "../../utils/errors";
+import i18n from "../../i18n";
 
 export interface ProposeTaskState {
   // Gating (faction-agnostic guards live in the dispatcher)
@@ -81,11 +82,11 @@ export function useProposeTask(): ProposeTaskState {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (title.length > 200) {
-      setError("Task name must be 200 characters or fewer.");
+      setError(i18n.t("forms:proposeTask.fields.name.tooLong"));
       return;
     }
     if (description.length > 5000) {
-      setError("Description must be 5000 characters or fewer.");
+      setError(i18n.t("forms:proposeTask.fields.description.tooLong"));
       return;
     }
     // Backend authoritatively enforces metatask proposal gating (level 6 or
@@ -94,7 +95,7 @@ export function useProposeTask(): ProposeTaskState {
       isMetaTask &&
       (!factionSlug || factionSlug === "na" || factionSlug === "ua")
     ) {
-      setError("Meta tasks must belong to a specific faction.");
+      setError(i18n.t("forms:proposeTask.errors.metaFactionRequired"));
       return;
     }
     setSubmitting(true);
@@ -123,8 +124,8 @@ export function useProposeTask(): ProposeTaskState {
         extractError(
           err,
           isMetaTask
-            ? "Could not create meta task."
-            : "Could not propose task.",
+            ? i18n.t("forms:proposeTask.errors.createMeta")
+            : i18n.t("forms:proposeTask.errors.propose"),
         ),
       );
     } finally {
