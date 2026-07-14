@@ -2,5 +2,333 @@
   "charLimit": {
     "approaching": "{{remaining}} characters left — make them count",
     "terminal": "{{max}} characters — your proof is complete. No more words."
+  },
+  "card": {
+    "ptsAndVotes": "pts + votes",
+    "level": "L{{level}}",
+    "points": "{{points}} pts",
+    "solo": "solo",
+    "crew": "+{{count}} crew",
+    "adminStatus": {
+      "underReview": "under review",
+      "failed": "failed",
+      "hidden": "hidden"
+    },
+    "adminAction": {
+      "hide": "hide",
+      "fail": "fail"
+    },
+    "errors": {
+      "hide": "Failed to hide.",
+      "fail": "Failed to fail."
+    },
+    "masthead": {
+      "ua": "Acquisition · filed",
+      "ephemerists": "Ephemeris · sealed entry",
+      "snide": "evidence locker",
+      "albescent": "Account · filed",
+      "singularity": "singularity protocol",
+      "default": "Praxis · unaffiliated"
+    }
+  },
+  "detail": {
+    "loading": "Loading...",
+    "retry": "Try refreshing.",
+    "notFound": "Not found.",
+    "errors": {
+      "load": "Couldn't load this praxis.",
+      "moderate": "Moderation failed.",
+      "withdraw": "Could not withdraw this praxis.",
+      "resubmit": "Could not resubmit.",
+      "flag": "Could not flag this praxis.",
+      "flagReasonMissing": "Pick a reason first.",
+      "metataskLoad": "Failed to load metatasks.",
+      "metataskApply": "Failed to apply metatask.",
+      "metataskRemove": "Failed to remove metatask."
+    },
+    "banners": {
+      "crownLabel": "TASK CROWN",
+      "crownBody": "The top-scoring praxis for this task — held until another entry out-votes it.",
+      "inEditingLabel": "IN EDITING",
+      "inEditingBody": "This praxis is in editing mode. Points and votes are paused until submitted.",
+      "failedTitle": "This praxis was marked as failed."
+    },
+    "admin": {
+      "eyebrow": "ADMIN · Status:",
+      "approve": "approve",
+      "hide": "hide",
+      "fail": "fail",
+      "restore": "restore",
+      "failReasonPlaceholder": "Reason for failure (visible to player)...",
+      "confirm": "confirm"
+    },
+    "owner": {
+      "edit": "edit this praxis",
+      "submitting": "...",
+      "submit": "Submit",
+      "unsubmit": "unsubmit",
+      "confirmPrompt": "Sure? Points & votes will pause.",
+      "confirmUnsubmit": "Yes, unsubmit",
+      "cancel": "Cancel"
+    },
+    "flag": {
+      "flaggedTitle": "Flagged for admin review",
+      "flaggedBody": "Thanks — an admin will take a look shortly.",
+      "flaggedOk": "OK",
+      "badge": "FLAG",
+      "title": "Flag this praxis",
+      "body": "If this content is inappropriate or violates the rules, flag it for admin review.",
+      "flag": "Flag",
+      "reasonGroupLabel": "Flag reason",
+      "notePlaceholder": "What's wrong? (optional note for the moderators)",
+      "submit": "Submit flag",
+      "submitting": "...",
+      "cancel": "Cancel"
+    },
+    "voters": {
+      "heading": "Who voted",
+      "count_one": "{{count}} vote",
+      "count_other": "{{count}} votes"
+    },
+    "metatasks": {
+      "heading": "Metatasks",
+      "loading": "loading...",
+      "applied": "Applied",
+      "appliedPoints": "+{{points}} pts",
+      "remove": "remove",
+      "removing": "...",
+      "appliedEmpty": "No metatasks applied yet.",
+      "available": "Available",
+      "availableEmpty": "No eligible metatasks available.",
+      "apply": "apply",
+      "applying": "...",
+      "readOnlyNote": "Reach level 7 to apply metatasks."
+    },
+    "default": {
+      "breadcrumbTasks": "Tasks",
+      "breadcrumbPraxis": "Praxis",
+      "votes": "{{count}} votes",
+      "completingTask": "Completing task",
+      "points": "{{points}} pts",
+      "pointsFromVotes": "Points earned from votes",
+      "pts": "pts",
+      "submitted": "Submitted {{date}}",
+      "flagged": "flagged"
+    },
+    "ua": {
+      "status": {
+        "underReview": "Under review",
+        "returned": "Returned",
+        "withdrawn": "Withdrawn from view",
+        "exhibited": "Exhibited"
+      },
+      "mode": {
+        "solo": "a sole acquisition",
+        "collab": "a collaborative acquisition",
+        "duel": "a dueling acquisition"
+      },
+      "re": "re: {{task}}",
+      "acquisitionGrade": "Acquisition · Grade {{grade}}",
+      "returnedToSalon": "returned to the Salon {{date}}",
+      "untitled": "Untitled acquisition",
+      "acquiringHand": "The acquiring hand",
+      "ptsAtStake": "pts at stake",
+      "theProcess": "The Process",
+      "thePlate_one": "The Plate · {{count}} work",
+      "thePlate_other": "The Plate · {{count}} works",
+      "standing": {
+        "heading": "The Standing",
+        "pointsEarned": "points earned",
+        "appraisal_one": "appraisal",
+        "appraisal_other": "appraisals",
+        "appraisedBy": "Appraised by",
+        "patronsTotal_one": "{{count}} patron · total",
+        "patronsTotal_other": "{{count}} patrons · total",
+        "pts": "{{points}} pts"
+      },
+      "patronage": "The Patronage"
+    },
+    "ephemerists": {
+      "motto": "finding · testament · codex",
+      "re": "re: {{task}}",
+      "grade": "Grade {{grade}}",
+      "sealed": "sealed {{date}}",
+      "flagged": "flagged",
+      "untitled": "Untitled filing",
+      "mode": {
+        "solo": "sole filing",
+        "collab": "collaborative filing",
+        "duel": "dueling filing"
+      },
+      "basePts": "BASE PTS",
+      "theAccount": "The account",
+      "evidence_one": "The evidence · {{count}} specimen",
+      "evidence_other": "The evidence · {{count}} specimens",
+      "concordance": "The concordance",
+      "ptsFromVotes": "PTS FROM VOTES"
+    },
+    "everymen": {
+      "mode": {
+        "collab": "COLLAB",
+        "solo": "SOLO"
+      },
+      "workReportFiled": "Work Report · Filed",
+      "re": "re: {{task}}",
+      "lvl": "lvl {{level}}",
+      "sealed": "sealed {{date}}",
+      "flagged": "FLAGGED",
+      "theJobDone": "the job, done",
+      "untitled": "Untitled filing",
+      "hands": {
+        "collab": "all hands",
+        "solo": "one pair of hands"
+      },
+      "basePoints": "base points",
+      "theWork": "The Work",
+      "proofOfWork_one": "Proof of Work · {{count}} plate",
+      "proofOfWork_other": "Proof of Work · {{count}} plates",
+      "crewsMarks": "The Crew's Marks",
+      "ptsFromVotes": "pts from votes"
+    },
+    "singularity": {
+      "instance": {
+        "solo": "SOLO",
+        "collab": "NETWORKED",
+        "duel": "ADVERSARIAL"
+      },
+      "sealedProtocol": "Singularity · sealed protocol",
+      "signalTrace": "SIGNAL_TRACE // {{date}}",
+      "sealed": "SEALED",
+      "re": "re: {{task}}",
+      "gradeCredits": "GRADE 0x0{{grade}} · {{points}} CR",
+      "flagged": "flagged",
+      "output": "> OUTPUT:",
+      "untitled": "UNTITLED OUTPUT",
+      "instanceLabel": "{{instance}} instance",
+      "baseCredits": "BASE CREDITS",
+      "processLog": "PROCESS_LOG",
+      "artifacts_one": "ARTIFACTS · {{count}} file submitted",
+      "artifacts_other": "ARTIFACTS · {{count}} files submitted",
+      "consensusArray": "CONSENSUS_ARRAY",
+      "crFromSignals": "CR FROM SIGNALS"
+    },
+    "snide": {
+      "closedCaseFiled": "S.N.I.D.E. · CLOSED CASE · FILED",
+      "mode": {
+        "solo": "solo job",
+        "collab": "crew job",
+        "duel": "turf war"
+      },
+      "re": "re: {{task}}",
+      "grade": "grade {{grade}}",
+      "filed": "filed {{date}}",
+      "flagged": "flagged",
+      "untitled": "Untitled confession",
+      "pulledItOff": "pulled it off",
+      "base": "base",
+      "theConfession": "the confession",
+      "evidence": "evidence · {{count}}",
+      "theVerdict": "the verdict",
+      "ptsFromVotes": "pts from votes"
+    },
+    "wow": {
+      "mode": {
+        "collab": "cast together",
+        "solo": "filed solo"
+      },
+      "sealed": "sealed",
+      "re": "re:",
+      "lvlSealed": "· lvl {{level}} · sealed {{date}}",
+      "flagged": "flagged",
+      "theFinding": "the finding",
+      "untitled": "Untitled spell",
+      "witchWhoCast": "the witch who cast it",
+      "basePoints": "base points",
+      "whatIDid": "what i did",
+      "keepsakes_one": "what i left behind · {{count}} keepsake",
+      "keepsakes_other": "what i left behind · {{count}} keepsakes",
+      "windows": {
+        "praxis": "praxis.exe",
+        "keepsakes": "keepsakes.exe",
+        "hearts": "hearts.exe"
+      },
+      "sendLove": "send a little love",
+      "pointsFromVotes": "points from votes"
+    },
+    "albescent": {
+      "ref": "Albescent · Ref. {{id}}",
+      "status": {
+        "underReview": "under review",
+        "returned": "returned"
+      },
+      "re": "re: {{task}}",
+      "grade": "Grade {{grade}}",
+      "filed": "filed {{date}}",
+      "mode": {
+        "solo": "sole account",
+        "collab": "joint account",
+        "duel": "contested account"
+      },
+      "untitled": "Untitled account",
+      "ptsReturned": "pts returned",
+      "account": "Account",
+      "plates": "Plates · {{count}}",
+      "bearWitness": "Bear Witness",
+      "witnessPrompt": "How completely was this account attended?",
+      "fromWitnesses": "FROM WITNESSES"
+    }
+  },
+  "comments": {
+    "heading_one": "{{count}} comment",
+    "heading_other": "{{count}} comments",
+    "loading": "Loading…",
+    "loadError": "Could not load comments.",
+    "composerPlaceholder": "Write a comment… type @ to mention someone",
+    "post": "Post comment",
+    "posting": "…",
+    "edited": "edited",
+    "ua": {
+      "house": "University of Asthmatics",
+      "edited": "edited"
+    },
+    "everymen": {
+      "masthead": "EVERYMEN · DISPATCH FROM THE FLOOR",
+      "edited": "revised"
+    },
+    "wow": {
+      "edited": "edited"
+    },
+    "snide": {
+      "prompt": "say your piece —",
+      "edited": "EDITED"
+    },
+    "ephemerists": {
+      "prompt": "inscribe a note in the margin",
+      "edited": "emended"
+    },
+    "singularity": {
+      "protocol": "singularity protocol",
+      "edited": "edited"
+    },
+    "albescent": {
+      "letterhead": "Albescent — correspondence",
+      "edited": "amended"
+    }
+  },
+  "duelCrossLink": {
+    "dueling": "⚔ Dueling {{name}}",
+    "youForfeited": "You forfeited this duel.",
+    "wonByDefault": "⚔ Won by default",
+    "wonByDefaultSuffix": " — {{name}} forfeited",
+    "theirEntry": "their entry",
+    "duel": "⚔ Duel",
+    "vs": "vs",
+    "standing": {
+      "tied": "Tied",
+      "ahead": "You're ahead",
+      "behind": "You're behind"
+    },
+    "live": "{{standing}} · live — the winner floats with the votes until era reset.",
+    "factionSuffix": " · {{faction}}"
   }
 }

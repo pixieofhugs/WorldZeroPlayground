@@ -8,6 +8,7 @@
  * lifted 1:1 from the original PraxisCard switcher component.
  */
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import type { PraxisCardOut } from "../../api/praxis";
 import { useAuth } from "../../auth/AuthContext";
 import { useAdminMode } from "../../auth/AdminModeContext";
@@ -24,6 +25,7 @@ export function usePraxisCard(
   praxis: PraxisCardOut,
   onModerated?: () => void,
 ): PraxisCardModeration {
+  const { t } = useTranslation("praxis");
   const { user } = useAuth();
   const { adminMode } = useAdminMode();
   const showAdminControls = (user?.is_admin && adminMode) ?? false;
@@ -45,7 +47,7 @@ export function usePraxisCard(
       applyModeration(updated.moderation_status);
       onModerated?.();
     } catch (err) {
-      setModerateError(extractError(err, "Failed to hide."));
+      setModerateError(extractError(err, t("card.errors.hide")));
     }
   };
 
@@ -58,7 +60,7 @@ export function usePraxisCard(
       applyModeration(updated.moderation_status);
       onModerated?.();
     } catch (err) {
-      setModerateError(extractError(err, "Failed to fail."));
+      setModerateError(extractError(err, t("card.errors.fail")));
     }
   };
 

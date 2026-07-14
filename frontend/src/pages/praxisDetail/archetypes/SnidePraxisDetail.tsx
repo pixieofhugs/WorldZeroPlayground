@@ -12,6 +12,7 @@
  * the shared module — this archetype owns only presentation. The actor-scoped
  * byline themes to the AUTHOR's faction, not the task's.
  */
+import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import ReactMarkdown from 'react-markdown'
 import MediaGallery from '../../../components/MediaGallery'
@@ -36,13 +37,14 @@ const F_MARKER = 'var(--faction-snide-font-marker)'
 const F_BODY = 'var(--font-body)'
 
 export default function SnidePraxisDetail({ state }: { state: PraxisDetailState }) {
+  const { t } = useTranslation('praxis')
   const { praxis, votes } = state
   if (!praxis) return null
 
   const sealedDate = praxis.submitted_at ?? praxis.created_at
   const grade = praxis.task_level_required > 0 ? praxis.task_level_required : '—'
   const mode =
-    praxis.type === 'solo' ? 'solo job' : praxis.type === 'collab' ? 'crew job' : 'turf war'
+    praxis.type === 'solo' ? t('detail.snide.mode.solo') : praxis.type === 'collab' ? t('detail.snide.mode.collab') : t('detail.snide.mode.duel')
 
   return (
     <div
@@ -94,7 +96,7 @@ export default function SnidePraxisDetail({ state }: { state: PraxisDetailState 
                 whiteSpace: 'nowrap',
               }}
             >
-              S.N.I.D.E. · CLOSED CASE · FILED
+              {t('detail.snide.closedCaseFiled')}
             </span>
           </div>
         </div>
@@ -124,7 +126,7 @@ export default function SnidePraxisDetail({ state }: { state: PraxisDetailState 
               textTransform: 'uppercase',
             }}
           >
-            re: {praxis.task_title}
+            {t('detail.snide.re', { task: praxis.task_title })}
           </Link>
           <span style={{ color: MUTED, fontSize: 9 }}>·</span>
           <span
@@ -136,7 +138,7 @@ export default function SnidePraxisDetail({ state }: { state: PraxisDetailState 
               color: MUTED,
             }}
           >
-            grade {grade}
+            {t('detail.snide.grade', { grade })}
           </span>
           <span style={{ color: MUTED, fontSize: 9 }}>·</span>
           <span
@@ -160,7 +162,7 @@ export default function SnidePraxisDetail({ state }: { state: PraxisDetailState 
               color: MUTED,
             }}
           >
-            filed {formatTimestamp(sealedDate)}
+            {t('detail.snide.filed', { date: formatTimestamp(sealedDate) })}
           </span>
           {praxis.moderation_status === 'flagged' && (
             <span
@@ -175,7 +177,7 @@ export default function SnidePraxisDetail({ state }: { state: PraxisDetailState 
                 textTransform: 'uppercase',
               }}
             >
-              flagged
+              {t('detail.snide.flagged')}
             </span>
           )}
         </div>
@@ -192,7 +194,7 @@ export default function SnidePraxisDetail({ state }: { state: PraxisDetailState 
             letterSpacing: '0.01em',
           }}
         >
-          {praxis.title ?? 'Untitled confession'}
+          {praxis.title ?? t('detail.snide.untitled')}
         </h1>
 
         {/* Acid rule */}
@@ -249,7 +251,7 @@ export default function SnidePraxisDetail({ state }: { state: PraxisDetailState 
                 color: MUTED,
               }}
             >
-              pulled it off
+              {t('detail.snide.pulledItOff')}
             </span>
           </div>
           {/* Base point value from task */}
@@ -277,7 +279,7 @@ export default function SnidePraxisDetail({ state }: { state: PraxisDetailState 
                 color: MUTED,
               }}
             >
-              base
+              {t('detail.snide.base')}
             </span>
           </div>
         </div>
@@ -298,7 +300,7 @@ export default function SnidePraxisDetail({ state }: { state: PraxisDetailState 
                 marginBottom: 12,
               }}
             >
-              the confession
+              {t('detail.snide.theConfession')}
             </span>
             <div
               className="markdown-preview"
@@ -336,7 +338,7 @@ export default function SnidePraxisDetail({ state }: { state: PraxisDetailState 
                 marginBottom: 14,
               }}
             >
-              evidence · {praxis.media_items.length}
+              {t('detail.snide.evidence', { count: praxis.media_items.length })}
             </span>
             <div
               style={{
@@ -381,7 +383,7 @@ export default function SnidePraxisDetail({ state }: { state: PraxisDetailState 
                 boxShadow: `2px 2px 0 ${PAPER_INK}`,
               }}
             >
-              the verdict
+              {t('detail.snide.theVerdict')}
             </span>
             {/* Points from votes */}
             {votes && votes.total_votes > 0 && (
@@ -405,7 +407,7 @@ export default function SnidePraxisDetail({ state }: { state: PraxisDetailState 
                     color: MUTED,
                   }}
                 >
-                  pts from votes
+                  {t('detail.snide.ptsFromVotes')}
                 </span>
               </div>
             )}

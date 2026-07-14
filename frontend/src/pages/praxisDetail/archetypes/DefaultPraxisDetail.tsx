@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import ReactMarkdown from 'react-markdown'
 import MediaGallery from '../../../components/MediaGallery'
 import { formatTimestamp } from '../../../utils/dates'
@@ -20,6 +21,7 @@ export default function DefaultPraxisDetail({
 }: {
   state: PraxisDetailState
 }) {
+  const { t } = useTranslation('praxis')
   const { praxis, votes } = state
 
   // Guarded non-null by the dispatcher.
@@ -29,13 +31,13 @@ export default function DefaultPraxisDetail({
     <div className="py-8 max-w-2xl">
       {/* ── Breadcrumb (§12.1) ── */}
       <nav className="font-body mb-4" style={{ fontSize: 9, letterSpacing: '0.1em', color: 'var(--color-text-tertiary)' }}>
-        <Link to="/tasks" style={{ color: 'inherit', textDecoration: 'none' }}>Tasks</Link>
+        <Link to="/tasks" style={{ color: 'inherit', textDecoration: 'none' }}>{t('detail.default.breadcrumbTasks')}</Link>
         {' › '}
         <Link to={`/tasks/${praxis.task_id}`} style={{ color: 'var(--color-text-secondary)', textDecoration: 'none' }}>
           {praxis.task_title}
         </Link>
         {' › '}
-        <span style={{ color: 'var(--color-text-primary)' }}>Praxis</span>
+        <span style={{ color: 'var(--color-text-primary)' }}>{t('detail.default.breadcrumbPraxis')}</span>
       </nav>
 
       <PraxisStatusBanners state={state} />
@@ -70,7 +72,7 @@ export default function DefaultPraxisDetail({
             <div className="font-display italic" style={{ fontSize: 22, color: 'var(--color-text-primary)' }}>
               {votes.total_score}
             </div>
-            <span className="eyebrow">{votes.total_votes} votes</span>
+            <span className="eyebrow">{t('detail.default.votes', { count: votes.total_votes })}</span>
           </div>
         )}
       </div>
@@ -103,7 +105,7 @@ export default function DefaultPraxisDetail({
           gap: 8,
         }}
       >
-        <span className="eyebrow" style={{ fontSize: 8 }}>Completing task</span>
+        <span className="eyebrow" style={{ fontSize: 8 }}>{t('detail.default.completingTask')}</span>
         <Link
           to={`/tasks/${praxis.task_id}`}
           className="font-body"
@@ -112,7 +114,7 @@ export default function DefaultPraxisDetail({
           {praxis.task_title}
         </Link>
         <span className="font-body" style={{ fontSize: 9, color: 'var(--color-text-tertiary)', marginLeft: 'auto' }}>
-          {praxis.task_point_value} pts
+          {t('detail.default.points', { points: praxis.task_point_value })}
         </span>
       </div>
 
@@ -136,11 +138,11 @@ export default function DefaultPraxisDetail({
       {/* ── Voting (§13 preview — full redesign in Phase 8) ── */}
       <div className="sidebar-card mb-4" style={{ padding: '14px 16px' }}>
         <div className="flex items-baseline justify-between mb-3">
-          <span className="eyebrow">Points earned from votes</span>
+          <span className="eyebrow">{t('detail.default.pointsFromVotes')}</span>
           {votes && (
             <span className="font-display italic" style={{ fontSize: 22, color: 'var(--color-text-primary)' }}>
               {votes.total_score}
-              <span className="eyebrow" style={{ marginLeft: 4 }}>pts</span>
+              <span className="eyebrow" style={{ marginLeft: 4 }}>{t('detail.default.pts')}</span>
             </span>
           )}
         </div>
@@ -154,10 +156,10 @@ export default function DefaultPraxisDetail({
 
       {/* ── Meta ── */}
       <div className="flex items-center gap-4 eyebrow mb-4">
-        <span>Submitted {formatTimestamp(praxis.created_at)}</span>
+        <span>{t('detail.default.submitted', { date: formatTimestamp(praxis.created_at) })}</span>
         {praxis.moderation_status === 'flagged' && (
           <span style={{ border: '1px solid rgba(220,38,38,0.4)', color: 'var(--color-danger)', padding: '1px 6px', fontSize: 8 }}>
-            flagged
+            {t('detail.default.flagged')}
           </span>
         )}
       </div>
@@ -194,27 +196,27 @@ export default function DefaultPraxisDetail({
         return (
           <div className="sidebar-card mb-4" style={{ padding: "14px 16px" }}>
             <div className="flex items-center justify-between mb-3">
-              <span className="eyebrow">Metatasks</span>
+              <span className="eyebrow">{t('detail.metatasks.heading')}</span>
               {state.metataskLoading && (
-                <span className="eyebrow" style={{ fontSize: 8 }}>loading...</span>
+                <span className="eyebrow" style={{ fontSize: 8 }}>{t('detail.metatasks.loading')}</span>
               )}
             </div>
 
             {/* Applied metatasks */}
             {state.praxis.applied_metatasks && state.praxis.applied_metatasks.length > 0 ? (
               <div style={{ marginBottom: canEdit ? 12 : 0 }}>
-                <span className="eyebrow" style={{ fontSize: 8, display: "block", marginBottom: 6 }}>Applied</span>
-                {state.praxis.applied_metatasks.map((t) => (
-                  <div key={t.id} className="flex items-center gap-2 mb-1" style={{ padding: "4px 8px", background: "var(--color-surface-soft)", fontSize: 11 }}>
-                    <span className="flex-1 font-body">{t.title}</span>
-                    <span className="eyebrow" style={{ fontSize: 8 }}>+{t.point_value} pts</span>
+                <span className="eyebrow" style={{ fontSize: 8, display: "block", marginBottom: 6 }}>{t('detail.metatasks.applied')}</span>
+                {state.praxis.applied_metatasks.map((metatask) => (
+                  <div key={metatask.id} className="flex items-center gap-2 mb-1" style={{ padding: "4px 8px", background: "var(--color-surface-soft)", fontSize: 11 }}>
+                    <span className="flex-1 font-body">{metatask.title}</span>
+                    <span className="eyebrow" style={{ fontSize: 8 }}>{t('detail.metatasks.appliedPoints', { points: metatask.point_value })}</span>
                     {canEdit && (
                       <button
-                        onClick={() => void state.handleRemoveMetatask(t.id)}
-                        disabled={state.removingMetataskId === t.id}
-                        style={{ background: "none", border: "1px solid rgba(220,38,38,0.3)", color: "var(--color-danger)", fontSize: 8, padding: "1px 6px", cursor: "pointer", opacity: state.removingMetataskId === t.id ? 0.5 : 1 }}
+                        onClick={() => void state.handleRemoveMetatask(metatask.id)}
+                        disabled={state.removingMetataskId === metatask.id}
+                        style={{ background: "none", border: "1px solid rgba(220,38,38,0.3)", color: "var(--color-danger)", fontSize: 8, padding: "1px 6px", cursor: "pointer", opacity: state.removingMetataskId === metatask.id ? 0.5 : 1 }}
                       >
-                        {state.removingMetataskId === t.id ? "..." : "remove"}
+                        {state.removingMetataskId === metatask.id ? t('detail.metatasks.removing') : t('detail.metatasks.remove')}
                       </button>
                     )}
                   </div>
@@ -222,14 +224,14 @@ export default function DefaultPraxisDetail({
               </div>
             ) : (
               <p className="font-body" style={{ fontSize: 10, color: "var(--color-text-tertiary)", marginBottom: canEdit ? 12 : 0 }}>
-                No metatasks applied yet.
+                {t('detail.metatasks.appliedEmpty')}
               </p>
             )}
 
             {/* Available metatasks */}
             {canEdit && (
               <>
-                <span className="eyebrow" style={{ fontSize: 8, display: "block", marginBottom: 6 }}>Available</span>
+                <span className="eyebrow" style={{ fontSize: 8, display: "block", marginBottom: 6 }}>{t('detail.metatasks.available')}</span>
                 {state.metataskError && (
                   <p className="font-body" style={{ fontSize: 9, color: "var(--color-danger)", marginBottom: 6 }}>
                     {state.metataskError}
@@ -237,19 +239,19 @@ export default function DefaultPraxisDetail({
                 )}
                 {available.length === 0 && !state.metataskLoading ? (
                   <p className="font-body" style={{ fontSize: 10, color: "var(--color-text-tertiary)" }}>
-                    No eligible metatasks available.
+                    {t('detail.metatasks.availableEmpty')}
                   </p>
                 ) : (
-                  available.map((t) => (
-                    <div key={t.id} className="flex items-center gap-2 mb-1" style={{ padding: "4px 8px", background: "var(--color-surface-soft)", fontSize: 11 }}>
-                      <span className="flex-1 font-body">{t.title}</span>
-                      <span className="eyebrow" style={{ fontSize: 8 }}>+{t.point_value} pts</span>
+                  available.map((metatask) => (
+                    <div key={metatask.id} className="flex items-center gap-2 mb-1" style={{ padding: "4px 8px", background: "var(--color-surface-soft)", fontSize: 11 }}>
+                      <span className="flex-1 font-body">{metatask.title}</span>
+                      <span className="eyebrow" style={{ fontSize: 8 }}>{t('detail.metatasks.appliedPoints', { points: metatask.point_value })}</span>
                       <button
-                        onClick={() => void state.handleApplyMetatask(t.id)}
-                        disabled={state.applyingMetataskId === t.id}
-                        style={{ background: "none", border: "1px solid var(--color-accent)", color: "var(--color-accent)", fontSize: 8, padding: "1px 6px", cursor: "pointer", opacity: state.applyingMetataskId === t.id ? 0.5 : 1 }}
+                        onClick={() => void state.handleApplyMetatask(metatask.id)}
+                        disabled={state.applyingMetataskId === metatask.id}
+                        style={{ background: "none", border: "1px solid var(--color-accent)", color: "var(--color-accent)", fontSize: 8, padding: "1px 6px", cursor: "pointer", opacity: state.applyingMetataskId === metatask.id ? 0.5 : 1 }}
                       >
-                        {state.applyingMetataskId === t.id ? "..." : "apply"}
+                        {state.applyingMetataskId === metatask.id ? t('detail.metatasks.applying') : t('detail.metatasks.apply')}
                       </button>
                     </div>
                   ))
@@ -260,7 +262,7 @@ export default function DefaultPraxisDetail({
             {/* Read-only note */}
             {!canEdit && canSee && (
               <p className="font-body" style={{ fontSize: 9, color: "var(--color-text-tertiary)", fontStyle: "italic" }}>
-                Reach level 7 to apply metatasks.
+                {t('detail.metatasks.readOnlyNote')}
               </p>
             )}
           </div>

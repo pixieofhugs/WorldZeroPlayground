@@ -8,6 +8,7 @@
  * not-found guards live here so archetypes can assume a non-null praxis.
  */
 import type { ComponentType } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Navigate, useParams } from 'react-router-dom'
 import { usePraxisDetail } from './praxisDetail/usePraxisDetail'
 import type { PraxisDetailState } from './praxisDetail/usePraxisDetail'
@@ -40,19 +41,20 @@ export const ARCHETYPE_BY_SLUG: Record<string, ComponentType<{ state: PraxisDeta
 }
 
 export default function PraxisDetail() {
+  const { t } = useTranslation('praxis')
   const { id } = useParams<{ id: string }>()
   const state = usePraxisDetail(id)
 
-  if (state.loading) return <div className="py-8 font-body text-muted">Loading...</div>
+  if (state.loading) return <div className="py-8 font-body text-muted">{t('detail.loading')}</div>
   if (state.fetchError) return (
     <div className="py-8">
       <p className="font-body text-sm text-red-600 border-2 border-red-300 px-3 py-2">
         {state.fetchError}{' '}
-        <button onClick={() => window.location.reload()} className="underline">Try refreshing.</button>
+        <button onClick={() => window.location.reload()} className="underline">{t('detail.retry')}</button>
       </p>
     </div>
   )
-  if (!state.praxis) return <div className="py-8 font-body text-muted">Not found.</div>
+  if (!state.praxis) return <div className="py-8 font-body text-muted">{t('detail.notFound')}</div>
 
   // ADR-0024: the public detail view never renders a draft. Only members reach
   // here (the API 404s everyone else) — route them to the editor, the sole

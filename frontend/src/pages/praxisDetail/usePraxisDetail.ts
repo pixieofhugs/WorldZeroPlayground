@@ -10,6 +10,7 @@
  * faction vote UIs keep working through any archetype.
  */
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   getPraxis,
   withdrawPraxis,
@@ -109,6 +110,7 @@ export function isViewerMember(
 }
 
 export function usePraxisDetail(idParam: string | undefined): PraxisDetailState {
+  const { t } = useTranslation("praxis");
   const { user, refetch } = useAuth();
   const { adminMode } = useAdminMode();
 
@@ -150,7 +152,7 @@ export function usePraxisDetail(idParam: string | undefined): PraxisDetailState 
       setShowFailInput(false);
       setAdminFailNote("");
     } catch (err) {
-      setModerateError(extractError(err, "Moderation failed."));
+      setModerateError(extractError(err, t("detail.errors.moderate")));
     } finally {
       setModerating(false);
     }
@@ -166,7 +168,7 @@ export function usePraxisDetail(idParam: string | undefined): PraxisDetailState 
         setVoters(vr);
       })
       .catch((err) =>
-        setFetchError(extractError(err, "Couldn't load this praxis.")),
+        setFetchError(extractError(err, t("detail.errors.load"))),
       )
       .finally(() => setLoading(false));
   }, [idParam]);
@@ -196,7 +198,7 @@ export function usePraxisDetail(idParam: string | undefined): PraxisDetailState 
     setMetataskLoading(true);
     listTasks({ task_type: "metatask" })
       .then(setMetatasks)
-      .catch((err) => setMetataskError(extractError(err, "Failed to load metatasks.")))
+      .catch((err) => setMetataskError(extractError(err, t("detail.errors.metataskLoad"))))
       .finally(() => setMetataskLoading(false));
   }, [praxis?.id]);
 
@@ -208,7 +210,7 @@ export function usePraxisDetail(idParam: string | undefined): PraxisDetailState 
       const updated = await applyMetatask(praxis.id, taskId);
       setPraxis(updated);
     } catch (err) {
-      setMetataskError(extractError(err, "Failed to apply metatask."));
+      setMetataskError(extractError(err, t("detail.errors.metataskApply")));
     } finally {
       setApplyingMetataskId(null);
     }
@@ -223,7 +225,7 @@ export function usePraxisDetail(idParam: string | undefined): PraxisDetailState 
       const updated = await getPraxis(praxis.id);
       setPraxis(updated);
     } catch (err) {
-      setMetataskError(extractError(err, "Failed to remove metatask."));
+      setMetataskError(extractError(err, t("detail.errors.metataskRemove")));
     } finally {
       setRemovingMetataskId(null);
     }
@@ -239,7 +241,7 @@ export function usePraxisDetail(idParam: string | undefined): PraxisDetailState 
       setShowWithdrawConfirm(false);
       void refetch();
     } catch (err) {
-      setWithdrawError(extractError(err, "Could not withdraw this praxis."));
+      setWithdrawError(extractError(err, t("detail.errors.withdraw")));
     } finally {
       setWithdrawing(false);
     }
@@ -254,7 +256,7 @@ export function usePraxisDetail(idParam: string | undefined): PraxisDetailState 
       setPraxis(updated);
       void refetch();
     } catch (err) {
-      setWithdrawError(extractError(err, "Could not resubmit."));
+      setWithdrawError(extractError(err, t("detail.errors.resubmit")));
     } finally {
       setWithdrawing(false);
     }
@@ -263,7 +265,7 @@ export function usePraxisDetail(idParam: string | undefined): PraxisDetailState 
   const handleFlag = async () => {
     if (!praxis) return;
     if (flagReason === null) {
-      setFlagError("Pick a reason first.");
+      setFlagError(t("detail.errors.flagReasonMissing"));
       return;
     }
     setFlagging(true);
@@ -277,7 +279,7 @@ export function usePraxisDetail(idParam: string | undefined): PraxisDetailState 
       setFlagReason(null);
       setFlagDetail("");
     } catch (err) {
-      setFlagError(extractError(err, "Could not flag this praxis."));
+      setFlagError(extractError(err, t("detail.errors.flag")));
     } finally {
       setFlagging(false);
     }

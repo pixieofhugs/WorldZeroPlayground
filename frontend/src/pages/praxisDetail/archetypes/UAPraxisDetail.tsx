@@ -16,6 +16,8 @@
  * All colors via --faction-ua* + the gilt private palette (--ua-*), index.css.
  * Actor-scoped byline themes to the AUTHOR's faction, not the task's.
  */
+import type { TFunction } from 'i18next'
+import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import ReactMarkdown from 'react-markdown'
 import MediaGallery from '../../../components/MediaGallery'
@@ -32,10 +34,10 @@ const REGALIA = "'Marcellus SC', serif"
 const SERIF = "'EB Garamond', serif"
 const MONO = "'Courier Prime', monospace"
 
-function modeLabel(type: string): string {
-  if (type === 'solo') return 'a sole acquisition'
-  if (type === 'collab') return 'a collaborative acquisition'
-  return 'a dueling acquisition'
+function modeLabel(type: string, t: TFunction<'praxis'>): string {
+  if (type === 'solo') return t('detail.ua.mode.solo')
+  if (type === 'collab') return t('detail.ua.mode.collab')
+  return t('detail.ua.mode.duel')
 }
 
 function initials(name: string): string {
@@ -70,6 +72,7 @@ function TheStanding({
   votes: VoteSummary | null
   voters: VoterDetail[]
 }) {
+  const { t } = useTranslation('praxis')
   if (!votes || votes.total_votes === 0) return null
 
   return (
@@ -84,7 +87,7 @@ function TheStanding({
       }}
     >
       <div style={{ fontFamily: REGALIA, fontSize: 10, letterSpacing: '0.2em', color: 'var(--ua-gold)', marginBottom: 18 }}>
-        The Standing
+        {t('detail.ua.standing.heading')}
       </div>
 
       {/* Headline: points earned · appraisal headcount */}
@@ -94,7 +97,7 @@ function TheStanding({
             {votes.total_score}
           </div>
           <div style={{ fontFamily: MONO, fontSize: 8, letterSpacing: '0.16em', textTransform: 'uppercase', color: 'var(--ua-sub)', marginTop: 7 }}>
-            points earned
+            {t('detail.ua.standing.pointsEarned')}
           </div>
         </div>
         <div style={{ flex: 1, paddingLeft: 16, borderLeft: '1px solid var(--ua-line)' }}>
@@ -103,7 +106,7 @@ function TheStanding({
             {votes.total_votes}
           </div>
           <div style={{ fontFamily: MONO, fontSize: 8, letterSpacing: '0.16em', textTransform: 'uppercase', color: 'var(--ua-sub)', marginTop: 7 }}>
-            {votes.total_votes === 1 ? 'appraisal' : 'appraisals'}
+            {t('detail.ua.standing.appraisal', { count: votes.total_votes })}
           </div>
         </div>
       </div>
@@ -112,7 +115,7 @@ function TheStanding({
       {voters.length > 0 && (
         <>
           <div style={{ borderTop: '1px dashed var(--ua-line-soft)', paddingTop: 15, fontFamily: MONO, fontSize: 8, letterSpacing: '0.16em', textTransform: 'uppercase', color: 'var(--ua-sub)', marginBottom: 13 }}>
-            Appraised by
+            {t('detail.ua.standing.appraisedBy')}
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 11 }}>
             {voters.map((voter) => (
@@ -154,10 +157,10 @@ function TheStanding({
           </div>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', borderTop: '1px solid var(--ua-line)', marginTop: 12, paddingTop: 10 }}>
             <span style={{ fontFamily: MONO, fontSize: 8, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--ua-sub)' }}>
-              {voters.length} {voters.length === 1 ? 'patron' : 'patrons'} · total
+              {t('detail.ua.standing.patronsTotal', { count: voters.length })}
             </span>
             <span style={{ fontFamily: DISPLAY, fontStyle: 'italic', fontWeight: 700, fontSize: 17, color: 'var(--ua-orange)' }}>
-              {votes.total_score} pts
+              {t('detail.ua.standing.pts', { points: votes.total_score })}
             </span>
           </div>
         </>
@@ -167,6 +170,7 @@ function TheStanding({
 }
 
 export default function UAPraxisDetail({ state }: { state: PraxisDetailState }) {
+  const { t } = useTranslation('praxis')
   const { praxis, votes, voters } = state
   if (!praxis) return null
 
@@ -208,7 +212,7 @@ export default function UAPraxisDetail({ state }: { state: PraxisDetailState }) 
             textDecoration: 'none',
           }}
         >
-          re: {praxis.task_title}
+          {t('detail.ua.re', { task: praxis.task_title })}
         </Link>
         <span
           style={{
@@ -222,12 +226,12 @@ export default function UAPraxisDetail({ state }: { state: PraxisDetailState }) 
           }}
         >
           {praxis.moderation_status === 'flagged'
-            ? 'Under review'
+            ? t('detail.ua.status.underReview')
             : praxis.moderation_status === 'failed'
-            ? 'Returned'
+            ? t('detail.ua.status.returned')
             : praxis.moderation_status === 'hidden'
-            ? 'Withdrawn from view'
-            : 'Exhibited'}
+            ? t('detail.ua.status.withdrawn')
+            : t('detail.ua.status.exhibited')}
         </span>
       </div>
 
@@ -251,12 +255,12 @@ export default function UAPraxisDetail({ state }: { state: PraxisDetailState }) 
             alignItems: 'center',
           }}
         >
-          <span>Acquisition · Grade {praxis.task_level_required > 0 ? praxis.task_level_required : '—'}</span>
+          <span>{t('detail.ua.acquisitionGrade', { grade: praxis.task_level_required > 0 ? praxis.task_level_required : '—' })}</span>
           <span style={{ color: 'var(--ua-line)' }}>·</span>
-          <span>{modeLabel(praxis.type)}</span>
+          <span>{modeLabel(praxis.type, t)}</span>
           <span style={{ color: 'var(--ua-line)' }}>·</span>
           <span style={{ fontFamily: SERIF, fontSize: 11, fontStyle: 'italic', letterSpacing: 0, textTransform: 'none', color: 'var(--ua-sub)' }}>
-            returned to the Salon {formatTimestamp(sealedDate)}
+            {t('detail.ua.returnedToSalon', { date: formatTimestamp(sealedDate) })}
           </span>
         </div>
 
@@ -272,7 +276,7 @@ export default function UAPraxisDetail({ state }: { state: PraxisDetailState }) 
             marginBottom: 18,
           }}
         >
-          {praxis.title ?? 'Untitled acquisition'}
+          {praxis.title ?? t('detail.ua.untitled')}
         </h1>
 
         {/* ── Owner actions ── */}
@@ -321,7 +325,7 @@ export default function UAPraxisDetail({ state }: { state: PraxisDetailState }) 
                 color: 'var(--ua-muted)',
               }}
             >
-              The acquiring hand
+              {t('detail.ua.acquiringHand')}
             </span>
           </div>
           {/* Base point value from the task */}
@@ -347,7 +351,7 @@ export default function UAPraxisDetail({ state }: { state: PraxisDetailState }) 
                 marginTop: 2,
               }}
             >
-              pts at stake
+              {t('detail.ua.ptsAtStake')}
             </div>
           </div>
         </div>
@@ -358,7 +362,7 @@ export default function UAPraxisDetail({ state }: { state: PraxisDetailState }) 
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, margin: '0 0 16px' }}>
               <div style={{ height: 1, flex: 1, background: 'var(--ua-line-soft)' }} />
               <span style={{ fontFamily: REGALIA, fontSize: 9, letterSpacing: '0.22em', color: 'var(--ua-gold)', whiteSpace: 'nowrap' }}>
-                The Process
+                {t('detail.ua.theProcess')}
               </span>
               <div style={{ height: 1, flex: 1, background: 'var(--ua-line-soft)' }} />
             </div>
@@ -382,7 +386,7 @@ export default function UAPraxisDetail({ state }: { state: PraxisDetailState }) 
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, margin: '0 0 16px' }}>
               <div style={{ height: 1, flex: 1, background: 'var(--ua-line-soft)' }} />
               <span style={{ fontFamily: REGALIA, fontSize: 9, letterSpacing: '0.22em', color: 'var(--ua-gold)', whiteSpace: 'nowrap' }}>
-                The Plate · {praxis.media_items.length} {praxis.media_items.length === 1 ? 'work' : 'works'}
+                {t('detail.ua.thePlate', { count: praxis.media_items.length })}
               </span>
               <div style={{ height: 1, flex: 1, background: 'var(--ua-line-soft)' }} />
             </div>
@@ -416,7 +420,7 @@ export default function UAPraxisDetail({ state }: { state: PraxisDetailState }) 
         <div style={{ marginBottom: 18 }}>
           <div style={{ marginBottom: 14, paddingTop: 16, borderTop: '1px solid var(--ua-line-soft)' }}>
             <span style={{ fontFamily: REGALIA, fontSize: 10, letterSpacing: '0.2em', color: 'var(--ua-gold)' }}>
-              The Patronage
+              {t('detail.ua.patronage')}
             </span>
           </div>
           <VoteUI

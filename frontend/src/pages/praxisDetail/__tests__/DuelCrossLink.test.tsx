@@ -5,6 +5,8 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { MemoryRouter } from "react-router-dom";
 import { describe, it, expect } from "vitest";
+// Initialize the i18n catalog so the copy keys resolve to English text.
+import "../../../i18n";
 import DuelCrossLink from "../DuelCrossLink";
 import type { PraxisOut } from "../../../api/praxis";
 import type { DuelDetailOut, DuelSideOut, DuelStatus } from "../../../api/duel";

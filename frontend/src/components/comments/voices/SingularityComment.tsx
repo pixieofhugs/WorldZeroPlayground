@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { factionCssVar } from '../../../utils/factions'
 import FactionAvatar from '../../avatar/FactionAvatar'
 import { formatCommentTime } from '../../../utils/commentTime'
@@ -36,6 +37,7 @@ function Brackets() {
 }
 
 export default function SingularityComment(props: CommentProps) {
+  const { t } = useTranslation('praxis')
   if (props.mode === 'composer') {
     const { character, value, onChange, onSubmit, submitting } = props
     return (
@@ -45,7 +47,7 @@ export default function SingularityComment(props: CommentProps) {
           <FactionAvatar character={character} size="sm" />
           <div style={{ flex: 1 }}>
             <div style={{ fontSize: 9, color: 'var(--faction-singularity-card-muted)', textTransform: 'uppercase', letterSpacing: '0.14em', marginBottom: 6 }}>
-              singularity protocol
+              {t('comments.singularity.protocol')}
               <span style={{ display: 'inline-block', width: 5, height: 9, background: 'var(--faction-singularity-card-text)', marginLeft: 4, verticalAlign: 'middle', animation: 'blink 1s step-end infinite' }} />
             </div>
             <ComposerControls value={value} onChange={onChange} onSubmit={onSubmit} submitting={submitting} accent="var(--faction-singularity-card-text)" bg="#0a1f12" text="var(--faction-singularity-card-text)" />
@@ -68,7 +70,7 @@ export default function SingularityComment(props: CommentProps) {
             </Link>
             <span style={{ fontSize: 11, color: 'var(--faction-singularity-card-muted)', whiteSpace: 'nowrap' }}>
               {formatCommentTime(slug, comment.created_at)}
-              {comment.is_edited ? ' [edited]' : ''}
+              {comment.is_edited ? ` [${t('comments.singularity.edited')}]` : ''}
             </span>
           </div>
           <div style={{ fontSize: 13, lineHeight: 1.55, marginTop: 4 }}>

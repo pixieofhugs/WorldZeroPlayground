@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import type { ReactNode } from 'react'
+import { useTranslation } from 'react-i18next'
 import FactionAvatar from '../../avatar/FactionAvatar'
 import { formatCommentTime } from '../../../utils/commentTime'
 import { type CommentProps, authorToCharacter, ComposerControls, MentionText } from '../shared'
@@ -50,6 +51,7 @@ function GiltFrame({ children, gap }: { children: ReactNode; gap: number }) {
 }
 
 export default function UAComment(props: CommentProps) {
+  const { t } = useTranslation('praxis')
   if (props.mode === 'composer') {
     const { character, value, onChange, onSubmit, submitting } = props
     return (
@@ -57,7 +59,7 @@ export default function UAComment(props: CommentProps) {
         <FactionAvatar character={character} size="sm" />
         <div style={{ flex: 1 }}>
           <div style={{ fontFamily: LABEL, fontSize: 10, letterSpacing: '0.14em', textTransform: 'uppercase', color: ORANGE, marginBottom: 6 }}>
-            University of Asthmatics
+            {t('comments.ua.house')}
           </div>
           <ComposerControls value={value} onChange={onChange} onSubmit={onSubmit} submitting={submitting} accent={ORANGE} bg={PAPER_WARM} text={INK} />
         </div>
@@ -71,7 +73,7 @@ export default function UAComment(props: CommentProps) {
       <FactionAvatar character={authorToCharacter(comment.author)} size="sm" />
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ fontFamily: LABEL, fontSize: 10, letterSpacing: '0.14em', textTransform: 'uppercase', color: ORANGE }}>
-          University of Asthmatics
+          {t('comments.ua.house')}
         </div>
         <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 10 }}>
           <Link to={`/characters/${comment.author.id}`} style={{ fontFamily: SERIF, fontStyle: 'italic', fontWeight: 600, fontSize: 18, color: INK, textDecoration: 'none' }}>
@@ -79,7 +81,7 @@ export default function UAComment(props: CommentProps) {
           </Link>
           <span style={{ fontFamily: SERIF, fontStyle: 'italic', fontSize: 12, color: SUB, whiteSpace: 'nowrap' }}>
             {formatCommentTime(slug, comment.created_at)}
-            {comment.is_edited ? ' · edited' : ''}
+            {comment.is_edited ? ` · ${t('comments.ua.edited')}` : ''}
           </span>
         </div>
         <div style={{ height: 1, background: 'color-mix(in srgb, var(--ua-gold) 55%, transparent)', margin: '8px 0 9px' }} />

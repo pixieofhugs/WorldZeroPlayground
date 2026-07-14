@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import FactionAvatar from '../../avatar/FactionAvatar'
 import { formatCommentTime } from '../../../utils/commentTime'
 import { type CommentProps, authorToCharacter, ComposerControls, MentionText } from '../shared'
@@ -22,6 +23,7 @@ function frame(): React.CSSProperties {
 }
 
 export default function EphemeristsComment(props: CommentProps) {
+  const { t } = useTranslation('praxis')
   if (props.mode === 'composer') {
     const { character, value, onChange, onSubmit, submitting } = props
     return (
@@ -29,7 +31,7 @@ export default function EphemeristsComment(props: CommentProps) {
         <FactionAvatar character={character} size="sm" />
         <div style={{ flex: 1 }}>
           <div style={{ fontSize: 10, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--faction-ephemerists-card-accent)', marginBottom: 6 }}>
-            inscribe a note in the margin
+            {t('comments.ephemerists.prompt')}
           </div>
           <ComposerControls value={value} onChange={onChange} onSubmit={onSubmit} submitting={submitting} accent="var(--faction-ephemerists-card-accent)" bg="rgba(255,255,255,0.35)" text="var(--faction-ephemerists-card-text)" />
         </div>
@@ -49,7 +51,7 @@ export default function EphemeristsComment(props: CommentProps) {
         </Link>
         <span style={{ marginLeft: 'auto', fontSize: 11, fontStyle: 'italic', color: 'var(--faction-ephemerists-card-muted)', whiteSpace: 'nowrap' }}>
           {formatCommentTime(slug, comment.created_at)}
-          {comment.is_edited ? ' · emended' : ''}
+          {comment.is_edited ? ` · ${t('comments.ephemerists.edited')}` : ''}
         </span>
       </div>
       <div style={{ fontSize: 16, lineHeight: 1.55 }}>

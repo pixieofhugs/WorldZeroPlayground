@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import FactionAvatar from '../../avatar/FactionAvatar'
 import { formatCommentTime } from '../../../utils/commentTime'
 import { type CommentProps, authorToCharacter, ComposerControls, MentionText } from '../shared'
@@ -53,6 +54,7 @@ function Tape() {
 }
 
 export default function SnideComment(props: CommentProps) {
+  const { t } = useTranslation('praxis')
   if (props.mode === 'composer') {
     const { character, value, onChange, onSubmit, submitting } = props
     return (
@@ -62,7 +64,7 @@ export default function SnideComment(props: CommentProps) {
           <FactionAvatar character={character} size="sm" />
           <div style={{ flex: 1 }}>
             <div style={{ fontFamily: 'var(--faction-snide-font-marker)', color: 'var(--faction-snide-pink)', fontSize: 11, transform: 'rotate(-1deg)', marginBottom: 6 }}>
-              say your piece —
+              {t('comments.snide.prompt')}
             </div>
             <ComposerControls value={value} onChange={onChange} onSubmit={onSubmit} submitting={submitting} accent="var(--faction-snide-pink)" bg="rgba(255,255,255,0.04)" text="var(--faction-snide-card-text)" />
           </div>
@@ -84,7 +86,7 @@ export default function SnideComment(props: CommentProps) {
             </Link>
             <span style={{ fontFamily: 'var(--font-body)', fontSize: 10, color: 'var(--faction-snide-card-muted)', whiteSpace: 'nowrap' }}>
               {formatCommentTime(slug, comment.created_at)}
-              {comment.is_edited ? ' · EDITED' : ''}
+              {comment.is_edited ? ` · ${t('comments.snide.edited')}` : ''}
             </span>
           </div>
           <div style={{ fontFamily: 'var(--faction-snide-font-cond)', textTransform: 'uppercase', fontSize: 15, lineHeight: 1.4, letterSpacing: '0.02em' }}>

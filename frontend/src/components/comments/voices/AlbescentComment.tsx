@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import FactionAvatar from '../../avatar/FactionAvatar'
 import { formatCommentTime } from '../../../utils/commentTime'
 import { type CommentProps, authorToCharacter, ComposerControls, MentionText } from '../shared'
@@ -25,9 +26,10 @@ function frame(): React.CSSProperties {
 }
 
 function Letterhead({ monogram }: { monogram: string }) {
+  const { t } = useTranslation('praxis')
   return (
     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 9, letterSpacing: '0.22em', textTransform: 'uppercase', color: MUTED, marginBottom: 11 }}>
-      <span>Albescent — correspondence</span>
+      <span>{t('comments.albescent.letterhead')}</span>
       <span style={{ width: 22, height: 22, display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid rgba(28,28,26,0.3)', borderRadius: '50%', fontFamily: SERIF, fontStyle: 'italic', fontSize: 12, color: 'rgba(28,28,26,0.6)' }}>
         {monogram}
       </span>
@@ -36,6 +38,7 @@ function Letterhead({ monogram }: { monogram: string }) {
 }
 
 export default function AlbescentComment(props: CommentProps) {
+  const { t } = useTranslation('praxis')
   if (props.mode === 'composer') {
     const { character, value, onChange, onSubmit, submitting } = props
     return (
@@ -66,7 +69,7 @@ export default function AlbescentComment(props: CommentProps) {
       </div>
       <div style={{ marginTop: 11, fontSize: 10, letterSpacing: '0.1em', textTransform: 'uppercase', color: MUTED }}>
         {formatCommentTime(slug, comment.created_at)}
-        {comment.is_edited ? ' · amended' : ''}
+        {comment.is_edited ? ` · ${t('comments.albescent.edited')}` : ''}
       </div>
     </div>
   )

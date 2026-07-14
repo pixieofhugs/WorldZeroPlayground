@@ -15,6 +15,7 @@
  * Shades via color-mix(). Theme flips automatically through the tokens.
  * Actor-scoped byline themes to the AUTHOR's faction, not the task's.
  */
+import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import ReactMarkdown from 'react-markdown'
 import MediaGallery from '../../../components/MediaGallery'
@@ -49,11 +50,12 @@ function SectionHead({ children }: { children: React.ReactNode }) {
 }
 
 export default function EverymenPraxisDetail({ state }: { state: PraxisDetailState }) {
+  const { t } = useTranslation('praxis')
   const { praxis, votes } = state
   if (!praxis) return null
 
   const sealedDate = praxis.submitted_at ?? praxis.created_at
-  const modeLabel = praxis.type === 'collab' ? 'COLLAB' : 'SOLO'
+  const modeLabel = praxis.type === 'collab' ? t('detail.everymen.mode.collab') : t('detail.everymen.mode.solo')
 
   return (
     <div
@@ -81,7 +83,7 @@ export default function EverymenPraxisDetail({ state }: { state: PraxisDetailSta
         }}
       >
         <span style={{ fontFamily: POSTER, fontSize: 26, letterSpacing: '0.08em', lineHeight: 1, whiteSpace: 'nowrap' }}>
-          Work Report · Filed
+          {t('detail.everymen.workReportFiled')}
         </span>
         <span style={{ fontFamily: BODY, fontSize: 9, letterSpacing: '0.12em', textAlign: 'right' }}>
           {modeLabel}
@@ -98,10 +100,10 @@ export default function EverymenPraxisDetail({ state }: { state: PraxisDetailSta
         {/* ── Identity / status strip ── */}
         <div style={{ fontSize: 9, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--everymen-muted)', marginBottom: 4 }}>
           <Link to={`/tasks/${praxis.task_id}`} style={{ color: 'var(--everymen-muted)', textDecoration: 'none' }}>
-            re: {praxis.task_title}
+            {t('detail.everymen.re', { task: praxis.task_title })}
           </Link>
-          {' · '}lvl {praxis.task_level_required}
-          {' · '}sealed {formatTimestamp(sealedDate)}
+          {' · '}{t('detail.everymen.lvl', { level: praxis.task_level_required })}
+          {' · '}{t('detail.everymen.sealed', { date: formatTimestamp(sealedDate) })}
           {praxis.moderation_status === 'flagged' && (
             <>
               {' · '}
@@ -115,13 +117,13 @@ export default function EverymenPraxisDetail({ state }: { state: PraxisDetailSta
                   padding: '1px 6px',
                 }}
               >
-                FLAGGED
+                {t('detail.everymen.flagged')}
               </span>
             </>
           )}
         </div>
         <div style={{ fontSize: 9, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'var(--everymen-red)', marginBottom: 8 }}>
-          the job, done
+          {t('detail.everymen.theJobDone')}
         </div>
 
         {/* ── Poster headline ── */}
@@ -136,7 +138,7 @@ export default function EverymenPraxisDetail({ state }: { state: PraxisDetailSta
             color: 'var(--everymen-paper-text)',
           }}
         >
-          {praxis.title || 'Untitled filing'}
+          {praxis.title || t('detail.everymen.untitled')}
         </h1>
 
         {/* ── Owner actions ── */}
@@ -179,7 +181,7 @@ export default function EverymenPraxisDetail({ state }: { state: PraxisDetailSta
               }}
             />
             <div style={{ fontSize: 9, letterSpacing: '0.06em', color: 'var(--everymen-muted)', marginTop: 3 }}>
-              {praxis.type === 'collab' ? 'all hands' : 'one pair of hands'}
+              {praxis.type === 'collab' ? t('detail.everymen.hands.collab') : t('detail.everymen.hands.solo')}
             </div>
           </div>
           {/* base points from the task */}
@@ -188,7 +190,7 @@ export default function EverymenPraxisDetail({ state }: { state: PraxisDetailSta
               ★ {praxis.task_point_value}
             </div>
             <div style={{ fontSize: 8, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--everymen-muted)', marginTop: 3 }}>
-              base points
+              {t('detail.everymen.basePoints')}
             </div>
           </div>
         </div>
@@ -196,7 +198,7 @@ export default function EverymenPraxisDetail({ state }: { state: PraxisDetailSta
         {/* ── The report (account body) ── */}
         {praxis.body_text && (
           <>
-            <SectionHead>The Work</SectionHead>
+            <SectionHead>{t('detail.everymen.theWork')}</SectionHead>
             <div
               className="markdown-preview"
               style={{
@@ -215,7 +217,7 @@ export default function EverymenPraxisDetail({ state }: { state: PraxisDetailSta
         {praxis.media_items.length > 0 && (
           <>
             <SectionHead>
-              Proof of Work · {praxis.media_items.length} {praxis.media_items.length === 1 ? 'plate' : 'plates'}
+              {t('detail.everymen.proofOfWork', { count: praxis.media_items.length })}
             </SectionHead>
             <div
               style={{
@@ -233,7 +235,7 @@ export default function EverymenPraxisDetail({ state }: { state: PraxisDetailSta
         {/* ── The crew's marks (vote caster) ── */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', margin: '26px 0 16px', gap: 14 }}>
           <h2 style={{ fontFamily: POSTER, fontSize: 25, letterSpacing: '0.04em', margin: 0, color: 'var(--everymen-paper-text)', whiteSpace: 'nowrap' }}>
-            The Crew's Marks
+            {t('detail.everymen.crewsMarks')}
           </h2>
           {/* points from votes */}
           {votes && votes.total_votes > 0 && (
@@ -242,7 +244,7 @@ export default function EverymenPraxisDetail({ state }: { state: PraxisDetailSta
                 +{votes.total_score}
               </span>
               <span style={{ fontFamily: BODY, fontSize: 8, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--everymen-muted)', marginLeft: 6 }}>
-                pts from votes
+                {t('detail.everymen.ptsFromVotes')}
               </span>
             </div>
           )}

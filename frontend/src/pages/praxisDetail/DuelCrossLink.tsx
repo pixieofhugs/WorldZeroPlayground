@@ -14,6 +14,7 @@
  *              404s gracefully (it's a plain link, so it never breaks this page).
  */
 import type { CSSProperties } from "react";
+import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import { factionCssVar, factionName } from "../../utils/factions";
 import { mediaUrl } from "../../utils/media";
@@ -21,6 +22,7 @@ import type { PraxisOut } from "../../api/praxis";
 import type { DuelDetailOut, DuelSideOut } from "../../api/duel";
 
 function OpponentBadge({ side }: { side: DuelSideOut }) {
+  const { t } = useTranslation("praxis");
   const border = factionCssVar(side.faction_slug, "border");
   const soft = factionCssVar(side.faction_slug, "light");
   return (
@@ -51,7 +53,7 @@ function OpponentBadge({ side }: { side: DuelSideOut }) {
       )}
       <span>
         <strong>{side.display_name}</strong>
-        <span style={{ opacity: 0.7 }}> · {factionName(side.faction_slug)}</span>
+        <span style={{ opacity: 0.7 }}>{t("duelCrossLink.factionSuffix", { faction: factionName(side.faction_slug) })}</span>
       </span>
     </span>
   );
@@ -64,6 +66,7 @@ export default function DuelCrossLink({
   praxis: PraxisOut;
   duel: DuelDetailOut;
 }) {
+  const { t } = useTranslation("praxis");
   const isChallenger = praxis.id === duel.challenger.praxis_id;
   const me: DuelSideOut = isChallenger ? duel.challenger : duel.opponent;
   const foe: DuelSideOut = isChallenger ? duel.opponent : duel.challenger;
@@ -88,7 +91,7 @@ export default function DuelCrossLink({
   if (duel.status === "active" && !forfeited) {
     return (
       <div style={wrapper}>
-        <span style={{ fontWeight: 700 }}>⚔ Dueling {foe.display_name}</span>
+        <span style={{ fontWeight: 700 }}>{t("duelCrossLink.dueling", { name: foe.display_name })}</span>
       </div>
     );
   }
@@ -100,16 +103,17 @@ export default function DuelCrossLink({
     return (
       <div style={wrapper}>
         {iForfeited ? (
-          <span>You forfeited this duel.</span>
+          <span>{t("duelCrossLink.youForfeited")}</span>
         ) : (
           <span>
-            <strong>⚔ Won by default</strong> — {foe.display_name} forfeited
+            <strong>{t("duelCrossLink.wonByDefault")}</strong>
+            {t("duelCrossLink.wonByDefaultSuffix", { name: foe.display_name })}
             {foe.praxis_id != null && (
               <>
                 {" "}
                 (
                 <Link to={`/praxes/${foe.praxis_id}`} style={{ color: accent }}>
-                  their entry
+                  {t("duelCrossLink.theirEntry")}
                 </Link>
                 )
               </>
@@ -124,7 +128,11 @@ export default function DuelCrossLink({
   // settled: live tally + cross-link.
   const diff = me.points_from_votes - foe.points_from_votes;
   const standing =
-    diff === 0 ? "Tied" : diff > 0 ? "You're ahead" : "You're behind";
+    diff === 0
+      ? t("duelCrossLink.standing.tied")
+      : diff > 0
+      ? t("duelCrossLink.standing.ahead")
+      : t("duelCrossLink.standing.behind");
   return (
     <div style={wrapper}>
       <div
@@ -137,7 +145,7 @@ export default function DuelCrossLink({
         }}
       >
         <span>
-          <span style={{ fontWeight: 700 }}>⚔ Duel</span> vs{" "}
+          <span style={{ fontWeight: 700 }}>{t("duelCrossLink.duel")}</span> {t("duelCrossLink.vs")}{" "}
           {foe.praxis_id != null ? (
             <Link to={`/praxes/${foe.praxis_id}`} style={{ color: accent }}>
               <OpponentBadge side={foe} />
@@ -153,7 +161,7 @@ export default function DuelCrossLink({
         </span>
       </div>
       <div style={{ marginTop: 4, fontSize: "var(--text-xs)", opacity: 0.85 }}>
-        {standing} · live — the winner floats with the votes until era reset.
+        {t("duelCrossLink.live", { standing })}
       </div>
     </div>
   );

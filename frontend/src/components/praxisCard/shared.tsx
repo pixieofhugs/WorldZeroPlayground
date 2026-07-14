@@ -1,4 +1,5 @@
 import type { CSSProperties, MouseEvent } from "react";
+import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import type { PraxisCardOut } from "../../api/praxis";
 import { TaskCrown } from "../cards/TaskCrown";
@@ -114,6 +115,7 @@ export function PraxisScoreHero({
   /** Set false when the surface renders its own TaskCrown (the faction pages). */
   showCrown?: boolean;
 }) {
+  const { t } = useTranslation("praxis");
   if (praxis.score === null || praxis.score === undefined) return null;
   const base = praxis.task_point_value;
   const votePoints = Math.max(0, Math.round(praxis.score - base));
@@ -161,7 +163,7 @@ export function PraxisScoreHero({
           opacity: 0.8,
         }}
       >
-        pts + votes
+        {t("card.ptsAndVotes")}
       </span>
     </div>
   );
@@ -175,6 +177,7 @@ export function PraxisStats({
   praxis: PraxisCardOut;
   style?: CSSProperties;
 }) {
+  const { t } = useTranslation("praxis");
   const collaborators = praxis.member_count - 1;
   const submittedDate = praxis.submitted_at
     ? new Date(praxis.submitted_at).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })
@@ -186,13 +189,13 @@ export function PraxisStats({
     >
       {praxis.task_level_required > 0 && (
         <>
-          <span style={{ fontWeight: 600, opacity: 0.75 }}>L{praxis.task_level_required}</span>
+          <span style={{ fontWeight: 600, opacity: 0.75 }}>{t("card.level", { level: praxis.task_level_required })}</span>
           <span aria-hidden>·</span>
         </>
       )}
-      <span style={{ fontWeight: 700 }}>{praxis.task_point_value} pts</span>
+      <span style={{ fontWeight: 700 }}>{t("card.points", { points: praxis.task_point_value })}</span>
       <span aria-hidden>·</span>
-      <span>{collaborators > 0 ? `+${collaborators} crew` : "solo"}</span>
+      <span>{collaborators > 0 ? t("card.crew", { count: collaborators }) : t("card.solo")}</span>
       {submittedDate && (
         <>
           <span aria-hidden>·</span>
@@ -221,6 +224,7 @@ export function AdminOverlay({
   onFail,
   moderateError,
 }: AdminProps) {
+  const { t } = useTranslation("praxis");
   return (
     <>
       {praxis.moderation_status === "flagged" && (
@@ -237,7 +241,7 @@ export function AdminOverlay({
             background: "rgba(220,38,38,0.05)",
           }}
         >
-          under review
+          {t("card.adminStatus.underReview")}
         </span>
       )}
       {praxis.moderation_status === "failed" && (
@@ -254,7 +258,7 @@ export function AdminOverlay({
             background: "rgba(245,158,11,0.05)",
           }}
         >
-          failed
+          {t("card.adminStatus.failed")}
         </span>
       )}
       {praxis.moderation_status === "hidden" && (
@@ -271,7 +275,7 @@ export function AdminOverlay({
             background: "rgba(107,114,128,0.05)",
           }}
         >
-          hidden
+          {t("card.adminStatus.hidden")}
         </span>
       )}
       {moderateError && (
@@ -308,7 +312,7 @@ export function AdminOverlay({
               cursor: "pointer",
             }}
           >
-            hide
+            {t("card.adminAction.hide")}
           </button>
           <button
             onClick={onFail}
@@ -322,7 +326,7 @@ export function AdminOverlay({
               cursor: "pointer",
             }}
           >
-            fail
+            {t("card.adminAction.fail")}
           </button>
         </div>
       )}

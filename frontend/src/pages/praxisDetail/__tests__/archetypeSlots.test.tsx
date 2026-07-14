@@ -17,6 +17,8 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { MemoryRouter } from "react-router-dom";
 import type { ReactElement } from "react";
 import { describe, it, expect } from "vitest";
+// Initialize the i18n catalog so shared-chrome copy keys resolve to English text.
+import "../../../i18n";
 import { ARCHETYPE_BY_SLUG } from "../../PraxisDetail";
 import DefaultPraxisDetail from "../archetypes/DefaultPraxisDetail";
 import type { PraxisDetailState } from "../usePraxisDetail";

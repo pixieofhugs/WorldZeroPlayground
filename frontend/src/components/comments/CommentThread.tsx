@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import type { CharacterOut } from '../../api/auth'
 import {
@@ -32,6 +33,7 @@ import AlbescentComment from './voices/AlbescentComment'
  * FactionAvatar + the timestamp dialect. Any unregistered faction renders this.
  */
 export function DefaultComment(props: CommentProps) {
+  const { t } = useTranslation('praxis')
   if (props.mode === 'composer') {
     const { character, value, onChange, onSubmit, submitting } = props
     return (
@@ -65,7 +67,7 @@ export function DefaultComment(props: CommentProps) {
           </Link>
           <span style={{ fontSize: 11, color: 'var(--color-text-tertiary)' }}>
             {formatCommentTime(slug, comment.created_at)}
-            {comment.is_edited ? ' · edited' : ''}
+            {comment.is_edited ? ` · ${t('comments.edited')}` : ''}
           </span>
         </div>
         <div style={{ marginTop: 2, color: 'var(--color-text-primary)', lineHeight: 1.5 }}>
@@ -138,6 +140,7 @@ export default function CommentThread({
   target: CommentTarget
   targetId: number
 }) {
+  const { t } = useTranslation('praxis')
   const { user } = useAuth()
   const [comments, setComments] = useState<CommentOut[]>([])
   const [loading, setLoading] = useState(true)
@@ -154,7 +157,7 @@ export default function CommentThread({
         }
       })
       .catch(() => {
-        if (active) setError('Could not load comments.')
+        if (active) setError(t('comments.loadError'))
       })
       .finally(() => {
         if (active) setLoading(false)
@@ -174,11 +177,11 @@ export default function CommentThread({
   return (
     <section style={{ marginTop: 24 }}>
       <h3 className="eyebrow" style={{ marginBottom: 12 }}>
-        {comments.length} comment{comments.length === 1 ? '' : 's'}
+        {t('comments.heading', { count: comments.length })}
       </h3>
       {loading && (
         <p className="font-body" style={{ fontSize: 12, color: 'var(--color-text-tertiary)' }}>
-          Loading…
+          {t('comments.loading')}
         </p>
       )}
       {error && (

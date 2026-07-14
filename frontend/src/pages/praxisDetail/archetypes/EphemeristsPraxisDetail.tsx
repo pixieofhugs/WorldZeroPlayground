@@ -9,6 +9,7 @@
  * All colors via --eph-* and --faction-ephemerists-* CSS vars (index.css).
  * Actor-scoped byline themes to the AUTHOR's faction, not the task's.
  */
+import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import ReactMarkdown from 'react-markdown'
 import MediaGallery from '../../../components/MediaGallery'
@@ -20,6 +21,7 @@ import { PraxisAdminBar, PraxisStatusBanners, PraxisOwnerActions, PraxisFlagBloc
 import type { PraxisDetailState } from '../usePraxisDetail'
 
 export default function EphemeristsPraxisDetail({ state }: { state: PraxisDetailState }) {
+  const { t } = useTranslation('praxis')
   const { praxis, votes } = state
   if (!praxis) return null
 
@@ -44,7 +46,7 @@ export default function EphemeristsPraxisDetail({ state }: { state: PraxisDetail
 
         {/* ── Masthead ── */}
         <div style={{ textAlign: 'center', marginBottom: 20 }}>
-          <EphEyebrow motto="finding · testament · codex" />
+          <EphEyebrow motto={t('detail.ephemerists.motto')} />
         </div>
 
         {/* ── Behavior slots (invariant — from shared module) ── */}
@@ -72,7 +74,7 @@ export default function EphemeristsPraxisDetail({ state }: { state: PraxisDetail
               textTransform: 'uppercase',
             }}
           >
-            re: {praxis.task_title}
+            {t('detail.ephemerists.re', { task: praxis.task_title })}
           </Link>
           <span style={{ color: 'color-mix(in srgb, var(--eph-ink) 25%, transparent)', fontSize: 8 }}>·</span>
           <span
@@ -83,7 +85,7 @@ export default function EphemeristsPraxisDetail({ state }: { state: PraxisDetail
               color: 'var(--eph-muted)',
             }}
           >
-            Grade {grade}
+            {t('detail.ephemerists.grade', { grade })}
           </span>
           <span style={{ color: 'color-mix(in srgb, var(--eph-ink) 25%, transparent)', fontSize: 8 }}>·</span>
           <span
@@ -94,7 +96,7 @@ export default function EphemeristsPraxisDetail({ state }: { state: PraxisDetail
               color: 'var(--eph-muted)',
             }}
           >
-            sealed {formatTimestamp(sealedDate)}
+            {t('detail.ephemerists.sealed', { date: formatTimestamp(sealedDate) })}
           </span>
           {praxis.moderation_status === 'flagged' && (
             <>
@@ -109,7 +111,7 @@ export default function EphemeristsPraxisDetail({ state }: { state: PraxisDetail
                   padding: '1px 5px',
                 }}
               >
-                flagged
+                {t('detail.ephemerists.flagged')}
               </span>
             </>
           )}
@@ -127,7 +129,7 @@ export default function EphemeristsPraxisDetail({ state }: { state: PraxisDetail
             letterSpacing: '0.01em',
           }}
         >
-          <LapisLastWord text={praxis.title ?? 'Untitled filing'} footnote />
+          <LapisLastWord text={praxis.title ?? t('detail.ephemerists.untitled')} footnote />
         </h1>
 
         {/* Ink rule */}
@@ -184,7 +186,7 @@ export default function EphemeristsPraxisDetail({ state }: { state: PraxisDetail
                 color: 'var(--eph-muted)',
               }}
             >
-              {praxis.type === 'solo' ? 'sole filing' : praxis.type === 'collab' ? 'collaborative filing' : 'dueling filing'}
+              {praxis.type === 'solo' ? t('detail.ephemerists.mode.solo') : praxis.type === 'collab' ? t('detail.ephemerists.mode.collab') : t('detail.ephemerists.mode.duel')}
             </span>
           </div>
           {/* Point value from task */}
@@ -207,7 +209,7 @@ export default function EphemeristsPraxisDetail({ state }: { state: PraxisDetail
                 color: 'var(--eph-muted)',
               }}
             >
-              BASE PTS
+              {t('detail.ephemerists.basePts')}
             </span>
           </div>
         </div>
@@ -233,7 +235,7 @@ export default function EphemeristsPraxisDetail({ state }: { state: PraxisDetail
                   textTransform: 'uppercase',
                 }}
               >
-                The account
+                {t('detail.ephemerists.theAccount')}
               </span>
             </div>
             <div
@@ -272,7 +274,7 @@ export default function EphemeristsPraxisDetail({ state }: { state: PraxisDetail
                   textTransform: 'uppercase',
                 }}
               >
-                The evidence · {praxis.media_items.length} {praxis.media_items.length === 1 ? 'specimen' : 'specimens'}
+                {t('detail.ephemerists.evidence', { count: praxis.media_items.length })}
               </span>
             </div>
             <div
@@ -321,7 +323,7 @@ export default function EphemeristsPraxisDetail({ state }: { state: PraxisDetail
                   textTransform: 'uppercase',
                 }}
               >
-                The concordance
+                {t('detail.ephemerists.concordance')}
               </span>
             </div>
             {/* Points from votes */}
@@ -346,7 +348,7 @@ export default function EphemeristsPraxisDetail({ state }: { state: PraxisDetail
                     marginLeft: 4,
                   }}
                 >
-                  PTS FROM VOTES
+                  {t('detail.ephemerists.ptsFromVotes')}
                 </span>
               </div>
             )}

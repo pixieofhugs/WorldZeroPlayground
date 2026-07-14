@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import FactionAvatar from '../../avatar/FactionAvatar'
 import { formatCommentTime } from '../../../utils/commentTime'
 import { type CommentProps, authorToCharacter, ComposerControls, MentionText } from '../shared'
@@ -28,6 +29,7 @@ function Window({ title, children }: { title: string; children: React.ReactNode 
 }
 
 export default function WowComment(props: CommentProps) {
+  const { t } = useTranslation('praxis')
   if (props.mode === 'composer') {
     const { character, value, onChange, onSubmit, submitting } = props
     return (
@@ -57,7 +59,7 @@ export default function WowComment(props: CommentProps) {
             </Link>
             {' · '}
             {formatCommentTime(slug, comment.created_at)}
-            {comment.is_edited ? ' · edited' : ''}
+            {comment.is_edited ? ` · ${t('comments.wow.edited')}` : ''}
           </div>
         </div>
       </div>

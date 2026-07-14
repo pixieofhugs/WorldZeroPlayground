@@ -15,6 +15,7 @@
  * Invariant behavior slots (admin bar, banners, owner actions, flag) come from
  * the shared module — this archetype owns only presentation.
  */
+import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import ReactMarkdown from 'react-markdown'
 import MediaGallery from '../../../components/MediaGallery'
@@ -87,19 +88,19 @@ function SgDivider({ label }: { label: string }) {
   )
 }
 
-const INSTANCE_LABEL: Record<string, string> = {
-  solo: 'SOLO',
-  collab: 'NETWORKED',
-  duel: 'ADVERSARIAL',
-}
-
 export default function SingularityPraxisDetail({ state }: { state: PraxisDetailState }) {
+  const { t } = useTranslation('praxis')
   const { praxis, votes } = state
   if (!praxis) return null
 
   const sealedDate = praxis.submitted_at ?? praxis.created_at
   const grade = praxis.task_level_required > 0 ? praxis.task_level_required : '—'
-  const instance = INSTANCE_LABEL[praxis.type] ?? praxis.type.toUpperCase()
+  const instance =
+    praxis.type === 'solo'
+      ? t('detail.singularity.instance.solo')
+      : praxis.type === 'collab'
+      ? t('detail.singularity.instance.collab')
+      : t('detail.singularity.instance.duel')
 
   return (
     <div
@@ -154,7 +155,7 @@ export default function SingularityPraxisDetail({ state }: { state: PraxisDetail
               color: 'var(--faction-singularity-muted)',
             }}
           >
-            Singularity · sealed protocol
+            {t('detail.singularity.sealedProtocol')}
           </span>
           <span
             style={{
@@ -163,7 +164,7 @@ export default function SingularityPraxisDetail({ state }: { state: PraxisDetail
               color: 'color-mix(in srgb, var(--faction-singularity-muted) 55%, transparent)',
             }}
           >
-            SIGNAL_TRACE // {formatTimestamp(sealedDate)}
+            {t('detail.singularity.signalTrace', { date: formatTimestamp(sealedDate) })}
           </span>
         </div>
 
@@ -196,7 +197,7 @@ export default function SingularityPraxisDetail({ state }: { state: PraxisDetail
                 fontWeight: 700,
               }}
             >
-              ● SEALED
+              ● {t('detail.singularity.sealed')}
             </span>
             <span
               style={{
@@ -218,7 +219,7 @@ export default function SingularityPraxisDetail({ state }: { state: PraxisDetail
                 color: 'color-mix(in srgb, var(--faction-singularity-card-accent) 65%, transparent)',
               }}
             >
-              re: {praxis.task_title}
+              {t('detail.singularity.re', { task: praxis.task_title })}
             </Link>
             <span style={{ color: 'color-mix(in srgb, var(--faction-singularity-muted) 35%, transparent)', fontSize: 8 }}>·</span>
             <span
@@ -228,7 +229,7 @@ export default function SingularityPraxisDetail({ state }: { state: PraxisDetail
                 color: 'color-mix(in srgb, var(--faction-singularity-muted) 60%, transparent)',
               }}
             >
-              GRADE 0x0{grade} · {praxis.task_point_value} CR
+              {t('detail.singularity.gradeCredits', { grade, points: praxis.task_point_value })}
             </span>
             {praxis.moderation_status === 'flagged' && (
               <>
@@ -243,7 +244,7 @@ export default function SingularityPraxisDetail({ state }: { state: PraxisDetail
                     padding: '1px 6px',
                   }}
                 >
-                  flagged
+                  {t('detail.singularity.flagged')}
                 </span>
               </>
             )}
@@ -259,7 +260,7 @@ export default function SingularityPraxisDetail({ state }: { state: PraxisDetail
                 color: 'color-mix(in srgb, var(--faction-singularity-muted) 55%, transparent)',
               }}
             >
-              {'> OUTPUT:'}
+              {t('detail.singularity.output')}
             </div>
             <h1
               style={{
@@ -272,7 +273,7 @@ export default function SingularityPraxisDetail({ state }: { state: PraxisDetail
                 color: 'var(--faction-singularity-card-accent)',
               }}
             >
-              {praxis.title ?? 'UNTITLED OUTPUT'}
+              {praxis.title ?? t('detail.singularity.untitled')}
               <span
                 className="sg-blink"
                 aria-hidden
@@ -339,7 +340,7 @@ export default function SingularityPraxisDetail({ state }: { state: PraxisDetail
                   color: 'color-mix(in srgb, var(--faction-singularity-muted) 50%, transparent)',
                 }}
               >
-                {instance.toLowerCase()} instance
+                {t('detail.singularity.instanceLabel', { instance: instance.toLowerCase() })}
               </span>
             </div>
             {/* Base point value from task */}
@@ -355,7 +356,7 @@ export default function SingularityPraxisDetail({ state }: { state: PraxisDetail
                   color: 'color-mix(in srgb, var(--faction-singularity-muted) 50%, transparent)',
                 }}
               >
-                BASE CREDITS
+                {t('detail.singularity.baseCredits')}
               </div>
             </div>
           </div>
@@ -363,7 +364,7 @@ export default function SingularityPraxisDetail({ state }: { state: PraxisDetail
           {/* ── The account body → PROCESS_LOG ── */}
           {praxis.body_text && (
             <>
-              <SgDivider label="PROCESS_LOG" />
+              <SgDivider label={t('detail.singularity.processLog')} />
               <div
                 className="markdown-preview"
                 style={{
@@ -382,7 +383,7 @@ export default function SingularityPraxisDetail({ state }: { state: PraxisDetail
           {praxis.media_items.length > 0 && (
             <>
               <SgDivider
-                label={`ARTIFACTS · ${praxis.media_items.length} ${praxis.media_items.length === 1 ? 'file' : 'files'} submitted`}
+                label={t('detail.singularity.artifacts', { count: praxis.media_items.length })}
               />
               <div
                 style={{
@@ -397,7 +398,7 @@ export default function SingularityPraxisDetail({ state }: { state: PraxisDetail
           )}
 
           {/* ── The consensus array (vote caster) ── */}
-          <SgDivider label="CONSENSUS_ARRAY" />
+          <SgDivider label={t('detail.singularity.consensusArray')} />
           <div style={{ marginBottom: 20 }}>
             {votes && votes.total_votes > 0 && (
               <div
@@ -419,7 +420,7 @@ export default function SingularityPraxisDetail({ state }: { state: PraxisDetail
                     color: 'color-mix(in srgb, var(--faction-singularity-muted) 55%, transparent)',
                   }}
                 >
-                  CR FROM SIGNALS
+                  {t('detail.singularity.crFromSignals')}
                 </span>
               </div>
             )}

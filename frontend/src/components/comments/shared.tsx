@@ -8,6 +8,7 @@
  * only owns its chrome.
  */
 import type { ComponentType } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import type { CharacterOut } from '../../api/auth'
 import type { CommentMention, CommentOut } from '../../api/comments'
@@ -110,6 +111,7 @@ export function ComposerControls({
   bg?: string
   text?: string
 }) {
+  const { t } = useTranslation('praxis')
   const disabled = submitting || value.trim().length === 0
   const mention = useMentionAutocomplete(value, onChange)
   return (
@@ -121,7 +123,7 @@ export function ComposerControls({
           onChange={mention.handleChange}
           onKeyDown={mention.handleKeyDown}
           onBlur={mention.close}
-          placeholder="Write a comment… type @ to mention someone"
+          placeholder={t('comments.composerPlaceholder')}
           rows={2}
           disabled={submitting}
           role="combobox"
@@ -166,7 +168,7 @@ export function ComposerControls({
             opacity: disabled ? 0.5 : 1,
           }}
         >
-          {submitting ? '…' : 'Post comment'}
+          {submitting ? t('comments.posting') : t('comments.post')}
         </button>
       </div>
     </div>

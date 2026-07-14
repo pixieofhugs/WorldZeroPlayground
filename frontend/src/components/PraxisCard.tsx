@@ -1,4 +1,5 @@
 import type { ComponentType, CSSProperties } from "react";
+import { useTranslation } from "react-i18next";
 import type { PraxisCardOut } from "../api/praxis";
 import { factionCssVar } from "../utils/factions";
 import { pickVariant } from "../utils/factionDispatch";
@@ -102,6 +103,7 @@ function PraxisBody({
  * and the DS FactionPraxisCard reference. All colors via --ua-* tokens.
  */
 function UAPraxisCard({ praxis, adminProps, showCrown }: ArchetypeProps) {
+  const { t } = useTranslation("praxis");
   return (
     // Gilt frame: gold-leaf gradient border, then the parchment plate.
     <div
@@ -139,7 +141,7 @@ function UAPraxisCard({ praxis, adminProps, showCrown }: ArchetypeProps) {
             marginBottom: 6,
           }}
         >
-          Acquisition · filed
+          {t("card.masthead.ua")}
         </div>
         <AdminOverlay {...adminProps} />
         <PraxisBody
@@ -279,6 +281,7 @@ const SNIDE_TORN_CLIP =
   "polygon(0% 0%, 4% 100%, 8% 20%, 12% 90%, 16% 10%, 20% 80%, 24% 0%, 28% 100%, 32% 15%, 36% 85%, 40% 5%, 44% 95%, 48% 20%, 52% 80%, 56% 0%, 60% 100%, 64% 15%, 68% 90%, 72% 5%, 76% 85%, 80% 0%, 84% 100%, 88% 20%, 92% 80%, 96% 10%, 100% 0%)";
 
 function SnidePraxisCard({ praxis, adminProps, showCrown }: ArchetypeProps) {
+  const { t } = useTranslation("praxis");
   return (
     <div
       style={{
@@ -317,7 +320,7 @@ function SnidePraxisCard({ praxis, adminProps, showCrown }: ArchetypeProps) {
         }}
       />
       <div className="snide-tape" style={{ top: -10, left: 22, transform: "rotate(-8deg)" }} />
-      <SnideMasthead subtitle="evidence locker" />
+      <SnideMasthead subtitle={t("card.masthead.snide")} />
       <AdminOverlay {...adminProps} />
       <PraxisBody
         praxis={praxis}
@@ -335,6 +338,7 @@ function SnidePraxisCard({ praxis, adminProps, showCrown }: ArchetypeProps) {
  * leaf with a lapis-ruled running head, the sigil, and rubric-accented text.
  */
 function EphemeristsPraxisCard({ praxis, adminProps, showCrown }: ArchetypeProps) {
+  const { t } = useTranslation("praxis");
   return (
     <div
       style={{
@@ -376,7 +380,7 @@ function EphemeristsPraxisCard({ praxis, adminProps, showCrown }: ArchetypeProps
             color: "var(--eph-rubric)",
           }}
         >
-          Ephemeris · sealed entry
+          {t("card.masthead.ephemerists")}
         </span>
       </div>
       <div style={{ position: "relative", zIndex: 2, padding: "10px 14px 14px" }}>
@@ -422,6 +426,7 @@ function SingularityHoles() {
 }
 
 function SingularityPraxisCard({ praxis, adminProps, showCrown }: ArchetypeProps) {
+  const { t } = useTranslation("praxis");
   return (
     <div
       style={{
@@ -504,7 +509,7 @@ function SingularityPraxisCard({ praxis, adminProps, showCrown }: ArchetypeProps
             marginBottom: 8,
           }}
         >
-          singularity protocol
+          {t("card.masthead.singularity")}
           <span
             style={{
               display: "inline-block",
@@ -544,6 +549,7 @@ function SingularityPraxisCard({ praxis, adminProps, showCrown }: ArchetypeProps
  * the alias drops in slice 2 of #232). Ported from docs/design/albescent-kit.
  */
 function AlbescentPraxisCard({ praxis, adminProps, showCrown }: ArchetypeProps) {
+  const { t } = useTranslation("praxis");
   const ink = (pct: number) =>
     `color-mix(in srgb, var(--faction-albescent-card-text) ${pct}%, transparent)`;
   return (
@@ -591,7 +597,7 @@ function AlbescentPraxisCard({ praxis, adminProps, showCrown }: ArchetypeProps) 
             color: ink(30),
           }}
         >
-          Account · filed
+          {t("card.masthead.albescent")}
         </span>
       </div>
       <div style={{ position: "relative", padding: "12px 15px 14px" }}>
@@ -622,6 +628,7 @@ function AlbescentPraxisCard({ praxis, adminProps, showCrown }: ArchetypeProps) 
  * via --faction-default-* tokens; flips light/dark.
  */
 export function DefaultPraxisCard({ praxis, adminProps, showCrown }: ArchetypeProps) {
+  const { t } = useTranslation("praxis");
   return (
     // Spectrum band → clean inner sheet.
     <div
@@ -658,7 +665,7 @@ export function DefaultPraxisCard({ praxis, adminProps, showCrown }: ArchetypePr
             color: "var(--faction-default-card-muted)",
           }}
         >
-          <DefaultSigil size={22} /> Praxis · unaffiliated
+          <DefaultSigil size={22} /> {t("card.masthead.default")}
         </div>
         <AdminOverlay {...adminProps} />
         <PraxisBody

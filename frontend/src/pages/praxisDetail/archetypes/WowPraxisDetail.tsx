@@ -13,6 +13,8 @@
  * The author byline themes to the AUTHOR's faction, not the task's.
  */
 import type { CSSProperties } from 'react'
+import type { TFunction } from 'i18next'
+import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import ReactMarkdown from 'react-markdown'
 import MediaGallery from '../../../components/MediaGallery'
@@ -37,9 +39,9 @@ const ON_ACCENT = 'var(--color-text-on-accent)'
 
 /** Party-voiced label for the filing mode. A duel side is a solo praxis
  * (ADR-0011) — its duel context is shown by the shared DuelCrossLink, not here. */
-function modeVoice(type: string): string {
-  if (type === 'collab') return 'cast together'
-  return 'filed solo'
+function modeVoice(type: string, t: TFunction<'praxis'>): string {
+  if (type === 'collab') return t('detail.wow.mode.collab')
+  return t('detail.wow.mode.solo')
 }
 
 /** Sparkle charm — the kit's signature four-point star. */
@@ -123,6 +125,7 @@ function TitleBar({ name }: { name: string }) {
 }
 
 export default function WowPraxisDetail({ state }: { state: PraxisDetailState }) {
+  const { t } = useTranslation('praxis')
   const { praxis, votes } = state
   if (!praxis) return null
 
@@ -161,7 +164,7 @@ export default function WowPraxisDetail({ state }: { state: PraxisDetailState })
             boxShadow: `0 14px 34px color-mix(in srgb, ${PINK} 30%, transparent)`,
           }}
         >
-          <TitleBar name="praxis.exe" />
+          <TitleBar name={t('detail.wow.windows.praxis')} />
 
           {/* desktop body — dotted grid */}
           <div
@@ -199,16 +202,16 @@ export default function WowPraxisDetail({ state }: { state: PraxisDetailState })
               >
                 <Sparkle size={10} color={ON_ACCENT} /> sealed
               </span>
-              <span style={pill}>{modeVoice(praxis.type)}</span>
+              <span style={pill}>{modeVoice(praxis.type, t)}</span>
               <span style={{ fontSize: 9.5, color: CARD_MUTED, letterSpacing: '0.04em' }}>
-                re:{' '}
+                {t('detail.wow.re')}{' '}
                 <Link
                   to={`/tasks/${praxis.task_id}`}
                   style={{ color: TITLE_TEXT, fontWeight: 700, textDecoration: 'none' }}
                 >
                   {praxis.task_title}
                 </Link>{' '}
-                · lvl {praxis.task_level_required} · sealed {formatTimestamp(sealedDate)}
+                {t('detail.wow.lvlSealed', { level: praxis.task_level_required, date: formatTimestamp(sealedDate) })}
               </span>
               {praxis.moderation_status === 'flagged' && (
                 <span
@@ -219,7 +222,7 @@ export default function WowPraxisDetail({ state }: { state: PraxisDetailState })
                     background: 'transparent',
                   }}
                 >
-                  flagged
+                  {t('detail.wow.flagged')}
                 </span>
               )}
             </div>
@@ -234,7 +237,7 @@ export default function WowPraxisDetail({ state }: { state: PraxisDetailState })
                 marginBottom: 8,
               }}
             >
-              the finding
+              {t('detail.wow.theFinding')}
             </div>
             <h1
               style={{
@@ -247,7 +250,7 @@ export default function WowPraxisDetail({ state }: { state: PraxisDetailState })
                 overflowWrap: 'anywhere',
               }}
             >
-              {praxis.title ?? 'Untitled spell'}
+              {praxis.title ?? t('detail.wow.untitled')}
             </h1>
 
             {/* ── Owner actions (invariant) ── */}
@@ -300,7 +303,7 @@ export default function WowPraxisDetail({ state }: { state: PraxisDetailState })
                 <div
                   style={{ fontSize: 9, color: CARD_MUTED, letterSpacing: '0.06em', marginTop: 2 }}
                 >
-                  the witch who cast it
+                  {t('detail.wow.witchWhoCast')}
                 </div>
               </div>
               <div style={{ marginLeft: 'auto', textAlign: 'right', flexShrink: 0 }}>
@@ -316,7 +319,7 @@ export default function WowPraxisDetail({ state }: { state: PraxisDetailState })
                     marginTop: 3,
                   }}
                 >
-                  base points
+                  {t('detail.wow.basePoints')}
                 </div>
               </div>
             </div>
@@ -324,7 +327,7 @@ export default function WowPraxisDetail({ state }: { state: PraxisDetailState })
             {/* ── 3 · the account (body text) ── */}
             {praxis.body_text && (
               <>
-                <Divider label="what i did" />
+                <Divider label={t('detail.wow.whatIDid')} />
                 <div
                   className="markdown-preview"
                   style={{ fontFamily: BODY, fontSize: 12, lineHeight: 1.75, color: CARD_TEXT }}
@@ -338,7 +341,7 @@ export default function WowPraxisDetail({ state }: { state: PraxisDetailState })
             {praxis.media_items.length > 0 && (
               <>
                 <Divider
-                  label={`what i left behind · ${praxis.media_items.length} ${praxis.media_items.length === 1 ? 'keepsake' : 'keepsakes'}`}
+                  label={t('detail.wow.keepsakes', { count: praxis.media_items.length })}
                 />
                 <div
                   style={{
@@ -348,7 +351,7 @@ export default function WowPraxisDetail({ state }: { state: PraxisDetailState })
                     boxShadow: `0 6px 16px color-mix(in srgb, ${PINK} 18%, transparent)`,
                   }}
                 >
-                  <TitleBar name="keepsakes.exe" />
+                  <TitleBar name={t('detail.wow.windows.keepsakes')} />
                   <div
                     style={{
                       padding: 12,
@@ -374,7 +377,7 @@ export default function WowPraxisDetail({ state }: { state: PraxisDetailState })
             boxShadow: `0 10px 26px color-mix(in srgb, ${PINK} 26%, transparent)`,
           }}
         >
-          <TitleBar name="hearts.exe" />
+          <TitleBar name={t('detail.wow.windows.hearts')} />
           <div
             style={{
               padding: '20px 24px 22px',
@@ -403,7 +406,7 @@ export default function WowPraxisDetail({ state }: { state: PraxisDetailState })
                   color: TITLE_TEXT,
                 }}
               >
-                <Sparkle size={14} color={PINK} /> send a little love
+                <Sparkle size={14} color={PINK} /> {t('detail.wow.sendLove')}
               </span>
               {votes && votes.total_votes > 0 && (
                 <div style={{ textAlign: 'right' }}>
@@ -419,7 +422,7 @@ export default function WowPraxisDetail({ state }: { state: PraxisDetailState })
                       marginLeft: 6,
                     }}
                   >
-                    points from votes
+                    {t('detail.wow.pointsFromVotes')}
                   </span>
                 </div>
               )}

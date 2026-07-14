@@ -13,6 +13,7 @@
  * The behavior slots come from the shared module; this archetype owns only
  * presentation.
  */
+import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import ReactMarkdown from 'react-markdown'
 import MediaGallery from '../../../components/MediaGallery'
@@ -51,12 +52,13 @@ function Divider({ label }: { label: string }) {
 }
 
 export default function AlbescentPraxisDetail({ state }: { state: PraxisDetailState }) {
+  const { t } = useTranslation('praxis')
   const { praxis, votes } = state
   if (!praxis) return null
 
   const sealedDate = praxis.submitted_at ?? praxis.created_at
   const mode =
-    praxis.type === 'solo' ? 'sole account' : praxis.type === 'collab' ? 'joint account' : 'contested account'
+    praxis.type === 'solo' ? t('detail.albescent.mode.solo') : praxis.type === 'collab' ? t('detail.albescent.mode.collab') : t('detail.albescent.mode.duel')
 
   return (
     <div
@@ -88,7 +90,7 @@ export default function AlbescentPraxisDetail({ state }: { state: PraxisDetailSt
             color: ink(30),
           }}
         >
-          Albescent · Ref. {praxis.id}
+          {t('detail.albescent.ref', { id: praxis.id })}
         </span>
         <span
           style={{
@@ -100,7 +102,7 @@ export default function AlbescentPraxisDetail({ state }: { state: PraxisDetailSt
             paddingBottom: 1,
           }}
         >
-          {praxis.moderation_status === 'flagged' ? 'under review' : praxis.status === 'submitted' ? 'returned' : praxis.status}
+          {praxis.moderation_status === 'flagged' ? t('detail.albescent.status.underReview') : praxis.status === 'submitted' ? t('detail.albescent.status.returned') : praxis.status}
         </span>
       </div>
 
@@ -115,14 +117,14 @@ export default function AlbescentPraxisDetail({ state }: { state: PraxisDetailSt
             to={`/tasks/${praxis.task_id}`}
             style={{ fontSize: 7.5, letterSpacing: '0.14em', color: ink(34), textDecoration: 'none', textTransform: 'uppercase' }}
           >
-            re: {praxis.task_title}
+            {t('detail.albescent.re', { task: praxis.task_title })}
           </Link>
           <span style={{ color: ink(20), fontSize: 8 }}>·</span>
-          <span style={{ fontSize: 7.5, letterSpacing: '0.1em', color: ink(34) }}>Grade {praxis.task_level_required || '—'}</span>
+          <span style={{ fontSize: 7.5, letterSpacing: '0.1em', color: ink(34) }}>{t('detail.albescent.grade', { grade: praxis.task_level_required || '—' })}</span>
           <span style={{ color: ink(20), fontSize: 8 }}>·</span>
           <span style={{ fontFamily: FONT, fontStyle: 'italic', fontSize: 10, color: ink(38) }}>{mode}</span>
           <span style={{ color: ink(20), fontSize: 8 }}>·</span>
-          <span style={{ fontFamily: FONT, fontStyle: 'italic', fontSize: 10, color: ink(38) }}>filed {formatTimestamp(sealedDate)}</span>
+          <span style={{ fontFamily: FONT, fontStyle: 'italic', fontSize: 10, color: ink(38) }}>{t('detail.albescent.filed', { date: formatTimestamp(sealedDate) })}</span>
         </div>
 
         {/* ── The finding ── */}
@@ -137,7 +139,7 @@ export default function AlbescentPraxisDetail({ state }: { state: PraxisDetailSt
             margin: '0 0 16px',
           }}
         >
-          {praxis.title ?? 'Untitled account'}
+          {praxis.title ?? t('detail.albescent.untitled')}
         </h1>
 
         {/* ── Owner actions ── */}
@@ -177,14 +179,14 @@ export default function AlbescentPraxisDetail({ state }: { state: PraxisDetailSt
             <div style={{ fontFamily: FONT, fontStyle: 'italic', fontWeight: 300, fontSize: 28, lineHeight: 1, color: ink(55) }}>
               {praxis.task_point_value}
             </div>
-            <div style={{ fontSize: 7, letterSpacing: '0.14em', color: ink(26), marginTop: 2 }}>pts returned</div>
+            <div style={{ fontSize: 7, letterSpacing: '0.14em', color: ink(26), marginTop: 2 }}>{t('detail.albescent.ptsReturned')}</div>
           </div>
         </div>
 
         {/* ── The account ── */}
         {praxis.body_text && (
           <>
-            <Divider label="Account" />
+            <Divider label={t('detail.albescent.account')} />
             <div
               className="markdown-preview"
               style={{ fontFamily: FONT, fontStyle: 'italic', fontSize: 15, lineHeight: 1.7, color: ink(62) }}
@@ -197,7 +199,7 @@ export default function AlbescentPraxisDetail({ state }: { state: PraxisDetailSt
         {/* ── The plates (evidence) ── */}
         {praxis.media_items.length > 0 && (
           <>
-            <Divider label={`Plates · ${praxis.media_items.length}`} />
+            <Divider label={t('detail.albescent.plates', { count: praxis.media_items.length })} />
             <div style={{ border: `1px solid ${ink(10)}`, padding: 10 }}>
               <MediaGallery media={praxis.media_items} layout="grid" />
             </div>
@@ -205,15 +207,15 @@ export default function AlbescentPraxisDetail({ state }: { state: PraxisDetailSt
         )}
 
         {/* ── Bear witness (vote caster) ── */}
-        <Divider label="Bear Witness" />
+        <Divider label={t('detail.albescent.bearWitness')} />
         <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 10, marginBottom: 12 }}>
           <span style={{ fontFamily: FONT, fontStyle: 'italic', fontSize: 13, color: ink(48) }}>
-            How completely was this account attended?
+            {t('detail.albescent.witnessPrompt')}
           </span>
           {votes && votes.total_votes > 0 && (
             <span style={{ fontFamily: FONT, fontStyle: 'italic', fontSize: 16, color: ink(60), whiteSpace: 'nowrap' }}>
               +{votes.total_score}{' '}
-              <span style={{ fontFamily: MONO, fontSize: 7, letterSpacing: '0.14em', color: ink(30) }}>FROM WITNESSES</span>
+              <span style={{ fontFamily: MONO, fontSize: 7, letterSpacing: '0.14em', color: ink(30) }}>{t('detail.albescent.fromWitnesses')}</span>
             </span>
           )}
         </div>

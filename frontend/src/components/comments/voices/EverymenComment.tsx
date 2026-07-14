@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import FactionAvatar from '../../avatar/FactionAvatar'
 import { formatCommentTime } from '../../../utils/commentTime'
 import { type CommentProps, authorToCharacter, ComposerControls, MentionText } from '../shared'
@@ -17,9 +18,10 @@ function frame(): React.CSSProperties {
 }
 
 export default function EverymenComment(props: CommentProps) {
+  const { t } = useTranslation('praxis')
   const masthead = (
     <div style={{ background: 'var(--faction-everymen-card-accent)', color: 'var(--faction-everymen-card-bg)', fontFamily: 'var(--faction-everymen-card-font)', fontSize: 13, letterSpacing: '0.14em', padding: '5px 14px' }}>
-      EVERYMEN · DISPATCH FROM THE FLOOR
+      {t('comments.everymen.masthead')}
     </div>
   )
 
@@ -51,7 +53,7 @@ export default function EverymenComment(props: CommentProps) {
             </Link>
             <span style={{ fontSize: 11, color: 'var(--faction-everymen-card-muted)', textTransform: 'uppercase', letterSpacing: '0.06em', whiteSpace: 'nowrap' }}>
               {formatCommentTime(slug, comment.created_at)}
-              {comment.is_edited ? ' · revised' : ''}
+              {comment.is_edited ? ` · ${t('comments.everymen.edited')}` : ''}
             </span>
           </div>
           <div style={{ fontSize: 15, lineHeight: 1.4, marginTop: 3 }}>
