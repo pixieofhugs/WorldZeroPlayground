@@ -1,0 +1,78 @@
+<!-- TRIMMED for repo port: the visual skin only. The original .dc.html trailing
+     <script type="text/x-dc" data-dc-script> block (sample DATA + DCLogic renderVals)
+     was dropped — the repo wires real data via DefaultProfileBody / the #459 foundation.
+     Keep: section-spine structure, faction chrome, which tokens/fonts/frames the skin uses.
+     Port with repo --faction-ua-* CSS vars (strip these literal hexes). -->
+<!-- UA (University of Asthmatics) — gilt-salon skin. Fonts: Playfair Display (display, italic),
+     Marcellus/Marcellus SC (labels), EB Garamond (body), Courier Prime (mono eyebrows).
+     Frame idiom: gilt double-border (linear-gradient gold bevel + inset cream/gold rules),
+     radial paper-grain dot texture, orange (#c2541f) accent, ANNO/roman-numeral motif.
+     data-theme="light". -->
+<div data-theme="light" style="min-height:100vh;font-family:'Courier Prime',monospace;color:#3d2410;background:#ece4d2;background-image:radial-gradient(70% 50% at 8% 0%,rgba(221,147,34,.07),transparent 70%),radial-gradient(60% 50% at 100% 8%,rgba(194,84,31,.06),transparent 70%),radial-gradient(rgba(140,106,30,.045) 1px,transparent 1px);background-size:auto,auto,6px 6px;">
+
+  <!-- breadcrumb -->
+  <div style="font-family:'Courier Prime',monospace;font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:#a8895a;margin-bottom:18px;">Players · Profile</div>
+
+  <!-- ① IDENTITY + PROGRESSION — gilt frame around the shared CredentialCard + progression panel -->
+  <header style="position:relative;overflow:hidden;background:#fdf6ea;border:1px solid #cdab63;box-shadow:0 16px 40px rgba(60,40,10,.16),inset 0 0 0 4px #fdf6ea,inset 0 0 0 5px #e7c889;margin-bottom:40px;">
+    <div style="position:absolute;inset:0;pointer-events:none;background-image:radial-gradient(rgba(60,40,10,.03) 1px,transparent 1px);background-size:6px 6px;"></div>
+    <div style="position:relative;z-index:2;display:flex;gap:40px;align-items:center;flex-wrap:wrap;padding:34px 40px;">
+      <!-- gilt bevel wrapper around FactionCredentialCard(faction=ua) -->
+      <div style="flex-shrink:0;padding:12px;background:linear-gradient(135deg,#eec06a 0%,#9c6a1a 24%,#f0c878 50%,#9c6a1a 76%,#dd9322 100%);box-shadow:0 14px 30px rgba(60,40,10,.26),inset 0 0 0 1px rgba(255,255,255,.45);">
+        <div style="padding:4px;background:linear-gradient(135deg,#9c6a1a,#eec06a);">
+          [ shared FactionCredentialCard, faction=ua, name/bio/level/points ]
+        </div>
+      </div>
+      <div style="flex:1;min-width:300px;">
+        <div style="font-family:'Courier Prime',monospace;font-size:8px;letter-spacing:.26em;text-transform:uppercase;color:#a8895a;line-height:2;margin-bottom:8px;">Player · University of Asthmatics</div>
+        <h1 style="font-family:'Playfair Display',serif;font-style:italic;font-weight:800;font-size:56px;line-height:.96;letter-spacing:-.01em;color:#3d2410;margin:0;">{{ name }}</h1>
+        <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:12px;">
+          <!-- role chip: OUT OF SCOPE per #459 (no rank system). keep joined only. -->
+          <span style="font-family:'EB Garamond',serif;font-style:italic;font-size:14px;color:#8f6a3a;">{{ joined }}</span>
+        </div>
+        <!-- progression: conic-gradient ring (accent #c2541f) with ANNO/level, points-into-level bar toward level+1 -->
+        <div style="margin-top:22px;background:#fef9f0;border:1px solid #dd9322;box-shadow:inset 0 0 0 3px #fef9f0,inset 0 0 0 4px #ecd6a4;padding:16px 18px;display:flex;align-items:center;gap:16px;max-width:440px;">
+          <div style="flex-shrink:0;width:62px;height:62px;border-radius:50%;background:conic-gradient(#c2541f var(--deg),#e7d3ab 0);display:flex;align-items:center;justify-content:center;">
+            <span style="width:48px;height:48px;border-radius:50%;background:#fef9f0;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1;">
+              <span style="font-family:'Marcellus SC',serif;font-size:7px;letter-spacing:.1em;color:#a8895a;">ANNO</span>
+              <span style="font-family:'Playfair Display',serif;font-style:italic;font-weight:700;font-size:22px;color:#c2541f;">{{ level }}</span>
+            </span>
+          </div>
+          <div style="flex:1;min-width:0;">
+            <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px;">
+              <span style="font-family:'EB Garamond',serif;font-size:13px;color:#6a4f2c;">{{ into }} / {{ toNext }} pts this anno</span>
+              <span style="font-family:'Marcellus SC',serif;font-size:8.5px;letter-spacing:.12em;text-transform:uppercase;color:#a8895a;">next · anno {{ level+1 }}</span>
+            </div>
+            <div style="height:10px;background:#e7d3ab;overflow:hidden;box-shadow:inset 0 1px 2px rgba(60,40,10,.2);">
+              <div style="height:100%;background:linear-gradient(90deg,#dd9322,#c2541f);width:{{ pct }};"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- two columns: main (② about [SKIP per #459], ⑤ praxis) + right rail (③ badges) -->
+  <div style="display:grid;grid-template-columns:1fr 322px;gap:34px;align-items:start;">
+    <div style="display:flex;flex-direction:column;gap:46px;">
+      <!-- ⑤ PRAXIS — eyebrow + Playfair heading, then live UA PraxisCard rows; top row gets FDL laurel -->
+      <div>
+        <div style="margin-bottom:18px;">
+          <div style="font-family:'Courier Prime',monospace;font-size:8px;letter-spacing:.26em;text-transform:uppercase;color:#a8895a;margin-bottom:7px;">Exhibited by {{ name }}</div>
+          <h2 style="font-family:'Playfair Display',serif;font-style:italic;font-weight:700;font-size:30px;line-height:1;color:#3d2410;margin:0;">Praxis</h2>
+        </div>
+        <!-- each row: [ live faction PraxisCard ]; top entry overlaid with the spectrum-ring FDL laurel medallion.
+             empty state: dashed gilt border, "Nothing hung in the Salon yet". -->
+      </div>
+    </div>
+    <!-- RIGHT RAIL — ③ BADGES ("Distinctions") — hidden when empty per #459.
+         featured badge = gilt medallion hero (FDL mark); others = numbered (roman) gilt-disc list rows. -->
+    <div style="display:flex;flex-direction:column;gap:20px;">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <h2 style="font-family:'Playfair Display',serif;font-style:italic;font-weight:700;font-size:24px;margin:0;color:#3d2410;">Distinctions</h2>
+      </div>
+      <!-- badge rows: 32px gilt disc + name (Playfair italic) + note (EB Garamond). image mapped client-side by badge key. -->
+    </div>
+  </div>
+</div>
+<!-- FDL laurel SVG symbol (spectrum conic ring + cream center + fleur mark) accompanies the top praxis + featured badge. -->

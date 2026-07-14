@@ -29,7 +29,14 @@ import type { CharacterOut } from '../../api/auth'
 import type { PraxisCardOut } from '../../api/praxis'
 import type { TaskOut } from '../../api/tasks'
 import { pickVariant } from '../../utils/factionDispatch'
+import AlbescentProfileBody from './archetypes/AlbescentProfileBody'
 import DefaultProfileBody from './archetypes/DefaultProfileBody'
+import EphemeristsProfileBody from './archetypes/EphemeristsProfileBody'
+import EverymenProfileBody from './archetypes/EverymenProfileBody'
+import SingularityProfileBody from './archetypes/SingularityProfileBody'
+import SnideProfileBody from './archetypes/SnideProfileBody'
+import UaProfileBody from './archetypes/UaProfileBody'
+import WowProfileBody from './archetypes/WowProfileBody'
 
 export interface ProfileProgression {
   /** The level the current score is climbing toward (capped at max level). */
@@ -55,9 +62,20 @@ export interface ProfileBodyProps {
   identityActions: ReactNode
 }
 
-/** Per-faction profile skins land in #460 — until a row is registered here,
- *  every slug falls back to the default spectrum-band skin below. */
-const FACTION_PROFILE_BODIES: Record<string, ComponentType<ProfileBodyProps>> = {}
+/** Per-faction profile skins (#460). Each renders the SAME locked section spine
+ *  as DefaultProfileBody (via ProfileSkin) in the faction's costume; the default
+ *  spectrum-band skin remains the fallback for na / unaffiliated / unknown.
+ *  The explicit `albescent` entry beats the albescent→ua alias in pickVariant,
+ *  so it renders its own colorless skin immediately. */
+const FACTION_PROFILE_BODIES: Record<string, ComponentType<ProfileBodyProps>> = {
+  ua: UaProfileBody,
+  wow: WowProfileBody,
+  snide: SnideProfileBody,
+  ephemerists: EphemeristsProfileBody,
+  singularity: SingularityProfileBody,
+  everymen: EverymenProfileBody,
+  albescent: AlbescentProfileBody,
+}
 
 export default function FactionProfileBody(props: ProfileBodyProps) {
   const Body = pickVariant(
