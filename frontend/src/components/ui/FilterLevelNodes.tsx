@@ -1,3 +1,5 @@
+import { useTranslation } from 'react-i18next'
+
 /**
  * Level filter — Connected Nodes (Style Guide §5.3).
  * Row of circles connected by horizontal bars. Active: dark fill, scale(1.15).
@@ -11,9 +13,10 @@ interface Props {
 }
 
 export default function FilterLevelNodes({ levels, value, onChange }: Props) {
+  const { t } = useTranslation('common')
   return (
     <div className="flex items-center">
-      <span className="eyebrow mr-2">level:</span>
+      <span className="eyebrow mr-2">{t('filters.level')}</span>
       {levels.map((level, index) => {
         const active = value === level
         return (
@@ -43,7 +46,7 @@ export default function FilterLevelNodes({ levels, value, onChange }: Props) {
                 padding: 0,
               }}
             >
-              {level}+
+              {t('filters.levelAtLeast', { level })}
             </button>
           </div>
         )

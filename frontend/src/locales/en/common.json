@@ -1,1 +1,101 @@
-{}
+{
+  "brand": "World Zero",
+  "loading": "Loading...",
+  "nav": {
+    "home": "Home",
+    "tasks": "Tasks",
+    "praxis": "Praxis",
+    "players": "Players",
+    "factions": "Factions",
+    "updates": "Updates",
+    "admin": "Admin",
+    "adminMode": {
+      "badge": "MOD",
+      "enableTitle": "Enable admin mode",
+      "disableTitle": "Admin mode ON — click to disable"
+    },
+    "themeToggle": {
+      "toLight": "light",
+      "toDark": "dark"
+    },
+    "fieldDeskTitle": "Your FieldDesk — switch lives or begin a new one",
+    "createCharacter": "create character",
+    "logout": "logout",
+    "login": "Login"
+  },
+  "footer": {
+    "about": "About",
+    "contact": "Contact",
+    "disclaimer": "Disclaimer",
+    "attributions": "Attributions",
+    "donate": "Donate"
+  },
+  "actions": {
+    "accept": "Accept",
+    "decline": "Decline",
+    "proposeTask": "Propose a Task"
+  },
+  "filters": {
+    "faction": "faction:",
+    "level": "level:",
+    "status": "status:",
+    "levelAtLeast": "{{level}}+"
+  },
+  "level": {
+    "short": "lvl {{level}}"
+  },
+  "praxisType": {
+    "solo": "Solo",
+    "collab": "Collab",
+    "duel": "Duel"
+  },
+  "requests": {
+    "collabInvite": "Collab Invite",
+    "duelChallenge": "Duel Challenge"
+  },
+  "sidebar": {
+    "characterCard": {
+      "eyebrow": "Your Character",
+      "factionLevel": "{{faction}} · Level {{level}}",
+      "noCharacter": "No character yet"
+    },
+    "stats": {
+      "score": "Score",
+      "votes": "Votes",
+      "current": "Current",
+      "currentValue": "Era 3"
+    },
+    "pendingRequests": {
+      "heading_one": "Pending Requests · {{count}}",
+      "heading_other": "Pending Requests · {{count}}"
+    },
+    "activeTasks": {
+      "heading": "In progress tasks",
+      "empty": "No in progress tasks",
+      "slots_one": "{{count}} / {{max}} slots",
+      "slots_other": "{{count}} / {{max}} slots"
+    },
+    "globalActivity": {
+      "heading": "Recent global activity",
+      "empty": "No activity yet",
+      "eraBegun": "{{eraName}} has begun",
+      "newTask": "<0>New task:</0> <1>{{title}}</1>",
+      "completedTask": "<0>{{actor}}</0> completed <1>{{title}}</1>",
+      "fallbackTaskTitle": "a task"
+    }
+  },
+  "voteStamps": {
+    "a-start": "a start",
+    "solid": "solid",
+    "good": "good",
+    "excellent": "excellent",
+    "legendary": "legendary",
+    "rateAria": "Rate {{value}} — {{label}}",
+    "loginPrompt": "Log in to vote",
+    "voted_one": "Voted {{count}} pt",
+    "voted_other": "Voted {{count}} pts",
+    "summary_one": "{{count}} vote · {{points}} pts",
+    "summary_other": "{{count}} votes · {{points}} pts",
+    "saveError": "Could not save your vote. Please try again."
+  }
+}

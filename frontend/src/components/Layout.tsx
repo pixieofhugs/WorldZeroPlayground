@@ -1,5 +1,6 @@
 import { useEffect, type ReactNode } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { useAuth } from '../auth/AuthContext'
 import NavBar from './NavBar'
 import { BackdropProvider } from './backdrop/BackdropContext'
@@ -8,6 +9,7 @@ import LevelUpWatcher from './LevelUpWatcher'
 import Sidebar from './layout/Sidebar'
 
 export default function Layout({ children }: { children: ReactNode }) {
+  const { t } = useTranslation('common')
   const { user, loading } = useAuth()
   const navigate = useNavigate()
   const { pathname } = useLocation()
@@ -49,11 +51,11 @@ export default function Layout({ children }: { children: ReactNode }) {
         className="relative font-body text-xs flex gap-6 flex-wrap max-w-5xl mx-auto w-full px-4 sm:px-6 py-4 mt-8"
         style={{ color: 'var(--color-text-tertiary)', zIndex: 5 }}
       >
-        <Link to="/about" className="hover:underline">About</Link>
-        <Link to="/contact" className="hover:underline">Contact</Link>
-        <Link to="/disclaimer" className="hover:underline">Disclaimer</Link>
-        <Link to="/attributions" className="hover:underline">Attributions</Link>
-        <Link to="/donate" className="hover:underline">Donate</Link>
+        <Link to="/about" className="hover:underline">{t('footer.about')}</Link>
+        <Link to="/contact" className="hover:underline">{t('footer.contact')}</Link>
+        <Link to="/disclaimer" className="hover:underline">{t('footer.disclaimer')}</Link>
+        <Link to="/attributions" className="hover:underline">{t('footer.attributions')}</Link>
+        <Link to="/donate" className="hover:underline">{t('footer.donate')}</Link>
       </footer>
     </div>
     </BackdropProvider>
