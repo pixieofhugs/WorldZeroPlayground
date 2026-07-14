@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { Trans } from "react-i18next";
 import type { ActivityFeedItem } from "../../api/activityFeed";
+import i18n from "../../i18n";
 import { useRespondToRequest } from "../../hooks/useRespondToRequest";
 import { useMyActiveTasks } from "../../hooks/useMyActiveTasks";
 import { useGameConfig } from "../../hooks/useGameConfig";
@@ -102,7 +104,9 @@ export default function FeedCardDuelChallenge({ item }: Props) {
       setShowDropModal(false);
       landOnPraxis(duel.opponent_praxis_id);
     } catch (err) {
-      setDropError(extractError(err, "Could not drop that task. Try another."));
+      setDropError(
+        extractError(err, i18n.t("feed:duelChallenge.bankFull.dropError")),
+      );
     } finally {
       setBusy(false);
     }
@@ -136,25 +140,33 @@ export default function FeedCardDuelChallenge({ item }: Props) {
                 flexWrap: "wrap",
               }}
             >
-              <Link
-                to={`/characters/${challenger_character_id}`}
-                className="font-body"
-                style={{
-                  fontSize: 11,
-                  fontWeight: 700,
-                  color: "var(--color-text-primary)",
-                  textDecoration: "none",
-                }}
-              >
-                {item.actor_display_name}
-              </Link>
+              {/* One <Trans> sentence so "{name} has challenged you…" stays a
+                  translatable unit; the challenger link is tag <1>. */}
               <span
                 className="font-body"
                 style={{ fontSize: 11, color: "var(--color-text-secondary)" }}
               >
-                has challenged you to a duel
+                <Trans
+                  ns="feed"
+                  i18nKey="duelChallenge.sentence"
+                  values={{ name: item.actor_display_name }}
+                  components={{
+                    1: (
+                      <Link
+                        to={`/characters/${challenger_character_id}`}
+                        className="font-body"
+                        style={{
+                          fontSize: 11,
+                          fontWeight: 700,
+                          color: "var(--color-text-primary)",
+                          textDecoration: "none",
+                        }}
+                      />
+                    ),
+                  }}
+                />
               </span>
-              <FeedBadge type="duel" label="Duel" />
+              <FeedBadge type="duel" label={i18n.t("feed:badge.duel")} />
             </div>
             <span
               className="eyebrow"
@@ -202,7 +214,7 @@ export default function FeedCardDuelChallenge({ item }: Props) {
             className="eyebrow"
             style={{ color: "var(--color-text-tertiary)" }}
           >
-            {task_point_value} pts · winner takes the points
+            {i18n.t("feed:duelChallenge.taskMeta", { points: task_point_value })}
           </span>
           <span style={{ fontSize: 12 }}>&#x2694;</span>
         </div>
@@ -235,7 +247,7 @@ export default function FeedCardDuelChallenge({ item }: Props) {
                 cursor: loading || busy ? "not-allowed" : "pointer",
               }}
             >
-              Accept Duel
+              {i18n.t("feed:duelChallenge.accept")}
             </button>
             <button
               onClick={handleDecline}
@@ -253,7 +265,7 @@ export default function FeedCardDuelChallenge({ item }: Props) {
                 cursor: loading || busy ? "not-allowed" : "pointer",
               }}
             >
-              Decline
+              {i18n.t("feed:duelChallenge.decline")}
             </button>
             {error && !showDropModal && (
               <span
@@ -273,7 +285,7 @@ export default function FeedCardDuelChallenge({ item }: Props) {
               className="eyebrow"
               style={{ color: "var(--badge-duel)", textDecoration: "none" }}
             >
-              Duel Accepted — view duel
+              {i18n.t("feed:duelChallenge.accepted")}
             </Link>
           </div>
         )}
@@ -283,7 +295,7 @@ export default function FeedCardDuelChallenge({ item }: Props) {
               className="eyebrow"
               style={{ color: "var(--color-text-tertiary)" }}
             >
-              Declined
+              {i18n.t("feed:duelChallenge.declined")}
             </span>
           </div>
         )}
@@ -315,7 +327,7 @@ export default function FeedCardDuelChallenge({ item }: Props) {
             onClick={(e) => e.stopPropagation()}
           >
             <p className="eyebrow" style={{ marginBottom: 8 }}>
-              Task list full
+              {i18n.t("feed:duelChallenge.bankFull.title")}
             </p>
             <p
               className="font-body"
@@ -325,8 +337,7 @@ export default function FeedCardDuelChallenge({ item }: Props) {
                 color: "var(--color-text-secondary)",
               }}
             >
-              You have {maxTaskSlots} in-progress tasks. Drop one to accept this
-              duel:
+              {i18n.t("feed:duelChallenge.bankFull.body", { max: maxTaskSlots })}
             </p>
             <div
               style={{
@@ -353,7 +364,9 @@ export default function FeedCardDuelChallenge({ item }: Props) {
                     color: "var(--color-text-primary)",
                   }}
                 >
-                  Drop: {praxis.title || praxis.task_title}
+                  {i18n.t("feed:duelChallenge.bankFull.dropOption", {
+                    title: praxis.title || praxis.task_title,
+                  })}
                 </button>
               ))}
             </div>
@@ -380,7 +393,7 @@ export default function FeedCardDuelChallenge({ item }: Props) {
                 color: "var(--color-text-secondary)",
               }}
             >
-              Cancel
+              {i18n.t("feed:duelChallenge.bankFull.cancel")}
             </button>
           </div>
         </div>

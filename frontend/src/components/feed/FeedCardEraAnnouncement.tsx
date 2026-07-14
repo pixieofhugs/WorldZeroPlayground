@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import type { ActivityFeedItem } from '../../api/activityFeed'
+import i18n from '../../i18n'
 import FeedBadge from './FeedBadge'
 
 interface Props {
@@ -22,12 +23,12 @@ export default function FeedCardEraAnnouncement({ item }: Props) {
       }}
     >
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
-        <span className="eyebrow">ERA</span>
+        <span className="eyebrow">{i18n.t('feed:eraAnnouncement.kicker')}</span>
         <span className="eyebrow" style={{ color: 'var(--rank-silver)', fontSize: 8 }}>
-          Era Announcement
+          {i18n.t('feed:eraAnnouncement.label')}
         </span>
         <span style={{ marginLeft: 'auto' }}>
-          <FeedBadge type="admin" label="Admin" />
+          <FeedBadge type="admin" label={i18n.t('feed:badge.admin')} />
         </span>
       </div>
 
@@ -35,7 +36,7 @@ export default function FeedCardEraAnnouncement({ item }: Props) {
         className="font-display italic"
         style={{ fontSize: 18, color: 'var(--badge-admin-text)', marginBottom: 8, lineHeight: 1.3 }}
       >
-        {era_name} is now active.
+        {i18n.t('feed:eraAnnouncement.headline', { name: era_name })}
       </h3>
 
       {era_notes && (
@@ -59,7 +60,7 @@ export default function FeedCardEraAnnouncement({ item }: Props) {
             textDecoration: 'none',
           }}
         >
-          See New Tasks
+          {i18n.t('feed:eraAnnouncement.seeNewTasks')}
         </Link>
         <Link
           to="/praxes"
@@ -75,7 +76,7 @@ export default function FeedCardEraAnnouncement({ item }: Props) {
             textDecoration: 'none',
           }}
         >
-          Era Archive
+          {i18n.t('feed:eraAnnouncement.eraArchive')}
         </Link>
       </div>
     </div>

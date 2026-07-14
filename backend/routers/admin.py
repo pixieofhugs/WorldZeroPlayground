@@ -26,6 +26,8 @@ from schemas.admin import (
     CharacterSummary,
     CliTokenResponse,
     FactionCreate,
+    FlaggedCommentOut,
+    FlaggedPraxisOut,
     ModerationAction,
     OverviewStats,
     RoleAction,
@@ -46,6 +48,8 @@ from services.admin_service import (
     assign_or_revoke_role,
     create_faction,
     find_admin_accounts,
+    flags_for_comments,
+    flags_for_praxes,
     game_overview,
     get_account_detail,
     list_accounts,
@@ -303,12 +307,12 @@ async def admin_cli_token(
 # ---------------------------------------------------------------------------
 
 
-@router.get("/praxes/flagged", response_model=list[PraxisOut])
+@router.get("/praxes/flagged", response_model=list[FlaggedPraxisOut])
 async def admin_list_flagged_praxes(
     _: Account = Depends(require_admin),
     session: AsyncSession = Depends(get_db),
 ):
-    """Return praxes with moderation_status == flagged."""
+    """Return praxes with moderation_status == flagged, each with its flag rows (#237)."""
     result = await session.execute(
         select(Praxis)
         .options(selectinload(Praxis.invites), selectinload(Praxis.media_items))
@@ -320,8 +324,14 @@ async def admin_list_flagged_praxes(
     crowned = await crowned_praxis_ids(
         {praxis.task_id for praxis in praxis_list}, session
     )
+    flags_by_praxis = await flags_for_praxes(
+        {praxis.id for praxis in praxis_list}, session
+    )
     return [
-        await build_praxis_out(praxis, session, crowned_ids=crowned)
+        FlaggedPraxisOut(
+            **(await build_praxis_out(praxis, session, crowned_ids=crowned)).model_dump(),
+            flags=flags_by_praxis.get(praxis.id, []),
+        )
         for praxis in praxis_list
     ]
 
@@ -337,14 +347,23 @@ async def admin_moderate_praxis(
     return await build_praxis_out(praxis, session)
 
 
-@router.get("/comments/flagged", response_model=list[CommentOut])
+@router.get("/comments/flagged", response_model=list[FlaggedCommentOut])
 async def admin_list_flagged_comments(
     _: Account = Depends(require_admin),
     session: AsyncSession = Depends(get_db),
 ):
-    """Return comments with moderation_status == flagged (alongside flagged praxes)."""
+    """Return comments with moderation_status == flagged, each with its flag rows (#237)."""
     comments = await list_flagged_comments(session)
-    return [build_comment_out(comment) for comment in comments]
+    flags_by_comment = await flags_for_comments(
+        {comment.id for comment in comments}, session
+    )
+    return [
+        FlaggedCommentOut(
+            **build_comment_out(comment).model_dump(),
+            flags=flags_by_comment.get(comment.id, []),
+        )
+        for comment in comments
+    ]
 
 
 @router.patch("/comments/{comment_id}/moderate", response_model=CommentOut)

@@ -1,4 +1,5 @@
 import type { CSSProperties } from "react";
+import i18n from "../../i18n";
 
 /**
  * TaskCrown — the one praxis mark (ADR-0028).
@@ -40,7 +41,7 @@ export function TaskCrown({
   const glyph = Math.round(size * 0.46);
   return (
     <span
-      title="Task Crown — top praxis for this task"
+      title={i18n.t("feed:taskCrown.title")}
       style={{
         position: "relative",
         display: "inline-block",

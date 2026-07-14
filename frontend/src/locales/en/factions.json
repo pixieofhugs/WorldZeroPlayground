@@ -1,1 +1,283 @@
-{}
+{
+  "unaffiliatedName": "Unaffiliated",
+  "detail": {
+    "loading": "Loading...",
+    "retry": "Try refreshing.",
+    "notFound": "Faction not found.",
+    "backToFactions": "Back to factions.",
+    "eyebrow": "Faction",
+    "descriptionEmpty": "No description yet.",
+    "errors": {
+      "load": "Couldn't load this faction.",
+      "join": "Could not join faction."
+    },
+    "join": {
+      "confirmSwitch": "Join {{faction}}? You won't be able to rejoin {{current}} after leaving.",
+      "confirm": "Join {{faction}}?",
+      "cancel": "Cancel"
+    },
+    "membersEmpty": "No members yet.",
+    "default": {
+      "membersHeading": "Members · {{total}}",
+      "tasksHeading": "Tasks · {{total}}",
+      "tasksEmpty": "No tasks yet.",
+      "recentHeading": "Recently completed",
+      "recentEmpty": "No completed praxis yet."
+    }
+  },
+  "albescent": {
+    "keepers": {
+      "kicker": "The Houses",
+      "title": "Keepers",
+      "empty": "No keepers on record."
+    },
+    "ledger": {
+      "kicker": "Open Work",
+      "title": "The Ledger",
+      "empty": "The ledger is clear."
+    },
+    "returned": {
+      "kicker": "Attended To",
+      "title": "Lately Returned",
+      "empty": "Nothing returned yet. The Record waits."
+    }
+  },
+  "ephemerists": {
+    "apparatus": {
+      "heading": "The Apparatus",
+      "empty": "No apparatus recorded yet."
+    },
+    "tasks": {
+      "heading": "Tasks",
+      "kicker": "Surveys awaiting a hand to triangulate them",
+      "empty": "No surveys open."
+    },
+    "praxis": {
+      "heading": "Praxis",
+      "kicker": "Truths filed to the codex & weighed for concordance",
+      "empty": "Nothing sealed to the codex yet."
+    },
+    "road": {
+      "heading": "The Road",
+      "memberTitle": "Your name is in the codex",
+      "memberStanding": "Standing · <1>keeper of the road</1>",
+      "eligibleKicker": "The codex lies open —",
+      "eligibleTitle": "Walk with the keepers",
+      "eligibleBody": "Take a survey, triangulate what you find, and file it to the record. The road is long and forks often.",
+      "joinButton": "TAKE THE ROAD ▸",
+      "joining": "SEALING…",
+      "confirmButton": "CONFIRM",
+      "gateKicker": "Not yet in the codex —",
+      "gateTitle": "Earn your place on the road",
+      "gateBody": "File surveys worthy of {{faction}} and the keepers will send word. The road is long — keep triangulating, and the record will remember."
+    },
+    "spotlight": {
+      "label": "Keeper of the road",
+      "stat": "grade {{grade}} · {{score}} pvncta"
+    },
+    "roster": {
+      "heading": "The keepers",
+      "emptyWithSpotlight": "No other names in the codex yet.",
+      "level": "grade {{grade}}"
+    }
+  },
+  "everymen": {
+    "charter": {
+      "heading": "The Charter",
+      "empty": "No charter written yet."
+    },
+    "tasks": {
+      "heading": "Tasks",
+      "kicker": "Now mobilizing",
+      "empty": "No work orders posted."
+    },
+    "praxis": {
+      "heading": "Praxis",
+      "kicker": "Work that held up",
+      "empty": "No reports filed yet."
+    },
+    "roll": {
+      "heading": "THE ROLL",
+      "memberTitle": "You're on the roll",
+      "memberStanding": "Standing · <1>card-carrying</1>",
+      "eligibleKicker": "Doors are open —",
+      "eligibleTitle": "Join the ranks",
+      "eligibleBody": "Anyone willing to put in the shift belongs here. Pick up the work in front of you and finish what you start.",
+      "joinButton": "ENLIST ▸",
+      "joining": "ENLISTING…",
+      "confirmButton": "CONFIRM",
+      "gateKicker": "Not on the roll — yet",
+      "gateTitle": "Earn your invitation",
+      "gateBody": "Complete tasks from {{faction}} and the ranks will send word. Keep going — the work speaks for itself."
+    },
+    "spotlight": {
+      "label": "Standard-bearer of the week",
+      "stat": "lvl {{level}} · {{score}} pts"
+    },
+    "roster": {
+      "heading": "The roster",
+      "emptyWithSpotlight": "No others on the roll yet.",
+      "level": "lvl {{level}}"
+    }
+  },
+  "singularity": {
+    "manifest": {
+      "command": "> cat /faction/manifest.txt",
+      "empty": "> manifest.txt: empty"
+    },
+    "tasks": {
+      "heading": "Tasks",
+      "kicker": "Open protocols // awaiting nodes",
+      "empty": "> no open protocols"
+    },
+    "praxis": {
+      "heading": "Praxis",
+      "kicker": "Sealed outputs // verified by the array",
+      "empty": "> nothing sealed yet"
+    },
+    "access": {
+      "heading": "ACCESS",
+      "reLabel": "re: you",
+      "memberTitle": "NODE ONLINE",
+      "memberStanding": "array · <1>online</1>",
+      "eligibleKicker": "> ACCESS GRANTED",
+      "eligibleTitle": "JOIN THE ARRAY",
+      "eligibleBody": "Take a node. Run protocols, seal outputs, cast signal into the consensus. The threshold is already behind us.",
+      "joinButton": "> CONNECT",
+      "joining": "> CONNECTING…",
+      "confirmButton": "> CONFIRM",
+      "gateKicker": "> NODE NOT YET ONLINE",
+      "gateTitle": "{{faction}} is listening",
+      "gateBody": "Keep running protocols and the array will bring your node online."
+    },
+    "spotlight": {
+      "label": "> PRIMARY NODE",
+      "stat": "lvl {{level}} · {{score}} cr"
+    },
+    "roster": {
+      "heading": "> THE ARRAY",
+      "empty": "> no nodes online",
+      "emptyWithSpotlight": "> no other nodes online",
+      "level": "lvl {{level}}"
+    }
+  },
+  "snide": {
+    "about": {
+      "heading": "what we're about —",
+      "empty": "No manifesto pasted up yet."
+    },
+    "tasks": {
+      "heading": "Tasks",
+      "kicker": "your assignment, should you ignore it —",
+      "empty": "No dispatches posted."
+    },
+    "praxis": {
+      "heading": "Praxis",
+      "kicker": "intercepted dispatches —",
+      "empty": "No jobs pulled off yet."
+    },
+    "dispatch": {
+      "letterhead": "S.N.I.D.E.",
+      "reLabel": "re: you",
+      "memberTitle": "You're on the inside",
+      "memberStanding": "Standing · <1>accomplice</1>",
+      "eligibleKicker": "the door's open —",
+      "eligibleTitle": "Come cause trouble",
+      "eligibleBody": "No forms. No gods. No managers. Just show up and mean it.",
+      "joinButton": "I'M IN ↗",
+      "joining": "BREAKING IN…",
+      "confirmButton": "CONFIRM",
+      "gateKicker": "not one of us — yet",
+      "gateTitle": "Make some noise",
+      "gateBody": "Keep pulling off jobs and {{faction}} will come looking for you. Cause enough trouble and the invitation writes itself."
+    },
+    "spotlight": {
+      "wanted": "★ WANTED ★",
+      "label": "menace of the week",
+      "stat": "lvl {{level}} · {{score}} pts"
+    },
+    "roster": {
+      "heading": "the rap sheet",
+      "emptyWithSpotlight": "No other names on file yet.",
+      "level": "lvl {{level}}"
+    }
+  },
+  "ua": {
+    "prospectus": {
+      "heading": "The prospectus",
+      "empty": "No prospectus written yet."
+    },
+    "tasks": {
+      "heading": "Tasks",
+      "kicker": "Now accepting submissions",
+      "empty": "No commissions open."
+    },
+    "praxis": {
+      "heading": "Praxis",
+      "kicker": "Recently exhibited & critiqued",
+      "empty": "Nothing exhibited yet."
+    },
+    "registry": {
+      "heading": "The Registry",
+      "memberTitle": "Your name is on the wall",
+      "memberStanding": "Standing · <1>enrolled</1>",
+      "eligibleKicker": "The easels are warm —",
+      "eligibleTitle": "Submit your portfolio",
+      "eligibleBody": "All media welcome, talent optional. Enroll and take your first commission today.",
+      "joinButton": "Enroll ▸",
+      "confirmSwitch": "Enroll in {{faction}}? You won't be able to rejoin {{current}} after leaving.",
+      "confirm": "Enroll in {{faction}}?",
+      "joining": "Enrolling…",
+      "confirmButton": "Confirm",
+      "gateKicker": "Not enrolled — yet",
+      "gateTitle": "Earn your enrollment",
+      "gateBody": "Exhibit work worthy of {{faction}} and the Salon will send an invitation. Keep at it — talent is optional, persistence isn't."
+    },
+    "spotlight": {
+      "label": "Artist in Residence",
+      "stat": "Anno {{anno}} · {{score}} pts"
+    },
+    "roster": {
+      "heading": "The register",
+      "emptyWithSpotlight": "No other names on the wall yet.",
+      "level": "Anno {{anno}}"
+    }
+  },
+  "wow": {
+    "manifesto": {
+      "heading": "the manifesto ✦",
+      "empty": "No manifesto scribbled yet."
+    },
+    "tasks": {
+      "heading": "Tasks",
+      "kicker": "Fresh quests on the board",
+      "empty": "No quests pinned up."
+    },
+    "praxis": {
+      "heading": "Praxis",
+      "kicker": "Spells that stuck the landing",
+      "empty": "Nothing cast yet."
+    },
+    "join": {
+      "windowTitle": "join.exe",
+      "memberTitle": "You're in the circle",
+      "memberStanding": "Standing · <1>coven witch</1>",
+      "eligibleTitle": "The circle is open",
+      "eligibleBody": "You've done the work — welcome home, witch.",
+      "joinButton": "Join the coven ✦",
+      "joining": "Joining…",
+      "confirmButton": "Confirm",
+      "gateTitle": "Not in the circle — yet",
+      "gateBody": "Keep casting spells worthy of {{faction}} and the coven will leave a light on. The weird ones always find their way home."
+    },
+    "spotlight": {
+      "label": "Witch of the week",
+      "stat": "lvl {{level}} · {{score}} pts"
+    },
+    "roster": {
+      "heading": "the coven roster",
+      "emptyWithSpotlight": "No other witches in the circle yet.",
+      "level": "lvl {{level}}"
+    }
+  }
+}

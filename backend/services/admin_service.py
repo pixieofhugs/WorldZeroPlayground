@@ -11,6 +11,7 @@ from models.character_stats import CharacterStats
 from models.faction import Faction, FactionStatus
 from models.roles import AccountRole, Role
 from models.contact import ContactMessage
+from models.flag import Flag, normalize_flag_reason
 from models.praxis import ModerationStatus, Praxis
 from models.task import Task, TaskStatus
 from models.vote import Vote
@@ -23,6 +24,7 @@ from schemas.admin import (
     CharacterStatsPatch,
     CharacterSummary,
     FactionCreate,
+    FlagOut,
     OverviewStats,
 )
 from services.era import get_current_era_row, get_or_create_stats
@@ -186,6 +188,58 @@ async def game_overview(session: AsyncSession) -> OverviewStats:
         flagged_praxis=flagged_count_result.scalar_one(),
         suspended_accounts=suspended_count_result.scalar_one(),
     )
+
+
+def _build_flag_out(flag: Flag, flagged_by_name: str) -> FlagOut:
+    """Normalize a stored Flag row onto the shared vocabulary (ADR-0031)."""
+    reason, reason_detail = normalize_flag_reason(flag.reason)
+    return FlagOut(
+        reason=reason.value,
+        reason_detail=reason_detail,
+        flagged_by_id=flag.flagged_by,
+        flagged_by_name=flagged_by_name,
+        created_at=flag.created_at,
+    )
+
+
+async def flags_for_praxes(
+    praxis_ids: set[int], session: AsyncSession
+) -> dict[int, list[FlagOut]]:
+    """Flag rows (newest first) per praxis id, for the moderator queue (#237)."""
+    if not praxis_ids:
+        return {}
+    result = await session.execute(
+        select(Flag, Character.display_name)
+        .join(Character, Character.id == Flag.flagged_by)
+        .where(Flag.praxis_id.in_(praxis_ids))
+        .order_by(Flag.created_at.desc())
+    )
+    flags_by_praxis: dict[int, list[FlagOut]] = {}
+    for flag, flagged_by_name in result.all():
+        flags_by_praxis.setdefault(flag.praxis_id, []).append(
+            _build_flag_out(flag, flagged_by_name)
+        )
+    return flags_by_praxis
+
+
+async def flags_for_comments(
+    comment_ids: set[int], session: AsyncSession
+) -> dict[int, list[FlagOut]]:
+    """Flag rows (newest first) per comment id, for the moderator queue (#237)."""
+    if not comment_ids:
+        return {}
+    result = await session.execute(
+        select(Flag, Character.display_name)
+        .join(Character, Character.id == Flag.flagged_by)
+        .where(Flag.comment_id.in_(comment_ids))
+        .order_by(Flag.created_at.desc())
+    )
+    flags_by_comment: dict[int, list[FlagOut]] = {}
+    for flag, flagged_by_name in result.all():
+        flags_by_comment.setdefault(flag.comment_id, []).append(
+            _build_flag_out(flag, flagged_by_name)
+        )
+    return flags_by_comment
 
 
 # ---------------------------------------------------------------------------

@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import type { TaskOut } from "../../api/tasks";
+import i18n from "../../i18n";
 import AlbescentMark from "./AlbescentMark";
 
 /**
@@ -68,7 +69,7 @@ export default function AlbescentTaskCard({ task, displayPoints, onSignup }: Pro
           marginBottom: 10,
         }}
       >
-        Albescent
+        {i18n.t("feed:taskCard.albescent.eyebrow")}
       </div>
 
       {/* Title */}
@@ -125,7 +126,7 @@ export default function AlbescentTaskCard({ task, displayPoints, onSignup }: Pro
               borderBottom: `1px solid ${ink(20)}`,
             }}
           >
-            acknowledge
+            {i18n.t("feed:taskCard.albescent.signup")}
           </button>
         </div>
       )}
@@ -149,7 +150,7 @@ export default function AlbescentTaskCard({ task, displayPoints, onSignup }: Pro
             color: ink(22),
           }}
         >
-          Lvl {task.level_required}
+          {i18n.t("feed:taskCard.albescent.level", { level: task.level_required })}
         </span>
         <span style={{ fontSize: 15, fontWeight: 300, color: ink(52) }}>
           {displayPoints}
@@ -162,7 +163,7 @@ export default function AlbescentTaskCard({ task, displayPoints, onSignup }: Pro
               textTransform: "uppercase",
             }}
           >
-            pts
+            {i18n.t("feed:taskCard.albescent.pointsUnit")}
           </span>
         </span>
       </div>

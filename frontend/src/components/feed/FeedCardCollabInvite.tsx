@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { Trans } from "react-i18next";
 import type { ActivityFeedItem } from "../../api/activityFeed";
+import i18n from "../../i18n";
 import { useRespondToRequest } from "../../hooks/useRespondToRequest";
 import { useMyActiveTasks } from "../../hooks/useMyActiveTasks";
 import { useGameConfig } from "../../hooks/useGameConfig";
@@ -96,7 +98,9 @@ export default function FeedCardCollabInvite({ item }: Props) {
       setShowDropModal(false);
       navigate(`/praxes/${praxis_id}`);
     } catch (err) {
-      setDropError(extractError(err, "Could not drop that task. Try again."));
+      setDropError(
+        extractError(err, i18n.t("feed:collabInvite.bankFull.dropError")),
+      );
     } finally {
       setDropping(false);
     }
@@ -130,25 +134,33 @@ export default function FeedCardCollabInvite({ item }: Props) {
                 flexWrap: "wrap",
               }}
             >
-              <Link
-                to={`/characters/${inviter_character_id}`}
-                className="font-body"
-                style={{
-                  fontSize: 11,
-                  fontWeight: 700,
-                  color: "var(--color-text-primary)",
-                  textDecoration: "none",
-                }}
-              >
-                {item.actor_display_name}
-              </Link>
+              {/* One <Trans> sentence so "{name} invited you…" stays a
+                  translatable unit; the actor link is tag <1>. */}
               <span
                 className="font-body"
                 style={{ fontSize: 11, color: "var(--color-text-secondary)" }}
               >
-                invited you to collaborate
+                <Trans
+                  ns="feed"
+                  i18nKey="collabInvite.sentence"
+                  values={{ name: item.actor_display_name }}
+                  components={{
+                    1: (
+                      <Link
+                        to={`/characters/${inviter_character_id}`}
+                        className="font-body"
+                        style={{
+                          fontSize: 11,
+                          fontWeight: 700,
+                          color: "var(--color-text-primary)",
+                          textDecoration: "none",
+                        }}
+                      />
+                    ),
+                  }}
+                />
               </span>
-              <FeedBadge type="your_stuff" label="Your Stuff" />
+              <FeedBadge type="your_stuff" label={i18n.t("feed:badge.yourStuff")} />
             </div>
             <span
               className="eyebrow"
@@ -196,9 +208,12 @@ export default function FeedCardCollabInvite({ item }: Props) {
             className="eyebrow"
             style={{ color: "var(--color-text-tertiary)" }}
           >
-            {task_point_value} pts · lvl {task_level_required}
+            {i18n.t("feed:collabInvite.taskMeta", {
+              points: task_point_value,
+              level: task_level_required,
+            })}
           </span>
-          <FeedBadge type="collab" label="Collab" />
+          <FeedBadge type="collab" label={i18n.t("feed:badge.collab")} />
         </div>
 
         {/* Accept/Decline buttons */}
@@ -229,7 +244,7 @@ export default function FeedCardCollabInvite({ item }: Props) {
                 cursor: loading ? "not-allowed" : "pointer",
               }}
             >
-              Accept
+              {i18n.t("feed:collabInvite.accept")}
             </button>
             <button
               onClick={handleDecline}
@@ -247,7 +262,7 @@ export default function FeedCardCollabInvite({ item }: Props) {
                 cursor: loading ? "not-allowed" : "pointer",
               }}
             >
-              Decline
+              {i18n.t("feed:collabInvite.decline")}
             </button>
             {error && (
               <span className="eyebrow" style={{ color: "var(--color-danger)" }}>
@@ -264,7 +279,7 @@ export default function FeedCardCollabInvite({ item }: Props) {
               className="eyebrow"
               style={{ color: "var(--badge-collab)", textDecoration: "none" }}
             >
-              Accepted — view collaboration
+              {i18n.t("feed:collabInvite.accepted")}
             </Link>
           </div>
         )}
@@ -274,7 +289,7 @@ export default function FeedCardCollabInvite({ item }: Props) {
               className="eyebrow"
               style={{ color: "var(--color-text-tertiary)" }}
             >
-              Declined
+              {i18n.t("feed:collabInvite.declined")}
             </span>
           </div>
         )}
@@ -306,7 +321,7 @@ export default function FeedCardCollabInvite({ item }: Props) {
             onClick={(e) => e.stopPropagation()}
           >
             <p className="eyebrow" style={{ marginBottom: 8 }}>
-              Task bank full
+              {i18n.t("feed:collabInvite.bankFull.title")}
             </p>
             <p
               className="font-body"
@@ -316,8 +331,7 @@ export default function FeedCardCollabInvite({ item }: Props) {
                 color: "var(--color-text-secondary)",
               }}
             >
-              You have {maxTaskSlots} in-progress tasks. Drop one to accept this
-              collaboration:
+              {i18n.t("feed:collabInvite.bankFull.body", { max: maxTaskSlots })}
             </p>
             <div
               style={{
@@ -346,7 +360,9 @@ export default function FeedCardCollabInvite({ item }: Props) {
                     color: "var(--color-text-primary)",
                   }}
                 >
-                  Drop: {praxis.title || praxis.task_title}
+                  {i18n.t("feed:collabInvite.bankFull.dropOption", {
+                    title: praxis.title || praxis.task_title,
+                  })}
                 </button>
               ))}
             </div>
@@ -373,7 +389,7 @@ export default function FeedCardCollabInvite({ item }: Props) {
                 color: "var(--color-text-secondary)",
               }}
             >
-              Cancel
+              {i18n.t("feed:collabInvite.bankFull.cancel")}
             </button>
           </div>
         </div>

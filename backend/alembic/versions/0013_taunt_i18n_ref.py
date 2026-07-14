@@ -8,8 +8,16 @@ words and interpolates the FK-derived names.
 
 Existing rows hold only a baked sentence that cannot be reversed into a
 (faction_slug, trigger_type) reference, so we **wipe** ``taunt_message`` before
-adding the NOT NULL ``faction_slug`` column and dropping ``message``. Taunts are
+adding the ``faction_slug`` column and dropping ``message``. Taunts are
 ephemeral social nudges — losing the backlog is acceptable.
+
+Idempotency (same pattern as ``0003_add_praxis_submitted_at``): ``0001_squashed``
+builds the schema with ``Base.metadata.create_all`` from the LIVE ORM models, so
+a fresh CI/dev DB already has ``taunt_message`` with ``faction_slug`` and without
+``message``. The ``IF NOT EXISTS`` / ``IF EXISTS`` guards make this migration a
+no-op there, while still performing the real column swap on an existing
+0012-era DB. The table is empty after the DELETE, so adding ``faction_slug`` as
+NOT NULL without a default is safe on the real upgrade path.
 
 Revision ID: 0013_taunt_i18n_ref
 Revises: 0012_retire_aged_out_faction
@@ -27,22 +35,22 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
-    # Wipe first: old rows can't be reversed into a structured reference, and
-    # this lets faction_slug land as NOT NULL without a server default.
+    # Wipe first: old rows can't be reversed into a structured reference, and an
+    # empty table lets faction_slug land as NOT NULL without a server default.
     op.execute(sa.text("DELETE FROM taunt_message"))
-    op.add_column(
-        "taunt_message",
-        sa.Column("faction_slug", sa.String(), nullable=False),
-    )
-    op.drop_column("taunt_message", "message")
+    # IF NOT EXISTS / IF EXISTS: on a fresh DB built from 0001_squashed the ORM
+    # baseline already reflects the post-swap shape, so these become no-ops.
+    op.execute(sa.text(
+        "ALTER TABLE taunt_message ADD COLUMN IF NOT EXISTS faction_slug VARCHAR NOT NULL"
+    ))
+    op.execute(sa.text("ALTER TABLE taunt_message DROP COLUMN IF EXISTS message"))
 
 
 def downgrade() -> None:
     # Symmetric: restore the message column (rows are already gone) and drop
     # faction_slug. Wiping again keeps the NOT NULL message column consistent.
     op.execute(sa.text("DELETE FROM taunt_message"))
-    op.add_column(
-        "taunt_message",
-        sa.Column("message", sa.Text(), nullable=False),
-    )
-    op.drop_column("taunt_message", "faction_slug")
+    op.execute(sa.text(
+        "ALTER TABLE taunt_message ADD COLUMN IF NOT EXISTS message TEXT NOT NULL"
+    ))
+    op.execute(sa.text("ALTER TABLE taunt_message DROP COLUMN IF EXISTS faction_slug"))

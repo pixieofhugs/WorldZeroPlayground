@@ -1,4 +1,5 @@
 import { useState, type CSSProperties, type ReactNode } from "react";
+import { Trans, useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import TaskCard from "../../../components/TaskCard";
 import PraxisCard from "../../../components/PraxisCard";
@@ -115,6 +116,7 @@ function Medallion({ name, size, spotlight = false }: { name: string; size: numb
 }
 
 export default function UaFactionBody({ state }: { state: FactionDetailState }) {
+  const { t } = useTranslation("factions");
   const { faction, members, tasks, recentPraxis, viewerFactionSlug, gameFactions, membership } = state;
   const [confirming, setConfirming] = useState(false);
 
@@ -134,7 +136,7 @@ export default function UaFactionBody({ state }: { state: FactionDetailState }) 
           <Grain />
           <div style={{ position: "relative", display: "flex", alignItems: "center", gap: 12, marginBottom: 16 }}>
             <span style={{ fontFamily: MONO, fontSize: 8, letterSpacing: "0.26em", textTransform: "uppercase", color: MUTED }}>
-              The prospectus
+              {t("ua.prospectus.heading")}
             </span>
             <span style={{ flex: 1, height: 1, background: `linear-gradient(90deg, ${GOLD_LT}, transparent)` }} />
           </div>
@@ -147,7 +149,7 @@ export default function UaFactionBody({ state }: { state: FactionDetailState }) 
               ))
             ) : (
               <p style={{ fontFamily: DISPLAY, fontStyle: "italic", fontSize: 15, lineHeight: 1.75, color: SUB, margin: 0 }}>
-                No prospectus written yet.
+                {t("ua.prospectus.empty")}
               </p>
             )}
           </div>
@@ -155,9 +157,9 @@ export default function UaFactionBody({ state }: { state: FactionDetailState }) 
 
         {/* ④ TASKS */}
         <div>
-          <SectionHeading kicker="Now accepting submissions">Tasks</SectionHeading>
+          <SectionHeading kicker={t("ua.tasks.kicker")}>{t("ua.tasks.heading")}</SectionHeading>
           {tasks.length === 0 ? (
-            <p style={{ fontFamily: DISPLAY, fontStyle: "italic", fontSize: 14, color: SUB }}>No commissions open.</p>
+            <p style={{ fontFamily: DISPLAY, fontStyle: "italic", fontSize: 14, color: SUB }}>{t("ua.tasks.empty")}</p>
           ) : (
             <div style={{ display: "flex", flexWrap: "wrap", gap: 26, alignItems: "flex-start" }}>
               {tasks.map((task) => (
@@ -178,9 +180,9 @@ export default function UaFactionBody({ state }: { state: FactionDetailState }) 
 
         {/* ⑤ PRAXIS */}
         <div>
-          <SectionHeading kicker="Recently exhibited & critiqued">Praxis</SectionHeading>
+          <SectionHeading kicker={t("ua.praxis.kicker")}>{t("ua.praxis.heading")}</SectionHeading>
           {recentPraxis.length === 0 ? (
-            <p style={{ fontFamily: DISPLAY, fontStyle: "italic", fontSize: 14, color: SUB }}>Nothing exhibited yet.</p>
+            <p style={{ fontFamily: DISPLAY, fontStyle: "italic", fontSize: 14, color: SUB }}>{t("ua.praxis.empty")}</p>
           ) : (
             <div style={{ display: "flex", flexWrap: "wrap", gap: 16, alignItems: "flex-start" }}>
               {recentPraxis.map((praxis) => (
@@ -213,7 +215,7 @@ export default function UaFactionBody({ state }: { state: FactionDetailState }) 
             <Grain />
             <div style={{ position: "relative", display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
               <span style={{ fontFamily: MONO, fontSize: 8, letterSpacing: "0.24em", textTransform: "uppercase", color: MUTED }}>
-                The Registry
+                {t("ua.registry.heading")}
               </span>
               <span style={{ flex: 1, height: 1, background: `linear-gradient(90deg, ${GOLD_LT}, transparent)` }} />
             </div>
@@ -221,28 +223,30 @@ export default function UaFactionBody({ state }: { state: FactionDetailState }) 
               {membership.state === "member" && (
                 <div>
                   <div style={{ fontFamily: DISPLAY, fontStyle: "italic", fontWeight: 700, fontSize: 24, lineHeight: 1, color: INK }}>
-                    Your name is on the wall
+                    {t("ua.registry.memberTitle")}
                   </div>
                   <div style={{ fontFamily: DISPLAY, fontStyle: "italic", fontSize: 13, color: SUB, margin: "10px 0 0" }}>
-                    Standing · <span style={{ color: ACCENT }}>enrolled</span>
+                    <Trans t={t} i18nKey="ua.registry.memberStanding">
+                      Standing · <span style={{ color: ACCENT }}>enrolled</span>
+                    </Trans>
                   </div>
                 </div>
               )}
 
               {membership.state === "eligible" && !confirming && (
                 <div>
-                  <div style={{ fontFamily: ENGRAVED, fontSize: 10, letterSpacing: "0.1em", color: GOLD, marginBottom: 5 }}>The easels are warm —</div>
+                  <div style={{ fontFamily: ENGRAVED, fontSize: 10, letterSpacing: "0.1em", color: GOLD, marginBottom: 5 }}>{t("ua.registry.eligibleKicker")}</div>
                   <div style={{ fontFamily: DISPLAY, fontStyle: "italic", fontWeight: 700, fontSize: 24, lineHeight: 1.02, color: INK, marginBottom: 10 }}>
-                    Submit your portfolio
+                    {t("ua.registry.eligibleTitle")}
                   </div>
                   <div style={{ fontFamily: DISPLAY, fontStyle: "italic", fontSize: 13, lineHeight: 1.55, color: SUB, marginBottom: 18 }}>
-                    All media welcome, talent optional. Enroll and take your first commission today.
+                    {t("ua.registry.eligibleBody")}
                   </div>
                   <button
                     onClick={() => setConfirming(true)}
                     style={{ width: "100%", fontFamily: ENGRAVED, fontSize: 11, letterSpacing: "0.14em", color: PAPER_WARM, background: ACCENT, border: "none", padding: 12, boxShadow: "0 6px 16px rgba(194,84,31,.28)", cursor: "pointer" }}
                   >
-                    Enroll ▸
+                    {t("ua.registry.joinButton")}
                   </button>
                 </div>
               )}
@@ -252,8 +256,11 @@ export default function UaFactionBody({ state }: { state: FactionDetailState }) 
                   <div style={{ fontFamily: DISPLAY, fontStyle: "italic", fontSize: 13, lineHeight: 1.6, color: INK, marginBottom: 14 }}>
                     {membership.currentFactionSlug &&
                     membership.currentFactionSlug !== "na"
-                      ? `Enroll in ${faction.name}? You won't be able to rejoin ${factionName(membership.currentFactionSlug)} after leaving.`
-                      : `Enroll in ${faction.name}?`}
+                      ? t("ua.registry.confirmSwitch", {
+                          faction: faction.name,
+                          current: factionName(membership.currentFactionSlug),
+                        })
+                      : t("ua.registry.confirm", { faction: faction.name })}
                   </div>
                   {membership.joinError && (
                     <div style={{ fontFamily: MONO, fontSize: 10, color: "var(--color-danger)", marginBottom: 8 }}>{membership.joinError}</div>
@@ -264,14 +271,16 @@ export default function UaFactionBody({ state }: { state: FactionDetailState }) 
                       disabled={membership.joining}
                       style={{ flex: 1, fontFamily: ENGRAVED, fontSize: 11, letterSpacing: "0.12em", color: PAPER_WARM, background: ACCENT, border: "none", padding: 11, cursor: membership.joining ? "not-allowed" : "pointer" }}
                     >
-                      {membership.joining ? "Enrolling…" : "Confirm"}
+                      {membership.joining
+                        ? t("ua.registry.joining")
+                        : t("ua.registry.confirmButton")}
                     </button>
                     <button
                       onClick={() => setConfirming(false)}
                       disabled={membership.joining}
                       style={{ fontFamily: ENGRAVED, fontSize: 10, letterSpacing: "0.12em", color: SUB, background: "transparent", border: `1px solid ${LINE}`, padding: "11px 14px", cursor: membership.joining ? "not-allowed" : "pointer" }}
                     >
-                      Cancel
+                      {t("detail.join.cancel")}
                     </button>
                   </div>
                 </div>
@@ -279,12 +288,12 @@ export default function UaFactionBody({ state }: { state: FactionDetailState }) 
 
               {membership.state === "gate" && (
                 <div>
-                  <div style={{ fontFamily: ENGRAVED, fontSize: 10, letterSpacing: "0.1em", color: GOLD, marginBottom: 5 }}>Not enrolled — yet</div>
+                  <div style={{ fontFamily: ENGRAVED, fontSize: 10, letterSpacing: "0.1em", color: GOLD, marginBottom: 5 }}>{t("ua.registry.gateKicker")}</div>
                   <div style={{ fontFamily: DISPLAY, fontStyle: "italic", fontWeight: 700, fontSize: 23, lineHeight: 1.04, color: INK, marginBottom: 12 }}>
-                    Earn your enrollment
+                    {t("ua.registry.gateTitle")}
                   </div>
                   <div style={{ fontFamily: DISPLAY, fontStyle: "italic", fontSize: 13, lineHeight: 1.65, color: SUB }}>
-                    Exhibit work worthy of {faction.name} and the Salon will send an invitation. Keep at it — talent is optional, persistence isn't.
+                    {t("ua.registry.gateBody", { faction: faction.name })}
                   </div>
                 </div>
               )}
@@ -301,7 +310,7 @@ export default function UaFactionBody({ state }: { state: FactionDetailState }) 
                 <div style={{ padding: 4, background: `linear-gradient(135deg, ${GOLD}, ${GOLD_PALE})` }}>
                   <div style={{ background: PAPER_WARM, border: `1px solid ${LINE}`, padding: "20px 18px 18px", textAlign: "center" }}>
                     <div style={{ fontFamily: MONO, fontSize: 7, letterSpacing: "0.3em", textTransform: "uppercase", color: MUTED, marginBottom: 12 }}>
-                      Artist in Residence
+                      {t("ua.spotlight.label")}
                     </div>
                     <div style={{ display: "flex", justifyContent: "center", marginBottom: 12 }}>
                       <Medallion name={spot.display_name} size={72} spotlight />
@@ -310,7 +319,10 @@ export default function UaFactionBody({ state }: { state: FactionDetailState }) 
                       {spot.display_name}
                     </div>
                     <div style={{ fontFamily: ENGRAVED, fontSize: 8, letterSpacing: "0.12em", textTransform: "uppercase", color: MUTED, marginTop: 8 }}>
-                      Anno {anno(spot.level)} · {spot.all_time_score.toLocaleString()} pts
+                      {t("ua.spotlight.stat", {
+                        anno: anno(spot.level),
+                        score: spot.all_time_score.toLocaleString(),
+                      })}
                     </div>
                   </div>
                 </div>
@@ -321,11 +333,13 @@ export default function UaFactionBody({ state }: { state: FactionDetailState }) 
           <div style={{ ...PLATE, boxShadow: `0 4px 14px rgba(60,40,10,.08), inset 0 0 0 3px ${PAPER}, inset 0 0 0 4px ${GOLD_PALE}`, padding: "18px 20px 14px" }}>
             <Grain />
             <div style={{ position: "relative", fontFamily: MONO, fontSize: 8, letterSpacing: "0.24em", textTransform: "uppercase", color: MUTED, marginBottom: 12 }}>
-              The register
+              {t("ua.roster.heading")}
             </div>
             {register.length === 0 ? (
               <p style={{ position: "relative", fontFamily: DISPLAY, fontStyle: "italic", fontSize: 14, color: SUB }}>
-                {spot ? "No other names on the wall yet." : "No members yet."}
+                {spot
+                  ? t("ua.roster.emptyWithSpotlight")
+                  : t("detail.membersEmpty")}
               </p>
             ) : (
               register.map((m) => (
@@ -340,7 +354,9 @@ export default function UaFactionBody({ state }: { state: FactionDetailState }) 
                       {m.display_name}
                     </div>
                   </div>
-                  <span style={{ fontFamily: ENGRAVED, fontSize: 9, letterSpacing: "0.08em", color: GOLD }}>Anno {anno(m.level)}</span>
+                  <span style={{ fontFamily: ENGRAVED, fontSize: 9, letterSpacing: "0.08em", color: GOLD }}>
+                    {t("ua.roster.level", { anno: anno(m.level) })}
+                  </span>
                 </Link>
               ))
             )}

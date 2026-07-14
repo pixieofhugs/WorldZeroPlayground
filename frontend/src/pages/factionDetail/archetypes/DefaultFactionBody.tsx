@@ -1,4 +1,5 @@
 import { type CSSProperties } from "react";
+import { useTranslation } from "react-i18next";
 import TaskCard from "../../../components/TaskCard";
 import PraxisCard from "../../../components/PraxisCard";
 import CharacterBadge from "../../../components/CharacterBadge";
@@ -30,6 +31,7 @@ export default function DefaultFactionBody({
 }: {
   state: FactionDetailState;
 }) {
+  const { t } = useTranslation("factions");
   const { faction, members, tasks, recentPraxis, viewerFactionSlug, gameFactions } =
     state;
 
@@ -42,9 +44,11 @@ export default function DefaultFactionBody({
     <>
       {/* ── Members ── PLACEHOLDER: design to restyle ── */}
       <section className="mb-8">
-        <h2 className="eyebrow mb-3">Members · {members.length}</h2>
+        <h2 className="eyebrow mb-3">
+          {t("detail.default.membersHeading", { total: members.length })}
+        </h2>
         {members.length === 0 ? (
-          <p className="font-body text-muted text-sm">No members yet.</p>
+          <p className="font-body text-muted text-sm">{t("detail.membersEmpty")}</p>
         ) : (
           <div className="flex flex-wrap gap-3">
             {members.map((m) => (
@@ -65,9 +69,11 @@ export default function DefaultFactionBody({
 
       {/* ── Tasks ── reuses the per-faction TaskCard archetype ── */}
       <section className="mb-8">
-        <h2 className="eyebrow mb-3">Tasks · {tasks.length}</h2>
+        <h2 className="eyebrow mb-3">
+          {t("detail.default.tasksHeading", { total: tasks.length })}
+        </h2>
         {tasks.length === 0 ? (
-          <p className="font-body text-muted text-sm">No tasks yet.</p>
+          <p className="font-body text-muted text-sm">{t("detail.default.tasksEmpty")}</p>
         ) : (
           <div style={CARD_GRID}>
             {tasks.map((task) => (
@@ -88,10 +94,10 @@ export default function DefaultFactionBody({
 
       {/* ── Recently completed ── PLACEHOLDER: design to restyle ── */}
       <section className="mb-8">
-        <h2 className="eyebrow mb-3">Recently completed</h2>
+        <h2 className="eyebrow mb-3">{t("detail.default.recentHeading")}</h2>
         {recentPraxis.length === 0 ? (
           <p className="font-body text-muted text-sm">
-            No completed praxis yet.
+            {t("detail.default.recentEmpty")}
           </p>
         ) : (
           <div style={CARD_GRID}>

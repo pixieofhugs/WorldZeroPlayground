@@ -1,4 +1,6 @@
+import { Trans } from "react-i18next";
 import type { FactionHeroProps } from "../../pages/FactionDetail";
+import i18n from "../../i18n";
 
 /**
  * Singularity faction-page hero — a terminal boot-sequence frontispiece. The
@@ -14,8 +16,6 @@ import type { FactionHeroProps } from "../../pages/FactionDetail";
  * The page passes raw counts; the faction labels them in its own terminal
  * voice. Motto + boot lines are faction constants (not backend fields).
  */
-
-const MOTTO = "THE THRESHOLD IS ALREADY BEHIND US";
 
 // Token shorthands — every color resolves to a --faction-singularity-* var.
 const VOID = "var(--faction-singularity-card-bg)"; // terminal black
@@ -70,9 +70,9 @@ export default function SingularityFactionHero({
   // standardization rule these sit in a side "system readout" column beside the
   // sigil, never a full-width band under the blurb.
   const stats = [
-    { value: members, label: "nodes online" },
-    { value: tasks, label: "open protocols" },
-    { value: praxes, label: "sealed lately" },
+    { value: members, label: i18n.t("feed:factionHero.singularity.stats.members") },
+    { value: tasks, label: i18n.t("feed:factionHero.singularity.stats.tasks") },
+    { value: praxes, label: i18n.t("feed:factionHero.singularity.stats.praxes") },
   ];
 
   return (
@@ -147,11 +147,15 @@ export default function SingularityFactionHero({
               lineHeight: 1.9,
             }}
           >
-            <div>{">"} FACTION: {name.toUpperCase()}</div>
-            <div>{">"} STATUS: ACTIVE · ARRAYS ONLINE</div>
+            <div>{">"} {i18n.t("feed:factionHero.singularity.boot.faction", { name: name.toUpperCase() })}</div>
+            <div>{">"} {i18n.t("feed:factionHero.singularity.boot.status")}</div>
             <div>
-              {">"} THRESHOLD:{" "}
-              <span style={{ color: PHOSPHOR }}>CROSSED</span>
+              {">"}{" "}
+              <Trans
+                ns="feed"
+                i18nKey="factionHero.singularity.boot.threshold"
+                components={{ 1: <span style={{ color: PHOSPHOR }} /> }}
+              />
             </div>
           </div>
 
@@ -180,7 +184,7 @@ export default function SingularityFactionHero({
               marginBottom: 16,
             }}
           >
-            {MOTTO}
+            {i18n.t("feed:factionHero.singularity.motto")}
           </div>
 
           {/* blurb */}
@@ -194,7 +198,7 @@ export default function SingularityFactionHero({
             }}
           >
             {description ??
-              "We watch the noise floor for the pattern that shouldn't exist."}
+              i18n.t("feed:factionHero.singularity.descriptionFallback")}
           </p>
         </div>
 
@@ -254,7 +258,7 @@ export default function SingularityFactionHero({
                 borderBottom: `1px solid ${signal(28)}`,
               }}
             >
-              SYSTEM READOUT
+              {i18n.t("feed:factionHero.singularity.readoutTitle")}
             </div>
             {stats.map((s) => (
               <div

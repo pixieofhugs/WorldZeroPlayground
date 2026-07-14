@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import i18n from "../../i18n";
 
 /**
  * FactionSelectCard — the faction-DIRECTORY tile, one per faction. The compact
@@ -135,13 +136,8 @@ function AlbescentSigil({ size = 20, color = "var(--faction-albescent-card-text,
 
 // ─── Per-faction archetypes ───────────────────────────────────────────────────
 
-const UA_STATUS: Record<SelectState, string> = {
-  locked: "Exhibit work to earn your matriculation.",
-  eligible: "A place in the Salon awaits you.",
-  member: "Matriculated — Artist in Residence.",
-};
 function UASelectCard({ state = "locked", members, onVisit }: Omit<FactionSelectCardProps, "faction">) {
-  const status = UA_STATUS[state];
+  const status = i18n.t(`feed:factionSelect.ua.status.${state}` as const);
   return (
     <div style={{
       width: 360, height: 300, boxSizing: "border-box", position: "relative", overflow: "hidden",
@@ -154,20 +150,20 @@ function UASelectCard({ state = "locked", members, onVisit }: Omit<FactionSelect
       <div style={{ position: "relative", flex: 1, padding: "22px 26px 0", display: "flex", flexDirection: "column" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
           <div>
-            <div style={{ fontFamily: "var(--font-faction-engraved-caps)", fontSize: 10, letterSpacing: "0.32em", color: "var(--ua-gold)", textTransform: "uppercase" }}>World Zero · Nº I</div>
-            <div style={{ fontFamily: "var(--font-faction-gilt)", fontStyle: "italic", fontWeight: 800, fontSize: 52, lineHeight: 0.9, letterSpacing: "0.01em", marginTop: 8 }}>UA</div>
-            <div style={{ fontFamily: "var(--font-faction-engraved-caps)", fontSize: 12, letterSpacing: "0.24em", color: "var(--ua-sub)", textTransform: "uppercase", marginTop: 3 }}>The Gilt Salon</div>
+            <div style={{ fontFamily: "var(--font-faction-engraved-caps)", fontSize: 10, letterSpacing: "0.32em", color: "var(--ua-gold)", textTransform: "uppercase" }}>{i18n.t("feed:factionSelect.ua.masthead")}</div>
+            <div style={{ fontFamily: "var(--font-faction-gilt)", fontStyle: "italic", fontWeight: 800, fontSize: 52, lineHeight: 0.9, letterSpacing: "0.01em", marginTop: 8 }}>{i18n.t("feed:factionSelect.ua.wordmark")}</div>
+            <div style={{ fontFamily: "var(--font-faction-engraved-caps)", fontSize: 12, letterSpacing: "0.24em", color: "var(--ua-sub)", textTransform: "uppercase", marginTop: 3 }}>{i18n.t("feed:factionSelect.ua.subtitle")}</div>
           </div>
           <UASigil size={44} />
         </div>
         <div style={{ height: 2, background: "var(--ua-gilt)", margin: "16px 0 13px", opacity: 0.85 }} />
         <p style={{ margin: 0, fontFamily: "var(--font-faction-gilt)", fontStyle: "italic", fontSize: 16, lineHeight: 1.4, color: "var(--ua-ink)" }}>
-          “Ars longa, spiritus brevis.” A regal academy that frames good work in gold and hangs it where the world walks.
+          {i18n.t("feed:factionSelect.ua.blurb")}
         </p>
       </div>
       <div style={{ position: "relative", padding: "0 26px 20px" }}>
         <div style={{ fontSize: 10, letterSpacing: "0.04em", color: "var(--ua-sub)", marginBottom: 11 }}>
-          {status}{members != null && <> · <span style={{ color: "var(--ua-muted)" }}>{members} residents</span></>}
+          {status}{members != null && <> · <span style={{ color: "var(--ua-muted)" }}>{i18n.t("feed:factionSelect.ua.members", { count: members })}</span></>}
         </div>
         <button onClick={onVisit} style={{
           width: "100%", cursor: "pointer", border: "1px solid var(--ua-gold)", background: "transparent",
@@ -176,19 +172,14 @@ function UASelectCard({ state = "locked", members, onVisit }: Omit<FactionSelect
         }}
           onMouseEnter={(e) => { e.currentTarget.style.background = "var(--ua-orange)"; e.currentTarget.style.color = "var(--ua-paper)"; }}
           onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "var(--ua-orange)"; }}
-        >Enter the Salon →</button>
+        >{i18n.t("feed:factionSelect.ua.cta")}</button>
       </div>
     </div>
   );
 }
 
-const WOW_STATUS: Record<SelectState, string> = {
-  locked: "Do the tiny brave thing to be invited ✦",
-  eligible: "The circle has opened for you ✦",
-  member: "You’re one of us now ✦",
-};
 function WOWSelectCard({ state = "locked", members, onVisit }: Omit<FactionSelectCardProps, "faction">) {
-  const status = WOW_STATUS[state];
+  const status = i18n.t(`feed:factionSelect.wow.status.${state}` as const);
   return (
     <div style={{
       width: 360, height: 300, boxSizing: "border-box", position: "relative", overflow: "hidden",
@@ -202,39 +193,34 @@ function WOWSelectCard({ state = "locked", members, onVisit }: Omit<FactionSelec
         <span style={{ display: "flex", gap: 6 }}>
           {["#f6c75e", "#7fc59e", "#ec5f99"].map((color) => <i key={color} style={{ width: 11, height: 11, borderRadius: "50%", background: color, border: "1px solid rgba(0,0,0,0.15)" }} />)}
         </span>
-        <span style={{ fontSize: 12, color: "var(--gestalt-title-text)", letterSpacing: "0.02em" }}>whimsy.exe</span>
+        <span style={{ fontSize: 12, color: "var(--gestalt-title-text)", letterSpacing: "0.02em" }}>{i18n.t("feed:identity.wow.windowTitle")}</span>
         <span style={{ marginLeft: "auto", fontSize: 12, color: "var(--gestalt-title-text)", opacity: 0.7 }}>▢ ✕</span>
       </div>
       <div style={{ flex: 1, padding: "14px 20px 0", position: "relative" }}>
         <div style={{ fontFamily: "var(--font-faction-script)", fontWeight: 700, fontSize: 27, lineHeight: 1.1, color: "var(--gestalt-ink)", whiteSpace: "nowrap" }}>
-          <span style={{ display: "inline-block", verticalAlign: "-3px", marginRight: 6 }}><WOWSigil size={18} color="var(--gestalt-pink)" /></span>Warriors of Whimsy
+          <span style={{ display: "inline-block", verticalAlign: "-3px", marginRight: 6 }}><WOWSigil size={18} color="var(--gestalt-pink)" /></span>{i18n.t("feed:factionSelect.wow.name")}
         </div>
         <p style={{ margin: "13px 0 0", fontSize: 12, lineHeight: 1.6, color: "var(--gestalt-ink-soft)" }}>
-          A little magic, a lot of mischief. World Zero’s coven for the soft and the strange — take a quest, cast a small spell, let the circle cheer.
+          {i18n.t("feed:factionSelect.wow.blurb")}
         </p>
       </div>
       <div style={{ padding: "0 20px 16px" }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, marginBottom: 11 }}>
           <div style={{ transform: "rotate(-1.5deg)", background: "var(--gestalt-pink-lt)", color: "var(--gestalt-ink)", fontSize: 10.5, padding: "5px 10px", borderRadius: 4 }}>{status}</div>
-          {members != null && <div style={{ flexShrink: 0, fontSize: 9.5, letterSpacing: "0.04em", color: "var(--gestalt-label)" }}>{members} witches ✦</div>}
+          {members != null && <div style={{ flexShrink: 0, fontSize: 9.5, letterSpacing: "0.04em", color: "var(--gestalt-label)" }}>{i18n.t("feed:factionSelect.wow.members", { count: members })}</div>}
         </div>
         <button onClick={onVisit} style={{
           width: "100%", cursor: "pointer",
           border: "1.5px solid var(--gestalt-pink)", borderRadius: 7, background: "var(--gestalt-pink)", color: "#fff",
           fontFamily: "var(--font-faction-script)", fontWeight: 700, fontSize: 21, padding: "6px 14px",
-        }}>peek inside ✦</button>
+        }}>{i18n.t("feed:factionSelect.wow.cta")}</button>
       </div>
     </div>
   );
 }
 
-const SNIDE_STATUS: Record<SelectState, string> = {
-  locked: "Cause enough trouble and we’ll be in touch.",
-  eligible: "Consider yourself recruited.",
-  member: "Active operative — welcome to the mess.",
-};
 function SNIDESelectCard({ state = "locked", members, onVisit }: Omit<FactionSelectCardProps, "faction">) {
-  const status = SNIDE_STATUS[state];
+  const status = i18n.t(`feed:factionSelect.snide.status.${state}` as const);
   return (
     <div style={{
       width: 360, height: 300, boxSizing: "border-box", position: "relative", overflow: "hidden",
@@ -248,13 +234,13 @@ function SNIDESelectCard({ state = "locked", members, onVisit }: Omit<FactionSel
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
           <SNIDESigil size={40} color="var(--snide-acid)" />
           <div>
-            <div style={{ fontFamily: "var(--font-faction-anton)", fontSize: 34, lineHeight: 0.85, color: "var(--snide-paper)", letterSpacing: "0.02em" }}>S.N.I.D.E.</div>
-            <div style={{ fontSize: 10, letterSpacing: "0.14em", color: "var(--snide-acid)", marginTop: 4, textTransform: "uppercase" }}>Field Dispatch · Nº 0666</div>
+            <div style={{ fontFamily: "var(--font-faction-anton)", fontSize: 34, lineHeight: 0.85, color: "var(--snide-paper)", letterSpacing: "0.02em" }}>{i18n.t("feed:identity.snide.wordmark")}</div>
+            <div style={{ fontSize: 10, letterSpacing: "0.14em", color: "var(--snide-acid)", marginTop: 4, textTransform: "uppercase" }}>{i18n.t("feed:factionSelect.snide.masthead")}</div>
           </div>
         </div>
         <div style={{ borderTop: "1px dashed rgba(255,255,255,0.25)", margin: "16px 0 12px" }} />
         <p style={{ margin: 0, fontSize: 12.5, lineHeight: 1.65, color: "var(--snide-paper)" }}>
-          Your assignment, should you ignore it. Specialists in gleeful disorder — bounties on the boring, and points for the trouble nobody else will take.
+          {i18n.t("feed:factionSelect.snide.blurb")}
         </p>
       </div>
       <div style={{ position: "relative", padding: "0 24px 20px" }}>
@@ -266,19 +252,14 @@ function SNIDESelectCard({ state = "locked", members, onVisit }: Omit<FactionSel
         }}
           onMouseEnter={(e) => { e.currentTarget.style.background = "var(--snide-acid)"; e.currentTarget.style.color = "var(--snide-ink)"; }}
           onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "var(--snide-acid)"; }}
-        ><span>Read the dispatch →</span>{members != null && <span style={{ fontSize: 10 }}>{members} operatives</span>}</button>
+        ><span>{i18n.t("feed:factionSelect.snide.cta")}</span>{members != null && <span style={{ fontSize: 10 }}>{i18n.t("feed:factionSelect.snide.members", { count: members })}</span>}</button>
       </div>
     </div>
   );
 }
 
-const EPH_STATUS: Record<SelectState, string> = {
-  locked: "Walk far enough and the map redraws for you.",
-  eligible: "The road has opened.",
-  member: "Fellow wanderer — mind the tides.",
-};
 function EphemeristsSelectCard({ state = "locked", members, onVisit }: Omit<FactionSelectCardProps, "faction">) {
-  const status = EPH_STATUS[state];
+  const status = i18n.t(`feed:factionSelect.ephemerists.status.${state}` as const);
   return (
     <div style={{
       width: 360, height: 300, boxSizing: "border-box", position: "relative", overflow: "hidden",
@@ -293,36 +274,31 @@ function EphemeristsSelectCard({ state = "locked", members, onVisit }: Omit<Fact
             <EphemeristsSigil size={26} color="var(--eph-gold-light)" stroke={1.4} />
           </span>
           <div>
-            <div style={{ fontSize: 9, letterSpacing: "0.24em", color: "var(--eph-gold-light)", textTransform: "uppercase" }}>Exhibit C · no single here</div>
-            <div style={{ fontFamily: "var(--font-faction-engraved)", fontWeight: 800, fontSize: 26, lineHeight: 1, letterSpacing: "0.03em", color: "var(--eph-parchment)", marginTop: 4, textShadow: "1px 1px 0 var(--eph-field-deep)" }}>THE EPHEMERISTS</div>
+            <div style={{ fontSize: 9, letterSpacing: "0.24em", color: "var(--eph-gold-light)", textTransform: "uppercase" }}>{i18n.t("feed:factionSelect.ephemerists.eyebrow")}</div>
+            <div style={{ fontFamily: "var(--font-faction-engraved)", fontWeight: 800, fontSize: 26, lineHeight: 1, letterSpacing: "0.03em", color: "var(--eph-parchment)", marginTop: 4, textShadow: "1px 1px 0 var(--eph-field-deep)" }}>{i18n.t("feed:identity.ephemerists.wordmark")}</div>
           </div>
         </div>
         <div style={{ height: 1.5, background: "linear-gradient(90deg, var(--eph-gold) 0%, transparent 100%)", margin: "16px 0 13px" }} />
         <p style={{ margin: 0, fontFamily: "var(--font-faction-codex-script)", fontStyle: "italic", fontSize: 17, lineHeight: 1.45, color: "var(--eph-parchment)" }}>
-          There is no single here. Wanderers who set down what is true before the road moves on — and keep the record anyway.
+          {i18n.t("feed:factionSelect.ephemerists.blurb")}
         </p>
       </div>
       <div style={{ position: "relative", padding: "0 24px 20px" }}>
-        <div style={{ fontSize: 10.5, letterSpacing: "0.03em", color: "var(--eph-gold-light)", marginBottom: 11 }}>{status}{members != null && ` · ${members} wanderers`}</div>
+        <div style={{ fontSize: 10.5, letterSpacing: "0.03em", color: "var(--eph-gold-light)", marginBottom: 11 }}>{status}{members != null && ` · ${i18n.t("feed:factionSelect.ephemerists.members", { count: members })}`}</div>
         <button onClick={onVisit} style={{
           width: "100%", cursor: "pointer", border: "1px solid var(--eph-gold)", background: "transparent", color: "var(--eph-gold-light)",
           fontFamily: "var(--font-faction-engraved)", fontWeight: 600, fontSize: 13, letterSpacing: "0.16em", padding: "10px", textTransform: "uppercase",
         }}
           onMouseEnter={(e) => { e.currentTarget.style.background = "var(--eph-gold)"; e.currentTarget.style.color = "var(--eph-field-deep)"; }}
           onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "var(--eph-gold-light)"; }}
-        >Trace the route →</button>
+        >{i18n.t("feed:factionSelect.ephemerists.cta")}</button>
       </div>
     </div>
   );
 }
 
-const SG_STATUS: Record<SelectState, string> = {
-  locked: "// accrue signal to be granted access",
-  eligible: "// access granted — welcome, operator",
-  member: "// node online",
-};
 function SingularitySelectCard({ state = "locked", members, onVisit }: Omit<FactionSelectCardProps, "faction">) {
-  const status = SG_STATUS[state];
+  const status = i18n.t(`feed:factionSelect.singularity.status.${state}` as const);
   const green = "#4ade80";
   return (
     <div style={{
@@ -337,18 +313,18 @@ function SingularitySelectCard({ state = "locked", members, onVisit }: Omit<Fact
       </div>
       <div style={{ position: "relative", flex: 1, padding: "16px 18px 0" }}>
         <div style={{ fontSize: 11, letterSpacing: "0.14em", color: "#60a5fa", textTransform: "uppercase" }}>
-          singularity protocol<span style={{ display: "inline-block", width: 6, height: 11, background: green, marginLeft: 4, verticalAlign: "middle", animation: "wz-blink 1s step-end infinite" }} />
+          {i18n.t("feed:identity.singularity.protocol")}<span style={{ display: "inline-block", width: 6, height: 11, background: green, marginLeft: 4, verticalAlign: "middle", animation: "wz-blink 1s step-end infinite" }} />
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 11, marginTop: 12 }}>
           <SingularitySigil size={30} color={green} />
-          <span style={{ fontSize: 30, color: green, letterSpacing: "0.02em" }}>Singularity</span>
+          <span style={{ fontSize: 30, color: green, letterSpacing: "0.02em" }}>{i18n.t("feed:factionSelect.singularity.name")}</span>
         </div>
         <p style={{ margin: "14px 0 0", fontSize: 12, lineHeight: 1.65, color: "#8fe6ac" }}>
-          &gt; The signal does not sleep. A distributed intelligence resolving noise into signal, one verified task at a time.
+          &gt; {i18n.t("feed:factionSelect.singularity.blurb")}
         </p>
       </div>
       <div style={{ position: "relative", padding: "0 18px 18px" }}>
-        <div style={{ fontSize: 11, color: "#60a5fa", marginBottom: 10 }}>{status}{members != null && <span style={{ float: "right", color: green }}>{members} nodes</span>}</div>
+        <div style={{ fontSize: 11, color: "#60a5fa", marginBottom: 10 }}>{status}{members != null && <span style={{ float: "right", color: green }}>{i18n.t("feed:factionSelect.singularity.members", { count: members })}</span>}</div>
         <button onClick={onVisit} style={{
           display: "flex", alignItems: "center", width: "100%", cursor: "pointer", gap: 8,
           border: "1px solid #2563eb", background: "rgba(37,99,235,0.14)", color: green,
@@ -356,20 +332,15 @@ function SingularitySelectCard({ state = "locked", members, onVisit }: Omit<Fact
         }}
           onMouseEnter={(e) => { e.currentTarget.style.background = green; e.currentTarget.style.color = "#050f08"; }}
           onMouseLeave={(e) => { e.currentTarget.style.background = "rgba(37,99,235,0.14)"; e.currentTarget.style.color = green; }}
-        ><span style={{ opacity: 0.7 }}>$</span> visit_node --enter</button>
+        ><span style={{ opacity: 0.7 }}>$</span> {i18n.t("feed:factionSelect.singularity.cta")}</button>
       </div>
       <style>{`@keyframes wz-blink { 50% { opacity: 0; } }`}</style>
     </div>
   );
 }
 
-const EM_STATUS: Record<SelectState, string> = {
-  locked: "Put in the shift and there’s a place for you.",
-  eligible: "There’s a place for you — take it.",
-  member: "On the line with us.",
-};
 function EverymenSelectCard({ state = "locked", members, onVisit }: Omit<FactionSelectCardProps, "faction">) {
-  const status = EM_STATUS[state];
+  const status = i18n.t(`feed:factionSelect.everymen.status.${state}` as const);
   return (
     <div style={{
       width: 360, height: 300, boxSizing: "border-box", position: "relative", overflow: "hidden",
@@ -380,7 +351,7 @@ function EverymenSelectCard({ state = "locked", members, onVisit }: Omit<Faction
       <div style={{ position: "absolute", inset: 0, pointerEvents: "none", opacity: 0.5,
         background: "repeating-conic-gradient(from 0deg at 50% 34%, var(--everymen-field-deep) 0deg 7deg, transparent 7deg 14deg)" }} />
       <div style={{ position: "relative", background: "var(--everymen-ink)", color: "var(--everymen-gold)", textAlign: "center",
-        fontFamily: "var(--font-faction-poster)", fontSize: 14, letterSpacing: "0.3em", padding: "6px 0" }}>THE EVERYMEN WANT YOU</div>
+        fontFamily: "var(--font-faction-poster)", fontSize: 14, letterSpacing: "0.3em", padding: "6px 0" }}>{i18n.t("feed:factionSelect.everymen.banner")}</div>
       <div style={{ height: 3, background: "var(--everymen-gold)" }} />
       <div style={{ position: "relative", flex: 1, padding: "14px 22px 0", textAlign: "center" }}>
         <div style={{ display: "flex", justifyContent: "center", marginBottom: 6 }}>
@@ -389,28 +360,23 @@ function EverymenSelectCard({ state = "locked", members, onVisit }: Omit<Faction
             <EverymenSigil size={30} color="var(--everymen-red)" />
           </span>
         </div>
-        <div style={{ fontFamily: "var(--font-faction-poster)", fontSize: 40, lineHeight: 0.86, color: "var(--everymen-cream)", textShadow: "2px 2px 0 var(--everymen-ink)" }}>PICK UP THE LOAD</div>
+        <div style={{ fontFamily: "var(--font-faction-poster)", fontSize: 40, lineHeight: 0.86, color: "var(--everymen-cream)", textShadow: "2px 2px 0 var(--everymen-ink)" }}>{i18n.t("feed:factionSelect.everymen.headline")}</div>
         <div style={{ display: "inline-block", marginTop: 11, background: "var(--everymen-ink)", color: "var(--everymen-gold)",
-          fontFamily: "var(--font-faction-poster)", fontSize: 13, letterSpacing: "0.2em", padding: "3px 14px" }}>UNITED · WE · STAND</div>
+          fontFamily: "var(--font-faction-poster)", fontSize: 13, letterSpacing: "0.2em", padding: "3px 14px" }}>{i18n.t("feed:factionSelect.everymen.plaque")}</div>
       </div>
       <div style={{ position: "relative", padding: "10px 22px 18px", textAlign: "center" }}>
         <div style={{ fontSize: 10, color: "var(--everymen-cream)", opacity: 0.9, marginBottom: 10 }}>{status}</div>
         <button onClick={onVisit} style={{
           width: "100%", cursor: "pointer", border: "2px solid var(--everymen-ink)", background: "var(--everymen-gold)", color: "var(--everymen-ink)",
           fontFamily: "var(--font-faction-poster)", fontSize: 22, letterSpacing: "0.1em", padding: "8px",
-        }}>FALL IN{members != null ? ` ▸ ${members} HANDS` : ""}</button>
+        }}>{i18n.t("feed:factionSelect.everymen.cta")}{members != null ? ` ${i18n.t("feed:factionSelect.everymen.members", { count: members })}` : ""}</button>
       </div>
     </div>
   );
 }
 
-const AL_STATUS: Record<SelectState, string> = {
-  locked: "Some are noticed. Few are ever named.",
-  eligible: "You have been noticed.",
-  member: "Named — and unrecorded.",
-};
 function AlbescentSelectCard({ state = "locked", members, onVisit }: Omit<FactionSelectCardProps, "faction">) {
-  const status = AL_STATUS[state];
+  const status = i18n.t(`feed:factionSelect.albescent.status.${state}` as const);
   return (
     <div style={{
       width: 360, height: 300, boxSizing: "border-box", position: "relative", overflow: "hidden",
@@ -420,24 +386,24 @@ function AlbescentSelectCard({ state = "locked", members, onVisit }: Omit<Factio
       <div style={{ position: "absolute", inset: 12, border: "1px solid var(--al-border-faint)", pointerEvents: "none" }} />
       <div style={{ position: "relative", flex: 1, padding: "26px 30px 0", display: "flex", flexDirection: "column" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-          <div style={{ fontFamily: "var(--font-body)", fontSize: 9, letterSpacing: "0.34em", color: "var(--al-text-muted)", textTransform: "uppercase" }}>World Zero</div>
+          <div style={{ fontFamily: "var(--font-body)", fontSize: 9, letterSpacing: "0.34em", color: "var(--al-text-muted)", textTransform: "uppercase" }}>{i18n.t("feed:factionSelect.albescent.eyebrow")}</div>
           <AlbescentSigil size={26} color="var(--al-ink)" />
         </div>
-        <div style={{ fontFamily: "var(--font-faction-vellum)", fontStyle: "italic", fontWeight: 600, fontSize: 40, lineHeight: 1, letterSpacing: "0.01em", marginTop: 16 }}>Albescent</div>
+        <div style={{ fontFamily: "var(--font-faction-vellum)", fontStyle: "italic", fontWeight: 600, fontSize: 40, lineHeight: 1, letterSpacing: "0.01em", marginTop: 16 }}>{i18n.t("feed:factionSelect.albescent.name")}</div>
         <div style={{ width: 44, height: 1, background: "var(--al-text)", opacity: 0.5, margin: "13px 0" }} />
         <p style={{ margin: 0, fontStyle: "italic", fontSize: 16, lineHeight: 1.45, color: "var(--al-ink)" }}>
-          Some work leaves no record. An unranked society that keeps its own counsel — and yours.
+          {i18n.t("feed:factionSelect.albescent.blurb")}
         </p>
       </div>
       <div style={{ position: "relative", padding: "14px 30px 22px" }}>
-        <div style={{ fontFamily: "var(--font-body)", fontSize: 9.5, letterSpacing: "0.06em", color: "var(--al-text-muted)", marginBottom: 13, textTransform: "uppercase" }}>{status}{members != null && ` · ${members} named`}</div>
+        <div style={{ fontFamily: "var(--font-body)", fontSize: 9.5, letterSpacing: "0.06em", color: "var(--al-text-muted)", marginBottom: 13, textTransform: "uppercase" }}>{status}{members != null && ` · ${i18n.t("feed:factionSelect.albescent.members", { count: members })}`}</div>
         <button onClick={onVisit} style={{
           width: "100%", cursor: "pointer", border: "1px solid var(--al-text)", background: "transparent", color: "var(--al-text)",
           fontFamily: "var(--font-body)", fontSize: 10.5, letterSpacing: "0.22em", padding: "11px", textTransform: "uppercase", transition: "background 140ms, color 140ms",
         }}
           onMouseEnter={(e) => { e.currentTarget.style.background = "var(--al-text)"; e.currentTarget.style.color = "var(--al-surface)"; }}
           onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "var(--al-text)"; }}
-        >Request an audience →</button>
+        >{i18n.t("feed:factionSelect.albescent.cta")}</button>
       </div>
     </div>
   );

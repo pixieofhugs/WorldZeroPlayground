@@ -1,5 +1,7 @@
 import type { ReactNode } from 'react'
 
+import i18n from '../../i18n'
+
 /**
  * Singularity per-faction feed frame (surface #12, SPEC-faction-ui-profile.md).
  *
@@ -79,7 +81,7 @@ export default function SingularityFeedFrame({ children }: { children: ReactNode
         }}
       >
         <span style={{ color: PHOSPHOR }}>{'>'}</span>
-        <span>DISPATCH · SIGNAL ONLINE</span>
+        <span>{i18n.t('feed:frame.singularity.masthead')}</span>
       </div>
 
       {/* printout body — the neutral card, unchanged */}

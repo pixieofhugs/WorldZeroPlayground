@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import type { TaskOut } from "../../api/tasks";
+import i18n from "../../i18n";
 import DefaultSigil from "./DefaultSigil";
 
 /**
@@ -56,7 +57,7 @@ export default function DefaultTaskCard({ task, displayPoints, onSignup }: Props
             color: "var(--faction-default-card-muted)",
           }}
         >
-          <DefaultSigil size={28} /> Unaffiliated · all paths
+          <DefaultSigil size={28} /> {i18n.t("feed:taskCard.na.eyebrow")}
         </div>
 
         <Link to={`/tasks/${task.id}`} style={{ textDecoration: "none", color: "inherit" }}>
@@ -102,7 +103,7 @@ export default function DefaultTaskCard({ task, displayPoints, onSignup }: Props
               padding: "4px 10px",
             }}
           >
-            lvl {task.level_required}
+            {i18n.t("feed:taskCard.na.level", { level: task.level_required })}
           </span>
           <span
             style={{
@@ -116,7 +117,7 @@ export default function DefaultTaskCard({ task, displayPoints, onSignup }: Props
           >
             {displayPoints}
             <span style={{ fontSize: 11, marginLeft: 2, color: "var(--faction-default-card-muted)" }}>
-              pts
+              {i18n.t("feed:taskCard.na.pointsUnit")}
             </span>
           </span>
           {onSignup && (
@@ -136,7 +137,7 @@ export default function DefaultTaskCard({ task, displayPoints, onSignup }: Props
                 border: "1.5px solid var(--faction-default-card-accent)",
               }}
             >
-              Sign up ↗
+              {i18n.t("feed:taskCard.na.signup")}
             </button>
           )}
         </div>

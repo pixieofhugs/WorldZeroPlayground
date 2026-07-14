@@ -1,4 +1,5 @@
 import type { FactionHeroProps } from "../../pages/FactionDetail";
+import i18n from "../../i18n";
 
 /**
  * The Everymen faction-page hero — a union masthead poster. A sunburst red
@@ -14,8 +15,6 @@ import type { FactionHeroProps } from "../../pages/FactionDetail";
  * The page passes raw counts; the faction labels them in its own union voice.
  * Motto is a faction constant (not a backend field).
  */
-
-const MOTTO = "THE WORK OUTLASTS THE WORKER";
 
 const FIELD = "var(--everymen-field)";
 const CREAM = "var(--everymen-cream)";
@@ -49,9 +48,9 @@ export default function EverymenFactionHero({
   // ponytail: three real counts. seasonRank / total-points-awarded aren't
   // sourced yet (no leaderboard/aggregate endpoint) — add rows when they are.
   const stats = [
-    { value: members, label: "card-carrying" },
-    { value: tasks, label: "work orders" },
-    { value: praxes, label: "reports filed" },
+    { value: members, label: i18n.t("feed:factionHero.everymen.stats.members") },
+    { value: tasks, label: i18n.t("feed:factionHero.everymen.stats.tasks") },
+    { value: praxes, label: i18n.t("feed:factionHero.everymen.stats.praxes") },
   ];
 
   return (
@@ -141,7 +140,7 @@ export default function EverymenFactionHero({
                 marginBottom: 5,
               }}
             >
-              World Zero · Faction
+              {i18n.t("feed:factionHero.everymen.eyebrow")}
             </div>
             <h1
               style={{
@@ -169,7 +168,7 @@ export default function EverymenFactionHero({
                 padding: "4px 14px",
               }}
             >
-              {MOTTO}
+              {i18n.t("feed:factionHero.everymen.motto")}
             </div>
             <p
               style={{
@@ -181,7 +180,7 @@ export default function EverymenFactionHero({
                 color: CREAM,
               }}
             >
-              {description ?? "Nobody's coming to fix it but us. Report for duty."}
+              {description ?? i18n.t("feed:factionHero.everymen.descriptionFallback")}
             </p>
           </div>
         </div>

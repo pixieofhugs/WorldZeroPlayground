@@ -1,5 +1,7 @@
 import { Link } from "react-router-dom";
+import { Trans } from "react-i18next";
 import type { ActivityFeedItem } from "../../api/activityFeed";
+import i18n from "../../i18n";
 import { factionColor } from "../../utils/factions";
 import { relativeTime } from "../../utils/dates";
 import FeedBadge from "./FeedBadge";
@@ -24,9 +26,9 @@ export default function FeedCardInvitationLetter({ item }: Props) {
       >
         <span style={{ fontSize: 16 }}>&#x2709;&#xFE0F;</span>
         <span className="eyebrow" style={{ color, fontSize: 8 }}>
-          Faction Invitation
+          {i18n.t("feed:invitationLetter.kicker")}
         </span>
-        <FeedBadge type="your_stuff" label="Your Stuff" />
+        <FeedBadge type="your_stuff" label={i18n.t("feed:badge.yourStuff")} />
         <span
           className="eyebrow"
           style={{
@@ -48,8 +50,14 @@ export default function FeedCardInvitationLetter({ item }: Props) {
           marginBottom: 8,
         }}
       >
-        You've received an invitation to join{" "}
-        <span style={{ color, fontWeight: 700 }}>{faction_name}</span>.
+        {/* One <Trans> sentence so the faction name stays inside the
+            translatable unit; the highlighted name is tag <1>. */}
+        <Trans
+          ns="feed"
+          i18nKey="invitationLetter.sentence"
+          values={{ faction: faction_name }}
+          components={{ 1: <span style={{ color, fontWeight: 700 }} /> }}
+        />
       </p>
 
       <p
@@ -60,8 +68,7 @@ export default function FeedCardInvitationLetter({ item }: Props) {
           marginBottom: 12,
         }}
       >
-        Complete faction tasks to prove your dedication, or visit the factions
-        page to make your choice.
+        {i18n.t("feed:invitationLetter.body")}
       </p>
 
       <Link
@@ -76,7 +83,7 @@ export default function FeedCardInvitationLetter({ item }: Props) {
           textDecoration: "none",
         }}
       >
-        View Factions &rarr;
+        {i18n.t("feed:invitationLetter.viewFactions")}
       </Link>
     </div>
   );

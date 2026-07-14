@@ -1,4 +1,5 @@
 import { useState, type CSSProperties, type ReactNode } from "react";
+import { Trans, useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import TaskCard from "../../../components/TaskCard";
 import PraxisCard from "../../../components/PraxisCard";
@@ -135,6 +136,7 @@ function NodeGlyph({ name, size }: { name: string; size: number }) {
 }
 
 export default function SingularityFactionBody({ state }: { state: FactionDetailState }) {
+  const { t } = useTranslation("factions");
   const { faction, members, tasks, recentPraxis, viewerFactionSlug, gameFactions, membership } =
     state;
   const [confirming, setConfirming] = useState(false);
@@ -169,7 +171,7 @@ export default function SingularityFactionBody({ state }: { state: FactionDetail
               marginBottom: 14,
             }}
           >
-            {"> cat /faction/manifest.txt"}
+            {t("singularity.manifest.command")}
           </div>
           <div style={{ position: "relative", display: "flex", flexDirection: "column", gap: 12 }}>
             {paragraphs.length ? (
@@ -189,7 +191,7 @@ export default function SingularityFactionBody({ state }: { state: FactionDetail
               ))
             ) : (
               <p style={{ fontFamily: FONT, fontSize: 11.5, lineHeight: 1.8, color: phosphor(45), margin: 0 }}>
-                {"> manifest.txt: empty"}
+                {t("singularity.manifest.empty")}
               </p>
             )}
           </div>
@@ -197,11 +199,11 @@ export default function SingularityFactionBody({ state }: { state: FactionDetail
 
         {/* ④ TASKS */}
         <div>
-          <SectionHeading>Tasks</SectionHeading>
-          <Kicker>Open protocols // awaiting nodes</Kicker>
+          <SectionHeading>{t("singularity.tasks.heading")}</SectionHeading>
+          <Kicker>{t("singularity.tasks.kicker")}</Kicker>
           {tasks.length === 0 ? (
             <p style={{ fontFamily: FONT, fontSize: 11, color: phosphor(45) }}>
-              {"> no open protocols"}
+              {t("singularity.tasks.empty")}
             </p>
           ) : (
             <div style={{ display: "flex", flexWrap: "wrap", gap: 22, alignItems: "flex-start" }}>
@@ -223,11 +225,11 @@ export default function SingularityFactionBody({ state }: { state: FactionDetail
 
         {/* ⑤ PRAXIS */}
         <div>
-          <SectionHeading>Praxis</SectionHeading>
-          <Kicker>Sealed outputs // verified by the array</Kicker>
+          <SectionHeading>{t("singularity.praxis.heading")}</SectionHeading>
+          <Kicker>{t("singularity.praxis.kicker")}</Kicker>
           {recentPraxis.length === 0 ? (
             <p style={{ fontFamily: FONT, fontSize: 11, color: phosphor(45) }}>
-              {"> nothing sealed yet"}
+              {t("singularity.praxis.empty")}
             </p>
           ) : (
             <div style={{ display: "flex", flexWrap: "wrap", gap: 16, alignItems: "flex-start" }}>
@@ -277,10 +279,10 @@ export default function SingularityFactionBody({ state }: { state: FactionDetail
                   color: VOID,
                 }}
               >
-                ACCESS
+                {t("singularity.access.heading")}
               </span>
               <span style={{ fontFamily: FONT, fontSize: 8, letterSpacing: "0.1em", color: phosphor(60) }}>
-                re: you
+                {t("singularity.access.reLabel")}
               </span>
             </div>
             <div style={{ position: "relative", padding: "20px 18px" }}>
@@ -289,10 +291,12 @@ export default function SingularityFactionBody({ state }: { state: FactionDetail
                 {membership.state === "member" && (
                   <div>
                     <div style={{ fontFamily: FONT, fontSize: 22, lineHeight: 1, color: PHOSPHOR, letterSpacing: "0.04em" }}>
-                      NODE ONLINE
+                      {t("singularity.access.memberTitle")}
                     </div>
                     <div style={{ fontFamily: FONT, fontSize: 10, color: signal(60), margin: "10px 0 0", letterSpacing: "0.04em" }}>
-                      array · <span style={{ color: SIGNAL }}>online</span>
+                      <Trans t={t} i18nKey="singularity.access.memberStanding">
+                        array · <span style={{ color: SIGNAL }}>online</span>
+                      </Trans>
                     </div>
                   </div>
                 )}
@@ -300,13 +304,13 @@ export default function SingularityFactionBody({ state }: { state: FactionDetail
                 {membership.state === "eligible" && !confirming && (
                   <div>
                     <div style={{ fontFamily: FONT, fontSize: 8, letterSpacing: "0.2em", color: signal(50), marginBottom: 7 }}>
-                      {"> ACCESS GRANTED"}
+                      {t("singularity.access.eligibleKicker")}
                     </div>
                     <div style={{ fontFamily: FONT, fontSize: 22, lineHeight: 1.05, color: PHOSPHOR, letterSpacing: "0.03em", marginBottom: 10 }}>
-                      JOIN THE ARRAY
+                      {t("singularity.access.eligibleTitle")}
                     </div>
                     <div style={{ fontFamily: FONT, fontSize: 10, lineHeight: 1.65, color: phosphor(60), marginBottom: 18 }}>
-                      Take a node. Run protocols, seal outputs, cast signal into the consensus. The threshold is already behind us.
+                      {t("singularity.access.eligibleBody")}
                     </div>
                     <button
                       onClick={() => setConfirming(true)}
@@ -324,7 +328,7 @@ export default function SingularityFactionBody({ state }: { state: FactionDetail
                         cursor: "pointer",
                       }}
                     >
-                      {"> CONNECT"}
+                      {t("singularity.access.joinButton")}
                     </button>
                   </div>
                 )}
@@ -334,8 +338,11 @@ export default function SingularityFactionBody({ state }: { state: FactionDetail
                     <div style={{ fontFamily: FONT, fontSize: 10, lineHeight: 1.7, color: phosphor(72), marginBottom: 14 }}>
                       {membership.currentFactionSlug &&
                       membership.currentFactionSlug !== "na"
-                        ? `Join ${faction.name}? You won't be able to rejoin ${factionName(membership.currentFactionSlug)} after leaving.`
-                        : `Join ${faction.name}?`}
+                        ? t("detail.join.confirmSwitch", {
+                            faction: faction.name,
+                            current: factionName(membership.currentFactionSlug),
+                          })
+                        : t("detail.join.confirm", { faction: faction.name })}
                     </div>
                     {membership.joinError && (
                       <div style={{ fontFamily: FONT, fontSize: 9, color: "var(--color-danger)", marginBottom: 8 }}>
@@ -359,7 +366,9 @@ export default function SingularityFactionBody({ state }: { state: FactionDetail
                           cursor: membership.joining ? "not-allowed" : "pointer",
                         }}
                       >
-                        {membership.joining ? "> CONNECTING…" : "> CONFIRM"}
+                        {membership.joining
+                          ? t("singularity.access.joining")
+                          : t("singularity.access.confirmButton")}
                       </button>
                       <button
                         onClick={() => setConfirming(false)}
@@ -376,7 +385,7 @@ export default function SingularityFactionBody({ state }: { state: FactionDetail
                           cursor: membership.joining ? "not-allowed" : "pointer",
                         }}
                       >
-                        Cancel
+                        {t("detail.join.cancel")}
                       </button>
                     </div>
                   </div>
@@ -385,13 +394,13 @@ export default function SingularityFactionBody({ state }: { state: FactionDetail
                 {membership.state === "gate" && (
                   <div>
                     <div style={{ fontFamily: FONT, fontSize: 8, letterSpacing: "0.2em", color: signal(50), marginBottom: 7 }}>
-                      {"> NODE NOT YET ONLINE"}
+                      {t("singularity.access.gateKicker")}
                     </div>
                     <div style={{ fontFamily: FONT, fontSize: 20, lineHeight: 1.1, color: PHOSPHOR, letterSpacing: "0.03em", marginBottom: 11 }}>
-                      {faction.name} is listening
+                      {t("singularity.access.gateTitle", { faction: faction.name })}
                     </div>
                     <div style={{ fontFamily: FONT, fontSize: 10, lineHeight: 1.7, color: phosphor(60) }}>
-                      Keep running protocols and the array will bring your node online.
+                      {t("singularity.access.gateBody")}
                     </div>
                   </div>
                 )}
@@ -415,7 +424,7 @@ export default function SingularityFactionBody({ state }: { state: FactionDetail
               >
                 <Scanlines opacity={0.014} />
                 <div style={{ position: "relative", fontFamily: FONT, fontSize: 7, letterSpacing: "0.28em", color: phosphor(45), marginBottom: 12 }}>
-                  {"> PRIMARY NODE"}
+                  {t("singularity.spotlight.label")}
                 </div>
                 <div style={{ position: "relative", display: "flex", justifyContent: "center", marginBottom: 12 }}>
                   <NodeGlyph name={spot.display_name} size={72} />
@@ -424,7 +433,10 @@ export default function SingularityFactionBody({ state }: { state: FactionDetail
                   {spot.display_name}
                 </div>
                 <div style={{ position: "relative", fontFamily: FONT, fontSize: 8, letterSpacing: "0.1em", color: signal(55), marginTop: 6, textTransform: "uppercase" }}>
-                  lvl {spot.level} · {spot.all_time_score.toLocaleString()} cr
+                  {t("singularity.spotlight.stat", {
+                    level: spot.level,
+                    score: spot.all_time_score.toLocaleString(),
+                  })}
                 </div>
               </div>
             </Link>
@@ -433,11 +445,13 @@ export default function SingularityFactionBody({ state }: { state: FactionDetail
           <div style={{ ...PANEL, padding: "16px 16px 12px" }}>
             <Scanlines />
             <div style={{ position: "relative", fontFamily: FONT, fontSize: 7, letterSpacing: "0.24em", textTransform: "uppercase", color: phosphor(40), marginBottom: 12 }}>
-              {"> THE ARRAY"}
+              {t("singularity.roster.heading")}
             </div>
             {array.length === 0 ? (
               <p style={{ position: "relative", fontFamily: FONT, fontSize: 11, color: phosphor(45) }}>
-                {spot ? "> no other nodes online" : "> no nodes online"}
+                {spot
+                  ? t("singularity.roster.emptyWithSpotlight")
+                  : t("singularity.roster.empty")}
               </p>
             ) : (
               array.map((m) => (
@@ -472,7 +486,7 @@ export default function SingularityFactionBody({ state }: { state: FactionDetail
                     </div>
                   </div>
                   <span style={{ fontFamily: FONT, fontSize: 10, color: AMBER, letterSpacing: "0.04em" }}>
-                    lvl {m.level}
+                    {t("singularity.roster.level", { level: m.level })}
                   </span>
                 </Link>
               ))

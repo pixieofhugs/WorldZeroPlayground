@@ -1,4 +1,5 @@
 import { useId } from "react";
+import i18n from "../../i18n";
 
 /**
  * Shared UA (University of Asthmatics) heraldic atoms — the gilt-salon crest
@@ -11,8 +12,6 @@ import { useId } from "react";
  * so tokens read identically in both themes.
  */
 
-export const UA_FULL_NAME = "University of Asthmatics";
-export const UA_MOTTO = "Ars Longa · Spiritus Brevis";
 
 /** Heraldic crest — a shield with a rising sun and crossed brushes. */
 export function UACrest({ width, height }: { width: number; height: number }) {
@@ -88,7 +87,7 @@ export function MottoRibbon({
         clipPath: "polygon(0 0,100% 0,96% 50%,100% 100%,0 100%,4% 50%)",
       }}
     >
-      {UA_MOTTO}
+      {i18n.t("feed:identity.ua.motto")}
     </div>
   );
 }

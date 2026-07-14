@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import i18n from '../../i18n'
 import { factionColor } from '../../utils/factions'
 import { mediaUrl } from '../../utils/media'
 import FeedBadge from './FeedBadge'
@@ -101,7 +102,7 @@ export default function FeedRowContent({
               className="font-body"
               style={{ margin: 0, fontSize: 11, fontStyle: 'italic', color: 'var(--color-text-primary)', lineHeight: 1.4 }}
             >
-              “{row.headline}”
+              {i18n.t('feed:row.quotedHeadline', { headline: row.headline })}
             </p>
           ) : row.headlineHref ? (
             <Link
@@ -120,7 +121,7 @@ export default function FeedRowContent({
             <span className="eyebrow" style={{ color: 'var(--color-text-tertiary)' }}>
               {row.points}
               {row.points && row.level != null ? ' · ' : ''}
-              {row.level != null ? `lvl ${row.level}` : ''}
+              {row.level != null ? i18n.t('feed:row.level', { level: row.level }) : ''}
             </span>
           )}
         </div>

@@ -1,4 +1,5 @@
 import { type ComponentType } from "react";
+import { useTranslation } from "react-i18next";
 import { useParams, Link } from "react-router-dom";
 import PageTitle from "../components/ui/PageTitle";
 import { factionCssVar } from "../utils/factions";
@@ -67,20 +68,21 @@ const FACTION_BODIES: Record<string, ComponentType<{ state: FactionDetailState }
 };
 
 export default function FactionDetail({ slug: slugProp }: { slug?: string } = {}) {
+  const { t } = useTranslation("factions");
   const { slug: slugParam } = useParams<{ slug: string }>();
   const slug = slugProp ?? slugParam;
   const state = useFactionDetail(slug);
   const { loading, faction, fetchError, members, tasks, recentPraxis } = state;
 
   if (loading)
-    return <div className="py-8 font-body text-muted">Loading...</div>;
+    return <div className="py-8 font-body text-muted">{t("detail.loading")}</div>;
   if (fetchError)
     return (
       <div className="py-8">
         <p className="font-body text-sm text-red-600 border-2 border-red-300 px-3 py-2">
           {fetchError}{" "}
           <button onClick={() => window.location.reload()} className="underline">
-            Try refreshing.
+            {t("detail.retry")}
           </button>
         </p>
       </div>
@@ -88,9 +90,9 @@ export default function FactionDetail({ slug: slugProp }: { slug?: string } = {}
   if (!faction)
     return (
       <div className="py-8 font-body text-muted">
-        Faction not found.{" "}
+        {t("detail.notFound")}{" "}
         <Link to="/factions" className="underline">
-          Back to factions.
+          {t("detail.backToFactions")}
         </Link>
       </div>
     );
@@ -115,7 +117,7 @@ export default function FactionDetail({ slug: slugProp }: { slug?: string } = {}
         />
       ) : (
         <>
-          <PageTitle title={faction.name} eyebrow="Faction" />
+          <PageTitle title={faction.name} eyebrow={t("detail.eyebrow")} />
 
           {/* ── Description ── PLACEHOLDER: design to restyle ── */}
           <div
@@ -123,7 +125,7 @@ export default function FactionDetail({ slug: slugProp }: { slug?: string } = {}
             style={{ borderLeft: `4px solid ${accent}`, padding: "14px 16px" }}
           >
             <p className="font-body text-sm text-ink">
-              {faction.description ?? "No description yet."}
+              {faction.description ?? t("detail.descriptionEmpty")}
             </p>
           </div>
         </>

@@ -3,6 +3,9 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from schemas.comment import CommentOut
+from schemas.praxis import PraxisOut
+
 
 # ---------------------------------------------------------------------------
 # Read / Inspect
@@ -51,6 +54,33 @@ class CharacterSummary(BaseModel):
     level: int
     votes_available: int
     created_at: datetime
+
+
+class FlagOut(BaseModel):
+    """One flag row for the moderator queue (#237, ADR-0031).
+
+    ``reason`` is normalized onto the shared vocabulary at read time; legacy
+    free text (or an ``other`` note) surfaces via ``reason_detail`` under the
+    ``other`` key. Reporter identity is character-scoped — never account/email.
+    """
+
+    reason: str
+    reason_detail: str | None = None
+    flagged_by_id: int
+    flagged_by_name: str
+    created_at: datetime
+
+
+class FlaggedPraxisOut(PraxisOut):
+    """PraxisOut plus its flag rows — the moderator review queue shape."""
+
+    flags: list[FlagOut] = []
+
+
+class FlaggedCommentOut(CommentOut):
+    """CommentOut plus its flag rows — the moderator review queue shape."""
+
+    flags: list[FlagOut] = []
 
 
 class OverviewStats(BaseModel):

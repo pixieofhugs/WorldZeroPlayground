@@ -38,6 +38,7 @@ import { listCharacters, type CharacterOut } from "../../api/characters";
 import { listMetatasks } from "../../api/metaTasks";
 import { useAuth } from "../../auth/AuthContext";
 import { extractError } from "../../utils/errors";
+import i18n from "../../i18n";
 
 export const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50 MB
 
@@ -133,10 +134,10 @@ export function modeSwitchPrompt(
   inDuel: boolean,
 ): string | null {
   if (inDuel && next !== "duel") {
-    return "Switching mode will cancel your duel challenge. Continue?";
+    return i18n.t("forms:editPraxis.confirm.leaveDuel");
   }
   if (next === "solo" && currentType === "collab" && memberCount > 1) {
-    return "Switching to solo will remove your co-authors — your draft stays. Continue?";
+    return i18n.t("forms:editPraxis.confirm.soloDropsCoauthors");
   }
   return null;
 }
@@ -248,7 +249,7 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
             }),
         ]);
       })
-      .catch(() => setError("Couldn't load this praxis."))
+      .catch(() => setError(i18n.t("forms:editPraxis.errors.load")))
       .finally(() => setLoading(false));
   }, [idParam, user, authLoading, navigate]);
 
@@ -339,7 +340,10 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
       const tooLarge = incoming.filter((f) => f.size > MAX_FILE_SIZE);
       if (tooLarge.length > 0) {
         setFileError(
-          `File${tooLarge.length > 1 ? "s" : ""} too large (50 MB limit): ${tooLarge.map((f) => f.name).join(", ")}`,
+          i18n.t("forms:editPraxis.errors.fileTooLarge", {
+            count: tooLarge.length,
+            names: tooLarge.map((f) => f.name).join(", "),
+          }),
         );
       } else {
         setFileError("");
@@ -356,7 +360,12 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
           const uploaded = await uploadPraxisMedia(praxisId, file);
           setMedia((previous) => [...previous, uploaded]);
         } catch (err) {
-          setError(extractError(err, `Could not upload ${file.name}.`));
+          setError(
+            extractError(
+              err,
+              i18n.t("forms:editPraxis.errors.upload", { name: file.name }),
+            ),
+          );
         }
       }
     },
@@ -370,7 +379,9 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
         await deletePraxisMedia(parseInt(idParam, 10), item.id);
         setMedia((previous) => previous.filter((m) => m.id !== item.id));
       } catch (err) {
-        setError(extractError(err, "Could not remove media item."));
+        setError(
+          extractError(err, i18n.t("forms:editPraxis.errors.removeMedia")),
+        );
       }
     },
     [idParam],
@@ -405,11 +416,11 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
 
   const publish = useCallback(async () => {
     if (!idParam || !title.trim()) {
-      setError("Title is required.");
+      setError(i18n.t("forms:editPraxis.errors.titleRequired"));
       return;
     }
     if (title.length > 200) {
-      setError("Title must be 200 characters or fewer.");
+      setError(i18n.t("forms:editPraxis.errors.titleTooLong"));
       return;
     }
     setSubmitting(true);
@@ -425,7 +436,7 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
       }
       navigate(`/praxes/${idParam}`);
     } catch (err) {
-      setError(extractError(err, "Could not publish proof."));
+      setError(extractError(err, i18n.t("forms:editPraxis.errors.publish")));
     } finally {
       setSubmitting(false);
     }
@@ -434,7 +445,7 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
   const cancel = useCallback(async () => {
     if (!praxis) return;
     const confirmed = window.confirm(
-      "Drop this task? Your draft will be lost.",
+      i18n.t("forms:editPraxis.confirm.dropTask"),
     );
     if (!confirmed) return;
     if (autosaveTimerRef.current) {
@@ -444,7 +455,7 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
     try {
       await deletePraxis(praxis.id);
     } catch (err) {
-      setError(extractError(err, "Could not drop the task."));
+      setError(extractError(err, i18n.t("forms:editPraxis.errors.drop")));
       return;
     }
     navigate("/tasks");
@@ -464,7 +475,7 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
           if (
             praxis.members.length > 1 &&
             !window.confirm(
-              "Switching to a duel will remove your co-authors — your draft stays. Continue?",
+              i18n.t("forms:editPraxis.confirm.duelDropsCoauthors"),
             )
           ) {
             return;
@@ -476,7 +487,9 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
             setPraxis(updated);
             setMedia(updated.media_items);
           } catch (err) {
-            setError(extractError(err, "Could not change mode."));
+            setError(
+              extractError(err, i18n.t("forms:editPraxis.errors.changeMode")),
+            );
             setSwitchingMode(null);
             return;
           }
@@ -497,9 +510,7 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
       // unilaterally cancelling an accepted duel). Once the opponent has
       // accepted, the challenger can't switch away.
       if (inDuel && duel && duel.status !== "pending") {
-        setError(
-          "This duel is already underway — it can't be cancelled from here.",
-        );
+        setError(i18n.t("forms:editPraxis.errors.duelUnderway"));
         return;
       }
 
@@ -528,7 +539,9 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
         setDuelPaneOpen(false);
         setDuel(null);
       } catch (err) {
-        setError(extractError(err, "Could not change mode."));
+        setError(
+          extractError(err, i18n.t("forms:editPraxis.errors.changeMode")),
+        );
       } finally {
         setSwitchingMode(null);
       }
@@ -600,7 +613,12 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
         setPraxis(refreshed);
       } catch (err) {
         setError(
-          extractError(err, `Could not invite ${character.display_name}.`),
+          extractError(
+            err,
+            i18n.t("forms:editPraxis.errors.invite", {
+              name: character.display_name,
+            }),
+          ),
         );
       } finally {
         setInviting(false);
@@ -619,7 +637,9 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
         const refreshed = await getPraxis(praxis.id);
         setPraxis(refreshed);
       } catch (err) {
-        setError(extractError(err, "Could not rescind the invite."));
+        setError(
+          extractError(err, i18n.t("forms:editPraxis.errors.rescindInvite")),
+        );
       }
     },
     [praxis],
@@ -644,7 +664,12 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
         setPraxis(refreshed);
       } catch (err) {
         setError(
-          extractError(err, `Could not challenge ${character.display_name}.`),
+          extractError(
+            err,
+            i18n.t("forms:editPraxis.errors.challenge", {
+              name: character.display_name,
+            }),
+          ),
         );
       } finally {
         setInviting(false);
@@ -663,7 +688,9 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
       setDuel(null);
       setDuelPaneOpen(false);
     } catch (err) {
-      setError(extractError(err, "Could not cancel the challenge."));
+      setError(
+        extractError(err, i18n.t("forms:editPraxis.errors.cancelChallenge")),
+      );
     }
   }, [praxis]);
 
@@ -687,7 +714,9 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
           setAppliedMetatasks((previous) => new Set(previous).add(mt.id));
         }
       } catch (err) {
-        setError(extractError(err, "Could not update metatask."));
+        setError(
+          extractError(err, i18n.t("forms:editPraxis.errors.updateMetatask")),
+        );
       } finally {
         setApplyingMetatask(null);
       }

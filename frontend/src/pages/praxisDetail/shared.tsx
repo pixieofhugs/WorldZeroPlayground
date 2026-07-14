@@ -17,6 +17,7 @@ import { reframeLabel } from '../../components/vote/voteReframes'
 import { TaskCrown } from '../../components/cards/TaskCrown'
 import type { PraxisDetailState } from './usePraxisDetail'
 import type { PraxisMemberOut, PraxisOut } from '../../api/praxis'
+import { FLAG_REASONS, FLAG_REASON_OTHER } from '../../utils/flagReasons'
 
 // ── Egalitarian byline (#387) ────────────────────────────────────────────────
 //
@@ -268,7 +269,7 @@ export function PraxisOwnerActions({ state }: { state: PraxisDetailState }) {
 // ── Flag block ────────────────────────────────────────────────────────────────
 
 export function PraxisFlagBlock({ state }: { state: PraxisDetailState }) {
-  const { praxis, showFlagForm, setShowFlagForm, flagReason, setFlagReason, flagging, flagError, setFlagError, flagSubmitted, handleFlag } = state
+  const { praxis, showFlagForm, setShowFlagForm, flagReason, setFlagReason, flagDetail, setFlagDetail, flagging, flagError, setFlagError, flagSubmitted, handleFlag } = state
   if (!praxis) return null
 
   if (flagSubmitted) {
@@ -305,19 +306,46 @@ export function PraxisFlagBlock({ state }: { state: PraxisDetailState }) {
       </div>
       {showFlagForm && (
         <div style={{ marginTop: 10 }}>
-          <textarea
-            className="border-2 border-border bg-card px-3 py-2 font-body text-sm focus:outline-none focus:border-ink w-full resize-none"
-            rows={3}
-            placeholder="Describe the issue (at least 10 characters)..."
-            value={flagReason}
-            onChange={(e) => setFlagReason(e.target.value)}
-            disabled={flagging}
-          />
-          <div className="flex items-center gap-2" style={{ marginTop: 6 }}>
-            <button onClick={() => void handleFlag()} disabled={flagging} className="btn-primary" style={{ fontSize: 9, padding: '4px 12px', background: 'var(--color-danger)', borderColor: 'var(--color-danger)' }}>
-              {flagging ? '...' : 'Submit flag'}
-            </button>
-            <button onClick={() => { setShowFlagForm(false); setFlagReason(''); setFlagError(null) }} disabled={flagging} className="btn-outline" style={{ fontSize: 9, padding: '4px 12px' }}>
+          {/* Reason picker — the shared vocabulary (ADR-0031), not free text. */}
+          <div className="flex items-center gap-2" style={{ flexWrap: 'wrap' }} role="radiogroup" aria-label="Flag reason">
+            {FLAG_REASONS.map(({ value, label }) => (
+              <button
+                key={value}
+                role="radio"
+                aria-checked={flagReason === value}
+                onClick={() => { setFlagReason(value); setFlagError(null) }}
+                disabled={flagging}
+                className="btn-outline"
+                style={{
+                  fontSize: 9,
+                  padding: '4px 10px',
+                  ...(flagReason === value
+                    ? { background: 'var(--color-danger)', borderColor: 'var(--color-danger)', color: 'var(--color-bg-surface)' }
+                    : {}),
+                }}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+          {flagReason === FLAG_REASON_OTHER && (
+            <textarea
+              className="border-2 border-border bg-card px-3 py-2 font-body text-sm focus:outline-none focus:border-ink w-full resize-none"
+              rows={2}
+              placeholder="What's wrong? (optional note for the moderators)"
+              value={flagDetail}
+              onChange={(e) => setFlagDetail(e.target.value)}
+              disabled={flagging}
+              style={{ marginTop: 8 }}
+            />
+          )}
+          <div className="flex items-center gap-2" style={{ marginTop: 8 }}>
+            {flagReason !== null && (
+              <button onClick={() => void handleFlag()} disabled={flagging} className="btn-primary" style={{ fontSize: 9, padding: '4px 12px', background: 'var(--color-danger)', borderColor: 'var(--color-danger)' }}>
+                {flagging ? '...' : 'Submit flag'}
+              </button>
+            )}
+            <button onClick={() => { setShowFlagForm(false); setFlagReason(null); setFlagDetail(''); setFlagError(null) }} disabled={flagging} className="btn-outline" style={{ fontSize: 9, padding: '4px 12px' }}>
               Cancel
             </button>
           </div>

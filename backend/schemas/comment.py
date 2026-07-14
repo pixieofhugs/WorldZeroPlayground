@@ -4,6 +4,7 @@ from typing import Literal, Optional
 from pydantic import BaseModel, ConfigDict, Field
 
 from models.comment import MAX_COMMENT_BODY
+from models.flag import MAX_FLAG_REASON_DETAIL, FlagReason
 
 
 class CommentAuthor(BaseModel):
@@ -35,7 +36,14 @@ class CommentIn(BaseModel):
 
 
 class FlagIn(BaseModel):
-    reason: str = ""
+    """Player flag payload — reason constrained to the shared vocabulary (ADR-0031).
+
+    ``reason_detail`` is the free-text escape hatch for ``other``; the four named
+    reasons carry no note (any detail sent alongside them is ignored).
+    """
+
+    reason: FlagReason
+    reason_detail: Optional[str] = Field(None, max_length=MAX_FLAG_REASON_DETAIL)
 
 
 class CommentModerationIn(BaseModel):

@@ -14,6 +14,7 @@
  * all components automatically see live API values after the first fetch without any
  * component-level changes.
  */
+import i18n from "../i18n";
 
 export interface FactionConfig {
   slug: string;
@@ -113,7 +114,10 @@ export function factionColor(slug: string | null | undefined): string {
 
 /** Get faction display name by slug, with fallback */
 export function factionName(slug: string | null | undefined): string {
-  return factionRegistry[slug ?? ""]?.name ?? "Unaffiliated";
+  // The per-slug names are backend-authored (overwritten by /game-config and
+  // localized in a separate backend issue); only the "no such faction" fallback
+  // is frontend-owned copy, so that one string reads from the catalog.
+  return factionRegistry[slug ?? ""]?.name ?? i18n.t("factions:unaffiliatedName");
 }
 
 /** Get all factions from the live registry (populated from API after useGameConfig loads) */

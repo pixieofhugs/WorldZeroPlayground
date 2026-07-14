@@ -9,6 +9,7 @@
  * every atom is theme-aware through the cascade — no hardcoded hex, no ternaries.
  */
 import type { ReactNode } from "react";
+import i18n from "../../i18n";
 
 /* ── Roman numerals — grades, vote tiers, entry numbers ── */
 const ROMAN: Array<[string, number]> = [
@@ -110,7 +111,7 @@ export function EphEyebrow({
             letterSpacing: "0.24em",
           }}
         >
-          THE EPHEMERISTS
+          {i18n.t("feed:identity.ephemerists.wordmark")}
         </span>
       </div>
       {motto && (

@@ -95,7 +95,7 @@ async def test_sibling_cannot_flag_own_accounts_praxis(
 
     await _carry(client, puppet_b.id, auth_headers)
     resp = await client.post(
-        f"/praxes/{praxis_id}/flag", params={"reason": "sockpuppet self-flag"}, headers=auth_headers
+        f"/praxes/{praxis_id}/flag", json={"reason": "spam"}, headers=auth_headers
     )
     assert resp.status_code == 403
 
@@ -124,14 +124,14 @@ async def test_account_flag_uniqueness_and_non_sibling_still_allowed(
     # Puppet A registers the account's one legitimate flag.
     await _carry(client, character.id, auth_headers)
     first = await client.post(
-        f"/praxes/{target_pid}/flag", params={"reason": "genuine concern here"}, headers=auth_headers
+        f"/praxes/{target_pid}/flag", json={"reason": "other", "reason_detail": "genuine concern here"}, headers=auth_headers
     )
     assert first.status_code == 200
 
     # Puppet B (same account) tries to stack a second flag → 409.
     await _carry(client, puppet_b.id, auth_headers)
     gang = await client.post(
-        f"/praxes/{target_pid}/flag", params={"reason": "piling on here"}, headers=auth_headers
+        f"/praxes/{target_pid}/flag", json={"reason": "spam"}, headers=auth_headers
     )
     assert gang.status_code == 409
 
@@ -143,6 +143,6 @@ async def test_account_flag_uniqueness_and_non_sibling_still_allowed(
     ns_headers = {"Authorization": f"Bearer {create_jwt(account3.id)}"}
     assert non_sibling.id  # seeded
     ns_flag = await client.post(
-        f"/praxes/{target_pid}/flag", params={"reason": "independent concern"}, headers=ns_headers
+        f"/praxes/{target_pid}/flag", json={"reason": "harassment"}, headers=ns_headers
     )
     assert ns_flag.status_code == 200

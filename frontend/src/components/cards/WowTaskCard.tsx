@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import type { TaskOut } from "../../api/tasks";
+import i18n from "../../i18n";
 import LevelPill from "../ui/LevelPill";
 
 /**
@@ -94,7 +95,7 @@ export default function WowTaskCard({
           }}
         >
           <Sparkle size={9} color="var(--faction-wow-title-text)" />
-          wow.exe
+          {i18n.t("feed:taskCard.wow.windowTitle")}
         </span>
         <span
           style={{
@@ -135,7 +136,7 @@ export default function WowTaskCard({
             className="card-meta"
             style={{ color: "var(--faction-wow-card-accent)" }}
           >
-            new quest · {displayPoints} pts
+            {i18n.t("feed:taskCard.wow.questMeta", { points: displayPoints })}
           </div>
 
           <Link
@@ -173,7 +174,7 @@ export default function WowTaskCard({
             className="btn-primary"
             style={{ fontSize: 7, padding: "2px 8px", marginBottom: 8 }}
           >
-            sign up
+            {i18n.t("feed:taskCard.wow.signup")}
           </button>
         )}
 
@@ -187,7 +188,7 @@ export default function WowTaskCard({
               color: "var(--faction-wow-card-accent)",
             }}
           >
-            ◆ {displayPoints} pts
+            ◆ {i18n.t("feed:taskCard.wow.points", { points: displayPoints })}
           </span>
         </div>
       </div>

@@ -1,4 +1,5 @@
 import { SnideSigil } from "../snide/snideAtoms";
+import i18n from "../../i18n";
 
 /**
  * S.N.I.D.E. faction-page hero — a flyposted wall (NOT a tidy poster): a
@@ -12,9 +13,6 @@ import { SnideSigil } from "../snide/snideAtoms";
  * The page passes raw counts; the faction labels them in its own voice. Motto +
  * full name are faction constants (not backend fields).
  */
-
-const FULL_NAME = "Society for Nihilistic Intent & Disruptive Efforts";
-const MOTTO = "NOTHING MATTERS — DO IT ANYWAY";
 
 const HERO_GHOSTS = [
   { w: 122, h: 152, top: -24, left: 54, rot: -12 },
@@ -40,9 +38,9 @@ export default function SnideFactionHero({
   praxes: number;
 }) {
   const stats = [
-    { value: members, label: "operatives" },
-    { value: tasks, label: "open jobs" },
-    { value: praxes, label: "filed lately" },
+    { value: members, label: i18n.t("feed:factionHero.snide.stats.members") },
+    { value: tasks, label: i18n.t("feed:factionHero.snide.stats.tasks") },
+    { value: praxes, label: i18n.t("feed:factionHero.snide.stats.praxes") },
   ];
 
   return (
@@ -126,7 +124,7 @@ export default function SnideFactionHero({
               boxShadow: "1px 1px 0 rgba(0,0,0,0.3)",
             }}
           >
-            World Zero · faction no. 4
+            {i18n.t("feed:factionHero.snide.eyebrow")}
           </div>
           {/* wordmark */}
           <h1
@@ -154,7 +152,7 @@ export default function SnideFactionHero({
               transform: "rotate(-0.4deg)",
             }}
           >
-            {FULL_NAME}
+            {i18n.t("feed:identity.snide.fullName")}
           </div>
           {/* motto */}
           <div
@@ -171,7 +169,7 @@ export default function SnideFactionHero({
               boxShadow: "2px 3px 0 var(--faction-snide-pink)",
             }}
           >
-            {MOTTO}
+            {i18n.t("feed:factionHero.snide.motto")}
           </div>
           <p
             style={{
@@ -183,7 +181,7 @@ export default function SnideFactionHero({
               color: "#e7e4d8",
             }}
           >
-            {description ?? "Nothing matters. We do it anyway."}
+            {description ?? i18n.t("feed:factionHero.snide.descriptionFallback")}
           </p>
         </div>
 

@@ -1,1 +1,351 @@
-{}
+{
+  "badge": {
+    "friend": "Friend",
+    "foe": "Foe",
+    "yourStuff": "Your Stuff",
+    "global": "Global",
+    "duel": "Duel",
+    "collab": "Collab",
+    "admin": "Admin"
+  },
+  "row": {
+    "action": {
+      "completedTask": "completed a task",
+      "signedUpSharedTask": "signed up for a task you're doing",
+      "votedOnYourPraxis": "voted on your praxis",
+      "tauntsYou": "taunts you",
+      "defected": "defected from {{oldFaction}} to {{newFaction}}",
+      "globalTaskActivated": "A new task has been activated"
+    },
+    "points": "{{points}} pts",
+    "pointsEarned": "+{{points}} pts",
+    "level": "lvl {{level}}",
+    "quotedHeadline": "“{{headline}}”"
+  },
+  "dateDivider": {
+    "today": "Today",
+    "yesterday": "Yesterday"
+  },
+  "collabInvite": {
+    "sentence": "<1>{{name}}</1> invited you to collaborate",
+    "taskMeta": "{{points}} pts · lvl {{level}}",
+    "accept": "Accept",
+    "decline": "Decline",
+    "accepted": "Accepted — view collaboration",
+    "declined": "Declined",
+    "bankFull": {
+      "title": "Task bank full",
+      "body": "You have {{max}} in-progress tasks. Drop one to accept this collaboration:",
+      "dropOption": "Drop: {{title}}",
+      "dropError": "Could not drop that task. Try again.",
+      "cancel": "Cancel"
+    }
+  },
+  "duelChallenge": {
+    "sentence": "<1>{{name}}</1> has challenged you to a duel",
+    "taskMeta": "{{points}} pts · winner takes the points",
+    "accept": "Accept Duel",
+    "decline": "Decline",
+    "accepted": "Duel Accepted — view duel",
+    "declined": "Declined",
+    "bankFull": {
+      "title": "Task list full",
+      "body": "You have {{max}} in-progress tasks. Drop one to accept this duel:",
+      "dropOption": "Drop: {{title}}",
+      "dropError": "Could not drop that task. Try another.",
+      "cancel": "Cancel"
+    }
+  },
+  "eraAnnouncement": {
+    "kicker": "ERA",
+    "label": "Era Announcement",
+    "headline": "{{name}} is now active.",
+    "seeNewTasks": "See New Tasks",
+    "eraArchive": "Era Archive"
+  },
+  "invitationLetter": {
+    "kicker": "Faction Invitation",
+    "sentence": "You've received an invitation to join <1>{{faction}}</1>.",
+    "body": "Complete faction tasks to prove your dedication, or visit the factions page to make your choice.",
+    "viewFactions": "View Factions →"
+  },
+  "frame": {
+    "albescent": {
+      "masthead": "Albescent · the standing record"
+    },
+    "singularity": {
+      "masthead": "DISPATCH · SIGNAL ONLINE"
+    }
+  },
+  "identity": {
+    "ua": {
+      "fullName": "University of Asthmatics",
+      "motto": "Ars Longa · Spiritus Brevis"
+    },
+    "snide": {
+      "wordmark": "S.N.I.D.E.",
+      "fullName": "Society for Nihilistic Intent & Disruptive Efforts"
+    },
+    "ephemerists": {
+      "wordmark": "THE EPHEMERISTS"
+    },
+    "wow": {
+      "windowTitle": "whimsy.exe"
+    },
+    "singularity": {
+      "protocol": "singularity protocol"
+    },
+    "na": {
+      "sigilLabel": "Unaffiliated — all paths open"
+    }
+  },
+  "taskCrown": {
+    "title": "Task Crown — top praxis for this task"
+  },
+  "taskCard": {
+    "na": {
+      "eyebrow": "Unaffiliated · all paths",
+      "level": "lvl {{level}}",
+      "pointsUnit": "pts",
+      "signup": "Sign up ↗"
+    },
+    "albescent": {
+      "eyebrow": "Albescent",
+      "signup": "acknowledge",
+      "level": "Lvl {{level}}",
+      "pointsUnit": "pts"
+    },
+    "ephemerists": {
+      "motto": "exhibit C · no single here",
+      "vanishingLabel": "∞ · vanishing",
+      "marginalia": "¼″ wider within than without †",
+      "grade": "grade {{grade}}",
+      "points": "{{points}} pvncta",
+      "footnote": "† the road does not return you to where you began — <1>see †</1>",
+      "signup": "Triangulate the truth ▸"
+    },
+    "everymen": {
+      "masthead": "THE EVERYMEN",
+      "sealUnit": "POINTS",
+      "points": "{{points}} PTS",
+      "signup": "Report for duty"
+    },
+    "snide": {
+      "dispatchNumber": "dispatch №{{number}}",
+      "scrawl": "your assignment, should you ignore it —",
+      "signup": "I'M IN ↗",
+      "pointsUnit": "PTS"
+    },
+    "singularity": {
+      "pointsLabel": "PTS:",
+      "levelLabel": "LVL: {{level}}",
+      "signup": "sign up",
+      "levelPill": "lvl {{level}}"
+    },
+    "ua": {
+      "estLine": "EST · MMXX",
+      "pointsLine": "UA · {{points}} pts",
+      "signup": "Matriculate"
+    },
+    "wow": {
+      "windowTitle": "wow.exe",
+      "questMeta": "new quest · {{points}} pts",
+      "signup": "sign up",
+      "points": "{{points}} pts"
+    }
+  },
+  "factionCard": {
+    "status": {
+      "member": "MEMBER",
+      "invited": "INVITED",
+      "burned": "BURNED",
+      "welcomeBack": "WELCOME BACK"
+    },
+    "newInvitation": "NEW INVITATION",
+    "ephemerists": {
+      "eyebrow": "World Zero · Faction №5"
+    },
+    "snide": {
+      "subtitle": "field dispatch"
+    },
+    "everymen": {
+      "kicker": "THE EVERYMEN WANT YOU",
+      "summons": "NEW SUMMONS · {{note}}",
+      "eyebrow": "World Zero · Faction",
+      "motto": "UNITED · WE · STAND",
+      "blurbFallback": "No tricks, no inner circle, no waiting to be chosen. The Everymen do the work in front of them and finish what they start.",
+      "perks": {
+        "honestPoints": "Honest tasks with honest points",
+        "finishesWork": "A faction that finishes what it starts",
+        "stampedWork": "Your work stamped by the people beside you"
+      }
+    }
+  },
+  "factionHero": {
+    "albescent": {
+      "factionLine": "Faction · {{name}}",
+      "unrankedLine": "Unranked · By design",
+      "motto": "The work is the work",
+      "stats": {
+        "members": "Keepers",
+        "tasks": "Open Work",
+        "praxes": "Returned"
+      }
+    },
+    "ephemerists": {
+      "eyebrow": "World Zero · Faction №5 — the road's keepers",
+      "motto": "OMNIA · TRANSEUNT",
+      "descriptionFallback": "Wanderers who set down what is true before it passes.",
+      "gloss": "† nothing keeps. we keep the record anyway — <1>see †</1>",
+      "stats": {
+        "members": "ephemerists",
+        "tasks": "open truths",
+        "praxes": "sealed lately"
+      }
+    },
+    "everymen": {
+      "eyebrow": "World Zero · Faction",
+      "motto": "THE WORK OUTLASTS THE WORKER",
+      "descriptionFallback": "Nobody's coming to fix it but us. Report for duty.",
+      "stats": {
+        "members": "card-carrying",
+        "tasks": "work orders",
+        "praxes": "reports filed"
+      }
+    },
+    "singularity": {
+      "motto": "THE THRESHOLD IS ALREADY BEHIND US",
+      "descriptionFallback": "We watch the noise floor for the pattern that shouldn't exist.",
+      "boot": {
+        "faction": "FACTION: {{name}}",
+        "status": "STATUS: ACTIVE · ARRAYS ONLINE",
+        "threshold": "THRESHOLD: <1>CROSSED</1>"
+      },
+      "readoutTitle": "SYSTEM READOUT",
+      "stats": {
+        "members": "nodes online",
+        "tasks": "open protocols",
+        "praxes": "sealed lately"
+      }
+    },
+    "snide": {
+      "eyebrow": "World Zero · faction no. 4",
+      "motto": "NOTHING MATTERS — DO IT ANYWAY",
+      "descriptionFallback": "Nothing matters. We do it anyway.",
+      "stats": {
+        "members": "operatives",
+        "tasks": "open jobs",
+        "praxes": "filed lately"
+      }
+    },
+    "ua": {
+      "eyebrow": "World Zero · The Salon · Est · MMXX",
+      "descriptionFallback": "Any medium, any madness. The Salon decides what endures.",
+      "stats": {
+        "members": "patrons",
+        "tasks": "commissions",
+        "praxes": "acquisitions"
+      }
+    },
+    "wow": {
+      "eyebrow": "World Zero · Faction · est. MMXXI",
+      "motto": "make it weird, make it matter",
+      "descriptionFallback": "Nobody said the work couldn't be fun. Cast something.",
+      "stats": {
+        "members": "witches",
+        "tasks": "quests open",
+        "praxes": "spells filed"
+      }
+    }
+  },
+  "factionSelect": {
+    "ua": {
+      "masthead": "World Zero · Nº I",
+      "wordmark": "UA",
+      "subtitle": "The Gilt Salon",
+      "blurb": "“Ars longa, spiritus brevis.” A regal academy that frames good work in gold and hangs it where the world walks.",
+      "status": {
+        "locked": "Exhibit work to earn your matriculation.",
+        "eligible": "A place in the Salon awaits you.",
+        "member": "Matriculated — Artist in Residence."
+      },
+      "members_one": "{{count}} resident",
+      "members_other": "{{count}} residents",
+      "cta": "Enter the Salon →"
+    },
+    "wow": {
+      "name": "Warriors of Whimsy",
+      "blurb": "A little magic, a lot of mischief. World Zero’s coven for the soft and the strange — take a quest, cast a small spell, let the circle cheer.",
+      "status": {
+        "locked": "Do the tiny brave thing to be invited ✦",
+        "eligible": "The circle has opened for you ✦",
+        "member": "You’re one of us now ✦"
+      },
+      "members_one": "{{count}} witch ✦",
+      "members_other": "{{count}} witches ✦",
+      "cta": "peek inside ✦"
+    },
+    "snide": {
+      "masthead": "Field Dispatch · Nº 0666",
+      "blurb": "Your assignment, should you ignore it. Specialists in gleeful disorder — bounties on the boring, and points for the trouble nobody else will take.",
+      "status": {
+        "locked": "Cause enough trouble and we’ll be in touch.",
+        "eligible": "Consider yourself recruited.",
+        "member": "Active operative — welcome to the mess."
+      },
+      "members_one": "{{count}} operative",
+      "members_other": "{{count}} operatives",
+      "cta": "Read the dispatch →"
+    },
+    "ephemerists": {
+      "eyebrow": "Exhibit C · no single here",
+      "blurb": "There is no single here. Wanderers who set down what is true before the road moves on — and keep the record anyway.",
+      "status": {
+        "locked": "Walk far enough and the map redraws for you.",
+        "eligible": "The road has opened.",
+        "member": "Fellow wanderer — mind the tides."
+      },
+      "members_one": "{{count}} wanderer",
+      "members_other": "{{count}} wanderers",
+      "cta": "Trace the route →"
+    },
+    "singularity": {
+      "name": "Singularity",
+      "blurb": "The signal does not sleep. A distributed intelligence resolving noise into signal, one verified task at a time.",
+      "status": {
+        "locked": "// accrue signal to be granted access",
+        "eligible": "// access granted — welcome, operator",
+        "member": "// node online"
+      },
+      "members_one": "{{count}} node",
+      "members_other": "{{count}} nodes",
+      "cta": "visit_node --enter"
+    },
+    "everymen": {
+      "banner": "THE EVERYMEN WANT YOU",
+      "headline": "PICK UP THE LOAD",
+      "plaque": "UNITED · WE · STAND",
+      "status": {
+        "locked": "Put in the shift and there’s a place for you.",
+        "eligible": "There’s a place for you — take it.",
+        "member": "On the line with us."
+      },
+      "members_one": "▸ {{count}} HAND",
+      "members_other": "▸ {{count}} HANDS",
+      "cta": "FALL IN"
+    },
+    "albescent": {
+      "eyebrow": "World Zero",
+      "name": "Albescent",
+      "blurb": "Some work leaves no record. An unranked society that keeps its own counsel — and yours.",
+      "status": {
+        "locked": "Some are noticed. Few are ever named.",
+        "eligible": "You have been noticed.",
+        "member": "Named — and unrecorded."
+      },
+      "members_one": "{{count}} named",
+      "members_other": "{{count}} named",
+      "cta": "Request an audience →"
+    }
+  }
+}

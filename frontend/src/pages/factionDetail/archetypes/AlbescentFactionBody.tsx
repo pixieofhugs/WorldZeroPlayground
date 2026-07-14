@@ -1,4 +1,5 @@
 import { type CSSProperties, type ReactNode } from "react";
+import { useTranslation } from "react-i18next";
 import TaskCard from "../../../components/TaskCard";
 import PraxisCard from "../../../components/PraxisCard";
 import CharacterBadge from "../../../components/CharacterBadge";
@@ -79,6 +80,7 @@ function Quiet({ children }: { children: ReactNode }) {
 }
 
 export default function AlbescentFactionBody({ state }: { state: FactionDetailState }) {
+  const { t } = useTranslation("factions");
   const { faction, members, tasks, recentPraxis, viewerFactionSlug, gameFactions } = state;
 
   // Guarded non-null by the dispatcher.
@@ -88,9 +90,13 @@ export default function AlbescentFactionBody({ state }: { state: FactionDetailSt
     <>
       {/* ── Keepers (members) ── */}
       <Sheet>
-        <SectionHeading kicker="The Houses" title="Keepers" count={members.length} />
+        <SectionHeading
+          kicker={t("albescent.keepers.kicker")}
+          title={t("albescent.keepers.title")}
+          count={members.length}
+        />
         {members.length === 0 ? (
-          <Quiet>No keepers on record.</Quiet>
+          <Quiet>{t("albescent.keepers.empty")}</Quiet>
         ) : (
           <div className="flex flex-wrap gap-3">
             {members.map((m) => (
@@ -104,9 +110,13 @@ export default function AlbescentFactionBody({ state }: { state: FactionDetailSt
 
       {/* ── Tasks (the ledger) ── reuses the Albescent TaskCard archetype ── */}
       <Sheet>
-        <SectionHeading kicker="Open Work" title="The Ledger" count={tasks.length} />
+        <SectionHeading
+          kicker={t("albescent.ledger.kicker")}
+          title={t("albescent.ledger.title")}
+          count={tasks.length}
+        />
         {tasks.length === 0 ? (
-          <Quiet>The ledger is clear.</Quiet>
+          <Quiet>{t("albescent.ledger.empty")}</Quiet>
         ) : (
           <div style={CARD_GRID}>
             {tasks.map((task) => (
@@ -127,9 +137,12 @@ export default function AlbescentFactionBody({ state }: { state: FactionDetailSt
 
       {/* ── Recently completed (returned) ── reuses the Albescent PraxisCard ── */}
       <Sheet>
-        <SectionHeading kicker="Attended To" title="Lately Returned" />
+        <SectionHeading
+          kicker={t("albescent.returned.kicker")}
+          title={t("albescent.returned.title")}
+        />
         {recentPraxis.length === 0 ? (
-          <Quiet>Nothing returned yet. The Record waits.</Quiet>
+          <Quiet>{t("albescent.returned.empty")}</Quiet>
         ) : (
           <div style={CARD_GRID}>
             {recentPraxis.map((p) => (
