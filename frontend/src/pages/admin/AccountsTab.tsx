@@ -1,4 +1,5 @@
 import { useEffect, useState, useRef } from "react";
+import { useTranslation } from "react-i18next";
 import {
   getAccounts,
   getAccountDetail,
@@ -9,7 +10,22 @@ import type { AccountSummary, AccountDetail } from "../../api/admin";
 import { extractError } from "../../utils/errors";
 import { formatTimestamp } from "../../utils/dates";
 
+type AccountStatus = "active" | "suspended" | "banned" | "paused";
+const ACCOUNT_STATUSES: AccountStatus[] = [
+  "active",
+  "suspended",
+  "banned",
+  "paused",
+];
+
 export default function AccountsTab() {
+  const { t } = useTranslation(["admin", "common"]);
+  // Backend statuses are open strings; render the known ones through the
+  // catalog and fall back to the raw value for anything unmapped.
+  const statusLabel = (status: string): string => {
+    const known = ACCOUNT_STATUSES.find((s) => s === status);
+    return known ? t(`accounts.status.${known}`) : status;
+  };
   const [accounts, setAccounts] = useState<AccountSummary[]>([]);
   const [searchEmail, setSearchEmail] = useState("");
   const [expandedId, setExpandedId] = useState<number | null>(null);
@@ -23,7 +39,7 @@ export default function AccountsTab() {
     setError(null);
     getAccounts(email || undefined)
       .then(setAccounts)
-      .catch((err) => setError(extractError(err, "Couldn't load accounts.")))
+      .catch((err) => setError(extractError(err, t("accounts.loadError"))))
       .finally(() => setLoading(false));
   };
 
@@ -50,7 +66,7 @@ export default function AccountsTab() {
       const d = await getAccountDetail(accountId);
       setDetail(d);
     } catch (err) {
-      setActionError(extractError(err, "Could not load account detail."));
+      setActionError(extractError(err, t("accounts.detailError")));
     }
   };
 
@@ -64,7 +80,7 @@ export default function AccountsTab() {
         setDetail(d);
       }
     } catch (err) {
-      setActionError(extractError(err, "Could not update account."));
+      setActionError(extractError(err, t("accounts.suspendError")));
     }
   };
 
@@ -77,12 +93,12 @@ export default function AccountsTab() {
         setDetail(d);
       }
     } catch (err) {
-      setActionError(extractError(err, "Could not update character."));
+      setActionError(extractError(err, t("accounts.banError")));
     }
   };
 
   if (loading)
-    return <div className="font-body text-muted text-sm">Loading...</div>;
+    return <div className="font-body text-muted text-sm">{t("common:loading")}</div>;
   if (error) return <p className="font-body text-sm text-red-600">{error}</p>;
 
   return (
@@ -96,7 +112,7 @@ export default function AccountsTab() {
       {/* Search */}
       <input
         type="text"
-        placeholder="Search by email..."
+        placeholder={t("accounts.searchPlaceholder")}
         value={searchEmail}
         onChange={(e) => handleSearch(e.target.value)}
         className="border-2 border-border bg-card px-3 py-2 font-body text-sm focus:outline-none focus:border-ink w-full mb-4"
@@ -104,7 +120,7 @@ export default function AccountsTab() {
 
       {/* Accounts list */}
       {accounts.length === 0 ? (
-        <p className="font-body text-sm text-muted">No accounts found.</p>
+        <p className="font-body text-sm text-muted">{t("accounts.empty")}</p>
       ) : (
         <div className="flex flex-col gap-3">
           {accounts.map((account) => (
@@ -133,9 +149,9 @@ export default function AccountsTab() {
                         fontWeight: 700,
                       }}
                     >
-                      {account.status}
+                      {statusLabel(account.status)}
                     </span>{" "}
-                    &middot; ID #{account.id} &middot;{" "}
+                    &middot; {t("accounts.idLabel", { id: account.id })} &middot;{" "}
                     {formatTimestamp(account.created_at)}
                   </p>
                 </button>
@@ -159,7 +175,9 @@ export default function AccountsTab() {
                         }
                   }
                 >
-                  {account.status === "suspended" ? "unsuspend" : "suspend"}
+                  {account.status === "suspended"
+                    ? t("accounts.unsuspend")
+                    : t("accounts.suspend")}
                 </button>
               </div>
 
@@ -170,11 +188,13 @@ export default function AccountsTab() {
                     className="eyebrow mb-2"
                     style={{ color: "var(--color-text-tertiary)" }}
                   >
-                    Characters ({detail.characters.length})
+                    {t("accounts.charactersHeading", {
+                      count: detail.characters.length,
+                    })}
                   </p>
                   {detail.characters.length === 0 ? (
                     <p className="font-body text-xs text-muted">
-                      No characters.
+                      {t("accounts.noCharacters")}
                     </p>
                   ) : (
                     <div className="flex flex-col gap-2">
@@ -203,7 +223,7 @@ export default function AccountsTab() {
                                 fontWeight: 700,
                               }}
                             >
-                              {character.status}
+                              {statusLabel(character.status)}
                             </span>
                           </div>
                           <button
@@ -230,7 +250,9 @@ export default function AccountsTab() {
                                   }
                             }
                           >
-                            {character.status === "banned" ? "unban" : "ban"}
+                            {character.status === "banned"
+                              ? t("accounts.unban")
+                              : t("accounts.ban")}
                           </button>
                         </div>
                       ))}

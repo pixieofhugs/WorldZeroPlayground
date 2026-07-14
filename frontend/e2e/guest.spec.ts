@@ -11,7 +11,8 @@ test('marketing home renders for a guest', async ({ page }) => {
 test('the dev-login button logs a bot in', async ({ page }) => {
   await page.goto('/')
   await page.getByRole('button', { name: /dev login/i }).click()
-  // Once authed, `/` swaps from the marketing Home to the FieldDesk.
+  // This bot has no character (clicked the real button, not the seeded fixture),
+  // so it correctly redirects to character creation rather than the FieldDesk.
   await expect(page.getByRole('button', { name: /sign up here/i })).toHaveCount(0)
-  await expect(page.getByRole('heading', { name: /whose shoes today/i })).toBeVisible()
+  await expect(page.getByRole('heading', { name: /who are you becoming/i })).toBeVisible()
 })

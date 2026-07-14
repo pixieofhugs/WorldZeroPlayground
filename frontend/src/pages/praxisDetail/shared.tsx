@@ -17,7 +17,7 @@ import { reframeLabel } from '../../components/vote/voteReframes'
 import { TaskCrown } from '../../components/cards/TaskCrown'
 import type { PraxisDetailState } from './usePraxisDetail'
 import type { PraxisMemberOut, PraxisOut } from '../../api/praxis'
-import { FLAG_REASONS, FLAG_REASON_OTHER } from '../../utils/flagReasons'
+import { flagReasonOptions, FLAG_REASON_OTHER } from '../../utils/flagReasons'
 
 // ── Egalitarian byline (#387) ────────────────────────────────────────────────
 //
@@ -308,7 +308,7 @@ export function PraxisFlagBlock({ state }: { state: PraxisDetailState }) {
         <div style={{ marginTop: 10 }}>
           {/* Reason picker — the shared vocabulary (ADR-0031), not free text. */}
           <div className="flex items-center gap-2" style={{ flexWrap: 'wrap' }} role="radiogroup" aria-label="Flag reason">
-            {FLAG_REASONS.map(({ value, label }) => (
+            {flagReasonOptions().map(({ value, label }) => (
               <button
                 key={value}
                 role="radio"
