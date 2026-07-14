@@ -39,6 +39,11 @@ class CharacterOut(BaseModel):
     status: str
     created_at: datetime
     badges: list[BadgeOut] = Field(default_factory=list)
+    # Faction slugs this character holds a current-era invitation letter for
+    # (ADR-0022; #243). Populated ONLY by the /auth/me active-character path so
+    # the frontend InvitationWatcher can detect a newly-earned invite; list
+    # serializers and public reads leave it empty. na/albescent excluded.
+    invitations: list[str] = Field(default_factory=list)
 
 
 class CharacterCreate(BaseModel):

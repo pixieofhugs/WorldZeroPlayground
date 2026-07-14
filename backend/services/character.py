@@ -30,12 +30,16 @@ def build_character_out(
     character: Character,
     stats: CharacterStats | None,
     badges: list[BadgeOut] | None = None,
+    invitations: list[str] | None = None,
 ) -> CharacterOut:
     """Flatten a Character row plus its (optional) CharacterStats into CharacterOut.
 
     votes_available is computed on read from stats.score and votes_spent_this_era.
     badges (ADR-0033) is supplied only by the single-character read path; list
     serializers omit it and the field defaults to empty.
+    invitations (#243) is supplied only by the /auth/me active-character path so
+    the frontend can detect newly-earned invitation letters; it defaults to empty
+    everywhere else.
     """
     return CharacterOut(
         id=character.id,
@@ -52,6 +56,7 @@ def build_character_out(
         level=stats.level if stats else 0,
         votes_available=compute_votes_available(stats) if stats else 0,
         badges=badges or [],
+        invitations=invitations or [],
     )
 
 
@@ -199,6 +204,35 @@ async def get_account_invited_faction_slugs(
         .join(Character, Character.id == InvitationLetter.character_id)
         .where(
             Character.account_id == account_id,
+            InvitationLetter.era_id == era_row.id,
+            InvitationLetter.faction_slug.notin_(list(_ALBESCENT_SENTINEL_SLUGS)),
+        )
+    )
+    return sorted(row[0] for row in result.all())
+
+
+async def list_current_era_invitations_for_character(
+    character_id: int,
+    session: AsyncSession,
+) -> list[str]:
+    """Faction slugs THIS character holds a current-era invitation letter for (#243).
+
+    Unlike :func:`get_account_invited_faction_slugs` (account-pooled, used to gate
+    creation/join), this is per-character: it powers the /auth/me invitation
+    watcher, which diffs the active life's own earned invites. ``Character.account``
+    is ``lazy="raise"``, so the letter rows are queried explicitly by character_id
+    (mirroring how #459 badges do sibling queries). The ``na`` sentinel and
+    ``albescent`` are excluded — never invite-joinable. Returns ``[]`` when the era
+    is unseeded or no invites exist.
+    """
+    era_row = await get_current_era_row_safe(session)
+    if era_row is None:
+        return []
+    result = await session.execute(
+        select(InvitationLetter.faction_slug)
+        .distinct()
+        .where(
+            InvitationLetter.character_id == character_id,
             InvitationLetter.era_id == era_row.id,
             InvitationLetter.faction_slug.notin_(list(_ALBESCENT_SENTINEL_SLUGS)),
         )

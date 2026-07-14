@@ -15,6 +15,7 @@ from services.character import (
     build_character_out,
     can_create_additional_character,
     can_start_as_albescent,
+    list_current_era_invitations_for_character,
     resolve_active_character,
 )
 from services.character_capabilities import compute_capabilities
@@ -32,7 +33,12 @@ async def build_current_user(
     character_level: int | None = None
     if character:
         stats = await load_current_era_stats(character.id, session)
-        char_out = build_character_out(character, stats)
+        # #243: surface the active life's own current-era invitation letters so the
+        # frontend InvitationWatcher can detect newly-earned ones.
+        invitations = await list_current_era_invitations_for_character(
+            character.id, session
+        )
+        char_out = build_character_out(character, stats, invitations=invitations)
         character_level = stats.level if stats else 0
 
     is_admin = await account_has_admin_role(account.id, session)

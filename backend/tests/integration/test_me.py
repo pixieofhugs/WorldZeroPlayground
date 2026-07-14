@@ -189,3 +189,85 @@ async def test_auth_me_surfaces_gate_copy_fields(
     data = resp.json()
     assert data["second_character_level_required"] == CURRENT_ERA.second_character_level_required
     assert data["era_name"] == CURRENT_ERA.name
+
+
+# --- /auth/me invitations field (#243) --------------------------------------
+
+
+@pytest.mark.asyncio
+async def test_auth_me_invitations_empty_by_default(
+    client: AsyncClient, character: Character, era: Era, auth_headers: dict
+):
+    """No invitation letters -> empty list on the carried life."""
+    resp = await client.get("/auth/me", headers=auth_headers)
+    assert resp.status_code == 200
+    assert resp.json()["character"]["invitations"] == []
+
+
+@pytest.mark.asyncio
+async def test_auth_me_invitations_single(
+    client: AsyncClient,
+    db_session: AsyncSession,
+    character: Character,
+    era: Era,
+    faction_ua: Faction,
+    auth_headers: dict,
+):
+    """One held current-era invitation surfaces on the carried life."""
+    db_session.add(
+        InvitationLetter(character_id=character.id, faction_slug="ua", era_id=era.id)
+    )
+    await db_session.commit()
+
+    resp = await client.get("/auth/me", headers=auth_headers)
+    assert resp.status_code == 200
+    assert resp.json()["character"]["invitations"] == ["ua"]
+
+
+@pytest.mark.asyncio
+async def test_auth_me_invitations_two_sorted_excludes_sentinels(
+    client: AsyncClient,
+    db_session: AsyncSession,
+    account: Account,
+    character: Character,
+    era: Era,
+    faction_ua: Faction,
+    faction_ephemerists: Faction,
+    auth_headers: dict,
+):
+    """Two invitations return sorted; na/albescent sentinels are excluded, and
+    a sibling life's invite does NOT leak onto the carried life (per-character,
+    not account-pooled)."""
+    from models.faction import FactionStatus
+
+    # Pin the carried life to `character` so a later-created sibling doesn't
+    # become the resolved active character.
+    account.active_character_id = character.id
+
+    db_session.add(
+        InvitationLetter(character_id=character.id, faction_slug="ua", era_id=era.id)
+    )
+    db_session.add(
+        InvitationLetter(
+            character_id=character.id, faction_slug="ephemerists", era_id=era.id
+        )
+    )
+    # A sentinel invite is never surfaced.
+    db_session.add(
+        Faction(slug="albescent", name="Albescent", description="x", status=FactionStatus.visible)
+    )
+    db_session.add(
+        InvitationLetter(
+            character_id=character.id, faction_slug="albescent", era_id=era.id
+        )
+    )
+    # A sibling life's invite must not appear on the carried life.
+    sibling = await _add_character(db_session, account, era, username="sibling")
+    db_session.add(
+        InvitationLetter(character_id=sibling.id, faction_slug="ua", era_id=era.id)
+    )
+    await db_session.commit()
+
+    resp = await client.get("/auth/me", headers=auth_headers)
+    assert resp.status_code == 200
+    assert resp.json()["character"]["invitations"] == ["ephemerists", "ua"]
