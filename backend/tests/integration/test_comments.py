@@ -218,7 +218,7 @@ async def test_self_flag_rejected(
     comment_id = create.json()["id"]
     resp = await client.post(
         f"/comments/{comment_id}/flag",
-        json={"reason": "x"},
+        json={"reason": "spam"},
         headers=auth_headers2,
     )
     assert resp.status_code == 403
@@ -241,7 +241,7 @@ async def test_flag_requires_level(
     # character is level 0 < flag_level_required (4)
     resp = await client.post(
         f"/comments/{comment_id}/flag",
-        json={"reason": "x"},
+        json={"reason": "spam"},
         headers=auth_headers,
     )
     assert resp.status_code == 403

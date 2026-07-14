@@ -102,5 +102,7 @@ async def flag_comment_route(
     flagged_by: Character = Depends(get_current_character),
     session: AsyncSession = Depends(get_db),
 ):
-    comment = await flag_comment(comment_id, flagged_by, data.reason, session)
+    comment = await flag_comment(
+        comment_id, flagged_by, data.reason, session, reason_detail=data.reason_detail
+    )
     return build_comment_out(comment)

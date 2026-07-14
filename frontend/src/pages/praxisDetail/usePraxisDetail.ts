@@ -27,6 +27,7 @@ import { moderatePraxis } from "../../api/admin";
 import { extractError } from "../../utils/errors";
 import type { CurrentUser } from "../../api/auth";
 import { listTasks, type TaskOut } from "../../api/tasks";
+import { FLAG_REASON_OTHER, type FlagReason } from "../../utils/flagReasons";
 
 export interface PraxisDetailState {
   // Routing / loading
@@ -62,11 +63,14 @@ export interface PraxisDetailState {
   moderating: boolean;
   moderateError: string | null;
 
-  // Flagging
+  // Flagging — reason is a pick from the shared vocabulary (ADR-0031);
+  // flagDetail is the free-text note that only travels with 'other'.
   showFlagForm: boolean;
   setShowFlagForm: (value: boolean) => void;
-  flagReason: string;
-  setFlagReason: (value: string) => void;
+  flagReason: FlagReason | null;
+  setFlagReason: (value: FlagReason | null) => void;
+  flagDetail: string;
+  setFlagDetail: (value: string) => void;
   flagging: boolean;
   flagError: string | null;
   setFlagError: (value: string | null) => void;
@@ -128,7 +132,8 @@ export function usePraxisDetail(idParam: string | undefined): PraxisDetailState 
   const [moderating, setModerating] = useState(false);
   const [moderateError, setModerateError] = useState<string | null>(null);
   const [showFlagForm, setShowFlagForm] = useState(false);
-  const [flagReason, setFlagReason] = useState("");
+  const [flagReason, setFlagReason] = useState<FlagReason | null>(null);
+  const [flagDetail, setFlagDetail] = useState("");
   const [flagging, setFlagging] = useState(false);
   const [flagError, setFlagError] = useState<string | null>(null);
   const [flagSubmitted, setFlagSubmitted] = useState(false);
@@ -257,18 +262,20 @@ export function usePraxisDetail(idParam: string | undefined): PraxisDetailState 
 
   const handleFlag = async () => {
     if (!praxis) return;
-    const trimmed = flagReason.trim();
-    if (trimmed.length < 10) {
-      setFlagError("Please describe the issue in at least 10 characters.");
+    if (flagReason === null) {
+      setFlagError("Pick a reason first.");
       return;
     }
     setFlagging(true);
     setFlagError(null);
     try {
-      await flagPraxis(praxis.id, trimmed);
+      const detail =
+        flagReason === FLAG_REASON_OTHER ? flagDetail.trim() : undefined;
+      await flagPraxis(praxis.id, flagReason, detail || undefined);
       setFlagSubmitted(true);
       setShowFlagForm(false);
-      setFlagReason("");
+      setFlagReason(null);
+      setFlagDetail("");
     } catch (err) {
       setFlagError(extractError(err, "Could not flag this praxis."));
     } finally {
@@ -308,6 +315,8 @@ export function usePraxisDetail(idParam: string | undefined): PraxisDetailState 
     setShowFlagForm,
     flagReason,
     setFlagReason,
+    flagDetail,
+    setFlagDetail,
     flagging,
     flagError,
     setFlagError,
