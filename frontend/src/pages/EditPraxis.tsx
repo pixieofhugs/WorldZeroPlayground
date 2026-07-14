@@ -6,6 +6,7 @@
  * archetypes share identical behaviour but each owns its own visual metaphor.
  */
 import { useParams } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import PageTitle from "../components/ui/PageTitle";
 import { pickVariant } from "../utils/factionDispatch";
 import {
@@ -37,14 +38,15 @@ const ARCHETYPE_BY_SLUG: Record<string, Archetype> = {
 };
 
 export default function EditPraxis() {
+  const { t } = useTranslation("forms");
   const { id } = useParams<{ id: string }>();
   const state = useEditPraxis(id);
 
   if (state.loading) {
     return (
       <div className="py-8 font-body text-muted">
-        <PageTitle title="Edit Praxis" />
-        Loading...
+        <PageTitle title={t("editPraxis.loadingPageTitle")} />
+        {t("editPraxis.loading")}
       </div>
     );
   }

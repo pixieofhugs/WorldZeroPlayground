@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { getLeaderboard } from '../api/leaderboard'
 import type { CharacterOut } from '../api/auth'
 import PageTitle from '../components/ui/PageTitle'
@@ -17,6 +18,7 @@ const RANK_STYLES = [
 ]
 
 export default function Leaderboard() {
+  const { t } = useTranslation('common')
   const { user } = useAuth()
   const [characters, setCharacters] = useState<CharacterOut[]>([])
   const [scoreMode, setScoreMode] = useState<'era' | 'alltime'>('era')
@@ -44,14 +46,14 @@ export default function Leaderboard() {
       <PageTitle title="Players" eyebrow="Era I" />
 
       {loading ? (
-        <p className="font-body text-muted">Loading...</p>
+        <p className="font-body text-muted">{t('leaderboard.loading')}</p>
       ) : fetchError ? (
         <p className="font-body text-sm text-red-600 border-2 border-red-300 px-3 py-2">
           {fetchError}{' '}
-          <button onClick={() => window.location.reload()} className="underline">Try refreshing.</button>
+          <button onClick={() => window.location.reload()} className="underline">{t('states.tryRefreshing')}</button>
         </p>
       ) : characters.length === 0 ? (
-        <p className="font-body text-muted">No players yet.</p>
+        <p className="font-body text-muted">{t('leaderboard.empty')}</p>
       ) : (
         <>
           {/* ── Early-era hero note: only you have joined so far ── */}
@@ -65,11 +67,10 @@ export default function Leaderboard() {
               }}
             >
               <span className="eyebrow" style={{ fontSize: 8, display: 'block', marginBottom: 4 }}>
-                Era I · Roll call
+                {t('leaderboard.soloEyebrow')}
               </span>
               <p className="font-body" style={{ fontSize: 14, margin: 0, color: 'var(--color-text-primary)' }}>
-                You're the first player on World Zero. The rankings will fill in as others arrive —
-                until then, the board is yours alone.
+                {t('leaderboard.soloBody')}
               </p>
             </div>
           )}
@@ -149,7 +150,7 @@ export default function Leaderboard() {
           {sorted.length === 2 && (
             <>
               <span className="eyebrow" style={{ fontSize: 8, display: 'block', marginBottom: 8, textAlign: 'center' }}>
-                Rankings so far
+                {t('leaderboard.rankingsSoFar')}
               </span>
               <div style={{ display: 'flex', justifyContent: 'center', gap: 12, marginBottom: 24 }}>
                 {sorted.map((player, index) => {
@@ -388,7 +389,10 @@ export default function Leaderboard() {
                   {user?.character?.display_name}
                 </span>
                 <span className="eyebrow" style={{ marginLeft: 6 }}>
-                  {factionName(user?.character?.faction_slug)} · Level {user?.character?.level}
+                  {t('leaderboard.youFactionLevel', {
+                    faction: factionName(user?.character?.faction_slug),
+                    level: user?.character?.level,
+                  })}
                 </span>
               </div>
               <span className="font-display italic" style={{ fontSize: 16, fontWeight: 700, color: 'var(--color-rank-accent)' }}>

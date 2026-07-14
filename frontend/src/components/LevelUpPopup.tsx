@@ -133,7 +133,7 @@ function AbilityRow({ ability, color }: { ability: LevelUnlock; color: string })
       </span>
       <div>
         <div style={{ fontFamily: FONT_BODY, fontSize: 7, letterSpacing: '0.18em', textTransform: 'uppercase', color: FAINT, marginBottom: 3 }}>
-          {isSense ? 'A curious sense' : 'New ability'}
+          {isSense ? t('popup.senseEyebrow') : t('popup.abilityEyebrow')}
         </div>
         <div style={{ fontFamily: FONT_DISPLAY, fontStyle: 'italic', fontSize: 16, lineHeight: 1.2, color: INK }}>
           {name}
@@ -164,11 +164,12 @@ export default function LevelUpPopup({
   rankKey,
   abilities,
   onContinue,
-  continueLabel = 'Continue',
+  continueLabel,
   sealRing = 'rainbow',
   dimBackdrop = true,
 }: LevelUpPopupProps) {
   const { t } = useTranslation('progression')
+  const continueText = continueLabel ?? t('popup.continue')
   const rank = tKey(t, `ranks.${rankKey}`)
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
@@ -198,14 +199,14 @@ export default function LevelUpPopup({
       <SealStamp level={level} sealRing={sealRing} />
 
       <p style={{ fontFamily: FONT_BODY, fontSize: 9, textTransform: 'uppercase', letterSpacing: '0.15em', color: FAINT, margin: '0 0 4px' }}>
-        Level Reached
+        {t('popup.levelReached')}
       </p>
       <RainbowText text={rank} />
 
       <RainbowRule style={{ margin: '14px 0 16px' }} />
 
       <div style={{ fontFamily: FONT_BODY, fontSize: 8, letterSpacing: '0.2em', textTransform: 'uppercase', color: FAINT, marginBottom: 14 }}>
-        Now Unlocked
+        {t('popup.nowUnlocked')}
       </div>
 
       {abilities.map((ab, idx) => (
@@ -233,7 +234,7 @@ export default function LevelUpPopup({
         onMouseEnter={(e) => (e.currentTarget.style.opacity = '0.85')}
         onMouseLeave={(e) => (e.currentTarget.style.opacity = '1')}
       >
-        {continueLabel}
+        {continueText}
       </button>
     </div>
   )

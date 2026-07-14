@@ -200,7 +200,7 @@ export default function WowPraxisDetail({ state }: { state: PraxisDetailState })
                   boxShadow: `0 3px 8px var(--faction-wow-light)`,
                 }}
               >
-                <Sparkle size={10} color={ON_ACCENT} /> sealed
+                <Sparkle size={10} color={ON_ACCENT} /> {t('detail.wow.sealed')}
               </span>
               <span style={pill}>{modeVoice(praxis.type, t)}</span>
               <span style={{ fontSize: 9.5, color: CARD_MUTED, letterSpacing: '0.04em' }}>

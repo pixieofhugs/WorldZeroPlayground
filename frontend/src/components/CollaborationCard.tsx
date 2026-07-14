@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import type { PraxisCardOut } from '../api/praxis'
 import { factionCssVar } from '../utils/factions'
 
@@ -7,6 +8,7 @@ interface Props {
 }
 
 export default function CollaborationCard({ collab }: Props) {
+  const { t } = useTranslation('common')
   const isDuel = collab.type === 'duel'
 
   return (
@@ -32,7 +34,7 @@ export default function CollaborationCard({ collab }: Props) {
             : 'color-mix(in srgb, var(--color-success) 30%, transparent)'}`,
         }}
       >
-        {isDuel ? 'Duel' : 'Collaboration'}
+        {isDuel ? t('collaborationCard.duel') : t('collaborationCard.collaboration')}
       </span>
 
       {/* Task link */}
@@ -43,13 +45,16 @@ export default function CollaborationCard({ collab }: Props) {
       {/* Title or member count */}
       <Link to={`/praxes/${collab.id}`}>
         <h3 className="font-display text-lg font-semibold leading-tight hover:underline">
-          {collab.title ?? `${collab.type === 'duel' ? 'Duel' : 'Collaboration'} · ${collab.member_count} players`}
+          {collab.title ?? t('collaborationCard.titleFallback', {
+            label: isDuel ? t('collaborationCard.duel') : t('collaborationCard.collaboration'),
+            count: collab.member_count,
+          })}
         </h3>
       </Link>
 
       <div className="flex justify-between items-center pt-2 border-t border-dashed border-border/40 font-body text-xs text-muted mt-auto">
         <Link to={`/praxes/${collab.id}`} className="hover:underline">
-          View {isDuel ? 'duel' : 'collaboration'}
+          {isDuel ? t('collaborationCard.viewDuel') : t('collaborationCard.viewCollaboration')}
         </Link>
         {collab.score !== null && collab.score > 0 && (
           <span className="font-display text-sm font-bold text-ink">

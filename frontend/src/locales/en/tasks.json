@@ -1,4 +1,8 @@
 {
+  "listPage": {
+    "loading": "Loading tasks...",
+    "empty": "No tasks match your filters."
+  },
   "detail": {
     "loading": "Loading...",
     "fetchError": "<0>Try refreshing.</0>",
@@ -181,6 +185,12 @@
     "viewAll": "see all {{count}} spells ✦"
   },
   "ephemerists": {
+    "diagram": {
+      "coordXPrefix": "x 14 · y ",
+      "coordPolar": "r 47 · θ 31°",
+      "coordVanishing": "∞ · vanishing",
+      "widthNote": "¼″ wider within than without †"
+    },
     "breadcrumb": "Tasks",
     "faction": "The Ephemerists",
     "masthead": "THE EPHEMERISTS",

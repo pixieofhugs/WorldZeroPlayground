@@ -1,5 +1,6 @@
 import { useEffect, useState, type CSSProperties } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { useAuth } from '../auth/AuthContext'
 import { getMyCharacters, setActiveCharacter } from '../api/me'
 import type { CharacterOut } from '../api/auth'
@@ -17,6 +18,7 @@ import { mediaUrl } from '../utils/media'
 const TILTS = [-2.5, 1.8, -1.2, 2.4, -2.0, 1.4]
 
 export default function FieldDesk() {
+  const { t } = useTranslation('common')
   const { user, refetch } = useAuth()
   const navigate = useNavigate()
   const [lives, setLives] = useState<CharacterOut[]>([])
@@ -62,18 +64,18 @@ export default function FieldDesk() {
             <span style={{ fontSize: 9, color: 'var(--color-text-secondary)' }}>
               @{active.username} ·{' '}
               <b style={{ color: 'var(--color-text-primary)' }}>
-                {lives.length} {lives.length === 1 ? 'life' : 'lives'} in play
+                {t('fieldDesk.livesInPlay', { count: lives.length })}
               </b>
             </span>
           </div>
         )}
       </div>
 
-      <h1 style={headingStyle}>Whose shoes today?</h1>
+      <h1 style={headingStyle}>{t('fieldDesk.heading')}</h1>
       <div style={rainbowUnderline} />
 
       {loading ? (
-        <p className="font-body text-muted" style={{ marginTop: 24 }}>Pulling your lives from the drawer…</p>
+        <p className="font-body text-muted" style={{ marginTop: 24 }}>{t('fieldDesk.loading')}</p>
       ) : (
         <div style={rosterRow}>
           {lives.map((life, index) => (
@@ -84,7 +86,7 @@ export default function FieldDesk() {
               disabled={switching != null}
               className="fielddesk-life"
               style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}
-              title={`Step into ${life.display_name}`}
+              title={t('fieldDesk.stepInto', { name: life.display_name })}
             >
               <CredentialCard
                 displayName={life.display_name}
@@ -124,7 +126,7 @@ export default function FieldDesk() {
       )}
 
       <p style={footerHint}>
-        A life is a pair of shoes. Lace up an old one, or cut a new pair from whole cloth.
+        {t('fieldDesk.footer')}
       </p>
     </div>
   )
@@ -143,15 +145,16 @@ function NewSelfDossier({
   levelsToGo: number
   onBegin: () => void
 }) {
+  const { t } = useTranslation('common')
   if (unlocked) {
     return (
-      <button type="button" onClick={onBegin} style={dossierUnlocked} title="Begin a new self">
+      <button type="button" onClick={onBegin} style={dossierUnlocked} title={t('fieldDesk.beginNewSelfTitle')}>
         <div style={folderTab} />
         <div style={medallion}>+</div>
         <div style={{ fontFamily: 'var(--font-display)', fontStyle: 'italic', fontWeight: 700, fontSize: 23, color: 'var(--color-text-primary)' }}>
-          Begin a new self
+          {t('fieldDesk.beginNewSelf')}
         </div>
-        <div style={slotOpen}>✓ slot open — start a new life</div>
+        <div style={slotOpen}>{t('fieldDesk.slotOpen')}</div>
       </button>
     )
   }
@@ -159,12 +162,15 @@ function NewSelfDossier({
     <div style={dossierLocked} aria-disabled>
       <div style={{ fontSize: 22 }}>🔒</div>
       <div style={{ fontFamily: 'var(--font-display)', fontStyle: 'italic', fontWeight: 700, fontSize: 21, color: 'var(--color-text-secondary)', marginTop: 8 }}>
-        A second self awaits
+        {t('fieldDesk.secondSelfAwaits')}
       </div>
       <div style={{ fontSize: 9.5, lineHeight: 1.6, color: 'var(--color-text-tertiary)', marginTop: 8, maxWidth: 200 }}>
-        Reach Lvl {gateLevel} on a life you already carry{eraName ? ` — the gate set by ${eraName}` : ''}.
+        {t('fieldDesk.gateHint', {
+          gateLevel,
+          eraSuffix: eraName ? t('fieldDesk.gateHintEra', { eraName }) : '',
+        })}
         <br />
-        <b style={{ color: 'var(--color-text-secondary)' }}>{levelsToGo} {levelsToGo === 1 ? 'level' : 'levels'} to go.</b>
+        <b style={{ color: 'var(--color-text-secondary)' }}>{t('fieldDesk.levelsToGo', { count: levelsToGo })}</b>
       </div>
       <div style={progressTrack}>
         <div style={progressFill} />

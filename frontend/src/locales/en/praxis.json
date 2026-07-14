@@ -3,6 +3,12 @@
     "approaching": "{{remaining}} characters left — make them count",
     "terminal": "{{max}} characters — your proof is complete. No more words."
   },
+  "listPage": {
+    "title": "Praxis",
+    "intro": "Proof of action. All praxes from across World Zero.",
+    "loading": "Loading praxis...",
+    "empty": "No praxes yet. Be the first."
+  },
   "card": {
     "ptsAndVotes": "pts + votes",
     "level": "L{{level}}",

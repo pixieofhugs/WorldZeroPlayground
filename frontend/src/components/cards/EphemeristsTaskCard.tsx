@@ -114,11 +114,11 @@ export default function EphemeristsTaskCard({ task, displayPoints, onSignup }: P
         </div>
         {/* three coordinate labels for one point — and none agree */}
         <div style={{ position: "absolute", top: "8%", left: "6%", fontSize: 7.5, letterSpacing: "0.04em", color: "var(--eph-vellum-text)", background: "color-mix(in srgb, var(--eph-vellum) 82%, transparent)", padding: "1px 4px" }}>
-          x 14 · y <span style={{ textDecoration: "line-through", opacity: 0.65 }}>8</span>{" "}
+          {i18n.t("feed:taskCard.ephemerists.coordXPrefix")}<span style={{ textDecoration: "line-through", opacity: 0.65 }}>8</span>{" "}
           <span style={{ color: "var(--eph-lapis)", fontStyle: "italic" }}>9</span>
         </div>
         <div style={{ position: "absolute", top: "78%", left: "54%", fontSize: 7.5, letterSpacing: "0.04em", color: "var(--eph-rubric)", background: "color-mix(in srgb, var(--eph-vellum) 82%, transparent)", padding: "1px 4px" }}>
-          r 47 · θ 31°
+          {i18n.t("feed:taskCard.ephemerists.coordPolar")}
         </div>
         <div style={{ position: "absolute", top: "6%", left: "68%", fontSize: 7.5, letterSpacing: "0.04em", color: "var(--eph-lapis)", background: "color-mix(in srgb, var(--eph-vellum) 82%, transparent)", padding: "1px 4px" }}>
           {i18n.t("feed:taskCard.ephemerists.vanishingLabel")}

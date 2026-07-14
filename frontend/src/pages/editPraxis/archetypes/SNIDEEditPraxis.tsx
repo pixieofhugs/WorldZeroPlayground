@@ -408,7 +408,7 @@ export default function SNIDEEditPraxis({ state }: Props) {
                   className="eyebrow"
                   style={{ color: accentDeep, display: "block", marginBottom: 6 }}
                 >
-                  Preview
+                  {t("editPraxis.snide.previewLabel")}
                 </span>
               ),
               markdownStyle: {
@@ -487,7 +487,7 @@ export default function SNIDEEditPraxis({ state }: Props) {
                         color: accentDeep,
                       }}
                     >
-                      FIG. {index + 1} · {filename}
+                      {t("editPraxis.snide.figureCaption", { number: index + 1, name: filename })}
                     </div>
                     <button
                       type="button"
@@ -525,7 +525,7 @@ export default function SNIDEEditPraxis({ state }: Props) {
             className="eyebrow"
             style={{ display: "block", marginBottom: 10, color: accentDeep }}
           >
-            ↳ glue in proof · photos / audio / receipts
+            {t("editPraxis.snide.filesLabel")}
           </span>
           <FilePicker
             state={state}
@@ -566,7 +566,7 @@ export default function SNIDEEditPraxis({ state }: Props) {
               className="eyebrow"
               style={{ display: "block", marginBottom: 10, color: accentDeep }}
             >
-              ★ optional bonus
+              {t("editPraxis.snide.metatasksLabel")}
             </span>
             <MetatasksList
               state={state}

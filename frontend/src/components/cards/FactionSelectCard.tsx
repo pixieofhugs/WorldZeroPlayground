@@ -267,7 +267,7 @@ function EphemeristsSelectCard({ state = "locked", members, onVisit }: Omit<Fact
       border: "1px solid var(--eph-gold-deep)", boxShadow: "0 8px 26px rgba(20,59,84,0.4)", display: "flex", flexDirection: "column",
     }}>
       <div style={{ position: "absolute", inset: 9, border: "1px solid rgba(180,150,80,0.35)", pointerEvents: "none" }} />
-      <div style={{ position: "absolute", top: 16, right: 18, fontSize: 9, letterSpacing: "0.1em", color: "var(--eph-gold-light)", opacity: 0.7, textAlign: "right", lineHeight: 1.5 }}>x 41.7°<br />r ∞ · θ 12</div>
+      <div style={{ position: "absolute", top: 16, right: 18, fontSize: 9, letterSpacing: "0.1em", color: "var(--eph-gold-light)", opacity: 0.7, textAlign: "right", lineHeight: 1.5 }}>{i18n.t("feed:factionSelect.ephemerists.coords")}<br />{i18n.t("feed:factionSelect.ephemerists.coordsPolar")}</div>
       <div style={{ position: "relative", flex: 1, padding: "22px 24px 0" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 13 }}>
           <span style={{ width: 46, height: 46, borderRadius: "50%", border: "1.5px solid var(--eph-gold)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>

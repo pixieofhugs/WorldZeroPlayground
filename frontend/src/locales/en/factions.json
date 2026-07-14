@@ -1,5 +1,12 @@
 {
   "unaffiliatedName": "Unaffiliated",
+  "index": {
+    "loading": "Loading...",
+    "recentInvitations": "Recent Invitations ({{count}})",
+    "inviteBadge": "INVITE",
+    "invitedToJoin": "You've been invited to join <1>{{faction}}</1>",
+    "loggedOutHint": "Everyone starts unaffiliated. Earn an invitation through task work to join a faction."
+  },
   "detail": {
     "loading": "Loading...",
     "retry": "Try refreshing.",
@@ -26,6 +33,41 @@
     }
   },
   "albescent": {
+    "sealed": {
+      "eyebrow": "— no such account —",
+      "line": "You know not what you seek."
+    },
+    "invitation": {
+      "aria": "A correspondence",
+      "wordmark": "Albescent",
+      "letterhead": "Faction no. 7 · enlistment · in confidence",
+      "handExtended": "A hand is extended —",
+      "headline": "Take up the work",
+      "pitch": "Albescent is an unranked order that keeps what others let slip. Attend the quiet duties, return them well, and leave no trace of yourself in the work. There is no leaderboard here worth minding.",
+      "termsHeading": "The terms, plainly",
+      "terms": {
+        "tollLabel": "toll of entry",
+        "tollValue": "one duty, quietly kept",
+        "skillsLabel": "required skills",
+        "skillsValue": "none — only care",
+        "outputLabel": "expected output",
+        "outputValue": "accounts, entered plainly",
+        "standingLabel": "standing",
+        "standingValue": "unranked, by design"
+      },
+      "perks": {
+        "record": "A record that survives the keeper",
+        "duties": "Duties that ask nothing back",
+        "witnessed": "Your account, witnessed and inscribed"
+      },
+      "joined": "You are of the Order",
+      "whoHeading": "Who takes up the work",
+      "lifeMeta": "@{{username}} · {{faction}}",
+      "acceptBusy": "Entering the record…",
+      "acceptIdle": "Accept the order",
+      "reassurance": "you need not persuade us.",
+      "declineError": "The order declined, and gave no reason."
+    },
     "keepers": {
       "kicker": "The Houses",
       "title": "Keepers",

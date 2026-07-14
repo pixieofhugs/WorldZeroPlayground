@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { Trans, useTranslation } from 'react-i18next'
 import { getFactions, getFactionStatus, getInvitations } from '../api/factions'
 import type { FactionOut, FactionPageOut, InvitationLetterOut } from '../api/factions'
 import PageTitle from '../components/ui/PageTitle'
@@ -31,6 +32,7 @@ const HIDDEN_SLUGS = new Set([NA_SLUG])
  * and orders the cards by that status.
  */
 export default function Factions() {
+  const { t } = useTranslation('factions')
   const { user } = useAuth()
   const character = user?.character ?? null
   const navigate = useNavigate()
@@ -74,7 +76,7 @@ export default function Factions() {
     return entry?.status ?? STATUS_NOT_INVITED
   }
 
-  if (loading) return <div className="py-8 font-body text-muted">Loading...</div>
+  if (loading) return <div className="py-8 font-body text-muted">{t('index.loading')}</div>
 
   // Index invitations by slug for quick per-card lookup
   const invitationBySlug: Record<string, InvitationLetterOut> = {}
@@ -138,7 +140,7 @@ export default function Factions() {
           >
             <span>{invitationsExpanded ? '▾' : '▸'}</span>
             <span>
-              Recent Invitations ({invitations.length})
+              {t('index.recentInvitations', { count: invitations.length })}
             </span>
           </button>
           {invitationsExpanded && (
@@ -156,10 +158,17 @@ export default function Factions() {
                       borderLeft: `3px solid ${factionCssVar(inv.faction_slug, 'border')}`,
                     }}
                   >
-                    <span className="eyebrow">INVITE</span>
+                    <span className="eyebrow">{t('index.inviteBadge')}</span>
                     <span className="font-body" style={{ fontSize: 11, color: 'var(--color-text-primary)', flex: 1 }}>
-                      You've been invited to join{' '}
-                      <span style={{ fontWeight: 700, color: factionCssVar(inv.faction_slug) }}>{inv.faction_name}</span>
+                      <Trans
+                        t={t}
+                        i18nKey="index.invitedToJoin"
+                        values={{ faction: inv.faction_name }}
+                        components={[
+                          <span key="0" />,
+                          <span key="1" style={{ fontWeight: 700, color: factionCssVar(inv.faction_slug) }} />,
+                        ]}
+                      />
                     </span>
                     <span className="eyebrow" style={{ color: 'var(--color-text-tertiary)', fontSize: 8 }}>
                       {relativeTime(inv.delivered_at)}
@@ -175,7 +184,7 @@ export default function Factions() {
       {/* Logged-out hint */}
       {!character && (
         <p className="font-body text-sm text-muted mb-6">
-          Everyone starts unaffiliated. Earn an invitation through task work to join a faction.
+          {t('index.loggedOutHint')}
         </p>
       )}
 

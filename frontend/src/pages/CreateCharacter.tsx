@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type CSSProperties } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { useAuth } from '../auth/AuthContext'
 import { createCharacter, uploadCharacterAvatar } from '../api/characters'
 import { getInvitedFactions } from '../api/me'
@@ -23,6 +24,7 @@ function previewHandle(displayName: string): string {
 }
 
 export default function CreateCharacter() {
+  const { t } = useTranslation('forms')
   const { refetch } = useAuth()
   const navigate = useNavigate()
 
@@ -85,47 +87,47 @@ export default function CreateCharacter() {
 
   return (
     <div className="page">
-      <button onClick={() => navigate('/')} style={backLink}>‹ back to your lives</button>
+      <button onClick={() => navigate('/')} style={backLink}>{t('createCharacter.back')}</button>
 
       <div style={twoCol}>
         {/* Left — form */}
         <form onSubmit={handleSubmit} style={{ flex: '1 1 320px', maxWidth: 440 }}>
-          <h1 style={titleStyle}>Who are you becoming?</h1>
+          <h1 style={titleStyle}>{t('createCharacter.heading')}</h1>
 
           {/* Chosen name */}
-          <label style={eyebrow}>Chosen name</label>
+          <label style={eyebrow}>{t('createCharacter.nameLabel')}</label>
           <input
             value={displayName}
             onChange={(e) => setDisplayName(e.target.value)}
             maxLength={NAME_MAX}
-            placeholder="Wanderer"
+            placeholder={t('createCharacter.namePlaceholder')}
             autoFocus
             style={nameInput}
           />
           <div style={metaRow}>
             <span style={{ color: 'var(--color-text-tertiary)' }}>@{handle}</span>
             <span style={{ color: displayName.length >= NAME_MAX ? 'var(--color-danger)' : 'var(--color-text-tertiary)' }}>
-              {NAME_MAX - displayName.length} left
+              {t('createCharacter.charsLeft', { count: NAME_MAX - displayName.length })}
             </span>
           </div>
 
           {/* About */}
-          <label style={{ ...eyebrow, marginTop: 20 }}>About — shown on your profile</label>
+          <label style={{ ...eyebrow, marginTop: 20 }}>{t('createCharacter.aboutLabel')}</label>
           <textarea
             value={bio}
             onChange={(e) => setBio(e.target.value)}
             maxLength={BIO_MAX}
-            placeholder="A line or two about who they are…"
+            placeholder={t('createCharacter.aboutPlaceholder')}
             rows={3}
             style={bioInput}
           />
           <div style={metaRow}>
             <span />
-            <span style={{ color: 'var(--color-text-tertiary)' }}>{BIO_MAX - bio.length} left</span>
+            <span style={{ color: 'var(--color-text-tertiary)' }}>{t('createCharacter.charsLeft', { count: BIO_MAX - bio.length })}</span>
           </div>
 
           {/* Portrait — reuses the existing avatar uploader (POST /characters/{id}/avatar) */}
-          <label style={{ ...eyebrow, marginTop: 20 }}>Portrait <span style={{ textTransform: 'none', letterSpacing: 0 }}>· optional</span></label>
+          <label style={{ ...eyebrow, marginTop: 20 }}>{t('createCharacter.portraitLabel')} <span style={{ textTransform: 'none', letterSpacing: 0 }}>{t('createCharacter.optional')}</span></label>
           <input
             ref={fileInputRef}
             type="file"
@@ -139,7 +141,7 @@ export default function CreateCharacter() {
           {showPicker && (
             <>
               <label style={{ ...eyebrow, marginTop: 22 }}>
-                Answer a calling <span style={{ textTransform: 'none', letterSpacing: 0 }}>· optional — invitations you've earned</span>
+                {t('createCharacter.callingLabel')} <span style={{ textTransform: 'none', letterSpacing: 0 }}>{t('createCharacter.callingOptional')}</span>
               </label>
               <div style={pickerGrid}>
                 {invited.map((slug) => {
@@ -169,11 +171,11 @@ export default function CreateCharacter() {
 
           <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginTop: 24 }}>
             <button type="submit" disabled={!canSubmit} style={primaryBtn}>
-              {submitting ? 'Stepping out…' : 'Create & step out ▸'}
+              {submitting ? t('createCharacter.submitBusy') : t('createCharacter.submitIdle')}
             </button>
-            <button type="button" onClick={() => navigate('/')} style={cancelBtn}>Cancel</button>
+            <button type="button" onClick={() => navigate('/')} style={cancelBtn}>{t('createCharacter.cancel')}</button>
             <span style={{ fontSize: 8, color: 'var(--color-text-tertiary)', letterSpacing: '0.06em' }}>
-              starts at Lvl 1 · 0 pts
+              {t('createCharacter.startsAt')}
             </span>
           </div>
         </form>
@@ -181,7 +183,7 @@ export default function CreateCharacter() {
         {/* Right — live credential preview */}
         <div style={{ flex: '0 0 auto', display: 'flex', justifyContent: 'center' }}>
           <CredentialCard
-            displayName={displayName || 'Wanderer'}
+            displayName={displayName || t('createCharacter.previewFallbackName')}
             handle={handle}
             bio={bio}
             factionSlug={factionSlug || null}

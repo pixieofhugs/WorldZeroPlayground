@@ -74,6 +74,7 @@ function SectionHead({
 /** The contested coordinate field — a vellum cartographic exhibit with three
  *  irreconcilable readings (cartesian grid, perspective rays, polar rings). */
 function DiscordantMap() {
+  const { t } = useTranslation("tasks");
   return (
     <div
       style={{
@@ -157,7 +158,7 @@ function DiscordantMap() {
           padding: "2px 5px",
         }}
       >
-        x 14 · y <span style={{ textDecoration: "line-through", opacity: 0.65 }}>8</span>{" "}
+        {t("ephemerists.diagram.coordXPrefix")}<span style={{ textDecoration: "line-through", opacity: 0.65 }}>8</span>{" "}
         <span style={{ color: "var(--eph-lapis)", fontStyle: "italic" }}>9</span>
       </div>
       <div
@@ -171,7 +172,7 @@ function DiscordantMap() {
           padding: "2px 5px",
         }}
       >
-        r 47 · θ 31°
+        {t("ephemerists.diagram.coordPolar")}
       </div>
       <div
         style={{
@@ -184,7 +185,7 @@ function DiscordantMap() {
           padding: "2px 5px",
         }}
       >
-        ∞ · vanishing
+        {t("ephemerists.diagram.coordVanishing")}
       </div>
       <div
         style={{
@@ -199,7 +200,7 @@ function DiscordantMap() {
           opacity: 0.85,
         }}
       >
-        ¼″ wider within than without †
+        {t("ephemerists.diagram.widthNote")}
       </div>
     </div>
   );

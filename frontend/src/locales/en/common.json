@@ -1,6 +1,121 @@
 {
   "brand": "World Zero",
   "loading": "Loading...",
+  "states": {
+    "tryRefreshing": "Try refreshing.",
+    "characterNotFound": "Character not found.",
+    "loading": "Loading..."
+  },
+  "relationships": {
+    "blocked": "Blocked",
+    "friends": "Friends",
+    "foe": "Foe",
+    "remove": "remove",
+    "unblock": "unblock",
+    "addFriend": "Friend",
+    "addFoe": "Foe"
+  },
+  "profile": {
+    "praxisEmptyTitle": "No praxis sealed yet",
+    "praxisEmptyBody": "Every path is still open — the first finding is the hardest.",
+    "proposedTasksHeading": "Proposed tasks",
+    "proposedTasksTotal": "{{count}} total",
+    "proposedTasksEmpty": "No proposed tasks yet.",
+    "playerFaction": "Player · {{faction}}",
+    "unaffiliated": "Unaffiliated",
+    "unaffiliatedPending": "Unaffiliated · faction pending",
+    "handleJoined": "@{{username}} · joined {{joined}}",
+    "lvl": "lvl",
+    "ptsThisLevel": "{{current}} / {{span}} pts this level",
+    "nextLevel": "next · lvl {{level}}",
+    "ptsToNext": "{{score}} / {{threshold}} pts",
+    "badgesHeading": "Badges",
+    "badgesEarned": "{{count}} earned"
+  },
+  "leaderboard": {
+    "loading": "Loading...",
+    "empty": "No players yet.",
+    "soloEyebrow": "Era I · Roll call",
+    "soloBody": "You're the first player on World Zero. The rankings will fill in as others arrive — until then, the board is yours alone.",
+    "rankingsSoFar": "Rankings so far",
+    "youFactionLevel": "{{faction}} · Level {{level}}"
+  },
+  "collaborationCard": {
+    "duel": "Duel",
+    "collaboration": "Collaboration",
+    "titleFallback": "{{label}} · {{count}} players",
+    "viewDuel": "View duel",
+    "viewCollaboration": "View collaboration"
+  },
+  "credential": {
+    "fallbackName": "Wanderer",
+    "credential": "credential",
+    "unaffiliated": "unaffiliated",
+    "uploadTitle": "Drag a photo here, or click to upload",
+    "blankPassport": "A blank passport, waiting for its first stamp.",
+    "factionToBeChosen": "— faction to be chosen —",
+    "lvl": "lvl {{level}}",
+    "pts": "pts"
+  },
+  "fieldDesk": {
+    "livesInPlay_one": "{{count}} life in play",
+    "livesInPlay_other": "{{count}} lives in play",
+    "heading": "Whose shoes today?",
+    "loading": "Pulling your lives from the drawer…",
+    "stepInto": "Step into {{name}}",
+    "footer": "A life is a pair of shoes. Lace up an old one, or cut a new pair from whole cloth.",
+    "beginNewSelfTitle": "Begin a new self",
+    "beginNewSelf": "Begin a new self",
+    "slotOpen": "✓ slot open — start a new life",
+    "secondSelfAwaits": "A second self awaits",
+    "gateHint": "Reach Lvl {{gateLevel}} on a life you already carry{{eraSuffix}}.",
+    "gateHintEra": " — the gate set by {{eraName}}",
+    "levelsToGo_one": "{{count}} level to go.",
+    "levelsToGo_other": "{{count}} levels to go."
+  },
+  "about": {
+    "title": "About World Zero",
+    "intro1": "World Zero is a community game played in the real world. Players create characters — public personas separate from their login identity — and compete by completing real-world tasks, posting proof of their actions, and earning points through community votes.",
+    "intro2": "Every task has a level requirement. Every submission is rated by the community with a star vote. Points flow from votes; votes flow from participation. The leaderboard reflects not just effort, but community recognition.",
+    "howToPlayHeading": "How to Play",
+    "step1": "Sign in with Google and create a Character — your public game persona.",
+    "step2": "Browse open Tasks and sign up for ones that interest you.",
+    "step3": "Complete the task in the real world and post your proof (Praxis).",
+    "step4": "The community votes on submissions with a star rating.",
+    "step5": "Earn points, level up, and unlock new tasks and privileges.",
+    "inspiredHeading": "Inspired by SF0",
+    "inspiredBody": "World Zero is inspired by <1>SF0</1>, the original collaborative art game created in San Francisco. SF0 challenged players to complete tasks that blurred the line between game and life. World Zero carries that spirit forward as an open community platform."
+  },
+  "contact": {
+    "title": "Contact",
+    "sentHeading": "Message sent!",
+    "sentBody": "We'll get back to you when we can.",
+    "intro": "Have a question, bug report, or just want to say hi? Send us a message.",
+    "nameLabel": "Name",
+    "emailLabel": "Email",
+    "messageLabel": "Message",
+    "sending": "Sending…",
+    "send": "Send Message",
+    "error": "Something went wrong. Please try again."
+  },
+  "disclaimer": {
+    "title": "Disclaimer",
+    "p1": "World Zero is a community game intended for entertainment purposes only. Nothing on this platform constitutes professional, legal, medical, or financial advice of any kind.",
+    "p2": "Participation is entirely voluntary. Players are solely responsible for their own safety and the legality of any real-world actions taken in the course of completing tasks. The operators of World Zero are not liable for any harm, injury, damage, or legal consequence arising from participation in the game.",
+    "p3": "All content on World Zero — including task descriptions, submissions, and comments — is user-generated. The operators do not endorse, verify, or take responsibility for user-posted material. Content that violates applicable law or community standards may be removed at the operators' discretion.",
+    "p4": "World Zero is provided \"as is\" without warranty of any kind. The operators reserve the right to modify, suspend, or discontinue the platform at any time without notice.",
+    "lastUpdated": "Last updated: April 2026"
+  },
+  "donate": {
+    "title": "Support World Zero",
+    "intro": "World Zero is a community project built and maintained by volunteers. If you enjoy the game and want to help keep it running, consider supporting us on Patreon. Every contribution goes directly toward hosting, development, and keeping the game free for everyone.",
+    "patreon": "Support on Patreon",
+    "outro": "You can also support the project by playing, posting praxis, and spreading the word."
+  },
+  "attributions": {
+    "title": "Attributions",
+    "intro": "World Zero is built on the shoulders of great open source projects and creative predecessors. Thank you to all of the following."
+  },
   "nav": {
     "home": "Home",
     "tasks": "Tasks",

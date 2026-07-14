@@ -1,4 +1,5 @@
 import { Navigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { useAuth } from './AuthContext'
 import type { ReactNode } from 'react'
 
@@ -9,9 +10,10 @@ interface Props {
 
 export default function ProtectedRoute({ children, adminOnly = false }: Props) {
   const { user, loading } = useAuth()
+  const { t } = useTranslation('common')
 
   if (loading) {
-    return <div className="page font-body text-muted">Loading...</div>
+    return <div className="page font-body text-muted">{t('loading')}</div>
   }
 
   if (!user) {

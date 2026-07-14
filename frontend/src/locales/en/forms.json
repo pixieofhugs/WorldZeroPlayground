@@ -3,6 +3,51 @@
     "approaching": "{{remaining}} characters remaining",
     "reached": "{{max}}-character limit reached"
   },
+  "createCharacter": {
+    "back": "‹ back to your lives",
+    "heading": "Who are you becoming?",
+    "nameLabel": "Chosen name",
+    "namePlaceholder": "Wanderer",
+    "charsLeft": "{{count}} left",
+    "aboutLabel": "About — shown on your profile",
+    "aboutPlaceholder": "A line or two about who they are…",
+    "portraitLabel": "Portrait",
+    "optional": "· optional",
+    "callingLabel": "Answer a calling",
+    "callingOptional": "· optional — invitations you've earned",
+    "submitIdle": "Create & step out ▸",
+    "submitBusy": "Stepping out…",
+    "cancel": "Cancel",
+    "startsAt": "starts at Lvl 1 · 0 pts",
+    "previewFallbackName": "Wanderer"
+  },
+  "editCharacter": {
+    "loading": "Loading...",
+    "notFound": "Character not found.",
+    "notOwner": "You can only edit your own character.",
+    "eyebrow": "Unaffiliated · this is who you are",
+    "heading": "Edit character",
+    "intro": "Your character is yours before any faction is. Set your portrait, name and story — it follows you onto every task and praxis you file.",
+    "portraitHeading": "Portrait",
+    "avatarLabel": "Avatar",
+    "avatarHint": "Square image, at least 240px. Your monogram “{{initial}}” shows until you add one — framed in the full spectrum, since every path is still open to you.",
+    "identityHeading": "Identity",
+    "displayNameLabel": "Display name",
+    "displayNamePlaceholder": "What should people call you?",
+    "displayNameCount": "{{count}}/50",
+    "handleLabel": "Handle",
+    "handleHint": "Auto-derived · permanent",
+    "storyLabel": "Your story",
+    "storyCount": "{{count}} / 500",
+    "storyPlaceholder": "A line or two about what you're here to do…",
+    "basedLabel": "Where you're based",
+    "basedPlaceholder": "City, region…",
+    "basedCount": "{{count}}/100",
+    "optional": "· optional",
+    "saveBusy": "Saving...",
+    "saveIdle": "Save Changes",
+    "cancel": "Cancel"
+  },
   "autosaveAgo": {
     "justNow": "just now",
     "seconds": "{{seconds}}s ago",
@@ -25,6 +70,8 @@
     "removeAria": "Remove {{name}}"
   },
   "editPraxis": {
+    "loadingPageTitle": "Edit Praxis",
+    "loading": "Loading...",
     "errors": {
       "load": "Couldn't load this praxis.",
       "titleRequired": "Title is required.",
@@ -204,6 +251,26 @@
       "autosaveUnsaved": "↳ unsaved · staple it before it walks off"
     },
     "singularity": {
+      "terminal": {
+        "sessionPath": "singularity://praxis/draft.md · session 0x{{session}}",
+        "whoami": "$ wz auth --whoami",
+        "whoamiResult": "> @{{name}} · faction:singularity",
+        "editCommand": "$ wz praxis edit ./draft-{{id}}.md --live --rainbow=on",
+        "factionLabel": "FACTION:",
+        "factionValue": "singularity",
+        "ptsLabel": "PTS:",
+        "lvlLabel": "LVL:",
+        "modeLabel": "MODE:",
+        "setModeCommand": "wz praxis set-mode --select",
+        "inviteCommand": "wz praxis invite [...handles]",
+        "titleCommand": "echo \"title\" >> ./draft.md ·",
+        "bodyCommand": "vim ./draft.md ·",
+        "insertMode": "-- INSERT --",
+        "statusLine": "{{words}} W · {{chars}} CH · UTF-8",
+        "renderCommand": "render --markdown",
+        "attachCommand": "wz praxis attach ./media/*",
+        "metataskCommand": "wz praxis apply-metatask --opt"
+      },
       "taskRefLabel": "▸ proving completion of",
       "mode": {
         "solo": { "label": "--solo", "desc": "one author. all credit accrues." },

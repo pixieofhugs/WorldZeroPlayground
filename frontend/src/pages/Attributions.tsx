@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import PageTitle from '../components/ui/PageTitle'
 const attributions = [
   {
@@ -44,12 +45,12 @@ const attributions = [
 ]
 
 export default function Attributions() {
+  const { t } = useTranslation('common')
   return (
     <div className="py-8 max-w-2xl">
-      <PageTitle title="Attributions" />
+      <PageTitle title={t('attributions.title')} />
       <p className="font-body text-muted mb-6">
-        World Zero is built on the shoulders of great open source projects and creative
-        predecessors. Thank you to all of the following.
+        {t('attributions.intro')}
       </p>
 
       <div className="space-y-3">
