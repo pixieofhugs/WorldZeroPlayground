@@ -54,8 +54,17 @@ export default function Sidebar() {
       {/* ── Character Card ── */}
       {character ? (
         <div className="sidebar-card">
-          <div className="eyebrow mb-2" style={{ fontSize: 8, color: 'var(--color-text-tertiary)' }}>
-            {t('sidebar.characterCard.eyebrow')}
+          <div className="flex items-baseline justify-between mb-2">
+            <span className="eyebrow" style={{ fontSize: 8, color: 'var(--color-text-tertiary)' }}>
+              {t('sidebar.characterCard.eyebrow')}
+            </span>
+            <Link
+              to={`/characters/${character.id}/edit`}
+              className="eyebrow hover:underline"
+              style={{ fontSize: 8, color: 'var(--color-text-tertiary)' }}
+            >
+              {t('sidebar.characterCard.edit')}
+            </Link>
           </div>
           <div className="flex items-center gap-3 mb-3">
             {character.avatar_url ? (
