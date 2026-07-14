@@ -1,4 +1,11 @@
 {
+  "popup": {
+    "senseEyebrow": "A curious sense",
+    "abilityEyebrow": "New ability",
+    "levelReached": "Level Reached",
+    "nowUnlocked": "Now Unlocked",
+    "continue": "Continue"
+  },
   "ranks": {
     "trailhead": "Trailhead",
     "ranger": "Ranger",

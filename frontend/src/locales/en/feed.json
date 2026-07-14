@@ -1,4 +1,9 @@
 {
+  "page": {
+    "show": "show",
+    "loading": "Loading...",
+    "empty": "No updates yet. Activity from friends, foes, and the community will appear here."
+  },
   "badge": {
     "friend": "Friend",
     "foe": "Foe",
@@ -117,6 +122,8 @@
     },
     "ephemerists": {
       "motto": "exhibit C · no single here",
+      "coordXPrefix": "x 14 · y ",
+      "coordPolar": "r 47 · θ 31°",
       "vanishingLabel": "∞ · vanishing",
       "marginalia": "¼″ wider within than without †",
       "grade": "grade {{grade}}",
@@ -299,6 +306,8 @@
     },
     "ephemerists": {
       "eyebrow": "Exhibit C · no single here",
+      "coords": "x 41.7°",
+      "coordsPolar": "r ∞ · θ 12",
       "blurb": "There is no single here. Wanderers who set down what is true before the road moves on — and keep the record anyway.",
       "status": {
         "locked": "Walk far enough and the map redraws for you.",

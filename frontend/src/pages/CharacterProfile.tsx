@@ -11,6 +11,7 @@
  */
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { getCharacter, type CharacterOut } from "../api/characters";
 import { listPraxes, type PraxisCardOut } from "../api/praxis";
 import { listTasks, type TaskOut } from "../api/tasks";
@@ -31,6 +32,7 @@ import FactionProfileBody, {
 } from "./characterProfile/FactionProfileBody";
 
 export default function CharacterProfile() {
+  const { t } = useTranslation("common");
   const { id } = useParams<{ id: string }>();
   const { user } = useAuth();
   const gameConfig = useGameConfig();
@@ -151,7 +153,7 @@ export default function CharacterProfile() {
   };
 
   if (loading)
-    return <div className="py-8 font-body text-muted">Loading...</div>;
+    return <div className="py-8 font-body text-muted">{t("states.loading")}</div>;
   if (fetchError)
     return (
       <div className="py-8">
@@ -161,14 +163,14 @@ export default function CharacterProfile() {
             onClick={() => window.location.reload()}
             className="underline"
           >
-            Try refreshing.
+            {t("states.tryRefreshing")}
           </button>
         </p>
       </div>
     );
   if (!character)
     return (
-      <div className="py-8 font-body text-muted">Character not found.</div>
+      <div className="py-8 font-body text-muted">{t("states.characterNotFound")}</div>
     );
 
   const isOwn = user?.character?.id === character.id;
@@ -231,10 +233,10 @@ export default function CharacterProfile() {
               }}
             >
               {relationship.display_status === "Blocked"
-                ? "Blocked"
+                ? t("relationships.blocked")
                 : relationship.type === "friend"
-                  ? "Friends"
-                  : "Foe"}
+                  ? t("relationships.friends")
+                  : t("relationships.foe")}
             </div>
             {relationship.display_status !== "Blocked" ? (
               <button
@@ -249,7 +251,7 @@ export default function CharacterProfile() {
                   textAlign: "center",
                 }}
               >
-                remove
+                {t("relationships.remove")}
               </button>
             ) : (
               // ADR-0009 — a block is reversible; either party can unblock.
@@ -265,7 +267,7 @@ export default function CharacterProfile() {
                   textAlign: "center",
                 }}
               >
-                unblock
+                {t("relationships.unblock")}
               </button>
             )}
           </>
@@ -288,7 +290,7 @@ export default function CharacterProfile() {
                 opacity: relationshipLoading ? 0.5 : 1,
               }}
             >
-              Friend
+              {t("relationships.addFriend")}
             </button>
             <button
               onClick={() => handleAddRelationship("foe")}
@@ -307,7 +309,7 @@ export default function CharacterProfile() {
                 opacity: relationshipLoading ? 0.5 : 1,
               }}
             >
-              Foe
+              {t("relationships.addFoe")}
             </button>
           </>
         )}

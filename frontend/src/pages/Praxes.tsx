@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { listPraxes, type PraxisCardOut } from '../api/praxis'
 import PraxisCard from '../components/PraxisCard'
 import CollaborationCard from '../components/CollaborationCard'
@@ -6,6 +7,8 @@ import PageTitle from '../components/ui/PageTitle'
 import { extractError } from '../utils/errors'
 
 export default function Praxes() {
+  const { t } = useTranslation('praxis')
+  const { t: tc } = useTranslation('common')
   const [soloItems, setSoloItems] = useState<PraxisCardOut[]>([])
   const [collabItems, setCollabItems] = useState<PraxisCardOut[]>([])
   const [loading, setLoading] = useState(true)
@@ -29,20 +32,20 @@ export default function Praxes() {
 
   return (
     <div className="py-8">
-      <PageTitle title="Praxis" />
+      <PageTitle title={t('listPage.title')} />
       <p className="font-body text-sm text-muted mb-6">
-        Proof of action. All praxes from across World Zero.
+        {t('listPage.intro')}
       </p>
 
       {loading ? (
-        <p className="font-body text-muted">Loading praxis...</p>
+        <p className="font-body text-muted">{t('listPage.loading')}</p>
       ) : fetchError ? (
         <p className="font-body text-sm text-red-600 border-2 border-red-300 px-3 py-2">
           {fetchError}{' '}
-          <button onClick={() => window.location.reload()} className="underline">Try refreshing.</button>
+          <button onClick={() => window.location.reload()} className="underline">{tc('states.tryRefreshing')}</button>
         </p>
       ) : isEmpty ? (
-        <p className="font-body text-muted">No praxes yet. Be the first.</p>
+        <p className="font-body text-muted">{t('listPage.empty')}</p>
       ) : (
         <div className="flex flex-wrap gap-4 items-start">
           {soloItems.map((p) => (

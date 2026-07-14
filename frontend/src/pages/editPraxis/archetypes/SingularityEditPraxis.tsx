@@ -112,7 +112,7 @@ export default function SingularityEditPraxis({ state }: Props) {
               textTransform: "uppercase",
             }}
           >
-            singularity://praxis/draft.md · session 0x{praxis.id.toString(16)}
+            {t("editPraxis.singularity.terminal.sessionPath", { session: praxis.id.toString(16) })}
           </span>
         </div>
         <div style={{ display: "flex", gap: 12, fontSize: 10, color: dim }}>
@@ -138,12 +138,12 @@ export default function SingularityEditPraxis({ state }: Props) {
 
         {/* Boot lines */}
         <div style={{ marginBottom: 16, fontSize: 11, lineHeight: 1.7 }}>
-          <div style={{ color: dim }}>$ wz auth --whoami</div>
+          <div style={{ color: dim }}>{t("editPraxis.singularity.terminal.whoami")}</div>
           <div style={{ color: term }}>
-            &gt; @{praxis.created_by_display_name} · faction:singularity
+            {t("editPraxis.singularity.terminal.whoamiResult", { name: praxis.created_by_display_name })}
           </div>
           <div style={{ color: dim }}>
-            $ wz praxis edit ./draft-{praxis.id}.md --live --rainbow=on
+            {t("editPraxis.singularity.terminal.editCommand", { id: praxis.id })}
           </div>
         </div>
 
@@ -192,21 +192,21 @@ export default function SingularityEditPraxis({ state }: Props) {
               }}
             >
               <span>
-                <span style={{ color: accent }}>FACTION:</span> singularity
+                <span style={{ color: accent }}>{t("editPraxis.singularity.terminal.factionLabel")}</span> {t("editPraxis.singularity.terminal.factionValue")}
               </span>
               {task && (
                 <span>
-                  <span style={{ color: accent }}>PTS:</span> {task.point_value}
+                  <span style={{ color: accent }}>{t("editPraxis.singularity.terminal.ptsLabel")}</span> {task.point_value}
                 </span>
               )}
               {task && (
                 <span>
-                  <span style={{ color: accent }}>LVL:</span>{" "}
+                  <span style={{ color: accent }}>{t("editPraxis.singularity.terminal.lvlLabel")}</span>{" "}
                   {task.level_required}
                 </span>
               )}
               <span>
-                <span style={{ color: accent }}>MODE:</span> {praxis.type}
+                <span style={{ color: accent }}>{t("editPraxis.singularity.terminal.modeLabel")}</span> {praxis.type}
               </span>
             </div>
           </div>
@@ -216,7 +216,7 @@ export default function SingularityEditPraxis({ state }: Props) {
         {!state.controlsLocked && (
           <div style={{ marginBottom: 22 }}>
             <div style={{ fontSize: 10, color: dim, marginBottom: 10 }}>
-              <span style={{ color: term }}>$ </span>wz praxis set-mode --select
+              <span style={{ color: term }}>$ </span>{t("editPraxis.singularity.terminal.setModeCommand")}
             </div>
             <ModePicker
               state={state}
@@ -268,8 +268,7 @@ export default function SingularityEditPraxis({ state }: Props) {
         {state.showInviteBox && (
             <div style={{ marginBottom: 22 }}>
               <div style={{ fontSize: 10, color: dim, marginBottom: 8 }}>
-                <span style={{ color: term }}>$ </span>wz praxis invite
-                [...handles]
+                <span style={{ color: term }}>$ </span>{t("editPraxis.singularity.terminal.inviteCommand")}
               </div>
               <div
                 style={{
@@ -301,8 +300,7 @@ export default function SingularityEditPraxis({ state }: Props) {
         {/* Title */}
         <div style={{ marginBottom: 22 }}>
           <div style={{ fontSize: 10, color: dim, marginBottom: 6 }}>
-            <span style={{ color: term }}>$ </span>echo "title" &gt;&gt;
-            ./draft.md ·{" "}
+            <span style={{ color: term }}>$ </span>{t("editPraxis.singularity.terminal.titleCommand")}{" "}
             <TitleCounter length={state.title.length} color={dim} />
           </div>
           <div
@@ -354,7 +352,7 @@ export default function SingularityEditPraxis({ state }: Props) {
             }}
           >
             <div style={{ fontSize: 10, color: dim }}>
-              <span style={{ color: term }}>$ </span>vim ./draft.md ·{" "}
+              <span style={{ color: term }}>$ </span>{t("editPraxis.singularity.terminal.bodyCommand")}{" "}
               <span style={{ color: dim }}>
                 {t("editPraxis.singularity.bodyMeta", {
                   words: state.wordCount,
@@ -445,9 +443,9 @@ export default function SingularityEditPraxis({ state }: Props) {
               letterSpacing: "0.05em",
             }}
           >
-            <span>-- INSERT --</span>
+            <span>{t("editPraxis.singularity.terminal.insertMode")}</span>
             <span>
-              {state.wordCount} W · {state.body.length} CH · UTF-8
+              {t("editPraxis.singularity.terminal.statusLine", { words: state.wordCount, chars: state.body.length })}
             </span>
             <span>
               {state.saveStatus === "saving"
@@ -470,7 +468,7 @@ export default function SingularityEditPraxis({ state }: Props) {
               },
               label: (
                 <div style={{ fontSize: 9, color: dim, marginBottom: 8 }}>
-                  <span style={{ color: term }}>$ </span>render --markdown
+                  <span style={{ color: term }}>$ </span>{t("editPraxis.singularity.terminal.renderCommand")}
                 </div>
               ),
               markdownStyle: {
@@ -486,7 +484,7 @@ export default function SingularityEditPraxis({ state }: Props) {
         {/* Media */}
         <div style={{ marginBottom: 22 }}>
           <div style={{ fontSize: 10, color: dim, marginBottom: 8 }}>
-            <span style={{ color: term }}>$ </span>wz praxis attach ./media/*
+            <span style={{ color: term }}>$ </span>{t("editPraxis.singularity.terminal.attachCommand")}
           </div>
           <div
             style={{
@@ -590,8 +588,7 @@ export default function SingularityEditPraxis({ state }: Props) {
         {state.showMetatasks && (
           <div style={{ marginBottom: 22 }}>
             <div style={{ fontSize: 10, color: dim, marginBottom: 8 }}>
-              <span style={{ color: term }}>$ </span>wz praxis apply-metatask
-              --opt
+              <span style={{ color: term }}>$ </span>{t("editPraxis.singularity.terminal.metataskCommand")}
             </div>
             <div
               style={{

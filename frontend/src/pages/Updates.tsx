@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from 'react'
 import { useSearchParams } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { getActivityFeed, type ActivityFeedItem, type FeedCounts } from '../api/activityFeed'
 import PageTitle from '../components/ui/PageTitle'
 import FeedCardRouter from '../components/feed/FeedCardRouter'
@@ -34,6 +35,8 @@ function getCount(filter: FeedFilter, counts: FeedCounts): number {
 }
 
 export default function Updates() {
+  const { t } = useTranslation('feed')
+  const { t: tc } = useTranslation('common')
   const [searchParams] = useSearchParams()
   const [items, setItems] = useState<ActivityFeedItem[]>([])
   const [counts, setCounts] = useState<FeedCounts>({ all: 0, friends: 0, foes: 0, your_stuff: 0, global_count: 0, requests: 0 })
@@ -159,7 +162,7 @@ export default function Updates() {
       <div style={{ marginBottom: 20 }}>
         {/* Row 1 */}
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 6, alignItems: 'center' }}>
-          <span className="eyebrow">show</span>
+          <span className="eyebrow">{t('page.show')}</span>
           {ROW_1_FILTERS.map(renderFilterButton)}
         </div>
         {/* Row 2 */}
@@ -170,16 +173,16 @@ export default function Updates() {
 
       {/* ── Feed ── */}
       {loading ? (
-        <div className="py-8 font-body text-muted">Loading...</div>
+        <div className="py-8 font-body text-muted">{t('page.loading')}</div>
       ) : fetchError ? (
         <p className="font-body text-sm text-red-600 border-2 border-red-300 px-3 py-2">
           {fetchError}{' '}
-          <button onClick={() => window.location.reload()} className="underline">Try refreshing.</button>
+          <button onClick={() => window.location.reload()} className="underline">{tc('states.tryRefreshing')}</button>
         </p>
       ) : items.length === 0 ? (
         <div className="sidebar-card" style={{ padding: 20, textAlign: 'center' }}>
           <p className="font-body" style={{ fontSize: 10, color: 'var(--color-text-tertiary)' }}>
-            No updates yet. Activity from friends, foes, and the community will appear here.
+            {t('page.empty')}
           </p>
         </div>
       ) : (

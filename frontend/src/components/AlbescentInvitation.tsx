@@ -1,4 +1,5 @@
 import { useState, type CSSProperties } from 'react'
+import { useTranslation } from 'react-i18next'
 import type { CharacterOut } from '../api/auth'
 import { setActiveCharacter } from '../api/me'
 import { chooseFaction } from '../api/factions'
@@ -43,17 +44,18 @@ const HAIRLINE = 'rgba(0,0,0,0.10)'
 const HAIRLINE_FAINT = 'rgba(0,0,0,0.055)'
 const RULE = 'rgba(0,0,0,0.07)'
 
-const TERMS: ReadonlyArray<{ label: string; value: string }> = [
-  { label: 'toll of entry', value: 'one duty, quietly kept' },
-  { label: 'required skills', value: 'none — only care' },
-  { label: 'expected output', value: 'accounts, entered plainly' },
-  { label: 'standing', value: 'unranked, by design' },
+// i18n key stems under factions:albescent.invitation — resolved at render.
+const TERM_KEYS: ReadonlyArray<{ label: string; value: string }> = [
+  { label: 'terms.tollLabel', value: 'terms.tollValue' },
+  { label: 'terms.skillsLabel', value: 'terms.skillsValue' },
+  { label: 'terms.outputLabel', value: 'terms.outputValue' },
+  { label: 'terms.standingLabel', value: 'terms.standingValue' },
 ]
 
-const PERKS: ReadonlyArray<string> = [
-  'A record that survives the keeper',
-  'Duties that ask nothing back',
-  'Your account, witnessed and inscribed',
+const PERK_KEYS: ReadonlyArray<string> = [
+  'perks.record',
+  'perks.duties',
+  'perks.witnessed',
 ]
 
 /** The surveyor's cross-hair mark — Albescent's only sigil. */
@@ -94,6 +96,10 @@ export interface AlbescentInvitationProps {
 }
 
 export default function AlbescentInvitation({ lives, onJoined }: AlbescentInvitationProps) {
+  const { t } = useTranslation('factions')
+  // Dynamic term/perk keys are data-driven; resolve them through a plain
+  // string view of `t` (the typed union can't see the interpolated key).
+  const tDynamic = t as unknown as (key: string) => string
   const choices = eligibleLives(lives)
   const [selectedId, setSelectedId] = useState<number | null>(choices[0]?.id ?? null)
   const [joined, setJoined] = useState(false)
@@ -117,14 +123,14 @@ export default function AlbescentInvitation({ lives, onJoined }: AlbescentInvita
       setJoined(true)
       await onJoined()
     } catch (err) {
-      setError(extractError(err, 'The order declined, and gave no reason.'))
+      setError(extractError(err, t('albescent.invitation.declineError')))
     } finally {
       setSubmitting(false)
     }
   }
 
   return (
-    <section style={letter} aria-label="A correspondence">
+    <section style={letter} aria-label={t('albescent.invitation.aria')}>
       <div style={innerFrame} />
 
       {/* letterhead */}
@@ -132,32 +138,30 @@ export default function AlbescentInvitation({ lives, onJoined }: AlbescentInvita
         <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 18 }}>
           <AlbescentMark size={44} />
         </div>
-        <div style={{ ...monoCaps, fontSize: 9, letterSpacing: '0.34em', color: ACCENT, marginBottom: 6 }}>Albescent</div>
-        <div style={{ ...monoCaps, fontSize: 8, letterSpacing: '0.28em', marginBottom: 22 }}>Faction no. 7 · enlistment · in confidence</div>
+        <div style={{ ...monoCaps, fontSize: 9, letterSpacing: '0.34em', color: ACCENT, marginBottom: 6 }}>{t('albescent.invitation.wordmark')}</div>
+        <div style={{ ...monoCaps, fontSize: 8, letterSpacing: '0.28em', marginBottom: 22 }}>{t('albescent.invitation.letterhead')}</div>
         <div style={{ width: 54, height: 1, background: HAIRLINE, margin: '0 auto 22px' }} />
-        <div style={{ ...monoCaps, fontSize: 8, letterSpacing: '0.2em', marginBottom: 10 }}>A hand is extended —</div>
-        <h2 style={headline}>Take up the work</h2>
+        <div style={{ ...monoCaps, fontSize: 8, letterSpacing: '0.2em', marginBottom: 10 }}>{t('albescent.invitation.handExtended')}</div>
+        <h2 style={headline}>{t('albescent.invitation.headline')}</h2>
         <p style={pitch}>
-          Albescent is an unranked order that keeps what others let slip. Attend the
-          quiet duties, return them well, and leave no trace of yourself in the work.
-          There is no leaderboard here worth minding.
+          {t('albescent.invitation.pitch')}
         </p>
       </div>
 
       {/* terms slip */}
       <div style={{ position: 'relative', margin: '0 42px', borderTop: `1px solid ${RULE}`, padding: '20px 0 4px', textAlign: 'left' }}>
-        <div style={{ ...monoCaps, fontSize: 7, letterSpacing: '0.22em', marginBottom: 12 }}>The terms, plainly</div>
+        <div style={{ ...monoCaps, fontSize: 7, letterSpacing: '0.22em', marginBottom: 12 }}>{t('albescent.invitation.termsHeading')}</div>
         <div style={termsGrid}>
-          {TERMS.map((term) => (
+          {TERM_KEYS.map((term) => (
             <div key={term.label} style={{ borderBottom: `1px solid ${HAIRLINE_FAINT}`, padding: '8px 0' }}>
-              <div style={{ ...monoCaps, fontSize: 7, letterSpacing: '0.14em' }}>{term.label}</div>
-              <div style={{ ...serifItalic, fontSize: 18, color: INK, marginTop: 2 }}>{term.value}</div>
+              <div style={{ ...monoCaps, fontSize: 7, letterSpacing: '0.14em' }}>{tDynamic(`albescent.invitation.${term.label}`)}</div>
+              <div style={{ ...serifItalic, fontSize: 18, color: INK, marginTop: 2 }}>{tDynamic(`albescent.invitation.${term.value}`)}</div>
             </div>
           ))}
         </div>
         <div style={{ marginTop: 12, display: 'flex', flexWrap: 'wrap', gap: '4px 16px' }}>
-          {PERKS.map((perk) => (
-            <div key={perk} style={{ ...serifItalic, fontSize: 14, color: ACCENT }}>— {perk}</div>
+          {PERK_KEYS.map((perk) => (
+            <div key={perk} style={{ ...serifItalic, fontSize: 14, color: ACCENT }}>— {tDynamic(`albescent.invitation.${perk}`)}</div>
           ))}
         </div>
       </div>
@@ -165,10 +169,10 @@ export default function AlbescentInvitation({ lives, onJoined }: AlbescentInvita
       {/* answer */}
       <div style={{ position: 'relative', padding: '24px 42px 36px' }}>
         {joined ? (
-          <div style={{ ...serifItalic, fontSize: 22, color: INK, textAlign: 'center' }}>You are of the Order</div>
+          <div style={{ ...serifItalic, fontSize: 22, color: INK, textAlign: 'center' }}>{t('albescent.invitation.joined')}</div>
         ) : (
           <>
-            <div style={{ ...monoCaps, fontSize: 7, letterSpacing: '0.22em', marginBottom: 10 }}>Who takes up the work</div>
+            <div style={{ ...monoCaps, fontSize: 7, letterSpacing: '0.22em', marginBottom: 10 }}>{t('albescent.invitation.whoHeading')}</div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 20 }}>
               {choices.map((life) => {
                 const selected = life.id === selectedId
@@ -182,7 +186,7 @@ export default function AlbescentInvitation({ lives, onJoined }: AlbescentInvita
                   >
                     <span style={{ ...serifItalic, fontSize: 16, color: INK, lineHeight: 1.1 }}>{life.display_name}</span>
                     <span style={{ ...monoCaps, fontSize: 7, letterSpacing: '0.08em', marginTop: 3 }}>
-                      @{life.username} · {factionName(life.faction_slug)}
+                      {t('albescent.invitation.lifeMeta', { username: life.username, faction: factionName(life.faction_slug) })}
                     </span>
                     <span style={{ marginLeft: 'auto', fontSize: 12, color: MUTED, position: 'absolute', right: 14, top: '50%', transform: 'translateY(-50%)' }}>
                       {selected ? '•' : '→'}
@@ -193,9 +197,9 @@ export default function AlbescentInvitation({ lives, onJoined }: AlbescentInvita
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap', justifyContent: 'center' }}>
               <button type="button" onClick={() => void handleAccept()} disabled={submitting} style={acceptButton}>
-                {submitting ? 'Entering the record…' : 'Accept the order'}
+                {submitting ? t('albescent.invitation.acceptBusy') : t('albescent.invitation.acceptIdle')}
               </button>
-              <span style={{ ...serifItalic, fontSize: 15, color: ACCENT }}>you need not persuade us.</span>
+              <span style={{ ...serifItalic, fontSize: 15, color: ACCENT }}>{t('albescent.invitation.reassurance')}</span>
             </div>
             {error && (
               <p style={{ ...serifItalic, fontSize: 14, color: INK, textAlign: 'center', marginTop: 14, marginBottom: 0 }}>{error}</p>

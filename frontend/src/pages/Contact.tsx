@@ -1,10 +1,12 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import api from '../api/axios'
 import PageTitle from '../components/ui/PageTitle'
 
 type FormState = { name: string; email: string; message: string }
 
 export default function Contact() {
+  const { t } = useTranslation('common')
   const [form, setForm] = useState<FormState>({ name: '', email: '', message: '' })
   const [submitting, setSubmitting] = useState(false)
   const [success, setSuccess] = useState(false)
@@ -22,7 +24,7 @@ export default function Contact() {
       await api.post('/contact', form)
       setSuccess(true)
     } catch {
-      setError('Something went wrong. Please try again.')
+      setError(t('contact.error'))
     } finally {
       setSubmitting(false)
     }
@@ -31,10 +33,10 @@ export default function Contact() {
   if (success) {
     return (
       <div className="py-8 max-w-2xl">
-        <PageTitle title="Contact" />
+        <PageTitle title={t('contact.title')} />
         <div className="card p-6 text-center">
-          <p className="font-display text-2xl font-bold mb-2">Message sent!</p>
-          <p className="font-body text-muted">We'll get back to you when we can.</p>
+          <p className="font-display text-2xl font-bold mb-2">{t('contact.sentHeading')}</p>
+          <p className="font-body text-muted">{t('contact.sentBody')}</p>
         </div>
       </div>
     )
@@ -42,15 +44,15 @@ export default function Contact() {
 
   return (
     <div className="py-8 max-w-2xl">
-      <PageTitle title="Contact" />
+      <PageTitle title={t('contact.title')} />
       <p className="font-body text-muted mb-6">
-        Have a question, bug report, or just want to say hi? Send us a message.
+        {t('contact.intro')}
       </p>
 
       <form onSubmit={handleSubmit} className="card p-6 space-y-4">
         <div>
           <label className="font-body text-sm block mb-1" htmlFor="name">
-            Name
+            {t('contact.nameLabel')}
           </label>
           <input
             id="name"
@@ -68,7 +70,7 @@ export default function Contact() {
 
         <div>
           <label className="font-body text-sm block mb-1" htmlFor="email">
-            Email
+            {t('contact.emailLabel')}
           </label>
           <input
             id="email"
@@ -85,7 +87,7 @@ export default function Contact() {
 
         <div>
           <label className="font-body text-sm block mb-1" htmlFor="message">
-            Message
+            {t('contact.messageLabel')}
           </label>
           <textarea
             id="message"
@@ -108,7 +110,7 @@ export default function Contact() {
         )}
 
         <button type="submit" disabled={submitting} className="btn-primary disabled:opacity-50">
-          {submitting ? 'Sending…' : 'Send Message'}
+          {submitting ? t('contact.sending') : t('contact.send')}
         </button>
       </form>
     </div>

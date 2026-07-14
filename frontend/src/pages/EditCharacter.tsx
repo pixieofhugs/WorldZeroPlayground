@@ -1,5 +1,6 @@
 import { useEffect, useState, useRef, type CSSProperties } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { getCharacter, updateCharacter, uploadCharacterAvatar, type CharacterOut } from '../api/characters'
 import { useAuth } from '../auth/AuthContext'
 import { extractError } from '../utils/errors'
@@ -31,6 +32,7 @@ const inputStyle: CSSProperties = {
 }
 
 export default function EditCharacter() {
+  const { t } = useTranslation('forms')
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const { user, refetch } = useAuth()
@@ -99,9 +101,9 @@ export default function EditCharacter() {
     }
   }
 
-  if (loading) return <div className="py-8 font-body text-muted">Loading...</div>
-  if (!character) return <div className="py-8 font-body text-muted">Character not found.</div>
-  if (!isOwner) return <div className="py-8 font-body text-muted">You can only edit your own character.</div>
+  if (loading) return <div className="py-8 font-body text-muted">{t('editCharacter.loading')}</div>
+  if (!character) return <div className="py-8 font-body text-muted">{t('editCharacter.notFound')}</div>
+  if (!isOwner) return <div className="py-8 font-body text-muted">{t('editCharacter.notOwner')}</div>
 
   // Monogram tracks the display name as you type (falls back to the handle).
   const initial = (displayName.trim()[0] || character.username[0] || '?').toUpperCase()
@@ -127,7 +129,7 @@ export default function EditCharacter() {
                   className="eyebrow"
                   style={{ color: 'var(--faction-default-card-muted)', marginBottom: 0 }}
                 >
-                  Unaffiliated · this is who you are
+                  {t('editCharacter.eyebrow')}
                 </div>
                 <h1
                   style={{
@@ -140,7 +142,7 @@ export default function EditCharacter() {
                     color: 'var(--faction-default-card-text)',
                   }}
                 >
-                  Edit character
+                  {t('editCharacter.heading')}
                 </h1>
               </div>
             </div>
@@ -153,15 +155,14 @@ export default function EditCharacter() {
                 maxWidth: 440,
               }}
             >
-              Your character is yours before any faction is. Set your portrait, name and story —
-              it follows you onto every task and praxis you file.
+              {t('editCharacter.intro')}
             </p>
           </div>
         </div>
 
         {/* ── Portrait ── */}
         <section className="sidebar-card" style={{ padding: '22px 24px' }}>
-          <div className="eyebrow" style={{ marginBottom: 16 }}>Portrait</div>
+          <div className="eyebrow" style={{ marginBottom: 16 }}>{t('editCharacter.portraitHeading')}</div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 20, flexWrap: 'wrap' }}>
             {/* Spectrum-framed portrait — the DefaultAvatar look at portrait size
                 (reuses DefaultSigil for the corner mark). Every path still open. */}
@@ -224,7 +225,7 @@ export default function EditCharacter() {
             </div>
             <div style={{ flex: 1, minWidth: 200 }}>
               <label className="font-body text-sm font-bold" style={{ display: 'block', marginBottom: 6 }}>
-                Avatar
+                {t('editCharacter.avatarLabel')}
               </label>
               <input
                 ref={fileRef}
@@ -244,8 +245,7 @@ export default function EditCharacter() {
                   lineHeight: 1.5,
                 }}
               >
-                Square image, at least 240px. Your monogram “{initial}” shows until you add one —
-                framed in the full spectrum, since every path is still open to you.
+                {t('editCharacter.avatarHint', { initial })}
               </p>
             </div>
           </div>
@@ -253,30 +253,30 @@ export default function EditCharacter() {
 
         {/* ── Identity ── */}
         <section className="sidebar-card" style={{ padding: '22px 24px' }}>
-          <div className="eyebrow" style={{ marginBottom: 16 }}>Identity</div>
+          <div className="eyebrow" style={{ marginBottom: 16 }}>{t('editCharacter.identityHeading')}</div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
             <label style={{ display: 'block' }}>
               <span style={{ display: 'block', fontSize: 11, color: 'var(--color-text-secondary)', marginBottom: 7 }}>
-                Display name
+                {t('editCharacter.displayNameLabel')}
               </span>
               <input
                 type="text"
                 value={displayName}
                 onChange={(e) => setDisplayName(e.target.value)}
                 maxLength={50}
-                placeholder="What should people call you?"
+                placeholder={t('editCharacter.displayNamePlaceholder')}
                 style={inputStyle}
               />
               <span
                 className={`font-body text-xs ${displayName.length >= 45 ? 'text-red-600' : 'text-muted'}`}
                 style={{ display: 'block', textAlign: 'right', marginTop: 4 }}
               >
-                {displayName.length}/50
+                {t('editCharacter.displayNameCount', { count: displayName.length })}
               </span>
             </label>
             <div>
               <span style={{ display: 'block', fontSize: 11, color: 'var(--color-text-secondary)', marginBottom: 7 }}>
-                Handle
+                {t('editCharacter.handleLabel')}
               </span>
               {/* Read-only: `username` is the auto-derived, unique handle (ADR-0019). */}
               <div
@@ -293,7 +293,7 @@ export default function EditCharacter() {
                 <span style={{ fontFamily: 'var(--font-body)' }}>@{character.username}</span>
               </div>
               <span className="eyebrow" style={{ display: 'block', marginTop: 6, color: 'var(--color-text-tertiary)' }}>
-                Auto-derived · permanent
+                {t('editCharacter.handleHint')}
               </span>
             </div>
           </div>
@@ -302,9 +302,9 @@ export default function EditCharacter() {
         {/* ── Your story ── */}
         <section className="sidebar-card" style={{ padding: '22px 24px' }}>
           <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 16 }}>
-            <span className="eyebrow">Your story</span>
+            <span className="eyebrow">{t('editCharacter.storyLabel')}</span>
             <span className={`font-body text-xs ${bio.length >= 450 ? 'text-red-600' : 'text-muted'}`}>
-              {bio.length} / 500
+              {t('editCharacter.storyCount', { count: bio.length })}
             </span>
           </div>
           <textarea
@@ -312,26 +312,26 @@ export default function EditCharacter() {
             onChange={(e) => setBio(e.target.value)}
             rows={4}
             maxLength={500}
-            placeholder="A line or two about what you're here to do…"
+            placeholder={t('editCharacter.storyPlaceholder')}
             style={{ ...inputStyle, resize: 'vertical', lineHeight: 1.7 }}
           />
           <div style={{ marginTop: 18 }}>
             <span style={{ display: 'block', fontSize: 11, color: 'var(--color-text-secondary)', marginBottom: 7 }}>
-              Where you're based <span style={{ color: 'var(--color-text-tertiary)' }}>· optional</span>
+              {t('editCharacter.basedLabel')} <span style={{ color: 'var(--color-text-tertiary)' }}>{t('editCharacter.optional')}</span>
             </span>
             <input
               type="text"
               value={location}
               onChange={(e) => setLocation(e.target.value)}
               maxLength={100}
-              placeholder="City, region…"
+              placeholder={t('editCharacter.basedPlaceholder')}
               style={{ ...inputStyle, maxWidth: 280 }}
             />
             <span
               className={`font-body text-xs ${location.length >= 90 ? 'text-red-600' : 'text-muted'}`}
               style={{ display: 'block', marginTop: 4 }}
             >
-              {location.length}/100
+              {t('editCharacter.basedCount', { count: location.length })}
             </span>
           </div>
         </section>
@@ -341,10 +341,10 @@ export default function EditCharacter() {
         {/* ── Actions ── */}
         <div style={{ display: 'flex', gap: 12 }}>
           <button type="submit" disabled={saving} className="btn-primary">
-            {saving ? 'Saving...' : 'Save Changes'}
+            {saving ? t('editCharacter.saveBusy') : t('editCharacter.saveIdle')}
           </button>
           <button type="button" onClick={() => navigate(`/characters/${id}`)} className="btn-outline">
-            Cancel
+            {t('editCharacter.cancel')}
           </button>
         </div>
       </form>

@@ -1,4 +1,5 @@
 import type { CSSProperties } from 'react'
+import { useTranslation } from 'react-i18next'
 import { factionName } from '../utils/factions'
 
 /**
@@ -83,9 +84,10 @@ export default function CredentialCard({
   rotation = 0,
   onAvatarClick,
 }: CredentialCardProps) {
+  const { t } = useTranslation('common')
   const skinned = skinFor(factionSlug)
   const skin = skinned ?? NEUTRAL
-  const name = displayName.trim() || 'Wanderer'
+  const name = displayName.trim() || t('credential.fallbackName')
   const cardBio = (bio ?? '').trim()
 
   const cardStyle: CSSProperties = {
@@ -124,7 +126,7 @@ export default function CredentialCard({
         }}
       >
         <span>@{handle}</span>
-        <span>{skinned ? 'credential' : 'unaffiliated'}</span>
+        <span>{skinned ? t('credential.credential') : t('credential.unaffiliated')}</span>
       </div>
 
       {/* portrait ring. Rendered as a <button> only when it's an upload affordance —
@@ -167,7 +169,7 @@ export default function CredentialCard({
             <button
               type="button"
               onClick={onAvatarClick}
-              title="Drag a photo here, or click to upload"
+              title={t('credential.uploadTitle')}
               style={ringStyle}
             >
               {inner}
@@ -208,7 +210,7 @@ export default function CredentialCard({
           minHeight: cardBio ? undefined : 12,
         }}
       >
-        {cardBio || (skinned ? '' : 'A blank passport, waiting for its first stamp.')}
+        {cardBio || (skinned ? '' : t('credential.blankPassport'))}
       </div>
 
       {/* footer: pill + level + score */}
@@ -246,7 +248,7 @@ export default function CredentialCard({
               color: 'var(--fc-muted)',
             }}
           >
-            — faction to be chosen —
+            {t('credential.factionToBeChosen')}
           </span>
         )}
         <span
@@ -257,7 +259,7 @@ export default function CredentialCard({
             color: 'var(--fc-muted)',
           }}
         >
-          lvl {level}
+          {t('credential.lvl', { level })}
         </span>
         <span style={{ fontFamily: 'var(--fc-font)', fontSize: 17, color: 'var(--fc-accent)' }}>
           {score}
@@ -270,7 +272,7 @@ export default function CredentialCard({
               letterSpacing: '0.06em',
             }}
           >
-            pts
+            {t('credential.pts')}
           </span>
         </span>
       </div>

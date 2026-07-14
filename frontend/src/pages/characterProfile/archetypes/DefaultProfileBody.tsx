@@ -12,6 +12,7 @@
  * the kept proposed-tasks and friend/foe features.
  */
 import type { CSSProperties } from 'react'
+import { useTranslation } from 'react-i18next'
 
 import type { BadgeOut } from '../../../api/auth'
 import { badgeArtFor } from '../../../components/badges/badgeArt'
@@ -162,6 +163,7 @@ export default function DefaultProfileBody({
   progression,
   identityActions,
 }: ProfileBodyProps) {
+  const { t } = useTranslation('common')
   const isUnaffiliated = !character.faction_slug || character.faction_slug === 'na'
   const badges = character.badges ?? []
   const joined = new Date(character.created_at).toLocaleDateString(undefined, {
@@ -211,13 +213,13 @@ export default function DefaultProfileBody({
               className="font-display italic"
               style={{ fontSize: 19, color: 'var(--color-text-primary)' }}
             >
-              No praxis sealed yet
+              {t('profile.praxisEmptyTitle')}
             </div>
             <div
               className="font-body"
               style={{ fontSize: 11, color: 'var(--color-text-secondary)', marginTop: 5 }}
             >
-              Every path is still open — the first finding is the hardest.
+              {t('profile.praxisEmptyBody')}
             </div>
           </div>
         ) : (
@@ -235,11 +237,11 @@ export default function DefaultProfileBody({
       {/* ── Proposed tasks (kept feature, #419) ── */}
       <section>
         <SectionHeading
-          title="Proposed tasks"
-          eyebrow={`${proposedTasks.length} total`}
+          title={t('profile.proposedTasksHeading')}
+          eyebrow={t('profile.proposedTasksTotal', { count: proposedTasks.length })}
         />
         {proposedTasks.length === 0 ? (
-          <p className="font-body text-muted">No proposed tasks yet.</p>
+          <p className="font-body text-muted">{t('profile.proposedTasksEmpty')}</p>
         ) : (
           <div className="flex flex-wrap gap-4 items-start">
             {proposedTasks.map((task) => (
@@ -303,7 +305,9 @@ export default function DefaultProfileBody({
                 }}
               />
               <span style={{ ...EYEBROW, color: 'var(--faction-default-card-muted)' }}>
-                Player · {isUnaffiliated ? 'Unaffiliated' : factionName(character.faction_slug)}
+                {t('profile.playerFaction', {
+                  faction: isUnaffiliated ? t('profile.unaffiliated') : factionName(character.faction_slug),
+                })}
               </span>
             </div>
 
@@ -335,7 +339,7 @@ export default function DefaultProfileBody({
                     className="font-display italic"
                     style={{ fontSize: 13, color: 'var(--color-text-secondary)' }}
                   >
-                    Unaffiliated · faction pending
+                    {t('profile.unaffiliatedPending')}
                   </span>
                   <span
                     aria-hidden
@@ -352,7 +356,7 @@ export default function DefaultProfileBody({
                 className="font-body"
                 style={{ fontSize: 11, color: 'var(--color-text-tertiary)' }}
               >
-                @{character.username} · joined {joined}
+                {t('profile.handleJoined', { username: character.username, joined })}
               </span>
             </div>
 
@@ -397,7 +401,7 @@ export default function DefaultProfileBody({
                       lineHeight: 1,
                     }}
                   >
-                    <span style={{ ...EYEBROW, fontSize: 7, letterSpacing: '0.1em' }}>lvl</span>
+                    <span style={{ ...EYEBROW, fontSize: 7, letterSpacing: '0.1em' }}>{t('profile.lvl')}</span>
                     <span
                       className="font-display italic"
                       style={{ fontSize: 22, color: 'var(--color-text-primary)' }}
@@ -421,10 +425,10 @@ export default function DefaultProfileBody({
                       className="font-body"
                       style={{ fontSize: 10, color: 'var(--color-text-secondary)' }}
                     >
-                      {pointsIntoLevel} / {levelSpan} pts this level
+                      {t('profile.ptsThisLevel', { current: pointsIntoLevel, span: levelSpan })}
                     </span>
                     <span style={{ ...EYEBROW, fontSize: 9, letterSpacing: '0.08em' }}>
-                      next · lvl {progression.nextLevel}
+                      {t('profile.nextLevel', { level: progression.nextLevel })}
                     </span>
                   </div>
                   <div
@@ -449,7 +453,7 @@ export default function DefaultProfileBody({
                     className="font-body"
                     style={{ fontSize: 9, color: 'var(--color-text-tertiary)', marginTop: 5 }}
                   >
-                    {character.score} / {progression.nextThreshold} pts
+                    {t('profile.ptsToNext', { score: character.score, threshold: progression.nextThreshold })}
                   </div>
                 </div>
               </div>
@@ -485,7 +489,7 @@ export default function DefaultProfileBody({
                 className="font-display italic"
                 style={{ fontSize: 22, margin: 0, color: 'var(--color-text-primary)' }}
               >
-                Badges
+                {t('profile.badgesHeading')}
               </h2>
               <span
                 style={{
@@ -498,7 +502,7 @@ export default function DefaultProfileBody({
                   padding: '3px 9px',
                 }}
               >
-                {badges.length} earned
+                {t('profile.badgesEarned', { count: badges.length })}
               </span>
             </div>
             <div

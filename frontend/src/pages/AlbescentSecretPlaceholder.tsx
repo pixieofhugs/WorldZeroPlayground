@@ -6,6 +6,8 @@
  * fleur-de-lis glyph. Albescent surfaces never dim in dark mode — the
  * `--faction-albescent-*` tokens carry identical values in both themes.
  */
+import { useTranslation } from 'react-i18next'
+
 const BG = 'var(--faction-albescent-card-bg)'
 const INK = 'var(--faction-albescent-card-text)'
 const FONT = 'var(--faction-albescent-card-font)'
@@ -35,6 +37,7 @@ function FleurMark({ size = 56 }: { size?: number }) {
 }
 
 export default function AlbescentSecretPlaceholder() {
+  const { t } = useTranslation('factions')
   return (
     <div
       className="flex items-center justify-center"
@@ -64,7 +67,7 @@ export default function AlbescentSecretPlaceholder() {
             marginBottom: 20,
           }}
         >
-          — no such account —
+          {t('albescent.sealed.eyebrow')}
         </div>
         <p
           style={{
@@ -76,7 +79,7 @@ export default function AlbescentSecretPlaceholder() {
             margin: 0,
           }}
         >
-          You know not what you seek.
+          {t('albescent.sealed.line')}
         </p>
         <div style={{ height: 1, width: 64, margin: '28px auto 0', background: ink(16) }} />
       </div>

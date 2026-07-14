@@ -14,6 +14,7 @@
  * their tokens to the skin container and NEVER mutate the global [data-theme].
  */
 import type { CSSProperties, ReactNode } from 'react'
+import { useTranslation } from 'react-i18next'
 
 import type { BadgeOut } from '../../../api/auth'
 import { badgeArtFor } from '../../../components/badges/badgeArt'
@@ -226,6 +227,7 @@ export function ProfileSkin({
   props: ProfileBodyProps
   kit: ProfileKit
 }) {
+  const { t } = useTranslation('common')
   const { character, submissions, proposedTasks, progression, identityActions } = props
   const badges = character.badges ?? []
   const joined = new Date(character.created_at).toLocaleDateString(undefined, {
@@ -306,10 +308,10 @@ export function ProfileSkin({
 
       {/* ── Proposed tasks (kept feature, #419) ── */}
       <section>
-        {kit.sectionHeading('Proposed tasks', `${proposedTasks.length} total`)}
+        {kit.sectionHeading(t('profile.proposedTasksHeading'), t('profile.proposedTasksTotal', { count: proposedTasks.length }))}
         {proposedTasks.length === 0 ? (
           <p style={{ fontFamily: kit.bodyFont ?? kit.eyebrowFont, color: kit.muted }}>
-            No proposed tasks yet.
+            {t('profile.proposedTasksEmpty')}
           </p>
         ) : (
           <div className="flex flex-wrap gap-4 items-start">
@@ -398,7 +400,7 @@ export function ProfileSkin({
                   marginTop: 10,
                 }}
               >
-                @{character.username} · joined {joined}
+                {t('profile.handleJoined', { username: character.username, joined })}
               </div>
 
               {progression && (
@@ -551,7 +553,7 @@ export function ProfileSkin({
                 <h2 style={{ fontFamily: kit.displayFont, fontSize: 22, margin: 0, color: kit.ink }}>
                   {kit.badgeTitle}
                 </h2>
-                <span style={kit.badgeChipStyle}>{badges.length} earned</span>
+                <span style={kit.badgeChipStyle}>{t('profile.badgesEarned', { count: badges.length })}</span>
               </div>
               <div style={kit.badgeBoardStyle}>
                 {badges.map((badge, index) => (
