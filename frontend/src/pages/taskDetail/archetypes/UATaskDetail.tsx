@@ -1,5 +1,6 @@
 import type { CSSProperties, ReactNode } from "react";
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import PraxisCard from "../../../components/PraxisCard";
 import { mediaUrl } from "../../../utils/media";
 import { ErrorBanner, relationOf } from "./shared";
@@ -153,6 +154,7 @@ function HandsRow({
   friends: Set<number>;
   foes: Set<number>;
 }) {
+  const { t } = useTranslation("tasks");
   return (
     <div
       style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}
@@ -232,7 +234,7 @@ function HandsRow({
           marginLeft: 4,
         }}
       >
-        matriculated
+        {t("ua.matriculated")}
       </span>
     </div>
   );
@@ -290,6 +292,7 @@ export default function UATaskDetail({
 }: {
   state: TaskDetailState;
 }) {
+  const { t } = useTranslation("tasks");
   const {
     task,
     signups,
@@ -318,7 +321,7 @@ export default function UATaskDetail({
 
   // Status in the salon's voice: active reads as an open salon "on view".
   const statusVoice =
-    task.status === "active" ? "On View · Open Salon" : task.status;
+    task.status === "active" ? t("ua.statusOpen") : task.status;
 
   // Decorative: the salon's "commission №" — derived from the real task id.
   const commissionNo = String(task.id).padStart(4, "0");
@@ -345,10 +348,10 @@ export default function UATaskDetail({
         }}
       >
         <Link to="/tasks" style={{ color: ORANGE, textDecoration: "none" }}>
-          Tasks
+          {t("default.breadcrumb")}
         </Link>
         <span style={{ opacity: 0.5, margin: "0 8px" }}>›</span>
-        <span style={{ fontFamily: "var(--ua-engraved)" }}>UA</span>
+        <span style={{ fontFamily: "var(--ua-engraved)" }}>{t("ua.faction")}</span>
         <span style={{ opacity: 0.5, margin: "0 8px" }}>›</span>
         <span style={{ color: ORANGE }}>{task.title}</span>
       </nav>
@@ -396,7 +399,7 @@ export default function UATaskDetail({
                       marginBottom: 3,
                     }}
                   >
-                    University of Asthmatics
+                    {t("ua.masthead")}
                   </div>
                   <div
                     style={{
@@ -407,7 +410,7 @@ export default function UATaskDetail({
                       marginBottom: 14,
                     }}
                   >
-                    COMMISSION №{commissionNo} · EST · MMXX
+                    {t("ua.commissionLine", { number: commissionNo })}
                   </div>
                   <h1
                     style={{
@@ -441,8 +444,10 @@ export default function UATaskDetail({
                     <span style={{ color: PAPER_WARM }}>{statusVoice}</span>
                   </div>
                   <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
-                    <StatPlate label="ANNO">{romanLevel(task.level_required)}</StatPlate>
-                    <StatPlate label="HONORARIA" accent>
+                    <StatPlate label={t("ua.stats.anno")}>
+                      {romanLevel(task.level_required)}
+                    </StatPlate>
+                    <StatPlate label={t("ua.stats.honoraria")} accent>
                       {modifiedPoints}
                       <span
                         style={{
@@ -453,10 +458,10 @@ export default function UATaskDetail({
                           fontWeight: 400,
                         }}
                       >
-                        pts
+                        {t("ua.stats.honorariaUnit")}
                       </span>
                     </StatPlate>
-                    <StatPlate label="ON VIEW">
+                    <StatPlate label={t("ua.stats.onView")}>
                       <span
                         style={{
                           fontWeight: 600,
@@ -465,7 +470,10 @@ export default function UATaskDetail({
                           color: SUB,
                         }}
                       >
-                        {signups.length} sitting · {submissions.length} hung
+                        {t("ua.stats.onViewValue", {
+                          signups: signups.length,
+                          completed: submissions.length,
+                        })}
                       </span>
                     </StatPlate>
                   </div>
@@ -501,7 +509,7 @@ export default function UATaskDetail({
                   boxShadow: "0 3px 8px rgba(194,84,31,0.3)",
                 }}
               >
-                Matriculate ▸ earn up to {modifiedPoints} pts
+                {t("ua.signup.cta", { points: modifiedPoints })}
               </button>
               <div
                 style={{
@@ -511,8 +519,11 @@ export default function UATaskDetail({
                   color: SUB,
                 }}
               >
-                {slotsOpen} of {maxTaskSlots} easels reserved · Anno{" "}
-                {romanLevel(task.level_required)} standing met
+                {t("ua.signup.meta", {
+                  open: slotsOpen,
+                  max: maxTaskSlots,
+                  level: romanLevel(task.level_required),
+                })}
               </div>
               <ErrorBanner
                 message={signupError}
@@ -547,7 +558,7 @@ export default function UATaskDetail({
                   color: GOLD,
                 }}
               >
-                ✦ Your work hangs on the Salon Wall
+                {t("ua.submitted.text")}
               </span>
               <Link
                 to={`/praxes/${mySubmission.id}/edit`}
@@ -562,7 +573,7 @@ export default function UATaskDetail({
                   textDecoration: "none",
                 }}
               >
-                edit
+                {t("ua.submitted.edit")}
               </Link>
             </div>
           )}
@@ -587,7 +598,7 @@ export default function UATaskDetail({
                   color: ORANGE,
                 }}
               >
-                Your easel is at the salon
+                {t("ua.inProgress.text")}
               </span>
               <Link
                 to={`/praxes/${inProgressPraxisId}/edit`}
@@ -602,7 +613,7 @@ export default function UATaskDetail({
                   textDecoration: "none",
                 }}
               >
-                continue
+                {t("ua.inProgress.continue")}
               </Link>
               <button
                 onClick={handleDrop}
@@ -617,7 +628,7 @@ export default function UATaskDetail({
                   color: MUTED,
                 }}
               >
-                drop
+                {t("ua.inProgress.drop")}
               </button>
               <ErrorBanner
                 message={signupError}
@@ -634,7 +645,7 @@ export default function UATaskDetail({
 
           {/* ── The Commission — the user-written brief ── */}
           <section>
-            <SectionHead title="The Commission" />
+            <SectionHead title={t("ua.commissionHeading")} />
             <div
               style={{
                 border: `1px solid ${LINE}`,
@@ -653,8 +664,7 @@ export default function UATaskDetail({
                   whiteSpace: "pre-wrap",
                 }}
               >
-                {task.description ||
-                  "No commission posted yet. The Salon awaits its brief — render the light before it leaves and pin your work to the wall."}
+                {task.description || t("ua.commissionEmpty")}
               </p>
             </div>
           </section>
@@ -662,14 +672,14 @@ export default function UATaskDetail({
           {/* ── Hands matriculated ── */}
           {signups.length > 0 && (
             <section>
-              <SectionHead title="Matriculated" />
+              <SectionHead title={t("ua.matriculatedHeading")} />
               <HandsRow signups={signups} friends={friends} foes={foes} />
             </section>
           )}
 
           {/* ── The Critique — read-only aggregate verdict ── */}
           <section>
-            <SectionHead title="The Critique" />
+            <SectionHead title={t("ua.critiqueHeading")} />
             {voteCount > 0 ? (
               <div style={{ display: "flex", alignItems: "flex-end", gap: 12 }}>
                 <span
@@ -693,7 +703,7 @@ export default function UATaskDetail({
                       color: INK,
                     }}
                   >
-                    Finest Critique
+                    {t("ua.critique.finest")}
                   </div>
                   <div
                     style={{
@@ -703,7 +713,7 @@ export default function UATaskDetail({
                       color: MUTED,
                     }}
                   >
-                    {voteCount} work{voteCount === 1 ? "" : "s"} appraised
+                    {t("ua.critique.appraised", { count: voteCount })}
                   </div>
                 </div>
               </div>
@@ -716,8 +726,7 @@ export default function UATaskDetail({
                   color: SUB,
                 }}
               >
-                The Salon has rendered no verdict yet. Be the first hand to hang a
-                work.
+                {t("ua.critique.none")}
               </p>
             )}
           </section>
@@ -725,7 +734,7 @@ export default function UATaskDetail({
           {/* ── The Salon Wall — filed praxis (completions) ── */}
           <section>
             <SectionHead
-              title="The Salon Wall"
+              title={t("ua.salonWallHeading")}
               trailing={
                 <div style={{ display: "flex", gap: 0 }}>
                   {(["score", "recent"] as const).map((sort) => {
@@ -750,7 +759,9 @@ export default function UATaskDetail({
                           cursor: "pointer",
                         }}
                       >
-                        {sort === "score" ? "Finest" : "recent"}
+                        {sort === "score"
+                          ? t("ua.sort.finest")
+                          : t("ua.sort.recent")}
                       </button>
                     );
                   })}
@@ -766,8 +777,7 @@ export default function UATaskDetail({
                   color: SUB,
                 }}
               >
-                The wall is bare. Be the first hand to file a work against this
-                commission.
+                {t("ua.empty")}
               </p>
             ) : (
               <>
@@ -806,7 +816,7 @@ export default function UATaskDetail({
                           }}
                         >
                           <span style={{ fontSize: 13, lineHeight: 1 }}>⚜</span>{" "}
-                          FINEST HAND
+                          {t("ua.finestHand")}
                         </div>
                       )}
                       <PraxisCard praxis={s} />
@@ -825,7 +835,7 @@ export default function UATaskDetail({
                         textDecoration: "none",
                       }}
                     >
-                      View all {submissions.length} works &rarr;
+                      {t("ua.viewAll", { count: submissions.length })}
                     </Link>
                   </div>
                 )}

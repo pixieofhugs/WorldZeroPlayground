@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { Trans, useTranslation } from "react-i18next";
 import PraxisCard from "../../../components/PraxisCard";
 import { mediaUrl } from "../../../utils/media";
 import { factionName } from "../../../utils/factions";
@@ -215,6 +216,7 @@ function SurveyorRow({
   friends: Set<number>;
   foes: Set<number>;
 }) {
+  const { t } = useTranslation("tasks");
   return (
     <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
       {signups.map((m) => {
@@ -291,7 +293,7 @@ function SurveyorRow({
           marginLeft: 4,
         }}
       >
-        triangulating
+        {t("ephemerists.triangulating")}
       </span>
     </div>
   );
@@ -302,6 +304,7 @@ export default function EphemeristsTaskDetail({
 }: {
   state: TaskDetailState;
 }) {
+  const { t } = useTranslation("tasks");
   const {
     task,
     signups,
@@ -332,7 +335,8 @@ export default function EphemeristsTaskDetail({
   const commissionNo = `C-${task.id}`;
   const isMeta = task.task_type === "metatask";
   // The faction's voice: an active task is an OPEN commission; else honest status.
-  const statusLabel = task.status === "active" ? "open commission" : task.status;
+  const statusLabel =
+    task.status === "active" ? t("ephemerists.statusOpen") : task.status;
   // Top-rated ephemeris (most canonical) by real score.
   const topId = submissions.length
     ? submissions.reduce((a, b) => ((b.score ?? 0) > (a.score ?? 0) ? b : a)).id
@@ -358,10 +362,10 @@ export default function EphemeristsTaskDetail({
           to="/tasks"
           style={{ color: "var(--faction-ephemerists)", textDecoration: "none" }}
         >
-          Tasks
+          {t("ephemerists.breadcrumb")}
         </Link>
         <span style={{ opacity: 0.5, margin: "0 8px" }}>›</span>
-        <span>The Ephemerists</span>
+        <span>{t("ephemerists.faction")}</span>
         <span style={{ opacity: 0.5, margin: "0 8px" }}>›</span>
         <span style={{ color: "var(--eph-rubric)" }}>{task.title}</span>
       </nav>
@@ -413,7 +417,7 @@ export default function EphemeristsTaskDetail({
                     letterSpacing: "0.24em",
                   }}
                 >
-                  THE EPHEMERISTS
+                  {t("ephemerists.masthead")}
                 </span>
               </div>
               <div
@@ -425,7 +429,10 @@ export default function EphemeristsTaskDetail({
                   marginBottom: 16,
                 }}
               >
-                {statusLabel} · commission {commissionNo}
+                {t("ephemerists.statusLine", {
+                  status: statusLabel,
+                  number: commissionNo,
+                })}
               </div>
               {isMeta && (
                 <div
@@ -438,7 +445,9 @@ export default function EphemeristsTaskDetail({
                     marginBottom: 10,
                   }}
                 >
-                  ↳ metatask for {factionName(task.metatask_faction_slug)}
+                  {t("ephemerists.metataskFor", {
+                    faction: factionName(task.metatask_faction_slug),
+                  })}
                 </div>
               )}
               <h1
@@ -476,7 +485,7 @@ export default function EphemeristsTaskDetail({
                     color: VELLUM_TEXT,
                   }}
                 >
-                  ▦ GRADE {task.level_required}
+                  {t("ephemerists.grade", { level: task.level_required })}
                 </span>
                 <span
                   style={{
@@ -487,7 +496,9 @@ export default function EphemeristsTaskDetail({
                   }}
                 >
                   {modifiedPoints}{" "}
-                  <span style={{ fontSize: 11, letterSpacing: "0.06em" }}>PVNCTA</span>
+                  <span style={{ fontSize: 11, letterSpacing: "0.06em" }}>
+                    {t("ephemerists.puncta")}
+                  </span>
                 </span>
                 <span
                   style={{
@@ -497,7 +508,10 @@ export default function EphemeristsTaskDetail({
                     color: MUTED,
                   }}
                 >
-                  {signups.length} triangulating · {submissions.length} sealed
+                  {t("ephemerists.onView", {
+                    signups: signups.length,
+                    completed: submissions.length,
+                  })}
                 </span>
               </div>
               <div
@@ -509,8 +523,13 @@ export default function EphemeristsTaskDetail({
                   lineHeight: 1.4,
                 }}
               >
-                † the road does not return you to where you began —{" "}
-                <span style={{ color: "var(--eph-lapis)" }}>see †</span>
+                <Trans
+                  t={t}
+                  i18nKey="ephemerists.footnote"
+                  components={[
+                    <span key="0" style={{ color: "var(--eph-lapis)" }} />,
+                  ]}
+                />
               </div>
             </div>
           </div>
@@ -518,7 +537,7 @@ export default function EphemeristsTaskDetail({
 
         {/* ── The Commission (brief) ── */}
         <section>
-          <SectionHead title="The Commission" />
+          <SectionHead title={t("ephemerists.commissionHeading")} />
           <div
             className="font-body"
             style={{
@@ -536,8 +555,7 @@ export default function EphemeristsTaskDetail({
           >
             <Foxing opacity={0.3} />
             <span style={{ position: "relative", zIndex: 2 }}>
-              {task.description ||
-                "No commission is scribed. Walk the ground and let the contradictions guide you."}
+              {task.description || t("ephemerists.commissionEmpty")}
             </span>
           </div>
         </section>
@@ -569,7 +587,7 @@ export default function EphemeristsTaskDetail({
                 padding: "13px 26px",
               }}
             >
-              Triangulate the truth ▸ earn up to {modifiedPoints} pts
+              {t("ephemerists.signup.cta", { points: modifiedPoints })}
             </button>
             <div
               style={{
@@ -579,7 +597,7 @@ export default function EphemeristsTaskDetail({
                 color: MUTED,
               }}
             >
-              bring no certainty. only instruments.
+              {t("ephemerists.signup.note")}
             </div>
             <div
               style={{
@@ -591,7 +609,11 @@ export default function EphemeristsTaskDetail({
                 textTransform: "uppercase",
               }}
             >
-              {slotsOpen} of {maxTaskSlots} leaves open · grade {task.level_required} met
+              {t("ephemerists.signup.meta", {
+                open: slotsOpen,
+                max: maxTaskSlots,
+                level: task.level_required,
+              })}
             </div>
           </section>
         )}
@@ -627,7 +649,7 @@ export default function EphemeristsTaskDetail({
                 color: VELLUM_TEXT,
               }}
             >
-              your leaf is filed against this exhibit.
+              {t("ephemerists.submitted.text")}
             </span>
             <Link
               to={`/praxes/${mySubmission.id}/edit`}
@@ -642,7 +664,7 @@ export default function EphemeristsTaskDetail({
                 textDecoration: "none",
               }}
             >
-              edit
+              {t("ephemerists.submitted.edit")}
             </Link>
           </section>
         )}
@@ -667,7 +689,7 @@ export default function EphemeristsTaskDetail({
                 color: VELLUM_TEXT,
               }}
             >
-              your readings are unsealed — the survey is unfinished.
+              {t("ephemerists.inProgress.text")}
             </span>
             <Link
               to={`/praxes/${inProgressPraxisId}/edit`}
@@ -682,7 +704,7 @@ export default function EphemeristsTaskDetail({
                 textDecoration: "none",
               }}
             >
-              continue
+              {t("ephemerists.inProgress.continue")}
             </Link>
             <button
               onClick={handleDrop}
@@ -696,7 +718,7 @@ export default function EphemeristsTaskDetail({
                 color: "var(--eph-rubric)",
               }}
             >
-              drop
+              {t("ephemerists.inProgress.drop")}
             </button>
           </section>
         )}
@@ -704,14 +726,19 @@ export default function EphemeristsTaskDetail({
         {/* ── Marginalia of cartographers (signups) ── */}
         {signups.length > 0 && (
           <section>
-            <SectionHead title="The Cartographers" gloss={`${signups.length} on the ground`} />
+            <SectionHead
+              title={t("ephemerists.cartographersHeading")}
+              gloss={t("ephemerists.cartographersGloss", {
+                count: signups.length,
+              })}
+            />
             <SurveyorRow signups={signups} friends={friends} foes={foes} />
           </section>
         )}
 
         {/* ── Credence (read-only vote aggregate) ── */}
         <section>
-          <SectionHead title="The Credence" />
+          <SectionHead title={t("ephemerists.credenceHeading")} />
           {voteCount > 0 ? (
             <div style={{ display: "flex", alignItems: "flex-end", gap: 12 }}>
               <span
@@ -734,7 +761,7 @@ export default function EphemeristsTaskDetail({
                     color: VELLUM_TEXT,
                   }}
                 >
-                  HIGHEST
+                  {t("ephemerists.credence.highest")}
                 </div>
                 <div
                   style={{
@@ -744,7 +771,7 @@ export default function EphemeristsTaskDetail({
                     color: MUTED,
                   }}
                 >
-                  weighed across {voteCount} sealed leaves
+                  {t("ephemerists.credence.weighed", { count: voteCount })}
                 </div>
               </div>
             </div>
@@ -758,7 +785,7 @@ export default function EphemeristsTaskDetail({
                 margin: 0,
               }}
             >
-              no credence yet. the concordance awaits its first leaf.
+              {t("ephemerists.credence.none")}
             </p>
           )}
         </section>
@@ -776,8 +803,10 @@ export default function EphemeristsTaskDetail({
             }}
           >
             <SectionHead
-              title="Sealed Ephemerides"
-              gloss={`${submissions.length} leaves filed`}
+              title={t("ephemerists.ephemeridesHeading")}
+              gloss={t("ephemerists.ephemeridesGloss", {
+                count: submissions.length,
+              })}
             />
             <div style={{ display: "flex", gap: 0 }}>
               {(["score", "recent"] as const).map((sort) => {
@@ -798,7 +827,9 @@ export default function EphemeristsTaskDetail({
                       cursor: "pointer",
                     }}
                   >
-                    {sort === "score" ? "Most Canonical" : "Recent"}
+                    {sort === "score"
+                      ? t("ephemerists.sort.mostCanonical")
+                      : t("ephemerists.sort.recent")}
                   </button>
                 );
               })}
@@ -815,7 +846,7 @@ export default function EphemeristsTaskDetail({
                 margin: 0,
               }}
             >
-              no leaves sealed yet. be the first to file your contradictions.
+              {t("ephemerists.empty")}
             </p>
           ) : (
             <>
@@ -844,7 +875,7 @@ export default function EphemeristsTaskDetail({
                         }}
                       >
                         <span style={{ fontSize: 12, lineHeight: 1, color: "var(--eph-gold-light)" }}>⚜</span>{" "}
-                        MOST CANONICAL
+                        {t("ephemerists.mostCanonical")}
                       </div>
                     )}
                     <PraxisCard praxis={s} />
@@ -864,7 +895,7 @@ export default function EphemeristsTaskDetail({
                       borderBottom: "1px solid color-mix(in srgb, var(--eph-rubric) 40%, transparent)",
                     }}
                   >
-                    view all {submissions.length} ephemerides ↗
+                    {t("ephemerists.viewAll", { count: submissions.length })}
                   </Link>
                 </div>
               )}
