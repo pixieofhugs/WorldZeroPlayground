@@ -1,4 +1,5 @@
 import { useState, type CSSProperties, type ReactNode } from "react";
+import { Trans, useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import TaskCard from "../../../components/TaskCard";
 import PraxisCard from "../../../components/PraxisCard";
@@ -163,6 +164,7 @@ function Avatar({ name, size }: { name: string; size: number }) {
 }
 
 export default function WowFactionBody({ state }: { state: FactionDetailState }) {
+  const { t } = useTranslation("factions");
   const { faction, members, tasks, recentPraxis, viewerFactionSlug, gameFactions, membership } = state;
   const [confirming, setConfirming] = useState(false);
 
@@ -198,7 +200,7 @@ export default function WowFactionBody({ state }: { state: FactionDetailState })
             {/* red margin rule */}
             <div style={{ position: "absolute", left: 32, top: 0, bottom: 0, width: 2, background: `color-mix(in srgb, ${PINK} 55%, transparent)` }} />
             <div style={{ fontFamily: SCRIPT, fontSize: 30, fontWeight: 700, color: ACCENT, lineHeight: 1, marginBottom: 10 }}>
-              the manifesto ✦
+              {t("wow.manifesto.heading")}
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: 9 }}>
               {paragraphs.length ? (
@@ -209,7 +211,7 @@ export default function WowFactionBody({ state }: { state: FactionDetailState })
                 ))
               ) : (
                 <p style={{ fontFamily: BODY, fontSize: 11.5, lineHeight: 1.85, color: MUTED, margin: 0 }}>
-                  No manifesto scribbled yet.
+                  {t("wow.manifesto.empty")}
                 </p>
               )}
             </div>
@@ -218,10 +220,10 @@ export default function WowFactionBody({ state }: { state: FactionDetailState })
 
         {/* ④ TASKS */}
         <div>
-          <SectionHeading>Tasks</SectionHeading>
-          <Kicker>Fresh quests on the board</Kicker>
+          <SectionHeading>{t("wow.tasks.heading")}</SectionHeading>
+          <Kicker>{t("wow.tasks.kicker")}</Kicker>
           {tasks.length === 0 ? (
-            <p style={{ fontFamily: BODY, fontSize: 11, color: MUTED, marginTop: 12 }}>No quests pinned up.</p>
+            <p style={{ fontFamily: BODY, fontSize: 11, color: MUTED, marginTop: 12 }}>{t("wow.tasks.empty")}</p>
           ) : (
             <div style={{ display: "flex", flexWrap: "wrap", gap: 26, alignItems: "flex-start", marginTop: 16 }}>
               {tasks.map((task) => (
@@ -242,10 +244,10 @@ export default function WowFactionBody({ state }: { state: FactionDetailState })
 
         {/* ⑤ PRAXIS */}
         <div>
-          <SectionHeading>Praxis</SectionHeading>
-          <Kicker>Spells that stuck the landing</Kicker>
+          <SectionHeading>{t("wow.praxis.heading")}</SectionHeading>
+          <Kicker>{t("wow.praxis.kicker")}</Kicker>
           {recentPraxis.length === 0 ? (
-            <p style={{ fontFamily: BODY, fontSize: 11, color: MUTED, marginTop: 12 }}>Nothing cast yet.</p>
+            <p style={{ fontFamily: BODY, fontSize: 11, color: MUTED, marginTop: 12 }}>{t("wow.praxis.empty")}</p>
           ) : (
             <div style={{ display: "flex", flexWrap: "wrap", gap: 22, alignItems: "flex-start", marginTop: 16 }}>
               {recentPraxis.map((praxis) => (
@@ -293,7 +295,7 @@ export default function WowFactionBody({ state }: { state: FactionDetailState })
                   <span style={{ width: 9, height: 9, borderRadius: "50%", background: ACCENT }} />
                   <span style={{ width: 9, height: 9, borderRadius: "50%", background: IVY_LEAF }} />
                 </span>
-                <span style={{ marginLeft: "auto", fontFamily: BODY, fontSize: 9.5, color: TITLE_TEXT }}>join.exe</span>
+                <span style={{ marginLeft: "auto", fontFamily: BODY, fontSize: 9.5, color: TITLE_TEXT }}>{t("wow.join.windowTitle")}</span>
               </div>
 
               <div style={{ background: NOTEPAD, padding: 18 }}>
@@ -303,10 +305,12 @@ export default function WowFactionBody({ state }: { state: FactionDetailState })
                       <Sparkle size={30} color={ACCENT} />
                     </div>
                     <div style={{ fontFamily: SCRIPT, fontSize: 25, fontWeight: 700, color: IVY, lineHeight: 1 }}>
-                      You're in the circle
+                      {t("wow.join.memberTitle")}
                     </div>
                     <div style={{ fontFamily: BODY, fontSize: 10.5, color: MUTED, marginTop: 6 }}>
-                      Standing · <b style={{ color: ACCENT }}>coven witch</b>
+                      <Trans t={t} i18nKey="wow.join.memberStanding">
+                        Standing · <b style={{ color: ACCENT }}>coven witch</b>
+                      </Trans>
                     </div>
                   </div>
                 )}
@@ -314,10 +318,10 @@ export default function WowFactionBody({ state }: { state: FactionDetailState })
                 {membership.state === "eligible" && !confirming && (
                   <div style={{ textAlign: "center" }}>
                     <div style={{ fontFamily: SCRIPT, fontSize: 26, fontWeight: 700, color: ACCENT, lineHeight: 1, marginBottom: 6 }}>
-                      The circle is open
+                      {t("wow.join.eligibleTitle")}
                     </div>
                     <div style={{ fontFamily: BODY, fontSize: 10.5, lineHeight: 1.55, color: MUTED, marginBottom: 14 }}>
-                      You've done the work — welcome home, witch.
+                      {t("wow.join.eligibleBody")}
                     </div>
                     <button
                       onClick={() => setConfirming(true)}
@@ -337,7 +341,7 @@ export default function WowFactionBody({ state }: { state: FactionDetailState })
                         cursor: "pointer",
                       }}
                     >
-                      Join the coven ✦
+                      {t("wow.join.joinButton")}
                     </button>
                   </div>
                 )}
@@ -347,8 +351,11 @@ export default function WowFactionBody({ state }: { state: FactionDetailState })
                     <div style={{ fontFamily: BODY, fontSize: 10.5, lineHeight: 1.6, color: INK, marginBottom: 14 }}>
                       {membership.currentFactionSlug &&
                       membership.currentFactionSlug !== "na"
-                        ? `Join ${faction.name}? You won't be able to rejoin ${factionName(membership.currentFactionSlug)} after leaving.`
-                        : `Join ${faction.name}?`}
+                        ? t("detail.join.confirmSwitch", {
+                            faction: faction.name,
+                            current: factionName(membership.currentFactionSlug),
+                          })
+                        : t("detail.join.confirm", { faction: faction.name })}
                     </div>
                     {membership.joinError && (
                       <div style={{ fontFamily: BODY, fontSize: 10, color: "var(--color-danger)", marginBottom: 8 }}>{membership.joinError}</div>
@@ -372,7 +379,9 @@ export default function WowFactionBody({ state }: { state: FactionDetailState })
                           cursor: membership.joining ? "not-allowed" : "pointer",
                         }}
                       >
-                        {membership.joining ? "Joining…" : "Confirm"}
+                        {membership.joining
+                          ? t("wow.join.joining")
+                          : t("wow.join.confirmButton")}
                       </button>
                       <button
                         onClick={() => setConfirming(false)}
@@ -390,7 +399,7 @@ export default function WowFactionBody({ state }: { state: FactionDetailState })
                           cursor: membership.joining ? "not-allowed" : "pointer",
                         }}
                       >
-                        Cancel
+                        {t("detail.join.cancel")}
                       </button>
                     </div>
                   </div>
@@ -403,11 +412,11 @@ export default function WowFactionBody({ state }: { state: FactionDetailState })
                         <Sparkle size={20} color={IVY} />
                       </span>
                       <span style={{ fontFamily: SCRIPT, fontSize: 23, fontWeight: 700, color: ACCENT, lineHeight: 1.2 }}>
-                        Not in the circle — yet
+                        {t("wow.join.gateTitle")}
                       </span>
                     </div>
                     <div style={{ fontFamily: BODY, fontSize: 10.5, lineHeight: 1.55, color: MUTED }}>
-                      Keep casting spells worthy of {faction.name} and the coven will leave a light on. The weird ones always find their way home.
+                      {t("wow.join.gateBody", { faction: faction.name })}
                     </div>
                   </div>
                 )}
@@ -445,13 +454,16 @@ export default function WowFactionBody({ state }: { state: FactionDetailState })
                 </div>
                 <div style={{ padding: "8px 4px 14px", textAlign: "center" }}>
                   <div style={{ fontFamily: BODY, fontSize: 8, letterSpacing: "0.16em", textTransform: "uppercase", color: MUTED }}>
-                    Witch of the week
+                    {t("wow.spotlight.label")}
                   </div>
                   <div style={{ fontFamily: SCRIPT, fontSize: 26, fontWeight: 700, color: ACCENT, lineHeight: 1 }}>
                     {spot.display_name}
                   </div>
                   <div style={{ fontFamily: BODY, fontSize: 8.5, color: INK, marginTop: 2 }}>
-                    lvl {spot.level} · {spot.all_time_score.toLocaleString()} pts
+                    {t("wow.spotlight.stat", {
+                      level: spot.level,
+                      score: spot.all_time_score.toLocaleString(),
+                    })}
                   </div>
                 </div>
               </div>
@@ -471,11 +483,13 @@ export default function WowFactionBody({ state }: { state: FactionDetailState })
               }}
             >
               <div style={{ fontFamily: SCRIPT, fontSize: 23, fontWeight: 700, color: ACCENT, lineHeight: 1, marginBottom: 8 }}>
-                the coven roster
+                {t("wow.roster.heading")}
               </div>
               {roster.length === 0 ? (
                 <p style={{ fontFamily: BODY, fontSize: 11, color: MUTED }}>
-                  {spot ? "No other witches in the circle yet." : "No members yet."}
+                  {spot
+                    ? t("wow.roster.emptyWithSpotlight")
+                    : t("detail.membersEmpty")}
                 </p>
               ) : (
                 roster.map((m) => (
@@ -500,7 +514,9 @@ export default function WowFactionBody({ state }: { state: FactionDetailState })
                     >
                       {m.display_name}
                     </span>
-                    <span style={{ fontFamily: BODY, fontSize: 9, color: ACCENT }}>lvl {m.level}</span>
+                    <span style={{ fontFamily: BODY, fontSize: 9, color: ACCENT }}>
+                      {t("wow.roster.level", { level: m.level })}
+                    </span>
                   </Link>
                 ))
               )}

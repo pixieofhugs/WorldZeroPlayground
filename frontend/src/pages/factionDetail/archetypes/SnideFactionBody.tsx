@@ -1,4 +1,5 @@
 import { useState, type CSSProperties, type ReactNode } from "react";
+import { Trans, useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import TaskCard from "../../../components/TaskCard";
 import PraxisCard from "../../../components/PraxisCard";
@@ -167,6 +168,7 @@ function Mugshot({ name, size, invert = false }: { name: string; size: number; i
 }
 
 export default function SnideFactionBody({ state }: { state: FactionDetailState }) {
+  const { t } = useTranslation("factions");
   const { faction, members, tasks, recentPraxis, viewerFactionSlug, gameFactions, membership } = state;
   const [confirming, setConfirming] = useState(false);
 
@@ -200,7 +202,7 @@ export default function SnideFactionBody({ state }: { state: FactionDetailState 
                 marginBottom: 12,
               }}
             >
-              what we're about —
+              {t("snide.about.heading")}
             </div>
             <div style={{ position: "relative", display: "flex", flexDirection: "column", gap: 10 }}>
               {paragraphs.length ? (
@@ -211,7 +213,7 @@ export default function SnideFactionBody({ state }: { state: FactionDetailState 
                 ))
               ) : (
                 <p style={{ fontFamily: TYPE, fontSize: 12, lineHeight: 1.75, color: "color-mix(in srgb, var(--faction-snide-ink) 60%, transparent)", margin: 0 }}>
-                  No manifesto pasted up yet.
+                  {t("snide.about.empty")}
                 </p>
               )}
             </div>
@@ -220,10 +222,10 @@ export default function SnideFactionBody({ state }: { state: FactionDetailState 
 
         {/* ④ TASKS */}
         <div>
-          <SectionHeading>Tasks</SectionHeading>
-          <Kicker>your assignment, should you ignore it —</Kicker>
+          <SectionHeading>{t("snide.tasks.heading")}</SectionHeading>
+          <Kicker>{t("snide.tasks.kicker")}</Kicker>
           {tasks.length === 0 ? (
-            <p style={{ fontFamily: TYPE, fontSize: 12, color: MUTED }}>No dispatches posted.</p>
+            <p style={{ fontFamily: TYPE, fontSize: 12, color: MUTED }}>{t("snide.tasks.empty")}</p>
           ) : (
             <div style={{ display: "flex", flexWrap: "wrap", gap: 24, alignItems: "flex-start" }}>
               {tasks.map((task) => (
@@ -244,10 +246,10 @@ export default function SnideFactionBody({ state }: { state: FactionDetailState 
 
         {/* ⑤ PRAXIS */}
         <div>
-          <SectionHeading>Praxis</SectionHeading>
-          <Kicker>intercepted dispatches —</Kicker>
+          <SectionHeading>{t("snide.praxis.heading")}</SectionHeading>
+          <Kicker>{t("snide.praxis.kicker")}</Kicker>
           {recentPraxis.length === 0 ? (
-            <p style={{ fontFamily: TYPE, fontSize: 12, color: MUTED }}>No jobs pulled off yet.</p>
+            <p style={{ fontFamily: TYPE, fontSize: 12, color: MUTED }}>{t("snide.praxis.empty")}</p>
           ) : (
             <div style={{ display: "flex", flexWrap: "wrap", gap: 16, alignItems: "flex-start" }}>
               {recentPraxis.map((praxis) => (
@@ -291,19 +293,23 @@ export default function SnideFactionBody({ state }: { state: FactionDetailState 
                   marginBottom: 16,
                 }}
               >
-                <span style={{ fontFamily: COND, fontSize: 14, letterSpacing: "0.22em", color: ACID }}>S.N.I.D.E.</span>
+                <span style={{ fontFamily: COND, fontSize: 14, letterSpacing: "0.22em", color: ACID }}>
+                  {t("snide.dispatch.letterhead")}
+                </span>
                 <span style={{ fontFamily: MONO, fontSize: 8, letterSpacing: "0.16em", textTransform: "uppercase", color: MUTED }}>
-                  re: you
+                  {t("snide.dispatch.reLabel")}
                 </span>
               </div>
               <div style={{ position: "relative" }}>
                 {membership.state === "member" && (
                   <div>
                     <div style={{ fontFamily: IMPACT, fontSize: 26, lineHeight: 0.9, color: ACID, textTransform: "uppercase" }}>
-                      You're on the inside
+                      {t("snide.dispatch.memberTitle")}
                     </div>
                     <div style={{ fontFamily: MONO, fontSize: 10.5, color: MUTED, margin: "9px 0 0" }}>
-                      Standing · <b style={{ color: PINK }}>accomplice</b>
+                      <Trans t={t} i18nKey="snide.dispatch.memberStanding">
+                        Standing · <b style={{ color: PINK }}>accomplice</b>
+                      </Trans>
                     </div>
                   </div>
                 )}
@@ -311,13 +317,13 @@ export default function SnideFactionBody({ state }: { state: FactionDetailState 
                 {membership.state === "eligible" && !confirming && (
                   <div>
                     <div style={{ fontFamily: MARKER, fontSize: 16, color: PINK, transform: "rotate(-1.5deg)", marginBottom: 6 }}>
-                      the door's open —
+                      {t("snide.dispatch.eligibleKicker")}
                     </div>
                     <div style={{ fontFamily: IMPACT, fontSize: 24, lineHeight: 0.9, color: ACID, textTransform: "uppercase", marginBottom: 8 }}>
-                      Come cause trouble
+                      {t("snide.dispatch.eligibleTitle")}
                     </div>
                     <div style={{ fontFamily: TYPE, fontSize: 10.5, lineHeight: 1.5, color: "#d8d6c8", marginBottom: 16 }}>
-                      No forms. No gods. No managers. Just show up and mean it.
+                      {t("snide.dispatch.eligibleBody")}
                     </div>
                     <button
                       onClick={() => setConfirming(true)}
@@ -334,7 +340,7 @@ export default function SnideFactionBody({ state }: { state: FactionDetailState 
                         cursor: "pointer",
                       }}
                     >
-                      I'M IN ↗
+                      {t("snide.dispatch.joinButton")}
                     </button>
                   </div>
                 )}
@@ -344,8 +350,11 @@ export default function SnideFactionBody({ state }: { state: FactionDetailState 
                     <div style={{ fontFamily: TYPE, fontSize: 11, lineHeight: 1.6, color: "#e7e4d8", marginBottom: 14 }}>
                       {membership.currentFactionSlug &&
                       membership.currentFactionSlug !== "na"
-                        ? `Join ${faction.name}? You won't be able to rejoin ${factionName(membership.currentFactionSlug)} after leaving.`
-                        : `Join ${faction.name}?`}
+                        ? t("detail.join.confirmSwitch", {
+                            faction: faction.name,
+                            current: factionName(membership.currentFactionSlug),
+                          })
+                        : t("detail.join.confirm", { faction: faction.name })}
                     </div>
                     {membership.joinError && (
                       <div style={{ fontFamily: MONO, fontSize: 10, color: "var(--color-danger)", marginBottom: 8 }}>
@@ -367,7 +376,9 @@ export default function SnideFactionBody({ state }: { state: FactionDetailState 
                           cursor: membership.joining ? "not-allowed" : "pointer",
                         }}
                       >
-                        {membership.joining ? "BREAKING IN…" : "CONFIRM"}
+                        {membership.joining
+                          ? t("snide.dispatch.joining")
+                          : t("snide.dispatch.confirmButton")}
                       </button>
                       <button
                         onClick={() => setConfirming(false)}
@@ -384,7 +395,7 @@ export default function SnideFactionBody({ state }: { state: FactionDetailState 
                           cursor: membership.joining ? "not-allowed" : "pointer",
                         }}
                       >
-                        Cancel
+                        {t("detail.join.cancel")}
                       </button>
                     </div>
                   </div>
@@ -393,14 +404,13 @@ export default function SnideFactionBody({ state }: { state: FactionDetailState 
                 {membership.state === "gate" && (
                   <div>
                     <div style={{ fontFamily: MARKER, fontSize: 16, color: PINK, transform: "rotate(-1.5deg)", marginBottom: 6 }}>
-                      not one of us — yet
+                      {t("snide.dispatch.gateKicker")}
                     </div>
                     <div style={{ fontFamily: IMPACT, fontSize: 24, lineHeight: 0.9, color: ACID, textTransform: "uppercase", marginBottom: 10 }}>
-                      Make some noise
+                      {t("snide.dispatch.gateTitle")}
                     </div>
                     <div style={{ fontFamily: TYPE, fontSize: 10.5, lineHeight: 1.6, color: "#d8d6c8" }}>
-                      Keep pulling off jobs and {faction.name} will come looking for you. Cause enough trouble and the
-                      invitation writes itself.
+                      {t("snide.dispatch.gateBody", { faction: faction.name })}
                     </div>
                   </div>
                 )}
@@ -418,10 +428,10 @@ export default function SnideFactionBody({ state }: { state: FactionDetailState 
                 <div style={{ ...INK_PANEL, border: `2px solid ${ACID}`, boxShadow: "5px 6px 0 rgba(0,0,0,.3)", padding: "18px 16px 16px", textAlign: "center" }}>
                   <Halftone on="ink" />
                   <div style={{ position: "relative", fontFamily: COND, fontSize: 13, letterSpacing: "0.35em", color: PINK }}>
-                    ★ WANTED ★
+                    {t("snide.spotlight.wanted")}
                   </div>
                   <div style={{ position: "relative", fontFamily: MARKER, fontSize: 13, color: ACID, transform: "rotate(-2deg)", marginBottom: 10 }}>
-                    menace of the week
+                    {t("snide.spotlight.label")}
                   </div>
                   <div style={{ position: "relative", display: "flex", justifyContent: "center", marginBottom: 10 }}>
                     <Mugshot name={spot.display_name} size={70} invert />
@@ -430,7 +440,10 @@ export default function SnideFactionBody({ state }: { state: FactionDetailState 
                     {spot.display_name}
                   </div>
                   <div style={{ position: "relative", fontFamily: MONO, fontSize: 9, letterSpacing: "0.08em", textTransform: "uppercase", color: "#cfcdbf", marginTop: 4 }}>
-                    lvl {spot.level} · {spot.all_time_score.toLocaleString()} pts
+                    {t("snide.spotlight.stat", {
+                      level: spot.level,
+                      score: spot.all_time_score.toLocaleString(),
+                    })}
                   </div>
                 </div>
               </div>
@@ -441,11 +454,13 @@ export default function SnideFactionBody({ state }: { state: FactionDetailState 
             <div style={{ ...PAPER_PANEL, boxShadow: "4px 5px 0 rgba(0,0,0,.2)", padding: "16px 16px 12px" }}>
               <Halftone on="paper" />
               <div style={{ position: "relative", fontFamily: MARKER, fontSize: 22, color: GREEN, transform: "rotate(-1deg)", marginBottom: 10 }}>
-                the rap sheet
+                {t("snide.roster.heading")}
               </div>
               {rapSheet.length === 0 ? (
                 <p style={{ position: "relative", fontFamily: TYPE, fontSize: 12, color: "color-mix(in srgb, var(--faction-snide-ink) 60%, transparent)" }}>
-                  {spot ? "No other names on file yet." : "No members yet."}
+                  {spot
+                    ? t("snide.roster.emptyWithSpotlight")
+                    : t("detail.membersEmpty")}
                 </p>
               ) : (
                 rapSheet.map((m) => (
@@ -468,7 +483,9 @@ export default function SnideFactionBody({ state }: { state: FactionDetailState 
                         {m.display_name}
                       </div>
                     </div>
-                    <span style={{ fontFamily: COND, fontSize: 13, letterSpacing: "0.06em", color: PINK_DEEP }}>lvl {m.level}</span>
+                    <span style={{ fontFamily: COND, fontSize: 13, letterSpacing: "0.06em", color: PINK_DEEP }}>
+                      {t("snide.roster.level", { level: m.level })}
+                    </span>
                   </Link>
                 ))
               )}

@@ -1,4 +1,5 @@
 import { useState, type CSSProperties, type ReactNode } from "react";
+import { Trans, useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import TaskCard from "../../../components/TaskCard";
 import PraxisCard from "../../../components/PraxisCard";
@@ -105,6 +106,7 @@ function Medallion({ name, size, spotlight = false }: { name: string; size: numb
 }
 
 export default function EphemeristsFactionBody({ state }: { state: FactionDetailState }) {
+  const { t } = useTranslation("factions");
   const { faction, members, tasks, recentPraxis, viewerFactionSlug, gameFactions, membership } = state;
   const [confirming, setConfirming] = useState(false);
 
@@ -128,7 +130,7 @@ export default function EphemeristsFactionBody({ state }: { state: FactionDetail
           <div style={{ position: "relative", zIndex: 2, display: "flex", alignItems: "center", gap: 12, marginBottom: 16 }}>
             <EphMark size={15} color={RUBRIC} />
             <span style={{ fontFamily: DISPLAY, fontWeight: 600, fontSize: 11, letterSpacing: "0.22em", textTransform: "uppercase", color: GOLD_DEEP }}>
-              The Apparatus
+              {t("ephemerists.apparatus.heading")}
             </span>
             <span style={{ flex: 1, height: 1, background: `linear-gradient(90deg, ${GOLD}, transparent)` }} />
           </div>
@@ -141,7 +143,7 @@ export default function EphemeristsFactionBody({ state }: { state: FactionDetail
               ))
             ) : (
               <p style={{ fontFamily: SERIF, fontSize: 14.5, lineHeight: 1.78, color: MUTED, margin: 0 }}>
-                No apparatus recorded yet.
+                {t("ephemerists.apparatus.empty")}
               </p>
             )}
           </div>
@@ -149,10 +151,12 @@ export default function EphemeristsFactionBody({ state }: { state: FactionDetail
 
         {/* ④ TASKS */}
         <div>
-          <SectionHeading>Tasks</SectionHeading>
-          <Kicker>Surveys awaiting a hand to triangulate them</Kicker>
+          <SectionHeading>{t("ephemerists.tasks.heading")}</SectionHeading>
+          <Kicker>{t("ephemerists.tasks.kicker")}</Kicker>
           {tasks.length === 0 ? (
-            <p style={{ fontFamily: SCRIPT, fontStyle: "italic", fontSize: 14, color: MUTED }}>No surveys open.</p>
+            <p style={{ fontFamily: SCRIPT, fontStyle: "italic", fontSize: 14, color: MUTED }}>
+              {t("ephemerists.tasks.empty")}
+            </p>
           ) : (
             <div style={{ display: "flex", flexWrap: "wrap", gap: 24, alignItems: "flex-start" }}>
               {tasks.map((task) => (
@@ -173,10 +177,12 @@ export default function EphemeristsFactionBody({ state }: { state: FactionDetail
 
         {/* ⑤ PRAXIS */}
         <div>
-          <SectionHeading>Praxis</SectionHeading>
-          <Kicker>Truths filed to the codex &amp; weighed for concordance</Kicker>
+          <SectionHeading>{t("ephemerists.praxis.heading")}</SectionHeading>
+          <Kicker>{t("ephemerists.praxis.kicker")}</Kicker>
           {recentPraxis.length === 0 ? (
-            <p style={{ fontFamily: SCRIPT, fontStyle: "italic", fontSize: 14, color: MUTED }}>Nothing sealed to the codex yet.</p>
+            <p style={{ fontFamily: SCRIPT, fontStyle: "italic", fontSize: 14, color: MUTED }}>
+              {t("ephemerists.praxis.empty")}
+            </p>
           ) : (
             <div style={{ display: "flex", flexWrap: "wrap", gap: 16, alignItems: "flex-start" }}>
               {recentPraxis.map((praxis) => (
@@ -207,7 +213,7 @@ export default function EphemeristsFactionBody({ state }: { state: FactionDetail
         {membership.state !== "none" && (
           <div style={{ ...PLATE, boxShadow: "0 8px 24px color-mix(in srgb, var(--eph-ink) 12%, transparent)", padding: 0 }}>
             <div style={{ background: LAPIS, color: PARCHMENT, padding: "9px 16px", fontFamily: DISPLAY, fontWeight: 600, fontSize: 12, letterSpacing: "0.2em", textTransform: "uppercase", boxShadow: `inset 0 -2px 0 ${GOLD}` }}>
-              The Road
+              {t("ephemerists.road.heading")}
             </div>
             <div style={{ position: "relative", padding: "22px 20px" }}>
               <Foxing opacity={0.4} />
@@ -215,10 +221,12 @@ export default function EphemeristsFactionBody({ state }: { state: FactionDetail
                 {membership.state === "member" && (
                   <div>
                     <div style={{ fontFamily: DISPLAY, fontWeight: 700, fontSize: 22, lineHeight: 1.02, color: INK }}>
-                      Your name is in the codex
+                      {t("ephemerists.road.memberTitle")}
                     </div>
                     <div style={{ fontFamily: SERIF, fontSize: 13, color: MUTED, margin: "10px 0 0" }}>
-                      Standing · <span style={{ fontStyle: "italic", color: RUBRIC }}>keeper of the road</span>
+                      <Trans t={t} i18nKey="ephemerists.road.memberStanding">
+                        Standing · <span style={{ fontStyle: "italic", color: RUBRIC }}>keeper of the road</span>
+                      </Trans>
                     </div>
                   </div>
                 )}
@@ -226,19 +234,19 @@ export default function EphemeristsFactionBody({ state }: { state: FactionDetail
                 {membership.state === "eligible" && !confirming && (
                   <div>
                     <div style={{ fontFamily: SCRIPT, fontStyle: "italic", fontSize: 13, color: GOLD_DEEP, marginBottom: 5 }}>
-                      The codex lies open —
+                      {t("ephemerists.road.eligibleKicker")}
                     </div>
                     <div style={{ fontFamily: DISPLAY, fontWeight: 700, fontSize: 23, lineHeight: 1.02, color: INK, marginBottom: 10 }}>
-                      Walk with the keepers
+                      {t("ephemerists.road.eligibleTitle")}
                     </div>
                     <div style={{ fontFamily: SERIF, fontSize: 13, lineHeight: 1.6, color: TEXT, marginBottom: 18 }}>
-                      Take a survey, triangulate what you find, and file it to the record. The road is long and forks often.
+                      {t("ephemerists.road.eligibleBody")}
                     </div>
                     <button
                       onClick={() => setConfirming(true)}
                       style={{ width: "100%", fontFamily: DISPLAY, fontWeight: 600, fontSize: 13, letterSpacing: "0.14em", color: PARCHMENT, background: LAPIS, border: "none", padding: 12, boxShadow: `inset 0 0 0 1px ${GOLD}, 0 6px 16px color-mix(in srgb, var(--eph-field-deep) 40%, transparent)`, cursor: "pointer" }}
                     >
-                      TAKE THE ROAD ▸
+                      {t("ephemerists.road.joinButton")}
                     </button>
                   </div>
                 )}
@@ -248,8 +256,11 @@ export default function EphemeristsFactionBody({ state }: { state: FactionDetail
                     <div style={{ fontFamily: SERIF, fontSize: 13, lineHeight: 1.6, color: TEXT, marginBottom: 14 }}>
                       {membership.currentFactionSlug &&
                       membership.currentFactionSlug !== "na"
-                        ? `Join ${faction.name}? You won't be able to rejoin ${factionName(membership.currentFactionSlug)} after leaving.`
-                        : `Join ${faction.name}?`}
+                        ? t("detail.join.confirmSwitch", {
+                            faction: faction.name,
+                            current: factionName(membership.currentFactionSlug),
+                          })
+                        : t("detail.join.confirm", { faction: faction.name })}
                     </div>
                     {membership.joinError && (
                       <div style={{ fontFamily: SERIF, fontSize: 12, color: "var(--color-danger)", marginBottom: 8 }}>{membership.joinError}</div>
@@ -260,14 +271,16 @@ export default function EphemeristsFactionBody({ state }: { state: FactionDetail
                         disabled={membership.joining}
                         style={{ flex: 1, fontFamily: DISPLAY, fontWeight: 600, fontSize: 12, letterSpacing: "0.12em", color: PARCHMENT, background: LAPIS, border: "none", padding: 11, boxShadow: `inset 0 0 0 1px ${GOLD}`, cursor: membership.joining ? "not-allowed" : "pointer" }}
                       >
-                        {membership.joining ? "SEALING…" : "CONFIRM"}
+                        {membership.joining
+                          ? t("ephemerists.road.joining")
+                          : t("ephemerists.road.confirmButton")}
                       </button>
                       <button
                         onClick={() => setConfirming(false)}
                         disabled={membership.joining}
                         style={{ fontFamily: SERIF, fontStyle: "italic", fontSize: 12, letterSpacing: "0.06em", color: MUTED, background: "transparent", border: `1px solid ${HAIRLINE}`, padding: "11px 14px", cursor: membership.joining ? "not-allowed" : "pointer" }}
                       >
-                        Cancel
+                        {t("detail.join.cancel")}
                       </button>
                     </div>
                   </div>
@@ -276,13 +289,13 @@ export default function EphemeristsFactionBody({ state }: { state: FactionDetail
                 {membership.state === "gate" && (
                   <div>
                     <div style={{ fontFamily: SCRIPT, fontStyle: "italic", fontSize: 13, color: GOLD_DEEP, marginBottom: 5 }}>
-                      Not yet in the codex —
+                      {t("ephemerists.road.gateKicker")}
                     </div>
                     <div style={{ fontFamily: DISPLAY, fontWeight: 700, fontSize: 21, lineHeight: 1.08, color: INK, marginBottom: 11 }}>
-                      Earn your place on the road
+                      {t("ephemerists.road.gateTitle")}
                     </div>
                     <div style={{ fontFamily: SERIF, fontSize: 13, lineHeight: 1.65, color: TEXT }}>
-                      File surveys worthy of {faction.name} and the keepers will send word. The road is long — keep triangulating, and the record will remember.
+                      {t("ephemerists.road.gateBody", { faction: faction.name })}
                     </div>
                   </div>
                 )}
@@ -318,7 +331,7 @@ export default function EphemeristsFactionBody({ state }: { state: FactionDetail
                 />
                 <div style={{ position: "relative", zIndex: 2, padding: "20px 18px 18px" }}>
                   <div style={{ fontFamily: SCRIPT, fontStyle: "italic", fontSize: 11, letterSpacing: "0.06em", color: GOLD_LIGHT, marginBottom: 12 }}>
-                    Keeper of the road
+                    {t("ephemerists.spotlight.label")}
                   </div>
                   <div style={{ display: "flex", justifyContent: "center", marginBottom: 12 }}>
                     <Medallion name={spot.display_name} size={72} spotlight />
@@ -327,7 +340,10 @@ export default function EphemeristsFactionBody({ state }: { state: FactionDetail
                     {spot.display_name}
                   </div>
                   <div style={{ fontFamily: SERIF, fontSize: 8.5, letterSpacing: "0.1em", textTransform: "uppercase", color: `color-mix(in srgb, ${PARCHMENT} 70%, transparent)`, marginTop: 6 }}>
-                    grade {grade(spot.level)} · {spot.all_time_score.toLocaleString()} pvncta
+                    {t("ephemerists.spotlight.stat", {
+                      grade: grade(spot.level),
+                      score: spot.all_time_score.toLocaleString(),
+                    })}
                   </div>
                 </div>
               </div>
@@ -337,11 +353,13 @@ export default function EphemeristsFactionBody({ state }: { state: FactionDetail
           <div style={{ ...PLATE, boxShadow: "0 4px 14px color-mix(in srgb, var(--eph-ink) 8%, transparent)", padding: "18px 20px 14px" }}>
             <Foxing opacity={0.4} />
             <div style={{ position: "relative", zIndex: 2, fontFamily: DISPLAY, fontWeight: 600, fontSize: 11, letterSpacing: "0.2em", textTransform: "uppercase", color: GOLD_DEEP, marginBottom: 12 }}>
-              The keepers
+              {t("ephemerists.roster.heading")}
             </div>
             {roster.length === 0 ? (
               <p style={{ position: "relative", zIndex: 2, fontFamily: SCRIPT, fontStyle: "italic", fontSize: 14, color: MUTED }}>
-                {spot ? "No other names in the codex yet." : "No members yet."}
+                {spot
+                  ? t("ephemerists.roster.emptyWithSpotlight")
+                  : t("detail.membersEmpty")}
               </p>
             ) : (
               roster.map((m) => (
@@ -356,7 +374,9 @@ export default function EphemeristsFactionBody({ state }: { state: FactionDetail
                       {m.display_name}
                     </div>
                   </div>
-                  <span style={{ fontFamily: DISPLAY, fontWeight: 600, fontSize: 11, color: RUBRIC }}>grade {grade(m.level)}</span>
+                  <span style={{ fontFamily: DISPLAY, fontWeight: 600, fontSize: 11, color: RUBRIC }}>
+                    {t("ephemerists.roster.level", { grade: grade(m.level) })}
+                  </span>
                 </Link>
               ))
             )}

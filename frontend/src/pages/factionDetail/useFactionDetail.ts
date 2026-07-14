@@ -9,6 +9,7 @@
  * is the stable contract every faction-body archetype consumes.
  */
 import { useCallback, useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   getFactions,
   getFactionStatus,
@@ -69,6 +70,7 @@ export interface FactionDetailState {
 export function useFactionDetail(
   slug: string | undefined,
 ): FactionDetailState {
+  const { t } = useTranslation("factions");
   const { user, refetch } = useAuth();
   const characterId = user?.character?.id;
 
@@ -122,7 +124,7 @@ export function useFactionDetail(
       })
       .catch((err) => {
         if (!cancelled)
-          setFetchError(extractError(err, "Couldn't load this faction."));
+          setFetchError(extractError(err, t("detail.errors.load")));
       })
       .finally(() => {
         if (!cancelled) setLoading(false);
@@ -130,7 +132,7 @@ export function useFactionDetail(
     return () => {
       cancelled = true;
     };
-  }, [slug]);
+  }, [slug, t]);
 
   // Membership status for this faction — only meaningful with a logged-in
   // character; cleared otherwise so the join block hides.
@@ -185,11 +187,11 @@ export function useFactionDetail(
       await refetch();
       setRawStatus("member");
     } catch (err) {
-      setJoinError(extractError(err, "Could not join faction."));
+      setJoinError(extractError(err, t("detail.errors.join")));
     } finally {
       setJoining(false);
     }
-  }, [slug, refetch]);
+  }, [slug, refetch, t]);
 
   return {
     slug,
