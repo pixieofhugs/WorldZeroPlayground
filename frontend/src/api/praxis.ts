@@ -1,5 +1,6 @@
 import api from './axios'
 import type { TaskOut } from './tasks'
+import type { FlagReason } from '../utils/flagReasons'
 
 // ---------------------------------------------------------------------------
 // Types — match backend schemas/praxis.py exactly
@@ -254,10 +255,17 @@ export async function votePraxis(id: number, data: PraxisVoteIn): Promise<void> 
 }
 
 // ---------------------------------------------------------------------------
-// Flagging — backend expects ``reason`` as a query parameter, not a JSON body
-// (see backend/routers/praxes.py :: flag_praxis_route).
+// Flagging — reason is the shared vocabulary (ADR-0031); same FlagIn body as
+// the comment flag route. `reasonDetail` only travels with reason='other'.
 // ---------------------------------------------------------------------------
 
-export async function flagPraxis(praxisId: number, reason: string): Promise<void> {
-  await api.post(`/praxes/${praxisId}/flag`, null, { params: { reason } })
+export async function flagPraxis(
+  praxisId: number,
+  reason: FlagReason,
+  reasonDetail?: string,
+): Promise<void> {
+  await api.post(`/praxes/${praxisId}/flag`, {
+    reason,
+    reason_detail: reasonDetail || null,
+  })
 }

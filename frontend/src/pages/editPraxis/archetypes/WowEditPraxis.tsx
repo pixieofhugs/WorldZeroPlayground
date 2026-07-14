@@ -3,6 +3,7 @@
  * Lo-fi computer-witch desktop window: pastel pink chrome, dotted grid body,
  * notepad panels, window-tab mode chips, lo-fi pink buttons, ivy + sticker charms.
  */
+import { useTranslation } from "react-i18next";
 import { factionCssVar } from "../../../utils/factions";
 import { mediaUrl } from "../../../utils/media";
 import { type PraxisType } from "../../../api/praxis";
@@ -31,12 +32,6 @@ import type { EditPraxisState } from "../useEditPraxis";
 interface Props {
   state: EditPraxisState;
 }
-
-const MODE_OPTIONS: Array<{ key: PraxisType; label: string; desc: string }> = [
-  { key: "solo", label: "solo", desc: "one set of footprints" },
-  { key: "collab", label: "w/ friends", desc: "in step with others" },
-  { key: "duel", label: "witch duel", desc: "two paths, one prize" },
-];
 
 /* ───────── sticker + ivy atoms (inlined from the redesign kit) ───────── */
 
@@ -191,8 +186,17 @@ function Ivy({
 }
 
 export default function WowEditPraxis({ state }: Props) {
+  const { t } = useTranslation("forms");
   const praxis = state.praxis!;
   const task = state.task;
+
+  const modeOptions: Array<{ key: PraxisType; label: string; desc: string }> = (
+    ["solo", "collab", "duel"] as const
+  ).map((key) => ({
+    key,
+    label: t(`editPraxis.wow.mode.${key}.label`),
+    desc: t(`editPraxis.wow.mode.${key}.desc`),
+  }));
 
   const pink = factionCssVar("wow");
   const pinkDeep = factionCssVar("wow", "card-accent");
@@ -327,7 +331,8 @@ export default function WowEditPraxis({ state }: Props) {
                 gap: 5,
               }}
             >
-              <Sparkle size={11} color={titleText} /> wow.exe — edit praxis
+              <Sparkle size={11} color={titleText} />{" "}
+              {t("editPraxis.wow.windowTitle")}
             </span>
             <span
               style={{
@@ -366,14 +371,14 @@ export default function WowEditPraxis({ state }: Props) {
                 gap: 8,
               }}
             >
-              edit praxis
+              {t("editPraxis.wow.pageTitle")}
               <StarSticker size={26} color="#f47aa6" />
             </div>
 
             {/* Task — notepad scrap */}
             <div style={{ ...notepadPanel, marginBottom: 22 }}>
               <span style={{ ...eyebrowStyle, marginBottom: 4 }}>
-                re: completion of
+                {t("editPraxis.wow.taskRefLabel")}
               </span>
               <div
                 style={{
@@ -400,13 +405,13 @@ export default function WowEditPraxis({ state }: Props) {
             {!state.controlsLocked && (
               <div style={{ marginBottom: 22 }}>
                 <span style={{ ...eyebrowStyle, marginBottom: 10 }}>
-                  how are you walking?
+                  {t("editPraxis.wow.modeLabel")}
                 </span>
                 <ModePicker
                   state={state}
                   skin={{
                     containerStyle: { display: "flex", gap: 8, flexWrap: "wrap" },
-                    options: MODE_OPTIONS,
+                    options: modeOptions,
                     allowedModes,
                     renderOption: (opt, { active, disabled, onSelect }) => (
                       <button
@@ -462,7 +467,9 @@ export default function WowEditPraxis({ state }: Props) {
                   }}
                 >
                   <span style={{ ...eyebrowStyle, marginBottom: 10 }}>
-                    ↳ {state.duelMode ? "racing" : "walking together"}
+                    {state.duelMode
+                      ? t("editPraxis.wow.inviteLabelDuel")
+                      : t("editPraxis.wow.inviteLabel")}
                   </span>
                   <InviteSearch
                     state={state}
@@ -474,7 +481,7 @@ export default function WowEditPraxis({ state }: Props) {
                       pillBg: lightBg,
                       acceptedBg: pink,
                       acceptedColor: "var(--color-text-on-accent)",
-                      placeholder: "@ invite another walker…",
+                      placeholder: t("editPraxis.wow.invitePlaceholder"),
                     }}
                   />
                 </div>
@@ -483,12 +490,12 @@ export default function WowEditPraxis({ state }: Props) {
             {/* Title — notepad panel */}
             <div style={{ ...notepadPanel, marginBottom: 18 }}>
               <span style={{ ...eyebrowStyle, marginBottom: 8 }}>
-                title · what whimsy arose?
+                {t("editPraxis.wow.titleLabel")}
               </span>
               <TitleField
                 state={state}
                 skin={{
-                  placeholder: "What whimsy arose?",
+                  placeholder: t("editPraxis.wow.titlePlaceholder"),
                   inputStyle: {
                     width: "100%",
                     fontFamily: cardFont,
@@ -513,8 +520,10 @@ export default function WowEditPraxis({ state }: Props) {
                 <TitleCounter length={state.title.length} color={muted} />
                 <span style={{ ...eyebrowStyle, color: muted, fontSize: 8 }}>
                   {state.autosaveAt
-                    ? `saved ${formatAutosave(state.autosaveAt)}`
-                    : "unsaved"}
+                    ? t("editPraxis.wow.autosaveSaved", {
+                        ago: formatAutosave(state.autosaveAt),
+                      })
+                    : t("editPraxis.wow.autosaveUnsaved")}
                 </span>
               </div>
             </div>
@@ -522,13 +531,13 @@ export default function WowEditPraxis({ state }: Props) {
             {/* Body — notepad panel */}
             <div style={{ ...notepadPanel, marginBottom: 18 }}>
               <span style={{ ...eyebrowStyle, marginBottom: 8 }}>
-                field notes · {state.wordCount} words · markdown ok
+                {t("editPraxis.wow.bodyLabel", { words: state.wordCount })}
               </span>
               <BodyTextarea
                 state={state}
                 skin={{
                   rows: 12,
-                  placeholder: "Tonight I walked...",
+                  placeholder: t("editPraxis.wow.bodyPlaceholder"),
                   textareaStyle: {
                     width: "100%",
                     fontFamily: "var(--font-body)",
@@ -557,7 +566,7 @@ export default function WowEditPraxis({ state }: Props) {
                   },
                   label: (
                     <span style={{ ...eyebrowStyle, marginBottom: 6 }}>
-                      preview
+                      {t("editPraxis.wow.previewLabel")}
                     </span>
                   ),
                   markdownStyle: {
@@ -573,8 +582,9 @@ export default function WowEditPraxis({ state }: Props) {
             {/* Media — notepad panel */}
             <div style={{ ...notepadPanel, marginBottom: 18 }}>
               <span style={{ ...eyebrowStyle, marginBottom: 12 }}>
-                scraps &amp; specimens ·{" "}
-                {state.media.length} pasted
+                {t("editPraxis.wow.filesLabel", {
+                  pasted: state.media.length,
+                })}
               </span>
               <div style={{ display: "flex", flexWrap: "wrap", gap: 14 }}>
                 {state.media.map((item) => {
@@ -637,8 +647,8 @@ export default function WowEditPraxis({ state }: Props) {
                       flexDirection: "column",
                       gap: 4,
                     },
-                    buttonLabel: "+ paste in a scrap",
-                    helperText: "images · video · audio · max 50mb each",
+                    buttonLabel: t("editPraxis.wow.fileButton"),
+                    helperText: t("editPraxis.wow.fileHelper"),
                     helperStyle: {
                       fontSize: 9,
                       color: muted,
@@ -659,7 +669,7 @@ export default function WowEditPraxis({ state }: Props) {
                 }}
               >
                 <span style={{ ...eyebrowStyle, marginBottom: 8 }}>
-                  ★ optional bonus
+                  {t("editPraxis.wow.metatasksLabel")}
                 </span>
                 <MetatasksList
                   state={state}
@@ -702,8 +712,8 @@ export default function WowEditPraxis({ state }: Props) {
                   ornament: (
                     <Sparkle size={12} color="var(--color-text-on-accent)" />
                   ),
-                  idleLabel: "cast it into the world",
-                  busyLabel: "casting...",
+                  idleLabel: t("editPraxis.wow.publishIdle"),
+                  busyLabel: t("editPraxis.wow.publishBusy"),
                   style: {
                     display: "inline-flex",
                     alignItems: "center",
@@ -727,7 +737,7 @@ export default function WowEditPraxis({ state }: Props) {
               <DropButton
                 state={state}
                 skin={{
-                  label: "cancel",
+                  label: t("editPraxis.wow.dropLabel"),
                   style: {
                     background: "transparent",
                     color: muted,
@@ -794,6 +804,7 @@ function MediaTile({
   removeColor,
   onRemove,
 }: MediaTileProps) {
+  const { t } = useTranslation("forms");
   return (
     <div
       style={{
@@ -835,7 +846,7 @@ function MediaTile({
       <button
         type="button"
         onClick={onRemove}
-        aria-label={`Remove ${caption}`}
+        aria-label={t("media.removeAria", { name: caption })}
         style={{
           position: "absolute",
           top: -8,

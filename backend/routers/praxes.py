@@ -20,6 +20,7 @@ from game_config import CURRENT_ERA
 from models.character import Character
 from models.praxis import MediaItem, ModerationStatus, Praxis, PraxisType
 from pydantic import BaseModel
+from schemas.comment import FlagIn
 from schemas.praxis import (
     MediaItemOut,
     PraxisCardOut,
@@ -417,15 +418,18 @@ async def leave_praxis_route(
 @router.post("/{praxis_id}/flag", response_model=PraxisOut)
 async def flag_praxis_route(
     praxis_id: int,
-    reason: str,
+    data: FlagIn,
     character: Character = Depends(get_current_character),
     session: AsyncSession = Depends(get_db),
 ):
+    """Flag a praxis. Reason is the shared vocabulary (ADR-0031) — same FlagIn
+    payload as the comment flag route."""
     praxis = await flag_praxis(
         praxis_id=praxis_id,
         flagged_by=character,
-        reason=reason,
+        reason=data.reason,
         session=session,
+        reason_detail=data.reason_detail,
     )
     return await build_praxis_out(praxis, session, viewer=character)
 

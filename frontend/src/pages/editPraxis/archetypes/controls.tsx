@@ -6,6 +6,7 @@
  */
 import { useRef } from "react";
 import type { CSSProperties, ReactNode } from "react";
+import { useTranslation } from "react-i18next";
 import LevelPill from "../../../components/ui/LevelPill";
 import { factionCssVar, factionName } from "../../../utils/factions";
 import type { PraxisType } from "../../../api/praxis";
@@ -35,6 +36,7 @@ export function InviteSearch({
   state: EditPraxisState;
   skin: InviteSearchSkin;
 }) {
+  const { t } = useTranslation("forms");
   const praxis = state.praxis!;
   // Duel mode reuses this same box as a one-opponent challenge picker (#311):
   // picking issues a challenge; once attached, the opponent shows as a chip and
@@ -62,9 +64,14 @@ export function InviteSearch({
                   border: "1px dashed currentColor",
                 }}
               >
-                ⚔ {state.duel?.opponent.display_name ?? "opponent"}{" "}
+                ⚔{" "}
+                {state.duel?.opponent.display_name ??
+                  t("editPraxis.invite.opponentFallback")}{" "}
                 <em>
-                  · {state.duel?.status === "active" ? "accepted" : "challenged"}
+                  ·{" "}
+                  {state.duel?.status === "active"
+                    ? t("editPraxis.invite.statusAccepted")
+                    : t("editPraxis.invite.statusChallenged")}
                 </em>
                 {/* Only a pending challenge can be withdrawn (backend forbids
                     cancelling an accepted duel). */}
@@ -72,7 +79,7 @@ export function InviteSearch({
                   <button
                     type="button"
                     onClick={() => void state.cancelDuel()}
-                    aria-label="cancel challenge"
+                    aria-label={t("editPraxis.invite.cancelChallengeAria")}
                     style={{
                       background: "transparent",
                       border: "none",
@@ -121,12 +128,15 @@ export function InviteSearch({
                       border: "1px dashed currentColor",
                     }}
                   >
-                    {invite.invitee_display_name} <em>· pending</em>
+                    {invite.invitee_display_name}{" "}
+                    <em>· {t("editPraxis.invite.statusPending")}</em>
                     {/* Inviter rescinds a still-pending invite (#421). */}
                     <button
                       type="button"
                       onClick={() => void state.cancelInvite(invite.id)}
-                      aria-label={`rescind invite to ${invite.invitee_display_name}`}
+                      aria-label={t("editPraxis.invite.rescindInviteAria", {
+                        name: invite.invitee_display_name,
+                      })}
                       style={{
                         background: "transparent",
                         border: "none",
@@ -153,10 +163,14 @@ export function InviteSearch({
           placeholder={
             skin.placeholder ??
             (duelMode
-              ? "search an opponent to challenge"
-              : "search player name or @handle")
+              ? t("editPraxis.invite.searchPlaceholderDuel")
+              : t("editPraxis.invite.searchPlaceholder"))
           }
-          aria-label={duelMode ? "search an opponent" : "search players to invite"}
+          aria-label={
+            duelMode
+              ? t("editPraxis.invite.searchAriaDuel")
+              : t("editPraxis.invite.searchAria")
+          }
           style={{
             width: "100%",
             fontFamily: skin.fontFamily,
@@ -296,13 +310,14 @@ export function DropButton({
   state: EditPraxisState;
   skin?: DropButtonSkin;
 }) {
+  const { t } = useTranslation("forms");
   return (
     <button
       type="button"
       onClick={() => void state.cancel()}
       style={skin?.style}
     >
-      {skin?.label ?? "drop task"}
+      {skin?.label ?? t("editPraxis.dropTask")}
     </button>
   );
 }
@@ -323,6 +338,7 @@ export function MetatasksList({
   state: EditPraxisState;
   skin: MetataskListSkin;
 }) {
+  const { t } = useTranslation("forms");
   return (
     <div style={skin.containerStyle}>
       {state.metaTasks.map((mt) => {
@@ -377,7 +393,7 @@ export function MetatasksList({
                 whiteSpace: "nowrap",
               }}
             >
-              +{mt.point_value} pts
+              {t("metatasks.bonusPoints", { points: mt.point_value })}
             </span>
             {mt.level_required > 0 && <LevelPill level={mt.level_required} />}
           </button>

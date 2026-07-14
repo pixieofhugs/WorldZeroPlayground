@@ -18,6 +18,7 @@
  * docs/design/albescent-kit/Albescent Edit Praxis.dc.html. No hardcoded hex
  * (CLAUDE.md) — every colour is a --faction-albescent-* token or an ink() wash.
  */
+import { useTranslation } from "react-i18next";
 import { mediaUrl } from "../../../utils/media";
 import { type PraxisType } from "../../../api/praxis";
 import type { CSSProperties, ReactNode } from "react";
@@ -55,12 +56,6 @@ const WARM = "var(--faction-albescent-surface-warm)";
 /** A near-black ink wash at the given opacity — the whole palette is one hue. */
 const ink = (pct: number) => `color-mix(in srgb, ${INK} ${pct}%, transparent)`;
 
-const MODE_OPTIONS: Array<{ key: PraxisType; label: string; desc: string }> = [
-  { key: "solo", label: "Alone", desc: "no witness present" },
-  { key: "collab", label: "In Concord", desc: "attended together" },
-  { key: "duel", label: "In Contest", desc: "one account against another" },
-];
-
 /** Quiet mono section label with a trailing serif gloss and a hairline rule. */
 function MannerLabel({ label, gloss }: { label: string; gloss?: string }) {
   return (
@@ -88,9 +83,18 @@ function MannerLabel({ label, gloss }: { label: string; gloss?: string }) {
 }
 
 export default function AlbescentEditPraxis({ state }: Props) {
+  const { t } = useTranslation("forms");
   const praxis = state.praxis!;
   const task = state.task;
   const allowedModes = task?.allowed_modes ?? ["solo", "collab", "duel"];
+
+  const modeOptions: Array<{ key: PraxisType; label: string; desc: string }> = (
+    ["solo", "collab", "duel"] as const
+  ).map((key) => ({
+    key,
+    label: t(`editPraxis.albescent.mode.${key}.label`),
+    desc: t(`editPraxis.albescent.mode.${key}.desc`),
+  }));
 
   return (
     <div
@@ -149,7 +153,7 @@ export default function AlbescentEditPraxis({ state }: Props) {
               }}
             >
               <AlbescentMark size={13} />
-              Albescent · Account № {praxis.id}
+              {t("editPraxis.albescent.masthead", { number: praxis.id })}
             </span>
             <span
               style={{
@@ -162,7 +166,11 @@ export default function AlbescentEditPraxis({ state }: Props) {
                 paddingBottom: 1,
               }}
             >
-              {state.autosaveAt ? `noted ${formatAutosave(state.autosaveAt)}` : "unfiled draft"}
+              {state.autosaveAt
+                ? t("editPraxis.albescent.autosaveSaved", {
+                    ago: formatAutosave(state.autosaveAt),
+                  })
+                : t("editPraxis.albescent.autosaveUnsaved")}
             </span>
           </div>
 
@@ -179,7 +187,7 @@ export default function AlbescentEditPraxis({ state }: Props) {
               margin: "26px 0 8px",
             }}
           >
-            File an Account
+            {t("editPraxis.albescent.pageTitle")}
           </h1>
           <p
             style={{
@@ -194,8 +202,7 @@ export default function AlbescentEditPraxis({ state }: Props) {
               marginBottom: 30,
             }}
           >
-            A returned task is entered into the Register as a plain account — no more than was done. The keepers will bear
-            witness; you need not persuade them.
+            {t("editPraxis.albescent.preamble")}
           </p>
 
           {/* reference slip */}
@@ -223,7 +230,9 @@ export default function AlbescentEditPraxis({ state }: Props) {
                   marginBottom: 5,
                 }}
               >
-                Returning · Ref. {praxis.task_id}
+                {t("editPraxis.albescent.refLabel", {
+                  number: praxis.task_id,
+                })}
               </div>
               <div
                 style={{
@@ -244,7 +253,9 @@ export default function AlbescentEditPraxis({ state }: Props) {
                 </div>
               )}
               <div style={{ fontFamily: MONO, fontSize: 8, letterSpacing: "0.08em", color: ink(40) }}>
-                {praxis.task_point_value} pts on return
+                {t("editPraxis.albescent.pointsLabel", {
+                  points: praxis.task_point_value,
+                })}
               </div>
             </div>
           </div>
@@ -252,12 +263,15 @@ export default function AlbescentEditPraxis({ state }: Props) {
           {/* The Manner — mode picker */}
           {!state.controlsLocked && (
             <div style={{ position: "relative", marginBottom: 32 }}>
-              <MannerLabel label="The Manner" gloss="how was it attended?" />
+              <MannerLabel
+                label={t("editPraxis.albescent.modeLabel")}
+                gloss={t("editPraxis.albescent.modeMeta")}
+              />
               <ModePicker
                 state={state}
                 skin={{
                   containerStyle: { display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 },
-                  options: MODE_OPTIONS,
+                  options: modeOptions,
                   allowedModes,
                   renderOption: (opt, { active, disabled, onSelect }) => (
                     <button
@@ -293,7 +307,13 @@ export default function AlbescentEditPraxis({ state }: Props) {
           {/* Invitees / challenger */}
           {state.showInviteBox && (
             <div style={{ position: "relative", marginBottom: 32 }}>
-              <MannerLabel label={praxis.type === "duel" ? "The Other Account" : "The Other Hands"} />
+              <MannerLabel
+                label={
+                  praxis.type === "duel"
+                    ? t("editPraxis.albescent.inviteLabelDuel")
+                    : t("editPraxis.albescent.inviteLabel")
+                }
+              />
               <InviteSearch
                 state={state}
                 skin={{
@@ -305,7 +325,7 @@ export default function AlbescentEditPraxis({ state }: Props) {
                   dropdownBorder: `1px solid ${ink(12)}`,
                   acceptedBg: INK,
                   acceptedColor: "var(--faction-albescent-page)",
-                  placeholder: "name or @handle",
+                  placeholder: t("editPraxis.albescent.invitePlaceholder"),
                 }}
               />
             </div>
@@ -313,11 +333,14 @@ export default function AlbescentEditPraxis({ state }: Props) {
 
           {/* The Closing Line — the title */}
           <div style={{ position: "relative", marginBottom: 32 }}>
-            <MannerLabel label="The Closing Line" gloss="the one line the Register keeps" />
+            <MannerLabel
+              label={t("editPraxis.albescent.titleLabel")}
+              gloss={t("editPraxis.albescent.titleMeta")}
+            />
             <TitleField
               state={state}
               skin={{
-                placeholder: "what remains, now that it is done",
+                placeholder: t("editPraxis.albescent.titlePlaceholder"),
                 inputStyle: {
                   width: "100%",
                   border: "none",
@@ -340,12 +363,17 @@ export default function AlbescentEditPraxis({ state }: Props) {
 
           {/* The Account — the body */}
           <div style={{ position: "relative", marginBottom: 32 }}>
-            <MannerLabel label="The Account" gloss={`${state.wordCount} words · markdown`} />
+            <MannerLabel
+              label={t("editPraxis.albescent.bodyLabel")}
+              gloss={t("editPraxis.albescent.bodyMeta", {
+                words: state.wordCount,
+              })}
+            />
             <BodyTextarea
               state={state}
               skin={{
                 rows: 7,
-                placeholder: "Set down what was done, one line at a time. Leave nothing out; add nothing in.",
+                placeholder: t("editPraxis.albescent.bodyPlaceholder"),
                 textareaStyle: {
                   width: "100%",
                   resize: "vertical",
@@ -376,7 +404,7 @@ export default function AlbescentEditPraxis({ state }: Props) {
                       marginBottom: 8,
                     }}
                   >
-                    As the Register will keep it
+                    {t("editPraxis.albescent.previewLabel")}
                   </div>
                 ),
                 markdownStyle: { fontFamily: FONT, fontStyle: "italic", fontSize: 15, lineHeight: 1.75, color: ink(62) },
@@ -386,7 +414,10 @@ export default function AlbescentEditPraxis({ state }: Props) {
 
           {/* The Plates — media */}
           <div style={{ position: "relative", marginBottom: 32 }}>
-            <MannerLabel label="The Plates" gloss="what was seen, if anything" />
+            <MannerLabel
+              label={t("editPraxis.albescent.filesLabel")}
+              gloss={t("editPraxis.albescent.filesMeta")}
+            />
             <div style={{ display: "flex", gap: 16, flexWrap: "wrap", alignItems: "flex-start" }}>
               {state.media.map((item) => {
                 const filename = item.file_path.split("/").pop() ?? item.file_path;
@@ -423,9 +454,9 @@ export default function AlbescentEditPraxis({ state }: Props) {
                     flexDirection: "column",
                     gap: 4,
                   },
-                  buttonLabel: "+ affix a plate",
+                  buttonLabel: t("editPraxis.albescent.fileButton"),
                   errorColor: "var(--color-danger)",
-                  helperText: "images · video · audio · max 50mb",
+                  helperText: t("editPraxis.albescent.fileHelper"),
                   helperStyle: { fontFamily: MONO, fontSize: 8, letterSpacing: "0.08em", color: ink(30), marginTop: 8 },
                 }}
               />
@@ -435,7 +466,7 @@ export default function AlbescentEditPraxis({ state }: Props) {
           {/* Further merit — metatasks */}
           {state.showMetatasks && (
             <div style={{ position: "relative", marginBottom: 32 }}>
-              <MannerLabel label="Further Merit" />
+              <MannerLabel label={t("editPraxis.albescent.metatasksLabel")} />
               <MetatasksList
                 state={state}
                 skin={{
@@ -472,8 +503,8 @@ export default function AlbescentEditPraxis({ state }: Props) {
             <PublishButton
               state={state}
               skin={{
-                idleLabel: "Enter into the Register",
-                busyLabel: "entering…",
+                idleLabel: t("editPraxis.albescent.publishIdle"),
+                busyLabel: t("editPraxis.albescent.publishBusy"),
                 style: {
                   cursor: state.submitting ? "wait" : "pointer",
                   border: `1px solid ${INK}`,
@@ -492,7 +523,7 @@ export default function AlbescentEditPraxis({ state }: Props) {
             <DropButton
               state={state}
               skin={{
-                label: "Withdraw",
+                label: t("editPraxis.albescent.dropLabel"),
                 style: {
                   cursor: "pointer",
                   border: `1px solid ${ink(12)}`,
@@ -523,6 +554,7 @@ function PlateFrame({
   caption: string;
   onRemove: () => void;
 }) {
+  const { t } = useTranslation("forms");
   const ink = (pct: number) => `color-mix(in srgb, ${INK} ${pct}%, transparent)`;
   const frame: CSSProperties = {
     position: "relative",
@@ -553,7 +585,7 @@ function PlateFrame({
       <button
         type="button"
         onClick={onRemove}
-        aria-label={`Remove ${caption}`}
+        aria-label={t("media.removeAria", { name: caption })}
         style={{
           position: "absolute",
           top: -8,

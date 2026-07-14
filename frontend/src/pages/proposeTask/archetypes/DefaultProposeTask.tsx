@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import PageTitle from "../../../components/ui/PageTitle";
 import FilterLevelNodes from "../../../components/ui/FilterLevelNodes";
 import { factionCssVar, factionName, getAllFactions } from "../../../utils/factions";
@@ -6,14 +7,14 @@ import type { ProposeTaskState } from "../useProposeTask";
 
 const LEVEL_OPTIONS = [0, 1, 2, 3, 4, 5, 6, 7, 8];
 
-const FACTION_DESCRIPTORS: Record<string, string> = {
-  ua: "Unaffiliated",
-  wow: "Collective",
-  everymen: "Mobilize",
-  snide: "Mischief",
-  ephemerists: "Record",
-  singularity: "Discover",
-};
+const FACTION_DESCRIPTOR_KEY = {
+  ua: "proposeTask.factionDescriptor.ua",
+  wow: "proposeTask.factionDescriptor.wow",
+  everymen: "proposeTask.factionDescriptor.everymen",
+  snide: "proposeTask.factionDescriptor.snide",
+  ephemerists: "proposeTask.factionDescriptor.ephemerists",
+  singularity: "proposeTask.factionDescriptor.singularity",
+} as const;
 
 /**
  * Default propose-task archetype — the original universal form, now consuming
@@ -27,6 +28,11 @@ export default function DefaultProposeTask({
 }: {
   state: ProposeTaskState;
 }) {
+  const { t } = useTranslation("forms");
+  const factionDescriptor = (slug: string): string => {
+    const key = FACTION_DESCRIPTOR_KEY[slug as keyof typeof FACTION_DESCRIPTOR_KEY];
+    return key ? t(key) : "";
+  };
   const {
     canProposeMetatask,
     success,
@@ -59,7 +65,7 @@ export default function DefaultProposeTask({
   if (success) {
     return (
       <div className="py-8" style={{ maxWidth: 720, margin: "0 auto" }}>
-        <PageTitle title="Propose a Task" />
+        <PageTitle title={t("proposeTask.pageTitle")} />
         <div
           className="sidebar-card"
           style={{ padding: 24, textAlign: "center" }}
@@ -70,15 +76,15 @@ export default function DefaultProposeTask({
                 className="font-display italic"
                 style={{ fontSize: 22, color, marginBottom: 6 }}
               >
-                Meta task proposed!
+                {t("proposeTask.successMeta.heading")}
               </p>
               <p
                 className="font-body"
                 style={{ fontSize: 10, color: "var(--color-text-secondary)" }}
               >
-                An admin will review it. Once activated,{" "}
-                {factionName(factionSlug)} players can apply it to their praxes
-                for a points bonus.
+                {t("proposeTask.successMeta.body", {
+                  faction: factionName(factionSlug),
+                })}
               </p>
             </>
           ) : (
@@ -87,13 +93,13 @@ export default function DefaultProposeTask({
                 className="font-display italic"
                 style={{ fontSize: 22, color, marginBottom: 6 }}
               >
-                Task proposed!
+                {t("proposeTask.successTask.heading")}
               </p>
               <p
                 className="font-body"
                 style={{ fontSize: 10, color: "var(--color-text-secondary)" }}
               >
-                An admin will review it soon.
+                {t("proposeTask.successTask.body")}
               </p>
             </>
           )}
@@ -114,15 +120,15 @@ export default function DefaultProposeTask({
         }}
       >
         <Link to="/tasks" style={{ color: "inherit", textDecoration: "none" }}>
-          Tasks
+          {t("breadcrumb.tasks")}
         </Link>
         {" › "}
         <span style={{ color: "var(--color-text-primary)" }}>
-          Propose a Task
+          {t("proposeTask.pageTitle")}
         </span>
       </nav>
 
-      <PageTitle title="Propose a Task" />
+      <PageTitle title={t("proposeTask.pageTitle")} />
 
       {/* Two-column: form left, tips right (§20.1) */}
       <div
@@ -141,7 +147,7 @@ export default function DefaultProposeTask({
               className="eyebrow"
               style={{ display: "block", marginBottom: 8 }}
             >
-              Choose a faction for this task
+              {t("proposeTask.factionSelectorLabel")}
             </span>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
               {(factions.length > 0 ? factions : getAllFactions()).map((f) => {
@@ -185,7 +191,7 @@ export default function DefaultProposeTask({
                       {factionName(slug)}
                     </span>
                     <span className="eyebrow" style={{ fontSize: 7 }}>
-                      {FACTION_DESCRIPTORS[slug] ?? ""}
+                      {factionDescriptor(slug)}
                     </span>
                   </button>
                 );
@@ -209,7 +215,7 @@ export default function DefaultProposeTask({
                   className="eyebrow"
                   style={{ display: "block", marginBottom: 6 }}
                 >
-                  Task name
+                  {t("proposeTask.fields.name.label")}
                 </span>
                 <input
                   type="text"
@@ -218,7 +224,7 @@ export default function DefaultProposeTask({
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
                   disabled={submitting}
-                  placeholder="What do you want people to do?"
+                  placeholder={t("proposeTask.fields.name.placeholder")}
                   style={{
                     width: "100%",
                     fontFamily: "'Courier Prime', monospace",
@@ -257,7 +263,7 @@ export default function DefaultProposeTask({
                       marginTop: 2,
                     }}
                   >
-                    Task name must be 200 characters or fewer.
+                    {t("proposeTask.fields.name.tooLong")}
                   </span>
                 )}
               </div>
@@ -268,7 +274,7 @@ export default function DefaultProposeTask({
                   className="eyebrow"
                   style={{ display: "block", marginBottom: 6 }}
                 >
-                  Description
+                  {t("proposeTask.fields.description.label")}
                 </span>
                 <textarea
                   rows={6}
@@ -276,7 +282,7 @@ export default function DefaultProposeTask({
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   disabled={submitting}
-                  placeholder="Write the task description here. What exactly should the player do? What counts as completing it?"
+                  placeholder={t("proposeTask.fields.description.placeholder")}
                   style={{
                     width: "100%",
                     fontFamily: "'Courier Prime', monospace",
@@ -306,7 +312,7 @@ export default function DefaultProposeTask({
                       marginTop: 2,
                     }}
                   >
-                    Description must be 5000 characters or fewer.
+                    {t("proposeTask.fields.description.tooLong")}
                   </span>
                 )}
               </div>
@@ -326,7 +332,7 @@ export default function DefaultProposeTask({
                       className="eyebrow"
                       style={{ display: "block", marginBottom: 6 }}
                     >
-                      Base points
+                      {t("proposeTask.fields.basePoints.label")}
                     </span>
                     <input
                       type="text"
@@ -336,7 +342,7 @@ export default function DefaultProposeTask({
                         setPointValue(e.target.value.replace(/[^0-9]/g, ""))
                       }
                       disabled={submitting}
-                      placeholder="pts"
+                      placeholder={t("proposeTask.fields.basePoints.placeholder")}
                       style={{
                         width: 80,
                         fontFamily: "'Courier Prime', monospace",
@@ -354,7 +360,7 @@ export default function DefaultProposeTask({
                       className="eyebrow"
                       style={{ display: "block", marginTop: 4, fontSize: 7 }}
                     >
-                      Admin may adjust
+                      {t("proposeTask.fields.basePoints.hint")}
                     </span>
                   </div>
                 )}
@@ -364,7 +370,7 @@ export default function DefaultProposeTask({
                       className="eyebrow"
                       style={{ display: "block", marginBottom: 6 }}
                     >
-                      Bonus points
+                      {t("proposeTask.fields.bonusPoints.label")}
                     </span>
                     <input
                       type="text"
@@ -374,7 +380,7 @@ export default function DefaultProposeTask({
                         setMetaBonusValue(e.target.value.replace(/[^0-9]/g, ""))
                       }
                       disabled={submitting}
-                      placeholder="pts"
+                      placeholder={t("proposeTask.fields.bonusPoints.placeholder")}
                       style={{
                         width: 80,
                         fontFamily: "'Courier Prime', monospace",
@@ -392,7 +398,7 @@ export default function DefaultProposeTask({
                       className="eyebrow"
                       style={{ display: "block", marginTop: 4, fontSize: 7 }}
                     >
-                      Flat bonus added to score
+                      {t("proposeTask.fields.bonusPoints.hint")}
                     </span>
                   </div>
                 )}
@@ -401,7 +407,7 @@ export default function DefaultProposeTask({
                     className="eyebrow"
                     style={{ display: "block", marginBottom: 6 }}
                   >
-                    Minimum level
+                    {t("proposeTask.fields.minimumLevel.label")}
                   </span>
                   <FilterLevelNodes
                     levels={LEVEL_OPTIONS}
@@ -412,7 +418,7 @@ export default function DefaultProposeTask({
                     className="eyebrow"
                     style={{ display: "block", marginTop: 4, fontSize: 7 }}
                   >
-                    Level 0 = anyone can attempt
+                    {t("proposeTask.fields.minimumLevel.hint")}
                   </span>
                 </div>
               </div>
@@ -452,7 +458,7 @@ export default function DefaultProposeTask({
                         fontWeight: isMetaTask ? 700 : 400,
                       }}
                     >
-                      Create as meta task
+                      {t("proposeTask.metaToggle.label")}
                     </span>
                     <span
                       className="eyebrow"
@@ -461,9 +467,10 @@ export default function DefaultProposeTask({
                         color: "var(--color-text-tertiary)",
                       }}
                     >
-                      applies as a bonus to all{" "}
-                      {factionSlug !== "na" ? factionName(factionSlug) : ""}{" "}
-                      submissions
+                      {t("proposeTask.metaToggle.hint", {
+                        faction:
+                          factionSlug !== "na" ? factionName(factionSlug) : "",
+                      })}
                     </span>
                   </label>
                 </div>
@@ -477,14 +484,14 @@ export default function DefaultProposeTask({
                   className="eyebrow"
                   style={{ display: "block", marginBottom: 6 }}
                 >
-                  Notes to admin (optional)
+                  {t("proposeTask.fields.notes.label")}
                 </span>
                 <textarea
                   rows={3}
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
                   disabled={submitting}
-                  placeholder="Why do you want this task to exist? What inspired it?"
+                  placeholder={t("proposeTask.fields.notes.placeholder")}
                   style={{
                     width: "100%",
                     fontFamily: "'Courier Prime', monospace",
@@ -523,8 +530,8 @@ export default function DefaultProposeTask({
                   style={{ color, marginBottom: 4, display: "block" }}
                 >
                   {isMetaTask
-                    ? `Meta task preview — ${fname}`
-                    : `Task preview — ${fname} · Pending`}
+                    ? t("proposeTask.preview.metaHeading", { faction: fname })
+                    : t("proposeTask.preview.taskHeading", { faction: fname })}
                 </span>
                 <p
                   className="font-body"
@@ -559,17 +566,25 @@ export default function DefaultProposeTask({
                       className="eyebrow"
                       style={{ color: "var(--color-success)" }}
                     >
-                      +{metaBonusValue || "?"} bonus pts
+                      {t("proposeTask.preview.bonusPoints", {
+                        points: metaBonusValue || "?",
+                      })}
                     </span>
                   ) : (
-                    <span className="eyebrow">{pointValue || "?"} pts</span>
+                    <span className="eyebrow">
+                      {t("proposeTask.preview.points", {
+                        points: pointValue || "?",
+                      })}
+                    </span>
                   )}
                   <span className="eyebrow">
-                    lvl {levelRequired === "" ? 0 : levelRequired}
+                    {t("proposeTask.preview.level", {
+                      level: levelRequired === "" ? 0 : levelRequired,
+                    })}
                   </span>
                   {!isMetaTask && (
                     <span className="eyebrow" style={{ color }}>
-                      Pending review
+                      {t("proposeTask.preview.pending")}
                     </span>
                   )}
                 </div>
@@ -618,10 +633,10 @@ export default function DefaultProposeTask({
                   }}
                 />
                 {submitting
-                  ? "Submitting..."
+                  ? t("proposeTask.submit.busy")
                   : isMetaTask
-                    ? "Propose meta task"
-                    : "Submit proposal"}
+                    ? t("proposeTask.submit.meta")
+                    : t("proposeTask.submit.task")}
               </button>
               <button
                 type="button"
@@ -629,7 +644,7 @@ export default function DefaultProposeTask({
                 className="btn-outline"
                 style={{ fontSize: 10, padding: "8px 16px" }}
               >
-                Cancel
+                {t("proposeTask.submit.cancel")}
               </button>
               <span
                 className="font-body"
@@ -639,7 +654,7 @@ export default function DefaultProposeTask({
                   marginLeft: "auto",
                 }}
               >
-                Your proposal goes to admin for review.
+                {t("proposeTask.submit.note")}
               </span>
             </div>
           </form>
@@ -648,7 +663,9 @@ export default function DefaultProposeTask({
         {/* ── Right: Tips Column (§20.8) ── */}
         <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
           <div className="sidebar-card" style={{ padding: "14px 16px" }}>
-            <p className="eyebrow mb-2">What makes a good task</p>
+            <p className="eyebrow mb-2">
+              {t("proposeTask.tips.goodTaskHeading")}
+            </p>
             <ul
               className="font-body"
               style={{
@@ -659,22 +676,18 @@ export default function DefaultProposeTask({
                 listStyleType: "disc",
               }}
             >
-              <li>
-                It should be doable by someone with no money and no special
-                skills.
-              </li>
-              <li>
-                The proof post should be interesting to read even if you didn't
-                do the task.
-              </li>
-              <li>It should have a clear pass/fail.</li>
-              <li>It should feel like it belongs to its faction.</li>
-              <li>If anyone could do it anywhere, it's probably right.</li>
+              {(
+                t("proposeTask.tips.goodTaskItems", {
+                  returnObjects: true,
+                }) as string[]
+              ).map((item, index) => (
+                <li key={index}>{item}</li>
+              ))}
             </ul>
           </div>
 
           <div className="sidebar-card" style={{ padding: "14px 16px" }}>
-            <p className="eyebrow mb-2">What happens next</p>
+            <p className="eyebrow mb-2">{t("proposeTask.tips.nextHeading")}</p>
             <p
               className="font-body"
               style={{
@@ -683,9 +696,7 @@ export default function DefaultProposeTask({
                 lineHeight: 1.6,
               }}
             >
-              Your proposal goes to admin review. If approved, it enters the
-              pending task list. Admins typically review proposals within 1-2
-              weeks.
+              {t("proposeTask.tips.nextBody")}
             </p>
           </div>
         </div>

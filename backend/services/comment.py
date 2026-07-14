@@ -15,7 +15,7 @@ from sqlalchemy.orm import selectinload
 from game_config import CURRENT_ERA, EraConfig
 from models.character import Character
 from models.comment import MAX_COMMENT_BODY, Comment, CommentMention
-from models.flag import Flag
+from models.flag import Flag, FlagReason, stored_flag_reason
 from models.praxis import ModerationStatus, Praxis
 from models.task import Task, TaskStatus
 from schemas.comment import CommentAuthor, CommentMentionOut, CommentOut
@@ -238,8 +238,9 @@ async def list_comments(
 async def flag_comment(
     comment_id: int,
     flagged_by: Character,
-    reason: str,
+    reason: FlagReason,
     session: AsyncSession,
+    reason_detail: Optional[str] = None,
     era: EraConfig = CURRENT_ERA,
 ) -> Comment:
     """Flag a comment for moderation. Reuses era.flag_level_required.
@@ -256,7 +257,11 @@ async def flag_comment(
             detail=f"Must be level {era.flag_level_required} or above to flag a comment.",
         )
     session.add(
-        Flag(comment_id=comment.id, flagged_by=flagged_by.id, reason=reason or "")
+        Flag(
+            comment_id=comment.id,
+            flagged_by=flagged_by.id,
+            reason=stored_flag_reason(reason, reason_detail),
+        )
     )
     await session.flush()
 

@@ -3,6 +3,7 @@
  * vim-styled editor on near-black, scanline overlay, blinking cursor.
  */
 import { useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { factionCssVar } from "../../../utils/factions";
 import { mediaUrl } from "../../../utils/media";
 import { type PraxisType } from "../../../api/praxis";
@@ -24,19 +25,18 @@ interface Props {
   state: EditPraxisState;
 }
 
-const MODE_OPTIONS: Array<{ key: PraxisType; flag: string; desc: string }> = [
-  { key: "solo", flag: "--solo", desc: "one author. all credit accrues." },
-  {
-    key: "collab",
-    flag: "--networked",
-    desc: "fork. multiple authors. all earn full pts.",
-  },
-  { key: "duel", flag: "--adversarial", desc: "pvp. winner-take-all on vote median." },
-];
-
 export default function SingularityEditPraxis({ state }: Props) {
+  const { t } = useTranslation("forms");
   const praxis = state.praxis!;
   const task = state.task;
+
+  const modeOptions: Array<{ key: PraxisType; flag: string; desc: string }> = (
+    ["solo", "collab", "duel"] as const
+  ).map((key) => ({
+    key,
+    flag: t(`editPraxis.singularity.mode.${key}.label`),
+    desc: t(`editPraxis.singularity.mode.${key}.desc`),
+  }));
 
   // Singularity-specific tokens; these CSS vars resolve to terminal-green/black.
   const term = factionCssVar("singularity", "card-text"); // #4ade80 in both modes
@@ -162,7 +162,7 @@ export default function SingularityEditPraxis({ state }: Props) {
               textTransform: "uppercase",
             }}
           >
-            ▸ proving completion of
+            {t("editPraxis.singularity.taskRefLabel")}
           </span>
           <div
             style={{
@@ -222,7 +222,7 @@ export default function SingularityEditPraxis({ state }: Props) {
               state={state}
               skin={{
                 containerStyle: { display: "flex", gap: 0 },
-                options: MODE_OPTIONS,
+                options: modeOptions,
                 allowedModes,
                 renderOption: (opt, { active, disabled, onSelect }) => (
                   <button
@@ -291,7 +291,7 @@ export default function SingularityEditPraxis({ state }: Props) {
                     acceptedColor: term,
                     pendingBg: "transparent",
                     pendingColor: dim,
-                    placeholder: "search handle...",
+                    placeholder: t("editPraxis.singularity.invitePlaceholder"),
                   }}
                 />
               </div>
@@ -326,7 +326,7 @@ export default function SingularityEditPraxis({ state }: Props) {
             <TitleField
               state={state}
               skin={{
-                placeholder: "title_goes_here.md",
+                placeholder: t("editPraxis.singularity.titlePlaceholder"),
                 inputStyle: {
                   width: "100%",
                   paddingLeft: 22,
@@ -356,7 +356,10 @@ export default function SingularityEditPraxis({ state }: Props) {
             <div style={{ fontSize: 10, color: dim }}>
               <span style={{ color: term }}>$ </span>vim ./draft.md ·{" "}
               <span style={{ color: dim }}>
-                {state.wordCount} words · {lineCount} lines
+                {t("editPraxis.singularity.bodyMeta", {
+                  words: state.wordCount,
+                  lines: lineCount,
+                })}
               </span>
             </div>
           </div>
@@ -394,8 +397,7 @@ export default function SingularityEditPraxis({ state }: Props) {
                 state={state}
                 skin={{
                   rows: 12,
-                  placeholder:
-                    "# what did you do?\n\nwrite here. supports markdown.\n\n--INSERT--",
+                  placeholder: t("editPraxis.singularity.bodyPlaceholder"),
                   textareaStyle: {
                     width: "100%",
                     height: "100%",
@@ -449,10 +451,12 @@ export default function SingularityEditPraxis({ state }: Props) {
             </span>
             <span>
               {state.saveStatus === "saving"
-                ? "saving..."
+                ? t("editPraxis.singularity.saveState.saving")
                 : state.autosaveAt
-                  ? `[saved ${formatClock(state.autosaveAt)}]`
-                  : "unsaved"}
+                  ? t("editPraxis.singularity.saveState.saved", {
+                      time: formatClock(state.autosaveAt),
+                    })
+                  : t("editPraxis.singularity.saveState.unsaved")}
             </span>
           </div>
           <BodyPreview
@@ -500,10 +504,10 @@ export default function SingularityEditPraxis({ state }: Props) {
                   marginBottom: 12,
                 }}
               >
-                // 0 files attached · drop zone empty
+                {t("editPraxis.singularity.mediaEmpty")}
                 <br />
                 <span style={{ fontSize: 9 }}>
-                  // max 50mb/file · accepts: image/* video/* audio/*
+                  {t("editPraxis.singularity.mediaHelper")}
                 </span>
               </div>
             ) : (
@@ -554,7 +558,7 @@ export default function SingularityEditPraxis({ state }: Props) {
                           fontSize: 10,
                         }}
                       >
-                        rm
+                        {t("editPraxis.singularity.removeButton")}
                       </button>
                     </div>
                   );
@@ -575,7 +579,7 @@ export default function SingularityEditPraxis({ state }: Props) {
                   textTransform: "uppercase",
                   letterSpacing: "0.12em",
                 },
-                buttonLabel: "+ attach",
+                buttonLabel: t("editPraxis.singularity.fileButton"),
                 errorColor: "#f87171",
               }}
             />
@@ -635,8 +639,8 @@ export default function SingularityEditPraxis({ state }: Props) {
           <PublishButton
             state={state}
             skin={{
-              idleLabel: "SEAL & TRANSMIT",
-              busyLabel: "$ transmitting...",
+              idleLabel: t("editPraxis.singularity.publishIdle"),
+              busyLabel: t("editPraxis.singularity.publishBusy"),
               ornament: (
                 <span
                   aria-hidden
@@ -667,7 +671,7 @@ export default function SingularityEditPraxis({ state }: Props) {
           <DropButton
             state={state}
             skin={{
-              label: "[esc] :q",
+              label: t("editPraxis.singularity.dropLabel"),
               style: {
                 background: "transparent",
                 color: dim,
