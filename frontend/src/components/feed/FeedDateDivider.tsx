@@ -1,3 +1,4 @@
+import i18n from '../../i18n'
 import { formatDate } from '../../utils/dates'
 
 /** Date divider for the activity feed (TODAY, YESTERDAY, or formatted date). */
@@ -9,8 +10,8 @@ export function getDateLabel(iso: string): string {
   const yesterday = new Date(today.getTime() - 86400000)
   const itemDate = new Date(date.getFullYear(), date.getMonth(), date.getDate())
 
-  if (itemDate.getTime() === today.getTime()) return 'Today'
-  if (itemDate.getTime() === yesterday.getTime()) return 'Yesterday'
+  if (itemDate.getTime() === today.getTime()) return i18n.t('feed:dateDivider.today')
+  if (itemDate.getTime() === yesterday.getTime()) return i18n.t('feed:dateDivider.yesterday')
   return formatDate(iso)
 }
 

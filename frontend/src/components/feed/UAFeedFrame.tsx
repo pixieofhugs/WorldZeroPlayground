@@ -1,5 +1,7 @@
 import type { ReactNode } from 'react'
 
+import i18n from '../../i18n'
+
 /**
  * University of Asthmatics per-faction feed frame (surface #12,
  * SPEC-faction-ui-profile.md).
@@ -67,7 +69,7 @@ export default function UAFeedFrame({ children }: { children: ReactNode }) {
               color: ORANGE,
             }}
           >
-            University of Asthmatics
+            {i18n.t('feed:identity.ua.fullName')}
           </div>
           <div
             aria-hidden="true"

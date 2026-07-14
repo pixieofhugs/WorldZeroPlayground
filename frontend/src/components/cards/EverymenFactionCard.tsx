@@ -1,4 +1,5 @@
 import type { FactionCardProps } from "./FactionCard";
+import i18n from "../../i18n";
 
 /**
  * EverymenFactionCard — the Everymen faction PREVIEW card.
@@ -89,13 +90,12 @@ export default function EverymenCard({
   invitationNote,
 }: FactionCardProps) {
   const blurb =
-    faction.description ??
-    "No tricks, no inner circle, no waiting to be chosen. The Everymen do the work in front of them and finish what they start.";
+    faction.description ?? i18n.t("feed:factionCard.everymen.blurbFallback");
 
   const perks = [
-    "Honest tasks with honest points",
-    "A faction that finishes what it starts",
-    "Your work stamped by the people beside you",
+    i18n.t("feed:factionCard.everymen.perks.honestPoints"),
+    i18n.t("feed:factionCard.everymen.perks.finishesWork"),
+    i18n.t("feed:factionCard.everymen.perks.stampedWork"),
   ];
 
   return (
@@ -129,7 +129,11 @@ export default function EverymenCard({
           padding: "7px 0",
         }}
       >
-        {invitationNote ? `NEW SUMMONS · ${invitationNote.toUpperCase()}` : "THE EVERYMEN WANT YOU"}
+        {invitationNote
+          ? i18n.t("feed:factionCard.everymen.summons", {
+              note: invitationNote.toUpperCase(),
+            })
+          : i18n.t("feed:factionCard.everymen.kicker")}
       </div>
       <div style={{ height: 4, background: "var(--everymen-gold)", position: "relative", zIndex: 2 }} />
 
@@ -163,7 +167,7 @@ export default function EverymenCard({
             marginBottom: 8,
           }}
         >
-          World Zero · Faction
+          {i18n.t("feed:factionCard.everymen.eyebrow")}
         </div>
 
         {/* big Bebas headline = faction name */}
@@ -195,7 +199,7 @@ export default function EverymenCard({
             whiteSpace: "nowrap",
           }}
         >
-          UNITED · WE · STAND
+          {i18n.t("feed:factionCard.everymen.motto")}
         </div>
 
         {/* blurb from description */}

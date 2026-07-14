@@ -1,4 +1,5 @@
 import type { FactionOut } from "../../api/factions";
+import i18n from "../../i18n";
 import { factionCssVar } from "../../utils/factions";
 import EverymenCard from "./EverymenFactionCard";
 import SnideMasthead from "./SnideMasthead";
@@ -34,7 +35,7 @@ function StatusBadge({ status, slug }: { status: string; slug: string }) {
           letterSpacing: "0.1em",
         }}
       >
-        MEMBER
+        {i18n.t("feed:factionCard.status.member")}
       </span>
     );
   }
@@ -48,7 +49,7 @@ function StatusBadge({ status, slug }: { status: string; slug: string }) {
           letterSpacing: "0.1em",
         }}
       >
-        INVITED
+        {i18n.t("feed:factionCard.status.invited")}
       </span>
     );
   }
@@ -65,7 +66,7 @@ function StatusBadge({ status, slug }: { status: string; slug: string }) {
           padding: "2px 6px",
         }}
       >
-        BURNED
+        {i18n.t("feed:factionCard.status.burned")}
       </span>
     );
   }
@@ -79,7 +80,7 @@ function StatusBadge({ status, slug }: { status: string; slug: string }) {
           letterSpacing: "0.1em",
         }}
       >
-        WELCOME BACK
+        {i18n.t("feed:factionCard.status.welcomeBack")}
       </span>
     );
   }
@@ -105,7 +106,7 @@ function InvitationNote({ slug, note }: { slug: string; note: string }) {
         marginBottom: 6,
       }}
     >
-      <span style={{ fontWeight: 700 }}>NEW INVITATION</span>
+      <span style={{ fontWeight: 700 }}>{i18n.t("feed:factionCard.newInvitation")}</span>
       <span style={{ opacity: 0.75 }}>· {note}</span>
     </div>
   );
@@ -315,7 +316,7 @@ function WowCard({
               letterSpacing: "0.03em",
             }}
           >
-            <WowSparkle size={10} color={titleText} /> wow.exe
+            <WowSparkle size={10} color={titleText} /> {i18n.t("feed:identity.wow.windowTitle")}
           </span>
           <span
             style={{
@@ -466,7 +467,7 @@ function SnideCard({
         }}
       />
       <div className="snide-tape" style={{ top: -10, left: 22, transform: "rotate(-8deg)" }} />
-      <SnideMasthead subtitle="field dispatch" />
+      <SnideMasthead subtitle={i18n.t("feed:factionCard.snide.subtitle")} />
       {invitationNote && (
         <InvitationNote slug={faction.slug} note={invitationNote} />
       )}
@@ -570,7 +571,7 @@ function EphemeristsCard({
               marginBottom: 4,
             }}
           >
-            World Zero · Faction №5
+            {i18n.t("feed:factionCard.ephemerists.eyebrow")}
           </div>
           <div
             style={{
@@ -737,7 +738,7 @@ function SingularityCard({
             marginBottom: 8,
           }}
         >
-          singularity protocol
+          {i18n.t("feed:identity.singularity.protocol")}
           <span
             style={{
               display: "inline-block",

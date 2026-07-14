@@ -1,3 +1,5 @@
+import { Trans } from "react-i18next";
+import i18n from "../../i18n";
 import { EphSeal, LapisLastWord } from "./ephemeristsAtoms";
 
 /**
@@ -54,9 +56,9 @@ export default function EphemeristsFactionHero({
 }) {
   // The faction labels its own counts — page passes raw numbers only.
   const stats = [
-    { value: members, label: "ephemerists" },
-    { value: tasks, label: "open truths" },
-    { value: praxes, label: "sealed lately" },
+    { value: members, label: i18n.t("feed:factionHero.ephemerists.stats.members") },
+    { value: tasks, label: i18n.t("feed:factionHero.ephemerists.stats.tasks") },
+    { value: praxes, label: i18n.t("feed:factionHero.ephemerists.stats.praxes") },
   ];
   return (
     <header
@@ -85,7 +87,7 @@ export default function EphemeristsFactionHero({
               marginBottom: 6,
             }}
           >
-            World Zero · Faction №5 — the road's keepers
+            {i18n.t("feed:factionHero.ephemerists.eyebrow")}
           </div>
           <h1
             style={{
@@ -115,7 +117,7 @@ export default function EphemeristsFactionHero({
               border: "1px solid var(--eph-gold-deep)",
             }}
           >
-            OMNIA · TRANSEUNT
+            {i18n.t("feed:factionHero.ephemerists.motto")}
           </div>
           <p
             style={{
@@ -127,7 +129,7 @@ export default function EphemeristsFactionHero({
               color: "color-mix(in srgb, var(--eph-parchment) 92%, transparent)",
             }}
           >
-            {description ?? "Wanderers who set down what is true before it passes."}
+            {description ?? i18n.t("feed:factionHero.ephemerists.descriptionFallback")}
             <span
               style={{
                 display: "block",
@@ -138,7 +140,12 @@ export default function EphemeristsFactionHero({
                 marginTop: 8,
               }}
             >
-              † nothing keeps. we keep the record anyway — <span style={{ color: "var(--eph-gold-light)" }}>see †</span>
+              {/* The self-referential gloss is one <Trans> unit; "see †" is tag <1>. */}
+              <Trans
+                ns="feed"
+                i18nKey="factionHero.ephemerists.gloss"
+                components={{ 1: <span style={{ color: "var(--eph-gold-light)" }} /> }}
+              />
             </span>
           </p>
         </div>

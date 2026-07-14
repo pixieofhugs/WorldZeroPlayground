@@ -1,7 +1,8 @@
 import { Link } from "react-router-dom";
 import type { TaskOut } from "../../api/tasks";
+import i18n from "../../i18n";
 import LevelPill from "../ui/LevelPill";
-import { UACrest, MottoRibbon, UA_FULL_NAME } from "./UACrest";
+import { UACrest, MottoRibbon } from "./UACrest";
 
 /**
  * UA — Gilt salon crest placard (the University of Asthmatics archetype).
@@ -68,7 +69,7 @@ export default function UATaskCard({ task, displayPoints, onSignup }: Props) {
             marginTop: 8,
           }}
         >
-          {UA_FULL_NAME}
+          {i18n.t("feed:identity.ua.fullName")}
         </div>
         <div
           style={{
@@ -80,7 +81,7 @@ export default function UATaskCard({ task, displayPoints, onSignup }: Props) {
             marginBottom: 10,
           }}
         >
-          EST · MMXX
+          {i18n.t("feed:taskCard.ua.estLine")}
         </div>
 
         {/* Motto ribbon */}
@@ -124,7 +125,7 @@ export default function UATaskCard({ task, displayPoints, onSignup }: Props) {
             margin: "6px 0 10px",
           }}
         >
-          UA · {displayPoints} pts
+          {i18n.t("feed:taskCard.ua.pointsLine", { points: displayPoints })}
         </div>
 
         {onSignup && (
@@ -142,7 +143,7 @@ export default function UATaskCard({ task, displayPoints, onSignup }: Props) {
               border: "none",
             }}
           >
-            Matriculate
+            {i18n.t("feed:taskCard.ua.signup")}
           </button>
         )}
 

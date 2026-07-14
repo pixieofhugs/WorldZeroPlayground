@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import type { TaskOut } from "../../api/tasks";
+import i18n from "../../i18n";
 import LevelPill from "../ui/LevelPill";
 import SnideMasthead from "./SnideMasthead";
 
@@ -132,7 +133,9 @@ export default function SNIDETaskCard({
 
       {/* masthead */}
       <SnideMasthead
-        subtitle={`dispatch №${String(task.id).padStart(4, "0")}`}
+        subtitle={i18n.t("feed:taskCard.snide.dispatchNumber", {
+          number: String(task.id).padStart(4, "0"),
+        })}
         size={14}
       />
 
@@ -147,7 +150,7 @@ export default function SNIDETaskCard({
           marginBottom: 8,
         }}
       >
-        your assignment, should you ignore it —
+        {i18n.t("feed:taskCard.snide.scrawl")}
       </div>
 
       {/* ransom-letter title */}
@@ -195,7 +198,7 @@ export default function SNIDETaskCard({
             marginBottom: 12,
           }}
         >
-          I'M IN ↗
+          {i18n.t("feed:taskCard.snide.signup")}
         </button>
       )}
 
@@ -210,7 +213,9 @@ export default function SNIDETaskCard({
           }}
         >
           {displayPoints}
-          <span style={{ fontSize: 9, marginLeft: 3 }}>PTS</span>
+          <span style={{ fontSize: 9, marginLeft: 3 }}>
+            {i18n.t("feed:taskCard.snide.pointsUnit")}
+          </span>
         </span>
         <LevelPill level={task.level_required} factionSlug="snide" />
       </div>

@@ -1,5 +1,6 @@
 import type { CSSProperties } from "react";
 import type { FactionHeroProps } from "../../pages/FactionDetail";
+import i18n from "../../i18n";
 
 /**
  * Warriors of Whimsy faction-page hero — whimsy.exe pinned to a cork memo board.
@@ -16,8 +17,6 @@ import type { FactionHeroProps } from "../../pages/FactionDetail";
  * The page passes raw counts; the faction labels them in its own whimsy voice.
  * Motto is a faction constant (not a backend field).
  */
-
-const MOTTO = "make it weird, make it matter";
 
 // Token shorthands — every value resolves to a --faction-wow-* var.
 const PINK = "var(--faction-wow)";
@@ -105,9 +104,9 @@ export default function WowFactionHero({
   // ponytail: three real counts. seasonRank / total-points-won aren't sourced yet
   // (no leaderboard/aggregate endpoint) — add charms when they are.
   const statTags = [
-    { value: members, label: "witches", color: PINK, rot: "-3deg" },
-    { value: tasks, label: "quests open", color: IVY, rot: "2.5deg" },
-    { value: praxes, label: "spells filed", color: ACCENT, rot: "-2deg" },
+    { value: members, label: i18n.t("feed:factionHero.wow.stats.members"), color: PINK, rot: "-3deg" },
+    { value: tasks, label: i18n.t("feed:factionHero.wow.stats.tasks"), color: IVY, rot: "2.5deg" },
+    { value: praxes, label: i18n.t("feed:factionHero.wow.stats.praxes"), color: ACCENT, rot: "-2deg" },
   ];
 
   return (
@@ -160,7 +159,7 @@ export default function WowFactionHero({
                 marginBottom: 2,
               }}
             >
-              World Zero · Faction · est. MMXXI
+              {i18n.t("feed:factionHero.wow.eyebrow")}
             </div>
             <h1
               style={{
@@ -176,7 +175,7 @@ export default function WowFactionHero({
               {name}
             </h1>
             <div style={{ fontFamily: SCRIPT, fontSize: 24, color: PINK, marginTop: 2 }}>
-              {MOTTO}
+              {i18n.t("feed:factionHero.wow.motto")}
             </div>
             <p
               style={{
@@ -188,7 +187,7 @@ export default function WowFactionHero({
                 margin: "8px 0 0",
               }}
             >
-              {description ?? "Nobody said the work couldn't be fun. Cast something."}
+              {description ?? i18n.t("feed:factionHero.wow.descriptionFallback")}
             </p>
           </div>
 

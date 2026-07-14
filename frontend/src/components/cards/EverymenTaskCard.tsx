@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import type { TaskOut } from "../../api/tasks";
+import i18n from "../../i18n";
 import LevelPill from "../ui/LevelPill";
 
 /**
@@ -164,7 +165,7 @@ function PointsSeal({
           marginTop: 1,
         }}
       >
-        POINTS
+        {i18n.t("feed:taskCard.everymen.sealUnit")}
       </span>
     </div>
   );
@@ -216,7 +217,7 @@ export default function EverymenTaskCard({ task, displayPoints, onSignup }: Prop
               letterSpacing: "0.07em",
             }}
           >
-            THE EVERYMEN
+            {i18n.t("feed:taskCard.everymen.masthead")}
           </span>
           <CogMark size={11} color="var(--everymen-cream)" />
         </div>
@@ -281,7 +282,7 @@ export default function EverymenTaskCard({ task, displayPoints, onSignup }: Prop
               color: "var(--everymen-red)",
             }}
           >
-            {displayPoints} PTS
+            {i18n.t("feed:taskCard.everymen.points", { points: displayPoints })}
           </span>
         </div>
         <PointsSeal points={displayPoints} />
@@ -303,7 +304,7 @@ export default function EverymenTaskCard({ task, displayPoints, onSignup }: Prop
             width: "100%",
           }}
         >
-          Report for duty
+          {i18n.t("feed:taskCard.everymen.signup")}
         </button>
       )}
     </div>

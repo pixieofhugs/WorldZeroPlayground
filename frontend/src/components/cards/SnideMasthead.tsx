@@ -1,3 +1,4 @@
+import i18n from "../../i18n";
 import { factionCssVar } from "../../utils/factions";
 
 /**
@@ -32,7 +33,7 @@ export default function SnideMasthead({
           color: factionCssVar("snide", "card-accent"),
         }}
       >
-        S.N.I.D.E.
+        {i18n.t("feed:identity.snide.wordmark")}
       </span>
       <span
         style={{
