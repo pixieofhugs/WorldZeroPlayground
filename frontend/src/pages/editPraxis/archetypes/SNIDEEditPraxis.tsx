@@ -3,6 +3,7 @@
  * Photocopier ink stock, ransom-note title, two-column markdown preview, xerox
  * photo tiles. Colours read from the faction tokens, so it tracks the punk palette.
  */
+import { useTranslation } from "react-i18next";
 import { factionCssVar } from "../../../utils/factions";
 import { mediaUrl } from "../../../utils/media";
 import { type PraxisType } from "../../../api/praxis";
@@ -45,31 +46,11 @@ const cutoutFonts = [
   "'IM Fell English', serif",
 ];
 
-const MODE_OPTIONS: Array<{
-  key: PraxisType;
-  label: string;
-  desc: string;
-  font: string;
-}> = [
-  {
-    key: "solo",
-    label: "LONE WOLF",
-    desc: "just me",
-    font: "'Permanent Marker', cursive",
-  },
-  {
-    key: "collab",
-    label: "THE GANG",
-    desc: "a gang of us",
-    font: "'UnifrakturCook', serif",
-  },
-  {
-    key: "duel",
-    label: "BEEF",
-    desc: "me v. them",
-    font: "'Bebas Neue', sans-serif",
-  },
-];
+const MODE_FONTS: Record<PraxisType, string> = {
+  solo: "'Permanent Marker', cursive",
+  collab: "'UnifrakturCook', serif",
+  duel: "'Bebas Neue', sans-serif",
+};
 
 function RansomChar({ ch, index }: { ch: string; index: number }) {
   if (ch === " ")
@@ -107,8 +88,21 @@ function RansomChar({ ch, index }: { ch: string; index: number }) {
 }
 
 export default function SNIDEEditPraxis({ state }: Props) {
+  const { t } = useTranslation("forms");
   const praxis = state.praxis!;
   const task = state.task;
+
+  const modeOptions: Array<{
+    key: PraxisType;
+    label: string;
+    desc: string;
+    font: string;
+  }> = (["solo", "collab", "duel"] as const).map((key) => ({
+    key,
+    label: t(`editPraxis.snide.mode.${key}.label`),
+    desc: t(`editPraxis.snide.mode.${key}.desc`),
+    font: MODE_FONTS[key],
+  }));
 
   const accent = factionCssVar("snide");
   const accentDeep = factionCssVar("snide", "card-accent");
@@ -155,12 +149,16 @@ export default function SNIDEEditPraxis({ state }: Props) {
               boxShadow: `3px 3px 0 ${hot}`,
             }}
           >
-            ZINE #47 ·· S.N.I.D.E. ·· FREE / STEAL ME
+            {t("editPraxis.snide.masthead")}
           </div>
         </div>
 
         <div style={{ marginBottom: 18 }}>
-          <RainbowTitle text="edit praxis" size={40} color={ink} />
+          <RainbowTitle
+            text={t("editPraxis.snide.pageTitle")}
+            size={40}
+            color={ink}
+          />
         </div>
 
         {/* Task slip */}
@@ -181,7 +179,7 @@ export default function SNIDEEditPraxis({ state }: Props) {
             className="eyebrow"
             style={{ color: accentDeep, display: "block" }}
           >
-            Re: completion of
+            {t("editPraxis.snide.taskRefLabel")}
           </span>
           <div style={{ fontSize: 18, lineHeight: 1.25, marginTop: 6 }}>
             {praxis.task_title}
@@ -215,13 +213,13 @@ export default function SNIDEEditPraxis({ state }: Props) {
                 transform: "rotate(-1.5deg)",
               }}
             >
-              how shall we DO this??
+              {t("editPraxis.snide.modeLabel")}
             </div>
             <ModePicker
               state={state}
               skin={{
                 containerStyle: { display: "flex", gap: 12, flexWrap: "wrap" },
-                options: MODE_OPTIONS,
+                options: modeOptions,
                 allowedModes,
                 renderOption: (opt, { active, disabled, onSelect, index }) => {
                   const bg = active
@@ -289,7 +287,9 @@ export default function SNIDEEditPraxis({ state }: Props) {
                 className="eyebrow"
                 style={{ color: hot, display: "block", marginBottom: 8 }}
               >
-                {state.duelMode ? "✗ THE OPPOSITION ✗" : "WHO ELSE"}
+                {state.duelMode
+                  ? t("editPraxis.snide.inviteLabelDuel")
+                  : t("editPraxis.snide.inviteLabel")}
               </span>
               <InviteSearch
                 state={state}
@@ -299,8 +299,8 @@ export default function SNIDEEditPraxis({ state }: Props) {
                   inputColor: ink,
                   inputBorder: `2px dashed ${accentDeep}`,
                   placeholder: state.duelMode
-                    ? "@ who are you fighting?"
-                    : "@ who else?",
+                    ? t("editPraxis.snide.invitePlaceholderDuel")
+                    : t("editPraxis.snide.invitePlaceholder"),
                   pillBg: lightBg,
                   acceptedBg: accentDeep,
                   acceptedColor: "var(--color-text-on-accent)",
@@ -326,7 +326,7 @@ export default function SNIDEEditPraxis({ state }: Props) {
             }}
           >
             <span className="eyebrow" style={{ color: accentDeep }}>
-              HEADLINE · cut from anywhere
+              {t("editPraxis.snide.titleLabel")}
             </span>
             <TitleCounter length={state.title.length} color={accentDeep} />
           </div>
@@ -336,14 +336,14 @@ export default function SNIDEEditPraxis({ state }: Props) {
             ))}
             {!state.title && (
               <span style={{ color: muted, fontStyle: "italic", fontSize: 14 }}>
-                (snip letters out of magazines · paste here)
+                {t("editPraxis.snide.titleEmptyHint")}
               </span>
             )}
           </div>
           <TitleField
             state={state}
             skin={{
-              placeholder: "type your headline · we'll cut the letters for you",
+              placeholder: t("editPraxis.snide.titlePlaceholder"),
               inputStyle: {
                 width: "100%",
                 fontFamily: "'Courier Prime', monospace",
@@ -365,14 +365,14 @@ export default function SNIDEEditPraxis({ state }: Props) {
             className="eyebrow"
             style={{ display: "block", marginBottom: 8, color: accentDeep }}
           >
-            ↳ the manifesto · {state.wordCount} words · markdown ok
+            {t("editPraxis.snide.bodyLabel", { words: state.wordCount })}
           </span>
           <div style={{ position: "relative", transform: "rotate(0.3deg)" }}>
             <BodyTextarea
               state={state}
               skin={{
                 rows: 12,
-                placeholder: "lead with the lie. bury the truth in paragraph five...",
+                placeholder: t("editPraxis.snide.bodyPlaceholder"),
                 textareaStyle: {
                   width: "100%",
                   fontFamily: "'Special Elite', serif",
@@ -428,7 +428,7 @@ export default function SNIDEEditPraxis({ state }: Props) {
               className="eyebrow"
               style={{ display: "block", marginBottom: 10, color: accentDeep }}
             >
-              ↳ already glued in
+              {t("editPraxis.snide.mediaOnPageLabel")}
             </span>
             <div style={{ display: "flex", gap: 14, flexWrap: "wrap" }}>
               {state.media.map((item, index) => {
@@ -661,8 +661,10 @@ export default function SNIDEEditPraxis({ state }: Props) {
           }}
         >
           {state.autosaveAt
-            ? `↳ photocopied & filed ${formatAutosave(state.autosaveAt)}`
-            : "↳ unsaved · staple it before it walks off"}
+            ? t("editPraxis.snide.autosaveSaved", {
+                ago: formatAutosave(state.autosaveAt),
+              })
+            : t("editPraxis.snide.autosaveUnsaved")}
         </div>
       </div>
     </div>

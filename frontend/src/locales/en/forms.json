@@ -2,5 +2,407 @@
   "charLimit": {
     "approaching": "{{remaining}} characters remaining",
     "reached": "{{max}}-character limit reached"
+  },
+  "autosaveAgo": {
+    "justNow": "just now",
+    "seconds": "{{seconds}}s ago",
+    "minutes": "{{minutes}}m ago"
+  },
+  "breadcrumb": {
+    "tasks": "Tasks",
+    "praxis": "Praxis",
+    "edit": "Edit"
+  },
+  "taskMeta": {
+    "points": "{{points}} pts",
+    "duel": "duel",
+    "collab": "collab"
+  },
+  "metatasks": {
+    "bonusPoints": "+{{points}} pts"
+  },
+  "media": {
+    "removeAria": "Remove {{name}}"
+  },
+  "editPraxis": {
+    "errors": {
+      "load": "Couldn't load this praxis.",
+      "titleRequired": "Title is required.",
+      "titleTooLong": "Title must be 200 characters or fewer.",
+      "publish": "Could not publish proof.",
+      "drop": "Could not drop the task.",
+      "changeMode": "Could not change mode.",
+      "upload": "Could not upload {{name}}.",
+      "removeMedia": "Could not remove media item.",
+      "invite": "Could not invite {{name}}.",
+      "rescindInvite": "Could not rescind the invite.",
+      "challenge": "Could not challenge {{name}}.",
+      "cancelChallenge": "Could not cancel the challenge.",
+      "updateMetatask": "Could not update metatask.",
+      "duelUnderway": "This duel is already underway — it can't be cancelled from here.",
+      "fileTooLarge_one": "File too large (50 MB limit): {{names}}",
+      "fileTooLarge_other": "Files too large (50 MB limit): {{names}}"
+    },
+    "confirm": {
+      "leaveDuel": "Switching mode will cancel your duel challenge. Continue?",
+      "soloDropsCoauthors": "Switching to solo will remove your co-authors — your draft stays. Continue?",
+      "duelDropsCoauthors": "Switching to a duel will remove your co-authors — your draft stays. Continue?",
+      "dropTask": "Drop this task? Your draft will be lost."
+    },
+    "invite": {
+      "searchPlaceholder": "search player name or @handle",
+      "searchPlaceholderDuel": "search an opponent to challenge",
+      "searchAria": "search players to invite",
+      "searchAriaDuel": "search an opponent",
+      "opponentFallback": "opponent",
+      "statusAccepted": "accepted",
+      "statusChallenged": "challenged",
+      "statusPending": "pending",
+      "cancelChallengeAria": "cancel challenge",
+      "rescindInviteAria": "rescind invite to {{name}}"
+    },
+    "dropTask": "drop task",
+    "na": {
+      "masthead": "casual proof board",
+      "pageTitle": "edit praxis",
+      "autosaveSaved": "saved {{ago}}!",
+      "autosaveUnsaved": "unsaved",
+      "taskRefLabel": "re:",
+      "modeLabel": "how →",
+      "mode": {
+        "solo": { "label": "solo", "desc": "just me" },
+        "collab": { "label": "collab", "desc": "a few of us" },
+        "duel": { "label": "duel", "desc": "me v. you" }
+      },
+      "inviteLabel": "↳ who else?",
+      "inviteLabelDuel": "↳ me v.",
+      "invitePlaceholder": "name or @handle",
+      "titleLabel": "↳ what'd you call it?",
+      "titlePlaceholder": "give it a name",
+      "bodyLabel": "↓ what happened ({{words}} words · md ok)",
+      "bodyPlaceholder": "just write whatever...",
+      "previewLabel": "preview ↓",
+      "filesLabel": "stick anything →",
+      "fileButton": "+ tack it up",
+      "fileHelper": "images · video · audio · max 50mb",
+      "metatasksLabel": "★ bonus?",
+      "publishIdle": "tack it up →",
+      "publishBusy": "tacking...",
+      "dropLabel": "throw it away",
+      "footer": "✦ small thing, badly. that's the whole point."
+    },
+    "ephemerists": {
+      "masthead": "The Ephemerists · ephemeris entry №{{number}}",
+      "pageTitle": "EDIT <1>PRAXIS</1>",
+      "tagline": "— set it down before it passes",
+      "slipRunningHead": "Ephemeris · observed",
+      "slipGrade": "grade {{grade}} †",
+      "taskRefLabel": "Re: the truth traced in",
+      "factionTag": "Ephemerists",
+      "pointsLabel": "{{points}} pvncta",
+      "modeLabel": "THE METHOD",
+      "modeMeta": "how the account was taken",
+      "mode": {
+        "solo": { "label": "ALONE", "desc": "one observer" },
+        "collab": { "label": "IN CONCORD", "desc": "accounts agree" },
+        "duel": { "label": "IN DISPUTE", "desc": "accounts differ" }
+      },
+      "inviteLabel": "IN CONCORD WITH",
+      "inviteLabelDuel": "IN DISPUTE WITH",
+      "inviteMeta": "name the co-witness",
+      "inviteMetaDuel": "name the disputant",
+      "invitePlaceholder": "@ name the other observer...",
+      "titleLabel": "THE FINDING",
+      "titleMeta": "{{length}}/200 · name the plain fact",
+      "titlePlaceholder": "the ordinary event the legend grew from",
+      "bodyLabel": "THE ACCOUNT",
+      "bodyMeta": "{{words}} words · markdown ok",
+      "bodyPlaceholder": "Followed it backward through every retelling. The first teller…",
+      "bodyFootnote": "† the account you file is itself a retelling. someone will trace it back. — <1>see †</1>",
+      "previewLabel": "PREVIEW",
+      "filesLabel": "THE EVIDENCE",
+      "filesMeta": "{{pinned}} pinned",
+      "fileButton": "+ Pin a specimen",
+      "fileHelper": "rubbings · sketches · recordings · transcripts — max 50mb each",
+      "metatasksLabel": "IN THE MARGIN",
+      "metatasksMeta": "optional bonus observation",
+      "publishIdle": "✦ SEAL & ENTER ✦",
+      "publishBusy": "✦ SEALING…",
+      "dropLabel": "withdraw entry",
+      "autosaveSaved": "↳ entered {{ago}}",
+      "autosaveUnsaved": "↳ not yet sealed"
+    },
+    "everymen": {
+      "masthead": "THE EVERYMEN · WORK REPORT {{number}}",
+      "pageTitle": "EDIT PRAXIS",
+      "savingStatus": "filing carbon copy…",
+      "autosaveSaved": "autosaved {{ago}}",
+      "autosaveUnsaved": "not yet filed",
+      "taskRefLabel": "Re: completion of",
+      "modeLabel": "THE CREW",
+      "mode": {
+        "solo": { "label": "SOLO", "desc": "one pair of hands" },
+        "collab": { "label": "COLLAB", "desc": "all hands" },
+        "duel": { "label": "DUEL", "desc": "head to head" }
+      },
+      "inviteLabel": "THE CREW ROSTER",
+      "inviteLabelDuel": "YOUR OPPONENT",
+      "invitePlaceholder": "search by name or @handle",
+      "titleLabel": "THE JOB",
+      "titleMeta": "{{length}}/200",
+      "titlePlaceholder": "name the work in one line",
+      "saveState": {
+        "saved": "↳ carbon copy on file",
+        "saving": "↳ filing…",
+        "idle": "↳ not yet filed"
+      },
+      "bodyLabel": "THE REPORT",
+      "bodyMeta": "{{words}} words · markdown ok",
+      "bodyPlaceholder": "Clocked in at…",
+      "previewLabel": "Foreman's preview",
+      "onFileLabel": "ON FILE",
+      "filesLabel": "PROOF OF WORK",
+      "filesMeta": "{{pinned}} pinned · images · video · audio · max 50mb each",
+      "fileButton": "Pin Proof",
+      "metatasksLabel": "SIDE WORK",
+      "metatasksMeta": "optional · extra credit",
+      "metatasksPoints": "+{{points}} PTS",
+      "publishIdle": "★ STAMP & FILE ★",
+      "publishBusy": "✓ FILING…",
+      "dropLabel": "cancel"
+    },
+    "snide": {
+      "masthead": "ZINE #47 ·· S.N.I.D.E. ·· FREE / STEAL ME",
+      "pageTitle": "edit praxis",
+      "taskRefLabel": "Re: completion of",
+      "modeLabel": "how shall we DO this??",
+      "mode": {
+        "solo": { "label": "LONE WOLF", "desc": "just me" },
+        "collab": { "label": "THE GANG", "desc": "a gang of us" },
+        "duel": { "label": "BEEF", "desc": "me v. them" }
+      },
+      "inviteLabel": "WHO ELSE",
+      "inviteLabelDuel": "✗ THE OPPOSITION ✗",
+      "invitePlaceholder": "@ who else?",
+      "invitePlaceholderDuel": "@ who are you fighting?",
+      "titleLabel": "HEADLINE · cut from anywhere",
+      "titleEmptyHint": "(snip letters out of magazines · paste here)",
+      "titlePlaceholder": "type your headline · we'll cut the letters for you",
+      "bodyLabel": "↳ the manifesto · {{words}} words · markdown ok",
+      "bodyPlaceholder": "lead with the lie. bury the truth in paragraph five...",
+      "previewLabel": "Preview",
+      "mediaOnPageLabel": "↳ already glued in",
+      "figureCaption": "FIG. {{number}} · {{name}}",
+      "filesLabel": "↳ glue in proof · photos / audio / receipts",
+      "fileButton": "+ paste it in",
+      "fileHelper": "images · video · audio · max 50mb each",
+      "metatasksLabel": "★ optional bonus",
+      "publishIdle": "FILE IT & RUN",
+      "publishBusy": "running...",
+      "dropLabel": "cancel",
+      "autosaveSaved": "↳ photocopied & filed {{ago}}",
+      "autosaveUnsaved": "↳ unsaved · staple it before it walks off"
+    },
+    "singularity": {
+      "taskRefLabel": "▸ proving completion of",
+      "mode": {
+        "solo": { "label": "--solo", "desc": "one author. all credit accrues." },
+        "collab": { "label": "--networked", "desc": "fork. multiple authors. all earn full pts." },
+        "duel": { "label": "--adversarial", "desc": "pvp. winner-take-all on vote median." }
+      },
+      "invitePlaceholder": "search handle...",
+      "titlePlaceholder": "title_goes_here.md",
+      "bodyMeta": "{{words}} words · {{lines}} lines",
+      "bodyPlaceholder": "# what did you do?\n\nwrite here. supports markdown.\n\n--INSERT--",
+      "saveState": {
+        "saving": "saving...",
+        "saved": "[saved {{time}}]",
+        "unsaved": "unsaved"
+      },
+      "mediaEmpty": "// 0 files attached · drop zone empty",
+      "mediaHelper": "// max 50mb/file · accepts: image/* video/* audio/*",
+      "fileButton": "+ attach",
+      "removeButton": "rm",
+      "publishIdle": "SEAL & TRANSMIT",
+      "publishBusy": "$ transmitting...",
+      "dropLabel": "[esc] :q"
+    },
+    "ua": {
+      "masthead": "University of Asthmatics · Salon Submission №{{number}}",
+      "autosaveSaved": "sketched {{ago}}",
+      "autosaveUnsaved": "unsaved",
+      "pageTitle": "Submit to the Salon",
+      "commissionLabel": "Commission · Anno III",
+      "pointsLabel": "{{points}} pts",
+      "modeLabel": "The Hand",
+      "mode": {
+        "solo": { "label": "Alone", "desc": "a sole acquisition" },
+        "collab": { "label": "Atelier", "desc": "a joint acquisition" },
+        "duel": { "label": "Salon Duel", "desc": "a contested acquisition" }
+      },
+      "inviteLabel": "The other hands",
+      "inviteLabelDuel": "The challenger",
+      "invitePlaceholder": "name or @handle",
+      "titleLabel": "The Title of the Work",
+      "titlePlaceholder": "name this acquisition",
+      "bodyLabel": "The Statement · {{words}} words · markdown",
+      "bodyPlaceholder": "an account of the work…",
+      "previewLabel": "As it will read",
+      "filesLabel": "The Plate",
+      "fileButton": "+ affix a plate",
+      "fileHelper": "images · video · audio · max 50mb",
+      "metatasksLabel": "Further merit",
+      "publishIdle": "✦ Hang it in the Salon ✦",
+      "publishBusy": "hanging…",
+      "dropLabel": "Withdraw Work"
+    },
+    "wow": {
+      "windowTitle": "wow.exe — edit praxis",
+      "pageTitle": "edit praxis",
+      "taskRefLabel": "re: completion of",
+      "modeLabel": "how are you walking?",
+      "mode": {
+        "solo": { "label": "solo", "desc": "one set of footprints" },
+        "collab": { "label": "w/ friends", "desc": "in step with others" },
+        "duel": { "label": "witch duel", "desc": "two paths, one prize" }
+      },
+      "inviteLabel": "↳ walking together",
+      "inviteLabelDuel": "↳ racing",
+      "invitePlaceholder": "@ invite another walker…",
+      "titleLabel": "title · what whimsy arose?",
+      "titlePlaceholder": "What whimsy arose?",
+      "autosaveSaved": "saved {{ago}}",
+      "autosaveUnsaved": "unsaved",
+      "bodyLabel": "field notes · {{words}} words · markdown ok",
+      "bodyPlaceholder": "Tonight I walked...",
+      "previewLabel": "preview",
+      "filesLabel": "scraps & specimens · {{pasted}} pasted",
+      "fileButton": "+ paste in a scrap",
+      "fileHelper": "images · video · audio · max 50mb each",
+      "metatasksLabel": "★ optional bonus",
+      "publishIdle": "cast it into the world",
+      "publishBusy": "casting...",
+      "dropLabel": "cancel"
+    },
+    "albescent": {
+      "masthead": "Albescent · Account № {{number}}",
+      "autosaveSaved": "noted {{ago}}",
+      "autosaveUnsaved": "unfiled draft",
+      "pageTitle": "File an Account",
+      "preamble": "A returned task is entered into the Register as a plain account — no more than was done. The keepers will bear witness; you need not persuade them.",
+      "refLabel": "Returning · Ref. {{number}}",
+      "pointsLabel": "{{points}} pts on return",
+      "modeLabel": "The Manner",
+      "modeMeta": "how was it attended?",
+      "mode": {
+        "solo": { "label": "Alone", "desc": "no witness present" },
+        "collab": { "label": "In Concord", "desc": "attended together" },
+        "duel": { "label": "In Contest", "desc": "one account against another" }
+      },
+      "inviteLabel": "The Other Hands",
+      "inviteLabelDuel": "The Other Account",
+      "invitePlaceholder": "name or @handle",
+      "titleLabel": "The Closing Line",
+      "titleMeta": "the one line the Register keeps",
+      "titlePlaceholder": "what remains, now that it is done",
+      "bodyLabel": "The Account",
+      "bodyMeta": "{{words}} words · markdown",
+      "bodyPlaceholder": "Set down what was done, one line at a time. Leave nothing out; add nothing in.",
+      "previewLabel": "As the Register will keep it",
+      "filesLabel": "The Plates",
+      "filesMeta": "what was seen, if anything",
+      "fileButton": "+ affix a plate",
+      "fileHelper": "images · video · audio · max 50mb",
+      "metatasksLabel": "Further Merit",
+      "publishIdle": "Enter into the Register",
+      "publishBusy": "entering…",
+      "dropLabel": "Withdraw"
+    }
+  },
+  "proposeTask": {
+    "pageTitle": "Propose a Task",
+    "successTask": {
+      "heading": "Task proposed!",
+      "body": "An admin will review it soon."
+    },
+    "successMeta": {
+      "heading": "Meta task proposed!",
+      "body": "An admin will review it. Once activated, {{faction}} players can apply it to their praxes for a points bonus."
+    },
+    "factionSelectorLabel": "Choose a faction for this task",
+    "factionDescriptor": {
+      "ua": "Unaffiliated",
+      "wow": "Collective",
+      "everymen": "Mobilize",
+      "snide": "Mischief",
+      "ephemerists": "Record",
+      "singularity": "Discover"
+    },
+    "fields": {
+      "name": {
+        "label": "Task name",
+        "placeholder": "What do you want people to do?",
+        "tooLong": "Task name must be 200 characters or fewer."
+      },
+      "description": {
+        "label": "Description",
+        "placeholder": "Write the task description here. What exactly should the player do? What counts as completing it?",
+        "tooLong": "Description must be 5000 characters or fewer."
+      },
+      "basePoints": {
+        "label": "Base points",
+        "placeholder": "pts",
+        "hint": "Admin may adjust"
+      },
+      "bonusPoints": {
+        "label": "Bonus points",
+        "placeholder": "pts",
+        "hint": "Flat bonus added to score"
+      },
+      "minimumLevel": {
+        "label": "Minimum level",
+        "hint": "Level 0 = anyone can attempt"
+      },
+      "notes": {
+        "label": "Notes to admin (optional)",
+        "placeholder": "Why do you want this task to exist? What inspired it?"
+      }
+    },
+    "metaToggle": {
+      "label": "Create as meta task",
+      "hint": "applies as a bonus to all {{faction}} submissions"
+    },
+    "preview": {
+      "metaHeading": "Meta task preview — {{faction}}",
+      "taskHeading": "Task preview — {{faction}} · Pending",
+      "bonusPoints": "+{{points}} bonus pts",
+      "points": "{{points}} pts",
+      "level": "lvl {{level}}",
+      "pending": "Pending review"
+    },
+    "errors": {
+      "metaFactionRequired": "Meta tasks must belong to a specific faction.",
+      "createMeta": "Could not create meta task.",
+      "propose": "Could not propose task."
+    },
+    "submit": {
+      "busy": "Submitting...",
+      "meta": "Propose meta task",
+      "task": "Submit proposal",
+      "cancel": "Cancel",
+      "note": "Your proposal goes to admin for review."
+    },
+    "tips": {
+      "goodTaskHeading": "What makes a good task",
+      "goodTaskItems": [
+        "It should be doable by someone with no money and no special skills.",
+        "The proof post should be interesting to read even if you didn't do the task.",
+        "It should have a clear pass/fail.",
+        "It should feel like it belongs to its faction.",
+        "If anyone could do it anywhere, it's probably right."
+      ],
+      "nextHeading": "What happens next",
+      "nextBody": "Your proposal goes to admin review. If approved, it enters the pending task list. Admins typically review proposals within 1-2 weeks."
+    }
   }
 }

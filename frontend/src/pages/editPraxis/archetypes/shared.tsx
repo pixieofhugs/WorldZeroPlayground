@@ -4,6 +4,8 @@
  */
 import type { CSSProperties, ReactNode } from "react";
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
+import i18n from "../../../i18n";
 import LevelPill from "../../../components/ui/LevelPill";
 import { factionCssVar, factionName } from "../../../utils/factions";
 import type { TaskOut } from "../../../api/tasks";
@@ -26,12 +28,12 @@ interface RainbowTitleProps {
 }
 
 /**
- * "edit praxis" rendered as the brand's signature six-color underline. Each
+ * The page title rendered as the brand's signature six-color underline. Each
  * character gets its own underline tile so the cycle works regardless of
- * justification or wrapping.
+ * justification or wrapping. Callers pass the (localized) text.
  */
 export function RainbowTitle({
-  text = "edit praxis",
+  text,
   size = 38,
   fontFamily = "'Lora', serif",
   color = "var(--color-text-primary)",
@@ -85,6 +87,7 @@ export function Breadcrumb({
   style,
   inkColor,
 }: BreadcrumbProps) {
+  const { t } = useTranslation("forms");
   const tone = inkColor ?? "var(--color-text-tertiary)";
   return (
     <nav
@@ -98,7 +101,7 @@ export function Breadcrumb({
       }}
     >
       <Link to="/tasks" style={{ color: "inherit", textDecoration: "none" }}>
-        Tasks
+        {t("breadcrumb.tasks")}
       </Link>
       <span> &rsaquo; </span>
       <Link
@@ -112,10 +115,12 @@ export function Breadcrumb({
         to={`/praxes/${praxisId}`}
         style={{ color: "inherit", textDecoration: "none" }}
       >
-        Praxis
+        {t("breadcrumb.praxis")}
       </Link>
       <span> &rsaquo; </span>
-      <span style={{ color: "inherit", fontWeight: 700 }}>Edit</span>
+      <span style={{ color: "inherit", fontWeight: 700 }}>
+        {t("breadcrumb.edit")}
+      </span>
     </nav>
   );
 }
@@ -137,6 +142,7 @@ export function TaskMetaInline({
   showLevelPill = true,
   textColor,
 }: TaskHeaderInfoProps) {
+  const { t } = useTranslation("forms");
   const slug = task?.primary_faction_slug ?? null;
   return (
     <span
@@ -153,10 +159,17 @@ export function TaskMetaInline({
       }}
     >
       <span>{factionName(slug)}</span>
-      {task && <span>· {task.point_value} pts</span>}
+      {task && (
+        <span>· {t("taskMeta.points", { points: task.point_value })}</span>
+      )}
       {task && showLevelPill && <LevelPill level={task.level_required} />}
       {(praxis.type === "collab" || praxis.duel_id != null) && (
-        <span>· {praxis.duel_id != null ? "duel" : "collab"}</span>
+        <span>
+          ·{" "}
+          {praxis.duel_id != null
+            ? t("taskMeta.duel")
+            : t("taskMeta.collab")}
+        </span>
       )}
     </span>
   );
@@ -249,10 +262,10 @@ export function formatAutosave(date: Date | null): string {
   if (!date) return "";
   const now = Date.now();
   const ago = Math.max(0, Math.round((now - date.getTime()) / 1000));
-  if (ago < 5) return "just now";
-  if (ago < 60) return `${ago}s ago`;
+  if (ago < 5) return i18n.t("forms:autosaveAgo.justNow");
+  if (ago < 60) return i18n.t("forms:autosaveAgo.seconds", { seconds: ago });
   const minutes = Math.round(ago / 60);
-  return `${minutes}m ago`;
+  return i18n.t("forms:autosaveAgo.minutes", { minutes });
 }
 
 export function formatClock(date: Date | null): string {
