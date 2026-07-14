@@ -1,0 +1,23 @@
+<!-- SKIN BRIEF (trimmed; costume only; structure = repo DefaultProfileBody).
+     Singularity = terminal / phosphor-on-void CRT. THEME: always-DARK (data-theme="dark"; scope to container).
+     FONTS: 'Share Tech Mono' (everything — mono, uppercase), 'Lora' italic (only the shared wordmark).
+     PALETTE (repo --faction-singularity-* vars; hexes = reference): void #07090c / panel #050f08, phosphor-green #4ade80
+       (accent, primary text), blue #2563eb / #60a5fa (grid + secondary), amber #fbbf24 (counts).
+     IDIOM: CRT terminal — faint blue graticule grid bg + green scanline overlay, `> ` command-prompt eyebrows
+       (e.g. "> PLAYER: SINGULARITY", "> NODE STATUS: ONLINE"), boxy hairline-blue borders, node-target sigil,
+       green glow on the progress bar. UPPERCASE headings. -->
+
+<!-- ① IDENTITY + PROGRESSION: void panel, blue border + inset hairline, scanline overlay.
+     shared FactionCredentialCard(faction=singularity). Terminal eyebrow ("> PLAYER…/> NODE STATUS: ONLINE").
+     name in Share Tech Mono 48px uppercase phosphor-green. (role chip = OUT per #459.) joined line.
+     progression: conic ring (green) w/ LVL, blue→green glowing bar toward level+1 ("next // lvl {n}"), "> {pointsLabel}". -->
+
+<!-- ② ABOUT: SKIP per #459 (design was a "> cat /node/readme.txt" terminal card). -->
+
+<!-- ⑤ PRAXIS: "Praxis" uppercase mono + hairline rule; "Sealed outputs // by {name}" micro-eyebrow.
+     Rows = live faction Singularity PraxisCard; TOP entry overlaid with spectrum conic-ring FDL laurel (small, green glow).
+     EMPTY STATE: void box, dashed blue border, "> NO OUTPUT SEALED" / "Run a protocol. Cast the first signal." -->
+
+<!-- ③ BADGES ("Verified"): hidden when empty. Featured = void card, blue border + green glow, node-target sigil behind FDL,
+     "> PRIMARY OUTPUT", name uppercase mono #86efac. Others = rows: 32px square hairline-green cell + FDL,
+     name uppercase green, note blue. Badge image mapped by badge key in repo. -->

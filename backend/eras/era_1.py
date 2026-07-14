@@ -363,92 +363,6 @@ ERA_1_TASKS = (
 )
 
 
-# =============================================================================
-# TAUNT TEMPLATES
-# =============================================================================
-# Keyed by faction slug -> trigger type -> list of template strings.
-# Use {from_name} and {to_name} as placeholders.
-# A generic "default" key provides fallbacks for factions without custom taunts.
-
-ERA_1_TAUNT_TEMPLATES: dict[str, dict[str, list[str]]] = {
-    "default": {
-        "score_overtake": [
-            "{from_name} just passed {to_name} on the leaderboard. Awkward.",
-            "{to_name}, meet {from_name}'s dust.",
-            "{from_name} overtook {to_name}. The scoreboard doesn't lie.",
-        ],
-        "level_up": [
-            "{from_name} leveled up while {to_name} was napping.",
-            "{from_name} hit a new level. {to_name} remains where they are.",
-        ],
-        "praxis_complete": [
-            "{from_name} just completed a task. {to_name} is still thinking about it.",
-            "{from_name} submitted praxis. {to_name}... did not.",
-        ],
-    },
-    "snide": {
-        "score_overtake": [
-            "{from_name} danced past {to_name} on the scoreboard. Elegant, really.",
-            "Oh, {to_name}. {from_name} just made you look silly.",
-            "{from_name} sends their regards from above {to_name} on the leaderboard.",
-        ],
-        "level_up": [
-            "{from_name} ascended. {to_name} can see them from down there.",
-        ],
-        "praxis_complete": [
-            "{from_name} finished what {to_name} couldn't start.",
-        ],
-    },
-    "wow": {
-        "score_overtake": [
-            "The collective lifts {from_name} above {to_name}. Together, always.",
-            "{from_name} rose past {to_name}. The whole is greater than the parts.",
-        ],
-        "level_up": [
-            "{from_name} grew stronger through community. {to_name} walks alone.",
-        ],
-        "praxis_complete": [
-            "{from_name} contributed to the whole. {to_name} remained apart.",
-        ],
-    },
-    "ephemerists": {
-        "score_overtake": [
-            "{from_name} recorded a truth past {to_name}. Nothing keeps; the record does.",
-            "{from_name} triangulated a way past {to_name}. The map and the road disagree — {from_name} sided with the road.",
-        ],
-        "level_up": [
-            "{from_name} sealed another entry in the ephemeris. {to_name}'s page stays blank.",
-        ],
-        "praxis_complete": [
-            "{from_name} filed the finding before it could pass. {to_name} let it slip.",
-        ],
-    },
-    "everymen": {
-        "score_overtake": [
-            "{from_name} carved past {to_name} by hand. No shortcuts.",
-            "{from_name} overtook {to_name} the old-fashioned way.",
-        ],
-        "level_up": [
-            "{from_name} leveled up through repetition. {to_name} got bored.",
-        ],
-        "praxis_complete": [
-            "{from_name} made something real. {to_name} is still scrolling.",
-        ],
-    },
-    "singularity": {
-        "score_overtake": [
-            "{from_name} computed a path past {to_name}. Inevitable.",
-            "{from_name} surpassed {to_name}. The algorithm does not care.",
-        ],
-        "level_up": [
-            "{from_name} optimized beyond {to_name}'s level.",
-        ],
-        "praxis_complete": [
-            "{from_name} executed. {to_name} is still in the queue.",
-        ],
-    },
-}
-
 
 # =============================================================================
 # LEVEL PROFILES
@@ -466,89 +380,71 @@ ERA_1_TAUNT_TEMPLATES: dict[str, dict[str, list[str]]] = {
 # from the grounded abilities below rather than citing a gate that isn't
 # actually enforced.
 
+# ADR-0031: profiles carry copy KEYS, never prose. The English words live in
+# frontend/src/locales/en/progression.json (ranks.<rank_key>,
+# unlocks.<key>.name/.desc). rank_key="" at index 0 is the start state, never
+# shown. Ability keys stay gate-aligned; sense keys are short semantic slugs.
 ERA_1_LEVEL_PROFILES = (
-    LevelProfile(rank="", unlocks=()),  # index 0 = start state, never shown
+    LevelProfile(rank_key="", unlocks=()),  # index 0 = start state, never shown
     LevelProfile(
-        rank="Trailhead",
+        rank_key="trailhead",
         unlocks=(
-            LevelUnlock(LevelUnlockKind.ability, "Sign up for a task",
-                        "Pick a task from the board and begin your first praxis."),
-            LevelUnlock(LevelUnlockKind.ability, "Start a collaboration",
-                        "Pool a task with other questers and split the work."),
-            LevelUnlock(LevelUnlockKind.sense, "Notice the paths already worn",
-                        "Well-trodden ground hums faintly underfoot. You'll learn to trust it."),
+            LevelUnlock(LevelUnlockKind.ability, "sign_up_task"),
+            LevelUnlock(LevelUnlockKind.ability, "start_collaboration"),
+            LevelUnlock(LevelUnlockKind.sense, "worn_paths"),
         ),
     ),
     LevelProfile(
-        rank="Ranger",
+        rank_key="ranger",
         unlocks=(
-            LevelUnlock(LevelUnlockKind.ability, "Challenge a duel",
-                        "Stake reputation against another quester and settle it in the field."),
-            LevelUnlock(LevelUnlockKind.ability, "Leave a comment",
-                        "Weigh in on any praxis with a word of your own."),
-            LevelUnlock(LevelUnlockKind.ability, "See retired tasks",
-                        "The archive opens — browse tasks the board has since retired."),
-            LevelUnlock(LevelUnlockKind.sense, "Read weather a day early",
-                        "Clouds tell you their plans before the sky commits to them."),
+            LevelUnlock(LevelUnlockKind.ability, "duels"),
+            LevelUnlock(LevelUnlockKind.ability, "comment"),
+            LevelUnlock(LevelUnlockKind.ability, "retired_tasks"),
+            LevelUnlock(LevelUnlockKind.sense, "weather_early"),
         ),
     ),
     LevelProfile(
-        rank="Surveyor",
+        rank_key="surveyor",
         unlocks=(
-            LevelUnlock(LevelUnlockKind.ability, "Propose a task",
-                        "Draft a task of your own and submit it to the board."),
-            LevelUnlock(LevelUnlockKind.ability, "See pending tasks",
-                        "Watch proposals move through review before they go live."),
-            LevelUnlock(LevelUnlockKind.sense, "Sense a shortcut before taking it",
-                        "Some routes simply feel correct. You've started to notice which."),
+            LevelUnlock(LevelUnlockKind.ability, "propose_task"),
+            LevelUnlock(LevelUnlockKind.ability, "pending_tasks"),
+            LevelUnlock(LevelUnlockKind.sense, "shortcut_sense"),
         ),
     ),
     LevelProfile(
-        rank="Warden",
+        rank_key="warden",
         unlocks=(
-            LevelUnlock(LevelUnlockKind.ability, "Flag a praxis",
-                        "Send questionable praxis to moderation review."),
-            LevelUnlock(LevelUnlockKind.ability, "Create a second character",
-                        "Start a new character on this account, independent of this one."),
-            LevelUnlock(LevelUnlockKind.sense, "Hear a lie land wrong",
-                        "Untrue words ring a half-step flat. Useful, if unsettling."),
+            LevelUnlock(LevelUnlockKind.ability, "flag_praxis"),
+            LevelUnlock(LevelUnlockKind.ability, "second_character"),
+            LevelUnlock(LevelUnlockKind.sense, "lie_pitch"),
         ),
     ),
     LevelProfile(
-        rank="Voyager",
+        rank_key="voyager",
         unlocks=(
-            LevelUnlock(LevelUnlockKind.sense, "Taste distance in the air",
-                        "Far-off places have a flavor. You're close enough now to notice."),
+            LevelUnlock(LevelUnlockKind.sense, "distance_taste"),
         ),
     ),
     LevelProfile(
-        rank="Chronicler",
+        rank_key="chronicler",
         unlocks=(
-            LevelUnlock(LevelUnlockKind.ability, "See the metatask list",
-                        "The metatask board unseals — read what the factions are rallying around."),
-            LevelUnlock(LevelUnlockKind.ability, "Propose a metatask",
-                        "Draft a task built for your whole faction to apply to."),
-            LevelUnlock(LevelUnlockKind.sense, "Remember a place you've never been",
-                        "Certain rooms feel already-visited. You've stopped questioning it."),
+            LevelUnlock(LevelUnlockKind.ability, "see_metatasks"),
+            LevelUnlock(LevelUnlockKind.ability, "propose_metatask"),
+            LevelUnlock(LevelUnlockKind.sense, "place_memory"),
         ),
     ),
     LevelProfile(
-        rank="Luminary",
+        rank_key="luminary",
         unlocks=(
-            LevelUnlock(LevelUnlockKind.ability, "Apply your faction's metatasks",
-                        "Take on the metatasks your faction has published."),
-            LevelUnlock(LevelUnlockKind.sense, "Hold three plans at once without confusion",
-                        "Your mind now files contingencies the way it once filed excuses."),
+            LevelUnlock(LevelUnlockKind.ability, "apply_metatasks"),
+            LevelUnlock(LevelUnlockKind.sense, "three_plans"),
         ),
     ),
     LevelProfile(
-        rank="Paragon",
+        rank_key="paragon",
         unlocks=(
-            LevelUnlock(LevelUnlockKind.ability, "Join /Albescent",
-                        "Defect a life you carry to /Albescent — the order is "
-                        "joined in the field, never picked at creation."),
-            LevelUnlock(LevelUnlockKind.sense, "See the underline before it's drawn",
-                        "You've read enough field stamps to know how this sentence ends."),
+            LevelUnlock(LevelUnlockKind.ability, "join_albescent"),
+            LevelUnlock(LevelUnlockKind.sense, "underline_foresight"),
         ),
     ),
 )
@@ -595,7 +491,6 @@ ERA_1 = EraConfig(
     factions=ERA_1_FACTIONS,
     tasks=ERA_1_TASKS,
     level_profiles=ERA_1_LEVEL_PROFILES,
-    taunt_templates=ERA_1_TAUNT_TEMPLATES,
     # Ephemerists' Task Vision perk: they may create praxes on retired tasks.
     allow_praxis_on_retired_task_factions=frozenset({"ephemerists"}),
 )

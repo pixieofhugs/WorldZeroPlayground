@@ -1,0 +1,98 @@
+{
+  "ranks": {
+    "trailhead": "Trailhead",
+    "ranger": "Ranger",
+    "surveyor": "Surveyor",
+    "warden": "Warden",
+    "voyager": "Voyager",
+    "chronicler": "Chronicler",
+    "luminary": "Luminary",
+    "paragon": "Paragon"
+  },
+  "unlocks": {
+    "sign_up_task": {
+      "name": "Sign up for a task",
+      "desc": "Pick a task from the board and begin your first praxis."
+    },
+    "start_collaboration": {
+      "name": "Start a collaboration",
+      "desc": "Pool a task with other questers and split the work."
+    },
+    "worn_paths": {
+      "name": "Notice the paths already worn",
+      "desc": "Well-trodden ground hums faintly underfoot. You'll learn to trust it."
+    },
+    "duels": {
+      "name": "Challenge a duel",
+      "desc": "Stake reputation against another quester and settle it in the field."
+    },
+    "comment": {
+      "name": "Leave a comment",
+      "desc": "Weigh in on any praxis with a word of your own."
+    },
+    "retired_tasks": {
+      "name": "See retired tasks",
+      "desc": "The archive opens — browse tasks the board has since retired."
+    },
+    "weather_early": {
+      "name": "Read weather a day early",
+      "desc": "Clouds tell you their plans before the sky commits to them."
+    },
+    "propose_task": {
+      "name": "Propose a task",
+      "desc": "Draft a task of your own and submit it to the board."
+    },
+    "pending_tasks": {
+      "name": "See pending tasks",
+      "desc": "Watch proposals move through review before they go live."
+    },
+    "shortcut_sense": {
+      "name": "Sense a shortcut before taking it",
+      "desc": "Some routes simply feel correct. You've started to notice which."
+    },
+    "flag_praxis": {
+      "name": "Flag a praxis",
+      "desc": "Send questionable praxis to moderation review."
+    },
+    "second_character": {
+      "name": "Create a second character",
+      "desc": "Start a new character on this account, independent of this one."
+    },
+    "lie_pitch": {
+      "name": "Hear a lie land wrong",
+      "desc": "Untrue words ring a half-step flat. Useful, if unsettling."
+    },
+    "distance_taste": {
+      "name": "Taste distance in the air",
+      "desc": "Far-off places have a flavor. You're close enough now to notice."
+    },
+    "see_metatasks": {
+      "name": "See the metatask list",
+      "desc": "The metatask board unseals — read what the factions are rallying around."
+    },
+    "propose_metatask": {
+      "name": "Propose a metatask",
+      "desc": "Draft a task built for your whole faction to apply to."
+    },
+    "place_memory": {
+      "name": "Remember a place you've never been",
+      "desc": "Certain rooms feel already-visited. You've stopped questioning it."
+    },
+    "apply_metatasks": {
+      "name": "Apply your faction's metatasks",
+      "desc": "Take on the metatasks your faction has published."
+    },
+    "three_plans": {
+      "name": "Hold three plans at once without confusion",
+      "desc": "Your mind now files contingencies the way it once filed excuses."
+    },
+    "join_albescent": {
+      "name": "Join /Albescent",
+      "desc": "Defect a life you carry to /Albescent — the order is joined in the field, never picked at creation."
+    },
+    "underline_foresight": {
+      "name": "See the underline before it's drawn",
+      "desc": "You've read enough field stamps to know how this sentence ends."
+    }
+  }
+}

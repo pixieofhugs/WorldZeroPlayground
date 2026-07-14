@@ -116,44 +116,13 @@ ERA_N_TASKS = (
 
 
 # =============================================================================
-# TAUNT TEMPLATES
+# TAUNTS — NOT config-owned (ADR-0031)
 # =============================================================================
-# Faction-flavored trash talk. Templates use {from_name} and {to_name}.
-#
-# Structure: faction_slug -> trigger_type -> list of template strings
-# The "default" key provides fallbacks for factions without custom taunts.
-#
-# Trigger types:
-#   "score_overtake"       -- when one foe passes another on the leaderboard
-#   "level_up"             -- when a foe levels up
-#   "praxis_complete"  -- when a foe completes a task
-
-ERA_N_TAUNT_TEMPLATES: dict[str, dict[str, list[str]]] = {
-    "default": {
-        "score_overtake": [
-            # TODO: Add default score overtake taunts
-        ],
-        "level_up": [
-            # TODO: Add default level up taunts
-        ],
-        "praxis_complete": [
-            # TODO: Add default submission complete taunts
-        ],
-    },
-    # TODO: Add per-faction taunts (one dict per faction slug):
-    #
-    # "your_faction": {
-    #     "score_overtake": [
-    #         "{from_name} outscored {to_name}. Classic.",
-    #     ],
-    #     "level_up": [
-    #         "{from_name} leveled up. {to_name} didn't.",
-    #     ],
-    #     "praxis_complete": [
-    #         "{from_name} submitted proof. {to_name} is still planning.",
-    #     ],
-    # },
-}
+# Taunt copy is no longer authored here. Per ADR-0031 the template strings live
+# in frontend/src/locales/en/taunts.json (faction_slug -> trigger_type ->
+# [variants], with a "default" fallback). The backend persists a structured
+# (faction_slug, trigger_type) reference and the frontend catalog resolves the
+# words. There is nothing to define in this file for taunts.
 
 
 # =============================================================================
@@ -163,18 +132,20 @@ ERA_N_TAUNT_TEMPLATES: dict[str, dict[str, list[str]]] = {
 # level_thresholds (index 0 = start state, never shown). Every "ability"
 # unlock must match a real gate constant above at that same level — don't
 # invent one. "sense" unlocks are pure whimsy, no mechanics required.
+#
+# ADR-0031: profiles carry copy KEYS, never prose. The English words live in
+# frontend/src/locales/en/progression.json (ranks.<rank_key>,
+# unlocks.<key>.name/.desc). Add matching entries there for every key below.
 
 ERA_N_LEVEL_PROFILES = (
-    LevelProfile(rank="", unlocks=()),  # index 0 = start state, never shown
+    LevelProfile(rank_key="", unlocks=()),  # index 0 = start state, never shown
     # TODO: One LevelProfile per real level. Example:
     #
     # LevelProfile(
-    #     rank="Your Rank Title",
+    #     rank_key="your_rank_slug",
     #     unlocks=(
-    #         LevelUnlock(LevelUnlockKind.ability, "Ability name",
-    #                     "One sentence describing the unlocked capability."),
-    #         LevelUnlock(LevelUnlockKind.sense, "Curious sense name",
-    #                     "One sentence of whimsical flavor, no mechanics."),
+    #         LevelUnlock(LevelUnlockKind.ability, "ability_slug"),
+    #         LevelUnlock(LevelUnlockKind.sense, "sense_slug"),
     #     ),
     # ),
 )
@@ -241,5 +212,4 @@ ERA_N = EraConfig(
     factions=ERA_N_FACTIONS,
     tasks=ERA_N_TASKS,
     level_profiles=ERA_N_LEVEL_PROFILES,
-    taunt_templates=ERA_N_TAUNT_TEMPLATES,
 )

@@ -12,6 +12,7 @@
  */
 import { useEffect, useState } from 'react'
 import type { ReactNode } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import {
   getFlaggedPraxes,
@@ -31,6 +32,7 @@ import type {
 import { formatTimestamp, relativeTime } from '../../utils/dates'
 import { extractError } from '../../utils/errors'
 import { flagReasonLabel } from '../../utils/flagReasons'
+import i18n from '../../i18n'
 
 // ── Queue shaping ─────────────────────────────────────────────────────────────
 
@@ -73,8 +75,10 @@ function topReason(flags: FlagOut[]): string {
 /** "reported by {name}" for one reporter, "reported by N members" for more. */
 function reporterText(flags: FlagOut[]): string {
   const distinct = new Set(flags.map((flag) => flag.flagged_by_id))
-  if (distinct.size === 1 && flags[0]) return `reported by ${flags[0].flagged_by_name}`
-  return `reported by ${distinct.size} members`
+  if (distinct.size === 1 && flags[0]) {
+    return i18n.t('admin:moderation.reportedByOne', { name: flags[0].flagged_by_name })
+  }
+  return i18n.t('admin:moderation.reportedByMany', { count: distinct.size })
 }
 
 interface ActionLogEntry {
@@ -128,6 +132,7 @@ function QueueCardFrame({
 // ── The tab ──────────────────────────────────────────────────────────────────
 
 export default function ModerationTab() {
+  const { t } = useTranslation(['admin', 'common'])
   const [flaggedPraxes, setFlaggedPraxes] = useState<FlaggedPraxisOut[]>([])
   const [flaggedComments, setFlaggedComments] = useState<FlaggedCommentOut[]>([])
   const [activeMembers, setActiveMembers] = useState<number | null>(null)
@@ -159,7 +164,7 @@ export default function ModerationTab() {
         setActiveMembers(characters.length)
         setMessages(messageRows)
       })
-      .catch((err) => setError(extractError(err, "Couldn't load moderation data.")))
+      .catch((err) => setError(extractError(err, t('moderation.loadError'))))
       .finally(() => setLoading(false))
   }
 
@@ -178,15 +183,20 @@ export default function ModerationTab() {
     note?: string,
   ) => {
     setActionError(null)
-    const verb = status === 'visible' ? 'Kept' : status === 'hidden' ? 'Removed' : 'Failed'
+    const logKey =
+      status === 'visible'
+        ? 'moderation.log.keptPraxis'
+        : status === 'hidden'
+          ? 'moderation.log.removedPraxis'
+          : 'moderation.log.failedPraxis'
     try {
       await moderatePraxis(praxis.id, status, note)
       setFailNoteTarget(null)
       setFailNote('')
-      logAction(`${verb} praxis "${praxis.title || praxis.task_title}"`)
+      logAction(t(logKey, { title: praxis.title || praxis.task_title }))
       refresh()
     } catch (err) {
-      setActionError(extractError(err, 'Moderation action failed.'))
+      setActionError(extractError(err, t('moderation.actionError')))
     }
   }
 
@@ -195,13 +205,16 @@ export default function ModerationTab() {
     status: 'visible' | 'deleted',
   ) => {
     setActionError(null)
-    const verb = status === 'visible' ? 'Kept' : 'Removed'
+    const logKey =
+      status === 'visible'
+        ? 'moderation.log.keptComment'
+        : 'moderation.log.removedComment'
     try {
       await moderateComment(comment.id, status)
-      logAction(`${verb} comment by ${comment.author.display_name}`)
+      logAction(t(logKey, { name: comment.author.display_name }))
       refresh()
     } catch (err) {
-      setActionError(extractError(err, 'Moderation action failed.'))
+      setActionError(extractError(err, t('moderation.actionError')))
     }
   }
 
@@ -211,11 +224,11 @@ export default function ModerationTab() {
       await archiveMessage(id)
       refresh()
     } catch (err) {
-      setActionError(extractError(err, 'Could not archive message.'))
+      setActionError(extractError(err, t('moderation.archiveError')))
     }
   }
 
-  if (loading) return <div className="font-body text-muted text-sm">Loading...</div>
+  if (loading) return <div className="font-body text-muted text-sm">{t('common:loading')}</div>
   if (error) return <p className="font-body text-sm text-red-600">{error}</p>
 
   const queue: QueueItem[] = [
@@ -235,24 +248,24 @@ export default function ModerationTab() {
       <div className="flex gap-4">
         <div className="card px-5 py-3" style={{ minWidth: 140 }}>
           <p className="font-display text-2xl font-bold">{queue.length}</p>
-          <p className="eyebrow" style={{ color: 'var(--color-text-tertiary)' }}>Open reports</p>
+          <p className="eyebrow" style={{ color: 'var(--color-text-tertiary)' }}>{t('moderation.stats.openReports')}</p>
         </div>
         <div className="card px-5 py-3" style={{ minWidth: 140 }}>
           <p className="font-display text-2xl font-bold">{activeMembers ?? '—'}</p>
-          <p className="eyebrow" style={{ color: 'var(--color-text-tertiary)' }}>Active members</p>
+          <p className="eyebrow" style={{ color: 'var(--color-text-tertiary)' }}>{t('moderation.stats.activeMembers')}</p>
         </div>
       </div>
 
       {/* Review queue — flagged praxes + comments, one list, newest first. */}
       <section>
         <h3 className="font-display text-xl font-bold mb-3 border-b-2 border-border pb-1">
-          Review queue <span className="text-muted text-base">({queue.length})</span>
+          {t('moderation.queue.heading')} <span className="text-muted text-base">({queue.length})</span>
         </h3>
         {queue.length === 0 ? (
           <div className="card px-4 py-6" style={{ textAlign: 'center' }}>
-            <p className="font-display text-lg font-bold">Queue clear</p>
+            <p className="font-display text-lg font-bold">{t('moderation.queue.empty.title')}</p>
             <p className="font-body text-sm text-muted">
-              Nothing flagged right now. Check back later.
+              {t('moderation.queue.empty.body')}
             </p>
           </div>
         ) : (
@@ -262,7 +275,7 @@ export default function ModerationTab() {
                 <QueueCardFrame
                   key={`praxis-${item.praxis.id}`}
                   badgeReason={topReason(item.praxis.flags)}
-                  typeLabel="Praxis"
+                  typeLabel={t('moderation.typeLabel.praxis')}
                   when={queueTime(item)}
                 >
                   <div className="flex items-start gap-4">
@@ -275,9 +288,13 @@ export default function ModerationTab() {
                         {item.praxis.title || item.praxis.task_title}
                       </Link>
                       <p className="font-body text-xs text-muted">
-                        by {item.praxis.created_by_display_name || `#${item.praxis.created_by_id}`}
+                        {t('moderation.queue.byline', {
+                          author:
+                            item.praxis.created_by_display_name ||
+                            `#${item.praxis.created_by_id}`,
+                        })}
                         {' '}&middot; {reporterText(item.praxis.flags)}
-                        {' '}&middot; {item.praxis.flags.length} flag{item.praxis.flags.length === 1 ? '' : 's'}
+                        {' '}&middot; {t('moderation.queue.flags', { count: item.praxis.flags.length })}
                       </p>
                       {item.praxis.flags[0]?.reason_detail && (
                         <p className="font-body text-xs text-muted" style={{ marginTop: 4, fontStyle: 'italic' }}>
@@ -289,7 +306,7 @@ export default function ModerationTab() {
                         className="eyebrow"
                         style={{ display: 'inline-block', marginTop: 6 }}
                       >
-                        View praxis &rarr;
+                        {t('moderation.queue.viewPraxis')}
                       </Link>
                     </div>
                     <div className="flex items-center gap-2 shrink-0">
@@ -297,21 +314,21 @@ export default function ModerationTab() {
                         onClick={() => void handlePraxisAction(item.praxis, 'visible')}
                         className="btn-primary text-xs"
                       >
-                        keep
+                        {t('moderation.queue.actions.keep')}
                       </button>
                       <button
                         onClick={() => void handlePraxisAction(item.praxis, 'hidden')}
                         className="btn-outline text-xs"
                         style={{ borderColor: 'rgba(220,38,38,0.5)', color: 'var(--color-danger)' }}
                       >
-                        remove
+                        {t('moderation.queue.actions.remove')}
                       </button>
                       <button
                         onClick={() => setFailNoteTarget(failNoteTarget === item.praxis.id ? null : item.praxis.id)}
                         className="btn-outline text-xs"
                         style={{ borderColor: 'rgba(245,158,11,0.5)', color: 'var(--color-warning)' }}
                       >
-                        fail
+                        {t('moderation.queue.actions.fail')}
                       </button>
                     </div>
                   </div>
@@ -320,7 +337,7 @@ export default function ModerationTab() {
                       <textarea
                         className="border-2 border-border bg-card px-3 py-1 font-body text-sm focus:outline-none focus:border-ink flex-1 resize-none"
                         rows={2}
-                        placeholder="Reason for failure (visible to player)..."
+                        placeholder={t('moderation.queue.failNotePlaceholder')}
                         value={failNote}
                         onChange={(e) => setFailNote(e.target.value)}
                       />
@@ -329,13 +346,13 @@ export default function ModerationTab() {
                         className="btn-primary text-xs"
                         style={{ background: 'var(--color-warning)', borderColor: 'var(--color-warning)' }}
                       >
-                        confirm fail
+                        {t('moderation.queue.actions.confirmFail')}
                       </button>
                       <button
                         onClick={() => { setFailNoteTarget(null); setFailNote('') }}
                         className="btn-outline text-xs"
                       >
-                        cancel
+                        {t('moderation.queue.actions.cancel')}
                       </button>
                     </div>
                   )}
@@ -344,7 +361,7 @@ export default function ModerationTab() {
                 <QueueCardFrame
                   key={`comment-${item.comment.id}`}
                   badgeReason={topReason(item.comment.flags)}
-                  typeLabel="Comment"
+                  typeLabel={t('moderation.typeLabel.comment')}
                   when={queueTime(item)}
                 >
                   <div className="flex items-start gap-4">
@@ -353,9 +370,9 @@ export default function ModerationTab() {
                         &ldquo;{item.comment.body_text}&rdquo;
                       </p>
                       <p className="font-body text-xs text-muted" style={{ marginTop: 4 }}>
-                        by {item.comment.author.display_name}
+                        {t('moderation.queue.byline', { author: item.comment.author.display_name })}
                         {' '}&middot; {reporterText(item.comment.flags)}
-                        {' '}&middot; {item.comment.flags.length} flag{item.comment.flags.length === 1 ? '' : 's'}
+                        {' '}&middot; {t('moderation.queue.flags', { count: item.comment.flags.length })}
                       </p>
                       {item.comment.flags[0]?.reason_detail && (
                         <p className="font-body text-xs text-muted" style={{ marginTop: 4, fontStyle: 'italic' }}>
@@ -370,7 +387,7 @@ export default function ModerationTab() {
                         className="eyebrow"
                         style={{ display: 'inline-block', marginTop: 6 }}
                       >
-                        View thread &rarr;
+                        {t('moderation.queue.viewThread')}
                       </Link>
                     </div>
                     <div className="flex items-center gap-2 shrink-0">
@@ -378,14 +395,14 @@ export default function ModerationTab() {
                         onClick={() => void handleCommentAction(item.comment, 'visible')}
                         className="btn-primary text-xs"
                       >
-                        keep
+                        {t('moderation.queue.actions.keep')}
                       </button>
                       <button
                         onClick={() => void handleCommentAction(item.comment, 'deleted')}
                         className="btn-outline text-xs"
                         style={{ borderColor: 'rgba(220,38,38,0.5)', color: 'var(--color-danger)' }}
                       >
-                        remove
+                        {t('moderation.queue.actions.remove')}
                       </button>
                     </div>
                   </div>
@@ -400,10 +417,10 @@ export default function ModerationTab() {
       {actionLog.length > 0 && (
         <section>
           <h3 className="font-display text-xl font-bold mb-3 border-b-2 border-border pb-1">
-            Your last actions
+            {t('moderation.actionLog.heading')}
           </h3>
           <p className="font-body text-xs text-muted mb-2">
-            This session only — the list clears when you leave the page.
+            {t('moderation.actionLog.note')}
           </p>
           <ul className="flex flex-col gap-1">
             {actionLog.map((entry) => (
@@ -420,7 +437,7 @@ export default function ModerationTab() {
       <section>
         <div className="flex items-center gap-4 mb-3 border-b-2 border-border pb-1">
           <h3 className="font-display text-xl font-bold">
-            Messages <span className="text-muted text-base">({messages.length})</span>
+            {t('moderation.messages.heading')} <span className="text-muted text-base">({messages.length})</span>
           </h3>
           <label className="font-body text-xs text-muted flex items-center gap-1 cursor-pointer">
             <input
@@ -428,12 +445,12 @@ export default function ModerationTab() {
               checked={showArchived}
               onChange={(e) => setShowArchived(e.target.checked)}
             />
-            show archived
+            {t('moderation.messages.showArchived')}
           </label>
         </div>
         {messages.length === 0 ? (
           <p className="font-body text-sm text-muted">
-            {showArchived ? 'No archived messages.' : 'No messages.'}
+            {showArchived ? t('moderation.messages.emptyArchived') : t('moderation.messages.empty')}
           </p>
         ) : (
           <div className="flex flex-col gap-3">
@@ -454,7 +471,7 @@ export default function ModerationTab() {
                     onClick={() => void handleArchive(m.id)}
                     className="btn-outline text-xs shrink-0"
                   >
-                    {m.is_archived ? 'unarchive' : 'archive'}
+                    {m.is_archived ? t('moderation.messages.unarchive') : t('moderation.messages.archive')}
                   </button>
                 </div>
                 <p className="font-body text-sm text-ink mt-2 whitespace-pre-wrap">{m.message}</p>

@@ -15,13 +15,15 @@ class FactionConfigOut(BaseModel):
 
 
 class LevelUnlockOut(BaseModel):
+    # ADR-0031: emit a copy key, not prose. Frontend resolves
+    # t('progression:unlocks.<key>.name' | '.desc'). kind stays (game data).
     kind: str
-    name: str
-    desc: str
+    key: str
 
 
 class LevelProfileOut(BaseModel):
-    rank: str
+    # ADR-0031: rank_key resolves to t('progression:ranks.<rank_key>').
+    rank_key: str
     unlocks: list[LevelUnlockOut]
 
 

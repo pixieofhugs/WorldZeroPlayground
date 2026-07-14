@@ -76,7 +76,6 @@ def test_votes_available_formula():
         reset_all_time_score=False,
         factions=ERA_1_FACTIONS,
         tasks=(),
-        taunt_templates={},
     )
     stats = _StatsStub(score=100, votes_spent_this_era=3)
     assert compute_votes_available(stats, era=era) == 17
@@ -140,7 +139,6 @@ def test_vote_budget_floors_fractional():
         reset_all_time_score=False,
         factions=ERA_1_FACTIONS,
         tasks=(),
-        taunt_templates={},
     )
     # 1.5 * 3 = 4.5 → floor = 4, total = 14
     assert compute_vote_budget(score=3, era=era) == 14

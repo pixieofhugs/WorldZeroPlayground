@@ -8,7 +8,9 @@ import feed from './locales/en/feed.json'
 import forms from './locales/en/forms.json'
 import home from './locales/en/home.json'
 import praxis from './locales/en/praxis.json'
+import progression from './locales/en/progression.json'
 import tasks from './locales/en/tasks.json'
+import taunts from './locales/en/taunts.json'
 import votes from './locales/en/votes.json'
 
 export const DEFAULT_NAMESPACE = 'common'
@@ -22,7 +24,9 @@ export const resources = {
     forms,
     home,
     praxis,
+    progression,
     tasks,
+    taunts,
     votes,
   },
 } as const
