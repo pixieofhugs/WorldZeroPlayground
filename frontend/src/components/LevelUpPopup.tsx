@@ -1,6 +1,17 @@
 import { useEffect } from 'react'
 import type { CSSProperties } from 'react'
+import { useTranslation } from 'react-i18next'
+import type { TFunction } from 'i18next'
 import type { LevelUnlock } from '../api/gameConfig'
+
+// Rank / unlock keys are runtime-dynamic (server-supplied), so they aren't the
+// typed literals the scoped t() expects. Resolve through a plain-string view of
+// t — the catalog still owns the words; only the compile-time key check is
+// relaxed for these dynamic lookups.
+function tKey(t: TFunction<'progression'>, key: string): string {
+  const resolve = t as unknown as (k: string) => string
+  return resolve(key)
+}
 
 /**
  * LevelUpPopup — World Zero "Field Stamp" level-up popup (design: docs/design/level-up/).
@@ -109,7 +120,12 @@ function SealStamp({ level, sealRing = 'rainbow' }: { level: number; sealRing?: 
 }
 
 function AbilityRow({ ability, color }: { ability: LevelUnlock; color: string }) {
+  // ADR-0031: unlock carries a copy key; the progression.json catalog owns the
+  // words.
+  const { t } = useTranslation('progression')
   const isSense = ability.kind === 'sense'
+  const name = tKey(t, `unlocks.${ability.key}.name`)
+  const desc = tKey(t, `unlocks.${ability.key}.desc`)
   return (
     <div style={{ display: 'flex', gap: 13, textAlign: 'left', alignItems: 'flex-start', marginBottom: 15 }}>
       <span style={{ fontSize: 15, lineHeight: 1.1, flex: 'none', width: 18, textAlign: 'center', color }}>
@@ -120,11 +136,11 @@ function AbilityRow({ ability, color }: { ability: LevelUnlock; color: string })
           {isSense ? 'A curious sense' : 'New ability'}
         </div>
         <div style={{ fontFamily: FONT_DISPLAY, fontStyle: 'italic', fontSize: 16, lineHeight: 1.2, color: INK }}>
-          {ability.name}
+          {name}
         </div>
-        {ability.desc && (
+        {desc && (
           <div style={{ fontFamily: FONT_BODY, fontSize: 9, lineHeight: 1.55, color: MUTED, marginTop: 3 }}>
-            {ability.desc}
+            {desc}
           </div>
         )}
       </div>
@@ -134,7 +150,8 @@ function AbilityRow({ ability, color }: { ability: LevelUnlock; color: string })
 
 export interface LevelUpPopupProps {
   level: number
-  rank: string
+  /** ADR-0031: a progression.json rank key, resolved to prose here. */
+  rankKey: string
   abilities: LevelUnlock[]
   onContinue: () => void
   continueLabel?: string
@@ -144,13 +161,15 @@ export interface LevelUpPopupProps {
 
 export default function LevelUpPopup({
   level,
-  rank,
+  rankKey,
   abilities,
   onContinue,
   continueLabel = 'Continue',
   sealRing = 'rainbow',
   dimBackdrop = true,
 }: LevelUpPopupProps) {
+  const { t } = useTranslation('progression')
+  const rank = tKey(t, `ranks.${rankKey}`)
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
       if (e.key === 'Escape') onContinue()

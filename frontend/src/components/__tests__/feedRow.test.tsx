@@ -10,6 +10,7 @@ import { describe, it, expect } from 'vitest'
 import { normalizeFeedItem, FACTION_ROW_TYPES } from '../feed/normalizeFeedItem'
 import FeedRowContent from '../feed/FeedRowContent'
 import type { ActivityFeedItem } from '../../api/activityFeed'
+import '../../i18n'
 
 function item(type: string, payload: Record<string, unknown>): ActivityFeedItem {
   return {
@@ -35,12 +36,38 @@ describe('normalizeFeedItem', () => {
     expect(row.badge?.label).toBe('Friend')
   })
 
-  it('quotes a taunt and drops points', () => {
-    const row = normalizeFeedItem(item('foe_taunt', { from_character_id: 9, message: 'you fell behind' }))!
+  it('resolves a taunt from the catalog, quotes it, and drops points', () => {
+    // ADR-0031: payload is a structured reference; the catalog owns the words.
+    // wow/score_overtake has 2 variants; taunt_id 9 -> 9 % 2 = 1 -> the second.
+    const row = normalizeFeedItem(
+      item('foe_taunt', {
+        from_character_id: 9,
+        taunt_id: 9,
+        faction_slug: 'wow',
+        trigger_type: 'score_overtake',
+        from_name: 'Ada',
+        to_name: 'Bo',
+      }),
+    )!
     expect(row.action).toBe('taunts you')
-    expect(row.headline).toBe('you fell behind')
+    expect(row.headline).toBe('Ada rose past Bo. The whole is greater than the parts.')
     expect(row.headlineQuoted).toBe(true)
     expect(row.points).toBeNull()
+  })
+
+  it('falls back to the default faction when a faction has no taunt entry', () => {
+    // ua has no taunts branch; default/level_up has 2 variants, id 2 -> index 0.
+    const row = normalizeFeedItem(
+      item('foe_taunt', {
+        from_character_id: 4,
+        taunt_id: 2,
+        faction_slug: 'ua',
+        trigger_type: 'level_up',
+        from_name: 'Cy',
+        to_name: 'Di',
+      }),
+    )!
+    expect(row.headline).toBe('Cy leveled up while Di was napping.')
   })
 
   it('has an actorless system row for a global task', () => {

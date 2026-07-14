@@ -32,9 +32,9 @@ async def get_game_config() -> GameConfigOut:
 
     level_profiles = [
         LevelProfileOut(
-            rank=profile.rank,
+            rank_key=profile.rank_key,
             unlocks=[
-                LevelUnlockOut(kind=unlock.kind.value, name=unlock.name, desc=unlock.desc)
+                LevelUnlockOut(kind=unlock.kind.value, key=unlock.key)
                 for unlock in profile.unlocks
             ],
         )

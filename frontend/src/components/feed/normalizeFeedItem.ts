@@ -1,6 +1,7 @@
 import type { ActivityFeedItem } from '../../api/activityFeed'
 import { factionName } from '../../utils/factions'
 import { relativeTime } from '../../utils/dates'
+import { resolveTaunt } from '../../utils/taunts'
 
 /**
  * Full-adoption activity feed (#376): the faction owns the whole "someone did X"
@@ -97,20 +98,33 @@ export function normalizeFeedItem(item: ActivityFeedItem): FeedRow | null {
         level: null,
         time,
       }
-    case 'foe_taunt':
+    case 'foe_taunt': {
+      // ADR-0031: the payload is a structured reference; resolve the copy from
+      // the taunts.json catalog here.
+      const headline =
+        p.faction_slug != null && p.trigger_type != null && p.taunt_id != null
+          ? resolveTaunt({
+              id: p.taunt_id,
+              faction_slug: p.faction_slug,
+              trigger_type: p.trigger_type,
+              from_name: p.from_name ?? actor ?? '',
+              to_name: p.to_name ?? '',
+            })
+          : null
       return {
         slug,
         actor,
         actorHref: p.from_character_id != null ? `/characters/${p.from_character_id}` : null,
         action: 'taunts you',
         badge: { type: 'duel', label: 'Foe' },
-        headline: p.message ?? null,
+        headline,
         headlineHref: null,
         headlineQuoted: true,
         points: null,
         level: null,
         time,
       }
+    }
     case 'friend_defection':
       return {
         slug,

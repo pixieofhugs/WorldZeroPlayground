@@ -1,0 +1,78 @@
+{
+  "default": {
+    "score_overtake": [
+      "{{from_name}} just passed {{to_name}} on the leaderboard. Awkward.",
+      "{{to_name}}, meet {{from_name}}'s dust.",
+      "{{from_name}} overtook {{to_name}}. The scoreboard doesn't lie."
+    ],
+    "level_up": [
+      "{{from_name}} leveled up while {{to_name}} was napping.",
+      "{{from_name}} hit a new level. {{to_name}} remains where they are."
+    ],
+    "praxis_complete": [
+      "{{from_name}} just completed a task. {{to_name}} is still thinking about it.",
+      "{{from_name}} submitted praxis. {{to_name}}... did not."
+    ]
+  },
+  "snide": {
+    "score_overtake": [
+      "{{from_name}} danced past {{to_name}} on the scoreboard. Elegant, really.",
+      "Oh, {{to_name}}. {{from_name}} just made you look silly.",
+      "{{from_name}} sends their regards from above {{to_name}} on the leaderboard."
+    ],
+    "level_up": [
+      "{{from_name}} ascended. {{to_name}} can see them from down there."
+    ],
+    "praxis_complete": [
+      "{{from_name}} finished what {{to_name}} couldn't start."
+    ]
+  },
+  "wow": {
+    "score_overtake": [
+      "The collective lifts {{from_name}} above {{to_name}}. Together, always.",
+      "{{from_name}} rose past {{to_name}}. The whole is greater than the parts."
+    ],
+    "level_up": [
+      "{{from_name}} grew stronger through community. {{to_name}} walks alone."
+    ],
+    "praxis_complete": [
+      "{{from_name}} contributed to the whole. {{to_name}} remained apart."
+    ]
+  },
+  "ephemerists": {
+    "score_overtake": [
+      "{{from_name}} recorded a truth past {{to_name}}. Nothing keeps; the record does.",
+      "{{from_name}} triangulated a way past {{to_name}}. The map and the road disagree — {{from_name}} sided with the road."
+    ],
+    "level_up": [
+      "{{from_name}} sealed another entry in the ephemeris. {{to_name}}'s page stays blank."
+    ],
+    "praxis_complete": [
+      "{{from_name}} filed the finding before it could pass. {{to_name}} let it slip."
+    ]
+  },
+  "everymen": {
+    "score_overtake": [
+      "{{from_name}} carved past {{to_name}} by hand. No shortcuts.",
+      "{{from_name}} overtook {{to_name}} the old-fashioned way."
+    ],
+    "level_up": [
+      "{{from_name}} leveled up through repetition. {{to_name}} got bored."
+    ],
+    "praxis_complete": [
+      "{{from_name}} made something real. {{to_name}} is still scrolling."
+    ]
+  },
+  "singularity": {
+    "score_overtake": [
+      "{{from_name}} computed a path past {{to_name}}. Inevitable.",
+      "{{from_name}} surpassed {{to_name}}. The algorithm does not care."
+    ],
+    "level_up": [
+      "{{from_name}} optimized beyond {{to_name}}'s level."
+    ],
+    "praxis_complete": [
+      "{{from_name}} executed. {{to_name}} is still in the queue."
+    ]
+  }
+}

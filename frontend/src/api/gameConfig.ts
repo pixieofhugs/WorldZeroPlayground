@@ -15,14 +15,16 @@ export interface FactionConfigOut {
 
 export type LevelUnlockKind = 'ability' | 'sense'
 
+// ADR-0031: the backend emits copy KEYS; the progression.json catalog owns the
+// words. Resolve with t('progression:unlocks.<key>.name' | '.desc') and
+// t('progression:ranks.<rankKey>').
 export interface LevelUnlock {
   kind: LevelUnlockKind
-  name: string
-  desc: string
+  key: string
 }
 
 export interface LevelProfile {
-  rank: string
+  rank_key: string
   unlocks: LevelUnlock[]
 }
 

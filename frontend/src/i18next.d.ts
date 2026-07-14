@@ -18,7 +18,9 @@ declare module 'i18next' {
       forms: typeof import('./locales/en/forms.json')
       home: typeof import('./locales/en/home.json')
       praxis: typeof import('./locales/en/praxis.json')
+      progression: typeof import('./locales/en/progression.json')
       tasks: typeof import('./locales/en/tasks.json')
+      taunts: typeof import('./locales/en/taunts.json')
       votes: typeof import('./locales/en/votes.json')
     }
   }
