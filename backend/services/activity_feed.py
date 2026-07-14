@@ -13,6 +13,7 @@ from typing import Any, Callable, Coroutine, Optional
 
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import aliased
 
 from db import AsyncSessionLocal
 from game_config import CURRENT_ERA
@@ -265,15 +266,24 @@ async def _fetch_foe_taunts(
     session: AsyncSession,
     before: Optional[datetime],
 ) -> list[ActivityFeedItemDC]:
-    """Taunts received from foes."""
+    """Taunts received from foes.
+
+    ADR-0031: emits a structured reference (frozen ``faction_slug`` +
+    ``trigger_type`` + both display names), never rendered prose. The frontend
+    catalog resolves and interpolates the copy.
+    """
+    from_character = aliased(Character)
+    to_character = aliased(Character)
     query = (
         select(
             TauntMessage,
-            Character.display_name.label("from_display_name"),
-            Character.faction_slug.label("from_faction_slug"),
-            Character.avatar_url.label("from_avatar_url"),
+            from_character.display_name.label("from_display_name"),
+            from_character.faction_slug.label("from_faction_slug"),
+            from_character.avatar_url.label("from_avatar_url"),
+            to_character.display_name.label("to_display_name"),
         )
-        .join(Character, TauntMessage.from_character_id == Character.id)
+        .join(from_character, TauntMessage.from_character_id == from_character.id)
+        .join(to_character, TauntMessage.to_character_id == to_character.id)
         .where(TauntMessage.to_character_id == character_id)
     )
     if before is not None:
@@ -282,7 +292,7 @@ async def _fetch_foe_taunts(
 
     result = await session.execute(query)
     items: list[ActivityFeedItemDC] = []
-    for taunt, display_name, faction_slug, avatar_url in result.all():
+    for taunt, display_name, faction_slug, avatar_url, to_display_name in result.all():
         items.append(ActivityFeedItemDC(
             type=FEED_ITEM_TYPE_FOE_TAUNT,
             timestamp=taunt.created_at,
@@ -291,9 +301,11 @@ async def _fetch_foe_taunts(
             actor_avatar_url=avatar_url,
             payload={
                 "taunt_id": taunt.id,
-                "message": taunt.message,
+                "faction_slug": taunt.faction_slug,
                 "trigger_type": taunt.trigger_type.value,
                 "from_character_id": taunt.from_character_id,
+                "from_name": display_name,
+                "to_name": to_display_name,
             },
         ))
     return items

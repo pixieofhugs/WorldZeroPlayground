@@ -27,6 +27,8 @@ locales/
 | `feed.json` | Activity-feed cards and frames |
 | `home.json` | Home / landing page copy |
 | `admin.json` | Admin and moderation screens |
+| `progression.json` | Level-up ranks + unlock names/descriptions (backend emits keys — ADR-0031) |
+| `taunts.json` | Foe-taunt templates per faction/trigger (backend emits keys — ADR-0031) |
 
 ## How a key works
 
@@ -103,6 +105,31 @@ etc.:
 The numbers map to real components in the code (via react-i18next's
 `<Trans>`). Keep the tags and their nesting intact; reword the text around and
 inside them freely.
+
+## Backend-emitted copy (`progression.json`, `taunts.json`)
+
+Most namespaces hold copy the frontend authors. These two are different: the
+**backend emits a key** and this catalog owns the words (ADR-0031). The backend
+never sends prose for taunts or ranks/unlocks.
+
+- **`progression.json`** — the level-up popup. `ranks.<slug>` is a rank title;
+  `unlocks.<slug>.name` / `.desc` describe a level's unlocked ability or sense.
+  The backend (`backend/eras/era_1.py`) references these slugs by key. Reword the
+  values freely; don't rename a key without changing the era config that emits it.
+
+- **`taunts.json`** — foe taunts, shaped `faction_slug → trigger_type →
+  [variant, …]` with a `default` faction fallback. `{{from_name}}` / `{{to_name}}`
+  interpolate the two characters. The backend stores only a
+  `(faction_slug, trigger_type)` reference and the row id; the frontend picks the
+  variant as `id % variants.length`.
+  **Variant lists are append-only: never reorder or delete a variant.** The id-
+  modulo pick means reordering silently reassigns which taunt an existing row
+  renders, and deleting one shifts every later index. Adding to the end is safe.
+
+A backend drift-guard test (`backend/tests/unit/test_i18n_catalog_coverage.py`)
+fails if the era config references a rank/unlock key or a
+`(faction_slug, trigger_type)` combo this catalog can't resolve — so a missing
+key is caught in CI, not at render time.
 
 ## Rules of the road
 

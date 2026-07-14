@@ -22,8 +22,13 @@ async def test_get_game_config_returns_current_era(client: AsyncClient):
     slugs = {faction["slug"] for faction in data["factions"]}
     assert slugs == set(CURRENT_ERA.factions.keys())
 
-    # level_profiles serialized index-aligned with level_thresholds.
+    # level_profiles serialized index-aligned with level_thresholds, emitting
+    # copy KEYS not prose (ADR-0031).
     assert len(data["level_profiles"]) == len(CURRENT_ERA.level_profiles)
     served_level_1 = data["level_profiles"][1]
-    assert served_level_1["rank"] == CURRENT_ERA.level_profiles[1].rank
-    assert served_level_1["unlocks"][0]["kind"] in {"ability", "sense"}
+    assert served_level_1["rank_key"] == CURRENT_ERA.level_profiles[1].rank_key
+    assert "rank" not in served_level_1
+    first_unlock = served_level_1["unlocks"][0]
+    assert first_unlock["kind"] in {"ability", "sense"}
+    assert first_unlock["key"] == CURRENT_ERA.level_profiles[1].unlocks[0].key
+    assert "name" not in first_unlock and "desc" not in first_unlock

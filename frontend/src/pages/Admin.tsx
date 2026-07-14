@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import PageTitle from '../components/ui/PageTitle'
 import ModerationTab from './admin/ModerationTab'
 import TasksTab from './admin/TasksTab'
@@ -7,20 +8,16 @@ import OverviewTab from './admin/OverviewTab'
 
 type Tab = 'moderation' | 'tasks' | 'accounts' | 'overview'
 
-const TABS: { key: Tab; label: string }[] = [
-  { key: 'moderation', label: 'Moderation' },
-  { key: 'tasks', label: 'Tasks' },
-  { key: 'accounts', label: 'Accounts' },
-  { key: 'overview', label: 'Overview' },
-]
+const TABS: Tab[] = ['moderation', 'tasks', 'accounts', 'overview']
 
 function getInitialTab(): Tab {
   const hash = window.location.hash.replace('#', '')
-  if (TABS.some((t) => t.key === hash)) return hash as Tab
+  if (TABS.some((t) => t === hash)) return hash as Tab
   return 'moderation'
 }
 
 export default function Admin() {
+  const { t } = useTranslation('admin')
   const [activeTab, setActiveTab] = useState<Tab>(getInitialTab)
 
   const switchTab = (tab: Tab) => {
@@ -30,14 +27,14 @@ export default function Admin() {
 
   return (
     <div className="py-8">
-      <PageTitle title="Admin" />
+      <PageTitle title={t('title')} />
 
       {/* Tab bar */}
       <div
         className="flex gap-6 mb-6"
         style={{ borderBottom: '2px solid var(--color-border)' }}
       >
-        {TABS.map(({ key, label }) => (
+        {TABS.map((key) => (
           <button
             key={key}
             onClick={() => switchTab(key)}
@@ -55,7 +52,7 @@ export default function Admin() {
               letterSpacing: '0.12em',
             }}
           >
-            {label}
+            {t(`tabs.${key}`)}
           </button>
         ))}
       </div>

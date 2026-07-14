@@ -129,13 +129,19 @@ def test_era1_task_point_values_positive():
 
 
 # ---------------------------------------------------------------------------
-# Taunt templates
+# Level profiles carry copy KEYS, not prose (ADR-0031)
 # ---------------------------------------------------------------------------
 
 
-def test_era1_has_taunt_templates():
-    assert len(ERA_1.taunt_templates) > 0
-
-
-def test_era1_taunt_templates_has_default():
-    assert "default" in ERA_1.taunt_templates
+def test_era1_level_profiles_use_slug_keys():
+    """Every non-start rank_key / unlock key is a lowercase semantic slug, not
+    prose (no spaces, no uppercase)."""
+    for level, profile in enumerate(ERA_1.level_profiles):
+        if level == 0:
+            assert profile.rank_key == ""
+            continue
+        assert profile.rank_key and profile.rank_key.islower()
+        assert " " not in profile.rank_key
+        for unlock in profile.unlocks:
+            assert unlock.key and unlock.key.islower()
+            assert " " not in unlock.key

@@ -56,7 +56,7 @@ export default function LevelUpWatcher() {
   return (
     <LevelUpPopup
       level={level}
-      rank={profile.rank}
+      rankKey={profile.rank_key}
       abilities={profile.unlocks}
       onContinue={() => setQueue((prev) => prev.slice(1))}
     />

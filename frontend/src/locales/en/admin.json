@@ -1,1 +1,135 @@
-{}
+{
+  "title": "Admin",
+  "tabs": {
+    "moderation": "Moderation",
+    "tasks": "Tasks",
+    "accounts": "Accounts",
+    "overview": "Overview"
+  },
+  "flagReasons": {
+    "spam": "Spam",
+    "harassment": "Harassment",
+    "nsfw": "NSFW",
+    "slop": "Slop",
+    "other": "Other"
+  },
+  "overview": {
+    "loadError": "Couldn't load overview.",
+    "stats": {
+      "accounts": "Accounts",
+      "characters": "Characters",
+      "activeTasks": "Active Tasks",
+      "praxis": "Praxis",
+      "votes": "Votes",
+      "flagged": "Flagged",
+      "suspended": "Suspended"
+    }
+  },
+  "accounts": {
+    "loadError": "Couldn't load accounts.",
+    "detailError": "Could not load account detail.",
+    "suspendError": "Could not update account.",
+    "banError": "Could not update character.",
+    "searchPlaceholder": "Search by email...",
+    "empty": "No accounts found.",
+    "idLabel": "ID #{{id}}",
+    "suspend": "suspend",
+    "unsuspend": "unsuspend",
+    "charactersHeading": "Characters ({{count}})",
+    "noCharacters": "No characters.",
+    "ban": "ban",
+    "unban": "unban",
+    "status": {
+      "active": "active",
+      "suspended": "suspended",
+      "banned": "banned",
+      "paused": "paused"
+    }
+  },
+  "tasks": {
+    "loadError": "Couldn't load tasks.",
+    "statusError": "Could not update task status.",
+    "saveError": "Could not save task edits.",
+    "filters": {
+      "all": "all",
+      "pending": "pending",
+      "active": "active",
+      "retired": "retired"
+    },
+    "empty": "No {{filter}} tasks.",
+    "titlePlaceholder": "Title",
+    "descriptionPlaceholder": "Description",
+    "pointsLabel": "Points",
+    "levelLabel": "Level req.",
+    "meta": "{{points}} pts · lvl {{level}} · {{faction}}",
+    "crossFaction": "cross-faction",
+    "status": {
+      "active": "active",
+      "pending": "pending",
+      "retired": "retired"
+    },
+    "actions": {
+      "edit": "edit",
+      "activate": "activate",
+      "retire": "retire",
+      "reactivate": "reactivate",
+      "save": "save",
+      "saving": "saving…",
+      "cancel": "cancel"
+    }
+  },
+  "moderation": {
+    "loadError": "Couldn't load moderation data.",
+    "actionError": "Moderation action failed.",
+    "archiveError": "Could not archive message.",
+    "reportedByOne": "reported by {{name}}",
+    "reportedByMany": "reported by {{count}} members",
+    "log": {
+      "keptPraxis": "Kept praxis \"{{title}}\"",
+      "removedPraxis": "Removed praxis \"{{title}}\"",
+      "failedPraxis": "Failed praxis \"{{title}}\"",
+      "keptComment": "Kept comment by {{name}}",
+      "removedComment": "Removed comment by {{name}}"
+    },
+    "typeLabel": {
+      "praxis": "Praxis",
+      "comment": "Comment"
+    },
+    "stats": {
+      "openReports": "Open reports",
+      "activeMembers": "Active members"
+    },
+    "queue": {
+      "heading": "Review queue",
+      "empty": {
+        "title": "Queue clear",
+        "body": "Nothing flagged right now. Check back later."
+      },
+      "byline": "by {{author}}",
+      "flags_one": "{{count}} flag",
+      "flags_other": "{{count}} flags",
+      "viewPraxis": "View praxis →",
+      "viewThread": "View thread →",
+      "failNotePlaceholder": "Reason for failure (visible to player)...",
+      "actions": {
+        "keep": "keep",
+        "remove": "remove",
+        "fail": "fail",
+        "confirmFail": "confirm fail",
+        "cancel": "cancel"
+      }
+    },
+    "actionLog": {
+      "heading": "Your last actions",
+      "note": "This session only — the list clears when you leave the page."
+    },
+    "messages": {
+      "heading": "Messages",
+      "showArchived": "show archived",
+      "emptyArchived": "No archived messages.",
+      "empty": "No messages.",
+      "archive": "archive",
+      "unarchive": "unarchive"
+    }
+  }
+}

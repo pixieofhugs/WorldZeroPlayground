@@ -1,6 +1,6 @@
 import enum
 
-from sqlalchemy import Enum, ForeignKey, Text
+from sqlalchemy import Enum, ForeignKey, String
 from sqlalchemy.orm import Mapped, mapped_column
 
 from models.base import Base
@@ -23,7 +23,11 @@ class TauntMessage(CreatedAtMixin, Base):
     to_character_id: Mapped[int] = mapped_column(
         ForeignKey("character.id"), nullable=False
     )
-    message: Mapped[str] = mapped_column(Text, nullable=False)
+    # ADR-0031: no rendered prose is stored. faction_slug freezes the sender's
+    # send-time faction voice (senders can defect later); the frontend catalog
+    # resolves (faction_slug, trigger_type) -> taunt copy, picking the variant
+    # deterministically from the row id and interpolating the FK-derived names.
+    faction_slug: Mapped[str] = mapped_column(String, nullable=False)
     trigger_type: Mapped[TauntTriggerType] = mapped_column(
         Enum(TauntTriggerType, create_type=False), nullable=False
     )
