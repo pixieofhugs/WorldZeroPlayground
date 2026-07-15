@@ -4,6 +4,21 @@
     "loading": "Loading...",
     "empty": "No updates yet. Activity from friends, foes, and the community will appear here."
   },
+  "mobile": {
+    "title": "Updates",
+    "eyebrow": "Activity Feed",
+    "loadMore": "Load older updates",
+    "loadingMore": "Loading…",
+    "loadMoreError": "Couldn't load more updates.",
+    "filter": {
+      "all": "All",
+      "friends": "Friends",
+      "foes": "Foes",
+      "yourStuff": "Yours",
+      "global": "Global",
+      "requests": "Requests"
+    }
+  },
   "badge": {
     "friend": "Friend",
     "foe": "Foe",

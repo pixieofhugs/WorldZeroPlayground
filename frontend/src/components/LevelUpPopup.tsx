@@ -3,6 +3,7 @@ import type { CSSProperties } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { TFunction } from 'i18next'
 import type { LevelUnlock } from '../api/gameConfig'
+import { useFormFactor } from '../hooks/useFormFactor'
 
 // Rank / unlock keys are runtime-dynamic (server-supplied), so they aren't the
 // typed literals the scoped t() expects. Resolve through a plain-string view of
@@ -148,6 +149,151 @@ function AbilityRow({ ability, color }: { ability: LevelUnlock; color: string })
   )
 }
 
+// Confetti is deterministic (no RNG): fixed count, spread + timing derived from
+// the index so SSR/tests are stable. Colors reuse the RAINBOW tokens. Under
+// prefers-reduced-motion the pieces get no animation (they rest above the
+// clipped scrim, so nothing falls) — see the scoped <style> below.
+const CONFETTI_COUNT = 16
+
+function MobileConfetti() {
+  return (
+    <div aria-hidden style={{ position: 'absolute', inset: 0, pointerEvents: 'none', overflow: 'hidden' }}>
+      <style>{`
+        @keyframes wz-lu-confetti-fall { to { transform: translateY(680px) rotate(420deg); } }
+        .wz-lu-confetti { top: -14px; }
+        @media (prefers-reduced-motion: no-preference) {
+          .wz-lu-confetti {
+            animation-name: wz-lu-confetti-fall;
+            animation-timing-function: linear;
+            animation-iteration-count: infinite;
+          }
+        }
+      `}</style>
+      {Array.from({ length: CONFETTI_COUNT }).map((_, i) => {
+        const left = (i * 6.3 + 4) % 96
+        const duration = (2.4 + (i % 5) * 0.5).toFixed(1)
+        const delay = ((i % 7) * 0.35).toFixed(2)
+        return (
+          <i
+            key={i}
+            className="wz-lu-confetti"
+            style={{
+              position: 'absolute',
+              left: `${left}%`,
+              width: 8,
+              height: 9,
+              borderRadius: 2,
+              background: RAINBOW[i % RAINBOW.length],
+              animationDuration: `${duration}s`,
+              animationDelay: `${delay}s`,
+            }}
+          />
+        )
+      })}
+    </div>
+  )
+}
+
+/**
+ * Mobile skin of the Field Stamp popup (#519): full-bleed scrim, rainbow burst
+ * seal, confetti, one CTA. Reuses the same props/catalog as the desktop popup —
+ * the watcher/queue is untouched. See docs/design/mobile (moments section).
+ */
+function MobileLevelUpCard({
+  level,
+  rank,
+  abilities,
+  continueText,
+  onContinue,
+  sealRing,
+}: {
+  level: number
+  rank: string
+  abilities: LevelUnlock[]
+  continueText: string
+  onContinue: () => void
+  sealRing: 'rainbow' | 'ink'
+}) {
+  const { t } = useTranslation('progression')
+  return (
+    <div
+      onClick={onContinue}
+      style={{
+        position: 'fixed',
+        inset: 0,
+        zIndex: 1000,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: 24,
+        overflow: 'hidden',
+        background: 'radial-gradient(ellipse at 50% 42%, rgba(26,18,9,0.44), rgba(26,18,9,0.74))',
+      }}
+    >
+      <MobileConfetti />
+      <div
+        role="dialog"
+        aria-modal="true"
+        data-form-factor="mobile"
+        onClick={(e) => e.stopPropagation()}
+        style={{
+          position: 'relative',
+          zIndex: 2,
+          width: '100%',
+          maxWidth: 340,
+          boxSizing: 'border-box',
+          background: PAPER,
+          border: `1px solid ${BORDER}`,
+          borderRadius: 20,
+          padding: '26px 22px 22px',
+          textAlign: 'center',
+          fontFamily: FONT_BODY,
+          boxShadow: '0 20px 50px -12px rgba(26,18,9,0.5)',
+        }}
+      >
+        <SealStamp level={level} sealRing={sealRing} />
+
+        <p style={{ fontFamily: FONT_BODY, fontSize: 9, textTransform: 'uppercase', letterSpacing: '0.15em', color: FAINT, margin: '0 0 4px' }}>
+          {t('popup.levelReached')}
+        </p>
+        <RainbowText text={rank} fontSize={28} />
+
+        <RainbowRule style={{ margin: '14px 0 16px' }} />
+
+        <div style={{ fontFamily: FONT_BODY, fontSize: 8, letterSpacing: '0.2em', textTransform: 'uppercase', color: FAINT, marginBottom: 14 }}>
+          {t('popup.nowUnlocked')}
+        </div>
+
+        {abilities.map((ab, idx) => (
+          <AbilityRow key={idx} ability={ab} color={RAINBOW[idx % RAINBOW.length]} />
+        ))}
+
+        <button
+          type="button"
+          autoFocus
+          onClick={onContinue}
+          style={{
+            marginTop: 20,
+            width: '100%',
+            fontFamily: FONT_BODY,
+            textTransform: 'uppercase',
+            letterSpacing: '0.12em',
+            fontSize: 12,
+            padding: '0.7rem 1.4rem',
+            border: 'none',
+            borderRadius: 10,
+            background: INK,
+            color: PAPER,
+            cursor: 'pointer',
+          }}
+        >
+          {continueText}
+        </button>
+      </div>
+    </div>
+  )
+}
+
 export interface LevelUpPopupProps {
   level: number
   /** ADR-0031: a progression.json rank key, resolved to prose here. */
@@ -169,6 +315,7 @@ export default function LevelUpPopup({
   dimBackdrop = true,
 }: LevelUpPopupProps) {
   const { t } = useTranslation('progression')
+  const formFactor = useFormFactor()
   const continueText = continueLabel ?? t('popup.continue')
   const rank = tKey(t, `ranks.${rankKey}`)
   useEffect(() => {
@@ -178,6 +325,21 @@ export default function LevelUpPopup({
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [onContinue])
+
+  // Mobile form factor gets the full-bleed celebration skin (#519); desktop is
+  // unchanged. Same props/queue — only the presentation differs.
+  if (formFactor === 'mobile') {
+    return (
+      <MobileLevelUpCard
+        level={level}
+        rank={rank}
+        abilities={abilities}
+        continueText={continueText}
+        onContinue={onContinue}
+        sealRing={sealRing}
+      />
+    )
+  }
 
   const card = (
     <div
