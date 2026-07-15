@@ -10,6 +10,17 @@ import { extractError } from '../utils/errors'
 import { factionCssVar, factionName } from '../utils/factions'
 import { relativeTime } from '../utils/dates'
 import { useAuth } from '../auth/AuthContext'
+import { useFormFactor } from '../hooks/useFormFactor'
+import { pickVariant } from '../utils/factionDispatch'
+import DefaultFactionsDirectory from './factions/mobileArchetypes/DefaultFactionsDirectory'
+
+type MobileDirectory = () => JSX.Element
+
+// Parallel MOBILE registry, mirroring the faction-page dispatch. The directory
+// isn't keyed by a single faction slug, so this stays empty and every mobile
+// render falls through to the Default directory skin; bespoke faction directory
+// skins can register here later.
+export const MOBILE_ARCHETYPE_BY_SLUG: Record<string, MobileDirectory> = {}
 
 const NA_SLUG = 'na'
 
@@ -32,6 +43,17 @@ const HIDDEN_SLUGS = new Set([NA_SLUG])
  * and orders the cards by that status.
  */
 export default function Factions() {
+  const formFactor = useFormFactor()
+
+  if (formFactor === 'mobile') {
+    const Mobile = pickVariant(MOBILE_ARCHETYPE_BY_SLUG, null, DefaultFactionsDirectory)
+    return <Mobile />
+  }
+
+  return <DesktopFactions />
+}
+
+function DesktopFactions() {
   const { t } = useTranslation('factions')
   const { user } = useAuth()
   const character = user?.character ?? null
