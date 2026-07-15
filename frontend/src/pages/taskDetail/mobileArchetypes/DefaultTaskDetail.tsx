@@ -3,17 +3,18 @@ import { useTranslation } from "react-i18next";
 import PraxisCard from "../../../components/PraxisCard";
 import LevelPill from "../../../components/ui/LevelPill";
 import DefaultSigil from "../../../components/cards/DefaultSigil";
-import { factionName } from "../../../utils/factions";
+import { factionCssVar, factionName } from "../../../utils/factions";
+import { MobileStickyBar, MobileStickyCaption } from "./shared";
 import type { TaskDetailState } from "../useTaskDetail";
 
 /**
- * Default MOBILE task-detail skin — single-column, thumb-first, no fixed-px
- * two-column grid (the desktop Default's `width:240` sidebar would crush the
- * main column on a phone). Renders the same content slots as the desktop
- * archetypes (title, description, breadcrumb, sort toggle, signup CTA, edit /
- * continue controls) so the slot-invariant guard holds; reuses the existing
- * `tasks` copy keys verbatim. Every faction falls through here until it
- * registers a bespoke mobile skin (#496–#500).
+ * Default MOBILE task-detail skin — the na (Unaffiliated) language of the Field
+ * Kit (#495): single-column, thumb-first, no fixed-px two-column grid. A tinted
+ * hero (title, faction, level, points, description), the completed-praxis list,
+ * and a **sticky bottom action bar** that carries the one primary verb (sign up
+ * / continue / edit) above the tab bar while the body scrolls. Consumes the same
+ * {@link TaskDetailState} + copy keys as the desktop archetypes; every faction
+ * without a bespoke mobile skin falls through here (#496–#500).
  */
 export default function DefaultTaskDetail({ state }: { state: TaskDetailState }) {
   const { t } = useTranslation("tasks");
@@ -38,7 +39,11 @@ export default function DefaultTaskDetail({ state }: { state: TaskDetailState })
 
   if (!task) return null;
 
-  const color = "var(--faction-default)";
+  // Tint by the task's own faction; na / unknown falls back to the neutral
+  // default token (this skin backs na + every faction without a bespoke skin).
+  const slug = task.primary_faction_slug;
+  const color =
+    slug && slug !== "na" ? factionCssVar(slug) : "var(--faction-default)";
 
   return (
     <div className="py-4">
@@ -97,82 +102,6 @@ export default function DefaultTaskDetail({ state }: { state: TaskDetailState })
         )}
       </div>
 
-      {/* Signup CTA */}
-      {canSignUp && (
-        <div className="sidebar-card mb-4" style={{ padding: "16px 18px" }}>
-          <button
-            onClick={handleSignup}
-            style={{
-              width: "100%",
-              background: color,
-              color: "var(--color-text-on-accent)",
-              fontFamily: "'Courier Prime', monospace",
-              fontSize: 14,
-              fontWeight: 700,
-              textTransform: "uppercase",
-              letterSpacing: "0.12em",
-              padding: "12px 20px",
-              border: "none",
-              cursor: "pointer",
-            }}
-          >
-            {t("default.signup.cta", { points: modifiedPoints })}
-          </button>
-          <div className="eyebrow flex justify-between" style={{ marginTop: 6 }}>
-            <span>{t("default.signup.slots", { open: slotsOpen, max: maxTaskSlots })}</span>
-            <span>{t("default.signup.levelRequired", { level: task.level_required })} {t("default.signup.met")}</span>
-          </div>
-          {signupError && (
-            <div
-              className="font-body"
-              style={{ fontSize: 12, color: "var(--color-danger)", marginTop: 8, padding: "8px 12px", background: "rgba(220,38,38,0.06)", border: "1px solid rgba(220,38,38,0.2)" }}
-            >
-              {signupError}
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* Submitted */}
-      {mySubmission && (
-        <div className="sidebar-card mb-4 flex items-center gap-3" style={{ padding: "14px 18px" }}>
-          <span className="eyebrow flex-1" style={{ color }}>{t("default.submitted.badge")}</span>
-          <Link to={`/praxes/${mySubmission.id}/edit`} className="btn-outline" style={{ fontSize: 9, padding: "6px 14px" }}>
-            {t("default.submitted.edit")}
-          </Link>
-        </div>
-      )}
-
-      {/* In progress */}
-      {!mySubmission && isInProgress && inProgressPraxisId !== null && (
-        <div className="sidebar-card mb-4 flex items-center gap-3" style={{ padding: "14px 18px" }}>
-          <span className="eyebrow flex-1" style={{ color }}>{t("default.inProgress.badge")}</span>
-          <Link
-            to={`/praxes/${inProgressPraxisId}/edit`}
-            style={{
-              background: color,
-              color: "var(--color-text-on-accent)",
-              fontFamily: "'Courier Prime', monospace",
-              fontSize: 12,
-              fontWeight: 700,
-              textTransform: "uppercase",
-              letterSpacing: "0.1em",
-              padding: "8px 16px",
-              textDecoration: "none",
-            }}
-          >
-            {t("default.inProgress.continue")}
-          </Link>
-          <button
-            onClick={handleDrop}
-            className="eyebrow"
-            style={{ background: "none", border: "none", cursor: "pointer", color: "var(--color-text-tertiary)" }}
-          >
-            {t("default.inProgress.drop")}
-          </button>
-        </div>
-      )}
-
       {/* Completed praxis */}
       <div className="mt-2">
         <div className="flex items-center justify-between mb-3">
@@ -223,6 +152,79 @@ export default function DefaultTaskDetail({ state }: { state: TaskDetailState })
           </>
         )}
       </div>
+
+      {/* Sticky action bar — the mobile CTA pattern; carries the one primary verb. */}
+      {canSignUp && (
+        <MobileStickyBar>
+          {signupError && (
+            <div
+              className="font-body"
+              style={{ fontSize: 12, color: "var(--color-danger)", padding: "8px 12px", background: "var(--faction-default-light)", border: "1px solid var(--color-border)" }}
+            >
+              {signupError}
+            </div>
+          )}
+          <button
+            onClick={handleSignup}
+            style={{
+              width: "100%",
+              background: color,
+              color: "var(--color-text-on-accent)",
+              fontFamily: "'Courier Prime', monospace",
+              fontSize: 14,
+              fontWeight: 700,
+              textTransform: "uppercase",
+              letterSpacing: "0.12em",
+              padding: "14px 20px",
+              border: "none",
+              cursor: "pointer",
+            }}
+          >
+            {t("default.signup.cta", { points: modifiedPoints })}
+          </button>
+          <MobileStickyCaption>
+            {t("default.signup.slots", { open: slotsOpen, max: maxTaskSlots })}
+          </MobileStickyCaption>
+        </MobileStickyBar>
+      )}
+
+      {mySubmission && (
+        <MobileStickyBar style={{ flexDirection: "row", alignItems: "center" }}>
+          <span className="eyebrow flex-1" style={{ color }}>{t("default.submitted.badge")}</span>
+          <Link to={`/praxes/${mySubmission.id}/edit`} className="btn-outline" style={{ fontSize: 9, padding: "8px 18px" }}>
+            {t("default.submitted.edit")}
+          </Link>
+        </MobileStickyBar>
+      )}
+
+      {!mySubmission && isInProgress && inProgressPraxisId !== null && (
+        <MobileStickyBar style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
+          <button
+            onClick={handleDrop}
+            className="eyebrow"
+            style={{ background: "none", border: "none", cursor: "pointer", color: "var(--color-text-tertiary)" }}
+          >
+            {t("default.inProgress.drop")}
+          </button>
+          <Link
+            to={`/praxes/${inProgressPraxisId}/edit`}
+            style={{
+              marginLeft: "auto",
+              background: color,
+              color: "var(--color-text-on-accent)",
+              fontFamily: "'Courier Prime', monospace",
+              fontSize: 12,
+              fontWeight: 700,
+              textTransform: "uppercase",
+              letterSpacing: "0.1em",
+              padding: "12px 20px",
+              textDecoration: "none",
+            }}
+          >
+            {t("default.inProgress.continue")}
+          </Link>
+        </MobileStickyBar>
+      )}
     </div>
   );
 }
