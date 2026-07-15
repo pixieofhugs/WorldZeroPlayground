@@ -17,7 +17,7 @@ describe('mobile task-browse WOW dispatch', () => {
   })
 
   it('mobile + any other viewer falls through to the Default browse skin', () => {
-    for (const slug of ['snide', 'everymen', 'na', null]) {
+    for (const slug of ['__unregistered__', 'na', null]) {
       expect(pickVariant(MOBILE_ARCHETYPE_BY_SLUG, slug, DefaultTasks)).toBe(DefaultTasks)
     }
   })

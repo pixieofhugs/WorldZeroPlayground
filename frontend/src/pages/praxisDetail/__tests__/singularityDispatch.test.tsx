@@ -18,7 +18,7 @@ describe('mobile praxis-detail Singularity dispatch', () => {
   })
 
   it('falls through to the Default mobile skin for other slugs', () => {
-    for (const slug of ['na', 'ephemerists', null]) {
+    for (const slug of ['__unregistered__', 'na', null]) {
       expect(pickVariant(MOBILE_ARCHETYPE_BY_SLUG, slug, DefaultMobilePraxisDetail)).toBe(DefaultMobilePraxisDetail)
     }
   })

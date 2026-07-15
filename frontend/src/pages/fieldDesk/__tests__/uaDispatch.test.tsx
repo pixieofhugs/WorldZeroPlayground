@@ -16,7 +16,7 @@ describe('mobile FieldDesk-home UA dispatch', () => {
   })
 
   it('mobile + any other slug falls through to the Default home skin', () => {
-    for (const slug of ['snide', 'everymen', 'na', null]) {
+    for (const slug of ['__unregistered__', 'na', null]) {
       expect(pickVariant(MOBILE_ARCHETYPE_BY_SLUG, slug, DefaultFieldDesk)).toBe(DefaultFieldDesk)
     }
   })

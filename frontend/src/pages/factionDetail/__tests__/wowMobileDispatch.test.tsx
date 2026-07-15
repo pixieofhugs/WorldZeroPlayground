@@ -16,7 +16,7 @@ describe('mobile faction-page WOW dispatch', () => {
   })
 
   it('every other faction falls through to the Default mobile page', () => {
-    for (const slug of ['snide', 'everymen', 'na', null]) {
+    for (const slug of ['__unregistered__', 'na', null]) {
       expect(pickVariant(MOBILE_ARCHETYPE_BY_SLUG, slug, DefaultFactionPage)).toBe(DefaultFactionPage)
     }
   })
