@@ -1,72 +1,72 @@
-import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { useTranslation } from 'react-i18next'
-import { listTasks, type TaskOut } from '../api/tasks'
-import { createPraxis } from '../api/praxis'
-import { getFactions, type FactionOut } from '../api/factions'
-import { getGameConfig, type FactionConfigOut } from '../api/gameConfig'
-import TaskCard from '../components/TaskCard'
+/**
+ * Tasks browse dispatcher.
+ *
+ * Loads/filters tasks once via `useTasks()` and branches between the
+ * existing desktop flex-wrap `TaskCard` list (per-task faction styling is
+ * handled inside TaskCard/CARD_COMPONENTS — unrelated to this page-level
+ * split) and a single-column mobile skin. Mirrors the TaskDetail dispatcher
+ * (#494).
+ *
+ * Unlike Task Detail, this page shows a *mixed* list of tasks spanning every
+ * faction, so there is no single task-faction to key the page-chrome
+ * dispatch on. Instead we key the mobile archetype on the viewer's own
+ * character's faction (`user?.character?.faction_slug`) — the same "one
+ * faction, coherent idiom across screens" identity FactionDetail's
+ * `viewerFactionSlug` already uses. Bespoke faction mobile skins land
+ * incrementally in #525–#531; every viewer faction falls through to
+ * DefaultTaskList until then.
+ */
 import PageTitle from '../components/ui/PageTitle'
+import TaskCard from '../components/TaskCard'
 import FilterStamps from '../components/ui/FilterStamps'
 import FilterFactionTabs from '../components/ui/FilterFactionTabs'
 import FilterLevelNodes from '../components/ui/FilterLevelNodes'
-import { extractError } from '../utils/errors'
-import { useAuth } from '../auth/AuthContext'
-import { computeDisplayPoints } from '../utils/points'
+import { useTranslation } from 'react-i18next'
+import { useFormFactor } from '../hooks/useFormFactor'
+import { pickVariant } from '../utils/factionDispatch'
+import { useTasks, LEVEL_FILTERS, type TasksState } from './tasks/useTasks'
+import DefaultTaskList from './tasks/mobileArchetypes/DefaultTaskList'
 
-const LEVEL_FILTERS = [0, 1, 2, 3, 4, 5]
+type TasksArchetype = (props: { state: TasksState }) => JSX.Element | null
+
+// Parallel MOBILE registry. Empty for now — every faction falls through to
+// the Default mobile skin; bespoke faction mobile skins land incrementally
+// (#525–#531), exactly like the taskDetail archetypes' MOBILE_ARCHETYPE_BY_SLUG.
+export const MOBILE_ARCHETYPE_BY_SLUG: Record<string, TasksArchetype> = {}
 
 export default function Tasks() {
   const { t } = useTranslation('tasks')
   const { t: tc } = useTranslation('common')
-  const { user } = useAuth()
-  const navigate = useNavigate()
-  const characterId = user?.character?.id
+  const state = useTasks()
+  const formFactor = useFormFactor()
+  const {
+    tasks,
+    factions,
+    status,
+    setStatus,
+    faction,
+    setFaction,
+    level,
+    setLevel,
+    statusFilters,
+    loading,
+    fetchError,
+    signupMsg,
+    isLoggedIn,
+    handleSignup,
+    displayPointsFor,
+    viewerFactionSlug,
+  } = state
 
-  const [tasks, setTasks] = useState<TaskOut[]>([])
-  const [factions, setFactions] = useState<FactionOut[]>([])
-  const [factionConfigs, setFactionConfigs] = useState<FactionConfigOut[]>([])
-  const [status, setStatus] = useState('All')
-  const [faction, setFaction] = useState('')
-  const [level, setLevel] = useState<number | ''>('')
-  const [loading, setLoading] = useState(true)
-  const [fetchError, setFetchError] = useState<string | null>(null)
-  const [signupMsg, setSignupMsg] = useState<{ id: number; msg: string; ok: boolean } | null>(null)
-
-  useEffect(() => {
-    getFactions().then(setFactions).catch(() => {})
-    getGameConfig()
-      .then((config) => setFactionConfigs(config.factions))
-      .catch(() => {})
-  }, [])
-
-  useEffect(() => {
-    setLoading(true)
-    setFetchError(null)
-    listTasks({
-      status: status === 'All' ? undefined : status,
-      faction: faction || undefined,
-      level: level === '' ? undefined : level,
-      exclude_character_id: characterId,
-    })
-      .then(setTasks)
-      .catch((err) => setFetchError(extractError(err, "Couldn't load tasks.")))
-      .finally(() => setLoading(false))
-  }, [status, faction, level, characterId])
-
-  const handleSignup = async (id: number) => {
-    setSignupMsg(null)
-    try {
-      const praxis = await createPraxis({ task_id: id, type: 'solo' })
-      navigate(`/praxes/${praxis.id}/edit`)
-    } catch (err) {
-      setSignupMsg({ id, msg: extractError(err, 'Could not sign up — make sure you are logged in.'), ok: false })
-    }
+  if (formFactor === 'mobile') {
+    const Archetype = pickVariant(MOBILE_ARCHETYPE_BY_SLUG, viewerFactionSlug, DefaultTaskList)
+    return (
+      <div className="py-8">
+        <PageTitle title="Tasks" eyebrow={`${tasks.length} shown`} />
+        <Archetype state={state} />
+      </div>
+    )
   }
-
-  const statusFilters = ['All', 'active']
-  if (user?.can_see_retired_tasks) statusFilters.push('retired')
-  if (user?.can_see_pending_tasks) statusFilters.push('pending')
 
   return (
     <div className="py-8">
@@ -101,13 +101,8 @@ export default function Tasks() {
             <TaskCard
               key={task.id}
               task={task}
-              displayPoints={computeDisplayPoints(
-                task.point_value,
-                user?.character?.faction_slug,
-                task.primary_faction_slug,
-                factionConfigs,
-              )}
-              onSignup={user && task.can_submit_praxis ? handleSignup : undefined}
+              displayPoints={displayPointsFor(task)}
+              onSignup={isLoggedIn && task.can_submit_praxis ? handleSignup : undefined}
             />
           ))}
         </div>

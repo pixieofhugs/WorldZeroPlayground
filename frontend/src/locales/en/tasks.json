@@ -3,6 +3,19 @@
     "loading": "Loading tasks...",
     "empty": "No tasks match your filters."
   },
+  "mobile": {
+    "sortButton": "Sort",
+    "sortSheet": {
+      "heading": "Sort by",
+      "default": "Level & Points",
+      "newest": "Newest"
+    },
+    "points": "{{points}} pts",
+    "taskType": {
+      "standard": "Standard",
+      "metatask": "Metatask"
+    }
+  },
   "detail": {
     "loading": "Loading...",
     "fetchError": "<0>Try refreshing.</0>",
