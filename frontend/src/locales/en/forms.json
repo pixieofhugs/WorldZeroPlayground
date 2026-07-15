@@ -124,6 +124,11 @@
       "table": "table"
     },
     "dropTask": "drop task",
+    "mobile": {
+      "write": "Write",
+      "preview": "Preview",
+      "viewToggleAria": "Switch between write and preview"
+    },
     "na": {
       "masthead": "casual proof board",
       "pageTitle": "edit praxis",

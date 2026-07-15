@@ -10,6 +10,7 @@ import { useTranslation } from "react-i18next";
 import PageTitle from "../components/ui/PageTitle";
 import ImageEditModal from "../components/imageEdit/ImageEditModal";
 import { pickVariant } from "../utils/factionDispatch";
+import { useFormFactor } from "../hooks/useFormFactor";
 import {
   useEditPraxis,
   type EditPraxisState,
@@ -22,6 +23,8 @@ import DefaultEditPraxis from "./editPraxis/archetypes/DefaultEditPraxis";
 import EverymenEditPraxis from "./editPraxis/archetypes/EverymenEditPraxis";
 import UAEditPraxis from "./editPraxis/archetypes/UAEditPraxis";
 import AlbescentEditPraxis from "./editPraxis/archetypes/AlbescentEditPraxis";
+import DefaultMobileEditPraxis from "./editPraxis/mobileArchetypes/DefaultEditPraxis";
+import WowMobileEditPraxis from "./editPraxis/mobileArchetypes/WowEditPraxis";
 
 type Archetype = (props: { state: EditPraxisState }) => JSX.Element;
 
@@ -38,10 +41,18 @@ const ARCHETYPE_BY_SLUG: Record<string, Archetype> = {
   albescent: AlbescentEditPraxis,
 };
 
+// Parallel MOBILE registry (#498). WOW is the pilot bespoke phone composer; every
+// other faction falls through to the Default mobile skin. Bespoke faction mobile
+// composers land incrementally, exactly like the desktop archetypes above.
+export const MOBILE_ARCHETYPE_BY_SLUG: Record<string, Archetype> = {
+  wow: WowMobileEditPraxis,
+};
+
 export default function EditPraxis() {
   const { t } = useTranslation("forms");
   const { id } = useParams<{ id: string }>();
   const state = useEditPraxis(id);
+  const formFactor = useFormFactor();
 
   if (state.loading) {
     return (
@@ -65,7 +76,10 @@ export default function EditPraxis() {
   }
 
   const slug = state.task?.primary_faction_slug ?? null;
-  const Archetype = pickVariant(ARCHETYPE_BY_SLUG, slug, DefaultEditPraxis);
+  const Archetype =
+    formFactor === "mobile"
+      ? pickVariant(MOBILE_ARCHETYPE_BY_SLUG, slug, DefaultMobileEditPraxis)
+      : pickVariant(ARCHETYPE_BY_SLUG, slug, DefaultEditPraxis);
 
   return (
     <>
