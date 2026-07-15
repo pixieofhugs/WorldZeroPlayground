@@ -122,6 +122,11 @@
         "questsWindow": "quests",
         "charEyebrow": "you",
         "questsHeading": "quests"
+      },
+      "ua": {
+        "masthead": "The Salon Desk",
+        "charEyebrow": "In residence",
+        "questsHeading": "At the easel"
       }
     }
   },

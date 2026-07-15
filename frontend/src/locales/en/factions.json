@@ -463,6 +463,9 @@
       "emptyWithSpotlight": "No other names on the wall yet.",
       "level": "Anno {{anno}}"
     },
+    "mobile": {
+      "eyebrow": "The Gilt Salon"
+    },
     "invitation": {
       "kicker": "the salon is enrolling",
       "headline": "Take up the brush",

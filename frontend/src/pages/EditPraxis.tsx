@@ -25,6 +25,7 @@ import UAEditPraxis from "./editPraxis/archetypes/UAEditPraxis";
 import AlbescentEditPraxis from "./editPraxis/archetypes/AlbescentEditPraxis";
 import DefaultMobileEditPraxis from "./editPraxis/mobileArchetypes/DefaultEditPraxis";
 import WowMobileEditPraxis from "./editPraxis/mobileArchetypes/WowEditPraxis";
+import UAMobileEditPraxis from "./editPraxis/mobileArchetypes/UaComposer";
 
 type Archetype = (props: { state: EditPraxisState }) => JSX.Element;
 
@@ -46,6 +47,7 @@ const ARCHETYPE_BY_SLUG: Record<string, Archetype> = {
 // composers land incrementally, exactly like the desktop archetypes above.
 export const MOBILE_ARCHETYPE_BY_SLUG: Record<string, Archetype> = {
   wow: WowMobileEditPraxis,
+  ua: UAMobileEditPraxis,
 };
 
 export default function EditPraxis() {
