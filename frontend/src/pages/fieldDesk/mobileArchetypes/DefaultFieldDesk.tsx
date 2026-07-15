@@ -1,7 +1,9 @@
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { factionCssVar, factionName } from '../../../utils/factions'
 import { mediaUrl } from '../../../utils/media'
+import CharacterSwitcherSheet from '../../../components/CharacterSwitcherSheet'
 import type { FieldDeskHomeState } from '../useFieldDeskHome'
 
 /**
@@ -16,9 +18,15 @@ import type { FieldDeskHomeState } from '../useFieldDeskHome'
  * Layout is flex/relative — no fixed-px grid drives the page structure
  * (SPEC-faction-ui-profile §1a).
  */
+
+// Decorative down-caret (aria-hidden) marking the name as a switcher trigger; a
+// const so the jsx-text-only literal rule doesn't read it as user-facing copy.
+const CARET_DOWN = '▾'
+
 export default function DefaultFieldDesk({ state }: { state: FieldDeskHomeState }) {
   const { t } = useTranslation('common')
   const { character, eraName, votesReceived, activeTasks, pendingCount, canProposeTask } = state
+  const [switcherOpen, setSwitcherOpen] = useState(false)
 
   const stats = [
     { label: t('fieldDesk.home.stats.points'), value: character.score?.toLocaleString() ?? '0' },
@@ -64,13 +72,23 @@ export default function DefaultFieldDesk({ state }: { state: FieldDeskHomeState 
           <span className="eyebrow" style={{ fontSize: 9, color: 'var(--color-text-secondary)' }}>
             {t('fieldDesk.home.charEyebrow')}
           </span>
-          <Link
-            to={`/characters/${character.id}/edit`}
-            className="eyebrow"
-            style={{ fontSize: 9, color: 'var(--faction-default-card-muted)', textDecoration: 'none' }}
-          >
-            {t('fieldDesk.home.edit')}
-          </Link>
+          <div className="flex items-center" style={{ gap: 14 }}>
+            <button
+              type="button"
+              onClick={() => setSwitcherOpen(true)}
+              className="eyebrow"
+              style={{ fontSize: 9, color: 'var(--faction-default-card-muted)', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+            >
+              {t('fieldDesk.home.switch')}
+            </button>
+            <Link
+              to={`/characters/${character.id}/edit`}
+              className="eyebrow"
+              style={{ fontSize: 9, color: 'var(--faction-default-card-muted)', textDecoration: 'none' }}
+            >
+              {t('fieldDesk.home.edit')}
+            </Link>
+          </div>
         </div>
 
         <div className="flex items-center gap-3.5">
@@ -95,13 +113,24 @@ export default function DefaultFieldDesk({ state }: { state: FieldDeskHomeState 
             )}
           </div>
           <div className="min-w-0 flex-1">
-            <Link
-              to={`/characters/${character.id}`}
-              className="font-display italic block truncate"
-              style={{ fontSize: 24, lineHeight: 1.05, color: 'var(--color-text-primary)', textDecoration: 'none' }}
-            >
-              {character.display_name}
-            </Link>
+            <div className="flex items-center gap-1.5" style={{ minWidth: 0 }}>
+              <Link
+                to={`/characters/${character.id}`}
+                className="font-display italic block truncate"
+                style={{ fontSize: 24, lineHeight: 1.05, color: 'var(--color-text-primary)', textDecoration: 'none' }}
+              >
+                {character.display_name}
+              </Link>
+              {/* ▾ opens the active-character switcher sheet (#516). */}
+              <button
+                type="button"
+                onClick={() => setSwitcherOpen(true)}
+                aria-label={t('fieldDesk.home.switcher.title')}
+                style={{ flex: 'none', background: 'none', border: 'none', padding: 0, cursor: 'pointer', fontSize: 14, lineHeight: 1, color: 'var(--color-text-tertiary)' }}
+              >
+                <span aria-hidden>{CARET_DOWN}</span>
+              </button>
+            </div>
             <div
               className="truncate"
               style={{
@@ -301,6 +330,13 @@ export default function DefaultFieldDesk({ state }: { state: FieldDeskHomeState 
           </Link>
         )}
       </div>
+
+      {/* Active-character switcher — bottom sheet over Home (#516). */}
+      <CharacterSwitcherSheet
+        open={switcherOpen}
+        activeCharacterId={character.id}
+        onClose={() => setSwitcherOpen(false)}
+      />
     </div>
   )
 }

@@ -1,13 +1,14 @@
-import { useEffect, useState, useRef, type CSSProperties } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useRef, type CSSProperties } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { getCharacter, updateCharacter, uploadCharacterAvatar, type CharacterOut } from '../api/characters'
-import { useAuth } from '../auth/AuthContext'
-import { extractError } from '../utils/errors'
 import { mediaUrl } from '../utils/media'
 import DefaultSigil from '../components/cards/DefaultSigil'
 import ImageEditModal from '../components/imageEdit/ImageEditModal'
-import { AVATAR_ASPECT, blobToFile } from '../components/imageEdit/imageEditHelpers'
+import { AVATAR_ASPECT } from '../components/imageEdit/imageEditHelpers'
+import { useFormFactor } from '../hooks/useFormFactor'
+import { pickVariant } from '../utils/factionDispatch'
+import { useEditCharacter, type EditCharacterState } from './characterPaths/useEditCharacter'
+import DefaultEditCharacter from './characterPaths/mobileArchetypes/DefaultEditCharacter'
 
 /**
  * Edit Character — themed in the spectrum default skin for EVERYONE, regardless
@@ -17,8 +18,19 @@ import { AVATAR_ASPECT, blobToFile } from '../components/imageEdit/imageEditHelp
  * fields (display_name, bio, location), the avatar upload, and validation are
  * unchanged. `@handle` is the auto-derived, unique username (ADR-0019): shown
  * read-only, never an input. No pronouns field (a separate feature — new column).
+ *
+ * On a phone (#516) the same {@link useEditCharacter} state drives a mobile skin
+ * (single-column form + Change photo, faction link-out, delete, sticky Save),
+ * dispatched through the parallel registry; every faction falls through to the
+ * Default skin. Desktop unchanged.
  */
 const DISPLAY = 'var(--faction-default-card-font)'
+
+type MobileSkin = (props: { state: EditCharacterState }) => JSX.Element
+
+// Only factions with a bespoke mobile edit screen register here; na and the
+// rest fall through to DefaultEditCharacter (mirrors Tasks/FieldDesk).
+export const MOBILE_ARCHETYPE_BY_SLUG: Record<string, MobileSkin> = {}
 
 const inputStyle: CSSProperties = {
   width: '100%',
@@ -34,82 +46,41 @@ const inputStyle: CSSProperties = {
 }
 
 export default function EditCharacter() {
+  const state = useEditCharacter()
+  const formFactor = useFormFactor()
+
+  if (formFactor === 'mobile') {
+    const Mobile = pickVariant(MOBILE_ARCHETYPE_BY_SLUG, null, DefaultEditCharacter)
+    return <Mobile state={state} />
+  }
+
+  return <DesktopEditCharacter state={state} />
+}
+
+function DesktopEditCharacter({ state }: { state: EditCharacterState }) {
   const { t } = useTranslation('forms')
-  const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
-  const { user, refetch } = useAuth()
-  const [character, setCharacter] = useState<CharacterOut | null>(null)
-  const [displayName, setDisplayName] = useState('')
-  const [bio, setBio] = useState('')
-  const [location, setLocation] = useState('')
-  const [avatarFile, setAvatarFile] = useState<File | null>(null)
-  const [avatarSource, setAvatarSource] = useState<File | null>(null) // in the crop modal
-  const [saving, setSaving] = useState(false)
-  const [error, setError] = useState('')
-  const [loading, setLoading] = useState(true)
-  const [avatarError, setAvatarError] = useState('')
   const fileRef = useRef<HTMLInputElement>(null)
-
-  const MAX_AVATAR_SIZE = 10 * 1024 * 1024 // 10 MB
-
-  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const f = e.target.files?.[0] || null
-    e.target.value = ''
-    if (!f) return
-    if (f.size > MAX_AVATAR_SIZE) {
-      setAvatarError('Avatar must be under 10 MB.')
-      return
-    }
-    setAvatarError('')
-    // Crop/rotate to a square before it becomes the avatar (#514).
-    setAvatarSource(f)
-  }
-
-  const handleAvatarConfirm = (blob: Blob) => {
-    setAvatarFile(blobToFile(blob, avatarSource?.name ?? 'avatar'))
-    setAvatarSource(null)
-  }
-
-  useEffect(() => {
-    if (!id) return
-    getCharacter(parseInt(id, 10))
-      .then((c) => {
-        setCharacter(c)
-        setDisplayName(c.display_name)
-        setBio(c.bio || '')
-        setLocation(c.location || '')
-      })
-      .catch((err) => setError(extractError(err, 'Could not load character.')))
-      .finally(() => setLoading(false))
-  }, [id])
-
-  // Only allow editing your own character
-  const isOwner = user?.character?.id === character?.id
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!id || !character) return
-    setSaving(true)
-    setError('')
-    try {
-      const characterId = parseInt(id, 10)
-      if (avatarFile) {
-        await uploadCharacterAvatar(characterId, avatarFile)
-      }
-      const updated = await updateCharacter(characterId, {
-        display_name: displayName,
-        bio: bio || undefined,
-        location: location || undefined,
-      })
-      setCharacter(updated)
-      await refetch()
-      navigate(`/characters/${characterId}`)
-    } catch (err) {
-      setError(extractError(err, 'Could not save changes.'))
-    } finally {
-      setSaving(false)
-    }
-  }
+  const {
+    id,
+    character,
+    loading,
+    isOwner,
+    displayName,
+    setDisplayName,
+    bio,
+    setBio,
+    location,
+    setLocation,
+    avatarSource,
+    setAvatarSource,
+    avatarError,
+    handleAvatarChange,
+    handleAvatarConfirm,
+    saving,
+    error,
+    handleSubmit,
+  } = state
 
   if (loading) return <div className="py-8 font-body text-muted">{t('editCharacter.loading')}</div>
   if (!character) return <div className="py-8 font-body text-muted">{t('editCharacter.notFound')}</div>

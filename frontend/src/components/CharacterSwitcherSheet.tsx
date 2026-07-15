@@ -1,0 +1,213 @@
+import { useEffect, useState, type CSSProperties } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
+import { useAuth } from '../auth/AuthContext'
+import { getMyCharacters, setActiveCharacter } from '../api/me'
+import type { CharacterOut } from '../api/auth'
+import { factionCssVar, factionName } from '../utils/factions'
+import { mediaUrl } from '../utils/media'
+
+/**
+ * MOBILE active-character switcher (#516) — a bottom sheet over Home. Lists the
+ * account's lives (active one checkmarked), swaps the carried life on tap
+ * (`POST /me/active-character` then refetch), and holds the two path actions:
+ * Create new character and Edit this character. Opened from the Home character
+ * card's Switch / avatar caret. Presentation-only over existing endpoints.
+ */
+
+// Decorative edit glyph (aria-hidden icon); a const so the jsx-text-only literal
+// rule doesn't read it as user-facing copy.
+const PENCIL_GLYPH = '✎'
+export default function CharacterSwitcherSheet({
+  open,
+  activeCharacterId,
+  onClose,
+}: {
+  open: boolean
+  activeCharacterId: number
+  onClose: () => void
+}) {
+  const { t } = useTranslation('common')
+  const { refetch } = useAuth()
+  const navigate = useNavigate()
+  const [lives, setLives] = useState<CharacterOut[]>([])
+  const [switching, setSwitching] = useState<number | null>(null)
+
+  useEffect(() => {
+    if (!open) return
+    void getMyCharacters().then(setLives).catch(() => setLives([]))
+  }, [open])
+
+  if (!open) return null
+
+  const enterLife = async (id: number) => {
+    if (id === activeCharacterId) {
+      onClose()
+      return
+    }
+    setSwitching(id)
+    try {
+      await setActiveCharacter(id)
+      await refetch()
+      onClose()
+    } finally {
+      setSwitching(null)
+    }
+  }
+
+  return (
+    <div role="dialog" aria-modal="true" aria-label={t('fieldDesk.home.switcher.title')}>
+      <button type="button" aria-label={t('fieldDesk.home.switcher.close')} onClick={onClose} style={scrim} />
+      <div style={sheet}>
+        <span style={grab} />
+        <div style={sheetTitle}>{t('fieldDesk.home.switcher.title')}</div>
+
+        <CharacterSwitcherRows
+          lives={lives}
+          activeCharacterId={activeCharacterId}
+          onSelect={enterLife}
+          switching={switching}
+        />
+
+        <button type="button" onClick={() => navigate('/characters/create')} style={{ ...sheetAction, borderTop: '1px solid var(--color-border)' }}>
+          <span style={actionIcon}>+</span>
+          {t('fieldDesk.home.switcher.createNew')}
+        </button>
+        <button type="button" onClick={() => navigate(`/characters/${activeCharacterId}/edit`)} style={sheetAction}>
+          <span style={actionIcon}>{PENCIL_GLYPH}</span>
+          {t('fieldDesk.home.switcher.editThis')}
+        </button>
+      </div>
+    </div>
+  )
+}
+
+/**
+ * Presentational roster rows — extracted so the selection surface is testable
+ * without a DOM (renderToStaticMarkup): the active life is checkmarked, every
+ * other life is a tappable row that fires `onSelect(id)`.
+ */
+export function CharacterSwitcherRows({
+  lives,
+  activeCharacterId,
+  onSelect,
+  switching = null,
+}: {
+  lives: CharacterOut[]
+  activeCharacterId: number
+  onSelect: (id: number) => void
+  switching?: number | null
+}) {
+  const { t } = useTranslation('common')
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column' }}>
+      {lives.map((life) => {
+        const isActive = life.id === activeCharacterId
+        return (
+          <button
+            key={life.id}
+            type="button"
+            onClick={() => onSelect(life.id)}
+            disabled={switching != null}
+            data-testid={`switcher-row-${life.id}`}
+            data-active={isActive ? 'true' : 'false'}
+            style={switchRow}
+          >
+            <span style={{ ...miniRing, background: 'var(--faction-default-ring)' }}>
+              {life.avatar_url ? (
+                <img src={mediaUrl(life.avatar_url)} alt={life.display_name} style={miniAvatarImg} />
+              ) : (
+                <span
+                  style={{
+                    ...miniAvatarImg,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    background: `linear-gradient(135deg, ${factionCssVar(life.faction_slug, 'light')}, ${factionCssVar(life.faction_slug)})`,
+                    fontFamily: 'var(--faction-default-card-font)',
+                    fontStyle: 'italic',
+                    fontSize: 17,
+                    color: 'var(--color-text-on-accent)',
+                  }}
+                >
+                  {life.display_name[0]?.toUpperCase() ?? '?'}
+                </span>
+              )}
+            </span>
+            <span style={{ flex: 1, minWidth: 0, textAlign: 'left' }}>
+              <span style={rowName}>{life.display_name}</span>
+              <span style={rowMeta}>
+                {t('fieldDesk.home.switcher.meta', {
+                  faction: factionName(life.faction_slug),
+                  level: life.level,
+                  points: life.score,
+                })}
+              </span>
+            </span>
+            {isActive ? (
+              <span aria-hidden style={{ color: 'var(--faction-default-card-muted)', fontSize: 16, flex: 'none' }}>✓</span>
+            ) : (
+              <span style={rowTapHint}>{t('fieldDesk.home.switcher.tapToUse')}</span>
+            )}
+          </button>
+        )
+      })}
+    </div>
+  )
+}
+
+// --- token-driven styles ----------------------------------------------------
+
+const scrim: CSSProperties = {
+  position: 'fixed', inset: 0, zIndex: 40, border: 'none', padding: 0,
+  background: 'rgba(0,0,0,0.45)', cursor: 'pointer',
+}
+const sheet: CSSProperties = {
+  position: 'fixed', left: 0, right: 0, bottom: 0, zIndex: 41,
+  background: 'var(--color-bg-surface)', borderRadius: '22px 22px 0 0',
+  padding: '10px 16px calc(26px + env(safe-area-inset-bottom))',
+  boxShadow: '0 -12px 34px rgba(0,0,0,0.3)', maxHeight: '80vh', overflowY: 'auto',
+}
+const grab: CSSProperties = {
+  display: 'block', width: 38, height: 4, borderRadius: 999,
+  background: 'var(--color-border-strong)', margin: '2px auto 14px',
+}
+const sheetTitle: CSSProperties = {
+  fontFamily: 'var(--font-display)', fontStyle: 'italic', fontSize: 18,
+  color: 'var(--color-text-primary)', margin: '0 4px 6px',
+}
+const switchRow: CSSProperties = {
+  display: 'flex', alignItems: 'center', gap: 12, padding: '12px 4px',
+  borderBottom: '1px solid var(--color-border)', cursor: 'pointer',
+  background: 'none', border: 'none', borderBottomStyle: 'solid',
+  borderBottomWidth: 1, borderBottomColor: 'var(--color-border)', width: '100%',
+}
+const miniRing: CSSProperties = {
+  width: 44, height: 44, borderRadius: '50%', padding: 2, flex: 'none',
+}
+const miniAvatarImg: CSSProperties = {
+  width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover',
+}
+const rowName: CSSProperties = {
+  display: 'block', fontFamily: 'var(--font-display)', fontStyle: 'italic',
+  fontSize: 16, color: 'var(--color-text-primary)',
+  overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+}
+const rowMeta: CSSProperties = {
+  display: 'block', fontSize: 9, letterSpacing: '0.14em', textTransform: 'uppercase',
+  color: 'var(--color-text-secondary)', marginTop: 3,
+}
+const rowTapHint: CSSProperties = {
+  fontSize: 8, letterSpacing: '0.1em', textTransform: 'uppercase',
+  color: 'var(--color-text-tertiary)', flex: 'none',
+}
+const sheetAction: CSSProperties = {
+  display: 'flex', alignItems: 'center', gap: 12, padding: '15px 4px', width: '100%',
+  color: 'var(--color-text-primary)', fontFamily: 'var(--font-display)',
+  fontStyle: 'italic', fontSize: 15, cursor: 'pointer', background: 'none', border: 'none',
+}
+const actionIcon: CSSProperties = {
+  width: 34, height: 34, borderRadius: '50%', border: '1.5px dashed var(--color-border-strong)',
+  display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16,
+  color: 'var(--color-text-secondary)', flex: 'none',
+}

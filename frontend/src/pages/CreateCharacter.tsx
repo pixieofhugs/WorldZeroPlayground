@@ -1,101 +1,72 @@
-import { useEffect, useRef, useState, type CSSProperties } from 'react'
+import { useRef, type CSSProperties } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { useAuth } from '../auth/AuthContext'
-import { createCharacter, uploadCharacterAvatar } from '../api/characters'
-import { getInvitedFactions } from '../api/me'
 import { factionCssVar, factionName } from '../utils/factions'
-import { extractError } from '../utils/errors'
 import CredentialCard from '../components/CredentialCard'
 import ImageEditModal from '../components/imageEdit/ImageEditModal'
-import { AVATAR_ASPECT, blobToFile } from '../components/imageEdit/imageEditHelpers'
+import { AVATAR_ASPECT } from '../components/imageEdit/imageEditHelpers'
+import { useFormFactor } from '../hooks/useFormFactor'
+import { pickVariant } from '../utils/factionDispatch'
+import {
+  useCreateCharacter,
+  NAME_MAX,
+  BIO_MAX,
+  type CreateCharacterState,
+} from './characterPaths/useCreateCharacter'
+import DefaultCreateCharacter from './characterPaths/mobileArchetypes/DefaultCreateCharacter'
 
 /**
  * Adaptive Character Creation (#273, ADR-0019). One screen, two renderings: the
  * faction picker appears iff the account holds invitations; otherwise a brand-new
  * account creates a born-unaffiliated ("na") life. One submit path either way.
+ *
+ * On a phone (#516) the same {@link useCreateCharacter} state drives a mobile
+ * skin (full-column form + sticky Create), dispatched through the parallel
+ * registry; every faction falls through to the Default skin. Desktop unchanged.
  */
 
-const NAME_MAX = 22
-const BIO_MAX = 160
-const MAX_AVATAR_SIZE = 10 * 1024 * 1024 // 10 MB
+type MobileSkin = (props: { state: CreateCharacterState }) => JSX.Element
 
-/** Mirror of the server @handle derivation (services/character._derive_unique_username). */
-function previewHandle(displayName: string): string {
-  return displayName.toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 14) || 'wanderer'
-}
+// Only factions with a bespoke mobile create screen register here; na and the
+// rest fall through to DefaultCreateCharacter (mirrors Tasks/FieldDesk).
+export const MOBILE_ARCHETYPE_BY_SLUG: Record<string, MobileSkin> = {}
 
 export default function CreateCharacter() {
+  const state = useCreateCharacter()
+  const formFactor = useFormFactor()
+
+  if (formFactor === 'mobile') {
+    const Mobile = pickVariant(MOBILE_ARCHETYPE_BY_SLUG, null, DefaultCreateCharacter)
+    return <Mobile state={state} />
+  }
+
+  return <DesktopCreateCharacter state={state} />
+}
+
+function DesktopCreateCharacter({ state }: { state: CreateCharacterState }) {
   const { t } = useTranslation('forms')
-  const { refetch } = useAuth()
   const navigate = useNavigate()
-
-  const [displayName, setDisplayName] = useState('')
-  const [bio, setBio] = useState('')
-  const [factionSlug, setFactionSlug] = useState<string>('') // '' = born na
-  const [invited, setInvited] = useState<string[]>([])
-  const [avatarFile, setAvatarFile] = useState<File | null>(null)
-  const [avatarPreview, setAvatarPreview] = useState<string | null>(null)
-  const [avatarSource, setAvatarSource] = useState<File | null>(null) // in the crop modal
-  const [error, setError] = useState<string | null>(null)
-  const [submitting, setSubmitting] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
-
-  useEffect(() => {
-    void getInvitedFactions().then(setInvited).catch(() => setInvited([]))
-  }, [])
-
-  const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0] ?? null
-    e.target.value = ''
-    if (!file) return
-    if (file.size > MAX_AVATAR_SIZE) {
-      setError('Portrait must be under 10 MB.')
-      return
-    }
-    setError(null)
-    // Crop/rotate to a square before it becomes the portrait (#514).
-    setAvatarSource(file)
-  }
-
-  const handleAvatarConfirm = (blob: Blob) => {
-    const source = avatarSource
-    const file = blobToFile(blob, source?.name ?? 'avatar')
-    setAvatarFile(file)
-    setAvatarPreview(URL.createObjectURL(file))
-    setAvatarSource(null)
-  }
-
-  const trimmedName = displayName.trim()
-  const canSubmit = trimmedName.length > 0 && !submitting
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!canSubmit) return
-    setSubmitting(true)
-    setError(null)
-    try {
-      // Never send a faction the account wasn't invited to; '' → born na.
-      const picked = factionSlug && invited.includes(factionSlug) ? factionSlug : undefined
-      const character = await createCharacter({
-        display_name: trimmedName,
-        bio: bio || undefined,
-        faction_slug: picked,
-      })
-      if (avatarFile) {
-        await uploadCharacterAvatar(character.id, avatarFile)
-      }
-      await refetch() // server already set the new life active
-      navigate(`/characters/${character.id}`)
-    } catch (err) {
-      setError(extractError(err))
-    } finally {
-      setSubmitting(false)
-    }
-  }
-
-  const handle = previewHandle(displayName)
-  const showPicker = invited.length > 0
+  const {
+    displayName,
+    setDisplayName,
+    bio,
+    setBio,
+    factionSlug,
+    setFactionSlug,
+    invited,
+    avatarPreview,
+    avatarSource,
+    setAvatarSource,
+    handleFile,
+    handleAvatarConfirm,
+    error,
+    submitting,
+    canSubmit,
+    handleSubmit,
+    handle,
+    showPicker,
+  } = state
 
   return (
     <div className="page">
