@@ -3,7 +3,7 @@
  *
  * Flagged praxes and comments merge into ONE queue, newest first (both surface
  * on the first flag — era.comment_flag_review_threshold is 1). Each card badges
- * the top flag reason from the shared vocabulary (ADR-0031), links back to the
+ * the top flag reason from the shared vocabulary (ADR-0037), links back to the
  * flagged content, and dispatches actions to the right endpoint per type:
  *   Praxis:  Keep (visible) · Remove (hidden) · Fail (failed + player note)
  *   Comment: Keep (visible) · Remove (deleted)

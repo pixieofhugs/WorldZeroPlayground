@@ -422,7 +422,7 @@ async def flag_praxis_route(
     character: Character = Depends(get_current_character),
     session: AsyncSession = Depends(get_db),
 ):
-    """Flag a praxis. Reason is the shared vocabulary (ADR-0031) — same FlagIn
+    """Flag a praxis. Reason is the shared vocabulary (ADR-0037) — same FlagIn
     payload as the comment flag route."""
     praxis = await flag_praxis(
         praxis_id=praxis_id,

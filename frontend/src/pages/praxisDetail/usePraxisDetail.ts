@@ -64,7 +64,7 @@ export interface PraxisDetailState {
   moderating: boolean;
   moderateError: string | null;
 
-  // Flagging — reason is a pick from the shared vocabulary (ADR-0031);
+  // Flagging — reason is a pick from the shared vocabulary (ADR-0037);
   // flagDetail is the free-text note that only travels with 'other'.
   showFlagForm: boolean;
   setShowFlagForm: (value: boolean) => void;

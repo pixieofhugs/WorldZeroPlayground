@@ -191,7 +191,7 @@ async def game_overview(session: AsyncSession) -> OverviewStats:
 
 
 def _build_flag_out(flag: Flag, flagged_by_name: str) -> FlagOut:
-    """Normalize a stored Flag row onto the shared vocabulary (ADR-0031)."""
+    """Normalize a stored Flag row onto the shared vocabulary (ADR-0037)."""
     reason, reason_detail = normalize_flag_reason(flag.reason)
     return FlagOut(
         reason=reason.value,

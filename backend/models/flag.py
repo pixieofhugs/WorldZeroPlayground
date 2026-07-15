@@ -16,7 +16,7 @@ MAX_FLAG_REASON_DETAIL = 500
 
 
 class FlagReason(enum.Enum):
-    """Fixed, shared flag-reason vocabulary (ADR-0031).
+    """Fixed, shared flag-reason vocabulary (ADR-0037).
 
     One flat list for praxis and comment flags alike, validated at the API
     trust boundary. The set is additive: new reasons are a one-line addition
@@ -31,7 +31,7 @@ class FlagReason(enum.Enum):
 
 
 def stored_flag_reason(reason: "FlagReason", reason_detail: Optional[str]) -> str:
-    """What to persist in ``Flag.reason`` for a validated flag (ADR-0031).
+    """What to persist in ``Flag.reason`` for a validated flag (ADR-0037).
 
     The four named reasons store their enum key. ``other`` folds the flagger's
     free-text note into the column — read-side normalization already maps any
@@ -44,7 +44,7 @@ def stored_flag_reason(reason: "FlagReason", reason_detail: Optional[str]) -> st
 
 
 def normalize_flag_reason(raw: str) -> tuple["FlagReason", Optional[str]]:
-    """Map a stored ``Flag.reason`` string onto the vocabulary (ADR-0031).
+    """Map a stored ``Flag.reason`` string onto the vocabulary (ADR-0037).
 
     Enum keys map to themselves. Anything else — legacy free text, an ``other``
     note, or the pre-enum ``server_default=""`` — renders as ``other`` with the
