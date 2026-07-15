@@ -61,8 +61,12 @@ export function MemberByline({
   /** Optional wrapper for each display name (e.g. Singularity's `NODE_` prefix). */
   renderName?: (name: string) => ReactNode
 }) {
+  const { t } = useTranslation('praxis')
   const members = orderedMembers(praxis)
   const sepStyle = separatorStyle ?? linkStyle
+  // Per-member submit state only reads meaningfully mid-lifecycle on a collab
+  // (>1 member, still in editing). A solo/duel praxis or a live one stays clean.
+  const showSubmitState = members.length > 1 && praxis.status === 'in_progress'
 
   return (
     <span
@@ -89,6 +93,22 @@ export function MemberByline({
             >
               {renderName ? renderName(name) : name}
             </Link>
+            {showSubmitState && (
+              <span
+                className="eyebrow"
+                style={{
+                  marginLeft: 4,
+                  fontSize: 8,
+                  color: member.has_submitted
+                    ? 'var(--color-success)'
+                    : 'var(--color-text-tertiary)',
+                }}
+              >
+                {member.has_submitted
+                  ? t('detail.byline.submitted')
+                  : t('detail.byline.drafting')}
+              </span>
+            )}
           </span>
         )
       })}
@@ -201,12 +221,26 @@ export function PraxisStatusBanners({ state }: { state: PraxisDetailState }) {
           </div>
         </div>
       )}
+      {/* A collab that has been proposed for publish (submit_proposed_at set)
+          is still in editing, but the neutral "IN EDITING" copy under-reports
+          it — swap in the pending-publish wording (ADR-0012). */}
       {praxis.status === 'in_progress' && (
         <div style={{ background: 'rgba(245,158,11,0.1)', border: '2px solid rgba(245,158,11,0.3)', borderRadius: 8, padding: '8px 14px', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 8 }}>
-          <span className="eyebrow">{t('detail.banners.inEditingLabel')}</span>
-          <span className="font-body" style={{ fontSize: 11, color: 'var(--color-warning)', fontWeight: 700 }}>
-            {t('detail.banners.inEditingBody')}
-          </span>
+          {praxis.submit_proposed_at != null ? (
+            <>
+              <span className="eyebrow">{t('detail.banners.pendingPublishLabel')}</span>
+              <span className="font-body" style={{ fontSize: 11, color: 'var(--color-warning)', fontWeight: 700 }}>
+                {t('detail.banners.pendingPublishBody')}
+              </span>
+            </>
+          ) : (
+            <>
+              <span className="eyebrow">{t('detail.banners.inEditingLabel')}</span>
+              <span className="font-body" style={{ fontSize: 11, color: 'var(--color-warning)', fontWeight: 700 }}>
+                {t('detail.banners.inEditingBody')}
+              </span>
+            </>
+          )}
         </div>
       )}
       {praxis.moderation_status === 'failed' && praxis.admin_note && (
@@ -230,8 +264,20 @@ export function PraxisStatusBanners({ state }: { state: PraxisDetailState }) {
 
 export function PraxisOwnerActions({ state }: { state: PraxisDetailState }) {
   const { t } = useTranslation('praxis')
-  const { praxis, isOwner, withdrawing, showWithdrawConfirm, setShowWithdrawConfirm, withdrawError, handleWithdraw, handleResubmit } = state
+  const { praxis, isOwner, user, withdrawing, showWithdrawConfirm, setShowWithdrawConfirm, withdrawError, handleWithdraw, handleResubmit } = state
   if (!praxis || !isOwner) return null
+
+  // On a collab that hasn't gone live yet, a member who has already submitted
+  // waits on their co-authors — swap their green Submit control for a waiting
+  // state (ADR-0012). Editing stays available via the edit link above.
+  const viewerCharacterId = user?.character?.id
+  const viewerMember =
+    viewerCharacterId != null
+      ? praxis.members.find((member) => member.character_id === viewerCharacterId)
+      : undefined
+  const isCollab = praxis.members.length > 1
+  const viewerSubmittedWaiting =
+    isCollab && praxis.status === 'in_progress' && viewerMember?.has_submitted === true
 
   return (
     <div>
@@ -240,13 +286,19 @@ export function PraxisOwnerActions({ state }: { state: PraxisDetailState }) {
           {t('detail.owner.edit')}
         </Link>
         {praxis.status === 'in_progress' ? (
-          <button
-            onClick={handleResubmit}
-            disabled={withdrawing}
-            style={{ background: 'var(--color-success)', color: 'var(--color-text-on-accent)', fontFamily: "'Courier Prime', monospace", fontSize: 9, textTransform: 'uppercase', letterSpacing: '0.08em', padding: '4px 12px', border: 'none', cursor: 'pointer', borderRadius: 0, opacity: withdrawing ? 0.5 : 1 }}
-          >
-            {withdrawing ? t('detail.owner.submitting') : t('detail.owner.submit')}
-          </button>
+          viewerSubmittedWaiting ? (
+            <span className="eyebrow" style={{ color: 'var(--color-success)', fontWeight: 700 }}>
+              {t('detail.owner.submittedWaiting')}
+            </span>
+          ) : (
+            <button
+              onClick={handleResubmit}
+              disabled={withdrawing}
+              style={{ background: 'var(--color-success)', color: 'var(--color-text-on-accent)', fontFamily: "'Courier Prime', monospace", fontSize: 9, textTransform: 'uppercase', letterSpacing: '0.08em', padding: '4px 12px', border: 'none', cursor: 'pointer', borderRadius: 0, opacity: withdrawing ? 0.5 : 1 }}
+            >
+              {withdrawing ? t('detail.owner.submitting') : t('detail.owner.submit')}
+            </button>
+          )
         ) : !showWithdrawConfirm ? (
           <button onClick={() => setShowWithdrawConfirm(true)} className="font-body eyebrow" style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-text-tertiary)' }}>
             {t('detail.owner.unsubmit')}

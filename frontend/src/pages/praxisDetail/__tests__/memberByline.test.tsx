@@ -7,6 +7,8 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { MemoryRouter } from "react-router-dom";
 import { describe, it, expect } from "vitest";
+// Initialize the catalog so the collab submit-state markers resolve to English.
+import "../../../i18n";
 import { orderedMembers, MemberByline } from "../shared";
 import type { PraxisOut, PraxisMemberOut } from "../../../api/praxis";
 
@@ -14,18 +16,23 @@ function member(
   characterId: number,
   name: string,
   joinedAt: string,
+  hasSubmitted = false,
 ): PraxisMemberOut {
   return {
     id: characterId * 10,
     praxis_id: 1,
     character_id: characterId,
     character_display_name: name,
-    has_submitted: false,
+    has_submitted: hasSubmitted,
     joined_at: joinedAt,
   };
 }
 
-function praxis(members: PraxisMemberOut[], createdById: number): PraxisOut {
+function praxis(
+  members: PraxisMemberOut[],
+  createdById: number,
+  status: PraxisOut["status"] = "submitted",
+): PraxisOut {
   return {
     id: 1,
     task_id: 7,
@@ -34,7 +41,7 @@ function praxis(members: PraxisMemberOut[], createdById: number): PraxisOut {
     task_level_required: 3,
     task_faction_slug: "ua",
     type: "collab",
-    status: "submitted",
+    status,
     title: "Reforestation",
     body_text: "Seedlings planted along the estuary.",
     moderation_status: "visible",
@@ -64,10 +71,13 @@ const ADA = member(1, "Ada", "2026-01-03T00:00:00Z");
 const BETH = member(2, "Beth", "2026-01-01T00:00:00Z");
 const CY = member(3, "Cy", "2026-01-02T00:00:00Z");
 
-function bylineText(members: PraxisMemberOut[]): string {
+function bylineText(
+  members: PraxisMemberOut[],
+  status: PraxisOut["status"] = "submitted",
+): string {
   const html = renderToStaticMarkup(
     <MemoryRouter>
-      <MemberByline praxis={praxis(members, 1)} />
+      <MemberByline praxis={praxis(members, 1, status)} />
     </MemoryRouter>,
   );
   return html.replace(/<[^>]+>/g, "").replace(/&amp;/g, "&");
@@ -110,5 +120,31 @@ describe("MemberByline join format (#387)", () => {
     );
     expect(html).toContain('href="/characters/1"');
     expect(html).toContain('href="/characters/2"');
+  });
+});
+
+// ─── Collab submit indicators (#521) ─────────────────────────────────────────
+// On an in-editing collab, each member reads "✓ submitted" or "drafting" from
+// has_submitted. A live (submitted) collab and solo/duel praxes stay clean.
+
+describe("MemberByline submit state (#521)", () => {
+  const ADA_SUBMITTED = member(1, "Ada", "2026-01-03T00:00:00Z", true);
+  const BETH_DRAFTING = member(2, "Beth", "2026-01-01T00:00:00Z", false);
+
+  it("marks each member submitted / drafting from has_submitted while in editing", () => {
+    expect(bylineText([ADA_SUBMITTED, BETH_DRAFTING], "in_progress")).toBe(
+      "Ada✓ submitted & Bethdrafting",
+    );
+  });
+
+  it("renders no submit markers once the collab is live (submitted)", () => {
+    const text = bylineText([ADA_SUBMITTED, BETH_DRAFTING], "submitted");
+    expect(text).not.toContain("submitted");
+    expect(text).not.toContain("drafting");
+  });
+
+  it("leaves a solo (single-member) praxis unmarked even while in editing", () => {
+    const text = bylineText([ADA_SUBMITTED], "in_progress");
+    expect(text).toBe("Ada");
   });
 });

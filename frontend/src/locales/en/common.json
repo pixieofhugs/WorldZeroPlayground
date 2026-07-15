@@ -45,7 +45,8 @@
     "collaboration": "Collaboration",
     "titleFallback": "{{label}} · {{count}} players",
     "viewDuel": "View duel",
-    "viewCollaboration": "View collaboration"
+    "viewCollaboration": "View collaboration",
+    "pending": "pending"
   },
   "credential": {
     "fallbackName": "Wanderer",
