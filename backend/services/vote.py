@@ -44,12 +44,24 @@ async def cast_or_update_vote(
     if not 1 <= value <= 5:
         raise HTTPException(status_code=422, detail="Vote value must be between 1 and 5.")
 
-    # Account-level anti-self-vote. Praxis.created_by is selectin-loaded,
-    # but fall back to an explicit lookup if it isn't populated.
-    author = praxis.created_by
-    if author is None and praxis.created_by_id is not None:
-        author = await session.get(Character, praxis.created_by_id)
-    if author is not None and author.account_id == voter.account_id:
+    # Account-level anti-self-vote. A collab is co-owned by all its members
+    # (ADR-0013), not just the created_by starter — so block any character on
+    # ANY current member's account. members + member.character are selectin-
+    # loaded, so no extra query in the common path. Solo praxis: one member
+    # (the creator) → identical to the old created_by check.
+    member_account_ids = {
+        member.character.account_id
+        for member in praxis.members
+        if member.character is not None
+    }
+    # Fallback if members somehow isn't populated: use created_by directly.
+    if not member_account_ids and praxis.created_by_id is not None:
+        author = praxis.created_by
+        if author is None:
+            author = await session.get(Character, praxis.created_by_id)
+        if author is not None:
+            member_account_ids = {author.account_id}
+    if voter.account_id in member_account_ids:
         raise HTTPException(status_code=403, detail="Cannot vote on your own praxis.")
 
     # Duel anti-participation (#309): a duel participant — any life on their
