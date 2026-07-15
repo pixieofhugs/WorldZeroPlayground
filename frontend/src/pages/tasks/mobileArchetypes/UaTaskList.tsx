@@ -6,7 +6,7 @@ import { factionCssVar, factionName, sortFactionsByRainbowOrder } from '../../..
 import type { TasksState } from '../useTasks'
 
 /**
- * Universal Assembly MOBILE task-browse skin (#525) — the salon
+ * University of Asthmatics MOBILE task-browse skin (#525) — the salon
  * prospectus on a phone. The same scannable single-column list + touch-native
  * filter chip rows as the Default browse skin (status / faction / level),
  * dressed as parchment commission plates on a gilt rail. Dispatched by the

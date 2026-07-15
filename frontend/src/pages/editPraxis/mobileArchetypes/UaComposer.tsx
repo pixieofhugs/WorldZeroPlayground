@@ -20,7 +20,7 @@ import type { EditPraxisState } from '../useEditPraxis'
 import { MobileStickyBar, SegToggle, type ComposerTab } from './shared'
 
 /**
- * Universal Assembly MOBILE composer (#525) — "Submit to the Salon" on a
+ * University of Asthmatics MOBILE composer (#525) — "Submit to the Salon" on a
  * phone. The same single-column composer as the Default mobile skin
  * (Write/Preview toggle, fluid media grid, sticky submit bar) dressed in gilt
  * salon chrome: parchment plates in gold-leaf frames, engraved kickers, Cormorant

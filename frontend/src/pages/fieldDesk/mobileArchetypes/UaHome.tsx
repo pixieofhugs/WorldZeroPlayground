@@ -6,7 +6,7 @@ import { mediaUrl } from '../../../utils/media'
 import type { FieldDeskHomeState } from '../useFieldDeskHome'
 
 /**
- * Universal Assembly MOBILE FieldDesk home (#525) — the gilt salon on a
+ * University of Asthmatics MOBILE FieldDesk home (#525) — the gilt salon on a
  * phone. The carried life and its in-progress commissions become parchment
  * plates set in a gold-leaf frame, headed by an engraved masthead. Same content
  * slots as the Default mobile home (character header, Points/Votes/Era stat

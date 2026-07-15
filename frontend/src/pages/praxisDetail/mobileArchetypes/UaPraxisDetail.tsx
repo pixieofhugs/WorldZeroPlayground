@@ -16,7 +16,7 @@ import {
 import { MobileStarVote } from './shared'
 
 /**
- * Universal Assembly MOBILE praxis-detail skin (#525) — an acquisition
+ * University of Asthmatics MOBILE praxis-detail skin (#525) — an acquisition
  * hung in the salon, phone-shaped. A gilt-framed plate holds the exhibited work
  * (full media); a Cormorant-italic finding headline, the account body, and a
  * thumb-sized appraisal caster follow. Renders the same invariant CONTENT +

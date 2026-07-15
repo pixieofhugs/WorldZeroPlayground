@@ -7,7 +7,7 @@ import { MobileStickyBar, MobileStickyCaption } from './shared'
 import type { TaskDetailState } from '../useTaskDetail'
 
 /**
- * Universal Assembly MOBILE task-detail skin (#525) — the salon
+ * University of Asthmatics MOBILE task-detail skin (#525) — the salon
  * commission on a phone. A gilt-framed parchment hero (engraved masthead, title
  * in Cormorant italic, Anno + points plates, the commission brief), the
  * exhibited works, and a stamped **sticky action bar** ("Submit to the Salon")
