@@ -1,0 +1,911 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>World Zero — SNIDE Treatment · Mobile Field Kit</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Archivo+Black&family=Bebas+Neue&family=Permanent+Marker&family=Special+Elite&family=Lora:ital,wght@0,500;0,600;1,400;1,500;1,600&family=Courier+Prime:wght@400;700&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   BOARD (review surface — not part of the product)
+   ============================================================ */
+*{box-sizing:border-box}
+html,body{margin:0}
+body{
+  background:#26252c;
+  color:#e9e6df;
+  font-family:"Courier Prime",monospace;
+  -webkit-font-smoothing:antialiased;
+  padding:40px 32px 96px;
+}
+a{color:inherit}
+.board{max-width:1180px;margin:0 auto}
+.board-head{margin-bottom:40px;max-width:760px}
+.board-head .eyebrow{font-size:11px;letter-spacing:.32em;text-transform:uppercase;color:#8a8794;margin:0 0 14px}
+.board-head h1{font-family:"Lora",serif;font-weight:600;font-size:34px;line-height:1.1;margin:0 0 12px;color:#f4f1ea}
+.board-head p{font-size:13px;line-height:1.7;color:#a5a1ac;margin:0}
+.board-head .stage{display:inline-block;margin-top:18px;font-size:10px;letter-spacing:.24em;text-transform:uppercase;color:#26252c;background:#e7b94f;padding:6px 12px;border-radius:3px;font-weight:700}
+
+.section-label{display:flex;align-items:baseline;gap:16px;margin:56px 0 24px}
+.section-label .n{font-family:"Lora",serif;font-size:13px;color:#6f6c78}
+.section-label h2{font-family:"Lora",serif;font-weight:600;font-size:22px;margin:0;color:#f4f1ea}
+.section-label .rule{flex:1;height:1px;background:linear-gradient(90deg,rgba(255,255,255,.16),transparent)}
+.section-label p{width:100%;flex-basis:100%;font-size:12px;color:#918d99;margin:8px 0 0;line-height:1.6;max-width:720px}
+
+/* spec cards on the board */
+.grid{display:grid;gap:16px}
+.spec{background:#302f38;border:1px solid rgba(255,255,255,.07);border-radius:12px;padding:22px}
+.spec h3{font-family:"Lora",serif;font-size:15px;font-weight:600;margin:0 0 4px;color:#f4f1ea}
+.spec .sub{font-size:11px;color:#8a8794;margin:0 0 18px;line-height:1.5}
+
+/* spacing scale */
+.sp-row{display:flex;align-items:center;gap:16px;margin-bottom:9px}
+.sp-row .swatch{background:linear-gradient(90deg,#e7b94f,#d99a2b);height:14px;border-radius:2px;flex:none}
+.sp-row .lbl{font-size:11px;color:#c8c4cd;width:54px}
+.sp-row .use{font-size:10px;color:#807d89}
+
+/* type scale */
+.ty{display:flex;align-items:baseline;justify-content:space-between;gap:18px;padding:11px 0;border-bottom:1px solid rgba(255,255,255,.06)}
+.ty:last-child{border-bottom:0}
+.ty .demo{color:#f4f1ea;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ty .meta{font-size:10px;color:#807d89;text-align:right;flex:none;line-height:1.5}
+.ty .meta b{color:#c8c4cd;font-weight:400}
+
+.pattern-note{font-size:11px;line-height:1.7;color:#a5a1ac}
+.pattern-note b{color:#e9e6df;font-weight:400}
+.pill-legend{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px}
+.pill-legend span{font-size:10px;letter-spacing:.06em;color:#c8c4cd;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.09);border-radius:999px;padding:5px 11px}
+
+/* token cascade table */
+.cascade{width:100%;border-collapse:collapse;font-size:11px}
+.cascade th{text-align:left;font-weight:400;color:#807d89;letter-spacing:.1em;text-transform:uppercase;font-size:9px;padding:0 10px 10px;border-bottom:1px solid rgba(255,255,255,.1)}
+.cascade td{padding:9px 10px;border-bottom:1px solid rgba(255,255,255,.05);vertical-align:middle;color:#c8c4cd}
+.cascade td code{color:#9d99a6;font-size:10px}
+.chip{display:inline-block;width:14px;height:14px;border-radius:3px;vertical-align:middle;margin-right:7px;border:1px solid rgba(255,255,255,.18)}
+
+/* phone rail */
+.rail{display:flex;flex-wrap:wrap;gap:34px 30px;align-items:flex-start}
+.phone-wrap{display:flex;flex-direction:column;align-items:center;gap:14px}
+.phone-tag{font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:#8a8794}
+.phone-tag b{color:#e7b94f;font-weight:400}
+
+/* ============================================================
+   PHONE FRAME + PRODUCT
+   ============================================================ */
+.phone{
+  width:375px;height:770px;border-radius:46px;flex:none;position:relative;
+  background:#0a0a0d;padding:11px;
+  box-shadow:0 2px 4px rgba(0,0,0,.4),0 24px 60px rgba(0,0,0,.5),inset 0 0 0 2px rgba(255,255,255,.05);
+}
+.screen{
+  position:relative;width:100%;height:100%;border-radius:36px;overflow:hidden;
+  display:flex;flex-direction:column;
+  background:var(--field-bg,var(--bg-page));
+  color:var(--text-1);
+  font-family:var(--label-font);
+}
+
+/* ---- theme token layers (the tinting mechanism lives here) ---- */
+.screen[data-theme="light"]{
+  --bg-page:#f7f4ee; --surface:#fffdf9; --surface-2:#f0ede6;
+  --text-1:#1a1209; --text-2:#6b6050; --text-3:#9b8e7d;
+  --border:rgba(0,0,0,.09); --border-2:rgba(0,0,0,.16);
+  --nav-bg:rgba(247,244,238,.9);
+  --shadow:0 1px 2px rgba(0,0,0,.05),0 10px 26px rgba(0,0,0,.07);
+  --rainbow:linear-gradient(90deg,#c1272d,#c2541f 17%,#ca8a04 33%,#16a34a 50%,#1d6e72 67%,#2563eb 83%,#be185d);
+  --ring:conic-gradient(#c1272d 0 51deg,#c2541f 0 103deg,#ca8a04 0 154deg,#16a34a 0 206deg,#1d6e72 0 257deg,#2563eb 0 309deg,#be185d 0 360deg);
+}
+.screen[data-theme="dark"]{
+  --bg-page:#13121a; --surface:#1c1b24; --surface-2:#232230;
+  --text-1:#f0e6d0; --text-2:#8b8194; --text-3:#585568;
+  --border:rgba(255,255,255,.08); --border-2:rgba(255,255,255,.16);
+  --nav-bg:rgba(19,18,26,.9);
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 12px 30px rgba(0,0,0,.5);
+  --rainbow:linear-gradient(90deg,#e2433f,#e07a3a 17%,#e6b94f 33%,#4ade80 50%,#3aa0a4 67%,#60a5fa 83%,#f472b6);
+  --ring:conic-gradient(#e2433f 0 51deg,#e07a3a 0 103deg,#e6b94f 0 154deg,#4ade80 0 206deg,#3aa0a4 0 257deg,#60a5fa 0 309deg,#f472b6 0 360deg);
+}
+
+/* ---- treatment: DEFAULT (na) ---- */
+.screen[data-treatment="na"]{
+  --headline:"Lora",Georgia,serif; --headline-style:italic; --headline-weight:600;
+  --label-font:"Courier Prime",monospace;
+  --card-radius:14px; --tile-radius:10px; --btn-radius:12px;
+  --accent-solid:var(--text-1);
+  --paper-tex:none;
+}
+.screen[data-treatment="na"][data-theme="light"]{ --accent:#be185d; --accent-ink:#fffdf9; --cta-bg:#1a1209; --cta-text:#f7f4ee; --stamp:#be185d;
+  --field-bg:
+    radial-gradient(60% 45% at 12% 6%, rgba(193,39,45,.13), transparent 60%),
+    radial-gradient(55% 42% at 90% 3%, rgba(202,138,4,.12), transparent 60%),
+    radial-gradient(52% 46% at 102% 42%, rgba(37,99,235,.11), transparent 60%),
+    radial-gradient(68% 52% at 50% 116%, rgba(190,24,93,.12), transparent 62%),
+    radial-gradient(58% 46% at 6% 90%, rgba(22,163,74,.11), transparent 62%),
+    radial-gradient(46% 40% at 80% 96%, rgba(29,110,114,.10), transparent 62%),
+    #f7f4ee;
+  --paper-tex:none;
+}
+.screen[data-treatment="na"][data-theme="dark"]{ --accent:#f0e6d0; --accent-ink:#13121a; --cta-bg:#f0e6d0; --cta-text:#13121a; --stamp:#f472b6;
+  --field-bg:
+    radial-gradient(60% 45% at 12% 6%, rgba(226,67,63,.20), transparent 60%),
+    radial-gradient(55% 42% at 90% 3%, rgba(224,122,58,.17), transparent 60%),
+    radial-gradient(52% 46% at 102% 42%, rgba(96,165,250,.16), transparent 60%),
+    radial-gradient(68% 52% at 50% 116%, rgba(244,114,182,.17), transparent 62%),
+    radial-gradient(58% 46% at 6% 90%, rgba(74,222,128,.14), transparent 62%),
+    radial-gradient(46% 40% at 80% 96%, rgba(58,160,164,.13), transparent 62%),
+    #13121a;
+  --paper-tex:none;
+}
+
+/* ---- treatment: EVERYMEN (field report) ---- */
+.screen[data-treatment="everymen"]{
+  --headline:"Special Elite","Courier New",serif; --headline-style:normal; --headline-weight:400;
+  --label-font:"Special Elite","Courier New",monospace;
+  --card-radius:5px; --tile-radius:4px; --btn-radius:4px;
+}
+.screen[data-treatment="everymen"][data-theme="light"]{
+  --bg-page:#ddceac; --surface:#ece1c6; --surface-2:#e4d8ba;
+  --text-1:#221a12; --text-2:#6c5a40; --text-3:#8a7a5c;
+  --border:rgba(34,26,18,.2); --border-2:rgba(34,26,18,.38);
+  --nav-bg:rgba(236,225,198,.94);
+  --accent:#a9741a; --accent-bright:#d99a2b; --accent-ink:#ece1c6;
+  --stamp:#c1272d; --cta-bg:#a9741a; --cta-text:#f4ecd6;
+  --shadow:0 1px 2px rgba(34,26,18,.1),0 10px 22px rgba(34,26,18,.14);
+  --paper-tex:repeating-linear-gradient(0deg,rgba(34,26,18,.022) 0 1px,transparent 1px 3px);
+}
+.screen[data-treatment="everymen"][data-theme="dark"]{
+  --bg-page:#17110d; --surface:#221a16; --surface-2:#2b2118;
+  --text-1:#f3e7ce; --text-2:#b6a079; --text-3:#7d6c50;
+  --border:rgba(243,231,206,.16); --border-2:rgba(243,231,206,.32);
+  --nav-bg:rgba(23,17,13,.92);
+  --accent:#e7b94f; --accent-bright:#e7b94f; --accent-ink:#221a16;
+  --stamp:#e2433f; --cta-bg:#e7b94f; --cta-text:#221a16;
+  --shadow:0 1px 2px rgba(0,0,0,.5),0 12px 28px rgba(0,0,0,.55);
+  --paper-tex:repeating-linear-gradient(0deg,rgba(243,231,206,.02) 0 1px,transparent 1px 3px);
+}
+
+/* ---- treatment: SNIDE (redacted dossier / ransom note) ---- */
+.screen[data-treatment="snide"]{
+  --headline:"Bebas Neue",Impact,sans-serif; --headline-style:normal; --headline-weight:400;
+  --label-font:"Special Elite","Courier New",monospace;
+  --card-radius:2px; --tile-radius:2px; --btn-radius:2px; --paper-tex:none;
+}
+.screen[data-treatment="snide"][data-theme="dark"]{
+  --bg-page:#100d09; --surface:#14110b; --surface-2:#1e1a11;
+  --text-1:#f4f1e8; --text-2:#d8d6c8; --text-3:#8f8b78;
+  --border:rgba(244,241,232,.14); --border-2:rgba(244,241,232,.28);
+  --nav-bg:rgba(16,13,9,.92);
+  --accent:#b6ff2e; --accent-ink:#14110b; --cta-bg:#ff2d8b; --cta-text:#fff; --stamp:#ff2d8b;
+  --shadow:5px 6px 0 rgba(0,0,0,.5);
+  --rainbow:linear-gradient(90deg,#b6ff2e,#ff2d8b);
+  --ring:conic-gradient(#b6ff2e 0deg,#6fae00 140deg,#ff2d8b 260deg,#b6ff2e 360deg);
+  --field-bg:
+    radial-gradient(60% 45% at 12% 6%, rgba(182,255,46,.10), transparent 60%),
+    radial-gradient(55% 42% at 92% 4%, rgba(255,45,139,.12), transparent 62%),
+    radial-gradient(60% 50% at 50% 116%, rgba(182,255,46,.07), transparent 64%),
+    #100d09;
+}
+/* Bebas is tall + condensed — nudge sizes + tracking for UI legibility */
+.screen[data-treatment="snide"] .appbar .title-wrap .t{font-size:20px;letter-spacing:.04em}
+.screen[data-treatment="snide"] .char-id .name{font-size:26px;letter-spacing:.03em;line-height:1}
+.screen[data-treatment="snide"] .stat b{font-size:22px;letter-spacing:.02em}
+.screen[data-treatment="snide"] .trow .tt{font-size:16px;letter-spacing:.02em}
+.screen[data-treatment="snide"] .stitle{font-size:30px;letter-spacing:.02em}
+.screen[data-treatment="snide"] .pcard-head .nm{font-family:var(--headline);font-size:15px;letter-spacing:.03em}
+.screen[data-treatment="snide"] .topbar .tt{font-size:22px;letter-spacing:.03em}
+.screen[data-treatment="snide"] .prow2 .pinfo .n{font-size:16px;letter-spacing:.02em}
+.screen[data-treatment="snide"] .ppts2 b{font-family:'Anton',sans-serif;color:#b6ff2e}
+.screen[data-treatment="snide"] .appbar .brandmark{background:#b6ff2e;border-radius:1px}
+.screen[data-treatment="snide"] .appbar .brandmark::after{background:var(--bg-page);border-radius:0}
+.screen[data-treatment="snide"] .iconbtn,.screen[data-treatment="snide"] .topbar .back{border-radius:2px}
+.screen[data-treatment="snide"] .char-top{background:linear-gradient(90deg,#b6ff2e,#ff2d8b);height:3px}
+.screen[data-treatment="snide"] .btn.primary{font-family:'Archivo Black',Impact,sans-serif;letter-spacing:.06em;box-shadow:2px 3px 0 rgba(0,0,0,.4)}
+.screen[data-treatment="snide"] .chip2.on{background:#b6ff2e;color:#14110b}
+.screen[data-treatment="snide"] .mini-bar i{background:linear-gradient(90deg,#6fae00,#b6ff2e)}
+.screen[data-treatment="snide"] .ring .av,.screen[data-treatment="snide"] .big-ring .av{background:#b6ff2e;color:#14110b;font-family:'Anton',sans-serif;border-radius:2px}
+.screen[data-treatment="snide"] .ring,.screen[data-treatment="snide"] .big-ring{border-radius:3px}
+.screen[data-treatment="snide"] .seg button.on{font-family:'Archivo Black',sans-serif}
+
+/* ===== SNIDE distinctive: ransom cards, halftone, tape, masthead ===== */
+.snidecard{position:relative;background:#14110b;color:#f4f1e8;border:0;border-radius:2px;box-shadow:5px 6px 0 rgba(0,0,0,.5);overflow:hidden}
+.snidecard.rot{transform:rotate(-1deg)}
+.snidecard.rotp{transform:rotate(0.7deg)}
+.snidecard .sc-in{position:relative;z-index:1}
+.snidecard .char-id .name,.snidecard .who .name{color:#f4f1e8}
+.snidecard .stat{background:#1e1a11;border-color:rgba(244,241,232,.12)}
+.snidecard .trow{border-color:rgba(244,241,232,.1)}
+.ht-dots{position:absolute;inset:0;pointer-events:none;color:rgba(182,255,46,.09);background-image:radial-gradient(currentColor 32%,transparent 34%);background-size:5px 5px;z-index:0}
+.snide-tape{position:absolute;height:24px;width:60px;background:hsla(52,67%,68%,.62);box-shadow:inset 0 0 0 1px hsla(0,0%,100%,.25);opacity:.92;z-index:3}
+.snide-tape::before,.snide-tape::after{content:"";position:absolute;top:0;bottom:0;width:4px;background-image:repeating-linear-gradient(90deg,rgba(0,0,0,.05) 0 1px,transparent 1px 3px)}
+.snide-tape::before{left:0}.snide-tape::after{right:0}
+.snide-masthead{display:flex;justify-content:space-between;align-items:baseline;border-bottom:2px solid #b6ff2e;padding-bottom:4px;margin-bottom:9px}
+.snide-masthead .wm{font-family:"Bebas Neue",Impact,sans-serif;font-size:15px;letter-spacing:.22em;color:#b6ff2e;line-height:1}
+.snide-masthead .sub{font-size:7px;letter-spacing:.16em;text-transform:uppercase;color:#d8d6c8}
+.snide-scrawl{font-family:"Permanent Marker",cursive;font-size:12px;color:#ff2d8b;transform:rotate(-1.5deg);margin-bottom:6px}
+.ransom{display:inline-flex;flex-wrap:wrap;gap:4px 3px;align-items:center}
+.ransom>span{display:inline-block;line-height:.92;padding:2px 5px 0;box-shadow:1.5px 2.5px 0 rgba(0,0,0,.4);text-transform:uppercase}
+
+/* ---- status bar ---- */
+.statusbar{display:flex;align-items:center;justify-content:space-between;padding:14px 22px 6px;font-size:13px;font-weight:700;color:var(--text-1);flex:none;font-family:var(--label-font)}
+.statusbar .sig{display:flex;gap:5px;align-items:center}
+.statusbar .sig i{display:block;width:4px;height:4px;border-radius:50%;background:var(--text-1);opacity:.55}
+
+/* ---- app bar ---- */
+.appbar{display:flex;align-items:center;justify-content:space-between;padding:6px 20px 14px;flex:none}
+.appbar .brand{display:flex;align-items:center;gap:10px}
+.appbar .brandmark{width:26px;height:26px;border-radius:7px;flex:none;background:var(--rainbow);position:relative}
+.screen[data-treatment="everymen"] .appbar .brandmark{background:var(--stamp);border-radius:3px}
+.appbar .brandmark::after{content:"";position:absolute;inset:5px;border-radius:3px;background:var(--bg-page)}
+.screen[data-treatment="everymen"] .appbar .brandmark::after{border-radius:1px;inset:6px}
+.appbar .title-wrap .k{font-size:8px;letter-spacing:.24em;text-transform:uppercase;color:var(--text-3)}
+.appbar .title-wrap .t{font-family:var(--headline);font-style:var(--headline-style);font-weight:var(--headline-weight);font-size:17px;line-height:1;color:var(--text-1)}
+.iconbtn{width:36px;height:36px;border-radius:50%;border:1px solid var(--border);background:var(--surface);display:flex;align-items:center;justify-content:center;color:var(--text-2);flex:none}
+.screen[data-treatment="everymen"] .iconbtn{border-radius:4px}
+
+/* ---- scroll body ---- */
+.body{flex:1;overflow-y:auto;padding:4px 16px 20px;display:flex;flex-direction:column;gap:14px;scrollbar-width:none;background-image:var(--paper-tex)}
+.body>*{flex-shrink:0}
+.body::-webkit-scrollbar{display:none}
+
+/* ---- card ---- */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--card-radius);box-shadow:var(--shadow);position:relative;overflow:hidden}
+.card.pad{padding:16px}
+.screen[data-treatment="everymen"] .card{box-shadow:var(--shadow),inset 0 0 0 1px rgba(255,255,255,.02)}
+
+/* kicker + section header */
+.kicker{font-size:9px;letter-spacing:.22em;text-transform:uppercase;color:var(--text-2);font-family:var(--label-font)}
+.sechead{display:flex;align-items:center;gap:10px;padding:2px 2px}
+.sechead .k{font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:var(--text-2)}
+.sechead .rule{flex:1;height:1px;background:linear-gradient(90deg,var(--border-2),transparent)}
+.sechead a{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--text-2);text-decoration:none;border-bottom:1px solid var(--border-2);padding-bottom:1px}
+
+/* character card */
+.char-top{position:absolute;top:0;left:0;right:0;height:3px;background:var(--rainbow);opacity:.9}
+.screen[data-treatment="everymen"] .char-top{background:repeating-linear-gradient(90deg,var(--stamp) 0 8px,transparent 8px 14px);opacity:.85;height:3px}
+.char-id{display:flex;align-items:center;gap:14px}
+.ring{width:60px;height:60px;border-radius:50%;padding:3px;flex:none;background:var(--ring)}
+.screen[data-treatment="everymen"] .ring{border-radius:6px;padding:2px;background:var(--accent-bright)}
+.ring .av{width:100%;height:100%;border-radius:50%;background:radial-gradient(circle at 35% 30%,#c9683a,#8a3d1f);display:flex;align-items:center;justify-content:center;font-family:var(--headline);font-style:var(--headline-style);font-size:24px;color:#fbe9d8}
+.screen[data-treatment="everymen"] .ring .av{border-radius:4px;background:radial-gradient(circle at 35% 30%,#7c8646,#4c5230)}
+.char-id .who{min-width:0;flex:1}
+.char-id .name{font-family:var(--headline);font-style:var(--headline-style);font-weight:var(--headline-weight);font-size:25px;line-height:1.02;color:var(--text-1)}
+.char-id .meta{margin-top:5px;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--text-2)}
+.char-id .meta .sep{color:var(--text-3)}
+.char-id .pts{text-align:right;flex:none}
+.char-id .pts b{display:block;font-family:var(--headline);font-style:var(--headline-style);font-weight:var(--headline-weight);font-size:26px;line-height:1;color:var(--text-1)}
+.char-id .pts span{font-size:8px;letter-spacing:.2em;text-transform:uppercase;color:var(--text-2)}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:16px}
+.stat{background:var(--surface-2);border:1px solid var(--border);border-radius:var(--tile-radius);padding:11px 6px;text-align:center}
+.stat b{display:block;font-family:var(--headline);font-style:var(--headline-style);font-weight:var(--headline-weight);font-size:20px;line-height:1;color:var(--text-1)}
+.stat span{display:block;margin-top:6px;font-size:8px;letter-spacing:.18em;text-transform:uppercase;color:var(--text-2)}
+
+/* task row */
+.tasks{display:flex;flex-direction:column;gap:0}
+.trow{display:flex;align-items:center;gap:12px;padding:14px 4px;border-bottom:1px solid var(--border);cursor:pointer;-webkit-tap-highlight-color:transparent;transition:background .12s,transform .06s}
+.trow:last-child{border-bottom:0}
+.trow:active{background:var(--surface-2);transform:scale(.99)}
+.trow .dot{width:10px;height:10px;border-radius:3px;flex:none}
+.trow .tmid{flex:1;min-width:0}
+.trow .tt{font-family:var(--headline);font-style:var(--headline-style);font-weight:var(--headline-weight);font-size:16px;line-height:1.2;color:var(--text-1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.trow .tm{margin-top:4px;font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--text-2);display:flex;gap:8px;align-items:center}
+.trow .tm .fac{color:var(--text-2)}
+.trow .tm .pv{color:var(--accent);font-weight:700}
+.screen[data-treatment="na"][data-theme="light"] .trow .tm .pv{color:#c2541f}
+.trow .chev{color:var(--text-3);flex:none}
+.mini-bar{height:5px;border-radius:999px;background:var(--surface-2);overflow:hidden;margin-top:9px}
+.mini-bar i{display:block;height:100%;border-radius:999px;background:var(--rainbow)}
+.screen[data-treatment="everymen"] .mini-bar i{background:var(--accent-bright)}
+
+/* primary action pair */
+.actions{display:flex;gap:10px}
+.btn{flex:1;border:0;border-radius:var(--btn-radius);padding:15px 12px;font-family:var(--label-font);font-size:12px;letter-spacing:.12em;text-transform:uppercase;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:transform .06s,filter .12s}
+.btn:active{transform:scale(.98)}
+.btn.primary{background:var(--cta-bg);color:var(--cta-text);font-weight:700}
+.btn.primary:active{filter:brightness(1.06)}
+.btn.ghost{background:var(--surface);color:var(--text-1);border:1px solid var(--border-2)}
+.btn .plus{font-size:15px;line-height:1}
+
+/* tab bar */
+.tabbar{flex:none;display:flex;padding:8px 8px 22px;background:var(--nav-bg);backdrop-filter:blur(14px);border-top:1px solid var(--border)}
+.tab{flex:1;background:none;border:0;display:flex;flex-direction:column;align-items:center;gap:4px;padding:6px 2px;cursor:pointer;color:var(--text-3);font-family:var(--label-font);-webkit-tap-highlight-color:transparent}
+.tab svg{width:23px;height:23px;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.tab .l{font-size:8.5px;letter-spacing:.1em;text-transform:uppercase}
+.tab[aria-selected="true"]{color:var(--accent)}
+.screen[data-treatment="na"][data-theme="dark"] .tab[aria-selected="true"]{color:#f0e6d0}
+.tab[aria-selected="true"] svg{stroke-width:2}
+.tab[aria-selected="true"] .l{color:var(--text-1)}
+
+/* foundations mini phone-strip (bottom sheet + sticky bar demo) */
+.demo-frame{width:250px;height:150px;border-radius:16px;border:1px solid var(--border);position:relative;overflow:hidden;background:var(--bg-page);color:var(--text-1);font-family:var(--label-font)}
+.demo-scrim{position:absolute;inset:0;background:rgba(0,0,0,.35)}
+.demo-sheet{position:absolute;left:0;right:0;bottom:0;background:var(--surface);border-radius:18px 18px 0 0;padding:12px 14px 16px;box-shadow:0 -8px 24px rgba(0,0,0,.18)}
+.demo-sheet .grab{width:36px;height:4px;border-radius:999px;background:var(--border-2);margin:0 auto 12px}
+.demo-sticky{position:absolute;left:0;right:0;bottom:0;padding:10px 14px 14px;background:var(--nav-bg);backdrop-filter:blur(10px);border-top:1px solid var(--border)}
+.demo-sticky .b{background:var(--cta-bg);color:var(--cta-text);border-radius:var(--btn-radius);text-align:center;padding:12px;font-size:11px;letter-spacing:.12em;text-transform:uppercase;font-weight:700}
+.demo-chip{display:inline-block;font-size:10px;letter-spacing:.08em;text-transform:uppercase;padding:6px 11px;border-radius:999px;border:1px solid var(--border-2);color:var(--text-2);margin:3px 4px 0 0}
+.demo-chip.on{background:var(--accent);color:var(--accent-ink);border-color:transparent;font-weight:700}
+
+/* ---- forms / stacked screens (character + updates) ---- */
+.topbar{display:flex;align-items:center;gap:12px;padding:8px 16px 12px;flex:none}
+.topbar .back{width:34px;height:34px;border-radius:50%;border:1px solid var(--border);background:var(--surface);display:flex;align-items:center;justify-content:center;color:var(--text-1);font-size:18px;flex:none;cursor:pointer}
+.screen[data-treatment="everymen"] .topbar .back{border-radius:4px}
+.topbar .tt{font-family:var(--headline);font-style:var(--headline-style);font-weight:var(--headline-weight);font-size:19px;line-height:1;flex:1;color:var(--text-1)}
+.topbar a.act{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);text-decoration:none;flex:none}
+.screen[data-treatment="na"][data-theme="light"] .topbar a.act{color:#c2541f}
+.form-lbl{font-size:9px;letter-spacing:.22em;text-transform:uppercase;color:var(--text-2);margin:0 0 8px;display:block}
+.field{width:100%;background:var(--surface);border:1px solid var(--border-2);border-radius:var(--btn-radius);padding:14px;font-family:var(--label-font);font-size:15px;color:var(--text-1);outline:none}
+.field:focus{border-color:var(--accent)}
+.field::placeholder{color:var(--text-3)}
+.help{font-size:11px;line-height:1.55;color:var(--text-3)}
+.field-group{display:flex;flex-direction:column;gap:20px}
+.avatar-pick{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.avatar-pick .opt{width:40px;height:40px;border-radius:50%;border:2px solid transparent;cursor:pointer;padding:2px}
+.avatar-pick .opt i{display:block;width:100%;height:100%;border-radius:50%}
+.avatar-pick .opt.sel{border-color:var(--text-1)}
+.avatar-pick .add{width:40px;height:40px;border-radius:50%;border:1.5px dashed var(--border-2);color:var(--text-2);display:flex;align-items:center;justify-content:center;font-size:18px;cursor:pointer}
+.big-ring{width:96px;height:96px;border-radius:50%;padding:4px;margin:0 auto;background:var(--ring)}
+.screen[data-treatment="everymen"] .big-ring{border-radius:8px;background:var(--accent-bright)}
+.big-ring .av{width:100%;height:100%;border-radius:50%;background:radial-gradient(circle at 35% 30%,#c9683a,#8a3d1f);display:flex;align-items:center;justify-content:center;font-family:var(--headline);font-style:var(--headline-style);font-size:38px;color:#fbe9d8}
+.screen[data-treatment="everymen"] .big-ring .av{border-radius:5px;background:radial-gradient(circle at 35% 30%,#7c8646,#4c5230)}
+.danger-btn{width:100%;border:1px solid var(--danger);color:var(--danger);background:none;border-radius:var(--btn-radius);padding:13px;font-family:var(--label-font);font-size:11px;letter-spacing:.14em;text-transform:uppercase;cursor:pointer}
+/* real bottom sheet (over a screen) */
+.sheet-scrim{position:absolute;inset:0;background:rgba(0,0,0,.45);z-index:5;border-radius:36px}
+.sheet{position:absolute;left:0;right:0;bottom:0;z-index:6;background:var(--surface);border-radius:22px 22px 0 0;padding:10px 16px 26px;box-shadow:0 -12px 34px rgba(0,0,0,.3)}
+.screen[data-treatment="everymen"] .sheet{border-radius:8px 8px 0 0}
+.sheet .grab{width:38px;height:4px;border-radius:999px;background:var(--border-2);margin:2px auto 14px}
+.sheet .sh-title{font-family:var(--headline);font-style:var(--headline-style);font-weight:var(--headline-weight);font-size:17px;color:var(--text-1);margin:0 4px 6px}
+.switch-row{display:flex;align-items:center;gap:12px;padding:12px 4px;border-bottom:1px solid var(--border);cursor:pointer}
+.switch-row .mini-ring{width:44px;height:44px;border-radius:50%;padding:2px;background:var(--ring);flex:none}
+.switch-row .mini-ring .av{width:100%;height:100%;border-radius:50%;background:radial-gradient(circle at 35% 30%,#c9683a,#8a3d1f);display:flex;align-items:center;justify-content:center;font-family:var(--headline);font-style:var(--headline-style);font-size:17px;color:#fbe9d8}
+.switch-row .w{flex:1;min-width:0}
+.switch-row .nm{font-family:var(--headline);font-style:var(--headline-style);font-weight:var(--headline-weight);font-size:16px;color:var(--text-1)}
+.switch-row .mt{font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--text-2);margin-top:3px}
+.switch-row .ck{color:var(--accent);font-size:16px;flex:none}
+.screen[data-treatment="na"][data-theme="light"] .switch-row .ck{color:#c2541f}
+.sheet-action{display:flex;align-items:center;gap:12px;padding:15px 4px;color:var(--text-1);font-family:var(--headline);font-style:var(--headline-style);font-weight:var(--headline-weight);font-size:15px;cursor:pointer;border-top:1px solid var(--border)}
+.sheet-action .ic{width:34px;height:34px;border-radius:50%;border:1.5px dashed var(--border-2);display:flex;align-items:center;justify-content:center;font-size:16px;color:var(--text-2);flex:none}
+/* updates */
+.up-group{font-size:9px;letter-spacing:.22em;text-transform:uppercase;color:var(--text-2);margin:10px 4px 2px}
+.up-row{display:flex;gap:12px;padding:13px 4px;border-bottom:1px solid var(--border)}
+.up-row .udot{width:8px;height:8px;border-radius:50%;margin-top:6px;flex:none;background:var(--accent)}
+.screen[data-treatment="na"][data-theme="light"] .up-row .udot{background:#c2541f}
+.up-row.read .udot{background:var(--text-3);opacity:.45}
+.up-row .ub{flex:1;min-width:0}
+.up-row .utext{font-size:13px;line-height:1.45;color:var(--text-1)}
+.up-row .utext b{font-family:var(--headline);font-style:var(--headline-style);font-weight:var(--headline-weight);font-weight:600}
+.up-row .utime{font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--text-3);margin-top:4px}
+.caret{font-size:13px;color:var(--text-3);vertical-align:middle}
+.big-ring .av.up-face{background:var(--surface);border:1.5px dashed var(--border-2);color:var(--text-2);flex-direction:column;gap:3px;font-size:26px;font-family:var(--label-font)}
+.big-ring .av.up-face small{font-size:7.5px;letter-spacing:.16em;text-transform:uppercase}
+
+/* ---- filter chips ---- */
+.chips{display:flex;gap:8px;overflow-x:auto;padding:2px 0;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chip2{flex:none;font-size:11px;letter-spacing:.05em;color:var(--text-2);background:var(--surface);border:1px solid var(--border-2);border-radius:999px;padding:8px 13px;cursor:pointer;white-space:nowrap}
+.chip2.on{background:var(--accent);color:var(--accent-ink);border-color:transparent;font-weight:700}
+.screen[data-treatment="na"][data-theme="light"] .chip2.on{background:#c2541f;color:#fff}
+.sortbtn{flex:none;display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text-1);background:var(--surface);border:1px solid var(--border-2);border-radius:999px;padding:8px 13px;cursor:pointer;white-space:nowrap}
+/* ---- task card ---- */
+.tcard{background:var(--surface);border:1px solid var(--border);border-radius:var(--card-radius);box-shadow:var(--shadow);padding:14px 14px 14px 18px;position:relative;overflow:hidden;cursor:pointer;display:flex;flex-direction:column;gap:9px}
+.tcard .edge{position:absolute;left:0;top:0;bottom:0;width:4px}
+.fchip{display:inline-flex;align-items:center;gap:6px;font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:var(--text-2)}
+.fchip i{width:8px;height:8px;border-radius:2px;flex:none}
+.tcard-title{font-family:var(--headline);font-style:var(--headline-style);font-weight:var(--headline-weight);font-size:18px;line-height:1.15;color:var(--text-1)}
+.tcard-desc{font-size:12.5px;line-height:1.5;color:var(--text-2);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.tcard-foot{display:flex;align-items:center;gap:10px}
+.ppill{font-size:11px;letter-spacing:.04em;font-weight:700;color:var(--accent-ink);background:var(--accent);border-radius:999px;padding:5px 10px;flex:none}
+.screen[data-treatment="na"][data-theme="light"] .ppill{background:#c2541f;color:#fff}
+.metatxt{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--text-3)}
+.diff{display:flex;gap:3px;align-items:center}
+.diff i{width:6px;height:6px;border-radius:50%;background:var(--text-3);opacity:.3}
+.diff i.on{opacity:1;background:var(--text-2)}
+.stitle{font-family:var(--headline);font-style:var(--headline-style);font-weight:var(--headline-weight);font-size:26px;line-height:1.1;color:var(--text-1);margin:0}
+.para{font-size:14px;line-height:1.6;color:var(--text-2);margin:0 0 12px}
+/* ---- media placeholder ---- */
+.media{position:relative;background:repeating-linear-gradient(45deg,rgba(128,128,128,.10) 0 10px,transparent 10px 20px),var(--surface-2);display:flex;align-items:center;justify-content:center;color:var(--text-3);font-family:var(--label-font);font-size:9px;letter-spacing:.24em;text-transform:uppercase;border-radius:var(--tile-radius)}
+/* ---- proof (praxis) card ---- */
+.pcard{background:var(--surface);border:1px solid var(--border);border-radius:var(--card-radius);box-shadow:var(--shadow);overflow:hidden;cursor:pointer}
+.pcard-head{display:flex;align-items:center;gap:10px;padding:12px 14px}
+.pav{width:34px;height:34px;border-radius:50%;flex:none;display:flex;align-items:center;justify-content:center;font-family:var(--headline);font-style:var(--headline-style);font-size:14px;color:#fbe9d8}
+.pcard-head .nm{font-size:12px;color:var(--text-1);font-weight:700;font-family:var(--label-font)}
+.pcard-head .sub{font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--text-3);margin-top:2px}
+.pcard-media{height:180px;width:100%;border-radius:0}
+.pcard-body{padding:12px 14px}
+.pcard-title{font-family:var(--headline);font-style:var(--headline-style);font-weight:var(--headline-weight);font-size:17px;line-height:1.2;color:var(--text-1)}
+.pcard-foot{display:flex;align-items:center;justify-content:space-between;margin-top:10px}
+.stars{display:flex;gap:2px;color:var(--accent);font-size:14px}
+.screen[data-treatment="na"][data-theme="light"] .stars,.screen[data-treatment="na"][data-theme="light"] .vstars{color:#c2541f}
+.stars .off,.vstars .off{color:var(--text-3);opacity:.4}
+.votecount{font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--text-3)}
+.votebar{display:flex;flex-direction:column;align-items:center;gap:9px;padding:18px;background:var(--surface-2);border-radius:var(--card-radius);border:1px solid var(--border)}
+.vstars{display:flex;gap:10px;font-size:36px;color:var(--accent);cursor:pointer;line-height:1}
+.votelbl{font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--text-2)}
+/* ---- comments ---- */
+.cmt{display:flex;gap:10px;padding:12px 0;border-bottom:1px solid var(--border)}
+.cmt:last-child{border-bottom:0}
+.cmt .cav{width:30px;height:30px;border-radius:50%;flex:none;display:flex;align-items:center;justify-content:center;font-family:var(--headline);font-style:var(--headline-style);font-size:12px;color:#fbe9d8}
+.cmt .cb{flex:1;min-width:0}
+.cmt .cn{font-size:11px;font-weight:700;color:var(--text-1);font-family:var(--label-font)}
+.cmt .ct{font-size:13px;line-height:1.45;color:var(--text-2);margin-top:3px}
+/* ---- player rows ---- */
+.prow2{display:flex;align-items:center;gap:12px;padding:12px 4px;border-bottom:1px solid var(--border);cursor:pointer}
+.prow2 .rank{width:20px;text-align:center;font-family:var(--headline);font-style:var(--headline-style);font-size:15px;color:var(--text-3);flex:none}
+.prow2 .pav{width:40px;height:40px}
+.prow2 .pinfo{flex:1;min-width:0}
+.prow2 .pinfo .n{font-family:var(--headline);font-style:var(--headline-style);font-weight:var(--headline-weight);font-size:16px;color:var(--text-1)}
+.prow2 .pinfo .m{font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--text-2);margin-top:2px;display:flex;align-items:center;gap:6px}
+.prow2 .pinfo .m i{width:7px;height:7px;border-radius:2px;flex:none}
+.prow2 .ppts2{text-align:right;flex:none}
+.prow2 .ppts2 b{font-family:var(--headline);font-style:var(--headline-style);font-size:16px;color:var(--text-1);display:block}
+.prow2 .ppts2 span{font-size:8px;letter-spacing:.16em;text-transform:uppercase;color:var(--text-3)}
+/* ---- profile / segmented ---- */
+.segtabs{display:flex;border-bottom:1px solid var(--border);margin-top:4px}
+.segtab{flex:1;text-align:center;padding:12px 0;font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--text-3);border-bottom:2px solid transparent;cursor:pointer}
+.segtab.on{color:var(--text-1);border-bottom-color:var(--accent)}
+.screen[data-treatment="na"][data-theme="light"] .segtab.on{border-bottom-color:#c2541f}
+.thumbs{display:grid;grid-template-columns:repeat(3,1fr);gap:5px}
+.thumbs .media{aspect-ratio:1}
+/* ---- factions grid ---- */
+.fgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.ftile{border-radius:var(--card-radius);overflow:hidden;border:1px solid var(--border);cursor:pointer;position:relative;min-height:118px;display:flex;flex-direction:column;justify-content:flex-end;padding:12px;color:#fff}
+.ftile .fsig{position:absolute;top:11px;right:11px;width:20px;height:20px;border-radius:5px;background:rgba(255,255,255,.3)}
+.ftile .fn{font-family:var(--headline);font-style:var(--headline-style);font-weight:var(--headline-weight);font-size:17px;line-height:1.05;position:relative}
+.ftile .fm{font-size:9px;letter-spacing:.14em;text-transform:uppercase;opacity:.9;margin-top:3px;position:relative}
+.fhero{border-radius:var(--card-radius);padding:20px 16px;color:#fff;position:relative;overflow:hidden}
+.fhero .fh-name{font-family:var(--headline);font-style:var(--headline-style);font-weight:var(--headline-weight);font-size:26px}
+.fhero .fh-tag{font-size:11px;letter-spacing:.05em;opacity:.92;margin-top:5px;line-height:1.5}
+.fhero .fh-stat{display:flex;gap:20px;margin-top:15px}
+.fhero .fh-stat div b{font-family:var(--headline);font-style:var(--headline-style);font-size:18px;display:block}
+.fhero .fh-stat div span{font-size:8px;letter-spacing:.16em;text-transform:uppercase;opacity:.85}
+/* ---- composer ---- */
+.seg{display:flex;background:var(--surface-2);border:1px solid var(--border);border-radius:999px;padding:3px}
+.seg button{flex:1;border:0;background:none;border-radius:999px;padding:8px;font-family:var(--label-font);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--text-2);cursor:pointer}
+.seg button.on{background:var(--surface);color:var(--text-1);box-shadow:var(--shadow);font-weight:700}
+.forrow{display:flex;align-items:center;justify-content:space-between;background:var(--surface-2);border:1px solid var(--border);border-radius:var(--btn-radius);padding:11px 13px;font-size:11px;letter-spacing:.06em;color:var(--text-2)}
+.forrow b{font-family:var(--headline);font-style:var(--headline-style);color:var(--text-1);letter-spacing:0;font-size:13px}
+.ta{width:100%;min-height:120px;background:var(--surface);border:1px solid var(--border-2);border-radius:var(--btn-radius);padding:13px;font-family:var(--label-font);font-size:14px;line-height:1.55;color:var(--text-1);resize:none;outline:none;white-space:pre-wrap}
+.mgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.mgrid .media{aspect-ratio:1}
+.madd{aspect-ratio:1;border:1.5px dashed var(--border-2);border-radius:var(--tile-radius);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;color:var(--text-2);font-size:22px;cursor:pointer}
+.madd small{font-size:8px;letter-spacing:.12em;text-transform:uppercase}
+.kbd-acc{display:flex;gap:16px;padding:11px 18px;border-top:1px solid var(--border);background:var(--surface-2);color:var(--text-2);font-family:var(--label-font);font-size:16px;align-items:center;flex:none}
+.kbd-acc .ph{margin-left:auto;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--accent)}
+.screen[data-treatment="na"][data-theme="light"] .kbd-acc .ph{color:#c2541f}
+.kbd{height:172px;background:linear-gradient(180deg,var(--surface-2),var(--bg-page));border-top:1px solid var(--border);display:flex;align-items:center;justify-content:center;color:var(--text-3);font-size:9px;letter-spacing:.24em;text-transform:uppercase;flex:none}
+.mdprev h3{font-family:var(--headline);font-style:var(--headline-style);font-weight:var(--headline-weight);font-size:17px;margin:0 0 7px;color:var(--text-1)}
+.mdprev p{font-size:14px;line-height:1.6;color:var(--text-2);margin:0 0 11px}
+.mdprev li{font-size:14px;line-height:1.55;color:var(--text-2);margin-left:18px}
+/* ---- settings ---- */
+.setrow{display:flex;align-items:center;gap:12px;padding:14px 4px;border-bottom:1px solid var(--border);cursor:pointer}
+.setrow .si{width:32px;height:32px;border-radius:9px;background:var(--surface-2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;color:var(--text-2);flex:none;font-size:14px}
+.screen[data-treatment="everymen"] .setrow .si{border-radius:4px}
+.setrow .sl{flex:1;font-size:14px;color:var(--text-1);font-family:var(--label-font)}
+.setrow .sv{font-size:11px;color:var(--text-3);letter-spacing:.04em}
+.toggle{width:42px;height:24px;border-radius:999px;background:var(--accent);position:relative;flex:none}
+.screen[data-treatment="na"][data-theme="light"] .toggle{background:#c2541f}
+.toggle.off{background:var(--border-2)}
+.toggle i{position:absolute;top:2px;right:2px;width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.3)}
+.toggle.off i{right:auto;left:2px}
+/* ---- search ---- */
+.searchbar{display:flex;align-items:center;gap:10px;background:var(--surface-2);border:1px solid var(--border-2);border-radius:999px;padding:11px 15px;color:var(--text-2);font-size:14px;font-family:var(--label-font)}
+.sug{display:flex;align-items:center;gap:11px;padding:12px 4px;border-bottom:1px solid var(--border);font-size:13px;color:var(--text-1)}
+.sug .sk{font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--text-3);margin-left:auto}
+/* ---- level up ---- */
+.lu-scrim{position:absolute;inset:0;background:rgba(10,8,14,.72);z-index:5;display:flex;align-items:center;justify-content:center;border-radius:36px;overflow:hidden}
+.lu-card{width:78%;background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:26px 20px;text-align:center;position:relative;z-index:2;box-shadow:0 20px 50px rgba(0,0,0,.5)}
+.lu-burst{width:88px;height:88px;border-radius:50%;margin:0 auto 15px;background:var(--ring);display:flex;align-items:center;justify-content:center;box-shadow:0 6px 20px rgba(0,0,0,.3)}
+.lu-burst b{font-family:var(--headline);font-style:var(--headline-style);font-size:36px;color:#fff;text-shadow:0 2px 6px rgba(0,0,0,.35)}
+.lu-card h3{font-family:var(--headline);font-style:var(--headline-style);font-weight:var(--headline-weight);font-size:24px;margin:0 0 6px;color:var(--text-1)}
+.lu-card p{font-size:13px;line-height:1.5;color:var(--text-2);margin:0 0 18px}
+.confetti{position:absolute;inset:0;z-index:1;pointer-events:none;overflow:hidden}
+.confetti i{position:absolute;width:8px;height:9px;border-radius:2px;top:-14px;animation:cfall linear infinite}
+@keyframes cfall{to{transform:translateY(620px) rotate(420deg)}}
+/* ---- sticky CTA (detail screens) ---- */
+.sticky-cta{padding:12px 16px 22px;background:var(--nav-bg);backdrop-filter:blur(12px);border-top:1px solid var(--border);display:flex;gap:10px;flex:none;align-items:center}
+
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<template id="__bundler_thumbnail">
+<svg viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg">
+  <rect width="400" height="400" fill="#100d09"/>
+  <rect x="118" y="92" width="164" height="228" fill="#14110b" stroke="#b6ff2e" stroke-width="2" transform="rotate(-1.4 200 206)"/>
+  <rect x="150" y="96" width="60" height="18" fill="#e7d774" transform="rotate(-8 180 105)"/>
+  <rect x="132" y="150" width="42" height="30" fill="#f4f1e8" transform="rotate(-5 153 165)"/>
+  <rect x="178" y="150" width="40" height="30" fill="#b6ff2e" transform="rotate(5 198 165)"/>
+  <rect x="222" y="150" width="42" height="30" fill="#ff2d8b" transform="rotate(-3 243 165)"/>
+  <rect x="140" y="210" width="120" height="9" fill="#b6ff2e" transform="rotate(-1 200 214)"/>
+  <rect x="140" y="228" width="80" height="7" fill="#d8d6c8" transform="rotate(-1 180 231)"/>
+</svg>
+</template>
+<div class="board">
+
+  <header class="board-head">
+    <p class="eyebrow">World Zero · SNIDE — the ransom-note skin</p>
+    <h1>Join SNIDE and the app reads like a dossier someone taped together in the dark.</h1>
+    <p>Same 375px layout, same markup — but SNIDE wears its real web idiom. Cards go dark ink (<code style="color:#c8c4cd">--faction-snide-card-bg</code> #14110b), rotate a degree, cast a hard offset shadow and carry a <b style="color:#e9e6df">halftone</b> dot screen. Each headline is a <b style="color:#e9e6df">ransom note</b> — letters cut from paper, acid and pink in mixed Anton / Bebas / Archivo faces (<code style="color:#c8c4cd">--faction-snide-font-*</code>). A <b style="color:#e9e6df">masthead</b> rule in acid (<code style="color:#c8c4cd">--faction-snide-acid</code> #b6ff2e), a hot-pink marker <b style="color:#e9e6df">scrawl</b> (<code style="color:#c8c4cd">--faction-snide-pink</code>), striped <b style="color:#e9e6df">tape</b> (<code style="color:#c8c4cd">--faction-snide-tape</code>) and Anton points close it out. Nothing invented — all <code style="color:#c8c4cd">--faction-snide-*</code>. Native mode: dark. Body stays Special Elite / Courier so it's still readable at a glance.</p>
+    <span class="stage">SNIDE (redacted dossier) · ransom titles · halftone + tape · native dark</span>
+  </header>
+
+  <!-- ============ THE IDIOM ============ -->
+  <div class="section-label"><span class="n">01</span><h2>The idiom</h2><span class="rule"></span>
+    <p>SNIDE's signature is the <b style="color:#e9e6df">ransom title</b> on a dark, taped, halftoned card — lifted from the real SNIDETaskCard. Anatomy, then the paste-up kit.</p>
+  </div>
+
+  <div class="grid" style="grid-template-columns:1fr 1fr">
+    <div class="spec">
+      <h3>Ransom-card anatomy</h3>
+      <p class="sub">Tape → masthead (SNIDE · dispatch #) → marker scrawl → ransom title → muted brief → Anton points. Same DOM slots as any faction card; only the paste-up changes.</p>
+      <div id="anatomy" style="max-width:250px"></div>
+    </div>
+    <div class="spec">
+      <h3>Paste-up kit</h3>
+      <p class="sub">Every letter picks one of six cut-out styles by its code point — paper, acid, pink, ink; Anton / Bebas / Archivo / Lora, each rotated and hard-shadowed.</p>
+      <div id="ransomkit" style="padding:16px 6px 6px;background:#14110b;border-radius:3px;margin-top:8px"></div>
+      <div id="tapekit" style="display:flex;gap:26px;align-items:center;padding:16px 6px 4px"></div>
+      <p class="pattern-note" style="margin-top:12px"><b>Masthead</b> Bebas + acid rule · <b>Scrawl</b> Permanent Marker pink · <b>Tape</b> striped washi · <b>Halftone</b> 5px acid dot screen · <b>Points</b> Anton in acid.</p>
+    </div>
+  </div>
+
+  <!-- ============ HOME ============ -->
+  <div class="section-label"><span class="n">02</span><h2>FieldDesk — Home</h2><span class="rule"></span>
+    <p>Operative file and open dispatches, each a taped-down dark card on a near-black desk. Actions keep their one-hand spot; the primary is hot-pink.</p>
+  </div>
+  <div class="rail" id="homeRail"></div>
+
+  <!-- ============ TASKS ============ -->
+  <div class="section-label"><span class="n">03</span><h2>Tasks</h2><span class="rule"></span>
+    <p>Every job is a dispatch — masthead, marker note, ransom title, Anton bounty. Detail keeps the sticky take-the-job bar, filed proofs and comments.</p>
+  </div>
+  <div class="rail" id="tasksRail"></div>
+
+  <!-- ============ PRAXIS ============ -->
+  <div class="section-label"><span class="n">04</span><h2>Praxis</h2><span class="rule"></span>
+    <p>Evidence, filed: the photo taped into a dark card, ransom caption, the SNIDE stepped vote. Detail has the big vote row; the composer keeps Write / Preview and the media grid.</p>
+  </div>
+  <div class="rail" id="praxisRail"></div>
+
+  <!-- ============ UPDATES ============ -->
+  <div class="section-label"><span class="n">05</span><h2>Updates</h2><span class="rule"></span>
+    <p>The wire — votes, promotions, comments, new dispatches. Acid ticks for unread, pink marker timestamps, a strip of tape on each divider.</p>
+  </div>
+  <div class="rail" id="updatesRail"></div>
+
+  <!-- ============ FACTION PAGE ============ -->
+  <div class="section-label"><span class="n">06</span><h2>Faction page — SNIDE</h2><span class="rule"></span>
+    <p>The pre-join dossier: full SNIDE dress — a giant ransom wordmark, acid stat chits, tape across the top — while an unaffiliated viewer's chrome stays neutral. <b style="color:#e9e6df">Join SNIDE</b> flips the whole app into this.</p>
+  </div>
+  <div class="rail" id="factionRail"></div>
+
+</div>
+
+<script>
+/* ---------- icons ---------- */
+const ICON = {
+  home:'<svg viewBox="0 0 24 24"><path d="M4 11l8-6 8 6"/><path d="M6 10v9h12v-9"/></svg>',
+  tasks:'<svg viewBox="0 0 24 24"><path d="M9 6h11M9 12h11M9 18h11"/><path d="M4 6l1 1 2-2M4 12l1 1 2-2M4 18l1 1 2-2"/></svg>',
+  praxis:'<svg viewBox="0 0 24 24"><path d="M12 4l2.3 4.9 5.2.7-3.8 3.6.9 5.3-4.6-2.6-4.6 2.6.9-5.3L5.5 9.6l5.2-.7z"/></svg>',
+  players:'<svg viewBox="0 0 24 24"><circle cx="9" cy="9" r="3"/><path d="M4 19c0-2.8 2.2-5 5-5s5 2.2 5 5"/><path d="M16 7.5a3 3 0 010 5.4M15 14.6c2.3.5 4 2.3 4 4.4"/></svg>',
+  factions:'<svg viewBox="0 0 24 24"><path d="M12 3l7 3v5c0 4.4-3 7.6-7 9-4-1.4-7-4.6-7-9V6z"/></svg>',
+  bell:'<svg viewBox="0 0 24 24" style="width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round"><path d="M6 9a6 6 0 1112 0c0 5 2 6 2 6H4s2-1 2-6"/><path d="M10 20a2 2 0 004 0"/></svg>',
+  search:'<svg viewBox="0 0 24 24" style="width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round"><circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4.2-4.2"/></svg>'
+};
+const TABS = [['home','Home'],['tasks','Tasks'],['praxis','Praxis'],['players','Players'],['factions','Factions']];
+function tabbar(active){ return TABS.map(([k,l],i)=>`<button class="tab" aria-selected="${i===active}" data-tab="${i}">${ICON[k]}<span class="l">${l}</span></button>`).join(''); }
+
+/* ---------- SNIDE signature bits ---------- */
+const RANSOM_STYLES = [
+  { bg:'#f4f1e8', col:'#14110b', font:'"Anton",Impact,sans-serif', rot:-5 },
+  { bg:'#14110b', col:'#b6ff2e', font:'"Bebas Neue",Impact,sans-serif', rot:4 },
+  { bg:'#ff2d8b', col:'#fff', font:'"Archivo Black",Impact,sans-serif', rot:-3 },
+  { bg:'#b6ff2e', col:'#14110b', font:'"Anton",Impact,sans-serif', rot:6 },
+  { bg:'#f4f1e8', col:'#14110b', font:'"Lora",Georgia,serif', rot:2, italic:true },
+  { bg:'#14110b', col:'#fff', font:'"Bebas Neue",Impact,sans-serif', rot:-6 }
+];
+function ransom(text,size){
+  size = size||22;
+  return `<span class="ransom">` + [...text].map((ch,i)=>{
+    if(ch===' ') return `<span style="display:inline-block;width:${Math.round(size*0.22)}px"></span>`;
+    const s = RANSOM_STYLES[(ch.charCodeAt(0)+i*3)%RANSOM_STYLES.length];
+    return `<span style="background:${s.bg};color:${s.col};font-family:${s.font};font-style:${s.italic?'italic':'normal'};font-size:${size}px;${s.bg==='#14110b'?'outline:1px solid rgba(244,241,232,.18);':''}">${ch}</span>`;
+  }).join('') + `</span>`;
+}
+function masthead(sub){ return `<div class="snide-masthead"><span class="wm">SNIDE</span><span class="sub">${sub}</span></div>`; }
+function scrawl(t){ return `<div class="snide-scrawl">${t}</div>`; }
+function tapePair(){ return `<span class="snide-tape" style="top:-11px;left:28px;transform:rotate(-8deg)"></span><span class="snide-tape" style="top:-9px;right:22px;transform:rotate(7deg)"></span>`; }
+function snideCard(inner,opts){
+  opts = opts||{};
+  return `<div class="snidecard${opts.rot===false?'':(opts.rot===1?' rotp':' rot')}" style="${opts.style||''}"><span class="ht-dots"></span>${opts.tape===false?'':tapePair()}<div class="sc-in" style="${opts.pad||''}">${inner}</div></div>`;
+}
+
+/* ---------- palette / helpers ---------- */
+const FAC = { ua:'#c2541f', wow:'#ec5f99', snide:'#6fae00', ephemerists:'#1d6e72', singularity:'#2563eb', everymen:'#c1272d', albescent:'#8a8a86' };
+const FACNAME = { ua:'UA', wow:'Wow', snide:'SNIDE', ephemerists:'Ephemerists', singularity:'Singularity', everymen:'Everymen', albescent:'Albescent' };
+const SNC = { snide:'#b6ff2e' };
+const AVC = ['#b6ff2e','#ff2d8b','#e7d774','#8fae3a','#d8d6c8','#6fae00'];
+function status(){ return `<div class="statusbar"><span>9:41</span><span class="sig"><i></i><i></i><i></i><span style="opacity:.55">▮</span></span></div>`; }
+function appbar2(title,right){ return `<div class="appbar"><div class="brand"><div class="brandmark"></div><div class="title-wrap"><div class="k">SNIDE</div><div class="t">${title}</div></div></div>${right||'<span style="width:36px"></span>'}</div>`; }
+function topbar(title,right){ return `<div class="topbar"><div class="back">‹</div><div class="tt">${title||''}</div>${right||'<span style="width:34px"></span>'}</div>`; }
+const searchBtn = `<button class="iconbtn">${ICON.search}</button>`;
+const moreBtn = `<div class="back" style="font-size:20px;line-height:0">⋯</div>`;
+function pav(bg,l,cls){ return `<div class="pav${cls?' '+cls:''}" style="background:${bg};color:#14110b;border-radius:2px">${l}</div>`; }
+function diffDots(d){ return `<span class="diff">${[1,2,3].map(x=>`<i class="${x<=d?'on':''}"></i>`).join('')}</span>`; }
+function sec(label,right){ return `<div class="sechead" style="margin:14px 2px 2px"><span class="k">${label}</span><span class="rule"></span>${right||''}</div>`; }
+function anton(pts){ return `<span style="font-family:'Anton',Impact,sans-serif;font-size:20px;letter-spacing:.04em;color:#b6ff2e">${pts}<span style="font-size:9px;margin-left:3px">pts</span></span>`; }
+function levelPill(n){ return `<span style="display:inline-flex;align-items:center;font-family:'Special Elite',monospace;font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:#b6ff2e;border:1.5px solid rgba(182,255,46,.5);border-radius:2px;padding:3px 8px">Lv ${n}</span>`; }
+/* the SNIDE stepped vote (real SnideVote tiers) */
+function snideVote(sel){
+  const tiers = [['NAH',1,'#8f8b78','"Courier Prime",monospace',2,-3,10],['MEH',2,'#b59a3a','"Courier Prime",monospace',2,2,10],['OK',3,'#6fae00','"Bebas Neue",sans-serif','50%',-2,13],['SHARP',4,'#ff2d8b','"Archivo Black",sans-serif',3,3,12],['DAMN',5,'#f4f1e8','"Archivo Black",sans-serif',4,-4,12]];
+  return `<div style="display:flex;flex-wrap:wrap;gap:9px;align-items:center">` + tiers.map(([lbl,v,col,font,rad,rot,fs])=>{
+    const active = sel===v, reached = sel>=v;
+    return `<button style="min-width:46px;height:40px;padding:0 10px;border:${v===5?'2.5px double':'2.5px solid'} ${col};border-radius:${typeof rad==='number'?rad+'px':rad};background:${active?col:(reached?'rgba(182,255,46,.14)':'transparent')};color:${active?'#14110b':col};font-family:${font};font-size:${fs}px;letter-spacing:.06em;text-transform:uppercase;transform:rotate(${rot}deg) scale(${active?1.08:1});box-shadow:${active?'2px 3px 0 rgba(0,0,0,.35)':'none'}">${lbl}</button>`;
+  }).join('') + `</div>`;
+}
+
+/* ---------- HOME ---------- */
+const VOICE = { charK:'Operative file', tasksK:'Open dispatches', link:'All', browse:'Find Work', post:'File Intel', fac:'SNIDE' };
+function home(){
+  const v = VOICE;
+  const activeTasks = [
+    { t:'Knowledge Is Free', fac:'snide', facName:'SNIDE', pv:25, slots:'5 / 12', prog:42 },
+    { t:'Lacunae', fac:'singularity', facName:'Singularity', pv:40, slots:'2 / 6', prog:null }
+  ];
+  const rows = activeTasks.map(t=>`
+    <div class="trow" role="button" tabindex="0">
+      <span class="dot" style="background:${FAC[t.fac]}"></span>
+      <div class="tmid">
+        <div class="tt">${t.t}</div>
+        <div class="tm"><span class="fac">${t.facName}</span><span>·</span><span class="pv">+${t.pv} pts</span><span>·</span><span>${t.slots}</span></div>
+        ${t.prog!=null?`<div class="mini-bar"><i style="width:${t.prog}%"></i></div>`:''}
+      </div>
+      <span class="chev">›</span>
+    </div>`).join('');
+  return `
+  ${status()}
+  <div class="appbar">
+    <div class="brand"><div class="brandmark"></div>
+      <div class="title-wrap"><div class="k">SNIDE</div><div class="t">FieldDesk</div></div>
+    </div>
+    <button class="iconbtn">${ICON.bell}</button>
+  </div>
+  <div class="body">
+    ${snideCard(`
+      ${masthead('Operative #0417')}
+      <div class="char-id">
+        <div class="ring"><div class="av">M</div></div>
+        <div class="who">
+          <div class="name">Molly <span class="caret">▾</span></div>
+          <div class="meta"><span style="color:#b6ff2e">${v.fac}</span> <span class="sep">·</span> Level 4</div>
+        </div>
+        <div class="pts">${anton(340)}<span style="display:block;font-size:8px;letter-spacing:.2em;text-transform:uppercase;color:#d8d6c8;margin-top:2px">Bounty</span></div>
+      </div>
+      <div class="stats">
+        <div class="stat"><b>340</b><span>Points</span></div>
+        <div class="stat"><b>12</b><span>Votes</span></div>
+        <div class="stat"><b>III</b><span>Era</span></div>
+      </div>
+      <div class="sechead" style="margin:14px 0 0"><span class="k" style="color:#b6ff2e">${v.charK}</span><span class="rule"></span><span style="display:flex;gap:14px;flex:none"><a href="#">Switch</a><a href="#">Edit</a></span></div>
+    `,{pad:'padding:22px 18px 18px'})}
+
+    ${snideCard(`
+      ${masthead('Open · 2')}
+      <div class="sechead" style="margin:2px 0 4px"><span class="k" style="color:#b6ff2e">${v.tasksK}</span><span class="rule"></span><a href="#">${v.link}</a></div>
+      <div class="tasks">${rows}</div>
+    `,{rot:1,pad:'padding:22px 18px 12px'})}
+
+    <div class="actions">
+      <button class="btn primary">${v.browse}</button>
+      <button class="btn ghost"><span class="plus">+</span> ${v.post}</button>
+    </div>
+  </div>
+  <div class="tabbar">${tabbar(0)}</div>`;
+}
+
+/* ---------- TASKS ---------- */
+const TASKS = [
+  { t:'Knowledge Is Free', fac:'snide', desc:'Teach a real skill to someone for free. Proof is their words, not yours.', pv:25, diff:2, slots:'5 / 12', lv:2, id:'0042', scrawl:"they hate this one" },
+  { t:'Lacunae', fac:'singularity', desc:'Find a gap in a system everyone trusts, and map it carefully.', pv:40, diff:3, slots:'2 / 6', lv:3, id:'0051', scrawl:"mind the cameras" },
+  { t:'A Very Human Thing', fac:'everymen', desc:'Do something quietly kind for a stranger, then write it down.', pv:20, diff:1, slots:'1 / 20', lv:1, id:'0007', scrawl:"soft. still counts" },
+  { t:'Somewhere No One Needs To Be', fac:'ephemerists', desc:'Go to a place with no purpose. Document the nothing you find.', pv:15, diff:2, slots:'3 slots', lv:2, id:'0033', scrawl:"bring a ticket stub" }
+];
+function taskCard(t,i){
+  return snideCard(`
+    ${masthead('Dispatch #'+t.id)}
+    ${scrawl(t.scrawl)}
+    <div style="margin:6px 0 12px">${ransom(t.t,22)}</div>
+    <p style="font-size:11px;line-height:1.5;color:#d8d6c8;margin:0 0 14px">${t.desc}</p>
+    <div class="card-footer" style="display:flex;align-items:center;gap:12px">${anton('+'+t.pv)}${levelPill(t.lv)}<span class="metatxt" style="margin-left:auto">${t.slots}</span></div>
+  `,{rot: i%2, pad:'padding:22px 18px 16px'});
+}
+function tasksBrowse(){
+  return status() + appbar2('Tasks', searchBtn) +
+  `<div class="body">
+    <div class="chips"><span class="chip2 on">All</span><span class="chip2">Solo</span><span class="chip2">Collab</span><span class="chip2">Open slots</span><span class="sortbtn">⇅ Sort</span></div>
+    ${TASKS.map(taskCard).join('')}
+  </div>` + `<div class="tabbar">${tabbar(1)}</div>`;
+}
+function taskDetail(){
+  const proofs = [ { a:'Jae', av:AVC[3], r:5 }, { a:'Reza', av:AVC[5], r:4 }, { a:'Bo', av:AVC[4], r:4 } ];
+  return status() + topbar('', moreBtn) +
+  `<div class="body" style="padding-top:0">
+    ${snideCard(`
+      ${masthead('Dispatch #0042')}
+      ${scrawl('they hate this one')}
+      <div style="margin:8px 0 12px">${ransom('Knowledge Is Free',26)}</div>
+      <div class="card-footer" style="display:flex;align-items:center;gap:12px">${anton('+25')}${levelPill(2)}${diffDots(2)}<span class="metatxt" style="margin-left:auto">5 / 12</span></div>
+    `,{style:'margin-top:6px',pad:'padding:22px 18px 16px'})}
+    <p class="para" style="margin-top:16px">Teach a real skill to someone for free — no fee, no favor owed. Then bring back their words about what they learned, not yours.</p>
+    <p class="para">Collab task. Proof is a short account and, if they'll give it, a line from the person you taught.</p>
+    ${sec('Filed proofs · 3')}
+    <div>${proofs.map(p=>`<div class="cmt" style="align-items:center"><div class="cav" style="background:${p.av};color:#14110b;border-radius:2px">${p.a[0]}</div><div class="cb"><div class="cn">${p.a}</div><div style="font-family:'Anton',sans-serif;color:#b6ff2e;font-size:13px;letter-spacing:.04em">${'★'.repeat(p.r)}</div></div><div class="media" style="width:46px;height:46px;flex:none">IMG</div></div>`).join('')}</div>
+    ${sec('Comments · 2')}
+    <div class="cmt"><div class="cav" style="background:${AVC[0]};color:#14110b;border-radius:2px">M</div><div class="cb"><div class="cn">Molly <span style="color:var(--text-3);font-weight:400">· 1d</span></div><div class="ct">Taking this. Teaching a kid on my block to pick a lock — the legal kind.</div></div></div>
+    <div class="cmt"><div class="cav" style="background:${AVC[3]};color:#14110b;border-radius:2px">J</div><div class="cb"><div class="cn">Jae <span style="color:var(--text-3);font-weight:400">· 3d</span></div><div class="ct">Best dispatch of the era. The words back hit harder than points.</div></div></div>
+  </div>
+  <div class="sticky-cta"><button class="btn primary" style="flex:1">Take the job</button></div>`;
+}
+
+/* ---------- PRAXIS ---------- */
+const PROOFS = [
+  { a:'Jae', av:AVC[3], fac:'snide', t:'Taught the whole block to solder', r:5, v:190, c:22, time:'2h', scrawl:'no receipts' },
+  { a:'Reza', av:AVC[5], fac:'snide', t:'Mapped the gap in the ticket gates', r:4, v:151, c:18, time:'6h', scrawl:'you saw nothing' },
+  { a:'Bo', av:AVC[4], fac:null, t:'Free repair table, Saturday market', r:4, v:77, c:9, time:'1d', scrawl:'' }
+];
+function proofCard(p){
+  return snideCard(`
+    <div class="pcard-head" style="padding:0 0 10px">${pav(p.av,p.a[0])}<div><div class="nm">${p.a}</div><div class="sub"><span style="color:${p.fac?FAC[p.fac]:'var(--text-3)'}">●</span> ${p.fac?FACNAME[p.fac]:'Unaffiliated'} · ${p.time} ago</div></div></div>
+    <div style="position:relative"><span class="snide-tape" style="top:-13px;left:50%;transform:translateX(-50%) rotate(-3deg);z-index:4"></span><div class="media" style="height:150px;border:1px solid rgba(182,255,46,.25)">Photo</div></div>
+    ${p.scrawl?scrawl(p.scrawl):''}
+    <div style="margin:10px 0 8px">${ransom(p.t,16)}</div>
+    <div class="pcard-foot"><span style="font-family:'Anton',sans-serif;color:#b6ff2e;font-size:14px;letter-spacing:.04em">${'★'.repeat(p.r)}<span style="color:#3e3a2c">${'★'.repeat(5-p.r)}</span></span><span class="votecount">${p.r.toFixed(1)} · ${p.v} votes · ${p.c} comments</span></div>
+  `,{rot:false,pad:'padding:22px 16px 16px'});
+}
+function praxisFeed(){
+  return status() + appbar2('Praxis', searchBtn) +
+  `<div class="body">
+    <div class="chips"><span class="chip2 on">Latest</span><span class="chip2">Top rated</span><span class="chip2">Following</span></div>
+    ${PROOFS.map(proofCard).join('')}
+  </div>` + `<div class="tabbar">${tabbar(2)}</div>`;
+}
+function praxisDetail(){
+  return status() + topbar('', moreBtn) +
+  `<div class="body" style="padding-top:2px">
+    <div class="pcard-head" style="padding:4px 0 12px">${pav(AVC[3],'J')}<div style="flex:1"><div class="nm">Jae</div><div class="sub"><span style="color:${FAC.snide}">●</span> SNIDE · 2h ago</div></div><span class="chip2">Follow</span></div>
+    ${snideCard(`
+      <div style="position:relative"><span class="snide-tape" style="top:-13px;left:34px;transform:rotate(-6deg);z-index:4"></span><span class="snide-tape" style="top:-13px;right:34px;transform:rotate(5deg);z-index:4"></span><div class="media" style="height:210px;border:1px solid rgba(182,255,46,.25)">Photo</div></div>
+    `,{tape:false,rot:false,pad:'padding:20px 16px 16px'})}
+    <div style="margin:14px 0 4px">${ransom('Taught the whole block to solder',20)}</div>
+    <div class="mdprev" style="margin-top:10px">
+      <p>Set up a table with two irons and a bowl of dead radios. Anyone who sat down left able to fix one.</p>
+      <p>No fee, no sign-up sheet. The point was the skill leaving the room in more heads than it came in.</p>
+    </div>
+    <div class="votebar" style="margin:10px 0 4px;align-items:stretch">
+      <div class="votelbl" style="text-align:center;margin-bottom:4px">Rate this evidence</div>
+      ${snideVote(4)}
+      <div class="votelbl" style="text-align:center;margin-top:10px">4.0 average · 190 votes</div>
+    </div>
+    ${sec('Comments · 3')}
+    <div class="cmt"><div class="cav" style="background:${AVC[5]};color:#14110b;border-radius:2px">R</div><div class="cb"><div class="cn">Reza <span style="color:var(--text-3);font-weight:400">· 1h</span></div><div class="ct">This is the whole thesis of SNIDE in one table.</div></div></div>
+    <div class="cmt"><div class="cav" style="background:${AVC[4]};color:#14110b;border-radius:2px">B</div><div class="cb"><div class="cn">Bo <span style="color:var(--text-3);font-weight:400">· 40m</span></div><div class="ct">Stealing the dead-radio idea, respectfully.</div></div></div>
+  </div>
+  <div class="sticky-cta"><div class="searchbar" style="flex:1;border-radius:2px">Add a comment…</div><button class="btn primary" style="flex:none;padding:13px 16px">Post</button></div>`;
+}
+function composerWrite(){
+  return status() +
+  `<div class="topbar"><a href="#" class="act" style="color:var(--text-2)">Cancel</a><div class="tt" style="flex:1;text-align:center;font-size:18px;letter-spacing:.06em">FILE INTEL</div><a href="#" class="act">Submit</a></div>
+  <div class="body" style="gap:14px">
+    <div class="seg"><button class="on">Write</button><button>Preview</button></div>
+    <div class="forrow"><span>FOR DISPATCH</span><b>Knowledge Is Free ▾</b></div>
+    <input class="field" value="Taught the whole block to solder" />
+    <textarea class="ta">## What went down
+
+Set up a table with two irons and a bowl of dead radios. Anyone who sat down left able to fix one.
+
+- no fee, no sign-up sheet
+- eleven people, nine working radios
+- one small fire (contained)</textarea>
+    <div><label class="form-lbl">Evidence</label><div class="mgrid"><div class="media">Photo</div><div class="media">Photo</div><div class="madd">+<small>Add</small></div></div></div>
+  </div>
+  <div class="kbd-acc"><span style="font-weight:700">B</span><span style="font-style:italic">I</span><span>#</span><span>“ ”</span><span>≡</span><span class="ph">▦ Photo</span></div>
+  <div class="kbd">On-screen keyboard</div>`;
+}
+function composerPreview(){
+  return status() +
+  `<div class="topbar"><a href="#" class="act" style="color:var(--text-2)">Cancel</a><div class="tt" style="flex:1;text-align:center;font-size:18px;letter-spacing:.06em">FILE INTEL</div><a href="#" class="act">Submit</a></div>
+  <div class="body" style="gap:14px">
+    <div class="seg"><button>Write</button><button class="on">Preview</button></div>
+    ${snideCard(`
+      ${masthead('Evidence · draft')}
+      <div style="position:relative;margin-bottom:12px"><span class="snide-tape" style="top:-13px;left:50%;transform:translateX(-50%) rotate(-2deg);z-index:4"></span><div class="media" style="height:160px;border:1px solid rgba(182,255,46,.25)">Photo</div></div>
+      <div style="margin:2px 0 10px">${ransom('Taught the whole block to solder',18)}</div>
+      <div class="mdprev">
+        <p style="color:#d8d6c8">Set up a table with two irons and a bowl of dead radios. Anyone who sat down left able to fix one.</p>
+        <ul style="margin:0;padding:0;list-style:none;color:#d8d6c8"><li>• no fee, no sign-up sheet</li><li>• eleven people, nine working radios</li><li>• one small fire (contained)</li></ul>
+      </div>
+    `,{tape:false,rot:false,pad:'padding:22px 16px 16px'})}
+  </div>
+  <div class="sticky-cta"><button class="btn primary" style="flex:1">Submit intel</button></div>`;
+}
+
+/* ---------- UPDATES ---------- */
+function screenUpdates(){
+  const row = (unread,text,time) => `<div class="up-row${unread?'':' read'}"><span class="udot" style="${unread?'background:#b6ff2e':''}"></span><div class="ub"><div class="utext">${text}</div><div class="utime" style="${unread?'color:#ff2d8b':''}">${time}</div></div></div>`;
+  const day = (label) => `<div class="up-group" style="display:flex;align-items:center;gap:10px;position:relative"><span class="snide-tape" style="position:static;transform:rotate(-3deg);flex:none;width:44px;height:18px"></span>${label}</div>`;
+  return status() + topbar('Updates') +
+  `<div class="body" style="padding-top:0">
+    ${day('Today')}
+    ${row(true,'<b>Jae</b> rated your evidence <b style="color:#b6ff2e">DAMN</b>.','2h ago')}
+    ${row(true,'You made <b>Level 4</b> — clearance raised, two slots opened.','5h ago')}
+    ${row(true,'New dispatch in <b>SNIDE</b>: “Knowledge Is Free”, +25 pts.','9h ago')}
+    ${day('Earlier')}
+    ${row(false,'<b>Reza</b> commented on “Taught the whole block to solder”.','2d ago')}
+    ${row(false,'<b>Bo</b> started tailing you.','3d ago')}
+    ${row(false,'Your dispatch <b>Knowledge Is Free</b> got a new taker.','4d ago')}
+  </div>` + `<div class="tabbar">${tabbar(0)}</div>`;
+}
+
+/* ---------- FACTION PAGE ---------- */
+const PLAYERS = [
+  { n:'Jae', lv:9, pts:'2,140', av:AVC[3] },
+  { n:'Reza', lv:7, pts:'1,880', av:AVC[5] },
+  { n:'Molly', lv:4, pts:'340', av:AVC[0] }
+];
+function factionDetail(){
+  const statChit = (val,lbl) => `<div style="background:#b6ff2e;color:#14110b;padding:8px 12px 6px;transform:rotate(-2deg);box-shadow:2px 3px 0 rgba(0,0,0,.4)"><b style="display:block;font-family:'Anton',sans-serif;font-size:22px;line-height:1">${val}</b><span style="font-size:8px;letter-spacing:.16em;text-transform:uppercase">${lbl}</span></div>`;
+  return status() + topbar('', moreBtn) +
+  `<div class="body" style="padding-top:2px">
+    ${snideCard(`
+      ${masthead('Cell dossier')}
+      <div style="margin:10px 0 12px">${ransom('SNIDE',40)}</div>
+      ${scrawl('membership is deniable')}
+      <div style="display:flex;gap:12px;margin-top:16px">${statChit('301','Members')}${statChit('58','Jobs')}${statChit('III','Era')}</div>
+    `,{rot:false,pad:'padding:24px 18px 20px'})}
+    <p class="para" style="margin-top:16px">SNIDE believes the game is won by whoever knows what everyone else agreed not to look at. Their proofs are terse, redacted, a little smug. Join and your whole app goes dark, taped and cut from a magazine.</p>
+    ${sec('Top operatives')}
+    <div>${PLAYERS.map((p,i)=>`<div class="prow2"><div class="rank">${i+1}</div>${pav(p.av,p.n[0])}<div class="pinfo"><div class="n">${p.n}</div><div class="m"><i style="background:${SNC.snide}"></i>SNIDE · Lv ${p.lv}</div></div><div class="ppts2"><b>${p.pts}</b><span>pts</span></div></div>`).join('')}</div>
+    ${sec('Recent evidence')}
+    <div class="thumbs" style="margin-top:8px">${Array.from({length:3}).map(()=>`<div class="media" style="aspect-ratio:1;border:1px solid rgba(182,255,46,.22)">Photo</div>`).join('')}</div>
+  </div>
+  <div class="sticky-cta"><button class="btn primary" style="flex:1">Join SNIDE</button></div>`;
+}
+
+/* ---------- render (SNIDE · native dark) ---------- */
+function renderRail(id, list){
+  document.getElementById(id).innerHTML = list.map(([label,fn])=>`
+    <div class="phone-wrap">
+      <div class="phone-tag"><b>${label}</b> · Dark</div>
+      <div class="phone"><div class="screen" data-theme="dark" data-treatment="snide">${fn()}</div></div>
+    </div>`).join('');
+}
+renderRail('homeRail',    [['Home', home]]);
+renderRail('tasksRail',   [['Browse', tasksBrowse], ['Detail', taskDetail]]);
+renderRail('praxisRail',  [['Feed', praxisFeed], ['Detail', praxisDetail], ['Compose · Write', composerWrite], ['Compose · Preview', composerPreview]]);
+renderRail('updatesRail', [['Wire', screenUpdates]]);
+renderRail('factionRail', [['Faction page', factionDetail]]);
+
+/* ---------- anatomy + kit specimens ---------- */
+document.getElementById('anatomy').innerHTML =
+  `<div class="screen" data-theme="dark" data-treatment="snide" style="border-radius:6px;overflow:hidden;height:auto;font-family:var(--label-font);background:#100d09;padding:18px">
+     ${snideCard(`${masthead('Dispatch #0042')}${scrawl('they hate this one')}<div style="margin:6px 0 12px">${ransom('Knowledge Is Free',22)}</div><p style="font-size:11px;line-height:1.5;color:#d8d6c8;margin:0 0 12px">Teach a real skill to someone for free.</p><div class="card-footer" style="display:flex;align-items:center;gap:12px">${anton('+25')}${levelPill(2)}</div>`,{pad:'padding:22px 18px 16px'})}
+   </div>`;
+document.getElementById('ransomkit').innerHTML = ransom('CUT ME UP',24);
+document.getElementById('tapekit').innerHTML = [
+  `<div style="position:relative;width:70px;height:26px"><span class="snide-tape" style="position:static;display:block;transform:rotate(-6deg)"></span></div>`,
+  `<div class="snide-scrawl" style="color:#ff2d8b">marker scrawl</div>`,
+  `<span style="font-family:'Anton',sans-serif;color:#b6ff2e;font-size:22px;letter-spacing:.04em">+25<span style="font-size:10px">pts</span></span>`
+].join('');
+
+/* ---------- light interactivity ---------- */
+document.querySelectorAll('.rail, .spec').forEach(rail=>{
+  rail.addEventListener('click',e=>{
+    const tab = e.target.closest('.tab');
+    if(tab){ const bar = tab.closest('.tabbar'); bar.querySelectorAll('.tab').forEach(t=>t.setAttribute('aria-selected', t===tab)); return; }
+    const seg = e.target.closest('.seg button');
+    if(seg){ seg.parentElement.querySelectorAll('button').forEach(b=>b.classList.toggle('on', b===seg)); }
+  });
+});
+</script>
+</body>
+</html>
