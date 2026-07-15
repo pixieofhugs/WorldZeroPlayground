@@ -9,18 +9,14 @@ FactionMembershipStatus = Literal[
 ]
 
 
+# ADR-0038: faction name/description prose is not emitted by the backend. The
+# frontend resolves it from frontend/src/locales/en/factions.json by slug
+# (factionName()/factionDescription()). These schemas carry slug + status only.
 class FactionOut(BaseModel):
     slug: str
-    name: str
-    description: str
     status: str
 
     model_config = {"from_attributes": True}
-
-
-class FactionUpdate(BaseModel):
-    name: str = Field(min_length=1, max_length=100)
-    description: str = Field(default="", max_length=2000)
 
 
 class FactionChoiceRequest(BaseModel):
@@ -29,7 +25,6 @@ class FactionChoiceRequest(BaseModel):
 
 class FactionStatusOut(BaseModel):
     slug: str
-    name: str
     status: FactionMembershipStatus
 
 
@@ -40,7 +35,6 @@ class FactionPageOut(BaseModel):
 
 class InvitationLetterOut(BaseModel):
     faction_slug: str
-    faction_name: str
     delivered_at: datetime
 
     model_config = {"from_attributes": True}

@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 import { Trans } from "react-i18next";
 import type { ActivityFeedItem } from "../../api/activityFeed";
 import i18n from "../../i18n";
-import { factionColor } from "../../utils/factions";
+import { factionColor, factionName } from "../../utils/factions";
 import { relativeTime } from "../../utils/dates";
 import FeedBadge from "./FeedBadge";
 
@@ -11,7 +11,7 @@ interface Props {
 }
 
 export default function FeedCardInvitationLetter({ item }: Props) {
-  const { faction_slug, faction_name } = item.payload;
+  const { faction_slug } = item.payload;
   const color = factionColor(faction_slug);
 
   return (
@@ -55,7 +55,7 @@ export default function FeedCardInvitationLetter({ item }: Props) {
         <Trans
           ns="feed"
           i18nKey="invitationLetter.sentence"
-          values={{ faction: faction_name }}
+          values={{ faction: factionName(faction_slug) }}
           components={{ 1: <span style={{ color, fontWeight: 700 }} /> }}
         />
       </p>

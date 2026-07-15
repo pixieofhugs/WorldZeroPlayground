@@ -173,10 +173,10 @@ async def seed(env: str, yes: bool) -> None:
             )
             if existing.scalar_one_or_none() is None:
                 status = FactionStatus.hidden if slug in HIDDEN_FACTION_SLUGS else FactionStatus.visible
+                # ADR-0038: the row is slug + status only; name/description prose
+                # lives in frontend/src/locales/en/factions.json.
                 session.add(Faction(
                     slug=slug,
-                    name=faction_config.name,
-                    description=faction_config.description,
                     status=status,
                 ))
                 faction_count += 1

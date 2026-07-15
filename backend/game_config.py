@@ -57,9 +57,11 @@ class TaskDef:
 
 @dataclass(frozen=True)
 class FactionConfig:
+    # Faction name/description prose is NOT config-owned (ADR-0038): the English
+    # words live in frontend/src/locales/en/factions.json (names.<slug>,
+    # descriptions.<slug>). Config owns which factions exist + their mechanics;
+    # the DB Faction row carries slug + status only.
     slug: str
-    name: str
-    description: str
     can_always_rejoin: bool          # True for UA Masters and Albescent
     own_task_modifier: float         # solo own-faction task multiplier
     other_task_modifier: float       # solo other-faction task multiplier

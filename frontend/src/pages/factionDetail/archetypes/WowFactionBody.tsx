@@ -5,7 +5,7 @@ import TaskCard from "../../../components/TaskCard";
 import PraxisCard from "../../../components/PraxisCard";
 import { TaskCrown } from "../../../components/cards/TaskCrown";
 import { computeDisplayPoints } from "../../../utils/points";
-import { factionName } from "../../../utils/factions";
+import { factionName, factionDescription } from "../../../utils/factions";
 import type { CharacterOut } from "../../../api/auth";
 import type { FactionDetailState } from "../useFactionDetail";
 
@@ -171,7 +171,7 @@ export default function WowFactionBody({ state }: { state: FactionDetailState })
   if (!faction) return null;
 
   // ② manifesto paragraphs — split the single description on blank lines.
-  const paragraphs = (faction.description ?? "").split(/\n\s*\n/).map((p) => p.trim()).filter(Boolean);
+  const paragraphs = factionDescription(faction.slug).split(/\n\s*\n/).map((p) => p.trim()).filter(Boolean);
 
   // ⑥ spotlight = highest all-time score; roster = the rest.
   const ranked = [...members].sort((a, b) => b.all_time_score - a.all_time_score);
@@ -352,10 +352,10 @@ export default function WowFactionBody({ state }: { state: FactionDetailState })
                       {membership.currentFactionSlug &&
                       membership.currentFactionSlug !== "na"
                         ? t("detail.join.confirmSwitch", {
-                            faction: faction.name,
+                            faction: factionName(faction.slug),
                             current: factionName(membership.currentFactionSlug),
                           })
-                        : t("detail.join.confirm", { faction: faction.name })}
+                        : t("detail.join.confirm", { faction: factionName(faction.slug) })}
                     </div>
                     {membership.joinError && (
                       <div style={{ fontFamily: BODY, fontSize: 10, color: "var(--color-danger)", marginBottom: 8 }}>{membership.joinError}</div>
@@ -416,7 +416,7 @@ export default function WowFactionBody({ state }: { state: FactionDetailState })
                       </span>
                     </div>
                     <div style={{ fontFamily: BODY, fontSize: 10.5, lineHeight: 1.55, color: MUTED }}>
-                      {t("wow.join.gateBody", { faction: faction.name })}
+                      {t("wow.join.gateBody", { faction: factionName(faction.slug) })}
                     </div>
                   </div>
                 )}

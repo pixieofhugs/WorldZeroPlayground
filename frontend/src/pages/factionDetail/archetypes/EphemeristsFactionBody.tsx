@@ -6,7 +6,7 @@ import PraxisCard from "../../../components/PraxisCard";
 import { TaskCrown } from "../../../components/cards/TaskCrown";
 import { EphMark, Foxing, toRoman } from "../../../components/cards/ephemeristsAtoms";
 import { computeDisplayPoints } from "../../../utils/points";
-import { factionName } from "../../../utils/factions";
+import { factionName, factionDescription } from "../../../utils/factions";
 import type { CharacterOut } from "../../../api/auth";
 import type { FactionDetailState } from "../useFactionDetail";
 
@@ -113,7 +113,7 @@ export default function EphemeristsFactionBody({ state }: { state: FactionDetail
   if (!faction) return null;
 
   // ② apparatus paragraphs — split the single description on blank lines.
-  const paragraphs = (faction.description ?? "").split(/\n\s*\n/).map((p) => p.trim()).filter(Boolean);
+  const paragraphs = factionDescription(faction.slug).split(/\n\s*\n/).map((p) => p.trim()).filter(Boolean);
 
   // ⑥ spotlight = highest all-time score; roster = the rest.
   const ranked = [...members].sort((a, b) => b.all_time_score - a.all_time_score);
@@ -257,10 +257,10 @@ export default function EphemeristsFactionBody({ state }: { state: FactionDetail
                       {membership.currentFactionSlug &&
                       membership.currentFactionSlug !== "na"
                         ? t("detail.join.confirmSwitch", {
-                            faction: faction.name,
+                            faction: factionName(faction.slug),
                             current: factionName(membership.currentFactionSlug),
                           })
-                        : t("detail.join.confirm", { faction: faction.name })}
+                        : t("detail.join.confirm", { faction: factionName(faction.slug) })}
                     </div>
                     {membership.joinError && (
                       <div style={{ fontFamily: SERIF, fontSize: 12, color: "var(--color-danger)", marginBottom: 8 }}>{membership.joinError}</div>
@@ -295,7 +295,7 @@ export default function EphemeristsFactionBody({ state }: { state: FactionDetail
                       {t("ephemerists.road.gateTitle")}
                     </div>
                     <div style={{ fontFamily: SERIF, fontSize: 13, lineHeight: 1.65, color: TEXT }}>
-                      {t("ephemerists.road.gateBody", { faction: faction.name })}
+                      {t("ephemerists.road.gateBody", { faction: factionName(faction.slug) })}
                     </div>
                   </div>
                 )}

@@ -160,8 +160,6 @@ async def admin_create_faction(
     faction = await create_faction(data, session)
     return AdminFactionOut(
         slug=faction.slug,
-        name=faction.name,
-        description=faction.description,
         status=faction.status.value,
         created_at=faction.created_at,
     )

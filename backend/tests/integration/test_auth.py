@@ -392,8 +392,6 @@ async def test_me_can_start_as_albescent_true_when_level_8_plus(
             db_session.add(
                 Faction(
                     slug=faction_slug,
-                    name=faction_slug,
-                    description=f"{faction_slug} test faction",
                     status=FactionStatus.visible,
                 )
             )

@@ -1,6 +1,6 @@
 import type { FactionOut } from "../../api/factions";
 import i18n from "../../i18n";
-import { factionCssVar } from "../../utils/factions";
+import { factionCssVar, factionName, factionDescription } from "../../utils/factions";
 import EverymenCard from "./EverymenFactionCard";
 import SnideMasthead from "./SnideMasthead";
 import { EphSeal, LapisLastWord } from "./ephemeristsAtoms";
@@ -122,10 +122,8 @@ function UACard({
   invitationNote,
 }: FactionCardProps) {
   const rotation = ROTATIONS[faction.slug.length % ROTATIONS.length];
-  const desc = faction.description
-    ? faction.description.slice(0, 100) +
-      (faction.description.length > 100 ? "…" : "")
-    : "";
+  const fullDesc = factionDescription(faction.slug);
+  const desc = fullDesc.slice(0, 100) + (fullDesc.length > 100 ? "…" : "");
   return (
     <div
       style={{
@@ -172,7 +170,7 @@ function UACard({
           marginBottom: 8,
         }}
       >
-        {faction.name}
+        {factionName(faction.slug)}
       </div>
       {desc && (
         <div
@@ -234,10 +232,8 @@ function WowCard({
   status,
   invitationNote,
 }: FactionCardProps) {
-  const desc = faction.description
-    ? faction.description.slice(0, 100) +
-      (faction.description.length > 100 ? "…" : "")
-    : "";
+  const fullDesc = factionDescription(faction.slug);
+  const desc = fullDesc.slice(0, 100) + (fullDesc.length > 100 ? "…" : "");
   const titleText = "var(--faction-wow-title-text)";
   return (
     <div
@@ -395,7 +391,7 @@ function WowCard({
                 marginBottom: 4,
               }}
             >
-              {faction.name}
+              {factionName(faction.slug)}
             </div>
             {desc && (
               <div
@@ -423,10 +419,8 @@ function SnideCard({
   status,
   invitationNote,
 }: FactionCardProps) {
-  const desc = faction.description
-    ? faction.description.slice(0, 100) +
-      (faction.description.length > 100 ? "…" : "")
-    : "";
+  const fullDesc = factionDescription(faction.slug);
+  const desc = fullDesc.slice(0, 100) + (fullDesc.length > 100 ? "…" : "");
   const words = desc.split(" ");
   const mid = Math.ceil(words.length / 2);
   const col1 = words.slice(0, mid).join(" ");
@@ -480,7 +474,7 @@ function SnideCard({
         }}
       >
         <div style={{ fontSize: "var(--text-lg)", lineHeight: 1.2 }}>
-          {faction.name}
+          {factionName(faction.slug)}
         </div>
         <StatusBadge status={status} slug="snide" />
       </div>
@@ -528,10 +522,8 @@ function EphemeristsCard({
   status,
   invitationNote,
 }: FactionCardProps) {
-  const desc = faction.description
-    ? faction.description.slice(0, 110) +
-      (faction.description.length > 110 ? "…" : "")
-    : "";
+  const fullDesc = factionDescription(faction.slug);
+  const desc = fullDesc.slice(0, 110) + (fullDesc.length > 110 ? "…" : "");
   return (
     <div
       style={{
@@ -583,7 +575,7 @@ function EphemeristsCard({
               textShadow: "1px 1px 0 var(--eph-field-deep)",
             }}
           >
-            <LapisLastWord text={faction.name} />
+            <LapisLastWord text={factionName(faction.slug)} />
           </div>
         </div>
       </div>
@@ -649,10 +641,8 @@ function SingularityCard({
   status,
   invitationNote,
 }: FactionCardProps) {
-  const desc = faction.description
-    ? faction.description.slice(0, 100) +
-      (faction.description.length > 100 ? "…" : "")
-    : "";
+  const fullDesc = factionDescription(faction.slug);
+  const desc = fullDesc.slice(0, 100) + (fullDesc.length > 100 ? "…" : "");
   return (
     <div
       style={{
@@ -761,7 +751,7 @@ function SingularityCard({
         >
           <div style={{ fontSize: "var(--text-md)", lineHeight: 1.3 }}>
             {"> "}
-            {faction.name}
+            {factionName(faction.slug)}
           </div>
           <StatusBadge status={status} slug="singularity" />
         </div>
@@ -836,15 +826,13 @@ export default function FactionCard(props: FactionCardProps) {
                 color: factionCssVar(props.faction.slug),
               }}
             >
-              {props.faction.name}
+              {factionName(props.faction.slug)}
             </div>
             <StatusBadge status={props.status} slug={props.faction.slug} />
           </div>
-          {props.faction.description && (
-            <div className="card-description" style={{ marginBottom: 10 }}>
-              {props.faction.description.slice(0, 100)}
-            </div>
-          )}
+          <div className="card-description" style={{ marginBottom: 10 }}>
+            {factionDescription(props.faction.slug).slice(0, 100)}
+          </div>
         </div>
       );
   }

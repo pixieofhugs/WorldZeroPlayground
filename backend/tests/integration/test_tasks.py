@@ -413,8 +413,6 @@ async def test_list_tasks_excludes_hidden_faction_tasks(
     if hidden_result.scalar_one_or_none() is None:
         hidden_faction = Faction(
             slug="hiddenfaction",
-            name="Hidden",
-            description="Not visible",
             status=FactionStatus.hidden,
         )
         db_session.add(hidden_faction)
@@ -455,8 +453,6 @@ async def test_create_praxis_for_hidden_faction_task_rejected(
     if hidden_result.scalar_one_or_none() is None:
         hidden_faction = Faction(
             slug="hiddenfaction3",
-            name="Hidden3",
-            description="Still not visible",
             status=FactionStatus.hidden,
         )
         db_session.add(hidden_faction)
@@ -1115,8 +1111,6 @@ async def test_get_task_can_submit_true_for_analog_with_existing_praxis(
         db_session.add(
             Faction(
                 slug="everymen",
-                name="Everymen",
-                description="Double Dipper",
                 status=FactionStatus.visible,
             )
         )
@@ -1261,7 +1255,7 @@ async def test_get_task_can_submit_true_everymen_as_collaborator(
 
     result = await db_session.execute(select(Faction).where(Faction.slug == "everymen"))
     if result.scalar_one_or_none() is None:
-        db_session.add(Faction(slug="everymen", name="Everymen", description="Double Dipper", status=FactionStatus.visible))
+        db_session.add(Faction(slug="everymen", status=FactionStatus.visible))
         await db_session.commit()
 
     character2.faction_slug = "everymen"
@@ -1469,8 +1463,6 @@ async def test_get_task_metatask_eligibility_different_faction(
         db_session.add(
             Faction(
                 slug="snide",
-                name="Snide",
-                description="Other faction",
                 status=FactionStatus.visible,
             )
         )

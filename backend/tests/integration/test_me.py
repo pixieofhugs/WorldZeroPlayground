@@ -167,7 +167,7 @@ async def test_invited_factions_account_pooled(
     db_session.add(InvitationLetter(character_id=character.id, faction_slug="albescent", era_id=era.id))
     # albescent FK row
     from models.faction import FactionStatus
-    db_session.add(Faction(slug="albescent", name="Albescent", description="x", status=FactionStatus.visible))
+    db_session.add(Faction(slug="albescent", status=FactionStatus.visible))
     await db_session.commit()
 
     resp = await client.get("/me/invited-factions", headers=auth_headers)
@@ -254,7 +254,7 @@ async def test_auth_me_invitations_two_sorted_excludes_sentinels(
     )
     # A sentinel invite is never surfaced.
     db_session.add(
-        Faction(slug="albescent", name="Albescent", description="x", status=FactionStatus.visible)
+        Faction(slug="albescent", status=FactionStatus.visible)
     )
     db_session.add(
         InvitationLetter(

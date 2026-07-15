@@ -7,7 +7,7 @@ import PageTitle from '../components/ui/PageTitle'
 import FactionSelectCard from '../components/cards/FactionSelectCard'
 import type { SelectState } from '../components/cards/FactionSelectCard'
 import { extractError } from '../utils/errors'
-import { factionCssVar } from '../utils/factions'
+import { factionCssVar, factionName } from '../utils/factions'
 import { relativeTime } from '../utils/dates'
 import { useAuth } from '../auth/AuthContext'
 
@@ -163,7 +163,7 @@ export default function Factions() {
                       <Trans
                         t={t}
                         i18nKey="index.invitedToJoin"
-                        values={{ faction: inv.faction_name }}
+                        values={{ faction: factionName(inv.faction_slug) }}
                         components={[
                           <span key="0" />,
                           <span key="1" style={{ fontWeight: 700, color: factionCssVar(inv.faction_slug) }} />,

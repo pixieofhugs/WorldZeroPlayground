@@ -1,14 +1,15 @@
 import api from './axios'
 
+// Faction name/description prose is no longer backend-emitted (issue #461): the
+// server sends only the slug, and the frozen English words live in the
+// factions.json catalog. Resolve display copy with factionName(slug) /
+// factionDescription(slug) from utils/factions.
 export interface FactionOut {
   slug: string
-  name: string
-  description: string | null
 }
 
 export interface FactionStatusOut {
   slug: string
-  name: string
   status: string // member, invited, not_invited, defected, can_return
 }
 
@@ -19,17 +20,11 @@ export interface FactionPageOut {
 
 export interface InvitationLetterOut {
   faction_slug: string
-  faction_name: string
   delivered_at: string
 }
 
 export async function getFactions(): Promise<FactionOut[]> {
   const res = await api.get<FactionOut[]>('/factions')
-  return res.data
-}
-
-export async function updateFaction(slug: string, data: { name: string; description: string | null }): Promise<FactionOut> {
-  const res = await api.put<FactionOut>(`/factions/${slug}`, data)
   return res.data
 }
 
