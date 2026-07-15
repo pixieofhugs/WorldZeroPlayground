@@ -19,7 +19,15 @@
     "submitBusy": "Stepping out…",
     "cancel": "Cancel",
     "startsAt": "starts at Lvl 1 · 0 pts",
-    "previewFallbackName": "Wanderer"
+    "previewFallbackName": "Wanderer",
+    "mobile": {
+      "title": "New character",
+      "step": "Step 1 of 2 · Identity",
+      "addPhoto": "Add photo",
+      "changePhoto": "Change photo",
+      "help": "Upload a photo — it becomes your avatar everywhere. You'll pick a faction after your first task; until then you play as Unaffiliated and every path is open to you.",
+      "submit": "Create character"
+    }
   },
   "editCharacter": {
     "loading": "Loading...",
@@ -46,7 +54,18 @@
     "optional": "· optional",
     "saveBusy": "Saving...",
     "saveIdle": "Save Changes",
-    "cancel": "Cancel"
+    "cancel": "Cancel",
+    "mobile": {
+      "changePhoto": "Change photo",
+      "taglineLabel": "Tagline",
+      "factionLabel": "Faction",
+      "unaffiliated": "Unaffiliated",
+      "factionHelp": "Join a faction from the Factions tab. It re-skins your whole app.",
+      "delete": "Delete this character",
+      "deleteConfirm": "Delete this character? This can't be undone.",
+      "deleteConfirmYes": "Delete",
+      "deleteBusy": "Deleting…"
+    }
   },
   "autosaveAgo": {
     "justNow": "just now",

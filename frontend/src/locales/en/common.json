@@ -77,6 +77,15 @@
       "title": "FieldDesk",
       "charEyebrow": "You",
       "edit": "Edit",
+      "switch": "Switch",
+      "switcher": {
+        "title": "Your characters",
+        "close": "Close",
+        "tapToUse": "Tap to use",
+        "meta": "{{faction}} · Level {{level}} · {{points}} pts",
+        "createNew": "Create new character",
+        "editThis": "Edit this character"
+      },
       "questsHeading": "In progress",
       "questsEmpty": "Nothing in progress yet — pick up a task.",
       "viewAll": "All tasks",

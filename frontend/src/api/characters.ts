@@ -51,6 +51,13 @@ export async function updateCharacter(id: number, body: CharacterUpdate): Promis
   return data
 }
 
+/** Soft-delete an owned character (DELETE /characters/{id}, 204). Server rejects
+ *  deleting someone else's life; the account's active life is re-resolved on the
+ *  next /auth/me refetch. */
+export async function deleteCharacter(id: number): Promise<void> {
+  await api.delete(`/characters/${id}`)
+}
+
 export async function uploadCharacterAvatar(id: number, file: File): Promise<CharacterOut> {
   const form = new FormData()
   form.append('file', file)
