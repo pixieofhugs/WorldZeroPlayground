@@ -411,3 +411,80 @@ export const mockFeedItems: Record<string, ActivityFeedItem> = {
 
 /** A convenient noop for callback props. */
 export const noop = (): void => {}
+
+// ---------------------------------------------------------------------------
+// Faction reference data (mobile surfaces consume these)
+// ---------------------------------------------------------------------------
+
+import type { FactionOut } from '../../frontend/src/api/factions'
+import type { FactionConfigOut } from '../../frontend/src/api/gameConfig'
+
+/** FactionOut is just a slug carrier; one per live faction. */
+export const factionOuts: FactionOut[] = FACTION_SLUGS.map((slug) => ({ slug }))
+
+/** A neutral 1× config; overrides tune the multipliers. */
+export function makeFactionConfig(overrides: Partial<FactionConfigOut> = {}): FactionConfigOut {
+  return {
+    slug: 'ua',
+    can_always_rejoin: false,
+    own_task_modifier: 1.5,
+    other_task_modifier: 1,
+    collab_own_modifier: 1.25,
+    collab_other_modifier: 1,
+    duel_win_modifier: 1.5,
+    duel_loss_modifier: 0.5,
+    ...overrides,
+  }
+}
+
+/** One config per live faction, for the game-config reference arrays. */
+export const gameFactionConfigs: FactionConfigOut[] = FACTION_SLUGS.map((slug) =>
+  makeFactionConfig({ slug }),
+)
+
+// ---------------------------------------------------------------------------
+// PraxisCardOut factory (feed/list rows across mobile surfaces)
+// ---------------------------------------------------------------------------
+
+export function makePraxisCard(overrides: Partial<PraxisCardOut> = {}): PraxisCardOut {
+  const slug = overrides.task_faction_slug ?? 'ua'
+  return {
+    id: 601,
+    task_id: 101,
+    task_title: TASK_TITLE_BY_SLUG[slug ?? 'ua'] ?? 'Plant a native tree',
+    task_point_value: 30,
+    task_level_required: 2,
+    type: 'solo',
+    status: 'submitted',
+    title: 'Charcoal study, north portico',
+    moderation_status: 'visible',
+    created_by_id: 7,
+    created_by_display_name: NAME_BY_SLUG[slug ?? 'ua'] ?? 'Ada Reed',
+    created_at: EARLIER,
+    updated_at: NOW,
+    submitted_at: NOW,
+    member_count: 1,
+    score: 42,
+    voter_count: 8,
+    is_top_for_task: true,
+    task_faction_slug: slug,
+    ...overrides,
+  }
+}
+
+/** A short in-progress/active list, faction-flavored, for home/task surfaces. */
+export function praxisCardsFor(slug: string): PraxisCardOut[] {
+  return [
+    makePraxisCard({
+      id: 601, task_id: 101, task_faction_slug: slug, status: 'submitted',
+      task_title: TASK_TITLE_BY_SLUG[slug ?? 'ua'] ?? 'Plant a native tree',
+      title: 'Charcoal study, north portico',
+    }),
+    makePraxisCard({
+      id: 602, task_id: 108, task_faction_slug: slug, status: 'draft',
+      task_title: 'Organize a neighborhood tool library',
+      title: 'Second pass, west light',
+      submitted_at: null, score: 0, voter_count: 0, is_top_for_task: false,
+    }),
+  ]
+}
