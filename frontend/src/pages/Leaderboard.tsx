@@ -1,8 +1,8 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { getLeaderboard } from '../api/leaderboard'
-import type { CharacterOut } from '../api/auth'
+import { useResource } from '../hooks/useResource'
 import PageTitle from '../components/ui/PageTitle'
 import LevelPill from '../components/ui/LevelPill'
 import { useAuth } from '../auth/AuthContext'
@@ -20,17 +20,9 @@ const RANK_STYLES = [
 export default function Leaderboard() {
   const { t } = useTranslation('common')
   const { user } = useAuth()
-  const [characters, setCharacters] = useState<CharacterOut[]>([])
   const [scoreMode, setScoreMode] = useState<'era' | 'alltime'>('era')
-  const [loading, setLoading] = useState(true)
-  const [fetchError, setFetchError] = useState<string | null>(null)
-
-  useEffect(() => {
-    getLeaderboard({ limit: 50 })
-      .then(setCharacters)
-      .catch((err) => setFetchError(extractError(err, "Couldn't load the leaderboard.")))
-      .finally(() => setLoading(false))
-  }, [])
+  const { data, loading, error } = useResource(() => getLeaderboard({ limit: 50 }), [])
+  const characters = data ?? []
 
   const sorted = [...characters].sort((a, b) =>
     scoreMode === 'era' ? b.score - a.score : b.all_time_score - a.all_time_score
@@ -47,9 +39,9 @@ export default function Leaderboard() {
 
       {loading ? (
         <p className="font-body text-muted">{t('leaderboard.loading')}</p>
-      ) : fetchError ? (
+      ) : error ? (
         <p className="font-body text-sm text-red-600 border-2 border-red-300 px-3 py-2">
-          {fetchError}{' '}
+          {extractError(error, "Couldn't load the leaderboard.")}{' '}
           <button onClick={() => window.location.reload()} className="underline">{t('states.tryRefreshing')}</button>
         </p>
       ) : characters.length === 0 ? (
