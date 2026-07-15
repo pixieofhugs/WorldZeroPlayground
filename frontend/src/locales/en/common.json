@@ -194,6 +194,8 @@
     "globalActivity": {
       "heading": "Recent global activity",
       "empty": "No activity yet",
+      "kickerNewTask": "New task",
+      "kickerEra": "New era",
       "eraBegun": "{{eraName}} has begun",
       "newTask": "<0>New task:</0> <1>{{title}}</1>",
       "completedTask": "<0>{{actor}}</0> completed <1>{{title}}</1>",

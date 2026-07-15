@@ -146,7 +146,7 @@ async def seed(session) -> None:
                 praxis_id=praxis.id,
                 voter_character_id=voter.id,
                 voter_account_id=voter.account_id,
-                stars=star,
+                value=star,
             ))
         created += 1
         print(f"  + {faction}: '{title}' by {author.display_name} ({len(voters)} votes)")

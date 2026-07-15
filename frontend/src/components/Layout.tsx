@@ -39,7 +39,7 @@ export default function Layout({ children }: { children: ReactNode }) {
         className="flex-1 relative max-w-5xl mx-auto w-full px-4 sm:px-6 py-5"
         style={{ zIndex: 5 }}
       >
-        <div className={`gap-4 items-start ${user ? 'lg:grid lg:grid-cols-[1fr_256px]' : ''}`}>
+        <div className={`gap-4 items-start ${user ? 'lg:grid lg:grid-cols-[1fr_340px]' : ''}`}>
           <main className="min-w-0">{children}</main>
           {user && (
             <div className="hidden lg:block">

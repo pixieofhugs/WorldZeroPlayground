@@ -986,6 +986,12 @@
   .sg-rotate { animation: sg-rotate 120s linear infinite; }
 }
 
+/* Character-sidebar progress bar — rainbow fill drifts left→right. Stilled for reduced-motion. */
+@keyframes cs-shimmer { to { background-position: 200% 0; } }
+@media (prefers-reduced-motion: no-preference) {
+  .cs-shimmer { animation: cs-shimmer 4s linear infinite; }
+}
+
 /* FieldDesk life-card hover-lift (#274). The CredentialCard owns its own rotation;
    this lifts the clickable wrapper without touching the card's tilt. */
 .fielddesk-life { transition: transform 160ms ease; }
