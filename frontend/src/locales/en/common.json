@@ -72,7 +72,30 @@
     "gateHint": "Reach Lvl {{gateLevel}} on a life you already carry{{eraSuffix}}.",
     "gateHintEra": " — the gate set by {{eraName}}",
     "levelsToGo_one": "{{count}} level to go.",
-    "levelsToGo_other": "{{count}} levels to go."
+    "levelsToGo_other": "{{count}} levels to go.",
+    "home": {
+      "title": "FieldDesk",
+      "charEyebrow": "You",
+      "edit": "Edit",
+      "questsHeading": "In progress",
+      "questsEmpty": "Nothing in progress yet — pick up a task.",
+      "viewAll": "All tasks",
+      "taskMeta": "{{faction}} · +{{points}} pts",
+      "stats": {
+        "points": "Points",
+        "votes": "Votes",
+        "era": "Era"
+      },
+      "pending_one": "{{count}} pending request",
+      "pending_other": "{{count}} pending requests",
+      "browseTasks": "Browse Tasks",
+      "wow": {
+        "charWindow": "you",
+        "questsWindow": "quests",
+        "charEyebrow": "you",
+        "questsHeading": "quests"
+      }
+    }
   },
   "about": {
     "title": "About World Zero",
