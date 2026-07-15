@@ -43,6 +43,20 @@
 
 ---
 
+## 1a. The form-factor axis (mobile vs. desktop)
+
+Faction is not the only presentation axis — **form factor** is a second one, orthogonal to it (#494). A phone gets a *mobile-native* experience (bottom-tab nav, single-column, one-handed), not a responsive squeeze of the desktop skin.
+
+- **Detection.** `useFormFactor()` reports `mobile` vs `desktop` from one `matchMedia` breakpoint (`max-width: 767px`) — viewport-based, reactive to resize/rotate, not UA sniffing. One breakpoint; no tablet tier.
+- **Switch location.** Only two places branch on form factor: the **`Layout` shell** (`MobileLayout` with `MobileTabBar` vs. `DesktopLayout` with the top NavBar + sidebar) and **each page dispatcher**. Never a per-leaf-component branch — mobile and desktop are distinct component trees.
+- **Shared boundary.** All `use*` hooks, API clients, and state contracts (`TaskDetailState`, …) are shared verbatim. Mobile adds *presentation only*; zero backend/data change.
+- **Mobile skin registry.** Each surface that has a `ARCHETYPE_BY_SLUG` dispatcher gains a parallel `MOBILE_ARCHETYPE_BY_SLUG` with a `Default*` mobile skin. Partial faction coverage is intended — every faction renders via the Default until a bespoke mobile skin lands (like the desktop archetypes). Task detail is the reference implementation (`pages/taskDetail/mobileArchetypes/`).
+- **No fixed-px grids on the mobile path.** The desktop archetypes lay out with fixed-width inline grids (`width: 240` sidebars, `gridTemplateColumns: 1fr 322px`). A mobile skin must not — it stacks single-column with flow/wrap so it survives a 375px viewport.
+
+Reference issues: mobile foundation #494; design language + prompts #495; core-loop screens #496–#500.
+
+---
+
 ## 2. Whose faction themes each surface? (contextual-faction resolution)
 
 A per-faction surface needs to know *which* faction to render as. Use these rules — they are not all the same.
