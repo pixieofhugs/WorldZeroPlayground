@@ -7,6 +7,8 @@ import { getInvitedFactions } from '../api/me'
 import { factionCssVar, factionName } from '../utils/factions'
 import { extractError } from '../utils/errors'
 import CredentialCard from '../components/CredentialCard'
+import ImageEditModal from '../components/imageEdit/ImageEditModal'
+import { AVATAR_ASPECT, blobToFile } from '../components/imageEdit/imageEditHelpers'
 
 /**
  * Adaptive Character Creation (#273, ADR-0019). One screen, two renderings: the
@@ -34,6 +36,7 @@ export default function CreateCharacter() {
   const [invited, setInvited] = useState<string[]>([])
   const [avatarFile, setAvatarFile] = useState<File | null>(null)
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null)
+  const [avatarSource, setAvatarSource] = useState<File | null>(null) // in the crop modal
   const [error, setError] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -44,14 +47,23 @@ export default function CreateCharacter() {
 
   const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0] ?? null
-    if (file && file.size > MAX_AVATAR_SIZE) {
+    e.target.value = ''
+    if (!file) return
+    if (file.size > MAX_AVATAR_SIZE) {
       setError('Portrait must be under 10 MB.')
-      e.target.value = ''
       return
     }
     setError(null)
+    // Crop/rotate to a square before it becomes the portrait (#514).
+    setAvatarSource(file)
+  }
+
+  const handleAvatarConfirm = (blob: Blob) => {
+    const source = avatarSource
+    const file = blobToFile(blob, source?.name ?? 'avatar')
     setAvatarFile(file)
-    setAvatarPreview(file ? URL.createObjectURL(file) : null)
+    setAvatarPreview(URL.createObjectURL(file))
+    setAvatarSource(null)
   }
 
   const trimmedName = displayName.trim()
@@ -194,6 +206,17 @@ export default function CreateCharacter() {
           />
         </div>
       </div>
+
+      {/* Portrait crop/rotate — locked square (#514). */}
+      {avatarSource && (
+        <ImageEditModal
+          key={`${avatarSource.name}-${avatarSource.lastModified}`}
+          file={avatarSource}
+          aspect={AVATAR_ASPECT}
+          onConfirm={handleAvatarConfirm}
+          onCancel={() => setAvatarSource(null)}
+        />
+      )}
     </div>
   )
 }

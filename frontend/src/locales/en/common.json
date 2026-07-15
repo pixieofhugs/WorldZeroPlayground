@@ -203,6 +203,18 @@
       "fallbackTaskTitle": "a task"
     }
   },
+  "imageEdit": {
+    "heading": "Adjust your image",
+    "dialogAria": "Edit image before uploading",
+    "zoomLabel": "Zoom",
+    "rotateLabel": "Rotate",
+    "rotateLeft": "Rotate left",
+    "rotateRight": "Rotate right",
+    "apply": "Apply",
+    "applying": "Applying…",
+    "useOriginal": "Use original",
+    "cancel": "Cancel"
+  },
   "voteStamps": {
     "a-start": "a start",
     "solid": "solid",
