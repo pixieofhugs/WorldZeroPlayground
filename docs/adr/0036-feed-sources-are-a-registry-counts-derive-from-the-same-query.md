@@ -1,0 +1,58 @@
+# Feed types are a registry; badge counts derive from the same query
+
+/ status: accepted
+
+## Context
+
+ADR-0023 fixed the activity feed as a read-time projection: each type has a
+`_fetch_*` over its natural source row. But the *shape* of that projection is
+shallow. Adding or changing one feed type means editing six places — a
+`FEED_ITEM_TYPE_*` constant, its membership in `FILTER_QUERIES`, the `_fetch_*`
+query, an `if … in allowed_types:` branch in `get_activity_feed`, a nested
+`count_*` closure in `_compute_counts`, and the `if` wiring that count.
+
+The sixth of those is the dangerous one. `_compute_counts` re-writes every
+fetcher's `WHERE` clause a **second time** as a hand-authored parallel `COUNT`.
+This duplication has already drifted into three live bugs:
+
+- `duel_challenge` has no `count_*` closure at all — the `your_stuff` badge
+  silently undercounts.
+- the `requests` count queries only pending `PraxisInvite`, omitting the pending
+  duels that the `requests` filter and fan-out both include.
+- every count ignores the `before` cursor and the 50-row `SUB_QUERY_LIMIT`, so
+  badges are whole-table totals while the feed itself is windowed.
+
+Issue #489 proposed collapsing the fan-out behind a single `FeedSource` seam.
+
+## Decision
+
+Model each feed type as one **`FeedSource`**, held in a module-level
+`FEED_SOURCES` registry, and derive counts from the **same** query object.
+
+- `FeedSource` is a **frozen dataclass** — `item_type`, its `filters`
+  membership, the `needs` context it requires (friend_ids / foe_ids /
+  my_task_ids), and one `query: Callable[[FeedContext], Select]`. This matches
+  the repo's dataclass-over-class convention; no per-type subclass.
+- `get_activity_feed` iterates `FEED_SOURCES` filtered by `allowed_types`, runs
+  each source's `query`, maps rows → items. Adding a type is one registry entry,
+  not six edits.
+- **Counts are never re-written.** A badge count is `COUNT` *of the source's own
+  `query`*, so the filter is authored once. The three drift bugs above are
+  deleted as a consequence, not patched separately.
+- **`session_factory` stays** in `get_activity_feed`'s signature. It reads like a
+  leak (the router only passes it back down), but it is a deliberate test seam:
+  each concurrent sub-query needs its own session under `asyncio.gather`, and
+  tests inject a factory that reuses the test transaction. Dissolving it would
+  buy a cleaner signature at the cost of the test seam — not worth it. The
+  own-session-per-source gather runner stays internal to the service.
+
+## Consequences
+
+- Pure refactor: the `/activity-feed` payload and pagination are byte-identical
+  (ADR-0023 still holds — this is projection shape, not a stored log). The feed
+  integration tests are the safety net and pass untouched.
+- Counts change **numbers** only where they were already wrong (duels now
+  counted; counts respect the window). Add a feed-count regression test that
+  asserts each badge equals the length of its windowed fetch.
+- Future feed types cannot re-introduce count drift — there is no second `WHERE`
+  to forget.
