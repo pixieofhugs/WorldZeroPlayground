@@ -9,6 +9,43 @@ import { useAuth } from '../auth/AuthContext'
 import { factionCssVar, factionName } from '../utils/factions'
 import { extractError } from '../utils/errors'
 import { mediaUrl } from '../utils/media'
+import type { CharacterOut, CurrentUser } from '../api/auth'
+import { useFormFactor } from '../hooks/useFormFactor'
+import { pickVariant } from '../utils/factionDispatch'
+import DefaultPlayers, {
+  type PlayersDirectoryProps,
+} from './players/mobileArchetypes/DefaultPlayers'
+
+type MobileSkin = (props: PlayersDirectoryProps) => JSX.Element
+
+// Parallel MOBILE registry, mirroring Tasks. The players directory isn't keyed
+// by a single faction slug, so this stays empty and every phone render falls
+// through to the Default directory skin; bespoke faction directories can
+// register here later.
+export const MOBILE_ARCHETYPE_BY_SLUG: Record<string, MobileSkin> = {}
+
+export default function Leaderboard() {
+  const { user } = useAuth()
+  const { data, loading, error } = useResource(() => getLeaderboard({ limit: 50 }), [])
+  const formFactor = useFormFactor()
+  const characters = data ?? []
+
+  if (formFactor === 'mobile') {
+    const Mobile = pickVariant(MOBILE_ARCHETYPE_BY_SLUG, null, DefaultPlayers)
+    return (
+      <Mobile
+        characters={characters}
+        loading={loading}
+        error={error}
+        myCharId={user?.character?.id ?? null}
+      />
+    )
+  }
+
+  return (
+    <DesktopLeaderboard characters={characters} loading={loading} error={error} user={user} />
+  )
+}
 
 // Rank colors reference CSS vars defined in index.css (--rank-gold, --rank-silver, --rank-bronze)
 const RANK_STYLES = [
@@ -17,12 +54,19 @@ const RANK_STYLES = [
   { color: 'var(--rank-bronze)', bgSubtle: 'rgba(136,136,136,0.08)', textFaint: 'rgba(136,136,136,0.13)' },
 ]
 
-export default function Leaderboard() {
+function DesktopLeaderboard({
+  characters,
+  loading,
+  error,
+  user,
+}: {
+  characters: CharacterOut[]
+  loading: boolean
+  error: Error | null
+  user: CurrentUser | null
+}) {
   const { t } = useTranslation('common')
-  const { user } = useAuth()
   const [scoreMode, setScoreMode] = useState<'era' | 'alltime'>('era')
-  const { data, loading, error } = useResource(() => getLeaderboard({ limit: 50 }), [])
-  const characters = data ?? []
 
   const sorted = [...characters].sort((a, b) =>
     scoreMode === 'era' ? b.score - a.score : b.all_time_score - a.all_time_score

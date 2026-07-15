@@ -25,18 +25,31 @@ import {
 } from "../api/relationships";
 import { useAuth } from "../auth/AuthContext";
 import { useGameConfig } from "../hooks/useGameConfig";
+import { useFormFactor } from "../hooks/useFormFactor";
+import { pickVariant } from "../utils/factionDispatch";
 import { extractError } from "../utils/errors";
 import { factionCssVar } from "../utils/factions";
 import { useFactionBackdrop } from "../components/backdrop/BackdropContext";
 import FactionProfileBody, {
+  type ProfileBodyProps,
   type ProfileProgression,
 } from "./characterProfile/FactionProfileBody";
+import DefaultProfile from "./characterProfile/mobileArchetypes/DefaultProfile";
+
+// Parallel MOBILE profile registry, mirroring FACTION_PROFILE_BODIES. Empty for
+// now — every phone render falls through to the Default (na) mobile profile
+// skin (#517); bespoke faction mobile profiles register here in follow-ups.
+export const MOBILE_PROFILE_BY_SLUG: Record<
+  string,
+  (props: ProfileBodyProps) => JSX.Element
+> = {};
 
 export default function CharacterProfile() {
   const { t } = useTranslation("common");
   const { id } = useParams<{ id: string }>();
   const { user } = useAuth();
   const gameConfig = useGameConfig();
+  const formFactor = useFormFactor();
   const { data, loading, error } = useResource(
     () => {
       const cid = Number(id);
@@ -320,13 +333,24 @@ export default function CharacterProfile() {
       </div>
     ) : null;
 
-  return (
-    <FactionProfileBody
-      character={character}
-      submissions={submissions}
-      proposedTasks={proposedTasks}
-      progression={progression}
-      identityActions={identityActions}
-    />
-  );
+  const bodyProps: ProfileBodyProps = {
+    character,
+    submissions,
+    proposedTasks,
+    progression,
+    identityActions,
+  };
+
+  // Phone → the mobile-native profile skin (Default fallback until a faction
+  // registers its own); desktop → the existing faction-dispatched body.
+  if (formFactor === "mobile") {
+    const Mobile = pickVariant(
+      MOBILE_PROFILE_BY_SLUG,
+      character.faction_slug,
+      DefaultProfile,
+    );
+    return <Mobile {...bodyProps} />;
+  }
+
+  return <FactionProfileBody {...bodyProps} />;
 }

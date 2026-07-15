@@ -1,16 +1,23 @@
 import { useCallback, useEffect, useState } from 'react'
 
-type Theme = 'light' | 'dark'
+export type Theme = 'light' | 'dark'
 
-const STORAGE_KEY = 'wz-theme'
+export const THEME_STORAGE_KEY = 'wz-theme'
 
 function getInitialTheme(): Theme {
-  const stored = localStorage.getItem(STORAGE_KEY)
+  const stored = localStorage.getItem(THEME_STORAGE_KEY)
   if (stored === 'light' || stored === 'dark') return stored
   return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
 }
 
-function applyTheme(theme: Theme): void {
+/** The opposite theme — the single source of the toggle's flip decision. */
+export function nextTheme(theme: Theme): Theme {
+  return theme === 'light' ? 'dark' : 'light'
+}
+
+/** Paint the `[data-theme]` cascade. Exported so behaviour tests can exercise
+ *  the exact flip the toggle performs without a React hook runtime. */
+export function applyTheme(theme: Theme): void {
   document.documentElement.setAttribute('data-theme', theme)
 }
 
@@ -27,8 +34,8 @@ export function useTheme() {
 
   const toggle = useCallback(() => {
     setTheme((previous) => {
-      const next = previous === 'light' ? 'dark' : 'light'
-      localStorage.setItem(STORAGE_KEY, next)
+      const next = nextTheme(previous)
+      localStorage.setItem(THEME_STORAGE_KEY, next)
       return next
     })
   }, [])
