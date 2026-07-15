@@ -38,6 +38,10 @@ import { listCharacters, type CharacterOut } from "../../api/characters";
 import { listMetatasks } from "../../api/metaTasks";
 import { useAuth } from "../../auth/AuthContext";
 import { extractError } from "../../utils/errors";
+import {
+  blobToFile,
+  partitionByEditability,
+} from "../../components/imageEdit/imageEditHelpers";
 import i18n from "../../i18n";
 
 export const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50 MB
@@ -64,6 +68,13 @@ export interface EditPraxisState {
   fileError: string;
   handleFileChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
   removeMedia: (item: MediaItemOut) => Promise<void>;
+
+  // Image edit stage (#514) — picked images pass through ImageEditModal one at a
+  // time before upload; video/audio skip it. `pendingImage` is the file the modal
+  // is currently editing (null when the queue is empty).
+  pendingImage: File | null;
+  confirmImageEdit: (blob: Blob) => Promise<void>;
+  cancelImageEdit: () => void;
 
   // Mode switching
   switchingMode: PraxisType | null;
@@ -175,6 +186,8 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [fileError, setFileError] = useState("");
+  // Picked images awaiting the edit modal, oldest first (#514).
+  const [imageEditQueue, setImageEditQueue] = useState<File[]>([]);
 
   const [metaTasks, setMetaTasks] = useState<TaskOut[]>([]);
   const [appliedMetatasks, setAppliedMetatasks] = useState<Set<number>>(
@@ -351,11 +364,12 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
       const valid = incoming.filter((f) => f.size <= MAX_FILE_SIZE);
       event.target.value = "";
       if (!idParam || valid.length === 0) return;
-      // Upload immediately so a draft's media persists without a manual save
-      // (the Save Draft button was removed in #297; autosave covers title/body,
-      // and media now lands the moment it's picked — instant visual feedback too).
+      // Images get the crop/rotate edit stage first (#514); video/audio upload
+      // straight through. Uploading immediately keeps a draft's media persisted
+      // without a manual save (autosave covers title/body only; #297).
+      const { toEdit, toUploadDirect } = partitionByEditability(valid);
       const praxisId = parseInt(idParam, 10);
-      for (const file of valid) {
+      for (const file of toUploadDirect) {
         try {
           const uploaded = await uploadPraxisMedia(praxisId, file);
           setMedia((previous) => [...previous, uploaded]);
@@ -368,9 +382,43 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
           );
         }
       }
+      // Queue images for the modal; they're edited + uploaded one at a time.
+      if (toEdit.length > 0) {
+        setImageEditQueue((previous) => [...previous, ...toEdit]);
+      }
     },
     [idParam],
   );
+
+  // ---- Image edit stage (#514): edit → upload → advance the queue ----
+  const pendingImage = imageEditQueue[0] ?? null;
+
+  const confirmImageEdit = useCallback(
+    async (blob: Blob) => {
+      const current = imageEditQueue[0];
+      if (!idParam || !current) return;
+      const praxisId = parseInt(idParam, 10);
+      const file = blobToFile(blob, current.name);
+      try {
+        const uploaded = await uploadPraxisMedia(praxisId, file);
+        setMedia((previous) => [...previous, uploaded]);
+      } catch (err) {
+        setError(
+          extractError(
+            err,
+            i18n.t("forms:editPraxis.errors.upload", { name: current.name }),
+          ),
+        );
+      } finally {
+        setImageEditQueue((previous) => previous.slice(1));
+      }
+    },
+    [idParam, imageEditQueue],
+  );
+
+  const cancelImageEdit = useCallback(() => {
+    setImageEditQueue((previous) => previous.slice(1));
+  }, []);
 
   const removeMedia = useCallback(
     async (item: MediaItemOut) => {
@@ -769,6 +817,10 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
     fileError,
     handleFileChange,
     removeMedia,
+
+    pendingImage,
+    confirmImageEdit,
+    cancelImageEdit,
 
     switchingMode,
     changeMode,
