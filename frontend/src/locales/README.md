@@ -21,7 +21,7 @@ locales/
 | `common.json` | Shared chrome: nav, buttons, generic labels/errors used across pages |
 | `forms.json` | Form UX copy: validation, character limits, input hints |
 | `votes.json` | Vote-tier labels, per faction (see slug nesting below) |
-| `factions.json` | Faction pages: join flows, rosters, faction-detail copy |
+| `factions.json` | Faction `names`/`descriptions` per slug (backend emits slug — ADR-0038), plus faction pages: join flows, rosters, faction-detail copy |
 | `praxis.json` | Praxis composing/reading: submission, proof, praxis character limits |
 | `tasks.json` | Task cards, task detail, propose-task copy |
 | `feed.json` | Activity-feed cards and frames |
@@ -126,10 +126,27 @@ never sends prose for taunts or ranks/unlocks.
   modulo pick means reordering silently reassigns which taunt an existing row
   renders, and deleting one shifts every later index. Adding to the end is safe.
 
+### Faction names/descriptions (`factions.json`)
+
+Faction **name/description** prose is also backend-emitted-as-slug (ADR-0038):
+config owns which factions exist, the DB `Faction` row carries slug + status
+only, and this catalog owns the words.
+
+- **`names.<slug>`** — the faction's display name (e.g. `names.ua` → "UA").
+- **`descriptions.<slug>`** — the one-line faction blurb.
+
+The frontend resolves these by slug via `factionName()` / `factionDescription()`.
+Every slug the live era defines must have a non-empty `names.<slug>` **and**
+`descriptions.<slug>` — including `na` (unaffiliated). **Append-only per slug:**
+add an entry when a new faction ships; don't drop a slug that config still emits.
+
+### Drift guard
+
 A backend drift-guard test (`backend/tests/unit/test_i18n_catalog_coverage.py`)
-fails if the era config references a rank/unlock key or a
-`(faction_slug, trigger_type)` combo this catalog can't resolve — so a missing
-key is caught in CI, not at render time.
+fails if the era config references a rank/unlock key, a
+`(faction_slug, trigger_type)` taunt combo, or a faction slug whose
+`names`/`descriptions` entry this catalog can't resolve — so a missing key is
+caught in CI, not at render time.
 
 ## Rules of the road
 

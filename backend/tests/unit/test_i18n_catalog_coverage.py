@@ -34,6 +34,11 @@ def taunts() -> dict:
     return _load("taunts")
 
 
+@pytest.fixture(scope="module")
+def factions() -> dict:
+    return _load("factions")
+
+
 def test_every_rank_key_resolves(progression):
     ranks = progression["ranks"]
     for level, profile in enumerate(CURRENT_ERA.level_profiles):
@@ -66,6 +71,26 @@ def test_default_faction_covers_every_trigger(taunts):
         variants = default.get(trigger.value)
         assert isinstance(variants, list) and variants, (
             f"taunts:default.{trigger.value} must be a non-empty variant list"
+        )
+
+
+def test_every_config_faction_name_and_description_resolves(factions):
+    """ADR-0038 drift guard: faction name/description prose is config-canonical
+    but lives in the frontend factions.json catalog. Every slug the current era
+    defines — with no exceptions, including the ``na`` sentinel — must resolve a
+    non-empty names.<slug> and descriptions.<slug>. The backend is the only
+    layer that can enumerate the full slug set from config, so this lives here.
+    """
+    names = factions.get("names", {})
+    descriptions = factions.get("descriptions", {})
+    for faction_slug in CURRENT_ERA.factions:
+        name = names.get(faction_slug)
+        assert isinstance(name, str) and name.strip(), (
+            f"factions:names.{faction_slug} missing or empty in catalog"
+        )
+        description = descriptions.get(faction_slug)
+        assert isinstance(description, str) and description.strip(), (
+            f"factions:descriptions.{faction_slug} missing or empty in catalog"
         )
 
 

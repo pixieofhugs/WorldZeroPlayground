@@ -320,8 +320,6 @@ async def test_faction_change_via_choose_endpoint(
     # Seed a selectable target faction
     target = Faction(
         slug="testfaction",
-        name="Test Faction",
-        description="A test faction",
         status=FactionStatus.visible,
     )
     db_session.add(target)

@@ -22,7 +22,6 @@ from sqlalchemy import Select, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import aliased
 
-from game_config import CURRENT_ERA
 from models.character import Character
 from models.comment import Comment, CommentMention
 from models.era import Era
@@ -529,26 +528,19 @@ def _invitation_letters_query(ctx: FeedContext) -> Select:
     return query.order_by(InvitationLetter.delivered_at.desc()).limit(SUB_QUERY_LIMIT)
 
 
-def _faction_display_name(faction_slug: str) -> str:
-    """Resolve a faction slug to its display name for the current era."""
-    if faction_slug in CURRENT_ERA.factions:
-        return CURRENT_ERA.factions[faction_slug].name
-    return faction_slug
-
-
 def _invitation_letter_item(row: Any) -> ActivityFeedItemDC:
+    # ADR-0038: emit the faction slug only — the frontend card resolves the
+    # faction name from factions.json (factionName(faction_slug)).
     letter: InvitationLetter = row[0]
-    faction_name = _faction_display_name(letter.faction_slug)
     return ActivityFeedItemDC(
         type=FEED_ITEM_TYPE_INVITATION_LETTER,
         timestamp=letter.delivered_at,
-        actor_display_name=faction_name,
+        actor_display_name=letter.faction_slug,
         actor_faction_slug=letter.faction_slug,
         actor_avatar_url=None,
         payload={
             "letter_id": letter.id,
             "faction_slug": letter.faction_slug,
-            "faction_name": faction_name,
         },
     )
 
@@ -577,8 +569,8 @@ def _friend_defections_query(ctx: FeedContext) -> Select:
 
 
 def _friend_defection_item(row: Any) -> ActivityFeedItemDC:
-    old_faction_name = _faction_display_name(row.faction_slug)
-    new_faction_name = _faction_display_name(row.current_faction_slug)
+    # ADR-0038: emit faction slugs only — the frontend resolves both faction
+    # names from factions.json (factionName(<slug>)).
     return ActivityFeedItemDC(
         type=FEED_ITEM_TYPE_FRIEND_DEFECTION,
         timestamp=row.defected_at,
@@ -588,9 +580,7 @@ def _friend_defection_item(row: Any) -> ActivityFeedItemDC:
         payload={
             "character_id": row.character_id,
             "old_faction_slug": row.faction_slug,
-            "old_faction_name": old_faction_name,
             "new_faction_slug": row.current_faction_slug,
-            "new_faction_name": new_faction_name,
         },
     )
 

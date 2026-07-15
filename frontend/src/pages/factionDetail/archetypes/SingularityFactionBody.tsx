@@ -5,7 +5,7 @@ import TaskCard from "../../../components/TaskCard";
 import PraxisCard from "../../../components/PraxisCard";
 import { TaskCrown } from "../../../components/cards/TaskCrown";
 import { computeDisplayPoints } from "../../../utils/points";
-import { factionName } from "../../../utils/factions";
+import { factionName, factionDescription } from "../../../utils/factions";
 import type { CharacterOut } from "../../../api/auth";
 import type { FactionDetailState } from "../useFactionDetail";
 
@@ -144,7 +144,7 @@ export default function SingularityFactionBody({ state }: { state: FactionDetail
   if (!faction) return null;
 
   // ② manifest paragraphs — split the single description on blank lines.
-  const paragraphs = (faction.description ?? "")
+  const paragraphs = factionDescription(faction.slug)
     .split(/\n\s*\n/)
     .map((p) => p.trim())
     .filter(Boolean);
@@ -339,10 +339,10 @@ export default function SingularityFactionBody({ state }: { state: FactionDetail
                       {membership.currentFactionSlug &&
                       membership.currentFactionSlug !== "na"
                         ? t("detail.join.confirmSwitch", {
-                            faction: faction.name,
+                            faction: factionName(faction.slug),
                             current: factionName(membership.currentFactionSlug),
                           })
-                        : t("detail.join.confirm", { faction: faction.name })}
+                        : t("detail.join.confirm", { faction: factionName(faction.slug) })}
                     </div>
                     {membership.joinError && (
                       <div style={{ fontFamily: FONT, fontSize: 9, color: "var(--color-danger)", marginBottom: 8 }}>
@@ -397,7 +397,7 @@ export default function SingularityFactionBody({ state }: { state: FactionDetail
                       {t("singularity.access.gateKicker")}
                     </div>
                     <div style={{ fontFamily: FONT, fontSize: 20, lineHeight: 1.1, color: PHOSPHOR, letterSpacing: "0.03em", marginBottom: 11 }}>
-                      {t("singularity.access.gateTitle", { faction: faction.name })}
+                      {t("singularity.access.gateTitle", { faction: factionName(faction.slug) })}
                     </div>
                     <div style={{ fontFamily: FONT, fontSize: 10, lineHeight: 1.7, color: phosphor(60) }}>
                       {t("singularity.access.gateBody")}

@@ -35,6 +35,11 @@ from game_config import (
 # Each faction needs a unique slug (lowercase, underscores). The slug is the
 # primary key in the database and must be stable once deployed.
 #
+# Faction names/descriptions are NOT config-owned (ADR-0038): the English words
+# live in frontend/src/locales/en/factions.json (names.<slug>, descriptions.<slug>).
+# Config owns which factions exist + their mechanics; add matching name/description
+# entries there for every slug below.
+#
 # Required system factions (include these in every era):
 #   "ua"       -- an ordinary invite-joinable faction (no starter privilege, ADR-0030)
 #   "na"       -- sentinel for tasks with no faction affiliation
@@ -52,8 +57,6 @@ ERA_N_FACTIONS = {
     #
     # "ua": FactionConfig(
     #     slug="ua",
-    #     name="UA",
-    #     description="The Gilt Salon — an ordinary invite-joinable faction.",
     #     can_always_rejoin=False,
     #     own_task_modifier=1.0,
     #     other_task_modifier=1.0,
@@ -64,8 +67,6 @@ ERA_N_FACTIONS = {
     # ),
     # "na": FactionConfig(
     #     slug="na",
-    #     name="None",
-    #     description="Sentinel for tasks with no specific faction.",
     #     can_always_rejoin=False,
     #     own_task_modifier=1.0, other_task_modifier=1.0,
     #     collab_own_modifier=1.0, collab_other_modifier=1.0,
@@ -76,8 +77,6 @@ ERA_N_FACTIONS = {
     #
     # "your_faction": FactionConfig(
     #     slug="your_faction",
-    #     name="Your Faction",
-    #     description="What makes this faction unique.",
     #     can_always_rejoin=False,
     #     own_task_modifier=1.0,
     #     other_task_modifier=1.0,

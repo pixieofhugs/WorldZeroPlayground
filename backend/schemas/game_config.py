@@ -2,9 +2,9 @@ from pydantic import BaseModel
 
 
 class FactionConfigOut(BaseModel):
+    # ADR-0038: no name/description — the frontend resolves faction prose from
+    # frontend/src/locales/en/factions.json by slug.
     slug: str
-    name: str
-    description: str
     can_always_rejoin: bool
     own_task_modifier: float
     other_task_modifier: float

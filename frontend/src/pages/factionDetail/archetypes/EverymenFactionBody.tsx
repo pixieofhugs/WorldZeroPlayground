@@ -5,7 +5,7 @@ import TaskCard from "../../../components/TaskCard";
 import PraxisCard from "../../../components/PraxisCard";
 import { TaskCrown } from "../../../components/cards/TaskCrown";
 import { computeDisplayPoints } from "../../../utils/points";
-import { factionName } from "../../../utils/factions";
+import { factionName, factionDescription } from "../../../utils/factions";
 import type { CharacterOut } from "../../../api/auth";
 import type { FactionDetailState } from "../useFactionDetail";
 
@@ -126,7 +126,7 @@ export default function EverymenFactionBody({ state }: { state: FactionDetailSta
   if (!faction) return null;
 
   // ② manifesto paragraphs — split the single description on blank lines.
-  const paragraphs = (faction.description ?? "").split(/\n\s*\n/).map((p) => p.trim()).filter(Boolean);
+  const paragraphs = factionDescription(faction.slug).split(/\n\s*\n/).map((p) => p.trim()).filter(Boolean);
 
   // ⑥ spotlight = highest all-time score; roster = the rest.
   const ranked = [...members].sort((a, b) => b.all_time_score - a.all_time_score);
@@ -265,10 +265,10 @@ export default function EverymenFactionBody({ state }: { state: FactionDetailSta
                       {membership.currentFactionSlug &&
                       membership.currentFactionSlug !== "na"
                         ? t("detail.join.confirmSwitch", {
-                            faction: faction.name,
+                            faction: factionName(faction.slug),
                             current: factionName(membership.currentFactionSlug),
                           })
-                        : t("detail.join.confirm", { faction: faction.name })}
+                        : t("detail.join.confirm", { faction: factionName(faction.slug) })}
                     </div>
                     {membership.joinError && (
                       <div style={{ fontFamily: MONO, fontSize: 10, color: "var(--color-danger)", marginBottom: 8 }}>{membership.joinError}</div>
@@ -303,7 +303,7 @@ export default function EverymenFactionBody({ state }: { state: FactionDetailSta
                       {t("everymen.roll.gateTitle")}
                     </div>
                     <div style={{ fontFamily: MONO, fontSize: 11, lineHeight: 1.65, color: INK }}>
-                      {t("everymen.roll.gateBody", { faction: faction.name })}
+                      {t("everymen.roll.gateBody", { faction: factionName(faction.slug) })}
                     </div>
                   </div>
                 )}

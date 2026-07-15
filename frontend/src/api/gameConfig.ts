@@ -1,9 +1,10 @@
 import api from './axios'
 
+// Faction name/description prose moved to the factions.json catalog (issue
+// #461); /game-config emits only the slug + numeric rules. Resolve display copy
+// with factionName(slug) / factionDescription(slug) from utils/factions.
 export interface FactionConfigOut {
   slug: string
-  name: string
-  description: string
   can_always_rejoin: boolean
   own_task_modifier: number
   other_task_modifier: number

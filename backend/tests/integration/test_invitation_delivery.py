@@ -55,7 +55,7 @@ async def _letters(db_session: AsyncSession, character: Character) -> set[str]:
 
 async def _seed_faction(db_session: AsyncSession, slug: str) -> None:
     if await db_session.scalar(select(Faction).where(Faction.slug == slug)) is None:
-        db_session.add(Faction(slug=slug, name=slug, description=slug, status=FactionStatus.visible))
+        db_session.add(Faction(slug=slug, status=FactionStatus.visible))
         await db_session.flush()
 
 

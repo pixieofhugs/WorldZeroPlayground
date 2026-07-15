@@ -254,8 +254,6 @@ async def create_faction(data: FactionCreate, session: AsyncSession) -> Faction:
 
     faction = Faction(
         slug=data.slug,
-        name=data.name,
-        description=data.description,
         status=FactionStatus.hidden if data.hidden else FactionStatus.visible,
     )
     session.add(faction)

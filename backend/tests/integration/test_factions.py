@@ -7,7 +7,6 @@ from models.account import Account
 from models.character import Character
 from models.era import Era
 from models.faction import Faction, FactionStatus
-from models.roles import AccountRole, Role
 
 
 # ---------------------------------------------------------------------------
@@ -36,13 +35,18 @@ async def test_list_factions_structure(
     client: AsyncClient,
     faction_ua: Faction,
 ):
-    """Each faction in the list has the expected fields."""
+    """Each faction in the list has the expected fields.
+
+    ADR-0038: the backend emits slug + status only; name/description prose lives
+    in the frontend factions.json catalog and is never returned here.
+    """
     resp = await client.get("/factions")
     assert resp.status_code == 200
     for faction in resp.json():
         assert "slug" in faction
-        assert "name" in faction
-        assert "description" in faction
+        assert "status" in faction
+        assert "name" not in faction
+        assert "description" not in faction
 
 
 # ---------------------------------------------------------------------------
@@ -132,8 +136,6 @@ async def test_choose_faction_with_invitation_succeeds(
     if existing.scalar_one_or_none() is None:
         db_session.add(FactionModel(
             slug="wow",
-            name="Warriors of Whimsy",
-            description="Collective-minded",
             status=FactionStatus.visible,
         ))
         await db_session.commit()
@@ -184,8 +186,6 @@ async def _seed_faction(session: AsyncSession, slug: str) -> None:
     if existing.scalar_one_or_none() is None:
         session.add(Faction(
             slug=slug,
-            name=slug,
-            description=f"{slug} test faction",
             status=FactionStatus.visible,
         ))
         await session.flush()
@@ -427,69 +427,7 @@ async def test_albescent_reveal_is_sticky_not_derived_from_membership(
     assert "albescent" in [f["slug"] for f in listed.json()]
 
 
-# ---------------------------------------------------------------------------
-# Update faction (admin-only)
-# ---------------------------------------------------------------------------
-
-
-async def _make_admin(account: Account, session: AsyncSession) -> None:
-    role = Role(name="admin", description="Administrator")
-    session.add(role)
-    await session.flush()
-    ar = AccountRole(account_id=account.id, role_id=role.id, granted_by=account.id)
-    session.add(ar)
-    await session.commit()
-
-
-@pytest.mark.asyncio
-async def test_update_faction_admin_success(
-    client: AsyncClient,
-    account: Account,
-    auth_headers: dict,
-    faction_ua: Faction,
-    db_session: AsyncSession,
-):
-    """Admin can update a faction's name and description."""
-    await _make_admin(account, db_session)
-    resp = await client.put(
-        "/factions/ua",
-        json={"name": "United Alliance", "description": "Updated description."},
-        headers=auth_headers,
-    )
-    assert resp.status_code == 200
-    data = resp.json()
-    assert data["name"] == "United Alliance"
-    assert data["description"] == "Updated description."
-    assert data["slug"] == "ua"
-
-
-@pytest.mark.asyncio
-async def test_update_faction_non_admin_forbidden(
-    client: AsyncClient,
-    auth_headers: dict,
-    faction_ua: Faction,
-):
-    """Non-admin accounts get 403 when attempting to update a faction."""
-    resp = await client.put(
-        "/factions/ua",
-        json={"name": "Hijacked", "description": "Nope."},
-        headers=auth_headers,
-    )
-    assert resp.status_code == 403
-
-
-@pytest.mark.asyncio
-async def test_update_faction_not_found(
-    client: AsyncClient,
-    account: Account,
-    auth_headers: dict,
-    db_session: AsyncSession,
-):
-    """PUT /factions/{slug} returns 404 for an unknown slug."""
-    await _make_admin(account, db_session)
-    resp = await client.put(
-        "/factions/does_not_exist",
-        json={"name": "Ghost", "description": ""},
-        headers=auth_headers,
-    )
-    assert resp.status_code == 404
+# ADR-0038: the admin faction-copy edit path (PUT /factions/{slug},
+# update_faction, FactionUpdate) has been retired — faction name/description
+# prose is config-canonical and lives in frontend/src/locales/en/factions.json,
+# so there is nothing to edit through the API. No update tests remain.

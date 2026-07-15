@@ -153,8 +153,6 @@ async def test_list_praxes_filter_by_faction(
         db_session.add(
             Faction(
                 slug="wow",
-                name="Warriors of Whimsy",
-                description="",
                 status=FactionStatus.visible,
             )
         )
@@ -1527,8 +1525,6 @@ async def test_create_praxis_duplicate_allowed_for_analog(
         db_session.add(
             Faction(
                 slug="everymen",
-                name="Everymen",
-                description="Double Dipper perk",
                 status=FactionStatus.visible,
             )
         )
@@ -1994,7 +1990,7 @@ async def test_everymen_joined_collaborator_can_resign_up(
 
     result = await db_session.execute(sa_select(Faction).where(Faction.slug == "everymen"))
     if result.scalar_one_or_none() is None:
-        db_session.add(Faction(slug="everymen", name="Everymen", description="Double Dipper", status=FactionStatus.visible))
+        db_session.add(Faction(slug="everymen", status=FactionStatus.visible))
         await db_session.commit()
 
     character.faction_slug = "everymen"
@@ -2049,7 +2045,7 @@ async def test_everymen_can_be_invited_despite_active_collab(
 
     result = await db_session.execute(sa_select(Faction).where(Faction.slug == "everymen"))
     if result.scalar_one_or_none() is None:
-        db_session.add(Faction(slug="everymen", name="Everymen", description="Double Dipper", status=FactionStatus.visible))
+        db_session.add(Faction(slug="everymen", status=FactionStatus.visible))
         await db_session.commit()
 
     character2.faction_slug = "everymen"
