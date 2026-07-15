@@ -331,7 +331,20 @@
       "removeButton": "rm",
       "publishIdle": "TRANSMIT SIGNAL",
       "publishBusy": "$ transmitting...",
-      "dropLabel": "[esc] :q"
+      "dropLabel": "[esc] :q",
+      "mobile": {
+        "pageTitle": "> praxis --edit",
+        "autosaveSaved": "[saved {{ago}}]",
+        "autosaveUnsaved": "unsaved",
+        "taskRefLabel": "// function",
+        "titleLabel": "// title",
+        "bodyLabel": "// process_log · {{words}} W",
+        "inviteLabel": "// network",
+        "inviteLabelDuel": "// adversary",
+        "filesLabel": "// artifacts",
+        "metatasksLabel": "// optional_subroutines",
+        "previewLabel": "// render"
+      }
     },
     "ua": {
       "masthead": "University of Asthmatics · Salon Submission №{{number}}",

@@ -241,7 +241,15 @@
       "artifacts_one": "ARTIFACTS · {{count}} file submitted",
       "artifacts_other": "ARTIFACTS · {{count}} files submitted",
       "consensusArray": "CONSENSUS_ARRAY",
-      "crFromSignals": "CR FROM SIGNALS"
+      "crFromSignals": "CR FROM SIGNALS",
+      "mobile": {
+        "node": "signal from node",
+        "output": "// output",
+        "artifacts": "// output_artifacts",
+        "re": "re:",
+        "consensus": "// consensus_signal",
+        "amplify": "> amplify the signal"
+      }
     },
     "snide": {
       "closedCaseFiled": "S.N.I.D.E. · CLOSED CASE · FILED",

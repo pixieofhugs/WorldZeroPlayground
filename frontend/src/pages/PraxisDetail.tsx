@@ -18,6 +18,7 @@ import DefaultPraxisDetail from './praxisDetail/archetypes/DefaultPraxisDetail'
 import DefaultMobilePraxisDetail from './praxisDetail/mobileArchetypes/DefaultPraxisDetail'
 import WowMobilePraxisDetail from './praxisDetail/mobileArchetypes/WowPraxisDetail'
 import UAMobilePraxisDetail from './praxisDetail/mobileArchetypes/UaPraxisDetail'
+import SingularityMobilePraxisDetail from './praxisDetail/mobileArchetypes/SingularityPraxisDetail'
 import EphemeristsPraxisDetail from './praxisDetail/archetypes/EphemeristsPraxisDetail'
 import SnidePraxisDetail from './praxisDetail/archetypes/SnidePraxisDetail'
 import SingularityPraxisDetail from './praxisDetail/archetypes/SingularityPraxisDetail'
@@ -52,6 +53,7 @@ export const ARCHETYPE_BY_SLUG: Record<string, ComponentType<{ state: PraxisDeta
 export const MOBILE_ARCHETYPE_BY_SLUG: Record<string, ComponentType<{ state: PraxisDetailState }>> = {
   wow: WowMobilePraxisDetail,
   ua: UAMobilePraxisDetail,
+  singularity: SingularityMobilePraxisDetail,
 }
 
 export default function PraxisDetail() {

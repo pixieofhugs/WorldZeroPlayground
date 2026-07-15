@@ -290,7 +290,13 @@
     },
     "empty": "> No amplification detected. No node has witnessed this yet.",
     "highestSignal": "HIGHEST SIGNAL",
-    "viewAll": "> view all {{count}} logs →"
+    "viewAll": "> view all {{count}} logs →",
+    "mobile": {
+      "listMasthead": "> ls ./functions",
+      "detailEyebrow": "> cat ./function",
+      "briefHeading": "// the_function",
+      "worksHeading": "// signaled_praxis"
+    }
   },
   "ua": {
     "faction": "UA",

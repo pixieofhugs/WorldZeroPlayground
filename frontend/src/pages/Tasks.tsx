@@ -10,6 +10,7 @@ import { pickVariant } from '../utils/factionDispatch'
 import { useTasks, type TasksState } from './tasks/useTasks'
 import DefaultTasks from './tasks/mobileArchetypes/DefaultTasks'
 import UaTaskList from './tasks/mobileArchetypes/UaTaskList'
+import SingularityTaskList from './tasks/mobileArchetypes/SingularityTaskList'
 
 type MobileSkin = (props: { state: TasksState }) => JSX.Element | null
 
@@ -20,6 +21,7 @@ type MobileSkin = (props: { state: TasksState }) => JSX.Element | null
 // (and logged-out visitors) fall through to the Default mobile browse skin.
 export const MOBILE_ARCHETYPE_BY_SLUG: Record<string, MobileSkin> = {
   ua: UaTaskList,
+  singularity: SingularityTaskList,
 }
 
 export default function Tasks() {
