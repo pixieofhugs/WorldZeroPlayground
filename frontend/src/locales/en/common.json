@@ -137,6 +137,11 @@
         "masthead": "The Union Desk",
         "charEyebrow": "On the roll",
         "questsHeading": "On the job"
+      },
+      "ephemerists": {
+        "masthead": "The Codex Desk",
+        "charEyebrow": "On the road",
+        "questsHeading": "Surveys underway"
       }
     }
   },

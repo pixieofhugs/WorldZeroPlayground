@@ -196,7 +196,14 @@
       "evidence_one": "The evidence · {{count}} specimen",
       "evidence_other": "The evidence · {{count}} specimens",
       "concordance": "The concordance",
-      "ptsFromVotes": "PTS FROM VOTES"
+      "ptsFromVotes": "PTS FROM VOTES",
+      "acquiringHand": "Filed by the hand of",
+      "mobile": {
+        "plate": "The Evidence",
+        "theFinding": "The finding",
+        "re": "re:",
+        "appraise": "Weigh its concordance"
+      }
     },
     "everymen": {
       "mode": {
