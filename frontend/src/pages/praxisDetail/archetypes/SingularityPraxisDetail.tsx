@@ -17,7 +17,7 @@
  */
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
-import ReactMarkdown from 'react-markdown'
+import MarkdownPreview from '../../editPraxis/blocks/MarkdownPreview'
 import MediaGallery from '../../../components/MediaGallery'
 import SingularityVote from '../../../components/vote/SingularityVote'
 import { factionCssVar } from '../../../utils/factions'
@@ -365,7 +365,8 @@ export default function SingularityPraxisDetail({ state }: { state: PraxisDetail
           {praxis.body_text && (
             <>
               <SgDivider label={t('detail.singularity.processLog')} />
-              <div
+              <MarkdownPreview
+                source={praxis.body_text}
                 className="markdown-preview"
                 style={{
                   fontSize: 11,
@@ -373,9 +374,7 @@ export default function SingularityPraxisDetail({ state }: { state: PraxisDetail
                   color: 'color-mix(in srgb, var(--faction-singularity-card-accent) 78%, transparent)',
                   marginBottom: 8,
                 }}
-              >
-                <ReactMarkdown>{praxis.body_text}</ReactMarkdown>
-              </div>
+              />
             </>
           )}
 

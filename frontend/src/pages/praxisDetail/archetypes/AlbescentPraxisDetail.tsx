@@ -15,7 +15,7 @@
  */
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
-import ReactMarkdown from 'react-markdown'
+import MarkdownPreview from '../../editPraxis/blocks/MarkdownPreview'
 import MediaGallery from '../../../components/MediaGallery'
 import VoteUI from '../../../components/vote/VoteUI'
 import { factionCssVar } from '../../../utils/factions'
@@ -187,12 +187,11 @@ export default function AlbescentPraxisDetail({ state }: { state: PraxisDetailSt
         {praxis.body_text && (
           <>
             <Divider label={t('detail.albescent.account')} />
-            <div
+            <MarkdownPreview
+              source={praxis.body_text}
               className="markdown-preview"
               style={{ fontFamily: FONT, fontStyle: 'italic', fontSize: 15, lineHeight: 1.7, color: ink(62) }}
-            >
-              <ReactMarkdown>{praxis.body_text}</ReactMarkdown>
-            </div>
+            />
           </>
         )}
 

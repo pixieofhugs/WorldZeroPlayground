@@ -1,5 +1,6 @@
 import type { CSSProperties } from "react";
 import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
 interface MarkdownPreviewProps {
   source: string;
@@ -21,7 +22,7 @@ export default function MarkdownPreview({
   if (!source.trim()) return null;
   return (
     <div className={className} style={style}>
-      <ReactMarkdown>{source}</ReactMarkdown>
+      <ReactMarkdown remarkPlugins={[remarkGfm]}>{source}</ReactMarkdown>
     </div>
   );
 }

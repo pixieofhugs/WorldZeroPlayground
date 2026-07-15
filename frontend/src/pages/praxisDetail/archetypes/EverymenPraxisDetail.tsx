@@ -17,7 +17,7 @@
  */
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
-import ReactMarkdown from 'react-markdown'
+import MarkdownPreview from '../../editPraxis/blocks/MarkdownPreview'
 import MediaGallery from '../../../components/MediaGallery'
 import EverymenVote from '../../../components/vote/EverymenVote'
 import { factionCssVar } from '../../../utils/factions'
@@ -199,7 +199,8 @@ export default function EverymenPraxisDetail({ state }: { state: PraxisDetailSta
         {praxis.body_text && (
           <>
             <SectionHead>{t('detail.everymen.theWork')}</SectionHead>
-            <div
+            <MarkdownPreview
+              source={praxis.body_text}
               className="markdown-preview"
               style={{
                 fontFamily: BODY,
@@ -207,9 +208,7 @@ export default function EverymenPraxisDetail({ state }: { state: PraxisDetailSta
                 lineHeight: 1.7,
                 color: 'var(--everymen-paper-text)',
               }}
-            >
-              <ReactMarkdown>{praxis.body_text}</ReactMarkdown>
-            </div>
+            />
           </>
         )}
 
