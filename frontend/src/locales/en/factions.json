@@ -1,5 +1,24 @@
 {
-  "unaffiliatedName": "Unaffiliated",
+  "names": {
+    "ua": "UA",
+    "snide": "S.N.I.D.E.",
+    "wow": "Warriors of Whimsy",
+    "ephemerists": "The Ephemerists",
+    "everymen": "Everymen",
+    "singularity": "Singularity",
+    "albescent": "/Albescent",
+    "na": "Unaffiliated"
+  },
+  "descriptions": {
+    "ua": "The Gilt Salon — a regal academy. Full points on all tasks.",
+    "snide": "Specialists in one-on-one competition. Bonus points for winning duels.",
+    "wow": "Collective-minded. Excel at their own faction's tasks; reduced elsewhere.",
+    "ephemerists": "Wanderers who set down fleeting truths before the road moves on. Task Vision — access to select retired tasks.",
+    "everymen": "No inner circle, no waiting to be chosen. Reliable hands who do the work in front of them and finish what they start.",
+    "singularity": "embrace your digital double",
+    "albescent": "Full points and any meta tasks from any group. Unlock-only.",
+    "na": "Not yet sworn to a faction."
+  },
   "index": {
     "loading": "Loading...",
     "recentInvitations": "Recent Invitations ({{count}})",

@@ -2,7 +2,7 @@ import { type ComponentType } from "react";
 import { useTranslation } from "react-i18next";
 import { useParams, Link } from "react-router-dom";
 import PageTitle from "../components/ui/PageTitle";
-import { factionCssVar } from "../utils/factions";
+import { factionCssVar, factionName, factionDescription } from "../utils/factions";
 import { pickVariant } from "../utils/factionDispatch";
 import { useFactionDetail, type FactionDetailState } from "./factionDetail/useFactionDetail";
 import DefaultFactionBody from "./factionDetail/archetypes/DefaultFactionBody";
@@ -98,6 +98,8 @@ export default function FactionDetail({ slug: slugProp }: { slug?: string } = {}
     );
 
   const accent = factionCssVar(faction.slug, "border");
+  const name = factionName(faction.slug);
+  const description = factionDescription(faction.slug);
 
   // A faction may register a bespoke frontispiece in FACTION_HEROES; otherwise
   // (Hero is undefined) the shared title + description chrome is used. The page
@@ -109,15 +111,15 @@ export default function FactionDetail({ slug: slugProp }: { slug?: string } = {}
     <div className="py-8">
       {Hero ? (
         <Hero
-          name={faction.name}
-          description={faction.description}
+          name={name}
+          description={description}
           members={members.length}
           tasks={tasks.length}
           praxes={recentPraxis.length}
         />
       ) : (
         <>
-          <PageTitle title={faction.name} eyebrow={t("detail.eyebrow")} />
+          <PageTitle title={name} eyebrow={t("detail.eyebrow")} />
 
           {/* ── Description ── PLACEHOLDER: design to restyle ── */}
           <div
@@ -125,7 +127,7 @@ export default function FactionDetail({ slug: slugProp }: { slug?: string } = {}
             style={{ borderLeft: `4px solid ${accent}`, padding: "14px 16px" }}
           >
             <p className="font-body text-sm text-ink">
-              {faction.description ?? t("detail.descriptionEmpty")}
+              {description}
             </p>
           </div>
         </>

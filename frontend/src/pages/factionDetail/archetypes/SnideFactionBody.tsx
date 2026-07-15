@@ -5,7 +5,7 @@ import TaskCard from "../../../components/TaskCard";
 import PraxisCard from "../../../components/PraxisCard";
 import { TaskCrown } from "../../../components/cards/TaskCrown";
 import { computeDisplayPoints } from "../../../utils/points";
-import { factionName } from "../../../utils/factions";
+import { factionName, factionDescription } from "../../../utils/factions";
 import type { CharacterOut } from "../../../api/auth";
 import type { FactionDetailState } from "../useFactionDetail";
 
@@ -175,7 +175,7 @@ export default function SnideFactionBody({ state }: { state: FactionDetailState 
   if (!faction) return null;
 
   // ② about paragraphs — split the single description on blank lines.
-  const paragraphs = (faction.description ?? "").split(/\n\s*\n/).map((p) => p.trim()).filter(Boolean);
+  const paragraphs = factionDescription(faction.slug).split(/\n\s*\n/).map((p) => p.trim()).filter(Boolean);
 
   // ⑥ spotlight = highest all-time score; rap sheet = the rest.
   const ranked = [...members].sort((a, b) => b.all_time_score - a.all_time_score);
@@ -351,10 +351,10 @@ export default function SnideFactionBody({ state }: { state: FactionDetailState 
                       {membership.currentFactionSlug &&
                       membership.currentFactionSlug !== "na"
                         ? t("detail.join.confirmSwitch", {
-                            faction: faction.name,
+                            faction: factionName(faction.slug),
                             current: factionName(membership.currentFactionSlug),
                           })
-                        : t("detail.join.confirm", { faction: faction.name })}
+                        : t("detail.join.confirm", { faction: factionName(faction.slug) })}
                     </div>
                     {membership.joinError && (
                       <div style={{ fontFamily: MONO, fontSize: 10, color: "var(--color-danger)", marginBottom: 8 }}>
@@ -410,7 +410,7 @@ export default function SnideFactionBody({ state }: { state: FactionDetailState 
                       {t("snide.dispatch.gateTitle")}
                     </div>
                     <div style={{ fontFamily: TYPE, fontSize: 10.5, lineHeight: 1.6, color: "#d8d6c8" }}>
-                      {t("snide.dispatch.gateBody", { faction: faction.name })}
+                      {t("snide.dispatch.gateBody", { faction: factionName(faction.slug) })}
                     </div>
                   </div>
                 )}

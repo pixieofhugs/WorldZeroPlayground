@@ -9,54 +9,43 @@
  * Use factionCssVar() when you need the CSS variable reference (preferred for styles).
  * Use factionColor() when you need the raw hex value in JS (canvas, SVG generation, etc.).
  *
- * The faction registry is seeded with hardcoded fallback values on startup and overwritten
- * from GET /game-config via populateFactionRegistry() once the API responds. This means
- * all components automatically see live API values after the first fetch without any
- * component-level changes.
+ * The faction registry is a color-only runtime table, seeded from index.css
+ * --faction-* values. Faction NAMES and DESCRIPTIONS are no longer backend-
+ * emitted: the frozen English words live in the factions.json catalog, keyed by
+ * slug (ADR-0031, same split as taunts/ranks), and are resolved via
+ * factionName() / factionDescription().
  */
 import i18n from "../i18n";
 
+// Faction slugs are runtime-dynamic, so the catalog keys (`factions:names.<slug>`
+// / `factions:descriptions.<slug>`) can't be the typed literals t() expects.
+// Resolve through a plain-string view of t — the catalog still owns the words;
+// only the compile-time key check is relaxed for these dynamic lookups. Same
+// pattern as utils/taunts.ts.
+const tString = i18n.t as unknown as (key: string) => string;
+
 export interface FactionConfig {
   slug: string;
-  name: string;
   /** Primary faction color (light mode value — use factionCssVar for theme-aware styles) */
   color: string;
 }
 
-/** Hardcoded fallback — matches index.css --faction-* values exactly. Used on first render
- *  before the API response arrives. Do not use these values directly; call factionColor(). */
+/** Hardcoded color table — matches index.css --faction-* values exactly. The
+ *  API never sends color (ADR-0003: the frontend owns faction color), so this is
+ *  the single source of the JS-side hex. Do not use directly; call factionColor(). */
 const FACTION_FALLBACKS: Record<string, FactionConfig> = {
-  ua: { slug: "ua", name: "UA", color: "#c2541f" },
-  everymen: { slug: "everymen", name: "Everymen", color: "#c1272d" },
-  wow: { slug: "wow", name: "Warriors of Whimsy", color: "#ec5f99" },
-  snide: { slug: "snide", name: "S.N.I.D.E.", color: "#6fae00" },
-  ephemerists: { slug: "ephemerists", name: "The Ephemerists", color: "#1d6e72" },
-  singularity: { slug: "singularity", name: "Singularity", color: "#2563eb" },
+  ua: { slug: "ua", color: "#c2541f" },
+  everymen: { slug: "everymen", color: "#c1272d" },
+  wow: { slug: "wow", color: "#ec5f99" },
+  snide: { slug: "snide", color: "#6fae00" },
+  ephemerists: { slug: "ephemerists", color: "#1d6e72" },
+  singularity: { slug: "singularity", color: "#2563eb" },
   // First-class identity (#232): near-black ink, no hue — the order refuses the palette.
-  albescent: { slug: "albescent", name: "/Albescent", color: "#1c1c1a" },
+  albescent: { slug: "albescent", color: "#1c1c1a" },
 };
 
-/** Live registry — starts as the fallback, overwritten by populateFactionRegistry(). */
-let factionRegistry: Record<string, FactionConfig> = { ...FACTION_FALLBACKS };
-
-/**
- * Called once by useGameConfig when the API response arrives.
- * Updates the runtime registry so all subsequent factionColor() / factionName()
- * calls return API-sourced values without any component changes.
- */
-export function populateFactionRegistry(
-  apiFactions: Array<{ slug: string; name: string }>,
-) {
-  for (const f of apiFactions) {
-    // Preserve the existing fallback color — the API no longer sends color
-    // (ADR-0003: the frontend owns faction color). Only the name is updated.
-    factionRegistry[f.slug] = {
-      ...factionRegistry[f.slug],
-      slug: f.slug,
-      name: f.name,
-    };
-  }
-}
+/** Live registry — color-only, static (nothing hydrates it from the API). */
+const factionRegistry: Record<string, FactionConfig> = { ...FACTION_FALLBACKS };
 
 /**
  * Faction-identity aliases: a derived/retired slug renders with its canonical
@@ -112,12 +101,30 @@ export function factionColor(slug: string | null | undefined): string {
   return factionRegistry[slug ?? ""]?.color ?? "#6b6a7a";
 }
 
-/** Get faction display name by slug, with fallback */
+/**
+ * Get a faction's display name by slug from the factions.json catalog
+ * (`names.<slug>`). A null / unrecognized slug falls back to the "Unaffiliated"
+ * copy under `names.na`. The backend emits only slugs now — never name prose.
+ */
 export function factionName(slug: string | null | undefined): string {
-  // The per-slug names are backend-authored (overwritten by /game-config and
-  // localized in a separate backend issue); only the "no such faction" fallback
-  // is frontend-owned copy, so that one string reads from the catalog.
-  return factionRegistry[slug ?? ""]?.name ?? i18n.t("factions:unaffiliatedName");
+  const key = slug ?? "";
+  if (i18n.exists(`factions:names.${key}`)) {
+    return tString(`factions:names.${key}`);
+  }
+  return i18n.t("factions:names.na");
+}
+
+/**
+ * Get a faction's description by slug from the factions.json catalog
+ * (`descriptions.<slug>`). An unrecognized slug falls back to the shared
+ * "No description yet." copy (`detail.descriptionEmpty`).
+ */
+export function factionDescription(slug: string | null | undefined): string {
+  const key = slug ?? "";
+  if (i18n.exists(`factions:descriptions.${key}`)) {
+    return tString(`factions:descriptions.${key}`);
+  }
+  return i18n.t("factions:detail.descriptionEmpty");
 }
 
 /** Get all factions from the live registry (populated from API after useGameConfig loads) */

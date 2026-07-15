@@ -205,8 +205,8 @@ async def faction_ua(db_session: AsyncSession) -> Faction:
     from sqlalchemy import select
 
     factions_to_seed = [
-        Faction(slug="ua", name="UA", description="Default starting faction", status=FactionStatus.visible),
-        Faction(slug="na", name="None", description="Sentinel for no faction affiliation", status=FactionStatus.hidden),
+        Faction(slug="ua", status=FactionStatus.visible),
+        Faction(slug="na", status=FactionStatus.hidden),
     ]
     for faction in factions_to_seed:
         result = await db_session.execute(select(Faction).where(Faction.slug == faction.slug))
@@ -227,7 +227,7 @@ async def faction_ephemerists(db_session: AsyncSession) -> Faction:
     result = await db_session.execute(select(Faction).where(Faction.slug == "ephemerists"))
     existing = result.scalar_one_or_none()
     if existing is None:
-        faction = Faction(slug="ephemerists", name="The Ephemerists", description="Task Vision perk", status=FactionStatus.visible)
+        faction = Faction(slug="ephemerists", status=FactionStatus.visible)
         db_session.add(faction)
         await db_session.commit()
         result = await db_session.execute(select(Faction).where(Faction.slug == "ephemerists"))

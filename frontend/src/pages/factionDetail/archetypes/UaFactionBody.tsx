@@ -6,7 +6,7 @@ import PraxisCard from "../../../components/PraxisCard";
 import { TaskCrown } from "../../../components/cards/TaskCrown";
 import { toRoman } from "../../../components/cards/ephemeristsAtoms";
 import { computeDisplayPoints } from "../../../utils/points";
-import { factionName } from "../../../utils/factions";
+import { factionName, factionDescription } from "../../../utils/factions";
 import type { CharacterOut } from "../../../api/auth";
 import type { FactionDetailState } from "../useFactionDetail";
 
@@ -122,7 +122,7 @@ export default function UaFactionBody({ state }: { state: FactionDetailState }) 
 
   if (!faction) return null;
 
-  const paragraphs = (faction.description ?? "").split(/\n\s*\n/).map((p) => p.trim()).filter(Boolean);
+  const paragraphs = factionDescription(faction.slug).split(/\n\s*\n/).map((p) => p.trim()).filter(Boolean);
   const ranked = [...members].sort((a, b) => b.all_time_score - a.all_time_score);
   const spot: CharacterOut | undefined = ranked[0];
   const register = ranked.slice(1);
@@ -257,10 +257,10 @@ export default function UaFactionBody({ state }: { state: FactionDetailState }) 
                     {membership.currentFactionSlug &&
                     membership.currentFactionSlug !== "na"
                       ? t("ua.registry.confirmSwitch", {
-                          faction: faction.name,
+                          faction: factionName(faction.slug),
                           current: factionName(membership.currentFactionSlug),
                         })
-                      : t("ua.registry.confirm", { faction: faction.name })}
+                      : t("ua.registry.confirm", { faction: factionName(faction.slug) })}
                   </div>
                   {membership.joinError && (
                     <div style={{ fontFamily: MONO, fontSize: 10, color: "var(--color-danger)", marginBottom: 8 }}>{membership.joinError}</div>
@@ -293,7 +293,7 @@ export default function UaFactionBody({ state }: { state: FactionDetailState }) 
                     {t("ua.registry.gateTitle")}
                   </div>
                   <div style={{ fontFamily: DISPLAY, fontStyle: "italic", fontSize: 13, lineHeight: 1.65, color: SUB }}>
-                    {t("ua.registry.gateBody", { faction: faction.name })}
+                    {t("ua.registry.gateBody", { faction: factionName(faction.slug) })}
                   </div>
                 </div>
               )}

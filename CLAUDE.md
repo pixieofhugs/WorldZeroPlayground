@@ -27,6 +27,7 @@ Deeper notes: `docs/spec/SPEC-architecture.md`.
 | Active rule values (signup cap, vote budget, level thresholds, resets) | `backend/eras/era_1.py` (live `ERA_1`; `CURRENT_ERA` resolves here) |
 | Factions, tasks, level ranks/unlocks + taunt structure for the live era | `backend/eras/era_1.py` |
 | Taunt & rank/unlock **wording** (ADR-0031: backend emits keys) | `frontend/src/locales/en/{taunts,progression}.json` |
+| Faction **name/description** wording (ADR-0038: backend emits slug) | `frontend/src/locales/en/factions.json` (`names.<slug>`, `descriptions.<slug>`) |
 | Era config *shape* (dataclass fields) | `backend/game_config.py` |
 | Backend layering, DDD posture, what goes in services vs. routes | `docs/spec/SPEC-backend-architecture.md` |
 | Building a new era | `backend/eras/_template.py` |

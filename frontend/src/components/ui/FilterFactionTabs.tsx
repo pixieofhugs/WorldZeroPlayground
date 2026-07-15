@@ -2,6 +2,7 @@ import { useTranslation } from "react-i18next";
 import type { FactionOut } from "../../api/factions";
 import {
   factionCssVar,
+  factionName,
   sortFactionsByRainbowOrder,
 } from "../../utils/factions";
 
@@ -50,7 +51,7 @@ export default function FilterFactionTabs({
               transition: "all 120ms",
             }}
           >
-            {faction.name}
+            {factionName(faction.slug)}
           </button>
         );
       })}

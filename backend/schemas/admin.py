@@ -98,10 +98,11 @@ class OverviewStats(BaseModel):
 # ---------------------------------------------------------------------------
 
 
+# ADR-0038: faction name/description prose is not DB-owned. A faction row carries
+# slug + status only; the English words live in
+# frontend/src/locales/en/factions.json.
 class FactionCreate(BaseModel):
     slug: str = Field(..., min_length=2, max_length=30, pattern=r"^[a-z0-9_-]+$")
-    name: str = Field(..., min_length=1, max_length=100)
-    description: str = Field(default="", max_length=500)
     hidden: bool = False
 
 
@@ -109,8 +110,6 @@ class AdminFactionOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     slug: str
-    name: str
-    description: str
     status: str
     created_at: datetime
 

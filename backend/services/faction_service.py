@@ -12,7 +12,6 @@ from models.faction import Faction, FactionStatus
 from models.faction_defection_history import FactionDefectionHistory
 from models.invitation_letter import InvitationLetter
 from models.task import Task, TaskType
-from schemas.faction import FactionUpdate
 from services.character import ALBESCENT_FACTION_SLUG, can_start_as_albescent
 from services.era import clear_defection_history_for_era, get_current_era_row, get_or_create_stats
 
@@ -281,20 +280,3 @@ async def get_invitation_status(
             status_map[slug] = "not_invited"
 
     return status_map
-
-
-# ---------------------------------------------------------------------------
-# Admin mutations
-# ---------------------------------------------------------------------------
-
-
-async def update_faction(
-    faction: Faction,
-    data: FactionUpdate,
-    session: AsyncSession,
-) -> Faction:
-    faction.name = data.name
-    faction.description = data.description
-    await session.flush()
-    await session.refresh(faction)
-    return faction

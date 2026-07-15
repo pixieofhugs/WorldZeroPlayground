@@ -19,11 +19,12 @@ import FactionCard from "../../components/cards/FactionCard";
 import EverymenFactionBody from "../factionDetail/archetypes/EverymenFactionBody";
 import type { FactionDetailState, Membership } from "../factionDetail/useFactionDetail";
 import type { FactionOut } from "../../api/factions";
+import { factionName } from "../../utils/factions";
 
+// Faction name/description prose is no longer on FactionOut (issue #461) — the
+// display copy resolves from the factions.json catalog by slug.
 const FACTION: FactionOut = {
   slug: "everymen",
-  name: "The Everymen",
-  description: "Honest work, honestly done.",
 };
 
 function html(node: React.ReactElement): string {
@@ -43,11 +44,11 @@ describe("faction grid card is a pure preview", () => {
     it(`${slug} card renders the name but no membership buttons`, () => {
       const card = (
         <FactionCard
-          faction={{ ...FACTION, slug, name: `Faction ${slug}` }}
+          faction={{ ...FACTION, slug }}
           status="eligible"
         />
       );
-      expect(text(card), "faction name renders").toContain(`Faction ${slug}`);
+      expect(text(card), "faction name renders").toContain(factionName(slug));
       expect(html(card), "no interactive controls on the grid card").not.toContain(
         "<button",
       );

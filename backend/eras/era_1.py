@@ -18,14 +18,15 @@ from game_config import (
 # FACTIONS
 # =============================================================================
 
+# Faction names/descriptions are NOT config-owned (ADR-0038): the English words
+# live in frontend/src/locales/en/factions.json (names.<slug>, descriptions.<slug>).
+#
 # Cross-faction modifiers (other_task_modifier / collab_other_modifier) are
 # deliberately flattened to 1.0 for Era 1 — no faction is penalized for working
 # a task outside its own faction (issue #452). Re-tune in a future era if desired.
 ERA_1_FACTIONS = {
     "ua": FactionConfig(
         slug="ua",
-        name="UA",
-        description="The Gilt Salon — a regal academy. Full points on all tasks.",
         # UA is an ordinary, invite-joinable faction (ADR-0030) — no starter privilege.
         can_always_rejoin=False,
         own_task_modifier=1.0,
@@ -39,8 +40,6 @@ ERA_1_FACTIONS = {
     # tasks below are reassigned to ua.
     "snide": FactionConfig(
         slug="snide",
-        name="S.N.I.D.E.",
-        description="Specialists in one-on-one competition. Bonus points for winning duels.",
         can_always_rejoin=False,
         own_task_modifier=1.0,
         other_task_modifier=1.0,
@@ -51,8 +50,6 @@ ERA_1_FACTIONS = {
     ),
     "wow": FactionConfig(
         slug="wow",
-        name="Warriors of Whimsy",
-        description="Collective-minded. Excel at their own faction's tasks; reduced elsewhere.",
         can_always_rejoin=False,
         own_task_modifier=1.1,        # +10% on solo own-faction
         other_task_modifier=1.0,
@@ -63,8 +60,6 @@ ERA_1_FACTIONS = {
     ),
     "ephemerists": FactionConfig(
         slug="ephemerists",
-        name="The Ephemerists",
-        description="Wanderers who set down fleeting truths before the road moves on. Task Vision — access to select retired tasks.",
         can_always_rejoin=False,
         own_task_modifier=1.0,
         other_task_modifier=1.0,
@@ -75,9 +70,6 @@ ERA_1_FACTIONS = {
     ),
     "everymen": FactionConfig(
         slug="everymen",
-        name="Everymen",
-        description="No inner circle, no waiting to be chosen. Reliable hands who "
-        "do the work in front of them and finish what they start.",
         can_always_rejoin=False,
         own_task_modifier=1.0,
         other_task_modifier=1.0,
@@ -88,8 +80,6 @@ ERA_1_FACTIONS = {
     ),
     "singularity": FactionConfig(
         slug="singularity",
-        name="Singularity",
-        description="TBD",
         can_always_rejoin=False,
         own_task_modifier=1.0,
         other_task_modifier=1.0,
@@ -100,8 +90,6 @@ ERA_1_FACTIONS = {
     ),
     "albescent": FactionConfig(
         slug="albescent",
-        name="/Albescent",
-        description="Full points and any meta tasks from any group. Unlock-only.",
         can_always_rejoin=True,       # can always be rejoined after defecting
         own_task_modifier=1.0,
         other_task_modifier=1.0,
@@ -112,8 +100,6 @@ ERA_1_FACTIONS = {
     ),
     "na": FactionConfig(
         slug="na",
-        name="None",
-        description="Sentinel value for tasks with no specific faction affiliation.",
         can_always_rejoin=False,
         own_task_modifier=1.0,
         other_task_modifier=1.0,

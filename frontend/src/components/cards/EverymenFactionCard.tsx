@@ -1,11 +1,12 @@
 import type { FactionCardProps } from "./FactionCard";
 import i18n from "../../i18n";
+import { factionName, factionDescription } from "../../utils/factions";
 
 /**
  * EverymenFactionCard — the Everymen faction PREVIEW card.
  *
  * A union recruitment poster: a masthead with the faction name in a big Bebas
- * headline and the motto/blurb pulled from faction.description. Pure preview —
+ * headline and the motto/blurb from factionDescription(slug). Pure preview —
  * the whole card is a link to the faction detail page, where the enlist / leave
  * membership block lives (issue #347). No interactive controls here.
  *
@@ -89,8 +90,7 @@ export default function EverymenCard({
   faction,
   invitationNote,
 }: FactionCardProps) {
-  const blurb =
-    faction.description ?? i18n.t("feed:factionCard.everymen.blurbFallback");
+  const blurb = factionDescription(faction.slug);
 
   const perks = [
     i18n.t("feed:factionCard.everymen.perks.honestPoints"),
@@ -182,7 +182,7 @@ export default function EverymenCard({
             textShadow: "3px 3px 0 var(--everymen-ink)",
           }}
         >
-          {faction.name}
+          {factionName(faction.slug)}
         </h1>
 
         {/* motto plaque */}

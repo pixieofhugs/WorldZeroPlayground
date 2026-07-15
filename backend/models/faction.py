@@ -17,10 +17,10 @@ class Faction(TimestampMixin, Base):
     __tablename__ = "faction"
 
     slug: Mapped[str] = mapped_column(String, primary_key=True)
-    name: Mapped[str] = mapped_column(String, nullable=False)
-    description: Mapped[str] = mapped_column(String, nullable=False, server_default="")
     status: Mapped[FactionStatus] = mapped_column(
         Enum(FactionStatus, create_type=False), nullable=False, default=FactionStatus.visible
     )
-    # No multiplier columns: faction rules live in game_config.py, not the DB.
-    # This table exists for FK references and UI display only.
+    # ADR-0038: no name/description columns. Faction name/description prose lives
+    # in frontend/src/locales/en/factions.json (config-canonical identity); the
+    # row carries slug + status only. No multiplier columns either — faction
+    # rules live in game_config.py. This table exists for FK references only.
