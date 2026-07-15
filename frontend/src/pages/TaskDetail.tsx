@@ -11,8 +11,10 @@ import { useParams } from "react-router-dom";
 import { Trans, useTranslation } from "react-i18next";
 import PageTitle from "../components/ui/PageTitle";
 import { pickVariant } from "../utils/factionDispatch";
+import { useFormFactor } from "../hooks/useFormFactor";
 import { useTaskDetail, type TaskDetailState } from "./taskDetail/useTaskDetail";
 import DefaultTaskDetail from "./taskDetail/archetypes/DefaultTaskDetail";
+import DefaultMobileTaskDetail from "./taskDetail/mobileArchetypes/DefaultTaskDetail";
 import SNIDETaskDetail from "./taskDetail/archetypes/SNIDETaskDetail";
 import EverymenTaskDetail from "./taskDetail/archetypes/EverymenTaskDetail";
 import WowTaskDetail from "./taskDetail/archetypes/WowTaskDetail";
@@ -37,10 +39,16 @@ export const ARCHETYPE_BY_SLUG: Record<string, Archetype> = {
   albescent: AlbescentTaskDetail,
 };
 
+// Parallel MOBILE registry. Empty for now — every faction falls through to the
+// Default mobile skin; bespoke faction mobile skins land incrementally (#496–
+// #500) exactly like the desktop archetypes above.
+export const MOBILE_ARCHETYPE_BY_SLUG: Record<string, Archetype> = {};
+
 export default function TaskDetail() {
   const { id } = useParams<{ id: string }>();
   const { t } = useTranslation("tasks");
   const state = useTaskDetail(id);
+  const formFactor = useFormFactor();
 
   if (state.loading)
     return <div className="py-8 font-body text-muted">{t("detail.loading")}</div>;
@@ -71,7 +79,10 @@ export default function TaskDetail() {
     );
 
   const slug = state.task.primary_faction_slug ?? null;
-  const Archetype = pickVariant(ARCHETYPE_BY_SLUG, slug, DefaultTaskDetail);
+  const Archetype =
+    formFactor === "mobile"
+      ? pickVariant(MOBILE_ARCHETYPE_BY_SLUG, slug, DefaultMobileTaskDetail)
+      : pickVariant(ARCHETYPE_BY_SLUG, slug, DefaultTaskDetail);
 
   return (
     <>
