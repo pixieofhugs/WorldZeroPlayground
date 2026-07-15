@@ -79,7 +79,6 @@ export function useResource<T>(
     }
     // fetchFn is an inline closure per call site; `deps` is the explicit re-run
     // key (mirrors the pages this replaces).
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [...deps, reloadNonce])
 
   return { data, loading, error, refetch }
