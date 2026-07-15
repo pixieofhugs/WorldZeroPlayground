@@ -132,6 +132,11 @@
         "masthead": "FieldDesk.sys",
         "charEyebrow": "// active_node",
         "questsHeading": "// running_processes"
+      },
+      "everymen": {
+        "masthead": "The Union Desk",
+        "charEyebrow": "On the roll",
+        "questsHeading": "On the job"
       }
     }
   },

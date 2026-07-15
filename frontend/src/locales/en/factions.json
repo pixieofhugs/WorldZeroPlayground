@@ -244,6 +244,9 @@
       "emptyWithSpotlight": "No others on the roll yet.",
       "level": "lvl {{level}}"
     },
+    "mobile": {
+      "eyebrow": "The Union Hall"
+    },
     "invitation": {
       "kicker": "doors are open —",
       "headline": "Join the ranks",
