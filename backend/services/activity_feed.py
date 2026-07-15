@@ -5,17 +5,23 @@ timeline with cursor-based pagination.
 
 Per SPEC-backend-architecture.md, this service returns dataclasses. The
 router owns the Pydantic schema conversion.
+
+ADR-0036: feed types are a registry. Each type is one ``FeedSource`` in the
+module-level ``FEED_SOURCES`` tuple — a frozen dataclass pairing the type's
+filter-tab membership, the pre-fetch context it needs, one query builder, and
+one row-to-item mapper. ``get_activity_feed`` iterates the registry; badge
+counts are ``COUNT`` over the *same* windowed query, so a source's ``WHERE`` is
+authored exactly once and the counts can never drift from the fan-out.
 """
 import asyncio
 from dataclasses import dataclass
 from datetime import datetime
 from typing import Any, Callable, Coroutine, Optional
 
-from sqlalchemy import func, select
+from sqlalchemy import Select, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import aliased
 
-from db import AsyncSessionLocal
 from game_config import CURRENT_ERA
 from models.character import Character
 from models.comment import Comment, CommentMention
@@ -61,6 +67,7 @@ class ActivityFeedResponseDC:
     next_cursor: Optional[str] = None
 
 
+# --- Feed item types --------------------------------------------------------
 FEED_ITEM_TYPE_VOTE_ON_MINE = "vote_on_mine"
 FEED_ITEM_TYPE_FRIEND_COMPLETION = "friend_completion"
 FEED_ITEM_TYPE_FOE_TAUNT = "foe_taunt"
@@ -74,55 +81,62 @@ FEED_ITEM_TYPE_FRIEND_DEFECTION = "friend_defection"
 FEED_ITEM_TYPE_FOE_COMPLETION = "foe_completion"
 FEED_ITEM_TYPE_COMMENT_MENTION = "comment_mention"
 
-# Which sub-queries each filter includes
-FILTER_QUERIES: dict[str, set[str]] = {
-    "all": {
-        FEED_ITEM_TYPE_VOTE_ON_MINE,
-        FEED_ITEM_TYPE_FRIEND_COMPLETION,
-        FEED_ITEM_TYPE_FOE_TAUNT,
-        FEED_ITEM_TYPE_GLOBAL_TASK,
-        FEED_ITEM_TYPE_ERA_ANNOUNCEMENT,
-        FEED_ITEM_TYPE_COLLAB_INVITE,
-        FEED_ITEM_TYPE_DUEL_CHALLENGE,
-        FEED_ITEM_TYPE_FRIEND_SIGNUP,
-        FEED_ITEM_TYPE_INVITATION_LETTER,
-        FEED_ITEM_TYPE_FRIEND_DEFECTION,
-        FEED_ITEM_TYPE_FOE_COMPLETION,
-        FEED_ITEM_TYPE_COMMENT_MENTION,
-    },
-    "friends": {
-        FEED_ITEM_TYPE_FRIEND_COMPLETION,
-        FEED_ITEM_TYPE_FRIEND_SIGNUP,
-        FEED_ITEM_TYPE_FRIEND_DEFECTION,
-    },
-    "foes": {FEED_ITEM_TYPE_FOE_TAUNT, FEED_ITEM_TYPE_FOE_COMPLETION},
-    "your_stuff": {
-        FEED_ITEM_TYPE_VOTE_ON_MINE,
-        FEED_ITEM_TYPE_COLLAB_INVITE,
-        FEED_ITEM_TYPE_DUEL_CHALLENGE,
-        FEED_ITEM_TYPE_INVITATION_LETTER,
-        FEED_ITEM_TYPE_COMMENT_MENTION,
-    },
-    "global": {FEED_ITEM_TYPE_GLOBAL_TASK, FEED_ITEM_TYPE_ERA_ANNOUNCEMENT},
-    "requests": {FEED_ITEM_TYPE_COLLAB_INVITE, FEED_ITEM_TYPE_DUEL_CHALLENGE},
-}
+# --- Filter tabs ------------------------------------------------------------
+FILTER_ALL = "all"
+FILTER_FRIENDS = "friends"
+FILTER_FOES = "foes"
+FILTER_YOUR_STUFF = "your_stuff"
+FILTER_GLOBAL = "global"
+FILTER_REQUESTS = "requests"
+
+# --- Pre-fetch context a source's query depends on --------------------------
+# A source that needs one of these but whose context list is empty contributes
+# nothing (empty fetch, zero count) — the pre-fetch guard, in one place.
+NEEDS_FRIEND_IDS = "friend_ids"
+NEEDS_FOE_IDS = "foe_ids"
+NEEDS_MY_TASK_IDS = "my_task_ids"
 
 SUB_QUERY_LIMIT = 50
+ERA_ANNOUNCEMENT_LIMIT = 5
+ADMIN_ACTOR_NAME = "Admin"
 
 
-async def _run_with_own_session(
-    coro_factory: Callable[[AsyncSession], Coroutine[Any, Any, Any]],
-    session_factory: Callable,
-) -> Any:
-    """Open a session from session_factory, run coro_factory(session), and close it.
+@dataclass(frozen=True)
+class FeedContext:
+    """Everything a source's query needs, resolved once in the pre-fetch phase.
 
-    Each concurrent sub-query gets its own session so they can run safely under
-    asyncio.gather without sharing session state. The factory is injected so tests
-    can substitute one that reuses the test-transaction session.
+    ``pending_invites_only`` is the sole per-request axis: the ``requests`` tab
+    windows collab invites / duel challenges to pending only; every other tab
+    (and the your_stuff / all counts) sees every status.
     """
-    async with session_factory() as session:
-        return await coro_factory(session)
+    character_id: int
+    friend_ids: tuple[int, ...]
+    foe_ids: tuple[int, ...]
+    my_task_ids: tuple[int, ...]
+    era_id: int
+    before: Optional[datetime]
+    pending_invites_only: bool
 
+
+@dataclass(frozen=True)
+class FeedSource:
+    """One feed type: its tabs, its pre-fetch needs, its query and row mapper.
+
+    ADR-0036: the ``query`` is the single authority for this type's ``WHERE``.
+    The fan-out runs it and maps rows via ``to_item``; the badge count is
+    ``COUNT`` over the very same (windowed) query. Adding a feed type is one
+    entry in ``FEED_SOURCES`` — not six scattered edits.
+    """
+    item_type: str
+    filters: frozenset[str]
+    needs: frozenset[str]
+    query: Callable[[FeedContext], Select]
+    to_item: Callable[[Any], ActivityFeedItemDC]
+
+
+# ---------------------------------------------------------------------------
+# Pre-fetch helpers
+# ---------------------------------------------------------------------------
 
 async def _get_related_ids(
     character_id: int,
@@ -156,14 +170,17 @@ async def _get_my_task_ids(
     return list(result.scalars().all())
 
 
-async def _fetch_votes_on_mine(
-    character_id: int,
-    session: AsyncSession,
-    before: Optional[datetime],
-) -> list[ActivityFeedItemDC]:
+# ---------------------------------------------------------------------------
+# Per-source query builders + row mappers
+#
+# Each builder returns the windowed Select (ORDER BY + LIMIT) that IS the
+# source of truth for its WHERE clause; the matching mapper turns one row into
+# an ActivityFeedItemDC. Counts wrap the same Select in a COUNT subquery.
+# ---------------------------------------------------------------------------
+
+def _vote_on_mine_query(ctx: FeedContext) -> Select:
     """Votes cast on the current character's praxis."""
     voter_char = Character.__table__.alias("voter_char")
-
     query = (
         select(
             Vote.id,
@@ -179,71 +196,64 @@ async def _fetch_votes_on_mine(
         .join(Praxis, Vote.praxis_id == Praxis.id)
         .join(Task, Praxis.task_id == Task.id)
         .join(voter_char, Vote.voter_character_id == voter_char.c.id)
-        .where(Praxis.created_by_id == character_id)
+        .where(Praxis.created_by_id == ctx.character_id)
     )
-    if before is not None:
-        query = query.where(Vote.created_at < before)
-    query = query.order_by(Vote.created_at.desc()).limit(SUB_QUERY_LIMIT)
-
-    result = await session.execute(query)
-    items: list[ActivityFeedItemDC] = []
-    for row in result.all():
-        items.append(ActivityFeedItemDC(
-            type=FEED_ITEM_TYPE_VOTE_ON_MINE,
-            timestamp=row.created_at,
-            actor_display_name=row.voter_display_name,
-            actor_faction_slug=row.voter_faction_slug,
-            actor_avatar_url=row.voter_avatar_url,
-            payload={
-                "vote_id": row.id,
-                "value": row.value,
-                "praxis_id": row.praxis_id,
-                "praxis_title": row.praxis_title,
-                "task_point_value": row.task_point_value,
-                "points_earned": row.value * row.task_point_value,
-            },
-        ))
-    return items
+    if ctx.before is not None:
+        query = query.where(Vote.created_at < ctx.before)
+    return query.order_by(Vote.created_at.desc()).limit(SUB_QUERY_LIMIT)
 
 
-async def _fetch_completions(
-    character_ids: list[int],
-    item_type: str,
-    session: AsyncSession,
-    before: Optional[datetime],
-) -> list[ActivityFeedItemDC]:
-    """Recent praxis (completions) from the given characters (friends or foes)."""
-    if not character_ids:
-        return []
-
-    query = (
-        select(
-            Praxis.id,
-            Praxis.title,
-            Praxis.created_at,
-            Praxis.created_by_id.label("character_id"),
-            Task.title.label("task_title"),
-            Task.point_value.label("task_point_value"),
-            Task.primary_faction_slug.label("task_faction_slug"),
-            Character.display_name.label("author_display_name"),
-            Character.faction_slug.label("author_faction_slug"),
-            Character.avatar_url.label("author_avatar_url"),
-        )
-        .join(Task, Praxis.task_id == Task.id)
-        .join(Character, Praxis.created_by_id == Character.id)
-        .where(
-            Praxis.created_by_id.in_(character_ids),
-            Praxis.status == PraxisStatus.submitted,
-        )
+def _vote_on_mine_item(row: Any) -> ActivityFeedItemDC:
+    return ActivityFeedItemDC(
+        type=FEED_ITEM_TYPE_VOTE_ON_MINE,
+        timestamp=row.created_at,
+        actor_display_name=row.voter_display_name,
+        actor_faction_slug=row.voter_faction_slug,
+        actor_avatar_url=row.voter_avatar_url,
+        payload={
+            "vote_id": row.id,
+            "value": row.value,
+            "praxis_id": row.praxis_id,
+            "praxis_title": row.praxis_title,
+            "task_point_value": row.task_point_value,
+            "points_earned": row.value * row.task_point_value,
+        },
     )
-    if before is not None:
-        query = query.where(Praxis.created_at < before)
-    query = query.order_by(Praxis.created_at.desc()).limit(SUB_QUERY_LIMIT)
 
-    result = await session.execute(query)
-    items: list[ActivityFeedItemDC] = []
-    for row in result.all():
-        items.append(ActivityFeedItemDC(
+
+def _completions_query_factory(character_ids_attr: str) -> Callable[[FeedContext], Select]:
+    """Build a completions query reading its character-id list from ``ctx.<attr>``."""
+    def build(ctx: FeedContext) -> Select:
+        character_ids = getattr(ctx, character_ids_attr)
+        query = (
+            select(
+                Praxis.id,
+                Praxis.title,
+                Praxis.created_at,
+                Praxis.created_by_id.label("character_id"),
+                Task.title.label("task_title"),
+                Task.point_value.label("task_point_value"),
+                Task.primary_faction_slug.label("task_faction_slug"),
+                Character.display_name.label("author_display_name"),
+                Character.faction_slug.label("author_faction_slug"),
+                Character.avatar_url.label("author_avatar_url"),
+            )
+            .join(Task, Praxis.task_id == Task.id)
+            .join(Character, Praxis.created_by_id == Character.id)
+            .where(
+                Praxis.created_by_id.in_(character_ids),
+                Praxis.status == PraxisStatus.submitted,
+            )
+        )
+        if ctx.before is not None:
+            query = query.where(Praxis.created_at < ctx.before)
+        return query.order_by(Praxis.created_at.desc()).limit(SUB_QUERY_LIMIT)
+    return build
+
+
+def _completion_item_factory(item_type: str) -> Callable[[Any], ActivityFeedItemDC]:
+    def to_item(row: Any) -> ActivityFeedItemDC:
+        return ActivityFeedItemDC(
             type=item_type,
             timestamp=row.created_at,
             actor_display_name=row.author_display_name,
@@ -257,20 +267,15 @@ async def _fetch_completions(
                 "task_faction_slug": row.task_faction_slug,
                 "character_id": row.character_id,
             },
-        ))
-    return items
+        )
+    return to_item
 
 
-async def _fetch_foe_taunts(
-    character_id: int,
-    session: AsyncSession,
-    before: Optional[datetime],
-) -> list[ActivityFeedItemDC]:
+def _foe_taunts_query(ctx: FeedContext) -> Select:
     """Taunts received from foes.
 
     ADR-0031: emits a structured reference (frozen ``faction_slug`` +
-    ``trigger_type`` + both display names), never rendered prose. The frontend
-    catalog resolves and interpolates the copy.
+    ``trigger_type`` + both display names), never rendered prose.
     """
     from_character = aliased(Character)
     to_character = aliased(Character)
@@ -284,112 +289,91 @@ async def _fetch_foe_taunts(
         )
         .join(from_character, TauntMessage.from_character_id == from_character.id)
         .join(to_character, TauntMessage.to_character_id == to_character.id)
-        .where(TauntMessage.to_character_id == character_id)
+        .where(TauntMessage.to_character_id == ctx.character_id)
     )
-    if before is not None:
-        query = query.where(TauntMessage.created_at < before)
-    query = query.order_by(TauntMessage.created_at.desc()).limit(SUB_QUERY_LIMIT)
-
-    result = await session.execute(query)
-    items: list[ActivityFeedItemDC] = []
-    for taunt, display_name, faction_slug, avatar_url, to_display_name in result.all():
-        items.append(ActivityFeedItemDC(
-            type=FEED_ITEM_TYPE_FOE_TAUNT,
-            timestamp=taunt.created_at,
-            actor_display_name=display_name,
-            actor_faction_slug=faction_slug,
-            actor_avatar_url=avatar_url,
-            payload={
-                "taunt_id": taunt.id,
-                "faction_slug": taunt.faction_slug,
-                "trigger_type": taunt.trigger_type.value,
-                "from_character_id": taunt.from_character_id,
-                "from_name": display_name,
-                "to_name": to_display_name,
-            },
-        ))
-    return items
+    if ctx.before is not None:
+        query = query.where(TauntMessage.created_at < ctx.before)
+    return query.order_by(TauntMessage.created_at.desc()).limit(SUB_QUERY_LIMIT)
 
 
-async def _fetch_global_tasks(
-    session: AsyncSession,
-    before: Optional[datetime],
-) -> list[ActivityFeedItemDC]:
+def _foe_taunt_item(row: Any) -> ActivityFeedItemDC:
+    taunt: TauntMessage = row[0]
+    return ActivityFeedItemDC(
+        type=FEED_ITEM_TYPE_FOE_TAUNT,
+        timestamp=taunt.created_at,
+        actor_display_name=row.from_display_name,
+        actor_faction_slug=row.from_faction_slug,
+        actor_avatar_url=row.from_avatar_url,
+        payload={
+            "taunt_id": taunt.id,
+            "faction_slug": taunt.faction_slug,
+            "trigger_type": taunt.trigger_type.value,
+            "from_character_id": taunt.from_character_id,
+            "from_name": row.from_display_name,
+            "to_name": row.to_display_name,
+        },
+    )
+
+
+def _global_tasks_query(ctx: FeedContext) -> Select:
     """Recently activated tasks (global events)."""
-    query = (
-        select(
-            Task.id,
-            Task.title,
-            Task.point_value,
-            Task.level_required,
-            Task.primary_faction_slug,
-            Task.created_at,
-        )
-        .where(Task.status == TaskStatus.active)
+    query = select(
+        Task.id,
+        Task.title,
+        Task.point_value,
+        Task.level_required,
+        Task.primary_faction_slug,
+        Task.created_at,
+    ).where(Task.status == TaskStatus.active)
+    if ctx.before is not None:
+        query = query.where(Task.created_at < ctx.before)
+    return query.order_by(Task.created_at.desc()).limit(SUB_QUERY_LIMIT)
+
+
+def _global_task_item(row: Any) -> ActivityFeedItemDC:
+    return ActivityFeedItemDC(
+        type=FEED_ITEM_TYPE_GLOBAL_TASK,
+        timestamp=row.created_at,
+        actor_display_name=ADMIN_ACTOR_NAME,
+        actor_faction_slug=None,
+        actor_avatar_url=None,
+        payload={
+            "task_id": row.id,
+            "task_title": row.title,
+            "task_point_value": row.point_value,
+            "task_level_required": row.level_required,
+            "task_faction_slug": row.primary_faction_slug,
+        },
     )
-    if before is not None:
-        query = query.where(Task.created_at < before)
-    query = query.order_by(Task.created_at.desc()).limit(SUB_QUERY_LIMIT)
-
-    result = await session.execute(query)
-    items: list[ActivityFeedItemDC] = []
-    for row in result.all():
-        items.append(ActivityFeedItemDC(
-            type=FEED_ITEM_TYPE_GLOBAL_TASK,
-            timestamp=row.created_at,
-            actor_display_name="Admin",
-            actor_faction_slug=None,
-            actor_avatar_url=None,
-            payload={
-                "task_id": row.id,
-                "task_title": row.title,
-                "task_point_value": row.point_value,
-                "task_level_required": row.level_required,
-                "task_faction_slug": row.primary_faction_slug,
-            },
-        ))
-    return items
 
 
-async def _fetch_era_announcements(
-    session: AsyncSession,
-    before: Optional[datetime],
-) -> list[ActivityFeedItemDC]:
+def _era_announcements_query(ctx: FeedContext) -> Select:
     """Era start announcements."""
-    query = select(Era)
-    if before is not None:
-        query = query.where(Era.started_at < before)
-    query = query.order_by(Era.started_at.desc()).limit(5)
-
-    result = await session.execute(query)
-    items: list[ActivityFeedItemDC] = []
-    for era in result.scalars().all():
-        items.append(ActivityFeedItemDC(
-            type=FEED_ITEM_TYPE_ERA_ANNOUNCEMENT,
-            timestamp=era.started_at,
-            actor_display_name="Admin",
-            actor_faction_slug=None,
-            actor_avatar_url=None,
-            payload={
-                "era_id": era.id,
-                "era_name": era.name,
-                "era_notes": era.notes,
-                "config_key": era.config_key,
-            },
-        ))
-    return items
+    query: Select = select(Era)
+    if ctx.before is not None:
+        query = query.where(Era.started_at < ctx.before)
+    return query.order_by(Era.started_at.desc()).limit(ERA_ANNOUNCEMENT_LIMIT)
 
 
-async def _fetch_praxis_invites(
-    character_id: int,
-    praxis_type: PraxisType,
-    item_type: str,
-    actor_id_key: str,
-    session: AsyncSession,
-    before: Optional[datetime],
-    pending_only: bool = False,
-) -> list[ActivityFeedItemDC]:
-    """Praxis invites (collab invites / duel challenges) sent to the current character."""
+def _era_announcement_item(row: Any) -> ActivityFeedItemDC:
+    era: Era = row[0]
+    return ActivityFeedItemDC(
+        type=FEED_ITEM_TYPE_ERA_ANNOUNCEMENT,
+        timestamp=era.started_at,
+        actor_display_name=ADMIN_ACTOR_NAME,
+        actor_faction_slug=None,
+        actor_avatar_url=None,
+        payload={
+            "era_id": era.id,
+            "era_name": era.name,
+            "era_notes": era.notes,
+            "config_key": era.config_key,
+        },
+    )
+
+
+def _collab_invites_query(ctx: FeedContext) -> Select:
+    """Collab invites sent to the current character (PraxisInvite, collab type)."""
     query = (
         select(
             PraxisInvite.id,
@@ -409,52 +393,40 @@ async def _fetch_praxis_invites(
         .join(Task, Praxis.task_id == Task.id)
         .join(Character, PraxisInvite.inviter_id == Character.id)
         .where(
-            PraxisInvite.invitee_id == character_id,
-            Praxis.type == praxis_type,
+            PraxisInvite.invitee_id == ctx.character_id,
+            Praxis.type == PraxisType.collab,
         )
     )
-    if pending_only:
+    if ctx.pending_invites_only:
         query = query.where(PraxisInvite.status == PraxisInviteStatus.pending)
-    if before is not None:
-        query = query.where(PraxisInvite.created_at < before)
-    query = query.order_by(PraxisInvite.created_at.desc()).limit(SUB_QUERY_LIMIT)
+    if ctx.before is not None:
+        query = query.where(PraxisInvite.created_at < ctx.before)
+    return query.order_by(PraxisInvite.created_at.desc()).limit(SUB_QUERY_LIMIT)
 
-    result = await session.execute(query)
-    items: list[ActivityFeedItemDC] = []
-    for row in result.all():
-        payload = {
+
+def _collab_invite_item(row: Any) -> ActivityFeedItemDC:
+    return ActivityFeedItemDC(
+        type=FEED_ITEM_TYPE_COLLAB_INVITE,
+        timestamp=row.created_at,
+        actor_display_name=row.actor_display_name,
+        actor_faction_slug=row.actor_faction_slug,
+        actor_avatar_url=row.actor_avatar_url,
+        payload={
             "invite_id": row.id,
             "praxis_id": row.praxis_id,
             "task_title": row.task_title,
             "task_point_value": row.task_point_value,
             "task_faction_slug": row.task_faction_slug,
             "invite_status": row.status.value,
-            actor_id_key: row.inviter_id,
-        }
-        # ponytail: only collab cards render a level badge; duel payload omits it
-        if praxis_type == PraxisType.collab:
-            payload["task_level_required"] = row.task_level_required
-        items.append(ActivityFeedItemDC(
-            type=item_type,
-            timestamp=row.created_at,
-            actor_display_name=row.actor_display_name,
-            actor_faction_slug=row.actor_faction_slug,
-            actor_avatar_url=row.actor_avatar_url,
-            payload=payload,
-        ))
-    return items
+            # ponytail: only collab cards render a level badge
+            "inviter_character_id": row.inviter_id,
+            "task_level_required": row.task_level_required,
+        },
+    )
 
 
-async def _fetch_duel_challenges(
-    character_id: int,
-    session: AsyncSession,
-    before: Optional[datetime],
-    pending_only: bool = False,
-) -> list[ActivityFeedItemDC]:
-    """Duel challenges issued to ``character_id`` (ADR-0011).
-
-    Queries the Duel table directly — not PraxisInvite, which is collab-only now.
-    """
+def _duel_challenges_query(ctx: FeedContext) -> Select:
+    """Duel challenges issued to the current character (ADR-0011, Duel table)."""
     query = (
         select(
             Duel.id,
@@ -472,46 +444,36 @@ async def _fetch_duel_challenges(
         .join(Praxis, Duel.challenger_praxis_id == Praxis.id)
         .join(Task, Duel.task_id == Task.id)
         .join(Character, Praxis.created_by_id == Character.id)
-        .where(Duel.opponent_character_id == character_id)
+        .where(Duel.opponent_character_id == ctx.character_id)
     )
-    if pending_only:
+    if ctx.pending_invites_only:
         query = query.where(Duel.status == DuelStatus.pending)
-    if before is not None:
-        query = query.where(Duel.created_at < before)
-    query = query.order_by(Duel.created_at.desc()).limit(SUB_QUERY_LIMIT)
-
-    result = await session.execute(query)
-    items: list[ActivityFeedItemDC] = []
-    for row in result.all():
-        items.append(ActivityFeedItemDC(
-            type=FEED_ITEM_TYPE_DUEL_CHALLENGE,
-            timestamp=row.created_at,
-            actor_display_name=row.actor_display_name,
-            actor_faction_slug=row.actor_faction_slug,
-            actor_avatar_url=row.actor_avatar_url,
-            payload={
-                "duel_id": row.id,
-                "challenger_praxis_id": row.challenger_praxis_id,
-                "challenger_character_id": row.challenger_character_id,
-                "task_title": row.task_title,
-                "task_point_value": row.task_point_value,
-                "task_faction_slug": row.task_faction_slug,
-                "duel_status": row.status.value,
-            },
-        ))
-    return items
+    if ctx.before is not None:
+        query = query.where(Duel.created_at < ctx.before)
+    return query.order_by(Duel.created_at.desc()).limit(SUB_QUERY_LIMIT)
 
 
-async def _fetch_friend_signups(
-    friend_ids: list[int],
-    my_task_ids: list[int],
-    session: AsyncSession,
-    before: Optional[datetime],
-) -> list[ActivityFeedItemDC]:
+def _duel_challenge_item(row: Any) -> ActivityFeedItemDC:
+    return ActivityFeedItemDC(
+        type=FEED_ITEM_TYPE_DUEL_CHALLENGE,
+        timestamp=row.created_at,
+        actor_display_name=row.actor_display_name,
+        actor_faction_slug=row.actor_faction_slug,
+        actor_avatar_url=row.actor_avatar_url,
+        payload={
+            "duel_id": row.id,
+            "challenger_praxis_id": row.challenger_praxis_id,
+            "challenger_character_id": row.challenger_character_id,
+            "task_title": row.task_title,
+            "task_point_value": row.task_point_value,
+            "task_faction_slug": row.task_faction_slug,
+            "duel_status": row.status.value,
+        },
+    )
+
+
+def _friend_signups_query(ctx: FeedContext) -> Select:
     """Friends who joined praxes on tasks the current character is also doing."""
-    if not friend_ids or not my_task_ids:
-        return []
-
     query = (
         select(
             PraxisMember.id,
@@ -529,88 +491,70 @@ async def _fetch_friend_signups(
         .join(Character, PraxisMember.character_id == Character.id)
         .join(Task, Praxis.task_id == Task.id)
         .where(
-            PraxisMember.character_id.in_(friend_ids),
-            Praxis.task_id.in_(my_task_ids),
+            PraxisMember.character_id.in_(ctx.friend_ids),
+            Praxis.task_id.in_(ctx.my_task_ids),
         )
     )
-    if before is not None:
-        query = query.where(PraxisMember.joined_at < before)
-    query = query.order_by(PraxisMember.joined_at.desc()).limit(SUB_QUERY_LIMIT)
-
-    result = await session.execute(query)
-    items: list[ActivityFeedItemDC] = []
-    for row in result.all():
-        items.append(ActivityFeedItemDC(
-            type=FEED_ITEM_TYPE_FRIEND_SIGNUP,
-            timestamp=row.joined_at,
-            actor_display_name=row.display_name,
-            actor_faction_slug=row.faction_slug,
-            actor_avatar_url=row.avatar_url,
-            payload={
-                "praxis_member_id": row.id,
-                "character_id": row.character_id,
-                "task_id": row.task_id,
-                "task_title": row.task_title,
-                "task_point_value": row.task_point_value,
-                "task_faction_slug": row.task_faction_slug,
-            },
-        ))
-    return items
+    if ctx.before is not None:
+        query = query.where(PraxisMember.joined_at < ctx.before)
+    return query.order_by(PraxisMember.joined_at.desc()).limit(SUB_QUERY_LIMIT)
 
 
-async def _fetch_invitation_letters(
-    character_id: int,
-    session: AsyncSession,
-    before: Optional[datetime],
-) -> list[ActivityFeedItemDC]:
-    """Faction invitation letters delivered to the current character."""
-    era_row = await get_current_era_row(session)
-
-    query = (
-        select(InvitationLetter)
-        .where(
-            InvitationLetter.character_id == character_id,
-            InvitationLetter.era_id == era_row.id,
-        )
+def _friend_signup_item(row: Any) -> ActivityFeedItemDC:
+    return ActivityFeedItemDC(
+        type=FEED_ITEM_TYPE_FRIEND_SIGNUP,
+        timestamp=row.joined_at,
+        actor_display_name=row.display_name,
+        actor_faction_slug=row.faction_slug,
+        actor_avatar_url=row.avatar_url,
+        payload={
+            "praxis_member_id": row.id,
+            "character_id": row.character_id,
+            "task_id": row.task_id,
+            "task_title": row.task_title,
+            "task_point_value": row.task_point_value,
+            "task_faction_slug": row.task_faction_slug,
+        },
     )
-    if before is not None:
-        query = query.where(InvitationLetter.delivered_at < before)
-    query = query.order_by(InvitationLetter.delivered_at.desc()).limit(SUB_QUERY_LIMIT)
-
-    result = await session.execute(query)
-    items: list[ActivityFeedItemDC] = []
-    for letter in result.scalars().all():
-        faction_name = (
-            CURRENT_ERA.factions[letter.faction_slug].name
-            if letter.faction_slug in CURRENT_ERA.factions
-            else letter.faction_slug
-        )
-        items.append(ActivityFeedItemDC(
-            type=FEED_ITEM_TYPE_INVITATION_LETTER,
-            timestamp=letter.delivered_at,
-            actor_display_name=faction_name,
-            actor_faction_slug=letter.faction_slug,
-            actor_avatar_url=None,
-            payload={
-                "letter_id": letter.id,
-                "faction_slug": letter.faction_slug,
-                "faction_name": faction_name,
-            },
-        ))
-    return items
 
 
-async def _fetch_friend_defections(
-    friend_ids: list[int],
-    session: AsyncSession,
-    before: Optional[datetime],
-) -> list[ActivityFeedItemDC]:
-    """Friends who recently changed factions (defected)."""
-    if not friend_ids:
-        return []
+def _invitation_letters_query(ctx: FeedContext) -> Select:
+    """Faction invitation letters delivered to the current character (this era)."""
+    query: Select = select(InvitationLetter).where(
+        InvitationLetter.character_id == ctx.character_id,
+        InvitationLetter.era_id == ctx.era_id,
+    )
+    if ctx.before is not None:
+        query = query.where(InvitationLetter.delivered_at < ctx.before)
+    return query.order_by(InvitationLetter.delivered_at.desc()).limit(SUB_QUERY_LIMIT)
 
-    era_row = await get_current_era_row(session)
 
+def _faction_display_name(faction_slug: str) -> str:
+    """Resolve a faction slug to its display name for the current era."""
+    if faction_slug in CURRENT_ERA.factions:
+        return CURRENT_ERA.factions[faction_slug].name
+    return faction_slug
+
+
+def _invitation_letter_item(row: Any) -> ActivityFeedItemDC:
+    letter: InvitationLetter = row[0]
+    faction_name = _faction_display_name(letter.faction_slug)
+    return ActivityFeedItemDC(
+        type=FEED_ITEM_TYPE_INVITATION_LETTER,
+        timestamp=letter.delivered_at,
+        actor_display_name=faction_name,
+        actor_faction_slug=letter.faction_slug,
+        actor_avatar_url=None,
+        payload={
+            "letter_id": letter.id,
+            "faction_slug": letter.faction_slug,
+            "faction_name": faction_name,
+        },
+    )
+
+
+def _friend_defections_query(ctx: FeedContext) -> Select:
+    """Friends who recently changed factions (defected) this era."""
     query = (
         select(
             FactionDefectionHistory.id,
@@ -623,49 +567,35 @@ async def _fetch_friend_defections(
         )
         .join(Character, FactionDefectionHistory.character_id == Character.id)
         .where(
-            FactionDefectionHistory.character_id.in_(friend_ids),
-            FactionDefectionHistory.era_id == era_row.id,
+            FactionDefectionHistory.character_id.in_(ctx.friend_ids),
+            FactionDefectionHistory.era_id == ctx.era_id,
         )
     )
-    if before is not None:
-        query = query.where(FactionDefectionHistory.defected_at < before)
-    query = query.order_by(FactionDefectionHistory.defected_at.desc()).limit(SUB_QUERY_LIMIT)
-
-    result = await session.execute(query)
-    items: list[ActivityFeedItemDC] = []
-    for row in result.all():
-        old_faction_name = (
-            CURRENT_ERA.factions[row.faction_slug].name
-            if row.faction_slug in CURRENT_ERA.factions
-            else row.faction_slug
-        )
-        new_faction_name = (
-            CURRENT_ERA.factions[row.current_faction_slug].name
-            if row.current_faction_slug in CURRENT_ERA.factions
-            else row.current_faction_slug
-        )
-        items.append(ActivityFeedItemDC(
-            type=FEED_ITEM_TYPE_FRIEND_DEFECTION,
-            timestamp=row.defected_at,
-            actor_display_name=row.display_name,
-            actor_faction_slug=row.current_faction_slug,
-            actor_avatar_url=row.avatar_url,
-            payload={
-                "character_id": row.character_id,
-                "old_faction_slug": row.faction_slug,
-                "old_faction_name": old_faction_name,
-                "new_faction_slug": row.current_faction_slug,
-                "new_faction_name": new_faction_name,
-            },
-        ))
-    return items
+    if ctx.before is not None:
+        query = query.where(FactionDefectionHistory.defected_at < ctx.before)
+    return query.order_by(FactionDefectionHistory.defected_at.desc()).limit(SUB_QUERY_LIMIT)
 
 
-async def _fetch_comment_mentions(
-    character_id: int,
-    session: AsyncSession,
-    before: Optional[datetime],
-) -> list[ActivityFeedItemDC]:
+def _friend_defection_item(row: Any) -> ActivityFeedItemDC:
+    old_faction_name = _faction_display_name(row.faction_slug)
+    new_faction_name = _faction_display_name(row.current_faction_slug)
+    return ActivityFeedItemDC(
+        type=FEED_ITEM_TYPE_FRIEND_DEFECTION,
+        timestamp=row.defected_at,
+        actor_display_name=row.display_name,
+        actor_faction_slug=row.current_faction_slug,
+        actor_avatar_url=row.avatar_url,
+        payload={
+            "character_id": row.character_id,
+            "old_faction_slug": row.faction_slug,
+            "old_faction_name": old_faction_name,
+            "new_faction_slug": row.current_faction_slug,
+            "new_faction_name": new_faction_name,
+        },
+    )
+
+
+def _comment_mentions_query(ctx: FeedContext) -> Select:
     """Comments that @mention the current character (visible, non-withdrawn)."""
     query = (
         select(
@@ -681,222 +611,235 @@ async def _fetch_comment_mentions(
         .join(CommentMention, CommentMention.comment_id == Comment.id)
         .join(Character, Comment.created_by_id == Character.id)
         .where(
-            CommentMention.mentioned_character_id == character_id,
+            CommentMention.mentioned_character_id == ctx.character_id,
             Comment.is_withdrawn.is_(False),
             Comment.moderation_status == ModerationStatus.visible,
         )
     )
-    if before is not None:
-        query = query.where(Comment.created_at < before)
-    query = query.order_by(Comment.created_at.desc()).limit(SUB_QUERY_LIMIT)
+    if ctx.before is not None:
+        query = query.where(Comment.created_at < ctx.before)
+    return query.order_by(Comment.created_at.desc()).limit(SUB_QUERY_LIMIT)
 
-    result = await session.execute(query)
-    items: list[ActivityFeedItemDC] = []
-    for row in result.all():
-        items.append(ActivityFeedItemDC(
-            type=FEED_ITEM_TYPE_COMMENT_MENTION,
-            timestamp=row.created_at,
-            actor_display_name=row.author_display_name,
-            actor_faction_slug=row.author_faction_slug,
-            actor_avatar_url=row.author_avatar_url,
-            payload={
-                "comment_id": row.id,
-                "praxis_id": row.praxis_id,
-                "task_id": row.task_id,
-                "excerpt": row.body_text[:140],
-            },
-        ))
-    return items
+
+def _comment_mention_item(row: Any) -> ActivityFeedItemDC:
+    return ActivityFeedItemDC(
+        type=FEED_ITEM_TYPE_COMMENT_MENTION,
+        timestamp=row.created_at,
+        actor_display_name=row.author_display_name,
+        actor_faction_slug=row.author_faction_slug,
+        actor_avatar_url=row.author_avatar_url,
+        payload={
+            "comment_id": row.id,
+            "praxis_id": row.praxis_id,
+            "task_id": row.task_id,
+            "excerpt": row.body_text[:140],
+        },
+    )
+
+
+# ---------------------------------------------------------------------------
+# The registry — one entry per feed type. Adding a type is one line here.
+# ---------------------------------------------------------------------------
+
+FEED_SOURCES: tuple[FeedSource, ...] = (
+    FeedSource(
+        item_type=FEED_ITEM_TYPE_VOTE_ON_MINE,
+        filters=frozenset({FILTER_ALL, FILTER_YOUR_STUFF}),
+        needs=frozenset(),
+        query=_vote_on_mine_query,
+        to_item=_vote_on_mine_item,
+    ),
+    FeedSource(
+        item_type=FEED_ITEM_TYPE_FRIEND_COMPLETION,
+        filters=frozenset({FILTER_ALL, FILTER_FRIENDS}),
+        needs=frozenset({NEEDS_FRIEND_IDS}),
+        query=_completions_query_factory(NEEDS_FRIEND_IDS),
+        to_item=_completion_item_factory(FEED_ITEM_TYPE_FRIEND_COMPLETION),
+    ),
+    FeedSource(
+        item_type=FEED_ITEM_TYPE_FOE_TAUNT,
+        filters=frozenset({FILTER_ALL, FILTER_FOES}),
+        needs=frozenset(),
+        query=_foe_taunts_query,
+        to_item=_foe_taunt_item,
+    ),
+    FeedSource(
+        item_type=FEED_ITEM_TYPE_GLOBAL_TASK,
+        filters=frozenset({FILTER_ALL, FILTER_GLOBAL}),
+        needs=frozenset(),
+        query=_global_tasks_query,
+        to_item=_global_task_item,
+    ),
+    FeedSource(
+        item_type=FEED_ITEM_TYPE_ERA_ANNOUNCEMENT,
+        filters=frozenset({FILTER_ALL, FILTER_GLOBAL}),
+        needs=frozenset(),
+        query=_era_announcements_query,
+        to_item=_era_announcement_item,
+    ),
+    FeedSource(
+        item_type=FEED_ITEM_TYPE_COLLAB_INVITE,
+        filters=frozenset({FILTER_ALL, FILTER_YOUR_STUFF, FILTER_REQUESTS}),
+        needs=frozenset(),
+        query=_collab_invites_query,
+        to_item=_collab_invite_item,
+    ),
+    FeedSource(
+        item_type=FEED_ITEM_TYPE_DUEL_CHALLENGE,
+        filters=frozenset({FILTER_ALL, FILTER_YOUR_STUFF, FILTER_REQUESTS}),
+        needs=frozenset(),
+        query=_duel_challenges_query,
+        to_item=_duel_challenge_item,
+    ),
+    FeedSource(
+        item_type=FEED_ITEM_TYPE_FRIEND_SIGNUP,
+        filters=frozenset({FILTER_ALL, FILTER_FRIENDS}),
+        needs=frozenset({NEEDS_FRIEND_IDS, NEEDS_MY_TASK_IDS}),
+        query=_friend_signups_query,
+        to_item=_friend_signup_item,
+    ),
+    FeedSource(
+        item_type=FEED_ITEM_TYPE_INVITATION_LETTER,
+        filters=frozenset({FILTER_ALL, FILTER_YOUR_STUFF}),
+        needs=frozenset(),
+        query=_invitation_letters_query,
+        to_item=_invitation_letter_item,
+    ),
+    FeedSource(
+        item_type=FEED_ITEM_TYPE_FRIEND_DEFECTION,
+        filters=frozenset({FILTER_ALL, FILTER_FRIENDS}),
+        needs=frozenset({NEEDS_FRIEND_IDS}),
+        query=_friend_defections_query,
+        to_item=_friend_defection_item,
+    ),
+    FeedSource(
+        item_type=FEED_ITEM_TYPE_FOE_COMPLETION,
+        filters=frozenset({FILTER_ALL, FILTER_FOES}),
+        needs=frozenset({NEEDS_FOE_IDS}),
+        query=_completions_query_factory(NEEDS_FOE_IDS),
+        to_item=_completion_item_factory(FEED_ITEM_TYPE_FOE_COMPLETION),
+    ),
+    FeedSource(
+        item_type=FEED_ITEM_TYPE_COMMENT_MENTION,
+        filters=frozenset({FILTER_ALL, FILTER_YOUR_STUFF}),
+        needs=frozenset(),
+        query=_comment_mentions_query,
+        to_item=_comment_mention_item,
+    ),
+)
+
+# Which sub-queries each filter includes — derived from the registry so it can
+# never drift from FEED_SOURCES. FILTER_QUERIES.get(filter, all) keeps the
+# "unknown filter falls back to all" contract.
+FILTER_QUERIES: dict[str, set[str]] = {
+    tab: {source.item_type for source in FEED_SOURCES if tab in source.filters}
+    for tab in (
+        FILTER_ALL,
+        FILTER_FRIENDS,
+        FILTER_FOES,
+        FILTER_YOUR_STUFF,
+        FILTER_GLOBAL,
+        FILTER_REQUESTS,
+    )
+}
+
+
+# ---------------------------------------------------------------------------
+# Registry runner — one own-session-per-source pattern for fetch and count
+# ---------------------------------------------------------------------------
+
+def _needs_satisfied(source: FeedSource, ctx: FeedContext) -> bool:
+    """A source with an empty required context contributes nothing (guard)."""
+    if NEEDS_FRIEND_IDS in source.needs and not ctx.friend_ids:
+        return False
+    if NEEDS_FOE_IDS in source.needs and not ctx.foe_ids:
+        return False
+    if NEEDS_MY_TASK_IDS in source.needs and not ctx.my_task_ids:
+        return False
+    return True
+
+
+async def _run_source_fetch(
+    source: FeedSource,
+    ctx: FeedContext,
+    session_factory: Callable,
+) -> list[ActivityFeedItemDC]:
+    """Run a source's query in its own session and map rows → items."""
+    if not _needs_satisfied(source, ctx):
+        return []
+    async with session_factory() as session:
+        result = await session.execute(source.query(ctx))
+        return [source.to_item(row) for row in result.all()]
+
+
+async def _run_source_count(
+    source: FeedSource,
+    ctx: FeedContext,
+    session_factory: Callable,
+) -> int:
+    """COUNT over the source's OWN windowed query (ADR-0036).
+
+    The count wraps the identical Select in a subquery, so it respects the same
+    WHERE, the ``before`` cursor, and the SUB_QUERY_LIMIT window as the fetch —
+    the badge can never disagree with what the fan-out would return.
+    """
+    if not _needs_satisfied(source, ctx):
+        return 0
+    async with session_factory() as session:
+        windowed = source.query(ctx).subquery()
+        result = await session.execute(select(func.count()).select_from(windowed))
+        return int(result.scalar_one())
+
+
+def _sum_counts_for_tab(tab: str, counts_by_type: dict[str, int]) -> int:
+    """Sum the per-source counts of every source belonging to ``tab``."""
+    return sum(
+        counts_by_type.get(source.item_type, 0)
+        for source in FEED_SOURCES
+        if tab in source.filters
+    )
 
 
 async def _compute_counts(
-    character_id: int,
-    friend_ids: list[int],
-    my_task_ids: list[int],
+    count_ctx: FeedContext,
+    count_ctx_requests: FeedContext,
     session_factory: Callable,
 ) -> FeedCountsDC:
-    """Compute badge counts for each filter tab.
+    """Badge counts, each derived from its source's own query (ADR-0036).
 
-    Each COUNT query runs in its own session so they can execute concurrently
-    under asyncio.gather.
+    Every tab but ``requests`` sees all statuses (``count_ctx``); the
+    ``requests`` tab windows collab invites / duel challenges to pending only
+    (``count_ctx_requests``) — matching what that tab's fan-out returns.
     """
+    requests_sources = [s for s in FEED_SOURCES if FILTER_REQUESTS in s.filters]
 
-    async def count_votes_on_mine() -> int:
-        async with session_factory() as s:
-            result = await s.execute(
-                select(func.count())
-                .select_from(Vote)
-                .join(Praxis, Vote.praxis_id == Praxis.id)
-                .where(Praxis.created_by_id == character_id)
-            )
-            return result.scalar_one()
-
-    async def count_friend_completions() -> int:
-        if not friend_ids:
-            return 0
-        async with session_factory() as s:
-            result = await s.execute(
-                select(func.count())
-                .select_from(Praxis)
-                .where(
-                    Praxis.created_by_id.in_(friend_ids),
-                    Praxis.status == PraxisStatus.submitted,
-                )
-            )
-            return result.scalar_one()
-
-    async def count_friend_signups() -> int:
-        if not friend_ids or not my_task_ids:
-            return 0
-        async with session_factory() as s:
-            result = await s.execute(
-                select(func.count())
-                .select_from(PraxisMember)
-                .join(Praxis, PraxisMember.praxis_id == Praxis.id)
-                .where(
-                    PraxisMember.character_id.in_(friend_ids),
-                    Praxis.task_id.in_(my_task_ids),
-                )
-            )
-            return result.scalar_one()
-
-    async def count_foe_taunts() -> int:
-        async with session_factory() as s:
-            result = await s.execute(
-                select(func.count())
-                .select_from(TauntMessage)
-                .where(TauntMessage.to_character_id == character_id)
-            )
-            return result.scalar_one()
-
-    async def count_foe_completions() -> int:
-        async with session_factory() as s:
-            foe_ids = await _get_related_ids(character_id, RelationshipType.foe, s)
-            if not foe_ids:
-                return 0
-            result = await s.execute(
-                select(func.count())
-                .select_from(Praxis)
-                .where(
-                    Praxis.created_by_id.in_(foe_ids),
-                    Praxis.status == PraxisStatus.submitted,
-                )
-            )
-            return result.scalar_one()
-
-    async def count_praxis_invites() -> int:
-        async with session_factory() as s:
-            result = await s.execute(
-                select(func.count())
-                .select_from(PraxisInvite)
-                .where(PraxisInvite.invitee_id == character_id)
-            )
-            return result.scalar_one()
-
-    async def count_invitation_letters() -> int:
-        async with session_factory() as s:
-            era_row = await get_current_era_row(s)
-            result = await s.execute(
-                select(func.count())
-                .select_from(InvitationLetter)
-                .where(
-                    InvitationLetter.character_id == character_id,
-                    InvitationLetter.era_id == era_row.id,
-                )
-            )
-            return result.scalar_one()
-
-    async def count_friend_defections() -> int:
-        if not friend_ids:
-            return 0
-        async with session_factory() as s:
-            era_row = await get_current_era_row(s)
-            result = await s.execute(
-                select(func.count())
-                .select_from(FactionDefectionHistory)
-                .where(
-                    FactionDefectionHistory.character_id.in_(friend_ids),
-                    FactionDefectionHistory.era_id == era_row.id,
-                )
-            )
-            return result.scalar_one()
-
-    async def count_comment_mentions() -> int:
-        async with session_factory() as s:
-            result = await s.execute(
-                select(func.count())
-                .select_from(CommentMention)
-                .join(Comment, CommentMention.comment_id == Comment.id)
-                .where(
-                    CommentMention.mentioned_character_id == character_id,
-                    Comment.is_withdrawn.is_(False),
-                    Comment.moderation_status == ModerationStatus.visible,
-                )
-            )
-            return result.scalar_one()
-
-    async def count_global() -> int:
-        async with session_factory() as s:
-            tasks_result = await s.execute(
-                select(func.count())
-                .select_from(Task)
-                .where(Task.status == TaskStatus.active)
-            )
-            era_result = await s.execute(
-                select(func.count()).select_from(Era)
-            )
-            return tasks_result.scalar_one() + era_result.scalar_one()
-
-    async def count_requests() -> int:
-        async with session_factory() as s:
-            result = await s.execute(
-                select(func.count())
-                .select_from(PraxisInvite)
-                .where(
-                    PraxisInvite.invitee_id == character_id,
-                    PraxisInvite.status == PraxisInviteStatus.pending,
-                )
-            )
-            return result.scalar_one()
-
-    (
-        votes_count,
-        friend_completions_count,
-        friend_signups_count,
-        friend_defections_count,
-        foe_taunts_count,
-        foe_completions_count,
-        invites_count,
-        letters_count,
-        mentions_count,
-        global_count,
-        requests_count,
-    ) = await asyncio.gather(
-        count_votes_on_mine(),
-        count_friend_completions(),
-        count_friend_signups(),
-        count_friend_defections(),
-        count_foe_taunts(),
-        count_foe_completions(),
-        count_praxis_invites(),
-        count_invitation_letters(),
-        count_comment_mentions(),
-        count_global(),
-        count_requests(),
+    normal_results, requests_results = await asyncio.gather(
+        asyncio.gather(*(
+            _run_source_count(source, count_ctx, session_factory)
+            for source in FEED_SOURCES
+        )),
+        asyncio.gather(*(
+            _run_source_count(source, count_ctx_requests, session_factory)
+            for source in requests_sources
+        )),
     )
 
-    friends_count = friend_completions_count + friend_signups_count + friend_defections_count
-    foes_count = foe_taunts_count + foe_completions_count
-    your_stuff_count = votes_count + invites_count + letters_count + mentions_count
-    all_count = friends_count + foes_count + your_stuff_count + global_count
+    normal_counts = {
+        source.item_type: count
+        for source, count in zip(FEED_SOURCES, normal_results)
+    }
+    requests_counts = {
+        source.item_type: count
+        for source, count in zip(requests_sources, requests_results)
+    }
 
     return FeedCountsDC(
-        all=all_count,
-        friends=friends_count,
-        foes=foes_count,
-        your_stuff=your_stuff_count,
-        global_count=global_count,
-        requests=requests_count,
+        all=_sum_counts_for_tab(FILTER_ALL, normal_counts),
+        friends=_sum_counts_for_tab(FILTER_FRIENDS, normal_counts),
+        foes=_sum_counts_for_tab(FILTER_FOES, normal_counts),
+        your_stuff=_sum_counts_for_tab(FILTER_YOUR_STUFF, normal_counts),
+        global_count=_sum_counts_for_tab(FILTER_GLOBAL, normal_counts),
+        requests=_sum_counts_for_tab(FILTER_REQUESTS, requests_counts),
     )
 
 
@@ -916,117 +859,63 @@ async def get_activity_feed(
         session_factory: Callable that returns an async session context manager.
             Each concurrent sub-query gets its own session from this factory.
             Injected via FastAPI's Depends(get_session_factory); tests override
-            it to reuse the test-transaction session.
+            it to reuse the test-transaction session. (ADR-0036: a deliberate
+            test seam, kept even though the router only passes it back down.)
         feed_filter: One of "all", "friends", "foes", "your_stuff", "global", "requests".
         before_cursor: ISO datetime cursor for pagination (items before this time).
         limit: Max items to return.
     """
-    active_filter = feed_filter or "all"
-    allowed_types = FILTER_QUERIES.get(active_filter, FILTER_QUERIES["all"])
-    is_requests_filter = active_filter == "requests"
+    active_filter = feed_filter or FILTER_ALL
+    allowed_types = FILTER_QUERIES.get(active_filter, FILTER_QUERIES[FILTER_ALL])
+    is_requests_filter = active_filter == FILTER_REQUESTS
 
-    # Pre-fetch relationship and task context needed by multiple sub-queries
-    friend_ids: list[int] = []
-    foe_ids: list[int] = []
-    my_task_ids: list[int] = []
+    # Pre-fetch relationship / task / era context. Badge counts span every tab
+    # regardless of the active filter, so all context is loaded up front.
+    friend_ids = tuple(await _get_related_ids(character_id, RelationshipType.friend, session))
+    foe_ids = tuple(await _get_related_ids(character_id, RelationshipType.foe, session))
+    my_task_ids = tuple(await _get_my_task_ids(character_id, session))
+    era_row = await get_current_era_row(session)
 
-    needs_friends = bool(allowed_types & {
-        FEED_ITEM_TYPE_FRIEND_COMPLETION, FEED_ITEM_TYPE_FRIEND_SIGNUP,
-        FEED_ITEM_TYPE_FRIEND_DEFECTION,
-    })
-    needs_foes = FEED_ITEM_TYPE_FOE_COMPLETION in allowed_types
-    needs_my_tasks = FEED_ITEM_TYPE_FRIEND_SIGNUP in allowed_types
+    fetch_ctx = FeedContext(
+        character_id=character_id,
+        friend_ids=friend_ids,
+        foe_ids=foe_ids,
+        my_task_ids=my_task_ids,
+        era_id=era_row.id,
+        before=before_cursor,
+        pending_invites_only=is_requests_filter,
+    )
+    # Counts always report every tab. The ``requests`` badge windows invites /
+    # duels to pending; every other tab counts all statuses.
+    count_ctx = FeedContext(
+        character_id=character_id,
+        friend_ids=friend_ids,
+        foe_ids=foe_ids,
+        my_task_ids=my_task_ids,
+        era_id=era_row.id,
+        before=before_cursor,
+        pending_invites_only=False,
+    )
+    count_ctx_requests = FeedContext(
+        character_id=character_id,
+        friend_ids=friend_ids,
+        foe_ids=foe_ids,
+        my_task_ids=my_task_ids,
+        era_id=era_row.id,
+        before=before_cursor,
+        pending_invites_only=True,
+    )
 
-    if needs_friends:
-        friend_ids = await _get_related_ids(character_id, RelationshipType.friend, session)
-    if needs_foes:
-        foe_ids = await _get_related_ids(character_id, RelationshipType.foe, session)
-    if needs_my_tasks:
-        my_task_ids = await _get_my_task_ids(character_id, session)
+    allowed_sources = [s for s in FEED_SOURCES if s.item_type in allowed_types]
 
-    # Build per-sub-query coroutine factories; each gets its own session so
-    # they can run concurrently under asyncio.gather without sharing state.
-    fetch_coros: list[Coroutine[Any, Any, list[ActivityFeedItemDC]]] = []
-
-    if FEED_ITEM_TYPE_VOTE_ON_MINE in allowed_types:
-        fetch_coros.append(_run_with_own_session(
-            lambda s: _fetch_votes_on_mine(character_id, s, before_cursor),
-            session_factory,
-        ))
-
-    if FEED_ITEM_TYPE_FRIEND_COMPLETION in allowed_types:
-        fetch_coros.append(_run_with_own_session(
-            lambda s: _fetch_completions(friend_ids, FEED_ITEM_TYPE_FRIEND_COMPLETION, s, before_cursor),
-            session_factory,
-        ))
-
-    if FEED_ITEM_TYPE_FOE_TAUNT in allowed_types:
-        fetch_coros.append(_run_with_own_session(
-            lambda s: _fetch_foe_taunts(character_id, s, before_cursor),
-            session_factory,
-        ))
-
-    if FEED_ITEM_TYPE_FOE_COMPLETION in allowed_types:
-        fetch_coros.append(_run_with_own_session(
-            lambda s: _fetch_completions(foe_ids, FEED_ITEM_TYPE_FOE_COMPLETION, s, before_cursor),
-            session_factory,
-        ))
-
-    if FEED_ITEM_TYPE_GLOBAL_TASK in allowed_types:
-        fetch_coros.append(_run_with_own_session(
-            lambda s: _fetch_global_tasks(s, before_cursor),
-            session_factory,
-        ))
-
-    if FEED_ITEM_TYPE_ERA_ANNOUNCEMENT in allowed_types:
-        fetch_coros.append(_run_with_own_session(
-            lambda s: _fetch_era_announcements(s, before_cursor),
-            session_factory,
-        ))
-
-    if FEED_ITEM_TYPE_COLLAB_INVITE in allowed_types:
-        fetch_coros.append(_run_with_own_session(
-            lambda s: _fetch_praxis_invites(
-                character_id, PraxisType.collab, FEED_ITEM_TYPE_COLLAB_INVITE,
-                "inviter_character_id", s, before_cursor, pending_only=is_requests_filter,
-            ),
-            session_factory,
-        ))
-
-    if FEED_ITEM_TYPE_DUEL_CHALLENGE in allowed_types:
-        fetch_coros.append(_run_with_own_session(
-            lambda s: _fetch_duel_challenges(character_id, s, before_cursor, pending_only=is_requests_filter),
-            session_factory,
-        ))
-
-    if FEED_ITEM_TYPE_FRIEND_SIGNUP in allowed_types:
-        fetch_coros.append(_run_with_own_session(
-            lambda s: _fetch_friend_signups(friend_ids, my_task_ids, s, before_cursor),
-            session_factory,
-        ))
-
-    if FEED_ITEM_TYPE_INVITATION_LETTER in allowed_types:
-        fetch_coros.append(_run_with_own_session(
-            lambda s: _fetch_invitation_letters(character_id, s, before_cursor),
-            session_factory,
-        ))
-
-    if FEED_ITEM_TYPE_FRIEND_DEFECTION in allowed_types:
-        fetch_coros.append(_run_with_own_session(
-            lambda s: _fetch_friend_defections(friend_ids, s, before_cursor),
-            session_factory,
-        ))
-
-    if FEED_ITEM_TYPE_COMMENT_MENTION in allowed_types:
-        fetch_coros.append(_run_with_own_session(
-            lambda s: _fetch_comment_mentions(character_id, s, before_cursor),
-            session_factory,
-        ))
-
-    # Run feed fan-out and badge counts concurrently; each sub-query has its own session.
+    # Run fan-out and badge counts concurrently; each sub-query owns its session.
+    fetch_coros: list[Coroutine[Any, Any, list[ActivityFeedItemDC]]] = [
+        _run_source_fetch(source, fetch_ctx, session_factory)
+        for source in allowed_sources
+    ]
     gather_results = await asyncio.gather(
         *fetch_coros,
-        _compute_counts(character_id, friend_ids, my_task_ids, session_factory),
+        _compute_counts(count_ctx, count_ctx_requests, session_factory),
     )
     counts: FeedCountsDC = gather_results[-1]
 
