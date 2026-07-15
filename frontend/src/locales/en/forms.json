@@ -105,6 +105,7 @@
       "statusAccepted": "accepted",
       "statusChallenged": "challenged",
       "statusPending": "pending",
+      "statusSubmitted": "submitted",
       "cancelChallengeAria": "cancel challenge",
       "rescindInviteAria": "rescind invite to {{name}}"
     },

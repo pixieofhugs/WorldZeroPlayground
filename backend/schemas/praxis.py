@@ -91,6 +91,7 @@ class PraxisCardOut(BaseModel):
     created_at: datetime
     updated_at: datetime
     submitted_at: Optional[datetime] = None
+    submit_proposed_at: Optional[datetime] = None  # collab pending-publish chip (#521, ADR-0012)
     member_count: int
     score: float
     voter_count: int = 0

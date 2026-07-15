@@ -28,6 +28,7 @@ from models.praxis import (
     PraxisStatus,
     PraxisType,
 )
+from models.era import Era
 from models.task import Task, TaskStatus, TaskType
 from schemas.task import TaskOut
 from schemas.praxis import (
@@ -112,6 +113,30 @@ async def _count_in_progress_praxes(character_id: int, session: AsyncSession) ->
         )
     )
     return result.scalar_one()
+
+
+async def recalculate_members_stats(
+    praxis: Praxis,
+    session: AsyncSession,
+    era: EraConfig = CURRENT_ERA,
+    *,
+    era_row: Optional[Era] = None,
+) -> None:
+    """Recalculate stats for every member of ``praxis``, then flush (#492).
+
+    Lifts the per-member recalc loop copy-pasted across ``submit_praxis``,
+    ``withdraw_praxis``, ``apply_metatask``, and ``remove_metatask``. Callers
+    that already hold an ``era_row`` (e.g. a duel-forfeit recalc that reuses it)
+    pass it in to avoid a re-fetch. ``leave_praxis`` deliberately does NOT use
+    this — it recalcs only the single leaver, not all members.
+    """
+    if era_row is None:
+        era_row = await get_current_era_row(session)
+    for member in praxis.members:
+        await recalculate_character_stats(
+            member.character_id, session, era, era_row=era_row
+        )
+    await session.flush()
 
 
 # ---------------------------------------------------------------------------
@@ -261,6 +286,7 @@ async def build_praxis_card_out(
         created_at=praxis.created_at,
         updated_at=praxis.updated_at,
         submitted_at=praxis.submitted_at,
+        submit_proposed_at=praxis.submit_proposed_at,
         member_count=len(praxis.members),
         score=score,
         voter_count=tally.voter_count,
@@ -662,15 +688,12 @@ async def withdraw_praxis(
     # praxis while it was submitted, so all of them must drop (the submit paths
     # already recalc all members — this fixes the prior single-actor under-recalc).
     era_row = await get_current_era_row(session)
-    for member in praxis.members:
-        await recalculate_character_stats(
-            member.character_id, session, era, era_row=era_row
-        )
+    await recalculate_members_stats(praxis, session, era, era_row=era_row)
     if forfeit_winner_character_id is not None:
         await recalculate_character_stats(
             forfeit_winner_character_id, session, era, era_row=era_row
         )
-    await session.flush()
+        await session.flush()
     return await get_praxis(praxis_id, session)
 
 
@@ -1232,12 +1255,7 @@ async def submit_praxis(
         # services.duel, which imports services.praxis (import-cycle avoidance).
         from services.duel import maybe_settle_duel
         await maybe_settle_duel(praxis_id, session)
-        era_row = await get_current_era_row(session)
-        for member in praxis.members:
-            await recalculate_character_stats(
-                member.character_id, session, era, era_row=era_row
-            )
-        await session.flush()
+        await recalculate_members_stats(praxis, session, era)
     return await get_praxis(praxis_id, session)
 
 
@@ -1367,12 +1385,7 @@ async def apply_metatask(
     session.add(PraxisMetaTask(praxis_id=praxis_id, task_id=task_id))
     await session.flush()
 
-    era_row = await get_current_era_row(session)
-    for member in praxis.members:
-        await recalculate_character_stats(
-            member.character_id, session, era, era_row=era_row
-        )
-    await session.flush()
+    await recalculate_members_stats(praxis, session, era)
     return await get_praxis(praxis_id, session)
 
 
@@ -1406,12 +1419,7 @@ async def remove_metatask(
     await session.delete(link)
     await session.flush()
 
-    era_row = await get_current_era_row(session)
-    for member in praxis.members:
-        await recalculate_character_stats(
-            member.character_id, session, era, era_row=era_row
-        )
-    await session.flush()
+    await recalculate_members_stats(praxis, session, era)
     return await get_praxis(praxis_id, session)
 
 
