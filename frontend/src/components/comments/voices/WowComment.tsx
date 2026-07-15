@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import FactionAvatar from '../../avatar/FactionAvatar'
 import { formatCommentTime } from '../../../utils/commentTime'
 import { type CommentProps, authorToCharacter, ComposerControls, MentionText } from '../shared'
+import { CommentEditor, OwnerControls, useOwnerEdit } from '../OwnerControls'
 
 /**
  * Warriors of Whimsy — `{handle}.exe` (ADR-0018). Reuses the task-card window
@@ -43,23 +44,31 @@ export default function WowComment(props: CommentProps) {
       </Window>
     )
   }
-  const { comment } = props
+  const { comment, onEdited, onWithdrawn } = props
   const slug = comment.author.faction_slug
+  const owner = useOwnerEdit({ comment, onEdited, onWithdrawn })
   return (
     <Window title={`${comment.author.username}.exe`}>
       <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
         <FactionAvatar character={authorToCharacter(comment.author)} size="sm" />
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ fontFamily: 'var(--faction-wow-card-font)', fontSize: 20, lineHeight: 1.25, color: 'var(--faction-wow-card-text)' }}>
-            <MentionText body={comment.body_text} mentions={comment.mentions} accent="var(--faction-wow-card-accent)" />
+            {owner.editing ? (
+              <CommentEditor owner={owner} accent="var(--faction-wow-card-accent)" bg="var(--faction-wow-notepad-bg)" text="var(--faction-wow-card-text)" />
+            ) : (
+              <MentionText body={comment.body_text} mentions={comment.mentions} accent="var(--faction-wow-card-accent)" />
+            )}
           </div>
-          <div style={{ marginTop: 6, fontSize: 11, color: 'var(--faction-wow-card-accent)', letterSpacing: '0.04em' }}>
+          <div style={{ marginTop: 6, fontSize: 11, color: 'var(--faction-wow-card-accent)', letterSpacing: '0.04em', display: 'inline-flex', alignItems: 'baseline', flexWrap: 'wrap', gap: 6 }}>
             <Link to={`/characters/${comment.author.id}`} style={{ color: 'inherit', textDecoration: 'none' }}>
               @{comment.author.username}
             </Link>
-            {' · '}
-            {formatCommentTime(slug, comment.created_at)}
-            {comment.is_edited ? ` · ${t('comments.wow.edited')}` : ''}
+            <span>
+              {' · '}
+              {formatCommentTime(slug, comment.created_at)}
+              {comment.is_edited ? ` · ${t('comments.wow.edited')}` : ''}
+            </span>
+            <OwnerControls owner={owner} />
           </div>
         </div>
       </div>

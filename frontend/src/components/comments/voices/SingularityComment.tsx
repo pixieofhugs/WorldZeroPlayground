@@ -4,6 +4,7 @@ import { factionCssVar } from '../../../utils/factions'
 import FactionAvatar from '../../avatar/FactionAvatar'
 import { formatCommentTime } from '../../../utils/commentTime'
 import { type CommentProps, authorToCharacter, ComposerControls, MentionText } from '../shared'
+import { CommentEditor, OwnerControls, useOwnerEdit } from '../OwnerControls'
 
 /**
  * Singularity — terminal printout (ADR-0018). Dark, green mono, corner brackets,
@@ -56,8 +57,9 @@ export default function SingularityComment(props: CommentProps) {
       </div>
     )
   }
-  const { comment } = props
+  const { comment, onEdited, onWithdrawn } = props
   const slug = comment.author.faction_slug
+  const owner = useOwnerEdit({ comment, onEdited, onWithdrawn })
   return (
     <div style={frame()}>
       <Brackets />
@@ -68,14 +70,21 @@ export default function SingularityComment(props: CommentProps) {
             <Link to={`/characters/${comment.author.id}`} style={{ fontSize: 13, color: 'var(--faction-singularity-card-text)', textDecoration: 'none' }}>
               {comment.author.username}
             </Link>
-            <span style={{ fontSize: 11, color: 'var(--faction-singularity-card-muted)', whiteSpace: 'nowrap' }}>
+            <span style={{ fontSize: 11, color: 'var(--faction-singularity-card-muted)', whiteSpace: 'nowrap', display: 'inline-flex', alignItems: 'baseline', gap: 8 }}>
               {formatCommentTime(slug, comment.created_at)}
               {comment.is_edited ? ` [${t('comments.singularity.edited')}]` : ''}
+              <OwnerControls owner={owner} />
             </span>
           </div>
           <div style={{ fontSize: 13, lineHeight: 1.55, marginTop: 4 }}>
-            <span style={{ color: 'var(--faction-singularity-card-muted)' }}>&gt; </span>
-            <MentionText body={comment.body_text} mentions={comment.mentions} accent="var(--faction-singularity-card-muted)" />
+            {owner.editing ? (
+              <CommentEditor owner={owner} accent="var(--faction-singularity-card-text)" bg="#0a1f12" text="var(--faction-singularity-card-text)" />
+            ) : (
+              <>
+                <span style={{ color: 'var(--faction-singularity-card-muted)' }}>&gt; </span>
+                <MentionText body={comment.body_text} mentions={comment.mentions} accent="var(--faction-singularity-card-muted)" />
+              </>
+            )}
           </div>
         </div>
       </div>
