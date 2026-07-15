@@ -54,6 +54,9 @@
     "tally_one": "{{count}} vote · <1>{{points}}</1> pts",
     "tally_other": "{{count}} votes · <1>{{points}}</1> pts",
     "saveError": "Could not save your vote. Please try again.",
+    "mobile": {
+      "rateAria": "Rate {{value}} of 5"
+    },
     "ephemerists": {
       "rateAria": "Mark {{value}} — {{label}}"
     },
