@@ -433,6 +433,9 @@
         "join": "I'm in",
         "joined": "you're on the inside"
       }
+    },
+    "mobile": {
+      "eyebrow": "The Dossier"
     }
   },
   "ua": {

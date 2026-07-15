@@ -19,7 +19,7 @@ describe('mobile composer Singularity dispatch', () => {
   })
 
   it('falls through to the Default mobile composer for other slugs', () => {
-    for (const slug of ['na', 'snide', null]) {
+    for (const slug of ['__unregistered__', 'na', null]) {
       expect(pickVariant(MOBILE_ARCHETYPE_BY_SLUG, slug, DefaultMobileEditPraxis)).toBe(DefaultMobileEditPraxis)
     }
   })

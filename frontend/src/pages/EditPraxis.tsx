@@ -30,6 +30,7 @@ import SingularityMobileEditPraxis from "./editPraxis/mobileArchetypes/Singulari
 import EverymenMobileEditPraxis from "./editPraxis/mobileArchetypes/EverymenComposer";
 import EphemeristsMobileEditPraxis from "./editPraxis/mobileArchetypes/EphemeristsComposer";
 import AlbescentMobileEditPraxis from "./editPraxis/mobileArchetypes/AlbescentComposer";
+import SnideMobileEditPraxis from "./editPraxis/mobileArchetypes/SnideComposer";
 
 type Archetype = (props: { state: EditPraxisState }) => JSX.Element;
 
@@ -56,6 +57,7 @@ export const MOBILE_ARCHETYPE_BY_SLUG: Record<string, Archetype> = {
   everymen: EverymenMobileEditPraxis,
   ephemerists: EphemeristsMobileEditPraxis,
   albescent: AlbescentMobileEditPraxis,
+  snide: SnideMobileEditPraxis,
 };
 
 export default function EditPraxis() {

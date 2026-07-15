@@ -281,7 +281,12 @@
       "theConfession": "the confession",
       "evidence": "evidence · {{count}}",
       "theVerdict": "the verdict",
-      "ptsFromVotes": "pts from votes"
+      "ptsFromVotes": "pts from votes",
+      "mobile": {
+        "re": "re:",
+        "evidence": "the evidence",
+        "appraise": "call the job"
+      }
     },
     "wow": {
       "mode": {
