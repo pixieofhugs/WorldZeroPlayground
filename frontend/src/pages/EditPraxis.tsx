@@ -28,6 +28,7 @@ import WowMobileEditPraxis from "./editPraxis/mobileArchetypes/WowEditPraxis";
 import UAMobileEditPraxis from "./editPraxis/mobileArchetypes/UaComposer";
 import SingularityMobileEditPraxis from "./editPraxis/mobileArchetypes/SingularityComposer";
 import EverymenMobileEditPraxis from "./editPraxis/mobileArchetypes/EverymenComposer";
+import EphemeristsMobileEditPraxis from "./editPraxis/mobileArchetypes/EphemeristsComposer";
 
 type Archetype = (props: { state: EditPraxisState }) => JSX.Element;
 
@@ -52,6 +53,7 @@ export const MOBILE_ARCHETYPE_BY_SLUG: Record<string, Archetype> = {
   ua: UAMobileEditPraxis,
   singularity: SingularityMobileEditPraxis,
   everymen: EverymenMobileEditPraxis,
+  ephemerists: EphemeristsMobileEditPraxis,
 };
 
 export default function EditPraxis() {
