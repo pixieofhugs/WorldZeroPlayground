@@ -15,7 +15,7 @@ describe('mobile FieldDesk-home Singularity dispatch', () => {
   })
 
   it('falls through to the Default mobile home for other slugs', () => {
-    for (const slug of ['na', 'snide', null]) {
+    for (const slug of ['__unregistered__', 'na', null]) {
       expect(pickVariant(MOBILE_ARCHETYPE_BY_SLUG, slug, DefaultFieldDesk)).toBe(DefaultFieldDesk)
     }
   })

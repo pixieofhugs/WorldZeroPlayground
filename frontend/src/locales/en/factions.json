@@ -538,6 +538,9 @@
       "emptyWithSpotlight": "No other witches in the circle yet.",
       "level": "lvl {{level}}"
     },
+    "mobile": {
+      "eyebrow": "wow.exe"
+    },
     "invitation": {
       "kicker": "the circle is recruiting",
       "headline": "Come be a little magic",

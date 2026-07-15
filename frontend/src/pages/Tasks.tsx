@@ -11,6 +11,7 @@ import { useTasks, type TasksState } from './tasks/useTasks'
 import DefaultTasks from './tasks/mobileArchetypes/DefaultTasks'
 import UaTaskList from './tasks/mobileArchetypes/UaTaskList'
 import SingularityTaskList from './tasks/mobileArchetypes/SingularityTaskList'
+import WowTaskList from './tasks/mobileArchetypes/WowTaskList'
 
 type MobileSkin = (props: { state: TasksState }) => JSX.Element | null
 
@@ -22,6 +23,7 @@ type MobileSkin = (props: { state: TasksState }) => JSX.Element | null
 export const MOBILE_ARCHETYPE_BY_SLUG: Record<string, MobileSkin> = {
   ua: UaTaskList,
   singularity: SingularityTaskList,
+  wow: WowTaskList,
 }
 
 export default function Tasks() {

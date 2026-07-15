@@ -18,6 +18,7 @@ import DefaultMobileTaskDetail from "./taskDetail/mobileArchetypes/DefaultTaskDe
 import EverymenMobileTaskDetail from "./taskDetail/mobileArchetypes/EverymenTaskDetail";
 import UAMobileTaskDetail from "./taskDetail/mobileArchetypes/UaTaskDetail";
 import SingularityMobileTaskDetail from "./taskDetail/mobileArchetypes/SingularityTaskDetail";
+import WowMobileTaskDetail from "./taskDetail/mobileArchetypes/WowTaskDetail";
 import SNIDETaskDetail from "./taskDetail/archetypes/SNIDETaskDetail";
 import EverymenTaskDetail from "./taskDetail/archetypes/EverymenTaskDetail";
 import WowTaskDetail from "./taskDetail/archetypes/WowTaskDetail";
@@ -49,6 +50,7 @@ export const MOBILE_ARCHETYPE_BY_SLUG: Record<string, Archetype> = {
   everymen: EverymenMobileTaskDetail,
   ua: UAMobileTaskDetail,
   singularity: SingularityMobileTaskDetail,
+  wow: WowMobileTaskDetail,
 };
 
 export default function TaskDetail() {

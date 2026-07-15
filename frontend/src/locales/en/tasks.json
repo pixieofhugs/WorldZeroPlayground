@@ -190,7 +190,11 @@
     },
     "empty": "no spells cast yet. nobody's pulled it off.",
     "mostLoved": "most loved",
-    "viewAll": "see all {{count}} spells ✦"
+    "viewAll": "see all {{count}} spells ✦",
+    "mobile": {
+      "masthead": "quests.exe",
+      "cardMeta": "{{faction}} · +{{points}} pts"
+    }
   },
   "ephemerists": {
     "diagram": {
