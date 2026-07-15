@@ -9,6 +9,7 @@ import { useFactionDetail, type FactionDetailState } from "./factionDetail/useFa
 import UaFactionPage from "./factionDetail/mobileArchetypes/UaFactionPage";
 import SingularityFactionPage from "./factionDetail/mobileArchetypes/SingularityFactionPage";
 import WowFactionPage from "./factionDetail/mobileArchetypes/WowFactionPage";
+import EverymenFactionPage from "./factionDetail/mobileArchetypes/EverymenFactionPage";
 import DefaultFactionBody from "./factionDetail/archetypes/DefaultFactionBody";
 import DefaultFactionPage from "./factionDetail/mobileArchetypes/DefaultFactionPage";
 import EverymenFactionBody from "./factionDetail/archetypes/EverymenFactionBody";
@@ -84,6 +85,7 @@ export const MOBILE_ARCHETYPE_BY_SLUG: Record<
   ua: UaFactionPage,
   singularity: SingularityFactionPage,
   wow: WowFactionPage,
+  everymen: EverymenFactionPage,
 };
 
 export default function FactionDetail({ slug: slugProp }: { slug?: string } = {}) {

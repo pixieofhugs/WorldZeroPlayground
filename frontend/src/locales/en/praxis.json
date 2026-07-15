@@ -219,7 +219,13 @@
       "proofOfWork_one": "Proof of Work · {{count}} plate",
       "proofOfWork_other": "Proof of Work · {{count}} plates",
       "crewsMarks": "The Crew's Marks",
-      "ptsFromVotes": "pts from votes"
+      "ptsFromVotes": "pts from votes",
+      "mobile": {
+        "re": "re:",
+        "filed": "filed the report",
+        "plate": "Proof of Work",
+        "appraise": "Mark the work"
+      }
     },
     "singularity": {
       "instance": {

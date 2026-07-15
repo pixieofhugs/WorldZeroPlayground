@@ -14,6 +14,7 @@ import DefaultFieldDesk from './fieldDesk/mobileArchetypes/DefaultFieldDesk'
 import WowFieldDesk from './fieldDesk/mobileArchetypes/WowFieldDesk'
 import UaHome from './fieldDesk/mobileArchetypes/UaHome'
 import SingularityHome from './fieldDesk/mobileArchetypes/SingularityHome'
+import EverymenHome from './fieldDesk/mobileArchetypes/EverymenHome'
 
 /**
  * FieldDesk roster — the authenticated account home (#274). "Whose shoes today?":
@@ -36,6 +37,7 @@ export const MOBILE_ARCHETYPE_BY_SLUG: Record<string, MobileHomeSkin> = {
   wow: WowFieldDesk,
   ua: UaHome,
   singularity: SingularityHome,
+  everymen: EverymenHome,
 }
 
 // Deterministic slight tilt per card — index-keyed so it's stable across renders.

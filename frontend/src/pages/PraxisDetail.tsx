@@ -19,6 +19,7 @@ import DefaultMobilePraxisDetail from './praxisDetail/mobileArchetypes/DefaultPr
 import WowMobilePraxisDetail from './praxisDetail/mobileArchetypes/WowPraxisDetail'
 import UAMobilePraxisDetail from './praxisDetail/mobileArchetypes/UaPraxisDetail'
 import SingularityMobilePraxisDetail from './praxisDetail/mobileArchetypes/SingularityPraxisDetail'
+import EverymenMobilePraxisDetail from './praxisDetail/mobileArchetypes/EverymenPraxisDetail'
 import EphemeristsPraxisDetail from './praxisDetail/archetypes/EphemeristsPraxisDetail'
 import SnidePraxisDetail from './praxisDetail/archetypes/SnidePraxisDetail'
 import SingularityPraxisDetail from './praxisDetail/archetypes/SingularityPraxisDetail'
@@ -54,6 +55,7 @@ export const MOBILE_ARCHETYPE_BY_SLUG: Record<string, ComponentType<{ state: Pra
   wow: WowMobilePraxisDetail,
   ua: UAMobilePraxisDetail,
   singularity: SingularityMobilePraxisDetail,
+  everymen: EverymenMobilePraxisDetail,
 }
 
 export default function PraxisDetail() {
