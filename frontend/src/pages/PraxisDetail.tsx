@@ -13,7 +13,10 @@ import { Navigate, useParams } from 'react-router-dom'
 import { usePraxisDetail } from './praxisDetail/usePraxisDetail'
 import type { PraxisDetailState } from './praxisDetail/usePraxisDetail'
 import { pickVariant } from '../utils/factionDispatch'
+import { useFormFactor } from '../hooks/useFormFactor'
 import DefaultPraxisDetail from './praxisDetail/archetypes/DefaultPraxisDetail'
+import DefaultMobilePraxisDetail from './praxisDetail/mobileArchetypes/DefaultPraxisDetail'
+import WowMobilePraxisDetail from './praxisDetail/mobileArchetypes/WowPraxisDetail'
 import EphemeristsPraxisDetail from './praxisDetail/archetypes/EphemeristsPraxisDetail'
 import SnidePraxisDetail from './praxisDetail/archetypes/SnidePraxisDetail'
 import SingularityPraxisDetail from './praxisDetail/archetypes/SingularityPraxisDetail'
@@ -40,10 +43,20 @@ export const ARCHETYPE_BY_SLUG: Record<string, ComponentType<{ state: PraxisDeta
   albescent: AlbescentPraxisDetail,
 }
 
+/**
+ * Parallel MOBILE registry (#499). Every faction falls through to the Default
+ * mobile skin until it registers a bespoke one; WOW is the pilot (its Field Kit
+ * praxis-detail treatment), mirroring the mobile FieldDesk + TaskDetail seams.
+ */
+export const MOBILE_ARCHETYPE_BY_SLUG: Record<string, ComponentType<{ state: PraxisDetailState }>> = {
+  wow: WowMobilePraxisDetail,
+}
+
 export default function PraxisDetail() {
   const { t } = useTranslation('praxis')
   const { id } = useParams<{ id: string }>()
   const state = usePraxisDetail(id)
+  const formFactor = useFormFactor()
 
   if (state.loading) return <div className="py-8 font-body text-muted">{t('detail.loading')}</div>
   if (state.fetchError) return (
@@ -63,7 +76,10 @@ export default function PraxisDetail() {
     return <Navigate to={`/praxes/${state.praxis.id}/edit`} replace />
   }
 
-  const Archetype = pickVariant(ARCHETYPE_BY_SLUG, state.praxis.task_faction_slug, DefaultPraxisDetail)
+  const Archetype =
+    formFactor === 'mobile'
+      ? pickVariant(MOBILE_ARCHETYPE_BY_SLUG, state.praxis.task_faction_slug, DefaultMobilePraxisDetail)
+      : pickVariant(ARCHETYPE_BY_SLUG, state.praxis.task_faction_slug, DefaultPraxisDetail)
   return (
     <>
       {/* Duel cross-link is neutral chrome above every archetype (#313); one

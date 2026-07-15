@@ -1,27 +1,26 @@
 import { useTranslation } from 'react-i18next'
-import { listPraxes } from '../api/praxis'
 import PraxisCard from '../components/PraxisCard'
 import CollaborationCard from '../components/CollaborationCard'
 import PageTitle from '../components/ui/PageTitle'
 import { extractError } from '../utils/errors'
-import { useResource } from '../hooks/useResource'
+import { useFormFactor } from '../hooks/useFormFactor'
+import { usePraxes } from './praxes/usePraxes'
+import MobilePraxisFeed from './praxes/MobilePraxisFeed'
 
+/**
+ * Praxis feed. `usePraxes()` owns the 3-way (solo / collab / duel) fetch; on a
+ * phone (#499) `useFormFactor() === 'mobile'` swaps the wrapped desktop card
+ * grid for the single-column mobile proof stream. Desktop renders exactly as
+ * before.
+ */
 export default function Praxes() {
   const { t } = useTranslation('praxis')
   const { t: tc } = useTranslation('common')
-  const { data, loading, error } = useResource(
-    () =>
-      Promise.all([
-        listPraxes({ type: 'solo', status: 'submitted' }),
-        listPraxes({ type: 'collab', status: 'submitted' }),
-        listPraxes({ type: 'duel', status: 'submitted' }),
-      ]),
-    [],
-  )
-  const soloItems = data ? data[0] : []
-  const collabItems = data ? [...data[1], ...data[2]] : []
+  const formFactor = useFormFactor()
+  const state = usePraxes()
+  const { soloItems, collabItems, loading, error, isEmpty } = state
 
-  const isEmpty = soloItems.length === 0 && collabItems.length === 0
+  if (formFactor === 'mobile') return <MobilePraxisFeed state={state} />
 
   return (
     <div className="py-8">
