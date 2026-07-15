@@ -6,6 +6,8 @@ import { useAuth } from '../auth/AuthContext'
 import { extractError } from '../utils/errors'
 import { mediaUrl } from '../utils/media'
 import DefaultSigil from '../components/cards/DefaultSigil'
+import ImageEditModal from '../components/imageEdit/ImageEditModal'
+import { AVATAR_ASPECT, blobToFile } from '../components/imageEdit/imageEditHelpers'
 
 /**
  * Edit Character — themed in the spectrum default skin for EVERYONE, regardless
@@ -41,6 +43,7 @@ export default function EditCharacter() {
   const [bio, setBio] = useState('')
   const [location, setLocation] = useState('')
   const [avatarFile, setAvatarFile] = useState<File | null>(null)
+  const [avatarSource, setAvatarSource] = useState<File | null>(null) // in the crop modal
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(true)
@@ -51,13 +54,20 @@ export default function EditCharacter() {
 
   const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0] || null
-    if (f && f.size > MAX_AVATAR_SIZE) {
+    e.target.value = ''
+    if (!f) return
+    if (f.size > MAX_AVATAR_SIZE) {
       setAvatarError('Avatar must be under 10 MB.')
-      e.target.value = ''
       return
     }
     setAvatarError('')
-    setAvatarFile(f)
+    // Crop/rotate to a square before it becomes the avatar (#514).
+    setAvatarSource(f)
+  }
+
+  const handleAvatarConfirm = (blob: Blob) => {
+    setAvatarFile(blobToFile(blob, avatarSource?.name ?? 'avatar'))
+    setAvatarSource(null)
   }
 
   useEffect(() => {
@@ -348,6 +358,17 @@ export default function EditCharacter() {
           </button>
         </div>
       </form>
+
+      {/* Avatar crop/rotate — locked square (#514). */}
+      {avatarSource && (
+        <ImageEditModal
+          key={`${avatarSource.name}-${avatarSource.lastModified}`}
+          file={avatarSource}
+          aspect={AVATAR_ASPECT}
+          onConfirm={handleAvatarConfirm}
+          onCancel={() => setAvatarSource(null)}
+        />
+      )}
     </div>
   )
 }

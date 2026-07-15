@@ -8,6 +8,7 @@
 import { useParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import PageTitle from "../components/ui/PageTitle";
+import ImageEditModal from "../components/imageEdit/ImageEditModal";
 import { pickVariant } from "../utils/factionDispatch";
 import {
   useEditPraxis,
@@ -70,6 +71,17 @@ export default function EditPraxis() {
     <>
       <PageTitle title="Edit Praxis" />
       <Archetype state={state} />
+      {/* Praxis images crop/rotate in place before upload (#514), free-form so
+          nothing is force-cropped. Sequential: keyed on identity so each queued
+          image gets a fresh modal. */}
+      {state.pendingImage && (
+        <ImageEditModal
+          key={`${state.pendingImage.name}-${state.pendingImage.lastModified}`}
+          file={state.pendingImage}
+          onConfirm={(blob) => void state.confirmImageEdit(blob)}
+          onCancel={state.cancelImageEdit}
+        />
+      )}
     </>
   );
 }
