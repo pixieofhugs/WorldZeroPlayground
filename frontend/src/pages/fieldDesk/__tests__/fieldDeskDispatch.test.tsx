@@ -92,9 +92,15 @@ describe('FieldDesk form-factor dispatch', () => {
     expect(render()).toContain('data-skin="wow"')
   })
 
-  it('falls through to the Default home skin on mobile for an unregistered faction', () => {
+  it('renders the SNIDE bespoke home skin on mobile for a SNIDE life', () => {
     mocks.formFactor = 'mobile'
     mocks.user = currentUser('snide')
+    expect(render()).toContain('data-skin="snide"')
+  })
+
+  it('falls through to the Default home skin on mobile for an unregistered faction', () => {
+    mocks.formFactor = 'mobile'
+    mocks.user = currentUser('na')
     const html = render()
     expect(html).toContain('data-skin="default"')
     expect(html).not.toContain('data-skin="wow"')

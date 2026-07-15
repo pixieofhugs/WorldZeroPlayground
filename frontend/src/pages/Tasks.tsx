@@ -15,6 +15,7 @@ import WowTaskList from './tasks/mobileArchetypes/WowTaskList'
 import EverymenTaskList from './tasks/mobileArchetypes/EverymenTaskList'
 import EphemeristsTaskList from './tasks/mobileArchetypes/EphemeristsTaskList'
 import AlbescentTaskList from './tasks/mobileArchetypes/AlbescentTaskList'
+import SnideTaskList from './tasks/mobileArchetypes/SnideTaskList'
 
 type MobileSkin = (props: { state: TasksState }) => JSX.Element | null
 
@@ -30,6 +31,7 @@ export const MOBILE_ARCHETYPE_BY_SLUG: Record<string, MobileSkin> = {
   everymen: EverymenTaskList,
   ephemerists: EphemeristsTaskList,
   albescent: AlbescentTaskList,
+  snide: SnideTaskList,
 }
 
 export default function Tasks() {

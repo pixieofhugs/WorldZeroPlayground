@@ -17,7 +17,7 @@ describe('mobile composer Everymen dispatch', () => {
   })
 
   it('mobile + any other slug falls through to the Default composer', () => {
-    for (const slug of ['snide', 'wow', 'na', null]) {
+    for (const slug of ['__unregistered__', 'na', null]) {
       expect(pickVariant(MOBILE_ARCHETYPE_BY_SLUG, slug, DefaultMobileEditPraxis)).not.toBe(
         EverymenMobileEditPraxis,
       )

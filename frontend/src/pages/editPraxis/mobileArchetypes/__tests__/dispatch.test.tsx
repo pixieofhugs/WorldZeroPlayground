@@ -133,9 +133,14 @@ describe("edit-praxis form-factor dispatch", () => {
     expect(render("wow")).toContain('data-skin="wow"');
   });
 
+  it("renders the SNIDE bespoke composer on mobile for a SNIDE task", () => {
+    mocks.formFactor = "mobile";
+    expect(render("snide")).toContain('data-skin="snide"');
+  });
+
   it("falls through to the Default mobile composer for an unregistered faction", () => {
     mocks.formFactor = "mobile";
-    const html = render("snide");
+    const html = render("na");
     expect(html).toContain('data-skin="default"');
     expect(html).not.toContain('data-skin="wow"');
   });
@@ -151,8 +156,9 @@ describe("edit-praxis form-factor dispatch", () => {
 
 describe("mobile composer content slots", () => {
   for (const [label, slug] of [
-    ["Default", "snide"],
+    ["Default", "na"],
     ["WOW", "wow"],
+    ["SNIDE", "snide"],
   ] as const) {
     it(`${label} mobile composer renders body editor + media-add + submit`, () => {
       mocks.formFactor = "mobile";
@@ -161,7 +167,7 @@ describe("mobile composer content slots", () => {
       expect(html, "media-add slot").toContain('type="file"');
       // Submit affordance: the faction-voiced publish label from the mocked state.
       const text = html.replace(/<[^>]*>/g, "").toLowerCase();
-      expect(text, "submit slot").toMatch(/tack it up|cast it into the world/);
+      expect(text, "submit slot").toMatch(/tack it up|cast it into the world|file it &amp; run/);
     });
   }
 });

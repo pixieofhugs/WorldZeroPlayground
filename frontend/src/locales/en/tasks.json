@@ -105,7 +105,11 @@
     },
     "empty": "no files yet. nobody's pulled it off.",
     "topMarks": "TOP MARKS",
-    "viewAll": "open all {{count}} files →"
+    "viewAll": "open all {{count}} files →",
+    "mobile": {
+      "verdictHeading": "the verdict",
+      "casesHeading": "cases closed"
+    }
   },
   "everymen": {
     "breadcrumb": "Tasks",

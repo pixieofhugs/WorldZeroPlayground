@@ -147,6 +147,11 @@
         "masthead": "The Desk",
         "charEyebrow": "On record",
         "questsHeading": "In hand"
+      },
+      "snide": {
+        "masthead": "The Job Board",
+        "charEyebrow": "on file",
+        "questsHeading": "jobs in play"
       }
     }
   },

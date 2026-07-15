@@ -40,7 +40,7 @@ function text(node: React.ReactElement): string {
 // ─── 1. Grid card is a pure preview (no interactive controls) ─────────────────
 
 describe("faction grid card is a pure preview", () => {
-  for (const slug of ["everymen", "wow", "snide", "ephemerists", "singularity", "ua"]) {
+  for (const slug of ['__unregistered__', 'na', null]) {
     it(`${slug} card renders the name but no membership buttons`, () => {
       const card = (
         <FactionCard

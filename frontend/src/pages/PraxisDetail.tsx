@@ -22,6 +22,7 @@ import SingularityMobilePraxisDetail from './praxisDetail/mobileArchetypes/Singu
 import EverymenMobilePraxisDetail from './praxisDetail/mobileArchetypes/EverymenPraxisDetail'
 import EphemeristsMobilePraxisDetail from './praxisDetail/mobileArchetypes/EphemeristsPraxisDetail'
 import AlbescentMobilePraxisDetail from './praxisDetail/mobileArchetypes/AlbescentPraxisDetail'
+import SnideMobilePraxisDetail from './praxisDetail/mobileArchetypes/SnidePraxisDetail'
 import EphemeristsPraxisDetail from './praxisDetail/archetypes/EphemeristsPraxisDetail'
 import SnidePraxisDetail from './praxisDetail/archetypes/SnidePraxisDetail'
 import SingularityPraxisDetail from './praxisDetail/archetypes/SingularityPraxisDetail'
@@ -60,6 +61,7 @@ export const MOBILE_ARCHETYPE_BY_SLUG: Record<string, ComponentType<{ state: Pra
   everymen: EverymenMobilePraxisDetail,
   ephemerists: EphemeristsMobilePraxisDetail,
   albescent: AlbescentMobilePraxisDetail,
+  snide: SnideMobilePraxisDetail,
 }
 
 export default function PraxisDetail() {
