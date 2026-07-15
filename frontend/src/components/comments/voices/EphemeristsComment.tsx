@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import FactionAvatar from '../../avatar/FactionAvatar'
 import { formatCommentTime } from '../../../utils/commentTime'
 import { type CommentProps, authorToCharacter, ComposerControls, MentionText } from '../shared'
+import { CommentEditor, OwnerControls, useOwnerEdit } from '../OwnerControls'
 
 /**
  * The Ephemerists — marginalia (ADR-0018). Vellum leaf, engraved Cinzel byline,
@@ -38,8 +39,9 @@ export default function EphemeristsComment(props: CommentProps) {
       </div>
     )
   }
-  const { comment } = props
+  const { comment, onEdited, onWithdrawn } = props
   const slug = comment.author.faction_slug
+  const owner = useOwnerEdit({ comment, onEdited, onWithdrawn })
   const body = comment.body_text
   const drop = body[0] ?? ''
   return (
@@ -49,15 +51,20 @@ export default function EphemeristsComment(props: CommentProps) {
         <Link to={`/characters/${comment.author.id}`} style={{ fontSize: 15, fontWeight: 600, letterSpacing: '0.05em', color: 'var(--faction-ephemerists-card-text)', textDecoration: 'none' }}>
           {comment.author.display_name}
         </Link>
-        <span style={{ marginLeft: 'auto', fontSize: 11, fontStyle: 'italic', color: 'var(--faction-ephemerists-card-muted)', whiteSpace: 'nowrap' }}>
+        <span style={{ marginLeft: 'auto', fontSize: 11, fontStyle: 'italic', color: 'var(--faction-ephemerists-card-muted)', whiteSpace: 'nowrap', display: 'inline-flex', alignItems: 'baseline', gap: 8 }}>
           {formatCommentTime(slug, comment.created_at)}
           {comment.is_edited ? ` · ${t('comments.ephemerists.edited')}` : ''}
+          <OwnerControls owner={owner} />
         </span>
       </div>
-      <div style={{ fontSize: 16, lineHeight: 1.55 }}>
-        <span style={{ float: 'left', fontSize: 34, lineHeight: 0.72, color: RUBRIC, padding: '4px 8px 0 0', fontWeight: 600 }}>{drop}</span>
-        <MentionText body={body.slice(1)} mentions={comment.mentions} accent="var(--faction-ephemerists-card-accent)" />
-      </div>
+      {owner.editing ? (
+        <CommentEditor owner={owner} accent="var(--faction-ephemerists-card-accent)" bg="rgba(255,255,255,0.35)" text="var(--faction-ephemerists-card-text)" />
+      ) : (
+        <div style={{ fontSize: 16, lineHeight: 1.55 }}>
+          <span style={{ float: 'left', fontSize: 34, lineHeight: 0.72, color: RUBRIC, padding: '4px 8px 0 0', fontWeight: 600 }}>{drop}</span>
+          <MentionText body={body.slice(1)} mentions={comment.mentions} accent="var(--faction-ephemerists-card-accent)" />
+        </div>
+      )}
     </div>
   )
 }
