@@ -12,6 +12,7 @@ import { useFormFactor } from '../hooks/useFormFactor'
 import { useFieldDeskHome, type FieldDeskHomeState } from './fieldDesk/useFieldDeskHome'
 import DefaultFieldDesk from './fieldDesk/mobileArchetypes/DefaultFieldDesk'
 import WowFieldDesk from './fieldDesk/mobileArchetypes/WowFieldDesk'
+import UaHome from './fieldDesk/mobileArchetypes/UaHome'
 
 /**
  * FieldDesk roster — the authenticated account home (#274). "Whose shoes today?":
@@ -32,6 +33,7 @@ type MobileHomeSkin = (props: { state: FieldDeskHomeState }) => JSX.Element
 // per-faction follow-ups), exactly like MOBILE_ARCHETYPE_BY_SLUG in TaskDetail.
 export const MOBILE_ARCHETYPE_BY_SLUG: Record<string, MobileHomeSkin> = {
   wow: WowFieldDesk,
+  ua: UaHome,
 }
 
 // Deterministic slight tilt per card — index-keyed so it's stable across renders.

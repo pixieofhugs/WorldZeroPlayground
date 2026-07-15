@@ -16,6 +16,7 @@ import { useTaskDetail, type TaskDetailState } from "./taskDetail/useTaskDetail"
 import DefaultTaskDetail from "./taskDetail/archetypes/DefaultTaskDetail";
 import DefaultMobileTaskDetail from "./taskDetail/mobileArchetypes/DefaultTaskDetail";
 import EverymenMobileTaskDetail from "./taskDetail/mobileArchetypes/EverymenTaskDetail";
+import UAMobileTaskDetail from "./taskDetail/mobileArchetypes/UaTaskDetail";
 import SNIDETaskDetail from "./taskDetail/archetypes/SNIDETaskDetail";
 import EverymenTaskDetail from "./taskDetail/archetypes/EverymenTaskDetail";
 import WowTaskDetail from "./taskDetail/archetypes/WowTaskDetail";
@@ -45,6 +46,7 @@ export const ARCHETYPE_BY_SLUG: Record<string, Archetype> = {
 // falls through to the Default mobile skin. Everymen is the first pilot (#497).
 export const MOBILE_ARCHETYPE_BY_SLUG: Record<string, Archetype> = {
   everymen: EverymenMobileTaskDetail,
+  ua: UAMobileTaskDetail,
 };
 
 export default function TaskDetail() {

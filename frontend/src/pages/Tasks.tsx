@@ -9,21 +9,26 @@ import { useFormFactor } from '../hooks/useFormFactor'
 import { pickVariant } from '../utils/factionDispatch'
 import { useTasks, type TasksState } from './tasks/useTasks'
 import DefaultTasks from './tasks/mobileArchetypes/DefaultTasks'
+import UaTaskList from './tasks/mobileArchetypes/UaTaskList'
 
 type MobileSkin = (props: { state: TasksState }) => JSX.Element | null
 
-// Parallel MOBILE registry, mirroring TaskDetail. Task browse isn't dispatched
-// by a single faction slug the way detail is, so this stays empty and every
-// render falls through to the Default mobile browse skin; bespoke faction
-// browse skins can register here later (#496–#500).
-export const MOBILE_ARCHETYPE_BY_SLUG: Record<string, MobileSkin> = {}
+// Parallel MOBILE registry, mirroring TaskDetail. Task browse shows every
+// faction's tasks, so — unlike task/praxis detail — it has no single task slug
+// to dispatch on; instead the VIEWING life's faction picks the skin, so a UA
+// member reads the catalogue in the gilt salon (#525). Unregistered factions
+// (and logged-out visitors) fall through to the Default mobile browse skin.
+export const MOBILE_ARCHETYPE_BY_SLUG: Record<string, MobileSkin> = {
+  ua: UaTaskList,
+}
 
 export default function Tasks() {
   const state = useTasks()
   const formFactor = useFormFactor()
 
   if (formFactor === 'mobile') {
-    const Mobile = pickVariant(MOBILE_ARCHETYPE_BY_SLUG, null, DefaultTasks)
+    const viewerSlug = state.user?.character?.faction_slug ?? null
+    const Mobile = pickVariant(MOBILE_ARCHETYPE_BY_SLUG, viewerSlug, DefaultTasks)
     return <Mobile state={state} />
   }
 

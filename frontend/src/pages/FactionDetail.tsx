@@ -6,6 +6,7 @@ import { factionCssVar, factionName, factionDescription } from "../utils/faction
 import { pickVariant } from "../utils/factionDispatch";
 import { useFormFactor } from "../hooks/useFormFactor";
 import { useFactionDetail, type FactionDetailState } from "./factionDetail/useFactionDetail";
+import UaFactionPage from "./factionDetail/mobileArchetypes/UaFactionPage";
 import DefaultFactionBody from "./factionDetail/archetypes/DefaultFactionBody";
 import DefaultFactionPage from "./factionDetail/mobileArchetypes/DefaultFactionPage";
 import EverymenFactionBody from "./factionDetail/archetypes/EverymenFactionBody";
@@ -69,21 +70,24 @@ const FACTION_BODIES: Record<string, ComponentType<{ state: FactionDetailState }
   albescent: AlbescentFactionBody,
 };
 
-// Parallel MOBILE registry — the phone twin of FACTION_BODIES. Empty today: every
-// mobile render falls through to the single-column DefaultFactionPage skin. The
-// per-faction mobile follow-ups register their bespoke `factionPage/mobileArchetypes/*`
-// skins here (keyed by slug), exactly as the desktop bodies register in FACTION_BODIES.
+// Parallel MOBILE registry — the phone twin of FACTION_BODIES. Every mobile
+// render falls through to the single-column DefaultFactionPage skin unless a
+// faction registers its bespoke `factionDetail/mobileArchetypes/*` page here
+// (keyed by slug), exactly as the desktop bodies register in FACTION_BODIES. UA
+// is the first (its gilt-salon page, #525).
 export const MOBILE_ARCHETYPE_BY_SLUG: Record<
   string,
   ComponentType<{ state: FactionDetailState }>
-> = {};
+> = {
+  ua: UaFactionPage,
+};
 
 export default function FactionDetail({ slug: slugProp }: { slug?: string } = {}) {
   const { t } = useTranslation("factions");
   const { slug: slugParam } = useParams<{ slug: string }>();
   const slug = slugProp ?? slugParam;
-  const formFactor = useFormFactor();
   const state = useFactionDetail(slug);
+  const formFactor = useFormFactor();
   const { loading, faction, fetchError, members, tasks, recentPraxis } = state;
 
   if (loading)

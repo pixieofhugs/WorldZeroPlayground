@@ -1,0 +1,307 @@
+import type { CSSProperties, ReactNode } from 'react'
+import { Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
+import PraxisCard from '../../../components/PraxisCard'
+import { toRoman } from '../../../components/cards/ephemeristsAtoms'
+import { MobileStickyBar, MobileStickyCaption } from './shared'
+import type { TaskDetailState } from '../useTaskDetail'
+
+/**
+ * Universal Assembly MOBILE task-detail skin (#525) — the salon
+ * commission on a phone. A gilt-framed parchment hero (engraved masthead, title
+ * in Cormorant italic, Anno + points plates, the commission brief), the
+ * exhibited works, and a stamped **sticky action bar** ("Submit to the Salon")
+ * pinned above the tab bar. Single-column, no fixed-px grid — the desktop
+ * salon's wide plate would overflow a phone. Reuses the same
+ * {@link TaskDetailState}, the shared mobile sticky bar, and the `ua.*` copy +
+ * `--faction-ua-*` tokens as the desktop archetype. Always-light: UA never dims.
+ */
+
+const PAPER = 'var(--faction-ua-card-bg)'
+const PAPER_WARM = 'var(--ua-paper-warm)'
+const WALL = 'var(--ua-wall)'
+const INK = 'var(--faction-ua-card-text)'
+const ACCENT = 'var(--faction-ua-card-accent)'
+const SUB = 'var(--faction-ua-card-muted)'
+const MUTED = 'var(--ua-muted)'
+const GOLD = 'var(--ua-gold)'
+const GOLD_PALE = 'var(--ua-gold-pale)'
+const LINE = 'var(--ua-line)'
+const GILT = 'var(--ua-gilt)'
+const DISPLAY = 'var(--faction-ua-card-font)'
+const ENGRAVED = 'var(--font-faction-engraved)'
+const MONO = 'var(--font-body)'
+
+const kicker: CSSProperties = {
+  fontFamily: MONO,
+  fontSize: 8,
+  letterSpacing: '0.24em',
+  textTransform: 'uppercase',
+  color: MUTED,
+}
+
+// "Anno {roman}"; level 0 shows an em-dash (matches the desktop UA convention).
+const anno = (level: number) => (level > 0 ? toRoman(level) : '—')
+
+function SectionHead({ title, trailing }: { title: string; trailing?: ReactNode }) {
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
+      <h2 style={{ fontFamily: ENGRAVED, fontSize: 14, letterSpacing: '0.08em', textTransform: 'uppercase', margin: 0, color: INK, whiteSpace: 'nowrap' }}>
+        {title}
+      </h2>
+      <span style={{ flex: 1, height: 1, background: `linear-gradient(90deg, ${GOLD}, transparent)` }} />
+      {trailing}
+    </div>
+  )
+}
+
+function plate(background: string, textColor: string, border: string, label: string) {
+  return (
+    <span style={{ fontFamily: ENGRAVED, fontSize: 12, letterSpacing: '0.04em', color: textColor, background, border: `1px solid ${border}`, padding: '4px 12px' }}>
+      {label}
+    </span>
+  )
+}
+
+export default function UaTaskDetail({ state }: { state: TaskDetailState }) {
+  const { t } = useTranslation('tasks')
+  const {
+    task,
+    submissions,
+    mySubmission,
+    isInProgress,
+    inProgressPraxisId,
+    canSignUp,
+    slotsOpen,
+    maxTaskSlots,
+    modifiedPoints,
+    topScore,
+    voteCount,
+    sortedSubmissions,
+    submissionSort,
+    setSubmissionSort,
+    signupError,
+    handleSignup,
+    handleDrop,
+  } = state
+
+  if (!task) return null
+
+  const topId = submissions.length
+    ? submissions.reduce((a, b) => ((b.score ?? 0) > (a.score ?? 0) ? b : a)).id
+    : null
+
+  return (
+    <div className="py-4" style={{ fontFamily: MONO, color: INK, background: WALL, marginLeft: -16, marginRight: -16, paddingLeft: 16, paddingRight: 16 }}>
+      {/* Breadcrumb */}
+      <nav className="mb-3" style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '0.1em', textTransform: 'uppercase', color: MUTED }}>
+        <Link to="/tasks" style={{ color: ACCENT, textDecoration: 'none' }}>
+          {t('default.breadcrumb')}
+        </Link>
+        <span aria-hidden style={{ margin: '0 6px', color: GOLD }}>›</span>
+        <span style={{ color: SUB }}>{task.title}</span>
+      </nav>
+
+      {/* Hero — gilt-framed commission plate */}
+      <div style={{ padding: 8, background: GILT, boxShadow: '0 12px 28px rgba(60,40,10,.2), inset 0 0 0 1px rgba(255,255,255,0.45)', marginBottom: 20 }}>
+        <div style={{ padding: 3, background: `linear-gradient(135deg, ${GOLD}, ${GOLD_PALE})` }}>
+          <div
+            style={{
+              position: 'relative',
+              overflow: 'hidden',
+              background: PAPER,
+              backgroundImage: 'radial-gradient(rgba(60,40,10,.03) 1px, transparent 1px)',
+              backgroundSize: '5px 5px',
+              border: `1px solid ${LINE}`,
+              padding: '20px 22px 22px',
+            }}
+          >
+            <div className="flex items-center justify-between" style={{ marginBottom: 12 }}>
+              <span style={{ fontFamily: ENGRAVED, fontSize: 9, letterSpacing: '0.13em', textTransform: 'uppercase', color: ACCENT }}>
+                {t('ua.masthead')}
+              </span>
+              <span style={kicker}>{t('ua.statusOpen')}</span>
+            </div>
+
+            <h1 style={{ fontFamily: DISPLAY, fontStyle: 'italic', fontWeight: 700, fontSize: 34, lineHeight: 1.05, color: INK, margin: 0, overflowWrap: 'anywhere' }}>
+              {task.title}
+            </h1>
+            <div style={{ height: 1, margin: '14px 0 14px', background: `linear-gradient(90deg, ${GOLD}, transparent)` }} />
+
+            <div className="flex items-center gap-2 flex-wrap">
+              {plate(PAPER_WARM, INK, GOLD, `${t('ua.stats.anno')} ${anno(task.level_required)}`)}
+              {plate(ACCENT, PAPER_WARM, ACCENT, t('mobile.points', { points: modifiedPoints }))}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* The Commission — brief */}
+      <section style={{ marginBottom: 20 }}>
+        <SectionHead title={t('ua.commissionHeading')} />
+        <div style={{ background: PAPER, border: `1px solid ${LINE}`, padding: '18px 20px' }}>
+          <p style={{ fontFamily: DISPLAY, fontStyle: 'italic', fontSize: 15, lineHeight: 1.75, color: task.description ? INK : SUB, margin: 0, whiteSpace: 'pre-wrap' }}>
+            {task.description || t('ua.commissionEmpty')}
+          </p>
+        </div>
+      </section>
+
+      {/* The Standing — read-only aggregate */}
+      <section style={{ marginBottom: 20 }}>
+        <SectionHead title={t('ua.critiqueHeading')} />
+        {voteCount > 0 ? (
+          <div style={{ display: 'flex', alignItems: 'flex-end', gap: 12 }}>
+            <span style={{ fontFamily: DISPLAY, fontStyle: 'italic', fontWeight: 700, fontSize: 44, lineHeight: 0.85, color: ACCENT }}>
+              {topScore}
+            </span>
+            <div style={{ paddingBottom: 5 }}>
+              <div style={{ fontFamily: ENGRAVED, fontSize: 12, letterSpacing: '0.06em', textTransform: 'uppercase', color: INK }}>
+                {t('ua.critique.finest')}
+              </div>
+              <div style={{ ...kicker, marginTop: 2 }}>{t('ua.critique.appraised', { count: voteCount })}</div>
+            </div>
+          </div>
+        ) : (
+          <p style={{ fontFamily: DISPLAY, fontStyle: 'italic', fontSize: 14, color: SUB, margin: 0 }}>{t('ua.critique.none')}</p>
+        )}
+      </section>
+
+      {/* Works exhibited (completions) */}
+      <section>
+        <SectionHead
+          title={t('ua.salonWallHeading')}
+          trailing={
+            <div style={{ display: 'flex' }}>
+              {(['score', 'recent'] as const).map((sort) => {
+                const on = submissionSort === sort
+                return (
+                  <button
+                    key={sort}
+                    onClick={() => setSubmissionSort(sort)}
+                    style={{
+                      fontFamily: MONO,
+                      fontSize: 8,
+                      letterSpacing: '0.1em',
+                      textTransform: 'uppercase',
+                      padding: '5px 10px',
+                      background: on ? ACCENT : 'transparent',
+                      color: on ? PAPER_WARM : MUTED,
+                      border: `1px solid ${on ? ACCENT : LINE}`,
+                      cursor: 'pointer',
+                    }}
+                  >
+                    {sort === 'score' ? t('ua.sort.finest') : t('ua.sort.recent')}
+                  </button>
+                )
+              })}
+            </div>
+          }
+        />
+        {sortedSubmissions.length === 0 ? (
+          <p style={{ fontFamily: DISPLAY, fontStyle: 'italic', fontSize: 14, color: SUB, margin: 0 }}>{t('ua.empty')}</p>
+        ) : (
+          <>
+            <div className="flex flex-col gap-4">
+              {sortedSubmissions.slice(0, 4).map((s) => (
+                <div key={s.id} style={{ position: 'relative', paddingTop: s.id === topId ? 16 : 0 }}>
+                  {s.id === topId && (
+                    <div
+                      style={{
+                        position: 'absolute',
+                        top: -4,
+                        left: '50%',
+                        transform: 'translateX(-50%)',
+                        zIndex: 3,
+                        whiteSpace: 'nowrap',
+                        background: GOLD,
+                        color: PAPER_WARM,
+                        fontFamily: ENGRAVED,
+                        fontSize: 10,
+                        letterSpacing: '0.1em',
+                        textTransform: 'uppercase',
+                        padding: '2px 12px',
+                        boxShadow: '0 3px 8px rgba(60,40,10,0.3)',
+                      }}
+                    >
+                      {t('ua.finestHand')}
+                    </div>
+                  )}
+                  <PraxisCard praxis={s} />
+                </div>
+              ))}
+            </div>
+            {submissions.length > 4 && (
+              <div style={{ marginTop: 16 }}>
+                <Link to={`/praxes?task_id=${task.id}`} style={{ fontFamily: ENGRAVED, fontSize: 12, letterSpacing: '0.06em', color: ACCENT, textDecoration: 'none' }}>
+                  {t('ua.viewAll', { count: submissions.length })}
+                </Link>
+              </div>
+            )}
+          </>
+        )}
+      </section>
+
+      {/* Sticky action bar */}
+      {canSignUp && (
+        <MobileStickyBar>
+          {signupError && (
+            <div style={{ fontFamily: MONO, fontSize: 12, color: 'var(--color-danger)', padding: '8px 12px', background: 'var(--faction-ua-light)', border: `1px solid ${LINE}` }}>
+              {signupError}
+            </div>
+          )}
+          <button
+            onClick={handleSignup}
+            style={{
+              width: '100%',
+              background: ACCENT,
+              color: PAPER_WARM,
+              fontFamily: ENGRAVED,
+              fontSize: 14,
+              letterSpacing: '0.1em',
+              textTransform: 'uppercase',
+              padding: '14px 20px',
+              border: 'none',
+              cursor: 'pointer',
+            }}
+          >
+            {t('ua.signup.cta', { points: modifiedPoints })}
+          </button>
+          <MobileStickyCaption color={MUTED}>
+            {t('ua.signup.meta', { open: slotsOpen, max: maxTaskSlots, level: task.level_required })}
+          </MobileStickyCaption>
+        </MobileStickyBar>
+      )}
+
+      {mySubmission && (
+        <MobileStickyBar style={{ flexDirection: 'row', alignItems: 'center' }}>
+          <span style={{ fontFamily: DISPLAY, fontStyle: 'italic', fontWeight: 700, fontSize: 15, color: GOLD, flex: 1 }}>
+            {t('ua.submitted.text')}
+          </span>
+          <Link
+            to={`/praxes/${mySubmission.id}/edit`}
+            style={{ fontFamily: ENGRAVED, fontSize: 10, letterSpacing: '0.12em', textTransform: 'uppercase', padding: '10px 18px', background: INK, color: PAPER_WARM, textDecoration: 'none' }}
+          >
+            {t('ua.submitted.edit')}
+          </Link>
+        </MobileStickyBar>
+      )}
+
+      {!mySubmission && isInProgress && inProgressPraxisId !== null && (
+        <MobileStickyBar style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+          <button
+            onClick={handleDrop}
+            style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: MONO, fontSize: 10, letterSpacing: '0.1em', textTransform: 'uppercase', color: MUTED }}
+          >
+            {t('ua.inProgress.drop')}
+          </button>
+          <Link
+            to={`/praxes/${inProgressPraxisId}/edit`}
+            style={{ marginLeft: 'auto', fontFamily: ENGRAVED, fontSize: 11, letterSpacing: '0.12em', textTransform: 'uppercase', padding: '12px 20px', background: ACCENT, color: PAPER_WARM, textDecoration: 'none' }}
+          >
+            {t('ua.inProgress.continue')}
+          </Link>
+        </MobileStickyBar>
+      )}
+    </div>
+  )
+}

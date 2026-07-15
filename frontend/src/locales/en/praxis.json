@@ -170,7 +170,14 @@
         "patronsTotal_other": "{{count}} patrons · total",
         "pts": "{{points}} pts"
       },
-      "patronage": "The Patronage"
+      "patronage": "The Patronage",
+      "mobile": {
+        "back": "The Salon",
+        "re": "re:",
+        "theAcquisition": "The acquisition",
+        "plate": "The Plate",
+        "appraise": "Offer an appraisal"
+      }
     },
     "ephemerists": {
       "motto": "finding · testament · codex",
