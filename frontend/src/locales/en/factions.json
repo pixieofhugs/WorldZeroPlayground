@@ -570,5 +570,22 @@
     "termsHeading": "Terms of matriculation",
     "dismiss": "Maybe later",
     "confirm": "Confirm"
+  },
+  "mobile": {
+    "loadError": "Couldn't load factions.",
+    "unaffiliatedTitle": "You're Unaffiliated",
+    "unaffiliatedBody": "Every path is open. Join a faction after your first task.",
+    "topMembers": "Top members",
+    "recentPraxis": "Recent praxis",
+    "membersStat": "Members",
+    "tasksStat": "Tasks",
+    "membersEmpty": "No members yet.",
+    "praxisEmpty": "No praxis yet.",
+    "memberStat": "lvl {{level}} · {{score}} pts",
+    "join": "Join {{faction}}",
+    "joining": "Joining…",
+    "confirm": "Confirm",
+    "memberBadge": "You're a member",
+    "gateHint": "Keep completing tasks to earn an invitation to {{faction}}."
   }
 }
