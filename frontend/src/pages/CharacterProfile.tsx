@@ -12,9 +12,10 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { getCharacter, type CharacterOut } from "../api/characters";
-import { listPraxes, type PraxisCardOut } from "../api/praxis";
-import { listTasks, type TaskOut } from "../api/tasks";
+import { getCharacter } from "../api/characters";
+import { listPraxes } from "../api/praxis";
+import { listTasks } from "../api/tasks";
+import { useResource } from "../hooks/useResource";
 import {
   listRelationships,
   createRelationship,
@@ -36,38 +37,28 @@ export default function CharacterProfile() {
   const { id } = useParams<{ id: string }>();
   const { user } = useAuth();
   const gameConfig = useGameConfig();
-  const [character, setCharacter] = useState<CharacterOut | null>(null);
-  const [submissions, setSubmissions] = useState<PraxisCardOut[]>([]);
-  const [proposedTasks, setProposedTasks] = useState<TaskOut[]>([]);
+  const { data, loading, error } = useResource(
+    () => {
+      const cid = Number(id);
+      return Promise.all([
+        getCharacter(cid),
+        listPraxes({ character_id: cid }),
+        listTasks({ created_by: cid }),
+      ]);
+    },
+    [id],
+  );
+  const character = data?.[0] ?? null;
+  const submissions = data?.[1] ?? [];
+  const proposedTasks = data?.[2] ?? [];
   const [relationship, setRelationship] = useState<RelationshipListItem | null>(
     null,
   );
   const [relationshipLoading, setRelationshipLoading] = useState(false);
-  const [loading, setLoading] = useState(true);
-  const [fetchError, setFetchError] = useState<string | null>(null);
 
   // Theme the page backdrop to this character's faction (falls back to the
   // global watercolor until loaded / for factions with no backdrop variant).
   useFactionBackdrop(character?.faction_slug);
-
-  useEffect(() => {
-    if (!id) return;
-    const cid = parseInt(id, 10);
-    Promise.all([
-      getCharacter(cid),
-      listPraxes({ character_id: cid }),
-      listTasks({ created_by: cid }),
-    ])
-      .then(([c, s, t]) => {
-        setCharacter(c);
-        setSubmissions(s);
-        setProposedTasks(t);
-      })
-      .catch((err) =>
-        setFetchError(extractError(err, "Couldn't load this character.")),
-      )
-      .finally(() => setLoading(false));
-  }, [id]);
 
   useEffect(() => {
     if (!id || !user?.character) return;
@@ -154,11 +145,11 @@ export default function CharacterProfile() {
 
   if (loading)
     return <div className="py-8 font-body text-muted">{t("states.loading")}</div>;
-  if (fetchError)
+  if (error)
     return (
       <div className="py-8">
         <p className="font-body text-sm text-red-600 border-2 border-red-300 px-3 py-2">
-          {fetchError}{" "}
+          {extractError(error, "Couldn't load this character.")}{" "}
           <button
             onClick={() => window.location.reload()}
             className="underline"
