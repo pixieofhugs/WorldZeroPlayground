@@ -82,6 +82,7 @@ export default function InvitationWatcher() {
 
   return (
     <InvitationLetterPopup
+      key={queue[0]}
       factionSlug={queue[0]}
       onClose={() => setQueue((prev) => prev.slice(1))}
     />

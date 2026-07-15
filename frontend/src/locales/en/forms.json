@@ -255,7 +255,7 @@
         "sessionPath": "singularity://praxis/draft.md · session 0x{{session}}",
         "whoami": "$ wz auth --whoami",
         "whoamiResult": "> @{{name}} · faction:singularity",
-        "editCommand": "$ wz praxis edit ./draft-{{id}}.md --live --raibow=on",
+        "editCommand": "$ wz praxis edit ./draft-{{id}}.md --live --rainbow=on",
         "factionLabel": "FACTION:",
         "factionValue": "singularity",
         "ptsLabel": "PTS:",
