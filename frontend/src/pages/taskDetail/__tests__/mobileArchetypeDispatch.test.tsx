@@ -110,7 +110,7 @@ describe("mobile task-detail dispatch", () => {
   });
 
   it("mobile + any other slug falls through to the Default mobile skin", () => {
-    for (const slug of ["snide", "wow", "na", null]) {
+    for (const slug of ["snide", "singularity", "na", null]) {
       expect(
         pickVariant(MOBILE_ARCHETYPE_BY_SLUG, slug, DefaultMobileTaskDetail),
       ).toBe(DefaultMobileTaskDetail);
