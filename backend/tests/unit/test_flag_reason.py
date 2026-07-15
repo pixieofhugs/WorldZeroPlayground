@@ -1,4 +1,4 @@
-"""Unit tests for the flag-reason vocabulary helpers (ADR-0031, #237).
+"""Unit tests for the flag-reason vocabulary helpers (ADR-0037, #237).
 
 `Flag.reason` stays a plain text column; the vocabulary is enforced in app
 code. These tests pin the write-side fold (`stored_flag_reason`) and the
@@ -15,7 +15,7 @@ class TestStoredFlagReason:
         assert stored_flag_reason(FlagReason.harassment, None) == "harassment"
 
     def test_named_reason_ignores_a_stray_note(self):
-        # The four named reasons carry no note (ADR-0031).
+        # The four named reasons carry no note (ADR-0037).
         assert stored_flag_reason(FlagReason.nsfw, "extra text") == "nsfw"
 
     def test_other_with_note_folds_note_into_reason(self):
@@ -41,7 +41,7 @@ class TestNormalizeFlagReason:
         )
 
     def test_pre_enum_empty_default_renders_as_other(self):
-        # Flag.reason has server_default="" from before the enum (ADR-0031).
+        # Flag.reason has server_default="" from before the enum (ADR-0037).
         assert normalize_flag_reason("") == (FlagReason.other, None)
 
     def test_round_trip_of_an_other_note(self):

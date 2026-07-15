@@ -59,7 +59,7 @@ export interface AdminCharacterSummary {
   created_at: string
 }
 
-/** One flag row on a queue item (#237, ADR-0031). `reason` is a vocabulary key;
+/** One flag row on a queue item (#237, ADR-0037). `reason` is a vocabulary key;
  *  legacy free text / `other` notes surface via `reason_detail`. */
 export interface FlagOut {
   reason: string

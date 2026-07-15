@@ -36,7 +36,7 @@ class CommentIn(BaseModel):
 
 
 class FlagIn(BaseModel):
-    """Player flag payload — reason constrained to the shared vocabulary (ADR-0031).
+    """Player flag payload — reason constrained to the shared vocabulary (ADR-0037).
 
     ``reason_detail`` is the free-text escape hatch for ``other``; the four named
     reasons carry no note (any detail sent alongside them is ignored).

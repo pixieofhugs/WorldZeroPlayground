@@ -57,7 +57,7 @@ class CharacterSummary(BaseModel):
 
 
 class FlagOut(BaseModel):
-    """One flag row for the moderator queue (#237, ADR-0031).
+    """One flag row for the moderator queue (#237, ADR-0037).
 
     ``reason`` is normalized onto the shared vocabulary at read time; legacy
     free text (or an ``other`` note) surfaces via ``reason_detail`` under the
