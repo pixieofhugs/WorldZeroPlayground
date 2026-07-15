@@ -58,3 +58,8 @@ export async function editComment(
   })
   return data
 }
+
+/** Author-only soft-delete → the comment is withdrawn (204, no body). */
+export async function deleteComment(commentId: number): Promise<void> {
+  await api.delete(`/comments/${commentId}`)
+}

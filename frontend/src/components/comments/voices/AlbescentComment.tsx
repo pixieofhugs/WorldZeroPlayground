@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import FactionAvatar from '../../avatar/FactionAvatar'
 import { formatCommentTime } from '../../../utils/commentTime'
 import { type CommentProps, authorToCharacter, ComposerControls, MentionText } from '../shared'
+import { CommentEditor, OwnerControls, useOwnerEdit } from '../OwnerControls'
 
 /**
  * Albescent — vellum correspondence (ADR-0018). The quietest archetype: warm-white
@@ -53,8 +54,9 @@ export default function AlbescentComment(props: CommentProps) {
       </div>
     )
   }
-  const { comment } = props
+  const { comment, onEdited, onWithdrawn } = props
   const slug = comment.author.faction_slug
+  const owner = useOwnerEdit({ comment, onEdited, onWithdrawn })
   return (
     <div style={frame()}>
       <Letterhead monogram={comment.author.display_name[0]?.toUpperCase() ?? 'A'} />
@@ -65,11 +67,16 @@ export default function AlbescentComment(props: CommentProps) {
         </Link>
       </div>
       <div style={{ borderTop: '1px solid rgba(0,0,0,0.08)', marginTop: 10, paddingTop: 11, fontFamily: SERIF, fontSize: 17, lineHeight: 1.6, letterSpacing: '0.01em', color: INK }}>
-        <MentionText body={comment.body_text} mentions={comment.mentions} accent={INK} />
+        {owner.editing ? (
+          <CommentEditor owner={owner} accent={INK} bg="#ffffff" text={INK} />
+        ) : (
+          <MentionText body={comment.body_text} mentions={comment.mentions} accent={INK} />
+        )}
       </div>
-      <div style={{ marginTop: 11, fontSize: 10, letterSpacing: '0.1em', textTransform: 'uppercase', color: MUTED }}>
+      <div style={{ marginTop: 11, fontSize: 10, letterSpacing: '0.1em', textTransform: 'uppercase', color: MUTED, display: 'flex', alignItems: 'baseline', gap: 8 }}>
         {formatCommentTime(slug, comment.created_at)}
         {comment.is_edited ? ` · ${t('comments.albescent.edited')}` : ''}
+        <OwnerControls owner={owner} />
       </div>
     </div>
   )

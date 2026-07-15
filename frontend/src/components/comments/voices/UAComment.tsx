@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next'
 import FactionAvatar from '../../avatar/FactionAvatar'
 import { formatCommentTime } from '../../../utils/commentTime'
 import { type CommentProps, authorToCharacter, ComposerControls, MentionText } from '../shared'
+import { CommentEditor, OwnerControls, useOwnerEdit } from '../OwnerControls'
 
 /**
  * UA — University of Asthmatics. The gilt salon (ADR-0026, superseding
@@ -66,8 +67,9 @@ export default function UAComment(props: CommentProps) {
       </GiltFrame>
     )
   }
-  const { comment } = props
+  const { comment, onEdited, onWithdrawn } = props
   const slug = comment.author.faction_slug
+  const owner = useOwnerEdit({ comment, onEdited, onWithdrawn })
   return (
     <GiltFrame gap={14}>
       <FactionAvatar character={authorToCharacter(comment.author)} size="sm" />
@@ -79,14 +81,19 @@ export default function UAComment(props: CommentProps) {
           <Link to={`/characters/${comment.author.id}`} style={{ fontFamily: SERIF, fontStyle: 'italic', fontWeight: 600, fontSize: 18, color: INK, textDecoration: 'none' }}>
             {comment.author.display_name}
           </Link>
-          <span style={{ fontFamily: SERIF, fontStyle: 'italic', fontSize: 12, color: SUB, whiteSpace: 'nowrap' }}>
+          <span style={{ fontFamily: SERIF, fontStyle: 'italic', fontSize: 12, color: SUB, whiteSpace: 'nowrap', display: 'inline-flex', alignItems: 'baseline', gap: 8 }}>
             {formatCommentTime(slug, comment.created_at)}
             {comment.is_edited ? ` · ${t('comments.ua.edited')}` : ''}
+            <OwnerControls owner={owner} />
           </span>
         </div>
         <div style={{ height: 1, background: 'color-mix(in srgb, var(--ua-gold) 55%, transparent)', margin: '8px 0 9px' }} />
         <div style={{ fontFamily: SERIF, fontStyle: 'italic', fontSize: 16, lineHeight: 1.5, color: INK }}>
-          <MentionText body={comment.body_text} mentions={comment.mentions} accent={ORANGE} />
+          {owner.editing ? (
+            <CommentEditor owner={owner} accent={ORANGE} bg={PAPER_WARM} text={INK} />
+          ) : (
+            <MentionText body={comment.body_text} mentions={comment.mentions} accent={ORANGE} />
+          )}
         </div>
       </div>
     </GiltFrame>

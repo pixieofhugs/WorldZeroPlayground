@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import FactionAvatar from '../../avatar/FactionAvatar'
 import { formatCommentTime } from '../../../utils/commentTime'
 import { type CommentProps, authorToCharacter, ComposerControls, MentionText } from '../shared'
+import { CommentEditor, OwnerControls, useOwnerEdit } from '../OwnerControls'
 
 /**
  * S.N.I.D.E. — ransom dispatch (ADR-0018). Reuses the task-card ransom vocabulary:
@@ -72,8 +73,9 @@ export default function SnideComment(props: CommentProps) {
       </div>
     )
   }
-  const { comment } = props
+  const { comment, onEdited, onWithdrawn } = props
   const slug = comment.author.faction_slug
+  const owner = useOwnerEdit({ comment, onEdited, onWithdrawn })
   return (
     <div style={frame()}>
       <Tape />
@@ -84,13 +86,18 @@ export default function SnideComment(props: CommentProps) {
             <Link to={`/characters/${comment.author.id}`} style={{ textDecoration: 'none' }}>
               <Ransom text={comment.author.display_name} size={16} />
             </Link>
-            <span style={{ fontFamily: 'var(--font-body)', fontSize: 10, color: 'var(--faction-snide-card-muted)', whiteSpace: 'nowrap' }}>
+            <span style={{ fontFamily: 'var(--font-body)', fontSize: 10, color: 'var(--faction-snide-card-muted)', whiteSpace: 'nowrap', display: 'inline-flex', alignItems: 'baseline', gap: 8 }}>
               {formatCommentTime(slug, comment.created_at)}
               {comment.is_edited ? ` · ${t('comments.snide.edited')}` : ''}
+              <OwnerControls owner={owner} />
             </span>
           </div>
           <div style={{ fontFamily: 'var(--faction-snide-font-cond)', textTransform: 'uppercase', fontSize: 15, lineHeight: 1.4, letterSpacing: '0.02em' }}>
-            <MentionText body={comment.body_text} mentions={comment.mentions} accent="var(--faction-snide-acid)" />
+            {owner.editing ? (
+              <CommentEditor owner={owner} accent="var(--faction-snide-pink)" bg="rgba(255,255,255,0.04)" text="var(--faction-snide-card-text)" />
+            ) : (
+              <MentionText body={comment.body_text} mentions={comment.mentions} accent="var(--faction-snide-acid)" />
+            )}
           </div>
         </div>
       </div>
