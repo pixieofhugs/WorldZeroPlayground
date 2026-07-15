@@ -1,0 +1,553 @@
+/**
+ * Warriors of Whimsy MOBILE composer (#498 pilot) — the scrapbook `.exe` window
+ * idiom on a phone. Same single-column composer as the Default mobile skin
+ * (Write/Preview toggle, fluid media grid, sticky submit bar) dressed in the
+ * pink window chrome: dotted board, notepad panels, sparkle-titled bars.
+ * Ported from the Field Kit `wow-treatment` composer; grounds on the
+ * `--faction-wow-*` tokens already in index.css (the set WowFieldDesk /
+ * WowEditPraxis desktop use). Consumes `useEditPraxis` verbatim — no editor,
+ * upload, or submit logic lives here. Presentation-only.
+ */
+import { useState } from "react";
+import type { CSSProperties, ReactNode } from "react";
+import { useTranslation } from "react-i18next";
+import { factionName } from "../../../utils/factions";
+import { mediaUrl } from "../../../utils/media";
+import MediaArt from "../blocks/MediaArt";
+import { pickArtKey } from "../blocks/useMediaArt";
+import { ErrorBanner, formatAutosave } from "../archetypes/shared";
+import {
+  BodyPreview,
+  BodyTextarea,
+  DropButton,
+  FilePicker,
+  InviteSearch,
+  MetatasksList,
+  PublishButton,
+  TitleField,
+} from "../archetypes/controls";
+import type { EditPraxisState } from "../useEditPraxis";
+import { MobileStickyBar, SegToggle, type ComposerTab } from "./shared";
+
+const PINK = "var(--faction-wow)";
+const PINK_DEEP = "var(--faction-wow-card-accent)";
+const TITLE_TEXT = "var(--faction-wow-title-text)";
+const CARD_TEXT = "var(--faction-wow-card-text)";
+const CARD_MUTED = "var(--faction-wow-card-muted)";
+const WIN_BORDER = "var(--faction-wow-win-border)";
+const NOTEPAD_BG = "var(--faction-wow-notepad-bg)";
+const NOTEPAD_BORDER = "var(--faction-wow-notepad-border)";
+const BODY_BG = "var(--faction-wow-body-bg)";
+const DOT = "var(--faction-wow-dot)";
+const SCRIPT = "var(--faction-wow-card-font)";
+const BODY = "var(--font-body)";
+const ON_ACCENT = "var(--color-text-on-accent)";
+
+function Sparkle({
+  size,
+  color,
+  style,
+}: {
+  size: number;
+  color: string;
+  style?: CSSProperties;
+}) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" style={style} aria-hidden>
+      <path
+        d="M12 0c.9 7 4.1 10.2 11 11-6.9.8-10.1 4-11 11-.9-7-4.1-10.2-11-11C7.9 10.2 11.1 7 12 0Z"
+        fill={color}
+      />
+    </svg>
+  );
+}
+
+const eyebrow: CSSProperties = {
+  display: "block",
+  fontFamily: BODY,
+  fontSize: 9,
+  letterSpacing: "0.18em",
+  textTransform: "uppercase",
+  color: PINK_DEEP,
+};
+
+/** A pink window: sparkle title bar + dotted board wrapping an inner notepad. */
+function Window({ title, children }: { title: string; children: ReactNode }) {
+  return (
+    <section
+      style={{
+        borderRadius: 16,
+        overflow: "hidden",
+        border: `2px solid ${WIN_BORDER}`,
+        boxShadow: `0 8px 22px color-mix(in srgb, ${PINK} 22%, transparent)`,
+      }}
+    >
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: 7,
+          padding: "8px 12px",
+          background:
+            "linear-gradient(180deg, var(--faction-wow-title-from), var(--faction-wow-title-to))",
+          borderBottom: `2px solid ${WIN_BORDER}`,
+        }}
+      >
+        {[
+          "var(--faction-wow-scrap-deep)",
+          "var(--faction-wow-tape)",
+          "var(--faction-wow-ivy-leaf)",
+        ].map((color) => (
+          <span
+            key={color}
+            style={{
+              width: 9,
+              height: 9,
+              borderRadius: "50%",
+              background: color,
+              border: "1.2px solid rgba(255,255,255,0.7)",
+            }}
+          />
+        ))}
+        <span
+          style={{
+            marginLeft: "auto",
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 5,
+            fontFamily: SCRIPT,
+            fontSize: 18,
+            color: TITLE_TEXT,
+          }}
+        >
+          <Sparkle size={11} color={TITLE_TEXT} />
+          {title}
+        </span>
+      </div>
+      <div
+        style={{
+          padding: 12,
+          background: BODY_BG,
+          backgroundImage: `radial-gradient(${DOT} 1.4px, transparent 1.4px)`,
+          backgroundSize: "13px 13px",
+        }}
+      >
+        <div
+          style={{
+            background: NOTEPAD_BG,
+            border: `1.5px solid ${NOTEPAD_BORDER}`,
+            borderRadius: 9,
+            padding: 13,
+          }}
+        >
+          {children}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+export default function WowEditPraxis({ state }: { state: EditPraxisState }) {
+  const { t } = useTranslation("forms");
+  const [tab, setTab] = useState<ComposerTab>("write");
+  const praxis = state.praxis!;
+  const task = state.task;
+
+  return (
+    <div
+      data-skin="wow"
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        gap: 14,
+        fontFamily: BODY,
+        color: CARD_TEXT,
+        background: BODY_BG,
+        backgroundImage: `radial-gradient(${DOT} 1.4px, transparent 1.4px)`,
+        backgroundSize: "15px 15px",
+      }}
+    >
+      <header style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <h1
+            style={{
+              fontFamily: SCRIPT,
+              fontSize: 34,
+              lineHeight: 0.9,
+              color: TITLE_TEXT,
+              margin: 0,
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 8,
+            }}
+          >
+            {t("editPraxis.wow.pageTitle")}
+            <Sparkle size={16} color={PINK} />
+          </h1>
+          <span style={{ ...eyebrow, color: CARD_MUTED, marginLeft: "auto" }}>
+            {state.autosaveAt
+              ? t("editPraxis.wow.autosaveSaved", {
+                  ago: formatAutosave(state.autosaveAt),
+                })
+              : t("editPraxis.wow.autosaveUnsaved")}
+          </span>
+        </div>
+
+        <SegToggle
+          tab={tab}
+          setTab={setTab}
+          skin={{
+            containerStyle: {
+              gap: 4,
+              padding: 3,
+              background: NOTEPAD_BG,
+              border: `1.5px solid ${NOTEPAD_BORDER}`,
+              borderRadius: 999,
+            },
+            buttonStyle: (active) => ({
+              padding: "9px 10px",
+              borderRadius: 999,
+              border: active ? `1.5px solid ${PINK_DEEP}` : "1.5px solid transparent",
+              fontFamily: BODY,
+              fontSize: 11,
+              letterSpacing: "0.1em",
+              textTransform: "uppercase",
+              fontWeight: 700,
+              background: active
+                ? `linear-gradient(180deg, ${PINK}, ${PINK_DEEP})`
+                : "transparent",
+              color: active ? ON_ACCENT : CARD_MUTED,
+            }),
+          }}
+        />
+      </header>
+
+      {/* For-quest reference */}
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          gap: 10,
+          padding: "11px 14px",
+          background: NOTEPAD_BG,
+          border: `1.5px solid ${NOTEPAD_BORDER}`,
+          borderRadius: 12,
+        }}
+      >
+        <span style={eyebrow}>{t("editPraxis.wow.taskRefLabel")}</span>
+        <span
+          style={{
+            fontFamily: SCRIPT,
+            fontSize: 20,
+            color: TITLE_TEXT,
+            textAlign: "right",
+            flex: 1,
+            lineHeight: 1.05,
+          }}
+        >
+          {praxis.task_title}
+        </span>
+      </div>
+      <div style={{ ...eyebrow, color: PINK_DEEP }}>
+        {factionName(task?.primary_faction_slug ?? null)}
+        {task ? ` · ${t("taskMeta.points", { points: task.point_value })}` : ""}
+      </div>
+
+      {tab === "write" ? (
+        <>
+          <Window title={t("editPraxis.wow.titleLabel")}>
+            <TitleField
+              state={state}
+              skin={{
+                placeholder: t("editPraxis.wow.titlePlaceholder"),
+                inputStyle: {
+                  width: "100%",
+                  fontFamily: SCRIPT,
+                  fontSize: 24,
+                  fontWeight: 700,
+                  color: TITLE_TEXT,
+                  background: "transparent",
+                  border: "none",
+                  outline: "none",
+                  borderBottom: `2px solid ${NOTEPAD_BORDER}`,
+                  padding: "2px 0 8px",
+                },
+              }}
+            />
+          </Window>
+
+          <Window title={t("editPraxis.wow.bodyLabel", { words: state.wordCount })}>
+            <BodyTextarea
+              state={state}
+              skin={{
+                rows: 10,
+                placeholder: t("editPraxis.wow.bodyPlaceholder"),
+                textareaStyle: {
+                  width: "100%",
+                  fontFamily: BODY,
+                  fontSize: 15,
+                  lineHeight: 1.55,
+                  color: CARD_TEXT,
+                  background: BODY_BG,
+                  border: `1.5px solid ${NOTEPAD_BORDER}`,
+                  borderRadius: 7,
+                  padding: "13px 15px",
+                  outline: "none",
+                  resize: "vertical",
+                  minHeight: 180,
+                },
+              }}
+            />
+          </Window>
+
+          {state.showInviteBox && (
+            <Window
+              title={
+                state.duelMode
+                  ? t("editPraxis.wow.inviteLabelDuel")
+                  : t("editPraxis.wow.inviteLabel")
+              }
+            >
+              <InviteSearch
+                state={state}
+                skin={{
+                  fontFamily: BODY,
+                  inputBg: BODY_BG,
+                  inputColor: CARD_TEXT,
+                  inputBorder: `1.5px solid ${NOTEPAD_BORDER}`,
+                  acceptedBg: PINK,
+                  acceptedColor: ON_ACCENT,
+                  placeholder: t("editPraxis.wow.invitePlaceholder"),
+                }}
+              />
+            </Window>
+          )}
+
+          <Window title={t("editPraxis.wow.filesLabel", { pasted: state.media.length })}>
+            <MediaGrid state={state} />
+          </Window>
+
+          {state.showMetatasks && (
+            <Window title={t("editPraxis.wow.metatasksLabel")}>
+              <MetatasksList
+                state={state}
+                skin={{
+                  containerStyle: {
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: 4,
+                  },
+                  rowStyle: (selected) => ({
+                    padding: "10px 12px",
+                    background: selected ? BODY_BG : "transparent",
+                    border: `1.5px solid ${selected ? PINK_DEEP : "transparent"}`,
+                    borderRadius: 7,
+                  }),
+                  titleColor: CARD_TEXT,
+                  descColor: CARD_MUTED,
+                  pointsActiveColor: PINK_DEEP,
+                  pointsIdleColor: CARD_MUTED,
+                }}
+              />
+            </Window>
+          )}
+        </>
+      ) : (
+        <Window title={t("editPraxis.wow.previewLabel")}>
+          <div
+            style={{
+              fontFamily: SCRIPT,
+              fontSize: 22,
+              color: TITLE_TEXT,
+              marginBottom: 10,
+            }}
+          >
+            {state.title || t("editPraxis.wow.titlePlaceholder")}
+          </div>
+          {state.media.length > 0 && (
+            <div style={{ marginBottom: 12 }}>
+              <MediaGrid state={state} readOnly />
+            </div>
+          )}
+          <BodyPreview
+            state={state}
+            skin={{
+              markdownStyle: {
+                fontFamily: BODY,
+                fontSize: 15,
+                lineHeight: 1.6,
+                color: CARD_TEXT,
+              },
+            }}
+          />
+        </Window>
+      )}
+
+      <ErrorBanner message={state.error} />
+
+      <MobileStickyBar
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: 12,
+          padding: "12px 0 4px",
+          background: "var(--color-nav-bg)",
+          backdropFilter: "blur(var(--nav-blur))",
+          borderTop: `1.5px solid ${WIN_BORDER}`,
+        }}
+      >
+        <PublishButton
+          state={state}
+          skin={{
+            ornament: <Sparkle size={13} color={ON_ACCENT} />,
+            idleLabel: t("editPraxis.wow.publishIdle"),
+            busyLabel: t("editPraxis.wow.publishBusy"),
+            style: {
+              flex: 1,
+              display: "inline-flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 7,
+              background: `linear-gradient(180deg, ${PINK}, ${PINK_DEEP})`,
+              color: ON_ACCENT,
+              fontFamily: BODY,
+              fontSize: 12,
+              fontWeight: 700,
+              letterSpacing: "0.12em",
+              textTransform: "uppercase",
+              padding: "13px 18px",
+              border: `1.5px solid ${PINK_DEEP}`,
+              borderRadius: 14,
+              cursor: state.submitting ? "wait" : "pointer",
+            },
+          }}
+        />
+        {!state.isPublished && (
+          <DropButton
+            state={state}
+            skin={{
+              label: t("editPraxis.wow.dropLabel"),
+              style: {
+                background: "transparent",
+                border: "none",
+                color: CARD_MUTED,
+                fontFamily: SCRIPT,
+                fontSize: 18,
+                fontWeight: 700,
+                cursor: "pointer",
+              },
+            }}
+          />
+        )}
+      </MobileStickyBar>
+    </div>
+  );
+}
+
+/** Fluid 3-column media grid in the WOW notepad idiom. */
+function MediaGrid({
+  state,
+  readOnly = false,
+}: {
+  state: EditPraxisState;
+  readOnly?: boolean;
+}) {
+  const { t } = useTranslation("forms");
+  return (
+    <div
+      style={{
+        display: "grid",
+        gridTemplateColumns: "repeat(3, 1fr)",
+        gap: 8,
+      }}
+    >
+      {state.media.map((item) => {
+        const filename = item.file_path.split("/").pop() ?? item.file_path;
+        const src = mediaUrl(item.file_path);
+        return (
+          <div
+            key={item.id}
+            style={{
+              position: "relative",
+              aspectRatio: "1 / 1",
+              overflow: "hidden",
+              borderRadius: 9,
+              border: `1.5px solid ${NOTEPAD_BORDER}`,
+              background: BODY_BG,
+            }}
+          >
+            {item.type === "image" ? (
+              <img
+                src={src}
+                alt=""
+                style={{ width: "100%", height: "100%", objectFit: "cover" }}
+              />
+            ) : item.type === "video" ? (
+              <video
+                src={src}
+                style={{ width: "100%", height: "100%", objectFit: "cover" }}
+              />
+            ) : (
+              <MediaArt
+                art={pickArtKey(filename, "audio")}
+                width={120}
+                height={120}
+              />
+            )}
+            {!readOnly && (
+              <button
+                type="button"
+                onClick={() => void state.removeMedia(item)}
+                aria-label={t("media.removeAria", { name: filename })}
+                style={{
+                  position: "absolute",
+                  top: 4,
+                  right: 4,
+                  width: 24,
+                  height: 24,
+                  borderRadius: "50%",
+                  background: NOTEPAD_BG,
+                  border: `1.5px solid ${PINK}`,
+                  color: PINK,
+                  fontSize: 12,
+                  fontWeight: 700,
+                  lineHeight: 1,
+                  cursor: "pointer",
+                  padding: 0,
+                }}
+              >
+                ×
+              </button>
+            )}
+          </div>
+        );
+      })}
+      {!readOnly && (
+        <FilePicker
+          state={state}
+          skin={{
+            buttonStyle: {
+              aspectRatio: "1 / 1",
+              width: "100%",
+              background: BODY_BG,
+              border: `2px dashed ${NOTEPAD_BORDER}`,
+              borderRadius: 9,
+              cursor: "pointer",
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 4,
+              fontFamily: SCRIPT,
+              fontSize: 16,
+              fontWeight: 700,
+              color: PINK,
+            },
+            buttonLabel: t("editPraxis.wow.fileButton"),
+          }}
+        />
+      )}
+    </div>
+  );
+}
