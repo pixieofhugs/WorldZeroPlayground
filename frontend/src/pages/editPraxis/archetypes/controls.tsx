@@ -112,6 +112,10 @@ export function InviteSearch({
                     }}
                   >
                     {member.character_display_name}
+                    {/* Collab submit indicator (#521): who has already submitted. */}
+                    {member.has_submitted && (
+                      <em> · ✓ {t("editPraxis.invite.statusSubmitted")}</em>
+                    )}
                   </span>
                 )),
               ...praxis.invites

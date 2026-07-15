@@ -90,6 +90,12 @@ export interface PraxisCardOut {
   created_at: string
   updated_at: string
   submitted_at: string | null
+  /**
+   * When a collab's pending-publish window opened; null/absent if not pending
+   * (ADR-0012). Optional because the list schema may omit it — the pending chip
+   * simply doesn't render until it's present.
+   */
+  submit_proposed_at?: string | null
   member_count: number
   score: number
   voter_count: number

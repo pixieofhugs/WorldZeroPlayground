@@ -261,6 +261,7 @@ async def build_praxis_card_out(
         created_at=praxis.created_at,
         updated_at=praxis.updated_at,
         submitted_at=praxis.submitted_at,
+        submit_proposed_at=praxis.submit_proposed_at,
         member_count=len(praxis.members),
         score=score,
         voter_count=tally.voter_count,

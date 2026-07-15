@@ -57,6 +57,8 @@
       "crownBody": "The top-scoring praxis for this task — held until another entry out-votes it.",
       "inEditingLabel": "IN EDITING",
       "inEditingBody": "This praxis is in editing mode. Points and votes are paused until submitted.",
+      "pendingPublishLabel": "PENDING PUBLISH",
+      "pendingPublishBody": "Waiting on co-authors to submit.",
       "failedTitle": "This praxis was marked as failed."
     },
     "admin": {
@@ -68,10 +70,15 @@
       "failReasonPlaceholder": "Reason for failure (visible to player)...",
       "confirm": "confirm"
     },
+    "byline": {
+      "submitted": "✓ submitted",
+      "drafting": "drafting"
+    },
     "owner": {
       "edit": "edit this praxis",
       "submitting": "...",
       "submit": "Submit",
+      "submittedWaiting": "You've submitted — waiting on co-authors",
       "unsubmit": "unsubmit",
       "confirmPrompt": "Sure? Points & votes will pause.",
       "confirmUnsubmit": "Yes, unsubmit",
