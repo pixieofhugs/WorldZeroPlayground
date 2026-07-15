@@ -3,6 +3,11 @@
 How World Zero keeps its Alembic chain short and recovers when a squash
 invalidates an existing DB. Read this before squashing migrations or resetting a DB.
 
+**Current baseline:** `0001_squashed` (`down_revision = None`, the single head) —
+squashed 2026-07-14, collapsing legacy `0001`–`0013`. Its `upgrade()` builds the
+whole schema from the live ORM models via `Base.metadata.create_all`, so it can
+never drift from `models/`.
+
 ## Why this exists
 
 A squash collapses `versions/*.py` into one revision. Every DB that was stamped

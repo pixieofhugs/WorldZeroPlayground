@@ -1,6 +1,6 @@
 """Squashed baseline — full schema built straight from the ORM models.
 
-Collapses the entire prior migration chain (legacy 0001–0010) into one root
+Collapses the entire prior migration chain (legacy 0001–0013) into one root
 revision. A fresh database reaches the current schema with a single
 ``alembic upgrade head``; ``seed.py`` then loads reference data (factions, era,
 admin, tasks) from the live era config.
@@ -44,6 +44,7 @@ ENUMS: list[tuple[str, list[str]]] = [
     ("relationshiptype", ["friend", "foe"]),
     ("relationshipstatus", ["active", "blocked"]),
     ("taunttriggertype", ["score_overtake", "level_up", "praxis_complete"]),
+    ("duelstatus", ["pending", "active", "settled", "declined"]),
 ]
 
 
