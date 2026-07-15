@@ -278,7 +278,7 @@ async def test_admin_list_flagged_praxes(
     ids = [p["id"] for p in resp.json()]
     assert praxis_id in ids
 
-    # Flag rows ride along for the moderator queue (#237, ADR-0031).
+    # Flag rows ride along for the moderator queue (#237, ADR-0037).
     row = next(p for p in resp.json() if p["id"] == praxis_id)
     assert [flag["reason"] for flag in row["flags"]] == ["harassment"]
     assert row["flags"][0]["reason_detail"] is None
@@ -294,7 +294,7 @@ async def test_flag_reason_outside_vocabulary_rejected(
     auth_headers: dict,
     auth_headers2: dict,
 ):
-    """Free-text reasons are rejected at the trust boundary (ADR-0031)."""
+    """Free-text reasons are rejected at the trust boundary (ADR-0037)."""
     sub_resp = await client.post(
         "/praxes",
         json={"task_id": signed_up_task.id, "title": "Flaggable"},
@@ -323,7 +323,7 @@ async def test_admin_list_flagged_comments_includes_flags(
     db_session: AsyncSession,
 ):
     """Flagged comments surface with normalized flag rows; an `other` note is
-    preserved as reason_detail (#237, ADR-0031)."""
+    preserved as reason_detail (#237, ADR-0037)."""
     await _make_admin(account, db_session)
 
     sub_resp = await client.post(

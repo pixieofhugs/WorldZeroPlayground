@@ -1,5 +1,5 @@
 /**
- * Flag-reason vocabulary (ADR-0031) — mirrors backend models/flag.py FlagReason.
+ * Flag-reason vocabulary (ADR-0037) — mirrors backend models/flag.py FlagReason.
  *
  * One flat list shared by praxis and comment flags. The player flag control
  * picks from these keys; the moderator queue badges on them. `other` carries
@@ -23,7 +23,7 @@ const FLAG_REASON_VALUES: FlagReason[] = [
   'other',
 ]
 
-/** Badge label for a stored reason key; unknown keys read as Other (ADR-0031). */
+/** Badge label for a stored reason key; unknown keys read as Other (ADR-0037). */
 export function flagReasonLabel(value: string): string {
   const match = FLAG_REASON_VALUES.find((reason) => reason === value)
   return i18n.t(`admin:flagReasons.${match ?? FLAG_REASON_OTHER}`)

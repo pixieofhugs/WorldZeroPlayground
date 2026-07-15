@@ -255,7 +255,7 @@ export async function votePraxis(id: number, data: PraxisVoteIn): Promise<void> 
 }
 
 // ---------------------------------------------------------------------------
-// Flagging — reason is the shared vocabulary (ADR-0031); same FlagIn body as
+// Flagging — reason is the shared vocabulary (ADR-0037); same FlagIn body as
 // the comment flag route. `reasonDetail` only travels with reason='other'.
 // ---------------------------------------------------------------------------
 

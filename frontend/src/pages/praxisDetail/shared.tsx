@@ -311,7 +311,7 @@ export function PraxisFlagBlock({ state }: { state: PraxisDetailState }) {
       </div>
       {showFlagForm && (
         <div style={{ marginTop: 10 }}>
-          {/* Reason picker — the shared vocabulary (ADR-0031), not free text. */}
+          {/* Reason picker — the shared vocabulary (ADR-0037), not free text. */}
           <div className="flex items-center gap-2" style={{ flexWrap: 'wrap' }} role="radiogroup" aria-label={t('detail.flag.reasonGroupLabel')}>
             {flagReasonOptions().map(({ value, label }) => (
               <button
