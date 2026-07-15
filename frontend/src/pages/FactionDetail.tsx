@@ -4,8 +4,10 @@ import { useParams, Link } from "react-router-dom";
 import PageTitle from "../components/ui/PageTitle";
 import { factionCssVar, factionName, factionDescription } from "../utils/factions";
 import { pickVariant } from "../utils/factionDispatch";
+import { useFormFactor } from "../hooks/useFormFactor";
 import { useFactionDetail, type FactionDetailState } from "./factionDetail/useFactionDetail";
 import DefaultFactionBody from "./factionDetail/archetypes/DefaultFactionBody";
+import DefaultFactionPage from "./factionDetail/mobileArchetypes/DefaultFactionPage";
 import EverymenFactionBody from "./factionDetail/archetypes/EverymenFactionBody";
 import UaFactionBody from "./factionDetail/archetypes/UaFactionBody";
 import SingularityFactionBody from "./factionDetail/archetypes/SingularityFactionBody";
@@ -67,10 +69,20 @@ const FACTION_BODIES: Record<string, ComponentType<{ state: FactionDetailState }
   albescent: AlbescentFactionBody,
 };
 
+// Parallel MOBILE registry — the phone twin of FACTION_BODIES. Empty today: every
+// mobile render falls through to the single-column DefaultFactionPage skin. The
+// per-faction mobile follow-ups register their bespoke `factionPage/mobileArchetypes/*`
+// skins here (keyed by slug), exactly as the desktop bodies register in FACTION_BODIES.
+export const MOBILE_ARCHETYPE_BY_SLUG: Record<
+  string,
+  ComponentType<{ state: FactionDetailState }>
+> = {};
+
 export default function FactionDetail({ slug: slugProp }: { slug?: string } = {}) {
   const { t } = useTranslation("factions");
   const { slug: slugParam } = useParams<{ slug: string }>();
   const slug = slugProp ?? slugParam;
+  const formFactor = useFormFactor();
   const state = useFactionDetail(slug);
   const { loading, faction, fetchError, members, tasks, recentPraxis } = state;
 
@@ -96,6 +108,13 @@ export default function FactionDetail({ slug: slugProp }: { slug?: string } = {}
         </Link>
       </div>
     );
+
+  // Phone: dispatch to a single-column mobile skin (Default fallback), keyed by
+  // faction slug so a per-faction mobile treatment can register in the registry.
+  if (formFactor === "mobile") {
+    const Mobile = pickVariant(MOBILE_ARCHETYPE_BY_SLUG, faction.slug, DefaultFactionPage);
+    return <Mobile state={state} />;
+  }
 
   const accent = factionCssVar(faction.slug, "border");
   const name = factionName(faction.slug);

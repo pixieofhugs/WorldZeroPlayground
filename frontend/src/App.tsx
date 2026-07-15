@@ -16,6 +16,7 @@ import FactionDetail from './pages/FactionDetail'
 import AlbescentSecretPlaceholder from './pages/AlbescentSecretPlaceholder'
 import Updates from './pages/Updates'
 import Praxes from './pages/Praxes'
+import Settings from './pages/Settings'
 import Admin from './pages/Admin'
 import CreateCharacter from './pages/CreateCharacter'
 import EditCharacter from './pages/EditCharacter'
@@ -87,6 +88,16 @@ export default function App() {
           element={
             <ProtectedRoute>
               <Updates />
+            </ProtectedRoute>
+          }
+        />
+        {/* Mobile-only Settings surface (#520). The page redirects to `/` on
+            desktop, which keeps the desktop NavBar controls the sole path. */}
+        <Route
+          path="/settings"
+          element={
+            <ProtectedRoute>
+              <Settings />
             </ProtectedRoute>
           }
         />

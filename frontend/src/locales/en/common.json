@@ -271,5 +271,23 @@
     "summary_one": "{{count}} vote · {{points}} pts",
     "summary_other": "{{count}} votes · {{points}} pts",
     "saveError": "Could not save your vote. Please try again."
+  },
+  "settings": {
+    "title": "Settings",
+    "open": "Settings",
+    "account": {
+      "eyebrow": "Signed in as",
+      "viewProfile": "View profile",
+      "noCharacter": "No character yet"
+    },
+    "characters": {
+      "label": "Characters",
+      "hint": "Switch or edit your lives"
+    },
+    "appearance": {
+      "eyebrow": "Appearance",
+      "darkMode": "Dark mode"
+    },
+    "signOut": "Sign out"
   }
 }

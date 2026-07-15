@@ -1,100 +1,49 @@
-import { useEffect, useState, useCallback } from 'react'
-import { useSearchParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { getActivityFeed, type ActivityFeedItem, type FeedCounts } from '../api/activityFeed'
 import PageTitle from '../components/ui/PageTitle'
 import FeedCardRouter from '../components/feed/FeedCardRouter'
 import FeedDateDivider, { getDateLabel } from '../components/feed/FeedDateDivider'
-import { extractError } from '../utils/errors'
+import { useFormFactor } from '../hooks/useFormFactor'
+import {
+  useUpdates,
+  getCount,
+  ROW_1_FILTERS,
+  ROW_2_FILTERS,
+  type FeedFilter,
+  type UpdatesState,
+} from './updates/useUpdates'
+import MobileUpdates from './updates/MobileUpdates'
 
-type FeedFilter = 'All' | 'Friends' | 'Foes' | 'Your Stuff' | 'Global' | 'Requests'
-
-const ROW_1_FILTERS: FeedFilter[] = ['All', 'Friends', 'Foes', 'Your Stuff']
-const ROW_2_FILTERS: FeedFilter[] = ['Global', 'Requests']
-
-/** Map UI filter name to API filter param. */
-const FILTER_API_MAP: Record<FeedFilter, string> = {
-  'All': 'all',
-  'Friends': 'friends',
-  'Foes': 'foes',
-  'Your Stuff': 'your_stuff',
-  'Global': 'global',
-  'Requests': 'requests',
-}
-
-/** Map filter name to the key in FeedCounts. */
-function getCount(filter: FeedFilter, counts: FeedCounts): number {
-  switch (filter) {
-    case 'All': return counts.all
-    case 'Friends': return counts.friends
-    case 'Foes': return counts.foes
-    case 'Your Stuff': return counts.your_stuff
-    case 'Global': return counts.global_count
-    case 'Requests': return counts.requests
-  }
-}
-
+/**
+ * Activity feed. `useUpdates()` owns the filter-tab fetch + cursor pagination;
+ * on a phone (#532) `useFormFactor() === 'mobile'` swaps the desktop tab bar for
+ * a scroll-native single-column stream. Both surfaces render the SAME items
+ * through the SAME per-faction FeedCardRouter frames — a mixed, multi-faction
+ * stream, presentation-only. Desktop renders exactly as before.
+ */
 export default function Updates() {
+  const formFactor = useFormFactor()
+  const state = useUpdates()
+
+  if (formFactor === 'mobile') return <MobileUpdates state={state} />
+
+  return <DesktopUpdates state={state} />
+}
+
+function DesktopUpdates({ state }: { state: UpdatesState }) {
   const { t } = useTranslation('feed')
   const { t: tc } = useTranslation('common')
-  const [searchParams] = useSearchParams()
-  const [items, setItems] = useState<ActivityFeedItem[]>([])
-  const [counts, setCounts] = useState<FeedCounts>({ all: 0, friends: 0, foes: 0, your_stuff: 0, global_count: 0, requests: 0 })
-  // Deep-link the initial tab from ?filter=<api value> (e.g. Sidebar → Requests).
-  const [filter, setFilter] = useState<FeedFilter>(() => {
-    const apiFilter = searchParams.get('filter')
-    return (Object.keys(FILTER_API_MAP) as FeedFilter[]).find(
-      (name) => FILTER_API_MAP[name] === apiFilter,
-    ) ?? 'All'
-  })
-  const [loading, setLoading] = useState(true)
-  const [loadingMore, setLoadingMore] = useState(false)
-  const [nextCursor, setNextCursor] = useState<string | null>(null)
-  const [fetchError, setFetchError] = useState<string | null>(null)
-  const [loadMoreError, setLoadMoreError] = useState<string | null>(null)
-
-  const fetchFeed = useCallback(async (feedFilter: FeedFilter, cursor?: string) => {
-    const response = await getActivityFeed({
-      filter: FILTER_API_MAP[feedFilter],
-      before: cursor,
-      limit: 20,
-    })
-    return response
-  }, [])
-
-  // Initial load + filter changes
-  useEffect(() => {
-    let cancelled = false
-    setLoading(true)
-    setFetchError(null)
-    setLoadMoreError(null)
-    fetchFeed(filter).then((response) => {
-      if (cancelled) return
-      setItems(response.items)
-      setCounts(response.counts)
-      setNextCursor(response.next_cursor)
-      setLoading(false)
-    }).catch((err) => {
-      if (cancelled) return
-      setFetchError(extractError(err, "Couldn't load the activity feed."))
-      setLoading(false)
-    })
-    return () => { cancelled = true }
-  }, [filter, fetchFeed])
-
-  const loadMore = async () => {
-    if (!nextCursor || loadingMore) return
-    setLoadingMore(true)
-    setLoadMoreError(null)
-    try {
-      const response = await fetchFeed(filter, nextCursor)
-      setItems((prev) => [...prev, ...response.items])
-      setNextCursor(response.next_cursor)
-    } catch (err) {
-      setLoadMoreError(extractError(err, "Couldn't load more updates."))
-    }
-    setLoadingMore(false)
-  }
+  const {
+    items,
+    counts,
+    filter,
+    setFilter,
+    loading,
+    loadingMore,
+    nextCursor,
+    fetchError,
+    loadMoreError,
+    loadMore,
+  } = state
 
   /** Insert date dividers between items when the date changes. */
   const renderFeedWithDividers = () => {
@@ -217,7 +166,7 @@ export default function Updates() {
               padding: '8px 16px',
             }}
           >
-            {loadingMore ? 'Loading...' : 'Load Older Updates \u2192'}
+            {loadingMore ? 'Loading...' : 'Load Older Updates →'}
           </button>
         </div>
       )}
