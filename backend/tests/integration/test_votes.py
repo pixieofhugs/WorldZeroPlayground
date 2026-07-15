@@ -74,6 +74,62 @@ async def test_cast_vote_self_blocked(
 
 
 @pytest.mark.asyncio
+async def test_collab_co_owner_cannot_vote(
+    client: AsyncClient,
+    character: Character,
+    character2: Character,
+    character3: Character,
+    active_task: Task,
+    auth_headers: dict,
+    auth_headers2: dict,
+    auth_headers3: dict,
+):
+    """#515: a collab co-owner who is NOT ``created_by`` still cannot vote on
+    the praxis they co-own (ADR-0013). Sanity: an unrelated account still can.
+    """
+    # character2 (created_by) creates a collab and invites character
+    create_resp = await client.post(
+        "/praxes",
+        json={"task_id": active_task.id, "type": "collab", "title": "Shared work"},
+        headers=auth_headers2,
+    )
+    assert create_resp.status_code == 201
+    praxis_id = create_resp.json()["id"]
+
+    invite_resp = await client.post(
+        f"/praxes/{praxis_id}/invite",
+        json={"invitee_id": character.id},
+        headers=auth_headers2,
+    )
+    assert invite_resp.status_code == 200
+    invite_id = invite_resp.json()["id"]
+
+    respond_resp = await client.post(
+        f"/praxes/{praxis_id}/invite/{invite_id}/respond",
+        json={"accept": True},
+        headers=auth_headers,
+    )
+    assert respond_resp.status_code == 200
+
+    # character is now a co-owner but NOT created_by — must be blocked (403)
+    coowner_vote = await client.post(
+        f"/praxes/{praxis_id}/vote",
+        json={"value": 5},
+        headers=auth_headers,
+    )
+    assert coowner_vote.status_code == 403
+
+    # Sanity: an unrelated account (character3) can still vote
+    unrelated_vote = await client.post(
+        f"/praxes/{praxis_id}/vote",
+        json={"value": 4},
+        headers=auth_headers3,
+    )
+    assert unrelated_vote.status_code == 200
+    assert unrelated_vote.json()["value"] == 4
+
+
+@pytest.mark.asyncio
 async def test_update_vote_is_free(
     client: AsyncClient,
     character: Character,

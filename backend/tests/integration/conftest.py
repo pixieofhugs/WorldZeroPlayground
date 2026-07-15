@@ -288,6 +288,41 @@ async def character2(db_session: AsyncSession, account2: Account, era: Era, fact
 
 
 @pytest_asyncio.fixture
+async def account3(db_session: AsyncSession) -> Account:
+    acc = Account(email="third@example.com")
+    db_session.add(acc)
+    await db_session.commit()
+    await db_session.refresh(acc)
+    return acc
+
+
+@pytest_asyncio.fixture
+async def character3(db_session: AsyncSession, account3: Account, era: Era, faction_ua: Faction) -> Character:
+    ch = Character(
+        account_id=account3.id,
+        username="thirdcharacter",
+        display_name="Third Character",
+        faction_slug="ua",
+    )
+    db_session.add(ch)
+    await db_session.flush()
+
+    stats = CharacterStats(
+        character_id=ch.id,
+        era_id=era.id,
+        score=0,
+        all_time_score=0,
+        level=0,
+        votes_spent_this_era=0,
+    )
+    db_session.add(stats)
+    await db_session.commit()
+    await db_session.refresh(ch)
+    await db_session.refresh(stats)
+    return ch
+
+
+@pytest_asyncio.fixture
 async def auth_headers(account: Account) -> dict:
     token = create_jwt(account.id)
     return {"Authorization": f"Bearer {token}"}
@@ -296,6 +331,12 @@ async def auth_headers(account: Account) -> dict:
 @pytest_asyncio.fixture
 async def auth_headers2(account2: Account) -> dict:
     token = create_jwt(account2.id)
+    return {"Authorization": f"Bearer {token}"}
+
+
+@pytest_asyncio.fixture
+async def auth_headers3(account3: Account) -> dict:
+    token = create_jwt(account3.id)
     return {"Authorization": f"Bearer {token}"}
 
 
