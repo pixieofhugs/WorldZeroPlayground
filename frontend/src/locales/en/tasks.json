@@ -3,6 +3,14 @@
     "loading": "Loading tasks...",
     "empty": "No tasks match your filters."
   },
+  "mobile": {
+    "count": "{{count}} shown",
+    "allFactions": "All",
+    "anyLevel": "Any",
+    "loadError": "Couldn't load tasks.",
+    "points": "+{{points}} pts",
+    "level": "Lvl {{level}}"
+  },
   "detail": {
     "loading": "Loading...",
     "fetchError": "<0>Try refreshing.</0>",
