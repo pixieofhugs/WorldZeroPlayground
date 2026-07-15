@@ -15,6 +15,7 @@ import { useFormFactor } from "../hooks/useFormFactor";
 import { useTaskDetail, type TaskDetailState } from "./taskDetail/useTaskDetail";
 import DefaultTaskDetail from "./taskDetail/archetypes/DefaultTaskDetail";
 import DefaultMobileTaskDetail from "./taskDetail/mobileArchetypes/DefaultTaskDetail";
+import EverymenMobileTaskDetail from "./taskDetail/mobileArchetypes/EverymenTaskDetail";
 import SNIDETaskDetail from "./taskDetail/archetypes/SNIDETaskDetail";
 import EverymenTaskDetail from "./taskDetail/archetypes/EverymenTaskDetail";
 import WowTaskDetail from "./taskDetail/archetypes/WowTaskDetail";
@@ -39,10 +40,12 @@ export const ARCHETYPE_BY_SLUG: Record<string, Archetype> = {
   albescent: AlbescentTaskDetail,
 };
 
-// Parallel MOBILE registry. Empty for now — every faction falls through to the
-// Default mobile skin; bespoke faction mobile skins land incrementally (#496–
-// #500) exactly like the desktop archetypes above.
-export const MOBILE_ARCHETYPE_BY_SLUG: Record<string, Archetype> = {};
+// Parallel MOBILE registry. Bespoke faction mobile skins land incrementally
+// (#496–#500) exactly like the desktop archetypes above; every unlisted faction
+// falls through to the Default mobile skin. Everymen is the first pilot (#497).
+export const MOBILE_ARCHETYPE_BY_SLUG: Record<string, Archetype> = {
+  everymen: EverymenMobileTaskDetail,
+};
 
 export default function TaskDetail() {
   const { id } = useParams<{ id: string }>();

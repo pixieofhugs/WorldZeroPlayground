@@ -2,9 +2,9 @@
  * Mobile task-detail slot invariant — the mobile twin of archetypeSlots.test.
  * Walks the MOBILE_ARCHETYPE_BY_SLUG registry plus the Default mobile skin and
  * asserts each still emits the invariant content slots (title, description,
- * all-tasks breadcrumb, sort toggle, signup CTA, edit/continue controls). The
- * registry is empty today, so this mainly guards the Default fallback and any
- * bespoke mobile skin added later (#496–#500).
+ * all-tasks breadcrumb, sort toggle, signup CTA, edit/continue controls). Guards
+ * the Default fallback plus every bespoke mobile skin — Everymen is the first
+ * (#497); the rest land in #496–#500.
  */
 import { renderToStaticMarkup } from "react-dom/server";
 import { MemoryRouter } from "react-router-dom";
