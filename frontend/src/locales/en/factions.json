@@ -317,6 +317,9 @@
       "emptyWithSpotlight": "> no other nodes online",
       "level": "lvl {{level}}"
     },
+    "mobile": {
+      "eyebrow": "> ~/faction"
+    },
     "invitation": {
       "kicker": "> PRIVILEGE ELEVATED",
       "headline": "Join the array",

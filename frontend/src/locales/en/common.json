@@ -127,6 +127,11 @@
         "masthead": "The Salon Desk",
         "charEyebrow": "In residence",
         "questsHeading": "At the easel"
+      },
+      "singularity": {
+        "masthead": "FieldDesk.sys",
+        "charEyebrow": "// active_node",
+        "questsHeading": "// running_processes"
       }
     }
   },

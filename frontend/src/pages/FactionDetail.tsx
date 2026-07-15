@@ -7,6 +7,7 @@ import { pickVariant } from "../utils/factionDispatch";
 import { useFormFactor } from "../hooks/useFormFactor";
 import { useFactionDetail, type FactionDetailState } from "./factionDetail/useFactionDetail";
 import UaFactionPage from "./factionDetail/mobileArchetypes/UaFactionPage";
+import SingularityFactionPage from "./factionDetail/mobileArchetypes/SingularityFactionPage";
 import DefaultFactionBody from "./factionDetail/archetypes/DefaultFactionBody";
 import DefaultFactionPage from "./factionDetail/mobileArchetypes/DefaultFactionPage";
 import EverymenFactionBody from "./factionDetail/archetypes/EverymenFactionBody";
@@ -80,6 +81,7 @@ export const MOBILE_ARCHETYPE_BY_SLUG: Record<
   ComponentType<{ state: FactionDetailState }>
 > = {
   ua: UaFactionPage,
+  singularity: SingularityFactionPage,
 };
 
 export default function FactionDetail({ slug: slugProp }: { slug?: string } = {}) {
