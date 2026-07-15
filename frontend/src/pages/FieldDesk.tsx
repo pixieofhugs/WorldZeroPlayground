@@ -7,12 +7,32 @@ import type { CharacterOut } from '../api/auth'
 import CredentialCard from '../components/CredentialCard'
 import AlbescentInvitation from '../components/AlbescentInvitation'
 import { mediaUrl } from '../utils/media'
+import { pickVariant } from '../utils/factionDispatch'
+import { useFormFactor } from '../hooks/useFormFactor'
+import { useFieldDeskHome, type FieldDeskHomeState } from './fieldDesk/useFieldDeskHome'
+import DefaultFieldDesk from './fieldDesk/mobileArchetypes/DefaultFieldDesk'
+import WowFieldDesk from './fieldDesk/mobileArchetypes/WowFieldDesk'
 
 /**
  * FieldDesk roster — the authenticated account home (#274). "Whose shoes today?":
  * step back into an existing life or begin a new one. Rendered at `/` when authed
  * (App routes a logged-out visitor to the marketing Home instead).
+ *
+ * On a phone (#500) the carried life gets a mobile-native home instead of the
+ * roster: `useFormFactor() === 'mobile'` dispatches through
+ * MOBILE_ARCHETYPE_BY_SLUG to a per-faction skin (Default fallback), mirroring
+ * the TaskDetail mobile seam. A brand-new account with no active life still
+ * falls through to the roster below so it can create one.
  */
+
+type MobileHomeSkin = (props: { state: FieldDeskHomeState }) => JSX.Element
+
+// Only factions with a bespoke mobile home are listed; everything else (incl.
+// na) falls through to DefaultFieldDesk. Grows one row per faction skin (#500 +
+// per-faction follow-ups), exactly like MOBILE_ARCHETYPE_BY_SLUG in TaskDetail.
+export const MOBILE_ARCHETYPE_BY_SLUG: Record<string, MobileHomeSkin> = {
+  wow: WowFieldDesk,
+}
 
 // Deterministic slight tilt per card — index-keyed so it's stable across renders.
 const TILTS = [-2.5, 1.8, -1.2, 2.4, -2.0, 1.4]
@@ -24,6 +44,11 @@ export default function FieldDesk() {
   const [lives, setLives] = useState<CharacterOut[]>([])
   const [loading, setLoading] = useState(true)
   const [switching, setSwitching] = useState<number | null>(null)
+
+  // Mobile home dispatch (#500). Hooks run unconditionally; the branch below
+  // only fires once a carried life exists — otherwise we render the roster.
+  const formFactor = useFormFactor()
+  const homeState = useFieldDeskHome()
 
   useEffect(() => {
     void getMyCharacters()
@@ -49,6 +74,12 @@ export default function FieldDesk() {
   const unlocked = lives.length === 0 || (user?.can_create_additional_character ?? false)
   const highestLevel = lives.reduce((max, life) => Math.max(max, life.level), 0)
   const levelsToGo = Math.max(0, gateLevel - highestLevel)
+
+  // Phone + a carried life → the mobile-native home skin for that faction.
+  if (formFactor === 'mobile' && homeState) {
+    const Skin = pickVariant(MOBILE_ARCHETYPE_BY_SLUG, homeState.character.faction_slug, DefaultFieldDesk)
+    return <Skin state={homeState} />
+  }
 
   return (
     <div className="page" style={pageStyle}>

@@ -300,6 +300,16 @@
     "post": "Post comment",
     "posting": "…",
     "edited": "edited",
+    "edit": "edit",
+    "delete": "delete",
+    "save": "Save",
+    "cancel": "Cancel",
+    "withdraw": "Withdraw",
+    "keep": "Keep",
+    "confirmWithdraw": "Withdraw this comment?",
+    "charCount": "{{count}}/{{max}}",
+    "editError": "Could not save the edit.",
+    "withdrawError": "Could not withdraw the comment.",
     "ua": {
       "house": "University of Asthmatics",
       "edited": "edited"

@@ -17,6 +17,10 @@ import { MentionDropdown, useMentionAutocomplete } from './useMentionAutocomplet
 export interface CommentRowProps {
   mode: 'row'
   comment: CommentOut
+  /** Lift an author edit back into the thread's list (re-renders with is_edited). */
+  onEdited?: (updated: CommentOut) => void
+  /** Lift an author withdrawal back into the thread's list (drops the row). */
+  onWithdrawn?: (id: number) => void
 }
 
 export interface CommentComposerProps {
@@ -102,6 +106,10 @@ export function ComposerControls({
   accent,
   bg = 'transparent',
   text = 'inherit',
+  maxLength,
+  submitLabel,
+  submittingLabel,
+  onCancel,
 }: {
   value: string
   onChange: (value: string) => void
@@ -110,6 +118,13 @@ export function ComposerControls({
   accent: string
   bg?: string
   text?: string
+  /** Cap the body length (edit mode passes MAX_COMMENT_BODY) + light a live count. */
+  maxLength?: number
+  /** Override the default "Post" affordance (edit mode → "Save"). */
+  submitLabel?: string
+  submittingLabel?: string
+  /** When set, renders a neutral Cancel affordance beside submit (edit mode). */
+  onCancel?: () => void
 }) {
   const { t } = useTranslation('praxis')
   const disabled = submitting || value.trim().length === 0
@@ -125,6 +140,7 @@ export function ComposerControls({
           onBlur={mention.close}
           placeholder={t('comments.composerPlaceholder')}
           rows={2}
+          maxLength={maxLength}
           disabled={submitting}
           role="combobox"
           aria-autocomplete="list"
@@ -152,24 +168,58 @@ export function ComposerControls({
           />
         )}
       </div>
-      <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 6 }}>
-        <button
-          onClick={onSubmit}
-          disabled={disabled}
-          style={{
-            background: accent,
-            color: '#fff',
-            border: 'none',
-            borderRadius: 4,
-            padding: '4px 14px',
-            cursor: disabled ? 'default' : 'pointer',
-            fontSize: 12,
-            letterSpacing: '0.04em',
-            opacity: disabled ? 0.5 : 1,
-          }}
-        >
-          {submitting ? t('comments.posting') : t('comments.post')}
-        </button>
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          gap: 8,
+          marginTop: 6,
+        }}
+      >
+        {maxLength != null ? (
+          <span style={{ fontSize: 11, color: 'var(--color-text-tertiary)' }}>
+            {t('comments.charCount', { count: value.length, max: maxLength })}
+          </span>
+        ) : (
+          <span />
+        )}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          {onCancel && (
+            <button
+              onClick={onCancel}
+              className="font-body eyebrow hover:underline"
+              style={{
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                padding: '4px 6px',
+                color: 'var(--color-text-tertiary)',
+              }}
+            >
+              {t('comments.cancel')}
+            </button>
+          )}
+          <button
+            onClick={onSubmit}
+            disabled={disabled}
+            style={{
+              background: accent,
+              color: '#fff',
+              border: 'none',
+              borderRadius: 4,
+              padding: '4px 14px',
+              cursor: disabled ? 'default' : 'pointer',
+              fontSize: 12,
+              letterSpacing: '0.04em',
+              opacity: disabled ? 0.5 : 1,
+            }}
+          >
+            {submitting
+              ? (submittingLabel ?? t('comments.posting'))
+              : (submitLabel ?? t('comments.post'))}
+          </button>
+        </div>
       </div>
     </div>
   )
