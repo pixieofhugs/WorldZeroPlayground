@@ -1,8 +1,10 @@
-import { useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useEffect, useState, type CSSProperties } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { TFunction } from 'i18next'
 import { factionCssVar, factionName } from '../utils/factions'
+import { useAuth } from '../auth/AuthContext'
+import { chooseFaction } from '../api/factions'
+import { extractError } from '../utils/errors'
 
 // The per-faction key path (`<slug>.invitation.*`) is runtime-dynamic, so it
 // isn't one of the compile-time key literals the scoped t() expects. Resolve
@@ -59,7 +61,12 @@ export default function InvitationLetterPopup({
   onClose,
 }: InvitationLetterPopupProps) {
   const { t } = useTranslation('factions')
-  const navigate = useNavigate()
+  const { user, refetch } = useAuth()
+  const currentSlug = user?.character?.faction_slug
+  const isSwitch = !!currentSlug && currentSlug !== 'na'
+  const [confirming, setConfirming] = useState(false)
+  const [joining, setJoining] = useState(false)
+  const [joinError, setJoinError] = useState<string | null>(null)
 
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
@@ -78,11 +85,46 @@ export default function InvitationLetterPopup({
   const termsList = tArr<Term>(t, `${base}.terms`)
   const perksList = tArr<string>(t, `${base}.perks`)
 
-  function handleJoin() {
-    // The prospectus ENLIST does NOT join in place — it routes to the faction
-    // detail page, whose existing join block owns the actual (one-way) join.
-    onClose()
-    navigate(`/factions/${factionSlug}`)
+  // The prospectus ENLIST commits the join in place (#493). Joining is one-way
+  // (ADR-0019), so ENLIST arms a confirm step before actually joining.
+  async function handleConfirm() {
+    setJoining(true)
+    setJoinError(null)
+    try {
+      await chooseFaction(factionSlug)
+      await refetch()
+      onClose() // advance the queue; watcher keys the popup per slug so state resets
+    } catch (err) {
+      setJoinError(extractError(err, t('detail.errors.join')))
+      setJoining(false)
+    }
+  }
+
+  const enlistStyle: CSSProperties = {
+    flex: 1,
+    fontFamily: FONT_BODY,
+    textTransform: 'uppercase',
+    letterSpacing: '0.12em',
+    fontSize: 11,
+    fontWeight: 700,
+    padding: '0.7rem 1.2rem',
+    border: 'none',
+    background: accent,
+    color: PAPER,
+    cursor: 'pointer',
+    boxShadow: `4px 4px 0 ${border}`,
+    transition: 'opacity 150ms',
+  }
+  const dismissStyle: CSSProperties = {
+    fontFamily: FONT_MONO,
+    fontSize: 10,
+    letterSpacing: '0.08em',
+    textTransform: 'uppercase',
+    padding: '0.6rem 0.4rem',
+    border: 'none',
+    background: 'transparent',
+    color: FAINT,
+    cursor: 'pointer',
   }
 
   const card = (
@@ -276,50 +318,56 @@ export default function InvitationLetterPopup({
         </ul>
       )}
 
-      {/* CTA row */}
-      <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-        <button
-          type="button"
-          autoFocus
-          onClick={handleJoin}
-          style={{
-            flex: 1,
-            fontFamily: FONT_BODY,
-            textTransform: 'uppercase',
-            letterSpacing: '0.12em',
-            fontSize: 11,
-            fontWeight: 700,
-            padding: '0.7rem 1.2rem',
-            border: 'none',
-            background: accent,
-            color: PAPER,
-            cursor: 'pointer',
-            boxShadow: `4px 4px 0 ${border}`,
-            transition: 'opacity 150ms',
-          }}
-          onMouseEnter={(e) => (e.currentTarget.style.opacity = '0.88')}
-          onMouseLeave={(e) => (e.currentTarget.style.opacity = '1')}
-        >
-          {tKey(t, `${base}.cta.join`)}
-        </button>
-        <button
-          type="button"
-          onClick={onClose}
-          style={{
-            fontFamily: FONT_MONO,
-            fontSize: 10,
-            letterSpacing: '0.08em',
-            textTransform: 'uppercase',
-            padding: '0.6rem 0.4rem',
-            border: 'none',
-            background: 'transparent',
-            color: FAINT,
-            cursor: 'pointer',
-          }}
-        >
-          {t('invitation.dismiss')}
-        </button>
-      </div>
+      {/* CTA row — ENLIST arms a one-way join confirm (#493); dismiss defers. */}
+      {!confirming ? (
+        <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+          <button
+            type="button"
+            autoFocus
+            onClick={() => setConfirming(true)}
+            style={enlistStyle}
+            onMouseEnter={(e) => (e.currentTarget.style.opacity = '0.88')}
+            onMouseLeave={(e) => (e.currentTarget.style.opacity = '1')}
+          >
+            {tKey(t, `${base}.cta.join`)}
+          </button>
+          <button type="button" onClick={onClose} style={dismissStyle}>
+            {t('invitation.dismiss')}
+          </button>
+        </div>
+      ) : (
+        <div>
+          <p style={{ fontFamily: FONT_BODY, fontSize: 12, lineHeight: 1.5, color: MUTED, margin: '0 0 10px' }}>
+            {isSwitch
+              ? t('detail.join.confirmSwitch', { faction: name, current: factionName(currentSlug as string) })
+              : t('detail.join.confirm', { faction: name })}
+          </p>
+          {joinError && (
+            <p style={{ fontFamily: FONT_MONO, fontSize: 10, color: 'var(--color-danger)', margin: '0 0 10px' }}>
+              {joinError}
+            </p>
+          )}
+          <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+            <button
+              type="button"
+              autoFocus
+              onClick={() => void handleConfirm()}
+              disabled={joining}
+              style={{ ...enlistStyle, cursor: joining ? 'not-allowed' : 'pointer' }}
+            >
+              {t('invitation.confirm')}
+            </button>
+            <button
+              type="button"
+              onClick={() => setConfirming(false)}
+              disabled={joining}
+              style={dismissStyle}
+            >
+              {t('detail.join.cancel')}
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   )
 

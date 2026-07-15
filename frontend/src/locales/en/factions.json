@@ -549,6 +549,7 @@
   "invitation": {
     "prospectus": "a prospectus",
     "termsHeading": "Terms of matriculation",
-    "dismiss": "Maybe later"
+    "dismiss": "Maybe later",
+    "confirm": "Confirm"
   }
 }
