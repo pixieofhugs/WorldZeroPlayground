@@ -260,9 +260,8 @@
     },
     "stats": {
       "score": "Score",
-      "votes": "Votes",
-      "current": "Current",
-      "currentValue": "Era 3"
+      "allTime": "All-Time",
+      "current": "Current"
     },
     "pendingRequests": {
       "heading_one": "Pending Requests · {{count}}",
