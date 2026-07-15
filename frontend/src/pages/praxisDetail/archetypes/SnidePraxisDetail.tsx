@@ -14,7 +14,7 @@
  */
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
-import ReactMarkdown from 'react-markdown'
+import MarkdownPreview from '../../editPraxis/blocks/MarkdownPreview'
 import MediaGallery from '../../../components/MediaGallery'
 import SnideVote from '../../../components/vote/SnideVote'
 import { factionCssVar } from '../../../utils/factions'
@@ -302,7 +302,8 @@ export default function SnidePraxisDetail({ state }: { state: PraxisDetailState 
             >
               {t('detail.snide.theConfession')}
             </span>
-            <div
+            <MarkdownPreview
+              source={praxis.body_text}
               className="markdown-preview"
               style={{
                 border: `1.5px solid ${PAPER_INK}`,
@@ -316,9 +317,7 @@ export default function SnidePraxisDetail({ state }: { state: PraxisDetailState 
                 fontSize: 13,
                 lineHeight: '28px',
               }}
-            >
-              <ReactMarkdown>{praxis.body_text}</ReactMarkdown>
-            </div>
+            />
           </div>
         )}
 

@@ -16,7 +16,7 @@ import type { CSSProperties } from 'react'
 import type { TFunction } from 'i18next'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
-import ReactMarkdown from 'react-markdown'
+import MarkdownPreview from '../../editPraxis/blocks/MarkdownPreview'
 import MediaGallery from '../../../components/MediaGallery'
 import WowVote from '../../../components/vote/WowVote'
 import { factionCssVar } from '../../../utils/factions'
@@ -328,12 +328,11 @@ export default function WowPraxisDetail({ state }: { state: PraxisDetailState })
             {praxis.body_text && (
               <>
                 <Divider label={t('detail.wow.whatIDid')} />
-                <div
+                <MarkdownPreview
+                  source={praxis.body_text}
                   className="markdown-preview"
                   style={{ fontFamily: BODY, fontSize: 12, lineHeight: 1.75, color: CARD_TEXT }}
-                >
-                  <ReactMarkdown>{praxis.body_text}</ReactMarkdown>
-                </div>
+                />
               </>
             )}
 

@@ -11,6 +11,8 @@ import LevelPill from "../../../components/ui/LevelPill";
 import { factionCssVar, factionName } from "../../../utils/factions";
 import type { PraxisType } from "../../../api/praxis";
 import MarkdownPreview from "../blocks/MarkdownPreview";
+import { applyMarkdown } from "../blocks/markdownToolbar";
+import type { MarkdownCommand } from "../blocks/markdownToolbar";
 import type { EditPraxisState } from "../useEditPraxis";
 
 export interface InviteSearchSkin {
@@ -447,7 +449,48 @@ export interface BodyTextareaSkin {
   textareaStyle: CSSProperties;
   rows?: number;
   placeholder?: string;
+  /** Optional override for the toolbar wrapper (e.g. archetype spacing). */
+  toolbarStyle?: CSSProperties;
+  /** Optional override for each toolbar button. */
+  toolbarButtonStyle?: CSSProperties;
 }
+
+// Toolbar buttons in render order. Each glyph is referenced through
+// `button.glyph` (an identifier expression, not JSX text) so it never trips
+// i18next/no-literal-string; the accessible name comes from the t() labelKey.
+const BODY_TOOLBAR_BUTTONS = [
+  { command: "bold", glyph: "B", labelKey: "editPraxis.toolbar.bold" },
+  { command: "italic", glyph: "I", labelKey: "editPraxis.toolbar.italic" },
+  {
+    command: "strikethrough",
+    glyph: "S",
+    labelKey: "editPraxis.toolbar.strikethrough",
+  },
+  { command: "heading", glyph: "H", labelKey: "editPraxis.toolbar.heading" },
+  {
+    command: "unorderedList",
+    glyph: "•",
+    labelKey: "editPraxis.toolbar.unorderedList",
+  },
+  {
+    command: "orderedList",
+    glyph: "1.",
+    labelKey: "editPraxis.toolbar.orderedList",
+  },
+  { command: "link", glyph: "🔗", labelKey: "editPraxis.toolbar.link" },
+  { command: "blockquote", glyph: "❝", labelKey: "editPraxis.toolbar.blockquote" },
+  {
+    command: "inlineCode",
+    glyph: "</>",
+    labelKey: "editPraxis.toolbar.inlineCode",
+  },
+  { command: "codeBlock", glyph: "{ }", labelKey: "editPraxis.toolbar.codeBlock" },
+  { command: "table", glyph: "▦", labelKey: "editPraxis.toolbar.table" },
+] as const satisfies ReadonlyArray<{
+  command: MarkdownCommand;
+  glyph: string;
+  labelKey: string;
+}>;
 
 export function BodyTextarea({
   state,
@@ -456,14 +499,72 @@ export function BodyTextarea({
   state: EditPraxisState;
   skin: BodyTextareaSkin;
 }) {
+  const { t } = useTranslation("forms");
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  const runCommand = (command: MarkdownCommand) => {
+    const el = textareaRef.current;
+    if (!el) return;
+    const result = applyMarkdown(command, {
+      text: state.body,
+      selectionStart: el.selectionStart,
+      selectionEnd: el.selectionEnd,
+    });
+    state.setBody(result.text);
+    // Restore the caret/selection after React commits the new value.
+    requestAnimationFrame(() => {
+      el.focus();
+      el.setSelectionRange(result.selectionStart, result.selectionEnd);
+    });
+  };
+
+  const buttonStyle: CSSProperties = {
+    minWidth: 26,
+    padding: "3px 7px",
+    fontSize: 12,
+    fontWeight: 700,
+    lineHeight: 1.2,
+    background: "var(--color-bg-surface)",
+    color: "var(--color-text-secondary)",
+    border: "1px solid var(--color-border)",
+    cursor: "pointer",
+    ...skin.toolbarButtonStyle,
+  };
+
   return (
-    <textarea
-      value={state.body}
-      onChange={(event) => state.setBody(event.target.value)}
-      rows={skin.rows}
-      placeholder={skin.placeholder}
-      style={skin.textareaStyle}
-    />
+    <div>
+      <div
+        role="toolbar"
+        aria-label={t("editPraxis.toolbar.label")}
+        style={{
+          display: "flex",
+          flexWrap: "wrap",
+          gap: 4,
+          marginBottom: 8,
+          ...skin.toolbarStyle,
+        }}
+      >
+        {BODY_TOOLBAR_BUTTONS.map((button) => (
+          <button
+            key={button.command}
+            type="button"
+            onClick={() => runCommand(button.command)}
+            aria-label={t(button.labelKey)}
+            style={buttonStyle}
+          >
+            {button.glyph}
+          </button>
+        ))}
+      </div>
+      <textarea
+        ref={textareaRef}
+        value={state.body}
+        onChange={(event) => state.setBody(event.target.value)}
+        rows={skin.rows}
+        placeholder={skin.placeholder}
+        style={skin.textareaStyle}
+      />
+    </div>
   );
 }
 

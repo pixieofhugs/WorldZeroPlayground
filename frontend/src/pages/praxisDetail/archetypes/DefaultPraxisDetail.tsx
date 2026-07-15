@@ -1,11 +1,11 @@
 import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import ReactMarkdown from 'react-markdown'
 import MediaGallery from '../../../components/MediaGallery'
 import { formatTimestamp } from '../../../utils/dates'
 import VoteUI from '../../../components/vote/VoteUI'
 import type { PraxisDetailState } from '../usePraxisDetail'
 import { PraxisAdminBar, PraxisStatusBanners, PraxisOwnerActions, PraxisFlagBlock, PraxisVoterBreakdown, MemberByline } from '../shared'
+import MarkdownPreview from '../../editPraxis/blocks/MarkdownPreview'
 
 /** Style Guide §12.3 */
 const RAINBOW_COLORS = ['var(--underline-1)', 'var(--underline-2)', 'var(--underline-3)', 'var(--underline-4)', 'var(--underline-5)', 'var(--underline-6)', 'var(--underline-1)', 'var(--underline-2)']
@@ -127,12 +127,11 @@ export default function DefaultPraxisDetail({
 
       {/* ── Body Text (§12.6) — uses ReactMarkdown for rich content ── */}
       {praxis.body_text && (
-        <div
+        <MarkdownPreview
+          source={praxis.body_text}
           className="font-display mb-6 markdown-preview"
           style={{ fontSize: 15, lineHeight: 1.75, color: 'var(--color-text-primary)' }}
-        >
-          <ReactMarkdown>{praxis.body_text}</ReactMarkdown>
-        </div>
+        />
       )}
 
       {/* ── Voting (§13 preview — full redesign in Phase 8) ── */}

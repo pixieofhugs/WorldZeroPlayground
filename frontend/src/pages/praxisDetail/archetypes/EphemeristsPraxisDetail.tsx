@@ -11,7 +11,7 @@
  */
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
-import ReactMarkdown from 'react-markdown'
+import MarkdownPreview from '../../editPraxis/blocks/MarkdownPreview'
 import MediaGallery from '../../../components/MediaGallery'
 import EphemeristsVote from '../../../components/vote/EphemeristsVote'
 import { EphMark, EphEyebrow, Foxing, LapisLastWord, toRoman } from '../../../components/cards/ephemeristsAtoms'
@@ -238,7 +238,8 @@ export default function EphemeristsPraxisDetail({ state }: { state: PraxisDetail
                 {t('detail.ephemerists.theAccount')}
               </span>
             </div>
-            <div
+            <MarkdownPreview
+              source={praxis.body_text}
               className="markdown-preview"
               style={{
                 fontFamily: 'var(--eph-script)',
@@ -247,9 +248,7 @@ export default function EphemeristsPraxisDetail({ state }: { state: PraxisDetail
                 lineHeight: 1.8,
                 color: 'var(--eph-vellum-text)',
               }}
-            >
-              <ReactMarkdown>{praxis.body_text}</ReactMarkdown>
-            </div>
+            />
           </div>
         )}
 

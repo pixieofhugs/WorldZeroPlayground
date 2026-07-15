@@ -19,7 +19,7 @@
 import type { TFunction } from 'i18next'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
-import ReactMarkdown from 'react-markdown'
+import MarkdownPreview from '../../editPraxis/blocks/MarkdownPreview'
 import MediaGallery from '../../../components/MediaGallery'
 import VoteUI from '../../../components/vote/VoteUI'
 import { factionCssVar } from '../../../utils/factions'
@@ -366,7 +366,8 @@ export default function UAPraxisDetail({ state }: { state: PraxisDetailState }) 
               </span>
               <div style={{ height: 1, flex: 1, background: 'var(--ua-line-soft)' }} />
             </div>
-            <div
+            <MarkdownPreview
+              source={praxis.body_text}
               className="markdown-preview"
               style={{
                 fontFamily: SERIF,
@@ -374,9 +375,7 @@ export default function UAPraxisDetail({ state }: { state: PraxisDetailState }) 
                 lineHeight: 1.85,
                 color: 'var(--ua-sub)',
               }}
-            >
-              <ReactMarkdown>{praxis.body_text}</ReactMarkdown>
-            </div>
+            />
           </div>
         )}
 

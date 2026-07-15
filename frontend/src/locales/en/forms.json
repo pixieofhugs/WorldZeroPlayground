@@ -109,6 +109,20 @@
       "cancelChallengeAria": "cancel challenge",
       "rescindInviteAria": "rescind invite to {{name}}"
     },
+    "toolbar": {
+      "label": "formatting",
+      "bold": "bold",
+      "italic": "italic",
+      "strikethrough": "strikethrough",
+      "heading": "heading",
+      "unorderedList": "bulleted list",
+      "orderedList": "numbered list",
+      "link": "link",
+      "blockquote": "quote",
+      "inlineCode": "inline code",
+      "codeBlock": "code block",
+      "table": "table"
+    },
     "dropTask": "drop task",
     "na": {
       "masthead": "casual proof board",
