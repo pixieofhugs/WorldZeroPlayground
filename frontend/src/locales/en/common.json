@@ -142,6 +142,11 @@
         "masthead": "The Codex Desk",
         "charEyebrow": "On the road",
         "questsHeading": "Surveys underway"
+      },
+      "albescent": {
+        "masthead": "The Desk",
+        "charEyebrow": "On record",
+        "questsHeading": "In hand"
       }
     }
   },

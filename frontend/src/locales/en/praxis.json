@@ -327,7 +327,14 @@
       "plates": "Plates · {{count}}",
       "bearWitness": "Bear Witness",
       "witnessPrompt": "How completely was this account attended?",
-      "fromWitnesses": "FROM WITNESSES"
+      "fromWitnesses": "FROM WITNESSES",
+      "acquiringHand": "the keeper's hand",
+      "mobile": {
+        "plate": "The Plates",
+        "theAccount": "The account",
+        "re": "re:",
+        "witness": "Bear witness"
+      }
     }
   },
   "comments": {

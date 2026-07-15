@@ -415,6 +415,7 @@
       "pointsLabel": "{{points}} pts on return",
       "modeLabel": "The Manner",
       "modeMeta": "how was it attended?",
+      "taskRefLabel": "In answer to",
       "mode": {
         "solo": { "label": "Alone", "desc": "no witness present" },
         "collab": { "label": "In Concord", "desc": "attended together" },

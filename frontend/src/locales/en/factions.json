@@ -52,6 +52,9 @@
     }
   },
   "albescent": {
+    "mobile": {
+      "eyebrow": "The Record"
+    },
     "sealed": {
       "eyebrow": "— no such account —",
       "line": "You know not what you seek."
