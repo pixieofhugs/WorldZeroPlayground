@@ -349,6 +349,8 @@
   },
   "albescent": {
     "faction": "Albescent",
+    "masthead": "The Record",
+    "statusOpen": "open · in confidence",
     "correspondence": "Correspondence №{{number}} · in confidence",
     "stats": {
       "standing": "Standing",

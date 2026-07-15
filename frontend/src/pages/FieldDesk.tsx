@@ -16,6 +16,7 @@ import UaHome from './fieldDesk/mobileArchetypes/UaHome'
 import SingularityHome from './fieldDesk/mobileArchetypes/SingularityHome'
 import EverymenHome from './fieldDesk/mobileArchetypes/EverymenHome'
 import EphemeristsHome from './fieldDesk/mobileArchetypes/EphemeristsHome'
+import AlbescentHome from './fieldDesk/mobileArchetypes/AlbescentHome'
 
 /**
  * FieldDesk roster — the authenticated account home (#274). "Whose shoes today?":
@@ -40,6 +41,7 @@ export const MOBILE_ARCHETYPE_BY_SLUG: Record<string, MobileHomeSkin> = {
   singularity: SingularityHome,
   everymen: EverymenHome,
   ephemerists: EphemeristsHome,
+  albescent: AlbescentHome,
 }
 
 // Deterministic slight tilt per card — index-keyed so it's stable across renders.

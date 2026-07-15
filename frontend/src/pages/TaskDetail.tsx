@@ -20,6 +20,7 @@ import UAMobileTaskDetail from "./taskDetail/mobileArchetypes/UaTaskDetail";
 import SingularityMobileTaskDetail from "./taskDetail/mobileArchetypes/SingularityTaskDetail";
 import WowMobileTaskDetail from "./taskDetail/mobileArchetypes/WowTaskDetail";
 import EphemeristsMobileTaskDetail from "./taskDetail/mobileArchetypes/EphemeristsTaskDetail";
+import AlbescentMobileTaskDetail from "./taskDetail/mobileArchetypes/AlbescentTaskDetail";
 import SNIDETaskDetail from "./taskDetail/archetypes/SNIDETaskDetail";
 import EverymenTaskDetail from "./taskDetail/archetypes/EverymenTaskDetail";
 import WowTaskDetail from "./taskDetail/archetypes/WowTaskDetail";
@@ -53,6 +54,7 @@ export const MOBILE_ARCHETYPE_BY_SLUG: Record<string, Archetype> = {
   singularity: SingularityMobileTaskDetail,
   wow: WowMobileTaskDetail,
   ephemerists: EphemeristsMobileTaskDetail,
+  albescent: AlbescentMobileTaskDetail,
 };
 
 export default function TaskDetail() {

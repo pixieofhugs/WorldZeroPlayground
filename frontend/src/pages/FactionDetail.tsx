@@ -11,6 +11,7 @@ import SingularityFactionPage from "./factionDetail/mobileArchetypes/Singularity
 import WowFactionPage from "./factionDetail/mobileArchetypes/WowFactionPage";
 import EverymenFactionPage from "./factionDetail/mobileArchetypes/EverymenFactionPage";
 import EphemeristsFactionPage from "./factionDetail/mobileArchetypes/EphemeristsFactionPage";
+import AlbescentFactionPage from "./factionDetail/mobileArchetypes/AlbescentFactionPage";
 import DefaultFactionBody from "./factionDetail/archetypes/DefaultFactionBody";
 import DefaultFactionPage from "./factionDetail/mobileArchetypes/DefaultFactionPage";
 import EverymenFactionBody from "./factionDetail/archetypes/EverymenFactionBody";
@@ -88,6 +89,7 @@ export const MOBILE_ARCHETYPE_BY_SLUG: Record<
   wow: WowFactionPage,
   everymen: EverymenFactionPage,
   ephemerists: EphemeristsFactionPage,
+  albescent: AlbescentFactionPage,
 };
 
 export default function FactionDetail({ slug: slugProp }: { slug?: string } = {}) {
