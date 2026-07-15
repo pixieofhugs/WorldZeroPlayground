@@ -1,0 +1,1076 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>World Zero — Mobile Field Kit · Stage 1</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,500;0,600;1,400;1,500;1,600&family=Courier+Prime:wght@400;700&family=Special+Elite&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   BOARD (review surface — not part of the product)
+   ============================================================ */
+*{box-sizing:border-box}
+html,body{margin:0}
+body{
+  background:#26252c;
+  color:#e9e6df;
+  font-family:"Courier Prime",monospace;
+  -webkit-font-smoothing:antialiased;
+  padding:40px 32px 96px;
+}
+a{color:inherit}
+.board{max-width:1180px;margin:0 auto}
+.board-head{margin-bottom:40px;max-width:760px}
+.board-head .eyebrow{font-size:11px;letter-spacing:.32em;text-transform:uppercase;color:#8a8794;margin:0 0 14px}
+.board-head h1{font-family:"Lora",serif;font-weight:600;font-size:34px;line-height:1.1;margin:0 0 12px;color:#f4f1ea}
+.board-head p{font-size:13px;line-height:1.7;color:#a5a1ac;margin:0}
+.board-head .stage{display:inline-block;margin-top:18px;font-size:10px;letter-spacing:.24em;text-transform:uppercase;color:#26252c;background:#e7b94f;padding:6px 12px;border-radius:3px;font-weight:700}
+
+.section-label{display:flex;align-items:baseline;gap:16px;margin:56px 0 24px}
+.section-label .n{font-family:"Lora",serif;font-size:13px;color:#6f6c78}
+.section-label h2{font-family:"Lora",serif;font-weight:600;font-size:22px;margin:0;color:#f4f1ea}
+.section-label .rule{flex:1;height:1px;background:linear-gradient(90deg,rgba(255,255,255,.16),transparent)}
+.section-label p{width:100%;flex-basis:100%;font-size:12px;color:#918d99;margin:8px 0 0;line-height:1.6;max-width:720px}
+
+/* spec cards on the board */
+.grid{display:grid;gap:16px}
+.spec{background:#302f38;border:1px solid rgba(255,255,255,.07);border-radius:12px;padding:22px}
+.spec h3{font-family:"Lora",serif;font-size:15px;font-weight:600;margin:0 0 4px;color:#f4f1ea}
+.spec .sub{font-size:11px;color:#8a8794;margin:0 0 18px;line-height:1.5}
+
+/* spacing scale */
+.sp-row{display:flex;align-items:center;gap:16px;margin-bottom:9px}
+.sp-row .swatch{background:linear-gradient(90deg,#e7b94f,#d99a2b);height:14px;border-radius:2px;flex:none}
+.sp-row .lbl{font-size:11px;color:#c8c4cd;width:54px}
+.sp-row .use{font-size:10px;color:#807d89}
+
+/* type scale */
+.ty{display:flex;align-items:baseline;justify-content:space-between;gap:18px;padding:11px 0;border-bottom:1px solid rgba(255,255,255,.06)}
+.ty:last-child{border-bottom:0}
+.ty .demo{color:#f4f1ea;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ty .meta{font-size:10px;color:#807d89;text-align:right;flex:none;line-height:1.5}
+.ty .meta b{color:#c8c4cd;font-weight:400}
+
+.pattern-note{font-size:11px;line-height:1.7;color:#a5a1ac}
+.pattern-note b{color:#e9e6df;font-weight:400}
+.pill-legend{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px}
+.pill-legend span{font-size:10px;letter-spacing:.06em;color:#c8c4cd;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.09);border-radius:999px;padding:5px 11px}
+
+/* token cascade table */
+.cascade{width:100%;border-collapse:collapse;font-size:11px}
+.cascade th{text-align:left;font-weight:400;color:#807d89;letter-spacing:.1em;text-transform:uppercase;font-size:9px;padding:0 10px 10px;border-bottom:1px solid rgba(255,255,255,.1)}
+.cascade td{padding:9px 10px;border-bottom:1px solid rgba(255,255,255,.05);vertical-align:middle;color:#c8c4cd}
+.cascade td code{color:#9d99a6;font-size:10px}
+.chip{display:inline-block;width:14px;height:14px;border-radius:3px;vertical-align:middle;margin-right:7px;border:1px solid rgba(255,255,255,.18)}
+
+/* phone rail */
+.rail{display:flex;flex-wrap:wrap;gap:34px 30px;align-items:flex-start}
+.phone-wrap{display:flex;flex-direction:column;align-items:center;gap:14px}
+.phone-tag{font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:#8a8794}
+.phone-tag b{color:#e7b94f;font-weight:400}
+
+/* ============================================================
+   PHONE FRAME + PRODUCT
+   ============================================================ */
+.phone{
+  width:375px;height:770px;border-radius:46px;flex:none;position:relative;
+  background:#0a0a0d;padding:11px;
+  box-shadow:0 2px 4px rgba(0,0,0,.4),0 24px 60px rgba(0,0,0,.5),inset 0 0 0 2px rgba(255,255,255,.05);
+}
+.screen{
+  position:relative;width:100%;height:100%;border-radius:36px;overflow:hidden;
+  display:flex;flex-direction:column;
+  background:var(--field-bg,var(--bg-page));
+  color:var(--text-1);
+  font-family:var(--label-font);
+}
+
+/* ---- theme token layers (the tinting mechanism lives here) ---- */
+.screen[data-theme="light"]{
+  --bg-page:#f7f4ee; --surface:#fffdf9; --surface-2:#f0ede6;
+  --text-1:#1a1209; --text-2:#6b6050; --text-3:#9b8e7d;
+  --border:rgba(0,0,0,.09); --border-2:rgba(0,0,0,.16);
+  --nav-bg:rgba(247,244,238,.9);
+  --shadow:0 1px 2px rgba(0,0,0,.05),0 10px 26px rgba(0,0,0,.07);
+  --rainbow:linear-gradient(90deg,#c1272d,#c2541f 17%,#ca8a04 33%,#16a34a 50%,#1d6e72 67%,#2563eb 83%,#be185d);
+  --ring:conic-gradient(#c1272d 0 51deg,#c2541f 0 103deg,#ca8a04 0 154deg,#16a34a 0 206deg,#1d6e72 0 257deg,#2563eb 0 309deg,#be185d 0 360deg);
+}
+.screen[data-theme="dark"]{
+  --bg-page:#13121a; --surface:#1c1b24; --surface-2:#232230;
+  --text-1:#f0e6d0; --text-2:#8b8194; --text-3:#585568;
+  --border:rgba(255,255,255,.08); --border-2:rgba(255,255,255,.16);
+  --nav-bg:rgba(19,18,26,.9);
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 12px 30px rgba(0,0,0,.5);
+  --rainbow:linear-gradient(90deg,#e2433f,#e07a3a 17%,#e6b94f 33%,#4ade80 50%,#3aa0a4 67%,#60a5fa 83%,#f472b6);
+  --ring:conic-gradient(#e2433f 0 51deg,#e07a3a 0 103deg,#e6b94f 0 154deg,#4ade80 0 206deg,#3aa0a4 0 257deg,#60a5fa 0 309deg,#f472b6 0 360deg);
+}
+
+/* ---- treatment: DEFAULT (na) ---- */
+.screen[data-treatment="na"]{
+  --headline:"Lora",Georgia,serif; --headline-style:italic; --headline-weight:600;
+  --label-font:"Courier Prime",monospace;
+  --card-radius:14px; --tile-radius:10px; --btn-radius:12px;
+  --accent-solid:var(--text-1);
+  --paper-tex:none;
+}
+.screen[data-treatment="na"][data-theme="light"]{ --accent:#be185d; --accent-ink:#fffdf9; --cta-bg:#1a1209; --cta-text:#f7f4ee; --stamp:#be185d;
+  --field-bg:
+    radial-gradient(60% 45% at 12% 6%, rgba(193,39,45,.13), transparent 60%),
+    radial-gradient(55% 42% at 90% 3%, rgba(202,138,4,.12), transparent 60%),
+    radial-gradient(52% 46% at 102% 42%, rgba(37,99,235,.11), transparent 60%),
+    radial-gradient(68% 52% at 50% 116%, rgba(190,24,93,.12), transparent 62%),
+    radial-gradient(58% 46% at 6% 90%, rgba(22,163,74,.11), transparent 62%),
+    radial-gradient(46% 40% at 80% 96%, rgba(29,110,114,.10), transparent 62%),
+    #f7f4ee;
+  --paper-tex:none;
+}
+.screen[data-treatment="na"][data-theme="dark"]{ --accent:#f0e6d0; --accent-ink:#13121a; --cta-bg:#f0e6d0; --cta-text:#13121a; --stamp:#f472b6;
+  --field-bg:
+    radial-gradient(60% 45% at 12% 6%, rgba(226,67,63,.20), transparent 60%),
+    radial-gradient(55% 42% at 90% 3%, rgba(224,122,58,.17), transparent 60%),
+    radial-gradient(52% 46% at 102% 42%, rgba(96,165,250,.16), transparent 60%),
+    radial-gradient(68% 52% at 50% 116%, rgba(244,114,182,.17), transparent 62%),
+    radial-gradient(58% 46% at 6% 90%, rgba(74,222,128,.14), transparent 62%),
+    radial-gradient(46% 40% at 80% 96%, rgba(58,160,164,.13), transparent 62%),
+    #13121a;
+  --paper-tex:none;
+}
+
+/* ---- treatment: EVERYMEN (field report) ---- */
+.screen[data-treatment="everymen"]{
+  --headline:"Special Elite","Courier New",serif; --headline-style:normal; --headline-weight:400;
+  --label-font:"Special Elite","Courier New",monospace;
+  --card-radius:5px; --tile-radius:4px; --btn-radius:4px;
+}
+.screen[data-treatment="everymen"][data-theme="light"]{
+  --bg-page:#ddceac; --surface:#ece1c6; --surface-2:#e4d8ba;
+  --text-1:#221a12; --text-2:#6c5a40; --text-3:#8a7a5c;
+  --border:rgba(34,26,18,.2); --border-2:rgba(34,26,18,.38);
+  --nav-bg:rgba(236,225,198,.94);
+  --accent:#a9741a; --accent-bright:#d99a2b; --accent-ink:#ece1c6;
+  --stamp:#c1272d; --cta-bg:#a9741a; --cta-text:#f4ecd6;
+  --shadow:0 1px 2px rgba(34,26,18,.1),0 10px 22px rgba(34,26,18,.14);
+  --paper-tex:repeating-linear-gradient(0deg,rgba(34,26,18,.022) 0 1px,transparent 1px 3px);
+}
+.screen[data-treatment="everymen"][data-theme="dark"]{
+  --bg-page:#17110d; --surface:#221a16; --surface-2:#2b2118;
+  --text-1:#f3e7ce; --text-2:#b6a079; --text-3:#7d6c50;
+  --border:rgba(243,231,206,.16); --border-2:rgba(243,231,206,.32);
+  --nav-bg:rgba(23,17,13,.92);
+  --accent:#e7b94f; --accent-bright:#e7b94f; --accent-ink:#221a16;
+  --stamp:#e2433f; --cta-bg:#e7b94f; --cta-text:#221a16;
+  --shadow:0 1px 2px rgba(0,0,0,.5),0 12px 28px rgba(0,0,0,.55);
+  --paper-tex:repeating-linear-gradient(0deg,rgba(243,231,206,.02) 0 1px,transparent 1px 3px);
+}
+
+/* ---- status bar ---- */
+.statusbar{display:flex;align-items:center;justify-content:space-between;padding:14px 22px 6px;font-size:13px;font-weight:700;color:var(--text-1);flex:none;font-family:var(--label-font)}
+.statusbar .sig{display:flex;gap:5px;align-items:center}
+.statusbar .sig i{display:block;width:4px;height:4px;border-radius:50%;background:var(--text-1);opacity:.55}
+
+/* ---- app bar ---- */
+.appbar{display:flex;align-items:center;justify-content:space-between;padding:6px 20px 14px;flex:none}
+.appbar .brand{display:flex;align-items:center;gap:10px}
+.appbar .brandmark{width:26px;height:26px;border-radius:7px;flex:none;background:var(--rainbow);position:relative}
+.screen[data-treatment="everymen"] .appbar .brandmark{background:var(--stamp);border-radius:3px}
+.appbar .brandmark::after{content:"";position:absolute;inset:5px;border-radius:3px;background:var(--bg-page)}
+.screen[data-treatment="everymen"] .appbar .brandmark::after{border-radius:1px;inset:6px}
+.appbar .title-wrap .k{font-size:8px;letter-spacing:.24em;text-transform:uppercase;color:var(--text-3)}
+.appbar .title-wrap .t{font-family:var(--headline);font-style:var(--headline-style);font-weight:var(--headline-weight);font-size:17px;line-height:1;color:var(--text-1)}
+.iconbtn{width:36px;height:36px;border-radius:50%;border:1px solid var(--border);background:var(--surface);display:flex;align-items:center;justify-content:center;color:var(--text-2);flex:none}
+.screen[data-treatment="everymen"] .iconbtn{border-radius:4px}
+
+/* ---- scroll body ---- */
+.body{flex:1;overflow-y:auto;padding:4px 16px 20px;display:flex;flex-direction:column;gap:14px;scrollbar-width:none;background-image:var(--paper-tex)}
+.body>*{flex-shrink:0}
+.body::-webkit-scrollbar{display:none}
+
+/* ---- card ---- */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--card-radius);box-shadow:var(--shadow);position:relative;overflow:hidden}
+.card.pad{padding:16px}
+.screen[data-treatment="everymen"] .card{box-shadow:var(--shadow),inset 0 0 0 1px rgba(255,255,255,.02)}
+
+/* kicker + section header */
+.kicker{font-size:9px;letter-spacing:.22em;text-transform:uppercase;color:var(--text-2);font-family:var(--label-font)}
+.sechead{display:flex;align-items:center;gap:10px;padding:2px 2px}
+.sechead .k{font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:var(--text-2)}
+.sechead .rule{flex:1;height:1px;background:linear-gradient(90deg,var(--border-2),transparent)}
+.sechead a{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--text-2);text-decoration:none;border-bottom:1px solid var(--border-2);padding-bottom:1px}
+
+/* character card */
+.char-top{position:absolute;top:0;left:0;right:0;height:3px;background:var(--rainbow);opacity:.9}
+.screen[data-treatment="everymen"] .char-top{background:repeating-linear-gradient(90deg,var(--stamp) 0 8px,transparent 8px 14px);opacity:.85;height:3px}
+.char-id{display:flex;align-items:center;gap:14px}
+.ring{width:60px;height:60px;border-radius:50%;padding:3px;flex:none;background:var(--ring)}
+.screen[data-treatment="everymen"] .ring{border-radius:6px;padding:2px;background:var(--accent-bright)}
+.ring .av{width:100%;height:100%;border-radius:50%;background:radial-gradient(circle at 35% 30%,#c9683a,#8a3d1f);display:flex;align-items:center;justify-content:center;font-family:var(--headline);font-style:var(--headline-style);font-size:24px;color:#fbe9d8}
+.screen[data-treatment="everymen"] .ring .av{border-radius:4px;background:radial-gradient(circle at 35% 30%,#7c8646,#4c5230)}
+.char-id .who{min-width:0;flex:1}
+.char-id .name{font-family:var(--headline);font-style:var(--headline-style);font-weight:var(--headline-weight);font-size:25px;line-height:1.02;color:var(--text-1)}
+.char-id .meta{margin-top:5px;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--text-2)}
+.char-id .meta .sep{color:var(--text-3)}
+.char-id .pts{text-align:right;flex:none}
+.char-id .pts b{display:block;font-family:var(--headline);font-style:var(--headline-style);font-weight:var(--headline-weight);font-size:26px;line-height:1;color:var(--text-1)}
+.char-id .pts span{font-size:8px;letter-spacing:.2em;text-transform:uppercase;color:var(--text-2)}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:16px}
+.stat{background:var(--surface-2);border:1px solid var(--border);border-radius:var(--tile-radius);padding:11px 6px;text-align:center}
+.stat b{display:block;font-family:var(--headline);font-style:var(--headline-style);font-weight:var(--headline-weight);font-size:20px;line-height:1;color:var(--text-1)}
+.stat span{display:block;margin-top:6px;font-size:8px;letter-spacing:.18em;text-transform:uppercase;color:var(--text-2)}
+
+/* task row */
+.tasks{display:flex;flex-direction:column;gap:0}
+.trow{display:flex;align-items:center;gap:12px;padding:14px 4px;border-bottom:1px solid var(--border);cursor:pointer;-webkit-tap-highlight-color:transparent;transition:background .12s,transform .06s}
+.trow:last-child{border-bottom:0}
+.trow:active{background:var(--surface-2);transform:scale(.99)}
+.trow .dot{width:10px;height:10px;border-radius:3px;flex:none}
+.trow .tmid{flex:1;min-width:0}
+.trow .tt{font-family:var(--headline);font-style:var(--headline-style);font-weight:var(--headline-weight);font-size:16px;line-height:1.2;color:var(--text-1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.trow .tm{margin-top:4px;font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--text-2);display:flex;gap:8px;align-items:center}
+.trow .tm .fac{color:var(--text-2)}
+.trow .tm .pv{color:var(--accent);font-weight:700}
+.screen[data-treatment="na"][data-theme="light"] .trow .tm .pv{color:#c2541f}
+.trow .chev{color:var(--text-3);flex:none}
+.mini-bar{height:5px;border-radius:999px;background:var(--surface-2);overflow:hidden;margin-top:9px}
+.mini-bar i{display:block;height:100%;border-radius:999px;background:var(--rainbow)}
+.screen[data-treatment="everymen"] .mini-bar i{background:var(--accent-bright)}
+
+/* primary action pair */
+.actions{display:flex;gap:10px}
+.btn{flex:1;border:0;border-radius:var(--btn-radius);padding:15px 12px;font-family:var(--label-font);font-size:12px;letter-spacing:.12em;text-transform:uppercase;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:transform .06s,filter .12s}
+.btn:active{transform:scale(.98)}
+.btn.primary{background:var(--cta-bg);color:var(--cta-text);font-weight:700}
+.btn.primary:active{filter:brightness(1.06)}
+.btn.ghost{background:var(--surface);color:var(--text-1);border:1px solid var(--border-2)}
+.btn .plus{font-size:15px;line-height:1}
+
+/* tab bar */
+.tabbar{flex:none;display:flex;padding:8px 8px 22px;background:var(--nav-bg);backdrop-filter:blur(14px);border-top:1px solid var(--border)}
+.tab{flex:1;background:none;border:0;display:flex;flex-direction:column;align-items:center;gap:4px;padding:6px 2px;cursor:pointer;color:var(--text-3);font-family:var(--label-font);-webkit-tap-highlight-color:transparent}
+.tab svg{width:23px;height:23px;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.tab .l{font-size:8.5px;letter-spacing:.1em;text-transform:uppercase}
+.tab[aria-selected="true"]{color:var(--accent)}
+.screen[data-treatment="na"][data-theme="dark"] .tab[aria-selected="true"]{color:#f0e6d0}
+.tab[aria-selected="true"] svg{stroke-width:2}
+.tab[aria-selected="true"] .l{color:var(--text-1)}
+
+/* foundations mini phone-strip (bottom sheet + sticky bar demo) */
+.demo-frame{width:250px;height:150px;border-radius:16px;border:1px solid var(--border);position:relative;overflow:hidden;background:var(--bg-page);color:var(--text-1);font-family:var(--label-font)}
+.demo-scrim{position:absolute;inset:0;background:rgba(0,0,0,.35)}
+.demo-sheet{position:absolute;left:0;right:0;bottom:0;background:var(--surface);border-radius:18px 18px 0 0;padding:12px 14px 16px;box-shadow:0 -8px 24px rgba(0,0,0,.18)}
+.demo-sheet .grab{width:36px;height:4px;border-radius:999px;background:var(--border-2);margin:0 auto 12px}
+.demo-sticky{position:absolute;left:0;right:0;bottom:0;padding:10px 14px 14px;background:var(--nav-bg);backdrop-filter:blur(10px);border-top:1px solid var(--border)}
+.demo-sticky .b{background:var(--cta-bg);color:var(--cta-text);border-radius:var(--btn-radius);text-align:center;padding:12px;font-size:11px;letter-spacing:.12em;text-transform:uppercase;font-weight:700}
+.demo-chip{display:inline-block;font-size:10px;letter-spacing:.08em;text-transform:uppercase;padding:6px 11px;border-radius:999px;border:1px solid var(--border-2);color:var(--text-2);margin:3px 4px 0 0}
+.demo-chip.on{background:var(--accent);color:var(--accent-ink);border-color:transparent;font-weight:700}
+
+/* ---- forms / stacked screens (character + updates) ---- */
+.topbar{display:flex;align-items:center;gap:12px;padding:8px 16px 12px;flex:none}
+.topbar .back{width:34px;height:34px;border-radius:50%;border:1px solid var(--border);background:var(--surface);display:flex;align-items:center;justify-content:center;color:var(--text-1);font-size:18px;flex:none;cursor:pointer}
+.screen[data-treatment="everymen"] .topbar .back{border-radius:4px}
+.topbar .tt{font-family:var(--headline);font-style:var(--headline-style);font-weight:var(--headline-weight);font-size:19px;line-height:1;flex:1;color:var(--text-1)}
+.topbar a.act{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);text-decoration:none;flex:none}
+.screen[data-treatment="na"][data-theme="light"] .topbar a.act{color:#c2541f}
+.form-lbl{font-size:9px;letter-spacing:.22em;text-transform:uppercase;color:var(--text-2);margin:0 0 8px;display:block}
+.field{width:100%;background:var(--surface);border:1px solid var(--border-2);border-radius:var(--btn-radius);padding:14px;font-family:var(--label-font);font-size:15px;color:var(--text-1);outline:none}
+.field:focus{border-color:var(--accent)}
+.field::placeholder{color:var(--text-3)}
+.help{font-size:11px;line-height:1.55;color:var(--text-3)}
+.field-group{display:flex;flex-direction:column;gap:20px}
+.avatar-pick{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.avatar-pick .opt{width:40px;height:40px;border-radius:50%;border:2px solid transparent;cursor:pointer;padding:2px}
+.avatar-pick .opt i{display:block;width:100%;height:100%;border-radius:50%}
+.avatar-pick .opt.sel{border-color:var(--text-1)}
+.avatar-pick .add{width:40px;height:40px;border-radius:50%;border:1.5px dashed var(--border-2);color:var(--text-2);display:flex;align-items:center;justify-content:center;font-size:18px;cursor:pointer}
+.big-ring{width:96px;height:96px;border-radius:50%;padding:4px;margin:0 auto;background:var(--ring)}
+.screen[data-treatment="everymen"] .big-ring{border-radius:8px;background:var(--accent-bright)}
+.big-ring .av{width:100%;height:100%;border-radius:50%;background:radial-gradient(circle at 35% 30%,#c9683a,#8a3d1f);display:flex;align-items:center;justify-content:center;font-family:var(--headline);font-style:var(--headline-style);font-size:38px;color:#fbe9d8}
+.screen[data-treatment="everymen"] .big-ring .av{border-radius:5px;background:radial-gradient(circle at 35% 30%,#7c8646,#4c5230)}
+.danger-btn{width:100%;border:1px solid var(--danger);color:var(--danger);background:none;border-radius:var(--btn-radius);padding:13px;font-family:var(--label-font);font-size:11px;letter-spacing:.14em;text-transform:uppercase;cursor:pointer}
+/* real bottom sheet (over a screen) */
+.sheet-scrim{position:absolute;inset:0;background:rgba(0,0,0,.45);z-index:5;border-radius:36px}
+.sheet{position:absolute;left:0;right:0;bottom:0;z-index:6;background:var(--surface);border-radius:22px 22px 0 0;padding:10px 16px 26px;box-shadow:0 -12px 34px rgba(0,0,0,.3)}
+.screen[data-treatment="everymen"] .sheet{border-radius:8px 8px 0 0}
+.sheet .grab{width:38px;height:4px;border-radius:999px;background:var(--border-2);margin:2px auto 14px}
+.sheet .sh-title{font-family:var(--headline);font-style:var(--headline-style);font-weight:var(--headline-weight);font-size:17px;color:var(--text-1);margin:0 4px 6px}
+.switch-row{display:flex;align-items:center;gap:12px;padding:12px 4px;border-bottom:1px solid var(--border);cursor:pointer}
+.switch-row .mini-ring{width:44px;height:44px;border-radius:50%;padding:2px;background:var(--ring);flex:none}
+.switch-row .mini-ring .av{width:100%;height:100%;border-radius:50%;background:radial-gradient(circle at 35% 30%,#c9683a,#8a3d1f);display:flex;align-items:center;justify-content:center;font-family:var(--headline);font-style:var(--headline-style);font-size:17px;color:#fbe9d8}
+.switch-row .w{flex:1;min-width:0}
+.switch-row .nm{font-family:var(--headline);font-style:var(--headline-style);font-weight:var(--headline-weight);font-size:16px;color:var(--text-1)}
+.switch-row .mt{font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--text-2);margin-top:3px}
+.switch-row .ck{color:var(--accent);font-size:16px;flex:none}
+.screen[data-treatment="na"][data-theme="light"] .switch-row .ck{color:#c2541f}
+.sheet-action{display:flex;align-items:center;gap:12px;padding:15px 4px;color:var(--text-1);font-family:var(--headline);font-style:var(--headline-style);font-weight:var(--headline-weight);font-size:15px;cursor:pointer;border-top:1px solid var(--border)}
+.sheet-action .ic{width:34px;height:34px;border-radius:50%;border:1.5px dashed var(--border-2);display:flex;align-items:center;justify-content:center;font-size:16px;color:var(--text-2);flex:none}
+/* updates */
+.up-group{font-size:9px;letter-spacing:.22em;text-transform:uppercase;color:var(--text-2);margin:10px 4px 2px}
+.up-row{display:flex;gap:12px;padding:13px 4px;border-bottom:1px solid var(--border)}
+.up-row .udot{width:8px;height:8px;border-radius:50%;margin-top:6px;flex:none;background:var(--accent)}
+.screen[data-treatment="na"][data-theme="light"] .up-row .udot{background:#c2541f}
+.up-row.read .udot{background:var(--text-3);opacity:.45}
+.up-row .ub{flex:1;min-width:0}
+.up-row .utext{font-size:13px;line-height:1.45;color:var(--text-1)}
+.up-row .utext b{font-family:var(--headline);font-style:var(--headline-style);font-weight:var(--headline-weight);font-weight:600}
+.up-row .utime{font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--text-3);margin-top:4px}
+.caret{font-size:13px;color:var(--text-3);vertical-align:middle}
+.big-ring .av.up-face{background:var(--surface);border:1.5px dashed var(--border-2);color:var(--text-2);flex-direction:column;gap:3px;font-size:26px;font-family:var(--label-font)}
+.big-ring .av.up-face small{font-size:7.5px;letter-spacing:.16em;text-transform:uppercase}
+
+/* ---- filter chips ---- */
+.chips{display:flex;gap:8px;overflow-x:auto;padding:2px 0;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chip2{flex:none;font-size:11px;letter-spacing:.05em;color:var(--text-2);background:var(--surface);border:1px solid var(--border-2);border-radius:999px;padding:8px 13px;cursor:pointer;white-space:nowrap}
+.chip2.on{background:var(--accent);color:var(--accent-ink);border-color:transparent;font-weight:700}
+.screen[data-treatment="na"][data-theme="light"] .chip2.on{background:#c2541f;color:#fff}
+.sortbtn{flex:none;display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text-1);background:var(--surface);border:1px solid var(--border-2);border-radius:999px;padding:8px 13px;cursor:pointer;white-space:nowrap}
+/* ---- task card ---- */
+.tcard{background:var(--surface);border:1px solid var(--border);border-radius:var(--card-radius);box-shadow:var(--shadow);padding:14px 14px 14px 18px;position:relative;overflow:hidden;cursor:pointer;display:flex;flex-direction:column;gap:9px}
+.tcard .edge{position:absolute;left:0;top:0;bottom:0;width:4px}
+.fchip{display:inline-flex;align-items:center;gap:6px;font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:var(--text-2)}
+.fchip i{width:8px;height:8px;border-radius:2px;flex:none}
+.tcard-title{font-family:var(--headline);font-style:var(--headline-style);font-weight:var(--headline-weight);font-size:18px;line-height:1.15;color:var(--text-1)}
+.tcard-desc{font-size:12.5px;line-height:1.5;color:var(--text-2);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.tcard-foot{display:flex;align-items:center;gap:10px}
+.ppill{font-size:11px;letter-spacing:.04em;font-weight:700;color:var(--accent-ink);background:var(--accent);border-radius:999px;padding:5px 10px;flex:none}
+.screen[data-treatment="na"][data-theme="light"] .ppill{background:#c2541f;color:#fff}
+.metatxt{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--text-3)}
+.diff{display:flex;gap:3px;align-items:center}
+.diff i{width:6px;height:6px;border-radius:50%;background:var(--text-3);opacity:.3}
+.diff i.on{opacity:1;background:var(--text-2)}
+.stitle{font-family:var(--headline);font-style:var(--headline-style);font-weight:var(--headline-weight);font-size:26px;line-height:1.1;color:var(--text-1);margin:0}
+.para{font-size:14px;line-height:1.6;color:var(--text-2);margin:0 0 12px}
+/* ---- media placeholder ---- */
+.media{position:relative;background:repeating-linear-gradient(45deg,rgba(128,128,128,.10) 0 10px,transparent 10px 20px),var(--surface-2);display:flex;align-items:center;justify-content:center;color:var(--text-3);font-family:var(--label-font);font-size:9px;letter-spacing:.24em;text-transform:uppercase;border-radius:var(--tile-radius)}
+/* ---- proof (praxis) card ---- */
+.pcard{background:var(--surface);border:1px solid var(--border);border-radius:var(--card-radius);box-shadow:var(--shadow);overflow:hidden;cursor:pointer}
+.pcard-head{display:flex;align-items:center;gap:10px;padding:12px 14px}
+.pav{width:34px;height:34px;border-radius:50%;flex:none;display:flex;align-items:center;justify-content:center;font-family:var(--headline);font-style:var(--headline-style);font-size:14px;color:#fbe9d8}
+.pcard-head .nm{font-size:12px;color:var(--text-1);font-weight:700;font-family:var(--label-font)}
+.pcard-head .sub{font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--text-3);margin-top:2px}
+.pcard-media{height:180px;width:100%;border-radius:0}
+.pcard-body{padding:12px 14px}
+.pcard-title{font-family:var(--headline);font-style:var(--headline-style);font-weight:var(--headline-weight);font-size:17px;line-height:1.2;color:var(--text-1)}
+.pcard-foot{display:flex;align-items:center;justify-content:space-between;margin-top:10px}
+.stars{display:flex;gap:2px;color:var(--accent);font-size:14px}
+.screen[data-treatment="na"][data-theme="light"] .stars,.screen[data-treatment="na"][data-theme="light"] .vstars{color:#c2541f}
+.stars .off,.vstars .off{color:var(--text-3);opacity:.4}
+.votecount{font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--text-3)}
+.votebar{display:flex;flex-direction:column;align-items:center;gap:9px;padding:18px;background:var(--surface-2);border-radius:var(--card-radius);border:1px solid var(--border)}
+.vstars{display:flex;gap:10px;font-size:36px;color:var(--accent);cursor:pointer;line-height:1}
+.votelbl{font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--text-2)}
+/* ---- comments ---- */
+.cmt{display:flex;gap:10px;padding:12px 0;border-bottom:1px solid var(--border)}
+.cmt:last-child{border-bottom:0}
+.cmt .cav{width:30px;height:30px;border-radius:50%;flex:none;display:flex;align-items:center;justify-content:center;font-family:var(--headline);font-style:var(--headline-style);font-size:12px;color:#fbe9d8}
+.cmt .cb{flex:1;min-width:0}
+.cmt .cn{font-size:11px;font-weight:700;color:var(--text-1);font-family:var(--label-font)}
+.cmt .ct{font-size:13px;line-height:1.45;color:var(--text-2);margin-top:3px}
+/* ---- player rows ---- */
+.prow2{display:flex;align-items:center;gap:12px;padding:12px 4px;border-bottom:1px solid var(--border);cursor:pointer}
+.prow2 .rank{width:20px;text-align:center;font-family:var(--headline);font-style:var(--headline-style);font-size:15px;color:var(--text-3);flex:none}
+.prow2 .pav{width:40px;height:40px}
+.prow2 .pinfo{flex:1;min-width:0}
+.prow2 .pinfo .n{font-family:var(--headline);font-style:var(--headline-style);font-weight:var(--headline-weight);font-size:16px;color:var(--text-1)}
+.prow2 .pinfo .m{font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--text-2);margin-top:2px;display:flex;align-items:center;gap:6px}
+.prow2 .pinfo .m i{width:7px;height:7px;border-radius:2px;flex:none}
+.prow2 .ppts2{text-align:right;flex:none}
+.prow2 .ppts2 b{font-family:var(--headline);font-style:var(--headline-style);font-size:16px;color:var(--text-1);display:block}
+.prow2 .ppts2 span{font-size:8px;letter-spacing:.16em;text-transform:uppercase;color:var(--text-3)}
+/* ---- profile / segmented ---- */
+.segtabs{display:flex;border-bottom:1px solid var(--border);margin-top:4px}
+.segtab{flex:1;text-align:center;padding:12px 0;font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--text-3);border-bottom:2px solid transparent;cursor:pointer}
+.segtab.on{color:var(--text-1);border-bottom-color:var(--accent)}
+.screen[data-treatment="na"][data-theme="light"] .segtab.on{border-bottom-color:#c2541f}
+.thumbs{display:grid;grid-template-columns:repeat(3,1fr);gap:5px}
+.thumbs .media{aspect-ratio:1}
+/* ---- factions grid ---- */
+.fgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.ftile{border-radius:var(--card-radius);overflow:hidden;border:1px solid var(--border);cursor:pointer;position:relative;min-height:118px;display:flex;flex-direction:column;justify-content:flex-end;padding:12px;color:#fff}
+.ftile .fsig{position:absolute;top:11px;right:11px;width:20px;height:20px;border-radius:5px;background:rgba(255,255,255,.3)}
+.ftile .fn{font-family:var(--headline);font-style:var(--headline-style);font-weight:var(--headline-weight);font-size:17px;line-height:1.05;position:relative}
+.ftile .fm{font-size:9px;letter-spacing:.14em;text-transform:uppercase;opacity:.9;margin-top:3px;position:relative}
+.fhero{border-radius:var(--card-radius);padding:20px 16px;color:#fff;position:relative;overflow:hidden}
+.fhero .fh-name{font-family:var(--headline);font-style:var(--headline-style);font-weight:var(--headline-weight);font-size:26px}
+.fhero .fh-tag{font-size:11px;letter-spacing:.05em;opacity:.92;margin-top:5px;line-height:1.5}
+.fhero .fh-stat{display:flex;gap:20px;margin-top:15px}
+.fhero .fh-stat div b{font-family:var(--headline);font-style:var(--headline-style);font-size:18px;display:block}
+.fhero .fh-stat div span{font-size:8px;letter-spacing:.16em;text-transform:uppercase;opacity:.85}
+/* ---- composer ---- */
+.seg{display:flex;background:var(--surface-2);border:1px solid var(--border);border-radius:999px;padding:3px}
+.seg button{flex:1;border:0;background:none;border-radius:999px;padding:8px;font-family:var(--label-font);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--text-2);cursor:pointer}
+.seg button.on{background:var(--surface);color:var(--text-1);box-shadow:var(--shadow);font-weight:700}
+.forrow{display:flex;align-items:center;justify-content:space-between;background:var(--surface-2);border:1px solid var(--border);border-radius:var(--btn-radius);padding:11px 13px;font-size:11px;letter-spacing:.06em;color:var(--text-2)}
+.forrow b{font-family:var(--headline);font-style:var(--headline-style);color:var(--text-1);letter-spacing:0;font-size:13px}
+.ta{width:100%;min-height:120px;background:var(--surface);border:1px solid var(--border-2);border-radius:var(--btn-radius);padding:13px;font-family:var(--label-font);font-size:14px;line-height:1.55;color:var(--text-1);resize:none;outline:none;white-space:pre-wrap}
+.mgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.mgrid .media{aspect-ratio:1}
+.madd{aspect-ratio:1;border:1.5px dashed var(--border-2);border-radius:var(--tile-radius);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;color:var(--text-2);font-size:22px;cursor:pointer}
+.madd small{font-size:8px;letter-spacing:.12em;text-transform:uppercase}
+.kbd-acc{display:flex;gap:16px;padding:11px 18px;border-top:1px solid var(--border);background:var(--surface-2);color:var(--text-2);font-family:var(--label-font);font-size:16px;align-items:center;flex:none}
+.kbd-acc .ph{margin-left:auto;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--accent)}
+.screen[data-treatment="na"][data-theme="light"] .kbd-acc .ph{color:#c2541f}
+.kbd{height:172px;background:linear-gradient(180deg,var(--surface-2),var(--bg-page));border-top:1px solid var(--border);display:flex;align-items:center;justify-content:center;color:var(--text-3);font-size:9px;letter-spacing:.24em;text-transform:uppercase;flex:none}
+.mdprev h3{font-family:var(--headline);font-style:var(--headline-style);font-weight:var(--headline-weight);font-size:17px;margin:0 0 7px;color:var(--text-1)}
+.mdprev p{font-size:14px;line-height:1.6;color:var(--text-2);margin:0 0 11px}
+.mdprev li{font-size:14px;line-height:1.55;color:var(--text-2);margin-left:18px}
+/* ---- settings ---- */
+.setrow{display:flex;align-items:center;gap:12px;padding:14px 4px;border-bottom:1px solid var(--border);cursor:pointer}
+.setrow .si{width:32px;height:32px;border-radius:9px;background:var(--surface-2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;color:var(--text-2);flex:none;font-size:14px}
+.screen[data-treatment="everymen"] .setrow .si{border-radius:4px}
+.setrow .sl{flex:1;font-size:14px;color:var(--text-1);font-family:var(--label-font)}
+.setrow .sv{font-size:11px;color:var(--text-3);letter-spacing:.04em}
+.toggle{width:42px;height:24px;border-radius:999px;background:var(--accent);position:relative;flex:none}
+.screen[data-treatment="na"][data-theme="light"] .toggle{background:#c2541f}
+.toggle.off{background:var(--border-2)}
+.toggle i{position:absolute;top:2px;right:2px;width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.3)}
+.toggle.off i{right:auto;left:2px}
+/* ---- search ---- */
+.searchbar{display:flex;align-items:center;gap:10px;background:var(--surface-2);border:1px solid var(--border-2);border-radius:999px;padding:11px 15px;color:var(--text-2);font-size:14px;font-family:var(--label-font)}
+.sug{display:flex;align-items:center;gap:11px;padding:12px 4px;border-bottom:1px solid var(--border);font-size:13px;color:var(--text-1)}
+.sug .sk{font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--text-3);margin-left:auto}
+/* ---- level up ---- */
+.lu-scrim{position:absolute;inset:0;background:rgba(10,8,14,.72);z-index:5;display:flex;align-items:center;justify-content:center;border-radius:36px;overflow:hidden}
+.lu-card{width:78%;background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:26px 20px;text-align:center;position:relative;z-index:2;box-shadow:0 20px 50px rgba(0,0,0,.5)}
+.lu-burst{width:88px;height:88px;border-radius:50%;margin:0 auto 15px;background:var(--ring);display:flex;align-items:center;justify-content:center;box-shadow:0 6px 20px rgba(0,0,0,.3)}
+.lu-burst b{font-family:var(--headline);font-style:var(--headline-style);font-size:36px;color:#fff;text-shadow:0 2px 6px rgba(0,0,0,.35)}
+.lu-card h3{font-family:var(--headline);font-style:var(--headline-style);font-weight:var(--headline-weight);font-size:24px;margin:0 0 6px;color:var(--text-1)}
+.lu-card p{font-size:13px;line-height:1.5;color:var(--text-2);margin:0 0 18px}
+.confetti{position:absolute;inset:0;z-index:1;pointer-events:none;overflow:hidden}
+.confetti i{position:absolute;width:8px;height:9px;border-radius:2px;top:-14px;animation:cfall linear infinite}
+@keyframes cfall{to{transform:translateY(620px) rotate(420deg)}}
+/* ---- sticky CTA (detail screens) ---- */
+.sticky-cta{padding:12px 16px 22px;background:var(--nav-bg);backdrop-filter:blur(12px);border-top:1px solid var(--border);display:flex;gap:10px;flex:none;align-items:center}
+
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+
+<div class="board">
+
+  <header class="board-head">
+    <p class="eyebrow">World Zero · Mobile Field Kit</p>
+    <h1>A phone-native language, tinted per faction from one layout.</h1>
+    <p>375px, one-hand. Every screen is built from a single markup layer and painted by a token cascade: <b style="color:#e9e6df">theme</b> (light / dark) sets the neutral surfaces; <b style="color:#e9e6df">treatment</b> (faction slug) overrides accent, headline face, paper and voice. No brand colors are invented — everything below resolves to <code style="color:#c8c4cd">--faction-*</code> / <code style="color:#c8c4cd">--color-*</code> tokens already in the kit. Two treatments shipped here: <b style="color:#e9e6df">Default (na)</b> — Lora + the seven-faction rainbow — and <b style="color:#e9e6df">Everymen</b> — Special Elite, amber (<code style="color:#c8c4cd">--everymen-gold</code>) on paper, field-report voice.</p>
+    <span class="stage">Unaffiliated (Default) · every screen · light + dark</span>
+  </header>
+
+  <!-- ================= FOUNDATIONS ================= -->
+  <div class="section-label"><span class="n">01</span><h2>Foundations</h2><span class="rule"></span>
+    <p>The reusable primitives every screen is assembled from. Sized for a thumb at the bottom of a 375-wide viewport.</p>
+  </div>
+
+  <div class="grid" style="grid-template-columns:repeat(2,1fr)">
+    <!-- spacing -->
+    <div class="spec">
+      <h3>Spacing scale</h3>
+      <p class="sub">4pt base. Screen gutter 16 · card padding 16 · section gap 14. Only these steps.</p>
+      <div id="spacing"></div>
+    </div>
+
+    <!-- type -->
+    <div class="spec">
+      <h3>Mobile type scale</h3>
+      <p class="sub">Body never below 15px; labels never below 8px and always tracked + uppercase. Headline face swaps per treatment.</p>
+      <div>
+        <div class="ty"><div class="demo" style="font-family:'Lora',serif;font-style:italic;font-size:25px">Display / name</div><div class="meta"><b>25 / 1.0</b><br>Lora ital · na</div></div>
+        <div class="ty"><div class="demo" style="font-family:'Special Elite';font-size:22px">Screen title</div><div class="meta"><b>22 / 1.1</b><br>headline</div></div>
+        <div class="ty"><div class="demo" style="font-family:'Lora',serif;font-size:16px">Card title</div><div class="meta"><b>16 / 1.2</b><br>headline</div></div>
+        <div class="ty"><div class="demo" style="font-family:'Courier Prime'">Body copy — proof text</div><div class="meta"><b>15 / 1.5</b><br>Courier</div></div>
+        <div class="ty"><div class="demo" style="font-family:'Courier Prime';font-size:11px;letter-spacing:.16em;text-transform:uppercase">Meta · value · slots</div><div class="meta"><b>11 · .16em</b><br>label</div></div>
+        <div class="ty"><div class="demo" style="font-family:'Courier Prime';font-size:9px;letter-spacing:.22em;text-transform:uppercase">Section kicker</div><div class="meta"><b>9 · .22em</b><br>kicker</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid" style="grid-template-columns:1.1fr 1fr 1fr;margin-top:16px">
+    <!-- card anatomy -->
+    <div class="spec">
+      <h3>Card</h3>
+      <p class="sub">Surface + hairline border + soft shadow. Radius is a treatment token: 14 (na) vs 5 (Everymen, paper feel).</p>
+      <div class="pattern-note">
+        <b>na</b> radius 14 · rainbow signal edge<br>
+        <b>Everymen</b> radius 5 · dashed stamp edge, faint paper grain<br><br>
+        Same DOM. Only <code style="color:#c8c4cd">--card-radius</code>, border and edge treatment change.
+      </div>
+    </div>
+    <!-- sticky action bar -->
+    <div class="spec">
+      <h3>Sticky action bar</h3>
+      <p class="sub">Primary CTA pinned above the tab bar, blurred nav-bg, safe-area padding at the bottom.</p>
+      <div class="screen" data-theme="light" data-treatment="na" style="--label-font:'Courier Prime'">
+        <div class="demo-frame">
+          <div style="padding:12px 14px;font-size:11px;color:var(--text-3)">…task detail scrolls…</div>
+          <div class="demo-sticky"><div class="b">Sign up</div></div>
+        </div>
+      </div>
+    </div>
+    <!-- bottom sheet -->
+    <div class="spec">
+      <h3>Bottom sheet</h3>
+      <p class="sub">Filters, sort, confirm. Grabber + scrim; dismiss by swipe or tap-out. Never a desktop sidebar.</p>
+      <div class="screen" data-theme="light" data-treatment="na" style="--label-font:'Courier Prime'">
+        <div class="demo-frame">
+          <div class="demo-scrim"></div>
+          <div class="demo-sheet">
+            <div class="grab"></div>
+            <div style="font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:var(--text-2);margin-bottom:8px">Filter</div>
+            <span class="demo-chip on">All</span><span class="demo-chip">Solo</span><span class="demo-chip">Collab</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid" style="grid-template-columns:1fr 1.3fr;margin-top:16px">
+    <!-- tab bar -->
+    <div class="spec">
+      <h3>Bottom tab bar</h3>
+      <p class="sub">Fixed, 5 destinations, icons + labels, active = accent tint. Home · Tasks · Praxis · Players · Factions.</p>
+      <div class="screen" data-theme="light" data-treatment="na" style="border-radius:12px;overflow:hidden;border:1px solid var(--border)">
+        <div class="tabbar" id="tabdemo" style="padding-bottom:12px"></div>
+      </div>
+    </div>
+    <!-- tinting -->
+    <div class="spec">
+      <h3>The tinting mechanism</h3>
+      <p class="sub">One layout, two data-attributes. Below: the same tokens resolved across both treatments the kit ships here.</p>
+      <table class="cascade">
+        <tbody><tr><th>Token</th><th>Light</th><th>Dark</th></tr>
+        <tr><td><code>--bg-page</code></td><td><span class="chip" style="background:#f7f4ee"></span>warm white</td><td><span class="chip" style="background:#13121a"></span>charcoal</td></tr>
+        <tr><td><code>--surface</code></td><td><span class="chip" style="background:#fffdf9"></span>near-white</td><td><span class="chip" style="background:#1c1b24"></span>raised</td></tr>
+        <tr><td><code>--accent</code></td><td><span class="chip" style="background:#be185d"></span>magenta</td><td><span class="chip" style="background:#f0e6d0"></span>cream</td></tr>
+        <tr><td><code>--field-bg</code></td><td>prismatic wash</td><td>prismatic wash</td></tr>
+        <tr><td>headline</td><td colspan="2">Lora italic · the seven-faction rainbow as accent</td></tr>
+      </tbody></table>
+      <p class="sub" style="margin:14px 0 0">A faction treatment (Everymen, UA, …) layers on top later by overriding <code style="color:#c8c4cd">--accent</code>, <code style="color:#c8c4cd">--headline</code>, surfaces and voice — same markup, different skin.</p>
+    </div>
+  </div>
+
+  <!-- ================= FIELDDESK / HOME ================= -->
+  <div class="section-label"><span class="n">02</span><h2>FieldDesk — Home</h2><span class="rule"></span>
+    <p>The logged-in dashboard. Character (avatar, name, level, faction, points), active tasks tappable into detail, and two primary actions — browse tasks, post praxis — kept in the bottom third for one-hand reach. Sits above the tab bar. Tap the tabs; press a task row. Default treatment, light + dark.</p>
+  </div>
+
+  <div class="rail" id="homeRail"></div>
+
+  <!-- ================= CHARACTER & UPDATES ================= -->
+  <div class="section-label"><span class="n">03</span><h2>Character paths</h2><span class="rule"></span>
+    <p>Default treatment, no faction — the paths for managing <b style="color:#e9e6df">who you play as</b>, read left → right. <b style="color:#e9e6df">Create character</b> is the first-run screen (no account yet, so no tab bar — just a sticky Create). To reach <b style="color:#e9e6df">character select</b> once you're in the app, tap <b style="color:#e9e6df">Switch</b> on the Home character card (or your avatar/name — the ▾ caret); that opens the switcher sheet, which also holds <b style="color:#e9e6df">Create new character</b> and <b style="color:#e9e6df">Edit</b>. (Updates screen parked — those cards are faction-based and a separate effort.)</p>
+  </div>
+
+  <div class="rail" id="charRail"></div>
+
+  <!-- ================= TASKS ================= -->
+  <div class="section-label"><span class="n">04</span><h2>Tasks</h2><span class="rule"></span>
+    <p>Browse is a scannable card list with phone-native filter chips (horizontal scroll) + a Sort button that opens a bottom sheet — no desktop sidebar. Each card carries faction, points, difficulty and slots. Detail is a pushed screen with a <b style="color:#e9e6df">sticky Sign-up bar</b>, submitted proofs, and comments below.</p>
+  </div>
+  <div class="rail" id="tasksRail"></div>
+
+  <!-- ================= PRAXIS ================= -->
+  <div class="section-label"><span class="n">05</span><h2>Praxis</h2><span class="rule"></span>
+    <p>The proof loop. Feed of media-forward proof cards (author, faction, thumbnail, star rating) → detail with full media, a big touch-sized star vote, and comments. The <b style="color:#e9e6df">composer</b> is the most important flow: a focused full-screen editor with Write/Preview toggle, an obvious media-add grid, a formatting accessory bar riding the keyboard, and a submit affordance that stays reachable.</p>
+  </div>
+  <div class="rail" id="praxisRail"></div>
+
+  <!-- ================= PLAYERS ================= -->
+  <div class="section-label"><span class="n">06</span><h2>Players</h2><span class="rule"></span>
+    <p>Directory / leaderboard of players (rank, avatar, faction, level, points) → a public profile with stats and a Praxis/Tasks toggle over a thumbnail grid.</p>
+  </div>
+  <div class="rail" id="playersRail"></div>
+
+  <!-- ================= FACTIONS ================= -->
+  <div class="section-label"><span class="n">07</span><h2>Factions</h2><span class="rule"></span>
+    <p>Browsed by an Unaffiliated player: a grid of the factions (each in its own color) with a “you're unaffiliated” banner, → a faction page whose hero wears that faction's color while the app chrome stays neutral, with a Join action. (Committing to a faction is what re-skins the whole app — the treatment work.)</p>
+  </div>
+  <div class="rail" id="factionsRail"></div>
+
+  <!-- ================= MOMENTS & UTILITY ================= -->
+  <div class="section-label"><span class="n">08</span><h2>Moments &amp; utility</h2><span class="rule"></span>
+    <p>The connective tissue: a whimsical <b style="color:#e9e6df">level-up</b> celebration (rainbow burst + confetti), global <b style="color:#e9e6df">search</b>, and <b style="color:#e9e6df">settings</b> (characters, notifications, appearance, sign out).</p>
+  </div>
+  <div class="rail" id="momentsRail"></div>
+
+</div>
+
+<script>
+/* ---------- icon set (simple line glyphs) ---------- */
+const ICON = {
+  home:'<svg viewBox="0 0 24 24"><path d="M4 11l8-6 8 6"/><path d="M6 10v9h12v-9"/></svg>',
+  tasks:'<svg viewBox="0 0 24 24"><path d="M9 6h11M9 12h11M9 18h11"/><path d="M4 6l1 1 2-2M4 12l1 1 2-2M4 18l1 1 2-2"/></svg>',
+  praxis:'<svg viewBox="0 0 24 24"><path d="M12 4l2.3 4.9 5.2.7-3.8 3.6.9 5.3-4.6-2.6-4.6 2.6.9-5.3L5.5 9.6l5.2-.7z"/></svg>',
+  players:'<svg viewBox="0 0 24 24"><circle cx="9" cy="9" r="3"/><path d="M4 19c0-2.8 2.2-5 5-5s5 2.2 5 5"/><path d="M16 7.5a3 3 0 010 5.4M15 14.6c2.3.5 4 2.3 4 4.4"/></svg>',
+  factions:'<svg viewBox="0 0 24 24"><path d="M12 3l7 3v5c0 4.4-3 7.6-7 9-4-1.4-7-4.6-7-9V6z"/></svg>',
+  bell:'<svg viewBox="0 0 24 24" style="width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round"><path d="M6 9a6 6 0 1112 0c0 5 2 6 2 6H4s2-1 2-6"/><path d="M10 20a2 2 0 004 0"/></svg>',
+  search:'<svg viewBox="0 0 24 24" style="width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round"><circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4.2-4.2"/></svg>'
+};
+const TABS = [['home','Home'],['tasks','Tasks'],['praxis','Praxis'],['players','Players'],['factions','Factions']];
+
+/* ---------- spacing specimen ---------- */
+(function(){
+  const steps=[[4,'hairline gaps'],[8,'tile gap · chip pad'],[12,'row rhythm'],[16,'gutter · card pad'],[20,'block spacing'],[24,'section top'],[32,'screen breaks']];
+  document.getElementById('spacing').innerHTML = steps.map(([n,u])=>
+    `<div class="sp-row"><div class="swatch" style="width:${n*2}px"></div><span class="lbl">${n}px</span><span class="use">${u}</span></div>`).join('');
+})();
+
+/* ---------- tab bar builder ---------- */
+function tabbar(active){
+  return TABS.map(([k,l],i)=>
+    `<button class="tab" aria-selected="${i===active}" data-tab="${i}">${ICON[k]}<span class="l">${l}</span></button>`).join('');
+}
+document.getElementById('tabdemo').innerHTML = tabbar(0);
+
+/* ---------- home screen (one layout) ---------- */
+const VOICE = {
+  na: { charK:'Your Character', tasksK:'Active Tasks', link:'All', browse:'Browse Tasks', post:'Post Praxis', fac:'Unaffiliated', s3:['Score','Votes','Era'] },
+  everymen: { charK:'Member File', tasksK:'In The Field', link:'Logbook', browse:'Browse Tasks', post:'File a Report', fac:'Everymen', s3:['Points','Votes','Era'] }
+};
+const FAC = { ua:'#c2541f', wow:'#ec5f99', snide:'#6fae00', ephemerists:'#1d6e72', singularity:'#2563eb', everymen:'#c1272d', albescent:'#8a8a86' };
+
+function home(treat){
+  const v = VOICE[treat];
+  const activeTasks = [
+    { t:'A Very Human Thing', fac:'everymen', facName:'Everymen', pv:20, slots:'1 / 20', prog:8 },
+    { t:'Somewhere No One Needs To Be', fac:'ephemerists', facName:'Ephemerists', pv:15, slots:'3 slots', prog:null }
+  ];
+  const rows = activeTasks.map(t=>`
+    <div class="trow" role="button" tabindex="0">
+      <span class="dot" style="background:${FAC[t.fac]}"></span>
+      <div class="tmid">
+        <div class="tt">${t.t}</div>
+        <div class="tm"><span class="fac">${t.facName}</span><span>·</span><span class="pv">+${t.pv} pts</span><span>·</span><span>${t.slots}</span></div>
+        ${t.prog!=null?`<div class="mini-bar"><i style="width:${t.prog}%"></i></div>`:''}
+      </div>
+      <span class="chev">›</span>
+    </div>`).join('');
+
+  return `
+  <div class="statusbar"><span>9:41</span><span class="sig"><i></i><i></i><i></i><span style="opacity:.55">▮</span></span></div>
+  <div class="appbar">
+    <div class="brand"><div class="brandmark"></div>
+      <div class="title-wrap"><div class="k">${treat==='everymen'?'Local 0':'World Zero'}</div><div class="t">FieldDesk</div></div>
+    </div>
+    <button class="iconbtn">${ICON.bell}</button>
+  </div>
+  <div class="body">
+    <!-- character -->
+    <section class="card pad">
+      <div class="char-top"></div>
+      <div class="sechead" style="margin-bottom:14px"><span class="k">${v.charK}</span><span class="rule"></span><span style="display:flex;gap:14px;flex:none"><a href="#">Switch</a><a href="#">Edit</a></span></div>
+      <div class="char-id">
+        <div class="ring"><div class="av">M</div></div>
+        <div class="who">
+          <div class="name">Molly <span class="caret">▾</span></div>
+          <div class="meta">${v.fac} <span class="sep">·</span> Level 4</div>
+        </div>
+        <div class="pts"><b>340</b><span>Points</span></div>
+      </div>
+      <div class="stats">
+        <div class="stat"><b>340</b><span>${v.s3[0]}</span></div>
+        <div class="stat"><b>12</b><span>${v.s3[1]}</span></div>
+        <div class="stat"><b>III</b><span>${v.s3[2]}</span></div>
+      </div>
+    </section>
+
+    <!-- active tasks -->
+    <section class="card pad">
+      <div class="sechead" style="margin-bottom:6px"><span class="k">${v.tasksK}</span><span class="rule"></span><a href="#">${v.link}</a></div>
+      <div class="tasks">${rows}</div>
+    </section>
+
+    <!-- primary actions -->
+    <div class="actions">
+      <button class="btn primary"><span class="plus">⌕</span> ${v.browse}</button>
+      <button class="btn ghost"><span class="plus">+</span> ${v.post}</button>
+    </div>
+  </div>
+  <div class="tabbar">${tabbar(0)}</div>`;
+}
+
+/* ---------- render home (na light + dark) ---------- */
+const COMBOS = [
+  ['na','light','Default','Light'],
+  ['na','dark','Default','Dark']
+];
+document.getElementById('homeRail').innerHTML = COMBOS.map(([tr,th,a,b])=>`
+  <div class="phone-wrap">
+    <div class="phone-tag"><b>${a}</b> · ${b}</div>
+    <div class="phone"><div class="screen" data-theme="${th}" data-treatment="${tr}">${home(tr)}</div></div>
+  </div>`).join('');
+
+/* ---------- character & updates screens (na, no faction) ---------- */
+const AVOPT = [
+  'radial-gradient(circle at 35% 30%,#c9683a,#8a3d1f)',
+  'radial-gradient(circle at 35% 30%,#5aa0a4,#1d5f63)',
+  'radial-gradient(circle at 35% 30%,#7c8646,#4c5230)',
+  'radial-gradient(circle at 35% 30%,#8e6fb0,#4a3568)'
+];
+
+// 1 — create first character (first run, no tab bar)
+function screenOnboard(){
+  return `
+  <div class="statusbar"><span>9:41</span><span class="sig"><i></i><i></i><i></i><span style="opacity:.55">\u25ae</span></span></div>
+  <div class="topbar"><div class="back">\u2039</div><div class="tt">New character</div><span style="width:34px"></span></div>
+  <div class="body" style="gap:22px;padding-top:8px">
+    <div style="text-align:center">
+      <div class="big-ring" style="background:var(--surface-2)"><div class="av up-face">+<small>Add photo</small></div></div>
+      <div class="kicker" style="margin-top:12px">Step 1 of 2 \u00b7 Identity</div>
+    </div>
+    <div class="field-group">
+      <div>
+        <label class="form-lbl">Character name</label>
+        <input class="field" value="Molly" />
+      </div>
+      <p class="help">Upload a photo \u2014 it becomes your avatar everywhere. You'll pick a faction after your first task; until then you play as <b style="color:var(--text-2)">Unaffiliated</b> and every path is open to you.</p>
+    </div>
+  </div>
+  <div class="tabbar" style="padding:12px 16px 22px;background:var(--nav-bg)">
+    <button class="btn primary" style="flex:1">Create character</button>
+  </div>`;
+}
+
+// 2 — active-character switcher (bottom sheet over Home)
+function screenSwitcher(){
+  const chars = [
+    { nm:'Molly', mt:'Unaffiliated \u00b7 Level 4 \u00b7 340 pts', g:AVOPT[0], active:true },
+    { nm:'Wren',  mt:'Unaffiliated \u00b7 Level 1 \u00b7 20 pts',  g:AVOPT[1], active:false }
+  ];
+  const list = chars.map(c=>`
+    <div class="switch-row">
+      <div class="mini-ring"><div class="av" style="background:${c.g}">${c.nm[0]}</div></div>
+      <div class="w"><div class="nm">${c.nm}</div><div class="mt">${c.mt}</div></div>
+      ${c.active?'<span class="ck">\u2713</span>':'<span class="caret" style="font-size:11px;letter-spacing:.1em;color:var(--text-3)">TAP TO USE</span>'}
+    </div>`).join('');
+  return home('na') + `
+    <div class="sheet-scrim"></div>
+    <div class="sheet">
+      <div class="grab"></div>
+      <div class="sh-title">Your characters</div>
+      ${list}
+      <div class="sheet-action"><span class="ic">+</span> Create new character</div>
+      <div class="sheet-action" style="border-top:0;padding-top:6px"><span class="ic">\u270e</span> Edit this character</div>
+    </div>`;
+}
+
+// 3 — edit / change character
+function screenEdit(){
+  return `
+  <div class="statusbar"><span>9:41</span><span class="sig"><i></i><i></i><i></i><span style="opacity:.55">\u25ae</span></span></div>
+  <div class="topbar"><div class="back">\u2039</div><div class="tt">Edit character</div><a href="#" class="act">Save</a></div>
+  <div class="body" style="gap:22px;padding-top:8px">
+    <div style="text-align:center">
+      <div class="big-ring"><div class="av">M</div></div>
+      <a href="#" class="act" style="display:inline-block;margin-top:12px;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);text-decoration:none">Change photo</a>
+    </div>
+    <div class="field-group">
+      <div><label class="form-lbl">Name</label><input class="field" value="Molly" /></div>
+      <div><label class="form-lbl">Tagline</label><input class="field" value="Doing very human things." /></div>
+      <div>
+        <label class="form-lbl">Faction</label>
+        <div class="field" style="display:flex;align-items:center;justify-content:space-between;color:var(--text-2)"><span>Unaffiliated</span><span class="caret">\u203a</span></div>
+        <p class="help" style="margin-top:8px">Join a faction from the Factions tab. It re-skins your whole app.</p>
+      </div>
+      <button class="danger-btn">Delete this character</button>
+    </div>
+  </div>
+  <div class="tabbar" style="padding:12px 16px 22px;background:var(--nav-bg)">
+    <button class="btn primary" style="flex:1">Save changes</button>
+  </div>`;
+}
+
+// 4 — (updates screen removed for now: faction-based update cards are a separate effort)
+
+const CHAR_SCREENS = [
+  ['Create character', screenOnboard],
+  ['Switch active character', screenSwitcher],
+  ['Edit character', screenEdit]
+];
+document.getElementById('charRail').innerHTML = CHAR_SCREENS.map(([label,fn])=>
+  ['light','dark'].map(th=>`
+    <div class="phone-wrap">
+      <div class="phone-tag"><b>${label}</b> \u00b7 ${th[0].toUpperCase()+th.slice(1)}</div>
+      <div class="phone"><div class="screen" data-theme="${th}" data-treatment="na">${fn()}</div></div>
+    </div>`).join('')
+).join('');
+
+/* ============================================================
+   UNAFFILIATED SCREEN CATALOG (na) — shared helpers
+   ============================================================ */
+const FACNAME = { ua:'UA', wow:'Wow', snide:'SNIDE', ephemerists:'Ephemerists', singularity:'Singularity', everymen:'Everymen', albescent:'Albescent' };
+const AVC = ['#c9683a','#4f8a8d','#7c8646','#8e6fb0','#b0574f','#4f79b0','#a8823a'];
+function status(){ return `<div class="statusbar"><span>9:41</span><span class="sig"><i></i><i></i><i></i><span style="opacity:.55">▮</span></span></div>`; }
+function appbar2(title,right){ return `<div class="appbar"><div class="brand"><div class="brandmark"></div><div class="title-wrap"><div class="k">World Zero</div><div class="t">${title}</div></div></div>${right||'<span style="width:36px"></span>'}</div>`; }
+function topbar(title,right){ return `<div class="topbar"><div class="back">‹</div><div class="tt">${title||''}</div>${right||'<span style="width:34px"></span>'}</div>`; }
+const searchBtn = `<button class="iconbtn">${ICON.search}</button>`;
+const moreBtn = `<div class="back" style="font-size:20px;line-height:0">⋯</div>`;
+function pav(bg,l,cls){ return `<div class="pav${cls?' '+cls:''}" style="background:${bg}">${l}</div>`; }
+function stars(n,cls){ let s=''; for(let i=1;i<=5;i++) s+=`<span class="${i<=n?'':'off'}">★</span>`; return `<div class="${cls||'stars'}">${s}</div>`; }
+function diffDots(d){ return `<span class="diff">${[1,2,3].map(x=>`<i class="${x<=d?'on':''}"></i>`).join('')}</span>`; }
+function sec(label,right){ return `<div class="sechead" style="margin:12px 2px 2px"><span class="k">${label}</span><span class="rule"></span>${right||''}</div>`; }
+
+const TASKS = [
+  { t:'A Very Human Thing', fac:'everymen', desc:'Do something quietly kind for a stranger, then write down exactly what happened.', pv:20, diff:1, slots:'1 / 20' },
+  { t:'Somewhere No One Needs To Be', fac:'ephemerists', desc:'Go to a place with no purpose. Document the nothing you find there.', pv:15, diff:2, slots:'3 slots' },
+  { t:'Knowledge Is Free', fac:'snide', desc:'Teach a real skill to someone for free. Proof is their words, not yours.', pv:25, diff:2, slots:'5 / 12' },
+  { t:'Let Him (or Her) Cook', fac:'wow', desc:'Cook a meal from scratch for people you love. Feed at least three.', pv:30, diff:3, slots:'Open' },
+  { t:'Lacunae', fac:'singularity', desc:'Find a gap in a system everyone trusts, and map it carefully.', pv:40, diff:3, slots:'2 / 6' }
+];
+function taskCard(t){
+  return `<div class="tcard"><div class="edge" style="background:${FAC[t.fac]}"></div>
+    <div class="fchip"><i style="background:${FAC[t.fac]}"></i>${FACNAME[t.fac]}</div>
+    <div class="tcard-title">${t.t}</div>
+    <div class="tcard-desc">${t.desc}</div>
+    <div class="tcard-foot"><span class="ppill">+${t.pv} pts</span>${diffDots(t.diff)}<span class="metatxt">${t.slots}</span></div>
+  </div>`;
+}
+
+const PROOFS = [
+  { a:'Reza', av:AVC[3], fac:'ephemerists', t:'The empty lot behind the station', r:4, v:128, c:14, time:'2h' },
+  { a:'Ida',  av:AVC[1], fac:'everymen', t:'Carried her groceries up four floors', r:5, v:210, c:31, time:'6h' },
+  { a:'Bo',   av:AVC[5], fac:null, t:'Taught my neighbor to solder', r:4, v:76, c:8, time:'1d' }
+];
+function proofCard(p){
+  return `<div class="pcard">
+    <div class="pcard-head">${pav(p.av,p.a[0])}<div><div class="nm">${p.a}</div><div class="sub"><span style="color:${p.fac?FAC[p.fac]:'var(--text-3)'}">●</span> ${p.fac?FACNAME[p.fac]:'Unaffiliated'} · ${p.time} ago</div></div></div>
+    <div class="pcard-media media">Photo</div>
+    <div class="pcard-body"><div class="pcard-title">${p.t}</div>
+      <div class="pcard-foot">${stars(p.r)}<span class="votecount">${p.r.toFixed(1)} · ${p.v} votes · ${p.c} comments</span></div></div>
+  </div>`;
+}
+
+/* ---- 04 Tasks ---- */
+function tasksBrowse(){
+  return status() + appbar2('Tasks', searchBtn) +
+  `<div class="body">
+    <div class="chips"><span class="chip2 on">All</span><span class="chip2">Solo</span><span class="chip2">Collab</span><span class="chip2">Open slots</span><span class="sortbtn">⇅ Sort</span></div>
+    ${TASKS.map(taskCard).join('')}
+  </div>` + `<div class="tabbar">${tabbar(1)}</div>`;
+}
+function taskDetail(){
+  const proofs = [
+    { a:'Ida', av:AVC[1], r:5 }, { a:'Reza', av:AVC[3], r:4 }, { a:'Bo', av:AVC[5], r:4 }
+  ];
+  return status() + topbar('', moreBtn) +
+  `<div class="body" style="padding-top:0">
+    <div class="fchip" style="margin:2px 0 10px"><i style="background:${FAC.everymen}"></i>Everymen</div>
+    <h1 class="stitle">A Very Human Thing</h1>
+    <div class="tcard-foot" style="margin:14px 0"><span class="ppill">+20 pts</span>${diffDots(1)}<span class="metatxt">1 / 20 slots</span></div>
+    <p class="para">Do something quietly kind for a stranger — no audience, no reward expected. Then come back and write down exactly what happened, in your own words.</p>
+    <p class="para">Solo task. Proof is a short write-up and, if you have one, a photo. Honesty over spectacle.</p>
+    ${sec('Proofs · 3')}
+    <div>${proofs.map(p=>`<div class="cmt" style="align-items:center"><div class="cav" style="background:${p.av}">${p.a[0]}</div><div class="cb"><div class="cn">${p.a}</div>${stars(p.r)}</div><div class="media" style="width:46px;height:46px;flex:none">IMG</div></div>`).join('')}</div>
+    ${sec('Comments · 2')}
+    <div class="cmt"><div class="cav" style="background:${AVC[0]}">M</div><div class="cb"><div class="cn">Molly <span style="color:var(--text-3);font-weight:400">· 1d</span></div><div class="ct">Signing up. This one's been on my mind.</div></div></div>
+    <div class="cmt"><div class="cav" style="background:${AVC[2]}">J</div><div class="cb"><div class="cn">Jae <span style="color:var(--text-3);font-weight:400">· 3d</span></div><div class="ct">Did this last era. Changed how I walk around my block.</div></div></div>
+  </div>
+  <div class="sticky-cta"><button class="btn primary" style="flex:1">Sign up for this task</button></div>`;
+}
+
+/* ---- 05 Praxis ---- */
+function praxisFeed(){
+  return status() + appbar2('Praxis', searchBtn) +
+  `<div class="body">
+    <div class="chips"><span class="chip2 on">Latest</span><span class="chip2">Top rated</span><span class="chip2">Following</span></div>
+    ${PROOFS.map(proofCard).join('')}
+  </div>` + `<div class="tabbar">${tabbar(2)}</div>`;
+}
+function praxisDetail(){
+  return status() + topbar('', moreBtn) +
+  `<div class="body" style="padding-top:2px">
+    <div class="pcard-head" style="padding:4px 0 12px">${pav(AVC[1],'I')}<div style="flex:1"><div class="nm">Ida</div><div class="sub"><span style="color:${FAC.everymen}">●</span> Everymen · 6h ago</div></div><span class="chip2">Follow</span></div>
+    <div class="media" style="height:230px;margin-bottom:14px">Photo</div>
+    <h1 class="stitle" style="font-size:22px">Carried her groceries up four floors</h1>
+    <div class="mdprev" style="margin-top:10px">
+      <p>She was resting on the second landing with four bags. I took the heavy two and we talked the rest of the way up.</p>
+      <p>Her name is Perpetua. She's 84 and has opinions about everyone on her floor.</p>
+    </div>
+    <div class="votebar" style="margin:8px 0 4px"><div class="votelbl">Rate this proof</div><div class="vstars">★★★★<span class="off">★</span></div><div class="votelbl">4.0 average · 210 votes</div></div>
+    ${sec('Comments · 3')}
+    <div class="cmt"><div class="cav" style="background:${AVC[3]}">R</div><div class="cb"><div class="cn">Reza <span style="color:var(--text-3);font-weight:400">· 4h</span></div><div class="ct">Perpetua sounds like a whole era of stories.</div></div></div>
+    <div class="cmt"><div class="cav" style="background:${AVC[0]}">M</div><div class="cb"><div class="cn">Molly <span style="color:var(--text-3);font-weight:400">· 5h</span></div><div class="ct">This is exactly the point of the game.</div></div></div>
+  </div>
+  <div class="sticky-cta"><div class="searchbar" style="flex:1;border-radius:999px">Add a comment…</div><button class="btn primary" style="flex:none;padding:13px 16px">Post</button></div>`;
+}
+function composerWrite(){
+  return status() +
+  `<div class="topbar"><a href="#" class="act" style="color:var(--text-2)">Cancel</a><div class="tt" style="flex:1;text-align:center;font-size:16px">New Praxis</div><a href="#" class="act">Submit</a></div>
+  <div class="body" style="gap:14px">
+    <div class="seg"><button class="on">Write</button><button>Preview</button></div>
+    <div class="forrow"><span>FOR TASK</span><b>A Very Human Thing ▾</b></div>
+    <input class="field" value="I helped a stranger today" />
+    <textarea class="ta">## What I did
+
+I saw someone drop a folder of papers in the wind and helped chase them down. We laughed about it.
+
+- caught 6 of 7 pages
+- the 7th is somewhere over the river now</textarea>
+    <div><label class="form-lbl">Evidence</label><div class="mgrid"><div class="media">Photo</div><div class="media">Photo</div><div class="madd">+<small>Add</small></div></div></div>
+  </div>
+  <div class="kbd-acc"><span style="font-weight:700">B</span><span style="font-style:italic">I</span><span>#</span><span>“ ”</span><span>≡</span><span class="ph">▦ Photo</span></div>
+  <div class="kbd">On-screen keyboard</div>`;
+}
+function composerPreview(){
+  return status() +
+  `<div class="topbar"><a href="#" class="act" style="color:var(--text-2)">Cancel</a><div class="tt" style="flex:1;text-align:center;font-size:16px">New Praxis</div><a href="#" class="act">Submit</a></div>
+  <div class="body" style="gap:14px">
+    <div class="seg"><button>Write</button><button class="on">Preview</button></div>
+    <div class="forrow"><span>FOR TASK</span><b>A Very Human Thing</b></div>
+    <div class="media" style="height:190px">Photo</div>
+    <div class="mgrid" style="grid-template-columns:repeat(4,1fr)"><div class="media" style="aspect-ratio:1">1</div><div class="media" style="aspect-ratio:1">2</div></div>
+    <div class="mdprev">
+      <h3>What I did</h3>
+      <p>I saw someone drop a folder of papers in the wind and helped chase them down. We laughed about it.</p>
+      <ul style="margin:0;padding:0;list-style:none"><li>• caught 6 of 7 pages</li><li>• the 7th is somewhere over the river now</li></ul>
+    </div>
+  </div>
+  <div class="sticky-cta"><button class="btn primary" style="flex:1">Submit proof</button></div>`;
+}
+
+/* ---- 06 Players ---- */
+const PLAYERS = [
+  { n:'Perpetua', fac:'everymen', lv:9, pts:'2,140', av:AVC[4] },
+  { n:'Reza', fac:'ephemerists', lv:7, pts:'1,880', av:AVC[3] },
+  { n:'Jae', fac:'snide', lv:6, pts:'1,510', av:AVC[2] },
+  { n:'Molly', fac:null, lv:4, pts:'340', av:AVC[0] },
+  { n:'Bo', fac:null, lv:3, pts:'295', av:AVC[5] }
+];
+function players(){
+  return status() + appbar2('Players', searchBtn) +
+  `<div class="body">
+    <div class="chips"><span class="chip2 on">Top</span><span class="chip2">New</span><span class="chip2">Near you</span></div>
+    <div>${PLAYERS.map((p,i)=>`<div class="prow2"><div class="rank">${i+1}</div>${pav(p.av,p.n[0])}<div class="pinfo"><div class="n">${p.n}</div><div class="m"><i style="background:${p.fac?FAC[p.fac]:'#8a8a86'}"></i>${p.fac?FACNAME[p.fac]:'Unaffiliated'} · Lv ${p.lv}</div></div><div class="ppts2"><b>${p.pts}</b><span>pts</span></div></div>`).join('')}</div>
+  </div>` + `<div class="tabbar">${tabbar(3)}</div>`;
+}
+function playerProfile(){
+  return status() + topbar('', moreBtn) +
+  `<div class="body" style="padding-top:0">
+    <div style="text-align:center;padding:2px 0 4px">
+      <div class="ring" style="width:78px;height:78px;margin:0 auto"><div class="av" style="background:${AVC[3]};font-size:30px">R</div></div>
+      <div class="name" style="font-family:var(--headline);font-style:var(--headline-style);font-size:24px;margin-top:10px;color:var(--text-1)">Reza</div>
+      <div class="meta" style="font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--text-2);margin-top:5px"><span style="color:${FAC.ephemerists}">Ephemerists</span> · Level 7</div>
+    </div>
+    <div class="stats" style="margin:16px 0"><div class="stat"><b>1,880</b><span>Points</span></div><div class="stat"><b>63</b><span>Votes</span></div><div class="stat"><b>18</b><span>Praxis</span></div></div>
+    <div class="segtabs"><div class="segtab on">Praxis</div><div class="segtab">Tasks</div></div>
+    <div class="thumbs" style="margin-top:10px">${Array.from({length:6}).map(()=>`<div class="media">Photo</div>`).join('')}</div>
+  </div>`;
+}
+
+/* ---- 07 Factions ---- */
+const FACTIONS = [
+  { n:'UA', c:'#c2541f', m:214 }, { n:'Wow', c:'#ec5f99', m:188 },
+  { n:'SNIDE', c:'#6fae00', m:301 }, { n:'Ephemerists', c:'#1d6e72', m:97 },
+  { n:'Singularity', c:'#2563eb', m:143 }, { n:'Everymen', c:'#c1272d', m:256 },
+  { n:'Albescent', c:'#4a4a45', m:64 }
+];
+function factions(){
+  return status() + appbar2('Factions', searchBtn) +
+  `<div class="body">
+    <section class="card pad" style="display:flex;align-items:center;gap:12px">
+      <div style="width:34px;height:34px;border-radius:50%;flex:none;background:var(--ring)"></div>
+      <div><div style="font-family:var(--headline);font-style:var(--headline-style);font-size:16px;color:var(--text-1)">You're Unaffiliated</div><div style="font-size:11px;color:var(--text-2);margin-top:2px;line-height:1.4">Every path is open. Join a faction after your first task.</div></div>
+    </section>
+    <div class="fgrid">${FACTIONS.map(f=>`<div class="ftile" style="background:linear-gradient(170deg, rgba(255,255,255,.12), rgba(0,0,0,.5)), ${f.c}"><div class="fsig"></div><div class="fn">${f.n}</div><div class="fm">${f.m} members</div></div>`).join('')}</div>
+  </div>` + `<div class="tabbar">${tabbar(4)}</div>`;
+}
+function factionDetail(){
+  const c = '#c1272d';
+  return status() + topbar('', moreBtn) +
+  `<div class="body" style="padding-top:2px">
+    <div class="fhero" style="background:linear-gradient(160deg, rgba(255,255,255,.14), rgba(0,0,0,.4)), ${c}">
+      <div style="position:absolute;top:14px;right:14px;width:30px;height:30px;border-radius:8px;background:rgba(255,255,255,.28)"></div>
+      <div class="fh-name">Everymen</div>
+      <div class="fh-tag">Ordinary hands, extraordinary record. The faction of quiet, documented labor.</div>
+      <div class="fh-stat"><div><b>256</b><span>Members</span></div><div><b>41</b><span>Tasks</span></div><div><b>III</b><span>Era</span></div></div>
+    </div>
+    <p class="para" style="margin-top:14px">The Everymen believe the game is won in small, honest acts nobody applauds. Their proofs read like field reports. Join and your whole app takes on their paper-and-ink identity.</p>
+    ${sec('Top members')}
+    <div>${PLAYERS.slice(0,3).map((p,i)=>`<div class="prow2"><div class="rank">${i+1}</div>${pav(p.av,p.n[0])}<div class="pinfo"><div class="n">${p.n}</div><div class="m">Lv ${p.lv}</div></div><div class="ppts2"><b>${p.pts}</b><span>pts</span></div></div>`).join('')}</div>
+    ${sec('Recent praxis')}
+    <div class="thumbs" style="margin-top:8px">${Array.from({length:3}).map(()=>`<div class="media">Photo</div>`).join('')}</div>
+  </div>
+  <div class="sticky-cta"><button class="btn primary" style="flex:1">Join the Everymen</button></div>`;
+}
+
+/* ---- 08 Moments & utility ---- */
+function levelUp(){
+  const cols = ['#e2433f','#e07a3a','#e6b94f','#4ade80','#3aa0a4','#60a5fa','#f472b6'];
+  const conf = Array.from({length:16}).map((_,i)=>{
+    const c = cols[i%cols.length], left = (i*6.3+4)%96, dur = (2.4+ (i%5)*0.5).toFixed(1), del = ((i%7)*0.35).toFixed(2);
+    return `<i style="left:${left}%;background:${c};animation-duration:${dur}s;animation-delay:${del}s"></i>`;
+  }).join('');
+  return home('na') + `
+    <div class="lu-scrim">
+      <div class="confetti">${conf}</div>
+      <div class="lu-card">
+        <div class="lu-burst"><b>4</b></div>
+        <h3>Level up!</h3>
+        <p>You reached <b style="color:var(--text-1)">Level 4</b> — two new task slots just opened.</p>
+        <button class="btn primary" style="width:100%">Nice</button>
+      </div>
+    </div>`;
+}
+function search(){
+  return status() +
+  `<div class="topbar" style="gap:10px"><div class="back">‹</div><div class="searchbar" style="flex:1">${ICON.search} <span style="color:var(--text-1)">human&nbsp;</span><span style="color:var(--accent)">|</span></div></div>
+  <div class="body" style="padding-top:2px">
+    <div class="kicker" style="margin:6px 4px 2px">Recent</div>
+    <div class="sug">↺ <span>cooking tasks</span></div>
+    <div class="sug">↺ <span>Reza</span></div>
+    <div class="kicker" style="margin:14px 4px 2px">Results</div>
+    <div class="sug"><span style="color:${FAC.everymen}">◆</span> <span>A Very Human Thing</span><span class="sk">Task</span></div>
+    <div class="sug"><span style="color:var(--text-3)">◆</span> <span>Human After All</span><span class="sk">Task</span></div>
+    <div class="sug">${pav(AVC[4],'P',)} <span>Perpetua</span><span class="sk">Player</span></div>
+    <div class="sug"><span style="width:16px;height:16px;border-radius:4px;background:${FAC.wow};display:inline-block"></span> <span>Wow</span><span class="sk">Faction</span></div>
+  </div>`;
+}
+function settings(){
+  const row = (icon,label,val,tog) => `<div class="setrow"><div class="si">${icon}</div><div class="sl">${label}</div>${tog!==undefined?`<div class="toggle${tog?'':' off'}"><i></i></div>`:`<div class="sv">${val||''} ›</div>`}</div>`;
+  return status() + topbar('Settings') +
+  `<div class="body" style="padding-top:0">
+    <section class="card pad" style="display:flex;align-items:center;gap:12px">
+      <div class="ring" style="width:48px;height:48px"><div class="av" style="background:${AVC[0]};font-size:18px">M</div></div>
+      <div style="flex:1"><div style="font-family:var(--headline);font-style:var(--headline-style);font-size:18px;color:var(--text-1)">Molly</div><div style="font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--text-2);margin-top:2px">View profile ›</div></div>
+    </section>
+    <div class="kicker" style="margin:14px 4px 0">Account</div>
+    <div>${row('◍','Characters','2')}${row('◑','Notifications','On')}${row('▢','Privacy')}</div>
+    <div class="kicker" style="margin:14px 4px 0">Appearance</div>
+    <div>${row('◐','Dark mode','',true)}${row('≈','Reduce motion','',false)}</div>
+    <div class="kicker" style="margin:14px 4px 0">Support</div>
+    <div>${row('?','Help')}${row('i','About World Zero')}</div>
+    <button class="danger-btn" style="margin-top:16px">Sign out</button>
+  </div>`;
+}
+
+/* ---------- render all catalog rails ---------- */
+function renderRail(id, list){
+  document.getElementById(id).innerHTML = list.map(([label,fn])=>
+    ['light','dark'].map(th=>`
+      <div class="phone-wrap">
+        <div class="phone-tag"><b>${label}</b> · ${th[0].toUpperCase()+th.slice(1)}</div>
+        <div class="phone"><div class="screen" data-theme="${th}" data-treatment="na">${fn()}</div></div>
+      </div>`).join('')).join('');
+}
+renderRail('tasksRail',    [['Browse', tasksBrowse], ['Detail', taskDetail]]);
+renderRail('praxisRail',   [['Feed', praxisFeed], ['Detail', praxisDetail], ['Compose · Write', composerWrite], ['Compose · Preview', composerPreview]]);
+renderRail('playersRail',  [['Directory', players], ['Profile', playerProfile]]);
+renderRail('factionsRail', [['Directory', factions], ['Faction page', factionDetail]]);
+renderRail('momentsRail',  [['Level up', levelUp], ['Search', search], ['Settings', settings]]);
+
+/* ---------- light interactivity: tab switching + task tap ---------- */
+document.querySelectorAll('.rail').forEach(rail=>{
+  rail.addEventListener('click',e=>{
+    const tab = e.target.closest('.tab');
+    if(tab){
+      const bar = tab.closest('.tabbar');
+      bar.querySelectorAll('.tab').forEach(t=>t.setAttribute('aria-selected', t===tab));
+      return;
+    }
+    const sc = e.target.closest('.sheet-scrim');
+    if(sc){ sc.parentElement.querySelector('.sheet').style.display = sc.style.display = 'none'; }
+  });
+});
+</script>
+
+
+</body></html>
