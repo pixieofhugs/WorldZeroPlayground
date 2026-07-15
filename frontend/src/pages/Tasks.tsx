@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { listTasks, type TaskOut } from '../api/tasks'
+import { listTasks } from '../api/tasks'
 import { createPraxis } from '../api/praxis'
 import { getFactions, type FactionOut } from '../api/factions'
 import { getGameConfig, type FactionConfigOut } from '../api/gameConfig'
@@ -13,6 +13,7 @@ import FilterLevelNodes from '../components/ui/FilterLevelNodes'
 import { extractError } from '../utils/errors'
 import { useAuth } from '../auth/AuthContext'
 import { computeDisplayPoints } from '../utils/points'
+import { useResource } from '../hooks/useResource'
 
 const LEVEL_FILTERS = [0, 1, 2, 3, 4, 5]
 
@@ -23,14 +24,11 @@ export default function Tasks() {
   const navigate = useNavigate()
   const characterId = user?.character?.id
 
-  const [tasks, setTasks] = useState<TaskOut[]>([])
   const [factions, setFactions] = useState<FactionOut[]>([])
   const [factionConfigs, setFactionConfigs] = useState<FactionConfigOut[]>([])
   const [status, setStatus] = useState('All')
   const [faction, setFaction] = useState('')
   const [level, setLevel] = useState<number | ''>('')
-  const [loading, setLoading] = useState(true)
-  const [fetchError, setFetchError] = useState<string | null>(null)
   const [signupMsg, setSignupMsg] = useState<{ id: number; msg: string; ok: boolean } | null>(null)
 
   useEffect(() => {
@@ -40,19 +38,17 @@ export default function Tasks() {
       .catch(() => {})
   }, [])
 
-  useEffect(() => {
-    setLoading(true)
-    setFetchError(null)
-    listTasks({
-      status: status === 'All' ? undefined : status,
-      faction: faction || undefined,
-      level: level === '' ? undefined : level,
-      exclude_character_id: characterId,
-    })
-      .then(setTasks)
-      .catch((err) => setFetchError(extractError(err, "Couldn't load tasks.")))
-      .finally(() => setLoading(false))
-  }, [status, faction, level, characterId])
+  const { data, loading, error } = useResource(
+    () =>
+      listTasks({
+        status: status === 'All' ? undefined : status,
+        faction: faction || undefined,
+        level: level === '' ? undefined : level,
+        exclude_character_id: characterId,
+      }),
+    [status, faction, level, characterId],
+  )
+  const tasks = data ?? []
 
   const handleSignup = async (id: number) => {
     setSignupMsg(null)
@@ -87,9 +83,9 @@ export default function Tasks() {
 
       {loading ? (
         <p className="font-body text-muted">{t('listPage.loading')}</p>
-      ) : fetchError ? (
+      ) : error ? (
         <p className="font-body text-sm text-red-600 border-2 border-red-300 px-3 py-2">
-          {fetchError}{' '}
+          {extractError(error, "Couldn't load tasks.")}{' '}
           <button onClick={() => window.location.reload()} className="underline">{tc('states.tryRefreshing')}</button>
         </p>
       ) : tasks.length === 0 ? (
