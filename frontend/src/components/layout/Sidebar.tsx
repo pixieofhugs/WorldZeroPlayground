@@ -1,12 +1,11 @@
 import { useEffect, useState, type CSSProperties } from 'react'
 import { Link } from 'react-router-dom'
-import { Trans, useTranslation } from 'react-i18next'
+import { useTranslation } from 'react-i18next'
 import { useAuth } from '../../auth/AuthContext'
 import { getActivityFeed, type ActivityFeedItem } from '../../api/activityFeed'
 import { relativeTime } from '../../utils/dates'
 import { factionCssVar, factionName } from '../../utils/factions'
 import { mediaUrl } from '../../utils/media'
-import FeedBadge from '../feed/FeedBadge'
 import { useMyActiveTasks } from '../../hooks/useMyActiveTasks'
 import type { PraxisType } from '../../api/praxis'
 import { useMyCharacterStats } from '../../hooks/useMyCharacterStats'
@@ -16,9 +15,44 @@ import { useGameConfig } from '../../hooks/useGameConfig'
 
 const DEFAULT_MAX_TASK_SLOTS = 20
 
+/** Shared panel shell for the redesigned sidebar (unaffiliated rainbow style). */
+const panelStyle: CSSProperties = {
+  position: 'relative',
+  overflow: 'hidden',
+  background: 'var(--color-bg-surface)',
+  border: '1px solid var(--color-border)',
+  borderRadius: 'var(--radius-xl)',
+  padding: 18,
+}
+
+const sectionLabel: CSSProperties = {
+  fontFamily: 'var(--font-body)',
+  fontSize: 10,
+  letterSpacing: '0.22em',
+  textTransform: 'uppercase',
+  color: 'var(--color-text-secondary)',
+}
+
+/** "LABEL ——————" header: eyebrow + a rule that fades out to the right. */
+function SectionHeader({ label }: { label: string }) {
+  return (
+    <div className="flex items-center gap-2.5 mb-3.5">
+      <span style={sectionLabel}>{label}</span>
+      <span
+        style={{
+          flex: 1,
+          height: 1,
+          background: 'linear-gradient(90deg, var(--color-border-strong), transparent)',
+        }}
+      />
+    </div>
+  )
+}
+
 /**
- * Always-on right sidebar (Style Guide §4.2).
- * Character card + pending requests + active tasks + recent global activity + propose button.
+ * Always-on right sidebar (Style Guide §4.2), redesigned into the unaffiliated
+ * "all paths" rainbow-spectrum identity: character card + pending requests +
+ * in-progress tasks + recent global activity + propose CTA.
  */
 export default function Sidebar() {
   const { t } = useTranslation('common')
@@ -50,65 +84,92 @@ export default function Sidebar() {
   const slotPercent = Math.min((slotCount / maxTaskSlots) * 100, 100)
 
   return (
-    <aside className="flex flex-col gap-3 w-64">
+    <aside className="flex flex-col gap-4 w-full">
       {/* ── Character Card ── */}
       {character ? (
-        <div className="sidebar-card">
-          <div className="flex items-baseline justify-between mb-2">
-            <span className="eyebrow" style={{ fontSize: 8, color: 'var(--color-text-tertiary)' }}>
-              {t('sidebar.characterCard.eyebrow')}
-            </span>
+        <section style={panelStyle}>
+          {/* signature rainbow rule (this panel only) */}
+          <span
+            style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              right: 0,
+              height: 2,
+              opacity: 0.85,
+              background: 'var(--faction-default-rainbow)',
+            }}
+          />
+          <div className="flex items-center justify-between mb-4">
+            <span style={sectionLabel}>{t('sidebar.characterCard.eyebrow')}</span>
             <Link
               to={`/characters/${character.id}/edit`}
-              className="eyebrow hover:underline"
-              style={{ fontSize: 8, color: 'var(--color-text-tertiary)' }}
+              className="hover:opacity-80"
+              style={{
+                fontFamily: 'var(--font-body)',
+                fontSize: 10,
+                letterSpacing: '0.16em',
+                textTransform: 'uppercase',
+                color: 'var(--faction-default-card-muted)',
+                textDecoration: 'none',
+                borderBottom: '1px solid var(--color-border-strong)',
+                paddingBottom: 1,
+              }}
             >
               {t('sidebar.characterCard.edit')}
             </Link>
           </div>
-          <div className="flex items-center gap-3 mb-3">
-            {character.avatar_url ? (
-              <img
-                src={mediaUrl(character.avatar_url)}
-                alt={character.display_name}
-                className="shrink-0 rounded-full"
-                style={{ width: 40, height: 40, objectFit: 'cover' }}
-              />
-            ) : (
-              <div
-                className="shrink-0 rounded-full"
-                style={{
-                  width: 40,
-                  height: 40,
-                  background: `linear-gradient(135deg, ${factionCssVar(character.faction_slug, 'light')}, ${factionCssVar(character.faction_slug)})`,
-                }}
-              />
-            )}
+
+          <div className="flex items-center gap-3.5 mb-4">
+            {/* avatar in a rainbow ring (unaffiliated / all-paths mark) */}
+            <div
+              className="shrink-0 rounded-full"
+              style={{ width: 58, height: 58, padding: 3, background: 'var(--faction-default-ring)' }}
+            >
+              {character.avatar_url ? (
+                <img
+                  src={mediaUrl(character.avatar_url)}
+                  alt={character.display_name}
+                  className="w-full h-full rounded-full"
+                  style={{ objectFit: 'cover' }}
+                />
+              ) : (
+                <div
+                  className="w-full h-full rounded-full"
+                  style={{
+                    background: `linear-gradient(135deg, ${factionCssVar(character.faction_slug, 'light')}, ${factionCssVar(character.faction_slug)})`,
+                  }}
+                />
+              )}
+            </div>
             <div className="min-w-0">
               <Link
                 to={`/characters/${character.id}`}
-                className="font-display italic text-sm block truncate"
-                style={{ color: 'var(--color-text-primary)' }}
+                className="font-display italic block truncate"
+                style={{ fontSize: 24, lineHeight: 1.05, color: 'var(--color-text-primary)', textDecoration: 'none' }}
               >
                 {character.display_name}
               </Link>
-              <span
-                className="font-body uppercase block truncate"
+              <div
+                className="truncate"
                 style={{
-                  fontSize: 9,
-                  letterSpacing: '0.12em',
-                  color: factionCssVar(character.faction_slug),
+                  marginTop: 5,
+                  fontFamily: 'var(--font-body)',
+                  fontSize: 10,
+                  letterSpacing: '0.16em',
+                  textTransform: 'uppercase',
+                  color: 'var(--color-text-secondary)',
                 }}
               >
                 {t('sidebar.characterCard.factionLevel', {
                   faction: factionName(character.faction_slug),
                   level: character.level,
                 })}
-              </span>
+              </div>
             </div>
           </div>
 
-          <div className="grid grid-cols-3 gap-1">
+          <div className="grid grid-cols-3 gap-2">
             {[
               { label: t('sidebar.stats.score'), value: character.score?.toLocaleString() ?? '0' },
               { label: t('sidebar.stats.votes'), value: votesReceived.toLocaleString() },
@@ -116,31 +177,43 @@ export default function Sidebar() {
             ].map((stat) => (
               <div
                 key={stat.label}
-                className="text-center rounded-md py-1.5"
-                style={{ background: 'var(--color-bg-surface-alt)' }}
+                className="text-center"
+                style={{
+                  background: 'var(--color-bg-surface)',
+                  border: '1px solid var(--color-border)',
+                  borderRadius: 9,
+                  padding: '11px 8px',
+                }}
               >
-                <div className="font-body font-bold text-sm" style={{ color: 'var(--color-text-primary)' }}>
+                <div className="font-display" style={{ fontSize: 22, lineHeight: 1, color: 'var(--color-text-primary)' }}>
                   {stat.value}
                 </div>
-                <div className="eyebrow" style={{ fontSize: 7 }}>
+                <div
+                  style={{
+                    marginTop: 6,
+                    fontFamily: 'var(--font-body)',
+                    fontSize: 8,
+                    letterSpacing: '0.2em',
+                    textTransform: 'uppercase',
+                    color: 'var(--color-text-secondary)',
+                  }}
+                >
                   {stat.label}
                 </div>
               </div>
             ))}
           </div>
-        </div>
+        </section>
       ) : (
-        <div className="sidebar-card">
+        <section style={panelStyle}>
           <p className="eyebrow text-center">{t('sidebar.characterCard.noCharacter')}</p>
-        </div>
+        </section>
       )}
 
       {/* ── Pending Requests Panel ── */}
       {pendingRequests.length > 0 && (
-        <div className="sidebar-card">
-          <p className="eyebrow mb-2">
-            {t('sidebar.pendingRequests.heading', { count: pendingRequests.length })}
-          </p>
+        <section style={panelStyle}>
+          <SectionHeader label={t('sidebar.pendingRequests.heading', { count: pendingRequests.length })} />
           <div className="flex flex-col gap-1.5">
             {pendingRequests.map((item, index) => (
               <PendingRequestRow
@@ -156,75 +229,75 @@ export default function Sidebar() {
               />
             ))}
           </div>
-        </div>
+        </section>
       )}
 
-      {/* ── Active Tasks Panel ── */}
-      <div className="sidebar-card">
-        <p className="eyebrow mb-2">{t('sidebar.activeTasks.heading')}</p>
+      {/* ── In Progress Panel ── */}
+      <section style={panelStyle}>
+        <SectionHeader label={t('sidebar.activeTasks.heading')} />
 
         {activeTasks.length === 0 ? (
           <p className="font-body text-xs" style={{ color: 'var(--color-text-tertiary)' }}>
             {t('sidebar.activeTasks.empty')}
           </p>
         ) : (
-          <div className="flex flex-col gap-1.5">
+          <div className="flex flex-col gap-3">
             {activeTasks.map((praxis) => (
-              <div
-                key={praxis.id}
-                className="flex items-start justify-between"
-                style={{
-                  borderLeft: `3px solid var(--color-border)`,
-                  paddingLeft: 8,
-                }}
-              >
-                <div className="min-w-0">
-                  <Link
-                    to={`/praxes/${praxis.id}/edit`}
-                    className="font-body block"
-                    style={{ fontSize: 10, fontWeight: 700, color: 'var(--color-text-primary)', textDecoration: 'none', lineHeight: 1.3 }}
-                  >
-                    {praxis.task_title}
-                  </Link>
-                </div>
-                <FeedBadge
-                  type={praxis.type === 'solo' ? 'global' : praxis.type}
-                  label={praxisTypeLabel[praxis.type]}
-                />
+              <div key={praxis.id} className="flex items-start justify-between gap-3">
+                <Link
+                  to={`/praxes/${praxis.id}/edit`}
+                  className="font-display min-w-0"
+                  style={{ fontSize: 17, lineHeight: 1.25, color: 'var(--color-text-primary)', textDecoration: 'none' }}
+                >
+                  {praxis.task_title}
+                </Link>
+                <span
+                  className="shrink-0"
+                  style={{
+                    fontFamily: 'var(--font-body)',
+                    fontSize: 9,
+                    letterSpacing: '0.16em',
+                    textTransform: 'uppercase',
+                    color: 'var(--faction-default-card-muted)',
+                    padding: '4px 9px',
+                    border: '1px solid var(--color-border-strong)',
+                    borderRadius: 999,
+                  }}
+                >
+                  {praxisTypeLabel[praxis.type]}
+                </span>
               </div>
             ))}
           </div>
         )}
 
-        {/* Progress bar */}
-        <div className="mt-2">
-          <div
-            className="overflow-hidden"
-            style={{
-              height: 4,
-              borderRadius: 2,
-              background: 'var(--color-bg-surface-alt)',
-            }}
-          >
+        {/* Slot-usage progress bar — rainbow fill, drifts unless reduced-motion */}
+        <div className="mt-4">
+          <div className="overflow-hidden" style={{ height: 6, borderRadius: 999, background: 'var(--color-bg-surface-alt)' }}>
             <div
+              className="cs-shimmer"
               style={{
                 height: '100%',
                 width: `${slotPercent}%`,
-                background: 'var(--faction-singularity)',
-                borderRadius: 2,
+                borderRadius: 999,
+                background: 'var(--faction-default-rainbow)',
+                backgroundSize: '200% 100%',
                 transition: 'width 300ms',
               }}
             />
           </div>
-          <p className="font-body" style={{ fontSize: 8, color: 'var(--color-text-tertiary)', marginTop: 3 }}>
+          <p
+            className="font-body text-right"
+            style={{ fontSize: 10, letterSpacing: '0.08em', color: 'var(--color-text-secondary)', marginTop: 8 }}
+          >
             {t('sidebar.activeTasks.slots', { count: slotCount, max: maxTaskSlots })}
           </p>
         </div>
-      </div>
+      </section>
 
       {/* ── Recent Global Activity Panel ── */}
-      <div className="sidebar-card">
-        <p className="eyebrow mb-2">{t('sidebar.globalActivity.heading')}</p>
+      <section style={panelStyle}>
+        <SectionHeader label={t('sidebar.globalActivity.heading')} />
 
         {globalActivity.length === 0 ? (
           <p className="font-body text-xs" style={{ color: 'var(--color-text-tertiary)' }}>
@@ -235,64 +308,98 @@ export default function Sidebar() {
             {globalActivity.map((item, index) => {
               const isTask = item.type === 'global_task'
               const isEra = item.type === 'era_announcement'
+              const isLast = index === globalActivity.length - 1
+              const taskId = item.payload.task_id
+              const title = isEra
+                ? item.payload.era_name
+                : item.payload.task_title ||
+                  item.payload.praxis_title ||
+                  t('sidebar.globalActivity.fallbackTaskTitle')
+              const kicker = isEra
+                ? t('sidebar.globalActivity.kickerEra')
+                : isTask
+                  ? t('sidebar.globalActivity.kickerNewTask')
+                  : item.actor_display_name
+              const titleStyle: CSSProperties = {
+                fontSize: 14,
+                lineHeight: 1.3,
+                color: 'var(--color-text-primary)',
+                textDecoration: 'none',
+              }
               return (
                 <div
                   key={`${item.type}-${index}`}
-                  className="py-1"
+                  className="flex gap-3"
                   style={{
-                    borderTop: index > 0 ? '1px dashed var(--color-border)' : undefined,
+                    padding: '13px 0',
+                    borderBottom: isLast ? undefined : '1px solid var(--color-border)',
                   }}
                 >
-                  <div className="font-body" style={{ fontSize: 9, lineHeight: 1.4 }}>
-                    {isEra ? (
-                      <span style={{ fontWeight: 700, color: 'var(--faction-ephemerists)' }}>
-                        {t('sidebar.globalActivity.eraBegun', { eraName: item.payload.era_name })}
-                      </span>
-                    ) : isTask ? (
-                      <Trans
-                        i18nKey="sidebar.globalActivity.newTask"
-                        values={{ title: item.payload.task_title }}
-                        components={[
-                          <span style={{ fontWeight: 700, color: 'var(--color-text-primary)' }} />,
-                          <Link
-                            to={`/tasks/${item.payload.task_id}`}
-                            style={{ color: 'var(--color-text-secondary)', textDecoration: 'none' }}
-                          />,
-                        ]}
-                      />
+                  {/* rainbow bullet — sampled from the default spectrum by position */}
+                  <span
+                    className="shrink-0"
+                    style={{
+                      width: 6,
+                      height: 6,
+                      marginTop: 5,
+                      borderRadius: 2,
+                      background: 'var(--faction-default-rainbow)',
+                      backgroundSize: '600% 100%',
+                      backgroundPosition: `${index * 20}% 0`,
+                    }}
+                  />
+                  <div className="min-w-0">
+                    <div
+                      style={{
+                        fontFamily: 'var(--font-body)',
+                        fontSize: 9,
+                        letterSpacing: '0.18em',
+                        textTransform: 'uppercase',
+                        color: 'var(--color-text-secondary)',
+                        marginBottom: 3,
+                      }}
+                    >
+                      {kicker}
+                    </div>
+                    {isTask && taskId ? (
+                      <Link to={`/tasks/${taskId}`} className="font-display block truncate" style={titleStyle}>
+                        {title}
+                      </Link>
                     ) : (
-                      <Trans
-                        i18nKey="sidebar.globalActivity.completedTask"
-                        values={{
-                          actor: item.actor_display_name,
-                          title:
-                            item.payload.task_title ||
-                            item.payload.praxis_title ||
-                            t('sidebar.globalActivity.fallbackTaskTitle'),
-                        }}
-                        components={[
-                          <span style={{ fontWeight: 700, color: 'var(--color-text-primary)' }} />,
-                          <span style={{ color: 'var(--color-text-secondary)' }} />,
-                        ]}
-                      />
+                      <div className="font-display truncate" style={titleStyle}>
+                        {title}
+                      </div>
                     )}
+                    <div className="font-body" style={{ marginTop: 3, fontSize: 10, color: 'var(--color-text-tertiary)' }}>
+                      {relativeTime(item.timestamp)}
+                    </div>
                   </div>
-                  <span className="font-body" style={{ fontSize: 7, color: 'var(--color-text-tertiary)' }}>
-                    {relativeTime(item.timestamp)}
-                  </span>
                 </div>
               )
             })}
           </div>
         )}
-      </div>
+      </section>
 
-      {/* ── Propose a Task Button ── */}
+      {/* ── Propose a Task CTA ── */}
       <Link
         to="/propose-task"
-        className="btn-primary text-center w-full block"
+        className="font-display w-full flex items-center justify-center gap-2.5 hover:opacity-90"
+        style={{
+          boxSizing: 'border-box',
+          padding: 14,
+          borderRadius: 11,
+          fontSize: 14,
+          letterSpacing: '0.14em',
+          textTransform: 'uppercase',
+          color: 'var(--color-bg-page)',
+          background: 'var(--color-text-primary)',
+          border: '1px solid var(--color-text-primary)',
+          textDecoration: 'none',
+        }}
       >
-        {t('actions.proposeTask')}
+        <span style={{ fontSize: 15, lineHeight: 1 }}>+</span>
+        <span>{t('actions.proposeTask')}</span>
       </Link>
     </aside>
   )
