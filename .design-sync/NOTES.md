@@ -70,3 +70,46 @@ re-sync.
   Tailwind config, or the `index.html` font `<link>` changes, regenerate.
 - The preview auth mock's `MOCK_USER` is inlined in `provider.tsx` — if `CurrentUser`'s shape
   changes, update it or the provider won't type-check.
+
+## [2026-07-15] Mobile page-archetypes added (86 → 140 components)
+The mobile-native epic (#494 graph) landed 54 full-screen mobile page skins across 9
+surfaces; this sync added them all. What changed here:
+
+- **componentSrcMap 86 → 140**; barrel `index.tsx` regenerated (+54 named default re-exports
+  under `pages/<surface>/mobileArchetypes/`). `overrides` gained 54 entries — every mobile
+  archetype is `cardMode:single` + `viewport:"390x760"` (they're full phone screens).
+- **Fork `source-kit.mjs`** (`cfg.libOverrides`): added `pages`,`mobilearchetypes` to `GENERIC_DIR`
+  so the 54 group by SURFACE (`fielddesk`/`tasks`/`taskdetail`/`praxisdetail`/`editpraxis`/
+  `factiondetail`/…) instead of one flat `mobilearchetypes` bucket. Recreate the fork symlink
+  on a fresh clone: `ln -sfn ../.ds-sync/node_modules .design-sync/node_modules` (it imports bare `ts-morph`).
+- **Provider now mocks `GET /factions`** — `DefaultFactionsDirectory` self-fetches (no props);
+  without the mock its preview shows the offline-error state. The `/auth/me` mock was already there.
+- **`_state.tsx`** (NEW, committed) — 10 surface STATE builders the mobile previews consume:
+  `fieldDeskState / tasksState / taskDetailState / praxisDetailState / editPraxisState /
+  factionDetailState / createCharacterState / editCharacterState` (all take a slug) + `profileProps(slug)`
+  + `playersProps`. 8 surfaces take a single `{state}` prop → previews are slug-swaps (content
+  flavors automatically via the slug-aware `_fixtures`); 3 singletons take custom props.
+- **`_fixtures.tsx` additions**: `factionOuts`, `makeFactionConfig`, `gameFactionConfigs`,
+  `makePraxisCard`, `praxisCardsFor`.
+
+### Grading insight (don't re-panic next sync)
+All 86 existing components showed as `changed`/`pendingGrade` but their **renderHash was byte-identical**
+(0 of 86 changed) — the epic only moved their upstream source fingerprint (`sourceKey`), not the emitted
+files or the render. When renderHash is unchanged vs the anchor, re-grading is a formality (grade good).
+
+### Upload optimization used this run
+Uploaded only genuinely-changed files (bundle, README, CSS, the 54 mobile components + their `_preview`)
+= 274 files, NOT all 708. The 86 existing components + `_vendor` were provably byte-identical on the
+remote (their `sourceHashes` matched the anchor exactly; `styleSha` matched → CSS unchanged), so re-sending
+them was pure waste. `deletePaths` was `[]` — the hand-uploaded design handoffs (`mobile-system/`,
+`templates/`, `screenshots/`, `design_handoff_*`, `uploads/`) are NOT converter output and stay untouched.
+
+## Re-sync risks (mobile)
+- **State-builder drift**: each mobile archetype renders from a hook-state interface (`FieldDeskHomeState`,
+  `TaskDetailState`, `EditPraxisState`, …). If one gains a new REQUIRED field, its `_state.tsx` builder must
+  be updated or the preview won't compile → drops to floor card. `EditPraxisState` is the largest (~47 fields).
+- **`source-kit.mjs` fork**: on re-sync, diff `.design-sync/overrides/source-kit.mjs` against the bundled
+  `lib/source-kit.mjs` and re-apply the 2-string GENERIC_DIR change if upstream moved.
+- **Provider `/factions` mock**: inlines the 7 live slugs; if `FactionOut` gains required fields or the slug
+  set changes, update the mock in `frontend/.ds-kit/provider.tsx`.
+- **Mobile viewport**: `390x760` single-card shows the top fold of long screens by design — not a defect.

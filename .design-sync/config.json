@@ -95,7 +95,61 @@
     "WowFactionHero": "src/components/cards/WowFactionHero.tsx",
     "WowFeedFrame": "src/components/feed/WowFeedFrame.tsx",
     "WowTaskCard": "src/components/cards/WowTaskCard.tsx",
-    "WowVote": "src/components/vote/WowVote.tsx"
+    "WowVote": "src/components/vote/WowVote.tsx",
+    "DefaultCreateCharacter": "src/pages/characterPaths/mobileArchetypes/DefaultCreateCharacter.tsx",
+    "DefaultEditCharacter": "src/pages/characterPaths/mobileArchetypes/DefaultEditCharacter.tsx",
+    "DefaultProfile": "src/pages/characterProfile/mobileArchetypes/DefaultProfile.tsx",
+    "AlbescentComposer": "src/pages/editPraxis/mobileArchetypes/AlbescentComposer.tsx",
+    "DefaultEditPraxis": "src/pages/editPraxis/mobileArchetypes/DefaultEditPraxis.tsx",
+    "EphemeristsComposer": "src/pages/editPraxis/mobileArchetypes/EphemeristsComposer.tsx",
+    "EverymenComposer": "src/pages/editPraxis/mobileArchetypes/EverymenComposer.tsx",
+    "SingularityComposer": "src/pages/editPraxis/mobileArchetypes/SingularityComposer.tsx",
+    "SnideComposer": "src/pages/editPraxis/mobileArchetypes/SnideComposer.tsx",
+    "UaComposer": "src/pages/editPraxis/mobileArchetypes/UaComposer.tsx",
+    "WowEditPraxis": "src/pages/editPraxis/mobileArchetypes/WowEditPraxis.tsx",
+    "AlbescentFactionPage": "src/pages/factionDetail/mobileArchetypes/AlbescentFactionPage.tsx",
+    "DefaultFactionPage": "src/pages/factionDetail/mobileArchetypes/DefaultFactionPage.tsx",
+    "EphemeristsFactionPage": "src/pages/factionDetail/mobileArchetypes/EphemeristsFactionPage.tsx",
+    "EverymenFactionPage": "src/pages/factionDetail/mobileArchetypes/EverymenFactionPage.tsx",
+    "SingularityFactionPage": "src/pages/factionDetail/mobileArchetypes/SingularityFactionPage.tsx",
+    "SnideFactionPage": "src/pages/factionDetail/mobileArchetypes/SnideFactionPage.tsx",
+    "UaFactionPage": "src/pages/factionDetail/mobileArchetypes/UaFactionPage.tsx",
+    "WowFactionPage": "src/pages/factionDetail/mobileArchetypes/WowFactionPage.tsx",
+    "DefaultFactionsDirectory": "src/pages/factions/mobileArchetypes/DefaultFactionsDirectory.tsx",
+    "AlbescentHome": "src/pages/fieldDesk/mobileArchetypes/AlbescentHome.tsx",
+    "DefaultFieldDesk": "src/pages/fieldDesk/mobileArchetypes/DefaultFieldDesk.tsx",
+    "EphemeristsHome": "src/pages/fieldDesk/mobileArchetypes/EphemeristsHome.tsx",
+    "EverymenHome": "src/pages/fieldDesk/mobileArchetypes/EverymenHome.tsx",
+    "SingularityHome": "src/pages/fieldDesk/mobileArchetypes/SingularityHome.tsx",
+    "SnideHome": "src/pages/fieldDesk/mobileArchetypes/SnideHome.tsx",
+    "UaHome": "src/pages/fieldDesk/mobileArchetypes/UaHome.tsx",
+    "WowFieldDesk": "src/pages/fieldDesk/mobileArchetypes/WowFieldDesk.tsx",
+    "DefaultPlayers": "src/pages/players/mobileArchetypes/DefaultPlayers.tsx",
+    "AlbescentPraxisDetail": "src/pages/praxisDetail/mobileArchetypes/AlbescentPraxisDetail.tsx",
+    "DefaultPraxisDetail": "src/pages/praxisDetail/mobileArchetypes/DefaultPraxisDetail.tsx",
+    "EphemeristsPraxisDetail": "src/pages/praxisDetail/mobileArchetypes/EphemeristsPraxisDetail.tsx",
+    "EverymenPraxisDetail": "src/pages/praxisDetail/mobileArchetypes/EverymenPraxisDetail.tsx",
+    "SingularityPraxisDetail": "src/pages/praxisDetail/mobileArchetypes/SingularityPraxisDetail.tsx",
+    "SnidePraxisDetail": "src/pages/praxisDetail/mobileArchetypes/SnidePraxisDetail.tsx",
+    "UaPraxisDetail": "src/pages/praxisDetail/mobileArchetypes/UaPraxisDetail.tsx",
+    "WowPraxisDetail": "src/pages/praxisDetail/mobileArchetypes/WowPraxisDetail.tsx",
+    "DefaultSettings": "src/pages/settings/mobileArchetypes/DefaultSettings.tsx",
+    "AlbescentTaskDetail": "src/pages/taskDetail/mobileArchetypes/AlbescentTaskDetail.tsx",
+    "DefaultTaskDetail": "src/pages/taskDetail/mobileArchetypes/DefaultTaskDetail.tsx",
+    "EphemeristsTaskDetail": "src/pages/taskDetail/mobileArchetypes/EphemeristsTaskDetail.tsx",
+    "EverymenTaskDetail": "src/pages/taskDetail/mobileArchetypes/EverymenTaskDetail.tsx",
+    "SingularityTaskDetail": "src/pages/taskDetail/mobileArchetypes/SingularityTaskDetail.tsx",
+    "SnideTaskDetail": "src/pages/taskDetail/mobileArchetypes/SnideTaskDetail.tsx",
+    "UaTaskDetail": "src/pages/taskDetail/mobileArchetypes/UaTaskDetail.tsx",
+    "WowTaskDetail": "src/pages/taskDetail/mobileArchetypes/WowTaskDetail.tsx",
+    "AlbescentTaskList": "src/pages/tasks/mobileArchetypes/AlbescentTaskList.tsx",
+    "DefaultTasks": "src/pages/tasks/mobileArchetypes/DefaultTasks.tsx",
+    "EphemeristsTaskList": "src/pages/tasks/mobileArchetypes/EphemeristsTaskList.tsx",
+    "EverymenTaskList": "src/pages/tasks/mobileArchetypes/EverymenTaskList.tsx",
+    "SingularityTaskList": "src/pages/tasks/mobileArchetypes/SingularityTaskList.tsx",
+    "SnideTaskList": "src/pages/tasks/mobileArchetypes/SnideTaskList.tsx",
+    "UaTaskList": "src/pages/tasks/mobileArchetypes/UaTaskList.tsx",
+    "WowTaskList": "src/pages/tasks/mobileArchetypes/WowTaskList.tsx"
   },
   "overrides": {
     "FactionBackdrop": {
@@ -153,7 +207,226 @@
     },
     "FilterStamps": {
       "cardMode": "column"
+    },
+    "DefaultCreateCharacter": {
+      "cardMode": "single",
+      "viewport": "390x760"
+    },
+    "DefaultEditCharacter": {
+      "cardMode": "single",
+      "viewport": "390x760"
+    },
+    "DefaultProfile": {
+      "cardMode": "single",
+      "viewport": "390x760"
+    },
+    "AlbescentComposer": {
+      "cardMode": "single",
+      "viewport": "390x760"
+    },
+    "DefaultEditPraxis": {
+      "cardMode": "single",
+      "viewport": "390x760"
+    },
+    "EphemeristsComposer": {
+      "cardMode": "single",
+      "viewport": "390x760"
+    },
+    "EverymenComposer": {
+      "cardMode": "single",
+      "viewport": "390x760"
+    },
+    "SingularityComposer": {
+      "cardMode": "single",
+      "viewport": "390x760"
+    },
+    "SnideComposer": {
+      "cardMode": "single",
+      "viewport": "390x760"
+    },
+    "UaComposer": {
+      "cardMode": "single",
+      "viewport": "390x760"
+    },
+    "WowEditPraxis": {
+      "cardMode": "single",
+      "viewport": "390x760"
+    },
+    "AlbescentFactionPage": {
+      "cardMode": "single",
+      "viewport": "390x760"
+    },
+    "DefaultFactionPage": {
+      "cardMode": "single",
+      "viewport": "390x760"
+    },
+    "EphemeristsFactionPage": {
+      "cardMode": "single",
+      "viewport": "390x760"
+    },
+    "EverymenFactionPage": {
+      "cardMode": "single",
+      "viewport": "390x760"
+    },
+    "SingularityFactionPage": {
+      "cardMode": "single",
+      "viewport": "390x760"
+    },
+    "SnideFactionPage": {
+      "cardMode": "single",
+      "viewport": "390x760"
+    },
+    "UaFactionPage": {
+      "cardMode": "single",
+      "viewport": "390x760"
+    },
+    "WowFactionPage": {
+      "cardMode": "single",
+      "viewport": "390x760"
+    },
+    "DefaultFactionsDirectory": {
+      "cardMode": "single",
+      "viewport": "390x760"
+    },
+    "AlbescentHome": {
+      "cardMode": "single",
+      "viewport": "390x760"
+    },
+    "DefaultFieldDesk": {
+      "cardMode": "single",
+      "viewport": "390x760"
+    },
+    "EphemeristsHome": {
+      "cardMode": "single",
+      "viewport": "390x760"
+    },
+    "EverymenHome": {
+      "cardMode": "single",
+      "viewport": "390x760"
+    },
+    "SingularityHome": {
+      "cardMode": "single",
+      "viewport": "390x760"
+    },
+    "SnideHome": {
+      "cardMode": "single",
+      "viewport": "390x760"
+    },
+    "UaHome": {
+      "cardMode": "single",
+      "viewport": "390x760"
+    },
+    "WowFieldDesk": {
+      "cardMode": "single",
+      "viewport": "390x760"
+    },
+    "DefaultPlayers": {
+      "cardMode": "single",
+      "viewport": "390x760"
+    },
+    "AlbescentPraxisDetail": {
+      "cardMode": "single",
+      "viewport": "390x760"
+    },
+    "DefaultPraxisDetail": {
+      "cardMode": "single",
+      "viewport": "390x760"
+    },
+    "EphemeristsPraxisDetail": {
+      "cardMode": "single",
+      "viewport": "390x760"
+    },
+    "EverymenPraxisDetail": {
+      "cardMode": "single",
+      "viewport": "390x760"
+    },
+    "SingularityPraxisDetail": {
+      "cardMode": "single",
+      "viewport": "390x760"
+    },
+    "SnidePraxisDetail": {
+      "cardMode": "single",
+      "viewport": "390x760"
+    },
+    "UaPraxisDetail": {
+      "cardMode": "single",
+      "viewport": "390x760"
+    },
+    "WowPraxisDetail": {
+      "cardMode": "single",
+      "viewport": "390x760"
+    },
+    "DefaultSettings": {
+      "cardMode": "single",
+      "viewport": "390x760"
+    },
+    "AlbescentTaskDetail": {
+      "cardMode": "single",
+      "viewport": "390x760"
+    },
+    "DefaultTaskDetail": {
+      "cardMode": "single",
+      "viewport": "390x760"
+    },
+    "EphemeristsTaskDetail": {
+      "cardMode": "single",
+      "viewport": "390x760"
+    },
+    "EverymenTaskDetail": {
+      "cardMode": "single",
+      "viewport": "390x760"
+    },
+    "SingularityTaskDetail": {
+      "cardMode": "single",
+      "viewport": "390x760"
+    },
+    "SnideTaskDetail": {
+      "cardMode": "single",
+      "viewport": "390x760"
+    },
+    "UaTaskDetail": {
+      "cardMode": "single",
+      "viewport": "390x760"
+    },
+    "WowTaskDetail": {
+      "cardMode": "single",
+      "viewport": "390x760"
+    },
+    "AlbescentTaskList": {
+      "cardMode": "single",
+      "viewport": "390x760"
+    },
+    "DefaultTasks": {
+      "cardMode": "single",
+      "viewport": "390x760"
+    },
+    "EphemeristsTaskList": {
+      "cardMode": "single",
+      "viewport": "390x760"
+    },
+    "EverymenTaskList": {
+      "cardMode": "single",
+      "viewport": "390x760"
+    },
+    "SingularityTaskList": {
+      "cardMode": "single",
+      "viewport": "390x760"
+    },
+    "SnideTaskList": {
+      "cardMode": "single",
+      "viewport": "390x760"
+    },
+    "UaTaskList": {
+      "cardMode": "single",
+      "viewport": "390x760"
+    },
+    "WowTaskList": {
+      "cardMode": "single",
+      "viewport": "390x760"
     }
   },
-  "readmeHeader": ".design-sync/conventions.md"
+  "readmeHeader": ".design-sync/conventions.md",
+  "libOverrides": {
+    "source-kit.mjs": "GENERIC_DIR += pages,mobileArchetypes → mobile page-archetypes group by surface"
+  }
 }

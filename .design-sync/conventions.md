@@ -50,3 +50,20 @@ faction's own component and let it carry its identity.
   a **dispatcher** (`TaskCard`, `VoteUI`, `FactionAvatar`, `FactionFeedFrame`,
   `FactionCard`) and pass a faction slug when you want "the right skin for this faction";
   reach for a named leaf (`UATaskCard`, `SnideVote`, …) only to pin one faction.
+
+### Mobile page archetypes (full-screen, not atoms)
+The kit also ships **mobile full-screen page skins** — compose the whole screen,
+don't cherry-pick pieces. Nine surfaces, each faction-skinned with a `Default`
+(na) fallback: **FieldDesk** (home — `DefaultFieldDesk`, `WowFieldDesk`, `UaHome`…),
+**Tasks** (browse — `DefaultTasks`, `UaTaskList`…), **TaskDetail**, **PraxisDetail**
+(reading), **EditPraxis** (composer — `WowEditPraxis`, `UaComposer`…), **FactionPage**,
+plus singletons `DefaultPlayers`, `DefaultProfile`, `DefaultSettings`,
+`DefaultCreateCharacter`, `DefaultEditCharacter`, `DefaultFactionsDirectory`.
+
+Each takes a single hook-shaped `state` prop (`FieldDeskHomeState`, `TasksState`,
+`TaskDetailState`, …) — the screen is presentation-only; assemble the state object
+(character, tasks, praxis, handlers) and pass it. They wear the same faction dress
+as the desktop cards (UA gilt salon, SNIDE ransom, Ephemerists codex, Singularity
+terminal, Wow whimsy, Everymen broadsheet, Albescent vellum) and stack single-column
+for one-hand use. In the component picker they're grouped by surface
+(`fielddesk`, `tasks`, `taskdetail`, `praxisdetail`, `editpraxis`, `factiondetail`).

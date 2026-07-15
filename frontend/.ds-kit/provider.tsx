@@ -56,10 +56,18 @@ function installPreviewAuth(): void {
   i18n.options.saveMissing = false;
   i18n.options.missingKeyHandler = undefined;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  api.defaults.adapter = (config: any) =>
-    String(config.url ?? "").includes("/auth/me")
-      ? Promise.resolve({ data: MOCK_USER, status: 200, statusText: "OK", headers: {}, config })
-      : Promise.reject(new Error("design-sync preview: network disabled"));
+  api.defaults.adapter = (config: any) => {
+    const url = String(config.url ?? "");
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const ok = (data: any) =>
+      Promise.resolve({ data, status: 200, statusText: "OK", headers: {}, config });
+    if (url.includes("/auth/me")) return ok(MOCK_USER);
+    // The mobile factions-directory self-fetches GET /factions (slug-only list);
+    // serve it so the preview renders the populated grid, not the offline error.
+    if (/\/factions(\?|$)/.test(url))
+      return ok(["ua", "wow", "snide", "ephemerists", "singularity", "everymen", "albescent"].map((slug) => ({ slug })));
+    return Promise.reject(new Error("design-sync preview: network disabled"));
+  };
 }
 
 export function DSProvider({ children }: { children: ReactNode }) {
