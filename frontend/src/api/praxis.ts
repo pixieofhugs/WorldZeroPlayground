@@ -1,4 +1,5 @@
 import api from './axios'
+import { clearVoteOverrides } from '../components/vote/voteOverrides'
 import type { TaskOut } from './tasks'
 import type { FlagReason } from '../utils/flagReasons'
 
@@ -147,11 +148,14 @@ export async function listPraxes(filters?: {
   offset?: number
 }): Promise<PraxisCardOut[]> {
   const { data } = await api.get<PraxisCardOut[]>('/praxes', { params: filters })
+  // Server truth — retire any local vote overrides so they can't double-count (#626).
+  clearVoteOverrides(data.map((praxis) => praxis.id))
   return data
 }
 
 export async function getPraxis(id: number): Promise<PraxisOut> {
   const { data } = await api.get<PraxisOut>(`/praxes/${id}`)
+  clearVoteOverrides([id])
   return data
 }
 

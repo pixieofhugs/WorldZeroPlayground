@@ -1,4 +1,5 @@
 import api from './axios'
+import { clearVoteOverrides } from '../components/vote/voteOverrides'
 
 export interface VoteOut {
   id: number
@@ -31,6 +32,8 @@ export async function castVote(praxisId: number, value: number): Promise<VoteOut
 
 export async function getVotes(praxisId: number): Promise<VoteSummary> {
   const { data } = await api.get<VoteSummary>(`/praxes/${praxisId}/votes`)
+  // Server truth — retire any local override so it can't double-count (#626).
+  clearVoteOverrides([praxisId])
   return data
 }
 

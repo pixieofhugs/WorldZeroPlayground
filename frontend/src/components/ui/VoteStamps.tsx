@@ -1,12 +1,16 @@
-import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { castVote } from '../../api/votes'
-import { useAuth } from '../../auth/AuthContext'
-import { extractError } from '../../utils/errors'
+import { useVote } from '../vote/useVote'
+import type { VoteUIProps } from '../vote/VoteUI'
 
 /**
  * Stamp-style vote buttons replacing star rating (Style Guide §13.1).
  * Five rectangular stamps numbered 1–5 with word labels and value-specific colors.
+ *
+ * The fallback every unregistered / `na`-faction praxis renders, so it drives
+ * from the shared {@link useVote} hook exactly like the seven faction variants
+ * do — cast, error handling and the tally override (#626) stay in one place.
+ * It keeps its own summary markup because its copy is the common:voteStamps
+ * catalog branch rather than votes:chrome.
  */
 
 interface StampConfig {
@@ -15,20 +19,9 @@ interface StampConfig {
   color: string
 }
 
-interface Props {
-  praxisId: number
-  currentValue?: number
-  points?: number | null
-  totalVotes?: number
-  mode?: 'caster' | 'summary'
-}
-
-export default function VoteStamps({ praxisId, currentValue, points, totalVotes }: Props) {
+export default function VoteStamps({ praxisId, currentValue, points, totalVotes }: VoteUIProps) {
   const { t } = useTranslation('common')
-  const { user, refetch } = useAuth()
-  const [selected, setSelected] = useState(currentValue ?? 0)
-  const [saving, setSaving] = useState(false)
-  const [error, setError] = useState('')
+  const { user, selected, saving, error, vote } = useVote(praxisId, currentValue)
 
   const stamps: StampConfig[] = [
     { value: 1, label: t('voteStamps.a-start'), color: 'var(--vote-1)' },
@@ -37,21 +30,6 @@ export default function VoteStamps({ praxisId, currentValue, points, totalVotes 
     { value: 4, label: t('voteStamps.excellent'), color: 'var(--vote-4)' },
     { value: 5, label: t('voteStamps.legendary'), color: 'var(--vote-5)' },
   ]
-
-  const handleVote = async (stars: number) => {
-    setSaving(true)
-    setError('')
-    try {
-      await castVote(praxisId, stars)
-      setSelected(stars)
-      // Refresh sidebar character stats (score/level may have changed)
-      void refetch()
-    } catch (err) {
-      setError(extractError(err, t('voteStamps.saveError')))
-    } finally {
-      setSaving(false)
-    }
-  }
 
   return (
     <div>
@@ -66,7 +44,7 @@ export default function VoteStamps({ praxisId, currentValue, points, totalVotes 
               <div key={stamp.value} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3 }}>
                 <button
                   disabled={saving}
-                  onClick={() => void handleVote(stamp.value)}
+                  onClick={() => void vote(stamp.value)}
                   className={active ? 'vote-stamp vote-stamp-active' : 'vote-stamp'}
                   style={{ '--stamp-color': stamp.color } as React.CSSProperties}
                   aria-label={t('voteStamps.rateAria', { value: stamp.value, label: stamp.label })}
