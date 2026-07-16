@@ -21,12 +21,12 @@ const panelStyle: CSSProperties = {
   background: 'var(--color-bg-surface)',
   border: '1px solid var(--color-border)',
   borderRadius: 'var(--radius-xl)',
-  padding: 18,
+  padding: 'var(--space-lg)',
 }
 
 const sectionLabel: CSSProperties = {
   fontFamily: 'var(--font-body)',
-  fontSize: 10,
+  fontSize: 'var(--text-base)',
   letterSpacing: '0.22em',
   textTransform: 'uppercase',
   color: 'var(--color-text-secondary)',
@@ -105,13 +105,13 @@ export default function Sidebar() {
               className="hover:opacity-80"
               style={{
                 fontFamily: 'var(--font-body)',
-                fontSize: 10,
+                fontSize: 'var(--text-base)',
                 letterSpacing: '0.16em',
                 textTransform: 'uppercase',
                 color: 'var(--faction-default-card-muted)',
                 textDecoration: 'none',
                 borderBottom: '1px solid var(--color-border-strong)',
-                paddingBottom: 1,
+                paddingBottom: 'var(--space-xs)',
               }}
             >
               {t('sidebar.characterCard.edit')}
@@ -122,7 +122,7 @@ export default function Sidebar() {
             {/* avatar in a rainbow ring (unaffiliated / all-paths mark) */}
             <div
               className="shrink-0 rounded-full"
-              style={{ width: 58, height: 58, padding: 3, background: 'var(--faction-default-ring)' }}
+              style={{ width: 58, height: 58, padding: 'var(--space-xs)', background: 'var(--faction-default-ring)' }}
             >
               {character.avatar_url ? (
                 <img
@@ -144,16 +144,16 @@ export default function Sidebar() {
               <Link
                 to={`/characters/${character.id}`}
                 className="font-display italic block truncate"
-                style={{ fontSize: 24, lineHeight: 1.05, color: 'var(--color-text-primary)', textDecoration: 'none' }}
+                style={{ fontSize: 'var(--text-3xl)', lineHeight: 1.05, color: 'var(--color-text-primary)', textDecoration: 'none' }}
               >
                 {character.display_name}
               </Link>
               <div
                 className="truncate"
                 style={{
-                  marginTop: 5,
+                  marginTop: 'var(--space-xs)',
                   fontFamily: 'var(--font-body)',
-                  fontSize: 10,
+                  fontSize: 'var(--text-base)',
                   letterSpacing: '0.16em',
                   textTransform: 'uppercase',
                   color: 'var(--color-text-secondary)',
@@ -180,17 +180,17 @@ export default function Sidebar() {
                   background: 'var(--color-bg-surface)',
                   border: '1px solid var(--color-border)',
                   borderRadius: 9,
-                  padding: '11px 8px',
+                  padding: 'var(--space-md) var(--space-sm)',
                 }}
               >
-                <div className="font-display" style={{ fontSize: 22, lineHeight: 1, color: 'var(--color-text-primary)' }}>
+                <div className="font-display" style={{ fontSize: 'var(--text-2xl)', lineHeight: 1, color: 'var(--color-text-primary)' }}>
                   {stat.value}
                 </div>
                 <div
                   style={{
-                    marginTop: 6,
+                    marginTop: 'var(--space-sm)',
                     fontFamily: 'var(--font-body)',
-                    fontSize: 8,
+                    fontSize: 'var(--text-xs)',
                     letterSpacing: '0.2em',
                     textTransform: 'uppercase',
                     color: 'var(--color-text-secondary)',
@@ -245,7 +245,7 @@ export default function Sidebar() {
                 <Link
                   to={`/praxes/${praxis.id}/edit`}
                   className="font-display min-w-0"
-                  style={{ fontSize: 17, lineHeight: 1.25, color: 'var(--color-text-primary)', textDecoration: 'none' }}
+                  style={{ fontSize: 'var(--text-2xl)', lineHeight: 1.25, color: 'var(--color-text-primary)', textDecoration: 'none' }}
                 >
                   {praxis.task_title}
                 </Link>
@@ -253,11 +253,11 @@ export default function Sidebar() {
                   className="shrink-0"
                   style={{
                     fontFamily: 'var(--font-body)',
-                    fontSize: 9,
+                    fontSize: 'var(--text-sm)',
                     letterSpacing: '0.16em',
                     textTransform: 'uppercase',
                     color: 'var(--faction-default-card-muted)',
-                    padding: '4px 9px',
+                    padding: 'var(--space-xs) var(--space-sm)',
                     border: '1px solid var(--color-border-strong)',
                     borderRadius: 999,
                   }}
@@ -286,7 +286,7 @@ export default function Sidebar() {
           </div>
           <p
             className="font-body text-right"
-            style={{ fontSize: 10, letterSpacing: '0.08em', color: 'var(--color-text-secondary)', marginTop: 8 }}
+            style={{ fontSize: 'var(--text-base)', letterSpacing: '0.08em', color: 'var(--color-text-secondary)', marginTop: 'var(--space-sm)' }}
           >
             {t('sidebar.activeTasks.slots', { count: slotCount, max: maxTaskSlots })}
           </p>
@@ -319,7 +319,7 @@ export default function Sidebar() {
                   ? t('sidebar.globalActivity.kickerNewTask')
                   : item.actor_display_name
               const titleStyle: CSSProperties = {
-                fontSize: 14,
+                fontSize: 'var(--text-2xl)',
                 lineHeight: 1.3,
                 color: 'var(--color-text-primary)',
                 textDecoration: 'none',
@@ -329,7 +329,7 @@ export default function Sidebar() {
                   key={`${item.type}-${index}`}
                   className="flex gap-3"
                   style={{
-                    padding: '13px 0',
+                    padding: 'var(--space-md) 0',
                     borderBottom: isLast ? undefined : '1px solid var(--color-border)',
                   }}
                 >
@@ -339,7 +339,7 @@ export default function Sidebar() {
                     style={{
                       width: 6,
                       height: 6,
-                      marginTop: 5,
+                      marginTop: 'var(--space-xs)',
                       borderRadius: 2,
                       background: 'var(--faction-default-rainbow)',
                       backgroundSize: '600% 100%',
@@ -350,11 +350,11 @@ export default function Sidebar() {
                     <div
                       style={{
                         fontFamily: 'var(--font-body)',
-                        fontSize: 9,
+                        fontSize: 'var(--text-sm)',
                         letterSpacing: '0.18em',
                         textTransform: 'uppercase',
                         color: 'var(--color-text-secondary)',
-                        marginBottom: 3,
+                        marginBottom: 'var(--space-xs)',
                       }}
                     >
                       {kicker}
@@ -368,7 +368,7 @@ export default function Sidebar() {
                         {title}
                       </div>
                     )}
-                    <div className="font-body" style={{ marginTop: 3, fontSize: 10, color: 'var(--color-text-tertiary)' }}>
+                    <div className="font-body" style={{ marginTop: 'var(--space-xs)', fontSize: 'var(--text-base)', color: 'var(--color-text-tertiary)' }}>
                       {relativeTime(item.timestamp)}
                     </div>
                   </div>
@@ -385,9 +385,9 @@ export default function Sidebar() {
         className="font-display w-full flex items-center justify-center gap-2.5 hover:opacity-90"
         style={{
           boxSizing: 'border-box',
-          padding: 14,
+          padding: 'var(--space-lg)',
           borderRadius: 11,
-          fontSize: 14,
+          fontSize: 'var(--text-xl)',
           letterSpacing: '0.14em',
           textTransform: 'uppercase',
           color: 'var(--color-bg-page)',
@@ -396,7 +396,7 @@ export default function Sidebar() {
           textDecoration: 'none',
         }}
       >
-        <span style={{ fontSize: 15, lineHeight: 1 }}>+</span>
+        <span style={{ fontSize: 'var(--text-xl)', lineHeight: 1 }}>+</span>
         <span>{t('actions.proposeTask')}</span>
       </Link>
     </aside>
@@ -405,11 +405,11 @@ export default function Sidebar() {
 
 const REQUEST_BUTTON_BASE: CSSProperties = {
   fontFamily: "'Courier Prime', monospace",
-  fontSize: 8,
+  fontSize: 'var(--text-xs)',
   fontWeight: 700,
   textTransform: 'uppercase',
   letterSpacing: '0.08em',
-  padding: '3px 8px',
+  padding: 'var(--space-xs) var(--space-sm)',
 }
 
 /**
@@ -458,7 +458,7 @@ function PendingRequestRow({
           <Link
             to={`/characters/${actorId}`}
             className="font-body block truncate"
-            style={{ fontSize: 10, fontWeight: 700, color: 'var(--color-text-primary)', textDecoration: 'none' }}
+            style={{ fontSize: 'var(--text-base)', fontWeight: 700, color: 'var(--color-text-primary)', textDecoration: 'none' }}
           >
             {item.actor_display_name}
           </Link>
@@ -471,7 +471,7 @@ function PendingRequestRow({
           </Link>
         </div>
       </div>
-      <div className="flex items-center gap-1.5" style={{ marginTop: 4, marginLeft: 32 }}>
+      <div className="flex items-center gap-1.5" style={{ marginTop: 'var(--space-xs)', marginLeft: 'var(--space-2xl)' }}>
         <button
           onClick={() => respond(accept)}
           disabled={loading}
@@ -502,7 +502,7 @@ function PendingRequestRow({
       {error && (
         <span
           className="eyebrow block"
-          style={{ color: 'var(--color-danger)', marginTop: 3, marginLeft: 32 }}
+          style={{ color: 'var(--color-danger)', marginTop: 'var(--space-xs)', marginLeft: 'var(--space-2xl)' }}
         >
           {error}
         </span>
