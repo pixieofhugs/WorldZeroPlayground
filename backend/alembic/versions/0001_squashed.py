@@ -37,7 +37,7 @@ ENUMS: list[tuple[str, list[str]]] = [
     ("taskstatus", ["pending", "active", "retired"]),
     ("tasktype", ["standard", "metatask"]),
     ("praxistype", ["solo", "collab", "duel"]),
-    ("praxisstatus", ["in_progress", "submitted"]),
+    ("praxisstatus", ["in_progress", "pending", "submitted"]),
     ("praxisinvitestatus", ["pending", "accepted", "declined"]),
     ("mediatype", ["image", "video", "audio"]),
     ("moderationstatus", ["visible", "flagged", "hidden", "failed", "deleted"]),
