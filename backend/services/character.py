@@ -35,8 +35,9 @@ def build_character_out(
     """Flatten a Character row plus its (optional) CharacterStats into CharacterOut.
 
     votes_available is computed on read from stats.score and votes_spent_this_era.
-    badges (ADR-0033) is supplied only by the single-character read path; list
-    serializers omit it and the field defaults to empty.
+    badges (ADR-0033) is supplied by the caller and defaults to empty; list
+    callers should go through :func:`build_character_outs` so every context is
+    resolved in one batched query rather than one per character (#655).
     invitations (#243) is supplied only by the /auth/me active-character path so
     the frontend can detect newly-earned invitation letters; it defaults to empty
     everywhere else.
@@ -564,11 +565,35 @@ async def list_characters_for_viewer(
                 Character.id.notin_(active_member_ids),
             )
         )
+    # id ASC is the tiebreak, not decoration: most of the roster is tied at zero,
+    # and score alone leaves Postgres free to reshuffle equal-score rows between
+    # requests — which flickers the sky's top-N membership and its crown, and
+    # makes limit/offset paging silently duplicate and drop rows (#655).
     query = (
-        query.order_by(CharacterStats.score.desc().nulls_last())
+        query.order_by(CharacterStats.score.desc().nulls_last(), Character.id.asc())
         .limit(limit)
         .offset(offset)
     )
 
     result = await session.execute(query)
     return list(result.all())
+
+
+async def build_character_outs(
+    rows: list[tuple[Character, CharacterStats | None]],
+    session: AsyncSession,
+) -> list[CharacterOut]:
+    """Serialize a list page, badges included, in one extra query total (#655).
+
+    Both facts a badge condition consults are per-account aggregates, so the
+    whole page resolves through a single ``GROUP BY account_id`` — the N+1 that
+    kept badges off list paths (ADR-0033) is avoidable, not inherent. The query
+    count does not scale with ``len(rows)``.
+    """
+    from services.badge import build_badge_contexts, evaluate_badges
+
+    contexts = await build_badge_contexts([character for character, _ in rows], session)
+    return [
+        build_character_out(character, stats, badges=evaluate_badges(contexts[character.id]))
+        for character, stats in rows
+    ]

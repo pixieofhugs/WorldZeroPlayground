@@ -37,9 +37,8 @@ bool]`. They are **evaluated on read** in `services/badge.py` — no table, no
 A badge either holds right now or it doesn't; a new badge is one registry
 entry.
 
-- The payload is `{ key, name }[]` on `CharacterOut.badges`, populated
-  **only** by the single-character `GET /characters/{id}` — list serializers
-  leave it empty (no N+1 sibling queries).
+- The payload is `{ key, name }[]` on `CharacterOut.badges`. List serializers
+  may populate it — see the amendment below.
 - The **image is not in the payload**: the frontend maps `key` to a bundled
   SVG (`frontend/src/components/badges/badgeArt.tsx`), exactly like faction
   sigils.
@@ -50,6 +49,29 @@ entry.
 Seed pair (both key off one account owning multiple characters, ordered by
 `(created_at, id)`): `sock_puppeteer` on the account's earliest character,
 `sock_puppet` on every later one. A solo-account character has neither.
+
+### Amendment (#655) — list paths may serve badges, batched
+
+The original rule was **"badges never appear on a list path"**. That was the
+N+1 wearing the mask of a contract: the ban was a defence against one sibling
+query per character, and it outlived its reason. The Players redesign (The
+Constellation) puts a Badges column on the roster, and every fact a condition
+can consult — `account_character_count`, `is_earliest_on_account` — is a
+**per-account aggregate**, so a whole page resolves in one
+`GROUP BY account_id`.
+
+The replacement rule: **badges are never evaluated *per character* on a list
+path.** A list serializer populates them only through
+`services.badge.build_badge_contexts`, which takes the page's characters and
+returns every `BadgeContext` from a single query — one extra query total,
+regardless of page length. `build_character_outs` is that seam; a list caller
+that reaches for `build_badge_context` (singular) in a loop is the thing being
+banned, and it is the thing to keep banning.
+
+`GET /characters` (invite search) shares the serializer and therefore also
+serves badges. Accepted rather than papered over with an opt-in flag for one
+caller: `/characters/{id}` is already a public, unprotected route that renders
+the same badges, so this exposes nothing new.
 
 ## Rejected
 

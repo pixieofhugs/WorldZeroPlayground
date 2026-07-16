@@ -5,7 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from db import get_db
 from schemas.character import CharacterOut
-from services.character import build_character_out, list_characters_for_viewer
+from services.character import build_character_outs, list_characters_for_viewer
 
 router = APIRouter()
 
@@ -21,4 +21,4 @@ async def get_leaderboard(
     rows = await list_characters_for_viewer(
         session, faction_slug=faction, limit=limit, offset=offset
     )
-    return [build_character_out(character, stats) for character, stats in rows]
+    return await build_character_outs(rows, session)

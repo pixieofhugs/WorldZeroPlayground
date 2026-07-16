@@ -18,9 +18,11 @@ class CharacterOut(BaseModel):
     (see services.scoring.compute_votes_available); it reflects score growth
     and spent votes without a stored counter.
 
-    badges is evaluated on read (ADR-0033) and populated ONLY by the
-    single-character GET /characters/{id} — list serializers leave it empty
-    to avoid N+1 sibling queries. account_id / email never leave the backend.
+    badges is evaluated on read (ADR-0033) — never stored. List serializers may
+    populate it, but only via services.badge.build_badge_contexts, which resolves
+    a whole page in one GROUP BY account_id query; the rule is "never
+    per-character on a list path", not "never on a list path" (#655).
+    account_id / email never leave the backend.
     """
 
     model_config = ConfigDict(from_attributes=True)
