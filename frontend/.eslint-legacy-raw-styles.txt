@@ -52,7 +52,6 @@ src/components/imageEdit/ImageEditModal.tsx
 src/components/InvitationLetterPopup.tsx
 src/components/layout/MobileLayout.tsx
 src/components/layout/MobileTabBar.tsx
-src/components/layout/Sidebar.tsx
 src/components/LevelUpPopup.tsx
 src/components/MediaGallery.tsx
 src/components/NavBar.tsx
