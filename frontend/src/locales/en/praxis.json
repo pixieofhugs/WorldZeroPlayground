@@ -104,7 +104,7 @@
       "body": "If this content is inappropriate or violates the rules, flag it for admin review.",
       "flag": "Flag",
       "reasonGroupLabel": "Flag reason",
-      "notePlaceholder": "What's wrong? (optional note for the moderators)",
+      "notePlaceholder": "Add a note (optional)",
       "submit": "Submit flag",
       "submitting": "...",
       "cancel": "Cancel"
