@@ -25,8 +25,8 @@ function SprocketHoles() {
       style={{
         display: "flex",
         justifyContent: "center",
-        gap: 6,
-        padding: "4px 0",
+        gap: "var(--space-sm)",
+        padding: "var(--space-xs) 0",
       }}
     >
       {Array.from({ length: 5 }).map((_, index) => (
@@ -125,15 +125,21 @@ export default function SingularityTaskCard({
 
       <SprocketHoles />
 
-      <div style={{ padding: "4px 12px 8px", position: "relative", zIndex: 2 }}>
+      <div
+        style={{
+          padding: "var(--space-xs) var(--space-md) var(--space-sm)",
+          position: "relative",
+          zIndex: 2,
+        }}
+      >
         {/* Header */}
         <div
           style={{
-            fontSize: 7,
+            fontSize: "var(--text-xs)",
             color: "var(--faction-singularity-card-muted)",
             textTransform: "uppercase",
             letterSpacing: "0.15em",
-            marginBottom: 6,
+            marginBottom: "var(--space-sm)",
           }}
         >
           {i18n.t("feed:identity.singularity.protocol")}
@@ -143,7 +149,7 @@ export default function SingularityTaskCard({
               width: 5,
               height: 9,
               background: "var(--faction-singularity-card-text)",
-              marginLeft: 3,
+              marginLeft: "var(--space-xs)",
               verticalAlign: "middle",
               animation: "blink 1s step-end infinite",
             }}
@@ -156,8 +162,8 @@ export default function SingularityTaskCard({
         >
           <div
             style={{
-              fontSize: "var(--text-sm)",
-              marginBottom: 6,
+              fontSize: "var(--text-2xl)",
+              marginBottom: "var(--space-sm)",
               lineHeight: 1.3,
               overflowWrap: "anywhere",
             }}
@@ -172,7 +178,7 @@ export default function SingularityTaskCard({
             fontSize: "var(--text-xs)",
             color: "var(--faction-singularity-card-muted)",
             lineHeight: 1.6,
-            marginBottom: 6,
+            marginBottom: "var(--space-sm)",
           }}
         >
           <div>
@@ -180,7 +186,7 @@ export default function SingularityTaskCard({
             <span
               style={{
                 color: "var(--faction-singularity-card-text)",
-                fontSize: "var(--text-md)",
+                fontSize: "var(--text-2xl)",
                 fontWeight: 700,
               }}
             >
@@ -197,10 +203,10 @@ export default function SingularityTaskCard({
         {task.description && (
           <div
             style={{
-              fontSize: 7,
+              fontSize: "var(--text-xs)",
               color: "var(--faction-singularity-card-muted)",
               lineHeight: 1.4,
-              marginBottom: 6,
+              marginBottom: "var(--space-sm)",
               overflow: "hidden",
               display: "-webkit-box",
               WebkitLineClamp: 2,
@@ -219,12 +225,12 @@ export default function SingularityTaskCard({
               color: "var(--faction-singularity-card-text)",
               border: "1px solid var(--faction-singularity-card-text)",
               fontFamily: factionCssVar("singularity", "card-font"),
-              fontSize: 7,
+              fontSize: "var(--text-xs)",
               textTransform: "uppercase",
               letterSpacing: "0.1em",
-              padding: "2px 8px",
+              padding: "var(--space-xs) var(--space-sm)",
               cursor: "pointer",
-              marginBottom: 4,
+              marginBottom: "var(--space-xs)",
             }}
           >
             {">"} {i18n.t("feed:taskCard.singularity.signup")}
@@ -236,15 +242,15 @@ export default function SingularityTaskCard({
             display: "flex",
             justifyContent: "flex-end",
             borderTop: "1px solid var(--faction-singularity-border-hard)",
-            paddingTop: 5,
+            paddingTop: "var(--space-xs)",
           }}
         >
           <span
             style={{
               border: "1px solid var(--faction-singularity-card-text)",
               color: "var(--faction-singularity-card-text)",
-              fontSize: 7,
-              padding: "1px 6px",
+              fontSize: "var(--text-xs)",
+              padding: "var(--space-xs) var(--space-sm)",
               borderRadius: 6,
               textTransform: "uppercase",
             }}
