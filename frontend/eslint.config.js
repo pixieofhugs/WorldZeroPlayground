@@ -12,8 +12,10 @@
 // EXTEND the plugin defaults (which already exempt `t`/`i18next`, ALL-CAPS
 // constants, and ASCII punctuation); replacing rather than extending them would
 // turn every `t()` key and inline glyph into a false positive.
+import fs from 'node:fs'
 import tsParser from '@typescript-eslint/parser'
 import i18next from 'eslint-plugin-i18next'
+import sonarjs from 'eslint-plugin-sonarjs'
 
 // Attribute names whose values are never user-facing copy. a11y attributes
 // (aria-label, alt, title, placeholder) are deliberately absent — those ARE
@@ -85,6 +87,72 @@ const NON_COPY_WORDS = [
   /^[\p{Emoji}‍️]+$/u,
 ]
 
+// Lint guard for the type-scale/spacing token migration (issue #579): inline
+// styles must reference the --text-*/--space-* CSS variable scales, never a
+// raw pixel number. Catches both `fontSize: 7` and `fontSize: "9px"`, plus
+// multi-value shorthand strings like `padding: "4px 12px 8px"`.
+const STYLE_PROPS = new Set([
+  'fontSize',
+  'padding',
+  'paddingTop',
+  'paddingRight',
+  'paddingBottom',
+  'paddingLeft',
+  'margin',
+  'marginTop',
+  'marginRight',
+  'marginBottom',
+  'marginLeft',
+  'gap',
+  'rowGap',
+  'columnGap',
+])
+const RAW_PX_STRING = /^-?\d+(\.\d+)?px(\s+-?\d+(\.\d+)?px){0,3}$/
+
+function isRawPxValue(node) {
+  if (node.type !== 'Literal') return false
+  if (typeof node.value === 'number') return true
+  if (typeof node.value === 'string') return RAW_PX_STRING.test(node.value.trim())
+  return false
+}
+
+const noRawStyleValues = {
+  rules: {
+    'no-raw-style-values': {
+      meta: {
+        type: 'problem',
+        docs: {
+          description:
+            'Disallow raw pixel numbers for fontSize/padding/margin/gap — use the --text-*/--space-* token scales (WORLD_ZERO_STYLE.md).',
+        },
+        schema: [],
+      },
+      create(context) {
+        return {
+          Property(node) {
+            if (node.key.type !== 'Identifier' || !STYLE_PROPS.has(node.key.name)) return
+            if (isRawPxValue(node.value)) {
+              context.report({
+                node,
+                message: `Raw pixel value for "${node.key.name}" — use a --text-*/--space-* token instead of a hardcoded number.`,
+              })
+            }
+          },
+        }
+      },
+    },
+  },
+}
+
+// Files not yet migrated onto the token scale (issue #579). This list only
+// ever shrinks — migrating a file means deleting its line here, not adding
+// one. New files may never be added to it.
+const LEGACY_RAW_STYLE_FILES = fs
+  .readFileSync(new URL('./.eslint-legacy-raw-styles.txt', import.meta.url), 'utf8')
+  .split('\n')
+  .map((line) => line.trim())
+  .filter(Boolean)
+
 export default [
   {
     ignores: ['dist/**', 'node_modules/**', 'playwright-report/**', 'test-results/**'],
@@ -97,7 +165,7 @@ export default [
         ecmaFeatures: { jsx: true },
       },
     },
-    plugins: { i18next },
+    plugins: { i18next, local: noRawStyleValues, sonarjs },
     rules: {
       'i18next/no-literal-string': [
         'error',
@@ -111,6 +179,15 @@ export default [
           words: { exclude: NON_COPY_WORDS },
         },
       ],
+      'local/no-raw-style-values': 'error',
+      'sonarjs/no-identical-functions': 'error',
+    },
+  },
+  {
+    // Ratchet: existing violations are grandfathered until migrated.
+    files: LEGACY_RAW_STYLE_FILES,
+    rules: {
+      'local/no-raw-style-values': 'off',
     },
   },
   {
