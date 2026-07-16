@@ -6,43 +6,18 @@ import FilterFactionTabs from '../components/ui/FilterFactionTabs'
 import FilterLevelNodes from '../components/ui/FilterLevelNodes'
 import { extractError } from '../utils/errors'
 import { useFormFactor } from '../hooks/useFormFactor'
-import { pickVariant } from '../utils/factionDispatch'
 import { useTasks, type TasksState } from './tasks/useTasks'
 import DefaultTasks from './tasks/mobileArchetypes/DefaultTasks'
-import UaTaskList from './tasks/mobileArchetypes/UaTaskList'
-import SingularityTaskList from './tasks/mobileArchetypes/SingularityTaskList'
-import WowTaskList from './tasks/mobileArchetypes/WowTaskList'
-import EverymenTaskList from './tasks/mobileArchetypes/EverymenTaskList'
-import EphemeristsTaskList from './tasks/mobileArchetypes/EphemeristsTaskList'
-import AlbescentTaskList from './tasks/mobileArchetypes/AlbescentTaskList'
-import SnideTaskList from './tasks/mobileArchetypes/SnideTaskList'
-
-type MobileSkin = (props: { state: TasksState }) => JSX.Element | null
-
-// Parallel MOBILE registry, mirroring TaskDetail. Task browse shows every
-// faction's tasks, so — unlike task/praxis detail — it has no single task slug
-// to dispatch on; instead the VIEWING life's faction picks the skin, so a UA
-// member reads the catalogue in the gilt salon (#525). Unregistered factions
-// (and logged-out visitors) fall through to the Default mobile browse skin.
-export const MOBILE_ARCHETYPE_BY_SLUG: Record<string, MobileSkin> = {
-  ua: UaTaskList,
-  singularity: SingularityTaskList,
-  wow: WowTaskList,
-  everymen: EverymenTaskList,
-  ephemerists: EphemeristsTaskList,
-  albescent: AlbescentTaskList,
-  snide: SnideTaskList,
-}
 
 export default function Tasks() {
   const state = useTasks()
   const formFactor = useFormFactor()
 
-  if (formFactor === 'mobile') {
-    const viewerSlug = state.user?.character?.faction_slug ?? null
-    const Mobile = pickVariant(MOBILE_ARCHETYPE_BY_SLUG, viewerSlug, DefaultTasks)
-    return <Mobile state={state} />
-  }
+  // Mobile browse is faction-agnostic page chrome (#565): the page shows every
+  // faction's tasks, and each card in the results list picks its own skin from
+  // its task's faction slug (via the MobileTaskCard dispatcher) — mirroring the
+  // desktop TaskCard per-item dispatch. No viewer-faction page skin.
+  if (formFactor === 'mobile') return <DefaultTasks state={state} />
 
   return <DesktopTasks state={state} />
 }
