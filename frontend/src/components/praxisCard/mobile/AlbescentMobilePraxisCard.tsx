@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next'
 import type { PraxisCardOut } from '../../../api/praxis'
-import AlbescentMark from '../../cards/AlbescentMark'
+import AlbescentSigil from '../../cards/AlbescentSigil'
 import { MobilePraxisBody, type MobileSlotTheme } from './shared'
 
 /**
@@ -49,7 +49,7 @@ export default function AlbescentMobilePraxisCard({ praxis }: { praxis: PraxisCa
           color: ink(30),
         }}
       >
-        <AlbescentMark size={14} />
+        <AlbescentSigil size={14} />
         {t('card.masthead.albescent')}
       </div>
       <div style={{ position: 'relative' }}>

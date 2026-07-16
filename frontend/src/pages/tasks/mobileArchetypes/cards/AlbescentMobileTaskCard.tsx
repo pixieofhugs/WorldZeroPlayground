@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import type { TaskOut } from '../../../../api/tasks'
 import { factionName } from '../../../../utils/factions'
-import AlbescentMark from '../../../../components/cards/AlbescentMark'
+import AlbescentSigil from '../../../../components/cards/AlbescentSigil'
 
 /**
  * Albescent MOBILE task card (#528/#565) — a quiet cotton Ledger entry: the
@@ -44,7 +44,7 @@ export default function AlbescentMobileTaskCard({ task, points }: { task: TaskOu
       }}
     >
       <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
-        <AlbescentMark size={16} opacity={0.75} />
+        <AlbescentSigil size={16} opacity={0.75} />
         <i style={{ fontFamily: MONO, fontSize: 8, letterSpacing: '0.22em', textTransform: 'uppercase', color: ink(24), fontStyle: 'normal' }}>
           {factionName(task.primary_faction_slug)}
         </i>

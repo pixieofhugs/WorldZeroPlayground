@@ -14,7 +14,7 @@ import { Link } from 'react-router-dom'
 import MarkdownPreview from '../../editPraxis/blocks/MarkdownPreview'
 import MediaGallery from '../../../components/MediaGallery'
 import EphemeristsVote from '../../../components/vote/EphemeristsVote'
-import { EphMark, EphEyebrow, Foxing, LapisLastWord, toRoman } from '../../../components/cards/ephemeristsAtoms'
+import { EphemeristsSigil, EphEyebrow, Foxing, LapisLastWord, toRoman } from '../../../components/cards/ephemeristsAtoms'
 import { factionCssVar } from '../../../utils/factions'
 import { formatTimestamp } from '../../../utils/dates'
 import { PraxisAdminBar, PraxisStatusBanners, PraxisOwnerActions, PraxisFlagBlock, PraxisVoterBreakdown, MemberByline } from '../shared'
@@ -225,7 +225,7 @@ export default function EphemeristsPraxisDetail({ state }: { state: PraxisDetail
                 marginBottom: 10,
               }}
             >
-              <EphMark size={10} color="var(--eph-rubric)" />
+              <EphemeristsSigil size={10} color="var(--eph-rubric)" />
               <span
                 style={{
                   fontFamily: 'var(--eph-display)',
@@ -263,7 +263,7 @@ export default function EphemeristsPraxisDetail({ state }: { state: PraxisDetail
                 marginBottom: 10,
               }}
             >
-              <EphMark size={10} color="var(--eph-rubric)" />
+              <EphemeristsSigil size={10} color="var(--eph-rubric)" />
               <span
                 style={{
                   fontFamily: 'var(--eph-display)',
@@ -297,7 +297,7 @@ export default function EphemeristsPraxisDetail({ state }: { state: PraxisDetail
           }}
         >
           <div style={{ flex: 1, height: 1, background: 'color-mix(in srgb, var(--eph-ink) 14%, transparent)' }} />
-          <EphMark size={12} color="var(--eph-gold)" />
+          <EphemeristsSigil size={12} color="var(--eph-gold)" />
           <div style={{ flex: 1, height: 1, background: 'color-mix(in srgb, var(--eph-ink) 14%, transparent)' }} />
         </div>
 
@@ -312,7 +312,7 @@ export default function EphemeristsPraxisDetail({ state }: { state: PraxisDetail
             }}
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              <EphMark size={10} color="var(--eph-rubric)" />
+              <EphemeristsSigil size={10} color="var(--eph-rubric)" />
               <span
                 style={{
                   fontFamily: 'var(--eph-display)',

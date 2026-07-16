@@ -27,7 +27,7 @@ import {
   PublishButton,
   TitleField,
 } from "./controls";
-import { EphMark, Foxing, LapisLastWord, toRoman } from "../../../components/cards/ephemeristsAtoms";
+import { EphemeristsSigil, Foxing, LapisLastWord, toRoman } from "../../../components/cards/ephemeristsAtoms";
 import type { EditPraxisState } from "../useEditPraxis";
 
 interface Props {
@@ -119,7 +119,7 @@ export default function EphemeristsEditPraxis({ state }: Props) {
             ...HAIRLINE,
           }}
         >
-          <EphMark size={15} color="var(--eph-lapis)" />
+          <EphemeristsSigil size={15} color="var(--eph-lapis)" />
           <span style={{ fontFamily: "var(--eph-display)", fontWeight: 600, fontSize: 14, letterSpacing: "0.18em", textTransform: "uppercase", whiteSpace: "nowrap" }}>
             {t("editPraxis.ephemerists.masthead", {
               number: praxis.id.toString().padStart(4, "0"),
@@ -195,7 +195,7 @@ export default function EphemeristsEditPraxis({ state }: Props) {
             )}
             <div style={{ display: "flex", alignItems: "center", gap: 12, marginTop: 8, flexWrap: "wrap" }}>
               <span style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 9.5, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--eph-lapis)", fontWeight: 600 }}>
-                <EphMark size={12} color="var(--eph-lapis)" />{" "}
+                <EphemeristsSigil size={12} color="var(--eph-lapis)" />{" "}
                 {t("editPraxis.ephemerists.factionTag")}
               </span>
               <span style={{ fontFamily: "var(--eph-display)", fontWeight: 700, fontSize: 15, color: RUBRIC }}>

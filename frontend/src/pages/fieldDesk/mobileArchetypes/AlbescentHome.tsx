@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { factionName } from '../../../utils/factions'
 import { mediaUrl } from '../../../utils/media'
-import AlbescentMark from '../../../components/cards/AlbescentMark'
+import AlbescentSigil from '../../../components/cards/AlbescentSigil'
 import type { FieldDeskHomeState } from '../useFieldDeskHome'
 
 /**
@@ -68,7 +68,7 @@ export default function AlbescentHome({ state }: { state: FieldDeskHomeState }) 
       {/* Masthead — the Mark and a hairline */}
       <header>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
-          <AlbescentMark size={26} />
+          <AlbescentSigil size={26} />
           <div style={kicker}>{t('nav.home')}</div>
         </div>
         <h1 style={{ fontFamily: FONT, fontStyle: 'italic', fontWeight: 300, fontSize: 32, lineHeight: 1, color: INK, margin: 0 }}>
@@ -180,7 +180,7 @@ export default function AlbescentHome({ state }: { state: FieldDeskHomeState }) 
                 className="flex items-center gap-3"
                 style={{ padding: '12px 0', borderTop: index === 0 ? undefined : `1px solid ${ink(8)}`, textDecoration: 'none' }}
               >
-                <AlbescentMark size={14} opacity={0.7} />
+                <AlbescentSigil size={14} opacity={0.7} />
                 <div className="min-w-0 flex-1">
                   <div className="truncate" style={{ fontFamily: FONT, fontStyle: 'italic', fontWeight: 300, fontSize: 17, lineHeight: 1.2, color: INK }}>
                     {praxis.task_title}

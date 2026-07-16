@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import MediaGallery from '../../../components/MediaGallery'
 import MarkdownPreview from '../../editPraxis/blocks/MarkdownPreview'
-import { EphMark } from '../../../components/cards/ephemeristsAtoms'
+import { EphemeristsSigil } from '../../../components/cards/ephemeristsAtoms'
 import { formatTimestamp } from '../../../utils/dates'
 import type { PraxisDetailState } from '../usePraxisDetail'
 import {
@@ -90,7 +90,7 @@ export default function EphemeristsPraxisDetail({ state }: { state: PraxisDetail
             {t('detail.ephemerists.acquiringHand')} · {formatTimestamp(sealedDate)}
           </div>
         </div>
-        <EphMark size={20} color={LAPIS} />
+        <EphemeristsSigil size={20} color={LAPIS} />
       </div>
 
       {/* Evidence plate — full media inside */}

@@ -24,7 +24,7 @@ import {
   TitleCounter,
   formatAutosave,
 } from "./shared";
-import { UaCrest } from "../../../components/cards/UaCrest";
+import { UaSigil } from "../../../components/cards/UaSigil";
 import {
   BodyPreview,
   BodyTextarea,
@@ -126,7 +126,7 @@ export default function UaEditPraxis({ state }: Props) {
             }}
           >
             <span style={{ display: "inline-flex", alignItems: "center", gap: 10, minWidth: 0 }}>
-              <UaCrest width={22} height={26} />
+              <UaSigil width={22} height={26} />
               <span style={{ fontFamily: REGALIA, fontSize: 10, letterSpacing: "0.14em", color: "var(--ua-paper-warm)" }}>
                 {t("editPraxis.ua.masthead", { number: praxis.id })}
               </span>
@@ -147,7 +147,7 @@ export default function UaEditPraxis({ state }: Props) {
             <div style={{ height: 0, borderTop: "1.5px dashed var(--ua-gold)", marginBottom: 18 }} />
             {/* commission reference slip — crest, task, points, era mark */}
             <div style={{ display: "flex", alignItems: "center", gap: 14, border: "1px solid var(--ua-line)", background: "var(--ua-paper-warm)", padding: "12px 16px" }}>
-              <UaCrest width={50} height={60} />
+              <UaSigil width={50} height={60} />
               <div style={{ minWidth: 0 }}>
                 <div style={{ fontFamily: MONO, fontSize: 8, letterSpacing: "0.2em", textTransform: "uppercase", color: "var(--ua-muted)", marginBottom: 4 }}>
                   {t("editPraxis.ua.commissionLabel")}

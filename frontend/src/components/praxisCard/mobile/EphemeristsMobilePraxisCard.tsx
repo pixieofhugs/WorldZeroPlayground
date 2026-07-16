@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next'
 import type { PraxisCardOut } from '../../../api/praxis'
-import { EphMark, Foxing } from '../../cards/ephemeristsAtoms'
+import { EphemeristsSigil, Foxing } from '../../cards/ephemeristsAtoms'
 import { MobilePraxisBody, type MobileSlotTheme } from './shared'
 
 /**
@@ -48,7 +48,7 @@ export default function EphemeristsMobilePraxisCard({ praxis }: { praxis: Praxis
           color: 'var(--eph-rubric)',
         }}
       >
-        <EphMark size={13} color="var(--eph-lapis)" />
+        <EphemeristsSigil size={13} color="var(--eph-lapis)" />
         {t('card.masthead.ephemerists')}
       </div>
       <div style={{ position: 'relative', zIndex: 2, padding: '14px 16px' }}>

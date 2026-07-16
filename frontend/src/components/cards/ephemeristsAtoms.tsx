@@ -29,7 +29,7 @@ export function toRoman(value: number): string {
 }
 
 /* ── The faction sigil: the watching wanderer — an eye on an orbital ring ── */
-export function EphMark({
+export function EphemeristsSigil({
   size = 22,
   color = "currentColor",
   stroke = 1.4,
@@ -102,7 +102,7 @@ export function EphEyebrow({
           color,
         }}
       >
-        <EphMark size={11} color={color} />
+        <EphemeristsSigil size={11} color={color} />
         <span
           style={{
             fontFamily: "var(--eph-display)",
@@ -176,7 +176,7 @@ export function EphSeal({
           }}
         />
       ))}
-      <EphMark size={size * 0.46} color={eye} stroke={1.2} />
+      <EphemeristsSigil size={size * 0.46} color={eye} stroke={1.2} />
     </div>
   );
 }

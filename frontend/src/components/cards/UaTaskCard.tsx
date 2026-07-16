@@ -2,14 +2,14 @@ import { Link } from "react-router-dom";
 import type { TaskOut } from "../../api/tasks";
 import i18n from "../../i18n";
 import LevelPill from "../ui/LevelPill";
-import { UaCrest, MottoRibbon } from "./UaCrest";
+import { UaSigil, MottoRibbon } from "./UaSigil";
 
 /**
  * UA — Gilt salon crest placard (the University of Asthmatics archetype).
  * A gold-framed acquisition plate on the salon wall, center-composed around the
  * heraldic crest: masthead ("University of Asthmatics · EST · MMXX"), motto
  * ribbon, Playfair-italic title, and a "Matriculate" sign-up affordance. The
- * crest + motto are shared with UaFactionHero (see UaCrest.tsx), not re-drawn.
+ * crest + motto are shared with UaFactionHero (see UaSigil.tsx), not re-drawn.
  * All colors via --ua-* tokens (never hardcode hex — CLAUDE.md); the salon is
  * always-light, so tokens read identically in both themes.
  */
@@ -56,7 +56,7 @@ export default function UaTaskCard({ task, displayPoints, onSignup }: Props) {
         }}
       >
         {/* Crest */}
-        <UaCrest width={72} height={86} />
+        <UaSigil width={72} height={86} />
 
         {/* Masthead */}
         <div

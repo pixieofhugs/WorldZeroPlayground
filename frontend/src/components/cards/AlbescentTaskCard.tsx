@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import type { TaskOut } from "../../api/tasks";
 import i18n from "../../i18n";
-import AlbescentMark from "./AlbescentMark";
+import AlbescentSigil from "./AlbescentSigil";
 
 /**
  * Albescent — Vellum correspondence. The quietest card in the grid: pure white
@@ -52,7 +52,7 @@ export default function AlbescentTaskCard({ task, displayPoints, onSignup }: Pro
     >
       {/* Centred sigil */}
       <div style={{ display: "flex", justifyContent: "center", marginBottom: 16 }}>
-        <AlbescentMark size={20} />
+        <AlbescentSigil size={20} />
       </div>
 
       {/* Top rule */}

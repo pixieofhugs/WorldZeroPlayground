@@ -16,7 +16,7 @@ import {
   PublishButton,
   TitleField,
 } from '../archetypes/controls'
-import AlbescentMark from '../../../components/cards/AlbescentMark'
+import AlbescentSigil from '../../../components/cards/AlbescentSigil'
 import type { EditPraxisState } from '../useEditPraxis'
 import { MobileStickyBar, SegToggle, type ComposerTab } from './shared'
 
@@ -69,7 +69,7 @@ export default function AlbescentComposer({ state }: { state: EditPraxisState })
     <div data-skin="albescent" style={{ display: 'flex', flexDirection: 'column', gap: 14, fontFamily: MONO, color: INK, background: PAGE }}>
       <header style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <AlbescentMark size={22} />
+          <AlbescentSigil size={22} />
           <h1 style={{ fontFamily: FONT, fontStyle: 'italic', fontWeight: 300, fontSize: 27, lineHeight: 1, color: INK, margin: 0 }}>
             {t('editPraxis.albescent.pageTitle')}
           </h1>
