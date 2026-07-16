@@ -26,7 +26,7 @@ import EphemeristsFactionHero from "../components/cards/EphemeristsFactionHero";
 import SnideFactionHero from "../components/cards/SnideFactionHero";
 import SingularityFactionHero from "../components/cards/SingularityFactionHero";
 import EverymenFactionHero from "../components/cards/EverymenFactionHero";
-import UAFactionHero from "../components/cards/UAFactionHero";
+import UaFactionHero from "../components/cards/UaFactionHero";
 import WowFactionHero from "../components/cards/WowFactionHero";
 import AlbescentFactionHero from "../components/cards/AlbescentFactionHero";
 
@@ -58,7 +58,7 @@ const FACTION_HEROES: Record<string, ComponentType<FactionHeroProps>> = {
   snide: SnideFactionHero,
   singularity: SingularityFactionHero,
   everymen: EverymenFactionHero,
-  ua: UAFactionHero,
+  ua: UaFactionHero,
   wow: WowFactionHero,
   albescent: AlbescentFactionHero,
 };

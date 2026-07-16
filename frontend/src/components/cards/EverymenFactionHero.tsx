@@ -1,5 +1,6 @@
 import type { FactionHeroProps } from "../../pages/FactionDetail";
 import i18n from "../../i18n";
+import { EverymenSigil } from "./EverymenSigil";
 
 /**
  * The Everymen faction-page hero — a union masthead poster. A sunburst red
@@ -21,21 +22,6 @@ const CREAM = "var(--everymen-cream)";
 const GOLD = "var(--everymen-gold)";
 const INK = "var(--everymen-ink)";
 const RED = "var(--everymen-red)";
-
-/** Union cog seal — a toothed ring around a hub. */
-function CogMark({ size, color }: { size: number; color: string }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" aria-hidden="true" style={{ display: "block" }}>
-      <g fill={color}>
-        {[0, 30, 60, 90, 120, 150].map((d) => (
-          <rect key={d} x="11" y="0.5" width="2" height="5" rx="0.5" transform={`rotate(${d} 12 12)`} />
-        ))}
-      </g>
-      <circle cx="12" cy="12" r="6.5" fill="none" stroke={color} strokeWidth="2.4" />
-      <circle cx="12" cy="12" r="2" fill={color} />
-    </svg>
-  );
-}
 
 export default function EverymenFactionHero({
   name,
@@ -126,7 +112,7 @@ export default function EverymenFactionHero({
               boxShadow: `0 0 0 4px ${INK}, inset 0 0 0 6px ${RED}`,
             }}
           >
-            <CogMark size={58} color={RED} />
+            <EverymenSigil size={58} color={RED} />
           </div>
 
           <div style={{ flex: 1, minWidth: 0 }}>

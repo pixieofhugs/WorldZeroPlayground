@@ -29,6 +29,7 @@ import {
   TitleField,
 } from "./controls";
 import type { EditPraxisState } from "../useEditPraxis";
+import { EverymenSigil } from "../../../components/cards/EverymenSigil";
 
 interface Props {
   state: EditPraxisState;
@@ -47,42 +48,6 @@ const BODY_FONT = "var(--font-body)";
 
 const RED_GOLD_RULE =
   "repeating-linear-gradient(90deg, var(--everymen-red) 0 16px, var(--everymen-gold) 16px 26px)";
-
-/** Union cog sigil. Inlined poster atom from the Everymen kit. */
-function CogMark({
-  size = 17,
-  color = "currentColor",
-}: {
-  size?: number;
-  color?: string;
-}) {
-  return (
-    <svg
-      aria-hidden
-      width={size}
-      height={size}
-      viewBox="0 0 24 24"
-      fill="none"
-      style={{ display: "block" }}
-    >
-      <g fill={color}>
-        {Array.from({ length: 8 }).map((_, i) => (
-          <rect
-            key={i}
-            x="11"
-            y="0.5"
-            width="2"
-            height="5"
-            rx="0.5"
-            transform={`rotate(${i * 45} 12 12)`}
-          />
-        ))}
-      </g>
-      <circle cx="12" cy="12" r="6.5" fill="none" stroke={color} strokeWidth="2.4" />
-      <circle cx="12" cy="12" r="2" fill={color} />
-    </svg>
-  );
-}
 
 /** Union stencil field label with a red/gold tape underline. */
 function FieldLabel({
@@ -191,7 +156,7 @@ export default function EverymenEditPraxis({ state }: Props) {
             boxShadow: `5px 5px 0 ${INK}`,
           }}
         >
-          <CogMark size={17} color={CREAM} />
+          <EverymenSigil size={17} color={CREAM} />
           <span
             style={{
               fontFamily: ACCENT_FONT,

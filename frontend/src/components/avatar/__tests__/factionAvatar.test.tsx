@@ -37,10 +37,10 @@ describe("FactionAvatar — UA variant (#200)", () => {
     // Parchment disc ringed in UA gilt tokens (never hardcoded hex).
     expect(html).toContain("var(--ua-orange)");
     expect(html).toContain("var(--faction-ua-card-font)");
-    // The heraldic crest badge is present (UACrest draws --ua-* shield fills).
+    // The heraldic sigil badge is present (UaSigil draws --ua-* shield fills).
     expect(html).toContain("var(--ua-gold)");
     expect(html).toContain("var(--ua-paper-warm)");
-    // UACrest markup marker — the shield uses an SVG viewBox unique to the crest.
+    // UaSigil markup marker — the shield uses an SVG viewBox unique to the sigil.
     expect(html).toContain('viewBox="0 0 100 120"');
   });
 

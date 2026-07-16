@@ -4,6 +4,7 @@ import { factionCssVar, factionName, factionDescription } from "../../utils/fact
 import EverymenCard from "./EverymenFactionCard";
 import SnideMasthead from "./SnideMasthead";
 import { EphSeal, LapisLastWord } from "./ephemeristsAtoms";
+import { WowSigil } from "./WowSigil";
 
 /**
  * FactionCard — faction-archetype switcher.
@@ -116,7 +117,7 @@ function InvitationNote({ slug, note }: { slug: string; note: string }) {
 
 const ROTATIONS = [-2, 1.5, -1, 2.5];
 
-function UACard({
+function UaCard({
   faction,
   status,
   invitationNote,
@@ -185,24 +186,6 @@ function UACard({
 }
 
 // ─── Warriors of Whimsy ".exe" window atoms ──────────────────────────────────────────────
-
-/** A small sparkle glyph used in the wow.exe title bar. */
-function WowSparkle({
-  size = 10,
-  color,
-}: {
-  size?: number;
-  color: string;
-}) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24" aria-hidden="true">
-      <path
-        d="M12 1c.6 5.2 2.8 7.4 8 8-5.2.6-7.4 2.8-8 8-.6-5.2-2.8-7.4-8-8 5.2-.6 7.4-2.8 8-8z"
-        fill={color}
-      />
-    </svg>
-  );
-}
 
 /** A tiny white die-cut ivy sticker peeking off the window corner. */
 function WowIvySticker({
@@ -312,7 +295,7 @@ function WowCard({
               letterSpacing: "0.03em",
             }}
           >
-            <WowSparkle size={10} color={titleText} /> {i18n.t("feed:identity.wow.windowTitle")}
+            <WowSigil size={10} color={titleText} /> {i18n.t("feed:identity.wow.windowTitle")}
           </span>
           <span
             style={{
@@ -780,7 +763,7 @@ function SingularityCard({
 export default function FactionCard(props: FactionCardProps) {
   switch (props.faction.slug) {
     case "ua":
-      return <UACard {...props} />;
+      return <UaCard {...props} />;
     case "wow":
       return <WowCard {...props} />;
     case "snide":

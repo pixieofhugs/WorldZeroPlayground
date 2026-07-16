@@ -13,7 +13,7 @@ import type { FactionDetailState } from "../useFactionDetail";
 /**
  * UA (University of Asthmatics) faction-body — the gilt-salon skin of the
  * standardized six-section spine (② Prospectus, ③ The Registry, ④ Tasks,
- * ⑤ Praxis, ⑥ Members). Section ① (hero + side stats) is UAFactionHero above.
+ * ⑤ Praxis, ⑥ Members). Section ① (hero + side stats) is UaFactionHero above.
  *
  * Same shape as EverymenFactionBody — Tasks/Praxis reuse the app-wide per-faction
  * cards (TaskCard/PraxisCard already dispatch to the UA archetypes); this file

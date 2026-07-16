@@ -24,7 +24,7 @@ import { type PraxisType } from "../../../api/praxis";
 import type { CSSProperties, ReactNode } from "react";
 import MediaArt from "../blocks/MediaArt";
 import { pickArtKey } from "../blocks/useMediaArt";
-import AlbescentMark from "../../../components/cards/AlbescentMark";
+import AlbescentSigil from "../../../components/cards/AlbescentSigil";
 import {
   Breadcrumb,
   ErrorBanner,
@@ -152,7 +152,7 @@ export default function AlbescentEditPraxis({ state }: Props) {
                 color: ink(30),
               }}
             >
-              <AlbescentMark size={13} />
+              <AlbescentSigil size={13} />
               {t("editPraxis.albescent.masthead", { number: praxis.id })}
             </span>
             <span
@@ -218,7 +218,7 @@ export default function AlbescentEditPraxis({ state }: Props) {
               marginBottom: 34,
             }}
           >
-            <AlbescentMark size={38} />
+            <AlbescentSigil size={38} />
             <div style={{ flex: 1, minWidth: 0 }}>
               <div
                 style={{

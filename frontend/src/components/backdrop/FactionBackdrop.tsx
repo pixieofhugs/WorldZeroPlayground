@@ -5,7 +5,7 @@ import WowBackdrop from './WowBackdrop'
 import SnideBackdrop from './SnideBackdrop'
 import EphemeristsBackdrop from './EphemeristsBackdrop'
 import SingularityBackdrop from './SingularityBackdrop'
-import UABackdrop from './UABackdrop'
+import UaBackdrop from './UaBackdrop'
 import AlbescentBackdrop from './AlbescentBackdrop'
 import { useBackdropSlug } from './BackdropContext'
 import { pickVariant } from '../../utils/factionDispatch'
@@ -22,7 +22,7 @@ const FACTION_BACKDROPS: Record<string, ComponentType> = {
   snide: SnideBackdrop,
   ephemerists: EphemeristsBackdrop,
   singularity: SingularityBackdrop,
-  ua: UABackdrop,
+  ua: UaBackdrop,
   albescent: AlbescentBackdrop,
 }
 

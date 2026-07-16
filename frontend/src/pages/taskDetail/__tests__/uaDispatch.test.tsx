@@ -11,7 +11,7 @@ import {
 import { pickVariant } from "../../../utils/factionDispatch";
 import DefaultMobileTaskDetail from "../mobileArchetypes/DefaultTaskDetail";
 import UAMobileTaskDetail from "../mobileArchetypes/UaTaskDetail";
-import UADesktopTaskDetail from "../archetypes/UATaskDetail";
+import UADesktopTaskDetail from "../archetypes/UaTaskDetail";
 
 describe("mobile task-detail UA dispatch", () => {
   it("mobile + a UA task resolves to the bespoke UA mobile skin", () => {

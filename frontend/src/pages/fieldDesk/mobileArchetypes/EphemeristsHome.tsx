@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { factionName } from '../../../utils/factions'
 import { mediaUrl } from '../../../utils/media'
-import { EphMark } from '../../../components/cards/ephemeristsAtoms'
+import { EphemeristsSigil } from '../../../components/cards/ephemeristsAtoms'
 import type { FieldDeskHomeState } from '../useFieldDeskHome'
 
 /**
@@ -77,7 +77,7 @@ export default function EphemeristsHome({ state }: { state: FieldDeskHomeState }
       {/* Cinzel running-head */}
       <header>
         <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: RUBRIC }}>
-          <EphMark size={13} color={LAPIS} />
+          <EphemeristsSigil size={13} color={LAPIS} />
           <span style={kicker}>{t('nav.home')}</span>
         </div>
         <h1 style={{ fontFamily: DISPLAY, fontWeight: 700, fontSize: 28, lineHeight: 1.05, color: TEXT, margin: '4px 0 0' }}>

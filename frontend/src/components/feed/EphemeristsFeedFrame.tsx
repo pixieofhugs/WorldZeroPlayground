@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react'
 
-import { EphMark, Foxing } from '../cards/ephemeristsAtoms'
+import { EphemeristsSigil, Foxing } from '../cards/ephemeristsAtoms'
 
 /**
  * Ephemerists feed-card FRAME (surface #12, SPEC-faction-ui-profile.md).
@@ -44,7 +44,7 @@ export default function EphemeristsFeedFrame({ children }: { children: ReactNode
           pointerEvents: 'none',
         }}
       >
-        <EphMark size={12} color="var(--eph-rubric)" stroke={1.2} />
+        <EphemeristsSigil size={12} color="var(--eph-rubric)" stroke={1.2} />
       </div>
 
       {/* the neutral feed card, rendered in the content area */}

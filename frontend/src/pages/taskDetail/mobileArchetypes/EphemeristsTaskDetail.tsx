@@ -2,7 +2,7 @@ import type { ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import PraxisCard from '../../../components/PraxisCard'
-import { EphMark, LapisLastWord } from '../../../components/cards/ephemeristsAtoms'
+import { EphemeristsSigil, LapisLastWord } from '../../../components/cards/ephemeristsAtoms'
 import { MobileStickyBar, MobileStickyCaption } from './shared'
 import type { TaskDetailState } from '../useTaskDetail'
 
@@ -87,7 +87,7 @@ export default function EphemeristsTaskDetail({ state }: { state: TaskDetailStat
       <div style={{ position: 'relative', overflow: 'hidden', background: VELLUM, border: `1.5px solid ${INK}`, boxShadow: '0 12px 28px rgba(42,29,18,0.18)', padding: '20px 22px 22px', marginBottom: 20 }}>
         <div className="flex items-center justify-between" style={{ marginBottom: 12 }}>
           <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontFamily: DISPLAY, fontSize: 9, letterSpacing: '0.13em', textTransform: 'uppercase', color: GOLD }}>
-            <EphMark size={12} color={GOLD} />
+            <EphemeristsSigil size={12} color={GOLD} />
             {t('ephemerists.masthead')}
           </span>
           <span style={{ fontFamily: SCRIPT, fontStyle: 'italic', fontSize: 12, color: MUTED }}>{t('ephemerists.statusOpen')}</span>

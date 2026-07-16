@@ -1,5 +1,5 @@
 import { BadgedAvatar, type FactionAvatarProps } from "./FactionAvatar";
-import { EphMark } from "../cards/ephemeristsAtoms";
+import { EphemeristsSigil } from "../cards/ephemeristsAtoms";
 
 /**
  * The Ephemerists avatar — the standard circle plus a lapis membership badge
@@ -19,7 +19,7 @@ export default function EphemeristsAvatar({ character, size }: FactionAvatarProp
       initialFontSize={[11, 14]}
       badgeBg="var(--eph-lapis)"
       badgeRing="var(--eph-vellum)"
-      glyph={(s, _color) => <EphMark size={s} color="var(--eph-gold-light)" stroke={1.4} />}
+      glyph={(s, _color) => <EphemeristsSigil size={s} color="var(--eph-gold-light)" stroke={1.4} />}
     />
   );
 }

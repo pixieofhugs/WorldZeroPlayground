@@ -1,6 +1,6 @@
 import type { FactionHeroProps } from "../../pages/FactionDetail";
 import i18n from "../../i18n";
-import AlbescentMark from "./AlbescentMark";
+import AlbescentSigil from "./AlbescentSigil";
 
 /**
  * Albescent faction-page hero — a still, meditative frontispiece (#232). No
@@ -59,7 +59,7 @@ export default function AlbescentFactionHero({
           opacity: 0.035,
         }}
       >
-        <AlbescentMark size={220} />
+        <AlbescentSigil size={220} />
       </div>
 
       <div
@@ -145,7 +145,7 @@ export default function AlbescentFactionHero({
         {/* Struck mark at the side. ponytail: static, not the design's slow
             "breathe" — a decorative keyframe not worth a global @keyframes here. */}
         <div style={{ flexShrink: 0 }}>
-          <AlbescentMark size={96} />
+          <AlbescentSigil size={96} />
         </div>
       </div>
     </div>

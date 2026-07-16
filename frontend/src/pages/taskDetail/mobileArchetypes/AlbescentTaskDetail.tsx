@@ -2,7 +2,7 @@ import type { CSSProperties, ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import PraxisCard from '../../../components/PraxisCard'
-import AlbescentMark from '../../../components/cards/AlbescentMark'
+import AlbescentSigil from '../../../components/cards/AlbescentSigil'
 import { MobileStickyBar, MobileStickyCaption } from './shared'
 import type { TaskDetailState } from '../useTaskDetail'
 
@@ -104,7 +104,7 @@ export default function AlbescentTaskDetail({ state }: { state: TaskDetailState 
         }}
       >
         <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 16 }}>
-          <AlbescentMark size={38} />
+          <AlbescentSigil size={38} />
         </div>
         <div style={{ ...kicker, letterSpacing: '0.32em', color: ink(45), marginBottom: 6 }}>{t('albescent.faction')}</div>
         <div style={{ ...kicker, letterSpacing: '0.24em', color: ink(30), marginBottom: 20 }}>

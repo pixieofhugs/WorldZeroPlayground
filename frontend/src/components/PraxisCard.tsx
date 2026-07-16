@@ -4,9 +4,9 @@ import type { PraxisCardOut } from "../api/praxis";
 import { factionCssVar } from "../utils/factions";
 import { pickVariant } from "../utils/factionDispatch";
 import SnideMasthead from "./cards/SnideMasthead";
-import AlbescentMark from "./cards/AlbescentMark";
+import AlbescentSigil from "./cards/AlbescentSigil";
 import DefaultSigil from "./cards/DefaultSigil";
-import { EphMark, Foxing } from "./cards/ephemeristsAtoms";
+import { EphemeristsSigil, Foxing } from "./cards/ephemeristsAtoms";
 import {
   AdminOverlay,
   PraxisTitle,
@@ -14,6 +14,11 @@ import {
   PraxisByline,
   PraxisScoreHero,
   PraxisStats,
+  PraxisExcerpt,
+  PraxisModeChip,
+  PraxisRoster,
+  PraxisMediaGallery,
+  PraxisVoteFooter,
   type AdminProps,
 } from "./praxisCard/shared";
 import { usePraxisCard } from "./praxisCard/usePraxisCard";
@@ -93,6 +98,7 @@ function PraxisBody({
         <div style={{ flex: 1, minWidth: 0 }}>
           <PraxisTitle praxis={praxis} style={titleStyle} />
           <PraxisTaskLink praxis={praxis} style={{ color: muted }} />
+          <PraxisExcerpt praxis={praxis} style={{ color: muted }} />
         </div>
         <PraxisScoreHero
           praxis={praxis}
@@ -103,7 +109,11 @@ function PraxisBody({
         />
       </div>
       <PraxisStats praxis={praxis} style={{ color: muted, marginTop: "var(--space-sm)" }} />
+      <PraxisModeChip praxis={praxis} />
+      <PraxisRoster praxis={praxis} accent={tint} paper={paper} />
+      <PraxisMediaGallery praxis={praxis} accent={tint} paper={paper} />
       <PraxisByline praxis={praxis} style={{ color: muted }} />
+      <PraxisVoteFooter praxis={praxis} />
     </>
   );
 }
@@ -111,10 +121,10 @@ function PraxisBody({
 /**
  * UA — Gilt salon placard, filed. A gold-framed acquisition plate: gilt-leaf
  * gradient border, parchment ground with a faint dotted tooth, an engraved
- * "Acquisition · filed" regalia line. Matches the UA praxis-read sheet, UAVote,
+ * "Acquisition · filed" regalia line. Matches the UA praxis-read sheet, UaVote,
  * and the DS FactionPraxisCard reference. All colors via --ua-* tokens.
  */
-function UAPraxisCard({ praxis, adminProps, showCrown }: ArchetypeProps) {
+function UaPraxisCard({ praxis, adminProps, showCrown }: ArchetypeProps) {
   const { t } = useTranslation("praxis");
   return (
     // Gilt frame: gold-leaf gradient border, then the parchment plate.
@@ -367,7 +377,7 @@ function EphemeristsPraxisCard({ praxis, adminProps, showCrown }: ArchetypeProps
           boxShadow: "0 2px 0 -1px color-mix(in srgb, var(--eph-lapis) 55%, transparent)",
         }}
       >
-        <EphMark size={13} color="var(--eph-lapis)" />
+        <EphemeristsSigil size={13} color="var(--eph-lapis)" />
         <span
           style={{
             fontFamily: "var(--eph-serif)",
@@ -578,7 +588,7 @@ function AlbescentPraxisCard({ praxis, adminProps, showCrown }: ArchetypeProps) 
           borderBottom: `1px solid ${ink(7)}`,
         }}
       >
-        <AlbescentMark size={13} />
+        <AlbescentSigil size={13} />
         <span
           style={{
             fontFamily: "var(--faction-albescent-mono)",
@@ -671,7 +681,7 @@ export function DefaultPraxisCard({ praxis, adminProps, showCrown }: ArchetypePr
 // ─── Dispatcher ───────────────────────────────────────────────────────────────
 
 export const PRAXIS_CARD_BY_SLUG: Record<string, ComponentType<ArchetypeProps>> = {
-  ua: UAPraxisCard,
+  ua: UaPraxisCard,
   everymen: EverymenPraxisCard,
   wow: WowPraxisCard,
   snide: SnidePraxisCard,

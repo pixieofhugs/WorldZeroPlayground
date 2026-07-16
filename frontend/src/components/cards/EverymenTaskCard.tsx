@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import type { TaskOut } from "../../api/tasks";
 import i18n from "../../i18n";
 import LevelPill from "../ui/LevelPill";
+import { EverymenSigil } from "./EverymenSigil";
 
 /**
  * Everymen — "The Rally Bill".
@@ -17,41 +18,6 @@ interface Props {
 }
 
 /* ── poster atoms (self-contained) ─────────────────────────────── */
-
-// worker cog / gear sigil — the faction mark.
-function CogMark({
-  size = 22,
-  color = "currentColor",
-}: {
-  size?: number;
-  color?: string;
-}) {
-  return (
-    <svg
-      width={size}
-      height={size}
-      viewBox="0 0 24 24"
-      fill="none"
-      style={{ display: "block" }}
-    >
-      <g fill={color}>
-        {Array.from({ length: 8 }).map((_, index) => (
-          <rect
-            key={index}
-            x="11"
-            y="0.5"
-            width="2"
-            height="5"
-            rx="0.5"
-            transform={`rotate(${index * 45} 12 12)`}
-          />
-        ))}
-      </g>
-      <circle cx="12" cy="12" r="6.5" fill="none" stroke={color} strokeWidth="2.4" />
-      <circle cx="12" cy="12" r="2" fill={color} />
-    </svg>
-  );
-}
 
 // faint screen-print halftone wash.
 function Halftone({
@@ -209,7 +175,7 @@ export default function EverymenTaskCard({ task, displayPoints, onSignup }: Prop
             fontFamily: "var(--font-body)",
           }}
         >
-          <CogMark size={11} color="var(--everymen-cream)" />
+          <EverymenSigil size={11} color="var(--everymen-cream)" />
           <span
             style={{
               fontFamily: "var(--faction-everymen-card-font)",
@@ -219,7 +185,7 @@ export default function EverymenTaskCard({ task, displayPoints, onSignup }: Prop
           >
             {i18n.t("feed:taskCard.everymen.masthead")}
           </span>
-          <CogMark size={11} color="var(--everymen-cream)" />
+          <EverymenSigil size={11} color="var(--everymen-cream)" />
         </div>
       </div>
 

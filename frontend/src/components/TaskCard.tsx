@@ -2,9 +2,9 @@ import type { TaskOut } from '../api/tasks'
 import { useAuth } from '../auth/AuthContext'
 import { useAdminMode } from '../auth/AdminModeContext'
 import { updateTaskStatus } from '../api/admin'
-import UATaskCard from './cards/UATaskCard'
+import UaTaskCard from './cards/UaTaskCard'
 import WowTaskCard from './cards/WowTaskCard'
-import SNIDETaskCard from './cards/SNIDETaskCard'
+import SnideTaskCard from './cards/SnideTaskCard'
 import EphemeristsTaskCard from './cards/EphemeristsTaskCard'
 import SingularityTaskCard from './cards/SingularityTaskCard'
 import EverymenTaskCard from './cards/EverymenTaskCard'
@@ -22,10 +22,10 @@ export interface CardProps {
 
 /** Style Guide §6 — one card archetype per faction. */
 export const CARD_COMPONENTS: Record<string, ComponentType<CardProps>> = {
-  ua: UATaskCard,
+  ua: UaTaskCard,
   everymen: EverymenTaskCard,
   wow: WowTaskCard,
-  snide: SNIDETaskCard,
+  snide: SnideTaskCard,
   ephemerists: EphemeristsTaskCard,
   singularity: SingularityTaskCard,
   // First-class Albescent identity (#232 slice 1). The explicit entry beats the

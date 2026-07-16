@@ -1,6 +1,7 @@
 import { Trans } from "react-i18next";
 import type { FactionHeroProps } from "../../pages/FactionDetail";
 import i18n from "../../i18n";
+import { SingularitySigil } from "./SingularitySigil";
 
 /**
  * Singularity faction-page hero — a terminal boot-sequence frontispiece. The
@@ -32,32 +33,6 @@ const phosphor = (pct: number): string =>
 const signal = (pct: number): string =>
   `color-mix(in srgb, ${SIGNAL} ${pct}%, transparent)`;
 const signalFill = "var(--faction-singularity)"; // blue brand fill
-
-/** Minimal phosphor sigil — three concentric rings around a node. */
-function SingularityMark({
-  size,
-  color,
-}: {
-  size: number;
-  color: string;
-}) {
-  return (
-    <svg
-      width={size}
-      height={size}
-      viewBox="0 0 100 100"
-      aria-hidden="true"
-      style={{ display: "block" }}
-    >
-      <g fill="none" stroke={color} strokeWidth="1.5">
-        <circle cx="50" cy="50" r="46" />
-        <circle cx="50" cy="50" r="30" strokeDasharray="3 5" />
-        <circle cx="50" cy="50" r="14" />
-      </g>
-      <circle cx="50" cy="50" r="4" fill={color} />
-    </svg>
-  );
-}
 
 export default function SingularityFactionHero({
   name,
@@ -225,7 +200,7 @@ export default function SingularityFactionHero({
               }}
             />
             <div className="sg-rotate">
-              <SingularityMark size={120} color={phosphor(55)} />
+              <SingularitySigil size={120} color={phosphor(55)} />
             </div>
             <div
               style={{
@@ -236,7 +211,7 @@ export default function SingularityFactionHero({
                 justifyContent: "center",
               }}
             >
-              <SingularityMark size={44} color={PHOSPHOR} />
+              <SingularitySigil size={44} color={PHOSPHOR} />
             </div>
           </div>
 

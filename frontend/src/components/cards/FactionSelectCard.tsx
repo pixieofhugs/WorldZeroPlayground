@@ -1,5 +1,11 @@
-import { useMemo } from "react";
 import i18n from "../../i18n";
+import { UaSigil } from "./UaSigil";
+import { WowSigil } from "./WowSigil";
+import { SnideSigil } from "../snide/snideAtoms";
+import { EphemeristsSigil } from "./ephemeristsAtoms";
+import { SingularitySigil } from "./SingularitySigil";
+import { EverymenSigil } from "./EverymenSigil";
+import AlbescentSigil from "./AlbescentSigil";
 
 /**
  * FactionSelectCard — the faction-DIRECTORY tile, one per faction. The compact
@@ -13,8 +19,9 @@ import i18n from "../../i18n";
  * are component-owned, derived from the faction slug. Joining is NOT on the
  * tile — the CTA visits the faction's detail page, which owns the Join block.
  *
- * Mirrors FactionCard.tsx's structure: dispatcher + per-faction archetypes +
- * the sigil atoms, all inline in one file.
+ * Mirrors FactionCard.tsx's structure: dispatcher + per-faction archetypes. The
+ * per-faction sigils are the shared canonical *Sigil components (one dedicated
+ * file each), imported here — never re-drawn inline.
  */
 
 export type SelectState = "locked" | "eligible" | "member";
@@ -31,112 +38,9 @@ export interface FactionSelectCardProps {
   onVisit?: () => void;
 }
 
-// ─── Sigils ───────────────────────────────────────────────────────────────────
-
-let _uaUid = 0;
-function UASigil({ size = 50 }: { size?: number }) {
-  const id = useMemo(() => "uasigil-" + _uaUid++, []);
-  const shield = "M8 6 H92 V60 C92 92 66 108 50 116 C34 108 8 92 8 60 Z";
-  return (
-    <svg width={size} height={size * 1.2} viewBox="0 0 100 120" style={{ display: "block" }}>
-      <defs><clipPath id={id}><path d={shield} /></clipPath></defs>
-      <g clipPath={`url(#${id})`}>
-        <rect x="0" y="0" width="100" height="120" fill="var(--ua-orange)" />
-        <rect x="0" y="60" width="100" height="60" fill="#f8ead2" />
-        <circle cx="50" cy="60" r="15" fill="#f0b53e" />
-        <g stroke="#f0b53e" strokeWidth="2.4" strokeLinecap="round">
-          <line x1="50" y1="60" x2="50" y2="20" /><line x1="50" y1="60" x2="22" y2="30" /><line x1="50" y1="60" x2="78" y2="30" />
-          <line x1="50" y1="60" x2="14" y2="48" /><line x1="50" y1="60" x2="86" y2="48" /><line x1="50" y1="60" x2="34" y2="22" /><line x1="50" y1="60" x2="66" y2="22" />
-        </g>
-        <g transform="translate(50 84)">
-          <g transform="rotate(38)"><rect x="-2" y="-30" width="4" height="44" rx="1.5" fill="#3d2410" /><rect x="-3" y="10" width="6" height="6" fill="#eab94a" /><path d="M-3 16 L3 16 L1.5 26 L-1.5 26 Z" fill="var(--ua-orange)" /></g>
-          <g transform="rotate(-38)"><rect x="-2" y="-30" width="4" height="44" rx="1.5" fill="var(--ua-gold)" /><rect x="-3" y="10" width="6" height="6" fill="#eab94a" /><path d="M-3 16 L3 16 L1.5 26 L-1.5 26 Z" fill="var(--ua-gold-lt)" /></g>
-        </g>
-      </g>
-      <path d={shield} fill="none" stroke="var(--ua-gold-lt)" strokeWidth="2.5" />
-      <path d={shield} fill="none" stroke="#3d2410" strokeWidth="0.8" />
-    </svg>
-  );
-}
-
-function WOWSigil({ size = 22, color = "var(--gestalt-pink)" }: { size?: number; color?: string }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24" style={{ display: "block" }}>
-      <path d="M12 0c.9 7 4.1 10.2 11 11-6.9.8-10.1 4-11 11-.9-7-4.1-10.2-11-11C7.9 10.2 11.1 7 12 0Z" fill={color} />
-    </svg>
-  );
-}
-
-function SNIDESigil({ size = 48, color = "var(--snide-acid)" }: { size?: number; color?: string }) {
-  return (
-    <svg viewBox="0 0 48 48" width={size} height={size} style={{ display: "block" }}>
-      <circle cx="24" cy="24" r="19" fill="none" stroke={color} strokeWidth="3" />
-      <text x="24" y="34" textAnchor="middle" fontFamily="var(--font-faction-anton)" fontSize="30" fill={color}>S</text>
-      <line x1="9" y1="40" x2="39" y2="8" stroke={color} strokeWidth="3" strokeLinecap="round" />
-    </svg>
-  );
-}
-
-function EphemeristsSigil({ size = 22, color = "var(--eph-lapis)", stroke = 1.4 }: { size?: number; color?: string; stroke?: number }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={stroke} style={{ display: "block" }}>
-      <ellipse cx="12" cy="12" rx="11" ry="4.4" transform="rotate(-24 12 12)" />
-      <path d="M4 12 C7.5 8.2 16.5 8.2 20 12 C16.5 15.8 7.5 15.8 4 12 Z" />
-      <circle cx="12" cy="12" r="2.7" />
-      <circle cx="12" cy="12" r="0.6" fill={color} stroke="none" />
-    </svg>
-  );
-}
-
-function SingularitySigil({ size = 15, color = "#4ade80", coreHole = "#050f08" }: { size?: number; color?: string; coreHole?: string }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24" style={{ display: "block" }}>
-      <circle cx="12" cy="12" r="10.3" fill="none" stroke={color} strokeWidth="0.62" opacity="0.32" />
-      <circle cx="12" cy="12" r="5.76" fill="none" stroke={color} strokeWidth="0.82" opacity="0.68" />
-      <g stroke={color} strokeWidth="0.86" opacity="0.8">
-        <line x1="17.76" y1="12" x2="22.32" y2="12" /><line x1="12" y1="17.76" x2="12" y2="22.32" />
-        <line x1="6.24" y1="12" x2="1.68" y2="12" /><line x1="12" y1="6.24" x2="12" y2="1.68" />
-      </g>
-      <g fill={color} opacity="0.78">
-        <circle cx="22.32" cy="12" r="1.2" /><circle cx="12" cy="22.32" r="1.2" /><circle cx="1.68" cy="12" r="1.2" /><circle cx="12" cy="1.68" r="1.2" />
-      </g>
-      <circle cx="12" cy="12" r="2.28" fill={color} opacity="0.92" />
-      <circle cx="12" cy="12" r="0.87" fill={coreHole} />
-    </svg>
-  );
-}
-
-function EverymenSigil({ size = 22, color = "currentColor" }: { size?: number; color?: string }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" style={{ display: "block" }}>
-      <g fill={color}>
-        {Array.from({ length: 8 }).map((_, i) => (
-          <rect key={i} x="11" y="0.5" width="2" height="5" rx="0.5" transform={`rotate(${i * 45} 12 12)`} />
-        ))}
-      </g>
-      <circle cx="12" cy="12" r="6.5" fill="none" stroke={color} strokeWidth="2.4" />
-      <circle cx="12" cy="12" r="2" fill={color} />
-    </svg>
-  );
-}
-
-function AlbescentSigil({ size = 20, color = "var(--faction-albescent-card-text, #1c1c1a)" }: { size?: number; color?: string }) {
-  const c = size / 2, rO = size * 0.43, rI = size * 0.235, rD = size * 0.05;
-  const tS = rI + size * 0.025, tE = tS + size * 0.13;
-  const tick = (deg: number) => { const a = (deg * Math.PI) / 180; return { x1: c + tS * Math.cos(a), y1: c + tS * Math.sin(a), x2: c + tE * Math.cos(a), y2: c + tE * Math.sin(a) }; };
-  return (
-    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} fill="none" style={{ display: "block", flexShrink: 0 }}>
-      <circle cx={c} cy={c} r={rO} stroke={color} strokeWidth={size * 0.022} opacity={0.18} />
-      <circle cx={c} cy={c} r={rI} stroke={color} strokeWidth={size * 0.05} opacity={0.55} />
-      {[0, 90, 180, 270].map((deg, i) => { const { x1, y1, x2, y2 } = tick(deg); return <line key={i} x1={x1} y1={y1} x2={x2} y2={y2} stroke={color} strokeWidth={size * 0.05} />; })}
-      <circle cx={c} cy={c} r={rD} fill={color} />
-    </svg>
-  );
-}
-
 // ─── Per-faction archetypes ───────────────────────────────────────────────────
 
-function UASelectCard({ state = "locked", members, onVisit }: Omit<FactionSelectCardProps, "faction">) {
+function UaSelectCard({ state = "locked", members, onVisit }: Omit<FactionSelectCardProps, "faction">) {
   const status = i18n.t(`feed:factionSelect.ua.status.${state}` as const);
   return (
     <div style={{
@@ -154,7 +58,7 @@ function UASelectCard({ state = "locked", members, onVisit }: Omit<FactionSelect
             <div style={{ fontFamily: "var(--font-faction-gilt)", fontStyle: "italic", fontWeight: 800, fontSize: 52, lineHeight: 0.9, letterSpacing: "0.01em", marginTop: 8 }}>{i18n.t("feed:factionSelect.ua.wordmark")}</div>
             <div style={{ fontFamily: "var(--font-faction-engraved-caps)", fontSize: 12, letterSpacing: "0.24em", color: "var(--ua-sub)", textTransform: "uppercase", marginTop: 3 }}>{i18n.t("feed:factionSelect.ua.subtitle")}</div>
           </div>
-          <UASigil size={44} />
+          <UaSigil width={44} height={53} />
         </div>
         <div style={{ height: 2, background: "var(--ua-gilt)", margin: "16px 0 13px", opacity: 0.85 }} />
         <p style={{ margin: 0, fontFamily: "var(--font-faction-gilt)", fontStyle: "italic", fontSize: 16, lineHeight: 1.4, color: "var(--ua-ink)" }}>
@@ -198,7 +102,7 @@ function WOWSelectCard({ state = "locked", members, onVisit }: Omit<FactionSelec
       </div>
       <div style={{ flex: 1, padding: "14px 20px 0", position: "relative" }}>
         <div style={{ fontFamily: "var(--font-faction-script)", fontWeight: 700, fontSize: 27, lineHeight: 1.1, color: "var(--gestalt-ink)", whiteSpace: "nowrap" }}>
-          <span style={{ display: "inline-block", verticalAlign: "-3px", marginRight: 6 }}><WOWSigil size={18} color="var(--gestalt-pink)" /></span>{i18n.t("feed:factionSelect.wow.name")}
+          <span style={{ display: "inline-block", verticalAlign: "-3px", marginRight: 6 }}><WowSigil size={18} color="var(--faction-wow)" /></span>{i18n.t("feed:factionSelect.wow.name")}
         </div>
         <p style={{ margin: "13px 0 0", fontSize: 12, lineHeight: 1.6, color: "var(--gestalt-ink-soft)" }}>
           {i18n.t("feed:factionSelect.wow.blurb")}
@@ -219,7 +123,7 @@ function WOWSelectCard({ state = "locked", members, onVisit }: Omit<FactionSelec
   );
 }
 
-function SNIDESelectCard({ state = "locked", members, onVisit }: Omit<FactionSelectCardProps, "faction">) {
+function SnideSelectCard({ state = "locked", members, onVisit }: Omit<FactionSelectCardProps, "faction">) {
   const status = i18n.t(`feed:factionSelect.snide.status.${state}` as const);
   return (
     <div style={{
@@ -232,7 +136,7 @@ function SNIDESelectCard({ state = "locked", members, onVisit }: Omit<FactionSel
       <div style={{ position: "absolute", top: 14, left: 22, width: 74, height: 20, background: "var(--snide-tape)", transform: "rotate(-6deg)", boxShadow: "0 1px 2px rgba(0,0,0,0.4)" }} />
       <div style={{ position: "relative", flex: 1, padding: "26px 24px 0" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-          <SNIDESigil size={40} color="var(--snide-acid)" />
+          <SnideSigil size={40} color="var(--snide-acid)" />
           <div>
             <div style={{ fontFamily: "var(--font-faction-anton)", fontSize: 34, lineHeight: 0.85, color: "var(--snide-paper)", letterSpacing: "0.02em" }}>{i18n.t("feed:identity.snide.wordmark")}</div>
             <div style={{ fontSize: 10, letterSpacing: "0.14em", color: "var(--snide-acid)", marginTop: 4, textTransform: "uppercase" }}>{i18n.t("feed:factionSelect.snide.masthead")}</div>
@@ -412,9 +316,9 @@ function AlbescentSelectCard({ state = "locked", members, onVisit }: Omit<Factio
 // ─── Switcher ─────────────────────────────────────────────────────────────────
 
 const BY_FACTION: Record<string, (p: Omit<FactionSelectCardProps, "faction">) => JSX.Element> = {
-  ua: UASelectCard,
+  ua: UaSelectCard,
   wow: WOWSelectCard,
-  snide: SNIDESelectCard,
+  snide: SnideSelectCard,
   ephemerists: EphemeristsSelectCard,
   singularity: SingularitySelectCard,
   everymen: EverymenSelectCard,
@@ -431,6 +335,6 @@ const LEGACY_SLUG: Record<string, string> = {
 
 export default function FactionSelectCard({ faction, ...rest }: FactionSelectCardProps) {
   const key = BY_FACTION[faction] ? faction : LEGACY_SLUG[faction] ?? faction;
-  const Card = BY_FACTION[key] ?? UASelectCard;
+  const Card = BY_FACTION[key] ?? UaSelectCard;
   return <Card {...rest} />;
 }

@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 import TaskCard from "../../../components/TaskCard";
 import PraxisCard from "../../../components/PraxisCard";
 import { TaskCrown } from "../../../components/cards/TaskCrown";
-import { EphMark, Foxing, toRoman } from "../../../components/cards/ephemeristsAtoms";
+import { EphemeristsSigil, Foxing, toRoman } from "../../../components/cards/ephemeristsAtoms";
 import { computeDisplayPoints } from "../../../utils/points";
 import { factionName, factionDescription } from "../../../utils/factions";
 import type { CharacterOut } from "../../../api/auth";
@@ -128,7 +128,7 @@ export default function EphemeristsFactionBody({ state }: { state: FactionDetail
         <div style={{ ...PLATE, padding: "26px 30px 28px" }}>
           <Foxing opacity={0.5} />
           <div style={{ position: "relative", zIndex: 2, display: "flex", alignItems: "center", gap: 12, marginBottom: 16 }}>
-            <EphMark size={15} color={RUBRIC} />
+            <EphemeristsSigil size={15} color={RUBRIC} />
             <span style={{ fontFamily: DISPLAY, fontWeight: 600, fontSize: 11, letterSpacing: "0.22em", textTransform: "uppercase", color: GOLD_DEEP }}>
               {t("ephemerists.apparatus.heading")}
             </span>
