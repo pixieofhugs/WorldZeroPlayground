@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import type { PraxisCardOut } from "../api/praxis";
 import { factionCssVar } from "../utils/factions";
 import { pickVariant } from "../utils/factionDispatch";
+import { useVotedPraxis } from "./vote/useVotedPraxis";
 import SnideMasthead from "./cards/SnideMasthead";
 import AlbescentSigil from "./cards/AlbescentSigil";
 import DefaultSigil from "./cards/DefaultSigil";
@@ -693,10 +694,13 @@ export const PRAXIS_CARD_BY_SLUG: Record<string, ComponentType<ArchetypeProps>> 
 
 export default function PraxisCard({ praxis, onModerated, showCrown = true }: Props) {
   const { localPraxis, adminProps } = usePraxisCard(praxis, onModerated);
+  // Merge the viewer's own just-cast vote (#626) before the skin sees it, so the
+  // score hero, footer meta and vote tally all move together on one object.
+  const voted = useVotedPraxis(localPraxis);
   const Card = pickVariant(
     PRAXIS_CARD_BY_SLUG,
-    localPraxis.task_faction_slug,
+    voted.task_faction_slug,
     DefaultPraxisCard,
   );
-  return <Card praxis={localPraxis} adminProps={adminProps} showCrown={showCrown} />;
+  return <Card praxis={voted} adminProps={adminProps} showCrown={showCrown} />;
 }

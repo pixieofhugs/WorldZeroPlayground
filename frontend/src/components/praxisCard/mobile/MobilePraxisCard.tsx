@@ -1,6 +1,7 @@
 import type { ComponentType } from 'react'
 import type { PraxisCardOut } from '../../../api/praxis'
 import { pickVariant } from '../../../utils/factionDispatch'
+import { useVotedPraxis } from '../../vote/useVotedPraxis'
 import UaMobilePraxisCard from './UaMobilePraxisCard'
 import WowMobilePraxisCard from './WowMobilePraxisCard'
 import SnideMobilePraxisCard from './SnideMobilePraxisCard'
@@ -34,6 +35,9 @@ export const MOBILE_PRAXIS_CARD_BY_SLUG: Record<string, ComponentType<MobilePrax
 }
 
 export default function MobilePraxisCard({ praxis }: MobilePraxisCardProps) {
-  const Card = pickVariant(MOBILE_PRAXIS_CARD_BY_SLUG, praxis.task_faction_slug, DefaultMobilePraxisCard)
-  return <Card praxis={praxis} />
+  // Merge the viewer's own just-cast vote (#626) before the skin sees it, so the
+  // score and the vote tally move together on one object.
+  const voted = useVotedPraxis(praxis)
+  const Card = pickVariant(MOBILE_PRAXIS_CARD_BY_SLUG, voted.task_faction_slug, DefaultMobilePraxisCard)
+  return <Card praxis={voted} />
 }
