@@ -3,29 +3,17 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from db import get_db
-from dependencies import get_current_character
 from models.character import Character
 from models.praxis import Praxis
 from models.vote import Vote
-from schemas.vote import VoterDetail, VoteIn, VoteOut, VoteSummary
-from services.vote import cast_or_update_vote
+from schemas.vote import VoterDetail, VoteSummary
 from services.vote_tally import tally_votes
 
+# Read-only vote surfaces. The write surface (POST /praxes/{id}/vote) lives in
+# ``routers/praxes.py`` -- it enforces the hidden-praxis 404 guard. A duplicate
+# POST route here was shadowed by include order in ``main.py`` and lacked that
+# guard; it was deleted in #637. Do not re-add a vote write route to this module.
 router = APIRouter()
-
-
-@router.post("/praxes/{praxis_id}/vote", response_model=VoteOut)
-async def cast_vote(
-    praxis_id: int,
-    data: VoteIn,
-    voter: Character = Depends(get_current_character),
-    session: AsyncSession = Depends(get_db),
-):
-    praxis = await session.get(Praxis, praxis_id)
-    if praxis is None:
-        raise HTTPException(status_code=404, detail="Praxis not found.")
-    vote = await cast_or_update_vote(voter, praxis, data.value, session)
-    return VoteOut.model_validate(vote)
 
 
 @router.get("/praxes/{praxis_id}/votes", response_model=VoteSummary)
