@@ -14,6 +14,11 @@ import {
   PraxisByline,
   PraxisScoreHero,
   PraxisStats,
+  PraxisExcerpt,
+  PraxisModeChip,
+  PraxisRoster,
+  PraxisMediaGallery,
+  PraxisVoteFooter,
   type AdminProps,
 } from "./praxisCard/shared";
 import { usePraxisCard } from "./praxisCard/usePraxisCard";
@@ -93,6 +98,7 @@ function PraxisBody({
         <div style={{ flex: 1, minWidth: 0 }}>
           <PraxisTitle praxis={praxis} style={titleStyle} />
           <PraxisTaskLink praxis={praxis} style={{ color: muted }} />
+          <PraxisExcerpt praxis={praxis} style={{ color: muted }} />
         </div>
         <PraxisScoreHero
           praxis={praxis}
@@ -103,7 +109,11 @@ function PraxisBody({
         />
       </div>
       <PraxisStats praxis={praxis} style={{ color: muted, marginTop: "var(--space-sm)" }} />
+      <PraxisModeChip praxis={praxis} />
+      <PraxisRoster praxis={praxis} accent={tint} paper={paper} />
+      <PraxisMediaGallery praxis={praxis} accent={tint} paper={paper} />
       <PraxisByline praxis={praxis} style={{ color: muted }} />
+      <PraxisVoteFooter praxis={praxis} />
     </>
   );
 }

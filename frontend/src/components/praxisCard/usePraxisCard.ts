@@ -6,6 +6,10 @@
  * moderate handlers. Returns the live praxis plus the assembled
  * {@link AdminProps} every archetype forwards to <AdminOverlay>. Behaviour is
  * lifted 1:1 from the original PraxisCard switcher component.
+ *
+ * Voting is deliberately NOT owned here: the PraxisVoteFooter slot renders
+ * <VoteUI>, whose per-faction variants self-manage casting through useVote /
+ * castVote. A vote handler on this hook would be dead code (#587 §2).
  */
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
