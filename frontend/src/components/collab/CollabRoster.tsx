@@ -13,10 +13,14 @@
  * `action` is supplied only in the editable composer; the read-only detail view
  * omits it (the detail page owns its own reopen affordance). Spacing/type via
  * Tailwind utilities + --text-* tokens, not raw inline pixels (#588 lint guard).
+ *
+ * Every word resolves through `collabCopy(factionSlug, key)`, so each faction
+ * speaks the same states in its own voice and anything it hasn't overridden
+ * falls back to the shared `editPraxis.collab.*` block (#591).
  */
-import { useTranslation } from 'react-i18next'
 import type { PraxisMemberOut } from '../../api/praxis'
 import { factionCssVar } from '../../utils/factions'
+import { collabCopy } from './collabCopy'
 
 export type CollabState = 'writing' | 'waiting' | 'holdout' | 'published'
 
@@ -63,7 +67,6 @@ export function CollabRoster({
   taskPointValue?: number | null
   action?: CollabRosterAction
 }) {
-  const { t } = useTranslation('forms')
   const gate = deriveCollabGate(members, currentCharacterId)
   if (gate.memberCount < 2) return null // solo/duel render nothing
 
@@ -72,11 +75,11 @@ export function CollabRoster({
 
   const banner =
     gate.state === 'waiting'
-      ? { text: t('editPraxis.collab.bannerWaiting'), tone: accent, warn: false }
+      ? { text: collabCopy(factionSlug, 'bannerWaiting'), tone: accent, warn: false }
       : gate.state === 'holdout'
-        ? { text: t('editPraxis.collab.bannerHoldout'), tone: 'var(--color-warning)', warn: true }
+        ? { text: collabCopy(factionSlug, 'bannerHoldout'), tone: 'var(--color-warning)', warn: true }
         : gate.state === 'published'
-          ? { text: t('editPraxis.collab.bannerPublished'), tone: 'var(--color-success)', warn: false }
+          ? { text: collabCopy(factionSlug, 'bannerPublished'), tone: 'var(--color-success)', warn: false }
           : null
 
   return (
@@ -84,7 +87,7 @@ export function CollabRoster({
       {/* Header: label + cast progress chip */}
       <div className="flex items-center gap-2" style={{ justifyContent: 'space-between' }}>
         <span className="eyebrow text-[10px]" style={{ color: 'var(--color-text-secondary)' }}>
-          {t('editPraxis.collab.castStatus', { cast: gate.castCount, total: gate.memberCount })}
+          {collabCopy(factionSlug, 'castStatus', { cast: gate.castCount, total: gate.memberCount })}
         </span>
       </div>
 
@@ -94,7 +97,7 @@ export function CollabRoster({
         aria-valuenow={gate.castCount}
         aria-valuemin={0}
         aria-valuemax={gate.memberCount}
-        aria-label={t('editPraxis.collab.progressAria', { cast: gate.castCount, total: gate.memberCount })}
+        aria-label={collabCopy(factionSlug, 'progressAria', { cast: gate.castCount, total: gate.memberCount })}
         style={{ height: 4, borderRadius: 2, background: 'var(--color-border)', overflow: 'hidden' }}
       >
         <div style={{ width: `${pct}%`, height: '100%', background: accent, transition: 'width 200ms' }} />
@@ -118,14 +121,14 @@ export function CollabRoster({
               <span className="font-body text-[12px]" style={{ fontWeight: cast ? 700 : 400, flex: 1 }}>
                 {member.character_display_name}
                 {isMe && (
-                  <span style={{ color: 'var(--color-text-tertiary)' }}> · {t('editPraxis.collab.you')}</span>
+                  <span style={{ color: 'var(--color-text-tertiary)' }}> · {collabCopy(factionSlug, 'you')}</span>
                 )}
                 {gate.state === 'published' && taskPointValue != null && (
                   <span style={{ color: 'var(--color-success)', fontWeight: 700 }}> +{taskPointValue}</span>
                 )}
               </span>
               <span className="eyebrow text-[9px]" style={{ color: cast ? accent : 'var(--color-warning)' }}>
-                {cast ? `✓ ${t('editPraxis.collab.pillCast')}` : t('editPraxis.collab.pillWeaving')}
+                {cast ? `✓ ${collabCopy(factionSlug, 'pillCast')}` : collabCopy(factionSlug, 'pillWeaving')}
               </span>
             </div>
           )
@@ -157,10 +160,10 @@ export function CollabRoster({
           style={{ alignSelf: 'flex-start' }}
         >
           {gate.iCast
-            ? t('editPraxis.collab.pullBackAction')
+            ? collabCopy(factionSlug, 'pullBackAction')
             : gate.castCount === gate.memberCount - 1
-              ? t('editPraxis.collab.castFinalAction')
-              : t('editPraxis.collab.castAction')}
+              ? collabCopy(factionSlug, 'castFinalAction')
+              : collabCopy(factionSlug, 'castAction')}
         </button>
       )}
     </div>
