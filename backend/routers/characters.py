@@ -23,6 +23,7 @@ from services.badge import list_badges_for_character
 from services.character import (
     CharacterCreationResult,
     build_character_out,
+    build_character_outs,
     create_character,
     list_characters_for_viewer,
     soft_delete_character,
@@ -58,7 +59,9 @@ async def list_characters(
         limit=limit,
         offset=offset,
     )
-    return [build_character_out(character, stats) for character, stats in rows]
+    # Badges ride along, batched (#655) — the invite search shares this path and
+    # gets them too, which is harmless: /characters/{id} is already public.
+    return await build_character_outs(rows, session)
 
 
 @router.get("/{character_id}", response_model=CharacterOut)
