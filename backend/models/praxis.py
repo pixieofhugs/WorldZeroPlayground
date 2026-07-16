@@ -155,6 +155,11 @@ class PraxisMember(Base):
     has_submitted: Mapped[bool] = mapped_column(
         Boolean, nullable=False, default=False, server_default="false"
     )
+    # When has_submitted last flipped True (#571). The collaborator-submitted feed
+    # sorts strictly by this, not joined_at. NULL = never submitted / pulled back.
+    submitted_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
     joined_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=func.now()
     )

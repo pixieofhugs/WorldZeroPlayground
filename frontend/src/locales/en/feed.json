@@ -32,6 +32,7 @@
     "action": {
       "completedTask": "completed a task",
       "signedUpSharedTask": "signed up for a task you're doing",
+      "collaboratorSubmitted": "submitted their part of",
       "votedOnYourPraxis": "voted on your praxis",
       "tauntsYou": "taunts you",
       "defected": "defected from {{oldFaction}} to {{newFaction}}",

@@ -27,9 +27,12 @@ def _apply_seal(praxis: Praxis) -> None:
     """Pure state mutation for going Live: mark the whole group submitted and clear
     the window. Caller flushes and recalculates member stats."""
     praxis.status = PraxisStatus.submitted
-    praxis.submitted_at = datetime.now(timezone.utc)
+    now = datetime.now(timezone.utc)
+    praxis.submitted_at = now
     praxis.submit_proposed_at = None
     for member in praxis.members:
+        if not member.has_submitted:
+            member.submitted_at = now
         member.has_submitted = True
 
 
@@ -88,6 +91,7 @@ async def on_member_edit(
     praxis.status = PraxisStatus.in_progress
     for member in praxis.members:
         member.has_submitted = False
+        member.submitted_at = None
     await session.flush()
     if was_live:
         # Leaving Live changes scoring — recompute every member's stats.
@@ -111,6 +115,7 @@ async def on_submit(
     for member in praxis.members:
         if member.character_id == character_id:
             member.has_submitted = True
+            member.submitted_at = datetime.now(timezone.utc)
             break
     await session.flush()
     await session.refresh(praxis)
@@ -150,6 +155,7 @@ async def on_member_kicked(praxis: Praxis, session: AsyncSession) -> None:
     Call after removing the kicked member."""
     for member in praxis.members:
         member.has_submitted = False
+        member.submitted_at = None
     praxis.status = PraxisStatus.in_progress
     praxis.submit_proposed_at = None
     await session.flush()
@@ -168,6 +174,7 @@ async def on_member_unsubmit(
     for member in praxis.members:
         if member.character_id == character_id:
             member.has_submitted = False
+            member.submitted_at = None
             break
     if any(m.has_submitted for m in praxis.members):
         praxis.status = PraxisStatus.pending
