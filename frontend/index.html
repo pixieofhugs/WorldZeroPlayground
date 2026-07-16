@@ -4,6 +4,27 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>World Zero</title>
+    <script>
+      // Pre-paint theme bootstrap (mirrors useTheme's getInitialTheme).
+      // Applies the persisted [data-theme] before first paint so a mobile
+      // refresh (MobileLayout never mounts useTheme) doesn't revert to light,
+      // and desktop doesn't flash light before React hydrates. Keep this in
+      // sync with THEME_STORAGE_KEY ('wz-theme') in src/hooks/useTheme.ts.
+      (function () {
+        try {
+          var stored = localStorage.getItem('wz-theme')
+          var theme =
+            stored === 'light' || stored === 'dark'
+              ? stored
+              : window.matchMedia('(prefers-color-scheme: dark)').matches
+                ? 'dark'
+                : 'light'
+          document.documentElement.setAttribute('data-theme', theme)
+        } catch (error) {
+          /* localStorage/matchMedia can throw; fall back to CSS default. */
+        }
+      })()
+    </script>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link

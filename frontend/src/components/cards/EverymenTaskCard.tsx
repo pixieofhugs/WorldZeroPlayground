@@ -180,7 +180,7 @@ export default function EverymenTaskCard({ task, displayPoints, onSignup }: Prop
         maxWidth: 206,
         flex: "0 1 206px",
         background: "var(--everymen-paper)",
-        color: "var(--everymen-ink)",
+        color: "var(--faction-everymen-card-text)",
         border: "1.5px solid var(--everymen-ink)",
         boxShadow:
           "0 0 0 3px var(--everymen-paper), 0 0 0 4px var(--everymen-ink)",

@@ -36,9 +36,17 @@ import i18n from '../../i18n'
 
 // ── Queue shaping ─────────────────────────────────────────────────────────────
 
-type QueueItem =
+export type QueueItem =
   | { kind: 'praxis'; praxis: FlaggedPraxisOut }
   | { kind: 'comment'; comment: FlaggedCommentOut }
+
+/** Client-side content-type filter over the merged queue (#576). */
+export type QueueFilter = 'all' | 'praxis' | 'comment'
+
+/** Narrow the merged queue to one content type; 'all' passes through (#576). */
+export function filterQueueByType(queue: QueueItem[], filter: QueueFilter): QueueItem[] {
+  return filter === 'all' ? queue : queue.filter((item) => item.kind === filter)
+}
 
 /** When the item entered the queue: its most recent flag (flags arrive newest
  *  first), falling back to the content's own timestamps. */
@@ -105,6 +113,43 @@ function ReasonBadge({ reason }: { reason: string }) {
   )
 }
 
+/** Segmented content-type filter over the merged queue (#576). Mirrors the
+ *  admin tab-bar's underline eyebrow language rather than the mobile pill. */
+function QueueFilterBar({
+  value,
+  onChange,
+  labels,
+}: {
+  value: QueueFilter
+  onChange: (next: QueueFilter) => void
+  labels: Record<QueueFilter, string>
+}) {
+  const options: QueueFilter[] = ['all', 'praxis', 'comment']
+  return (
+    <div className="flex gap-4" role="tablist" aria-label={labels.all}>
+      {options.map((option) => (
+        <button
+          key={option}
+          type="button"
+          role="tab"
+          aria-selected={value === option}
+          onClick={() => onChange(option)}
+          className="eyebrow pb-1 transition-colors"
+          style={{
+            background: 'none',
+            border: 'none',
+            cursor: 'pointer',
+            color: value === option ? 'var(--color-text-primary)' : 'var(--color-text-tertiary)',
+            borderBottom: value === option ? '2px solid var(--color-text-primary)' : '2px solid transparent',
+          }}
+        >
+          {labels[option]}
+        </button>
+      ))}
+    </div>
+  )
+}
+
 function QueueCardFrame({
   badgeReason,
   typeLabel,
@@ -138,6 +183,7 @@ export default function ModerationTab() {
   const [activeMembers, setActiveMembers] = useState<number | null>(null)
   const [messages, setMessages] = useState<ContactMessageOut[]>([])
   const [showArchived, setShowArchived] = useState(false)
+  const [typeFilter, setTypeFilter] = useState<QueueFilter>('all')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [actionError, setActionError] = useState<string | null>(null)
@@ -236,6 +282,15 @@ export default function ModerationTab() {
     ...flaggedComments.map((comment): QueueItem => ({ kind: 'comment', comment })),
   ].sort((a, b) => queueTime(b).localeCompare(queueTime(a)))
 
+  // Content-type filter is purely client-side over the already-merged queue (#576).
+  const visibleQueue = filterQueueByType(queue, typeFilter)
+
+  const filterLabels: Record<QueueFilter, string> = {
+    all: t('moderation.queue.filter.all'),
+    praxis: t('moderation.queue.filter.praxes'),
+    comment: t('moderation.queue.filter.comments'),
+  }
+
   return (
     <div className="flex flex-col gap-8">
       {actionError && (
@@ -261,7 +316,12 @@ export default function ModerationTab() {
         <h3 className="font-display text-xl font-bold mb-3 border-b-2 border-border pb-1">
           {t('moderation.queue.heading')} <span className="text-muted text-base">({queue.length})</span>
         </h3>
-        {queue.length === 0 ? (
+        {queue.length > 0 && (
+          <div className="mb-3">
+            <QueueFilterBar value={typeFilter} onChange={setTypeFilter} labels={filterLabels} />
+          </div>
+        )}
+        {visibleQueue.length === 0 ? (
           <div className="card px-4 py-6" style={{ textAlign: 'center' }}>
             <p className="font-display text-lg font-bold">{t('moderation.queue.empty.title')}</p>
             <p className="font-body text-sm text-muted">
@@ -270,7 +330,7 @@ export default function ModerationTab() {
           </div>
         ) : (
           <div className="flex flex-col gap-3">
-            {queue.map((item) =>
+            {visibleQueue.map((item) =>
               item.kind === 'praxis' ? (
                 <QueueCardFrame
                   key={`praxis-${item.praxis.id}`}

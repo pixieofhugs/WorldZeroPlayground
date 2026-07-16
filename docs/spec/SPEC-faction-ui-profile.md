@@ -128,6 +128,7 @@ Hand this to whoever wires the faction after design is delivered. (Designer only
     - *(progression/level is token-tinted, not a dispatcher — no map to register; #9.)*
 13. **Comment (#14, ADR-0006):** `COMMENT_COMPONENTS` (`Record<slug, Component>` + `DefaultComment`), one archetype rendered in `row`/`composer` modes. Omit a faction to inherit `DefaultComment`. The thread container is neutral — do not register it.
 14. Leave the slug out of the `Factions.tsx` hidden list unless it should be hidden.
+15. **Contrast:** verify every text/background color pair in the faction's tokens (light **and** dark) meets WCAG AA — 4.5:1 for normal text, 3:1 for large text and UI components — before registering the faction.
 
 ---
 
