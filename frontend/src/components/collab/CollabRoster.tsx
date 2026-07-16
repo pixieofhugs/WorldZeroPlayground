@@ -11,7 +11,8 @@
  *   cast_count === member_count         → published (S4) every part woven
  *
  * `action` is supplied only in the editable composer; the read-only detail view
- * omits it (the detail page owns its own reopen affordance).
+ * omits it (the detail page owns its own reopen affordance). Spacing/type via
+ * Tailwind utilities + --text-* tokens, not raw inline pixels (#588 lint guard).
  */
 import { useTranslation } from 'react-i18next'
 import type { PraxisMemberOut } from '../../api/praxis'
@@ -79,10 +80,10 @@ export function CollabRoster({
           : null
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+    <div className="flex flex-col gap-[8px]">
       {/* Header: label + cast progress chip */}
       <div className="flex items-center gap-2" style={{ justifyContent: 'space-between' }}>
-        <span className="eyebrow" style={{ fontSize: 10, color: 'var(--color-text-secondary)' }}>
+        <span className="eyebrow text-[10px]" style={{ color: 'var(--color-text-secondary)' }}>
           {t('editPraxis.collab.castStatus', { cast: gate.castCount, total: gate.memberCount })}
         </span>
       </div>
@@ -100,22 +101,21 @@ export function CollabRoster({
       </div>
 
       {/* Roster rows */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+      <div className="flex flex-col gap-[4px]">
         {members.map((member) => {
           const isMe = member.character_id === currentCharacterId
           const cast = member.has_submitted
           return (
             <div
               key={member.id}
-              className="flex items-center gap-2"
+              className="flex items-center gap-2 px-[10px] py-[5px]"
               style={{
-                padding: '5px 10px',
                 borderRadius: 4,
                 border: cast ? `1.5px solid ${accent}` : '1.5px dashed var(--color-border)',
                 background: cast ? factionCssVar(factionSlug, 'card-muted') : 'transparent',
               }}
             >
-              <span className="font-body" style={{ fontSize: 12, fontWeight: cast ? 700 : 400, flex: 1 }}>
+              <span className="font-body text-[12px]" style={{ fontWeight: cast ? 700 : 400, flex: 1 }}>
                 {member.character_display_name}
                 {isMe && (
                   <span style={{ color: 'var(--color-text-tertiary)' }}> · {t('editPraxis.collab.you')}</span>
@@ -124,13 +124,7 @@ export function CollabRoster({
                   <span style={{ color: 'var(--color-success)', fontWeight: 700 }}> +{taskPointValue}</span>
                 )}
               </span>
-              <span
-                className="eyebrow"
-                style={{
-                  fontSize: 9,
-                  color: cast ? accent : 'var(--color-warning)',
-                }}
-              >
+              <span className="eyebrow text-[9px]" style={{ color: cast ? accent : 'var(--color-warning)' }}>
                 {cast ? `✓ ${t('editPraxis.collab.pillCast')}` : t('editPraxis.collab.pillWeaving')}
               </span>
             </div>
@@ -141,10 +135,8 @@ export function CollabRoster({
       {/* Per-state banner */}
       {banner && (
         <p
-          className="font-body"
+          className="font-body text-[11px] px-[10px] py-[6px]"
           style={{
-            fontSize: 11,
-            padding: '6px 10px',
             borderRadius: 4,
             color: banner.tone,
             border: `1px solid ${banner.tone}`,
@@ -161,8 +153,8 @@ export function CollabRoster({
           type="button"
           onClick={() => (gate.iCast ? action.onPullBack() : action.onCast())}
           disabled={action.submitting}
-          className={gate.iCast ? 'btn-outline' : 'btn-primary'}
-          style={{ fontSize: 11, padding: '6px 14px', alignSelf: 'flex-start' }}
+          className={`${gate.iCast ? 'btn-outline' : 'btn-primary'} text-[11px] px-[14px] py-[6px]`}
+          style={{ alignSelf: 'flex-start' }}
         >
           {gate.iCast
             ? t('editPraxis.collab.pullBackAction')
