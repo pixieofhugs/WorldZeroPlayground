@@ -34,7 +34,7 @@ export interface FactionSelectCardProps {
 // ─── Sigils ───────────────────────────────────────────────────────────────────
 
 let _uaUid = 0;
-function UASigil({ size = 50 }: { size?: number }) {
+function UaSigil({ size = 50 }: { size?: number }) {
   const id = useMemo(() => "uasigil-" + _uaUid++, []);
   const shield = "M8 6 H92 V60 C92 92 66 108 50 116 C34 108 8 92 8 60 Z";
   return (
@@ -67,7 +67,7 @@ function WOWSigil({ size = 22, color = "var(--gestalt-pink)" }: { size?: number;
   );
 }
 
-function SNIDESigil({ size = 48, color = "var(--snide-acid)" }: { size?: number; color?: string }) {
+function SnideSigil({ size = 48, color = "var(--snide-acid)" }: { size?: number; color?: string }) {
   return (
     <svg viewBox="0 0 48 48" width={size} height={size} style={{ display: "block" }}>
       <circle cx="24" cy="24" r="19" fill="none" stroke={color} strokeWidth="3" />
@@ -136,7 +136,7 @@ function AlbescentSigil({ size = 20, color = "var(--faction-albescent-card-text,
 
 // ─── Per-faction archetypes ───────────────────────────────────────────────────
 
-function UASelectCard({ state = "locked", members, onVisit }: Omit<FactionSelectCardProps, "faction">) {
+function UaSelectCard({ state = "locked", members, onVisit }: Omit<FactionSelectCardProps, "faction">) {
   const status = i18n.t(`feed:factionSelect.ua.status.${state}` as const);
   return (
     <div style={{
@@ -154,7 +154,7 @@ function UASelectCard({ state = "locked", members, onVisit }: Omit<FactionSelect
             <div style={{ fontFamily: "var(--font-faction-gilt)", fontStyle: "italic", fontWeight: 800, fontSize: 52, lineHeight: 0.9, letterSpacing: "0.01em", marginTop: 8 }}>{i18n.t("feed:factionSelect.ua.wordmark")}</div>
             <div style={{ fontFamily: "var(--font-faction-engraved-caps)", fontSize: 12, letterSpacing: "0.24em", color: "var(--ua-sub)", textTransform: "uppercase", marginTop: 3 }}>{i18n.t("feed:factionSelect.ua.subtitle")}</div>
           </div>
-          <UASigil size={44} />
+          <UaSigil size={44} />
         </div>
         <div style={{ height: 2, background: "var(--ua-gilt)", margin: "16px 0 13px", opacity: 0.85 }} />
         <p style={{ margin: 0, fontFamily: "var(--font-faction-gilt)", fontStyle: "italic", fontSize: 16, lineHeight: 1.4, color: "var(--ua-ink)" }}>
@@ -219,7 +219,7 @@ function WOWSelectCard({ state = "locked", members, onVisit }: Omit<FactionSelec
   );
 }
 
-function SNIDESelectCard({ state = "locked", members, onVisit }: Omit<FactionSelectCardProps, "faction">) {
+function SnideSelectCard({ state = "locked", members, onVisit }: Omit<FactionSelectCardProps, "faction">) {
   const status = i18n.t(`feed:factionSelect.snide.status.${state}` as const);
   return (
     <div style={{
@@ -232,7 +232,7 @@ function SNIDESelectCard({ state = "locked", members, onVisit }: Omit<FactionSel
       <div style={{ position: "absolute", top: 14, left: 22, width: 74, height: 20, background: "var(--snide-tape)", transform: "rotate(-6deg)", boxShadow: "0 1px 2px rgba(0,0,0,0.4)" }} />
       <div style={{ position: "relative", flex: 1, padding: "26px 24px 0" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-          <SNIDESigil size={40} color="var(--snide-acid)" />
+          <SnideSigil size={40} color="var(--snide-acid)" />
           <div>
             <div style={{ fontFamily: "var(--font-faction-anton)", fontSize: 34, lineHeight: 0.85, color: "var(--snide-paper)", letterSpacing: "0.02em" }}>{i18n.t("feed:identity.snide.wordmark")}</div>
             <div style={{ fontSize: 10, letterSpacing: "0.14em", color: "var(--snide-acid)", marginTop: 4, textTransform: "uppercase" }}>{i18n.t("feed:factionSelect.snide.masthead")}</div>
@@ -412,9 +412,9 @@ function AlbescentSelectCard({ state = "locked", members, onVisit }: Omit<Factio
 // ─── Switcher ─────────────────────────────────────────────────────────────────
 
 const BY_FACTION: Record<string, (p: Omit<FactionSelectCardProps, "faction">) => JSX.Element> = {
-  ua: UASelectCard,
+  ua: UaSelectCard,
   wow: WOWSelectCard,
-  snide: SNIDESelectCard,
+  snide: SnideSelectCard,
   ephemerists: EphemeristsSelectCard,
   singularity: SingularitySelectCard,
   everymen: EverymenSelectCard,
@@ -431,6 +431,6 @@ const LEGACY_SLUG: Record<string, string> = {
 
 export default function FactionSelectCard({ faction, ...rest }: FactionSelectCardProps) {
   const key = BY_FACTION[faction] ? faction : LEGACY_SLUG[faction] ?? faction;
-  const Card = BY_FACTION[key] ?? UASelectCard;
+  const Card = BY_FACTION[key] ?? UaSelectCard;
   return <Card {...rest} />;
 }

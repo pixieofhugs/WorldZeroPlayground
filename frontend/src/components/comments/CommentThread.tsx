@@ -22,7 +22,7 @@ import {
 } from './shared'
 import { CommentEditor, OwnerControls, useOwnerEdit } from './OwnerControls'
 import { CommentFlagControl } from './FlagControl'
-import UAComment from './voices/UAComment'
+import UaComment from './voices/UaComment'
 import EverymenComment from './voices/EverymenComment'
 import WowComment from './voices/WowComment'
 import SnideComment from './voices/SnideComment'
@@ -90,7 +90,7 @@ export function DefaultComment(props: CommentProps) {
 /** Seven faction comment archetypes (ADR-0018). Albescent is explicit, so it
  *  beats the albescent→ua alias for comments while still aliasing elsewhere. */
 export const COMMENT_COMPONENTS: Record<string, CommentComponent> = {
-  ua: UAComment,
+  ua: UaComment,
   everymen: EverymenComment,
   wow: WowComment,
   snide: SnideComment,

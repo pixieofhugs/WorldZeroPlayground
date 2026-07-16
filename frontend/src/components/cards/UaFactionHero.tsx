@@ -1,6 +1,6 @@
 import type { FactionHeroProps } from "../../pages/FactionDetail";
 import i18n from "../../i18n";
-import { UACrest, MottoRibbon } from "./UACrest";
+import { UaCrest, MottoRibbon } from "./UaCrest";
 
 /**
  * UA (University of Asthmatics) faction-page hero — a gilt-salon frontispiece.
@@ -8,7 +8,7 @@ import { UACrest, MottoRibbon } from "./UACrest";
  * (--ua-gilt) around a parchment field, a heraldic crest, a regal serif
  * wordmark, a Latin motto cartouche, and the three counts engraved as salon
  * regalia (patrons / commissions / acquisitions). Ported from the UA design kit
- * (UATaskDetail hero / ua.css); conforms to {@link FactionHeroProps}.
+ * (UaTaskDetail hero / ua.css); conforms to {@link FactionHeroProps}.
  *
  * UA is ALWAYS LIGHT: its --faction-ua-* / --ua-* tokens are identical in both
  * themes, so the salon styles itself with them and never dims — it does not
@@ -38,7 +38,7 @@ const ENGRAVED = '"Marcellus", Georgia, serif';
 const ink = (pct: number): string =>
   `color-mix(in srgb, ${INK} ${pct}%, transparent)`;
 
-export default function UAFactionHero({
+export default function UaFactionHero({
   name,
   description,
   members,
@@ -86,7 +86,7 @@ export default function UAFactionHero({
               alignItems: "center",
             }}
           >
-            <UACrest width={150} height={180} />
+            <UaCrest width={150} height={180} />
 
             <div style={{ flex: 1, minWidth: 260 }}>
               {/* engraved house line */}

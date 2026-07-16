@@ -87,7 +87,7 @@ function RansomChar({ ch, index }: { ch: string; index: number }) {
   );
 }
 
-export default function SNIDEEditPraxis({ state }: Props) {
+export default function SnideEditPraxis({ state }: Props) {
   const { t } = useTranslation("forms");
   const praxis = state.praxis!;
   const task = state.task;

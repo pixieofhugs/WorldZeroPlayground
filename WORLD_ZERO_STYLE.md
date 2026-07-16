@@ -195,6 +195,10 @@ Frosted surface: `var(--color-bg-surface)`, backdrop blur, `var(--color-border)`
 
 Full-bleed SVG with blurred ellipses in four corners. Opacity controlled by `--wc-opacity-*` variables so dark mode dims automatically.
 
+### Faction Component Naming
+
+Faction-specific components are named with a **Title-cased slug prefix** — `Ua`, `Snide`, `Wow`, `Everymen`, `Ephemerists`, `Singularity`, `Albescent` — never an ALL-CAPS acronym (`UA`, `SNIDE`). The file name, the component's default export, and any private per-faction helper (sigil, crest, card) all share that Title-cased prefix. Only the lowercase backend **slug** (`ua`, `snide`) stays lowercase — it is the string key in dispatch registries (`FACTION_*_BY_SLUG`, `pickVariant`) and in CSS variables (`--faction-ua-*`), and must never be recased. This keeps a single, greppable identifier per faction across every surface.
+
 ---
 
 ## 8. Dark Mode

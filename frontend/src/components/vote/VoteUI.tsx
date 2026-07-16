@@ -6,7 +6,7 @@ import WowVote from './WowVote'
 import SnideVote from './SnideVote'
 import EphemeristsVote from './EphemeristsVote'
 import SingularityVote from './SingularityVote'
-import UAVote from './UAVote'
+import UaVote from './UaVote'
 import AlbescentVote from './AlbescentVote'
 
 /**
@@ -29,7 +29,7 @@ const FACTION_VOTE: Record<string, ComponentType<VoteUIProps>> = {
   snide: SnideVote,
   ephemerists: EphemeristsVote,
   singularity: SingularityVote,
-  ua: UAVote,
+  ua: UaVote,
   albescent: AlbescentVote,
 }
 

@@ -22,12 +22,12 @@ import WowMobileTaskDetail from "./taskDetail/mobileArchetypes/WowTaskDetail";
 import EphemeristsMobileTaskDetail from "./taskDetail/mobileArchetypes/EphemeristsTaskDetail";
 import AlbescentMobileTaskDetail from "./taskDetail/mobileArchetypes/AlbescentTaskDetail";
 import SnideMobileTaskDetail from "./taskDetail/mobileArchetypes/SnideTaskDetail";
-import SNIDETaskDetail from "./taskDetail/archetypes/SNIDETaskDetail";
+import SnideTaskDetail from "./taskDetail/archetypes/SnideTaskDetail";
 import EverymenTaskDetail from "./taskDetail/archetypes/EverymenTaskDetail";
 import WowTaskDetail from "./taskDetail/archetypes/WowTaskDetail";
 import EphemeristsTaskDetail from "./taskDetail/archetypes/EphemeristsTaskDetail";
 import SingularityTaskDetail from "./taskDetail/archetypes/SingularityTaskDetail";
-import UATaskDetail from "./taskDetail/archetypes/UATaskDetail";
+import UaTaskDetail from "./taskDetail/archetypes/UaTaskDetail";
 import AlbescentTaskDetail from "./taskDetail/archetypes/AlbescentTaskDetail";
 import CommentThread from "../components/comments/CommentThread";
 
@@ -37,12 +37,12 @@ type Archetype = (props: { state: TaskDetailState }) => JSX.Element | null;
 // na) falls through to DefaultTaskDetail below. albescent is a FIRST-CLASS
 // identity (#232 slice 1) with its own entry.
 export const ARCHETYPE_BY_SLUG: Record<string, Archetype> = {
-  snide: SNIDETaskDetail,
+  snide: SnideTaskDetail,
   everymen: EverymenTaskDetail,
   wow: WowTaskDetail,
   ephemerists: EphemeristsTaskDetail,
   singularity: SingularityTaskDetail,
-  ua: UATaskDetail,
+  ua: UaTaskDetail,
   albescent: AlbescentTaskDetail,
 };
 

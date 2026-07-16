@@ -14,9 +14,9 @@ src/components/cards/FactionSelectCard.tsx
 src/components/cards/SingularityFactionHero.tsx
 src/components/cards/SnideFactionHero.tsx
 src/components/cards/SnideMasthead.tsx
-src/components/cards/SNIDETaskCard.tsx
-src/components/cards/UAFactionHero.tsx
-src/components/cards/UATaskCard.tsx
+src/components/cards/SnideTaskCard.tsx
+src/components/cards/UaFactionHero.tsx
+src/components/cards/UaTaskCard.tsx
 src/components/cards/WowFactionHero.tsx
 src/components/cards/WowTaskCard.tsx
 src/components/CharacterSwitcherSheet.tsx
@@ -30,7 +30,7 @@ src/components/comments/voices/EphemeristsComment.tsx
 src/components/comments/voices/EverymenComment.tsx
 src/components/comments/voices/SingularityComment.tsx
 src/components/comments/voices/SnideComment.tsx
-src/components/comments/voices/UAComment.tsx
+src/components/comments/voices/UaComment.tsx
 src/components/comments/voices/WowComment.tsx
 src/components/CredentialCard.tsx
 src/components/feed/AlbescentFeedFrame.tsx
@@ -45,7 +45,7 @@ src/components/feed/FeedDateDivider.tsx
 src/components/feed/FeedRowContent.tsx
 src/components/feed/SingularityFeedFrame.tsx
 src/components/feed/SnideFeedFrame.tsx
-src/components/feed/UAFeedFrame.tsx
+src/components/feed/UaFeedFrame.tsx
 src/components/feed/WowFeedFrame.tsx
 src/components/home/ActivityTicker.tsx
 src/components/imageEdit/ImageEditModal.tsx
@@ -68,7 +68,7 @@ src/components/vote/EphemeristsVote.tsx
 src/components/vote/EverymenVote.tsx
 src/components/vote/SingularityVote.tsx
 src/components/vote/SnideVote.tsx
-src/components/vote/UAVote.tsx
+src/components/vote/UaVote.tsx
 src/components/vote/VoteShell.tsx
 src/components/vote/WowVote.tsx
 src/pages/Admin.tsx
@@ -98,8 +98,8 @@ src/pages/editPraxis/archetypes/EphemeristsEditPraxis.tsx
 src/pages/editPraxis/archetypes/EverymenEditPraxis.tsx
 src/pages/editPraxis/archetypes/shared.tsx
 src/pages/editPraxis/archetypes/SingularityEditPraxis.tsx
-src/pages/editPraxis/archetypes/SNIDEEditPraxis.tsx
-src/pages/editPraxis/archetypes/UAEditPraxis.tsx
+src/pages/editPraxis/archetypes/SnideEditPraxis.tsx
+src/pages/editPraxis/archetypes/UaEditPraxis.tsx
 src/pages/editPraxis/archetypes/WowEditPraxis.tsx
 src/pages/editPraxis/mobileArchetypes/AlbescentComposer.tsx
 src/pages/editPraxis/mobileArchetypes/DefaultEditPraxis.tsx
@@ -148,7 +148,7 @@ src/pages/praxisDetail/archetypes/EphemeristsPraxisDetail.tsx
 src/pages/praxisDetail/archetypes/EverymenPraxisDetail.tsx
 src/pages/praxisDetail/archetypes/SingularityPraxisDetail.tsx
 src/pages/praxisDetail/archetypes/SnidePraxisDetail.tsx
-src/pages/praxisDetail/archetypes/UAPraxisDetail.tsx
+src/pages/praxisDetail/archetypes/UaPraxisDetail.tsx
 src/pages/praxisDetail/archetypes/WowPraxisDetail.tsx
 src/pages/praxisDetail/DuelCrossLink.tsx
 src/pages/praxisDetail/mobileArchetypes/AlbescentPraxisDetail.tsx
@@ -170,8 +170,8 @@ src/pages/taskDetail/archetypes/EphemeristsTaskDetail.tsx
 src/pages/taskDetail/archetypes/EverymenTaskDetail.tsx
 src/pages/taskDetail/archetypes/shared.tsx
 src/pages/taskDetail/archetypes/SingularityTaskDetail.tsx
-src/pages/taskDetail/archetypes/SNIDETaskDetail.tsx
-src/pages/taskDetail/archetypes/UATaskDetail.tsx
+src/pages/taskDetail/archetypes/SnideTaskDetail.tsx
+src/pages/taskDetail/archetypes/UaTaskDetail.tsx
 src/pages/taskDetail/archetypes/WowTaskDetail.tsx
 src/pages/taskDetail/mobileArchetypes/AlbescentTaskDetail.tsx
 src/pages/taskDetail/mobileArchetypes/DefaultTaskDetail.tsx

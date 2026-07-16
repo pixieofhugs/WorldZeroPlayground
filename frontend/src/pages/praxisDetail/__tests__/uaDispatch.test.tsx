@@ -8,7 +8,7 @@ import { MOBILE_ARCHETYPE_BY_SLUG, ARCHETYPE_BY_SLUG } from '../../PraxisDetail'
 import { pickVariant } from '../../../utils/factionDispatch'
 import DefaultMobilePraxisDetail from '../mobileArchetypes/DefaultPraxisDetail'
 import UAMobilePraxisDetail from '../mobileArchetypes/UaPraxisDetail'
-import UADesktopPraxisDetail from '../archetypes/UAPraxisDetail'
+import UADesktopPraxisDetail from '../archetypes/UaPraxisDetail'
 
 describe('mobile praxis-detail UA dispatch', () => {
   it('mobile + a UA praxis resolves to the bespoke UA mobile skin', () => {

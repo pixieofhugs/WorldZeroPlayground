@@ -20,7 +20,7 @@ const PLATE_FONT = 'var(--faction-ua-card-font)'
 
 const TIERS = VOTE_REFRAMES['ua'].tiers
 
-export default function UAVote({
+export default function UaVote({
   praxisId,
   currentValue,
   points,

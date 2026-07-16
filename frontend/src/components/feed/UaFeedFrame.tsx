@@ -31,7 +31,7 @@ const FONT_ENGRAVED = 'var(--font-faction-engraved)' // Cinzel
 const ink = (pct: number): string =>
   `color-mix(in srgb, ${INK} ${pct}%, transparent)`
 
-export default function UAFeedFrame({ children }: { children: ReactNode }) {
+export default function UaFeedFrame({ children }: { children: ReactNode }) {
   return (
     // Outer gilt border + soft brown drop-shadow & inset white hairline.
     <div

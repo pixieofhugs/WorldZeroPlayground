@@ -24,6 +24,6 @@ const backdropStyle: CSSProperties = {
   backgroundSize: 'auto, auto, 6px 6px',
 }
 
-export default function UABackdrop() {
+export default function UaBackdrop() {
   return <div style={backdropStyle} aria-hidden="true" />
 }

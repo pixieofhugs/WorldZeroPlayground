@@ -1,7 +1,7 @@
 /**
  * The University of Asthmatics (UA) edit-praxis archetype — THE ATELIER.
  *
- * The gilt-salon counterpart to the read-page sheet (UAPraxisDetail) and UAVote:
+ * The gilt-salon counterpart to the read-page sheet (UaPraxisDetail) and UaVote:
  * a work-in-progress acquisition being prepared on the salon's workbench. Gilt
  * frames, parchment grounds, Playfair italic display, EB-Garamond serif body,
  * Marcellus small-caps regalia, burnt-amber accent. The salon never dims — UA
@@ -24,7 +24,7 @@ import {
   TitleCounter,
   formatAutosave,
 } from "./shared";
-import { UACrest } from "../../../components/cards/UACrest";
+import { UaCrest } from "../../../components/cards/UaCrest";
 import {
   BodyPreview,
   BodyTextarea,
@@ -78,7 +78,7 @@ function RegaliaLabel({ children }: { children: ReactNode }) {
   );
 }
 
-export default function UAEditPraxis({ state }: Props) {
+export default function UaEditPraxis({ state }: Props) {
   const { t } = useTranslation("forms");
   const praxis = state.praxis!;
   const task = state.task;
@@ -126,7 +126,7 @@ export default function UAEditPraxis({ state }: Props) {
             }}
           >
             <span style={{ display: "inline-flex", alignItems: "center", gap: 10, minWidth: 0 }}>
-              <UACrest width={22} height={26} />
+              <UaCrest width={22} height={26} />
               <span style={{ fontFamily: REGALIA, fontSize: 10, letterSpacing: "0.14em", color: "var(--ua-paper-warm)" }}>
                 {t("editPraxis.ua.masthead", { number: praxis.id })}
               </span>
@@ -147,7 +147,7 @@ export default function UAEditPraxis({ state }: Props) {
             <div style={{ height: 0, borderTop: "1.5px dashed var(--ua-gold)", marginBottom: 18 }} />
             {/* commission reference slip — crest, task, points, era mark */}
             <div style={{ display: "flex", alignItems: "center", gap: 14, border: "1px solid var(--ua-line)", background: "var(--ua-paper-warm)", padding: "12px 16px" }}>
-              <UACrest width={50} height={60} />
+              <UaCrest width={50} height={60} />
               <div style={{ minWidth: 0 }}>
                 <div style={{ fontFamily: MONO, fontSize: 8, letterSpacing: "0.2em", textTransform: "uppercase", color: "var(--ua-muted)", marginBottom: 4 }}>
                   {t("editPraxis.ua.commissionLabel")}
