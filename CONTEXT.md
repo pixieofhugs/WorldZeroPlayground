@@ -375,6 +375,16 @@ A **sealed, public** praxis. Its votes count toward score; it appears on every p
 surface (lists, detail, task/faction pages, activity feed). The only publicly visible
 praxis state. _Avoid_: "published"/"Live" as distinct states — they are this one.
 
+**Seal date** *(`submitted_at`)*:
+When a praxis entered the public register — set once on `in_progress → submitted`. For
+solo/duel, the author's submit; for collab, the lazy-consensus seal (everyone submitted
+**or** the window lapsed — ADR-0012). This is the date a praxis card shows and the date the
+**Praxis Index** sorts by. Distinct from `created_at`, which is the **draft-open** timestamp
+(row insert, when the first member opens the draft) — private, often days earlier, and never
+displayed.
+_Avoid_: "created"/"creation date" for the seal (`created_at` is a different, earlier event);
+"when the last one submits" (the timeout seals without them).
+
 **In editing** *(`status = in_progress`)*:
 A praxis being worked on — a never-submitted **draft** *or* one that was **unsubmitted**.
 The two are indistinguishable by design (ADR-0007): no "was previously submitted" flag.
