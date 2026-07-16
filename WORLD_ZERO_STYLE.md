@@ -93,13 +93,50 @@ All fonts loaded from Google Fonts.
 
 Use `factionCssVar(slug, 'card-font')` in components. Never hardcode the font family string directly.
 
-**Type scale** is defined as CSS variables (`--text-xs` through `--text-4xl`). Use the variable names, not raw pixel values.
+**Type scale** is defined as CSS variables in `index.css`. Use the variable names, not raw pixel values. It comes in **two tiers**, and the naming convention is the tier boundary made visible: the label tier is a size ramp with t-shirt names, the content tier is a **role vocabulary**.
 
-**Content-text floor.** `--text-2xl` (18px) is the floor for _real content_ — anything a player is meant to actually read: titles, scores, body copy, descriptions. `--text-xs` through `--text-xl` (8–14px) remain valid but are **label tier only**: eyebrows, kickers, badges, pills, stamps, button chrome. If a human reads it for meaning rather than scanning it as a label, it is `--text-2xl` or larger.
+| Tier        | Tokens                                                                     | Rule                    |
+| ----------- | -------------------------------------------------------------------------- | ----------------------- |
+| **Label**   | `--text-xs` 8 · `--text-sm` 9 · `--text-base` 10 · `--text-md` 11 · `--text-lg` 12 · `--text-xl` 14 | Stays small. Scanned, not read. |
+| **Content** | `--text-content` 18 · `--text-title` 24 · `--text-heading` 32 · `--text-display` 42 | The floor and up. Read for meaning. |
 
-This is a usage rule, not a change to the scale — no token values were renumbered and no new type tokens were added.
+The content tier is a clean **4:3 ramp** — each step is exactly a third bigger than the last, so it needs no table to reproduce.
 
-**Eyebrow / label text:** Courier Prime, `--text-sm` (9px), uppercase, letter-spacing 0.15em, `var(--color-text-tertiary)`. Use the `.eyebrow` class.
+| Token             | px  | Role                                                    |
+| ----------------- | --- | ------------------------------------------------------- |
+| `--text-content`  | 18  | body copy, descriptions, admin notes — **the floor**    |
+| `--text-title`    | 24  | titles, scores                                          |
+| `--text-heading`  | 32  | section and page headings                               |
+| `--text-display`  | 42  | hero, wordmark                                          |
+
+**Content-text floor.** `--text-content` (18px) is the floor for _real content_ — nothing a player is meant to actually read may sit below it. The name *is* the rule.
+
+### The role vocabulary
+
+Classify every string against these three roles. This is the vocabulary the sweeps work from.
+
+- **Content → the floor.** User-authored free text (`praxis.body`, `task.description`, `admin_note`, comments). Titles (`h1`–`h3`, `font-display`, `task.title`). Numbers a player cares about (points, votes, level). Full sentences from the i18n catalog — banner prose, status explanations.
+- **Label → stays small.** `.eyebrow` (and anything uppercase + letter-spacing, which is the same thing hand-rolled). Button and link chrome. Pills, badges, stamps, corner counters. Bylines, timestamps, metadata.
+- **Ornament → exempt.** Glyphs used as icons (a `✗` dingbat is not text). Text that is part of the illustration — stamp text, tape-strip labels, punch-card headers.
+
+### The geometry doctrine
+
+> **If the type doesn't fit, the container is too small. Make the container bigger.**
+> Type wins; geometry yields. A cramped card is not a reason to shrink readable text —
+> it is a reason to widen the card.
+
+Both of the floor's original exceptions came from treating a fixed container as immovable. It is not.
+
+**Role classes.** Two classes carry the content tier, next to `.eyebrow`:
+
+| Class            | Token                   | Role                                                                     |
+| ---------------- | ----------------------- | ------------------------------------------------------------------------ |
+| `.content-text`  | `--text-content` (18px) | body copy, descriptions, admin notes, the praxis body, textareas          |
+| `.content-title` | `--text-title` (24px)   | titles and scores                                                        |
+
+There is deliberately no `.content-heading` / `.content-display` / `.content-score`: each would have a single caller already owned by a component, and a class for one caller is a class for nobody. A score is a title-sized number — `.content-title` plus a `fontWeight`.
+
+**Eyebrow / label text:** Courier Prime, `--text-sm` (9px), uppercase, letter-spacing 0.15em, `var(--color-text-tertiary)`. Use the `.eyebrow` class. Never add an inline `fontSize` to an element that already carries `.eyebrow` — the class owns the size.
 
 ---
 
@@ -119,6 +156,8 @@ This is a usage rule, not a change to the scale — no token values were renumbe
 **Rule:** `padding`, `margin`, and `gap` take a `--space-*` token — never a raw pixel value. If you're about to write `padding: 13` or `gap: 6`, stop and pick the nearest token. This mirrors the typography rule: the scale is the vocabulary, and a value outside it is a bug, not a nuance.
 
 Both scales are **global, not per-faction**. A faction picks a headline font, a colour, and an ornament — never its own type size or spacing. There are no per-faction size or spacing exceptions.
+
+**Skins don't own type size.** A skin style object (`inputStyle`, `textareaStyle`, `markdownStyle`, and friends) carries `fontFamily`, `fontStyle`, `color`, `lineHeight` — **never `fontSize`**. The shared control owns the size, via a role class (`.content-text` / `.content-title`) or a `--text-*` token. This is the rule above made enforceable: if a skin is setting a size, the size has escaped the scale.
 
 **Not covered by the rule:** ornament geometry (`width`/`height`/`top`/`inset` on decorative marks, sprocket holes, tape strips, corner brackets) is illustration, not layout spacing, and stays in raw pixels.
 
@@ -176,7 +215,7 @@ Cards are arranged in a `flex-wrap` container with varied heights and slight rot
 
 ### Page Title
 
-- Lora italic, `--text-4xl`
+- Lora italic, `--text-display`
 - Per-letter colored underline bars cycling through `--underline-1` to `--underline-6`
 
 ### Filter Controls
@@ -236,7 +275,9 @@ Brief design intent for each page. For implementation details, read the componen
 - **No solid color backgrounds on the page** — the watercolor SVG is always present
 - **No hardcoded hex values in components** — always use CSS custom properties
 - **No raw pixel values for fontSize/padding/margin/gap** — use the `--text-*` / `--space-*` scales (§4, §4a); enforced by `local/no-raw-style-values`
-- **No content text below `--text-2xl`** — 7px and 9px are label sizes, not reading sizes
+- **No content text below `--text-content`** — 7px and 9px are label sizes, not reading sizes
+- **No shrinking type to fit a container** — if the type doesn't fit, the container is too small; widen it (§4)
+- **No `fontSize` in a skin style object** — a skin owns font, colour and ornament, never size (§4a)
 - **No dark mode via ternaries** — use CSS variables so the cascade handles it
 - **No dark mode by inverting colors** — each card has a specifically designed dark variant in the CSS variables
 - **No disabled buttons for permission gates** — hide controls users can't use
