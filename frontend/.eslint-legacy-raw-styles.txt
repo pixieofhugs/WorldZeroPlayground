@@ -12,7 +12,6 @@ src/components/cards/EverymenTaskCard.tsx
 src/components/cards/FactionCard.tsx
 src/components/cards/FactionSelectCard.tsx
 src/components/cards/SingularityFactionHero.tsx
-src/components/cards/SingularityTaskCard.tsx
 src/components/cards/SnideFactionHero.tsx
 src/components/cards/SnideMasthead.tsx
 src/components/cards/SNIDETaskCard.tsx
