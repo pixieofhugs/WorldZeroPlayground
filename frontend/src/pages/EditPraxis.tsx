@@ -23,6 +23,7 @@ import DefaultEditPraxis from "./editPraxis/archetypes/DefaultEditPraxis";
 import EverymenEditPraxis from "./editPraxis/archetypes/EverymenEditPraxis";
 import UAEditPraxis from "./editPraxis/archetypes/UAEditPraxis";
 import AlbescentEditPraxis from "./editPraxis/archetypes/AlbescentEditPraxis";
+import { Breadcrumb } from "./editPraxis/archetypes/shared";
 import DefaultMobileEditPraxis from "./editPraxis/mobileArchetypes/DefaultEditPraxis";
 import WowMobileEditPraxis from "./editPraxis/mobileArchetypes/WowEditPraxis";
 import UAMobileEditPraxis from "./editPraxis/mobileArchetypes/UaComposer";
@@ -96,6 +97,18 @@ export default function EditPraxis() {
   return (
     <>
       <PageTitle title="Edit Praxis" />
+      {/* Mobile skins paint no breadcrumb of their own, so after publish the
+          phone composer is a dead end (#567). Render the shared desktop
+          breadcrumb once here for the mobile path — present for every skin and
+          every state, including the published state. Desktop archetypes render
+          their own breadcrumb, so gate this to mobile to avoid doubling up. */}
+      {formFactor === "mobile" && (
+        <Breadcrumb
+          praxisId={state.praxis.id}
+          taskId={state.praxis.task_id}
+          taskTitle={state.praxis.task_title}
+        />
+      )}
       <Archetype state={state} />
       {/* Praxis images crop/rotate in place before upload (#514), free-form so
           nothing is force-cropped. Sequential: keyed on identity so each queued

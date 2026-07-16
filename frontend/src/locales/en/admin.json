@@ -105,6 +105,11 @@
         "title": "Queue clear",
         "body": "Nothing flagged right now. Check back later."
       },
+      "filter": {
+        "all": "All",
+        "praxes": "Praxes",
+        "comments": "Comments"
+      },
       "byline": "by {{author}}",
       "flags_one": "{{count}} flag",
       "flags_other": "{{count}} flags",
