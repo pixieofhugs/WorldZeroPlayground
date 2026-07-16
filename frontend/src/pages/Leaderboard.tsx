@@ -102,7 +102,7 @@ function DesktopLeaderboard({
                 borderLeft: `3px solid ${factionCssVar(sorted[0].faction_slug, 'border')}`,
               }}
             >
-              <span className="eyebrow" style={{ fontSize: 8, display: 'block', marginBottom: 4 }}>
+              <span className="eyebrow" style={{ display: 'block', marginBottom: 4 }}>
                 {t('leaderboard.soloEyebrow')}
               </span>
               <p className="font-body" style={{ fontSize: 14, margin: 0, color: 'var(--color-text-primary)' }}>
@@ -173,7 +173,7 @@ function DesktopLeaderboard({
                     >
                       {scoreMode === 'era' ? player.score : player.all_time_score}
                     </div>
-                    <span className="eyebrow" style={{ fontSize: 7 }}>
+                    <span className="eyebrow">
                       {scoreMode === 'era' ? 'era pts' : 'all-time pts'}
                     </span>
                   </div>
@@ -185,7 +185,7 @@ function DesktopLeaderboard({
           {/* ── Two-player rankings-so-far (no podium platforms) ── */}
           {sorted.length === 2 && (
             <>
-              <span className="eyebrow" style={{ fontSize: 8, display: 'block', marginBottom: 8, textAlign: 'center' }}>
+              <span className="eyebrow" style={{ display: 'block', marginBottom: 8, textAlign: 'center' }}>
                 {t('leaderboard.rankingsSoFar')}
               </span>
               <div style={{ display: 'flex', justifyContent: 'center', gap: 12, marginBottom: 24 }}>
@@ -263,7 +263,7 @@ function DesktopLeaderboard({
                       >
                         {scoreMode === 'era' ? player.score : player.all_time_score}
                       </div>
-                      <span className="eyebrow" style={{ fontSize: 7 }}>
+                      <span className="eyebrow">
                         {scoreMode === 'era' ? 'era pts' : 'all-time pts'}
                       </span>
                     </div>
@@ -365,7 +365,7 @@ function DesktopLeaderboard({
                       <div className="font-display italic" style={{ fontSize: scoreSize, fontWeight: 700, color: factionCssVar(player.faction_slug) }}>
                         {scoreMode === 'era' ? player.score : player.all_time_score}
                       </div>
-                      <span className="eyebrow" style={{ fontSize: 7 }}>
+                      <span className="eyebrow">
                         {scoreMode === 'era' ? 'era pts' : 'all-time pts'}
                       </span>
                     </div>
@@ -481,7 +481,7 @@ function DesktopLeaderboard({
               }}
             >
               {['#', 'Player', 'Faction', 'Lvl', 'Score'].map((col) => (
-                <span key={col} className="eyebrow" style={{ fontSize: 8 }}>{col}</span>
+                <span key={col} className="eyebrow">{col}</span>
               ))}
             </div>
 
@@ -530,7 +530,7 @@ function DesktopLeaderboard({
                   {/* Faction */}
                   <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
                     <span style={{ width: 8, height: 8, borderRadius: '50%', background: factionCssVar(c.faction_slug, 'border'), flexShrink: 0 }} />
-                    <span className="eyebrow" style={{ fontSize: 8 }}>{factionName(c.faction_slug)}</span>
+                    <span className="eyebrow">{factionName(c.faction_slug)}</span>
                   </div>
 
                   {/* Level */}

@@ -75,7 +75,7 @@ export default function DefaultEditCharacter({ state }: { state: EditCharacterSt
             )}
           </span>
         </button>
-        <div className="eyebrow" style={{ marginTop: 12, fontSize: 9, color: 'var(--faction-default-card-muted)' }}>
+        <div className="eyebrow" style={{ marginTop: 12, color: 'var(--faction-default-card-muted)' }}>
           {t('editCharacter.mobile.changePhoto')}
         </div>
         {avatarError && <p style={{ ...errorBox, marginTop: 8 }}>{avatarError}</p>}

@@ -43,17 +43,10 @@ export default {
         singularity: { DEFAULT: "#2563eb", accent: "#60a5fa" },
         "ua-masters": { DEFAULT: "#c2410c", accent: "#fb923c" },
       },
-      fontSize: {
-        "wz-xs": "8px",
-        "wz-sm": "9px",
-        "wz-base": "10px",
-        "wz-md": "11px",
-        "wz-lg": "12px",
-        "wz-xl": "14px",
-        "wz-2xl": "18px",
-        "wz-3xl": "28px",
-        "wz-4xl": "34px",
-      },
+      // No fontSize block: the type scale lives in index.css as --text-*
+      // (label tier) and --text-content/title/heading/display (content tier).
+      // A hand-duplicated `text-wz-*` set here was a second place for the
+      // numbers to drift, with zero uses. Removed in #627.
     },
   },
   plugins: [],

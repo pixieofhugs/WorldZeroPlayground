@@ -105,7 +105,7 @@ export default function DefaultPraxisDetail({
           gap: 8,
         }}
       >
-        <span className="eyebrow" style={{ fontSize: 8 }}>{t('detail.default.completingTask')}</span>
+        <span className="eyebrow">{t('detail.default.completingTask')}</span>
         <Link
           to={`/tasks/${praxis.task_id}`}
           className="font-body"
@@ -197,18 +197,18 @@ export default function DefaultPraxisDetail({
             <div className="flex items-center justify-between mb-3">
               <span className="eyebrow">{t('detail.metatasks.heading')}</span>
               {state.metataskLoading && (
-                <span className="eyebrow" style={{ fontSize: 8 }}>{t('detail.metatasks.loading')}</span>
+                <span className="eyebrow">{t('detail.metatasks.loading')}</span>
               )}
             </div>
 
             {/* Applied metatasks */}
             {state.praxis.applied_metatasks && state.praxis.applied_metatasks.length > 0 ? (
               <div style={{ marginBottom: canEdit ? 12 : 0 }}>
-                <span className="eyebrow" style={{ fontSize: 8, display: "block", marginBottom: 6 }}>{t('detail.metatasks.applied')}</span>
+                <span className="eyebrow" style={{ display: "block", marginBottom: 6 }}>{t('detail.metatasks.applied')}</span>
                 {state.praxis.applied_metatasks.map((metatask) => (
                   <div key={metatask.id} className="flex items-center gap-2 mb-1" style={{ padding: "4px 8px", background: "var(--color-surface-soft)", fontSize: 11 }}>
                     <span className="flex-1 font-body">{metatask.title}</span>
-                    <span className="eyebrow" style={{ fontSize: 8 }}>{t('detail.metatasks.appliedPoints', { points: metatask.point_value })}</span>
+                    <span className="eyebrow">{t('detail.metatasks.appliedPoints', { points: metatask.point_value })}</span>
                     {canEdit && (
                       <button
                         onClick={() => void state.handleRemoveMetatask(metatask.id)}
@@ -230,7 +230,7 @@ export default function DefaultPraxisDetail({
             {/* Available metatasks */}
             {canEdit && (
               <>
-                <span className="eyebrow" style={{ fontSize: 8, display: "block", marginBottom: 6 }}>{t('detail.metatasks.available')}</span>
+                <span className="eyebrow" style={{ display: "block", marginBottom: 6 }}>{t('detail.metatasks.available')}</span>
                 {state.metataskError && (
                   <p className="font-body" style={{ fontSize: 9, color: "var(--color-danger)", marginBottom: 6 }}>
                     {state.metataskError}
@@ -244,7 +244,7 @@ export default function DefaultPraxisDetail({
                   available.map((metatask) => (
                     <div key={metatask.id} className="flex items-center gap-2 mb-1" style={{ padding: "4px 8px", background: "var(--color-surface-soft)", fontSize: 11 }}>
                       <span className="flex-1 font-body">{metatask.title}</span>
-                      <span className="eyebrow" style={{ fontSize: 8 }}>{t('detail.metatasks.appliedPoints', { points: metatask.point_value })}</span>
+                      <span className="eyebrow">{t('detail.metatasks.appliedPoints', { points: metatask.point_value })}</span>
                       <button
                         onClick={() => void state.handleApplyMetatask(metatask.id)}
                         disabled={state.applyingMetataskId === metatask.id}

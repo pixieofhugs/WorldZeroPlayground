@@ -220,7 +220,7 @@ export default function DefaultTaskDetail({
                   >
                     {stat.value}
                   </div>
-                  <div className="eyebrow" style={{ fontSize: 7 }}>
+                  <div className="eyebrow">
                     {stat.label}
                   </div>
                 </div>

@@ -139,7 +139,7 @@ function AdminStatusButton({
       onClick={onClick}
       className="eyebrow"
       style={{
-        fontSize: 7, padding: '1px 5px',
+        padding: '1px 5px',
         border: `1px solid color-mix(in srgb, ${toneVar} 30%, transparent)`,
         color: toneVar,
         background: 'var(--color-surface-scrim)',

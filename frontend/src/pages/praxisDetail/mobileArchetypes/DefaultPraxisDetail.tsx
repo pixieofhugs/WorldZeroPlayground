@@ -77,7 +77,7 @@ export default function DefaultPraxisDetail({ state }: { state: PraxisDetailStat
             linkClassName="font-display italic"
             linkStyle={{ fontSize: 15, color: 'var(--color-text-primary)', textDecoration: 'none' }}
           />
-          <span className="eyebrow" style={{ fontSize: 9, color: 'var(--color-text-tertiary)' }}>
+          <span className="eyebrow" style={{ color: 'var(--color-text-tertiary)' }}>
             {formatTimestamp(praxis.created_at)}
           </span>
         </div>
@@ -105,7 +105,7 @@ export default function DefaultPraxisDetail({ state }: { state: PraxisDetailStat
           textDecoration: 'none',
         }}
       >
-        <span className="eyebrow" style={{ fontSize: 8 }}>{t('detail.default.completingTask')}</span>
+        <span className="eyebrow">{t('detail.default.completingTask')}</span>
         <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--color-text-primary)' }}>
           {praxis.task_title}
         </span>

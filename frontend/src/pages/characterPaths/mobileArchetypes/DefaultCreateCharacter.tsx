@@ -61,10 +61,10 @@ export default function DefaultCreateCharacter({ state }: { state: CreateCharact
             )}
           </span>
         </button>
-        <div className="eyebrow" style={{ marginTop: 12, fontSize: 9, color: 'var(--faction-default-card-muted)' }}>
+        <div className="eyebrow" style={{ marginTop: 12, color: 'var(--faction-default-card-muted)' }}>
           {avatarPreview ? t('createCharacter.mobile.changePhoto') : t('createCharacter.mobile.addPhoto')}
         </div>
-        <div className="eyebrow" style={{ marginTop: 6, fontSize: 8, color: 'var(--color-text-tertiary)' }}>
+        <div className="eyebrow" style={{ marginTop: 6, color: 'var(--color-text-tertiary)' }}>
           {t('createCharacter.mobile.step')}
         </div>
       </div>

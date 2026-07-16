@@ -24,7 +24,7 @@ export default function FeedCardEraAnnouncement({ item }: Props) {
     >
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
         <span className="eyebrow">{i18n.t('feed:eraAnnouncement.kicker')}</span>
-        <span className="eyebrow" style={{ color: 'var(--rank-silver)', fontSize: 8 }}>
+        <span className="eyebrow" style={{ color: 'var(--rank-silver)' }}>
           {i18n.t('feed:eraAnnouncement.label')}
         </span>
         <span style={{ marginLeft: 'auto' }}>

@@ -156,7 +156,7 @@ export default function WowFieldDesk({ state }: { state: FieldDeskHomeState }) {
       }}
     >
       <header>
-        <div className="eyebrow" style={{ fontSize: 8, color: CARD_MUTED }}>{t('nav.home')}</div>
+        <div className="eyebrow" style={{ color: CARD_MUTED }}>{t('nav.home')}</div>
         <h1 style={{ fontFamily: SCRIPT, fontSize: 34, lineHeight: 0.9, color: TITLE_TEXT, margin: 0 }}>
           {t('fieldDesk.home.title')}
         </h1>
@@ -165,13 +165,13 @@ export default function WowFieldDesk({ state }: { state: FieldDeskHomeState }) {
       {/* ── Character window ── */}
       <Window title={t('fieldDesk.home.wow.charWindow')}>
         <div className="flex items-center justify-between" style={{ marginBottom: 12 }}>
-          <span className="eyebrow" style={{ fontSize: 9, color: CARD_MUTED }}>
+          <span className="eyebrow" style={{ color: CARD_MUTED }}>
             {t('fieldDesk.home.wow.charEyebrow')}
           </span>
           <Link
             to={`/characters/${character.id}/edit`}
             className="eyebrow"
-            style={{ fontSize: 9, color: PINK, textDecoration: 'none' }}
+            style={{ color: PINK, textDecoration: 'none' }}
           >
             {t('fieldDesk.home.edit')}
           </Link>
@@ -222,7 +222,7 @@ export default function WowFieldDesk({ state }: { state: FieldDeskHomeState }) {
             <div style={{ fontFamily: SCRIPT, fontSize: 30, lineHeight: 1, color: TITLE_TEXT }}>
               {character.score?.toLocaleString() ?? '0'}
             </div>
-            <div className="eyebrow" style={{ fontSize: 8, color: CARD_MUTED }}>
+            <div className="eyebrow" style={{ color: CARD_MUTED }}>
               {t('fieldDesk.home.stats.points')}
             </div>
           </div>
@@ -245,7 +245,7 @@ export default function WowFieldDesk({ state }: { state: FieldDeskHomeState }) {
               <div className="truncate" style={{ fontFamily: SCRIPT, fontSize: 24, lineHeight: 1, color: TITLE_TEXT }}>
                 {stat.value}
               </div>
-              <div className="eyebrow" style={{ marginTop: 5, fontSize: 8, color: CARD_MUTED }}>
+              <div className="eyebrow" style={{ marginTop: 5, color: CARD_MUTED }}>
                 {stat.label}
               </div>
             </div>
@@ -284,7 +284,7 @@ export default function WowFieldDesk({ state }: { state: FieldDeskHomeState }) {
             {t('fieldDesk.home.wow.questsHeading')}
           </span>
           <span style={{ flex: 1, height: 2, background: `repeating-linear-gradient(90deg, ${PINK} 0 8px, transparent 8px 14px)` }} />
-          <Link to="/tasks" className="eyebrow" style={{ fontSize: 9, color: PINK, textDecoration: 'none' }}>
+          <Link to="/tasks" className="eyebrow" style={{ color: PINK, textDecoration: 'none' }}>
             {t('fieldDesk.home.viewAll')}
           </Link>
         </div>
@@ -323,7 +323,7 @@ export default function WowFieldDesk({ state }: { state: FieldDeskHomeState }) {
                 </div>
                 <span
                   className="shrink-0 eyebrow"
-                  style={{ fontSize: 8, color: PINK, padding: '4px 9px', border: `1.5px solid ${NOTEPAD_BORDER}`, borderRadius: 999 }}
+                  style={{ color: PINK, padding: '4px 9px', border: `1.5px solid ${NOTEPAD_BORDER}`, borderRadius: 999 }}
                 >
                   {t(`praxisType.${praxis.type}`)}
                 </span>

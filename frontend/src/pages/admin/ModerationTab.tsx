@@ -105,7 +105,6 @@ function ReasonBadge({ reason }: { reason: string }) {
         border: '1.5px solid var(--color-danger)',
         color: 'var(--color-danger)',
         padding: '2px 8px',
-        fontSize: 9,
       }}
     >
       {flagReasonLabel(reason)}

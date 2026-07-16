@@ -25,7 +25,7 @@ export default function FeedCardInvitationLetter({ item }: Props) {
         }}
       >
         <span style={{ fontSize: 16 }}>&#x2709;&#xFE0F;</span>
-        <span className="eyebrow" style={{ color, fontSize: 8 }}>
+        <span className="eyebrow" style={{ color }}>
           {i18n.t("feed:invitationLetter.kicker")}
         </span>
         <FeedBadge type="your_stuff" label={i18n.t("feed:badge.yourStuff")} />
@@ -34,7 +34,6 @@ export default function FeedCardInvitationLetter({ item }: Props) {
           style={{
             marginLeft: "auto",
             color: "var(--color-text-tertiary)",
-            fontSize: 8,
           }}
         >
           {relativeTime(item.timestamp)}
