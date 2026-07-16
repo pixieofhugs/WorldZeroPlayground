@@ -106,7 +106,7 @@ Every logged-in page follows this shell:
 ```
 Nav (sticky, frosted glass)
 Watercolor Background (absolute, behind content)
-Body: Main Content (flex: 1) + Sidebar (256px)
+Body: Main Content (flex: 1) + Sidebar (minmax 280–340px)
 ```
 
 The sidebar contains: character card, active tasks panel, recent activity panel, propose-a-task button. Some pages add contextual panels (e.g., faction standings on Players, pending requests on Updates).
