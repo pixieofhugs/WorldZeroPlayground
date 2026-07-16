@@ -63,9 +63,20 @@ export function isImageFile(file: { type: string }): boolean {
 }
 
 /**
- * Split picked files into the ones that open the edit modal (images) and the
- * ones that upload straight through (video/audio). Keeps original order within
- * each bucket so the sequential image queue stays predictable.
+ * True when an image can safely go through the crop/rotate stage. Animated GIFs
+ * are excluded (#569): the edit modal canvas-encodes on "Apply", which only ever
+ * captures the first frame, so a cropped GIF loses its animation. GIFs upload
+ * straight through untouched instead.
+ */
+export function isCropEditableImage(file: { type: string }): boolean {
+  return isImageFile(file) && file.type !== 'image/gif'
+}
+
+/**
+ * Split picked files into the ones that open the edit modal (crop-editable
+ * images) and the ones that upload straight through (video/audio, and animated
+ * GIFs — see #569). Keeps original order within each bucket so the sequential
+ * image queue stays predictable.
  */
 export function partitionByEditability<T extends { type: string }>(
   files: readonly T[],
@@ -73,7 +84,7 @@ export function partitionByEditability<T extends { type: string }>(
   const toEdit: T[] = []
   const toUploadDirect: T[] = []
   for (const file of files) {
-    if (isImageFile(file)) toEdit.push(file)
+    if (isCropEditableImage(file)) toEdit.push(file)
     else toUploadDirect.push(file)
   }
   return { toEdit, toUploadDirect }
