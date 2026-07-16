@@ -30,6 +30,30 @@ export type BaselineEntry = {
   where: string;
 };
 
+/**
+ * DELIBERATELY EMPTY — this spec does not go green until #651's open question
+ * is answered. See the escalation comment on the issue.
+ *
+ * The sweep run produced two populations, and only one of them fits the entry
+ * shape above:
+ *
+ *   - **149 distinct measured failures.** Real, keyed on their color pair,
+ *     each carrying a ratio. These are the audit list, and they slot straight
+ *     in. (They reproduce all four of #651's hand-measured failures exactly.)
+ *
+ *   - **134 "unresolved backdrop" findings**, overwhelmingly text sitting on a
+ *     surface that paints a *translucent texture* over its own solid fill —
+ *     the paper grain `radial-gradient(rgba(0,0,0,0.035) 1px, transparent 1px)`
+ *     on `div.page` and on the faction cards. #651 calls failing loudly here
+ *     non-negotiable, on the stated premise that "the gradient is only behind
+ *     them". The sweep disproves that premise: the grain is painted ON the
+ *     text-bearing surfaces. These findings have NO ratio (so they cannot
+ *     carry one, as the entry shape requires) and no stable identity except a
+ *     DOM path that rots on the next copy edit.
+ *
+ * Populating this list with 134 DOM-path keys would bury the 149 real findings
+ * and rot immediately, so it is left empty rather than guessed at.
+ */
 export const RENDERED_BASELINE: Record<string, BaselineEntry> = {};
 
 export function baselineKey(theme: string, text: string, background: string): string {
