@@ -4,6 +4,7 @@ import FactionAvatar from '../../avatar/FactionAvatar'
 import { formatCommentTime } from '../../../utils/commentTime'
 import { type CommentProps, authorToCharacter, ComposerControls, MentionText } from '../shared'
 import { CommentEditor, OwnerControls, useOwnerEdit } from '../OwnerControls'
+import { CommentFlagControl } from '../FlagControl'
 
 /**
  * The Ephemerists — marginalia (ADR-0018). Vellum leaf, engraved Cinzel byline,
@@ -55,6 +56,7 @@ export default function EphemeristsComment(props: CommentProps) {
           {formatCommentTime(slug, comment.created_at)}
           {comment.is_edited ? ` · ${t('comments.ephemerists.edited')}` : ''}
           <OwnerControls owner={owner} />
+          <CommentFlagControl comment={comment} />
         </span>
       </div>
       {owner.editing ? (

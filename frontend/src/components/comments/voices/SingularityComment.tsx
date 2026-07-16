@@ -5,6 +5,7 @@ import FactionAvatar from '../../avatar/FactionAvatar'
 import { formatCommentTime } from '../../../utils/commentTime'
 import { type CommentProps, authorToCharacter, ComposerControls, MentionText } from '../shared'
 import { CommentEditor, OwnerControls, useOwnerEdit } from '../OwnerControls'
+import { CommentFlagControl } from '../FlagControl'
 
 /**
  * Singularity — terminal printout (ADR-0018). Dark, green mono, corner brackets,
@@ -74,6 +75,7 @@ export default function SingularityComment(props: CommentProps) {
               {formatCommentTime(slug, comment.created_at)}
               {comment.is_edited ? ` [${t('comments.singularity.edited')}]` : ''}
               <OwnerControls owner={owner} />
+              <CommentFlagControl comment={comment} />
             </span>
           </div>
           <div style={{ fontSize: 13, lineHeight: 1.55, marginTop: 4 }}>

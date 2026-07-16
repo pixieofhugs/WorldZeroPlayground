@@ -28,6 +28,7 @@ export const FACTION_ROW_TYPES = new Set([
   'friend_signup',
   'friend_defection',
   'global_task',
+  'collaborator_submitted',
 ])
 
 export interface FeedRow {
@@ -94,6 +95,25 @@ export function normalizeFeedItem(item: ActivityFeedItem): FeedRow | null {
             ? i18n.t('feed:row.points', { points: p.task_point_value })
             : null,
         level: p.task_level_required ?? null,
+        time,
+      }
+    case 'collaborator_submitted':
+      // A co-member submitted their part of a collab you're in (#571). Reuses the
+      // friend-signup row shape; framed in the submitter's faction voice.
+      return {
+        slug,
+        actor,
+        actorHref: p.character_id != null ? `/characters/${p.character_id}` : null,
+        action: i18n.t('feed:row.action.collaboratorSubmitted'),
+        badge: { type: 'your_stuff', label: i18n.t('feed:badge.yourStuff') },
+        headline: p.task_title ?? null,
+        headlineHref: p.praxis_id != null ? `/praxes/${p.praxis_id}` : null,
+        headlineQuoted: false,
+        points:
+          p.task_point_value != null
+            ? i18n.t('feed:row.points', { points: p.task_point_value })
+            : null,
+        level: null,
         time,
       }
     case 'vote_on_mine':

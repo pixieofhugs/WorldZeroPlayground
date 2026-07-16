@@ -38,6 +38,10 @@ class PraxisType(enum.Enum):
 
 class PraxisStatus(enum.Enum):
     in_progress = "in_progress"
+    # A collab mid-consensus (#590): at least one member submitted but not all.
+    # Open, member-only and unscored like in_progress, but distinct so the UI/feed
+    # can surface the pending-publish state. Solo/duel never enter it.
+    pending = "pending"
     submitted = "submitted"
 
 
@@ -150,6 +154,11 @@ class PraxisMember(Base):
     character_id: Mapped[int] = mapped_column(ForeignKey("character.id"), nullable=False)
     has_submitted: Mapped[bool] = mapped_column(
         Boolean, nullable=False, default=False, server_default="false"
+    )
+    # When has_submitted last flipped True (#571). The collaborator-submitted feed
+    # sorts strictly by this, not joined_at. NULL = never submitted / pulled back.
+    submitted_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True), nullable=True
     )
     joined_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=func.now()

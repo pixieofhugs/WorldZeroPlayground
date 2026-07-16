@@ -128,6 +128,22 @@
       "cancelChallengeAria": "cancel challenge",
       "rescindInviteAria": "rescind invite to {{name}}"
     },
+    "collab": {
+      "castStatus": "{{cast}} of {{total}} cast",
+      "pillCast": "cast",
+      "pillWeaving": "weaving",
+      "you": "you",
+      "progressAria": "{{cast}} of {{total}} members have cast their part",
+      "bannerWaiting": "Cast. Waiting on the others to weave their parts.",
+      "bannerHoldout": "The circle is waiting on you — cast your part to weave it in.",
+      "bannerPublished": "Woven and live. Every member is credited.",
+      "castAction": "Cast my part",
+      "castFinalAction": "Cast — send it live",
+      "pullBackAction": "Pull my part back",
+      "successHeading": "The proof is woven",
+      "successBody": "Every part is cast — your collab is live.",
+      "successContinue": "View the praxis"
+    },
     "toolbar": {
       "label": "formatting",
       "bold": "bold",

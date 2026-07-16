@@ -234,7 +234,10 @@
   --faction-albescent-card-bg: #ffffff;
   --faction-albescent-card-text: #1c1c1a; /* near-black ink, no hue */
   --faction-albescent-card-accent: rgba(28, 28, 26, 0.72);
-  --faction-albescent-card-muted: rgba(28, 28, 26, 0.44);
+  /* Muted ink over the #ffffff card. Deepened from 0.44 → 0.61 so body/meta text
+     clears WCAG AA: near-black #1c1c1a at 0.61α renders ~#757573 for a 4.64:1
+     contrast ratio against white (was 2.78:1, failing AA). #594. */
+  --faction-albescent-card-muted: rgba(28, 28, 26, 0.61);
   --faction-albescent-card-font: "Cormorant Garamond", Georgia, serif;
   /* Full vellum-correspondence set — the whole palette is one near-black hue. */
   --faction-albescent-primary: #1c1c1a; /* near-black ink */
@@ -410,7 +413,9 @@
   --faction-albescent-card-bg: #ffffff;
   --faction-albescent-card-text: #1c1c1a;
   --faction-albescent-card-accent: rgba(28, 28, 26, 0.72);
-  --faction-albescent-card-muted: rgba(28, 28, 26, 0.44);
+  /* Always-light: card bg stays #ffffff in dark mode, so it carries the same
+     AA-clearing 0.61α muted ink as :root. #594. */
+  --faction-albescent-card-muted: rgba(28, 28, 26, 0.61);
   --faction-albescent-card-font: "Cormorant Garamond", Georgia, serif;
   --faction-albescent-primary: #1c1c1a;
   --faction-albescent: var(--faction-albescent-primary); /* bare primary — first-class, no longer aliases ua (#232) */

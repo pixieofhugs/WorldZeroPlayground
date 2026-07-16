@@ -278,7 +278,7 @@ async def test_withdraw_praxis(
     # Must be submitted before withdrawing back to editing
     await client.post(f"/praxes/{praxis_id}/submit", headers=auth_headers)
 
-    withdraw_resp = await client.post(f"/praxes/{praxis_id}/withdraw", headers=auth_headers)
+    withdraw_resp = await client.post(f"/praxes/{praxis_id}/unsubmit", headers=auth_headers)
     assert withdraw_resp.status_code == 200
     data = withdraw_resp.json()
     assert data["status"] == "in_progress"
@@ -314,7 +314,7 @@ async def test_withdraw_updates_score(
     await db_session.refresh(stats)
     score_after_submit = stats.score
 
-    withdraw_resp = await client.post(f"/praxes/{praxis_id}/withdraw", headers=auth_headers)
+    withdraw_resp = await client.post(f"/praxes/{praxis_id}/unsubmit", headers=auth_headers)
     assert withdraw_resp.status_code == 200
 
     await db_session.refresh(stats)
@@ -342,7 +342,7 @@ async def test_submit_editing_withdraw_submit_roundtrip(
     assert submit_resp.status_code == 200
     assert submit_resp.json()["status"] == "submitted"
 
-    withdraw_resp = await client.post(f"/praxes/{praxis_id}/withdraw", headers=auth_headers)
+    withdraw_resp = await client.post(f"/praxes/{praxis_id}/unsubmit", headers=auth_headers)
     assert withdraw_resp.status_code == 200
     assert withdraw_resp.json()["status"] == "in_progress"
 
@@ -368,7 +368,7 @@ async def test_withdraw_already_in_progress_returns_422(
     praxis_id = create_resp.json()["id"]
 
     # Praxis starts in_progress — withdrawing immediately returns 422
-    resp = await client.post(f"/praxes/{praxis_id}/withdraw", headers=auth_headers)
+    resp = await client.post(f"/praxes/{praxis_id}/unsubmit", headers=auth_headers)
     assert resp.status_code == 422
 
 
@@ -390,7 +390,7 @@ async def test_withdraw_wrong_owner_returns_403(
     assert create_resp.status_code == 201
     praxis_id = create_resp.json()["id"]
 
-    resp = await client.post(f"/praxes/{praxis_id}/withdraw", headers=auth_headers2)
+    resp = await client.post(f"/praxes/{praxis_id}/unsubmit", headers=auth_headers2)
     assert resp.status_code == 403
 
 
@@ -849,7 +849,7 @@ async def test_collab_all_submit_transitions_to_submitted(
     submit1 = await client.post(f"/praxes/{praxis_id}/submit", headers=auth_headers2)
     assert submit1.status_code == 200
     # Not yet submitted (character still needs to submit)
-    assert submit1.json()["status"] == "in_progress"
+    assert submit1.json()["status"] == "pending"
 
     # character submits
     submit2 = await client.post(f"/praxes/{praxis_id}/submit", headers=auth_headers)
@@ -990,7 +990,7 @@ async def test_collab_non_creator_can_reopen(
     submit2 = await client.post(f"/praxes/{praxis_id}/submit", headers=auth_headers)
     assert submit2.json()["status"] == "submitted"
 
-    resp = await client.post(f"/praxes/{praxis_id}/withdraw", headers=auth_headers)
+    resp = await client.post(f"/praxes/{praxis_id}/unsubmit", headers=auth_headers)
     assert resp.status_code == 200
     assert resp.json()["status"] == "in_progress"
 
@@ -1039,7 +1039,7 @@ async def test_collab_partial_submit_opens_pending_window(
     resp = await client.post(f"/praxes/{praxis_id}/submit", headers=auth_headers2)
     assert resp.status_code == 200
     data = resp.json()
-    assert data["status"] == "in_progress"          # not Live yet
+    assert data["status"] == "pending"          # not Live yet
     assert data["submit_proposed_at"] is not None   # countdown opened
 
 
@@ -2245,3 +2245,137 @@ async def test_change_type_takeover_clears_pending_publish_window(
     assert body["status"] == "in_progress"
     assert body["submit_proposed_at"] is None
     assert all(not m["has_submitted"] for m in body["members"])
+
+
+# ---------------------------------------------------------------------------
+# Pending consensus state + per-member unsubmit (#590)
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.asyncio
+async def test_pending_collab_counts_against_bank_cap(
+    client: AsyncClient,
+    character: Character,
+    character2: Character,
+    active_task: Task,
+    auth_headers: dict,
+    auth_headers2: dict,
+    db_session: AsyncSession,
+):
+    """A pending (mid-consensus) collab is still an open, slot-consuming membership."""
+    from services.praxis import _count_in_progress_praxes
+
+    praxis_id = await _two_member_collab(
+        client, active_task, auth_headers2, character.id, auth_headers
+    )
+    resp = await client.post(f"/praxes/{praxis_id}/submit", headers=auth_headers2)
+    assert resp.json()["status"] == "pending"
+    assert await _count_in_progress_praxes(character2.id, db_session) == 1
+    assert await _count_in_progress_praxes(character.id, db_session) == 1
+
+
+@pytest.mark.asyncio
+async def test_pending_collab_appears_in_active_tasks(
+    client: AsyncClient,
+    character: Character,
+    character2: Character,
+    active_task: Task,
+    auth_headers: dict,
+    auth_headers2: dict,
+    db_session: AsyncSession,
+):
+    """A pending collab's task still counts as one its members are working on."""
+    from services.activity_feed import _get_my_task_ids
+
+    praxis_id = await _two_member_collab(
+        client, active_task, auth_headers2, character.id, auth_headers
+    )
+    await client.post(f"/praxes/{praxis_id}/submit", headers=auth_headers2)
+    assert active_task.id in await _get_my_task_ids(character2.id, db_session)
+    assert active_task.id in await _get_my_task_ids(character.id, db_session)
+
+
+@pytest.mark.asyncio
+async def test_unsubmit_pending_clears_only_caller(
+    client: AsyncClient,
+    character: Character,
+    character2: Character,
+    character3: Character,
+    active_task: Task,
+    auth_headers: dict,
+    auth_headers2: dict,
+    auth_headers3: dict,
+):
+    """In a pending collab with two members submitted, one member's unsubmit clears
+    only their own part; the collab stays pending while the other remains in (#590)."""
+    create = await client.post(
+        "/praxes",
+        json={"task_id": active_task.id, "type": "collab", "title": "Trio"},
+        headers=auth_headers2,
+    )
+    praxis_id = create.json()["id"]
+    for invitee_id, invitee_headers in (
+        (character.id, auth_headers),
+        (character3.id, auth_headers3),
+    ):
+        inv = await client.post(
+            f"/praxes/{praxis_id}/invite",
+            json={"invitee_id": invitee_id},
+            headers=auth_headers2,
+        )
+        await client.post(
+            f"/praxes/{praxis_id}/invite/{inv.json()['id']}/respond",
+            json={"accept": True},
+            headers=invitee_headers,
+        )
+    await client.post(f"/praxes/{praxis_id}/submit", headers=auth_headers2)
+    resp = await client.post(f"/praxes/{praxis_id}/submit", headers=auth_headers3)
+    assert resp.json()["status"] == "pending"
+
+    unsub = await client.post(f"/praxes/{praxis_id}/unsubmit", headers=auth_headers2)
+    assert unsub.status_code == 200
+    data = unsub.json()
+    assert data["status"] == "pending"
+    submitted = {m["character_id"]: m["has_submitted"] for m in data["members"]}
+    assert submitted[character2.id] is False
+    assert submitted[character3.id] is True
+
+
+@pytest.mark.asyncio
+async def test_unsubmit_last_pending_member_returns_to_in_progress(
+    client: AsyncClient,
+    character: Character,
+    character2: Character,
+    active_task: Task,
+    auth_headers: dict,
+    auth_headers2: dict,
+):
+    """The last submitted member unsubmitting a pending collab reopens it fully (#590)."""
+    praxis_id = await _two_member_collab(
+        client, active_task, auth_headers2, character.id, auth_headers
+    )
+    await client.post(f"/praxes/{praxis_id}/submit", headers=auth_headers2)
+    resp = await client.post(f"/praxes/{praxis_id}/unsubmit", headers=auth_headers2)
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["status"] == "in_progress"
+    assert data["submit_proposed_at"] is None
+    assert all(not m["has_submitted"] for m in data["members"])
+
+
+@pytest.mark.asyncio
+async def test_unsubmit_fresh_in_progress_returns_422(
+    client: AsyncClient,
+    character: Character,
+    active_task: Task,
+    auth_headers: dict,
+):
+    """Unsubmitting a praxis that was never submitted is a 422 — nothing to pull back."""
+    create = await client.post(
+        "/praxes",
+        json={"task_id": active_task.id, "type": "solo", "title": "Fresh"},
+        headers=auth_headers,
+    )
+    praxis_id = create.json()["id"]
+    resp = await client.post(f"/praxes/{praxis_id}/unsubmit", headers=auth_headers)
+    assert resp.status_code == 422

@@ -4,6 +4,7 @@ import FactionAvatar from '../../avatar/FactionAvatar'
 import { formatCommentTime } from '../../../utils/commentTime'
 import { type CommentProps, authorToCharacter, ComposerControls, MentionText } from '../shared'
 import { CommentEditor, OwnerControls, useOwnerEdit } from '../OwnerControls'
+import { CommentFlagControl } from '../FlagControl'
 
 /**
  * S.N.I.D.E. — ransom dispatch (ADR-0018). Reuses the task-card ransom vocabulary:
@@ -90,6 +91,7 @@ export default function SnideComment(props: CommentProps) {
               {formatCommentTime(slug, comment.created_at)}
               {comment.is_edited ? ` · ${t('comments.snide.edited')}` : ''}
               <OwnerControls owner={owner} />
+              <CommentFlagControl comment={comment} />
             </span>
           </div>
           <div style={{ fontFamily: 'var(--faction-snide-font-cond)', textTransform: 'uppercase', fontSize: 15, lineHeight: 1.4, letterSpacing: '0.02em' }}>

@@ -18,7 +18,7 @@ import { reframeLabel } from '../../components/vote/voteReframes'
 import { TaskCrown } from '../../components/cards/TaskCrown'
 import type { PraxisDetailState } from './usePraxisDetail'
 import type { PraxisMemberOut, PraxisOut } from '../../api/praxis'
-import { flagReasonOptions, FLAG_REASON_OTHER } from '../../utils/flagReasons'
+import { flagReasonOptions } from '../../utils/flagReasons'
 
 // ── Egalitarian byline (#387) ────────────────────────────────────────────────
 //
@@ -66,7 +66,11 @@ export function MemberByline({
   const sepStyle = separatorStyle ?? linkStyle
   // Per-member submit state only reads meaningfully mid-lifecycle on a collab
   // (>1 member, still in editing). A solo/duel praxis or a live one stays clean.
-  const showSubmitState = members.length > 1 && praxis.status === 'in_progress'
+  // `pending` is the mid-consensus state (#590/#591) — exactly when cast status
+  // matters most — so it counts as "still open" alongside in_progress.
+  const showSubmitState =
+    members.length > 1 &&
+    (praxis.status === 'in_progress' || praxis.status === 'pending')
 
   return (
     <span
@@ -385,7 +389,13 @@ export function PraxisFlagBlock({ state }: { state: PraxisDetailState }) {
               </button>
             ))}
           </div>
-          {flagReason === FLAG_REASON_OTHER && (
+          {/* A note is available for every reason, not just "Other" (#570).
+              handleFlag forwards flagDetail regardless of reason. Note: the
+              backend only *persists* the note for the "other" reason (ADR-0037,
+              stored_flag_reason); for named reasons it is accepted but not
+              stored — persisting it for all reasons would need a reason_detail
+              column (follow-up, out of #570's scope). */}
+          {flagReason !== null && (
             <textarea
               className="border-2 border-border bg-card px-3 py-2 font-body text-sm focus:outline-none focus:border-ink w-full resize-none"
               rows={2}

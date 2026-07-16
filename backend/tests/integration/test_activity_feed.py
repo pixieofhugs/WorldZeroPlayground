@@ -242,3 +242,53 @@ async def test_badge_count_equals_windowed_fetch_length_per_tab(
     ).json()
     assert any(i["type"] == "duel_challenge" for i in requests["items"])
     assert requests["counts"]["requests"] == 2  # pending collab invite + pending duel
+
+
+@pytest.mark.asyncio
+async def test_activity_feed_shows_collaborator_submitted(
+    client: AsyncClient,
+    character: Character,
+    character2: Character,
+    active_task: Task,
+    auth_headers: dict,
+    auth_headers2: dict,
+):
+    """A co-member submitting their part of a collab the viewer is in surfaces a
+    collaborator_submitted entry in the viewer's feed (#571)."""
+    create = await client.post(
+        "/praxes",
+        json={"task_id": active_task.id, "type": "collab", "title": "Team"},
+        headers=auth_headers2,
+    )
+    praxis_id = create.json()["id"]
+    inv = await client.post(
+        f"/praxes/{praxis_id}/invite",
+        json={"invitee_id": character.id},
+        headers=auth_headers2,
+    )
+    await client.post(
+        f"/praxes/{praxis_id}/invite/{inv.json()['id']}/respond",
+        json={"accept": True},
+        headers=auth_headers,
+    )
+    # character2 submits their part -> pending; character (a co-member) should see it.
+    await client.post(f"/praxes/{praxis_id}/submit", headers=auth_headers2)
+
+    feed = await client.get(
+        "/activity-feed", params={"filter": "your_stuff"}, headers=auth_headers
+    )
+    assert feed.status_code == 200
+    items = [i for i in feed.json()["items"] if i["type"] == "collaborator_submitted"]
+    assert len(items) == 1, feed.json()["items"]
+    entry = items[0]
+    assert entry["payload"]["praxis_id"] == praxis_id
+    assert entry["payload"]["character_id"] == character2.id
+    assert entry["actor_display_name"] == character2.display_name
+
+    # The submitter does not get a notification about their own submission.
+    own = await client.get(
+        "/activity-feed", params={"filter": "your_stuff"}, headers=auth_headers2
+    )
+    assert not [
+        i for i in own.json()["items"] if i["type"] == "collaborator_submitted"
+    ]

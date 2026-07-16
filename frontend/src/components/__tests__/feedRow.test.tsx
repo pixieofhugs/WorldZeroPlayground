@@ -36,6 +36,24 @@ describe('normalizeFeedItem', () => {
     expect(row.badge?.label).toBe('Friend')
   })
 
+  it('maps a collaborator submission to the your-stuff row (#571)', () => {
+    const row = normalizeFeedItem(
+      item('collaborator_submitted', {
+        character_id: 8,
+        praxis_id: 12,
+        task_title: 'Plant a tree',
+        task_point_value: 25,
+      }),
+    )!
+    expect(row.actor).toBe('Ada')
+    expect(row.action).toBe('submitted their part of')
+    expect(row.actorHref).toBe('/characters/8')
+    expect(row.headline).toBe('Plant a tree')
+    expect(row.headlineHref).toBe('/praxes/12')
+    expect(row.points).toBe('25 pts')
+    expect(row.badge?.label).toBe('Your Stuff')
+  })
+
   it('resolves a taunt from the catalog, quotes it, and drops points', () => {
     // ADR-0031: payload is a structured reference; the catalog owns the words.
     // wow/score_overtake has 2 variants; taunt_id 9 -> 9 % 2 = 1 -> the second.

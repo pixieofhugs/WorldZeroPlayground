@@ -79,6 +79,7 @@ FEED_ITEM_TYPE_INVITATION_LETTER = "invitation_letter"
 FEED_ITEM_TYPE_FRIEND_DEFECTION = "friend_defection"
 FEED_ITEM_TYPE_FOE_COMPLETION = "foe_completion"
 FEED_ITEM_TYPE_COMMENT_MENTION = "comment_mention"
+FEED_ITEM_TYPE_COLLABORATOR_SUBMITTED = "collaborator_submitted"
 
 # --- Filter tabs ------------------------------------------------------------
 FILTER_ALL = "all"
@@ -163,7 +164,7 @@ async def _get_my_task_ids(
         .join(PraxisMember, PraxisMember.praxis_id == Praxis.id)
         .where(
             PraxisMember.character_id == character_id,
-            Praxis.status == PraxisStatus.in_progress,
+            Praxis.status.in_([PraxisStatus.in_progress, PraxisStatus.pending]),
         )
     )
     return list(result.scalars().all())
@@ -627,6 +628,65 @@ def _comment_mention_item(row: Any) -> ActivityFeedItemDC:
     )
 
 
+def _collaborator_submitted_query(ctx: FeedContext) -> Select:
+    """A collaborator submitted their part of a collab the viewer is also in (#571).
+
+    PraxisMember rows with has_submitted=True on collab praxes the viewer is also
+    a member of, excluding the viewer's own membership. Ordered by submitted_at —
+    the moment their part landed, not when they joined.
+    """
+    viewer_praxis_ids = (
+        select(PraxisMember.praxis_id)
+        .where(PraxisMember.character_id == ctx.character_id)
+        .scalar_subquery()
+    )
+    query = (
+        select(
+            PraxisMember.id,
+            PraxisMember.submitted_at,
+            PraxisMember.praxis_id,
+            Character.id.label("character_id"),
+            Character.display_name,
+            Character.faction_slug,
+            Character.avatar_url,
+            Task.title.label("task_title"),
+            Task.point_value.label("task_point_value"),
+            Task.primary_faction_slug.label("task_faction_slug"),
+        )
+        .join(Praxis, PraxisMember.praxis_id == Praxis.id)
+        .join(Character, PraxisMember.character_id == Character.id)
+        .join(Task, Praxis.task_id == Task.id)
+        .where(
+            PraxisMember.has_submitted.is_(True),
+            PraxisMember.submitted_at.is_not(None),
+            PraxisMember.character_id != ctx.character_id,
+            Praxis.type == PraxisType.collab,
+            PraxisMember.praxis_id.in_(viewer_praxis_ids),
+        )
+    )
+    if ctx.before is not None:
+        query = query.where(PraxisMember.submitted_at < ctx.before)
+    return query.order_by(PraxisMember.submitted_at.desc()).limit(SUB_QUERY_LIMIT)
+
+
+def _collaborator_submitted_item(row: Any) -> ActivityFeedItemDC:
+    return ActivityFeedItemDC(
+        type=FEED_ITEM_TYPE_COLLABORATOR_SUBMITTED,
+        timestamp=row.submitted_at,
+        actor_display_name=row.display_name,
+        actor_faction_slug=row.faction_slug,
+        actor_avatar_url=row.avatar_url,
+        payload={
+            "praxis_member_id": row.id,
+            "character_id": row.character_id,
+            "praxis_id": row.praxis_id,
+            "task_title": row.task_title,
+            "task_point_value": row.task_point_value,
+            "task_faction_slug": row.task_faction_slug,
+        },
+    )
+
+
 # ---------------------------------------------------------------------------
 # The registry — one entry per feed type. Adding a type is one line here.
 # ---------------------------------------------------------------------------
@@ -687,6 +747,13 @@ FEED_SOURCES: tuple[FeedSource, ...] = (
         needs=frozenset({NEEDS_FRIEND_IDS, NEEDS_MY_TASK_IDS}),
         query=_friend_signups_query,
         to_item=_friend_signup_item,
+    ),
+    FeedSource(
+        item_type=FEED_ITEM_TYPE_COLLABORATOR_SUBMITTED,
+        filters=frozenset({FILTER_ALL, FILTER_YOUR_STUFF}),
+        needs=frozenset(),
+        query=_collaborator_submitted_query,
+        to_item=_collaborator_submitted_item,
     ),
     FeedSource(
         item_type=FEED_ITEM_TYPE_INVITATION_LETTER,

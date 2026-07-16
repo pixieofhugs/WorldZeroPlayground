@@ -27,9 +27,12 @@ def _apply_seal(praxis: Praxis) -> None:
     """Pure state mutation for going Live: mark the whole group submitted and clear
     the window. Caller flushes and recalculates member stats."""
     praxis.status = PraxisStatus.submitted
-    praxis.submitted_at = datetime.now(timezone.utc)
+    now = datetime.now(timezone.utc)
+    praxis.submitted_at = now
     praxis.submit_proposed_at = None
     for member in praxis.members:
+        if not member.has_submitted:
+            member.submitted_at = now
         member.has_submitted = True
 
 
@@ -60,7 +63,7 @@ async def settle_if_window_lapsed(
     """
     if (
         praxis.type != PraxisType.collab
-        or praxis.status != PraxisStatus.in_progress
+        or praxis.status not in (PraxisStatus.in_progress, PraxisStatus.pending)
         or praxis.submit_proposed_at is None
     ):
         return
@@ -88,6 +91,7 @@ async def on_member_edit(
     praxis.status = PraxisStatus.in_progress
     for member in praxis.members:
         member.has_submitted = False
+        member.submitted_at = None
     await session.flush()
     if was_live:
         # Leaving Live changes scoring — recompute every member's stats.
@@ -111,6 +115,7 @@ async def on_submit(
     for member in praxis.members:
         if member.character_id == character_id:
             member.has_submitted = True
+            member.submitted_at = datetime.now(timezone.utc)
             break
     await session.flush()
     await session.refresh(praxis)
@@ -119,9 +124,13 @@ async def on_submit(
         _apply_seal(praxis)
         await session.flush()
         return True
-    if praxis.type == PraxisType.collab and praxis.submit_proposed_at is None:
-        # First member to submit opens the silence-is-consent countdown.
-        praxis.submit_proposed_at = datetime.now(timezone.utc)
+    if praxis.type == PraxisType.collab:
+        # A partial collab submit is a first-class "pending" state (#590): some
+        # members are in, not all. The first submit also opens the
+        # silence-is-consent countdown.
+        praxis.status = PraxisStatus.pending
+        if praxis.submit_proposed_at is None:
+            praxis.submit_proposed_at = datetime.now(timezone.utc)
         await session.flush()
     return False
 
@@ -146,6 +155,30 @@ async def on_member_kicked(praxis: Praxis, session: AsyncSession) -> None:
     Call after removing the kicked member."""
     for member in praxis.members:
         member.has_submitted = False
+        member.submitted_at = None
     praxis.status = PraxisStatus.in_progress
     praxis.submit_proposed_at = None
+    await session.flush()
+
+
+async def on_member_unsubmit(
+    praxis: Praxis, character_id: int, session: AsyncSession, era: EraConfig = CURRENT_ERA
+) -> None:
+    """Pull back a single member's submission from a pending collab (#590).
+
+    Only the caller's ``has_submitted`` clears. If anyone else is still in, the
+    collab stays ``pending``; if the caller was the last hold-out it returns to
+    ``in_progress`` and the silence-is-consent window closes. Pending collabs are
+    unscored, so no stat recalc is needed. Solo/duel never reach ``pending``.
+    """
+    for member in praxis.members:
+        if member.character_id == character_id:
+            member.has_submitted = False
+            member.submitted_at = None
+            break
+    if any(m.has_submitted for m in praxis.members):
+        praxis.status = PraxisStatus.pending
+    else:
+        praxis.status = PraxisStatus.in_progress
+        praxis.submit_proposed_at = None
     await session.flush()

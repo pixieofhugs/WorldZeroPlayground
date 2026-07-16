@@ -84,7 +84,7 @@ export default function FeedCardDuelChallenge({ item }: Props) {
   // Drop the chosen in-progress praxis to free a slot, then retry the accept.
   //   authored solo  → deletePraxis  (removes the praxis)
   //   joined collab  → leavePraxis   (drops your membership)
-  // NEVER withdrawPraxis — it keeps the membership and does not free a slot.
+  // NEVER unsubmitPraxis — it keeps the membership and does not free a slot.
   const dropAndRetry = async (praxis: {
     id: number;
     created_by_id: number;

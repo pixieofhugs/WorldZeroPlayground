@@ -109,7 +109,9 @@ async def _count_in_progress_praxes(character_id: int, session: AsyncSession) ->
         .join(Praxis, PraxisMember.praxis_id == Praxis.id)
         .where(
             PraxisMember.character_id == character_id,
-            Praxis.status == PraxisStatus.in_progress,
+            # pending = a collab mid-consensus; still an open, slot-consuming
+            # membership for bank-cap purposes (#590).
+            Praxis.status.in_([PraxisStatus.in_progress, PraxisStatus.pending]),
         )
     )
     return result.scalar_one()
@@ -125,7 +127,7 @@ async def recalculate_members_stats(
     """Recalculate stats for every member of ``praxis``, then flush (#492).
 
     Lifts the per-member recalc loop copy-pasted across ``submit_praxis``,
-    ``withdraw_praxis``, ``apply_metatask``, and ``remove_metatask``. Callers
+    ``unsubmit_praxis``, ``apply_metatask``, and ``remove_metatask``. Callers
     that already hold an ``era_row`` (e.g. a duel-forfeit recalc that reuses it)
     pass it in to avoid a re-fetch. ``leave_praxis`` deliberately does NOT use
     this — it recalcs only the single leaver, not all members.
@@ -637,25 +639,41 @@ async def update_praxis(
     return await get_praxis(praxis_id, session)
 
 
-async def withdraw_praxis(
+async def unsubmit_praxis(
     praxis_id: int,
     character_id: int,
     session: AsyncSession,
     era: EraConfig = CURRENT_ERA,
 ) -> Praxis:
-    """Move praxis back to editing (in_progress). Any member may reopen (ADR-0013).
+    """Unsubmit a praxis back to editing. Any member may act (ADR-0013). #590.
 
-    Votes are preserved but stop contributing to score until resubmitted via
-    ``submit_praxis``. For collabs/duels, member submission flags are reset so
-    the full group must re-submit.
-
-    Unsubmitting a *settled* duel side forfeits the contest (ADR-0011 §Forfeit):
-    the opponent wins by default, the duel stays ``settled``, and the forfeit is
-    permanent — resubmitting does not restore it.
+    Three cases by status:
+    - ``submitted``: the whole group reopens. Votes are preserved but stop scoring
+      until resubmitted; every member's ``has_submitted`` clears. Unsubmitting a
+      *settled* duel side forfeits the contest permanently (ADR-0011 §Forfeit):
+      the opponent wins by default and the duel stays ``settled``.
+    - ``pending`` (a collab mid-consensus) where the caller has already submitted:
+      only the caller's part is pulled back (``on_member_unsubmit``); other members'
+      submissions stand. Pending praxes are unscored — no stat recalc.
+    - anything else (a fresh ``in_progress`` praxis, or ``pending`` where the caller
+      has not submitted): 422 — nothing of theirs to pull back.
     """
     praxis = await get_praxis(praxis_id, session)
     _require_member(praxis, character_id, "reopen")
-    if praxis.status == PraxisStatus.in_progress:
+
+    # Pending collab: pull back only the caller's own submission.
+    if praxis.status == PraxisStatus.pending:
+        caller = next(
+            (m for m in praxis.members if m.character_id == character_id), None
+        )
+        if caller is None or not caller.has_submitted:
+            raise HTTPException(
+                status_code=422, detail="Praxis is already in editing mode."
+            )
+        await collab_consensus.on_member_unsubmit(praxis, character_id, session, era)
+        return await get_praxis(praxis_id, session)
+
+    if praxis.status != PraxisStatus.submitted:
         raise HTTPException(status_code=422, detail="Praxis is already in editing mode.")
 
     # ADR-0011 §Forfeit (#307): unsubmitting a *settled* duel side forfeits the
@@ -725,7 +743,7 @@ async def change_praxis_type(
 
     praxis = await get_praxis(praxis_id, session)
     _require_member(praxis, character_id, "change the mode of")
-    if praxis.status != PraxisStatus.in_progress:
+    if praxis.status not in (PraxisStatus.in_progress, PraxisStatus.pending):
         raise HTTPException(
             status_code=422, detail="Can only change mode while the praxis is in editing."
         )
@@ -875,7 +893,9 @@ def active_member_task_ids_subquery(character_id: int):
         .join(PraxisMember, PraxisMember.praxis_id == Praxis.id)
         .where(
             PraxisMember.character_id == character_id,
-            Praxis.status.in_([PraxisStatus.in_progress, PraxisStatus.submitted]),
+            Praxis.status.in_(
+                [PraxisStatus.in_progress, PraxisStatus.pending, PraxisStatus.submitted]
+            ),
         )
     )
 
@@ -897,7 +917,9 @@ async def is_active_member_of_task(
         .where(
             PraxisMember.character_id == character.id,
             Praxis.task_id == task.id,
-            Praxis.status.in_([PraxisStatus.in_progress, PraxisStatus.submitted]),
+            Praxis.status.in_(
+                [PraxisStatus.in_progress, PraxisStatus.pending, PraxisStatus.submitted]
+            ),
         )
     )
     return result.scalar_one_or_none() is not None
@@ -1452,5 +1474,5 @@ __all__ = [
     "SignupEligibility",
     "submit_praxis",
     "update_praxis",
-    "withdraw_praxis",
+    "unsubmit_praxis",
 ]

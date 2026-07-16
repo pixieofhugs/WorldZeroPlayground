@@ -105,6 +105,7 @@ function stateWith(publish: () => Promise<void>): EditPraxisState {
     toggleMetatask: async () => {},
     submitting: false,
     publish,
+    pullBack: async () => {},
     cancel: async () => {},
     autosaveAt: null,
     saveStatus: "idle",
