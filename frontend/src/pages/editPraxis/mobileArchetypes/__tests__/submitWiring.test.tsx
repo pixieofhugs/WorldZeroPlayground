@@ -106,6 +106,8 @@ function stateWith(publish: () => Promise<void>): EditPraxisState {
     submitting: false,
     publish,
     pullBack: async () => {},
+    collabSuccess: false,
+    continueFromCollabSuccess: () => {},
     cancel: async () => {},
     autosaveAt: null,
     saveStatus: "idle",

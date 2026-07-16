@@ -16,7 +16,11 @@ import { MemoryRouter } from "react-router-dom";
 import type { ReactElement } from "react";
 import { describe, it, expect } from "vitest";
 import "../../../i18n";
-import { PraxisStatusBanners, PraxisOwnerActions } from "../shared";
+import {
+  PraxisStatusBanners,
+  PraxisOwnerActions,
+  CollabRosterBlock,
+} from "../shared";
 import type { PraxisDetailState } from "../usePraxisDetail";
 import type {
   PraxisOut,
@@ -192,6 +196,75 @@ describe("PraxisStatusBanners pending-publish (#521)", () => {
     );
     expect(t).toContain("IN EDITING");
     expect(t).not.toContain("PENDING PUBLISH");
+  });
+});
+
+describe("CollabRosterBlock on the detail page (#591)", () => {
+  it("reports the cast state read-only for a still-resolving collab", () => {
+    const t = text(
+      <CollabRosterBlock
+        state={state({
+          user: user(2), // Beth — has not cast, so the circle waits on her
+          praxis: praxis([ADA(), BETH()], "pending", "2026-01-03T00:00:00Z"),
+        })}
+      />,
+    );
+    expect(t).toContain("Ada");
+    expect(t).toContain("Beth");
+    expect(t).toContain("1 of 2 cast");
+    // Read-only: the composer owns the cast / pull-back controls.
+    expect(t).not.toContain("Cast my part");
+    expect(t).not.toContain("Pull my part back");
+  });
+
+  it("renders the roster on an in_progress collab too", () => {
+    const t = text(
+      <CollabRosterBlock
+        state={state({
+          user: user(1),
+          praxis: praxis([ADA(), BETH()], "in_progress", null),
+        })}
+      />,
+    );
+    expect(t).toContain("1 of 2 cast");
+  });
+
+  it("hides once the praxis is live — the byline already credits everyone", () => {
+    const t = text(
+      <CollabRosterBlock
+        state={state({
+          user: user(1),
+          praxis: praxis([ADA(), member(2, "Beth", true)], "submitted", null),
+        })}
+      />,
+    );
+    expect(t).toBe("");
+  });
+
+  it("hides on a solo praxis (a single member is not a circle)", () => {
+    const t = text(
+      <CollabRosterBlock
+        state={state({
+          user: user(1),
+          praxis: praxis([ADA()], "in_progress", null),
+        })}
+      />,
+    );
+    expect(t).toBe("");
+  });
+
+  it("speaks the task faction's voice", () => {
+    const collab = praxis([ADA(), BETH()], "pending", "2026-01-03T00:00:00Z");
+    const t = text(
+      <CollabRosterBlock
+        state={{
+          ...state({ user: user(2) }),
+          praxis: { ...collab, task_faction_slug: "everymen" },
+        }}
+      />,
+    );
+    expect(t).toContain("1 of 2 signed off");
+    expect(t).toContain("still on the clock");
   });
 });
 

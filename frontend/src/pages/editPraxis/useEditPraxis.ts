@@ -32,6 +32,7 @@ import {
   issueChallenge,
   type DuelDetailOut,
 } from "../../api/duel";
+import { deriveCollabGate } from "../../components/collab/CollabRoster";
 import { getGameConfig } from "../../api/gameConfig";
 import { listRelationships } from "../../api/relationships";
 import { getTask, type TaskOut } from "../../api/tasks";
@@ -109,6 +110,15 @@ export interface EditPraxisState {
   /** Pull my own cast back on a pending collab (#591). */
   pullBack: () => Promise<void>;
   cancel: () => Promise<void>;
+
+  /**
+   * My cast just closed the consensus gate on a multi-member collab, so the
+   * one-shot success screen is up (#591). Transient client state — never
+   * persisted, and only ever true for the member who cast last.
+   */
+  collabSuccess: boolean;
+  /** Manual continue from the success screen → the praxis detail page. */
+  continueFromCollabSuccess: () => void;
 
   // Autosave
   autosaveAt: Date | null;
@@ -204,6 +214,8 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
   const [inviting, setInviting] = useState(false);
 
   const [switchingMode, setSwitchingMode] = useState<PraxisType | null>(null);
+  // One-shot post-publish beat for the member whose cast closed the gate (#591).
+  const [collabSuccess, setCollabSuccess] = useState(false);
 
   // Duel challenge (#311)
   const [duelPaneOpen, setDuelPaneOpen] = useState(false);
@@ -480,10 +492,27 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
       const praxisId = parseInt(idParam, 10);
       await persistEdits(praxisId);
       await submitPraxis(praxisId);
+      let refreshed: PraxisOut | null = null;
       try {
         await refetch();
+        // Reload the praxis too: `refetch` is the AUTH refetch (points/level),
+        // so it says nothing about who has now cast. The fresh member list is
+        // what decides between the success screen and the redirect below.
+        refreshed = await getPraxis(praxisId);
+        setPraxis(refreshed);
       } catch {
         // best-effort; praxis was submitted successfully
+      }
+      // If my cast is the one that closed the gate on a multi-member collab,
+      // hold the composer and show the success beat (#591). Every other case —
+      // solo, duel, or a cast that still leaves co-authors weaving — keeps the
+      // existing redirect.
+      if (refreshed) {
+        const gate = deriveCollabGate(refreshed.members, user?.character?.id);
+        if (gate.memberCount > 1 && gate.state === "published") {
+          setCollabSuccess(true);
+          return;
+        }
       }
       navigate(`/praxes/${idParam}`);
     } catch (err) {
@@ -491,7 +520,7 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
     } finally {
       setSubmitting(false);
     }
-  }, [idParam, title, persistEdits, navigate, refetch]);
+  }, [idParam, title, persistEdits, navigate, refetch, user?.character?.id]);
 
   // Pull my own part back out of a pending collab (#591) — clears my cast so the
   // composer unlocks for editing. Backend re-opens only my membership (#590).
@@ -500,14 +529,25 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
     setSubmitting(true);
     setError("");
     try {
-      await unsubmitPraxis(parseInt(idParam, 10));
+      const praxisId = parseInt(idParam, 10);
+      await unsubmitPraxis(praxisId);
       await refetch();
+      // `refetch` only refreshes auth — without reloading the praxis the roster
+      // would keep showing my part as cast right after I pulled it back.
+      setPraxis(await getPraxis(praxisId));
     } catch (err) {
       setError(extractError(err, i18n.t("forms:editPraxis.errors.publish")));
     } finally {
       setSubmitting(false);
     }
   }, [idParam, refetch]);
+
+  // The success screen's only exit: an explicit "it's on the public board" tap.
+  // Deliberately not a timer — the player leaves when they've read it (#591).
+  const continueFromCollabSuccess = useCallback(() => {
+    setCollabSuccess(false);
+    navigate(`/praxes/${idParam}`);
+  }, [idParam, navigate]);
 
   const cancel = useCallback(async () => {
     if (!praxis) return;
@@ -866,6 +906,8 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
     publish,
     pullBack,
     cancel,
+    collabSuccess,
+    continueFromCollabSuccess,
 
     autosaveAt,
     saveStatus,

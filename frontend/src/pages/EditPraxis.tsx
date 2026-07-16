@@ -9,6 +9,7 @@ import { useParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import PageTitle from "../components/ui/PageTitle";
 import ImageEditModal from "../components/imageEdit/ImageEditModal";
+import { CollabSuccess } from "../components/collab/CollabSuccess";
 import { pickVariant } from "../utils/factionDispatch";
 import { useFormFactor } from "../hooks/useFormFactor";
 import {
@@ -110,6 +111,19 @@ export default function EditPraxis() {
         />
       )}
       <Archetype state={state} />
+      {/* The cast that closes a collab's consensus gate earns a standalone beat
+          rather than a silent redirect (#591). Rendered here, over whichever
+          archetype is mounted, so it's one shared screen for every faction and
+          both form factors. Only the member who cast last ever sees it. */}
+      {state.collabSuccess && (
+        <CollabSuccess
+          members={state.praxis.members}
+          currentCharacterId={state.currentCharacterId}
+          factionSlug={state.praxis.task_faction_slug}
+          taskPointValue={state.praxis.task_point_value}
+          onContinue={state.continueFromCollabSuccess}
+        />
+      )}
       {/* Praxis images crop/rotate in place before upload (#514), free-form so
           nothing is force-cropped. Sequential: keyed on identity so each queued
           image gets a fresh modal. */}
