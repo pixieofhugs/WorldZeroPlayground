@@ -19,7 +19,9 @@ import { describe, it, expect } from "vitest";
 import { PRAXIS_CARD_BY_SLUG, DefaultPraxisCard } from "../PraxisCard";
 import { CARD_COMPONENTS, DEFAULT_CARD } from "../TaskCard";
 import { COMMENT_COMPONENTS, DefaultComment } from "../comments/CommentThread";
-import type { PraxisCardOut } from "../../api/praxis";
+import i18n from "../../i18n";
+import { factionName } from "../../utils/factions";
+import type { PraxisCardOut, PraxisMemberOut, MediaItemOut } from "../../api/praxis";
 import type { TaskOut } from "../../api/tasks";
 import type { CommentOut } from "../../api/comments";
 
@@ -113,6 +115,135 @@ describe("praxis-card Task Crown stamp", () => {
       );
     });
   }
+});
+
+// ─── Content-parity slots (#587) ─────────────────────────────────────────────
+// The desktop praxis card reached full content parity with the mobile card:
+// every archetype must fold in the body excerpt, media gallery, crew roster,
+// mode chip and inline vote footer (via the shared PraxisBody). These slots are
+// conditional (roster/chip only on collab·duel; excerpt/media only when present),
+// so we fixture each shape and assert every archetype renders them.
+
+const IMAGE_MEDIA: MediaItemOut = {
+  id: 91,
+  praxis_id: 1,
+  type: "image",
+  file_path: "proofs/chlorophyll-leaf.png",
+  display_order: 0,
+  created_at: "2026-01-01T00:00:00Z",
+};
+
+function member(id: number, name: string): PraxisMemberOut {
+  return {
+    id,
+    praxis_id: 1,
+    character_id: id,
+    character_display_name: name,
+    has_submitted: true,
+    joined_at: "2026-01-01T00:00:00Z",
+  };
+}
+
+// Solo proof carrying a body excerpt + one image tile, no crew.
+const SOLO_RICH: PraxisCardOut = {
+  ...PRAXIS,
+  body_text: "Grew a whole canopy from a single seedling.",
+  media_items: [IMAGE_MEDIA],
+};
+
+// Collab of three, mid pending-publish window.
+const COLLAB: PraxisCardOut = {
+  ...PRAXIS,
+  type: "collab",
+  member_count: 3,
+  members: [member(3, "Ada"), member(4, "Græce"), member(5, "Kepler")],
+  submit_proposed_at: "2026-01-03T00:00:00Z",
+};
+
+// Duel side — a mode chip, no crew roster.
+const DUEL: PraxisCardOut = { ...PRAXIS, type: "duel" };
+
+// Four images → gallery caps at three tiles with a "+1" overflow badge.
+const OVERFLOW: PraxisCardOut = {
+  ...PRAXIS,
+  media_items: [
+    IMAGE_MEDIA,
+    { ...IMAGE_MEDIA, id: 92 },
+    { ...IMAGE_MEDIA, id: 93 },
+    { ...IMAGE_MEDIA, id: 94 },
+  ],
+};
+
+const COLLAB_LABEL = i18n.t("common:collaborationCard.collaboration");
+const DUEL_LABEL = i18n.t("common:collaborationCard.duel");
+const PENDING_LABEL = i18n.t("common:collaborationCard.pending");
+
+describe("praxis-card content-parity slots (#587)", () => {
+  for (const [slug, Card] of Object.entries(praxisArchetypes)) {
+    const render = (praxis: PraxisCardOut) =>
+      markup(<Card praxis={praxis} adminProps={{ ...PRAXIS_ADMIN, praxis }} />);
+
+    it(`${slug} renders the excerpt + a real media thumbnail`, () => {
+      const { html, text } = render(SOLO_RICH);
+      expect(text, "excerpt slot").toContain("Grew a whole canopy");
+      expect(html, "media thumbnail").toContain("chlorophyll-leaf.png");
+      expect(html, "image tile is an <img>").toContain("<img");
+    });
+
+    it(`${slug} caps the gallery at three tiles + a +N badge`, () => {
+      const { text } = render(OVERFLOW);
+      expect(text, "overflow badge").toContain("+1");
+    });
+
+    it(`${slug} shows the crew roster + collaboration chip on a collab`, () => {
+      const { text } = render(COLLAB);
+      expect(text, "roster names").toContain("Ada");
+      expect(text, "roster names").toContain("Kepler");
+      expect(text, "collaboration chip").toContain(COLLAB_LABEL);
+      expect(text, "pending chip").toContain(PENDING_LABEL);
+    });
+
+    it(`${slug} shows the duel chip on a duel and no roster`, () => {
+      const { text } = render(DUEL);
+      expect(text, "duel chip").toContain(DUEL_LABEL);
+    });
+
+    it(`${slug} omits the roster + mode chip on a plain solo praxis`, () => {
+      const { text } = render(PRAXIS);
+      expect(text, "no collaboration chip on solo").not.toContain(COLLAB_LABEL);
+      expect(text, "no duel chip on solo").not.toContain(DUEL_LABEL);
+    });
+  }
+});
+
+// The byline surfaces the author's OWN faction only when it differs from the
+// task faction (the frame already carries the task faction's voice).
+describe("praxis-card byline author faction (#587)", () => {
+  const OFF_FACTION: PraxisCardOut = {
+    ...PRAXIS,
+    task_faction_slug: "ua",
+    created_by_faction_slug: "snide",
+  };
+  const SAME_FACTION: PraxisCardOut = {
+    ...PRAXIS,
+    task_faction_slug: "ua",
+    created_by_faction_slug: "ua",
+  };
+
+  it("shows the author faction when it differs from the task faction", () => {
+    const { text } = markup(
+      <DefaultPraxisCard praxis={OFF_FACTION} adminProps={{ ...PRAXIS_ADMIN, praxis: OFF_FACTION }} />,
+    );
+    expect(text).toContain(factionName("snide"));
+  });
+
+  it("omits the author faction when it matches the task faction", () => {
+    const { text } = markup(
+      <DefaultPraxisCard praxis={SAME_FACTION} adminProps={{ ...PRAXIS_ADMIN, praxis: SAME_FACTION }} />,
+    );
+    // The UA name should not appear as a byline tag (only the task faction voice).
+    expect(text).not.toContain(`· ${factionName("ua")}`);
+  });
 });
 
 // ─── Task cards ───────────────────────────────────────────────────────────────

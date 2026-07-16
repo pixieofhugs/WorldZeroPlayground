@@ -17,7 +17,7 @@
 | # | Surface | What varies | Existing example |
 |---|---|---|---|
 | 1 | **Task card** | Whole archetype (shape, layout, ornament, copy voice) | Everymen union-poster, S.N.I.D.E. ransom clipping |
-| 2 | **Praxis card** | Mirrors the task-card archetype — **⚠ currently reads flat next to the task cards; flagged for a visual rework (pending design)** | per faction |
+| 2 | **Praxis card** | Mirrors the task-card archetype; full content parity (excerpt, media gallery, crew roster, mode chip, inline vote footer) folded into `PraxisBody` (#587) | per faction |
 | 3 | **Edit-praxis editor** | Mirrors the archetype, as a form | sticky-note / terminal / gazette |
 | 4 | **Faction-selection card** | Bespoke "join me" card | per faction |
 | 5 | **Headline font** | One display face per faction | Bebas Neue (Everymen), Caveat (Warriors of Whimsy) |

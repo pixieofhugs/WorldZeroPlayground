@@ -1,6 +1,5 @@
 import { useTranslation } from 'react-i18next'
 import PraxisCard from '../components/PraxisCard'
-import CollaborationCard from '../components/CollaborationCard'
 import PageTitle from '../components/ui/PageTitle'
 import { extractError } from '../utils/errors'
 import { useFormFactor } from '../hooks/useFormFactor'
@@ -40,11 +39,8 @@ export default function Praxes() {
         <p className="font-body text-muted">{t('listPage.empty')}</p>
       ) : (
         <div className="flex flex-wrap gap-4 items-start">
-          {soloItems.map((p) => (
+          {[...soloItems, ...collabItems].map((p) => (
             <PraxisCard key={`praxis-${p.id}`} praxis={p} />
-          ))}
-          {collabItems.map((c) => (
-            <CollaborationCard key={`collab-${c.id}`} collab={c} />
           ))}
         </div>
       )}
