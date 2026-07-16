@@ -531,13 +531,18 @@ async def list_characters_for_viewer(
     era_id = era_row.id if era_row else None
 
     query = _character_stats_era_join(era_id)
-    if search:
+    # Callers pass the handle as the player typed it, sigil and all ("@mol") —
+    # the invite search even prompts for "@handle". Neither a username nor a
+    # display name can contain '@', so a leading one is a sigil to drop, not a
+    # character to match (#624).
+    term = search.lstrip("@") if search else None
+    if term:
         # Match on handle OR display name so "@Mol" surfaces "Molly" (@mollusk).
         # The inserted mention is still @username; display_name only *matches*.
         query = query.where(
             or_(
-                Character.username.ilike(f"%{search}%"),
-                Character.display_name.ilike(f"%{search}%"),
+                Character.username.ilike(f"%{term}%"),
+                Character.display_name.ilike(f"%{term}%"),
             )
         )
     if faction_slug:
