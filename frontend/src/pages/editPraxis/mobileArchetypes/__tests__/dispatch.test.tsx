@@ -105,6 +105,8 @@ function baseState(slug: string | null): EditPraxisState {
     submitting: false,
     publish: async () => {},
     pullBack: async () => {},
+    collabSuccess: false,
+    continueFromCollabSuccess: () => {},
     cancel: async () => {},
     autosaveAt: null,
     saveStatus: "idle",
