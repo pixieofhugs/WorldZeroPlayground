@@ -832,7 +832,13 @@
      skin still owns font, colour and ornament, never its own type size.
      There is deliberately no .content-heading / .content-display: each has a
      single caller (Sidebar, PageTitle), and a class for one caller is a class
-     for nobody. */
+     for nobody.
+
+     Note: these live in @layer components, so Tailwind only emits a class once
+     it sees the literal string in a scanned file. Until the sweeps land a real
+     caller, probing one in devtools will show it doing nothing — that's the
+     purge, not a broken rule. Same as .eyebrow. It also means a class name
+     assembled at runtime gets purged: write it as a literal. */
 
   .content-text {
     font-size: var(--text-content);
