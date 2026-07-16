@@ -177,7 +177,7 @@ async def list_signups_for_task(
         .join(Character, PraxisMember.character_id == Character.id)
         .where(
             Praxis.task_id == task_id,
-            Praxis.status == PraxisStatus.in_progress,
+            Praxis.status.in_([PraxisStatus.in_progress, PraxisStatus.pending]),
         )
         .order_by(PraxisMember.joined_at.asc())
     )

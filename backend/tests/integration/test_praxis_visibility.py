@@ -154,7 +154,7 @@ async def test_resubmit_preserves_vote_tally(
     before = await client.get(f"/praxes/{praxis_id}/votes")
     assert before.json()["total_votes"] == 1
 
-    assert (await client.post(f"/praxes/{praxis_id}/withdraw", headers=auth_headers)).status_code == 200
+    assert (await client.post(f"/praxes/{praxis_id}/unsubmit", headers=auth_headers)).status_code == 200
     assert (await client.post(f"/praxes/{praxis_id}/submit", headers=auth_headers)).status_code == 200
 
     after = await client.get(f"/praxes/{praxis_id}/votes")
@@ -201,7 +201,7 @@ async def test_withdraw_collab_recalculates_every_member(
     assert coauthor_before > 0
 
     # character (a member, but NOT the co-author) reopens the collab.
-    withdraw = await client.post(f"/praxes/{praxis.id}/withdraw", headers=auth_headers)
+    withdraw = await client.post(f"/praxes/{praxis.id}/unsubmit", headers=auth_headers)
     assert withdraw.status_code == 200
 
     coauthor_after = (await client.get(f"/characters/{character2.id}")).json()["score"]
@@ -237,7 +237,7 @@ async def test_withdraw_settled_duel_side_forfeits(
     db_session.add(duel)
     await db_session.commit()
 
-    resp = await client.post(f"/praxes/{praxis_id}/withdraw", headers=auth_headers)
+    resp = await client.post(f"/praxes/{praxis_id}/unsubmit", headers=auth_headers)
     assert resp.status_code == 200
 
     await db_session.refresh(duel)

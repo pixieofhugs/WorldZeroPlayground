@@ -38,6 +38,10 @@ class PraxisType(enum.Enum):
 
 class PraxisStatus(enum.Enum):
     in_progress = "in_progress"
+    # A collab mid-consensus (#590): at least one member submitted but not all.
+    # Open, member-only and unscored like in_progress, but distinct so the UI/feed
+    # can surface the pending-publish state. Solo/duel never enter it.
+    pending = "pending"
     submitted = "submitted"
 
 
