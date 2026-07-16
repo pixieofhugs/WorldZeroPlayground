@@ -8,7 +8,6 @@ import { factionCssVar, factionName } from '../../utils/factions'
 import { mediaUrl } from '../../utils/media'
 import { useMyActiveTasks } from '../../hooks/useMyActiveTasks'
 import type { PraxisType } from '../../api/praxis'
-import { useMyCharacterStats } from '../../hooks/useMyCharacterStats'
 import { usePendingRequests } from '../../hooks/usePendingRequests'
 import { useRespondToRequest } from '../../hooks/useRespondToRequest'
 import { useGameConfig } from '../../hooks/useGameConfig'
@@ -60,7 +59,6 @@ export default function Sidebar() {
   const character = user?.character
 
   const { activeTasks, refetch: refetchActiveTasks } = useMyActiveTasks()
-  const { votesReceived } = useMyCharacterStats(character?.id)
   const { pendingRequests, refetch: refetchPendingRequests } = usePendingRequests()
   const gameConfig = useGameConfig()
   const [globalActivity, setGlobalActivity] = useState<ActivityFeedItem[]>([])
@@ -172,8 +170,8 @@ export default function Sidebar() {
           <div className="grid grid-cols-3 gap-2">
             {[
               { label: t('sidebar.stats.score'), value: character.score?.toLocaleString() ?? '0' },
-              { label: t('sidebar.stats.votes'), value: votesReceived.toLocaleString() },
-              { label: t('sidebar.stats.current'), value: t('sidebar.stats.currentValue') },
+              { label: t('sidebar.stats.allTime'), value: character.all_time_score?.toLocaleString() ?? '0' },
+              { label: t('sidebar.stats.current'), value: user?.era_name ?? '' },
             ].map((stat) => (
               <div
                 key={stat.label}
