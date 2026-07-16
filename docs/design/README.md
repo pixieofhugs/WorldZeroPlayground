@@ -19,6 +19,7 @@ stand-ins — discard them and consume the real state (`useTaskDetail`, `usePrax
 | `design-system/templates/<faction>/` | Per-faction kit sources (`*.jsx`/`*.css`) — vote, backdrop, avatar, hero, feed surfaces. Used by #221–#224. |
 | `task-detail/` | The 7 task-detail archetypes (`*TaskDetail.tsx`). Used by #210–#214, #242. See the locked spec on #242. |
 | `praxis-read/factions/<faction>/` | The 7 praxis read-page designs. Used by #205–#209, #231. |
+| `collab-submission/` | 4-state collab-submission composer mockup (Wow dark-mode), the recipe for the other 7 factions in its `README.md`. Shipped only as a single rendered `design-reference.html` — no separate `.tsx`/`.jsx` source was provided, so unlike the kits above there's nothing lighter to vendor instead. Read for intent per the note above; don't port its runtime. Used by #590, #591, #592. |
 
 ## Token truth vs. stale text
 
