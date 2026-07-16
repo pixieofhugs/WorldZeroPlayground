@@ -16,6 +16,7 @@ import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import { reframeLabel } from '../../components/vote/voteReframes'
 import { TaskCrown } from '../../components/cards/TaskCrown'
+import { CollabRoster } from '../../components/collab/CollabRoster'
 import type { PraxisDetailState } from './usePraxisDetail'
 import type { PraxisMemberOut, PraxisOut } from '../../api/praxis'
 import { flagReasonOptions } from '../../utils/flagReasons'
@@ -192,6 +193,35 @@ export function PraxisAdminBar({ state }: { state: PraxisDetailState }) {
   )
 }
 
+// ── Collab cast-status roster (#591) ─────────────────────────────────────────
+
+/**
+ * The read-only twin of the composer's roster: the same shared `CollabRoster`
+ * component with no `action` prop, so it reports the ADR-0012 consensus state
+ * without offering a cast/pull-back control.
+ *
+ * Gated to a still-resolving collab (in_progress / pending), mirroring
+ * `MemberByline`'s `showSubmitState`: that is exactly when "who still owes their
+ * part" is a live question. Once the praxis is live the byline already credits
+ * every co-author and a cast roster would only restate it. The component
+ * self-hides on a solo/duel praxis (<2 members).
+ */
+export function CollabRosterBlock({ state }: { state: PraxisDetailState }) {
+  const { praxis, user } = state
+  if (!praxis) return null
+  if (praxis.status !== 'in_progress' && praxis.status !== 'pending') return null
+  return (
+    <div style={{ marginBottom: 12 }}>
+      <CollabRoster
+        members={praxis.members}
+        currentCharacterId={user?.character?.id ?? null}
+        factionSlug={praxis.task_faction_slug}
+        taskPointValue={praxis.task_point_value}
+      />
+    </div>
+  )
+}
+
 // ── Status banners ────────────────────────────────────────────────────────────
 
 export function PraxisStatusBanners({ state }: { state: PraxisDetailState }) {
@@ -201,6 +231,15 @@ export function PraxisStatusBanners({ state }: { state: PraxisDetailState }) {
 
   return (
     <>
+      {/* Read-only cast-status roster (#591). The same shared component the
+          composer uses, minus the `action` prop — the detail page is a reading
+          surface, so it shows who has cast and who hasn't but offers no
+          cast/pull-back control (those live in the composer). It self-hides on
+          a solo/duel praxis (<2 members). Rendered here rather than in each
+          archetype because every archetype — desktop and mobile — already
+          renders PraxisStatusBanners, so both form factors pick it up from one
+          place and no faction skin has to re-implement it. */}
+      <CollabRosterBlock state={state} />
       {/* Task Crown hero (ADR-0028) — this praxis is the task's top submitted
           entry, computed live. Invariant chrome, so every archetype shows it. */}
       {praxis.is_top_for_task && (
