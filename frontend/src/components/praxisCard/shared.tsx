@@ -28,7 +28,7 @@ export function PraxisTitle({
     <Link to={`/praxes/${praxis.id}`}>
       <h3
         className="font-display font-semibold leading-tight hover:underline"
-        style={{ fontSize: "var(--text-lg)", marginBottom: 6, ...style }}
+        style={{ fontSize: "var(--text-2xl)", marginBottom: "var(--space-sm)", ...style }}
       >
         {praxis.title}
       </h3>
@@ -68,8 +68,8 @@ export function PraxisByline({
       className="flex justify-between items-center font-body"
       style={{
         fontSize: "var(--text-xs)",
-        marginTop: 8,
-        paddingTop: 6,
+        marginTop: "var(--space-sm)",
+        paddingTop: "var(--space-sm)",
         borderTop: "1px dashed rgba(128,128,128,0.3)",
         ...style,
       }}
@@ -130,7 +130,7 @@ export function PraxisScoreHero({
         justifyContent: "center",
         flexShrink: 0,
         minWidth: 54,
-        padding: "6px 10px",
+        padding: "var(--space-sm) var(--space-md)",
         border: `2px solid ${border ?? "currentColor"}`,
         borderRadius: 4,
         transform: "rotate(-3deg)",
@@ -149,17 +149,17 @@ export function PraxisScoreHero({
           style={{ position: "absolute", top: -13, right: -12, zIndex: 3 }}
         />
       )}
-      <span className="font-display" style={{ fontWeight: 800, fontSize: "var(--text-lg)", whiteSpace: "nowrap" }}>
+      <span className="font-display" style={{ fontWeight: 800, fontSize: "var(--text-2xl)", whiteSpace: "nowrap" }}>
         {base}
-        <span style={{ opacity: 0.55, margin: "0 2px" }}>+</span>
+        <span style={{ opacity: 0.55, margin: "0 var(--space-xs)" }}>+</span>
         {votePoints}
       </span>
       <span
         style={{
-          fontSize: 7,
+          fontSize: "var(--text-xs)",
           letterSpacing: "0.16em",
           textTransform: "uppercase",
-          marginTop: 3,
+          marginTop: "var(--space-xs)",
           opacity: 0.8,
         }}
       >
@@ -234,8 +234,8 @@ export function AdminOverlay({
             position: "absolute",
             top: 8,
             right: 8,
-            fontSize: 7,
-            padding: "1px 5px",
+            fontSize: "var(--text-xs)",
+            padding: "var(--space-xs) var(--space-xs)",
             border: "1px solid rgba(220,38,38,0.4)",
             color: "var(--color-danger)",
             background: "rgba(220,38,38,0.05)",
@@ -251,8 +251,8 @@ export function AdminOverlay({
             position: "absolute",
             top: 8,
             right: 8,
-            fontSize: 7,
-            padding: "1px 5px",
+            fontSize: "var(--text-xs)",
+            padding: "var(--space-xs) var(--space-xs)",
             border: "1px solid rgba(245,158,11,0.4)",
             color: "var(--color-warning)",
             background: "rgba(245,158,11,0.05)",
@@ -268,8 +268,8 @@ export function AdminOverlay({
             position: "absolute",
             top: 8,
             right: 8,
-            fontSize: 7,
-            padding: "1px 5px",
+            fontSize: "var(--text-xs)",
+            padding: "var(--space-xs) var(--space-xs)",
             border: "1px solid rgba(107,114,128,0.4)",
             color: "var(--color-text-secondary)",
             background: "rgba(107,114,128,0.05)",
@@ -284,7 +284,7 @@ export function AdminOverlay({
           style={{
             fontSize: "var(--text-xs)",
             color: "var(--color-danger)",
-            marginBottom: 4,
+            marginBottom: "var(--space-xs)",
           }}
         >
           {moderateError}
@@ -297,15 +297,15 @@ export function AdminOverlay({
             top: 8,
             right: 8,
             display: "flex",
-            gap: 4,
+            gap: "var(--space-xs)",
           }}
         >
           <button
             onClick={onHide}
             className="eyebrow"
             style={{
-              fontSize: 7,
-              padding: "1px 5px",
+              fontSize: "var(--text-xs)",
+              padding: "var(--space-xs) var(--space-xs)",
               border: "1px solid rgba(220,38,38,0.3)",
               color: "var(--color-danger)",
               background: "rgba(220,38,38,0.05)",
@@ -318,8 +318,8 @@ export function AdminOverlay({
             onClick={onFail}
             className="eyebrow"
             style={{
-              fontSize: 7,
-              padding: "1px 5px",
+              fontSize: "var(--text-xs)",
+              padding: "var(--space-xs) var(--space-xs)",
               border: "1px solid rgba(245,158,11,0.3)",
               color: "var(--color-warning)",
               background: "rgba(245,158,11,0.05)",

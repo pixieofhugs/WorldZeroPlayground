@@ -87,7 +87,7 @@ function PraxisBody({
           display: "flex",
           justifyContent: "space-between",
           alignItems: "flex-start",
-          gap: 10,
+          gap: "var(--space-md)",
         }}
       >
         <div style={{ flex: 1, minWidth: 0 }}>
@@ -102,7 +102,7 @@ function PraxisBody({
           showCrown={showCrown}
         />
       </div>
-      <PraxisStats praxis={praxis} style={{ color: muted, marginTop: 8 }} />
+      <PraxisStats praxis={praxis} style={{ color: muted, marginTop: "var(--space-sm)" }} />
       <PraxisByline praxis={praxis} style={{ color: muted }} />
     </>
   );
@@ -121,7 +121,7 @@ function UAPraxisCard({ praxis, adminProps, showCrown }: ArchetypeProps) {
     <div
       style={{
         ...frameBase,
-        padding: 5,
+        padding: "var(--space-xs)",
         background: "var(--ua-gilt)",
         boxShadow:
           "0 12px 26px color-mix(in srgb, var(--ua-ink) 22%, transparent), inset 0 0 0 1px color-mix(in srgb, white 45%, transparent)",
@@ -132,7 +132,7 @@ function UAPraxisCard({ praxis, adminProps, showCrown }: ArchetypeProps) {
           position: "relative",
           background: factionCssVar("ua", "card-bg"),
           border: "1px solid color-mix(in srgb, var(--ua-ink) 30%, transparent)",
-          padding: "16px 17px 14px",
+          padding: "var(--space-lg)",
           fontFamily: "'EB Garamond', serif",
           color: factionCssVar("ua", "card-text"),
           backgroundImage:
@@ -143,11 +143,11 @@ function UAPraxisCard({ praxis, adminProps, showCrown }: ArchetypeProps) {
         <div
           style={{
             fontFamily: "'Marcellus SC', serif",
-            fontSize: 8,
+            fontSize: "var(--text-xs)",
             letterSpacing: "0.12em",
             textTransform: "uppercase",
             color: factionCssVar("ua", "card-accent"),
-            marginBottom: 6,
+            marginBottom: "var(--space-sm)",
           }}
         >
           {t("card.masthead.ua")}
@@ -176,7 +176,7 @@ function EverymenPraxisCard({ praxis, adminProps, showCrown }: ArchetypeProps) {
         clipPath:
           "polygon(0 0, 100% 0, 100% 90%, 92% 100%, 80% 95%, 68% 100%, 56% 93%, 44% 100%, 32% 94%, 20% 100%, 8% 94%, 0 100%)",
         position: "relative",
-        padding: "14px 16px 28px 28px",
+        padding: "var(--space-lg) var(--space-lg) var(--space-2xl) var(--space-2xl)",
         fontFamily: "'Special Elite', serif",
         color: factionCssVar("everymen", "card-text"),
         backgroundImage:
@@ -247,7 +247,7 @@ function WowPraxisCard({ praxis, adminProps, showCrown }: ArchetypeProps) {
           background: factionCssVar("wow", "card-bg"),
           border: "1.5px solid rgba(0,0,0,0.12)",
           transform: "rotate(-2deg)",
-          padding: "22px 14px 16px",
+          padding: "var(--space-xl) var(--space-lg) var(--space-lg)",
           fontFamily: "'Courier Prime', monospace",
           color: factionCssVar("wow", "card-text"),
           zIndex: 2,
@@ -291,7 +291,7 @@ function SnidePraxisCard({ praxis, adminProps, showCrown }: ArchetypeProps) {
         ...frameBase,
         background: factionCssVar("snide", "card-bg"),
         position: "relative",
-        padding: "14px 14px 16px",
+        padding: "var(--space-lg)",
         fontFamily: "'Special Elite', serif",
         color: factionCssVar("snide", "card-text"),
         transition: "background 150ms, color 150ms",
@@ -361,8 +361,8 @@ function EphemeristsPraxisCard({ praxis, adminProps, showCrown }: ArchetypeProps
           zIndex: 2,
           display: "flex",
           alignItems: "center",
-          gap: 8,
-          padding: "7px 14px 6px",
+          gap: "var(--space-sm)",
+          padding: "var(--space-sm) var(--space-lg) var(--space-sm)",
           borderBottom: "1px solid var(--eph-gold-deep)",
           boxShadow: "0 2px 0 -1px color-mix(in srgb, var(--eph-lapis) 55%, transparent)",
         }}
@@ -371,7 +371,7 @@ function EphemeristsPraxisCard({ praxis, adminProps, showCrown }: ArchetypeProps
         <span
           style={{
             fontFamily: "var(--eph-serif)",
-            fontSize: 8.5,
+            fontSize: "var(--text-xs)",
             letterSpacing: "0.18em",
             textTransform: "uppercase",
             color: "var(--eph-rubric)",
@@ -380,7 +380,7 @@ function EphemeristsPraxisCard({ praxis, adminProps, showCrown }: ArchetypeProps
           {t("card.masthead.ephemerists")}
         </span>
       </div>
-      <div style={{ position: "relative", zIndex: 2, padding: "10px 14px 14px" }}>
+      <div style={{ position: "relative", zIndex: 2, padding: "var(--space-md) var(--space-lg) var(--space-lg)" }}>
         <AdminOverlay {...adminProps} />
         <PraxisBody
           praxis={praxis}
@@ -401,8 +401,8 @@ function SingularityHoles() {
       style={{
         display: "flex",
         justifyContent: "center",
-        gap: 6,
-        padding: "4px 0",
+        gap: "var(--space-sm)",
+        padding: "var(--space-xs) 0",
       }}
     >
       {Array.from({ length: 5 }).map((_, index) => (
@@ -492,15 +492,15 @@ function SingularityPraxisCard({ praxis, adminProps, showCrown }: ArchetypeProps
       />
       <SingularityHoles />
       <div
-        style={{ padding: "6px 16px 12px", position: "relative", zIndex: 2 }}
+        style={{ padding: "var(--space-sm) var(--space-lg) var(--space-md)", position: "relative", zIndex: 2 }}
       >
         <div
           style={{
-            fontSize: 8,
+            fontSize: "var(--text-xs)",
             color: "var(--faction-singularity-card-muted)",
             textTransform: "uppercase",
             letterSpacing: "0.15em",
-            marginBottom: 8,
+            marginBottom: "var(--space-sm)",
           }}
         >
           {t("card.masthead.singularity")}
@@ -510,7 +510,7 @@ function SingularityPraxisCard({ praxis, adminProps, showCrown }: ArchetypeProps
               width: 5,
               height: 9,
               background: "var(--faction-singularity-card-text)",
-              marginLeft: 3,
+              marginLeft: "var(--space-xs)",
               verticalAlign: "middle",
               animation: "blink 1s step-end infinite",
             }}
@@ -573,8 +573,8 @@ function AlbescentPraxisCard({ praxis, adminProps, showCrown }: ArchetypeProps) 
           position: "relative",
           display: "flex",
           alignItems: "center",
-          gap: 8,
-          padding: "9px 15px 7px",
+          gap: "var(--space-sm)",
+          padding: "var(--space-sm) var(--space-lg) var(--space-sm)",
           borderBottom: `1px solid ${ink(7)}`,
         }}
       >
@@ -582,7 +582,7 @@ function AlbescentPraxisCard({ praxis, adminProps, showCrown }: ArchetypeProps) 
         <span
           style={{
             fontFamily: "var(--faction-albescent-mono)",
-            fontSize: 8,
+            fontSize: "var(--text-xs)",
             letterSpacing: "0.22em",
             textTransform: "uppercase",
             color: ink(30),
@@ -591,7 +591,7 @@ function AlbescentPraxisCard({ praxis, adminProps, showCrown }: ArchetypeProps) 
           {t("card.masthead.albescent")}
         </span>
       </div>
-      <div style={{ position: "relative", padding: "12px 15px 14px" }}>
+      <div style={{ position: "relative", padding: "var(--space-md) var(--space-lg) var(--space-lg)" }}>
         <AdminOverlay {...adminProps} />
         <PraxisBody
           praxis={praxis}
@@ -626,7 +626,7 @@ export function DefaultPraxisCard({ praxis, adminProps, showCrown }: ArchetypePr
       style={{
         ...frameBase,
         borderRadius: 10,
-        padding: 5,
+        padding: "var(--space-xs)",
         background: "var(--faction-default-rainbow)",
         boxShadow: "0 12px 26px -14px rgba(0,0,0,0.4)",
       }}
@@ -637,17 +637,17 @@ export function DefaultPraxisCard({ praxis, adminProps, showCrown }: ArchetypePr
           background: "var(--faction-default-card-bg)",
           color: "var(--faction-default-card-text)",
           borderRadius: 5,
-          padding: "14px 16px",
+          padding: "var(--space-lg)",
         }}
       >
         <div
           style={{
             display: "flex",
             alignItems: "center",
-            gap: 8,
-            marginBottom: 10,
+            gap: "var(--space-sm)",
+            marginBottom: "var(--space-md)",
             fontFamily: "'Courier Prime', monospace",
-            fontSize: 8.5,
+            fontSize: "var(--text-xs)",
             letterSpacing: "0.22em",
             textTransform: "uppercase",
             color: "var(--faction-default-card-muted)",
