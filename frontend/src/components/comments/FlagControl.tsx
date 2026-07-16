@@ -6,6 +6,9 @@
  * comment header. A note is available for every reason (mirrors #570); the
  * backend only persists it for reason='other', and 403s self-flags — so this is
  * hidden on the viewer's own comment.
+ *
+ * Spacing/type via Tailwind utilities + --text-* tokens, not raw inline pixels
+ * (#588 no-raw-style-values lint guard).
  */
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -35,7 +38,7 @@ export function CommentFlagControl({ comment }: { comment: CommentOut }) {
 
   if (submitted) {
     return (
-      <span className="eyebrow" style={{ fontSize: 9, color: 'var(--color-success)' }}>
+      <span className="eyebrow text-[9px]" style={{ color: 'var(--color-success)' }}>
         {t('detail.flag.flaggedTitle')}
       </span>
     )
@@ -58,8 +61,8 @@ export function CommentFlagControl({ comment }: { comment: CommentOut }) {
     return (
       <button
         onClick={() => { setOpen(true); setError(null) }}
-        className="btn-outline"
-        style={{ fontSize: 8, padding: '2px 8px', borderColor: 'rgba(220,38,38,0.4)', color: 'var(--color-danger)' }}
+        className="btn-outline text-[8px] px-[8px] py-[2px]"
+        style={{ borderColor: 'rgba(220,38,38,0.4)', color: 'var(--color-danger)' }}
       >
         {t('detail.flag.flag')}
       </button>
@@ -67,8 +70,8 @@ export function CommentFlagControl({ comment }: { comment: CommentOut }) {
   }
 
   return (
-    <div style={{ width: '100%', marginTop: 6 }}>
-      <div className="flex items-center gap-2" style={{ flexWrap: 'wrap' }} role="radiogroup" aria-label={t('detail.flag.reasonGroupLabel')}>
+    <div className="w-full mt-[6px]">
+      <div className="flex items-center gap-2 flex-wrap" role="radiogroup" aria-label={t('detail.flag.reasonGroupLabel')}>
         {flagReasonOptions().map(({ value, label }) => (
           <button
             key={value}
@@ -76,14 +79,12 @@ export function CommentFlagControl({ comment }: { comment: CommentOut }) {
             aria-checked={reason === value}
             onClick={() => { setReason(value); setError(null) }}
             disabled={submitting}
-            className="btn-outline"
-            style={{
-              fontSize: 9,
-              padding: '3px 8px',
-              ...(reason === value
+            className="btn-outline text-[9px] px-[8px] py-[3px]"
+            style={
+              reason === value
                 ? { background: 'var(--color-danger)', borderColor: 'var(--color-danger)', color: 'var(--color-bg-surface)' }
-                : {}),
-            }}
+                : undefined
+            }
           >
             {label}
           </button>
@@ -91,26 +92,25 @@ export function CommentFlagControl({ comment }: { comment: CommentOut }) {
       </div>
       {reason !== null && (
         <textarea
-          className="border-2 border-border bg-card px-3 py-2 font-body text-sm focus:outline-none focus:border-ink w-full resize-none"
+          className="border-2 border-border bg-card px-3 py-2 font-body text-sm focus:outline-none focus:border-ink w-full resize-none mt-[6px]"
           rows={2}
           placeholder={t('detail.flag.notePlaceholder')}
           value={detail}
           onChange={(e) => setDetail(e.target.value)}
           disabled={submitting}
-          style={{ marginTop: 6 }}
         />
       )}
-      <div className="flex items-center gap-2" style={{ marginTop: 6 }}>
+      <div className="flex items-center gap-2 mt-[6px]">
         {reason !== null && (
-          <button onClick={() => void submit()} disabled={submitting} className="btn-primary" style={{ fontSize: 9, padding: '3px 10px', background: 'var(--color-danger)', borderColor: 'var(--color-danger)' }}>
+          <button onClick={() => void submit()} disabled={submitting} className="btn-primary text-[9px] px-[10px] py-[3px]" style={{ background: 'var(--color-danger)', borderColor: 'var(--color-danger)' }}>
             {submitting ? t('detail.flag.submitting') : t('detail.flag.submit')}
           </button>
         )}
-        <button onClick={() => { setOpen(false); setReason(null); setDetail(''); setError(null) }} disabled={submitting} className="btn-outline" style={{ fontSize: 9, padding: '3px 10px' }}>
+        <button onClick={() => { setOpen(false); setReason(null); setDetail(''); setError(null) }} disabled={submitting} className="btn-outline text-[9px] px-[10px] py-[3px]">
           {t('detail.flag.cancel')}
         </button>
       </div>
-      {error && <p className="font-body text-xs" style={{ color: 'var(--color-danger)', marginTop: 4 }}>{error}</p>}
+      {error && <p className="font-body text-xs mt-[4px]" style={{ color: 'var(--color-danger)' }}>{error}</p>}
     </div>
   )
 }
