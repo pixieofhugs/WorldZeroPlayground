@@ -548,7 +548,9 @@ async def list_characters_for_viewer(
             .join(Praxis, PraxisMember.praxis_id == Praxis.id)
             .where(
                 Praxis.task_id == exclude_active_task_id,
-                Praxis.status.in_([PraxisStatus.in_progress, PraxisStatus.submitted]),
+                Praxis.status.in_(
+                    [PraxisStatus.in_progress, PraxisStatus.pending, PraxisStatus.submitted]
+                ),
             )
         )
         query = query.where(

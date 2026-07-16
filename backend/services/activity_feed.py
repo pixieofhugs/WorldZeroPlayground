@@ -163,7 +163,7 @@ async def _get_my_task_ids(
         .join(PraxisMember, PraxisMember.praxis_id == Praxis.id)
         .where(
             PraxisMember.character_id == character_id,
-            Praxis.status == PraxisStatus.in_progress,
+            Praxis.status.in_([PraxisStatus.in_progress, PraxisStatus.pending]),
         )
     )
     return list(result.scalars().all())

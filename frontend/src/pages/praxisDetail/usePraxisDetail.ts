@@ -13,7 +13,7 @@ import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   getPraxis,
-  withdrawPraxis,
+  unsubmitPraxis,
   submitPraxis,
   flagPraxis,
   applyMetatask,
@@ -236,7 +236,7 @@ export function usePraxisDetail(idParam: string | undefined): PraxisDetailState 
     setWithdrawing(true);
     setWithdrawError(null);
     try {
-      const updated = await withdrawPraxis(praxis.id);
+      const updated = await unsubmitPraxis(praxis.id);
       setPraxis(updated);
       setShowWithdrawConfirm(false);
       void refetch();

@@ -62,7 +62,7 @@ from services.praxis import (
     respond_to_invite,
     submit_praxis,
     update_praxis,
-    withdraw_praxis,
+    unsubmit_praxis,
 )
 from services.media import process_and_save_media
 from services.vote import cast_vote_on_praxis
@@ -221,13 +221,13 @@ async def delete_praxis_route(
 # ---------------------------------------------------------------------------
 
 
-@router.post("/{praxis_id}/withdraw", response_model=PraxisOut)
-async def withdraw_praxis_route(
+@router.post("/{praxis_id}/unsubmit", response_model=PraxisOut)
+async def unsubmit_praxis_route(
     praxis_id: int,
     character: Character = Depends(get_current_character),
     session: AsyncSession = Depends(get_db),
 ):
-    praxis = await withdraw_praxis(
+    praxis = await unsubmit_praxis(
         praxis_id=praxis_id,
         character_id=character.id,
         session=session,

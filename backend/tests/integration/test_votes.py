@@ -814,7 +814,7 @@ async def test_forfeit_by_unsubmit_gives_opponent_win_regardless_of_votes(
     resubmitting does not restore the contest (ADR-0011 §Forfeit)."""
     from game_config import CURRENT_ERA
     from models.duel import Duel, DuelStatus
-    from services.praxis import get_praxis, withdraw_praxis
+    from services.praxis import get_praxis, unsubmit_praxis
     from services.praxis_scoring import compute_contributions
 
     challenger_pid = await _create_and_submit_solo(client, active_task, auth_headers)
@@ -833,7 +833,7 @@ async def test_forfeit_by_unsubmit_gives_opponent_win_regardless_of_votes(
 
     # No votes cast on either side → without forfeit this is a 1.0x tie for both.
     # character2 forfeits by unsubmitting their side.
-    await withdraw_praxis(opponent_pid, character2.id, db_session)
+    await unsubmit_praxis(opponent_pid, character2.id, db_session)
 
     challenger_praxis = await get_praxis(challenger_pid, db_session)
     contribs = await compute_contributions(
@@ -1042,7 +1042,7 @@ async def test_duel_detail_marks_forfeited_side(
 ):
     """A forfeited duel: winner renders fully, thrown side marked unsubmitted, no body leak."""
     from models.duel import Duel, DuelStatus
-    from services.praxis import withdraw_praxis
+    from services.praxis import unsubmit_praxis
 
     challenger_pid = await _create_and_submit_solo(client, active_task, auth_headers)
     opponent_pid = await _create_and_submit_solo(client, active_task, auth_headers2)
@@ -1057,7 +1057,7 @@ async def test_duel_detail_marks_forfeited_side(
     await db_session.commit()
 
     # character2 forfeits by unsubmitting their side; commit so the API view sees it.
-    await withdraw_praxis(opponent_pid, character2.id, db_session)
+    await unsubmit_praxis(opponent_pid, character2.id, db_session)
     await db_session.commit()
 
     resp = await client.get(f"/duels/{duel.id}/detail")
