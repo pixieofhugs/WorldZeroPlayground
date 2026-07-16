@@ -25,7 +25,17 @@ from services.era import get_current_era_row
 
 def _apply_seal(praxis: Praxis) -> None:
     """Pure state mutation for going Live: mark the whole group submitted and clear
-    the window. Caller flushes and recalculates member stats."""
+    the window. Caller flushes and recalculates member stats.
+
+    **Establishes the invariant** ``status == submitted ⟹ submitted_at IS NOT NULL``.
+    This is the only writer of ``praxis.submitted_at``, and every route to
+    ``status=submitted`` runs through it: solo and duel seal on the first submit
+    (one member, so ``all(has_submitted)`` holds immediately), collab seals via
+    :func:`seal_to_live`. Set both fields together, always. The reader that
+    depends on it — and drops any row that violates it — is the
+    ``status == submitted`` branch of ``services.praxis.list_praxes``, whose
+    feed sort orders on ``submitted_at`` (#658).
+    """
     praxis.status = PraxisStatus.submitted
     now = datetime.now(timezone.utc)
     praxis.submitted_at = now
