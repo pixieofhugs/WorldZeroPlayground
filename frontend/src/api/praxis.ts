@@ -171,8 +171,11 @@ export async function changePraxisType(id: number, type: PraxisType): Promise<Pr
 // Lifecycle transitions
 // ---------------------------------------------------------------------------
 
-export async function withdrawPraxis(id: number): Promise<PraxisOut> {
-  const { data } = await api.post<PraxisOut>(`/praxes/${id}/withdraw`)
+// Unsubmit a praxis back to editing (#590 renamed withdraw → unsubmit). For a
+// sealed solo/collab this reopens the whole group; for a pending collab where
+// the caller has submitted, it clears only the caller's part.
+export async function unsubmitPraxis(id: number): Promise<PraxisOut> {
+  const { data } = await api.post<PraxisOut>(`/praxes/${id}/unsubmit`)
   return data
 }
 
