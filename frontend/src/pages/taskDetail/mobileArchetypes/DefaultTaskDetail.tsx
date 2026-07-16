@@ -87,7 +87,7 @@ export default function DefaultTaskDetail({ state }: { state: TaskDetailState })
               style={{ border: "1px solid var(--color-border)", background: "var(--color-bg-surface)", flex: "1 0 28%" }}
             >
               <div className="font-body font-bold text-lg" style={{ color: "var(--color-text-primary)" }}>{stat.value}</div>
-              <div className="eyebrow" style={{ fontSize: 7 }}>{stat.label}</div>
+              <div className="eyebrow">{stat.label}</div>
             </div>
           ))}
         </div>

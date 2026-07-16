@@ -186,7 +186,6 @@ export function TitleCounter({ length, color }: TitleCounterProps) {
     <span
       className="eyebrow"
       style={{
-        fontSize: 8,
         color: isDanger
           ? "var(--color-danger)"
           : (color ?? "var(--color-text-tertiary)"),

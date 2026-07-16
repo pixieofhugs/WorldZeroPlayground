@@ -75,7 +75,7 @@ export function CollabSuccess({
 
         <h2
           className="font-display text-center"
-          style={{ fontSize: 'var(--text-2xl)', color: 'var(--color-text-primary)' }}
+          style={{ fontSize: 'var(--text-content)', color: 'var(--color-text-primary)' }}
         >
           {collabCopy(factionSlug, 'successHeading')}
         </h2>

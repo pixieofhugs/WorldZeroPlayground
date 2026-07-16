@@ -38,7 +38,7 @@ export default function DefaultFieldDesk({ state }: { state: FieldDeskHomeState 
     <div data-skin="default" className="page" style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
       {/* App-bar row: kicker + FieldDesk title */}
       <header>
-        <div className="eyebrow" style={{ fontSize: 8, color: 'var(--color-text-secondary)' }}>
+        <div className="eyebrow" style={{ color: 'var(--color-text-secondary)' }}>
           {t('nav.home')}
         </div>
         <h1 className="font-display italic" style={{ fontSize: 30, lineHeight: 1, color: 'var(--color-text-primary)', margin: 0 }}>
@@ -69,7 +69,7 @@ export default function DefaultFieldDesk({ state }: { state: FieldDeskHomeState 
           }}
         />
         <div className="flex items-center justify-between mb-4" style={{ marginTop: 4 }}>
-          <span className="eyebrow" style={{ fontSize: 9, color: 'var(--color-text-secondary)' }}>
+          <span className="eyebrow" style={{ color: 'var(--color-text-secondary)' }}>
             {t('fieldDesk.home.charEyebrow')}
           </span>
           <div className="flex items-center" style={{ gap: 14 }}>
@@ -84,7 +84,7 @@ export default function DefaultFieldDesk({ state }: { state: FieldDeskHomeState 
             <Link
               to={`/characters/${character.id}/edit`}
               className="eyebrow"
-              style={{ fontSize: 9, color: 'var(--faction-default-card-muted)', textDecoration: 'none' }}
+              style={{ color: 'var(--faction-default-card-muted)', textDecoration: 'none' }}
             >
               {t('fieldDesk.home.edit')}
             </Link>
@@ -152,7 +152,7 @@ export default function DefaultFieldDesk({ state }: { state: FieldDeskHomeState 
             <div className="font-display" style={{ fontSize: 26, lineHeight: 1, color: 'var(--color-text-primary)' }}>
               {character.score?.toLocaleString() ?? '0'}
             </div>
-            <div className="eyebrow" style={{ fontSize: 8, color: 'var(--color-text-secondary)' }}>
+            <div className="eyebrow" style={{ color: 'var(--color-text-secondary)' }}>
               {t('fieldDesk.home.stats.points')}
             </div>
           </div>
@@ -177,7 +177,7 @@ export default function DefaultFieldDesk({ state }: { state: FieldDeskHomeState 
               </div>
               <div
                 className="eyebrow"
-                style={{ marginTop: 6, fontSize: 8, color: 'var(--color-text-secondary)' }}
+                style={{ marginTop: 6, color: 'var(--color-text-secondary)' }}
               >
                 {stat.label}
               </div>
@@ -216,14 +216,14 @@ export default function DefaultFieldDesk({ state }: { state: FieldDeskHomeState 
         }}
       >
         <div className="flex items-center gap-2.5 mb-3">
-          <span className="eyebrow" style={{ fontSize: 9, color: 'var(--color-text-secondary)' }}>
+          <span className="eyebrow" style={{ color: 'var(--color-text-secondary)' }}>
             {t('fieldDesk.home.questsHeading')}
           </span>
           <span style={{ flex: 1, height: 1, background: 'linear-gradient(90deg, var(--color-border-strong), transparent)' }} />
           <Link
             to="/tasks"
             className="eyebrow"
-            style={{ fontSize: 9, color: 'var(--faction-default-card-muted)', textDecoration: 'none' }}
+            style={{ color: 'var(--faction-default-card-muted)', textDecoration: 'none' }}
           >
             {t('fieldDesk.home.viewAll')}
           </Link>
@@ -274,7 +274,6 @@ export default function DefaultFieldDesk({ state }: { state: FieldDeskHomeState 
                 <span
                   className="shrink-0 eyebrow"
                   style={{
-                    fontSize: 8,
                     color: 'var(--faction-default-card-muted)',
                     padding: '4px 9px',
                     border: '1px solid var(--color-border-strong)',

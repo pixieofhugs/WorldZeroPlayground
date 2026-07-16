@@ -21,7 +21,7 @@ export default function PageTitle({ title, eyebrow }: Props) {
       {eyebrow && <p className="eyebrow mb-1">{eyebrow}</p>}
       <h1
         className="font-display italic font-medium leading-tight"
-        style={{ fontSize: 'var(--text-4xl)', color: 'var(--color-text-primary)' }}
+        style={{ fontSize: 'var(--text-display)', color: 'var(--color-text-primary)' }}
       >
         {title.split('').map((char, index) => {
           if (char === ' ') {

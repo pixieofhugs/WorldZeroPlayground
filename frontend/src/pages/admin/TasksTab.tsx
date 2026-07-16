@@ -226,7 +226,6 @@ export default function TasksTab() {
                       <span
                         className="eyebrow"
                         style={{
-                          fontSize: 8,
                           padding: "1px 6px",
                           border: "1px solid var(--color-border)",
                           color:

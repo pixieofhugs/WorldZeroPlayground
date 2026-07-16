@@ -146,7 +146,7 @@ export default function Sidebar() {
               <Link
                 to={`/characters/${character.id}`}
                 className="font-display italic block truncate"
-                style={{ fontSize: 'var(--text-3xl)', lineHeight: 1.05, color: 'var(--color-text-primary)', textDecoration: 'none' }}
+                style={{ fontSize: 'var(--text-heading)', lineHeight: 1.05, color: 'var(--color-text-primary)', textDecoration: 'none' }}
               >
                 {character.display_name}
               </Link>
@@ -185,7 +185,7 @@ export default function Sidebar() {
                   padding: 'var(--space-md) var(--space-sm)',
                 }}
               >
-                <div className="font-display" style={{ fontSize: 'var(--text-2xl)', lineHeight: 1, color: 'var(--color-text-primary)' }}>
+                <div className="font-display" style={{ fontSize: 'var(--text-content)', lineHeight: 1, color: 'var(--color-text-primary)' }}>
                   {stat.value}
                 </div>
                 <div
@@ -247,7 +247,7 @@ export default function Sidebar() {
                 <Link
                   to={`/praxes/${praxis.id}/edit`}
                   className="font-display min-w-0"
-                  style={{ fontSize: 'var(--text-2xl)', lineHeight: 1.25, color: 'var(--color-text-primary)', textDecoration: 'none' }}
+                  style={{ fontSize: 'var(--text-content)', lineHeight: 1.25, color: 'var(--color-text-primary)', textDecoration: 'none' }}
                 >
                   {praxis.task_title}
                 </Link>
@@ -321,7 +321,7 @@ export default function Sidebar() {
                   ? t('sidebar.globalActivity.kickerNewTask')
                   : item.actor_display_name
               const titleStyle: CSSProperties = {
-                fontSize: 'var(--text-2xl)',
+                fontSize: 'var(--text-content)',
                 lineHeight: 1.3,
                 color: 'var(--color-text-primary)',
                 textDecoration: 'none',
@@ -460,9 +460,9 @@ function PendingRequestRow({
           <Link
             to={`/characters/${actorId}`}
             className="font-body block truncate"
-            /* ponytail: an actor byline in a dense 24px-avatar notification
-               row — scanned, not read, so it stays label-tier rather than
-               taking the --text-2xl content floor, which would break the row. */
+            /* An actor byline in a dense 24px-avatar notification row —
+               scanned, not read. Label tier by the role vocabulary (§4), not
+               an exception to the content floor. */
             style={{ fontSize: 'var(--text-xl)', fontWeight: 700, color: 'var(--color-text-primary)', textDecoration: 'none' }}
           >
             {item.actor_display_name}

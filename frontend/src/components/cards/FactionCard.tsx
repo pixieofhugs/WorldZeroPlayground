@@ -31,7 +31,6 @@ function StatusBadge({ status, slug }: { status: string; slug: string }) {
       <span
         className="eyebrow"
         style={{
-          fontSize: 8,
           color: "var(--color-success)",
           letterSpacing: "0.1em",
         }}
@@ -45,7 +44,6 @@ function StatusBadge({ status, slug }: { status: string; slug: string }) {
       <span
         className="eyebrow"
         style={{
-          fontSize: 8,
           color: "var(--color-warning)",
           letterSpacing: "0.1em",
         }}
@@ -59,7 +57,6 @@ function StatusBadge({ status, slug }: { status: string; slug: string }) {
       <span
         className="eyebrow"
         style={{
-          fontSize: 8,
           color: factionCssVar(slug, "card-muted"),
           background: factionCssVar(slug, "light"),
           border: `1px solid ${factionCssVar(slug, "border")}`,
@@ -76,7 +73,6 @@ function StatusBadge({ status, slug }: { status: string; slug: string }) {
       <span
         className="eyebrow"
         style={{
-          fontSize: 8,
           color: factionCssVar(slug),
           letterSpacing: "0.1em",
         }}
@@ -98,7 +94,6 @@ function InvitationNote({ slug, note }: { slug: string; note: string }) {
         display: "inline-flex",
         alignItems: "center",
         gap: 6,
-        fontSize: 8,
         color: factionCssVar(slug),
         background: factionCssVar(slug, "light"),
         border: `1px solid ${factionCssVar(slug, "border")}`,

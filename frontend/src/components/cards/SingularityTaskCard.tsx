@@ -160,10 +160,10 @@ export default function SingularityTaskCard({
           to={`/tasks/${task.id}`}
           style={{ textDecoration: "none", color: "inherit" }}
         >
-          {/* Task title — real content, so --text-2xl per the floor rule (§4). */}
+          {/* Task title — real content, so --text-content per the floor rule (§4). */}
           <div
             style={{
-              fontSize: "var(--text-2xl)",
+              fontSize: "var(--text-content)",
               marginBottom: "var(--space-sm)",
               lineHeight: 1.3,
               overflowWrap: "anywhere",
@@ -184,11 +184,11 @@ export default function SingularityTaskCard({
         >
           <div>
             {i18n.t("feed:taskCard.singularity.pointsLabel")}{" "}
-            {/* Points value — a score, so --text-2xl per the floor rule (§4). */}
+            {/* Points value — a score, so --text-content per the floor rule (§4). */}
             <span
               style={{
                 color: "var(--faction-singularity-card-text)",
-                fontSize: "var(--text-2xl)",
+                fontSize: "var(--text-content)",
                 fontWeight: 700,
               }}
             >
@@ -204,10 +204,12 @@ export default function SingularityTaskCard({
 
         {task.description && (
           /* ponytail: a 2-line-clamped teaser in a ~140px card. The floor rule
-             would put body copy at --text-2xl, but 18px clamped text would eat
-             the whole card, and #579's own commit-4 note moves only the title
-             and points value to --text-2xl. Parked at the top of the label tier
-             — a 2x lift off the un-tokenized 7px without distorting the card. */
+             would put body copy at --text-content, but 18px clamped text would
+             eat the whole card. Under the geometry doctrine (§4) the container
+             is the thing that's wrong here — this card is 140px wide when every
+             other task card is 196–282px — so the fix is to widen the card, not
+             to lower the floor. Tracked as #628; parked at the top of the label
+             tier until then. */
           <div
             style={{
               fontSize: "var(--text-xl)",

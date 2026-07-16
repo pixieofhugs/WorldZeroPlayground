@@ -190,7 +190,7 @@ export default function DefaultProposeTask({
                     >
                       {factionName(slug)}
                     </span>
-                    <span className="eyebrow" style={{ fontSize: 7 }}>
+                    <span className="eyebrow">
                       {factionDescriptor(slug)}
                     </span>
                   </button>
@@ -358,7 +358,7 @@ export default function DefaultProposeTask({
                     />
                     <span
                       className="eyebrow"
-                      style={{ display: "block", marginTop: 4, fontSize: 7 }}
+                      style={{ display: "block", marginTop: 4 }}
                     >
                       {t("proposeTask.fields.basePoints.hint")}
                     </span>
@@ -396,7 +396,7 @@ export default function DefaultProposeTask({
                     />
                     <span
                       className="eyebrow"
-                      style={{ display: "block", marginTop: 4, fontSize: 7 }}
+                      style={{ display: "block", marginTop: 4 }}
                     >
                       {t("proposeTask.fields.bonusPoints.hint")}
                     </span>
@@ -416,7 +416,7 @@ export default function DefaultProposeTask({
                   />
                   <span
                     className="eyebrow"
-                    style={{ display: "block", marginTop: 4, fontSize: 7 }}
+                    style={{ display: "block", marginTop: 4 }}
                   >
                     {t("proposeTask.fields.minimumLevel.hint")}
                   </span>
@@ -463,7 +463,6 @@ export default function DefaultProposeTask({
                     <span
                       className="eyebrow"
                       style={{
-                        fontSize: 7,
                         color: "var(--color-text-tertiary)",
                       }}
                     >

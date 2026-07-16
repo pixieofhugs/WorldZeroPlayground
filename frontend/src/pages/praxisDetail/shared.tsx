@@ -103,7 +103,6 @@ export function MemberByline({
                 className="eyebrow"
                 style={{
                   marginLeft: 4,
-                  fontSize: 8,
                   color: member.has_submitted
                     ? 'var(--color-success)'
                     : 'var(--color-text-tertiary)',
@@ -131,13 +130,13 @@ export function PraxisAdminBar({ state }: { state: PraxisDetailState }) {
   return (
     <div className="sidebar-card mb-4" style={{ padding: '10px 14px' }}>
       <div className="flex items-center gap-3 flex-wrap">
-        <span className="eyebrow" style={{ color: 'var(--color-text-tertiary)', fontSize: 8 }}>
+        <span className="eyebrow" style={{ color: 'var(--color-text-tertiary)' }}>
           {t('detail.admin.eyebrow')}
         </span>
         <span
           className="eyebrow"
           style={{
-            fontSize: 8, padding: '1px 6px',
+            padding: '1px 6px',
             border: '1px solid var(--color-border)',
             color: praxis.moderation_status === 'flagged' ? 'var(--color-danger)'
               : praxis.moderation_status === 'hidden' ? 'var(--color-text-tertiary)'

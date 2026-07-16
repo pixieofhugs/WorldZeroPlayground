@@ -51,7 +51,7 @@ export function PraxisTitle({
     <Link to={`/praxes/${praxis.id}`}>
       <h3
         className="font-display font-semibold leading-tight hover:underline"
-        style={{ fontSize: "var(--text-2xl)", marginBottom: "var(--space-sm)", ...style }}
+        style={{ fontSize: "var(--text-content)", marginBottom: "var(--space-sm)", ...style }}
       >
         {praxis.title}
       </h3>
@@ -118,7 +118,7 @@ export function PraxisByline({
       {praxis.score !== null && (
         <span
           className="font-display font-bold"
-          style={{ fontSize: "var(--text-2xl)", color: "inherit" }}
+          style={{ fontSize: "var(--text-content)", color: "inherit" }}
         >
           {praxis.score.toFixed(1)}
         </span>
@@ -184,8 +184,8 @@ export function PraxisScoreHero({
           style={{ position: "absolute", top: -13, right: -12, zIndex: 3 }}
         />
       )}
-      {/* The earned-points readout — a score, so --text-2xl per the floor (§4). */}
-      <span className="font-display" style={{ fontWeight: 800, fontSize: "var(--text-2xl)", whiteSpace: "nowrap" }}>
+      {/* The earned-points readout — a score, so --text-content per the floor (§4). */}
+      <span className="font-display" style={{ fontWeight: 800, fontSize: "var(--text-content)", whiteSpace: "nowrap" }}>
         {base}
         <span style={{ opacity: 0.55, margin: "0 var(--space-xs)" }}>+</span>
         {votePoints}
@@ -557,7 +557,6 @@ export function AdminOverlay({
             position: "absolute",
             top: 8,
             right: 8,
-            fontSize: "var(--text-xs)",
             padding: "0 var(--space-xs)",
             border: "1px solid rgba(220,38,38,0.4)",
             color: "var(--color-danger)",
@@ -574,7 +573,6 @@ export function AdminOverlay({
             position: "absolute",
             top: 8,
             right: 8,
-            fontSize: "var(--text-xs)",
             padding: "0 var(--space-xs)",
             border: "1px solid rgba(245,158,11,0.4)",
             color: "var(--color-warning)",
@@ -591,7 +589,6 @@ export function AdminOverlay({
             position: "absolute",
             top: 8,
             right: 8,
-            fontSize: "var(--text-xs)",
             padding: "0 var(--space-xs)",
             border: "1px solid rgba(107,114,128,0.4)",
             color: "var(--color-text-secondary)",
@@ -627,7 +624,6 @@ export function AdminOverlay({
             onClick={onHide}
             className="eyebrow"
             style={{
-              fontSize: "var(--text-xs)",
               padding: "0 var(--space-xs)",
               border: "1px solid rgba(220,38,38,0.3)",
               color: "var(--color-danger)",
@@ -641,7 +637,6 @@ export function AdminOverlay({
             onClick={onFail}
             className="eyebrow"
             style={{
-              fontSize: "var(--text-xs)",
               padding: "0 var(--space-xs)",
               border: "1px solid rgba(245,158,11,0.3)",
               color: "var(--color-warning)",

@@ -22,7 +22,7 @@ export default function MobilePraxisFeed({ state }: { state: PraxesFeedState }) 
   return (
     <div data-feed="mobile" className="page" style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
       <header>
-        <div className="eyebrow" style={{ fontSize: 8, color: 'var(--color-text-secondary)' }}>
+        <div className="eyebrow" style={{ color: 'var(--color-text-secondary)' }}>
           {tc('nav.praxis')}
         </div>
         <h1
