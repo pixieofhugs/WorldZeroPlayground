@@ -8,6 +8,7 @@ creating a praxis.  create_praxis() checks level and bank cap only.
 """
 
 from datetime import datetime, timedelta, timezone
+from typing import Optional
 
 import pytest
 from httpx import AsyncClient
@@ -202,6 +203,330 @@ async def test_list_praxes_filter_by_faction(
     wow_ids = {item["id"] for item in wow_list.json()}
     assert wow_praxis_id in wow_ids
     assert ua_praxis_id not in wow_ids
+
+
+# ---------------------------------------------------------------------------
+# Feed: sort + free-text search (#658)
+# ---------------------------------------------------------------------------
+
+
+async def _submitted_praxis(
+    client: AsyncClient,
+    db_session: AsyncSession,
+    character: Character,
+    headers: dict,
+    *,
+    task_title: str,
+    praxis_title: str,
+    body_text: str = "",
+    submitted_at: datetime,
+    created_at: Optional[datetime] = None,
+) -> int:
+    """Create a task + a solo praxis on it, submit it, then pin its timestamps.
+
+    Both timestamps are pinned explicitly, and the ordering tests set them in
+    *opposite* orders, so a sort that silently fell back to the wrong column
+    fails instead of passing by coincidence.
+
+    ``created_at`` must be pinned for any test that asserts on creation order:
+    its ``server_default`` is ``now()``, which in Postgres is *transaction*-start
+    time, and the fixture session runs the whole test in one transaction — so
+    rows created in a single test all tie, and the tiebreak is arbitrary.
+    """
+    task = Task(
+        title=task_title,
+        description="",
+        point_value=10,
+        level_required=0,
+        status=TaskStatus.active,
+        created_by=character.id,
+        primary_faction_slug="ua",
+    )
+    db_session.add(task)
+    await db_session.commit()
+    await db_session.refresh(task)
+
+    create_resp = await client.post(
+        "/praxes",
+        json={
+            "task_id": task.id,
+            "type": "solo",
+            "title": praxis_title,
+            "body_text": body_text,
+        },
+        headers=headers,
+    )
+    assert create_resp.status_code == 201
+    praxis_id = create_resp.json()["id"]
+
+    submit_resp = await client.post(f"/praxes/{praxis_id}/submit", headers=headers)
+    assert submit_resp.status_code == 200
+
+    praxis = await db_session.get(Praxis, praxis_id)
+    praxis.submitted_at = submitted_at
+    if created_at is not None:
+        praxis.created_at = created_at
+    await db_session.commit()
+    return praxis_id
+
+
+@pytest.mark.asyncio
+async def test_feed_sort_orders_by_submitted_at_not_created_at(
+    client: AsyncClient,
+    character: Character,
+    auth_headers: dict,
+    db_session: AsyncSession,
+):
+    """?sort=newest|oldest orders on submitted_at, and oldest reverses newest.
+
+    The three praxes are created oldest-first but sealed newest-first, so any
+    implementation that ordered on ``created_at`` would return them backwards.
+    """
+    now = datetime.now(timezone.utc)
+    ids = []
+    for index in range(3):
+        ids.append(
+            await _submitted_praxis(
+                client,
+                db_session,
+                character,
+                auth_headers,
+                task_title=f"Sort Task {index}",
+                praxis_title=f"Sort Praxis {index}",
+                # Inverted on purpose: praxis 0 was started first but filed
+                # last, so created_at DESC and submitted_at DESC disagree.
+                submitted_at=now - timedelta(days=index),
+                created_at=now - timedelta(days=10 - index),
+            )
+        )
+
+    newest = await client.get(
+        "/praxes", params={"status": "submitted", "sort": "newest"}
+    )
+    assert newest.status_code == 200
+    newest_ids = [item["id"] for item in newest.json() if item["id"] in ids]
+    assert newest_ids == ids  # praxis 0 sealed most recently
+
+    oldest = await client.get(
+        "/praxes", params={"status": "submitted", "sort": "oldest"}
+    )
+    assert oldest.status_code == 200
+    oldest_ids = [item["id"] for item in oldest.json() if item["id"] in ids]
+    assert oldest_ids == list(reversed(ids))
+
+
+@pytest.mark.asyncio
+async def test_list_praxes_without_sort_keeps_created_at_desc(
+    client: AsyncClient,
+    character: Character,
+    auth_headers: dict,
+    db_session: AsyncSession,
+):
+    """A caller that passes no ``sort`` still gets created_at DESC.
+
+    ``list_praxes`` is shared — the sidebar, task detail and profile lists all
+    call it. This is the regression guard on that blast radius: the seal times
+    below invert the creation order, so a sort that leaked into the default
+    would flip this list.
+    """
+    now = datetime.now(timezone.utc)
+    ids = []
+    for index in range(3):
+        ids.append(
+            await _submitted_praxis(
+                client,
+                db_session,
+                character,
+                auth_headers,
+                task_title=f"Default Task {index}",
+                praxis_title=f"Default Praxis {index}",
+                submitted_at=now - timedelta(days=index),
+                created_at=now - timedelta(days=10 - index),
+            )
+        )
+
+    resp = await client.get("/praxes", params={"status": "submitted"})
+    assert resp.status_code == 200
+    got = [item["id"] for item in resp.json() if item["id"] in ids]
+    # created_at DESC — last created first, i.e. the reverse of `ids`.
+    assert got == list(reversed(ids))
+
+
+@pytest.mark.asyncio
+async def test_feed_search_matches_task_title(
+    client: AsyncClient,
+    character: Character,
+    auth_headers: dict,
+    db_session: AsyncSession,
+):
+    """?q= matches the linked task's title, not just the praxis's own fields."""
+    now = datetime.now(timezone.utc)
+    match_id = await _submitted_praxis(
+        client,
+        db_session,
+        character,
+        auth_headers,
+        task_title="Sweep the Aqueduct",
+        praxis_title="Untitled findings",
+        submitted_at=now,
+    )
+    other_id = await _submitted_praxis(
+        client,
+        db_session,
+        character,
+        auth_headers,
+        task_title="Catalogue the Reliquary",
+        praxis_title="Untitled findings",
+        submitted_at=now,
+    )
+
+    resp = await client.get(
+        "/praxes", params={"status": "submitted", "q": "aqueduct"}
+    )
+    assert resp.status_code == 200
+    ids = {item["id"] for item in resp.json()}
+    assert match_id in ids
+    assert other_id not in ids
+
+
+@pytest.mark.asyncio
+async def test_feed_search_matches_praxis_title_and_body(
+    client: AsyncClient,
+    character: Character,
+    auth_headers: dict,
+    db_session: AsyncSession,
+):
+    """?q= also matches the praxis's own title and body_text."""
+    now = datetime.now(timezone.utc)
+    by_title = await _submitted_praxis(
+        client,
+        db_session,
+        character,
+        auth_headers,
+        task_title="Generic Task A",
+        praxis_title="The Lantern Report",
+        submitted_at=now,
+    )
+    by_body = await _submitted_praxis(
+        client,
+        db_session,
+        character,
+        auth_headers,
+        task_title="Generic Task B",
+        praxis_title="Untitled",
+        body_text="Found a lantern under the bridge.",
+        submitted_at=now,
+    )
+    neither = await _submitted_praxis(
+        client,
+        db_session,
+        character,
+        auth_headers,
+        task_title="Generic Task C",
+        praxis_title="Untitled",
+        body_text="Nothing to report.",
+        submitted_at=now,
+    )
+
+    resp = await client.get("/praxes", params={"status": "submitted", "q": "lantern"})
+    assert resp.status_code == 200
+    ids = {item["id"] for item in resp.json()}
+    assert by_title in ids
+    assert by_body in ids
+    assert neither not in ids
+
+
+@pytest.mark.asyncio
+async def test_faction_and_search_combine(
+    client: AsyncClient,
+    character: Character,
+    auth_headers: dict,
+    db_session: AsyncSession,
+):
+    """?faction=x&q=y works — the Task join is unconditional, never doubled."""
+    now = datetime.now(timezone.utc)
+    match_id = await _submitted_praxis(
+        client,
+        db_session,
+        character,
+        auth_headers,
+        task_title="Beacon Duty",
+        praxis_title="Report",
+        submitted_at=now,
+    )
+
+    resp = await client.get(
+        "/praxes",
+        params={"status": "submitted", "faction": "ua", "q": "beacon", "sort": "newest"},
+    )
+    assert resp.status_code == 200
+    assert match_id in {item["id"] for item in resp.json()}
+
+
+@pytest.mark.asyncio
+async def test_invalid_sort_returns_422(client: AsyncClient):
+    """An unknown ?sort= is rejected, not silently ignored."""
+    resp = await client.get("/praxes", params={"sort": "sideways"})
+    assert resp.status_code == 422
+
+
+@pytest.mark.asyncio
+async def test_in_progress_still_returns_null_submitted_at(
+    client: AsyncClient,
+    character: Character,
+    active_task: Task,
+    auth_headers: dict,
+):
+    """The submitted_at guard is scoped to status=submitted only.
+
+    In-progress praxes have a NULL submitted_at *by definition* — a blanket
+    ``submitted_at IS NOT NULL`` would empty the sidebar's in-progress list.
+    """
+    create_resp = await client.post(
+        "/praxes",
+        json={"task_id": active_task.id, "type": "solo", "title": "Still Drafting"},
+        headers=auth_headers,
+    )
+    assert create_resp.status_code == 201
+    praxis_id = create_resp.json()["id"]
+
+    resp = await client.get(
+        "/praxes", params={"status": "in_progress"}, headers=auth_headers
+    )
+    assert resp.status_code == 200
+    assert praxis_id in {item["id"] for item in resp.json()}
+
+
+@pytest.mark.asyncio
+async def test_submitted_praxis_with_null_seal_time_is_hidden(
+    client: AsyncClient,
+    character: Character,
+    active_task: Task,
+    auth_headers: dict,
+    db_session: AsyncSession,
+):
+    """A submitted praxis with no submitted_at is corrupt, and is not shown.
+
+    _apply_seal makes this unreachable and the #658 backfill cleared the legacy
+    rows, so this can only ever fire on a genuine future bug — which is exactly
+    what it is here for.
+    """
+    create_resp = await client.post(
+        "/praxes",
+        json={"task_id": active_task.id, "type": "solo", "title": "Corrupt Seal"},
+        headers=auth_headers,
+    )
+    praxis_id = create_resp.json()["id"]
+    submit_resp = await client.post(f"/praxes/{praxis_id}/submit", headers=auth_headers)
+    assert submit_resp.status_code == 200
+
+    praxis = await db_session.get(Praxis, praxis_id)
+    praxis.submitted_at = None
+    await db_session.commit()
+
+    resp = await client.get("/praxes", params={"status": "submitted"})
+    assert resp.status_code == 200
+    assert praxis_id not in {item["id"] for item in resp.json()}
 
 
 # ---------------------------------------------------------------------------

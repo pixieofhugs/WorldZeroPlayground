@@ -58,6 +58,7 @@ from services.praxis import (
     kick_member,
     leave_praxis,
     list_praxes,
+    PraxisSort,
     remove_metatask,
     respond_to_invite,
     submit_praxis,
@@ -87,11 +88,20 @@ async def list_praxes_route(
     status: Optional[str] = None,
     moderation_status: Optional[str] = None,
     faction: Optional[str] = None,
+    q: Optional[str] = None,
+    sort: Optional[str] = None,
     limit: int = 50,
     offset: int = 0,
     session: AsyncSession = Depends(get_db),
     viewer: Optional[Character] = Depends(get_current_character_optional),
 ):
+    praxis_sort: Optional[PraxisSort] = None
+    if sort is not None:
+        try:
+            praxis_sort = PraxisSort(sort)
+        except ValueError:
+            raise HTTPException(status_code=422, detail=f"Invalid praxis sort: {sort}")
+
     praxis_type: Optional[PraxisType] = None
     if type is not None:
         try:
@@ -116,6 +126,8 @@ async def list_praxes_route(
         status=praxis_status,
         moderation_status=moderation_status,
         faction=faction,
+        search=q,
+        sort=praxis_sort,
         viewer_id=viewer.id if viewer else None,
         limit=limit,
         offset=offset,

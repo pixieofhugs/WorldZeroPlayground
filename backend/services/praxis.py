@@ -358,6 +358,19 @@ def praxis_visibility_condition(viewer_id: Optional[int]):
     return visible
 
 
+class PraxisSort(str, Enum):
+    """Feed orderings for the ``status=submitted`` praxis feed (#658).
+
+    Both sort on ``Praxis.submitted_at`` — when the praxis was *filed* — not
+    ``created_at``, which is merely when the draft was started (i.e. when the
+    author signed up for the task). A praxis begun three weeks ago and filed
+    this morning is news, and belongs at the top of ``newest``.
+    """
+
+    newest = "newest"
+    oldest = "oldest"
+
+
 async def list_praxes(
     session: AsyncSession,
     *,
@@ -368,6 +381,8 @@ async def list_praxes(
     status: Optional[PraxisStatus] = None,
     moderation_status: Optional[str] = None,
     faction: Optional[str] = None,
+    search: Optional[str] = None,
+    sort: Optional[PraxisSort] = None,
     viewer_id: Optional[int] = None,
     limit: int = 50,
     offset: int = 0,
@@ -382,14 +397,35 @@ async def list_praxes(
     filters by *membership* (``PraxisMember``), mirroring
     :func:`_count_in_progress_praxes` so a membership-based list (the sidebar's
     in-progress tasks) can never disagree with the slot count.
+
+    ``search`` is a free-text ``ilike`` over the praxis title, its body, and the
+    linked task's title. Author is deliberately excluded: ``faction`` already
+    answers "show me the Ephemerists", and finding a *person* is what the
+    character search is for.
+
+    ``sort`` only applies to the ``status=submitted`` feed and is ignored
+    otherwise; every caller that passes no ``sort`` keeps ``created_at DESC``.
     """
     query = select(Praxis).where(praxis_visibility_condition(viewer_id))
 
+    # Unconditional: both the faction filter and the ``search`` task-title match
+    # need it, and joining once keeps ``?faction=x&q=y`` from double-joining.
+    query = query.join(Task, Praxis.task_id == Task.id)
+
     if faction is not None:
         # Praxis has no faction of its own; it inherits the linked task's faction.
-        query = query.join(Task, Praxis.task_id == Task.id).where(
-            Task.primary_faction_slug == faction
-        )
+        query = query.where(Task.primary_faction_slug == faction)
+
+    if search:
+        term = search.strip()
+        if term:
+            query = query.where(
+                or_(
+                    Praxis.title.ilike(f"%{term}%"),
+                    Praxis.body_text.ilike(f"%{term}%"),
+                    Task.title.ilike(f"%{term}%"),
+                )
+            )
 
     if praxis_type is not None:
         query = query.where(Praxis.type == praxis_type)
@@ -436,8 +472,27 @@ async def list_praxes(
     if status is not None:
         query = query.where(Praxis.status == status)
 
+    if status == PraxisStatus.submitted:
+        # Invariant, established by collab_consensus._apply_seal — the single
+        # writer of submitted_at, on the only path to status=submitted:
+        # status == submitted ⟹ submitted_at IS NOT NULL. A submitted praxis
+        # with no seal time is corrupt, so it is not shown. Scoped to this
+        # branch on purpose: in-progress praxes have a NULL submitted_at *by
+        # definition*, and a blanket filter would empty the sidebar.
+        query = query.where(Praxis.submitted_at.isnot(None))
+        # That invariant is also what lets the sort below be a plain ORDER BY
+        # with no coalesce and no NULLS-FIRST-on-DESC trap.
+
     query = query.options(selectinload(Praxis.media_items))
-    query = query.order_by(Praxis.created_at.desc()).limit(limit).offset(offset)
+    if sort is not None and status == PraxisStatus.submitted:
+        order = (
+            Praxis.submitted_at.asc()
+            if sort == PraxisSort.oldest
+            else Praxis.submitted_at.desc()
+        )
+    else:
+        order = Praxis.created_at.desc()
+    query = query.order_by(order).limit(limit).offset(offset)
     result = await session.execute(query)
     praxes = list(result.scalars().all())
     for praxis in praxes:
@@ -1479,6 +1534,7 @@ __all__ = [
     "leave_praxis",
     "list_praxes",
     "praxis_visibility_condition",
+    "PraxisSort",
     "moderate_praxis",
     "remove_metatask",
     "respond_to_invite",
