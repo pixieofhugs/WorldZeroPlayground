@@ -4,6 +4,7 @@ import FactionAvatar from '../../avatar/FactionAvatar'
 import { formatCommentTime } from '../../../utils/commentTime'
 import { type CommentProps, authorToCharacter, ComposerControls, MentionText } from '../shared'
 import { CommentEditor, OwnerControls, useOwnerEdit } from '../OwnerControls'
+import { CommentFlagControl } from '../FlagControl'
 
 /**
  * Warriors of Whimsy — `{handle}.exe` (ADR-0018). Reuses the task-card window
@@ -69,6 +70,7 @@ export default function WowComment(props: CommentProps) {
               {comment.is_edited ? ` · ${t('comments.wow.edited')}` : ''}
             </span>
             <OwnerControls owner={owner} />
+            <CommentFlagControl comment={comment} />
           </div>
         </div>
       </div>

@@ -21,6 +21,7 @@ import {
   MentionText,
 } from './shared'
 import { CommentEditor, OwnerControls, useOwnerEdit } from './OwnerControls'
+import { CommentFlagControl } from './FlagControl'
 import UAComment from './voices/UAComment'
 import EverymenComment from './voices/EverymenComment'
 import WowComment from './voices/WowComment'
@@ -72,6 +73,7 @@ export function DefaultComment(props: CommentProps) {
             {comment.is_edited ? ` · ${t('comments.edited')}` : ''}
           </span>
           <OwnerControls owner={owner} />
+          <CommentFlagControl comment={comment} />
         </div>
         <div style={{ marginTop: 2, color: 'var(--color-text-primary)', lineHeight: 1.5 }}>
           {owner.editing ? (
