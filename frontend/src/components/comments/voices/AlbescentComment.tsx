@@ -4,6 +4,7 @@ import FactionAvatar from '../../avatar/FactionAvatar'
 import { formatCommentTime } from '../../../utils/commentTime'
 import { type CommentProps, authorToCharacter, ComposerControls, MentionText } from '../shared'
 import { CommentEditor, OwnerControls, useOwnerEdit } from '../OwnerControls'
+import { CommentFlagControl } from '../FlagControl'
 
 /**
  * Albescent — vellum correspondence (ADR-0018). The quietest archetype: warm-white
@@ -77,6 +78,7 @@ export default function AlbescentComment(props: CommentProps) {
         {formatCommentTime(slug, comment.created_at)}
         {comment.is_edited ? ` · ${t('comments.albescent.edited')}` : ''}
         <OwnerControls owner={owner} />
+        <CommentFlagControl comment={comment} />
       </div>
     </div>
   )

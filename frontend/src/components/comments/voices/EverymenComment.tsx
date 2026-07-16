@@ -4,6 +4,7 @@ import FactionAvatar from '../../avatar/FactionAvatar'
 import { formatCommentTime } from '../../../utils/commentTime'
 import { type CommentProps, authorToCharacter, ComposerControls, MentionText } from '../shared'
 import { CommentEditor, OwnerControls, useOwnerEdit } from '../OwnerControls'
+import { CommentFlagControl } from '../FlagControl'
 
 /**
  * Everymen — dispatch from the floor (ADR-0018). Union-poster register: red
@@ -57,6 +58,7 @@ export default function EverymenComment(props: CommentProps) {
               {formatCommentTime(slug, comment.created_at)}
               {comment.is_edited ? ` · ${t('comments.everymen.edited')}` : ''}
               <OwnerControls owner={owner} />
+              <CommentFlagControl comment={comment} />
             </span>
           </div>
           <div style={{ fontSize: 15, lineHeight: 1.4, marginTop: 3 }}>
