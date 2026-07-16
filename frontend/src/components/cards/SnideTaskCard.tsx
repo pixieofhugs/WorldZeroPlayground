@@ -98,7 +98,7 @@ function Ransom({ text, size = 22 }: { text: string; size?: number }) {
   );
 }
 
-export default function SNIDETaskCard({
+export default function SnideTaskCard({
   task,
   displayPoints,
   onSignup,

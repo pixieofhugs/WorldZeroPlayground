@@ -10,7 +10,7 @@ import { CommentEditor, OwnerControls, useOwnerEdit } from '../OwnerControls'
  * UA — University of Asthmatics. The gilt salon (ADR-0026, superseding
  * ADR-0018's comment-scoped orange letterhead): a gold museum-frame around a
  * parchment plate, Marcellus small-caps house line, Playfair-italic body. Mirrors
- * UAFeedFrame / UAPraxisDetail; all colors via --ua-* tokens (no hex — CLAUDE.md).
+ * UaFeedFrame / UaPraxisDetail; all colors via --ua-* tokens (no hex — CLAUDE.md).
  * UA is always-light, so tokens read identically in both themes.
  */
 const GILT = 'var(--ua-gilt)'
@@ -51,7 +51,7 @@ function GiltFrame({ children, gap }: { children: ReactNode; gap: number }) {
   )
 }
 
-export default function UAComment(props: CommentProps) {
+export default function UaComment(props: CommentProps) {
   const { t } = useTranslation('praxis')
   if (props.mode === 'composer') {
     const { character, value, onChange, onSubmit, submitting } = props

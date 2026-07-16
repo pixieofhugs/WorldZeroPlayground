@@ -15,13 +15,13 @@ import {
   useEditPraxis,
   type EditPraxisState,
 } from "./editPraxis/useEditPraxis";
-import SNIDEEditPraxis from "./editPraxis/archetypes/SNIDEEditPraxis";
+import SnideEditPraxis from "./editPraxis/archetypes/SnideEditPraxis";
 import SingularityEditPraxis from "./editPraxis/archetypes/SingularityEditPraxis";
 import WowEditPraxis from "./editPraxis/archetypes/WowEditPraxis";
 import EphemeristsEditPraxis from "./editPraxis/archetypes/EphemeristsEditPraxis";
 import DefaultEditPraxis from "./editPraxis/archetypes/DefaultEditPraxis";
 import EverymenEditPraxis from "./editPraxis/archetypes/EverymenEditPraxis";
-import UAEditPraxis from "./editPraxis/archetypes/UAEditPraxis";
+import UaEditPraxis from "./editPraxis/archetypes/UaEditPraxis";
 import AlbescentEditPraxis from "./editPraxis/archetypes/AlbescentEditPraxis";
 import DefaultMobileEditPraxis from "./editPraxis/mobileArchetypes/DefaultEditPraxis";
 import WowMobileEditPraxis from "./editPraxis/mobileArchetypes/WowEditPraxis";
@@ -39,11 +39,11 @@ type Archetype = (props: { state: EditPraxisState }) => JSX.Element;
 // for `na` / unknown factions.
 const ARCHETYPE_BY_SLUG: Record<string, Archetype> = {
   everymen: EverymenEditPraxis,
-  snide: SNIDEEditPraxis,
+  snide: SnideEditPraxis,
   singularity: SingularityEditPraxis,
   wow: WowEditPraxis,
   ephemerists: EphemeristsEditPraxis,
-  ua: UAEditPraxis,
+  ua: UaEditPraxis,
   albescent: AlbescentEditPraxis,
 };
 

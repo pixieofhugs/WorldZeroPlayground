@@ -121,10 +121,10 @@ function PraxisBody({
 /**
  * UA — Gilt salon placard, filed. A gold-framed acquisition plate: gilt-leaf
  * gradient border, parchment ground with a faint dotted tooth, an engraved
- * "Acquisition · filed" regalia line. Matches the UA praxis-read sheet, UAVote,
+ * "Acquisition · filed" regalia line. Matches the UA praxis-read sheet, UaVote,
  * and the DS FactionPraxisCard reference. All colors via --ua-* tokens.
  */
-function UAPraxisCard({ praxis, adminProps, showCrown }: ArchetypeProps) {
+function UaPraxisCard({ praxis, adminProps, showCrown }: ArchetypeProps) {
   const { t } = useTranslation("praxis");
   return (
     // Gilt frame: gold-leaf gradient border, then the parchment plate.
@@ -681,7 +681,7 @@ export function DefaultPraxisCard({ praxis, adminProps, showCrown }: ArchetypePr
 // ─── Dispatcher ───────────────────────────────────────────────────────────────
 
 export const PRAXIS_CARD_BY_SLUG: Record<string, ComponentType<ArchetypeProps>> = {
-  ua: UAPraxisCard,
+  ua: UaPraxisCard,
   everymen: EverymenPraxisCard,
   wow: WowPraxisCard,
   snide: SnidePraxisCard,

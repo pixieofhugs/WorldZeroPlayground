@@ -13,7 +13,7 @@ import type { TaskDetailState } from "../useTaskDetail";
  * (burnt amber / cream / gold / brown ink), a matriculation CTA, the commission
  * brief on parchment, the hands matriculated, "The Salon Wall" of filed praxis
  * (the finest hand wears a fleur-de-lis), and a read-only critique aggregate.
- * Ported from the UA design kit (UATaskDetail.tsx); wired to the real
+ * Ported from the UA design kit (UaTaskDetail.tsx); wired to the real
  * {@link TaskDetailState}.
  *
  * UA is ALWAYS-LIGHT — its --faction-ua-* / --ua-* tokens are identical in both
@@ -287,7 +287,7 @@ function StatPlate({
   );
 }
 
-export default function UATaskDetail({
+export default function UaTaskDetail({
   state,
 }: {
   state: TaskDetailState;

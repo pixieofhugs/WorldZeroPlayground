@@ -12,7 +12,7 @@ import type { FieldDeskHomeState } from '../useFieldDeskHome'
  * slots as the Default mobile home (character header, Points/Votes/Era stat
  * tiles, active-tasks list, primary actions) — only the dress changes. Grounds
  * on the `--faction-ua-*` / `--ua-*` tokens already in index.css (the set
- * UAFeedFrame / UaFactionBody use) and is always-light: UA never dims.
+ * UaFeedFrame / UaFactionBody use) and is always-light: UA never dims.
  * Presentation-only — all data arrives via {@link FieldDeskHomeState}.
  */
 

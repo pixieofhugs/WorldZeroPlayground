@@ -271,7 +271,7 @@ function AccompliceRow({
   );
 }
 
-export default function SNIDETaskDetail({
+export default function SnideTaskDetail({
   state,
 }: {
   state: TaskDetailState;

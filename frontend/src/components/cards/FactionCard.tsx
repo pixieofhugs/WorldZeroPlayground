@@ -116,7 +116,7 @@ function InvitationNote({ slug, note }: { slug: string; note: string }) {
 
 const ROTATIONS = [-2, 1.5, -1, 2.5];
 
-function UACard({
+function UaCard({
   faction,
   status,
   invitationNote,
@@ -781,7 +781,7 @@ function SingularityCard({
 export default function FactionCard(props: FactionCardProps) {
   switch (props.faction.slug) {
     case "ua":
-      return <UACard {...props} />;
+      return <UaCard {...props} />;
     case "wow":
       return <WowCard {...props} />;
     case "snide":

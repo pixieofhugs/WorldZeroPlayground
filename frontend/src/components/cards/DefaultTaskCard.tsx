@@ -9,7 +9,7 @@ import DefaultSigil from "./DefaultSigil";
  * Where each faction commits to one loud archetype, the default stays
  * deliberately un-committed: a clean sheet wrapped in a thick spectrum band
  * (every faction colour at once = all paths open), marked with the seven-segment
- * ring. Replaces the old borrowed-UA `DEFAULT_CARD = UATaskCard` (#418). All
+ * ring. Replaces the old borrowed-UA `DEFAULT_CARD = UaTaskCard` (#418). All
  * colours via --faction-default-* tokens (no hardcoded hex — CLAUDE.md); flips
  * light/dark through the cascade.
  */

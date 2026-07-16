@@ -7,7 +7,7 @@ import WowAvatar from './WowAvatar'
 import SnideAvatar from './SnideAvatar'
 import EphemeristsAvatar from './EphemeristsAvatar'
 import SingularityAvatar from './SingularityAvatar'
-import UAAvatar from './UAAvatar'
+import UaAvatar from './UaAvatar'
 import AlbescentAvatar from './AlbescentAvatar'
 import DefaultSigil from '../cards/DefaultSigil'
 
@@ -194,7 +194,7 @@ const FACTION_AVATARS: Record<string, ComponentType<FactionAvatarProps>> = {
   snide: SnideAvatar,
   ephemerists: EphemeristsAvatar,
   singularity: SingularityAvatar,
-  ua: UAAvatar,
+  ua: UaAvatar,
   albescent: AlbescentAvatar,
 }
 

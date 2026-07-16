@@ -169,7 +169,7 @@ function TheStanding({
   )
 }
 
-export default function UAPraxisDetail({ state }: { state: PraxisDetailState }) {
+export default function UaPraxisDetail({ state }: { state: PraxisDetailState }) {
   const { t } = useTranslation('praxis')
   const { praxis, votes, voters } = state
   if (!praxis) return null
