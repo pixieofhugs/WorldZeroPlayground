@@ -5,6 +5,7 @@ import { setActiveCharacter } from '../api/me'
 import { chooseFaction } from '../api/factions'
 import { extractError } from '../utils/errors'
 import { factionName } from '../utils/factions'
+import AlbescentSigil from './cards/AlbescentSigil'
 
 /**
  * AlbescentInvitation — the order's standing correspondence (#395).
@@ -58,36 +59,6 @@ const PERK_KEYS: ReadonlyArray<string> = [
   'perks.witnessed',
 ]
 
-/** The surveyor's cross-hair mark — Albescent's only sigil. */
-function AlbescentMark({ size = 44 }: { size?: number }) {
-  const center = size / 2
-  const outerRadius = size * 0.43
-  const innerRadius = size * 0.235
-  const dotRadius = size * 0.044
-  const tickStart = innerRadius + size * 0.025
-  const tickEnd = tickStart + size * 0.13
-  const tick = (degrees: number) => {
-    const angle = (degrees * Math.PI) / 180
-    return {
-      x1: center + tickStart * Math.cos(angle),
-      y1: center + tickStart * Math.sin(angle),
-      x2: center + tickEnd * Math.cos(angle),
-      y2: center + tickEnd * Math.sin(angle),
-    }
-  }
-  return (
-    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} fill="none" style={{ display: 'block', flexShrink: 0 }} aria-hidden>
-      <circle cx={center} cy={center} r={outerRadius} stroke={INK} strokeWidth={size * 0.022} opacity={0.18} />
-      <circle cx={center} cy={center} r={innerRadius} stroke={INK} strokeWidth={size * 0.038} opacity={0.5} />
-      {[0, 90, 180, 270].map((degrees) => {
-        const { x1, y1, x2, y2 } = tick(degrees)
-        return <line key={degrees} x1={x1} y1={y1} x2={x2} y2={y2} stroke={INK} strokeWidth={size * 0.038} />
-      })}
-      <circle cx={center} cy={center} r={dotRadius} fill={INK} />
-    </svg>
-  )
-}
-
 export interface AlbescentInvitationProps {
   /** The account's roster (active + paused lives). */
   lives: CharacterOut[]
@@ -136,7 +107,7 @@ export default function AlbescentInvitation({ lives, onJoined }: AlbescentInvita
       {/* letterhead */}
       <div style={{ position: 'relative', padding: '36px 42px 30px', textAlign: 'center' }}>
         <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 18 }}>
-          <AlbescentMark size={44} />
+          <AlbescentSigil size={44} />
         </div>
         <div style={{ ...monoCaps, fontSize: 9, letterSpacing: '0.34em', color: ACCENT, marginBottom: 6 }}>{t('albescent.invitation.wordmark')}</div>
         <div style={{ ...monoCaps, fontSize: 8, letterSpacing: '0.28em', marginBottom: 22 }}>{t('albescent.invitation.letterhead')}</div>

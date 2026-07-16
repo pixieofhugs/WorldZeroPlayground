@@ -2,7 +2,7 @@ import { useState, type CSSProperties, type ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import PraxisCard from '../../../components/PraxisCard'
-import AlbescentMark from '../../../components/cards/AlbescentMark'
+import AlbescentSigil from '../../../components/cards/AlbescentSigil'
 import { factionName, factionDescription } from '../../../utils/factions'
 import { MobileStickyBar } from '../../taskDetail/mobileArchetypes/shared'
 import type { CharacterOut } from '../../../api/auth'
@@ -114,7 +114,7 @@ export default function AlbescentFactionPage({ state }: { state: FactionDetailSt
         }}
       >
         <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 14 }}>
-          <AlbescentMark size={34} />
+          <AlbescentSigil size={34} />
         </div>
         <div style={{ ...kicker, letterSpacing: '0.3em', color: ink(40) }}>{t('albescent.mobile.eyebrow')}</div>
         <h1 style={{ fontFamily: FONT, fontStyle: 'italic', fontWeight: 300, fontSize: 34, lineHeight: 1.08, color: INK, margin: '6px 0 0' }}>

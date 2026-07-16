@@ -1,6 +1,6 @@
 import type { PraxisCardOut } from '../../../api/praxis'
 import { factionCssVar } from '../../../utils/factions'
-import { WowSparkle } from '../../cards/FactionCard'
+import { WowSigil } from '../../cards/WowSigil'
 import i18n from '../../../i18n'
 import { MobilePraxisBody, type MobileSlotTheme } from './shared'
 
@@ -68,7 +68,7 @@ export default function WowMobilePraxisCard({ praxis }: { praxis: PraxisCardOut 
             color: accent,
           }}
         >
-          <WowSparkle size={11} color={accent} />
+          <WowSigil size={11} color={accent} />
           {i18n.t('feed:identity.wow.windowTitle')}
         </div>
         <MobilePraxisBody praxis={praxis} theme={theme} />

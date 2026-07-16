@@ -4,9 +4,9 @@ import type { PraxisCardOut } from "../api/praxis";
 import { factionCssVar } from "../utils/factions";
 import { pickVariant } from "../utils/factionDispatch";
 import SnideMasthead from "./cards/SnideMasthead";
-import AlbescentMark from "./cards/AlbescentMark";
+import AlbescentSigil from "./cards/AlbescentSigil";
 import DefaultSigil from "./cards/DefaultSigil";
-import { EphMark, Foxing } from "./cards/ephemeristsAtoms";
+import { EphemeristsSigil, Foxing } from "./cards/ephemeristsAtoms";
 import {
   AdminOverlay,
   PraxisTitle,
@@ -377,7 +377,7 @@ function EphemeristsPraxisCard({ praxis, adminProps, showCrown }: ArchetypeProps
           boxShadow: "0 2px 0 -1px color-mix(in srgb, var(--eph-lapis) 55%, transparent)",
         }}
       >
-        <EphMark size={13} color="var(--eph-lapis)" />
+        <EphemeristsSigil size={13} color="var(--eph-lapis)" />
         <span
           style={{
             fontFamily: "var(--eph-serif)",
@@ -588,7 +588,7 @@ function AlbescentPraxisCard({ praxis, adminProps, showCrown }: ArchetypeProps) 
           borderBottom: `1px solid ${ink(7)}`,
         }}
       >
-        <AlbescentMark size={13} />
+        <AlbescentSigil size={13} />
         <span
           style={{
             fontFamily: "var(--faction-albescent-mono)",

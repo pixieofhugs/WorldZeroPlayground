@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next'
 import type { PraxisCardOut } from '../../../api/praxis'
 import { factionCssVar } from '../../../utils/factions'
-import { UaCrest } from '../../cards/UaCrest'
+import { UaSigil } from '../../cards/UaSigil'
 import { MobilePraxisBody, type MobileSlotTheme } from './shared'
 
 /**
@@ -47,7 +47,7 @@ export default function UaMobilePraxisCard({ praxis }: { praxis: PraxisCardOut }
             color: factionCssVar('ua', 'card-accent'),
           }}
         >
-          <UaCrest width={16} height={19} />
+          <UaSigil width={16} height={19} />
           {t('card.masthead.ua')}
         </div>
         <MobilePraxisBody praxis={praxis} theme={theme} />

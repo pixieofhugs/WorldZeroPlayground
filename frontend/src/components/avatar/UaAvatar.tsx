@@ -1,5 +1,5 @@
 import { BadgedAvatar, type FactionAvatarProps } from "./FactionAvatar";
-import { UaCrest } from "../cards/UaCrest";
+import { UaSigil } from "../cards/UaSigil";
 
 /**
  * UA (University of Asthmatics) avatar — the Salon "Artist in Residence"
@@ -8,7 +8,7 @@ import { UaCrest } from "../cards/UaCrest";
  * lower-right as the membership badge.
  *
  * Reuses the shared BadgedAvatar shell (image/initial circle + corner badge)
- * and the repo's own {@link UaCrest} for the badge glyph rather than porting a
+ * and the repo's own {@link UaSigil} for the badge glyph rather than porting a
  * separate sigil. UA is ALWAYS LIGHT: its --ua-* / --faction-ua-* tokens are
  * identical in both themes, so the salon styles itself with them and never
  * mutates data-theme. All colors via tokens (never hardcode hex — CLAUDE.md).
@@ -29,7 +29,7 @@ export default function UaAvatar({ character, size }: FactionAvatarProps) {
       // The crest is a shield (100×120 viewBox); render it square at badge
       // scale — BadgedAvatar hands us the inner glyph size and the ring color
       // (unused here; the crest carries its own --ua-* palette).
-      glyph={(s) => <UaCrest width={s} height={s} />}
+      glyph={(s) => <UaSigil width={s} height={s} />}
     />
   );
 }

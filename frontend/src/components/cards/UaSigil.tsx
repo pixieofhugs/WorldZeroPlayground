@@ -2,10 +2,10 @@ import { useId } from "react";
 import i18n from "../../i18n";
 
 /**
- * Shared UA (University of Asthmatics) heraldic atoms — the gilt-salon crest
+ * Shared UA (University of Asthmatics) heraldic atoms — the gilt-salon sigil
  * and motto ribbon that are the faction's locked identity.
  *
- * Extracted from UaFactionHero so the crest is drawn once and dropped into
+ * Extracted from UaFactionHero so the sigil is drawn once and dropped into
  * every UA surface that carries it (faction hero, task card, edit-praxis
  * masthead + commission slip) rather than re-drawn per file. All colors via
  * --ua-* tokens (never hardcode hex — CLAUDE.md); the salon is always-light,
@@ -13,8 +13,8 @@ import i18n from "../../i18n";
  */
 
 
-/** Heraldic crest — a shield with a rising sun and crossed brushes. */
-export function UaCrest({ width, height }: { width: number; height: number }) {
+/** Heraldic sigil — a shield with a rising sun and crossed brushes. */
+export function UaSigil({ width, height }: { width: number; height: number }) {
   // Unique clip id per instance — the shield is rendered many times per page
   // (a card list, the hero, twice in edit-praxis); a shared literal id would
   // be invalid SVG and risk cross-instance clipping.

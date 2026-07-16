@@ -1,6 +1,6 @@
 import type { FactionHeroProps } from "../../pages/FactionDetail";
 import i18n from "../../i18n";
-import { UaCrest, MottoRibbon } from "./UaCrest";
+import { UaSigil, MottoRibbon } from "./UaSigil";
 
 /**
  * UA (University of Asthmatics) faction-page hero — a gilt-salon frontispiece.
@@ -86,7 +86,7 @@ export default function UaFactionHero({
               alignItems: "center",
             }}
           >
-            <UaCrest width={150} height={180} />
+            <UaSigil width={150} height={180} />
 
             <div style={{ flex: 1, minWidth: 260 }}>
               {/* engraved house line */}

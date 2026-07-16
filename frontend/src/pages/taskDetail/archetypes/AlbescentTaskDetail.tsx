@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import PraxisCard from "../../../components/PraxisCard";
-import AlbescentMark from "../../../components/cards/AlbescentMark";
+import AlbescentSigil from "../../../components/cards/AlbescentSigil";
 import { mediaUrl } from "../../../utils/media";
 import { ErrorBanner, relationOf } from "./shared";
 import type { TaskDetailState } from "../useTaskDetail";
@@ -132,7 +132,7 @@ export default function AlbescentTaskDetail({ state }: { state: TaskDetailState 
             }}
           >
             <div style={{ display: "flex", justifyContent: "center", marginBottom: 24 }}>
-              <AlbescentMark size={44} />
+              <AlbescentSigil size={44} />
             </div>
             <div
               style={{

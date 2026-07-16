@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import PraxisCard from '../../../components/PraxisCard'
 import { factionName, factionDescription } from '../../../utils/factions'
-import { EphMark } from '../../../components/cards/ephemeristsAtoms'
+import { EphemeristsSigil } from '../../../components/cards/ephemeristsAtoms'
 import { MobileStickyBar } from '../../taskDetail/mobileArchetypes/shared'
 import type { CharacterOut } from '../../../api/auth'
 import type { FactionDetailState } from '../useFactionDetail'
@@ -112,7 +112,7 @@ export default function EphemeristsFactionPage({ state }: { state: FactionDetail
       {/* Hero — ledger-ruled vellum masthead */}
       <section style={{ position: 'relative', overflow: 'hidden', background: VELLUM, border: `1.5px solid ${INK}`, boxShadow: '0 12px 28px rgba(42,29,18,0.18)', padding: '20px 18px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: RUBRIC }}>
-          <EphMark size={13} color={LAPIS} />
+          <EphemeristsSigil size={13} color={LAPIS} />
           <span style={{ ...kicker, color: LAPIS }}>{t('ephemerists.mobile.eyebrow')}</span>
         </div>
         <h1 style={{ fontFamily: DISPLAY, fontWeight: 700, fontSize: 32, lineHeight: 1.05, color: TEXT, margin: '4px 0 0' }}>

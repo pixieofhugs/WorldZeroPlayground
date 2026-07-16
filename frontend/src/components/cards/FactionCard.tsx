@@ -4,6 +4,7 @@ import { factionCssVar, factionName, factionDescription } from "../../utils/fact
 import EverymenCard from "./EverymenFactionCard";
 import SnideMasthead from "./SnideMasthead";
 import { EphSeal, LapisLastWord } from "./ephemeristsAtoms";
+import { WowSigil } from "./WowSigil";
 
 /**
  * FactionCard — faction-archetype switcher.
@@ -186,25 +187,6 @@ function UaCard({
 
 // ─── Warriors of Whimsy ".exe" window atoms ──────────────────────────────────────────────
 
-/** A small sparkle glyph used in the wow.exe title bar. Exported so the mobile
- *  Warriors-of-Whimsy praxis card can reuse the mark (#573) without a new SVG. */
-export function WowSparkle({
-  size = 10,
-  color,
-}: {
-  size?: number;
-  color: string;
-}) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24" aria-hidden="true">
-      <path
-        d="M12 1c.6 5.2 2.8 7.4 8 8-5.2.6-7.4 2.8-8 8-.6-5.2-2.8-7.4-8-8 5.2-.6 7.4-2.8 8-8z"
-        fill={color}
-      />
-    </svg>
-  );
-}
-
 /** A tiny white die-cut ivy sticker peeking off the window corner. */
 function WowIvySticker({
   stem,
@@ -313,7 +295,7 @@ function WowCard({
               letterSpacing: "0.03em",
             }}
           >
-            <WowSparkle size={10} color={titleText} /> {i18n.t("feed:identity.wow.windowTitle")}
+            <WowSigil size={10} color={titleText} /> {i18n.t("feed:identity.wow.windowTitle")}
           </span>
           <span
             style={{

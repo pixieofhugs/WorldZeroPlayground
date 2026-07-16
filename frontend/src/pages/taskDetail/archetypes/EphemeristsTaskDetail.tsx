@@ -3,7 +3,7 @@ import { Trans, useTranslation } from "react-i18next";
 import PraxisCard from "../../../components/PraxisCard";
 import { mediaUrl } from "../../../utils/media";
 import { factionName } from "../../../utils/factions";
-import { EphMark, Foxing, LapisLastWord } from "../../../components/cards/ephemeristsAtoms";
+import { EphemeristsSigil, Foxing, LapisLastWord } from "../../../components/cards/ephemeristsAtoms";
 import { ErrorBanner, relationOf } from "./shared";
 import type { TaskSignupOut } from "../../../api/tasks";
 import type { TaskDetailState } from "../useTaskDetail";
@@ -409,7 +409,7 @@ export default function EphemeristsTaskDetail({
                   marginBottom: 6,
                 }}
               >
-                <EphMark size={13} color="var(--eph-gold)" />
+                <EphemeristsSigil size={13} color="var(--eph-gold)" />
                 <span
                   style={{
                     fontFamily: "var(--eph-display)",

@@ -1,6 +1,7 @@
 import type { FactionCardProps } from "./FactionCard";
 import i18n from "../../i18n";
 import { factionName, factionDescription } from "../../utils/factions";
+import { EverymenSigil } from "./EverymenSigil";
 
 /**
  * EverymenFactionCard — the Everymen faction PREVIEW card.
@@ -10,29 +11,11 @@ import { factionName, factionDescription } from "../../utils/factions";
  * the whole card is a link to the faction detail page, where the enlist / leave
  * membership block lives (issue #347). No interactive controls here.
  *
- * Self-contained: the SVG poster atoms (CogMark sigil, Halftone, Sunburst) are
- * declared locally so this file has no external dependencies beyond the
- * FactionCardProps contract.
+ * The faction sigil is the shared EverymenSigil atom; the poster-only atoms
+ * (Halftone, Sunburst) are declared locally.
  */
 
 // ─── SVG atoms ────────────────────────────────────────────────────────────────
-
-function CogMark({ size = 58, color = "var(--everymen-red)" }: { size?: number; color?: string }) {
-  const teeth = 10;
-  const points: string[] = [];
-  for (let i = 0; i < teeth * 2; i++) {
-    const angle = (Math.PI / teeth) * i;
-    const radius = i % 2 === 0 ? 50 : 40;
-    points.push(`${50 + radius * Math.cos(angle)},${50 + radius * Math.sin(angle)}`);
-  }
-  return (
-    <svg width={size} height={size} viewBox="0 0 100 100" aria-hidden="true">
-      <polygon points={points.join(" ")} fill={color} />
-      <circle cx={50} cy={50} r={22} fill="var(--everymen-cream)" />
-      <circle cx={50} cy={50} r={11} fill={color} />
-    </svg>
-  );
-}
 
 function Halftone({ color = "var(--everymen-cream)", opacity = 0.08 }: { color?: string; opacity?: number }) {
   const id = "em-halftone";
@@ -152,7 +135,7 @@ export default function EverymenCard({
               boxShadow: "0 0 0 4px var(--everymen-ink), inset 0 0 0 6px var(--everymen-red)",
             }}
           >
-            <CogMark size={58} color="var(--everymen-red)" />
+            <EverymenSigil size={58} color="var(--everymen-red)" />
           </div>
         </div>
 
