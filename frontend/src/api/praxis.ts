@@ -102,6 +102,18 @@ export interface PraxisCardOut {
   /** Task Crown — top-scoring submitted praxis for its task (ADR-0028). */
   is_top_for_task: boolean
   task_faction_slug: string | null
+  // Full-fidelity fields for the bespoke mobile praxis cards (#573). The list
+  // schema now emits these; older callers simply ignore them.
+  /** Proof body excerpt — clamped to 1–2 lines in the mobile card. */
+  body_text?: string | null
+  /** Author's own member faction — drives the actor-scoped byline. */
+  created_by_faction_slug?: string | null
+  /** Crew roster (owner + collaborators); empty/absent on solo. */
+  members?: PraxisMemberOut[]
+  /** Attached proof media (images / video / audio). */
+  media_items?: MediaItemOut[]
+  /** The authenticated viewer's own cast value (1–5); null/absent if unvoted. */
+  viewer_vote?: number | null
 }
 
 export interface PraxisCreate {

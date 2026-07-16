@@ -16,6 +16,26 @@ import { TaskCrown } from "../cards/TaskCrown";
  * a true per-faction dispatch rather than chrome-only.
  */
 
+/**
+ * Roster-name helper — the crew names shown on a collaboration card, capped so a
+ * large crew doesn't overflow the card. Returns up to `cap` display names plus
+ * the overflow count (the "+N more" tail). Shared by the desktop collaboration
+ * surface (#587) and the mobile praxis card (#573) — put it here, not a mobile
+ * copy, so both read the same cap.
+ */
+export const ROSTER_NAME_CAP = 7
+
+export function rosterNames(
+  members: { display_name?: string | null }[],
+  cap = ROSTER_NAME_CAP,
+): { names: string[]; overflow: number } {
+  const names = members
+    .slice(0, cap)
+    .map((member) => member.display_name ?? "")
+  const overflow = Math.max(0, members.length - cap)
+  return { names, overflow }
+}
+
 /** Slot: the praxis title, linked to the praxis detail page. */
 export function PraxisTitle({
   praxis,
