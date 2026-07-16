@@ -25,6 +25,9 @@ const HEX_SHORT = /^#([0-9a-f])([0-9a-f])([0-9a-f])$/i;
 const HEX_LONG = /^#([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i;
 const HEX_LONG_ALPHA = /^#([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i;
 const RGB_FUNC = /^rgba?\(([^)]+)\)$/i;
+// Chromium serializes a resolved `color-mix()` in the modern `color(srgb …)`
+// syntax, so computed styles hand us `color(srgb 0.129 0.102 0.063 / 0.82)`.
+const COLOR_SRGB = /^color\(\s*srgb\s+([^)]+)\)$/i;
 
 /**
  * Parse a solid CSS color into RGBA. Returns null for anything that is NOT a
@@ -58,6 +61,23 @@ export function parseColor(input: string): Rgba | null {
   if (long) {
     const [r, g, b] = long.slice(1, 4).map((pair) => parseInt(pair, 16));
     return { r, g, b, a: 1 };
+  }
+
+  const srgb = COLOR_SRGB.exec(value);
+  if (srgb) {
+    // `color(srgb …)` channels are 0–1 floats, not 0–255.
+    const parts = srgb[1].replace(/\//g, " ").split(/[\s,]+/).filter(Boolean);
+    if (parts.length < 3 || parts.length > 4) return null;
+    const channels = parts.slice(0, 3).map((token) => {
+      const numeric = Number.parseFloat(token);
+      if (Number.isNaN(numeric)) return null;
+      const unit = token.endsWith("%") ? numeric / 100 : numeric;
+      return clamp(unit * 255, 0, 255);
+    });
+    const alpha = parts.length === 4 ? readAlpha(parts[3]) : 1;
+    if (channels.some((channel) => channel === null) || alpha === null) return null;
+    const [r, g, b] = channels as number[];
+    return { r, g, b, a: alpha };
   }
 
   const func = RGB_FUNC.exec(value);
