@@ -95,7 +95,13 @@ Use `factionCssVar(slug, 'card-font')` in components. Never hardcode the font fa
 
 **Type scale** is defined as CSS variables (`--text-xs` through `--text-4xl`). Use the variable names, not raw pixel values.
 
+**Content-text floor:** real content — titles, scores, body copy — uses `--text-2xl` (18px) or larger. The smaller tokens (`--text-xs`–`--text-xl`, 8–14px) are reserved for labels, eyebrows, and badges only. Don't render readable content below `--text-2xl`.
+
 **Eyebrow / label text:** Courier Prime, `--text-sm` (9px), uppercase, letter-spacing 0.15em, `var(--color-text-tertiary)`. Use the `.eyebrow` class.
+
+**Spacing scale** is defined as CSS variables `--space-xs` (4px), `--space-sm` (8px), `--space-md` (12px), `--space-lg` (16px), `--space-xl` (24px), `--space-2xl` (32px) — same shape as `--radius-*`. Use these token names for `padding` / `margin` / `gap`, never raw pixel values. The scale is global and theme-independent; faction identity comes from font, colour, and ornament, never from a bespoke size or spacing.
+
+Both rules (type scale + spacing scale) are enforced by the `no-raw-style-values` ESLint rule, with existing violations grandfathered into a shrinking exemption list (`frontend/.eslint-legacy-raw-styles.txt`).
 
 ---
 
