@@ -473,7 +473,7 @@ export default function DefaultProfileBody({
         <div
           style={{
             display: 'grid',
-            gridTemplateColumns: 'minmax(0, 1fr) 300px',
+            gridTemplateColumns: 'minmax(0, 1fr) fit-content(300px)',
             gap: 30,
             alignItems: 'start',
           }}
