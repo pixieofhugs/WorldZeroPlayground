@@ -281,6 +281,20 @@
   --radius-lg: 12px;
   --radius-xl: 14px;
 
+  /* ── Spacing scale (issue #579) ──
+     The only legal values for padding / margin / gap. Like --radius-* and
+     --text-*, this scale is theme-invariant and global: it lives in :root
+     ONLY and is deliberately NOT repeated under [data-theme="dark"] — a
+     duplicate would be two places to drift, for zero benefit. A faction
+     expresses identity through font, colour and ornament, never through its
+     own spacing or type scale. */
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 12px;
+  --space-lg: 16px;
+  --space-xl: 24px;
+  --space-2xl: 32px;
+
   /* ── Filter stamp dashed-border (inverts with active state bg) ── */
   --stamp-active-dashed: rgba(255, 255, 255, 0.2);
   --stamp-inactive-dashed: rgba(0, 0, 0, 0.15);
