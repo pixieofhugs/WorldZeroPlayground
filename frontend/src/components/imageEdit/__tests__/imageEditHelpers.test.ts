@@ -9,6 +9,7 @@ import {
   blobToFile,
   cropOutputSize,
   effectiveAspect,
+  isCropEditableImage,
   isImageFile,
   originalUpload,
   partitionByEditability,
@@ -90,6 +91,20 @@ describe('isImageFile / partitionByEditability — which files open the modal', 
     const { toEdit, toUploadDirect } = partitionByEditability([image, video])
     expect(toEdit).toEqual([image])
     expect(toUploadDirect).toEqual([video])
+  })
+
+  it('a GIF is still an image but is not crop-editable (#569)', () => {
+    expect(isImageFile({ type: 'image/gif' })).toBe(true)
+    expect(isCropEditableImage({ type: 'image/gif' })).toBe(false)
+    expect(isCropEditableImage({ type: 'image/png' })).toBe(true)
+  })
+
+  it('a GIF uploads directly (untouched), never entering the crop queue (#569)', () => {
+    const gif = { type: 'image/gif', name: 'party.gif' }
+    const png = { type: 'image/png', name: 'shot.png' }
+    const { toEdit, toUploadDirect } = partitionByEditability([png, gif])
+    expect(toEdit).toEqual([png])
+    expect(toUploadDirect).toEqual([gif])
   })
 })
 

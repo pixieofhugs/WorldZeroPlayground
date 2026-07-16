@@ -151,6 +151,12 @@ export default function ImageEditModal({
     setRotation((previous) => (previous + delta + 360) % 360)
 
   const handleApply = async () => {
+    // Belt-and-suspenders for #569: a GIF should never be canvas-encoded (that
+    // flattens it to its first frame), so short-circuit to the untouched file.
+    if (file.type === 'image/gif') {
+      onConfirm(originalUpload(file))
+      return
+    }
     const area = croppedAreaRef.current
     if (!objectUrl || !area) {
       // Nothing to slice yet — fall back to the untouched file.
