@@ -95,7 +95,10 @@ export default function AlbescentTaskCard({ task, displayPoints, onSignup }: Pro
           style={{
             fontFamily: MONO,
             fontSize: 9,
-            color: ink(42),
+            /* Muted body ink — shares the AA-cleared token (0.61α ≈ 4.64:1 on
+               white) so the description meets WCAG AA rather than the old
+               ink(42) wash (~2.9:1). #594. */
+            color: "var(--faction-albescent-card-muted)",
             lineHeight: 1.6,
             marginBottom: 16,
             overflow: "hidden",
