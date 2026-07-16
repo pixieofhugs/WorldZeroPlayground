@@ -7,7 +7,7 @@ import type { FlagReason } from '../utils/flagReasons'
 // ---------------------------------------------------------------------------
 
 export type PraxisType = 'solo' | 'collab' | 'duel'
-export type PraxisStatus = 'in_progress' | 'submitted'
+export type PraxisStatus = 'in_progress' | 'pending' | 'submitted'
 export type PraxisInviteStatus = 'pending' | 'accepted' | 'declined'
 export type ModerationStatus = 'visible' | 'flagged' | 'hidden' | 'failed'
 export type MediaType = 'image' | 'video' | 'audio'

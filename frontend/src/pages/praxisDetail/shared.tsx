@@ -66,7 +66,11 @@ export function MemberByline({
   const sepStyle = separatorStyle ?? linkStyle
   // Per-member submit state only reads meaningfully mid-lifecycle on a collab
   // (>1 member, still in editing). A solo/duel praxis or a live one stays clean.
-  const showSubmitState = members.length > 1 && praxis.status === 'in_progress'
+  // `pending` is the mid-consensus state (#590/#591) — exactly when cast status
+  // matters most — so it counts as "still open" alongside in_progress.
+  const showSubmitState =
+    members.length > 1 &&
+    (praxis.status === 'in_progress' || praxis.status === 'pending')
 
   return (
     <span
