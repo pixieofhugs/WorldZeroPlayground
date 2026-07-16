@@ -192,7 +192,7 @@ function DesktopFactions() {
                         ]}
                       />
                     </span>
-                    <span className="eyebrow" style={{ color: 'var(--color-text-tertiary)', fontSize: 8 }}>
+                    <span className="eyebrow" style={{ color: 'var(--color-text-tertiary)' }}>
                       {relativeTime(inv.delivered_at)}
                     </span>
                   </div>

@@ -53,7 +53,7 @@ export default function DefaultSettings({ character, dark, onToggleTheme, onSign
           padding: 16,
         }}
       >
-        <div className="eyebrow" style={{ fontSize: 9, color: 'var(--color-text-secondary)', marginBottom: 12 }}>
+        <div className="eyebrow" style={{ color: 'var(--color-text-secondary)', marginBottom: 12 }}>
           {t('settings.account.eyebrow')}
         </div>
         {character ? (
@@ -106,7 +106,6 @@ export default function DefaultSettings({ character, dark, onToggleTheme, onSign
               to={`/characters/${character.id}`}
               className="shrink-0 eyebrow"
               style={{
-                fontSize: 9,
                 color: 'var(--color-text-secondary)',
                 textDecoration: 'none',
                 border: '1px solid var(--color-border-strong)',
@@ -156,7 +155,7 @@ export default function DefaultSettings({ character, dark, onToggleTheme, onSign
           padding: '16px',
         }}
       >
-        <div className="eyebrow" style={{ fontSize: 9, color: 'var(--color-text-secondary)', marginBottom: 12 }}>
+        <div className="eyebrow" style={{ color: 'var(--color-text-secondary)', marginBottom: 12 }}>
           {t('settings.appearance.eyebrow')}
         </div>
         <div className="flex items-center gap-3">
