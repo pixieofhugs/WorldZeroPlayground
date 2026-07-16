@@ -45,6 +45,18 @@ export type ArchetypeProps = {
 // ─── Per-faction archetypes ───────────────────────────────────────────────────
 
 /**
+ * Outer-frame sizing shared by every faction archetype's root element. Each
+ * archetype spreads this then layers its own bespoke frame styling on top.
+ * Mirrors Sidebar.tsx's `panelStyle` pattern — one place to change the sizing.
+ */
+const frameBase: CSSProperties = {
+  width: "100%",
+  flex: "1 1 280px",
+  minWidth: 280,
+  boxSizing: "border-box",
+};
+
+/**
  * Shared content body for every faction's praxis card: title + task link on the
  * left, the score hero (`{base} + {votes}` points) on the right, then a
  * points/mode line and the byline. Each faction's own frame wraps this; tint /
@@ -108,14 +120,11 @@ function UAPraxisCard({ praxis, adminProps, showCrown }: ArchetypeProps) {
     // Gilt frame: gold-leaf gradient border, then the parchment plate.
     <div
       style={{
-        width: "100%",
-        flex: "1 1 280px",
-        minWidth: 280,
+        ...frameBase,
         padding: 5,
         background: "var(--ua-gilt)",
         boxShadow:
           "0 12px 26px color-mix(in srgb, var(--ua-ink) 22%, transparent), inset 0 0 0 1px color-mix(in srgb, white 45%, transparent)",
-        boxSizing: "border-box",
       }}
     >
       <div
@@ -161,9 +170,7 @@ function EverymenPraxisCard({ praxis, adminProps, showCrown }: ArchetypeProps) {
   return (
     <div
       style={{
-        width: "100%",
-        flex: "1 1 280px",
-        minWidth: 280,
+        ...frameBase,
         background: factionCssVar("everymen", "card-bg"),
         border: "1px solid var(--color-border)",
         clipPath:
@@ -175,7 +182,6 @@ function EverymenPraxisCard({ praxis, adminProps, showCrown }: ArchetypeProps) {
         backgroundImage:
           "repeating-linear-gradient(to bottom, transparent, transparent 17px, rgba(100,140,200,0.08) 17px, rgba(100,140,200,0.08) 18px)",
         transition: "background 150ms, color 150ms",
-        boxSizing: "border-box",
       }}
     >
       <div
@@ -205,11 +211,8 @@ function WowPraxisCard({ praxis, adminProps, showCrown }: ArchetypeProps) {
     <div
       style={{
         position: "relative",
-        width: "100%",
-        flex: "1 1 280px",
-        minWidth: 280,
+        ...frameBase,
         minHeight: 140,
-        boxSizing: "border-box",
       }}
     >
       <div
@@ -285,16 +288,13 @@ function SnidePraxisCard({ praxis, adminProps, showCrown }: ArchetypeProps) {
   return (
     <div
       style={{
-        width: "100%",
-        flex: "1 1 280px",
-        minWidth: 280,
+        ...frameBase,
         background: factionCssVar("snide", "card-bg"),
         position: "relative",
         padding: "14px 14px 16px",
         fontFamily: "'Special Elite', serif",
         color: factionCssVar("snide", "card-text"),
         transition: "background 150ms, color 150ms",
-        boxSizing: "border-box",
       }}
     >
       <div
@@ -343,10 +343,7 @@ function EphemeristsPraxisCard({ praxis, adminProps, showCrown }: ArchetypeProps
     <div
       style={{
         position: "relative",
-        width: "100%",
-        flex: "1 1 280px",
-        minWidth: 280,
-        boxSizing: "border-box",
+        ...frameBase,
         overflow: "hidden",
         background: "var(--eph-vellum)",
         color: "var(--eph-vellum-text)",
@@ -430,16 +427,13 @@ function SingularityPraxisCard({ praxis, adminProps, showCrown }: ArchetypeProps
   return (
     <div
       style={{
-        width: "100%",
-        flex: "1 1 280px",
-        minWidth: 280,
+        ...frameBase,
         background: "var(--faction-singularity-card-bg)",
         border: "1px solid var(--faction-singularity-border-hard)",
         position: "relative",
         fontFamily: "'Share Tech Mono', monospace",
         color: "var(--faction-singularity-card-text)",
         overflow: "hidden",
-        boxSizing: "border-box",
       }}
     >
       <div
@@ -556,10 +550,7 @@ function AlbescentPraxisCard({ praxis, adminProps, showCrown }: ArchetypeProps) 
     <div
       style={{
         position: "relative",
-        width: "100%",
-        flex: "1 1 280px",
-        minWidth: 280,
-        boxSizing: "border-box",
+        ...frameBase,
         background: "var(--faction-albescent-card-bg)",
         color: "var(--faction-albescent-card-text)",
         border: `1px solid ${ink(10)}`,
@@ -633,14 +624,11 @@ export function DefaultPraxisCard({ praxis, adminProps, showCrown }: ArchetypePr
     // Spectrum band → clean inner sheet.
     <div
       style={{
-        width: "100%",
-        flex: "1 1 280px",
-        minWidth: 280,
+        ...frameBase,
         borderRadius: 10,
         padding: 5,
         background: "var(--faction-default-rainbow)",
         boxShadow: "0 12px 26px -14px rgba(0,0,0,0.4)",
-        boxSizing: "border-box",
       }}
     >
       <div
