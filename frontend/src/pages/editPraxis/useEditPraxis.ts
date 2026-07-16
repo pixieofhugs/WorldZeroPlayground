@@ -19,6 +19,7 @@ import {
   inviteToPraxis,
   removeMetatask,
   submitPraxis,
+  unsubmitPraxis,
   updatePraxis,
   uploadPraxisMedia,
   type MediaItemOut,
@@ -105,6 +106,8 @@ export interface EditPraxisState {
   // Save / publish / drop
   submitting: boolean;
   publish: () => Promise<void>;
+  /** Pull my own cast back on a pending collab (#591). */
+  pullBack: () => Promise<void>;
   cancel: () => Promise<void>;
 
   // Autosave
@@ -490,6 +493,22 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
     }
   }, [idParam, title, persistEdits, navigate, refetch]);
 
+  // Pull my own part back out of a pending collab (#591) — clears my cast so the
+  // composer unlocks for editing. Backend re-opens only my membership (#590).
+  const pullBack = useCallback(async () => {
+    if (!idParam) return;
+    setSubmitting(true);
+    setError("");
+    try {
+      await unsubmitPraxis(parseInt(idParam, 10));
+      await refetch();
+    } catch (err) {
+      setError(extractError(err, i18n.t("forms:editPraxis.errors.publish")));
+    } finally {
+      setSubmitting(false);
+    }
+  }, [idParam, refetch]);
+
   const cancel = useCallback(async () => {
     if (!praxis) return;
     const confirmed = window.confirm(
@@ -845,6 +864,7 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
 
     submitting,
     publish,
+    pullBack,
     cancel,
 
     autosaveAt,

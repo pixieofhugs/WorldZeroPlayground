@@ -14,6 +14,7 @@ import MarkdownPreview from "../blocks/MarkdownPreview";
 import { applyMarkdown } from "../blocks/markdownToolbar";
 import type { MarkdownCommand } from "../blocks/markdownToolbar";
 import type { EditPraxisState } from "../useEditPraxis";
+import { CollabRoster } from "../../../components/collab/CollabRoster";
 
 export interface InviteSearchSkin {
   inputBg?: string;
@@ -46,6 +47,8 @@ export function InviteSearch({
   const duelMode = state.duelMode;
   const challengeAttached = duelMode && praxis.duel_id != null;
   const onPick = duelMode ? state.sendChallenge : state.sendInvite;
+  // Cast progress drives the roster + hides "invite another" once weaving starts (#591).
+  const castCount = praxis.members.filter((m) => m.has_submitted).length;
   return (
     <div>
       <div
@@ -98,28 +101,20 @@ export function InviteSearch({
               </span>
             )
           : [
-              ...praxis.members
-                .filter(
-                  (member) => member.character_id !== state.currentCharacterId,
-                )
-                .map((member) => (
-                  <span
-                    key={`m-${member.id}`}
-                    style={{
-                      fontFamily: skin.fontFamily,
-                      fontSize: 11,
-                      padding: "4px 10px",
-                      background: skin.acceptedBg ?? "var(--color-success)",
-                      color: skin.acceptedColor ?? "var(--color-text-on-accent)",
-                    }}
-                  >
-                    {member.character_display_name}
-                    {/* Collab submit indicator (#521): who has already submitted. */}
-                    {member.has_submitted && (
-                      <em> · ✓ {t("editPraxis.invite.statusSubmitted")}</em>
-                    )}
-                  </span>
-                )),
+              // Live cast-status roster replaces the flat member pills (#591).
+              <div key="roster" style={{ flex: "1 1 100%" }}>
+                <CollabRoster
+                  members={praxis.members}
+                  currentCharacterId={state.currentCharacterId}
+                  factionSlug={praxis.task_faction_slug}
+                  taskPointValue={praxis.task_point_value}
+                  action={{
+                    onCast: state.publish,
+                    onPullBack: state.pullBack,
+                    submitting: state.submitting,
+                  }}
+                />
+              </div>,
               ...praxis.invites
                 .filter((invite) => invite.status === "pending")
                 .map((invite) => (
@@ -160,7 +155,7 @@ export function InviteSearch({
                 )),
             ]}
       </div>
-      {!challengeAttached && (
+      {!challengeAttached && (duelMode || castCount === 0) && (
       <div style={{ position: "relative" }}>
         <input
           type="text"
@@ -688,6 +683,8 @@ export function PublishButton({
   skin: PublishButtonSkin;
 }) {
   if (state.isPublished) return null;
+  // Multi-member collabs cast through the CollabRoster action, not this button (#591).
+  if (state.praxis?.type === "collab" && state.praxis.members.length > 1) return null;
   return (
     <button
       type="button"

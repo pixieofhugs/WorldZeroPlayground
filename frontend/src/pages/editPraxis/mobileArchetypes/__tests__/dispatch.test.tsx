@@ -104,6 +104,7 @@ function baseState(slug: string | null): EditPraxisState {
     toggleMetatask: async () => {},
     submitting: false,
     publish: async () => {},
+    pullBack: async () => {},
     cancel: async () => {},
     autosaveAt: null,
     saveStatus: "idle",
