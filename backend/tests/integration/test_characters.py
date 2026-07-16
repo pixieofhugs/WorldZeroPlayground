@@ -142,6 +142,23 @@ async def test_list_characters_search_by_display_name(
 
 
 @pytest.mark.asyncio
+async def test_list_characters_search_ignores_handle_sigil(
+    client: AsyncClient, character: Character, character2: Character
+):
+    """A leading '@' is a sigil, not a search character (#624).
+
+    The collab/duel invite search prompts for "@handle" and sends the query as
+    typed. No username contains '@', so without stripping it the ILIKE matched
+    nothing and the dropdown never opened.
+    """
+    resp = await client.get("/characters", params={"search": "@testcharacter"})
+    assert resp.status_code == 200
+    ids = [c["id"] for c in resp.json()]
+    assert character.id in ids
+    assert character2.id not in ids
+
+
+@pytest.mark.asyncio
 async def test_list_characters_filter_by_faction(
     client: AsyncClient, character: Character, character2: Character
 ):
