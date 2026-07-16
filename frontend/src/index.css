@@ -278,6 +278,16 @@
   --radius-lg: 12px;
   --radius-xl: 14px;
 
+  /* Spacing scale for padding/margin/gap. Global (never per-faction) and
+     theme-independent, same as --radius-* and --text-* — a faction picks a font
+     and colour, not a new scale (SPEC-faction-ui-profile.md). */
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 12px;
+  --space-lg: 16px;
+  --space-xl: 24px;
+  --space-2xl: 32px;
+
   /* ── Filter stamp dashed-border (inverts with active state bg) ── */
   --stamp-active-dashed: rgba(255, 255, 255, 0.2);
   --stamp-inactive-dashed: rgba(0, 0, 0, 0.15);
