@@ -12,7 +12,6 @@ src/components/cards/EverymenTaskCard.tsx
 src/components/cards/FactionCard.tsx
 src/components/cards/FactionSelectCard.tsx
 src/components/cards/SingularityFactionHero.tsx
-src/components/cards/SingularityTaskCard.tsx
 src/components/cards/SnideFactionHero.tsx
 src/components/cards/SnideMasthead.tsx
 src/components/cards/SNIDETaskCard.tsx
@@ -53,12 +52,9 @@ src/components/imageEdit/ImageEditModal.tsx
 src/components/InvitationLetterPopup.tsx
 src/components/layout/MobileLayout.tsx
 src/components/layout/MobileTabBar.tsx
-src/components/layout/Sidebar.tsx
 src/components/LevelUpPopup.tsx
 src/components/MediaGallery.tsx
 src/components/NavBar.tsx
-src/components/PraxisCard.tsx
-src/components/praxisCard/shared.tsx
 src/components/snide/snideAtoms.tsx
 src/components/TaskCard.tsx
 src/components/ui/FilterFactionTabs.tsx

@@ -95,7 +95,34 @@ Use `factionCssVar(slug, 'card-font')` in components. Never hardcode the font fa
 
 **Type scale** is defined as CSS variables (`--text-xs` through `--text-4xl`). Use the variable names, not raw pixel values.
 
+**Content-text floor.** `--text-2xl` (18px) is the floor for _real content_ — anything a player is meant to actually read: titles, scores, body copy, descriptions. `--text-xs` through `--text-xl` (8–14px) remain valid but are **label tier only**: eyebrows, kickers, badges, pills, stamps, button chrome. If a human reads it for meaning rather than scanning it as a label, it is `--text-2xl` or larger.
+
+This is a usage rule, not a change to the scale — no token values were renumbered and no new type tokens were added.
+
 **Eyebrow / label text:** Courier Prime, `--text-sm` (9px), uppercase, letter-spacing 0.15em, `var(--color-text-tertiary)`. Use the `.eyebrow` class.
+
+---
+
+## 4a. Spacing
+
+**Spacing scale** is defined as CSS variables in `index.css`. Use the variable names, not raw pixel values.
+
+| Token         | Value |
+| ------------- | ----- |
+| `--space-xs`  | 4px   |
+| `--space-sm`  | 8px   |
+| `--space-md`  | 12px  |
+| `--space-lg`  | 16px  |
+| `--space-xl`  | 24px  |
+| `--space-2xl` | 32px  |
+
+**Rule:** `padding`, `margin`, and `gap` take a `--space-*` token — never a raw pixel value. If you're about to write `padding: 13` or `gap: 6`, stop and pick the nearest token. This mirrors the typography rule: the scale is the vocabulary, and a value outside it is a bug, not a nuance.
+
+Both scales are **global, not per-faction**. A faction picks a headline font, a colour, and an ornament — never its own type size or spacing. There are no per-faction size or spacing exceptions.
+
+**Not covered by the rule:** ornament geometry (`width`/`height`/`top`/`inset` on decorative marks, sprocket holes, tape strips, corner brackets) is illustration, not layout spacing, and stays in raw pixels.
+
+**Enforcement.** The `local/no-raw-style-values` ESLint rule fails the build on a raw numeric `fontSize`/`padding`/`margin`/`gap` in an inline style. Files not yet migrated are grandfathered in `frontend/.eslint-legacy-raw-styles.txt`. **That list only ever shrinks** — migrating a file means deleting its line; no file may ever be added to it.
 
 ---
 
@@ -204,6 +231,8 @@ Brief design intent for each page. For implementation details, read the componen
 - **No sans-serif for body text** — Courier Prime is the base UI font
 - **No solid color backgrounds on the page** — the watercolor SVG is always present
 - **No hardcoded hex values in components** — always use CSS custom properties
+- **No raw pixel values for fontSize/padding/margin/gap** — use the `--text-*` / `--space-*` scales (§4, §4a); enforced by `local/no-raw-style-values`
+- **No content text below `--text-2xl`** — 7px and 9px are label sizes, not reading sizes
 - **No dark mode via ternaries** — use CSS variables so the cascade handles it
 - **No dark mode by inverting colors** — each card has a specifically designed dark variant in the CSS variables
 - **No disabled buttons for permission gates** — hide controls users can't use
