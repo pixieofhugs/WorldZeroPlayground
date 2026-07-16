@@ -97,6 +97,12 @@ class PraxisCardOut(BaseModel):
     voter_count: int = 0
     is_top_for_task: bool = False  # Task Crown: top submitted praxis for its task (ADR-0028)
     task_faction_slug: Optional[str] = None
+    # Full-fidelity fields for bespoke mobile praxis cards (#573).
+    body_text: Optional[str] = None
+    created_by_faction_slug: Optional[str] = None  # author's member faction; actor-scoped byline
+    members: List[PraxisMemberOut] = []
+    media_items: List[MediaItemOut] = []
+    viewer_vote: Optional[int] = None  # the authenticated viewer's own cast value (1-5), None if unvoted/anonymous
 
     model_config = {"from_attributes": True}
 

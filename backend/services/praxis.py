@@ -249,6 +249,7 @@ async def build_praxis_card_out(
     era: EraConfig = CURRENT_ERA,
     *,
     crowned_ids: Optional[set[int]] = None,
+    viewer_votes: Optional[dict[int, int]] = None,
 ) -> PraxisCardOut:
     """Lightweight card for list views.
 
@@ -257,6 +258,11 @@ async def build_praxis_card_out(
     ``crowned_ids`` are the Task Crown holders (ADR-0028); list routes
     precompute them once via :func:`~services.vote_tally.crowned_praxis_ids`
     so the crown never becomes a per-card query.
+
+    ``viewer_votes`` maps praxis id → the viewer's own cast value (#573); list
+    routes precompute it once via :func:`~services.vote_tally.viewer_votes_for`
+    so the viewer's highlight never becomes a per-card query. ``None`` (anonymous
+    viewer) leaves ``viewer_vote`` unset.
     """
     task_title = praxis.task.title if praxis.task else ""
     task_point_value = praxis.task.point_value if praxis.task else 0
@@ -292,6 +298,11 @@ async def build_praxis_card_out(
         voter_count=tally.voter_count,
         is_top_for_task=praxis.id in crowned_ids,
         task_faction_slug=praxis.task.primary_faction_slug if praxis.task else None,
+        body_text=praxis.body_text,
+        created_by_faction_slug=praxis.created_by.faction_slug if praxis.created_by else None,
+        members=[_build_member_out(m) for m in praxis.members],
+        media_items=[MediaItemOut.model_validate(item) for item in praxis.media_items],
+        viewer_vote=viewer_votes.get(praxis.id) if viewer_votes else None,
     )
 
 
@@ -423,6 +434,7 @@ async def list_praxes(
     if status is not None:
         query = query.where(Praxis.status == status)
 
+    query = query.options(selectinload(Praxis.media_items))
     query = query.order_by(Praxis.created_at.desc()).limit(limit).offset(offset)
     result = await session.execute(query)
     praxes = list(result.scalars().all())

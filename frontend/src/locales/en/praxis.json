@@ -20,6 +20,14 @@
     "back": "Praxis",
     "ratePrompt": "Rate this proof"
   },
+  "mobileCard": {
+    "taskRef": "Re · {{title}}",
+    "untitled": "Untitled praxis",
+    "rosterMore": "+{{count}} more",
+    "mediaMore": "+{{count}}",
+    "mediaVideo": "video",
+    "mediaAudio": "audio"
+  },
   "card": {
     "ptsAndVotes": "pts + votes",
     "level": "L{{level}}",

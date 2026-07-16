@@ -186,8 +186,9 @@ function UACard({
 
 // ─── Warriors of Whimsy ".exe" window atoms ──────────────────────────────────────────────
 
-/** A small sparkle glyph used in the wow.exe title bar. */
-function WowSparkle({
+/** A small sparkle glyph used in the wow.exe title bar. Exported so the mobile
+ *  Warriors-of-Whimsy praxis card can reuse the mark (#573) without a new SVG. */
+export function WowSparkle({
   size = 10,
   color,
 }: {

@@ -1,15 +1,15 @@
 import { useTranslation } from 'react-i18next'
-import PraxisCard from '../../components/PraxisCard'
-import CollaborationCard from '../../components/CollaborationCard'
+import MobilePraxisCard from '../../components/praxisCard/mobile/MobilePraxisCard'
 import type { PraxesFeedState } from './usePraxes'
 
 /**
- * Mobile praxis feed (#499/#565) — a single-column vertical proof stream. Each
- * card picks its own faction skin from its item's data (the bespoke
- * `PraxisCard` / `CollaborationCard` per-item dispatch), so a mixed feed shows
- * every faction's own card archetype instead of theming the whole page to one
- * faction. Solo + collab/duel are merged into one stream, matching the Field
- * Kit §05 praxis feed.
+ * Mobile praxis feed (#499/#565/#573) — a single-column vertical proof stream.
+ * Each card picks its own bespoke faction skin from its item's data (the
+ * per-item `MobilePraxisCard` dispatch), so a mixed feed shows every faction's
+ * own touch-native card archetype instead of theming the whole page to one
+ * faction. Solo + collab/duel are merged into ONE uniform stream — the same
+ * card renders all three modes (roster + mode chip are its only conditional
+ * slots), matching the Field Kit §05 praxis feed.
  *
  * Presentation-only: data arrives via {@link PraxesFeedState}. Single-column, no
  * fixed-px layout grid (SPEC-faction-ui-profile §1a).
@@ -46,11 +46,8 @@ export default function MobilePraxisFeed({ state }: { state: PraxesFeedState }) 
         <p className="font-body text-muted">{t('listPage.empty')}</p>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-          {soloItems.map((p) => (
-            <PraxisCard key={`praxis-${p.id}`} praxis={p} />
-          ))}
-          {collabItems.map((c) => (
-            <CollaborationCard key={`collab-${c.id}`} collab={c} />
+          {[...soloItems, ...collabItems].map((p) => (
+            <MobilePraxisCard key={`praxis-${p.id}`} praxis={p} />
           ))}
         </div>
       )}

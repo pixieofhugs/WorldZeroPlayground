@@ -2245,3 +2245,142 @@ async def test_change_type_takeover_clears_pending_publish_window(
     assert body["status"] == "in_progress"
     assert body["submit_proposed_at"] is None
     assert all(not m["has_submitted"] for m in body["members"])
+
+
+# ---------------------------------------------------------------------------
+# Full-fidelity card fields for mobile praxis cards (#573)
+# ---------------------------------------------------------------------------
+
+
+def _find_card(cards: list[dict], praxis_id: int) -> dict:
+    match = next((card for card in cards if card["id"] == praxis_id), None)
+    assert match is not None, f"praxis {praxis_id} missing from list"
+    return match
+
+
+@pytest.mark.asyncio
+async def test_card_out_includes_full_fidelity_fields(
+    client: AsyncClient,
+    character: Character,
+    active_task: Task,
+    auth_headers: dict,
+):
+    """A /praxes list row carries body_text, created_by_faction_slug, and members (#573)."""
+    create_resp = await client.post(
+        "/praxes",
+        json={
+            "task_id": active_task.id,
+            "type": "solo",
+            "title": "Card Fidelity",
+            "body_text": "the full proof text",
+        },
+        headers=auth_headers,
+    )
+    assert create_resp.status_code == 201
+    praxis_id = create_resp.json()["id"]
+
+    # Read as the author-member so the in_progress praxis is visible (ADR-0024).
+    list_resp = await client.get(
+        "/praxes", params={"task_id": active_task.id}, headers=auth_headers
+    )
+    assert list_resp.status_code == 200
+    card = _find_card(list_resp.json(), praxis_id)
+
+    assert card["body_text"] == "the full proof text"
+    # character is seeded in the 'ua' faction by the conftest fixture.
+    assert card["created_by_faction_slug"] == "ua"
+    member_names = [m["character_display_name"] for m in card["members"]]
+    assert character.display_name in member_names
+    assert card["media_items"] == []
+
+
+@pytest.mark.asyncio
+async def test_card_out_viewer_vote_none_for_anonymous(
+    client: AsyncClient,
+    character: Character,
+    active_task: Task,
+    auth_headers: dict,
+):
+    """viewer_vote is None on an anonymous (unauthenticated) list read (#573)."""
+    create_resp = await client.post(
+        "/praxes",
+        json={"task_id": active_task.id, "type": "solo", "title": "Anon View"},
+        headers=auth_headers,
+    )
+    assert create_resp.status_code == 201
+    praxis_id = create_resp.json()["id"]
+    # Submit so an anonymous viewer can see it (in_progress is member-only).
+    await client.post(f"/praxes/{praxis_id}/submit", headers=auth_headers)
+
+    list_resp = await client.get("/praxes", params={"task_id": active_task.id})
+    assert list_resp.status_code == 200
+    card = _find_card(list_resp.json(), praxis_id)
+    assert card["viewer_vote"] is None
+
+
+@pytest.mark.asyncio
+async def test_card_out_viewer_vote_none_when_not_voted(
+    client: AsyncClient,
+    character: Character,
+    character2: Character,
+    active_task: Task,
+    auth_headers: dict,
+    auth_headers2: dict,
+):
+    """viewer_vote is None for an authenticated viewer who has not voted (#573)."""
+    create_resp = await client.post(
+        "/praxes",
+        json={"task_id": active_task.id, "type": "solo", "title": "Not Voted"},
+        headers=auth_headers2,
+    )
+    assert create_resp.status_code == 201
+    praxis_id = create_resp.json()["id"]
+    await client.post(f"/praxes/{praxis_id}/submit", headers=auth_headers2)
+
+    # character reads the list but has cast no vote.
+    list_resp = await client.get(
+        "/praxes", params={"task_id": active_task.id}, headers=auth_headers
+    )
+    assert list_resp.status_code == 200
+    card = _find_card(list_resp.json(), praxis_id)
+    assert card["viewer_vote"] is None
+
+
+@pytest.mark.asyncio
+async def test_card_out_viewer_vote_reflects_cast_value(
+    client: AsyncClient,
+    character: Character,
+    character2: Character,
+    active_task: Task,
+    auth_headers: dict,
+    auth_headers2: dict,
+):
+    """viewer_vote equals the viewer's own cast value once they have voted (#573)."""
+    create_resp = await client.post(
+        "/praxes",
+        json={"task_id": active_task.id, "type": "solo", "title": "Voted Card"},
+        headers=auth_headers2,
+    )
+    assert create_resp.status_code == 201
+    praxis_id = create_resp.json()["id"]
+    await client.post(f"/praxes/{praxis_id}/submit", headers=auth_headers2)
+
+    # character casts a 3-star vote.
+    vote_resp = await client.post(
+        f"/praxes/{praxis_id}/vote", json={"value": 3}, headers=auth_headers
+    )
+    assert vote_resp.status_code == 200
+
+    # The voter sees their own value pre-highlighted...
+    voter_list = await client.get(
+        "/praxes", params={"task_id": active_task.id}, headers=auth_headers
+    )
+    assert voter_list.status_code == 200
+    assert _find_card(voter_list.json(), praxis_id)["viewer_vote"] == 3
+
+    # ...but the author (a different viewer, who did not vote) does not.
+    author_list = await client.get(
+        "/praxes", params={"task_id": active_task.id}, headers=auth_headers2
+    )
+    assert author_list.status_code == 200
+    assert _find_card(author_list.json(), praxis_id)["viewer_vote"] is None

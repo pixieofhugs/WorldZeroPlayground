@@ -194,3 +194,12 @@ src/pages/tasks/mobileArchetypes/cards/UaMobileTaskCard.tsx
 src/pages/tasks/mobileArchetypes/cards/WowMobileTaskCard.tsx
 src/pages/Updates.tsx
 src/pages/updates/MobileUpdates.tsx
+src/components/praxisCard/mobile/shared.tsx
+src/components/praxisCard/mobile/UaMobilePraxisCard.tsx
+src/components/praxisCard/mobile/WowMobilePraxisCard.tsx
+src/components/praxisCard/mobile/SnideMobilePraxisCard.tsx
+src/components/praxisCard/mobile/EphemeristsMobilePraxisCard.tsx
+src/components/praxisCard/mobile/SingularityMobilePraxisCard.tsx
+src/components/praxisCard/mobile/EverymenMobilePraxisCard.tsx
+src/components/praxisCard/mobile/AlbescentMobilePraxisCard.tsx
+src/components/praxisCard/mobile/DefaultMobilePraxisCard.tsx

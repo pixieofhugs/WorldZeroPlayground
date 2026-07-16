@@ -60,6 +60,21 @@ def get_tally(tallies: dict[int, VoteTally], praxis_id: int) -> VoteTally:
     return tallies.get(praxis_id, _EMPTY_TALLY)
 
 
+async def viewer_votes_for(
+    praxis_ids: Collection[int], viewer_character_id: int, session: AsyncSession,
+) -> dict[int, int]:
+    """This viewer's own cast value per praxis, one batched query (not per-card)."""
+    if not praxis_ids:
+        return {}
+    result = await session.execute(
+        select(Vote.praxis_id, Vote.value).where(
+            Vote.praxis_id.in_(praxis_ids),
+            Vote.voter_character_id == viewer_character_id,
+        )
+    )
+    return dict(result.all())
+
+
 async def crowned_praxis_ids(
     task_ids: Collection[int],
     session: AsyncSession,
