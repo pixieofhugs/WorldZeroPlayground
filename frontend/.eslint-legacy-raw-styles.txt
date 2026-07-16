@@ -55,8 +55,6 @@ src/components/layout/MobileTabBar.tsx
 src/components/LevelUpPopup.tsx
 src/components/MediaGallery.tsx
 src/components/NavBar.tsx
-src/components/PraxisCard.tsx
-src/components/praxisCard/shared.tsx
 src/components/snide/snideAtoms.tsx
 src/components/TaskCard.tsx
 src/components/ui/FilterFactionTabs.tsx
