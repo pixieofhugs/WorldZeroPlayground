@@ -107,7 +107,8 @@
       "notePlaceholder": "Add a note (optional)",
       "submit": "Submit flag",
       "submitting": "...",
-      "cancel": "Cancel"
+      "cancel": "Cancel",
+      "error": "Couldn't flag this. Please try again."
     },
     "voters": {
       "heading": "Who voted",

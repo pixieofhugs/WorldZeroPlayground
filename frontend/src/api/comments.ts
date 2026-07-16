@@ -1,4 +1,5 @@
 import api from './axios'
+import type { FlagReason } from '../utils/flagReasons'
 
 /** A resolved @mention — the frontend linkifies these handles in the body. */
 export interface CommentMention {
@@ -62,4 +63,20 @@ export async function editComment(
 /** Author-only soft-delete → the comment is withdrawn (204, no body). */
 export async function deleteComment(commentId: number): Promise<void> {
   await api.delete(`/comments/${commentId}`)
+}
+
+/**
+ * Flag a comment for moderator review (#575). Same FlagIn body (ADR-0037) as the
+ * praxis flag route; `reasonDetail` only persists server-side with reason='other'.
+ * The backend 403s self-flags, so the UI hides this on the viewer's own comments.
+ */
+export async function flagComment(
+  commentId: number,
+  reason: FlagReason,
+  reasonDetail?: string,
+): Promise<void> {
+  await api.post(`/comments/${commentId}/flag`, {
+    reason,
+    reason_detail: reasonDetail || null,
+  })
 }

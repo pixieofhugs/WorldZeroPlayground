@@ -5,6 +5,7 @@ import FactionAvatar from '../../avatar/FactionAvatar'
 import { formatCommentTime } from '../../../utils/commentTime'
 import { type CommentProps, authorToCharacter, ComposerControls, MentionText } from '../shared'
 import { CommentEditor, OwnerControls, useOwnerEdit } from '../OwnerControls'
+import { CommentFlagControl } from '../FlagControl'
 
 /**
  * UA — University of Asthmatics. The gilt salon (ADR-0026, superseding
@@ -85,6 +86,7 @@ export default function UAComment(props: CommentProps) {
             {formatCommentTime(slug, comment.created_at)}
             {comment.is_edited ? ` · ${t('comments.ua.edited')}` : ''}
             <OwnerControls owner={owner} />
+            <CommentFlagControl comment={comment} />
           </span>
         </div>
         <div style={{ height: 1, background: 'color-mix(in srgb, var(--ua-gold) 55%, transparent)', margin: '8px 0 9px' }} />
