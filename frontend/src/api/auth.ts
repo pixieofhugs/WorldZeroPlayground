@@ -21,8 +21,8 @@ export interface CharacterOut {
   /** "active" | "paused" | "banned" — the roster includes paused lives (#270). */
   status: string
   created_at: string
-  /** Populated only by the single-character GET /characters/{id} (ADR-0033);
-   *  list responses leave it empty. */
+  /** Evaluated on read (ADR-0033). Populated by GET /characters/{id} and, since
+   *  #655, by the leaderboard list serializer (batched in one query). */
   badges?: BadgeOut[]
   /** Faction slugs this life holds a current-era invitation letter for (#243).
    *  Populated only by /auth/me (the carried life); the InvitationWatcher diffs

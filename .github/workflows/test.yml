@@ -67,6 +67,14 @@ jobs:
         run: npm run lint
         working-directory: frontend
 
+      - name: Typecheck (tsc --noEmit)
+        run: npm run typecheck
+        working-directory: frontend
+
       - name: Run tests
         run: npm test
+        working-directory: frontend
+
+      - name: Build (catches import/resolution errors eslint & vitest miss)
+        run: npm run build
         working-directory: frontend

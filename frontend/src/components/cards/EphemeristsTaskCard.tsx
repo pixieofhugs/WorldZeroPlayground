@@ -37,7 +37,7 @@ export default function EphemeristsTaskCard({ task, displayPoints, onSignup }: P
         transition: "background 150ms, color 150ms",
       }}
     >
-      <div style={{ position: "relative", zIndex: 5, padding: "9px 0 4px" }}>
+      <div style={{ position: "relative", zIndex: 5, padding: "var(--space-sm) 0 var(--space-xs)" }}>
         <EphEyebrow motto={i18n.t("feed:taskCard.ephemerists.motto")} dark />
       </div>
 
@@ -47,7 +47,7 @@ export default function EphemeristsTaskCard({ task, displayPoints, onSignup }: P
           position: "relative",
           flex: 1,
           minHeight: 188,
-          margin: "2px 4px",
+          margin: "var(--space-xs) var(--space-xs)",
           border: "1px solid var(--eph-gold-deep)",
           overflow: "hidden",
         }}
@@ -113,37 +113,37 @@ export default function EphemeristsTaskCard({ task, displayPoints, onSignup }: P
           />
         </div>
         {/* three coordinate labels for one point — and none agree */}
-        <div style={{ position: "absolute", top: "8%", left: "6%", fontSize: 7.5, letterSpacing: "0.04em", color: "var(--eph-vellum-text)", background: "color-mix(in srgb, var(--eph-vellum) 82%, transparent)", padding: "1px 4px" }}>
+        <div style={{ position: "absolute", top: "8%", left: "6%", fontSize: "var(--text-xs)", letterSpacing: "0.04em", color: "var(--eph-vellum-text)", background: "color-mix(in srgb, var(--eph-vellum) 82%, transparent)", padding: "var(--space-xs) var(--space-xs)" }}>
           {i18n.t("feed:taskCard.ephemerists.coordXPrefix")}<span style={{ textDecoration: "line-through", opacity: 0.65 }}>8</span>{" "}
           <span style={{ color: "var(--eph-lapis)", fontStyle: "italic" }}>9</span>
         </div>
-        <div style={{ position: "absolute", top: "78%", left: "54%", fontSize: 7.5, letterSpacing: "0.04em", color: "var(--eph-rubric)", background: "color-mix(in srgb, var(--eph-vellum) 82%, transparent)", padding: "1px 4px" }}>
+        <div style={{ position: "absolute", top: "78%", left: "54%", fontSize: "var(--text-xs)", letterSpacing: "0.04em", color: "var(--eph-rubric)", background: "color-mix(in srgb, var(--eph-vellum) 82%, transparent)", padding: "var(--space-xs) var(--space-xs)" }}>
           {i18n.t("feed:taskCard.ephemerists.coordPolar")}
         </div>
-        <div style={{ position: "absolute", top: "6%", left: "68%", fontSize: 7.5, letterSpacing: "0.04em", color: "var(--eph-lapis)", background: "color-mix(in srgb, var(--eph-vellum) 82%, transparent)", padding: "1px 4px" }}>
+        <div style={{ position: "absolute", top: "6%", left: "68%", fontSize: "var(--text-xs)", letterSpacing: "0.04em", color: "var(--eph-lapis)", background: "color-mix(in srgb, var(--eph-vellum) 82%, transparent)", padding: "var(--space-xs) var(--space-xs)" }}>
           {i18n.t("feed:taskCard.ephemerists.vanishingLabel")}
         </div>
         {/* marginal apparatus climbing the gutter */}
-        <div style={{ position: "absolute", left: 2, bottom: 7, transformOrigin: "left bottom", transform: "rotate(-90deg)", whiteSpace: "nowrap", fontSize: 6, letterSpacing: "0.05em", color: "var(--eph-muted)", opacity: 0.85 }}>
+        <div style={{ position: "absolute", left: 2, bottom: 7, transformOrigin: "left bottom", transform: "rotate(-90deg)", whiteSpace: "nowrap", fontSize: "var(--text-xs)", letterSpacing: "0.05em", color: "var(--eph-muted)", opacity: 0.85 }}>
           {i18n.t("feed:taskCard.ephemerists.marginalia")}
         </div>
       </div>
 
       {/* Legend / title */}
-      <div style={{ position: "relative", zIndex: 5, padding: "8px 14px 10px", textAlign: "center" }}>
+      <div style={{ position: "relative", zIndex: 5, padding: "var(--space-sm) var(--space-lg) var(--space-md)", textAlign: "center" }}>
         <Link to={`/tasks/${task.id}`} style={{ textDecoration: "none", color: "inherit" }}>
-          <div style={{ fontFamily: "var(--eph-display)", fontWeight: 700, fontSize: 22, lineHeight: 0.94 }}>
+          <div className="content-title" style={{ fontFamily: "var(--eph-display)", fontWeight: 700, lineHeight: 0.94 }}>
             <LapisLastWord text={task.title} footnote />
           </div>
         </Link>
         {task.description && (
           <div
+            className="content-text"
             style={{
-              fontSize: 8.5,
               lineHeight: 1.45,
               fontStyle: "italic",
               color: "var(--eph-muted)",
-              margin: "4px 0 6px",
+              margin: "var(--space-xs) 0 var(--space-sm)",
               display: "-webkit-box",
               WebkitLineClamp: 2,
               WebkitBoxOrient: "vertical",
@@ -153,16 +153,18 @@ export default function EphemeristsTaskCard({ task, displayPoints, onSignup }: P
             {task.description}
           </div>
         )}
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 7, fontSize: 7.5 }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "var(--space-sm)", fontSize: "var(--text-xs)" }}>
           <span style={{ color: "var(--eph-vellum-text)" }}>
             ▦ {i18n.t("feed:taskCard.ephemerists.grade", { grade: toRoman(task.level_required) })}
           </span>
           <span style={{ color: "var(--eph-gold-deep)" }}>·</span>
-          <span style={{ fontFamily: "var(--eph-display)", fontWeight: 700, fontSize: 13, color: "var(--eph-rubric)" }}>
+          {/* Points woven into the grade legend — a counter/legend accent, so it
+              stays label-tier per the role vocabulary (§4), not a plain score. */}
+          <span style={{ fontFamily: "var(--eph-display)", fontWeight: 700, fontSize: "var(--text-lg)", color: "var(--eph-rubric)" }}>
             {i18n.t("feed:taskCard.ephemerists.points", { points: displayPoints })}
           </span>
         </div>
-        <div style={{ fontSize: 6.5, fontStyle: "italic", color: "var(--eph-muted)", marginTop: 6, lineHeight: 1.35 }}>
+        <div style={{ fontSize: "var(--text-xs)", fontStyle: "italic", color: "var(--eph-muted)", marginTop: "var(--space-sm)", lineHeight: 1.35 }}>
           {/* The self-referential footnote is one <Trans> unit; "see †" is tag <1>. */}
           <Trans
             ns="feed"
@@ -177,10 +179,10 @@ export default function EphemeristsTaskCard({ task, displayPoints, onSignup }: P
           onClick={() => onSignup(task.id)}
           style={{
             fontFamily: "var(--eph-serif)",
-            fontSize: 9,
+            fontSize: "var(--text-sm)",
             letterSpacing: "0.12em",
             fontStyle: "italic",
-            padding: "7px 10px",
+            padding: "var(--space-sm) var(--space-md)",
             border: "none",
             cursor: "pointer",
             width: "100%",
