@@ -4,7 +4,7 @@ import PraxisCard from "../../../components/PraxisCard";
 import LevelPill from "../../../components/ui/LevelPill";
 import FeedBadge from "../../../components/feed/FeedBadge";
 import DefaultSigil from "../../../components/cards/DefaultSigil";
-import { factionCssVar, factionName } from "../../../utils/factions";
+import { factionCssVar, factionFill, factionName } from "../../../utils/factions";
 import { mediaUrl } from "../../../utils/media";
 import type { TaskDetailState } from "../useTaskDetail";
 
@@ -141,10 +141,10 @@ export default function DefaultTaskDetail({
                     letterSpacing: "0.15em",
                     padding: "2px 8px",
                     borderRadius: 4,
-                    background: factionCssVar(task.metatask_faction_slug),
-                    color: factionCssVar(task.metatask_faction_slug, "on-fill"),
                     fontWeight: 700,
                     textShadow: "0 1px 2px rgba(0,0,0,0.3)",
+                    // na → rainbow frame; real faction → solid hue + on-fill ink
+                    ...factionFill(task.metatask_faction_slug, "pill"),
                   }}
                 >
                   {t("default.meta")}

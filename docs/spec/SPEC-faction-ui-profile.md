@@ -77,7 +77,7 @@ A per-faction surface needs to know *which* faction to render as. Use these rule
 
 ## 3. The token contract a new faction must satisfy
 
-Every faction supplies one CSS-variable block in `frontend/src/index.css`, defined in **both** `:root` (light) and `[data-theme="dark"]`. Naming is `--faction-{cssKey}-{suffix}`. `factionCssVar(slug, suffix)` reads these; a missing `CSS_KEY` entry silently falls back to the `ua` theme.
+Every faction supplies one CSS-variable block in `frontend/src/index.css`, defined in **both** `:root` (light) and `[data-theme="dark"]`. Naming is `--faction-{cssKey}-{suffix}`. `factionCssVar(slug, suffix)` reads these; a missing `CSS_KEY` entry falls back to the `default` theme (neutral grey / rainbow — the `na` set, ADR-0039), not `ua`. Fills that render a dynamic slug use `factionFill(slug, shape)` instead, which turns `na`'s scalar grey into its spectrum by surface shape.
 
 Required suffixes (consumed by the dispatchers / `factionCssVar`):
 
@@ -177,7 +177,7 @@ Hand this to whoever wires the faction after design is delivered. (Designer only
 
 ### B. Token / tint surfaces — every faction has these by construction
 
-Not bespoke components; driven by the CSS-var block (§3) + registry (`utils/factions.ts`). A faction can't be "missing" one — a blank token silently falls back to the `ua` theme. So they're **not** a design-commission gap, only a "did you fill in the tokens" check.
+Not bespoke components; driven by the CSS-var block (§3) + registry (`utils/factions.ts`). A faction can't be "missing" one — a blank token falls back to the `default` (neutral grey / `na`) theme, not `ua` (ADR-0039). So they're **not** a design-commission gap, only a "did you fill in the tokens" check.
 
 | Surface (§1 #) | How it varies | Mechanism |
 |---|---|---|

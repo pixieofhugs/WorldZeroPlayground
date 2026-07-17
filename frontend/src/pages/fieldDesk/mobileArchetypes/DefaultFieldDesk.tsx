@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { factionCssVar, factionName } from '../../../utils/factions'
+import { factionCssVar, factionFill, factionName } from '../../../utils/factions'
 import { mediaUrl } from '../../../utils/media'
 import CharacterSwitcherSheet from '../../../components/CharacterSwitcherSheet'
 import type { FieldDeskHomeState } from '../useFieldDeskHome'
@@ -248,7 +248,7 @@ export default function DefaultFieldDesk({ state }: { state: FieldDeskHomeState 
               >
                 <span
                   className="shrink-0"
-                  style={{ width: 10, height: 10, borderRadius: 3, background: factionCssVar(praxis.task_faction_slug) }}
+                  style={{ width: 10, height: 10, borderRadius: 3, ...factionFill(praxis.task_faction_slug, 'dot') }}
                 />
                 <div className="min-w-0 flex-1">
                   <div className="font-display truncate" style={{ fontSize: 17, lineHeight: 1.2, color: 'var(--color-text-primary)' }}>

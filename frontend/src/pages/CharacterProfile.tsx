@@ -28,7 +28,7 @@ import { useGameConfig } from "../hooks/useGameConfig";
 import { useFormFactor } from "../hooks/useFormFactor";
 import { pickVariant } from "../utils/factionDispatch";
 import { extractError } from "../utils/errors";
-import { factionCssVar } from "../utils/factions";
+import { factionFill } from "../utils/factions";
 import { useFactionBackdrop } from "../components/backdrop/BackdropContext";
 import FactionProfileBody, {
   type ProfileBodyProps,
@@ -281,8 +281,6 @@ export default function CharacterProfile() {
               onClick={() => handleAddRelationship("friend")}
               disabled={relationshipLoading}
               style={{
-                background: factionCssVar(character.faction_slug),
-                color: factionCssVar(character.faction_slug, "on-fill"),
                 fontFamily: "'Courier Prime', monospace",
                 fontSize: 8,
                 textTransform: "uppercase",
@@ -292,6 +290,8 @@ export default function CharacterProfile() {
                 cursor: "pointer",
                 borderRadius: 2,
                 opacity: relationshipLoading ? 0.5 : 1,
+                // na → rainbow frame; real faction → solid hue + on-fill ink
+                ...factionFill(character.faction_slug, "pill"),
               }}
             >
               {t("relationships.addFriend")}
