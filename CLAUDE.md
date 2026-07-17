@@ -112,7 +112,7 @@ Work lives in **GitHub Issues** on `pixieofhugs/WorldZeroPlayground`, managed vi
 Default vocabulary — `needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`. See `docs/agents/triage-labels.md`.
 
 ### Domain docs
-Multi-context (`backend/`, `frontend/`). Domain knowledge is the routing table above plus `docs/spec/*` and `WORLD_ZERO_STYLE.md`; `CONTEXT.md` / `CONTEXT-MAP.md` get created lazily by `/domain-modeling`. See `docs/agents/domain.md`.
+A single root `CONTEXT.md` glossary holds the ubiquitous language (one context — no `CONTEXT-MAP.md`); `/domain-modeling` maintains it. Domain knowledge = the routing table above + `CONTEXT.md` + `docs/adr/*` + the `docs/spec/*` + `WORLD_ZERO_STYLE.md`. See `docs/agents/domain.md`.
 
 ## Working in worktrees
 For any non-trivial code change, work in an isolated git worktree on its own branch rather than directly on the current branch. Stay within the file scope of the issue you picked up.
