@@ -113,7 +113,6 @@ const sectionRule: CSSProperties = {
 };
 const sectionH2: CSSProperties = {
   fontFamily: "var(--ua-engraved)",
-  fontSize: 18,
   letterSpacing: "0.06em",
   margin: 0,
   color: INK,
@@ -137,7 +136,7 @@ function SectionHead({
         marginBottom: 18,
       }}
     >
-      <h2 style={sectionH2}>{title}</h2>
+      <h2 className="content-title" style={sectionH2}>{title}</h2>
       <span style={sectionRule} />
       {trailing}
     </div>
@@ -200,7 +199,7 @@ function HandsRow({
                   color: GOLD_PALE,
                   fontFamily: "var(--ua-display)",
                   fontStyle: "italic",
-                  fontSize: 18,
+                  fontSize: "var(--text-content)",
                 }}
               >
                 {hand.display_name[0]?.toUpperCase()}
@@ -227,7 +226,7 @@ function HandsRow({
       <span
         style={{
           fontFamily: "var(--ua-mono)",
-          fontSize: 10,
+          fontSize: "var(--text-base)",
           letterSpacing: "0.12em",
           textTransform: "uppercase",
           color: MUTED,
@@ -264,7 +263,7 @@ function StatPlate({
       <span
         style={{
           fontFamily: "var(--ua-engraved)",
-          fontSize: 8,
+          fontSize: "var(--text-xs)",
           letterSpacing: "0.14em",
           color: accent ? "var(--ua-paper-warm)" : MUTED,
         }}
@@ -272,11 +271,11 @@ function StatPlate({
         {label}
       </span>
       <span
+        className="content-title"
         style={{
           fontFamily: "var(--ua-display)",
           fontStyle: "italic",
           fontWeight: 700,
-          fontSize: 24,
           lineHeight: 0.9,
           color: accent ? PAPER_WARM : INK,
         }}
@@ -341,7 +340,7 @@ export default function UaTaskDetail({
         className="mb-4"
         style={{
           fontFamily: "var(--ua-mono)",
-          fontSize: 10,
+          fontSize: "var(--text-base)",
           letterSpacing: "0.18em",
           textTransform: "uppercase",
           color: MUTED,
@@ -393,7 +392,7 @@ export default function UaTaskDetail({
                   <div
                     style={{
                       fontFamily: "var(--ua-engraved)",
-                      fontSize: 11,
+                      fontSize: "var(--text-md)",
                       letterSpacing: "0.16em",
                       color: ORANGE,
                       marginBottom: 3,
@@ -404,7 +403,7 @@ export default function UaTaskDetail({
                   <div
                     style={{
                       fontFamily: "var(--ua-mono)",
-                      fontSize: 8,
+                      fontSize: "var(--text-xs)",
                       letterSpacing: "0.3em",
                       color: MUTED,
                       marginBottom: 14,
@@ -413,11 +412,11 @@ export default function UaTaskDetail({
                     {t("ua.commissionLine", { number: commissionNo })}
                   </div>
                   <h1
+                    className="content-title"
                     style={{
                       fontFamily: "var(--ua-display)",
                       fontStyle: "italic",
                       fontWeight: 700,
-                      fontSize: 42,
                       lineHeight: 1.06,
                       color: INK,
                       margin: "0 0 16px",
@@ -433,7 +432,7 @@ export default function UaTaskDetail({
                       background: ORANGE,
                       color: "var(--faction-ua-light)",
                       fontFamily: "var(--ua-engraved)",
-                      fontSize: 9,
+                      fontSize: "var(--text-sm)",
                       letterSpacing: "0.1em",
                       padding: "5px 24px",
                       clipPath:
@@ -452,7 +451,7 @@ export default function UaTaskDetail({
                       <span
                         style={{
                           fontFamily: "var(--ua-engraved)",
-                          fontSize: 9,
+                          fontSize: "var(--text-sm)",
                           marginLeft: 4,
                           fontStyle: "normal",
                           fontWeight: 400,
@@ -463,9 +462,9 @@ export default function UaTaskDetail({
                     </StatPlate>
                     <StatPlate label={t("ua.stats.onView")}>
                       <span
+                        className="content-text"
                         style={{
                           fontWeight: 600,
-                          fontSize: 18,
                           lineHeight: 1.2,
                           color: SUB,
                         }}
@@ -500,7 +499,7 @@ export default function UaTaskDetail({
                 style={{
                   cursor: "pointer",
                   fontFamily: "var(--ua-engraved)",
-                  fontSize: 12,
+                  fontSize: "var(--text-lg)",
                   letterSpacing: "0.14em",
                   color: PAPER_WARM,
                   background: ORANGE,
@@ -515,7 +514,7 @@ export default function UaTaskDetail({
                 style={{
                   fontFamily: "var(--ua-serif)",
                   fontStyle: "italic",
-                  fontSize: 14,
+                  fontSize: "var(--text-xl)",
                   color: SUB,
                 }}
               >
@@ -553,7 +552,7 @@ export default function UaTaskDetail({
               <span
                 style={{
                   fontFamily: "var(--ua-engraved)",
-                  fontSize: 14,
+                  fontSize: "var(--text-xl)",
                   letterSpacing: "0.1em",
                   color: GOLD,
                 }}
@@ -565,7 +564,7 @@ export default function UaTaskDetail({
                 style={{
                   marginLeft: "auto",
                   fontFamily: "var(--ua-engraved)",
-                  fontSize: 11,
+                  fontSize: "var(--text-md)",
                   letterSpacing: "0.12em",
                   padding: "10px 20px",
                   background: INK,
@@ -593,7 +592,7 @@ export default function UaTaskDetail({
               <span
                 style={{
                   fontFamily: "var(--ua-engraved)",
-                  fontSize: 14,
+                  fontSize: "var(--text-xl)",
                   letterSpacing: "0.1em",
                   color: ORANGE,
                 }}
@@ -605,7 +604,7 @@ export default function UaTaskDetail({
                 style={{
                   marginLeft: "auto",
                   fontFamily: "var(--ua-engraved)",
-                  fontSize: 11,
+                  fontSize: "var(--text-md)",
                   letterSpacing: "0.12em",
                   padding: "10px 20px",
                   background: ORANGE,
@@ -622,7 +621,7 @@ export default function UaTaskDetail({
                   border: "none",
                   cursor: "pointer",
                   fontFamily: "var(--ua-mono)",
-                  fontSize: 10,
+                  fontSize: "var(--text-base)",
                   letterSpacing: "0.1em",
                   textTransform: "uppercase",
                   color: MUTED,
@@ -655,9 +654,9 @@ export default function UaTaskDetail({
               }}
             >
               <p
+                className="content-text"
                 style={{
                   fontFamily: "var(--ua-serif)",
-                  fontSize: 17,
                   lineHeight: 1.75,
                   color: SUB,
                   margin: 0,
@@ -683,11 +682,11 @@ export default function UaTaskDetail({
             {voteCount > 0 ? (
               <div style={{ display: "flex", alignItems: "flex-end", gap: 12 }}>
                 <span
+                  className="content-title"
                   style={{
                     fontFamily: "var(--ua-display)",
                     fontStyle: "italic",
                     fontWeight: 700,
-                    fontSize: 54,
                     lineHeight: 0.8,
                     color: ORANGE,
                   }}
@@ -698,7 +697,7 @@ export default function UaTaskDetail({
                   <div
                     style={{
                       fontFamily: "var(--ua-engraved)",
-                      fontSize: 14,
+                      fontSize: "var(--text-xl)",
                       letterSpacing: "0.06em",
                       color: INK,
                     }}
@@ -708,7 +707,7 @@ export default function UaTaskDetail({
                   <div
                     style={{
                       fontFamily: "var(--ua-mono)",
-                      fontSize: 10,
+                      fontSize: "var(--text-base)",
                       letterSpacing: "0.06em",
                       color: MUTED,
                     }}
@@ -719,10 +718,10 @@ export default function UaTaskDetail({
               </div>
             ) : (
               <p
+                className="content-text"
                 style={{
                   fontFamily: "var(--ua-serif)",
                   fontStyle: "italic",
-                  fontSize: 15,
                   color: SUB,
                 }}
               >
@@ -745,7 +744,7 @@ export default function UaTaskDetail({
                         onClick={() => setSubmissionSort(sort)}
                         style={{
                           fontFamily: "var(--ua-engraved)",
-                          fontSize: 10,
+                          fontSize: "var(--text-base)",
                           letterSpacing: "0.1em",
                           textTransform: "uppercase",
                           padding: "5px 12px",
@@ -770,10 +769,10 @@ export default function UaTaskDetail({
             />
             {sortedSubmissions.length === 0 ? (
               <p
+                className="content-text"
                 style={{
                   fontFamily: "var(--ua-serif)",
                   fontStyle: "italic",
-                  fontSize: 15,
                   color: SUB,
                 }}
               >
@@ -809,13 +808,13 @@ export default function UaTaskDetail({
                             background: ORANGE,
                             color: PAPER_WARM,
                             fontFamily: "var(--ua-engraved)",
-                            fontSize: 9,
+                            fontSize: "var(--text-sm)",
                             letterSpacing: "0.12em",
                             padding: "4px 12px",
                             boxShadow: "0 3px 8px rgba(60,40,10,0.3)",
                           }}
                         >
-                          <span style={{ fontSize: 13, lineHeight: 1 }}>⚜</span>{" "}
+                          <span style={{ fontSize: "var(--text-lg)", lineHeight: 1 }}>⚜</span>{" "}
                           {t("ua.finestHand")}
                         </div>
                       )}
@@ -829,7 +828,7 @@ export default function UaTaskDetail({
                       to={`/praxes?task_id=${task.id}`}
                       style={{
                         fontFamily: "var(--ua-engraved)",
-                        fontSize: 13,
+                        fontSize: "var(--text-lg)",
                         letterSpacing: "0.06em",
                         color: ORANGE,
                         textDecoration: "none",

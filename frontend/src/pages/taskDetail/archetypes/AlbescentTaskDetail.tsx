@@ -37,11 +37,11 @@ function SectionHead({ title, trailing }: { title: string; trailing?: ReactNode 
   return (
     <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 18 }}>
       <h2
+        className="content-title"
         style={{
           fontFamily: FONT,
           fontStyle: "italic",
           fontWeight: 500,
-          fontSize: 22,
           margin: 0,
           color: INK,
           whiteSpace: "nowrap",
@@ -104,7 +104,7 @@ export default function AlbescentTaskDetail({ state }: { state: TaskDetailState 
         className="mb-4"
         style={{
           fontFamily: MONO,
-          fontSize: 10,
+          fontSize: "var(--text-base)",
           letterSpacing: "0.16em",
           textTransform: "uppercase",
           color: ink(40),
@@ -137,7 +137,7 @@ export default function AlbescentTaskDetail({ state }: { state: TaskDetailState 
             <div
               style={{
                 fontFamily: MONO,
-                fontSize: 9,
+                fontSize: "var(--text-sm)",
                 letterSpacing: "0.34em",
                 textTransform: "uppercase",
                 color: ink(45),
@@ -149,7 +149,7 @@ export default function AlbescentTaskDetail({ state }: { state: TaskDetailState 
             <div
               style={{
                 fontFamily: MONO,
-                fontSize: 8,
+                fontSize: "var(--text-xs)",
                 letterSpacing: "0.28em",
                 textTransform: "uppercase",
                 color: ink(30),
@@ -160,11 +160,11 @@ export default function AlbescentTaskDetail({ state }: { state: TaskDetailState 
             </div>
             <div style={{ width: 54, height: 1, background: ink(12), margin: "0 auto 26px" }} />
             <h1
+              className="content-title"
               style={{
                 fontFamily: FONT,
                 fontStyle: "italic",
                 fontWeight: 500,
-                fontSize: 46,
                 lineHeight: 1.16,
                 color: INK,
                 margin: "0 auto 22px",
@@ -200,7 +200,7 @@ export default function AlbescentTaskDetail({ state }: { state: TaskDetailState 
                     <div
                       style={{
                         fontFamily: MONO,
-                        fontSize: 8,
+                        fontSize: "var(--text-xs)",
                         letterSpacing: "0.22em",
                         textTransform: "uppercase",
                         color: ink(40),
@@ -209,7 +209,7 @@ export default function AlbescentTaskDetail({ state }: { state: TaskDetailState 
                     >
                       {stat.label}
                     </div>
-                    <div style={{ fontFamily: FONT, fontStyle: "italic", fontSize: 22, color: INK }}>{stat.value}</div>
+                    <div className="content-title" style={{ fontFamily: FONT, fontStyle: "italic", color: INK }}>{stat.value}</div>
                   </div>
                 </div>
               ))}
@@ -235,7 +235,7 @@ export default function AlbescentTaskDetail({ state }: { state: TaskDetailState 
                 style={{
                   cursor: "pointer",
                   fontFamily: MONO,
-                  fontSize: 9,
+                  fontSize: "var(--text-sm)",
                   letterSpacing: "0.22em",
                   textTransform: "uppercase",
                   color: INK,
@@ -246,14 +246,14 @@ export default function AlbescentTaskDetail({ state }: { state: TaskDetailState 
               >
                 {t("albescent.signup.cta", { points: modifiedPoints })}
               </button>
-              <div style={{ fontFamily: FONT, fontStyle: "italic", fontSize: 15, color: ink(55) }}>
+              <div style={{ fontFamily: FONT, fontStyle: "italic", fontSize: "var(--text-xl)", color: ink(55) }}>
                 {t("albescent.signup.note")}
               </div>
               <div
                 style={{
                   marginLeft: "auto",
                   fontFamily: MONO,
-                  fontSize: 8,
+                  fontSize: "var(--text-xs)",
                   letterSpacing: "0.18em",
                   textTransform: "uppercase",
                   color: ink(40),
@@ -290,7 +290,7 @@ export default function AlbescentTaskDetail({ state }: { state: TaskDetailState 
                 padding: "16px 22px",
               }}
             >
-              <span style={{ fontFamily: FONT, fontStyle: "italic", fontSize: 17, color: ink(65) }}>
+              <span className="content-text" style={{ fontFamily: FONT, fontStyle: "italic", color: ink(65) }}>
                 {t("albescent.submitted.text")}
               </span>
               <Link
@@ -298,7 +298,7 @@ export default function AlbescentTaskDetail({ state }: { state: TaskDetailState 
                 style={{
                   marginLeft: "auto",
                   fontFamily: MONO,
-                  fontSize: 9,
+                  fontSize: "var(--text-sm)",
                   letterSpacing: "0.16em",
                   textTransform: "uppercase",
                   padding: "10px 20px",
@@ -324,7 +324,7 @@ export default function AlbescentTaskDetail({ state }: { state: TaskDetailState 
                 padding: "16px 22px",
               }}
             >
-              <span style={{ fontFamily: FONT, fontStyle: "italic", fontSize: 17, color: ink(65) }}>
+              <span className="content-text" style={{ fontFamily: FONT, fontStyle: "italic", color: ink(65) }}>
                 {t("albescent.inProgress.text")}
               </span>
               <Link
@@ -332,7 +332,7 @@ export default function AlbescentTaskDetail({ state }: { state: TaskDetailState 
                 style={{
                   marginLeft: "auto",
                   fontFamily: MONO,
-                  fontSize: 9,
+                  fontSize: "var(--text-sm)",
                   letterSpacing: "0.16em",
                   textTransform: "uppercase",
                   padding: "10px 20px",
@@ -350,7 +350,7 @@ export default function AlbescentTaskDetail({ state }: { state: TaskDetailState 
                   border: "none",
                   cursor: "pointer",
                   fontFamily: MONO,
-                  fontSize: 9,
+                  fontSize: "var(--text-sm)",
                   letterSpacing: "0.12em",
                   textTransform: "uppercase",
                   color: ink(40),
@@ -376,7 +376,7 @@ export default function AlbescentTaskDetail({ state }: { state: TaskDetailState 
             <SectionHead
               title={t("albescent.askHeading")}
               trailing={
-                <span style={{ fontFamily: FONT, fontStyle: "italic", fontSize: 13, color: ink(45), whiteSpace: "nowrap" }}>
+                <span style={{ fontFamily: FONT, fontStyle: "italic", fontSize: "var(--text-lg)", color: ink(45), whiteSpace: "nowrap" }}>
                   {t("albescent.askGloss")}
                 </span>
               }
@@ -391,9 +391,9 @@ export default function AlbescentTaskDetail({ state }: { state: TaskDetailState 
               }}
             >
               <p
+                className="content-text"
                 style={{
                   fontFamily: FONT,
-                  fontSize: 20,
                   lineHeight: 1.62,
                   color: ink(72),
                   margin: 0,
@@ -439,7 +439,7 @@ export default function AlbescentTaskDetail({ state }: { state: TaskDetailState 
                             color: ink(50),
                             fontFamily: FONT,
                             fontStyle: "italic",
-                            fontSize: 16,
+                            fontSize: "var(--text-xl)",
                           }}
                         >
                           {hand.display_name[0]?.toUpperCase()}
@@ -451,7 +451,7 @@ export default function AlbescentTaskDetail({ state }: { state: TaskDetailState 
                 <span
                   style={{
                     fontFamily: MONO,
-                    fontSize: 9,
+                    fontSize: "var(--text-sm)",
                     letterSpacing: "0.12em",
                     textTransform: "uppercase",
                     color: ink(40),
@@ -478,7 +478,7 @@ export default function AlbescentTaskDetail({ state }: { state: TaskDetailState 
                         onClick={() => setSubmissionSort(sort)}
                         style={{
                           fontFamily: MONO,
-                          fontSize: 9,
+                          fontSize: "var(--text-sm)",
                           letterSpacing: "0.12em",
                           textTransform: "uppercase",
                           padding: "5px 12px",
@@ -498,7 +498,7 @@ export default function AlbescentTaskDetail({ state }: { state: TaskDetailState 
               }
             />
             {sortedSubmissions.length === 0 ? (
-              <p style={{ fontFamily: FONT, fontStyle: "italic", fontSize: 16, color: ink(45) }}>
+              <p className="content-text" style={{ fontFamily: FONT, fontStyle: "italic", color: ink(45) }}>
                 {t("albescent.empty")}
               </p>
             ) : (
@@ -522,12 +522,12 @@ export default function AlbescentTaskDetail({ state }: { state: TaskDetailState 
                             color: "var(--faction-albescent-page)",
                             fontFamily: FONT,
                             fontStyle: "italic",
-                            fontSize: 13,
+                            fontSize: "var(--text-lg)",
                             letterSpacing: "0.04em",
                             padding: "3px 14px",
                           }}
                         >
-                          <span style={{ fontSize: 13, lineHeight: 1 }}>⚜</span>{" "}
+                          <span style={{ fontSize: "var(--text-lg)", lineHeight: 1 }}>⚜</span>{" "}
                           {t("albescent.mostWitnessed")}
                         </div>
                       )}
@@ -541,7 +541,7 @@ export default function AlbescentTaskDetail({ state }: { state: TaskDetailState 
                       to={`/praxes?task_id=${task.id}`}
                       style={{
                         fontFamily: MONO,
-                        fontSize: 10,
+                        fontSize: "var(--text-base)",
                         letterSpacing: "0.12em",
                         textTransform: "uppercase",
                         color: ink(55),
