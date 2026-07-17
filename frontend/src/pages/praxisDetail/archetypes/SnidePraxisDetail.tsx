@@ -16,7 +16,7 @@ import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import MarkdownPreview from '../../editPraxis/blocks/MarkdownPreview'
 import MediaGallery from '../../../components/MediaGallery'
-import SnideVote from '../../../components/vote/SnideVote'
+import VoteUI from '../../../components/vote/VoteUI'
 import { factionCssVar } from '../../../utils/factions'
 import { formatTimestamp } from '../../../utils/dates'
 import { PraxisAdminBar, PraxisStatusBanners, PraxisOwnerActions, PraxisFlagBlock, PraxisVoterBreakdown, MemberByline } from '../shared'
@@ -410,7 +410,8 @@ export default function SnidePraxisDetail({ state }: { state: PraxisDetailState 
               </div>
             )}
           </div>
-          <SnideVote
+          <VoteUI
+            factionSlug={praxis.task_faction_slug}
             praxisId={praxis.id}
             points={votes?.total_score}
             totalVotes={votes?.total_votes}

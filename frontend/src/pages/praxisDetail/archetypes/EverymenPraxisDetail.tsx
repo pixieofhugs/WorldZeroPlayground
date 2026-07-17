@@ -19,7 +19,7 @@ import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import MarkdownPreview from '../../editPraxis/blocks/MarkdownPreview'
 import MediaGallery from '../../../components/MediaGallery'
-import EverymenVote from '../../../components/vote/EverymenVote'
+import VoteUI from '../../../components/vote/VoteUI'
 import { factionCssVar } from '../../../utils/factions'
 import { formatTimestamp } from '../../../utils/dates'
 import { PraxisAdminBar, PraxisStatusBanners, PraxisOwnerActions, PraxisFlagBlock, PraxisVoterBreakdown, MemberByline } from '../shared'
@@ -248,7 +248,8 @@ export default function EverymenPraxisDetail({ state }: { state: PraxisDetailSta
           )}
         </div>
         <div style={{ marginBottom: 20 }}>
-          <EverymenVote
+          <VoteUI
+            factionSlug={praxis.task_faction_slug}
             praxisId={praxis.id}
             points={votes?.total_score}
             totalVotes={votes?.total_votes}
