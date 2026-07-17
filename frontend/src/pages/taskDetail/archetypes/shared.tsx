@@ -28,7 +28,7 @@ export function ErrorBanner({ message, style }: ErrorBannerProps) {
     <div
       className="font-body"
       style={{
-        fontSize: 11,
+        fontSize: "var(--text-md)",
         color: "var(--color-danger)",
         marginTop: 8,
         padding: "8px 12px",
