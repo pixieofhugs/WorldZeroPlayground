@@ -50,7 +50,7 @@ export default function DefaultTaskDetail({ state }: { state: TaskDetailState })
       {/* Breadcrumb */}
       <nav
         className="font-body mb-3"
-        style={{ fontSize: 10, letterSpacing: "0.08em", color: "var(--color-text-tertiary)" }}
+        style={{ fontSize: "var(--text-base)", letterSpacing: "0.08em", color: "var(--color-text-tertiary)" }}
       >
         <Link to="/tasks" style={{ color: "var(--faction-ephemerists)", textDecoration: "none" }}>
           {t("default.breadcrumb")}
@@ -68,8 +68,8 @@ export default function DefaultTaskDetail({ state }: { state: TaskDetailState })
         </div>
 
         <h1
-          className="font-display italic font-medium mb-2"
-          style={{ fontSize: 24, color: "var(--color-text-primary)", lineHeight: 1.2 }}
+          className="font-display italic font-medium mb-2 content-title"
+          style={{ color: "var(--color-text-primary)", lineHeight: 1.2 }}
         >
           {task.title}
         </h1>
@@ -94,8 +94,8 @@ export default function DefaultTaskDetail({ state }: { state: TaskDetailState })
 
         {task.description && (
           <p
-            className="font-body"
-            style={{ fontSize: 14, lineHeight: 1.7, color: "var(--color-text-secondary)", whiteSpace: "pre-wrap" }}
+            className="font-body content-text"
+            style={{ lineHeight: 1.7, color: "var(--color-text-secondary)", whiteSpace: "pre-wrap" }}
           >
             {task.description}
           </p>
@@ -113,7 +113,7 @@ export default function DefaultTaskDetail({ state }: { state: TaskDetailState })
                 onClick={() => setSubmissionSort(sort)}
                 style={{
                   fontFamily: "'Courier Prime', monospace",
-                  fontSize: 9,
+                  fontSize: "var(--text-sm)",
                   fontWeight: 700,
                   textTransform: "uppercase",
                   letterSpacing: "0.1em",
@@ -143,7 +143,7 @@ export default function DefaultTaskDetail({ state }: { state: TaskDetailState })
               <div style={{ textAlign: "center", marginTop: 16 }}>
                 <Link
                   to={`/praxes?task_id=${task.id}`}
-                  style={{ fontFamily: "'Courier Prime', monospace", fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", color: "var(--faction-ephemerists)", textDecoration: "none" }}
+                  style={{ fontFamily: "'Courier Prime', monospace", fontSize: "var(--text-md)", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", color: "var(--faction-ephemerists)", textDecoration: "none" }}
                 >
                   {t("default.viewAll", { count: submissions.length })}
                 </Link>
@@ -159,7 +159,7 @@ export default function DefaultTaskDetail({ state }: { state: TaskDetailState })
           {signupError && (
             <div
               className="font-body"
-              style={{ fontSize: 12, color: "var(--color-danger)", padding: "8px 12px", background: "var(--faction-default-light)", border: "1px solid var(--color-border)" }}
+              style={{ fontSize: "var(--text-lg)", color: "var(--color-danger)", padding: "8px 12px", background: "var(--faction-default-light)", border: "1px solid var(--color-border)" }}
             >
               {signupError}
             </div>
@@ -171,7 +171,7 @@ export default function DefaultTaskDetail({ state }: { state: TaskDetailState })
               background: color,
               color: "var(--color-text-on-accent)",
               fontFamily: "'Courier Prime', monospace",
-              fontSize: 14,
+              fontSize: "var(--text-xl)",
               fontWeight: 700,
               textTransform: "uppercase",
               letterSpacing: "0.12em",
@@ -191,7 +191,7 @@ export default function DefaultTaskDetail({ state }: { state: TaskDetailState })
       {mySubmission && (
         <MobileStickyBar style={{ flexDirection: "row", alignItems: "center" }}>
           <span className="eyebrow flex-1" style={{ color }}>{t("default.submitted.badge")}</span>
-          <Link to={`/praxes/${mySubmission.id}/edit`} className="btn-outline" style={{ fontSize: 9, padding: "8px 18px" }}>
+          <Link to={`/praxes/${mySubmission.id}/edit`} className="btn-outline" style={{ fontSize: "var(--text-sm)", padding: "8px 18px" }}>
             {t("default.submitted.edit")}
           </Link>
         </MobileStickyBar>
@@ -213,7 +213,7 @@ export default function DefaultTaskDetail({ state }: { state: TaskDetailState })
               background: color,
               color: "var(--color-text-on-accent)",
               fontFamily: "'Courier Prime', monospace",
-              fontSize: 12,
+              fontSize: "var(--text-lg)",
               fontWeight: 700,
               textTransform: "uppercase",
               letterSpacing: "0.1em",

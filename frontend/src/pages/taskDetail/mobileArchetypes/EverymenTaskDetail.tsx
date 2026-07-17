@@ -62,9 +62,9 @@ function SectionHead({
   return (
     <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
       <h2
+        className="content-title"
         style={{
           fontFamily: ACCENT_FONT,
-          fontSize: 20,
           letterSpacing: "0.04em",
           margin: 0,
           color: INK,
@@ -118,11 +118,11 @@ export default function EverymenTaskDetail({ state }: { state: TaskDetailState }
 
   const stamp = (background: string, textColor: string, label: string) => (
     <span
+      className="content-title"
       style={{
         background,
         color: textColor,
         fontFamily: ACCENT_FONT,
-        fontSize: 16,
         letterSpacing: "0.06em",
         padding: "4px 12px",
       }}
@@ -141,7 +141,7 @@ export default function EverymenTaskDetail({ state }: { state: TaskDetailState }
         className="mb-3"
         style={{
           fontFamily: BODY_FONT,
-          fontSize: 10,
+          fontSize: "var(--text-base)",
           letterSpacing: "0.14em",
           textTransform: "uppercase",
           color: MUTED,
@@ -182,13 +182,13 @@ export default function EverymenTaskDetail({ state }: { state: TaskDetailState }
         >
           <div style={{ display: "flex", alignItems: "center", gap: 8, color: GOLD }}>
             <CogSeal size={16} />
-            <span style={{ fontFamily: ACCENT_FONT, fontSize: 14, letterSpacing: "0.2em" }}>
+            <span style={{ fontFamily: ACCENT_FONT, fontSize: "var(--text-xl)", letterSpacing: "0.2em" }}>
               {t("everymen.masthead")}
             </span>
           </div>
           <span
             style={{
-              fontSize: 8,
+              fontSize: "var(--text-xs)",
               letterSpacing: "0.14em",
               textTransform: "uppercase",
               color: CREAM,
@@ -202,9 +202,9 @@ export default function EverymenTaskDetail({ state }: { state: TaskDetailState }
         <div style={{ height: 4, background: GOLD, position: "relative", zIndex: 2 }} />
         <div style={{ position: "relative", zIndex: 2, padding: "20px 18px 22px" }}>
           <div
+            className="content-title"
             style={{
               fontFamily: ACCENT_FONT,
-              fontSize: 46,
               lineHeight: 0.92,
               letterSpacing: "0.01em",
               color: CREAM,
@@ -219,7 +219,7 @@ export default function EverymenTaskDetail({ state }: { state: TaskDetailState }
             {stamp(INK, CREAM, t("everymen.levelValue", { level: task.level_required }))}
             {stamp(GOLD, INK, t("everymen.pointsValue", { points: modifiedPoints }))}
           </div>
-          <div style={{ fontFamily: BODY_FONT, fontSize: 10, letterSpacing: "0.06em", color: CREAM, marginTop: 12 }}>
+          <div style={{ fontFamily: BODY_FONT, fontSize: "var(--text-base)", letterSpacing: "0.06em", color: CREAM, marginTop: 12 }}>
             {t("everymen.onView", { signups: signups.length, completed: submissions.length })}
           </div>
         </div>
@@ -230,9 +230,9 @@ export default function EverymenTaskDetail({ state }: { state: TaskDetailState }
         <SectionHead title={t("everymen.orderHeading")} />
         <div style={{ border: `1.5px solid ${INK}`, background: PAPER, padding: "18px 20px" }}>
           <p
+            className="content-text"
             style={{
               fontFamily: BODY_FONT,
-              fontSize: 13,
               lineHeight: 1.75,
               color: INK,
               margin: 0,
@@ -249,20 +249,20 @@ export default function EverymenTaskDetail({ state }: { state: TaskDetailState }
         <SectionHead title={t("everymen.verdictHeading")} />
         {voteCount > 0 ? (
           <div style={{ display: "flex", alignItems: "flex-end", gap: 12 }}>
-            <span style={{ fontFamily: ACCENT_FONT, fontSize: 44, lineHeight: 0.8, color: RED }}>
+            <span className="content-title" style={{ fontFamily: ACCENT_FONT, lineHeight: 0.8, color: RED }}>
               {topScore}
             </span>
             <div style={{ paddingBottom: 5 }}>
-              <div style={{ fontFamily: ACCENT_FONT, fontSize: 14, letterSpacing: "0.06em", color: INK }}>
+              <div style={{ fontFamily: ACCENT_FONT, fontSize: "var(--text-xl)", letterSpacing: "0.06em", color: INK }}>
                 {t("everymen.verdict.topMark")}
               </div>
-              <div style={{ fontFamily: BODY_FONT, fontSize: 10, letterSpacing: "0.06em", color: MUTED }}>
+              <div style={{ fontFamily: BODY_FONT, fontSize: "var(--text-base)", letterSpacing: "0.06em", color: MUTED }}>
                 {t("everymen.verdict.reports", { count: voteCount })}
               </div>
             </div>
           </div>
         ) : (
-          <p style={{ fontFamily: BODY_FONT, fontSize: 13, color: MUTED, margin: 0 }}>
+          <p className="content-text" style={{ fontFamily: BODY_FONT, color: MUTED, margin: 0 }}>
             {t("everymen.verdict.none")}
           </p>
         )}
@@ -282,7 +282,7 @@ export default function EverymenTaskDetail({ state }: { state: TaskDetailState }
                     onClick={() => setSubmissionSort(sort)}
                     style={{
                       fontFamily: BODY_FONT,
-                      fontSize: 9,
+                      fontSize: "var(--text-sm)",
                       fontWeight: 700,
                       letterSpacing: "0.1em",
                       textTransform: "uppercase",
@@ -303,7 +303,7 @@ export default function EverymenTaskDetail({ state }: { state: TaskDetailState }
           }
         />
         {sortedSubmissions.length === 0 ? (
-          <p style={{ fontFamily: BODY_FONT, fontSize: 13, color: MUTED, margin: 0 }}>
+          <p className="content-text" style={{ fontFamily: BODY_FONT, color: MUTED, margin: 0 }}>
             {t("everymen.empty")}
           </p>
         ) : (
@@ -323,13 +323,13 @@ export default function EverymenTaskDetail({ state }: { state: TaskDetailState }
                         background: GOLD,
                         color: INK,
                         fontFamily: ACCENT_FONT,
-                        fontSize: 12,
+                        fontSize: "var(--text-lg)",
                         letterSpacing: "0.1em",
                         padding: "2px 12px",
                         boxShadow: "0 3px 8px rgba(0,0,0,0.3)",
                       }}
                     >
-                      <span style={{ fontSize: 12, lineHeight: 1 }}>⚜</span>{" "}
+                      <span style={{ fontSize: "var(--text-lg)", lineHeight: 1 }}>⚜</span>{" "}
                       {t("everymen.bestInHall")}
                     </div>
                   )}
@@ -341,7 +341,7 @@ export default function EverymenTaskDetail({ state }: { state: TaskDetailState }
               <div style={{ marginTop: 16 }}>
                 <Link
                   to={`/praxes?task_id=${task.id}`}
-                  style={{ fontFamily: ACCENT_FONT, fontSize: 15, letterSpacing: "0.06em", color: RED, textDecoration: "none" }}
+                  style={{ fontFamily: ACCENT_FONT, fontSize: "var(--text-xl)", letterSpacing: "0.06em", color: RED, textDecoration: "none" }}
                 >
                   {t("everymen.viewAll", { count: submissions.length })}
                 </Link>
@@ -357,7 +357,7 @@ export default function EverymenTaskDetail({ state }: { state: TaskDetailState }
           {signupError && (
             <div
               className="font-body"
-              style={{ fontSize: 12, color: RED_DEEP, padding: "8px 12px", background: "color-mix(in srgb, var(--everymen-red) 8%, transparent)", border: `1px solid ${RED}` }}
+              style={{ fontSize: "var(--text-lg)", color: RED_DEEP, padding: "8px 12px", background: "color-mix(in srgb, var(--everymen-red) 8%, transparent)", border: `1px solid ${RED}` }}
             >
               {signupError}
             </div>
@@ -369,7 +369,7 @@ export default function EverymenTaskDetail({ state }: { state: TaskDetailState }
               background: RED,
               color: CREAM,
               fontFamily: BODY_FONT,
-              fontSize: 13,
+              fontSize: "var(--text-lg)",
               fontWeight: 700,
               letterSpacing: "0.14em",
               textTransform: "uppercase",
@@ -388,14 +388,14 @@ export default function EverymenTaskDetail({ state }: { state: TaskDetailState }
 
       {mySubmission && (
         <MobileStickyBar style={{ flexDirection: "row", alignItems: "center" }}>
-          <span style={{ fontFamily: ACCENT_FONT, fontSize: 16, letterSpacing: "0.08em", color: OLIVE, flex: 1 }}>
+          <span className="content-text" style={{ fontFamily: ACCENT_FONT, letterSpacing: "0.08em", color: OLIVE, flex: 1 }}>
             {t("everymen.submitted.text")}
           </span>
           <Link
             to={`/praxes/${mySubmission.id}/edit`}
             style={{
               fontFamily: BODY_FONT,
-              fontSize: 11,
+              fontSize: "var(--text-md)",
               fontWeight: 700,
               letterSpacing: "0.12em",
               textTransform: "uppercase",
@@ -419,7 +419,7 @@ export default function EverymenTaskDetail({ state }: { state: TaskDetailState }
               border: "none",
               cursor: "pointer",
               fontFamily: BODY_FONT,
-              fontSize: 10,
+              fontSize: "var(--text-base)",
               letterSpacing: "0.1em",
               textTransform: "uppercase",
               color: MUTED,
@@ -432,7 +432,7 @@ export default function EverymenTaskDetail({ state }: { state: TaskDetailState }
             style={{
               marginLeft: "auto",
               fontFamily: BODY_FONT,
-              fontSize: 11,
+              fontSize: "var(--text-md)",
               fontWeight: 700,
               letterSpacing: "0.12em",
               textTransform: "uppercase",
