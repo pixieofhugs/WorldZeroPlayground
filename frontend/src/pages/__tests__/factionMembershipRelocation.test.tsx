@@ -40,11 +40,14 @@ function text(node: React.ReactElement): string {
 // ─── 1. Grid card is a pure preview (no interactive controls) ─────────────────
 
 describe("faction grid card is a pure preview", () => {
-  for (const slug of ['__unregistered__', 'na', null]) {
+  // The `null` slug is deliberate: it pins that the grid card survives a
+  // missing slug. FactionOut.slug is `string`, so feed it through as such —
+  // the cast is the narrow escape hatch, not a behavior change.
+  for (const slug of ['__unregistered__', 'na', null] as (string | null)[]) {
     it(`${slug} card renders the name but no membership buttons`, () => {
       const card = (
         <FactionCard
-          faction={{ ...FACTION, slug }}
+          faction={{ ...FACTION, slug } as FactionOut}
           status="eligible"
         />
       );
