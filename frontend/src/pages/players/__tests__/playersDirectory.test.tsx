@@ -1,10 +1,11 @@
 /**
- * Mobile players directory (#517) — form-factor dispatch + the directory→profile
- * navigation contract. Mirrors the Tasks mobile-browse test: renders <Leaderboard/>
- * with useFormFactor mocked (phone → the Default directory skin, desktop → the
- * existing podium/table board), then renders the Default directory skin directly
- * over controlled rows to pin the scannable list + the /characters/:id links a tap
- * follows to the public profile.
+ * Players page (#517 mobile directory, #656 desktop constellation) — form-factor
+ * dispatch plus the directory/roster → profile navigation contract. Renders
+ * <Leaderboard/> with useFormFactor mocked (phone → the Default directory skin,
+ * desktop → the constellation + roster board), then renders the Default skin, the
+ * Constellation and the RosterTable directly over controlled rows to pin the
+ * scannable content + the /characters/:id links a tap follows to the public
+ * profile.
  */
 import { renderToStaticMarkup } from 'react-dom/server'
 import { MemoryRouter } from 'react-router-dom'
@@ -29,6 +30,8 @@ vi.mock('../../../api/leaderboard', () => ({
 
 import Leaderboard from '../../Leaderboard'
 import DefaultPlayers from '../mobileArchetypes/DefaultPlayers'
+import Constellation, { type RankedPlayer } from '../Constellation'
+import RosterTable from '../RosterTable'
 
 function render(element: ReactElement): { html: string; text: string } {
   const html = renderToStaticMarkup(<MemoryRouter>{element}</MemoryRouter>)
@@ -59,19 +62,58 @@ const PLAYERS: CharacterOut[] = [
   player({ id: 33, display_name: 'Molly', faction_slug: null, score: 340 }),
 ]
 
-describe('players directory form-factor dispatch', () => {
+function ranked(list: CharacterOut[]): RankedPlayer[] {
+  return [...list]
+    .sort((a, b) => b.score - a.score)
+    .map((character, index) => ({ character, rank: index + 1, points: character.score }))
+}
+
+describe('players page form-factor dispatch', () => {
   it('renders the Default directory skin on mobile', () => {
     mocks.formFactor = 'mobile'
     const { html } = render(<Leaderboard />)
     expect(html).toContain('data-testid="mobile-players-directory"')
   })
 
-  it('renders the desktop podium board on desktop (untouched)', () => {
+  it('routes to the desktop board (not the mobile directory) on desktop', () => {
     mocks.formFactor = 'desktop'
-    const { html, text } = render(<Leaderboard />)
+    const { html } = render(<Leaderboard />)
     expect(html).not.toContain('data-testid="mobile-players-directory"')
-    // PageTitle eyebrow is desktop-only chrome.
-    expect(text).toContain('Era I')
+  })
+})
+
+describe('desktop constellation (#656)', () => {
+  it('links every star to its public profile, champion first', () => {
+    const { html } = render(
+      <Constellation players={ranked(PLAYERS)} maxScore={2140} myCharId={null} />,
+    )
+    expect(html).toContain('href="/characters/11"')
+    expect(html).toContain('href="/characters/22"')
+    expect(html).toContain('href="/characters/33"')
+  })
+
+  it('shows the zero state and no crown when nobody has climbed', () => {
+    const flat = PLAYERS.map((c) => ({ ...c, score: 0 }))
+    const { text } = render(<Constellation players={ranked(flat)} maxScore={0} myCharId={null} />)
+    expect(text).toContain('The era is young')
+  })
+})
+
+describe('desktop roster (#656)', () => {
+  it('renders a rank/name/points row per player, ranked from 1', () => {
+    const { text, html } = render(<RosterTable players={ranked(PLAYERS)} myCharId={22} />)
+    expect(text).toContain('Full Roster')
+    expect(text).toContain('Perpetua')
+    expect(text).toContain('2140')
+    expect(html).toContain('href="/characters/11"')
+  })
+
+  it('shows the two real badges from the list serializer', () => {
+    const withBadge = ranked([
+      player({ id: 44, display_name: 'Nemesis', badges: [{ key: 'sock_puppet', name: 'Sock Puppet' }] }),
+    ])
+    const { html } = render(<RosterTable players={withBadge} myCharId={null} />)
+    expect(html).toContain('Sock Puppet')
   })
 })
 
