@@ -88,7 +88,9 @@
       "factionLevel": "{{faction}} · Lv {{level}}",
       "points": "pts",
       "empty": "No players match this filter.",
-      "loadError": "Couldn't load the leaderboard."
+      "loadError": "Couldn't load the leaderboard.",
+      "loadMore": "Load more players",
+      "showing": "Showing {{shown}} of {{total}}"
     }
   },
   "collaborationCard": {
