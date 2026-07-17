@@ -62,6 +62,9 @@ Canonical examples:
 
 ## 3. Pragmatic DDD posture
 
+> **Decision recorded in ADR-0045.** This section (and §5's HTTPException note) is the *how*;
+> the *why* + the rejected full-DDD alternative live in the ADR so they survive spec trimming.
+
 This codebase is **not** full DDD. No aggregate-root base classes, no
 repository interface types, no domain-event bus. What it *does* have are
 implicit aggregates — groups of models that are always written together

@@ -30,7 +30,7 @@ identity + era-as-ruleset in ADR-0041 / ADR-0042.
 | Taunt & rank/unlock **wording** (ADR-0031: backend emits keys) | `frontend/src/locales/en/{taunts,progression}.json` |
 | Faction **name/description** wording (ADR-0038: backend emits slug) | `frontend/src/locales/en/factions.json` (`names.<slug>`, `descriptions.<slug>`) |
 | Era config *shape* (dataclass fields) | `backend/game_config.py` |
-| Backend layering, DDD posture, what goes in services vs. routes | `docs/spec/SPEC-backend-architecture.md` |
+| Backend layering, DDD posture, what goes in services vs. routes | `docs/spec/SPEC-backend-architecture.md` (how); ADR-0045 (why-not-full-DDD) |
 | Building a new era | `backend/eras/_template.py` |
 | Account vs. Character, anti-self-voting | ADR-0041 + CONTEXT.md ("Account", "Character") |
 | DB schema | `backend/models/*.py` (source of truth) |
