@@ -30,7 +30,7 @@ export default function DefaultTaskCard({ task, displayPoints, onSignup }: Props
         maxWidth: 292,
         flex: "0 1 282px",
         borderRadius: 10,
-        padding: 6,
+        padding: "var(--space-sm)",
         background: "var(--faction-default-rainbow)",
         boxShadow: "0 12px 32px -14px rgba(0,0,0,0.4)",
         boxSizing: "border-box",
@@ -40,7 +40,7 @@ export default function DefaultTaskCard({ task, displayPoints, onSignup }: Props
         style={{
           background: "var(--faction-default-card-bg)",
           borderRadius: 5,
-          padding: "24px 22px 22px",
+          padding: "var(--space-xl) var(--space-xl) var(--space-xl)",
           color: "var(--faction-default-card-text)",
         }}
       >
@@ -48,10 +48,10 @@ export default function DefaultTaskCard({ task, displayPoints, onSignup }: Props
           style={{
             display: "flex",
             alignItems: "center",
-            gap: 10,
-            marginBottom: 16,
+            gap: "var(--space-md)",
+            marginBottom: "var(--space-lg)",
             fontFamily: MONO,
-            fontSize: 10,
+            fontSize: "var(--text-base)",
             letterSpacing: "0.22em",
             textTransform: "uppercase",
             color: "var(--faction-default-card-muted)",
@@ -62,12 +62,12 @@ export default function DefaultTaskCard({ task, displayPoints, onSignup }: Props
 
         <Link to={`/tasks/${task.id}`} style={{ textDecoration: "none", color: "inherit" }}>
           <h3
+            className="content-title"
             style={{
               fontFamily: "var(--faction-default-card-font)",
               fontStyle: "italic",
-              fontSize: 26,
               lineHeight: 1.08,
-              margin: "0 0 10px",
+              margin: "0 0 var(--space-md)",
               color: "var(--faction-default-card-text)",
               overflowWrap: "anywhere",
             }}
@@ -80,43 +80,42 @@ export default function DefaultTaskCard({ task, displayPoints, onSignup }: Props
           <p
             className="card-description"
             style={{
-              fontSize: 11.5,
               lineHeight: 1.55,
               color: "var(--faction-default-card-muted)",
-              margin: "0 0 20px",
+              margin: "0 0 var(--space-xl)",
             }}
           >
             {task.description}
           </p>
         )}
 
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "var(--space-md)" }}>
           <span
             style={{
               fontFamily: MONO,
-              fontSize: 10,
+              fontSize: "var(--text-base)",
               letterSpacing: "0.08em",
               textTransform: "uppercase",
               color: "var(--faction-default-card-muted)",
               border: "1px solid var(--faction-default-border)",
               borderRadius: 99,
-              padding: "4px 10px",
+              padding: "var(--space-xs) var(--space-md)",
             }}
           >
             {i18n.t("feed:taskCard.na.level", { level: task.level_required })}
           </span>
           <span
+            className="content-title"
             style={{
               fontFamily: "var(--faction-default-card-font)",
               fontStyle: "italic",
               fontWeight: 700,
-              fontSize: 26,
               lineHeight: 1,
               color: "var(--faction-default-card-text)",
             }}
           >
             {displayPoints}
-            <span style={{ fontSize: 11, marginLeft: 2, color: "var(--faction-default-card-muted)" }}>
+            <span style={{ fontSize: "var(--text-md)", marginLeft: "var(--space-xs)", color: "var(--faction-default-card-muted)" }}>
               {i18n.t("feed:taskCard.na.pointsUnit")}
             </span>
           </span>
@@ -128,9 +127,9 @@ export default function DefaultTaskCard({ task, displayPoints, onSignup }: Props
                 cursor: "pointer",
                 fontFamily: "var(--faction-default-card-font)",
                 fontStyle: "italic",
-                fontSize: 14,
+                fontSize: "var(--text-xl)",
                 letterSpacing: "0.03em",
-                padding: "8px 14px",
+                padding: "var(--space-sm) var(--space-lg)",
                 borderRadius: 3,
                 color: "var(--faction-default-card-text)",
                 background: "transparent",

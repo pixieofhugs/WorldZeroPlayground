@@ -44,29 +44,29 @@ export default function AlbescentTaskCard({ task, displayPoints, onSignup }: Pro
         background: "var(--faction-albescent-card-bg)",
         border: `1px solid ${ink(9)}`,
         boxShadow: "0 2px 18px rgba(0,0,0,0.055), 0 1px 3px rgba(0,0,0,0.04)",
-        padding: "24px 20px 18px",
+        padding: "var(--space-xl) var(--space-lg) var(--space-lg)",
         fontFamily: FONT,
         color: INK,
         boxSizing: "border-box",
       }}
     >
       {/* Centred sigil */}
-      <div style={{ display: "flex", justifyContent: "center", marginBottom: 16 }}>
+      <div style={{ display: "flex", justifyContent: "center", marginBottom: "var(--space-lg)" }}>
         <AlbescentSigil size={20} />
       </div>
 
       {/* Top rule */}
-      <div style={{ height: 1, background: ink(7), marginBottom: 13 }} />
+      <div style={{ height: 1, background: ink(7), marginBottom: "var(--space-md)" }} />
 
       {/* Eyebrow */}
       <div
         style={{
           fontFamily: MONO,
-          fontSize: 8,
+          fontSize: "var(--text-xs)",
           letterSpacing: "0.32em",
           textTransform: "uppercase",
           color: ink(24),
-          marginBottom: 10,
+          marginBottom: "var(--space-md)",
         }}
       >
         {i18n.t("feed:taskCard.albescent.eyebrow")}
@@ -75,13 +75,13 @@ export default function AlbescentTaskCard({ task, displayPoints, onSignup }: Pro
       {/* Title */}
       <Link to={`/tasks/${task.id}`} style={{ textDecoration: "none", color: "inherit" }}>
         <div
+          className="content-title"
           style={{
-            fontSize: 18,
             fontStyle: "italic",
             fontWeight: 300,
             lineHeight: 1.28,
             color: INK,
-            marginBottom: 11,
+            marginBottom: "var(--space-md)",
             overflowWrap: "anywhere",
           }}
         >
@@ -92,15 +92,15 @@ export default function AlbescentTaskCard({ task, displayPoints, onSignup }: Pro
       {/* Description — quiet mono, clamped to three lines */}
       {task.description && (
         <div
+          className="content-text"
           style={{
             fontFamily: MONO,
-            fontSize: 9,
             /* Muted body ink — shares the AA-cleared token (0.61α ≈ 4.64:1 on
                white) so the description meets WCAG AA rather than the old
                ink(42) wash (~2.9:1). #594. */
             color: "var(--faction-albescent-card-muted)",
             lineHeight: 1.6,
-            marginBottom: 16,
+            marginBottom: "var(--space-lg)",
             overflow: "hidden",
             display: "-webkit-box",
             WebkitLineClamp: 3,
@@ -113,7 +113,7 @@ export default function AlbescentTaskCard({ task, displayPoints, onSignup }: Pro
 
       {/* Acknowledge — the sign-up affordance, a bordered whisper */}
       {onSignup && (
-        <div style={{ marginBottom: 14 }}>
+        <div style={{ marginBottom: "var(--space-lg)" }}>
           <button
             onClick={() => onSignup(task.id)}
             style={{
@@ -122,7 +122,7 @@ export default function AlbescentTaskCard({ task, displayPoints, onSignup }: Pro
               padding: "0 0 1px",
               cursor: "pointer",
               fontFamily: MONO,
-              fontSize: 9,
+              fontSize: "var(--text-sm)",
               letterSpacing: "0.22em",
               textTransform: "uppercase",
               color: ink(40),
@@ -138,7 +138,7 @@ export default function AlbescentTaskCard({ task, displayPoints, onSignup }: Pro
       <div
         style={{
           borderTop: `1px solid ${ink(7)}`,
-          paddingTop: 11,
+          paddingTop: "var(--space-md)",
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
@@ -147,7 +147,7 @@ export default function AlbescentTaskCard({ task, displayPoints, onSignup }: Pro
         <span
           style={{
             fontFamily: MONO,
-            fontSize: 8,
+            fontSize: "var(--text-xs)",
             letterSpacing: "0.2em",
             textTransform: "uppercase",
             color: ink(22),
@@ -155,13 +155,13 @@ export default function AlbescentTaskCard({ task, displayPoints, onSignup }: Pro
         >
           {i18n.t("feed:taskCard.albescent.level", { level: task.level_required })}
         </span>
-        <span style={{ fontSize: 15, fontWeight: 300, color: ink(52) }}>
+        <span className="content-title" style={{ fontWeight: 300, color: ink(52) }}>
           {displayPoints}
           <span
             style={{
               fontFamily: MONO,
-              fontSize: 8,
-              marginLeft: 3,
+              fontSize: "var(--text-xs)",
+              marginLeft: "var(--space-xs)",
               letterSpacing: "0.1em",
               textTransform: "uppercase",
             }}

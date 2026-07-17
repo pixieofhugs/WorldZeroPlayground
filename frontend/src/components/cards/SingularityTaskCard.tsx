@@ -24,9 +24,9 @@ function SprocketHoles() {
     <div
       style={{
         display: "flex",
-        justifyContent: "center",
+        justifyContent: "space-around",
         gap: "var(--space-sm)",
-        padding: "var(--space-xs) 0",
+        padding: "var(--space-xs) var(--space-lg)",
       }}
     >
       {Array.from({ length: 5 }).map((_, index) => (
@@ -54,9 +54,9 @@ export default function SingularityTaskCard({
   return (
     <div
       style={{
-        minWidth: 128,
-        maxWidth: 156,
-        flex: "0 1 140px",
+        minWidth: 180,
+        maxWidth: 224,
+        flex: "0 1 204px",
         background: "var(--faction-singularity-card-bg)",
         border: "1px solid var(--faction-singularity-border-hard)",
         position: "relative",
@@ -160,10 +160,10 @@ export default function SingularityTaskCard({
           to={`/tasks/${task.id}`}
           style={{ textDecoration: "none", color: "inherit" }}
         >
-          {/* Task title — real content, so --text-content per the floor rule (§4). */}
+          {/* Task title — a title, so .content-title per #627's re-cut (§4). */}
           <div
+            className="content-title"
             style={{
-              fontSize: "var(--text-content)",
               marginBottom: "var(--space-sm)",
               lineHeight: 1.3,
               overflowWrap: "anywhere",
@@ -184,11 +184,11 @@ export default function SingularityTaskCard({
         >
           <div>
             {i18n.t("feed:taskCard.singularity.pointsLabel")}{" "}
-            {/* Points value — a score, so --text-content per the floor rule (§4). */}
+            {/* Points value — a score, so .content-title per #627's re-cut (§4). */}
             <span
+              className="content-title"
               style={{
                 color: "var(--faction-singularity-card-text)",
-                fontSize: "var(--text-content)",
                 fontWeight: 700,
               }}
             >
@@ -203,16 +203,11 @@ export default function SingularityTaskCard({
         </div>
 
         {task.description && (
-          /* ponytail: a 2-line-clamped teaser in a ~140px card. The floor rule
-             would put body copy at --text-content, but 18px clamped text would
-             eat the whole card. Under the geometry doctrine (§4) the container
-             is the thing that's wrong here — this card is 140px wide when every
-             other task card is 196–282px — so the fix is to widen the card, not
-             to lower the floor. Tracked as #628; parked at the top of the label
-             tier until then. */
+          /* Body copy on the content floor (.content-text, 18px). The card was
+             widened to ~204px in #628 so the floor has no exceptions. */
           <div
+            className="content-text"
             style={{
-              fontSize: "var(--text-xl)",
               color: "var(--faction-singularity-card-muted)",
               lineHeight: 1.4,
               marginBottom: "var(--space-sm)",

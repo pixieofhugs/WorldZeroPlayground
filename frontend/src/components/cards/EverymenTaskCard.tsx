@@ -77,9 +77,9 @@ function RuleDiamond({ color = "var(--everymen-red)" }: { color?: string }) {
       style={{
         display: "flex",
         alignItems: "center",
-        gap: 5,
+        gap: "var(--space-xs)",
         justifyContent: "center",
-        margin: "7px 0",
+        margin: "var(--space-sm) 0",
       }}
     >
       <div style={{ height: 1.5, flex: 1, background: color }} />
@@ -126,9 +126,9 @@ function PointsSeal({
       <span
         style={{
           fontFamily: "var(--font-body)",
-          fontSize: 6,
+          fontSize: "var(--text-xs)",
           letterSpacing: "0.18em",
-          marginTop: 1,
+          marginTop: "var(--space-xs)",
         }}
       >
         {i18n.t("feed:taskCard.everymen.sealUnit")}
@@ -159,7 +159,7 @@ export default function EverymenTaskCard({ task, displayPoints, onSignup }: Prop
         style={{
           background: "var(--everymen-red)",
           borderBottom: "2px solid var(--everymen-gold)",
-          padding: "7px 8px 6px",
+          padding: "var(--space-sm) var(--space-sm) var(--space-sm)",
           textAlign: "center",
         }}
       >
@@ -169,7 +169,7 @@ export default function EverymenTaskCard({ task, displayPoints, onSignup }: Prop
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            gap: 5,
+            gap: "var(--space-xs)",
             color: "var(--everymen-cream)",
             whiteSpace: "nowrap",
             fontFamily: "var(--font-body)",
@@ -179,7 +179,7 @@ export default function EverymenTaskCard({ task, displayPoints, onSignup }: Prop
           <span
             style={{
               fontFamily: "var(--faction-everymen-card-font)",
-              fontSize: 14,
+              fontSize: "var(--text-xl)",
               letterSpacing: "0.07em",
             }}
           >
@@ -190,15 +190,15 @@ export default function EverymenTaskCard({ task, displayPoints, onSignup }: Prop
       </div>
 
       {/* body */}
-      <div style={{ position: "relative", padding: "13px 14px 12px", overflow: "hidden" }}>
+      <div style={{ position: "relative", padding: "var(--space-md) var(--space-lg) var(--space-md)", overflow: "hidden" }}>
         <Sunburst opacity={0.08} step={6} />
         <Halftone />
         <div style={{ position: "relative", zIndex: 2 }}>
           <Link to={`/tasks/${task.id}`} style={{ textDecoration: "none", color: "inherit" }}>
             <div
+              className="content-title"
               style={{
                 fontFamily: "var(--faction-everymen-card-font)",
-                fontSize: 32,
                 lineHeight: 0.98,
                 textAlign: "center",
                 letterSpacing: "0.01em",
@@ -213,7 +213,6 @@ export default function EverymenTaskCard({ task, displayPoints, onSignup }: Prop
             <div
               className="card-description"
               style={{
-                fontSize: 8,
                 lineHeight: 1.55,
                 textAlign: "center",
                 color: "var(--everymen-muted)",
@@ -235,16 +234,18 @@ export default function EverymenTaskCard({ task, displayPoints, onSignup }: Prop
         style={{
           alignItems: "center",
           justifyContent: "space-between",
-          gap: 8,
-          padding: "0 14px 12px",
+          gap: "var(--space-sm)",
+          padding: "0 var(--space-lg) var(--space-md)",
         }}
       >
-        <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-xs)" }}>
           <LevelPill level={task.level_required} factionSlug="everymen" />
+          {/* Secondary points caption — the rubber-stamp PointsSeal is the score
+              display; this stays label-tier so it doesn't outshout the seal (§4). */}
           <span
             style={{
               fontFamily: "var(--faction-everymen-card-font)",
-              fontSize: 13,
+              fontSize: "var(--text-lg)",
               color: "var(--everymen-red)",
             }}
           >
@@ -259,10 +260,10 @@ export default function EverymenTaskCard({ task, displayPoints, onSignup }: Prop
           onClick={() => onSignup(task.id)}
           style={{
             fontFamily: "var(--font-body)",
-            fontSize: 8,
+            fontSize: "var(--text-xs)",
             textTransform: "uppercase",
             letterSpacing: "0.14em",
-            padding: "6px 10px",
+            padding: "var(--space-sm) var(--space-md)",
             border: "none",
             cursor: "pointer",
             background: "var(--everymen-ink)",
