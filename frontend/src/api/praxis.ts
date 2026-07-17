@@ -129,10 +129,6 @@ export interface PraxisUpdate {
   body_text?: string
 }
 
-export interface PraxisVoteIn {
-  value: number
-}
-
 // ---------------------------------------------------------------------------
 // List / detail
 // ---------------------------------------------------------------------------
@@ -269,14 +265,6 @@ export async function applyMetatask(praxisId: number, taskId: number): Promise<P
 
 export async function removeMetatask(praxisId: number, taskId: number): Promise<void> {
   await api.delete(`/praxes/${praxisId}/metatasks/${taskId}`)
-}
-
-// ---------------------------------------------------------------------------
-// Voting
-// ---------------------------------------------------------------------------
-
-export async function votePraxis(id: number, data: PraxisVoteIn): Promise<void> {
-  await api.post(`/praxes/${id}/vote`, data)
 }
 
 // ---------------------------------------------------------------------------
