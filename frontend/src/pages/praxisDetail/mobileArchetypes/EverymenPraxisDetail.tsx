@@ -24,7 +24,8 @@ import { MobileStarVote } from './shared'
  * `--everymen-*` tokens; flips with `[data-theme]`.
  */
 
-const INK = 'var(--everymen-ink)'
+const INK = 'var(--everymen-ink)' // structure only: borders/rules (stays near-black in dark)
+const PAPER_TEXT = 'var(--everymen-paper-text)' // text on the paper surface (flips in dark)
 const RED = 'var(--everymen-red)'
 const GOLD = 'var(--everymen-gold)'
 const MUTED = 'var(--everymen-muted)'
@@ -61,7 +62,7 @@ export default function EverymenPraxisDetail({ state }: { state: PraxisDetailSta
   const initial = (praxis.created_by_display_name || '?')[0]?.toUpperCase() ?? '?'
 
   return (
-    <div data-skin="everymen" className="page" style={{ display: 'flex', flexDirection: 'column', gap: 14, fontFamily: BODY_FONT, color: INK, background: PAPER }}>
+    <div data-skin="everymen" className="page" style={{ display: 'flex', flexDirection: 'column', gap: 14, fontFamily: BODY_FONT, color: PAPER_TEXT, background: PAPER }}>
       {/* Behavior slots (invariant) */}
       <PraxisStatusBanners state={state} />
       <PraxisAdminBar state={state} />
@@ -80,7 +81,7 @@ export default function EverymenPraxisDetail({ state }: { state: PraxisDetailSta
         <div className="min-w-0 flex-1">
           <MemberByline
             praxis={praxis}
-            linkStyle={{ fontFamily: ACCENT_FONT, fontSize: 20, letterSpacing: '0.02em', color: INK, lineHeight: 1, textDecoration: 'none' }}
+            linkStyle={{ fontFamily: ACCENT_FONT, fontSize: 20, letterSpacing: '0.02em', color: PAPER_TEXT, lineHeight: 1, textDecoration: 'none' }}
           />
           <div className="truncate" style={{ ...kicker, marginTop: 3 }}>
             {t('detail.everymen.mobile.filed')} · {formatTimestamp(sealedDate)}
@@ -98,7 +99,7 @@ export default function EverymenPraxisDetail({ state }: { state: PraxisDetailSta
       {/* Finding headline */}
       <div>
         <div style={{ ...kicker, marginBottom: 4, color: RED }}>{t('detail.everymen.theWork')}</div>
-        <h1 style={{ fontFamily: ACCENT_FONT, fontSize: 34, lineHeight: 0.95, letterSpacing: '0.01em', margin: 0, color: INK, overflowWrap: 'anywhere' }}>
+        <h1 style={{ fontFamily: ACCENT_FONT, fontSize: 34, lineHeight: 0.95, letterSpacing: '0.01em', margin: 0, color: PAPER_TEXT, overflowWrap: 'anywhere' }}>
           {praxis.title ?? t('detail.everymen.untitled')}
         </h1>
       </div>
@@ -119,13 +120,13 @@ export default function EverymenPraxisDetail({ state }: { state: PraxisDetailSta
         <MarkdownPreview
           source={praxis.body_text}
           className="markdown-preview"
-          style={{ fontFamily: BODY_FONT, fontSize: 14, lineHeight: 1.75, color: INK }}
+          style={{ fontFamily: BODY_FONT, fontSize: 14, lineHeight: 1.75, color: PAPER_TEXT }}
         />
       )}
 
       {/* The crew's marks — vote caster */}
       <Plate title={t('detail.everymen.crewsMarks')}>
-        <div className="flex items-center justify-center" style={{ marginBottom: 12, fontFamily: ACCENT_FONT, fontSize: 18, letterSpacing: '0.04em', color: INK }}>
+        <div className="flex items-center justify-center" style={{ marginBottom: 12, fontFamily: ACCENT_FONT, fontSize: 18, letterSpacing: '0.04em', color: PAPER_TEXT }}>
           {t('detail.everymen.mobile.appraise')}
         </div>
         <MobileStarVote
