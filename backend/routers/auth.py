@@ -103,13 +103,23 @@ async def dev_login(
     key: str = "1",
     name: Optional[str] = None,
     level: int = 0,
+    faction: Optional[str] = None,
 ):
     """Dev-only bot login (bypasses Google OAuth). Disabled in production.
 
     Optional query params turn it into a one-call e2e fixture:
-      key   — distinct dev account selector ("1" = the legacy dev account)
-      name  — if set, ensure the account carries a character with this display name
-      level — if >0, seed the carried character's current-era level (collab needs >=1)
+      key     — distinct dev account selector ("1" = the legacy dev account)
+      name    — if set, ensure the account carries a character with this display name
+      level   — if >0, seed the carried character's current-era level (collab needs >=1)
+      faction — if set, place the carried character in that faction directly
+
+    `faction` deliberately bypasses the join gate rather than replaying it.
+    Players start unaffiliated and most factions are invite-gated
+    (ADR-0030), so there is no real flow that puts a test character in all
+    seven — and the contrast sweep (#651) needs exactly that. This is the
+    same dev-only seam as `key`/`name`/`level`, behind the same production
+    guard; it is not a second enabler.
+
     Returns account_id + character_id so tests can invite/credit by id.
     """
     if settings.ENVIRONMENT == _ENV_PRODUCTION:
@@ -132,6 +142,19 @@ async def dev_login(
             account.id, CharacterCreate(display_name=name), session
         )
         character = result.character
+
+    if faction is not None:
+        if faction not in CURRENT_ERA.factions:
+            raise HTTPException(
+                status_code=400, detail=f"Unknown faction slug: {faction}"
+            )
+        if character is None:
+            raise HTTPException(
+                status_code=400,
+                detail="faction needs a character — pass name= on the first call.",
+            )
+        character.faction_slug = faction
+        await session.flush()
 
     if character is not None and level > 0:
         era_row = await get_current_era_row(session)
@@ -156,4 +179,5 @@ async def dev_login(
         "account_id": account.id,
         "character_id": character.id if character else None,
         "character_name": character.display_name if character else None,
+        "faction_slug": character.faction_slug if character else None,
     }
