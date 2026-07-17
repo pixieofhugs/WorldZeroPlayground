@@ -36,10 +36,10 @@ function SectionHead({
   return (
     <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 16 }}>
       <h2
+        className="content-title"
         style={{
           fontFamily: "var(--eph-display)",
           fontWeight: 600,
-          fontSize: 15,
           letterSpacing: "0.1em",
           margin: 0,
           color: VELLUM_TEXT,
@@ -60,7 +60,7 @@ function SectionHead({
           style={{
             fontFamily: "var(--eph-script)",
             fontStyle: "italic",
-            fontSize: 12,
+            fontSize: "var(--text-lg)",
             color: MUTED,
           }}
         >
@@ -152,7 +152,7 @@ function DiscordantMap() {
           position: "absolute",
           top: "8%",
           left: "6%",
-          fontSize: 9,
+          fontSize: "var(--text-sm)",
           color: VELLUM_TEXT,
           background: "color-mix(in srgb, var(--eph-vellum) 82%, transparent)",
           padding: "2px 5px",
@@ -166,7 +166,7 @@ function DiscordantMap() {
           position: "absolute",
           top: "74%",
           left: "50%",
-          fontSize: 9,
+          fontSize: "var(--text-sm)",
           color: "var(--eph-rubric)",
           background: "color-mix(in srgb, var(--eph-vellum) 82%, transparent)",
           padding: "2px 5px",
@@ -179,7 +179,7 @@ function DiscordantMap() {
           position: "absolute",
           top: "5%",
           left: "62%",
-          fontSize: 9,
+          fontSize: "var(--text-sm)",
           color: "var(--eph-lapis)",
           background: "color-mix(in srgb, var(--eph-vellum) 82%, transparent)",
           padding: "2px 5px",
@@ -195,7 +195,7 @@ function DiscordantMap() {
           transformOrigin: "left bottom",
           transform: "rotate(-90deg)",
           whiteSpace: "nowrap",
-          fontSize: 7.5,
+          fontSize: "var(--text-xs)",
           color: MUTED,
           opacity: 0.85,
         }}
@@ -261,7 +261,7 @@ function SurveyorRow({
                   justifyContent: "center",
                   color: "var(--eph-rubric)",
                   fontFamily: "var(--eph-display)",
-                  fontSize: 15,
+                  fontSize: "var(--text-xl)",
                 }}
               >
                 {m.display_name[0]?.toUpperCase()}
@@ -289,7 +289,7 @@ function SurveyorRow({
         style={{
           fontFamily: "var(--eph-script)",
           fontStyle: "italic",
-          fontSize: 13,
+          fontSize: "var(--text-lg)",
           color: MUTED,
           marginLeft: 4,
         }}
@@ -351,7 +351,7 @@ export default function EphemeristsTaskDetail({
       {/* ── Breadcrumb ── */}
       <nav
         style={{
-          fontSize: 10,
+          fontSize: "var(--text-base)",
           letterSpacing: "0.14em",
           textTransform: "uppercase",
           color: MUTED,
@@ -414,7 +414,7 @@ export default function EphemeristsTaskDetail({
                   style={{
                     fontFamily: "var(--eph-display)",
                     fontWeight: 600,
-                    fontSize: 9,
+                    fontSize: "var(--text-sm)",
                     letterSpacing: "0.24em",
                   }}
                 >
@@ -425,7 +425,7 @@ export default function EphemeristsTaskDetail({
                 style={{
                   fontFamily: "var(--eph-script)",
                   fontStyle: "italic",
-                  fontSize: 12,
+                  fontSize: "var(--text-lg)",
                   color: MUTED,
                   marginBottom: 16,
                 }}
@@ -439,7 +439,7 @@ export default function EphemeristsTaskDetail({
                 <div
                   style={{
                     fontFamily: "var(--eph-display)",
-                    fontSize: 11,
+                    fontSize: "var(--text-md)",
                     letterSpacing: "0.14em",
                     textTransform: "uppercase",
                     color: "var(--eph-rubric)",
@@ -452,10 +452,10 @@ export default function EphemeristsTaskDetail({
                 </div>
               )}
               <h1
+                className="content-title"
                 style={{
                   fontFamily: "var(--eph-display)",
                   fontWeight: 700,
-                  fontSize: 38,
                   lineHeight: 1.04,
                   color: VELLUM_TEXT,
                   margin: "0 0 14px",
@@ -482,22 +482,22 @@ export default function EphemeristsTaskDetail({
                 <span
                   style={{
                     fontFamily: "var(--eph-display)",
-                    fontSize: 12,
+                    fontSize: "var(--text-lg)",
                     color: VELLUM_TEXT,
                   }}
                 >
                   {t("ephemerists.grade", { level: task.level_required })}
                 </span>
                 <span
+                  className="content-title"
                   style={{
                     fontFamily: "var(--eph-display)",
                     fontWeight: 700,
-                    fontSize: 20,
                     color: "var(--eph-rubric)",
                   }}
                 >
                   {modifiedPoints}{" "}
-                  <span style={{ fontSize: 11, letterSpacing: "0.06em" }}>
+                  <span style={{ fontSize: "var(--text-md)", letterSpacing: "0.06em" }}>
                     {t("ephemerists.puncta")}
                   </span>
                 </span>
@@ -505,7 +505,7 @@ export default function EphemeristsTaskDetail({
                   style={{
                     fontFamily: "var(--eph-script)",
                     fontStyle: "italic",
-                    fontSize: 13,
+                    fontSize: "var(--text-lg)",
                     color: MUTED,
                   }}
                 >
@@ -517,7 +517,7 @@ export default function EphemeristsTaskDetail({
               </div>
               <div
                 style={{
-                  fontSize: 9,
+                  fontSize: "var(--text-sm)",
                   fontStyle: "italic",
                   color: MUTED,
                   marginTop: 14,
@@ -540,7 +540,7 @@ export default function EphemeristsTaskDetail({
         <section>
           <SectionHead title={t("ephemerists.commissionHeading")} />
           <div
-            className="font-body"
+            className="font-body content-text"
             style={{
               position: "relative",
               border: "1px solid var(--eph-gold-deep)",
@@ -548,7 +548,6 @@ export default function EphemeristsTaskDetail({
               padding: "28px 32px",
               maxWidth: 660,
               fontFamily: "var(--eph-serif)",
-              fontSize: 17,
               lineHeight: 1.7,
               color: VELLUM_TEXT,
               whiteSpace: "pre-wrap",
@@ -580,7 +579,7 @@ export default function EphemeristsTaskDetail({
                 cursor: "pointer",
                 fontFamily: "var(--eph-serif)",
                 fontStyle: "italic",
-                fontSize: 15,
+                fontSize: "var(--text-xl)",
                 letterSpacing: "0.06em",
                 color: "var(--eph-parchment)",
                 background: "var(--eph-ink)",
@@ -594,7 +593,7 @@ export default function EphemeristsTaskDetail({
               style={{
                 fontFamily: "var(--eph-script)",
                 fontStyle: "italic",
-                fontSize: 14,
+                fontSize: "var(--text-xl)",
                 color: MUTED,
               }}
             >
@@ -604,7 +603,7 @@ export default function EphemeristsTaskDetail({
               style={{
                 marginLeft: "auto",
                 fontFamily: "var(--eph-display)",
-                fontSize: 9,
+                fontSize: "var(--text-sm)",
                 letterSpacing: "0.1em",
                 color: "var(--eph-gold-deep)",
                 textTransform: "uppercase",
@@ -643,10 +642,10 @@ export default function EphemeristsTaskDetail({
             }}
           >
             <span
+              className="content-text"
               style={{
                 fontFamily: "var(--eph-script)",
                 fontStyle: "italic",
-                fontSize: 14,
                 color: VELLUM_TEXT,
               }}
             >
@@ -656,7 +655,7 @@ export default function EphemeristsTaskDetail({
               to={`/praxes/${mySubmission.id}/edit`}
               style={{
                 fontFamily: "var(--eph-display)",
-                fontSize: 11,
+                fontSize: "var(--text-md)",
                 letterSpacing: "0.1em",
                 textTransform: "uppercase",
                 color: "var(--eph-parchment)",
@@ -683,10 +682,10 @@ export default function EphemeristsTaskDetail({
             }}
           >
             <span
+              className="content-text"
               style={{
                 fontFamily: "var(--eph-script)",
                 fontStyle: "italic",
-                fontSize: 14,
                 color: VELLUM_TEXT,
               }}
             >
@@ -696,7 +695,7 @@ export default function EphemeristsTaskDetail({
               to={`/praxes/${inProgressPraxisId}/edit`}
               style={{
                 fontFamily: "var(--eph-display)",
-                fontSize: 11,
+                fontSize: "var(--text-md)",
                 letterSpacing: "0.1em",
                 textTransform: "uppercase",
                 color: "var(--eph-parchment)",
@@ -715,7 +714,7 @@ export default function EphemeristsTaskDetail({
                 cursor: "pointer",
                 fontFamily: "var(--eph-script)",
                 fontStyle: "italic",
-                fontSize: 14,
+                fontSize: "var(--text-xl)",
                 color: "var(--eph-rubric)",
               }}
             >
@@ -743,10 +742,10 @@ export default function EphemeristsTaskDetail({
           {voteCount > 0 ? (
             <div style={{ display: "flex", alignItems: "flex-end", gap: 12 }}>
               <span
+                className="content-title"
                 style={{
                   fontFamily: "var(--eph-display)",
                   fontWeight: 700,
-                  fontSize: 54,
                   lineHeight: 0.8,
                   color: "var(--eph-rubric)",
                 }}
@@ -757,7 +756,7 @@ export default function EphemeristsTaskDetail({
                 <div
                   style={{
                     fontFamily: "var(--eph-display)",
-                    fontSize: 14,
+                    fontSize: "var(--text-xl)",
                     letterSpacing: "0.06em",
                     color: VELLUM_TEXT,
                   }}
@@ -768,7 +767,7 @@ export default function EphemeristsTaskDetail({
                   style={{
                     fontFamily: "var(--eph-script)",
                     fontStyle: "italic",
-                    fontSize: 13,
+                    fontSize: "var(--text-lg)",
                     color: MUTED,
                   }}
                 >
@@ -778,10 +777,10 @@ export default function EphemeristsTaskDetail({
             </div>
           ) : (
             <p
+              className="content-text"
               style={{
                 fontFamily: "var(--eph-script)",
                 fontStyle: "italic",
-                fontSize: 15,
                 color: MUTED,
                 margin: 0,
               }}
@@ -818,7 +817,7 @@ export default function EphemeristsTaskDetail({
                     onClick={() => setSubmissionSort(sort)}
                     style={{
                       fontFamily: "var(--eph-display)",
-                      fontSize: 10,
+                      fontSize: "var(--text-base)",
                       letterSpacing: "0.1em",
                       textTransform: "uppercase",
                       padding: "5px 12px",
@@ -839,10 +838,10 @@ export default function EphemeristsTaskDetail({
 
           {sortedSubmissions.length === 0 ? (
             <p
+              className="content-text"
               style={{
                 fontFamily: "var(--eph-script)",
                 fontStyle: "italic",
-                fontSize: 15,
                 color: MUTED,
                 margin: 0,
               }}
@@ -869,13 +868,13 @@ export default function EphemeristsTaskDetail({
                           background: INK,
                           color: "var(--eph-gold-light)",
                           fontFamily: "var(--eph-display)",
-                          fontSize: 8,
+                          fontSize: "var(--text-xs)",
                           letterSpacing: "0.14em",
                           padding: "4px 12px",
                           boxShadow: "0 3px 8px rgba(42,29,18,0.35)",
                         }}
                       >
-                        <span style={{ fontSize: 12, lineHeight: 1, color: "var(--eph-gold-light)" }}>⚜</span>{" "}
+                        <span style={{ fontSize: "var(--text-lg)", lineHeight: 1, color: "var(--eph-gold-light)" }}>⚜</span>{" "}
                         {t("ephemerists.mostCanonical")}
                       </div>
                     )}
@@ -890,7 +889,7 @@ export default function EphemeristsTaskDetail({
                     style={{
                       fontFamily: "var(--eph-script)",
                       fontStyle: "italic",
-                      fontSize: 15,
+                      fontSize: "var(--text-xl)",
                       color: "var(--eph-rubric)",
                       textDecoration: "none",
                       borderBottom: "1px solid color-mix(in srgb, var(--eph-rubric) 40%, transparent)",
