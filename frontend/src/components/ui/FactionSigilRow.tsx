@@ -44,8 +44,8 @@ export default function FactionSigilRow({ factions, value, onChange }: Props) {
     <div className="flex items-center gap-2">
       <span className="eyebrow flex-none">{t("filters.faction")}</span>
       <div
-        className="flex gap-2"
-        style={{ overflowX: "auto", paddingBottom: 2, scrollbarWidth: "none" }}
+        className="flex gap-2 pb-0.5"
+        style={{ overflowX: "auto", scrollbarWidth: "none" }}
       >
         <button
           type="button"
