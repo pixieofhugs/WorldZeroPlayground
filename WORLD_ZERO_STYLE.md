@@ -63,7 +63,7 @@ All color values are CSS custom properties defined in `index.css`. See that file
 - **Functional:** `--color-success`, `--color-danger`, `--color-warning` (each with `-light` and `-border` variants)
 - **Votes:** `--vote-1` through `--vote-5` (orange → yellow → green → blue → magenta, increasing intensity)
 
-**Dark mode** is handled by `[data-theme="dark"]` overrides in `index.css`. Components should use `var(--faction-analog-card-bg)` — never `dark ? '#1e1a10' : '#fffef5'`.
+**Dark mode** is handled by `[data-theme="dark"]` overrides in `index.css`. Components should use `var(--faction-everymen-card-bg)` — never `dark ? '#1e1a10' : '#fffef5'`.
 
 **Rule:** If you're about to hardcode a hex value in a component, stop. Add it as a CSS variable first.
 

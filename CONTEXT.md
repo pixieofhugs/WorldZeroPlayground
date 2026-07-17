@@ -27,17 +27,17 @@ The per-surface map (`Record<slug, Component>`) plus the `pickVariant` call that
 faction slug into its archetype, falling back to the default. One dispatcher per surface.
 
 **Slug**:
-The faction's stable identifier in the DB and code. Slugs **match faction identity** —
-the rename `analog→everymen`, `gestalt→wow`, `journeymen→ephemerists` is being applied
-(see ADR-0004), retiring the legacy-slug reuse trick.
+The faction's stable identifier in the DB and code. Slugs **match faction identity**. The
+rename `analog→everymen`, `gestalt→wow`, `journeymen→ephemerists` **has landed** (ADR-0004):
+`era_1.py` carries only identity-matched slugs (`everymen`, `wow`, `ephemerists`, `snide`,
+`singularity`, `ua`, `albescent`, `na`) — **no legacy slugs remain**.
 _Avoid_: faction id, key (CSS uses a separate hyphenated "css key").
 
-**Legacy slug** *(being retired — ADR-0004)*:
-A slug kept after a rebrand to dodge DB/plumbing churn: `analog` shown as "Everymen",
-`gestalt` as "Warriors of Whimsy", `journeymen` as "The Ephemerists". This trick is the
-top source of doc/code drift and is being reversed — slugs renamed to match identity even
-at the cost of breaking the (test-only) live site. Historical term; do not introduce new
-legacy slugs.
+**Legacy slug** *(retired — ADR-0004; historical term only)*:
+A slug once kept after a rebrand to dodge DB/plumbing churn: `analog` shown as "Everymen",
+`gestalt` as "Warriors of Whimsy", `journeymen` as "The Ephemerists". This trick was the
+top source of doc/code drift and **has been reversed** — every slug now matches identity.
+Do not introduce new legacy slugs.
 
 **Alias slug**:
 A slug that inherits another faction's archetype by design rather than rebrand:
@@ -78,19 +78,20 @@ Which collaboration shape a doing-of-a-task takes: **solo**, **collab**, or **du
 collab are *one shared praxis* (collab just has many members on it); a **duel** is **two linked
 praxes that compete** — see **Duel**.
 
-**Duel** *(being redesigned — two-linked-praxes model; ADR-0011)*:
+**Duel** *(two-linked-praxes model; ADR-0011 — landed)*:
 A head-to-head competition between two characters on the same task. Each side authors **its own
 `type=solo` praxis** — own owner, body, media, votes — and the two are joined by a **Duel link**.
 The winner is whichever linked praxis earns more stars; the win/loss multiplier is applied per
 side at scoring time and **floats with the votes until era reset** (no per-duel freeze). *Not*
-one shared praxis with two members and split votes (the current code shape, being retired): a
+one shared praxis with two members and split votes (the **retired** code shape): a
 voter rates a whole praxis, not a "member".
 _Avoid_: "shared document" for a duel (each duelist has their own); treating a duel as a single
 praxis row.
 
-**Duel link**:
+**Duel link** *(the `Duel` model; tablename `duel`)*:
 The row that owns a duel: the pairing (`challenger_praxis_id`, `opponent_praxis_id`) plus the
-challenge handshake (`opponent_character_id`, `status`). Replaces `PraxisInvite` for duels.
+challenge handshake (`opponent_character_id`, `status`), with sticky `forfeited_by_character_id`.
+Replaces `PraxisInvite` for duels.
 **States:** `pending` (challenged; only the challenger's praxis exists) → `active` (accepted;
 opponent's praxis created) → `settled` (both submitted; voting open, winner provisional until era
 reset). `declined` is terminal. A **cold symmetric challenge**: the challenger's praxis is created
@@ -191,7 +192,7 @@ The **sum** of a praxis's vote values, added flat to score *after* all multiplie
 as *points* (the "73" in a "15 + 73 points" display = base + points-from-votes), never as its
 own noun. Distinct from **voter count** — how many votes were cast (the "45 votes" label). The
 **average** of a praxis's vote values is *not* a domain quantity — a praxis's standing is the sum
-(points-from-votes) and the count, never the mean (SPEC-game-rules: "Not an average").
+(points-from-votes) and the count, never the mean (ADR-0014: standing is the sum, not the mean).
 _Avoid_: average rating, avg score.
 
 **Vote tally** *(read-model; `services/vote_tally.py`)*:
@@ -222,14 +223,19 @@ feeds standings + the detail-page breakdown). Splitting Merit from Contribution 
 locality win of the praxis-scoring deepening — one well-defined number per surface instead of
 one conflated `score` field computed two disagreeing ways.
 
-**Metatask** *(becoming its own model — reverses migration 0006; ADR-0015)*:
+**Metatask**:
 A flat-points **add-on to a praxis**, not a doable task — it has no praxis, no votes, no
 lifecycle of its own beyond **propose → approve → retire**. Owned by a faction
 (`faction_slug`); its `point_value` is a flat bonus that stacks additively and rides the same
-multipliers as base points (`(base + metatask_points) × faction × duel + votes` — unchanged by
-the remodel). Currently modeled as a `Task` row (`task_type=metatask`); being split into a
-standalone `MetaTask` model so `Task` sheds `task_type` + `metatask_faction_slug` and the
-`TaskType` enum collapses.
+multipliers as base points (`(base + metatask_points) × faction × duel + votes`).
+**Current shape (canonical today):** a metatask **is a `Task` row** (`task_type=metatask`,
+`metatask_faction_slug`) attached to a praxis via the `PraxisMetaTask` join table. Migration
+0006 *unified* the old standalone `MetaTask`/`BonusType` classes *into* `Task` (they were
+removed).
+**Planned (ADR-0015, not yet done):** split metatask back out into its own model — `Task` sheds
+`task_type` + `metatask_faction_slug` and the `TaskType` enum collapses. This reverses migration
+0006 and has **not** landed; treat the standalone-model language elsewhere as aspiration, not
+present reality.
 - **Access** is **one predicate** — `can_access_metatask` = Albescent **or**
   (`level ≥ era.metatask_apply_level` **and** own faction). Enforced once **at apply**; the
   "can apply" UI flag mirrors it. Replaces the three drifted gates (the per-metatask
@@ -347,11 +353,13 @@ path (rejected — lives stay independent); renaming "life" to "sock puppet" in 
 **Unaffiliated** *(`na`)*:
 A character belonging to **no faction** — the **universal starting state** for every new
 character. (The old "everyone starts in UA" rule is retired: ADR-0019. UA is now an
-ordinary, invite-able faction with no starter privilege.) Scoring: full **1.0×** through
-level `era.unaffiliated_penalty_level − 1`; from that level on (the **grace cliff**),
-faction-owned tasks score `era.unaffiliated_task_modifier` (0.8×) while neutral (`na`)
-tasks stay 1.0×. `na` is also the sentinel for tasks with no faction and the state era-reset
-returns characters to. See ADR-0020.
+ordinary, invite-able faction with no starter privilege.) Scoring: **all tasks currently
+score 1.0×** for `na` — cross-faction modifiers were flattened to 1.0 (#452), so there is
+**no unaffiliated penalty** today. (ADR-0020 specced a 0.8× grace-cliff penalty keyed on
+`unaffiliated_penalty_level` / `unaffiliated_task_modifier`; it was **never built** — those
+`EraConfig` fields don't exist and `compute_faction_multiplier` applies no penalty. See
+ADR-0020's status banner.) `na` is also the sentinel for tasks with no faction and the state
+era-reset returns characters to.
 _Avoid_: "UA" as a synonym for "new/starting"; "none" as a faction name.
 
 **Faction invite** *(`InvitationLetter`)*:
@@ -405,6 +413,10 @@ collaborators (ADR-0013). Membership — not authorship — is the visibility an
 an `in_progress` praxis. _Avoid_: "owner"/"creator" when the rule is really "any member".
 
 ## Task promotion
+
+> **Status (2026-07-17): DESIGNED, NOT BUILT (ADR-0034).** No backend implementation exists
+> yet — no `TaskPromotionVote` model, no threshold config, no level-5 `promote_tasks` ability.
+> The vocabulary below is the *design*; treat it as forward-looking until ADR-0034 lands.
 
 **Promotion vote** *(distinct from a praxis star-vote)*:
 An eligible player's single binary "list this task" approval on a `pending` task. Not a
