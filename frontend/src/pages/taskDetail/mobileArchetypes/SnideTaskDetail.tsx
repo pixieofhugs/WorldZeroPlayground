@@ -36,7 +36,7 @@ const CARD_SHADOW = '5px 6px 0 rgba(0,0,0,.5)'
 
 const kicker: CSSProperties = {
   fontFamily: TYPE,
-  fontSize: 8,
+  fontSize: "var(--text-xs)",
   letterSpacing: '0.24em',
   textTransform: 'uppercase',
   color: MUTED,
@@ -45,7 +45,7 @@ const kicker: CSSProperties = {
 function SectionHead({ title, trailing }: { title: string; trailing?: ReactNode }) {
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
-      <h2 style={{ fontFamily: COND, fontSize: 16, letterSpacing: '0.04em', textTransform: 'uppercase', margin: 0, color: ACID, whiteSpace: 'nowrap' }}>
+      <h2 className="content-title" style={{ fontFamily: COND, letterSpacing: '0.04em', textTransform: 'uppercase', margin: 0, color: ACID, whiteSpace: 'nowrap' }}>
         {title}
       </h2>
       <span style={{ flex: 1, height: 1, background: LINE }} />
@@ -56,7 +56,7 @@ function SectionHead({ title, trailing }: { title: string; trailing?: ReactNode 
 
 function plate(background: string, textColor: string, label: string) {
   return (
-    <span style={{ fontFamily: IMPACT, fontSize: 13, letterSpacing: '0.02em', color: textColor, background, padding: '4px 12px' }}>
+    <span className="content-title" style={{ fontFamily: IMPACT, letterSpacing: '0.02em', color: textColor, background, padding: '4px 12px' }}>
       {label}
     </span>
   )
@@ -93,7 +93,7 @@ export default function SnideTaskDetail({ state }: { state: TaskDetailState }) {
   return (
     <div className="py-4" style={{ fontFamily: TYPE, color: WALL_TEXT, background: WALL, marginLeft: -16, marginRight: -16, paddingLeft: 16, paddingRight: 16 }}>
       {/* Breadcrumb */}
-      <nav className="mb-3" style={{ fontFamily: TYPE, fontSize: 9, letterSpacing: '0.1em', textTransform: 'uppercase', color: MUTED }}>
+      <nav className="mb-3" style={{ fontFamily: TYPE, fontSize: "var(--text-sm)", letterSpacing: '0.1em', textTransform: 'uppercase', color: MUTED }}>
         <Link to="/tasks" style={{ color: ACCENT_WALL, textDecoration: 'none' }}>
           {t('default.breadcrumb')}
         </Link>
@@ -107,13 +107,13 @@ export default function SnideTaskDetail({ state }: { state: TaskDetailState }) {
         <span aria-hidden style={{ position: 'absolute', top: -11, left: 28, width: 66, height: 24, background: TAPE, transform: 'rotate(-5deg)', opacity: 0.92 }} />
         <div style={{ position: 'relative' }}>
           <div className="flex items-center justify-between" style={{ marginBottom: 12 }}>
-            <span style={{ fontFamily: COND, fontSize: 12, letterSpacing: '0.16em', textTransform: 'uppercase', color: ACID }}>
+            <span style={{ fontFamily: COND, fontSize: "var(--text-lg)", letterSpacing: '0.16em', textTransform: 'uppercase', color: ACID }}>
               {t('snide.jobFile')}
             </span>
             <span style={kicker}>{t('snide.openCase')}</span>
           </div>
 
-          <h1 style={{ fontFamily: COND, fontSize: 34, letterSpacing: '0.02em', lineHeight: 1.02, color: TEXT, margin: 0, overflowWrap: 'anywhere' }}>
+          <h1 className="content-title" style={{ fontFamily: COND, letterSpacing: '0.02em', lineHeight: 1.02, color: TEXT, margin: 0, overflowWrap: 'anywhere' }}>
             {task.title}
           </h1>
           <div style={{ height: 2, margin: '14px 0', background: ACID }} />
@@ -129,7 +129,7 @@ export default function SnideTaskDetail({ state }: { state: TaskDetailState }) {
       <section style={{ marginBottom: 20 }}>
         <SectionHead title={t('snide.brief')} />
         <div style={{ background: INK, color: TEXT, border: `1px solid ${LINE}`, padding: '18px 20px' }}>
-          <p style={{ fontFamily: TYPE, fontSize: 14, lineHeight: 1.7, color: task.description ? TEXT : MUTED, margin: 0, whiteSpace: 'pre-wrap' }}>
+          <p className="content-text" style={{ fontFamily: TYPE, lineHeight: 1.7, color: task.description ? TEXT : MUTED, margin: 0, whiteSpace: 'pre-wrap' }}>
             {task.description || t('snide.briefEmpty')}
           </p>
         </div>
@@ -140,18 +140,18 @@ export default function SnideTaskDetail({ state }: { state: TaskDetailState }) {
         <SectionHead title={t('snide.mobile.verdictHeading')} />
         {voteCount > 0 ? (
           <div style={{ display: 'flex', alignItems: 'flex-end', gap: 12 }}>
-            <span style={{ fontFamily: IMPACT, fontSize: 44, lineHeight: 0.85, color: ACID }}>
+            <span className="content-title" style={{ fontFamily: IMPACT, lineHeight: 0.85, color: ACID }}>
               {topScore}
             </span>
             <div style={{ paddingBottom: 5 }}>
-              <div style={{ fontFamily: COND, fontSize: 14, letterSpacing: '0.06em', textTransform: 'uppercase', color: WALL_TEXT }}>
+              <div style={{ fontFamily: COND, fontSize: "var(--text-xl)", letterSpacing: '0.06em', textTransform: 'uppercase', color: WALL_TEXT }}>
                 {t('snide.topMarks')}
               </div>
               <div style={{ ...kicker, marginTop: 2 }}>{t('snide.casesClosed', { count: voteCount })}</div>
             </div>
           </div>
         ) : (
-          <p style={{ fontFamily: MARKER, fontSize: 14, color: MUTED, margin: 0, transform: 'rotate(-1deg)' }}>{t('snide.verdict.none')}</p>
+          <p className="content-text" style={{ fontFamily: MARKER, color: MUTED, margin: 0, transform: 'rotate(-1deg)' }}>{t('snide.verdict.none')}</p>
         )}
       </section>
 
@@ -169,7 +169,7 @@ export default function SnideTaskDetail({ state }: { state: TaskDetailState }) {
                     onClick={() => setSubmissionSort(sort)}
                     style={{
                       fontFamily: TYPE,
-                      fontSize: 8,
+                      fontSize: "var(--text-xs)",
                       letterSpacing: '0.1em',
                       textTransform: 'uppercase',
                       padding: '5px 10px',
@@ -187,7 +187,7 @@ export default function SnideTaskDetail({ state }: { state: TaskDetailState }) {
           }
         />
         {sortedSubmissions.length === 0 ? (
-          <p style={{ fontFamily: MARKER, fontSize: 14, color: MUTED, margin: 0, transform: 'rotate(-1deg)' }}>{t('snide.empty')}</p>
+          <p className="content-text" style={{ fontFamily: MARKER, color: MUTED, margin: 0, transform: 'rotate(-1deg)' }}>{t('snide.empty')}</p>
         ) : (
           <>
             <div className="flex flex-col gap-4">
@@ -205,7 +205,7 @@ export default function SnideTaskDetail({ state }: { state: TaskDetailState }) {
                         background: PINK,
                         color: PAPER,
                         fontFamily: BLACK,
-                        fontSize: 10,
+                        fontSize: "var(--text-base)",
                         letterSpacing: '0.08em',
                         textTransform: 'uppercase',
                         padding: '2px 12px',
@@ -221,7 +221,7 @@ export default function SnideTaskDetail({ state }: { state: TaskDetailState }) {
             </div>
             {submissions.length > 4 && (
               <div style={{ marginTop: 16 }}>
-                <Link to={`/praxes?task_id=${task.id}`} style={{ fontFamily: COND, fontSize: 15, letterSpacing: '0.04em', color: ACCENT_WALL, textDecoration: 'none' }}>
+                <Link to={`/praxes?task_id=${task.id}`} style={{ fontFamily: COND, fontSize: "var(--text-xl)", letterSpacing: '0.04em', color: ACCENT_WALL, textDecoration: 'none' }}>
                   {t('snide.viewAll', { count: submissions.length })}
                 </Link>
               </div>
@@ -234,7 +234,7 @@ export default function SnideTaskDetail({ state }: { state: TaskDetailState }) {
       {canSignUp && (
         <MobileStickyBar>
           {signupError && (
-            <div style={{ fontFamily: TYPE, fontSize: 12, color: 'var(--color-danger)', padding: '8px 12px', background: 'var(--faction-snide-light)', border: `1px solid ${LINE}` }}>
+            <div style={{ fontFamily: TYPE, fontSize: "var(--text-lg)", color: 'var(--color-danger)', padding: '8px 12px', background: 'var(--faction-snide-light)', border: `1px solid ${LINE}` }}>
               {signupError}
             </div>
           )}
@@ -245,7 +245,7 @@ export default function SnideTaskDetail({ state }: { state: TaskDetailState }) {
               background: PINK,
               color: PAPER,
               fontFamily: BLACK,
-              fontSize: 14,
+              fontSize: "var(--text-xl)",
               letterSpacing: '0.06em',
               textTransform: 'uppercase',
               padding: '14px 20px',
@@ -264,12 +264,12 @@ export default function SnideTaskDetail({ state }: { state: TaskDetailState }) {
 
       {mySubmission && (
         <MobileStickyBar style={{ flexDirection: 'row', alignItems: 'center' }}>
-          <span style={{ fontFamily: COND, fontSize: 15, letterSpacing: '0.03em', color: ACID, flex: 1 }}>
+          <span style={{ fontFamily: COND, fontSize: "var(--text-xl)", letterSpacing: '0.03em', color: ACID, flex: 1 }}>
             {t('snide.submitted.note')}
           </span>
           <Link
             to={`/praxes/${mySubmission.id}/edit`}
-            style={{ fontFamily: BLACK, fontSize: 10, letterSpacing: '0.06em', textTransform: 'uppercase', padding: '10px 18px', background: ACID, color: INK, textDecoration: 'none' }}
+            style={{ fontFamily: BLACK, fontSize: "var(--text-base)", letterSpacing: '0.06em', textTransform: 'uppercase', padding: '10px 18px', background: ACID, color: INK, textDecoration: 'none' }}
           >
             {t('snide.submitted.edit')}
           </Link>
@@ -280,13 +280,13 @@ export default function SnideTaskDetail({ state }: { state: TaskDetailState }) {
         <MobileStickyBar style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
           <button
             onClick={handleDrop}
-            style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: TYPE, fontSize: 10, letterSpacing: '0.1em', textTransform: 'uppercase', color: MUTED }}
+            style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: TYPE, fontSize: "var(--text-base)", letterSpacing: '0.1em', textTransform: 'uppercase', color: MUTED }}
           >
             {t('snide.inProgress.drop')}
           </button>
           <Link
             to={`/praxes/${inProgressPraxisId}/edit`}
-            style={{ marginLeft: 'auto', fontFamily: BLACK, fontSize: 11, letterSpacing: '0.06em', textTransform: 'uppercase', padding: '12px 20px', background: PINK, color: PAPER, textDecoration: 'none' }}
+            style={{ marginLeft: 'auto', fontFamily: BLACK, fontSize: "var(--text-md)", letterSpacing: '0.06em', textTransform: 'uppercase', padding: '12px 20px', background: PINK, color: PAPER, textDecoration: 'none' }}
           >
             {t('snide.inProgress.continue')}
           </Link>

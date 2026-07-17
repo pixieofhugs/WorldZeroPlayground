@@ -60,7 +60,6 @@ const sectionRule: CSSProperties = {
 };
 const sectionH2: CSSProperties = {
   fontFamily: "var(--font-accent)",
-  fontSize: 26,
   letterSpacing: "0.04em",
   margin: 0,
   color: INK,
@@ -84,7 +83,7 @@ function SectionHead({
         marginBottom: 18,
       }}
     >
-      <h2 style={sectionH2}>{title}</h2>
+      <h2 className="content-title" style={sectionH2}>{title}</h2>
       <span style={sectionRule} />
       {trailing}
     </div>
@@ -146,7 +145,7 @@ function HandsRow({
                   justifyContent: "center",
                   color: GOLD,
                   fontFamily: "var(--font-accent)",
-                  fontSize: 18,
+                  fontSize: "var(--text-content)",
                 }}
               >
                 {hand.display_name[0]?.toUpperCase()}
@@ -173,7 +172,7 @@ function HandsRow({
       <span
         style={{
           fontFamily: "var(--font-body)",
-          fontSize: 10,
+          fontSize: "var(--text-base)",
           letterSpacing: "0.1em",
           textTransform: "uppercase",
           color: MUTED,
@@ -236,7 +235,7 @@ export default function EverymenTaskDetail({
       <nav
         className="font-body mb-4"
         style={{
-          fontSize: 10,
+          fontSize: "var(--text-base)",
           letterSpacing: "0.16em",
           textTransform: "uppercase",
           color: MUTED,
@@ -310,7 +309,7 @@ export default function EverymenTaskDetail({
                 <span
                   style={{
                     fontFamily: "var(--font-accent)",
-                    fontSize: 17,
+                    fontSize: "var(--text-content)",
                     letterSpacing: "0.2em",
                   }}
                 >
@@ -319,7 +318,7 @@ export default function EverymenTaskDetail({
               </div>
               <span
                 style={{
-                  fontSize: 9,
+                  fontSize: "var(--text-sm)",
                   letterSpacing: "0.14em",
                   textTransform: "uppercase",
                   color: CREAM,
@@ -342,9 +341,9 @@ export default function EverymenTaskDetail({
               style={{ position: "relative", zIndex: 2, padding: "30px 34px 32px" }}
             >
               <div
+                className="content-title"
                 style={{
                   fontFamily: "var(--font-accent)",
-                  fontSize: 72,
                   lineHeight: 0.9,
                   letterSpacing: "0.01em",
                   color: CREAM,
@@ -372,11 +371,11 @@ export default function EverymenTaskDetail({
                 }}
               >
                 <span
+                  className="content-title"
                   style={{
                     background: INK,
                     color: CREAM,
                     fontFamily: "var(--font-accent)",
-                    fontSize: 22,
                     letterSpacing: "0.06em",
                     padding: "6px 16px",
                   }}
@@ -384,11 +383,11 @@ export default function EverymenTaskDetail({
                   {t("everymen.levelValue", { level: task.level_required })}
                 </span>
                 <span
+                  className="content-title"
                   style={{
                     background: GOLD,
                     color: INK,
                     fontFamily: "var(--font-accent)",
-                    fontSize: 22,
                     letterSpacing: "0.06em",
                     padding: "6px 16px",
                   }}
@@ -398,7 +397,7 @@ export default function EverymenTaskDetail({
                 <span
                   style={{
                     fontFamily: "var(--font-body)",
-                    fontSize: 11,
+                    fontSize: "var(--text-md)",
                     letterSpacing: "0.06em",
                     color: CREAM,
                   }}
@@ -430,7 +429,7 @@ export default function EverymenTaskDetail({
                 style={{
                   cursor: "pointer",
                   fontFamily: "var(--font-body)",
-                  fontSize: 13,
+                  fontSize: "var(--text-lg)",
                   fontWeight: 700,
                   letterSpacing: "0.14em",
                   textTransform: "uppercase",
@@ -442,7 +441,7 @@ export default function EverymenTaskDetail({
               >
                 {t("everymen.signup.cta")}
               </button>
-              <div style={{ fontSize: 11, color: MUTED }}>
+              <div style={{ fontSize: "var(--text-md)", color: MUTED }}>
                 {t("everymen.signup.meta", {
                   points: modifiedPoints,
                   open: slotsOpen,
@@ -453,7 +452,7 @@ export default function EverymenTaskDetail({
                 style={{
                   marginLeft: "auto",
                   fontFamily: "var(--font-accent)",
-                  fontSize: 15,
+                  fontSize: "var(--text-xl)",
                   letterSpacing: "0.06em",
                   color: RED,
                 }}
@@ -487,9 +486,9 @@ export default function EverymenTaskDetail({
               }}
             >
               <span
+                className="content-text"
                 style={{
                   fontFamily: "var(--font-accent)",
-                  fontSize: 18,
                   letterSpacing: "0.08em",
                   color: OLIVE,
                 }}
@@ -501,7 +500,7 @@ export default function EverymenTaskDetail({
                 style={{
                   marginLeft: "auto",
                   fontFamily: "var(--font-body)",
-                  fontSize: 11,
+                  fontSize: "var(--text-md)",
                   fontWeight: 700,
                   letterSpacing: "0.12em",
                   textTransform: "uppercase",
@@ -529,9 +528,9 @@ export default function EverymenTaskDetail({
               }}
             >
               <span
+                className="content-text"
                 style={{
                   fontFamily: "var(--font-accent)",
-                  fontSize: 18,
                   letterSpacing: "0.08em",
                   color: RED,
                 }}
@@ -543,7 +542,7 @@ export default function EverymenTaskDetail({
                 style={{
                   marginLeft: "auto",
                   fontFamily: "var(--font-body)",
-                  fontSize: 11,
+                  fontSize: "var(--text-md)",
                   fontWeight: 700,
                   letterSpacing: "0.12em",
                   textTransform: "uppercase",
@@ -562,7 +561,7 @@ export default function EverymenTaskDetail({
                   border: "none",
                   cursor: "pointer",
                   fontFamily: "var(--font-body)",
-                  fontSize: 10,
+                  fontSize: "var(--text-base)",
                   letterSpacing: "0.1em",
                   textTransform: "uppercase",
                   color: MUTED,
@@ -594,9 +593,9 @@ export default function EverymenTaskDetail({
               }}
             >
               <p
+                className="content-text"
                 style={{
                   fontFamily: "var(--font-body)",
-                  fontSize: 13,
                   lineHeight: 1.75,
                   color: INK,
                   margin: 0,
@@ -622,9 +621,9 @@ export default function EverymenTaskDetail({
             {voteCount > 0 ? (
               <div style={{ display: "flex", alignItems: "flex-end", gap: 12 }}>
                 <span
+                  className="content-title"
                   style={{
                     fontFamily: "var(--font-accent)",
-                    fontSize: 54,
                     lineHeight: 0.8,
                     color: RED,
                   }}
@@ -635,7 +634,7 @@ export default function EverymenTaskDetail({
                   <div
                     style={{
                       fontFamily: "var(--font-accent)",
-                      fontSize: 16,
+                      fontSize: "var(--text-xl)",
                       letterSpacing: "0.06em",
                       color: INK,
                     }}
@@ -645,7 +644,7 @@ export default function EverymenTaskDetail({
                   <div
                     style={{
                       fontFamily: "var(--font-body)",
-                      fontSize: 10,
+                      fontSize: "var(--text-base)",
                       letterSpacing: "0.06em",
                       color: MUTED,
                     }}
@@ -656,9 +655,9 @@ export default function EverymenTaskDetail({
               </div>
             ) : (
               <p
+                className="content-text"
                 style={{
                   fontFamily: "var(--font-body)",
-                  fontSize: 13,
                   color: MUTED,
                 }}
               >
@@ -681,7 +680,7 @@ export default function EverymenTaskDetail({
                         onClick={() => setSubmissionSort(sort)}
                         style={{
                           fontFamily: "var(--font-body)",
-                          fontSize: 9,
+                          fontSize: "var(--text-sm)",
                           fontWeight: 700,
                           letterSpacing: "0.1em",
                           textTransform: "uppercase",
@@ -707,9 +706,9 @@ export default function EverymenTaskDetail({
             />
             {sortedSubmissions.length === 0 ? (
               <p
+                className="content-text"
                 style={{
                   fontFamily: "var(--font-body)",
-                  fontSize: 13,
                   color: MUTED,
                 }}
               >
@@ -745,13 +744,13 @@ export default function EverymenTaskDetail({
                             background: GOLD,
                             color: INK,
                             fontFamily: "var(--font-accent)",
-                            fontSize: 13,
+                            fontSize: "var(--text-lg)",
                             letterSpacing: "0.1em",
                             padding: "3px 13px",
                             boxShadow: "0 3px 8px rgba(0,0,0,0.3)",
                           }}
                         >
-                          <span style={{ fontSize: 13, lineHeight: 1 }}>⚜</span>{" "}
+                          <span style={{ fontSize: "var(--text-lg)", lineHeight: 1 }}>⚜</span>{" "}
                           {t("everymen.bestInHall")}
                         </div>
                       )}
@@ -765,7 +764,7 @@ export default function EverymenTaskDetail({
                       to={`/praxes?task_id=${task.id}`}
                       style={{
                         fontFamily: "var(--font-accent)",
-                        fontSize: 15,
+                        fontSize: "var(--text-xl)",
                         letterSpacing: "0.06em",
                         color: RED,
                         textDecoration: "none",

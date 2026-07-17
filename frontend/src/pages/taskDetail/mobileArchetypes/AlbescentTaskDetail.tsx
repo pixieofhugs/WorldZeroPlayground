@@ -27,7 +27,7 @@ const ink = (pct: number) => `color-mix(in srgb, ${INK} ${pct}%, transparent)`
 
 const kicker: CSSProperties = {
   fontFamily: MONO,
-  fontSize: 8,
+  fontSize: "var(--text-xs)",
   letterSpacing: '0.24em',
   textTransform: 'uppercase',
   color: ink(30),
@@ -36,7 +36,7 @@ const kicker: CSSProperties = {
 function SectionHead({ title, trailing }: { title: string; trailing?: ReactNode }) {
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 14 }}>
-      <h2 style={{ fontFamily: FONT, fontStyle: 'italic', fontWeight: 500, fontSize: 20, margin: 0, color: INK, whiteSpace: 'nowrap' }}>
+      <h2 className="content-title" style={{ fontFamily: FONT, fontStyle: 'italic', fontWeight: 500, margin: 0, color: INK, whiteSpace: 'nowrap' }}>
         {title}
       </h2>
       <span style={{ flex: 1, height: 1, background: ink(8) }} />
@@ -49,7 +49,7 @@ function Stat({ label, value }: { label: string; value: string }) {
   return (
     <div style={{ textAlign: 'center' }}>
       <div style={{ ...kicker, marginBottom: 5 }}>{label}</div>
-      <div style={{ fontFamily: FONT, fontStyle: 'italic', fontSize: 20, color: INK }}>{value}</div>
+      <div className="content-title" style={{ fontFamily: FONT, fontStyle: 'italic', color: INK }}>{value}</div>
     </div>
   )
 }
@@ -84,7 +84,7 @@ export default function AlbescentTaskDetail({ state }: { state: TaskDetailState 
   return (
     <div className="py-4" style={{ fontFamily: MONO, color: INK, background: PAGE, marginLeft: -16, marginRight: -16, paddingLeft: 16, paddingRight: 16 }}>
       {/* Breadcrumb */}
-      <nav className="mb-3" style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '0.14em', textTransform: 'uppercase', color: ink(38) }}>
+      <nav className="mb-3" style={{ fontFamily: MONO, fontSize: "var(--text-sm)", letterSpacing: '0.14em', textTransform: 'uppercase', color: ink(38) }}>
         <Link to="/tasks" style={{ color: 'inherit', textDecoration: 'none' }}>
           {t('default.breadcrumb')}
         </Link>
@@ -111,7 +111,7 @@ export default function AlbescentTaskDetail({ state }: { state: TaskDetailState 
           {t('albescent.correspondence', { number: correspondenceNo })}
         </div>
         <div style={{ width: 48, height: 1, background: ink(12), margin: '0 auto 20px' }} />
-        <h1 style={{ fontFamily: FONT, fontStyle: 'italic', fontWeight: 500, fontSize: 32, lineHeight: 1.16, color: INK, margin: '0 auto 20px', overflowWrap: 'anywhere' }}>
+        <h1 className="content-title" style={{ fontFamily: FONT, fontStyle: 'italic', fontWeight: 500, lineHeight: 1.16, color: INK, margin: '0 auto 20px', overflowWrap: 'anywhere' }}>
           {task.title}
         </h1>
         <div style={{ width: 48, height: 1, background: ink(12), margin: '0 auto 22px' }} />
@@ -127,13 +127,13 @@ export default function AlbescentTaskDetail({ state }: { state: TaskDetailState 
         <SectionHead
           title={t('albescent.askHeading')}
           trailing={
-            <span style={{ fontFamily: FONT, fontStyle: 'italic', fontSize: 12, color: ink(45), whiteSpace: 'nowrap' }}>
+            <span style={{ fontFamily: FONT, fontStyle: 'italic', fontSize: "var(--text-lg)", color: ink(45), whiteSpace: 'nowrap' }}>
               {t('albescent.askGloss')}
             </span>
           }
         />
         <div style={{ background: SHEET, border: `1px solid ${ink(10)}`, padding: '18px 20px' }}>
-          <p style={{ fontFamily: FONT, fontSize: 16, lineHeight: 1.7, color: task.description ? ink(72) : ink(45), margin: 0, whiteSpace: 'pre-wrap' }}>
+          <p className="content-text" style={{ fontFamily: FONT, lineHeight: 1.7, color: task.description ? ink(72) : ink(45), margin: 0, whiteSpace: 'pre-wrap' }}>
             {task.description || t('albescent.askEmpty')}
           </p>
         </div>
@@ -153,7 +153,7 @@ export default function AlbescentTaskDetail({ state }: { state: TaskDetailState 
                     onClick={() => setSubmissionSort(sort)}
                     style={{
                       fontFamily: MONO,
-                      fontSize: 8,
+                      fontSize: "var(--text-xs)",
                       letterSpacing: '0.1em',
                       textTransform: 'uppercase',
                       padding: '5px 10px',
@@ -171,7 +171,7 @@ export default function AlbescentTaskDetail({ state }: { state: TaskDetailState 
           }
         />
         {sortedSubmissions.length === 0 ? (
-          <p style={{ fontFamily: FONT, fontStyle: 'italic', fontSize: 15, color: ink(45), margin: 0 }}>{t('albescent.empty')}</p>
+          <p className="content-text" style={{ fontFamily: FONT, fontStyle: 'italic', color: ink(45), margin: 0 }}>{t('albescent.empty')}</p>
         ) : (
           <>
             <div className="flex flex-col gap-5">
@@ -193,12 +193,12 @@ export default function AlbescentTaskDetail({ state }: { state: TaskDetailState 
                         color: PAGE,
                         fontFamily: FONT,
                         fontStyle: 'italic',
-                        fontSize: 12,
+                        fontSize: "var(--text-lg)",
                         letterSpacing: '0.04em',
                         padding: '2px 12px',
                       }}
                     >
-                      <span aria-hidden style={{ fontSize: 12, lineHeight: 1 }}>⚜</span>
+                      <span aria-hidden style={{ fontSize: "var(--text-lg)", lineHeight: 1 }}>⚜</span>
                       {t('albescent.mostWitnessed')}
                     </div>
                   )}
@@ -210,7 +210,7 @@ export default function AlbescentTaskDetail({ state }: { state: TaskDetailState 
               <div style={{ marginTop: 16 }}>
                 <Link
                   to={`/praxes?task_id=${task.id}`}
-                  style={{ fontFamily: MONO, fontSize: 10, letterSpacing: '0.1em', textTransform: 'uppercase', color: ink(55), textDecoration: 'none', borderBottom: `1px solid ${ink(20)}`, paddingBottom: 2 }}
+                  style={{ fontFamily: MONO, fontSize: "var(--text-base)", letterSpacing: '0.1em', textTransform: 'uppercase', color: ink(55), textDecoration: 'none', borderBottom: `1px solid ${ink(20)}`, paddingBottom: 2 }}
                 >
                   {t('albescent.viewAll', { count: submissions.length })}
                 </Link>
@@ -224,7 +224,7 @@ export default function AlbescentTaskDetail({ state }: { state: TaskDetailState 
       {canSignUp && (
         <MobileStickyBar>
           {signupError && (
-            <div style={{ fontFamily: MONO, fontSize: 12, color: 'var(--color-danger)', padding: '8px 12px', background: ink(3), border: `1px solid ${ink(14)}` }}>
+            <div style={{ fontFamily: MONO, fontSize: "var(--text-lg)", color: 'var(--color-danger)', padding: '8px 12px', background: ink(3), border: `1px solid ${ink(14)}` }}>
               {signupError}
             </div>
           )}
@@ -235,7 +235,7 @@ export default function AlbescentTaskDetail({ state }: { state: TaskDetailState 
               background: INK,
               color: PAGE,
               fontFamily: MONO,
-              fontSize: 12,
+              fontSize: "var(--text-lg)",
               letterSpacing: '0.18em',
               textTransform: 'uppercase',
               padding: '14px 20px',
@@ -253,12 +253,12 @@ export default function AlbescentTaskDetail({ state }: { state: TaskDetailState 
 
       {mySubmission && (
         <MobileStickyBar style={{ flexDirection: 'row', alignItems: 'center' }}>
-          <span style={{ fontFamily: FONT, fontStyle: 'italic', fontSize: 15, color: ink(65), flex: 1 }}>
+          <span className="content-text" style={{ fontFamily: FONT, fontStyle: 'italic', color: ink(65), flex: 1 }}>
             {t('albescent.submitted.text')}
           </span>
           <Link
             to={`/praxes/${mySubmission.id}/edit`}
-            style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '0.16em', textTransform: 'uppercase', padding: '10px 18px', background: INK, color: PAGE, textDecoration: 'none' }}
+            style={{ fontFamily: MONO, fontSize: "var(--text-sm)", letterSpacing: '0.16em', textTransform: 'uppercase', padding: '10px 18px', background: INK, color: PAGE, textDecoration: 'none' }}
           >
             {t('albescent.submitted.edit')}
           </Link>
@@ -269,13 +269,13 @@ export default function AlbescentTaskDetail({ state }: { state: TaskDetailState 
         <MobileStickyBar style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
           <button
             onClick={handleDrop}
-            style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: MONO, fontSize: 9, letterSpacing: '0.12em', textTransform: 'uppercase', color: ink(40) }}
+            style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: MONO, fontSize: "var(--text-sm)", letterSpacing: '0.12em', textTransform: 'uppercase', color: ink(40) }}
           >
             {t('albescent.inProgress.drop')}
           </button>
           <Link
             to={`/praxes/${inProgressPraxisId}/edit`}
-            style={{ marginLeft: 'auto', fontFamily: MONO, fontSize: 10, letterSpacing: '0.16em', textTransform: 'uppercase', padding: '12px 20px', background: INK, color: PAGE, textDecoration: 'none' }}
+            style={{ marginLeft: 'auto', fontFamily: MONO, fontSize: "var(--text-base)", letterSpacing: '0.16em', textTransform: 'uppercase', padding: '12px 20px', background: INK, color: PAGE, textDecoration: 'none' }}
           >
             {t('albescent.inProgress.continue')}
           </Link>
