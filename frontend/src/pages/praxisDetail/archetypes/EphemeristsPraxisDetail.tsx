@@ -13,7 +13,7 @@ import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import MarkdownPreview from '../../editPraxis/blocks/MarkdownPreview'
 import MediaGallery from '../../../components/MediaGallery'
-import EphemeristsVote from '../../../components/vote/EphemeristsVote'
+import VoteUI from '../../../components/vote/VoteUI'
 import { EphemeristsSigil, EphEyebrow, Foxing, LapisLastWord, toRoman } from '../../../components/cards/ephemeristsAtoms'
 import { factionCssVar } from '../../../utils/factions'
 import { formatTimestamp } from '../../../utils/dates'
@@ -351,7 +351,8 @@ export default function EphemeristsPraxisDetail({ state }: { state: PraxisDetail
               </div>
             )}
           </div>
-          <EphemeristsVote
+          <VoteUI
+            factionSlug={praxis.task_faction_slug}
             praxisId={praxis.id}
             points={votes?.total_score}
             totalVotes={votes?.total_votes}
