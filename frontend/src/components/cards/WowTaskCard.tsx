@@ -72,14 +72,14 @@ export default function WowTaskCard({
         style={{
           display: "flex",
           alignItems: "center",
-          gap: 7,
-          padding: "6px 9px",
+          gap: "var(--space-sm)",
+          padding: "var(--space-sm) var(--space-sm)",
           background:
             "linear-gradient(180deg, var(--faction-wow-title-from), var(--faction-wow-title-to))",
           borderBottom: "2px solid var(--faction-wow-win-border)",
         }}
       >
-        <div style={{ display: "flex", gap: 4 }}>
+        <div style={{ display: "flex", gap: "var(--space-xs)" }}>
           <WindowDot color="#fb7aa8" />
           <WindowDot color="#f6c75e" />
           <WindowDot color="#86cfa6" />
@@ -88,8 +88,8 @@ export default function WowTaskCard({
           style={{
             display: "flex",
             alignItems: "center",
-            gap: 4,
-            fontSize: 10,
+            gap: "var(--space-xs)",
+            fontSize: "var(--text-base)",
             letterSpacing: "0.03em",
             color: "var(--faction-wow-title-text)",
           }}
@@ -100,7 +100,7 @@ export default function WowTaskCard({
         <span
           style={{
             marginLeft: "auto",
-            fontSize: 10,
+            fontSize: "var(--text-base)",
             opacity: 0.75,
             letterSpacing: "1.5px",
             color: "var(--faction-wow-title-text)",
@@ -114,7 +114,7 @@ export default function WowTaskCard({
       <div
         style={
           {
-            padding: "12px 12px 11px",
+            padding: "var(--space-md) var(--space-md) var(--space-md)",
             background: "var(--faction-wow-body-bg)",
             backgroundImage:
               "radial-gradient(var(--faction-wow-dot) 1.4px, transparent 1.4px)",
@@ -128,8 +128,8 @@ export default function WowTaskCard({
             background: "var(--faction-wow-notepad-bg)",
             border: "1.5px solid var(--faction-wow-notepad-border)",
             borderRadius: 7,
-            padding: "9px 11px",
-            marginBottom: 10,
+            padding: "var(--space-sm) var(--space-md)",
+            marginBottom: "var(--space-md)",
           }}
         >
           <div
@@ -144,12 +144,12 @@ export default function WowTaskCard({
             style={{ textDecoration: "none", color: "inherit" }}
           >
             <div
+              className="content-title"
               style={{
                 fontFamily: "var(--faction-wow-card-font)",
-                fontSize: 22,
                 fontWeight: 700,
                 lineHeight: 1.05,
-                marginBottom: 4,
+                marginBottom: "var(--space-xs)",
                 color: "var(--faction-wow-card-text)",
                 overflowWrap: "anywhere",
               }}
@@ -172,7 +172,7 @@ export default function WowTaskCard({
           <button
             onClick={() => onSignup(task.id)}
             className="btn-primary"
-            style={{ fontSize: 7, padding: "2px 8px", marginBottom: 8 }}
+            style={{ fontSize: "var(--text-xs)", padding: "var(--space-xs) var(--space-sm)", marginBottom: "var(--space-sm)" }}
           >
             {i18n.t("feed:taskCard.wow.signup")}
           </button>
@@ -181,9 +181,11 @@ export default function WowTaskCard({
         {/* status row */}
         <div className="card-footer">
           <LevelPill level={task.level_required} factionSlug="wow" />
+          {/* Points shown as a ◆ corner-counter — a badge/counter, so it stays
+              label-tier per the role vocabulary (§4), not a plain score number. */}
           <span
             style={{
-              fontSize: 9,
+              fontSize: "var(--text-sm)",
               letterSpacing: "0.1em",
               color: "var(--faction-wow-card-accent)",
             }}

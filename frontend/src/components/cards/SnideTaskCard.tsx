@@ -64,7 +64,7 @@ function Ransom({ text, size = 22 }: { text: string; size?: number }) {
       style={{
         display: "inline-flex",
         flexWrap: "wrap",
-        gap: "4px 3px",
+        gap: "var(--space-xs) var(--space-xs)",
         alignItems: "center",
       }}
     >
@@ -84,7 +84,7 @@ function Ransom({ text, size = 22 }: { text: string; size?: number }) {
               fontStyle: style.italic ? "italic" : "normal",
               fontSize: size,
               lineHeight: 0.92,
-              padding: "2px 5px 0",
+              padding: "var(--space-xs) var(--space-xs) 0",
               transform: `rotate(${style.rot}deg)`,
               boxShadow: "1.5px 2.5px 0 rgba(0,0,0,0.4)",
               textTransform: "uppercase",
@@ -112,7 +112,7 @@ export default function SnideTaskCard({
         position: "relative",
         background: "var(--faction-snide-card-bg)",
         color: "var(--faction-snide-card-text)",
-        padding: "26px 18px 18px",
+        padding: "var(--space-xl) var(--space-lg) var(--space-lg)",
         fontFamily: "var(--font-body)",
         overflow: "hidden",
         boxShadow: "6px 8px 0 rgba(0,0,0,0.28)",
@@ -144,10 +144,10 @@ export default function SnideTaskCard({
         style={{
           position: "relative",
           fontFamily: "var(--faction-snide-font-marker)",
-          fontSize: 11,
+          fontSize: "var(--text-md)",
           color: "var(--faction-snide-pink)",
           transform: "rotate(-1.5deg)",
-          marginBottom: 8,
+          marginBottom: "var(--space-sm)",
         }}
       >
         {i18n.t("feed:taskCard.snide.scrawl")}
@@ -158,19 +158,19 @@ export default function SnideTaskCard({
         to={`/tasks/${task.id}`}
         style={{ textDecoration: "none", color: "inherit" }}
       >
-        <div style={{ position: "relative", margin: "4px 0 12px" }}>
-          <Ransom text={task.title} size={22} />
+        <div style={{ position: "relative", margin: "var(--space-xs) 0 var(--space-md)" }}>
+          <Ransom text={task.title} size={24} />
         </div>
       </Link>
 
       {task.description && (
         <p
+          className="content-text"
           style={{
             position: "relative",
-            fontSize: 10,
             lineHeight: 1.5,
             color: "var(--faction-snide-card-muted)",
-            margin: "0 0 14px",
+            margin: "0 0 var(--space-lg)",
             overflow: "hidden",
             display: "-webkit-box",
             WebkitLineClamp: 3,
@@ -189,13 +189,13 @@ export default function SnideTaskCard({
             background: "var(--faction-snide-pink)",
             color: "#fff",
             fontFamily: "var(--faction-snide-font-black)",
-            fontSize: 11,
-            padding: "6px 12px",
+            fontSize: "var(--text-md)",
+            padding: "var(--space-sm) var(--space-md)",
             border: "none",
             cursor: "pointer",
             transform: "rotate(-2deg)",
             boxShadow: "2px 3px 0 rgba(0,0,0,0.4)",
-            marginBottom: 12,
+            marginBottom: "var(--space-md)",
           }}
         >
           {i18n.t("feed:taskCard.snide.signup")}
@@ -205,15 +205,15 @@ export default function SnideTaskCard({
       {/* footer: points + level */}
       <div className="card-footer" style={{ position: "relative" }}>
         <span
+          className="content-title"
           style={{
             fontFamily: "var(--faction-snide-font-impact)",
-            fontSize: 18,
             letterSpacing: "0.04em",
             color: "var(--faction-snide-acid)",
           }}
         >
           {displayPoints}
-          <span style={{ fontSize: 9, marginLeft: 3 }}>
+          <span style={{ fontSize: "var(--text-sm)", marginLeft: "var(--space-xs)" }}>
             {i18n.t("feed:taskCard.snide.pointsUnit")}
           </span>
         </span>
