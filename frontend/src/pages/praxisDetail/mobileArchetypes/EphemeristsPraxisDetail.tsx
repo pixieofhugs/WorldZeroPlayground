@@ -38,7 +38,7 @@ const SCRIPT = 'var(--eph-script)'
 
 const kicker: CSSProperties = {
   fontFamily: DISPLAY,
-  fontSize: 8,
+  fontSize: 'var(--text-xs)',
   letterSpacing: '0.2em',
   textTransform: 'uppercase',
   color: MUTED,
@@ -48,7 +48,7 @@ const kicker: CSSProperties = {
 function Leaf({ title, children }: { title: string; children: ReactNode }) {
   return (
     <section style={{ background: VELLUM, border: `1px solid ${GOLD_DEEP}`, padding: 13 }}>
-      <div style={{ fontFamily: DISPLAY, fontSize: 9, letterSpacing: '0.13em', textTransform: 'uppercase', color: RUBRIC, marginBottom: 10 }}>
+      <div style={{ fontFamily: DISPLAY, fontSize: 'var(--text-sm)', letterSpacing: '0.13em', textTransform: 'uppercase', color: RUBRIC, marginBottom: 10 }}>
         {title}
       </div>
       {children}
@@ -75,7 +75,7 @@ export default function EphemeristsPraxisDetail({ state }: { state: PraxisDetail
         <Link to={`/characters/${praxis.created_by_id}`} className="shrink-0">
           <span
             className="flex items-center justify-center rounded-full"
-            style={{ width: 42, height: 42, background: VELLUM_DEEP, border: `1.5px solid ${GOLD_DEEP}`, color: RUBRIC, fontFamily: DISPLAY, fontWeight: 700, fontSize: 20 }}
+            style={{ width: 42, height: 42, background: VELLUM_DEEP, border: `1.5px solid ${GOLD_DEEP}`, color: RUBRIC, fontFamily: DISPLAY, fontWeight: 700, fontSize: 'var(--text-content)' }}
             aria-hidden
           >
             {initial}
@@ -84,7 +84,7 @@ export default function EphemeristsPraxisDetail({ state }: { state: PraxisDetail
         <div className="min-w-0 flex-1">
           <MemberByline
             praxis={praxis}
-            linkStyle={{ fontFamily: DISPLAY, fontWeight: 700, fontSize: 18, color: TEXT, lineHeight: 1, textDecoration: 'none' }}
+            linkStyle={{ fontFamily: DISPLAY, fontWeight: 700, fontSize: 'var(--text-content)', color: TEXT, lineHeight: 1, textDecoration: 'none' }}
           />
           <div className="truncate" style={{ ...kicker, marginTop: 3 }}>
             {t('detail.ephemerists.acquiringHand')} · {formatTimestamp(sealedDate)}
@@ -103,7 +103,7 @@ export default function EphemeristsPraxisDetail({ state }: { state: PraxisDetail
       {/* Finding headline */}
       <div>
         <div style={{ ...kicker, marginBottom: 4, color: LAPIS }}>{t('detail.ephemerists.mobile.theFinding')}</div>
-        <h1 style={{ fontFamily: DISPLAY, fontWeight: 700, fontSize: 30, lineHeight: 1.1, margin: 0, color: TEXT, overflowWrap: 'anywhere' }}>
+        <h1 style={{ fontFamily: DISPLAY, fontWeight: 700, fontSize: 'var(--text-heading)', lineHeight: 1.1, margin: 0, color: TEXT, overflowWrap: 'anywhere' }}>
           {praxis.title ?? t('detail.ephemerists.untitled')}
         </h1>
       </div>
@@ -112,7 +112,7 @@ export default function EphemeristsPraxisDetail({ state }: { state: PraxisDetail
       <PraxisOwnerActions state={state} />
 
       {/* re: task link */}
-      <div style={{ fontFamily: SCRIPT, fontStyle: 'italic', fontSize: 14, color: MUTED }}>
+      <div style={{ fontFamily: SCRIPT, fontStyle: 'italic', fontSize: 'var(--text-xl)', color: MUTED }}>
         {t('detail.ephemerists.mobile.re')}{' '}
         <Link to={`/tasks/${praxis.task_id}`} style={{ color: LAPIS, fontWeight: 700, textDecoration: 'none' }}>
           {praxis.task_title}
@@ -123,14 +123,14 @@ export default function EphemeristsPraxisDetail({ state }: { state: PraxisDetail
       {praxis.body_text && (
         <MarkdownPreview
           source={praxis.body_text}
-          className="markdown-preview"
-          style={{ fontFamily: SERIF, fontSize: 15, lineHeight: 1.7, color: TEXT }}
+          className="markdown-preview content-text"
+          style={{ fontFamily: SERIF, lineHeight: 1.7, color: TEXT }}
         />
       )}
 
       {/* Concordance caster */}
       <Leaf title={t('detail.ephemerists.concordance')}>
-        <div className="flex items-center justify-center" style={{ marginBottom: 12, fontFamily: SCRIPT, fontStyle: 'italic', fontSize: 18, color: TEXT }}>
+        <div className="flex items-center justify-center content-text" style={{ marginBottom: 12, fontFamily: SCRIPT, fontStyle: 'italic', color: TEXT }}>
           {t('detail.ephemerists.mobile.appraise')}
         </div>
         <MobileStarVote

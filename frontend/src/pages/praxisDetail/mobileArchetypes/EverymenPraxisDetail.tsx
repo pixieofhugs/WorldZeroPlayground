@@ -35,7 +35,7 @@ const BODY_FONT = 'var(--font-body)'
 
 const kicker: CSSProperties = {
   fontFamily: BODY_FONT,
-  fontSize: 8,
+  fontSize: 'var(--text-xs)',
   letterSpacing: '0.2em',
   textTransform: 'uppercase',
   color: MUTED,
@@ -45,7 +45,7 @@ const kicker: CSSProperties = {
 function Plate({ title, children }: { title: string; children: ReactNode }) {
   return (
     <section style={{ background: PAPER, border: `2px solid ${INK}`, padding: 14 }}>
-      <div style={{ fontFamily: ACCENT_FONT, fontSize: 15, letterSpacing: '0.06em', color: RED, marginBottom: 10 }}>
+      <div style={{ fontFamily: ACCENT_FONT, fontSize: 'var(--text-xl)', letterSpacing: '0.06em', color: RED, marginBottom: 10 }}>
         {title}
       </div>
       {children}
@@ -72,7 +72,7 @@ export default function EverymenPraxisDetail({ state }: { state: PraxisDetailSta
         <Link to={`/characters/${praxis.created_by_id}`} className="shrink-0">
           <span
             className="flex items-center justify-center"
-            style={{ width: 42, height: 42, background: GOLD, border: `2px solid ${INK}`, color: RED, fontFamily: ACCENT_FONT, fontSize: 22 }}
+            style={{ width: 42, height: 42, background: GOLD, border: `2px solid ${INK}`, color: RED, fontFamily: ACCENT_FONT, fontSize: 'var(--text-title)' }}
             aria-hidden
           >
             {initial}
@@ -81,7 +81,7 @@ export default function EverymenPraxisDetail({ state }: { state: PraxisDetailSta
         <div className="min-w-0 flex-1">
           <MemberByline
             praxis={praxis}
-            linkStyle={{ fontFamily: ACCENT_FONT, fontSize: 20, letterSpacing: '0.02em', color: PAPER_TEXT, lineHeight: 1, textDecoration: 'none' }}
+            linkStyle={{ fontFamily: ACCENT_FONT, fontSize: 'var(--text-content)', letterSpacing: '0.02em', color: PAPER_TEXT, lineHeight: 1, textDecoration: 'none' }}
           />
           <div className="truncate" style={{ ...kicker, marginTop: 3 }}>
             {t('detail.everymen.mobile.filed')} · {formatTimestamp(sealedDate)}
@@ -99,7 +99,7 @@ export default function EverymenPraxisDetail({ state }: { state: PraxisDetailSta
       {/* Finding headline */}
       <div>
         <div style={{ ...kicker, marginBottom: 4, color: RED }}>{t('detail.everymen.theWork')}</div>
-        <h1 style={{ fontFamily: ACCENT_FONT, fontSize: 34, lineHeight: 0.95, letterSpacing: '0.01em', margin: 0, color: PAPER_TEXT, overflowWrap: 'anywhere' }}>
+        <h1 style={{ fontFamily: ACCENT_FONT, fontSize: 'var(--text-heading)', lineHeight: 0.95, letterSpacing: '0.01em', margin: 0, color: PAPER_TEXT, overflowWrap: 'anywhere' }}>
           {praxis.title ?? t('detail.everymen.untitled')}
         </h1>
       </div>
@@ -108,9 +108,9 @@ export default function EverymenPraxisDetail({ state }: { state: PraxisDetailSta
       <PraxisOwnerActions state={state} />
 
       {/* re: task link */}
-      <div style={{ fontFamily: BODY_FONT, fontSize: 12, color: MUTED }}>
+      <div style={{ fontFamily: BODY_FONT, fontSize: 'var(--text-lg)', color: MUTED }}>
         {t('detail.everymen.mobile.re')}{' '}
-        <Link to={`/tasks/${praxis.task_id}`} style={{ fontFamily: ACCENT_FONT, fontSize: 16, letterSpacing: '0.02em', color: RED, textDecoration: 'none' }}>
+        <Link to={`/tasks/${praxis.task_id}`} style={{ fontFamily: ACCENT_FONT, fontSize: 'var(--text-xl)', letterSpacing: '0.02em', color: RED, textDecoration: 'none' }}>
           {praxis.task_title}
         </Link>
       </div>
@@ -119,14 +119,14 @@ export default function EverymenPraxisDetail({ state }: { state: PraxisDetailSta
       {praxis.body_text && (
         <MarkdownPreview
           source={praxis.body_text}
-          className="markdown-preview"
-          style={{ fontFamily: BODY_FONT, fontSize: 14, lineHeight: 1.75, color: PAPER_TEXT }}
+          className="markdown-preview content-text"
+          style={{ fontFamily: BODY_FONT, lineHeight: 1.75, color: PAPER_TEXT }}
         />
       )}
 
       {/* The crew's marks — vote caster */}
       <Plate title={t('detail.everymen.crewsMarks')}>
-        <div className="flex items-center justify-center" style={{ marginBottom: 12, fontFamily: ACCENT_FONT, fontSize: 18, letterSpacing: '0.04em', color: PAPER_TEXT }}>
+        <div className="flex items-center justify-center content-text" style={{ marginBottom: 12, fontFamily: ACCENT_FONT, letterSpacing: '0.04em', color: PAPER_TEXT }}>
           {t('detail.everymen.mobile.appraise')}
         </div>
         <MobileStarVote

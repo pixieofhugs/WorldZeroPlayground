@@ -86,26 +86,26 @@ function TheStanding({
         padding: '22px 24px',
       }}
     >
-      <div style={{ fontFamily: REGALIA, fontSize: 10, letterSpacing: '0.2em', color: 'var(--ua-gold)', marginBottom: 18 }}>
+      <div style={{ fontFamily: REGALIA, fontSize: 'var(--text-base)', letterSpacing: '0.2em', color: 'var(--ua-gold)', marginBottom: 18 }}>
         {t('detail.ua.standing.heading')}
       </div>
 
       {/* Headline: points earned · appraisal headcount */}
       <div style={{ display: 'flex', marginBottom: voters.length ? 20 : 0 }}>
         <div style={{ flex: 1, paddingRight: 16 }}>
-          <div style={{ fontFamily: DISPLAY, fontStyle: 'italic', fontWeight: 700, fontSize: 42, lineHeight: 0.85, color: 'var(--ua-orange)' }}>
+          <div style={{ fontFamily: DISPLAY, fontStyle: 'italic', fontWeight: 700, fontSize: 'var(--text-display)', lineHeight: 0.85, color: 'var(--ua-orange)' }}>
             {votes.total_score}
           </div>
-          <div style={{ fontFamily: MONO, fontSize: 8, letterSpacing: '0.16em', textTransform: 'uppercase', color: 'var(--ua-sub)', marginTop: 7 }}>
+          <div style={{ fontFamily: MONO, fontSize: 'var(--text-xs)', letterSpacing: '0.16em', textTransform: 'uppercase', color: 'var(--ua-sub)', marginTop: 7 }}>
             {t('detail.ua.standing.pointsEarned')}
           </div>
         </div>
         <div style={{ flex: 1, paddingLeft: 16, borderLeft: '1px solid var(--ua-line)' }}>
-          <div style={{ fontFamily: DISPLAY, fontStyle: 'italic', fontWeight: 700, fontSize: 42, lineHeight: 0.85, color: 'var(--ua-ink)', display: 'flex', alignItems: 'center', gap: 8 }}>
-            <span style={{ fontSize: 20, color: 'var(--ua-gold)' }}>✦</span>
+          <div style={{ fontFamily: DISPLAY, fontStyle: 'italic', fontWeight: 700, fontSize: 'var(--text-display)', lineHeight: 0.85, color: 'var(--ua-ink)', display: 'flex', alignItems: 'center', gap: 8 }}>
+            <span style={{ fontSize: 'var(--text-content)', color: 'var(--ua-gold)' }}>✦</span>
             {votes.total_votes}
           </div>
-          <div style={{ fontFamily: MONO, fontSize: 8, letterSpacing: '0.16em', textTransform: 'uppercase', color: 'var(--ua-sub)', marginTop: 7 }}>
+          <div style={{ fontFamily: MONO, fontSize: 'var(--text-xs)', letterSpacing: '0.16em', textTransform: 'uppercase', color: 'var(--ua-sub)', marginTop: 7 }}>
             {t('detail.ua.standing.appraisal', { count: votes.total_votes })}
           </div>
         </div>
@@ -114,7 +114,7 @@ function TheStanding({
       {/* Appraisers' ledger — each patron + the rung they gave (value / 5) */}
       {voters.length > 0 && (
         <>
-          <div style={{ borderTop: '1px dashed var(--ua-line-soft)', paddingTop: 15, fontFamily: MONO, fontSize: 8, letterSpacing: '0.16em', textTransform: 'uppercase', color: 'var(--ua-sub)', marginBottom: 13 }}>
+          <div style={{ borderTop: '1px dashed var(--ua-line-soft)', paddingTop: 15, fontFamily: MONO, fontSize: 'var(--text-xs)', letterSpacing: '0.16em', textTransform: 'uppercase', color: 'var(--ua-sub)', marginBottom: 13 }}>
             {t('detail.ua.standing.appraisedBy')}
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 11 }}>
@@ -133,7 +133,7 @@ function TheStanding({
                       border: '1.5px solid var(--ua-line)',
                       fontFamily: MONO,
                       fontWeight: 700,
-                      fontSize: 9,
+                      fontSize: 'var(--text-sm)',
                       color: 'var(--ua-orange)',
                     }}
                   >
@@ -142,24 +142,24 @@ function TheStanding({
                 </Link>
                 <Link
                   to={`/characters/${voter.character_id}`}
-                  style={{ width: 96, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontFamily: SERIF, fontSize: 12.5, color: 'var(--ua-ink)', textDecoration: 'none' }}
+                  style={{ width: 96, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontFamily: SERIF, fontSize: 'var(--text-lg)', color: 'var(--ua-ink)', textDecoration: 'none' }}
                 >
                   {voter.display_name}
                 </Link>
                 <div style={{ flex: 1, height: 9, background: 'color-mix(in srgb, var(--ua-gold-pale) 20%, var(--ua-paper))', border: '1px solid var(--ua-line-soft)', position: 'relative', overflow: 'hidden' }}>
                   <div style={{ position: 'absolute', inset: 0, width: `${(voter.value / 5) * 100}%`, background: 'var(--ua-orange)', opacity: 0.9 }} />
                 </div>
-                <span style={{ width: 40, textAlign: 'right', whiteSpace: 'nowrap', fontFamily: DISPLAY, fontStyle: 'italic', fontWeight: 700, fontSize: 14, color: 'var(--ua-orange)' }}>
+                <span style={{ width: 40, textAlign: 'right', whiteSpace: 'nowrap', fontFamily: DISPLAY, fontStyle: 'italic', fontWeight: 700, fontSize: 'var(--text-xl)', color: 'var(--ua-orange)' }}>
                   {voter.value === 5 ? '✦' : `№${voter.value}`}
                 </span>
               </div>
             ))}
           </div>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', borderTop: '1px solid var(--ua-line)', marginTop: 12, paddingTop: 10 }}>
-            <span style={{ fontFamily: MONO, fontSize: 8, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--ua-sub)' }}>
+            <span style={{ fontFamily: MONO, fontSize: 'var(--text-xs)', letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--ua-sub)' }}>
               {t('detail.ua.standing.patronsTotal', { count: voters.length })}
             </span>
-            <span style={{ fontFamily: DISPLAY, fontStyle: 'italic', fontWeight: 700, fontSize: 17, color: 'var(--ua-orange)' }}>
+            <span style={{ fontFamily: DISPLAY, fontStyle: 'italic', fontWeight: 700, fontSize: 'var(--text-title)', color: 'var(--ua-orange)' }}>
               {t('detail.ua.standing.pts', { points: votes.total_score })}
             </span>
           </div>
@@ -206,7 +206,7 @@ export default function UaPraxisDetail({ state }: { state: PraxisDetailState }) 
           to={`/tasks/${praxis.task_id}`}
           style={{
             fontFamily: REGALIA,
-            fontSize: 10,
+            fontSize: 'var(--text-base)',
             letterSpacing: '0.14em',
             color: 'var(--ua-gold)',
             textDecoration: 'none',
@@ -217,7 +217,7 @@ export default function UaPraxisDetail({ state }: { state: PraxisDetailState }) 
         <span
           style={{
             fontFamily: MONO,
-            fontSize: 8,
+            fontSize: 'var(--text-xs)',
             letterSpacing: '0.18em',
             textTransform: 'uppercase',
             color: 'var(--faction-ua)',
@@ -244,7 +244,7 @@ export default function UaPraxisDetail({ state }: { state: PraxisDetailState }) 
         <div
           style={{
             fontFamily: MONO,
-            fontSize: 8,
+            fontSize: 'var(--text-xs)',
             letterSpacing: '0.22em',
             textTransform: 'uppercase',
             color: 'var(--ua-muted)',
@@ -259,7 +259,7 @@ export default function UaPraxisDetail({ state }: { state: PraxisDetailState }) 
           <span style={{ color: 'var(--ua-line)' }}>·</span>
           <span>{modeLabel(praxis.type, t)}</span>
           <span style={{ color: 'var(--ua-line)' }}>·</span>
-          <span style={{ fontFamily: SERIF, fontSize: 11, fontStyle: 'italic', letterSpacing: 0, textTransform: 'none', color: 'var(--ua-sub)' }}>
+          <span style={{ fontFamily: SERIF, fontSize: 'var(--text-md)', fontStyle: 'italic', letterSpacing: 0, textTransform: 'none', color: 'var(--ua-sub)' }}>
             {t('detail.ua.returnedToSalon', { date: formatTimestamp(sealedDate) })}
           </span>
         </div>
@@ -270,7 +270,7 @@ export default function UaPraxisDetail({ state }: { state: PraxisDetailState }) 
             fontFamily: DISPLAY,
             fontStyle: 'italic',
             fontWeight: 600,
-            fontSize: 42,
+            fontSize: 'var(--text-display)',
             lineHeight: 1.06,
             color: 'var(--ua-ink)',
             marginBottom: 18,
@@ -312,7 +312,7 @@ export default function UaPraxisDetail({ state }: { state: PraxisDetailState }) 
                 fontFamily: SERIF,
                 fontStyle: 'italic',
                 fontWeight: 500,
-                fontSize: 15,
+                fontSize: 'var(--text-xl)',
                 color: 'var(--ua-ink)',
                 textDecoration: 'none',
               }}
@@ -320,7 +320,7 @@ export default function UaPraxisDetail({ state }: { state: PraxisDetailState }) 
             <span
               style={{
                 fontFamily: MONO,
-                fontSize: 8,
+                fontSize: 'var(--text-xs)',
                 letterSpacing: '0.06em',
                 color: 'var(--ua-muted)',
               }}
@@ -335,7 +335,7 @@ export default function UaPraxisDetail({ state }: { state: PraxisDetailState }) 
                 fontFamily: DISPLAY,
                 fontStyle: 'italic',
                 fontWeight: 700,
-                fontSize: 30,
+                fontSize: 'var(--text-heading)',
                 lineHeight: 1,
                 color: 'var(--ua-orange)',
               }}
@@ -345,7 +345,7 @@ export default function UaPraxisDetail({ state }: { state: PraxisDetailState }) 
             <div
               style={{
                 fontFamily: REGALIA,
-                fontSize: 8,
+                fontSize: 'var(--text-xs)',
                 letterSpacing: '0.1em',
                 color: 'var(--ua-muted)',
                 marginTop: 2,
@@ -361,17 +361,16 @@ export default function UaPraxisDetail({ state }: { state: PraxisDetailState }) 
           <div style={{ marginBottom: 26 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, margin: '0 0 16px' }}>
               <div style={{ height: 1, flex: 1, background: 'var(--ua-line-soft)' }} />
-              <span style={{ fontFamily: REGALIA, fontSize: 9, letterSpacing: '0.22em', color: 'var(--ua-gold)', whiteSpace: 'nowrap' }}>
+              <span style={{ fontFamily: REGALIA, fontSize: 'var(--text-sm)', letterSpacing: '0.22em', color: 'var(--ua-gold)', whiteSpace: 'nowrap' }}>
                 {t('detail.ua.theProcess')}
               </span>
               <div style={{ height: 1, flex: 1, background: 'var(--ua-line-soft)' }} />
             </div>
             <MarkdownPreview
               source={praxis.body_text}
-              className="markdown-preview"
+              className="markdown-preview content-text"
               style={{
                 fontFamily: SERIF,
-                fontSize: 14,
                 lineHeight: 1.85,
                 color: 'var(--ua-sub)',
               }}
@@ -384,7 +383,7 @@ export default function UaPraxisDetail({ state }: { state: PraxisDetailState }) 
           <div style={{ marginBottom: 26 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, margin: '0 0 16px' }}>
               <div style={{ height: 1, flex: 1, background: 'var(--ua-line-soft)' }} />
-              <span style={{ fontFamily: REGALIA, fontSize: 9, letterSpacing: '0.22em', color: 'var(--ua-gold)', whiteSpace: 'nowrap' }}>
+              <span style={{ fontFamily: REGALIA, fontSize: 'var(--text-sm)', letterSpacing: '0.22em', color: 'var(--ua-gold)', whiteSpace: 'nowrap' }}>
                 {t('detail.ua.thePlate', { count: praxis.media_items.length })}
               </span>
               <div style={{ height: 1, flex: 1, background: 'var(--ua-line-soft)' }} />
@@ -418,7 +417,7 @@ export default function UaPraxisDetail({ state }: { state: PraxisDetailState }) 
         {/* ── The Patronage (cast your appraisal) ── */}
         <div style={{ marginBottom: 18 }}>
           <div style={{ marginBottom: 14, paddingTop: 16, borderTop: '1px solid var(--ua-line-soft)' }}>
-            <span style={{ fontFamily: REGALIA, fontSize: 10, letterSpacing: '0.2em', color: 'var(--ua-gold)' }}>
+            <span style={{ fontFamily: REGALIA, fontSize: 'var(--text-base)', letterSpacing: '0.2em', color: 'var(--ua-gold)' }}>
               {t('detail.ua.patronage')}
             </span>
           </div>

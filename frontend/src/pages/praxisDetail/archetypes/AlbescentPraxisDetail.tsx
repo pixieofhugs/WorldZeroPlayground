@@ -37,7 +37,7 @@ function Divider({ label }: { label: string }) {
       <span
         style={{
           fontFamily: MONO,
-          fontSize: 8,
+          fontSize: 'var(--text-xs)',
           letterSpacing: '0.24em',
           textTransform: 'uppercase',
           color: ink(28),
@@ -84,7 +84,7 @@ export default function AlbescentPraxisDetail({ state }: { state: PraxisDetailSt
       >
         <span
           style={{
-            fontSize: 9,
+            fontSize: 'var(--text-sm)',
             letterSpacing: '0.22em',
             textTransform: 'uppercase',
             color: ink(30),
@@ -94,7 +94,7 @@ export default function AlbescentPraxisDetail({ state }: { state: PraxisDetailSt
         </span>
         <span
           style={{
-            fontSize: 7,
+            fontSize: 'var(--text-xs)',
             letterSpacing: '0.16em',
             textTransform: 'uppercase',
             color: ink(28),
@@ -115,16 +115,16 @@ export default function AlbescentPraxisDetail({ state }: { state: PraxisDetailSt
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12, flexWrap: 'wrap' }}>
           <Link
             to={`/tasks/${praxis.task_id}`}
-            style={{ fontSize: 7.5, letterSpacing: '0.14em', color: ink(34), textDecoration: 'none', textTransform: 'uppercase' }}
+            style={{ fontSize: 'var(--text-xs)', letterSpacing: '0.14em', color: ink(34), textDecoration: 'none', textTransform: 'uppercase' }}
           >
             {t('detail.albescent.re', { task: praxis.task_title })}
           </Link>
-          <span style={{ color: ink(20), fontSize: 8 }}>·</span>
-          <span style={{ fontSize: 7.5, letterSpacing: '0.1em', color: ink(34) }}>{t('detail.albescent.grade', { grade: praxis.task_level_required || '—' })}</span>
-          <span style={{ color: ink(20), fontSize: 8 }}>·</span>
-          <span style={{ fontFamily: FONT, fontStyle: 'italic', fontSize: 10, color: ink(38) }}>{mode}</span>
-          <span style={{ color: ink(20), fontSize: 8 }}>·</span>
-          <span style={{ fontFamily: FONT, fontStyle: 'italic', fontSize: 10, color: ink(38) }}>{t('detail.albescent.filed', { date: formatTimestamp(sealedDate) })}</span>
+          <span style={{ color: ink(20), fontSize: 'var(--text-xs)' }}>·</span>
+          <span style={{ fontSize: 'var(--text-xs)', letterSpacing: '0.1em', color: ink(34) }}>{t('detail.albescent.grade', { grade: praxis.task_level_required || '—' })}</span>
+          <span style={{ color: ink(20), fontSize: 'var(--text-xs)' }}>·</span>
+          <span style={{ fontFamily: FONT, fontStyle: 'italic', fontSize: 'var(--text-base)', color: ink(38) }}>{mode}</span>
+          <span style={{ color: ink(20), fontSize: 'var(--text-xs)' }}>·</span>
+          <span style={{ fontFamily: FONT, fontStyle: 'italic', fontSize: 'var(--text-base)', color: ink(38) }}>{t('detail.albescent.filed', { date: formatTimestamp(sealedDate) })}</span>
         </div>
 
         {/* ── The finding ── */}
@@ -133,7 +133,7 @@ export default function AlbescentPraxisDetail({ state }: { state: PraxisDetailSt
             fontFamily: FONT,
             fontStyle: 'italic',
             fontWeight: 300,
-            fontSize: 44,
+            fontSize: 'var(--text-display)',
             lineHeight: 1.05,
             color: INK,
             margin: '0 0 16px',
@@ -171,15 +171,15 @@ export default function AlbescentPraxisDetail({ state }: { state: PraxisDetailSt
           <div style={{ minWidth: 0 }}>
             <MemberByline
               praxis={praxis}
-              linkStyle={{ fontFamily: FONT, fontStyle: 'italic', fontWeight: 300, fontSize: 15, color: ink(72), textDecoration: 'none' }}
+              linkStyle={{ fontFamily: FONT, fontStyle: 'italic', fontWeight: 300, fontSize: 'var(--text-xl)', color: ink(72), textDecoration: 'none' }}
             />
-            <span style={{ fontSize: 7.5, letterSpacing: '0.06em', color: ink(34) }}>{mode}</span>
+            <span style={{ fontSize: 'var(--text-xs)', letterSpacing: '0.06em', color: ink(34) }}>{mode}</span>
           </div>
           <div style={{ marginLeft: 'auto', textAlign: 'right', flexShrink: 0 }}>
-            <div style={{ fontFamily: FONT, fontStyle: 'italic', fontWeight: 300, fontSize: 28, lineHeight: 1, color: ink(55) }}>
+            <div className="content-title" style={{ fontFamily: FONT, fontStyle: 'italic', fontWeight: 300, lineHeight: 1, color: ink(55) }}>
               {praxis.task_point_value}
             </div>
-            <div style={{ fontSize: 7, letterSpacing: '0.14em', color: ink(26), marginTop: 2 }}>{t('detail.albescent.ptsReturned')}</div>
+            <div style={{ fontSize: 'var(--text-xs)', letterSpacing: '0.14em', color: ink(26), marginTop: 2 }}>{t('detail.albescent.ptsReturned')}</div>
           </div>
         </div>
 
@@ -189,8 +189,8 @@ export default function AlbescentPraxisDetail({ state }: { state: PraxisDetailSt
             <Divider label={t('detail.albescent.account')} />
             <MarkdownPreview
               source={praxis.body_text}
-              className="markdown-preview"
-              style={{ fontFamily: FONT, fontStyle: 'italic', fontSize: 15, lineHeight: 1.7, color: ink(62) }}
+              className="markdown-preview content-text"
+              style={{ fontFamily: FONT, fontStyle: 'italic', lineHeight: 1.7, color: ink(62) }}
             />
           </>
         )}
@@ -208,13 +208,13 @@ export default function AlbescentPraxisDetail({ state }: { state: PraxisDetailSt
         {/* ── Bear witness (vote caster) ── */}
         <Divider label={t('detail.albescent.bearWitness')} />
         <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 10, marginBottom: 12 }}>
-          <span style={{ fontFamily: FONT, fontStyle: 'italic', fontSize: 13, color: ink(48) }}>
+          <span className="content-text" style={{ fontFamily: FONT, fontStyle: 'italic', color: ink(48) }}>
             {t('detail.albescent.witnessPrompt')}
           </span>
           {votes && votes.total_votes > 0 && (
-            <span style={{ fontFamily: FONT, fontStyle: 'italic', fontSize: 16, color: ink(60), whiteSpace: 'nowrap' }}>
+            <span className="content-title" style={{ fontFamily: FONT, fontStyle: 'italic', color: ink(60), whiteSpace: 'nowrap' }}>
               +{votes.total_score}{' '}
-              <span style={{ fontFamily: MONO, fontSize: 7, letterSpacing: '0.14em', color: ink(30) }}>{t('detail.albescent.fromWitnesses')}</span>
+              <span style={{ fontFamily: MONO, fontSize: 'var(--text-xs)', letterSpacing: '0.14em', color: ink(30) }}>{t('detail.albescent.fromWitnesses')}</span>
             </span>
           )}
         </div>
