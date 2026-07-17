@@ -3,30 +3,36 @@
  *
  * This module is serialized into the browser by `contrast.spec.ts` — it may
  * not import anything (Playwright's `page.evaluate` ships the function source,
- * not its module graph), so the small amount of WCAG math it needs is inlined
- * inside `scanPageForContrast`. `src/utils/contrast.ts` remains the source of
- * truth for the node-side math; the duplication here is a constraint of the
- * evaluate boundary, not a second opinion.
+ * not its module graph), so the WCAG math it needs is inlined inside
+ * `scanPageForContrast`. `src/utils/contrast.ts` remains the source of truth
+ * for the node-side math; the duplication here is a constraint of the evaluate
+ * boundary, not a second opinion.
  */
 
 /** One measured text node. `background: null` means "could not resolve to a solid". */
 export type Finding = {
   /** `rgb(r, g, b)` of the text, alpha already folded in from ancestor opacity. */
   text: string;
-  /** The nearest resolved opaque backdrop, or null if it was a gradient/image. */
+  /** The nearest resolved opaque backdrop, or null if it could not be resolved. */
   background: string | null;
   /** Why it could not resolve — only set when `background` is null. */
   unresolved: string | null;
   /**
-   * What KIND of unresolvable backdrop this is (#651 audit):
-   *  - `texture`         — a gradient whose every color stop is translucent
-   *                        (paper grain, ruled lines). It sits ON a solid
-   *                        background-color and perturbs it by a few percent.
+   * What KIND of unresolvable backdrop this is:
    *  - `opaque-gradient` — a gradient with an opaque stop: a real fill whose
-   *                        color genuinely varies under the text.
+   *                        colour genuinely varies under the text.
    *  - `other`           — an image, or a background-color we cannot parse.
+   * A gradient whose stops are ALL translucent is a texture, not a fill: it is
+   * composited and measured rather than reported here (see `textureOf`).
    */
-  unresolvedKind: 'texture' | 'opaque-gradient' | 'other' | null;
+  unresolvedKind: 'opaque-gradient' | 'other' | null;
+  /**
+   * The raw CSS that defeated resolution (the gradient / image / colour).
+   * This — not the DOM path — is what identifies an unresolved finding: the
+   * CSS is stable across copy edits and re-layouts, a `div > div > span` path
+   * is not.
+   */
+  backdropCss: string | null;
   ratio: number;
   required: number;
   fontSizePx: number;
@@ -43,13 +49,23 @@ export type Finding = {
  * Two deliberate behaviours, both of them the reason this exists rather than
  * an axe-core dependency:
  *
- *  1. **A gradient/image backdrop is a FAILURE, not a skip.** axe returns
+ *  1. **An unmeasurable backdrop is a FAILURE, not a skip.** axe returns
  *     "incomplete" there, which reads as green — and this app's flavor
- *     surfaces (`.em-backdrop`, the S.N.I.D.E. flyposted wall, the
- *     unaffiliated `repeating-conic-gradient`) are exactly that shape. Today
- *     the broken text happens to sit on cards with solid fills and the
- *     gradients are only *behind* those cards; that is luck, and the sweep
- *     asserts it instead of assuming it.
+ *     surfaces are exactly that shape.
+ *
+ *     "Unmeasurable" is narrower than "is a gradient", though. #651 originally
+ *     assumed gradients only ever sit *behind* opaque cards; the first sweep
+ *     disproved that — the text-bearing surfaces paint a translucent paper
+ *     grain (`radial-gradient(rgba(0,0,0,0.035) 1px, transparent 1px)`) over
+ *     their own solid fill, which made 134 perfectly legible nodes
+ *     "unresolvable". So we distinguish (Molly's call on #651):
+ *
+ *       - every stop translucent  → a TEXTURE over the element's own
+ *         background-color. Composite the most-opaque stop over that colour
+ *         and measure. Worst-case by construction; the accepted error is <2%.
+ *       - any stop opaque         → a FILL (gilt wordmark, WOW title bar, the
+ *         unaffiliated rainbow). It genuinely hides what is beneath it, so it
+ *         still fails loudly.
  *
  *  2. **`aria-hidden="true"` text is ignored.** WCAG exempts incidental /
  *     decorative content, and at least one such element (the Albescent mono
@@ -86,26 +102,17 @@ export function scanPageForContrast(): Finding[] {
   }
 
   /**
-   * Classify a `background-image`. A gradient made only of translucent stops
-   * is a TEXTURE laid over the element's own background-color; a gradient with
-   * an opaque stop is a FILL that genuinely hides what's beneath it.
+   * General source-over compositing — `back` may itself be translucent, and
+   * the result carries the combined alpha. (The simpler "assume the backdrop
+   * is opaque" shortcut silently resolves a translucent card against the first
+   * tinted panel it meets, which is wrong.)
    */
-  function classifyImage(image: string): 'texture' | 'opaque-gradient' | 'other' {
-    if (!/gradient\(/.test(image)) return 'other';
-    const stops = image.match(/(?:rgba?|color)\([^)]*\)/g);
-    if (!stops) return 'opaque-gradient';
-    const parsed = stops.map(parse);
-    if (parsed.some((stop) => stop === null)) return 'other';
-    return parsed.every((stop) => (stop as Rgba).a < 1) ? 'texture' : 'opaque-gradient';
-  }
-
-  function over(fore: Rgba, back: Rgba): Rgba {
-    return {
-      r: fore.r * fore.a + back.r * (1 - fore.a),
-      g: fore.g * fore.a + back.g * (1 - fore.a),
-      b: fore.b * fore.a + back.b * (1 - fore.a),
-      a: 1,
-    };
+  function srcOver(fore: Rgba, back: Rgba): Rgba {
+    const alpha = fore.a + back.a * (1 - fore.a);
+    if (alpha === 0) return { r: 0, g: 0, b: 0, a: 0 };
+    const mix = (front: number, behind: number) =>
+      (front * fore.a + behind * back.a * (1 - fore.a)) / alpha;
+    return { r: mix(fore.r, back.r), g: mix(fore.g, back.g), b: mix(fore.b, back.b), a: alpha };
   }
 
   function luminance(color: Rgba): number {
@@ -117,15 +124,44 @@ export function scanPageForContrast(): Finding[] {
   }
 
   function ratioOf(text: Rgba, surface: Rgba): number {
-    const composited = over(text, surface);
+    const composited = srcOver(text, surface);
     const high = Math.max(luminance(composited), luminance(surface));
     const low = Math.min(luminance(composited), luminance(surface));
     return (high + 0.05) / (low + 0.05);
   }
 
+  /**
+   * Serialize a colour for the baseline key. The alpha MUST survive: text at
+   * `rgba(28,28,26,1)` and the same ink ghosted to `rgba(28,28,26,0.22)` are
+   * different pairs (17.07:1 vs 1.66:1 on white), and printing both as
+   * `rgb(28, 28, 26)` collapses them into one entry that is simultaneously
+   * passing and failing.
+   */
   function show(color: Rgba): string {
-    const round = (channel: number) => Math.round(channel);
-    return `rgb(${round(color.r)}, ${round(color.g)}, ${round(color.b)})`;
+    const [r, g, b] = [color.r, color.g, color.b].map((channel) => Math.round(channel));
+    if (color.a >= 1) return `rgb(${r}, ${g}, ${b})`;
+    return `rgba(${r}, ${g}, ${b}, ${Number(color.a.toFixed(3))})`;
+  }
+
+  /**
+   * If `image` is a texture (a gradient whose every colour stop is
+   * translucent), return its most-opaque stop — the worst case it can
+   * contribute. Returns `undefined` for a fill, whose colour genuinely varies,
+   * and `null` when a stop can't be parsed (never guess).
+   */
+  function textureOf(image: string): Rgba | null | undefined {
+    if (!/gradient\(/.test(image)) return undefined;
+    const stops = image.match(/(?:rgba?|color)\([^)]*\)/g);
+    if (!stops) return undefined;
+    const parsed: Rgba[] = [];
+    for (const stop of stops) {
+      const color = parse(stop);
+      if (color === null) return null;
+      if (color.a >= 1) return undefined; // an opaque stop makes this a fill
+      parsed.push(color);
+    }
+    if (parsed.length === 0) return undefined;
+    return parsed.reduce((worst, stop) => (stop.a > worst.a ? stop : worst));
   }
 
   function ariaHidden(element: Element): boolean {
@@ -149,7 +185,10 @@ export function scanPageForContrast(): Finding[] {
     const steps: string[] = [];
     let node: Element | null = element;
     for (let depth = 0; node && depth < 4; depth += 1) {
-      const classes = typeof node.className === "string" ? node.className.trim().split(/\s+/).slice(0, 2) : [];
+      const classes =
+        typeof node.className === "string"
+          ? node.className.trim().split(/\s+/).slice(0, 2).filter(Boolean)
+          : [];
       steps.unshift(node.tagName.toLowerCase() + classes.map((name) => `.${name}`).join(""));
       node = node.parentElement;
     }
@@ -157,46 +196,56 @@ export function scanPageForContrast(): Finding[] {
   }
 
   /**
-   * Resolve the backdrop under `element`. Returns the solid color, or an
-   * explanation of why it isn't one. `backgroundImage` is checked BEFORE
-   * `backgroundColor` on purpose: `.em-backdrop` carries both, and its
-   * gradients paint over its solid fill, so the fill is not the answer.
+   * Resolve the backdrop under `element` by walking ancestors until the
+   * accumulated colour is opaque. At each node the paint order is
+   * background-color first, then background-image over it.
    */
   function backdropOf(element: Element): {
     color: Rgba | null;
     why: string | null;
-    kind: Finding['unresolvedKind'];
+    kind: Finding["unresolvedKind"];
+    css: string | null;
   } {
     let stack: Rgba | null = null;
     let node: Element | null = element;
 
     while (node) {
       const style = window.getComputedStyle(node);
-      if (style.backgroundImage && style.backgroundImage !== "none") {
-        return {
-          color: null,
-          why: `${pathOf(node)} paints ${style.backgroundImage.slice(0, 80)}`,
-          kind: classifyImage(style.backgroundImage),
-        };
-      }
-      const background = parse(style.backgroundColor);
-      if (background === null) {
+
+      let layer = parse(style.backgroundColor);
+      if (layer === null) {
         return {
           color: null,
           why: `${pathOf(node)} background-color "${style.backgroundColor}" is not a solid color`,
-          kind: 'other',
+          kind: "other",
+          css: style.backgroundColor,
         };
       }
-      if (background.a > 0) {
-        stack = stack === null ? background : over(stack, background);
-        if (stack.a >= 1) return { color: stack, why: null, kind: null };
+
+      if (style.backgroundImage && style.backgroundImage !== "none") {
+        const texture = textureOf(style.backgroundImage);
+        if (texture === undefined || texture === null) {
+          const isGradient = /gradient\(/.test(style.backgroundImage);
+          return {
+            color: null,
+            why: `${pathOf(node)} paints ${style.backgroundImage.slice(0, 80)}`,
+            kind: isGradient && texture === undefined ? "opaque-gradient" : "other",
+            css: style.backgroundImage,
+          };
+        }
+        layer = srcOver(texture, layer);
+      }
+
+      if (layer.a > 0) {
+        stack = stack === null ? layer : srcOver(stack, layer);
+        if (stack.a >= 0.999) return { color: { ...stack, a: 1 }, why: null, kind: null, css: null };
       }
       node = node.parentElement;
     }
 
     // Nothing opaque all the way up: the canvas is the browser default white.
     const canvas: Rgba = { r: 255, g: 255, b: 255, a: 1 };
-    return { color: stack === null ? canvas : over(stack, canvas), why: null, kind: null };
+    return { color: stack === null ? canvas : srcOver(stack, canvas), why: null, kind: null, css: null };
   }
 
   const findings: Finding[] = [];
@@ -233,28 +282,13 @@ export function scanPageForContrast(): Finding[] {
     const required = large ? 3 : 4.5;
     const sample = text.replace(/\s+/g, " ").slice(0, 40);
 
-    if (backdrop.color === null) {
-      findings.push({
-        text: show(inked),
-        background: null,
-        unresolved: backdrop.why,
-        unresolvedKind: backdrop.kind,
-        ratio: 0,
-        required,
-        fontSizePx,
-        fontWeight,
-        where: pathOf(element),
-        sample,
-      });
-      continue;
-    }
-
     findings.push({
       text: show(inked),
-      background: show(backdrop.color),
-      unresolved: null,
-      unresolvedKind: null,
-      ratio: ratioOf(inked, backdrop.color),
+      background: backdrop.color === null ? null : show(backdrop.color),
+      unresolved: backdrop.why,
+      unresolvedKind: backdrop.kind,
+      backdropCss: backdrop.css,
+      ratio: backdrop.color === null ? 0 : ratioOf(inked, backdrop.color),
       required,
       fontSizePx,
       fontWeight,

@@ -1,6 +1,7 @@
 import { test, expect, type Page } from '@playwright/test'
+import { appendFileSync } from 'node:fs'
 
-import { RENDERED_BASELINE, baselineKey, type BaselineEntry } from './contrastBaseline'
+import { RENDERED_BASELINE, baselineKey, unresolvedKey, type BaselineEntry } from './contrastBaseline'
 import { scanPageForContrast, type Finding } from './contrastScan'
 
 /**
@@ -20,9 +21,15 @@ import { scanPageForContrast, type Finding } from './contrastScan'
  *
  * Nightly, not per-PR: `.github/workflows/e2e.yml` already stands up Postgres
  * + backend + seed + Playwright. No new CI job.
+ *
+ * REGENERATING THE BASELINE. Set `CONTRAST_BASELINE_OUT=<path>` and run the
+ * suite; every failure is appended there as a ready-to-paste entry. The list
+ * is machine-produced on purpose — hand-typed ratios would be wrong within a
+ * week, which is the whole thesis of this issue.
  */
 
 const API = process.env.E2E_API_URL ?? 'http://localhost:8000'
+const BASELINE_OUT = process.env.CONTRAST_BASELINE_OUT
 
 const FACTIONS = ['ua', 'everymen', 'wow', 'snide', 'ephemerists', 'singularity', 'albescent'] as const
 const THEMES = ['light', 'dark'] as const
@@ -63,44 +70,27 @@ async function useTheme(page: Page, theme: Theme): Promise<void> {
   }, theme)
 }
 
+function keyOf(theme: Theme, finding: Finding): string {
+  return finding.background === null
+    ? unresolvedKey(theme, finding.text, finding.backdropCss ?? 'unknown', finding.required)
+    : baselineKey(theme, finding.text, finding.background, finding.required)
+}
+
 function describeFinding(finding: Finding): string {
   const size = `${finding.fontSizePx}px/${finding.fontWeight}`
   if (finding.background === null) {
-    return `  UNRESOLVED BACKDROP — ${finding.where} (${size})\n    "${finding.sample}"\n    ${finding.unresolved}`
+    return `  UNRESOLVED BACKDROP (${finding.unresolvedKind}) — ${finding.where} (${size})\n    "${finding.sample}"\n    ${finding.unresolved}`
   }
   return `  ${finding.ratio.toFixed(2)}:1 (needs ${finding.required}:1) — ${finding.text} on ${finding.background}\n    ${finding.where} (${size}) "${finding.sample}"`
 }
 
-/** Everything the sweep saw, for the audit comment on #651. */
-const auditLog = new Map<string, { finding: Finding; seenAt: Set<string> }>()
-
-function record(theme: Theme, route: string, finding: Finding): string {
-  const key =
-    finding.background === null
-      ? `${theme} | UNRESOLVED | ${finding.where}`
-      : baselineKey(theme, finding.text, finding.background)
-  const existing = auditLog.get(key)
-  if (existing) existing.seenAt.add(route)
-  else auditLog.set(key, { finding, seenAt: new Set([route]) })
-  return key
+/** Emit a ready-to-paste BASELINE entry when regenerating (see header). */
+function emitBaseline(key: string, finding: Finding, faction: Faction, theme: Theme, viewport: ViewportName): void {
+  if (!BASELINE_OUT) return
+  const ratio = finding.background === null ? 'null' : finding.ratio.toFixed(2)
+  const where = `${faction}/${theme}/${viewport} ${finding.where}`.replace(/'/g, '')
+  appendFileSync(BASELINE_OUT, `  ${JSON.stringify(key)}: { ratio: ${ratio}, issue: 651, where: '${where}' },\n`)
 }
-
-test.afterAll(() => {
-  if (auditLog.size === 0) return
-  // Printed, not asserted: this is the audit list #651 asks to be posted as a
-  // comment so it can be triaged into children.
-  const kinds = new Map<string, number>()
-  for (const { finding } of auditLog.values()) {
-    const kind = finding.background === null ? `unresolved:${finding.unresolvedKind}` : 'measured-fail'
-    kinds.set(kind, (kinds.get(kind) ?? 0) + 1)
-  }
-  const breakdown = [...kinds].map(([kind, count]) => `${kind}: ${count}`).join('\n')
-  console.log(`\n===== #651 breakdown =====\n${breakdown}\n`)
-  const lines = [...auditLog.entries()]
-    .sort(([, a], [, b]) => a.finding.ratio - b.finding.ratio)
-    .map(([key, { finding, seenAt }]) => `${key}\n${describeFinding(finding)}\n    seen on: ${[...seenAt].join(', ')}`)
-  console.log(`\n===== #651 rendered contrast audit (${auditLog.size} distinct failing pairs) =====\n${lines.join('\n')}\n`)
-})
 
 for (const faction of FACTIONS) {
   for (const theme of THEMES) {
@@ -124,11 +114,11 @@ for (const faction of FACTIONS) {
 
           const findings = (await page.evaluate(scanPageForContrast)) as Finding[]
           for (const finding of findings) {
-            const resolved = finding.background !== null && finding.ratio >= finding.required
-            const key = resolved ? baselineKey(theme, finding.text, finding.background!) : record(theme, route, finding)
+            const ok = finding.background !== null && finding.ratio >= finding.required
+            const key = keyOf(theme, finding)
             const allowed: BaselineEntry | undefined = RENDERED_BASELINE[key]
 
-            if (resolved) {
+            if (ok) {
               // A pair that now passes but is still allowlisted is debt that
               // got fixed without the list being updated. Catch it: an
               // allowlist that outlives its bug stops being a ratchet.
@@ -136,15 +126,16 @@ for (const faction of FACTIONS) {
               continue
             }
             if (allowed) continue
+            emitBaseline(key, finding, faction, theme, viewport)
             failures.push(describeFinding(finding))
           }
         }
 
         expect(
-          failures,
-          `${faction}/${theme}/${viewport}: ${failures.length} text nodes below WCAG AA.\n` +
-            `An UNRESOLVED BACKDROP is a failure, not a skip — text over a gradient/image cannot be measured, ` +
-            `so it must be given a solid backdrop (or the gradient hoisted behind an opaque card).\n\n` +
+          [...new Set(failures)],
+          `${faction}/${theme}/${viewport}: text below WCAG AA.\n` +
+            `An UNRESOLVED BACKDROP is a failure, not a skip — text over an opaque-stop gradient or an image ` +
+            `cannot be measured, so it must be given a solid backdrop (or the fill hoisted behind an opaque card).\n\n` +
             [...new Set(failures)].join('\n\n'),
         ).toHaveLength(0)
 
