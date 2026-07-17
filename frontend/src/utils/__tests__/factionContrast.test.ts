@@ -74,11 +74,15 @@ const CARD_PAIRS: Pair[] = CARD_KEYS.flatMap((key) => [
   { what: `${key} card accent`, surface: `--faction-${key}-card-bg`, text: `--faction-${key}-card-accent` },
 ]);
 
-/** #649 — the global `--color-text-on-accent` pasted onto every faction fill. */
+/**
+ * #649 — text on each faction's solid fill. The global `--color-text-on-accent`
+ * (#ffffff) failed AA on 7 of these 14 pairs, so each faction now owns a
+ * per-theme `--faction-{key}-on-fill` (white or ink); this measures that token.
+ */
 const FILL_PAIRS: Pair[] = FILL_KEYS.map((key) => ({
-  what: `${key} fill, text-on-accent`,
+  what: `${key} fill, on-fill`,
   surface: `--faction-${key}`,
-  text: "--color-text-on-accent",
+  text: `--faction-${key}-on-fill`,
 }));
 
 /**
@@ -145,18 +149,8 @@ const PAIRS: Pair[] = [...CARD_PAIRS, ...FILL_PAIRS, ...ARCHETYPE_PAIRS];
  * comment, awaiting triage into a child".
  */
 const BASELINE: Record<string, { ratio: number; issue: number }> = {
-  // ── #649 — white on faction fills, 7 of 14 pairs ──
-  // NOTE: #649's table reads the dark everymen fill as `#e2433f` (4.11:1).
-  // That is `--everymen-red`; the fill token `--faction-everymen` is actually
-  // `#ef5350` in dark, which measures 3.49:1 — worse than #649 recorded. The
-  // hand-audit misread one token; this is the number.
-  "light | wow fill, text-on-accent": { ratio: 3.15, issue: 649 },
-  "light | snide fill, text-on-accent": { ratio: 2.72, issue: 649 },
-  "dark | everymen fill, text-on-accent": { ratio: 3.49, issue: 649 },
-  "dark | wow fill, text-on-accent": { ratio: 2.65, issue: 649 },
-  "dark | snide fill, text-on-accent": { ratio: 1.21, issue: 649 },
-  "dark | ephemerists fill, text-on-accent": { ratio: 3.11, issue: 649 },
-  "dark | singularity fill, text-on-accent": { ratio: 2.54, issue: 649 },
+  // ── #649 fixed: `--faction-{key}-on-fill` now carries AA-legible text on every
+  //    faction fill in both themes, so the 7 failing white-on-fill pairs are gone. ──
 
   // ── Albescent faint ink — the sibling #594 left alive (named in #651) ──
   "light | albescent sheet, faint": { ratio: 1.59, issue: 651 },

@@ -282,7 +282,7 @@ export default function CharacterProfile() {
               disabled={relationshipLoading}
               style={{
                 background: factionCssVar(character.faction_slug),
-                color: "var(--color-text-on-accent)",
+                color: factionCssVar(character.faction_slug, "on-fill"),
                 fontFamily: "'Courier Prime', monospace",
                 fontSize: 8,
                 textTransform: "uppercase",

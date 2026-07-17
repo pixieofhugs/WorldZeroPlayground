@@ -253,7 +253,6 @@ export default function EverymenPraxisDetail({ state }: { state: PraxisDetailSta
             praxisId={praxis.id}
             points={votes?.total_score}
             totalVotes={votes?.total_votes}
-            mode="caster"
           />
         </div>
 

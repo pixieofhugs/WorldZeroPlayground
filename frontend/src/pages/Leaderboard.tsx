@@ -130,7 +130,7 @@ function DesktopLeaderboard({
                       className="pennant-shape"
                       style={{
                         display: 'inline-block',
-                        background: factionCssVar(player.faction_slug), color: 'var(--color-text-on-accent)',
+                        background: factionCssVar(player.faction_slug), color: factionCssVar(player.faction_slug, 'on-fill'),
                         fontFamily: "'Courier Prime', monospace",
                         fontSize: 7, fontWeight: 700, textTransform: 'uppercase',
                         letterSpacing: '0.07em', padding: '2px 10px',
@@ -220,7 +220,7 @@ function DesktopLeaderboard({
                         className="pennant-shape"
                         style={{
                           display: 'inline-block',
-                          background: factionCssVar(player.faction_slug), color: 'var(--color-text-on-accent)',
+                          background: factionCssVar(player.faction_slug), color: factionCssVar(player.faction_slug, 'on-fill'),
                           fontFamily: "'Courier Prime', monospace",
                           fontSize: 7, fontWeight: 700, textTransform: 'uppercase',
                           letterSpacing: '0.07em', padding: '2px 10px',
@@ -319,7 +319,7 @@ function DesktopLeaderboard({
                         className="pennant-shape"
                         style={{
                           display: 'inline-block',
-                          background: factionCssVar(player.faction_slug), color: 'var(--color-text-on-accent)',
+                          background: factionCssVar(player.faction_slug), color: factionCssVar(player.faction_slug, 'on-fill'),
                           fontFamily: "'Courier Prime', monospace",
                           fontSize: 7, fontWeight: 700, textTransform: 'uppercase',
                           letterSpacing: '0.07em', padding: '2px 10px',

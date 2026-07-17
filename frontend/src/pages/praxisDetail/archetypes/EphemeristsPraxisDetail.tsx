@@ -124,7 +124,7 @@ export default function EphemeristsPraxisDetail({ state }: { state: PraxisDetail
             fontSize: 26,
             fontWeight: 700,
             lineHeight: 1.15,
-            color: 'var(--eph-ink)',
+            color: 'var(--eph-vellum-text)',
             marginBottom: 4,
             letterSpacing: '0.01em',
           }}
@@ -195,7 +195,7 @@ export default function EphemeristsPraxisDetail({ state }: { state: PraxisDetail
               style={{
                 fontFamily: 'var(--eph-display)',
                 fontSize: 18,
-                color: 'var(--eph-ink)',
+                color: 'var(--eph-vellum-text)',
                 lineHeight: 1,
               }}
             >
@@ -332,7 +332,7 @@ export default function EphemeristsPraxisDetail({ state }: { state: PraxisDetail
                   style={{
                     fontFamily: 'var(--eph-display)',
                     fontSize: 18,
-                    color: 'var(--eph-ink)',
+                    color: 'var(--eph-vellum-text)',
                     lineHeight: 1,
                   }}
                 >
@@ -356,7 +356,6 @@ export default function EphemeristsPraxisDetail({ state }: { state: PraxisDetail
             praxisId={praxis.id}
             points={votes?.total_score}
             totalVotes={votes?.total_votes}
-            mode="caster"
           />
         </div>
 

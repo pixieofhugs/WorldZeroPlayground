@@ -14,7 +14,8 @@ import type { ReactNode } from 'react'
 import type { ProfileBodyProps } from '../FactionProfileBody'
 import { BadgeRow, ProfileSkin, SpectrumLaurel, type ProfileKit } from './profileSkin'
 
-const INK = 'var(--eph-ink)'
+const INK = 'var(--eph-ink)' // structure / kit spine (stays dark in both themes)
+const VELLUM_TEXT = 'var(--eph-vellum-text)' // text on the vellum surface (flips in dark)
 const MUTED = 'var(--eph-muted)'
 const GOLD = 'var(--eph-gold-light)'
 const GOLD_DEEP = 'var(--eph-gold)'
@@ -65,7 +66,7 @@ function heading(title: string, eyebrow: string): ReactNode {
           fontFamily: DISPLAY,
           fontSize: 26,
           letterSpacing: '0.06em',
-          color: INK,
+          color: VELLUM_TEXT,
           margin: 0,
         }}
       >
@@ -167,7 +168,7 @@ const kit: ProfileKit = {
       badge={badge}
       last={last}
       dividerColor="rgba(176,134,58,0.28)"
-      nameStyle={{ fontFamily: DISPLAY, fontSize: 14, color: INK, lineHeight: 1.2, letterSpacing: '0.03em' }}
+      nameStyle={{ fontFamily: DISPLAY, fontSize: 14, color: VELLUM_TEXT, lineHeight: 1.2, letterSpacing: '0.03em' }}
       medallion={(glyph) => (
         <span
           style={{

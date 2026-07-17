@@ -20,7 +20,6 @@ export interface VoteUIProps {
   currentValue?: number
   points?: number | null
   totalVotes?: number
-  mode?: 'caster' | 'summary'
 }
 
 const FACTION_VOTE: Record<string, ComponentType<VoteUIProps>> = {

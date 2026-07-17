@@ -14,7 +14,8 @@ import type { ReactNode } from 'react'
 import type { ProfileBodyProps } from '../FactionProfileBody'
 import { BadgeRow, ProfileSkin, SpectrumLaurel, type ProfileKit } from './profileSkin'
 
-const INK = 'var(--everymen-ink)'
+const INK = 'var(--everymen-ink)' // structure + text on the stable cream board (near-black both themes)
+const PAPER_TEXT = 'var(--everymen-paper-text)' // text on the paper page (flips in dark)
 const MUTED = 'var(--everymen-muted)'
 const RED = 'var(--everymen-red)'
 const GOLD = 'var(--everymen-gold)'
@@ -46,7 +47,7 @@ function heading(title: string, eyebrow: string): ReactNode {
           fontFamily: BEBAS,
           fontSize: 34,
           letterSpacing: '0.03em',
-          color: INK,
+          color: PAPER_TEXT,
           margin: 0,
           textShadow: '2px 2px 0 rgba(0,0,0,0.12)',
         }}
