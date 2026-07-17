@@ -90,7 +90,9 @@ function RansomChip({
         background: skin.bg,
         color: skin.color,
         fontFamily: skin.font,
-        fontSize: big ? 38 : 32,
+        // The ransom title is the task title rendered as ornament — it keeps its
+        // bespoke big/small cut, but on the content tier (never a label size).
+        fontSize: big ? "var(--text-display)" : "var(--text-heading)",
         lineHeight: 0.9,
         padding: "2px 10px 0",
         textTransform: "uppercase",
@@ -129,7 +131,7 @@ function EvidenceTag({
       <span
         style={{
           fontFamily: "var(--faction-snide-font-type)",
-          fontSize: 8,
+          fontSize: "var(--text-xs)",
           letterSpacing: "0.18em",
           textTransform: "uppercase",
           color: accent
@@ -140,9 +142,9 @@ function EvidenceTag({
         {label}
       </span>
       <span
+        className="content-title"
         style={{
           fontFamily: "var(--faction-snide-font-impact)",
-          fontSize: 26,
           lineHeight: 0.85,
           color: accent ? ACID : INK,
         }}
@@ -157,12 +159,12 @@ function EvidenceTag({
 function MarkerTab({ text, rot = -1.5 }: { text: string; rot?: number }) {
   return (
     <div
+      className="content-title"
       style={{
         display: "inline-block",
         background: ACID,
         color: INK,
         fontFamily: "var(--faction-snide-font-marker)",
-        fontSize: 17,
         padding: "3px 14px",
         transform: `rotate(${rot}deg)`,
         boxShadow: `2px 2px 0 ${PINK}`,
@@ -231,7 +233,7 @@ function AccompliceRow({
                   justifyContent: "center",
                   color: ACID,
                   fontFamily: "var(--faction-snide-font-impact)",
-                  fontSize: 16,
+                  fontSize: "var(--text-xl)",
                 }}
               >
                 {m.display_name[0]?.toUpperCase()}
@@ -258,7 +260,7 @@ function AccompliceRow({
       <span
         style={{
           fontFamily: "var(--faction-snide-font-type)",
-          fontSize: 10,
+          fontSize: "var(--text-base)",
           letterSpacing: "0.1em",
           textTransform: "uppercase",
           color: "color-mix(in srgb, var(--faction-snide-wall-text) 55%, transparent)",
@@ -321,7 +323,7 @@ export default function SnideTaskDetail({
         className="mb-4"
         style={{
           fontFamily: "var(--faction-snide-font-type)",
-          fontSize: 10,
+          fontSize: "var(--text-base)",
           letterSpacing: "0.14em",
           textTransform: "uppercase",
           color: muted,
@@ -392,7 +394,7 @@ export default function SnideTaskDetail({
               <div
                 style={{
                   fontFamily: "var(--faction-snide-font-impact)",
-                  fontSize: 13,
+                  fontSize: "var(--text-lg)",
                   letterSpacing: "0.12em",
                   color: ACID,
                   marginTop: 12,
@@ -403,7 +405,7 @@ export default function SnideTaskDetail({
               <div
                 style={{
                   fontFamily: "var(--faction-snide-font-type)",
-                  fontSize: 8,
+                  fontSize: "var(--text-xs)",
                   color: "color-mix(in srgb, var(--faction-snide-acid) 60%, var(--faction-snide-ink))",
                   letterSpacing: "0.1em",
                   marginTop: 3,
@@ -424,7 +426,7 @@ export default function SnideTaskDetail({
               <div
                 style={{
                   fontFamily: "var(--faction-snide-font-type)",
-                  fontSize: 9,
+                  fontSize: "var(--text-sm)",
                   letterSpacing: "0.2em",
                   textTransform: "uppercase",
                   color: "color-mix(in srgb, var(--faction-snide-ink) 60%, transparent)",
@@ -451,7 +453,7 @@ export default function SnideTaskDetail({
                 <div
                   style={{
                     fontFamily: "var(--faction-snide-font-cond)",
-                    fontSize: 11,
+                    fontSize: "var(--text-md)",
                     letterSpacing: "0.14em",
                     textTransform: "uppercase",
                     color: "var(--faction-snide-pink-deep)",
@@ -498,7 +500,7 @@ export default function SnideTaskDetail({
                   bottom: 16,
                   right: 16,
                   fontFamily: "var(--faction-snide-font-cond)",
-                  fontSize: 15,
+                  fontSize: "var(--text-xl)",
                   letterSpacing: "0.14em",
                   color: "color-mix(in srgb, var(--faction-snide-pink-deep) 75%, transparent)",
                   border: "2.5px solid color-mix(in srgb, var(--faction-snide-pink-deep) 70%, transparent)",
@@ -535,7 +537,7 @@ export default function SnideTaskDetail({
               <div
                 style={{
                   fontFamily: "var(--faction-snide-font-marker)",
-                  fontSize: 13,
+                  fontSize: "var(--text-lg)",
                   color: PINK,
                   transform: "rotate(-1deg)",
                 }}
@@ -545,7 +547,7 @@ export default function SnideTaskDetail({
               <div
                 style={{
                   fontFamily: "var(--font-body)",
-                  fontSize: 10,
+                  fontSize: "var(--text-base)",
                   letterSpacing: "0.06em",
                   color: muted,
                   width: "100%",
@@ -572,7 +574,7 @@ export default function SnideTaskDetail({
               <div
                 style={{
                   fontFamily: "var(--faction-snide-font-marker)",
-                  fontSize: 13,
+                  fontSize: "var(--text-lg)",
                   color: ACID,
                   transform: "rotate(-1deg)",
                 }}
@@ -597,7 +599,7 @@ export default function SnideTaskDetail({
                   border: "none",
                   cursor: "pointer",
                   fontFamily: "var(--faction-snide-font-marker)",
-                  fontSize: 13,
+                  fontSize: "var(--text-lg)",
                   color: PINK,
                   transform: "rotate(-1deg)",
                 }}
@@ -612,7 +614,7 @@ export default function SnideTaskDetail({
             style={{
               marginLeft: "auto",
               fontFamily: "var(--faction-snide-font-impact)",
-              fontSize: 11,
+              fontSize: "var(--text-md)",
               letterSpacing: "0.1em",
               color: ACID,
             }}
@@ -656,9 +658,9 @@ export default function SnideTaskDetail({
               style={{ top: -9, left: 32, width: 62, height: 18, transform: "rotate(-5deg)" }}
             />
             <p
+              className="content-text"
               style={{
                 fontFamily: "var(--faction-snide-font-type)",
-                fontSize: 13,
                 lineHeight: "28px",
                 margin: 0,
                 whiteSpace: "pre-wrap",
@@ -701,7 +703,7 @@ export default function SnideTaskDetail({
                     onClick={() => setSubmissionSort(sort)}
                     style={{
                       fontFamily: "var(--faction-snide-font-cond)",
-                      fontSize: 11,
+                      fontSize: "var(--text-md)",
                       letterSpacing: "0.1em",
                       textTransform: "uppercase",
                       padding: "5px 12px",
@@ -722,9 +724,9 @@ export default function SnideTaskDetail({
 
           {sortedSubmissions.length === 0 ? (
             <p
+              className="content-text"
               style={{
                 fontFamily: "var(--faction-snide-font-marker)",
-                fontSize: 15,
                 color: PINK,
               }}
             >
@@ -750,13 +752,13 @@ export default function SnideTaskDetail({
                           background: PINK,
                           color: "#fff",
                           fontFamily: "var(--faction-snide-font-black)",
-                          fontSize: 9,
+                          fontSize: "var(--text-sm)",
                           letterSpacing: "0.06em",
                           padding: "4px 12px",
                           boxShadow: `2px 3px 0 ${INK}`,
                         }}
                       >
-                        <span style={{ fontSize: 12, lineHeight: 1 }}>⚜</span>{" "}
+                        <span style={{ fontSize: "var(--text-lg)", lineHeight: 1 }}>⚜</span>{" "}
                         {t("snide.topMarks")}
                       </div>
                     )}
@@ -770,7 +772,7 @@ export default function SnideTaskDetail({
                     to={`/praxes?task_id=${task.id}`}
                     style={{
                       fontFamily: "var(--faction-snide-font-marker)",
-                      fontSize: 15,
+                      fontSize: "var(--text-xl)",
                       color: "var(--faction-snide)",
                       textDecoration: "none",
                     }}
