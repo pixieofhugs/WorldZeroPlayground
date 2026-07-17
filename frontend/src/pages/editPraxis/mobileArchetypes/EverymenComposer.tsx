@@ -43,7 +43,7 @@ const BODY_FONT = 'var(--font-body)'
 const kicker: CSSProperties = {
   display: 'block',
   fontFamily: BODY_FONT,
-  fontSize: 8,
+  fontSize: "var(--text-xs)",
   letterSpacing: '0.2em',
   textTransform: 'uppercase',
   color: MUTED,
@@ -53,7 +53,7 @@ const kicker: CSSProperties = {
 function Plate({ title, children }: { title: string; children: ReactNode }) {
   return (
     <section style={{ background: PAPER, border: `2px solid ${INK}`, padding: 14 }}>
-      <div style={{ fontFamily: ACCENT_FONT, fontSize: 15, letterSpacing: '0.06em', color: RED, marginBottom: 10 }}>
+      <div style={{ fontFamily: ACCENT_FONT, fontSize: "var(--text-xl)", letterSpacing: '0.06em', color: RED, marginBottom: 10 }}>
         {title}
       </div>
       {children}
@@ -71,7 +71,7 @@ export default function EverymenComposer({ state }: { state: EditPraxisState }) 
     <div data-skin="everymen" style={{ display: 'flex', flexDirection: 'column', gap: 14, fontFamily: BODY_FONT, color: PAPER_TEXT, background: PAPER }}>
       <header style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
         <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
-          <h1 style={{ fontFamily: ACCENT_FONT, fontSize: 30, lineHeight: 0.95, letterSpacing: '0.02em', color: PAPER_TEXT, margin: 0 }}>
+          <h1 style={{ fontFamily: ACCENT_FONT, fontSize: "var(--text-heading)", lineHeight: 0.95, letterSpacing: '0.02em', color: PAPER_TEXT, margin: 0 }}>
             {t('editPraxis.everymen.pageTitle')}
           </h1>
           <span style={{ ...kicker, marginLeft: 'auto' }}>
@@ -90,7 +90,7 @@ export default function EverymenComposer({ state }: { state: EditPraxisState }) 
               padding: '9px 10px',
               border: 'none',
               fontFamily: ACCENT_FONT,
-              fontSize: 14,
+              fontSize: "var(--text-xl)",
               letterSpacing: '0.08em',
               background: active ? INK : 'transparent',
               color: active ? CREAM : MUTED,
@@ -102,7 +102,7 @@ export default function EverymenComposer({ state }: { state: EditPraxisState }) 
       {/* For-task reference */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, padding: '11px 14px', background: PAPER_DEEP, border: `1.5px solid ${INK}` }}>
         <span style={kicker}>{t('editPraxis.everymen.taskRefLabel')}</span>
-        <span style={{ fontFamily: ACCENT_FONT, fontSize: 18, letterSpacing: '0.02em', color: PAPER_TEXT, textAlign: 'right', flex: 1, lineHeight: 1 }}>
+        <span style={{ fontFamily: ACCENT_FONT, fontSize: "var(--text-content)", letterSpacing: '0.02em', color: PAPER_TEXT, textAlign: 'right', flex: 1, lineHeight: 1 }}>
           {praxis.task_title}
         </span>
       </div>
@@ -121,7 +121,6 @@ export default function EverymenComposer({ state }: { state: EditPraxisState }) 
                 inputStyle: {
                   width: '100%',
                   fontFamily: ACCENT_FONT,
-                  fontSize: 24,
                   letterSpacing: '0.01em',
                   color: PAPER_TEXT,
                   background: 'transparent',
@@ -143,7 +142,6 @@ export default function EverymenComposer({ state }: { state: EditPraxisState }) 
                 textareaStyle: {
                   width: '100%',
                   fontFamily: BODY_FONT,
-                  fontSize: 14,
                   lineHeight: 1.6,
                   color: PAPER_TEXT,
                   background: PAPER_DEEP,
@@ -200,7 +198,7 @@ export default function EverymenComposer({ state }: { state: EditPraxisState }) 
         </>
       ) : (
         <Plate title={t('editPraxis.everymen.previewLabel')}>
-          <div style={{ fontFamily: ACCENT_FONT, fontSize: 24, letterSpacing: '0.01em', color: PAPER_TEXT, marginBottom: 10 }}>
+          <div style={{ fontFamily: ACCENT_FONT, fontSize: "var(--text-title)", letterSpacing: '0.01em', color: PAPER_TEXT, marginBottom: 10 }}>
             {state.title || t('editPraxis.everymen.titlePlaceholder')}
           </div>
           {state.media.length > 0 && (
@@ -211,7 +209,7 @@ export default function EverymenComposer({ state }: { state: EditPraxisState }) 
           <BodyPreview
             state={state}
             skin={{
-              markdownStyle: { fontFamily: BODY_FONT, fontSize: 14, lineHeight: 1.6, color: PAPER_TEXT },
+              markdownStyle: { fontFamily: BODY_FONT, lineHeight: 1.6, color: PAPER_TEXT },
             }}
           />
         </Plate>
@@ -240,7 +238,7 @@ export default function EverymenComposer({ state }: { state: EditPraxisState }) 
               background: RED,
               color: CREAM,
               fontFamily: ACCENT_FONT,
-              fontSize: 16,
+              fontSize: "var(--text-xl)",
               letterSpacing: '0.08em',
               padding: '13px 18px',
               border: `2px solid ${INK}`,
@@ -258,7 +256,7 @@ export default function EverymenComposer({ state }: { state: EditPraxisState }) 
                 border: 'none',
                 color: MUTED,
                 fontFamily: BODY_FONT,
-                fontSize: 12,
+                fontSize: "var(--text-lg)",
                 textDecoration: 'underline',
                 cursor: 'pointer',
               },
@@ -301,7 +299,7 @@ function MediaGrid({ state, readOnly = false }: { state: EditPraxisState; readOn
                   background: GOLD,
                   border: `1.5px solid ${INK}`,
                   color: INK,
-                  fontSize: 12,
+                  fontSize: "var(--text-lg)",
                   fontWeight: 700,
                   lineHeight: 1,
                   cursor: 'pointer',
@@ -330,7 +328,7 @@ function MediaGrid({ state, readOnly = false }: { state: EditPraxisState; readOn
               justifyContent: 'center',
               gap: 4,
               fontFamily: ACCENT_FONT,
-              fontSize: 13,
+              fontSize: "var(--text-lg)",
               letterSpacing: '0.06em',
               color: RED,
             },
