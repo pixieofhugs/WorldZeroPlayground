@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next'
-import { factionCssVar, factionName, sortFactionsByRainbowOrder } from '../../../utils/factions'
 import type { TasksState } from '../useTasks'
 import MobileTaskCard from './mobileTaskCard'
+import FactionSigilRow from '../../../components/ui/FactionSigilRow'
 
 /**
  * Default MOBILE task-browse skin — a scannable single-column card list with
@@ -51,22 +51,10 @@ export default function DefaultTasks({ state }: { state: TasksState }) {
         ))}
       </ChipRow>
 
-      {/* Faction chips */}
-      <ChipRow label={tc('filters.faction')}>
-        <Chip on={faction === ''} onClick={() => setFaction('')}>
-          {t('mobile.allFactions')}
-        </Chip>
-        {sortFactionsByRainbowOrder(factions).map((f) => (
-          <Chip
-            key={f.slug}
-            on={faction === f.slug}
-            onClick={() => setFaction(faction === f.slug ? '' : f.slug)}
-            tint={factionCssVar(f.slug)}
-          >
-            {factionName(f.slug)}
-          </Chip>
-        ))}
-      </ChipRow>
+      {/* Faction sigils */}
+      <div className="mb-2">
+        <FactionSigilRow factions={factions} value={faction} onChange={setFaction} />
+      </div>
 
       {/* Level chips */}
       <ChipRow label={tc('filters.level')}>

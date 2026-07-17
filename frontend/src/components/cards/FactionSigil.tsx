@@ -1,0 +1,65 @@
+import type { ComponentType } from "react";
+import { pickVariant } from "../../utils/factionDispatch";
+import { factionCssVar } from "../../utils/factions";
+import { EverymenSigil } from "./EverymenSigil";
+import { WowSigil } from "./WowSigil";
+import { SnideSigil } from "./SnideSigil";
+import { EphemeristsSigil } from "./ephemeristsAtoms";
+import { SingularitySigil } from "./SingularitySigil";
+import { UaSigil } from "./UaSigil";
+import AlbescentSigil from "./AlbescentSigil";
+import DefaultSigil from "./DefaultSigil";
+
+/**
+ * FactionSigil — the dispatcher that makes the seven faction sigils (each
+ * previously its own inline/scattered component with its own prop shape)
+ * reachable as one `{ slug, size, color }` component (ADR-0040, #659). Falls
+ * back to the unaffiliated seven-segment `DefaultSigil` ring for an
+ * unknown/null slug, mirroring `FactionAvatar`'s dispatch pattern.
+ */
+export interface FactionSigilProps {
+  slug: string | null | undefined;
+  size?: number;
+  color?: string;
+}
+
+type SigilVariantProps = { size?: number; color?: string };
+
+function UaSigilAdapter({ size }: SigilVariantProps) {
+  const dim = size ?? 22;
+  // UA draws its own --ua-* tokens internally; it has no color prop.
+  return <UaSigil width={dim} height={dim} />;
+}
+
+function SingularitySigilAdapter({ size, color }: SigilVariantProps) {
+  return (
+    <SingularitySigil
+      size={size ?? 22}
+      color={color ?? factionCssVar("singularity")}
+    />
+  );
+}
+
+function AlbescentSigilAdapter({ size, color }: SigilVariantProps) {
+  return <AlbescentSigil size={size} color={color} />;
+}
+
+function DefaultSigilAdapter({ size }: SigilVariantProps) {
+  // The default ring has no color prop — it draws --faction-default-ring.
+  return <DefaultSigil size={size} />;
+}
+
+const FACTION_SIGILS: Record<string, ComponentType<SigilVariantProps>> = {
+  everymen: EverymenSigil,
+  wow: WowSigil,
+  snide: SnideSigil,
+  ephemerists: EphemeristsSigil,
+  singularity: SingularitySigilAdapter,
+  ua: UaSigilAdapter,
+  albescent: AlbescentSigilAdapter,
+};
+
+export default function FactionSigil({ slug, size, color }: FactionSigilProps) {
+  const Variant = pickVariant(FACTION_SIGILS, slug, DefaultSigilAdapter);
+  return <Variant size={size} color={color} />;
+}

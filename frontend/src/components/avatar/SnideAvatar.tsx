@@ -1,20 +1,5 @@
 import { BadgedAvatar, type FactionAvatarProps } from './FactionAvatar'
-
-/** Circled-A anarchy sigil. */
-function CircledAGlyph({ size, color }: { size: number; color: string }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 48 48" fill="none" aria-hidden="true">
-      <circle cx="24" cy="24" r="19" stroke={color} strokeWidth="3.5" />
-      <path
-        d="M14 34 L24 12 L34 34 M18 27 H30"
-        stroke={color}
-        strokeWidth="3.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  )
-}
+import { SnideSigil } from '../cards/SnideSigil'
 
 /**
  * S.N.I.D.E. avatar — the standard circle on photocopier ink with an acid
@@ -33,7 +18,7 @@ export default function SnideAvatar({ character, size }: FactionAvatarProps) {
       }}
       badgeBg="var(--faction-snide-ink)"
       badgeRing="var(--faction-snide-acid)"
-      glyph={(s, color) => <CircledAGlyph size={s} color={color} />}
+      glyph={(s, color) => <SnideSigil size={s} color={color} />}
     />
   )
 }
