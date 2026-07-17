@@ -29,7 +29,7 @@ const signal = (pct: number): string => `color-mix(in srgb, ${SIGNAL} ${pct}%, t
 
 const kicker: CSSProperties = {
   fontFamily: FONT,
-  fontSize: 8,
+  fontSize: "var(--text-xs)",
   letterSpacing: '0.2em',
   textTransform: 'uppercase',
   color: signal(60),
@@ -38,7 +38,7 @@ const kicker: CSSProperties = {
 function SectionHead({ title, trailing }: { title: string; trailing?: ReactNode }) {
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
-      <h2 style={{ fontFamily: FONT, fontSize: 13, letterSpacing: '0.04em', textTransform: 'uppercase', margin: 0, color: PHOSPHOR, whiteSpace: 'nowrap' }}>
+      <h2 className="content-title" style={{ fontFamily: FONT, letterSpacing: '0.04em', textTransform: 'uppercase', margin: 0, color: PHOSPHOR, whiteSpace: 'nowrap' }}>
         {title}
       </h2>
       <span style={{ flex: 1, height: 1, background: signal(30) }} />
@@ -78,7 +78,7 @@ export default function SingularityTaskDetail({ state }: { state: TaskDetailStat
   return (
     <div className="py-4" style={{ fontFamily: FONT, color: PHOSPHOR, background: VOID, marginLeft: -16, marginRight: -16, paddingLeft: 16, paddingRight: 16 }}>
       {/* Breadcrumb */}
-      <nav className="mb-3" style={{ fontFamily: FONT, fontSize: 9, letterSpacing: '0.1em', textTransform: 'uppercase', color: signal(55) }}>
+      <nav className="mb-3" style={{ fontFamily: FONT, fontSize: "var(--text-sm)", letterSpacing: '0.1em', textTransform: 'uppercase', color: signal(55) }}>
         <Link to="/tasks" style={{ color: PHOSPHOR, textDecoration: 'none' }}>
           {t('default.breadcrumb')}
         </Link>
@@ -103,12 +103,12 @@ export default function SingularityTaskDetail({ state }: { state: TaskDetailStat
             <span style={kicker}>{t('singularity.statusOpen')}</span>
           </div>
 
-          <h1 style={{ fontFamily: FONT, fontSize: 24, lineHeight: 1.2, color: PHOSPHOR, letterSpacing: '0.02em', margin: 0, overflowWrap: 'anywhere' }}>
+          <h1 className="content-title" style={{ fontFamily: FONT, lineHeight: 1.2, color: PHOSPHOR, letterSpacing: '0.02em', margin: 0, overflowWrap: 'anywhere' }}>
             {'> '}
             {task.title}
           </h1>
           <div style={{ height: 1, margin: '14px 0', background: signal(30) }} />
-          <div style={{ fontFamily: FONT, fontSize: 11, letterSpacing: '0.06em', color: signal(70) }}>
+          <div style={{ fontFamily: FONT, fontSize: "var(--text-md)", letterSpacing: '0.06em', color: signal(70) }}>
             {t('singularity.class', { level: task.level_required, points: modifiedPoints })}
           </div>
         </div>
@@ -118,7 +118,7 @@ export default function SingularityTaskDetail({ state }: { state: TaskDetailStat
       <section style={{ marginBottom: 20 }}>
         <SectionHead title={t('singularity.mobile.briefHeading')} />
         <div style={{ background: VOID, border: `1px solid ${signal(38)}`, padding: '16px 18px' }}>
-          <p style={{ fontFamily: FONT, fontSize: 12, lineHeight: 1.7, color: task.description ? phosphor(72) : phosphor(45), margin: 0, whiteSpace: 'pre-wrap' }}>
+          <p className="content-text" style={{ fontFamily: FONT, lineHeight: 1.7, color: task.description ? phosphor(72) : phosphor(45), margin: 0, whiteSpace: 'pre-wrap' }}>
             {task.description || t('singularity.observationEmpty')}
           </p>
         </div>
@@ -129,18 +129,18 @@ export default function SingularityTaskDetail({ state }: { state: TaskDetailStat
         <SectionHead title={t('singularity.consensusHeading')} />
         {voteCount > 0 ? (
           <div style={{ display: 'flex', alignItems: 'flex-end', gap: 12 }}>
-            <span style={{ fontFamily: FONT, fontSize: 40, lineHeight: 0.85, color: PHOSPHOR }}>
+            <span className="content-title" style={{ fontFamily: FONT, lineHeight: 0.85, color: PHOSPHOR }}>
               {topScore}
             </span>
             <div style={{ paddingBottom: 5 }}>
-              <div style={{ fontFamily: FONT, fontSize: 11, letterSpacing: '0.06em', textTransform: 'uppercase', color: SIGNAL }}>
+              <div style={{ fontFamily: FONT, fontSize: "var(--text-md)", letterSpacing: '0.06em', textTransform: 'uppercase', color: SIGNAL }}>
                 {t('singularity.consensus.peakSignal')}
               </div>
               <div style={{ ...kicker, marginTop: 2 }}>{t('singularity.consensus.sealed', { count: voteCount })}</div>
             </div>
           </div>
         ) : (
-          <p style={{ fontFamily: FONT, fontSize: 12, color: phosphor(50), margin: 0 }}>{t('singularity.consensus.none')}</p>
+          <p className="content-text" style={{ fontFamily: FONT, color: phosphor(50), margin: 0 }}>{t('singularity.consensus.none')}</p>
         )}
       </section>
 
@@ -158,7 +158,7 @@ export default function SingularityTaskDetail({ state }: { state: TaskDetailStat
                     onClick={() => setSubmissionSort(sort)}
                     style={{
                       fontFamily: FONT,
-                      fontSize: 8,
+                      fontSize: "var(--text-xs)",
                       letterSpacing: '0.1em',
                       textTransform: 'uppercase',
                       padding: '5px 10px',
@@ -176,7 +176,7 @@ export default function SingularityTaskDetail({ state }: { state: TaskDetailStat
           }
         />
         {sortedSubmissions.length === 0 ? (
-          <p style={{ fontFamily: FONT, fontSize: 12, color: phosphor(50), margin: 0 }}>{t('singularity.empty')}</p>
+          <p className="content-text" style={{ fontFamily: FONT, color: phosphor(50), margin: 0 }}>{t('singularity.empty')}</p>
         ) : (
           <>
             <div className="flex flex-col gap-4">
@@ -194,7 +194,7 @@ export default function SingularityTaskDetail({ state }: { state: TaskDetailStat
                         background: PHOSPHOR,
                         color: VOID,
                         fontFamily: FONT,
-                        fontSize: 9,
+                        fontSize: "var(--text-sm)",
                         letterSpacing: '0.1em',
                         textTransform: 'uppercase',
                         padding: '2px 12px',
@@ -210,7 +210,7 @@ export default function SingularityTaskDetail({ state }: { state: TaskDetailStat
             </div>
             {submissions.length > 4 && (
               <div style={{ marginTop: 16 }}>
-                <Link to={`/praxes?task_id=${task.id}`} style={{ fontFamily: FONT, fontSize: 11, letterSpacing: '0.06em', color: SIGNAL, textDecoration: 'none' }}>
+                <Link to={`/praxes?task_id=${task.id}`} style={{ fontFamily: FONT, fontSize: "var(--text-md)", letterSpacing: '0.06em', color: SIGNAL, textDecoration: 'none' }}>
                   {t('singularity.viewAll', { count: submissions.length })}
                 </Link>
               </div>
@@ -223,7 +223,7 @@ export default function SingularityTaskDetail({ state }: { state: TaskDetailStat
       {canSignUp && (
         <MobileStickyBar>
           {signupError && (
-            <div style={{ fontFamily: FONT, fontSize: 12, color: 'var(--color-danger)', padding: '8px 12px', background: signal(10), border: `1px solid ${signal(40)}` }}>
+            <div style={{ fontFamily: FONT, fontSize: "var(--text-lg)", color: 'var(--color-danger)', padding: '8px 12px', background: signal(10), border: `1px solid ${signal(40)}` }}>
               {signupError}
             </div>
           )}
@@ -234,7 +234,7 @@ export default function SingularityTaskDetail({ state }: { state: TaskDetailStat
               background: PHOSPHOR,
               color: VOID,
               fontFamily: FONT,
-              fontSize: 14,
+              fontSize: "var(--text-xl)",
               letterSpacing: '0.1em',
               textTransform: 'uppercase',
               padding: '14px 20px',
@@ -253,12 +253,12 @@ export default function SingularityTaskDetail({ state }: { state: TaskDetailStat
 
       {mySubmission && (
         <MobileStickyBar style={{ flexDirection: 'row', alignItems: 'center' }}>
-          <span style={{ fontFamily: FONT, fontSize: 12, color: PHOSPHOR, flex: 1 }}>
+          <span style={{ fontFamily: FONT, fontSize: "var(--text-lg)", color: PHOSPHOR, flex: 1 }}>
             {t('singularity.submitted.note')}
           </span>
           <Link
             to={`/praxes/${mySubmission.id}/edit`}
-            style={{ fontFamily: FONT, fontSize: 10, letterSpacing: '0.1em', textTransform: 'uppercase', padding: '10px 18px', background: VOID, color: PHOSPHOR, border: `1px solid ${PHOSPHOR}`, textDecoration: 'none' }}
+            style={{ fontFamily: FONT, fontSize: "var(--text-base)", letterSpacing: '0.1em', textTransform: 'uppercase', padding: '10px 18px', background: VOID, color: PHOSPHOR, border: `1px solid ${PHOSPHOR}`, textDecoration: 'none' }}
           >
             {t('singularity.submitted.edit')}
           </Link>
@@ -269,13 +269,13 @@ export default function SingularityTaskDetail({ state }: { state: TaskDetailStat
         <MobileStickyBar style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
           <button
             onClick={handleDrop}
-            style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: FONT, fontSize: 10, letterSpacing: '0.1em', textTransform: 'uppercase', color: signal(55) }}
+            style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: FONT, fontSize: "var(--text-base)", letterSpacing: '0.1em', textTransform: 'uppercase', color: signal(55) }}
           >
             {t('singularity.inProgress.drop')}
           </button>
           <Link
             to={`/praxes/${inProgressPraxisId}/edit`}
-            style={{ marginLeft: 'auto', fontFamily: FONT, fontSize: 11, letterSpacing: '0.1em', textTransform: 'uppercase', padding: '12px 20px', background: PHOSPHOR, color: VOID, textDecoration: 'none' }}
+            style={{ marginLeft: 'auto', fontFamily: FONT, fontSize: "var(--text-md)", letterSpacing: '0.1em', textTransform: 'uppercase', padding: '12px 20px', background: PHOSPHOR, color: VOID, textDecoration: 'none' }}
           >
             {t('singularity.inProgress.continue')}
           </Link>
