@@ -49,7 +49,10 @@ export default function AlbescentVote({
           fontSize: 7,
           letterSpacing: '0.26em',
           textTransform: 'uppercase',
-          color: 'var(--faction-albescent-text-faint)',
+          // card-muted (4.65:1, #594), not -text-faint: this prompt is
+          // functional text and owes AA. -text-faint is decorative-only —
+          // it drives the deliberately-ghosted AlbescentFeedFrame masthead.
+          color: 'var(--faction-albescent-card-muted)',
           marginBottom: 10,
         }}
       >
