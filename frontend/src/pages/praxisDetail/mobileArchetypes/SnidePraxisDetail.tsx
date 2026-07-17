@@ -41,7 +41,7 @@ const CARD_SHADOW = '5px 6px 0 rgba(0,0,0,.5)'
 
 const kicker: CSSProperties = {
   fontFamily: TYPE,
-  fontSize: 8,
+  fontSize: 'var(--text-xs)',
   letterSpacing: '0.24em',
   textTransform: 'uppercase',
   color: MUTED,
@@ -52,7 +52,7 @@ function Plate({ title, children }: { title: string; children: ReactNode }) {
   return (
     <section style={{ position: 'relative', background: INK, color: TEXT, border: `1px solid ${LINE}`, boxShadow: CARD_SHADOW, padding: 13, overflow: 'hidden' }}>
       <span aria-hidden style={{ position: 'absolute', top: -10, left: 20, width: 58, height: 22, background: TAPE, transform: 'rotate(-4deg)', opacity: 0.92 }} />
-      <div style={{ fontFamily: COND, fontSize: 13, letterSpacing: '0.1em', textTransform: 'uppercase', color: ACID, marginBottom: 10 }}>
+      <div style={{ fontFamily: COND, fontSize: 'var(--text-lg)', letterSpacing: '0.1em', textTransform: 'uppercase', color: ACID, marginBottom: 10 }}>
         {title}
       </div>
       {children}
@@ -79,7 +79,7 @@ export default function SnidePraxisDetail({ state }: { state: PraxisDetailState 
         <Link to={`/characters/${praxis.created_by_id}`} className="shrink-0">
           <span
             className="flex items-center justify-center"
-            style={{ width: 42, height: 42, background: ACID, color: INK, fontFamily: IMPACT, fontSize: 20 }}
+            style={{ width: 42, height: 42, background: ACID, color: INK, fontFamily: IMPACT, fontSize: 'var(--text-content)' }}
             aria-hidden
           >
             {initial}
@@ -88,7 +88,7 @@ export default function SnidePraxisDetail({ state }: { state: PraxisDetailState 
         <div className="min-w-0 flex-1">
           <MemberByline
             praxis={praxis}
-            linkStyle={{ fontFamily: COND, fontSize: 19, letterSpacing: '0.03em', color: WALL_TEXT, lineHeight: 1, textDecoration: 'none' }}
+            linkStyle={{ fontFamily: COND, fontSize: 'var(--text-content)', letterSpacing: '0.03em', color: WALL_TEXT, lineHeight: 1, textDecoration: 'none' }}
           />
           <div className="truncate" style={{ ...kicker, marginTop: 3 }}>
             {t('detail.snide.pulledItOff')} · {formatTimestamp(filedDate)}
@@ -106,7 +106,7 @@ export default function SnidePraxisDetail({ state }: { state: PraxisDetailState 
       {/* Confession headline */}
       <div>
         <div style={{ ...kicker, marginBottom: 4, color: ACID }}>{t('detail.snide.theConfession')}</div>
-        <h1 style={{ fontFamily: COND, fontSize: 30, letterSpacing: '0.02em', lineHeight: 1.08, margin: 0, color: WALL_TEXT, overflowWrap: 'anywhere' }}>
+        <h1 style={{ fontFamily: COND, fontSize: 'var(--text-heading)', letterSpacing: '0.02em', lineHeight: 1.08, margin: 0, color: WALL_TEXT, overflowWrap: 'anywhere' }}>
           {praxis.title ?? t('detail.snide.untitled')}
         </h1>
       </div>
@@ -115,7 +115,7 @@ export default function SnidePraxisDetail({ state }: { state: PraxisDetailState 
       <PraxisOwnerActions state={state} />
 
       {/* re: task link */}
-      <div style={{ fontFamily: TYPE, fontSize: 13, color: MUTED }}>
+      <div style={{ fontFamily: TYPE, fontSize: 'var(--text-lg)', color: MUTED }}>
         {t('detail.snide.mobile.re')}{' '}
         <Link to={`/tasks/${praxis.task_id}`} style={{ color: PINK, fontFamily: COND, letterSpacing: '0.03em', textDecoration: 'none' }}>
           {praxis.task_title}
@@ -126,14 +126,14 @@ export default function SnidePraxisDetail({ state }: { state: PraxisDetailState 
       {praxis.body_text && (
         <MarkdownPreview
           source={praxis.body_text}
-          className="markdown-preview"
-          style={{ fontFamily: TYPE, fontSize: 14, lineHeight: 1.7, color: WALL_TEXT }}
+          className="markdown-preview content-text"
+          style={{ fontFamily: TYPE, lineHeight: 1.7, color: WALL_TEXT }}
         />
       )}
 
       {/* Vote caster */}
       <Plate title={t('detail.snide.theVerdict')}>
-        <div className="flex items-center justify-center" style={{ marginBottom: 12, fontFamily: COND, fontSize: 20, letterSpacing: '0.03em', color: TEXT }}>
+        <div className="flex items-center justify-center content-text" style={{ marginBottom: 12, fontFamily: COND, letterSpacing: '0.03em', color: TEXT }}>
           {t('detail.snide.mobile.appraise')}
         </div>
         <MobileStarVote

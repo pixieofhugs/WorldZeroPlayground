@@ -79,7 +79,7 @@ function Window({ title, children }: { title: string; children: ReactNode }) {
           />
         ))}
         <span
-          style={{ marginLeft: 'auto', display: 'inline-flex', alignItems: 'center', gap: 5, fontFamily: SCRIPT, fontSize: 18, color: TITLE_TEXT }}
+          style={{ marginLeft: 'auto', display: 'inline-flex', alignItems: 'center', gap: 5, fontFamily: SCRIPT, fontSize: 'var(--text-content)', color: TITLE_TEXT }}
         >
           <Sparkle size={11} color={TITLE_TEXT} />
           {title}
@@ -131,7 +131,7 @@ export default function WowPraxisDetail({ state }: { state: PraxisDetailState })
               border: `1.5px solid ${WIN_BORDER}`,
               color: ON_ACCENT,
               fontFamily: SCRIPT,
-              fontSize: 20,
+              fontSize: 'var(--text-content)',
             }}
             aria-hidden
           >
@@ -141,9 +141,9 @@ export default function WowPraxisDetail({ state }: { state: PraxisDetailState })
         <div className="min-w-0 flex-1">
           <MemberByline
             praxis={praxis}
-            linkStyle={{ fontFamily: SCRIPT, fontSize: 22, color: TITLE_TEXT, lineHeight: 1, textDecoration: 'none' }}
+            linkStyle={{ fontFamily: SCRIPT, fontSize: 'var(--text-title)', color: TITLE_TEXT, lineHeight: 1, textDecoration: 'none' }}
           />
-          <div className="truncate" style={{ marginTop: 2, fontSize: 9, color: CARD_MUTED, letterSpacing: '0.06em' }}>
+          <div className="truncate" style={{ marginTop: 2, fontSize: 'var(--text-sm)', color: CARD_MUTED, letterSpacing: '0.06em' }}>
             {t('mobileFeed.byline', { faction: factionName(praxis.created_by_faction_slug), time: formatTimestamp(sealedDate) })}
           </div>
         </div>
@@ -158,10 +158,10 @@ export default function WowPraxisDetail({ state }: { state: PraxisDetailState })
 
       {/* Finding headline */}
       <div>
-        <div style={{ fontSize: 9, textTransform: 'uppercase', letterSpacing: '0.2em', color: CARD_MUTED, marginBottom: 4 }}>
+        <div style={{ fontSize: 'var(--text-sm)', textTransform: 'uppercase', letterSpacing: '0.2em', color: CARD_MUTED, marginBottom: 4 }}>
           {t('detail.wow.theFinding')}
         </div>
-        <h1 style={{ fontFamily: SCRIPT, fontWeight: 700, fontSize: 34, lineHeight: 1.12, margin: 0, color: TITLE_TEXT, overflowWrap: 'anywhere' }}>
+        <h1 style={{ fontFamily: SCRIPT, fontWeight: 700, fontSize: 'var(--text-heading)', lineHeight: 1.12, margin: 0, color: TITLE_TEXT, overflowWrap: 'anywhere' }}>
           {praxis.title ?? t('detail.wow.untitled')}
         </h1>
       </div>
@@ -170,7 +170,7 @@ export default function WowPraxisDetail({ state }: { state: PraxisDetailState })
       <PraxisOwnerActions state={state} />
 
       {/* re: task link */}
-      <div style={{ fontSize: 9.5, color: CARD_MUTED, letterSpacing: '0.04em' }}>
+      <div style={{ fontSize: 'var(--text-sm)', color: CARD_MUTED, letterSpacing: '0.04em' }}>
         {t('detail.wow.re')}{' '}
         <Link to={`/tasks/${praxis.task_id}`} style={{ color: TITLE_TEXT, fontWeight: 700, textDecoration: 'none' }}>
           {praxis.task_title}
@@ -182,16 +182,16 @@ export default function WowPraxisDetail({ state }: { state: PraxisDetailState })
       {praxis.body_text && (
         <MarkdownPreview
           source={praxis.body_text}
-          className="markdown-preview"
-          style={{ fontFamily: BODY, fontSize: 13, lineHeight: 1.75, color: CARD_TEXT }}
+          className="markdown-preview content-text"
+          style={{ fontFamily: BODY, lineHeight: 1.75, color: CARD_TEXT }}
         />
       )}
 
       {/* hearts.exe — the touch star caster */}
       <Window title={t('detail.wow.windows.hearts')}>
         <div
-          className="flex items-center justify-center gap-2"
-          style={{ marginBottom: 12, fontFamily: SCRIPT, fontSize: 22, color: TITLE_TEXT }}
+          className="flex items-center justify-center gap-2 content-title"
+          style={{ marginBottom: 12, fontFamily: SCRIPT, color: TITLE_TEXT }}
         >
           <Sparkle size={13} color={PINK} />
           {t('detail.wow.sendLove')}
