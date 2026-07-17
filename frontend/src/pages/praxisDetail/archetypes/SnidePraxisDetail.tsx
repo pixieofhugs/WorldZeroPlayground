@@ -415,7 +415,6 @@ export default function SnidePraxisDetail({ state }: { state: PraxisDetailState 
             praxisId={praxis.id}
             points={votes?.total_score}
             totalVotes={votes?.total_votes}
-            mode="caster"
           />
         </div>
 

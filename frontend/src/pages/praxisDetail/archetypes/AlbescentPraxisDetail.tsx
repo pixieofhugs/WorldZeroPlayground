@@ -223,7 +223,6 @@ export default function AlbescentPraxisDetail({ state }: { state: PraxisDetailSt
           praxisId={praxis.id}
           points={votes?.total_score}
           totalVotes={votes?.total_votes}
-          mode="caster"
         />
 
         {/* ── Flag block ── */}

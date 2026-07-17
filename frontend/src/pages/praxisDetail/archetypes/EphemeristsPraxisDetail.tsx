@@ -356,7 +356,6 @@ export default function EphemeristsPraxisDetail({ state }: { state: PraxisDetail
             praxisId={praxis.id}
             points={votes?.total_score}
             totalVotes={votes?.total_votes}
-            mode="caster"
           />
         </div>
 
