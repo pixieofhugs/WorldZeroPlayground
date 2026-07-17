@@ -142,7 +142,7 @@ export default function DefaultTaskDetail({
                     padding: "2px 8px",
                     borderRadius: 4,
                     background: factionCssVar(task.metatask_faction_slug),
-                    color: "var(--color-text-on-accent)",
+                    color: factionCssVar(task.metatask_faction_slug, "on-fill"),
                     fontWeight: 700,
                     textShadow: "0 1px 2px rgba(0,0,0,0.3)",
                   }}

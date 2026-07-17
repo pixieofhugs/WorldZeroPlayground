@@ -91,6 +91,7 @@ Required suffixes (consumed by the dispatchers / `factionCssVar`):
 | `--faction-{key}-card-accent` | metadata / decorative accent |
 | `--faction-{key}-card-muted` | secondary text |
 | `--faction-{key}-card-font` | headline font (points at a `--font-*` face) |
+| `--faction-{key}-on-fill` | AA-legible text ink for the faction's **solid fill** — white or ink per faction × theme, so `factionCssVar(slug, 'on-fill')` never paints white on a fill that fails AA (#649). Not for `na`, whose fill is a gradient, not a text backdrop. Guarded by `factionContrast.test.ts`. |
 
 Plus any **archetype-private primitives** (e.g. Everymen's `--everymen-cream/-gold/-ink/-paper/-field`, Gestalt's window-chrome tokens, S.N.I.D.E.'s punk pigments `--faction-snide-acid/-ink/-paper/-pink/-tape` + flyposted-wall `--faction-snide-wall*` + the `--faction-snide-font-*` set). These are referenced only inside that faction's own components, not through `factionCssVar`, and are ported verbatim from the design kit. S.N.I.D.E. namespaces them under `--faction-snide-*` (rather than bare `--acid` etc.) so they stay within the single-source-of-truth scheme; note that this flips `--faction-snide-card-bg` to ink — SNIDE is an always-dark card like Singularity.
 

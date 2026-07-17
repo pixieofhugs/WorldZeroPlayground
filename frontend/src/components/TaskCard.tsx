@@ -69,7 +69,7 @@ export default function TaskCard({ task, displayPoints, onSignup }: CardProps) {
           <span
             style={{
               background: factionCssVar(task.metatask_faction_slug),
-              color: 'var(--color-text-on-accent)',
+              color: factionCssVar(task.metatask_faction_slug, 'on-fill'),
               fontFamily: "'Courier Prime', monospace",
               fontSize: 8,
               fontWeight: 700,
