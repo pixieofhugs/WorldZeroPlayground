@@ -15,6 +15,7 @@
  * slug (ADR-0031, same split as taunts/ranks), and are resolved via
  * factionName() / factionDescription().
  */
+import type { CSSProperties } from "react";
 import i18n from "../i18n";
 
 // Faction slugs are runtime-dynamic, so the catalog keys (`factions:names.<slug>`
@@ -71,7 +72,20 @@ const CSS_KEY: Record<string, string> = {
   ephemerists: "ephemerists",
   singularity: "singularity",
   albescent: "albescent", // first-class (#232) — its own --faction-albescent-* set
+  // `na` (unaffiliated) is a state, not a faction: it reads the neutral/rainbow
+  // --faction-default-* set (#418). Scalars resolve to grey here; the spectrum
+  // reaches fills only through factionFill() (ADR-0039).
+  na: "default",
 };
+
+/**
+ * Resolve a slug (through aliases) to its CSS-variable key. Unknown/unregistered
+ * slugs degrade to `default` (neutral grey / rainbow), never impersonate `ua`.
+ */
+function resolveCssKey(slug: string | null | undefined): string {
+  const resolved = FACTION_ALIASES[slug ?? ""] ?? slug ?? "";
+  return CSS_KEY[resolved] ?? "default";
+}
 
 /**
  * Get a CSS variable reference for a faction property.
@@ -90,10 +104,69 @@ export function factionCssVar(
   slug: string | null | undefined,
   suffix?: string,
 ): string {
-  const resolved = FACTION_ALIASES[slug ?? ""] ?? slug ?? "";
-  const key = CSS_KEY[resolved] ?? "ua";
+  const key = resolveCssKey(slug);
   const prop = suffix ? `--faction-${key}-${suffix}` : `--faction-${key}`;
   return `var(${prop})`;
+}
+
+/**
+ * Surface geometry a faction FILL can occupy. Determines how `na`'s spectrum is
+ * rendered — the wrong shape compiles fine but looks bad (a 7-stop linear on a
+ * 10px dot reads as mud), so the call site picks it. See ADR-0039.
+ */
+export type FactionFillShape = "bar" | "dot" | "pill";
+
+/**
+ * A faction FILL as a style object to spread onto the filled element.
+ *
+ * Every real faction returns its solid hue for every shape (with the paired
+ * `--faction-{key}-on-fill` AA ink for `"pill"`, #649). Only `na`/unregistered
+ * slugs are shape-dependent, because their identity is a gradient, not a hue
+ * (ADR-0039):
+ *   - `"bar"`  → the linear rainbow (`--faction-default-rainbow`)
+ *   - `"dot"`  → the conic rainbow (`--faction-default-ring`; a 7-stop linear is
+ *                mud at 10–12px)
+ *   - `"pill"` → the rainbow as a *frame* (border-box) around a neutral paper
+ *                interior with ink text — no single ink is legible across the
+ *                spectrum, so the label never sits on it.
+ *
+ * Prefer this over `factionCssVar(slug)` for any `background:` that renders a
+ * dynamic slug (one that can be `na` at runtime). Scalar contexts (`color:`,
+ * borders) keep using `factionCssVar` and stay neutral grey for `na`.
+ */
+export function factionFill(
+  slug: string | null | undefined,
+  shape: FactionFillShape,
+): CSSProperties {
+  const key = resolveCssKey(slug);
+  const isDefault = key === "default";
+
+  if (shape === "pill") {
+    if (isDefault) {
+      // Paper interior on padding-box, spectrum on border-box, ink on paper.
+      return {
+        background:
+          "linear-gradient(var(--faction-default-card-bg), var(--faction-default-card-bg)) padding-box, var(--faction-default-rainbow) border-box",
+        border: "2px solid transparent",
+        color: "var(--faction-default-card-text)",
+        boxSizing: "border-box",
+      };
+    }
+    return {
+      background: `var(--faction-${key})`,
+      color: `var(--faction-${key}-on-fill)`,
+    };
+  }
+
+  if (isDefault) {
+    return {
+      background:
+        shape === "dot"
+          ? "var(--faction-default-ring)"
+          : "var(--faction-default-rainbow)",
+    };
+  }
+  return { background: `var(--faction-${key})` };
 }
 
 /** Get faction color by slug, with fallback (raw hex — light mode only) */
