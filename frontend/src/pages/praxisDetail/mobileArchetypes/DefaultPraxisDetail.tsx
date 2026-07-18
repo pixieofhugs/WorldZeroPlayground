@@ -36,7 +36,7 @@ export default function DefaultPraxisDetail({ state }: { state: PraxisDetailStat
   const initial = (praxis.created_by_display_name || '?')[0]?.toUpperCase() ?? '?'
 
   return (
-    <div data-skin="default" className="page" style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+    <div data-skin="default" className="page" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-lg)' }}>
       {/* Breadcrumb */}
       <nav
         className="font-body"
@@ -102,7 +102,7 @@ export default function DefaultPraxisDetail({ state }: { state: PraxisDetailStat
         style={{
           borderLeft: `4px solid ${accent}`,
           borderRadius: '0 8px 8px 0',
-          padding: '10px 14px',
+          padding: 'var(--space-md) var(--space-lg)',
           textDecoration: 'none',
         }}
       >
@@ -128,11 +128,11 @@ export default function DefaultPraxisDetail({ state }: { state: PraxisDetailStat
       )}
 
       {/* Touch star-vote */}
-      <div className="sidebar-card" style={{ padding: '16px 14px' }}>
-        <div className="eyebrow" style={{ textAlign: 'center', marginBottom: 12, color: 'var(--color-text-secondary)' }}>
+      <div className="sidebar-card" style={{ padding: 'var(--space-lg) var(--space-lg)' }}>
+        <div className="eyebrow" style={{ textAlign: 'center', marginBottom: 'var(--space-md)', color: 'var(--color-text-secondary)' }}>
           {t('mobileDetail.ratePrompt')}
         </div>
-        <div style={{ marginBottom: 12 }}>
+        <div style={{ marginBottom: 'var(--space-md)' }}>
           <PraxisScoreBreakdown state={state} align="center" accent={accent} />
         </div>
         <MobileStarVote

@@ -67,8 +67,8 @@ function Window({ title, children }: { title: string; children: ReactNode }) {
         style={{
           display: 'flex',
           alignItems: 'center',
-          gap: 7,
-          padding: '8px 12px',
+          gap: 'var(--space-sm)',
+          padding: 'var(--space-sm) var(--space-md)',
           background: 'linear-gradient(180deg, var(--faction-wow-title-from), var(--faction-wow-title-to))',
           borderBottom: `2px solid ${WIN_BORDER}`,
         }}
@@ -80,7 +80,7 @@ function Window({ title, children }: { title: string; children: ReactNode }) {
           />
         ))}
         <span
-          style={{ marginLeft: 'auto', display: 'inline-flex', alignItems: 'center', gap: 5, fontFamily: SCRIPT, fontSize: 'var(--text-content)', color: TITLE_TEXT }}
+          style={{ marginLeft: 'auto', display: 'inline-flex', alignItems: 'center', gap: 'var(--space-xs)', fontFamily: SCRIPT, fontSize: 'var(--text-content)', color: TITLE_TEXT }}
         >
           <Sparkle size={11} color={TITLE_TEXT} />
           {title}
@@ -88,13 +88,13 @@ function Window({ title, children }: { title: string; children: ReactNode }) {
       </div>
       <div
         style={{
-          padding: 12,
+          padding: 'var(--space-md)',
           background: BODY_BG,
           backgroundImage: `radial-gradient(${DOT} 1.4px, transparent 1.4px)`,
           backgroundSize: '13px 13px',
         }}
       >
-        <div style={{ background: NOTEPAD_BG, border: `1.5px solid ${NOTEPAD_BORDER}`, borderRadius: 9, padding: 13 }}>
+        <div style={{ background: NOTEPAD_BG, border: `1.5px solid ${NOTEPAD_BORDER}`, borderRadius: 9, padding: 'var(--space-md)' }}>
           {children}
         </div>
       </div>
@@ -114,7 +114,7 @@ export default function WowPraxisDetail({ state }: { state: PraxisDetailState })
     <div
       data-skin="wow"
       className="page"
-      style={{ display: 'flex', flexDirection: 'column', gap: 14, fontFamily: BODY, color: CARD_TEXT, background: BODY_BG }}
+      style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-lg)', fontFamily: BODY, color: CARD_TEXT, background: BODY_BG }}
     >
       {/* Behavior slots (invariant) */}
       <PraxisStatusBanners state={state} />
@@ -144,7 +144,7 @@ export default function WowPraxisDetail({ state }: { state: PraxisDetailState })
             praxis={praxis}
             linkStyle={{ fontFamily: SCRIPT, fontSize: 'var(--text-title)', color: TITLE_TEXT, lineHeight: 1, textDecoration: 'none' }}
           />
-          <div className="truncate" style={{ marginTop: 2, fontSize: 'var(--text-sm)', color: CARD_MUTED, letterSpacing: '0.06em' }}>
+          <div className="truncate" style={{ marginTop: 'var(--space-xs)', fontSize: 'var(--text-sm)', color: CARD_MUTED, letterSpacing: '0.06em' }}>
             {t('mobileFeed.byline', { faction: factionName(praxis.created_by_faction_slug), time: formatTimestamp(sealedDate) })}
           </div>
         </div>
@@ -159,7 +159,7 @@ export default function WowPraxisDetail({ state }: { state: PraxisDetailState })
 
       {/* Finding headline */}
       <div>
-        <div style={{ fontSize: 'var(--text-sm)', textTransform: 'uppercase', letterSpacing: '0.2em', color: CARD_MUTED, marginBottom: 4 }}>
+        <div style={{ fontSize: 'var(--text-sm)', textTransform: 'uppercase', letterSpacing: '0.2em', color: CARD_MUTED, marginBottom: 'var(--space-xs)' }}>
           {t('detail.wow.theFinding')}
         </div>
         <h1 style={{ fontFamily: SCRIPT, fontWeight: 700, fontSize: 'var(--text-heading)', lineHeight: 1.12, margin: 0, color: TITLE_TEXT, overflowWrap: 'anywhere' }}>
@@ -192,12 +192,12 @@ export default function WowPraxisDetail({ state }: { state: PraxisDetailState })
       <Window title={t('detail.wow.windows.hearts')}>
         <div
           className="flex items-center justify-center gap-2 content-title"
-          style={{ marginBottom: 12, fontFamily: SCRIPT, color: TITLE_TEXT }}
+          style={{ marginBottom: 'var(--space-md)', fontFamily: SCRIPT, color: TITLE_TEXT }}
         >
           <Sparkle size={13} color={PINK} />
           {t('detail.wow.sendLove')}
         </div>
-        <div style={{ marginBottom: 12 }}>
+        <div style={{ marginBottom: 'var(--space-md)' }}>
           <PraxisScoreBreakdown state={state} align="center" accent={PINK} font={SCRIPT} />
         </div>
         <MobileStarVote

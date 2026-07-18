@@ -43,10 +43,10 @@ const MONO = 'var(--font-body)'
 /** Exhibited plate — the gilt sandwich frame around a parchment body. */
 function Plate({ title, children }: { title: string; children: ReactNode }) {
   return (
-    <section style={{ padding: 8, background: GILT, boxShadow: '0 10px 24px rgba(60,40,10,.18), inset 0 0 0 1px rgba(255,255,255,0.45)' }}>
-      <div style={{ padding: 3, background: `linear-gradient(135deg, ${GOLD}, ${GOLD_PALE})` }}>
-        <div style={{ background: PAPER, border: `1px solid ${LINE}`, padding: 13 }}>
-          <div style={{ fontFamily: ENGRAVED, fontSize: 'var(--text-sm)', letterSpacing: '0.13em', textTransform: 'uppercase', color: ACCENT, marginBottom: 10 }}>
+    <section style={{ padding: 'var(--space-sm)', background: GILT, boxShadow: '0 10px 24px rgba(60,40,10,.18), inset 0 0 0 1px rgba(255,255,255,0.45)' }}>
+      <div style={{ padding: 'var(--space-xs)', background: `linear-gradient(135deg, ${GOLD}, ${GOLD_PALE})` }}>
+        <div style={{ background: PAPER, border: `1px solid ${LINE}`, padding: 'var(--space-md)' }}>
+          <div style={{ fontFamily: ENGRAVED, fontSize: 'var(--text-sm)', letterSpacing: '0.13em', textTransform: 'uppercase', color: ACCENT, marginBottom: 'var(--space-md)' }}>
             {title}
           </div>
           {children}
@@ -73,7 +73,7 @@ export default function UaPraxisDetail({ state }: { state: PraxisDetailState }) 
   const initial = (praxis.created_by_display_name || '?')[0]?.toUpperCase() ?? '?'
 
   return (
-    <div data-skin="ua" className="page" style={{ display: 'flex', flexDirection: 'column', gap: 14, fontFamily: MONO, color: INK, background: WALL }}>
+    <div data-skin="ua" className="page" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-lg)', fontFamily: MONO, color: INK, background: WALL }}>
       {/* Behavior slots (invariant) */}
       <PraxisStatusBanners state={state} />
       <PraxisAdminBar state={state} />
@@ -94,7 +94,7 @@ export default function UaPraxisDetail({ state }: { state: PraxisDetailState }) 
             praxis={praxis}
             linkStyle={{ fontFamily: DISPLAY, fontStyle: 'italic', fontWeight: 700, fontSize: 'var(--text-content)', color: INK, lineHeight: 1, textDecoration: 'none' }}
           />
-          <div className="truncate" style={{ ...kicker, marginTop: 3 }}>
+          <div className="truncate" style={{ ...kicker, marginTop: 'var(--space-xs)' }}>
             {t('detail.ua.acquiringHand')} · {formatTimestamp(sealedDate)}
           </div>
         </div>
@@ -109,7 +109,7 @@ export default function UaPraxisDetail({ state }: { state: PraxisDetailState }) 
 
       {/* Finding headline */}
       <div>
-        <div style={{ ...kicker, marginBottom: 4, color: SUB }}>{t('detail.ua.mobile.theAcquisition')}</div>
+        <div style={{ ...kicker, marginBottom: 'var(--space-xs)', color: SUB }}>{t('detail.ua.mobile.theAcquisition')}</div>
         <h1 style={{ fontFamily: DISPLAY, fontStyle: 'italic', fontWeight: 700, fontSize: 'var(--text-heading)', lineHeight: 1.1, margin: 0, color: INK, overflowWrap: 'anywhere' }}>
           {praxis.title ?? t('detail.ua.untitled')}
         </h1>
@@ -137,10 +137,10 @@ export default function UaPraxisDetail({ state }: { state: PraxisDetailState }) 
 
       {/* Appraisal caster */}
       <Plate title={t('detail.ua.standing.heading')}>
-        <div className="flex items-center justify-center content-text" style={{ marginBottom: 12, fontFamily: DISPLAY, fontStyle: 'italic', fontWeight: 700, color: INK }}>
+        <div className="flex items-center justify-center content-text" style={{ marginBottom: 'var(--space-md)', fontFamily: DISPLAY, fontStyle: 'italic', fontWeight: 700, color: INK }}>
           {t('detail.ua.mobile.appraise')}
         </div>
-        <div style={{ marginBottom: 12 }}>
+        <div style={{ marginBottom: 'var(--space-md)' }}>
           <PraxisScoreBreakdown state={state} align="center" accent={ACCENT} font={DISPLAY} />
         </div>
         <MobileStarVote

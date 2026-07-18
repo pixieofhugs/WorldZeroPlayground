@@ -40,7 +40,7 @@ function Sprockets({ position }: { position: 'top' | 'bottom' }) {
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',
-        padding: '5px 10px',
+        padding: 'var(--space-xs) var(--space-md)',
         background: 'color-mix(in srgb, var(--faction-singularity-muted) 10%, transparent)',
         ...border,
       }}
@@ -64,7 +64,7 @@ function Sprockets({ position }: { position: 'top' | 'bottom' }) {
 /** A labelled section rule — `> LABEL ─────────`. */
 function SgDivider({ label }: { label: string }) {
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '20px 0 12px' }}>
+    <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-md)', margin: 'var(--space-xl) 0 var(--space-md)' }}>
       <span
         style={{
           fontFamily: 'var(--font-faction-terminal)',
@@ -140,9 +140,9 @@ export default function SingularityPraxisDetail({ state }: { state: PraxisDetail
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
-            gap: 12,
+            gap: 'var(--space-md)',
             flexWrap: 'wrap',
-            padding: '12px 24px',
+            padding: 'var(--space-md) var(--space-xl)',
             borderBottom: '1px solid color-mix(in srgb, var(--faction-singularity-muted) 28%, transparent)',
             background: 'color-mix(in srgb, var(--faction-singularity-card-accent) 3%, transparent)',
           }}
@@ -168,7 +168,7 @@ export default function SingularityPraxisDetail({ state }: { state: PraxisDetail
           </span>
         </div>
 
-        <div style={{ padding: '20px 24px 28px' }}>
+        <div style={{ padding: 'var(--space-xl) var(--space-xl) var(--space-2xl)' }}>
           {/* ── Behavior slots (invariant — from shared module) ── */}
           <PraxisAdminBar state={state} />
           <PraxisStatusBanners state={state} />
@@ -178,8 +178,8 @@ export default function SingularityPraxisDetail({ state }: { state: PraxisDetail
             style={{
               display: 'flex',
               alignItems: 'center',
-              gap: 10,
-              marginBottom: 16,
+              gap: 'var(--space-md)',
+              marginBottom: 'var(--space-lg)',
               flexWrap: 'wrap',
             }}
           >
@@ -187,13 +187,13 @@ export default function SingularityPraxisDetail({ state }: { state: PraxisDetail
               style={{
                 display: 'inline-flex',
                 alignItems: 'center',
-                gap: 7,
+                gap: 'var(--space-sm)',
                 background: 'var(--faction-singularity-card-accent)',
                 color: 'var(--faction-singularity-card-bg)',
                 fontSize: 'var(--text-xs)',
                 letterSpacing: '0.2em',
                 textTransform: 'uppercase',
-                padding: '4px 12px',
+                padding: 'var(--space-xs) var(--space-md)',
                 fontWeight: 700,
               }}
             >
@@ -202,7 +202,7 @@ export default function SingularityPraxisDetail({ state }: { state: PraxisDetail
             <span
               style={{
                 fontSize: 'var(--text-xs)',
-                padding: '4px 10px',
+                padding: 'var(--space-xs) var(--space-md)',
                 border: '1px solid color-mix(in srgb, var(--faction-singularity-muted) 40%, transparent)',
                 color: 'color-mix(in srgb, var(--faction-singularity-muted) 80%, transparent)',
                 letterSpacing: '0.14em',
@@ -241,7 +241,7 @@ export default function SingularityPraxisDetail({ state }: { state: PraxisDetail
                     textTransform: 'uppercase',
                     color: 'var(--color-danger)',
                     border: '1px solid var(--color-danger)',
-                    padding: '1px 6px',
+                    padding: 'var(--space-xs) var(--space-sm)',
                   }}
                 >
                   {t('detail.singularity.flagged')}
@@ -251,12 +251,12 @@ export default function SingularityPraxisDetail({ state }: { state: PraxisDetail
           </div>
 
           {/* ── Output headline ── */}
-          <div style={{ marginBottom: 18 }}>
+          <div style={{ marginBottom: 'var(--space-lg)' }}>
             <div
               style={{
                 fontSize: 'var(--text-xs)',
                 letterSpacing: '0.2em',
-                marginBottom: 8,
+                marginBottom: 'var(--space-sm)',
                 color: 'color-mix(in srgb, var(--faction-singularity-muted) 55%, transparent)',
               }}
             >
@@ -281,7 +281,7 @@ export default function SingularityPraxisDetail({ state }: { state: PraxisDetail
                   display: 'inline-block',
                   width: 8,
                   height: 30,
-                  marginLeft: 6,
+                  marginLeft: 'var(--space-sm)',
                   verticalAlign: 'middle',
                   background: 'var(--faction-singularity-card-accent)',
                 }}
@@ -297,9 +297,9 @@ export default function SingularityPraxisDetail({ state }: { state: PraxisDetail
             style={{
               display: 'flex',
               alignItems: 'center',
-              gap: 12,
-              paddingBottom: 18,
-              marginBottom: 8,
+              gap: 'var(--space-md)',
+              paddingBottom: 'var(--space-lg)',
+              marginBottom: 'var(--space-sm)',
               borderBottom: '1px dashed color-mix(in srgb, var(--faction-singularity-muted) 28%, transparent)',
             }}
           >
@@ -352,7 +352,7 @@ export default function SingularityPraxisDetail({ state }: { state: PraxisDetail
                 style={{
                   fontSize: 'var(--text-xs)',
                   letterSpacing: '0.12em',
-                  marginTop: 2,
+                  marginTop: 'var(--space-xs)',
                   color: 'color-mix(in srgb, var(--faction-singularity-muted) 50%, transparent)',
                 }}
               >
@@ -371,7 +371,7 @@ export default function SingularityPraxisDetail({ state }: { state: PraxisDetail
                 style={{
                   lineHeight: 1.75,
                   color: 'color-mix(in srgb, var(--faction-singularity-card-accent) 78%, transparent)',
-                  marginBottom: 8,
+                  marginBottom: 'var(--space-sm)',
                 }}
               />
             </>
@@ -387,7 +387,7 @@ export default function SingularityPraxisDetail({ state }: { state: PraxisDetail
                 style={{
                   border: '1px solid color-mix(in srgb, var(--faction-singularity-muted) 30%, transparent)',
                   background: 'color-mix(in srgb, var(--faction-singularity-muted) 6%, transparent)',
-                  padding: 10,
+                  padding: 'var(--space-md)',
                 }}
               >
                 <MediaGallery media={praxis.media_items} layout="grid" />
@@ -397,8 +397,8 @@ export default function SingularityPraxisDetail({ state }: { state: PraxisDetail
 
           {/* ── The consensus array (vote caster) ── */}
           <SgDivider label={t('detail.singularity.consensusArray')} />
-          <div style={{ marginBottom: 20 }}>
-            <div style={{ marginBottom: 12 }}>
+          <div style={{ marginBottom: 'var(--space-xl)' }}>
+            <div style={{ marginBottom: 'var(--space-md)' }}>
               <PraxisScoreBreakdown
                 state={state}
                 align="right"
