@@ -481,9 +481,8 @@ export default function WowFactionBody({ state }: { state: FactionDetailState })
                   border: `1px solid ${HAIRLINE}`,
                   boxShadow: `0 10px 20px ${BOARD_SHADOW}`,
                   // ornament: the polaroid's mat. A thin top/side border against a fat
-                  // bottom chin IS the polaroid; the mats are drawn, not layout. No
-                  // disable directive — the trailing bare `0` keeps this shorthand out
-                  // of the rule's all-px string pattern, so one here would be unused.
+                  // bottom chin IS the polaroid; the mats are drawn, not layout.
+                  // eslint-disable-next-line local/no-raw-style-values -- ornament, per above
                   padding: "10px 10px 0",
                 }}
               >
