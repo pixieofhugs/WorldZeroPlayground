@@ -17,12 +17,12 @@ import VoteUI from '../../../components/vote/VoteUI'
 import { EphemeristsSigil, EphEyebrow, Foxing, LapisLastWord, toRoman } from '../../../components/cards/ephemeristsAtoms'
 import { factionCssVar } from '../../../utils/factions'
 import { formatTimestamp } from '../../../utils/dates'
-import { PraxisAdminBar, PraxisStatusBanners, PraxisOwnerActions, PraxisFlagBlock, PraxisVoterBreakdown, MemberByline } from '../shared'
+import { PraxisAdminBar, PraxisStatusBanners, PraxisOwnerActions, PraxisFlagBlock, PraxisVoterBreakdown, PraxisScoreBreakdown, MemberByline } from '../shared'
 import type { PraxisDetailState } from '../usePraxisDetail'
 
 export default function EphemeristsPraxisDetail({ state }: { state: PraxisDetailState }) {
   const { t } = useTranslation('praxis')
-  const { praxis, votes } = state
+  const { praxis } = state
   if (!praxis) return null
 
   const sealedDate = praxis.submitted_at ?? praxis.created_at
@@ -324,38 +324,18 @@ export default function EphemeristsPraxisDetail({ state }: { state: PraxisDetail
                 {t('detail.ephemerists.concordance')}
               </span>
             </div>
-            {/* Points from votes */}
-            {votes && votes.total_votes > 0 && (
-              <div style={{ textAlign: 'right' }}>
-                <span
-                  className="content-title"
-                  style={{
-                    fontFamily: 'var(--eph-display)',
-                    color: 'var(--eph-vellum-text)',
-                    lineHeight: 1,
-                  }}
-                >
-                  +{votes.total_score}
-                </span>
-                <span
-                  style={{
-                    fontFamily: 'var(--eph-display)',
-                    fontSize: 'var(--text-xs)',
-                    letterSpacing: '0.14em',
-                    color: 'var(--eph-muted)',
-                    marginLeft: 4,
-                  }}
-                >
-                  {t('detail.ephemerists.ptsFromVotes')}
-                </span>
-              </div>
-            )}
+            {/* Earned-points breakdown (#641) */}
+            <PraxisScoreBreakdown
+              state={state}
+              align="right"
+              accent="var(--eph-vellum-text)"
+              muted="var(--eph-muted)"
+              font="var(--eph-display)"
+            />
           </div>
           <VoteUI
             factionSlug={praxis.task_faction_slug}
             praxisId={praxis.id}
-            points={votes?.total_score}
-            totalVotes={votes?.total_votes}
           />
         </div>
 

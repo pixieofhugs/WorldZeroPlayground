@@ -21,7 +21,7 @@ import MediaGallery from '../../../components/MediaGallery'
 import VoteUI from '../../../components/vote/VoteUI'
 import { factionCssVar } from '../../../utils/factions'
 import { formatTimestamp } from '../../../utils/dates'
-import { PraxisAdminBar, PraxisStatusBanners, PraxisOwnerActions, PraxisFlagBlock, PraxisVoterBreakdown, MemberByline } from '../shared'
+import { PraxisAdminBar, PraxisStatusBanners, PraxisOwnerActions, PraxisFlagBlock, PraxisVoterBreakdown, PraxisScoreBreakdown, MemberByline } from '../shared'
 import type { PraxisDetailState } from '../usePraxisDetail'
 
 // ── whimsy.exe token vocabulary (same as WowTaskDetail) ──────────────────────
@@ -126,7 +126,7 @@ function TitleBar({ name }: { name: string }) {
 
 export default function WowPraxisDetail({ state }: { state: PraxisDetailState }) {
   const { t } = useTranslation('praxis')
-  const { praxis, votes } = state
+  const { praxis } = state
   if (!praxis) return null
 
   const sealedDate = praxis.submitted_at ?? praxis.created_at
@@ -407,30 +407,11 @@ export default function WowPraxisDetail({ state }: { state: PraxisDetailState })
               >
                 <Sparkle size={14} color={PINK} /> {t('detail.wow.sendLove')}
               </span>
-              {votes && votes.total_votes > 0 && (
-                <div style={{ textAlign: 'right' }}>
-                  <span style={{ fontFamily: SCRIPT, fontSize: 'var(--text-title)', color: PINK, lineHeight: 1 }}>
-                    +{votes.total_score}
-                  </span>
-                  <span
-                    style={{
-                      fontSize: 'var(--text-xs)',
-                      color: CARD_MUTED,
-                      letterSpacing: '0.14em',
-                      textTransform: 'uppercase',
-                      marginLeft: 6,
-                    }}
-                  >
-                    {t('detail.wow.pointsFromVotes')}
-                  </span>
-                </div>
-              )}
+              <PraxisScoreBreakdown state={state} align="right" accent={PINK} muted={CARD_MUTED} font={SCRIPT} />
             </div>
             <VoteUI
               factionSlug={praxis.task_faction_slug}
               praxisId={praxis.id}
-              points={votes?.total_score}
-              totalVotes={votes?.total_votes}
             />
           </div>
         </div>

@@ -22,7 +22,7 @@ import MediaGallery from '../../../components/MediaGallery'
 import VoteUI from '../../../components/vote/VoteUI'
 import { factionCssVar } from '../../../utils/factions'
 import { formatTimestamp } from '../../../utils/dates'
-import { PraxisAdminBar, PraxisStatusBanners, PraxisOwnerActions, PraxisFlagBlock, PraxisVoterBreakdown, MemberByline } from '../shared'
+import { PraxisAdminBar, PraxisStatusBanners, PraxisOwnerActions, PraxisFlagBlock, PraxisVoterBreakdown, PraxisScoreBreakdown, MemberByline } from '../shared'
 import type { PraxisDetailState } from '../usePraxisDetail'
 
 const POSTER = 'var(--font-accent)' // Bebas Neue
@@ -51,7 +51,7 @@ function SectionHead({ children }: { children: React.ReactNode }) {
 
 export default function EverymenPraxisDetail({ state }: { state: PraxisDetailState }) {
   const { t } = useTranslation('praxis')
-  const { praxis, votes } = state
+  const { praxis } = state
   if (!praxis) return null
 
   const sealedDate = praxis.submitted_at ?? praxis.created_at
@@ -235,24 +235,15 @@ export default function EverymenPraxisDetail({ state }: { state: PraxisDetailSta
           <h2 style={{ fontFamily: POSTER, fontSize: 'var(--text-title)', letterSpacing: '0.04em', margin: 0, color: 'var(--everymen-paper-text)', whiteSpace: 'nowrap' }}>
             {t('detail.everymen.crewsMarks')}
           </h2>
-          {/* points from votes */}
-          {votes && votes.total_votes > 0 && (
-            <div style={{ textAlign: 'right', flexShrink: 0 }}>
-              <span style={{ fontFamily: POSTER, fontSize: 'var(--text-title)', lineHeight: 1, color: 'var(--everymen-red)' }}>
-                +{votes.total_score}
-              </span>
-              <span style={{ fontFamily: BODY, fontSize: 'var(--text-xs)', letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--everymen-muted)', marginLeft: 6 }}>
-                {t('detail.everymen.ptsFromVotes')}
-              </span>
-            </div>
-          )}
+          {/* earned-points breakdown (#641) */}
+          <div style={{ flexShrink: 0 }}>
+            <PraxisScoreBreakdown state={state} align="right" accent="var(--everymen-red)" muted="var(--everymen-muted)" font={POSTER} />
+          </div>
         </div>
         <div style={{ marginBottom: 20 }}>
           <VoteUI
             factionSlug={praxis.task_faction_slug}
             praxisId={praxis.id}
-            points={votes?.total_score}
-            totalVotes={votes?.total_votes}
           />
         </div>
 

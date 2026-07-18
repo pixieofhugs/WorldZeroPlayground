@@ -20,7 +20,7 @@ import MediaGallery from '../../../components/MediaGallery'
 import VoteUI from '../../../components/vote/VoteUI'
 import { factionCssVar } from '../../../utils/factions'
 import { formatTimestamp } from '../../../utils/dates'
-import { PraxisAdminBar, PraxisStatusBanners, PraxisOwnerActions, PraxisFlagBlock, PraxisVoterBreakdown, MemberByline } from '../shared'
+import { PraxisAdminBar, PraxisStatusBanners, PraxisOwnerActions, PraxisFlagBlock, PraxisVoterBreakdown, PraxisScoreBreakdown, MemberByline } from '../shared'
 import type { PraxisDetailState } from '../usePraxisDetail'
 
 const INK = 'var(--faction-albescent-card-text)'
@@ -53,7 +53,7 @@ function Divider({ label }: { label: string }) {
 
 export default function AlbescentPraxisDetail({ state }: { state: PraxisDetailState }) {
   const { t } = useTranslation('praxis')
-  const { praxis, votes } = state
+  const { praxis } = state
   if (!praxis) return null
 
   const sealedDate = praxis.submitted_at ?? praxis.created_at
@@ -211,18 +211,11 @@ export default function AlbescentPraxisDetail({ state }: { state: PraxisDetailSt
           <span className="content-text" style={{ fontFamily: FONT, fontStyle: 'italic', color: ink(48) }}>
             {t('detail.albescent.witnessPrompt')}
           </span>
-          {votes && votes.total_votes > 0 && (
-            <span className="content-title" style={{ fontFamily: FONT, fontStyle: 'italic', color: ink(60), whiteSpace: 'nowrap' }}>
-              +{votes.total_score}{' '}
-              <span style={{ fontFamily: MONO, fontSize: 'var(--text-xs)', letterSpacing: '0.14em', color: ink(30) }}>{t('detail.albescent.fromWitnesses')}</span>
-            </span>
-          )}
+          <PraxisScoreBreakdown state={state} align="right" accent={ink(60)} muted={ink(30)} font={FONT} />
         </div>
         <VoteUI
           factionSlug={praxis.task_faction_slug}
           praxisId={praxis.id}
-          points={votes?.total_score}
-          totalVotes={votes?.total_votes}
         />
 
         {/* ── Flag block ── */}

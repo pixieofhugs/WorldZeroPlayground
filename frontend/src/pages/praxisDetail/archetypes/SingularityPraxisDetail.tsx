@@ -22,7 +22,7 @@ import MediaGallery from '../../../components/MediaGallery'
 import VoteUI from '../../../components/vote/VoteUI'
 import { factionCssVar } from '../../../utils/factions'
 import { formatTimestamp } from '../../../utils/dates'
-import { PraxisAdminBar, PraxisStatusBanners, PraxisOwnerActions, PraxisFlagBlock, PraxisVoterBreakdown, MemberByline } from '../shared'
+import { PraxisAdminBar, PraxisStatusBanners, PraxisOwnerActions, PraxisFlagBlock, PraxisVoterBreakdown, PraxisScoreBreakdown, MemberByline } from '../shared'
 import type { PraxisDetailState } from '../usePraxisDetail'
 
 // ── Terminal atoms (presentation only — no shared behavior) ──────────────────
@@ -90,7 +90,7 @@ function SgDivider({ label }: { label: string }) {
 
 export default function SingularityPraxisDetail({ state }: { state: PraxisDetailState }) {
   const { t } = useTranslation('praxis')
-  const { praxis, votes } = state
+  const { praxis } = state
   if (!praxis) return null
 
   const sealedDate = praxis.submitted_at ?? praxis.created_at
@@ -398,35 +398,17 @@ export default function SingularityPraxisDetail({ state }: { state: PraxisDetail
           {/* ── The consensus array (vote caster) ── */}
           <SgDivider label={t('detail.singularity.consensusArray')} />
           <div style={{ marginBottom: 20 }}>
-            {votes && votes.total_votes > 0 && (
-              <div
-                style={{
-                  display: 'flex',
-                  alignItems: 'baseline',
-                  justifyContent: 'flex-end',
-                  gap: 6,
-                  marginBottom: 12,
-                }}
-              >
-                <span className="content-title" style={{ lineHeight: 1, color: 'var(--faction-singularity-card-accent)' }}>
-                  +{votes.total_score}
-                </span>
-                <span
-                  style={{
-                    fontSize: 'var(--text-xs)',
-                    letterSpacing: '0.14em',
-                    color: 'color-mix(in srgb, var(--faction-singularity-muted) 55%, transparent)',
-                  }}
-                >
-                  {t('detail.singularity.crFromSignals')}
-                </span>
-              </div>
-            )}
+            <div style={{ marginBottom: 12 }}>
+              <PraxisScoreBreakdown
+                state={state}
+                align="right"
+                accent="var(--faction-singularity-card-accent)"
+                muted="color-mix(in srgb, var(--faction-singularity-muted) 55%, transparent)"
+              />
+            </div>
             <VoteUI
               factionSlug={praxis.task_faction_slug}
               praxisId={praxis.id}
-              points={votes?.total_score}
-              totalVotes={votes?.total_votes}
             />
           </div>
 

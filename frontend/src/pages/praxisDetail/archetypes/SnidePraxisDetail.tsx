@@ -19,7 +19,7 @@ import MediaGallery from '../../../components/MediaGallery'
 import VoteUI from '../../../components/vote/VoteUI'
 import { factionCssVar } from '../../../utils/factions'
 import { formatTimestamp } from '../../../utils/dates'
-import { PraxisAdminBar, PraxisStatusBanners, PraxisOwnerActions, PraxisFlagBlock, PraxisVoterBreakdown, MemberByline } from '../shared'
+import { PraxisAdminBar, PraxisStatusBanners, PraxisOwnerActions, PraxisFlagBlock, PraxisVoterBreakdown, PraxisScoreBreakdown, MemberByline } from '../shared'
 import type { PraxisDetailState } from '../usePraxisDetail'
 
 // Always-dark dossier tokens (scoped to this archetype's container).
@@ -38,7 +38,7 @@ const F_BODY = 'var(--font-body)'
 
 export default function SnidePraxisDetail({ state }: { state: PraxisDetailState }) {
   const { t } = useTranslation('praxis')
-  const { praxis, votes } = state
+  const { praxis } = state
   if (!praxis) return null
 
   const sealedDate = praxis.submitted_at ?? praxis.created_at
@@ -383,38 +383,14 @@ export default function SnidePraxisDetail({ state }: { state: PraxisDetailState 
             >
               {t('detail.snide.theVerdict')}
             </span>
-            {/* Points from votes */}
-            {votes && votes.total_votes > 0 && (
-              <div
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'baseline',
-                  gap: 4,
-                  transform: 'rotate(1deg)',
-                }}
-              >
-                <span style={{ fontFamily: F_ANTON, fontSize: 'var(--text-title)', color: ACID, lineHeight: 1 }}>
-                  +{votes.total_score}
-                </span>
-                <span
-                  style={{
-                    fontFamily: F_BODY,
-                    fontSize: 'var(--text-xs)',
-                    letterSpacing: '0.14em',
-                    textTransform: 'uppercase',
-                    color: MUTED,
-                  }}
-                >
-                  {t('detail.snide.ptsFromVotes')}
-                </span>
-              </div>
-            )}
+            {/* Earned-points breakdown (#641) */}
+            <div style={{ transform: 'rotate(1deg)' }}>
+              <PraxisScoreBreakdown state={state} align="right" accent={ACID} muted={MUTED} font={F_ANTON} />
+            </div>
           </div>
           <VoteUI
             factionSlug={praxis.task_faction_slug}
             praxisId={praxis.id}
-            points={votes?.total_score}
-            totalVotes={votes?.total_votes}
           />
         </div>
 
