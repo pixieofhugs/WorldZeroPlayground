@@ -18,8 +18,8 @@ export default function EphemeristsFeedFrame({ children }: { children: ReactNode
     <div
       style={{
         position: 'relative',
-        marginBottom: 14,
-        padding: '10px 12px 12px 16px',
+        marginBottom: 'var(--space-lg)',
+        padding: 'var(--space-md) var(--space-md) var(--space-md) var(--space-lg)',
         background:
           'linear-gradient(170deg, var(--eph-vellum), var(--eph-vellum-deep))',
         border: '1px solid color-mix(in srgb, var(--eph-vellum-text) 30%, transparent)',

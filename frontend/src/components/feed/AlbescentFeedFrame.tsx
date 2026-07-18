@@ -39,13 +39,20 @@ export default function AlbescentFeedFrame({ children }: { children: ReactNode }
     // White archival sheet — thin edge + soft neutral shadow.
     <div style={{ background: SURFACE, border: `1px solid ${BORDER}`, boxShadow: SHEET_SHADOW }}>
       {/* inset architectural hairline holding the entry */}
-      <div style={{ margin: 6, border: `1px solid ${BORDER_FAINT}`, padding: '13px 17px' }}>
+      <div
+        style={{
+          // eslint-disable-next-line local/no-raw-style-values -- ornament: the margin IS the inset architectural hairline's offset from the sheet edge.
+          margin: 6,
+          border: `1px solid ${BORDER_FAINT}`,
+          padding: 'var(--space-md) var(--space-lg)',
+        }}
+      >
         {/* quiet mono masthead */}
         <div
           aria-hidden="true"
           style={{
             fontFamily: MONO,
-            // ornament: aria-hidden masthead strip, part of the frame illustration
+            // eslint-disable-next-line local/no-raw-style-values -- ornament: aria-hidden masthead strip, part of the frame illustration
             fontSize: 7.5,
             letterSpacing: '0.28em',
             textTransform: 'uppercase',
