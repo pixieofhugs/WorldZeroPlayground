@@ -102,7 +102,6 @@ src/pages/editPraxis/mobileArchetypes/SnideComposer.tsx
 src/pages/editPraxis/mobileArchetypes/UaComposer.tsx
 src/pages/editPraxis/mobileArchetypes/WowEditPraxis.tsx
 src/pages/FactionDetail.tsx
-src/pages/factionDetail/archetypes/WowFactionBody.tsx
 src/pages/factionDetail/mobileArchetypes/AlbescentFactionPage.tsx
 src/pages/factionDetail/mobileArchetypes/DefaultFactionPage.tsx
 src/pages/factionDetail/mobileArchetypes/EphemeristsFactionPage.tsx
