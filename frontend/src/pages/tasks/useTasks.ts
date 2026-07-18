@@ -5,9 +5,11 @@
  *
  * The factions/factionConfigs fetch on mount, the status/faction/level filter
  * state, the task read keyed on those filters + the viewer's character id, and
- * the signup → navigate-to-edit handler with its inline message. The read runs
- * through the shared `usePagedResource` growing window (#645): filter setters
- * reset the window and a full page exposes "load more".
+ * the signup → navigate-to-edit handler with its inline message. The free-text search (#661) rides
+ * alongside them, debounced 200ms via `useDebouncedValue` — the idiom #644 set on
+ * the praxis feed. The read runs through the shared `usePagedResource` growing
+ * window (#645): filter setters (search included) reset the window and a full
+ * page exposes "load more".
  */
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
@@ -19,6 +21,7 @@ import { extractError } from '../../utils/errors'
 import { useAuth } from '../../auth/AuthContext'
 import { computeDisplayPoints } from '../../utils/points'
 import { usePagedResource } from '../../hooks/usePagedResource'
+import { useDebouncedValue } from '../../hooks/useDebouncedValue'
 import type { CurrentUser } from '../../api/auth'
 
 export const LEVEL_FILTERS = [0, 1, 2, 3, 4, 5]
@@ -54,6 +57,9 @@ export interface TasksState {
   setFaction: (faction: string) => void
   level: number | ''
   setLevel: (level: number | '') => void
+  /** Raw search box value (bind directly); the fetch reads a debounced copy (#661). */
+  query: string
+  setQuery: (query: string) => void
 
   // Growing window (#645).
   hasMore: boolean
@@ -77,7 +83,12 @@ export function useTasks(): TasksState {
   const [status, setStatusState] = useState('All')
   const [faction, setFactionState] = useState('')
   const [level, setLevelState] = useState<number | ''>('')
+  const [query, setQueryState] = useState('')
   const [signupMsg, setSignupMsg] = useState<SignupMessage | null>(null)
+
+  // Debounced so a refetch fires once the typing settles, not per keystroke —
+  // the same 200ms the praxis feed uses (#644).
+  const debouncedQuery = useDebouncedValue(query, 200)
 
   useEffect(() => {
     getFactions().then(setFactions).catch(() => {})
@@ -86,16 +97,18 @@ export function useTasks(): TasksState {
       .catch(() => {})
   }, [])
 
+  const trimmedQuery = debouncedQuery.trim()
   const { data, loading, error, hasMore, loadMore, resetWindow } = usePagedResource(
     (limit) =>
       listTasks({
         status: status === 'All' ? undefined : status,
         faction: faction || undefined,
         level: level === '' ? undefined : level,
+        q: trimmedQuery || undefined,
         exclude_character_id: characterId,
         limit,
       }),
-    [status, faction, level, characterId],
+    [status, faction, level, trimmedQuery, characterId],
     PAGE_LIMIT,
   )
   const tasks = data ?? []
@@ -105,6 +118,7 @@ export function useTasks(): TasksState {
   const setStatus = (next: string) => { setStatusState(next); resetWindow() }
   const setFaction = (next: string) => { setFactionState(next); resetWindow() }
   const setLevel = (next: number | '') => { setLevelState(next); resetWindow() }
+  const setQuery = (next: string) => { setQueryState(next); resetWindow() }
 
   const handleSignup = async (id: number) => {
     setSignupMsg(null)
@@ -146,6 +160,8 @@ export function useTasks(): TasksState {
     setFaction,
     level,
     setLevel,
+    query,
+    setQuery,
 
     hasMore,
     loadMore,
