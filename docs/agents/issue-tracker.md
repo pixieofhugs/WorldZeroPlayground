@@ -29,4 +29,4 @@ Run `gh issue view <number> --comments`.
 
 ## History
 
-This replaced a hand-maintained markdown task queue (`docs/TASKS.md`, retired 2026-06-22 → `docs/archive/TASKS-completed.md`). GitHub Issues were already in active use; the queue's open items were migrated to issues #141–#146.
+This replaced a hand-maintained markdown task queue (`docs/TASKS.md`, retired 2026-06-22; the archived log was deleted in the 2026-07-17 docs sweep). GitHub Issues were already in active use; the queue's open items were migrated to issues #141–#146.

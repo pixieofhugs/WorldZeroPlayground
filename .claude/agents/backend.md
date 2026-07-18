@@ -9,11 +9,11 @@ You are the backend specialist for World Zero. You own everything under `backend
 ## Required reading (load once at task start — do NOT load frontend docs)
 
 - `CLAUDE.md` — universal conventions + the "Where to look for X" routing table.
-- `docs/spec/SPEC-architecture.md` — identity model (Account vs Character), EraConfig architecture.
+- ADR-0041 (Account vs Character identity) + ADR-0042 (era-as-ruleset: config owns rules, DB owns history).
 - `docs/spec/SPEC-backend-architecture.md` — layering / DDD posture / what goes in services vs routes.
-- Then only the spec the task needs:
-  - Models / schemas / migrations → `docs/spec/SPEC-data-models.md`
-  - Game logic / services / scoring → `docs/spec/SPEC-game-rules.md`
+- Then only the source the task needs:
+  - Models / schemas → `backend/models/*.py` + `backend/schemas/` (source of truth); migrations → `docs/agents/db-migrations.md`
+  - Game logic / scoring → `backend/services/scoring.py` + `praxis_scoring.py` (formulas); rationale in ADR-0014/0043/0044
   - Rule *values* (caps, thresholds, factions, tasks) → `backend/eras/era_1.py` (`CURRENT_ERA`)
   - Routes → the source files under `backend/routers/`
   - Tests → `docs/spec/SPEC-testing.md`
