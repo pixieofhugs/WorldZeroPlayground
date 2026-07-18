@@ -316,6 +316,16 @@
   --space-lg: 16px;
   --space-xl: 24px;
   --space-2xl: 32px;
+  /* Page-level gutters. The rungs above exist for spacing WITHIN a component;
+     these are for the space AROUND one — section breaks, hero padding, sticky
+     footer clearance. Without them large values had nowhere to go but a
+     calc() sum of smaller rungs, which is arithmetic homework at the call
+     site. The step widens deliberately: at this size a 4px difference is not
+     a design decision anyone is making (#750). */
+  --space-3xl: 40px;
+  --space-4xl: 48px;
+  --space-5xl: 64px;
+  --space-6xl: 96px;
 
   /* ── Filter stamp dashed-border (inverts with active state bg) ── */
   --stamp-active-dashed: rgba(255, 255, 255, 0.2);

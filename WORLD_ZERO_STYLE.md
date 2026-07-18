@@ -152,8 +152,18 @@ There is deliberately no `.content-heading` / `.content-display` / `.content-sco
 | `--space-lg`  | 16px  |
 | `--space-xl`  | 24px  |
 | `--space-2xl` | 32px  |
+| `--space-3xl` | 40px  |
+| `--space-4xl` | 48px  |
+| `--space-5xl` | 64px  |
+| `--space-6xl` | 96px  |
+
+The rungs through `2xl` are for spacing **within** a component; `3xl` and up are for the space **around** one — section breaks, hero padding, sticky-footer clearance. The step widens on purpose: at that size a 4px difference is not a design decision anyone is making.
 
 **Rule:** `padding`, `margin`, and `gap` take a `--space-*` token — never a raw pixel value. If you're about to write `padding: 13` or `gap: 6`, stop and pick the nearest token. This mirrors the typography rule: the scale is the vocabulary, and a value outside it is a bug, not a nuance.
+
+**Ties round up.** 20px sits exactly between `--space-lg` and `--space-xl`, and it is one of the most common raw values in the codebase; "nearest" does not resolve it. Round up. §4's *type wins; geometry yields* is the reason — text sizes rose site-wide in #627/#623, so containers giving up room is the wrong direction. The exception is an intentionally **asymmetric** inset (`"24px 24px 22px 20px"`), where rounding every side up flattens the asymmetry into a uniform box; there, round the tie down and keep the shape.
+
+**Never compose with `calc()` to dodge the scale.** `calc(var(--space-2xl) + var(--space-lg))` is a 48px value wearing a disguise — it passes the linter and tells the next reader nothing. If a needed value has no rung, that is a gap in the scale to raise, not to route around.
 
 Both scales are **global, not per-faction**. A faction picks a headline font, a colour, and an ornament — never its own type size or spacing. There are no per-faction size or spacing exceptions.
 
