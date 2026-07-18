@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, type CSSProperties } from 'react'
 import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { factionCssVar, factionFill, factionName } from '../../../utils/factions'
@@ -23,6 +23,49 @@ import type { FieldDeskHomeState } from '../useFieldDeskHome'
 // const so the jsx-text-only literal rule doesn't read it as user-facing copy.
 const CARET_DOWN = '▾'
 
+// Static style objects, hoisted to module scope (#586) — no closure deps.
+const pageTitleStyle: CSSProperties = {
+  fontSize: 'var(--text-heading)',
+  lineHeight: 1,
+  color: 'var(--color-text-primary)',
+  margin: 0,
+}
+const statTileStyle: CSSProperties = {
+  flex: '1 1 0',
+  background: 'var(--color-bg-surface-alt)',
+  border: '1px solid var(--color-border)',
+  borderRadius: 9,
+  padding: '11px 6px',
+  minWidth: 0,
+}
+const pendingPillStyle: CSSProperties = {
+  background: 'var(--color-bg-surface)',
+  border: '1px solid var(--color-border)',
+  borderRadius: 999,
+  padding: '10px 16px',
+  color: 'var(--color-text-primary)',
+  textDecoration: 'none',
+}
+const primaryActionStyle: CSSProperties = {
+  padding: 15,
+  borderRadius: 12,
+  fontSize: 'var(--text-lg)',
+  letterSpacing: '0.12em',
+  textTransform: 'uppercase',
+  fontWeight: 700,
+  color: 'var(--color-bg-page)',
+  background: 'var(--color-text-primary)',
+  border: '1px solid var(--color-text-primary)',
+  textDecoration: 'none',
+}
+const secondaryActionStyle: CSSProperties = {
+  ...primaryActionStyle,
+  fontWeight: undefined,
+  color: 'var(--color-text-primary)',
+  background: 'var(--color-bg-surface)',
+  border: '1px solid var(--color-border-strong)',
+}
+
 export default function DefaultFieldDesk({ state }: { state: FieldDeskHomeState }) {
   const { t } = useTranslation('common')
   const { character, eraName, votesReceived, activeTasks, pendingCount, canProposeTask } = state
@@ -41,7 +84,7 @@ export default function DefaultFieldDesk({ state }: { state: FieldDeskHomeState 
         <div className="eyebrow" style={{ color: 'var(--color-text-secondary)' }}>
           {t('nav.home')}
         </div>
-        <h1 className="font-display italic" style={{ fontSize: 30, lineHeight: 1, color: 'var(--color-text-primary)', margin: 0 }}>
+        <h1 className="font-display italic" style={pageTitleStyle}>
           {t('fieldDesk.home.title')}
         </h1>
       </header>
@@ -77,7 +120,7 @@ export default function DefaultFieldDesk({ state }: { state: FieldDeskHomeState 
               type="button"
               onClick={() => setSwitcherOpen(true)}
               className="eyebrow"
-              style={{ fontSize: 9, color: 'var(--faction-default-card-muted)', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+              style={{ color: 'var(--faction-default-card-muted)', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
             >
               {t('fieldDesk.home.switch')}
             </button>
@@ -116,8 +159,8 @@ export default function DefaultFieldDesk({ state }: { state: FieldDeskHomeState 
             <div className="flex items-center gap-1.5" style={{ minWidth: 0 }}>
               <Link
                 to={`/characters/${character.id}`}
-                className="font-display italic block truncate"
-                style={{ fontSize: 24, lineHeight: 1.05, color: 'var(--color-text-primary)', textDecoration: 'none' }}
+                className="font-display italic block truncate content-title"
+                style={{ lineHeight: 1.05, color: 'var(--color-text-primary)', textDecoration: 'none' }}
               >
                 {character.display_name}
               </Link>
@@ -126,6 +169,7 @@ export default function DefaultFieldDesk({ state }: { state: FieldDeskHomeState 
                 type="button"
                 onClick={() => setSwitcherOpen(true)}
                 aria-label={t('fieldDesk.home.switcher.title')}
+                // ornament: ▾ dingbat used as an icon, sized to the name row
                 style={{ flex: 'none', background: 'none', border: 'none', padding: 0, cursor: 'pointer', fontSize: 14, lineHeight: 1, color: 'var(--color-text-tertiary)' }}
               >
                 <span aria-hidden>{CARET_DOWN}</span>
@@ -136,7 +180,7 @@ export default function DefaultFieldDesk({ state }: { state: FieldDeskHomeState 
               style={{
                 marginTop: 5,
                 fontFamily: 'var(--font-body)',
-                fontSize: 10,
+                fontSize: 'var(--text-base)',
                 letterSpacing: '0.14em',
                 textTransform: 'uppercase',
                 color: 'var(--color-text-secondary)',
@@ -149,7 +193,7 @@ export default function DefaultFieldDesk({ state }: { state: FieldDeskHomeState 
             </div>
           </div>
           <div className="shrink-0 text-right">
-            <div className="font-display" style={{ fontSize: 26, lineHeight: 1, color: 'var(--color-text-primary)' }}>
+            <div className="font-display content-title" style={{ lineHeight: 1, color: 'var(--color-text-primary)' }}>
               {character.score?.toLocaleString() ?? '0'}
             </div>
             <div className="eyebrow" style={{ color: 'var(--color-text-secondary)' }}>
@@ -163,16 +207,9 @@ export default function DefaultFieldDesk({ state }: { state: FieldDeskHomeState 
             <div
               key={stat.label}
               className="text-center"
-              style={{
-                flex: '1 1 0',
-                background: 'var(--color-bg-surface-alt)',
-                border: '1px solid var(--color-border)',
-                borderRadius: 9,
-                padding: '11px 6px',
-                minWidth: 0,
-              }}
+              style={statTileStyle}
             >
-              <div className="font-display truncate" style={{ fontSize: 20, lineHeight: 1, color: 'var(--color-text-primary)' }}>
+              <div className="font-display truncate content-text" style={{ lineHeight: 1, color: 'var(--color-text-primary)' }}>
                 {stat.value}
               </div>
               <div
@@ -190,16 +227,8 @@ export default function DefaultFieldDesk({ state }: { state: FieldDeskHomeState 
       {pendingCount > 0 && (
         <Link
           to="/updates?filter=requests"
-          className="font-body flex items-center justify-between"
-          style={{
-            background: 'var(--color-bg-surface)',
-            border: '1px solid var(--color-border)',
-            borderRadius: 999,
-            padding: '10px 16px',
-            fontSize: 12,
-            color: 'var(--color-text-primary)',
-            textDecoration: 'none',
-          }}
+          className="font-body flex items-center justify-between content-text"
+          style={pendingPillStyle}
         >
           <span>{t('fieldDesk.home.pending', { count: pendingCount })}</span>
           <span aria-hidden style={{ color: 'var(--color-text-tertiary)' }}>›</span>
@@ -230,7 +259,7 @@ export default function DefaultFieldDesk({ state }: { state: FieldDeskHomeState 
         </div>
 
         {activeTasks.length === 0 ? (
-          <p className="font-body" style={{ fontSize: 12, color: 'var(--color-text-tertiary)' }}>
+          <p className="font-body content-text" style={{ color: 'var(--color-text-tertiary)' }}>
             {t('fieldDesk.home.questsEmpty')}
           </p>
         ) : (
@@ -251,7 +280,7 @@ export default function DefaultFieldDesk({ state }: { state: FieldDeskHomeState 
                   style={{ width: 10, height: 10, borderRadius: 3, ...factionFill(praxis.task_faction_slug, 'dot') }}
                 />
                 <div className="min-w-0 flex-1">
-                  <div className="font-display truncate" style={{ fontSize: 17, lineHeight: 1.2, color: 'var(--color-text-primary)' }}>
+                  <div className="font-display truncate content-text" style={{ lineHeight: 1.2, color: 'var(--color-text-primary)' }}>
                     {praxis.task_title}
                   </div>
                   <div
@@ -259,7 +288,7 @@ export default function DefaultFieldDesk({ state }: { state: FieldDeskHomeState 
                     style={{
                       marginTop: 3,
                       fontFamily: 'var(--font-body)',
-                      fontSize: 9,
+                      fontSize: 'var(--text-sm)',
                       letterSpacing: '0.1em',
                       textTransform: 'uppercase',
                       color: 'var(--color-text-secondary)',
@@ -293,18 +322,7 @@ export default function DefaultFieldDesk({ state }: { state: FieldDeskHomeState 
         <Link
           to="/tasks"
           className="font-body flex-1 flex items-center justify-center"
-          style={{
-            padding: 15,
-            borderRadius: 12,
-            fontSize: 12,
-            letterSpacing: '0.12em',
-            textTransform: 'uppercase',
-            fontWeight: 700,
-            color: 'var(--color-bg-page)',
-            background: 'var(--color-text-primary)',
-            border: '1px solid var(--color-text-primary)',
-            textDecoration: 'none',
-          }}
+          style={primaryActionStyle}
         >
           {t('fieldDesk.home.browseTasks')}
         </Link>
@@ -312,18 +330,9 @@ export default function DefaultFieldDesk({ state }: { state: FieldDeskHomeState 
           <Link
             to="/propose-task"
             className="font-body flex-1 flex items-center justify-center gap-2"
-            style={{
-              padding: 15,
-              borderRadius: 12,
-              fontSize: 12,
-              letterSpacing: '0.12em',
-              textTransform: 'uppercase',
-              color: 'var(--color-text-primary)',
-              background: 'var(--color-bg-surface)',
-              border: '1px solid var(--color-border-strong)',
-              textDecoration: 'none',
-            }}
+            style={secondaryActionStyle}
           >
+            {/* ornament: "+" glyph used as an icon, sized to the button row */}
             <span aria-hidden style={{ fontSize: 15, lineHeight: 1 }}>+</span>
             <span>{t('actions.proposeTask')}</span>
           </Link>
