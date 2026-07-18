@@ -48,7 +48,7 @@ const CARD_SHADOW = '5px 6px 0 rgba(0,0,0,.5)'
 const kicker: CSSProperties = {
   display: 'block',
   fontFamily: TYPE,
-  fontSize: 8,
+  fontSize: "var(--text-xs)",
   letterSpacing: '0.22em',
   textTransform: 'uppercase',
   color: MUTED,
@@ -59,7 +59,7 @@ function Plate({ title, children }: { title: string; children: ReactNode }) {
   return (
     <section style={{ position: 'relative', background: INK, color: TEXT, border: `1px solid ${LINE}`, boxShadow: CARD_SHADOW, padding: 14, overflow: 'hidden' }}>
       <span aria-hidden style={{ position: 'absolute', top: -10, left: 18, width: 56, height: 22, background: TAPE, transform: 'rotate(-4deg)', opacity: 0.92 }} />
-      <div style={{ fontFamily: COND, fontSize: 13, letterSpacing: '0.08em', textTransform: 'uppercase', color: ACID, marginBottom: 10 }}>
+      <div style={{ fontFamily: COND, fontSize: "var(--text-lg)", letterSpacing: '0.08em', textTransform: 'uppercase', color: ACID, marginBottom: 10 }}>
         {title}
       </div>
       {children}
@@ -77,7 +77,7 @@ export default function SnideComposer({ state }: { state: EditPraxisState }) {
     <div data-skin="snide" style={{ display: 'flex', flexDirection: 'column', gap: 14, fontFamily: TYPE, color: WALL_TEXT, background: WALL }}>
       <header style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
         <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
-          <h1 style={{ fontFamily: COND, fontSize: 30, letterSpacing: '0.03em', lineHeight: 1, color: WALL_TEXT, margin: 0, textTransform: 'uppercase' }}>
+          <h1 style={{ fontFamily: COND, fontSize: "var(--text-heading)", letterSpacing: '0.03em', lineHeight: 1, color: WALL_TEXT, margin: 0, textTransform: 'uppercase' }}>
             {t('editPraxis.snide.pageTitle')}
           </h1>
           <span style={{ ...kicker, marginLeft: 'auto' }}>
@@ -96,7 +96,7 @@ export default function SnideComposer({ state }: { state: EditPraxisState }) {
               padding: '9px 10px',
               border: 'none',
               fontFamily: BLACK,
-              fontSize: 11,
+              fontSize: "var(--text-md)",
               letterSpacing: '0.06em',
               textTransform: 'uppercase',
               background: active ? ACID : 'transparent',
@@ -109,7 +109,7 @@ export default function SnideComposer({ state }: { state: EditPraxisState }) {
       {/* For-completion reference */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, padding: '11px 14px', background: INK, color: TEXT, border: `1px solid ${LINE}` }}>
         <span style={kicker}>{t('editPraxis.snide.taskRefLabel')}</span>
-        <span style={{ fontFamily: COND, fontSize: 17, letterSpacing: '0.03em', color: TEXT, textAlign: 'right', flex: 1, lineHeight: 1.1 }}>
+        <span style={{ fontFamily: COND, fontSize: "var(--text-content)", letterSpacing: '0.03em', color: TEXT, textAlign: 'right', flex: 1, lineHeight: 1.1 }}>
           {praxis.task_title}
         </span>
       </div>
@@ -128,7 +128,6 @@ export default function SnideComposer({ state }: { state: EditPraxisState }) {
                 inputStyle: {
                   width: '100%',
                   fontFamily: COND,
-                  fontSize: 24,
                   letterSpacing: '0.02em',
                   color: TEXT,
                   background: 'transparent',
@@ -150,7 +149,6 @@ export default function SnideComposer({ state }: { state: EditPraxisState }) {
                 textareaStyle: {
                   width: '100%',
                   fontFamily: TYPE,
-                  fontSize: 15,
                   lineHeight: 1.6,
                   color: TEXT,
                   background: 'rgba(255,255,255,0.04)',
@@ -207,7 +205,7 @@ export default function SnideComposer({ state }: { state: EditPraxisState }) {
         </>
       ) : (
         <Plate title={t('editPraxis.snide.previewLabel')}>
-          <div style={{ fontFamily: COND, fontSize: 24, letterSpacing: '0.02em', color: TEXT, marginBottom: 10 }}>
+          <div style={{ fontFamily: COND, fontSize: "var(--text-title)", letterSpacing: '0.02em', color: TEXT, marginBottom: 10 }}>
             {state.title || t('editPraxis.snide.titlePlaceholder')}
           </div>
           {state.media.length > 0 && (
@@ -218,7 +216,7 @@ export default function SnideComposer({ state }: { state: EditPraxisState }) {
           <BodyPreview
             state={state}
             skin={{
-              markdownStyle: { fontFamily: TYPE, fontSize: 15, lineHeight: 1.6, color: TEXT },
+              markdownStyle: { fontFamily: TYPE, lineHeight: 1.6, color: TEXT },
             }}
           />
         </Plate>
@@ -237,26 +235,6 @@ export default function SnideComposer({ state }: { state: EditPraxisState }) {
           borderTop: `1px solid ${ACID}`,
         }}
       >
-        <PublishButton
-          state={state}
-          skin={{
-            idleLabel: t('editPraxis.snide.publishIdle'),
-            busyLabel: t('editPraxis.snide.publishBusy'),
-            style: {
-              flex: 1,
-              background: PINK,
-              color: PAPER,
-              fontFamily: BLACK,
-              fontSize: 12,
-              letterSpacing: '0.06em',
-              textTransform: 'uppercase',
-              padding: '13px 18px',
-              border: 'none',
-              boxShadow: '2px 3px 0 rgba(0,0,0,.4)',
-              cursor: state.submitting ? 'wait' : 'pointer',
-            },
-          }}
-        />
         {!state.isPublished && (
           <DropButton
             state={state}
@@ -267,7 +245,7 @@ export default function SnideComposer({ state }: { state: EditPraxisState }) {
                 border: 'none',
                 color: MUTED,
                 fontFamily: TYPE,
-                fontSize: 13,
+                fontSize: "var(--text-lg)",
                 textTransform: 'uppercase',
                 letterSpacing: '0.06em',
                 cursor: 'pointer',
@@ -275,6 +253,26 @@ export default function SnideComposer({ state }: { state: EditPraxisState }) {
             }}
           />
         )}
+        <PublishButton
+          state={state}
+          skin={{
+            idleLabel: t('editPraxis.snide.publishIdle'),
+            busyLabel: t('editPraxis.snide.publishBusy'),
+            style: {
+              flex: 1,
+              background: PINK,
+              color: PAPER,
+              fontFamily: BLACK,
+              fontSize: "var(--text-lg)",
+              letterSpacing: '0.06em',
+              textTransform: 'uppercase',
+              padding: '13px 18px',
+              border: 'none',
+              boxShadow: '2px 3px 0 rgba(0,0,0,.4)',
+              cursor: state.submitting ? 'wait' : 'pointer',
+            },
+          }}
+        />
       </MobileStickyBar>
     </div>
   )
@@ -311,7 +309,7 @@ function MediaGrid({ state, readOnly = false }: { state: EditPraxisState; readOn
                   background: INK,
                   border: `1px solid ${ACID}`,
                   color: ACID,
-                  fontSize: 12,
+                  fontSize: "var(--text-lg)",
                   fontWeight: 700,
                   lineHeight: 1,
                   cursor: 'pointer',
@@ -340,7 +338,7 @@ function MediaGrid({ state, readOnly = false }: { state: EditPraxisState; readOn
               justifyContent: 'center',
               gap: 4,
               fontFamily: TYPE,
-              fontSize: 10,
+              fontSize: "var(--text-base)",
               letterSpacing: '0.06em',
               textTransform: 'uppercase',
               color: ACID,

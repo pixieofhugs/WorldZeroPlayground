@@ -69,7 +69,7 @@ function FieldLabel({
       <span
         style={{
           fontFamily: ACCENT_FONT,
-          fontSize: 16,
+          fontSize: "var(--text-xl)",
           letterSpacing: "0.12em",
           color: RED,
           whiteSpace: "nowrap",
@@ -81,7 +81,7 @@ function FieldLabel({
         <span
           style={{
             fontFamily: BODY_FONT,
-            fontSize: 9,
+            fontSize: "var(--text-sm)",
             letterSpacing: "0.14em",
             textTransform: "uppercase",
             color: MUTED,
@@ -160,7 +160,7 @@ export default function EverymenEditPraxis({ state }: Props) {
           <span
             style={{
               fontFamily: ACCENT_FONT,
-              fontSize: 18,
+              fontSize: "var(--text-content)",
               letterSpacing: "0.16em",
               whiteSpace: "nowrap",
             }}
@@ -182,7 +182,7 @@ export default function EverymenEditPraxis({ state }: Props) {
           <div
             style={{
               fontFamily: ACCENT_FONT,
-              fontSize: 58,
+              fontSize: "var(--text-display)",
               lineHeight: 0.9,
               letterSpacing: "0.02em",
               color: PAPER_TEXT,
@@ -194,7 +194,7 @@ export default function EverymenEditPraxis({ state }: Props) {
             style={{
               textAlign: "right",
               fontFamily: BODY_FONT,
-              fontSize: 9,
+              fontSize: "var(--text-sm)",
               letterSpacing: "0.12em",
               textTransform: "uppercase",
               color: MUTED,
@@ -249,7 +249,7 @@ export default function EverymenEditPraxis({ state }: Props) {
             <div
               style={{
                 fontFamily: BODY_FONT,
-                fontSize: 8.5,
+                fontSize: "var(--text-xs)",
                 letterSpacing: "0.2em",
                 textTransform: "uppercase",
                 color: MUTED,
@@ -261,7 +261,7 @@ export default function EverymenEditPraxis({ state }: Props) {
             <div
               style={{
                 fontFamily: ACCENT_FONT,
-                fontSize: 30,
+                fontSize: "var(--text-heading)",
                 lineHeight: 0.96,
                 color: PAPER_TEXT,
                 marginBottom: 8,
@@ -270,7 +270,7 @@ export default function EverymenEditPraxis({ state }: Props) {
               {praxis.task_title}
             </div>
             {task?.description && (
-              <div style={{ fontFamily: ACCENT_FONT, fontSize: 13, lineHeight: 1.5, color: MUTED, marginBottom: 8 }}>
+              <div style={{ fontFamily: ACCENT_FONT, fontSize: "var(--text-content)", lineHeight: 1.5, color: MUTED, marginBottom: 8 }}>
                 {task.description}
               </div>
             )}
@@ -316,7 +316,7 @@ export default function EverymenEditPraxis({ state }: Props) {
                     <div
                       style={{
                         fontFamily: ACCENT_FONT,
-                        fontSize: 24,
+                        fontSize: "var(--text-title)",
                         lineHeight: 1,
                         letterSpacing: "0.04em",
                       }}
@@ -325,7 +325,7 @@ export default function EverymenEditPraxis({ state }: Props) {
                     </div>
                     <div
                       style={{
-                        fontSize: 9.5,
+                        fontSize: "var(--text-sm)",
                         letterSpacing: "0.04em",
                         marginTop: 3,
                         opacity: active ? 0.9 : 0.7,
@@ -377,7 +377,6 @@ export default function EverymenEditPraxis({ state }: Props) {
                 borderBottom: `2px solid ${INK}`,
                 background: "transparent",
                 fontFamily: ACCENT_FONT,
-                fontSize: 26,
                 letterSpacing: "0.01em",
                 color: PAPER_TEXT,
                 padding: "4px 2px 8px",
@@ -388,7 +387,7 @@ export default function EverymenEditPraxis({ state }: Props) {
           <div
             style={{
               fontFamily: BODY_FONT,
-              fontSize: 9,
+              fontSize: "var(--text-sm)",
               letterSpacing: "0.12em",
               textTransform: "uppercase",
               color: MUTED,
@@ -423,7 +422,6 @@ export default function EverymenEditPraxis({ state }: Props) {
                 border: `1.5px solid ${INK}`,
                 background: PAPER,
                 fontFamily: BODY_FONT,
-                fontSize: 13,
                 lineHeight: 1.6,
                 color: PAPER_TEXT,
                 padding: "13px 15px",
@@ -444,7 +442,7 @@ export default function EverymenEditPraxis({ state }: Props) {
                 <div
                   style={{
                     fontFamily: BODY_FONT,
-                    fontSize: 9,
+                    fontSize: "var(--text-sm)",
                     letterSpacing: "0.2em",
                     textTransform: "uppercase",
                     color: MUTED,
@@ -456,7 +454,6 @@ export default function EverymenEditPraxis({ state }: Props) {
               ),
               markdownStyle: {
                 fontFamily: BODY_FONT,
-                fontSize: 13,
                 lineHeight: 1.6,
                 color: PAPER_TEXT,
               },
@@ -496,7 +493,7 @@ export default function EverymenEditPraxis({ state }: Props) {
                 background: "transparent",
                 color: PAPER_TEXT,
                 fontFamily: BODY_FONT,
-                fontSize: 11,
+                fontSize: "var(--text-md)",
                 fontWeight: 700,
                 letterSpacing: "0.12em",
                 textTransform: "uppercase",
@@ -506,7 +503,7 @@ export default function EverymenEditPraxis({ state }: Props) {
               <span
                 style={{
                   fontFamily: ACCENT_FONT,
-                  fontSize: 18,
+                  fontSize: "var(--text-content)",
                   color: RED,
                   lineHeight: 0.6,
                 }}
@@ -527,7 +524,7 @@ export default function EverymenEditPraxis({ state }: Props) {
           {state.fileError && (
             <p
               style={{
-                fontSize: 11,
+                fontSize: "var(--text-md)",
                 color: "var(--color-danger)",
                 marginTop: 9,
               }}
@@ -555,40 +552,40 @@ export default function EverymenEditPraxis({ state }: Props) {
             flexWrap: "wrap",
           }}
         >
+          <DropButton
+            state={state}
+            skin={{
+              label: t("editPraxis.everymen.dropLabel"),
+              style: {
+                background: "transparent",
+                border: "none",
+                color: MUTED,
+                fontFamily: BODY_FONT,
+                fontSize: "var(--text-md)",
+                fontStyle: "italic",
+                textDecoration: "underline",
+                cursor: "pointer",
+              },
+            }}
+          />
           <PublishButton
             state={state}
             skin={{
               idleLabel: t("editPraxis.everymen.publishIdle"),
               busyLabel: t("editPraxis.everymen.publishBusy"),
               style: {
+                marginLeft: "auto",
                 cursor: state.submitting ? "wait" : "pointer",
                 border: `2px solid ${INK}`,
                 background: state.submitting ? OLIVE : RED,
                 color: CREAM,
                 fontFamily: ACCENT_FONT,
-                fontSize: 26,
+                fontSize: "var(--text-title)",
                 letterSpacing: "0.1em",
                 padding: "12px 30px",
                 whiteSpace: "nowrap",
                 boxShadow: `5px 5px 0 ${INK}`,
                 transition: "background 150ms",
-              },
-            }}
-          />
-          <DropButton
-            state={state}
-            skin={{
-              label: t("editPraxis.everymen.dropLabel"),
-              style: {
-                marginLeft: "auto",
-                background: "transparent",
-                border: "none",
-                color: MUTED,
-                fontFamily: BODY_FONT,
-                fontSize: 11,
-                fontStyle: "italic",
-                textDecoration: "underline",
-                cursor: "pointer",
               },
             }}
           />
@@ -624,7 +621,7 @@ function ProofSlip({ children, caption, onRemove }: ProofSlipProps) {
       <div
         style={{
           fontFamily: BODY_FONT,
-          fontSize: 9,
+          fontSize: "var(--text-sm)",
           letterSpacing: "0.04em",
           color: PAPER_TEXT,
           marginTop: 6,
@@ -648,7 +645,7 @@ function ProofSlip({ children, caption, onRemove }: ProofSlipProps) {
           background: RED,
           border: `2px solid ${INK}`,
           color: CREAM,
-          fontSize: 12,
+          fontSize: "var(--text-lg)",
           fontWeight: 700,
           cursor: "pointer",
           lineHeight: 1,
@@ -800,14 +797,14 @@ function MetatasksBlock({ state }: { state: EditPraxisState }) {
             </span>
             <div style={{ flex: 1 }}>
               <div
-                style={{ fontSize: 14, color: PAPER_TEXT, fontWeight: 700 }}
+                style={{ fontSize: "var(--text-xl)", color: PAPER_TEXT, fontWeight: 700 }}
               >
                 {mt.title}
               </div>
               {mt.description && (
                 <div
                   style={{
-                    fontSize: 11,
+                    fontSize: "var(--text-md)",
                     color: MUTED,
                     fontStyle: "italic",
                   }}
@@ -819,7 +816,7 @@ function MetatasksBlock({ state }: { state: EditPraxisState }) {
             <span
               style={{
                 fontFamily: ACCENT_FONT,
-                fontSize: 15,
+                fontSize: "var(--text-xl)",
                 color: selected ? OLIVE : RED,
                 whiteSpace: "nowrap",
               }}

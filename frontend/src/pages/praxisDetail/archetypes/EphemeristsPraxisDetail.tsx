@@ -13,16 +13,16 @@ import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import MarkdownPreview from '../../editPraxis/blocks/MarkdownPreview'
 import MediaGallery from '../../../components/MediaGallery'
-import EphemeristsVote from '../../../components/vote/EphemeristsVote'
+import VoteUI from '../../../components/vote/VoteUI'
 import { EphemeristsSigil, EphEyebrow, Foxing, LapisLastWord, toRoman } from '../../../components/cards/ephemeristsAtoms'
 import { factionCssVar } from '../../../utils/factions'
 import { formatTimestamp } from '../../../utils/dates'
-import { PraxisAdminBar, PraxisStatusBanners, PraxisOwnerActions, PraxisFlagBlock, PraxisVoterBreakdown, MemberByline } from '../shared'
+import { PraxisAdminBar, PraxisStatusBanners, PraxisOwnerActions, PraxisFlagBlock, PraxisVoterBreakdown, PraxisScoreBreakdown, MemberByline } from '../shared'
 import type { PraxisDetailState } from '../usePraxisDetail'
 
 export default function EphemeristsPraxisDetail({ state }: { state: PraxisDetailState }) {
   const { t } = useTranslation('praxis')
-  const { praxis, votes } = state
+  const { praxis } = state
   if (!praxis) return null
 
   const sealedDate = praxis.submitted_at ?? praxis.created_at
@@ -67,7 +67,7 @@ export default function EphemeristsPraxisDetail({ state }: { state: PraxisDetail
             to={`/tasks/${praxis.task_id}`}
             style={{
               fontFamily: 'var(--eph-display)',
-              fontSize: 8,
+              fontSize: 'var(--text-xs)',
               letterSpacing: '0.18em',
               color: 'var(--eph-muted)',
               textDecoration: 'none',
@@ -76,22 +76,22 @@ export default function EphemeristsPraxisDetail({ state }: { state: PraxisDetail
           >
             {t('detail.ephemerists.re', { task: praxis.task_title })}
           </Link>
-          <span style={{ color: 'color-mix(in srgb, var(--eph-ink) 25%, transparent)', fontSize: 8 }}>·</span>
+          <span style={{ color: 'color-mix(in srgb, var(--eph-ink) 25%, transparent)', fontSize: 'var(--text-xs)' }}>·</span>
           <span
             style={{
               fontFamily: 'var(--eph-display)',
-              fontSize: 8,
+              fontSize: 'var(--text-xs)',
               letterSpacing: '0.12em',
               color: 'var(--eph-muted)',
             }}
           >
             {t('detail.ephemerists.grade', { grade })}
           </span>
-          <span style={{ color: 'color-mix(in srgb, var(--eph-ink) 25%, transparent)', fontSize: 8 }}>·</span>
+          <span style={{ color: 'color-mix(in srgb, var(--eph-ink) 25%, transparent)', fontSize: 'var(--text-xs)' }}>·</span>
           <span
             style={{
               fontFamily: 'var(--eph-serif)',
-              fontSize: 8,
+              fontSize: 'var(--text-xs)',
               fontStyle: 'italic',
               color: 'var(--eph-muted)',
             }}
@@ -100,11 +100,11 @@ export default function EphemeristsPraxisDetail({ state }: { state: PraxisDetail
           </span>
           {praxis.moderation_status === 'flagged' && (
             <>
-              <span style={{ color: 'color-mix(in srgb, var(--eph-ink) 25%, transparent)', fontSize: 8 }}>·</span>
+              <span style={{ color: 'color-mix(in srgb, var(--eph-ink) 25%, transparent)', fontSize: 'var(--text-xs)' }}>·</span>
               <span
                 style={{
                   fontFamily: 'var(--eph-display)',
-                  fontSize: 7,
+                  fontSize: 'var(--text-xs)',
                   letterSpacing: '0.1em',
                   color: 'var(--eph-rubric)',
                   border: '1px solid var(--eph-rubric)',
@@ -121,7 +121,7 @@ export default function EphemeristsPraxisDetail({ state }: { state: PraxisDetail
         <h1
           style={{
             fontFamily: 'var(--eph-display)',
-            fontSize: 26,
+            fontSize: 'var(--text-title)',
             fontWeight: 700,
             lineHeight: 1.15,
             color: 'var(--eph-vellum-text)',
@@ -173,7 +173,7 @@ export default function EphemeristsPraxisDetail({ state }: { state: PraxisDetail
               linkStyle={{
                 fontFamily: 'var(--eph-serif)',
                 fontStyle: 'italic',
-                fontSize: 13,
+                fontSize: 'var(--text-lg)',
                 color: 'var(--eph-lapis)',
                 textDecoration: 'none',
               }}
@@ -181,7 +181,7 @@ export default function EphemeristsPraxisDetail({ state }: { state: PraxisDetail
             <span
               style={{
                 fontFamily: 'var(--eph-display)',
-                fontSize: 7.5,
+                fontSize: 'var(--text-xs)',
                 letterSpacing: '0.1em',
                 color: 'var(--eph-muted)',
               }}
@@ -192,9 +192,9 @@ export default function EphemeristsPraxisDetail({ state }: { state: PraxisDetail
           {/* Point value from task */}
           <div style={{ textAlign: 'right', flexShrink: 0 }}>
             <div
+              className="content-title"
               style={{
                 fontFamily: 'var(--eph-display)',
-                fontSize: 18,
                 color: 'var(--eph-vellum-text)',
                 lineHeight: 1,
               }}
@@ -204,7 +204,7 @@ export default function EphemeristsPraxisDetail({ state }: { state: PraxisDetail
             <span
               style={{
                 fontFamily: 'var(--eph-display)',
-                fontSize: 7,
+                fontSize: 'var(--text-xs)',
                 letterSpacing: '0.14em',
                 color: 'var(--eph-muted)',
               }}
@@ -229,7 +229,7 @@ export default function EphemeristsPraxisDetail({ state }: { state: PraxisDetail
               <span
                 style={{
                   fontFamily: 'var(--eph-display)',
-                  fontSize: 8,
+                  fontSize: 'var(--text-xs)',
                   letterSpacing: '0.2em',
                   color: 'var(--eph-rubric)',
                   textTransform: 'uppercase',
@@ -240,11 +240,10 @@ export default function EphemeristsPraxisDetail({ state }: { state: PraxisDetail
             </div>
             <MarkdownPreview
               source={praxis.body_text}
-              className="markdown-preview"
+              className="markdown-preview content-text"
               style={{
                 fontFamily: 'var(--eph-script)',
                 fontStyle: 'italic',
-                fontSize: 15,
                 lineHeight: 1.8,
                 color: 'var(--eph-vellum-text)',
               }}
@@ -267,7 +266,7 @@ export default function EphemeristsPraxisDetail({ state }: { state: PraxisDetail
               <span
                 style={{
                   fontFamily: 'var(--eph-display)',
-                  fontSize: 8,
+                  fontSize: 'var(--text-xs)',
                   letterSpacing: '0.2em',
                   color: 'var(--eph-rubric)',
                   textTransform: 'uppercase',
@@ -316,7 +315,7 @@ export default function EphemeristsPraxisDetail({ state }: { state: PraxisDetail
               <span
                 style={{
                   fontFamily: 'var(--eph-display)',
-                  fontSize: 8,
+                  fontSize: 'var(--text-xs)',
                   letterSpacing: '0.2em',
                   color: 'var(--eph-rubric)',
                   textTransform: 'uppercase',
@@ -325,37 +324,18 @@ export default function EphemeristsPraxisDetail({ state }: { state: PraxisDetail
                 {t('detail.ephemerists.concordance')}
               </span>
             </div>
-            {/* Points from votes */}
-            {votes && votes.total_votes > 0 && (
-              <div style={{ textAlign: 'right' }}>
-                <span
-                  style={{
-                    fontFamily: 'var(--eph-display)',
-                    fontSize: 18,
-                    color: 'var(--eph-vellum-text)',
-                    lineHeight: 1,
-                  }}
-                >
-                  +{votes.total_score}
-                </span>
-                <span
-                  style={{
-                    fontFamily: 'var(--eph-display)',
-                    fontSize: 7,
-                    letterSpacing: '0.14em',
-                    color: 'var(--eph-muted)',
-                    marginLeft: 4,
-                  }}
-                >
-                  {t('detail.ephemerists.ptsFromVotes')}
-                </span>
-              </div>
-            )}
+            {/* Earned-points breakdown (#641) */}
+            <PraxisScoreBreakdown
+              state={state}
+              align="right"
+              accent="var(--eph-vellum-text)"
+              muted="var(--eph-muted)"
+              font="var(--eph-display)"
+            />
           </div>
-          <EphemeristsVote
+          <VoteUI
+            factionSlug={praxis.task_faction_slug}
             praxisId={praxis.id}
-            points={votes?.total_score}
-            totalVotes={votes?.total_votes}
           />
         </div>
 

@@ -63,7 +63,7 @@ function MannerLabel({ label, gloss }: { label: string; gloss?: string }) {
       <span
         style={{
           fontFamily: MONO,
-          fontSize: 8,
+          fontSize: "var(--text-xs)",
           letterSpacing: "0.26em",
           textTransform: "uppercase",
           color: ink(30),
@@ -73,7 +73,7 @@ function MannerLabel({ label, gloss }: { label: string; gloss?: string }) {
         {label}
       </span>
       {gloss && (
-        <span style={{ fontFamily: FONT, fontStyle: "italic", fontSize: 13, color: ink(40), whiteSpace: "nowrap" }}>
+        <span style={{ fontFamily: FONT, fontStyle: "italic", fontSize: "var(--text-lg)", color: ink(40), whiteSpace: "nowrap" }}>
           {gloss}
         </span>
       )}
@@ -146,7 +146,7 @@ export default function AlbescentEditPraxis({ state }: Props) {
                 alignItems: "center",
                 gap: 9,
                 fontFamily: MONO,
-                fontSize: 8.5,
+                fontSize: "var(--text-xs)",
                 letterSpacing: "0.24em",
                 textTransform: "uppercase",
                 color: ink(30),
@@ -158,7 +158,7 @@ export default function AlbescentEditPraxis({ state }: Props) {
             <span
               style={{
                 fontFamily: MONO,
-                fontSize: 7.5,
+                fontSize: "var(--text-xs)",
                 letterSpacing: "0.16em",
                 textTransform: "uppercase",
                 color: ink(26),
@@ -181,7 +181,7 @@ export default function AlbescentEditPraxis({ state }: Props) {
               fontFamily: FONT,
               fontStyle: "italic",
               fontWeight: 300,
-              fontSize: 56,
+              fontSize: "var(--text-display)",
               lineHeight: 1.0,
               color: INK,
               margin: "26px 0 8px",
@@ -195,7 +195,7 @@ export default function AlbescentEditPraxis({ state }: Props) {
               fontFamily: FONT,
               fontStyle: "italic",
               fontWeight: 300,
-              fontSize: 16,
+              fontSize: "var(--text-xl)",
               lineHeight: 1.5,
               color: ink(50),
               maxWidth: 480,
@@ -223,7 +223,7 @@ export default function AlbescentEditPraxis({ state }: Props) {
               <div
                 style={{
                   fontFamily: MONO,
-                  fontSize: 7.5,
+                  fontSize: "var(--text-xs)",
                   letterSpacing: "0.2em",
                   textTransform: "uppercase",
                   color: ink(30),
@@ -238,7 +238,7 @@ export default function AlbescentEditPraxis({ state }: Props) {
                 style={{
                   fontFamily: FONT,
                   fontStyle: "italic",
-                  fontSize: 24,
+                  fontSize: "var(--text-title)",
                   lineHeight: 1.05,
                   color: INK,
                   marginBottom: 7,
@@ -248,11 +248,11 @@ export default function AlbescentEditPraxis({ state }: Props) {
                 {praxis.task_title}
               </div>
               {task?.description && (
-                <div style={{ fontFamily: MONO, fontSize: 9, lineHeight: 1.5, color: ink(40), marginBottom: 6, overflowWrap: "anywhere" }}>
+                <div style={{ fontFamily: MONO, fontSize: "var(--text-content)", lineHeight: 1.5, color: ink(40), marginBottom: 6, overflowWrap: "anywhere" }}>
                   {task.description}
                 </div>
               )}
-              <div style={{ fontFamily: MONO, fontSize: 8, letterSpacing: "0.08em", color: ink(40) }}>
+              <div style={{ fontFamily: MONO, fontSize: "var(--text-xs)", letterSpacing: "0.08em", color: ink(40) }}>
                 {t("editPraxis.albescent.pointsLabel", {
                   points: praxis.task_point_value,
                 })}
@@ -291,10 +291,10 @@ export default function AlbescentEditPraxis({ state }: Props) {
                         transition: "all 160ms",
                       }}
                     >
-                      <div style={{ fontFamily: FONT, fontStyle: "italic", fontWeight: 400, fontSize: 22, lineHeight: 1 }}>
+                      <div style={{ fontFamily: FONT, fontStyle: "italic", fontWeight: 400, fontSize: "var(--text-title)", lineHeight: 1 }}>
                         {opt.label}
                       </div>
-                      <div style={{ fontFamily: MONO, fontSize: 7.5, letterSpacing: "0.06em", marginTop: 6, opacity: 0.7 }}>
+                      <div style={{ fontFamily: MONO, fontSize: "var(--text-xs)", letterSpacing: "0.06em", marginTop: 6, opacity: 0.7 }}>
                         {opt.desc}
                       </div>
                     </button>
@@ -349,7 +349,6 @@ export default function AlbescentEditPraxis({ state }: Props) {
                   fontFamily: FONT,
                   fontStyle: "italic",
                   fontWeight: 400,
-                  fontSize: 26,
                   color: INK,
                   padding: "4px 2px 10px",
                   outline: "none",
@@ -380,7 +379,6 @@ export default function AlbescentEditPraxis({ state }: Props) {
                   border: `1px solid ${ink(10)}`,
                   background: WARM,
                   fontFamily: FONT,
-                  fontSize: 18,
                   lineHeight: 1.75,
                   color: INK,
                   padding: "16px 18px",
@@ -397,7 +395,7 @@ export default function AlbescentEditPraxis({ state }: Props) {
                   <div
                     style={{
                       fontFamily: MONO,
-                      fontSize: 8,
+                      fontSize: "var(--text-xs)",
                       letterSpacing: "0.2em",
                       textTransform: "uppercase",
                       color: ink(30),
@@ -407,7 +405,7 @@ export default function AlbescentEditPraxis({ state }: Props) {
                     {t("editPraxis.albescent.previewLabel")}
                   </div>
                 ),
-                markdownStyle: { fontFamily: FONT, fontStyle: "italic", fontSize: 15, lineHeight: 1.75, color: ink(62) },
+                markdownStyle: { fontFamily: FONT, fontStyle: "italic", lineHeight: 1.75, color: ink(62) },
               }}
             />
           </div>
@@ -444,7 +442,7 @@ export default function AlbescentEditPraxis({ state }: Props) {
                     border: `1px dashed ${ink(16)}`,
                     cursor: "pointer",
                     fontFamily: MONO,
-                    fontSize: 9,
+                    fontSize: "var(--text-sm)",
                     letterSpacing: "0.14em",
                     textTransform: "uppercase",
                     color: ink(40),
@@ -457,7 +455,7 @@ export default function AlbescentEditPraxis({ state }: Props) {
                   buttonLabel: t("editPraxis.albescent.fileButton"),
                   errorColor: "var(--color-danger)",
                   helperText: t("editPraxis.albescent.fileHelper"),
-                  helperStyle: { fontFamily: MONO, fontSize: 8, letterSpacing: "0.08em", color: ink(30), marginTop: 8 },
+                  helperStyle: { fontFamily: MONO, fontSize: "var(--text-xs)", letterSpacing: "0.08em", color: ink(30), marginTop: 8 },
                 }}
               />
             </div>
@@ -500,6 +498,23 @@ export default function AlbescentEditPraxis({ state }: Props) {
               flexWrap: "wrap",
             }}
           >
+            <DropButton
+              state={state}
+              skin={{
+                label: t("editPraxis.albescent.dropLabel"),
+                style: {
+                  cursor: "pointer",
+                  border: `1px solid ${ink(12)}`,
+                  background: "transparent",
+                  color: ink(50),
+                  fontFamily: MONO,
+                  fontSize: "var(--text-sm)",
+                  letterSpacing: "0.12em",
+                  textTransform: "uppercase",
+                  padding: "14px 18px",
+                },
+              }}
+            />
             <PublishButton
               state={state}
               skin={{
@@ -513,27 +528,10 @@ export default function AlbescentEditPraxis({ state }: Props) {
                   fontFamily: FONT,
                   fontStyle: "italic",
                   fontWeight: 500,
-                  fontSize: 20,
+                  fontSize: "var(--text-content)",
                   letterSpacing: "0.02em",
                   padding: "12px 30px",
                   whiteSpace: "nowrap",
-                },
-              }}
-            />
-            <DropButton
-              state={state}
-              skin={{
-                label: t("editPraxis.albescent.dropLabel"),
-                style: {
-                  cursor: "pointer",
-                  border: `1px solid ${ink(12)}`,
-                  background: "transparent",
-                  color: ink(50),
-                  fontFamily: MONO,
-                  fontSize: 9,
-                  letterSpacing: "0.12em",
-                  textTransform: "uppercase",
-                  padding: "14px 18px",
                 },
               }}
             />
@@ -569,7 +567,7 @@ function PlateFrame({
       <div
         style={{
           fontFamily: MONO,
-          fontSize: 8,
+          fontSize: "var(--text-xs)",
           letterSpacing: "0.04em",
           color: ink(40),
           textAlign: "center",
@@ -596,7 +594,7 @@ function PlateFrame({
           background: SHEET,
           border: `1.5px solid ${INK}`,
           color: INK,
-          fontSize: 12,
+          fontSize: "var(--text-lg)",
           fontWeight: 700,
           cursor: "pointer",
           lineHeight: 1,

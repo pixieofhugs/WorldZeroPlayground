@@ -14,7 +14,8 @@ import MarkdownPreview from "../blocks/MarkdownPreview";
 import { applyMarkdown } from "../blocks/markdownToolbar";
 import type { MarkdownCommand } from "../blocks/markdownToolbar";
 import type { EditPraxisState } from "../useEditPraxis";
-import { CollabRoster } from "../../../components/collab/CollabRoster";
+import { CollabRoster, deriveCollabGate } from "../../../components/collab/CollabRoster";
+import { collabCopy } from "../../../components/collab/collabCopy";
 
 export interface InviteSearchSkin {
   inputBg?: string;
@@ -62,7 +63,7 @@ export function InviteSearch({
                   alignItems: "center",
                   gap: 6,
                   fontFamily: skin.fontFamily,
-                  fontSize: 11,
+                  fontSize: "var(--text-md)",
                   padding: "4px 10px",
                   background: skin.pendingBg ?? "transparent",
                   color: skin.pendingColor ?? "inherit",
@@ -90,7 +91,7 @@ export function InviteSearch({
                       border: "none",
                       color: "inherit",
                       cursor: "pointer",
-                      fontSize: 14,
+                      fontSize: "var(--text-xl)",
                       lineHeight: 1,
                       padding: 0,
                     }}
@@ -108,11 +109,6 @@ export function InviteSearch({
                   currentCharacterId={state.currentCharacterId}
                   factionSlug={praxis.task_faction_slug}
                   taskPointValue={praxis.task_point_value}
-                  action={{
-                    onCast: state.publish,
-                    onPullBack: state.pullBack,
-                    submitting: state.submitting,
-                  }}
                 />
               </div>,
               ...praxis.invites
@@ -122,7 +118,7 @@ export function InviteSearch({
                     key={`i-${invite.id}`}
                     style={{
                       fontFamily: skin.fontFamily,
-                      fontSize: 11,
+                      fontSize: "var(--text-md)",
                       padding: "4px 10px",
                       background: skin.pendingBg ?? "transparent",
                       color: skin.pendingColor ?? "inherit",
@@ -143,7 +139,7 @@ export function InviteSearch({
                         border: "none",
                         color: "inherit",
                         cursor: "pointer",
-                        fontSize: 14,
+                        fontSize: "var(--text-xl)",
                         lineHeight: 1,
                         padding: 0,
                         marginLeft: 6,
@@ -175,7 +171,7 @@ export function InviteSearch({
           style={{
             width: "100%",
             fontFamily: skin.fontFamily,
-            fontSize: 13,
+            fontSize: "var(--text-lg)",
             padding: "8px 12px",
             background: skin.inputBg ?? "transparent",
             color: skin.inputColor ?? "inherit",
@@ -220,7 +216,7 @@ export function InviteSearch({
                   cursor: state.inviting ? "wait" : "pointer",
                   textAlign: "left",
                   fontFamily: skin.fontFamily,
-                  fontSize: 12,
+                  fontSize: "var(--text-lg)",
                   color: skin.inputColor ?? "inherit",
                 }}
               >
@@ -237,7 +233,7 @@ export function InviteSearch({
                 <span style={{ fontWeight: 700 }}>
                   {character.display_name}
                 </span>
-                <span style={{ marginLeft: "auto", fontSize: 9, opacity: 0.7 }}>
+                <span style={{ marginLeft: "auto", fontSize: "var(--text-sm)", opacity: 0.7 }}>
                   {factionName(character.faction_slug)}
                 </span>
               </button>
@@ -287,7 +283,7 @@ export function FilePicker({
       {state.fileError && (
         <p
           style={{
-            fontSize: 11,
+            fontSize: "var(--text-md)",
             color: skin.errorColor ?? "var(--color-danger)",
             marginTop: 8,
           }}
@@ -375,18 +371,18 @@ export function MetatasksList({
               aria-hidden
             />
             <div style={{ flex: 1 }}>
-              <div style={{ fontSize: 13, color: skin.titleColor }}>
+              <div style={{ fontSize: "var(--text-lg)", color: skin.titleColor }}>
                 {mt.title}
               </div>
               {mt.description && (
-                <div style={{ fontSize: 10, color: skin.descColor }}>
+                <div style={{ fontSize: "var(--text-base)", color: skin.descColor }}>
                   {mt.description}
                 </div>
               )}
             </div>
             <span
               style={{
-                fontSize: 12,
+                fontSize: "var(--text-lg)",
                 fontWeight: 700,
                 color: selected
                   ? (skin.pointsActiveColor ?? "var(--color-success)")
@@ -423,9 +419,13 @@ export function TitleField({
   skin: TitleFieldSkin;
 }) {
   return (
+    // The role class owns the type size; the skin keeps font/colour/ornament
+    // only (§4a). Inline style wins over class, so the size lands as soon as the
+    // skin stops setting fontSize.
     <input
       type="text"
       maxLength={200}
+      className="content-text"
       value={state.title}
       onChange={(event) => state.setTitle(event.target.value)}
       placeholder={skin.placeholder}
@@ -516,7 +516,7 @@ export function BodyTextarea({
   const buttonStyle: CSSProperties = {
     minWidth: 26,
     padding: "3px 7px",
-    fontSize: 12,
+    fontSize: "var(--text-lg)",
     fontWeight: 700,
     lineHeight: 1.2,
     background: "var(--color-bg-surface)",
@@ -551,8 +551,10 @@ export function BodyTextarea({
           </button>
         ))}
       </div>
+      {/* Role class owns the size; the skin gives up only fontSize (§4a). */}
       <textarea
         ref={textareaRef}
+        className="content-text"
         value={state.body}
         onChange={(event) => state.setBody(event.target.value)}
         rows={skin.rows}
@@ -587,9 +589,13 @@ export function BodyPreview({
   return (
     <div style={skin.wrapperStyle}>
       {skin.label}
+      {/* content-text owns the body's type size (the largest player-written
+          prose on the site); the skin's markdownStyle keeps only font/colour.
+          The literal class lives on TitleField/BodyTextarea so Tailwind emits
+          it even though this one is assembled. */}
       <MarkdownPreview
         source={state.body}
-        className={skin.markdownClassName ?? "markdown-preview"}
+        className={`content-text ${skin.markdownClassName ?? "markdown-preview"}`}
         style={skin.markdownStyle}
       />
     </div>
@@ -683,17 +689,35 @@ export function PublishButton({
   skin: PublishButtonSkin;
 }) {
   if (state.isPublished) return null;
-  // Multi-member collabs cast through the CollabRoster action, not this button (#591).
-  if (state.praxis?.type === "collab" && state.praxis.members.length > 1) return null;
+  // Multi-member collabs cast (and pull back) through this same footer button
+  // (#646). The consensus gate decides the action and the faction-voiced idle
+  // label; the busy label stays the archetype's mode-agnostic present participle.
+  const praxis = state.praxis;
+  const collab =
+    praxis?.type === "collab" && praxis.members.length > 1
+      ? deriveCollabGate(praxis.members, state.currentCharacterId)
+      : null;
+  const idleLabel =
+    collab && praxis
+      ? collabCopy(
+          praxis.task_faction_slug,
+          collab.iCast
+            ? "pullBackAction"
+            : collab.castCount === collab.memberCount - 1
+              ? "castFinalAction"
+              : "castAction",
+        )
+      : skin.idleLabel;
+  const onClick = collab?.iCast ? state.pullBack : state.publish;
   return (
     <button
       type="button"
-      onClick={() => void state.publish()}
+      onClick={() => void onClick()}
       disabled={state.submitting || state.switchingMode !== null}
       style={skin.style}
     >
       {skin.ornament}
-      {state.submitting ? skin.busyLabel : skin.idleLabel}
+      {state.submitting ? skin.busyLabel : idleLabel}
     </button>
   );
 }

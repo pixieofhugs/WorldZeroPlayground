@@ -33,7 +33,7 @@ export default function UaTaskCard({ task, displayPoints, onSignup }: Props) {
         minWidth: 240,
         maxWidth: 282,
         flex: "0 1 264px",
-        padding: 4,
+        padding: "var(--space-xs)",
         background: "var(--ua-gilt)",
         transform: "rotate(-0.6deg)",
         boxShadow:
@@ -47,7 +47,7 @@ export default function UaTaskCard({ task, displayPoints, onSignup }: Props) {
             "radial-gradient(color-mix(in srgb, var(--ua-ink) 3%, transparent) 1px, transparent 1px)",
           backgroundSize: "5px 5px",
           border: "1px solid var(--ua-line-soft)",
-          padding: "18px 20px 14px",
+          padding: "var(--space-lg) var(--space-lg) var(--space-md)",
           color: "var(--ua-ink)",
           textAlign: "center",
           display: "flex",
@@ -62,11 +62,11 @@ export default function UaTaskCard({ task, displayPoints, onSignup }: Props) {
         <div
           style={{
             fontFamily: REGALIA,
-            fontSize: 10,
+            fontSize: "var(--text-base)",
             letterSpacing: "0.16em",
             textTransform: "uppercase",
             color: "var(--ua-orange)",
-            marginTop: 8,
+            marginTop: "var(--space-sm)",
           }}
         >
           {i18n.t("feed:identity.ua.fullName")}
@@ -74,11 +74,11 @@ export default function UaTaskCard({ task, displayPoints, onSignup }: Props) {
         <div
           style={{
             fontFamily: REGALIA,
-            fontSize: 8,
+            fontSize: "var(--text-xs)",
             letterSpacing: "0.3em",
             textTransform: "uppercase",
             color: "var(--ua-muted)",
-            marginBottom: 10,
+            marginBottom: "var(--space-md)",
           }}
         >
           {i18n.t("feed:taskCard.ua.estLine")}
@@ -92,13 +92,13 @@ export default function UaTaskCard({ task, displayPoints, onSignup }: Props) {
           style={{ textDecoration: "none", color: "inherit" }}
         >
           <div
+            className="content-title"
             style={{
               fontFamily: DISPLAY,
               fontStyle: "italic",
               fontWeight: 600,
-              fontSize: "var(--text-lg)",
               lineHeight: 1.2,
-              margin: "12px 0 6px",
+              margin: "var(--space-md) 0 var(--space-sm)",
               overflowWrap: "anywhere",
             }}
           >
@@ -109,7 +109,7 @@ export default function UaTaskCard({ task, displayPoints, onSignup }: Props) {
         {task.description && (
           <div
             className="card-description"
-            style={{ fontFamily: SERIF, color: "var(--ua-sub)", marginBottom: 4 }}
+            style={{ fontFamily: SERIF, color: "var(--ua-sub)", marginBottom: "var(--space-xs)" }}
           >
             {task.description}
           </div>
@@ -118,11 +118,11 @@ export default function UaTaskCard({ task, displayPoints, onSignup }: Props) {
         <div
           style={{
             fontFamily: REGALIA,
-            fontSize: 9,
+            fontSize: "var(--text-sm)",
             letterSpacing: "0.12em",
             textTransform: "uppercase",
             color: "var(--ua-gold)",
-            margin: "6px 0 10px",
+            margin: "var(--space-sm) 0 var(--space-md)",
           }}
         >
           {i18n.t("feed:taskCard.ua.pointsLine", { points: displayPoints })}
@@ -134,11 +134,11 @@ export default function UaTaskCard({ task, displayPoints, onSignup }: Props) {
             className="btn-primary"
             style={{
               fontFamily: REGALIA,
-              fontSize: 10,
+              fontSize: "var(--text-base)",
               letterSpacing: "0.12em",
               textTransform: "uppercase",
-              padding: "7px 22px",
-              marginBottom: 12,
+              padding: "var(--space-sm) var(--space-xl)",
+              marginBottom: "var(--space-md)",
               background: "var(--ua-orange)",
               border: "none",
             }}
@@ -156,10 +156,10 @@ export default function UaTaskCard({ task, displayPoints, onSignup }: Props) {
         >
           <LevelPill level={task.level_required} factionSlug="ua" />
           <span
+            className="content-title"
             style={{
               fontFamily: DISPLAY,
               fontStyle: "italic",
-              fontSize: "var(--text-base)",
               fontWeight: 700,
               color: "var(--ua-orange)",
             }}

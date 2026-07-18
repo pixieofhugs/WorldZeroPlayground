@@ -22,13 +22,14 @@ import {
   PraxisOwnerActions,
   PraxisFlagBlock,
   PraxisVoterBreakdown,
+  PraxisScoreBreakdown,
   MemberByline,
 } from '../shared'
 import { MobileStarVote } from './shared'
 
 export default function DefaultPraxisDetail({ state }: { state: PraxisDetailState }) {
   const { t } = useTranslation('praxis')
-  const { praxis, votes } = state
+  const { praxis } = state
   if (!praxis) return null
 
   const accent = factionCssVar(praxis.task_faction_slug, 'card-accent')
@@ -39,7 +40,7 @@ export default function DefaultPraxisDetail({ state }: { state: PraxisDetailStat
       {/* Breadcrumb */}
       <nav
         className="font-body"
-        style={{ fontSize: 10, letterSpacing: '0.08em', color: 'var(--color-text-tertiary)' }}
+        style={{ fontSize: 'var(--text-base)', letterSpacing: '0.08em', color: 'var(--color-text-tertiary)' }}
       >
         <Link to="/tasks" style={{ color: accent, textDecoration: 'none' }}>
           {t('detail.default.breadcrumbTasks')}
@@ -64,7 +65,7 @@ export default function DefaultPraxisDetail({ state }: { state: PraxisDetailStat
               color: 'var(--color-text-on-accent)',
               fontFamily: 'var(--font-display)',
               fontStyle: 'italic',
-              fontSize: 17,
+              fontSize: 'var(--text-content)',
             }}
             aria-hidden
           >
@@ -75,7 +76,7 @@ export default function DefaultPraxisDetail({ state }: { state: PraxisDetailStat
           <MemberByline
             praxis={praxis}
             linkClassName="font-display italic"
-            linkStyle={{ fontSize: 15, color: 'var(--color-text-primary)', textDecoration: 'none' }}
+            linkStyle={{ fontSize: 'var(--text-xl)', color: 'var(--color-text-primary)', textDecoration: 'none' }}
           />
           <span className="eyebrow" style={{ color: 'var(--color-text-tertiary)' }}>
             {formatTimestamp(praxis.created_at)}
@@ -85,8 +86,8 @@ export default function DefaultPraxisDetail({ state }: { state: PraxisDetailStat
 
       {/* Finding title */}
       <h1
-        className="font-display italic font-medium"
-        style={{ fontSize: 26, lineHeight: 1.2, color: 'var(--color-text-primary)', margin: 0 }}
+        className="font-display italic font-medium content-title"
+        style={{ lineHeight: 1.2, color: 'var(--color-text-primary)', margin: 0 }}
       >
         {praxis.title}
       </h1>
@@ -106,10 +107,10 @@ export default function DefaultPraxisDetail({ state }: { state: PraxisDetailStat
         }}
       >
         <span className="eyebrow">{t('detail.default.completingTask')}</span>
-        <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--color-text-primary)' }}>
+        <span style={{ fontSize: 'var(--text-lg)', fontWeight: 700, color: 'var(--color-text-primary)' }}>
           {praxis.task_title}
         </span>
-        <span style={{ fontSize: 9, color: 'var(--color-text-tertiary)', marginLeft: 'auto' }}>
+        <span style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-tertiary)', marginLeft: 'auto' }}>
           {t('detail.default.points', { points: praxis.task_point_value })}
         </span>
       </Link>
@@ -121,8 +122,8 @@ export default function DefaultPraxisDetail({ state }: { state: PraxisDetailStat
       {praxis.body_text && (
         <MarkdownPreview
           source={praxis.body_text}
-          className="font-display markdown-preview"
-          style={{ fontSize: 15, lineHeight: 1.75, color: 'var(--color-text-primary)' }}
+          className="font-display markdown-preview content-text"
+          style={{ lineHeight: 1.75, color: 'var(--color-text-primary)' }}
         />
       )}
 
@@ -131,10 +132,11 @@ export default function DefaultPraxisDetail({ state }: { state: PraxisDetailStat
         <div className="eyebrow" style={{ textAlign: 'center', marginBottom: 12, color: 'var(--color-text-secondary)' }}>
           {t('mobileDetail.ratePrompt')}
         </div>
+        <div style={{ marginBottom: 12 }}>
+          <PraxisScoreBreakdown state={state} align="center" accent={accent} />
+        </div>
         <MobileStarVote
           praxisId={praxis.id}
-          points={votes?.total_score}
-          totalVotes={votes?.total_votes}
           accent={accent}
         />
       </div>

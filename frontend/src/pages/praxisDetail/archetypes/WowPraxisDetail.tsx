@@ -18,10 +18,10 @@ import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import MarkdownPreview from '../../editPraxis/blocks/MarkdownPreview'
 import MediaGallery from '../../../components/MediaGallery'
-import WowVote from '../../../components/vote/WowVote'
+import VoteUI from '../../../components/vote/VoteUI'
 import { factionCssVar } from '../../../utils/factions'
 import { formatTimestamp } from '../../../utils/dates'
-import { PraxisAdminBar, PraxisStatusBanners, PraxisOwnerActions, PraxisFlagBlock, PraxisVoterBreakdown, MemberByline } from '../shared'
+import { PraxisAdminBar, PraxisStatusBanners, PraxisOwnerActions, PraxisFlagBlock, PraxisVoterBreakdown, PraxisScoreBreakdown, MemberByline } from '../shared'
 import type { PraxisDetailState } from '../usePraxisDetail'
 
 // ── whimsy.exe token vocabulary (same as WowTaskDetail) ──────────────────────
@@ -67,7 +67,7 @@ function Divider({ label }: { label: string }) {
           alignItems: 'center',
           gap: 6,
           fontFamily: BODY,
-          fontSize: 9,
+          fontSize: 'var(--text-sm)',
           textTransform: 'uppercase',
           letterSpacing: '0.18em',
           color: CARD_MUTED,
@@ -113,7 +113,7 @@ function TitleBar({ name }: { name: string }) {
           alignItems: 'center',
           gap: 5,
           fontFamily: SCRIPT,
-          fontSize: 20,
+          fontSize: 'var(--text-content)',
           color: TITLE_TEXT,
           letterSpacing: '0.03em',
         }}
@@ -126,7 +126,7 @@ function TitleBar({ name }: { name: string }) {
 
 export default function WowPraxisDetail({ state }: { state: PraxisDetailState }) {
   const { t } = useTranslation('praxis')
-  const { praxis, votes } = state
+  const { praxis } = state
   if (!praxis) return null
 
   const sealedDate = praxis.submitted_at ?? praxis.created_at
@@ -136,7 +136,7 @@ export default function WowPraxisDetail({ state }: { state: PraxisDetailState })
     display: 'inline-flex',
     alignItems: 'center',
     gap: 6,
-    fontSize: 8.5,
+    fontSize: 'var(--text-xs)',
     letterSpacing: '0.12em',
     textTransform: 'uppercase',
     padding: '5px 11px',
@@ -191,7 +191,7 @@ export default function WowPraxisDetail({ state }: { state: PraxisDetailState })
                   gap: 6,
                   background: `linear-gradient(180deg, ${PINK}, ${CARD_MUTED})`,
                   color: ON_ACCENT,
-                  fontSize: 8.5,
+                  fontSize: 'var(--text-xs)',
                   letterSpacing: '0.16em',
                   textTransform: 'uppercase',
                   padding: '5px 12px',
@@ -203,7 +203,7 @@ export default function WowPraxisDetail({ state }: { state: PraxisDetailState })
                 <Sparkle size={10} color={ON_ACCENT} /> {t('detail.wow.sealed')}
               </span>
               <span style={pill}>{modeVoice(praxis.type, t)}</span>
-              <span style={{ fontSize: 9.5, color: CARD_MUTED, letterSpacing: '0.04em' }}>
+              <span style={{ fontSize: 'var(--text-sm)', color: CARD_MUTED, letterSpacing: '0.04em' }}>
                 {t('detail.wow.re')}{' '}
                 <Link
                   to={`/tasks/${praxis.task_id}`}
@@ -230,7 +230,7 @@ export default function WowPraxisDetail({ state }: { state: PraxisDetailState })
             {/* ── 1 · the finding headline ── */}
             <div
               style={{
-                fontSize: 9,
+                fontSize: 'var(--text-sm)',
                 textTransform: 'uppercase',
                 letterSpacing: '0.2em',
                 color: CARD_MUTED,
@@ -243,7 +243,7 @@ export default function WowPraxisDetail({ state }: { state: PraxisDetailState })
               style={{
                 fontFamily: SCRIPT,
                 fontWeight: 700,
-                fontSize: 46,
+                fontSize: 'var(--text-display)',
                 lineHeight: 1.12,
                 margin: 0,
                 color: TITLE_TEXT,
@@ -282,7 +282,7 @@ export default function WowPraxisDetail({ state }: { state: PraxisDetailState })
                     border: `1.5px solid ${WIN_BORDER}`,
                     color: ON_ACCENT,
                     fontFamily: SCRIPT,
-                    fontSize: 20,
+                    fontSize: 'var(--text-content)',
                     fontWeight: 700,
                   }}
                 >
@@ -294,25 +294,25 @@ export default function WowPraxisDetail({ state }: { state: PraxisDetailState })
                   praxis={praxis}
                   linkStyle={{
                     fontFamily: SCRIPT,
-                    fontSize: 22,
+                    fontSize: 'var(--text-title)',
                     color: TITLE_TEXT,
                     lineHeight: 1,
                     textDecoration: 'none',
                   }}
                 />
                 <div
-                  style={{ fontSize: 9, color: CARD_MUTED, letterSpacing: '0.06em', marginTop: 2 }}
+                  style={{ fontSize: 'var(--text-sm)', color: CARD_MUTED, letterSpacing: '0.06em', marginTop: 2 }}
                 >
                   {t('detail.wow.witchWhoCast')}
                 </div>
               </div>
               <div style={{ marginLeft: 'auto', textAlign: 'right', flexShrink: 0 }}>
-                <div style={{ fontFamily: SCRIPT, fontSize: 30, lineHeight: 1, color: PINK }}>
+                <div style={{ fontFamily: SCRIPT, fontSize: 'var(--text-heading)', lineHeight: 1, color: PINK }}>
                   ◆ {praxis.task_point_value}
                 </div>
                 <div
                   style={{
-                    fontSize: 8,
+                    fontSize: 'var(--text-xs)',
                     color: CARD_MUTED,
                     letterSpacing: '0.14em',
                     textTransform: 'uppercase',
@@ -330,8 +330,8 @@ export default function WowPraxisDetail({ state }: { state: PraxisDetailState })
                 <Divider label={t('detail.wow.whatIDid')} />
                 <MarkdownPreview
                   source={praxis.body_text}
-                  className="markdown-preview"
-                  style={{ fontFamily: BODY, fontSize: 12, lineHeight: 1.75, color: CARD_TEXT }}
+                  className="markdown-preview content-text"
+                  style={{ fontFamily: BODY, lineHeight: 1.75, color: CARD_TEXT }}
                 />
               </>
             )}
@@ -401,35 +401,17 @@ export default function WowPraxisDetail({ state }: { state: PraxisDetailState })
                   alignItems: 'center',
                   gap: 6,
                   fontFamily: SCRIPT,
-                  fontSize: 24,
+                  fontSize: 'var(--text-title)',
                   color: TITLE_TEXT,
                 }}
               >
                 <Sparkle size={14} color={PINK} /> {t('detail.wow.sendLove')}
               </span>
-              {votes && votes.total_votes > 0 && (
-                <div style={{ textAlign: 'right' }}>
-                  <span style={{ fontFamily: SCRIPT, fontSize: 26, color: PINK, lineHeight: 1 }}>
-                    +{votes.total_score}
-                  </span>
-                  <span
-                    style={{
-                      fontSize: 8,
-                      color: CARD_MUTED,
-                      letterSpacing: '0.14em',
-                      textTransform: 'uppercase',
-                      marginLeft: 6,
-                    }}
-                  >
-                    {t('detail.wow.pointsFromVotes')}
-                  </span>
-                </div>
-              )}
+              <PraxisScoreBreakdown state={state} align="right" accent={PINK} muted={CARD_MUTED} font={SCRIPT} />
             </div>
-            <WowVote
+            <VoteUI
+              factionSlug={praxis.task_faction_slug}
               praxisId={praxis.id}
-              points={votes?.total_score}
-              totalVotes={votes?.total_votes}
             />
           </div>
         </div>

@@ -15,7 +15,7 @@
   /* ── Text ── */
   --color-text-primary: #1a1209;
   --color-text-secondary: #6b6050;
-  --color-text-tertiary: #9b8e7d;
+  --color-text-tertiary: #6c6358;
 
   /* ── Borders ── */
   --color-border: rgba(0, 0, 0, 0.07);
@@ -331,6 +331,26 @@
   /* ── Leaderboard table row hover ── */
   --leaderboard-row-hover: rgba(255, 255, 255, 0.55);
 
+  /* ── Constellation sky (Players redesign, #656) ──
+     A self-contained night sky: night in BOTH themes, so these live in :root
+     only and are deliberately NOT repeated under [data-theme="dark"] — the
+     canvas never flips (epic #654 decision #8; same pattern as the rank colors
+     above and the "Constants keep their role in both themes" faction tokens).
+     Decorative tokens (glow/ring/sparkle/tether) carry no AA duty. The three
+     text-bearing tokens are measured against --sky-bg and clear AA:
+       --sky-name        #efe6d4 → 15.48:1
+       --sky-crown       #f0c85a → 11.99:1 (gilt icon)
+       --sky-name-muted  #8a8070 →  4.94:1  (zero-score names + zero-state copy;
+                          the #9b9080@.5 the mock used measures 2.38:1 and fails). */
+  --sky-bg: #0f0e15; /* night canvas */
+  --sky-glow: rgba(240, 202, 94, 0.16); /* warm gilt "sun" glow — central + orb boxShadow */
+  --sky-ring: rgba(239, 230, 212, 0.12); /* faint orbit-ring stroke */
+  --sky-sparkle: rgba(239, 230, 212, 0.55); /* starfield dots */
+  --sky-tether: rgba(239, 230, 212, 0.35); /* dashed pinned-viewer tether */
+  --sky-crown: #f0c85a; /* gilt rank-1 crown */
+  --sky-name: #efe6d4; /* node name/score — AA 15.48:1 */
+  --sky-name-muted: #8a8070; /* faded/zero names + zero-state — AA 4.94:1 */
+
   /* ── Level track node colors ── */
   --color-level-inactive: #c8c0b0;
   --level-node-incomplete: rgba(255, 255, 255, 0.5);
@@ -357,8 +377,8 @@
 
   /* ── Text ── */
   --color-text-primary: #f0e6d0;
-  --color-text-secondary: #7a7060;
-  --color-text-tertiary: #4a4860;
+  --color-text-secondary: #988c78;
+  --color-text-tertiary: #9490c0;
 
   /* ── Borders ── */
   --color-border: rgba(255, 255, 255, 0.07);
@@ -429,7 +449,7 @@
 
   /* ── Faction card secondary text (dark mode) ── */
   --faction-ua-card-muted: var(--ua-sub);
-  --faction-wow-card-muted: #c4648a;
+  --faction-wow-card-muted: #dd719c;
   --faction-snide-card-muted: #cfcdbf;
   /* SNIDE flyposted wall flips to concrete-at-night */
   --faction-snide-wall: #141310;

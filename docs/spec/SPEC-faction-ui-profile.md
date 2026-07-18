@@ -10,7 +10,7 @@
 
 ## 1. The per-faction boundary (Tier 3)
 
-> **Current implementation coverage lives in [§7](#7-current-coverage-matrix).** §1 is the *contract* (what a faction *may* own); §7 is the *state* (what each faction *actually* has wired today, and where it falls back to a default).
+> **§1 is the *contract*** — what a faction *may* own. For the *state* (which factions actually have each surface wired today, and where they fall back to a default), grep the dispatchers in `frontend/src` (`pickVariant` / `Record<slug, …>` maps + `MOBILE_ARCHETYPE_BY_SLUG`) — the code is the source of truth, not a hand-maintained matrix.
 
 ### Per-faction — a faction owns its own version of each of these
 
@@ -77,7 +77,7 @@ A per-faction surface needs to know *which* faction to render as. Use these rule
 
 ## 3. The token contract a new faction must satisfy
 
-Every faction supplies one CSS-variable block in `frontend/src/index.css`, defined in **both** `:root` (light) and `[data-theme="dark"]`. Naming is `--faction-{cssKey}-{suffix}`. `factionCssVar(slug, suffix)` reads these; a missing `CSS_KEY` entry silently falls back to the `ua` theme.
+Every faction supplies one CSS-variable block in `frontend/src/index.css`, defined in **both** `:root` (light) and `[data-theme="dark"]`. Naming is `--faction-{cssKey}-{suffix}`. `factionCssVar(slug, suffix)` reads these; a missing `CSS_KEY` entry falls back to the `default` theme (neutral grey / rainbow — the `na` set, ADR-0039), not `ua`. Fills that render a dynamic slug use `factionFill(slug, shape)` instead, which turns `na`'s scalar grey into its spectrum by surface shape.
 
 Required suffixes (consumed by the dispatchers / `factionCssVar`):
 
@@ -148,6 +148,10 @@ Hand this to whoever wires the faction after design is delivered. (Designer only
 
 ## 6. Change log
 
+- **2026-07-17** — **Removed §7 "current coverage matrix"** (docs consolidation, PR #692).
+  It was audited-from-code state that had to be re-synced by hand; the dispatchers in
+  `frontend/src` are the source of truth. §1 stays the contract; §4's field list corrected
+  to the 8 real `FactionConfig` fields.
 - **2026-06-24** — **Activity-feed cards (#12) made truly per-faction + drift cleanup.**
   Wired the dispatch seam ahead of design: a `FactionFeedFrame` (`FACTION_FEED_FRAMES` +
   passthrough default) wraps each event-type card; the backend derives one

@@ -19,6 +19,7 @@ import { TaskCrown } from '../../components/cards/TaskCrown'
 import { CollabRoster } from '../../components/collab/CollabRoster'
 import type { PraxisDetailState } from './usePraxisDetail'
 import type { PraxisMemberOut, PraxisOut } from '../../api/praxis'
+import type { VoteSummary } from '../../api/votes'
 import { flagReasonOptions } from '../../utils/flagReasons'
 
 // ── Egalitarian byline (#387) ────────────────────────────────────────────────
@@ -149,21 +150,21 @@ export function PraxisAdminBar({ state }: { state: PraxisDetailState }) {
         <div className="flex items-center gap-2 ml-auto">
           {praxis.moderation_status === 'flagged' && (
             <>
-              <button onClick={() => void handleModerate('visible')} disabled={moderating} className="btn-primary text-xs" style={{ padding: '2px 10px', fontSize: 9 }}>{t('detail.admin.approve')}</button>
-              <button onClick={() => void handleModerate('hidden')} disabled={moderating} className="btn-outline text-xs" style={{ padding: '2px 10px', fontSize: 9, borderColor: 'rgba(220,38,38,0.5)', color: 'var(--color-danger)' }}>{t('detail.admin.hide')}</button>
-              <button onClick={() => setShowFailInput(!showFailInput)} disabled={moderating} className="btn-outline text-xs" style={{ padding: '2px 10px', fontSize: 9, borderColor: 'rgba(245,158,11,0.5)', color: 'var(--color-warning)' }}>{t('detail.admin.fail')}</button>
+              <button onClick={() => void handleModerate('visible')} disabled={moderating} className="btn-primary text-xs" style={{ padding: '2px 10px', fontSize: 'var(--text-sm)' }}>{t('detail.admin.approve')}</button>
+              <button onClick={() => void handleModerate('hidden')} disabled={moderating} className="btn-outline text-xs" style={{ padding: '2px 10px', fontSize: 'var(--text-sm)', borderColor: 'rgba(220,38,38,0.5)', color: 'var(--color-danger)' }}>{t('detail.admin.hide')}</button>
+              <button onClick={() => setShowFailInput(!showFailInput)} disabled={moderating} className="btn-outline text-xs" style={{ padding: '2px 10px', fontSize: 'var(--text-sm)', borderColor: 'rgba(245,158,11,0.5)', color: 'var(--color-warning)' }}>{t('detail.admin.fail')}</button>
             </>
           )}
           {praxis.moderation_status === 'visible' && (
             <>
-              <button onClick={() => void handleModerate('hidden')} disabled={moderating} className="btn-outline text-xs" style={{ padding: '2px 10px', fontSize: 9, borderColor: 'rgba(220,38,38,0.5)', color: 'var(--color-danger)' }}>{t('detail.admin.hide')}</button>
-              <button onClick={() => setShowFailInput(!showFailInput)} disabled={moderating} className="btn-outline text-xs" style={{ padding: '2px 10px', fontSize: 9, borderColor: 'rgba(245,158,11,0.5)', color: 'var(--color-warning)' }}>{t('detail.admin.fail')}</button>
+              <button onClick={() => void handleModerate('hidden')} disabled={moderating} className="btn-outline text-xs" style={{ padding: '2px 10px', fontSize: 'var(--text-sm)', borderColor: 'rgba(220,38,38,0.5)', color: 'var(--color-danger)' }}>{t('detail.admin.hide')}</button>
+              <button onClick={() => setShowFailInput(!showFailInput)} disabled={moderating} className="btn-outline text-xs" style={{ padding: '2px 10px', fontSize: 'var(--text-sm)', borderColor: 'rgba(245,158,11,0.5)', color: 'var(--color-warning)' }}>{t('detail.admin.fail')}</button>
             </>
           )}
           {(praxis.moderation_status === 'hidden' || praxis.moderation_status === 'failed') && (
             <>
-              <button onClick={() => void handleModerate('visible')} disabled={moderating} className="btn-primary text-xs" style={{ padding: '2px 10px', fontSize: 9 }}>{t('detail.admin.restore')}</button>
-              <button onClick={() => setShowFailInput(!showFailInput)} disabled={moderating} className="btn-outline text-xs" style={{ padding: '2px 10px', fontSize: 9, borderColor: 'rgba(245,158,11,0.5)', color: 'var(--color-warning)' }}>{t('detail.admin.fail')}</button>
+              <button onClick={() => void handleModerate('visible')} disabled={moderating} className="btn-primary text-xs" style={{ padding: '2px 10px', fontSize: 'var(--text-sm)' }}>{t('detail.admin.restore')}</button>
+              <button onClick={() => setShowFailInput(!showFailInput)} disabled={moderating} className="btn-outline text-xs" style={{ padding: '2px 10px', fontSize: 'var(--text-sm)', borderColor: 'rgba(245,158,11,0.5)', color: 'var(--color-warning)' }}>{t('detail.admin.fail')}</button>
             </>
           )}
         </div>
@@ -181,7 +182,7 @@ export function PraxisAdminBar({ state }: { state: PraxisDetailState }) {
             onClick={() => void handleModerate('failed', adminFailNote)}
             disabled={moderating}
             className="btn-primary text-xs"
-            style={{ background: 'var(--color-warning)', borderColor: 'var(--color-warning)', fontSize: 9 }}
+            style={{ background: 'var(--color-warning)', borderColor: 'var(--color-warning)', fontSize: 'var(--text-sm)' }}
           >
             {t('detail.admin.confirm')}
           </button>
@@ -257,7 +258,7 @@ export function PraxisStatusBanners({ state }: { state: PraxisDetailState }) {
           <TaskCrown size={34} ringInset={3} />
           <div>
             <span className="eyebrow" style={{ display: 'block' }}>{t('detail.banners.crownLabel')}</span>
-            <span className="font-body" style={{ fontSize: 11, color: 'var(--color-text-secondary)' }}>
+            <span className="font-body content-text" style={{ color: 'var(--color-text-secondary)' }}>
               {t('detail.banners.crownBody')}
             </span>
           </div>
@@ -271,14 +272,14 @@ export function PraxisStatusBanners({ state }: { state: PraxisDetailState }) {
           {praxis.submit_proposed_at != null ? (
             <>
               <span className="eyebrow">{t('detail.banners.pendingPublishLabel')}</span>
-              <span className="font-body" style={{ fontSize: 11, color: 'var(--color-warning)', fontWeight: 700 }}>
+              <span className="font-body content-text" style={{ color: 'var(--color-warning)', fontWeight: 700 }}>
                 {t('detail.banners.pendingPublishBody')}
               </span>
             </>
           ) : (
             <>
               <span className="eyebrow">{t('detail.banners.inEditingLabel')}</span>
-              <span className="font-body" style={{ fontSize: 11, color: 'var(--color-warning)', fontWeight: 700 }}>
+              <span className="font-body content-text" style={{ color: 'var(--color-warning)', fontWeight: 700 }}>
                 {t('detail.banners.inEditingBody')}
               </span>
             </>
@@ -287,12 +288,15 @@ export function PraxisStatusBanners({ state }: { state: PraxisDetailState }) {
       )}
       {praxis.moderation_status === 'failed' && praxis.admin_note && (
         <div style={{ background: 'rgba(220,38,38,0.05)', border: '2px solid rgba(220,38,38,0.3)', borderRadius: 8, padding: '8px 14px', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 8 }}>
-          <span style={{ fontSize: 16 }}>&#10007;</span>
+          {/* Ornament: a ✗ dingbat used as an icon, not readable text. Sized
+              from the label tier (nearest token to its old 16px), never the
+              content floor — see WORLD_ZERO_STYLE.md §4, ornament role. */}
+          <span style={{ fontSize: 'var(--text-xl)' }}>&#10007;</span>
           <div>
-            <span className="font-body" style={{ fontSize: 11, color: 'var(--color-danger)', fontWeight: 700, display: 'block' }}>
+            <span className="font-body content-title" style={{ color: 'var(--color-danger)', fontWeight: 700, display: 'block' }}>
               {t('detail.banners.failedTitle')}
             </span>
-            <span className="font-body" style={{ fontSize: 11, color: 'var(--color-warning)' }}>
+            <span className="font-body content-text" style={{ color: 'var(--color-warning)' }}>
               {praxis.admin_note}
             </span>
           </div>
@@ -336,7 +340,7 @@ export function PraxisOwnerActions({ state }: { state: PraxisDetailState }) {
             <button
               onClick={handleResubmit}
               disabled={withdrawing}
-              style={{ background: 'var(--color-success)', color: 'var(--color-text-on-accent)', fontFamily: "'Courier Prime', monospace", fontSize: 9, textTransform: 'uppercase', letterSpacing: '0.08em', padding: '4px 12px', border: 'none', cursor: 'pointer', borderRadius: 0, opacity: withdrawing ? 0.5 : 1 }}
+              style={{ background: 'var(--color-success)', color: 'var(--color-text-on-accent)', fontFamily: "'Courier Prime', monospace", fontSize: 'var(--text-sm)', textTransform: 'uppercase', letterSpacing: '0.08em', padding: '4px 12px', border: 'none', cursor: 'pointer', borderRadius: 0, opacity: withdrawing ? 0.5 : 1 }}
             >
               {withdrawing ? t('detail.owner.submitting') : t('detail.owner.submit')}
             </button>
@@ -351,11 +355,11 @@ export function PraxisOwnerActions({ state }: { state: PraxisDetailState }) {
             <button
               onClick={handleWithdraw}
               disabled={withdrawing}
-              style={{ background: 'rgba(220,38,38,0.1)', border: '1.5px solid var(--color-danger)', color: 'var(--color-danger)', fontFamily: "'Courier Prime', monospace", fontSize: 9, textTransform: 'uppercase', padding: '3px 10px', cursor: 'pointer', borderRadius: 0 }}
+              style={{ background: 'rgba(220,38,38,0.1)', border: '1.5px solid var(--color-danger)', color: 'var(--color-danger)', fontFamily: "'Courier Prime', monospace", fontSize: 'var(--text-sm)', textTransform: 'uppercase', padding: '3px 10px', cursor: 'pointer', borderRadius: 0 }}
             >
               {withdrawing ? t('detail.owner.submitting') : t('detail.owner.confirmUnsubmit')}
             </button>
-            <button onClick={() => setShowWithdrawConfirm(false)} className="btn-outline" style={{ fontSize: 9, padding: '3px 10px' }}>{t('detail.owner.cancel')}</button>
+            <button onClick={() => setShowWithdrawConfirm(false)} className="btn-outline" style={{ fontSize: 'var(--text-sm)', padding: '3px 10px' }}>{t('detail.owner.cancel')}</button>
           </div>
         )}
       </div>
@@ -378,8 +382,8 @@ export function PraxisFlagBlock({ state }: { state: PraxisDetailState }) {
           <span className="eyebrow" style={{ color: 'var(--color-success)' }}>{t('detail.flag.flaggedOk')}</span>
         </div>
         <div className="flex-1">
-          <p className="font-body" style={{ fontSize: 10, fontWeight: 700, color: 'var(--color-text-secondary)' }}>{t('detail.flag.flaggedTitle')}</p>
-          <p className="font-body" style={{ fontSize: 8, color: 'var(--color-text-tertiary)' }}>{t('detail.flag.flaggedBody')}</p>
+          <p className="font-body" style={{ fontSize: 'var(--text-base)', fontWeight: 700, color: 'var(--color-text-secondary)' }}>{t('detail.flag.flaggedTitle')}</p>
+          <p className="font-body" style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-tertiary)' }}>{t('detail.flag.flaggedBody')}</p>
         </div>
       </div>
     )
@@ -394,11 +398,11 @@ export function PraxisFlagBlock({ state }: { state: PraxisDetailState }) {
           <span className="eyebrow">{t('detail.flag.badge')}</span>
         </div>
         <div className="flex-1">
-          <p className="font-body" style={{ fontSize: 10, fontWeight: 700, color: 'var(--color-text-secondary)' }}>{t('detail.flag.title')}</p>
-          <p className="font-body" style={{ fontSize: 8, color: 'var(--color-text-tertiary)' }}>{t('detail.flag.body')}</p>
+          <p className="font-body" style={{ fontSize: 'var(--text-base)', fontWeight: 700, color: 'var(--color-text-secondary)' }}>{t('detail.flag.title')}</p>
+          <p className="font-body" style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-tertiary)' }}>{t('detail.flag.body')}</p>
         </div>
         {!showFlagForm && (
-          <button onClick={() => { setShowFlagForm(true); setFlagError(null) }} className="btn-outline" style={{ fontSize: 9, padding: '4px 12px', borderColor: 'rgba(220,38,38,0.5)', color: 'var(--color-danger)' }}>
+          <button onClick={() => { setShowFlagForm(true); setFlagError(null) }} className="btn-outline" style={{ fontSize: 'var(--text-sm)', padding: '4px 12px', borderColor: 'rgba(220,38,38,0.5)', color: 'var(--color-danger)' }}>
             {t('detail.flag.flag')}
           </button>
         )}
@@ -416,7 +420,7 @@ export function PraxisFlagBlock({ state }: { state: PraxisDetailState }) {
                 disabled={flagging}
                 className="btn-outline"
                 style={{
-                  fontSize: 9,
+                  fontSize: 'var(--text-sm)',
                   padding: '4px 10px',
                   ...(flagReason === value
                     ? { background: 'var(--color-danger)', borderColor: 'var(--color-danger)', color: 'var(--color-bg-surface)' }
@@ -446,11 +450,11 @@ export function PraxisFlagBlock({ state }: { state: PraxisDetailState }) {
           )}
           <div className="flex items-center gap-2" style={{ marginTop: 8 }}>
             {flagReason !== null && (
-              <button onClick={() => void handleFlag()} disabled={flagging} className="btn-primary" style={{ fontSize: 9, padding: '4px 12px', background: 'var(--color-danger)', borderColor: 'var(--color-danger)' }}>
+              <button onClick={() => void handleFlag()} disabled={flagging} className="btn-primary" style={{ fontSize: 'var(--text-sm)', padding: '4px 12px', background: 'var(--color-danger)', borderColor: 'var(--color-danger)' }}>
                 {flagging ? t('detail.flag.submitting') : t('detail.flag.submit')}
               </button>
             )}
-            <button onClick={() => { setShowFlagForm(false); setFlagReason(null); setFlagDetail(''); setFlagError(null) }} disabled={flagging} className="btn-outline" style={{ fontSize: 9, padding: '4px 12px' }}>
+            <button onClick={() => { setShowFlagForm(false); setFlagReason(null); setFlagDetail(''); setFlagError(null) }} disabled={flagging} className="btn-outline" style={{ fontSize: 'var(--text-sm)', padding: '4px 12px' }}>
               {t('detail.flag.cancel')}
             </button>
           </div>
@@ -488,16 +492,107 @@ export function PraxisVoterBreakdown({ state }: { state: PraxisDetailState }) {
             <Link
               to={`/characters/${voter.character_id}`}
               className="font-body"
-              style={{ fontSize: 12, color: 'var(--color-text-primary)', textDecoration: 'none' }}
+              style={{ fontSize: 'var(--text-lg)', color: 'var(--color-text-primary)', textDecoration: 'none' }}
             >
               {voter.display_name}
             </Link>
-            <span className="font-body" style={{ fontSize: 11, fontWeight: 700, color: 'var(--color-text-secondary)' }}>
+            <span className="font-body content-text" style={{ fontWeight: 700, color: 'var(--color-text-secondary)' }}>
               {reframeLabel(praxis.task_faction_slug, voter.value)}
             </span>
           </li>
         ))}
       </ul>
+    </div>
+  )
+}
+
+// ── Single earned-points breakdown (#641) ────────────────────────────────────
+//
+// The one explicit score readout a detail page shows, mirroring the card's
+// PraxisScoreHero idiom (`{base} + {votes}`). ADR-0014 merit is
+// `base × multiplier + points_from_votes`; the multiplier is fixed WHEN the
+// praxis was scored (never viewer-relative, so this is derived from the praxis's
+// own `score`, not computeDisplayPoints). Today every praxis scores at ×1.0, so
+// the plain `{base} + {votes}` form renders; a future era's own-faction bonus
+// would surface the `{base} × {mult} + {votes}` form. The vote number is the
+// authoritative `votes.total_score`.
+
+/** Format a multiplier for display: 1.1 → "1.1", 1.10 → "1.1", 1.25 → "1.25". */
+function formatMultiplier(multiplier: number): string {
+  return Number(multiplier.toFixed(2)).toString()
+}
+
+export interface PraxisBreakdownParts {
+  base: number
+  votePoints: number
+  multiplier: number
+  multiplierLabel: string
+  /** True when the multiplier is effectively 1.0 (the common case). */
+  isPlain: boolean
+}
+
+/**
+ * The numbers behind the earned-points breakdown, derived on the frontend from
+ * the detail response (no backend change — PraxisOut already carries the raw
+ * base `task_point_value` and the full merit `score`; the votes object carries
+ * the authoritative vote-point subtotal `total_score`).
+ */
+export function praxisBreakdownParts(
+  praxis: PraxisOut,
+  votes: VoteSummary | null,
+): PraxisBreakdownParts {
+  const base = praxis.task_point_value
+  const votePoints = votes?.total_score ?? 0
+  const multiplier = base > 0 ? (praxis.score - votePoints) / base : 1
+  const isPlain = Math.abs(multiplier - 1) < 0.005
+  return { base, votePoints, multiplier, multiplierLabel: formatMultiplier(multiplier), isPlain }
+}
+
+/**
+ * The single earned-points breakdown for a detail page. Faction-themeable via
+ * `accent`/`muted`/`font` so each archetype can render it in its own voice while
+ * the arithmetic + copy stay in one place. `align` positions it within its slot.
+ */
+export function PraxisScoreBreakdown({
+  state,
+  accent,
+  muted,
+  font,
+  align = 'left',
+}: {
+  state: PraxisDetailState
+  accent?: string
+  muted?: string
+  font?: string
+  align?: 'left' | 'center' | 'right'
+}) {
+  const { t } = useTranslation('praxis')
+  const { praxis, votes } = state
+  if (!praxis) return null
+  const { base, votePoints, isPlain, multiplierLabel } = praxisBreakdownParts(praxis, votes)
+
+  return (
+    <div style={{ textAlign: align, lineHeight: 1 }}>
+      <span
+        className="font-display content-title"
+        style={{ fontWeight: 800, fontFamily: font, color: accent ?? 'var(--color-text-primary)', whiteSpace: 'nowrap' }}
+      >
+        {base}
+        {!isPlain && (
+          <>
+            <span style={{ opacity: 0.55, margin: '0 var(--space-xs)' }}>×</span>
+            {multiplierLabel}
+          </>
+        )}
+        <span style={{ opacity: 0.55, margin: '0 var(--space-xs)' }}>+</span>
+        {votePoints}
+      </span>
+      <span
+        className="eyebrow"
+        style={{ display: 'block', marginTop: 'var(--space-xs)', color: muted }}
+      >
+        {isPlain ? t('card.ptsAndVotes') : t('detail.score.ptsMultVotes')}
+      </span>
     </div>
   )
 }

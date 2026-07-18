@@ -11,6 +11,7 @@ import {
   PraxisOwnerActions,
   PraxisFlagBlock,
   PraxisVoterBreakdown,
+  PraxisScoreBreakdown,
   MemberByline,
 } from '../shared'
 import { MobileStarVote } from './shared'
@@ -45,7 +46,7 @@ function Plate({ title, children }: { title: string; children: ReactNode }) {
     <section style={{ padding: 8, background: GILT, boxShadow: '0 10px 24px rgba(60,40,10,.18), inset 0 0 0 1px rgba(255,255,255,0.45)' }}>
       <div style={{ padding: 3, background: `linear-gradient(135deg, ${GOLD}, ${GOLD_PALE})` }}>
         <div style={{ background: PAPER, border: `1px solid ${LINE}`, padding: 13 }}>
-          <div style={{ fontFamily: ENGRAVED, fontSize: 9, letterSpacing: '0.13em', textTransform: 'uppercase', color: ACCENT, marginBottom: 10 }}>
+          <div style={{ fontFamily: ENGRAVED, fontSize: 'var(--text-sm)', letterSpacing: '0.13em', textTransform: 'uppercase', color: ACCENT, marginBottom: 10 }}>
             {title}
           </div>
           {children}
@@ -57,7 +58,7 @@ function Plate({ title, children }: { title: string; children: ReactNode }) {
 
 const kicker: CSSProperties = {
   fontFamily: MONO,
-  fontSize: 8,
+  fontSize: 'var(--text-xs)',
   letterSpacing: '0.24em',
   textTransform: 'uppercase',
   color: MUTED,
@@ -65,7 +66,7 @@ const kicker: CSSProperties = {
 
 export default function UaPraxisDetail({ state }: { state: PraxisDetailState }) {
   const { t } = useTranslation('praxis')
-  const { praxis, votes } = state
+  const { praxis } = state
   if (!praxis) return null
 
   const sealedDate = praxis.submitted_at ?? praxis.created_at
@@ -82,7 +83,7 @@ export default function UaPraxisDetail({ state }: { state: PraxisDetailState }) 
         <Link to={`/characters/${praxis.created_by_id}`} className="shrink-0">
           <span
             className="flex items-center justify-center rounded-full"
-            style={{ width: 42, height: 42, background: PAPER_WARM, border: `1px solid ${GOLD}`, boxShadow: `0 0 0 3px ${PAPER_WARM}, 0 0 0 4px ${GOLD_PALE}`, color: ACCENT, fontFamily: DISPLAY, fontStyle: 'italic', fontWeight: 700, fontSize: 20 }}
+            style={{ width: 42, height: 42, background: PAPER_WARM, border: `1px solid ${GOLD}`, boxShadow: `0 0 0 3px ${PAPER_WARM}, 0 0 0 4px ${GOLD_PALE}`, color: ACCENT, fontFamily: DISPLAY, fontStyle: 'italic', fontWeight: 700, fontSize: 'var(--text-content)' }}
             aria-hidden
           >
             {initial}
@@ -91,7 +92,7 @@ export default function UaPraxisDetail({ state }: { state: PraxisDetailState }) 
         <div className="min-w-0 flex-1">
           <MemberByline
             praxis={praxis}
-            linkStyle={{ fontFamily: DISPLAY, fontStyle: 'italic', fontWeight: 700, fontSize: 18, color: INK, lineHeight: 1, textDecoration: 'none' }}
+            linkStyle={{ fontFamily: DISPLAY, fontStyle: 'italic', fontWeight: 700, fontSize: 'var(--text-content)', color: INK, lineHeight: 1, textDecoration: 'none' }}
           />
           <div className="truncate" style={{ ...kicker, marginTop: 3 }}>
             {t('detail.ua.acquiringHand')} · {formatTimestamp(sealedDate)}
@@ -109,7 +110,7 @@ export default function UaPraxisDetail({ state }: { state: PraxisDetailState }) 
       {/* Finding headline */}
       <div>
         <div style={{ ...kicker, marginBottom: 4, color: SUB }}>{t('detail.ua.mobile.theAcquisition')}</div>
-        <h1 style={{ fontFamily: DISPLAY, fontStyle: 'italic', fontWeight: 700, fontSize: 30, lineHeight: 1.1, margin: 0, color: INK, overflowWrap: 'anywhere' }}>
+        <h1 style={{ fontFamily: DISPLAY, fontStyle: 'italic', fontWeight: 700, fontSize: 'var(--text-heading)', lineHeight: 1.1, margin: 0, color: INK, overflowWrap: 'anywhere' }}>
           {praxis.title ?? t('detail.ua.untitled')}
         </h1>
       </div>
@@ -118,7 +119,7 @@ export default function UaPraxisDetail({ state }: { state: PraxisDetailState }) 
       <PraxisOwnerActions state={state} />
 
       {/* re: task link */}
-      <div style={{ fontFamily: DISPLAY, fontStyle: 'italic', fontSize: 13, color: SUB }}>
+      <div style={{ fontFamily: DISPLAY, fontStyle: 'italic', fontSize: 'var(--text-lg)', color: SUB }}>
         {t('detail.ua.mobile.re')}{' '}
         <Link to={`/tasks/${praxis.task_id}`} style={{ color: ACCENT, fontWeight: 700, textDecoration: 'none' }}>
           {praxis.task_title}
@@ -129,20 +130,21 @@ export default function UaPraxisDetail({ state }: { state: PraxisDetailState }) 
       {praxis.body_text && (
         <MarkdownPreview
           source={praxis.body_text}
-          className="markdown-preview"
-          style={{ fontFamily: DISPLAY, fontSize: 15, lineHeight: 1.75, color: INK }}
+          className="markdown-preview content-text"
+          style={{ fontFamily: DISPLAY, lineHeight: 1.75, color: INK }}
         />
       )}
 
       {/* Appraisal caster */}
       <Plate title={t('detail.ua.standing.heading')}>
-        <div className="flex items-center justify-center" style={{ marginBottom: 12, fontFamily: DISPLAY, fontStyle: 'italic', fontWeight: 700, fontSize: 20, color: INK }}>
+        <div className="flex items-center justify-center content-text" style={{ marginBottom: 12, fontFamily: DISPLAY, fontStyle: 'italic', fontWeight: 700, color: INK }}>
           {t('detail.ua.mobile.appraise')}
+        </div>
+        <div style={{ marginBottom: 12 }}>
+          <PraxisScoreBreakdown state={state} align="center" accent={ACCENT} font={DISPLAY} />
         </div>
         <MobileStarVote
           praxisId={praxis.id}
-          points={votes?.total_score}
-          totalVotes={votes?.total_votes}
           accent={ACCENT}
           accentFont={DISPLAY}
         />

@@ -19,10 +19,10 @@ import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import MarkdownPreview from '../../editPraxis/blocks/MarkdownPreview'
 import MediaGallery from '../../../components/MediaGallery'
-import SingularityVote from '../../../components/vote/SingularityVote'
+import VoteUI from '../../../components/vote/VoteUI'
 import { factionCssVar } from '../../../utils/factions'
 import { formatTimestamp } from '../../../utils/dates'
-import { PraxisAdminBar, PraxisStatusBanners, PraxisOwnerActions, PraxisFlagBlock, PraxisVoterBreakdown, MemberByline } from '../shared'
+import { PraxisAdminBar, PraxisStatusBanners, PraxisOwnerActions, PraxisFlagBlock, PraxisVoterBreakdown, PraxisScoreBreakdown, MemberByline } from '../shared'
 import type { PraxisDetailState } from '../usePraxisDetail'
 
 // ── Terminal atoms (presentation only — no shared behavior) ──────────────────
@@ -68,7 +68,7 @@ function SgDivider({ label }: { label: string }) {
       <span
         style={{
           fontFamily: 'var(--font-faction-terminal)',
-          fontSize: 7,
+          fontSize: 'var(--text-xs)',
           letterSpacing: '0.24em',
           textTransform: 'uppercase',
           color: 'color-mix(in srgb, var(--faction-singularity-card-accent) 55%, transparent)',
@@ -90,7 +90,7 @@ function SgDivider({ label }: { label: string }) {
 
 export default function SingularityPraxisDetail({ state }: { state: PraxisDetailState }) {
   const { t } = useTranslation('praxis')
-  const { praxis, votes } = state
+  const { praxis } = state
   if (!praxis) return null
 
   const sealedDate = praxis.submitted_at ?? praxis.created_at
@@ -149,7 +149,7 @@ export default function SingularityPraxisDetail({ state }: { state: PraxisDetail
         >
           <span
             style={{
-              fontSize: 9,
+              fontSize: 'var(--text-sm)',
               letterSpacing: '0.22em',
               textTransform: 'uppercase',
               color: 'var(--faction-singularity-muted)',
@@ -159,7 +159,7 @@ export default function SingularityPraxisDetail({ state }: { state: PraxisDetail
           </span>
           <span
             style={{
-              fontSize: 8,
+              fontSize: 'var(--text-xs)',
               letterSpacing: '0.12em',
               color: 'color-mix(in srgb, var(--faction-singularity-muted) 55%, transparent)',
             }}
@@ -190,7 +190,7 @@ export default function SingularityPraxisDetail({ state }: { state: PraxisDetail
                 gap: 7,
                 background: 'var(--faction-singularity-card-accent)',
                 color: 'var(--faction-singularity-card-bg)',
-                fontSize: 8,
+                fontSize: 'var(--text-xs)',
                 letterSpacing: '0.2em',
                 textTransform: 'uppercase',
                 padding: '4px 12px',
@@ -201,7 +201,7 @@ export default function SingularityPraxisDetail({ state }: { state: PraxisDetail
             </span>
             <span
               style={{
-                fontSize: 7.5,
+                fontSize: 'var(--text-xs)',
                 padding: '4px 10px',
                 border: '1px solid color-mix(in srgb, var(--faction-singularity-muted) 40%, transparent)',
                 color: 'color-mix(in srgb, var(--faction-singularity-muted) 80%, transparent)',
@@ -213,7 +213,7 @@ export default function SingularityPraxisDetail({ state }: { state: PraxisDetail
             <Link
               to={`/tasks/${praxis.task_id}`}
               style={{
-                fontSize: 8,
+                fontSize: 'var(--text-xs)',
                 letterSpacing: '0.08em',
                 textDecoration: 'none',
                 color: 'color-mix(in srgb, var(--faction-singularity-card-accent) 65%, transparent)',
@@ -221,10 +221,10 @@ export default function SingularityPraxisDetail({ state }: { state: PraxisDetail
             >
               {t('detail.singularity.re', { task: praxis.task_title })}
             </Link>
-            <span style={{ color: 'color-mix(in srgb, var(--faction-singularity-muted) 35%, transparent)', fontSize: 8 }}>·</span>
+            <span style={{ color: 'color-mix(in srgb, var(--faction-singularity-muted) 35%, transparent)', fontSize: 'var(--text-xs)' }}>·</span>
             <span
               style={{
-                fontSize: 8,
+                fontSize: 'var(--text-xs)',
                 letterSpacing: '0.1em',
                 color: 'color-mix(in srgb, var(--faction-singularity-muted) 60%, transparent)',
               }}
@@ -233,10 +233,10 @@ export default function SingularityPraxisDetail({ state }: { state: PraxisDetail
             </span>
             {praxis.moderation_status === 'flagged' && (
               <>
-                <span style={{ color: 'color-mix(in srgb, var(--faction-singularity-muted) 35%, transparent)', fontSize: 8 }}>·</span>
+                <span style={{ color: 'color-mix(in srgb, var(--faction-singularity-muted) 35%, transparent)', fontSize: 'var(--text-xs)' }}>·</span>
                 <span
                   style={{
-                    fontSize: 7,
+                    fontSize: 'var(--text-xs)',
                     letterSpacing: '0.12em',
                     textTransform: 'uppercase',
                     color: 'var(--color-danger)',
@@ -254,7 +254,7 @@ export default function SingularityPraxisDetail({ state }: { state: PraxisDetail
           <div style={{ marginBottom: 18 }}>
             <div
               style={{
-                fontSize: 7,
+                fontSize: 'var(--text-xs)',
                 letterSpacing: '0.2em',
                 marginBottom: 8,
                 color: 'color-mix(in srgb, var(--faction-singularity-muted) 55%, transparent)',
@@ -266,7 +266,7 @@ export default function SingularityPraxisDetail({ state }: { state: PraxisDetail
               style={{
                 fontFamily: 'var(--font-faction-terminal)',
                 fontWeight: 700,
-                fontSize: 34,
+                fontSize: 'var(--text-heading)',
                 lineHeight: 1.08,
                 letterSpacing: '0.02em',
                 margin: 0,
@@ -313,7 +313,7 @@ export default function SingularityPraxisDetail({ state }: { state: PraxisDetail
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  fontSize: 10,
+                  fontSize: 'var(--text-base)',
                   letterSpacing: '0.06em',
                   color: 'var(--faction-singularity-muted)',
                   background: `color-mix(in srgb, ${factionCssVar(praxis.created_by_faction_slug, 'card-accent')} 20%, var(--faction-singularity-card-bg))`,
@@ -327,7 +327,7 @@ export default function SingularityPraxisDetail({ state }: { state: PraxisDetail
               <MemberByline
                 praxis={praxis}
                 linkStyle={{
-                  fontSize: 13,
+                  fontSize: 'var(--text-lg)',
                   textDecoration: 'none',
                   color: 'var(--faction-singularity-card-accent)',
                 }}
@@ -335,7 +335,7 @@ export default function SingularityPraxisDetail({ state }: { state: PraxisDetail
               />
               <span
                 style={{
-                  fontSize: 8,
+                  fontSize: 'var(--text-xs)',
                   letterSpacing: '0.06em',
                   color: 'color-mix(in srgb, var(--faction-singularity-muted) 50%, transparent)',
                 }}
@@ -345,12 +345,12 @@ export default function SingularityPraxisDetail({ state }: { state: PraxisDetail
             </div>
             {/* Base point value from task */}
             <div style={{ textAlign: 'right', flexShrink: 0 }}>
-              <div style={{ fontSize: 26, lineHeight: 1, color: 'var(--faction-singularity-card-accent)' }}>
+              <div className="content-title" style={{ lineHeight: 1, color: 'var(--faction-singularity-card-accent)' }}>
                 {praxis.task_point_value}
               </div>
               <div
                 style={{
-                  fontSize: 7,
+                  fontSize: 'var(--text-xs)',
                   letterSpacing: '0.12em',
                   marginTop: 2,
                   color: 'color-mix(in srgb, var(--faction-singularity-muted) 50%, transparent)',
@@ -367,9 +367,8 @@ export default function SingularityPraxisDetail({ state }: { state: PraxisDetail
               <SgDivider label={t('detail.singularity.processLog')} />
               <MarkdownPreview
                 source={praxis.body_text}
-                className="markdown-preview"
+                className="markdown-preview content-text"
                 style={{
-                  fontSize: 11,
                   lineHeight: 1.75,
                   color: 'color-mix(in srgb, var(--faction-singularity-card-accent) 78%, transparent)',
                   marginBottom: 8,
@@ -399,34 +398,17 @@ export default function SingularityPraxisDetail({ state }: { state: PraxisDetail
           {/* ── The consensus array (vote caster) ── */}
           <SgDivider label={t('detail.singularity.consensusArray')} />
           <div style={{ marginBottom: 20 }}>
-            {votes && votes.total_votes > 0 && (
-              <div
-                style={{
-                  display: 'flex',
-                  alignItems: 'baseline',
-                  justifyContent: 'flex-end',
-                  gap: 6,
-                  marginBottom: 12,
-                }}
-              >
-                <span style={{ fontSize: 18, lineHeight: 1, color: 'var(--faction-singularity-card-accent)' }}>
-                  +{votes.total_score}
-                </span>
-                <span
-                  style={{
-                    fontSize: 7,
-                    letterSpacing: '0.14em',
-                    color: 'color-mix(in srgb, var(--faction-singularity-muted) 55%, transparent)',
-                  }}
-                >
-                  {t('detail.singularity.crFromSignals')}
-                </span>
-              </div>
-            )}
-            <SingularityVote
+            <div style={{ marginBottom: 12 }}>
+              <PraxisScoreBreakdown
+                state={state}
+                align="right"
+                accent="var(--faction-singularity-card-accent)"
+                muted="color-mix(in srgb, var(--faction-singularity-muted) 55%, transparent)"
+              />
+            </div>
+            <VoteUI
+              factionSlug={praxis.task_faction_slug}
               praxisId={praxis.id}
-              points={votes?.total_score}
-              totalVotes={votes?.total_votes}
             />
           </div>
 

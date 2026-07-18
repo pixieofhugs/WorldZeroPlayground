@@ -46,7 +46,7 @@ const SCRIPT = 'var(--eph-script)'
 const kicker: CSSProperties = {
   display: 'block',
   fontFamily: DISPLAY,
-  fontSize: 8,
+  fontSize: "var(--text-xs)",
   letterSpacing: '0.2em',
   textTransform: 'uppercase',
   color: MUTED,
@@ -56,7 +56,7 @@ const kicker: CSSProperties = {
 function Leaf({ title, children }: { title: string; children: ReactNode }) {
   return (
     <section style={{ background: VELLUM, border: `1px solid ${GOLD_DEEP}`, padding: 14 }}>
-      <div style={{ fontFamily: DISPLAY, fontWeight: 700, fontSize: 12, letterSpacing: '0.14em', textTransform: 'uppercase', color: RUBRIC, marginBottom: 10 }}>
+      <div style={{ fontFamily: DISPLAY, fontWeight: 700, fontSize: "var(--text-lg)", letterSpacing: '0.14em', textTransform: 'uppercase', color: RUBRIC, marginBottom: 10 }}>
         {title}
       </div>
       {children}
@@ -74,7 +74,7 @@ export default function EphemeristsComposer({ state }: { state: EditPraxisState 
     <div data-skin="ephemerists" style={{ display: 'flex', flexDirection: 'column', gap: 14, fontFamily: SERIF, color: TEXT, background: VELLUM_DEEP }}>
       <header style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
         <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
-          <h1 style={{ fontFamily: DISPLAY, fontWeight: 800, fontSize: 28, lineHeight: 1, color: TEXT, margin: 0 }}>
+          <h1 style={{ fontFamily: DISPLAY, fontWeight: 800, fontSize: "var(--text-title)", lineHeight: 1, color: TEXT, margin: 0 }}>
             <Trans
               ns="forms"
               i18nKey="editPraxis.ephemerists.pageTitle"
@@ -97,7 +97,7 @@ export default function EphemeristsComposer({ state }: { state: EditPraxisState 
               padding: '9px 10px',
               border: 'none',
               fontFamily: DISPLAY,
-              fontSize: 11,
+              fontSize: "var(--text-md)",
               letterSpacing: '0.1em',
               textTransform: 'uppercase',
               background: active ? INK : 'transparent',
@@ -110,7 +110,7 @@ export default function EphemeristsComposer({ state }: { state: EditPraxisState 
       {/* Observed-task reference */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, padding: '11px 14px', background: VELLUM, border: `1px solid ${GOLD_DEEP}` }}>
         <span style={kicker}>{t('editPraxis.ephemerists.taskRefLabel')}</span>
-        <span style={{ fontFamily: DISPLAY, fontWeight: 700, fontSize: 16, color: TEXT, textAlign: 'right', flex: 1, lineHeight: 1.1 }}>
+        <span style={{ fontFamily: DISPLAY, fontWeight: 700, fontSize: "var(--text-content)", color: TEXT, textAlign: 'right', flex: 1, lineHeight: 1.1 }}>
           {praxis.task_title}
         </span>
       </div>
@@ -129,7 +129,6 @@ export default function EphemeristsComposer({ state }: { state: EditPraxisState 
                 inputStyle: {
                   width: '100%',
                   fontFamily: DISPLAY,
-                  fontSize: 22,
                   fontWeight: 700,
                   color: TEXT,
                   background: 'transparent',
@@ -151,7 +150,6 @@ export default function EphemeristsComposer({ state }: { state: EditPraxisState 
                 textareaStyle: {
                   width: '100%',
                   fontFamily: SERIF,
-                  fontSize: 15,
                   lineHeight: 1.65,
                   color: TEXT,
                   background: VELLUM_DEEP,
@@ -211,7 +209,7 @@ export default function EphemeristsComposer({ state }: { state: EditPraxisState 
         </>
       ) : (
         <Leaf title={t('editPraxis.ephemerists.previewLabel')}>
-          <div style={{ fontFamily: DISPLAY, fontWeight: 700, fontSize: 22, color: TEXT, marginBottom: 10 }}>
+          <div style={{ fontFamily: DISPLAY, fontWeight: 700, fontSize: "var(--text-title)", color: TEXT, marginBottom: 10 }}>
             {state.title || t('editPraxis.ephemerists.titlePlaceholder')}
           </div>
           {state.media.length > 0 && (
@@ -222,7 +220,7 @@ export default function EphemeristsComposer({ state }: { state: EditPraxisState 
           <BodyPreview
             state={state}
             skin={{
-              markdownStyle: { fontFamily: SERIF, fontSize: 15, lineHeight: 1.65, color: TEXT },
+              markdownStyle: { fontFamily: SERIF, lineHeight: 1.65, color: TEXT },
             }}
           />
         </Leaf>
@@ -241,25 +239,6 @@ export default function EphemeristsComposer({ state }: { state: EditPraxisState 
           borderTop: `1px solid ${GOLD}`,
         }}
       >
-        <PublishButton
-          state={state}
-          skin={{
-            idleLabel: t('editPraxis.ephemerists.publishIdle'),
-            busyLabel: t('editPraxis.ephemerists.publishBusy'),
-            style: {
-              flex: 1,
-              background: RUBRIC,
-              color: PARCHMENT,
-              fontFamily: DISPLAY,
-              fontWeight: 700,
-              fontSize: 14,
-              letterSpacing: '0.08em',
-              padding: '13px 18px',
-              border: `1px solid ${GOLD}`,
-              cursor: state.submitting ? 'wait' : 'pointer',
-            },
-          }}
-        />
         {!state.isPublished && (
           <DropButton
             state={state}
@@ -271,13 +250,32 @@ export default function EphemeristsComposer({ state }: { state: EditPraxisState 
                 color: MUTED,
                 fontFamily: SCRIPT,
                 fontStyle: 'italic',
-                fontSize: 14,
+                fontSize: "var(--text-xl)",
                 textDecoration: 'underline',
                 cursor: 'pointer',
               },
             }}
           />
         )}
+        <PublishButton
+          state={state}
+          skin={{
+            idleLabel: t('editPraxis.ephemerists.publishIdle'),
+            busyLabel: t('editPraxis.ephemerists.publishBusy'),
+            style: {
+              flex: 1,
+              background: RUBRIC,
+              color: PARCHMENT,
+              fontFamily: DISPLAY,
+              fontWeight: 700,
+              fontSize: "var(--text-xl)",
+              letterSpacing: '0.08em',
+              padding: '13px 18px',
+              border: `1px solid ${GOLD}`,
+              cursor: state.submitting ? 'wait' : 'pointer',
+            },
+          }}
+        />
       </MobileStickyBar>
     </div>
   )
@@ -315,7 +313,7 @@ function MediaGrid({ state, readOnly = false }: { state: EditPraxisState; readOn
                   background: VELLUM,
                   border: `1.5px solid ${GOLD}`,
                   color: GOLD,
-                  fontSize: 12,
+                  fontSize: "var(--text-lg)",
                   fontWeight: 700,
                   lineHeight: 1,
                   cursor: 'pointer',
@@ -344,7 +342,7 @@ function MediaGrid({ state, readOnly = false }: { state: EditPraxisState; readOn
               justifyContent: 'center',
               gap: 4,
               fontFamily: DISPLAY,
-              fontSize: 10,
+              fontSize: "var(--text-base)",
               letterSpacing: '0.08em',
               textTransform: 'uppercase',
               color: RUBRIC,

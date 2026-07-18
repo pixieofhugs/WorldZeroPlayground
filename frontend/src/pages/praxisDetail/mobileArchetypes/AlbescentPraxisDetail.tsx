@@ -11,6 +11,7 @@ import {
   PraxisOwnerActions,
   PraxisFlagBlock,
   PraxisVoterBreakdown,
+  PraxisScoreBreakdown,
   MemberByline,
 } from '../shared'
 import { MobileStarVote } from './shared'
@@ -35,7 +36,7 @@ const ink = (pct: number) => `color-mix(in srgb, ${INK} ${pct}%, transparent)`
 
 const kicker: CSSProperties = {
   fontFamily: MONO,
-  fontSize: 8,
+  fontSize: 'var(--text-xs)',
   letterSpacing: '0.24em',
   textTransform: 'uppercase',
   color: ink(30),
@@ -61,7 +62,7 @@ function Sheet({ children }: { children: ReactNode }) {
 
 export default function AlbescentPraxisDetail({ state }: { state: PraxisDetailState }) {
   const { t } = useTranslation('praxis')
-  const { praxis, votes } = state
+  const { praxis } = state
   if (!praxis) return null
 
   const sealedDate = praxis.submitted_at ?? praxis.created_at
@@ -78,7 +79,7 @@ export default function AlbescentPraxisDetail({ state }: { state: PraxisDetailSt
         <Link to={`/characters/${praxis.created_by_id}`} className="shrink-0">
           <span
             className="flex items-center justify-center rounded-full"
-            style={{ width: 40, height: 40, background: ink(4), border: `1px solid ${ink(14)}`, color: ink(55), fontFamily: FONT, fontStyle: 'italic', fontWeight: 300, fontSize: 18 }}
+            style={{ width: 40, height: 40, background: ink(4), border: `1px solid ${ink(14)}`, color: ink(55), fontFamily: FONT, fontStyle: 'italic', fontWeight: 300, fontSize: 'var(--text-content)' }}
             aria-hidden
           >
             {initial}
@@ -87,7 +88,7 @@ export default function AlbescentPraxisDetail({ state }: { state: PraxisDetailSt
         <div className="min-w-0 flex-1">
           <MemberByline
             praxis={praxis}
-            linkStyle={{ fontFamily: FONT, fontStyle: 'italic', fontWeight: 300, fontSize: 18, color: INK, lineHeight: 1, textDecoration: 'none' }}
+            linkStyle={{ fontFamily: FONT, fontStyle: 'italic', fontWeight: 300, fontSize: 'var(--text-content)', color: INK, lineHeight: 1, textDecoration: 'none' }}
           />
           <div className="truncate" style={{ ...kicker, marginTop: 3 }}>
             {t('detail.albescent.acquiringHand')} · {formatTimestamp(sealedDate)}
@@ -108,7 +109,7 @@ export default function AlbescentPraxisDetail({ state }: { state: PraxisDetailSt
       {/* The finding */}
       <div>
         <div style={{ ...kicker, marginBottom: 4, color: ink(40) }}>{t('detail.albescent.mobile.theAccount')}</div>
-        <h1 style={{ fontFamily: FONT, fontStyle: 'italic', fontWeight: 300, fontSize: 30, lineHeight: 1.1, margin: 0, color: INK, overflowWrap: 'anywhere' }}>
+        <h1 style={{ fontFamily: FONT, fontStyle: 'italic', fontWeight: 300, fontSize: 'var(--text-heading)', lineHeight: 1.1, margin: 0, color: INK, overflowWrap: 'anywhere' }}>
           {praxis.title ?? t('detail.albescent.untitled')}
         </h1>
       </div>
@@ -117,7 +118,7 @@ export default function AlbescentPraxisDetail({ state }: { state: PraxisDetailSt
       <PraxisOwnerActions state={state} />
 
       {/* re: task link */}
-      <div style={{ fontFamily: FONT, fontStyle: 'italic', fontSize: 13, color: ink(48) }}>
+      <div style={{ fontFamily: FONT, fontStyle: 'italic', fontSize: 'var(--text-lg)', color: ink(48) }}>
         {t('detail.albescent.mobile.re')}{' '}
         <Link to={`/tasks/${praxis.task_id}`} style={{ color: ink(72), textDecoration: 'none', borderBottom: `1px solid ${ink(20)}` }}>
           {praxis.task_title}
@@ -128,21 +129,22 @@ export default function AlbescentPraxisDetail({ state }: { state: PraxisDetailSt
       {praxis.body_text && (
         <MarkdownPreview
           source={praxis.body_text}
-          className="markdown-preview"
-          style={{ fontFamily: FONT, fontStyle: 'italic', fontSize: 15, lineHeight: 1.7, color: ink(62) }}
+          className="markdown-preview content-text"
+          style={{ fontFamily: FONT, fontStyle: 'italic', lineHeight: 1.7, color: ink(62) }}
         />
       )}
 
       {/* Bear witness caster */}
       <div>
         <Divider label={t('detail.albescent.mobile.witness')} />
-        <div className="flex items-center justify-center" style={{ margin: '10px 0 12px', fontFamily: FONT, fontStyle: 'italic', fontSize: 15, color: ink(50) }}>
+        <div className="flex items-center justify-center content-text" style={{ margin: '10px 0 12px', fontFamily: FONT, fontStyle: 'italic', color: ink(50) }}>
           {t('detail.albescent.witnessPrompt')}
+        </div>
+        <div style={{ marginBottom: 12 }}>
+          <PraxisScoreBreakdown state={state} align="center" accent={INK} font={FONT} />
         </div>
         <MobileStarVote
           praxisId={praxis.id}
-          points={votes?.total_score}
-          totalVotes={votes?.total_votes}
           accent={INK}
           accentFont={FONT}
         />

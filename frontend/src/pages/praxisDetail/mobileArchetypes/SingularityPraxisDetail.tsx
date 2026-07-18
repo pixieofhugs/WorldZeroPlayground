@@ -11,6 +11,7 @@ import {
   PraxisOwnerActions,
   PraxisFlagBlock,
   PraxisVoterBreakdown,
+  PraxisScoreBreakdown,
   MemberByline,
 } from '../shared'
 import { MobileStarVote } from './shared'
@@ -37,7 +38,7 @@ const signal = (pct: number): string => `color-mix(in srgb, ${SIGNAL} ${pct}%, t
 
 const kicker: CSSProperties = {
   fontFamily: FONT,
-  fontSize: 8,
+  fontSize: 'var(--text-xs)',
   letterSpacing: '0.2em',
   textTransform: 'uppercase',
   color: signal(60),
@@ -52,7 +53,7 @@ function Panel({ title, children }: { title: string; children: ReactNode }) {
         style={{ position: 'absolute', inset: 0, pointerEvents: 'none', background: `repeating-linear-gradient(to bottom, transparent, transparent 2px, ${phosphor(1.2)} 2px, ${phosphor(1.2)} 4px)` }}
       />
       <div style={{ position: 'relative' }}>
-        <div style={{ fontFamily: FONT, fontSize: 9, letterSpacing: '0.13em', textTransform: 'uppercase', color: PHOSPHOR, marginBottom: 10 }}>
+        <div style={{ fontFamily: FONT, fontSize: 'var(--text-sm)', letterSpacing: '0.13em', textTransform: 'uppercase', color: PHOSPHOR, marginBottom: 10 }}>
           {title}
         </div>
         {children}
@@ -63,7 +64,7 @@ function Panel({ title, children }: { title: string; children: ReactNode }) {
 
 export default function SingularityPraxisDetail({ state }: { state: PraxisDetailState }) {
   const { t } = useTranslation('praxis')
-  const { praxis, votes } = state
+  const { praxis } = state
   if (!praxis) return null
 
   const sealedDate = praxis.submitted_at ?? praxis.created_at
@@ -80,7 +81,7 @@ export default function SingularityPraxisDetail({ state }: { state: PraxisDetail
         <Link to={`/characters/${praxis.created_by_id}`} className="shrink-0">
           <span
             className="flex items-center justify-center rounded-full"
-            style={{ width: 42, height: 42, background: signal(14), border: `1px solid ${BORDER_HARD}`, color: SIGNAL, fontFamily: FONT, fontSize: 18 }}
+            style={{ width: 42, height: 42, background: signal(14), border: `1px solid ${BORDER_HARD}`, color: SIGNAL, fontFamily: FONT, fontSize: 'var(--text-content)' }}
             aria-hidden
           >
             {initial}
@@ -89,7 +90,7 @@ export default function SingularityPraxisDetail({ state }: { state: PraxisDetail
         <div className="min-w-0 flex-1">
           <MemberByline
             praxis={praxis}
-            linkStyle={{ fontFamily: FONT, fontSize: 16, color: PHOSPHOR, lineHeight: 1, textDecoration: 'none' }}
+            linkStyle={{ fontFamily: FONT, fontSize: 'var(--text-xl)', color: PHOSPHOR, lineHeight: 1, textDecoration: 'none' }}
           />
           <div className="truncate" style={{ ...kicker, marginTop: 3 }}>
             {t('detail.singularity.mobile.node')} · {formatTimestamp(sealedDate)}
@@ -107,7 +108,7 @@ export default function SingularityPraxisDetail({ state }: { state: PraxisDetail
       {/* Finding */}
       <div>
         <div style={{ ...kicker, marginBottom: 4, color: SIGNAL }}>{t('detail.singularity.mobile.output')}</div>
-        <h1 style={{ fontFamily: FONT, fontSize: 24, lineHeight: 1.2, margin: 0, color: PHOSPHOR, letterSpacing: '0.02em', overflowWrap: 'anywhere' }}>
+        <h1 style={{ fontFamily: FONT, fontSize: 'var(--text-title)', lineHeight: 1.2, margin: 0, color: PHOSPHOR, letterSpacing: '0.02em', overflowWrap: 'anywhere' }}>
           {'> '}
           {praxis.title ?? t('detail.singularity.untitled')}
         </h1>
@@ -117,7 +118,7 @@ export default function SingularityPraxisDetail({ state }: { state: PraxisDetail
       <PraxisOwnerActions state={state} />
 
       {/* re: task link */}
-      <div style={{ fontFamily: FONT, fontSize: 12, color: phosphor(60) }}>
+      <div style={{ fontFamily: FONT, fontSize: 'var(--text-lg)', color: phosphor(60) }}>
         {t('detail.singularity.mobile.re')}{' '}
         <Link to={`/tasks/${praxis.task_id}`} style={{ color: PHOSPHOR, textDecoration: 'none' }}>
           {praxis.task_title}
@@ -128,20 +129,21 @@ export default function SingularityPraxisDetail({ state }: { state: PraxisDetail
       {praxis.body_text && (
         <MarkdownPreview
           source={praxis.body_text}
-          className="markdown-preview"
-          style={{ fontFamily: FONT, fontSize: 13, lineHeight: 1.7, color: phosphor(80) }}
+          className="markdown-preview content-text"
+          style={{ fontFamily: FONT, lineHeight: 1.7, color: phosphor(80) }}
         />
       )}
 
       {/* Amplify caster */}
       <Panel title={t('detail.singularity.mobile.consensus')}>
-        <div className="flex items-center justify-center" style={{ marginBottom: 12, fontFamily: FONT, fontSize: 13, color: PHOSPHOR }}>
+        <div className="flex items-center justify-center content-text" style={{ marginBottom: 12, fontFamily: FONT, color: PHOSPHOR }}>
           {t('detail.singularity.mobile.amplify')}
+        </div>
+        <div style={{ marginBottom: 12 }}>
+          <PraxisScoreBreakdown state={state} align="center" accent={PHOSPHOR} font={FONT} />
         </div>
         <MobileStarVote
           praxisId={praxis.id}
-          points={votes?.total_score}
-          totalVotes={votes?.total_votes}
           accent={PHOSPHOR}
           accentFont={FONT}
         />

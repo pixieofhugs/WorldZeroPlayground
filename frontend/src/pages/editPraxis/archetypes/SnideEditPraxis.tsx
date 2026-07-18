@@ -144,7 +144,7 @@ export default function SnideEditPraxis({ state }: Props) {
               transform: "rotate(-1.2deg)",
               fontFamily: "'Bebas Neue', sans-serif",
               letterSpacing: "0.2em",
-              fontSize: 18,
+              fontSize: "var(--text-content)",
               display: "inline-block",
               boxShadow: `3px 3px 0 ${hot}`,
             }}
@@ -181,11 +181,11 @@ export default function SnideEditPraxis({ state }: Props) {
           >
             {t("editPraxis.snide.taskRefLabel")}
           </span>
-          <div style={{ fontSize: 18, lineHeight: 1.25, marginTop: 6 }}>
+          <div style={{ fontSize: "var(--text-content)", lineHeight: 1.25, marginTop: 6 }}>
             {praxis.task_title}
           </div>
           {task?.description && (
-            <div style={{ fontSize: 12, lineHeight: 1.45, color: muted, marginTop: 6 }}>
+            <div style={{ fontSize: "var(--text-content)", lineHeight: 1.45, color: muted, marginTop: 6 }}>
               {task.description}
             </div>
           )}
@@ -207,7 +207,7 @@ export default function SnideEditPraxis({ state }: Props) {
                 background: lightBg,
                 color: ink,
                 fontFamily: "'Permanent Marker', cursive",
-                fontSize: 13,
+                fontSize: "var(--text-lg)",
                 padding: "3px 12px",
                 marginBottom: 10,
                 transform: "rotate(-1.5deg)",
@@ -252,13 +252,13 @@ export default function SnideEditPraxis({ state }: Props) {
                       }}
                     >
                       <div
-                        style={{ fontSize: 22, lineHeight: 1, marginBottom: 4 }}
+                        style={{ fontSize: "var(--text-title)", lineHeight: 1, marginBottom: 4 }}
                       >
                         {opt.label}
                       </div>
                       <div
                         style={{
-                          fontSize: 10,
+                          fontSize: "var(--text-base)",
                           fontFamily: "'Courier Prime', monospace",
                           opacity: 0.85,
                         }}
@@ -335,7 +335,7 @@ export default function SnideEditPraxis({ state }: Props) {
               <RansomChar key={index} ch={ch} index={index} />
             ))}
             {!state.title && (
-              <span style={{ color: muted, fontStyle: "italic", fontSize: 14 }}>
+              <span style={{ color: muted, fontStyle: "italic", fontSize: "var(--text-xl)" }}>
                 {t("editPraxis.snide.titleEmptyHint")}
               </span>
             )}
@@ -347,7 +347,6 @@ export default function SnideEditPraxis({ state }: Props) {
               inputStyle: {
                 width: "100%",
                 fontFamily: "'Courier Prime', monospace",
-                fontSize: 13,
                 padding: "6px 10px",
                 background: surface,
                 color: ink,
@@ -376,7 +375,6 @@ export default function SnideEditPraxis({ state }: Props) {
                 textareaStyle: {
                   width: "100%",
                   fontFamily: "'Special Elite', serif",
-                  fontSize: 13,
                   lineHeight: 1.7,
                   color: ink,
                   background: surface,
@@ -413,7 +411,6 @@ export default function SnideEditPraxis({ state }: Props) {
               ),
               markdownStyle: {
                 fontFamily: "'Special Elite', serif",
-                fontSize: 12,
                 lineHeight: 1.6,
                 color: ink,
               },
@@ -480,7 +477,7 @@ export default function SnideEditPraxis({ state }: Props) {
                     </div>
                     <div
                       style={{
-                        fontSize: 9,
+                        fontSize: "var(--text-sm)",
                         marginTop: 4,
                         fontStyle: "italic",
                         fontFamily: "'Special Elite', serif",
@@ -502,7 +499,7 @@ export default function SnideEditPraxis({ state }: Props) {
                         background: lightBg,
                         border: `2px solid ${ink}`,
                         color: ink,
-                        fontSize: 12,
+                        fontSize: "var(--text-lg)",
                         fontWeight: 700,
                         cursor: "pointer",
                         lineHeight: 1,
@@ -534,7 +531,7 @@ export default function SnideEditPraxis({ state }: Props) {
                 background: accentDeep,
                 color: "var(--color-text-on-accent)",
                 fontFamily: "'Permanent Marker', cursive",
-                fontSize: 14,
+                fontSize: "var(--text-xl)",
                 padding: "8px 18px",
                 border: `2px solid ${accentDeep}`,
                 cursor: "pointer",
@@ -543,7 +540,7 @@ export default function SnideEditPraxis({ state }: Props) {
               buttonLabel: "+ paste it in",
               helperText: "images · video · audio · max 50mb each",
               helperStyle: {
-                fontSize: 9,
+                fontSize: "var(--text-sm)",
                 color: muted,
                 marginTop: 6,
                 fontStyle: "italic",
@@ -602,6 +599,22 @@ export default function SnideEditPraxis({ state }: Props) {
             flexWrap: "wrap",
           }}
         >
+          <DropButton
+            state={state}
+            skin={{
+              label: t("editPraxis.snide.dropLabel"),
+              style: {
+                background: "transparent",
+                color: muted,
+                fontFamily: "'Special Elite', serif",
+                fontSize: "var(--text-md)",
+                border: "none",
+                cursor: "pointer",
+                textDecoration: "underline",
+              },
+            }}
+          />
+          <div style={{ flex: 1 }} />
           <PublishButton
             state={state}
             skin={{
@@ -622,7 +635,7 @@ export default function SnideEditPraxis({ state }: Props) {
                 background: accent,
                 color: "var(--color-text-on-accent)",
                 fontFamily: "'Permanent Marker', cursive",
-                fontSize: 22,
+                fontSize: "var(--text-title)",
                 padding: "14px 28px",
                 border: `3px solid ${accentDeep}`,
                 borderRadius: 0,
@@ -633,28 +646,12 @@ export default function SnideEditPraxis({ state }: Props) {
               },
             }}
           />
-          <div style={{ flex: 1 }} />
-          <DropButton
-            state={state}
-            skin={{
-              label: "cancel",
-              style: {
-                background: "transparent",
-                color: muted,
-                fontFamily: "'Special Elite', serif",
-                fontSize: 11,
-                border: "none",
-                cursor: "pointer",
-                textDecoration: "underline",
-              },
-            }}
-          />
         </div>
 
         <div
           style={{
             marginTop: 14,
-            fontSize: 10,
+            fontSize: "var(--text-base)",
             color: muted,
             fontFamily: "'Special Elite', serif",
             fontStyle: "italic",

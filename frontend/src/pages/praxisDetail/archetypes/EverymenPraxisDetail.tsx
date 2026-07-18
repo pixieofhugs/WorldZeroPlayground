@@ -19,10 +19,10 @@ import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import MarkdownPreview from '../../editPraxis/blocks/MarkdownPreview'
 import MediaGallery from '../../../components/MediaGallery'
-import EverymenVote from '../../../components/vote/EverymenVote'
+import VoteUI from '../../../components/vote/VoteUI'
 import { factionCssVar } from '../../../utils/factions'
 import { formatTimestamp } from '../../../utils/dates'
-import { PraxisAdminBar, PraxisStatusBanners, PraxisOwnerActions, PraxisFlagBlock, PraxisVoterBreakdown, MemberByline } from '../shared'
+import { PraxisAdminBar, PraxisStatusBanners, PraxisOwnerActions, PraxisFlagBlock, PraxisVoterBreakdown, PraxisScoreBreakdown, MemberByline } from '../shared'
 import type { PraxisDetailState } from '../usePraxisDetail'
 
 const POSTER = 'var(--font-accent)' // Bebas Neue
@@ -35,7 +35,7 @@ function SectionHead({ children }: { children: React.ReactNode }) {
       <h2
         style={{
           fontFamily: POSTER,
-          fontSize: 25,
+          fontSize: 'var(--text-title)',
           letterSpacing: '0.04em',
           margin: 0,
           color: 'var(--everymen-paper-text)',
@@ -51,7 +51,7 @@ function SectionHead({ children }: { children: React.ReactNode }) {
 
 export default function EverymenPraxisDetail({ state }: { state: PraxisDetailState }) {
   const { t } = useTranslation('praxis')
-  const { praxis, votes } = state
+  const { praxis } = state
   if (!praxis) return null
 
   const sealedDate = praxis.submitted_at ?? praxis.created_at
@@ -82,10 +82,10 @@ export default function EverymenPraxisDetail({ state }: { state: PraxisDetailSta
           padding: '10px 22px',
         }}
       >
-        <span style={{ fontFamily: POSTER, fontSize: 26, letterSpacing: '0.08em', lineHeight: 1, whiteSpace: 'nowrap' }}>
+        <span style={{ fontFamily: POSTER, fontSize: 'var(--text-title)', letterSpacing: '0.08em', lineHeight: 1, whiteSpace: 'nowrap' }}>
           {t('detail.everymen.workReportFiled')}
         </span>
-        <span style={{ fontFamily: BODY, fontSize: 9, letterSpacing: '0.12em', textAlign: 'right' }}>
+        <span style={{ fontFamily: BODY, fontSize: 'var(--text-sm)', letterSpacing: '0.12em', textAlign: 'right' }}>
           {modeLabel}
         </span>
       </div>
@@ -98,7 +98,7 @@ export default function EverymenPraxisDetail({ state }: { state: PraxisDetailSta
         <PraxisStatusBanners state={state} />
 
         {/* ── Identity / status strip ── */}
-        <div style={{ fontSize: 9, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--everymen-muted)', marginBottom: 4 }}>
+        <div style={{ fontSize: 'var(--text-sm)', letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--everymen-muted)', marginBottom: 4 }}>
           <Link to={`/tasks/${praxis.task_id}`} style={{ color: 'var(--everymen-muted)', textDecoration: 'none' }}>
             {t('detail.everymen.re', { task: praxis.task_title })}
           </Link>
@@ -122,7 +122,7 @@ export default function EverymenPraxisDetail({ state }: { state: PraxisDetailSta
             </>
           )}
         </div>
-        <div style={{ fontSize: 9, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'var(--everymen-red)', marginBottom: 8 }}>
+        <div style={{ fontSize: 'var(--text-sm)', letterSpacing: '0.2em', textTransform: 'uppercase', color: 'var(--everymen-red)', marginBottom: 8 }}>
           {t('detail.everymen.theJobDone')}
         </div>
 
@@ -131,7 +131,7 @@ export default function EverymenPraxisDetail({ state }: { state: PraxisDetailSta
           style={{
             fontFamily: POSTER,
             fontWeight: 400,
-            fontSize: 52,
+            fontSize: 'var(--text-display)',
             lineHeight: 0.98,
             letterSpacing: '0.01em',
             margin: 0,
@@ -174,22 +174,22 @@ export default function EverymenPraxisDetail({ state }: { state: PraxisDetailSta
               praxis={praxis}
               linkStyle={{
                 fontFamily: POSTER,
-                fontSize: 22,
+                fontSize: 'var(--text-title)',
                 color: 'var(--everymen-paper-text)',
                 lineHeight: 1,
                 textDecoration: 'none',
               }}
             />
-            <div style={{ fontSize: 9, letterSpacing: '0.06em', color: 'var(--everymen-muted)', marginTop: 3 }}>
+            <div style={{ fontSize: 'var(--text-sm)', letterSpacing: '0.06em', color: 'var(--everymen-muted)', marginTop: 3 }}>
               {praxis.type === 'collab' ? t('detail.everymen.hands.collab') : t('detail.everymen.hands.solo')}
             </div>
           </div>
           {/* base points from the task */}
           <div style={{ marginLeft: 'auto', textAlign: 'right', flexShrink: 0 }}>
-            <div style={{ fontFamily: POSTER, fontSize: 30, lineHeight: 1, color: 'var(--everymen-red)' }}>
+            <div style={{ fontFamily: POSTER, fontSize: 'var(--text-heading)', lineHeight: 1, color: 'var(--everymen-red)' }}>
               ★ {praxis.task_point_value}
             </div>
-            <div style={{ fontSize: 8, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--everymen-muted)', marginTop: 3 }}>
+            <div style={{ fontSize: 'var(--text-xs)', letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--everymen-muted)', marginTop: 3 }}>
               {t('detail.everymen.basePoints')}
             </div>
           </div>
@@ -201,10 +201,9 @@ export default function EverymenPraxisDetail({ state }: { state: PraxisDetailSta
             <SectionHead>{t('detail.everymen.theWork')}</SectionHead>
             <MarkdownPreview
               source={praxis.body_text}
-              className="markdown-preview"
+              className="markdown-preview content-text"
               style={{
                 fontFamily: BODY,
-                fontSize: 13,
                 lineHeight: 1.7,
                 color: 'var(--everymen-paper-text)',
               }}
@@ -233,26 +232,18 @@ export default function EverymenPraxisDetail({ state }: { state: PraxisDetailSta
 
         {/* ── The crew's marks (vote caster) ── */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', margin: '26px 0 16px', gap: 14 }}>
-          <h2 style={{ fontFamily: POSTER, fontSize: 25, letterSpacing: '0.04em', margin: 0, color: 'var(--everymen-paper-text)', whiteSpace: 'nowrap' }}>
+          <h2 style={{ fontFamily: POSTER, fontSize: 'var(--text-title)', letterSpacing: '0.04em', margin: 0, color: 'var(--everymen-paper-text)', whiteSpace: 'nowrap' }}>
             {t('detail.everymen.crewsMarks')}
           </h2>
-          {/* points from votes */}
-          {votes && votes.total_votes > 0 && (
-            <div style={{ textAlign: 'right', flexShrink: 0 }}>
-              <span style={{ fontFamily: POSTER, fontSize: 24, lineHeight: 1, color: 'var(--everymen-red)' }}>
-                +{votes.total_score}
-              </span>
-              <span style={{ fontFamily: BODY, fontSize: 8, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--everymen-muted)', marginLeft: 6 }}>
-                {t('detail.everymen.ptsFromVotes')}
-              </span>
-            </div>
-          )}
+          {/* earned-points breakdown (#641) */}
+          <div style={{ flexShrink: 0 }}>
+            <PraxisScoreBreakdown state={state} align="right" accent="var(--everymen-red)" muted="var(--everymen-muted)" font={POSTER} />
+          </div>
         </div>
         <div style={{ marginBottom: 20 }}>
-          <EverymenVote
+          <VoteUI
+            factionSlug={praxis.task_faction_slug}
             praxisId={praxis.id}
-            points={votes?.total_score}
-            totalVotes={votes?.total_votes}
           />
         </div>
 

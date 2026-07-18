@@ -63,7 +63,7 @@ export function MobileStickyCaption({
     <div
       className="font-body"
       style={{
-        fontSize: 10,
+        fontSize: "var(--text-base)",
         letterSpacing: "0.08em",
         textTransform: "uppercase",
         color: color ?? "var(--color-text-tertiary)",

@@ -93,7 +93,7 @@ export function Breadcrumb({
     <nav
       className="font-body"
       style={{
-        fontSize: 9,
+        fontSize: "var(--text-sm)",
         letterSpacing: "0.1em",
         color: tone,
         marginBottom: 12,
@@ -152,7 +152,7 @@ export function TaskMetaInline({
         alignItems: "center",
         flexWrap: "wrap",
         fontFamily: "'Courier Prime', monospace",
-        fontSize: 9,
+        fontSize: "var(--text-sm)",
         textTransform: "uppercase",
         letterSpacing: "0.12em",
         color: textColor ?? factionCssVar(slug),
@@ -224,7 +224,7 @@ export function ErrorBanner({ message }: ErrorBannerProps) {
     <div
       className="font-body"
       style={{
-        fontSize: 11,
+        fontSize: "var(--text-md)",
         color: "var(--color-danger)",
         marginTop: 8,
         padding: "8px 12px",

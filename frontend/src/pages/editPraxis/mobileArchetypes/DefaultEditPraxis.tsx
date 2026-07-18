@@ -36,7 +36,7 @@ const FAINT = "var(--color-text-tertiary)";
 
 const eyebrow: React.CSSProperties = {
   fontFamily: "var(--font-body)",
-  fontSize: 9,
+  fontSize: "var(--text-sm)",
   letterSpacing: "0.16em",
   textTransform: "uppercase",
   color: FAINT,
@@ -68,7 +68,7 @@ export default function DefaultEditPraxis({
         <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
           <h1
             className="font-display italic"
-            style={{ fontSize: 26, lineHeight: 1, color: INK, margin: 0 }}
+            style={{ fontSize: "var(--text-title)", lineHeight: 1, color: INK, margin: 0 }}
           >
             {t("editPraxis.na.pageTitle")}
           </h1>
@@ -97,7 +97,7 @@ export default function DefaultEditPraxis({
               borderRadius: 999,
               border: "none",
               fontFamily: "var(--font-body)",
-              fontSize: 11,
+              fontSize: "var(--text-md)",
               letterSpacing: "0.1em",
               textTransform: "uppercase",
               fontWeight: active ? 700 : 400,
@@ -124,7 +124,7 @@ export default function DefaultEditPraxis({
         <span style={eyebrow}>{t("editPraxis.na.taskRefLabel")}</span>
         <span
           className="font-display italic"
-          style={{ fontSize: 15, color: INK, textAlign: "right", flex: 1 }}
+          style={{ fontSize: "var(--text-content)", color: INK, textAlign: "right", flex: 1 }}
         >
           {praxis.task_title}
         </span>
@@ -146,7 +146,6 @@ export default function DefaultEditPraxis({
                 inputStyle: {
                   width: "100%",
                   fontFamily: "var(--font-body)",
-                  fontSize: 16,
                   color: INK,
                   background: SURFACE,
                   border: `1px solid ${BORDER}`,
@@ -171,7 +170,6 @@ export default function DefaultEditPraxis({
                 textareaStyle: {
                   width: "100%",
                   fontFamily: "var(--font-body)",
-                  fontSize: 15,
                   lineHeight: 1.55,
                   color: INK,
                   background: SURFACE,
@@ -247,7 +245,7 @@ export default function DefaultEditPraxis({
         <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
           <div
             className="font-display italic"
-            style={{ fontSize: 20, color: INK }}
+            style={{ fontSize: "var(--text-content)", color: INK }}
           >
             {state.title || t("editPraxis.na.titlePlaceholder")}
           </div>
@@ -263,7 +261,6 @@ export default function DefaultEditPraxis({
               },
               markdownStyle: {
                 fontFamily: "var(--font-body)",
-                fontSize: 15,
                 lineHeight: 1.6,
                 color: INK,
               },
@@ -286,27 +283,6 @@ export default function DefaultEditPraxis({
           borderTop: `1px solid ${BORDER}`,
         }}
       >
-        <PublishButton
-          state={state}
-          skin={{
-            idleLabel: t("editPraxis.na.publishIdle"),
-            busyLabel: t("editPraxis.na.publishBusy"),
-            style: {
-              flex: 1,
-              background: ACCENT,
-              color: "var(--color-text-on-accent)",
-              fontFamily: "var(--font-body)",
-              fontSize: 13,
-              fontWeight: 700,
-              letterSpacing: "0.1em",
-              textTransform: "uppercase",
-              padding: "13px 18px",
-              border: "none",
-              borderRadius: 12,
-              cursor: state.submitting ? "wait" : "pointer",
-            },
-          }}
-        />
         {!state.isPublished && (
           <DropButton
             state={state}
@@ -317,13 +293,34 @@ export default function DefaultEditPraxis({
                 border: "none",
                 color: FAINT,
                 fontFamily: "var(--font-body)",
-                fontSize: 11,
+                fontSize: "var(--text-md)",
                 textDecoration: "underline",
                 cursor: "pointer",
               },
             }}
           />
         )}
+        <PublishButton
+          state={state}
+          skin={{
+            idleLabel: t("editPraxis.na.publishIdle"),
+            busyLabel: t("editPraxis.na.publishBusy"),
+            style: {
+              flex: 1,
+              background: ACCENT,
+              color: "var(--color-text-on-accent)",
+              fontFamily: "var(--font-body)",
+              fontSize: "var(--text-lg)",
+              fontWeight: 700,
+              letterSpacing: "0.1em",
+              textTransform: "uppercase",
+              padding: "13px 18px",
+              border: "none",
+              borderRadius: 12,
+              cursor: state.submitting ? "wait" : "pointer",
+            },
+          }}
+        />
       </MobileStickyBar>
     </div>
   );
@@ -394,7 +391,7 @@ function MediaGrid({
                   background: "var(--color-bg-page)",
                   border: `1px solid ${BORDER}`,
                   color: INK,
-                  fontSize: 12,
+                  fontSize: "var(--text-lg)",
                   fontWeight: 700,
                   lineHeight: 1,
                   cursor: "pointer",
@@ -424,7 +421,7 @@ function MediaGrid({
               justifyContent: "center",
               gap: 4,
               fontFamily: "var(--font-body)",
-              fontSize: 11,
+              fontSize: "var(--text-md)",
               letterSpacing: "0.1em",
               textTransform: "uppercase",
               color: MUTED,

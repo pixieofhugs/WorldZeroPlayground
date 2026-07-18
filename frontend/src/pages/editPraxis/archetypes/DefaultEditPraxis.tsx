@@ -116,7 +116,7 @@ export default function DefaultEditPraxis({ state }: Props) {
             style={{
               marginTop: 6,
               fontFamily: "'Permanent Marker', cursive",
-              fontSize: 14,
+              fontSize: "var(--text-xl)",
               color: SLATE_DEEP,
               letterSpacing: "0.05em",
             }}
@@ -143,7 +143,7 @@ export default function DefaultEditPraxis({ state }: Props) {
               position: "absolute",
               top: 6,
               right: 14,
-              fontSize: 12,
+              fontSize: "var(--text-lg)",
               color: SLATE,
               fontFamily: "'Caveat', cursive",
               fontStyle: "italic",
@@ -164,7 +164,7 @@ export default function DefaultEditPraxis({ state }: Props) {
           </div>
           <div
             style={{
-              fontSize: 22,
+              fontSize: "var(--text-title)",
               color: SLATE_DEEP,
               lineHeight: 1.25,
               marginTop: 8,
@@ -174,7 +174,7 @@ export default function DefaultEditPraxis({ state }: Props) {
             <span
               style={{
                 fontFamily: "'Courier Prime', monospace",
-                fontSize: 9,
+                fontSize: "var(--text-sm)",
                 textTransform: "uppercase",
                 letterSpacing: "0.15em",
                 color: SLATE,
@@ -186,7 +186,7 @@ export default function DefaultEditPraxis({ state }: Props) {
             {praxis.task_title}
           </div>
           {task?.description && (
-            <div style={{ fontSize: 12, lineHeight: 1.5, color: SLATE, marginTop: 8 }}>
+            <div style={{ fontSize: "var(--text-content)", lineHeight: 1.5, color: SLATE, marginTop: 8 }}>
               {task.description}
             </div>
           )}
@@ -209,7 +209,7 @@ export default function DefaultEditPraxis({ state }: Props) {
             <div
               style={{
                 fontFamily: "'Permanent Marker', cursive",
-                fontSize: 16,
+                fontSize: "var(--text-xl)",
                 color: "#fef3c7",
                 alignSelf: "center",
                 transform: "rotate(-2deg)",
@@ -249,7 +249,7 @@ export default function DefaultEditPraxis({ state }: Props) {
                     <div
                       style={{
                         fontFamily: "'Permanent Marker', cursive",
-                        fontSize: 22,
+                        fontSize: "var(--text-title)",
                         color: SLATE_DEEP,
                         lineHeight: 1,
                         marginBottom: 4,
@@ -257,7 +257,7 @@ export default function DefaultEditPraxis({ state }: Props) {
                     >
                       {opt.label}
                     </div>
-                    <div style={{ fontSize: 13, color: SLATE }}>{opt.desc}</div>
+                    <div style={{ fontSize: "var(--text-content)", color: SLATE }}>{opt.desc}</div>
                     {active && (
                       <span
                         style={{
@@ -265,7 +265,7 @@ export default function DefaultEditPraxis({ state }: Props) {
                           top: -8,
                           right: -8,
                           fontFamily: "'Permanent Marker', cursive",
-                          fontSize: 16,
+                          fontSize: "var(--text-xl)",
                           color: "#dc2626",
                           transform: "rotate(20deg)",
                         }}
@@ -294,7 +294,7 @@ export default function DefaultEditPraxis({ state }: Props) {
               <div
                 style={{
                   fontFamily: "'Permanent Marker', cursive",
-                  fontSize: 13,
+                  fontSize: "var(--text-lg)",
                   color: SLATE,
                   marginBottom: 6,
                 }}
@@ -331,7 +331,7 @@ export default function DefaultEditPraxis({ state }: Props) {
           <div
             style={{
               fontFamily: "'Permanent Marker', cursive",
-              fontSize: 11,
+              fontSize: "var(--text-md)",
               color: SLATE,
               marginBottom: 6,
               letterSpacing: "0.05em",
@@ -346,7 +346,6 @@ export default function DefaultEditPraxis({ state }: Props) {
               inputStyle: {
                 width: "100%",
                 fontFamily: "'Caveat', cursive",
-                fontSize: 30,
                 color: SLATE_DEEP,
                 fontWeight: 700,
                 background: "transparent",
@@ -392,7 +391,7 @@ export default function DefaultEditPraxis({ state }: Props) {
           <div
             style={{
               fontFamily: "'Permanent Marker', cursive",
-              fontSize: 12,
+              fontSize: "var(--text-lg)",
               color: SLATE,
               marginBottom: 10,
             }}
@@ -407,7 +406,6 @@ export default function DefaultEditPraxis({ state }: Props) {
               textareaStyle: {
                 width: "100%",
                 fontFamily: "'Caveat', cursive",
-                fontSize: 18,
                 lineHeight: 1.5,
                 color: SLATE_DEEP,
                 background: "transparent",
@@ -430,7 +428,7 @@ export default function DefaultEditPraxis({ state }: Props) {
                 <div
                   style={{
                     fontFamily: "'Permanent Marker', cursive",
-                    fontSize: 11,
+                    fontSize: "var(--text-md)",
                     color: SLATE,
                     marginBottom: 6,
                   }}
@@ -440,7 +438,6 @@ export default function DefaultEditPraxis({ state }: Props) {
               ),
               markdownStyle: {
                 fontFamily: "'Caveat', cursive",
-                fontSize: 18,
                 lineHeight: 1.5,
                 color: SLATE_DEEP,
               },
@@ -461,7 +458,7 @@ export default function DefaultEditPraxis({ state }: Props) {
           <div
             style={{
               fontFamily: "'Permanent Marker', cursive",
-              fontSize: 14,
+              fontSize: "var(--text-xl)",
               color: "#fef3c7",
               alignSelf: "center",
               transform: "rotate(-3deg)",
@@ -507,7 +504,7 @@ export default function DefaultEditPraxis({ state }: Props) {
                 border: `2.5px dashed ${SLATE_DEEP}`,
                 cursor: "pointer",
                 fontFamily: "'Permanent Marker', cursive",
-                fontSize: 16,
+                fontSize: "var(--text-xl)",
                 color: SLATE_DEEP,
                 display: "flex",
                 alignItems: "center",
@@ -520,7 +517,7 @@ export default function DefaultEditPraxis({ state }: Props) {
               errorColor: "#dc2626",
               helperText: t("editPraxis.na.fileHelper"),
               helperStyle: {
-                fontSize: 12,
+                fontSize: "var(--text-lg)",
                 color: "#fef3c7",
                 marginTop: 6,
                 fontStyle: "italic",
@@ -544,7 +541,7 @@ export default function DefaultEditPraxis({ state }: Props) {
             <div
               style={{
                 fontFamily: "'Permanent Marker', cursive",
-                fontSize: 13,
+                fontSize: "var(--text-lg)",
                 color: SLATE,
                 marginBottom: 8,
               }}
@@ -584,6 +581,21 @@ export default function DefaultEditPraxis({ state }: Props) {
             flexWrap: "wrap",
           }}
         >
+          <DropButton
+            state={state}
+            skin={{
+              label: t("editPraxis.na.dropLabel"),
+              style: {
+                background: "transparent",
+                border: "none",
+                color: SLATE_DEEP,
+                fontFamily: "'Caveat', cursive",
+                fontSize: "var(--text-xl)",
+                textDecoration: "underline",
+                cursor: "pointer",
+              },
+            }}
+          />
           <PublishButton
             state={state}
             skin={{
@@ -604,7 +616,7 @@ export default function DefaultEditPraxis({ state }: Props) {
                 background: "#dc2626",
                 color: STICKY_PAPER,
                 fontFamily: "'Permanent Marker', cursive",
-                fontSize: 22,
+                fontSize: "var(--text-title)",
                 padding: "14px 28px",
                 border: "none",
                 borderRadius: 0,
@@ -616,26 +628,11 @@ export default function DefaultEditPraxis({ state }: Props) {
               },
             }}
           />
-          <DropButton
-            state={state}
-            skin={{
-              label: t("editPraxis.na.dropLabel"),
-              style: {
-                background: "transparent",
-                border: "none",
-                color: SLATE_DEEP,
-                fontFamily: "'Caveat', cursive",
-                fontSize: 16,
-                textDecoration: "underline",
-                cursor: "pointer",
-              },
-            }}
-          />
           <div style={{ flex: 1 }} />
           <span
             style={{
               fontFamily: "'Caveat', cursive",
-              fontSize: 16,
+              fontSize: "var(--text-xl)",
               color: "#fef3c7",
               fontStyle: "italic",
               maxWidth: 220,
@@ -696,7 +693,7 @@ function PolaroidStickie({
       </div>
       <div
         style={{
-          fontSize: 12,
+          fontSize: "var(--text-lg)",
           fontFamily: "'Caveat', cursive",
           color: SLATE_DEEP,
           textAlign: "center",
@@ -719,7 +716,7 @@ function PolaroidStickie({
           background: "#fef3c7",
           border: `1.5px solid ${SLATE_DEEP}`,
           color: SLATE_DEEP,
-          fontSize: 11,
+          fontSize: "var(--text-md)",
           fontWeight: 700,
           cursor: "pointer",
           lineHeight: 1,

@@ -47,7 +47,7 @@ const MONO = 'var(--font-body)'
 const kicker: CSSProperties = {
   display: 'block',
   fontFamily: MONO,
-  fontSize: 8,
+  fontSize: "var(--text-xs)",
   letterSpacing: '0.22em',
   textTransform: 'uppercase',
   color: MUTED,
@@ -59,7 +59,7 @@ function Plate({ title, children }: { title: string; children: ReactNode }) {
     <section style={{ padding: 7, background: GILT, boxShadow: '0 8px 20px rgba(60,40,10,.16), inset 0 0 0 1px rgba(255,255,255,0.45)' }}>
       <div style={{ padding: 3, background: `linear-gradient(135deg, ${GOLD}, ${GOLD_PALE})` }}>
         <div style={{ background: PAPER, border: `1px solid ${LINE}`, padding: 14 }}>
-          <div style={{ fontFamily: ENGRAVED, fontSize: 9, letterSpacing: '0.13em', textTransform: 'uppercase', color: ACCENT, marginBottom: 10 }}>
+          <div style={{ fontFamily: ENGRAVED, fontSize: "var(--text-sm)", letterSpacing: '0.13em', textTransform: 'uppercase', color: ACCENT, marginBottom: 10 }}>
             {title}
           </div>
           {children}
@@ -79,7 +79,7 @@ export default function UaComposer({ state }: { state: EditPraxisState }) {
     <div data-skin="ua" style={{ display: 'flex', flexDirection: 'column', gap: 14, fontFamily: MONO, color: INK, background: WALL }}>
       <header style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
         <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
-          <h1 style={{ fontFamily: DISPLAY, fontStyle: 'italic', fontWeight: 700, fontSize: 28, lineHeight: 1, color: INK, margin: 0 }}>
+          <h1 style={{ fontFamily: DISPLAY, fontStyle: 'italic', fontWeight: 700, fontSize: "var(--text-title)", lineHeight: 1, color: INK, margin: 0 }}>
             {t('editPraxis.ua.pageTitle')}
           </h1>
           <span style={{ ...kicker, marginLeft: 'auto' }}>
@@ -99,7 +99,7 @@ export default function UaComposer({ state }: { state: EditPraxisState }) {
               borderRadius: 999,
               border: 'none',
               fontFamily: ENGRAVED,
-              fontSize: 11,
+              fontSize: "var(--text-md)",
               letterSpacing: '0.1em',
               textTransform: 'uppercase',
               background: active ? ACCENT : 'transparent',
@@ -112,7 +112,7 @@ export default function UaComposer({ state }: { state: EditPraxisState }) {
       {/* For-commission reference */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, padding: '11px 14px', background: PAPER, border: `1px solid ${LINE}` }}>
         <span style={kicker}>{t('editPraxis.ua.taskRefLabel')}</span>
-        <span style={{ fontFamily: DISPLAY, fontStyle: 'italic', fontWeight: 700, fontSize: 16, color: INK, textAlign: 'right', flex: 1, lineHeight: 1.1 }}>
+        <span style={{ fontFamily: DISPLAY, fontStyle: 'italic', fontWeight: 700, fontSize: "var(--text-content)", color: INK, textAlign: 'right', flex: 1, lineHeight: 1.1 }}>
           {praxis.task_title}
         </span>
       </div>
@@ -132,7 +132,6 @@ export default function UaComposer({ state }: { state: EditPraxisState }) {
                   width: '100%',
                   fontFamily: DISPLAY,
                   fontStyle: 'italic',
-                  fontSize: 22,
                   fontWeight: 700,
                   color: INK,
                   background: 'transparent',
@@ -154,7 +153,6 @@ export default function UaComposer({ state }: { state: EditPraxisState }) {
                 textareaStyle: {
                   width: '100%',
                   fontFamily: DISPLAY,
-                  fontSize: 15,
                   lineHeight: 1.6,
                   color: INK,
                   background: PAPER_WARM,
@@ -211,7 +209,7 @@ export default function UaComposer({ state }: { state: EditPraxisState }) {
         </>
       ) : (
         <Plate title={t('editPraxis.ua.previewLabel')}>
-          <div style={{ fontFamily: DISPLAY, fontStyle: 'italic', fontWeight: 700, fontSize: 22, color: INK, marginBottom: 10 }}>
+          <div style={{ fontFamily: DISPLAY, fontStyle: 'italic', fontWeight: 700, fontSize: "var(--text-title)", color: INK, marginBottom: 10 }}>
             {state.title || t('editPraxis.ua.titlePlaceholder')}
           </div>
           {state.media.length > 0 && (
@@ -222,7 +220,7 @@ export default function UaComposer({ state }: { state: EditPraxisState }) {
           <BodyPreview
             state={state}
             skin={{
-              markdownStyle: { fontFamily: DISPLAY, fontSize: 15, lineHeight: 1.6, color: INK },
+              markdownStyle: { fontFamily: DISPLAY, lineHeight: 1.6, color: INK },
             }}
           />
         </Plate>
@@ -241,25 +239,6 @@ export default function UaComposer({ state }: { state: EditPraxisState }) {
           borderTop: `1px solid ${GOLD}`,
         }}
       >
-        <PublishButton
-          state={state}
-          skin={{
-            idleLabel: t('editPraxis.ua.publishIdle'),
-            busyLabel: t('editPraxis.ua.publishBusy'),
-            style: {
-              flex: 1,
-              background: ACCENT,
-              color: PAPER_WARM,
-              fontFamily: ENGRAVED,
-              fontSize: 12,
-              letterSpacing: '0.12em',
-              textTransform: 'uppercase',
-              padding: '13px 18px',
-              border: `1px solid ${ACCENT}`,
-              cursor: state.submitting ? 'wait' : 'pointer',
-            },
-          }}
-        />
         {!state.isPublished && (
           <DropButton
             state={state}
@@ -271,12 +250,31 @@ export default function UaComposer({ state }: { state: EditPraxisState }) {
                 color: MUTED,
                 fontFamily: DISPLAY,
                 fontStyle: 'italic',
-                fontSize: 14,
+                fontSize: "var(--text-xl)",
                 cursor: 'pointer',
               },
             }}
           />
         )}
+        <PublishButton
+          state={state}
+          skin={{
+            idleLabel: t('editPraxis.ua.publishIdle'),
+            busyLabel: t('editPraxis.ua.publishBusy'),
+            style: {
+              flex: 1,
+              background: ACCENT,
+              color: PAPER_WARM,
+              fontFamily: ENGRAVED,
+              fontSize: "var(--text-lg)",
+              letterSpacing: '0.12em',
+              textTransform: 'uppercase',
+              padding: '13px 18px',
+              border: `1px solid ${ACCENT}`,
+              cursor: state.submitting ? 'wait' : 'pointer',
+            },
+          }}
+        />
       </MobileStickyBar>
     </div>
   )
@@ -314,7 +312,7 @@ function MediaGrid({ state, readOnly = false }: { state: EditPraxisState; readOn
                   background: PAPER,
                   border: `1px solid ${ACCENT}`,
                   color: ACCENT,
-                  fontSize: 12,
+                  fontSize: "var(--text-lg)",
                   fontWeight: 700,
                   lineHeight: 1,
                   cursor: 'pointer',
@@ -343,7 +341,7 @@ function MediaGrid({ state, readOnly = false }: { state: EditPraxisState; readOn
               justifyContent: 'center',
               gap: 4,
               fontFamily: ENGRAVED,
-              fontSize: 10,
+              fontSize: "var(--text-base)",
               letterSpacing: '0.08em',
               textTransform: 'uppercase',
               color: ACCENT,

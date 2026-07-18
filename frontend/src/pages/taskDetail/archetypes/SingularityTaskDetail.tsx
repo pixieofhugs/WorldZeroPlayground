@@ -41,7 +41,7 @@ const GREEN_SOFT = "color-mix(in srgb, var(--faction-singularity-card-text) 60%,
 
 const sectionRule: CSSProperties = { flex: 1, height: 1, background: RULE };
 const sectionH2: CSSProperties = {
-  fontSize: 7.5,
+  fontSize: "var(--text-xs)",
   letterSpacing: "0.28em",
   margin: 0,
   color: GREEN_SOFT,
@@ -57,7 +57,7 @@ const statBox: CSSProperties = {
   minWidth: 90,
 };
 const statLabel: CSSProperties = {
-  fontSize: 7,
+  fontSize: "var(--text-xs)",
   letterSpacing: "0.2em",
   color: BLUE_FAINT,
   textTransform: "uppercase",
@@ -134,7 +134,7 @@ function ArrayRoster({
                   justifyContent: "center",
                   color: GREEN,
                   fontFamily: TERM_FONT,
-                  fontSize: 13,
+                  fontSize: "var(--text-lg)",
                 }}
               >
                 {member.display_name[0]?.toUpperCase()}
@@ -160,7 +160,7 @@ function ArrayRoster({
       <span
         style={{
           fontFamily: TERM_FONT,
-          fontSize: 8,
+          fontSize: "var(--text-xs)",
           letterSpacing: "0.14em",
           textTransform: "uppercase",
           color: BLUE_DIM,
@@ -238,7 +238,7 @@ export default function SingularityTaskDetail({
         <nav
           className="font-body"
           style={{
-            fontSize: 9,
+            fontSize: "var(--text-sm)",
             letterSpacing: "0.14em",
             textTransform: "uppercase",
             color: BLUE_FAINT,
@@ -277,7 +277,7 @@ export default function SingularityTaskDetail({
             <div style={{ position: "relative", zIndex: 2, padding: "30px 36px 34px" }}>
               <div
                 style={{
-                  fontSize: 8,
+                  fontSize: "var(--text-xs)",
                   letterSpacing: "0.16em",
                   color: BLUE_FAINT,
                   lineHeight: 2,
@@ -302,8 +302,8 @@ export default function SingularityTaskDetail({
                 </div>
               </div>
               <h1
+                className="content-title"
                 style={{
-                  fontSize: 40,
                   lineHeight: 1.0,
                   letterSpacing: "0.03em",
                   color: GREEN,
@@ -326,25 +326,25 @@ export default function SingularityTaskDetail({
               </h1>
               <div style={{ display: "flex", gap: 14, flexWrap: "wrap" }}>
                 <div style={statBox}>
-                  <div style={{ fontSize: 26, lineHeight: 1, color: GREEN }}>
+                  <div className="content-title" style={{ lineHeight: 1, color: GREEN }}>
                     {modifiedPoints}
                   </div>
                   <div style={statLabel}>{t("singularity.stats.credits")}</div>
                 </div>
                 <div style={statBox}>
-                  <div style={{ fontSize: 26, lineHeight: 1, color: GREEN }}>
+                  <div className="content-title" style={{ lineHeight: 1, color: GREEN }}>
                     {task.level_required}
                   </div>
                   <div style={statLabel}>{t("singularity.stats.level")}</div>
                 </div>
                 <div style={statBox}>
-                  <div style={{ fontSize: 26, lineHeight: 1, color: BLUE }}>
+                  <div className="content-title" style={{ lineHeight: 1, color: BLUE }}>
                     {signups.length}
                   </div>
                   <div style={statLabel}>{t("singularity.stats.arrays")}</div>
                 </div>
                 <div style={statBox}>
-                  <div style={{ fontSize: 26, lineHeight: 1, color: GREEN }}>
+                  <div className="content-title" style={{ lineHeight: 1, color: GREEN }}>
                     {submissions.length}
                   </div>
                   <div style={statLabel}>{t("singularity.stats.sealed")}</div>
@@ -378,9 +378,9 @@ export default function SingularityTaskDetail({
               }}
             >
               <p
+                className="content-text"
                 style={{
                   fontFamily: TERM_FONT,
-                  fontSize: 11,
                   lineHeight: 1.9,
                   color: GREEN_DIM,
                   margin: 0,
@@ -410,7 +410,7 @@ export default function SingularityTaskDetail({
                 style={{
                   cursor: "pointer",
                   fontFamily: TERM_FONT,
-                  fontSize: 11,
+                  fontSize: "var(--text-md)",
                   letterSpacing: "0.1em",
                   textTransform: "uppercase",
                   color: BLUE,
@@ -423,7 +423,7 @@ export default function SingularityTaskDetail({
               </button>
               <div
                 style={{
-                  fontSize: 8,
+                  fontSize: "var(--text-xs)",
                   letterSpacing: "0.06em",
                   color: GREEN_DIM,
                   fontStyle: "italic",
@@ -437,7 +437,7 @@ export default function SingularityTaskDetail({
               <div
                 style={{
                   marginLeft: "auto",
-                  fontSize: 7,
+                  fontSize: "var(--text-xs)",
                   letterSpacing: "0.14em",
                   color: BLUE_DIM,
                 }}
@@ -465,7 +465,7 @@ export default function SingularityTaskDetail({
                 to={`/praxes/${mySubmission.id}/edit`}
                 style={{
                   fontFamily: TERM_FONT,
-                  fontSize: 11,
+                  fontSize: "var(--text-md)",
                   letterSpacing: "0.1em",
                   textTransform: "uppercase",
                   color: GREEN,
@@ -477,7 +477,7 @@ export default function SingularityTaskDetail({
               >
                 {t("singularity.submitted.edit")}
               </Link>
-              <div style={{ fontSize: 8, letterSpacing: "0.06em", color: GREEN_DIM, fontStyle: "italic" }}>
+              <div style={{ fontSize: "var(--text-xs)", letterSpacing: "0.06em", color: GREEN_DIM, fontStyle: "italic" }}>
                 {t("singularity.submitted.note")}
               </div>
             </div>
@@ -499,7 +499,7 @@ export default function SingularityTaskDetail({
                 to={`/praxes/${inProgressPraxisId}/edit`}
                 style={{
                   fontFamily: TERM_FONT,
-                  fontSize: 11,
+                  fontSize: "var(--text-md)",
                   letterSpacing: "0.1em",
                   textTransform: "uppercase",
                   color: GREEN,
@@ -518,7 +518,7 @@ export default function SingularityTaskDetail({
                   border: "none",
                   cursor: "pointer",
                   fontFamily: TERM_FONT,
-                  fontSize: 9,
+                  fontSize: "var(--text-sm)",
                   letterSpacing: "0.1em",
                   textTransform: "uppercase",
                   color: BLUE_DIM,
@@ -544,7 +544,7 @@ export default function SingularityTaskDetail({
               <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 14 }}>
                 <h2 style={sectionH2}>{t("singularity.rosterHeading")}</h2>
                 <span style={sectionRule} />
-                <span style={{ fontSize: 7, letterSpacing: "0.12em", color: BLUE_DIM }}>
+                <span style={{ fontSize: "var(--text-xs)", letterSpacing: "0.12em", color: BLUE_DIM }}>
                   {t("singularity.rosterSynced", { count: signups.length })}
                 </span>
               </div>
@@ -560,14 +560,14 @@ export default function SingularityTaskDetail({
             </div>
             {voteCount > 0 ? (
               <div style={{ display: "flex", alignItems: "flex-end", gap: 12 }}>
-                <span style={{ fontFamily: TERM_FONT, fontSize: 48, lineHeight: 0.8, color: GREEN }}>
+                <span className="content-title" style={{ fontFamily: TERM_FONT, lineHeight: 0.8, color: GREEN }}>
                   {topScore}
                 </span>
                 <div style={{ paddingBottom: 4 }}>
                   <div
                     style={{
                       fontFamily: TERM_FONT,
-                      fontSize: 12,
+                      fontSize: "var(--text-lg)",
                       letterSpacing: "0.1em",
                       color: BLUE,
                       textTransform: "uppercase",
@@ -575,13 +575,13 @@ export default function SingularityTaskDetail({
                   >
                     {t("singularity.consensus.peakSignal")}
                   </div>
-                  <div style={{ fontSize: 8, letterSpacing: "0.1em", color: BLUE_DIM }}>
+                  <div style={{ fontSize: "var(--text-xs)", letterSpacing: "0.1em", color: BLUE_DIM }}>
                     {t("singularity.consensus.sealed", { count: voteCount })}
                   </div>
                 </div>
               </div>
             ) : (
-              <p style={{ fontFamily: TERM_FONT, fontSize: 11, color: GREEN_DIM, margin: 0 }}>
+              <p className="content-text" style={{ fontFamily: TERM_FONT, color: GREEN_DIM, margin: 0 }}>
                 {t("singularity.consensus.none")}
               </p>
             )}
@@ -600,7 +600,7 @@ export default function SingularityTaskDetail({
             >
               <h2 style={sectionH2}>{t("singularity.sealedHeading")}</h2>
               <span style={sectionRule} />
-              <span style={{ fontSize: 7, letterSpacing: "0.12em", color: BLUE_DIM }}>
+              <span style={{ fontSize: "var(--text-xs)", letterSpacing: "0.12em", color: BLUE_DIM }}>
                 {t("singularity.sealedCount", { count: submissions.length })}
               </span>
               <div style={{ display: "flex", gap: 0 }}>
@@ -612,7 +612,7 @@ export default function SingularityTaskDetail({
                       onClick={() => setSubmissionSort(sort)}
                       style={{
                         fontFamily: TERM_FONT,
-                        fontSize: 8,
+                        fontSize: "var(--text-xs)",
                         letterSpacing: "0.1em",
                         textTransform: "uppercase",
                         padding: "5px 12px",
@@ -632,7 +632,7 @@ export default function SingularityTaskDetail({
             </div>
 
             {sortedSubmissions.length === 0 ? (
-              <p style={{ fontFamily: TERM_FONT, fontSize: 11, color: GREEN_DIM, margin: 0 }}>
+              <p className="content-text" style={{ fontFamily: TERM_FONT, color: GREEN_DIM, margin: 0 }}>
                 {t("singularity.empty")}
               </p>
             ) : (
@@ -656,13 +656,13 @@ export default function SingularityTaskDetail({
                             border: `1px solid ${GREEN}`,
                             color: GREEN,
                             fontFamily: TERM_FONT,
-                            fontSize: 7.5,
+                            fontSize: "var(--text-xs)",
                             letterSpacing: "0.16em",
                             padding: "4px 11px",
                             boxShadow: "0 0 12px rgba(74,222,128,0.4)",
                           }}
                         >
-                          <span style={{ fontSize: 12, lineHeight: 1 }}>⚜</span>{" "}
+                          <span style={{ fontSize: "var(--text-lg)", lineHeight: 1 }}>⚜</span>{" "}
                           {t("singularity.highestSignal")}
                         </div>
                       )}
@@ -676,7 +676,7 @@ export default function SingularityTaskDetail({
                       to={`/praxes?task_id=${task.id}`}
                       style={{
                         fontFamily: TERM_FONT,
-                        fontSize: 10,
+                        fontSize: "var(--text-base)",
                         letterSpacing: "0.1em",
                         textTransform: "uppercase",
                         color: BLUE,

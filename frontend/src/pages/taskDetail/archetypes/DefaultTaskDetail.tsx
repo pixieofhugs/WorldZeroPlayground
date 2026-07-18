@@ -4,7 +4,7 @@ import PraxisCard from "../../../components/PraxisCard";
 import LevelPill from "../../../components/ui/LevelPill";
 import FeedBadge from "../../../components/feed/FeedBadge";
 import DefaultSigil from "../../../components/cards/DefaultSigil";
-import { factionCssVar, factionName } from "../../../utils/factions";
+import { factionCssVar, factionFill, factionName } from "../../../utils/factions";
 import { mediaUrl } from "../../../utils/media";
 import type { TaskDetailState } from "../useTaskDetail";
 
@@ -61,7 +61,7 @@ export default function DefaultTaskDetail({
       <nav
         className="font-body mb-4"
         style={{
-          fontSize: 9,
+          fontSize: "var(--text-sm)",
           letterSpacing: "0.1em",
           color: "var(--color-text-tertiary)",
         }}
@@ -102,7 +102,7 @@ export default function DefaultTaskDetail({
                   background: "var(--faction-default-rainbow)",
                   color: "var(--color-text-on-accent)",
                   fontFamily: "'Courier Prime', monospace",
-                  fontSize: 9,
+                  fontSize: "var(--text-sm)",
                   fontWeight: 700,
                   textTransform: "uppercase",
                   letterSpacing: "0.07em",
@@ -115,7 +115,7 @@ export default function DefaultTaskDetail({
               <span
                 className="font-body"
                 style={{
-                  fontSize: 8,
+                  fontSize: "var(--text-xs)",
                   textTransform: "uppercase",
                   letterSpacing: "0.1em",
                   padding: "2px 8px",
@@ -136,15 +136,15 @@ export default function DefaultTaskDetail({
                 <span
                   className="font-body"
                   style={{
-                    fontSize: 8,
+                    fontSize: "var(--text-xs)",
                     textTransform: "uppercase",
                     letterSpacing: "0.15em",
                     padding: "2px 8px",
                     borderRadius: 4,
-                    background: factionCssVar(task.metatask_faction_slug),
-                    color: factionCssVar(task.metatask_faction_slug, "on-fill"),
                     fontWeight: 700,
                     textShadow: "0 1px 2px rgba(0,0,0,0.3)",
+                    // na → rainbow frame; real faction → solid hue + on-fill ink
+                    ...factionFill(task.metatask_faction_slug, "pill"),
                   }}
                 >
                   {t("default.meta")}
@@ -155,9 +155,8 @@ export default function DefaultTaskDetail({
 
             {/* Title */}
             <h1
-              className="font-display italic font-medium"
+              className="font-display italic font-medium content-title"
               style={{
-                fontSize: 28,
                 color: "var(--color-text-primary)",
                 lineHeight: 1.2,
                 marginBottom: task.task_type === "metatask" ? 4 : 12,
@@ -230,9 +229,8 @@ export default function DefaultTaskDetail({
             {/* Description */}
             {task.description && (
               <p
-                className="font-body"
+                className="font-body content-text"
                 style={{
-                  fontSize: 13,
                   lineHeight: 1.7,
                   color: "var(--color-text-secondary)",
                   whiteSpace: "pre-wrap",
@@ -253,7 +251,7 @@ export default function DefaultTaskDetail({
                   background: color,
                   color: "var(--color-text-on-accent)",
                   fontFamily: "'Courier Prime', monospace",
-                  fontSize: 13,
+                  fontSize: "var(--text-lg)",
                   fontWeight: 700,
                   textTransform: "uppercase",
                   letterSpacing: "0.15em",
@@ -300,7 +298,7 @@ export default function DefaultTaskDetail({
                 <div
                   className="font-body"
                   style={{
-                    fontSize: 11,
+                    fontSize: "var(--text-md)",
                     color: "var(--color-danger)",
                     marginTop: 8,
                     padding: "8px 12px",
@@ -341,8 +339,8 @@ export default function DefaultTaskDetail({
                   {t("default.submitted.badge")}
                 </span>
                 <span
-                  className="font-body"
-                  style={{ fontSize: 11, color: "var(--color-text-primary)" }}
+                  className="font-body content-text"
+                  style={{ color: "var(--color-text-primary)" }}
                 >
                   {t("default.submitted.text")}
                 </span>
@@ -350,7 +348,7 @@ export default function DefaultTaskDetail({
               <Link
                 to={`/praxes/${mySubmission.id}/edit`}
                 className="btn-outline"
-                style={{ fontSize: 8, padding: "4px 12px" }}
+                style={{ fontSize: "var(--text-xs)", padding: "4px 12px" }}
               >
                 {t("default.submitted.edit")}
               </Link>
@@ -383,8 +381,8 @@ export default function DefaultTaskDetail({
                   {t("default.inProgress.badge")}
                 </span>
                 <span
-                  className="font-body"
-                  style={{ fontSize: 11, color: "var(--color-text-primary)" }}
+                  className="font-body content-text"
+                  style={{ color: "var(--color-text-primary)" }}
                 >
                   {t("default.inProgress.text")}
                 </span>
@@ -395,7 +393,7 @@ export default function DefaultTaskDetail({
                   background: color,
                   color: "var(--color-text-on-accent)",
                   fontFamily: "'Courier Prime', monospace",
-                  fontSize: 11,
+                  fontSize: "var(--text-md)",
                   fontWeight: 700,
                   textTransform: "uppercase",
                   letterSpacing: "0.12em",
@@ -449,7 +447,7 @@ export default function DefaultTaskDetail({
                     onClick={() => setSubmissionSort(sort)}
                     style={{
                       fontFamily: "'Courier Prime', monospace",
-                      fontSize: 8,
+                      fontSize: "var(--text-xs)",
                       fontWeight: 700,
                       textTransform: "uppercase",
                       letterSpacing: "0.1em",
@@ -489,7 +487,7 @@ export default function DefaultTaskDetail({
                       to={`/praxes?task_id=${task.id}`}
                       style={{
                         fontFamily: "'Courier Prime', monospace",
-                        fontSize: 10,
+                        fontSize: "var(--text-base)",
                         fontWeight: 700,
                         textTransform: "uppercase",
                         letterSpacing: "0.1em",
@@ -556,7 +554,7 @@ export default function DefaultTaskDetail({
                       to={`/characters/${signup.character_id}`}
                       className="font-body"
                       style={{
-                        fontSize: 10,
+                        fontSize: "var(--text-base)",
                         fontWeight: 700,
                         color: "var(--color-text-primary)",
                         textDecoration: "none",

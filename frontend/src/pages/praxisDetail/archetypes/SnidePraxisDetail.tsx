@@ -16,10 +16,10 @@ import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import MarkdownPreview from '../../editPraxis/blocks/MarkdownPreview'
 import MediaGallery from '../../../components/MediaGallery'
-import SnideVote from '../../../components/vote/SnideVote'
+import VoteUI from '../../../components/vote/VoteUI'
 import { factionCssVar } from '../../../utils/factions'
 import { formatTimestamp } from '../../../utils/dates'
-import { PraxisAdminBar, PraxisStatusBanners, PraxisOwnerActions, PraxisFlagBlock, PraxisVoterBreakdown, MemberByline } from '../shared'
+import { PraxisAdminBar, PraxisStatusBanners, PraxisOwnerActions, PraxisFlagBlock, PraxisVoterBreakdown, PraxisScoreBreakdown, MemberByline } from '../shared'
 import type { PraxisDetailState } from '../usePraxisDetail'
 
 // Always-dark dossier tokens (scoped to this archetype's container).
@@ -38,7 +38,7 @@ const F_BODY = 'var(--font-body)'
 
 export default function SnidePraxisDetail({ state }: { state: PraxisDetailState }) {
   const { t } = useTranslation('praxis')
-  const { praxis, votes } = state
+  const { praxis } = state
   if (!praxis) return null
 
   const sealedDate = praxis.submitted_at ?? praxis.created_at
@@ -91,7 +91,7 @@ export default function SnidePraxisDetail({ state }: { state: PraxisDetailState 
             <span
               style={{
                 fontFamily: F_COND,
-                fontSize: 17,
+                fontSize: 'var(--text-content)',
                 letterSpacing: '0.14em',
                 whiteSpace: 'nowrap',
               }}
@@ -119,7 +119,7 @@ export default function SnidePraxisDetail({ state }: { state: PraxisDetailState 
             to={`/tasks/${praxis.task_id}`}
             style={{
               fontFamily: F_COND,
-              fontSize: 13,
+              fontSize: 'var(--text-lg)',
               letterSpacing: '0.08em',
               color: ACID,
               textDecoration: 'none',
@@ -128,11 +128,11 @@ export default function SnidePraxisDetail({ state }: { state: PraxisDetailState 
           >
             {t('detail.snide.re', { task: praxis.task_title })}
           </Link>
-          <span style={{ color: MUTED, fontSize: 9 }}>·</span>
+          <span style={{ color: MUTED, fontSize: 'var(--text-sm)' }}>·</span>
           <span
             style={{
               fontFamily: F_BODY,
-              fontSize: 8.5,
+              fontSize: 'var(--text-xs)',
               letterSpacing: '0.12em',
               textTransform: 'uppercase',
               color: MUTED,
@@ -140,11 +140,11 @@ export default function SnidePraxisDetail({ state }: { state: PraxisDetailState 
           >
             {t('detail.snide.grade', { grade })}
           </span>
-          <span style={{ color: MUTED, fontSize: 9 }}>·</span>
+          <span style={{ color: MUTED, fontSize: 'var(--text-sm)' }}>·</span>
           <span
             style={{
               fontFamily: F_BODY,
-              fontSize: 8.5,
+              fontSize: 'var(--text-xs)',
               letterSpacing: '0.12em',
               textTransform: 'uppercase',
               color: MUTED,
@@ -152,11 +152,11 @@ export default function SnidePraxisDetail({ state }: { state: PraxisDetailState 
           >
             {mode}
           </span>
-          <span style={{ color: MUTED, fontSize: 9 }}>·</span>
+          <span style={{ color: MUTED, fontSize: 'var(--text-sm)' }}>·</span>
           <span
             style={{
               fontFamily: F_BODY,
-              fontSize: 8.5,
+              fontSize: 'var(--text-xs)',
               letterSpacing: '0.08em',
               textTransform: 'uppercase',
               color: MUTED,
@@ -168,7 +168,7 @@ export default function SnidePraxisDetail({ state }: { state: PraxisDetailState 
             <span
               style={{
                 fontFamily: F_COND,
-                fontSize: 11,
+                fontSize: 'var(--text-md)',
                 letterSpacing: '0.1em',
                 color: '#fff',
                 background: PINK,
@@ -186,7 +186,7 @@ export default function SnidePraxisDetail({ state }: { state: PraxisDetailState 
         <h1
           style={{
             fontFamily: F_ANTON,
-            fontSize: 40,
+            fontSize: 'var(--text-display)',
             lineHeight: 0.9,
             color: PAPER_TEXT,
             margin: '0 0 14px',
@@ -237,7 +237,7 @@ export default function SnidePraxisDetail({ state }: { state: PraxisDetailState 
               praxis={praxis}
               linkStyle={{
                 fontFamily: F_MARKER,
-                fontSize: 22,
+                fontSize: 'var(--text-title)',
                 color: PINK,
                 textDecoration: 'none',
               }}
@@ -245,7 +245,7 @@ export default function SnidePraxisDetail({ state }: { state: PraxisDetailState 
             <span
               style={{
                 fontFamily: F_BODY,
-                fontSize: 8.5,
+                fontSize: 'var(--text-xs)',
                 letterSpacing: '0.12em',
                 textTransform: 'uppercase',
                 color: MUTED,
@@ -267,13 +267,13 @@ export default function SnidePraxisDetail({ state }: { state: PraxisDetailState 
               transform: 'rotate(1.5deg)',
             }}
           >
-            <span style={{ fontFamily: F_ANTON, fontSize: 22, color: ACID, lineHeight: 1 }}>
+            <span style={{ fontFamily: F_ANTON, fontSize: 'var(--text-title)', color: ACID, lineHeight: 1 }}>
               +{praxis.task_point_value}
             </span>
             <span
               style={{
                 fontFamily: F_BODY,
-                fontSize: 7,
+                fontSize: 'var(--text-xs)',
                 letterSpacing: '0.14em',
                 textTransform: 'uppercase',
                 color: MUTED,
@@ -293,7 +293,7 @@ export default function SnidePraxisDetail({ state }: { state: PraxisDetailState 
                 background: ACID,
                 color: PAPER_INK,
                 fontFamily: F_MARKER,
-                fontSize: 17,
+                fontSize: 'var(--text-content)',
                 padding: '3px 13px',
                 transform: 'rotate(-1.5deg)',
                 boxShadow: `2px 2px 0 ${PINK}`,
@@ -304,7 +304,7 @@ export default function SnidePraxisDetail({ state }: { state: PraxisDetailState 
             </span>
             <MarkdownPreview
               source={praxis.body_text}
-              className="markdown-preview"
+              className="markdown-preview content-text"
               style={{
                 border: `1.5px solid ${PAPER_INK}`,
                 borderLeft: `4px solid ${PINK}`,
@@ -314,7 +314,6 @@ export default function SnidePraxisDetail({ state }: { state: PraxisDetailState 
                   'repeating-linear-gradient(180deg, transparent 0 27px, color-mix(in srgb, var(--faction-snide-ink) 11%, transparent) 27px 28px)',
                 padding: '10px 18px 16px',
                 fontFamily: F_BODY,
-                fontSize: 13,
                 lineHeight: '28px',
               }}
             />
@@ -330,7 +329,7 @@ export default function SnidePraxisDetail({ state }: { state: PraxisDetailState 
                 background: ACID,
                 color: PAPER_INK,
                 fontFamily: F_MARKER,
-                fontSize: 17,
+                fontSize: 'var(--text-content)',
                 padding: '3px 13px',
                 transform: 'rotate(1.5deg)',
                 boxShadow: `2px 2px 0 ${PINK}`,
@@ -354,7 +353,7 @@ export default function SnidePraxisDetail({ state }: { state: PraxisDetailState 
         {/* ── Ransom divider ── */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 20 }}>
           <div style={{ flex: 1, height: 2, background: `color-mix(in srgb, ${ACID} 40%, transparent)` }} />
-          <span style={{ fontFamily: F_MARKER, fontSize: 14, color: PINK, transform: 'rotate(-2deg)' }}>×</span>
+          <span style={{ fontFamily: F_MARKER, fontSize: 'var(--text-xl)', color: PINK, transform: 'rotate(-2deg)' }}>×</span>
           <div style={{ flex: 1, height: 2, background: `color-mix(in srgb, ${ACID} 40%, transparent)` }} />
         </div>
 
@@ -376,7 +375,7 @@ export default function SnidePraxisDetail({ state }: { state: PraxisDetailState 
                 background: PINK,
                 color: '#fff',
                 fontFamily: F_MARKER,
-                fontSize: 17,
+                fontSize: 'var(--text-content)',
                 padding: '3px 13px',
                 transform: 'rotate(-1deg)',
                 boxShadow: `2px 2px 0 ${PAPER_INK}`,
@@ -384,37 +383,14 @@ export default function SnidePraxisDetail({ state }: { state: PraxisDetailState 
             >
               {t('detail.snide.theVerdict')}
             </span>
-            {/* Points from votes */}
-            {votes && votes.total_votes > 0 && (
-              <div
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'baseline',
-                  gap: 4,
-                  transform: 'rotate(1deg)',
-                }}
-              >
-                <span style={{ fontFamily: F_ANTON, fontSize: 22, color: ACID, lineHeight: 1 }}>
-                  +{votes.total_score}
-                </span>
-                <span
-                  style={{
-                    fontFamily: F_BODY,
-                    fontSize: 7,
-                    letterSpacing: '0.14em',
-                    textTransform: 'uppercase',
-                    color: MUTED,
-                  }}
-                >
-                  {t('detail.snide.ptsFromVotes')}
-                </span>
-              </div>
-            )}
+            {/* Earned-points breakdown (#641) */}
+            <div style={{ transform: 'rotate(1deg)' }}>
+              <PraxisScoreBreakdown state={state} align="right" accent={ACID} muted={MUTED} font={F_ANTON} />
+            </div>
           </div>
-          <SnideVote
+          <VoteUI
+            factionSlug={praxis.task_faction_slug}
             praxisId={praxis.id}
-            points={votes?.total_score}
-            totalVotes={votes?.total_votes}
           />
         </div>
 
