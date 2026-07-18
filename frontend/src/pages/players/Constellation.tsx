@@ -18,7 +18,10 @@ interface ConstellationProps {
   players: RankedPlayer[]
   /** Highest score in the field; 0 triggers the zero state. */
   maxScore: number
-  /** The viewer's own character id — pinned on a tether if outside the sky. */
+  /** The viewer's own character id. Their orb gets a "you" ring when it is in
+   *  the sky; when it is not, the sky says nothing and the roster's your-rank
+   *  strip carries "where am I" (#684 §§6-7 — this used to pin them on a
+   *  tether, which drew a sigil at a radius its rank had not earned). */
   myCharId: number | null
   /** How many of the top players get a star. Mobile (#657) passes a smaller N. */
   population?: number
@@ -69,7 +72,6 @@ interface PlacedNode {
   size: number
   faded: boolean
   crowned: boolean
-  pinned: boolean
 }
 
 /**
@@ -122,7 +124,6 @@ export function placeOrbs(
       size: nodeSize(entry.points),
       faded: !zeroState && entry.points <= 0,
       crowned: !zeroState && index === 0,
-      pinned: false,
     }
   })
 }
@@ -143,26 +144,8 @@ export default function Constellation({
   const zeroState = maxScore <= 0
 
   const sky = players.slice(0, population)
-  const skyCount = sky.length
 
   const placed = placeOrbs(sky, radius, maxScore)
-
-  // Viewer outside the sky: pin their sigil just past the outermost ring on a
-  // dashed tether so it never implies a truthful radius.
-  const mine = myCharId != null ? players.find((p) => p.character.id === myCharId) : undefined
-  const pinnedRadius = radius + 58
-  const pinnedNode: PlacedNode | null =
-    mine && mine.rank > skyCount
-      ? {
-          entry: mine,
-          x: 0,
-          y: pinnedRadius,
-          size: NODE_MIN,
-          faded: !zeroState && mine.points <= 0,
-          crowned: false,
-          pinned: true,
-        }
-      : null
 
   const ringRadii = zeroState
     ? [radius]
@@ -231,20 +214,9 @@ export default function Constellation({
               fill="var(--sky-sparkle)"
             />
           ))}
-          {pinnedNode && (
-            <line
-              x1={centreX}
-              y1={centreY + radius}
-              x2={centreX + pinnedNode.x}
-              y2={centreY + pinnedNode.y}
-              stroke="var(--sky-tether)"
-              strokeWidth={1}
-              strokeDasharray="4 4"
-            />
-          )}
         </svg>
 
-        {[...placed, ...(pinnedNode ? [pinnedNode] : [])].map((node) => (
+        {placed.map((node) => (
           <SkyNode
             key={node.entry.character.id}
             node={node}
@@ -303,7 +275,7 @@ function SkyNode({
   isMe: boolean
 }) {
   const { t } = useTranslation('common')
-  const { entry, size, faded, crowned, pinned } = node
+  const { entry, size, faded, crowned } = node
   const character = entry.character
   // factionCssVar resolves an unknown slug to the `ua` theme, so unaffiliated
   // branches on isKnownFaction first (#636 / ADR-0039).
@@ -333,7 +305,17 @@ function SkyNode({
           already carries the faction ring, the sigil corner mark, the img/monogram
           fallback and the unaffiliated spectrum, so the bespoke circle + <img>
           this used to hand-roll is deleted. `glow` supplies the halo. */}
-      <span style={{ position: 'relative', lineHeight: 0, opacity: faded ? 0.4 : 1 }}>
+      <span
+        style={{
+          position: 'relative',
+          lineHeight: 0,
+          opacity: faded ? 0.4 : 1,
+          // The "you" ring, symmetric with the Meadow's (#684 §7). The sky had
+          // no self-marker at all — `isMe` only ever fed the deleted pin.
+          borderRadius: '50%',
+          boxShadow: isMe ? '0 0 0 2px var(--sky-you)' : undefined,
+        }}
+      >
         <FactionAvatar character={character} size={Math.round(size)} glow />
 
         {/* Rank badge — a small disc on the orb's shoulder. */}
@@ -373,31 +355,30 @@ function SkyNode({
 
       {/* Points, in the faction hue — or the shared .rainbow-ink gradient clip
           for unaffiliated, matching the roster row (#729 / ADR-0039). */}
-      {!pinned && (
-        <span
-          className={known ? 'font-body' : 'font-body rainbow-ink'}
-          style={{
-            fontSize: 'var(--text-content)',
-            fontWeight: 700,
-            lineHeight: 1.1,
-            // .rainbow-ink sets its own transparent colour — don't hand it one.
-            ...(known ? { color: pointsColor } : null),
-          }}
-        >
-          {entry.points}
-        </span>
-      )}
+      <span
+        className={known ? 'font-body' : 'font-body rainbow-ink'}
+        style={{
+          fontSize: 'var(--text-content)',
+          fontWeight: 700,
+          lineHeight: 1.1,
+          // .rainbow-ink sets its own transparent colour — don't hand it one.
+          ...(known ? { color: pointsColor } : null),
+        }}
+      >
+        {entry.points}
+      </span>
 
-      {pinned && (
+      {isMe && (
         <span
           className="font-body uppercase"
           style={{
-            fontSize: 'var(--text-sm)',
+            fontSize: 'var(--text-lg)',
             letterSpacing: '0.15em',
+            lineHeight: 1.1,
             color: 'var(--sky-name-muted)',
           }}
         >
-          {isMe ? t('leaderboard.desktop.you') : character.display_name}
+          {t('leaderboard.desktop.you')}
         </span>
       )}
     </Link>
