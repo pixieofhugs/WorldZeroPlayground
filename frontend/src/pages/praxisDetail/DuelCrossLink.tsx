@@ -4,7 +4,11 @@
  * decision: a mechanism, not a per-faction identity statement). It inherits the
  * opponent's faction tokens so it reads native inside any archetype.
  *
- * Lifecycle states (ADR-0011, designs in #310):
+ * Lifecycle states (ADR-0011, designs in #310) — one branch per DuelStatus, no
+ * fallthrough (#717: pending/declined used to render a live settled tally):
+ *  - pending  (challenge sent, unanswered): "waiting to accept" — casting isn't
+ *              gated on accept, so a praxis can exist here. No tally.
+ *  - declined (opponent said no): scores as an ordinary praxis — no multiplier.
  *  - active   (accepted, pre-settle): a "⚔ Dueling [opponent]" marker only — no
  *              tally (voting isn't open; the opponent may be unsubmitted).
  *  - settled  (both submitted): live points-from-votes tally on both sides, who's
@@ -87,6 +91,26 @@ export default function DuelCrossLink({
 
   const forfeited = duel.forfeited_by_character_id != null;
 
+  // pending: the challenge is out but unanswered. Casting isn't gated on accept,
+  // so this praxis can exist before the opponent responds — no tally yet.
+  if (duel.status === "pending" && !forfeited) {
+    return (
+      <div style={wrapper}>
+        <span>{t("duelCrossLink.pending", { name: foe.display_name })}</span>
+      </div>
+    );
+  }
+
+  // declined: no duel happened. praxis_scoring only picks up active/settled
+  // duels, so this praxis takes no duel multiplier — say so plainly.
+  if (duel.status === "declined" && !forfeited) {
+    return (
+      <div style={wrapper}>
+        <span>{t("duelCrossLink.declined", { name: foe.display_name })}</span>
+      </div>
+    );
+  }
+
   // active: marker only.
   if (duel.status === "active" && !forfeited) {
     return (
@@ -125,7 +149,9 @@ export default function DuelCrossLink({
     );
   }
 
-  // settled: live tally + cross-link.
+  // settled: live tally + cross-link. ponytail: the other three DuelStatus arms
+  // returned above, so this is settled-only without a switch/exhaustiveness check.
+  // A fifth status would land here — #718 rewrites this component wholesale.
   const diff = me.points_from_votes - foe.points_from_votes;
   const standing =
     diff === 0

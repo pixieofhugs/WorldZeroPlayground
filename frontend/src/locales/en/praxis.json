@@ -417,6 +417,8 @@
     }
   },
   "duelCrossLink": {
+    "pending": "⚔ Challenge sent — waiting for {{name}} to accept.",
+    "declined": "⚔ {{name}} declined the challenge — this scores as an ordinary praxis.",
     "dueling": "⚔ Dueling {{name}}",
     "youForfeited": "You forfeited this duel.",
     "wonByDefault": "⚔ Won by default",
