@@ -159,7 +159,11 @@ Both scales are **global, not per-faction**. A faction picks a headline font, a 
 
 **Skins don't own type size.** A skin style object (`inputStyle`, `textareaStyle`, `markdownStyle`, and friends) carries `fontFamily`, `fontStyle`, `color`, `lineHeight` — **never `fontSize`**. The shared control owns the size, via a role class (`.content-text` / `.content-title`) or a `--text-*` token. This is the rule above made enforceable: if a skin is setting a size, the size has escaped the scale.
 
+**Zero is exempt.** `padding: 0` / `margin: 0` / `gap: 0` stay as written. Zero is the *absence* of spacing rather than a choice from the scale — it is unit-less and theme-invariant, so it carries none of the drift the scale exists to prevent. There is deliberately no `--space-none` token: spelling "nothing" as `var(--space-none)` is churn, not clarity. The lint rule exempts the literal `0`.
+
 **Not covered by the rule:** ornament geometry (`width`/`height`/`top`/`inset` on decorative marks, sprocket holes, tape strips, corner brackets) is illustration, not layout spacing, and stays in raw pixels.
+
+**Ornament spacing.** The same carve-out extends to `padding`/`margin`/`gap` *inside* an ornamental composition — the lead between stacked stencil lines, the inset of a stamp within its border, the offset of a taped label. Rounding those to the nearest rung reflows the composition, and §6's "do not regularize card sizes" applies to an archetype's internal rhythm as much as to its outer dimensions. Such a value keeps its raw pixels behind the same per-line hatch ornament `fontSize` uses. The test is unchanged: spacing that positions **layout** takes a token; spacing that positions **illustration** is ornament. When genuinely unsure, it is layout — the carve-out is narrow, and a gutter between two paragraphs is never ornament.
 
 ### The ornament escape hatch
 
