@@ -46,7 +46,7 @@ export default function AlbescentVote({
       <div
         style={{
           fontFamily: MONO,
-          fontSize: 7,
+          fontSize: 'var(--text-xs)',
           letterSpacing: '0.26em',
           textTransform: 'uppercase',
           // card-muted (4.65:1, #594), not -text-faint: this prompt is
@@ -101,7 +101,7 @@ export default function AlbescentVote({
               <span
                 style={{
                   fontFamily: MONO,
-                  fontSize: 6.5,
+                  fontSize: 'var(--text-xs)',
                   letterSpacing: '0.08em',
                   textTransform: 'uppercase',
                   textAlign: 'center',

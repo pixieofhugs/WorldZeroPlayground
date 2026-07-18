@@ -45,7 +45,7 @@ export default function SingularityVote({ praxisId, currentValue, points, totalV
     <div style={{ fontFamily: 'var(--font-faction-terminal)' }}>
       <div
         style={{
-          fontSize: 8,
+          fontSize: 'var(--text-xs)',
           letterSpacing: '0.18em',
           color: 'color-mix(in srgb, var(--faction-singularity-card-muted) 75%, transparent)',
           textTransform: 'uppercase',
@@ -56,7 +56,7 @@ export default function SingularityVote({ praxisId, currentValue, points, totalV
       </div>
       <div
         style={{
-          fontSize: 7.5,
+          fontSize: 'var(--text-xs)',
           fontStyle: 'italic',
           color: 'color-mix(in srgb, var(--faction-singularity-card-accent) 50%, transparent)',
           marginBottom: 12,
@@ -87,7 +87,7 @@ export default function SingularityVote({ praxisId, currentValue, points, totalV
                   color: reached ? 'var(--faction-singularity-card-bg)' : 'color-mix(in srgb, var(--faction-singularity-card-muted) 55%, transparent)',
                   fontFamily: 'var(--font-faction-terminal)',
                   fontWeight: 700,
-                  fontSize: 13,
+                  fontSize: 'var(--text-lg)',
                   lineHeight: 1,
                   display: 'flex',
                   alignItems: 'center',
@@ -102,7 +102,7 @@ export default function SingularityVote({ praxisId, currentValue, points, totalV
               </button>
               <span
                 style={{
-                  fontSize: 6.5,
+                  fontSize: 'var(--text-xs)',
                   letterSpacing: '0.08em',
                   color: picked ? fill : 'color-mix(in srgb, var(--faction-singularity-card-muted) 45%, transparent)',
                   maxWidth: KEY_SIZE + 8,

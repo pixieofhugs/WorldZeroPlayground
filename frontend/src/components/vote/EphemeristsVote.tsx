@@ -88,7 +88,7 @@ export default function EphemeristsVote({
               <span
                 style={{
                   fontFamily: "var(--eph-serif)",
-                  fontSize: 8,
+                  fontSize: "var(--text-xs)",
                   fontStyle: "italic",
                   letterSpacing: "0.02em",
                   color: active ? "var(--eph-rubric)" : "var(--eph-muted)",
