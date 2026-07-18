@@ -237,7 +237,7 @@ export default function Sidebar() {
         <SectionHeader label={t('sidebar.activeTasks.heading')} />
 
         {activeTasks.length === 0 ? (
-          <p className="font-body text-xs" style={{ color: 'var(--color-text-tertiary)' }}>
+          <p className="font-body content-text" style={{ color: 'var(--color-text-tertiary)' }}>
             {t('sidebar.activeTasks.empty')}
           </p>
         ) : (
@@ -300,7 +300,7 @@ export default function Sidebar() {
         <SectionHeader label={t('sidebar.globalActivity.heading')} />
 
         {globalActivity.length === 0 ? (
-          <p className="font-body text-xs" style={{ color: 'var(--color-text-tertiary)' }}>
+          <p className="font-body content-text" style={{ color: 'var(--color-text-tertiary)' }}>
             {t('sidebar.globalActivity.empty')}
           </p>
         ) : (

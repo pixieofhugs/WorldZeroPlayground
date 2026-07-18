@@ -106,14 +106,28 @@ export default function AlbescentInvitation({ lives, onJoined }: AlbescentInvita
 
       {/* letterhead — the engraved mono-caps below are ornament: they draw the
           stationery (wordmark, rule, slip headings), they are not read as copy. */}
-      <div style={{ position: 'relative', padding: '36px 42px 30px', textAlign: 'center' }}>
-        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 18 }}>
+      {/* §4a asymmetric-inset exception: ties round DOWN so the wide side gutters
+          of the stationery survive instead of flattening into a uniform box. */}
+      <div style={{ position: 'relative', padding: 'var(--space-2xl) var(--space-3xl) var(--space-2xl)', textAlign: 'center' }}>
+        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 'var(--space-lg)' }}>
           <AlbescentSigil size={44} />
         </div>
-        <div style={{ ...monoCaps, /* ornament */ fontSize: 9, letterSpacing: '0.34em', color: ACCENT, marginBottom: 6 }}>{t('albescent.letter.wordmark')}</div>
-        <div style={{ ...monoCaps, /* ornament */ fontSize: 8, letterSpacing: '0.28em', marginBottom: 22 }}>{t('albescent.letter.letterhead')}</div>
-        <div style={{ width: 54, height: 1, background: HAIRLINE, margin: '0 auto 22px' }} />
-        <div style={{ ...monoCaps, /* ornament */ fontSize: 8, letterSpacing: '0.2em', marginBottom: 10 }}>{t('albescent.letter.handExtended')}</div>
+        <div style={{
+          ...monoCaps, letterSpacing: '0.34em', color: ACCENT, marginBottom: 'var(--space-sm)',
+          // eslint-disable-next-line local/no-raw-style-values -- ornament: engraved stationery mono-caps; these draw the letterhead rather than set read copy
+          fontSize: 9,
+        }}>{t('albescent.letter.wordmark')}</div>
+        <div style={{
+          ...monoCaps, letterSpacing: '0.28em', marginBottom: 'var(--space-xl)',
+          // eslint-disable-next-line local/no-raw-style-values -- ornament: engraved stationery mono-caps; these draw the letterhead rather than set read copy
+          fontSize: 8,
+        }}>{t('albescent.letter.letterhead')}</div>
+        <div style={{ width: 54, height: 1, background: HAIRLINE, margin: '0 auto var(--space-xl)' }} />
+        <div style={{
+          ...monoCaps, letterSpacing: '0.2em', marginBottom: 'var(--space-md)',
+          // eslint-disable-next-line local/no-raw-style-values -- ornament: engraved stationery mono-caps; these draw the letterhead rather than set read copy
+          fontSize: 8,
+        }}>{t('albescent.letter.handExtended')}</div>
         <h2 style={headline}>{t('albescent.letter.headline')}</h2>
         <p style={pitch}>
           {t('albescent.letter.pitch')}
@@ -121,17 +135,25 @@ export default function AlbescentInvitation({ lives, onJoined }: AlbescentInvita
       </div>
 
       {/* terms slip */}
-      <div style={{ position: 'relative', margin: '0 42px', borderTop: `1px solid ${RULE}`, padding: '20px 0 4px', textAlign: 'left' }}>
-        <div style={{ ...monoCaps, /* ornament */ fontSize: 7, letterSpacing: '0.22em', marginBottom: 12 }}>{t('albescent.letter.termsHeading')}</div>
+      <div style={{ position: 'relative', margin: '0 var(--space-3xl)', borderTop: `1px solid ${RULE}`, padding: 'var(--space-xl) 0 var(--space-xs)', textAlign: 'left' }}>
+        <div style={{
+          ...monoCaps, letterSpacing: '0.22em', marginBottom: 'var(--space-md)',
+          // eslint-disable-next-line local/no-raw-style-values -- ornament: engraved stationery mono-caps; these draw the letterhead rather than set read copy
+          fontSize: 7,
+        }}>{t('albescent.letter.termsHeading')}</div>
         <div style={termsGrid}>
           {TERM_KEYS.map((term) => (
-            <div key={term.label} style={{ borderBottom: `1px solid ${HAIRLINE_FAINT}`, padding: '8px 0' }}>
-              <div style={{ ...monoCaps, /* ornament */ fontSize: 7, letterSpacing: '0.14em' }}>{tDynamic(`albescent.letter.${term.label}`)}</div>
-              <div style={{ ...serifItalic, fontSize: 'var(--text-content)', color: INK, marginTop: 2 }}>{tDynamic(`albescent.letter.${term.value}`)}</div>
+            <div key={term.label} style={{ borderBottom: `1px solid ${HAIRLINE_FAINT}`, padding: 'var(--space-sm) 0' }}>
+              <div style={{
+                ...monoCaps, letterSpacing: '0.14em',
+                // eslint-disable-next-line local/no-raw-style-values -- ornament: engraved stationery mono-caps; these draw the letterhead rather than set read copy
+                fontSize: 7,
+              }}>{tDynamic(`albescent.letter.${term.label}`)}</div>
+              <div style={{ ...serifItalic, fontSize: 'var(--text-content)', color: INK, marginTop: 'var(--space-xs)' }}>{tDynamic(`albescent.letter.${term.value}`)}</div>
             </div>
           ))}
         </div>
-        <div style={{ marginTop: 12, display: 'flex', flexWrap: 'wrap', gap: '4px 16px' }}>
+        <div style={{ marginTop: 'var(--space-md)', display: 'flex', flexWrap: 'wrap', gap: 'var(--space-xs) var(--space-lg)' }}>
           {PERK_KEYS.map((perk) => (
             <div key={perk} style={{ ...serifItalic, fontSize: 'var(--text-content)', color: ACCENT }}>— {tDynamic(`albescent.letter.${perk}`)}</div>
           ))}
@@ -139,13 +161,17 @@ export default function AlbescentInvitation({ lives, onJoined }: AlbescentInvita
       </div>
 
       {/* answer */}
-      <div style={{ position: 'relative', padding: '24px 42px 36px' }}>
+      <div style={{ position: 'relative', padding: 'var(--space-xl) var(--space-3xl) var(--space-2xl)' }}>
         {joined ? (
           <div style={{ ...serifItalic, fontSize: 'var(--text-title)', color: INK, textAlign: 'center' }}>{t('albescent.letter.joined')}</div>
         ) : (
           <>
-            <div style={{ ...monoCaps, /* ornament */ fontSize: 7, letterSpacing: '0.22em', marginBottom: 10 }}>{t('albescent.letter.whoHeading')}</div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 20 }}>
+            <div style={{
+              ...monoCaps, letterSpacing: '0.22em', marginBottom: 'var(--space-md)',
+              // eslint-disable-next-line local/no-raw-style-values -- ornament: engraved stationery mono-caps; these draw the letterhead rather than set read copy
+              fontSize: 7,
+            }}>{t('albescent.letter.whoHeading')}</div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-sm)', marginBottom: 'var(--space-xl)' }}>
               {choices.map((life) => {
                 const selected = life.id === selectedId
                 return (
@@ -157,10 +183,10 @@ export default function AlbescentInvitation({ lives, onJoined }: AlbescentInvita
                     aria-pressed={selected}
                   >
                     <span style={{ ...serifItalic, fontSize: 'var(--text-content)', color: INK, lineHeight: 1.1 }}>{life.display_name}</span>
-                    <span style={{ ...monoCaps, fontSize: 'var(--text-xs)', letterSpacing: '0.08em', marginTop: 3 }}>
+                    <span style={{ ...monoCaps, fontSize: 'var(--text-xs)', letterSpacing: '0.08em', marginTop: 'var(--space-xs)' }}>
                       {t('albescent.letter.lifeMeta', { username: life.username, faction: factionName(life.faction_slug) })}
                     </span>
-                    {/* ornament: bullet/arrow dingbat marking the selected life */}
+                    {/* eslint-disable-next-line local/no-raw-style-values -- ornament: bullet/arrow dingbat marking the selected life */}
                     <span style={{ marginLeft: 'auto', fontSize: 12, color: MUTED, position: 'absolute', right: 14, top: '50%', transform: 'translateY(-50%)' }}>
                       {selected ? '•' : '→'}
                     </span>
@@ -168,14 +194,14 @@ export default function AlbescentInvitation({ lives, onJoined }: AlbescentInvita
                 )
               })}
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap', justifyContent: 'center' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-lg)', flexWrap: 'wrap', justifyContent: 'center' }}>
               <button type="button" onClick={() => void handleAccept()} disabled={submitting} style={acceptButton}>
                 {submitting ? t('albescent.letter.acceptBusy') : t('albescent.letter.acceptIdle')}
               </button>
               <span style={{ ...serifItalic, fontSize: 'var(--text-content)', color: ACCENT }}>{t('albescent.letter.reassurance')}</span>
             </div>
             {error && (
-              <p style={{ ...serifItalic, fontSize: 'var(--text-content)', color: INK, textAlign: 'center', marginTop: 14, marginBottom: 0 }}>{error}</p>
+              <p style={{ ...serifItalic, fontSize: 'var(--text-content)', color: INK, textAlign: 'center', marginTop: 'var(--space-lg)', marginBottom: 0 }}>{error}</p>
             )}
           </>
         )}
@@ -194,7 +220,7 @@ const letter: CSSProperties = {
   border: `1px solid ${HAIRLINE}`,
   boxShadow: '0 2px 24px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.04)',
   overflow: 'hidden',
-  marginTop: 40,
+  marginTop: 'var(--space-3xl)',
 }
 const innerFrame: CSSProperties = {
   position: 'absolute',
@@ -217,7 +243,7 @@ const headline: CSSProperties = {
   fontSize: 'var(--text-display)',
   lineHeight: 1.05,
   color: INK,
-  margin: '0 0 14px',
+  margin: '0 0 var(--space-lg)',
 }
 const pitch: CSSProperties = {
   ...serifItalic,
@@ -230,7 +256,7 @@ const pitch: CSSProperties = {
 const termsGrid: CSSProperties = {
   display: 'grid',
   gridTemplateColumns: '1fr 1fr',
-  gap: '2px 26px',
+  gap: 'var(--space-xs) var(--space-xl)',
 }
 const lifeChip: CSSProperties = {
   position: 'relative',
@@ -239,7 +265,7 @@ const lifeChip: CSSProperties = {
   alignItems: 'flex-start',
   textAlign: 'left',
   width: '100%',
-  padding: '10px 34px 10px 14px',
+  padding: 'var(--space-md) var(--space-2xl) var(--space-md) var(--space-lg)',
   background: BG,
   border: `1px solid ${HAIRLINE_FAINT}`,
   cursor: 'pointer',
@@ -251,5 +277,5 @@ const acceptButton: CSSProperties = {
   background: INK,
   color: BG,
   fontSize: 'var(--text-content)',
-  padding: '12px 30px',
+  padding: 'var(--space-md) var(--space-2xl)',
 }
