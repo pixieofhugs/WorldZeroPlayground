@@ -95,8 +95,8 @@ function RansomChip({
         fontSize: big ? "var(--text-display)" : "var(--text-heading)",
         lineHeight: 0.9,
         // ornament: ransom-letter tile inset; the zero bottom sits the display face on
-        // the tile edge, which is the cut-from-a-magazine look. No disable directive:
-        // the bare `0` makes this string invisible to RAW_PX_STRING.
+        // the tile edge, which is the cut-from-a-magazine look.
+        // eslint-disable-next-line local/no-raw-style-values -- ornament, per above
         padding: "2px 10px 0",
         textTransform: "uppercase",
         transform: `rotate(${rots[index % rots.length]}deg)`,

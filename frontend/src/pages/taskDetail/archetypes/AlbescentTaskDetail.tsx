@@ -159,8 +159,16 @@ export default function AlbescentTaskDetail({ state }: { state: TaskDetailState 
             >
               {t("albescent.correspondence", { number: correspondenceNo })}
             </div>
-            {/* ornament: letterpress hairline rule; its lead sets the plate's vertical rhythm against the title, not a layout gutter. No disable directive: the rule's RAW_PX_STRING only matches all-px strings, so the bare `0` and `auto` here make it invisible to the lint. */}
-            <div style={{ width: 54, height: 1, background: ink(12), margin: "0 auto 26px" }} />
+            {/* ornament: letterpress hairline rule; its lead sets the plate's vertical rhythm against the title, not a layout gutter. */}
+            <div
+              style={{
+                width: 54,
+                height: 1,
+                background: ink(12),
+                // eslint-disable-next-line local/no-raw-style-values -- ornament, per above
+                margin: "0 auto 26px",
+              }}
+            />
             <h1
               className="content-title"
               style={{
@@ -176,8 +184,16 @@ export default function AlbescentTaskDetail({ state }: { state: TaskDetailState 
             >
               {task.title}
             </h1>
-            {/* ornament: letterpress hairline rule; its lead sets the plate's vertical rhythm against the title, not a layout gutter. No disable directive: the rule's RAW_PX_STRING only matches all-px strings, so the bare `0` and `auto` here make it invisible to the lint. */}
-            <div style={{ width: 54, height: 1, background: ink(12), margin: "0 auto 28px" }} />
+            {/* ornament: letterpress hairline rule; its lead sets the plate's vertical rhythm against the title, not a layout gutter. */}
+            <div
+              style={{
+                width: 54,
+                height: 1,
+                background: ink(12),
+                // eslint-disable-next-line local/no-raw-style-values -- ornament, per above
+                margin: "0 auto 28px",
+              }}
+            />
             <div style={{ display: "flex", justifyContent: "center", gap: "var(--space-2xl)", flexWrap: "wrap" }}>
               {[
                 {
