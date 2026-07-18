@@ -9,6 +9,7 @@ from models.character import Character
 from models.character_stats import CharacterStats
 from models.contact import ContactMessage
 from models.era import Era
+from models.faction import Faction
 from models.praxis import Praxis, ModerationStatus
 from models.roles import AccountRole, Role
 from models.task import Task, TaskStatus
@@ -507,6 +508,7 @@ async def test_admin_create_character_defaults_to_unaffiliated(
     auth_headers: dict,
     db_session: AsyncSession,
     era: Era,
+    faction_ua: Faction,
 ):
     """Admin-created characters start unaffiliated unless a slug is given.
 
