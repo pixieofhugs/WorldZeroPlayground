@@ -32,7 +32,7 @@ const ink = (pct: number) => `color-mix(in srgb, ${INK} ${pct}%, transparent)`
 /** Quiet mono section divider, e.g. "Account" / "Plates". */
 function Divider({ label }: { label: string }) {
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '22px 0 12px' }}>
+    <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-md)', margin: 'var(--space-xl) 0 var(--space-md)' }}>
       <div style={{ height: 1, flex: 1, background: ink(8) }} />
       <span
         style={{
@@ -76,8 +76,8 @@ export default function AlbescentPraxisDetail({ state }: { state: PraxisDetailSt
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          gap: 14,
-          padding: '10px 24px',
+          gap: 'var(--space-lg)',
+          padding: 'var(--space-md) var(--space-xl)',
           borderBottom: `1px solid ${ink(7)}`,
           background: ink(2),
         }}
@@ -99,6 +99,11 @@ export default function AlbescentPraxisDetail({ state }: { state: PraxisDetailSt
             textTransform: 'uppercase',
             color: ink(28),
             borderBottom: `1px solid ${ink(18)}`,
+            // Ornament: the lead between the status word and its own hairline
+            // rule, not space between two elements (WORLD_ZERO_STYLE.md §4a,
+            // ornament spacing). The nearest rung (4px) detaches the rule and
+            // turns a ruled ledger entry into an underlined label.
+            // eslint-disable-next-line local/no-raw-style-values -- ornament: hairline-rule lead under the status word.
             paddingBottom: 1,
           }}
         >
@@ -106,13 +111,13 @@ export default function AlbescentPraxisDetail({ state }: { state: PraxisDetailSt
         </span>
       </div>
 
-      <div style={{ padding: '24px 24px 28px' }}>
+      <div style={{ padding: 'var(--space-xl) var(--space-xl) var(--space-2xl)' }}>
         {/* ── Behavior slots (invariant — shared module) ── */}
         <PraxisAdminBar state={state} />
         <PraxisStatusBanners state={state} />
 
         {/* ── Status strip ── */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12, flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-md)', marginBottom: 'var(--space-md)', flexWrap: 'wrap' }}>
           <Link
             to={`/tasks/${praxis.task_id}`}
             style={{ fontSize: 'var(--text-xs)', letterSpacing: '0.14em', color: ink(34), textDecoration: 'none', textTransform: 'uppercase' }}
@@ -136,7 +141,7 @@ export default function AlbescentPraxisDetail({ state }: { state: PraxisDetailSt
             fontSize: 'var(--text-display)',
             lineHeight: 1.05,
             color: INK,
-            margin: '0 0 16px',
+            margin: '0 0 var(--space-lg)',
           }}
         >
           {praxis.title ?? t('detail.albescent.untitled')}
@@ -150,9 +155,9 @@ export default function AlbescentPraxisDetail({ state }: { state: PraxisDetailSt
           style={{
             display: 'flex',
             alignItems: 'center',
-            gap: 14,
-            paddingBottom: 20,
-            marginBottom: 6,
+            gap: 'var(--space-lg)',
+            paddingBottom: 'var(--space-xl)',
+            marginBottom: 'var(--space-sm)',
             borderBottom: `1px solid ${ink(6)}`,
           }}
         >
@@ -179,7 +184,7 @@ export default function AlbescentPraxisDetail({ state }: { state: PraxisDetailSt
             <div className="content-title" style={{ fontFamily: FONT, fontStyle: 'italic', fontWeight: 300, lineHeight: 1, color: ink(55) }}>
               {praxis.task_point_value}
             </div>
-            <div style={{ fontSize: 'var(--text-xs)', letterSpacing: '0.14em', color: ink(26), marginTop: 2 }}>{t('detail.albescent.ptsReturned')}</div>
+            <div style={{ fontSize: 'var(--text-xs)', letterSpacing: '0.14em', color: ink(26), marginTop: 'var(--space-xs)' }}>{t('detail.albescent.ptsReturned')}</div>
           </div>
         </div>
 
@@ -199,7 +204,7 @@ export default function AlbescentPraxisDetail({ state }: { state: PraxisDetailSt
         {praxis.media_items.length > 0 && (
           <>
             <Divider label={t('detail.albescent.plates', { count: praxis.media_items.length })} />
-            <div style={{ border: `1px solid ${ink(10)}`, padding: 10 }}>
+            <div style={{ border: `1px solid ${ink(10)}`, padding: 'var(--space-md)' }}>
               <MediaGallery media={praxis.media_items} layout="grid" />
             </div>
           </>
@@ -207,7 +212,7 @@ export default function AlbescentPraxisDetail({ state }: { state: PraxisDetailSt
 
         {/* ── Bear witness (vote caster) ── */}
         <Divider label={t('detail.albescent.bearWitness')} />
-        <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 10, marginBottom: 12 }}>
+        <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 'var(--space-md)', marginBottom: 'var(--space-md)' }}>
           <span className="content-text" style={{ fontFamily: FONT, fontStyle: 'italic', color: ink(48) }}>
             {t('detail.albescent.witnessPrompt')}
           </span>

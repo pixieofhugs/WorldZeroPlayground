@@ -132,14 +132,6 @@ src/pages/fieldDesk/mobileArchetypes/WowFieldDesk.tsx
 src/pages/Home.tsx
 src/pages/Leaderboard.tsx
 src/pages/praxes/MobilePraxisFeed.tsx
-src/pages/praxisDetail/archetypes/AlbescentPraxisDetail.tsx
-src/pages/praxisDetail/archetypes/DefaultPraxisDetail.tsx
-src/pages/praxisDetail/archetypes/EphemeristsPraxisDetail.tsx
-src/pages/praxisDetail/archetypes/EverymenPraxisDetail.tsx
-src/pages/praxisDetail/archetypes/SingularityPraxisDetail.tsx
-src/pages/praxisDetail/archetypes/SnidePraxisDetail.tsx
-src/pages/praxisDetail/archetypes/UaPraxisDetail.tsx
-src/pages/praxisDetail/archetypes/WowPraxisDetail.tsx
 src/pages/ProposeTask.tsx
 src/pages/proposeTask/archetypes/DefaultProposeTask.tsx
 src/pages/settings/mobileArchetypes/DefaultSettings.tsx

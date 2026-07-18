@@ -35,7 +35,7 @@ export default function EphemeristsPraxisDetail({ state }: { state: PraxisDetail
         position: 'relative',
         background: 'var(--eph-vellum)',
         border: '1px solid color-mix(in srgb, var(--eph-ink) 12%, transparent)',
-        padding: '28px 32px',
+        padding: 'var(--space-2xl) var(--space-2xl)',
       }}
     >
       {/* Age-foxing overlay — multiply-blended, pointer-events: none */}
@@ -45,7 +45,7 @@ export default function EphemeristsPraxisDetail({ state }: { state: PraxisDetail
       <div style={{ position: 'relative', zIndex: 2 }}>
 
         {/* ── Masthead ── */}
-        <div style={{ textAlign: 'center', marginBottom: 20 }}>
+        <div style={{ textAlign: 'center', marginBottom: 'var(--space-xl)' }}>
           <EphEyebrow motto={t('detail.ephemerists.motto')} />
         </div>
 
@@ -58,8 +58,8 @@ export default function EphemeristsPraxisDetail({ state }: { state: PraxisDetail
           style={{
             display: 'flex',
             alignItems: 'center',
-            gap: 10,
-            marginBottom: 10,
+            gap: 'var(--space-md)',
+            marginBottom: 'var(--space-md)',
             flexWrap: 'wrap',
           }}
         >
@@ -108,7 +108,7 @@ export default function EphemeristsPraxisDetail({ state }: { state: PraxisDetail
                   letterSpacing: '0.1em',
                   color: 'var(--eph-rubric)',
                   border: '1px solid var(--eph-rubric)',
-                  padding: '1px 5px',
+                  padding: 'var(--space-xs) var(--space-xs)',
                 }}
               >
                 {t('detail.ephemerists.flagged')}
@@ -125,7 +125,7 @@ export default function EphemeristsPraxisDetail({ state }: { state: PraxisDetail
             fontWeight: 700,
             lineHeight: 1.15,
             color: 'var(--eph-vellum-text)',
-            marginBottom: 4,
+            marginBottom: 'var(--space-xs)',
             letterSpacing: '0.01em',
           }}
         >
@@ -137,7 +137,7 @@ export default function EphemeristsPraxisDetail({ state }: { state: PraxisDetail
           style={{
             height: 1,
             background: `linear-gradient(90deg, var(--eph-rubric), color-mix(in srgb, var(--eph-ink) 18%, transparent))`,
-            marginBottom: 16,
+            marginBottom: 'var(--space-lg)',
           }}
         />
 
@@ -149,9 +149,9 @@ export default function EphemeristsPraxisDetail({ state }: { state: PraxisDetail
           style={{
             display: 'flex',
             alignItems: 'center',
-            gap: 10,
-            marginBottom: 20,
-            paddingBottom: 14,
+            gap: 'var(--space-md)',
+            marginBottom: 'var(--space-xl)',
+            paddingBottom: 'var(--space-lg)',
             borderBottom: '1px dashed color-mix(in srgb, var(--eph-ink) 18%, transparent)',
           }}
         >
@@ -216,13 +216,13 @@ export default function EphemeristsPraxisDetail({ state }: { state: PraxisDetail
 
         {/* ── The account ── */}
         {praxis.body_text && (
-          <div style={{ marginBottom: 24 }}>
+          <div style={{ marginBottom: 'var(--space-xl)' }}>
             <div
               style={{
                 display: 'flex',
                 alignItems: 'center',
-                gap: 6,
-                marginBottom: 10,
+                gap: 'var(--space-sm)',
+                marginBottom: 'var(--space-md)',
               }}
             >
               <EphemeristsSigil size={10} color="var(--eph-rubric)" />
@@ -253,13 +253,13 @@ export default function EphemeristsPraxisDetail({ state }: { state: PraxisDetail
 
         {/* ── The evidence ── */}
         {praxis.media_items.length > 0 && (
-          <div style={{ marginBottom: 24 }}>
+          <div style={{ marginBottom: 'var(--space-xl)' }}>
             <div
               style={{
                 display: 'flex',
                 alignItems: 'center',
-                gap: 6,
-                marginBottom: 10,
+                gap: 'var(--space-sm)',
+                marginBottom: 'var(--space-md)',
               }}
             >
               <EphemeristsSigil size={10} color="var(--eph-rubric)" />
@@ -278,7 +278,7 @@ export default function EphemeristsPraxisDetail({ state }: { state: PraxisDetail
             <div
               style={{
                 border: '1px solid color-mix(in srgb, var(--eph-ink) 14%, transparent)',
-                padding: 10,
+                padding: 'var(--space-md)',
               }}
             >
               <MediaGallery media={praxis.media_items} layout="grid" />
@@ -291,8 +291,8 @@ export default function EphemeristsPraxisDetail({ state }: { state: PraxisDetail
           style={{
             display: 'flex',
             alignItems: 'center',
-            gap: 8,
-            marginBottom: 20,
+            gap: 'var(--space-sm)',
+            marginBottom: 'var(--space-xl)',
           }}
         >
           <div style={{ flex: 1, height: 1, background: 'color-mix(in srgb, var(--eph-ink) 14%, transparent)' }} />
@@ -301,16 +301,16 @@ export default function EphemeristsPraxisDetail({ state }: { state: PraxisDetail
         </div>
 
         {/* ── The concordance (vote caster) ── */}
-        <div style={{ marginBottom: 20 }}>
+        <div style={{ marginBottom: 'var(--space-xl)' }}>
           <div
             style={{
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'space-between',
-              marginBottom: 12,
+              marginBottom: 'var(--space-md)',
             }}
           >
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-sm)' }}>
               <EphemeristsSigil size={10} color="var(--eph-rubric)" />
               <span
                 style={{

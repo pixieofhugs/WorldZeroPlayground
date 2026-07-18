@@ -46,7 +46,7 @@ export default function DefaultPraxisDetail({
       {/* ── Byline Block (§12.2) ── */}
       <div
         className="sidebar-card flex items-center gap-3 mb-4"
-        style={{ padding: '10px 14px' }}
+        style={{ padding: 'var(--space-md) var(--space-lg)' }}
       >
         <Link to={`/characters/${praxis.created_by_id}`}>
           <div
@@ -71,12 +71,12 @@ export default function DefaultPraxisDetail({
       {/* ── Praxis Title (§12.3) ── */}
       <h1
         className="font-display italic font-medium"
-        style={{ fontSize: 'var(--text-heading)', color: 'var(--color-text-primary)', lineHeight: 1.2, marginBottom: 4 }}
+        style={{ fontSize: 'var(--text-heading)', color: 'var(--color-text-primary)', lineHeight: 1.2, marginBottom: 'var(--space-xs)' }}
       >
         {praxis.title}
       </h1>
       {/* Rainbow underline bar — 8 equal segments */}
-      <div style={{ display: 'flex', height: 4, marginBottom: 16 }}>
+      <div style={{ display: 'flex', height: 4, marginBottom: 'var(--space-lg)' }}>
         {RAINBOW_COLORS.map((color, index) => (
           <div key={index} style={{ flex: 1, background: color }} />
         ))}
@@ -90,10 +90,10 @@ export default function DefaultPraxisDetail({
         style={{
           borderLeft: '4px solid var(--faction-default-card-accent)',
           borderRadius: '0 8px 8px 0',
-          padding: '8px 14px',
+          padding: 'var(--space-sm) var(--space-lg)',
           display: 'flex',
           alignItems: 'center',
-          gap: 8,
+          gap: 'var(--space-sm)',
         }}
       >
         <span className="eyebrow">{t('detail.default.completingTask')}</span>
@@ -126,7 +126,7 @@ export default function DefaultPraxisDetail({
       )}
 
       {/* ── Voting (§13 preview — full redesign in Phase 8) ── */}
-      <div className="sidebar-card mb-4" style={{ padding: '14px 16px' }}>
+      <div className="sidebar-card mb-4" style={{ padding: 'var(--space-lg) var(--space-lg)' }}>
         <div className="flex items-baseline justify-between mb-3">
           <span className="eyebrow">{t('detail.default.pointsFromVotes')}</span>
           <PraxisScoreBreakdown state={state} align="right" />
@@ -141,7 +141,7 @@ export default function DefaultPraxisDetail({
       <div className="flex items-center gap-4 eyebrow mb-4">
         <span>{t('detail.default.submitted', { date: formatTimestamp(praxis.created_at) })}</span>
         {praxis.moderation_status === 'flagged' && (
-          <span style={{ border: '1px solid rgba(220,38,38,0.4)', color: 'var(--color-danger)', padding: '1px 6px', fontSize: 'var(--text-xs)' }}>
+          <span style={{ border: '1px solid rgba(220,38,38,0.4)', color: 'var(--color-danger)', padding: 'var(--space-xs) var(--space-sm)', fontSize: 'var(--text-xs)' }}>
             {t('detail.default.flagged')}
           </span>
         )}
@@ -177,7 +177,7 @@ export default function DefaultPraxisDetail({
         );
 
         return (
-          <div className="sidebar-card mb-4" style={{ padding: "14px 16px" }}>
+          <div className="sidebar-card mb-4" style={{ padding: "var(--space-lg) var(--space-lg)" }}>
             <div className="flex items-center justify-between mb-3">
               <span className="eyebrow">{t('detail.metatasks.heading')}</span>
               {state.metataskLoading && (
@@ -188,16 +188,16 @@ export default function DefaultPraxisDetail({
             {/* Applied metatasks */}
             {state.praxis.applied_metatasks && state.praxis.applied_metatasks.length > 0 ? (
               <div style={{ marginBottom: canEdit ? 12 : 0 }}>
-                <span className="eyebrow" style={{ display: "block", marginBottom: 6 }}>{t('detail.metatasks.applied')}</span>
+                <span className="eyebrow" style={{ display: "block", marginBottom: 'var(--space-sm)' }}>{t('detail.metatasks.applied')}</span>
                 {state.praxis.applied_metatasks.map((metatask) => (
-                  <div key={metatask.id} className="flex items-center gap-2 mb-1" style={{ padding: "4px 8px", background: "var(--color-surface-soft)", fontSize: 'var(--text-md)' }}>
+                  <div key={metatask.id} className="flex items-center gap-2 mb-1" style={{ padding: "var(--space-xs) var(--space-sm)", background: "var(--color-surface-soft)", fontSize: 'var(--text-md)' }}>
                     <span className="flex-1 font-body">{metatask.title}</span>
                     <span className="eyebrow">{t('detail.metatasks.appliedPoints', { points: metatask.point_value })}</span>
                     {canEdit && (
                       <button
                         onClick={() => void state.handleRemoveMetatask(metatask.id)}
                         disabled={state.removingMetataskId === metatask.id}
-                        style={{ background: "none", border: "1px solid rgba(220,38,38,0.3)", color: "var(--color-danger)", fontSize: 'var(--text-xs)', padding: "1px 6px", cursor: "pointer", opacity: state.removingMetataskId === metatask.id ? 0.5 : 1 }}
+                        style={{ background: "none", border: "1px solid rgba(220,38,38,0.3)", color: "var(--color-danger)", fontSize: 'var(--text-xs)', padding: "var(--space-xs) var(--space-sm)", cursor: "pointer", opacity: state.removingMetataskId === metatask.id ? 0.5 : 1 }}
                       >
                         {state.removingMetataskId === metatask.id ? t('detail.metatasks.removing') : t('detail.metatasks.remove')}
                       </button>
@@ -214,9 +214,9 @@ export default function DefaultPraxisDetail({
             {/* Available metatasks */}
             {canEdit && (
               <>
-                <span className="eyebrow" style={{ display: "block", marginBottom: 6 }}>{t('detail.metatasks.available')}</span>
+                <span className="eyebrow" style={{ display: "block", marginBottom: 'var(--space-sm)' }}>{t('detail.metatasks.available')}</span>
                 {state.metataskError && (
-                  <p className="font-body" style={{ fontSize: 'var(--text-sm)', color: "var(--color-danger)", marginBottom: 6 }}>
+                  <p className="font-body" style={{ fontSize: 'var(--text-sm)', color: "var(--color-danger)", marginBottom: 'var(--space-sm)' }}>
                     {state.metataskError}
                   </p>
                 )}
@@ -226,13 +226,13 @@ export default function DefaultPraxisDetail({
                   </p>
                 ) : (
                   available.map((metatask) => (
-                    <div key={metatask.id} className="flex items-center gap-2 mb-1" style={{ padding: "4px 8px", background: "var(--color-surface-soft)", fontSize: 'var(--text-md)' }}>
+                    <div key={metatask.id} className="flex items-center gap-2 mb-1" style={{ padding: "var(--space-xs) var(--space-sm)", background: "var(--color-surface-soft)", fontSize: 'var(--text-md)' }}>
                       <span className="flex-1 font-body">{metatask.title}</span>
                       <span className="eyebrow">{t('detail.metatasks.appliedPoints', { points: metatask.point_value })}</span>
                       <button
                         onClick={() => void state.handleApplyMetatask(metatask.id)}
                         disabled={state.applyingMetataskId === metatask.id}
-                        style={{ background: "none", border: "1px solid var(--color-accent)", color: "var(--color-accent)", fontSize: 'var(--text-xs)', padding: "1px 6px", cursor: "pointer", opacity: state.applyingMetataskId === metatask.id ? 0.5 : 1 }}
+                        style={{ background: "none", border: "1px solid var(--color-accent)", color: "var(--color-accent)", fontSize: 'var(--text-xs)', padding: "var(--space-xs) var(--space-sm)", cursor: "pointer", opacity: state.applyingMetataskId === metatask.id ? 0.5 : 1 }}
                       >
                         {state.applyingMetataskId === metatask.id ? t('detail.metatasks.applying') : t('detail.metatasks.apply')}
                       </button>

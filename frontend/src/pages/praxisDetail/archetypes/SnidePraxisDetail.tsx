@@ -56,7 +56,7 @@ export default function SnidePraxisDetail({ state }: { state: PraxisDetailState 
         background: INK,
         border: `1.5px solid ${ACID}`,
         boxShadow: '6px 7px 0 rgba(0,0,0,0.4)',
-        padding: '28px 30px',
+        padding: 'var(--space-2xl) var(--space-2xl)',
       }}
     >
       {/* Halftone screen over the ink — pointer-events: none */}
@@ -75,15 +75,15 @@ export default function SnidePraxisDetail({ state }: { state: PraxisDetailState 
       <div style={{ position: 'relative', zIndex: 2 }}>
 
         {/* ── Stamped masthead ── */}
-        <div style={{ lineHeight: 0, marginBottom: 18 }}>
+        <div style={{ lineHeight: 0, marginBottom: 'var(--space-lg)' }}>
           <div
             style={{
               display: 'inline-flex',
               alignItems: 'center',
-              gap: 9,
+              gap: 'var(--space-sm)',
               background: ACID,
               color: PAPER_INK,
-              padding: '8px 16px',
+              padding: 'var(--space-sm) var(--space-lg)',
               transform: 'rotate(-1.5deg)',
               boxShadow: `4px 4px 0 ${PINK}`,
             }}
@@ -110,8 +110,8 @@ export default function SnidePraxisDetail({ state }: { state: PraxisDetailState 
           style={{
             display: 'flex',
             alignItems: 'center',
-            gap: 10,
-            marginBottom: 14,
+            gap: 'var(--space-md)',
+            marginBottom: 'var(--space-lg)',
             flexWrap: 'wrap',
           }}
         >
@@ -172,7 +172,7 @@ export default function SnidePraxisDetail({ state }: { state: PraxisDetailState 
                 letterSpacing: '0.1em',
                 color: '#fff',
                 background: PINK,
-                padding: '1px 8px',
+                padding: 'var(--space-xs) var(--space-sm)',
                 transform: 'rotate(-3deg)',
                 textTransform: 'uppercase',
               }}
@@ -189,7 +189,7 @@ export default function SnidePraxisDetail({ state }: { state: PraxisDetailState 
             fontSize: 'var(--text-display)',
             lineHeight: 0.9,
             color: PAPER_TEXT,
-            margin: '0 0 14px',
+            margin: '0 0 var(--space-lg)',
             transform: 'skewX(-4deg)',
             letterSpacing: '0.01em',
           }}
@@ -202,7 +202,7 @@ export default function SnidePraxisDetail({ state }: { state: PraxisDetailState 
           style={{
             height: 2,
             background: `linear-gradient(90deg, ${PINK}, ${ACID}, transparent)`,
-            marginBottom: 16,
+            marginBottom: 'var(--space-lg)',
           }}
         />
 
@@ -214,9 +214,9 @@ export default function SnidePraxisDetail({ state }: { state: PraxisDetailState 
           style={{
             display: 'flex',
             alignItems: 'center',
-            gap: 14,
-            marginBottom: 24,
-            paddingBottom: 16,
+            gap: 'var(--space-lg)',
+            marginBottom: 'var(--space-xl)',
+            paddingBottom: 'var(--space-lg)',
             borderBottom: `1.5px dashed color-mix(in srgb, ${PAPER_TEXT} 30%, transparent)`,
           }}
         >
@@ -260,10 +260,10 @@ export default function SnidePraxisDetail({ state }: { state: PraxisDetailState 
               flexShrink: 0,
               display: 'inline-flex',
               alignItems: 'baseline',
-              gap: 4,
+              gap: 'var(--space-xs)',
               background: PAPER_INK,
               border: `1.5px solid ${PINK}`,
-              padding: '4px 10px',
+              padding: 'var(--space-xs) var(--space-md)',
               transform: 'rotate(1.5deg)',
             }}
           >
@@ -286,7 +286,7 @@ export default function SnidePraxisDetail({ state }: { state: PraxisDetailState 
 
         {/* ── The confession (taped notebook) ── */}
         {praxis.body_text && (
-          <div style={{ position: 'relative', marginBottom: 28 }}>
+          <div style={{ position: 'relative', marginBottom: 'var(--space-2xl)' }}>
             <span
               style={{
                 display: 'inline-block',
@@ -294,10 +294,10 @@ export default function SnidePraxisDetail({ state }: { state: PraxisDetailState 
                 color: PAPER_INK,
                 fontFamily: F_MARKER,
                 fontSize: 'var(--text-content)',
-                padding: '3px 13px',
+                padding: 'var(--space-xs) var(--space-md)',
                 transform: 'rotate(-1.5deg)',
                 boxShadow: `2px 2px 0 ${PINK}`,
-                marginBottom: 12,
+                marginBottom: 'var(--space-md)',
               }}
             >
               {t('detail.snide.theConfession')}
@@ -312,7 +312,7 @@ export default function SnidePraxisDetail({ state }: { state: PraxisDetailState 
                 color: PAPER_INK,
                 backgroundImage:
                   'repeating-linear-gradient(180deg, transparent 0 27px, color-mix(in srgb, var(--faction-snide-ink) 11%, transparent) 27px 28px)',
-                padding: '10px 18px 16px',
+                padding: 'var(--space-md) var(--space-lg) var(--space-lg)',
                 fontFamily: F_BODY,
                 lineHeight: '28px',
               }}
@@ -322,7 +322,7 @@ export default function SnidePraxisDetail({ state }: { state: PraxisDetailState 
 
         {/* ── The evidence (exhibit frames) ── */}
         {praxis.media_items.length > 0 && (
-          <div style={{ marginBottom: 30 }}>
+          <div style={{ marginBottom: 'var(--space-2xl)' }}>
             <span
               style={{
                 display: 'inline-block',
@@ -330,10 +330,10 @@ export default function SnidePraxisDetail({ state }: { state: PraxisDetailState 
                 color: PAPER_INK,
                 fontFamily: F_MARKER,
                 fontSize: 'var(--text-content)',
-                padding: '3px 13px',
+                padding: 'var(--space-xs) var(--space-md)',
                 transform: 'rotate(1.5deg)',
                 boxShadow: `2px 2px 0 ${PINK}`,
-                marginBottom: 14,
+                marginBottom: 'var(--space-lg)',
               }}
             >
               {t('detail.snide.evidence', { count: praxis.media_items.length })}
@@ -342,7 +342,7 @@ export default function SnidePraxisDetail({ state }: { state: PraxisDetailState 
               style={{
                 border: `1.5px solid ${ACID}`,
                 background: 'color-mix(in srgb, var(--faction-snide-acid) 6%, transparent)',
-                padding: 10,
+                padding: 'var(--space-md)',
               }}
             >
               <MediaGallery media={praxis.media_items} layout="grid" />
@@ -351,22 +351,22 @@ export default function SnidePraxisDetail({ state }: { state: PraxisDetailState 
         )}
 
         {/* ── Ransom divider ── */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 20 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-sm)', marginBottom: 'var(--space-xl)' }}>
           <div style={{ flex: 1, height: 2, background: `color-mix(in srgb, ${ACID} 40%, transparent)` }} />
           <span style={{ fontFamily: F_MARKER, fontSize: 'var(--text-xl)', color: PINK, transform: 'rotate(-2deg)' }}>×</span>
           <div style={{ flex: 1, height: 2, background: `color-mix(in srgb, ${ACID} 40%, transparent)` }} />
         </div>
 
         {/* ── Cast a vote (the verdict) ── */}
-        <div style={{ marginBottom: 20 }}>
+        <div style={{ marginBottom: 'var(--space-xl)' }}>
           <div
             style={{
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'space-between',
-              gap: 10,
+              gap: 'var(--space-md)',
               flexWrap: 'wrap',
-              marginBottom: 12,
+              marginBottom: 'var(--space-md)',
             }}
           >
             <span
@@ -376,7 +376,7 @@ export default function SnidePraxisDetail({ state }: { state: PraxisDetailState 
                 color: '#fff',
                 fontFamily: F_MARKER,
                 fontSize: 'var(--text-content)',
-                padding: '3px 13px',
+                padding: 'var(--space-xs) var(--space-md)',
                 transform: 'rotate(-1deg)',
                 boxShadow: `2px 2px 0 ${PAPER_INK}`,
               }}

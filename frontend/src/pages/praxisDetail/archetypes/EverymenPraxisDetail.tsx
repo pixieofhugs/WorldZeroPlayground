@@ -31,7 +31,7 @@ const STRIPE = 'repeating-linear-gradient(90deg, var(--everymen-red) 0 16px, var
 
 function SectionHead({ children }: { children: React.ReactNode }) {
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 14, margin: '26px 0 16px' }}>
+    <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-lg)', margin: 'var(--space-xl) 0 var(--space-lg)' }}>
       <h2
         style={{
           fontFamily: POSTER,
@@ -78,8 +78,8 @@ export default function EverymenPraxisDetail({ state }: { state: PraxisDetailSta
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          gap: 12,
-          padding: '10px 22px',
+          gap: 'var(--space-md)',
+          padding: 'var(--space-md) var(--space-xl)',
         }}
       >
         <span style={{ fontFamily: POSTER, fontSize: 'var(--text-title)', letterSpacing: '0.08em', lineHeight: 1, whiteSpace: 'nowrap' }}>
@@ -92,13 +92,13 @@ export default function EverymenPraxisDetail({ state }: { state: PraxisDetailSta
       {/* red→gold stripe rule */}
       <div style={{ height: 4, background: STRIPE }} />
 
-      <div style={{ padding: '24px 30px 30px' }}>
+      <div style={{ padding: 'var(--space-xl) var(--space-2xl) var(--space-2xl)' }}>
         {/* ── Behavior slots (invariant — from shared module) ── */}
         <PraxisAdminBar state={state} />
         <PraxisStatusBanners state={state} />
 
         {/* ── Identity / status strip ── */}
-        <div style={{ fontSize: 'var(--text-sm)', letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--everymen-muted)', marginBottom: 4 }}>
+        <div style={{ fontSize: 'var(--text-sm)', letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--everymen-muted)', marginBottom: 'var(--space-xs)' }}>
           <Link to={`/tasks/${praxis.task_id}`} style={{ color: 'var(--everymen-muted)', textDecoration: 'none' }}>
             {t('detail.everymen.re', { task: praxis.task_title })}
           </Link>
@@ -114,7 +114,7 @@ export default function EverymenPraxisDetail({ state }: { state: PraxisDetailSta
                   color: 'var(--everymen-cream)',
                   background: 'var(--everymen-red)',
                   border: '1px solid var(--everymen-ink)',
-                  padding: '1px 6px',
+                  padding: 'var(--space-xs) var(--space-sm)',
                 }}
               >
                 {t('detail.everymen.flagged')}
@@ -122,7 +122,7 @@ export default function EverymenPraxisDetail({ state }: { state: PraxisDetailSta
             </>
           )}
         </div>
-        <div style={{ fontSize: 'var(--text-sm)', letterSpacing: '0.2em', textTransform: 'uppercase', color: 'var(--everymen-red)', marginBottom: 8 }}>
+        <div style={{ fontSize: 'var(--text-sm)', letterSpacing: '0.2em', textTransform: 'uppercase', color: 'var(--everymen-red)', marginBottom: 'var(--space-sm)' }}>
           {t('detail.everymen.theJobDone')}
         </div>
 
@@ -142,7 +142,7 @@ export default function EverymenPraxisDetail({ state }: { state: PraxisDetailSta
         </h1>
 
         {/* ── Owner actions ── */}
-        <div style={{ marginTop: 16 }}>
+        <div style={{ marginTop: 'var(--space-lg)' }}>
           <PraxisOwnerActions state={state} />
         </div>
 
@@ -151,9 +151,9 @@ export default function EverymenPraxisDetail({ state }: { state: PraxisDetailSta
           style={{
             display: 'flex',
             alignItems: 'center',
-            gap: 13,
-            paddingTop: 18,
-            marginTop: 18,
+            gap: 'var(--space-md)',
+            paddingTop: 'var(--space-lg)',
+            marginTop: 'var(--space-lg)',
             borderTop: '2px solid var(--everymen-ink)',
           }}
         >
@@ -180,7 +180,7 @@ export default function EverymenPraxisDetail({ state }: { state: PraxisDetailSta
                 textDecoration: 'none',
               }}
             />
-            <div style={{ fontSize: 'var(--text-sm)', letterSpacing: '0.06em', color: 'var(--everymen-muted)', marginTop: 3 }}>
+            <div style={{ fontSize: 'var(--text-sm)', letterSpacing: '0.06em', color: 'var(--everymen-muted)', marginTop: 'var(--space-xs)' }}>
               {praxis.type === 'collab' ? t('detail.everymen.hands.collab') : t('detail.everymen.hands.solo')}
             </div>
           </div>
@@ -189,7 +189,7 @@ export default function EverymenPraxisDetail({ state }: { state: PraxisDetailSta
             <div style={{ fontFamily: POSTER, fontSize: 'var(--text-heading)', lineHeight: 1, color: 'var(--everymen-red)' }}>
               ★ {praxis.task_point_value}
             </div>
-            <div style={{ fontSize: 'var(--text-xs)', letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--everymen-muted)', marginTop: 3 }}>
+            <div style={{ fontSize: 'var(--text-xs)', letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--everymen-muted)', marginTop: 'var(--space-xs)' }}>
               {t('detail.everymen.basePoints')}
             </div>
           </div>
@@ -222,7 +222,7 @@ export default function EverymenPraxisDetail({ state }: { state: PraxisDetailSta
                 border: '1.5px solid var(--everymen-ink)',
                 background: 'var(--everymen-cream)',
                 boxShadow: '3px 4px 0 color-mix(in srgb, var(--everymen-ink) 18%, transparent)',
-                padding: 10,
+                padding: 'var(--space-md)',
               }}
             >
               <MediaGallery media={praxis.media_items} layout="grid" />
@@ -231,7 +231,7 @@ export default function EverymenPraxisDetail({ state }: { state: PraxisDetailSta
         )}
 
         {/* ── The crew's marks (vote caster) ── */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', margin: '26px 0 16px', gap: 14 }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', margin: 'var(--space-xl) 0 var(--space-lg)', gap: 'var(--space-lg)' }}>
           <h2 style={{ fontFamily: POSTER, fontSize: 'var(--text-title)', letterSpacing: '0.04em', margin: 0, color: 'var(--everymen-paper-text)', whiteSpace: 'nowrap' }}>
             {t('detail.everymen.crewsMarks')}
           </h2>
@@ -240,7 +240,7 @@ export default function EverymenPraxisDetail({ state }: { state: PraxisDetailSta
             <PraxisScoreBreakdown state={state} align="right" accent="var(--everymen-red)" muted="var(--everymen-muted)" font={POSTER} />
           </div>
         </div>
-        <div style={{ marginBottom: 20 }}>
+        <div style={{ marginBottom: 'var(--space-xl)' }}>
           <VoteUI
             factionSlug={praxis.task_faction_slug}
             praxisId={praxis.id}
