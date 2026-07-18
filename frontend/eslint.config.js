@@ -111,6 +111,11 @@ const RAW_PX_STRING = /^-?\d+(\.\d+)?px(\s+-?\d+(\.\d+)?px){0,3}$/
 
 function isRawPxValue(node) {
   if (node.type !== 'Literal') return false
+  // Zero is exempt: it is the absence of spacing, not a choice from the scale.
+  // It is unit-less and theme-invariant, so it carries none of the drift the
+  // token scale exists to prevent — and there is deliberately no --space-none
+  // token to migrate the ~222 `padding: 0` sites onto (#750).
+  if (node.value === 0) return false
   if (typeof node.value === 'number') return true
   if (typeof node.value === 'string') return RAW_PX_STRING.test(node.value.trim())
   return false
