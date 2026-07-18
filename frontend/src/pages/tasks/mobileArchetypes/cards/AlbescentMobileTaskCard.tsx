@@ -22,7 +22,7 @@ const ink = (pct: number) => `color-mix(in srgb, ${INK} ${pct}%, transparent)`
 
 const kicker: CSSProperties = {
   fontFamily: MONO,
-  fontSize: 8,
+  fontSize: 'var(--text-xs)',
   letterSpacing: '0.28em',
   textTransform: 'uppercase',
   color: ink(30),
@@ -46,23 +46,24 @@ export default function AlbescentMobileTaskCard({ task, points }: { task: TaskOu
     >
       <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
         <AlbescentSigil size={16} opacity={0.75} />
-        <i style={{ fontFamily: MONO, fontSize: 8, letterSpacing: '0.22em', textTransform: 'uppercase', color: ink(24), fontStyle: 'normal' }}>
+        <i style={{ fontFamily: MONO, fontSize: 'var(--text-xs)', letterSpacing: '0.22em', textTransform: 'uppercase', color: ink(24), fontStyle: 'normal' }}>
           {factionName(task.primary_faction_slug)}
         </i>
       </span>
 
-      <h2 style={{ fontFamily: FONT, fontStyle: 'italic', fontWeight: 300, fontSize: 19, lineHeight: 1.28, color: INK, margin: 0, overflowWrap: 'anywhere' }}>
+      <h2 className="content-title" style={{ fontFamily: FONT, fontStyle: 'italic', fontWeight: 300, lineHeight: 1.28, color: INK, margin: 0, overflowWrap: 'anywhere' }}>
         {task.title}
       </h2>
 
       <MobileTaskDescription
         text={task.description}
-        style={{ fontFamily: MONO, fontSize: 10, lineHeight: 1.6, color: ink(42), margin: 0 }}
+        className="content-text"
+        style={{ fontFamily: MONO, lineHeight: 1.6, color: ink(42), margin: 0 }}
       />
 
       <div className="flex items-center justify-between" style={{ marginTop: 2, borderTop: `1px solid ${ink(7)}`, paddingTop: 10 }}>
         <span style={{ ...kicker, letterSpacing: '0.2em', color: ink(24) }}>{t('mobile.level', { level: task.level_required })}</span>
-        <span style={{ fontFamily: FONT, fontStyle: 'italic', fontSize: 16, color: ink(55) }}>{t('mobile.points', { points })}</span>
+        <span style={{ fontFamily: FONT, fontStyle: 'italic', fontSize: 'var(--text-xl)', color: ink(55) }}>{t('mobile.points', { points })}</span>
       </div>
     </Link>
   )

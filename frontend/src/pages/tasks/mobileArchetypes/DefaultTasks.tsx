@@ -41,7 +41,7 @@ export default function DefaultTasks({ state }: { state: TasksState }) {
     <div className="py-4" data-testid="mobile-tasks-browse">
       <h1
         className="font-display italic font-medium mb-1"
-        style={{ fontSize: 26, color: 'var(--color-text-primary)', lineHeight: 1.1 }}
+        style={{ fontSize: 'var(--text-heading)', color: 'var(--color-text-primary)', lineHeight: 1.1 }}
       >
         {tc('nav.tasks')}
       </h1>

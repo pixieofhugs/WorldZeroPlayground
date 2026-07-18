@@ -24,7 +24,7 @@ const signal = (pct: number): string => `color-mix(in srgb, ${SIGNAL} ${pct}%, t
 
 const kicker: CSSProperties = {
   fontFamily: FONT,
-  fontSize: 8,
+  fontSize: 'var(--text-xs)',
   letterSpacing: '0.22em',
   textTransform: 'uppercase',
   color: signal(60),
@@ -47,23 +47,24 @@ export default function SingularityMobileTaskCard({ task, points }: { task: Task
         textDecoration: 'none',
       }}
     >
-      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontFamily: FONT, fontSize: 8, letterSpacing: '0.14em', textTransform: 'uppercase', color: SIGNAL }}>
+      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontFamily: FONT, fontSize: 'var(--text-xs)', letterSpacing: '0.14em', textTransform: 'uppercase', color: SIGNAL }}>
         <i style={{ width: 7, height: 7, background: color, flex: 'none' }} />
         {factionName(task.primary_faction_slug)}
       </span>
 
-      <h2 style={{ fontFamily: FONT, fontSize: 15, lineHeight: 1.3, color: PHOSPHOR, margin: 0, overflowWrap: 'anywhere' }}>
+      <h2 className="content-title" style={{ fontFamily: FONT, lineHeight: 1.3, color: PHOSPHOR, margin: 0, overflowWrap: 'anywhere' }}>
         {'> '}
         {task.title}
       </h2>
 
       <MobileTaskDescription
         text={task.description}
-        style={{ fontFamily: FONT, fontSize: 11, lineHeight: 1.5, color: phosphor(55), margin: 0 }}
+        className="content-text"
+        style={{ fontFamily: FONT, lineHeight: 1.5, color: phosphor(55), margin: 0 }}
       />
 
       <div className="flex items-center gap-3" style={{ marginTop: 2, borderTop: `1px solid ${signal(20)}`, paddingTop: 8 }}>
-        <span style={{ fontFamily: FONT, fontSize: 12, letterSpacing: '0.04em', color: PHOSPHOR, border: `1px solid ${signal(38)}`, padding: '3px 9px' }}>
+        <span style={{ fontFamily: FONT, fontSize: 'var(--text-lg)', letterSpacing: '0.04em', color: PHOSPHOR, border: `1px solid ${signal(38)}`, padding: '3px 9px' }}>
           {t('mobile.points', { points })}
         </span>
         <span style={{ ...kicker }}>{t('mobile.level', { level: task.level_required })}</span>

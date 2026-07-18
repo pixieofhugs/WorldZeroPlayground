@@ -98,7 +98,7 @@ export function MobileByline({
           className="hover:underline"
           style={{
             fontFamily: theme.displayFont,
-            fontSize: 14,
+            fontSize: 'var(--text-xl)',
             fontWeight: 600,
             color: theme.ink,
             textDecoration: 'none',
@@ -112,7 +112,7 @@ export function MobileByline({
         <span
           style={{
             fontFamily: theme.bodyFont,
-            fontSize: 10,
+            fontSize: 'var(--text-base)',
             letterSpacing: '0.04em',
             color: theme.muted,
           }}
@@ -144,7 +144,7 @@ export function MobileTaskRef({
       className="hover:underline"
       style={{
         fontFamily: theme.bodyFont,
-        fontSize: 11,
+        fontSize: 'var(--text-content)',
         letterSpacing: '0.02em',
         color: theme.accent,
         textDecoration: 'none',
@@ -170,10 +170,9 @@ export function MobileTitle({
   return (
     <Link to={`/praxes/${praxis.id}`} style={{ textDecoration: 'none' }}>
       <h3
-        className="hover:underline"
+        className="content-title hover:underline"
         style={{
           fontFamily: theme.displayFont,
-          fontSize: 20,
           lineHeight: 1.15,
           color: theme.ink,
           margin: 0,
@@ -198,9 +197,9 @@ export function MobileBody({
   if (!praxis.body_text) return null
   return (
     <p
+      className="card-description"
       style={{
         fontFamily: theme.bodyFont,
-        fontSize: 13,
         lineHeight: 1.5,
         color: theme.muted,
         margin: 0,
@@ -245,7 +244,7 @@ export function MobileRoster({
       <span
         style={{
           fontFamily: theme.bodyFont,
-          fontSize: 10,
+          fontSize: 'var(--text-content)',
           color: theme.muted,
           overflow: 'hidden',
           textOverflow: 'ellipsis',
@@ -278,7 +277,7 @@ export function MobileModeChip({
   if (!isDuel && !isPending) return null
   const chip: CSSProperties = {
     fontFamily: theme.bodyFont,
-    fontSize: 9,
+    fontSize: 'var(--text-sm)',
     letterSpacing: '0.14em',
     textTransform: 'uppercase',
     padding: '2px 8px',
@@ -370,10 +369,17 @@ export function MobileMediaGallery({
                   fontFamily: theme.bodyFont,
                 }}
               >
+                {/* ornament: dingbat glyph used as a media-type icon, not text */}
                 <span aria-hidden style={{ fontSize: 20, lineHeight: 1 }}>
                   {item.type === 'video' ? '▶' : '♪'}
                 </span>
-                <span style={{ fontSize: 8, letterSpacing: '0.1em', textTransform: 'uppercase' }}>
+                <span
+                  style={{
+                    fontSize: 'var(--text-xs)',
+                    letterSpacing: '0.1em',
+                    textTransform: 'uppercase',
+                  }}
+                >
                   {item.type === 'video' ? t('mobileCard.mediaVideo') : t('mobileCard.mediaAudio')}
                 </span>
               </span>
@@ -389,7 +395,7 @@ export function MobileMediaGallery({
                   background: 'color-mix(in srgb, black 55%, transparent)',
                   color: 'white',
                   fontFamily: theme.displayFont,
-                  fontSize: 18,
+                  fontSize: 'var(--text-content)',
                   fontWeight: 700,
                 }}
               >
@@ -427,7 +433,7 @@ export function MobileVotedByMarker({
     <span
       style={{
         fontFamily: theme.bodyFont,
-        fontSize: 10,
+        fontSize: 'var(--text-base)',
         letterSpacing: '0.06em',
         textTransform: 'uppercase',
         color: theme.muted,

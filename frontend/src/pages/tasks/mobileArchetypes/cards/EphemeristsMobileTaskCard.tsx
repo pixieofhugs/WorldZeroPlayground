@@ -22,7 +22,7 @@ const SCRIPT = 'var(--eph-script)'
 
 const kicker: CSSProperties = {
   fontFamily: DISPLAY,
-  fontSize: 8,
+  fontSize: 'var(--text-xs)',
   letterSpacing: '0.22em',
   textTransform: 'uppercase',
   color: MUTED,
@@ -45,22 +45,23 @@ export default function EphemeristsMobileTaskCard({ task, points }: { task: Task
         textDecoration: 'none',
       }}
     >
-      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontFamily: DISPLAY, fontSize: 9, letterSpacing: '0.1em', textTransform: 'uppercase', color }}>
+      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontFamily: DISPLAY, fontSize: 'var(--text-sm)', letterSpacing: '0.1em', textTransform: 'uppercase', color }}>
         <i style={{ width: 7, height: 7, borderRadius: '50%', background: color, flex: 'none' }} />
         {factionName(task.primary_faction_slug)}
       </span>
 
-      <h2 style={{ fontFamily: DISPLAY, fontWeight: 700, fontSize: 19, lineHeight: 1.15, color: TEXT, margin: 0 }}>
+      <h2 className="content-title" style={{ fontFamily: DISPLAY, fontWeight: 700, lineHeight: 1.15, color: TEXT, margin: 0 }}>
         {task.title}
       </h2>
 
       <MobileTaskDescription
         text={task.description}
-        style={{ fontFamily: SCRIPT, fontStyle: 'italic', fontSize: 14, lineHeight: 1.5, color: MUTED, margin: 0 }}
+        className="content-text"
+        style={{ fontFamily: SCRIPT, fontStyle: 'italic', lineHeight: 1.5, color: MUTED, margin: 0 }}
       />
 
       <div className="flex items-center gap-3" style={{ marginTop: 2 }}>
-        <span style={{ fontFamily: DISPLAY, fontSize: 12, letterSpacing: '0.04em', color: TEXT, background: VELLUM_DEEP, border: `1px solid ${GOLD}`, padding: '3px 9px' }}>
+        <span style={{ fontFamily: DISPLAY, fontSize: 'var(--text-lg)', letterSpacing: '0.04em', color: TEXT, background: VELLUM_DEEP, border: `1px solid ${GOLD}`, padding: '3px 9px' }}>
           {t('mobile.points', { points })}
         </span>
         <span style={{ ...kicker, color: MUTED }}>{t('mobile.level', { level: task.level_required })}</span>

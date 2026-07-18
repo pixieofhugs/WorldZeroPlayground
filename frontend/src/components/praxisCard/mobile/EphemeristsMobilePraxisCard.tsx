@@ -42,7 +42,7 @@ export default function EphemeristsMobilePraxisCard({ praxis }: { praxis: Praxis
           borderBottom: '1px solid var(--eph-gold-deep)',
           boxShadow: '0 2px 0 -1px color-mix(in srgb, var(--eph-lapis) 55%, transparent)',
           fontFamily: 'var(--eph-serif)',
-          fontSize: 9,
+          fontSize: 'var(--text-sm)',
           letterSpacing: '0.18em',
           textTransform: 'uppercase',
           color: 'var(--eph-rubric)',

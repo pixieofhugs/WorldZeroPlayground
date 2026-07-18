@@ -1,3 +1,4 @@
+import type { CSSProperties } from "react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import PageTitle from "../../../components/ui/PageTitle";
@@ -6,6 +7,78 @@ import { factionCssVar, factionName, getAllFactions } from "../../../utils/facti
 import type { ProposeTaskState } from "../useProposeTask";
 
 const LEVEL_OPTIONS = [0, 1, 2, 3, 4, 5, 6, 7, 8];
+
+const breadcrumbStyle: CSSProperties = {
+  fontSize: "var(--text-sm)",
+  letterSpacing: "0.1em",
+  color: "var(--color-text-tertiary)",
+};
+
+const descriptionTextareaStyle: CSSProperties = {
+  width: "100%",
+  fontFamily: "'Courier Prime', monospace",
+  lineHeight: 1.7,
+  color: "var(--color-text-primary)",
+  background: "transparent",
+  border: "none",
+  outline: "none",
+  resize: "vertical",
+  minHeight: 120,
+};
+
+const notesTextareaStyle: CSSProperties = {
+  width: "100%",
+  fontFamily: "'Courier Prime', monospace",
+  color: "var(--color-text-primary)",
+  background: "transparent",
+  border: "1px solid var(--color-border)",
+  borderRadius: 6,
+  padding: "0.6rem 0.7rem",
+  outline: "none",
+  resize: "vertical",
+};
+
+const tooLongStyle: CSSProperties = {
+  color: "#dc2626",
+  display: "block",
+  marginTop: 2,
+};
+
+const basePointsInputStyle: CSSProperties = {
+  width: 80,
+  fontFamily: "'Courier Prime', monospace",
+  fontWeight: 700,
+  color: "var(--color-text-primary)",
+  background: "transparent",
+  border: "none",
+  borderBottom: "2px solid var(--color-border-strong)",
+  outline: "none",
+  textAlign: "center",
+};
+
+const tipsListStyle: CSSProperties = {
+  color: "var(--color-text-primary)",
+  lineHeight: 1.6,
+  paddingLeft: 14,
+  listStyleType: "disc",
+};
+
+const tipsBodyStyle: CSSProperties = {
+  color: "var(--color-text-secondary)",
+  lineHeight: 1.6,
+};
+
+const submitNoteStyle: CSSProperties = {
+  color: "var(--color-text-tertiary)",
+  marginLeft: "auto",
+};
+
+const submitDashStyle: CSSProperties = {
+  position: "absolute",
+  inset: 3,
+  border: "1px dashed rgba(255,255,255,0.25)",
+  pointerEvents: "none",
+};
 
 const FACTION_DESCRIPTOR_KEY = {
   ua: "proposeTask.factionDescriptor.ua",
@@ -73,14 +146,14 @@ export default function DefaultProposeTask({
           {isMetaTask ? (
             <>
               <p
-                className="font-display italic"
-                style={{ fontSize: 22, color, marginBottom: 6 }}
+                className="content-title font-display italic"
+                style={{ color, marginBottom: 6 }}
               >
                 {t("proposeTask.successMeta.heading")}
               </p>
               <p
-                className="font-body"
-                style={{ fontSize: 10, color: "var(--color-text-secondary)" }}
+                className="content-text font-body"
+                style={{ color: "var(--color-text-secondary)" }}
               >
                 {t("proposeTask.successMeta.body", {
                   faction: factionName(factionSlug),
@@ -90,14 +163,14 @@ export default function DefaultProposeTask({
           ) : (
             <>
               <p
-                className="font-display italic"
-                style={{ fontSize: 22, color, marginBottom: 6 }}
+                className="content-title font-display italic"
+                style={{ color, marginBottom: 6 }}
               >
                 {t("proposeTask.successTask.heading")}
               </p>
               <p
-                className="font-body"
-                style={{ fontSize: 10, color: "var(--color-text-secondary)" }}
+                className="content-text font-body"
+                style={{ color: "var(--color-text-secondary)" }}
               >
                 {t("proposeTask.successTask.body")}
               </p>
@@ -113,11 +186,7 @@ export default function DefaultProposeTask({
       {/* Breadcrumb */}
       <nav
         className="font-body mb-4"
-        style={{
-          fontSize: 9,
-          letterSpacing: "0.1em",
-          color: "var(--color-text-tertiary)",
-        }}
+        style={breadcrumbStyle}
       >
         <Link to="/tasks" style={{ color: "inherit", textDecoration: "none" }}>
           {t("breadcrumb.tasks")}
@@ -179,7 +248,7 @@ export default function DefaultProposeTask({
                         background: factionCssVar(slug),
                         color: "var(--color-text-on-accent)",
                         fontFamily: "'Courier Prime', monospace",
-                        fontSize: 8,
+                        fontSize: "var(--text-xs)",
                         fontWeight: 700,
                         textTransform: "uppercase",
                         letterSpacing: "0.07em",
@@ -228,7 +297,7 @@ export default function DefaultProposeTask({
                   style={{
                     width: "100%",
                     fontFamily: "'Courier Prime', monospace",
-                    fontSize: 22,
+                    fontSize: "var(--text-title)",
                     fontWeight: 700,
                     color: "var(--color-text-primary)",
                     background: "transparent",
@@ -249,19 +318,14 @@ export default function DefaultProposeTask({
                 />
                 <span
                   className={`eyebrow self-end ${title.length >= 180 ? "text-red-600" : ""}`}
-                  style={{ fontSize: 7, marginTop: 4 }}
+                  style={{ marginTop: 4 }}
                 >
                   {title.length}/200
                 </span>
                 {title.length >= 200 && (
                   <span
-                    className="font-body"
-                    style={{
-                      fontSize: 10,
-                      color: "#dc2626",
-                      display: "block",
-                      marginTop: 2,
-                    }}
+                    className="content-text font-body"
+                    style={tooLongStyle}
                   >
                     {t("proposeTask.fields.name.tooLong")}
                   </span>
@@ -283,34 +347,19 @@ export default function DefaultProposeTask({
                   onChange={(e) => setDescription(e.target.value)}
                   disabled={submitting}
                   placeholder={t("proposeTask.fields.description.placeholder")}
-                  style={{
-                    width: "100%",
-                    fontFamily: "'Courier Prime', monospace",
-                    fontSize: 13,
-                    lineHeight: 1.7,
-                    color: "var(--color-text-primary)",
-                    background: "transparent",
-                    border: "none",
-                    outline: "none",
-                    resize: "vertical",
-                    minHeight: 120,
-                  }}
+                  className="content-text"
+                  style={descriptionTextareaStyle}
                 />
                 <span
                   className={`eyebrow self-end ${description.length >= 4500 ? "text-red-600" : ""}`}
-                  style={{ fontSize: 7, marginTop: 4 }}
+                  style={{ marginTop: 4 }}
                 >
                   {description.length}/5000
                 </span>
                 {description.length >= 5000 && (
                   <span
-                    className="font-body"
-                    style={{
-                      fontSize: 10,
-                      color: "#dc2626",
-                      display: "block",
-                      marginTop: 2,
-                    }}
+                    className="content-text font-body"
+                    style={tooLongStyle}
                   >
                     {t("proposeTask.fields.description.tooLong")}
                   </span>
@@ -343,18 +392,8 @@ export default function DefaultProposeTask({
                       }
                       disabled={submitting}
                       placeholder={t("proposeTask.fields.basePoints.placeholder")}
-                      style={{
-                        width: 80,
-                        fontFamily: "'Courier Prime', monospace",
-                        fontSize: 20,
-                        fontWeight: 700,
-                        color: "var(--color-text-primary)",
-                        background: "transparent",
-                        border: "none",
-                        borderBottom: "2px solid var(--color-border-strong)",
-                        outline: "none",
-                        textAlign: "center",
-                      }}
+                      className="content-title"
+                      style={basePointsInputStyle}
                     />
                     <span
                       className="eyebrow"
@@ -381,17 +420,10 @@ export default function DefaultProposeTask({
                       }
                       disabled={submitting}
                       placeholder={t("proposeTask.fields.bonusPoints.placeholder")}
+                      className="content-title"
                       style={{
-                        width: 80,
-                        fontFamily: "'Courier Prime', monospace",
-                        fontSize: 20,
-                        fontWeight: 700,
-                        color: "var(--color-text-primary)",
-                        background: "transparent",
-                        border: "none",
+                        ...basePointsInputStyle,
                         borderBottom: `2px solid ${color}`,
-                        outline: "none",
-                        textAlign: "center",
                       }}
                     />
                     <span
@@ -451,9 +483,8 @@ export default function DefaultProposeTask({
                       }}
                     />
                     <span
-                      className="font-body"
+                      className="content-text font-body"
                       style={{
-                        fontSize: 11,
                         color: "var(--color-text-primary)",
                         fontWeight: isMetaTask ? 700 : 400,
                       }}
@@ -491,18 +522,8 @@ export default function DefaultProposeTask({
                   onChange={(e) => setNotes(e.target.value)}
                   disabled={submitting}
                   placeholder={t("proposeTask.fields.notes.placeholder")}
-                  style={{
-                    width: "100%",
-                    fontFamily: "'Courier Prime', monospace",
-                    fontSize: 11,
-                    color: "var(--color-text-primary)",
-                    background: "transparent",
-                    border: "1px solid var(--color-border)",
-                    borderRadius: 6,
-                    padding: "0.6rem 0.7rem",
-                    outline: "none",
-                    resize: "vertical",
-                  }}
+                  className="content-text"
+                  style={notesTextareaStyle}
                   onFocus={(e) => {
                     e.currentTarget.style.borderColor = color;
                   }}
@@ -533,9 +554,8 @@ export default function DefaultProposeTask({
                     : t("proposeTask.preview.taskHeading", { faction: fname })}
                 </span>
                 <p
-                  className="font-body"
+                  className="content-text font-body"
                   style={{
-                    fontSize: 12,
                     fontWeight: 700,
                     color: "var(--color-text-primary)",
                     marginBottom: 2,
@@ -545,9 +565,8 @@ export default function DefaultProposeTask({
                 </p>
                 {description && (
                   <p
-                    className="font-body"
+                    className="content-text font-body"
                     style={{
-                      fontSize: 9,
                       color: "var(--color-text-secondary)",
                       lineHeight: 1.4,
                       overflow: "hidden",
@@ -592,9 +611,8 @@ export default function DefaultProposeTask({
 
             {error && (
               <p
-                className="font-body"
+                className="content-text font-body"
                 style={{
-                  fontSize: 10,
                   color: "var(--color-danger)",
                   marginBottom: 12,
                 }}
@@ -612,7 +630,7 @@ export default function DefaultProposeTask({
                   background: color,
                   color: "var(--color-text-on-accent)",
                   fontFamily: "'Courier Prime', monospace",
-                  fontSize: 12,
+                  fontSize: "var(--text-lg)",
                   fontWeight: 700,
                   textTransform: "uppercase",
                   letterSpacing: "0.15em",
@@ -624,12 +642,7 @@ export default function DefaultProposeTask({
                 }}
               >
                 <span
-                  style={{
-                    position: "absolute",
-                    inset: 3,
-                    border: "1px dashed rgba(255,255,255,0.25)",
-                    pointerEvents: "none",
-                  }}
+                  style={submitDashStyle}
                 />
                 {submitting
                   ? t("proposeTask.submit.busy")
@@ -641,17 +654,13 @@ export default function DefaultProposeTask({
                 type="button"
                 onClick={handleCancel}
                 className="btn-outline"
-                style={{ fontSize: 10, padding: "8px 16px" }}
+                style={{ fontSize: "var(--text-base)", padding: "8px 16px" }}
               >
                 {t("proposeTask.submit.cancel")}
               </button>
               <span
-                className="font-body"
-                style={{
-                  fontSize: 8,
-                  color: "var(--color-text-tertiary)",
-                  marginLeft: "auto",
-                }}
+                className="content-text font-body"
+                style={submitNoteStyle}
               >
                 {t("proposeTask.submit.note")}
               </span>
@@ -666,14 +675,8 @@ export default function DefaultProposeTask({
               {t("proposeTask.tips.goodTaskHeading")}
             </p>
             <ul
-              className="font-body"
-              style={{
-                fontSize: 9,
-                color: "var(--color-text-primary)",
-                lineHeight: 1.6,
-                paddingLeft: 14,
-                listStyleType: "disc",
-              }}
+              className="content-text font-body"
+              style={tipsListStyle}
             >
               {(
                 t("proposeTask.tips.goodTaskItems", {
@@ -688,12 +691,8 @@ export default function DefaultProposeTask({
           <div className="sidebar-card" style={{ padding: "14px 16px" }}>
             <p className="eyebrow mb-2">{t("proposeTask.tips.nextHeading")}</p>
             <p
-              className="font-body"
-              style={{
-                fontSize: 9,
-                color: "var(--color-text-secondary)",
-                lineHeight: 1.6,
-              }}
+              className="content-text font-body"
+              style={tipsBodyStyle}
             >
               {t("proposeTask.tips.nextBody")}
             </p>
