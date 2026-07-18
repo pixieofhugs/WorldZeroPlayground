@@ -24,10 +24,10 @@ const STATUS_CAN_RETURN = 'can_return'
 
 /**
  * Default MOBILE factions-directory skin — the phone twin of the desktop
- * Factions grid. A single-column screen: a title over a seven-stripe faction
- * bar, an "unaffiliated" banner (shown only while the viewer hasn't sworn to a
- * faction), any invitation letters the player holds (#733), then a vertical
- * stack of the SAME bespoke FactionSelectCard
+ * Factions grid. A single-column screen, in render order: a title, the faction
+ * stripe bar, any invitation letters the player holds (#733), an "unaffiliated"
+ * banner (shown only while the viewer hasn't sworn to a faction), then a
+ * vertical stack of the SAME bespoke FactionSelectCard
  * archetypes desktop uses (#732), each visiting its faction's detail page where
  * all membership actions live (#347). Member counts are intentionally dropped —
  * no cheap per-faction count query exists (ADR-0035: real fields only).
