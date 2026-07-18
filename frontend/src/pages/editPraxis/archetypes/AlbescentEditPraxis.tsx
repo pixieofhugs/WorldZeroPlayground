@@ -163,7 +163,8 @@ export default function AlbescentEditPraxis({ state }: Props) {
                 textTransform: "uppercase",
                 color: ink(26),
                 borderBottom: `1px solid ${ink(18)}`,
-                paddingBottom: "var(--space-xs)",
+                // eslint-disable-next-line local/no-raw-style-values -- ornament: hairline ruled under the letterforms; a 4px offset detaches the rule from the word.
+                paddingBottom: 1,
               }}
             >
               {state.autosaveAt

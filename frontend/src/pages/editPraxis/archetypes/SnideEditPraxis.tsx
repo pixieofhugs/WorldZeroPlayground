@@ -75,8 +75,10 @@ function RansomChar({ ch, index }: { ch: string; index: number }) {
         fontSize: sz,
         lineHeight: 1,
         fontWeight: 700,
-        padding: "var(--space-xs)",
-        margin: "var(--space-xs)",
+        // eslint-disable-next-line local/no-raw-style-values -- ornament: ransom-note letter tile; the mat is cut tight around one glyph.
+        padding: "2px 6px",
+        // eslint-disable-next-line local/no-raw-style-values -- ornament: the scraps overlap into a word; a 4px gutter would space them out into a row of chips.
+        margin: "2px 1px",
         transform: `rotate(${rot}deg)`,
         boxShadow: "1px 1px 0 rgba(0,0,0,.2)",
         textTransform: index % 2 ? "uppercase" : "none",
