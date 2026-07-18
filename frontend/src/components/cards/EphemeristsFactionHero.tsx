@@ -65,7 +65,7 @@ export default function EphemeristsFactionHero({
       style={{
         position: "relative",
         overflow: "hidden",
-        marginBottom: 24,
+        marginBottom: "var(--space-xl)",
         border: "2px solid var(--eph-gold)",
         background:
           "radial-gradient(120% 140% at 82% 0%, var(--eph-lapis), var(--eph-field-deep) 60%, #05131c 100%)",
@@ -75,7 +75,7 @@ export default function EphemeristsFactionHero({
     >
       <HeroGrids />
       <div style={{ height: 5, background: "var(--eph-gold)", position: "relative", zIndex: 2 }} />
-      <div style={{ position: "relative", zIndex: 2, display: "flex", alignItems: "center", gap: 32, padding: "26px 32px 26px", flexWrap: "wrap" }}>
+      <div style={{ position: "relative", zIndex: 2, display: "flex", alignItems: "center", gap: "var(--space-2xl)", padding: "var(--space-xl) var(--space-2xl)", flexWrap: "wrap" }}>
         <div style={{ flex: "1 1 300px", minWidth: 220 }}>
           <div
             style={{
@@ -84,7 +84,7 @@ export default function EphemeristsFactionHero({
               letterSpacing: "0.28em",
               textTransform: "uppercase",
               color: "var(--eph-gold-light)",
-              marginBottom: 6,
+              marginBottom: "var(--space-sm)",
             }}
           >
             {i18n.t("feed:factionHero.ephemerists.eyebrow")}
@@ -93,7 +93,7 @@ export default function EphemeristsFactionHero({
             style={{
               fontFamily: "var(--eph-display)",
               fontWeight: 800,
-              // ornament: codex wordmark — display serif at 0.88 leading with a letterpress shadow
+              // eslint-disable-next-line local/no-raw-style-values -- ornament: codex wordmark — display serif at 0.88 leading with a letterpress shadow
               fontSize: 52,
               lineHeight: 0.88,
               letterSpacing: "0.02em",
@@ -107,13 +107,14 @@ export default function EphemeristsFactionHero({
           <div
             style={{
               display: "inline-block",
-              marginTop: 12,
+              marginTop: "var(--space-md)",
               background: "var(--eph-ink)",
               color: "var(--eph-gold-light)",
               fontFamily: "var(--eph-display)",
               fontWeight: 600,
               fontSize: "var(--text-xl)",
               letterSpacing: "0.26em",
+              // eslint-disable-next-line local/no-raw-style-values -- ornament: inset of the motto on its letterpress plate; rounding reflows the plate.
               padding: "5px 16px",
               border: "1px solid var(--eph-gold-deep)",
             }}
@@ -126,7 +127,7 @@ export default function EphemeristsFactionHero({
               fontFamily: "var(--eph-serif)",
               lineHeight: 1.6,
               maxWidth: 580,
-              margin: "14px 0 0",
+              margin: "var(--space-lg) 0 0",
               color: "color-mix(in srgb, var(--eph-parchment) 92%, transparent)",
             }}
           >
@@ -140,7 +141,7 @@ export default function EphemeristsFactionHero({
                 fontFamily: "var(--eph-script)",
                 fontStyle: "italic",
                 color: "color-mix(in srgb, var(--eph-parchment) 62%, transparent)",
-                marginTop: 8,
+                marginTop: "var(--space-sm)",
               }}
             >
               {/* The self-referential gloss is one <Trans> unit; "see †" is tag <1>. */}
@@ -155,7 +156,7 @@ export default function EphemeristsFactionHero({
 
         {/* Right column: seal + a stat ledger on the side (standardization:
             stats sit beside the seal, never a full-width band). */}
-        <div style={{ display: "flex", flexDirection: "column", gap: 22, alignItems: "center", flex: "0 0 232px", minWidth: 200 }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-xl)", alignItems: "center", flex: "0 0 232px", minWidth: 200 }}>
           <EphSeal size={112} bg="var(--eph-vellum)" eye="var(--eph-lapis)" />
           <div style={{ alignSelf: "stretch", border: "1px solid color-mix(in srgb, var(--eph-gold-light) 40%, transparent)", background: "color-mix(in srgb, var(--eph-field-deep) 55%, transparent)" }}>
             {stats.map((s, i) => (
@@ -165,8 +166,8 @@ export default function EphemeristsFactionHero({
                   display: "flex",
                   justifyContent: "space-between",
                   alignItems: "baseline",
-                  gap: 10,
-                  padding: "9px 14px",
+                  gap: "var(--space-md)",
+                  padding: "var(--space-sm) var(--space-lg)",
                   borderTop: i > 0 ? "1px solid color-mix(in srgb, var(--eph-gold-light) 18%, transparent)" : undefined,
                 }}
               >

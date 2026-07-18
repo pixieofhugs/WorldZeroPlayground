@@ -44,7 +44,7 @@ export default function EverymenFactionHero({
       style={{
         position: "relative",
         overflow: "hidden",
-        marginBottom: 32,
+        marginBottom: "var(--space-2xl)",
         border: `3px solid ${INK}`,
         background: FIELD,
         color: CREAM,
@@ -94,8 +94,8 @@ export default function EverymenFactionHero({
             minWidth: 300,
             display: "flex",
             alignItems: "center",
-            gap: 30,
-            padding: "30px 38px 28px",
+            gap: "var(--space-2xl)",
+            padding: "var(--space-2xl)",
           }}
         >
           {/* cog seal */}
@@ -123,7 +123,7 @@ export default function EverymenFactionHero({
                 letterSpacing: "0.3em",
                 textTransform: "uppercase",
                 color: GOLD,
-                marginBottom: 5,
+                marginBottom: "var(--space-xs)",
               }}
             >
               {i18n.t("feed:factionHero.everymen.eyebrow")}
@@ -131,7 +131,7 @@ export default function EverymenFactionHero({
             <h1
               style={{
                 fontFamily: "var(--font-accent)",
-                // ornament: union-poster wordmark — accent face at 0.82 leading, hard drop shadow
+                // eslint-disable-next-line local/no-raw-style-values -- ornament: union-poster wordmark — accent face at 0.82 leading, hard drop shadow
                 fontSize: 76,
                 lineHeight: 0.82,
                 letterSpacing: "0.01em",
@@ -146,13 +146,14 @@ export default function EverymenFactionHero({
             <div
               style={{
                 display: "inline-block",
-                marginTop: 12,
+                marginTop: "var(--space-md)",
                 background: INK,
                 color: GOLD,
-                // ornament: struck motto plaque — poster type set to the ink block
                 fontFamily: "var(--font-accent)",
+                // eslint-disable-next-line local/no-raw-style-values -- ornament: struck motto plaque — poster type set to the ink block
                 fontSize: 17,
                 letterSpacing: "0.18em",
+                // eslint-disable-next-line local/no-raw-style-values -- ornament: inset of the motto on its struck ink plaque; rounding reflows the plaque.
                 padding: "4px 14px",
               }}
             >
@@ -164,7 +165,7 @@ export default function EverymenFactionHero({
                 fontFamily: "var(--font-body)",
                 lineHeight: 1.6,
                 maxWidth: 560,
-                margin: "13px 0 0",
+                margin: "var(--space-md) 0 0",
                 color: CREAM,
               }}
             >
@@ -183,7 +184,7 @@ export default function EverymenFactionHero({
             display: "flex",
             flexDirection: "column",
             justifyContent: "center",
-            padding: "14px 26px",
+            padding: "var(--space-lg) var(--space-xl)",
           }}
         >
           {stats.map((s) => (
@@ -193,8 +194,8 @@ export default function EverymenFactionHero({
                 display: "flex",
                 justifyContent: "space-between",
                 alignItems: "baseline",
-                gap: 12,
-                padding: "11px 0",
+                gap: "var(--space-md)",
+                padding: "var(--space-md) 0",
                 borderBottom: "1px solid color-mix(in srgb, var(--everymen-gold) 22%, transparent)",
               }}
             >
@@ -210,7 +211,7 @@ export default function EverymenFactionHero({
               >
                 {s.label}
               </span>
-              {/* ornament: ledger numeral in the poster face, sized to its cap-height; above the floor already */}
+              {/* eslint-disable-next-line local/no-raw-style-values -- ornament: ledger numeral in the poster face, sized to its cap-height; above the floor already */}
               <span style={{ fontFamily: "var(--font-accent)", fontSize: 34, lineHeight: 0.8, color: GOLD }}>
                 {s.value}
               </span>
