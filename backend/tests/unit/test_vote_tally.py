@@ -2,7 +2,7 @@
 
 import pytest
 
-from services.vote_tally import VoteTally, get_tally, viewer_votes_for
+from services.vote_tally import ViewerVote, VoteTally, get_tally, viewer_votes_for
 
 
 def test_get_tally_returns_empty_when_missing():
@@ -34,17 +34,27 @@ async def test_viewer_votes_for_empty_ids_short_circuits():
         async def execute(self, *args, **kwargs):  # pragma: no cover - must not run
             raise AssertionError("execute should not be called for empty ids")
 
-    result = await viewer_votes_for([], 1, _ExplodingSession())
+    result = await viewer_votes_for([], 1, 1, _ExplodingSession())
     assert result == {}
 
 
 @pytest.mark.asyncio
-async def test_viewer_votes_for_maps_praxis_to_value():
-    """Rows (praxis_id, value) map into a dict keyed by praxis id (#573)."""
+async def test_viewer_votes_for_splits_own_and_account_mate():
+    """Account rows split into the carried character's star vs an account-mate marker (#644).
+
+    Row shape is (praxis_id, voter_character_id, value, display_name). The carried
+    character (id 7) yields ``value``; a different character on the account yields
+    ``voted_by_name`` only when the carried character did not vote that praxis.
+    """
 
     class _FakeResult:
         def all(self):
-            return [(10, 4), (11, 2)]
+            return [
+                (10, 7, 4, "Me"),        # carried character voted → value=4
+                (11, 9, 2, "Alice"),     # account-mate only → marker
+                (12, 7, 5, "Me"),        # carried voted...
+                (12, 9, 1, "Alice"),     # ...and a mate voted → marker suppressed
+            ]
 
     class _FakeSession:
         def __init__(self):
@@ -55,6 +65,9 @@ async def test_viewer_votes_for_maps_praxis_to_value():
             return _FakeResult()
 
     session = _FakeSession()
-    result = await viewer_votes_for([10, 11], 7, session)
-    assert result == {10: 4, 11: 2}
+    result = await viewer_votes_for([10, 11, 12], 7, 1, session)
+    assert result[10] == ViewerVote(value=4, voted_by_name=None)
+    assert result[11] == ViewerVote(value=None, voted_by_name="Alice")
+    # Carried character's own star wins; the mate marker is suppressed.
+    assert result[12] == ViewerVote(value=5, voted_by_name=None)
     assert session.captured is not None  # a query was issued for non-empty ids

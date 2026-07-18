@@ -59,6 +59,7 @@ from services.praxis import (
     leave_praxis,
     list_praxes,
     PraxisSort,
+    VotedFilter,
     remove_metatask,
     respond_to_invite,
     submit_praxis,
@@ -90,6 +91,7 @@ async def list_praxes_route(
     faction: Optional[str] = None,
     q: Optional[str] = None,
     sort: Optional[str] = None,
+    voted: Optional[str] = None,
     limit: int = 50,
     offset: int = 0,
     session: AsyncSession = Depends(get_db),
@@ -101,6 +103,13 @@ async def list_praxes_route(
             praxis_sort = PraxisSort(sort)
         except ValueError:
             raise HTTPException(status_code=422, detail=f"Invalid praxis sort: {sort}")
+
+    voted_filter: Optional[VotedFilter] = None
+    if voted is not None:
+        try:
+            voted_filter = VotedFilter(voted)
+        except ValueError:
+            raise HTTPException(status_code=422, detail=f"Invalid voted filter: {voted}")
 
     praxis_type: Optional[PraxisType] = None
     if type is not None:
@@ -128,15 +137,21 @@ async def list_praxes_route(
         faction=faction,
         search=q,
         sort=praxis_sort,
+        voted=voted_filter,
         viewer_id=viewer.id if viewer else None,
+        viewer_account_id=viewer.account_id if viewer else None,
         limit=limit,
         offset=offset,
     )
     # Task Crown (ADR-0028): one windowed query for the whole page — not per card.
     crowned = await crowned_praxis_ids({praxis.task_id for praxis in praxes}, session)
-    # Viewer's own votes (#573): one batched query for the whole page — not per card.
+    # Viewer's votes (#573, #644): one batched query for the whole page — not per
+    # card. Account-scoped so both the own-star highlight and the account-mate
+    # "voted by" marker come from the same fetch.
     viewer_votes = (
-        await viewer_votes_for({praxis.id for praxis in praxes}, viewer.id, session)
+        await viewer_votes_for(
+            {praxis.id for praxis in praxes}, viewer.id, viewer.account_id, session
+        )
         if viewer
         else {}
     )

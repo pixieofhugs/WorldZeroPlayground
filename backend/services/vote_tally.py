@@ -9,11 +9,12 @@ vote aggregation (a per-task max over ``SUM(Vote.value)``), so it stays beside
 the tally rather than growing a second sum elsewhere.
 """
 from dataclasses import dataclass
-from typing import Collection
+from typing import Collection, Optional
 
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from models.character import Character
 from models.praxis import Praxis, PraxisStatus
 from models.vote import Vote
 
@@ -60,19 +61,67 @@ def get_tally(tallies: dict[int, VoteTally], praxis_id: int) -> VoteTally:
     return tallies.get(praxis_id, _EMPTY_TALLY)
 
 
+@dataclass(frozen=True)
+class ViewerVote:
+    """The viewer *account*'s vote state on one praxis (#644 §7).
+
+    ``value`` is the **carried character's** own star (1-5) — the character-scoped
+    ``viewer_vote`` that renders the viewer's highlight — or ``None`` if the
+    carried character has not voted. ``voted_by_name`` names an *account-mate*
+    character who voted when the carried character did not: the account-scoped
+    "voted by Alice" marker. The two are mutually exclusive by construction — the
+    marker only fires when the carried character's own star is absent.
+    """
+
+    value: Optional[int]
+    voted_by_name: Optional[str]
+
+
 async def viewer_votes_for(
-    praxis_ids: Collection[int], viewer_character_id: int, session: AsyncSession,
-) -> dict[int, int]:
-    """This viewer's own cast value per praxis, one batched query (not per-card)."""
+    praxis_ids: Collection[int],
+    viewer_character_id: int,
+    viewer_account_id: int,
+    session: AsyncSession,
+) -> dict[int, "ViewerVote"]:
+    """The viewer account's vote state per praxis, one batched query (not per-card).
+
+    Account-scoped (#644): matches on ``Vote.voter_account_id`` so a vote cast by
+    any character on the viewer's account is seen, then splits each praxis into the
+    carried character's own star (``value``) and, only when that is absent, the
+    display name of an account-mate who voted (``voted_by_name``). ``viewer_vote``
+    on the card stays character-scoped; the marker is the account-scoped extra.
+    """
     if not praxis_ids:
         return {}
     result = await session.execute(
-        select(Vote.praxis_id, Vote.value).where(
+        select(
+            Vote.praxis_id,
+            Vote.voter_character_id,
+            Vote.value,
+            Character.display_name,
+        )
+        .join(Character, Character.id == Vote.voter_character_id)
+        .where(
             Vote.praxis_id.in_(praxis_ids),
-            Vote.voter_character_id == viewer_character_id,
+            Vote.voter_account_id == viewer_account_id,
         )
     )
-    return dict(result.all())
+    carried_value: dict[int, int] = {}
+    account_mate_name: dict[int, str] = {}
+    for praxis_id, voter_character_id, value, display_name in result.all():
+        if voter_character_id == viewer_character_id:
+            carried_value[praxis_id] = value
+        else:
+            # First account-mate wins; a deterministic single name for the marker.
+            account_mate_name.setdefault(praxis_id, display_name)
+
+    votes: dict[int, ViewerVote] = {}
+    for praxis_id in carried_value.keys() | account_mate_name.keys():
+        own = carried_value.get(praxis_id)
+        # Marker only when the carried character did NOT vote this praxis.
+        mate = account_mate_name.get(praxis_id) if own is None else None
+        votes[praxis_id] = ViewerVote(value=own, voted_by_name=mate)
+    return votes
 
 
 async def crowned_praxis_ids(
