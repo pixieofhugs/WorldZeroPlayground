@@ -630,6 +630,22 @@ export default function SingularityEditPraxis({ state }: Props) {
             flexWrap: "wrap",
           }}
         >
+          <DropButton
+            state={state}
+            skin={{
+              label: t("editPraxis.singularity.dropLabel"),
+              style: {
+                background: "transparent",
+                color: dim,
+                fontFamily: "'Share Tech Mono', monospace",
+                fontSize: "var(--text-sm)",
+                border: "none",
+                cursor: "pointer",
+                textDecoration: "underline",
+              },
+            }}
+          />
+          <div style={{ flex: 1 }} />
           <PublishButton
             state={state}
             skin={{
@@ -658,22 +674,6 @@ export default function SingularityEditPraxis({ state }: Props) {
                 cursor: state.submitting ? "wait" : "pointer",
                 textTransform: "uppercase",
                 position: "relative",
-              },
-            }}
-          />
-          <div style={{ flex: 1 }} />
-          <DropButton
-            state={state}
-            skin={{
-              label: t("editPraxis.singularity.dropLabel"),
-              style: {
-                background: "transparent",
-                color: dim,
-                fontFamily: "'Share Tech Mono', monospace",
-                fontSize: "var(--text-sm)",
-                border: "none",
-                cursor: "pointer",
-                textDecoration: "underline",
               },
             }}
           />

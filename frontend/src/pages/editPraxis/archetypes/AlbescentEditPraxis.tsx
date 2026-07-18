@@ -498,6 +498,23 @@ export default function AlbescentEditPraxis({ state }: Props) {
               flexWrap: "wrap",
             }}
           >
+            <DropButton
+              state={state}
+              skin={{
+                label: t("editPraxis.albescent.dropLabel"),
+                style: {
+                  cursor: "pointer",
+                  border: `1px solid ${ink(12)}`,
+                  background: "transparent",
+                  color: ink(50),
+                  fontFamily: MONO,
+                  fontSize: "var(--text-sm)",
+                  letterSpacing: "0.12em",
+                  textTransform: "uppercase",
+                  padding: "14px 18px",
+                },
+              }}
+            />
             <PublishButton
               state={state}
               skin={{
@@ -515,23 +532,6 @@ export default function AlbescentEditPraxis({ state }: Props) {
                   letterSpacing: "0.02em",
                   padding: "12px 30px",
                   whiteSpace: "nowrap",
-                },
-              }}
-            />
-            <DropButton
-              state={state}
-              skin={{
-                label: t("editPraxis.albescent.dropLabel"),
-                style: {
-                  cursor: "pointer",
-                  border: `1px solid ${ink(12)}`,
-                  background: "transparent",
-                  color: ink(50),
-                  fontFamily: MONO,
-                  fontSize: "var(--text-sm)",
-                  letterSpacing: "0.12em",
-                  textTransform: "uppercase",
-                  padding: "14px 18px",
                 },
               }}
             />

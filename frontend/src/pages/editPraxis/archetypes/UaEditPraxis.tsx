@@ -376,6 +376,22 @@ export default function UaEditPraxis({ state }: Props) {
 
         {/* CTAs */}
         <div style={{ display: "flex", gap: 18, alignItems: "center", marginTop: 26, flexWrap: "wrap" }}>
+          <DropButton
+            state={state}
+            skin={{
+              label: t("editPraxis.ua.dropLabel"),
+              style: {
+                background: "transparent",
+                border: "none",
+                color: "var(--ua-muted)",
+                fontFamily: SERIF,
+                fontStyle: "italic",
+                fontSize: "var(--text-xl)",
+                textDecoration: "underline",
+                cursor: "pointer",
+              },
+            }}
+          />
           <PublishButton
             state={state}
             skin={{
@@ -392,22 +408,6 @@ export default function UaEditPraxis({ state }: Props) {
                 borderRadius: 0,
                 cursor: state.submitting ? "wait" : "pointer",
                 boxShadow: "0 4px 10px color-mix(in srgb, var(--ua-ink) 22%, transparent)",
-              },
-            }}
-          />
-          <DropButton
-            state={state}
-            skin={{
-              label: t("editPraxis.ua.dropLabel"),
-              style: {
-                background: "transparent",
-                border: "none",
-                color: "var(--ua-muted)",
-                fontFamily: SERIF,
-                fontStyle: "italic",
-                fontSize: "var(--text-xl)",
-                textDecoration: "underline",
-                cursor: "pointer",
               },
             }}
           />

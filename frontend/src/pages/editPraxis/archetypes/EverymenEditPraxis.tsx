@@ -552,12 +552,29 @@ export default function EverymenEditPraxis({ state }: Props) {
             flexWrap: "wrap",
           }}
         >
+          <DropButton
+            state={state}
+            skin={{
+              label: t("editPraxis.everymen.dropLabel"),
+              style: {
+                background: "transparent",
+                border: "none",
+                color: MUTED,
+                fontFamily: BODY_FONT,
+                fontSize: "var(--text-md)",
+                fontStyle: "italic",
+                textDecoration: "underline",
+                cursor: "pointer",
+              },
+            }}
+          />
           <PublishButton
             state={state}
             skin={{
               idleLabel: t("editPraxis.everymen.publishIdle"),
               busyLabel: t("editPraxis.everymen.publishBusy"),
               style: {
+                marginLeft: "auto",
                 cursor: state.submitting ? "wait" : "pointer",
                 border: `2px solid ${INK}`,
                 background: state.submitting ? OLIVE : RED,
@@ -569,23 +586,6 @@ export default function EverymenEditPraxis({ state }: Props) {
                 whiteSpace: "nowrap",
                 boxShadow: `5px 5px 0 ${INK}`,
                 transition: "background 150ms",
-              },
-            }}
-          />
-          <DropButton
-            state={state}
-            skin={{
-              label: t("editPraxis.everymen.dropLabel"),
-              style: {
-                marginLeft: "auto",
-                background: "transparent",
-                border: "none",
-                color: MUTED,
-                fontFamily: BODY_FONT,
-                fontSize: "var(--text-md)",
-                fontStyle: "italic",
-                textDecoration: "underline",
-                cursor: "pointer",
               },
             }}
           />
