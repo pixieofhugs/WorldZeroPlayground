@@ -65,7 +65,7 @@ function Sparkle({
 const eyebrow: CSSProperties = {
   display: "block",
   fontFamily: BODY,
-  fontSize: 9,
+  fontSize: "var(--text-sm)",
   letterSpacing: "0.18em",
   textTransform: "uppercase",
   color: PINK_DEEP,
@@ -116,7 +116,7 @@ function Window({ title, children }: { title: string; children: ReactNode }) {
             alignItems: "center",
             gap: 5,
             fontFamily: SCRIPT,
-            fontSize: 18,
+            fontSize: "var(--text-content)",
             color: TITLE_TEXT,
           }}
         >
@@ -172,7 +172,7 @@ export default function WowEditPraxis({ state }: { state: EditPraxisState }) {
           <h1
             style={{
               fontFamily: SCRIPT,
-              fontSize: 34,
+              fontSize: "var(--text-heading)",
               lineHeight: 0.9,
               color: TITLE_TEXT,
               margin: 0,
@@ -209,7 +209,7 @@ export default function WowEditPraxis({ state }: { state: EditPraxisState }) {
               borderRadius: 999,
               border: active ? `1.5px solid ${PINK_DEEP}` : "1.5px solid transparent",
               fontFamily: BODY,
-              fontSize: 11,
+              fontSize: "var(--text-md)",
               letterSpacing: "0.1em",
               textTransform: "uppercase",
               fontWeight: 700,
@@ -239,7 +239,7 @@ export default function WowEditPraxis({ state }: { state: EditPraxisState }) {
         <span
           style={{
             fontFamily: SCRIPT,
-            fontSize: 20,
+            fontSize: "var(--text-content)",
             color: TITLE_TEXT,
             textAlign: "right",
             flex: 1,
@@ -264,7 +264,6 @@ export default function WowEditPraxis({ state }: { state: EditPraxisState }) {
                 inputStyle: {
                   width: "100%",
                   fontFamily: SCRIPT,
-                  fontSize: 24,
                   fontWeight: 700,
                   color: TITLE_TEXT,
                   background: "transparent",
@@ -286,7 +285,6 @@ export default function WowEditPraxis({ state }: { state: EditPraxisState }) {
                 textareaStyle: {
                   width: "100%",
                   fontFamily: BODY,
-                  fontSize: 15,
                   lineHeight: 1.55,
                   color: CARD_TEXT,
                   background: BODY_BG,
@@ -358,7 +356,7 @@ export default function WowEditPraxis({ state }: { state: EditPraxisState }) {
           <div
             style={{
               fontFamily: SCRIPT,
-              fontSize: 22,
+              fontSize: "var(--text-title)",
               color: TITLE_TEXT,
               marginBottom: 10,
             }}
@@ -375,7 +373,6 @@ export default function WowEditPraxis({ state }: { state: EditPraxisState }) {
             skin={{
               markdownStyle: {
                 fontFamily: BODY,
-                fontSize: 15,
                 lineHeight: 1.6,
                 color: CARD_TEXT,
               },
@@ -412,7 +409,7 @@ export default function WowEditPraxis({ state }: { state: EditPraxisState }) {
               background: `linear-gradient(180deg, ${PINK}, ${PINK_DEEP})`,
               color: ON_ACCENT,
               fontFamily: BODY,
-              fontSize: 12,
+              fontSize: "var(--text-lg)",
               fontWeight: 700,
               letterSpacing: "0.12em",
               textTransform: "uppercase",
@@ -433,7 +430,7 @@ export default function WowEditPraxis({ state }: { state: EditPraxisState }) {
                 border: "none",
                 color: CARD_MUTED,
                 fontFamily: SCRIPT,
-                fontSize: 18,
+                fontSize: "var(--text-content)",
                 fontWeight: 700,
                 cursor: "pointer",
               },
@@ -510,7 +507,7 @@ function MediaGrid({
                   background: NOTEPAD_BG,
                   border: `1.5px solid ${PINK}`,
                   color: PINK,
-                  fontSize: 12,
+                  fontSize: "var(--text-lg)",
                   fontWeight: 700,
                   lineHeight: 1,
                   cursor: "pointer",
@@ -540,7 +537,7 @@ function MediaGrid({
               justifyContent: "center",
               gap: 4,
               fontFamily: SCRIPT,
-              fontSize: 16,
+              fontSize: "var(--text-xl)",
               fontWeight: 700,
               color: PINK,
             },
