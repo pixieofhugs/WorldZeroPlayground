@@ -126,6 +126,10 @@
   --faction-default-card-accent: #1a1209;
   --faction-default-card-muted: #6b6050;
   --faction-default-card-font: var(--font-display);
+  /* Neutral glow for unaffiliated surfaces (#728): a rainbow has no single
+     colour to cast, so na glows colourless. Light mode uses a soft grey — a
+     literally-white glow on a light page is invisible; dark mode is white. */
+  --glow-neutral: rgba(120, 120, 130, 0.55);
 
   /* ── S.N.I.D.E. punk extension — ransom/xerox/spray pigments + font set ──
      Extra named pigments beyond the standard suffix set, namespaced to the
@@ -467,6 +471,7 @@
   --faction-default-card-text: #f0e6d0;
   --faction-default-card-accent: #f0e6d0;
   --faction-default-card-muted: #9b9080;
+  --glow-neutral: rgba(255, 255, 255, 0.75);
 
   /* Albescent — always-light: identical to the :root values so the vellum
      register never dims, regardless of the global theme (#231/#232). */
@@ -874,6 +879,87 @@
     color: var(--color-text-tertiary);
   }
 
+  /* ── Level gem (issue #728) ──
+     A square rotated 45° — outlined, never filled, so the numeral sits on
+     whatever surface the gem lands on and stays AA-safe without per-faction
+     tuning. The caller supplies four custom properties inline:
+       --gem-size   overall box in px (task-card ~24 → roster ~34)
+       --gem-stroke paint for the outline: a faction colour, or the
+                    --faction-default-rainbow gradient for unaffiliated
+       --gem-ink    numeral colour (unaffiliated uses the rainbow class below)
+       --gem-glow   colour cast around the shape
+     The outline is a gradient-capable "border": a filled lozenge whose middle
+     is masked out. That is what lets the rainbow stroke and the solid faction
+     strokes be the same code path. */
+
+  .level-gem {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    line-height: 1;
+  }
+
+  .level-gem-box {
+    position: relative;
+    display: grid;
+    place-items: center;
+    width: var(--gem-size);
+    height: var(--gem-size);
+  }
+
+  .level-gem-shape {
+    position: absolute;
+    /* a square inscribed in the box once rotated: side = box / √2 */
+    width: calc(var(--gem-size) / 1.414);
+    height: calc(var(--gem-size) / 1.414);
+    box-sizing: border-box;
+    padding: max(1.5px, calc(var(--gem-size) * 0.07));
+    transform: rotate(45deg);
+    background: var(--gem-stroke);
+    -webkit-mask:
+      linear-gradient(#000 0 0) content-box,
+      linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask:
+      linear-gradient(#000 0 0) content-box exclude,
+      linear-gradient(#000 0 0);
+    filter: drop-shadow(0 0 calc(var(--gem-size) * 0.17) var(--gem-glow));
+  }
+
+  .level-gem-number {
+    position: relative;
+    font-family: var(--font-body);
+    font-weight: 700;
+    font-size: calc(var(--gem-size) * 0.42);
+    line-height: 1;
+    color: var(--gem-ink);
+  }
+
+  /* Unaffiliated ink, per ADR-0039: the spectrum, not a grey fallback.
+     .rainbow-ink is the general form (roster points numeral, #729); the gem's
+     own class rides the same rule so there is one gradient-clip in the sheet.
+
+     WARNING: background-clip:text fails INVISIBLY — if the gradient token ever
+     resolves to nothing the glyph renders transparent, i.e. blank. Any surface
+     adopting this owes it a human eyeball in both themes. Contrast here also
+     cannot be machine-measured (axe punts on gradients, see #651); the stop to
+     hand-check is the darkest light-mode red, #c1272d, on the light page. */
+  .rainbow-ink,
+  .level-gem-number-rainbow {
+    background: var(--faction-default-rainbow);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  .level-gem-caption {
+    font-size: var(--text-sm);
+    font-family: var(--font-body);
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--color-text-tertiary);
+  }
+
   /* ── Content-tier role classes (issue #627) ──
      The whole design-system surface for the content-text floor. Put anything
      readable on one of these instead of typing a number: user-authored free
@@ -907,6 +993,52 @@
 
   .leaderboard-row:hover {
     background: var(--leaderboard-row-hover) !important;
+  }
+
+  /* ── Curved row divider (issue #729) ──
+     A divided row whose rule flares into an upward curl at each end instead of
+     terminating flat. Owns the dashed line itself, so a caller drops its inline
+     `border-bottom` and adds this class — the two pseudo-elements are the only
+     new paint and no element is added per row.
+
+     Each curl is a quarter arc: a box with ONLY a bottom border plus a 100%
+     radius on its FAR corner, so the stroke leaves the baseline tangentially at
+     the line's end and sweeps up. Radius 100% means there is no flat run in the
+     arc, so it never double-draws over the line it springs from — the two meet
+     at a single point. Anchored inside the row's own box, so it survives the
+     `overflow: hidden` on the card that wraps the roster.
+
+     Deliberately NEUTRAL, never faction-tinted: the avatar ring, level gem and
+     points numeral already carry the colour, and a coloured rule under every
+     row would compete with all three.
+
+     ponytail: desktop roster only for now. Three other surfaces use divided
+     rows (CharacterSwitcherSheet, DefaultProfileBody badges, Sidebar activity)
+     but none is a ranked list; promoting the class is one line each, later. */
+  .divider-curved {
+    position: relative;
+    border-bottom: 1px dashed var(--color-border);
+  }
+
+  .divider-curved::before,
+  .divider-curved::after {
+    content: "";
+    position: absolute;
+    bottom: -1px;
+    width: 10px;
+    height: 10px;
+    pointer-events: none;
+    border-bottom: 1px dashed var(--color-border);
+  }
+
+  .divider-curved::before {
+    left: 0;
+    border-bottom-right-radius: 100%;
+  }
+
+  .divider-curved::after {
+    right: 0;
+    border-bottom-left-radius: 100%;
   }
 
   /* ── Page wrapper ── */

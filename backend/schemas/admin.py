@@ -121,7 +121,9 @@ class AdminCharacterCreate(BaseModel):
     bio: str = Field(default="", max_length=500)
     avatar_url: str = Field(default="", max_length=500)
     location: str = Field(default="", max_length=100)
-    faction_slug: str = Field(default="ua")
+    # Characters start unaffiliated (ADR-0019). An admin who wants to place a
+    # character straight into a faction passes the slug explicitly.
+    faction_slug: str = Field(default="na")
 
 
 # ---------------------------------------------------------------------------

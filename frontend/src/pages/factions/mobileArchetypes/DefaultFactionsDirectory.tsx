@@ -1,33 +1,61 @@
 import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
-import { useTranslation } from 'react-i18next'
-import { getFactions, type FactionOut } from '../../../api/factions'
+import { Link, useNavigate } from 'react-router-dom'
+import { Trans, useTranslation } from 'react-i18next'
+import {
+  getFactions,
+  getFactionStatus,
+  getInvitations,
+  type FactionOut,
+  type FactionPageOut,
+  type InvitationLetterOut,
+} from '../../../api/factions'
 import { factionCssVar, factionName, sortFactionsByRainbowOrder } from '../../../utils/factions'
+import { relativeTime } from '../../../utils/dates'
+import FactionSelectCard, { type SelectState } from '../../../components/cards/FactionSelectCard'
 import { useAuth } from '../../../auth/AuthContext'
 import { extractError } from '../../../utils/errors'
 
 const NA_SLUG = 'na'
 
+const STATUS_MEMBER = 'member'
+const STATUS_INVITED = 'invited'
+const STATUS_NOT_INVITED = 'not_invited'
+const STATUS_CAN_RETURN = 'can_return'
+
 /**
  * Default MOBILE factions-directory skin — the phone twin of the desktop
- * Factions grid. A single-column screen: an "unaffiliated" banner (shown only
- * while the viewer hasn't sworn to a faction) over a two-up tile grid, each tile
- * wearing its faction's colour and linking to that faction's detail page where
+ * Factions grid. A single-column screen, in render order: a title, the faction
+ * stripe bar, any invitation letters the player holds (#733), an "unaffiliated"
+ * banner (shown only while the viewer hasn't sworn to a faction), then a
+ * vertical stack of the SAME bespoke FactionSelectCard
+ * archetypes desktop uses (#732), each visiting its faction's detail page where
  * all membership actions live (#347). Member counts are intentionally dropped —
  * no cheap per-faction count query exists (ADR-0035: real fields only).
  *
- * Self-fetches the (slug-only) faction list; the viewer's current faction comes
- * from AuthContext, so no extra membership plumbing is needed for the banner.
- * Bespoke faction directory skins register in Factions' MOBILE_ARCHETYPE_BY_SLUG.
+ * The stripe bar is a legend for the list: one hard-edged span per rendered
+ * row, in the same rainbow order, so stripe N == card N. That's why it is NOT
+ * `var(--faction-default-rainbow)` (a smooth gradient, no per-faction
+ * correspondence) and why the list keeps rainbow order rather than desktop's
+ * member-first sort. The stripe count follows the fetched list rather than a
+ * static seven — Albescent is hidden until revealed (ADR-0027).
+ *
+ * Self-fetches the (slug-only) faction list plus the viewer's per-faction
+ * status, so the cards render real member/eligible/locked rather than a
+ * uniform neutral. Bespoke faction directory skins register in Factions'
+ * MOBILE_ARCHETYPE_BY_SLUG.
  */
 export default function DefaultFactionsDirectory() {
   const { t } = useTranslation('factions')
   const { t: tc } = useTranslation('common')
   const { user } = useAuth()
-  const currentSlug = user?.character?.faction_slug ?? null
+  const navigate = useNavigate()
+  const character = user?.character ?? null
+  const currentSlug = character?.faction_slug ?? null
   const unaffiliated = !currentSlug || currentSlug === NA_SLUG
 
   const [factions, setFactions] = useState<FactionOut[]>([])
+  const [factionPage, setFactionPage] = useState<FactionPageOut | null>(null)
+  const [invitations, setInvitations] = useState<InvitationLetterOut[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -35,10 +63,25 @@ export default function DefaultFactionsDirectory() {
     let cancelled = false
     setLoading(true)
     setError(null)
-    getFactions()
-      .then((data) => {
-        if (!cancelled) setFactions(data)
-      })
+    // The invitations feed backs the letters PANEL only — never card state.
+    // Desktop's extra `|| invitationBySlug[slug]` arm in its `selectState` is
+    // dead code: `_NON_INVITE_FACTION_SLUGS = {"na", "albescent"}` (backend
+    // services/character_stats.py) means no letter is ever written for those
+    // two, and `get_account_invited_faction_slugs` excludes the same pair while
+    // being ACCOUNT-pooled — strictly broader than the character-scoped
+    // /factions/invitations. So every slug this feed can return already reports
+    // `invited` in /factions/status. `selectState` stays as-is (#733).
+    const load = async () => {
+      const factionsData = await getFactions()
+      if (cancelled) return
+      setFactions(factionsData)
+      if (!character) return
+      const [statusData, invitesData] = await Promise.all([getFactionStatus(), getInvitations()])
+      if (cancelled) return
+      setFactionPage(statusData)
+      setInvitations(invitesData)
+    }
+    load()
       .catch((err) => {
         if (!cancelled) setError(extractError(err, t('mobile.loadError')))
       })
@@ -48,7 +91,16 @@ export default function DefaultFactionsDirectory() {
     return () => {
       cancelled = true
     }
-  }, [t])
+  }, [t, character?.id])
+
+  // Same invite-gated status → three-state mapping as DesktopFactions.
+  const selectState = (slug: string): SelectState => {
+    const status =
+      factionPage?.all_factions.find((f) => f.slug === slug)?.status ?? STATUS_NOT_INVITED
+    if (status === STATUS_MEMBER) return 'member'
+    if (status === STATUS_INVITED || status === STATUS_CAN_RETURN) return 'eligible'
+    return 'locked'
+  }
 
   const visible = sortFactionsByRainbowOrder(factions.filter((f) => f.slug !== NA_SLUG))
 
@@ -60,6 +112,85 @@ export default function DefaultFactionsDirectory() {
       >
         {tc('nav.factions')}
       </h1>
+
+      {/* Faction legend: one hard-edged stripe per faction, in the same order
+          as the cards below. Deliberately not extracted — single caller.
+
+          Driven off `visible` (the rows actually rendered), NOT the static
+          FACTION_RAINBOW_ORDER: Albescent is a secret society omitted from
+          /factions until the account is revealed to it (ADR-0027, #390,
+          routers/factions.py:53). A hardcoded seven-stripe bar would both
+          break the stripe==row correspondence for unrevealed players and
+          leak Albescent's existence in its own colour. */}
+      {visible.length > 0 && (
+        <div
+          aria-hidden="true"
+          style={{
+            display: 'flex',
+            height: 10,
+            borderRadius: 999,
+            overflow: 'hidden',
+            marginBottom: 20,
+          }}
+        >
+          {visible.map((f) => (
+            <span key={f.slug} style={{ flex: 1, background: factionCssVar(f.slug) }} />
+          ))}
+        </div>
+      )}
+
+      {/* Invitation letters. Rendered only when the player actually holds one —
+          an empty list draws NOTHING (no header, no empty state).
+
+          ponytail: NO collapse toggle, unlike desktop's collapsed-by-default
+          panel. Desktop can collapse because its grid is fully visible above
+          the fold and each tile already shows `eligible`; on a phone the cards
+          are a tall vertical stack, so this panel is the only thing that tells
+          an invited player a letter exists without scrolling. A collapsed
+          `▸ Recent Invitations (1)` would defeat the point of the issue, and
+          one or two rows never need collapsing. Rows link to the detail page,
+          which owns Accept/Decline (ADR-0030, #347). */}
+      {invitations.length > 0 && (
+        <div className="mb-4" style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+          <span className="eyebrow" style={{ color: 'var(--color-text-tertiary)', fontSize: 9 }}>
+            {t('index.recentInvitations', { count: invitations.length })}
+          </span>
+          {invitations.map((inv) => (
+            <Link
+              key={inv.faction_slug}
+              to={`/factions/${inv.faction_slug}`}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 8,
+                padding: '10px 12px',
+                textDecoration: 'none',
+                background: `linear-gradient(135deg, ${factionCssVar(inv.faction_slug, 'light')}, transparent)`,
+                borderLeft: `3px solid ${factionCssVar(inv.faction_slug, 'border')}`,
+              }}
+            >
+              <span className="eyebrow">{t('index.inviteBadge')}</span>
+              <span
+                className="font-body"
+                style={{ fontSize: 11, color: 'var(--color-text-primary)', flex: 1, lineHeight: 1.4 }}
+              >
+                <Trans
+                  t={t}
+                  i18nKey="index.invitedToJoin"
+                  values={{ faction: factionName(inv.faction_slug) }}
+                  components={[
+                    <span key="0" />,
+                    <span key="1" style={{ fontWeight: 700, color: factionCssVar(inv.faction_slug) }} />,
+                  ]}
+                />
+              </span>
+              <span className="eyebrow" style={{ color: 'var(--color-text-tertiary)' }}>
+                {relativeTime(inv.delivered_at)}
+              </span>
+            </Link>
+          ))}
+        </div>
+      )}
 
       {unaffiliated && (
         <section
@@ -99,31 +230,14 @@ export default function DefaultFactionsDirectory() {
       ) : error ? (
         <p className="font-body text-sm text-red-600 border-2 border-red-300 px-3 py-2">{error}</p>
       ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 10 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 30 }}>
           {visible.map((f) => (
-            <Link
+            <FactionSelectCard
               key={f.slug}
-              to={`/factions/${f.slug}`}
-              style={{
-                position: 'relative',
-                display: 'flex',
-                flexDirection: 'column',
-                justifyContent: 'flex-end',
-                minHeight: 118,
-                padding: 12,
-                borderRadius: 12,
-                textDecoration: 'none',
-                background: factionCssVar(f.slug),
-                color: 'var(--color-text-on-accent)',
-              }}
-            >
-              <span
-                className="font-display italic font-medium"
-                style={{ fontSize: 17, lineHeight: 1.05 }}
-              >
-                {factionName(f.slug)}
-              </span>
-            </Link>
+              faction={f.slug}
+              state={selectState(f.slug)}
+              onVisit={() => navigate(`/factions/${f.slug}`)}
+            />
           ))}
         </div>
       )}

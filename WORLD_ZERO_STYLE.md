@@ -183,7 +183,9 @@ The sidebar contains: character card, active tasks panel, recent activity panel,
 
 ## 6. Faction Card Archetypes
 
-**Core principle:** Each faction's tasks use a completely different card archetype. The card type IS the faction identity. All cards display: task name, faction name, point value, level requirement (via `LevelPill`).
+**Core principle:** Each faction's tasks use a completely different card archetype. The card type IS the faction identity. All cards display: task name, faction name, point value, level requirement (via `LevelGem`).
+
+**The level gem** is the one shape shared across every archetype: a 45°-rotated square, always outlined and never filled, with a faction-coloured numeral and a mandatory tiny "LVL" caption. It is deliberately the exception to "no uniform shapes" — the level is a game-wide fact, not a faction one, and a player should recognise it instantly whether it sits on a ransom note or a roster row. Faction identity enters as stroke colour and glow only. Unaffiliated takes the spectrum on both stroke and numeral (ADR-0039); it never degrades to grey, and it never borrows another faction's hue.
 
 Cards are arranged in a `flex-wrap` container with varied heights and slight rotations. This is intentional — they are NOT on a strict grid.
 
@@ -252,7 +254,7 @@ Brief design intent for each page. For implementation details, read the componen
 - **Task Detail:** Faction card archetype expanded to full width as hero block. Sign-up block with mode selector (Solo/Collab/Duel) as stamp buttons. Meta tasks section. Praxis gallery below.
 - **Praxis Submission:** Faction-framed byline block. Media gallery with thumbnail strip. Lora prose body with drop-cap in faction color. Vote stamps (1-5, word labels) replace star ratings. Voter tile grid.
 - **Player Profile:** Faction-framed header. Level track (horizontal, 9 levels). Praxis grid. Friends/Foes panels with score deltas.
-- **Players (Leaderboard):** Top 3 podium in faction-framed cards. Your rank strip. Frosted table with faction color edge accents. Faction standings sidebar panel.
+- **Players (Leaderboard):** Top 3 podium in faction-framed cards. Your rank strip. Frosted table with faction color edge accents. Faction standings sidebar panel. In the roster rows, faction colour lives on **ornament only** — the glowing `FactionAvatar` ring, the level gem, the edge accent, the points numeral. Player names are always `--color-text-primary`, including your own row; the tinted row background is what identifies you. Unaffiliated players get the spectrum, never a borrowed faction colour (ADR-0039). Desktop rows are separated by `.divider-curved`: a neutral dashed rule that flares into an upward curl at each end. It is deliberately not applied site-wide — the other divided-row surfaces are not ranked lists.
 - **Updates Feed:** Stamp-style filter pills. Feed items with 4px left-edge accent by type. Foe taunts as physical notes (aged paper, tape, torn edge). Era announcements as full-width dark cards.
 - **Submit Proof:** No sidebar — single centered column. Faction-framed task context header. Rich text editor. Media upload grid. Meta task checkboxes.
 - **Propose Task:** No sidebar — two-column (form + tips). Faction selector determines card wrapper aesthetic. Live task preview strip.

@@ -417,6 +417,8 @@
     }
   },
   "duelCrossLink": {
+    "pending": "⚔ Challenge sent — waiting for {{name}} to accept.",
+    "declined": "⚔ {{name}} declined the challenge — this scores as an ordinary praxis.",
     "dueling": "⚔ Dueling {{name}}",
     "youForfeited": "You forfeited this duel.",
     "wonByDefault": "⚔ Won by default",
@@ -431,5 +433,40 @@
     },
     "live": "{{standing}} · live — the winner floats with the votes until era reset.",
     "factionSuffix": " · {{faction}}"
+  },
+  "duelStakes": {
+    "heading": "What's at stake",
+    "winLabel": "If you win",
+    "loseLabel": "If you lose",
+    "tieLine": "A tie pays {{points}}.",
+    "beforeVotes": "Base points, before crowd votes — stars add on top.",
+    "soloFallback": "Nothing is at stake yet. If {{name}} declines, this scores as an ordinary praxis worth {{points}}."
+  },
+  "duelRoster": {
+    "you": "You",
+    "sealed": "sealed ✓",
+    "walking": "still walking…"
+  },
+  "duelNextStep": {
+    "pending": "Waiting for {{name}} to accept the challenge.",
+    "declined": "{{name}} declined — no duel, no multiplier.",
+    "activeWaitingOnYou": "{{name}} accepted. Cast your praxis to seal the duel.",
+    "activeWaitingOnThem": "You've cast. Waiting for {{name}} — the duel seals when they do.",
+    "settled": "Both sides are in. The winner floats with the votes until era reset.",
+    "youForfeited": "You forfeited this duel.",
+    "wonByDefault": "{{name}} forfeited — you won by default."
+  },
+  "duelSeal": {
+    "heading": "Seal the duel?",
+    "confirm": "Seal it",
+    "cancel": "Not yet",
+    "bodyActive": "{{name}} has accepted. Casting now seals the duel — once you have both cast, pulling back is a permanent forfeit.",
+    "bodyPending": "{{name}} hasn't accepted yet. You can cast now; if they decline, this scores as an ordinary praxis.",
+    "reopenNote": "Until {{name}} casts, you can still pull this back for free — no forfeit."
+  },
+  "duelForfeit": {
+    "confirmPrompt": "Pulling back now FORFEITS the duel.",
+    "cost": "{{name}} wins by default and you keep {{points}} instead of {{win}}.",
+    "action": "Forfeit"
   }
 }

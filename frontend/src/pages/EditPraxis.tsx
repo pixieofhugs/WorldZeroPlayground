@@ -10,6 +10,7 @@ import { useTranslation } from "react-i18next";
 import PageTitle from "../components/ui/PageTitle";
 import ImageEditModal from "../components/imageEdit/ImageEditModal";
 import { CollabSuccess } from "../components/collab/CollabSuccess";
+import DuelSealConfirm from "../components/duel/DuelSealConfirm";
 import { pickVariant } from "../utils/factionDispatch";
 import { useFormFactor } from "../hooks/useFormFactor";
 import {
@@ -122,6 +123,22 @@ export default function EditPraxis() {
           factionSlug={state.praxis.task_faction_slug}
           taskPointValue={state.praxis.task_point_value}
           onContinue={state.continueFromCollabSuccess}
+        />
+      )}
+      {/* A duel cast is the one cast that can't be fully undone later, so it
+          asks first (#718). Mounted here beside CollabSuccess — over whichever
+          archetype rendered — so one mount covers all 16 composer surfaces and
+          both form factors. Confirming calls the same publish() the button
+          used to call directly. */}
+      {state.duelSealOpen && state.duel && (
+        <DuelSealConfirm
+          taskFactionSlug={state.task?.primary_faction_slug}
+          duel={state.duel}
+          viewerCharacterId={state.currentCharacterId}
+          taskPointValue={state.praxis.task_point_value}
+          busy={state.submitting}
+          onConfirm={() => void state.publish()}
+          onCancel={state.cancelDuelSeal}
         />
       )}
       {/* Praxis images crop/rotate in place before upload (#514), free-form so

@@ -7,7 +7,7 @@
 import { useRef } from "react";
 import type { CSSProperties, ReactNode } from "react";
 import { useTranslation } from "react-i18next";
-import LevelPill from "../../../components/ui/LevelPill";
+import LevelGem from "../../../components/ui/LevelGem";
 import { factionCssVar, factionName } from "../../../utils/factions";
 import type { PraxisType } from "../../../api/praxis";
 import MarkdownPreview from "../blocks/MarkdownPreview";
@@ -392,7 +392,7 @@ export function MetatasksList({
             >
               {t("metatasks.bonusPoints", { points: mt.point_value })}
             </span>
-            {mt.level_required > 0 && <LevelPill level={mt.level_required} />}
+            {mt.level_required > 0 && <LevelGem level={mt.level_required} />}
           </button>
         );
       })}
@@ -714,7 +714,16 @@ export function PublishButton({
               : "castAction",
         )
       : skin.idleLabel;
-  const onClick = collab?.iCast ? state.pullBack : state.publish;
+  // A duel side asks before it casts (#718): the button opens the seal
+  // confirmation, whose confirm calls this same `publish()`. Only once an
+  // opponent is actually attached — duel mode with an empty opponent slot casts
+  // as an ordinary solo praxis, so there is nothing to warn about.
+  const sealsADuel = state.duelMode && state.duel != null;
+  const onClick = collab?.iCast
+    ? state.pullBack
+    : sealsADuel
+      ? async () => state.requestDuelSeal()
+      : state.publish;
   return (
     <button
       type="button"

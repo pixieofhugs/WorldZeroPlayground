@@ -2,6 +2,7 @@ import type { ComponentType, ReactNode } from 'react'
 import type { CharacterOut } from '../../api/auth'
 import { mediaUrl } from '../../utils/media'
 import { pickVariant } from '../../utils/factionDispatch'
+import { factionCssVar, isKnownFaction } from '../../utils/factions'
 import EverymenAvatar from './EverymenAvatar'
 import WowAvatar from './WowAvatar'
 import SnideAvatar from './SnideAvatar'
@@ -20,11 +21,20 @@ import DefaultSigil from '../cards/DefaultSigil'
  */
 export interface FactionAvatarProps {
   character: CharacterOut
-  size?: 'sm' | 'md'
+  /** 'sm'/'md' are the historic 24/32px steps; a number is a literal pixel dim. */
+  size?: 'sm' | 'md' | number
+  /** Cast a faction-coloured glow around the ring. Off unless a surface asks. */
+  glow?: boolean
+}
+
+/** 'sm' | 'md' | px → px. The two string steps keep their original values. */
+export function avatarDim(size: FactionAvatarProps['size']): number {
+  if (typeof size === 'number') return size
+  return size === 'sm' ? 24 : 32
 }
 
 function DefaultAvatar({ character, size = 'md' }: FactionAvatarProps) {
-  const dim = size === 'sm' ? 24 : 32
+  const dim = avatarDim(size)
   const badge = Math.max(12, Math.round(dim * 0.44))
   return (
     <span style={{ position: 'relative', display: 'inline-block', width: dim, height: dim }}>
@@ -156,15 +166,23 @@ export function BadgedAvatar({
   badgeRing: string
   glyph: (size: number, color: string) => ReactNode
 }) {
-  const isSmall = size === 'sm'
-  const dim = isSmall ? 24 : 32
-  const badge = isSmall ? 12 : 16
+  const dim = avatarDim(size)
+  const isSmall = dim <= 24
+  const badge = Math.max(12, Math.round(dim * 0.5))
   return (
     <span style={{ position: 'relative', display: 'inline-block', width: dim, height: dim }}>
       <FactionCircle
         character={character}
         dim={dim}
-        fontSize={isSmall ? initialFontSize[0] : initialFontSize[1]}
+        fontSize={
+          // ponytail: a numeric size just scales the 'md' step rather than
+          // gaining its own per-faction tuning table.
+          typeof size === 'number'
+            ? Math.round((initialFontSize[1] * dim) / 32)
+            : isSmall
+              ? initialFontSize[0]
+              : initialFontSize[1]
+        }
         style={circle}
       />
       <span
@@ -198,7 +216,29 @@ const FACTION_AVATARS: Record<string, ComponentType<FactionAvatarProps>> = {
   albescent: AlbescentAvatar,
 }
 
-export default function FactionAvatar({ character, size }: FactionAvatarProps) {
+export default function FactionAvatar({ character, size, glow = false }: FactionAvatarProps) {
   const Variant = pickVariant(FACTION_AVATARS, character.faction_slug, DefaultAvatar)
-  return <Variant character={character} size={size} />
+  const avatar = <Variant character={character} size={size} />
+  if (!glow) return avatar
+
+  // ponytail: the glow is applied once here on a wrapper rather than threaded
+  // through all eight skins. drop-shadow follows the rendered alpha, so it hugs
+  // the circle + sigil badge instead of boxing them — the constellation orbs'
+  // `0 0 Npx <colour>` cast, minus a per-skin box-shadow in seven files.
+  // Unaffiliated glows neutral: a spectrum ring has no one colour to throw.
+  const dim = avatarDim(size)
+  const color = isKnownFaction(character.faction_slug)
+    ? factionCssVar(character.faction_slug)
+    : 'var(--glow-neutral)'
+  return (
+    <span
+      style={{
+        display: 'inline-block',
+        lineHeight: 0,
+        filter: `drop-shadow(0 0 ${Math.round(dim * 0.25)}px ${color})`,
+      }}
+    >
+      {avatar}
+    </span>
+  )
 }

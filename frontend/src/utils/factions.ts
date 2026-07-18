@@ -169,6 +169,20 @@ export function factionFill(
   return { background: `var(--faction-${key})` };
 }
 
+/**
+ * Is this slug a real faction with its own theme?
+ *
+ * Needed because factionCssVar() silently falls back to the `ua` theme for
+ * anything it doesn't know — including `na` and null. Surfaces that owe the
+ * unaffiliated player the spectrum rather than borrowed orange (ADR-0039) must
+ * branch *before* asking for a faction variable. Aliases resolve first, so a
+ * derived slug counts as known.
+ */
+export function isKnownFaction(slug: string | null | undefined): boolean {
+  const resolved = FACTION_ALIASES[slug ?? ""] ?? slug ?? "";
+  return resolved in CSS_KEY;
+}
+
 /** Get faction color by slug, with fallback (raw hex — light mode only) */
 export function factionColor(slug: string | null | undefined): string {
   return factionRegistry[slug ?? ""]?.color ?? "#6b6a7a";
