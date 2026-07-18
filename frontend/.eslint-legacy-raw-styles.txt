@@ -1,8 +1,5 @@
 ﻿src/components/AlbescentInvitation.tsx
 src/components/CharacterSwitcherSheet.tsx
-src/components/comments/CommentThread.tsx
-src/components/comments/shared.tsx
-src/components/comments/useMentionAutocomplete.tsx
 src/components/comments/voices/AlbescentComment.tsx
 src/components/comments/voices/EphemeristsComment.tsx
 src/components/comments/voices/EverymenComment.tsx

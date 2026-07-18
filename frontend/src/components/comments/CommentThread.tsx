@@ -39,7 +39,7 @@ export function DefaultComment(props: CommentProps) {
   if (props.mode === 'composer') {
     const { character, value, onChange, onSubmit, submitting } = props
     return (
-      <div style={{ display: 'flex', gap: 10 }}>
+      <div style={{ display: 'flex', gap: 'var(--space-md)' }}>
         <FactionAvatar character={character} size="sm" />
         <div style={{ flex: 1 }}>
           <ComposerControls
@@ -58,10 +58,10 @@ export function DefaultComment(props: CommentProps) {
   const accent = factionCssVar(slug, 'card-accent')
   const owner = useOwnerEdit({ comment, onEdited, onWithdrawn })
   return (
-    <div style={{ display: 'flex', gap: 10 }}>
+    <div style={{ display: 'flex', gap: 'var(--space-md)' }}>
       <FactionAvatar character={authorToCharacter(comment.author)} size="sm" />
       <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', alignItems: 'baseline', gap: 'var(--space-sm)', flexWrap: 'wrap' }}>
           <Link
             to={`/characters/${comment.author.id}`}
             style={{ fontWeight: 600, color: accent, textDecoration: 'none' }}
@@ -75,7 +75,7 @@ export function DefaultComment(props: CommentProps) {
           <OwnerControls owner={owner} />
           <CommentFlagControl comment={comment} />
         </div>
-        <div style={{ marginTop: 2, color: 'var(--color-text-primary)', lineHeight: 1.5 }}>
+        <div style={{ marginTop: 'var(--space-xs)', color: 'var(--color-text-primary)', lineHeight: 1.5 }}>
           {owner.editing ? (
             <CommentEditor owner={owner} accent={accent} />
           ) : (
@@ -194,8 +194,8 @@ export default function CommentThread({
   const character = user?.character ?? null
 
   return (
-    <section style={{ marginTop: 24 }}>
-      <h3 className="eyebrow" style={{ marginBottom: 12 }}>
+    <section style={{ marginTop: 'var(--space-xl)' }}>
+      <h3 className="eyebrow" style={{ marginBottom: 'var(--space-md)' }}>
         {t('comments.heading', { count: comments.length })}
       </h3>
       {loading && (
@@ -208,7 +208,7 @@ export default function CommentThread({
           {error}
         </p>
       )}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-lg)' }}>
         {comments.map((comment) => (
           <CommentRow
             key={comment.id}
@@ -222,7 +222,7 @@ export default function CommentThread({
       </div>
       {/* Hide the composer below comment level (repo convention: hide, don't disable). */}
       {character && user?.can_comment && (
-        <div style={{ marginTop: 20 }}>
+        <div style={{ marginTop: 'var(--space-xl)' }}>
           <CommentComposer character={character} onPost={handlePost} />
         </div>
       )}
