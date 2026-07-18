@@ -59,13 +59,13 @@ function Sparkle({ size, color, style }: { size: number; color: string; style?: 
 /** Dotted section divider with a centered sparkle + uppercase label. */
 function Divider({ label }: { label: string }) {
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 12, margin: '24px 0 16px' }}>
+    <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-md)', margin: 'var(--space-xl) 0 var(--space-lg)' }}>
       <span style={{ flex: 1, height: 0, borderTop: `2px dotted var(--faction-wow-border)` }} />
       <span
         style={{
           display: 'inline-flex',
           alignItems: 'center',
-          gap: 6,
+          gap: 'var(--space-sm)',
           fontFamily: BODY,
           fontSize: 'var(--text-sm)',
           textTransform: 'uppercase',
@@ -88,8 +88,8 @@ function TitleBar({ name }: { name: string }) {
       style={{
         display: 'flex',
         alignItems: 'center',
-        gap: 7,
-        padding: '9px 14px',
+        gap: 'var(--space-sm)',
+        padding: 'var(--space-sm) var(--space-lg)',
         background: `linear-gradient(180deg, var(--faction-wow-title-from), var(--faction-wow-title-to))`,
         borderBottom: `2px solid ${WIN_BORDER}`,
       }}
@@ -111,7 +111,7 @@ function TitleBar({ name }: { name: string }) {
           marginLeft: 'auto',
           display: 'inline-flex',
           alignItems: 'center',
-          gap: 5,
+          gap: 'var(--space-xs)',
           fontFamily: SCRIPT,
           fontSize: 'var(--text-content)',
           color: TITLE_TEXT,
@@ -135,11 +135,11 @@ export default function WowPraxisDetail({ state }: { state: PraxisDetailState })
   const pill: CSSProperties = {
     display: 'inline-flex',
     alignItems: 'center',
-    gap: 6,
+    gap: 'var(--space-sm)',
     fontSize: 'var(--text-xs)',
     letterSpacing: '0.12em',
     textTransform: 'uppercase',
-    padding: '5px 11px',
+    padding: 'var(--space-xs) var(--space-md)',
     borderRadius: 20,
     background: 'var(--faction-wow-light)',
     color: CARD_TEXT,
@@ -149,7 +149,7 @@ export default function WowPraxisDetail({ state }: { state: PraxisDetailState })
 
   return (
     <div className="py-8" style={{ fontFamily: BODY, color: CARD_TEXT }}>
-      <div style={{ maxWidth: 720, display: 'flex', flexDirection: 'column', gap: 16 }}>
+      <div style={{ maxWidth: 720, display: 'flex', flexDirection: 'column', gap: 'var(--space-lg)' }}>
         {/* ── Behavior slots (invariant — from shared module) ── */}
         <PraxisAdminBar state={state} />
         <PraxisStatusBanners state={state} />
@@ -170,7 +170,7 @@ export default function WowPraxisDetail({ state }: { state: PraxisDetailState })
           <div
             style={{
               position: 'relative',
-              padding: '26px 30px 30px',
+              padding: 'var(--space-xl) var(--space-2xl) var(--space-2xl)',
               background: NOTEPAD_BG,
               backgroundImage: `radial-gradient(${DOT} 1.4px, transparent 1.4px)`,
               backgroundSize: '15px 15px',
@@ -183,18 +183,18 @@ export default function WowPraxisDetail({ state }: { state: PraxisDetailState })
             />
 
             {/* ── 1 · status row: sealed · mode · re:task · level · moderation ── */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 9, flexWrap: 'wrap', marginBottom: 18 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-sm)', flexWrap: 'wrap', marginBottom: 'var(--space-lg)' }}>
               <span
                 style={{
                   display: 'inline-flex',
                   alignItems: 'center',
-                  gap: 6,
+                  gap: 'var(--space-sm)',
                   background: `linear-gradient(180deg, ${PINK}, ${CARD_MUTED})`,
                   color: ON_ACCENT,
                   fontSize: 'var(--text-xs)',
                   letterSpacing: '0.16em',
                   textTransform: 'uppercase',
-                  padding: '5px 12px',
+                  padding: 'var(--space-xs) var(--space-md)',
                   borderRadius: 20,
                   fontWeight: 700,
                   boxShadow: `0 3px 8px var(--faction-wow-light)`,
@@ -234,7 +234,7 @@ export default function WowPraxisDetail({ state }: { state: PraxisDetailState })
                 textTransform: 'uppercase',
                 letterSpacing: '0.2em',
                 color: CARD_MUTED,
-                marginBottom: 8,
+                marginBottom: 'var(--space-sm)',
               }}
             >
               {t('detail.wow.theFinding')}
@@ -254,7 +254,7 @@ export default function WowPraxisDetail({ state }: { state: PraxisDetailState })
             </h1>
 
             {/* ── Owner actions (invariant) ── */}
-            <div style={{ marginTop: 16 }}>
+            <div style={{ marginTop: 'var(--space-lg)' }}>
               <PraxisOwnerActions state={state} />
             </div>
 
@@ -263,9 +263,9 @@ export default function WowPraxisDetail({ state }: { state: PraxisDetailState })
               style={{
                 display: 'flex',
                 alignItems: 'center',
-                gap: 12,
-                paddingTop: 18,
-                marginTop: 18,
+                gap: 'var(--space-md)',
+                paddingTop: 'var(--space-lg)',
+                marginTop: 'var(--space-lg)',
                 borderTop: `2px dotted var(--faction-wow-border)`,
               }}
             >
@@ -301,7 +301,7 @@ export default function WowPraxisDetail({ state }: { state: PraxisDetailState })
                   }}
                 />
                 <div
-                  style={{ fontSize: 'var(--text-sm)', color: CARD_MUTED, letterSpacing: '0.06em', marginTop: 2 }}
+                  style={{ fontSize: 'var(--text-sm)', color: CARD_MUTED, letterSpacing: '0.06em', marginTop: 'var(--space-xs)' }}
                 >
                   {t('detail.wow.witchWhoCast')}
                 </div>
@@ -316,7 +316,7 @@ export default function WowPraxisDetail({ state }: { state: PraxisDetailState })
                     color: CARD_MUTED,
                     letterSpacing: '0.14em',
                     textTransform: 'uppercase',
-                    marginTop: 3,
+                    marginTop: 'var(--space-xs)',
                   }}
                 >
                   {t('detail.wow.basePoints')}
@@ -353,7 +353,7 @@ export default function WowPraxisDetail({ state }: { state: PraxisDetailState })
                   <TitleBar name={t('detail.wow.windows.keepsakes')} />
                   <div
                     style={{
-                      padding: 12,
+                      padding: 'var(--space-md)',
                       background: NOTEPAD_BG,
                       backgroundImage: `radial-gradient(${DOT} 1.3px, transparent 1.3px)`,
                       backgroundSize: '13px 13px',
@@ -379,7 +379,7 @@ export default function WowPraxisDetail({ state }: { state: PraxisDetailState })
           <TitleBar name={t('detail.wow.windows.hearts')} />
           <div
             style={{
-              padding: '20px 24px 22px',
+              padding: 'var(--space-xl) var(--space-xl) var(--space-xl)',
               background: NOTEPAD_BG,
               backgroundImage: `radial-gradient(${DOT} 1.3px, transparent 1.3px)`,
               backgroundSize: '13px 13px',
@@ -391,15 +391,15 @@ export default function WowPraxisDetail({ state }: { state: PraxisDetailState })
                 alignItems: 'center',
                 justifyContent: 'space-between',
                 flexWrap: 'wrap',
-                gap: 8,
-                marginBottom: 14,
+                gap: 'var(--space-sm)',
+                marginBottom: 'var(--space-lg)',
               }}
             >
               <span
                 style={{
                   display: 'inline-flex',
                   alignItems: 'center',
-                  gap: 6,
+                  gap: 'var(--space-sm)',
                   fontFamily: SCRIPT,
                   fontSize: 'var(--text-title)',
                   color: TITLE_TEXT,

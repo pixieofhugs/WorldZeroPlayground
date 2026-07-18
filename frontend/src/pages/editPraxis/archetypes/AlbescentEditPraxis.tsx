@@ -59,7 +59,7 @@ const ink = (pct: number) => `color-mix(in srgb, ${INK} ${pct}%, transparent)`;
 /** Quiet mono section label with a trailing serif gloss and a hairline rule. */
 function MannerLabel({ label, gloss }: { label: string; gloss?: string }) {
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 13 }}>
+    <div style={{ display: "flex", alignItems: "center", gap: "var(--space-md)", marginBottom: "var(--space-md)" }}>
       <span
         style={{
           fontFamily: MONO,
@@ -104,7 +104,7 @@ export default function AlbescentEditPraxis({ state }: Props) {
           "radial-gradient(ellipse 72% 58% at 50% 38%, rgba(255,255,255,0.58) 0%, transparent 100%), var(--faction-albescent-page)",
         fontFamily: MONO,
         color: INK,
-        padding: "24px 24px 90px",
+        padding: "var(--space-xl) var(--space-xl) var(--space-6xl)",
       }}
     >
       <div style={{ maxWidth: 780, margin: "0 auto" }}>
@@ -122,7 +122,7 @@ export default function AlbescentEditPraxis({ state }: Props) {
             background: SHEET,
             border: `1px solid ${ink(10)}`,
             boxShadow: "0 2px 18px rgba(0,0,0,0.055), 0 1px 3px rgba(0,0,0,0.04)",
-            padding: "40px 46px 44px",
+            padding: "var(--space-3xl) var(--space-4xl) var(--space-4xl)",
           }}
         >
           {/* architectural inset hairline */}
@@ -135,8 +135,8 @@ export default function AlbescentEditPraxis({ state }: Props) {
               display: "flex",
               alignItems: "center",
               justifyContent: "space-between",
-              gap: 14,
-              paddingBottom: 18,
+              gap: "var(--space-md)",
+              paddingBottom: "var(--space-lg)",
               borderBottom: `1px solid ${ink(7)}`,
             }}
           >
@@ -144,7 +144,7 @@ export default function AlbescentEditPraxis({ state }: Props) {
               style={{
                 display: "inline-flex",
                 alignItems: "center",
-                gap: 9,
+                gap: "var(--space-sm)",
                 fontFamily: MONO,
                 fontSize: "var(--text-xs)",
                 letterSpacing: "0.24em",
@@ -163,6 +163,7 @@ export default function AlbescentEditPraxis({ state }: Props) {
                 textTransform: "uppercase",
                 color: ink(26),
                 borderBottom: `1px solid ${ink(18)}`,
+                // eslint-disable-next-line local/no-raw-style-values -- ornament: hairline ruled under the letterforms; a 4px offset detaches the rule from the word.
                 paddingBottom: 1,
               }}
             >
@@ -184,7 +185,7 @@ export default function AlbescentEditPraxis({ state }: Props) {
               fontSize: "var(--text-display)",
               lineHeight: 1.0,
               color: INK,
-              margin: "26px 0 8px",
+              margin: "var(--space-xl) 0 var(--space-sm)",
             }}
           >
             {t("editPraxis.albescent.pageTitle")}
@@ -199,7 +200,7 @@ export default function AlbescentEditPraxis({ state }: Props) {
               lineHeight: 1.5,
               color: ink(50),
               maxWidth: 480,
-              marginBottom: 30,
+              marginBottom: "var(--space-2xl)",
             }}
           >
             {t("editPraxis.albescent.preamble")}
@@ -210,12 +211,12 @@ export default function AlbescentEditPraxis({ state }: Props) {
             style={{
               position: "relative",
               display: "flex",
-              gap: 16,
+              gap: "var(--space-lg)",
               alignItems: "center",
               border: `1px solid ${ink(7)}`,
               background: WARM,
-              padding: "15px 18px",
-              marginBottom: 34,
+              padding: "var(--space-lg)",
+              marginBottom: "var(--space-3xl)",
             }}
           >
             <AlbescentSigil size={38} />
@@ -227,7 +228,7 @@ export default function AlbescentEditPraxis({ state }: Props) {
                   letterSpacing: "0.2em",
                   textTransform: "uppercase",
                   color: ink(30),
-                  marginBottom: 5,
+                  marginBottom: "var(--space-xs)",
                 }}
               >
                 {t("editPraxis.albescent.refLabel", {
@@ -241,14 +242,14 @@ export default function AlbescentEditPraxis({ state }: Props) {
                   fontSize: "var(--text-title)",
                   lineHeight: 1.05,
                   color: INK,
-                  marginBottom: 7,
+                  marginBottom: "var(--space-sm)",
                   overflowWrap: "anywhere",
                 }}
               >
                 {praxis.task_title}
               </div>
               {task?.description && (
-                <div style={{ fontFamily: MONO, fontSize: "var(--text-content)", lineHeight: 1.5, color: ink(40), marginBottom: 6, overflowWrap: "anywhere" }}>
+                <div style={{ fontFamily: MONO, fontSize: "var(--text-content)", lineHeight: 1.5, color: ink(40), marginBottom: "var(--space-xs)", overflowWrap: "anywhere" }}>
                   {task.description}
                 </div>
               )}
@@ -262,7 +263,7 @@ export default function AlbescentEditPraxis({ state }: Props) {
 
           {/* The Manner — mode picker */}
           {!state.controlsLocked && (
-            <div style={{ position: "relative", marginBottom: 32 }}>
+            <div style={{ position: "relative", marginBottom: "var(--space-2xl)" }}>
               <MannerLabel
                 label={t("editPraxis.albescent.modeLabel")}
                 gloss={t("editPraxis.albescent.modeMeta")}
@@ -270,7 +271,7 @@ export default function AlbescentEditPraxis({ state }: Props) {
               <ModePicker
                 state={state}
                 skin={{
-                  containerStyle: { display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 },
+                  containerStyle: { display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "var(--space-md)" },
                   options: modeOptions,
                   allowedModes,
                   renderOption: (opt, { active, disabled, onSelect }) => (
@@ -283,7 +284,7 @@ export default function AlbescentEditPraxis({ state }: Props) {
                       style={{
                         cursor: disabled && !active ? "not-allowed" : "pointer",
                         textAlign: "left",
-                        padding: "14px 16px",
+                        padding: "var(--space-md) var(--space-lg)",
                         width: "100%",
                         background: active ? INK : SHEET,
                         color: active ? "var(--faction-albescent-page)" : INK,
@@ -294,7 +295,7 @@ export default function AlbescentEditPraxis({ state }: Props) {
                       <div style={{ fontFamily: FONT, fontStyle: "italic", fontWeight: 400, fontSize: "var(--text-title)", lineHeight: 1 }}>
                         {opt.label}
                       </div>
-                      <div style={{ fontFamily: MONO, fontSize: "var(--text-xs)", letterSpacing: "0.06em", marginTop: 6, opacity: 0.7 }}>
+                      <div style={{ fontFamily: MONO, fontSize: "var(--text-xs)", letterSpacing: "0.06em", marginTop: "var(--space-xs)", opacity: 0.7 }}>
                         {opt.desc}
                       </div>
                     </button>
@@ -306,7 +307,7 @@ export default function AlbescentEditPraxis({ state }: Props) {
 
           {/* Invitees / challenger */}
           {state.showInviteBox && (
-            <div style={{ position: "relative", marginBottom: 32 }}>
+            <div style={{ position: "relative", marginBottom: "var(--space-2xl)" }}>
               <MannerLabel
                 label={
                   praxis.type === "duel"
@@ -332,7 +333,7 @@ export default function AlbescentEditPraxis({ state }: Props) {
           )}
 
           {/* The Closing Line — the title */}
-          <div style={{ position: "relative", marginBottom: 32 }}>
+          <div style={{ position: "relative", marginBottom: "var(--space-2xl)" }}>
             <MannerLabel
               label={t("editPraxis.albescent.titleLabel")}
               gloss={t("editPraxis.albescent.titleMeta")}
@@ -350,18 +351,18 @@ export default function AlbescentEditPraxis({ state }: Props) {
                   fontStyle: "italic",
                   fontWeight: 400,
                   color: INK,
-                  padding: "4px 2px 10px",
+                  padding: "var(--space-xs) var(--space-xs) var(--space-sm)",
                   outline: "none",
                 },
               }}
             />
-            <div style={{ marginTop: 8 }}>
+            <div style={{ marginTop: "var(--space-sm)" }}>
               <TitleCounter length={state.title.length} color={ink(34)} />
             </div>
           </div>
 
           {/* The Account — the body */}
-          <div style={{ position: "relative", marginBottom: 32 }}>
+          <div style={{ position: "relative", marginBottom: "var(--space-2xl)" }}>
             <MannerLabel
               label={t("editPraxis.albescent.bodyLabel")}
               gloss={t("editPraxis.albescent.bodyMeta", {
@@ -381,7 +382,7 @@ export default function AlbescentEditPraxis({ state }: Props) {
                   fontFamily: FONT,
                   lineHeight: 1.75,
                   color: INK,
-                  padding: "16px 18px",
+                  padding: "var(--space-lg)",
                   outline: "none",
                   minHeight: 200,
                 },
@@ -390,7 +391,7 @@ export default function AlbescentEditPraxis({ state }: Props) {
             <BodyPreview
               state={state}
               skin={{
-                wrapperStyle: { borderTop: `1px solid ${ink(7)}`, marginTop: 14, paddingTop: 12 },
+                wrapperStyle: { borderTop: `1px solid ${ink(7)}`, marginTop: "var(--space-md)", paddingTop: "var(--space-md)" },
                 label: (
                   <div
                     style={{
@@ -399,7 +400,7 @@ export default function AlbescentEditPraxis({ state }: Props) {
                       letterSpacing: "0.2em",
                       textTransform: "uppercase",
                       color: ink(30),
-                      marginBottom: 8,
+                      marginBottom: "var(--space-sm)",
                     }}
                   >
                     {t("editPraxis.albescent.previewLabel")}
@@ -411,12 +412,12 @@ export default function AlbescentEditPraxis({ state }: Props) {
           </div>
 
           {/* The Plates — media */}
-          <div style={{ position: "relative", marginBottom: 32 }}>
+          <div style={{ position: "relative", marginBottom: "var(--space-2xl)" }}>
             <MannerLabel
               label={t("editPraxis.albescent.filesLabel")}
               gloss={t("editPraxis.albescent.filesMeta")}
             />
-            <div style={{ display: "flex", gap: 16, flexWrap: "wrap", alignItems: "flex-start" }}>
+            <div style={{ display: "flex", gap: "var(--space-lg)", flexWrap: "wrap", alignItems: "flex-start" }}>
               {state.media.map((item) => {
                 const filename = item.file_path.split("/").pop() ?? item.file_path;
                 const src = mediaUrl(item.file_path);
@@ -450,12 +451,12 @@ export default function AlbescentEditPraxis({ state }: Props) {
                     alignItems: "center",
                     justifyContent: "center",
                     flexDirection: "column",
-                    gap: 4,
+                    gap: "var(--space-xs)",
                   },
                   buttonLabel: t("editPraxis.albescent.fileButton"),
                   errorColor: "var(--color-danger)",
                   helperText: t("editPraxis.albescent.fileHelper"),
-                  helperStyle: { fontFamily: MONO, fontSize: "var(--text-xs)", letterSpacing: "0.08em", color: ink(30), marginTop: 8 },
+                  helperStyle: { fontFamily: MONO, fontSize: "var(--text-xs)", letterSpacing: "0.08em", color: ink(30), marginTop: "var(--space-sm)" },
                 }}
               />
             </div>
@@ -463,16 +464,16 @@ export default function AlbescentEditPraxis({ state }: Props) {
 
           {/* Further merit — metatasks */}
           {state.showMetatasks && (
-            <div style={{ position: "relative", marginBottom: 32 }}>
+            <div style={{ position: "relative", marginBottom: "var(--space-2xl)" }}>
               <MannerLabel label={t("editPraxis.albescent.metatasksLabel")} />
               <MetatasksList
                 state={state}
                 skin={{
                   rowStyle: (selected) => ({
-                    padding: "8px 10px",
+                    padding: "var(--space-sm)",
                     background: selected ? WARM : "transparent",
                     border: selected ? `1px solid ${ink(10)}` : "1px solid transparent",
-                    marginBottom: 4,
+                    marginBottom: "var(--space-xs)",
                     fontFamily: FONT,
                   }),
                   titleColor: INK,
@@ -491,10 +492,10 @@ export default function AlbescentEditPraxis({ state }: Props) {
             style={{
               position: "relative",
               borderTop: `1px solid ${ink(7)}`,
-              paddingTop: 24,
+              paddingTop: "var(--space-xl)",
               display: "flex",
               alignItems: "center",
-              gap: 16,
+              gap: "var(--space-lg)",
               flexWrap: "wrap",
             }}
           >
@@ -511,7 +512,7 @@ export default function AlbescentEditPraxis({ state }: Props) {
                   fontSize: "var(--text-sm)",
                   letterSpacing: "0.12em",
                   textTransform: "uppercase",
-                  padding: "14px 18px",
+                  padding: "var(--space-md) var(--space-lg)",
                 },
               }}
             />
@@ -530,7 +531,7 @@ export default function AlbescentEditPraxis({ state }: Props) {
                   fontWeight: 500,
                   fontSize: "var(--text-content)",
                   letterSpacing: "0.02em",
-                  padding: "12px 30px",
+                  padding: "var(--space-md) var(--space-2xl)",
                   whiteSpace: "nowrap",
                 },
               }}
@@ -558,7 +559,7 @@ function PlateFrame({
     position: "relative",
     background: SHEET,
     border: `1px solid ${ink(10)}`,
-    padding: 5,
+    padding: "var(--space-xs)",
     boxShadow: "0 2px 12px rgba(0,0,0,0.05)",
   };
   return (
@@ -571,7 +572,7 @@ function PlateFrame({
           letterSpacing: "0.04em",
           color: ink(40),
           textAlign: "center",
-          marginTop: 4,
+          marginTop: "var(--space-xs)",
           maxWidth: 140,
           overflow: "hidden",
           textOverflow: "ellipsis",

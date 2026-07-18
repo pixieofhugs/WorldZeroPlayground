@@ -132,8 +132,8 @@ function SectionHead({
       style={{
         display: "flex",
         alignItems: "center",
-        gap: 14,
-        marginBottom: 18,
+        gap: "var(--space-lg)",
+        marginBottom: "var(--space-lg)",
       }}
     >
       <h2 className="content-title" style={sectionH2}>{title}</h2>
@@ -156,7 +156,7 @@ function HandsRow({
   const { t } = useTranslation("tasks");
   return (
     <div
-      style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}
+      style={{ display: "flex", alignItems: "center", gap: "var(--space-md)", flexWrap: "wrap" }}
     >
       {signups.map((hand) => {
         const rel = relationOf(hand.character_id, friends, foes);
@@ -230,7 +230,7 @@ function HandsRow({
           letterSpacing: "0.12em",
           textTransform: "uppercase",
           color: MUTED,
-          marginLeft: 4,
+          marginLeft: "var(--space-xs)",
         }}
       >
         {t("ua.matriculated")}
@@ -254,8 +254,8 @@ function StatPlate({
       style={{
         display: "flex",
         flexDirection: "column",
-        gap: 2,
-        padding: "9px 16px",
+        gap: "var(--space-xs)",
+        padding: "var(--space-sm) var(--space-lg)",
         border: `1px solid ${accent ? ORANGE : LINE}`,
         background: accent ? ORANGE : PAPER,
       }}
@@ -349,18 +349,18 @@ export default function UaTaskDetail({
         <Link to="/tasks" style={{ color: ORANGE, textDecoration: "none" }}>
           {t("default.breadcrumb")}
         </Link>
-        <span style={{ opacity: 0.5, margin: "0 8px" }}>›</span>
+        <span style={{ opacity: 0.5, margin: "0 var(--space-sm)" }}>›</span>
         <span style={{ fontFamily: "var(--ua-engraved)" }}>{t("ua.faction")}</span>
-        <span style={{ opacity: 0.5, margin: "0 8px" }}>›</span>
+        <span style={{ opacity: 0.5, margin: "0 var(--space-sm)" }}>›</span>
         <span style={{ color: ORANGE }}>{task.title}</span>
       </nav>
 
       <div style={{ maxWidth: 920 }}>
-        <div style={{ display: "flex", flexDirection: "column", gap: 30 }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-2xl)" }}>
           {/* ── HERO — gilt salon acquisition plate ── */}
           <div
             style={{
-              padding: 11,
+              padding: "var(--space-md)",
               background: GILT,
               boxShadow:
                 "0 18px 40px rgba(60,40,10,0.28), inset 0 0 0 1px rgba(255,255,255,0.45)",
@@ -368,7 +368,7 @@ export default function UaTaskDetail({
           >
             <div
               style={{
-                padding: 5,
+                padding: "var(--space-xs)",
                 background: `linear-gradient(135deg, ${GOLD}, ${GOLD_PALE})`,
               }}
             >
@@ -380,9 +380,10 @@ export default function UaTaskDetail({
                   backgroundImage:
                     "radial-gradient(color-mix(in srgb, var(--ua-ink) 3%, transparent) 1px, transparent 1px)",
                   backgroundSize: "5px 5px",
+                  // eslint-disable-next-line local/no-raw-style-values -- ornament: the inset of the crest panel within its gilt border, sized to the dot-grid ground rather than the layout scale.
                   padding: "34px 38px 30px",
                   display: "flex",
-                  gap: 30,
+                  gap: "var(--space-2xl)",
                   alignItems: "center",
                   flexWrap: "wrap",
                 }}
@@ -395,7 +396,7 @@ export default function UaTaskDetail({
                       fontSize: "var(--text-md)",
                       letterSpacing: "0.16em",
                       color: ORANGE,
-                      marginBottom: 3,
+                      marginBottom: "var(--space-xs)",
                     }}
                   >
                     {t("ua.masthead")}
@@ -406,7 +407,7 @@ export default function UaTaskDetail({
                       fontSize: "var(--text-xs)",
                       letterSpacing: "0.3em",
                       color: MUTED,
-                      marginBottom: 14,
+                      marginBottom: "var(--space-lg)",
                     }}
                   >
                     {t("ua.commissionLine", { number: commissionNo })}
@@ -419,7 +420,7 @@ export default function UaTaskDetail({
                       fontWeight: 700,
                       lineHeight: 1.06,
                       color: INK,
-                      margin: "0 0 16px",
+                      margin: "0 0 var(--space-lg)",
                       overflowWrap: "anywhere",
                     }}
                   >
@@ -434,15 +435,15 @@ export default function UaTaskDetail({
                       fontFamily: "var(--ua-engraved)",
                       fontSize: "var(--text-sm)",
                       letterSpacing: "0.1em",
-                      padding: "5px 24px",
+                      padding: "var(--space-xs) var(--space-xl)",
                       clipPath:
                         "polygon(0 0,100% 0,96% 50%,100% 100%,0 100%,4% 50%)",
-                      marginBottom: 18,
+                      marginBottom: "var(--space-lg)",
                     }}
                   >
                     <span style={{ color: PAPER_WARM }}>{statusVoice}</span>
                   </div>
-                  <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+                  <div style={{ display: "flex", gap: "var(--space-md)", flexWrap: "wrap" }}>
                     <StatPlate label={t("ua.stats.anno")}>
                       {romanLevel(task.level_required)}
                     </StatPlate>
@@ -452,7 +453,7 @@ export default function UaTaskDetail({
                         style={{
                           fontFamily: "var(--ua-engraved)",
                           fontSize: "var(--text-sm)",
-                          marginLeft: 4,
+                          marginLeft: "var(--space-xs)",
                           fontStyle: "normal",
                           fontWeight: 400,
                         }}
@@ -487,9 +488,9 @@ export default function UaTaskDetail({
               style={{
                 display: "flex",
                 alignItems: "center",
-                gap: 18,
+                gap: "var(--space-lg)",
                 flexWrap: "wrap",
-                padding: "16px 20px",
+                padding: "var(--space-lg) var(--space-xl)",
                 border: `1px solid ${LINE}`,
                 background: PAPER,
               }}
@@ -504,7 +505,7 @@ export default function UaTaskDetail({
                   color: PAPER_WARM,
                   background: ORANGE,
                   border: "none",
-                  padding: "13px 26px",
+                  padding: "var(--space-md) var(--space-xl)",
                   boxShadow: "0 3px 8px rgba(194,84,31,0.3)",
                 }}
               >
@@ -542,9 +543,9 @@ export default function UaTaskDetail({
               style={{
                 display: "flex",
                 alignItems: "center",
-                gap: 16,
+                gap: "var(--space-lg)",
                 flexWrap: "wrap",
-                padding: "16px 20px",
+                padding: "var(--space-lg) var(--space-xl)",
                 border: `1px solid ${LINE}`,
                 background: PAPER,
               }}
@@ -566,7 +567,7 @@ export default function UaTaskDetail({
                   fontFamily: "var(--ua-engraved)",
                   fontSize: "var(--text-md)",
                   letterSpacing: "0.12em",
-                  padding: "10px 20px",
+                  padding: "var(--space-md) var(--space-xl)",
                   background: INK,
                   color: PAPER_WARM,
                   textDecoration: "none",
@@ -582,9 +583,9 @@ export default function UaTaskDetail({
               style={{
                 display: "flex",
                 alignItems: "center",
-                gap: 16,
+                gap: "var(--space-lg)",
                 flexWrap: "wrap",
-                padding: "16px 20px",
+                padding: "var(--space-lg) var(--space-xl)",
                 border: `1px solid ${LINE}`,
                 background: PAPER,
               }}
@@ -606,7 +607,7 @@ export default function UaTaskDetail({
                   fontFamily: "var(--ua-engraved)",
                   fontSize: "var(--text-md)",
                   letterSpacing: "0.12em",
-                  padding: "10px 20px",
+                  padding: "var(--space-md) var(--space-xl)",
                   background: ORANGE,
                   color: PAPER_WARM,
                   textDecoration: "none",
@@ -649,7 +650,7 @@ export default function UaTaskDetail({
               style={{
                 border: `1px solid ${LINE}`,
                 background: PAPER,
-                padding: "28px 32px",
+                padding: "var(--space-2xl) var(--space-2xl)",
                 maxWidth: 660,
               }}
             >
@@ -680,7 +681,7 @@ export default function UaTaskDetail({
           <section>
             <SectionHead title={t("ua.critiqueHeading")} />
             {voteCount > 0 ? (
-              <div style={{ display: "flex", alignItems: "flex-end", gap: 12 }}>
+              <div style={{ display: "flex", alignItems: "flex-end", gap: "var(--space-md)" }}>
                 <span
                   className="content-title"
                   style={{
@@ -693,7 +694,7 @@ export default function UaTaskDetail({
                 >
                   {topScore}
                 </span>
-                <div style={{ paddingBottom: 6 }}>
+                <div style={{ paddingBottom: "var(--space-sm)" }}>
                   <div
                     style={{
                       fontFamily: "var(--ua-engraved)",
@@ -747,7 +748,7 @@ export default function UaTaskDetail({
                           fontSize: "var(--text-base)",
                           letterSpacing: "0.1em",
                           textTransform: "uppercase",
-                          padding: "5px 12px",
+                          padding: "var(--space-xs) var(--space-md)",
                           background: on ? INK : "transparent",
                           color: on ? PAPER_WARM : MUTED,
                           border: `1px solid ${
@@ -784,14 +785,14 @@ export default function UaTaskDetail({
                   style={{
                     display: "flex",
                     flexWrap: "wrap",
-                    gap: "30px 22px",
+                    gap: "var(--space-2xl) var(--space-xl)",
                     alignItems: "flex-start",
                   }}
                 >
                   {sortedSubmissions.slice(0, 4).map((s) => (
                     <div
                       key={s.id}
-                      style={{ position: "relative", paddingTop: 20 }}
+                      style={{ position: "relative", paddingTop: "var(--space-xl)" }}
                     >
                       {s.id === topId && (
                         <div
@@ -803,14 +804,14 @@ export default function UaTaskDetail({
                             zIndex: 3,
                             display: "inline-flex",
                             alignItems: "center",
-                            gap: 5,
+                            gap: "var(--space-xs)",
                             whiteSpace: "nowrap",
                             background: ORANGE,
                             color: PAPER_WARM,
                             fontFamily: "var(--ua-engraved)",
                             fontSize: "var(--text-sm)",
                             letterSpacing: "0.12em",
-                            padding: "4px 12px",
+                            padding: "var(--space-xs) var(--space-md)",
                             boxShadow: "0 3px 8px rgba(60,40,10,0.3)",
                           }}
                         >
@@ -823,7 +824,7 @@ export default function UaTaskDetail({
                   ))}
                 </div>
                 {submissions.length > 4 && (
-                  <div style={{ marginTop: 18 }}>
+                  <div style={{ marginTop: "var(--space-lg)" }}>
                     <Link
                       to={`/praxes?task_id=${task.id}`}
                       style={{

@@ -34,7 +34,7 @@ const SCRIPT = 'var(--eph-script)'
 
 function SectionHead({ title, trailing }: { title: string; trailing?: ReactNode }) {
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
+    <div style={{ display: 'flex', alignItems: 'center', gap: "var(--space-md)", marginBottom: "var(--space-md)" }}>
       <h2 className="content-title" style={{ fontFamily: DISPLAY, fontWeight: 600, letterSpacing: '0.08em', margin: 0, color: TEXT, whiteSpace: 'nowrap' }}>
         {title}
       </h2>
@@ -73,20 +73,20 @@ export default function EphemeristsTaskDetail({ state }: { state: TaskDetailStat
     : null
 
   return (
-    <div className="py-4" style={{ fontFamily: SERIF, color: TEXT, background: VELLUM_DEEP, marginLeft: -16, marginRight: -16, paddingLeft: 16, paddingRight: 16 }}>
+    <div className="py-4" style={{ fontFamily: SERIF, color: TEXT, background: VELLUM_DEEP, marginLeft: -16, marginRight: -16, paddingLeft: "var(--space-lg)", paddingRight: "var(--space-lg)" }}>
       {/* Breadcrumb */}
       <nav className="mb-3" style={{ fontFamily: DISPLAY, fontSize: "var(--text-sm)", letterSpacing: '0.1em', textTransform: 'uppercase', color: MUTED }}>
         <Link to="/tasks" style={{ color: LAPIS, textDecoration: 'none' }}>
           {t('ephemerists.breadcrumb')}
         </Link>
-        <span aria-hidden style={{ margin: '0 6px', color: GOLD }}>›</span>
+        <span aria-hidden style={{ margin: "0 var(--space-sm)", color: GOLD }}>›</span>
         <span style={{ color: RUBRIC }}>{task.title}</span>
       </nav>
 
       {/* Hero — ledger-ruled vellum commission */}
-      <div style={{ position: 'relative', overflow: 'hidden', background: VELLUM, border: `1.5px solid ${INK}`, boxShadow: '0 12px 28px rgba(42,29,18,0.18)', padding: '20px 22px 22px', marginBottom: 20 }}>
-        <div className="flex items-center justify-between" style={{ marginBottom: 12 }}>
-          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontFamily: DISPLAY, fontSize: "var(--text-sm)", letterSpacing: '0.13em', textTransform: 'uppercase', color: GOLD }}>
+      <div style={{ position: 'relative', overflow: 'hidden', background: VELLUM, border: `1.5px solid ${INK}`, boxShadow: '0 12px 28px rgba(42,29,18,0.18)', padding: "var(--space-xl) var(--space-xl) var(--space-xl)", marginBottom: "var(--space-xl)" }}>
+        <div className="flex items-center justify-between" style={{ marginBottom: "var(--space-md)" }}>
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: "var(--space-sm)", fontFamily: DISPLAY, fontSize: "var(--text-sm)", letterSpacing: '0.13em', textTransform: 'uppercase', color: GOLD }}>
             <EphemeristsSigil size={12} color={GOLD} />
             {t('ephemerists.masthead')}
           </span>
@@ -96,10 +96,10 @@ export default function EphemeristsTaskDetail({ state }: { state: TaskDetailStat
         <h1 className="content-title" style={{ fontFamily: DISPLAY, fontWeight: 700, lineHeight: 1.04, color: TEXT, margin: 0, overflowWrap: 'anywhere' }}>
           <LapisLastWord text={task.title} footnote />
         </h1>
-        <div style={{ height: 1, margin: '14px 0', background: `linear-gradient(90deg, ${GOLD}, transparent)` }} />
+        <div style={{ height: 1, margin: "var(--space-lg) 0", background: `linear-gradient(90deg, ${GOLD}, transparent)` }} />
 
         <div className="flex items-center gap-3 flex-wrap">
-          <span style={{ fontFamily: DISPLAY, fontSize: "var(--text-lg)", color: TEXT, background: VELLUM_DEEP, border: `1px solid ${GOLD}`, padding: '4px 12px' }}>
+          <span style={{ fontFamily: DISPLAY, fontSize: "var(--text-lg)", color: TEXT, background: VELLUM_DEEP, border: `1px solid ${GOLD}`, padding: "var(--space-xs) var(--space-md)" }}>
             {t('ephemerists.grade', { level: task.level_required })}
           </span>
           <span className="content-title" style={{ fontFamily: DISPLAY, fontWeight: 700, color: RUBRIC }}>
@@ -109,9 +109,9 @@ export default function EphemeristsTaskDetail({ state }: { state: TaskDetailStat
       </div>
 
       {/* The Commission — brief */}
-      <section style={{ marginBottom: 20 }}>
+      <section style={{ marginBottom: "var(--space-xl)" }}>
         <SectionHead title={t('ephemerists.commissionHeading')} />
-        <div style={{ background: VELLUM, border: `1px solid ${GOLD_DEEP}`, padding: '18px 20px' }}>
+        <div style={{ background: VELLUM, border: `1px solid ${GOLD_DEEP}`, padding: "var(--space-lg) var(--space-xl)" }}>
           <p className="content-text" style={{ fontFamily: SERIF, lineHeight: 1.7, color: task.description ? TEXT : MUTED, margin: 0, whiteSpace: 'pre-wrap' }}>
             {task.description || t('ephemerists.commissionEmpty')}
           </p>
@@ -119,18 +119,18 @@ export default function EphemeristsTaskDetail({ state }: { state: TaskDetailStat
       </section>
 
       {/* The Credence — read-only aggregate */}
-      <section style={{ marginBottom: 20 }}>
+      <section style={{ marginBottom: "var(--space-xl)" }}>
         <SectionHead title={t('ephemerists.credenceHeading')} />
         {voteCount > 0 ? (
-          <div style={{ display: 'flex', alignItems: 'flex-end', gap: 12 }}>
+          <div style={{ display: 'flex', alignItems: 'flex-end', gap: "var(--space-md)" }}>
             <span className="content-title" style={{ fontFamily: DISPLAY, fontWeight: 700, lineHeight: 0.85, color: RUBRIC }}>
               {topScore}
             </span>
-            <div style={{ paddingBottom: 5 }}>
+            <div style={{ paddingBottom: "var(--space-xs)" }}>
               <div style={{ fontFamily: DISPLAY, fontSize: "var(--text-lg)", letterSpacing: '0.06em', color: TEXT }}>
                 {t('ephemerists.credence.highest')}
               </div>
-              <div style={{ fontFamily: SCRIPT, fontStyle: 'italic', fontSize: "var(--text-lg)", color: MUTED, marginTop: 2 }}>
+              <div style={{ fontFamily: SCRIPT, fontStyle: 'italic', fontSize: "var(--text-lg)", color: MUTED, marginTop: "var(--space-xs)" }}>
                 {t('ephemerists.credence.weighed', { count: voteCount })}
               </div>
             </div>
@@ -157,7 +157,7 @@ export default function EphemeristsTaskDetail({ state }: { state: TaskDetailStat
                       fontSize: "var(--text-xs)",
                       letterSpacing: '0.1em',
                       textTransform: 'uppercase',
-                      padding: '5px 10px',
+                      padding: "var(--space-xs) var(--space-md)",
                       background: on ? INK : 'transparent',
                       color: on ? GOLD_LIGHT : MUTED,
                       border: `1px solid ${on ? INK : GOLD_DEEP}`,
@@ -177,7 +177,7 @@ export default function EphemeristsTaskDetail({ state }: { state: TaskDetailStat
           <>
             <div className="flex flex-col gap-4">
               {sortedSubmissions.slice(0, 4).map((s) => (
-                <div key={s.id} style={{ position: 'relative', paddingTop: s.id === topId ? 16 : 0 }}>
+                <div key={s.id} style={{ position: 'relative', paddingTop: s.id === topId ? 'var(--space-lg)' : 0 }}>
                   {s.id === topId && (
                     <div
                       style={{
@@ -188,7 +188,7 @@ export default function EphemeristsTaskDetail({ state }: { state: TaskDetailStat
                         zIndex: 3,
                         display: 'inline-flex',
                         alignItems: 'center',
-                        gap: 5,
+                        gap: "var(--space-xs)",
                         whiteSpace: 'nowrap',
                         background: INK,
                         color: GOLD_LIGHT,
@@ -196,7 +196,7 @@ export default function EphemeristsTaskDetail({ state }: { state: TaskDetailStat
                         fontSize: "var(--text-sm)",
                         letterSpacing: '0.12em',
                         textTransform: 'uppercase',
-                        padding: '3px 12px',
+                        padding: "var(--space-xs) var(--space-md)",
                         boxShadow: '0 3px 8px rgba(42,29,18,0.35)',
                       }}
                     >
@@ -209,7 +209,7 @@ export default function EphemeristsTaskDetail({ state }: { state: TaskDetailStat
               ))}
             </div>
             {submissions.length > 4 && (
-              <div style={{ marginTop: 16 }}>
+              <div style={{ marginTop: "var(--space-lg)" }}>
                 <Link to={`/praxes?task_id=${task.id}`} style={{ fontFamily: SCRIPT, fontStyle: 'italic', fontSize: "var(--text-xl)", color: RUBRIC, textDecoration: 'none' }}>
                   {t('ephemerists.viewAll', { count: submissions.length })}
                 </Link>
@@ -223,7 +223,7 @@ export default function EphemeristsTaskDetail({ state }: { state: TaskDetailStat
       {canSignUp && (
         <MobileStickyBar>
           {signupError && (
-            <div style={{ fontFamily: SERIF, fontSize: "var(--text-lg)", color: 'var(--color-danger)', padding: '8px 12px', background: 'var(--faction-ephemerists-light)', border: `1px solid ${GOLD_DEEP}` }}>
+            <div style={{ fontFamily: SERIF, fontSize: "var(--text-lg)", color: 'var(--color-danger)', padding: "var(--space-sm) var(--space-md)", background: 'var(--faction-ephemerists-light)', border: `1px solid ${GOLD_DEEP}` }}>
               {signupError}
             </div>
           )}
@@ -237,7 +237,7 @@ export default function EphemeristsTaskDetail({ state }: { state: TaskDetailStat
               fontStyle: 'italic',
               fontSize: "var(--text-xl)",
               letterSpacing: '0.06em',
-              padding: '14px 20px',
+              padding: "var(--space-lg) var(--space-xl)",
               border: `1px solid ${GOLD}`,
               cursor: 'pointer',
             }}
@@ -257,7 +257,7 @@ export default function EphemeristsTaskDetail({ state }: { state: TaskDetailStat
           </span>
           <Link
             to={`/praxes/${mySubmission.id}/edit`}
-            style={{ fontFamily: DISPLAY, fontSize: "var(--text-base)", letterSpacing: '0.1em', textTransform: 'uppercase', padding: '10px 18px', background: LAPIS, color: PARCHMENT, textDecoration: 'none' }}
+            style={{ fontFamily: DISPLAY, fontSize: "var(--text-base)", letterSpacing: '0.1em', textTransform: 'uppercase', padding: "var(--space-md) var(--space-lg)", background: LAPIS, color: PARCHMENT, textDecoration: 'none' }}
           >
             {t('ephemerists.submitted.edit')}
           </Link>
@@ -265,7 +265,7 @@ export default function EphemeristsTaskDetail({ state }: { state: TaskDetailStat
       )}
 
       {!mySubmission && isInProgress && inProgressPraxisId !== null && (
-        <MobileStickyBar style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+        <MobileStickyBar style={{ flexDirection: 'row', alignItems: 'center', gap: "var(--space-md)" }}>
           <button
             onClick={handleDrop}
             style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: SCRIPT, fontStyle: 'italic', fontSize: "var(--text-xl)", color: RUBRIC }}
@@ -274,7 +274,7 @@ export default function EphemeristsTaskDetail({ state }: { state: TaskDetailStat
           </button>
           <Link
             to={`/praxes/${inProgressPraxisId}/edit`}
-            style={{ marginLeft: 'auto', fontFamily: DISPLAY, fontSize: "var(--text-md)", letterSpacing: '0.1em', textTransform: 'uppercase', padding: '12px 20px', background: INK, color: PARCHMENT, textDecoration: 'none' }}
+            style={{ marginLeft: "auto", fontFamily: DISPLAY, fontSize: "var(--text-md)", letterSpacing: '0.1em', textTransform: 'uppercase', padding: "var(--space-md) var(--space-xl)", background: INK, color: PARCHMENT, textDecoration: 'none' }}
           >
             {t('ephemerists.inProgress.continue')}
           </Link>

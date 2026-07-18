@@ -82,21 +82,21 @@ function TheStanding({
   return (
     <div
       style={{
-        marginTop: 8,
-        marginBottom: 24,
+        marginTop: 'var(--space-sm)',
+        marginBottom: 'var(--space-xl)',
         background: 'var(--ua-paper)',
         border: '1px solid var(--ua-line)',
         boxShadow: 'inset 0 0 0 4px var(--ua-paper), inset 0 0 0 5px var(--ua-line-soft)',
-        padding: '22px 24px',
+        padding: 'var(--space-xl) var(--space-xl)',
       }}
     >
-      <div style={{ fontFamily: REGALIA, fontSize: 'var(--text-base)', letterSpacing: '0.2em', color: 'var(--ua-gold)', marginBottom: 18 }}>
+      <div style={{ fontFamily: REGALIA, fontSize: 'var(--text-base)', letterSpacing: '0.2em', color: 'var(--ua-gold)', marginBottom: 'var(--space-lg)' }}>
         {t('detail.ua.standing.heading')}
       </div>
 
       {/* Headline: points earned · appraisal headcount */}
-      <div style={{ display: 'flex', marginBottom: voters.length ? 20 : 0 }}>
-        <div style={{ flex: 1, paddingRight: 16 }}>
+      <div style={{ display: 'flex', marginBottom: voters.length ? "var(--space-xl)" : 0 }}>
+        <div style={{ flex: 1, paddingRight: 'var(--space-lg)' }}>
           <div style={{ fontFamily: DISPLAY, fontStyle: 'italic', fontWeight: 700, fontSize: 'var(--text-display)', lineHeight: 0.85, color: 'var(--ua-orange)', whiteSpace: 'nowrap' }}>
             {base}
             {!isPlain && (
@@ -108,16 +108,16 @@ function TheStanding({
             <span style={{ opacity: 0.55, margin: '0 var(--space-xs)' }}>+</span>
             {votePoints}
           </div>
-          <div style={{ fontFamily: MONO, fontSize: 'var(--text-xs)', letterSpacing: '0.16em', textTransform: 'uppercase', color: 'var(--ua-sub)', marginTop: 7 }}>
+          <div style={{ fontFamily: MONO, fontSize: 'var(--text-xs)', letterSpacing: '0.16em', textTransform: 'uppercase', color: 'var(--ua-sub)', marginTop: 'var(--space-sm)' }}>
             {t('detail.ua.standing.pointsEarned')}
           </div>
         </div>
-        <div style={{ flex: 1, paddingLeft: 16, borderLeft: '1px solid var(--ua-line)' }}>
-          <div style={{ fontFamily: DISPLAY, fontStyle: 'italic', fontWeight: 700, fontSize: 'var(--text-display)', lineHeight: 0.85, color: 'var(--ua-ink)', display: 'flex', alignItems: 'center', gap: 8 }}>
+        <div style={{ flex: 1, paddingLeft: 'var(--space-lg)', borderLeft: '1px solid var(--ua-line)' }}>
+          <div style={{ fontFamily: DISPLAY, fontStyle: 'italic', fontWeight: 700, fontSize: 'var(--text-display)', lineHeight: 0.85, color: 'var(--ua-ink)', display: 'flex', alignItems: 'center', gap: 'var(--space-sm)' }}>
             <span style={{ fontSize: 'var(--text-content)', color: 'var(--ua-gold)' }}>✦</span>
             {votes.total_votes}
           </div>
-          <div style={{ fontFamily: MONO, fontSize: 'var(--text-xs)', letterSpacing: '0.16em', textTransform: 'uppercase', color: 'var(--ua-sub)', marginTop: 7 }}>
+          <div style={{ fontFamily: MONO, fontSize: 'var(--text-xs)', letterSpacing: '0.16em', textTransform: 'uppercase', color: 'var(--ua-sub)', marginTop: 'var(--space-sm)' }}>
             {t('detail.ua.standing.appraisal', { count: votes.total_votes })}
           </div>
         </div>
@@ -126,12 +126,12 @@ function TheStanding({
       {/* Appraisers' ledger — each patron + the rung they gave (value / 5) */}
       {voters.length > 0 && (
         <>
-          <div style={{ borderTop: '1px dashed var(--ua-line-soft)', paddingTop: 15, fontFamily: MONO, fontSize: 'var(--text-xs)', letterSpacing: '0.16em', textTransform: 'uppercase', color: 'var(--ua-sub)', marginBottom: 13 }}>
+          <div style={{ borderTop: '1px dashed var(--ua-line-soft)', paddingTop: 'var(--space-lg)', fontFamily: MONO, fontSize: 'var(--text-xs)', letterSpacing: '0.16em', textTransform: 'uppercase', color: 'var(--ua-sub)', marginBottom: 'var(--space-md)' }}>
             {t('detail.ua.standing.appraisedBy')}
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 11 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-md)' }}>
             {voters.map((voter) => (
-              <div key={voter.character_id} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <div key={voter.character_id} style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-md)' }}>
                 <Link to={`/characters/${voter.character_id}`} style={{ textDecoration: 'none', flexShrink: 0 }}>
                   <span
                     style={{
@@ -167,7 +167,7 @@ function TheStanding({
               </div>
             ))}
           </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', borderTop: '1px solid var(--ua-line)', marginTop: 12, paddingTop: 10 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', borderTop: '1px solid var(--ua-line)', marginTop: 'var(--space-md)', paddingTop: 'var(--space-md)' }}>
             <span style={{ fontFamily: MONO, fontSize: 'var(--text-xs)', letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--ua-sub)' }}>
               {t('detail.ua.standing.patronsTotal', { count: voters.length })}
             </span>
@@ -208,8 +208,8 @@ export default function UaPraxisDetail({ state }: { state: PraxisDetailState }) 
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          gap: 14,
-          padding: '12px 26px',
+          gap: 'var(--space-lg)',
+          padding: 'var(--space-md) var(--space-xl)',
           borderBottom: '1px solid var(--ua-line-soft)',
           background: 'linear-gradient(180deg, color-mix(in srgb, var(--ua-gold-pale) 28%, var(--ua-paper)), var(--ua-paper))',
         }}
@@ -234,7 +234,7 @@ export default function UaPraxisDetail({ state }: { state: PraxisDetailState }) 
             textTransform: 'uppercase',
             color: 'var(--faction-ua)',
             border: '1px solid var(--faction-ua-border)',
-            padding: '3px 9px',
+            padding: 'var(--space-xs) var(--space-sm)',
           }}
         >
           {praxis.moderation_status === 'flagged'
@@ -247,7 +247,7 @@ export default function UaPraxisDetail({ state }: { state: PraxisDetailState }) 
         </span>
       </div>
 
-      <div style={{ padding: '30px 30px 34px' }}>
+      <div style={{ padding: 'var(--space-2xl) var(--space-2xl) var(--space-2xl)' }}>
         {/* ── Behavior slots (invariant — from shared module) ── */}
         <PraxisAdminBar state={state} />
         <PraxisStatusBanners state={state} />
@@ -260,10 +260,10 @@ export default function UaPraxisDetail({ state }: { state: PraxisDetailState }) 
             letterSpacing: '0.22em',
             textTransform: 'uppercase',
             color: 'var(--ua-muted)',
-            marginBottom: 12,
+            marginBottom: 'var(--space-md)',
             display: 'flex',
             flexWrap: 'wrap',
-            gap: 8,
+            gap: 'var(--space-sm)',
             alignItems: 'center',
           }}
         >
@@ -285,7 +285,7 @@ export default function UaPraxisDetail({ state }: { state: PraxisDetailState }) 
             fontSize: 'var(--text-display)',
             lineHeight: 1.06,
             color: 'var(--ua-ink)',
-            marginBottom: 18,
+            marginBottom: 'var(--space-lg)',
           }}
         >
           {praxis.title ?? t('detail.ua.untitled')}
@@ -299,9 +299,9 @@ export default function UaPraxisDetail({ state }: { state: PraxisDetailState }) 
           style={{
             display: 'flex',
             alignItems: 'center',
-            gap: 14,
-            paddingBottom: 22,
-            marginBottom: 24,
+            gap: 'var(--space-lg)',
+            paddingBottom: 'var(--space-xl)',
+            marginBottom: 'var(--space-xl)',
             borderBottom: '1px solid var(--ua-line-soft)',
           }}
         >
@@ -360,7 +360,7 @@ export default function UaPraxisDetail({ state }: { state: PraxisDetailState }) 
                 fontSize: 'var(--text-xs)',
                 letterSpacing: '0.1em',
                 color: 'var(--ua-muted)',
-                marginTop: 2,
+                marginTop: 'var(--space-xs)',
               }}
             >
               {t('detail.ua.ptsAtStake')}
@@ -370,8 +370,8 @@ export default function UaPraxisDetail({ state }: { state: PraxisDetailState }) 
 
         {/* ── The account (body) ── */}
         {praxis.body_text && (
-          <div style={{ marginBottom: 26 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12, margin: '0 0 16px' }}>
+          <div style={{ marginBottom: 'var(--space-xl)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-md)', margin: '0 0 var(--space-lg)' }}>
               <div style={{ height: 1, flex: 1, background: 'var(--ua-line-soft)' }} />
               <span style={{ fontFamily: REGALIA, fontSize: 'var(--text-sm)', letterSpacing: '0.22em', color: 'var(--ua-gold)', whiteSpace: 'nowrap' }}>
                 {t('detail.ua.theProcess')}
@@ -392,8 +392,8 @@ export default function UaPraxisDetail({ state }: { state: PraxisDetailState }) 
 
         {/* ── The evidence — gilt-framed plate ── */}
         {praxis.media_items.length > 0 && (
-          <div style={{ marginBottom: 26 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12, margin: '0 0 16px' }}>
+          <div style={{ marginBottom: 'var(--space-xl)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-md)', margin: '0 0 var(--space-lg)' }}>
               <div style={{ height: 1, flex: 1, background: 'var(--ua-line-soft)' }} />
               <span style={{ fontFamily: REGALIA, fontSize: 'var(--text-sm)', letterSpacing: '0.22em', color: 'var(--ua-gold)', whiteSpace: 'nowrap' }}>
                 {t('detail.ua.thePlate', { count: praxis.media_items.length })}
@@ -403,7 +403,7 @@ export default function UaPraxisDetail({ state }: { state: PraxisDetailState }) 
             {/* gilt frame: gold-leaf outer, gold inner mat, then the gallery */}
             <div
               style={{
-                padding: 9,
+                padding: 'var(--space-sm)',
                 background: 'var(--ua-gilt)',
                 boxShadow: `0 10px 22px color-mix(in srgb, var(--ua-ink) 20%, transparent),
                             inset 0 0 0 1px color-mix(in srgb, white 40%, transparent)`,
@@ -411,11 +411,11 @@ export default function UaPraxisDetail({ state }: { state: PraxisDetailState }) 
             >
               <div
                 style={{
-                  padding: 3,
+                  padding: 'var(--space-xs)',
                   background: 'linear-gradient(135deg, var(--ua-gold), var(--ua-gold-pale))',
                 }}
               >
-                <div style={{ background: 'var(--ua-paper)', padding: 6 }}>
+                <div style={{ background: 'var(--ua-paper)', padding: 'var(--space-sm)' }}>
                   <MediaGallery media={praxis.media_items} layout="grid" />
                 </div>
               </div>
@@ -427,8 +427,8 @@ export default function UaPraxisDetail({ state }: { state: PraxisDetailState }) 
         <TheStanding praxis={praxis} votes={votes} voters={voters} />
 
         {/* ── The Patronage (cast your appraisal) ── */}
-        <div style={{ marginBottom: 18 }}>
-          <div style={{ marginBottom: 14, paddingTop: 16, borderTop: '1px solid var(--ua-line-soft)' }}>
+        <div style={{ marginBottom: 'var(--space-lg)' }}>
+          <div style={{ marginBottom: 'var(--space-lg)', paddingTop: 'var(--space-lg)', borderTop: '1px solid var(--ua-line-soft)' }}>
             <span style={{ fontFamily: REGALIA, fontSize: 'var(--text-base)', letterSpacing: '0.2em', color: 'var(--ua-gold)' }}>
               {t('detail.ua.patronage')}
             </span>

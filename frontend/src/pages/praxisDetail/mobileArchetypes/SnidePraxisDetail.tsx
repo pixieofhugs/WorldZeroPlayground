@@ -51,9 +51,9 @@ const kicker: CSSProperties = {
 /** Evidence plate — a dark taped card headed by an acid kicker. */
 function Plate({ title, children }: { title: string; children: ReactNode }) {
   return (
-    <section style={{ position: 'relative', background: INK, color: TEXT, border: `1px solid ${LINE}`, boxShadow: CARD_SHADOW, padding: 13, overflow: 'hidden' }}>
+    <section style={{ position: 'relative', background: INK, color: TEXT, border: `1px solid ${LINE}`, boxShadow: CARD_SHADOW, padding: 'var(--space-md)', overflow: 'hidden' }}>
       <span aria-hidden style={{ position: 'absolute', top: -10, left: 20, width: 58, height: 22, background: TAPE, transform: 'rotate(-4deg)', opacity: 0.92 }} />
-      <div style={{ fontFamily: COND, fontSize: 'var(--text-lg)', letterSpacing: '0.1em', textTransform: 'uppercase', color: ACID, marginBottom: 10 }}>
+      <div style={{ fontFamily: COND, fontSize: 'var(--text-lg)', letterSpacing: '0.1em', textTransform: 'uppercase', color: ACID, marginBottom: 'var(--space-md)' }}>
         {title}
       </div>
       {children}
@@ -70,7 +70,7 @@ export default function SnidePraxisDetail({ state }: { state: PraxisDetailState 
   const initial = (praxis.created_by_display_name || '?')[0]?.toUpperCase() ?? '?'
 
   return (
-    <div data-skin="snide" className="page" style={{ display: 'flex', flexDirection: 'column', gap: 14, fontFamily: TYPE, color: WALL_TEXT, background: WALL }}>
+    <div data-skin="snide" className="page" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-lg)', fontFamily: TYPE, color: WALL_TEXT, background: WALL }}>
       {/* Behavior slots (invariant) */}
       <PraxisStatusBanners state={state} />
       <PraxisAdminBar state={state} />
@@ -91,7 +91,7 @@ export default function SnidePraxisDetail({ state }: { state: PraxisDetailState 
             praxis={praxis}
             linkStyle={{ fontFamily: COND, fontSize: 'var(--text-content)', letterSpacing: '0.03em', color: WALL_TEXT, lineHeight: 1, textDecoration: 'none' }}
           />
-          <div className="truncate" style={{ ...kicker, marginTop: 3 }}>
+          <div className="truncate" style={{ ...kicker, marginTop: 'var(--space-xs)' }}>
             {t('detail.snide.pulledItOff')} · {formatTimestamp(filedDate)}
           </div>
         </div>
@@ -106,7 +106,7 @@ export default function SnidePraxisDetail({ state }: { state: PraxisDetailState 
 
       {/* Confession headline */}
       <div>
-        <div style={{ ...kicker, marginBottom: 4, color: ACID }}>{t('detail.snide.theConfession')}</div>
+        <div style={{ ...kicker, marginBottom: 'var(--space-xs)', color: ACID }}>{t('detail.snide.theConfession')}</div>
         <h1 style={{ fontFamily: COND, fontSize: 'var(--text-heading)', letterSpacing: '0.02em', lineHeight: 1.08, margin: 0, color: WALL_TEXT, overflowWrap: 'anywhere' }}>
           {praxis.title ?? t('detail.snide.untitled')}
         </h1>
@@ -134,10 +134,10 @@ export default function SnidePraxisDetail({ state }: { state: PraxisDetailState 
 
       {/* Vote caster */}
       <Plate title={t('detail.snide.theVerdict')}>
-        <div className="flex items-center justify-center content-text" style={{ marginBottom: 12, fontFamily: COND, letterSpacing: '0.03em', color: TEXT }}>
+        <div className="flex items-center justify-center content-text" style={{ marginBottom: 'var(--space-md)', fontFamily: COND, letterSpacing: '0.03em', color: TEXT }}>
           {t('detail.snide.mobile.appraise')}
         </div>
-        <div style={{ marginBottom: 12 }}>
+        <div style={{ marginBottom: 'var(--space-md)' }}>
           <PraxisScoreBreakdown state={state} align="center" accent={ACID} font={IMPACT} />
         </div>
         <MobileStarVote

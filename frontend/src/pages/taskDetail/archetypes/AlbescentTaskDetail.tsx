@@ -35,7 +35,7 @@ const ink = (pct: number) => `color-mix(in srgb, ${INK} ${pct}%, transparent)`;
 /** Section heading — a serif-italic title flanked by a fading hairline rule. */
 function SectionHead({ title, trailing }: { title: string; trailing?: ReactNode }) {
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 18 }}>
+    <div style={{ display: "flex", alignItems: "center", gap: "var(--space-lg)", marginBottom: "var(--space-lg)" }}>
       <h2
         className="content-title"
         style={{
@@ -113,25 +113,26 @@ export default function AlbescentTaskDetail({ state }: { state: TaskDetailState 
         <Link to="/tasks" style={{ color: "inherit", textDecoration: "none" }}>
           {t("default.breadcrumb")}
         </Link>
-        <span style={{ opacity: 0.5, margin: "0 8px" }}>/</span>
+        <span style={{ opacity: 0.5, margin: "0 var(--space-sm)" }}>/</span>
         <span>{t("albescent.faction")}</span>
-        <span style={{ opacity: 0.5, margin: "0 8px" }}>/</span>
+        <span style={{ opacity: 0.5, margin: "0 var(--space-sm)" }}>/</span>
         <span style={{ color: INK }}>{task.title}</span>
       </nav>
 
       <div style={{ maxWidth: 880, margin: "0 auto" }}>
-        <div style={{ display: "flex", flexDirection: "column", gap: 34 }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-2xl)" }}>
           {/* HERO — the letter */}
           <div
             style={{
               background: SHEET,
               border: `1px solid ${ink(10)}`,
               boxShadow: "0 2px 24px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.04)",
+              // eslint-disable-next-line local/no-raw-style-values -- ornament: letterpress plate margins; the asymmetric 54/60/48 inset is what makes the hero read as a printed sheet rather than a card.
               padding: "54px 60px 48px",
               textAlign: "center",
             }}
           >
-            <div style={{ display: "flex", justifyContent: "center", marginBottom: 24 }}>
+            <div style={{ display: "flex", justifyContent: "center", marginBottom: "var(--space-xl)" }}>
               <AlbescentSigil size={44} />
             </div>
             <div
@@ -141,7 +142,7 @@ export default function AlbescentTaskDetail({ state }: { state: TaskDetailState 
                 letterSpacing: "0.34em",
                 textTransform: "uppercase",
                 color: ink(45),
-                marginBottom: 6,
+                marginBottom: "var(--space-sm)",
               }}
             >
               {t("albescent.faction")}
@@ -153,12 +154,21 @@ export default function AlbescentTaskDetail({ state }: { state: TaskDetailState 
                 letterSpacing: "0.28em",
                 textTransform: "uppercase",
                 color: ink(30),
-                marginBottom: 26,
+                marginBottom: "var(--space-xl)",
               }}
             >
               {t("albescent.correspondence", { number: correspondenceNo })}
             </div>
-            <div style={{ width: 54, height: 1, background: ink(12), margin: "0 auto 26px" }} />
+            {/* ornament: letterpress hairline rule; its lead sets the plate's vertical rhythm against the title, not a layout gutter. */}
+            <div
+              style={{
+                width: 54,
+                height: 1,
+                background: ink(12),
+                // eslint-disable-next-line local/no-raw-style-values -- ornament, per above
+                margin: "0 auto 26px",
+              }}
+            />
             <h1
               className="content-title"
               style={{
@@ -167,15 +177,24 @@ export default function AlbescentTaskDetail({ state }: { state: TaskDetailState 
                 fontWeight: 500,
                 lineHeight: 1.16,
                 color: INK,
-                margin: "0 auto 22px",
+                margin: "0 auto var(--space-xl)",
                 maxWidth: 560,
                 overflowWrap: "anywhere",
               }}
             >
               {task.title}
             </h1>
-            <div style={{ width: 54, height: 1, background: ink(12), margin: "0 auto 28px" }} />
-            <div style={{ display: "flex", justifyContent: "center", gap: 48, flexWrap: "wrap" }}>
+            {/* ornament: letterpress hairline rule; its lead sets the plate's vertical rhythm against the title, not a layout gutter. */}
+            <div
+              style={{
+                width: 54,
+                height: 1,
+                background: ink(12),
+                // eslint-disable-next-line local/no-raw-style-values -- ornament, per above
+                margin: "0 auto 28px",
+              }}
+            />
+            <div style={{ display: "flex", justifyContent: "center", gap: "var(--space-2xl)", flexWrap: "wrap" }}>
               {[
                 {
                   label: t("albescent.stats.standing"),
@@ -194,7 +213,7 @@ export default function AlbescentTaskDetail({ state }: { state: TaskDetailState 
                   value: `${submissions.length}`,
                 },
               ].map((stat, index) => (
-                <div key={stat.label} style={{ display: "flex", gap: 48 }}>
+                <div key={stat.label} style={{ display: "flex", gap: "var(--space-2xl)" }}>
                   {index > 0 && <div style={{ borderLeft: `1px solid ${ink(10)}` }} />}
                   <div>
                     <div
@@ -204,7 +223,7 @@ export default function AlbescentTaskDetail({ state }: { state: TaskDetailState 
                         letterSpacing: "0.22em",
                         textTransform: "uppercase",
                         color: ink(40),
-                        marginBottom: 6,
+                        marginBottom: "var(--space-sm)",
                       }}
                     >
                       {stat.label}
@@ -222,12 +241,12 @@ export default function AlbescentTaskDetail({ state }: { state: TaskDetailState 
               style={{
                 display: "flex",
                 alignItems: "center",
-                gap: 18,
+                gap: "var(--space-lg)",
                 flexWrap: "wrap",
                 background: SHEET,
                 border: `1px solid ${ink(10)}`,
                 boxShadow: "0 1px 3px rgba(0,0,0,0.04)",
-                padding: "16px 22px",
+                padding: "var(--space-lg) var(--space-xl)",
               }}
             >
               <button
@@ -241,7 +260,7 @@ export default function AlbescentTaskDetail({ state }: { state: TaskDetailState 
                   color: INK,
                   background: "transparent",
                   border: `1px solid ${INK}`,
-                  padding: "13px 26px",
+                  padding: "var(--space-md) var(--space-xl)",
                 }}
               >
                 {t("albescent.signup.cta", { points: modifiedPoints })}
@@ -283,11 +302,11 @@ export default function AlbescentTaskDetail({ state }: { state: TaskDetailState 
               style={{
                 display: "flex",
                 alignItems: "center",
-                gap: 16,
+                gap: "var(--space-lg)",
                 flexWrap: "wrap",
                 background: SHEET,
                 border: `1px solid ${ink(10)}`,
-                padding: "16px 22px",
+                padding: "var(--space-lg) var(--space-xl)",
               }}
             >
               <span className="content-text" style={{ fontFamily: FONT, fontStyle: "italic", color: ink(65) }}>
@@ -301,7 +320,7 @@ export default function AlbescentTaskDetail({ state }: { state: TaskDetailState 
                   fontSize: "var(--text-sm)",
                   letterSpacing: "0.16em",
                   textTransform: "uppercase",
-                  padding: "10px 20px",
+                  padding: "var(--space-md) var(--space-xl)",
                   background: INK,
                   color: "var(--faction-albescent-page)",
                   textDecoration: "none",
@@ -317,11 +336,11 @@ export default function AlbescentTaskDetail({ state }: { state: TaskDetailState 
               style={{
                 display: "flex",
                 alignItems: "center",
-                gap: 16,
+                gap: "var(--space-lg)",
                 flexWrap: "wrap",
                 background: SHEET,
                 border: `1px solid ${ink(10)}`,
-                padding: "16px 22px",
+                padding: "var(--space-lg) var(--space-xl)",
               }}
             >
               <span className="content-text" style={{ fontFamily: FONT, fontStyle: "italic", color: ink(65) }}>
@@ -335,7 +354,7 @@ export default function AlbescentTaskDetail({ state }: { state: TaskDetailState 
                   fontSize: "var(--text-sm)",
                   letterSpacing: "0.16em",
                   textTransform: "uppercase",
-                  padding: "10px 20px",
+                  padding: "var(--space-md) var(--space-xl)",
                   background: INK,
                   color: "var(--faction-albescent-page)",
                   textDecoration: "none",
@@ -386,6 +405,7 @@ export default function AlbescentTaskDetail({ state }: { state: TaskDetailState 
                 background: SHEET,
                 border: `1px solid ${ink(10)}`,
                 boxShadow: "0 1px 3px rgba(0,0,0,0.04)",
+                // eslint-disable-next-line local/no-raw-style-values -- ornament: letterpress plate margins, matching the hero sheet at a smaller cut.
                 padding: "34px 40px",
                 maxWidth: 640,
               }}
@@ -409,7 +429,7 @@ export default function AlbescentTaskDetail({ state }: { state: TaskDetailState 
           {signups.length > 0 && (
             <section>
               <SectionHead title={t("albescent.inConfidenceHeading")} />
-              <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "var(--space-md)", flexWrap: "wrap" }}>
                 {signups.map((hand) => {
                   const rel = relationOf(hand.character_id, friends, foes);
                   return (
@@ -455,7 +475,7 @@ export default function AlbescentTaskDetail({ state }: { state: TaskDetailState 
                     letterSpacing: "0.12em",
                     textTransform: "uppercase",
                     color: ink(40),
-                    marginLeft: 4,
+                    marginLeft: "var(--space-xs)",
                   }}
                 >
                   {t("albescent.inHand")}
@@ -481,7 +501,7 @@ export default function AlbescentTaskDetail({ state }: { state: TaskDetailState 
                           fontSize: "var(--text-sm)",
                           letterSpacing: "0.12em",
                           textTransform: "uppercase",
-                          padding: "5px 12px",
+                          padding: "var(--space-xs) var(--space-md)",
                           background: on ? INK : "transparent",
                           color: on ? "var(--faction-albescent-page)" : ink(45),
                           border: `1px solid ${on ? INK : ink(14)}`,
@@ -503,9 +523,9 @@ export default function AlbescentTaskDetail({ state }: { state: TaskDetailState 
               </p>
             ) : (
               <>
-                <div style={{ display: "flex", flexWrap: "wrap", gap: "30px 24px", alignItems: "flex-start" }}>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: "var(--space-2xl) var(--space-xl)", alignItems: "flex-start" }}>
                   {sortedSubmissions.slice(0, 4).map((s) => (
-                    <div key={s.id} style={{ position: "relative", paddingTop: 22 }}>
+                    <div key={s.id} style={{ position: "relative", paddingTop: "var(--space-xl)" }}>
                       {s.id === topId && (
                         <div
                           style={{
@@ -516,7 +536,7 @@ export default function AlbescentTaskDetail({ state }: { state: TaskDetailState 
                             zIndex: 3,
                             display: "inline-flex",
                             alignItems: "center",
-                            gap: 6,
+                            gap: "var(--space-sm)",
                             whiteSpace: "nowrap",
                             background: INK,
                             color: "var(--faction-albescent-page)",
@@ -524,7 +544,7 @@ export default function AlbescentTaskDetail({ state }: { state: TaskDetailState 
                             fontStyle: "italic",
                             fontSize: "var(--text-lg)",
                             letterSpacing: "0.04em",
-                            padding: "3px 14px",
+                            padding: "var(--space-xs) var(--space-lg)",
                           }}
                         >
                           <span style={{ fontSize: "var(--text-lg)", lineHeight: 1 }}>⚜</span>{" "}
@@ -536,7 +556,7 @@ export default function AlbescentTaskDetail({ state }: { state: TaskDetailState 
                   ))}
                 </div>
                 {submissions.length > 4 && (
-                  <div style={{ marginTop: 18 }}>
+                  <div style={{ marginTop: "var(--space-lg)" }}>
                     <Link
                       to={`/praxes?task_id=${task.id}`}
                       style={{
@@ -547,7 +567,7 @@ export default function AlbescentTaskDetail({ state }: { state: TaskDetailState 
                         color: ink(55),
                         textDecoration: "none",
                         borderBottom: `1px solid ${ink(20)}`,
-                        paddingBottom: 2,
+                        paddingBottom: "var(--space-xs)",
                       }}
                     >
                       {t("albescent.viewAll", { count: submissions.length })}

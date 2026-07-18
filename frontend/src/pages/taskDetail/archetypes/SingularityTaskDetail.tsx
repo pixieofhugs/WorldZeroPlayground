@@ -52,7 +52,7 @@ const sectionH2: CSSProperties = {
 const statBox: CSSProperties = {
   border: `1px solid ${PANEL_BORDER}`,
   background: PANEL_BG,
-  padding: "10px 18px",
+  padding: "var(--space-md) var(--space-lg)",
   textAlign: "center",
   minWidth: 90,
 };
@@ -61,7 +61,7 @@ const statLabel: CSSProperties = {
   letterSpacing: "0.2em",
   color: BLUE_FAINT,
   textTransform: "uppercase",
-  marginTop: 4,
+  marginTop: "var(--space-xs)",
 };
 
 /** A single circuit-trace corner SVG (token-stroked). */
@@ -100,7 +100,7 @@ function ArrayRoster({
 }) {
   const { t } = useTranslation("tasks");
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+    <div style={{ display: "flex", alignItems: "center", gap: "var(--space-sm)", flexWrap: "wrap" }}>
       {signups.map((member) => {
         const rel = relationOf(member.character_id, friends, foes);
         const relColor = rel === "friend" ? GREEN : BLUE;
@@ -164,7 +164,7 @@ function ArrayRoster({
           letterSpacing: "0.14em",
           textTransform: "uppercase",
           color: BLUE_DIM,
-          marginLeft: 6,
+          marginLeft: "var(--space-sm)",
         }}
       >
         {t("singularity.nodesOnArray")}
@@ -233,7 +233,7 @@ export default function SingularityTaskDetail({
     >
       <style>{`@keyframes sg-blink { 50% { opacity: 0; } }`}</style>
 
-      <div style={{ maxWidth: 920, margin: "0 auto", padding: "0 24px" }}>
+      <div style={{ maxWidth: 920, margin: "0 auto", padding: "0 var(--space-xl)" }}>
         {/* ── Breadcrumb ── */}
         <nav
           className="font-body"
@@ -242,19 +242,19 @@ export default function SingularityTaskDetail({
             letterSpacing: "0.14em",
             textTransform: "uppercase",
             color: BLUE_FAINT,
-            marginBottom: 22,
+            marginBottom: "var(--space-xl)",
           }}
         >
           <Link to="/tasks" style={{ color: BLUE, textDecoration: "none" }}>
             {t("default.breadcrumb")}
           </Link>
-          <span style={{ opacity: 0.5, margin: "0 8px" }}>/</span>
+          <span style={{ opacity: 0.5, margin: "0 var(--space-sm)" }}>/</span>
           <span>{t("singularity.faction")}</span>
-          <span style={{ opacity: 0.5, margin: "0 8px" }}>/</span>
+          <span style={{ opacity: 0.5, margin: "0 var(--space-sm)" }}>/</span>
           <span style={{ color: GREEN }}>{task.title}</span>
         </nav>
 
-        <div style={{ display: "flex", flexDirection: "column", gap: 30 }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-2xl)" }}>
           {/* ── Hero — terminal protocol readout ── */}
           <div
             style={{
@@ -274,14 +274,14 @@ export default function SingularityTaskDetail({
             />
             <CircuitCorner />
             <CircuitCorner flip />
-            <div style={{ position: "relative", zIndex: 2, padding: "30px 36px 34px" }}>
+            <div style={{ position: "relative", zIndex: 2, padding: "var(--space-2xl) var(--space-2xl) var(--space-2xl)" }}>
               <div
                 style={{
                   fontSize: "var(--text-xs)",
                   letterSpacing: "0.16em",
                   color: BLUE_FAINT,
                   lineHeight: 2,
-                  marginBottom: 18,
+                  marginBottom: "var(--space-lg)",
                 }}
               >
                 <div>
@@ -307,7 +307,7 @@ export default function SingularityTaskDetail({
                   lineHeight: 1.0,
                   letterSpacing: "0.03em",
                   color: GREEN,
-                  margin: "0 0 22px",
+                  margin: "0 0 var(--space-xl)",
                   overflowWrap: "anywhere",
                 }}
               >
@@ -318,13 +318,13 @@ export default function SingularityTaskDetail({
                     width: 14,
                     height: 34,
                     background: GREEN,
-                    marginLeft: 6,
+                    marginLeft: "var(--space-sm)",
                     verticalAlign: -4,
                     animation: "sg-blink 1s step-end infinite",
                   }}
                 />
               </h1>
-              <div style={{ display: "flex", gap: 14, flexWrap: "wrap" }}>
+              <div style={{ display: "flex", gap: "var(--space-lg)", flexWrap: "wrap" }}>
                 <div style={statBox}>
                   <div className="content-title" style={{ lineHeight: 1, color: GREEN }}>
                     {modifiedPoints}
@@ -365,7 +365,7 @@ export default function SingularityTaskDetail({
 
           {/* ── The observation (task body) ── */}
           <section>
-            <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 14 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "var(--space-lg)", marginBottom: "var(--space-lg)" }}>
               <h2 style={sectionH2}>{t("singularity.observationHeading")}</h2>
               <span style={sectionRule} />
             </div>
@@ -373,7 +373,7 @@ export default function SingularityTaskDetail({
               style={{
                 border: `1px solid ${BODY_BORDER}`,
                 background: BODY_BG,
-                padding: "24px 28px",
+                padding: "var(--space-xl) var(--space-2xl)",
                 maxWidth: 660,
               }}
             >
@@ -398,11 +398,11 @@ export default function SingularityTaskDetail({
               style={{
                 display: "flex",
                 alignItems: "center",
-                gap: 18,
+                gap: "var(--space-lg)",
                 flexWrap: "wrap",
                 border: `1px solid ${PANEL_BORDER}`,
                 background: PANEL_BG,
-                padding: "16px 20px",
+                padding: "var(--space-lg) var(--space-xl)",
               }}
             >
               <button
@@ -416,7 +416,7 @@ export default function SingularityTaskDetail({
                   color: BLUE,
                   background: PANEL_BG,
                   border: `1px solid ${BLUE}`,
-                  padding: "13px 24px",
+                  padding: "var(--space-md) var(--space-xl)",
                 }}
               >
                 {t("singularity.signup.cta", { points: modifiedPoints })}
@@ -454,11 +454,11 @@ export default function SingularityTaskDetail({
               style={{
                 display: "flex",
                 alignItems: "center",
-                gap: 18,
+                gap: "var(--space-lg)",
                 flexWrap: "wrap",
                 border: `1px solid ${PANEL_BORDER}`,
                 background: PANEL_BG,
-                padding: "16px 20px",
+                padding: "var(--space-lg) var(--space-xl)",
               }}
             >
               <Link
@@ -471,7 +471,7 @@ export default function SingularityTaskDetail({
                   color: GREEN,
                   background: "color-mix(in srgb, var(--faction-singularity-card-text) 14%, transparent)",
                   border: `1px solid ${GREEN}`,
-                  padding: "13px 24px",
+                  padding: "var(--space-md) var(--space-xl)",
                   textDecoration: "none",
                 }}
               >
@@ -488,11 +488,11 @@ export default function SingularityTaskDetail({
               style={{
                 display: "flex",
                 alignItems: "center",
-                gap: 18,
+                gap: "var(--space-lg)",
                 flexWrap: "wrap",
                 border: `1px solid ${PANEL_BORDER}`,
                 background: PANEL_BG,
-                padding: "16px 20px",
+                padding: "var(--space-lg) var(--space-xl)",
               }}
             >
               <Link
@@ -505,7 +505,7 @@ export default function SingularityTaskDetail({
                   color: GREEN,
                   background: "color-mix(in srgb, var(--faction-singularity-card-text) 14%, transparent)",
                   border: `1px solid ${GREEN}`,
-                  padding: "13px 24px",
+                  padding: "var(--space-md) var(--space-xl)",
                   textDecoration: "none",
                 }}
               >
@@ -541,7 +541,7 @@ export default function SingularityTaskDetail({
           {/* ── Array roster (signups) ── */}
           {signups.length > 0 && (
             <section>
-              <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 14 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "var(--space-lg)", marginBottom: "var(--space-lg)" }}>
                 <h2 style={sectionH2}>{t("singularity.rosterHeading")}</h2>
                 <span style={sectionRule} />
                 <span style={{ fontSize: "var(--text-xs)", letterSpacing: "0.12em", color: BLUE_DIM }}>
@@ -554,16 +554,16 @@ export default function SingularityTaskDetail({
 
           {/* ── Mob verdict (read-only vote aggregate) ── */}
           <section>
-            <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 14 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "var(--space-lg)", marginBottom: "var(--space-lg)" }}>
               <h2 style={sectionH2}>{t("singularity.consensusHeading")}</h2>
               <span style={sectionRule} />
             </div>
             {voteCount > 0 ? (
-              <div style={{ display: "flex", alignItems: "flex-end", gap: 12 }}>
+              <div style={{ display: "flex", alignItems: "flex-end", gap: "var(--space-md)" }}>
                 <span className="content-title" style={{ fontFamily: TERM_FONT, lineHeight: 0.8, color: GREEN }}>
                   {topScore}
                 </span>
-                <div style={{ paddingBottom: 4 }}>
+                <div style={{ paddingBottom: "var(--space-xs)" }}>
                   <div
                     style={{
                       fontFamily: TERM_FONT,
@@ -593,8 +593,8 @@ export default function SingularityTaskDetail({
               style={{
                 display: "flex",
                 alignItems: "center",
-                gap: 14,
-                marginBottom: 18,
+                gap: "var(--space-lg)",
+                marginBottom: "var(--space-lg)",
                 flexWrap: "wrap",
               }}
             >
@@ -615,7 +615,7 @@ export default function SingularityTaskDetail({
                         fontSize: "var(--text-xs)",
                         letterSpacing: "0.1em",
                         textTransform: "uppercase",
-                        padding: "5px 12px",
+                        padding: "var(--space-xs) var(--space-md)",
                         background: on ? "color-mix(in srgb, var(--faction-singularity-card-text) 14%, transparent)" : "transparent",
                         color: on ? GREEN : BLUE_DIM,
                         border: `1px solid ${on ? GREEN : RULE}`,
@@ -637,9 +637,9 @@ export default function SingularityTaskDetail({
               </p>
             ) : (
               <>
-                <div style={{ display: "flex", flexWrap: "wrap", gap: "30px 22px", alignItems: "flex-start" }}>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: "var(--space-2xl) var(--space-xl)", alignItems: "flex-start" }}>
                   {sortedSubmissions.slice(0, 4).map((s) => (
-                    <div key={s.id} style={{ position: "relative", paddingTop: s.id === topId ? 20 : 0 }}>
+                    <div key={s.id} style={{ position: "relative", paddingTop: s.id === topId ? "var(--space-xl)" : 0 }}>
                       {s.id === topId && (
                         <div
                           style={{
@@ -650,7 +650,7 @@ export default function SingularityTaskDetail({
                             zIndex: 3,
                             display: "inline-flex",
                             alignItems: "center",
-                            gap: 5,
+                            gap: "var(--space-xs)",
                             whiteSpace: "nowrap",
                             background: BLACK,
                             border: `1px solid ${GREEN}`,
@@ -658,7 +658,7 @@ export default function SingularityTaskDetail({
                             fontFamily: TERM_FONT,
                             fontSize: "var(--text-xs)",
                             letterSpacing: "0.16em",
-                            padding: "4px 11px",
+                            padding: "var(--space-xs) var(--space-md)",
                             boxShadow: "0 0 12px rgba(74,222,128,0.4)",
                           }}
                         >
@@ -671,7 +671,7 @@ export default function SingularityTaskDetail({
                   ))}
                 </div>
                 {submissions.length > 4 && (
-                  <div style={{ marginTop: 16 }}>
+                  <div style={{ marginTop: "var(--space-lg)" }}>
                     <Link
                       to={`/praxes?task_id=${task.id}`}
                       style={{

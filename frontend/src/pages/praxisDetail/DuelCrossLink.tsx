@@ -103,8 +103,8 @@ export function DefaultDuelRail({
 }: DuelRailSkinProps) {
   const wrapper: CSSProperties = {
     maxWidth,
-    margin: "16px 0",
-    padding: "12px 16px",
+    margin: "var(--space-lg) 0",
+    padding: "var(--space-md) var(--space-lg)",
     borderLeft: `3px solid ${accent}`,
     background: soft,
     fontFamily: "var(--font-body)",
@@ -119,7 +119,7 @@ export function DefaultDuelRail({
             display: "flex",
             justifyContent: "space-between",
             alignItems: "center",
-            gap: 12,
+            gap: "var(--space-md)",
             flexWrap: "wrap",
           }}
         >
@@ -150,7 +150,7 @@ function OpponentBadge({ side }: { side: DuelSideOut }) {
   const border = factionCssVar(side.faction_slug, "border");
   const soft = factionCssVar(side.faction_slug, "light");
   return (
-    <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
+    <span style={{ display: "inline-flex", alignItems: "center", gap: "var(--space-sm)" }}>
       {side.avatar_url ? (
         <img
           src={mediaUrl(side.avatar_url)}
@@ -362,7 +362,7 @@ export default function DuelCrossLink({
         </span>
       }
       note={
-        <div style={{ marginTop: 4, fontSize: "var(--text-xs)", opacity: 0.85 }}>
+        <div style={{ marginTop: "var(--space-xs)", fontSize: "var(--text-xs)", opacity: 0.85 }}>
           {t("duelCrossLink.live", { standing })}
         </div>
       }
