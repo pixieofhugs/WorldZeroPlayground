@@ -66,10 +66,10 @@ export default function AlbescentFactionHero({
         style={{
           position: "relative",
           zIndex: 1,
-          padding: "var(--space-2xl)",
+          padding: "var(--space-2xl) var(--space-3xl) var(--space-3xl)",
           display: "grid",
           gridTemplateColumns: "1fr auto",
-          gap: "var(--space-2xl)",
+          gap: "var(--space-3xl)",
           alignItems: "center",
         }}
       >

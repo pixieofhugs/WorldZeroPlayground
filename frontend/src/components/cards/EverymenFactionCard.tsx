@@ -110,8 +110,7 @@ export default function EverymenCard({
           // eslint-disable-next-line local/no-raw-style-values -- ornament: struck banner ribbon across the card head — illustration, not chrome
           fontSize: 15,
           letterSpacing: "0.34em",
-          // ornament: lead of the struck banner ribbon; rounding reflows it. (The
-          // rule does not fire on a mixed "7px 0" string, so no directive here.)
+          // eslint-disable-next-line local/no-raw-style-values -- ornament: lead of the struck banner ribbon; rounding reflows it.
           padding: "7px 0",
         }}
       >
@@ -198,7 +197,7 @@ export default function EverymenCard({
             fontFamily: "var(--font-body)",
             lineHeight: 1.65,
             maxWidth: 420,
-            margin: "18px auto 0",
+            margin: "var(--space-lg) auto 0",
             color: "var(--everymen-cream)",
           }}
         >
@@ -212,7 +211,7 @@ export default function EverymenCard({
             flexDirection: "column",
             gap: 0,
             maxWidth: 380,
-            margin: "22px auto 0",
+            margin: "var(--space-xl) auto 0",
             textAlign: "left",
           }}
         >

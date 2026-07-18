@@ -103,7 +103,7 @@ export default function SnideFactionHero({
           alignItems: "flex-start",
           flexWrap: "wrap",
           gap: "var(--space-2xl)",
-          padding: "var(--space-xl) var(--space-2xl) var(--space-2xl)",
+          padding: "var(--space-xl) var(--space-3xl) var(--space-2xl)",
         }}
       >
         {/* identity — eyebrow + wordmark + motto + blurb */}
@@ -181,7 +181,7 @@ export default function SnideFactionHero({
               fontFamily: "var(--font-body)",
               lineHeight: 1.6,
               maxWidth: 560,
-              margin: "16px 0 0",
+              margin: "var(--space-lg) 0 0",
               color: "#e7e4d8",
             }}
           >
@@ -201,6 +201,7 @@ export default function SnideFactionHero({
           }}
         >
           {/* slapped sigil sticker, tilted */}
+          {/* eslint-disable-next-line local/no-raw-style-values -- ornament: offset of the slapped sigil sticker; rounding reflows the tilted paste-up. */}
           <div style={{ position: "relative", transform: "rotate(9deg)", margin: "2px 10px 6px 0" }}>
             <div
               style={{

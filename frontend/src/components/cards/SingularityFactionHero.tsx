@@ -104,7 +104,7 @@ export default function SingularityFactionHero({
         style={{
           position: "relative",
           zIndex: 2,
-          padding: "var(--space-2xl)",
+          padding: "var(--space-2xl) var(--space-3xl) var(--space-3xl)",
           display: "grid",
           gridTemplateColumns: "1fr 240px",
           gap: "var(--space-2xl)",

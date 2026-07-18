@@ -61,6 +61,7 @@ export default function AlbescentFeedFrame({ children }: { children: ReactNode }
         >
           {i18n.t('feed:frame.albescent.masthead')}
         </div>
+        {/* eslint-disable-next-line local/no-raw-style-values -- ornament: lead around the masthead hairline; in register with its raw 56x1 geometry. */}
         <div aria-hidden="true" style={{ height: 1, width: 56, margin: '9px 0 12px', background: BORDER_RULE }} />
 
         {/* the neutral card, unchanged */}

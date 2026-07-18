@@ -93,8 +93,9 @@ export default function FeedRowContent({
         <div
           style={{
             marginTop: 'var(--space-md)',
-            // Aligns the headline rule with the text column: 28px avatar + the row gap.
-            marginLeft: row.actor ? 'calc(28px + var(--space-md))' : 0,
+            // Aligns the headline rule with the text column: --space-3xl (40px) is
+            // the 28px avatar plus the --space-md row gap.
+            marginLeft: row.actor ? 'var(--space-3xl)' : 0,
             borderLeft: `3px solid ${accent}`,
             paddingLeft: 'var(--space-md)',
           }}

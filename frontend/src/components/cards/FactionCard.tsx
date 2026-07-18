@@ -312,7 +312,7 @@ function WowCard({
           style={
             {
               position: "relative",
-              padding: "var(--space-lg)",
+              padding: "var(--space-lg) var(--space-lg) var(--space-md)",
               background: "var(--faction-wow-body-bg)",
               backgroundImage:
                 "radial-gradient(var(--faction-wow-dot) 1.4px, transparent 1.4px)",
@@ -413,7 +413,7 @@ function SnideCard({
         width: "100%",
         background: factionCssVar("snide", "card-bg"),
         position: "relative",
-        padding: "var(--space-lg)",
+        padding: "var(--space-md) var(--space-md) var(--space-lg)",
         fontFamily: factionCssVar("snide", "card-font"),
         color: factionCssVar("snide", "card-text"),
         transition: "background 150ms, color 150ms",
@@ -782,7 +782,7 @@ export default function FactionCard(props: FactionCardProps) {
             width: "100%",
             background: "var(--color-bg-card)",
             border: `2px solid ${factionCssVar(props.faction.slug, "border")}`,
-            padding: "var(--space-lg)",
+            padding: "var(--space-md) var(--space-lg)",
             fontFamily: "var(--font-body)",
             color: "var(--color-text-primary)",
             boxSizing: "border-box",

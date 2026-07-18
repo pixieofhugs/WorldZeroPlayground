@@ -78,6 +78,7 @@ export default function UaFeedFrame({ children }: { children: ReactNode }) {
             aria-hidden="true"
             style={{
               height: 1,
+              // eslint-disable-next-line local/no-raw-style-values -- ornament: lead around the gold hairline divider; in register with its raw 1px rule.
               margin: '9px 0 11px',
               background: `linear-gradient(90deg, ${GOLD}, transparent)`,
             }}

@@ -69,7 +69,7 @@ function UaSelectCard({ state = "locked", members, onVisit }: Omit<FactionSelect
           {i18n.t("feed:factionSelect.ua.blurb")}
         </p>
       </div>
-      <div style={{ position: "relative", padding: "0 var(--space-xl) var(--space-xl)" }}>
+      <div style={{ position: "relative", padding: "0 var(--space-xl) var(--space-lg)" }}>
         <div style={{ fontSize: "var(--text-base)", letterSpacing: "0.04em", color: "var(--ua-sub)", marginBottom: "var(--space-md)" }}>
           {status}{members != null && <> · <span style={{ color: "var(--ua-muted)" }}>{i18n.t("feed:factionSelect.ua.members", { count: members })}</span></>}
         </div>
@@ -157,7 +157,7 @@ function SnideSelectCard({ state = "locked", members, onVisit }: Omit<FactionSel
           {i18n.t("feed:factionSelect.snide.blurb")}
         </p>
       </div>
-      <div style={{ position: "relative", padding: "0 var(--space-xl) var(--space-xl)" }}>
+      <div style={{ position: "relative", padding: "0 var(--space-xl) var(--space-lg)" }}>
         <div style={{ fontFamily: "var(--font-faction-marker)", fontSize: "var(--text-xl)", color: "var(--snide-pink)", transform: "rotate(-1deg)", marginBottom: "var(--space-md)" }}>{status}</div>
         <button onClick={onVisit} style={{
           display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%", cursor: "pointer",
@@ -199,7 +199,7 @@ function EphemeristsSelectCard({ state = "locked", members, onVisit }: Omit<Fact
           {i18n.t("feed:factionSelect.ephemerists.blurb")}
         </p>
       </div>
-      <div style={{ position: "relative", padding: "0 var(--space-xl) var(--space-xl)" }}>
+      <div style={{ position: "relative", padding: "0 var(--space-xl) var(--space-lg)" }}>
         <div style={{ fontSize: "var(--text-md)", letterSpacing: "0.03em", color: "var(--eph-gold-light)", marginBottom: "var(--space-md)" }}>{status}{members != null && ` · ${i18n.t("feed:factionSelect.ephemerists.members", { count: members })}`}</div>
         <button onClick={onVisit} style={{
           width: "100%", cursor: "pointer", border: "1px solid var(--eph-gold)", background: "transparent", color: "var(--eph-gold-light)",
@@ -268,7 +268,9 @@ function EverymenSelectCard({ state = "locked", members, onVisit }: Omit<Faction
       <div style={{ position: "absolute", inset: 0, pointerEvents: "none", opacity: 0.5,
         background: "repeating-conic-gradient(from 0deg at 50% 34%, var(--everymen-field-deep) 0deg 7deg, transparent 7deg 14deg)" }} />
       <div style={{ position: "relative", background: "var(--everymen-ink)", color: "var(--everymen-gold)", textAlign: "center",
-        fontFamily: "var(--font-faction-poster)", fontSize: "var(--text-xl)", letterSpacing: "0.3em", padding: "6px 0" }}>{i18n.t("feed:factionSelect.everymen.banner")}</div>
+        fontFamily: "var(--font-faction-poster)", fontSize: "var(--text-xl)", letterSpacing: "0.3em",
+        // eslint-disable-next-line local/no-raw-style-values -- ornament: lead of the struck banner strip; rounding reflows it.
+        padding: "6px 0" }}>{i18n.t("feed:factionSelect.everymen.banner")}</div>
       <div style={{ height: 3, background: "var(--everymen-gold)" }} />
       <div style={{ position: "relative", flex: 1, padding: "var(--space-lg) var(--space-xl) 0", textAlign: "center" }}>
         <div style={{ display: "flex", justifyContent: "center", marginBottom: "var(--space-sm)" }}>

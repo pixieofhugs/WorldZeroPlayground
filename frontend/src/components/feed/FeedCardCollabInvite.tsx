@@ -179,7 +179,7 @@ export default function FeedCardCollabInvite({ item }: Props) {
         <div
           style={{
             marginTop: "var(--space-md)",
-            marginLeft: "calc(28px + var(--space-md))",
+            marginLeft: "var(--space-3xl)",
             display: "flex",
             alignItems: "center",
             gap: "var(--space-sm)",
@@ -221,7 +221,7 @@ export default function FeedCardCollabInvite({ item }: Props) {
           <div
             style={{
               marginTop: "var(--space-md)",
-              marginLeft: "calc(28px + var(--space-md))",
+              marginLeft: "var(--space-3xl)",
               display: "flex",
               alignItems: "center",
               gap: "var(--space-sm)",
@@ -273,7 +273,7 @@ export default function FeedCardCollabInvite({ item }: Props) {
         )}
 
         {status === "accepted" && (
-          <div style={{ marginTop: "var(--space-sm)", marginLeft: "calc(28px + var(--space-md))" }}>
+          <div style={{ marginTop: "var(--space-sm)", marginLeft: "var(--space-3xl)" }}>
             <Link
               to={`/praxes/${praxis_id}`}
               className="eyebrow"
@@ -284,7 +284,7 @@ export default function FeedCardCollabInvite({ item }: Props) {
           </div>
         )}
         {status === "declined" && (
-          <div style={{ marginTop: "var(--space-sm)", marginLeft: "calc(28px + var(--space-md))" }}>
+          <div style={{ marginTop: "var(--space-sm)", marginLeft: "var(--space-3xl)" }}>
             <span
               className="eyebrow"
               style={{ color: "var(--color-text-tertiary)" }}

@@ -18,7 +18,7 @@ export default function FeedCardEraAnnouncement({ item }: Props) {
       style={{
         background: 'var(--badge-admin-bg)',
         color: 'var(--badge-admin-text)',
-        padding: 'var(--space-xl)',
+        padding: 'var(--space-lg) var(--space-xl)',
         position: 'relative',
       }}
     >

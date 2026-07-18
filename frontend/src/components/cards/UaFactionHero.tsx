@@ -81,7 +81,7 @@ export default function UaFactionHero({
               background: PAPER,
               backgroundImage: `radial-gradient(${ink(3)} 1px, transparent 1px)`,
               backgroundSize: "5px 5px",
-              padding: "var(--space-2xl)",
+              padding: "var(--space-2xl) var(--space-3xl) var(--space-2xl)",
               display: "flex",
               flexWrap: "wrap",
               gap: "var(--space-2xl)",
@@ -150,7 +150,7 @@ export default function UaFactionHero({
                   lineHeight: 1.7,
                   color: SUB,
                   maxWidth: 560,
-                  margin: "0 0 22px",
+                  margin: "0 0 var(--space-xl)",
                 }}
               >
                 {description ??

@@ -30,7 +30,7 @@ export default function SnideMobilePraxisCard({ praxis }: { praxis: PraxisCardOu
         background: factionCssVar('snide', 'card-bg'),
         color: factionCssVar('snide', 'card-text'),
         border: `1px solid ${factionCssVar('snide', 'border')}`,
-        padding: 'var(--space-lg)',
+        padding: 'var(--space-lg) var(--space-lg) var(--space-md)',
         boxShadow: '5px 6px 0 rgba(0,0,0,.5)',
       }}
     >

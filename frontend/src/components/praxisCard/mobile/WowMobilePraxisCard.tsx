@@ -44,7 +44,7 @@ export default function WowMobilePraxisCard({ praxis }: { praxis: PraxisCardOut 
           position: 'relative',
           background: factionCssVar('wow', 'card-bg'),
           border: '1.5px solid rgba(0,0,0,0.12)',
-          padding: 'var(--space-lg)',
+          padding: 'var(--space-lg) var(--space-lg) var(--space-md)',
           zIndex: 2,
         }}
       >

@@ -95,7 +95,7 @@ export default function EverymenFactionHero({
             display: "flex",
             alignItems: "center",
             gap: "var(--space-2xl)",
-            padding: "var(--space-2xl)",
+            padding: "var(--space-2xl) var(--space-3xl) var(--space-2xl)",
           }}
         >
           {/* cog seal */}

@@ -34,7 +34,7 @@ export default function UaMobilePraxisCard({ praxis }: { praxis: PraxisCardOut }
           position: 'relative',
           background: factionCssVar('ua', 'card-bg'),
           border: '1px solid color-mix(in srgb, var(--ua-ink) 30%, transparent)',
-          padding: 'var(--space-lg)',
+          padding: 'var(--space-lg) var(--space-lg) var(--space-md)',
           backgroundImage:
             'radial-gradient(color-mix(in srgb, var(--ua-ink) 4%, transparent) 1px, transparent 1px)',
           backgroundSize: '5px 5px',
