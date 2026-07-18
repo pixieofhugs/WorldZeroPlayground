@@ -62,10 +62,10 @@ describe('no duplicate keys in any locale catalog', () => {
   // cannot catch it — we scan the raw file text instead. Guard for #670.
   const localesDir = join(dirname(fileURLToPath(import.meta.url)), '..')
 
-  const jsonFiles = readdirSync(localesDir, { recursive: true })
-    .map((entry: string) => String(entry))
-    .filter((entry: string) => entry.endsWith('.json'))
-    .map((entry: string) => join(localesDir, entry))
+  // recursive + no withFileTypes → path strings; the cast drops the string|Buffer union.
+  const jsonFiles = (readdirSync(localesDir, { recursive: true }) as string[])
+    .filter((entry) => entry.endsWith('.json'))
+    .map((entry) => join(localesDir, entry))
 
   it('finds catalog files to scan', () => {
     // Fails loudly if the glob ever silently matches nothing (moved dir, etc.).
