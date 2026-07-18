@@ -39,7 +39,7 @@ const MONO = 'var(--font-body)'
 
 const kicker: CSSProperties = {
   fontFamily: MONO,
-  fontSize: 8,
+  fontSize: 'var(--text-xs)',
   letterSpacing: '0.24em',
   textTransform: 'uppercase',
   color: MUTED,
@@ -64,6 +64,7 @@ function Medallion({ name, size }: { name: string; size: number }) {
         fontFamily: DISPLAY,
         fontStyle: 'italic',
         fontWeight: 700,
+        // ornament: avatar monogram, sized from the medallion it sits in - geometry, not text.
         fontSize: size * 0.42,
         color: ACCENT,
       }}
@@ -76,7 +77,7 @@ function Medallion({ name, size }: { name: string; size: number }) {
 function SectionHead({ children }: { children: ReactNode }) {
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
-      <span style={{ fontFamily: ENGRAVED, fontSize: 11, letterSpacing: '0.1em', textTransform: 'uppercase', color: INK }}>
+      <span style={{ fontFamily: ENGRAVED, fontSize: 'var(--text-md)', letterSpacing: '0.1em', textTransform: 'uppercase', color: INK }}>
         {children}
       </span>
       <span style={{ flex: 1, height: 1, background: `linear-gradient(90deg, ${GOLD}, transparent)` }} />
@@ -87,7 +88,7 @@ function SectionHead({ children }: { children: ReactNode }) {
 const joinButton: CSSProperties = {
   width: '100%',
   fontFamily: ENGRAVED,
-  fontSize: 13,
+  fontSize: 'var(--text-xl)',
   letterSpacing: '0.12em',
   textTransform: 'uppercase',
   color: PAPER_WARM,
@@ -127,10 +128,11 @@ export default function UaFactionPage({ state }: { state: FactionDetailState }) 
             }}
           >
             <div style={{ ...kicker, color: ACCENT }}>{t('ua.mobile.eyebrow')}</div>
+            {/* ornament: masthead display type - the engraved title is the skin's identity (§4/§270). */}
             <h1 style={{ fontFamily: DISPLAY, fontStyle: 'italic', fontWeight: 700, fontSize: 34, lineHeight: 1.05, color: INK, margin: '4px 0 0' }}>
               {name}
             </h1>
-            <p style={{ fontFamily: DISPLAY, fontStyle: 'italic', fontSize: 13, lineHeight: 1.6, color: SUB, margin: '8px 0 0' }}>
+            <p className="content-text" style={{ fontFamily: DISPLAY, fontStyle: 'italic', lineHeight: 1.6, color: SUB, margin: '8px 0 0' }}>
               {factionDescription(faction.slug)}
             </p>
             <div style={{ display: 'flex', gap: 8, marginTop: 15 }}>
@@ -149,7 +151,7 @@ export default function UaFactionPage({ state }: { state: FactionDetailState }) 
       <section className="mt-6">
         <SectionHead>{t('mobile.topMembers')}</SectionHead>
         {topMembers.length === 0 ? (
-          <p style={{ fontFamily: DISPLAY, fontStyle: 'italic', fontSize: 14, color: SUB, margin: 0 }}>{t('mobile.membersEmpty')}</p>
+          <p className="content-text" style={{ fontFamily: DISPLAY, fontStyle: 'italic', color: SUB, margin: 0 }}>{t('mobile.membersEmpty')}</p>
         ) : (
           <div className="flex flex-col gap-2">
             {topMembers.map((m, index) => (
@@ -163,7 +165,7 @@ export default function UaFactionPage({ state }: { state: FactionDetailState }) 
       <section className="mt-6">
         <SectionHead>{t('mobile.recentPraxis')}</SectionHead>
         {recentPraxis.length === 0 ? (
-          <p style={{ fontFamily: DISPLAY, fontStyle: 'italic', fontSize: 14, color: SUB, margin: 0 }}>{t('mobile.praxisEmpty')}</p>
+          <p className="content-text" style={{ fontFamily: DISPLAY, fontStyle: 'italic', color: SUB, margin: 0 }}>{t('mobile.praxisEmpty')}</p>
         ) : (
           <div className="flex flex-col gap-3">
             {recentPraxis.map((p) => (
@@ -174,7 +176,7 @@ export default function UaFactionPage({ state }: { state: FactionDetailState }) 
       </section>
 
       {membership.state === 'gate' && (
-        <p style={{ fontFamily: DISPLAY, fontStyle: 'italic', fontSize: 14, color: SUB, marginTop: 24 }}>
+        <p className="content-text" style={{ fontFamily: DISPLAY, fontStyle: 'italic', color: SUB, marginTop: 24 }}>
           {t('mobile.gateHint', { faction: name })}
         </p>
       )}
@@ -183,7 +185,7 @@ export default function UaFactionPage({ state }: { state: FactionDetailState }) 
       {membership.state === 'eligible' && (
         <MobileStickyBar>
           {membership.joinError && (
-            <p style={{ fontFamily: MONO, fontSize: 12, color: 'var(--color-danger)' }}>{membership.joinError}</p>
+            <p className="content-text" style={{ fontFamily: MONO, color: 'var(--color-danger)' }}>{membership.joinError}</p>
           )}
           {!confirming ? (
             <button type="button" onClick={() => setConfirming(true)} style={joinButton}>
@@ -191,7 +193,7 @@ export default function UaFactionPage({ state }: { state: FactionDetailState }) 
             </button>
           ) : (
             <>
-              <p style={{ fontFamily: DISPLAY, fontStyle: 'italic', fontSize: 14, color: INK }}>
+              <p className="content-text" style={{ fontFamily: DISPLAY, fontStyle: 'italic', color: INK }}>
                 {switching
                   ? t('detail.join.confirmSwitch', { faction: name, current: factionName(currentSlug) })
                   : t('detail.join.confirm', { faction: name })}
@@ -211,7 +213,7 @@ export default function UaFactionPage({ state }: { state: FactionDetailState }) 
                   disabled={membership.joining}
                   style={{
                     fontFamily: ENGRAVED,
-                    fontSize: 11,
+                    fontSize: 'var(--text-md)',
                     letterSpacing: '0.1em',
                     textTransform: 'uppercase',
                     color: SUB,
@@ -235,7 +237,7 @@ export default function UaFactionPage({ state }: { state: FactionDetailState }) 
 function HeroStat({ value, label }: { value: number; label: string }) {
   return (
     <div style={{ flex: '1 1 0', textAlign: 'center', background: PAPER_WARM, border: `1px solid ${GOLD}`, padding: '10px 6px' }}>
-      <b style={{ fontFamily: DISPLAY, fontStyle: 'italic', fontWeight: 700, fontSize: 20, display: 'block', lineHeight: 1, color: INK }}>
+      <b className="content-title" style={{ fontFamily: DISPLAY, fontStyle: 'italic', fontWeight: 700, display: 'block', lineHeight: 1, color: INK }}>
         {value}
       </b>
       <span style={{ ...kicker, marginTop: 5, display: 'block' }}>{label}</span>
@@ -259,15 +261,15 @@ function MemberRow({ rank, member }: { rank: number; member: CharacterOut }) {
         textDecoration: 'none',
       }}
     >
-      <span style={{ fontFamily: DISPLAY, fontStyle: 'italic', fontSize: 16, color: ACCENT, width: 16, flex: 'none' }}>{rank}</span>
+      <span style={{ fontFamily: DISPLAY, fontStyle: 'italic', fontSize: 'var(--text-xl)', color: ACCENT, width: 16, flex: 'none' }}>{rank}</span>
       <Medallion name={member.display_name} size={28} />
       <span
+        className="content-text"
         style={{
           flex: 1,
           minWidth: 0,
           fontFamily: DISPLAY,
           fontStyle: 'italic',
-          fontSize: 15,
           color: INK,
           overflow: 'hidden',
           textOverflow: 'ellipsis',
@@ -276,7 +278,7 @@ function MemberRow({ rank, member }: { rank: number; member: CharacterOut }) {
       >
         {member.display_name}
       </span>
-      <span style={{ fontFamily: ENGRAVED, fontSize: 9, letterSpacing: '0.06em', color: GOLD, flex: 'none' }}>
+      <span style={{ fontFamily: ENGRAVED, fontSize: 'var(--text-sm)', letterSpacing: '0.06em', color: GOLD, flex: 'none' }}>
         {t('mobile.memberStat', { level: member.level, score: member.all_time_score.toLocaleString() })}
       </span>
     </Link>

@@ -83,7 +83,7 @@ function Seal({ name, size }: { name: string; size: number }) {
 function SectionHead({ children }: { children: ReactNode }) {
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
-      <span style={{ fontFamily: ACCENT_FONT, fontSize: 'var(--text-xl)', letterSpacing: '0.04em', color: INK, whiteSpace: 'nowrap' }}>
+      <span style={{ fontFamily: ACCENT_FONT, fontSize: 'var(--text-content)', letterSpacing: '0.04em', color: INK, whiteSpace: 'nowrap' }}>
         {children}
       </span>
       <span style={{ flex: 1, height: 3, background: `repeating-linear-gradient(90deg, ${RED} 0 12px, ${GOLD} 12px 20px)` }} />

@@ -64,6 +64,7 @@ function Avatar({ name, size }: { name: string; size: number }) {
         alignItems: 'center',
         justifyContent: 'center',
         fontFamily: SCRIPT,
+        // ornament: avatar monogram, sized from the sticker it sits in - geometry, not text.
         fontSize: size * 0.5,
         color: ON_ACCENT,
       }}
@@ -76,7 +77,7 @@ function Avatar({ name, size }: { name: string; size: number }) {
 function SectionHead({ children }: { children: ReactNode }) {
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
-      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 7, fontFamily: SCRIPT, fontSize: 24, color: TITLE_TEXT }}>
+      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 7, fontFamily: SCRIPT, fontSize: 'var(--text-title)', color: TITLE_TEXT }}>
         <Sparkle size={13} color={PINK} />
         {children}
       </span>
@@ -92,7 +93,7 @@ const joinButton: CSSProperties = {
   justifyContent: 'center',
   gap: 8,
   fontFamily: BODY,
-  fontSize: 13,
+  fontSize: 'var(--text-xl)',
   fontWeight: 700,
   letterSpacing: '0.1em',
   textTransform: 'uppercase',
@@ -156,7 +157,7 @@ export default function WowFactionPage({ state }: { state: FactionDetailState })
           {['var(--faction-wow-scrap-deep)', 'var(--faction-wow-tape)', 'var(--faction-wow-ivy-leaf)'].map((c) => (
             <span key={c} style={{ width: 9, height: 9, borderRadius: '50%', background: c, border: '1.2px solid rgba(255,255,255,0.7)' }} />
           ))}
-          <span style={{ marginLeft: 'auto', display: 'inline-flex', alignItems: 'center', gap: 5, fontFamily: SCRIPT, fontSize: 18, color: TITLE_TEXT }}>
+          <span style={{ marginLeft: 'auto', display: 'inline-flex', alignItems: 'center', gap: 5, fontFamily: SCRIPT, fontSize: 'var(--text-content)', color: TITLE_TEXT }}>
             <Sparkle size={11} color={TITLE_TEXT} />
             {t('wow.mobile.eyebrow')}
           </span>
@@ -168,11 +169,12 @@ export default function WowFactionPage({ state }: { state: FactionDetailState })
             color: TITLE_TEXT,
           }}
         >
+          {/* ornament: masthead display type - the hand-lettered title is the skin's identity (§4/§270). */}
           <h1 style={{ display: 'inline-flex', alignItems: 'center', gap: 8, fontFamily: SCRIPT, fontSize: 36, lineHeight: 0.95, margin: 0 }}>
             <Sparkle size={18} color={TITLE_TEXT} />
             {name}
           </h1>
-          <p style={{ fontFamily: BODY, fontSize: 12, lineHeight: 1.6, color: PINK_DEEP, margin: '8px 0 0' }}>
+          <p className="content-text" style={{ fontFamily: BODY, lineHeight: 1.6, color: PINK_DEEP, margin: '8px 0 0' }}>
             {factionDescription(faction.slug)}
           </p>
           <div style={{ display: 'flex', gap: 8, marginTop: 16 }}>
@@ -183,14 +185,14 @@ export default function WowFactionPage({ state }: { state: FactionDetailState })
       </section>
 
       {membership.state === 'member' && (
-        <p style={{ fontFamily: SCRIPT, fontSize: 18, color: PINK, margin: '12px 0 0' }}>{t('mobile.memberBadge')}</p>
+        <p className="content-text" style={{ fontFamily: SCRIPT, color: PINK, margin: '12px 0 0' }}>{t('mobile.memberBadge')}</p>
       )}
 
       {/* Top members */}
       <section className="mt-6">
         <SectionHead>{t('mobile.topMembers')}</SectionHead>
         {topMembers.length === 0 ? (
-          <p style={{ fontFamily: SCRIPT, fontSize: 20, color: PINK, margin: 0 }}>{t('mobile.membersEmpty')}</p>
+          <p className="content-text" style={{ fontFamily: SCRIPT, color: PINK, margin: 0 }}>{t('mobile.membersEmpty')}</p>
         ) : (
           <div className="flex flex-col gap-2">
             {topMembers.map((m, index) => (
@@ -204,7 +206,7 @@ export default function WowFactionPage({ state }: { state: FactionDetailState })
       <section className="mt-6">
         <SectionHead>{t('mobile.recentPraxis')}</SectionHead>
         {recentPraxis.length === 0 ? (
-          <p style={{ fontFamily: SCRIPT, fontSize: 20, color: PINK, margin: 0 }}>{t('mobile.praxisEmpty')}</p>
+          <p className="content-text" style={{ fontFamily: SCRIPT, color: PINK, margin: 0 }}>{t('mobile.praxisEmpty')}</p>
         ) : (
           <div className="flex flex-col gap-3">
             {recentPraxis.map((p) => (
@@ -215,7 +217,7 @@ export default function WowFactionPage({ state }: { state: FactionDetailState })
       </section>
 
       {membership.state === 'gate' && (
-        <p style={{ fontFamily: BODY, fontSize: 12, color: CARD_MUTED, marginTop: 24, lineHeight: 1.6 }}>
+        <p className="content-text" style={{ fontFamily: BODY, color: CARD_MUTED, marginTop: 24, lineHeight: 1.6 }}>
           {t('mobile.gateHint', { faction: name })}
         </p>
       )}
@@ -224,7 +226,7 @@ export default function WowFactionPage({ state }: { state: FactionDetailState })
       {membership.state === 'eligible' && (
         <MobileStickyBar>
           {membership.joinError && (
-            <p style={{ fontFamily: BODY, fontSize: 12, color: 'var(--color-danger)' }}>{membership.joinError}</p>
+            <p className="content-text" style={{ fontFamily: BODY, color: 'var(--color-danger)' }}>{membership.joinError}</p>
           )}
           {!confirming ? (
             <button type="button" onClick={() => setConfirming(true)} style={joinButton}>
@@ -233,7 +235,7 @@ export default function WowFactionPage({ state }: { state: FactionDetailState })
             </button>
           ) : (
             <>
-              <p style={{ fontFamily: BODY, fontSize: 12, lineHeight: 1.6, color: CARD_TEXT }}>
+              <p className="content-text" style={{ fontFamily: BODY, lineHeight: 1.6, color: CARD_TEXT }}>
                 {switching
                   ? t('detail.join.confirmSwitch', { faction: name, current: factionName(currentSlug) })
                   : t('detail.join.confirm', { faction: name })}
@@ -253,7 +255,7 @@ export default function WowFactionPage({ state }: { state: FactionDetailState })
                   disabled={membership.joining}
                   style={{
                     fontFamily: BODY,
-                    fontSize: 11,
+                    fontSize: 'var(--text-md)',
                     letterSpacing: '0.1em',
                     textTransform: 'uppercase',
                     color: CARD_MUTED,
@@ -278,8 +280,8 @@ export default function WowFactionPage({ state }: { state: FactionDetailState })
 function HeroStat({ value, label }: { value: number; label: string }) {
   return (
     <div style={{ flex: '1 1 0', textAlign: 'center', background: NOTEPAD_BG, border: `1.5px solid ${NOTEPAD_BORDER}`, borderRadius: 12, padding: '11px 6px' }}>
-      <b style={{ fontFamily: SCRIPT, fontSize: 24, display: 'block', lineHeight: 1, color: TITLE_TEXT }}>{value}</b>
-      <span style={{ fontSize: 8, letterSpacing: '0.16em', textTransform: 'uppercase', color: CARD_MUTED, marginTop: 5, display: 'block' }}>
+      <b className="content-title" style={{ fontFamily: SCRIPT, display: 'block', lineHeight: 1, color: TITLE_TEXT }}>{value}</b>
+      <span style={{ fontSize: 'var(--text-xs)', letterSpacing: '0.16em', textTransform: 'uppercase', color: CARD_MUTED, marginTop: 5, display: 'block' }}>
         {label}
       </span>
     </div>
@@ -302,14 +304,14 @@ function MemberRow({ rank, member }: { rank: number; member: CharacterOut }) {
         textDecoration: 'none',
       }}
     >
-      <span style={{ fontFamily: SCRIPT, fontSize: 20, color: PINK, width: 16, flex: 'none' }}>{rank}</span>
+      <span style={{ fontFamily: SCRIPT, fontSize: 'var(--text-xl)', color: PINK, width: 16, flex: 'none' }}>{rank}</span>
       <Avatar name={member.display_name} size={28} />
       <span
+        className="content-text"
         style={{
           flex: 1,
           minWidth: 0,
           fontFamily: SCRIPT,
-          fontSize: 19,
           color: TITLE_TEXT,
           overflow: 'hidden',
           textOverflow: 'ellipsis',
@@ -318,7 +320,7 @@ function MemberRow({ rank, member }: { rank: number; member: CharacterOut }) {
       >
         {member.display_name}
       </span>
-      <span style={{ fontFamily: BODY, fontSize: 9, letterSpacing: '0.04em', color: PINK_DEEP, flex: 'none' }}>
+      <span style={{ fontFamily: BODY, fontSize: 'var(--text-sm)', letterSpacing: '0.04em', color: PINK_DEEP, flex: 'none' }}>
         {t('mobile.memberStat', { level: member.level, score: member.all_time_score.toLocaleString() })}
       </span>
     </Link>
