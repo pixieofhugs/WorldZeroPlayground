@@ -4,7 +4,7 @@
     "empty": "No tasks match your filters.",
     "loadMore": "Load more",
     "filter": {
-      "searchPlaceholder": "Search tasks...",
+      "searchPlaceholder": "Search tasks or players...",
       "searchLabel": "Search tasks"
     }
   },

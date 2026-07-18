@@ -147,7 +147,10 @@ export async function listPraxes(filters?: {
   type?: PraxisType
   status?: PraxisStatus
   faction?: string
-  /** Free-text search over praxis title, praxis body, and task title (#644 §4). */
+  /**
+   * Free-text search over praxis title, praxis body, task title, and member
+   * name/handle (#644 §4; member axis added in #681).
+   */
   q?: string
   /**
    * Account-scoped vote filter (#644 §6). `no` = "needs my vote" (votable and

@@ -14,7 +14,7 @@
     "filter": {
       "typeLabel": "type:",
       "showLabel": "show:",
-      "searchPlaceholder": "Search proof or task…",
+      "searchPlaceholder": "Search proof, task, or player…",
       "searchLabel": "Search praxes",
       "all": "All",
       "needsMyVote": "needs my vote",
