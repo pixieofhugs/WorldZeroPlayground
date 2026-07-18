@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import type { TaskOut } from "../../api/tasks";
 import i18n from "../../i18n";
-import LevelPill from "../ui/LevelPill";
+import LevelGem from "../ui/LevelGem";
 
 /**
  * Warriors of Whimsy — wow.exe.
@@ -180,7 +180,7 @@ export default function WowTaskCard({
 
         {/* status row */}
         <div className="card-footer">
-          <LevelPill level={task.level_required} factionSlug="wow" />
+          <LevelGem level={task.level_required} factionSlug="wow" />
           {/* Points shown as a ◆ corner-counter — a badge/counter, so it stays
               label-tier per the role vocabulary (§4), not a plain score number. */}
           <span

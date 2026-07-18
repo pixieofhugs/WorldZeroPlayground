@@ -8,7 +8,7 @@ import {
 } from '../../utils/factions'
 import { mediaUrl } from '../../utils/media'
 import { badgeArtFor } from '../../components/badges/badgeArt'
-import LevelPill from '../../components/ui/LevelPill'
+import LevelGem from '../../components/ui/LevelGem'
 import type { RankedPlayer } from './Constellation'
 
 const PAGE_SIZE = 8
@@ -251,7 +251,7 @@ function RosterRow({ row, isMe }: { row: RankedPlayer; isMe: boolean }) {
         )}
       </div>
 
-      <LevelPill level={character.level} factionSlug={character.faction_slug} />
+      <LevelGem level={character.level} factionSlug={character.faction_slug} size={34} />
 
       <div style={{ textAlign: 'right' }}>
         <span
