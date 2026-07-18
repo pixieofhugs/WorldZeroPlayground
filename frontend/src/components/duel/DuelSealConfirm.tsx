@@ -30,6 +30,8 @@ import { useFormFactor } from '../../hooks/useFormFactor'
 import { factionCssVar } from '../../utils/factions'
 import { pickVariant } from '../../utils/factionDispatch'
 import { duelSides, RaceRoster, SealActions, StakesTiles, type DuelSlotTheme } from './shared'
+import WowDuelSealConfirm from './WowDuelSealConfirm'
+import WowMobileDuelSealConfirm from './WowMobileDuelSealConfirm'
 
 export interface DuelSealConfirmProps {
   duel: DuelDetailOut
@@ -127,14 +129,18 @@ export function DefaultDuelSealConfirm({
 }
 
 /**
- * Per-faction seal dialogs. Empty for now by design — every faction gets the
- * Default skin the moment #718 lands, and each bespoke skin is a purely visual
- * follow-up that can never be urgent.
+ * Per-faction seal dialogs. Every unregistered faction gets the Default skin;
+ * each bespoke skin is a purely visual follow-up that can never be urgent.
+ * Wow is first (#720) — it is the only faction with a design in hand.
  */
-export const DUEL_SEAL_BY_SLUG: Record<string, ComponentType<DuelSealConfirmProps>> = {}
+export const DUEL_SEAL_BY_SLUG: Record<string, ComponentType<DuelSealConfirmProps>> = {
+  wow: WowDuelSealConfirm,
+}
 
 /** Parallel MOBILE registry (#494 form-factor dispatch). */
-export const MOBILE_DUEL_SEAL_BY_SLUG: Record<string, ComponentType<DuelSealConfirmProps>> = {}
+export const MOBILE_DUEL_SEAL_BY_SLUG: Record<string, ComponentType<DuelSealConfirmProps>> = {
+  wow: WowMobileDuelSealConfirm,
+}
 
 /**
  * The dispatcher the composer mounts. Skinned by the TASK's faction (the

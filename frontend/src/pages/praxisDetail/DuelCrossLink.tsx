@@ -28,10 +28,12 @@
  *              winner / "you forfeited" for the thrower; the thrown-side link
  *              404s gracefully (it's a plain link, so it never breaks this page).
  */
-import type { CSSProperties } from "react";
+import type { CSSProperties, ComponentType, ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import { factionCssVar, factionName } from "../../utils/factions";
+import { pickVariant } from "../../utils/factionDispatch";
+import { useFormFactor } from "../../hooks/useFormFactor";
 import { mediaUrl } from "../../utils/media";
 import type { PraxisOut } from "../../api/praxis";
 import type { DuelDetailOut, DuelSideOut } from "../../api/duel";
@@ -41,6 +43,8 @@ import {
   StakesTiles,
   type DuelSlotTheme,
 } from "../../components/duel/shared";
+import WowDuelRail from "./duelRails/WowDuelRail";
+import WowMobileDuelRail from "./duelRails/WowMobileDuelRail";
 
 /**
  * The rail is mounted by the dispatcher, above the archetype, so it can't read
@@ -54,6 +58,92 @@ const RAIL_WIDTH_BY_SLUG: Record<string, string> = {
   wow: "720px", // WowPraxisDetail
 };
 const DEFAULT_RAIL_WIDTH = "42rem";
+
+/* -------------------------------------------------------------------------- */
+/* Skin contract (#720)                                                        */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * What a rail SKIN receives. Every branch — forfeited-pre-empts-status, the
+ * per-`DuelStatus` table, and the slot composition inside `body` — is resolved
+ * by the dispatcher below and handed over as already-rendered nodes. A skin
+ * therefore *cannot* recompute a figure or re-derive a status; it can only
+ * arrange these four slots inside its own chrome. It must never drop one.
+ *
+ * `accent`/`soft` are the OPPONENT's faction tokens (the foreign element looks
+ * foreign, per #310) and are handed down pre-resolved so a skin never re-reads
+ * the faction registry either.
+ */
+export interface DuelRailSkinProps {
+  /** Opponent-faction accent, pre-resolved to a CSS var reference. */
+  accent: string;
+  /** Opponent-faction soft/light wash, pre-resolved. */
+  soft: string;
+  /** The archetype-matched rail width for the TASK's faction. */
+  maxWidth: string;
+  /** The state headline — one line per branch. Always present. */
+  headline: ReactNode;
+  /** Settled-only live score pair. `null` in every other state. */
+  tally: ReactNode | null;
+  /** Settled-only "who's ahead" note. `null` in every other state. */
+  note: ReactNode | null;
+  /** Roster + next-step + stakes. `null` for declined and forfeited, which have no race left. */
+  body: ReactNode | null;
+}
+
+/** The plain rail: a soft wash with an accent edge, the shape #313 shipped. */
+export function DefaultDuelRail({
+  accent,
+  soft,
+  maxWidth,
+  headline,
+  tally,
+  note,
+  body,
+}: DuelRailSkinProps) {
+  const wrapper: CSSProperties = {
+    maxWidth,
+    margin: "16px 0",
+    padding: "12px 16px",
+    borderLeft: `3px solid ${accent}`,
+    background: soft,
+    fontFamily: "var(--font-body)",
+    fontSize: "var(--text-sm)",
+    color: "var(--color-text)",
+  };
+  return (
+    <div style={wrapper}>
+      {tally ? (
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            gap: 12,
+            flexWrap: "wrap",
+          }}
+        >
+          {headline}
+          {tally}
+        </div>
+      ) : (
+        headline
+      )}
+      {note}
+      {body}
+    </div>
+  );
+}
+
+/** Per-faction rail skins (#720 registers Wow; one issue per faction after). */
+export const DUEL_RAIL_BY_SLUG: Record<string, ComponentType<DuelRailSkinProps>> = {
+  wow: WowDuelRail,
+};
+
+/** Parallel MOBILE registry (#494 form-factor dispatch). */
+export const MOBILE_DUEL_RAIL_BY_SLUG: Record<string, ComponentType<DuelRailSkinProps>> = {
+  wow: WowMobileDuelRail,
+};
 
 function OpponentBadge({ side }: { side: DuelSideOut }) {
   const { t } = useTranslation("praxis");
@@ -108,16 +198,27 @@ export default function DuelCrossLink({
   const accent = factionCssVar(foe.faction_slug);
   const soft = factionCssVar(foe.faction_slug, "light");
 
-  const wrapper: CSSProperties = {
+  // The skin is chosen by the TASK's faction (like the archetype it sits above);
+  // only the tokens above are the opponent's.
+  const formFactor = useFormFactor();
+  const Skin =
+    formFactor === "mobile"
+      ? pickVariant(
+          MOBILE_DUEL_RAIL_BY_SLUG,
+          praxis.task_faction_slug,
+          DefaultDuelRail,
+        )
+      : pickVariant(
+          DUEL_RAIL_BY_SLUG,
+          praxis.task_faction_slug,
+          DefaultDuelRail,
+        );
+
+  const frame = {
+    accent,
+    soft,
     maxWidth:
       RAIL_WIDTH_BY_SLUG[praxis.task_faction_slug ?? ""] ?? DEFAULT_RAIL_WIDTH,
-    margin: "16px 0",
-    padding: "12px 16px",
-    borderLeft: `3px solid ${accent}`,
-    background: soft,
-    fontFamily: "var(--font-body)",
-    fontSize: "var(--text-sm)",
-    color: "var(--color-text)",
   };
 
   const theme: DuelSlotTheme = { accent };
@@ -147,27 +248,33 @@ export default function DuelCrossLink({
   if (forfeited) {
     const iForfeited = duel.forfeited_by_character_id === me.character_id;
     return (
-      <div style={wrapper}>
-        {iForfeited ? (
-          <span>{t("duelCrossLink.youForfeited")}</span>
-        ) : (
-          <span>
-            <strong>{t("duelCrossLink.wonByDefault")}</strong>
-            {t("duelCrossLink.wonByDefaultSuffix", { name: foe.display_name })}
-            {foe.praxis_id != null && (
-              <>
-                {" "}
-                (
-                <Link to={`/praxes/${foe.praxis_id}`} style={{ color: accent }}>
-                  {t("duelCrossLink.theirEntry")}
-                </Link>
-                )
-              </>
-            )}
-            .
-          </span>
-        )}
-      </div>
+      <Skin
+        {...frame}
+        tally={null}
+        note={null}
+        body={null}
+        headline={
+          iForfeited ? (
+            <span>{t("duelCrossLink.youForfeited")}</span>
+          ) : (
+            <span>
+              <strong>{t("duelCrossLink.wonByDefault")}</strong>
+              {t("duelCrossLink.wonByDefaultSuffix", { name: foe.display_name })}
+              {foe.praxis_id != null && (
+                <>
+                  {" "}
+                  (
+                  <Link to={`/praxes/${foe.praxis_id}`} style={{ color: accent }}>
+                    {t("duelCrossLink.theirEntry")}
+                  </Link>
+                  )
+                </>
+              )}
+              .
+            </span>
+          )
+        }
+      />
     );
   }
 
@@ -176,10 +283,15 @@ export default function DuelCrossLink({
   // StakesTiles swaps its win/lose pair for the solo-fallback line.
   if (duel.status === "pending") {
     return (
-      <div style={wrapper}>
-        <span>{t("duelCrossLink.pending", { name: foe.display_name })}</span>
-        {body(true)}
-      </div>
+      <Skin
+        {...frame}
+        tally={null}
+        note={null}
+        headline={
+          <span>{t("duelCrossLink.pending", { name: foe.display_name })}</span>
+        }
+        body={body(true)}
+      />
     );
   }
 
@@ -188,9 +300,15 @@ export default function DuelCrossLink({
   // No roster, no stakes: there is nothing left to race for or win.
   if (duel.status === "declined") {
     return (
-      <div style={wrapper}>
-        <span>{t("duelCrossLink.declined", { name: foe.display_name })}</span>
-      </div>
+      <Skin
+        {...frame}
+        tally={null}
+        note={null}
+        body={null}
+        headline={
+          <span>{t("duelCrossLink.declined", { name: foe.display_name })}</span>
+        }
+      />
     );
   }
 
@@ -198,10 +316,17 @@ export default function DuelCrossLink({
   // voting isn't open and at most one side has cast.
   if (duel.status === "active") {
     return (
-      <div style={wrapper}>
-        <span style={{ fontWeight: 700 }}>{t("duelCrossLink.dueling", { name: foe.display_name })}</span>
-        {body(true)}
-      </div>
+      <Skin
+        {...frame}
+        tally={null}
+        note={null}
+        headline={
+          <span style={{ fontWeight: 700 }}>
+            {t("duelCrossLink.dueling", { name: foe.display_name })}
+          </span>
+        }
+        body={body(true)}
+      />
     );
   }
 
@@ -214,18 +339,12 @@ export default function DuelCrossLink({
       ? t("duelCrossLink.standing.ahead")
       : t("duelCrossLink.standing.behind");
   return (
-    <div style={wrapper}>
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          gap: 12,
-          flexWrap: "wrap",
-        }}
-      >
+    <Skin
+      {...frame}
+      headline={
         <span>
-          <span style={{ fontWeight: 700 }}>{t("duelCrossLink.duel")}</span> {t("duelCrossLink.vs")}{" "}
+          <span style={{ fontWeight: 700 }}>{t("duelCrossLink.duel")}</span>{" "}
+          {t("duelCrossLink.vs")}{" "}
           {foe.praxis_id != null ? (
             <Link to={`/praxes/${foe.praxis_id}`} style={{ color: accent }}>
               <OpponentBadge side={foe} />
@@ -234,16 +353,20 @@ export default function DuelCrossLink({
             <OpponentBadge side={foe} />
           )}
         </span>
+      }
+      tally={
         <span style={{ whiteSpace: "nowrap" }}>
           <strong>{me.points_from_votes}</strong>
           <span style={{ opacity: 0.6 }}> — </span>
           <strong>{foe.points_from_votes}</strong>
         </span>
-      </div>
-      <div style={{ marginTop: 4, fontSize: "var(--text-xs)", opacity: 0.85 }}>
-        {t("duelCrossLink.live", { standing })}
-      </div>
-      {body(false)}
-    </div>
+      }
+      note={
+        <div style={{ marginTop: 4, fontSize: "var(--text-xs)", opacity: 0.85 }}>
+          {t("duelCrossLink.live", { standing })}
+        </div>
+      }
+      body={body(false)}
+    />
   );
 }
