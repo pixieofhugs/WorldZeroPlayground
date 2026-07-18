@@ -53,13 +53,13 @@ export default function AlbescentVote({
           // functional text and owes AA. -text-faint is decorative-only —
           // it drives the deliberately-ghosted AlbescentFeedFrame masthead.
           color: 'var(--faction-albescent-card-muted)',
-          marginBottom: 10,
+          marginBottom: 'var(--space-md)',
         }}
       >
         {t('chrome.albescent.prompt')}
       </div>
 
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, alignItems: 'flex-start' }}>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-md)', alignItems: 'flex-start' }}>
         {TIERS.map((tier) => {
           const reached = selected >= tier.value
           const picked = selected === tier.value
@@ -67,7 +67,7 @@ export default function AlbescentVote({
           return (
             <div
               key={tier.value}
-              style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 7, minWidth: 44 }}
+              style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 'var(--space-sm)', minWidth: 44 }}
             >
               <button
                 disabled={saving}

@@ -55,14 +55,6 @@ src/components/ui/FilterStamps.tsx
 src/components/ui/LevelPill.tsx
 src/components/ui/PageTitle.tsx
 src/components/ui/VoteStamps.tsx
-src/components/vote/AlbescentVote.tsx
-src/components/vote/EphemeristsVote.tsx
-src/components/vote/EverymenVote.tsx
-src/components/vote/SingularityVote.tsx
-src/components/vote/SnideVote.tsx
-src/components/vote/UaVote.tsx
-src/components/vote/VoteShell.tsx
-src/components/vote/WowVote.tsx
 src/pages/admin/AccountsTab.tsx
 src/pages/admin/ModerationTab.tsx
 src/pages/admin/TasksTab.tsx

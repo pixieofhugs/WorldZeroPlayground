@@ -32,10 +32,15 @@ interface StampVisual {
  * illustration); the sizes here draw the stamp, they are not read as text.
  */
 const SNIDE_VISUALS: Record<number, StampVisual> = {
+  // eslint-disable-next-line local/no-raw-style-values -- ornament: each tier is a rubber stamp; the size draws the stamp, it is not read as text.
   1: { color: 'var(--color-text-tertiary)', font: 'var(--font-body)', radius: 2, rot: -3, fontSize: 10 },
+  // eslint-disable-next-line local/no-raw-style-values -- ornament: each tier is a rubber stamp; the size draws the stamp, it is not read as text.
   2: { color: '#b59a3a', font: 'var(--font-body)', radius: 2, rot: 2, fontSize: 10 },
+  // eslint-disable-next-line local/no-raw-style-values -- ornament: each tier is a rubber stamp; the size draws the stamp, it is not read as text.
   3: { color: 'var(--faction-snide)', font: 'var(--faction-snide-font-cond)', radius: '50%', rot: -2, fontSize: 13 },
+  // eslint-disable-next-line local/no-raw-style-values -- ornament: each tier is a rubber stamp; the size draws the stamp, it is not read as text.
   4: { color: 'var(--faction-snide-pink)', font: 'var(--faction-snide-font-black)', radius: 3, rot: 3, fontSize: 12 },
+  // eslint-disable-next-line local/no-raw-style-values -- ornament: each tier is a rubber stamp; the size draws the stamp, it is not read as text.
   5: { color: 'var(--color-text-primary)', font: 'var(--faction-snide-font-black)', radius: 4, rot: -4, fontSize: 12 },
 }
 
@@ -51,7 +56,7 @@ export default function SnideVote({ praxisId, currentValue, points, totalVotes }
 
   return (
     <div>
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 9, alignItems: 'center' }}>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-sm)', alignItems: 'center' }}>
         {TIERS.map((tier) => {
           const visual = SNIDE_VISUALS[tier.value] ?? SNIDE_VISUALS[1]
           const active = selected === tier.value
@@ -65,7 +70,7 @@ export default function SnideVote({ praxisId, currentValue, points, totalVotes }
               style={{
                 minWidth: 46,
                 height: 40,
-                padding: '0 10px',
+                padding: '0 var(--space-md)',
                 cursor: saving ? 'default' : 'pointer',
                 border: `2.5px ${tier.value === 5 ? 'double' : 'solid'} ${visual.color}`,
                 borderRadius: visual.radius,
