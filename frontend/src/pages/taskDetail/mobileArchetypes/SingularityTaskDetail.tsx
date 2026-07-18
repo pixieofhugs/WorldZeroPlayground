@@ -37,7 +37,7 @@ const kicker: CSSProperties = {
 
 function SectionHead({ title, trailing }: { title: string; trailing?: ReactNode }) {
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
+    <div style={{ display: 'flex', alignItems: 'center', gap: "var(--space-md)", marginBottom: "var(--space-md)" }}>
       <h2 className="content-title" style={{ fontFamily: FONT, letterSpacing: '0.04em', textTransform: 'uppercase', margin: 0, color: PHOSPHOR, whiteSpace: 'nowrap' }}>
         {title}
       </h2>
@@ -76,18 +76,18 @@ export default function SingularityTaskDetail({ state }: { state: TaskDetailStat
     : null
 
   return (
-    <div className="py-4" style={{ fontFamily: FONT, color: PHOSPHOR, background: VOID, marginLeft: -16, marginRight: -16, paddingLeft: 16, paddingRight: 16 }}>
+    <div className="py-4" style={{ fontFamily: FONT, color: PHOSPHOR, background: VOID, marginLeft: -16, marginRight: -16, paddingLeft: "var(--space-lg)", paddingRight: "var(--space-lg)" }}>
       {/* Breadcrumb */}
       <nav className="mb-3" style={{ fontFamily: FONT, fontSize: "var(--text-sm)", letterSpacing: '0.1em', textTransform: 'uppercase', color: signal(55) }}>
         <Link to="/tasks" style={{ color: PHOSPHOR, textDecoration: 'none' }}>
           {t('default.breadcrumb')}
         </Link>
-        <span aria-hidden style={{ margin: '0 6px', color: SIGNAL }}>/</span>
+        <span aria-hidden style={{ margin: "0 var(--space-sm)", color: SIGNAL }}>/</span>
         <span style={{ color: phosphor(60) }}>{task.title}</span>
       </nav>
 
       {/* Hero — bracketed readout panel */}
-      <div style={{ position: 'relative', overflow: 'hidden', background: VOID, border: `1px solid ${BORDER_HARD}`, padding: '20px 20px 22px', marginBottom: 20 }}>
+      <div style={{ position: 'relative', overflow: 'hidden', background: VOID, border: `1px solid ${BORDER_HARD}`, padding: "var(--space-xl) var(--space-xl) var(--space-xl)", marginBottom: "var(--space-xl)" }}>
         {/* Corner brackets */}
         <Bracket pos="tl" />
         <Bracket pos="tr" />
@@ -98,7 +98,7 @@ export default function SingularityTaskDetail({ state }: { state: TaskDetailStat
           style={{ position: 'absolute', inset: 0, pointerEvents: 'none', background: `repeating-linear-gradient(to bottom, transparent, transparent 2px, ${phosphor(1.2)} 2px, ${phosphor(1.2)} 4px)` }}
         />
         <div style={{ position: 'relative' }}>
-          <div className="flex items-center justify-between" style={{ marginBottom: 12 }}>
+          <div className="flex items-center justify-between" style={{ marginBottom: "var(--space-md)" }}>
             <span style={{ ...kicker, color: PHOSPHOR }}>{t('singularity.mobile.detailEyebrow')}</span>
             <span style={kicker}>{t('singularity.statusOpen')}</span>
           </div>
@@ -107,7 +107,7 @@ export default function SingularityTaskDetail({ state }: { state: TaskDetailStat
             {'> '}
             {task.title}
           </h1>
-          <div style={{ height: 1, margin: '14px 0', background: signal(30) }} />
+          <div style={{ height: 1, margin: "var(--space-lg) 0", background: signal(30) }} />
           <div style={{ fontFamily: FONT, fontSize: "var(--text-md)", letterSpacing: '0.06em', color: signal(70) }}>
             {t('singularity.class', { level: task.level_required, points: modifiedPoints })}
           </div>
@@ -115,9 +115,9 @@ export default function SingularityTaskDetail({ state }: { state: TaskDetailStat
       </div>
 
       {/* The function — brief */}
-      <section style={{ marginBottom: 20 }}>
+      <section style={{ marginBottom: "var(--space-xl)" }}>
         <SectionHead title={t('singularity.mobile.briefHeading')} />
-        <div style={{ background: VOID, border: `1px solid ${signal(38)}`, padding: '16px 18px' }}>
+        <div style={{ background: VOID, border: `1px solid ${signal(38)}`, padding: "var(--space-lg) var(--space-lg)" }}>
           <p className="content-text" style={{ fontFamily: FONT, lineHeight: 1.7, color: task.description ? phosphor(72) : phosphor(45), margin: 0, whiteSpace: 'pre-wrap' }}>
             {task.description || t('singularity.observationEmpty')}
           </p>
@@ -125,18 +125,18 @@ export default function SingularityTaskDetail({ state }: { state: TaskDetailStat
       </section>
 
       {/* The consensus — read-only aggregate */}
-      <section style={{ marginBottom: 20 }}>
+      <section style={{ marginBottom: "var(--space-xl)" }}>
         <SectionHead title={t('singularity.consensusHeading')} />
         {voteCount > 0 ? (
-          <div style={{ display: 'flex', alignItems: 'flex-end', gap: 12 }}>
+          <div style={{ display: 'flex', alignItems: 'flex-end', gap: "var(--space-md)" }}>
             <span className="content-title" style={{ fontFamily: FONT, lineHeight: 0.85, color: PHOSPHOR }}>
               {topScore}
             </span>
-            <div style={{ paddingBottom: 5 }}>
+            <div style={{ paddingBottom: "var(--space-xs)" }}>
               <div style={{ fontFamily: FONT, fontSize: "var(--text-md)", letterSpacing: '0.06em', textTransform: 'uppercase', color: SIGNAL }}>
                 {t('singularity.consensus.peakSignal')}
               </div>
-              <div style={{ ...kicker, marginTop: 2 }}>{t('singularity.consensus.sealed', { count: voteCount })}</div>
+              <div style={{ ...kicker, marginTop: "var(--space-xs)" }}>{t('singularity.consensus.sealed', { count: voteCount })}</div>
             </div>
           </div>
         ) : (
@@ -161,7 +161,7 @@ export default function SingularityTaskDetail({ state }: { state: TaskDetailStat
                       fontSize: "var(--text-xs)",
                       letterSpacing: '0.1em',
                       textTransform: 'uppercase',
-                      padding: '5px 10px',
+                      padding: "var(--space-xs) var(--space-md)",
                       background: on ? PHOSPHOR : 'transparent',
                       color: on ? VOID : signal(60),
                       border: `1px solid ${on ? PHOSPHOR : signal(35)}`,
@@ -181,7 +181,7 @@ export default function SingularityTaskDetail({ state }: { state: TaskDetailStat
           <>
             <div className="flex flex-col gap-4">
               {sortedSubmissions.slice(0, 4).map((s) => (
-                <div key={s.id} style={{ position: 'relative', paddingTop: s.id === topId ? 16 : 0 }}>
+                <div key={s.id} style={{ position: 'relative', paddingTop: s.id === topId ? 'var(--space-lg)' : 0 }}>
                   {s.id === topId && (
                     <div
                       style={{
@@ -197,7 +197,7 @@ export default function SingularityTaskDetail({ state }: { state: TaskDetailStat
                         fontSize: "var(--text-sm)",
                         letterSpacing: '0.1em',
                         textTransform: 'uppercase',
-                        padding: '2px 12px',
+                        padding: "var(--space-xs) var(--space-md)",
                         boxShadow: `0 0 12px ${phosphor(40)}`,
                       }}
                     >
@@ -209,7 +209,7 @@ export default function SingularityTaskDetail({ state }: { state: TaskDetailStat
               ))}
             </div>
             {submissions.length > 4 && (
-              <div style={{ marginTop: 16 }}>
+              <div style={{ marginTop: "var(--space-lg)" }}>
                 <Link to={`/praxes?task_id=${task.id}`} style={{ fontFamily: FONT, fontSize: "var(--text-md)", letterSpacing: '0.06em', color: SIGNAL, textDecoration: 'none' }}>
                   {t('singularity.viewAll', { count: submissions.length })}
                 </Link>
@@ -223,7 +223,7 @@ export default function SingularityTaskDetail({ state }: { state: TaskDetailStat
       {canSignUp && (
         <MobileStickyBar>
           {signupError && (
-            <div style={{ fontFamily: FONT, fontSize: "var(--text-lg)", color: 'var(--color-danger)', padding: '8px 12px', background: signal(10), border: `1px solid ${signal(40)}` }}>
+            <div style={{ fontFamily: FONT, fontSize: "var(--text-lg)", color: 'var(--color-danger)', padding: "var(--space-sm) var(--space-md)", background: signal(10), border: `1px solid ${signal(40)}` }}>
               {signupError}
             </div>
           )}
@@ -237,7 +237,7 @@ export default function SingularityTaskDetail({ state }: { state: TaskDetailStat
               fontSize: "var(--text-xl)",
               letterSpacing: '0.1em',
               textTransform: 'uppercase',
-              padding: '14px 20px',
+              padding: "var(--space-lg) var(--space-xl)",
               border: 'none',
               boxShadow: `0 0 16px ${phosphor(35)}`,
               cursor: 'pointer',
@@ -258,7 +258,7 @@ export default function SingularityTaskDetail({ state }: { state: TaskDetailStat
           </span>
           <Link
             to={`/praxes/${mySubmission.id}/edit`}
-            style={{ fontFamily: FONT, fontSize: "var(--text-base)", letterSpacing: '0.1em', textTransform: 'uppercase', padding: '10px 18px', background: VOID, color: PHOSPHOR, border: `1px solid ${PHOSPHOR}`, textDecoration: 'none' }}
+            style={{ fontFamily: FONT, fontSize: "var(--text-base)", letterSpacing: '0.1em', textTransform: 'uppercase', padding: "var(--space-md) var(--space-lg)", background: VOID, color: PHOSPHOR, border: `1px solid ${PHOSPHOR}`, textDecoration: 'none' }}
           >
             {t('singularity.submitted.edit')}
           </Link>
@@ -266,7 +266,7 @@ export default function SingularityTaskDetail({ state }: { state: TaskDetailStat
       )}
 
       {!mySubmission && isInProgress && inProgressPraxisId !== null && (
-        <MobileStickyBar style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+        <MobileStickyBar style={{ flexDirection: 'row', alignItems: 'center', gap: "var(--space-md)" }}>
           <button
             onClick={handleDrop}
             style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: FONT, fontSize: "var(--text-base)", letterSpacing: '0.1em', textTransform: 'uppercase', color: signal(55) }}
@@ -275,7 +275,7 @@ export default function SingularityTaskDetail({ state }: { state: TaskDetailStat
           </button>
           <Link
             to={`/praxes/${inProgressPraxisId}/edit`}
-            style={{ marginLeft: 'auto', fontFamily: FONT, fontSize: "var(--text-md)", letterSpacing: '0.1em', textTransform: 'uppercase', padding: '12px 20px', background: PHOSPHOR, color: VOID, textDecoration: 'none' }}
+            style={{ marginLeft: "auto", fontFamily: FONT, fontSize: "var(--text-md)", letterSpacing: '0.1em', textTransform: 'uppercase', padding: "var(--space-md) var(--space-xl)", background: PHOSPHOR, color: VOID, textDecoration: 'none' }}
           >
             {t('singularity.inProgress.continue')}
           </Link>

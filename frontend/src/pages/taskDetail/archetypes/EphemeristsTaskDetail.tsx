@@ -34,7 +34,7 @@ function SectionHead({
   gloss?: string;
 }) {
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 16 }}>
+    <div style={{ display: "flex", alignItems: "center", gap: "var(--space-lg)", marginBottom: "var(--space-lg)" }}>
       <h2
         className="content-title"
         style={{
@@ -155,7 +155,7 @@ function DiscordantMap() {
           fontSize: "var(--text-sm)",
           color: VELLUM_TEXT,
           background: "color-mix(in srgb, var(--eph-vellum) 82%, transparent)",
-          padding: "2px 5px",
+          padding: "var(--space-xs) var(--space-xs)",
         }}
       >
         {t("ephemerists.diagram.coordXPrefix")}<span style={{ textDecoration: "line-through", opacity: 0.65 }}>8</span>{" "}
@@ -169,7 +169,7 @@ function DiscordantMap() {
           fontSize: "var(--text-sm)",
           color: "var(--eph-rubric)",
           background: "color-mix(in srgb, var(--eph-vellum) 82%, transparent)",
-          padding: "2px 5px",
+          padding: "var(--space-xs) var(--space-xs)",
         }}
       >
         {t("ephemerists.diagram.coordPolar")}
@@ -182,7 +182,7 @@ function DiscordantMap() {
           fontSize: "var(--text-sm)",
           color: "var(--eph-lapis)",
           background: "color-mix(in srgb, var(--eph-vellum) 82%, transparent)",
-          padding: "2px 5px",
+          padding: "var(--space-xs) var(--space-xs)",
         }}
       >
         {t("ephemerists.diagram.coordVanishing")}
@@ -219,7 +219,7 @@ function SurveyorRow({
 }) {
   const { t } = useTranslation("tasks");
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+    <div style={{ display: "flex", alignItems: "center", gap: "var(--space-md)", flexWrap: "wrap" }}>
       {signups.map((m) => {
         const rel = relationOf(m.character_id, friends, foes);
         const relColor = rel === "friend" ? "var(--eph-lapis)" : "var(--eph-rubric)";
@@ -291,7 +291,7 @@ function SurveyorRow({
           fontStyle: "italic",
           fontSize: "var(--text-lg)",
           color: MUTED,
-          marginLeft: 4,
+          marginLeft: "var(--space-xs)",
         }}
       >
         {t("ephemerists.triangulating")}
@@ -356,7 +356,7 @@ export default function EphemeristsTaskDetail({
           textTransform: "uppercase",
           color: MUTED,
           fontFamily: "var(--eph-display)",
-          marginBottom: 22,
+          marginBottom: "var(--space-xl)",
         }}
       >
         <Link
@@ -365,13 +365,13 @@ export default function EphemeristsTaskDetail({
         >
           {t("ephemerists.breadcrumb")}
         </Link>
-        <span style={{ opacity: 0.5, margin: "0 8px" }}>›</span>
+        <span style={{ opacity: 0.5, margin: "0 var(--space-sm)" }}>›</span>
         <span>{t("ephemerists.faction")}</span>
-        <span style={{ opacity: 0.5, margin: "0 8px" }}>›</span>
+        <span style={{ opacity: 0.5, margin: "0 var(--space-sm)" }}>›</span>
         <span style={{ color: "var(--eph-rubric)" }}>{task.title}</span>
       </nav>
 
-      <div style={{ maxWidth: 920, display: "flex", flexDirection: "column", gap: 30 }}>
+      <div style={{ maxWidth: 920, display: "flex", flexDirection: "column", gap: "var(--space-2xl)" }}>
         {/* ── Hero — the discordant exhibit ── */}
         <div
           style={{
@@ -394,7 +394,7 @@ export default function EphemeristsTaskDetail({
             <DiscordantMap />
             <div
               style={{
-                padding: "30px 34px",
+                padding: "var(--space-2xl) var(--space-2xl)",
                 display: "flex",
                 flexDirection: "column",
                 justifyContent: "center",
@@ -404,9 +404,9 @@ export default function EphemeristsTaskDetail({
                 style={{
                   display: "flex",
                   alignItems: "center",
-                  gap: 7,
+                  gap: "var(--space-sm)",
                   color: "var(--eph-gold)",
-                  marginBottom: 6,
+                  marginBottom: "var(--space-sm)",
                 }}
               >
                 <EphemeristsSigil size={13} color="var(--eph-gold)" />
@@ -427,7 +427,7 @@ export default function EphemeristsTaskDetail({
                   fontStyle: "italic",
                   fontSize: "var(--text-lg)",
                   color: MUTED,
-                  marginBottom: 16,
+                  marginBottom: "var(--space-lg)",
                 }}
               >
                 {t("ephemerists.statusLine", {
@@ -443,7 +443,7 @@ export default function EphemeristsTaskDetail({
                     letterSpacing: "0.14em",
                     textTransform: "uppercase",
                     color: "var(--eph-rubric)",
-                    marginBottom: 10,
+                    marginBottom: "var(--space-md)",
                   }}
                 >
                   {t("ephemerists.metataskFor", {
@@ -458,7 +458,7 @@ export default function EphemeristsTaskDetail({
                   fontWeight: 700,
                   lineHeight: 1.04,
                   color: VELLUM_TEXT,
-                  margin: "0 0 14px",
+                  margin: "0 0 var(--space-lg)",
                   overflowWrap: "anywhere",
                 }}
               >
@@ -468,13 +468,13 @@ export default function EphemeristsTaskDetail({
                 style={{
                   height: 1,
                   background: "linear-gradient(90deg, var(--eph-gold), transparent)",
-                  marginBottom: 16,
+                  marginBottom: "var(--space-lg)",
                 }}
               />
               <div
                 style={{
                   display: "flex",
-                  gap: 20,
+                  gap: "var(--space-xl)",
                   flexWrap: "wrap",
                   alignItems: "center",
                 }}
@@ -520,7 +520,7 @@ export default function EphemeristsTaskDetail({
                   fontSize: "var(--text-sm)",
                   fontStyle: "italic",
                   color: MUTED,
-                  marginTop: 14,
+                  marginTop: "var(--space-lg)",
                   lineHeight: 1.4,
                 }}
               >
@@ -545,7 +545,7 @@ export default function EphemeristsTaskDetail({
               position: "relative",
               border: "1px solid var(--eph-gold-deep)",
               background: "var(--eph-vellum)",
-              padding: "28px 32px",
+              padding: "var(--space-2xl) var(--space-2xl)",
               maxWidth: 660,
               fontFamily: "var(--eph-serif)",
               lineHeight: 1.7,
@@ -566,11 +566,11 @@ export default function EphemeristsTaskDetail({
             style={{
               display: "flex",
               alignItems: "center",
-              gap: 18,
+              gap: "var(--space-lg)",
               flexWrap: "wrap",
               border: "1px solid var(--eph-ink)",
               background: "var(--eph-vellum)",
-              padding: "16px 20px",
+              padding: "var(--space-lg) var(--space-xl)",
             }}
           >
             <button
@@ -584,7 +584,7 @@ export default function EphemeristsTaskDetail({
                 color: "var(--eph-parchment)",
                 background: "var(--eph-ink)",
                 border: "none",
-                padding: "13px 26px",
+                padding: "var(--space-md) var(--space-xl)",
               }}
             >
               {t("ephemerists.signup.cta", { points: modifiedPoints })}
@@ -634,11 +634,11 @@ export default function EphemeristsTaskDetail({
             style={{
               display: "flex",
               alignItems: "center",
-              gap: 16,
+              gap: "var(--space-lg)",
               flexWrap: "wrap",
               border: "1px solid var(--eph-gold-deep)",
               background: "var(--eph-vellum)",
-              padding: "14px 20px",
+              padding: "var(--space-lg) var(--space-xl)",
             }}
           >
             <span
@@ -660,7 +660,7 @@ export default function EphemeristsTaskDetail({
                 textTransform: "uppercase",
                 color: "var(--eph-parchment)",
                 background: "var(--eph-lapis)",
-                padding: "9px 18px",
+                padding: "var(--space-sm) var(--space-lg)",
                 textDecoration: "none",
               }}
             >
@@ -674,11 +674,11 @@ export default function EphemeristsTaskDetail({
             style={{
               display: "flex",
               alignItems: "center",
-              gap: 16,
+              gap: "var(--space-lg)",
               flexWrap: "wrap",
               border: "1px solid var(--eph-gold-deep)",
               background: "var(--eph-vellum)",
-              padding: "14px 20px",
+              padding: "var(--space-lg) var(--space-xl)",
             }}
           >
             <span
@@ -700,7 +700,7 @@ export default function EphemeristsTaskDetail({
                 textTransform: "uppercase",
                 color: "var(--eph-parchment)",
                 background: "var(--eph-ink)",
-                padding: "9px 18px",
+                padding: "var(--space-sm) var(--space-lg)",
                 textDecoration: "none",
               }}
             >
@@ -740,7 +740,7 @@ export default function EphemeristsTaskDetail({
         <section>
           <SectionHead title={t("ephemerists.credenceHeading")} />
           {voteCount > 0 ? (
-            <div style={{ display: "flex", alignItems: "flex-end", gap: 12 }}>
+            <div style={{ display: "flex", alignItems: "flex-end", gap: "var(--space-md)" }}>
               <span
                 className="content-title"
                 style={{
@@ -752,7 +752,7 @@ export default function EphemeristsTaskDetail({
               >
                 {topScore}
               </span>
-              <div style={{ paddingBottom: 6 }}>
+              <div style={{ paddingBottom: "var(--space-sm)" }}>
                 <div
                   style={{
                     fontFamily: "var(--eph-display)",
@@ -797,9 +797,9 @@ export default function EphemeristsTaskDetail({
               display: "flex",
               alignItems: "center",
               justifyContent: "space-between",
-              gap: 8,
+              gap: "var(--space-sm)",
               flexWrap: "wrap",
-              marginBottom: 16,
+              marginBottom: "var(--space-lg)",
             }}
           >
             <SectionHead
@@ -820,7 +820,7 @@ export default function EphemeristsTaskDetail({
                       fontSize: "var(--text-base)",
                       letterSpacing: "0.1em",
                       textTransform: "uppercase",
-                      padding: "5px 12px",
+                      padding: "var(--space-xs) var(--space-md)",
                       background: on ? "var(--eph-ink)" : "transparent",
                       color: on ? "var(--eph-gold-light)" : MUTED,
                       border: `1px solid ${on ? "var(--eph-ink)" : "var(--eph-gold-deep)"}`,
@@ -850,9 +850,9 @@ export default function EphemeristsTaskDetail({
             </p>
           ) : (
             <>
-              <div style={{ display: "flex", flexWrap: "wrap", gap: "30px 24px", alignItems: "flex-start" }}>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: "var(--space-2xl) var(--space-xl)", alignItems: "flex-start" }}>
                 {sortedSubmissions.slice(0, 4).map((s) => (
-                  <div key={s.id} style={{ position: "relative", paddingTop: s.id === topId ? 22 : 0 }}>
+                  <div key={s.id} style={{ position: "relative", paddingTop: s.id === topId ? "var(--space-xl)" : 0 }}>
                     {s.id === topId && (
                       <div
                         style={{
@@ -863,14 +863,14 @@ export default function EphemeristsTaskDetail({
                           zIndex: 3,
                           display: "inline-flex",
                           alignItems: "center",
-                          gap: 5,
+                          gap: "var(--space-xs)",
                           whiteSpace: "nowrap",
                           background: INK,
                           color: "var(--eph-gold-light)",
                           fontFamily: "var(--eph-display)",
                           fontSize: "var(--text-xs)",
                           letterSpacing: "0.14em",
-                          padding: "4px 12px",
+                          padding: "var(--space-xs) var(--space-md)",
                           boxShadow: "0 3px 8px rgba(42,29,18,0.35)",
                         }}
                       >
@@ -883,7 +883,7 @@ export default function EphemeristsTaskDetail({
                 ))}
               </div>
               {submissions.length > 4 && (
-                <div style={{ marginTop: 16 }}>
+                <div style={{ marginTop: "var(--space-lg)" }}>
                   <Link
                     to={`/praxes?task_id=${task.id}`}
                     style={{
