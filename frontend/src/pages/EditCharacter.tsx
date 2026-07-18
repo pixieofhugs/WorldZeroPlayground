@@ -38,11 +38,47 @@ const inputStyle: CSSProperties = {
   borderRadius: 8,
   background: 'var(--color-bg-page)',
   fontFamily: 'var(--font-body)',
-  fontSize: 13,
+  fontSize: 'var(--text-content)',
   color: 'var(--color-text-primary)',
   padding: '10px 13px',
   outline: 'none',
   boxSizing: 'border-box',
+}
+
+// Form field labels — read to fill the form in, so they sit on the content
+// floor, not the label ramp (#623). Static, hoisted per #586.
+const fieldLabel: CSSProperties = {
+  display: 'block',
+  fontSize: 'var(--text-content)',
+  color: 'var(--color-text-secondary)',
+  marginBottom: 7,
+}
+
+const headingStyle: CSSProperties = {
+  fontFamily: DISPLAY,
+  fontStyle: 'italic',
+  fontWeight: 700,
+  fontSize: 'var(--text-heading)',
+  lineHeight: 1,
+  margin: '4px 0 0',
+  color: 'var(--faction-default-card-text)',
+}
+
+const introStyle: CSSProperties = {
+  fontSize: 'var(--text-content)',
+  lineHeight: 1.6,
+  color: 'var(--faction-default-card-muted)',
+  margin: '16px 0 0',
+  maxWidth: 440,
+}
+
+const avatarHintStyle: CSSProperties = {
+  fontSize: 'var(--text-content)',
+  fontStyle: 'italic',
+  fontFamily: DISPLAY,
+  color: 'var(--color-text-tertiary)',
+  margin: '11px 0 0',
+  lineHeight: 1.5,
 }
 
 export default function EditCharacter() {
@@ -112,32 +148,10 @@ function DesktopEditCharacter({ state }: { state: EditCharacterState }) {
                 >
                   {t('editCharacter.eyebrow')}
                 </div>
-                <h1
-                  style={{
-                    fontFamily: DISPLAY,
-                    fontStyle: 'italic',
-                    fontWeight: 700,
-                    fontSize: 32,
-                    lineHeight: 1,
-                    margin: '4px 0 0',
-                    color: 'var(--faction-default-card-text)',
-                  }}
-                >
-                  {t('editCharacter.heading')}
-                </h1>
+                <h1 style={headingStyle}>{t('editCharacter.heading')}</h1>
               </div>
             </div>
-            <p
-              style={{
-                fontSize: 12,
-                lineHeight: 1.6,
-                color: 'var(--faction-default-card-muted)',
-                margin: '16px 0 0',
-                maxWidth: 440,
-              }}
-            >
-              {t('editCharacter.intro')}
-            </p>
+            <p style={introStyle}>{t('editCharacter.intro')}</p>
           </div>
         </div>
 
@@ -172,6 +186,7 @@ function DesktopEditCharacter({ state }: { state: EditCharacterState }) {
                   justifyContent: 'center',
                   fontFamily: DISPLAY,
                   fontStyle: 'italic',
+                  // ornament: monogram glyph scaled to the 82px portrait ring, not read text
                   fontSize: 34,
                   lineHeight: 1,
                 }}
@@ -216,18 +231,7 @@ function DesktopEditCharacter({ state }: { state: EditCharacterState }) {
                 className="font-body text-sm"
               />
               {avatarError && <p className="font-body text-xs text-red-600 mt-1">{avatarError}</p>}
-              <p
-                style={{
-                  fontSize: 10.5,
-                  fontStyle: 'italic',
-                  fontFamily: DISPLAY,
-                  color: 'var(--color-text-tertiary)',
-                  margin: '11px 0 0',
-                  lineHeight: 1.5,
-                }}
-              >
-                {t('editCharacter.avatarHint', { initial })}
-              </p>
+              <p style={avatarHintStyle}>{t('editCharacter.avatarHint', { initial })}</p>
             </div>
           </div>
         </section>
@@ -237,7 +241,7 @@ function DesktopEditCharacter({ state }: { state: EditCharacterState }) {
           <div className="eyebrow" style={{ marginBottom: 16 }}>{t('editCharacter.identityHeading')}</div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
             <label style={{ display: 'block' }}>
-              <span style={{ display: 'block', fontSize: 11, color: 'var(--color-text-secondary)', marginBottom: 7 }}>
+              <span style={fieldLabel}>
                 {t('editCharacter.displayNameLabel')}
               </span>
               <input
@@ -256,7 +260,7 @@ function DesktopEditCharacter({ state }: { state: EditCharacterState }) {
               </span>
             </label>
             <div>
-              <span style={{ display: 'block', fontSize: 11, color: 'var(--color-text-secondary)', marginBottom: 7 }}>
+              <span style={fieldLabel}>
                 {t('editCharacter.handleLabel')}
               </span>
               {/* Read-only: `username` is the auto-derived, unique handle (ADR-0019). */}
@@ -297,7 +301,7 @@ function DesktopEditCharacter({ state }: { state: EditCharacterState }) {
             style={{ ...inputStyle, resize: 'vertical', lineHeight: 1.7 }}
           />
           <div style={{ marginTop: 18 }}>
-            <span style={{ display: 'block', fontSize: 11, color: 'var(--color-text-secondary)', marginBottom: 7 }}>
+            <span style={fieldLabel}>
               {t('editCharacter.basedLabel')} <span style={{ color: 'var(--color-text-tertiary)' }}>{t('editCharacter.optional')}</span>
             </span>
             <input
