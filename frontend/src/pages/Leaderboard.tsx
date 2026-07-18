@@ -8,7 +8,9 @@ import { FACTION_RAINBOW_ORDER, factionCssVar } from '../utils/factions'
 import type { CharacterOut, CurrentUser } from '../api/auth'
 import { useFormFactor } from '../hooks/useFormFactor'
 import { pickVariant } from '../utils/factionDispatch'
-import Constellation, { type RankedPlayer } from './players/Constellation'
+import { type RankedPlayer } from './players/Constellation'
+import SkyCanvas, { DESKTOP_SKY_MAX_WIDTH } from './players/SkyCanvas'
+import SkyLegend from './players/SkyLegend'
 import RosterTable from './players/RosterTable'
 import DefaultPlayers, {
   type PlayersDirectoryProps,
@@ -22,6 +24,10 @@ type ScoreMode = 'era' | 'alltime'
 // through to the Default directory skin; bespoke faction directories can
 // register here later.
 export const MOBILE_ARCHETYPE_BY_SLUG: Record<string, MobileSkin> = {}
+
+/** Orbs in the desktop sky. Mobile shows 6 (`DefaultPlayers`); at the ~294px
+ *  radius the 900px stage yields there is room for 12 (#730 §2). */
+const DESKTOP_SKY_POPULATION = 12
 
 export default function Leaderboard() {
   const { user } = useAuth()
@@ -90,10 +96,6 @@ function DesktopLeaderboard({
     scoreMode === 'era'
       ? t('leaderboard.desktop.taglineEra')
       : t('leaderboard.desktop.taglineAllTime')
-  const legend =
-    scoreMode === 'era'
-      ? t('leaderboard.desktop.legendEra')
-      : t('leaderboard.desktop.legendAllTime')
 
   if (loading) {
     return (
@@ -169,16 +171,17 @@ function DesktopLeaderboard({
           {tagline}
         </p>
 
-        <Constellation
+        {/* The stage measures itself and caps at 900px — desktop used to hand
+            Constellation a hardcoded 620×460 island in a ~1200px box (#730 §1). */}
+        <SkyCanvas
           players={ranked}
           maxScore={maxScore}
           myCharId={myCharId}
-          population={12}
+          population={DESKTOP_SKY_POPULATION}
+          maxWidth={DESKTOP_SKY_MAX_WIDTH}
         />
 
-        <p className="content-text mt-3" style={{ color: 'var(--color-text-secondary)' }}>
-          {legend}
-        </p>
+        <SkyLegend scoreMode={scoreMode} />
       </section>
 
       {/* ── Full roster ── */}

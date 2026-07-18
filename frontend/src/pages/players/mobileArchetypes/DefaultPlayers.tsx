@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import type { CharacterOut } from '../../../api/auth'
@@ -15,7 +15,9 @@ import FactionAvatar from '../../../components/avatar/FactionAvatar'
 import FactionSigil from '../../../components/cards/FactionSigil'
 import LevelGem from '../../../components/ui/LevelGem'
 import { ChipRow, Chip } from '../../../components/ui/ChipRow'
-import Constellation, { type RankedPlayer } from '../Constellation'
+import { type RankedPlayer } from '../Constellation'
+import SkyCanvas, { MOBILE_SKY_ASPECT } from '../SkyCanvas'
+import SkyLegend from '../SkyLegend'
 
 export interface PlayersDirectoryProps {
   characters: CharacterOut[]
@@ -81,10 +83,6 @@ export default function DefaultPlayers({ characters, loading, error, myCharId }:
     scoreMode === 'era'
       ? t('leaderboard.desktop.taglineEra')
       : t('leaderboard.desktop.taglineAllTime')
-  const legend =
-    scoreMode === 'era'
-      ? t('leaderboard.desktop.legendEra')
-      : t('leaderboard.desktop.legendAllTime')
 
   return (
     <div className="py-4" data-testid="mobile-players-directory">
@@ -149,61 +147,19 @@ export default function DefaultPlayers({ characters, loading, error, myCharId }:
             {tagline}
           </p>
 
-          <SkyCanvas players={ranked} maxScore={maxScore} myCharId={myCharId} />
+          <SkyCanvas
+            players={ranked}
+            maxScore={maxScore}
+            myCharId={myCharId}
+            population={SKY_POPULATION}
+            aspect={MOBILE_SKY_ASPECT}
+          />
 
-          <p className="content-text mt-3" style={{ color: 'var(--color-text-secondary)' }}>
-            {legend}
-          </p>
+          <SkyLegend scoreMode={scoreMode} />
 
           {/* ── Full roster ── */}
           <Roster players={ranked} myCharId={myCharId} />
         </>
-      )}
-    </div>
-  )
-}
-
-/**
- * Measures its own width so the Constellation's spiral radius is derived from
- * the real phone-column width rather than a magic constant — 6 labelled orbs on
- * a ~360px canvas is tight, so equal offsets must be equal px (epic #654 §1).
- * The stage is drawn slightly taller than wide so `min(w, h)` — the radius
- * basis inside Constellation — tracks the measured width.
- */
-function SkyCanvas({
-  players,
-  maxScore,
-  myCharId,
-}: {
-  players: RankedPlayer[]
-  maxScore: number
-  myCharId: number | null
-}) {
-  const ref = useRef<HTMLDivElement>(null)
-  const [width, setWidth] = useState(0)
-
-  useEffect(() => {
-    const element = ref.current
-    if (!element) return
-    const measure = () => setWidth(element.clientWidth)
-    measure()
-    if (typeof ResizeObserver === 'undefined') return
-    const observer = new ResizeObserver(measure)
-    observer.observe(element)
-    return () => observer.disconnect()
-  }, [])
-
-  return (
-    <div ref={ref} style={{ minHeight: 320 }}>
-      {width > 0 && (
-        <Constellation
-          players={players}
-          maxScore={maxScore}
-          myCharId={myCharId}
-          population={SKY_POPULATION}
-          stageWidth={width}
-          stageHeight={Math.round(width * 1.08)}
-        />
       )}
     </div>
   )

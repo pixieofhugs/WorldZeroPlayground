@@ -30,7 +30,9 @@ vi.mock('../../../api/leaderboard', () => ({
 
 import Leaderboard from '../../Leaderboard'
 import DefaultPlayers from '../mobileArchetypes/DefaultPlayers'
-import Constellation, { type RankedPlayer } from '../Constellation'
+import Constellation, { skyRadius, type RankedPlayer } from '../Constellation'
+import SkyCanvas, { DESKTOP_SKY_MAX_WIDTH } from '../SkyCanvas'
+import SkyLegend from '../SkyLegend'
 import RosterTable from '../RosterTable'
 
 function render(element: ReactElement): { html: string; text: string } {
@@ -82,10 +84,14 @@ describe('players page form-factor dispatch', () => {
   })
 })
 
+// The sky is positioned in measured px, so a direct render must be handed a
+// stage. SkyCanvas supplies this in the app; these dims stand in for it.
+const STAGE = { stageWidth: 900, stageHeight: 765 }
+
 describe('desktop constellation (#656)', () => {
   it('links every star to its public profile, champion first', () => {
     const { html } = render(
-      <Constellation players={ranked(PLAYERS)} maxScore={2140} myCharId={null} />,
+      <Constellation players={ranked(PLAYERS)} maxScore={2140} myCharId={null} {...STAGE} />,
     )
     expect(html).toContain('href="/characters/11"')
     expect(html).toContain('href="/characters/22"')
@@ -94,8 +100,67 @@ describe('desktop constellation (#656)', () => {
 
   it('shows the zero state and no crown when nobody has climbed', () => {
     const flat = PLAYERS.map((c) => ({ ...c, score: 0 }))
-    const { text } = render(<Constellation players={ranked(flat)} maxScore={0} myCharId={null} />)
+    const { text } = render(
+      <Constellation players={ranked(flat)} maxScore={0} myCharId={null} {...STAGE} />,
+    )
     expect(text).toContain('The era is young')
+  })
+
+  // #730 §2: every orb carries its rank and its points, not just the champion.
+  it('carries a rank number and the points on each orb', () => {
+    const { text } = render(
+      <Constellation players={ranked(PLAYERS)} maxScore={2140} myCharId={null} {...STAGE} />,
+    )
+    expect(text, 'champion name').toContain('Perpetua')
+    expect(text, 'per-orb points').toContain('2140')
+    expect(text, 'a lower-ranked orb keeps its points').toContain('340')
+  })
+
+  // #730 §1: the radius is the binding half of the cramping bug. A 900x765
+  // stage must yield roughly double the old fixed 620x460 stage's 142px.
+  it('grows the sky radius with the measured stage', () => {
+    expect(skyRadius(620, 460)).toBe(142)
+    expect(skyRadius(900, 765)).toBeGreaterThan(280)
+  })
+
+  // The unaffiliated spectrum is a class, never a faction colour (ADR-0039).
+  it('paints unaffiliated points with the rainbow ink, not a faction hue', () => {
+    const { html } = render(
+      <Constellation players={ranked(PLAYERS)} maxScore={2140} myCharId={null} {...STAGE} />,
+    )
+    expect(html).toContain('rainbow-ink')
+  })
+})
+
+describe('sky legend (#730 §3)', () => {
+  it('names all three chips, with the era wording on the size chip', () => {
+    const { text } = render(<SkyLegend scoreMode="era" />)
+    expect(text).toContain('more era points')
+    expect(text).toContain('Crown')
+    expect(text).toContain('still at zero')
+  })
+
+  it('swaps only the size chip in all-time mode', () => {
+    const { text } = render(<SkyLegend scoreMode="alltime" />)
+    expect(text).toContain('more all-time points')
+    expect(text).toContain('Crown')
+  })
+})
+
+describe('SkyCanvas measuring wrapper (#730 §1)', () => {
+  // Regression: an earlier draft guarded on `width > 0`. With no DOM the effect
+  // never runs, so the sky vanished and every assertion above went vacuous.
+  it('renders a sky before any measurement has happened', () => {
+    const { html } = render(
+      <SkyCanvas
+        players={ranked(PLAYERS)}
+        maxScore={2140}
+        myCharId={null}
+        population={12}
+        maxWidth={DESKTOP_SKY_MAX_WIDTH}
+      />,
+    )
+    expect(html).toContain('href="/characters/11"')
   })
 })
 
