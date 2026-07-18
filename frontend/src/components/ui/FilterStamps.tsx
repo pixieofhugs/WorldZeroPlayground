@@ -41,7 +41,7 @@ export default function FilterStamps({ options, value, onChange, label, optionLa
               fontWeight: 700,
               textTransform: 'uppercase',
               letterSpacing: '0.1em',
-              padding: '5px 10px',
+              padding: 'var(--space-xs) var(--space-md)',
               cursor: 'pointer',
               transition: 'all 120ms',
             }}

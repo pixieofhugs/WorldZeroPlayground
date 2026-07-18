@@ -51,6 +51,7 @@ export default function NavBar() {
               backgroundSize: '100% calc(100% - 2px), 100% 2px',
               backgroundPosition: 'top, bottom',
               backgroundRepeat: 'no-repeat',
+              // eslint-disable-next-line local/no-raw-style-values -- ornament: lead between the wordmark and the rainbow rule drawn by the 2px backgroundSize band; a rung detaches the rule.
               paddingBottom: 2,
             }}
           >
@@ -101,7 +102,7 @@ export default function NavBar() {
               background: 'none',
               border: adminMode ? '1.5px solid var(--color-text-primary)' : '1.5px solid transparent',
               cursor: 'pointer',
-              padding: '2px 6px',
+              padding: 'var(--space-xs) var(--space-sm)',
               color: adminMode ? 'var(--color-text-primary)' : 'var(--color-text-tertiary)',
               transition: 'color 150ms, border-color 150ms',
               borderRadius: 2,
@@ -119,7 +120,7 @@ export default function NavBar() {
             background: 'none',
             border: 'none',
             cursor: 'pointer',
-            padding: '2px 6px',
+            padding: 'var(--space-xs) var(--space-sm)',
             color: 'var(--color-text-tertiary)',
             transition: 'color 150ms',
           }}

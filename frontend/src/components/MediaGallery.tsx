@@ -18,8 +18,8 @@ export default function MediaGallery({ media, layout = 'column' }: Props) {
     <div
       style={
         layout === 'grid'
-          ? { display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: 10 }
-          : { display: 'flex', flexDirection: 'column', gap: 12 }
+          ? { display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: 'var(--space-md)' }
+          : { display: 'flex', flexDirection: 'column', gap: 'var(--space-md)' }
       }
     >
       {sorted.map((item) => {
