@@ -45,8 +45,8 @@ const kicker: CSSProperties = {
 /** Cream ledger plate framed in union ink, headed by a Bebas title. */
 function Plate({ title, children }: { title: string; children: ReactNode }) {
   return (
-    <section style={{ background: PAPER, border: `2px solid ${INK}`, padding: 14 }}>
-      <div style={{ fontFamily: ACCENT_FONT, fontSize: 'var(--text-xl)', letterSpacing: '0.06em', color: RED, marginBottom: 10 }}>
+    <section style={{ background: PAPER, border: `2px solid ${INK}`, padding: 'var(--space-lg)' }}>
+      <div style={{ fontFamily: ACCENT_FONT, fontSize: 'var(--text-xl)', letterSpacing: '0.06em', color: RED, marginBottom: 'var(--space-md)' }}>
         {title}
       </div>
       {children}
@@ -63,7 +63,7 @@ export default function EverymenPraxisDetail({ state }: { state: PraxisDetailSta
   const initial = (praxis.created_by_display_name || '?')[0]?.toUpperCase() ?? '?'
 
   return (
-    <div data-skin="everymen" className="page" style={{ display: 'flex', flexDirection: 'column', gap: 14, fontFamily: BODY_FONT, color: PAPER_TEXT, background: PAPER }}>
+    <div data-skin="everymen" className="page" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-lg)', fontFamily: BODY_FONT, color: PAPER_TEXT, background: PAPER }}>
       {/* Behavior slots (invariant) */}
       <PraxisStatusBanners state={state} />
       <PraxisAdminBar state={state} />
@@ -84,7 +84,7 @@ export default function EverymenPraxisDetail({ state }: { state: PraxisDetailSta
             praxis={praxis}
             linkStyle={{ fontFamily: ACCENT_FONT, fontSize: 'var(--text-content)', letterSpacing: '0.02em', color: PAPER_TEXT, lineHeight: 1, textDecoration: 'none' }}
           />
-          <div className="truncate" style={{ ...kicker, marginTop: 3 }}>
+          <div className="truncate" style={{ ...kicker, marginTop: 'var(--space-xs)' }}>
             {t('detail.everymen.mobile.filed')} · {formatTimestamp(sealedDate)}
           </div>
         </div>
@@ -99,7 +99,7 @@ export default function EverymenPraxisDetail({ state }: { state: PraxisDetailSta
 
       {/* Finding headline */}
       <div>
-        <div style={{ ...kicker, marginBottom: 4, color: RED }}>{t('detail.everymen.theWork')}</div>
+        <div style={{ ...kicker, marginBottom: 'var(--space-xs)', color: RED }}>{t('detail.everymen.theWork')}</div>
         <h1 style={{ fontFamily: ACCENT_FONT, fontSize: 'var(--text-heading)', lineHeight: 0.95, letterSpacing: '0.01em', margin: 0, color: PAPER_TEXT, overflowWrap: 'anywhere' }}>
           {praxis.title ?? t('detail.everymen.untitled')}
         </h1>
@@ -127,10 +127,10 @@ export default function EverymenPraxisDetail({ state }: { state: PraxisDetailSta
 
       {/* The crew's marks — vote caster */}
       <Plate title={t('detail.everymen.crewsMarks')}>
-        <div className="flex items-center justify-center content-text" style={{ marginBottom: 12, fontFamily: ACCENT_FONT, letterSpacing: '0.04em', color: PAPER_TEXT }}>
+        <div className="flex items-center justify-center content-text" style={{ marginBottom: 'var(--space-md)', fontFamily: ACCENT_FONT, letterSpacing: '0.04em', color: PAPER_TEXT }}>
           {t('detail.everymen.mobile.appraise')}
         </div>
-        <div style={{ marginBottom: 12 }}>
+        <div style={{ marginBottom: 'var(--space-md)' }}>
           <PraxisScoreBreakdown state={state} align="center" accent={RED} font={ACCENT_FONT} />
         </div>
         <MobileStarVote

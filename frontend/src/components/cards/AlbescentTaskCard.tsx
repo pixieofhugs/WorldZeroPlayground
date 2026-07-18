@@ -119,6 +119,7 @@ export default function AlbescentTaskCard({ task, displayPoints, onSignup }: Pro
             style={{
               background: "none",
               border: "none",
+              // eslint-disable-next-line local/no-raw-style-values -- ornament: 1px lead holding the letterpress hairline against its label; the nearest rung detaches the rule.
               padding: "0 0 1px",
               cursor: "pointer",
               fontFamily: MONO,

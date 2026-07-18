@@ -60,8 +60,12 @@
       "factionsCount_other": "{{count}} factions",
       "taglineEra": "The closer to the sun, the higher you've climbed this era.",
       "taglineAllTime": "The closer to the sun, the higher you've climbed of all time.",
-      "legendEra": "Bigger sigil = more era points · closer to the sun = higher rank.",
-      "legendAllTime": "Bigger sigil = more all-time points · closer to the sun = higher rank.",
+      "legend": {
+        "sizeEra": "Bigger sigil = more era points",
+        "sizeAllTime": "Bigger sigil = more all-time points",
+        "crown": "Crown = the lead",
+        "faint": "Faint = still at zero"
+      },
       "zeroState": "The era is young — no one has climbed yet.",
       "skyLabel": "The standings, drawn as a night sky of players.",
       "you": "You",

@@ -152,14 +152,28 @@ There is deliberately no `.content-heading` / `.content-display` / `.content-sco
 | `--space-lg`  | 16px  |
 | `--space-xl`  | 24px  |
 | `--space-2xl` | 32px  |
+| `--space-3xl` | 40px  |
+| `--space-4xl` | 48px  |
+| `--space-5xl` | 64px  |
+| `--space-6xl` | 96px  |
+
+The rungs through `2xl` are for spacing **within** a component; `3xl` and up are for the space **around** one — section breaks, hero padding, sticky-footer clearance. The step widens on purpose: at that size a 4px difference is not a design decision anyone is making.
 
 **Rule:** `padding`, `margin`, and `gap` take a `--space-*` token — never a raw pixel value. If you're about to write `padding: 13` or `gap: 6`, stop and pick the nearest token. This mirrors the typography rule: the scale is the vocabulary, and a value outside it is a bug, not a nuance.
+
+**Ties round up.** 20px sits exactly between `--space-lg` and `--space-xl`, and it is one of the most common raw values in the codebase; "nearest" does not resolve it. Round up. §4's *type wins; geometry yields* is the reason — text sizes rose site-wide in #627/#623, so containers giving up room is the wrong direction. The exception is an intentionally **asymmetric** inset (`"24px 24px 22px 20px"`), where rounding every side up flattens the asymmetry into a uniform box; there, round the tie down and keep the shape.
+
+**Never compose with `calc()` to dodge the scale.** `calc(var(--space-2xl) + var(--space-lg))` is a 48px value wearing a disguise — it passes the linter and tells the next reader nothing. If a needed value has no rung, that is a gap in the scale to raise, not to route around.
 
 Both scales are **global, not per-faction**. A faction picks a headline font, a colour, and an ornament — never its own type size or spacing. There are no per-faction size or spacing exceptions.
 
 **Skins don't own type size.** A skin style object (`inputStyle`, `textareaStyle`, `markdownStyle`, and friends) carries `fontFamily`, `fontStyle`, `color`, `lineHeight` — **never `fontSize`**. The shared control owns the size, via a role class (`.content-text` / `.content-title`) or a `--text-*` token. This is the rule above made enforceable: if a skin is setting a size, the size has escaped the scale.
 
+**Zero is exempt.** `padding: 0` / `margin: 0` / `gap: 0` stay as written. Zero is the *absence* of spacing rather than a choice from the scale — it is unit-less and theme-invariant, so it carries none of the drift the scale exists to prevent. There is deliberately no `--space-none` token: spelling "nothing" as `var(--space-none)` is churn, not clarity. The lint rule exempts the literal `0`.
+
 **Not covered by the rule:** ornament geometry (`width`/`height`/`top`/`inset` on decorative marks, sprocket holes, tape strips, corner brackets) is illustration, not layout spacing, and stays in raw pixels.
+
+**Ornament spacing.** The same carve-out extends to `padding`/`margin`/`gap` *inside* an ornamental composition — the lead between stacked stencil lines, the inset of a stamp within its border, the offset of a taped label. Rounding those to the nearest rung reflows the composition, and §6's "do not regularize card sizes" applies to an archetype's internal rhythm as much as to its outer dimensions. Such a value keeps its raw pixels behind the same per-line hatch ornament `fontSize` uses. The test is unchanged: spacing that positions **layout** takes a token; spacing that positions **illustration** is ornament. When genuinely unsure, it is layout — the carve-out is narrow, and a gutter between two paragraphs is never ornament.
 
 ### The ornament escape hatch
 

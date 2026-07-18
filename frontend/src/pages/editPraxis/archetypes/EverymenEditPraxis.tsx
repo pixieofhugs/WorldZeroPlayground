@@ -62,8 +62,8 @@ function FieldLabel({
       style={{
         display: "flex",
         alignItems: "baseline",
-        gap: 16,
-        marginBottom: 9,
+        gap: "var(--space-lg)",
+        marginBottom: "var(--space-sm)",
       }}
     >
       <span
@@ -131,7 +131,7 @@ export default function EverymenEditPraxis({ state }: Props) {
           color: PAPER_TEXT,
           background: "var(--everymen-paper-deep)",
           minHeight: "100vh",
-          padding: "32px 24px 56px",
+          padding: "var(--space-2xl) var(--space-xl) var(--space-5xl)",
         } as React.CSSProperties
       }
     >
@@ -149,10 +149,10 @@ export default function EverymenEditPraxis({ state }: Props) {
             position: "relative",
             display: "inline-flex",
             alignItems: "center",
-            gap: 10,
+            gap: "var(--space-sm)",
             background: RED,
             color: CREAM,
-            padding: "8px 18px 8px 16px",
+            padding: "var(--space-sm) var(--space-lg)",
             boxShadow: `5px 5px 0 ${INK}`,
           }}
         >
@@ -175,8 +175,8 @@ export default function EverymenEditPraxis({ state }: Props) {
             display: "flex",
             alignItems: "flex-end",
             justifyContent: "space-between",
-            gap: 16,
-            margin: "16px 0 4px",
+            gap: "var(--space-lg)",
+            margin: "var(--space-lg) 0 var(--space-xs)",
           }}
         >
           <div
@@ -199,7 +199,7 @@ export default function EverymenEditPraxis({ state }: Props) {
               textTransform: "uppercase",
               color: MUTED,
               lineHeight: 1.4,
-              paddingBottom: 6,
+              paddingBottom: "var(--space-xs)",
             }}
           >
             <div>
@@ -221,7 +221,7 @@ export default function EverymenEditPraxis({ state }: Props) {
             height: 4,
             width: 180,
             background: RED_GOLD_RULE,
-            marginBottom: 24,
+            marginBottom: "var(--space-xl)",
           }}
         />
 
@@ -232,7 +232,7 @@ export default function EverymenEditPraxis({ state }: Props) {
             overflow: "hidden",
             border: `1.5px solid ${INK}`,
             background: PAPER,
-            marginBottom: 30,
+            marginBottom: "var(--space-2xl)",
             display: "flex",
           }}
         >
@@ -245,7 +245,7 @@ export default function EverymenEditPraxis({ state }: Props) {
                 "repeating-linear-gradient(180deg, transparent 0 13px, color-mix(in srgb, var(--everymen-cream) 55%, transparent) 13px 15px)",
             }}
           />
-          <div style={{ flex: 1, padding: "15px 18px" }}>
+          <div style={{ flex: 1, padding: "var(--space-lg)" }}>
             <div
               style={{
                 fontFamily: BODY_FONT,
@@ -253,7 +253,7 @@ export default function EverymenEditPraxis({ state }: Props) {
                 letterSpacing: "0.2em",
                 textTransform: "uppercase",
                 color: MUTED,
-                marginBottom: 4,
+                marginBottom: "var(--space-xs)",
               }}
             >
               {t("editPraxis.everymen.taskRefLabel")}
@@ -264,13 +264,13 @@ export default function EverymenEditPraxis({ state }: Props) {
                 fontSize: "var(--text-heading)",
                 lineHeight: 0.96,
                 color: PAPER_TEXT,
-                marginBottom: 8,
+                marginBottom: "var(--space-sm)",
               }}
             >
               {praxis.task_title}
             </div>
             {task?.description && (
-              <div style={{ fontFamily: ACCENT_FONT, fontSize: "var(--text-content)", lineHeight: 1.5, color: MUTED, marginBottom: 8 }}>
+              <div style={{ fontFamily: ACCENT_FONT, fontSize: "var(--text-content)", lineHeight: 1.5, color: MUTED, marginBottom: "var(--space-sm)" }}>
                 {task.description}
               </div>
             )}
@@ -280,7 +280,7 @@ export default function EverymenEditPraxis({ state }: Props) {
 
         {/* The crew (mode selector) */}
         {!state.controlsLocked && (
-          <div style={{ marginBottom: 28 }}>
+          <div style={{ marginBottom: "var(--space-xl)" }}>
             <FieldLabel>{t("editPraxis.everymen.modeLabel")}</FieldLabel>
             <ModePicker
               state={state}
@@ -288,7 +288,7 @@ export default function EverymenEditPraxis({ state }: Props) {
                 containerStyle: {
                   display: "grid",
                   gridTemplateColumns: "repeat(3, 1fr)",
-                  gap: 12,
+                  gap: "var(--space-md)",
                 },
                 options: modeOptions,
                 allowedModes,
@@ -303,7 +303,7 @@ export default function EverymenEditPraxis({ state }: Props) {
                       position: "relative",
                       cursor: disabled ? "not-allowed" : "pointer",
                       textAlign: "left",
-                      padding: "13px 15px",
+                      padding: "var(--space-md) var(--space-lg)",
                       background: active ? RED : PAPER,
                       color: active ? CREAM : PAPER_TEXT,
                       border: `2px solid ${INK}`,
@@ -327,7 +327,7 @@ export default function EverymenEditPraxis({ state }: Props) {
                       style={{
                         fontSize: "var(--text-sm)",
                         letterSpacing: "0.04em",
-                        marginTop: 3,
+                        marginTop: "var(--space-xs)",
                         opacity: active ? 0.9 : 0.7,
                       }}
                     >
@@ -359,7 +359,7 @@ export default function EverymenEditPraxis({ state }: Props) {
         {state.showInviteBox && <InviteBlock state={state} />}
 
         {/* The job (headline) */}
-        <div style={{ marginBottom: 28 }}>
+        <div style={{ marginBottom: "var(--space-xl)" }}>
           <FieldLabel
             meta={t("editPraxis.everymen.titleMeta", {
               length: state.title.length,
@@ -379,7 +379,7 @@ export default function EverymenEditPraxis({ state }: Props) {
                 fontFamily: ACCENT_FONT,
                 letterSpacing: "0.01em",
                 color: PAPER_TEXT,
-                padding: "4px 2px 8px",
+                padding: "var(--space-xs) var(--space-xs) var(--space-sm)",
                 outline: "none",
               },
             }}
@@ -391,7 +391,7 @@ export default function EverymenEditPraxis({ state }: Props) {
               letterSpacing: "0.12em",
               textTransform: "uppercase",
               color: MUTED,
-              marginTop: 6,
+              marginTop: "var(--space-xs)",
             }}
           >
             {state.saveStatus === "saved"
@@ -403,7 +403,7 @@ export default function EverymenEditPraxis({ state }: Props) {
         </div>
 
         {/* The report (body) */}
-        <div style={{ marginBottom: 28 }}>
+        <div style={{ marginBottom: "var(--space-xl)" }}>
           <FieldLabel
             meta={t("editPraxis.everymen.bodyMeta", {
               words: state.wordCount,
@@ -424,7 +424,7 @@ export default function EverymenEditPraxis({ state }: Props) {
                 fontFamily: BODY_FONT,
                 lineHeight: 1.6,
                 color: PAPER_TEXT,
-                padding: "13px 15px",
+                padding: "var(--space-md) var(--space-lg)",
                 outline: "none",
                 minHeight: 200,
               },
@@ -434,9 +434,9 @@ export default function EverymenEditPraxis({ state }: Props) {
             state={state}
             skin={{
               wrapperStyle: {
-                marginTop: 14,
+                marginTop: "var(--space-md)",
                 borderLeft: `4px solid ${RED}`,
-                paddingLeft: 14,
+                paddingLeft: "var(--space-md)",
               },
               label: (
                 <div
@@ -446,7 +446,7 @@ export default function EverymenEditPraxis({ state }: Props) {
                     letterSpacing: "0.2em",
                     textTransform: "uppercase",
                     color: MUTED,
-                    marginBottom: 6,
+                    marginBottom: "var(--space-xs)",
                   }}
                 >
                   {t("editPraxis.everymen.previewLabel")}
@@ -467,7 +467,7 @@ export default function EverymenEditPraxis({ state }: Props) {
         )}
 
         {/* Proof of work */}
-        <div style={{ marginBottom: 30 }}>
+        <div style={{ marginBottom: "var(--space-2xl)" }}>
           <FieldLabel
             meta={t("editPraxis.everymen.filesMeta", { pinned: totalProof })}
           >
@@ -477,7 +477,7 @@ export default function EverymenEditPraxis({ state }: Props) {
             style={{
               display: "flex",
               flexWrap: "wrap",
-              gap: 14,
+              gap: "var(--space-md)",
               alignItems: "flex-start",
             }}
           >
@@ -487,7 +487,7 @@ export default function EverymenEditPraxis({ state }: Props) {
               style={{
                 display: "inline-flex",
                 alignItems: "center",
-                gap: 8,
+                gap: "var(--space-sm)",
                 cursor: "pointer",
                 border: `2px dashed ${INK}`,
                 background: "transparent",
@@ -497,7 +497,7 @@ export default function EverymenEditPraxis({ state }: Props) {
                 fontWeight: 700,
                 letterSpacing: "0.12em",
                 textTransform: "uppercase",
-                padding: "11px 18px",
+                padding: "var(--space-md) var(--space-lg)",
               }}
             >
               <span
@@ -526,7 +526,7 @@ export default function EverymenEditPraxis({ state }: Props) {
               style={{
                 fontSize: "var(--text-md)",
                 color: "var(--color-danger)",
-                marginTop: 9,
+                marginTop: "var(--space-sm)",
               }}
             >
               {state.fileError}
@@ -544,11 +544,11 @@ export default function EverymenEditPraxis({ state }: Props) {
           style={{
             borderTop:
               "1px solid color-mix(in srgb, var(--everymen-paper-text) 22%, transparent)",
-            paddingTop: 22,
-            marginTop: 22,
+            paddingTop: "var(--space-xl)",
+            marginTop: "var(--space-xl)",
             display: "flex",
             alignItems: "center",
-            gap: 16,
+            gap: "var(--space-lg)",
             flexWrap: "wrap",
           }}
         >
@@ -582,7 +582,7 @@ export default function EverymenEditPraxis({ state }: Props) {
                 fontFamily: ACCENT_FONT,
                 fontSize: "var(--text-title)",
                 letterSpacing: "0.1em",
-                padding: "12px 30px",
+                padding: "var(--space-md) var(--space-2xl)",
                 whiteSpace: "nowrap",
                 boxShadow: `5px 5px 0 ${INK}`,
                 transition: "background 150ms",
@@ -612,7 +612,7 @@ function ProofSlip({ children, caption, onRemove }: ProofSlipProps) {
         background: PAPER,
         border: `1.5px solid ${INK}`,
         boxShadow: `3px 3px 0 ${INK}`,
-        padding: 6,
+        padding: "var(--space-xs)",
       }}
     >
       <div style={{ width: "100%", height: 100, overflow: "hidden" }}>
@@ -624,7 +624,7 @@ function ProofSlip({ children, caption, onRemove }: ProofSlipProps) {
           fontSize: "var(--text-sm)",
           letterSpacing: "0.04em",
           color: PAPER_TEXT,
-          marginTop: 6,
+          marginTop: "var(--space-xs)",
           overflow: "hidden",
           textOverflow: "ellipsis",
           whiteSpace: "nowrap",
@@ -661,9 +661,9 @@ function ProofSlip({ children, caption, onRemove }: ProofSlipProps) {
 function ExistingProof({ state }: { state: EditPraxisState }) {
   const { t } = useTranslation("forms");
   return (
-    <div style={{ marginBottom: 28 }}>
+    <div style={{ marginBottom: "var(--space-xl)" }}>
       <FieldLabel>{t("editPraxis.everymen.onFileLabel")}</FieldLabel>
-      <div style={{ display: "flex", flexWrap: "wrap", gap: 14 }}>
+      <div style={{ display: "flex", flexWrap: "wrap", gap: "var(--space-md)" }}>
         {state.media.map((item: MediaItemOut) => {
           const src = mediaUrl(item.file_path);
           const filename =
@@ -705,8 +705,8 @@ function InviteBlock({ state }: { state: EditPraxisState }) {
   return (
     <div
       style={{
-        marginBottom: 28,
-        padding: "14px 16px",
+        marginBottom: "var(--space-xl)",
+        padding: "var(--space-md) var(--space-lg)",
         background: PAPER,
         border: `1.5px dashed ${INK}`,
       }}
@@ -740,8 +740,8 @@ function MetatasksBlock({ state }: { state: EditPraxisState }) {
   return (
     <div
       style={{
-        marginBottom: 28,
-        padding: "16px",
+        marginBottom: "var(--space-xl)",
+        padding: "var(--space-lg)",
         background: PAPER,
         border: `1.5px solid ${INK}`,
       }}
@@ -761,9 +761,9 @@ function MetatasksBlock({ state }: { state: EditPraxisState }) {
             style={{
               display: "flex",
               alignItems: "flex-start",
-              gap: 12,
+              gap: "var(--space-md)",
               width: "100%",
-              padding: "10px 4px",
+              padding: "var(--space-sm) var(--space-xs)",
               background: "transparent",
               border: "none",
               cursor: busy ? "wait" : "pointer",
@@ -777,7 +777,7 @@ function MetatasksBlock({ state }: { state: EditPraxisState }) {
                 flexShrink: 0,
                 border: `2px solid ${INK}`,
                 background: selected ? RED : CREAM,
-                marginTop: 2,
+                marginTop: "var(--space-xs)",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",

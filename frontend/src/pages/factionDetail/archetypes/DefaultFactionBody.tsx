@@ -11,7 +11,7 @@ import type { FactionDetailState } from "../useFactionDetail";
 const CARD_GRID: CSSProperties = {
   display: "flex",
   flexWrap: "wrap",
-  gap: "1rem",
+  gap: "var(--space-lg)",
   alignItems: "flex-start",
 };
 
@@ -56,7 +56,7 @@ export default function DefaultFactionBody({
                 key={m.id}
                 style={{
                   border: `1px solid ${accent}`,
-                  padding: "6px 10px",
+                  padding: "var(--space-sm) var(--space-md)",
                   background: "var(--color-bg-card)",
                 }}
               >

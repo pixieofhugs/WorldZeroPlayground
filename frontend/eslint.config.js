@@ -107,12 +107,32 @@ const STYLE_PROPS = new Set([
   'rowGap',
   'columnGap',
 ])
-const RAW_PX_STRING = /^-?\d+(\.\d+)?px(\s+-?\d+(\.\d+)?px){0,3}$/
+const RAW_PX_COMPONENT = /^-?\d+(\.\d+)?px$/
+
+// A shorthand string is a violation if ANY of its components is a raw pixel
+// value. Matching the WHOLE string against a px-only pattern (as this once did)
+// meant a single bare `0` or `auto` disarmed the rule entirely, so
+// `"0 0 14px"`, `"12px 0"` and `"0 auto 26px"` all passed silently — and a file
+// carrying them could be delisted while still holding raw values (#750).
+function hasRawPxComponent(value) {
+  return value.trim().split(/\s+/).some((part) => RAW_PX_COMPONENT.test(part))
+}
 
 function isRawPxValue(node) {
+  // Zero is exempt: it is the absence of spacing, not a choice from the scale.
+  // It is unit-less and theme-invariant, so it carries none of the drift the
+  // token scale exists to prevent — and there is deliberately no --space-none
+  // token to migrate the ~222 `padding: 0` sites onto (#750).
+  if (node.type === 'Literal' && node.value === 0) return false
+  // A ternary hides raw values from a Literal-only check: `fontSize: big ? 15 : 14`
+  // read as clean and survived the whole #623 sweep. Recurse into both branches
+  // so "the raw count reached zero" means what it says (#750).
+  if (node.type === 'ConditionalExpression') {
+    return isRawPxValue(node.consequent) || isRawPxValue(node.alternate)
+  }
   if (node.type !== 'Literal') return false
   if (typeof node.value === 'number') return true
-  if (typeof node.value === 'string') return RAW_PX_STRING.test(node.value.trim())
+  if (typeof node.value === 'string') return hasRawPxComponent(node.value)
   return false
 }
 

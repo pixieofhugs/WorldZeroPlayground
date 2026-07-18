@@ -55,8 +55,8 @@ const kicker: CSSProperties = {
 /** A ledger leaf bound in a gold-deep hairline, headed by a rubric Cinzel label. */
 function Leaf({ title, children }: { title: string; children: ReactNode }) {
   return (
-    <section style={{ background: VELLUM, border: `1px solid ${GOLD_DEEP}`, padding: 14 }}>
-      <div style={{ fontFamily: DISPLAY, fontWeight: 700, fontSize: "var(--text-lg)", letterSpacing: '0.14em', textTransform: 'uppercase', color: RUBRIC, marginBottom: 10 }}>
+    <section style={{ background: VELLUM, border: `1px solid ${GOLD_DEEP}`, padding: "var(--space-md)" }}>
+      <div style={{ fontFamily: DISPLAY, fontWeight: 700, fontSize: "var(--text-lg)", letterSpacing: '0.14em', textTransform: 'uppercase', color: RUBRIC, marginBottom: "var(--space-sm)" }}>
         {title}
       </div>
       {children}
@@ -71,9 +71,9 @@ export default function EphemeristsComposer({ state }: { state: EditPraxisState 
   const task = state.task
 
   return (
-    <div data-skin="ephemerists" style={{ display: 'flex', flexDirection: 'column', gap: 14, fontFamily: SERIF, color: TEXT, background: VELLUM_DEEP }}>
-      <header style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-        <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
+    <div data-skin="ephemerists" style={{ display: 'flex', flexDirection: 'column', gap: "var(--space-md)", fontFamily: SERIF, color: TEXT, background: VELLUM_DEEP }}>
+      <header style={{ display: 'flex', flexDirection: 'column', gap: "var(--space-md)" }}>
+        <div style={{ display: 'flex', alignItems: 'baseline', gap: "var(--space-sm)" }}>
           <h1 style={{ fontFamily: DISPLAY, fontWeight: 800, fontSize: "var(--text-title)", lineHeight: 1, color: TEXT, margin: 0 }}>
             <Trans
               ns="forms"
@@ -92,9 +92,9 @@ export default function EphemeristsComposer({ state }: { state: EditPraxisState 
           tab={tab}
           setTab={setTab}
           skin={{
-            containerStyle: { gap: 4, padding: 3, background: VELLUM, border: `1px solid ${GOLD_DEEP}` },
+            containerStyle: { gap: "var(--space-xs)", padding: "var(--space-xs)", background: VELLUM, border: `1px solid ${GOLD_DEEP}` },
             buttonStyle: (active) => ({
-              padding: '9px 10px',
+              padding: 'var(--space-sm)',
               border: 'none',
               fontFamily: DISPLAY,
               fontSize: "var(--text-md)",
@@ -108,7 +108,7 @@ export default function EphemeristsComposer({ state }: { state: EditPraxisState 
       </header>
 
       {/* Observed-task reference */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, padding: '11px 14px', background: VELLUM, border: `1px solid ${GOLD_DEEP}` }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: "var(--space-sm)", padding: 'var(--space-md)', background: VELLUM, border: `1px solid ${GOLD_DEEP}` }}>
         <span style={kicker}>{t('editPraxis.ephemerists.taskRefLabel')}</span>
         <span style={{ fontFamily: DISPLAY, fontWeight: 700, fontSize: "var(--text-content)", color: TEXT, textAlign: 'right', flex: 1, lineHeight: 1.1 }}>
           {praxis.task_title}
@@ -135,7 +135,7 @@ export default function EphemeristsComposer({ state }: { state: EditPraxisState 
                   border: 'none',
                   outline: 'none',
                   borderBottom: `2px solid ${INK}`,
-                  padding: '2px 0 8px',
+                  padding: 'var(--space-xs) 0 var(--space-sm)',
                 },
               }}
             />
@@ -154,14 +154,14 @@ export default function EphemeristsComposer({ state }: { state: EditPraxisState 
                   color: TEXT,
                   background: VELLUM_DEEP,
                   border: `1.5px solid ${INK}`,
-                  padding: '13px 15px',
+                  padding: 'var(--space-md) var(--space-lg)',
                   outline: 'none',
                   resize: 'vertical',
                   minHeight: 180,
                 },
               }}
             />
-            <div style={{ ...kicker, marginTop: 8, color: MUTED }}>
+            <div style={{ ...kicker, marginTop: "var(--space-sm)", color: MUTED }}>
               {t('editPraxis.ephemerists.bodyMeta', { words: state.wordCount })}
             </div>
           </Leaf>
@@ -192,9 +192,9 @@ export default function EphemeristsComposer({ state }: { state: EditPraxisState 
               <MetatasksList
                 state={state}
                 skin={{
-                  containerStyle: { display: 'flex', flexDirection: 'column', gap: 4 },
+                  containerStyle: { display: 'flex', flexDirection: 'column', gap: "var(--space-xs)" },
                   rowStyle: (selected) => ({
-                    padding: '10px 12px',
+                    padding: 'var(--space-sm) var(--space-md)',
                     background: selected ? VELLUM_DEEP : 'transparent',
                     border: `1px solid ${selected ? GOLD : GOLD_DEEP}`,
                   }),
@@ -209,11 +209,11 @@ export default function EphemeristsComposer({ state }: { state: EditPraxisState 
         </>
       ) : (
         <Leaf title={t('editPraxis.ephemerists.previewLabel')}>
-          <div style={{ fontFamily: DISPLAY, fontWeight: 700, fontSize: "var(--text-title)", color: TEXT, marginBottom: 10 }}>
+          <div style={{ fontFamily: DISPLAY, fontWeight: 700, fontSize: "var(--text-title)", color: TEXT, marginBottom: "var(--space-sm)" }}>
             {state.title || t('editPraxis.ephemerists.titlePlaceholder')}
           </div>
           {state.media.length > 0 && (
-            <div style={{ marginBottom: 12 }}>
+            <div style={{ marginBottom: "var(--space-md)" }}>
               <MediaGrid state={state} readOnly />
             </div>
           )}
@@ -232,8 +232,8 @@ export default function EphemeristsComposer({ state }: { state: EditPraxisState 
         style={{
           display: 'flex',
           alignItems: 'center',
-          gap: 12,
-          padding: '12px 0 4px',
+          gap: "var(--space-md)",
+          padding: 'var(--space-md) 0 var(--space-xs)',
           background: 'var(--color-nav-bg)',
           backdropFilter: 'blur(var(--nav-blur))',
           borderTop: `1px solid ${GOLD}`,
@@ -270,7 +270,7 @@ export default function EphemeristsComposer({ state }: { state: EditPraxisState 
               fontWeight: 700,
               fontSize: "var(--text-xl)",
               letterSpacing: '0.08em',
-              padding: '13px 18px',
+              padding: 'var(--space-md) var(--space-lg)',
               border: `1px solid ${GOLD}`,
               cursor: state.submitting ? 'wait' : 'pointer',
             },
@@ -285,7 +285,7 @@ export default function EphemeristsComposer({ state }: { state: EditPraxisState 
 function MediaGrid({ state, readOnly = false }: { state: EditPraxisState; readOnly?: boolean }) {
   const { t } = useTranslation('forms')
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
+    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: "var(--space-sm)" }}>
       {state.media.map((item) => {
         const filename = item.file_path.split('/').pop() ?? item.file_path
         const src = mediaUrl(item.file_path)
@@ -340,7 +340,7 @@ function MediaGrid({ state, readOnly = false }: { state: EditPraxisState; readOn
               flexDirection: 'column',
               alignItems: 'center',
               justifyContent: 'center',
-              gap: 4,
+              gap: "var(--space-xs)",
               fontFamily: DISPLAY,
               fontSize: "var(--text-base)",
               letterSpacing: '0.08em',

@@ -35,7 +35,7 @@ export function MobileStickyBar({
         position: "sticky",
         bottom: MOBILE_TABBAR_CLEARANCE,
         zIndex: 8,
-        marginTop: 20,
+        marginTop: "var(--space-xl)",
         ...style,
       }}
     >

@@ -106,7 +106,7 @@ function Tape({ color, style }: { color: string; style?: CSSProperties }) {
 const SECTION_HEADING: CSSProperties = {
   display: "inline-block",
   fontFamily: SCRIPT,
-  // ornament: hand-lettered Caveat on a kraft sticker — the sticker is drawn, not typeset.
+  // eslint-disable-next-line local/no-raw-style-values -- ornament: hand-lettered Caveat on a kraft sticker — the sticker is drawn, not typeset.
   fontSize: 28,
   fontWeight: 700,
   lineHeight: 1,
@@ -114,6 +114,7 @@ const SECTION_HEADING: CSSProperties = {
   background: CARD_BG,
   border: `1px solid ${NOTEPAD_BORDER}`,
   borderRadius: 8,
+  // eslint-disable-next-line local/no-raw-style-values -- ornament: the sticker's own inset. The 1px tuck is optical, sized to Caveat's ascenders; rounding it to a scale rung fattens the drawn sticker.
   padding: "1px 12px",
   transform: "rotate(-1.5deg)",
   boxShadow: `0 2px 5px ${BOARD_SHADOW}`,
@@ -130,7 +131,7 @@ const KICKER: CSSProperties = {
   letterSpacing: "0.18em",
   textTransform: "uppercase",
   color: MUTED,
-  margin: "8px 0 2px",
+  margin: "var(--space-sm) 0 var(--space-xs)",
 };
 
 function Kicker({ children }: { children: ReactNode }) {
@@ -183,7 +184,7 @@ export default function WowFactionBody({ state }: { state: FactionDetailState })
   return (
     <div className="wz-faction-grid">
       {/* ── MAIN COLUMN ── */}
-      <div style={{ display: "flex", flexDirection: "column", gap: 34 }}>
+      <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-2xl)" }}>
         {/* ② ABOUT — taped lined index card */}
         <div style={{ position: "relative", transform: "rotate(-1deg)" }}>
           <Tape color={IVY_LEAF} style={{ top: -10, right: 30, transform: "rotate(6deg)" }} />
@@ -196,16 +197,26 @@ export default function WowFactionBody({ state }: { state: FactionDetailState })
               border: `1px solid ${NOTEPAD_BORDER}`,
               borderRadius: 4,
               boxShadow: `0 10px 22px ${BOARD_SHADOW}`,
+              // eslint-disable-next-line local/no-raw-style-values -- ornament: the index card's ruled inset. The 46px left gutter clears the drawn red margin rule at left:32 — rounding it to a scale rung runs the text into the rule.
               padding: "20px 24px 22px 46px",
             }}
           >
             {/* red margin rule */}
             <div style={{ position: "absolute", left: 32, top: 0, bottom: 0, width: 2, background: `color-mix(in srgb, ${PINK} 55%, transparent)` }} />
-            {/* ornament: hand-lettered Caveat — handwriting on the board, not typeset copy. */}
-            <div style={{ fontFamily: SCRIPT, fontSize: 30, fontWeight: 700, color: ACCENT, lineHeight: 1, marginBottom: 10 }}>
+            <div
+              style={{
+                fontFamily: SCRIPT,
+                // eslint-disable-next-line local/no-raw-style-values -- ornament: hand-lettered Caveat — handwriting on the board, not typeset copy.
+                fontSize: 30,
+                fontWeight: 700,
+                color: ACCENT,
+                lineHeight: 1,
+                marginBottom: "var(--space-md)",
+              }}
+            >
               {t("wow.manifesto.heading")}
             </div>
-            <div style={{ display: "flex", flexDirection: "column", gap: 9 }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-sm)" }}>
               {paragraphs.length ? (
                 paragraphs.map((para, i) => (
                   <p key={i} className="content-text" style={{ fontFamily: BODY, lineHeight: 1.85, color: MUTED, margin: 0 }}>
@@ -226,9 +237,9 @@ export default function WowFactionBody({ state }: { state: FactionDetailState })
           <SectionHeading>{t("wow.tasks.heading")}</SectionHeading>
           <Kicker>{t("wow.tasks.kicker")}</Kicker>
           {tasks.length === 0 ? (
-            <p className="content-text" style={{ fontFamily: BODY, color: MUTED, marginTop: 12 }}>{t("wow.tasks.empty")}</p>
+            <p className="content-text" style={{ fontFamily: BODY, color: MUTED, marginTop: "var(--space-md)" }}>{t("wow.tasks.empty")}</p>
           ) : (
-            <div style={{ display: "flex", flexWrap: "wrap", gap: 26, alignItems: "flex-start", marginTop: 16 }}>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: "var(--space-xl)", alignItems: "flex-start", marginTop: "var(--space-lg)" }}>
               {tasks.map((task) => (
                 <TaskCard
                   key={task.id}
@@ -250,9 +261,9 @@ export default function WowFactionBody({ state }: { state: FactionDetailState })
           <SectionHeading>{t("wow.praxis.heading")}</SectionHeading>
           <Kicker>{t("wow.praxis.kicker")}</Kicker>
           {recentPraxis.length === 0 ? (
-            <p className="content-text" style={{ fontFamily: BODY, color: MUTED, marginTop: 12 }}>{t("wow.praxis.empty")}</p>
+            <p className="content-text" style={{ fontFamily: BODY, color: MUTED, marginTop: "var(--space-md)" }}>{t("wow.praxis.empty")}</p>
           ) : (
-            <div style={{ display: "flex", flexWrap: "wrap", gap: 22, alignItems: "flex-start", marginTop: 16 }}>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: "var(--space-xl)", alignItems: "flex-start", marginTop: "var(--space-lg)" }}>
               {recentPraxis.map((praxis) => (
                 <div key={praxis.id} style={{ position: "relative", flex: "1 1 280px", minWidth: 280 }}>
                   {/* ⑤ Task Crown (ADR-0028) — the skin's own corner medallion,
@@ -276,7 +287,7 @@ export default function WowFactionBody({ state }: { state: FactionDetailState })
       </div>
 
       {/* ── RIGHT RAIL ── */}
-      <div style={{ display: "flex", flexDirection: "column", gap: 34 }}>
+      <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-2xl)" }}>
         {/* ③ join.exe — pinned window: standing / join / gate */}
         {membership.state !== "none" && (
           <div style={{ position: "relative", transform: "rotate(1deg)" }}>
@@ -287,13 +298,13 @@ export default function WowFactionBody({ state }: { state: FactionDetailState })
                 style={{
                   display: "flex",
                   alignItems: "center",
-                  gap: 7,
-                  padding: "8px 12px",
+                  gap: "var(--space-sm)",
+                  padding: "var(--space-sm) var(--space-md)",
                   background: `linear-gradient(180deg, ${TITLE_FROM}, ${TITLE_TO})`,
                   borderBottom: `2px solid ${WIN_BORDER}`,
                 }}
               >
-                <span style={{ display: "flex", gap: 4 }}>
+                <span style={{ display: "flex", gap: "var(--space-xs)" }}>
                   <span style={{ width: 9, height: 9, borderRadius: "50%", background: PINK }} />
                   <span style={{ width: 9, height: 9, borderRadius: "50%", background: ACCENT }} />
                   <span style={{ width: 9, height: 9, borderRadius: "50%", background: IVY_LEAF }} />
@@ -301,17 +312,25 @@ export default function WowFactionBody({ state }: { state: FactionDetailState })
                 <span style={{ marginLeft: "auto", fontFamily: BODY, fontSize: "var(--text-base)", color: TITLE_TEXT }}>{t("wow.join.windowTitle")}</span>
               </div>
 
-              <div style={{ background: NOTEPAD, padding: 18 }}>
+              <div style={{ background: NOTEPAD, padding: "var(--space-lg)" }}>
                 {membership.state === "member" && (
                   <div style={{ textAlign: "center" }}>
-                    <div style={{ display: "flex", justifyContent: "center", marginBottom: 6 }}>
+                    <div style={{ display: "flex", justifyContent: "center", marginBottom: "var(--space-sm)" }}>
                       <Sparkle size={30} color={ACCENT} />
                     </div>
-                    {/* ornament: hand-lettered Caveat — handwriting on the board, not typeset copy. */}
-                    <div style={{ fontFamily: SCRIPT, fontSize: 25, fontWeight: 700, color: IVY, lineHeight: 1 }}>
+                    <div
+                      style={{
+                        fontFamily: SCRIPT,
+                        // eslint-disable-next-line local/no-raw-style-values -- ornament: hand-lettered Caveat — handwriting on the board, not typeset copy.
+                        fontSize: 25,
+                        fontWeight: 700,
+                        color: IVY,
+                        lineHeight: 1,
+                      }}
+                    >
                       {t("wow.join.memberTitle")}
                     </div>
-                    <div style={{ fontFamily: BODY, fontSize: "var(--text-md)", color: MUTED, marginTop: 6 }}>
+                    <div style={{ fontFamily: BODY, fontSize: "var(--text-md)", color: MUTED, marginTop: "var(--space-sm)" }}>
                       <Trans t={t} i18nKey="wow.join.memberStanding">
                         Standing · <b style={{ color: ACCENT }}>coven witch</b>
                       </Trans>
@@ -321,11 +340,20 @@ export default function WowFactionBody({ state }: { state: FactionDetailState })
 
                 {membership.state === "eligible" && !confirming && (
                   <div style={{ textAlign: "center" }}>
-                    {/* ornament: hand-lettered Caveat — handwriting on the board, not typeset copy. */}
-                    <div style={{ fontFamily: SCRIPT, fontSize: 26, fontWeight: 700, color: ACCENT, lineHeight: 1, marginBottom: 6 }}>
+                    <div
+                      style={{
+                        fontFamily: SCRIPT,
+                        // eslint-disable-next-line local/no-raw-style-values -- ornament: hand-lettered Caveat — handwriting on the board, not typeset copy.
+                        fontSize: 26,
+                        fontWeight: 700,
+                        color: ACCENT,
+                        lineHeight: 1,
+                        marginBottom: "var(--space-sm)",
+                      }}
+                    >
                       {t("wow.join.eligibleTitle")}
                     </div>
-                    <div className="content-text" style={{ fontFamily: BODY, lineHeight: 1.55, color: MUTED, marginBottom: 14 }}>
+                    <div className="content-text" style={{ fontFamily: BODY, lineHeight: 1.55, color: MUTED, marginBottom: "var(--space-lg)" }}>
                       {t("wow.join.eligibleBody")}
                     </div>
                     <button
@@ -341,7 +369,7 @@ export default function WowFactionBody({ state }: { state: FactionDetailState })
                         background: PINK,
                         border: "none",
                         borderRadius: 10,
-                        padding: 12,
+                        padding: "var(--space-md)",
                         boxShadow: `0 6px 16px color-mix(in srgb, ${PINK} 40%, transparent)`,
                         cursor: "pointer",
                       }}
@@ -353,7 +381,7 @@ export default function WowFactionBody({ state }: { state: FactionDetailState })
 
                 {membership.state === "eligible" && confirming && (
                   <div>
-                    <div className="content-text" style={{ fontFamily: BODY, lineHeight: 1.6, color: INK, marginBottom: 14 }}>
+                    <div className="content-text" style={{ fontFamily: BODY, lineHeight: 1.6, color: INK, marginBottom: "var(--space-lg)" }}>
                       {membership.currentFactionSlug &&
                       membership.currentFactionSlug !== "na"
                         ? t("detail.join.confirmSwitch", {
@@ -363,9 +391,9 @@ export default function WowFactionBody({ state }: { state: FactionDetailState })
                         : t("detail.join.confirm", { faction: factionName(faction.slug) })}
                     </div>
                     {membership.joinError && (
-                      <div className="content-text" style={{ fontFamily: BODY, color: "var(--color-danger)", marginBottom: 8 }}>{membership.joinError}</div>
+                      <div className="content-text" style={{ fontFamily: BODY, color: "var(--color-danger)", marginBottom: "var(--space-sm)" }}>{membership.joinError}</div>
                     )}
-                    <div style={{ display: "flex", gap: 8 }}>
+                    <div style={{ display: "flex", gap: "var(--space-sm)" }}>
                       <button
                         onClick={() => void membership.join()}
                         disabled={membership.joining}
@@ -380,7 +408,7 @@ export default function WowFactionBody({ state }: { state: FactionDetailState })
                           background: PINK,
                           border: "none",
                           borderRadius: 9,
-                          padding: 11,
+                          padding: "var(--space-md)",
                           cursor: membership.joining ? "not-allowed" : "pointer",
                         }}
                       >
@@ -400,7 +428,7 @@ export default function WowFactionBody({ state }: { state: FactionDetailState })
                           background: "transparent",
                           border: `1px solid ${WIN_BORDER}`,
                           borderRadius: 9,
-                          padding: "11px 14px",
+                          padding: "var(--space-md) var(--space-lg)",
                           cursor: membership.joining ? "not-allowed" : "pointer",
                         }}
                       >
@@ -412,12 +440,21 @@ export default function WowFactionBody({ state }: { state: FactionDetailState })
 
                 {membership.state === "gate" && (
                   <div>
-                    <div style={{ display: "flex", alignItems: "flex-start", gap: 9, marginBottom: 12 }}>
+                    <div style={{ display: "flex", alignItems: "flex-start", gap: "var(--space-sm)", marginBottom: "var(--space-md)" }}>
+                      {/* eslint-disable-next-line local/no-raw-style-values -- ornament: optical nudge aligning the sparkle glyph to the script cap-height. */}
                       <span style={{ marginTop: 3 }}>
                         <Sparkle size={20} color={IVY} />
                       </span>
-                      {/* ornament: hand-lettered Caveat — handwriting on the board, not typeset copy. */}
-                      <span style={{ fontFamily: SCRIPT, fontSize: 23, fontWeight: 700, color: ACCENT, lineHeight: 1.2 }}>
+                      <span
+                        style={{
+                          fontFamily: SCRIPT,
+                          // eslint-disable-next-line local/no-raw-style-values -- ornament: hand-lettered Caveat — handwriting on the board, not typeset copy.
+                          fontSize: 23,
+                          fontWeight: 700,
+                          color: ACCENT,
+                          lineHeight: 1.2,
+                        }}
+                      >
                         {t("wow.join.gateTitle")}
                       </span>
                     </div>
@@ -432,7 +469,7 @@ export default function WowFactionBody({ state }: { state: FactionDetailState })
         )}
 
         {/* ⑥ MEMBERS — Witch-of-the-week polaroid + coven roster */}
-        <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-xl)" }}>
           {spot && (
             <Link to={`/characters/${spot.id}`} style={{ textDecoration: "none", alignSelf: "center" }}>
               <div
@@ -443,6 +480,9 @@ export default function WowFactionBody({ state }: { state: FactionDetailState })
                   background: NOTEPAD,
                   border: `1px solid ${HAIRLINE}`,
                   boxShadow: `0 10px 20px ${BOARD_SHADOW}`,
+                  // ornament: the polaroid's mat. A thin top/side border against a fat
+                  // bottom chin IS the polaroid; the mats are drawn, not layout.
+                  // eslint-disable-next-line local/no-raw-style-values -- ornament, per above
                   padding: "10px 10px 0",
                 }}
               >
@@ -458,15 +498,24 @@ export default function WowFactionBody({ state }: { state: FactionDetailState })
                 >
                   <Avatar name={spot.display_name} size={60} />
                 </div>
+                {/* eslint-disable-next-line local/no-raw-style-values -- ornament: the polaroid's caption chin, sized with the mat above. */}
                 <div style={{ padding: "8px 4px 14px", textAlign: "center" }}>
                   <div style={{ fontFamily: BODY, fontSize: "var(--text-xs)", letterSpacing: "0.16em", textTransform: "uppercase", color: MUTED }}>
                     {t("wow.spotlight.label")}
                   </div>
-                  {/* ornament: hand-lettered Caveat — handwriting on the board, not typeset copy. */}
-                  <div style={{ fontFamily: SCRIPT, fontSize: 26, fontWeight: 700, color: ACCENT, lineHeight: 1 }}>
+                  <div
+                    style={{
+                      fontFamily: SCRIPT,
+                      // eslint-disable-next-line local/no-raw-style-values -- ornament: hand-lettered Caveat — handwriting on the board, not typeset copy.
+                      fontSize: 26,
+                      fontWeight: 700,
+                      color: ACCENT,
+                      lineHeight: 1,
+                    }}
+                  >
                     {spot.display_name}
                   </div>
-                  <div style={{ fontFamily: BODY, fontSize: "var(--text-sm)", color: INK, marginTop: 2 }}>
+                  <div style={{ fontFamily: BODY, fontSize: "var(--text-sm)", color: INK, marginTop: "var(--space-xs)" }}>
                     {t("wow.spotlight.stat", {
                       level: spot.level,
                       score: spot.all_time_score.toLocaleString(),
@@ -486,11 +535,20 @@ export default function WowFactionBody({ state }: { state: FactionDetailState })
                 border: `1px solid ${NOTEPAD_BORDER}`,
                 borderRadius: 4,
                 boxShadow: `0 10px 20px ${BOARD_SHADOW}`,
-                padding: "14px 16px",
+                padding: "var(--space-lg)",
               }}
             >
-              {/* ornament: hand-lettered Caveat — handwriting on the board, not typeset copy. */}
-              <div style={{ fontFamily: SCRIPT, fontSize: 23, fontWeight: 700, color: ACCENT, lineHeight: 1, marginBottom: 8 }}>
+              <div
+                style={{
+                  fontFamily: SCRIPT,
+                  // eslint-disable-next-line local/no-raw-style-values -- ornament: hand-lettered Caveat — handwriting on the board, not typeset copy.
+                  fontSize: 23,
+                  fontWeight: 700,
+                  color: ACCENT,
+                  lineHeight: 1,
+                  marginBottom: "var(--space-sm)",
+                }}
+              >
                 {t("wow.roster.heading")}
               </div>
               {roster.length === 0 ? (
@@ -504,7 +562,7 @@ export default function WowFactionBody({ state }: { state: FactionDetailState })
                   <Link
                     key={m.id}
                     to={`/characters/${m.id}`}
-                    style={{ display: "flex", alignItems: "center", gap: 10, padding: "5px 0", textDecoration: "none" }}
+                    style={{ display: "flex", alignItems: "center", gap: "var(--space-md)", padding: "var(--space-xs) 0", textDecoration: "none" }}
                   >
                     <Avatar name={m.display_name} size={26} />
                     <span
@@ -512,7 +570,7 @@ export default function WowFactionBody({ state }: { state: FactionDetailState })
                         flex: 1,
                         minWidth: 0,
                         fontFamily: SCRIPT,
-                        // ornament: hand-lettered Caveat roster name.
+                        // eslint-disable-next-line local/no-raw-style-values -- ornament: hand-lettered Caveat roster name.
                         fontSize: 19,
                         color: INK,
                         lineHeight: 1,

@@ -38,9 +38,9 @@ function rapSheetStyle(background: string, big = false): CSSProperties {
     background,
     color: "#fff",
     fontFamily: "var(--faction-snide-font-black)",
-    fontSize: big ? 15 : 14,
+    fontSize: "var(--text-xl)",
     letterSpacing: "0.03em",
-    padding: big ? "14px 26px" : "12px 22px",
+    padding: big ? "var(--space-lg) var(--space-xl)" : "var(--space-md) var(--space-xl)",
     textDecoration: "none",
     transform: "rotate(-1.5deg)",
     boxShadow: `3px 4px 0 ${ACID}`,
@@ -94,6 +94,9 @@ function RansomChip({
         // bespoke big/small cut, but on the content tier (never a label size).
         fontSize: big ? "var(--text-display)" : "var(--text-heading)",
         lineHeight: 0.9,
+        // ornament: ransom-letter tile inset; the zero bottom sits the display face on
+        // the tile edge, which is the cut-from-a-magazine look.
+        // eslint-disable-next-line local/no-raw-style-values -- ornament, per above
         padding: "2px 10px 0",
         textTransform: "uppercase",
         transform: `rotate(${rots[index % rots.length]}deg)`,
@@ -120,8 +123,8 @@ function EvidenceTag({
       style={{
         display: "flex",
         flexDirection: "column",
-        gap: 3,
-        padding: "9px 14px",
+        gap: "var(--space-xs)",
+        padding: "var(--space-sm) var(--space-lg)",
         border: `1.5px solid ${INK}`,
         background: accent ? INK : "transparent",
         transform: `rotate(${accent ? -1.5 : 1}deg)`,
@@ -165,10 +168,10 @@ function MarkerTab({ text, rot = -1.5 }: { text: string; rot?: number }) {
         background: ACID,
         color: INK,
         fontFamily: "var(--faction-snide-font-marker)",
-        padding: "3px 14px",
+        padding: "var(--space-xs) var(--space-lg)",
         transform: `rotate(${rot}deg)`,
         boxShadow: `2px 2px 0 ${PINK}`,
-        marginBottom: 14,
+        marginBottom: "var(--space-lg)",
       }}
     >
       {text}
@@ -189,7 +192,7 @@ function AccompliceRow({
   const { t } = useTranslation("tasks");
   return (
     <div
-      style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}
+      style={{ display: "flex", alignItems: "center", gap: "var(--space-sm)", flexWrap: "wrap" }}
     >
       {signups.map((m, i) => {
         const rel = relationOf(m.character_id, friends, foes);
@@ -264,7 +267,7 @@ function AccompliceRow({
           letterSpacing: "0.1em",
           textTransform: "uppercase",
           color: "color-mix(in srgb, var(--faction-snide-wall-text) 55%, transparent)",
-          marginLeft: 6,
+          marginLeft: "var(--space-sm)",
         }}
       >
         {t("snide.onTheJob")}
@@ -335,15 +338,15 @@ export default function SnideTaskDetail({
         >
           {t("snide.breadcrumb")}
         </Link>
-        <span style={{ opacity: 0.5, margin: "0 8px" }}>›</span>
+        <span style={{ opacity: 0.5, margin: "0 var(--space-sm)" }}>›</span>
         <span style={{ fontFamily: "var(--faction-snide-font-cond)", letterSpacing: "0.12em" }}>
           {t("snide.faction")}
         </span>
-        <span style={{ opacity: 0.5, margin: "0 8px" }}>›</span>
+        <span style={{ opacity: 0.5, margin: "0 var(--space-sm)" }}>›</span>
         <span style={{ color: wall }}>{task.title}</span>
       </nav>
 
-      <div style={{ maxWidth: 760, display: "flex", flexDirection: "column", gap: 30 }}>
+      <div style={{ maxWidth: 760, display: "flex", flexDirection: "column", gap: "var(--space-2xl)" }}>
         {/* ── Open-case dossier header (ransom cut-out title) ── */}
         <div
           style={{
@@ -385,7 +388,7 @@ export default function SnideTaskDetail({
                 flexDirection: "column",
                 alignItems: "center",
                 justifyContent: "center",
-                padding: "22px 10px",
+                padding: "var(--space-xl) var(--space-md)",
                 backgroundImage:
                   "repeating-linear-gradient(180deg, transparent 0 13px, rgba(182,255,46,0.16) 13px 14px)",
               }}
@@ -397,7 +400,7 @@ export default function SnideTaskDetail({
                   fontSize: "var(--text-lg)",
                   letterSpacing: "0.12em",
                   color: ACID,
-                  marginTop: 12,
+                  marginTop: "var(--space-md)",
                 }}
               >
                 {t("snide.jobFile")}
@@ -408,7 +411,7 @@ export default function SnideTaskDetail({
                   fontSize: "var(--text-xs)",
                   color: "color-mix(in srgb, var(--faction-snide-acid) 60%, var(--faction-snide-ink))",
                   letterSpacing: "0.1em",
-                  marginTop: 3,
+                  marginTop: "var(--space-xs)",
                 }}
               >
                 {t("snide.openCase")}
@@ -419,7 +422,7 @@ export default function SnideTaskDetail({
               style={{
                 flex: 1,
                 minWidth: 0,
-                padding: "24px 24px 22px 20px",
+                padding: "var(--space-xl) var(--space-xl) var(--space-xl) var(--space-lg)",
                 position: "relative",
               }}
             >
@@ -430,7 +433,7 @@ export default function SnideTaskDetail({
                   letterSpacing: "0.2em",
                   textTransform: "uppercase",
                   color: "color-mix(in srgb, var(--faction-snide-ink) 60%, transparent)",
-                  marginBottom: 10,
+                  marginBottom: "var(--space-md)",
                 }}
               >
                 {t("snide.caseFile", { number: caseNo })}
@@ -440,9 +443,9 @@ export default function SnideTaskDetail({
                 style={{
                   display: "flex",
                   flexWrap: "wrap",
-                  gap: "6px 5px",
+                  gap: "var(--space-sm) var(--space-xs)",
                   alignItems: "center",
-                  margin: "0 0 18px",
+                  margin: "0 0 var(--space-lg)",
                 }}
               >
                 {fragments.map((frag, i) => (
@@ -457,7 +460,7 @@ export default function SnideTaskDetail({
                     letterSpacing: "0.14em",
                     textTransform: "uppercase",
                     color: "var(--faction-snide-pink-deep)",
-                    marginBottom: 12,
+                    marginBottom: "var(--space-md)",
                   }}
                 >
                   {t("snide.metataskFor", {
@@ -468,7 +471,7 @@ export default function SnideTaskDetail({
               <div
                 style={{
                   display: "flex",
-                  gap: 10,
+                  gap: "var(--space-md)",
                   flexWrap: "wrap",
                 }}
               >
@@ -504,7 +507,7 @@ export default function SnideTaskDetail({
                   letterSpacing: "0.14em",
                   color: "color-mix(in srgb, var(--faction-snide-pink-deep) 75%, transparent)",
                   border: "2.5px solid color-mix(in srgb, var(--faction-snide-pink-deep) 70%, transparent)",
-                  padding: "3px 12px",
+                  padding: "var(--space-xs) var(--space-md)",
                   transform: "rotate(-7deg)",
                 }}
               >
@@ -521,10 +524,10 @@ export default function SnideTaskDetail({
           style={{
             display: "flex",
             alignItems: "center",
-            gap: 18,
+            gap: "var(--space-lg)",
             flexWrap: "wrap",
             background: INK,
-            padding: "16px 20px",
+            padding: "var(--space-lg) var(--space-xl)",
             transform: "rotate(-0.4deg)",
             boxShadow: "4px 5px 0 rgba(0,0,0,0.2)",
           }}
@@ -645,7 +648,7 @@ export default function SnideTaskDetail({
               color: INK,
               border: `1.5px solid ${INK}`,
               borderLeft: "4px solid var(--faction-snide)",
-              padding: "24px 24px 20px",
+              padding: "var(--space-xl) var(--space-xl) var(--space-lg)",
               backgroundImage:
                 "repeating-linear-gradient(180deg, transparent 0 27px, rgba(20,17,11,0.08) 27px 28px)",
               transform: "rotate(0.3deg)",
@@ -687,14 +690,14 @@ export default function SnideTaskDetail({
               alignItems: "center",
               justifyContent: "space-between",
               flexWrap: "wrap",
-              gap: 8,
+              gap: "var(--space-sm)",
             }}
           >
             <MarkerTab
               text={t("snide.casesClosed", { count: submissions.length })}
               rot={1}
             />
-            <div style={{ display: "flex", gap: 0, marginBottom: 14 }}>
+            <div style={{ display: "flex", gap: 0, marginBottom: "var(--space-lg)" }}>
               {(["score", "recent"] as const).map((sort) => {
                 const on = submissionSort === sort;
                 return (
@@ -706,7 +709,7 @@ export default function SnideTaskDetail({
                       fontSize: "var(--text-md)",
                       letterSpacing: "0.1em",
                       textTransform: "uppercase",
-                      padding: "5px 12px",
+                      padding: "var(--space-xs) var(--space-md)",
                       background: on ? INK : "transparent",
                       color: on ? ACID : muted,
                       border: `1.5px solid ${on ? INK : "color-mix(in srgb, var(--faction-snide-wall-text) 30%, transparent)"}`,
@@ -734,9 +737,9 @@ export default function SnideTaskDetail({
             </p>
           ) : (
             <>
-              <div style={{ display: "flex", flexWrap: "wrap", gap: "32px 26px", alignItems: "flex-start" }}>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: "var(--space-2xl) var(--space-xl)", alignItems: "flex-start" }}>
                 {sortedSubmissions.slice(0, 4).map((s) => (
-                  <div key={s.id} style={{ position: "relative", paddingTop: s.id === topId ? 22 : 0 }}>
+                  <div key={s.id} style={{ position: "relative", paddingTop: s.id === topId ? "var(--space-xl)" : 0 }}>
                     {s.id === topId && (
                       <div
                         style={{
@@ -747,14 +750,14 @@ export default function SnideTaskDetail({
                           zIndex: 3,
                           display: "inline-flex",
                           alignItems: "center",
-                          gap: 5,
+                          gap: "var(--space-xs)",
                           whiteSpace: "nowrap",
                           background: PINK,
                           color: "#fff",
                           fontFamily: "var(--faction-snide-font-black)",
                           fontSize: "var(--text-sm)",
                           letterSpacing: "0.06em",
-                          padding: "4px 12px",
+                          padding: "var(--space-xs) var(--space-md)",
                           boxShadow: `2px 3px 0 ${INK}`,
                         }}
                       >
@@ -767,7 +770,7 @@ export default function SnideTaskDetail({
                 ))}
               </div>
               {submissions.length > 4 && (
-                <div style={{ marginTop: 16 }}>
+                <div style={{ marginTop: "var(--space-lg)" }}>
                   <Link
                     to={`/praxes?task_id=${task.id}`}
                     style={{

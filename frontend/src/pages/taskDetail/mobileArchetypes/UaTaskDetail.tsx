@@ -45,7 +45,7 @@ const anno = (level: number) => (level > 0 ? toRoman(level) : '—')
 
 function SectionHead({ title, trailing }: { title: string; trailing?: ReactNode }) {
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
+    <div style={{ display: 'flex', alignItems: 'center', gap: "var(--space-md)", marginBottom: "var(--space-md)" }}>
       <h2 className="content-title" style={{ fontFamily: ENGRAVED, letterSpacing: '0.08em', textTransform: 'uppercase', margin: 0, color: INK, whiteSpace: 'nowrap' }}>
         {title}
       </h2>
@@ -57,7 +57,7 @@ function SectionHead({ title, trailing }: { title: string; trailing?: ReactNode 
 
 function plate(background: string, textColor: string, border: string, label: string) {
   return (
-    <span className="content-title" style={{ fontFamily: ENGRAVED, letterSpacing: '0.04em', color: textColor, background, border: `1px solid ${border}`, padding: '4px 12px' }}>
+    <span className="content-title" style={{ fontFamily: ENGRAVED, letterSpacing: '0.04em', color: textColor, background, border: `1px solid ${border}`, padding: "var(--space-xs) var(--space-md)" }}>
       {label}
     </span>
   )
@@ -92,19 +92,19 @@ export default function UaTaskDetail({ state }: { state: TaskDetailState }) {
     : null
 
   return (
-    <div className="py-4" style={{ fontFamily: MONO, color: INK, background: WALL, marginLeft: -16, marginRight: -16, paddingLeft: 16, paddingRight: 16 }}>
+    <div className="py-4" style={{ fontFamily: MONO, color: INK, background: WALL, marginLeft: -16, marginRight: -16, paddingLeft: "var(--space-lg)", paddingRight: "var(--space-lg)" }}>
       {/* Breadcrumb */}
       <nav className="mb-3" style={{ fontFamily: MONO, fontSize: "var(--text-sm)", letterSpacing: '0.1em', textTransform: 'uppercase', color: MUTED }}>
         <Link to="/tasks" style={{ color: ACCENT, textDecoration: 'none' }}>
           {t('default.breadcrumb')}
         </Link>
-        <span aria-hidden style={{ margin: '0 6px', color: GOLD }}>›</span>
+        <span aria-hidden style={{ margin: "0 var(--space-sm)", color: GOLD }}>›</span>
         <span style={{ color: SUB }}>{task.title}</span>
       </nav>
 
       {/* Hero — gilt-framed commission plate */}
-      <div style={{ padding: 8, background: GILT, boxShadow: '0 12px 28px rgba(60,40,10,.2), inset 0 0 0 1px rgba(255,255,255,0.45)', marginBottom: 20 }}>
-        <div style={{ padding: 3, background: `linear-gradient(135deg, ${GOLD}, ${GOLD_PALE})` }}>
+      <div style={{ padding: "var(--space-sm)", background: GILT, boxShadow: '0 12px 28px rgba(60,40,10,.2), inset 0 0 0 1px rgba(255,255,255,0.45)', marginBottom: "var(--space-xl)" }}>
+        <div style={{ padding: "var(--space-xs)", background: `linear-gradient(135deg, ${GOLD}, ${GOLD_PALE})` }}>
           <div
             style={{
               position: 'relative',
@@ -113,10 +113,10 @@ export default function UaTaskDetail({ state }: { state: TaskDetailState }) {
               backgroundImage: 'radial-gradient(rgba(60,40,10,.03) 1px, transparent 1px)',
               backgroundSize: '5px 5px',
               border: `1px solid ${LINE}`,
-              padding: '20px 22px 22px',
+              padding: "var(--space-xl) var(--space-xl) var(--space-xl)",
             }}
           >
-            <div className="flex items-center justify-between" style={{ marginBottom: 12 }}>
+            <div className="flex items-center justify-between" style={{ marginBottom: "var(--space-md)" }}>
               <span style={{ fontFamily: ENGRAVED, fontSize: "var(--text-sm)", letterSpacing: '0.13em', textTransform: 'uppercase', color: ACCENT }}>
                 {t('ua.masthead')}
               </span>
@@ -126,7 +126,7 @@ export default function UaTaskDetail({ state }: { state: TaskDetailState }) {
             <h1 className="content-title" style={{ fontFamily: DISPLAY, fontStyle: 'italic', fontWeight: 700, lineHeight: 1.05, color: INK, margin: 0, overflowWrap: 'anywhere' }}>
               {task.title}
             </h1>
-            <div style={{ height: 1, margin: '14px 0 14px', background: `linear-gradient(90deg, ${GOLD}, transparent)` }} />
+            <div style={{ height: 1, margin: "var(--space-lg) 0 var(--space-lg)", background: `linear-gradient(90deg, ${GOLD}, transparent)` }} />
 
             <div className="flex items-center gap-2 flex-wrap">
               {plate(PAPER_WARM, INK, GOLD, `${t('ua.stats.anno')} ${anno(task.level_required)}`)}
@@ -137,9 +137,9 @@ export default function UaTaskDetail({ state }: { state: TaskDetailState }) {
       </div>
 
       {/* The Commission — brief */}
-      <section style={{ marginBottom: 20 }}>
+      <section style={{ marginBottom: "var(--space-xl)" }}>
         <SectionHead title={t('ua.commissionHeading')} />
-        <div style={{ background: PAPER, border: `1px solid ${LINE}`, padding: '18px 20px' }}>
+        <div style={{ background: PAPER, border: `1px solid ${LINE}`, padding: "var(--space-lg) var(--space-xl)" }}>
           <p className="content-text" style={{ fontFamily: DISPLAY, fontStyle: 'italic', lineHeight: 1.75, color: task.description ? INK : SUB, margin: 0, whiteSpace: 'pre-wrap' }}>
             {task.description || t('ua.commissionEmpty')}
           </p>
@@ -147,18 +147,18 @@ export default function UaTaskDetail({ state }: { state: TaskDetailState }) {
       </section>
 
       {/* The Standing — read-only aggregate */}
-      <section style={{ marginBottom: 20 }}>
+      <section style={{ marginBottom: "var(--space-xl)" }}>
         <SectionHead title={t('ua.critiqueHeading')} />
         {voteCount > 0 ? (
-          <div style={{ display: 'flex', alignItems: 'flex-end', gap: 12 }}>
+          <div style={{ display: 'flex', alignItems: 'flex-end', gap: "var(--space-md)" }}>
             <span className="content-title" style={{ fontFamily: DISPLAY, fontStyle: 'italic', fontWeight: 700, lineHeight: 0.85, color: ACCENT }}>
               {topScore}
             </span>
-            <div style={{ paddingBottom: 5 }}>
+            <div style={{ paddingBottom: "var(--space-xs)" }}>
               <div style={{ fontFamily: ENGRAVED, fontSize: "var(--text-lg)", letterSpacing: '0.06em', textTransform: 'uppercase', color: INK }}>
                 {t('ua.critique.finest')}
               </div>
-              <div style={{ ...kicker, marginTop: 2 }}>{t('ua.critique.appraised', { count: voteCount })}</div>
+              <div style={{ ...kicker, marginTop: "var(--space-xs)" }}>{t('ua.critique.appraised', { count: voteCount })}</div>
             </div>
           </div>
         ) : (
@@ -183,7 +183,7 @@ export default function UaTaskDetail({ state }: { state: TaskDetailState }) {
                       fontSize: "var(--text-xs)",
                       letterSpacing: '0.1em',
                       textTransform: 'uppercase',
-                      padding: '5px 10px',
+                      padding: "var(--space-xs) var(--space-md)",
                       background: on ? ACCENT : 'transparent',
                       color: on ? PAPER_WARM : MUTED,
                       border: `1px solid ${on ? ACCENT : LINE}`,
@@ -203,7 +203,7 @@ export default function UaTaskDetail({ state }: { state: TaskDetailState }) {
           <>
             <div className="flex flex-col gap-4">
               {sortedSubmissions.slice(0, 4).map((s) => (
-                <div key={s.id} style={{ position: 'relative', paddingTop: s.id === topId ? 16 : 0 }}>
+                <div key={s.id} style={{ position: 'relative', paddingTop: s.id === topId ? 'var(--space-lg)' : 0 }}>
                   {s.id === topId && (
                     <div
                       style={{
@@ -219,7 +219,7 @@ export default function UaTaskDetail({ state }: { state: TaskDetailState }) {
                         fontSize: "var(--text-base)",
                         letterSpacing: '0.1em',
                         textTransform: 'uppercase',
-                        padding: '2px 12px',
+                        padding: "var(--space-xs) var(--space-md)",
                         boxShadow: '0 3px 8px rgba(60,40,10,0.3)',
                       }}
                     >
@@ -231,7 +231,7 @@ export default function UaTaskDetail({ state }: { state: TaskDetailState }) {
               ))}
             </div>
             {submissions.length > 4 && (
-              <div style={{ marginTop: 16 }}>
+              <div style={{ marginTop: "var(--space-lg)" }}>
                 <Link to={`/praxes?task_id=${task.id}`} style={{ fontFamily: ENGRAVED, fontSize: "var(--text-lg)", letterSpacing: '0.06em', color: ACCENT, textDecoration: 'none' }}>
                   {t('ua.viewAll', { count: submissions.length })}
                 </Link>
@@ -245,7 +245,7 @@ export default function UaTaskDetail({ state }: { state: TaskDetailState }) {
       {canSignUp && (
         <MobileStickyBar>
           {signupError && (
-            <div style={{ fontFamily: MONO, fontSize: "var(--text-lg)", color: 'var(--color-danger)', padding: '8px 12px', background: 'var(--faction-ua-light)', border: `1px solid ${LINE}` }}>
+            <div style={{ fontFamily: MONO, fontSize: "var(--text-lg)", color: 'var(--color-danger)', padding: "var(--space-sm) var(--space-md)", background: 'var(--faction-ua-light)', border: `1px solid ${LINE}` }}>
               {signupError}
             </div>
           )}
@@ -259,7 +259,7 @@ export default function UaTaskDetail({ state }: { state: TaskDetailState }) {
               fontSize: "var(--text-xl)",
               letterSpacing: '0.1em',
               textTransform: 'uppercase',
-              padding: '14px 20px',
+              padding: "var(--space-lg) var(--space-xl)",
               border: 'none',
               cursor: 'pointer',
             }}
@@ -279,7 +279,7 @@ export default function UaTaskDetail({ state }: { state: TaskDetailState }) {
           </span>
           <Link
             to={`/praxes/${mySubmission.id}/edit`}
-            style={{ fontFamily: ENGRAVED, fontSize: "var(--text-base)", letterSpacing: '0.12em', textTransform: 'uppercase', padding: '10px 18px', background: INK, color: PAPER_WARM, textDecoration: 'none' }}
+            style={{ fontFamily: ENGRAVED, fontSize: "var(--text-base)", letterSpacing: '0.12em', textTransform: 'uppercase', padding: "var(--space-md) var(--space-lg)", background: INK, color: PAPER_WARM, textDecoration: 'none' }}
           >
             {t('ua.submitted.edit')}
           </Link>
@@ -287,7 +287,7 @@ export default function UaTaskDetail({ state }: { state: TaskDetailState }) {
       )}
 
       {!mySubmission && isInProgress && inProgressPraxisId !== null && (
-        <MobileStickyBar style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+        <MobileStickyBar style={{ flexDirection: 'row', alignItems: 'center', gap: "var(--space-md)" }}>
           <button
             onClick={handleDrop}
             style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: MONO, fontSize: "var(--text-base)", letterSpacing: '0.1em', textTransform: 'uppercase', color: MUTED }}
@@ -296,7 +296,7 @@ export default function UaTaskDetail({ state }: { state: TaskDetailState }) {
           </button>
           <Link
             to={`/praxes/${inProgressPraxisId}/edit`}
-            style={{ marginLeft: 'auto', fontFamily: ENGRAVED, fontSize: "var(--text-md)", letterSpacing: '0.12em', textTransform: 'uppercase', padding: '12px 20px', background: ACCENT, color: PAPER_WARM, textDecoration: 'none' }}
+            style={{ marginLeft: "auto", fontFamily: ENGRAVED, fontSize: "var(--text-md)", letterSpacing: '0.12em', textTransform: 'uppercase', padding: "var(--space-md) var(--space-xl)", background: ACCENT, color: PAPER_WARM, textDecoration: 'none' }}
           >
             {t('ua.inProgress.continue')}
           </Link>

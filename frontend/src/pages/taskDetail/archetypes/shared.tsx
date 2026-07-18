@@ -30,8 +30,8 @@ export function ErrorBanner({ message, style }: ErrorBannerProps) {
       style={{
         fontSize: "var(--text-md)",
         color: "var(--color-danger)",
-        marginTop: 8,
-        padding: "8px 12px",
+        marginTop: "var(--space-sm)",
+        padding: "var(--space-sm) var(--space-md)",
         background: "rgba(220,38,38,0.06)",
         border: "1px solid rgba(220,38,38,0.2)",
         ...style,

@@ -45,8 +45,8 @@ function Sparkle({ size, color, style }: { size: number; color: string; style?: 
 /** Caveat section heading with a sparkle and a dashed running rule. */
 function SectionHead({ title, trailing }: { title: string; trailing?: ReactNode }) {
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
-      <span className="content-title" style={{ display: 'inline-flex', alignItems: 'center', gap: 7, fontFamily: SCRIPT, color: TITLE_TEXT, whiteSpace: 'nowrap' }}>
+    <div style={{ display: 'flex', alignItems: 'center', gap: "var(--space-md)", marginBottom: "var(--space-md)" }}>
+      <span className="content-title" style={{ display: 'inline-flex', alignItems: 'center', gap: "var(--space-sm)", fontFamily: SCRIPT, color: TITLE_TEXT, whiteSpace: 'nowrap' }}>
         <Sparkle size={13} color={PINK} />
         {title}
       </span>
@@ -96,8 +96,8 @@ export default function WowTaskDetail({ state }: { state: TaskDetailState }) {
         backgroundSize: '15px 15px',
         marginLeft: -16,
         marginRight: -16,
-        paddingLeft: 16,
-        paddingRight: 16,
+        paddingLeft: "var(--space-lg)",
+        paddingRight: "var(--space-lg)",
       }}
     >
       {/* Breadcrumb */}
@@ -105,7 +105,7 @@ export default function WowTaskDetail({ state }: { state: TaskDetailState }) {
         <Link to="/tasks" style={{ color: PINK_DEEP, textDecoration: 'none' }}>
           {t('wow.breadcrumb')}
         </Link>
-        <span aria-hidden style={{ margin: '0 6px', color: PINK }}>›</span>
+        <span aria-hidden style={{ margin: "0 var(--space-sm)", color: PINK }}>›</span>
         <span style={{ fontFamily: SCRIPT, fontSize: "var(--text-xl)", color: TITLE_TEXT }}>{task.title}</span>
       </nav>
 
@@ -116,15 +116,15 @@ export default function WowTaskDetail({ state }: { state: TaskDetailState }) {
           overflow: 'hidden',
           border: `2px solid ${WIN_BORDER}`,
           boxShadow: `0 8px 22px color-mix(in srgb, ${PINK} 22%, transparent)`,
-          marginBottom: 20,
+          marginBottom: "var(--space-xl)",
         }}
       >
         <div
           style={{
             display: 'flex',
             alignItems: 'center',
-            gap: 7,
-            padding: '8px 12px',
+            gap: "var(--space-sm)",
+            padding: "var(--space-sm) var(--space-md)",
             background: 'linear-gradient(180deg, var(--faction-wow-title-from), var(--faction-wow-title-to))',
             borderBottom: `2px solid ${WIN_BORDER}`,
           }}
@@ -132,7 +132,7 @@ export default function WowTaskDetail({ state }: { state: TaskDetailState }) {
           {['var(--faction-wow-scrap-deep)', 'var(--faction-wow-tape)', 'var(--faction-wow-ivy-leaf)'].map((c) => (
             <span key={c} style={{ width: 9, height: 9, borderRadius: '50%', background: c, border: '1.2px solid rgba(255,255,255,0.7)' }} />
           ))}
-          <span style={{ marginLeft: 'auto', display: 'inline-flex', alignItems: 'center', gap: 5, fontFamily: SCRIPT, fontSize: "var(--text-content)", color: TITLE_TEXT }}>
+          <span style={{ marginLeft: "auto", display: 'inline-flex', alignItems: 'center', gap: "var(--space-xs)", fontFamily: SCRIPT, fontSize: "var(--text-content)", color: TITLE_TEXT }}>
             <Sparkle size={11} color={TITLE_TEXT} />
             {t('wow.window')}
           </span>
@@ -140,25 +140,25 @@ export default function WowTaskDetail({ state }: { state: TaskDetailState }) {
         <div
           style={{
             position: 'relative',
-            padding: 12,
+            padding: "var(--space-md)",
             background: BODY_BG,
             backgroundImage: `radial-gradient(${DOT} 1.4px, transparent 1.4px)`,
             backgroundSize: '13px 13px',
           }}
         >
-          <div style={{ background: NOTEPAD_BG, border: `1.5px solid ${NOTEPAD_BORDER}`, borderRadius: 9, padding: '18px 18px 20px' }}>
-            <div style={{ fontSize: "var(--text-sm)", letterSpacing: '0.16em', textTransform: 'uppercase', color: CARD_MUTED, marginBottom: 8 }}>
+          <div style={{ background: NOTEPAD_BG, border: `1.5px solid ${NOTEPAD_BORDER}`, borderRadius: 9, padding: "var(--space-lg) var(--space-lg) var(--space-xl)" }}>
+            <div style={{ fontSize: "var(--text-sm)", letterSpacing: '0.16em', textTransform: 'uppercase', color: CARD_MUTED, marginBottom: "var(--space-sm)" }}>
               {task.status === 'active' ? t('wow.statusOpen') : task.status}
             </div>
-            <h1 className="content-title" style={{ fontFamily: SCRIPT, lineHeight: 0.95, color: TITLE_TEXT, margin: '0 0 14px', overflowWrap: 'anywhere' }}>
+            <h1 className="content-title" style={{ fontFamily: SCRIPT, lineHeight: 0.95, color: TITLE_TEXT, margin: "0 0 var(--space-lg)", overflowWrap: 'anywhere' }}>
               {task.title}
             </h1>
             <div className="flex items-center gap-2 flex-wrap">
-              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: "var(--text-base)", letterSpacing: '0.06em', textTransform: 'uppercase', color: CARD_TEXT, background: BODY_BG, border: `1.5px solid ${NOTEPAD_BORDER}`, borderRadius: 999, padding: '6px 13px' }}>
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: "var(--space-sm)", fontSize: "var(--text-base)", letterSpacing: '0.06em', textTransform: 'uppercase', color: CARD_TEXT, background: BODY_BG, border: `1.5px solid ${NOTEPAD_BORDER}`, borderRadius: 999, padding: "var(--space-sm) var(--space-md)" }}>
                 <Sparkle size={10} color={PINK} />
                 {t('wow.level', { level: task.level_required })}
               </span>
-              <span className="content-title" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontFamily: SCRIPT, color: PINK }}>
+              <span className="content-title" style={{ display: 'inline-flex', alignItems: 'center', gap: "var(--space-sm)", fontFamily: SCRIPT, color: PINK }}>
                 {t('wow.sparks', { points: modifiedPoints })}
               </span>
             </div>
@@ -167,9 +167,9 @@ export default function WowTaskDetail({ state }: { state: TaskDetailState }) {
       </section>
 
       {/* What we're asking — brief */}
-      <section style={{ marginBottom: 20 }}>
+      <section style={{ marginBottom: "var(--space-xl)" }}>
         <SectionHead title={t('wow.askingHeading')} />
-        <div style={{ background: NOTEPAD_BG, border: `1.5px solid ${NOTEPAD_BORDER}`, borderRadius: 9, padding: '16px 18px' }}>
+        <div style={{ background: NOTEPAD_BG, border: `1.5px solid ${NOTEPAD_BORDER}`, borderRadius: 9, padding: "var(--space-lg) var(--space-lg)" }}>
           <p className="content-text" style={{ fontFamily: BODY, lineHeight: 1.75, color: task.description ? CARD_TEXT : CARD_MUTED, margin: 0, whiteSpace: 'pre-wrap' }}>
             {task.description || t('wow.askingEmpty')}
           </p>
@@ -177,14 +177,14 @@ export default function WowTaskDetail({ state }: { state: TaskDetailState }) {
       </section>
 
       {/* The love so far — read-only aggregate */}
-      <section style={{ marginBottom: 20 }}>
+      <section style={{ marginBottom: "var(--space-xl)" }}>
         <SectionHead title={t('wow.loveHeading')} />
         {voteCount > 0 ? (
-          <div style={{ display: 'flex', alignItems: 'flex-end', gap: 12 }}>
+          <div style={{ display: 'flex', alignItems: 'flex-end', gap: "var(--space-md)" }}>
             <span className="content-title" style={{ fontFamily: SCRIPT, lineHeight: 0.8, color: PINK }}>{topScore}</span>
-            <div style={{ paddingBottom: 5 }}>
+            <div style={{ paddingBottom: "var(--space-xs)" }}>
               <div className="content-text" style={{ fontFamily: SCRIPT, color: TITLE_TEXT }}>{t('wow.love.top')}</div>
-              <div style={{ fontSize: "var(--text-base)", color: CARD_MUTED, marginTop: 2 }}>{t('wow.love.adored', { count: voteCount })}</div>
+              <div style={{ fontSize: "var(--text-base)", color: CARD_MUTED, marginTop: "var(--space-xs)" }}>{t('wow.love.adored', { count: voteCount })}</div>
             </div>
           </div>
         ) : (
@@ -209,7 +209,7 @@ export default function WowTaskDetail({ state }: { state: TaskDetailState }) {
                       fontSize: "var(--text-xs)",
                       letterSpacing: '0.1em',
                       textTransform: 'uppercase',
-                      padding: '5px 10px',
+                      padding: "var(--space-xs) var(--space-md)",
                       borderRadius: on ? 8 : 0,
                       background: on ? `linear-gradient(180deg, ${PINK}, ${PINK_DEEP})` : 'transparent',
                       color: on ? ON_ACCENT : CARD_MUTED,
@@ -230,7 +230,7 @@ export default function WowTaskDetail({ state }: { state: TaskDetailState }) {
           <>
             <div className="flex flex-col gap-4">
               {sortedSubmissions.slice(0, 4).map((s) => (
-                <div key={s.id} style={{ position: 'relative', paddingTop: s.id === topId ? 18 : 0 }}>
+                <div key={s.id} style={{ position: 'relative', paddingTop: s.id === topId ? 'var(--space-lg)' : 0 }}>
                   {s.id === topId && (
                     <div
                       style={{
@@ -241,13 +241,13 @@ export default function WowTaskDetail({ state }: { state: TaskDetailState }) {
                         zIndex: 3,
                         display: 'inline-flex',
                         alignItems: 'center',
-                        gap: 5,
+                        gap: "var(--space-xs)",
                         whiteSpace: 'nowrap',
                         background: PINK,
                         color: ON_ACCENT,
                         fontFamily: SCRIPT,
                         fontSize: "var(--text-xl)",
-                        padding: '2px 14px',
+                        padding: "var(--space-xs) var(--space-lg)",
                         borderRadius: 14,
                         boxShadow: '2px 3px 0 var(--faction-wow-scrap-deep)',
                       }}
@@ -261,7 +261,7 @@ export default function WowTaskDetail({ state }: { state: TaskDetailState }) {
               ))}
             </div>
             {submissions.length > 4 && (
-              <div style={{ marginTop: 16 }}>
+              <div style={{ marginTop: "var(--space-lg)" }}>
                 <Link to={`/praxes?task_id=${task.id}`} className="content-text" style={{ fontFamily: SCRIPT, color: PINK, textDecoration: 'none' }}>
                   {t('wow.viewAll', { count: submissions.length })}
                 </Link>
@@ -275,7 +275,7 @@ export default function WowTaskDetail({ state }: { state: TaskDetailState }) {
       {canSignUp && (
         <MobileStickyBar>
           {signupError && (
-            <div style={{ fontFamily: BODY, fontSize: "var(--text-lg)", color: 'var(--color-danger)', padding: '8px 12px', background: 'var(--faction-wow-light)', border: `1.5px solid ${NOTEPAD_BORDER}`, borderRadius: 9 }}>
+            <div style={{ fontFamily: BODY, fontSize: "var(--text-lg)", color: 'var(--color-danger)', padding: "var(--space-sm) var(--space-md)", background: 'var(--faction-wow-light)', border: `1.5px solid ${NOTEPAD_BORDER}`, borderRadius: 9 }}>
               {signupError}
             </div>
           )}
@@ -286,7 +286,7 @@ export default function WowTaskDetail({ state }: { state: TaskDetailState }) {
               display: 'inline-flex',
               alignItems: 'center',
               justifyContent: 'center',
-              gap: 8,
+              gap: "var(--space-sm)",
               background: `linear-gradient(180deg, ${PINK}, ${PINK_DEEP})`,
               color: ON_ACCENT,
               fontFamily: BODY,
@@ -294,7 +294,7 @@ export default function WowTaskDetail({ state }: { state: TaskDetailState }) {
               fontWeight: 700,
               letterSpacing: '0.1em',
               textTransform: 'uppercase',
-              padding: '14px 20px',
+              padding: "var(--space-lg) var(--space-xl)",
               border: `1.5px solid ${PINK_DEEP}`,
               borderRadius: 14,
               cursor: 'pointer',
@@ -314,7 +314,7 @@ export default function WowTaskDetail({ state }: { state: TaskDetailState }) {
           <span className="content-text" style={{ fontFamily: SCRIPT, color: PINK, flex: 1 }}>{t('wow.submitted.text')}</span>
           <Link
             to={`/praxes/${mySubmission.id}/edit`}
-            style={{ fontFamily: BODY, fontSize: "var(--text-base)", letterSpacing: '0.12em', textTransform: 'uppercase', padding: '10px 18px', color: ON_ACCENT, background: `linear-gradient(180deg, ${PINK}, ${PINK_DEEP})`, border: `1.5px solid ${PINK_DEEP}`, borderRadius: 12, textDecoration: 'none' }}
+            style={{ fontFamily: BODY, fontSize: "var(--text-base)", letterSpacing: '0.12em', textTransform: 'uppercase', padding: "var(--space-md) var(--space-lg)", color: ON_ACCENT, background: `linear-gradient(180deg, ${PINK}, ${PINK_DEEP})`, border: `1.5px solid ${PINK_DEEP}`, borderRadius: 12, textDecoration: 'none' }}
           >
             {t('wow.submitted.edit')}
           </Link>
@@ -322,7 +322,7 @@ export default function WowTaskDetail({ state }: { state: TaskDetailState }) {
       )}
 
       {!mySubmission && isInProgress && inProgressPraxisId !== null && (
-        <MobileStickyBar style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+        <MobileStickyBar style={{ flexDirection: 'row', alignItems: 'center', gap: "var(--space-md)" }}>
           <button
             onClick={handleDrop}
             style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: SCRIPT, fontSize: "var(--text-content)", color: CARD_MUTED }}
@@ -331,7 +331,7 @@ export default function WowTaskDetail({ state }: { state: TaskDetailState }) {
           </button>
           <Link
             to={`/praxes/${inProgressPraxisId}/edit`}
-            style={{ marginLeft: 'auto', fontFamily: BODY, fontSize: "var(--text-md)", letterSpacing: '0.12em', textTransform: 'uppercase', padding: '12px 20px', color: ON_ACCENT, background: `linear-gradient(180deg, ${PINK}, ${PINK_DEEP})`, border: `1.5px solid ${PINK_DEEP}`, borderRadius: 14, textDecoration: 'none' }}
+            style={{ marginLeft: "auto", fontFamily: BODY, fontSize: "var(--text-md)", letterSpacing: '0.12em', textTransform: 'uppercase', padding: "var(--space-md) var(--space-xl)", color: ON_ACCENT, background: `linear-gradient(180deg, ${PINK}, ${PINK_DEEP})`, border: `1.5px solid ${PINK_DEEP}`, borderRadius: 14, textDecoration: 'none' }}
           >
             {t('wow.inProgress.continue')}
           </Link>

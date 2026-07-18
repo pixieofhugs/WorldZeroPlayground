@@ -73,7 +73,7 @@ function Medallion({ name, size }: { name: string; size: number }) {
 
 function SectionHead({ children }: { children: ReactNode }) {
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
+    <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-md)', marginBottom: 'var(--space-md)' }}>
       <span style={{ fontFamily: DISPLAY, fontSize: 'var(--text-md)', letterSpacing: '0.1em', textTransform: 'uppercase', color: TEXT }}>
         {children}
       </span>
@@ -92,7 +92,7 @@ const joinButton: CSSProperties = {
   color: PARCHMENT,
   background: INK,
   border: `1px solid ${GOLD}`,
-  padding: '13px 16px',
+  padding: 'var(--space-md) var(--space-lg)',
   cursor: 'pointer',
 }
 
@@ -105,7 +105,7 @@ const cancelButton: CSSProperties = {
   color: MUTED,
   background: 'transparent',
   border: `1px solid ${GOLD_DEEP}`,
-  padding: '11px 16px',
+  padding: 'var(--space-md) var(--space-lg)',
   cursor: 'pointer',
 }
 
@@ -124,26 +124,35 @@ export default function EphemeristsFactionPage({ state }: { state: FactionDetail
   return (
     <div data-skin="ephemerists" className="py-4" style={{ fontFamily: SERIF, color: TEXT, background: VELLUM_DEEP }} data-testid="mobile-faction-page">
       {/* Hero — ledger-ruled vellum masthead */}
-      <section style={{ position: 'relative', overflow: 'hidden', background: VELLUM, border: `1.5px solid ${INK}`, boxShadow: '0 12px 28px rgba(42,29,18,0.18)', padding: '20px 18px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: RUBRIC }}>
+      <section style={{ position: 'relative', overflow: 'hidden', background: VELLUM, border: `1.5px solid ${INK}`, boxShadow: '0 12px 28px rgba(42,29,18,0.18)', padding: 'var(--space-xl) var(--space-lg)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-sm)', color: RUBRIC }}>
           <EphemeristsSigil size={13} color={LAPIS} />
           <span style={{ ...kicker, color: LAPIS }}>{t('ephemerists.mobile.eyebrow')}</span>
         </div>
-        {/* ornament: masthead display type — the illuminated title is the skin's identity (§4/§270). */}
-        <h1 style={{ fontFamily: DISPLAY, fontWeight: 700, fontSize: 32, lineHeight: 1.05, color: TEXT, margin: '4px 0 0' }}>
+        <h1
+          style={{
+            fontFamily: DISPLAY,
+            fontWeight: 700,
+            // eslint-disable-next-line local/no-raw-style-values -- ornament: masthead display type — the illuminated title is the skin's identity (§4/§270).
+            fontSize: 32,
+            lineHeight: 1.05,
+            color: TEXT,
+            margin: 'var(--space-xs) 0 0',
+          }}
+        >
           {name}
         </h1>
-        <p className="content-text" style={{ fontFamily: SCRIPT, fontStyle: 'italic', lineHeight: 1.6, color: MUTED, margin: '8px 0 0' }}>
+        <p className="content-text" style={{ fontFamily: SCRIPT, fontStyle: 'italic', lineHeight: 1.6, color: MUTED, margin: 'var(--space-sm) 0 0' }}>
           {factionDescription(faction.slug)}
         </p>
-        <div style={{ display: 'flex', gap: 8, marginTop: 15 }}>
+        <div style={{ display: 'flex', gap: 'var(--space-sm)', marginTop: 'var(--space-lg)' }}>
           <HeroStat value={members.length} label={t('mobile.membersStat')} />
           <HeroStat value={tasks.length} label={t('mobile.tasksStat')} />
         </div>
       </section>
 
       {membership.state === 'member' && (
-        <p style={{ ...kicker, marginTop: 12, color: RUBRIC }}>{t('mobile.memberBadge')}</p>
+        <p style={{ ...kicker, marginTop: 'var(--space-md)', color: RUBRIC }}>{t('mobile.memberBadge')}</p>
       )}
 
       {/* Top keepers */}
@@ -175,7 +184,7 @@ export default function EphemeristsFactionPage({ state }: { state: FactionDetail
       </section>
 
       {membership.state === 'gate' && (
-        <p className="content-text" style={{ fontFamily: SCRIPT, fontStyle: 'italic', color: MUTED, marginTop: 24 }}>
+        <p className="content-text" style={{ fontFamily: SCRIPT, fontStyle: 'italic', color: MUTED, marginTop: 'var(--space-xl)' }}>
           {t('mobile.gateHint', { faction: name })}
         </p>
       )}
@@ -197,7 +206,7 @@ export default function EphemeristsFactionPage({ state }: { state: FactionDetail
                   ? t('detail.join.confirmSwitch', { faction: name, current: factionName(currentSlug) })
                   : t('detail.join.confirm', { faction: name })}
               </p>
-              <div style={{ display: 'flex', gap: 8 }}>
+              <div style={{ display: 'flex', gap: 'var(--space-sm)' }}>
                 <button
                   type="button"
                   onClick={() => void membership.join()}
@@ -225,11 +234,11 @@ export default function EphemeristsFactionPage({ state }: { state: FactionDetail
 
 function HeroStat({ value, label }: { value: number; label: string }) {
   return (
-    <div style={{ flex: '1 1 0', textAlign: 'center', background: VELLUM_DEEP, border: `1px solid ${GOLD}`, padding: '10px 6px' }}>
+    <div style={{ flex: '1 1 0', textAlign: 'center', background: VELLUM_DEEP, border: `1px solid ${GOLD}`, padding: 'var(--space-md) var(--space-sm)' }}>
       <b className="content-title" style={{ fontFamily: DISPLAY, fontWeight: 700, display: 'block', lineHeight: 1, color: TEXT }}>
         {value}
       </b>
-      <span style={{ ...kicker, marginTop: 5, display: 'block' }}>{label}</span>
+      <span style={{ ...kicker, marginTop: 'var(--space-xs)', display: 'block' }}>{label}</span>
     </div>
   )
 }
@@ -242,8 +251,8 @@ function MemberRow({ rank, member }: { rank: number; member: CharacterOut }) {
       style={{
         display: 'flex',
         alignItems: 'center',
-        gap: 12,
-        padding: '10px 14px',
+        gap: 'var(--space-md)',
+        padding: 'var(--space-md) var(--space-lg)',
         background: VELLUM,
         border: `1px solid ${GOLD_DEEP}`,
         borderLeft: `4px solid ${RUBRIC}`,

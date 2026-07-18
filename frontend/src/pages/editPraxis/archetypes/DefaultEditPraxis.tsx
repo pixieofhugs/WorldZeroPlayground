@@ -73,7 +73,7 @@ export default function DefaultEditPraxis({ state }: Props) {
         backgroundSize: "40px 40px, 35px 35px, 50px 50px, 45px 45px, 100% 100%",
         fontFamily: "'Caveat', cursive",
         color: SLATE_DEEP,
-        padding: "32px 24px 48px",
+        padding: "var(--space-2xl) var(--space-xl) var(--space-4xl)",
         minHeight: "100vh",
         position: "relative",
       }}
@@ -90,11 +90,11 @@ export default function DefaultEditPraxis({ state }: Props) {
         <div
           style={{
             background: "#60a5fa",
-            padding: "10px 16px",
+            padding: "var(--space-sm) var(--space-lg)",
             transform: "rotate(-3deg)",
             display: "inline-block",
             boxShadow: "3px 4px 6px rgba(0,0,0,.2)",
-            marginBottom: 18,
+            marginBottom: "var(--space-lg)",
             position: "relative",
           }}
         >
@@ -114,7 +114,7 @@ export default function DefaultEditPraxis({ state }: Props) {
           />
           <div
             style={{
-              marginTop: 6,
+              marginTop: "var(--space-xs)",
               fontFamily: "'Permanent Marker', cursive",
               fontSize: "var(--text-xl)",
               color: SLATE_DEEP,
@@ -129,10 +129,10 @@ export default function DefaultEditPraxis({ state }: Props) {
         <div
           style={{
             background: STICKY_YELLOW,
-            padding: "20px 28px 24px",
+            padding: "var(--space-lg) var(--space-xl) var(--space-xl)",
             transform: "rotate(-1.2deg)",
             boxShadow: "4px 6px 10px rgba(0,0,0,.22)",
-            marginBottom: 28,
+            marginBottom: "var(--space-xl)",
             position: "relative",
             backgroundImage:
               "linear-gradient(180deg, rgba(241,201,69,0.2) 0%, transparent 8%)",
@@ -155,7 +155,7 @@ export default function DefaultEditPraxis({ state }: Props) {
                 })
               : t("editPraxis.na.autosaveUnsaved")}
           </div>
-          <div style={{ marginBottom: 6 }}>
+          <div style={{ marginBottom: "var(--space-xs)" }}>
             <RainbowTitle
               text={t("editPraxis.na.pageTitle")}
               size={42}
@@ -167,7 +167,7 @@ export default function DefaultEditPraxis({ state }: Props) {
               fontSize: "var(--text-title)",
               color: SLATE_DEEP,
               lineHeight: 1.25,
-              marginTop: 8,
+              marginTop: "var(--space-sm)",
               fontFamily: "'Caveat', cursive",
             }}
           >
@@ -178,7 +178,7 @@ export default function DefaultEditPraxis({ state }: Props) {
                 textTransform: "uppercase",
                 letterSpacing: "0.15em",
                 color: SLATE,
-                marginRight: 8,
+                marginRight: "var(--space-sm)",
               }}
             >
               {t("editPraxis.na.taskRefLabel")}
@@ -186,11 +186,11 @@ export default function DefaultEditPraxis({ state }: Props) {
             {praxis.task_title}
           </div>
           {task?.description && (
-            <div style={{ fontSize: "var(--text-content)", lineHeight: 1.5, color: SLATE, marginTop: 8 }}>
+            <div style={{ fontSize: "var(--text-content)", lineHeight: 1.5, color: SLATE, marginTop: "var(--space-sm)" }}>
               {task.description}
             </div>
           )}
-          <div style={{ marginTop: 8 }}>
+          <div style={{ marginTop: "var(--space-sm)" }}>
             <TaskMetaInline praxis={praxis} task={task} textColor={SLATE} />
           </div>
         </div>
@@ -199,9 +199,9 @@ export default function DefaultEditPraxis({ state }: Props) {
         {!state.controlsLocked && (
           <div
             style={{
-              marginBottom: 26,
+              marginBottom: "var(--space-xl)",
               display: "flex",
-              gap: 16,
+              gap: "var(--space-lg)",
               alignItems: "flex-start",
               flexWrap: "wrap",
             }}
@@ -233,7 +233,7 @@ export default function DefaultEditPraxis({ state }: Props) {
                     disabled={disabled && !active}
                     style={{
                       background: opt.bg,
-                      padding: "12px 18px",
+                      padding: "var(--space-md) var(--space-lg)",
                       border: "none",
                       cursor: disabled ? "not-allowed" : "pointer",
                       transform: `rotate(${active ? (index % 2 ? 2 : -2.5) : index % 2 ? -1 : 1}deg) scale(${active ? 1.08 : 1})`,
@@ -252,7 +252,7 @@ export default function DefaultEditPraxis({ state }: Props) {
                         fontSize: "var(--text-title)",
                         color: SLATE_DEEP,
                         lineHeight: 1,
-                        marginBottom: 4,
+                        marginBottom: "var(--space-xs)",
                       }}
                     >
                       {opt.label}
@@ -285,10 +285,10 @@ export default function DefaultEditPraxis({ state }: Props) {
             <div
               style={{
                 background: STICKY_PAPER,
-                padding: "14px 20px",
+                padding: "var(--space-md) var(--space-lg)",
                 transform: "rotate(0.4deg)",
                 boxShadow: "3px 4px 7px rgba(0,0,0,.2)",
-                marginBottom: 24,
+                marginBottom: "var(--space-xl)",
               }}
             >
               <div
@@ -296,7 +296,7 @@ export default function DefaultEditPraxis({ state }: Props) {
                   fontFamily: "'Permanent Marker', cursive",
                   fontSize: "var(--text-lg)",
                   color: SLATE,
-                  marginBottom: 6,
+                  marginBottom: "var(--space-xs)",
                 }}
               >
                 {state.duelMode
@@ -322,10 +322,10 @@ export default function DefaultEditPraxis({ state }: Props) {
         <div
           style={{
             background: STICKY_PAPER,
-            padding: "14px 20px",
+            padding: "var(--space-md) var(--space-lg)",
             transform: "rotate(0.6deg)",
             boxShadow: "3px 4px 7px rgba(0,0,0,.2)",
-            marginBottom: 24,
+            marginBottom: "var(--space-xl)",
           }}
         >
           <div
@@ -333,7 +333,7 @@ export default function DefaultEditPraxis({ state }: Props) {
               fontFamily: "'Permanent Marker', cursive",
               fontSize: "var(--text-md)",
               color: SLATE,
-              marginBottom: 6,
+              marginBottom: "var(--space-xs)",
               letterSpacing: "0.05em",
             }}
           >
@@ -352,12 +352,12 @@ export default function DefaultEditPraxis({ state }: Props) {
                 border: "none",
                 outline: "none",
                 borderBottom: `2px dashed ${SLATE}`,
-                padding: "4px 0 6px",
+                padding: "var(--space-xs) 0",
               },
             }}
           />
           <RainbowUnderline opacity={0.55} height={2} />
-          <div style={{ marginTop: 6 }}>
+          <div style={{ marginTop: "var(--space-xs)" }}>
             <TitleCounter length={state.title.length} color={SLATE} />
           </div>
         </div>
@@ -366,10 +366,10 @@ export default function DefaultEditPraxis({ state }: Props) {
         <div
           style={{
             background: STICKY_PAPER,
-            padding: "18px 24px",
+            padding: "var(--space-lg) var(--space-xl)",
             transform: "rotate(-0.4deg)",
             boxShadow: "4px 5px 9px rgba(0,0,0,.22)",
-            marginBottom: 24,
+            marginBottom: "var(--space-xl)",
             position: "relative",
           }}
         >
@@ -393,7 +393,7 @@ export default function DefaultEditPraxis({ state }: Props) {
               fontFamily: "'Permanent Marker', cursive",
               fontSize: "var(--text-lg)",
               color: SLATE,
-              marginBottom: 10,
+              marginBottom: "var(--space-sm)",
             }}
           >
             {t("editPraxis.na.bodyLabel", { words: state.wordCount })}
@@ -421,8 +421,8 @@ export default function DefaultEditPraxis({ state }: Props) {
             skin={{
               wrapperStyle: {
                 borderTop: `1px dashed ${SLATE}`,
-                marginTop: 12,
-                paddingTop: 10,
+                marginTop: "var(--space-md)",
+                paddingTop: "var(--space-sm)",
               },
               label: (
                 <div
@@ -430,7 +430,7 @@ export default function DefaultEditPraxis({ state }: Props) {
                     fontFamily: "'Permanent Marker', cursive",
                     fontSize: "var(--text-md)",
                     color: SLATE,
-                    marginBottom: 6,
+                    marginBottom: "var(--space-xs)",
                   }}
                 >
                   {t("editPraxis.na.previewLabel")}
@@ -448,9 +448,9 @@ export default function DefaultEditPraxis({ state }: Props) {
         {/* Photos */}
         <div
           style={{
-            marginBottom: 26,
+            marginBottom: "var(--space-xl)",
             display: "flex",
-            gap: 16,
+            gap: "var(--space-lg)",
             flexWrap: "wrap",
             alignItems: "flex-start",
           }}
@@ -510,7 +510,7 @@ export default function DefaultEditPraxis({ state }: Props) {
                 alignItems: "center",
                 justifyContent: "center",
                 flexDirection: "column",
-                gap: 4,
+                gap: "var(--space-xs)",
                 transform: "rotate(1.4deg)",
               },
               buttonLabel: t("editPraxis.na.fileButton"),
@@ -519,7 +519,7 @@ export default function DefaultEditPraxis({ state }: Props) {
               helperStyle: {
                 fontSize: "var(--text-lg)",
                 color: "#fef3c7",
-                marginTop: 6,
+                marginTop: "var(--space-xs)",
                 fontStyle: "italic",
                 textShadow: "1px 1px 2px rgba(0,0,0,.4)",
               },
@@ -531,9 +531,9 @@ export default function DefaultEditPraxis({ state }: Props) {
         {state.showMetatasks && (
           <div
             style={{
-              marginBottom: 26,
+              marginBottom: "var(--space-xl)",
               background: STICKY_PAPER,
-              padding: "14px 20px",
+              padding: "var(--space-md) var(--space-lg)",
               transform: "rotate(-0.6deg)",
               boxShadow: "3px 4px 7px rgba(0,0,0,.2)",
             }}
@@ -543,7 +543,7 @@ export default function DefaultEditPraxis({ state }: Props) {
                 fontFamily: "'Permanent Marker', cursive",
                 fontSize: "var(--text-lg)",
                 color: SLATE,
-                marginBottom: 8,
+                marginBottom: "var(--space-sm)",
               }}
             >
               {t("editPraxis.na.metatasksLabel")}
@@ -552,12 +552,12 @@ export default function DefaultEditPraxis({ state }: Props) {
               state={state}
               skin={{
                 rowStyle: (selected) => ({
-                  padding: "8px 4px",
+                  padding: "var(--space-sm) var(--space-xs)",
                   background: selected ? STICKY_YELLOW : "transparent",
                   border: selected
                     ? `1.5px solid ${SLATE_DEEP}`
                     : `1.5px solid transparent`,
-                  marginBottom: 4,
+                  marginBottom: "var(--space-xs)",
                   fontFamily: "'Caveat', cursive",
                 }),
                 titleColor: SLATE_DEEP,
@@ -575,9 +575,9 @@ export default function DefaultEditPraxis({ state }: Props) {
         <div
           style={{
             display: "flex",
-            gap: 18,
+            gap: "var(--space-lg)",
             alignItems: "center",
-            marginTop: 26,
+            marginTop: "var(--space-xl)",
             flexWrap: "wrap",
           }}
         >
@@ -617,7 +617,7 @@ export default function DefaultEditPraxis({ state }: Props) {
                 color: STICKY_PAPER,
                 fontFamily: "'Permanent Marker', cursive",
                 fontSize: "var(--text-title)",
-                padding: "14px 28px",
+                padding: "var(--space-md) var(--space-xl)",
                 border: "none",
                 borderRadius: 0,
                 cursor: state.submitting ? "wait" : "pointer",
@@ -668,7 +668,7 @@ function PolaroidStickie({
       style={{
         position: "relative",
         background: STICKY_PAPER,
-        padding: 6,
+        padding: "var(--space-xs)",
         transform: `rotate(${rotation}deg)`,
         boxShadow: "3px 4px 7px rgba(0,0,0,.25)",
       }}
@@ -697,7 +697,7 @@ function PolaroidStickie({
           fontFamily: "'Caveat', cursive",
           color: SLATE_DEEP,
           textAlign: "center",
-          marginTop: 3,
+          marginTop: "var(--space-xs)",
         }}
       >
         {caption}

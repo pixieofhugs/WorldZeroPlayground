@@ -75,14 +75,14 @@ function WovenRule({ height = 3 }: { height?: number }) {
 const SECTION_HEADING_ROW: CSSProperties = {
   display: "flex",
   alignItems: "center",
-  gap: 14,
-  marginBottom: 6,
+  gap: "var(--space-lg)",
+  marginBottom: "var(--space-sm)",
   flexWrap: "wrap",
 };
 
 const SECTION_HEADING_TEXT: CSSProperties = {
   fontFamily: BEBAS,
-  // ornament: victory-poster display cut in condensed Bebas — poster type, not a read heading.
+  // eslint-disable-next-line local/no-raw-style-values -- ornament: victory-poster display cut in condensed Bebas — poster type, not a read heading.
   fontSize: 34,
   letterSpacing: "0.04em",
   margin: 0,
@@ -106,7 +106,7 @@ const KICKER: CSSProperties = {
   letterSpacing: "0.2em",
   textTransform: "uppercase",
   color: MUTED,
-  marginBottom: 18,
+  marginBottom: "var(--space-lg)",
 };
 
 function Kicker({ children }: { children: ReactNode }) {
@@ -157,17 +157,17 @@ export default function EverymenFactionBody({ state }: { state: FactionDetailSta
   return (
     <div className="wz-faction-grid">
       {/* ── MAIN COLUMN ── */}
-      <div style={{ display: "flex", flexDirection: "column", gap: 46 }}>
+      <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-2xl)" }}>
         {/* ② THE CHARTER */}
-        <div style={{ ...PAPER_FRAME, padding: "24px 28px 26px" }}>
+        <div style={{ ...PAPER_FRAME, padding: "var(--space-xl) var(--space-2xl)" }}>
           <Halftone />
-          <div style={{ position: "relative", display: "flex", alignItems: "center", gap: 10, marginBottom: 15 }}>
+          <div style={{ position: "relative", display: "flex", alignItems: "center", gap: "var(--space-md)", marginBottom: "var(--space-lg)" }}>
             <span style={{ fontFamily: MONO, fontSize: "var(--text-sm)", letterSpacing: "0.24em", textTransform: "uppercase", color: MUTED }}>
               {t("everymen.charter.heading")}
             </span>
             <span style={{ flex: 1, height: 2, background: `repeating-linear-gradient(90deg, ${RED} 0 12px, ${GOLD} 12px 20px)` }} />
           </div>
-          <div style={{ position: "relative", display: "flex", flexDirection: "column", gap: 11 }}>
+          <div style={{ position: "relative", display: "flex", flexDirection: "column", gap: "var(--space-md)" }}>
             {paragraphs.length ? (
               paragraphs.map((para, i) => (
                 <p key={i} className="content-text" style={{ fontFamily: MONO, lineHeight: 1.75, color: INK, margin: 0 }}>
@@ -189,7 +189,7 @@ export default function EverymenFactionBody({ state }: { state: FactionDetailSta
           {tasks.length === 0 ? (
             <p className="content-text" style={{ fontFamily: MONO, color: MUTED }}>{t("everymen.tasks.empty")}</p>
           ) : (
-            <div style={{ display: "flex", flexWrap: "wrap", gap: 24, alignItems: "flex-start" }}>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: "var(--space-xl)", alignItems: "flex-start" }}>
               {tasks.map((task) => (
                 <TaskCard
                   key={task.id}
@@ -213,7 +213,7 @@ export default function EverymenFactionBody({ state }: { state: FactionDetailSta
           {recentPraxis.length === 0 ? (
             <p className="content-text" style={{ fontFamily: MONO, color: MUTED }}>{t("everymen.praxis.empty")}</p>
           ) : (
-            <div style={{ display: "flex", flexWrap: "wrap", gap: 16, alignItems: "flex-start" }}>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: "var(--space-lg)", alignItems: "flex-start" }}>
               {recentPraxis.map((praxis) => (
                 <div key={praxis.id} style={{ position: "relative", flex: "1 1 280px", minWidth: 280 }}>
                   {/* ⑤ Task Crown (ADR-0028) — the skin's own corner medallion,
@@ -237,24 +237,42 @@ export default function EverymenFactionBody({ state }: { state: FactionDetailSta
       </div>
 
       {/* ── RIGHT RAIL ── */}
-      <div style={{ display: "flex", flexDirection: "column", gap: 46 }}>
+      <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-2xl)" }}>
         {/* ③ THE ROLL — join / gate / standing */}
         {membership.state !== "none" && (
           <div style={{ ...PAPER_FRAME, padding: 0 }}>
-            {/* ornament: printed banner across the top of the roll — Bebas poster furniture. */}
-            <div style={{ background: RED, color: CREAM, textAlign: "center", padding: "7px 0", fontFamily: BEBAS, fontSize: 16, letterSpacing: "0.16em", borderBottom: `2px solid ${GOLD}` }}>
+            <div
+              style={{
+                background: RED,
+                color: CREAM,
+                textAlign: "center",
+                padding: "var(--space-sm) 0",
+                fontFamily: BEBAS,
+                // eslint-disable-next-line local/no-raw-style-values -- ornament: printed banner across the top of the roll — Bebas poster furniture.
+                fontSize: 16,
+                letterSpacing: "0.16em",
+                borderBottom: `2px solid ${GOLD}`,
+              }}
+            >
               {t("everymen.roll.heading")}
             </div>
-            <div style={{ position: "relative", padding: "22px 20px" }}>
+            <div style={{ position: "relative", padding: "var(--space-xl)" }}>
               <Halftone />
               <div style={{ position: "relative" }}>
                 {membership.state === "member" && (
                   <div>
-                    {/* ornament: Bebas poster headline set tight (lineHeight 0.9). */}
-                    <div style={{ fontFamily: BEBAS, fontSize: 30, lineHeight: 0.9, color: INK }}>
+                    <div
+                      style={{
+                        fontFamily: BEBAS,
+                        // eslint-disable-next-line local/no-raw-style-values -- ornament: Bebas poster headline set tight (lineHeight 0.9).
+                        fontSize: 30,
+                        lineHeight: 0.9,
+                        color: INK,
+                      }}
+                    >
                       {t("everymen.roll.memberTitle")}
                     </div>
-                    <div style={{ fontFamily: MONO, fontSize: "var(--text-md)", color: MUTED, margin: "9px 0 0" }}>
+                    <div style={{ fontFamily: MONO, fontSize: "var(--text-md)", color: MUTED, margin: "var(--space-sm) 0 0" }}>
                       <Trans t={t} i18nKey="everymen.roll.memberStanding">
                         Standing · <b style={{ color: RED }}>card-carrying</b>
                       </Trans>
@@ -264,20 +282,39 @@ export default function EverymenFactionBody({ state }: { state: FactionDetailSta
 
                 {membership.state === "eligible" && !confirming && (
                   <div>
-                    <div style={{ fontFamily: MONO, fontSize: "var(--text-sm)", letterSpacing: "0.18em", textTransform: "uppercase", color: GOLD, marginBottom: 5 }}>
+                    <div style={{ fontFamily: MONO, fontSize: "var(--text-sm)", letterSpacing: "0.18em", textTransform: "uppercase", color: GOLD, marginBottom: "var(--space-xs)" }}>
                       {t("everymen.roll.eligibleKicker")}
                     </div>
-                    {/* ornament: Bebas poster headline set tight (lineHeight 0.9). */}
-                    <div style={{ fontFamily: BEBAS, fontSize: 32, lineHeight: 0.9, color: INK, marginBottom: 9 }}>
+                    <div
+                      style={{
+                        fontFamily: BEBAS,
+                        // eslint-disable-next-line local/no-raw-style-values -- ornament: Bebas poster headline set tight (lineHeight 0.9).
+                        fontSize: 32,
+                        lineHeight: 0.9,
+                        color: INK,
+                        marginBottom: "var(--space-sm)",
+                      }}
+                    >
                       {t("everymen.roll.eligibleTitle")}
                     </div>
-                    <div className="content-text" style={{ fontFamily: MONO, lineHeight: 1.6, color: INK, marginBottom: 18 }}>
+                    <div className="content-text" style={{ fontFamily: MONO, lineHeight: 1.6, color: INK, marginBottom: "var(--space-lg)" }}>
                       {t("everymen.roll.eligibleBody")}
                     </div>
-                    {/* ornament: Bebas is a condensed poster face — its optical size is not the text scale. */}
                     <button
                       onClick={() => setConfirming(true)}
-                      style={{ width: "100%", fontFamily: BEBAS, fontSize: 18, letterSpacing: "0.12em", color: CREAM, background: RED, border: "none", padding: 12, boxShadow: `3px 4px 0 ${INK}`, cursor: "pointer" }}
+                      style={{
+                        width: "100%",
+                        fontFamily: BEBAS,
+                        // eslint-disable-next-line local/no-raw-style-values -- ornament: Bebas is a condensed poster face — its optical size is not the text scale.
+                        fontSize: 18,
+                        letterSpacing: "0.12em",
+                        color: CREAM,
+                        background: RED,
+                        border: "none",
+                        padding: "var(--space-md)",
+                        boxShadow: `3px 4px 0 ${INK}`,
+                        cursor: "pointer",
+                      }}
                     >
                       {t("everymen.roll.joinButton")}
                     </button>
@@ -286,7 +323,7 @@ export default function EverymenFactionBody({ state }: { state: FactionDetailSta
 
                 {membership.state === "eligible" && confirming && (
                   <div>
-                    <div className="content-text" style={{ fontFamily: MONO, lineHeight: 1.6, color: INK, marginBottom: 14 }}>
+                    <div className="content-text" style={{ fontFamily: MONO, lineHeight: 1.6, color: INK, marginBottom: "var(--space-lg)" }}>
                       {membership.currentFactionSlug &&
                       membership.currentFactionSlug !== "na"
                         ? t("detail.join.confirmSwitch", {
@@ -296,14 +333,24 @@ export default function EverymenFactionBody({ state }: { state: FactionDetailSta
                         : t("detail.join.confirm", { faction: factionName(faction.slug) })}
                     </div>
                     {membership.joinError && (
-                      <div className="content-text" style={{ fontFamily: MONO, color: "var(--color-danger)", marginBottom: 8 }}>{membership.joinError}</div>
+                      <div className="content-text" style={{ fontFamily: MONO, color: "var(--color-danger)", marginBottom: "var(--space-sm)" }}>{membership.joinError}</div>
                     )}
-                    <div style={{ display: "flex", gap: 8 }}>
+                    <div style={{ display: "flex", gap: "var(--space-sm)" }}>
                       <button
                         onClick={() => void membership.join()}
                         disabled={membership.joining}
-                        // ornament: Bebas is a condensed poster face — its optical size is not the text scale.
-                        style={{ flex: 1, fontFamily: BEBAS, fontSize: 16, letterSpacing: "0.1em", color: CREAM, background: RED, border: "none", padding: 10, cursor: membership.joining ? "not-allowed" : "pointer" }}
+                        style={{
+                          flex: 1,
+                          fontFamily: BEBAS,
+                          // eslint-disable-next-line local/no-raw-style-values -- ornament: Bebas is a condensed poster face — its optical size is not the text scale.
+                          fontSize: 16,
+                          letterSpacing: "0.1em",
+                          color: CREAM,
+                          background: RED,
+                          border: "none",
+                          padding: "var(--space-md)",
+                          cursor: membership.joining ? "not-allowed" : "pointer",
+                        }}
                       >
                         {membership.joining
                           ? t("everymen.roll.joining")
@@ -312,7 +359,7 @@ export default function EverymenFactionBody({ state }: { state: FactionDetailSta
                       <button
                         onClick={() => setConfirming(false)}
                         disabled={membership.joining}
-                        style={{ fontFamily: MONO, fontSize: "var(--text-sm)", fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: MUTED, background: "transparent", border: `1.5px solid color-mix(in srgb, ${INK} 30%, transparent)`, padding: "10px 14px", cursor: membership.joining ? "not-allowed" : "pointer" }}
+                        style={{ fontFamily: MONO, fontSize: "var(--text-sm)", fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: MUTED, background: "transparent", border: `1.5px solid color-mix(in srgb, ${INK} 30%, transparent)`, padding: "var(--space-md) var(--space-lg)", cursor: membership.joining ? "not-allowed" : "pointer" }}
                       >
                         {t("detail.join.cancel")}
                       </button>
@@ -322,11 +369,19 @@ export default function EverymenFactionBody({ state }: { state: FactionDetailSta
 
                 {membership.state === "gate" && (
                   <div>
-                    <div style={{ fontFamily: MONO, fontSize: "var(--text-sm)", letterSpacing: "0.18em", textTransform: "uppercase", color: GOLD, marginBottom: 5 }}>
+                    <div style={{ fontFamily: MONO, fontSize: "var(--text-sm)", letterSpacing: "0.18em", textTransform: "uppercase", color: GOLD, marginBottom: "var(--space-xs)" }}>
                       {t("everymen.roll.gateKicker")}
                     </div>
-                    {/* ornament: Bebas poster headline set tight (lineHeight 0.92). */}
-                    <div style={{ fontFamily: BEBAS, fontSize: 30, lineHeight: 0.92, color: INK, marginBottom: 11 }}>
+                    <div
+                      style={{
+                        fontFamily: BEBAS,
+                        // eslint-disable-next-line local/no-raw-style-values -- ornament: Bebas poster headline set tight (lineHeight 0.92).
+                        fontSize: 30,
+                        lineHeight: 0.92,
+                        color: INK,
+                        marginBottom: "var(--space-md)",
+                      }}
+                    >
                       {t("everymen.roll.gateTitle")}
                     </div>
                     <div className="content-text" style={{ fontFamily: MONO, lineHeight: 1.65, color: INK }}>
@@ -340,7 +395,7 @@ export default function EverymenFactionBody({ state }: { state: FactionDetailSta
         )}
 
         {/* ⑥ MEMBERS — spotlight + roster */}
-        <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-xl)" }}>
           {spot && (
             <Link to={`/characters/${spot.id}`} style={{ textDecoration: "none" }}>
               <div style={{ position: "relative", overflow: "hidden", background: INK, color: CREAM, border: `3px solid ${INK}`, boxShadow: `0 0 0 3px ${GOLD}`, textAlign: "center" }}>
@@ -348,18 +403,26 @@ export default function EverymenFactionBody({ state }: { state: FactionDetailSta
                   aria-hidden="true"
                   style={{ position: "absolute", inset: 0, pointerEvents: "none", opacity: 0.5, background: `repeating-conic-gradient(from 0deg at 50% 30%, color-mix(in srgb, var(--everymen-red-deep) 60%, transparent) 0deg 8deg, transparent 8deg 16deg)` }}
                 />
-                <div style={{ position: "relative", zIndex: 2, padding: "20px 18px 18px" }}>
-                  <div style={{ fontFamily: MONO, fontSize: "var(--text-xs)", letterSpacing: "0.3em", textTransform: "uppercase", color: GOLD, marginBottom: 12 }}>
+                <div style={{ position: "relative", zIndex: 2, padding: "var(--space-xl) var(--space-lg) var(--space-lg)" }}>
+                  <div style={{ fontFamily: MONO, fontSize: "var(--text-xs)", letterSpacing: "0.3em", textTransform: "uppercase", color: GOLD, marginBottom: "var(--space-md)" }}>
                     {t("everymen.spotlight.label")}
                   </div>
-                  <div style={{ display: "flex", justifyContent: "center", marginBottom: 12 }}>
+                  <div style={{ display: "flex", justifyContent: "center", marginBottom: "var(--space-md)" }}>
                     <Medallion name={spot.display_name} size={74} invert />
                   </div>
-                  {/* ornament: the spotlight's printed name plate, Bebas on the sunburst. */}
-                  <div style={{ fontFamily: BEBAS, fontSize: 32, lineHeight: 0.9, color: CREAM, textShadow: "2px 2px 0 rgba(0,0,0,.4)" }}>
+                  <div
+                    style={{
+                      fontFamily: BEBAS,
+                      // eslint-disable-next-line local/no-raw-style-values -- ornament: the spotlight's printed name plate, Bebas on the sunburst.
+                      fontSize: 32,
+                      lineHeight: 0.9,
+                      color: CREAM,
+                      textShadow: "2px 2px 0 rgba(0,0,0,.4)",
+                    }}
+                  >
                     {spot.display_name}
                   </div>
-                  <div style={{ fontFamily: MONO, fontSize: "var(--text-sm)", letterSpacing: "0.08em", textTransform: "uppercase", color: GOLD, marginTop: 6 }}>
+                  <div style={{ fontFamily: MONO, fontSize: "var(--text-sm)", letterSpacing: "0.08em", textTransform: "uppercase", color: GOLD, marginTop: "var(--space-sm)" }}>
                     {t("everymen.spotlight.stat", {
                       level: spot.level,
                       score: spot.all_time_score.toLocaleString(),
@@ -370,9 +433,9 @@ export default function EverymenFactionBody({ state }: { state: FactionDetailSta
             </Link>
           )}
 
-          <div style={{ ...PAPER_FRAME, padding: "16px 18px 12px" }}>
+          <div style={{ ...PAPER_FRAME, padding: "var(--space-lg) var(--space-lg) var(--space-md)" }}>
             <Halftone />
-            <div style={{ position: "relative", fontFamily: MONO, fontSize: "var(--text-sm)", letterSpacing: "0.22em", textTransform: "uppercase", color: MUTED, marginBottom: 12 }}>
+            <div style={{ position: "relative", fontFamily: MONO, fontSize: "var(--text-sm)", letterSpacing: "0.22em", textTransform: "uppercase", color: MUTED, marginBottom: "var(--space-md)" }}>
               {t("everymen.roster.heading")}
             </div>
             {roster.length === 0 ? (
@@ -386,16 +449,34 @@ export default function EverymenFactionBody({ state }: { state: FactionDetailSta
                 <Link
                   key={m.id}
                   to={`/characters/${m.id}`}
-                  style={{ position: "relative", display: "flex", alignItems: "center", gap: 12, padding: "8px 0", borderBottom: `1px solid color-mix(in srgb, ${INK} 16%, transparent)`, textDecoration: "none" }}
+                  style={{ position: "relative", display: "flex", alignItems: "center", gap: "var(--space-md)", padding: "var(--space-sm) 0", borderBottom: `1px solid color-mix(in srgb, ${INK} 16%, transparent)`, textDecoration: "none" }}
                 >
                   <Medallion name={m.display_name} size={32} />
-                  {/* ornament: roster set in condensed Bebas — its optical size is not the text scale. */}
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontFamily: BEBAS, fontSize: 19, lineHeight: 1, color: INK, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                    <div
+                      style={{
+                        fontFamily: BEBAS,
+                        // eslint-disable-next-line local/no-raw-style-values -- ornament: roster set in condensed Bebas — its optical size is not the text scale.
+                        fontSize: 19,
+                        lineHeight: 1,
+                        color: INK,
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                        whiteSpace: "nowrap",
+                      }}
+                    >
                       {m.display_name}
                     </div>
                   </div>
-                  <span style={{ fontFamily: BEBAS, fontSize: 16, letterSpacing: "0.04em", color: RED }}>
+                  <span
+                    style={{
+                      fontFamily: BEBAS,
+                      // eslint-disable-next-line local/no-raw-style-values -- ornament: roster set in condensed Bebas — its optical size is not the text scale.
+                      fontSize: 16,
+                      letterSpacing: "0.04em",
+                      color: RED,
+                    }}
+                  >
                     {t("everymen.roster.level", { level: m.level })}
                   </span>
                 </Link>
