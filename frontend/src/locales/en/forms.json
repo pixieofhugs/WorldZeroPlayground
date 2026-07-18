@@ -472,7 +472,6 @@
         "duel": { "label": "Salon Duel", "desc": "a contested acquisition" }
       },
       "taskRefLabel": "Re: the commission",
-      "previewLabel": "As it will hang",
       "inviteLabel": "The other hands",
       "inviteLabelDuel": "The challenger",
       "invitePlaceholder": "name or @handle",
