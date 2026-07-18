@@ -58,13 +58,13 @@ function toRoman(value: number): string {
 function heading(title: string, eyebrow: string): ReactNode {
   return (
     <div style={{ marginBottom: 18 }}>
-      <div style={{ fontFamily: SCRIPT, fontStyle: 'italic', fontSize: 13, color: MUTED, marginBottom: 4 }}>
+      <div style={{ fontFamily: SCRIPT, fontStyle: 'italic', fontSize: 'var(--text-lg)', color: MUTED, marginBottom: 4 }}>
         {eyebrow}
       </div>
       <h2
         style={{
           fontFamily: DISPLAY,
-          fontSize: 26,
+          fontSize: 'var(--text-heading)',
           letterSpacing: '0.06em',
           color: VELLUM_TEXT,
           margin: 0,
@@ -155,7 +155,7 @@ const kit: ProfileKit = {
   },
   badgeChipStyle: {
     fontFamily: DISPLAY,
-    fontSize: 9,
+    fontSize: 'var(--text-sm)',
     letterSpacing: '0.14em',
     textTransform: 'uppercase',
     color: MUTED,
@@ -168,7 +168,7 @@ const kit: ProfileKit = {
       badge={badge}
       last={last}
       dividerColor="rgba(176,134,58,0.28)"
-      nameStyle={{ fontFamily: DISPLAY, fontSize: 14, color: VELLUM_TEXT, lineHeight: 1.2, letterSpacing: '0.03em' }}
+      nameStyle={{ fontFamily: DISPLAY, color: VELLUM_TEXT, lineHeight: 1.2, letterSpacing: '0.03em' }}
       medallion={(glyph) => (
         <span
           style={{

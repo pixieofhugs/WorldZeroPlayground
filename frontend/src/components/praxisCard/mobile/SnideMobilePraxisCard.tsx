@@ -53,7 +53,7 @@ export default function SnideMobilePraxisCard({ praxis }: { praxis: PraxisCardOu
           gap: 8,
           marginBottom: 12,
           fontFamily: 'var(--faction-snide-font-type)',
-          fontSize: 9,
+          fontSize: 'var(--text-sm)',
           letterSpacing: '0.14em',
           textTransform: 'uppercase',
           color: accent,

@@ -37,7 +37,7 @@ const CARD_SHADOW = '5px 6px 0 rgba(0,0,0,.5)'
 
 const kicker: CSSProperties = {
   fontFamily: TYPE,
-  fontSize: 8,
+  fontSize: 'var(--text-xs)',
   letterSpacing: '0.24em',
   textTransform: 'uppercase',
   color: MUTED,
@@ -90,7 +90,7 @@ export default function SnideHome({ state }: { state: FieldDeskHomeState }) {
       {/* Masthead — Bebas over an acid rule */}
       <header>
         <div style={kicker}>{t('nav.home')}</div>
-        <h1 style={{ fontFamily: COND, fontSize: 40, letterSpacing: '0.03em', lineHeight: 0.95, color: WALL_TEXT, margin: '2px 0 0' }}>
+        <h1 style={{ fontFamily: COND, fontSize: 'var(--text-display)', letterSpacing: '0.03em', lineHeight: 0.95, color: WALL_TEXT, margin: '2px 0 0' }}>
           {t('fieldDesk.home.snide.masthead')}
         </h1>
         <div style={{ height: 2, marginTop: 8, background: ACCENT_WALL }} />
@@ -110,6 +110,7 @@ export default function SnideHome({ state }: { state: FieldDeskHomeState }) {
             {character.avatar_url ? (
               <img src={mediaUrl(character.avatar_url)} alt={character.display_name} className="w-full h-full" style={{ objectFit: 'cover' }} />
             ) : (
+              // ornament: avatar initial sized to its 56px acid tile, not text
               <span style={{ fontFamily: IMPACT, fontSize: 26, color: INK }}>{character.display_name[0]?.toUpperCase()}</span>
             )}
           </div>
@@ -117,11 +118,11 @@ export default function SnideHome({ state }: { state: FieldDeskHomeState }) {
             <Link
               to={`/characters/${character.id}`}
               className="block truncate"
-              style={{ fontFamily: COND, fontSize: 26, letterSpacing: '0.03em', lineHeight: 1, color: TEXT, textDecoration: 'none' }}
+              style={{ fontFamily: COND, fontSize: 'var(--text-title)', letterSpacing: '0.03em', lineHeight: 1, color: TEXT, textDecoration: 'none' }}
             >
               {character.display_name}
             </Link>
-            <div className="truncate" style={{ marginTop: 5, fontFamily: TYPE, fontSize: 9, letterSpacing: '0.12em', textTransform: 'uppercase', color: MUTED }}>
+            <div className="truncate" style={{ marginTop: 5, fontFamily: TYPE, fontSize: 'var(--text-sm)', letterSpacing: '0.12em', textTransform: 'uppercase', color: MUTED }}>
               {t('sidebar.characterCard.factionLevel', {
                 faction: factionName(character.faction_slug),
                 level: character.level,
@@ -129,7 +130,7 @@ export default function SnideHome({ state }: { state: FieldDeskHomeState }) {
             </div>
           </div>
           <div className="shrink-0 text-right">
-            <div style={{ fontFamily: IMPACT, fontSize: 24, lineHeight: 1, color: ACID }}>
+            <div style={{ fontFamily: IMPACT, fontSize: 'var(--text-title)', lineHeight: 1, color: ACID }}>
               {character.score?.toLocaleString() ?? '0'}
             </div>
             <div style={{ ...kicker, marginTop: 2 }}>{t('fieldDesk.home.stats.points')}</div>
@@ -143,7 +144,7 @@ export default function SnideHome({ state }: { state: FieldDeskHomeState }) {
               className="text-center"
               style={{ flex: '1 1 0', minWidth: 0, background: 'rgba(255,255,255,0.04)', border: `1px solid ${LINE}`, padding: '11px 6px' }}
             >
-              <div className="truncate" style={{ fontFamily: IMPACT, fontSize: 20, lineHeight: 1, color: TEXT }}>
+              <div className="truncate" style={{ fontFamily: IMPACT, fontSize: 'var(--text-content)', lineHeight: 1, color: TEXT }}>
                 {stat.value}
               </div>
               <div style={{ ...kicker, marginTop: 6 }}>{stat.label}</div>
@@ -157,7 +158,7 @@ export default function SnideHome({ state }: { state: FieldDeskHomeState }) {
         <Link
           to="/updates?filter=requests"
           className="flex items-center justify-between"
-          style={{ background: INK, color: TEXT, border: `1px solid ${LINE}`, padding: '11px 16px', fontFamily: COND, fontSize: 15, letterSpacing: '0.03em', textDecoration: 'none' }}
+          style={{ background: INK, color: TEXT, border: `1px solid ${LINE}`, padding: '11px 16px', fontFamily: COND, fontSize: 'var(--text-content)', letterSpacing: '0.03em', textDecoration: 'none' }}
         >
           <span>{t('fieldDesk.home.pending', { count: pendingCount })}</span>
           <span aria-hidden style={{ color: ACID }}>›</span>
@@ -167,7 +168,7 @@ export default function SnideHome({ state }: { state: FieldDeskHomeState }) {
       {/* ── Jobs in play ── */}
       <RansomCard tilt={0.7}>
         <div className="flex items-center gap-2.5" style={{ marginBottom: 10 }}>
-          <span style={{ fontFamily: COND, fontSize: 15, letterSpacing: '0.06em', textTransform: 'uppercase', color: ACID }}>
+          <span style={{ fontFamily: COND, fontSize: 'var(--text-xl)', letterSpacing: '0.06em', textTransform: 'uppercase', color: ACID }}>
             {t('fieldDesk.home.snide.questsHeading')}
           </span>
           <span style={{ flex: 1, height: 1, background: LINE }} />
@@ -177,7 +178,7 @@ export default function SnideHome({ state }: { state: FieldDeskHomeState }) {
         </div>
 
         {activeTasks.length === 0 ? (
-          <p style={{ fontFamily: MARKER, fontSize: 14, color: MUTED, margin: 0, transform: 'rotate(-1deg)' }}>
+          <p style={{ fontFamily: MARKER, fontSize: 'var(--text-content)', color: MUTED, margin: 0, transform: 'rotate(-1deg)' }}>
             {t('fieldDesk.home.questsEmpty')}
           </p>
         ) : (
@@ -191,10 +192,10 @@ export default function SnideHome({ state }: { state: FieldDeskHomeState }) {
               >
                 <span className="shrink-0" style={{ width: 9, height: 9, background: ACID }} />
                 <div className="min-w-0 flex-1">
-                  <div className="truncate" style={{ fontFamily: COND, fontSize: 18, letterSpacing: '0.02em', lineHeight: 1.15, color: TEXT }}>
+                  <div className="truncate" style={{ fontFamily: COND, fontSize: 'var(--text-content)', letterSpacing: '0.02em', lineHeight: 1.15, color: TEXT }}>
                     {praxis.task_title}
                   </div>
-                  <div className="truncate" style={{ marginTop: 3, fontFamily: TYPE, fontSize: 8.5, letterSpacing: '0.1em', textTransform: 'uppercase', color: MUTED }}>
+                  <div className="truncate" style={{ marginTop: 3, fontFamily: TYPE, fontSize: 'var(--text-xs)', letterSpacing: '0.1em', textTransform: 'uppercase', color: MUTED }}>
                     {t('fieldDesk.home.taskMeta', {
                       faction: factionName(praxis.task_faction_slug),
                       points: praxis.task_point_value,
@@ -203,7 +204,7 @@ export default function SnideHome({ state }: { state: FieldDeskHomeState }) {
                 </div>
                 <span
                   className="shrink-0"
-                  style={{ fontFamily: TYPE, fontSize: 8, letterSpacing: '0.1em', textTransform: 'uppercase', color: ACID, padding: '4px 9px', border: `1px solid ${LINE}` }}
+                  style={{ fontFamily: TYPE, fontSize: 'var(--text-xs)', letterSpacing: '0.1em', textTransform: 'uppercase', color: ACID, padding: '4px 9px', border: `1px solid ${LINE}` }}
                 >
                   {t(`praxisType.${praxis.type}`)}
                 </span>
@@ -218,7 +219,7 @@ export default function SnideHome({ state }: { state: FieldDeskHomeState }) {
         <Link
           to="/tasks"
           className="flex-1 flex items-center justify-center"
-          style={{ fontFamily: BLACK, fontSize: 12, letterSpacing: '0.06em', textTransform: 'uppercase', padding: 15, color: 'var(--faction-snide-paper)', background: PINK, boxShadow: '2px 3px 0 rgba(0,0,0,.4)', textDecoration: 'none' }}
+          style={{ fontFamily: BLACK, fontSize: 'var(--text-lg)', letterSpacing: '0.06em', textTransform: 'uppercase', padding: 15, color: 'var(--faction-snide-paper)', background: PINK, boxShadow: '2px 3px 0 rgba(0,0,0,.4)', textDecoration: 'none' }}
         >
           {t('fieldDesk.home.browseTasks')}
         </Link>
@@ -226,8 +227,9 @@ export default function SnideHome({ state }: { state: FieldDeskHomeState }) {
           <Link
             to="/propose-task"
             className="flex-1 flex items-center justify-center gap-2"
-            style={{ fontFamily: COND, fontSize: 15, letterSpacing: '0.06em', textTransform: 'uppercase', padding: 15, color: TEXT, background: INK, border: `1px solid ${ACID}`, textDecoration: 'none' }}
+            style={{ fontFamily: COND, fontSize: 'var(--text-xl)', letterSpacing: '0.06em', textTransform: 'uppercase', padding: 15, color: TEXT, background: INK, border: `1px solid ${ACID}`, textDecoration: 'none' }}
           >
+            {/* ornament: "+" glyph used as an icon, sized to the button row */}
             <span aria-hidden style={{ fontSize: 15, lineHeight: 1, color: ACID }}>+</span>
             <span>{t('actions.proposeTask')}</span>
           </Link>

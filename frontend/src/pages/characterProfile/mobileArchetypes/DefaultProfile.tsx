@@ -62,7 +62,7 @@ export default function DefaultProfile({
         )}
         <h1
           className="font-display italic font-medium"
-          style={{ fontSize: 26, marginTop: 12, color: 'var(--color-text-primary)', overflowWrap: 'anywhere' }}
+          style={{ fontSize: 'var(--text-heading)', marginTop: 12, color: 'var(--color-text-primary)', overflowWrap: 'anywhere' }}
         >
           {character.display_name}
         </h1>
@@ -98,7 +98,7 @@ export default function DefaultProfile({
       {badges.length > 0 && (
         <div style={{ marginBottom: 18 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-            <h2 className="font-display italic" style={{ fontSize: 18, color: 'var(--color-text-primary)' }}>
+            <h2 className="font-display italic" style={{ fontSize: 'var(--text-title)', color: 'var(--color-text-primary)' }}>
               {t('profile.badgesHeading')}
             </h2>
             <span className="eyebrow" style={{ marginLeft: 'auto', color: 'var(--color-text-tertiary)' }}>
@@ -174,7 +174,7 @@ function Stat({ label, value, divider }: { label: string; value: number; divider
         borderLeft: divider ? '1px solid var(--color-border)' : undefined,
       }}
     >
-      <div className="font-display italic" style={{ fontSize: 22, fontWeight: 700, color: 'var(--color-text-primary)' }}>
+      <div className="font-display italic" style={{ fontSize: 'var(--text-title)', fontWeight: 700, color: 'var(--color-text-primary)' }}>
         {value}
       </div>
       <div className="eyebrow" style={{ color: 'var(--color-text-tertiary)', marginTop: 2 }}>
@@ -225,7 +225,7 @@ function BadgeRow({ badge, last }: { badge: BadgeOut; last: boolean }) {
           <Art size={16} />
         </span>
       </span>
-      <div className="font-display italic" style={{ fontSize: 15, color: 'var(--color-text-primary)' }}>
+      <div className="font-display italic" style={{ fontSize: 'var(--text-content)', color: 'var(--color-text-primary)' }}>
         {badge.name}
       </div>
     </div>
@@ -240,7 +240,7 @@ function SegTab({ on, onClick, children }: { on: boolean; onClick: () => void; c
       style={{
         flex: 1,
         fontFamily: "'Courier Prime', monospace",
-        fontSize: 11,
+        fontSize: 'var(--text-lg)',
         fontWeight: on ? 700 : 400,
         letterSpacing: '0.08em',
         textTransform: 'uppercase',
