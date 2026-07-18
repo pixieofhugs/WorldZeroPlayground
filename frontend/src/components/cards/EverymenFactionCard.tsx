@@ -106,6 +106,7 @@ export default function EverymenCard({
           background: "var(--everymen-ink)",
           color: "var(--everymen-gold)",
           textAlign: "center",
+          // ornament: struck banner ribbon across the card head — illustration, not chrome
           fontFamily: "var(--faction-everymen-card-font)",
           fontSize: 15,
           letterSpacing: "0.34em",
@@ -143,7 +144,7 @@ export default function EverymenCard({
         <div
           style={{
             fontFamily: "var(--font-body)",
-            fontSize: 10,
+            fontSize: "var(--text-base)",
             letterSpacing: "0.3em",
             textTransform: "uppercase",
             color: "var(--everymen-gold)",
@@ -156,6 +157,7 @@ export default function EverymenCard({
         {/* big Bebas headline = faction name */}
         <h1
           style={{
+            // ornament: union-poster headline — Bebas at 0.84 leading, the archetype's voice
             fontFamily: "var(--faction-everymen-card-font)",
             fontSize: 60,
             lineHeight: 0.84,
@@ -175,6 +177,7 @@ export default function EverymenCard({
             marginTop: 16,
             background: "var(--everymen-ink)",
             color: "var(--everymen-gold)",
+            // ornament: struck motto plaque — poster type set to the ink block
             fontFamily: "var(--faction-everymen-card-font)",
             fontSize: 16,
             letterSpacing: "0.2em",
@@ -187,9 +190,9 @@ export default function EverymenCard({
 
         {/* blurb from description */}
         <p
+          className="content-text"
           style={{
             fontFamily: "var(--font-body)",
-            fontSize: 13,
             lineHeight: 1.65,
             maxWidth: 420,
             margin: "18px auto 0",
@@ -231,13 +234,14 @@ export default function EverymenCard({
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
+                  // ornament: the checkmark is a dingbat glyph used as an icon in a 22px chip
                   fontFamily: "var(--faction-everymen-card-font)",
                   fontSize: 14,
                 }}
               >
                 ✓
               </span>
-              <span style={{ fontFamily: "var(--font-body)", fontSize: 12.5, color: "var(--everymen-cream)" }}>
+              <span className="content-text" style={{ fontFamily: "var(--font-body)", color: "var(--everymen-cream)" }}>
                 {perk}
               </span>
             </div>
