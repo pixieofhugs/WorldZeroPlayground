@@ -11,6 +11,7 @@ import {
   PraxisOwnerActions,
   PraxisFlagBlock,
   PraxisVoterBreakdown,
+  PraxisScoreBreakdown,
   MemberByline,
 } from '../shared'
 import { MobileStarVote } from './shared'
@@ -62,7 +63,7 @@ function Plate({ title, children }: { title: string; children: ReactNode }) {
 
 export default function SnidePraxisDetail({ state }: { state: PraxisDetailState }) {
   const { t } = useTranslation('praxis')
-  const { praxis, votes } = state
+  const { praxis } = state
   if (!praxis) return null
 
   const filedDate = praxis.submitted_at ?? praxis.created_at
@@ -136,10 +137,11 @@ export default function SnidePraxisDetail({ state }: { state: PraxisDetailState 
         <div className="flex items-center justify-center content-text" style={{ marginBottom: 12, fontFamily: COND, letterSpacing: '0.03em', color: TEXT }}>
           {t('detail.snide.mobile.appraise')}
         </div>
+        <div style={{ marginBottom: 12 }}>
+          <PraxisScoreBreakdown state={state} align="center" accent={ACID} font={IMPACT} />
+        </div>
         <MobileStarVote
           praxisId={praxis.id}
-          points={votes?.total_score}
-          totalVotes={votes?.total_votes}
           accent={ACID}
           accentFont={IMPACT}
         />

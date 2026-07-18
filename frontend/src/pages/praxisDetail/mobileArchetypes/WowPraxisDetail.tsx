@@ -22,6 +22,7 @@ import {
   PraxisOwnerActions,
   PraxisFlagBlock,
   PraxisVoterBreakdown,
+  PraxisScoreBreakdown,
   MemberByline,
 } from '../shared'
 import { MobileStarVote } from './shared'
@@ -103,7 +104,7 @@ function Window({ title, children }: { title: string; children: ReactNode }) {
 
 export default function WowPraxisDetail({ state }: { state: PraxisDetailState }) {
   const { t } = useTranslation('praxis')
-  const { praxis, votes } = state
+  const { praxis } = state
   if (!praxis) return null
 
   const sealedDate = praxis.submitted_at ?? praxis.created_at
@@ -196,10 +197,11 @@ export default function WowPraxisDetail({ state }: { state: PraxisDetailState })
           <Sparkle size={13} color={PINK} />
           {t('detail.wow.sendLove')}
         </div>
+        <div style={{ marginBottom: 12 }}>
+          <PraxisScoreBreakdown state={state} align="center" accent={PINK} font={SCRIPT} />
+        </div>
         <MobileStarVote
           praxisId={praxis.id}
-          points={votes?.total_score}
-          totalVotes={votes?.total_votes}
           accent={PINK}
           accentFont={SCRIPT}
         />

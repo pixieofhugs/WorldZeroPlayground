@@ -12,6 +12,7 @@ import {
   PraxisOwnerActions,
   PraxisFlagBlock,
   PraxisVoterBreakdown,
+  PraxisScoreBreakdown,
   MemberByline,
 } from '../shared'
 import { MobileStarVote } from './shared'
@@ -58,7 +59,7 @@ function Leaf({ title, children }: { title: string; children: ReactNode }) {
 
 export default function EphemeristsPraxisDetail({ state }: { state: PraxisDetailState }) {
   const { t } = useTranslation('praxis')
-  const { praxis, votes } = state
+  const { praxis } = state
   if (!praxis) return null
 
   const sealedDate = praxis.submitted_at ?? praxis.created_at
@@ -133,10 +134,11 @@ export default function EphemeristsPraxisDetail({ state }: { state: PraxisDetail
         <div className="flex items-center justify-center content-text" style={{ marginBottom: 12, fontFamily: SCRIPT, fontStyle: 'italic', color: TEXT }}>
           {t('detail.ephemerists.mobile.appraise')}
         </div>
+        <div style={{ marginBottom: 12 }}>
+          <PraxisScoreBreakdown state={state} align="center" accent={RUBRIC} font={DISPLAY} />
+        </div>
         <MobileStarVote
           praxisId={praxis.id}
-          points={votes?.total_score}
-          totalVotes={votes?.total_votes}
           accent={RUBRIC}
           accentFont={DISPLAY}
         />

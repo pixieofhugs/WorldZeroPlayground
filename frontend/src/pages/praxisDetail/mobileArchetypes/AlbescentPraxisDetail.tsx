@@ -11,6 +11,7 @@ import {
   PraxisOwnerActions,
   PraxisFlagBlock,
   PraxisVoterBreakdown,
+  PraxisScoreBreakdown,
   MemberByline,
 } from '../shared'
 import { MobileStarVote } from './shared'
@@ -61,7 +62,7 @@ function Sheet({ children }: { children: ReactNode }) {
 
 export default function AlbescentPraxisDetail({ state }: { state: PraxisDetailState }) {
   const { t } = useTranslation('praxis')
-  const { praxis, votes } = state
+  const { praxis } = state
   if (!praxis) return null
 
   const sealedDate = praxis.submitted_at ?? praxis.created_at
@@ -139,10 +140,11 @@ export default function AlbescentPraxisDetail({ state }: { state: PraxisDetailSt
         <div className="flex items-center justify-center content-text" style={{ margin: '10px 0 12px', fontFamily: FONT, fontStyle: 'italic', color: ink(50) }}>
           {t('detail.albescent.witnessPrompt')}
         </div>
+        <div style={{ marginBottom: 12 }}>
+          <PraxisScoreBreakdown state={state} align="center" accent={INK} font={FONT} />
+        </div>
         <MobileStarVote
           praxisId={praxis.id}
-          points={votes?.total_score}
-          totalVotes={votes?.total_votes}
           accent={INK}
           accentFont={FONT}
         />
