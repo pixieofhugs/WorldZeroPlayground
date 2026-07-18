@@ -110,8 +110,8 @@ export default function FeedCardCollabInvite({ item }: Props) {
 
   return (
     <>
-      <div style={{ padding: "12px 16px" }}>
-        <div style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
+      <div style={{ padding: "var(--space-md) var(--space-lg)" }}>
+        <div style={{ display: "flex", alignItems: "flex-start", gap: "var(--space-md)" }}>
           <Link to={`/characters/${inviter_character_id}`}>
             <div
               style={{
@@ -120,7 +120,7 @@ export default function FeedCardCollabInvite({ item }: Props) {
                 borderRadius: "50%",
                 background: `linear-gradient(135deg, ${actorColor}, ${actorColor}88)`,
                 flexShrink: 0,
-                marginTop: 2,
+                marginTop: "var(--space-xs)",
               }}
             />
           </Link>
@@ -130,7 +130,7 @@ export default function FeedCardCollabInvite({ item }: Props) {
               style={{
                 display: "flex",
                 alignItems: "center",
-                gap: 6,
+                gap: "var(--space-sm)",
                 flexWrap: "wrap",
               }}
             >
@@ -167,7 +167,7 @@ export default function FeedCardCollabInvite({ item }: Props) {
               style={{
                 color: "var(--color-text-tertiary)",
                 display: "block",
-                marginTop: 2,
+                marginTop: "var(--space-xs)",
               }}
             >
               {relativeTime(item.timestamp)}
@@ -178,11 +178,11 @@ export default function FeedCardCollabInvite({ item }: Props) {
         {/* Task detail */}
         <div
           style={{
-            marginTop: 10,
-            marginLeft: 38,
+            marginTop: "var(--space-md)",
+            marginLeft: "calc(28px + var(--space-md))",
             display: "flex",
             alignItems: "center",
-            gap: 8,
+            gap: "var(--space-sm)",
           }}
         >
           <span
@@ -220,11 +220,11 @@ export default function FeedCardCollabInvite({ item }: Props) {
         {isPending && (
           <div
             style={{
-              marginTop: 10,
-              marginLeft: 38,
+              marginTop: "var(--space-md)",
+              marginLeft: "calc(28px + var(--space-md))",
               display: "flex",
               alignItems: "center",
-              gap: 8,
+              gap: "var(--space-sm)",
               flexWrap: "wrap",
             }}
           >
@@ -240,7 +240,7 @@ export default function FeedCardCollabInvite({ item }: Props) {
                 background: "var(--badge-collab)",
                 color: "var(--color-text-on-accent)",
                 border: "none",
-                padding: "5px 14px",
+                padding: "var(--space-xs) var(--space-lg)",
                 cursor: loading ? "not-allowed" : "pointer",
               }}
             >
@@ -258,7 +258,7 @@ export default function FeedCardCollabInvite({ item }: Props) {
                 background: "transparent",
                 color: "var(--color-text-secondary)",
                 border: "1px solid var(--color-border)",
-                padding: "5px 14px",
+                padding: "var(--space-xs) var(--space-lg)",
                 cursor: loading ? "not-allowed" : "pointer",
               }}
             >
@@ -273,7 +273,7 @@ export default function FeedCardCollabInvite({ item }: Props) {
         )}
 
         {status === "accepted" && (
-          <div style={{ marginTop: 8, marginLeft: 38 }}>
+          <div style={{ marginTop: "var(--space-sm)", marginLeft: "calc(28px + var(--space-md))" }}>
             <Link
               to={`/praxes/${praxis_id}`}
               className="eyebrow"
@@ -284,7 +284,7 @@ export default function FeedCardCollabInvite({ item }: Props) {
           </div>
         )}
         {status === "declined" && (
-          <div style={{ marginTop: 8, marginLeft: 38 }}>
+          <div style={{ marginTop: "var(--space-sm)", marginLeft: "calc(28px + var(--space-md))" }}>
             <span
               className="eyebrow"
               style={{ color: "var(--color-text-tertiary)" }}
@@ -306,7 +306,7 @@ export default function FeedCardCollabInvite({ item }: Props) {
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            padding: 20,
+            padding: "var(--space-xl)",
           }}
           onClick={() => setShowDropModal(false)}
         >
@@ -314,20 +314,20 @@ export default function FeedCardCollabInvite({ item }: Props) {
             style={{
               background: "var(--color-bg-surface)",
               border: "1px solid var(--color-border)",
-              padding: "24px",
+              padding: "var(--space-xl)",
               maxWidth: 420,
               width: "100%",
             }}
             onClick={(e) => e.stopPropagation()}
           >
-            <p className="eyebrow" style={{ marginBottom: 8 }}>
+            <p className="eyebrow" style={{ marginBottom: "var(--space-sm)" }}>
               {i18n.t("feed:collabInvite.bankFull.title")}
             </p>
             <p
               className="font-body"
               style={{
                 fontSize: "var(--text-content)",
-                marginBottom: 16,
+                marginBottom: "var(--space-lg)",
                 color: "var(--color-text-secondary)",
               }}
             >
@@ -337,7 +337,7 @@ export default function FeedCardCollabInvite({ item }: Props) {
               style={{
                 display: "flex",
                 flexDirection: "column",
-                gap: 6,
+                gap: "var(--space-sm)",
                 maxHeight: 260,
                 overflowY: "auto",
               }}
@@ -352,7 +352,7 @@ export default function FeedCardCollabInvite({ item }: Props) {
                   style={{
                     background: "var(--color-bg-surface-alt)",
                     border: "1px solid var(--color-border)",
-                    padding: "8px 12px",
+                    padding: "var(--space-sm) var(--space-md)",
                     cursor: dropping ? "not-allowed" : "pointer",
                     textAlign: "left",
                     fontFamily: "'Courier Prime', monospace",
@@ -369,7 +369,7 @@ export default function FeedCardCollabInvite({ item }: Props) {
             {dropError && (
               <p
                 className="eyebrow"
-                style={{ color: "var(--color-danger)", marginTop: 10 }}
+                style={{ color: "var(--color-danger)", marginTop: "var(--space-md)" }}
               >
                 {dropError}
               </p>
@@ -377,14 +377,14 @@ export default function FeedCardCollabInvite({ item }: Props) {
             <button
               onClick={() => setShowDropModal(false)}
               style={{
-                marginTop: 14,
+                marginTop: "var(--space-lg)",
                 fontFamily: "'Courier Prime', monospace",
                 fontSize: "var(--text-sm)",
                 fontWeight: 700,
                 textTransform: "uppercase",
                 background: "transparent",
                 border: "1px solid var(--color-border)",
-                padding: "5px 14px",
+                padding: "var(--space-xs) var(--space-lg)",
                 cursor: "pointer",
                 color: "var(--color-text-secondary)",
               }}
