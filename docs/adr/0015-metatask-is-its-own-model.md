@@ -1,5 +1,12 @@
 # ADR-0015: A metatask is its own model, not a Task subtype
 
+> **⚠ Status (2026-07-17 audit): NOT BUILT.** The standalone-model split never
+> landed. A metatask is still a `Task` row (`task_type=metatask`,
+> `metatask_faction_slug`); `models/meta_task.py` records that migration 0006
+> *removed* the standalone `MetaTask`/`BonusType` classes. The **access-predicate**
+> parts below (`can_access_metatask`, propose/apply level split) ARE in force; only
+> the model split is aspirational. See CONTEXT.md "Metatask".
+
 Status: Accepted (2026-06-24)
 
 ## Context

@@ -6,13 +6,12 @@ multi-context: a `backend/` context and a `frontend/` context.
 ## Where the domain knowledge lives
 
 The authoritative domain documentation is the **"Where to look for X" routing table in
-`CLAUDE.md`** (the single source — don't duplicate it here), plus the `docs/spec/*` files
-and `WORLD_ZERO_STYLE.md` it points at, plus `docs/adr/` for decisions touching your area.
+`CLAUDE.md`** (the single source — don't duplicate it here), plus `docs/adr/` for decisions
+touching your area, and `WORLD_ZERO_STYLE.md` for design intent.
 
-`CONTEXT.md` / `CONTEXT-MAP.md` do not exist yet. `/domain-modeling` creates them lazily
-when terms actually get resolved (per-context `backend/CONTEXT.md` / `frontend/CONTEXT.md`,
-with a root `CONTEXT-MAP.md` pointing at them). If they're absent, **proceed silently** —
-don't flag it, don't create them upfront.
+`CONTEXT.md` exists at the repo root — the single glossary of the ubiquitous language (there
+is no `CONTEXT-MAP.md`; the repo is one context). `/domain-modeling` maintains it as terms are
+resolved. Read it for canonical vocabulary before you name a domain concept.
 
 ## Use the project's vocabulary
 

@@ -10,7 +10,7 @@
 
 ## 1. The per-faction boundary (Tier 3)
 
-> **Current implementation coverage lives in [§7](#7-current-coverage-matrix).** §1 is the *contract* (what a faction *may* own); §7 is the *state* (what each faction *actually* has wired today, and where it falls back to a default).
+> **§1 is the *contract*** — what a faction *may* own. For the *state* (which factions actually have each surface wired today, and where they fall back to a default), grep the dispatchers in `frontend/src` (`pickVariant` / `Record<slug, …>` maps + `MOBILE_ARCHETYPE_BY_SLUG`) — the code is the source of truth, not a hand-maintained matrix.
 
 ### Per-faction — a faction owns its own version of each of these
 
@@ -106,8 +106,8 @@ Plus any **archetype-private primitives** (e.g. Everymen's `--everymen-cream/-go
 Hand this to whoever wires the faction after design is delivered. (Designer only needs §1–§3; this section is the engineering contract.)
 
 **Backend (`backend/`)**
-1. `eras/era_1.py` → add a `FactionConfig` to `ERA_1_FACTIONS` with **all 12 fields** (`game_config.py` dataclass): `slug, name, description, color, is_selectable, can_always_rejoin, own_task_modifier, other_task_modifier, collab_own_modifier, collab_other_modifier, duel_win_modifier, duel_loss_modifier`.
-2. `eras/era_1.py` → optional taunt block in `ERA_1_TAUNT_TEMPLATES` (else `"default"` applies).
+1. `eras/era_1.py` → add a `FactionConfig` to `ERA_1_FACTIONS` with its **8 fields** (`game_config.py` dataclass): `slug, can_always_rejoin, own_task_modifier, other_task_modifier, collab_own_modifier, collab_other_modifier, duel_win_modifier, duel_loss_modifier`. Name/description live in `factions.json` (ADR-0038); color in `index.css` (ADR-0003) — **not** on `FactionConfig`.
+2. `eras/era_1.py` → optional taunt structure for the faction; the *wording* resolves via `frontend/src/locales/en/taunts.json` (ADR-0031 — there is no `taunt_templates` config field).
 3. Visibility: add the slug to `seed.py` `HIDDEN_FACTION_SLUGS` only if it should be hidden; otherwise it defaults to `visible`.
 4. Seeding: a fresh DB seeds from config automatically; an **already-seeded DB needs a one-off `Faction` row upsert** (no alembic migration — the table is a thin display mirror).
 5. `/game-config` exposure is automatic.
@@ -146,52 +146,12 @@ Hand this to whoever wires the faction after design is delivered. (Designer only
 
 ---
 
-## 7. Current coverage matrix
-
-**What this is.** The *state* companion to §1's *contract*: which factions have a bespoke version of each surface wired **today**, and which fall back to a generic default. Use it to brief design ("commission an `X` for these factions") and to scope a new faction ("here's everything it could own"). Audited from the dispatchers in code on **2026-06-24** — re-audit by grepping `pickVariant(` and the `Record<slug, …>` maps if it looks stale.
-
-**First-class factions (7):** `ua` · `everymen` · `wow` · `snide` · `ephemerists` · `singularity` · `albescent`. As of #232, `albescent` is a fully first-class identity: it owns a bespoke archetype on **every** surface (task/praxis card, edit-praxis, task/praxis detail, feed frame, avatar, backdrop, vote "bear witness", comment, faction body + hero) plus its own `--faction-albescent-*` token set and `CSS_KEY` entry — the `albescent → ua` alias has been **dropped** from `FACTION_ALIASES`. (`ua_masters` is dormant → Era 2; only `aged_out` remains a `ua` alias slug that owns nothing of its own by design.)
-
-### A. Bespoke-component surfaces — "missing" = falls back to a generic `Default*`
-
-✅ own component · ⬜ generic default. The dispatcher is the single place each row is wired (a `pickVariant` map or a `switch`).
-
-| Surface | Dispatcher (`frontend/src/…`) | ua | everymen | wow | snide | ephemerists | singularity |
-|---|---|:--:|:--:|:--:|:--:|:--:|:--:|
-| Task card | `components/TaskCard.tsx` `CARD_COMPONENTS` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Praxis card | `components/PraxisCard.tsx` `FACTION_FRAME` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Edit-praxis editor | `pages/EditPraxis.tsx` `ARCHETYPE_BY_SLUG` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Faction-selection card | `components/cards/FactionCard.tsx` (`switch`) | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Vote / rating UI | `components/vote/VoteUI.tsx` `FACTION_VOTE` | ⬜ | ✅ | ✅ | ✅ | ✅ | ⬜ |
-| Page backdrop | `components/backdrop/FactionBackdrop.tsx` `FACTION_BACKDROPS` | ⬜ | ✅ | ✅ | ✅ | ✅ | ⬜ |
-| Avatar + badge | `components/avatar/FactionAvatar.tsx` `FACTION_AVATARS` | ⬜ | ✅ | ✅ | ✅ | ✅ | ⬜ |
-| Faction detail hero | `pages/FactionDetail.tsx` `FACTION_HEROES` | ⬜ | ⬜ | ⬜ | ✅ | ✅ | ⬜ |
-| Task detail page | `pages/TaskDetail.tsx` `ARCHETYPE_BY_SLUG` | ⬜ | ⬜ | ⬜ | ✅ | ⬜ | ⬜ |
-| Activity-feed card frame | `components/feed/FactionFeedFrame.tsx` `FACTION_FEED_FRAMES` | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ |
-| Propose-task page | `pages/ProposeTask.tsx` → `DefaultProposeTask` | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ |
-| Praxis detail page | `pages/PraxisDetail.tsx` → `DefaultPraxisDetail` | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ |
-
-**Read it two ways:**
-- **By faction (what to commission):** `ua` and `singularity` are the thinnest — cards only, no vote / backdrop / avatar. `snide` is richest (the only bespoke task-detail page). `everymen` / `wow` / `ephemerists` sit in the middle.
-- **By surface (where the system is thin):** task-detail (1/6) and faction-hero (2/6) are sparse; the **activity-feed frame** is *wired but unfilled* (dispatcher + server-derived `context_faction_slug` ship 2026-06-24, every faction awaits a design archetype); propose-task and praxis-detail have **no dispatch wired at all** (every faction renders the default) — add a `pickVariant` dispatch there before any faction can own them.
-
-### B. Token / tint surfaces — every faction has these by construction
-
-Not bespoke components; driven by the CSS-var block (§3) + registry (`utils/factions.ts`). A faction can't be "missing" one — a blank token falls back to the `default` (neutral grey / `na`) theme, not `ua` (ADR-0039). So they're **not** a design-commission gap, only a "did you fill in the tokens" check.
-
-| Surface (§1 #) | How it varies | Mechanism |
-|---|---|---|
-| Headline font (#5), Color set (#6) | per-faction values | `--faction-{key}-*` tokens |
-| Filter pennant (#7) | primary-color fill | `factionCssVar()` |
-| Progression / level (#9) | color tint only | `components/ui/LevelPill.tsx` — one shared pill shape, faction-*colored*. A bespoke per-faction *shape* is a candidate, not wired (no dispatcher). |
-| Comment (#14) | designed, **not built** | `COMMENT_COMPONENTS` does not exist yet (ADR-0006) |
-
-> **Faction owns the row (full adoption, #376, 2026-07-02).** `FeedCardRouter` normalizes every "someone did X" event (`friend_completion`, `foe_completion`, `vote_on_mine`, `foe_taunt`, `friend_signup`, `friend_defection`, `global_task`) into ONE slot bag (`normalizeFeedItem` → `FeedRow`) rendered by `FeedRowContent` inside `FactionFeedFrame` — **no per-event-type card**. Only the four structural/interactive events (`era_announcement`, `invitation_letter`, `duel_challenge`, `collab_invite`) keep bespoke companion cards; the interactive two own accept/decline handlers that must not collapse into slots. This supersedes the earlier frame-only model (#203/#282): the faction owns the frame *and* the content.
-
----
-
 ## 6. Change log
 
+- **2026-07-17** — **Removed §7 "current coverage matrix"** (docs consolidation, PR #692).
+  It was audited-from-code state that had to be re-synced by hand; the dispatchers in
+  `frontend/src` are the source of truth. §1 stays the contract; §4's field list corrected
+  to the 8 real `FactionConfig` fields.
 - **2026-06-24** — **Activity-feed cards (#12) made truly per-faction + drift cleanup.**
   Wired the dispatch seam ahead of design: a `FactionFeedFrame` (`FACTION_FEED_FRAMES` +
   passthrough default) wraps each event-type card; the backend derives one

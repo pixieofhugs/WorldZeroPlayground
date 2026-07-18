@@ -2,8 +2,8 @@
 
 Read this before touching anything under `backend/`. It describes **how** the
 backend is assembled — the conventions agents should follow, the patterns that
-already work, and the traps to avoid. For the *project overview* and identity
-model (Account vs. Character), see [SPEC-architecture.md](SPEC-architecture.md).
+already work, and the traps to avoid. For the identity model (Account vs.
+Character) see ADR-0041; for the era-as-ruleset config posture see ADR-0042.
 
 ---
 
@@ -61,6 +61,9 @@ Canonical examples:
 ---
 
 ## 3. Pragmatic DDD posture
+
+> **Decision recorded in ADR-0045.** This section (and §5's HTTPException note) is the *how*;
+> the *why* + the rejected full-DDD alternative live in the ADR so they survive spec trimming.
 
 This codebase is **not** full DDD. No aggregate-root base classes, no
 repository interface types, no domain-event bus. What it *does* have are
@@ -180,14 +183,14 @@ docs**:
 | Public game persona | **Character** | |
 | Completed-task artifact (the noun) | **Praxis** | The canonical noun for any proof-of-work submission. Covers solo, collab, and duel types. Table: `praxis`. |
 | The act of marking proof ready | **submit** | Use "submit" / "submitted" as the verb; `PraxisStatus.submitted` as the state. |
-| Multi-member proof-of-work | **collab praxis** (type=collab) | Both members must submit; praxis reaches `submitted` when all do. |
-| Head-to-head competition | **duel praxis** (type=duel) | Votes are per-member via `praxis_member_id`. Winner determined by star total. |
+| Multi-member proof-of-work | **collab praxis** (type=collab) | One shared praxis; reaches `submitted` by lazy consensus — any member submits, silence past the window auto-publishes (ADR-0012). |
+| Head-to-head competition | **duel** (two linked `type=solo` praxes) | Each side is its own praxis with its own votes; a `Duel` row links them (ADR-0011). Winner = higher star total. No `praxis_member_id`. |
 | Activity unit players complete | **Task** | |
 | Community rating of a praxis | **Vote** | |
 | Ruleset for a playing period | **Era** | |
 | Player group with a slug + modifiers | **Faction** | |
-| Star-rating granted by a voter | **stars** | 1–5 integer. |
-| Available voting currency | **votes_available** | Stored on `CharacterStats`. |
+| Star-rating granted by a voter | **vote value** | 1–5 integer (`Vote.value`; "stars" is retired — ADR-0014). |
+| Available voting currency | **votes_available** | Computed on read (ADR-0043); only `votes_spent_this_era` is stored on `CharacterStats`. |
 
 If you find yourself inventing a new name for an existing concept, stop and
 use the canonical one.
@@ -226,13 +229,12 @@ use the canonical one.
 - Module-level imports between `services/*` files that form cycles. If you
   need a function-scoped import to break a cycle, it's a code smell: leave a
   `# TODO: break cycle` comment and open a task. The one current instance is
-  `services/era.py:96` — see TASK A.4.
+  `services/era.py:96`.
 - String literals for domain values (`status == "active"`). Use the Enum.
 - Hand-written joins where a declared `relationship()` would load the same
-  data. Most of our models have no `relationship()` declarations today; see
-  TASK A.2.
+  data. Most of our models have no `relationship()` declarations today.
 - Fat route handlers that inline query construction. `routers/tasks.py::list_tasks`
-  is the current worst offender; see TASK A.5.
+  is the current worst offender.
 - Leaking `account_id` / `email` onto a public `*Out` schema. Always check
   before adding a field.
 
@@ -240,15 +242,12 @@ use the canonical one.
 
 ## 9. Intentional v2 deferrals
 
-These features have schema or skeleton support but **no service enforcement**.
-Do not "fix" them — they are deliberately parked until v2. See
+These features are **parked, not built** — deliberately deferred until v2. Do not "fix" them.
 
-
-| Feature | What exists | What's missing |
+| Feature | State | Notes |
 |---|---|---|
-| Multi-faction tasks | `TaskFaction` junction table | Unused. `Task.primary_faction_slug` is the only faction link in live code. |
-| Task Vision (Journeymen) | `Task.is_task_vision_eligible` column | No service exposes retired tasks to Journeymen. |
-| Double Dipper (Analog) | `models/analog_double_dipper.py` | No service tracks per-level task repeats. |
+| Task Vision (Ephemerists) | config flag `is_task_vision_eligible` exists | No service exposes retired tasks to Ephemerists. |
+| Multi-faction tasks | not built | `Task.primary_faction_slug` is the only faction link in live code (no `TaskFaction` table). |
 
 **Already implemented — do not confuse with the above:** faction multipliers, MetaTask scoring,
 Collaboration, and Duel resolution are *all* live. `services/scoring.py::compute_praxis_score`
@@ -279,7 +278,6 @@ Until then, the rules in §1–§8 are enough.
 - Start at `CLAUDE.md`'s "Where to look for X" table.
 - For game rule values: `backend/eras/era_1.py`.
 - For config shape: `backend/game_config.py`.
-- For data model detail: [SPEC-data-models.md](SPEC-data-models.md).
-- For formulas: [SPEC-game-rules.md](SPEC-game-rules.md) (and
-  `backend/services/scoring.py`, which is the live truth — see TASK A.9 for
-  a known divergence between the two).
+- For data model detail: `backend/models/*.py` (source of truth).
+- For scoring formulas: `backend/services/scoring.py` + `praxis_scoring.py` (the live
+  truth); rule *values* in `backend/eras/era_1.py`; rationale in ADR-0014/0043/0044.
