@@ -31,7 +31,7 @@ const ink = (pct: number) => `color-mix(in srgb, ${INK} ${pct}%, transparent)`
 
 const kicker: CSSProperties = {
   fontFamily: MONO,
-  fontSize: 8,
+  fontSize: 'var(--text-xs)',
   letterSpacing: '0.24em',
   textTransform: 'uppercase',
   color: ink(30),
@@ -56,6 +56,7 @@ function Witness({ name, size }: { name: string; size: number }) {
         fontFamily: FONT,
         fontStyle: 'italic',
         fontWeight: 300,
+        // ornament: avatar monogram, sized from the circle it sits in — geometry, not text.
         fontSize: size * 0.42,
         color: ink(55),
       }}
@@ -68,7 +69,7 @@ function Witness({ name, size }: { name: string; size: number }) {
 function SectionHead({ children }: { children: ReactNode }) {
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
-      <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '0.2em', textTransform: 'uppercase', color: ink(40) }}>
+      <span style={{ fontFamily: MONO, fontSize: 'var(--text-sm)', letterSpacing: '0.2em', textTransform: 'uppercase', color: ink(40) }}>
         {children}
       </span>
       <span style={{ flex: 1, height: 1, background: ink(8) }} />
@@ -79,7 +80,7 @@ function SectionHead({ children }: { children: ReactNode }) {
 const joinButton: CSSProperties = {
   width: '100%',
   fontFamily: MONO,
-  fontSize: 11,
+  fontSize: 'var(--text-md)',
   letterSpacing: '0.16em',
   textTransform: 'uppercase',
   color: PAGE,
@@ -117,10 +118,11 @@ export default function AlbescentFactionPage({ state }: { state: FactionDetailSt
           <AlbescentSigil size={34} />
         </div>
         <div style={{ ...kicker, letterSpacing: '0.3em', color: ink(40) }}>{t('albescent.mobile.eyebrow')}</div>
+        {/* ornament: masthead display type — the Record's hand-set title is the skin's identity (§4/§270). */}
         <h1 style={{ fontFamily: FONT, fontStyle: 'italic', fontWeight: 300, fontSize: 34, lineHeight: 1.08, color: INK, margin: '6px 0 0' }}>
           {name}
         </h1>
-        <p style={{ fontFamily: FONT, fontStyle: 'italic', fontSize: 14, lineHeight: 1.6, color: ink(52), margin: '10px auto 0', maxWidth: 320 }}>
+        <p className="content-text" style={{ fontFamily: FONT, fontStyle: 'italic', lineHeight: 1.6, color: ink(52), margin: '10px auto 0', maxWidth: 320 }}>
           {factionDescription(faction.slug)}
         </p>
         <div style={{ display: 'flex', gap: 8, marginTop: 18, justifyContent: 'center' }}>
@@ -137,7 +139,7 @@ export default function AlbescentFactionPage({ state }: { state: FactionDetailSt
       <section className="mt-6">
         <SectionHead>{t('mobile.topMembers')}</SectionHead>
         {topMembers.length === 0 ? (
-          <p style={{ fontFamily: FONT, fontStyle: 'italic', fontSize: 14, color: ink(45), margin: 0 }}>{t('mobile.membersEmpty')}</p>
+          <p className="content-text" style={{ fontFamily: FONT, fontStyle: 'italic', color: ink(45), margin: 0 }}>{t('mobile.membersEmpty')}</p>
         ) : (
           <div className="flex flex-col gap-2">
             {topMembers.map((m, index) => (
@@ -151,7 +153,7 @@ export default function AlbescentFactionPage({ state }: { state: FactionDetailSt
       <section className="mt-6">
         <SectionHead>{t('mobile.recentPraxis')}</SectionHead>
         {recentPraxis.length === 0 ? (
-          <p style={{ fontFamily: FONT, fontStyle: 'italic', fontSize: 14, color: ink(45), margin: 0 }}>{t('mobile.praxisEmpty')}</p>
+          <p className="content-text" style={{ fontFamily: FONT, fontStyle: 'italic', color: ink(45), margin: 0 }}>{t('mobile.praxisEmpty')}</p>
         ) : (
           <div className="flex flex-col gap-3">
             {recentPraxis.map((p) => (
@@ -162,7 +164,7 @@ export default function AlbescentFactionPage({ state }: { state: FactionDetailSt
       </section>
 
       {membership.state === 'gate' && (
-        <p style={{ fontFamily: FONT, fontStyle: 'italic', fontSize: 14, color: ink(45), marginTop: 24 }}>
+        <p className="content-text" style={{ fontFamily: FONT, fontStyle: 'italic', color: ink(45), marginTop: 24 }}>
           {t('mobile.gateHint', { faction: name })}
         </p>
       )}
@@ -171,7 +173,7 @@ export default function AlbescentFactionPage({ state }: { state: FactionDetailSt
       {membership.state === 'eligible' && (
         <MobileStickyBar>
           {membership.joinError && (
-            <p style={{ fontFamily: MONO, fontSize: 12, color: 'var(--color-danger)' }}>{membership.joinError}</p>
+            <p className="content-text" style={{ fontFamily: MONO, color: 'var(--color-danger)' }}>{membership.joinError}</p>
           )}
           {!confirming ? (
             <button type="button" onClick={() => setConfirming(true)} style={joinButton}>
@@ -179,7 +181,7 @@ export default function AlbescentFactionPage({ state }: { state: FactionDetailSt
             </button>
           ) : (
             <>
-              <p style={{ fontFamily: FONT, fontStyle: 'italic', fontSize: 14, color: INK }}>
+              <p className="content-text" style={{ fontFamily: FONT, fontStyle: 'italic', color: INK }}>
                 {switching
                   ? t('detail.join.confirmSwitch', { faction: name, current: factionName(currentSlug) })
                   : t('detail.join.confirm', { faction: name })}
@@ -199,7 +201,7 @@ export default function AlbescentFactionPage({ state }: { state: FactionDetailSt
                   disabled={membership.joining}
                   style={{
                     fontFamily: MONO,
-                    fontSize: 10,
+                    fontSize: 'var(--text-base)',
                     letterSpacing: '0.12em',
                     textTransform: 'uppercase',
                     color: ink(45),
@@ -223,7 +225,7 @@ export default function AlbescentFactionPage({ state }: { state: FactionDetailSt
 function HeroStat({ value, label }: { value: number; label: string }) {
   return (
     <div style={{ flex: '0 1 120px', textAlign: 'center', border: `1px solid ${ink(9)}`, padding: '10px 14px' }}>
-      <b style={{ fontFamily: FONT, fontStyle: 'italic', fontWeight: 300, fontSize: 20, display: 'block', lineHeight: 1, color: INK }}>
+      <b className="content-title" style={{ fontFamily: FONT, fontStyle: 'italic', fontWeight: 300, display: 'block', lineHeight: 1, color: INK }}>
         {value}
       </b>
       <span style={{ ...kicker, marginTop: 5, display: 'block' }}>{label}</span>
@@ -246,15 +248,15 @@ function MemberRow({ rank, member }: { rank: number; member: CharacterOut }) {
         textDecoration: 'none',
       }}
     >
-      <span style={{ fontFamily: FONT, fontStyle: 'italic', fontSize: 16, color: ink(45), width: 16, flex: 'none' }}>{rank}</span>
+      <span style={{ fontFamily: FONT, fontStyle: 'italic', fontSize: 'var(--text-xl)', color: ink(45), width: 16, flex: 'none' }}>{rank}</span>
       <Witness name={member.display_name} size={28} />
       <span
+        className="content-text"
         style={{
           flex: 1,
           minWidth: 0,
           fontFamily: FONT,
           fontStyle: 'italic',
-          fontSize: 15,
           color: INK,
           overflow: 'hidden',
           textOverflow: 'ellipsis',
@@ -263,7 +265,7 @@ function MemberRow({ rank, member }: { rank: number; member: CharacterOut }) {
       >
         {member.display_name}
       </span>
-      <span style={{ fontFamily: MONO, fontSize: 8, letterSpacing: '0.08em', textTransform: 'uppercase', color: ink(38), flex: 'none' }}>
+      <span style={{ fontFamily: MONO, fontSize: 'var(--text-xs)', letterSpacing: '0.08em', textTransform: 'uppercase', color: ink(38), flex: 'none' }}>
         {t('mobile.memberStat', { level: member.level, score: member.all_time_score.toLocaleString() })}
       </span>
     </Link>
