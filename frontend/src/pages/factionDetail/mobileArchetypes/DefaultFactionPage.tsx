@@ -47,10 +47,11 @@ export default function DefaultFactionPage({ state }: { state: FactionDetailStat
           color: 'var(--color-text-on-accent)',
         }}
       >
+        {/* ornament: masthead display type — the hero wordmark is the skin's identity (§4/§270). */}
         <h1 className="font-display italic font-medium" style={{ fontSize: 26, lineHeight: 1.1 }}>
           {name}
         </h1>
-        <p className="font-body" style={{ fontSize: 11, opacity: 0.92, marginTop: 5, lineHeight: 1.5 }}>
+        <p className="font-body content-text" style={{ opacity: 0.92, marginTop: 5, lineHeight: 1.5 }}>
           {factionDescription(faction.slug)}
         </p>
         <div style={{ display: 'flex', gap: 20, marginTop: 15 }}>
@@ -72,7 +73,7 @@ export default function DefaultFactionPage({ state }: { state: FactionDetailStat
       <section className="mt-6">
         <h2 className="eyebrow mb-2">{t('mobile.topMembers')}</h2>
         {topMembers.length === 0 ? (
-          <p className="font-body text-muted text-sm">{t('mobile.membersEmpty')}</p>
+          <p className="font-body text-muted content-text">{t('mobile.membersEmpty')}</p>
         ) : (
           <div className="flex flex-col gap-2">
             {topMembers.map((m, index) => (
@@ -86,7 +87,7 @@ export default function DefaultFactionPage({ state }: { state: FactionDetailStat
       <section className="mt-6">
         <h2 className="eyebrow mb-2">{t('mobile.recentPraxis')}</h2>
         {recentPraxis.length === 0 ? (
-          <p className="font-body text-muted text-sm">{t('mobile.praxisEmpty')}</p>
+          <p className="font-body text-muted content-text">{t('mobile.praxisEmpty')}</p>
         ) : (
           <div className="flex flex-col gap-3">
             {recentPraxis.map((p) => (
@@ -97,7 +98,7 @@ export default function DefaultFactionPage({ state }: { state: FactionDetailStat
       </section>
 
       {membership.state === 'gate' && (
-        <p className="font-body text-sm text-muted mt-6">
+        <p className="font-body text-muted content-text mt-6">
           {t('mobile.gateHint', { faction: name })}
         </p>
       )}
@@ -106,7 +107,7 @@ export default function DefaultFactionPage({ state }: { state: FactionDetailStat
       {membership.state === 'eligible' && (
         <MobileStickyBar>
           {membership.joinError && (
-            <p className="font-body text-sm text-red-600">{membership.joinError}</p>
+            <p className="font-body content-text text-red-600">{membership.joinError}</p>
           )}
           {!confirming ? (
             <button
@@ -118,7 +119,7 @@ export default function DefaultFactionPage({ state }: { state: FactionDetailStat
             </button>
           ) : (
             <>
-              <p className="font-body text-sm" style={{ color: 'var(--color-text-primary)' }}>
+              <p className="font-body content-text" style={{ color: 'var(--color-text-primary)' }}>
                 {switching
                   ? t('detail.join.confirmSwitch', { faction: name, current: factionName(currentSlug) })
                   : t('detail.join.confirm', { faction: name })}
@@ -138,7 +139,7 @@ export default function DefaultFactionPage({ state }: { state: FactionDetailStat
                   disabled={membership.joining}
                   style={{
                     fontFamily: 'var(--font-body)',
-                    fontSize: 11,
+                    fontSize: 'var(--text-md)',
                     letterSpacing: '0.08em',
                     textTransform: 'uppercase',
                     color: 'var(--color-text-secondary)',
@@ -163,7 +164,7 @@ export default function DefaultFactionPage({ state }: { state: FactionDetailStat
 const JOIN_BUTTON_STYLE = {
   width: '100%',
   fontFamily: 'var(--font-body)',
-  fontSize: 14,
+  fontSize: 'var(--text-xl)',
   fontWeight: 700,
   letterSpacing: '0.04em',
   color: 'var(--color-text-on-accent)',
@@ -177,11 +178,16 @@ const JOIN_BUTTON_STYLE = {
 function HeroStat({ value, label }: { value: number; label: string }) {
   return (
     <div>
-      <b className="font-display italic" style={{ fontSize: 18, display: 'block', lineHeight: 1 }}>
+      <b className="font-display italic content-title" style={{ display: 'block', lineHeight: 1 }}>
         {value}
       </b>
       <span
-        style={{ fontSize: 8, letterSpacing: '0.16em', textTransform: 'uppercase', opacity: 0.85 }}
+        style={{
+          fontSize: 'var(--text-xs)',
+          letterSpacing: '0.16em',
+          textTransform: 'uppercase',
+          opacity: 0.85,
+        }}
       >
         {label}
       </span>
@@ -213,16 +219,15 @@ function MemberRow({
     >
       <span
         className="font-display italic"
-        style={{ fontSize: 16, color: accent, width: 18, flex: 'none' }}
+        style={{ fontSize: 'var(--text-xl)', color: accent, width: 18, flex: 'none' }}
       >
         {rank}
       </span>
       <span
-        className="font-body"
+        className="font-body content-text"
         style={{
           flex: 1,
           minWidth: 0,
-          fontSize: 14,
           color: 'var(--color-text-primary)',
           overflow: 'hidden',
           textOverflow: 'ellipsis',
