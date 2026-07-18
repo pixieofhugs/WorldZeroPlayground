@@ -68,7 +68,7 @@ function Witness({ name, size }: { name: string; size: number }) {
 
 function SectionHead({ children }: { children: ReactNode }) {
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
+    <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-md)', marginBottom: 'var(--space-md)' }}>
       <span style={{ fontFamily: MONO, fontSize: 'var(--text-sm)', letterSpacing: '0.2em', textTransform: 'uppercase', color: ink(40) }}>
         {children}
       </span>
@@ -86,7 +86,7 @@ const joinButton: CSSProperties = {
   color: PAGE,
   background: INK,
   border: `1px solid ${INK}`,
-  padding: '13px 16px',
+  padding: 'var(--space-md) var(--space-lg)',
   cursor: 'pointer',
 }
 
@@ -99,7 +99,7 @@ const cancelButton: CSSProperties = {
   color: ink(45),
   background: 'transparent',
   border: `1px solid ${ink(14)}`,
-  padding: '11px 16px',
+  padding: 'var(--space-md) var(--space-lg)',
   cursor: 'pointer',
 }
 
@@ -123,29 +123,39 @@ export default function AlbescentFactionPage({ state }: { state: FactionDetailSt
           background: SHEET,
           border: `1px solid ${ink(10)}`,
           boxShadow: '0 2px 24px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.04)',
-          padding: '30px 20px 26px',
+          padding: 'var(--space-2xl) var(--space-xl) var(--space-xl)',
           textAlign: 'center',
         }}
       >
-        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 14 }}>
+        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 'var(--space-lg)' }}>
           <AlbescentSigil size={34} />
         </div>
         <div style={{ ...kicker, letterSpacing: '0.3em', color: ink(40) }}>{t('albescent.mobile.eyebrow')}</div>
-        {/* ornament: masthead display type — the Record's hand-set title is the skin's identity (§4/§270). */}
-        <h1 style={{ fontFamily: FONT, fontStyle: 'italic', fontWeight: 300, fontSize: 34, lineHeight: 1.08, color: INK, margin: '6px 0 0' }}>
+        <h1
+          style={{
+            fontFamily: FONT,
+            fontStyle: 'italic',
+            fontWeight: 300,
+            // eslint-disable-next-line local/no-raw-style-values -- ornament: masthead display type — the Record's hand-set title is the skin's identity (§4/§270).
+            fontSize: 34,
+            lineHeight: 1.08,
+            color: INK,
+            margin: 'var(--space-sm) 0 0',
+          }}
+        >
           {name}
         </h1>
-        <p className="content-text" style={{ fontFamily: FONT, fontStyle: 'italic', lineHeight: 1.6, color: ink(52), margin: '10px auto 0', maxWidth: 320 }}>
+        <p className="content-text" style={{ fontFamily: FONT, fontStyle: 'italic', lineHeight: 1.6, color: ink(52), margin: 'var(--space-md) auto 0', maxWidth: 320 }}>
           {factionDescription(faction.slug)}
         </p>
-        <div style={{ display: 'flex', gap: 8, marginTop: 18, justifyContent: 'center' }}>
+        <div style={{ display: 'flex', gap: 'var(--space-sm)', marginTop: 'var(--space-lg)', justifyContent: 'center' }}>
           <HeroStat value={members.length} label={t('mobile.membersStat')} />
           <HeroStat value={tasks.length} label={t('mobile.tasksStat')} />
         </div>
       </section>
 
       {membership.state === 'member' && (
-        <p style={{ ...kicker, marginTop: 12, color: ink(45) }}>{t('mobile.memberBadge')}</p>
+        <p style={{ ...kicker, marginTop: 'var(--space-md)', color: ink(45) }}>{t('mobile.memberBadge')}</p>
       )}
 
       {/* Top members */}
@@ -177,7 +187,7 @@ export default function AlbescentFactionPage({ state }: { state: FactionDetailSt
       </section>
 
       {membership.state === 'gate' && (
-        <p className="content-text" style={{ fontFamily: FONT, fontStyle: 'italic', color: ink(45), marginTop: 24 }}>
+        <p className="content-text" style={{ fontFamily: FONT, fontStyle: 'italic', color: ink(45), marginTop: 'var(--space-xl)' }}>
           {t('mobile.gateHint', { faction: name })}
         </p>
       )}
@@ -199,7 +209,7 @@ export default function AlbescentFactionPage({ state }: { state: FactionDetailSt
                   ? t('detail.join.confirmSwitch', { faction: name, current: factionName(currentSlug) })
                   : t('detail.join.confirm', { faction: name })}
               </p>
-              <div style={{ display: 'flex', gap: 8 }}>
+              <div style={{ display: 'flex', gap: 'var(--space-sm)' }}>
                 <button
                   type="button"
                   onClick={() => void membership.join()}
@@ -227,11 +237,11 @@ export default function AlbescentFactionPage({ state }: { state: FactionDetailSt
 
 function HeroStat({ value, label }: { value: number; label: string }) {
   return (
-    <div style={{ flex: '0 1 120px', textAlign: 'center', border: `1px solid ${ink(9)}`, padding: '10px 14px' }}>
+    <div style={{ flex: '0 1 120px', textAlign: 'center', border: `1px solid ${ink(9)}`, padding: 'var(--space-md) var(--space-lg)' }}>
       <b className="content-title" style={{ fontFamily: FONT, fontStyle: 'italic', fontWeight: 300, display: 'block', lineHeight: 1, color: INK }}>
         {value}
       </b>
-      <span style={{ ...kicker, marginTop: 5, display: 'block' }}>{label}</span>
+      <span style={{ ...kicker, marginTop: 'var(--space-xs)', display: 'block' }}>{label}</span>
     </div>
   )
 }
@@ -244,8 +254,8 @@ function MemberRow({ rank, member }: { rank: number; member: CharacterOut }) {
       style={{
         display: 'flex',
         alignItems: 'center',
-        gap: 12,
-        padding: '10px 14px',
+        gap: 'var(--space-md)',
+        padding: 'var(--space-md) var(--space-lg)',
         background: SHEET,
         border: `1px solid ${ink(10)}`,
         textDecoration: 'none',

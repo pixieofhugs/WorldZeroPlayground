@@ -74,7 +74,7 @@ function Mug({ name, size }: { name: string; size: number }) {
 
 function SectionHead({ children }: { children: ReactNode }) {
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
+    <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-md)', marginBottom: 'var(--space-md)' }}>
       <span style={{ fontFamily: COND, fontSize: 'var(--text-xl)', letterSpacing: '0.06em', textTransform: 'uppercase', color: ACID }}>
         {children}
       </span>
@@ -92,7 +92,7 @@ const joinButton: CSSProperties = {
   color: PAPER,
   background: PINK,
   border: 'none',
-  padding: '14px 16px',
+  padding: 'var(--space-lg) var(--space-lg)',
   boxShadow: '2px 3px 0 rgba(0,0,0,.4)',
   cursor: 'pointer',
 }
@@ -106,7 +106,7 @@ const cancelButton: CSSProperties = {
   color: MUTED,
   background: 'transparent',
   border: `1px solid ${LINE}`,
-  padding: '11px 16px',
+  padding: 'var(--space-md) var(--space-lg)',
   cursor: 'pointer',
 }
 
@@ -125,19 +125,28 @@ export default function SnideFactionPage({ state }: { state: FactionDetailState 
   return (
     <div data-skin="snide" className="py-4" style={{ fontFamily: TYPE, color: WALL_TEXT, background: WALL }} data-testid="mobile-faction-page">
       {/* Hero — dark ransom masthead */}
-      <section style={{ position: 'relative', background: INK, color: TEXT, border: `1px solid ${LINE}`, boxShadow: CARD_SHADOW, padding: '20px 18px', transform: 'rotate(-0.6deg)', overflow: 'hidden' }}>
+      <section style={{ position: 'relative', background: INK, color: TEXT, border: `1px solid ${LINE}`, boxShadow: CARD_SHADOW, padding: 'var(--space-xl) var(--space-lg)', transform: 'rotate(-0.6deg)', overflow: 'hidden' }}>
         <span aria-hidden style={{ position: 'absolute', inset: 0, pointerEvents: 'none', backgroundImage: 'radial-gradient(rgba(182,255,46,0.08) 32%, transparent 34%)', backgroundSize: '5px 5px' }} />
         <span aria-hidden style={{ position: 'absolute', top: -11, left: 26, width: 64, height: 24, background: TAPE, transform: 'rotate(-5deg)', opacity: 0.92 }} />
         <div style={{ position: 'relative' }}>
           <div style={{ ...kicker, color: ACID }}>{t('snide.mobile.eyebrow')}</div>
-          {/* ornament: masthead display type — the flyposted title is the skin's identity (§4/§270). */}
-          <h1 style={{ fontFamily: COND, fontSize: 34, letterSpacing: '0.02em', lineHeight: 1.02, color: TEXT, margin: '4px 0 0' }}>
+          <h1
+            style={{
+              fontFamily: COND,
+              // eslint-disable-next-line local/no-raw-style-values -- ornament: masthead display type — the flyposted title is the skin's identity (§4/§270).
+              fontSize: 34,
+              letterSpacing: '0.02em',
+              lineHeight: 1.02,
+              color: TEXT,
+              margin: 'var(--space-xs) 0 0',
+            }}
+          >
             {name}
           </h1>
-          <p className="content-text" style={{ fontFamily: TYPE, lineHeight: 1.6, color: MUTED, margin: '8px 0 0' }}>
+          <p className="content-text" style={{ fontFamily: TYPE, lineHeight: 1.6, color: MUTED, margin: 'var(--space-sm) 0 0' }}>
             {factionDescription(faction.slug)}
           </p>
-          <div style={{ display: 'flex', gap: 8, marginTop: 15 }}>
+          <div style={{ display: 'flex', gap: 'var(--space-sm)', marginTop: 'var(--space-lg)' }}>
             <HeroStat value={members.length} label={t('mobile.membersStat')} />
             <HeroStat value={tasks.length} label={t('mobile.tasksStat')} />
           </div>
@@ -145,7 +154,7 @@ export default function SnideFactionPage({ state }: { state: FactionDetailState 
       </section>
 
       {membership.state === 'member' && (
-        <p style={{ ...kicker, marginTop: 12, color: ACCENT_WALL }}>{t('mobile.memberBadge')}</p>
+        <p style={{ ...kicker, marginTop: 'var(--space-md)', color: ACCENT_WALL }}>{t('mobile.memberBadge')}</p>
       )}
 
       {/* Top members */}
@@ -177,7 +186,7 @@ export default function SnideFactionPage({ state }: { state: FactionDetailState 
       </section>
 
       {membership.state === 'gate' && (
-        <p className="content-text" style={{ fontFamily: MARKER, color: MUTED, marginTop: 24, transform: 'rotate(-1deg)' }}>
+        <p className="content-text" style={{ fontFamily: MARKER, color: MUTED, marginTop: 'var(--space-xl)', transform: 'rotate(-1deg)' }}>
           {t('mobile.gateHint', { faction: name })}
         </p>
       )}
@@ -199,7 +208,7 @@ export default function SnideFactionPage({ state }: { state: FactionDetailState 
                   ? t('detail.join.confirmSwitch', { faction: name, current: factionName(currentSlug) })
                   : t('detail.join.confirm', { faction: name })}
               </p>
-              <div style={{ display: 'flex', gap: 8 }}>
+              <div style={{ display: 'flex', gap: 'var(--space-sm)' }}>
                 <button
                   type="button"
                   onClick={() => void membership.join()}
@@ -227,11 +236,11 @@ export default function SnideFactionPage({ state }: { state: FactionDetailState 
 
 function HeroStat({ value, label }: { value: number; label: string }) {
   return (
-    <div style={{ flex: '1 1 0', textAlign: 'center', background: 'rgba(255,255,255,0.04)', border: `1px solid ${LINE}`, padding: '10px 6px' }}>
+    <div style={{ flex: '1 1 0', textAlign: 'center', background: 'rgba(255,255,255,0.04)', border: `1px solid ${LINE}`, padding: 'var(--space-md) var(--space-sm)' }}>
       <b className="content-title" style={{ fontFamily: IMPACT, display: 'block', lineHeight: 1, color: ACID }}>
         {value}
       </b>
-      <span style={{ ...kicker, marginTop: 5, display: 'block' }}>{label}</span>
+      <span style={{ ...kicker, marginTop: 'var(--space-xs)', display: 'block' }}>{label}</span>
     </div>
   )
 }
@@ -244,8 +253,8 @@ function MemberRow({ rank, member }: { rank: number; member: CharacterOut }) {
       style={{
         display: 'flex',
         alignItems: 'center',
-        gap: 12,
-        padding: '10px 14px',
+        gap: 'var(--space-md)',
+        padding: 'var(--space-md) var(--space-lg)',
         background: INK,
         color: TEXT,
         border: `1px solid ${LINE}`,

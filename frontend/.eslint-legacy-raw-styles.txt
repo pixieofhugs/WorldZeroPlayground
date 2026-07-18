@@ -102,14 +102,6 @@ src/pages/editPraxis/mobileArchetypes/SnideComposer.tsx
 src/pages/editPraxis/mobileArchetypes/UaComposer.tsx
 src/pages/editPraxis/mobileArchetypes/WowEditPraxis.tsx
 src/pages/FactionDetail.tsx
-src/pages/factionDetail/mobileArchetypes/AlbescentFactionPage.tsx
-src/pages/factionDetail/mobileArchetypes/DefaultFactionPage.tsx
-src/pages/factionDetail/mobileArchetypes/EphemeristsFactionPage.tsx
-src/pages/factionDetail/mobileArchetypes/EverymenFactionPage.tsx
-src/pages/factionDetail/mobileArchetypes/SingularityFactionPage.tsx
-src/pages/factionDetail/mobileArchetypes/SnideFactionPage.tsx
-src/pages/factionDetail/mobileArchetypes/UaFactionPage.tsx
-src/pages/factionDetail/mobileArchetypes/WowFactionPage.tsx
 src/pages/Factions.tsx
 src/pages/factions/mobileArchetypes/DefaultFactionsDirectory.tsx
 src/pages/FieldDesk.tsx

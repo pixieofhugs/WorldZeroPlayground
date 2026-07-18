@@ -69,7 +69,7 @@ function NodeGlyph({ name, size }: { name: string; size: number }) {
 
 function SectionHead({ children }: { children: ReactNode }) {
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
+    <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-md)', marginBottom: 'var(--space-md)' }}>
       <span style={{ fontFamily: FONT, fontSize: 'var(--text-md)', letterSpacing: '0.1em', textTransform: 'uppercase', color: PHOSPHOR }}>
         {children}
       </span>
@@ -87,7 +87,7 @@ const joinButton: CSSProperties = {
   color: VOID,
   background: PHOSPHOR,
   border: `1px solid ${PHOSPHOR}`,
-  padding: '13px 16px',
+  padding: 'var(--space-md) var(--space-lg)',
   boxShadow: `0 0 16px ${phosphor(30)}`,
   cursor: 'pointer',
 }
@@ -101,7 +101,7 @@ const cancelButton: CSSProperties = {
   color: signal(60),
   background: 'transparent',
   border: `1px solid ${signal(38)}`,
-  padding: '11px 16px',
+  padding: 'var(--space-md) var(--space-lg)',
   cursor: 'pointer',
 }
 
@@ -120,22 +120,31 @@ export default function SingularityFactionPage({ state }: { state: FactionDetail
   return (
     <div data-skin="singularity" className="py-4" style={{ fontFamily: FONT, color: PHOSPHOR, background: VOID }} data-testid="mobile-faction-page">
       {/* Hero — bracketed readout masthead */}
-      <section style={{ position: 'relative', overflow: 'hidden', background: VOID, border: `1px solid ${BORDER_HARD}`, padding: '20px 18px' }}>
+      <section style={{ position: 'relative', overflow: 'hidden', background: VOID, border: `1px solid ${BORDER_HARD}`, padding: 'var(--space-xl) var(--space-lg)' }}>
         <div
           aria-hidden
           style={{ position: 'absolute', inset: 0, pointerEvents: 'none', background: `repeating-linear-gradient(to bottom, transparent, transparent 2px, ${phosphor(1.2)} 2px, ${phosphor(1.2)} 4px)` }}
         />
         <div style={{ position: 'relative' }}>
           <div style={{ ...kicker, color: PHOSPHOR }}>{t('singularity.mobile.eyebrow')}</div>
-          {/* ornament: masthead display type — the terminal banner is the skin's identity (§4/§270). */}
-          <h1 style={{ fontFamily: FONT, fontSize: 26, lineHeight: 1.05, color: PHOSPHOR, letterSpacing: '0.03em', margin: '6px 0 0' }}>
+          <h1
+            style={{
+              fontFamily: FONT,
+              // eslint-disable-next-line local/no-raw-style-values -- ornament: masthead display type — the terminal banner is the skin's identity (§4/§270).
+              fontSize: 26,
+              lineHeight: 1.05,
+              color: PHOSPHOR,
+              letterSpacing: '0.03em',
+              margin: 'var(--space-sm) 0 0',
+            }}
+          >
             {'> '}
             {name}
           </h1>
-          <p className="content-text" style={{ fontFamily: FONT, lineHeight: 1.7, color: phosphor(60), margin: '10px 0 0' }}>
+          <p className="content-text" style={{ fontFamily: FONT, lineHeight: 1.7, color: phosphor(60), margin: 'var(--space-md) 0 0' }}>
             {factionDescription(faction.slug)}
           </p>
-          <div style={{ display: 'flex', gap: 8, marginTop: 15 }}>
+          <div style={{ display: 'flex', gap: 'var(--space-sm)', marginTop: 'var(--space-lg)' }}>
             <HeroStat value={members.length} label={t('mobile.membersStat')} />
             <HeroStat value={tasks.length} label={t('mobile.tasksStat')} />
           </div>
@@ -143,7 +152,7 @@ export default function SingularityFactionPage({ state }: { state: FactionDetail
       </section>
 
       {membership.state === 'member' && (
-        <p style={{ ...kicker, marginTop: 12, color: AMBER }}>{t('mobile.memberBadge')}</p>
+        <p style={{ ...kicker, marginTop: 'var(--space-md)', color: AMBER }}>{t('mobile.memberBadge')}</p>
       )}
 
       {/* Primary nodes */}
@@ -175,7 +184,7 @@ export default function SingularityFactionPage({ state }: { state: FactionDetail
       </section>
 
       {membership.state === 'gate' && (
-        <p className="content-text" style={{ fontFamily: FONT, color: phosphor(55), marginTop: 24 }}>
+        <p className="content-text" style={{ fontFamily: FONT, color: phosphor(55), marginTop: 'var(--space-xl)' }}>
           {t('mobile.gateHint', { faction: name })}
         </p>
       )}
@@ -197,7 +206,7 @@ export default function SingularityFactionPage({ state }: { state: FactionDetail
                   ? t('detail.join.confirmSwitch', { faction: name, current: factionName(currentSlug) })
                   : t('detail.join.confirm', { faction: name })}
               </p>
-              <div style={{ display: 'flex', gap: 8 }}>
+              <div style={{ display: 'flex', gap: 'var(--space-sm)' }}>
                 <button
                   type="button"
                   onClick={() => void membership.join()}
@@ -225,11 +234,11 @@ export default function SingularityFactionPage({ state }: { state: FactionDetail
 
 function HeroStat({ value, label }: { value: number; label: string }) {
   return (
-    <div style={{ flex: '1 1 0', textAlign: 'center', background: signal(8), border: `1px solid ${signal(28)}`, padding: '10px 6px' }}>
+    <div style={{ flex: '1 1 0', textAlign: 'center', background: signal(8), border: `1px solid ${signal(28)}`, padding: 'var(--space-md) var(--space-sm)' }}>
       <b className="content-title" style={{ fontFamily: FONT, display: 'block', lineHeight: 1, color: PHOSPHOR }}>
         {value}
       </b>
-      <span style={{ ...kicker, marginTop: 5, display: 'block' }}>{label}</span>
+      <span style={{ ...kicker, marginTop: 'var(--space-xs)', display: 'block' }}>{label}</span>
     </div>
   )
 }
@@ -242,8 +251,8 @@ function MemberRow({ rank, member }: { rank: number; member: CharacterOut }) {
       style={{
         display: 'flex',
         alignItems: 'center',
-        gap: 12,
-        padding: '10px 14px',
+        gap: 'var(--space-md)',
+        padding: 'var(--space-md) var(--space-lg)',
         background: VOID,
         border: `1px solid ${signal(38)}`,
         borderLeft: `3px solid ${PHOSPHOR}`,
