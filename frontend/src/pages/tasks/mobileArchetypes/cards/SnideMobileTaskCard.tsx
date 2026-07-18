@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import type { TaskOut } from '../../../../api/tasks'
 import { factionCssVar, factionName } from '../../../../utils/factions'
+import { MobileTaskDescription } from './shared'
 
 /**
  * S.N.I.D.E. MOBILE task card (#530/#565) — a dark job file taped to the wall:
@@ -64,24 +65,10 @@ export default function SnideMobileTaskCard({ task, points }: { task: TaskOut; p
         {task.title}
       </h2>
 
-      {task.description && (
-        <p
-          style={{
-            position: 'relative',
-            fontFamily: TYPE,
-            fontSize: 12.5,
-            lineHeight: 1.5,
-            color: MUTED,
-            margin: 0,
-            display: '-webkit-box',
-            WebkitLineClamp: 2,
-            WebkitBoxOrient: 'vertical',
-            overflow: 'hidden',
-          }}
-        >
-          {task.description}
-        </p>
-      )}
+      <MobileTaskDescription
+        text={task.description}
+        style={{ position: 'relative', fontFamily: TYPE, fontSize: 12.5, lineHeight: 1.5, color: MUTED, margin: 0 }}
+      />
 
       <div className="flex items-center gap-3" style={{ position: 'relative', marginTop: 2 }}>
         <span style={{ fontFamily: IMPACT, fontSize: 13, letterSpacing: '0.02em', color: INK, background: ACID, padding: '3px 9px' }}>

@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import type { TaskOut } from '../../../../api/tasks'
 import { factionCssVar, factionName } from '../../../../utils/factions'
+import { MobileTaskDescription } from './shared'
 
 /**
  * Default MOBILE task card — the scannable single-column proof card each task
@@ -43,22 +44,11 @@ export default function DefaultMobileTaskCard({ task, points }: { task: TaskOut;
       </h2>
 
       {/* Description — clamp to two lines */}
-      {task.description && (
-        <p
-          className="font-body"
-          style={{
-            fontSize: 13,
-            lineHeight: 1.5,
-            color: 'var(--color-text-secondary)',
-            display: '-webkit-box',
-            WebkitLineClamp: 2,
-            WebkitBoxOrient: 'vertical',
-            overflow: 'hidden',
-          }}
-        >
-          {task.description}
-        </p>
-      )}
+      <MobileTaskDescription
+        text={task.description}
+        className="font-body"
+        style={{ fontSize: 13, lineHeight: 1.5, color: 'var(--color-text-secondary)' }}
+      />
 
       {/* Footer — points + level */}
       <div className="flex items-center gap-3" style={{ marginTop: 2 }}>

@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import type { TaskOut } from '../../../../api/tasks'
 import { factionCssVar, factionName } from '../../../../utils/factions'
+import { MobileTaskDescription } from './shared'
 
 /**
  * Warriors of Whimsy MOBILE task card (#531/#565) — a pink scrapbook "quest"
@@ -69,23 +70,10 @@ export default function WowMobileTaskCard({ task, points }: { task: TaskOut; poi
             {task.title}
           </h2>
 
-          {task.description && (
-            <p
-              style={{
-                fontFamily: BODY,
-                fontSize: 12,
-                lineHeight: 1.5,
-                color: CARD_MUTED,
-                margin: 0,
-                display: '-webkit-box',
-                WebkitLineClamp: 2,
-                WebkitBoxOrient: 'vertical',
-                overflow: 'hidden',
-              }}
-            >
-              {task.description}
-            </p>
-          )}
+          <MobileTaskDescription
+            text={task.description}
+            style={{ fontFamily: BODY, fontSize: 12, lineHeight: 1.5, color: CARD_MUTED, margin: 0 }}
+          />
 
           <div className="flex items-center gap-3" style={{ marginTop: 2 }}>
             <span style={{ fontFamily: BODY, fontSize: 12, fontWeight: 700, color: PINK_DEEP, background: BODY_BG, border: `1px solid ${NOTEPAD_BORDER}`, borderRadius: 999, padding: '3px 11px' }}>
