@@ -11,6 +11,7 @@ import {
   PraxisOwnerActions,
   PraxisFlagBlock,
   PraxisVoterBreakdown,
+  PraxisScoreBreakdown,
   MemberByline,
 } from '../shared'
 import { MobileStarVote } from './shared'
@@ -65,7 +66,7 @@ const kicker: CSSProperties = {
 
 export default function UaPraxisDetail({ state }: { state: PraxisDetailState }) {
   const { t } = useTranslation('praxis')
-  const { praxis, votes } = state
+  const { praxis } = state
   if (!praxis) return null
 
   const sealedDate = praxis.submitted_at ?? praxis.created_at
@@ -139,10 +140,11 @@ export default function UaPraxisDetail({ state }: { state: PraxisDetailState }) 
         <div className="flex items-center justify-center content-text" style={{ marginBottom: 12, fontFamily: DISPLAY, fontStyle: 'italic', fontWeight: 700, color: INK }}>
           {t('detail.ua.mobile.appraise')}
         </div>
+        <div style={{ marginBottom: 12 }}>
+          <PraxisScoreBreakdown state={state} align="center" accent={ACCENT} font={DISPLAY} />
+        </div>
         <MobileStarVote
           praxisId={praxis.id}
-          points={votes?.total_score}
-          totalVotes={votes?.total_votes}
           accent={ACCENT}
           accentFont={DISPLAY}
         />

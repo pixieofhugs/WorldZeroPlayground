@@ -4,7 +4,7 @@ import MediaGallery from '../../../components/MediaGallery'
 import { formatTimestamp } from '../../../utils/dates'
 import VoteUI from '../../../components/vote/VoteUI'
 import type { PraxisDetailState } from '../usePraxisDetail'
-import { PraxisAdminBar, PraxisStatusBanners, PraxisOwnerActions, PraxisFlagBlock, PraxisVoterBreakdown, MemberByline } from '../shared'
+import { PraxisAdminBar, PraxisStatusBanners, PraxisOwnerActions, PraxisFlagBlock, PraxisVoterBreakdown, PraxisScoreBreakdown, MemberByline } from '../shared'
 import MarkdownPreview from '../../editPraxis/blocks/MarkdownPreview'
 
 /** Style Guide §12.3 */
@@ -22,7 +22,7 @@ export default function DefaultPraxisDetail({
   state: PraxisDetailState
 }) {
   const { t } = useTranslation('praxis')
-  const { praxis, votes } = state
+  const { praxis } = state
 
   // Guarded non-null by the dispatcher.
   if (!praxis) return null
@@ -66,15 +66,6 @@ export default function DefaultPraxisDetail({
           />
           <span className="eyebrow">{formatTimestamp(praxis.created_at)}</span>
         </div>
-        {/* Vote score */}
-        {votes && votes.total_votes > 0 && (
-          <div className="text-right shrink-0">
-            <div className="font-display italic content-title" style={{ color: 'var(--color-text-primary)' }}>
-              {votes.total_score}
-            </div>
-            <span className="eyebrow">{t('detail.default.votes', { count: votes.total_votes })}</span>
-          </div>
-        )}
       </div>
 
       {/* ── Praxis Title (§12.3) ── */}
@@ -138,18 +129,11 @@ export default function DefaultPraxisDetail({
       <div className="sidebar-card mb-4" style={{ padding: '14px 16px' }}>
         <div className="flex items-baseline justify-between mb-3">
           <span className="eyebrow">{t('detail.default.pointsFromVotes')}</span>
-          {votes && (
-            <span className="font-display italic content-title" style={{ color: 'var(--color-text-primary)' }}>
-              {votes.total_score}
-              <span className="eyebrow" style={{ marginLeft: 4 }}>{t('detail.default.pts')}</span>
-            </span>
-          )}
+          <PraxisScoreBreakdown state={state} align="right" />
         </div>
         <VoteUI
           factionSlug={praxis.task_faction_slug}
           praxisId={praxis.id}
-          points={votes?.total_score}
-          totalVotes={votes?.total_votes}
         />
       </div>
 

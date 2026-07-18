@@ -11,6 +11,7 @@ import {
   PraxisOwnerActions,
   PraxisFlagBlock,
   PraxisVoterBreakdown,
+  PraxisScoreBreakdown,
   MemberByline,
 } from '../shared'
 import { MobileStarVote } from './shared'
@@ -63,7 +64,7 @@ function Panel({ title, children }: { title: string; children: ReactNode }) {
 
 export default function SingularityPraxisDetail({ state }: { state: PraxisDetailState }) {
   const { t } = useTranslation('praxis')
-  const { praxis, votes } = state
+  const { praxis } = state
   if (!praxis) return null
 
   const sealedDate = praxis.submitted_at ?? praxis.created_at
@@ -138,10 +139,11 @@ export default function SingularityPraxisDetail({ state }: { state: PraxisDetail
         <div className="flex items-center justify-center content-text" style={{ marginBottom: 12, fontFamily: FONT, color: PHOSPHOR }}>
           {t('detail.singularity.mobile.amplify')}
         </div>
+        <div style={{ marginBottom: 12 }}>
+          <PraxisScoreBreakdown state={state} align="center" accent={PHOSPHOR} font={FONT} />
+        </div>
         <MobileStarVote
           praxisId={praxis.id}
-          points={votes?.total_score}
-          totalVotes={votes?.total_votes}
           accent={PHOSPHOR}
           accentFont={FONT}
         />

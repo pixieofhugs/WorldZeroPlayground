@@ -47,7 +47,8 @@ const PRAXIS: PraxisOut = {
   members: [],
   invites: [],
   media_items: [],
-  score: 42,
+  // Merit = base (30) × 1.0 + vote points (16) = 46 — the common ×1.0 case.
+  score: 46,
   is_top_for_task: false,
   duel_id: null,
   can_flag: true,
@@ -122,6 +123,36 @@ describe('mobile praxis-read Task Crown hero', () => {
       crowned.praxis = { ...PRAXIS, is_top_for_task: true }
       expect(render(<Archetype state={crowned} />).text).toContain('TASK CROWN')
       expect(render(<Archetype state={state()} />).text).not.toContain('TASK CROWN')
+    })
+  }
+})
+
+// ─── Single earned-points breakdown (#641) ───────────────────────────────────
+// The mobile twin: each mobile detail archetype renders one `{base} + {votes}`
+// breakdown above its star caster, and the `× {mult}` form when the fixed-at-
+// award multiplier ≠ 1.0.
+
+/** A rare non-1.0 multiplier: base 10 × 1.1 + 14 vote points = 25 merit. */
+function multiplierState(): PraxisDetailState {
+  const s = state()
+  s.praxis = { ...PRAXIS, task_point_value: 10, score: 25 }
+  s.votes = { praxis_id: 1, total_votes: 4, total_score: 14 }
+  return s
+}
+
+describe('mobile praxis-read earned-points breakdown', () => {
+  for (const [slug, Archetype] of Object.entries(archetypes)) {
+    it(`${slug} renders the base + vote-points breakdown`, () => {
+      const { text } = render(<Archetype state={state()} />)
+      expect(text, 'base points').toContain('30')
+      expect(text, 'vote points').toContain('16')
+    })
+
+    it(`${slug} renders the × multiplier form when the multiplier ≠ 1.0`, () => {
+      const { text } = render(<Archetype state={multiplierState()} />)
+      expect(text, 'multiplier value').toContain('1.1')
+      expect(text, 'multiplier operator').toContain('×')
+      expect(text, 'vote points').toContain('14')
     })
   }
 })

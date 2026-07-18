@@ -22,13 +22,14 @@ import {
   PraxisOwnerActions,
   PraxisFlagBlock,
   PraxisVoterBreakdown,
+  PraxisScoreBreakdown,
   MemberByline,
 } from '../shared'
 import { MobileStarVote } from './shared'
 
 export default function DefaultPraxisDetail({ state }: { state: PraxisDetailState }) {
   const { t } = useTranslation('praxis')
-  const { praxis, votes } = state
+  const { praxis } = state
   if (!praxis) return null
 
   const accent = factionCssVar(praxis.task_faction_slug, 'card-accent')
@@ -131,10 +132,11 @@ export default function DefaultPraxisDetail({ state }: { state: PraxisDetailStat
         <div className="eyebrow" style={{ textAlign: 'center', marginBottom: 12, color: 'var(--color-text-secondary)' }}>
           {t('mobileDetail.ratePrompt')}
         </div>
+        <div style={{ marginBottom: 12 }}>
+          <PraxisScoreBreakdown state={state} align="center" accent={accent} />
+        </div>
         <MobileStarVote
           praxisId={praxis.id}
-          points={votes?.total_score}
-          totalVotes={votes?.total_votes}
           accent={accent}
         />
       </div>

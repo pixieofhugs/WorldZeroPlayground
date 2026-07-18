@@ -24,7 +24,7 @@ import MediaGallery from '../../../components/MediaGallery'
 import VoteUI from '../../../components/vote/VoteUI'
 import { factionCssVar } from '../../../utils/factions'
 import { formatTimestamp } from '../../../utils/dates'
-import { PraxisAdminBar, PraxisStatusBanners, PraxisOwnerActions, PraxisFlagBlock, MemberByline } from '../shared'
+import { PraxisAdminBar, PraxisStatusBanners, PraxisOwnerActions, PraxisFlagBlock, MemberByline, praxisBreakdownParts } from '../shared'
 import type { PraxisDetailState } from '../usePraxisDetail'
 import type { PraxisOut } from '../../../api/praxis'
 import type { VoteSummary, VoterDetail } from '../../../api/votes'
@@ -65,6 +65,7 @@ function initials(name: string): string {
  * points-currency ledger would need a new backend model (its own issue).
  */
 function TheStanding({
+  praxis,
   votes,
   voters,
 }: {
@@ -74,6 +75,9 @@ function TheStanding({
 }) {
   const { t } = useTranslation('praxis')
   if (!votes || votes.total_votes === 0) return null
+  // The single earned-points breakdown (#641) — merit = base × mult + votes,
+  // ×1.0 today so it reads `{base} + {votes}` like the card's PraxisScoreHero.
+  const { base, votePoints, isPlain, multiplierLabel } = praxisBreakdownParts(praxis, votes)
 
   return (
     <div
@@ -93,8 +97,16 @@ function TheStanding({
       {/* Headline: points earned · appraisal headcount */}
       <div style={{ display: 'flex', marginBottom: voters.length ? 20 : 0 }}>
         <div style={{ flex: 1, paddingRight: 16 }}>
-          <div style={{ fontFamily: DISPLAY, fontStyle: 'italic', fontWeight: 700, fontSize: 'var(--text-display)', lineHeight: 0.85, color: 'var(--ua-orange)' }}>
-            {votes.total_score}
+          <div style={{ fontFamily: DISPLAY, fontStyle: 'italic', fontWeight: 700, fontSize: 'var(--text-display)', lineHeight: 0.85, color: 'var(--ua-orange)', whiteSpace: 'nowrap' }}>
+            {base}
+            {!isPlain && (
+              <>
+                <span style={{ opacity: 0.55, margin: '0 var(--space-xs)' }}>×</span>
+                {multiplierLabel}
+              </>
+            )}
+            <span style={{ opacity: 0.55, margin: '0 var(--space-xs)' }}>+</span>
+            {votePoints}
           </div>
           <div style={{ fontFamily: MONO, fontSize: 'var(--text-xs)', letterSpacing: '0.16em', textTransform: 'uppercase', color: 'var(--ua-sub)', marginTop: 7 }}>
             {t('detail.ua.standing.pointsEarned')}
@@ -424,8 +436,6 @@ export default function UaPraxisDetail({ state }: { state: PraxisDetailState }) 
           <VoteUI
             factionSlug={praxis.task_faction_slug}
             praxisId={praxis.id}
-            points={votes?.total_score}
-            totalVotes={votes?.total_votes}
           />
         </div>
 

@@ -11,6 +11,7 @@ import {
   PraxisOwnerActions,
   PraxisFlagBlock,
   PraxisVoterBreakdown,
+  PraxisScoreBreakdown,
   MemberByline,
 } from '../shared'
 import { MobileStarVote } from './shared'
@@ -55,7 +56,7 @@ function Plate({ title, children }: { title: string; children: ReactNode }) {
 
 export default function EverymenPraxisDetail({ state }: { state: PraxisDetailState }) {
   const { t } = useTranslation('praxis')
-  const { praxis, votes } = state
+  const { praxis } = state
   if (!praxis) return null
 
   const sealedDate = praxis.submitted_at ?? praxis.created_at
@@ -129,10 +130,11 @@ export default function EverymenPraxisDetail({ state }: { state: PraxisDetailSta
         <div className="flex items-center justify-center content-text" style={{ marginBottom: 12, fontFamily: ACCENT_FONT, letterSpacing: '0.04em', color: PAPER_TEXT }}>
           {t('detail.everymen.mobile.appraise')}
         </div>
+        <div style={{ marginBottom: 12 }}>
+          <PraxisScoreBreakdown state={state} align="center" accent={RED} font={ACCENT_FONT} />
+        </div>
         <MobileStarVote
           praxisId={praxis.id}
-          points={votes?.total_score}
-          totalVotes={votes?.total_votes}
           accent={RED}
           accentFont={ACCENT_FONT}
         />
