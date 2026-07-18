@@ -19,6 +19,7 @@ import { TaskCrown } from '../../components/cards/TaskCrown'
 import { CollabRoster } from '../../components/collab/CollabRoster'
 import type { PraxisDetailState } from './usePraxisDetail'
 import type { PraxisMemberOut, PraxisOut } from '../../api/praxis'
+import type { VoteSummary } from '../../api/votes'
 import { flagReasonOptions } from '../../utils/flagReasons'
 
 // ── Egalitarian byline (#387) ────────────────────────────────────────────────
@@ -501,6 +502,97 @@ export function PraxisVoterBreakdown({ state }: { state: PraxisDetailState }) {
           </li>
         ))}
       </ul>
+    </div>
+  )
+}
+
+// ── Single earned-points breakdown (#641) ────────────────────────────────────
+//
+// The one explicit score readout a detail page shows, mirroring the card's
+// PraxisScoreHero idiom (`{base} + {votes}`). ADR-0014 merit is
+// `base × multiplier + points_from_votes`; the multiplier is fixed WHEN the
+// praxis was scored (never viewer-relative, so this is derived from the praxis's
+// own `score`, not computeDisplayPoints). Today every praxis scores at ×1.0, so
+// the plain `{base} + {votes}` form renders; a future era's own-faction bonus
+// would surface the `{base} × {mult} + {votes}` form. The vote number is the
+// authoritative `votes.total_score`.
+
+/** Format a multiplier for display: 1.1 → "1.1", 1.10 → "1.1", 1.25 → "1.25". */
+function formatMultiplier(multiplier: number): string {
+  return Number(multiplier.toFixed(2)).toString()
+}
+
+export interface PraxisBreakdownParts {
+  base: number
+  votePoints: number
+  multiplier: number
+  multiplierLabel: string
+  /** True when the multiplier is effectively 1.0 (the common case). */
+  isPlain: boolean
+}
+
+/**
+ * The numbers behind the earned-points breakdown, derived on the frontend from
+ * the detail response (no backend change — PraxisOut already carries the raw
+ * base `task_point_value` and the full merit `score`; the votes object carries
+ * the authoritative vote-point subtotal `total_score`).
+ */
+export function praxisBreakdownParts(
+  praxis: PraxisOut,
+  votes: VoteSummary | null,
+): PraxisBreakdownParts {
+  const base = praxis.task_point_value
+  const votePoints = votes?.total_score ?? 0
+  const multiplier = base > 0 ? (praxis.score - votePoints) / base : 1
+  const isPlain = Math.abs(multiplier - 1) < 0.005
+  return { base, votePoints, multiplier, multiplierLabel: formatMultiplier(multiplier), isPlain }
+}
+
+/**
+ * The single earned-points breakdown for a detail page. Faction-themeable via
+ * `accent`/`muted`/`font` so each archetype can render it in its own voice while
+ * the arithmetic + copy stay in one place. `align` positions it within its slot.
+ */
+export function PraxisScoreBreakdown({
+  state,
+  accent,
+  muted,
+  font,
+  align = 'left',
+}: {
+  state: PraxisDetailState
+  accent?: string
+  muted?: string
+  font?: string
+  align?: 'left' | 'center' | 'right'
+}) {
+  const { t } = useTranslation('praxis')
+  const { praxis, votes } = state
+  if (!praxis) return null
+  const { base, votePoints, isPlain, multiplierLabel } = praxisBreakdownParts(praxis, votes)
+
+  return (
+    <div style={{ textAlign: align, lineHeight: 1 }}>
+      <span
+        className="font-display content-title"
+        style={{ fontWeight: 800, fontFamily: font, color: accent ?? 'var(--color-text-primary)', whiteSpace: 'nowrap' }}
+      >
+        {base}
+        {!isPlain && (
+          <>
+            <span style={{ opacity: 0.55, margin: '0 var(--space-xs)' }}>×</span>
+            {multiplierLabel}
+          </>
+        )}
+        <span style={{ opacity: 0.55, margin: '0 var(--space-xs)' }}>+</span>
+        {votePoints}
+      </span>
+      <span
+        className="eyebrow"
+        style={{ display: 'block', marginTop: 'var(--space-xs)', color: muted }}
+      >
+        {isPlain ? t('card.ptsAndVotes') : t('detail.score.ptsMultVotes')}
+      </span>
     </div>
   )
 }

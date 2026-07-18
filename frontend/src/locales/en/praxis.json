@@ -123,6 +123,9 @@
       "count_one": "{{count}} vote",
       "count_other": "{{count}} votes"
     },
+    "score": {
+      "ptsMultVotes": "pts × bonus + votes"
+    },
     "metatasks": {
       "heading": "Metatasks",
       "loading": "loading...",
