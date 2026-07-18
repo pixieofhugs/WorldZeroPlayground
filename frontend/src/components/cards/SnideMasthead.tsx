@@ -21,8 +21,8 @@ export default function SnideMasthead({
         justifyContent: "space-between",
         alignItems: "baseline",
         borderBottom: `2px solid ${factionCssVar("snide", "card-accent")}`,
-        paddingBottom: 4,
-        marginBottom: 9,
+        paddingBottom: "var(--space-xs)",
+        marginBottom: "var(--space-sm)",
       }}
     >
       <span

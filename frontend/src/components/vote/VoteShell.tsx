@@ -42,7 +42,7 @@ export function VoteSummary({
   return (
     <>
       {selected > 0 && (
-        <p className="font-body" style={{ fontSize: 'var(--text-content)', color: theme.muted, margin: '8px 0 0' }}>
+        <p className="font-body" style={{ fontSize: 'var(--text-content)', color: theme.muted, margin: 'var(--space-sm) 0 0' }}>
           {t('chrome.voted', { stars: selected })}
         </p>
       )}
@@ -53,7 +53,7 @@ export function VoteSummary({
           style={{
             fontSize: 'var(--text-content)',
             color: theme.muted,
-            margin: '11px 0 0',
+            margin: 'var(--space-md) 0 0',
             letterSpacing: theme.avgLetterSpacing,
           }}
         >
@@ -78,7 +78,7 @@ export function VoteSummary({
       )}
 
       {error && (
-        <p className="font-body" style={{ fontSize: 'var(--text-content)', color: theme.errorColor, marginTop: 4 }}>
+        <p className="font-body" style={{ fontSize: 'var(--text-content)', color: theme.errorColor, marginTop: 'var(--space-xs)' }}>
           {error}
         </p>
       )}

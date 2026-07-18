@@ -54,29 +54,29 @@ function UaSelectCard({ state = "locked", members, onVisit }: Omit<FactionSelect
     }}>
       <div style={{ position: "absolute", inset: 6, border: "2px solid var(--ua-gold)", pointerEvents: "none" }} />
       <div style={{ position: "absolute", inset: 9, border: "1px solid var(--ua-line-soft)", pointerEvents: "none" }} />
-      <div style={{ position: "relative", flex: 1, padding: "22px 26px 0", display: "flex", flexDirection: "column" }}>
+      <div style={{ position: "relative", flex: 1, padding: "var(--space-xl) var(--space-xl) 0", display: "flex", flexDirection: "column" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
           <div>
             <div style={{ fontFamily: "var(--font-faction-engraved-caps)", fontSize: "var(--text-base)", letterSpacing: "0.32em", color: "var(--ua-gold)", textTransform: "uppercase" }}>{i18n.t("feed:factionSelect.ua.masthead")}</div>
-            {/* ornament: gilt-placard wordmark — display type at 0.9 leading, the UA archetype's voice */}
-            <div style={{ fontFamily: "var(--font-faction-gilt)", fontStyle: "italic", fontWeight: 800, fontSize: 52, lineHeight: 0.9, letterSpacing: "0.01em", marginTop: 8 }}>{i18n.t("feed:factionSelect.ua.wordmark")}</div>
-            <div style={{ fontFamily: "var(--font-faction-engraved-caps)", fontSize: "var(--text-lg)", letterSpacing: "0.24em", color: "var(--ua-sub)", textTransform: "uppercase", marginTop: 3 }}>{i18n.t("feed:factionSelect.ua.subtitle")}</div>
+            {/* eslint-disable-next-line local/no-raw-style-values -- ornament: gilt-placard wordmark — display type at 0.9 leading, the UA archetype's voice */}
+            <div style={{ fontFamily: "var(--font-faction-gilt)", fontStyle: "italic", fontWeight: 800, fontSize: 52, lineHeight: 0.9, letterSpacing: "0.01em", marginTop: "var(--space-sm)" }}>{i18n.t("feed:factionSelect.ua.wordmark")}</div>
+            <div style={{ fontFamily: "var(--font-faction-engraved-caps)", fontSize: "var(--text-lg)", letterSpacing: "0.24em", color: "var(--ua-sub)", textTransform: "uppercase", marginTop: "var(--space-xs)" }}>{i18n.t("feed:factionSelect.ua.subtitle")}</div>
           </div>
           <UaSigil width={44} height={53} />
         </div>
-        <div style={{ height: 2, background: "var(--ua-gilt)", margin: "16px 0 13px", opacity: 0.85 }} />
+        <div style={{ height: 2, background: "var(--ua-gilt)", margin: "var(--space-lg) 0 var(--space-md)", opacity: 0.85 }} />
         <p className="content-text" style={{ margin: 0, fontFamily: "var(--font-faction-gilt)", fontStyle: "italic", lineHeight: 1.4, color: "var(--ua-ink)" }}>
           {i18n.t("feed:factionSelect.ua.blurb")}
         </p>
       </div>
-      <div style={{ position: "relative", padding: "0 26px 20px" }}>
-        <div style={{ fontSize: "var(--text-base)", letterSpacing: "0.04em", color: "var(--ua-sub)", marginBottom: 11 }}>
+      <div style={{ position: "relative", padding: "0 var(--space-xl) var(--space-lg)" }}>
+        <div style={{ fontSize: "var(--text-base)", letterSpacing: "0.04em", color: "var(--ua-sub)", marginBottom: "var(--space-md)" }}>
           {status}{members != null && <> · <span style={{ color: "var(--ua-muted)" }}>{i18n.t("feed:factionSelect.ua.members", { count: members })}</span></>}
         </div>
         <button onClick={onVisit} style={{
           width: "100%", cursor: "pointer", border: "1px solid var(--ua-gold)", background: "transparent",
           color: "var(--ua-orange)", fontFamily: "var(--font-faction-engraved-caps)", fontSize: "var(--text-xl)", letterSpacing: "0.18em",
-          textTransform: "uppercase", padding: "10px", transition: "background 140ms, color 140ms",
+          textTransform: "uppercase", padding: "var(--space-md)", transition: "background 140ms, color 140ms",
         }}
           onMouseEnter={(e) => { e.currentTarget.style.background = "var(--ua-orange)"; e.currentTarget.style.color = "var(--ua-paper)"; }}
           onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "var(--ua-orange)"; }}
@@ -95,35 +95,37 @@ function WOWSelectCard({ state = "locked", members, onVisit }: Omit<FactionSelec
       border: "1.5px solid var(--gestalt-win-border)", borderRadius: 10,
       boxShadow: "0 10px 30px var(--gestalt-glow)", display: "flex", flexDirection: "column",
     }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 12px",
+      <div style={{ display: "flex", alignItems: "center", gap: "var(--space-sm)", padding: "var(--space-sm) var(--space-md)",
         background: "linear-gradient(var(--gestalt-title-from), var(--gestalt-title-to))",
         borderBottom: "1.5px solid var(--gestalt-win-border)" }}>
+        {/* eslint-disable-next-line local/no-raw-style-values -- ornament: gutter between the 11px window traffic-light dots; in register with that raw geometry. */}
         <span style={{ display: "flex", gap: 6 }}>
           {["#f6c75e", "#7fc59e", "#ec5f99"].map((color) => <i key={color} style={{ width: 11, height: 11, borderRadius: "50%", background: color, border: "1px solid rgba(0,0,0,0.15)" }} />)}
         </span>
         <span style={{ fontSize: "var(--text-lg)", color: "var(--gestalt-title-text)", letterSpacing: "0.02em" }}>{i18n.t("feed:identity.wow.windowTitle")}</span>
-        {/* ornament: ▢ ✕ are drawn window-chrome glyphs used as icons, not text */}
+        {/* eslint-disable-next-line local/no-raw-style-values -- ornament: ▢ ✕ are drawn window-chrome glyphs used as icons, not text */}
         <span style={{ marginLeft: "auto", fontSize: 12, color: "var(--gestalt-title-text)", opacity: 0.7 }}>▢ ✕</span>
       </div>
-      <div style={{ flex: 1, padding: "14px 20px 0", position: "relative" }}>
-        {/* ornament: hand-script faction name, the whimsy.exe window's display type */}
+      <div style={{ flex: 1, padding: "var(--space-lg) var(--space-xl) 0", position: "relative" }}>
+        {/* eslint-disable-next-line local/no-raw-style-values -- ornament: hand-script faction name, the whimsy.exe window's display type */}
         <div style={{ fontFamily: "var(--font-faction-script)", fontWeight: 700, fontSize: 27, lineHeight: 1.1, color: "var(--gestalt-ink)", whiteSpace: "nowrap" }}>
-          <span style={{ display: "inline-block", verticalAlign: "-3px", marginRight: 6 }}><WowSigil size={18} color="var(--faction-wow)" /></span>{i18n.t("feed:factionSelect.wow.name")}
+          <span style={{ display: "inline-block", verticalAlign: "-3px", marginRight: "var(--space-sm)" }}><WowSigil size={18} color="var(--faction-wow)" /></span>{i18n.t("feed:factionSelect.wow.name")}
         </div>
-        <p className="content-text" style={{ margin: "13px 0 0", lineHeight: 1.6, color: "var(--gestalt-ink-soft)" }}>
+        <p className="content-text" style={{ margin: "var(--space-md) 0 0", lineHeight: 1.6, color: "var(--gestalt-ink-soft)" }}>
           {i18n.t("feed:factionSelect.wow.blurb")}
         </p>
       </div>
-      <div style={{ padding: "0 20px 16px" }}>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, marginBottom: 11 }}>
+      <div style={{ padding: "0 var(--space-xl) var(--space-lg)" }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "var(--space-md)", marginBottom: "var(--space-md)" }}>
+          {/* eslint-disable-next-line local/no-raw-style-values -- ornament: inset of the rotated status sticker; rounding reflows the sticker. */}
           <div style={{ transform: "rotate(-1.5deg)", background: "var(--gestalt-pink-lt)", color: "var(--gestalt-ink)", fontSize: "var(--text-md)", padding: "5px 10px", borderRadius: 4 }}>{status}</div>
           {members != null && <div style={{ flexShrink: 0, fontSize: "var(--text-sm)", letterSpacing: "0.04em", color: "var(--gestalt-label)" }}>{i18n.t("feed:factionSelect.wow.members", { count: members })}</div>}
         </div>
-        {/* ornament: CTA is set in the faction's hand-script at display size — shrinking it to a label token would flatten the archetype (§270) */}
         <button onClick={onVisit} style={{
           width: "100%", cursor: "pointer",
           border: "1.5px solid var(--gestalt-pink)", borderRadius: 7, background: "var(--gestalt-pink)", color: "#fff",
-          fontFamily: "var(--font-faction-script)", fontWeight: 700, fontSize: 21, padding: "6px 14px",
+          // eslint-disable-next-line local/no-raw-style-values -- ornament: CTA is set in the faction's hand-script at display size; a label token would flatten the archetype (§270)
+          fontFamily: "var(--font-faction-script)", fontWeight: 700, fontSize: 21, padding: "var(--space-sm) var(--space-lg)",
         }}>{i18n.t("feed:factionSelect.wow.cta")}</button>
       </div>
     </div>
@@ -141,27 +143,27 @@ function SnideSelectCard({ state = "locked", members, onVisit }: Omit<FactionSel
       <div style={{ position: "absolute", top: -40, right: -40, width: 130, height: 130, borderRadius: "50%",
         background: "radial-gradient(circle, var(--snide-acid) 0%, transparent 62%)", opacity: 0.22, filter: "blur(2px)" }} />
       <div style={{ position: "absolute", top: 14, left: 22, width: 74, height: 20, background: "var(--snide-tape)", transform: "rotate(-6deg)", boxShadow: "0 1px 2px rgba(0,0,0,0.4)" }} />
-      <div style={{ position: "relative", flex: 1, padding: "26px 24px 0" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+      <div style={{ position: "relative", flex: 1, padding: "var(--space-xl) var(--space-xl) 0" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "var(--space-md)" }}>
           <SnideSigil size={40} color="var(--snide-acid)" />
           <div>
-            {/* ornament: ransom-dispatch wordmark — Anton slammed at 0.85 leading */}
+            {/* eslint-disable-next-line local/no-raw-style-values -- ornament: ransom-dispatch wordmark — Anton slammed at 0.85 leading */}
             <div style={{ fontFamily: "var(--font-faction-anton)", fontSize: 34, lineHeight: 0.85, color: "var(--snide-paper)", letterSpacing: "0.02em" }}>{i18n.t("feed:identity.snide.wordmark")}</div>
-            <div style={{ fontSize: "var(--text-base)", letterSpacing: "0.14em", color: "var(--snide-acid)", marginTop: 4, textTransform: "uppercase" }}>{i18n.t("feed:factionSelect.snide.masthead")}</div>
+            <div style={{ fontSize: "var(--text-base)", letterSpacing: "0.14em", color: "var(--snide-acid)", marginTop: "var(--space-xs)", textTransform: "uppercase" }}>{i18n.t("feed:factionSelect.snide.masthead")}</div>
           </div>
         </div>
-        <div style={{ borderTop: "1px dashed rgba(255,255,255,0.25)", margin: "16px 0 12px" }} />
+        <div style={{ borderTop: "1px dashed rgba(255,255,255,0.25)", margin: "var(--space-lg) 0 var(--space-md)" }} />
         <p className="content-text" style={{ margin: 0, lineHeight: 1.65, color: "var(--snide-paper)" }}>
           {i18n.t("feed:factionSelect.snide.blurb")}
         </p>
       </div>
-      <div style={{ position: "relative", padding: "0 24px 20px" }}>
-        <div style={{ fontFamily: "var(--font-faction-marker)", fontSize: "var(--text-xl)", color: "var(--snide-pink)", transform: "rotate(-1deg)", marginBottom: 10 }}>{status}</div>
-        {/* ornament: CTA is Anton condensed caps, part of the ransom-note voice, not label chrome */}
+      <div style={{ position: "relative", padding: "0 var(--space-xl) var(--space-lg)" }}>
+        <div style={{ fontFamily: "var(--font-faction-marker)", fontSize: "var(--text-xl)", color: "var(--snide-pink)", transform: "rotate(-1deg)", marginBottom: "var(--space-md)" }}>{status}</div>
         <button onClick={onVisit} style={{
           display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%", cursor: "pointer",
           border: "2px solid var(--snide-acid)", background: "transparent", color: "var(--snide-acid)",
-          fontFamily: "var(--font-faction-anton)", fontSize: 15, letterSpacing: "0.08em", padding: "9px 14px", textTransform: "uppercase",
+          // eslint-disable-next-line local/no-raw-style-values -- ornament: CTA is Anton condensed caps, part of the ransom-note voice, not label chrome
+          fontFamily: "var(--font-faction-anton)", fontSize: 15, letterSpacing: "0.08em", padding: "var(--space-sm) var(--space-lg)", textTransform: "uppercase",
         }}
           onMouseEnter={(e) => { e.currentTarget.style.background = "var(--snide-acid)"; e.currentTarget.style.color = "var(--snide-ink)"; }}
           onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "var(--snide-acid)"; }}
@@ -181,27 +183,27 @@ function EphemeristsSelectCard({ state = "locked", members, onVisit }: Omit<Fact
     }}>
       <div style={{ position: "absolute", inset: 9, border: "1px solid rgba(180,150,80,0.35)", pointerEvents: "none" }} />
       <div style={{ position: "absolute", top: 16, right: 18, fontSize: "var(--text-sm)", letterSpacing: "0.1em", color: "var(--eph-gold-light)", opacity: 0.7, textAlign: "right", lineHeight: 1.5 }}>{i18n.t("feed:factionSelect.ephemerists.coords")}<br />{i18n.t("feed:factionSelect.ephemerists.coordsPolar")}</div>
-      <div style={{ position: "relative", flex: 1, padding: "22px 24px 0" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 13 }}>
+      <div style={{ position: "relative", flex: 1, padding: "var(--space-xl) var(--space-xl) 0" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "var(--space-md)" }}>
           <span style={{ width: 46, height: 46, borderRadius: "50%", border: "1.5px solid var(--eph-gold)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
             <EphemeristsSigil size={26} color="var(--eph-gold-light)" stroke={1.4} />
           </span>
           <div>
             <div style={{ fontSize: "var(--text-sm)", letterSpacing: "0.24em", color: "var(--eph-gold-light)", textTransform: "uppercase" }}>{i18n.t("feed:factionSelect.ephemerists.eyebrow")}</div>
-            {/* ornament: codex-leaf wordmark — engraved caps with a hard letterpress shadow */}
-            <div style={{ fontFamily: "var(--font-faction-engraved)", fontWeight: 800, fontSize: 26, lineHeight: 1, letterSpacing: "0.03em", color: "var(--eph-parchment)", marginTop: 4, textShadow: "1px 1px 0 var(--eph-field-deep)" }}>{i18n.t("feed:identity.ephemerists.wordmark")}</div>
+            {/* eslint-disable-next-line local/no-raw-style-values -- ornament: codex-leaf wordmark — engraved caps with a hard letterpress shadow */}
+            <div style={{ fontFamily: "var(--font-faction-engraved)", fontWeight: 800, fontSize: 26, lineHeight: 1, letterSpacing: "0.03em", color: "var(--eph-parchment)", marginTop: "var(--space-xs)", textShadow: "1px 1px 0 var(--eph-field-deep)" }}>{i18n.t("feed:identity.ephemerists.wordmark")}</div>
           </div>
         </div>
-        <div style={{ height: 1.5, background: "linear-gradient(90deg, var(--eph-gold) 0%, transparent 100%)", margin: "16px 0 13px" }} />
+        <div style={{ height: 1.5, background: "linear-gradient(90deg, var(--eph-gold) 0%, transparent 100%)", margin: "var(--space-lg) 0 var(--space-md)" }} />
         <p className="content-text" style={{ margin: 0, fontFamily: "var(--font-faction-codex-script)", fontStyle: "italic", lineHeight: 1.45, color: "var(--eph-parchment)" }}>
           {i18n.t("feed:factionSelect.ephemerists.blurb")}
         </p>
       </div>
-      <div style={{ position: "relative", padding: "0 24px 20px" }}>
-        <div style={{ fontSize: "var(--text-md)", letterSpacing: "0.03em", color: "var(--eph-gold-light)", marginBottom: 11 }}>{status}{members != null && ` · ${i18n.t("feed:factionSelect.ephemerists.members", { count: members })}`}</div>
+      <div style={{ position: "relative", padding: "0 var(--space-xl) var(--space-lg)" }}>
+        <div style={{ fontSize: "var(--text-md)", letterSpacing: "0.03em", color: "var(--eph-gold-light)", marginBottom: "var(--space-md)" }}>{status}{members != null && ` · ${i18n.t("feed:factionSelect.ephemerists.members", { count: members })}`}</div>
         <button onClick={onVisit} style={{
           width: "100%", cursor: "pointer", border: "1px solid var(--eph-gold)", background: "transparent", color: "var(--eph-gold-light)",
-          fontFamily: "var(--font-faction-engraved)", fontWeight: 600, fontSize: "var(--text-xl)", letterSpacing: "0.16em", padding: "10px", textTransform: "uppercase",
+          fontFamily: "var(--font-faction-engraved)", fontWeight: 600, fontSize: "var(--text-xl)", letterSpacing: "0.16em", padding: "var(--space-md)", textTransform: "uppercase",
         }}
           onMouseEnter={(e) => { e.currentTarget.style.background = "var(--eph-gold)"; e.currentTarget.style.color = "var(--eph-field-deep)"; }}
           onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "var(--eph-gold-light)"; }}
@@ -222,28 +224,28 @@ function SingularitySelectCard({ state = "locked", members, onVisit }: Omit<Fact
     }}>
       <div style={{ position: "absolute", inset: 0, pointerEvents: "none",
         background: "repeating-linear-gradient(rgba(74,222,128,0.05) 0 1px, transparent 1px 3px)" }} />
-      <div style={{ display: "flex", justifyContent: "space-between", padding: "7px 12px", borderBottom: "1px solid rgba(96,165,250,0.4)" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", padding: "var(--space-sm) var(--space-md)", borderBottom: "1px solid rgba(96,165,250,0.4)" }}>
         {Array.from({ length: 9 }).map((_, i) => <i key={i} style={{ width: 6, height: 6, borderRadius: 1, background: "rgba(96,165,250,0.5)" }} />)}
       </div>
-      <div style={{ position: "relative", flex: 1, padding: "16px 18px 0" }}>
+      <div style={{ position: "relative", flex: 1, padding: "var(--space-lg) var(--space-lg) 0" }}>
         <div style={{ fontSize: "var(--text-md)", letterSpacing: "0.14em", color: "#60a5fa", textTransform: "uppercase" }}>
-          {i18n.t("feed:identity.singularity.protocol")}<span style={{ display: "inline-block", width: 6, height: 11, background: green, marginLeft: 4, verticalAlign: "middle", animation: "wz-blink 1s step-end infinite" }} />
+          {i18n.t("feed:identity.singularity.protocol")}<span style={{ display: "inline-block", width: 6, height: 11, background: green, marginLeft: "var(--space-xs)", verticalAlign: "middle", animation: "wz-blink 1s step-end infinite" }} />
         </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 11, marginTop: 12 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "var(--space-md)", marginTop: "var(--space-md)" }}>
           <SingularitySigil size={30} color={green} />
-          {/* ornament: terminal-printout faction name — display-size mono, the archetype's banner */}
+          {/* eslint-disable-next-line local/no-raw-style-values -- ornament: terminal-printout faction name — display-size mono, the archetype's banner */}
           <span style={{ fontSize: 30, color: green, letterSpacing: "0.02em" }}>{i18n.t("feed:factionSelect.singularity.name")}</span>
         </div>
-        <p className="content-text" style={{ margin: "14px 0 0", lineHeight: 1.65, color: "#8fe6ac" }}>
+        <p className="content-text" style={{ margin: "var(--space-lg) 0 0", lineHeight: 1.65, color: "#8fe6ac" }}>
           &gt; {i18n.t("feed:factionSelect.singularity.blurb")}
         </p>
       </div>
-      <div style={{ position: "relative", padding: "0 18px 18px" }}>
-        <div style={{ fontSize: "var(--text-md)", color: "#60a5fa", marginBottom: 10 }}>{status}{members != null && <span style={{ float: "right", color: green }}>{i18n.t("feed:factionSelect.singularity.members", { count: members })}</span>}</div>
+      <div style={{ position: "relative", padding: "0 var(--space-lg) var(--space-lg)" }}>
+        <div style={{ fontSize: "var(--text-md)", color: "#60a5fa", marginBottom: "var(--space-md)" }}>{status}{members != null && <span style={{ float: "right", color: green }}>{i18n.t("feed:factionSelect.singularity.members", { count: members })}</span>}</div>
         <button onClick={onVisit} style={{
-          display: "flex", alignItems: "center", width: "100%", cursor: "pointer", gap: 8,
+          display: "flex", alignItems: "center", width: "100%", cursor: "pointer", gap: "var(--space-sm)",
           border: "1px solid #2563eb", background: "rgba(37,99,235,0.14)", color: green,
-          fontFamily: "var(--font-faction-terminal)", fontSize: "var(--text-xl)", letterSpacing: "0.06em", padding: "9px 13px",
+          fontFamily: "var(--font-faction-terminal)", fontSize: "var(--text-xl)", letterSpacing: "0.06em", padding: "var(--space-sm) var(--space-md)",
         }}
           onMouseEnter={(e) => { e.currentTarget.style.background = green; e.currentTarget.style.color = "#050f08"; }}
           onMouseLeave={(e) => { e.currentTarget.style.background = "rgba(37,99,235,0.14)"; e.currentTarget.style.color = green; }}
@@ -266,27 +268,42 @@ function EverymenSelectCard({ state = "locked", members, onVisit }: Omit<Faction
       <div style={{ position: "absolute", inset: 0, pointerEvents: "none", opacity: 0.5,
         background: "repeating-conic-gradient(from 0deg at 50% 34%, var(--everymen-field-deep) 0deg 7deg, transparent 7deg 14deg)" }} />
       <div style={{ position: "relative", background: "var(--everymen-ink)", color: "var(--everymen-gold)", textAlign: "center",
-        fontFamily: "var(--font-faction-poster)", fontSize: "var(--text-xl)", letterSpacing: "0.3em", padding: "6px 0" }}>{i18n.t("feed:factionSelect.everymen.banner")}</div>
+        fontFamily: "var(--font-faction-poster)", fontSize: "var(--text-xl)", letterSpacing: "0.3em",
+        // eslint-disable-next-line local/no-raw-style-values -- ornament: lead of the struck banner strip; rounding reflows it.
+        padding: "6px 0" }}>{i18n.t("feed:factionSelect.everymen.banner")}</div>
       <div style={{ height: 3, background: "var(--everymen-gold)" }} />
-      <div style={{ position: "relative", flex: 1, padding: "14px 22px 0", textAlign: "center" }}>
-        <div style={{ display: "flex", justifyContent: "center", marginBottom: 6 }}>
+      <div style={{ position: "relative", flex: 1, padding: "var(--space-lg) var(--space-xl) 0", textAlign: "center" }}>
+        <div style={{ display: "flex", justifyContent: "center", marginBottom: "var(--space-sm)" }}>
           <span style={{ width: 58, height: 58, borderRadius: "50%", background: "var(--everymen-cream)", display: "flex", alignItems: "center", justifyContent: "center",
             boxShadow: "0 0 0 3px var(--everymen-ink), inset 0 0 0 4px var(--everymen-red)" }}>
             <EverymenSigil size={30} color="var(--everymen-red)" />
           </span>
         </div>
-        {/* ornament: union-poster headline — poster type at 0.86 leading with a hard drop shadow */}
+        {/* eslint-disable-next-line local/no-raw-style-values -- ornament: union-poster headline — poster type at 0.86 leading with a hard drop shadow */}
         <div style={{ fontFamily: "var(--font-faction-poster)", fontSize: 40, lineHeight: 0.86, color: "var(--everymen-cream)", textShadow: "2px 2px 0 var(--everymen-ink)" }}>{i18n.t("feed:factionSelect.everymen.headline")}</div>
-        {/* ornament: struck plaque — the block is the illustration, its lettering is set to the plate */}
-        <div style={{ display: "inline-block", marginTop: 11, background: "var(--everymen-ink)", color: "var(--everymen-gold)",
-          fontFamily: "var(--font-faction-poster)", fontSize: 13, letterSpacing: "0.2em", padding: "3px 14px" }}>{i18n.t("feed:factionSelect.everymen.plaque")}</div>
+        <div
+          style={{
+            display: "inline-block",
+            marginTop: "var(--space-md)",
+            background: "var(--everymen-ink)",
+            color: "var(--everymen-gold)",
+            fontFamily: "var(--font-faction-poster)",
+            // eslint-disable-next-line local/no-raw-style-values -- ornament: struck plaque — the block is the illustration, its lettering is set to the plate
+            fontSize: 13,
+            letterSpacing: "0.2em",
+            // eslint-disable-next-line local/no-raw-style-values -- ornament: inset of the lettering within the struck plate; rounding reflows the plaque.
+            padding: "3px 14px",
+          }}
+        >
+          {i18n.t("feed:factionSelect.everymen.plaque")}
+        </div>
       </div>
-      <div style={{ position: "relative", padding: "10px 22px 18px", textAlign: "center" }}>
-        <div style={{ fontSize: "var(--text-base)", color: "var(--everymen-cream)", opacity: 0.9, marginBottom: 10 }}>{status}</div>
-        {/* ornament: CTA is poster type — the shout is the archetype; a label token would flatten it (§270) */}
+      <div style={{ position: "relative", padding: "var(--space-md) var(--space-xl) var(--space-lg)", textAlign: "center" }}>
+        <div style={{ fontSize: "var(--text-base)", color: "var(--everymen-cream)", opacity: 0.9, marginBottom: "var(--space-md)" }}>{status}</div>
         <button onClick={onVisit} style={{
           width: "100%", cursor: "pointer", border: "2px solid var(--everymen-ink)", background: "var(--everymen-gold)", color: "var(--everymen-ink)",
-          fontFamily: "var(--font-faction-poster)", fontSize: 22, letterSpacing: "0.1em", padding: "8px",
+          // eslint-disable-next-line local/no-raw-style-values -- ornament: CTA is poster type; the shout is the archetype, a label token would flatten it (§270)
+          fontFamily: "var(--font-faction-poster)", fontSize: 22, letterSpacing: "0.1em", padding: "var(--space-sm)",
         }}>{i18n.t("feed:factionSelect.everymen.cta")}{members != null ? ` ${i18n.t("feed:factionSelect.everymen.members", { count: members })}` : ""}</button>
       </div>
     </div>
@@ -302,23 +319,23 @@ function AlbescentSelectCard({ state = "locked", members, onVisit }: Omit<Factio
       border: "1px solid var(--al-border)", boxShadow: "var(--al-shadow)", display: "flex", flexDirection: "column",
     }}>
       <div style={{ position: "absolute", inset: 12, border: "1px solid var(--al-border-faint)", pointerEvents: "none" }} />
-      <div style={{ position: "relative", flex: 1, padding: "26px 30px 0", display: "flex", flexDirection: "column" }}>
+      <div style={{ position: "relative", flex: 1, padding: "var(--space-xl) var(--space-2xl) 0", display: "flex", flexDirection: "column" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
           <div style={{ fontFamily: "var(--font-body)", fontSize: "var(--text-sm)", letterSpacing: "0.34em", color: "var(--al-text-muted)", textTransform: "uppercase" }}>{i18n.t("feed:factionSelect.albescent.eyebrow")}</div>
           <AlbescentSigil size={26} color="var(--al-ink)" />
         </div>
-        {/* ornament: vellum-letter name — the archetype's calligraphic display type */}
-        <div style={{ fontFamily: "var(--font-faction-vellum)", fontStyle: "italic", fontWeight: 600, fontSize: 40, lineHeight: 1, letterSpacing: "0.01em", marginTop: 16 }}>{i18n.t("feed:factionSelect.albescent.name")}</div>
-        <div style={{ width: 44, height: 1, background: "var(--al-text)", opacity: 0.5, margin: "13px 0" }} />
+        {/* eslint-disable-next-line local/no-raw-style-values -- ornament: vellum-letter name — the archetype's calligraphic display type */}
+        <div style={{ fontFamily: "var(--font-faction-vellum)", fontStyle: "italic", fontWeight: 600, fontSize: 40, lineHeight: 1, letterSpacing: "0.01em", marginTop: "var(--space-lg)" }}>{i18n.t("feed:factionSelect.albescent.name")}</div>
+        <div style={{ width: 44, height: 1, background: "var(--al-text)", opacity: 0.5, margin: "var(--space-md) 0" }} />
         <p className="content-text" style={{ margin: 0, fontStyle: "italic", lineHeight: 1.45, color: "var(--al-ink)" }}>
           {i18n.t("feed:factionSelect.albescent.blurb")}
         </p>
       </div>
-      <div style={{ position: "relative", padding: "14px 30px 22px" }}>
-        <div style={{ fontFamily: "var(--font-body)", fontSize: "var(--text-sm)", letterSpacing: "0.06em", color: "var(--al-text-muted)", marginBottom: 13, textTransform: "uppercase" }}>{status}{members != null && ` · ${i18n.t("feed:factionSelect.albescent.members", { count: members })}`}</div>
+      <div style={{ position: "relative", padding: "var(--space-lg) var(--space-2xl) var(--space-xl)" }}>
+        <div style={{ fontFamily: "var(--font-body)", fontSize: "var(--text-sm)", letterSpacing: "0.06em", color: "var(--al-text-muted)", marginBottom: "var(--space-md)", textTransform: "uppercase" }}>{status}{members != null && ` · ${i18n.t("feed:factionSelect.albescent.members", { count: members })}`}</div>
         <button onClick={onVisit} style={{
           width: "100%", cursor: "pointer", border: "1px solid var(--al-text)", background: "transparent", color: "var(--al-text)",
-          fontFamily: "var(--font-body)", fontSize: "var(--text-md)", letterSpacing: "0.22em", padding: "11px", textTransform: "uppercase", transition: "background 140ms, color 140ms",
+          fontFamily: "var(--font-body)", fontSize: "var(--text-md)", letterSpacing: "0.22em", padding: "var(--space-md)", textTransform: "uppercase", transition: "background 140ms, color 140ms",
         }}
           onMouseEnter={(e) => { e.currentTarget.style.background = "var(--al-text)"; e.currentTarget.style.color = "var(--al-surface)"; }}
           onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "var(--al-text)"; }}

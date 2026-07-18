@@ -18,11 +18,11 @@ export default function FeedCardEraAnnouncement({ item }: Props) {
       style={{
         background: 'var(--badge-admin-bg)',
         color: 'var(--badge-admin-text)',
-        padding: '20px 24px',
+        padding: 'var(--space-lg) var(--space-xl)',
         position: 'relative',
       }}
     >
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-sm)', marginBottom: 'var(--space-md)' }}>
         <span className="eyebrow">{i18n.t('feed:eraAnnouncement.kicker')}</span>
         <span className="eyebrow" style={{ color: 'var(--rank-silver)' }}>
           {i18n.t('feed:eraAnnouncement.label')}
@@ -34,18 +34,18 @@ export default function FeedCardEraAnnouncement({ item }: Props) {
 
       <h3
         className="font-display italic"
-        style={{ fontSize: 'var(--text-content)', color: 'var(--badge-admin-text)', marginBottom: 8, lineHeight: 1.3 }}
+        style={{ fontSize: 'var(--text-content)', color: 'var(--badge-admin-text)', marginBottom: 'var(--space-sm)', lineHeight: 1.3 }}
       >
         {i18n.t('feed:eraAnnouncement.headline', { name: era_name })}
       </h3>
 
       {era_notes && (
-        <p className="font-body" style={{ fontSize: 'var(--text-content)', color: 'rgba(247,244,238,0.75)', marginBottom: 16, lineHeight: 1.5 }}>
+        <p className="font-body" style={{ fontSize: 'var(--text-content)', color: 'rgba(247,244,238,0.75)', marginBottom: 'var(--space-lg)', lineHeight: 1.5 }}>
           {era_notes}
         </p>
       )}
 
-      <div style={{ display: 'flex', gap: 10 }}>
+      <div style={{ display: 'flex', gap: 'var(--space-md)' }}>
         <Link
           to="/tasks"
           style={{
@@ -56,7 +56,7 @@ export default function FeedCardEraAnnouncement({ item }: Props) {
             letterSpacing: '0.1em',
             background: 'var(--badge-admin-text)',
             color: 'var(--badge-admin-bg)',
-            padding: '8px 16px',
+            padding: 'var(--space-sm) var(--space-lg)',
             textDecoration: 'none',
           }}
         >
@@ -72,7 +72,7 @@ export default function FeedCardEraAnnouncement({ item }: Props) {
             letterSpacing: '0.1em',
             border: '1px solid rgba(247,244,238,0.4)',
             color: 'var(--badge-admin-text)',
-            padding: '8px 16px',
+            padding: 'var(--space-sm) var(--space-lg)',
             textDecoration: 'none',
           }}
         >

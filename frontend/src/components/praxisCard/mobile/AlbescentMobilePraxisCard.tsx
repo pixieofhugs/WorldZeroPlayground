@@ -31,7 +31,7 @@ export default function AlbescentMobilePraxisCard({ praxis }: { praxis: PraxisCa
         color: 'var(--faction-albescent-card-text)',
         border: `1px solid ${ink(10)}`,
         boxShadow: '0 2px 18px rgba(0,0,0,0.055), 0 1px 3px rgba(0,0,0,0.04)',
-        padding: '14px 16px',
+        padding: 'var(--space-lg)',
       }}
     >
       <div style={{ position: 'absolute', inset: 5, border: `1px solid ${ink(5)}`, pointerEvents: 'none' }} />
@@ -40,8 +40,8 @@ export default function AlbescentMobilePraxisCard({ praxis }: { praxis: PraxisCa
           position: 'relative',
           display: 'flex',
           alignItems: 'center',
-          gap: 8,
-          marginBottom: 12,
+          gap: 'var(--space-sm)',
+          marginBottom: 'var(--space-md)',
           fontFamily: 'var(--faction-albescent-mono)',
           fontSize: 'var(--text-sm)',
           letterSpacing: '0.22em',

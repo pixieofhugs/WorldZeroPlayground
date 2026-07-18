@@ -39,8 +39,8 @@ export default function FeedRowContent({
   ) : null
 
   return (
-    <div style={{ padding: '12px 16px', position: 'relative' }}>
-      <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
+    <div style={{ padding: 'var(--space-md) var(--space-lg)', position: 'relative' }}>
+      <div style={{ display: 'flex', alignItems: 'flex-start', gap: 'var(--space-md)' }}>
         {/* Avatar — real image if present, else a faction-tinted monogram. */}
         {row.actor && (
           <MaybeLink href={row.actorHref}>
@@ -48,7 +48,7 @@ export default function FeedRowContent({
               <img
                 src={mediaUrl(avatarUrl)}
                 alt=""
-                style={{ width: 28, height: 28, borderRadius: '50%', objectFit: 'cover', flexShrink: 0, marginTop: 2 }}
+                style={{ width: 28, height: 28, borderRadius: '50%', objectFit: 'cover', flexShrink: 0, marginTop: 'var(--space-xs)' }}
               />
             ) : (
               <div
@@ -62,11 +62,11 @@ export default function FeedRowContent({
                   justifyContent: 'center',
                   color: 'var(--color-text-on-accent)',
                   fontFamily: "'Courier Prime', monospace",
-                  // ornament: monogram glyph sized to the 28px avatar disc
+                  // eslint-disable-next-line local/no-raw-style-values -- ornament: monogram glyph sized to the 28px avatar disc
                   fontSize: 12,
                   fontWeight: 700,
                   flexShrink: 0,
-                  marginTop: 2,
+                  marginTop: 'var(--space-xs)',
                 }}
               >
                 {initial}
@@ -76,14 +76,14 @@ export default function FeedRowContent({
         )}
 
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-sm)', flexWrap: 'wrap' }}>
             {actorNode}
             <span className="font-body" style={{ fontSize: 'var(--text-content)', color: 'var(--color-text-secondary)' }}>
               {row.action}
             </span>
             {row.badge && <FeedBadge type={row.badge.type} label={row.badge.label} />}
           </div>
-          <span className="eyebrow" style={{ color: 'var(--color-text-tertiary)', display: 'block', marginTop: 2 }}>
+          <span className="eyebrow" style={{ color: 'var(--color-text-tertiary)', display: 'block', marginTop: 'var(--space-xs)' }}>
             {row.time}
           </span>
         </div>
@@ -92,10 +92,12 @@ export default function FeedRowContent({
       {row.headline && (
         <div
           style={{
-            marginTop: 10,
-            marginLeft: row.actor ? 38 : 0,
+            marginTop: 'var(--space-md)',
+            // Aligns the headline rule with the text column: --space-3xl (40px) is
+            // the 28px avatar plus the --space-md row gap.
+            marginLeft: row.actor ? 'var(--space-3xl)' : 0,
             borderLeft: `3px solid ${accent}`,
-            paddingLeft: 10,
+            paddingLeft: 'var(--space-md)',
           }}
         >
           {row.headlineQuoted ? (

@@ -22,13 +22,19 @@ export default function UaMobilePraxisCard({ praxis }: { praxis: PraxisCardOut }
     titleStyle: { fontStyle: 'italic' },
   }
   return (
-    <div style={{ padding: 4, background: 'var(--ua-gilt)', borderRadius: 2 }}>
+    <div
+      style={{
+        padding: 'var(--space-xs)',
+        background: 'var(--ua-gilt)',
+        borderRadius: 2,
+      }}
+    >
       <div
         style={{
           position: 'relative',
           background: factionCssVar('ua', 'card-bg'),
           border: '1px solid color-mix(in srgb, var(--ua-ink) 30%, transparent)',
-          padding: '16px 16px 14px',
+          padding: 'var(--space-lg) var(--space-lg) var(--space-md)',
           backgroundImage:
             'radial-gradient(color-mix(in srgb, var(--ua-ink) 4%, transparent) 1px, transparent 1px)',
           backgroundSize: '5px 5px',
@@ -38,8 +44,8 @@ export default function UaMobilePraxisCard({ praxis }: { praxis: PraxisCardOut }
           style={{
             display: 'flex',
             alignItems: 'center',
-            gap: 8,
-            marginBottom: 12,
+            gap: 'var(--space-sm)',
+            marginBottom: 'var(--space-md)',
             fontFamily: "'Marcellus SC', serif",
             fontSize: 'var(--text-sm)',
             letterSpacing: '0.14em',

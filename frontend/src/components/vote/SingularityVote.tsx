@@ -49,7 +49,7 @@ export default function SingularityVote({ praxisId, currentValue, points, totalV
           letterSpacing: '0.18em',
           color: 'color-mix(in srgb, var(--faction-singularity-card-muted) 75%, transparent)',
           textTransform: 'uppercase',
-          marginBottom: 3,
+          marginBottom: 'var(--space-xs)',
         }}
       >
         {t('chrome.singularity.prompt')}
@@ -59,19 +59,19 @@ export default function SingularityVote({ praxisId, currentValue, points, totalV
           fontSize: 'var(--text-xs)',
           fontStyle: 'italic',
           color: 'color-mix(in srgb, var(--faction-singularity-card-accent) 50%, transparent)',
-          marginBottom: 12,
+          marginBottom: 'var(--space-md)',
         }}
       >
         {t('chrome.singularity.promptHint')}
       </div>
 
-      <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+      <div style={{ display: 'flex', gap: 'var(--space-sm)', flexWrap: 'wrap' }}>
         {TIERS.map((tier) => {
           const fill = SG_FILLS[tier.value] ?? SG_FILLS[1]
           const reached = selected >= tier.value
           const picked = selected === tier.value
           return (
-            <div key={tier.value} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 5 }}>
+            <div key={tier.value} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 'var(--space-xs)' }}>
               <button
                 disabled={saving}
                 onClick={() => void vote(tier.value)}

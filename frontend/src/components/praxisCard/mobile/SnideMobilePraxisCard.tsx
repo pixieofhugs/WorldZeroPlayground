@@ -30,7 +30,7 @@ export default function SnideMobilePraxisCard({ praxis }: { praxis: PraxisCardOu
         background: factionCssVar('snide', 'card-bg'),
         color: factionCssVar('snide', 'card-text'),
         border: `1px solid ${factionCssVar('snide', 'border')}`,
-        padding: '18px 16px 14px',
+        padding: 'var(--space-lg) var(--space-lg) var(--space-md)',
         boxShadow: '5px 6px 0 rgba(0,0,0,.5)',
       }}
     >
@@ -50,8 +50,8 @@ export default function SnideMobilePraxisCard({ praxis }: { praxis: PraxisCardOu
         style={{
           display: 'flex',
           alignItems: 'center',
-          gap: 8,
-          marginBottom: 12,
+          gap: 'var(--space-sm)',
+          marginBottom: 'var(--space-md)',
           fontFamily: 'var(--faction-snide-font-type)',
           fontSize: 'var(--text-sm)',
           letterSpacing: '0.14em',

@@ -98,7 +98,7 @@ export function EphEyebrow({
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          gap: 5,
+          gap: "var(--space-xs)",
           color,
         }}
       >
@@ -123,7 +123,7 @@ export function EphEyebrow({
             color: dark
               ? "var(--eph-muted)"
               : "color-mix(in srgb, var(--eph-parchment) 65%, transparent)",
-            marginTop: 1,
+            marginTop: "var(--space-xs)",
           }}
         >
           {motto}

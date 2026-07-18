@@ -46,7 +46,9 @@ export default function WowFeedFrame({ children }: { children: ReactNode }) {
         style={{
           display: 'flex',
           alignItems: 'center',
+          // eslint-disable-next-line local/no-raw-style-values -- ornament: window title bar, sized around its 9px traffic-light dots and raw script type.
           gap: 7,
+          // eslint-disable-next-line local/no-raw-style-values -- ornament: window title bar, sized around its 9px traffic-light dots and raw script type.
           padding: '7px 12px',
           background: `linear-gradient(180deg, ${TITLE_FROM}, ${TITLE_TO})`,
           borderBottom: `2px solid ${WIN_BORDER}`,
@@ -73,9 +75,10 @@ export default function WowFeedFrame({ children }: { children: ReactNode }) {
             marginLeft: 'auto',
             display: 'inline-flex',
             alignItems: 'center',
+            // eslint-disable-next-line local/no-raw-style-values -- ornament: lead between the hand-lettered window title and its sparkle.
             gap: 6,
             fontFamily: SCRIPT,
-            // ornament: hand-lettered window title on the frame chrome
+            // eslint-disable-next-line local/no-raw-style-values -- ornament: hand-lettered window title on the frame chrome
             fontSize: 17,
             color: TITLE_TEXT,
           }}
@@ -90,7 +93,7 @@ export default function WowFeedFrame({ children }: { children: ReactNode }) {
         style={{
           background: NOTEPAD_BG,
           borderTop: `1px solid ${NOTEPAD_BORDER}`,
-          padding: 12,
+          padding: 'var(--space-md)',
         }}
       >
         {children}

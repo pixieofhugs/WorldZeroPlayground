@@ -61,7 +61,7 @@ function StatusBadge({ status, slug }: { status: string; slug: string }) {
           background: factionCssVar(slug, "light"),
           border: `1px solid ${factionCssVar(slug, "border")}`,
           letterSpacing: "0.1em",
-          padding: "2px 6px",
+          padding: "var(--space-xs) var(--space-sm)",
         }}
       >
         {i18n.t("feed:factionCard.status.burned")}
@@ -93,13 +93,13 @@ function InvitationNote({ slug, note }: { slug: string; note: string }) {
       style={{
         display: "inline-flex",
         alignItems: "center",
-        gap: 6,
+        gap: "var(--space-sm)",
         color: factionCssVar(slug),
         background: factionCssVar(slug, "light"),
         border: `1px solid ${factionCssVar(slug, "border")}`,
-        padding: "2px 6px",
+        padding: "var(--space-xs) var(--space-sm)",
         letterSpacing: "0.12em",
-        marginBottom: 6,
+        marginBottom: "var(--space-sm)",
       }}
     >
       <span style={{ fontWeight: 700 }}>{i18n.t("feed:factionCard.newInvitation")}</span>
@@ -128,7 +128,7 @@ function UaCard({
         clipPath: "polygon(0 0, 100% 0, 100% 88%, 88% 100%, 0 100%)",
         transform: `rotate(${rotation}deg)`,
         position: "relative",
-        padding: "28px 16px 20px",
+        padding: "var(--space-2xl) var(--space-lg) var(--space-xl)",
         fontFamily: "var(--font-body)",
         color: factionCssVar("ua", "card-text"),
         transition: "background 150ms, color 150ms",
@@ -154,7 +154,7 @@ function UaCard({
       )}
       <div
         className="card-meta"
-        style={{ color: factionCssVar("ua", "card-accent"), marginBottom: 6 }}
+        style={{ color: factionCssVar("ua", "card-accent"), marginBottom: "var(--space-sm)" }}
       >
         <StatusBadge status={status} slug="ua" />
       </div>
@@ -163,7 +163,7 @@ function UaCard({
           fontSize: "var(--text-lg)",
           fontWeight: 700,
           lineHeight: 1.3,
-          marginBottom: 8,
+          marginBottom: "var(--space-sm)",
         }}
       >
         {factionName(faction.slug)}
@@ -171,7 +171,7 @@ function UaCard({
       {desc && (
         <div
           className="card-description"
-          style={{ color: factionCssVar("ua", "card-muted"), marginBottom: 10 }}
+          style={{ color: factionCssVar("ua", "card-muted"), marginBottom: "var(--space-md)" }}
         >
           {desc}
         </div>
@@ -243,7 +243,8 @@ function WowCard({
             {
               display: "flex",
               alignItems: "center",
-              gap: 8,
+              gap: "var(--space-sm)",
+              // eslint-disable-next-line local/no-raw-style-values -- ornament: inset of the drawn window title bar; rounding reflows the chrome.
               padding: "7px 11px",
               background:
                 "linear-gradient(180deg, var(--faction-wow-title-from), var(--faction-wow-title-to))",
@@ -251,6 +252,7 @@ function WowCard({
             } as React.CSSProperties
           }
         >
+          {/* eslint-disable-next-line local/no-raw-style-values -- ornament: gutter between the 11px traffic-light dots; in register with that raw geometry. */}
           <span style={{ display: "flex", gap: 5 }}>
             <span
               style={{
@@ -284,7 +286,7 @@ function WowCard({
             style={{
               display: "inline-flex",
               alignItems: "center",
-              gap: 4,
+              gap: "var(--space-xs)",
               fontSize: "var(--text-md)",
               color: titleText,
               letterSpacing: "0.03em",
@@ -292,10 +294,10 @@ function WowCard({
           >
             <WowSigil size={10} color={titleText} /> {i18n.t("feed:identity.wow.windowTitle")}
           </span>
-          {/* ornament: ▭ ✕ are drawn window-chrome glyphs used as icons, not text */}
           <span
             style={{
               marginLeft: "auto",
+              // eslint-disable-next-line local/no-raw-style-values -- ornament: ▭ ✕ are drawn window-chrome glyphs used as icons, not text
               fontSize: 11,
               color: titleText,
               opacity: 0.75,
@@ -310,7 +312,7 @@ function WowCard({
           style={
             {
               position: "relative",
-              padding: "14px 14px 13px",
+              padding: "var(--space-lg) var(--space-lg) var(--space-md)",
               background: "var(--faction-wow-body-bg)",
               backgroundImage:
                 "radial-gradient(var(--faction-wow-dot) 1.4px, transparent 1.4px)",
@@ -346,8 +348,8 @@ function WowCard({
                 background: "var(--faction-wow-notepad-bg)",
                 border: "1.5px solid var(--faction-wow-notepad-border)",
                 borderRadius: 7,
-                padding: "11px 13px",
-                marginBottom: 11,
+                padding: "var(--space-md)",
+                marginBottom: "var(--space-md)",
               } as React.CSSProperties
             }
           >
@@ -355,20 +357,20 @@ function WowCard({
               className="card-meta"
               style={{
                 color: factionCssVar("wow", "card-accent"),
-                marginBottom: 4,
+                marginBottom: "var(--space-xs)",
               }}
             >
               <StatusBadge status={status} slug="wow" />
             </div>
-            {/* ornament: faction name in Caveat at notepad-headline size — the archetype's voice */}
             <div
               style={{
                 fontFamily: factionCssVar("wow", "card-font"),
+                // eslint-disable-next-line local/no-raw-style-values -- ornament: faction name in Caveat at notepad-headline size — the archetype's voice
                 fontSize: 26,
                 fontWeight: 700,
                 lineHeight: 1.05,
                 color: factionCssVar("wow", "card-text"),
-                marginBottom: 4,
+                marginBottom: "var(--space-xs)",
               }}
             >
               {factionName(faction.slug)}
@@ -411,7 +413,7 @@ function SnideCard({
         width: "100%",
         background: factionCssVar("snide", "card-bg"),
         position: "relative",
-        padding: "14px 14px 16px",
+        padding: "var(--space-md) var(--space-md) var(--space-lg)",
         fontFamily: factionCssVar("snide", "card-font"),
         color: factionCssVar("snide", "card-text"),
         transition: "background 150ms, color 150ms",
@@ -450,7 +452,7 @@ function SnideCard({
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
-          marginBottom: 6,
+          marginBottom: "var(--space-sm)",
         }}
       >
         <div style={{ fontSize: "var(--text-lg)", lineHeight: 1.2 }}>
@@ -463,8 +465,8 @@ function SnideCard({
           style={{
             display: "grid",
             gridTemplateColumns: "1fr 1px 1fr",
-            gap: 4,
-            marginBottom: 10,
+            gap: "var(--space-xs)",
+            marginBottom: "var(--space-md)",
           }}
         >
           <div
@@ -523,8 +525,8 @@ function EphemeristsCard({
           position: "relative",
           display: "flex",
           alignItems: "center",
-          gap: 16,
-          padding: "16px 18px",
+          gap: "var(--space-lg)",
+          padding: "var(--space-lg)",
           background:
             "radial-gradient(120% 150% at 82% 0%, var(--eph-lapis), var(--eph-field-deep) 60%, #05131c 100%)",
           color: "var(--eph-parchment)",
@@ -540,16 +542,16 @@ function EphemeristsCard({
               letterSpacing: "0.26em",
               textTransform: "uppercase",
               color: "var(--eph-gold-light)",
-              marginBottom: 4,
+              marginBottom: "var(--space-xs)",
             }}
           >
             {i18n.t("feed:factionCard.ephemerists.eyebrow")}
           </div>
-          {/* ornament: codex frontispiece wordmark — display serif with a letterpress shadow */}
           <div
             style={{
               fontFamily: "var(--eph-display)",
               fontWeight: 800,
+              // eslint-disable-next-line local/no-raw-style-values -- ornament: codex frontispiece wordmark — display serif with a letterpress shadow
               fontSize: 26,
               lineHeight: 0.92,
               color: "var(--eph-parchment)",
@@ -565,7 +567,7 @@ function EphemeristsCard({
         style={{
           background: "var(--eph-vellum)",
           color: "var(--eph-vellum-text)",
-          padding: "12px 16px 14px",
+          padding: "var(--space-md) var(--space-lg) var(--space-lg)",
         }}
       >
         {invitationNote && (
@@ -573,14 +575,14 @@ function EphemeristsCard({
         )}
         <div
           className="card-meta"
-          style={{ color: "var(--eph-rubric)", marginBottom: 6 }}
+          style={{ color: "var(--eph-rubric)", marginBottom: "var(--space-sm)" }}
         >
           <StatusBadge status={status} slug="ephemerists" />
         </div>
         {desc && (
           <div
             className="card-description"
-            style={{ color: "var(--eph-muted)", marginBottom: 10, fontStyle: "italic" }}
+            style={{ color: "var(--eph-muted)", marginBottom: "var(--space-md)", fontStyle: "italic" }}
           >
             {desc}
           </div>
@@ -596,8 +598,8 @@ function SingularityHoles() {
       style={{
         display: "flex",
         justifyContent: "center",
-        gap: 6,
-        padding: "4px 0",
+        gap: "var(--space-sm)",
+        padding: "var(--space-xs) 0",
       }}
     >
       {Array.from({ length: 5 }).map((_, index) => (
@@ -695,7 +697,7 @@ function SingularityCard({
       />
       <SingularityHoles />
       <div
-        style={{ padding: "6px 16px 12px", position: "relative", zIndex: 2 }}
+        style={{ padding: "var(--space-sm) var(--space-lg) var(--space-md)", position: "relative", zIndex: 2 }}
       >
         {invitationNote && (
           <InvitationNote slug={faction.slug} note={invitationNote} />
@@ -706,7 +708,7 @@ function SingularityCard({
             color: "var(--faction-singularity-card-muted)",
             textTransform: "uppercase",
             letterSpacing: "0.15em",
-            marginBottom: 8,
+            marginBottom: "var(--space-sm)",
           }}
         >
           {i18n.t("feed:identity.singularity.protocol")}
@@ -716,7 +718,7 @@ function SingularityCard({
               width: 5,
               height: 9,
               background: "var(--faction-singularity-card-text)",
-              marginLeft: 3,
+              marginLeft: "var(--space-xs)",
               verticalAlign: "middle",
               animation: "blink 1s step-end infinite",
             }}
@@ -727,7 +729,7 @@ function SingularityCard({
             display: "flex",
             justifyContent: "space-between",
             alignItems: "flex-start",
-            marginBottom: 8,
+            marginBottom: "var(--space-sm)",
           }}
         >
           <div style={{ fontSize: "var(--text-md)", lineHeight: 1.3 }}>
@@ -742,7 +744,7 @@ function SingularityCard({
             style={{
               color: "var(--faction-singularity-card-muted)",
               lineHeight: 1.5,
-              marginBottom: 10,
+              marginBottom: "var(--space-md)",
             }}
           >
             {desc}
@@ -780,7 +782,7 @@ export default function FactionCard(props: FactionCardProps) {
             width: "100%",
             background: "var(--color-bg-card)",
             border: `2px solid ${factionCssVar(props.faction.slug, "border")}`,
-            padding: "14px 16px",
+            padding: "var(--space-md) var(--space-lg)",
             fontFamily: "var(--font-body)",
             color: "var(--color-text-primary)",
             boxSizing: "border-box",
@@ -797,7 +799,7 @@ export default function FactionCard(props: FactionCardProps) {
               display: "flex",
               justifyContent: "space-between",
               alignItems: "center",
-              marginBottom: 8,
+              marginBottom: "var(--space-sm)",
             }}
           >
             <div
@@ -811,7 +813,7 @@ export default function FactionCard(props: FactionCardProps) {
             </div>
             <StatusBadge status={props.status} slug={props.faction.slug} />
           </div>
-          <div className="card-description" style={{ marginBottom: 10 }}>
+          <div className="card-description" style={{ marginBottom: "var(--space-md)" }}>
             {factionDescription(props.faction.slug).slice(0, 100)}
           </div>
         </div>

@@ -52,7 +52,7 @@ export default function WowVote({ praxisId, currentValue, points, totalVotes }: 
 
   return (
     <div>
-      <div style={{ display: 'flex', gap: 9 }}>
+      <div style={{ display: 'flex', gap: 'var(--space-sm)' }}>
         {TIERS.map((tier) => {
           const fill = HEART_FILLS[tier.value] ?? HEART_FILLS[1]
           const filled = selected >= tier.value
@@ -60,7 +60,7 @@ export default function WowVote({ praxisId, currentValue, points, totalVotes }: 
           return (
             <div
               key={tier.value}
-              style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}
+              style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 'var(--space-xs)' }}
             >
               <button
                 disabled={saving}
