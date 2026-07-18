@@ -30,7 +30,7 @@ const BODY_FONT = 'var(--font-body)'
 
 const kicker: CSSProperties = {
   fontFamily: BODY_FONT,
-  fontSize: 8,
+  fontSize: 'var(--text-xs)',
   letterSpacing: '0.2em',
   textTransform: 'uppercase',
   color: MUTED,
@@ -72,7 +72,7 @@ function Plate({ children, style }: { children: ReactNode; style?: CSSProperties
 function SectionHead({ title, trailing }: { title: string; trailing?: ReactNode }) {
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
-      <span style={{ fontFamily: ACCENT_FONT, fontSize: 16, letterSpacing: '0.06em', color: INK, whiteSpace: 'nowrap' }}>
+      <span style={{ fontFamily: ACCENT_FONT, fontSize: 'var(--text-content)', letterSpacing: '0.06em', color: INK, whiteSpace: 'nowrap' }}>
         {title}
       </span>
       <span style={{ flex: 1, height: 3, background: `repeating-linear-gradient(90deg, ${RED} 0 12px, ${GOLD} 12px 20px)` }} />
@@ -110,7 +110,7 @@ export default function EverymenHome({ state }: { state: FieldDeskHomeState }) {
           }}
         >
           <CogSeal size={16} />
-          <span style={{ fontFamily: ACCENT_FONT, fontSize: 14, letterSpacing: '0.2em' }}>
+          <span style={{ fontFamily: ACCENT_FONT, fontSize: 'var(--text-xl)', letterSpacing: '0.2em' }}>
             {t('fieldDesk.home.everymen.masthead')}
           </span>
           <span style={{ ...kicker, marginLeft: 'auto', color: CREAM }}>{t('nav.home')}</span>
@@ -119,7 +119,7 @@ export default function EverymenHome({ state }: { state: FieldDeskHomeState }) {
         <h1
           style={{
             fontFamily: ACCENT_FONT,
-            fontSize: 34,
+            fontSize: 'var(--text-heading)',
             lineHeight: 0.95,
             letterSpacing: '0.02em',
             color: CREAM,
@@ -153,6 +153,7 @@ export default function EverymenHome({ state }: { state: FieldDeskHomeState }) {
             ) : (
               <span
                 className="flex w-full h-full items-center justify-center"
+                // ornament: avatar initial sized to its 56px gold plate, not text
                 style={{ background: PAPER_DEEP, fontFamily: ACCENT_FONT, fontSize: 26, color: RED }}
               >
                 {character.display_name[0]?.toUpperCase()}
@@ -163,7 +164,7 @@ export default function EverymenHome({ state }: { state: FieldDeskHomeState }) {
             <Link
               to={`/characters/${character.id}`}
               className="block truncate"
-              style={{ fontFamily: ACCENT_FONT, fontSize: 28, lineHeight: 0.95, color: INK, textDecoration: 'none' }}
+              style={{ fontFamily: ACCENT_FONT, fontSize: 'var(--text-title)', lineHeight: 0.95, color: INK, textDecoration: 'none' }}
             >
               {character.display_name}
             </Link>
@@ -175,7 +176,7 @@ export default function EverymenHome({ state }: { state: FieldDeskHomeState }) {
             </div>
           </div>
           <div className="shrink-0 text-right">
-            <div style={{ fontFamily: ACCENT_FONT, fontSize: 28, lineHeight: 0.9, color: RED }}>
+            <div style={{ fontFamily: ACCENT_FONT, fontSize: 'var(--text-title)', lineHeight: 0.9, color: RED }}>
               {character.score?.toLocaleString() ?? '0'}
             </div>
             <div style={{ ...kicker, marginTop: 2 }}>{t('fieldDesk.home.stats.points')}</div>
@@ -190,7 +191,7 @@ export default function EverymenHome({ state }: { state: FieldDeskHomeState }) {
               className="text-center"
               style={{ flex: '1 1 0', minWidth: 0, background: PAPER_DEEP, border: `1.5px solid ${INK}`, padding: '11px 6px' }}
             >
-              <div className="truncate" style={{ fontFamily: ACCENT_FONT, fontSize: 22, lineHeight: 0.9, color: INK }}>
+              <div className="truncate" style={{ fontFamily: ACCENT_FONT, fontSize: 'var(--text-title)', lineHeight: 0.9, color: INK }}>
                 {stat.value}
               </div>
               <div style={{ ...kicker, marginTop: 6 }}>{stat.label}</div>
@@ -204,7 +205,7 @@ export default function EverymenHome({ state }: { state: FieldDeskHomeState }) {
         <Link
           to="/updates?filter=requests"
           className="flex items-center justify-between"
-          style={{ background: PAPER, border: `1.5px solid ${INK}`, padding: '10px 16px', fontFamily: ACCENT_FONT, fontSize: 15, letterSpacing: '0.04em', color: INK, textDecoration: 'none' }}
+          style={{ background: PAPER, border: `1.5px solid ${INK}`, padding: '10px 16px', fontFamily: ACCENT_FONT, fontSize: 'var(--text-content)', letterSpacing: '0.04em', color: INK, textDecoration: 'none' }}
         >
           <span>{t('fieldDesk.home.pending', { count: pendingCount })}</span>
           <span aria-hidden style={{ color: RED }}>›</span>
@@ -223,7 +224,7 @@ export default function EverymenHome({ state }: { state: FieldDeskHomeState }) {
         />
 
         {activeTasks.length === 0 ? (
-          <p style={{ fontFamily: BODY_FONT, fontSize: 13, color: MUTED, margin: 0 }}>
+          <p style={{ fontFamily: BODY_FONT, fontSize: 'var(--text-content)', color: MUTED, margin: 0 }}>
             {t('fieldDesk.home.questsEmpty')}
           </p>
         ) : (
@@ -237,7 +238,7 @@ export default function EverymenHome({ state }: { state: FieldDeskHomeState }) {
               >
                 <span className="shrink-0" style={{ width: 10, height: 10, background: RED }} />
                 <div className="min-w-0 flex-1">
-                  <div className="truncate" style={{ fontFamily: ACCENT_FONT, fontSize: 18, lineHeight: 1.05, color: INK }}>
+                  <div className="truncate" style={{ fontFamily: ACCENT_FONT, fontSize: 'var(--text-content)', lineHeight: 1.05, color: INK }}>
                     {praxis.task_title}
                   </div>
                   <div className="truncate" style={{ ...kicker, marginTop: 3 }}>
@@ -249,7 +250,7 @@ export default function EverymenHome({ state }: { state: FieldDeskHomeState }) {
                 </div>
                 <span
                   className="shrink-0"
-                  style={{ fontFamily: BODY_FONT, fontSize: 8, letterSpacing: '0.1em', textTransform: 'uppercase', color: CREAM, background: INK, padding: '4px 9px' }}
+                  style={{ fontFamily: BODY_FONT, fontSize: 'var(--text-xs)', letterSpacing: '0.1em', textTransform: 'uppercase', color: CREAM, background: INK, padding: '4px 9px' }}
                 >
                   {t(`praxisType.${praxis.type}`)}
                 </span>
@@ -264,7 +265,7 @@ export default function EverymenHome({ state }: { state: FieldDeskHomeState }) {
         <Link
           to="/tasks"
           className="flex-1 flex items-center justify-center"
-          style={{ fontFamily: ACCENT_FONT, fontSize: 16, letterSpacing: '0.08em', padding: 14, color: CREAM, background: RED, border: `2px solid ${INK}`, textDecoration: 'none' }}
+          style={{ fontFamily: ACCENT_FONT, fontSize: 'var(--text-xl)', letterSpacing: '0.08em', padding: 14, color: CREAM, background: RED, border: `2px solid ${INK}`, textDecoration: 'none' }}
         >
           {t('fieldDesk.home.browseTasks')}
         </Link>
@@ -272,8 +273,9 @@ export default function EverymenHome({ state }: { state: FieldDeskHomeState }) {
           <Link
             to="/propose-task"
             className="flex-1 flex items-center justify-center gap-2"
-            style={{ fontFamily: ACCENT_FONT, fontSize: 16, letterSpacing: '0.08em', padding: 14, color: INK, background: PAPER_DEEP, border: `2px solid ${INK}`, textDecoration: 'none' }}
+            style={{ fontFamily: ACCENT_FONT, fontSize: 'var(--text-xl)', letterSpacing: '0.08em', padding: 14, color: INK, background: PAPER_DEEP, border: `2px solid ${INK}`, textDecoration: 'none' }}
           >
+            {/* ornament: "+" glyph used as an icon, sized to the button row */}
             <span aria-hidden style={{ fontSize: 15, lineHeight: 1 }}>+</span>
             <span>{t('actions.proposeTask')}</span>
           </Link>

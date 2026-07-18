@@ -285,13 +285,14 @@ function WowCard({
               display: "inline-flex",
               alignItems: "center",
               gap: 4,
-              fontSize: 10.5,
+              fontSize: "var(--text-md)",
               color: titleText,
               letterSpacing: "0.03em",
             }}
           >
             <WowSigil size={10} color={titleText} /> {i18n.t("feed:identity.wow.windowTitle")}
           </span>
+          {/* ornament: ▭ ✕ are drawn window-chrome glyphs used as icons, not text */}
           <span
             style={{
               marginLeft: "auto",
@@ -359,6 +360,7 @@ function WowCard({
             >
               <StatusBadge status={status} slug="wow" />
             </div>
+            {/* ornament: faction name in Caveat at notepad-headline size — the archetype's voice */}
             <div
               style={{
                 fontFamily: factionCssVar("wow", "card-font"),
@@ -373,8 +375,8 @@ function WowCard({
             </div>
             {desc && (
               <div
+                className="card-description"
                 style={{
-                  fontSize: 10,
                   lineHeight: 1.5,
                   color: factionCssVar("wow", "card-muted"),
                 }}
@@ -466,8 +468,8 @@ function SnideCard({
           }}
         >
           <div
+            className="card-description"
             style={{
-              fontSize: 8,
               color: factionCssVar("snide", "card-muted"),
               lineHeight: 1.5,
             }}
@@ -476,8 +478,8 @@ function SnideCard({
           </div>
           <div style={{ background: "var(--color-border)" }} />
           <div
+            className="card-description"
             style={{
-              fontSize: 8,
               color: factionCssVar("snide", "card-muted"),
               lineHeight: 1.5,
             }}
@@ -534,7 +536,7 @@ function EphemeristsCard({
           <div
             style={{
               fontFamily: "var(--eph-serif)",
-              fontSize: 8,
+              fontSize: "var(--text-xs)",
               letterSpacing: "0.26em",
               textTransform: "uppercase",
               color: "var(--eph-gold-light)",
@@ -543,6 +545,7 @@ function EphemeristsCard({
           >
             {i18n.t("feed:factionCard.ephemerists.eyebrow")}
           </div>
+          {/* ornament: codex frontispiece wordmark — display serif with a letterpress shadow */}
           <div
             style={{
               fontFamily: "var(--eph-display)",
@@ -699,7 +702,7 @@ function SingularityCard({
         )}
         <div
           style={{
-            fontSize: 8,
+            fontSize: "var(--text-xs)",
             color: "var(--faction-singularity-card-muted)",
             textTransform: "uppercase",
             letterSpacing: "0.15em",
@@ -735,8 +738,8 @@ function SingularityCard({
         </div>
         {desc && (
           <div
+            className="card-description"
             style={{
-              fontSize: 9,
               color: "var(--faction-singularity-card-muted)",
               lineHeight: 1.5,
               marginBottom: 10,

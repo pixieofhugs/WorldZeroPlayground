@@ -37,7 +37,7 @@ export default function SnideMasthead({
       </span>
       <span
         style={{
-          fontSize: 7,
+          fontSize: "var(--text-xs)",
           letterSpacing: "0.16em",
           textTransform: "uppercase",
           color: factionCssVar("snide", "card-muted"),

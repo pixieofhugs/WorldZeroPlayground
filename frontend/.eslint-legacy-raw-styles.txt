@@ -173,7 +173,6 @@ src/pages/taskDetail/mobileArchetypes/SnideTaskDetail.tsx
 src/pages/taskDetail/mobileArchetypes/UaTaskDetail.tsx
 src/pages/taskDetail/mobileArchetypes/WowTaskDetail.tsx
 src/pages/Tasks.tsx
-src/pages/tasks/mobileArchetypes/DefaultTasks.tsx
 src/pages/tasks/mobileArchetypes/cards/AlbescentMobileTaskCard.tsx
 src/pages/tasks/mobileArchetypes/cards/DefaultMobileTaskCard.tsx
 src/pages/tasks/mobileArchetypes/cards/EphemeristsMobileTaskCard.tsx

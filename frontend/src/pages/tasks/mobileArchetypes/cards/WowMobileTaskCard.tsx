@@ -61,25 +61,26 @@ export default function WowMobileTaskCard({ task, points }: { task: TaskOut; poi
         }}
       >
         <div style={{ background: NOTEPAD_BG, border: `1.5px solid ${NOTEPAD_BORDER}`, borderRadius: 9, padding: '13px 15px', display: 'flex', flexDirection: 'column', gap: 7 }}>
-          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 9, letterSpacing: '0.14em', textTransform: 'uppercase', color }}>
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 'var(--text-sm)', letterSpacing: '0.14em', textTransform: 'uppercase', color }}>
             <Sparkle size={10} color={color} />
             {t('wow.mobile.cardMeta', { faction: factionName(task.primary_faction_slug), points })}
           </span>
 
-          <h2 style={{ fontFamily: SCRIPT, fontSize: 22, lineHeight: 1.05, color: TITLE_TEXT, margin: 0, overflowWrap: 'anywhere' }}>
+          <h2 className="content-title" style={{ fontFamily: SCRIPT, lineHeight: 1.05, color: TITLE_TEXT, margin: 0, overflowWrap: 'anywhere' }}>
             {task.title}
           </h2>
 
           <MobileTaskDescription
             text={task.description}
-            style={{ fontFamily: BODY, fontSize: 12, lineHeight: 1.5, color: CARD_MUTED, margin: 0 }}
+            className="content-text"
+            style={{ fontFamily: BODY, lineHeight: 1.5, color: CARD_MUTED, margin: 0 }}
           />
 
           <div className="flex items-center gap-3" style={{ marginTop: 2 }}>
-            <span style={{ fontFamily: BODY, fontSize: 12, fontWeight: 700, color: PINK_DEEP, background: BODY_BG, border: `1px solid ${NOTEPAD_BORDER}`, borderRadius: 999, padding: '3px 11px' }}>
+            <span style={{ fontFamily: BODY, fontSize: 'var(--text-lg)', fontWeight: 700, color: PINK_DEEP, background: BODY_BG, border: `1px solid ${NOTEPAD_BORDER}`, borderRadius: 999, padding: '3px 11px' }}>
               {t('mobile.points', { points })}
             </span>
-            <span style={{ fontSize: 9, letterSpacing: '0.12em', textTransform: 'uppercase', color: CARD_MUTED }}>
+            <span style={{ fontSize: 'var(--text-sm)', letterSpacing: '0.12em', textTransform: 'uppercase', color: CARD_MUTED }}>
               {t('mobile.level', { level: task.level_required })}
             </span>
           </div>

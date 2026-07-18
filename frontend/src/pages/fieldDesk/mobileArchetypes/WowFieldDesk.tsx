@@ -70,7 +70,7 @@ function Window({ title, children }: { title: string; children: ReactNode }) {
           />
         ))}
         <span
-          style={{ marginLeft: 'auto', display: 'inline-flex', alignItems: 'center', gap: 5, fontFamily: SCRIPT, fontSize: 18, color: TITLE_TEXT }}
+          style={{ marginLeft: 'auto', display: 'inline-flex', alignItems: 'center', gap: 5, fontFamily: SCRIPT, fontSize: 'var(--text-content)', color: TITLE_TEXT }}
         >
           <Sparkle size={11} color={TITLE_TEXT} />
           {title}
@@ -100,7 +100,7 @@ const pinkButton: CSSProperties = {
   justifyContent: 'center',
   gap: 7,
   fontFamily: BODY,
-  fontSize: 12,
+  fontSize: 'var(--text-lg)',
   letterSpacing: '0.12em',
   textTransform: 'uppercase',
   fontWeight: 700,
@@ -119,7 +119,7 @@ const ghostButton: CSSProperties = {
   justifyContent: 'center',
   gap: 6,
   fontFamily: BODY,
-  fontSize: 12,
+  fontSize: 'var(--text-lg)',
   letterSpacing: '0.12em',
   textTransform: 'uppercase',
   padding: 15,
@@ -157,7 +157,7 @@ export default function WowFieldDesk({ state }: { state: FieldDeskHomeState }) {
     >
       <header>
         <div className="eyebrow" style={{ color: CARD_MUTED }}>{t('nav.home')}</div>
-        <h1 style={{ fontFamily: SCRIPT, fontSize: 34, lineHeight: 0.9, color: TITLE_TEXT, margin: 0 }}>
+        <h1 style={{ fontFamily: SCRIPT, fontSize: 'var(--text-heading)', lineHeight: 0.9, color: TITLE_TEXT, margin: 0 }}>
           {t('fieldDesk.home.title')}
         </h1>
       </header>
@@ -192,6 +192,7 @@ export default function WowFieldDesk({ state }: { state: FieldDeskHomeState }) {
                 style={{
                   background: 'radial-gradient(circle at 35% 28%, var(--faction-wow-title-from), var(--faction-wow))',
                   fontFamily: SCRIPT,
+                  // ornament: avatar initial sized to its 56px medallion, not text
                   fontSize: 24,
                   color: ON_ACCENT,
                 }}
@@ -204,13 +205,13 @@ export default function WowFieldDesk({ state }: { state: FieldDeskHomeState }) {
             <Link
               to={`/characters/${character.id}`}
               className="block truncate"
-              style={{ fontFamily: SCRIPT, fontSize: 30, lineHeight: 0.95, color: TITLE_TEXT, textDecoration: 'none' }}
+              style={{ fontFamily: SCRIPT, fontSize: 'var(--text-heading)', lineHeight: 0.95, color: TITLE_TEXT, textDecoration: 'none' }}
             >
               {character.display_name}
             </Link>
             <div
               className="truncate"
-              style={{ marginTop: 4, fontSize: 10, letterSpacing: '0.12em', textTransform: 'uppercase', color: CARD_MUTED }}
+              style={{ marginTop: 4, fontSize: 'var(--text-base)', letterSpacing: '0.12em', textTransform: 'uppercase', color: CARD_MUTED }}
             >
               {t('sidebar.characterCard.factionLevel', {
                 faction: factionName(character.faction_slug),
@@ -219,7 +220,7 @@ export default function WowFieldDesk({ state }: { state: FieldDeskHomeState }) {
             </div>
           </div>
           <div className="shrink-0 text-right">
-            <div style={{ fontFamily: SCRIPT, fontSize: 30, lineHeight: 1, color: TITLE_TEXT }}>
+            <div style={{ fontFamily: SCRIPT, fontSize: 'var(--text-heading)', lineHeight: 1, color: TITLE_TEXT }}>
               {character.score?.toLocaleString() ?? '0'}
             </div>
             <div className="eyebrow" style={{ color: CARD_MUTED }}>
@@ -242,7 +243,7 @@ export default function WowFieldDesk({ state }: { state: FieldDeskHomeState }) {
                 padding: '11px 6px',
               }}
             >
-              <div className="truncate" style={{ fontFamily: SCRIPT, fontSize: 24, lineHeight: 1, color: TITLE_TEXT }}>
+              <div className="truncate" style={{ fontFamily: SCRIPT, fontSize: 'var(--text-title)', lineHeight: 1, color: TITLE_TEXT }}>
                 {stat.value}
               </div>
               <div className="eyebrow" style={{ marginTop: 5, color: CARD_MUTED }}>
@@ -263,7 +264,7 @@ export default function WowFieldDesk({ state }: { state: FieldDeskHomeState }) {
             border: `1.5px solid ${NOTEPAD_BORDER}`,
             borderRadius: 999,
             padding: '10px 16px',
-            fontSize: 12,
+            fontSize: 'var(--text-content)',
             color: TITLE_TEXT,
             textDecoration: 'none',
           }}
@@ -279,7 +280,7 @@ export default function WowFieldDesk({ state }: { state: FieldDeskHomeState }) {
       {/* ── Quests window ── */}
       <Window title={t('fieldDesk.home.wow.questsWindow')}>
         <div className="flex items-center gap-2.5" style={{ marginBottom: 8 }}>
-          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontFamily: SCRIPT, fontSize: 20, color: TITLE_TEXT }}>
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontFamily: SCRIPT, fontSize: 'var(--text-content)', color: TITLE_TEXT }}>
             <Sparkle size={12} color={PINK} />
             {t('fieldDesk.home.wow.questsHeading')}
           </span>
@@ -290,7 +291,7 @@ export default function WowFieldDesk({ state }: { state: FieldDeskHomeState }) {
         </div>
 
         {activeTasks.length === 0 ? (
-          <p style={{ fontFamily: SCRIPT, fontSize: 20, color: PINK, margin: 0 }}>
+          <p style={{ fontFamily: SCRIPT, fontSize: 'var(--text-content)', color: PINK, margin: 0 }}>
             {t('fieldDesk.home.questsEmpty')}
           </p>
         ) : (
@@ -308,12 +309,12 @@ export default function WowFieldDesk({ state }: { state: FieldDeskHomeState }) {
               >
                 <span className="shrink-0" style={{ width: 10, height: 10, borderRadius: 3, background: PINK }} />
                 <div className="min-w-0 flex-1">
-                  <div className="truncate" style={{ fontFamily: SCRIPT, fontSize: 20, lineHeight: 1, color: TITLE_TEXT }}>
+                  <div className="truncate" style={{ fontFamily: SCRIPT, fontSize: 'var(--text-content)', lineHeight: 1, color: TITLE_TEXT }}>
                     {praxis.task_title}
                   </div>
                   <div
                     className="truncate"
-                    style={{ marginTop: 4, fontSize: 9, letterSpacing: '0.1em', textTransform: 'uppercase', color: CARD_MUTED }}
+                    style={{ marginTop: 4, fontSize: 'var(--text-sm)', letterSpacing: '0.1em', textTransform: 'uppercase', color: CARD_MUTED }}
                   >
                     {t('fieldDesk.home.taskMeta', {
                       faction: factionName(praxis.task_faction_slug),
@@ -341,6 +342,7 @@ export default function WowFieldDesk({ state }: { state: FieldDeskHomeState }) {
         </Link>
         {canProposeTask && (
           <Link to="/propose-task" style={ghostButton}>
+            {/* ornament: "+" glyph used as an icon, sized to the button row */}
             <span aria-hidden style={{ fontSize: 15, lineHeight: 1 }}>+</span>
             {t('actions.proposeTask')}
           </Link>

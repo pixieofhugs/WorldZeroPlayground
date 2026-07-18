@@ -117,7 +117,7 @@ export default function SnideFactionHero({
               background: "var(--faction-snide-tape)",
               color: "var(--faction-snide-ink)",
               fontFamily: "var(--faction-snide-font-type)",
-              fontSize: 10,
+              fontSize: "var(--text-base)",
               letterSpacing: "0.05em",
               padding: "3px 12px",
               transform: "rotate(-1.5deg)",
@@ -130,6 +130,7 @@ export default function SnideFactionHero({
           <h1
             style={{
               fontFamily: "var(--faction-snide-font-impact)",
+              // ornament: ransom wordmark — impact face skewed and slammed at 0.8 leading
               fontSize: 82,
               lineHeight: 0.8,
               letterSpacing: "0.02em",
@@ -144,7 +145,7 @@ export default function SnideFactionHero({
           <div
             style={{
               fontFamily: "var(--font-body)",
-              fontSize: 10,
+              fontSize: "var(--text-base)",
               letterSpacing: "0.16em",
               textTransform: "uppercase",
               color: "#b7b5a7",
@@ -161,6 +162,7 @@ export default function SnideFactionHero({
               marginTop: 14,
               background: "var(--faction-snide-acid)",
               color: "var(--faction-snide-ink)",
+              // ornament: motto slapped on an acid sticker, rotated -2deg — illustration, not chrome
               fontFamily: "var(--faction-snide-font-black)",
               fontSize: 15,
               letterSpacing: "0.02em",
@@ -172,9 +174,9 @@ export default function SnideFactionHero({
             {i18n.t("feed:factionHero.snide.motto")}
           </div>
           <p
+            className="content-text"
             style={{
               fontFamily: "var(--font-body)",
-              fontSize: 12.5,
               lineHeight: 1.6,
               maxWidth: 560,
               margin: "16px 0 0",
@@ -254,6 +256,7 @@ export default function SnideFactionHero({
             >
               <div
                 style={{
+                  // ornament: chit numeral in the impact face; above the content floor already
                   fontFamily: "var(--faction-snide-font-impact)",
                   fontSize: 30,
                   lineHeight: 0.85,
@@ -266,7 +269,7 @@ export default function SnideFactionHero({
               <div
                 style={{
                   fontFamily: "var(--font-body)",
-                  fontSize: 8.5,
+                  fontSize: "var(--text-xs)",
                   letterSpacing: "0.1em",
                   textTransform: "uppercase",
                   color: "#cfcdbf",
