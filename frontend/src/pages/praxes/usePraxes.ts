@@ -4,9 +4,11 @@
  *
  * The old three-call (solo / collab / duel) fetch is collapsed into ONE
  * `listPraxes` call so filter/search/sort can sit on top of a single date-ordered
- * stream (§1). Filter state (type / faction / voted / sort / query) lives here
- * via `useState` and is keyed into the fetch, so a chip tap rekeys it — mirroring
- * `pages/tasks/useTasks.ts`. The growing window (§8) lives in the shared
+ * stream (§1). Filter state (type / faction / voted / sort) lives here via
+ * `useState` and is keyed into the fetch, so a chip tap rekeys it — mirroring
+ * `pages/tasks/useTasks.ts`. The search query is the one axis that rides in the
+ * URL instead (`?q=`, via `useSearchQueryParam`, #660), so a pasted or refreshed
+ * link restores it. The growing window (§8) lives in the shared
  * `usePagedResource` hook (#645); filter setters call its `resetWindow`. Filter
  * values + setters ride on the returned state so `MobilePraxisFeed` and the
  * desktop page stay presentation-only.
@@ -16,6 +18,7 @@ import { listPraxes, type PraxisCardOut, type PraxisType } from '../../api/praxi
 import { getFactions, type FactionOut } from '../../api/factions'
 import { usePagedResource } from '../../hooks/usePagedResource'
 import { useDebouncedValue } from '../../hooks/useDebouncedValue'
+import { useSearchQueryParam } from '../../hooks/useSearchQueryParam'
 
 /** How many rows a page fetches; "load more" grows the window by this step. */
 const PAGE_LIMIT = 50
@@ -62,7 +65,7 @@ export function usePraxes(): PraxesFeedState {
   const [faction, setFactionState] = useState('')
   const [voted, setVotedState] = useState<VotedFilter>('')
   const [sort, setSortState] = useState<SortOrder>('newest')
-  const [query, setQueryState] = useState('')
+  const [query, setQueryState] = useSearchQueryParam()
 
   const debouncedQuery = useDebouncedValue(query, 200)
 
