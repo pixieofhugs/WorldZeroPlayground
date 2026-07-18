@@ -59,10 +59,10 @@ function TickerCard({ entry }: { entry: TickerEntry }) {
         width: 236,
         background: 'var(--color-bg-surface)',
         borderLeft: `3px solid ${accent}`,
-        padding: '10px 14px',
+        padding: 'var(--space-md) var(--space-lg)',
         display: 'flex',
         flexDirection: 'column',
-        gap: 4,
+        gap: 'var(--space-xs)',
       }}
     >
       <div
@@ -132,7 +132,7 @@ export default function ActivityTicker() {
         background: 'var(--color-bg-surface-alt)',
         borderTop: '1px solid var(--color-border)',
         borderBottom: '1px solid var(--color-border)',
-        padding: '14px 0',
+        padding: 'var(--space-lg) 0',
       }}
     >
       {/* LIVE badge — fades into the strip */}
@@ -145,14 +145,14 @@ export default function ActivityTicker() {
           zIndex: 3,
           display: 'flex',
           alignItems: 'center',
-          padding: '0 22px 0 18px',
+          padding: '0 var(--space-xl) 0 var(--space-lg)',
           background:
             'linear-gradient(to right, var(--color-bg-surface-alt) 65%, transparent)',
         }}
       >
         <div
           className="eyebrow"
-          style={{ display: 'flex', alignItems: 'center', gap: 7, color: 'var(--faction-wow)' }}
+          style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-sm)', color: 'var(--faction-wow)' }}
         >
           <span
             style={{
@@ -185,7 +185,8 @@ export default function ActivityTicker() {
       <div
         style={{
           display: 'inline-flex',
-          gap: 10,
+          gap: 'var(--space-md)',
+          // eslint-disable-next-line local/no-raw-style-values -- ornament: clears the absolutely-positioned LIVE badge + its gradient mask; the nearest rungs (64/96) either tuck the first card under the badge or leave a visible hole.
           paddingLeft: 84,
           animation: 'ticker-roll 90s linear infinite',
           willChange: 'transform',

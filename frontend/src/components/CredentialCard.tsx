@@ -104,7 +104,9 @@ export default function CredentialCard({
     color: 'var(--fc-text)',
     border: skin.border,
     boxShadow: '0 16px 34px rgba(0,0,0,0.18)',
-    padding: '18px 20px 16px',
+    // §4a asymmetric-inset exception: 18/20/16 is optical trim on a near-uniform
+    // inset, so the tie rounds DOWN to one rung rather than inverting the shape.
+    padding: 'var(--space-lg)',
     textAlign: 'center',
     overflow: 'hidden',
     transform: rotation ? `rotate(${rotation}deg)` : undefined,
@@ -132,14 +134,14 @@ export default function CredentialCard({
       {/* portrait ring. Rendered as a <button> only when it's an upload affordance —
           on FieldDesk the whole card is already a button, and button-in-button is
           invalid DOM. */}
-      <div style={{ display: 'flex', justifyContent: 'center', margin: '14px 0 10px' }}>
+      <div style={{ display: 'flex', justifyContent: 'center', margin: 'var(--space-lg) 0 var(--space-md)' }}>
         {(() => {
           const ringStyle: CSSProperties = {
             position: 'relative',
             width: 96,
             height: 96,
             borderRadius: '50%',
-            padding: 4,
+            padding: 'var(--space-xs)',
             boxSizing: 'border-box',
             background: 'var(--fc-accent)',
             border: 'none',
@@ -201,7 +203,7 @@ export default function CredentialCard({
           fontSize: 'var(--text-content)',
           lineHeight: 1.55,
           color: 'var(--fc-muted)',
-          margin: '7px auto 0',
+          margin: 'var(--space-sm) auto 0',
           maxWidth: 210,
           display: '-webkit-box',
           WebkitLineClamp: 2,
@@ -219,10 +221,10 @@ export default function CredentialCard({
           display: 'flex',
           justifyContent: 'center',
           alignItems: 'center',
-          gap: 11,
+          gap: 'var(--space-md)',
           borderTop: '1px solid var(--fc-muted)',
-          marginTop: 14,
-          paddingTop: 12,
+          marginTop: 'var(--space-lg)',
+          paddingTop: 'var(--space-md)',
         }}
       >
         {skinned ? (
@@ -232,7 +234,7 @@ export default function CredentialCard({
               color: 'var(--fc-bg)',
               fontFamily: 'var(--fc-font)',
               fontSize: 'var(--text-md)',
-              padding: '3px 10px',
+              padding: 'var(--space-xs) var(--space-md)',
               borderRadius: 4,
               lineHeight: 1.3,
             }}
@@ -267,7 +269,7 @@ export default function CredentialCard({
             style={{
               fontFamily: 'var(--font-body)',
               fontSize: 'var(--text-xs)',
-              marginLeft: 3,
+              marginLeft: 'var(--space-xs)',
               color: 'var(--fc-muted)',
               letterSpacing: '0.06em',
             }}
