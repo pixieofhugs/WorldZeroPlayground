@@ -47,7 +47,7 @@ export default function Admin() {
               borderBottom: activeTab === key ? '2px solid var(--color-text-primary)' : '2px solid transparent',
               marginBottom: -2,
               fontFamily: "'Courier Prime', monospace",
-              fontSize: 10,
+              fontSize: 'var(--text-base)',
               textTransform: 'uppercase',
               letterSpacing: '0.12em',
             }}

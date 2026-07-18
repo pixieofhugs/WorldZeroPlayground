@@ -38,7 +38,7 @@ export default function DefaultSettings({ character, dark, onToggleTheme, onSign
       <header>
         <h1
           className="font-display italic"
-          style={{ fontSize: 30, lineHeight: 1, color: 'var(--color-text-primary)', margin: 0 }}
+          style={{ fontSize: 'var(--text-heading)', lineHeight: 1, color: 'var(--color-text-primary)', margin: 0 }}
         >
           {t('settings.title')}
         </h1>
@@ -81,7 +81,7 @@ export default function DefaultSettings({ character, dark, onToggleTheme, onSign
             <div className="min-w-0 flex-1">
               <div
                 className="font-display italic truncate"
-                style={{ fontSize: 22, lineHeight: 1.05, color: 'var(--color-text-primary)' }}
+                style={{ fontSize: 'var(--text-title)', lineHeight: 1.05, color: 'var(--color-text-primary)' }}
               >
                 {character.display_name}
               </div>
@@ -90,7 +90,7 @@ export default function DefaultSettings({ character, dark, onToggleTheme, onSign
                 style={{
                   marginTop: 4,
                   fontFamily: 'var(--font-body)',
-                  fontSize: 10,
+                  fontSize: 'var(--text-base)',
                   letterSpacing: '0.14em',
                   textTransform: 'uppercase',
                   color: 'var(--color-text-secondary)',
@@ -117,7 +117,7 @@ export default function DefaultSettings({ character, dark, onToggleTheme, onSign
             </Link>
           </div>
         ) : (
-          <p className="font-body" style={{ fontSize: 12, color: 'var(--color-text-tertiary)', margin: 0 }}>
+          <p className="font-body content-text" style={{ color: 'var(--color-text-tertiary)', margin: 0 }}>
             {t('settings.account.noCharacter')}
           </p>
         )}
@@ -136,11 +136,12 @@ export default function DefaultSettings({ character, dark, onToggleTheme, onSign
         }}
       >
         <div className="min-w-0 flex-1">
-          <div style={{ fontSize: 15, color: 'var(--color-text-primary)' }}>{t('settings.characters.label')}</div>
-          <div style={{ marginTop: 2, fontSize: 11, color: 'var(--color-text-secondary)' }}>
+          <div style={{ fontSize: 'var(--text-content)', color: 'var(--color-text-primary)' }}>{t('settings.characters.label')}</div>
+          <div style={{ marginTop: 2, fontSize: 'var(--text-content)', color: 'var(--color-text-secondary)' }}>
             {t('settings.characters.hint')}
           </div>
         </div>
+        {/* ornament: chevron dingbat used as a row-affordance icon, not text */}
         <span aria-hidden style={{ color: 'var(--color-text-tertiary)', fontSize: 18, lineHeight: 1 }}>
           ›
         </span>
@@ -159,7 +160,7 @@ export default function DefaultSettings({ character, dark, onToggleTheme, onSign
           {t('settings.appearance.eyebrow')}
         </div>
         <div className="flex items-center gap-3">
-          <span className="font-body flex-1" style={{ fontSize: 15, color: 'var(--color-text-primary)' }}>
+          <span className="font-body flex-1" style={{ fontSize: 'var(--text-content)', color: 'var(--color-text-primary)' }}>
             {t('settings.appearance.darkMode')}
           </span>
           <button
@@ -208,7 +209,7 @@ export default function DefaultSettings({ character, dark, onToggleTheme, onSign
         style={{
           padding: 15,
           borderRadius: 12,
-          fontSize: 12,
+          fontSize: 'var(--text-lg)',
           letterSpacing: '0.12em',
           textTransform: 'uppercase',
           fontWeight: 700,

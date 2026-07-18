@@ -48,7 +48,7 @@ export default function MobileUpdates({ state }: { state: UpdatesState }) {
       <p className="eyebrow mb-1">{t('mobile.eyebrow')}</p>
       <h1
         className="font-display italic font-medium mb-3"
-        style={{ fontSize: 26, color: 'var(--color-text-primary)', lineHeight: 1.1 }}
+        style={{ fontSize: 'var(--text-title)', color: 'var(--color-text-primary)', lineHeight: 1.1 }}
       >
         {t('mobile.title')}
       </h1>
@@ -74,7 +74,7 @@ export default function MobileUpdates({ state }: { state: UpdatesState }) {
                 alignItems: 'center',
                 gap: 6,
                 fontFamily: "'Courier Prime', monospace",
-                fontSize: 11,
+                fontSize: 'var(--text-md)',
                 fontWeight: active ? 700 : 400,
                 letterSpacing: '0.05em',
                 textTransform: 'uppercase',
@@ -98,7 +98,7 @@ export default function MobileUpdates({ state }: { state: UpdatesState }) {
                         ? 'var(--color-bg-surface)'
                         : 'var(--color-bg-surface-alt)',
                     color: hasRedBadge ? 'var(--color-text-on-accent)' : 'var(--color-text-primary)',
-                    fontSize: 9,
+                    fontSize: 'var(--text-sm)',
                     fontWeight: 700,
                     padding: '1px 6px',
                     borderRadius: 999,
@@ -126,7 +126,7 @@ export default function MobileUpdates({ state }: { state: UpdatesState }) {
         </p>
       ) : items.length === 0 ? (
         <div className="sidebar-card" style={{ padding: 20, textAlign: 'center' }}>
-          <p className="font-body" style={{ fontSize: 12, color: 'var(--color-text-tertiary)' }}>
+          <p className="font-body content-text" style={{ color: 'var(--color-text-tertiary)' }}>
             {t('page.empty')}
           </p>
         </div>
@@ -151,7 +151,7 @@ export default function MobileUpdates({ state }: { state: UpdatesState }) {
             style={{
               width: '100%',
               fontFamily: "'Courier Prime', monospace",
-              fontSize: 12,
+              fontSize: 'var(--text-lg)',
               fontWeight: 700,
               textTransform: 'uppercase',
               letterSpacing: '0.08em',

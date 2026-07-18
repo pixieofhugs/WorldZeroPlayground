@@ -82,7 +82,7 @@ function DesktopUpdates({ state }: { state: UpdatesState }) {
           background: active ? 'var(--color-text-primary)' : 'var(--color-bg-surface)',
           color: active ? 'var(--color-bg-page)' : 'var(--color-text-primary)',
           fontFamily: "'Courier Prime', monospace",
-          fontSize: 10, fontWeight: 700, textTransform: 'uppercase',
+          fontSize: 'var(--text-base)', fontWeight: 700, textTransform: 'uppercase',
           letterSpacing: '0.1em', padding: '5px 10px',
           cursor: 'pointer', transition: 'all 120ms',
           display: 'flex', alignItems: 'center', gap: 5,
@@ -94,7 +94,7 @@ function DesktopUpdates({ state }: { state: UpdatesState }) {
           <span style={{
             background: hasRedBadge ? 'var(--color-danger)' : (active ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.1)'),
             color: hasRedBadge ? 'var(--color-text-on-accent)' : 'inherit',
-            fontSize: 8, padding: '0 5px', borderRadius: 8, minWidth: 16, textAlign: 'center',
+            fontSize: 'var(--text-xs)', padding: '0 5px', borderRadius: 8, minWidth: 16, textAlign: 'center',
           }}>
             {count}
           </span>
@@ -130,7 +130,7 @@ function DesktopUpdates({ state }: { state: UpdatesState }) {
         </p>
       ) : items.length === 0 ? (
         <div className="sidebar-card" style={{ padding: 20, textAlign: 'center' }}>
-          <p className="font-body" style={{ fontSize: 10, color: 'var(--color-text-tertiary)' }}>
+          <p className="font-body content-text" style={{ color: 'var(--color-text-tertiary)' }}>
             {t('page.empty')}
           </p>
         </div>
@@ -155,7 +155,7 @@ function DesktopUpdates({ state }: { state: UpdatesState }) {
             disabled={loadingMore}
             style={{
               fontFamily: "'Courier Prime', monospace",
-              fontSize: 10,
+              fontSize: 'var(--text-base)',
               fontWeight: 700,
               textTransform: 'uppercase',
               letterSpacing: '0.1em',
