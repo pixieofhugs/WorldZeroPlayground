@@ -581,6 +581,21 @@ export default function DefaultEditPraxis({ state }: Props) {
             flexWrap: "wrap",
           }}
         >
+          <DropButton
+            state={state}
+            skin={{
+              label: t("editPraxis.na.dropLabel"),
+              style: {
+                background: "transparent",
+                border: "none",
+                color: SLATE_DEEP,
+                fontFamily: "'Caveat', cursive",
+                fontSize: "var(--text-xl)",
+                textDecoration: "underline",
+                cursor: "pointer",
+              },
+            }}
+          />
           <PublishButton
             state={state}
             skin={{
@@ -610,21 +625,6 @@ export default function DefaultEditPraxis({ state }: Props) {
                 transform: "rotate(-2deg)",
                 boxShadow: "4px 5px 8px rgba(0,0,0,.3)",
                 position: "relative",
-              },
-            }}
-          />
-          <DropButton
-            state={state}
-            skin={{
-              label: t("editPraxis.na.dropLabel"),
-              style: {
-                background: "transparent",
-                border: "none",
-                color: SLATE_DEEP,
-                fontFamily: "'Caveat', cursive",
-                fontSize: "var(--text-xl)",
-                textDecoration: "underline",
-                cursor: "pointer",
               },
             }}
           />

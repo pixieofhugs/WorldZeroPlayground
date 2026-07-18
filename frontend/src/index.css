@@ -15,7 +15,7 @@
   /* ── Text ── */
   --color-text-primary: #1a1209;
   --color-text-secondary: #6b6050;
-  --color-text-tertiary: #9b8e7d;
+  --color-text-tertiary: #6c6358;
 
   /* ── Borders ── */
   --color-border: rgba(0, 0, 0, 0.07);
@@ -377,8 +377,8 @@
 
   /* ── Text ── */
   --color-text-primary: #f0e6d0;
-  --color-text-secondary: #7a7060;
-  --color-text-tertiary: #4a4860;
+  --color-text-secondary: #988c78;
+  --color-text-tertiary: #9490c0;
 
   /* ── Borders ── */
   --color-border: rgba(255, 255, 255, 0.07);
@@ -449,7 +449,7 @@
 
   /* ── Faction card secondary text (dark mode) ── */
   --faction-ua-card-muted: var(--ua-sub);
-  --faction-wow-card-muted: #c4648a;
+  --faction-wow-card-muted: #dd719c;
   --faction-snide-card-muted: #cfcdbf;
   /* SNIDE flyposted wall flips to concrete-at-night */
   --faction-snide-wall: #141310;

@@ -455,6 +455,23 @@ export default function EphemeristsEditPraxis({ state }: Props) {
             flexWrap: "wrap",
           }}
         >
+          <DropButton
+            state={state}
+            skin={{
+              label: t("editPraxis.ephemerists.dropLabel"),
+              style: {
+                background: "transparent",
+                border: "none",
+                color: MUTED,
+                fontFamily: "var(--eph-serif)",
+                fontSize: "var(--text-md)",
+                fontStyle: "italic",
+                letterSpacing: "0.06em",
+                textDecoration: "underline",
+                cursor: "pointer",
+              },
+            }}
+          />
           <PublishButton
             state={state}
             skin={{
@@ -473,23 +490,6 @@ export default function EphemeristsEditPraxis({ state }: Props) {
                 whiteSpace: "nowrap",
                 boxShadow:
                   "inset 0 2px 4px rgba(255,255,255,0.16), inset 0 -4px 7px rgba(0,0,0,0.38), 0 2px 5px rgba(0,0,0,0.25)",
-              },
-            }}
-          />
-          <DropButton
-            state={state}
-            skin={{
-              label: t("editPraxis.ephemerists.dropLabel"),
-              style: {
-                background: "transparent",
-                border: "none",
-                color: MUTED,
-                fontFamily: "var(--eph-serif)",
-                fontSize: "var(--text-md)",
-                fontStyle: "italic",
-                letterSpacing: "0.06em",
-                textDecoration: "underline",
-                cursor: "pointer",
               },
             }}
           />

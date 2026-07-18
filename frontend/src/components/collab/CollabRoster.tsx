@@ -10,9 +10,10 @@
  *   0 < cast_count < member_count, I didn't → holdout (S3) the circle waits on me
  *   cast_count === member_count         → published (S4) every part woven
  *
- * `action` is supplied only in the editable composer; the read-only detail view
- * omits it (the detail page owns its own reopen affordance). Spacing/type via
- * Tailwind utilities + --text-* tokens, not raw inline pixels (#588 lint guard).
+ * Pure display everywhere (#646): the cast / pull-back action lives in the
+ * composer footer's PublishButton, not the roster, so both the composer and the
+ * read-only detail view consume this the same way. Spacing/type via Tailwind
+ * utilities + --text-* tokens, not raw inline pixels (#588 lint guard).
  *
  * Every word resolves through `collabCopy(factionSlug, key)`, so each faction
  * speaks the same states in its own voice and anything it hasn't overridden
@@ -48,24 +49,16 @@ export function deriveCollabGate(
   return { memberCount, castCount, iCast, state }
 }
 
-export interface CollabRosterAction {
-  onCast: () => void
-  onPullBack: () => void
-  submitting: boolean
-}
-
 export function CollabRoster({
   members,
   currentCharacterId,
   factionSlug,
   taskPointValue,
-  action,
 }: {
   members: readonly PraxisMemberOut[]
   currentCharacterId: number | null | undefined
   factionSlug: string | null | undefined
   taskPointValue?: number | null
-  action?: CollabRosterAction
 }) {
   const gate = deriveCollabGate(members, currentCharacterId)
   if (gate.memberCount < 2) return null // solo/duel render nothing
@@ -148,23 +141,6 @@ export function CollabRoster({
         >
           {banner.text}
         </p>
-      )}
-
-      {/* Composer-only primary action (cast / pull-back). */}
-      {action && gate.state !== 'published' && (
-        <button
-          type="button"
-          onClick={() => (gate.iCast ? action.onPullBack() : action.onCast())}
-          disabled={action.submitting}
-          className={`${gate.iCast ? 'btn-outline' : 'btn-primary'} text-[11px] px-[14px] py-[6px]`}
-          style={{ alignSelf: 'flex-start' }}
-        >
-          {gate.iCast
-            ? collabCopy(factionSlug, 'pullBackAction')
-            : gate.castCount === gate.memberCount - 1
-              ? collabCopy(factionSlug, 'castFinalAction')
-              : collabCopy(factionSlug, 'castAction')}
-        </button>
       )}
     </div>
   )
