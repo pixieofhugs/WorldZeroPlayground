@@ -14,7 +14,7 @@ Idempotent: SET DEFAULT is a no-op on any DB already built from the current
 models, so it is safe on fresh and drifted DBs alike. No row data is touched —
 existing characters keep whatever faction they hold.
 
-Revision ID: 0004_character_faction_default_na
+Revision ID: 0004_character_faction_na
 Revises: 0003_backfill_praxis_seal_time
 Create Date: 2026-07-17
 """
@@ -22,7 +22,7 @@ from typing import Sequence, Union
 
 from alembic import op
 
-revision: str = "0004_character_faction_default_na"
+revision: str = "0004_character_faction_na"
 down_revision: Union[str, None] = "0003_backfill_praxis_seal_time"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
