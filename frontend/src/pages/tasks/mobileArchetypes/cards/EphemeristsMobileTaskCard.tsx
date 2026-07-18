@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import type { TaskOut } from '../../../../api/tasks'
 import { factionCssVar, factionName } from '../../../../utils/factions'
+import { MobileTaskDescription } from './shared'
 
 /**
  * The Ephemerists MOBILE task card (#527/#565) — a ledger-ruled commission leaf
@@ -53,24 +54,10 @@ export default function EphemeristsMobileTaskCard({ task, points }: { task: Task
         {task.title}
       </h2>
 
-      {task.description && (
-        <p
-          style={{
-            fontFamily: SCRIPT,
-            fontStyle: 'italic',
-            fontSize: 14,
-            lineHeight: 1.5,
-            color: MUTED,
-            margin: 0,
-            display: '-webkit-box',
-            WebkitLineClamp: 2,
-            WebkitBoxOrient: 'vertical',
-            overflow: 'hidden',
-          }}
-        >
-          {task.description}
-        </p>
-      )}
+      <MobileTaskDescription
+        text={task.description}
+        style={{ fontFamily: SCRIPT, fontStyle: 'italic', fontSize: 14, lineHeight: 1.5, color: MUTED, margin: 0 }}
+      />
 
       <div className="flex items-center gap-3" style={{ marginTop: 2 }}>
         <span style={{ fontFamily: DISPLAY, fontSize: 12, letterSpacing: '0.04em', color: TEXT, background: VELLUM_DEEP, border: `1px solid ${GOLD}`, padding: '3px 9px' }}>
