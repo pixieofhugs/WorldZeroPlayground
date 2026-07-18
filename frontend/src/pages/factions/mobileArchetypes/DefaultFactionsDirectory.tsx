@@ -1,8 +1,16 @@
 import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { useTranslation } from 'react-i18next'
-import { getFactions, getFactionStatus, type FactionOut, type FactionPageOut } from '../../../api/factions'
-import { factionCssVar, sortFactionsByRainbowOrder } from '../../../utils/factions'
+import { Link, useNavigate } from 'react-router-dom'
+import { Trans, useTranslation } from 'react-i18next'
+import {
+  getFactions,
+  getFactionStatus,
+  getInvitations,
+  type FactionOut,
+  type FactionPageOut,
+  type InvitationLetterOut,
+} from '../../../api/factions'
+import { factionCssVar, factionName, sortFactionsByRainbowOrder } from '../../../utils/factions'
+import { relativeTime } from '../../../utils/dates'
 import FactionSelectCard, { type SelectState } from '../../../components/cards/FactionSelectCard'
 import { useAuth } from '../../../auth/AuthContext'
 import { extractError } from '../../../utils/errors'
@@ -16,9 +24,10 @@ const STATUS_CAN_RETURN = 'can_return'
 
 /**
  * Default MOBILE factions-directory skin — the phone twin of the desktop
- * Factions grid. A single-column screen: a title over a seven-stripe faction
- * bar, an "unaffiliated" banner (shown only while the viewer hasn't sworn to a
- * faction), then a vertical stack of the SAME bespoke FactionSelectCard
+ * Factions grid. A single-column screen, in render order: a title, the faction
+ * stripe bar, any invitation letters the player holds (#733), an "unaffiliated"
+ * banner (shown only while the viewer hasn't sworn to a faction), then a
+ * vertical stack of the SAME bespoke FactionSelectCard
  * archetypes desktop uses (#732), each visiting its faction's detail page where
  * all membership actions live (#347). Member counts are intentionally dropped —
  * no cheap per-faction count query exists (ADR-0035: real fields only).
@@ -46,6 +55,7 @@ export default function DefaultFactionsDirectory() {
 
   const [factions, setFactions] = useState<FactionOut[]>([])
   const [factionPage, setFactionPage] = useState<FactionPageOut | null>(null)
+  const [invitations, setInvitations] = useState<InvitationLetterOut[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -53,16 +63,23 @@ export default function DefaultFactionsDirectory() {
     let cancelled = false
     setLoading(true)
     setError(null)
-    // ponytail: only the status call is added here. The invitations feed (and
-    // desktop's `invitationBySlug` fallback) belongs to the invitations panel,
-    // issue #733 — an open letter already reports as `invited` in this payload.
+    // The invitations feed backs the letters PANEL only — never card state.
+    // Desktop's extra `|| invitationBySlug[slug]` arm in its `selectState` is
+    // dead code: `_NON_INVITE_FACTION_SLUGS = {"na", "albescent"}` (backend
+    // services/character_stats.py) means no letter is ever written for those
+    // two, and `get_account_invited_faction_slugs` excludes the same pair while
+    // being ACCOUNT-pooled — strictly broader than the character-scoped
+    // /factions/invitations. So every slug this feed can return already reports
+    // `invited` in /factions/status. `selectState` stays as-is (#733).
     const load = async () => {
       const factionsData = await getFactions()
       if (cancelled) return
       setFactions(factionsData)
       if (!character) return
-      const statusData = await getFactionStatus()
-      if (!cancelled) setFactionPage(statusData)
+      const [statusData, invitesData] = await Promise.all([getFactionStatus(), getInvitations()])
+      if (cancelled) return
+      setFactionPage(statusData)
+      setInvitations(invitesData)
     }
     load()
       .catch((err) => {
@@ -118,6 +135,59 @@ export default function DefaultFactionsDirectory() {
         >
           {visible.map((f) => (
             <span key={f.slug} style={{ flex: 1, background: factionCssVar(f.slug) }} />
+          ))}
+        </div>
+      )}
+
+      {/* Invitation letters. Rendered only when the player actually holds one —
+          an empty list draws NOTHING (no header, no empty state).
+
+          ponytail: NO collapse toggle, unlike desktop's collapsed-by-default
+          panel. Desktop can collapse because its grid is fully visible above
+          the fold and each tile already shows `eligible`; on a phone the cards
+          are a tall vertical stack, so this panel is the only thing that tells
+          an invited player a letter exists without scrolling. A collapsed
+          `▸ Recent Invitations (1)` would defeat the point of the issue, and
+          one or two rows never need collapsing. Rows link to the detail page,
+          which owns Accept/Decline (ADR-0030, #347). */}
+      {invitations.length > 0 && (
+        <div className="mb-4" style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+          <span className="eyebrow" style={{ color: 'var(--color-text-tertiary)', fontSize: 9 }}>
+            {t('index.recentInvitations', { count: invitations.length })}
+          </span>
+          {invitations.map((inv) => (
+            <Link
+              key={inv.faction_slug}
+              to={`/factions/${inv.faction_slug}`}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 8,
+                padding: '10px 12px',
+                textDecoration: 'none',
+                background: `linear-gradient(135deg, ${factionCssVar(inv.faction_slug, 'light')}, transparent)`,
+                borderLeft: `3px solid ${factionCssVar(inv.faction_slug, 'border')}`,
+              }}
+            >
+              <span className="eyebrow">{t('index.inviteBadge')}</span>
+              <span
+                className="font-body"
+                style={{ fontSize: 11, color: 'var(--color-text-primary)', flex: 1, lineHeight: 1.4 }}
+              >
+                <Trans
+                  t={t}
+                  i18nKey="index.invitedToJoin"
+                  values={{ faction: factionName(inv.faction_slug) }}
+                  components={[
+                    <span key="0" />,
+                    <span key="1" style={{ fontWeight: 700, color: factionCssVar(inv.faction_slug) }} />,
+                  ]}
+                />
+              </span>
+              <span className="eyebrow" style={{ color: 'var(--color-text-tertiary)' }}>
+                {relativeTime(inv.delivered_at)}
+              </span>
+            </Link>
           ))}
         </div>
       )}
