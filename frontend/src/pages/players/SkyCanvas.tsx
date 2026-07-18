@@ -11,6 +11,11 @@ export const DESKTOP_SKY_MAX_WIDTH = 900
 export const DESKTOP_SKY_ASPECT = 0.85
 /** A phone column is already narrow, so its stage is taller than wide. */
 export const MOBILE_SKY_ASPECT = 1.08
+/** Pre-measurement stage width. The first paint (and every server/static render,
+ *  where no effect runs and `clientWidth` is 0) must still draw a real sky — a
+ *  `width > 0` guard renders NOTHING under `renderToStaticMarkup`, which would
+ *  quietly hollow out the players tests into vacuous passes (#730). */
+export const FALLBACK_SKY_WIDTH = 360
 
 export interface SkyCanvasProps {
   players: RankedPlayer[]
@@ -44,12 +49,16 @@ export default function SkyCanvas({
   aspect = DESKTOP_SKY_ASPECT,
 }: SkyCanvasProps) {
   const ref = useRef<HTMLDivElement>(null)
-  const [width, setWidth] = useState(0)
+  // Seeded, never 0: see FALLBACK_SKY_WIDTH. The measurement then corrects it on
+  // mount and on every resize.
+  const [width, setWidth] = useState(Math.min(maxWidth ?? FALLBACK_SKY_WIDTH, FALLBACK_SKY_WIDTH))
 
   useEffect(() => {
     const element = ref.current
     if (!element) return
-    const measure = () => setWidth(element.clientWidth)
+    const measure = () => {
+      if (element.clientWidth > 0) setWidth(element.clientWidth)
+    }
     measure()
     if (typeof ResizeObserver === 'undefined') return
     const observer = new ResizeObserver(measure)
@@ -58,17 +67,15 @@ export default function SkyCanvas({
   }, [])
 
   return (
-    <div ref={ref} className="mx-auto" style={{ maxWidth, minHeight: 320 }}>
-      {width > 0 && (
-        <Constellation
-          players={players}
-          maxScore={maxScore}
-          myCharId={myCharId}
-          population={population}
-          stageWidth={width}
-          stageHeight={Math.round(width * aspect)}
-        />
-      )}
+    <div ref={ref} className="mx-auto" style={{ maxWidth }}>
+      <Constellation
+        players={players}
+        maxScore={maxScore}
+        myCharId={myCharId}
+        population={population}
+        stageWidth={width}
+        stageHeight={Math.round(width * aspect)}
+      />
     </div>
   )
 }
