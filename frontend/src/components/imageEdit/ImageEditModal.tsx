@@ -223,7 +223,7 @@ export default function ImageEditModal({
       {/* Rotate — 90° steps cover sideways phone photos. */}
       <div style={controlRowStyle}>
         <span style={controlLabelStyle}>{t('imageEdit.rotateLabel')}</span>
-        <div style={{ display: 'flex', gap: 8 }}>
+        <div style={{ display: 'flex', gap: 'var(--space-sm)' }}>
           <button type="button" onClick={() => rotateBy(-ROTATE_STEP)} style={ghostButtonStyle}>
             {t('imageEdit.rotateLeft')}
           </button>
@@ -279,7 +279,7 @@ const overlayStyle: CSSProperties = {
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'center',
-  padding: 24,
+  padding: 'var(--space-xl)',
   zIndex: 1000,
   background: 'radial-gradient(ellipse at 50% 42%, rgba(26,18,9,0.30), rgba(26,18,9,0.66))',
 }
@@ -290,7 +290,9 @@ const cardStyle: CSSProperties = {
   background: PAPER,
   border: `1px solid ${BORDER}`,
   borderRadius: 12,
-  padding: '24px 24px 20px',
+  // §4a asymmetric-inset exception: the tie at 20 rounds DOWN so the shorter
+  // bottom inset survives instead of flattening into a uniform box.
+  padding: 'var(--space-xl) var(--space-xl) var(--space-lg)',
   boxShadow: '0 18px 46px -14px rgba(26,18,9,0.5)',
   fontFamily: FONT_BODY,
 }
@@ -301,7 +303,7 @@ const headingStyle: CSSProperties = {
   fontSize: 'var(--text-title)',
   lineHeight: 1.1,
   color: INK,
-  margin: '0 0 16px',
+  margin: '0 0 var(--space-lg)',
 }
 const cropSurfaceStyle: CSSProperties = {
   position: 'relative',
@@ -310,13 +312,13 @@ const cropSurfaceStyle: CSSProperties = {
   background: 'var(--color-bg-surface)',
   borderRadius: 8,
   overflow: 'hidden',
-  marginBottom: 16,
+  marginBottom: 'var(--space-lg)',
 }
 const controlRowStyle: CSSProperties = {
   display: 'flex',
   alignItems: 'center',
-  gap: 12,
-  marginBottom: 12,
+  gap: 'var(--space-md)',
+  marginBottom: 'var(--space-md)',
 }
 const controlLabelStyle: CSSProperties = {
   fontFamily: FONT_BODY,
@@ -330,8 +332,8 @@ const controlLabelStyle: CSSProperties = {
 const actionRowStyle: CSSProperties = {
   display: 'flex',
   alignItems: 'center',
-  gap: 10,
-  marginTop: 18,
+  gap: 'var(--space-md)',
+  marginTop: 'var(--space-lg)',
 }
 const primaryButtonStyle: CSSProperties = {
   flex: 1,
