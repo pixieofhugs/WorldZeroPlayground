@@ -183,7 +183,9 @@ The sidebar contains: character card, active tasks panel, recent activity panel,
 
 ## 6. Faction Card Archetypes
 
-**Core principle:** Each faction's tasks use a completely different card archetype. The card type IS the faction identity. All cards display: task name, faction name, point value, level requirement (via `LevelPill`).
+**Core principle:** Each faction's tasks use a completely different card archetype. The card type IS the faction identity. All cards display: task name, faction name, point value, level requirement (via `LevelGem`).
+
+**The level gem** is the one shape shared across every archetype: a 45°-rotated square, always outlined and never filled, with a faction-coloured numeral and a mandatory tiny "LVL" caption. It is deliberately the exception to "no uniform shapes" — the level is a game-wide fact, not a faction one, and a player should recognise it instantly whether it sits on a ransom note or a roster row. Faction identity enters as stroke colour and glow only. Unaffiliated takes the spectrum on both stroke and numeral (ADR-0039); it never degrades to grey, and it never borrows another faction's hue.
 
 Cards are arranged in a `flex-wrap` container with varied heights and slight rotations. This is intentional — they are NOT on a strict grid.
 

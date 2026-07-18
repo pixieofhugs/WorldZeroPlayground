@@ -274,7 +274,7 @@
     "levelAtLeast": "{{level}}+"
   },
   "level": {
-    "short": "lvl {{level}}"
+    "caption": "lvl"
   },
   "praxisType": {
     "solo": "Solo",

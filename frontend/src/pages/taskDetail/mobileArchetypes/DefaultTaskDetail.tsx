@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import PraxisCard from "../../../components/PraxisCard";
-import LevelPill from "../../../components/ui/LevelPill";
+import LevelGem from "../../../components/ui/LevelGem";
 import DefaultSigil from "../../../components/cards/DefaultSigil";
 import { factionCssVar, factionName } from "../../../utils/factions";
 import { MobileStickyBar, MobileStickyCaption } from "./shared";
@@ -64,7 +64,7 @@ export default function DefaultTaskDetail({ state }: { state: TaskDetailState })
         <div className="flex items-center gap-2 mb-2">
           <DefaultSigil size={18} />
           <span className="eyebrow" style={{ color }}>{factionName(task.primary_faction_slug)}</span>
-          <LevelPill level={task.level_required} />
+          <LevelGem level={task.level_required} />
         </div>
 
         <h1

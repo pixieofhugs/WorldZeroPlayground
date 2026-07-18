@@ -11,7 +11,7 @@ import {
 } from '../../../utils/factions'
 import { mediaUrl } from '../../../utils/media'
 import { badgeArtFor } from '../../../components/badges/badgeArt'
-import LevelPill from '../../../components/ui/LevelPill'
+import LevelGem from '../../../components/ui/LevelGem'
 import { ChipRow, Chip } from '../../../components/ui/ChipRow'
 import Constellation, { type RankedPlayer } from '../Constellation'
 
@@ -393,7 +393,7 @@ function PlayerRow({ row, isMe }: { row: RankedPlayer; isMe: boolean }) {
         </div>
         <div className="flex items-center flex-wrap mt-1" style={{ gap: 'var(--space-xs)' }}>
           <span className="eyebrow">{factionName(character.faction_slug)}</span>
-          <LevelPill level={character.level} factionSlug={character.faction_slug} />
+          <LevelGem level={character.level} factionSlug={character.faction_slug} size={34} />
           {badges.map((badge) => {
             const Art = badgeArtFor(badge.key)
             return (

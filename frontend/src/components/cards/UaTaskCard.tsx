@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import type { TaskOut } from "../../api/tasks";
 import i18n from "../../i18n";
-import LevelPill from "../ui/LevelPill";
+import LevelGem from "../ui/LevelGem";
 import { UaSigil, MottoRibbon } from "./UaSigil";
 
 /**
@@ -154,7 +154,7 @@ export default function UaTaskCard({ task, displayPoints, onSignup }: Props) {
             borderTop: "1px solid var(--ua-line-soft)",
           }}
         >
-          <LevelPill level={task.level_required} factionSlug="ua" />
+          <LevelGem level={task.level_required} factionSlug="ua" />
           <span
             className="content-title"
             style={{

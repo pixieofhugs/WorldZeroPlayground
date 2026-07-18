@@ -6,7 +6,7 @@ import type { CSSProperties, ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import i18n from "../../../i18n";
-import LevelPill from "../../../components/ui/LevelPill";
+import LevelGem from "../../../components/ui/LevelGem";
 import { factionCssVar, factionName } from "../../../utils/factions";
 import type { TaskOut } from "../../../api/tasks";
 import type { PraxisOut } from "../../../api/praxis";
@@ -128,7 +128,6 @@ export function Breadcrumb({
 interface TaskHeaderInfoProps {
   praxis: PraxisOut;
   task: TaskOut | null;
-  showLevelPill?: boolean;
   textColor?: string;
 }
 
@@ -139,7 +138,6 @@ interface TaskHeaderInfoProps {
 export function TaskMetaInline({
   praxis,
   task,
-  showLevelPill = true,
   textColor,
 }: TaskHeaderInfoProps) {
   const { t } = useTranslation("forms");
@@ -162,7 +160,7 @@ export function TaskMetaInline({
       {task && (
         <span>· {t("taskMeta.points", { points: task.point_value })}</span>
       )}
-      {task && showLevelPill && <LevelPill level={task.level_required} />}
+      {task && <LevelGem level={task.level_required} factionSlug={slug} />}
       {(praxis.type === "collab" || praxis.duel_id != null) && (
         <span>
           ·{" "}

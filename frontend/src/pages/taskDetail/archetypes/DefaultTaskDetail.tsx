@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import PraxisCard from "../../../components/PraxisCard";
-import LevelPill from "../../../components/ui/LevelPill";
+import LevelGem from "../../../components/ui/LevelGem";
 import FeedBadge from "../../../components/feed/FeedBadge";
 import DefaultSigil from "../../../components/cards/DefaultSigil";
 import { factionCssVar, factionFill, factionName } from "../../../utils/factions";
@@ -150,7 +150,7 @@ export default function DefaultTaskDetail({
                   {t("default.meta")}
                 </span>
               )}
-              <LevelPill level={task.level_required} />
+              <LevelGem level={task.level_required} />
             </div>
 
             {/* Title */}

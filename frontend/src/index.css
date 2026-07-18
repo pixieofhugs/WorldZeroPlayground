@@ -126,6 +126,10 @@
   --faction-default-card-accent: #1a1209;
   --faction-default-card-muted: #6b6050;
   --faction-default-card-font: var(--font-display);
+  /* Neutral glow for unaffiliated surfaces (#728): a rainbow has no single
+     colour to cast, so na glows colourless. Light mode uses a soft grey — a
+     literally-white glow on a light page is invisible; dark mode is white. */
+  --glow-neutral: rgba(120, 120, 130, 0.55);
 
   /* ── S.N.I.D.E. punk extension — ransom/xerox/spray pigments + font set ──
      Extra named pigments beyond the standard suffix set, namespaced to the
@@ -467,6 +471,7 @@
   --faction-default-card-text: #f0e6d0;
   --faction-default-card-accent: #f0e6d0;
   --faction-default-card-muted: #9b9080;
+  --glow-neutral: rgba(255, 255, 255, 0.75);
 
   /* Albescent — always-light: identical to the :root values so the vellum
      register never dims, regardless of the global theme (#231/#232). */
@@ -871,6 +876,78 @@
     font-size: var(--text-sm);
     text-transform: uppercase;
     letter-spacing: 0.15em;
+    color: var(--color-text-tertiary);
+  }
+
+  /* ── Level gem (issue #728) ──
+     A square rotated 45° — outlined, never filled, so the numeral sits on
+     whatever surface the gem lands on and stays AA-safe without per-faction
+     tuning. The caller supplies four custom properties inline:
+       --gem-size   overall box in px (task-card ~24 → roster ~34)
+       --gem-stroke paint for the outline: a faction colour, or the
+                    --faction-default-rainbow gradient for unaffiliated
+       --gem-ink    numeral colour (unaffiliated uses the rainbow class below)
+       --gem-glow   colour cast around the shape
+     The outline is a gradient-capable "border": a filled lozenge whose middle
+     is masked out. That is what lets the rainbow stroke and the solid faction
+     strokes be the same code path. */
+
+  .level-gem {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    line-height: 1;
+  }
+
+  .level-gem-box {
+    position: relative;
+    display: grid;
+    place-items: center;
+    width: var(--gem-size);
+    height: var(--gem-size);
+  }
+
+  .level-gem-shape {
+    position: absolute;
+    /* a square inscribed in the box once rotated: side = box / √2 */
+    width: calc(var(--gem-size) / 1.414);
+    height: calc(var(--gem-size) / 1.414);
+    box-sizing: border-box;
+    padding: max(1.5px, calc(var(--gem-size) * 0.07));
+    transform: rotate(45deg);
+    background: var(--gem-stroke);
+    -webkit-mask:
+      linear-gradient(#000 0 0) content-box,
+      linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask:
+      linear-gradient(#000 0 0) content-box exclude,
+      linear-gradient(#000 0 0);
+    filter: drop-shadow(0 0 calc(var(--gem-size) * 0.17) var(--gem-glow));
+  }
+
+  .level-gem-number {
+    position: relative;
+    font-family: var(--font-body);
+    font-weight: 700;
+    font-size: calc(var(--gem-size) * 0.42);
+    line-height: 1;
+    color: var(--gem-ink);
+  }
+
+  /* Unaffiliated numeral, per ADR-0039: the spectrum, not a grey fallback. */
+  .level-gem-number-rainbow {
+    background: var(--faction-default-rainbow);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  .level-gem-caption {
+    font-size: var(--text-sm);
+    font-family: var(--font-body);
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
     color: var(--color-text-tertiary);
   }
 
