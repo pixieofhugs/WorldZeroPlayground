@@ -150,7 +150,6 @@ src/pages/praxisDetail/mobileArchetypes/SingularityPraxisDetail.tsx
 src/pages/praxisDetail/mobileArchetypes/SnidePraxisDetail.tsx
 src/pages/praxisDetail/mobileArchetypes/UaPraxisDetail.tsx
 src/pages/praxisDetail/mobileArchetypes/WowPraxisDetail.tsx
-src/pages/praxisDetail/shared.tsx
 src/pages/ProposeTask.tsx
 src/pages/proposeTask/archetypes/DefaultProposeTask.tsx
 src/pages/settings/mobileArchetypes/DefaultSettings.tsx
