@@ -102,8 +102,6 @@ src/pages/editPraxis/mobileArchetypes/SnideComposer.tsx
 src/pages/editPraxis/mobileArchetypes/UaComposer.tsx
 src/pages/editPraxis/mobileArchetypes/WowEditPraxis.tsx
 src/pages/FactionDetail.tsx
-src/pages/factionDetail/archetypes/AlbescentFactionBody.tsx
-src/pages/factionDetail/archetypes/DefaultFactionBody.tsx
 src/pages/factionDetail/archetypes/EphemeristsFactionBody.tsx
 src/pages/factionDetail/archetypes/EverymenFactionBody.tsx
 src/pages/factionDetail/archetypes/SingularityFactionBody.tsx

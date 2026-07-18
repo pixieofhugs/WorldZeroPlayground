@@ -72,7 +72,7 @@ function SectionHeading({ kicker, title, count }: { kicker: string; title: strin
           fontSize: 26,
           lineHeight: 1,
           color: INK,
-          margin: "0",
+          margin: 0,
         }}
       >
         {title}
@@ -84,7 +84,7 @@ function SectionHeading({ kicker, title, count }: { kicker: string; title: strin
 
 function Quiet({ children }: { children: ReactNode }) {
   return (
-    <p className="content-text" style={{ fontFamily: FONT, fontStyle: "italic", color: MUTED, margin: "0" }}>
+    <p className="content-text" style={{ fontFamily: FONT, fontStyle: "italic", color: MUTED, margin: 0 }}>
       {children}
     </p>
   );
