@@ -69,17 +69,24 @@ export default function DefaultEditCharacter({ state }: { state: EditCharacterSt
             {character.avatar_url ? (
               <img src={mediaUrl(character.avatar_url)} alt={character.username} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
             ) : (
-              // ornament: the fallback monogram is illustration, sized to the 96px ring
-              <span style={{ fontFamily: 'var(--faction-default-card-font)', fontStyle: 'italic', fontSize: 34, color: 'var(--color-text-primary)' }}>
+              <span
+                style={{
+                  fontFamily: 'var(--faction-default-card-font)',
+                  fontStyle: 'italic',
+                  // eslint-disable-next-line local/no-raw-style-values -- ornament: the fallback monogram is illustration, sized to the 96px ring
+                  fontSize: 34,
+                  color: 'var(--color-text-primary)',
+                }}
+              >
                 {initial}
               </span>
             )}
           </span>
         </button>
-        <div className="eyebrow" style={{ marginTop: 12, color: 'var(--faction-default-card-muted)' }}>
+        <div className="eyebrow" style={{ marginTop: 'var(--space-md)', color: 'var(--faction-default-card-muted)' }}>
           {t('editCharacter.mobile.changePhoto')}
         </div>
-        {avatarError && <p className="content-text" style={{ ...errorBox, marginTop: 8 }}>{avatarError}</p>}
+        {avatarError && <p className="content-text" style={{ ...errorBox, marginTop: 'var(--space-sm)' }}>{avatarError}</p>}
       </div>
       <input ref={fileRef} type="file" accept="image/*" onChange={handleAvatarChange} style={{ display: 'none' }} />
 
@@ -125,7 +132,7 @@ export default function DefaultEditCharacter({ state }: { state: EditCharacterSt
           <span className="content-text" style={{ fontFamily: 'var(--font-body)', color: 'var(--color-text-secondary)' }}>
             {t('editCharacter.mobile.deleteConfirm')}
           </span>
-          <div style={{ display: 'flex', gap: 10 }}>
+          <div style={{ display: 'flex', gap: 'var(--space-md)' }}>
             <button type="button" onClick={() => setConfirmingDelete(false)} style={confirmCancel}>
               {t('editCharacter.cancel')}
             </button>
@@ -165,15 +172,19 @@ export default function DefaultEditCharacter({ state }: { state: EditCharacterSt
 
 // --- token-driven styles (single column, no hardcoded hex) ------------------
 
-const page: CSSProperties = { display: 'flex', flexDirection: 'column', gap: 20, paddingBottom: 96 }
+const page: CSSProperties = { display: 'flex', flexDirection: 'column', gap: 'var(--space-xl)', paddingBottom: 'var(--space-6xl)' }
 const topRow: CSSProperties = { display: 'flex', alignItems: 'center', justifyContent: 'space-between' }
 const backBtn: CSSProperties = {
   width: 28, height: 28, background: 'none', border: 'none', cursor: 'pointer',
-  // ornament: the back chevron is a glyph-as-icon sized to its 28px hit target
-  fontSize: 24, lineHeight: 1, color: 'var(--color-text-primary)', padding: 0,
+  // eslint-disable-next-line local/no-raw-style-values -- ornament: the back chevron is a glyph-as-icon sized to its 28px hit target
+  fontSize: 24,
+  lineHeight: 1, color: 'var(--color-text-primary)', padding: 0,
 }
 const ringBtn: CSSProperties = {
-  width: 96, height: 96, borderRadius: '50%', padding: 3, cursor: 'pointer',
+  width: 96, height: 96, borderRadius: '50%',
+  // eslint-disable-next-line local/no-raw-style-values -- ornament: rainbow ring thickness drawn around the 96px avatar well; the nearest rung (4px) thickens the band by a third.
+  padding: 3,
+  cursor: 'pointer',
   border: 'none', background: 'var(--faction-default-rainbow)',
 }
 const ringInner: CSSProperties = {
@@ -183,57 +194,57 @@ const ringInner: CSSProperties = {
 }
 const label: CSSProperties = {
   display: 'block', fontSize: 'var(--text-sm)', letterSpacing: '0.16em', textTransform: 'uppercase',
-  color: 'var(--color-text-secondary)', marginBottom: 8,
+  color: 'var(--color-text-secondary)', marginBottom: 'var(--space-sm)',
 }
 const field: CSSProperties = {
   display: 'block', width: '100%', boxSizing: 'border-box',
   background: 'var(--color-bg-page)', border: '1px solid var(--color-border-strong)',
   borderRadius: 8, outline: 'none', fontFamily: 'var(--font-body)',
-  color: 'var(--color-text-primary)', padding: '12px 13px',
+  color: 'var(--color-text-primary)', padding: 'var(--space-md)',
 }
 const factionRow: CSSProperties = {
   display: 'flex', alignItems: 'center', justifyContent: 'space-between',
   background: 'var(--color-bg-surface-alt)', border: '1px solid var(--color-border-strong)',
-  borderRadius: 8, padding: '12px 13px', textDecoration: 'none',
+  borderRadius: 8, padding: 'var(--space-md)', textDecoration: 'none',
   fontFamily: 'var(--font-body)', color: 'var(--color-text-secondary)',
 }
 const help: CSSProperties = {
   fontFamily: 'var(--font-body)', lineHeight: 1.6,
-  color: 'var(--color-text-tertiary)', margin: '8px 0 0',
+  color: 'var(--color-text-tertiary)', margin: 'var(--space-sm) 0 0',
 }
 const deleteBtn: CSSProperties = {
   width: '100%', cursor: 'pointer', background: 'none', textAlign: 'center',
-  border: '1px solid var(--color-danger)', borderRadius: 8, padding: '12px',
+  border: '1px solid var(--color-danger)', borderRadius: 8, padding: 'var(--space-md)',
   fontFamily: 'var(--font-body)', fontSize: 'var(--text-lg)', letterSpacing: '0.1em',
   textTransform: 'uppercase', color: 'var(--color-danger)',
 }
 const confirmRow: CSSProperties = {
-  display: 'flex', flexDirection: 'column', gap: 12,
-  border: '1px solid var(--color-danger)', borderRadius: 8, padding: '14px',
+  display: 'flex', flexDirection: 'column', gap: 'var(--space-md)',
+  border: '1px solid var(--color-danger)', borderRadius: 8, padding: 'var(--space-lg)',
 }
 const confirmCancel: CSSProperties = {
   flex: 1, cursor: 'pointer', background: 'var(--color-bg-surface)',
-  border: '1px solid var(--color-border-strong)', borderRadius: 8, padding: '10px',
+  border: '1px solid var(--color-border-strong)', borderRadius: 8, padding: 'var(--space-md)',
   fontFamily: 'var(--font-body)', fontSize: 'var(--text-lg)', color: 'var(--color-text-primary)',
 }
 const confirmDelete: CSSProperties = {
   flex: 1, cursor: 'pointer', background: 'var(--color-danger)', border: 'none',
-  borderRadius: 8, padding: '10px', fontFamily: 'var(--font-body)', fontSize: 'var(--text-lg)',
+  borderRadius: 8, padding: 'var(--space-md)', fontFamily: 'var(--font-body)', fontSize: 'var(--text-lg)',
   letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--color-bg-page)',
 }
 const errorBox: CSSProperties = {
   fontFamily: 'var(--font-body)', color: 'var(--color-danger)',
-  border: '1px solid var(--color-danger)', borderRadius: 6, padding: '10px 12px', margin: 0,
+  border: '1px solid var(--color-danger)', borderRadius: 6, padding: 'var(--space-md)', margin: 0,
 }
 const stickyBar: CSSProperties = {
   position: 'sticky',
   bottom: 'calc(3.5rem + env(safe-area-inset-bottom))',
   marginTop: 'auto',
-  paddingTop: 8,
+  paddingTop: 'var(--space-sm)',
 }
 const primaryBtn: CSSProperties = {
   width: '100%', cursor: 'pointer', fontFamily: 'var(--font-body)', fontSize: 'var(--text-xl)',
   letterSpacing: '0.12em', textTransform: 'uppercase', fontWeight: 700,
   color: 'var(--color-bg-page)', background: 'var(--color-text-primary)',
-  border: 'none', padding: '15px 24px', borderRadius: 12,
+  border: 'none', padding: 'var(--space-lg) var(--space-xl)', borderRadius: 12,
 }
