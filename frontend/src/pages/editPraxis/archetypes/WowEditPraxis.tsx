@@ -221,7 +221,7 @@ export default function WowEditPraxis({ state }: Props) {
   const eyebrowStyle: React.CSSProperties = {
     display: "block",
     fontFamily: "var(--font-body)",
-    fontSize: 9,
+    fontSize: "var(--text-sm)",
     textTransform: "uppercase",
     letterSpacing: "0.18em",
     color: pinkDeep,
@@ -323,7 +323,7 @@ export default function WowEditPraxis({ state }: Props) {
             </div>
             <span
               style={{
-                fontSize: 11,
+                fontSize: "var(--text-md)",
                 color: titleText,
                 letterSpacing: "0.03em",
                 display: "flex",
@@ -337,7 +337,7 @@ export default function WowEditPraxis({ state }: Props) {
             <span
               style={{
                 marginLeft: "auto",
-                fontSize: 11,
+                fontSize: "var(--text-md)",
                 color: titleText,
                 opacity: 0.75,
                 letterSpacing: "1.5px",
@@ -361,7 +361,7 @@ export default function WowEditPraxis({ state }: Props) {
             <div
               style={{
                 fontFamily: cardFont,
-                fontSize: 40,
+                fontSize: "var(--text-display)",
                 fontWeight: 700,
                 lineHeight: 1,
                 color: ink,
@@ -383,7 +383,7 @@ export default function WowEditPraxis({ state }: Props) {
               <div
                 style={{
                   fontFamily: cardFont,
-                  fontSize: 24,
+                  fontSize: "var(--text-title)",
                   fontWeight: 700,
                   lineHeight: 1.1,
                   color: ink,
@@ -394,7 +394,7 @@ export default function WowEditPraxis({ state }: Props) {
                 {praxis.task_title}
               </div>
               {task?.description && (
-                <div style={{ fontFamily: cardFont, fontSize: 13, lineHeight: 1.5, color: muted, marginBottom: 8 }}>
+                <div style={{ fontFamily: cardFont, fontSize: "var(--text-content)", lineHeight: 1.5, color: muted, marginBottom: 8 }}>
                   {task.description}
                 </div>
               )}
@@ -440,14 +440,14 @@ export default function WowEditPraxis({ state }: Props) {
                         <div
                           style={{
                             fontFamily: cardFont,
-                            fontSize: 22,
+                            fontSize: "var(--text-title)",
                             fontWeight: 700,
                             marginBottom: 2,
                           }}
                         >
                           {opt.label}
                         </div>
-                        <div style={{ fontSize: 10, opacity: 0.85 }}>
+                        <div style={{ fontSize: "var(--text-base)", opacity: 0.85 }}>
                           {opt.desc}
                         </div>
                       </button>
@@ -499,7 +499,6 @@ export default function WowEditPraxis({ state }: Props) {
                   inputStyle: {
                     width: "100%",
                     fontFamily: cardFont,
-                    fontSize: 28,
                     fontWeight: 700,
                     color: ink,
                     background: "transparent",
@@ -518,7 +517,7 @@ export default function WowEditPraxis({ state }: Props) {
                 }}
               >
                 <TitleCounter length={state.title.length} color={muted} />
-                <span style={{ ...eyebrowStyle, color: muted, fontSize: 8 }}>
+                <span style={{ ...eyebrowStyle, color: muted, fontSize: "var(--text-xs)" }}>
                   {state.autosaveAt
                     ? t("editPraxis.wow.autosaveSaved", {
                         ago: formatAutosave(state.autosaveAt),
@@ -541,7 +540,6 @@ export default function WowEditPraxis({ state }: Props) {
                   textareaStyle: {
                     width: "100%",
                     fontFamily: "var(--font-body)",
-                    fontSize: 14,
                     lineHeight: "24px",
                     color: ink,
                     background: bodyBg,
@@ -571,7 +569,6 @@ export default function WowEditPraxis({ state }: Props) {
                   ),
                   markdownStyle: {
                     fontFamily: "var(--font-body)",
-                    fontSize: 15,
                     lineHeight: 1.65,
                     color: ink,
                   },
@@ -638,7 +635,7 @@ export default function WowEditPraxis({ state }: Props) {
                       borderRadius: 9,
                       cursor: "pointer",
                       fontFamily: cardFont,
-                      fontSize: 18,
+                      fontSize: "var(--text-content)",
                       fontWeight: 700,
                       color: pink,
                       display: "flex",
@@ -650,7 +647,7 @@ export default function WowEditPraxis({ state }: Props) {
                     buttonLabel: t("editPraxis.wow.fileButton"),
                     helperText: t("editPraxis.wow.fileHelper"),
                     helperStyle: {
-                      fontSize: 9,
+                      fontSize: "var(--text-sm)",
                       color: muted,
                       marginTop: 6,
                     },
@@ -721,7 +718,7 @@ export default function WowEditPraxis({ state }: Props) {
                     background: `linear-gradient(180deg, ${pink}, ${pinkDeep})`,
                     color: "var(--color-text-on-accent)",
                     fontFamily: "var(--font-body)",
-                    fontSize: 12,
+                    fontSize: "var(--text-lg)",
                     fontWeight: 600,
                     textTransform: "uppercase",
                     letterSpacing: "0.1em",
@@ -742,7 +739,7 @@ export default function WowEditPraxis({ state }: Props) {
                     background: "transparent",
                     color: muted,
                     fontFamily: cardFont,
-                    fontSize: 18,
+                    fontSize: "var(--text-content)",
                     fontWeight: 700,
                     border: "none",
                     cursor: "pointer",
@@ -832,7 +829,7 @@ function MediaTile({
           bottom: 4,
           left: 8,
           right: 8,
-          fontSize: 10,
+          fontSize: "var(--text-base)",
           fontFamily: "var(--font-body)",
           color: borderColor,
           textAlign: "center",
@@ -857,7 +854,7 @@ function MediaTile({
           background: tileBg,
           border: `1.5px solid ${removeColor}`,
           color: removeColor,
-          fontSize: 11,
+          fontSize: "var(--text-md)",
           fontWeight: 700,
           cursor: "pointer",
           lineHeight: 1,

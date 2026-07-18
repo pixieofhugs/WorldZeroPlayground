@@ -105,7 +105,7 @@ export default function SingularityEditPraxis({ state }: Props) {
           ))}
           <span
             style={{
-              fontSize: 10,
+              fontSize: "var(--text-base)",
               color: dim,
               marginLeft: 12,
               letterSpacing: "0.15em",
@@ -115,7 +115,7 @@ export default function SingularityEditPraxis({ state }: Props) {
             {t("editPraxis.singularity.terminal.sessionPath", { session: praxis.id.toString(16) })}
           </span>
         </div>
-        <div style={{ display: "flex", gap: 12, fontSize: 10, color: dim }}>
+        <div style={{ display: "flex", gap: 12, fontSize: "var(--text-base)", color: dim }}>
           <span style={{ color: term }}>{cursorOn ? "●" : "○"} REC</span>
         </div>
       </div>
@@ -137,7 +137,7 @@ export default function SingularityEditPraxis({ state }: Props) {
         />
 
         {/* Boot lines */}
-        <div style={{ marginBottom: 16, fontSize: 11, lineHeight: 1.7 }}>
+        <div style={{ marginBottom: 16, fontSize: "var(--text-md)", lineHeight: 1.7 }}>
           <div style={{ color: dim }}>{t("editPraxis.singularity.terminal.whoami")}</div>
           <div style={{ color: term }}>
             {t("editPraxis.singularity.terminal.whoamiResult", { name: praxis.created_by_display_name })}
@@ -156,7 +156,7 @@ export default function SingularityEditPraxis({ state }: Props) {
               left: 12,
               background: bg,
               padding: "0 8px",
-              fontSize: 9,
+              fontSize: "var(--text-sm)",
               color: accent,
               letterSpacing: "0.15em",
               textTransform: "uppercase",
@@ -171,12 +171,12 @@ export default function SingularityEditPraxis({ state }: Props) {
               background: "rgba(37,99,235,.05)",
             }}
           >
-            <div style={{ fontSize: 13, color: term, lineHeight: 1.4 }}>
+            <div style={{ fontSize: "var(--text-content)", color: term, lineHeight: 1.4 }}>
               <span style={{ color: dim }}>&gt; </span>
               {praxis.task_title}
             </div>
             {task?.description && (
-              <div style={{ fontSize: 12, color: dim, lineHeight: 1.5, marginTop: 6, whiteSpace: "pre-wrap" }}>
+              <div style={{ fontSize: "var(--text-content)", color: dim, lineHeight: 1.5, marginTop: 6, whiteSpace: "pre-wrap" }}>
                 <span style={{ color: accent }}># </span>
                 {task.description}
               </div>
@@ -186,7 +186,7 @@ export default function SingularityEditPraxis({ state }: Props) {
                 display: "flex",
                 gap: 14,
                 marginTop: 10,
-                fontSize: 10,
+                fontSize: "var(--text-base)",
                 color: dim,
                 flexWrap: "wrap",
               }}
@@ -215,7 +215,7 @@ export default function SingularityEditPraxis({ state }: Props) {
         {/* Mode selector */}
         {!state.controlsLocked && (
           <div style={{ marginBottom: 22 }}>
-            <div style={{ fontSize: 10, color: dim, marginBottom: 10 }}>
+            <div style={{ fontSize: "var(--text-base)", color: dim, marginBottom: 10 }}>
               <span style={{ color: term }}>$ </span>{t("editPraxis.singularity.terminal.setModeCommand")}
             </div>
             <ModePicker
@@ -245,7 +245,7 @@ export default function SingularityEditPraxis({ state }: Props) {
                   >
                     <div
                       style={{
-                        fontSize: 12,
+                        fontSize: "var(--text-lg)",
                         fontWeight: 700,
                         marginBottom: 2,
                       }}
@@ -254,7 +254,7 @@ export default function SingularityEditPraxis({ state }: Props) {
                       {opt.flag}
                       {active && "]"}
                     </div>
-                    <div style={{ fontSize: 9, opacity: active ? 0.85 : 0.6 }}>
+                    <div style={{ fontSize: "var(--text-sm)", opacity: active ? 0.85 : 0.6 }}>
                       {opt.desc}
                     </div>
                   </button>
@@ -267,7 +267,7 @@ export default function SingularityEditPraxis({ state }: Props) {
         {/* Invite */}
         {state.showInviteBox && (
             <div style={{ marginBottom: 22 }}>
-              <div style={{ fontSize: 10, color: dim, marginBottom: 8 }}>
+              <div style={{ fontSize: "var(--text-base)", color: dim, marginBottom: 8 }}>
                 <span style={{ color: term }}>$ </span>{t("editPraxis.singularity.terminal.inviteCommand")}
               </div>
               <div
@@ -299,7 +299,7 @@ export default function SingularityEditPraxis({ state }: Props) {
 
         {/* Title */}
         <div style={{ marginBottom: 22 }}>
-          <div style={{ fontSize: 10, color: dim, marginBottom: 6 }}>
+          <div style={{ fontSize: "var(--text-base)", color: dim, marginBottom: 6 }}>
             <span style={{ color: term }}>$ </span>{t("editPraxis.singularity.terminal.titleCommand")}{" "}
             <TitleCounter length={state.title.length} color={dim} />
           </div>
@@ -316,7 +316,7 @@ export default function SingularityEditPraxis({ state }: Props) {
                 left: 0,
                 top: 4,
                 color: dim,
-                fontSize: 18,
+                fontSize: "var(--text-content)",
               }}
             >
               #{" "}
@@ -330,7 +330,6 @@ export default function SingularityEditPraxis({ state }: Props) {
                   paddingLeft: 22,
                   fontFamily: "'Lora', serif",
                   fontStyle: "italic",
-                  fontSize: 26,
                   color: term,
                   background: "transparent",
                   border: "none",
@@ -351,7 +350,7 @@ export default function SingularityEditPraxis({ state }: Props) {
               marginBottom: 6,
             }}
           >
-            <div style={{ fontSize: 10, color: dim }}>
+            <div style={{ fontSize: "var(--text-base)", color: dim }}>
               <span style={{ color: term }}>$ </span>{t("editPraxis.singularity.terminal.bodyCommand")}{" "}
               <span style={{ color: dim }}>
                 {t("editPraxis.singularity.bodyMeta", {
@@ -376,7 +375,7 @@ export default function SingularityEditPraxis({ state }: Props) {
                 background: "rgba(37,99,235,.08)",
                 padding: "12px 8px",
                 borderRight: `1px solid ${accent}`,
-                fontSize: 11,
+                fontSize: "var(--text-md)",
                 color: dim,
                 lineHeight: 1.7,
                 textAlign: "right",
@@ -401,7 +400,6 @@ export default function SingularityEditPraxis({ state }: Props) {
                     height: "100%",
                     minHeight: 220,
                     fontFamily: "'Share Tech Mono', monospace",
-                    fontSize: 12,
                     lineHeight: 1.7,
                     color: term,
                     background: "transparent",
@@ -418,7 +416,7 @@ export default function SingularityEditPraxis({ state }: Props) {
                     position: "absolute",
                     bottom: 16,
                     left: 14,
-                    fontSize: 12,
+                    fontSize: "var(--text-lg)",
                     color: dim,
                     fontStyle: "italic",
                     pointerEvents: "none",
@@ -438,7 +436,7 @@ export default function SingularityEditPraxis({ state }: Props) {
               background: accent,
               color: bg,
               padding: "3px 12px",
-              fontSize: 10,
+              fontSize: "var(--text-base)",
               fontWeight: 700,
               letterSpacing: "0.05em",
             }}
@@ -467,13 +465,12 @@ export default function SingularityEditPraxis({ state }: Props) {
                 background: "rgba(0,0,0,.5)",
               },
               label: (
-                <div style={{ fontSize: 9, color: dim, marginBottom: 8 }}>
+                <div style={{ fontSize: "var(--text-sm)", color: dim, marginBottom: 8 }}>
                   <span style={{ color: term }}>$ </span>{t("editPraxis.singularity.terminal.renderCommand")}
                 </div>
               ),
               markdownStyle: {
                 fontFamily: "'Share Tech Mono', monospace",
-                fontSize: 12,
                 lineHeight: 1.7,
                 color: term,
               },
@@ -483,7 +480,7 @@ export default function SingularityEditPraxis({ state }: Props) {
 
         {/* Media */}
         <div style={{ marginBottom: 22 }}>
-          <div style={{ fontSize: 10, color: dim, marginBottom: 8 }}>
+          <div style={{ fontSize: "var(--text-base)", color: dim, marginBottom: 8 }}>
             <span style={{ color: term }}>$ </span>{t("editPraxis.singularity.terminal.attachCommand")}
           </div>
           <div
@@ -496,7 +493,7 @@ export default function SingularityEditPraxis({ state }: Props) {
             {state.media.length === 0 ? (
               <div
                 style={{
-                  fontSize: 11,
+                  fontSize: "var(--text-md)",
                   color: dim,
                   fontStyle: "italic",
                   marginBottom: 12,
@@ -504,7 +501,7 @@ export default function SingularityEditPraxis({ state }: Props) {
               >
                 {t("editPraxis.singularity.mediaEmpty")}
                 <br />
-                <span style={{ fontSize: 9 }}>
+                <span style={{ fontSize: "var(--text-sm)" }}>
                   {t("editPraxis.singularity.mediaHelper")}
                 </span>
               </div>
@@ -531,7 +528,7 @@ export default function SingularityEditPraxis({ state }: Props) {
                         padding: "6px 10px",
                         background: "rgba(74,222,128,.06)",
                         border: `1px solid ${accent}`,
-                        fontSize: 11,
+                        fontSize: "var(--text-md)",
                         color: term,
                       }}
                     >
@@ -553,7 +550,7 @@ export default function SingularityEditPraxis({ state }: Props) {
                           border: "none",
                           cursor: "pointer",
                           fontFamily: "inherit",
-                          fontSize: 10,
+                          fontSize: "var(--text-base)",
                         }}
                       >
                         {t("editPraxis.singularity.removeButton")}
@@ -571,7 +568,7 @@ export default function SingularityEditPraxis({ state }: Props) {
                   color: term,
                   border: `1px solid ${term}`,
                   fontFamily: "'Share Tech Mono', monospace",
-                  fontSize: 10,
+                  fontSize: "var(--text-base)",
                   padding: "6px 14px",
                   cursor: "pointer",
                   textTransform: "uppercase",
@@ -587,7 +584,7 @@ export default function SingularityEditPraxis({ state }: Props) {
         {/* Metatasks */}
         {state.showMetatasks && (
           <div style={{ marginBottom: 22 }}>
-            <div style={{ fontSize: 10, color: dim, marginBottom: 8 }}>
+            <div style={{ fontSize: "var(--text-base)", color: dim, marginBottom: 8 }}>
               <span style={{ color: term }}>$ </span>{t("editPraxis.singularity.terminal.metataskCommand")}
             </div>
             <div
@@ -653,7 +650,7 @@ export default function SingularityEditPraxis({ state }: Props) {
                 background: term,
                 color: bg,
                 fontFamily: "'Share Tech Mono', monospace",
-                fontSize: 13,
+                fontSize: "var(--text-lg)",
                 fontWeight: 700,
                 letterSpacing: "0.1em",
                 padding: "12px 22px",
@@ -673,7 +670,7 @@ export default function SingularityEditPraxis({ state }: Props) {
                 background: "transparent",
                 color: dim,
                 fontFamily: "'Share Tech Mono', monospace",
-                fontSize: 9,
+                fontSize: "var(--text-sm)",
                 border: "none",
                 cursor: "pointer",
                 textDecoration: "underline",

@@ -43,7 +43,7 @@ const signal = (pct: number): string => `color-mix(in srgb, ${SIGNAL} ${pct}%, t
 const kicker: CSSProperties = {
   display: 'block',
   fontFamily: FONT,
-  fontSize: 8,
+  fontSize: "var(--text-xs)",
   letterSpacing: '0.2em',
   textTransform: 'uppercase',
   color: signal(60),
@@ -53,7 +53,7 @@ const kicker: CSSProperties = {
 function Panel({ title, children }: { title: string; children: ReactNode }) {
   return (
     <section style={{ background: VOID, border: `1px solid ${signal(42)}`, padding: 14 }}>
-      <div style={{ fontFamily: FONT, fontSize: 9, letterSpacing: '0.13em', textTransform: 'uppercase', color: PHOSPHOR, marginBottom: 10 }}>
+      <div style={{ fontFamily: FONT, fontSize: "var(--text-sm)", letterSpacing: '0.13em', textTransform: 'uppercase', color: PHOSPHOR, marginBottom: 10 }}>
         {title}
       </div>
       {children}
@@ -71,7 +71,7 @@ export default function SingularityComposer({ state }: { state: EditPraxisState 
     <div data-skin="singularity" style={{ display: 'flex', flexDirection: 'column', gap: 14, fontFamily: FONT, color: PHOSPHOR, background: VOID }}>
       <header style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
         <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
-          <h1 style={{ fontFamily: FONT, fontSize: 22, lineHeight: 1, color: PHOSPHOR, letterSpacing: '0.03em', margin: 0 }}>
+          <h1 style={{ fontFamily: FONT, fontSize: "var(--text-title)", lineHeight: 1, color: PHOSPHOR, letterSpacing: '0.03em', margin: 0 }}>
             {t('editPraxis.singularity.mobile.pageTitle')}
           </h1>
           <span style={{ ...kicker, marginLeft: 'auto' }}>
@@ -90,7 +90,7 @@ export default function SingularityComposer({ state }: { state: EditPraxisState 
               padding: '9px 10px',
               border: 'none',
               fontFamily: FONT,
-              fontSize: 11,
+              fontSize: "var(--text-md)",
               letterSpacing: '0.1em',
               textTransform: 'uppercase',
               background: active ? PHOSPHOR : 'transparent',
@@ -103,7 +103,7 @@ export default function SingularityComposer({ state }: { state: EditPraxisState 
       {/* For-function reference */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, padding: '11px 14px', background: VOID, border: `1px solid ${signal(38)}` }}>
         <span style={kicker}>{t('editPraxis.singularity.mobile.taskRefLabel')}</span>
-        <span style={{ fontFamily: FONT, fontSize: 14, color: PHOSPHOR, textAlign: 'right', flex: 1, lineHeight: 1.2 }}>
+        <span style={{ fontFamily: FONT, fontSize: "var(--text-content)", color: PHOSPHOR, textAlign: 'right', flex: 1, lineHeight: 1.2 }}>
           {praxis.task_title}
         </span>
       </div>
@@ -122,7 +122,6 @@ export default function SingularityComposer({ state }: { state: EditPraxisState 
                 inputStyle: {
                   width: '100%',
                   fontFamily: FONT,
-                  fontSize: 18,
                   color: PHOSPHOR,
                   background: 'transparent',
                   border: 'none',
@@ -143,7 +142,6 @@ export default function SingularityComposer({ state }: { state: EditPraxisState 
                 textareaStyle: {
                   width: '100%',
                   fontFamily: FONT,
-                  fontSize: 13,
                   lineHeight: 1.6,
                   color: PHOSPHOR,
                   background: signal(6),
@@ -200,7 +198,7 @@ export default function SingularityComposer({ state }: { state: EditPraxisState 
         </>
       ) : (
         <Panel title={t('editPraxis.singularity.mobile.previewLabel')}>
-          <div style={{ fontFamily: FONT, fontSize: 18, color: PHOSPHOR, marginBottom: 10 }}>
+          <div style={{ fontFamily: FONT, fontSize: "var(--text-content)", color: PHOSPHOR, marginBottom: 10 }}>
             {'> '}
             {state.title || t('editPraxis.singularity.titlePlaceholder')}
           </div>
@@ -212,7 +210,7 @@ export default function SingularityComposer({ state }: { state: EditPraxisState 
           <BodyPreview
             state={state}
             skin={{
-              markdownStyle: { fontFamily: FONT, fontSize: 13, lineHeight: 1.6, color: phosphor(80) },
+              markdownStyle: { fontFamily: FONT, lineHeight: 1.6, color: phosphor(80) },
             }}
           />
         </Panel>
@@ -241,7 +239,7 @@ export default function SingularityComposer({ state }: { state: EditPraxisState 
               background: PHOSPHOR,
               color: VOID,
               fontFamily: FONT,
-              fontSize: 12,
+              fontSize: "var(--text-lg)",
               letterSpacing: '0.12em',
               textTransform: 'uppercase',
               padding: '13px 18px',
@@ -261,7 +259,7 @@ export default function SingularityComposer({ state }: { state: EditPraxisState 
                 border: 'none',
                 color: signal(60),
                 fontFamily: FONT,
-                fontSize: 13,
+                fontSize: "var(--text-lg)",
                 cursor: 'pointer',
               },
             }}
@@ -303,7 +301,7 @@ function MediaGrid({ state, readOnly = false }: { state: EditPraxisState; readOn
                   background: VOID,
                   border: `1px solid ${PHOSPHOR}`,
                   color: PHOSPHOR,
-                  fontSize: 12,
+                  fontSize: "var(--text-lg)",
                   lineHeight: 1,
                   cursor: 'pointer',
                   padding: 0,
@@ -331,7 +329,7 @@ function MediaGrid({ state, readOnly = false }: { state: EditPraxisState; readOn
               justifyContent: 'center',
               gap: 4,
               fontFamily: FONT,
-              fontSize: 10,
+              fontSize: "var(--text-base)",
               letterSpacing: '0.08em',
               textTransform: 'uppercase',
               color: PHOSPHOR,

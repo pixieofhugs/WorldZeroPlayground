@@ -48,7 +48,7 @@ function FieldLabel({ children, meta }: { children: ReactNode; meta?: ReactNode 
         style={{
           fontFamily: "var(--eph-display)",
           fontWeight: 700,
-          fontSize: 14,
+          fontSize: "var(--text-xl)",
           letterSpacing: "0.16em",
           color: RUBRIC,
           whiteSpace: "nowrap",
@@ -57,7 +57,7 @@ function FieldLabel({ children, meta }: { children: ReactNode; meta?: ReactNode 
         {children}
       </span>
       {meta && (
-        <span style={{ fontFamily: "var(--eph-serif)", fontSize: 9.5, fontStyle: "italic", letterSpacing: "0.06em", color: MUTED, whiteSpace: "nowrap" }}>
+        <span style={{ fontFamily: "var(--eph-serif)", fontSize: "var(--text-sm)", fontStyle: "italic", letterSpacing: "0.06em", color: MUTED, whiteSpace: "nowrap" }}>
           {meta}
         </span>
       )}
@@ -120,7 +120,7 @@ export default function EphemeristsEditPraxis({ state }: Props) {
           }}
         >
           <EphemeristsSigil size={15} color="var(--eph-lapis)" />
-          <span style={{ fontFamily: "var(--eph-display)", fontWeight: 600, fontSize: 14, letterSpacing: "0.18em", textTransform: "uppercase", whiteSpace: "nowrap" }}>
+          <span style={{ fontFamily: "var(--eph-display)", fontWeight: 600, fontSize: "var(--text-xl)", letterSpacing: "0.18em", textTransform: "uppercase", whiteSpace: "nowrap" }}>
             {t("editPraxis.ephemerists.masthead", {
               number: praxis.id.toString().padStart(4, "0"),
             })}
@@ -129,7 +129,7 @@ export default function EphemeristsEditPraxis({ state }: Props) {
 
         {/* title */}
         <div style={{ display: "flex", alignItems: "baseline", gap: 14, margin: "18px 0 4px", flexWrap: "wrap" }}>
-          <div style={{ fontFamily: "var(--eph-display)", fontWeight: 800, fontSize: 54, lineHeight: 0.9, letterSpacing: "0.02em", color: TEXT, whiteSpace: "nowrap" }}>
+          <div style={{ fontFamily: "var(--eph-display)", fontWeight: 800, fontSize: "var(--text-display)", lineHeight: 0.9, letterSpacing: "0.02em", color: TEXT, whiteSpace: "nowrap" }}>
             <Trans
               ns="forms"
               i18nKey="editPraxis.ephemerists.pageTitle"
@@ -139,7 +139,7 @@ export default function EphemeristsEditPraxis({ state }: Props) {
               ]}
             />
           </div>
-          <span style={{ fontFamily: "var(--eph-script)", fontStyle: "italic", fontSize: 14, color: MUTED }}>
+          <span style={{ fontFamily: "var(--eph-script)", fontStyle: "italic", fontSize: "var(--text-xl)", color: MUTED }}>
             {t("editPraxis.ephemerists.tagline")}
           </span>
         </div>
@@ -173,32 +173,32 @@ export default function EphemeristsEditPraxis({ state }: Props) {
               boxShadow: "0 2px 0 -1px color-mix(in srgb, var(--eph-lapis) 55%, transparent)",
             }}
           >
-            <span style={{ fontSize: 8.5, letterSpacing: "0.18em", textTransform: "uppercase", color: RUBRIC }}>
+            <span style={{ fontSize: "var(--text-xs)", letterSpacing: "0.18em", textTransform: "uppercase", color: RUBRIC }}>
               {t("editPraxis.ephemerists.slipRunningHead")}
             </span>
-            <span style={{ fontSize: 8.5, letterSpacing: "0.06em", color: MUTED, whiteSpace: "nowrap" }}>
+            <span style={{ fontSize: "var(--text-xs)", letterSpacing: "0.06em", color: MUTED, whiteSpace: "nowrap" }}>
               {t("editPraxis.ephemerists.slipGrade", { grade: toRoman(grade) })}
             </span>
           </div>
           {/* body */}
           <div style={{ position: "relative", zIndex: 2, padding: "13px 16px 14px" }}>
-            <div style={{ fontSize: 9, fontStyle: "italic", letterSpacing: "0.14em", textTransform: "uppercase", color: MUTED, marginBottom: 4 }}>
+            <div style={{ fontSize: "var(--text-sm)", fontStyle: "italic", letterSpacing: "0.14em", textTransform: "uppercase", color: MUTED, marginBottom: 4 }}>
               {t("editPraxis.ephemerists.taskRefLabel")}
             </div>
-            <div style={{ fontFamily: "var(--eph-display)", fontWeight: 700, fontSize: 30, lineHeight: 0.96, color: TEXT }}>
+            <div style={{ fontFamily: "var(--eph-display)", fontWeight: 700, fontSize: "var(--text-heading)", lineHeight: 0.96, color: TEXT }}>
               <LapisLastWord text={praxis.task_title} />
             </div>
             {task?.description && (
-              <div style={{ fontSize: 11, fontStyle: "italic", lineHeight: 1.5, color: MUTED, marginTop: 8 }}>
+              <div style={{ fontSize: "var(--text-content)", fontStyle: "italic", lineHeight: 1.5, color: MUTED, marginTop: 8 }}>
                 {task.description}
               </div>
             )}
             <div style={{ display: "flex", alignItems: "center", gap: 12, marginTop: 8, flexWrap: "wrap" }}>
-              <span style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 9.5, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--eph-lapis)", fontWeight: 600 }}>
+              <span style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: "var(--text-sm)", letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--eph-lapis)", fontWeight: 600 }}>
                 <EphemeristsSigil size={12} color="var(--eph-lapis)" />{" "}
                 {t("editPraxis.ephemerists.factionTag")}
               </span>
-              <span style={{ fontFamily: "var(--eph-display)", fontWeight: 700, fontSize: 15, color: RUBRIC }}>
+              <span style={{ fontFamily: "var(--eph-display)", fontWeight: 700, fontSize: "var(--text-xl)", color: RUBRIC }}>
                 {t("editPraxis.ephemerists.pointsLabel", {
                   points: praxis.task_point_value,
                 })}
@@ -241,8 +241,8 @@ export default function EphemeristsEditPraxis({ state }: Props) {
                       transition: "all 120ms",
                     }}
                   >
-                    <div style={{ fontFamily: "var(--eph-display)", fontWeight: 700, fontSize: 21, lineHeight: 1, letterSpacing: "0.03em" }}>{opt.label}</div>
-                    <div style={{ fontStyle: "italic", fontSize: 10, letterSpacing: "0.02em", marginTop: 4, opacity: on ? 0.9 : 0.7 }}>{opt.sub}</div>
+                    <div style={{ fontFamily: "var(--eph-display)", fontWeight: 700, fontSize: "var(--text-title)", lineHeight: 1, letterSpacing: "0.03em" }}>{opt.label}</div>
+                    <div style={{ fontStyle: "italic", fontSize: "var(--text-base)", letterSpacing: "0.02em", marginTop: 4, opacity: on ? 0.9 : 0.7 }}>{opt.sub}</div>
                     {on && (
                       <div style={{ position: "absolute", top: 8, right: 9, width: 9, height: 9, borderRadius: "50%", background: "var(--eph-gold-light)", boxShadow: `0 0 0 2px ${INK}` }} />
                     )}
@@ -302,7 +302,6 @@ export default function EphemeristsEditPraxis({ state }: Props) {
                 background: "transparent",
                 fontFamily: "var(--eph-display)",
                 fontWeight: 700,
-                fontSize: 24,
                 letterSpacing: "0.01em",
                 color: TEXT,
                 padding: "4px 2px 8px",
@@ -332,7 +331,6 @@ export default function EphemeristsEditPraxis({ state }: Props) {
                 border: `1.5px solid ${INK}`,
                 background: "var(--eph-vellum)",
                 fontFamily: "var(--eph-serif)",
-                fontSize: 14,
                 lineHeight: 1.65,
                 color: TEXT,
                 padding: "13px 15px",
@@ -340,7 +338,7 @@ export default function EphemeristsEditPraxis({ state }: Props) {
               },
             }}
           />
-          <div style={{ fontSize: 9.5, fontStyle: "italic", color: MUTED, marginTop: 7 }}>
+          <div style={{ fontSize: "var(--text-sm)", fontStyle: "italic", color: MUTED, marginTop: 7 }}>
             <Trans
               ns="forms"
               i18nKey="editPraxis.ephemerists.bodyFootnote"
@@ -359,7 +357,7 @@ export default function EphemeristsEditPraxis({ state }: Props) {
                   {t("editPraxis.ephemerists.previewLabel")}
                 </FieldLabel>
               ),
-              markdownStyle: { fontFamily: "var(--eph-serif)", fontSize: 14, lineHeight: 1.65, color: TEXT },
+              markdownStyle: { fontFamily: "var(--eph-serif)", lineHeight: 1.65, color: TEXT },
             }}
           />
         </div>
@@ -407,7 +405,7 @@ export default function EphemeristsEditPraxis({ state }: Props) {
                 background: "transparent",
                 color: TEXT,
                 fontFamily: "var(--eph-serif)",
-                fontSize: 11.5,
+                fontSize: "var(--text-md)",
                 fontWeight: 600,
                 letterSpacing: "0.1em",
                 textTransform: "uppercase",
@@ -415,7 +413,7 @@ export default function EphemeristsEditPraxis({ state }: Props) {
               },
               buttonLabel: t("editPraxis.ephemerists.fileButton"),
               helperText: t("editPraxis.ephemerists.fileHelper"),
-              helperStyle: { fontSize: 10, fontStyle: "italic", color: MUTED, marginTop: 9 },
+              helperStyle: { fontSize: "var(--text-base)", fontStyle: "italic", color: MUTED, marginTop: 9 },
             }}
           />
         </div>
@@ -469,7 +467,7 @@ export default function EphemeristsEditPraxis({ state }: Props) {
                 color: "var(--eph-parchment)",
                 fontFamily: "var(--eph-display)",
                 fontWeight: 700,
-                fontSize: 22,
+                fontSize: "var(--text-title)",
                 letterSpacing: "0.08em",
                 padding: "12px 28px",
                 whiteSpace: "nowrap",
@@ -487,7 +485,7 @@ export default function EphemeristsEditPraxis({ state }: Props) {
                 border: "none",
                 color: MUTED,
                 fontFamily: "var(--eph-serif)",
-                fontSize: 11,
+                fontSize: "var(--text-md)",
                 fontStyle: "italic",
                 letterSpacing: "0.06em",
                 textDecoration: "underline",
@@ -495,7 +493,7 @@ export default function EphemeristsEditPraxis({ state }: Props) {
               },
             }}
           />
-          <span style={{ fontSize: 11, fontStyle: "italic", color: MUTED, marginLeft: "auto" }}>
+          <span style={{ fontSize: "var(--text-md)", fontStyle: "italic", color: MUTED, marginLeft: "auto" }}>
             {state.autosaveAt
               ? t("editPraxis.ephemerists.autosaveSaved", {
                   ago: formatAutosave(state.autosaveAt),
@@ -529,7 +527,7 @@ function Specimen({ children, caption, rotation, onRemove }: SpecimenProps) {
       }}
     >
       <div style={{ width: 140, height: 100, overflow: "hidden" }}>{children}</div>
-      <div style={{ fontSize: 9, marginTop: 4, fontFamily: "var(--eph-serif)", fontStyle: "italic", color: GOLD, textAlign: "center" }}>
+      <div style={{ fontSize: "var(--text-sm)", marginTop: 4, fontFamily: "var(--eph-serif)", fontStyle: "italic", color: GOLD, textAlign: "center" }}>
         {caption}
       </div>
       <button
@@ -546,7 +544,7 @@ function Specimen({ children, caption, rotation, onRemove }: SpecimenProps) {
           background: "var(--eph-vellum)",
           border: `1.5px solid ${GOLD}`,
           color: GOLD,
-          fontSize: 11,
+          fontSize: "var(--text-md)",
           fontWeight: 700,
           cursor: "pointer",
           lineHeight: 1,

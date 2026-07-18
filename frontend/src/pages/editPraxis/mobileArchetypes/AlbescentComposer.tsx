@@ -41,7 +41,7 @@ const ink = (pct: number) => `color-mix(in srgb, ${INK} ${pct}%, transparent)`
 const kicker: CSSProperties = {
   display: 'block',
   fontFamily: MONO,
-  fontSize: 8,
+  fontSize: "var(--text-xs)",
   letterSpacing: '0.24em',
   textTransform: 'uppercase',
   color: ink(30),
@@ -51,7 +51,7 @@ const kicker: CSSProperties = {
 function Sheet({ title, children }: { title: string; children: ReactNode }) {
   return (
     <section style={{ background: SHEET, border: `1px solid ${ink(10)}`, padding: 14 }}>
-      <div style={{ fontFamily: MONO, fontSize: 8, letterSpacing: '0.22em', textTransform: 'uppercase', color: ink(40), marginBottom: 10 }}>
+      <div style={{ fontFamily: MONO, fontSize: "var(--text-xs)", letterSpacing: '0.22em', textTransform: 'uppercase', color: ink(40), marginBottom: 10 }}>
         {title}
       </div>
       {children}
@@ -70,7 +70,7 @@ export default function AlbescentComposer({ state }: { state: EditPraxisState })
       <header style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <AlbescentSigil size={22} />
-          <h1 style={{ fontFamily: FONT, fontStyle: 'italic', fontWeight: 300, fontSize: 27, lineHeight: 1, color: INK, margin: 0 }}>
+          <h1 style={{ fontFamily: FONT, fontStyle: 'italic', fontWeight: 300, fontSize: "var(--text-title)", lineHeight: 1, color: INK, margin: 0 }}>
             {t('editPraxis.albescent.pageTitle')}
           </h1>
           <span style={{ ...kicker, marginLeft: 'auto' }}>
@@ -89,7 +89,7 @@ export default function AlbescentComposer({ state }: { state: EditPraxisState })
               padding: '9px 10px',
               border: 'none',
               fontFamily: MONO,
-              fontSize: 10,
+              fontSize: "var(--text-base)",
               letterSpacing: '0.12em',
               textTransform: 'uppercase',
               background: active ? INK : 'transparent',
@@ -102,7 +102,7 @@ export default function AlbescentComposer({ state }: { state: EditPraxisState })
       {/* In-answer-to reference */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, padding: '11px 14px', background: SHEET, border: `1px solid ${ink(10)}` }}>
         <span style={kicker}>{t('editPraxis.albescent.taskRefLabel')}</span>
-        <span style={{ fontFamily: FONT, fontStyle: 'italic', fontWeight: 300, fontSize: 16, color: INK, textAlign: 'right', flex: 1, lineHeight: 1.15 }}>
+        <span style={{ fontFamily: FONT, fontStyle: 'italic', fontWeight: 300, fontSize: "var(--text-content)", color: INK, textAlign: 'right', flex: 1, lineHeight: 1.15 }}>
           {praxis.task_title}
         </span>
       </div>
@@ -122,7 +122,6 @@ export default function AlbescentComposer({ state }: { state: EditPraxisState })
                   width: '100%',
                   fontFamily: FONT,
                   fontStyle: 'italic',
-                  fontSize: 22,
                   fontWeight: 300,
                   color: INK,
                   background: 'transparent',
@@ -145,7 +144,6 @@ export default function AlbescentComposer({ state }: { state: EditPraxisState })
                   width: '100%',
                   fontFamily: FONT,
                   fontStyle: 'italic',
-                  fontSize: 15,
                   lineHeight: 1.65,
                   color: INK,
                   background: ink(2),
@@ -202,7 +200,7 @@ export default function AlbescentComposer({ state }: { state: EditPraxisState })
         </>
       ) : (
         <Sheet title={t('editPraxis.albescent.previewLabel')}>
-          <div style={{ fontFamily: FONT, fontStyle: 'italic', fontWeight: 300, fontSize: 22, color: INK, marginBottom: 10 }}>
+          <div style={{ fontFamily: FONT, fontStyle: 'italic', fontWeight: 300, fontSize: "var(--text-title)", color: INK, marginBottom: 10 }}>
             {state.title || t('editPraxis.albescent.titlePlaceholder')}
           </div>
           {state.media.length > 0 && (
@@ -213,7 +211,7 @@ export default function AlbescentComposer({ state }: { state: EditPraxisState })
           <BodyPreview
             state={state}
             skin={{
-              markdownStyle: { fontFamily: FONT, fontStyle: 'italic', fontSize: 15, lineHeight: 1.65, color: ink(72) },
+              markdownStyle: { fontFamily: FONT, fontStyle: 'italic', lineHeight: 1.65, color: ink(72) },
             }}
           />
         </Sheet>
@@ -242,7 +240,7 @@ export default function AlbescentComposer({ state }: { state: EditPraxisState })
               background: INK,
               color: PAGE,
               fontFamily: MONO,
-              fontSize: 11,
+              fontSize: "var(--text-md)",
               letterSpacing: '0.16em',
               textTransform: 'uppercase',
               padding: '13px 18px',
@@ -262,7 +260,7 @@ export default function AlbescentComposer({ state }: { state: EditPraxisState })
                 color: ink(40),
                 fontFamily: FONT,
                 fontStyle: 'italic',
-                fontSize: 14,
+                fontSize: "var(--text-xl)",
                 cursor: 'pointer',
               },
             }}
@@ -305,7 +303,7 @@ function MediaGrid({ state, readOnly = false }: { state: EditPraxisState; readOn
                   background: SHEET,
                   border: `1px solid ${ink(20)}`,
                   color: ink(55),
-                  fontSize: 12,
+                  fontSize: "var(--text-lg)",
                   fontWeight: 700,
                   lineHeight: 1,
                   cursor: 'pointer',
@@ -334,7 +332,7 @@ function MediaGrid({ state, readOnly = false }: { state: EditPraxisState; readOn
               justifyContent: 'center',
               gap: 4,
               fontFamily: MONO,
-              fontSize: 9,
+              fontSize: "var(--text-sm)",
               letterSpacing: '0.1em',
               textTransform: 'uppercase',
               color: ink(50),
