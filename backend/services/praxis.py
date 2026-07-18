@@ -422,10 +422,15 @@ async def list_praxes(
     :func:`_count_in_progress_praxes` so a membership-based list (the sidebar's
     in-progress tasks) can never disagree with the slot count.
 
-    ``search`` is a free-text ``ilike`` over the praxis title, its body, and the
-    linked task's title. Author is deliberately excluded: ``faction`` already
-    answers "show me the Ephemerists", and finding a *person* is what the
-    character search is for.
+    ``search`` is a free-text ``ilike`` over the praxis title, its body, the
+    linked task's title, and **any member's** handle / display name. The player
+    axis (#681) reverses #658's deliberate exclusion of the author: the
+    maintainer chose one box that finds content OR a person, accepting that a
+    common word can surface every praxis by anyone whose name contains it.
+    It matches *members* rather than the author so a collab surfaces for each
+    participant; a duel is two praxis rows of one member each, so each side
+    already surfaces for its own duelist. A leading ``@`` is a sigil and is
+    dropped for the player axis only, matching the character search (#624).
 
     ``sort`` only applies to the ``status=submitted`` feed and is ignored
     otherwise; every caller that passes no ``sort`` keeps ``created_at DESC``.
@@ -448,13 +453,31 @@ async def list_praxes(
     if search:
         term = search.strip()
         if term:
-            query = query.where(
-                or_(
-                    Praxis.title.ilike(f"%{term}%"),
-                    Praxis.body_text.ilike(f"%{term}%"),
-                    Task.title.ilike(f"%{term}%"),
+            conditions = [
+                Praxis.title.ilike(f"%{term}%"),
+                Praxis.body_text.ilike(f"%{term}%"),
+                Task.title.ilike(f"%{term}%"),
+            ]
+            # Player axis (#681): match ANY member, not just the author. Every
+            # praxis has PraxisMember rows (solo/duel exactly one — the creator,
+            # per _require_member), so one condition covers all three types.
+            # `IN (subquery)` rather than a join: a collab with two matching
+            # members must still yield exactly one feed row.
+            player_term = term.lstrip("@")
+            if player_term:
+                conditions.append(
+                    Praxis.id.in_(
+                        select(PraxisMember.praxis_id)
+                        .join(Character, Character.id == PraxisMember.character_id)
+                        .where(
+                            or_(
+                                Character.username.ilike(f"%{player_term}%"),
+                                Character.display_name.ilike(f"%{player_term}%"),
+                            )
+                        )
+                    )
                 )
-            )
+            query = query.where(or_(*conditions))
 
     if praxis_type is not None:
         query = query.where(Praxis.type == praxis_type)
