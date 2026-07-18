@@ -621,9 +621,8 @@ export function AdminOverlay({
       )}
       {moderateError && (
         <p
-          className="font-body"
+          className="content-text font-body"
           style={{
-            fontSize: "var(--text-xs)",
             color: "var(--color-danger)",
             marginBottom: "var(--space-xs)",
           }}
