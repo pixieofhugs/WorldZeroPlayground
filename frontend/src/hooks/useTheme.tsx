@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from 'react'
 
 export type Theme = 'light' | 'dark'
 
@@ -21,11 +21,20 @@ export function applyTheme(theme: Theme): void {
   document.documentElement.setAttribute('data-theme', theme)
 }
 
+interface ThemeState {
+  theme: Theme
+  toggle: () => void
+}
+
+const ThemeContext = createContext<ThemeState | null>(null)
+
 /**
- * Theme hook (Style Guide §8).
+ * Single shared source of the current theme (Style Guide §8). Mount once at
+ * the app root — every `useTheme()` call reads the same state, so toggling
+ * anywhere updates all consumers without a remount.
  * Persists to localStorage key 'wz-theme', defaults to system preference.
  */
-export function useTheme() {
+export function ThemeProvider({ children }: { children: ReactNode }) {
   const [theme, setTheme] = useState<Theme>(getInitialTheme)
 
   useEffect(() => {
@@ -40,5 +49,13 @@ export function useTheme() {
     })
   }, [])
 
-  return { theme, toggle } as const
+  return <ThemeContext.Provider value={{ theme, toggle }}>{children}</ThemeContext.Provider>
+}
+
+export function useTheme(): ThemeState {
+  const context = useContext(ThemeContext)
+  if (!context) {
+    throw new Error('useTheme must be used within a ThemeProvider')
+  }
+  return context
 }
