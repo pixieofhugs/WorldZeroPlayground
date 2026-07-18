@@ -37,7 +37,7 @@ const SCRIPT = 'var(--eph-script)'
 
 const kicker: CSSProperties = {
   fontFamily: DISPLAY,
-  fontSize: 8,
+  fontSize: 'var(--text-xs)',
   letterSpacing: '0.2em',
   textTransform: 'uppercase',
   color: MUTED,
@@ -61,6 +61,7 @@ function Medallion({ name, size }: { name: string; size: number }) {
         justifyContent: 'center',
         fontFamily: DISPLAY,
         fontWeight: 700,
+        // ornament: avatar monogram, sized from the circle it sits in — geometry, not text.
         fontSize: size * 0.42,
         color: RUBRIC,
       }}
@@ -73,7 +74,7 @@ function Medallion({ name, size }: { name: string; size: number }) {
 function SectionHead({ children }: { children: ReactNode }) {
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
-      <span style={{ fontFamily: DISPLAY, fontSize: 11, letterSpacing: '0.1em', textTransform: 'uppercase', color: TEXT }}>
+      <span style={{ fontFamily: DISPLAY, fontSize: 'var(--text-md)', letterSpacing: '0.1em', textTransform: 'uppercase', color: TEXT }}>
         {children}
       </span>
       <span style={{ flex: 1, height: 1, background: `linear-gradient(90deg, ${GOLD}, transparent)` }} />
@@ -85,7 +86,7 @@ const joinButton: CSSProperties = {
   width: '100%',
   fontFamily: DISPLAY,
   fontWeight: 700,
-  fontSize: 13,
+  fontSize: 'var(--text-xl)',
   letterSpacing: '0.1em',
   textTransform: 'uppercase',
   color: PARCHMENT,
@@ -115,10 +116,11 @@ export default function EphemeristsFactionPage({ state }: { state: FactionDetail
           <EphemeristsSigil size={13} color={LAPIS} />
           <span style={{ ...kicker, color: LAPIS }}>{t('ephemerists.mobile.eyebrow')}</span>
         </div>
+        {/* ornament: masthead display type — the illuminated title is the skin's identity (§4/§270). */}
         <h1 style={{ fontFamily: DISPLAY, fontWeight: 700, fontSize: 32, lineHeight: 1.05, color: TEXT, margin: '4px 0 0' }}>
           {name}
         </h1>
-        <p style={{ fontFamily: SCRIPT, fontStyle: 'italic', fontSize: 14, lineHeight: 1.6, color: MUTED, margin: '8px 0 0' }}>
+        <p className="content-text" style={{ fontFamily: SCRIPT, fontStyle: 'italic', lineHeight: 1.6, color: MUTED, margin: '8px 0 0' }}>
           {factionDescription(faction.slug)}
         </p>
         <div style={{ display: 'flex', gap: 8, marginTop: 15 }}>
@@ -135,7 +137,7 @@ export default function EphemeristsFactionPage({ state }: { state: FactionDetail
       <section className="mt-6">
         <SectionHead>{t('mobile.topMembers')}</SectionHead>
         {topMembers.length === 0 ? (
-          <p style={{ fontFamily: SCRIPT, fontStyle: 'italic', fontSize: 14, color: MUTED, margin: 0 }}>{t('mobile.membersEmpty')}</p>
+          <p className="content-text" style={{ fontFamily: SCRIPT, fontStyle: 'italic', color: MUTED, margin: 0 }}>{t('mobile.membersEmpty')}</p>
         ) : (
           <div className="flex flex-col gap-2">
             {topMembers.map((m, index) => (
@@ -149,7 +151,7 @@ export default function EphemeristsFactionPage({ state }: { state: FactionDetail
       <section className="mt-6">
         <SectionHead>{t('mobile.recentPraxis')}</SectionHead>
         {recentPraxis.length === 0 ? (
-          <p style={{ fontFamily: SCRIPT, fontStyle: 'italic', fontSize: 14, color: MUTED, margin: 0 }}>{t('mobile.praxisEmpty')}</p>
+          <p className="content-text" style={{ fontFamily: SCRIPT, fontStyle: 'italic', color: MUTED, margin: 0 }}>{t('mobile.praxisEmpty')}</p>
         ) : (
           <div className="flex flex-col gap-3">
             {recentPraxis.map((p) => (
@@ -160,7 +162,7 @@ export default function EphemeristsFactionPage({ state }: { state: FactionDetail
       </section>
 
       {membership.state === 'gate' && (
-        <p style={{ fontFamily: SCRIPT, fontStyle: 'italic', fontSize: 14, color: MUTED, marginTop: 24 }}>
+        <p className="content-text" style={{ fontFamily: SCRIPT, fontStyle: 'italic', color: MUTED, marginTop: 24 }}>
           {t('mobile.gateHint', { faction: name })}
         </p>
       )}
@@ -169,7 +171,7 @@ export default function EphemeristsFactionPage({ state }: { state: FactionDetail
       {membership.state === 'eligible' && (
         <MobileStickyBar>
           {membership.joinError && (
-            <p style={{ fontFamily: SERIF, fontSize: 12, color: 'var(--color-danger)' }}>{membership.joinError}</p>
+            <p className="content-text" style={{ fontFamily: SERIF, color: 'var(--color-danger)' }}>{membership.joinError}</p>
           )}
           {!confirming ? (
             <button type="button" onClick={() => setConfirming(true)} style={joinButton}>
@@ -177,7 +179,7 @@ export default function EphemeristsFactionPage({ state }: { state: FactionDetail
             </button>
           ) : (
             <>
-              <p style={{ fontFamily: SCRIPT, fontStyle: 'italic', fontSize: 14, color: TEXT }}>
+              <p className="content-text" style={{ fontFamily: SCRIPT, fontStyle: 'italic', color: TEXT }}>
                 {switching
                   ? t('detail.join.confirmSwitch', { faction: name, current: factionName(currentSlug) })
                   : t('detail.join.confirm', { faction: name })}
@@ -197,7 +199,7 @@ export default function EphemeristsFactionPage({ state }: { state: FactionDetail
                   disabled={membership.joining}
                   style={{
                     fontFamily: DISPLAY,
-                    fontSize: 11,
+                    fontSize: 'var(--text-md)',
                     letterSpacing: '0.1em',
                     textTransform: 'uppercase',
                     color: MUTED,
@@ -221,7 +223,7 @@ export default function EphemeristsFactionPage({ state }: { state: FactionDetail
 function HeroStat({ value, label }: { value: number; label: string }) {
   return (
     <div style={{ flex: '1 1 0', textAlign: 'center', background: VELLUM_DEEP, border: `1px solid ${GOLD}`, padding: '10px 6px' }}>
-      <b style={{ fontFamily: DISPLAY, fontWeight: 700, fontSize: 20, display: 'block', lineHeight: 1, color: TEXT }}>
+      <b className="content-title" style={{ fontFamily: DISPLAY, fontWeight: 700, display: 'block', lineHeight: 1, color: TEXT }}>
         {value}
       </b>
       <span style={{ ...kicker, marginTop: 5, display: 'block' }}>{label}</span>
@@ -245,15 +247,15 @@ function MemberRow({ rank, member }: { rank: number; member: CharacterOut }) {
         textDecoration: 'none',
       }}
     >
-      <span style={{ fontFamily: DISPLAY, fontWeight: 700, fontSize: 16, color: RUBRIC, width: 16, flex: 'none' }}>{rank}</span>
+      <span style={{ fontFamily: DISPLAY, fontWeight: 700, fontSize: 'var(--text-xl)', color: RUBRIC, width: 16, flex: 'none' }}>{rank}</span>
       <Medallion name={member.display_name} size={28} />
       <span
+        className="content-text"
         style={{
           flex: 1,
           minWidth: 0,
           fontFamily: DISPLAY,
           fontWeight: 700,
-          fontSize: 15,
           color: TEXT,
           overflow: 'hidden',
           textOverflow: 'ellipsis',
@@ -262,7 +264,7 @@ function MemberRow({ rank, member }: { rank: number; member: CharacterOut }) {
       >
         {member.display_name}
       </span>
-      <span style={{ fontFamily: DISPLAY, fontSize: 9, letterSpacing: '0.06em', color: LAPIS, flex: 'none' }}>
+      <span style={{ fontFamily: DISPLAY, fontSize: 'var(--text-sm)', letterSpacing: '0.06em', color: LAPIS, flex: 'none' }}>
         {t('mobile.memberStat', { level: member.level, score: member.all_time_score.toLocaleString() })}
       </span>
     </Link>

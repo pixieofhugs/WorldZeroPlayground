@@ -33,7 +33,7 @@ const BODY_FONT = 'var(--font-body)'
 
 const kicker: CSSProperties = {
   fontFamily: BODY_FONT,
-  fontSize: 8,
+  fontSize: 'var(--text-xs)',
   letterSpacing: '0.2em',
   textTransform: 'uppercase',
   color: MUTED,
@@ -70,6 +70,7 @@ function Seal({ name, size }: { name: string; size: number }) {
         alignItems: 'center',
         justifyContent: 'center',
         fontFamily: ACCENT_FONT,
+        // ornament: avatar monogram, sized from the seal it sits in — geometry, not text.
         fontSize: size * 0.5,
         color: RED,
       }}
@@ -82,7 +83,7 @@ function Seal({ name, size }: { name: string; size: number }) {
 function SectionHead({ children }: { children: ReactNode }) {
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
-      <span style={{ fontFamily: ACCENT_FONT, fontSize: 18, letterSpacing: '0.04em', color: INK, whiteSpace: 'nowrap' }}>
+      <span style={{ fontFamily: ACCENT_FONT, fontSize: 'var(--text-xl)', letterSpacing: '0.04em', color: INK, whiteSpace: 'nowrap' }}>
         {children}
       </span>
       <span style={{ flex: 1, height: 3, background: `repeating-linear-gradient(90deg, ${RED} 0 12px, ${GOLD} 12px 20px)` }} />
@@ -93,7 +94,7 @@ function SectionHead({ children }: { children: ReactNode }) {
 const joinButton: CSSProperties = {
   width: '100%',
   fontFamily: ACCENT_FONT,
-  fontSize: 17,
+  fontSize: 'var(--text-xl)',
   letterSpacing: '0.08em',
   color: CREAM,
   background: RED,
@@ -124,10 +125,11 @@ export default function EverymenFactionPage({ state }: { state: FactionDetailSta
         </div>
         <div style={{ height: 4, background: GOLD }} />
         <div style={{ padding: '20px 18px' }}>
+          {/* ornament: masthead display type — the sign-painted title is the skin's identity (§4/§270). */}
           <h1 style={{ fontFamily: ACCENT_FONT, fontSize: 40, lineHeight: 0.92, letterSpacing: '0.01em', color: CREAM, textShadow: `2px 2px 0 ${INK}`, margin: 0 }}>
             {name}
           </h1>
-          <p style={{ fontFamily: BODY_FONT, fontSize: 12, lineHeight: 1.6, color: CREAM, margin: '10px 0 0' }}>
+          <p className="content-text" style={{ fontFamily: BODY_FONT, lineHeight: 1.6, color: CREAM, margin: '10px 0 0' }}>
             {factionDescription(faction.slug)}
           </p>
           <div style={{ display: 'flex', gap: 8, marginTop: 15 }}>
@@ -145,7 +147,7 @@ export default function EverymenFactionPage({ state }: { state: FactionDetailSta
       <section className="mt-6">
         <SectionHead>{t('mobile.topMembers')}</SectionHead>
         {topMembers.length === 0 ? (
-          <p style={{ fontFamily: BODY_FONT, fontSize: 13, color: MUTED, margin: 0 }}>{t('mobile.membersEmpty')}</p>
+          <p className="content-text" style={{ fontFamily: BODY_FONT, color: MUTED, margin: 0 }}>{t('mobile.membersEmpty')}</p>
         ) : (
           <div className="flex flex-col gap-2">
             {topMembers.map((m, index) => (
@@ -159,7 +161,7 @@ export default function EverymenFactionPage({ state }: { state: FactionDetailSta
       <section className="mt-6">
         <SectionHead>{t('mobile.recentPraxis')}</SectionHead>
         {recentPraxis.length === 0 ? (
-          <p style={{ fontFamily: BODY_FONT, fontSize: 13, color: MUTED, margin: 0 }}>{t('mobile.praxisEmpty')}</p>
+          <p className="content-text" style={{ fontFamily: BODY_FONT, color: MUTED, margin: 0 }}>{t('mobile.praxisEmpty')}</p>
         ) : (
           <div className="flex flex-col gap-3">
             {recentPraxis.map((p) => (
@@ -170,7 +172,7 @@ export default function EverymenFactionPage({ state }: { state: FactionDetailSta
       </section>
 
       {membership.state === 'gate' && (
-        <p style={{ fontFamily: BODY_FONT, fontSize: 13, color: MUTED, marginTop: 24 }}>
+        <p className="content-text" style={{ fontFamily: BODY_FONT, color: MUTED, marginTop: 24 }}>
           {t('mobile.gateHint', { faction: name })}
         </p>
       )}
@@ -179,7 +181,7 @@ export default function EverymenFactionPage({ state }: { state: FactionDetailSta
       {membership.state === 'eligible' && (
         <MobileStickyBar>
           {membership.joinError && (
-            <p style={{ fontFamily: BODY_FONT, fontSize: 12, color: RED }}>{membership.joinError}</p>
+            <p className="content-text" style={{ fontFamily: BODY_FONT, color: RED }}>{membership.joinError}</p>
           )}
           {!confirming ? (
             <button type="button" onClick={() => setConfirming(true)} style={joinButton}>
@@ -187,7 +189,7 @@ export default function EverymenFactionPage({ state }: { state: FactionDetailSta
             </button>
           ) : (
             <>
-              <p style={{ fontFamily: BODY_FONT, fontSize: 13, color: INK }}>
+              <p className="content-text" style={{ fontFamily: BODY_FONT, color: INK }}>
                 {switching
                   ? t('detail.join.confirmSwitch', { faction: name, current: factionName(currentSlug) })
                   : t('detail.join.confirm', { faction: name })}
@@ -207,7 +209,7 @@ export default function EverymenFactionPage({ state }: { state: FactionDetailSta
                   disabled={membership.joining}
                   style={{
                     fontFamily: ACCENT_FONT,
-                    fontSize: 15,
+                    fontSize: 'var(--text-xl)',
                     letterSpacing: '0.06em',
                     color: MUTED,
                     background: PAPER_DEEP,
@@ -230,7 +232,7 @@ export default function EverymenFactionPage({ state }: { state: FactionDetailSta
 function HeroStat({ value, label }: { value: number; label: string }) {
   return (
     <div style={{ flex: '1 1 0', textAlign: 'center', background: INK, border: `1.5px solid ${GOLD}`, padding: '10px 6px' }}>
-      <b style={{ fontFamily: ACCENT_FONT, fontSize: 22, display: 'block', lineHeight: 0.9, color: GOLD }}>
+      <b className="content-title" style={{ fontFamily: ACCENT_FONT, display: 'block', lineHeight: 0.9, color: GOLD }}>
         {value}
       </b>
       <span style={{ ...kicker, marginTop: 5, display: 'block', color: CREAM }}>{label}</span>
@@ -254,14 +256,14 @@ function MemberRow({ rank, member }: { rank: number; member: CharacterOut }) {
         textDecoration: 'none',
       }}
     >
-      <span style={{ fontFamily: ACCENT_FONT, fontSize: 18, color: RED, width: 16, flex: 'none' }}>{rank}</span>
+      <span style={{ fontFamily: ACCENT_FONT, fontSize: 'var(--text-xl)', color: RED, width: 16, flex: 'none' }}>{rank}</span>
       <Seal name={member.display_name} size={28} />
       <span
+        className="content-text"
         style={{
           flex: 1,
           minWidth: 0,
           fontFamily: ACCENT_FONT,
-          fontSize: 17,
           letterSpacing: '0.02em',
           color: INK,
           overflow: 'hidden',
