@@ -5,7 +5,6 @@ import {
   useEffect,
   useMemo,
   useState,
-  useSyncExternalStore,
   type ReactNode,
 } from 'react'
 
@@ -54,42 +53,6 @@ export function persistTheme(theme: Theme): void {
   localStorage.setItem(THEME_STORAGE_KEY, theme)
 }
 
-/**
- * The one theme cell, as a tiny subscribable store (#701).
- *
- * The bug this replaces: `useTheme` used to hold a private `useState` per call
- * site, so a toggle in the NavBar never re-rendered the Settings switch (or any
- * other consumer) — they re-synced only on remount. A store plus
- * `useSyncExternalStore` makes "every consumer observes one value" a literal,
- * node-testable property rather than an implicit one.
- */
-export interface ThemeStore {
-  getTheme(): Theme
-  setTheme(theme: Theme): void
-  subscribe(listener: () => void): () => void
-}
-
-export function createThemeStore(initial: Theme): ThemeStore {
-  let current: Theme = initial
-  const listeners = new Set<() => void>()
-
-  return {
-    getTheme: () => current,
-    setTheme(theme: Theme) {
-      if (theme === current) return
-      current = theme
-      // Every subscriber, not just the one that toggled.
-      listeners.forEach((listener) => listener())
-    },
-    subscribe(listener: () => void) {
-      listeners.add(listener)
-      return () => {
-        listeners.delete(listener)
-      }
-    },
-  }
-}
-
 export interface ThemeState {
   theme: Theme
   toggle: () => void
@@ -102,22 +65,25 @@ const ThemeContext = createContext<ThemeState | null>(null)
  * the `[data-theme]` cascade on change, and persists the choice to
  * localStorage — the same three behaviours the per-component hook had, now
  * shared by every consumer.
+ *
+ * The bug this fixes (#701): `useTheme` used to hold a private `useState` per
+ * call site, so a toggle in the NavBar never re-rendered the Settings switch.
+ * One `useState` behind one context fixes that by construction.
  */
 export function ThemeProvider({ children }: { children: ReactNode }) {
-  // Lazy: the browser reads happen at mount, exactly as the old `useState`
-  // initializer did.
-  const [store] = useState(() => createThemeStore(getInitialTheme()))
-  const theme = useSyncExternalStore(store.subscribe, store.getTheme, store.getTheme)
+  // Lazy initializer: the browser reads happen at mount, exactly as the old
+  // per-component `useState` did — not at import.
+  const [theme, setTheme] = useState<Theme>(getInitialTheme)
 
   useEffect(() => {
     applyTheme(theme)
   }, [theme])
 
   const toggle = useCallback(() => {
-    const next = nextTheme(store.getTheme())
+    const next = nextTheme(theme)
     persistTheme(next)
-    store.setTheme(next)
-  }, [store])
+    setTheme(next)
+  }, [theme])
 
   const value = useMemo<ThemeState>(() => ({ theme, toggle }), [theme, toggle])
 
