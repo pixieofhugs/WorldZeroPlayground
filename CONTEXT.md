@@ -81,22 +81,65 @@ praxes that compete** — see **Duel**.
 **Duel** *(two-linked-praxes model; ADR-0011 — landed)*:
 A head-to-head competition between two characters on the same task. Each side authors **its own
 `type=solo` praxis** — own owner, body, media, votes — and the two are joined by a **Duel link**.
-The winner is whichever linked praxis earns more stars; the win/loss multiplier is applied per
-side at scoring time and **floats with the votes until era reset** (no per-duel freeze). *Not*
-one shared praxis with two members and split votes (the **retired** code shape): a
-voter rates a whole praxis, not a "member".
+The win/loss multiplier is applied per **side** at scoring time and **floats with the votes until
+era reset** (no per-duel freeze) — see **Duel outcome**. *Not* one shared praxis with two members
+and split votes (the **retired** code shape): a voter rates a whole praxis, not a "member".
 _Avoid_: "shared document" for a duel (each duelist has their own); treating a duel as a single
-praxis row.
+praxis row; "duel praxis" (retired — there is no such row; a duel side is a solo praxis).
 
 **Duel link** *(the `Duel` model; tablename `duel`)*:
 The row that owns a duel: the pairing (`challenger_praxis_id`, `opponent_praxis_id`) plus the
 challenge handshake (`opponent_character_id`, `status`), with sticky `forfeited_by_character_id`.
 Replaces `PraxisInvite` for duels.
-**States:** `pending` (challenged; only the challenger's praxis exists) → `active` (accepted;
-opponent's praxis created) → `settled` (both submitted; voting open, winner provisional until era
-reset). `declined` is terminal. A **cold symmetric challenge**: the challenger's praxis is created
-`in_progress` at challenge time and both sides `submit` independently. On **decline or cancel**
-the link drops and the challenger's praxis stays as a plain solo praxis (**convert-to-solo**).
+**States:** `pending` (**challenged**; only the challenger's praxis exists) → `active` (accepted;
+opponent's praxis created) → **`live`** (both submitted; voting open). `declined` is terminal.
+A **cold symmetric challenge**: the challenger's praxis is created `in_progress` at challenge time
+and both sides `submit` independently. On **decline or cancel** the link drops and the challenger's
+praxis stays as a plain solo praxis (**convert-to-solo**).
+_Note_: the enum member is still spelled `settled` in code pending the rename — **`live` is the
+canonical word**. `settled` was always a misnomer: it fires when voting *opens*, not when anything
+is decided.
+_Avoid_: reading `settled` as "decided"; "the duel is over" for a `live` duel.
+
+**Challenge** *(the pending phase of a duel — not a separate object)*:
+A duel that has been issued and not yet answered. There is exactly one row (the **Duel link**)
+throughout; "challenge" names its `pending` phase and the verb that opens it. A **declined**
+challenge is therefore a duel that **never started**, not a duel that ended.
+_Avoid_: "a Challenge" as a noun for a distinct thing that later "becomes" a Duel.
+
+**Duel side** *(one half of a duel)*:
+A character plus their linked praxis. The two sides hold the **fixed roles** `challenger` and
+`opponent` — set at challenge time and never swapped. A person on a side is a **duelist**.
+_Avoid_: "opponent" for "whoever isn't the viewer" — that is the **foe** (a viewer-relative term);
+`duel.opponent` is an absolute role. Also avoid "member" and "participant" for a duel side
+(`PraxisMember` is a collab concept).
+
+**Duel outcome** *(provisional until era reset)*:
+The **winner** is the side whose praxis has the higher **`points_from_votes`** (not raw stars).
+Nothing is persisted and no event fires at the moment of winning — the winner is recomputed on
+read and **only becomes final at era close**. Each side's `duel_win_modifier` /
+`duel_loss_modifier` (its own faction's) multiplies its base points.
+- **Tie:** if exactly one side is **Snide**, Snide takes the win modifier and the other the loss
+  modifier — Snide wins ties. Otherwise (no Snide, or both Snide) **both sides get 1.0×**.
+- **Forfeit** overrides the tally entirely — see **Forfeit**.
+_Avoid_: "the duel is decided/settled"; comparing "stars"; expecting an "X won the duel" event.
+
+**Forfeit** *(duel only; sticky and irreversible)*:
+Backing out of a **`live`** duel. Triggered by unsubmitting that side's praxis or by the ban /
+soft-delete of its character. The forfeiter takes their **loss** modifier, the foe takes their
+**win** modifier, and the vote tally stops mattering. Recorded once in
+`forfeited_by_character_id` and **never overwritten** — resubmitting does not restore the contest,
+and the duel stays `live`.
+_Avoid_: "withdraw" for this in user-facing copy — a duelist's control says **Forfeit** and states
+the consequence. Reserve **withdraw** for the reversible solo/collab unsubmit, **decline** for an
+opponent refusing a `pending` challenge, **cancel** for a challenger revoking their own, and
+**leave** for a collab member dropping out.
+
+**Duel voice** *(per-faction wording; ADR-0031)*:
+Each faction names the duel in its own register — "BEEF", "IN DISPUTE", "witch duel", "Salon Duel",
+"--adversarial". This is **deliberate flavour** in the copy catalogs over one shared domain
+concept, not vocabulary drift. The domain word is always **duel**.
+_Avoid_: "unifying" these labels; letting flavour words into model, service, or API names.
 
 **Collaboration (collab)**:
 Genuinely shared work on one task: **one** praxis, many `PraxisMember`s, one shared body + media,

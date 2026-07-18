@@ -25,8 +25,15 @@ A duel is **two separate praxes that compete**, joined by a new `Duel` row.
   (nullable until accept), status, lifecycle timestamps }`. It **replaces
   `PraxisInvite` for duels**.
 - **Lifecycle states:** `pending` (challenged, only challenger's praxis exists) →
-  `active` (opponent accepted, opponent's praxis created) → `settled` (both
+  `active` (opponent accepted, opponent's praxis created) → `live` (both
   submitted, voting open). `declined` is terminal.
+
+  > **Naming amendment (2026-07-18).** This state was originally named `settled`,
+  > which reads as "decided" when it actually marks the moment voting *opens* —
+  > directly contradicting this ADR's own "no discrete win moment" consequence.
+  > The canonical domain word is now **`live`**; the enum member is still spelled
+  > `settled` in code until the rename lands. Read `settled` as `live` throughout
+  > this document.
 - **Cold symmetric challenge.** The challenge **attaches to the challenger's existing
   `in_progress` praxis** (created at signup), rather than creating one at challenge time.
   Decline/cancel drops the `Duel` row and the praxis remains a plain `type=solo` praxis

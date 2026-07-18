@@ -9,6 +9,7 @@ from models.character import Character
 from models.character_stats import CharacterStats
 from models.contact import ContactMessage
 from models.era import Era
+from models.faction import Faction
 from models.praxis import Praxis, ModerationStatus
 from models.roles import AccountRole, Role
 from models.task import Task, TaskStatus
@@ -498,6 +499,49 @@ async def test_admin_list_characters(
     assert resp.status_code == 200
     ids = [c["id"] for c in resp.json()]
     assert character.id in ids
+
+
+@pytest.mark.asyncio
+async def test_admin_create_character_defaults_to_unaffiliated(
+    client: AsyncClient,
+    account: Account,
+    auth_headers: dict,
+    db_session: AsyncSession,
+    era: Era,
+    faction_ua: Faction,
+):
+    """Admin-created characters start unaffiliated unless a slug is given.
+
+    Pins ADR-0019 on the admin surface: omitting ``faction_slug`` must land
+    ``na``, and passing one explicitly must still be honoured.
+    """
+    await _make_admin(account, db_session)
+
+    # ponytail: both halves in one test — they pin the two sides of one default.
+    resp = await client.post(
+        "/admin/characters",
+        json={
+            "account_id": account.id,
+            "username": "defaultslug",
+            "display_name": "Default Slug",
+        },
+        headers=auth_headers,
+    )
+    assert resp.status_code == 201
+    assert resp.json()["faction_slug"] == "na"
+
+    resp = await client.post(
+        "/admin/characters",
+        json={
+            "account_id": account.id,
+            "username": "explicitslug",
+            "display_name": "Explicit Slug",
+            "faction_slug": "ua",
+        },
+        headers=auth_headers,
+    )
+    assert resp.status_code == 201
+    assert resp.json()["faction_slug"] == "ua"
 
 
 @pytest.mark.asyncio

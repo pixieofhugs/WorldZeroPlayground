@@ -12,6 +12,7 @@ import {
 } from '../../../utils/factions'
 import { badgeArtFor } from '../../../components/badges/badgeArt'
 import FactionAvatar from '../../../components/avatar/FactionAvatar'
+import FactionSigil from '../../../components/cards/FactionSigil'
 import LevelGem from '../../../components/ui/LevelGem'
 import { ChipRow, Chip } from '../../../components/ui/ChipRow'
 import Constellation, { type RankedPlayer } from '../Constellation'
@@ -272,19 +273,30 @@ function Roster({ players, myCharId }: { players: RankedPlayer[]; myCharId: numb
         >
           {t('leaderboard.mobile.allFactions')}
         </Chip>
-        {factionChips.map(({ slug }) => (
-          <Chip
-            key={slug}
-            on={faction === slug}
-            onClick={() => {
-              setFaction(faction === slug ? '' : slug)
-              resetPaging()
-            }}
-            tint={factionCssVar(slug === UNAFFILIATED ? null : slug)}
-          >
-            {factionName(slug === UNAFFILIATED ? null : slug)}
-          </Chip>
-        ))}
+        {factionChips.map(({ slug }) => {
+          // factionCssVar resolves an unknown slug to the `ua` theme, so the
+          // unaffiliated ring branches on isKnownFaction first (#636/ADR-0039).
+          const ring = isKnownFaction(slug) ? factionCssVar(slug) : 'var(--faction-default)'
+          return (
+            <Chip
+              key={slug}
+              iconOnly
+              // The visible name is gone, so the label is the only name left.
+              ariaLabel={factionName(slug === UNAFFILIATED ? null : slug)}
+              on={faction === slug}
+              onClick={() => {
+                setFaction(faction === slug ? '' : slug)
+                resetPaging()
+              }}
+              tint={ring}
+            >
+              {/* ponytail: FactionSigil already dispatches all seven plus the
+                  unaffiliated rainbow ring, and each sigil defaults to its own
+                  faction colour — so no wrapper and no `color` prop. */}
+              <FactionSigil slug={slug === UNAFFILIATED ? null : slug} size={22} />
+            </Chip>
+          )
+        })}
       </ChipRow>
 
       {filtered.length === 0 ? (
