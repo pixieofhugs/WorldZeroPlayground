@@ -1,10 +1,9 @@
 # Albescent unlock is account-collective, with level and coverage decoupled
 
-> **⚠ Status (2026-07-17 audit): CONTRADICTED BY CODE.** `services/character.py`
-> (`can_start_as_albescent`) currently requires level ≥ threshold **and** full
-> coverage on the *same* character — the option this ADR explicitly **rejected**.
-> Either the code is a standing bug or this decision was abandoned; tracked as a
-> code-cleanup follow-up, not resolved here.
+> **Status: in force (as of #698).** The 2026-07-17 audit found
+> `services/character.py` (`can_start_as_albescent`) implementing the
+> same-character option this ADR explicitly **rejected**. #698 resolved that in
+> this ADR's favour — the code is now two independent account-scoped gates.
 
 Albescent becomes a selectable starting/joining faction for an account when **two
 independent conditions** both hold across the account (not on a single character):
