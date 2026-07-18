@@ -464,6 +464,132 @@ async def test_faction_and_search_combine(
 
 
 @pytest.mark.asyncio
+async def test_feed_search_matches_member_name(
+    client: AsyncClient,
+    character: Character,
+    character2: Character,
+    auth_headers: dict,
+    auth_headers2: dict,
+    db_session: AsyncSession,
+):
+    """?q= also matches a member's handle and display name (#681).
+
+    Reverses #658's deliberate exclusion of the author: one box now finds
+    content OR a person.
+    """
+    now = datetime.now(timezone.utc)
+    theirs = await _submitted_praxis(
+        client,
+        db_session,
+        character2,
+        auth_headers2,
+        task_title="Generic Task A",
+        praxis_title="Untitled",
+        submitted_at=now,
+    )
+    mine = await _submitted_praxis(
+        client,
+        db_session,
+        character,
+        auth_headers,
+        task_title="Generic Task B",
+        praxis_title="Untitled",
+        submitted_at=now,
+    )
+
+    # By handle, with the '@' sigil the player typed (#624).
+    resp = await client.get(
+        "/praxes", params={"status": "submitted", "q": "@othercharacter"}
+    )
+    assert resp.status_code == 200
+    ids = {item["id"] for item in resp.json()}
+    assert theirs in ids
+    assert mine not in ids
+
+    # By display name ("Other Character") — case-insensitive, partial.
+    resp = await client.get("/praxes", params={"status": "submitted", "q": "oTHer ch"})
+    assert resp.status_code == 200
+    ids = {item["id"] for item in resp.json()}
+    assert theirs in ids
+    assert mine not in ids
+
+
+@pytest.mark.asyncio
+async def test_feed_search_by_member_does_not_duplicate_rows(
+    client: AsyncClient,
+    character: Character,
+    character2: Character,
+    auth_headers: dict,
+    db_session: AsyncSession,
+):
+    """A praxis with TWO matching members still yields exactly one feed row.
+
+    This is why the player axis is an ``IN (subquery)`` and not a join: a
+    multi-member collab would otherwise be multiplied once per matching member.
+    """
+    now = datetime.now(timezone.utc)
+    praxis_id = await _submitted_praxis(
+        client,
+        db_session,
+        character,
+        auth_headers,
+        task_title="Generic Task C",
+        praxis_title="Untitled",
+        submitted_at=now,
+    )
+    # Second member, so the term below matches two rows of the same praxis.
+    db_session.add(PraxisMember(praxis_id=praxis_id, character_id=character2.id))
+    await db_session.commit()
+
+    # "character" is a substring of BOTH usernames (testcharacter/othercharacter).
+    resp = await client.get("/praxes", params={"status": "submitted", "q": "character"})
+    assert resp.status_code == 200
+    returned = [item["id"] for item in resp.json()]
+    assert returned.count(praxis_id) == 1
+
+
+@pytest.mark.asyncio
+async def test_feed_search_by_member_ands_with_other_filters(
+    client: AsyncClient,
+    character: Character,
+    character2: Character,
+    auth_headers2: dict,
+    db_session: AsyncSession,
+):
+    """The player axis is an OR *within* ?q=, still a plain AND with filters.
+
+    ``?faction=wow`` excludes a praxis whose member matches the term, proving
+    the name match cannot smuggle a row past another active filter.
+    """
+    now = datetime.now(timezone.utc)
+    theirs = await _submitted_praxis(
+        client,
+        db_session,
+        character2,
+        auth_headers2,
+        task_title="Generic Task D",
+        praxis_title="Untitled",
+        submitted_at=now,
+    )
+
+    # Same term, matching faction: present.
+    resp = await client.get(
+        "/praxes",
+        params={"status": "submitted", "q": "othercharacter", "faction": "ua"},
+    )
+    assert resp.status_code == 200
+    assert theirs in {item["id"] for item in resp.json()}
+
+    # Same term, non-matching faction: gone.
+    resp = await client.get(
+        "/praxes",
+        params={"status": "submitted", "q": "othercharacter", "faction": "wow"},
+    )
+    assert resp.status_code == 200
+    assert theirs not in {item["id"] for item in resp.json()}
+
+
+@pytest.mark.asyncio
 async def test_invalid_sort_returns_422(client: AsyncClient):
     """An unknown ?sort= is rejected, not silently ignored."""
     resp = await client.get("/praxes", params={"sort": "sideways"})

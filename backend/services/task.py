@@ -218,8 +218,11 @@ async def list_tasks(
     spec's "below level 6 cannot see the metatask list". ``skip_level_check``
     is the admin escape hatch, mirroring :func:`propose_task`.
 
-    ``q`` is a free-text ``ilike`` over the task title AND its description
-    (#661), mirroring the praxis-feed search in :func:`services.praxis.list_praxes`.
+    ``q`` is a free-text ``ilike`` over the task title, its description (#661),
+    AND the proposing character's handle / display name (#681), mirroring the
+    praxis-feed search in :func:`services.praxis.list_praxes`. A leading ``@``
+    is treated as a sigil and dropped for the player axis only (``@mol`` finds
+    ``@mollusk``), matching :func:`services.character.list_characters`.
     Metatasks are deliberately NOT excluded: whatever the type filter and the
     ``level_to_see_metatasks`` gate already let this viewer see stays
     searchable. It composes with every other filter as one more AND clause —
@@ -290,12 +293,26 @@ async def list_tasks(
             # ever grows to where this bites, the upgrade path is Postgres
             # full-text (`to_tsvector`/`plainto_tsquery` + a GIN index) — noted,
             # not built.
-            query = query.where(
-                or_(
-                    Task.title.ilike(f"%{term}%"),
-                    Task.description.ilike(f"%{term}%"),
+            conditions = [
+                Task.title.ilike(f"%{term}%"),
+                Task.description.ilike(f"%{term}%"),
+            ]
+            # Author axis (#681): the same box also matches the proposer's
+            # handle or display name. `IN (subquery)` rather than a join so a
+            # matching author can never multiply the task's feed row.
+            author_term = term.lstrip("@")
+            if author_term:
+                conditions.append(
+                    Task.created_by.in_(
+                        select(Character.id).where(
+                            or_(
+                                Character.username.ilike(f"%{author_term}%"),
+                                Character.display_name.ilike(f"%{author_term}%"),
+                            )
+                        )
+                    )
                 )
-            )
+            query = query.where(or_(*conditions))
 
     # Exclude tasks from hidden/deprecated factions
     if hidden_slugs:
