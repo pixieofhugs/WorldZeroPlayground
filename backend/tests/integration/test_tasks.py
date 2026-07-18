@@ -1538,3 +1538,106 @@ async def test_get_task_standard_task_always_eligible_for_authenticated(
     resp = await client.get(f"/tasks/{active_task.id}", headers=auth_headers)
     assert resp.status_code == 200
     assert resp.json()["eligible_for_current_user"] is True
+
+
+# ---------------------------------------------------------------------------
+# Free-text search (#661) — `q` ilikes over title AND description, and composes
+# with the existing filters as one more AND clause.
+# ---------------------------------------------------------------------------
+
+
+async def _seed_search_tasks(db_session: AsyncSession, character: Character) -> dict:
+    """Two active tasks whose shared word sits in different columns.
+
+    Both are ``ua`` — the integration fixtures only seed that faction — so the
+    composition test narrows on ``min_points`` instead.
+    """
+    title_match = Task(
+        title="Sourdough starter revival",
+        description="Ordinary prose with no distinguishing token.",
+        point_value=10,
+        level_required=0,
+        status=TaskStatus.active,
+        created_by=character.id,
+        primary_faction_slug="ua",
+    )
+    description_match = Task(
+        title="Ordinary title",
+        description="Feed the sourdough every morning until it doubles.",
+        point_value=50,
+        level_required=0,
+        status=TaskStatus.active,
+        created_by=character.id,
+        primary_faction_slug="ua",
+    )
+    db_session.add_all([title_match, description_match])
+    await db_session.commit()
+    await db_session.refresh(title_match)
+    await db_session.refresh(description_match)
+    return {"title": title_match, "description": description_match}
+
+
+@pytest.mark.asyncio
+async def test_list_tasks_search_matches_title(
+    client: AsyncClient, db_session: AsyncSession, character: Character
+):
+    """`q` matches on Task.title, case-insensitively."""
+    seeded = await _seed_search_tasks(db_session, character)
+
+    resp = await client.get("/tasks", params={"q": "SOURDOUGH starter"})
+    assert resp.status_code == 200
+    ids = [task["id"] for task in resp.json()]
+    assert seeded["title"].id in ids
+    # The other seeded row doesn't carry that phrase in either column.
+    assert seeded["description"].id not in ids
+
+
+@pytest.mark.asyncio
+async def test_list_tasks_search_matches_description(
+    client: AsyncClient, db_session: AsyncSession, character: Character
+):
+    """`q` matches on Task.description too, not just the title (#661)."""
+    seeded = await _seed_search_tasks(db_session, character)
+
+    resp = await client.get("/tasks", params={"q": "doubles"})
+    assert resp.status_code == 200
+    ids = [task["id"] for task in resp.json()]
+    assert seeded["description"].id in ids
+    assert seeded["title"].id not in ids
+
+
+@pytest.mark.asyncio
+async def test_list_tasks_search_composes_with_existing_filter(
+    client: AsyncClient, db_session: AsyncSession, character: Character
+):
+    """`q` ANDs with an existing filter rather than replacing it."""
+    seeded = await _seed_search_tasks(db_session, character)
+
+    # "sourdough" alone hits both rows (one via title, one via description).
+    both = await client.get("/tasks", params={"q": "sourdough"})
+    assert both.status_code == 200
+    both_ids = [task["id"] for task in both.json()]
+    assert seeded["title"].id in both_ids
+    assert seeded["description"].id in both_ids
+
+    # Adding min_points narrows that same result set to the 50-point row.
+    narrowed = await client.get(
+        "/tasks", params={"q": "sourdough", "min_points": 50}
+    )
+    assert narrowed.status_code == 200
+    narrowed_ids = [task["id"] for task in narrowed.json()]
+    assert narrowed_ids == [seeded["description"].id]
+
+
+@pytest.mark.asyncio
+async def test_list_tasks_absent_or_blank_q_is_no_filter(
+    client: AsyncClient, db_session: AsyncSession, character: Character
+):
+    """Empty/whitespace `q` filters nothing — same rows as omitting it."""
+    await _seed_search_tasks(db_session, character)
+
+    baseline = await client.get("/tasks")
+    blank = await client.get("/tasks", params={"q": "   "})
+    assert baseline.status_code == 200
+    assert blank.status_code == 200
+    assert [t["id"] for t in blank.json()] == [t["id"] for t in baseline.json()]
