@@ -1,7 +1,8 @@
 {
   "listPage": {
     "loading": "Loading tasks...",
-    "empty": "No tasks match your filters."
+    "empty": "No tasks match your filters.",
+    "loadMore": "Load more"
   },
   "mobile": {
     "count": "{{count}} shown",

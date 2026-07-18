@@ -30,6 +30,8 @@ export default function DefaultTasks({ state }: { state: TasksState }) {
     setFaction,
     level,
     setLevel,
+    hasMore,
+    loadMore,
     displayPointsFor,
   } = state
 
@@ -84,6 +86,25 @@ export default function DefaultTasks({ state }: { state: TasksState }) {
             {tasks.map((task) => (
               <MobileTaskCard key={task.id} task={task} points={displayPointsFor(task)} />
             ))}
+            {hasMore && (
+              <button
+                type="button"
+                onClick={loadMore}
+                className="font-body uppercase w-full"
+                style={{
+                  fontSize: 'var(--text-md)',
+                  letterSpacing: '0.1em',
+                  padding: 'var(--space-md)',
+                  border: '1px solid var(--color-border-strong)',
+                  background: 'var(--color-bg-surface)',
+                  color: 'var(--color-text-primary)',
+                  borderRadius: 6,
+                  cursor: 'pointer',
+                }}
+              >
+                {t('listPage.loadMore')}
+              </button>
+            )}
           </div>
         )}
       </div>
