@@ -935,7 +935,16 @@
     color: var(--gem-ink);
   }
 
-  /* Unaffiliated numeral, per ADR-0039: the spectrum, not a grey fallback. */
+  /* Unaffiliated ink, per ADR-0039: the spectrum, not a grey fallback.
+     .rainbow-ink is the general form (roster points numeral, #729); the gem's
+     own class rides the same rule so there is one gradient-clip in the sheet.
+
+     WARNING: background-clip:text fails INVISIBLY — if the gradient token ever
+     resolves to nothing the glyph renders transparent, i.e. blank. Any surface
+     adopting this owes it a human eyeball in both themes. Contrast here also
+     cannot be machine-measured (axe punts on gradients, see #651); the stop to
+     hand-check is the darkest light-mode red, #c1272d, on the light page. */
+  .rainbow-ink,
   .level-gem-number-rainbow {
     background: var(--faction-default-rainbow);
     -webkit-background-clip: text;
@@ -984,6 +993,52 @@
 
   .leaderboard-row:hover {
     background: var(--leaderboard-row-hover) !important;
+  }
+
+  /* ── Curved row divider (issue #729) ──
+     A divided row whose rule flares into an upward curl at each end instead of
+     terminating flat. Owns the dashed line itself, so a caller drops its inline
+     `border-bottom` and adds this class — the two pseudo-elements are the only
+     new paint and no element is added per row.
+
+     Each curl is a quarter arc: a box with ONLY a bottom border plus a 100%
+     radius on its FAR corner, so the stroke leaves the baseline tangentially at
+     the line's end and sweeps up. Radius 100% means there is no flat run in the
+     arc, so it never double-draws over the line it springs from — the two meet
+     at a single point. Anchored inside the row's own box, so it survives the
+     `overflow: hidden` on the card that wraps the roster.
+
+     Deliberately NEUTRAL, never faction-tinted: the avatar ring, level gem and
+     points numeral already carry the colour, and a coloured rule under every
+     row would compete with all three.
+
+     ponytail: desktop roster only for now. Three other surfaces use divided
+     rows (CharacterSwitcherSheet, DefaultProfileBody badges, Sidebar activity)
+     but none is a ranked list; promoting the class is one line each, later. */
+  .divider-curved {
+    position: relative;
+    border-bottom: 1px dashed var(--color-border);
+  }
+
+  .divider-curved::before,
+  .divider-curved::after {
+    content: "";
+    position: absolute;
+    bottom: -1px;
+    width: 10px;
+    height: 10px;
+    pointer-events: none;
+    border-bottom: 1px dashed var(--color-border);
+  }
+
+  .divider-curved::before {
+    left: 0;
+    border-bottom-right-radius: 100%;
+  }
+
+  .divider-curved::after {
+    right: 0;
+    border-bottom-left-radius: 100%;
   }
 
   /* ── Page wrapper ── */

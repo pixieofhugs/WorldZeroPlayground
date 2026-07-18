@@ -7,10 +7,11 @@ import {
   FACTION_RAINBOW_ORDER,
   factionCssVar,
   factionName,
+  isKnownFaction,
   sortFactionsByRainbowOrder,
 } from '../../../utils/factions'
-import { mediaUrl } from '../../../utils/media'
 import { badgeArtFor } from '../../../components/badges/badgeArt'
+import FactionAvatar from '../../../components/avatar/FactionAvatar'
 import LevelGem from '../../../components/ui/LevelGem'
 import { ChipRow, Chip } from '../../../components/ui/ChipRow'
 import Constellation, { type RankedPlayer } from '../Constellation'
@@ -329,7 +330,10 @@ function Roster({ players, myCharId }: { players: RankedPlayer[]; myCharId: numb
 function PlayerRow({ row, isMe }: { row: RankedPlayer; isMe: boolean }) {
   const { t } = useTranslation('common')
   const { character, rank, points } = row
-  const color = factionCssVar(character.faction_slug)
+  // See RosterTable: factionCssVar resolves an unknown slug to the `ua` theme,
+  // so unaffiliated ornament branches on isKnownFaction first (#636/ADR-0039).
+  const known = isKnownFaction(character.faction_slug)
+  const color = known ? factionCssVar(character.faction_slug) : 'var(--faction-default)'
   const badges = character.badges ?? []
 
   return (
@@ -339,9 +343,16 @@ function PlayerRow({ row, isMe }: { row: RankedPlayer; isMe: boolean }) {
       style={{
         gap: 'var(--space-md)',
         padding: 'var(--space-sm) var(--space-md)',
+        // ponytail: the 4px edge stays a flat colour rather than growing a
+        // gradient case — it is 4px of paint, and the avatar ring plus the
+        // points numeral already carry the spectrum for an unaffiliated row.
         borderLeft: `4px solid ${color}`,
         textDecoration: 'none',
-        background: isMe ? factionCssVar(character.faction_slug, 'light') : undefined,
+        background: isMe
+          ? known
+            ? factionCssVar(character.faction_slug, 'light')
+            : 'var(--faction-default-light)'
+          : undefined,
       }}
     >
       {/* Rank */}
@@ -359,33 +370,22 @@ function PlayerRow({ row, isMe }: { row: RankedPlayer; isMe: boolean }) {
         {rank}
       </span>
 
-      {/* Avatar */}
-      {character.avatar_url ? (
-        <img
-          src={mediaUrl(character.avatar_url)}
-          alt=""
-          style={{ width: 40, height: 40, borderRadius: '50%', objectFit: 'cover', flex: 'none' }}
-        />
-      ) : (
-        <span
-          aria-hidden
-          style={{
-            width: 40,
-            height: 40,
-            borderRadius: '50%',
-            flex: 'none',
-            background: `linear-gradient(135deg, ${factionCssVar(character.faction_slug, 'light')}, ${color})`,
-          }}
-        />
-      )}
+      {/* Avatar — the shared component supplies the glowing faction ring, the
+          corner sigil and the unaffiliated spectrum. No FactionSigil beside the
+          name: the sigil is already on the avatar, inches away. */}
+      <span style={{ flex: 'none', lineHeight: 0 }}>
+        <FactionAvatar character={character} size={40} glow />
+      </span>
 
       {/* Name + faction · level · badges */}
       <div style={{ flex: 1, minWidth: 0 }}>
         <div
           className="font-display italic truncate"
           style={{
+            // White on every row including your own — faction colour is
+            // ornament only; the tinted row background marks your row.
             fontSize: 'var(--text-content)',
-            color: isMe ? color : 'var(--color-text-primary)',
+            color: 'var(--color-text-primary)',
             lineHeight: 1.15,
           }}
         >
@@ -412,8 +412,13 @@ function PlayerRow({ row, isMe }: { row: RankedPlayer; isMe: boolean }) {
       {/* Points */}
       <div style={{ flex: 'none', textAlign: 'right' }}>
         <div
-          className="font-body"
-          style={{ fontSize: 'var(--text-content)', fontWeight: 700, color: 'var(--color-text-primary)' }}
+          className={known ? 'font-body' : 'font-body rainbow-ink'}
+          style={{
+            fontSize: 'var(--text-content)',
+            fontWeight: 700,
+            // .rainbow-ink sets its own transparent colour — don't hand it one.
+            ...(known ? { color } : null),
+          }}
         >
           {points}
         </div>
