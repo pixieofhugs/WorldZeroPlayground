@@ -2,6 +2,7 @@ import { useTranslation } from 'react-i18next'
 import type { TasksState } from '../useTasks'
 import MobileTaskCard from './mobileTaskCard'
 import FactionSigilRow from '../../../components/ui/FactionSigilRow'
+import { ChipRow, Chip } from '../../../components/ui/ChipRow'
 
 /**
  * Default MOBILE task-browse skin — a scannable single-column card list with
@@ -87,72 +88,5 @@ export default function DefaultTasks({ state }: { state: TasksState }) {
         )}
       </div>
     </div>
-  )
-}
-
-function ChipRow({ label, children }: { label: string; children: React.ReactNode }) {
-  return (
-    <div className="flex items-center gap-2 mb-2">
-      <span className="eyebrow" style={{ flex: 'none' }}>
-        {label}
-      </span>
-      <div
-        className="flex gap-2"
-        style={{ overflowX: 'auto', paddingBottom: 2, scrollbarWidth: 'none' }}
-      >
-        {children}
-      </div>
-    </div>
-  )
-}
-
-function Chip({
-  on,
-  onClick,
-  tint,
-  children,
-}: {
-  on: boolean
-  onClick: () => void
-  tint?: string
-  children: React.ReactNode
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      style={{
-        flex: 'none',
-        display: 'inline-flex',
-        alignItems: 'center',
-        gap: 6,
-        fontFamily: "'Courier Prime', monospace",
-        fontSize: 11,
-        fontWeight: on ? 700 : 400,
-        letterSpacing: '0.05em',
-        textTransform: 'uppercase',
-        color: on ? 'var(--color-text-on-accent)' : 'var(--color-text-secondary)',
-        background: on ? 'var(--color-text-primary)' : 'var(--color-bg-surface)',
-        border: `1px solid ${on ? 'transparent' : 'var(--color-border-strong)'}`,
-        borderRadius: 999,
-        padding: '8px 14px',
-        minHeight: 36,
-        whiteSpace: 'nowrap',
-        cursor: 'pointer',
-      }}
-    >
-      {tint && (
-        <i
-          style={{
-            width: 8,
-            height: 8,
-            borderRadius: 2,
-            flex: 'none',
-            background: tint,
-          }}
-        />
-      )}
-      {children}
-    </button>
   )
 }
