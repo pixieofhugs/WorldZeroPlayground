@@ -12,6 +12,7 @@ import {
 import { mediaUrl } from '../../../utils/media'
 import { badgeArtFor } from '../../../components/badges/badgeArt'
 import LevelPill from '../../../components/ui/LevelPill'
+import { ChipRow, Chip } from '../../../components/ui/ChipRow'
 import Constellation, { type RankedPlayer } from '../Constellation'
 
 export interface PlayersDirectoryProps {
@@ -421,71 +422,5 @@ function PlayerRow({ row, isMe }: { row: RankedPlayer; isMe: boolean }) {
         </span>
       </div>
     </Link>
-  )
-}
-
-function ChipRow({ label, children }: { label: string; children: React.ReactNode }) {
-  return (
-    <div className="flex items-center gap-2 mb-2">
-      <span className="eyebrow" style={{ flex: 'none' }}>
-        {label}
-      </span>
-      <div
-        className="flex gap-2 pb-0.5"
-        style={{ overflowX: 'auto', scrollbarWidth: 'none' }}
-      >
-        {children}
-      </div>
-    </div>
-  )
-}
-
-function Chip({
-  on,
-  onClick,
-  tint,
-  children,
-}: {
-  on: boolean
-  onClick: () => void
-  tint?: string
-  children: React.ReactNode
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className="font-body uppercase"
-      style={{
-        flex: 'none',
-        display: 'inline-flex',
-        alignItems: 'center',
-        gap: 'var(--space-xs)',
-        fontSize: 'var(--text-md)',
-        fontWeight: on ? 700 : 400,
-        letterSpacing: '0.05em',
-        color: on ? 'var(--color-text-on-accent)' : 'var(--color-text-secondary)',
-        background: on ? 'var(--color-text-primary)' : 'var(--color-bg-surface)',
-        border: `1px solid ${on ? 'transparent' : 'var(--color-border-strong)'}`,
-        borderRadius: 999,
-        padding: 'var(--space-sm) var(--space-md)',
-        minHeight: 36,
-        whiteSpace: 'nowrap',
-        cursor: 'pointer',
-      }}
-    >
-      {tint && (
-        <i
-          style={{
-            width: 8,
-            height: 8,
-            borderRadius: 2,
-            flex: 'none',
-            background: tint,
-          }}
-        />
-      )}
-      {children}
-    </button>
   )
 }

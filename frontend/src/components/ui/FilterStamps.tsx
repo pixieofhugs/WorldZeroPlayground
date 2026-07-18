@@ -10,13 +10,20 @@ interface Props {
   options: string[]
   value: string
   onChange: (value: string) => void
+  /** Group eyebrow. Defaults to the status label for the original Tasks call
+   *  site; other filters (type / voted / sort) pass their own (#644). */
+  label?: string
+  /** Per-option display text keyed by option value, when the option strings are
+   *  internal keys rather than the label to show (e.g. localized type names).
+   *  Falls back to the option string itself (the original Tasks behaviour). */
+  optionLabels?: Record<string, string>
 }
 
-export default function FilterStamps({ options, value, onChange }: Props) {
+export default function FilterStamps({ options, value, onChange, label, optionLabels }: Props) {
   const { t } = useTranslation('common')
   return (
     <div className="flex gap-1.5 items-center">
-      <span className="eyebrow">{t('filters.status')}</span>
+      <span className="eyebrow">{label ?? t('filters.status')}</span>
       {options.map((option) => {
         const active = value === option
         return (
@@ -47,7 +54,7 @@ export default function FilterStamps({ options, value, onChange }: Props) {
                 pointerEvents: 'none',
               }}
             />
-            {option}
+            {optionLabels?.[option] ?? option}
           </button>
         )
       })}

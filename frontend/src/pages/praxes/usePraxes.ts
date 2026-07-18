@@ -1,37 +1,125 @@
 /**
  * usePraxes — the praxis-feed data lift shared by the desktop list and the
- * mobile stream (#499). Extracted verbatim from the old inline Praxes.tsx body
- * so both form factors read the same 3-way (solo / collab / duel) fetch; the
- * desktop page renders exactly as before. Collab + duel are merged into one
- * `collabItems` bucket, matching the pre-extraction behaviour.
+ * mobile stream (#499, rewritten for #644).
+ *
+ * The old three-call (solo / collab / duel) fetch is collapsed into ONE
+ * `listPraxes` call so filter/search/sort can sit on top of a single date-ordered
+ * stream (§1). Filter state (type / faction / voted / sort / query) lives here
+ * via `useState` and is keyed into `useResource`, so a chip tap rekeys the fetch
+ * — mirroring `pages/tasks/useTasks.ts`. The growing window (§8) bumps `limit`,
+ * another `useResource` dep. Filter values + setters ride on the returned state
+ * so `MobilePraxisFeed` and the desktop page stay presentation-only.
  */
-import { listPraxes, type PraxisCardOut } from '../../api/praxis'
+import { useEffect, useState } from 'react'
+import { listPraxes, type PraxisCardOut, type PraxisType } from '../../api/praxis'
+import { getFactions, type FactionOut } from '../../api/factions'
 import { useResource } from '../../hooks/useResource'
+import { useDebouncedValue } from '../../hooks/useDebouncedValue'
+
+/** How many rows a page fetches; "load more" grows the window by this step. */
+const PAGE_LIMIT = 50
+
+export type PraxisTypeFilter = 'all' | PraxisType
+export type VotedFilter = '' | 'yes' | 'no'
+export type SortOrder = 'newest' | 'oldest'
 
 export interface PraxesFeedState {
-  /** Solo submitted praxes. */
-  soloItems: PraxisCardOut[]
-  /** Collab + duel submitted praxes, concatenated (collab first). */
-  collabItems: PraxisCardOut[]
+  /** The single date-ordered proof stream (§1). */
+  items: PraxisCardOut[]
   loading: boolean
   error: Error | null
-  /** True when neither bucket has any entry (drives the empty state). */
+  /** No results came back. */
   isEmpty: boolean
+  /** True when a filter/search is narrowing the feed — lets the page tell a
+   *  filtered-to-nothing result apart from a genuinely empty register. */
+  hasActiveFilters: boolean
+
+  /** Reference data for the faction filter. */
+  factions: FactionOut[]
+
+  // Filter state (setters reset the growing window).
+  type: PraxisTypeFilter
+  setType: (type: PraxisTypeFilter) => void
+  faction: string
+  setFaction: (faction: string) => void
+  voted: VotedFilter
+  setVoted: (voted: VotedFilter) => void
+  sort: SortOrder
+  setSort: (sort: SortOrder) => void
+  /** Raw search box value (bind directly); the fetch reads a debounced copy. */
+  query: string
+  setQuery: (query: string) => void
+
+  // Growing window (§8).
+  hasMore: boolean
+  loadMore: () => void
 }
 
 export function usePraxes(): PraxesFeedState {
+  const [factions, setFactions] = useState<FactionOut[]>([])
+  const [type, setTypeState] = useState<PraxisTypeFilter>('all')
+  const [faction, setFactionState] = useState('')
+  const [voted, setVotedState] = useState<VotedFilter>('')
+  const [sort, setSortState] = useState<SortOrder>('newest')
+  const [query, setQueryState] = useState('')
+  const [limit, setLimit] = useState(PAGE_LIMIT)
+
+  const debouncedQuery = useDebouncedValue(query, 200)
+
+  useEffect(() => {
+    getFactions().then(setFactions).catch(() => {})
+  }, [])
+
+  // Every filter/search change resets the window so "load more" can't strand a
+  // grown page against a freshly-narrowed result set.
+  const resetWindow = () => setLimit(PAGE_LIMIT)
+  const setType = (next: PraxisTypeFilter) => { setTypeState(next); resetWindow() }
+  const setFaction = (next: string) => { setFactionState(next); resetWindow() }
+  const setVoted = (next: VotedFilter) => { setVotedState(next); resetWindow() }
+  const setSort = (next: SortOrder) => { setSortState(next); resetWindow() }
+  const setQuery = (next: string) => { setQueryState(next); resetWindow() }
+
+  const trimmedQuery = debouncedQuery.trim()
   const { data, loading, error } = useResource(
     () =>
-      Promise.all([
-        listPraxes({ type: 'solo', status: 'submitted' }),
-        listPraxes({ type: 'collab', status: 'submitted' }),
-        listPraxes({ type: 'duel', status: 'submitted' }),
-      ]),
-    [],
+      listPraxes({
+        status: 'submitted',
+        type: type === 'all' ? undefined : type,
+        faction: faction || undefined,
+        voted: voted || undefined,
+        sort,
+        q: trimmedQuery || undefined,
+        limit,
+      }),
+    [type, faction, voted, sort, trimmedQuery, limit],
   )
-  const soloItems = data ? data[0] : []
-  const collabItems = data ? [...data[1], ...data[2]] : []
-  const isEmpty = soloItems.length === 0 && collabItems.length === 0
 
-  return { soloItems, collabItems, loading, error, isEmpty }
+  const items = data ?? []
+  const hasActiveFilters =
+    type !== 'all' || faction !== '' || voted !== '' || trimmedQuery !== ''
+
+  return {
+    items,
+    loading,
+    error,
+    isEmpty: items.length === 0,
+    hasActiveFilters,
+
+    factions,
+
+    type,
+    setType,
+    faction,
+    setFaction,
+    voted,
+    setVoted,
+    sort,
+    setSort,
+    query,
+    setQuery,
+
+    // A full page implies there may be more — reuses useResource untouched (§8).
+    hasMore: data?.length === limit,
+    loadMore: () => setLimit((current) => current + PAGE_LIMIT),
+  }
 }

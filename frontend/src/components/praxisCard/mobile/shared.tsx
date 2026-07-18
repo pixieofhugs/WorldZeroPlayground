@@ -119,7 +119,9 @@ export function MobileByline({
         >
           {t('mobileFeed.byline', {
             faction: factionName(praxis.created_by_faction_slug),
-            time: relativeTime(praxis.created_at),
+            // Seal date, not draft-open (#644 §3): a collab drafted weeks ago and
+            // sealed yesterday should read "1d ago", matching desktop + the sort.
+            time: relativeTime(praxis.submitted_at ?? praxis.created_at),
           })}
         </span>
       </span>
@@ -406,6 +408,36 @@ export function MobileMediaGallery({
  * faction. Pre-highlights the viewer's own cast (`viewer_vote`); tapping casts
  * through VoteUI's own useVote path. The 1–5 stamps own their ≥44px hit target.
  */
+/**
+ * Slot: the "voted by {name}" marker (#644 §7) — the mobile twin of the desktop
+ * `PraxisVotedByMarker`. Shows when another character on the viewer's ACCOUNT
+ * voted; account-scoped, so it can appear with no star of the carried character's
+ * own. Renders nothing without `voted_by_name`.
+ */
+export function MobileVotedByMarker({
+  praxis,
+  theme,
+}: {
+  praxis: PraxisCardOut
+  theme: MobileSlotTheme
+}) {
+  const { t } = useTranslation('praxis')
+  if (!praxis.voted_by_name) return null
+  return (
+    <span
+      style={{
+        fontFamily: theme.bodyFont,
+        fontSize: 10,
+        letterSpacing: '0.06em',
+        textTransform: 'uppercase',
+        color: theme.muted,
+      }}
+    >
+      {t('card.votedBy', { name: praxis.voted_by_name })}
+    </span>
+  )
+}
+
 export function MobileVoteFooter({ praxis }: { praxis: PraxisCardOut }) {
   return (
     <VoteUI
@@ -451,6 +483,7 @@ export function MobilePraxisBody({
       <MobileRoster praxis={praxis} theme={theme} />
       <MobileMediaGallery praxis={praxis} theme={theme} />
       <div style={{ borderTop: `1px solid ${theme.accent}`, paddingTop: 10 }}>
+        <MobileVotedByMarker praxis={praxis} theme={theme} />
         <MobileVoteFooter praxis={praxis} />
       </div>
     </div>

@@ -128,6 +128,28 @@ export function PraxisByline({
 }
 
 /**
+ * Slot: the "voted by {name}" marker (#644 §7). Renders when another character
+ * on the viewer's ACCOUNT voted on this praxis. Account-scoped, so it can appear
+ * even when the carried character has no star of its own (`viewer_vote` null) —
+ * the intended display. Renders nothing when `voted_by_name` is absent.
+ */
+export function PraxisVotedByMarker({
+  praxis,
+  style,
+}: {
+  praxis: PraxisCardOut;
+  style?: CSSProperties;
+}) {
+  const { t } = useTranslation("praxis");
+  if (!praxis.voted_by_name) return null;
+  return (
+    <div className="eyebrow" style={{ marginTop: "var(--space-sm)", opacity: 0.75, ...style }}>
+      {t("card.votedBy", { name: praxis.voted_by_name })}
+    </div>
+  );
+}
+
+/**
  * Slot: the score hero — a completed praxis's earned-points readout, stamped as
  * `{base} + {votes}`: the task's base points plus the points scored FROM votes
  * (ADR-0014 merit = `task base + points_from_votes`, so vote-points =
