@@ -1,14 +1,5 @@
 src/pages/characterPaths/mobileArchetypes/DefaultCreateCharacter.tsx
 src/pages/characterPaths/mobileArchetypes/DefaultEditCharacter.tsx
-src/pages/characterProfile/archetypes/AlbescentProfileBody.tsx
-src/pages/characterProfile/archetypes/DefaultProfileBody.tsx
-src/pages/characterProfile/archetypes/EphemeristsProfileBody.tsx
-src/pages/characterProfile/archetypes/EverymenProfileBody.tsx
-src/pages/characterProfile/archetypes/profileSkin.tsx
-src/pages/characterProfile/archetypes/SingularityProfileBody.tsx
-src/pages/characterProfile/archetypes/SnideProfileBody.tsx
-src/pages/characterProfile/archetypes/UaProfileBody.tsx
-src/pages/characterProfile/archetypes/WowProfileBody.tsx
 src/pages/characterProfile/mobileArchetypes/DefaultProfile.tsx
 src/pages/fieldDesk/mobileArchetypes/AlbescentHome.tsx
 src/pages/fieldDesk/mobileArchetypes/DefaultFieldDesk.tsx

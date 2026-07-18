@@ -30,7 +30,7 @@ const SCANLINES =
 
 function heading(title: string, eyebrow: string): ReactNode {
   return (
-    <div style={{ marginBottom: 16 }}>
+    <div style={{ marginBottom: 'var(--space-lg)' }}>
       <div
         style={{
           fontFamily: FONT,
@@ -38,7 +38,7 @@ function heading(title: string, eyebrow: string): ReactNode {
           letterSpacing: '0.14em',
           textTransform: 'uppercase',
           color: signal(65),
-          marginBottom: 6,
+          marginBottom: 'var(--space-sm)',
         }}
       >
         {'>'} {eyebrow}
@@ -56,7 +56,7 @@ function heading(title: string, eyebrow: string): ReactNode {
       >
         {title}
       </h2>
-      <div style={{ height: 1, marginTop: 8, background: signal(30) }} />
+      <div style={{ height: 1, marginTop: 'var(--space-sm)', background: signal(30) }} />
     </div>
   )
 }
@@ -78,8 +78,8 @@ const kit: ProfileKit = {
     background: VOID,
     border: `1px solid ${BORDER}`,
     boxShadow: `inset 0 0 0 1px ${signal(18)}`,
-    padding: '32px 34px',
-    marginBottom: 40,
+    padding: 'var(--space-2xl)',
+    marginBottom: 'var(--space-3xl)',
   },
   headerDecoration: (
     <div
@@ -95,13 +95,13 @@ const kit: ProfileKit = {
   },
   playerEyebrow: '> PLAYER: SINGULARITY // NODE STATUS: ONLINE',
   progressionStyle: {
-    marginTop: 22,
+    marginTop: 'var(--space-xl)',
     background: VOID,
     border: `1px solid ${signal(40)}`,
-    padding: '16px 18px',
+    padding: 'var(--space-lg)',
     display: 'flex',
     alignItems: 'center',
-    gap: 16,
+    gap: 'var(--space-lg)',
     maxWidth: 440,
   },
   ringLabel: 'lvl',
@@ -117,7 +117,7 @@ const kit: ProfileKit = {
   },
   emptyStateStyle: {
     border: `1px dashed ${signal(50)}`,
-    padding: 30,
+    padding: 'var(--space-2xl)',
     textAlign: 'center',
     background: VOID,
   },
@@ -126,7 +126,7 @@ const kit: ProfileKit = {
   badgeBoardStyle: {
     border: `1px solid ${signal(40)}`,
     background: VOID,
-    padding: '4px 14px',
+    padding: 'var(--space-xs) var(--space-lg)',
   },
   badgeChipStyle: {
     fontFamily: FONT,
@@ -136,7 +136,7 @@ const kit: ProfileKit = {
     color: signal(70),
     marginLeft: 'auto',
     border: `1px solid ${signal(40)}`,
-    padding: '3px 9px',
+    padding: 'var(--space-xs) var(--space-sm)',
   },
   badgeRow: (badge, last) => (
     <BadgeRow

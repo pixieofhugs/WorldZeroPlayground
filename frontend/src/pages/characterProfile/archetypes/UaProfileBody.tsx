@@ -26,7 +26,7 @@ const BODY = "'EB Garamond', Georgia, serif"
 
 function heading(title: string, eyebrow: string): ReactNode {
   return (
-    <div style={{ marginBottom: 18 }}>
+    <div style={{ marginBottom: 'var(--space-lg)' }}>
       <div
         style={{
           fontFamily: EYEBROW,
@@ -34,7 +34,7 @@ function heading(title: string, eyebrow: string): ReactNode {
           letterSpacing: '0.26em',
           textTransform: 'uppercase',
           color: MUTED,
-          marginBottom: 7,
+          marginBottom: 'var(--space-sm)',
         }}
       >
         {eyebrow}
@@ -64,8 +64,8 @@ const kit: ProfileKit = {
     background: PAPER,
     border: `1px solid ${LINE}`,
     boxShadow: 'inset 0 0 0 4px var(--ua-paper), inset 0 0 0 5px var(--ua-line-soft)',
-    padding: '34px 40px',
-    marginBottom: 40,
+    padding: 'var(--space-2xl) var(--space-3xl)',
+    marginBottom: 'var(--space-3xl)',
   },
   headerDecoration: (
     <div
@@ -80,8 +80,8 @@ const kit: ProfileKit = {
     />
   ),
   credentialFrame: (card) => (
-    <div style={{ padding: 12, background: GILT }}>
-      <div style={{ padding: 4, background: 'linear-gradient(135deg, var(--ua-gold), var(--ua-gold-pale))' }}>
+    <div style={{ padding: 'var(--space-md)', background: GILT }}>
+      <div style={{ padding: 'var(--space-xs)', background: 'linear-gradient(135deg, var(--ua-gold), var(--ua-gold-pale))' }}>
         {card}
       </div>
     </div>
@@ -89,14 +89,14 @@ const kit: ProfileKit = {
   nameSize: 56,
   playerEyebrow: 'Player · University of Asthmatics',
   progressionStyle: {
-    marginTop: 22,
+    marginTop: 'var(--space-xl)',
     background: 'var(--ua-paper-warm)',
     border: `1px solid ${ACCENT}`,
     boxShadow: 'inset 0 0 0 3px var(--ua-paper-warm), inset 0 0 0 4px var(--ua-line-soft)',
-    padding: '16px 18px',
+    padding: 'var(--space-lg)',
     display: 'flex',
     alignItems: 'center',
-    gap: 16,
+    gap: 'var(--space-lg)',
     maxWidth: 440,
   },
   ringLabel: 'anno',
@@ -112,7 +112,7 @@ const kit: ProfileKit = {
   },
   emptyStateStyle: {
     border: `1.5px dashed ${ACCENT}`,
-    padding: 30,
+    padding: 'var(--space-2xl)',
     textAlign: 'center',
     background: PAPER,
   },
@@ -121,7 +121,7 @@ const kit: ProfileKit = {
   badgeBoardStyle: {
     border: `1px solid ${LINE}`,
     background: PAPER,
-    padding: '4px 14px',
+    padding: 'var(--space-xs) var(--space-lg)',
   },
   badgeChipStyle: {
     fontFamily: EYEBROW,
@@ -132,7 +132,7 @@ const kit: ProfileKit = {
     marginLeft: 'auto',
     border: `1px solid ${LINE}`,
     borderRadius: 20,
-    padding: '3px 9px',
+    padding: 'var(--space-xs) var(--space-sm)',
   },
   badgeRow: (badge, last) => (
     <BadgeRow
@@ -147,6 +147,7 @@ const kit: ProfileKit = {
             width: 34,
             height: 34,
             borderRadius: '50%',
+            // eslint-disable-next-line local/no-raw-style-values -- ornament: gilt ring thickness on a 34px medallion; the nearest rung (4px) is a 60% thicker ring and visibly shrinks the inner disc.
             padding: 2.5,
             background: GILT,
             display: 'flex',

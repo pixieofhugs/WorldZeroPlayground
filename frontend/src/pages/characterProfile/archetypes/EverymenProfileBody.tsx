@@ -29,7 +29,7 @@ const SUNBURST =
 
 function heading(title: string, eyebrow: string): ReactNode {
   return (
-    <div style={{ marginBottom: 16 }}>
+    <div style={{ marginBottom: 'var(--space-lg)' }}>
       <div
         style={{
           fontFamily: MONO,
@@ -37,7 +37,7 @@ function heading(title: string, eyebrow: string): ReactNode {
           letterSpacing: '0.08em',
           textTransform: 'uppercase',
           color: MUTED,
-          marginBottom: 5,
+          marginBottom: 'var(--space-xs)',
         }}
       >
         {eyebrow}
@@ -57,7 +57,7 @@ function heading(title: string, eyebrow: string): ReactNode {
       <div
         style={{
           height: 4,
-          marginTop: 8,
+          marginTop: 'var(--space-sm)',
           background: `repeating-linear-gradient(90deg, ${RED} 0 14px, ${GOLD} 14px 28px)`,
         }}
       />
@@ -81,9 +81,9 @@ const kit: ProfileKit = {
     background: `linear-gradient(150deg, ${RED}, var(--everymen-red-deep))`,
     border: `3px solid ${INK}`,
     boxShadow: '8px 10px 0 rgba(0,0,0,0.4)',
-    padding: '34px 40px',
-    marginBottom: 44,
-    marginTop: 6,
+    padding: 'var(--space-2xl) var(--space-3xl)',
+    marginBottom: 'var(--space-4xl)',
+    marginTop: 'var(--space-sm)',
   },
   headerDecoration: (
     <>
@@ -101,13 +101,13 @@ const kit: ProfileKit = {
   nameExtra: { color: CREAM, textShadow: '3px 3px 0 rgba(0,0,0,0.3)', letterSpacing: '0.02em' },
   playerEyebrow: 'Player · The Everymen',
   progressionStyle: {
-    marginTop: 22,
+    marginTop: 'var(--space-xl)',
     background: INK,
     borderLeft: `5px solid ${GOLD}`,
-    padding: '16px 18px',
+    padding: 'var(--space-lg)',
     display: 'flex',
     alignItems: 'center',
-    gap: 16,
+    gap: 'var(--space-lg)',
     maxWidth: 440,
   },
   ringLabel: 'lvl',
@@ -122,7 +122,7 @@ const kit: ProfileKit = {
   },
   emptyStateStyle: {
     border: `2px dashed ${INK}`,
-    padding: 30,
+    padding: 'var(--space-2xl)',
     textAlign: 'center',
     background: CREAM,
   },
@@ -131,7 +131,7 @@ const kit: ProfileKit = {
   badgeBoardStyle: {
     border: `3px solid ${INK}`,
     background: CREAM,
-    padding: '4px 14px',
+    padding: 'var(--space-xs) var(--space-lg)',
   },
   badgeChipStyle: {
     fontFamily: MONO,
@@ -141,7 +141,7 @@ const kit: ProfileKit = {
     color: MUTED,
     marginLeft: 'auto',
     border: `1px solid ${INK}`,
-    padding: '3px 9px',
+    padding: 'var(--space-xs) var(--space-sm)',
   },
   badgeRow: (badge, last) => (
     <BadgeRow
