@@ -179,6 +179,16 @@ function UaPraxisCard({ praxis, adminProps, showCrown }: ArchetypeProps) {
   );
 }
 
+/** The red margin rule down the Everymen ruled sheet. Static (#586). */
+const everymenMarginRule: CSSProperties = {
+  position: "absolute",
+  left: 22,
+  top: 0,
+  bottom: 0,
+  width: 1,
+  background: "rgba(220,80,80,0.2)",
+};
+
 function EverymenPraxisCard({ praxis, adminProps, showCrown }: ArchetypeProps) {
   return (
     <div
@@ -197,16 +207,7 @@ function EverymenPraxisCard({ praxis, adminProps, showCrown }: ArchetypeProps) {
         transition: "background 150ms, color 150ms",
       }}
     >
-      <div
-        style={{
-          position: "absolute",
-          left: 22,
-          top: 0,
-          bottom: 0,
-          width: 1,
-          background: "rgba(220,80,80,0.2)",
-        }}
-      />
+      <div style={everymenMarginRule} />
       <AdminOverlay {...adminProps} />
       <PraxisBody
         praxis={praxis}
@@ -219,6 +220,42 @@ function EverymenPraxisCard({ praxis, adminProps, showCrown }: ArchetypeProps) {
   );
 }
 
+/** The two offset scrap layers behind the WOW card, plus its tape. Static (#586). */
+const wowScrapDeep: CSSProperties = {
+  position: "absolute",
+  top: 10,
+  left: -4,
+  right: -4,
+  height: 24,
+  background: "var(--faction-wow-scrap-deep)",
+  border: "1.5px solid rgba(0,0,0,0.12)",
+  transform: "rotate(-4deg)",
+  borderRadius: 1,
+};
+
+const wowScrapMid: CSSProperties = {
+  position: "absolute",
+  top: 4,
+  left: -2,
+  right: -2,
+  height: 36,
+  background: "var(--faction-wow-scrap-mid)",
+  border: "1.5px solid rgba(0,0,0,0.12)",
+  transform: "rotate(3deg)",
+  borderRadius: 1,
+};
+
+const wowTape: CSSProperties = {
+  position: "absolute",
+  top: 5,
+  left: "50%",
+  transform: "translateX(-50%) rotate(-1deg)",
+  width: 48,
+  height: 14,
+  background: "var(--faction-wow-tape)",
+  borderRadius: 1,
+};
+
 function WowPraxisCard({ praxis, adminProps, showCrown }: ArchetypeProps) {
   return (
     <div
@@ -228,32 +265,8 @@ function WowPraxisCard({ praxis, adminProps, showCrown }: ArchetypeProps) {
         minHeight: 140,
       }}
     >
-      <div
-        style={{
-          position: "absolute",
-          top: 10,
-          left: -4,
-          right: -4,
-          height: 24,
-          background: "var(--faction-wow-scrap-deep)",
-          border: "1.5px solid rgba(0,0,0,0.12)",
-          transform: "rotate(-4deg)",
-          borderRadius: 1,
-        }}
-      />
-      <div
-        style={{
-          position: "absolute",
-          top: 4,
-          left: -2,
-          right: -2,
-          height: 36,
-          background: "var(--faction-wow-scrap-mid)",
-          border: "1.5px solid rgba(0,0,0,0.12)",
-          transform: "rotate(3deg)",
-          borderRadius: 1,
-        }}
-      />
+      <div style={wowScrapDeep} />
+      <div style={wowScrapMid} />
       <div
         style={{
           position: "relative",
@@ -268,18 +281,7 @@ function WowPraxisCard({ praxis, adminProps, showCrown }: ArchetypeProps) {
           boxSizing: "border-box",
         }}
       >
-        <div
-          style={{
-            position: "absolute",
-            top: 5,
-            left: "50%",
-            transform: "translateX(-50%) rotate(-1deg)",
-            width: 48,
-            height: 14,
-            background: "var(--faction-wow-tape)",
-            borderRadius: 1,
-          }}
-        />
+        <div style={wowTape} />
         <AdminOverlay {...adminProps} />
         <PraxisBody
           praxis={praxis}
@@ -296,6 +298,18 @@ function WowPraxisCard({ praxis, adminProps, showCrown }: ArchetypeProps) {
 const SNIDE_TORN_CLIP =
   "polygon(0% 0%, 4% 100%, 8% 20%, 12% 90%, 16% 10%, 20% 80%, 24% 0%, 28% 100%, 32% 15%, 36% 85%, 40% 5%, 44% 95%, 48% 20%, 52% 80%, 56% 0%, 60% 100%, 64% 15%, 68% 90%, 72% 5%, 76% 85%, 80% 0%, 84% 100%, 88% 20%, 92% 80%, 96% 10%, 100% 0%)";
 
+/** The torn top/bottom edges of the Snide scrap. Static (#586). */
+const snideTornBase: CSSProperties = {
+  position: "absolute",
+  left: 0,
+  right: 0,
+  height: 6,
+  background: "var(--color-bg-page)",
+  clipPath: SNIDE_TORN_CLIP,
+};
+const snideTornTop: CSSProperties = { ...snideTornBase, top: -1 };
+const snideTornBottom: CSSProperties = { ...snideTornBase, bottom: -1 };
+
 function SnidePraxisCard({ praxis, adminProps, showCrown }: ArchetypeProps) {
   const { t } = useTranslation("praxis");
   return (
@@ -310,28 +324,8 @@ function SnidePraxisCard({ praxis, adminProps, showCrown }: ArchetypeProps) {
         transition: "background 150ms, color 150ms",
       }}
     >
-      <div
-        style={{
-          position: "absolute",
-          top: -1,
-          left: 0,
-          right: 0,
-          height: 6,
-          background: "var(--color-bg-page)",
-          clipPath: SNIDE_TORN_CLIP,
-        }}
-      />
-      <div
-        style={{
-          position: "absolute",
-          bottom: -1,
-          left: 0,
-          right: 0,
-          height: 6,
-          background: "var(--color-bg-page)",
-          clipPath: SNIDE_TORN_CLIP,
-        }}
-      />
+      <div style={snideTornTop} />
+      <div style={snideTornBottom} />
       <div className="snide-tape" style={{ top: -10, left: 22, transform: "rotate(-8deg)" }} />
       <SnideMasthead subtitle={t("card.masthead.snide")} />
       <AdminOverlay {...adminProps} />
@@ -408,32 +402,73 @@ function EphemeristsPraxisCard({ praxis, adminProps, showCrown }: ArchetypeProps
   );
 }
 
+/** Punch-card sprocket strip — the row and one hole. Static (#586). */
+const holeRowStyle: CSSProperties = {
+  display: "flex",
+  justifyContent: "center",
+  gap: "var(--space-sm)",
+  padding: "var(--space-xs) 0",
+};
+
+const holeStyle: CSSProperties = {
+  width: 6,
+  height: 4,
+  background: "rgba(10,26,14)",
+  border:
+    "1px solid var(--faction-singularity-card-accent, var(--faction-singularity-border-hard))",
+  borderRadius: 1,
+};
+
 function SingularityHoles() {
   return (
-    <div
-      style={{
-        display: "flex",
-        justifyContent: "center",
-        gap: "var(--space-sm)",
-        padding: "var(--space-xs) 0",
-      }}
-    >
+    <div style={holeRowStyle}>
       {Array.from({ length: 5 }).map((_, index) => (
-        <div
-          key={index}
-          style={{
-            width: 6,
-            height: 4,
-            background: "rgba(10,26,14)",
-            border:
-              "1px solid var(--faction-singularity-card-accent, var(--faction-singularity-border-hard))",
-            borderRadius: 1,
-          }}
-        />
+        <div key={index} style={holeStyle} />
       ))}
     </div>
   );
 }
+
+/** Terminal scanline wash + the four corner brackets. Static (#586). */
+const scanlineStyle: CSSProperties = {
+  position: "absolute",
+  inset: 0,
+  backgroundImage:
+    "repeating-linear-gradient(to bottom, transparent, transparent 2px, rgba(74,222,128,0.015) 2px, rgba(74,222,128,0.015) 4px)",
+  pointerEvents: "none",
+  zIndex: 1,
+};
+
+const cornerRule = "1px solid var(--faction-singularity-card-text)";
+const cornerBase: CSSProperties = { position: "absolute", width: 10, height: 10 };
+const cornerTopLeft: CSSProperties = {
+  ...cornerBase,
+  top: 3,
+  left: 3,
+  borderTop: cornerRule,
+  borderLeft: cornerRule,
+};
+const cornerTopRight: CSSProperties = {
+  ...cornerBase,
+  top: 3,
+  right: 3,
+  borderTop: cornerRule,
+  borderRight: cornerRule,
+};
+const cornerBottomLeft: CSSProperties = {
+  ...cornerBase,
+  bottom: 3,
+  left: 3,
+  borderBottom: cornerRule,
+  borderLeft: cornerRule,
+};
+const cornerBottomRight: CSSProperties = {
+  ...cornerBase,
+  bottom: 3,
+  right: 3,
+  borderBottom: cornerRule,
+  borderRight: cornerRule,
+};
 
 function SingularityPraxisCard({ praxis, adminProps, showCrown }: ArchetypeProps) {
   const { t } = useTranslation("praxis");
@@ -449,60 +484,11 @@ function SingularityPraxisCard({ praxis, adminProps, showCrown }: ArchetypeProps
         overflow: "hidden",
       }}
     >
-      <div
-        style={{
-          position: "absolute",
-          inset: 0,
-          backgroundImage:
-            "repeating-linear-gradient(to bottom, transparent, transparent 2px, rgba(74,222,128,0.015) 2px, rgba(74,222,128,0.015) 4px)",
-          pointerEvents: "none",
-          zIndex: 1,
-        }}
-      />
-      <div
-        style={{
-          position: "absolute",
-          top: 3,
-          left: 3,
-          width: 10,
-          height: 10,
-          borderTop: "1px solid var(--faction-singularity-card-text)",
-          borderLeft: "1px solid var(--faction-singularity-card-text)",
-        }}
-      />
-      <div
-        style={{
-          position: "absolute",
-          top: 3,
-          right: 3,
-          width: 10,
-          height: 10,
-          borderTop: "1px solid var(--faction-singularity-card-text)",
-          borderRight: "1px solid var(--faction-singularity-card-text)",
-        }}
-      />
-      <div
-        style={{
-          position: "absolute",
-          bottom: 3,
-          left: 3,
-          width: 10,
-          height: 10,
-          borderBottom: "1px solid var(--faction-singularity-card-text)",
-          borderLeft: "1px solid var(--faction-singularity-card-text)",
-        }}
-      />
-      <div
-        style={{
-          position: "absolute",
-          bottom: 3,
-          right: 3,
-          width: 10,
-          height: 10,
-          borderBottom: "1px solid var(--faction-singularity-card-text)",
-          borderRight: "1px solid var(--faction-singularity-card-text)",
-        }}
-      />
+      <div style={scanlineStyle} />
+      <div style={cornerTopLeft} />
+      <div style={cornerTopRight} />
+      <div style={cornerBottomLeft} />
+      <div style={cornerBottomRight} />
       <SingularityHoles />
       <div
         style={{ padding: "var(--space-sm) var(--space-lg) var(--space-md)", position: "relative", zIndex: 2 }}

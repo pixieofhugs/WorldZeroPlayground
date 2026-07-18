@@ -73,8 +73,10 @@ const CSS_KEY: Record<string, string> = {
   singularity: "singularity",
   albescent: "albescent", // first-class (#232) — its own --faction-albescent-* set
   // `na` (unaffiliated) is a state, not a faction: it reads the neutral/rainbow
-  // --faction-default-* set (#418). Scalars resolve to grey here; the spectrum
-  // reaches fills only through factionFill() (ADR-0039).
+  // --faction-default-* set (#418), so factionCssVar('na') is grey, never a
+  // borrowed `ua` orange. The spectrum reaches fills through factionFill(), and
+  // ornament surfaces reach it by branching on isKnownFaction — which returns
+  // false for `na` precisely because it lands on `default` (ADR-0039, #749).
   na: "default",
 };
 
@@ -172,15 +174,22 @@ export function factionFill(
 /**
  * Is this slug a real faction with its own theme?
  *
- * Needed because factionCssVar() silently falls back to the `ua` theme for
- * anything it doesn't know — including `na` and null. Surfaces that owe the
- * unaffiliated player the spectrum rather than borrowed orange (ADR-0039) must
- * branch *before* asking for a faction variable. Aliases resolve first, so a
- * derived slug counts as known.
+ * Needed because factionCssVar() resolves anything it doesn't know — including
+ * `na` and null — to the `default` key, whose scalars are neutral grey. Surfaces
+ * that owe the unaffiliated player the spectrum (ADR-0039) must branch *before*
+ * asking for a faction variable, then reach for the rainbow themselves
+ * (`--faction-default-rainbow` / `--faction-default-ring`, or factionFill()).
+ *
+ * `na` IS a key in CSS_KEY (it maps to `default`, #418) but is deliberately not
+ * "known" here: membership means "has a resolvable theme", and `default` is the
+ * absence of a faction identity rather than one of them. Testing the mapped
+ * value, not key presence, is what keeps those two meanings apart — presence
+ * alone reported `na` as a real faction and turned every unaffiliated ornament
+ * grey (#749). Aliases resolve first, so a derived slug counts as known.
  */
 export function isKnownFaction(slug: string | null | undefined): boolean {
   const resolved = FACTION_ALIASES[slug ?? ""] ?? slug ?? "";
-  return resolved in CSS_KEY;
+  return resolved in CSS_KEY && CSS_KEY[resolved] !== "default";
 }
 
 /** Get faction color by slug, with fallback (raw hex — light mode only) */
