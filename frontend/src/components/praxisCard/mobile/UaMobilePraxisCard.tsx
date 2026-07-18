@@ -41,7 +41,7 @@ export default function UaMobilePraxisCard({ praxis }: { praxis: PraxisCardOut }
             gap: 8,
             marginBottom: 12,
             fontFamily: "'Marcellus SC', serif",
-            fontSize: 9,
+            fontSize: 'var(--text-sm)',
             letterSpacing: '0.14em',
             textTransform: 'uppercase',
             color: factionCssVar('ua', 'card-accent'),
