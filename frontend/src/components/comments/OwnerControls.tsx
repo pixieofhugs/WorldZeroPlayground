@@ -159,7 +159,7 @@ export function OwnerControls({ owner }: { owner: OwnerEdit }) {
           alignItems: 'baseline',
           flexWrap: 'wrap',
           gap: 6,
-          fontSize: 11,
+          fontSize: 'var(--text-content)',
         }}
       >
         <span style={{ color: 'var(--color-text-tertiary)' }}>
@@ -250,7 +250,7 @@ export function CommentEditor({
         onCancel={owner.cancelEdit}
       />
       {owner.error && (
-        <p style={{ fontSize: 11, color: 'var(--color-danger)', marginTop: 4 }}>{owner.error}</p>
+        <p style={{ fontSize: 'var(--text-content)', color: 'var(--color-danger)', marginTop: 4 }}>{owner.error}</p>
       )}
     </div>
   )

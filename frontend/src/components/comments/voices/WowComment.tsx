@@ -20,6 +20,7 @@ function Window({ title, children }: { title: string; children: React.ReactNode 
     <div style={{ border: '2px solid var(--faction-wow-win-border)', borderRadius: 11, overflow: 'hidden' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '6px 10px', background: 'linear-gradient(180deg, var(--faction-wow-title-from), var(--faction-wow-title-to))', borderBottom: '2px solid var(--faction-wow-win-border)' }}>
         <Dot color="#fb7aa8" /><Dot color="#f6c75e" /><Dot color="#86cfa6" />
+        {/* ornament: window title bar + close glyphs, part of the desktop-window illustration */}
         <span style={{ fontSize: 10, letterSpacing: '0.03em', color: 'var(--faction-wow-title-text)', marginLeft: 2 }}>✦ {title}</span>
         <span style={{ marginLeft: 'auto', fontSize: 10, opacity: 0.8, letterSpacing: '1.5px', color: 'var(--faction-wow-title-text)' }}>▭ ✕</span>
       </div>
@@ -53,14 +54,14 @@ export default function WowComment(props: CommentProps) {
       <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
         <FactionAvatar character={authorToCharacter(comment.author)} size="sm" />
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ fontFamily: 'var(--faction-wow-card-font)', fontSize: 20, lineHeight: 1.25, color: 'var(--faction-wow-card-text)' }}>
+          <div style={{ fontFamily: 'var(--faction-wow-card-font)', fontSize: 'var(--text-content)', lineHeight: 1.25, color: 'var(--faction-wow-card-text)' }}>
             {owner.editing ? (
               <CommentEditor owner={owner} accent="var(--faction-wow-card-accent)" bg="var(--faction-wow-notepad-bg)" text="var(--faction-wow-card-text)" />
             ) : (
               <MentionText body={comment.body_text} mentions={comment.mentions} accent="var(--faction-wow-card-accent)" />
             )}
           </div>
-          <div style={{ marginTop: 6, fontSize: 11, color: 'var(--faction-wow-card-accent)', letterSpacing: '0.04em', display: 'inline-flex', alignItems: 'baseline', flexWrap: 'wrap', gap: 6 }}>
+          <div style={{ marginTop: 6, fontSize: 'var(--text-md)', color: 'var(--faction-wow-card-accent)', letterSpacing: '0.04em', display: 'inline-flex', alignItems: 'baseline', flexWrap: 'wrap', gap: 6 }}>
             <Link to={`/characters/${comment.author.id}`} style={{ color: 'inherit', textDecoration: 'none' }}>
               @{comment.author.username}
             </Link>

@@ -68,7 +68,7 @@ export function DefaultComment(props: CommentProps) {
           >
             {comment.author.display_name}
           </Link>
-          <span style={{ fontSize: 11, color: 'var(--color-text-tertiary)' }}>
+          <span style={{ fontSize: 'var(--text-md)', color: 'var(--color-text-tertiary)' }}>
             {formatCommentTime(slug, comment.created_at)}
             {comment.is_edited ? ` · ${t('comments.edited')}` : ''}
           </span>
@@ -199,12 +199,12 @@ export default function CommentThread({
         {t('comments.heading', { count: comments.length })}
       </h3>
       {loading && (
-        <p className="font-body" style={{ fontSize: 12, color: 'var(--color-text-tertiary)' }}>
+        <p className="font-body content-text" style={{ color: 'var(--color-text-tertiary)' }}>
           {t('comments.loading')}
         </p>
       )}
       {error && (
-        <p className="font-body" style={{ fontSize: 12, color: 'var(--color-danger)' }}>
+        <p className="font-body content-text" style={{ color: 'var(--color-danger)' }}>
           {error}
         </p>
       )}

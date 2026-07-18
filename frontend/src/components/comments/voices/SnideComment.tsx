@@ -65,7 +65,7 @@ export default function SnideComment(props: CommentProps) {
         <div style={{ position: 'relative', display: 'flex', gap: 11, alignItems: 'flex-start' }}>
           <FactionAvatar character={character} size="sm" />
           <div style={{ flex: 1 }}>
-            <div style={{ fontFamily: 'var(--faction-snide-font-marker)', color: 'var(--faction-snide-pink)', fontSize: 11, transform: 'rotate(-1deg)', marginBottom: 6 }}>
+            <div style={{ fontFamily: 'var(--faction-snide-font-marker)', color: 'var(--faction-snide-pink)', /* ornament: rotated marker scrawl */ fontSize: 11, transform: 'rotate(-1deg)', marginBottom: 6 }}>
               {t('comments.snide.prompt')}
             </div>
             <ComposerControls value={value} onChange={onChange} onSubmit={onSubmit} submitting={submitting} accent="var(--faction-snide-pink)" bg="rgba(255,255,255,0.04)" text="var(--faction-snide-card-text)" />
@@ -87,14 +87,14 @@ export default function SnideComment(props: CommentProps) {
             <Link to={`/characters/${comment.author.id}`} style={{ textDecoration: 'none' }}>
               <Ransom text={comment.author.display_name} size={16} />
             </Link>
-            <span style={{ fontFamily: 'var(--font-body)', fontSize: 10, color: 'var(--faction-snide-card-muted)', whiteSpace: 'nowrap', display: 'inline-flex', alignItems: 'baseline', gap: 8 }}>
+            <span style={{ fontFamily: 'var(--font-body)', fontSize: 'var(--text-base)', color: 'var(--faction-snide-card-muted)', whiteSpace: 'nowrap', display: 'inline-flex', alignItems: 'baseline', gap: 8 }}>
               {formatCommentTime(slug, comment.created_at)}
               {comment.is_edited ? ` · ${t('comments.snide.edited')}` : ''}
               <OwnerControls owner={owner} />
               <CommentFlagControl comment={comment} />
             </span>
           </div>
-          <div style={{ fontFamily: 'var(--faction-snide-font-cond)', textTransform: 'uppercase', fontSize: 15, lineHeight: 1.4, letterSpacing: '0.02em' }}>
+          <div style={{ fontFamily: 'var(--faction-snide-font-cond)', textTransform: 'uppercase', fontSize: 'var(--text-content)', lineHeight: 1.4, letterSpacing: '0.02em' }}>
             {owner.editing ? (
               <CommentEditor owner={owner} accent="var(--faction-snide-pink)" bg="rgba(255,255,255,0.04)" text="var(--faction-snide-card-text)" />
             ) : (
