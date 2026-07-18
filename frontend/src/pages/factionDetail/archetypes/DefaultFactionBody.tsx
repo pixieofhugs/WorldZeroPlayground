@@ -48,7 +48,7 @@ export default function DefaultFactionBody({
           {t("detail.default.membersHeading", { total: members.length })}
         </h2>
         {members.length === 0 ? (
-          <p className="font-body text-muted text-sm">{t("detail.membersEmpty")}</p>
+          <p className="font-body text-muted content-text">{t("detail.membersEmpty")}</p>
         ) : (
           <div className="flex flex-wrap gap-3">
             {members.map((m) => (
@@ -73,7 +73,7 @@ export default function DefaultFactionBody({
           {t("detail.default.tasksHeading", { total: tasks.length })}
         </h2>
         {tasks.length === 0 ? (
-          <p className="font-body text-muted text-sm">{t("detail.default.tasksEmpty")}</p>
+          <p className="font-body text-muted content-text">{t("detail.default.tasksEmpty")}</p>
         ) : (
           <div style={CARD_GRID}>
             {tasks.map((task) => (
@@ -96,7 +96,7 @@ export default function DefaultFactionBody({
       <section className="mb-8">
         <h2 className="eyebrow mb-3">{t("detail.default.recentHeading")}</h2>
         {recentPraxis.length === 0 ? (
-          <p className="font-body text-muted text-sm">
+          <p className="font-body text-muted content-text">
             {t("detail.default.recentEmpty")}
           </p>
         ) : (

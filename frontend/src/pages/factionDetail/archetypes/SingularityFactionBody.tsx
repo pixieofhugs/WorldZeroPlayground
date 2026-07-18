@@ -70,43 +70,45 @@ const PANEL: CSSProperties = {
   border: `1px solid ${signal(42)}`,
 };
 
+const SECTION_HEADING_ROW: CSSProperties = {
+  display: "flex",
+  alignItems: "center",
+  gap: 12,
+  marginBottom: 6,
+};
+
+const SECTION_HEADING_TEXT: CSSProperties = {
+  fontFamily: FONT,
+  // ornament: the terminal's banner cut, a step above the content ramp.
+  fontSize: 28,
+  letterSpacing: "0.04em",
+  margin: 0,
+  color: PHOSPHOR,
+  textTransform: "uppercase",
+  whiteSpace: "nowrap",
+};
+
 /** Section heading — uppercase phosphor title trailing a signal rule. */
 function SectionHeading({ children }: { children: ReactNode }) {
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 6 }}>
-      <h2
-        style={{
-          fontFamily: FONT,
-          fontSize: 28,
-          letterSpacing: "0.04em",
-          margin: 0,
-          color: PHOSPHOR,
-          textTransform: "uppercase",
-          whiteSpace: "nowrap",
-        }}
-      >
-        {children}
-      </h2>
+    <div style={SECTION_HEADING_ROW}>
+      <h2 style={SECTION_HEADING_TEXT}>{children}</h2>
       <span style={{ flex: 1, height: 1, minWidth: 30, background: signal(30) }} />
     </div>
   );
 }
 
+const KICKER: CSSProperties = {
+  fontFamily: FONT,
+  fontSize: "var(--text-xs)",
+  letterSpacing: "0.24em",
+  textTransform: "uppercase",
+  color: phosphor(40),
+  marginBottom: 18,
+};
+
 function Kicker({ children }: { children: ReactNode }) {
-  return (
-    <div
-      style={{
-        fontFamily: FONT,
-        fontSize: 7.5,
-        letterSpacing: "0.24em",
-        textTransform: "uppercase",
-        color: phosphor(40),
-        marginBottom: 18,
-      }}
-    >
-      {children}
-    </div>
-  );
+  return <div style={KICKER}>{children}</div>;
 }
 
 const initial = (name: string) => name.trim().charAt(0).toUpperCase() || "?";
@@ -165,7 +167,7 @@ export default function SingularityFactionBody({ state }: { state: FactionDetail
             style={{
               position: "relative",
               fontFamily: FONT,
-              fontSize: 9,
+              fontSize: "var(--text-sm)",
               letterSpacing: "0.14em",
               color: signal(55),
               marginBottom: 14,
@@ -178,9 +180,9 @@ export default function SingularityFactionBody({ state }: { state: FactionDetail
               paragraphs.map((para, i) => (
                 <p
                   key={i}
+                  className="content-text"
                   style={{
                     fontFamily: FONT,
-                    fontSize: 11.5,
                     lineHeight: 1.8,
                     color: phosphor(72),
                     margin: 0,
@@ -190,7 +192,7 @@ export default function SingularityFactionBody({ state }: { state: FactionDetail
                 </p>
               ))
             ) : (
-              <p style={{ fontFamily: FONT, fontSize: 11.5, lineHeight: 1.8, color: phosphor(45), margin: 0 }}>
+              <p className="content-text" style={{ fontFamily: FONT, lineHeight: 1.8, color: phosphor(45), margin: 0 }}>
                 {t("singularity.manifest.empty")}
               </p>
             )}
@@ -202,7 +204,7 @@ export default function SingularityFactionBody({ state }: { state: FactionDetail
           <SectionHeading>{t("singularity.tasks.heading")}</SectionHeading>
           <Kicker>{t("singularity.tasks.kicker")}</Kicker>
           {tasks.length === 0 ? (
-            <p style={{ fontFamily: FONT, fontSize: 11, color: phosphor(45) }}>
+            <p className="content-text" style={{ fontFamily: FONT, color: phosphor(45) }}>
               {t("singularity.tasks.empty")}
             </p>
           ) : (
@@ -228,7 +230,7 @@ export default function SingularityFactionBody({ state }: { state: FactionDetail
           <SectionHeading>{t("singularity.praxis.heading")}</SectionHeading>
           <Kicker>{t("singularity.praxis.kicker")}</Kicker>
           {recentPraxis.length === 0 ? (
-            <p style={{ fontFamily: FONT, fontSize: 11, color: phosphor(45) }}>
+            <p className="content-text" style={{ fontFamily: FONT, color: phosphor(45) }}>
               {t("singularity.praxis.empty")}
             </p>
           ) : (
@@ -273,7 +275,7 @@ export default function SingularityFactionBody({ state }: { state: FactionDetail
               <span
                 style={{
                   fontFamily: FONT,
-                  fontSize: 11,
+                  fontSize: "var(--text-md)",
                   letterSpacing: "0.22em",
                   textTransform: "uppercase",
                   color: VOID,
@@ -281,7 +283,7 @@ export default function SingularityFactionBody({ state }: { state: FactionDetail
               >
                 {t("singularity.access.heading")}
               </span>
-              <span style={{ fontFamily: FONT, fontSize: 8, letterSpacing: "0.1em", color: phosphor(60) }}>
+              <span style={{ fontFamily: FONT, fontSize: "var(--text-xs)", letterSpacing: "0.1em", color: phosphor(60) }}>
                 {t("singularity.access.reLabel")}
               </span>
             </div>
@@ -290,10 +292,11 @@ export default function SingularityFactionBody({ state }: { state: FactionDetail
               <div style={{ position: "relative" }}>
                 {membership.state === "member" && (
                   <div>
+                    {/* ornament: terminal display title. */}
                     <div style={{ fontFamily: FONT, fontSize: 22, lineHeight: 1, color: PHOSPHOR, letterSpacing: "0.04em" }}>
                       {t("singularity.access.memberTitle")}
                     </div>
-                    <div style={{ fontFamily: FONT, fontSize: 10, color: signal(60), margin: "10px 0 0", letterSpacing: "0.04em" }}>
+                    <div style={{ fontFamily: FONT, fontSize: "var(--text-base)", color: signal(60), margin: "10px 0 0", letterSpacing: "0.04em" }}>
                       <Trans t={t} i18nKey="singularity.access.memberStanding">
                         array · <span style={{ color: SIGNAL }}>online</span>
                       </Trans>
@@ -303,13 +306,14 @@ export default function SingularityFactionBody({ state }: { state: FactionDetail
 
                 {membership.state === "eligible" && !confirming && (
                   <div>
-                    <div style={{ fontFamily: FONT, fontSize: 8, letterSpacing: "0.2em", color: signal(50), marginBottom: 7 }}>
+                    <div style={{ fontFamily: FONT, fontSize: "var(--text-xs)", letterSpacing: "0.2em", color: signal(50), marginBottom: 7 }}>
                       {t("singularity.access.eligibleKicker")}
                     </div>
+                    {/* ornament: terminal display title. */}
                     <div style={{ fontFamily: FONT, fontSize: 22, lineHeight: 1.05, color: PHOSPHOR, letterSpacing: "0.03em", marginBottom: 10 }}>
                       {t("singularity.access.eligibleTitle")}
                     </div>
-                    <div style={{ fontFamily: FONT, fontSize: 10, lineHeight: 1.65, color: phosphor(60), marginBottom: 18 }}>
+                    <div className="content-text" style={{ fontFamily: FONT, lineHeight: 1.65, color: phosphor(60), marginBottom: 18 }}>
                       {t("singularity.access.eligibleBody")}
                     </div>
                     <button
@@ -317,7 +321,7 @@ export default function SingularityFactionBody({ state }: { state: FactionDetail
                       style={{
                         width: "100%",
                         fontFamily: FONT,
-                        fontSize: 11,
+                        fontSize: "var(--text-md)",
                         letterSpacing: "0.14em",
                         textTransform: "uppercase",
                         color: VOID,
@@ -335,7 +339,7 @@ export default function SingularityFactionBody({ state }: { state: FactionDetail
 
                 {membership.state === "eligible" && confirming && (
                   <div>
-                    <div style={{ fontFamily: FONT, fontSize: 10, lineHeight: 1.7, color: phosphor(72), marginBottom: 14 }}>
+                    <div className="content-text" style={{ fontFamily: FONT, lineHeight: 1.7, color: phosphor(72), marginBottom: 14 }}>
                       {membership.currentFactionSlug &&
                       membership.currentFactionSlug !== "na"
                         ? t("detail.join.confirmSwitch", {
@@ -345,7 +349,7 @@ export default function SingularityFactionBody({ state }: { state: FactionDetail
                         : t("detail.join.confirm", { faction: factionName(faction.slug) })}
                     </div>
                     {membership.joinError && (
-                      <div style={{ fontFamily: FONT, fontSize: 9, color: "var(--color-danger)", marginBottom: 8 }}>
+                      <div className="content-text" style={{ fontFamily: FONT, color: "var(--color-danger)", marginBottom: 8 }}>
                         {membership.joinError}
                       </div>
                     )}
@@ -356,7 +360,7 @@ export default function SingularityFactionBody({ state }: { state: FactionDetail
                         style={{
                           flex: 1,
                           fontFamily: FONT,
-                          fontSize: 10,
+                          fontSize: "var(--text-base)",
                           letterSpacing: "0.12em",
                           textTransform: "uppercase",
                           color: VOID,
@@ -375,7 +379,7 @@ export default function SingularityFactionBody({ state }: { state: FactionDetail
                         disabled={membership.joining}
                         style={{
                           fontFamily: FONT,
-                          fontSize: 8,
+                          fontSize: "var(--text-xs)",
                           letterSpacing: "0.16em",
                           textTransform: "uppercase",
                           color: signal(60),
@@ -393,13 +397,14 @@ export default function SingularityFactionBody({ state }: { state: FactionDetail
 
                 {membership.state === "gate" && (
                   <div>
-                    <div style={{ fontFamily: FONT, fontSize: 8, letterSpacing: "0.2em", color: signal(50), marginBottom: 7 }}>
+                    <div style={{ fontFamily: FONT, fontSize: "var(--text-xs)", letterSpacing: "0.2em", color: signal(50), marginBottom: 7 }}>
                       {t("singularity.access.gateKicker")}
                     </div>
+                    {/* ornament: terminal display title. */}
                     <div style={{ fontFamily: FONT, fontSize: 20, lineHeight: 1.1, color: PHOSPHOR, letterSpacing: "0.03em", marginBottom: 11 }}>
                       {t("singularity.access.gateTitle", { faction: factionName(faction.slug) })}
                     </div>
-                    <div style={{ fontFamily: FONT, fontSize: 10, lineHeight: 1.7, color: phosphor(60) }}>
+                    <div className="content-text" style={{ fontFamily: FONT, lineHeight: 1.7, color: phosphor(60) }}>
                       {t("singularity.access.gateBody")}
                     </div>
                   </div>
@@ -423,16 +428,16 @@ export default function SingularityFactionBody({ state }: { state: FactionDetail
                 }}
               >
                 <Scanlines opacity={0.014} />
-                <div style={{ position: "relative", fontFamily: FONT, fontSize: 7, letterSpacing: "0.28em", color: phosphor(45), marginBottom: 12 }}>
+                <div style={{ position: "relative", fontFamily: FONT, fontSize: "var(--text-xs)", letterSpacing: "0.28em", color: phosphor(45), marginBottom: 12 }}>
                   {t("singularity.spotlight.label")}
                 </div>
                 <div style={{ position: "relative", display: "flex", justifyContent: "center", marginBottom: 12 }}>
                   <NodeGlyph name={spot.display_name} size={72} />
                 </div>
-                <div style={{ position: "relative", fontFamily: FONT, fontSize: 24, lineHeight: 1, color: PHOSPHOR, letterSpacing: "0.03em" }}>
+                <div className="content-title" style={{ position: "relative", fontFamily: FONT, lineHeight: 1, color: PHOSPHOR, letterSpacing: "0.03em" }}>
                   {spot.display_name}
                 </div>
-                <div style={{ position: "relative", fontFamily: FONT, fontSize: 8, letterSpacing: "0.1em", color: signal(55), marginTop: 6, textTransform: "uppercase" }}>
+                <div style={{ position: "relative", fontFamily: FONT, fontSize: "var(--text-xs)", letterSpacing: "0.1em", color: signal(55), marginTop: 6, textTransform: "uppercase" }}>
                   {t("singularity.spotlight.stat", {
                     level: spot.level,
                     score: spot.all_time_score.toLocaleString(),
@@ -444,11 +449,11 @@ export default function SingularityFactionBody({ state }: { state: FactionDetail
 
           <div style={{ ...PANEL, padding: "16px 16px 12px" }}>
             <Scanlines />
-            <div style={{ position: "relative", fontFamily: FONT, fontSize: 7, letterSpacing: "0.24em", textTransform: "uppercase", color: phosphor(40), marginBottom: 12 }}>
+            <div style={{ position: "relative", fontFamily: FONT, fontSize: "var(--text-xs)", letterSpacing: "0.24em", textTransform: "uppercase", color: phosphor(40), marginBottom: 12 }}>
               {t("singularity.roster.heading")}
             </div>
             {array.length === 0 ? (
-              <p style={{ position: "relative", fontFamily: FONT, fontSize: 11, color: phosphor(45) }}>
+              <p className="content-text" style={{ position: "relative", fontFamily: FONT, color: phosphor(45) }}>
                 {spot
                   ? t("singularity.roster.emptyWithSpotlight")
                   : t("singularity.roster.empty")}
@@ -471,9 +476,9 @@ export default function SingularityFactionBody({ state }: { state: FactionDetail
                   <NodeGlyph name={m.display_name} size={30} />
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div
+                      className="content-text"
                       style={{
                         fontFamily: FONT,
-                        fontSize: 12,
                         color: PHOSPHOR,
                         lineHeight: 1.1,
                         letterSpacing: "0.03em",
@@ -485,7 +490,7 @@ export default function SingularityFactionBody({ state }: { state: FactionDetail
                       {m.display_name}
                     </div>
                   </div>
-                  <span style={{ fontFamily: FONT, fontSize: 10, color: AMBER, letterSpacing: "0.04em" }}>
+                  <span style={{ fontFamily: FONT, fontSize: "var(--text-base)", color: AMBER, letterSpacing: "0.04em" }}>
                     {t("singularity.roster.level", { level: m.level })}
                   </span>
                 </Link>

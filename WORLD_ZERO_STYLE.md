@@ -161,7 +161,31 @@ Both scales are **global, not per-faction**. A faction picks a headline font, a 
 
 **Not covered by the rule:** ornament geometry (`width`/`height`/`top`/`inset` on decorative marks, sprocket holes, tape strips, corner brackets) is illustration, not layout spacing, and stays in raw pixels.
 
-**Enforcement.** The `local/no-raw-style-values` ESLint rule fails the build on a raw numeric `fontSize`/`padding`/`margin`/`gap` in an inline style. Files not yet migrated are grandfathered in `frontend/.eslint-legacy-raw-styles.txt`. **That list only ever shrinks** — migrating a file means deleting its line; no file may ever be added to it.
+### The ornament escape hatch
+
+Some type is illustration rather than text: a marker scrawl, a stamp, a tape label, a punch-card header, a condensed poster face, hand-lettering on a pinned index card. It carries a raw pixel size on purpose, because rounding it to the nearest token would flatten one archetype into another. §6's "do not regularize card sizes" applies to type too.
+
+The test is what the size is *doing*, not how big it is. Display-face type whose optical size is not the text scale is ornament even at 13px; anything a player actually reads is content even at 30px. **When you are genuinely unsure, it is ornament** — the content-text floor is a rule about reading, not about every number in the file.
+
+Ornament that keeps a raw value must say so **at the site**, so the exemption is legible to the next reader instead of hiding behind a filename in a list. This is a **two-phase** state, because a file's `fontSize` axis and its spacing axis migrate on different schedules (#623 and #750):
+
+**Phase 1 — file still grandfathered (the rule is off for it).** Annotate with a plain comment. An `eslint-disable` directive here would be an *unused* directive, since the rule never fires on a listed file:
+
+```js
+// ornament: hand-lettered Caveat — handwriting on the board, not typeset copy.
+fontSize: 19,
+```
+
+**Phase 2 — file delisted (the rule is on for it).** The comment becomes the directive, and the exemption turns per-line and self-documenting instead of per-file and invisible:
+
+```js
+// eslint-disable-next-line local/no-raw-style-values -- ornament: hand-lettered Caveat.
+fontSize: 19,
+```
+
+A file only moves to phase 2 when it is clean on **both** axes — no un-annotated raw `fontSize` *and* no raw `padding`/`margin`/`gap`. Tokenizing only the type leaves it in phase 1.
+
+**Enforcement.** The `local/no-raw-style-values` ESLint rule fails the build on a raw numeric `fontSize`/`padding`/`margin`/`gap` in an inline style. Files not yet migrated are grandfathered in `frontend/.eslint-legacy-raw-styles.txt`. **That list only ever shrinks** — migrating a file means deleting its line; no file may ever be added to it. The hatch above is what keeps that literally true: ornament is not a permanent residue on the list, it is a per-line directive on a delisted file. The list reaches **empty** when #750 (the spacing sweep) closes and the last file moves to phase 2.
 
 ---
 
