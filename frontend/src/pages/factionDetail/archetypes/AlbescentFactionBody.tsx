@@ -32,15 +32,15 @@ const MONO = "var(--faction-albescent-mono)"; // Courier Prime
 const CARD_GRID: CSSProperties = {
   display: "flex",
   flexWrap: "wrap",
-  gap: "1rem",
+  gap: "var(--space-lg)",
   alignItems: "flex-start",
 };
 
 /** White archival sheet with an inset architectural hairline. */
 function Sheet({ children }: { children: ReactNode }) {
   return (
-    <div style={{ background: SURFACE, border: `1px solid ${BORDER}`, marginBottom: 20 }}>
-      <div style={{ margin: 6, border: `1px solid ${BORDER_FAINT}`, padding: "20px 22px" }}>
+    <div style={{ background: SURFACE, border: `1px solid ${BORDER}`, marginBottom: "var(--space-xl)" }}>
+      <div style={{ margin: "var(--space-sm)", border: `1px solid ${BORDER_FAINT}`, padding: "var(--space-xl)" }}>
         {children}
       </div>
     </div>
@@ -49,7 +49,7 @@ function Sheet({ children }: { children: ReactNode }) {
 
 function SectionHeading({ kicker, title, count }: { kicker: string; title: string; count?: number }) {
   return (
-    <div style={{ marginBottom: 16 }}>
+    <div style={{ marginBottom: "var(--space-lg)" }}>
       <div
         style={{
           fontFamily: MONO,
@@ -57,24 +57,34 @@ function SectionHeading({ kicker, title, count }: { kicker: string; title: strin
           letterSpacing: "0.26em",
           textTransform: "uppercase",
           color: FAINT,
-          marginBottom: 7,
+          marginBottom: "var(--space-sm)",
         }}
       >
         {kicker}
         {count !== undefined ? ` · ${count}` : ""}
       </div>
-      {/* ornament: the archive's light italic plate cut, a step above the content ramp. */}
-      <h2 style={{ fontFamily: FONT, fontStyle: "italic", fontWeight: 300, fontSize: 26, lineHeight: 1, color: INK, margin: 0 }}>
+      <h2
+        style={{
+          fontFamily: FONT,
+          fontStyle: "italic",
+          fontWeight: 300,
+          // eslint-disable-next-line local/no-raw-style-values -- ornament: the archive's light italic plate cut, a step above the content ramp.
+          fontSize: 26,
+          lineHeight: 1,
+          color: INK,
+          margin: "0",
+        }}
+      >
         {title}
       </h2>
-      <div style={{ height: 1, width: 56, background: BORDER, marginTop: 12 }} />
+      <div style={{ height: 1, width: 56, background: BORDER, marginTop: "var(--space-md)" }} />
     </div>
   );
 }
 
 function Quiet({ children }: { children: ReactNode }) {
   return (
-    <p className="content-text" style={{ fontFamily: FONT, fontStyle: "italic", color: MUTED, margin: 0 }}>
+    <p className="content-text" style={{ fontFamily: FONT, fontStyle: "italic", color: MUTED, margin: "0" }}>
       {children}
     </p>
   );
@@ -101,7 +111,7 @@ export default function AlbescentFactionBody({ state }: { state: FactionDetailSt
         ) : (
           <div className="flex flex-wrap gap-3">
             {members.map((m) => (
-              <div key={m.id} style={{ border: `1px solid ${BORDER_FAINT}`, padding: "6px 10px", background: SURFACE }}>
+              <div key={m.id} style={{ border: `1px solid ${BORDER_FAINT}`, padding: "var(--space-sm) var(--space-md)", background: SURFACE }}>
                 <CharacterBadge character={m} size="sm" />
               </div>
             ))}
