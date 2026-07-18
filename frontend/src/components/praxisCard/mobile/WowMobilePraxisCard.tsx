@@ -21,7 +21,13 @@ export default function WowMobilePraxisCard({ praxis }: { praxis: PraxisCardOut 
     bodyFont: "'Courier Prime', monospace",
   }
   return (
-    <div style={{ position: 'relative', paddingTop: 8 }}>
+    <div
+      style={{
+        position: 'relative',
+        // eslint-disable-next-line local/no-raw-style-values -- ornament: clearance for the rotated scrap-tape strip below (top: 2, height: 26); stays in register with that raw geometry.
+        paddingTop: 8,
+      }}
+    >
       <div
         style={{
           position: 'absolute',
@@ -39,7 +45,7 @@ export default function WowMobilePraxisCard({ praxis }: { praxis: PraxisCardOut 
           position: 'relative',
           background: factionCssVar('wow', 'card-bg'),
           border: '1.5px solid rgba(0,0,0,0.12)',
-          padding: '18px 16px 14px',
+          padding: 'var(--space-lg)',
           zIndex: 2,
         }}
       >
@@ -59,8 +65,8 @@ export default function WowMobilePraxisCard({ praxis }: { praxis: PraxisCardOut 
           style={{
             display: 'flex',
             alignItems: 'center',
-            gap: 6,
-            marginBottom: 12,
+            gap: 'var(--space-sm)',
+            marginBottom: 'var(--space-md)',
             fontFamily: "'Courier Prime', monospace",
             fontSize: 'var(--text-sm)',
             letterSpacing: '0.14em',

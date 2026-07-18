@@ -25,7 +25,7 @@ export default function EverymenMobilePraxisCard({ praxis }: { praxis: PraxisCar
         color: factionCssVar('everymen', 'card-text'),
         border: '1px solid var(--color-border)',
         borderLeft: `4px solid ${factionCssVar('everymen', 'card-accent')}`,
-        padding: '16px 16px 14px 22px',
+        padding: 'var(--space-lg) var(--space-lg) var(--space-lg) var(--space-xl)',
         backgroundImage:
           'repeating-linear-gradient(to bottom, transparent, transparent 17px, rgba(100,140,200,0.08) 17px, rgba(100,140,200,0.08) 18px)',
       }}

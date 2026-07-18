@@ -90,9 +90,9 @@ export function MobileByline({
   const { t } = useTranslation('praxis')
   const name = praxis.created_by_display_name || `#${praxis.created_by_id}`
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+    <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-md)' }}>
       <AvatarInitial name={name} theme={theme} />
-      <span style={{ display: 'flex', flexDirection: 'column', minWidth: 0, gap: 1 }}>
+      <span style={{ display: 'flex', flexDirection: 'column', minWidth: 0, gap: 'var(--space-xs)' }}>
         <Link
           to={`/characters/${praxis.created_by_id}`}
           className="hover:underline"
@@ -233,7 +233,7 @@ export function MobileRoster({
     members.map((member) => ({ display_name: member.character_display_name })),
   )
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+    <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-sm)', flexWrap: 'wrap' }}>
       <span style={{ display: 'inline-flex' }}>
         {names.map((name, index) => (
           <span key={index} style={{ marginLeft: index === 0 ? 0 : -8 }}>
@@ -280,11 +280,11 @@ export function MobileModeChip({
     fontSize: 'var(--text-sm)',
     letterSpacing: '0.14em',
     textTransform: 'uppercase',
-    padding: '2px 8px',
+    padding: 'var(--space-xs) var(--space-sm)',
     borderRadius: 3,
   }
   return (
-    <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+    <div style={{ display: 'flex', gap: 'var(--space-sm)', flexWrap: 'wrap' }}>
       {isDuel && (
         <span
           style={{
@@ -332,7 +332,7 @@ export function MobileMediaGallery({
   const tiles = items.slice(0, 3)
   const overflow = items.length - tiles.length
   return (
-    <div style={{ display: 'flex', gap: 6 }}>
+    <div style={{ display: 'flex', gap: 'var(--space-sm)' }}>
       {tiles.map((item, index) => {
         const isLast = index === tiles.length - 1
         const showOverflow = isLast && overflow > 0
@@ -364,12 +364,12 @@ export function MobileMediaGallery({
                   display: 'flex',
                   flexDirection: 'column',
                   alignItems: 'center',
-                  gap: 2,
+                  gap: 'var(--space-xs)',
                   color: theme.accent,
                   fontFamily: theme.bodyFont,
                 }}
               >
-                {/* ornament: dingbat glyph used as a media-type icon, not text */}
+                {/* eslint-disable-next-line local/no-raw-style-values -- ornament: dingbat glyph used as a media-type icon, not text */}
                 <span aria-hidden style={{ fontSize: 20, lineHeight: 1 }}>
                   {item.type === 'video' ? '▶' : '♪'}
                 </span>
@@ -469,7 +469,7 @@ export function MobilePraxisBody({
   theme: MobileSlotTheme
 }) {
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-md)' }}>
       {praxis.is_top_for_task && (
         <TaskCrown
           size={30}
@@ -481,14 +481,14 @@ export function MobilePraxisBody({
       )}
       <MobileByline praxis={praxis} theme={theme} />
       <MobileTaskRef praxis={praxis} theme={theme} />
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-sm)' }}>
         <MobileTitle praxis={praxis} theme={theme} />
         <MobileBody praxis={praxis} theme={theme} />
       </div>
       <MobileModeChip praxis={praxis} theme={theme} />
       <MobileRoster praxis={praxis} theme={theme} />
       <MobileMediaGallery praxis={praxis} theme={theme} />
-      <div style={{ borderTop: `1px solid ${theme.accent}`, paddingTop: 10 }}>
+      <div style={{ borderTop: `1px solid ${theme.accent}`, paddingTop: 'var(--space-md)' }}>
         <MobileVotedByMarker praxis={praxis} theme={theme} />
         <MobileVoteFooter praxis={praxis} />
       </div>

@@ -21,22 +21,29 @@ export default function DefaultMobilePraxisCard({ praxis }: { praxis: PraxisCard
     bodyFont: "'Courier Prime', monospace",
   }
   return (
-    <div style={{ borderRadius: 10, padding: 4, background: 'var(--faction-default-rainbow)' }}>
+    <div
+      style={{
+        borderRadius: 10,
+        // eslint-disable-next-line local/no-raw-style-values -- ornament: the padding IS the rainbow frame drawn around the card — a border width, not a gutter.
+        padding: 4,
+        background: 'var(--faction-default-rainbow)',
+      }}
+    >
       <div
         style={{
           position: 'relative',
           background: 'var(--faction-default-card-bg)',
           color: 'var(--faction-default-card-text)',
           borderRadius: 6,
-          padding: '16px',
+          padding: 'var(--space-lg)',
         }}
       >
         <div
           style={{
             display: 'flex',
             alignItems: 'center',
-            gap: 8,
-            marginBottom: 12,
+            gap: 'var(--space-sm)',
+            marginBottom: 'var(--space-md)',
             fontFamily: "'Courier Prime', monospace",
             fontSize: 'var(--text-sm)',
             letterSpacing: '0.2em',

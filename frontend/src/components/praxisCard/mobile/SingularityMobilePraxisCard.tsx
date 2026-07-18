@@ -25,7 +25,7 @@ export default function SingularityMobilePraxisCard({ praxis }: { praxis: Praxis
         background: 'var(--faction-singularity-card-bg)',
         border: '1px solid var(--faction-singularity-border-hard)',
         color: 'var(--faction-singularity-card-text)',
-        padding: '16px',
+        padding: 'var(--space-lg)',
         overflow: 'hidden',
       }}
     >
@@ -43,7 +43,7 @@ export default function SingularityMobilePraxisCard({ praxis }: { praxis: Praxis
       <div style={{ position: 'relative', zIndex: 2 }}>
         <div
           style={{
-            marginBottom: 12,
+            marginBottom: 'var(--space-md)',
             fontFamily: "'Share Tech Mono', monospace",
             fontSize: 'var(--text-sm)',
             letterSpacing: '0.15em',
@@ -57,7 +57,7 @@ export default function SingularityMobilePraxisCard({ praxis }: { praxis: Praxis
               display: 'inline-block',
               width: 5,
               height: 9,
-              marginLeft: 4,
+              marginLeft: 'var(--space-xs)',
               background: 'var(--faction-singularity-card-text)',
               verticalAlign: 'middle',
               animation: 'blink 1s step-end infinite',
