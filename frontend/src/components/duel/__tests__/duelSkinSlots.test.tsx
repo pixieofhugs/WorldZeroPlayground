@@ -18,8 +18,13 @@
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, it, expect, vi } from 'vitest'
 import '../../../i18n'
+import type { ComponentType } from 'react'
 import type { GameConfigOut, FactionConfigOut } from '../../../api/gameConfig'
 import type { DuelDetailOut, DuelSideOut } from '../../../api/duel'
+// Type-only, so these are erased before the vi.mock hoist and can't defeat the
+// dynamic imports below.
+import type { DuelSealConfirmProps } from '../DuelSealConfirm'
+import type { DuelRailSkinProps } from '../../../pages/praxisDetail/DuelCrossLink'
 
 function faction(slug: string, win: number, lose: number): FactionConfigOut {
   return {
@@ -71,11 +76,16 @@ const DUEL = {
 } as unknown as DuelDetailOut
 
 describe('duel seal skins render every slot', () => {
-  const skins = [
+  // Annotated as a tuple array rather than `as const`: the spreads widen to
+  // (string | ComponentType)[] otherwise, and it.each then can't match the
+  // two-arg callback signature.
+  const skins: [string, ComponentType<DuelSealConfirmProps>][] = [
     ['default', DefaultDuelSealConfirm],
     ...Object.entries(DUEL_SEAL_BY_SLUG),
-    ...Object.entries(MOBILE_DUEL_SEAL_BY_SLUG).map(([slug, skin]) => [`${slug} (mobile)`, skin]),
-  ] as const
+    ...Object.entries(MOBILE_DUEL_SEAL_BY_SLUG).map(
+      ([slug, skin]) => [`${slug} (mobile)`, skin] as [string, ComponentType<DuelSealConfirmProps>],
+    ),
+  ]
 
   it.each(skins)('%s keeps stakes, roster and actions', (_name, Skin) => {
     const html = renderToStaticMarkup(
@@ -101,11 +111,13 @@ describe('duel seal skins render every slot', () => {
 })
 
 describe('duel rail skins render every slot', () => {
-  const skins = [
+  const skins: [string, ComponentType<DuelRailSkinProps>][] = [
     ['default', DefaultDuelRail],
     ...Object.entries(DUEL_RAIL_BY_SLUG),
-    ...Object.entries(MOBILE_DUEL_RAIL_BY_SLUG).map(([slug, skin]) => [`${slug} (mobile)`, skin]),
-  ] as const
+    ...Object.entries(MOBILE_DUEL_RAIL_BY_SLUG).map(
+      ([slug, skin]) => [`${slug} (mobile)`, skin] as [string, ComponentType<DuelRailSkinProps>],
+    ),
+  ]
 
   it.each(skins)('%s passes headline, tally, note and body through', (_name, Skin) => {
     const html = renderToStaticMarkup(
