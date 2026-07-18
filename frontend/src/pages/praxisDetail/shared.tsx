@@ -17,6 +17,8 @@ import { Link } from 'react-router-dom'
 import { reframeLabel } from '../../components/vote/voteReframes'
 import { TaskCrown } from '../../components/cards/TaskCrown'
 import { CollabRoster } from '../../components/collab/CollabRoster'
+import { duelSides, formatPoints, useDuelStakes } from '../../components/duel/shared'
+import type { DuelDetailOut } from '../../api/duel'
 import type { PraxisDetailState } from './usePraxisDetail'
 import type { PraxisMemberOut, PraxisOut } from '../../api/praxis'
 import type { VoteSummary } from '../../api/votes'
@@ -308,10 +310,52 @@ export function PraxisStatusBanners({ state }: { state: PraxisDetailState }) {
 
 // ── Owner actions ─────────────────────────────────────────────────────────────
 
+/**
+ * The cost line on a settled duel's unsubmit confirm (#718).
+ *
+ * Its own component so the stakes hook runs unconditionally, below
+ * PraxisOwnerActions' early returns. Figures come from the same `useDuelStakes`
+ * the rail and the seal dialog use, so a Snide duelist is correctly told they
+ * keep 0 rather than some invented "half".
+ */
+function ForfeitCostLine({
+  duel,
+  viewerCharacterId,
+  taskPointValue,
+}: {
+  duel: DuelDetailOut
+  viewerCharacterId: number | null | undefined
+  taskPointValue: number | null | undefined
+}) {
+  const { t } = useTranslation('praxis')
+  const { me, foe } = duelSides(duel, viewerCharacterId)
+  const stakes = useDuelStakes(me.faction_slug, foe.faction_slug, taskPointValue)
+  return (
+    <span className="font-body" style={{ fontSize: 'var(--text-xs)', color: 'var(--color-danger)' }}>
+      {t('duelForfeit.confirmPrompt')}{' '}
+      {stakes &&
+        t('duelForfeit.cost', {
+          name: foe.display_name,
+          points: formatPoints(stakes.lose),
+          win: formatPoints(stakes.win),
+        })}
+    </span>
+  )
+}
+
 export function PraxisOwnerActions({ state }: { state: PraxisDetailState }) {
   const { t } = useTranslation('praxis')
-  const { praxis, isOwner, user, withdrawing, showWithdrawConfirm, setShowWithdrawConfirm, withdrawError, handleWithdraw, handleResubmit } = state
+  const { praxis, isOwner, user, duel, withdrawing, showWithdrawConfirm, setShowWithdrawConfirm, withdrawError, handleWithdraw, handleResubmit } = state
   if (!praxis || !isOwner) return null
+
+  // A SETTLED duel side's quiet unsubmit is a permanent forfeit (ADR-0011
+  // §Forfeit; the backend only forfeits at `status == settled`) — escalate the
+  // existing two-step confirm rather than adding a control (#718). During
+  // `active` it stays exactly as-is: until the opponent casts, pulling back is a
+  // free neutral reopen with no penalty, and warning about one would be a lie.
+  // Fixed at this choke point deliberately: PraxisOwnerActions is the only path
+  // to unsubmit on the detail page, so it catches anyone who never read the rail.
+  const forfeitsOnUnsubmit = duel?.status === 'settled' && duel.forfeited_by_character_id == null
 
   // On a collab that hasn't gone live yet, a member who has already submitted
   // waits on their co-authors — swap their green Submit control for a waiting
@@ -346,18 +390,22 @@ export function PraxisOwnerActions({ state }: { state: PraxisDetailState }) {
             </button>
           )
         ) : !showWithdrawConfirm ? (
-          <button onClick={() => setShowWithdrawConfirm(true)} className="font-body eyebrow" style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-text-tertiary)' }}>
-            {t('detail.owner.unsubmit')}
+          <button onClick={() => setShowWithdrawConfirm(true)} className="font-body eyebrow" style={{ background: 'none', border: 'none', cursor: 'pointer', color: forfeitsOnUnsubmit ? 'var(--color-danger)' : 'var(--color-text-tertiary)' }}>
+            {forfeitsOnUnsubmit ? t('duelForfeit.action') : t('detail.owner.unsubmit')}
           </button>
         ) : (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-            <span className="eyebrow" style={{ color: 'var(--color-text-tertiary)' }}>{t('detail.owner.confirmPrompt')}</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+            {forfeitsOnUnsubmit && duel ? (
+              <ForfeitCostLine duel={duel} viewerCharacterId={user?.character?.id} taskPointValue={praxis.task_point_value} />
+            ) : (
+              <span className="eyebrow" style={{ color: 'var(--color-text-tertiary)' }}>{t('detail.owner.confirmPrompt')}</span>
+            )}
             <button
               onClick={handleWithdraw}
               disabled={withdrawing}
               style={{ background: 'rgba(220,38,38,0.1)', border: '1.5px solid var(--color-danger)', color: 'var(--color-danger)', fontFamily: "'Courier Prime', monospace", fontSize: 'var(--text-sm)', textTransform: 'uppercase', padding: '3px 10px', cursor: 'pointer', borderRadius: 0 }}
             >
-              {withdrawing ? t('detail.owner.submitting') : t('detail.owner.confirmUnsubmit')}
+              {withdrawing ? t('detail.owner.submitting') : forfeitsOnUnsubmit ? t('duelForfeit.action') : t('detail.owner.confirmUnsubmit')}
             </button>
             <button onClick={() => setShowWithdrawConfirm(false)} className="btn-outline" style={{ fontSize: 'var(--text-sm)', padding: '3px 10px' }}>{t('detail.owner.cancel')}</button>
           </div>

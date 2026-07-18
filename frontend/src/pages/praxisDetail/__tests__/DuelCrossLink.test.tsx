@@ -120,4 +120,48 @@ describe("DuelCrossLink", () => {
     const t = text(duel({ forfeited_by_character_id: ME.character_id }));
     expect(t).toMatch(/You forfeited/i);
   });
+
+  // ── #718 rail content ──────────────────────────────────────────────────────
+  // The rail grew from a one-liner to a roster + next-step line + stakes. The
+  // stakes slot self-hides until the game config loads (it never does under
+  // SSR), so these assert the roster and next-step halves.
+
+  it("active: names who has cast and who is still walking", () => {
+    const t = text(
+      duel({
+        status: "active",
+        challenger: { ...ME, is_submitted: true },
+        opponent: { ...FOE, is_submitted: false },
+      }),
+    );
+    expect(t).toMatch(/sealed/i);
+    expect(t).toMatch(/still walking/i);
+  });
+
+  it("active, my side uncast: the next step is mine", () => {
+    const t = text(
+      duel({
+        status: "active",
+        challenger: { ...ME, is_submitted: false },
+        opponent: { ...FOE, is_submitted: false },
+      }),
+    );
+    expect(t).toMatch(/Cast your praxis to seal the duel/i);
+  });
+
+  it("active, my side cast: the next step is theirs", () => {
+    const t = text(
+      duel({
+        status: "active",
+        challenger: { ...ME, is_submitted: true },
+        opponent: { ...FOE, is_submitted: false },
+      }),
+    );
+    expect(t).toMatch(/Waiting for Bob/i);
+  });
+
+  it("declined: stops at the verdict — no roster, no race to run", () => {
+    const t = text(duel({ status: "declined", opponent: UNANSWERED_FOE }));
+    expect(t).not.toMatch(/sealed|still walking/i);
+  });
 });

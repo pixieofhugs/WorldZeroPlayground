@@ -714,7 +714,16 @@ export function PublishButton({
               : "castAction",
         )
       : skin.idleLabel;
-  const onClick = collab?.iCast ? state.pullBack : state.publish;
+  // A duel side asks before it casts (#718): the button opens the seal
+  // confirmation, whose confirm calls this same `publish()`. Only once an
+  // opponent is actually attached — duel mode with an empty opponent slot casts
+  // as an ordinary solo praxis, so there is nothing to warn about.
+  const sealsADuel = state.duelMode && state.duel != null;
+  const onClick = collab?.iCast
+    ? state.pullBack
+    : sealsADuel
+      ? async () => state.requestDuelSeal()
+      : state.publish;
   return (
     <button
       type="button"
