@@ -1,6 +1,4 @@
 ﻿src/components/AlbescentInvitation.tsx
-src/components/InvitationLetterPopup.tsx
-src/components/LevelUpPopup.tsx
 src/pages/characterPaths/mobileArchetypes/DefaultCreateCharacter.tsx
 src/pages/characterPaths/mobileArchetypes/DefaultEditCharacter.tsx
 src/pages/characterProfile/archetypes/AlbescentProfileBody.tsx
