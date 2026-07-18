@@ -77,21 +77,21 @@ export default function DefaultTaskDetail({
       </nav>
 
       {/* ── Two-Column Layout ── */}
-      <div style={{ display: "flex", gap: 24, alignItems: "flex-start" }}>
+      <div style={{ display: "flex", gap: "var(--space-xl)", alignItems: "flex-start" }}>
         {/* ── Main Column ── */}
         <div style={{ flex: 1, minWidth: 0 }}>
           {/* ── Task Hero Block ── */}
           <div
             className="sidebar-card mb-5"
-            style={{ borderLeft: `4px solid ${color}`, padding: "18px 22px" }}
+            style={{ borderLeft: `4px solid ${color}`, padding: "var(--space-lg) var(--space-xl)" }}
           >
             {/* Faction pennant + status + level */}
             <div
               style={{
                 display: "flex",
                 alignItems: "center",
-                gap: 8,
-                marginBottom: 10,
+                gap: "var(--space-sm)",
+                marginBottom: "var(--space-md)",
               }}
             >
               <DefaultSigil size={20} />
@@ -106,7 +106,7 @@ export default function DefaultTaskDetail({
                   fontWeight: 700,
                   textTransform: "uppercase",
                   letterSpacing: "0.07em",
-                  padding: "3px 14px",
+                  padding: "var(--space-xs) var(--space-lg)",
                   textShadow: "0 1px 2px rgba(0,0,0,0.3)",
                 }}
               >
@@ -118,7 +118,7 @@ export default function DefaultTaskDetail({
                   fontSize: "var(--text-xs)",
                   textTransform: "uppercase",
                   letterSpacing: "0.1em",
-                  padding: "2px 8px",
+                  padding: "var(--space-xs) var(--space-sm)",
                   borderRadius: 4,
                   background:
                     task.status === "active"
@@ -139,7 +139,7 @@ export default function DefaultTaskDetail({
                     fontSize: "var(--text-xs)",
                     textTransform: "uppercase",
                     letterSpacing: "0.15em",
-                    padding: "2px 8px",
+                    padding: "var(--space-xs) var(--space-sm)",
                     borderRadius: 4,
                     fontWeight: 700,
                     textShadow: "0 1px 2px rgba(0,0,0,0.3)",
@@ -159,7 +159,7 @@ export default function DefaultTaskDetail({
               style={{
                 color: "var(--color-text-primary)",
                 lineHeight: 1.2,
-                marginBottom: task.task_type === "metatask" ? 4 : 12,
+                marginBottom: task.task_type === "metatask" ? "var(--space-xs)" : "var(--space-md)",
               }}
             >
               {task.title}
@@ -170,7 +170,7 @@ export default function DefaultTaskDetail({
               <p
                 className="eyebrow"
                 style={{
-                  marginBottom: 12,
+                  marginBottom: "var(--space-md)",
                   color: factionCssVar(task.metatask_faction_slug),
                 }}
               >
@@ -185,8 +185,8 @@ export default function DefaultTaskDetail({
               style={{
                 display: "grid",
                 gridTemplateColumns: `repeat(${showMultiplierTile ? 5 : 4}, 1fr)`,
-                gap: 8,
-                marginBottom: 16,
+                gap: "var(--space-sm)",
+                marginBottom: "var(--space-lg)",
               }}
             >
               {[
@@ -243,7 +243,7 @@ export default function DefaultTaskDetail({
 
           {/* ── Signup Block ── */}
           {canSignUp && (
-            <div className="sidebar-card mb-5" style={{ padding: "16px 20px" }}>
+            <div className="sidebar-card mb-5" style={{ padding: "var(--space-lg) var(--space-xl)" }}>
               <button
                 onClick={handleSignup}
                 style={{
@@ -255,7 +255,7 @@ export default function DefaultTaskDetail({
                   fontWeight: 700,
                   textTransform: "uppercase",
                   letterSpacing: "0.15em",
-                  padding: "10px 20px",
+                  padding: "var(--space-md) var(--space-xl)",
                   border: "none",
                   cursor: "pointer",
                   position: "relative",
@@ -275,7 +275,7 @@ export default function DefaultTaskDetail({
               <div
                 className="eyebrow"
                 style={{
-                  marginTop: 6,
+                  marginTop: "var(--space-sm)",
                   display: "flex",
                   justifyContent: "space-between",
                 }}
@@ -300,8 +300,8 @@ export default function DefaultTaskDetail({
                   style={{
                     fontSize: "var(--text-md)",
                     color: "var(--color-danger)",
-                    marginTop: 8,
-                    padding: "8px 12px",
+                    marginTop: "var(--space-sm)",
+                    padding: "var(--space-sm) var(--space-md)",
                     background: "rgba(220,38,38,0.06)",
                     border: "1px solid rgba(220,38,38,0.2)",
                   }}
@@ -317,10 +317,10 @@ export default function DefaultTaskDetail({
             <div
               className="sidebar-card mb-5"
               style={{
-                padding: "16px 20px",
+                padding: "var(--space-lg) var(--space-xl)",
                 display: "flex",
                 alignItems: "center",
-                gap: 10,
+                gap: "var(--space-md)",
               }}
             >
               <div
@@ -328,10 +328,10 @@ export default function DefaultTaskDetail({
                   background: "var(--faction-default-light)",
                   border: "1.5px solid var(--faction-default-border)",
                   borderRadius: 8,
-                  padding: "8px 16px",
+                  padding: "var(--space-sm) var(--space-lg)",
                   display: "flex",
                   alignItems: "center",
-                  gap: 8,
+                  gap: "var(--space-sm)",
                   flex: 1,
                 }}
               >
@@ -348,7 +348,7 @@ export default function DefaultTaskDetail({
               <Link
                 to={`/praxes/${mySubmission.id}/edit`}
                 className="btn-outline"
-                style={{ fontSize: "var(--text-xs)", padding: "4px 12px" }}
+                style={{ fontSize: "var(--text-xs)", padding: "var(--space-xs) var(--space-md)" }}
               >
                 {t("default.submitted.edit")}
               </Link>
@@ -359,10 +359,10 @@ export default function DefaultTaskDetail({
             <div
               className="sidebar-card mb-5"
               style={{
-                padding: "16px 20px",
+                padding: "var(--space-lg) var(--space-xl)",
                 display: "flex",
                 alignItems: "center",
-                gap: 10,
+                gap: "var(--space-md)",
               }}
             >
               <div
@@ -370,10 +370,10 @@ export default function DefaultTaskDetail({
                   background: "var(--faction-default-light)",
                   border: "1.5px solid var(--faction-default-border)",
                   borderRadius: 8,
-                  padding: "8px 16px",
+                  padding: "var(--space-sm) var(--space-lg)",
                   display: "flex",
                   alignItems: "center",
-                  gap: 8,
+                  gap: "var(--space-sm)",
                   flex: 1,
                 }}
               >
@@ -397,7 +397,7 @@ export default function DefaultTaskDetail({
                   fontWeight: 700,
                   textTransform: "uppercase",
                   letterSpacing: "0.12em",
-                  padding: "8px 18px",
+                  padding: "var(--space-sm) var(--space-lg)",
                   textDecoration: "none",
                   position: "relative",
                 }}
@@ -434,7 +434,7 @@ export default function DefaultTaskDetail({
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "space-between",
-                marginBottom: 12,
+                marginBottom: "var(--space-md)",
               }}
             >
               <span className="eyebrow">
@@ -451,7 +451,7 @@ export default function DefaultTaskDetail({
                       fontWeight: 700,
                       textTransform: "uppercase",
                       letterSpacing: "0.1em",
-                      padding: "4px 10px",
+                      padding: "var(--space-xs) var(--space-md)",
                       background:
                         submissionSort === sort
                           ? "var(--color-text-primary)"
@@ -482,7 +482,7 @@ export default function DefaultTaskDetail({
                   ))}
                 </div>
                 {submissions.length > 4 && (
-                  <div style={{ textAlign: "center", marginTop: 16 }}>
+                  <div style={{ textAlign: "center", marginTop: "var(--space-lg)" }}>
                     <Link
                       to={`/praxes?task_id=${task.id}`}
                       style={{
@@ -512,7 +512,7 @@ export default function DefaultTaskDetail({
               {t("default.playersInProgress", { count: signups.length })}
             </p>
             <div
-              style={{ display: "flex", flexDirection: "column", gap: 6 }}
+              style={{ display: "flex", flexDirection: "column", gap: "var(--space-sm)" }}
             >
               {signups.slice(0, VISIBLE_SIGNUPS).map((signup) => {
                 const isFriend = friends.has(signup.character_id);
@@ -523,8 +523,8 @@ export default function DefaultTaskDetail({
                     style={{
                       display: "flex",
                       alignItems: "center",
-                      gap: 8,
-                      padding: "4px 0",
+                      gap: "var(--space-sm)",
+                      padding: "var(--space-xs) 0",
                     }}
                   >
                     <Link to={`/characters/${signup.character_id}`}>
@@ -574,7 +574,7 @@ export default function DefaultTaskDetail({
             {signups.length > VISIBLE_SIGNUPS && (
               <p
                 className="eyebrow"
-                style={{ marginTop: 6, color: "var(--color-text-tertiary)" }}
+                style={{ marginTop: "var(--space-sm)", color: "var(--color-text-tertiary)" }}
               >
                 {t("default.moreSignups", {
                   count: signups.length - VISIBLE_SIGNUPS,

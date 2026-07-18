@@ -60,7 +60,7 @@ export default function DefaultTaskDetail({ state }: { state: TaskDetailState })
       </nav>
 
       {/* Hero */}
-      <div className="sidebar-card mb-4" style={{ borderLeft: `4px solid ${color}`, padding: "16px 18px" }}>
+      <div className="sidebar-card mb-4" style={{ borderLeft: `4px solid ${color}`, padding: "var(--space-lg) var(--space-lg)" }}>
         <div className="flex items-center gap-2 mb-2">
           <DefaultSigil size={18} />
           <span className="eyebrow" style={{ color }}>{factionName(task.primary_faction_slug)}</span>
@@ -117,7 +117,7 @@ export default function DefaultTaskDetail({ state }: { state: TaskDetailState })
                   fontWeight: 700,
                   textTransform: "uppercase",
                   letterSpacing: "0.1em",
-                  padding: "5px 12px",
+                  padding: "var(--space-xs) var(--space-md)",
                   background: submissionSort === sort ? "var(--color-text-primary)" : "transparent",
                   color: submissionSort === sort ? "var(--color-bg-page)" : "var(--color-text-tertiary)",
                   border: `1px solid ${submissionSort === sort ? "transparent" : "var(--color-border)"}`,
@@ -140,7 +140,7 @@ export default function DefaultTaskDetail({ state }: { state: TaskDetailState })
               ))}
             </div>
             {submissions.length > 4 && (
-              <div style={{ textAlign: "center", marginTop: 16 }}>
+              <div style={{ textAlign: "center", marginTop: "var(--space-lg)" }}>
                 <Link
                   to={`/praxes?task_id=${task.id}`}
                   style={{ fontFamily: "'Courier Prime', monospace", fontSize: "var(--text-md)", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", color: "var(--faction-ephemerists)", textDecoration: "none" }}
@@ -159,7 +159,7 @@ export default function DefaultTaskDetail({ state }: { state: TaskDetailState })
           {signupError && (
             <div
               className="font-body"
-              style={{ fontSize: "var(--text-lg)", color: "var(--color-danger)", padding: "8px 12px", background: "var(--faction-default-light)", border: "1px solid var(--color-border)" }}
+              style={{ fontSize: "var(--text-lg)", color: "var(--color-danger)", padding: "var(--space-sm) var(--space-md)", background: "var(--faction-default-light)", border: "1px solid var(--color-border)" }}
             >
               {signupError}
             </div>
@@ -175,7 +175,7 @@ export default function DefaultTaskDetail({ state }: { state: TaskDetailState })
               fontWeight: 700,
               textTransform: "uppercase",
               letterSpacing: "0.12em",
-              padding: "14px 20px",
+              padding: "var(--space-lg) var(--space-xl)",
               border: "none",
               cursor: "pointer",
             }}
@@ -191,14 +191,14 @@ export default function DefaultTaskDetail({ state }: { state: TaskDetailState })
       {mySubmission && (
         <MobileStickyBar style={{ flexDirection: "row", alignItems: "center" }}>
           <span className="eyebrow flex-1" style={{ color }}>{t("default.submitted.badge")}</span>
-          <Link to={`/praxes/${mySubmission.id}/edit`} className="btn-outline" style={{ fontSize: "var(--text-sm)", padding: "8px 18px" }}>
+          <Link to={`/praxes/${mySubmission.id}/edit`} className="btn-outline" style={{ fontSize: "var(--text-sm)", padding: "var(--space-sm) var(--space-lg)" }}>
             {t("default.submitted.edit")}
           </Link>
         </MobileStickyBar>
       )}
 
       {!mySubmission && isInProgress && inProgressPraxisId !== null && (
-        <MobileStickyBar style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
+        <MobileStickyBar style={{ flexDirection: "row", alignItems: "center", gap: "var(--space-md)" }}>
           <button
             onClick={handleDrop}
             className="eyebrow"
@@ -217,7 +217,7 @@ export default function DefaultTaskDetail({ state }: { state: TaskDetailState })
               fontWeight: 700,
               textTransform: "uppercase",
               letterSpacing: "0.1em",
-              padding: "12px 20px",
+              padding: "var(--space-md) var(--space-xl)",
               textDecoration: "none",
             }}
           >

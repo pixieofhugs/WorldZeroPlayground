@@ -42,19 +42,25 @@ export default function DefaultFactionPage({ state }: { state: FactionDetailStat
       <section
         style={{
           borderRadius: 14,
-          padding: '20px 16px',
+          padding: 'var(--space-xl) var(--space-lg)',
           background: color,
           color: 'var(--color-text-on-accent)',
         }}
       >
-        {/* ornament: masthead display type — the hero wordmark is the skin's identity (§4/§270). */}
-        <h1 className="font-display italic font-medium" style={{ fontSize: 26, lineHeight: 1.1 }}>
+        <h1
+          className="font-display italic font-medium"
+          style={{
+            // eslint-disable-next-line local/no-raw-style-values -- ornament: masthead display type — the hero wordmark is the skin's identity (§4/§270).
+            fontSize: 26,
+            lineHeight: 1.1,
+          }}
+        >
           {name}
         </h1>
-        <p className="font-body content-text" style={{ opacity: 0.92, marginTop: 5, lineHeight: 1.5 }}>
+        <p className="font-body content-text" style={{ opacity: 0.92, marginTop: 'var(--space-xs)', lineHeight: 1.5 }}>
           {factionDescription(faction.slug)}
         </p>
-        <div style={{ display: 'flex', gap: 20, marginTop: 15 }}>
+        <div style={{ display: 'flex', gap: 'var(--space-xl)', marginTop: 'var(--space-lg)' }}>
           <HeroStat value={members.length} label={t('mobile.membersStat')} />
           <HeroStat value={tasks.length} label={t('mobile.tasksStat')} />
         </div>
@@ -63,7 +69,7 @@ export default function DefaultFactionPage({ state }: { state: FactionDetailStat
       {membership.state === 'member' && (
         <p
           className="eyebrow"
-          style={{ marginTop: 12, color: factionCssVar(faction.slug, 'border') }}
+          style={{ marginTop: 'var(--space-md)', color: factionCssVar(faction.slug, 'border') }}
         >
           {t('mobile.memberBadge')}
         </p>
@@ -124,7 +130,7 @@ export default function DefaultFactionPage({ state }: { state: FactionDetailStat
                   ? t('detail.join.confirmSwitch', { faction: name, current: factionName(currentSlug) })
                   : t('detail.join.confirm', { faction: name })}
               </p>
-              <div style={{ display: 'flex', gap: 8 }}>
+              <div style={{ display: 'flex', gap: 'var(--space-sm)' }}>
                 <button
                   type="button"
                   onClick={() => void membership.join()}
@@ -146,7 +152,7 @@ export default function DefaultFactionPage({ state }: { state: FactionDetailStat
                     background: 'transparent',
                     border: '1px solid var(--color-border-strong)',
                     borderRadius: 999,
-                    padding: '10px 16px',
+                    padding: 'var(--space-md) var(--space-lg)',
                     cursor: 'pointer',
                   }}
                 >
@@ -171,7 +177,7 @@ const JOIN_BUTTON_STYLE = {
   background: 'var(--color-text-primary)',
   border: 'none',
   borderRadius: 999,
-  padding: '13px 16px',
+  padding: 'var(--space-md) var(--space-lg)',
   cursor: 'pointer',
 } as const
 
@@ -212,8 +218,8 @@ function MemberRow({
       style={{
         display: 'flex',
         alignItems: 'center',
-        gap: 12,
-        padding: '10px 14px',
+        gap: 'var(--space-md)',
+        padding: 'var(--space-md) var(--space-lg)',
         textDecoration: 'none',
       }}
     >

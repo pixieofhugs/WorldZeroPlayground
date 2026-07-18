@@ -82,7 +82,7 @@ function Seal({ name, size }: { name: string; size: number }) {
 
 function SectionHead({ children }: { children: ReactNode }) {
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
+    <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-md)', marginBottom: 'var(--space-md)' }}>
       <span style={{ fontFamily: ACCENT_FONT, fontSize: 'var(--text-content)', letterSpacing: '0.04em', color: INK, whiteSpace: 'nowrap' }}>
         {children}
       </span>
@@ -99,7 +99,7 @@ const joinButton: CSSProperties = {
   color: CREAM,
   background: RED,
   border: `2px solid ${INK}`,
-  padding: '13px 16px',
+  padding: 'var(--space-md) var(--space-lg)',
   cursor: 'pointer',
 }
 
@@ -111,7 +111,7 @@ const cancelButton: CSSProperties = {
   color: MUTED,
   background: PAPER_DEEP,
   border: `1.5px solid ${INK}`,
-  padding: '11px 16px',
+  padding: 'var(--space-md) var(--space-lg)',
   cursor: 'pointer',
 }
 
@@ -131,20 +131,30 @@ export default function EverymenFactionPage({ state }: { state: FactionDetailSta
     <div data-skin="everymen" className="py-4" style={{ fontFamily: BODY_FONT, color: INK, background: PAPER }} data-testid="mobile-faction-page">
       {/* Hero — union masthead billboard */}
       <section style={{ border: `3px solid ${INK}`, background: RED, color: CREAM, overflow: 'hidden' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: INK, color: GOLD, padding: '8px 14px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-sm)', background: INK, color: GOLD, padding: 'var(--space-sm) var(--space-lg)' }}>
           <CogSeal size={16} />
           <span style={{ ...kicker, color: CREAM }}>{t('everymen.mobile.eyebrow')}</span>
         </div>
         <div style={{ height: 4, background: GOLD }} />
-        <div style={{ padding: '20px 18px' }}>
-          {/* ornament: masthead display type — the sign-painted title is the skin's identity (§4/§270). */}
-          <h1 style={{ fontFamily: ACCENT_FONT, fontSize: 40, lineHeight: 0.92, letterSpacing: '0.01em', color: CREAM, textShadow: `2px 2px 0 ${INK}`, margin: 0 }}>
+        <div style={{ padding: 'var(--space-xl) var(--space-lg)' }}>
+          <h1
+            style={{
+              fontFamily: ACCENT_FONT,
+              // eslint-disable-next-line local/no-raw-style-values -- ornament: masthead display type — the sign-painted title is the skin's identity (§4/§270).
+              fontSize: 40,
+              lineHeight: 0.92,
+              letterSpacing: '0.01em',
+              color: CREAM,
+              textShadow: `2px 2px 0 ${INK}`,
+              margin: 0,
+            }}
+          >
             {name}
           </h1>
-          <p className="content-text" style={{ fontFamily: BODY_FONT, lineHeight: 1.6, color: CREAM, margin: '10px 0 0' }}>
+          <p className="content-text" style={{ fontFamily: BODY_FONT, lineHeight: 1.6, color: CREAM, margin: 'var(--space-md) 0 0' }}>
             {factionDescription(faction.slug)}
           </p>
-          <div style={{ display: 'flex', gap: 8, marginTop: 15 }}>
+          <div style={{ display: 'flex', gap: 'var(--space-sm)', marginTop: 'var(--space-lg)' }}>
             <HeroStat value={members.length} label={t('mobile.membersStat')} />
             <HeroStat value={tasks.length} label={t('mobile.tasksStat')} />
           </div>
@@ -152,7 +162,7 @@ export default function EverymenFactionPage({ state }: { state: FactionDetailSta
       </section>
 
       {membership.state === 'member' && (
-        <p style={{ ...kicker, marginTop: 12, color: RED }}>{t('mobile.memberBadge')}</p>
+        <p style={{ ...kicker, marginTop: 'var(--space-md)', color: RED }}>{t('mobile.memberBadge')}</p>
       )}
 
       {/* Top members */}
@@ -184,7 +194,7 @@ export default function EverymenFactionPage({ state }: { state: FactionDetailSta
       </section>
 
       {membership.state === 'gate' && (
-        <p className="content-text" style={{ fontFamily: BODY_FONT, color: MUTED, marginTop: 24 }}>
+        <p className="content-text" style={{ fontFamily: BODY_FONT, color: MUTED, marginTop: 'var(--space-xl)' }}>
           {t('mobile.gateHint', { faction: name })}
         </p>
       )}
@@ -206,7 +216,7 @@ export default function EverymenFactionPage({ state }: { state: FactionDetailSta
                   ? t('detail.join.confirmSwitch', { faction: name, current: factionName(currentSlug) })
                   : t('detail.join.confirm', { faction: name })}
               </p>
-              <div style={{ display: 'flex', gap: 8 }}>
+              <div style={{ display: 'flex', gap: 'var(--space-sm)' }}>
                 <button
                   type="button"
                   onClick={() => void membership.join()}
@@ -234,11 +244,11 @@ export default function EverymenFactionPage({ state }: { state: FactionDetailSta
 
 function HeroStat({ value, label }: { value: number; label: string }) {
   return (
-    <div style={{ flex: '1 1 0', textAlign: 'center', background: INK, border: `1.5px solid ${GOLD}`, padding: '10px 6px' }}>
+    <div style={{ flex: '1 1 0', textAlign: 'center', background: INK, border: `1.5px solid ${GOLD}`, padding: 'var(--space-md) var(--space-sm)' }}>
       <b className="content-title" style={{ fontFamily: ACCENT_FONT, display: 'block', lineHeight: 0.9, color: GOLD }}>
         {value}
       </b>
-      <span style={{ ...kicker, marginTop: 5, display: 'block', color: CREAM }}>{label}</span>
+      <span style={{ ...kicker, marginTop: 'var(--space-xs)', display: 'block', color: CREAM }}>{label}</span>
     </div>
   )
 }
@@ -251,8 +261,8 @@ function MemberRow({ rank, member }: { rank: number; member: CharacterOut }) {
       style={{
         display: 'flex',
         alignItems: 'center',
-        gap: 12,
-        padding: '10px 14px',
+        gap: 'var(--space-md)',
+        padding: 'var(--space-md) var(--space-lg)',
         background: PAPER,
         border: `2px solid ${INK}`,
         borderLeft: `5px solid ${RED}`,

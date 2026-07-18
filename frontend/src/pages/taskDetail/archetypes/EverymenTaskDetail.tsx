@@ -79,8 +79,8 @@ function SectionHead({
       style={{
         display: "flex",
         alignItems: "center",
-        gap: 14,
-        marginBottom: 18,
+        gap: "var(--space-lg)",
+        marginBottom: "var(--space-lg)",
       }}
     >
       <h2 className="content-title" style={sectionH2}>{title}</h2>
@@ -103,7 +103,7 @@ function HandsRow({
   const { t } = useTranslation("tasks");
   return (
     <div
-      style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}
+      style={{ display: "flex", alignItems: "center", gap: "var(--space-md)", flexWrap: "wrap" }}
     >
       {signups.map((hand) => {
         const rel = relationOf(hand.character_id, friends, foes);
@@ -176,7 +176,7 @@ function HandsRow({
           letterSpacing: "0.1em",
           textTransform: "uppercase",
           color: MUTED,
-          marginLeft: 4,
+          marginLeft: "var(--space-xs)",
         }}
       >
         {t("everymen.onTheJob")}
@@ -244,14 +244,14 @@ export default function EverymenTaskDetail({
         <Link to="/tasks" style={{ color: RED, textDecoration: "none" }}>
           {t("everymen.breadcrumb")}
         </Link>
-        <span style={{ opacity: 0.5, margin: "0 8px" }}>›</span>
+        <span style={{ opacity: 0.5, margin: "0 var(--space-sm)" }}>›</span>
         <span>{t("everymen.faction")}</span>
-        <span style={{ opacity: 0.5, margin: "0 8px" }}>›</span>
+        <span style={{ opacity: 0.5, margin: "0 var(--space-sm)" }}>›</span>
         <span style={{ color: RED }}>{task.title}</span>
       </nav>
 
       <div style={{ maxWidth: 920 }}>
-        <div style={{ display: "flex", flexDirection: "column", gap: 30 }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-2xl)" }}>
           {/* ── HERO — union billboard ── */}
           <div
             style={{
@@ -291,17 +291,17 @@ export default function EverymenTaskDetail({
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "space-between",
-                gap: 12,
+                gap: "var(--space-md)",
                 flexWrap: "wrap",
                 background: INK,
-                padding: "9px 20px",
+                padding: "var(--space-sm) var(--space-xl)",
               }}
             >
               <div
                 style={{
                   display: "flex",
                   alignItems: "center",
-                  gap: 10,
+                  gap: "var(--space-md)",
                   color: GOLD,
                 }}
               >
@@ -323,7 +323,7 @@ export default function EverymenTaskDetail({
                   textTransform: "uppercase",
                   color: CREAM,
                   border: `1.5px solid ${GOLD}`,
-                  padding: "3px 10px",
+                  padding: "var(--space-xs) var(--space-md)",
                 }}
               >
                 {statusVoice}
@@ -338,7 +338,7 @@ export default function EverymenTaskDetail({
               }}
             />
             <div
-              style={{ position: "relative", zIndex: 2, padding: "30px 34px 32px" }}
+              style={{ position: "relative", zIndex: 2, padding: "var(--space-2xl) var(--space-2xl) var(--space-2xl)" }}
             >
               <div
                 className="content-title"
@@ -359,14 +359,14 @@ export default function EverymenTaskDetail({
                   height: 3,
                   background: GOLD,
                   width: 120,
-                  margin: "20px 0 18px",
+                  margin: "var(--space-xl) 0 var(--space-lg)",
                 }}
               />
               <div
                 style={{
                   display: "flex",
                   alignItems: "center",
-                  gap: 14,
+                  gap: "var(--space-lg)",
                   flexWrap: "wrap",
                 }}
               >
@@ -377,7 +377,7 @@ export default function EverymenTaskDetail({
                     color: CREAM,
                     fontFamily: "var(--font-accent)",
                     letterSpacing: "0.06em",
-                    padding: "6px 16px",
+                    padding: "var(--space-sm) var(--space-lg)",
                   }}
                 >
                   {t("everymen.levelValue", { level: task.level_required })}
@@ -389,7 +389,7 @@ export default function EverymenTaskDetail({
                     color: INK,
                     fontFamily: "var(--font-accent)",
                     letterSpacing: "0.06em",
-                    padding: "6px 16px",
+                    padding: "var(--space-sm) var(--space-lg)",
                   }}
                 >
                   {t("everymen.pointsValue", { points: modifiedPoints })}
@@ -417,11 +417,11 @@ export default function EverymenTaskDetail({
               style={{
                 display: "flex",
                 alignItems: "center",
-                gap: 18,
+                gap: "var(--space-lg)",
                 flexWrap: "wrap",
                 border: `1.5px solid ${INK}`,
                 background: PAPER,
-                padding: "16px 20px",
+                padding: "var(--space-lg) var(--space-xl)",
               }}
             >
               <button
@@ -433,7 +433,7 @@ export default function EverymenTaskDetail({
                   fontWeight: 700,
                   letterSpacing: "0.14em",
                   textTransform: "uppercase",
-                  padding: "14px 26px",
+                  padding: "var(--space-lg) var(--space-xl)",
                   border: "none",
                   background: RED,
                   color: CREAM,
@@ -478,11 +478,11 @@ export default function EverymenTaskDetail({
               style={{
                 display: "flex",
                 alignItems: "center",
-                gap: 16,
+                gap: "var(--space-lg)",
                 flexWrap: "wrap",
                 border: `1.5px solid ${INK}`,
                 background: PAPER,
-                padding: "16px 20px",
+                padding: "var(--space-lg) var(--space-xl)",
               }}
             >
               <span
@@ -504,7 +504,7 @@ export default function EverymenTaskDetail({
                   fontWeight: 700,
                   letterSpacing: "0.12em",
                   textTransform: "uppercase",
-                  padding: "10px 20px",
+                  padding: "var(--space-md) var(--space-xl)",
                   background: INK,
                   color: CREAM,
                   textDecoration: "none",
@@ -520,11 +520,11 @@ export default function EverymenTaskDetail({
               style={{
                 display: "flex",
                 alignItems: "center",
-                gap: 16,
+                gap: "var(--space-lg)",
                 flexWrap: "wrap",
                 border: `1.5px solid ${INK}`,
                 background: PAPER,
-                padding: "16px 20px",
+                padding: "var(--space-lg) var(--space-xl)",
               }}
             >
               <span
@@ -546,7 +546,7 @@ export default function EverymenTaskDetail({
                   fontWeight: 700,
                   letterSpacing: "0.12em",
                   textTransform: "uppercase",
-                  padding: "10px 20px",
+                  padding: "var(--space-md) var(--space-xl)",
                   background: RED,
                   color: CREAM,
                   textDecoration: "none",
@@ -588,7 +588,7 @@ export default function EverymenTaskDetail({
               style={{
                 border: `1.5px solid ${INK}`,
                 background: PAPER,
-                padding: "26px 30px",
+                padding: "var(--space-xl) var(--space-2xl)",
                 maxWidth: 660,
               }}
             >
@@ -619,7 +619,7 @@ export default function EverymenTaskDetail({
           <section>
             <SectionHead title={t("everymen.verdictHeading")} />
             {voteCount > 0 ? (
-              <div style={{ display: "flex", alignItems: "flex-end", gap: 12 }}>
+              <div style={{ display: "flex", alignItems: "flex-end", gap: "var(--space-md)" }}>
                 <span
                   className="content-title"
                   style={{
@@ -630,7 +630,7 @@ export default function EverymenTaskDetail({
                 >
                   {topScore}
                 </span>
-                <div style={{ paddingBottom: 6 }}>
+                <div style={{ paddingBottom: "var(--space-sm)" }}>
                   <div
                     style={{
                       fontFamily: "var(--font-accent)",
@@ -684,7 +684,7 @@ export default function EverymenTaskDetail({
                           fontWeight: 700,
                           letterSpacing: "0.1em",
                           textTransform: "uppercase",
-                          padding: "5px 12px",
+                          padding: "var(--space-xs) var(--space-md)",
                           background: on ? INK : "transparent",
                           color: on ? CREAM : MUTED,
                           border: `1.5px solid ${
@@ -720,14 +720,14 @@ export default function EverymenTaskDetail({
                   style={{
                     display: "flex",
                     flexWrap: "wrap",
-                    gap: "30px 24px",
+                    gap: "var(--space-2xl) var(--space-xl)",
                     alignItems: "flex-start",
                   }}
                 >
                   {sortedSubmissions.slice(0, 4).map((s) => (
                     <div
                       key={s.id}
-                      style={{ position: "relative", paddingTop: 20 }}
+                      style={{ position: "relative", paddingTop: "var(--space-xl)" }}
                     >
                       {s.id === topId && (
                         <div
@@ -739,14 +739,14 @@ export default function EverymenTaskDetail({
                             zIndex: 3,
                             display: "inline-flex",
                             alignItems: "center",
-                            gap: 5,
+                            gap: "var(--space-xs)",
                             whiteSpace: "nowrap",
                             background: GOLD,
                             color: INK,
                             fontFamily: "var(--font-accent)",
                             fontSize: "var(--text-lg)",
                             letterSpacing: "0.1em",
-                            padding: "3px 13px",
+                            padding: "var(--space-xs) var(--space-md)",
                             boxShadow: "0 3px 8px rgba(0,0,0,0.3)",
                           }}
                         >
@@ -759,7 +759,7 @@ export default function EverymenTaskDetail({
                   ))}
                 </div>
                 {submissions.length > 4 && (
-                  <div style={{ marginTop: 18 }}>
+                  <div style={{ marginTop: "var(--space-lg)" }}>
                     <Link
                       to={`/praxes?task_id=${task.id}`}
                       style={{

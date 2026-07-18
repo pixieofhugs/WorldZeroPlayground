@@ -76,7 +76,7 @@ function Medallion({ name, size }: { name: string; size: number }) {
 
 function SectionHead({ children }: { children: ReactNode }) {
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
+    <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-md)', marginBottom: 'var(--space-md)' }}>
       <span style={{ fontFamily: ENGRAVED, fontSize: 'var(--text-md)', letterSpacing: '0.1em', textTransform: 'uppercase', color: INK }}>
         {children}
       </span>
@@ -94,7 +94,7 @@ const joinButton: CSSProperties = {
   color: PAPER_WARM,
   background: ACCENT,
   border: `1px solid ${ACCENT}`,
-  padding: '13px 16px',
+  padding: 'var(--space-md) var(--space-lg)',
   boxShadow: '0 6px 16px rgba(194,84,31,.28)',
   cursor: 'pointer',
 }
@@ -108,7 +108,7 @@ const cancelButton: CSSProperties = {
   color: SUB,
   background: 'transparent',
   border: `1px solid ${LINE}`,
-  padding: '11px 16px',
+  padding: 'var(--space-md) var(--space-lg)',
   cursor: 'pointer',
 }
 
@@ -127,8 +127,8 @@ export default function UaFactionPage({ state }: { state: FactionDetailState }) 
   return (
     <div data-skin="ua" className="py-4" style={{ fontFamily: MONO, color: INK, background: WALL }} data-testid="mobile-faction-page">
       {/* Hero — gilt-framed parchment masthead */}
-      <section style={{ padding: 8, background: GILT, boxShadow: '0 12px 28px rgba(60,40,10,.2), inset 0 0 0 1px rgba(255,255,255,0.45)' }}>
-        <div style={{ padding: 3, background: `linear-gradient(135deg, ${GOLD}, ${GOLD_PALE})` }}>
+      <section style={{ padding: 'var(--space-sm)', background: GILT, boxShadow: '0 12px 28px rgba(60,40,10,.2), inset 0 0 0 1px rgba(255,255,255,0.45)' }}>
+        <div style={{ padding: 'var(--space-xs)', background: `linear-gradient(135deg, ${GOLD}, ${GOLD_PALE})` }}>
           <div
             style={{
               position: 'relative',
@@ -137,18 +137,28 @@ export default function UaFactionPage({ state }: { state: FactionDetailState }) 
               backgroundImage: 'radial-gradient(rgba(60,40,10,.03) 1px, transparent 1px)',
               backgroundSize: '5px 5px',
               border: `1px solid ${LINE}`,
-              padding: '20px 18px',
+              padding: 'var(--space-xl) var(--space-lg)',
             }}
           >
             <div style={{ ...kicker, color: ACCENT }}>{t('ua.mobile.eyebrow')}</div>
-            {/* ornament: masthead display type — the engraved title is the skin's identity (§4/§270). */}
-            <h1 style={{ fontFamily: DISPLAY, fontStyle: 'italic', fontWeight: 700, fontSize: 34, lineHeight: 1.05, color: INK, margin: '4px 0 0' }}>
+            <h1
+              style={{
+                fontFamily: DISPLAY,
+                fontStyle: 'italic',
+                fontWeight: 700,
+                // eslint-disable-next-line local/no-raw-style-values -- ornament: masthead display type — the engraved title is the skin's identity (§4/§270).
+                fontSize: 34,
+                lineHeight: 1.05,
+                color: INK,
+                margin: 'var(--space-xs) 0 0',
+              }}
+            >
               {name}
             </h1>
-            <p className="content-text" style={{ fontFamily: DISPLAY, fontStyle: 'italic', lineHeight: 1.6, color: SUB, margin: '8px 0 0' }}>
+            <p className="content-text" style={{ fontFamily: DISPLAY, fontStyle: 'italic', lineHeight: 1.6, color: SUB, margin: 'var(--space-sm) 0 0' }}>
               {factionDescription(faction.slug)}
             </p>
-            <div style={{ display: 'flex', gap: 8, marginTop: 15 }}>
+            <div style={{ display: 'flex', gap: 'var(--space-sm)', marginTop: 'var(--space-lg)' }}>
               <HeroStat value={members.length} label={t('mobile.membersStat')} />
               <HeroStat value={tasks.length} label={t('mobile.tasksStat')} />
             </div>
@@ -157,7 +167,7 @@ export default function UaFactionPage({ state }: { state: FactionDetailState }) 
       </section>
 
       {membership.state === 'member' && (
-        <p style={{ ...kicker, marginTop: 12, color: GOLD }}>{t('mobile.memberBadge')}</p>
+        <p style={{ ...kicker, marginTop: 'var(--space-md)', color: GOLD }}>{t('mobile.memberBadge')}</p>
       )}
 
       {/* Top members */}
@@ -189,7 +199,7 @@ export default function UaFactionPage({ state }: { state: FactionDetailState }) 
       </section>
 
       {membership.state === 'gate' && (
-        <p className="content-text" style={{ fontFamily: DISPLAY, fontStyle: 'italic', color: SUB, marginTop: 24 }}>
+        <p className="content-text" style={{ fontFamily: DISPLAY, fontStyle: 'italic', color: SUB, marginTop: 'var(--space-xl)' }}>
           {t('mobile.gateHint', { faction: name })}
         </p>
       )}
@@ -211,7 +221,7 @@ export default function UaFactionPage({ state }: { state: FactionDetailState }) 
                   ? t('detail.join.confirmSwitch', { faction: name, current: factionName(currentSlug) })
                   : t('detail.join.confirm', { faction: name })}
               </p>
-              <div style={{ display: 'flex', gap: 8 }}>
+              <div style={{ display: 'flex', gap: 'var(--space-sm)' }}>
                 <button
                   type="button"
                   onClick={() => void membership.join()}
@@ -239,11 +249,11 @@ export default function UaFactionPage({ state }: { state: FactionDetailState }) 
 
 function HeroStat({ value, label }: { value: number; label: string }) {
   return (
-    <div style={{ flex: '1 1 0', textAlign: 'center', background: PAPER_WARM, border: `1px solid ${GOLD}`, padding: '10px 6px' }}>
+    <div style={{ flex: '1 1 0', textAlign: 'center', background: PAPER_WARM, border: `1px solid ${GOLD}`, padding: 'var(--space-md) var(--space-sm)' }}>
       <b className="content-title" style={{ fontFamily: DISPLAY, fontStyle: 'italic', fontWeight: 700, display: 'block', lineHeight: 1, color: INK }}>
         {value}
       </b>
-      <span style={{ ...kicker, marginTop: 5, display: 'block' }}>{label}</span>
+      <span style={{ ...kicker, marginTop: 'var(--space-xs)', display: 'block' }}>{label}</span>
     </div>
   )
 }
@@ -256,8 +266,8 @@ function MemberRow({ rank, member }: { rank: number; member: CharacterOut }) {
       style={{
         display: 'flex',
         alignItems: 'center',
-        gap: 12,
-        padding: '10px 14px',
+        gap: 'var(--space-md)',
+        padding: 'var(--space-md) var(--space-lg)',
         background: PAPER,
         border: `1px solid ${LINE}`,
         borderLeft: `4px solid ${ACCENT}`,
