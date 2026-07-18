@@ -228,7 +228,7 @@ export default function CharacterProfile() {
                       : "var(--color-danger)",
                 color: "var(--color-text-on-accent)",
                 fontFamily: "'Courier Prime', monospace",
-                fontSize: 8,
+                fontSize: "var(--text-xs)",
                 textTransform: "uppercase",
                 letterSpacing: "0.1em",
                 padding: "4px 0",
@@ -282,7 +282,7 @@ export default function CharacterProfile() {
               disabled={relationshipLoading}
               style={{
                 fontFamily: "'Courier Prime', monospace",
-                fontSize: 8,
+                fontSize: "var(--text-xs)",
                 textTransform: "uppercase",
                 letterSpacing: "0.1em",
                 padding: "4px 0",
@@ -303,7 +303,7 @@ export default function CharacterProfile() {
                 background: "none",
                 color: "var(--color-danger)",
                 fontFamily: "'Courier Prime', monospace",
-                fontSize: 8,
+                fontSize: "var(--text-xs)",
                 textTransform: "uppercase",
                 letterSpacing: "0.1em",
                 padding: "3px 0",
@@ -321,7 +321,7 @@ export default function CharacterProfile() {
           <p
             className="font-body"
             style={{
-              fontSize: 8,
+              fontSize: "var(--text-content)",
               color: "var(--color-danger)",
               marginTop: 4,
               textAlign: "center",
