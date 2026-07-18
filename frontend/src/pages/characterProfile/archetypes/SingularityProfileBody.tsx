@@ -34,7 +34,7 @@ function heading(title: string, eyebrow: string): ReactNode {
       <div
         style={{
           fontFamily: FONT,
-          fontSize: 9,
+          fontSize: 'var(--text-sm)',
           letterSpacing: '0.14em',
           textTransform: 'uppercase',
           color: signal(65),
@@ -46,7 +46,7 @@ function heading(title: string, eyebrow: string): ReactNode {
       <h2
         style={{
           fontFamily: FONT,
-          fontSize: 24,
+          fontSize: 'var(--text-heading)',
           letterSpacing: '0.06em',
           textTransform: 'uppercase',
           color: PHOSPHOR,
@@ -130,7 +130,7 @@ const kit: ProfileKit = {
   },
   badgeChipStyle: {
     fontFamily: FONT,
-    fontSize: 9,
+    fontSize: 'var(--text-sm)',
     letterSpacing: '0.12em',
     textTransform: 'uppercase',
     color: signal(70),
@@ -145,7 +145,6 @@ const kit: ProfileKit = {
       dividerColor={signal(22)}
       nameStyle={{
         fontFamily: FONT,
-        fontSize: 13,
         textTransform: 'uppercase',
         letterSpacing: '0.04em',
         color: PHOSPHOR,
