@@ -48,11 +48,11 @@ export default function SnideFactionHero({
       style={{
         position: "relative",
         overflow: "hidden",
-        marginBottom: 24,
+        marginBottom: "var(--space-xl)",
         background: "var(--faction-snide-ink)",
         color: "#fff",
         boxShadow: "8px 10px 0 rgba(0,0,0,0.32)",
-        paddingBottom: 4,
+        paddingBottom: "var(--space-xs)",
       }}
     >
       <div
@@ -102,8 +102,8 @@ export default function SnideFactionHero({
           display: "flex",
           alignItems: "flex-start",
           flexWrap: "wrap",
-          gap: 30,
-          padding: "26px 38px 30px",
+          gap: "var(--space-2xl)",
+          padding: "var(--space-xl) var(--space-2xl) var(--space-2xl)",
         }}
       >
         {/* identity — eyebrow + wordmark + motto + blurb */}
@@ -119,6 +119,7 @@ export default function SnideFactionHero({
               fontFamily: "var(--faction-snide-font-type)",
               fontSize: "var(--text-base)",
               letterSpacing: "0.05em",
+              // eslint-disable-next-line local/no-raw-style-values -- ornament: inset of the eyebrow on its tape strip; rounding reflows the tape.
               padding: "3px 12px",
               transform: "rotate(-1.5deg)",
               boxShadow: "1px 1px 0 rgba(0,0,0,0.3)",
@@ -130,11 +131,11 @@ export default function SnideFactionHero({
           <h1
             style={{
               fontFamily: "var(--faction-snide-font-impact)",
-              // ornament: ransom wordmark — impact face skewed and slammed at 0.8 leading
+              // eslint-disable-next-line local/no-raw-style-values -- ornament: ransom wordmark — impact face skewed and slammed at 0.8 leading
               fontSize: 82,
               lineHeight: 0.8,
               letterSpacing: "0.02em",
-              margin: "16px 0 0",
+              margin: "var(--space-lg) 0 0",
               color: "var(--faction-snide-acid)",
               textShadow: "4px 4px 0 var(--faction-snide-pink)",
               transform: "skewX(-5deg) rotate(-1.5deg)",
@@ -149,7 +150,7 @@ export default function SnideFactionHero({
               letterSpacing: "0.16em",
               textTransform: "uppercase",
               color: "#b7b5a7",
-              margin: "12px 0 0",
+              margin: "var(--space-md) 0 0",
               transform: "rotate(-0.4deg)",
             }}
           >
@@ -159,13 +160,14 @@ export default function SnideFactionHero({
           <div
             style={{
               display: "inline-block",
-              marginTop: 14,
+              marginTop: "var(--space-lg)",
               background: "var(--faction-snide-acid)",
               color: "var(--faction-snide-ink)",
-              // ornament: motto slapped on an acid sticker, rotated -2deg — illustration, not chrome
               fontFamily: "var(--faction-snide-font-black)",
+              // eslint-disable-next-line local/no-raw-style-values -- ornament: motto slapped on an acid sticker, rotated -2deg — illustration, not chrome
               fontSize: 15,
               letterSpacing: "0.02em",
+              // eslint-disable-next-line local/no-raw-style-values -- ornament: inset of the motto on its acid sticker; rounding reflows the sticker.
               padding: "6px 15px",
               transform: "rotate(-2deg)",
               boxShadow: "2px 3px 0 var(--faction-snide-pink)",
@@ -193,7 +195,7 @@ export default function SnideFactionHero({
             display: "flex",
             flexDirection: "column",
             alignItems: "flex-end",
-            gap: 13,
+            gap: "var(--space-md)",
             flexShrink: 0,
             width: 196,
           }}
@@ -249,6 +251,7 @@ export default function SnideFactionHero({
                 textAlign: "right",
                 background: "rgba(0,0,0,0.34)",
                 border: "2px solid var(--faction-snide-acid)",
+                // eslint-disable-next-line local/no-raw-style-values -- ornament: inset of a rotated stat chit; rounding reflows the staggered stack.
                 padding: "7px 14px 6px",
                 transform: `rotate(${CHIT_ROT[i % CHIT_ROT.length]}deg)`,
                 boxShadow: "2px 3px 0 rgba(0,0,0,0.4)",
@@ -256,8 +259,8 @@ export default function SnideFactionHero({
             >
               <div
                 style={{
-                  // ornament: chit numeral in the impact face; above the content floor already
                   fontFamily: "var(--faction-snide-font-impact)",
+                  // eslint-disable-next-line local/no-raw-style-values -- ornament: chit numeral in the impact face; above the content floor already
                   fontSize: 30,
                   lineHeight: 0.85,
                   color: "var(--faction-snide-acid)",

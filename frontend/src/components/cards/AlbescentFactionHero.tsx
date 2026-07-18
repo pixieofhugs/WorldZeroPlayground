@@ -43,7 +43,7 @@ export default function AlbescentFactionHero({
         overflow: "hidden",
         background: SURFACE,
         border: `1px solid ${BORDER}`,
-        marginBottom: 24,
+        marginBottom: "var(--space-xl)",
       }}
     >
       {/* Faint watermark mark, high and to the side. */}
@@ -66,10 +66,10 @@ export default function AlbescentFactionHero({
         style={{
           position: "relative",
           zIndex: 1,
-          padding: "36px 40px 40px",
+          padding: "var(--space-2xl)",
           display: "grid",
           gridTemplateColumns: "1fr auto",
-          gap: 40,
+          gap: "var(--space-2xl)",
           alignItems: "center",
         }}
       >
@@ -82,7 +82,7 @@ export default function AlbescentFactionHero({
               letterSpacing: "0.28em",
               textTransform: "uppercase",
               color: ink(22),
-              marginBottom: 16,
+              marginBottom: "var(--space-lg)",
               lineHeight: 1.9,
             }}
           >
@@ -96,11 +96,11 @@ export default function AlbescentFactionHero({
               fontFamily: FONT,
               fontStyle: "italic",
               fontWeight: 300,
-              // ornament: vellum wordmark — the Albescent hero's display type
+              // eslint-disable-next-line local/no-raw-style-values -- ornament: vellum wordmark — the Albescent hero's display type
               fontSize: 60,
               lineHeight: 0.94,
               color: INK,
-              marginBottom: 14,
+              marginBottom: "var(--space-lg)",
               letterSpacing: "-0.015em",
             }}
           >
@@ -115,7 +115,7 @@ export default function AlbescentFactionHero({
               letterSpacing: "0.34em",
               textTransform: "uppercase",
               color: ink(28),
-              marginBottom: 18,
+              marginBottom: "var(--space-lg)",
             }}
           >
             {i18n.t("feed:factionHero.albescent.motto")}
@@ -123,17 +123,17 @@ export default function AlbescentFactionHero({
 
           {/* Blurb — the faction's own description */}
           {description && (
-            <p className="content-text" style={{ fontFamily: MONO, lineHeight: 1.74, color: ink(46), maxWidth: 490, marginBottom: 26 }}>
+            <p className="content-text" style={{ fontFamily: MONO, lineHeight: 1.74, color: ink(46), maxWidth: 490, marginBottom: "var(--space-xl)" }}>
               {description}
             </p>
           )}
 
           {/* Stats ledger */}
-          <div style={{ display: "flex", gap: 26, flexWrap: "wrap" }}>
+          <div style={{ display: "flex", gap: "var(--space-xl)", flexWrap: "wrap" }}>
             {stats.map((s) => (
-              <div key={s.label} style={{ paddingTop: 12, borderTop: `1px solid ${BORDER}`, minWidth: 80 }}>
-                {/* ornament: ledger numeral in the vellum display face, sized to its cap-height; already above the content floor */}
-                <div style={{ fontFamily: FONT, fontStyle: "italic", fontWeight: 300, fontSize: 26, lineHeight: 1, color: ink(68), marginBottom: 5 }}>
+              <div key={s.label} style={{ paddingTop: "var(--space-md)", borderTop: `1px solid ${BORDER}`, minWidth: 80 }}>
+                {/* eslint-disable-next-line local/no-raw-style-values -- ornament: ledger numeral in the vellum display face, sized to its cap-height; already above the content floor */}
+                <div style={{ fontFamily: FONT, fontStyle: "italic", fontWeight: 300, fontSize: 26, lineHeight: 1, color: ink(68), marginBottom: "var(--space-xs)" }}>
                   {s.value}
                 </div>
                 <div style={{ fontFamily: MONO, fontSize: "var(--text-xs)", letterSpacing: "0.2em", textTransform: "uppercase", color: ink(26) }}>
