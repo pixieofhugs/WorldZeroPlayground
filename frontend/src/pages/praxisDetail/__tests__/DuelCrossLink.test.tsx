@@ -1,6 +1,10 @@
 /**
  * DuelCrossLink lifecycle guard (#313): active shows a marker only; settled
  * shows the live tally + cross-link; forfeited shows won-by-default / you-forfeited.
+ *
+ * #717 regression: pending and declined used to fall through to the settled
+ * renderer, showing a live tally against someone who hadn't accepted or said no.
+ * One case per DuelStatus below — the tally must appear for settled only.
  */
 import { renderToStaticMarkup } from "react-dom/server";
 import { MemoryRouter } from "react-router-dom";
@@ -55,7 +59,38 @@ function text(d: DuelDetailOut): string {
   return html.replace(/<[^>]*>/g, "");
 }
 
+// What the backend actually returns pre-accept (services/duel.py:107-118): the
+// opponent's identity is real, but they have no praxis and no points yet.
+const UNANSWERED_FOE: DuelSideOut = {
+  ...FOE,
+  praxis_id: null,
+  points_from_votes: 0,
+  is_submitted: false,
+};
+
 describe("DuelCrossLink", () => {
+  it("pending: says the challenge is unanswered, with no tally (#717)", () => {
+    const html = renderToStaticMarkup(
+      <MemoryRouter>
+        <DuelCrossLink
+          praxis={PRAXIS}
+          duel={duel({ status: "pending", opponent: UNANSWERED_FOE })}
+        />
+      </MemoryRouter>,
+    );
+    expect(html).not.toMatch(/href="\/praxes\//); // nothing to cross-link to
+    const t = html.replace(/<[^>]*>/g, "");
+    expect(t).toMatch(/waiting for Bob to accept/i);
+    expect(t).not.toMatch(/ahead|behind|tied|live/i);
+  });
+
+  it("declined: says it scores as an ordinary praxis, with no tally (#717)", () => {
+    const t = text(duel({ status: "declined", opponent: UNANSWERED_FOE }));
+    expect(t).toMatch(/Bob declined/i);
+    expect(t).toMatch(/ordinary praxis/i);
+    expect(t).not.toMatch(/ahead|behind|tied|live/i);
+  });
+
   it("active: shows a marker only, no tally", () => {
     const t = text(duel({ status: "active" }));
     expect(t).toMatch(/Dueling Bob/);

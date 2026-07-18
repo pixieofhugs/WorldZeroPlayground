@@ -12,7 +12,10 @@ import AlbescentSigil from "./AlbescentSigil";
  * card a player meets when browsing "Choose your faction": each renders in its
  * faction's full archetype (gilt placard, whimsy.exe window, ransom dispatch,
  * codex leaf, terminal printout, union poster, vellum letter) at a UNIFORM
- * 360×300 so the grid stays tidy.
+ * 360×300 ceiling so the desktop grid stays tidy. The box is FLUID, not fixed:
+ * `width: 100%` up to a 360 max, `minHeight` rather than a hard height, so the
+ * same art survives a 375px phone in the single-column mobile directory (#732).
+ * Desktop is unchanged — DesktopFactions' flexWrap grid still hands each 360px.
  *
  * Ported from the Claude Design select.card. Faction-agnostic payload is just
  * { state, members?, onVisit }; name / archetype / blurb / status copy / CTA
@@ -44,7 +47,7 @@ function UaSelectCard({ state = "locked", members, onVisit }: Omit<FactionSelect
   const status = i18n.t(`feed:factionSelect.ua.status.${state}` as const);
   return (
     <div style={{
-      width: 360, height: 300, boxSizing: "border-box", position: "relative", overflow: "hidden",
+      width: "100%", maxWidth: 360, minHeight: 300, boxSizing: "border-box", position: "relative", overflow: "hidden",
       background: "var(--ua-paper)", color: "var(--ua-ink)", fontFamily: "var(--font-body)",
       border: "1px solid var(--ua-line)", boxShadow: "0 6px 24px rgba(61,36,16,0.12)",
       display: "flex", flexDirection: "column",
@@ -86,7 +89,7 @@ function WOWSelectCard({ state = "locked", members, onVisit }: Omit<FactionSelec
   const status = i18n.t(`feed:factionSelect.wow.status.${state}` as const);
   return (
     <div style={{
-      width: 360, height: 300, boxSizing: "border-box", position: "relative", overflow: "hidden",
+      width: "100%", maxWidth: 360, minHeight: 300, boxSizing: "border-box", position: "relative", overflow: "hidden",
       background: "var(--gestalt-card-bg)", color: "var(--gestalt-ink)", fontFamily: "var(--font-body)",
       border: "1.5px solid var(--gestalt-win-border)", borderRadius: 10,
       boxShadow: "0 10px 30px var(--gestalt-glow)", display: "flex", flexDirection: "column",
@@ -127,7 +130,7 @@ function SnideSelectCard({ state = "locked", members, onVisit }: Omit<FactionSel
   const status = i18n.t(`feed:factionSelect.snide.status.${state}` as const);
   return (
     <div style={{
-      width: 360, height: 300, boxSizing: "border-box", position: "relative", overflow: "hidden",
+      width: "100%", maxWidth: 360, minHeight: 300, boxSizing: "border-box", position: "relative", overflow: "hidden",
       background: "var(--snide-ink)", color: "var(--snide-paper)", fontFamily: "var(--font-faction-typewriter)",
       border: "1px solid #000", boxShadow: "0 8px 26px rgba(0,0,0,0.4)", display: "flex", flexDirection: "column",
     }}>
@@ -166,7 +169,7 @@ function EphemeristsSelectCard({ state = "locked", members, onVisit }: Omit<Fact
   const status = i18n.t(`feed:factionSelect.ephemerists.status.${state}` as const);
   return (
     <div style={{
-      width: 360, height: 300, boxSizing: "border-box", position: "relative", overflow: "hidden",
+      width: "100%", maxWidth: 360, minHeight: 300, boxSizing: "border-box", position: "relative", overflow: "hidden",
       background: "var(--eph-field)", color: "var(--eph-parchment)", fontFamily: "var(--font-faction-codex)",
       border: "1px solid var(--eph-gold-deep)", boxShadow: "0 8px 26px rgba(20,59,84,0.4)", display: "flex", flexDirection: "column",
     }}>
@@ -206,7 +209,7 @@ function SingularitySelectCard({ state = "locked", members, onVisit }: Omit<Fact
   const green = "#4ade80";
   return (
     <div style={{
-      width: 360, height: 300, boxSizing: "border-box", position: "relative", overflow: "hidden",
+      width: "100%", maxWidth: 360, minHeight: 300, boxSizing: "border-box", position: "relative", overflow: "hidden",
       background: "#050f08", color: green, fontFamily: "var(--font-faction-terminal)",
       border: "1px solid #2563eb", boxShadow: "0 8px 26px rgba(0,0,0,0.5)", display: "flex", flexDirection: "column",
     }}>
@@ -247,7 +250,7 @@ function EverymenSelectCard({ state = "locked", members, onVisit }: Omit<Faction
   const status = i18n.t(`feed:factionSelect.everymen.status.${state}` as const);
   return (
     <div style={{
-      width: 360, height: 300, boxSizing: "border-box", position: "relative", overflow: "hidden",
+      width: "100%", maxWidth: 360, minHeight: 300, boxSizing: "border-box", position: "relative", overflow: "hidden",
       background: "var(--everymen-field)", color: "var(--everymen-cream)", fontFamily: "var(--font-body)",
       border: "3px solid var(--everymen-ink)", boxShadow: "0 0 0 3px var(--everymen-paper), 0 8px 26px rgba(0,0,0,0.28)",
       display: "flex", flexDirection: "column",
@@ -283,7 +286,7 @@ function AlbescentSelectCard({ state = "locked", members, onVisit }: Omit<Factio
   const status = i18n.t(`feed:factionSelect.albescent.status.${state}` as const);
   return (
     <div style={{
-      width: 360, height: 300, boxSizing: "border-box", position: "relative", overflow: "hidden",
+      width: "100%", maxWidth: 360, minHeight: 300, boxSizing: "border-box", position: "relative", overflow: "hidden",
       background: "var(--al-surface)", color: "var(--al-text)", fontFamily: "var(--font-faction-vellum)",
       border: "1px solid var(--al-border)", boxShadow: "var(--al-shadow)", display: "flex", flexDirection: "column",
     }}>
