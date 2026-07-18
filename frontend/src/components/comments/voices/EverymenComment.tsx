@@ -22,7 +22,13 @@ function frame(): React.CSSProperties {
 export default function EverymenComment(props: CommentProps) {
   const { t } = useTranslation('praxis')
   const masthead = (
-    <div style={{ background: 'var(--faction-everymen-card-accent)', color: 'var(--faction-everymen-card-bg)', fontFamily: 'var(--faction-everymen-card-font)', /* ornament: newsprint masthead bar */ fontSize: 13, letterSpacing: '0.14em', padding: '5px 14px' }}>
+    <div style={{
+      background: 'var(--faction-everymen-card-accent)', color: 'var(--faction-everymen-card-bg)',
+      fontFamily: 'var(--faction-everymen-card-font)', letterSpacing: '0.14em',
+      padding: 'var(--space-xs) var(--space-lg)',
+      // eslint-disable-next-line local/no-raw-style-values -- ornament: newsprint masthead bar
+      fontSize: 13,
+    }}>
       {t('comments.everymen.masthead')}
     </div>
   )
@@ -32,7 +38,7 @@ export default function EverymenComment(props: CommentProps) {
     return (
       <div style={frame()}>
         {masthead}
-        <div style={{ padding: '12px 14px', display: 'flex', gap: 10, alignItems: 'flex-start' }}>
+        <div style={{ padding: 'var(--space-md) var(--space-lg)', display: 'flex', gap: 'var(--space-md)', alignItems: 'flex-start' }}>
           <FactionAvatar character={character} size="sm" />
           <div style={{ flex: 1 }}>
             <ComposerControls value={value} onChange={onChange} onSubmit={onSubmit} submitting={submitting} accent="var(--faction-everymen-card-accent)" bg="rgba(0,0,0,0.03)" text="var(--faction-everymen-card-text)" />
@@ -47,21 +53,21 @@ export default function EverymenComment(props: CommentProps) {
   return (
     <div style={frame()}>
       {masthead}
-      <div style={{ padding: '12px 14px', display: 'flex', gap: 10, alignItems: 'flex-start' }}>
+      <div style={{ padding: 'var(--space-md) var(--space-lg)', display: 'flex', gap: 'var(--space-md)', alignItems: 'flex-start' }}>
         <FactionAvatar character={authorToCharacter(comment.author)} size="sm" />
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 10 }}>
+          <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 'var(--space-md)' }}>
             <Link to={`/characters/${comment.author.id}`} style={{ fontFamily: 'var(--faction-everymen-card-font)', fontSize: 'var(--text-content)', letterSpacing: '0.04em', color: 'var(--faction-everymen-card-text)', textDecoration: 'none' }}>
               {comment.author.display_name}
             </Link>
-            <span style={{ fontSize: 'var(--text-md)', color: 'var(--faction-everymen-card-muted)', textTransform: 'uppercase', letterSpacing: '0.06em', whiteSpace: 'nowrap', display: 'inline-flex', alignItems: 'baseline', gap: 8 }}>
+            <span style={{ fontSize: 'var(--text-md)', color: 'var(--faction-everymen-card-muted)', textTransform: 'uppercase', letterSpacing: '0.06em', whiteSpace: 'nowrap', display: 'inline-flex', alignItems: 'baseline', gap: 'var(--space-sm)' }}>
               {formatCommentTime(slug, comment.created_at)}
               {comment.is_edited ? ` · ${t('comments.everymen.edited')}` : ''}
               <OwnerControls owner={owner} />
               <CommentFlagControl comment={comment} />
             </span>
           </div>
-          <div style={{ fontSize: 'var(--text-content)', lineHeight: 1.4, marginTop: 3 }}>
+          <div style={{ fontSize: 'var(--text-content)', lineHeight: 1.4, marginTop: 'var(--space-xs)' }}>
             {owner.editing ? (
               <CommentEditor owner={owner} accent="var(--faction-everymen-card-accent)" bg="rgba(0,0,0,0.03)" text="var(--faction-everymen-card-text)" />
             ) : (

@@ -1,12 +1,5 @@
 ﻿src/components/AlbescentInvitation.tsx
 src/components/CharacterSwitcherSheet.tsx
-src/components/comments/voices/AlbescentComment.tsx
-src/components/comments/voices/EphemeristsComment.tsx
-src/components/comments/voices/EverymenComment.tsx
-src/components/comments/voices/SingularityComment.tsx
-src/components/comments/voices/SnideComment.tsx
-src/components/comments/voices/UaComment.tsx
-src/components/comments/voices/WowComment.tsx
 src/components/CredentialCard.tsx
 src/components/home/ActivityTicker.tsx
 src/components/imageEdit/ImageEditModal.tsx
