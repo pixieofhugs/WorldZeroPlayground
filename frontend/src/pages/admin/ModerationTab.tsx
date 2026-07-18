@@ -104,7 +104,7 @@ function ReasonBadge({ reason }: { reason: string }) {
       style={{
         border: '1.5px solid var(--color-danger)',
         color: 'var(--color-danger)',
-        padding: '2px 8px',
+        padding: 'var(--space-xs) var(--space-sm)',
       }}
     >
       {flagReasonLabel(reason)}
@@ -273,8 +273,8 @@ export default function ModerationTab() {
     }
   }
 
-  if (loading) return <div className="font-body text-muted text-sm">{t('common:loading')}</div>
-  if (error) return <p className="font-body text-sm text-red-600">{error}</p>
+  if (loading) return <div className="font-body text-muted content-text">{t('common:loading')}</div>
+  if (error) return <p className="font-body content-text text-red-600">{error}</p>
 
   const queue: QueueItem[] = [
     ...flaggedPraxes.map((praxis): QueueItem => ({ kind: 'praxis', praxis })),
@@ -293,7 +293,7 @@ export default function ModerationTab() {
   return (
     <div className="flex flex-col gap-8">
       {actionError && (
-        <p className="font-body text-sm text-red-600 border-2 border-red-300 px-3 py-2">
+        <p className="font-body content-text text-red-600 border-2 border-red-300 px-3 py-2">
           {actionError}
         </p>
       )}
@@ -323,7 +323,7 @@ export default function ModerationTab() {
         {visibleQueue.length === 0 ? (
           <div className="card px-4 py-6" style={{ textAlign: 'center' }}>
             <p className="font-display text-lg font-bold">{t('moderation.queue.empty.title')}</p>
-            <p className="font-body text-sm text-muted">
+            <p className="font-body content-text text-muted">
               {t('moderation.queue.empty.body')}
             </p>
           </div>
@@ -356,14 +356,14 @@ export default function ModerationTab() {
                         {' '}&middot; {t('moderation.queue.flags', { count: item.praxis.flags.length })}
                       </p>
                       {item.praxis.flags[0]?.reason_detail && (
-                        <p className="font-body text-xs text-muted" style={{ marginTop: 4, fontStyle: 'italic' }}>
+                        <p className="font-body content-text text-muted" style={{ marginTop: 'var(--space-xs)', fontStyle: 'italic' }}>
                           &ldquo;{item.praxis.flags[0].reason_detail}&rdquo;
                         </p>
                       )}
                       <Link
                         to={`/praxes/${item.praxis.id}`}
                         className="eyebrow"
-                        style={{ display: 'inline-block', marginTop: 6 }}
+                        style={{ display: 'inline-block', marginTop: 'var(--space-sm)' }}
                       >
                         {t('moderation.queue.viewPraxis')}
                       </Link>
@@ -394,7 +394,7 @@ export default function ModerationTab() {
                   {failNoteTarget === item.praxis.id && (
                     <div className="mt-3 flex gap-2 items-end">
                       <textarea
-                        className="border-2 border-border bg-card px-3 py-1 font-body text-sm focus:outline-none focus:border-ink flex-1 resize-none"
+                        className="border-2 border-border bg-card px-3 py-1 font-body content-text focus:outline-none focus:border-ink flex-1 resize-none"
                         rows={2}
                         placeholder={t('moderation.queue.failNotePlaceholder')}
                         value={failNote}
@@ -425,16 +425,16 @@ export default function ModerationTab() {
                 >
                   <div className="flex items-start gap-4">
                     <div className="flex-1">
-                      <p className="font-body text-sm text-ink" style={{ fontStyle: 'italic' }}>
+                      <p className="font-body content-text text-ink" style={{ fontStyle: 'italic' }}>
                         &ldquo;{item.comment.body_text}&rdquo;
                       </p>
-                      <p className="font-body text-xs text-muted" style={{ marginTop: 4 }}>
+                      <p className="font-body text-xs text-muted" style={{ marginTop: 'var(--space-xs)' }}>
                         {t('moderation.queue.byline', { author: item.comment.author.display_name })}
                         {' '}&middot; {reporterText(item.comment.flags)}
                         {' '}&middot; {t('moderation.queue.flags', { count: item.comment.flags.length })}
                       </p>
                       {item.comment.flags[0]?.reason_detail && (
-                        <p className="font-body text-xs text-muted" style={{ marginTop: 4, fontStyle: 'italic' }}>
+                        <p className="font-body content-text text-muted" style={{ marginTop: 'var(--space-xs)', fontStyle: 'italic' }}>
                           &ldquo;{item.comment.flags[0].reason_detail}&rdquo;
                         </p>
                       )}
@@ -444,7 +444,7 @@ export default function ModerationTab() {
                           ? `/praxes/${item.comment.praxis_id}`
                           : `/tasks/${item.comment.task_id}`}
                         className="eyebrow"
-                        style={{ display: 'inline-block', marginTop: 6 }}
+                        style={{ display: 'inline-block', marginTop: 'var(--space-sm)' }}
                       >
                         {t('moderation.queue.viewThread')}
                       </Link>
@@ -478,7 +478,7 @@ export default function ModerationTab() {
           <h3 className="font-display text-xl font-bold mb-3 border-b-2 border-border pb-1">
             {t('moderation.actionLog.heading')}
           </h3>
-          <p className="font-body text-xs text-muted mb-2">
+          <p className="font-body content-text text-muted mb-2">
             {t('moderation.actionLog.note')}
           </p>
           <ul className="flex flex-col gap-1">
@@ -508,7 +508,7 @@ export default function ModerationTab() {
           </label>
         </div>
         {messages.length === 0 ? (
-          <p className="font-body text-sm text-muted">
+          <p className="font-body content-text text-muted">
             {showArchived ? t('moderation.messages.emptyArchived') : t('moderation.messages.empty')}
           </p>
         ) : (
@@ -533,7 +533,7 @@ export default function ModerationTab() {
                     {m.is_archived ? t('moderation.messages.unarchive') : t('moderation.messages.archive')}
                   </button>
                 </div>
-                <p className="font-body text-sm text-ink mt-2 whitespace-pre-wrap">{m.message}</p>
+                <p className="font-body content-text text-ink mt-2 whitespace-pre-wrap">{m.message}</p>
               </div>
             ))}
           </div>

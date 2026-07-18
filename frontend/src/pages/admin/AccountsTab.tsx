@@ -98,13 +98,13 @@ export default function AccountsTab() {
   };
 
   if (loading)
-    return <div className="font-body text-muted text-sm">{t("common:loading")}</div>;
-  if (error) return <p className="font-body text-sm text-red-600">{error}</p>;
+    return <div className="font-body text-muted content-text">{t("common:loading")}</div>;
+  if (error) return <p className="font-body content-text text-red-600">{error}</p>;
 
   return (
     <div>
       {actionError && (
-        <p className="font-body text-sm text-red-600 border-2 border-red-300 px-3 py-2 mb-4">
+        <p className="font-body content-text text-red-600 border-2 border-red-300 px-3 py-2 mb-4">
           {actionError}
         </p>
       )}
@@ -115,12 +115,12 @@ export default function AccountsTab() {
         placeholder={t("accounts.searchPlaceholder")}
         value={searchEmail}
         onChange={(e) => handleSearch(e.target.value)}
-        className="border-2 border-border bg-card px-3 py-2 font-body text-sm focus:outline-none focus:border-ink w-full mb-4"
+        className="border-2 border-border bg-card px-3 py-2 font-body content-text focus:outline-none focus:border-ink w-full mb-4"
       />
 
       {/* Accounts list */}
       {accounts.length === 0 ? (
-        <p className="font-body text-sm text-muted">{t("accounts.empty")}</p>
+        <p className="font-body content-text text-muted">{t("accounts.empty")}</p>
       ) : (
         <div className="flex flex-col gap-3">
           {accounts.map((account) => (
@@ -193,7 +193,7 @@ export default function AccountsTab() {
                     })}
                   </p>
                   {detail.characters.length === 0 ? (
-                    <p className="font-body text-xs text-muted">
+                    <p className="font-body content-text text-muted">
                       {t("accounts.noCharacters")}
                     </p>
                   ) : (
@@ -240,13 +240,13 @@ export default function AccountsTab() {
                                     borderColor: "var(--color-success)",
                                     color: "var(--color-success)",
                                     fontSize: "var(--text-sm)",
-                                    padding: "2px 8px",
+                                    padding: "var(--space-xs) var(--space-sm)",
                                   }
                                 : {
                                     borderColor: "rgba(220,38,38,0.5)",
                                     color: "var(--color-danger)",
                                     fontSize: "var(--text-sm)",
-                                    padding: "2px 8px",
+                                    padding: "var(--space-xs) var(--space-sm)",
                                   }
                             }
                           >

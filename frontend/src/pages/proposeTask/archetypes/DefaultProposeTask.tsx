@@ -33,7 +33,7 @@ const notesTextareaStyle: CSSProperties = {
   background: "transparent",
   border: "1px solid var(--color-border)",
   borderRadius: 6,
-  padding: "0.6rem 0.7rem",
+  padding: "var(--space-sm) var(--space-md)",
   outline: "none",
   resize: "vertical",
 };
@@ -41,7 +41,7 @@ const notesTextareaStyle: CSSProperties = {
 const tooLongStyle: CSSProperties = {
   color: "#dc2626",
   display: "block",
-  marginTop: 2,
+  marginTop: "var(--space-xs)",
 };
 
 const basePointsInputStyle: CSSProperties = {
@@ -59,7 +59,7 @@ const basePointsInputStyle: CSSProperties = {
 const tipsListStyle: CSSProperties = {
   color: "var(--color-text-primary)",
   lineHeight: 1.6,
-  paddingLeft: 14,
+  paddingLeft: "var(--space-lg)",
   listStyleType: "disc",
 };
 
@@ -141,13 +141,13 @@ export default function DefaultProposeTask({
         <PageTitle title={t("proposeTask.pageTitle")} />
         <div
           className="sidebar-card"
-          style={{ padding: 24, textAlign: "center" }}
+          style={{ padding: "var(--space-xl)", textAlign: "center" }}
         >
           {isMetaTask ? (
             <>
               <p
                 className="content-title font-display italic"
-                style={{ color, marginBottom: 6 }}
+                style={{ color, marginBottom: "var(--space-sm)" }}
               >
                 {t("proposeTask.successMeta.heading")}
               </p>
@@ -164,7 +164,7 @@ export default function DefaultProposeTask({
             <>
               <p
                 className="content-title font-display italic"
-                style={{ color, marginBottom: 6 }}
+                style={{ color, marginBottom: "var(--space-sm)" }}
               >
                 {t("proposeTask.successTask.heading")}
               </p>
@@ -204,21 +204,21 @@ export default function DefaultProposeTask({
         style={{
           display: "grid",
           gridTemplateColumns: "1fr 280px",
-          gap: 20,
+          gap: "var(--space-xl)",
           alignItems: "start",
         }}
       >
         {/* ── Left: Form ── */}
         <div>
           {/* Faction Selector (§20.2) */}
-          <div style={{ marginBottom: 16 }}>
+          <div style={{ marginBottom: "var(--space-lg)" }}>
             <span
               className="eyebrow"
-              style={{ display: "block", marginBottom: 8 }}
+              style={{ display: "block", marginBottom: "var(--space-sm)" }}
             >
               {t("proposeTask.factionSelectorLabel")}
             </span>
-            <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: "var(--space-sm)" }}>
               {(factions.length > 0 ? factions : getAllFactions()).map((f) => {
                 const slug =
                   "slug" in f ? f.slug : (f as { slug: string }).slug;
@@ -234,7 +234,7 @@ export default function DefaultProposeTask({
                         ? factionCssVar(slug, "light")
                         : "var(--color-bg-surface)",
                       borderRadius: 6,
-                      padding: "8px 14px",
+                      padding: "var(--space-sm) var(--space-lg)",
                       cursor: "pointer",
                       textAlign: "center",
                       transition: "all 120ms",
@@ -252,9 +252,9 @@ export default function DefaultProposeTask({
                         fontWeight: 700,
                         textTransform: "uppercase",
                         letterSpacing: "0.07em",
-                        padding: "2px 10px",
+                        padding: "var(--space-xs) var(--space-md)",
                         textShadow: "0 1px 2px rgba(0,0,0,0.3)",
-                        marginBottom: 4,
+                        marginBottom: "var(--space-xs)",
                       }}
                     >
                       {factionName(slug)}
@@ -274,15 +274,15 @@ export default function DefaultProposeTask({
               className="sidebar-card"
               style={{
                 borderLeft: `4px solid ${color}`,
-                padding: "18px 20px",
-                marginBottom: 16,
+                padding: "var(--space-lg) var(--space-xl)",
+                marginBottom: "var(--space-lg)",
               }}
             >
               {/* Task Name (§20.4) */}
-              <div style={{ marginBottom: 16 }}>
+              <div style={{ marginBottom: "var(--space-lg)" }}>
                 <span
                   className="eyebrow"
-                  style={{ display: "block", marginBottom: 6 }}
+                  style={{ display: "block", marginBottom: "var(--space-sm)" }}
                 >
                   {t("proposeTask.fields.name.label")}
                 </span>
@@ -304,7 +304,7 @@ export default function DefaultProposeTask({
                     border: "none",
                     borderBottom: `2px solid ${title ? color : "var(--color-border-strong)"}`,
                     outline: "none",
-                    paddingBottom: 6,
+                    paddingBottom: "var(--space-sm)",
                     transition: "border-color 150ms",
                   }}
                   onFocus={(e) => {
@@ -318,7 +318,7 @@ export default function DefaultProposeTask({
                 />
                 <span
                   className={`eyebrow self-end ${title.length >= 180 ? "text-red-600" : ""}`}
-                  style={{ marginTop: 4 }}
+                  style={{ marginTop: "var(--space-xs)" }}
                 >
                   {title.length}/200
                 </span>
@@ -333,10 +333,10 @@ export default function DefaultProposeTask({
               </div>
 
               {/* Description (§20.4) */}
-              <div style={{ marginBottom: 16 }}>
+              <div style={{ marginBottom: "var(--space-lg)" }}>
                 <span
                   className="eyebrow"
-                  style={{ display: "block", marginBottom: 6 }}
+                  style={{ display: "block", marginBottom: "var(--space-sm)" }}
                 >
                   {t("proposeTask.fields.description.label")}
                 </span>
@@ -352,7 +352,7 @@ export default function DefaultProposeTask({
                 />
                 <span
                   className={`eyebrow self-end ${description.length >= 4500 ? "text-red-600" : ""}`}
-                  style={{ marginTop: 4 }}
+                  style={{ marginTop: "var(--space-xs)" }}
                 >
                   {description.length}/5000
                 </span>
@@ -370,16 +370,16 @@ export default function DefaultProposeTask({
               <div
                 style={{
                   display: "flex",
-                  gap: 24,
+                  gap: "var(--space-xl)",
                   alignItems: "flex-start",
-                  marginBottom: 12,
+                  marginBottom: "var(--space-md)",
                 }}
               >
                 {!isMetaTask && (
                   <div>
                     <span
                       className="eyebrow"
-                      style={{ display: "block", marginBottom: 6 }}
+                      style={{ display: "block", marginBottom: "var(--space-sm)" }}
                     >
                       {t("proposeTask.fields.basePoints.label")}
                     </span>
@@ -397,7 +397,7 @@ export default function DefaultProposeTask({
                     />
                     <span
                       className="eyebrow"
-                      style={{ display: "block", marginTop: 4 }}
+                      style={{ display: "block", marginTop: "var(--space-xs)" }}
                     >
                       {t("proposeTask.fields.basePoints.hint")}
                     </span>
@@ -407,7 +407,7 @@ export default function DefaultProposeTask({
                   <div>
                     <span
                       className="eyebrow"
-                      style={{ display: "block", marginBottom: 6 }}
+                      style={{ display: "block", marginBottom: "var(--space-sm)" }}
                     >
                       {t("proposeTask.fields.bonusPoints.label")}
                     </span>
@@ -428,7 +428,7 @@ export default function DefaultProposeTask({
                     />
                     <span
                       className="eyebrow"
-                      style={{ display: "block", marginTop: 4 }}
+                      style={{ display: "block", marginTop: "var(--space-xs)" }}
                     >
                       {t("proposeTask.fields.bonusPoints.hint")}
                     </span>
@@ -437,7 +437,7 @@ export default function DefaultProposeTask({
                 <div>
                   <span
                     className="eyebrow"
-                    style={{ display: "block", marginBottom: 6 }}
+                    style={{ display: "block", marginBottom: "var(--space-sm)" }}
                   >
                     {t("proposeTask.fields.minimumLevel.label")}
                   </span>
@@ -448,7 +448,7 @@ export default function DefaultProposeTask({
                   />
                   <span
                     className="eyebrow"
-                    style={{ display: "block", marginTop: 4 }}
+                    style={{ display: "block", marginTop: "var(--space-xs)" }}
                   >
                     {t("proposeTask.fields.minimumLevel.hint")}
                   </span>
@@ -459,15 +459,15 @@ export default function DefaultProposeTask({
                 <div
                   style={{
                     borderTop: "1px dashed var(--color-border)",
-                    paddingTop: 12,
-                    marginTop: 4,
+                    paddingTop: "var(--space-md)",
+                    marginTop: "var(--space-xs)",
                   }}
                 >
                   <label
                     style={{
                       display: "flex",
                       alignItems: "center",
-                      gap: 8,
+                      gap: "var(--space-sm)",
                       cursor: "pointer",
                     }}
                   >
@@ -509,10 +509,10 @@ export default function DefaultProposeTask({
 
             {/* Notes to Admin (§20.5) — hidden for meta tasks */}
             {!isMetaTask && (
-              <div style={{ marginBottom: 16 }}>
+              <div style={{ marginBottom: "var(--space-lg)" }}>
                 <span
                   className="eyebrow"
-                  style={{ display: "block", marginBottom: 6 }}
+                  style={{ display: "block", marginBottom: "var(--space-sm)" }}
                 >
                   {t("proposeTask.fields.notes.label")}
                 </span>
@@ -541,13 +541,13 @@ export default function DefaultProposeTask({
                   background: factionCssVar(factionSlug, "light"),
                   border: `1.5px solid ${factionCssVar(factionSlug, "border")}`,
                   borderRadius: 8,
-                  padding: "10px 14px",
-                  marginBottom: 16,
+                  padding: "var(--space-md) var(--space-lg)",
+                  marginBottom: "var(--space-lg)",
                 }}
               >
                 <span
                   className="eyebrow"
-                  style={{ color, marginBottom: 4, display: "block" }}
+                  style={{ color, marginBottom: "var(--space-xs)", display: "block" }}
                 >
                   {isMetaTask
                     ? t("proposeTask.preview.metaHeading", { faction: fname })
@@ -558,7 +558,7 @@ export default function DefaultProposeTask({
                   style={{
                     fontWeight: 700,
                     color: "var(--color-text-primary)",
-                    marginBottom: 2,
+                    marginBottom: "var(--space-xs)",
                   }}
                 >
                   {title}
@@ -578,7 +578,7 @@ export default function DefaultProposeTask({
                     {description}
                   </p>
                 )}
-                <div style={{ display: "flex", gap: 6, marginTop: 6 }}>
+                <div style={{ display: "flex", gap: "var(--space-sm)", marginTop: "var(--space-sm)" }}>
                   {isMetaTask ? (
                     <span
                       className="eyebrow"
@@ -614,7 +614,7 @@ export default function DefaultProposeTask({
                 className="content-text font-body"
                 style={{
                   color: "var(--color-danger)",
-                  marginBottom: 12,
+                  marginBottom: "var(--space-md)",
                 }}
               >
                 {error}
@@ -622,7 +622,7 @@ export default function DefaultProposeTask({
             )}
 
             {/* Submit Row (§20.7) */}
-            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "var(--space-md)" }}>
               <button
                 type="submit"
                 disabled={submitting}
@@ -634,7 +634,7 @@ export default function DefaultProposeTask({
                   fontWeight: 700,
                   textTransform: "uppercase",
                   letterSpacing: "0.15em",
-                  padding: "10px 24px",
+                  padding: "var(--space-md) var(--space-xl)",
                   border: "none",
                   cursor: submitting ? "wait" : "pointer",
                   position: "relative",
@@ -654,7 +654,7 @@ export default function DefaultProposeTask({
                 type="button"
                 onClick={handleCancel}
                 className="btn-outline"
-                style={{ fontSize: "var(--text-base)", padding: "8px 16px" }}
+                style={{ fontSize: "var(--text-base)", padding: "var(--space-sm) var(--space-lg)" }}
               >
                 {t("proposeTask.submit.cancel")}
               </button>
@@ -669,8 +669,8 @@ export default function DefaultProposeTask({
         </div>
 
         {/* ── Right: Tips Column (§20.8) ── */}
-        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-          <div className="sidebar-card" style={{ padding: "14px 16px" }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-md)" }}>
+          <div className="sidebar-card" style={{ padding: "var(--space-md) var(--space-lg)" }}>
             <p className="eyebrow mb-2">
               {t("proposeTask.tips.goodTaskHeading")}
             </p>
@@ -688,7 +688,7 @@ export default function DefaultProposeTask({
             </ul>
           </div>
 
-          <div className="sidebar-card" style={{ padding: "14px 16px" }}>
+          <div className="sidebar-card" style={{ padding: "var(--space-md) var(--space-lg)" }}>
             <p className="eyebrow mb-2">{t("proposeTask.tips.nextHeading")}</p>
             <p
               className="content-text font-body"

@@ -96,7 +96,7 @@ export default function FieldDesk() {
   return (
     <div className="page" style={pageStyle}>
       {/* Top-bar pill: the ACTIVE life's @handle + avatar + lives-in-play. No account handle. */}
-      <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 8 }}>
+      <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 'var(--space-sm)' }}>
         {active && (
           <div style={pillStyle}>
             {active.avatar_url ? (
@@ -118,7 +118,7 @@ export default function FieldDesk() {
       <div style={rainbowUnderline} />
 
       {loading ? (
-        <p className="font-body text-muted" style={{ marginTop: 24 }}>{t('fieldDesk.loading')}</p>
+        <p className="font-body text-muted" style={{ marginTop: 'var(--space-xl)' }}>{t('fieldDesk.loading')}</p>
       ) : (
         <div style={rosterRow}>
           {lives.map((life, index) => (
@@ -203,8 +203,14 @@ function NewSelfDossier({
   }
   return (
     <div style={dossierLocked} aria-disabled>
-      {/* ornament: padlock dingbat used as an icon, sized to its slot — not text */}
-      <div style={{ fontSize: 22 }}>🔒</div>
+      <div
+        style={{
+          // eslint-disable-next-line local/no-raw-style-values -- ornament: padlock dingbat used as an icon, sized to its slot — not text
+          fontSize: 22,
+        }}
+      >
+        🔒
+      </div>
       <div className="content-title" style={dossierTitleLocked}>
         {t('fieldDesk.secondSelfAwaits')}
       </div>
@@ -232,11 +238,11 @@ const pageStyle: CSSProperties = {
 const pillStyle: CSSProperties = {
   display: 'flex',
   alignItems: 'center',
-  gap: 8,
+  gap: 'var(--space-sm)',
   background: 'var(--color-bg-surface)',
   border: '1px solid var(--color-border)',
   borderRadius: 999,
-  padding: '4px 12px 4px 4px',
+  padding: 'var(--space-xs) var(--space-md) var(--space-xs) var(--space-xs)',
 }
 const pillAvatar: CSSProperties = {
   width: 22,
@@ -256,12 +262,12 @@ const dossierTitle: CSSProperties = {
 const dossierTitleLocked: CSSProperties = {
   ...dossierTitle,
   color: 'var(--color-text-secondary)',
-  marginTop: 8,
+  marginTop: 'var(--space-sm)',
 }
 const gateHintStyle: CSSProperties = {
   lineHeight: 1.6,
   color: 'var(--color-text-tertiary)',
-  marginTop: 8,
+  marginTop: 'var(--space-sm)',
   // Container yields to type (§4 geometry doctrine): the hint reads at
   // --text-content now, so it gets the dossier's full inner width.
   maxWidth: 226,
@@ -278,23 +284,23 @@ const headingStyle: CSSProperties = {
 const rainbowUnderline: CSSProperties = {
   height: 4,
   width: 220,
-  marginTop: 8,
+  marginTop: 'var(--space-sm)',
   borderRadius: 2,
   background: 'linear-gradient(90deg, var(--underline-3), var(--underline-2), var(--underline-6), var(--underline-5))',
 }
 const rosterRow: CSSProperties = {
   display: 'flex',
   flexWrap: 'wrap',
-  gap: 28,
+  gap: 'var(--space-2xl)',
   alignItems: 'flex-start',
-  marginTop: 32,
+  marginTop: 'var(--space-2xl)',
 }
 const footerHint: CSSProperties = {
   fontFamily: 'var(--font-display)',
   fontStyle: 'italic',
   fontSize: 'var(--text-content)',
   color: 'var(--color-text-tertiary)',
-  marginTop: 36,
+  marginTop: 'var(--space-3xl)',
 }
 const dossierBase: CSSProperties = {
   width: 266,
@@ -305,7 +311,7 @@ const dossierBase: CSSProperties = {
   alignItems: 'center',
   justifyContent: 'center',
   textAlign: 'center',
-  padding: '24px 20px',
+  padding: 'var(--space-xl)',
   position: 'relative',
   background: 'var(--color-bg-surface-alt)',
 }
@@ -338,25 +344,25 @@ const medallion: CSSProperties = {
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'center',
-  // ornament: the "+" is a glyph sized to the 48px medallion, not text
+  // eslint-disable-next-line local/no-raw-style-values -- ornament: the "+" is a glyph sized to the 48px medallion, not text
   fontSize: 28,
   color: 'var(--color-text-primary)',
-  marginBottom: 14,
+  marginBottom: 'var(--space-lg)',
 }
 const slotOpen: CSSProperties = {
   fontSize: 'var(--text-xs)',
   letterSpacing: '0.14em',
   textTransform: 'uppercase',
   color: 'var(--color-success)',
-  marginTop: 16,
+  marginTop: 'var(--space-lg)',
   borderTop: '1px solid var(--color-border-strong)',
-  paddingTop: 10,
+  paddingTop: 'var(--space-md)',
 }
 const progressTrack: CSSProperties = {
   width: 160,
   height: 6,
   borderRadius: 3,
-  marginTop: 16,
+  marginTop: 'var(--space-lg)',
   overflow: 'hidden',
   background: 'var(--color-bg-surface)',
   border: '1px solid var(--color-border-strong)',

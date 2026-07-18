@@ -50,7 +50,7 @@ function DesktopPraxes({ state }: { state: PraxesFeedState }) {
   return (
     <div className="py-8">
       <PageTitle title={t('listPage.title')} eyebrow={t('listPage.count', { count: items.length })} />
-      <p className="font-body text-sm text-muted mb-6">{t('listPage.intro')}</p>
+      <p className="font-body content-text text-muted mb-6">{t('listPage.intro')}</p>
 
       {/* Filters (Style Guide §5.3) — bare stack, reusing the shared filter chips. */}
       <div className="flex flex-col gap-2.5 mb-6">
@@ -110,7 +110,7 @@ function DesktopPraxes({ state }: { state: PraxesFeedState }) {
       {loading && items.length === 0 ? (
         <p className="font-body text-muted">{t('listPage.loading')}</p>
       ) : error ? (
-        <p className="font-body text-sm text-red-600 border-2 border-red-300 px-3 py-2">
+        <p className="font-body content-text text-red-600 border-2 border-red-300 px-3 py-2">
           {extractError(error, "Couldn't load praxes.")}{' '}
           <button onClick={() => window.location.reload()} className="underline">{tc('states.tryRefreshing')}</button>
         </p>

@@ -39,8 +39,8 @@ export default function UaMobileTaskCard({ task, points }: { task: TaskOut; poin
       style={{
         display: 'flex',
         flexDirection: 'column',
-        gap: 8,
-        padding: '14px 16px',
+        gap: 'var(--space-sm)',
+        padding: 'var(--space-md) var(--space-lg)',
         background: PAPER,
         backgroundImage: 'radial-gradient(rgba(60,40,10,.03) 1px, transparent 1px)',
         backgroundSize: '5px 5px',
@@ -50,7 +50,7 @@ export default function UaMobileTaskCard({ task, points }: { task: TaskOut; poin
         textDecoration: 'none',
       }}
     >
-      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontFamily: ENGRAVED, fontSize: 'var(--text-sm)', letterSpacing: '0.1em', textTransform: 'uppercase', color }}>
+      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 'var(--space-sm)', fontFamily: ENGRAVED, fontSize: 'var(--text-sm)', letterSpacing: '0.1em', textTransform: 'uppercase', color }}>
         <i style={{ width: 7, height: 7, borderRadius: '50%', background: color, flex: 'none' }} />
         {factionName(task.primary_faction_slug)}
       </span>
@@ -65,8 +65,8 @@ export default function UaMobileTaskCard({ task, points }: { task: TaskOut; poin
         style={{ fontFamily: DISPLAY, fontStyle: 'italic', lineHeight: 1.5, color: SUB, margin: 0 }}
       />
 
-      <div className="flex items-center gap-3" style={{ marginTop: 2 }}>
-        <span style={{ fontFamily: ENGRAVED, fontSize: 'var(--text-lg)', letterSpacing: '0.04em', color: INK, background: PAPER_WARM, border: `1px solid ${GOLD}`, padding: '3px 9px' }}>
+      <div className="flex items-center gap-3" style={{ marginTop: 'var(--space-xs)' }}>
+        <span style={{ fontFamily: ENGRAVED, fontSize: 'var(--text-lg)', letterSpacing: '0.04em', color: INK, background: PAPER_WARM, border: `1px solid ${GOLD}`, padding: 'var(--space-xs) var(--space-sm)' }}>
           {t('mobile.points', { points })}
         </span>
         <span style={{ ...kicker, color: MUTED }}>{t('mobile.level', { level: task.level_required })}</span>

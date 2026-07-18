@@ -36,15 +36,15 @@ export default function AlbescentMobileTaskCard({ task, points }: { task: TaskOu
       style={{
         display: 'flex',
         flexDirection: 'column',
-        gap: 8,
-        padding: '16px 18px',
+        gap: 'var(--space-sm)',
+        padding: 'var(--space-lg)',
         background: SHEET,
         border: `1px solid ${ink(10)}`,
         boxShadow: '0 2px 18px rgba(0,0,0,0.045), 0 1px 3px rgba(0,0,0,0.04)',
         textDecoration: 'none',
       }}
     >
-      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 'var(--space-sm)' }}>
         <AlbescentSigil size={16} opacity={0.75} />
         <i style={{ fontFamily: MONO, fontSize: 'var(--text-xs)', letterSpacing: '0.22em', textTransform: 'uppercase', color: ink(24), fontStyle: 'normal' }}>
           {factionName(task.primary_faction_slug)}
@@ -61,7 +61,7 @@ export default function AlbescentMobileTaskCard({ task, points }: { task: TaskOu
         style={{ fontFamily: MONO, lineHeight: 1.6, color: ink(42), margin: 0 }}
       />
 
-      <div className="flex items-center justify-between" style={{ marginTop: 2, borderTop: `1px solid ${ink(7)}`, paddingTop: 10 }}>
+      <div className="flex items-center justify-between" style={{ marginTop: 'var(--space-xs)', borderTop: `1px solid ${ink(7)}`, paddingTop: 'var(--space-md)' }}>
         <span style={{ ...kicker, letterSpacing: '0.2em', color: ink(24) }}>{t('mobile.level', { level: task.level_required })}</span>
         <span style={{ fontFamily: FONT, fontStyle: 'italic', fontSize: 'var(--text-xl)', color: ink(55) }}>{t('mobile.points', { points })}</span>
       </div>

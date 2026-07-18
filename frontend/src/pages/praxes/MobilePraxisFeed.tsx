@@ -44,7 +44,7 @@ export default function MobilePraxisFeed({ state }: { state: PraxesFeedState }) 
     option === 'all' ? t('listPage.filter.all') : tc(`praxisType.${option}`)
 
   return (
-    <div data-feed="mobile" className="page" style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+    <div data-feed="mobile" className="page" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-md)' }}>
       <header>
         <div className="eyebrow" style={{ color: 'var(--color-text-secondary)' }}>
           {tc('nav.praxis')}
@@ -55,7 +55,7 @@ export default function MobilePraxisFeed({ state }: { state: PraxesFeedState }) 
         >
           {t('listPage.title')}
         </h1>
-        <p className="eyebrow" style={{ marginTop: 4 }}>
+        <p className="eyebrow" style={{ marginTop: 'var(--space-xs)' }}>
           {t('listPage.count', { count: items.length })}
         </p>
       </header>
@@ -116,7 +116,7 @@ export default function MobilePraxisFeed({ state }: { state: PraxesFeedState }) 
       {loading && items.length === 0 ? (
         <p className="font-body text-muted">{t('listPage.loading')}</p>
       ) : error ? (
-        <p className="font-body text-sm text-red-600 border-2 border-red-300 px-3 py-2">
+        <p className="font-body content-text text-red-600 border-2 border-red-300 px-3 py-2">
           {t('detail.errors.load')}{' '}
           <button onClick={() => window.location.reload()} className="underline">
             {tc('states.tryRefreshing')}
@@ -127,7 +127,7 @@ export default function MobilePraxisFeed({ state }: { state: PraxesFeedState }) 
           {hasActiveFilters ? t('listPage.emptyFiltered') : t('listPage.empty')}
         </p>
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-md)' }}>
           {items.map((p) => (
             <MobilePraxisCard key={`praxis-${p.id}`} praxis={p} />
           ))}

@@ -77,7 +77,7 @@ function DesktopTasks({ state }: { state: TasksState }) {
       </div>
 
       {signupMsg && (
-        <p className={`font-body text-sm mb-4 border-2 px-3 py-2 ${signupMsg.ok ? 'border-border text-ink' : 'border-red-300 text-red-600'}`}>
+        <p className={`font-body content-text mb-4 border-2 px-3 py-2 ${signupMsg.ok ? 'border-border text-ink' : 'border-red-300 text-red-600'}`}>
           {signupMsg.msg}
         </p>
       )}
@@ -85,7 +85,7 @@ function DesktopTasks({ state }: { state: TasksState }) {
       {loading && tasks.length === 0 ? (
         <p className="font-body text-muted">{t('listPage.loading')}</p>
       ) : error ? (
-        <p className="font-body text-sm text-red-600 border-2 border-red-300 px-3 py-2">
+        <p className="font-body content-text text-red-600 border-2 border-red-300 px-3 py-2">
           {extractError(error, "Couldn't load tasks.")}{' '}
           <button onClick={() => window.location.reload()} className="underline">{tc('states.tryRefreshing')}</button>
         </p>
@@ -94,7 +94,7 @@ function DesktopTasks({ state }: { state: TasksState }) {
       ) : (
         <>
           {/* Flex-wrap container — NOT a grid. Varied card sizes and rotations are intentional (Style Guide §6). */}
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', alignItems: 'flex-start' }}>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-lg)', alignItems: 'flex-start' }}>
             {tasks.map((task) => (
               <TaskCard
                 key={task.id}

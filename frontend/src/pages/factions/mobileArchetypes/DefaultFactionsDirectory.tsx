@@ -130,7 +130,7 @@ export default function DefaultFactionsDirectory() {
             height: 10,
             borderRadius: 999,
             overflow: 'hidden',
-            marginBottom: 20,
+            marginBottom: 'var(--space-xl)',
           }}
         >
           {visible.map((f) => (
@@ -151,7 +151,7 @@ export default function DefaultFactionsDirectory() {
           one or two rows never need collapsing. Rows link to the detail page,
           which owns Accept/Decline (ADR-0030, #347). */}
       {invitations.length > 0 && (
-        <div className="mb-4" style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+        <div className="mb-4" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-sm)' }}>
           <span className="eyebrow" style={{ color: 'var(--color-text-tertiary)' }}>
             {t('index.recentInvitations', { count: invitations.length })}
           </span>
@@ -162,8 +162,8 @@ export default function DefaultFactionsDirectory() {
               style={{
                 display: 'flex',
                 alignItems: 'center',
-                gap: 8,
-                padding: '10px 12px',
+                gap: 'var(--space-sm)',
+                padding: 'var(--space-md)',
                 textDecoration: 'none',
                 background: `linear-gradient(135deg, ${factionCssVar(inv.faction_slug, 'light')}, transparent)`,
                 borderLeft: `3px solid ${factionCssVar(inv.faction_slug, 'border')}`,
@@ -195,7 +195,7 @@ export default function DefaultFactionsDirectory() {
       {unaffiliated && (
         <section
           className="sidebar-card mb-4"
-          style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px 16px' }}
+          style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-md)', padding: 'var(--space-md) var(--space-lg)' }}
         >
           <span
             aria-hidden="true"
@@ -217,7 +217,7 @@ export default function DefaultFactionsDirectory() {
             </div>
             <p
               className="font-body"
-              style={{ fontSize: 'var(--text-content)', color: 'var(--color-text-secondary)', marginTop: 2, lineHeight: 1.4 }}
+              style={{ fontSize: 'var(--text-content)', color: 'var(--color-text-secondary)', marginTop: 'var(--space-xs)', lineHeight: 1.4 }}
             >
               {t('mobile.unaffiliatedBody')}
             </p>
@@ -228,9 +228,9 @@ export default function DefaultFactionsDirectory() {
       {loading ? (
         <p className="font-body text-muted">{t('index.loading')}</p>
       ) : error ? (
-        <p className="font-body text-sm text-red-600 border-2 border-red-300 px-3 py-2">{error}</p>
+        <p className="font-body content-text text-red-600 border-2 border-red-300 px-3 py-2">{error}</p>
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 30 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2xl)' }}>
           {visible.map((f) => (
             <FactionSelectCard
               key={f.slug}

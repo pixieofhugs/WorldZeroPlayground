@@ -81,7 +81,7 @@ export default function EditPraxis() {
   if (!state.praxis) {
     return (
       <div
-        className="py-8 font-body text-sm"
+        className="py-8 font-body content-text"
         style={{ color: "var(--color-danger)" }}
       >
         <PageTitle title="Edit Praxis" />

@@ -96,7 +96,7 @@ export default function DefaultTasks({ state }: { state: TasksState }) {
         {loading && tasks.length === 0 ? (
           <p className="font-body text-muted">{t('listPage.loading')}</p>
         ) : error ? (
-          <p className="font-body text-sm text-red-600 border-2 border-red-300 px-3 py-2">
+          <p className="font-body content-text text-red-600 border-2 border-red-300 px-3 py-2">
             {t('mobile.loadError')}
           </p>
         ) : tasks.length === 0 ? (
