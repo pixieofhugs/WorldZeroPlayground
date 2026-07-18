@@ -5,15 +5,16 @@
  * The old three-call (solo / collab / duel) fetch is collapsed into ONE
  * `listPraxes` call so filter/search/sort can sit on top of a single date-ordered
  * stream (§1). Filter state (type / faction / voted / sort / query) lives here
- * via `useState` and is keyed into `useResource`, so a chip tap rekeys the fetch
- * — mirroring `pages/tasks/useTasks.ts`. The growing window (§8) bumps `limit`,
- * another `useResource` dep. Filter values + setters ride on the returned state
- * so `MobilePraxisFeed` and the desktop page stay presentation-only.
+ * via `useState` and is keyed into the fetch, so a chip tap rekeys it — mirroring
+ * `pages/tasks/useTasks.ts`. The growing window (§8) lives in the shared
+ * `usePagedResource` hook (#645); filter setters call its `resetWindow`. Filter
+ * values + setters ride on the returned state so `MobilePraxisFeed` and the
+ * desktop page stay presentation-only.
  */
 import { useEffect, useState } from 'react'
 import { listPraxes, type PraxisCardOut, type PraxisType } from '../../api/praxis'
 import { getFactions, type FactionOut } from '../../api/factions'
-import { useResource } from '../../hooks/useResource'
+import { usePagedResource } from '../../hooks/usePagedResource'
 import { useDebouncedValue } from '../../hooks/useDebouncedValue'
 
 /** How many rows a page fetches; "load more" grows the window by this step. */
@@ -62,7 +63,6 @@ export function usePraxes(): PraxesFeedState {
   const [voted, setVotedState] = useState<VotedFilter>('')
   const [sort, setSortState] = useState<SortOrder>('newest')
   const [query, setQueryState] = useState('')
-  const [limit, setLimit] = useState(PAGE_LIMIT)
 
   const debouncedQuery = useDebouncedValue(query, 200)
 
@@ -70,18 +70,9 @@ export function usePraxes(): PraxesFeedState {
     getFactions().then(setFactions).catch(() => {})
   }, [])
 
-  // Every filter/search change resets the window so "load more" can't strand a
-  // grown page against a freshly-narrowed result set.
-  const resetWindow = () => setLimit(PAGE_LIMIT)
-  const setType = (next: PraxisTypeFilter) => { setTypeState(next); resetWindow() }
-  const setFaction = (next: string) => { setFactionState(next); resetWindow() }
-  const setVoted = (next: VotedFilter) => { setVotedState(next); resetWindow() }
-  const setSort = (next: SortOrder) => { setSortState(next); resetWindow() }
-  const setQuery = (next: string) => { setQueryState(next); resetWindow() }
-
   const trimmedQuery = debouncedQuery.trim()
-  const { data, loading, error } = useResource(
-    () =>
+  const { data, loading, error, hasMore, loadMore, resetWindow } = usePagedResource(
+    (limit) =>
       listPraxes({
         status: 'submitted',
         type: type === 'all' ? undefined : type,
@@ -91,8 +82,17 @@ export function usePraxes(): PraxesFeedState {
         q: trimmedQuery || undefined,
         limit,
       }),
-    [type, faction, voted, sort, trimmedQuery, limit],
+    [type, faction, voted, sort, trimmedQuery],
+    PAGE_LIMIT,
   )
+
+  // Every filter/search change resets the window so "load more" can't strand a
+  // grown page against a freshly-narrowed result set.
+  const setType = (next: PraxisTypeFilter) => { setTypeState(next); resetWindow() }
+  const setFaction = (next: string) => { setFactionState(next); resetWindow() }
+  const setVoted = (next: VotedFilter) => { setVotedState(next); resetWindow() }
+  const setSort = (next: SortOrder) => { setSortState(next); resetWindow() }
+  const setQuery = (next: string) => { setQueryState(next); resetWindow() }
 
   const items = data ?? []
   const hasActiveFilters =
@@ -118,8 +118,8 @@ export function usePraxes(): PraxesFeedState {
     query,
     setQuery,
 
-    // A full page implies there may be more — reuses useResource untouched (§8).
-    hasMore: data?.length === limit,
-    loadMore: () => setLimit((current) => current + PAGE_LIMIT),
+    // A full page implies there may be more (§8) — via the shared usePagedResource.
+    hasMore,
+    loadMore,
   }
 }

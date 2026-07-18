@@ -35,6 +35,8 @@ const CANNED: TasksState = {
   setFaction: () => {},
   level: '',
   setLevel: () => {},
+  hasMore: false,
+  loadMore: () => {},
   signupMsg: null,
   handleSignup: async () => {},
   displayPointsFor: () => 0,

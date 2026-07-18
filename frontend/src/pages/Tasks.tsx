@@ -39,6 +39,8 @@ function DesktopTasks({ state }: { state: TasksState }) {
     setFaction,
     level,
     setLevel,
+    hasMore,
+    loadMore,
     signupMsg,
     handleSignup,
     displayPointsFor,
@@ -71,17 +73,40 @@ function DesktopTasks({ state }: { state: TasksState }) {
       ) : tasks.length === 0 ? (
         <p className="font-body text-muted">{t('listPage.empty')}</p>
       ) : (
-        /* Flex-wrap container — NOT a grid. Varied card sizes and rotations are intentional (Style Guide §6). */
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', alignItems: 'flex-start' }}>
-          {tasks.map((task) => (
-            <TaskCard
-              key={task.id}
-              task={task}
-              displayPoints={displayPointsFor(task)}
-              onSignup={user && task.can_submit_praxis ? handleSignup : undefined}
-            />
-          ))}
-        </div>
+        <>
+          {/* Flex-wrap container — NOT a grid. Varied card sizes and rotations are intentional (Style Guide §6). */}
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', alignItems: 'flex-start' }}>
+            {tasks.map((task) => (
+              <TaskCard
+                key={task.id}
+                task={task}
+                displayPoints={displayPointsFor(task)}
+                onSignup={user && task.can_submit_praxis ? handleSignup : undefined}
+              />
+            ))}
+          </div>
+          {hasMore && (
+            <div className="flex justify-center mt-6">
+              <button
+                type="button"
+                onClick={loadMore}
+                className="font-body uppercase"
+                style={{
+                  fontSize: 'var(--text-sm)',
+                  letterSpacing: '0.1em',
+                  padding: 'var(--space-sm) var(--space-lg)',
+                  border: '1px solid var(--color-border-strong)',
+                  background: 'var(--color-bg-surface)',
+                  color: 'var(--color-text-primary)',
+                  borderRadius: 4,
+                  cursor: 'pointer',
+                }}
+              >
+                {t('listPage.loadMore')}
+              </button>
+            </div>
+          )}
+        </>
       )}
     </div>
   )
