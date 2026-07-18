@@ -45,6 +45,7 @@ export default function AlbescentFeedFrame({ children }: { children: ReactNode }
           aria-hidden="true"
           style={{
             fontFamily: MONO,
+            // ornament: aria-hidden masthead strip, part of the frame illustration
             fontSize: 7.5,
             letterSpacing: '0.28em',
             textTransform: 'uppercase',

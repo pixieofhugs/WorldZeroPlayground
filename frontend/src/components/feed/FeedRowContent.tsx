@@ -27,12 +27,12 @@ export default function FeedRowContent({
       <Link
         to={row.actorHref}
         className="font-body"
-        style={{ fontSize: 11, fontWeight: 700, color: accent, textDecoration: 'none' }}
+        style={{ fontSize: 'var(--text-content)', fontWeight: 700, color: accent, textDecoration: 'none' }}
       >
         {row.actor}
       </Link>
     ) : (
-      <span className="font-body" style={{ fontSize: 11, fontWeight: 700, color: accent }}>
+      <span className="font-body" style={{ fontSize: 'var(--text-content)', fontWeight: 700, color: accent }}>
         {row.actor}
       </span>
     )
@@ -62,6 +62,7 @@ export default function FeedRowContent({
                   justifyContent: 'center',
                   color: 'var(--color-text-on-accent)',
                   fontFamily: "'Courier Prime', monospace",
+                  // ornament: monogram glyph sized to the 28px avatar disc
                   fontSize: 12,
                   fontWeight: 700,
                   flexShrink: 0,
@@ -77,7 +78,7 @@ export default function FeedRowContent({
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
             {actorNode}
-            <span className="font-body" style={{ fontSize: 11, color: 'var(--color-text-secondary)' }}>
+            <span className="font-body" style={{ fontSize: 'var(--text-content)', color: 'var(--color-text-secondary)' }}>
               {row.action}
             </span>
             {row.badge && <FeedBadge type={row.badge.type} label={row.badge.label} />}
@@ -100,7 +101,7 @@ export default function FeedRowContent({
           {row.headlineQuoted ? (
             <p
               className="font-body"
-              style={{ margin: 0, fontSize: 11, fontStyle: 'italic', color: 'var(--color-text-primary)', lineHeight: 1.4 }}
+              style={{ margin: 0, fontSize: 'var(--text-content)', fontStyle: 'italic', color: 'var(--color-text-primary)', lineHeight: 1.4 }}
             >
               {i18n.t('feed:row.quotedHeadline', { headline: row.headline })}
             </p>
@@ -108,12 +109,12 @@ export default function FeedRowContent({
             <Link
               to={row.headlineHref}
               className="font-body"
-              style={{ fontSize: 11, fontWeight: 700, color: 'var(--color-text-primary)', textDecoration: 'none', display: 'block', lineHeight: 1.3 }}
+              style={{ fontSize: 'var(--text-content)', fontWeight: 700, color: 'var(--color-text-primary)', textDecoration: 'none', display: 'block', lineHeight: 1.3 }}
             >
               {row.headline}
             </Link>
           ) : (
-            <span className="font-body" style={{ fontSize: 11, fontWeight: 700, color: 'var(--color-text-primary)', display: 'block', lineHeight: 1.3 }}>
+            <span className="font-body" style={{ fontSize: 'var(--text-content)', fontWeight: 700, color: 'var(--color-text-primary)', display: 'block', lineHeight: 1.3 }}>
               {row.headline}
             </span>
           )}
