@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import type { TaskOut } from "../../api/tasks";
 import i18n from "../../i18n";
-import LevelPill from "../ui/LevelPill";
+import LevelGem from "../ui/LevelGem";
 import { EverymenSigil } from "./EverymenSigil";
 
 /**
@@ -239,7 +239,7 @@ export default function EverymenTaskCard({ task, displayPoints, onSignup }: Prop
         }}
       >
         <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-xs)" }}>
-          <LevelPill level={task.level_required} factionSlug="everymen" />
+          <LevelGem level={task.level_required} factionSlug="everymen" />
           {/* Secondary points caption — the rubber-stamp PointsSeal is the score
               display; this stays label-tier so it doesn't outshout the seal (§4). */}
           <span

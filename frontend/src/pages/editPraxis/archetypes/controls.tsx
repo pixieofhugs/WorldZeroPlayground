@@ -7,7 +7,7 @@
 import { useRef } from "react";
 import type { CSSProperties, ReactNode } from "react";
 import { useTranslation } from "react-i18next";
-import LevelPill from "../../../components/ui/LevelPill";
+import LevelGem from "../../../components/ui/LevelGem";
 import { factionCssVar, factionName } from "../../../utils/factions";
 import type { PraxisType } from "../../../api/praxis";
 import MarkdownPreview from "../blocks/MarkdownPreview";
@@ -392,7 +392,7 @@ export function MetatasksList({
             >
               {t("metatasks.bonusPoints", { points: mt.point_value })}
             </span>
-            {mt.level_required > 0 && <LevelPill level={mt.level_required} />}
+            {mt.level_required > 0 && <LevelGem level={mt.level_required} />}
           </button>
         );
       })}

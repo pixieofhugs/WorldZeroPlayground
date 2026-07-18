@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import type { TaskOut } from "../../api/tasks";
 import i18n from "../../i18n";
-import LevelPill from "../ui/LevelPill";
+import LevelGem from "../ui/LevelGem";
 import SnideMasthead from "./SnideMasthead";
 
 /**
@@ -217,7 +217,7 @@ export default function SnideTaskCard({
             {i18n.t("feed:taskCard.snide.pointsUnit")}
           </span>
         </span>
-        <LevelPill level={task.level_required} factionSlug="snide" />
+        <LevelGem level={task.level_required} factionSlug="snide" />
       </div>
 
       {/* scotch tape */}
