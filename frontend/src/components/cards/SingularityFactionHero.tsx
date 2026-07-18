@@ -55,7 +55,7 @@ export default function SingularityFactionHero({
       style={{
         position: "relative",
         overflow: "hidden",
-        marginBottom: 32,
+        marginBottom: "var(--space-2xl)",
         border: `1px solid ${BORDER_HARD}`,
         background: VOID,
         color: PHOSPHOR_TEXT,
@@ -104,10 +104,10 @@ export default function SingularityFactionHero({
         style={{
           position: "relative",
           zIndex: 2,
-          padding: "36px 40px 40px",
+          padding: "var(--space-2xl) var(--space-3xl) var(--space-3xl)",
           display: "grid",
           gridTemplateColumns: "1fr 240px",
-          gap: 32,
+          gap: "var(--space-2xl)",
           alignItems: "start",
         }}
       >
@@ -118,7 +118,7 @@ export default function SingularityFactionHero({
               fontSize: "var(--text-sm)",
               letterSpacing: "0.18em",
               color: signal(55),
-              marginBottom: 14,
+              marginBottom: "var(--space-lg)",
               lineHeight: 1.9,
             }}
           >
@@ -138,11 +138,11 @@ export default function SingularityFactionHero({
           <h1
             style={{
               fontFamily: FONT,
-              // ornament: terminal wordmark — the Singularity hero's display type
+              // eslint-disable-next-line local/no-raw-style-values -- ornament: terminal wordmark — the Singularity hero's display type
               fontSize: 56,
               lineHeight: 0.9,
               letterSpacing: "0.04em",
-              margin: "0 0 12px",
+              margin: "0 0 var(--space-md)",
               color: PHOSPHOR,
               fontWeight: 400,
             }}
@@ -157,7 +157,7 @@ export default function SingularityFactionHero({
               letterSpacing: "0.28em",
               color: signal(70),
               textTransform: "uppercase",
-              marginBottom: 16,
+              marginBottom: "var(--space-lg)",
             }}
           >
             {i18n.t("feed:factionHero.singularity.motto")}
@@ -183,7 +183,7 @@ export default function SingularityFactionHero({
           style={{
             display: "flex",
             flexDirection: "column",
-            gap: 20,
+            gap: "var(--space-xl)",
             alignItems: "center",
           }}
         >
@@ -230,7 +230,7 @@ export default function SingularityFactionHero({
                 letterSpacing: "0.2em",
                 color: signal(55),
                 textTransform: "uppercase",
-                padding: "7px 12px 5px",
+                padding: "var(--space-sm) var(--space-md) var(--space-xs)",
                 borderBottom: `1px solid ${signal(28)}`,
               }}
             >
@@ -243,8 +243,8 @@ export default function SingularityFactionHero({
                   display: "flex",
                   justifyContent: "space-between",
                   alignItems: "baseline",
-                  gap: 10,
-                  padding: "7px 12px",
+                  gap: "var(--space-md)",
+                  padding: "var(--space-sm) var(--space-md)",
                   borderBottom: `1px solid ${signal(14)}`,
                 }}
               >
@@ -258,7 +258,7 @@ export default function SingularityFactionHero({
                 >
                   {s.label}
                 </span>
-                {/* ornament: readout numeral sized to the terminal face; above the content floor already */}
+                {/* eslint-disable-next-line local/no-raw-style-values -- ornament: readout numeral sized to the terminal face; above the content floor already */}
                 <span style={{ fontSize: 20, lineHeight: 1, color: PHOSPHOR }}>
                   {s.value}
                 </span>

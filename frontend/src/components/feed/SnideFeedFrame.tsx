@@ -34,8 +34,8 @@ export default function SnideFeedFrame({ children }: { children: ReactNode }) {
         backgroundPosition: '0 0, 2px 1px',
         boxShadow: '3px 4px 0 rgba(0,0,0,0.22)',
         transform: 'rotate(-0.6deg)',
-        padding: '16px 18px 18px 22px',
-        marginBottom: 18,
+        padding: 'var(--space-lg) var(--space-lg) var(--space-lg) var(--space-xl)',
+        marginBottom: 'var(--space-lg)',
         overflow: 'hidden',
       }}
     >

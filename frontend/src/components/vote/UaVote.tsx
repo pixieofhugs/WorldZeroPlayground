@@ -35,7 +35,7 @@ export default function UaVote({
 
   return (
     <div>
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, alignItems: 'center' }}>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-md)', alignItems: 'center' }}>
         {TIERS.map((tier) => {
           const active = selected === tier.value
           const reached = selected >= tier.value
@@ -43,7 +43,7 @@ export default function UaVote({
           return (
             <div
               key={tier.value}
-              style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 5 }}
+              style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 'var(--space-xs)' }}
             >
               <button
                 disabled={saving}
@@ -52,7 +52,7 @@ export default function UaVote({
                 style={{
                   minWidth: 60,
                   height: 40,
-                  padding: '0 14px',
+                  padding: '0 var(--space-lg)',
                   cursor: saving ? 'default' : 'pointer',
                   border: active && top ? 'none' : `1px solid ${reached ? 'var(--faction-ua-card-accent)' : 'var(--ua-line)'}`,
                   background: active

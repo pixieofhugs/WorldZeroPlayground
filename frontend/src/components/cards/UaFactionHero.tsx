@@ -53,10 +53,11 @@ export default function UaFactionHero({
   ];
 
   return (
-    <header style={{ marginBottom: 32 }}>
+    <header style={{ marginBottom: "var(--space-2xl)" }}>
       {/* gilt museum frame — outer leaf */}
       <div
         style={{
+          // eslint-disable-next-line local/no-raw-style-values -- ornament: the padding IS the outer gilt leaf width; rounding reflows the museum frame.
           padding: 11,
           background: GILT,
           boxShadow:
@@ -66,6 +67,7 @@ export default function UaFactionHero({
         {/* inner gold leaf */}
         <div
           style={{
+            // eslint-disable-next-line local/no-raw-style-values -- ornament: the padding IS the inner gold leaf width; rounding reflows the museum frame.
             padding: 5,
             background: `linear-gradient(135deg, ${GOLD}, ${GOLD_PALE})`,
           }}
@@ -79,10 +81,10 @@ export default function UaFactionHero({
               background: PAPER,
               backgroundImage: `radial-gradient(${ink(3)} 1px, transparent 1px)`,
               backgroundSize: "5px 5px",
-              padding: "34px 38px 30px",
+              padding: "var(--space-2xl) var(--space-3xl) var(--space-2xl)",
               display: "flex",
               flexWrap: "wrap",
-              gap: 30,
+              gap: "var(--space-2xl)",
               alignItems: "center",
             }}
           >
@@ -97,7 +99,7 @@ export default function UaFactionHero({
                   letterSpacing: "0.16em",
                   textTransform: "uppercase",
                   color: ACCENT,
-                  marginBottom: 3,
+                  marginBottom: "var(--space-xs)",
                 }}
               >
                 {i18n.t("feed:identity.ua.fullName")}
@@ -110,7 +112,7 @@ export default function UaFactionHero({
                   letterSpacing: "0.3em",
                   textTransform: "uppercase",
                   color: MUTED,
-                  marginBottom: 14,
+                  marginBottom: "var(--space-lg)",
                 }}
               >
                 {i18n.t("feed:factionHero.ua.eyebrow")}
@@ -122,11 +124,11 @@ export default function UaFactionHero({
                   fontFamily: DISPLAY,
                   fontStyle: "italic",
                   fontWeight: 700,
-                  // ornament: gilt regal wordmark — the UA hero's display type
+                  // eslint-disable-next-line local/no-raw-style-values -- ornament: gilt regal wordmark — the UA hero's display type
                   fontSize: 54,
                   lineHeight: 1.04,
                   letterSpacing: "0.01em",
-                  margin: "0 0 16px",
+                  margin: "0 0 var(--space-lg)",
                   color: INK,
                   overflowWrap: "anywhere",
                 }}
@@ -135,7 +137,7 @@ export default function UaFactionHero({
               </h1>
 
               {/* motto cartouche */}
-              <div style={{ marginBottom: 18 }}>
+              <div style={{ marginBottom: "var(--space-lg)" }}>
                 <MottoRibbon />
               </div>
 
@@ -148,7 +150,7 @@ export default function UaFactionHero({
                   lineHeight: 1.7,
                   color: SUB,
                   maxWidth: 560,
-                  margin: "0 0 22px",
+                  margin: "0 0 var(--space-xl)",
                 }}
               >
                 {description ??
@@ -158,7 +160,7 @@ export default function UaFactionHero({
             </div>
 
             {/* stats on the side — engraved regalia stacked in a side column */}
-            <div style={{ flexShrink: 0, width: 168, display: "flex", flexDirection: "column", gap: 11 }}>
+            <div style={{ flexShrink: 0, width: 168, display: "flex", flexDirection: "column", gap: "var(--space-md)" }}>
               {stats.map((s) => (
                 <div
                   key={s.label}
@@ -167,7 +169,7 @@ export default function UaFactionHero({
                     justifyContent: "space-between",
                     alignItems: "baseline",
                     borderTop: `1px solid ${LINE}`,
-                    paddingTop: 9,
+                    paddingTop: "var(--space-sm)",
                   }}
                 >
                   <span

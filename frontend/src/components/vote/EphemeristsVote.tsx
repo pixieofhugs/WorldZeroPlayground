@@ -35,13 +35,13 @@ export default function EphemeristsVote({
 
   return (
     <div>
-      <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+      <div style={{ display: "flex", gap: "var(--space-md)", flexWrap: "wrap" }}>
         {TIERS.map((tier) => {
           const visual = CONCORD_VISUALS[tier.value] ?? CONCORD_VISUALS[1];
           const filled = selected >= tier.value;
           const active = selected === tier.value;
           return (
-            <div key={tier.value} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 5 }}>
+            <div key={tier.value} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "var(--space-xs)" }}>
               <button
                 disabled={saving}
                 onClick={() => void vote(tier.value)}

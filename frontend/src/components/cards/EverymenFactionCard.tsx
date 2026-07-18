@@ -106,10 +106,11 @@ export default function EverymenCard({
           background: "var(--everymen-ink)",
           color: "var(--everymen-gold)",
           textAlign: "center",
-          // ornament: struck banner ribbon across the card head — illustration, not chrome
           fontFamily: "var(--faction-everymen-card-font)",
+          // eslint-disable-next-line local/no-raw-style-values -- ornament: struck banner ribbon across the card head — illustration, not chrome
           fontSize: 15,
           letterSpacing: "0.34em",
+          // eslint-disable-next-line local/no-raw-style-values -- ornament: lead of the struck banner ribbon; rounding reflows it.
           padding: "7px 0",
         }}
       >
@@ -121,9 +122,9 @@ export default function EverymenCard({
       </div>
       <div style={{ height: 4, background: "var(--everymen-gold)", position: "relative", zIndex: 2 }} />
 
-      <div style={{ position: "relative", zIndex: 2, padding: "30px 34px 32px", textAlign: "center" }}>
+      <div style={{ position: "relative", zIndex: 2, padding: "var(--space-2xl)", textAlign: "center" }}>
         {/* sigil seal */}
-        <div style={{ display: "flex", justifyContent: "center", marginBottom: 18 }}>
+        <div style={{ display: "flex", justifyContent: "center", marginBottom: "var(--space-lg)" }}>
           <div
             style={{
               width: 110,
@@ -148,7 +149,7 @@ export default function EverymenCard({
             letterSpacing: "0.3em",
             textTransform: "uppercase",
             color: "var(--everymen-gold)",
-            marginBottom: 8,
+            marginBottom: "var(--space-sm)",
           }}
         >
           {i18n.t("feed:factionCard.everymen.eyebrow")}
@@ -157,8 +158,8 @@ export default function EverymenCard({
         {/* big Bebas headline = faction name */}
         <h1
           style={{
-            // ornament: union-poster headline — Bebas at 0.84 leading, the archetype's voice
             fontFamily: "var(--faction-everymen-card-font)",
+            // eslint-disable-next-line local/no-raw-style-values -- ornament: union-poster headline — Bebas at 0.84 leading, the archetype's voice
             fontSize: 60,
             lineHeight: 0.84,
             letterSpacing: "0.01em",
@@ -174,13 +175,14 @@ export default function EverymenCard({
         <div
           style={{
             display: "inline-block",
-            marginTop: 16,
+            marginTop: "var(--space-lg)",
             background: "var(--everymen-ink)",
             color: "var(--everymen-gold)",
-            // ornament: struck motto plaque — poster type set to the ink block
             fontFamily: "var(--faction-everymen-card-font)",
+            // eslint-disable-next-line local/no-raw-style-values -- ornament: struck motto plaque — poster type set to the ink block
             fontSize: 16,
             letterSpacing: "0.2em",
+            // eslint-disable-next-line local/no-raw-style-values -- ornament: inset of the motto on its struck ink plaque; rounding reflows the plaque.
             padding: "4px 16px",
             whiteSpace: "nowrap",
           }}
@@ -195,7 +197,7 @@ export default function EverymenCard({
             fontFamily: "var(--font-body)",
             lineHeight: 1.65,
             maxWidth: 420,
-            margin: "18px auto 0",
+            margin: "var(--space-lg) auto 0",
             color: "var(--everymen-cream)",
           }}
         >
@@ -209,7 +211,7 @@ export default function EverymenCard({
             flexDirection: "column",
             gap: 0,
             maxWidth: 380,
-            margin: "22px auto 0",
+            margin: "var(--space-xl) auto 0",
             textAlign: "left",
           }}
         >
@@ -219,8 +221,8 @@ export default function EverymenCard({
               style={{
                 display: "flex",
                 alignItems: "center",
-                gap: 12,
-                padding: "10px 0",
+                gap: "var(--space-md)",
+                padding: "var(--space-md) 0",
                 borderTop: "1px dashed color-mix(in srgb, var(--everymen-cream) 35%, transparent)",
               }}
             >
@@ -234,8 +236,8 @@ export default function EverymenCard({
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  // ornament: the checkmark is a dingbat glyph used as an icon in a 22px chip
                   fontFamily: "var(--faction-everymen-card-font)",
+                  // eslint-disable-next-line local/no-raw-style-values -- ornament: the checkmark is a dingbat glyph used as an icon in a 22px chip
                   fontSize: 14,
                 }}
               >

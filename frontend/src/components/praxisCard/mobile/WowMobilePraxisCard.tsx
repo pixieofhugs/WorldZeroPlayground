@@ -21,7 +21,12 @@ export default function WowMobilePraxisCard({ praxis }: { praxis: PraxisCardOut 
     bodyFont: "'Courier Prime', monospace",
   }
   return (
-    <div style={{ position: 'relative', paddingTop: 8 }}>
+    <div
+      style={{
+        position: 'relative',
+        paddingTop: 'var(--space-sm)',
+      }}
+    >
       <div
         style={{
           position: 'absolute',
@@ -39,7 +44,7 @@ export default function WowMobilePraxisCard({ praxis }: { praxis: PraxisCardOut 
           position: 'relative',
           background: factionCssVar('wow', 'card-bg'),
           border: '1.5px solid rgba(0,0,0,0.12)',
-          padding: '18px 16px 14px',
+          padding: 'var(--space-lg) var(--space-lg) var(--space-md)',
           zIndex: 2,
         }}
       >
@@ -59,8 +64,8 @@ export default function WowMobilePraxisCard({ praxis }: { praxis: PraxisCardOut 
           style={{
             display: 'flex',
             alignItems: 'center',
-            gap: 6,
-            marginBottom: 12,
+            gap: 'var(--space-sm)',
+            marginBottom: 'var(--space-md)',
             fontFamily: "'Courier Prime', monospace",
             fontSize: 'var(--text-sm)',
             letterSpacing: '0.14em',

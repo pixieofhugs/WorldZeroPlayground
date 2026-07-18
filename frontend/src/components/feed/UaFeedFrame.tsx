@@ -36,6 +36,7 @@ export default function UaFeedFrame({ children }: { children: ReactNode }) {
     // Outer gilt border + soft brown drop-shadow & inset white hairline.
     <div
       style={{
+        // eslint-disable-next-line local/no-raw-style-values -- ornament: the padding IS the gilt border width, not a gutter.
         padding: 6,
         background: GILT,
         boxShadow: `0 10px 24px ${ink(26)}, inset 0 0 0 1px rgba(255,255,255,0.45)`,
@@ -44,6 +45,7 @@ export default function UaFeedFrame({ children }: { children: ReactNode }) {
       {/* gold-gradient liner */}
       <div
         style={{
+          // eslint-disable-next-line local/no-raw-style-values -- ornament: the padding IS the gold liner width, not a gutter.
           padding: 3,
           background: `linear-gradient(135deg, ${GOLD}, ${GOLD_PALE})`,
         }}
@@ -55,7 +57,7 @@ export default function UaFeedFrame({ children }: { children: ReactNode }) {
             background: PAPER,
             backgroundImage: `radial-gradient(${ink(3)} 1px, transparent 1px)`,
             backgroundSize: '5px 5px',
-            padding: '13px 17px',
+            padding: 'var(--space-md) var(--space-lg)',
           }}
         >
           {/* engraved masthead strip + gold hairline divider */}
@@ -63,7 +65,7 @@ export default function UaFeedFrame({ children }: { children: ReactNode }) {
             aria-hidden="true"
             style={{
               fontFamily: FONT_ENGRAVED,
-              // ornament: aria-hidden engraved masthead, part of the frame illustration
+              // eslint-disable-next-line local/no-raw-style-values -- ornament: aria-hidden engraved masthead, part of the frame illustration
               fontSize: 8.5,
               letterSpacing: '0.13em',
               textTransform: 'uppercase',
@@ -76,6 +78,7 @@ export default function UaFeedFrame({ children }: { children: ReactNode }) {
             aria-hidden="true"
             style={{
               height: 1,
+              // eslint-disable-next-line local/no-raw-style-values -- ornament: lead around the gold hairline divider; in register with its raw 1px rule.
               margin: '9px 0 11px',
               background: `linear-gradient(90deg, ${GOLD}, transparent)`,
             }}

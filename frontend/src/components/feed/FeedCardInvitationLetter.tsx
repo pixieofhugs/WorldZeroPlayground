@@ -15,16 +15,16 @@ export default function FeedCardInvitationLetter({ item }: Props) {
   const color = factionColor(faction_slug);
 
   return (
-    <div style={{ padding: "16px 20px", position: "relative" }}>
+    <div style={{ padding: "var(--space-lg) var(--space-xl)", position: "relative" }}>
       <div
         style={{
           display: "flex",
           alignItems: "center",
-          gap: 8,
-          marginBottom: 10,
+          gap: "var(--space-sm)",
+          marginBottom: "var(--space-md)",
         }}
       >
-        {/* ornament: envelope emoji used as an icon */}
+        {/* eslint-disable-next-line local/no-raw-style-values -- ornament: envelope emoji used as an icon */}
         <span style={{ fontSize: 16 }}>&#x2709;&#xFE0F;</span>
         <span className="eyebrow" style={{ color }}>
           {i18n.t("feed:invitationLetter.kicker")}
@@ -47,7 +47,7 @@ export default function FeedCardInvitationLetter({ item }: Props) {
           fontSize: "var(--text-content)",
           color: "var(--color-text-primary)",
           lineHeight: 1.4,
-          marginBottom: 8,
+          marginBottom: "var(--space-sm)",
         }}
       >
         {/* One <Trans> sentence so the faction name stays inside the
@@ -65,7 +65,7 @@ export default function FeedCardInvitationLetter({ item }: Props) {
         style={{
           fontSize: "var(--text-content)",
           color: "var(--color-text-secondary)",
-          marginBottom: 12,
+          marginBottom: "var(--space-md)",
         }}
       >
         {i18n.t("feed:invitationLetter.body")}

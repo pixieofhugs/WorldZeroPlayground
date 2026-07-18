@@ -29,7 +29,7 @@ export default function FeedBadge({ type, label }: FeedBadgeProps) {
         fontWeight: 700,
         textTransform: 'uppercase',
         letterSpacing: '0.1em',
-        padding: '2px 8px',
+        padding: 'var(--space-xs) var(--space-sm)',
         borderRadius: 3,
         whiteSpace: 'nowrap',
       }}

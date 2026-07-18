@@ -21,7 +21,7 @@ interface FeedDateDividerProps {
 
 export default function FeedDateDivider({ label }: FeedDateDividerProps) {
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 12, margin: '16px 0' }}>
+    <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-md)', margin: 'var(--space-lg) 0' }}>
       <div style={{ flex: 1, height: 1, background: 'var(--color-border)' }} />
       <span
         style={{

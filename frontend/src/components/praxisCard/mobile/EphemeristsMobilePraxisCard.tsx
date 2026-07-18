@@ -37,8 +37,8 @@ export default function EphemeristsMobilePraxisCard({ praxis }: { praxis: Praxis
           zIndex: 2,
           display: 'flex',
           alignItems: 'center',
-          gap: 8,
-          padding: '10px 16px',
+          gap: 'var(--space-sm)',
+          padding: 'var(--space-md) var(--space-lg)',
           borderBottom: '1px solid var(--eph-gold-deep)',
           boxShadow: '0 2px 0 -1px color-mix(in srgb, var(--eph-lapis) 55%, transparent)',
           fontFamily: 'var(--eph-serif)',
@@ -51,7 +51,7 @@ export default function EphemeristsMobilePraxisCard({ praxis }: { praxis: Praxis
         <EphemeristsSigil size={13} color="var(--eph-lapis)" />
         {t('card.masthead.ephemerists')}
       </div>
-      <div style={{ position: 'relative', zIndex: 2, padding: '14px 16px' }}>
+      <div style={{ position: 'relative', zIndex: 2, padding: 'var(--space-lg)' }}>
         <MobilePraxisBody praxis={praxis} theme={theme} />
       </div>
     </div>
