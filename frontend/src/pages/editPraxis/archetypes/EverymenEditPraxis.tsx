@@ -131,7 +131,7 @@ export default function EverymenEditPraxis({ state }: Props) {
           color: PAPER_TEXT,
           background: "var(--everymen-paper-deep)",
           minHeight: "100vh",
-          padding: "var(--space-2xl) var(--space-xl) calc(var(--space-2xl) + var(--space-xl))",
+          padding: "var(--space-2xl) var(--space-xl) var(--space-5xl)",
         } as React.CSSProperties
       }
     >

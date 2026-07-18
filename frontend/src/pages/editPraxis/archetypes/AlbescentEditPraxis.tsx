@@ -104,7 +104,7 @@ export default function AlbescentEditPraxis({ state }: Props) {
           "radial-gradient(ellipse 72% 58% at 50% 38%, rgba(255,255,255,0.58) 0%, transparent 100%), var(--faction-albescent-page)",
         fontFamily: MONO,
         color: INK,
-        padding: "var(--space-xl) var(--space-xl) calc(var(--space-2xl) * 3)",
+        padding: "var(--space-xl) var(--space-xl) var(--space-6xl)",
       }}
     >
       <div style={{ maxWidth: 780, margin: "0 auto" }}>
@@ -122,7 +122,7 @@ export default function AlbescentEditPraxis({ state }: Props) {
             background: SHEET,
             border: `1px solid ${ink(10)}`,
             boxShadow: "0 2px 18px rgba(0,0,0,0.055), 0 1px 3px rgba(0,0,0,0.04)",
-            padding: "calc(var(--space-2xl) + var(--space-sm)) calc(var(--space-2xl) + var(--space-lg)) calc(var(--space-2xl) + var(--space-md))",
+            padding: "var(--space-3xl) var(--space-4xl) var(--space-4xl)",
           }}
         >
           {/* architectural inset hairline */}
@@ -216,7 +216,7 @@ export default function AlbescentEditPraxis({ state }: Props) {
               border: `1px solid ${ink(7)}`,
               background: WARM,
               padding: "var(--space-lg)",
-              marginBottom: "calc(var(--space-2xl) + var(--space-xs))",
+              marginBottom: "var(--space-3xl)",
             }}
           >
             <AlbescentSigil size={38} />

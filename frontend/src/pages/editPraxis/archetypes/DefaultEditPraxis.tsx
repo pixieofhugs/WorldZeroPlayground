@@ -73,7 +73,7 @@ export default function DefaultEditPraxis({ state }: Props) {
         backgroundSize: "40px 40px, 35px 35px, 50px 50px, 45px 45px, 100% 100%",
         fontFamily: "'Caveat', cursive",
         color: SLATE_DEEP,
-        padding: "var(--space-2xl) var(--space-xl) calc(var(--space-2xl) + var(--space-lg))",
+        padding: "var(--space-2xl) var(--space-xl) var(--space-4xl)",
         minHeight: "100vh",
         position: "relative",
       }}

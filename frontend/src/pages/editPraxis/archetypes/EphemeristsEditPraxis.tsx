@@ -93,7 +93,7 @@ export default function EphemeristsEditPraxis({ state }: Props) {
         color: TEXT,
         fontFamily: "var(--eph-serif)",
         position: "relative",
-        padding: "var(--space-2xl) var(--space-xl) calc(var(--space-2xl) + var(--space-lg))",
+        padding: "var(--space-2xl) var(--space-xl) var(--space-4xl)",
         minHeight: "100vh",
         backgroundImage:
           "radial-gradient(40% 32% at 100% 0%, color-mix(in srgb, var(--eph-gold) 12%, transparent), transparent 72%), radial-gradient(46% 38% at 0% 100%, color-mix(in srgb, var(--eph-lapis) 11%, transparent), transparent 72%), repeating-linear-gradient(0deg, color-mix(in srgb, var(--eph-vellum-text) 4%, transparent) 0 1px, transparent 1px 26px)",

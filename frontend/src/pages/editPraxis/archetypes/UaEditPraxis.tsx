@@ -100,7 +100,7 @@ export default function UaEditPraxis({ state }: Props) {
         backgroundSize: "22px 22px, 100% 100%",
         fontFamily: SERIF,
         color: "var(--ua-ink)",
-        padding: "var(--space-2xl) var(--space-xl) calc(var(--space-2xl) + var(--space-xl))",
+        padding: "var(--space-2xl) var(--space-xl) var(--space-5xl)",
         minHeight: "100vh",
       }}
     >

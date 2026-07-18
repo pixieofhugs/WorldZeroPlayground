@@ -123,7 +123,7 @@ export default function SnideEditPraxis({ state }: Props) {
         color: ink,
         fontFamily: "'Courier Prime', monospace",
         position: "relative",
-        padding: "calc(var(--space-2xl) + var(--space-xs)) var(--space-xl) calc(var(--space-2xl) + var(--space-lg))",
+        padding: "var(--space-3xl) var(--space-xl) var(--space-4xl)",
         minHeight: "100vh",
         backgroundImage: `repeating-linear-gradient(7deg, ${lightBg} 0, ${lightBg} 1px, transparent 1px, transparent 4px), repeating-linear-gradient(-93deg, rgba(0,0,0,.015) 0, rgba(0,0,0,.015) 1px, transparent 1px, transparent 5px)`,
       }}

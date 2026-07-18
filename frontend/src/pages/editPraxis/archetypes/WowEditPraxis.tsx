@@ -242,7 +242,7 @@ export default function WowEditPraxis({ state }: Props) {
         {
           fontFamily: "var(--font-body)",
           color: ink,
-          padding: "var(--space-2xl) var(--space-lg) calc(var(--space-2xl) + var(--space-xl))",
+          padding: "var(--space-2xl) var(--space-lg) var(--space-5xl)",
           minHeight: "100vh",
           background: lightBg,
         } as React.CSSProperties
