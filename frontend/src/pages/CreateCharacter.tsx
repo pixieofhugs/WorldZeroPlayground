@@ -140,7 +140,7 @@ function DesktopCreateCharacter({ state }: { state: CreateCharacterState }) {
                       }}
                     >
                       <span style={{ ...dot, background: factionCssVar(slug) }} />
-                      <span style={{ fontFamily: factionCssVar(slug, 'card-font'), fontSize: 13, color: 'var(--color-text-primary)' }}>
+                      <span style={{ fontFamily: factionCssVar(slug, 'card-font'), fontSize: 'var(--text-content)', color: 'var(--color-text-primary)' }}>
                         {factionName(slug)}
                       </span>
                     </button>
@@ -157,7 +157,7 @@ function DesktopCreateCharacter({ state }: { state: CreateCharacterState }) {
               {submitting ? t('createCharacter.submitBusy') : t('createCharacter.submitIdle')}
             </button>
             <button type="button" onClick={() => navigate('/')} style={cancelBtn}>{t('createCharacter.cancel')}</button>
-            <span style={{ fontSize: 8, color: 'var(--color-text-tertiary)', letterSpacing: '0.06em' }}>
+            <span style={{ fontSize: 'var(--text-content)', color: 'var(--color-text-tertiary)', letterSpacing: '0.06em' }}>
               {t('createCharacter.startsAt')}
             </span>
           </div>
@@ -196,32 +196,32 @@ function DesktopCreateCharacter({ state }: { state: CreateCharacterState }) {
 
 const backLink: CSSProperties = {
   background: 'none', border: 'none', cursor: 'pointer',
-  fontSize: 9, color: 'var(--color-text-secondary)', padding: 0, marginBottom: 16,
+  fontSize: 'var(--text-sm)', color: 'var(--color-text-secondary)', padding: 0, marginBottom: 16,
 }
 const twoCol: CSSProperties = { display: 'flex', flexWrap: 'wrap', gap: 48, alignItems: 'flex-start' }
 const titleStyle: CSSProperties = {
   fontFamily: 'var(--font-display)', fontStyle: 'italic', fontWeight: 700,
-  fontSize: 38, lineHeight: 1.02, color: 'var(--color-text-primary)', margin: '0 0 24px',
+  fontSize: 'var(--text-heading)', lineHeight: 1.02, color: 'var(--color-text-primary)', margin: '0 0 24px',
 }
 const eyebrow: CSSProperties = {
-  display: 'block', fontSize: 8, letterSpacing: '0.16em', textTransform: 'uppercase',
+  display: 'block', fontSize: 'var(--text-sm)', letterSpacing: '0.16em', textTransform: 'uppercase',
   color: 'var(--color-text-secondary)',
 }
 const nameInput: CSSProperties = {
   display: 'block', width: '100%', marginTop: 8, background: 'transparent', border: 'none',
   borderBottom: '1.5px solid var(--color-text-primary)', outline: 'none',
-  fontFamily: 'var(--font-display)', fontStyle: 'italic', fontSize: 30,
+  fontFamily: 'var(--font-display)', fontStyle: 'italic', fontSize: 'var(--text-title)',
   color: 'var(--color-text-primary)', padding: '2px 0 8px',
 }
 const bioInput: CSSProperties = {
   display: 'block', width: '100%', marginTop: 6, boxSizing: 'border-box', resize: 'none',
   background: 'var(--color-bg-surface)', border: '1px solid var(--color-border-strong)',
-  borderRadius: 5, outline: 'none', fontFamily: 'var(--font-body)', fontSize: 11,
+  borderRadius: 5, outline: 'none', fontFamily: 'var(--font-body)', fontSize: 'var(--text-content)',
   lineHeight: 1.6, color: 'var(--color-text-primary)', padding: '10px 12px',
 }
 const metaRow: CSSProperties = {
   display: 'flex', justifyContent: 'space-between', marginTop: 6,
-  fontFamily: 'var(--font-body)', fontSize: 9,
+  fontFamily: 'var(--font-body)', fontSize: 'var(--text-sm)',
 }
 const pickerGrid: CSSProperties = {
   display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginTop: 10,
@@ -233,15 +233,15 @@ const pickerCell: CSSProperties = {
 }
 const dot: CSSProperties = { width: 12, height: 12, borderRadius: '50%', flexShrink: 0 }
 const errorBox: CSSProperties = {
-  marginTop: 16, fontFamily: 'var(--font-body)', fontSize: 11, color: 'var(--color-danger)',
+  marginTop: 16, fontFamily: 'var(--font-body)', fontSize: 'var(--text-content)', color: 'var(--color-danger)',
   border: '1px solid var(--color-danger)', borderRadius: 4, padding: '8px 10px',
 }
 const primaryBtn: CSSProperties = {
-  cursor: 'pointer', fontFamily: 'var(--font-body)', fontSize: 10, letterSpacing: '0.12em',
+  cursor: 'pointer', fontFamily: 'var(--font-body)', fontSize: 'var(--text-base)', letterSpacing: '0.12em',
   textTransform: 'uppercase', color: 'var(--color-bg-page)', background: 'var(--color-text-primary)',
   border: 'none', padding: '12px 24px', borderRadius: 5,
 }
 const cancelBtn: CSSProperties = {
   cursor: 'pointer', background: 'none', border: 'none', fontFamily: 'var(--font-body)',
-  fontSize: 9, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--color-text-secondary)',
+  fontSize: 'var(--text-sm)', letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--color-text-secondary)',
 }

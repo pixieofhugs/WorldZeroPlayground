@@ -43,7 +43,7 @@ export default function NavBar() {
           <span
             className="font-display italic"
             style={{
-              fontSize: 19,
+              fontSize: 'var(--text-content)',
               color: 'var(--color-text-primary)',
               display: 'inline-block',
               borderBottom: '2px solid transparent',

@@ -106,6 +106,8 @@ function SealStamp({ level, sealRing = 'rainbow' }: { level: number; sealRing?: 
             boxShadow: `inset 0 0 0 2px ${PAPER}, inset 0 0 0 3px ${INK}`,
           }}
         >
+          {/* ornament: the LVL caption and numeral are engraved into the wax seal;
+              both sizes draw the stamp rather than set readable text. */}
           <div style={{ textAlign: 'center' }}>
             <div style={{ fontFamily: FONT_BODY, fontSize: 8, letterSpacing: '0.24em', color: INK }}>
               LVL
@@ -129,18 +131,19 @@ function AbilityRow({ ability, color }: { ability: LevelUnlock; color: string })
   const desc = tKey(t, `unlocks.${ability.key}.desc`)
   return (
     <div style={{ display: 'flex', gap: 13, textAlign: 'left', alignItems: 'flex-start', marginBottom: 15 }}>
+      {/* ornament: sense/ability dingbat used as a bullet */}
       <span style={{ fontSize: 15, lineHeight: 1.1, flex: 'none', width: 18, textAlign: 'center', color }}>
         {isSense ? '✦' : '■'}
       </span>
       <div>
-        <div style={{ fontFamily: FONT_BODY, fontSize: 7, letterSpacing: '0.18em', textTransform: 'uppercase', color: FAINT, marginBottom: 3 }}>
+        <div style={{ fontFamily: FONT_BODY, fontSize: 'var(--text-xs)', letterSpacing: '0.18em', textTransform: 'uppercase', color: FAINT, marginBottom: 3 }}>
           {isSense ? t('popup.senseEyebrow') : t('popup.abilityEyebrow')}
         </div>
-        <div style={{ fontFamily: FONT_DISPLAY, fontStyle: 'italic', fontSize: 16, lineHeight: 1.2, color: INK }}>
+        <div style={{ fontFamily: FONT_DISPLAY, fontStyle: 'italic', fontSize: 'var(--text-content)', lineHeight: 1.2, color: INK }}>
           {name}
         </div>
         {desc && (
-          <div style={{ fontFamily: FONT_BODY, fontSize: 9, lineHeight: 1.55, color: MUTED, marginTop: 3 }}>
+          <div style={{ fontFamily: FONT_BODY, fontSize: 'var(--text-content)', lineHeight: 1.55, color: MUTED, marginTop: 3 }}>
             {desc}
           </div>
         )}
@@ -253,14 +256,14 @@ function MobileLevelUpCard({
       >
         <SealStamp level={level} sealRing={sealRing} />
 
-        <p style={{ fontFamily: FONT_BODY, fontSize: 9, textTransform: 'uppercase', letterSpacing: '0.15em', color: FAINT, margin: '0 0 4px' }}>
+        <p style={{ fontFamily: FONT_BODY, fontSize: 'var(--text-sm)', textTransform: 'uppercase', letterSpacing: '0.15em', color: FAINT, margin: '0 0 4px' }}>
           {t('popup.levelReached')}
         </p>
         <RainbowText text={rank} fontSize={28} />
 
         <RainbowRule style={{ margin: '14px 0 16px' }} />
 
-        <div style={{ fontFamily: FONT_BODY, fontSize: 8, letterSpacing: '0.2em', textTransform: 'uppercase', color: FAINT, marginBottom: 14 }}>
+        <div style={{ fontFamily: FONT_BODY, fontSize: 'var(--text-xs)', letterSpacing: '0.2em', textTransform: 'uppercase', color: FAINT, marginBottom: 14 }}>
           {t('popup.nowUnlocked')}
         </div>
 
@@ -278,7 +281,7 @@ function MobileLevelUpCard({
             fontFamily: FONT_BODY,
             textTransform: 'uppercase',
             letterSpacing: '0.12em',
-            fontSize: 12,
+            fontSize: 'var(--text-lg)',
             padding: '0.7rem 1.4rem',
             border: 'none',
             borderRadius: 10,
@@ -360,14 +363,14 @@ export default function LevelUpPopup({
     >
       <SealStamp level={level} sealRing={sealRing} />
 
-      <p style={{ fontFamily: FONT_BODY, fontSize: 9, textTransform: 'uppercase', letterSpacing: '0.15em', color: FAINT, margin: '0 0 4px' }}>
+      <p style={{ fontFamily: FONT_BODY, fontSize: 'var(--text-sm)', textTransform: 'uppercase', letterSpacing: '0.15em', color: FAINT, margin: '0 0 4px' }}>
         {t('popup.levelReached')}
       </p>
       <RainbowText text={rank} />
 
       <RainbowRule style={{ margin: '14px 0 16px' }} />
 
-      <div style={{ fontFamily: FONT_BODY, fontSize: 8, letterSpacing: '0.2em', textTransform: 'uppercase', color: FAINT, marginBottom: 14 }}>
+      <div style={{ fontFamily: FONT_BODY, fontSize: 'var(--text-xs)', letterSpacing: '0.2em', textTransform: 'uppercase', color: FAINT, marginBottom: 14 }}>
         {t('popup.nowUnlocked')}
       </div>
 
@@ -385,7 +388,7 @@ export default function LevelUpPopup({
           fontFamily: FONT_BODY,
           textTransform: 'uppercase',
           letterSpacing: '0.12em',
-          fontSize: 11,
+          fontSize: 'var(--text-md)',
           padding: '0.6rem 1.4rem',
           border: 'none',
           background: INK,

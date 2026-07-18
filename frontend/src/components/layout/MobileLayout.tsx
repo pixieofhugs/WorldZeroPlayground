@@ -31,7 +31,7 @@ export default function MobileLayout({ children }: { children: ReactNode }) {
           borderBottom: '1px solid var(--color-border)',
         }}
       >
-        <Link to="/" className="font-display italic" style={{ fontSize: 18, color: 'var(--color-text-primary)', textDecoration: 'none' }}>
+        <Link to="/" className="font-display italic" style={{ fontSize: 'var(--text-content)', color: 'var(--color-text-primary)', textDecoration: 'none' }}>
           {t('brand')}
         </Link>
         {/* Right-side header controls — only meaningful when signed in. */}
@@ -70,7 +70,7 @@ export default function MobileLayout({ children }: { children: ReactNode }) {
                     height: 15,
                     padding: '0 3px',
                     borderRadius: 999,
-                    fontSize: 9,
+                    fontSize: 'var(--text-sm)',
                     fontWeight: 700,
                     lineHeight: 1,
                     color: 'var(--color-text-on-accent)',
@@ -88,7 +88,6 @@ export default function MobileLayout({ children }: { children: ReactNode }) {
               aria-label={t('settings.title')}
               className="eyebrow"
               style={{
-                fontSize: 10,
                 color: 'var(--color-text-secondary)',
                 textDecoration: 'none',
                 padding: '4px 2px',

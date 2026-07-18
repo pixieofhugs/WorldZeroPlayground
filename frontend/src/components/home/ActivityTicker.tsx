@@ -68,7 +68,7 @@ function TickerCard({ entry }: { entry: TickerEntry }) {
       <div
         style={{
           fontFamily: factionCssVar(entry.faction, 'card-font'),
-          fontSize: 17,
+          fontSize: 'var(--text-content)',
           color: 'var(--color-text-primary)',
           lineHeight: 1.05,
           overflow: 'hidden',
@@ -80,7 +80,7 @@ function TickerCard({ entry }: { entry: TickerEntry }) {
       </div>
       <div
         className="font-body"
-        style={{ fontSize: 9, color: 'var(--color-text-tertiary)', lineHeight: 1 }}
+        style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-tertiary)', lineHeight: 1 }}
       >
         {t(entry.verbKey)}
       </div>
@@ -88,7 +88,7 @@ function TickerCard({ entry }: { entry: TickerEntry }) {
         <div
           className="font-body"
           style={{
-            fontSize: 10,
+            fontSize: 'var(--text-content)',
             color: accent,
             fontStyle: 'italic',
             lineHeight: 1.25,

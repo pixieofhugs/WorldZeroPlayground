@@ -32,7 +32,7 @@ export default function EphemeristsComment(props: CommentProps) {
       <div style={{ ...frame(), display: 'flex', gap: 12, alignItems: 'flex-start' }}>
         <FactionAvatar character={character} size="sm" />
         <div style={{ flex: 1 }}>
-          <div style={{ fontSize: 10, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--faction-ephemerists-card-accent)', marginBottom: 6 }}>
+          <div style={{ fontSize: 'var(--text-base)', letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--faction-ephemerists-card-accent)', marginBottom: 6 }}>
             {t('comments.ephemerists.prompt')}
           </div>
           <ComposerControls value={value} onChange={onChange} onSubmit={onSubmit} submitting={submitting} accent="var(--faction-ephemerists-card-accent)" bg="rgba(255,255,255,0.35)" text="var(--faction-ephemerists-card-text)" />
@@ -49,10 +49,10 @@ export default function EphemeristsComment(props: CommentProps) {
     <div style={frame()}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, borderBottom: '1px solid rgba(29,110,114,0.25)', paddingBottom: 8, marginBottom: 10 }}>
         <FactionAvatar character={authorToCharacter(comment.author)} size="sm" />
-        <Link to={`/characters/${comment.author.id}`} style={{ fontSize: 15, fontWeight: 600, letterSpacing: '0.05em', color: 'var(--faction-ephemerists-card-text)', textDecoration: 'none' }}>
+        <Link to={`/characters/${comment.author.id}`} style={{ fontSize: 'var(--text-content)', fontWeight: 600, letterSpacing: '0.05em', color: 'var(--faction-ephemerists-card-text)', textDecoration: 'none' }}>
           {comment.author.display_name}
         </Link>
-        <span style={{ marginLeft: 'auto', fontSize: 11, fontStyle: 'italic', color: 'var(--faction-ephemerists-card-muted)', whiteSpace: 'nowrap', display: 'inline-flex', alignItems: 'baseline', gap: 8 }}>
+        <span style={{ marginLeft: 'auto', fontSize: 'var(--text-md)', fontStyle: 'italic', color: 'var(--faction-ephemerists-card-muted)', whiteSpace: 'nowrap', display: 'inline-flex', alignItems: 'baseline', gap: 8 }}>
           {formatCommentTime(slug, comment.created_at)}
           {comment.is_edited ? ` · ${t('comments.ephemerists.edited')}` : ''}
           <OwnerControls owner={owner} />
@@ -62,8 +62,8 @@ export default function EphemeristsComment(props: CommentProps) {
       {owner.editing ? (
         <CommentEditor owner={owner} accent="var(--faction-ephemerists-card-accent)" bg="rgba(255,255,255,0.35)" text="var(--faction-ephemerists-card-text)" />
       ) : (
-        <div style={{ fontSize: 16, lineHeight: 1.55 }}>
-          <span style={{ float: 'left', fontSize: 34, lineHeight: 0.72, color: RUBRIC, padding: '4px 8px 0 0', fontWeight: 600 }}>{drop}</span>
+        <div style={{ fontSize: 'var(--text-content)', lineHeight: 1.55 }}>
+          <span style={{ float: 'left', /* ornament: illuminated drop cap */ fontSize: 34, lineHeight: 0.72, color: RUBRIC, padding: '4px 8px 0 0', fontWeight: 600 }}>{drop}</span>
           <MentionText body={body.slice(1)} mentions={comment.mentions} accent="var(--faction-ephemerists-card-accent)" />
         </div>
       )}

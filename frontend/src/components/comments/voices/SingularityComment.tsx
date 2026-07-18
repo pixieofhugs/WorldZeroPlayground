@@ -48,7 +48,7 @@ export default function SingularityComment(props: CommentProps) {
         <div style={{ position: 'relative', display: 'flex', gap: 11, alignItems: 'flex-start' }}>
           <FactionAvatar character={character} size="sm" />
           <div style={{ flex: 1 }}>
-            <div style={{ fontSize: 9, color: 'var(--faction-singularity-card-muted)', textTransform: 'uppercase', letterSpacing: '0.14em', marginBottom: 6 }}>
+            <div style={{ fontSize: 'var(--text-sm)', color: 'var(--faction-singularity-card-muted)', textTransform: 'uppercase', letterSpacing: '0.14em', marginBottom: 6 }}>
               {t('comments.singularity.protocol')}
               <span style={{ display: 'inline-block', width: 5, height: 9, background: 'var(--faction-singularity-card-text)', marginLeft: 4, verticalAlign: 'middle', animation: 'blink 1s step-end infinite' }} />
             </div>
@@ -68,17 +68,17 @@ export default function SingularityComment(props: CommentProps) {
         <FactionAvatar character={authorToCharacter(comment.author)} size="sm" />
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 10 }}>
-            <Link to={`/characters/${comment.author.id}`} style={{ fontSize: 13, color: 'var(--faction-singularity-card-text)', textDecoration: 'none' }}>
+            <Link to={`/characters/${comment.author.id}`} style={{ fontSize: 'var(--text-content)', color: 'var(--faction-singularity-card-text)', textDecoration: 'none' }}>
               {comment.author.username}
             </Link>
-            <span style={{ fontSize: 11, color: 'var(--faction-singularity-card-muted)', whiteSpace: 'nowrap', display: 'inline-flex', alignItems: 'baseline', gap: 8 }}>
+            <span style={{ fontSize: 'var(--text-md)', color: 'var(--faction-singularity-card-muted)', whiteSpace: 'nowrap', display: 'inline-flex', alignItems: 'baseline', gap: 8 }}>
               {formatCommentTime(slug, comment.created_at)}
               {comment.is_edited ? ` [${t('comments.singularity.edited')}]` : ''}
               <OwnerControls owner={owner} />
               <CommentFlagControl comment={comment} />
             </span>
           </div>
-          <div style={{ fontSize: 13, lineHeight: 1.55, marginTop: 4 }}>
+          <div style={{ fontSize: 'var(--text-content)', lineHeight: 1.55, marginTop: 4 }}>
             {owner.editing ? (
               <CommentEditor owner={owner} accent="var(--faction-singularity-card-text)" bg="#0a1f12" text="var(--faction-singularity-card-text)" />
             ) : (

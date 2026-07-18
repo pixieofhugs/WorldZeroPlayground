@@ -152,7 +152,7 @@ function DesktopFactions() {
               padding: 0,
               cursor: 'pointer',
               color: 'var(--color-text-tertiary)',
-              fontSize: 9,
+              fontSize: 'var(--text-sm)',
               display: 'inline-flex',
               alignItems: 'center',
               gap: 6,
@@ -181,7 +181,7 @@ function DesktopFactions() {
                     }}
                   >
                     <span className="eyebrow">{t('index.inviteBadge')}</span>
-                    <span className="font-body" style={{ fontSize: 11, color: 'var(--color-text-primary)', flex: 1 }}>
+                    <span className="font-body" style={{ fontSize: 'var(--text-content)', color: 'var(--color-text-primary)', flex: 1 }}>
                       <Trans
                         t={t}
                         i18nKey="index.invitedToJoin"

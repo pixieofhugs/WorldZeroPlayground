@@ -63,6 +63,7 @@ export default function UaFeedFrame({ children }: { children: ReactNode }) {
             aria-hidden="true"
             style={{
               fontFamily: FONT_ENGRAVED,
+              // ornament: aria-hidden engraved masthead, part of the frame illustration
               fontSize: 8.5,
               letterSpacing: '0.13em',
               textTransform: 'uppercase',

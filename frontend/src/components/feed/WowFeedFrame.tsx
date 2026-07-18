@@ -75,6 +75,7 @@ export default function WowFeedFrame({ children }: { children: ReactNode }) {
             alignItems: 'center',
             gap: 6,
             fontFamily: SCRIPT,
+            // ornament: hand-lettered window title on the frame chrome
             fontSize: 17,
             color: TITLE_TEXT,
           }}

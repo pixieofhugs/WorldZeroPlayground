@@ -87,7 +87,7 @@ export default function WowVote({ praxisId, currentValue, points, totalVotes }: 
               <span
                 style={{
                   fontFamily: 'var(--font-body)',
-                  fontSize: 7,
+                  fontSize: 'var(--text-xs)',
                   textTransform: 'uppercase',
                   letterSpacing: '0.04em',
                   color: filled ? fill : 'var(--faction-wow-card-muted)',

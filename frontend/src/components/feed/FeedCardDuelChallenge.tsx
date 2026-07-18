@@ -144,7 +144,7 @@ export default function FeedCardDuelChallenge({ item }: Props) {
                   translatable unit; the challenger link is tag <1>. */}
               <span
                 className="font-body"
-                style={{ fontSize: 11, color: "var(--color-text-secondary)" }}
+                style={{ fontSize: "var(--text-content)", color: "var(--color-text-secondary)" }}
               >
                 <Trans
                   ns="feed"
@@ -156,7 +156,7 @@ export default function FeedCardDuelChallenge({ item }: Props) {
                         to={`/characters/${challenger_character_id}`}
                         className="font-body"
                         style={{
-                          fontSize: 11,
+                          fontSize: "var(--text-content)",
                           fontWeight: 700,
                           color: "var(--color-text-primary)",
                           textDecoration: "none",
@@ -203,7 +203,7 @@ export default function FeedCardDuelChallenge({ item }: Props) {
           <span
             className="font-body"
             style={{
-              fontSize: 11,
+              fontSize: "var(--text-content)",
               fontWeight: 700,
               color: "var(--color-text-primary)",
             }}
@@ -216,6 +216,7 @@ export default function FeedCardDuelChallenge({ item }: Props) {
           >
             {i18n.t("feed:duelChallenge.taskMeta", { points: task_point_value })}
           </span>
+          {/* ornament: crossed-swords dingbat used as an icon */}
           <span style={{ fontSize: 12 }}>&#x2694;</span>
         </div>
 
@@ -236,7 +237,7 @@ export default function FeedCardDuelChallenge({ item }: Props) {
               disabled={loading || busy}
               style={{
                 fontFamily: "'Courier Prime', monospace",
-                fontSize: 9,
+                fontSize: "var(--text-sm)",
                 fontWeight: 700,
                 textTransform: "uppercase",
                 letterSpacing: "0.1em",
@@ -254,7 +255,7 @@ export default function FeedCardDuelChallenge({ item }: Props) {
               disabled={loading || busy}
               style={{
                 fontFamily: "'Courier Prime', monospace",
-                fontSize: 9,
+                fontSize: "var(--text-sm)",
                 fontWeight: 700,
                 textTransform: "uppercase",
                 letterSpacing: "0.1em",
@@ -332,7 +333,7 @@ export default function FeedCardDuelChallenge({ item }: Props) {
             <p
               className="font-body"
               style={{
-                fontSize: 11,
+                fontSize: "var(--text-content)",
                 marginBottom: 16,
                 color: "var(--color-text-secondary)",
               }}
@@ -360,7 +361,7 @@ export default function FeedCardDuelChallenge({ item }: Props) {
                     cursor: busy ? "not-allowed" : "pointer",
                     textAlign: "left",
                     fontFamily: "'Courier Prime', monospace",
-                    fontSize: 10,
+                    fontSize: "var(--text-content)",
                     color: "var(--color-text-primary)",
                   }}
                 >
@@ -383,7 +384,7 @@ export default function FeedCardDuelChallenge({ item }: Props) {
               style={{
                 marginTop: 14,
                 fontFamily: "'Courier Prime', monospace",
-                fontSize: 9,
+                fontSize: "var(--text-sm)",
                 fontWeight: 700,
                 textTransform: "uppercase",
                 background: "transparent",

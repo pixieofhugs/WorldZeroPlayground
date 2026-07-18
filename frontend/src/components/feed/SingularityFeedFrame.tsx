@@ -74,6 +74,7 @@ export default function SingularityFeedFrame({ children }: { children: ReactNode
           gap: 8,
           padding: '6px 12px',
           borderBottom: `1px solid ${signal(20)}`,
+          // ornament: terminal chrome strip, part of the frame illustration
           fontSize: 7,
           letterSpacing: '0.18em',
           color: signal(55),

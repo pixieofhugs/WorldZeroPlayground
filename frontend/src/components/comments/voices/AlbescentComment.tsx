@@ -30,9 +30,9 @@ function frame(): React.CSSProperties {
 function Letterhead({ monogram }: { monogram: string }) {
   const { t } = useTranslation('praxis')
   return (
-    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 9, letterSpacing: '0.22em', textTransform: 'uppercase', color: MUTED, marginBottom: 11 }}>
+    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', /* ornament: engraved letterhead strip */ fontSize: 9, letterSpacing: '0.22em', textTransform: 'uppercase', color: MUTED, marginBottom: 11 }}>
       <span>{t('comments.albescent.letterhead')}</span>
-      <span style={{ width: 22, height: 22, display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid rgba(28,28,26,0.3)', borderRadius: '50%', fontFamily: SERIF, fontStyle: 'italic', fontSize: 12, color: 'rgba(28,28,26,0.6)' }}>
+      <span style={{ width: 22, height: 22, display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid rgba(28,28,26,0.3)', borderRadius: '50%', fontFamily: SERIF, fontStyle: 'italic', /* ornament: monogram glyph inside the 22px seal */ fontSize: 12, color: 'rgba(28,28,26,0.6)' }}>
         {monogram}
       </span>
     </div>
@@ -63,18 +63,18 @@ export default function AlbescentComment(props: CommentProps) {
       <Letterhead monogram={comment.author.display_name[0]?.toUpperCase() ?? 'A'} />
       <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
         <FactionAvatar character={authorToCharacter(comment.author)} size="sm" />
-        <Link to={`/characters/${comment.author.id}`} style={{ fontFamily: SERIF, fontWeight: 600, fontSize: 16, letterSpacing: '0.02em', color: INK, textDecoration: 'none' }}>
+        <Link to={`/characters/${comment.author.id}`} style={{ fontFamily: SERIF, fontWeight: 600, fontSize: 'var(--text-content)', letterSpacing: '0.02em', color: INK, textDecoration: 'none' }}>
           {comment.author.display_name}
         </Link>
       </div>
-      <div style={{ borderTop: '1px solid rgba(0,0,0,0.08)', marginTop: 10, paddingTop: 11, fontFamily: SERIF, fontSize: 17, lineHeight: 1.6, letterSpacing: '0.01em', color: INK }}>
+      <div style={{ borderTop: '1px solid rgba(0,0,0,0.08)', marginTop: 10, paddingTop: 11, fontFamily: SERIF, fontSize: 'var(--text-content)', lineHeight: 1.6, letterSpacing: '0.01em', color: INK }}>
         {owner.editing ? (
           <CommentEditor owner={owner} accent={INK} bg="#ffffff" text={INK} />
         ) : (
           <MentionText body={comment.body_text} mentions={comment.mentions} accent={INK} />
         )}
       </div>
-      <div style={{ marginTop: 11, fontSize: 10, letterSpacing: '0.1em', textTransform: 'uppercase', color: MUTED, display: 'flex', alignItems: 'baseline', gap: 8 }}>
+      <div style={{ marginTop: 11, fontSize: 'var(--text-base)', letterSpacing: '0.1em', textTransform: 'uppercase', color: MUTED, display: 'flex', alignItems: 'baseline', gap: 8 }}>
         {formatCommentTime(slug, comment.created_at)}
         {comment.is_edited ? ` · ${t('comments.albescent.edited')}` : ''}
         <OwnerControls owner={owner} />

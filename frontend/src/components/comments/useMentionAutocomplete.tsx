@@ -230,7 +230,7 @@ export function MentionDropdown({
           <span style={{ fontWeight: 600, color: 'var(--color-text-primary)' }}>
             {character.display_name}
           </span>
-          <span style={{ color: 'var(--color-text-secondary)', fontSize: 12 }}>
+          <span style={{ color: 'var(--color-text-secondary)', fontSize: 'var(--text-lg)' }}>
             @{character.username}
           </span>
         </li>

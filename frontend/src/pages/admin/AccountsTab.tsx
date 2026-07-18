@@ -239,13 +239,13 @@ export default function AccountsTab() {
                                 ? {
                                     borderColor: "var(--color-success)",
                                     color: "var(--color-success)",
-                                    fontSize: 9,
+                                    fontSize: "var(--text-sm)",
                                     padding: "2px 8px",
                                   }
                                 : {
                                     borderColor: "rgba(220,38,38,0.5)",
                                     color: "var(--color-danger)",
-                                    fontSize: 9,
+                                    fontSize: "var(--text-sm)",
                                     padding: "2px 8px",
                                   }
                             }

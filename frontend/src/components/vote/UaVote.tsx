@@ -68,7 +68,7 @@ export default function UaVote({
                       ? 'var(--faction-ua-card-accent)'
                       : 'var(--faction-ua-card-muted)',
                   fontFamily: PLATE_FONT,
-                  fontSize: 12,
+                  fontSize: 'var(--text-lg)',
                   letterSpacing: '0.1em',
                   textTransform: 'uppercase',
                   transform: active ? 'scale(1.06)' : 'none',
@@ -83,7 +83,7 @@ export default function UaVote({
               <span
                 style={{
                   fontFamily: PLATE_FONT,
-                  fontSize: 8,
+                  fontSize: 'var(--text-xs)',
                   letterSpacing: '0.14em',
                   color: active ? 'var(--faction-ua-card-accent)' : 'var(--faction-ua-card-muted)',
                   textTransform: 'uppercase',

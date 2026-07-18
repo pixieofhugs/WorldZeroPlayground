@@ -66,7 +66,7 @@ export default function VoteStamps({ praxisId, currentValue, points, totalVotes 
                 <span
                   style={{
                     fontFamily: "'Courier Prime', monospace",
-                    fontSize: 7,
+                    fontSize: 'var(--text-xs)',
                     textTransform: 'uppercase',
                     color: active ? stamp.color : 'var(--color-text-tertiary)',
                     maxWidth: 44,
@@ -84,19 +84,19 @@ export default function VoteStamps({ praxisId, currentValue, points, totalVotes 
 
       {/* Vote economy info */}
       {selected > 0 && (
-        <p className="font-body" style={{ fontSize: 8, color: 'var(--color-text-tertiary)', marginBottom: 8 }}>
+        <p className="font-body content-text" style={{ color: 'var(--color-text-tertiary)', marginBottom: 8 }}>
           {t('voteStamps.voted', { count: selected })}
         </p>
       )}
 
       {/* Summary */}
       {points != null && (
-        <p className="font-body" style={{ fontSize: 9, color: 'var(--color-text-secondary)' }}>
+        <p className="font-body content-text" style={{ color: 'var(--color-text-secondary)' }}>
           {t('voteStamps.summary', { count: totalVotes ?? 0, points })}
         </p>
       )}
 
-      {error && <p className="font-body" style={{ fontSize: 9, color: 'var(--color-danger)', marginTop: 4 }}>{error}</p>}
+      {error && <p className="font-body content-text" style={{ color: 'var(--color-danger)', marginTop: 4 }}>{error}</p>}
     </div>
   )
 }

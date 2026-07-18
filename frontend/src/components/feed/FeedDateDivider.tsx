@@ -26,7 +26,7 @@ export default function FeedDateDivider({ label }: FeedDateDividerProps) {
       <span
         style={{
           fontFamily: "'Courier Prime', monospace",
-          fontSize: 9,
+          fontSize: 'var(--text-sm)',
           fontWeight: 700,
           textTransform: 'uppercase',
           letterSpacing: '0.15em',

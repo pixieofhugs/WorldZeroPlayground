@@ -42,7 +42,7 @@ export function VoteSummary({
   return (
     <>
       {selected > 0 && (
-        <p className="font-body" style={{ fontSize: 8, color: theme.muted, margin: '8px 0 0' }}>
+        <p className="font-body" style={{ fontSize: 'var(--text-content)', color: theme.muted, margin: '8px 0 0' }}>
           {t('chrome.voted', { stars: selected })}
         </p>
       )}
@@ -51,7 +51,7 @@ export function VoteSummary({
         <p
           className="font-body"
           style={{
-            fontSize: 10,
+            fontSize: 'var(--text-content)',
             color: theme.muted,
             margin: '11px 0 0',
             letterSpacing: theme.avgLetterSpacing,
@@ -78,7 +78,7 @@ export function VoteSummary({
       )}
 
       {error && (
-        <p className="font-body" style={{ fontSize: 9, color: theme.errorColor, marginTop: 4 }}>
+        <p className="font-body" style={{ fontSize: 'var(--text-content)', color: theme.errorColor, marginTop: 4 }}>
           {error}
         </p>
       )}

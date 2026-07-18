@@ -60,7 +60,7 @@ export default function UaComment(props: CommentProps) {
       <GiltFrame gap={12}>
         <FactionAvatar character={character} size="sm" />
         <div style={{ flex: 1 }}>
-          <div style={{ fontFamily: LABEL, fontSize: 10, letterSpacing: '0.14em', textTransform: 'uppercase', color: ORANGE, marginBottom: 6 }}>
+          <div style={{ fontFamily: LABEL, fontSize: 'var(--text-base)', letterSpacing: '0.14em', textTransform: 'uppercase', color: ORANGE, marginBottom: 6 }}>
             {t('comments.ua.house')}
           </div>
           <ComposerControls value={value} onChange={onChange} onSubmit={onSubmit} submitting={submitting} accent={ORANGE} bg={PAPER_WARM} text={INK} />
@@ -75,14 +75,14 @@ export default function UaComment(props: CommentProps) {
     <GiltFrame gap={14}>
       <FactionAvatar character={authorToCharacter(comment.author)} size="sm" />
       <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ fontFamily: LABEL, fontSize: 10, letterSpacing: '0.14em', textTransform: 'uppercase', color: ORANGE }}>
+        <div style={{ fontFamily: LABEL, fontSize: 'var(--text-base)', letterSpacing: '0.14em', textTransform: 'uppercase', color: ORANGE }}>
           {t('comments.ua.house')}
         </div>
         <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 10 }}>
-          <Link to={`/characters/${comment.author.id}`} style={{ fontFamily: SERIF, fontStyle: 'italic', fontWeight: 600, fontSize: 18, color: INK, textDecoration: 'none' }}>
+          <Link to={`/characters/${comment.author.id}`} style={{ fontFamily: SERIF, fontStyle: 'italic', fontWeight: 600, fontSize: 'var(--text-content)', color: INK, textDecoration: 'none' }}>
             {comment.author.display_name}
           </Link>
-          <span style={{ fontFamily: SERIF, fontStyle: 'italic', fontSize: 12, color: SUB, whiteSpace: 'nowrap', display: 'inline-flex', alignItems: 'baseline', gap: 8 }}>
+          <span style={{ fontFamily: SERIF, fontStyle: 'italic', fontSize: 'var(--text-lg)', color: SUB, whiteSpace: 'nowrap', display: 'inline-flex', alignItems: 'baseline', gap: 8 }}>
             {formatCommentTime(slug, comment.created_at)}
             {comment.is_edited ? ` · ${t('comments.ua.edited')}` : ''}
             <OwnerControls owner={owner} />
@@ -90,7 +90,7 @@ export default function UaComment(props: CommentProps) {
           </span>
         </div>
         <div style={{ height: 1, background: 'color-mix(in srgb, var(--ua-gold) 55%, transparent)', margin: '8px 0 9px' }} />
-        <div style={{ fontFamily: SERIF, fontStyle: 'italic', fontSize: 16, lineHeight: 1.5, color: INK }}>
+        <div style={{ fontFamily: SERIF, fontStyle: 'italic', fontSize: 'var(--text-content)', lineHeight: 1.5, color: INK }}>
           {owner.editing ? (
             <CommentEditor owner={owner} accent={ORANGE} bg={PAPER_WARM} text={INK} />
           ) : (

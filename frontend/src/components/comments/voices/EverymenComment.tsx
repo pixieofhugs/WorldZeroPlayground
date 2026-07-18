@@ -22,7 +22,7 @@ function frame(): React.CSSProperties {
 export default function EverymenComment(props: CommentProps) {
   const { t } = useTranslation('praxis')
   const masthead = (
-    <div style={{ background: 'var(--faction-everymen-card-accent)', color: 'var(--faction-everymen-card-bg)', fontFamily: 'var(--faction-everymen-card-font)', fontSize: 13, letterSpacing: '0.14em', padding: '5px 14px' }}>
+    <div style={{ background: 'var(--faction-everymen-card-accent)', color: 'var(--faction-everymen-card-bg)', fontFamily: 'var(--faction-everymen-card-font)', /* ornament: newsprint masthead bar */ fontSize: 13, letterSpacing: '0.14em', padding: '5px 14px' }}>
       {t('comments.everymen.masthead')}
     </div>
   )
@@ -51,17 +51,17 @@ export default function EverymenComment(props: CommentProps) {
         <FactionAvatar character={authorToCharacter(comment.author)} size="sm" />
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 10 }}>
-            <Link to={`/characters/${comment.author.id}`} style={{ fontFamily: 'var(--faction-everymen-card-font)', fontSize: 18, letterSpacing: '0.04em', color: 'var(--faction-everymen-card-text)', textDecoration: 'none' }}>
+            <Link to={`/characters/${comment.author.id}`} style={{ fontFamily: 'var(--faction-everymen-card-font)', fontSize: 'var(--text-content)', letterSpacing: '0.04em', color: 'var(--faction-everymen-card-text)', textDecoration: 'none' }}>
               {comment.author.display_name}
             </Link>
-            <span style={{ fontSize: 11, color: 'var(--faction-everymen-card-muted)', textTransform: 'uppercase', letterSpacing: '0.06em', whiteSpace: 'nowrap', display: 'inline-flex', alignItems: 'baseline', gap: 8 }}>
+            <span style={{ fontSize: 'var(--text-md)', color: 'var(--faction-everymen-card-muted)', textTransform: 'uppercase', letterSpacing: '0.06em', whiteSpace: 'nowrap', display: 'inline-flex', alignItems: 'baseline', gap: 8 }}>
               {formatCommentTime(slug, comment.created_at)}
               {comment.is_edited ? ` · ${t('comments.everymen.edited')}` : ''}
               <OwnerControls owner={owner} />
               <CommentFlagControl comment={comment} />
             </span>
           </div>
-          <div style={{ fontSize: 15, lineHeight: 1.4, marginTop: 3 }}>
+          <div style={{ fontSize: 'var(--text-content)', lineHeight: 1.4, marginTop: 3 }}>
             {owner.editing ? (
               <CommentEditor owner={owner} accent="var(--faction-everymen-card-accent)" bg="rgba(0,0,0,0.03)" text="var(--faction-everymen-card-text)" />
             ) : (

@@ -178,7 +178,7 @@ export function ComposerControls({
         }}
       >
         {maxLength != null ? (
-          <span style={{ fontSize: 11, color: 'var(--color-text-tertiary)' }}>
+          <span style={{ fontSize: 'var(--text-md)', color: 'var(--color-text-tertiary)' }}>
             {t('comments.charCount', { count: value.length, max: maxLength })}
           </span>
         ) : (
@@ -210,7 +210,7 @@ export function ComposerControls({
               borderRadius: 4,
               padding: '4px 14px',
               cursor: disabled ? 'default' : 'pointer',
-              fontSize: 12,
+              fontSize: 'var(--text-lg)',
               letterSpacing: '0.04em',
               opacity: disabled ? 0.5 : 1,
             }}

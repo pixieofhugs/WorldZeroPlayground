@@ -20,7 +20,7 @@ function SectionHeader({ title, href, linkLabel }: { title: string; href: string
       <div
         style={{
           fontFamily: 'var(--font-faction-marker)',
-          fontSize: 32,
+          fontSize: 'var(--text-heading)',
           lineHeight: 1,
           color: 'var(--color-text-primary)',
         }}
@@ -42,7 +42,7 @@ function SectionHeader({ title, href, linkLabel }: { title: string; href: string
 /** Shared look for the oversized hand-lettered landing CTAs. */
 const markerButton: CSSProperties = {
   fontFamily: 'var(--font-faction-marker)',
-  fontSize: 18,
+  fontSize: 'var(--text-content)',
   textTransform: 'none',
   letterSpacing: '0.03em',
 }
@@ -119,7 +119,7 @@ export default function Home() {
         />
         <div
           className="relative"
-          style={{ fontFamily: 'var(--font-faction-script)', fontSize: 20, color: 'var(--color-text-secondary)', marginBottom: 16, letterSpacing: '0.06em' }}
+          style={{ fontFamily: 'var(--font-faction-script)', fontSize: 'var(--text-content)', color: 'var(--color-text-secondary)', marginBottom: 16, letterSpacing: '0.06em' }}
         >
           {t('hero.eyebrow')}
         </div>
@@ -144,7 +144,7 @@ export default function Home() {
         </div>
         <div
           className="relative mx-auto"
-          style={{ fontFamily: 'var(--font-faction-script)', fontSize: 28, lineHeight: 1.4, color: 'var(--color-text-secondary)', marginBottom: 40, maxWidth: 560 }}
+          style={{ fontFamily: 'var(--font-faction-script)', fontSize: 'var(--text-title)', lineHeight: 1.4, color: 'var(--color-text-secondary)', marginBottom: 40, maxWidth: 560 }}
         >
           {t('hero.tagline')}
         </div>
@@ -215,7 +215,7 @@ export default function Home() {
       {/* ── CLOSING CTA ── */}
       <section className="text-center" style={{ paddingTop: 64 }}>
         <div
-          style={{ fontFamily: 'var(--font-faction-marker)', fontSize: 36, lineHeight: 1.1, color: 'var(--color-text-primary)', marginBottom: 24, transform: 'rotate(-1.2deg)' }}
+          style={{ fontFamily: 'var(--font-faction-marker)', fontSize: 'var(--text-heading)', lineHeight: 1.1, color: 'var(--color-text-primary)', marginBottom: 24, transform: 'rotate(-1.2deg)' }}
         >
           {t('closing.prompt')}
         </div>

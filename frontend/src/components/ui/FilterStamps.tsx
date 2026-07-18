@@ -37,7 +37,7 @@ export default function FilterStamps({ options, value, onChange, label, optionLa
               background: active ? 'var(--color-text-primary)' : 'var(--color-bg-surface)',
               color: active ? 'var(--color-bg-page)' : 'var(--color-text-primary)',
               fontFamily: "'Courier Prime', monospace",
-              fontSize: 10,
+              fontSize: 'var(--text-base)',
               fontWeight: 700,
               textTransform: 'uppercase',
               letterSpacing: '0.1em',

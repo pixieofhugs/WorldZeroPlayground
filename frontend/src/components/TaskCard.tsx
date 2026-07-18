@@ -69,7 +69,7 @@ export default function TaskCard({ task, displayPoints, onSignup }: CardProps) {
           <span
             style={{
               fontFamily: "'Courier Prime', monospace",
-              fontSize: 8,
+              fontSize: 'var(--text-xs)',
               fontWeight: 700,
               textTransform: 'uppercase',
               letterSpacing: '0.15em',
@@ -88,7 +88,7 @@ export default function TaskCard({ task, displayPoints, onSignup }: CardProps) {
               background: factionCssVar(task.metatask_faction_slug, 'light'),
               color: factionCssVar(task.metatask_faction_slug),
               fontFamily: "'Courier Prime', monospace",
-              fontSize: 7,
+              fontSize: 'var(--text-xs)',
               fontWeight: 700,
               textTransform: 'uppercase',
               letterSpacing: '0.1em',

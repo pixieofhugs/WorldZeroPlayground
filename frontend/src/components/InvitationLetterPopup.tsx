@@ -105,7 +105,7 @@ export default function InvitationLetterPopup({
     fontFamily: FONT_BODY,
     textTransform: 'uppercase',
     letterSpacing: '0.12em',
-    fontSize: 11,
+    fontSize: 'var(--text-md)',
     fontWeight: 700,
     padding: '0.7rem 1.2rem',
     border: 'none',
@@ -117,7 +117,7 @@ export default function InvitationLetterPopup({
   }
   const dismissStyle: CSSProperties = {
     fontFamily: FONT_MONO,
-    fontSize: 10,
+    fontSize: 'var(--text-base)',
     letterSpacing: '0.08em',
     textTransform: 'uppercase',
     padding: '0.6rem 0.4rem',
@@ -161,7 +161,7 @@ export default function InvitationLetterPopup({
         <span
           style={{
             fontFamily: FONT_DISPLAY,
-            fontSize: 17,
+            fontSize: 'var(--text-content)',
             fontWeight: 600,
             letterSpacing: '0.04em',
             color: INK,
@@ -173,7 +173,7 @@ export default function InvitationLetterPopup({
           style={{
             marginLeft: 'auto',
             fontFamily: FONT_MONO,
-            fontSize: 8,
+            fontSize: 'var(--text-xs)',
             letterSpacing: '0.18em',
             textTransform: 'uppercase',
             color: FAINT,
@@ -187,7 +187,7 @@ export default function InvitationLetterPopup({
       <p
         style={{
           fontFamily: FONT_MONO,
-          fontSize: 9,
+          fontSize: 'var(--text-sm)',
           letterSpacing: '0.18em',
           textTransform: 'uppercase',
           color: accent,
@@ -203,7 +203,7 @@ export default function InvitationLetterPopup({
           fontFamily: FONT_DISPLAY,
           fontStyle: 'italic',
           fontWeight: 500,
-          fontSize: 28,
+          fontSize: 'var(--text-title)',
           lineHeight: 1.12,
           color: INK,
           margin: '0 0 10px',
@@ -216,7 +216,7 @@ export default function InvitationLetterPopup({
       <p
         style={{
           fontFamily: FONT_BODY,
-          fontSize: 12,
+          fontSize: 'var(--text-content)',
           lineHeight: 1.55,
           color: MUTED,
           margin: '0 0 16px',
@@ -239,7 +239,7 @@ export default function InvitationLetterPopup({
           <div
             style={{
               fontFamily: FONT_MONO,
-              fontSize: 8,
+              fontSize: 'var(--text-xs)',
               letterSpacing: '0.2em',
               textTransform: 'uppercase',
               color: FAINT,
@@ -262,7 +262,7 @@ export default function InvitationLetterPopup({
               <span
                 style={{
                   fontFamily: FONT_MONO,
-                  fontSize: 9,
+                  fontSize: 'var(--text-sm)',
                   letterSpacing: '0.08em',
                   textTransform: 'uppercase',
                   color: FAINT,
@@ -274,7 +274,7 @@ export default function InvitationLetterPopup({
                 style={{
                   fontFamily: FONT_DISPLAY,
                   fontStyle: 'italic',
-                  fontSize: 12,
+                  fontSize: 'var(--text-content)',
                   color: INK,
                   textAlign: 'right',
                 }}
@@ -299,6 +299,7 @@ export default function InvitationLetterPopup({
                 marginBottom: 8,
               }}
             >
+              {/* ornament: four-pointed-star dingbat used as a bullet */}
               <span style={{ color: accent, fontSize: 12, lineHeight: 1.4, flex: 'none' }}>
                 &#x2726;
               </span>
@@ -306,7 +307,7 @@ export default function InvitationLetterPopup({
                 style={{
                   fontFamily: FONT_DISPLAY,
                   fontStyle: 'italic',
-                  fontSize: 12,
+                  fontSize: 'var(--text-content)',
                   lineHeight: 1.4,
                   color: INK,
                 }}
@@ -337,13 +338,13 @@ export default function InvitationLetterPopup({
         </div>
       ) : (
         <div>
-          <p style={{ fontFamily: FONT_BODY, fontSize: 12, lineHeight: 1.5, color: MUTED, margin: '0 0 10px' }}>
+          <p style={{ fontFamily: FONT_BODY, fontSize: 'var(--text-content)', lineHeight: 1.5, color: MUTED, margin: '0 0 10px' }}>
             {isSwitch
               ? t('detail.join.confirmSwitch', { faction: name, current: factionName(currentSlug as string) })
               : t('detail.join.confirm', { faction: name })}
           </p>
           {joinError && (
-            <p style={{ fontFamily: FONT_MONO, fontSize: 10, color: 'var(--color-danger)', margin: '0 0 10px' }}>
+            <p style={{ fontFamily: FONT_MONO, fontSize: 'var(--text-content)', color: 'var(--color-danger)', margin: '0 0 10px' }}>
               {joinError}
             </p>
           )}

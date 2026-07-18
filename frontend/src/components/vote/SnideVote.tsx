@@ -25,7 +25,12 @@ interface StampVisual {
   fontSize: number
 }
 
-/** Visual tokens per tier value — labels come from voteReframes. */
+/**
+ * Visual tokens per tier value — labels come from voteReframes.
+ *
+ * ornament: each tier is a rubber stamp (rotation, radius, face, size are one
+ * illustration); the sizes here draw the stamp, they are not read as text.
+ */
 const SNIDE_VISUALS: Record<number, StampVisual> = {
   1: { color: 'var(--color-text-tertiary)', font: 'var(--font-body)', radius: 2, rot: -3, fontSize: 10 },
   2: { color: '#b59a3a', font: 'var(--font-body)', radius: 2, rot: 2, fontSize: 10 },

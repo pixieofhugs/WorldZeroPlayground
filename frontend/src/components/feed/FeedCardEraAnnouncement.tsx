@@ -34,13 +34,13 @@ export default function FeedCardEraAnnouncement({ item }: Props) {
 
       <h3
         className="font-display italic"
-        style={{ fontSize: 18, color: 'var(--badge-admin-text)', marginBottom: 8, lineHeight: 1.3 }}
+        style={{ fontSize: 'var(--text-content)', color: 'var(--badge-admin-text)', marginBottom: 8, lineHeight: 1.3 }}
       >
         {i18n.t('feed:eraAnnouncement.headline', { name: era_name })}
       </h3>
 
       {era_notes && (
-        <p className="font-body" style={{ fontSize: 11, color: 'rgba(247,244,238,0.75)', marginBottom: 16, lineHeight: 1.5 }}>
+        <p className="font-body" style={{ fontSize: 'var(--text-content)', color: 'rgba(247,244,238,0.75)', marginBottom: 16, lineHeight: 1.5 }}>
           {era_notes}
         </p>
       )}
@@ -50,7 +50,7 @@ export default function FeedCardEraAnnouncement({ item }: Props) {
           to="/tasks"
           style={{
             fontFamily: "'Courier Prime', monospace",
-            fontSize: 10,
+            fontSize: 'var(--text-base)',
             fontWeight: 700,
             textTransform: 'uppercase',
             letterSpacing: '0.1em',
@@ -66,7 +66,7 @@ export default function FeedCardEraAnnouncement({ item }: Props) {
           to="/praxes"
           style={{
             fontFamily: "'Courier Prime', monospace",
-            fontSize: 10,
+            fontSize: 'var(--text-base)',
             fontWeight: 700,
             textTransform: 'uppercase',
             letterSpacing: '0.1em',

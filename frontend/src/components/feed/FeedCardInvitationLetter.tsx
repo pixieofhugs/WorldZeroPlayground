@@ -24,6 +24,7 @@ export default function FeedCardInvitationLetter({ item }: Props) {
           marginBottom: 10,
         }}
       >
+        {/* ornament: envelope emoji used as an icon */}
         <span style={{ fontSize: 16 }}>&#x2709;&#xFE0F;</span>
         <span className="eyebrow" style={{ color }}>
           {i18n.t("feed:invitationLetter.kicker")}
@@ -43,7 +44,7 @@ export default function FeedCardInvitationLetter({ item }: Props) {
       <p
         className="font-display italic"
         style={{
-          fontSize: 14,
+          fontSize: "var(--text-content)",
           color: "var(--color-text-primary)",
           lineHeight: 1.4,
           marginBottom: 8,
@@ -62,7 +63,7 @@ export default function FeedCardInvitationLetter({ item }: Props) {
       <p
         className="font-body"
         style={{
-          fontSize: 10,
+          fontSize: "var(--text-content)",
           color: "var(--color-text-secondary)",
           marginBottom: 12,
         }}
@@ -74,7 +75,7 @@ export default function FeedCardInvitationLetter({ item }: Props) {
         to="/factions"
         style={{
           fontFamily: "'Courier Prime', monospace",
-          fontSize: 9,
+          fontSize: "var(--text-sm)",
           fontWeight: 700,
           textTransform: "uppercase",
           letterSpacing: "0.1em",

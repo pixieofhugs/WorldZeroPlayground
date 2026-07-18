@@ -29,7 +29,7 @@ export function SnideSigil({
         x="24"
         y="34"
         textAnchor="middle"
-        style={{ fontFamily: "var(--faction-snide-font-impact)", fontSize: 30 }}
+        style={{ fontFamily: "var(--faction-snide-font-impact)", /* ornament: sigil letterform drawn into the 48px SVG */ fontSize: 30 }}
         fill={color}
       >
         S
