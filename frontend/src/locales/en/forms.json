@@ -319,7 +319,7 @@
       "metatasksPoints": "+{{points}} PTS",
       "publishIdle": "★ STAMP & FILE ★",
       "publishBusy": "✓ FILING…",
-      "dropLabel": "cancel"
+      "dropLabel": "VOID THE REPORT"
     },
     "snide": {
       "collab": {
@@ -365,7 +365,7 @@
       "metatasksLabel": "★ optional bonus",
       "publishIdle": "FILE IT & RUN",
       "publishBusy": "running...",
-      "dropLabel": "cancel",
+      "dropLabel": "burn it",
       "autosaveSaved": "↳ photocopied & filed {{ago}}",
       "autosaveUnsaved": "↳ unsaved · staple it before it walks off"
     },
@@ -472,7 +472,6 @@
         "duel": { "label": "Salon Duel", "desc": "a contested acquisition" }
       },
       "taskRefLabel": "Re: the commission",
-      "previewLabel": "As it will hang",
       "inviteLabel": "The other hands",
       "inviteLabelDuel": "The challenger",
       "invitePlaceholder": "name or @handle",
@@ -531,7 +530,7 @@
       "metatasksLabel": "★ optional bonus",
       "publishIdle": "cast it into the world",
       "publishBusy": "casting...",
-      "dropLabel": "cancel"
+      "dropLabel": "let it go"
     },
     "albescent": {
       "collab": {

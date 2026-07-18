@@ -230,6 +230,23 @@ export default function AlbescentComposer({ state }: { state: EditPraxisState })
           borderTop: `1px solid ${ink(14)}`,
         }}
       >
+        {!state.isPublished && (
+          <DropButton
+            state={state}
+            skin={{
+              label: t('editPraxis.albescent.dropLabel'),
+              style: {
+                background: 'transparent',
+                border: 'none',
+                color: ink(40),
+                fontFamily: FONT,
+                fontStyle: 'italic',
+                fontSize: "var(--text-xl)",
+                cursor: 'pointer',
+              },
+            }}
+          />
+        )}
         <PublishButton
           state={state}
           skin={{
@@ -249,23 +266,6 @@ export default function AlbescentComposer({ state }: { state: EditPraxisState })
             },
           }}
         />
-        {!state.isPublished && (
-          <DropButton
-            state={state}
-            skin={{
-              label: t('editPraxis.albescent.dropLabel'),
-              style: {
-                background: 'transparent',
-                border: 'none',
-                color: ink(40),
-                fontFamily: FONT,
-                fontStyle: 'italic',
-                fontSize: "var(--text-xl)",
-                cursor: 'pointer',
-              },
-            }}
-          />
-        )}
       </MobileStickyBar>
     </div>
   )

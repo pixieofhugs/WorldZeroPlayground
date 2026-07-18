@@ -239,6 +239,24 @@ export default function EphemeristsComposer({ state }: { state: EditPraxisState 
           borderTop: `1px solid ${GOLD}`,
         }}
       >
+        {!state.isPublished && (
+          <DropButton
+            state={state}
+            skin={{
+              label: t('editPraxis.ephemerists.dropLabel'),
+              style: {
+                background: 'transparent',
+                border: 'none',
+                color: MUTED,
+                fontFamily: SCRIPT,
+                fontStyle: 'italic',
+                fontSize: "var(--text-xl)",
+                textDecoration: 'underline',
+                cursor: 'pointer',
+              },
+            }}
+          />
+        )}
         <PublishButton
           state={state}
           skin={{
@@ -258,24 +276,6 @@ export default function EphemeristsComposer({ state }: { state: EditPraxisState 
             },
           }}
         />
-        {!state.isPublished && (
-          <DropButton
-            state={state}
-            skin={{
-              label: t('editPraxis.ephemerists.dropLabel'),
-              style: {
-                background: 'transparent',
-                border: 'none',
-                color: MUTED,
-                fontFamily: SCRIPT,
-                fontStyle: 'italic',
-                fontSize: "var(--text-xl)",
-                textDecoration: 'underline',
-                cursor: 'pointer',
-              },
-            }}
-          />
-        )}
       </MobileStickyBar>
     </div>
   )

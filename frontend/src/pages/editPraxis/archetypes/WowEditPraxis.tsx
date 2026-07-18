@@ -703,6 +703,22 @@ export default function WowEditPraxis({ state }: Props) {
                 flexWrap: "wrap",
               }}
             >
+              <DropButton
+                state={state}
+                skin={{
+                  label: t("editPraxis.wow.dropLabel"),
+                  style: {
+                    background: "transparent",
+                    color: muted,
+                    fontFamily: cardFont,
+                    fontSize: "var(--text-content)",
+                    fontWeight: 700,
+                    border: "none",
+                    cursor: "pointer",
+                  },
+                }}
+              />
+              <div style={{ flex: 1 }} />
               <PublishButton
                 state={state}
                 skin={{
@@ -727,22 +743,6 @@ export default function WowEditPraxis({ state }: Props) {
                     borderRadius: 9,
                     cursor: state.submitting ? "wait" : "pointer",
                     boxShadow: "0 4px 12px rgba(236,95,153,.32)",
-                  },
-                }}
-              />
-              <div style={{ flex: 1 }} />
-              <DropButton
-                state={state}
-                skin={{
-                  label: t("editPraxis.wow.dropLabel"),
-                  style: {
-                    background: "transparent",
-                    color: muted,
-                    fontFamily: cardFont,
-                    fontSize: "var(--text-content)",
-                    fontWeight: 700,
-                    border: "none",
-                    cursor: "pointer",
                   },
                 }}
               />
