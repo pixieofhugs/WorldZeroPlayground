@@ -1,5 +1,9 @@
 # ADR-0039 — Unaffiliated's fill is a gradient, not a hue
 
+> **Status (2026-07-17 audit): NOT YET LANDED.** `factionFill`/`na→default`
+> routing is not in `utils/factions.ts` yet (the `?? "ua"` fallback still stands).
+> ADR dated one day prior to the audit — pending implementation, not drift.
+
 **Status:** Accepted
 **Date:** 2026-07-16
 **Relates to:** #636 (this decision), #418 (the `--faction-default-*` token set

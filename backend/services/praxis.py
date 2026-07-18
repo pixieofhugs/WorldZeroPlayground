@@ -30,6 +30,7 @@ from models.praxis import (
 )
 from models.era import Era
 from models.task import Task, TaskStatus, TaskType
+from models.vote import Vote
 from schemas.task import TaskOut
 from schemas.praxis import (
     MediaItemOut,
@@ -44,7 +45,7 @@ from services.character_stats import recalculate_character_stats
 from services.faction_service import faction_permits
 from services.era import get_current_era_row, get_or_create_stats
 from models.duel import Duel, DuelStatus
-from services.vote_tally import crowned_praxis_ids, get_tally, tally_votes
+from services.vote_tally import crowned_praxis_ids, get_tally, tally_votes, ViewerVote
 
 
 EVERYMEN_FACTION_SLUG = "everymen"
@@ -251,7 +252,7 @@ async def build_praxis_card_out(
     era: EraConfig = CURRENT_ERA,
     *,
     crowned_ids: Optional[set[int]] = None,
-    viewer_votes: Optional[dict[int, int]] = None,
+    viewer_votes: Optional[dict[int, ViewerVote]] = None,
 ) -> PraxisCardOut:
     """Lightweight card for list views.
 
@@ -261,15 +262,18 @@ async def build_praxis_card_out(
     precompute them once via :func:`~services.vote_tally.crowned_praxis_ids`
     so the crown never becomes a per-card query.
 
-    ``viewer_votes`` maps praxis id → the viewer's own cast value (#573); list
-    routes precompute it once via :func:`~services.vote_tally.viewer_votes_for`
-    so the viewer's highlight never becomes a per-card query. ``None`` (anonymous
-    viewer) leaves ``viewer_vote`` unset.
+    ``viewer_votes`` maps praxis id → the viewer account's :class:`ViewerVote`
+    (#573, #644); list routes precompute it once via
+    :func:`~services.vote_tally.viewer_votes_for` so neither the viewer's own-star
+    highlight nor the account-mate marker becomes a per-card query. ``None``
+    (anonymous viewer) leaves both ``viewer_vote`` and ``voted_by_name`` unset.
     """
     task_title = praxis.task.title if praxis.task else ""
     task_point_value = praxis.task.point_value if praxis.task else 0
     task_level_required = praxis.task.level_required if praxis.task else 0
     created_by_display_name = praxis.created_by.display_name if praxis.created_by else ""
+
+    viewer_vote_info = viewer_votes.get(praxis.id) if viewer_votes else None
 
     tally_map = await tally_votes([praxis.id], session)
     tally = get_tally(tally_map, praxis.id)
@@ -304,7 +308,8 @@ async def build_praxis_card_out(
         created_by_faction_slug=praxis.created_by.faction_slug if praxis.created_by else None,
         members=[_build_member_out(m) for m in praxis.members],
         media_items=[MediaItemOut.model_validate(item) for item in praxis.media_items],
-        viewer_vote=viewer_votes.get(praxis.id) if viewer_votes else None,
+        viewer_vote=viewer_vote_info.value if viewer_vote_info else None,
+        voted_by_name=viewer_vote_info.voted_by_name if viewer_vote_info else None,
     )
 
 
@@ -371,6 +376,23 @@ class PraxisSort(str, Enum):
     oldest = "oldest"
 
 
+class VotedFilter(str, Enum):
+    """Account-scoped vote filter for the submitted feed (#644 §6).
+
+    ``yes`` — any character on the viewer's account has voted the praxis.
+    ``no`` — *needs my vote*: votable **and** unvoted. That is: no vote from the
+    viewer's account, **and** the viewer's account does not co-own the praxis.
+    Co-owned praxes can never be voted (ADR-0013 account-scoped anti-self-vote,
+    mirrored from :func:`services.vote.cast_or_update_vote`), so a literal
+    "unvoted" would park them in the work queue forever — hence the extra
+    exclusion. ``yes`` and ``no`` are deliberately **not** complements: the
+    viewer's own praxes are in neither.
+    """
+
+    yes = "yes"
+    no = "no"
+
+
 async def list_praxes(
     session: AsyncSession,
     *,
@@ -383,7 +405,9 @@ async def list_praxes(
     faction: Optional[str] = None,
     search: Optional[str] = None,
     sort: Optional[PraxisSort] = None,
+    voted: Optional[VotedFilter] = None,
     viewer_id: Optional[int] = None,
+    viewer_account_id: Optional[int] = None,
     limit: int = 50,
     offset: int = 0,
     era: EraConfig = CURRENT_ERA,
@@ -405,6 +429,11 @@ async def list_praxes(
 
     ``sort`` only applies to the ``status=submitted`` feed and is ignored
     otherwise; every caller that passes no ``sort`` keeps ``created_at DESC``.
+
+    ``voted`` (needs ``viewer_account_id``) is the account-scoped vote filter
+    (#644 §6): ``yes`` = my account has voted this praxis; ``no`` = *needs my
+    vote* (unvoted by my account **and** not co-owned by my account). See
+    :class:`VotedFilter`. Ignored for anonymous viewers (no account).
     """
     query = select(Praxis).where(praxis_visibility_condition(viewer_id))
 
@@ -429,6 +458,35 @@ async def list_praxes(
 
     if praxis_type is not None:
         query = query.where(Praxis.type == praxis_type)
+
+    if voted is not None and viewer_account_id is not None:
+        # Account-scoped (#644 §6): a vote from ANY character on the viewer's
+        # account counts, matching the account-level anti-self-vote posture.
+        account_voted = (
+            select(Vote.id)
+            .where(
+                Vote.praxis_id == Praxis.id,
+                Vote.voter_account_id == viewer_account_id,
+            )
+            .exists()
+        )
+        if voted == VotedFilter.yes:
+            query = query.where(account_voted)
+        else:
+            # "needs my vote" = votable AND unvoted. Exclude praxes the account
+            # co-owns: they can never be voted (ADR-0013 — same account-member
+            # set cast_or_update_vote blocks on), so they must not park here
+            # forever. Mirrors that anti-self-vote rule as a NOT EXISTS in SQL.
+            account_member = (
+                select(PraxisMember.id)
+                .join(Character, Character.id == PraxisMember.character_id)
+                .where(
+                    PraxisMember.praxis_id == Praxis.id,
+                    Character.account_id == viewer_account_id,
+                )
+                .exists()
+            )
+            query = query.where(~account_voted, ~account_member)
 
     if moderation_status is not None:
         try:
@@ -1535,6 +1593,7 @@ __all__ = [
     "list_praxes",
     "praxis_visibility_condition",
     "PraxisSort",
+    "VotedFilter",
     "moderate_praxis",
     "remove_metatask",
     "respond_to_invite",

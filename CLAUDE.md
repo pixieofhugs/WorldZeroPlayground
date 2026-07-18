@@ -16,7 +16,8 @@ real-world tasks, post proof ("praxis"), earn points via star-rating votes.
 ## Stack
 FastAPI · SQLAlchemy (async) · Alembic · PostgreSQL · React · Axios ·
 Google OAuth2 → JWT · local-fs media (relative paths) · pytest + GitHub Actions.
-Deeper notes: `docs/spec/SPEC-architecture.md`.
+Deeper notes: `docs/spec/SPEC-backend-architecture.md` (backend posture);
+identity + era-as-ruleset in ADR-0041 / ADR-0042.
 
 ---
 
@@ -29,11 +30,11 @@ Deeper notes: `docs/spec/SPEC-architecture.md`.
 | Taunt & rank/unlock **wording** (ADR-0031: backend emits keys) | `frontend/src/locales/en/{taunts,progression}.json` |
 | Faction **name/description** wording (ADR-0038: backend emits slug) | `frontend/src/locales/en/factions.json` (`names.<slug>`, `descriptions.<slug>`) |
 | Era config *shape* (dataclass fields) | `backend/game_config.py` |
-| Backend layering, DDD posture, what goes in services vs. routes | `docs/spec/SPEC-backend-architecture.md` |
+| Backend layering, DDD posture, what goes in services vs. routes | `docs/spec/SPEC-backend-architecture.md` (how); ADR-0045 (why-not-full-DDD) |
 | Building a new era | `backend/eras/_template.py` |
-| Account vs. Character, anti-self-voting | `docs/spec/SPEC-architecture.md` §3 |
-| DB schema | `docs/spec/SPEC-data-models.md` |
-| Scoring, level perks, era reset semantics | `docs/spec/SPEC-game-rules.md` |
+| Account vs. Character, anti-self-voting | ADR-0041 + CONTEXT.md ("Account", "Character") |
+| DB schema | `backend/models/*.py` (source of truth) |
+| Scoring formulas / era-reset semantics | `backend/services/scoring.py` + `praxis_scoring.py` + `services/era.py`; **values** in `backend/eras/era_1.py`; rationale in ADR-0014/0042/0043/0044 |
 | API routes + auth guards | `backend/routers/` (source files) |
 | Pages, routing, components | `frontend/src/` (source files) |
 | Frontend API clients | `frontend/src/api/` |
@@ -43,7 +44,6 @@ Deeper notes: `docs/spec/SPEC-architecture.md`.
 | CSS variables (colors, type, themes) | `frontend/src/index.css` |
 | JS faction config | `frontend/src/utils/factions.ts` |
 | Open work / issues | GitHub Issues — `gh issue list` (see `docs/agents/issue-tracker.md`) |
-| Past task history (archived) | `docs/archive/TASKS-completed.md` |
 | Squashing migrations / resetting the DB | `docs/agents/db-migrations.md` |
 | Library/framework API docs (React, FastAPI, SQLAlchemy, Alembic, Pydantic, etc.) | Context7 -- call `mcp__MCP_DOCKER__resolve-library-id` then `mcp__MCP_DOCKER__get-library-docs` |
 
@@ -112,7 +112,7 @@ Work lives in **GitHub Issues** on `pixieofhugs/WorldZeroPlayground`, managed vi
 Default vocabulary — `needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`. See `docs/agents/triage-labels.md`.
 
 ### Domain docs
-Multi-context (`backend/`, `frontend/`). Domain knowledge is the routing table above plus `docs/spec/*` and `WORLD_ZERO_STYLE.md`; `CONTEXT.md` / `CONTEXT-MAP.md` get created lazily by `/domain-modeling`. See `docs/agents/domain.md`.
+A single root `CONTEXT.md` glossary holds the ubiquitous language (one context — no `CONTEXT-MAP.md`); `/domain-modeling` maintains it. Domain knowledge = the routing table above + `CONTEXT.md` + `docs/adr/*` + the `docs/spec/*` + `WORLD_ZERO_STYLE.md`. See `docs/agents/domain.md`.
 
 ## Working in worktrees
 For any non-trivial code change, work in an isolated git worktree on its own branch rather than directly on the current branch. Stay within the file scope of the issue you picked up.

@@ -103,6 +103,10 @@ class PraxisCardOut(BaseModel):
     members: List[PraxisMemberOut] = []
     media_items: List[MediaItemOut] = []
     viewer_vote: Optional[int] = None  # the authenticated viewer's own cast value (1-5), None if unvoted/anonymous
+    # Account-mate marker (#644 §7): the display name of another character on the
+    # viewer's account who voted this praxis, set only when the carried character
+    # did not vote it. None otherwise (incl. anonymous). Computed, no column.
+    voted_by_name: Optional[str] = None
 
     model_config = {"from_attributes": True}
 

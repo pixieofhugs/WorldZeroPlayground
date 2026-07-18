@@ -1,5 +1,12 @@
 # Unaffiliated characters score full until a level-3 grace cliff
 
+> **⚠ Status (2026-07-17 audit): NOT BUILT / SUPERSEDED.** The grace-cliff penalty
+> was never implemented — `unaffiliated_task_modifier` and
+> `unaffiliated_penalty_level` exist nowhere in the backend, and
+> `compute_faction_multiplier` (`services/scoring.py`) takes no level and applies no
+> penalty. #452 flattened cross-faction modifiers to 1.0×, reversing this direction.
+> Historical decision, not current behaviour.
+
 Because characters now start unaffiliated and are never *forced* to join a faction
 (ADR-0019), the incentive to commit comes from scoring. An unaffiliated (`na`) character
 scores full **1.0×** through level `era.unaffiliated_penalty_level − 1` (a frictionless
