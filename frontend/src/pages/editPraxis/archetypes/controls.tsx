@@ -543,6 +543,12 @@ export function BodyTextarea({
           <button
             key={button.command}
             type="button"
+            // #693: keep the formatting buttons out of the natural tab order so
+            // Tab runs title → body instead of stopping on all eleven glyphs.
+            // Every command is also typeable as plain markdown, so keyboard
+            // users lose no capability. (Roving tabindex was considered and
+            // declined: it still leaves a tab stop between title and body.)
+            tabIndex={-1}
             onClick={() => runCommand(button.command)}
             aria-label={t(button.labelKey)}
             style={buttonStyle}

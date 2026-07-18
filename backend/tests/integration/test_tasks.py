@@ -1630,6 +1630,105 @@ async def test_list_tasks_search_composes_with_existing_filter(
 
 
 @pytest.mark.asyncio
+async def test_list_tasks_search_matches_proposer_name(
+    client: AsyncClient,
+    db_session: AsyncSession,
+    character: Character,
+    character2: Character,
+):
+    """`q` also matches the proposing character's handle / display name (#681).
+
+    Overrides #644 §4's rejection of author search: the maintainer accepted
+    that a common word can surface every task by anyone whose name contains it.
+    """
+    mine = Task(
+        title="Ordinary title one",
+        description="No distinguishing token.",
+        point_value=10,
+        level_required=0,
+        status=TaskStatus.active,
+        created_by=character.id,
+        primary_faction_slug="ua",
+    )
+    theirs = Task(
+        title="Ordinary title two",
+        description="No distinguishing token.",
+        point_value=10,
+        level_required=0,
+        status=TaskStatus.active,
+        created_by=character2.id,
+        primary_faction_slug="ua",
+    )
+    db_session.add_all([mine, theirs])
+    await db_session.commit()
+    await db_session.refresh(mine)
+    await db_session.refresh(theirs)
+
+    # By handle, with the '@' sigil the player typed (#624).
+    resp = await client.get("/tasks", params={"q": "@othercharacter"})
+    assert resp.status_code == 200
+    ids = [task["id"] for task in resp.json()]
+    assert theirs.id in ids
+    assert mine.id not in ids
+    # One matching proposer must not multiply the task's feed row.
+    assert ids.count(theirs.id) == 1
+
+    # By display name ("Other Character") — case-insensitive, partial.
+    resp = await client.get("/tasks", params={"q": "oTHer ch"})
+    assert resp.status_code == 200
+    ids = [task["id"] for task in resp.json()]
+    assert theirs.id in ids
+    assert mine.id not in ids
+
+
+@pytest.mark.asyncio
+async def test_list_tasks_proposer_search_ands_with_other_filters(
+    client: AsyncClient,
+    db_session: AsyncSession,
+    character2: Character,
+):
+    """The proposer axis ORs *within* `q`, and still ANDs with other filters."""
+    cheap = Task(
+        title="Ordinary title three",
+        description="No distinguishing token.",
+        point_value=10,
+        level_required=0,
+        status=TaskStatus.active,
+        created_by=character2.id,
+        primary_faction_slug="ua",
+    )
+    pricey = Task(
+        title="Ordinary title four",
+        description="No distinguishing token.",
+        point_value=50,
+        level_required=0,
+        status=TaskStatus.active,
+        created_by=character2.id,
+        primary_faction_slug="ua",
+    )
+    db_session.add_all([cheap, pricey])
+    await db_session.commit()
+    await db_session.refresh(cheap)
+    await db_session.refresh(pricey)
+
+    # The name alone hits both of their tasks.
+    both = await client.get("/tasks", params={"q": "othercharacter"})
+    assert both.status_code == 200
+    both_ids = [task["id"] for task in both.json()]
+    assert cheap.id in both_ids
+    assert pricey.id in both_ids
+
+    # min_points narrows that same set — the name match can't smuggle a row past it.
+    narrowed = await client.get(
+        "/tasks", params={"q": "othercharacter", "min_points": 50}
+    )
+    assert narrowed.status_code == 200
+    narrowed_ids = [task["id"] for task in narrowed.json()]
+    assert pricey.id in narrowed_ids
+    assert cheap.id not in narrowed_ids
+
+
+@pytest.mark.asyncio
 async def test_list_tasks_absent_or_blank_q_is_no_filter(
     client: AsyncClient, db_session: AsyncSession, character: Character
 ):
