@@ -22,8 +22,8 @@ export default function SkyLegend({ scoreMode }: SkyLegendProps) {
 
   return (
     <ul
-      className="flex flex-wrap items-center list-none mt-3"
-      style={{ gap: 'var(--space-lg)', padding: 0, margin: 0 }}
+      className="flex flex-wrap items-center list-none mt-3 p-0 m-0"
+      style={{ gap: 'var(--space-lg)' }}
     >
       <LegendChip icon={<SigilScaleIcon />}>
         {scoreMode === 'era'
