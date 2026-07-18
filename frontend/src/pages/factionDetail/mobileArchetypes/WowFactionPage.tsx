@@ -76,8 +76,8 @@ function Avatar({ name, size }: { name: string; size: number }) {
 
 function SectionHead({ children }: { children: ReactNode }) {
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
-      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 7, fontFamily: SCRIPT, fontSize: 'var(--text-title)', color: TITLE_TEXT }}>
+    <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-md)', marginBottom: 'var(--space-md)' }}>
+      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 'var(--space-sm)', fontFamily: SCRIPT, fontSize: 'var(--text-title)', color: TITLE_TEXT }}>
         <Sparkle size={13} color={PINK} />
         {children}
       </span>
@@ -91,7 +91,7 @@ const joinButton: CSSProperties = {
   display: 'inline-flex',
   alignItems: 'center',
   justifyContent: 'center',
-  gap: 8,
+  gap: 'var(--space-sm)',
   fontFamily: BODY,
   fontSize: 'var(--text-xl)',
   fontWeight: 700,
@@ -101,7 +101,7 @@ const joinButton: CSSProperties = {
   background: `linear-gradient(180deg, ${PINK}, ${PINK_DEEP})`,
   border: `1.5px solid ${PINK_DEEP}`,
   borderRadius: 14,
-  padding: '13px 16px',
+  padding: 'var(--space-md) var(--space-lg)',
   boxShadow: `0 6px 16px color-mix(in srgb, ${PINK} 30%, transparent)`,
   cursor: 'pointer',
 }
@@ -116,7 +116,7 @@ const cancelButton: CSSProperties = {
   background: 'transparent',
   border: `1.5px solid ${NOTEPAD_BORDER}`,
   borderRadius: 12,
-  padding: '11px 16px',
+  padding: 'var(--space-md) var(--space-lg)',
   cursor: 'pointer',
 }
 
@@ -144,8 +144,8 @@ export default function WowFactionPage({ state }: { state: FactionDetailState })
         backgroundSize: '15px 15px',
         marginLeft: -16,
         marginRight: -16,
-        paddingLeft: 16,
-        paddingRight: 16,
+        paddingLeft: 'var(--space-lg)',
+        paddingRight: 'var(--space-lg)',
       }}
       data-testid="mobile-faction-page"
     >
@@ -162,8 +162,8 @@ export default function WowFactionPage({ state }: { state: FactionDetailState })
           style={{
             display: 'flex',
             alignItems: 'center',
-            gap: 7,
-            padding: '8px 12px',
+            gap: 'var(--space-sm)',
+            padding: 'var(--space-sm) var(--space-md)',
             background: 'linear-gradient(180deg, var(--faction-wow-title-from), var(--faction-wow-title-to))',
             borderBottom: `2px solid ${WIN_BORDER}`,
           }}
@@ -171,27 +171,37 @@ export default function WowFactionPage({ state }: { state: FactionDetailState })
           {['var(--faction-wow-scrap-deep)', 'var(--faction-wow-tape)', 'var(--faction-wow-ivy-leaf)'].map((c) => (
             <span key={c} style={{ width: 9, height: 9, borderRadius: '50%', background: c, border: '1.2px solid rgba(255,255,255,0.7)' }} />
           ))}
-          <span style={{ marginLeft: 'auto', display: 'inline-flex', alignItems: 'center', gap: 5, fontFamily: SCRIPT, fontSize: 'var(--text-content)', color: TITLE_TEXT }}>
+          <span style={{ marginLeft: 'auto', display: 'inline-flex', alignItems: 'center', gap: 'var(--space-xs)', fontFamily: SCRIPT, fontSize: 'var(--text-content)', color: TITLE_TEXT }}>
             <Sparkle size={11} color={TITLE_TEXT} />
             {t('wow.mobile.eyebrow')}
           </span>
         </div>
         <div
           style={{
-            padding: '22px 18px 20px',
+            padding: 'var(--space-xl) var(--space-lg) var(--space-xl)',
             background: 'linear-gradient(160deg, var(--faction-wow-title-from), var(--faction-wow-card-muted) 60%, var(--faction-wow))',
             color: TITLE_TEXT,
           }}
         >
-          {/* ornament: masthead display type — the hand-lettered title is the skin's identity (§4/§270). */}
-          <h1 style={{ display: 'inline-flex', alignItems: 'center', gap: 8, fontFamily: SCRIPT, fontSize: 36, lineHeight: 0.95, margin: 0 }}>
+          <h1
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 'var(--space-sm)',
+              fontFamily: SCRIPT,
+              // eslint-disable-next-line local/no-raw-style-values -- ornament: masthead display type — the hand-lettered title is the skin's identity (§4/§270).
+              fontSize: 36,
+              lineHeight: 0.95,
+              margin: 0,
+            }}
+          >
             <Sparkle size={18} color={TITLE_TEXT} />
             {name}
           </h1>
-          <p className="content-text" style={{ fontFamily: BODY, lineHeight: 1.6, color: PINK_DEEP, margin: '8px 0 0' }}>
+          <p className="content-text" style={{ fontFamily: BODY, lineHeight: 1.6, color: PINK_DEEP, margin: 'var(--space-sm) 0 0' }}>
             {factionDescription(faction.slug)}
           </p>
-          <div style={{ display: 'flex', gap: 8, marginTop: 16 }}>
+          <div style={{ display: 'flex', gap: 'var(--space-sm)', marginTop: 'var(--space-lg)' }}>
             <HeroStat value={members.length} label={t('mobile.membersStat')} />
             <HeroStat value={tasks.length} label={t('mobile.tasksStat')} />
           </div>
@@ -199,7 +209,7 @@ export default function WowFactionPage({ state }: { state: FactionDetailState })
       </section>
 
       {membership.state === 'member' && (
-        <p className="content-text" style={{ fontFamily: SCRIPT, color: PINK, margin: '12px 0 0' }}>{t('mobile.memberBadge')}</p>
+        <p className="content-text" style={{ fontFamily: SCRIPT, color: PINK, margin: 'var(--space-md) 0 0' }}>{t('mobile.memberBadge')}</p>
       )}
 
       {/* Top members */}
@@ -231,7 +241,7 @@ export default function WowFactionPage({ state }: { state: FactionDetailState })
       </section>
 
       {membership.state === 'gate' && (
-        <p className="content-text" style={{ fontFamily: BODY, color: CARD_MUTED, marginTop: 24, lineHeight: 1.6 }}>
+        <p className="content-text" style={{ fontFamily: BODY, color: CARD_MUTED, marginTop: 'var(--space-xl)', lineHeight: 1.6 }}>
           {t('mobile.gateHint', { faction: name })}
         </p>
       )}
@@ -254,7 +264,7 @@ export default function WowFactionPage({ state }: { state: FactionDetailState })
                   ? t('detail.join.confirmSwitch', { faction: name, current: factionName(currentSlug) })
                   : t('detail.join.confirm', { faction: name })}
               </p>
-              <div style={{ display: 'flex', gap: 8 }}>
+              <div style={{ display: 'flex', gap: 'var(--space-sm)' }}>
                 <button
                   type="button"
                   onClick={() => void membership.join()}
@@ -282,9 +292,9 @@ export default function WowFactionPage({ state }: { state: FactionDetailState })
 
 function HeroStat({ value, label }: { value: number; label: string }) {
   return (
-    <div style={{ flex: '1 1 0', textAlign: 'center', background: NOTEPAD_BG, border: `1.5px solid ${NOTEPAD_BORDER}`, borderRadius: 12, padding: '11px 6px' }}>
+    <div style={{ flex: '1 1 0', textAlign: 'center', background: NOTEPAD_BG, border: `1.5px solid ${NOTEPAD_BORDER}`, borderRadius: 12, padding: 'var(--space-md) var(--space-sm)' }}>
       <b className="content-title" style={{ fontFamily: SCRIPT, display: 'block', lineHeight: 1, color: TITLE_TEXT }}>{value}</b>
-      <span style={{ fontSize: 'var(--text-xs)', letterSpacing: '0.16em', textTransform: 'uppercase', color: CARD_MUTED, marginTop: 5, display: 'block' }}>
+      <span style={{ fontSize: 'var(--text-xs)', letterSpacing: '0.16em', textTransform: 'uppercase', color: CARD_MUTED, marginTop: 'var(--space-xs)', display: 'block' }}>
         {label}
       </span>
     </div>
@@ -299,8 +309,8 @@ function MemberRow({ rank, member }: { rank: number; member: CharacterOut }) {
       style={{
         display: 'flex',
         alignItems: 'center',
-        gap: 12,
-        padding: '10px 14px',
+        gap: 'var(--space-md)',
+        padding: 'var(--space-md) var(--space-lg)',
         background: NOTEPAD_BG,
         border: `1.5px solid ${NOTEPAD_BORDER}`,
         borderRadius: 12,

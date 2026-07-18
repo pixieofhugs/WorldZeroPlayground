@@ -104,14 +104,14 @@ function Tape({ style }: { style: CSSProperties }) {
 const SECTION_HEADING_ROW: CSSProperties = {
   display: "flex",
   alignItems: "center",
-  gap: 12,
-  marginBottom: 8,
+  gap: "var(--space-md)",
+  marginBottom: "var(--space-sm)",
   flexWrap: "wrap",
 };
 
 const SECTION_HEADING_TEXT: CSSProperties = {
   fontFamily: IMPACT,
-  // ornament: skewed Impact stencil — the ransom-dispatch masthead cut, not a heading you read.
+  // eslint-disable-next-line local/no-raw-style-values -- ornament: skewed Impact stencil — the ransom-dispatch masthead cut, not a heading you read.
   fontSize: 30,
   letterSpacing: "0.02em",
   color: ACID,
@@ -139,11 +139,11 @@ function SectionHeading({ children }: { children: ReactNode }) {
 
 const KICKER: CSSProperties = {
   fontFamily: MARKER,
-  // ornament: hand-scrawled marker aside slapped over the flyer — illustration, not copy.
+  // eslint-disable-next-line local/no-raw-style-values -- ornament: hand-scrawled marker aside slapped over the flyer — illustration, not copy.
   fontSize: 16,
   color: PINK,
   transform: "rotate(-1deg)",
-  marginBottom: 18,
+  marginBottom: "var(--space-lg)",
 };
 
 /** Scrawled marker kicker. */
@@ -197,27 +197,27 @@ export default function SnideFactionBody({ state }: { state: FactionDetailState 
   return (
     <div className="wz-faction-grid">
       {/* ── MAIN COLUMN ── */}
-      <div style={{ display: "flex", flexDirection: "column", gap: 36 }}>
+      <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-2xl)" }}>
         {/* ② ABOUT — taped xerox flyer */}
         <div style={{ position: "relative", transform: "rotate(-0.6deg)" }}>
           <Tape style={{ top: -11, left: 28, transform: "rotate(-7deg)" }} />
           <Tape style={{ top: -9, right: 32, transform: "rotate(6deg)" }} />
-          <div style={{ ...PAPER_PANEL, padding: "22px 26px" }}>
+          <div style={{ ...PAPER_PANEL, padding: "var(--space-xl)" }}>
             <Halftone on="paper" />
             <div
               style={{
                 position: "relative",
                 fontFamily: MARKER,
-                // ornament: marker scrawl heading on the taped xerox flyer.
+                // eslint-disable-next-line local/no-raw-style-values -- ornament: marker scrawl heading on the taped xerox flyer.
                 fontSize: 26,
                 color: GREEN,
                 transform: "rotate(-1deg)",
-                marginBottom: 12,
+                marginBottom: "var(--space-md)",
               }}
             >
               {t("snide.about.heading")}
             </div>
-            <div style={{ position: "relative", display: "flex", flexDirection: "column", gap: 10 }}>
+            <div style={{ position: "relative", display: "flex", flexDirection: "column", gap: "var(--space-md)" }}>
               {paragraphs.length ? (
                 paragraphs.map((para, i) => (
                   <p key={i} className="content-text" style={{ fontFamily: TYPE, lineHeight: 1.75, color: INK, margin: 0 }}>
@@ -240,7 +240,7 @@ export default function SnideFactionBody({ state }: { state: FactionDetailState 
           {tasks.length === 0 ? (
             <p className="content-text" style={{ fontFamily: TYPE, color: MUTED }}>{t("snide.tasks.empty")}</p>
           ) : (
-            <div style={{ display: "flex", flexWrap: "wrap", gap: 24, alignItems: "flex-start" }}>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: "var(--space-xl)", alignItems: "flex-start" }}>
               {tasks.map((task) => (
                 <TaskCard
                   key={task.id}
@@ -264,7 +264,7 @@ export default function SnideFactionBody({ state }: { state: FactionDetailState 
           {recentPraxis.length === 0 ? (
             <p className="content-text" style={{ fontFamily: TYPE, color: MUTED }}>{t("snide.praxis.empty")}</p>
           ) : (
-            <div style={{ display: "flex", flexWrap: "wrap", gap: 16, alignItems: "flex-start" }}>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: "var(--space-lg)", alignItems: "flex-start" }}>
               {recentPraxis.map((praxis) => (
                 <div key={praxis.id} style={{ position: "relative", flex: "1 1 280px", minWidth: 280 }}>
                   {/* ⑤ Task Crown (ADR-0028) — the skin's own corner medallion,
@@ -288,12 +288,12 @@ export default function SnideFactionBody({ state }: { state: FactionDetailState 
       </div>
 
       {/* ── RIGHT RAIL ── */}
-      <div style={{ display: "flex", flexDirection: "column", gap: 36 }}>
+      <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-2xl)" }}>
         {/* ③ RE: YOU — join / gate / standing (taped dispatch) */}
         {membership.state !== "none" && (
           <div style={{ position: "relative", transform: "rotate(-1deg)" }}>
             <Tape style={{ top: -10, left: "50%", marginLeft: -30, width: 60, transform: "rotate(-5deg)" }} />
-            <div style={{ ...INK_PANEL, padding: "22px 20px" }}>
+            <div style={{ ...INK_PANEL, padding: "var(--space-xl)" }}>
               <Halftone on="ink" />
               <div
                 style={{
@@ -302,12 +302,19 @@ export default function SnideFactionBody({ state }: { state: FactionDetailState 
                   justifyContent: "space-between",
                   alignItems: "baseline",
                   borderBottom: `2px solid ${ACID}`,
-                  paddingBottom: 6,
-                  marginBottom: 16,
+                  paddingBottom: "var(--space-sm)",
+                  marginBottom: "var(--space-lg)",
                 }}
               >
-                {/* ornament: condensed letterhead rule of the dispatch — printed furniture, not copy. */}
-                <span style={{ fontFamily: COND, fontSize: 14, letterSpacing: "0.22em", color: ACID }}>
+                <span
+                  style={{
+                    fontFamily: COND,
+                    // eslint-disable-next-line local/no-raw-style-values -- ornament: condensed letterhead rule of the dispatch — printed furniture, not copy.
+                    fontSize: 14,
+                    letterSpacing: "0.22em",
+                    color: ACID,
+                  }}
+                >
                   {t("snide.dispatch.letterhead")}
                 </span>
                 <span style={{ fontFamily: MONO, fontSize: "var(--text-xs)", letterSpacing: "0.16em", textTransform: "uppercase", color: MUTED }}>
@@ -317,11 +324,19 @@ export default function SnideFactionBody({ state }: { state: FactionDetailState 
               <div style={{ position: "relative" }}>
                 {membership.state === "member" && (
                   <div>
-                    {/* ornament: Impact stencil headline set tight (lineHeight 0.9) — poster type. */}
-                    <div style={{ fontFamily: IMPACT, fontSize: 26, lineHeight: 0.9, color: ACID, textTransform: "uppercase" }}>
+                    <div
+                      style={{
+                        fontFamily: IMPACT,
+                        // eslint-disable-next-line local/no-raw-style-values -- ornament: Impact stencil headline set tight (lineHeight 0.9) — poster type.
+                        fontSize: 26,
+                        lineHeight: 0.9,
+                        color: ACID,
+                        textTransform: "uppercase",
+                      }}
+                    >
                       {t("snide.dispatch.memberTitle")}
                     </div>
-                    <div style={{ fontFamily: MONO, fontSize: "var(--text-md)", color: MUTED, margin: "9px 0 0" }}>
+                    <div style={{ fontFamily: MONO, fontSize: "var(--text-md)", color: MUTED, margin: "var(--space-sm) 0 0" }}>
                       <Trans t={t} i18nKey="snide.dispatch.memberStanding">
                         Standing · <b style={{ color: PINK }}>accomplice</b>
                       </Trans>
@@ -331,14 +346,32 @@ export default function SnideFactionBody({ state }: { state: FactionDetailState 
 
                 {membership.state === "eligible" && !confirming && (
                   <div>
-                    {/* ornament: marker scrawl + Impact stencil headline — poster type. */}
-                    <div style={{ fontFamily: MARKER, fontSize: 16, color: PINK, transform: "rotate(-1.5deg)", marginBottom: 6 }}>
+                    <div
+                      style={{
+                        fontFamily: MARKER,
+                        // eslint-disable-next-line local/no-raw-style-values -- ornament: hand-scrawled marker aside on the dispatch.
+                        fontSize: 16,
+                        color: PINK,
+                        transform: "rotate(-1.5deg)",
+                        marginBottom: "var(--space-sm)",
+                      }}
+                    >
                       {t("snide.dispatch.eligibleKicker")}
                     </div>
-                    <div style={{ fontFamily: IMPACT, fontSize: 24, lineHeight: 0.9, color: ACID, textTransform: "uppercase", marginBottom: 8 }}>
+                    <div
+                      style={{
+                        fontFamily: IMPACT,
+                        // eslint-disable-next-line local/no-raw-style-values -- ornament: Impact stencil headline set tight (lineHeight 0.9) — poster type.
+                        fontSize: 24,
+                        lineHeight: 0.9,
+                        color: ACID,
+                        textTransform: "uppercase",
+                        marginBottom: "var(--space-sm)",
+                      }}
+                    >
                       {t("snide.dispatch.eligibleTitle")}
                     </div>
-                    <div className="content-text" style={{ fontFamily: TYPE, lineHeight: 1.5, color: "#d8d6c8", marginBottom: 16 }}>
+                    <div className="content-text" style={{ fontFamily: TYPE, lineHeight: 1.5, color: "#d8d6c8", marginBottom: "var(--space-lg)" }}>
                       {t("snide.dispatch.eligibleBody")}
                     </div>
                     <button
@@ -349,7 +382,7 @@ export default function SnideFactionBody({ state }: { state: FactionDetailState 
                         color: "#fff",
                         fontFamily: BLACK,
                         fontSize: "var(--text-xl)",
-                        padding: 12,
+                        padding: "var(--space-md)",
                         border: "none",
                         transform: "rotate(-1deg)",
                         boxShadow: "3px 4px 0 rgba(0,0,0,.4)",
@@ -363,7 +396,7 @@ export default function SnideFactionBody({ state }: { state: FactionDetailState 
 
                 {membership.state === "eligible" && confirming && (
                   <div>
-                    <div className="content-text" style={{ fontFamily: TYPE, lineHeight: 1.6, color: "#e7e4d8", marginBottom: 14 }}>
+                    <div className="content-text" style={{ fontFamily: TYPE, lineHeight: 1.6, color: "#e7e4d8", marginBottom: "var(--space-lg)" }}>
                       {membership.currentFactionSlug &&
                       membership.currentFactionSlug !== "na"
                         ? t("detail.join.confirmSwitch", {
@@ -373,11 +406,11 @@ export default function SnideFactionBody({ state }: { state: FactionDetailState 
                         : t("detail.join.confirm", { faction: factionName(faction.slug) })}
                     </div>
                     {membership.joinError && (
-                      <div className="content-text" style={{ fontFamily: MONO, color: "var(--color-danger)", marginBottom: 8 }}>
+                      <div className="content-text" style={{ fontFamily: MONO, color: "var(--color-danger)", marginBottom: "var(--space-sm)" }}>
                         {membership.joinError}
                       </div>
                     )}
-                    <div style={{ display: "flex", gap: 8 }}>
+                    <div style={{ display: "flex", gap: "var(--space-sm)" }}>
                       <button
                         onClick={() => void membership.join()}
                         disabled={membership.joining}
@@ -387,7 +420,7 @@ export default function SnideFactionBody({ state }: { state: FactionDetailState 
                           color: "#fff",
                           fontFamily: BLACK,
                           fontSize: "var(--text-xl)",
-                          padding: 11,
+                          padding: "var(--space-md)",
                           border: "none",
                           cursor: membership.joining ? "not-allowed" : "pointer",
                         }}
@@ -407,7 +440,7 @@ export default function SnideFactionBody({ state }: { state: FactionDetailState 
                           color: MUTED,
                           background: "transparent",
                           border: "2px dashed color-mix(in srgb, var(--faction-snide-card-muted) 45%, transparent)",
-                          padding: "10px 14px",
+                          padding: "var(--space-md) var(--space-lg)",
                           cursor: membership.joining ? "not-allowed" : "pointer",
                         }}
                       >
@@ -419,11 +452,29 @@ export default function SnideFactionBody({ state }: { state: FactionDetailState 
 
                 {membership.state === "gate" && (
                   <div>
-                    {/* ornament: marker scrawl + Impact stencil headline — poster type. */}
-                    <div style={{ fontFamily: MARKER, fontSize: 16, color: PINK, transform: "rotate(-1.5deg)", marginBottom: 6 }}>
+                    <div
+                      style={{
+                        fontFamily: MARKER,
+                        // eslint-disable-next-line local/no-raw-style-values -- ornament: hand-scrawled marker aside on the dispatch.
+                        fontSize: 16,
+                        color: PINK,
+                        transform: "rotate(-1.5deg)",
+                        marginBottom: "var(--space-sm)",
+                      }}
+                    >
                       {t("snide.dispatch.gateKicker")}
                     </div>
-                    <div style={{ fontFamily: IMPACT, fontSize: 24, lineHeight: 0.9, color: ACID, textTransform: "uppercase", marginBottom: 10 }}>
+                    <div
+                      style={{
+                        fontFamily: IMPACT,
+                        // eslint-disable-next-line local/no-raw-style-values -- ornament: Impact stencil headline set tight (lineHeight 0.9) — poster type.
+                        fontSize: 24,
+                        lineHeight: 0.9,
+                        color: ACID,
+                        textTransform: "uppercase",
+                        marginBottom: "var(--space-md)",
+                      }}
+                    >
                       {t("snide.dispatch.gateTitle")}
                     </div>
                     <div className="content-text" style={{ fontFamily: TYPE, lineHeight: 1.6, color: "#d8d6c8" }}>
@@ -437,28 +488,55 @@ export default function SnideFactionBody({ state }: { state: FactionDetailState 
         )}
 
         {/* ⑥ MEMBERS — WANTED spotlight + dashed rap sheet */}
-        <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-xl)" }}>
           {spot && (
             <Link to={`/characters/${spot.id}`} style={{ textDecoration: "none" }}>
               <div style={{ position: "relative", transform: "rotate(1.2deg)" }}>
                 <Tape style={{ top: -9, left: 26, width: 56, height: 22, transform: "rotate(-6deg)" }} />
-                <div style={{ ...INK_PANEL, border: `2px solid ${ACID}`, boxShadow: "5px 6px 0 rgba(0,0,0,.3)", padding: "18px 16px 16px", textAlign: "center" }}>
+                <div style={{ ...INK_PANEL, border: `2px solid ${ACID}`, boxShadow: "5px 6px 0 rgba(0,0,0,.3)", padding: "var(--space-lg)", textAlign: "center" }}>
                   <Halftone on="ink" />
-                  {/* ornament: WANTED-poster furniture — wide-tracked condensed caps + marker scrawl. */}
-                  <div style={{ position: "relative", fontFamily: COND, fontSize: 13, letterSpacing: "0.35em", color: PINK }}>
+                  <div
+                    style={{
+                      position: "relative",
+                      fontFamily: COND,
+                      // eslint-disable-next-line local/no-raw-style-values -- ornament: WANTED-poster furniture — wide-tracked condensed caps.
+                      fontSize: 13,
+                      letterSpacing: "0.35em",
+                      color: PINK,
+                    }}
+                  >
                     {t("snide.spotlight.wanted")}
                   </div>
-                  <div style={{ position: "relative", fontFamily: MARKER, fontSize: 13, color: ACID, transform: "rotate(-2deg)", marginBottom: 10 }}>
+                  <div
+                    style={{
+                      position: "relative",
+                      fontFamily: MARKER,
+                      // eslint-disable-next-line local/no-raw-style-values -- ornament: marker scrawl under the WANTED rule.
+                      fontSize: 13,
+                      color: ACID,
+                      transform: "rotate(-2deg)",
+                      marginBottom: "var(--space-md)",
+                    }}
+                  >
                     {t("snide.spotlight.label")}
                   </div>
-                  <div style={{ position: "relative", display: "flex", justifyContent: "center", marginBottom: 10 }}>
+                  <div style={{ position: "relative", display: "flex", justifyContent: "center", marginBottom: "var(--space-md)" }}>
                     <Mugshot name={spot.display_name} size={70} invert />
                   </div>
-                  {/* ornament: the mugshot's stencilled name plate. */}
-                  <div style={{ position: "relative", fontFamily: IMPACT, fontSize: 30, lineHeight: 0.9, color: ACID, textTransform: "uppercase" }}>
+                  <div
+                    style={{
+                      position: "relative",
+                      fontFamily: IMPACT,
+                      // eslint-disable-next-line local/no-raw-style-values -- ornament: the mugshot's stencilled name plate.
+                      fontSize: 30,
+                      lineHeight: 0.9,
+                      color: ACID,
+                      textTransform: "uppercase",
+                    }}
+                  >
                     {spot.display_name}
                   </div>
-                  <div style={{ position: "relative", fontFamily: MONO, fontSize: "var(--text-sm)", letterSpacing: "0.08em", textTransform: "uppercase", color: "#cfcdbf", marginTop: 4 }}>
+                  <div style={{ position: "relative", fontFamily: MONO, fontSize: "var(--text-sm)", letterSpacing: "0.08em", textTransform: "uppercase", color: "#cfcdbf", marginTop: "var(--space-xs)" }}>
                     {t("snide.spotlight.stat", {
                       level: spot.level,
                       score: spot.all_time_score.toLocaleString(),
@@ -470,10 +548,19 @@ export default function SnideFactionBody({ state }: { state: FactionDetailState 
           )}
 
           <div style={{ position: "relative", transform: "rotate(-0.6deg)" }}>
-            <div style={{ ...PAPER_PANEL, boxShadow: "4px 5px 0 rgba(0,0,0,.2)", padding: "16px 16px 12px" }}>
+            <div style={{ ...PAPER_PANEL, boxShadow: "4px 5px 0 rgba(0,0,0,.2)", padding: "var(--space-lg) var(--space-lg) var(--space-md)" }}>
               <Halftone on="paper" />
-              {/* ornament: marker scrawl heading on the rap sheet. */}
-              <div style={{ position: "relative", fontFamily: MARKER, fontSize: 22, color: GREEN, transform: "rotate(-1deg)", marginBottom: 10 }}>
+              <div
+                style={{
+                  position: "relative",
+                  fontFamily: MARKER,
+                  // eslint-disable-next-line local/no-raw-style-values -- ornament: marker scrawl heading on the rap sheet.
+                  fontSize: 22,
+                  color: GREEN,
+                  transform: "rotate(-1deg)",
+                  marginBottom: "var(--space-md)",
+                }}
+              >
                 {t("snide.roster.heading")}
               </div>
               {rapSheet.length === 0 ? (
@@ -491,8 +578,8 @@ export default function SnideFactionBody({ state }: { state: FactionDetailState 
                       position: "relative",
                       display: "flex",
                       alignItems: "center",
-                      gap: 11,
-                      padding: "7px 0",
+                      gap: "var(--space-md)",
+                      padding: "var(--space-sm) 0",
                       borderBottom: "1px dashed color-mix(in srgb, var(--faction-snide-ink) 22%, transparent)",
                       textDecoration: "none",
                     }}

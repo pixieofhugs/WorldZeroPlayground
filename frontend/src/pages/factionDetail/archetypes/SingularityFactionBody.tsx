@@ -73,13 +73,13 @@ const PANEL: CSSProperties = {
 const SECTION_HEADING_ROW: CSSProperties = {
   display: "flex",
   alignItems: "center",
-  gap: 12,
-  marginBottom: 6,
+  gap: "var(--space-md)",
+  marginBottom: "var(--space-sm)",
 };
 
 const SECTION_HEADING_TEXT: CSSProperties = {
   fontFamily: FONT,
-  // ornament: the terminal's banner cut, a step above the content ramp.
+  // eslint-disable-next-line local/no-raw-style-values -- ornament: the terminal's banner cut, a step above the content ramp.
   fontSize: 28,
   letterSpacing: "0.04em",
   margin: 0,
@@ -104,7 +104,7 @@ const KICKER: CSSProperties = {
   letterSpacing: "0.24em",
   textTransform: "uppercase",
   color: phosphor(40),
-  marginBottom: 18,
+  marginBottom: "var(--space-lg)",
 };
 
 function Kicker({ children }: { children: ReactNode }) {
@@ -159,9 +159,9 @@ export default function SingularityFactionBody({ state }: { state: FactionDetail
   return (
     <div className="wz-faction-grid">
       {/* ── MAIN COLUMN ── */}
-      <div style={{ display: "flex", flexDirection: "column", gap: 42 }}>
+      <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-2xl)" }}>
         {/* ② MANIFEST */}
-        <div style={{ ...PANEL, padding: "22px 26px 24px" }}>
+        <div style={{ ...PANEL, padding: "var(--space-xl)" }}>
           <Scanlines />
           <div
             style={{
@@ -170,12 +170,12 @@ export default function SingularityFactionBody({ state }: { state: FactionDetail
               fontSize: "var(--text-sm)",
               letterSpacing: "0.14em",
               color: signal(55),
-              marginBottom: 14,
+              marginBottom: "var(--space-lg)",
             }}
           >
             {t("singularity.manifest.command")}
           </div>
-          <div style={{ position: "relative", display: "flex", flexDirection: "column", gap: 12 }}>
+          <div style={{ position: "relative", display: "flex", flexDirection: "column", gap: "var(--space-md)" }}>
             {paragraphs.length ? (
               paragraphs.map((para, i) => (
                 <p
@@ -208,7 +208,7 @@ export default function SingularityFactionBody({ state }: { state: FactionDetail
               {t("singularity.tasks.empty")}
             </p>
           ) : (
-            <div style={{ display: "flex", flexWrap: "wrap", gap: 22, alignItems: "flex-start" }}>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: "var(--space-xl)", alignItems: "flex-start" }}>
               {tasks.map((task) => (
                 <TaskCard
                   key={task.id}
@@ -234,7 +234,7 @@ export default function SingularityFactionBody({ state }: { state: FactionDetail
               {t("singularity.praxis.empty")}
             </p>
           ) : (
-            <div style={{ display: "flex", flexWrap: "wrap", gap: 16, alignItems: "flex-start" }}>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: "var(--space-lg)", alignItems: "flex-start" }}>
               {recentPraxis.map((praxis) => (
                 <div key={praxis.id} style={{ position: "relative", flex: "1 1 280px", minWidth: 280 }}>
                   {/* ⑤ Task Crown (ADR-0028) — the skin's own corner medallion,
@@ -258,7 +258,7 @@ export default function SingularityFactionBody({ state }: { state: FactionDetail
       </div>
 
       {/* ── RIGHT RAIL ── */}
-      <div style={{ display: "flex", flexDirection: "column", gap: 42 }}>
+      <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-2xl)" }}>
         {/* ③ ACCESS — join / gate / standing */}
         {membership.state !== "none" && (
           <div style={{ ...PANEL }}>
@@ -268,8 +268,8 @@ export default function SingularityFactionBody({ state }: { state: FactionDetail
                 alignItems: "center",
                 justifyContent: "space-between",
                 background: SIGNAL_FILL,
-                padding: "9px 15px",
-                gap: 10,
+                padding: "var(--space-sm) var(--space-lg)",
+                gap: "var(--space-md)",
               }}
             >
               <span
@@ -287,16 +287,24 @@ export default function SingularityFactionBody({ state }: { state: FactionDetail
                 {t("singularity.access.reLabel")}
               </span>
             </div>
-            <div style={{ position: "relative", padding: "20px 18px" }}>
+            <div style={{ position: "relative", padding: "var(--space-xl) var(--space-lg)" }}>
               <Scanlines />
               <div style={{ position: "relative" }}>
                 {membership.state === "member" && (
                   <div>
-                    {/* ornament: terminal display title. */}
-                    <div style={{ fontFamily: FONT, fontSize: 22, lineHeight: 1, color: PHOSPHOR, letterSpacing: "0.04em" }}>
+                    <div
+                      style={{
+                        fontFamily: FONT,
+                        // eslint-disable-next-line local/no-raw-style-values -- ornament: terminal display title.
+                        fontSize: 22,
+                        lineHeight: 1,
+                        color: PHOSPHOR,
+                        letterSpacing: "0.04em",
+                      }}
+                    >
                       {t("singularity.access.memberTitle")}
                     </div>
-                    <div style={{ fontFamily: FONT, fontSize: "var(--text-base)", color: signal(60), margin: "10px 0 0", letterSpacing: "0.04em" }}>
+                    <div style={{ fontFamily: FONT, fontSize: "var(--text-base)", color: signal(60), margin: "var(--space-md) 0 0", letterSpacing: "0.04em" }}>
                       <Trans t={t} i18nKey="singularity.access.memberStanding">
                         array · <span style={{ color: SIGNAL }}>online</span>
                       </Trans>
@@ -306,14 +314,23 @@ export default function SingularityFactionBody({ state }: { state: FactionDetail
 
                 {membership.state === "eligible" && !confirming && (
                   <div>
-                    <div style={{ fontFamily: FONT, fontSize: "var(--text-xs)", letterSpacing: "0.2em", color: signal(50), marginBottom: 7 }}>
+                    <div style={{ fontFamily: FONT, fontSize: "var(--text-xs)", letterSpacing: "0.2em", color: signal(50), marginBottom: "var(--space-sm)" }}>
                       {t("singularity.access.eligibleKicker")}
                     </div>
-                    {/* ornament: terminal display title. */}
-                    <div style={{ fontFamily: FONT, fontSize: 22, lineHeight: 1.05, color: PHOSPHOR, letterSpacing: "0.03em", marginBottom: 10 }}>
+                    <div
+                      style={{
+                        fontFamily: FONT,
+                        // eslint-disable-next-line local/no-raw-style-values -- ornament: terminal display title.
+                        fontSize: 22,
+                        lineHeight: 1.05,
+                        color: PHOSPHOR,
+                        letterSpacing: "0.03em",
+                        marginBottom: "var(--space-md)",
+                      }}
+                    >
                       {t("singularity.access.eligibleTitle")}
                     </div>
-                    <div className="content-text" style={{ fontFamily: FONT, lineHeight: 1.65, color: phosphor(60), marginBottom: 18 }}>
+                    <div className="content-text" style={{ fontFamily: FONT, lineHeight: 1.65, color: phosphor(60), marginBottom: "var(--space-lg)" }}>
                       {t("singularity.access.eligibleBody")}
                     </div>
                     <button
@@ -327,7 +344,7 @@ export default function SingularityFactionBody({ state }: { state: FactionDetail
                         color: VOID,
                         background: PHOSPHOR,
                         border: "none",
-                        padding: 12,
+                        padding: "var(--space-md)",
                         boxShadow: `0 0 16px ${phosphor(35)}`,
                         cursor: "pointer",
                       }}
@@ -339,7 +356,7 @@ export default function SingularityFactionBody({ state }: { state: FactionDetail
 
                 {membership.state === "eligible" && confirming && (
                   <div>
-                    <div className="content-text" style={{ fontFamily: FONT, lineHeight: 1.7, color: phosphor(72), marginBottom: 14 }}>
+                    <div className="content-text" style={{ fontFamily: FONT, lineHeight: 1.7, color: phosphor(72), marginBottom: "var(--space-lg)" }}>
                       {membership.currentFactionSlug &&
                       membership.currentFactionSlug !== "na"
                         ? t("detail.join.confirmSwitch", {
@@ -349,11 +366,11 @@ export default function SingularityFactionBody({ state }: { state: FactionDetail
                         : t("detail.join.confirm", { faction: factionName(faction.slug) })}
                     </div>
                     {membership.joinError && (
-                      <div className="content-text" style={{ fontFamily: FONT, color: "var(--color-danger)", marginBottom: 8 }}>
+                      <div className="content-text" style={{ fontFamily: FONT, color: "var(--color-danger)", marginBottom: "var(--space-sm)" }}>
                         {membership.joinError}
                       </div>
                     )}
-                    <div style={{ display: "flex", gap: 8 }}>
+                    <div style={{ display: "flex", gap: "var(--space-sm)" }}>
                       <button
                         onClick={() => void membership.join()}
                         disabled={membership.joining}
@@ -366,7 +383,7 @@ export default function SingularityFactionBody({ state }: { state: FactionDetail
                           color: VOID,
                           background: PHOSPHOR,
                           border: "none",
-                          padding: 11,
+                          padding: "var(--space-md)",
                           cursor: membership.joining ? "not-allowed" : "pointer",
                         }}
                       >
@@ -385,7 +402,7 @@ export default function SingularityFactionBody({ state }: { state: FactionDetail
                           color: signal(60),
                           background: "transparent",
                           border: `1px solid ${signal(40)}`,
-                          padding: "11px 14px",
+                          padding: "var(--space-md) var(--space-lg)",
                           cursor: membership.joining ? "not-allowed" : "pointer",
                         }}
                       >
@@ -397,11 +414,20 @@ export default function SingularityFactionBody({ state }: { state: FactionDetail
 
                 {membership.state === "gate" && (
                   <div>
-                    <div style={{ fontFamily: FONT, fontSize: "var(--text-xs)", letterSpacing: "0.2em", color: signal(50), marginBottom: 7 }}>
+                    <div style={{ fontFamily: FONT, fontSize: "var(--text-xs)", letterSpacing: "0.2em", color: signal(50), marginBottom: "var(--space-sm)" }}>
                       {t("singularity.access.gateKicker")}
                     </div>
-                    {/* ornament: terminal display title. */}
-                    <div style={{ fontFamily: FONT, fontSize: 20, lineHeight: 1.1, color: PHOSPHOR, letterSpacing: "0.03em", marginBottom: 11 }}>
+                    <div
+                      style={{
+                        fontFamily: FONT,
+                        // eslint-disable-next-line local/no-raw-style-values -- ornament: terminal display title.
+                        fontSize: 20,
+                        lineHeight: 1.1,
+                        color: PHOSPHOR,
+                        letterSpacing: "0.03em",
+                        marginBottom: "var(--space-md)",
+                      }}
+                    >
                       {t("singularity.access.gateTitle", { faction: factionName(faction.slug) })}
                     </div>
                     <div className="content-text" style={{ fontFamily: FONT, lineHeight: 1.7, color: phosphor(60) }}>
@@ -415,7 +441,7 @@ export default function SingularityFactionBody({ state }: { state: FactionDetail
         )}
 
         {/* ⑥ MEMBERS — primary node + the array */}
-        <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-lg)" }}>
           {spot && (
             <Link to={`/characters/${spot.id}`} style={{ textDecoration: "none" }}>
               <div
@@ -424,20 +450,20 @@ export default function SingularityFactionBody({ state }: { state: FactionDetail
                   border: `1px solid ${BORDER_HARD}`,
                   boxShadow: `0 0 30px -18px ${phosphor(40)}`,
                   textAlign: "center",
-                  padding: "20px 18px 18px",
+                  padding: "var(--space-xl) var(--space-lg) var(--space-lg)",
                 }}
               >
                 <Scanlines opacity={0.014} />
-                <div style={{ position: "relative", fontFamily: FONT, fontSize: "var(--text-xs)", letterSpacing: "0.28em", color: phosphor(45), marginBottom: 12 }}>
+                <div style={{ position: "relative", fontFamily: FONT, fontSize: "var(--text-xs)", letterSpacing: "0.28em", color: phosphor(45), marginBottom: "var(--space-md)" }}>
                   {t("singularity.spotlight.label")}
                 </div>
-                <div style={{ position: "relative", display: "flex", justifyContent: "center", marginBottom: 12 }}>
+                <div style={{ position: "relative", display: "flex", justifyContent: "center", marginBottom: "var(--space-md)" }}>
                   <NodeGlyph name={spot.display_name} size={72} />
                 </div>
                 <div className="content-title" style={{ position: "relative", fontFamily: FONT, lineHeight: 1, color: PHOSPHOR, letterSpacing: "0.03em" }}>
                   {spot.display_name}
                 </div>
-                <div style={{ position: "relative", fontFamily: FONT, fontSize: "var(--text-xs)", letterSpacing: "0.1em", color: signal(55), marginTop: 6, textTransform: "uppercase" }}>
+                <div style={{ position: "relative", fontFamily: FONT, fontSize: "var(--text-xs)", letterSpacing: "0.1em", color: signal(55), marginTop: "var(--space-sm)", textTransform: "uppercase" }}>
                   {t("singularity.spotlight.stat", {
                     level: spot.level,
                     score: spot.all_time_score.toLocaleString(),
@@ -447,9 +473,9 @@ export default function SingularityFactionBody({ state }: { state: FactionDetail
             </Link>
           )}
 
-          <div style={{ ...PANEL, padding: "16px 16px 12px" }}>
+          <div style={{ ...PANEL, padding: "var(--space-lg) var(--space-lg) var(--space-md)" }}>
             <Scanlines />
-            <div style={{ position: "relative", fontFamily: FONT, fontSize: "var(--text-xs)", letterSpacing: "0.24em", textTransform: "uppercase", color: phosphor(40), marginBottom: 12 }}>
+            <div style={{ position: "relative", fontFamily: FONT, fontSize: "var(--text-xs)", letterSpacing: "0.24em", textTransform: "uppercase", color: phosphor(40), marginBottom: "var(--space-md)" }}>
               {t("singularity.roster.heading")}
             </div>
             {array.length === 0 ? (
@@ -467,8 +493,8 @@ export default function SingularityFactionBody({ state }: { state: FactionDetail
                     position: "relative",
                     display: "flex",
                     alignItems: "center",
-                    gap: 11,
-                    padding: "8px 0",
+                    gap: "var(--space-md)",
+                    padding: "var(--space-sm) 0",
                     borderBottom: `1px solid ${signal(14)}`,
                     textDecoration: "none",
                   }}
