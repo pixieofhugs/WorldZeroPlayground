@@ -38,7 +38,7 @@ export default function DefaultMobilePraxisCard({ praxis }: { praxis: PraxisCard
             gap: 8,
             marginBottom: 12,
             fontFamily: "'Courier Prime', monospace",
-            fontSize: 9,
+            fontSize: 'var(--text-sm)',
             letterSpacing: '0.2em',
             textTransform: 'uppercase',
             color: 'var(--faction-default-card-muted)',

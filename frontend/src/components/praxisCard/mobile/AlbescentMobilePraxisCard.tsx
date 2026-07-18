@@ -43,7 +43,7 @@ export default function AlbescentMobilePraxisCard({ praxis }: { praxis: PraxisCa
           gap: 8,
           marginBottom: 12,
           fontFamily: 'var(--faction-albescent-mono)',
-          fontSize: 9,
+          fontSize: 'var(--text-sm)',
           letterSpacing: '0.22em',
           textTransform: 'uppercase',
           color: ink(30),
