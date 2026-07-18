@@ -115,7 +115,7 @@ export default function SingularityFactionHero({
           {/* boot lines */}
           <div
             style={{
-              fontSize: 8.5,
+              fontSize: "var(--text-sm)",
               letterSpacing: "0.18em",
               color: signal(55),
               marginBottom: 14,
@@ -138,6 +138,7 @@ export default function SingularityFactionHero({
           <h1
             style={{
               fontFamily: FONT,
+              // ornament: terminal wordmark — the Singularity hero's display type
               fontSize: 56,
               lineHeight: 0.9,
               letterSpacing: "0.04em",
@@ -152,7 +153,7 @@ export default function SingularityFactionHero({
           {/* motto */}
           <div
             style={{
-              fontSize: 10,
+              fontSize: "var(--text-base)",
               letterSpacing: "0.28em",
               color: signal(70),
               textTransform: "uppercase",
@@ -164,8 +165,8 @@ export default function SingularityFactionHero({
 
           {/* blurb */}
           <p
+            className="content-text"
             style={{
-              fontSize: 11,
               lineHeight: 1.7,
               color: phosphor(60),
               maxWidth: 520,
@@ -225,7 +226,7 @@ export default function SingularityFactionHero({
           >
             <div
               style={{
-                fontSize: 7,
+                fontSize: "var(--text-xs)",
                 letterSpacing: "0.2em",
                 color: signal(55),
                 textTransform: "uppercase",
@@ -249,7 +250,7 @@ export default function SingularityFactionHero({
               >
                 <span
                   style={{
-                    fontSize: 7.5,
+                    fontSize: "var(--text-xs)",
                     letterSpacing: "0.14em",
                     color: signal(50),
                     textTransform: "uppercase",
@@ -257,6 +258,7 @@ export default function SingularityFactionHero({
                 >
                   {s.label}
                 </span>
+                {/* ornament: readout numeral sized to the terminal face; above the content floor already */}
                 <span style={{ fontSize: 20, lineHeight: 1, color: PHOSPHOR }}>
                   {s.value}
                 </span>
