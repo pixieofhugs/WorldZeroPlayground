@@ -105,6 +105,8 @@ For file-editing work, dispatch to a specialist that loads only its own context:
 
 `/wz-next-issue` picks up where `/triage` stops: it selects the best unblocked `ready-for-agent` issue (dependency-aware), builds it in a worktree, and opens a draft PR — commenting on the issue and stopping if it needs a human.
 
+`/wz-next-batch` is the multi-issue sibling: it shapes a whole batch (dependency-aware, grouped by **file footprint** so only disjoint work runs in parallel), grills anything ungrilled, dispatches each issue to a scoped subagent in its own worktree, then waits for CI and **merges** each PR. Use it for a wave/batch; use `/wz-next-issue` for a single issue.
+
 ### Issue tracker
 Work lives in **GitHub Issues** on `pixieofhugs/WorldZeroPlayground`, managed via the `gh` CLI. External PRs are **not** a triage surface. See `docs/agents/issue-tracker.md`.
 
