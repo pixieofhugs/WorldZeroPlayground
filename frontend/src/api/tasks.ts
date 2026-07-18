@@ -42,7 +42,10 @@ export interface TaskFilters {
   exclude_character_id?: number
   created_by?: number
   task_type?: TaskType
-  /** Free-text search over task title and task description (#661). */
+  /**
+   * Free-text search over task title, task description, and author name/handle
+   * (#661; author axis added in #681).
+   */
   q?: string
   /** 'newest' orders by creation time (newest first); default sorts by level/points. */
   sort?: string
