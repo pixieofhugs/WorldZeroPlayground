@@ -119,7 +119,7 @@ export default function CredentialCard({
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
-          fontSize: 7,
+          fontSize: 'var(--text-xs)',
           letterSpacing: '0.12em',
           textTransform: 'uppercase',
           color: 'var(--fc-muted)',
@@ -185,7 +185,7 @@ export default function CredentialCard({
         style={{
           fontFamily: 'var(--fc-font)',
           fontStyle: skinned ? undefined : 'italic',
-          fontSize: 28,
+          fontSize: 'var(--text-title)',
           lineHeight: 1.05,
           color: 'var(--fc-text)',
           overflowWrap: 'anywhere',
@@ -198,7 +198,7 @@ export default function CredentialCard({
       <div
         style={{
           fontFamily: 'var(--font-body)',
-          fontSize: 8,
+          fontSize: 'var(--text-content)',
           lineHeight: 1.55,
           color: 'var(--fc-muted)',
           margin: '7px auto 0',
@@ -231,7 +231,7 @@ export default function CredentialCard({
               background: 'var(--fc-accent)',
               color: 'var(--fc-bg)',
               fontFamily: 'var(--fc-font)',
-              fontSize: 11,
+              fontSize: 'var(--text-md)',
               padding: '3px 10px',
               borderRadius: 4,
               lineHeight: 1.3,
@@ -244,7 +244,7 @@ export default function CredentialCard({
             style={{
               fontStyle: 'italic',
               fontFamily: 'var(--font-display)',
-              fontSize: 9,
+              fontSize: 'var(--text-sm)',
               color: 'var(--fc-muted)',
             }}
           >
@@ -253,7 +253,7 @@ export default function CredentialCard({
         )}
         <span
           style={{
-            fontSize: 7.5,
+            fontSize: 'var(--text-xs)',
             letterSpacing: '0.1em',
             textTransform: 'uppercase',
             color: 'var(--fc-muted)',
@@ -261,12 +261,12 @@ export default function CredentialCard({
         >
           {t('credential.lvl', { level })}
         </span>
-        <span style={{ fontFamily: 'var(--fc-font)', fontSize: 17, color: 'var(--fc-accent)' }}>
+        <span style={{ fontFamily: 'var(--fc-font)', fontSize: 'var(--text-content)', color: 'var(--fc-accent)' }}>
           {score}
           <span
             style={{
               fontFamily: 'var(--font-body)',
-              fontSize: 8,
+              fontSize: 'var(--text-xs)',
               marginLeft: 3,
               color: 'var(--fc-muted)',
               letterSpacing: '0.06em',

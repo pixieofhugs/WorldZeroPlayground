@@ -104,15 +104,16 @@ export default function AlbescentInvitation({ lives, onJoined }: AlbescentInvita
     <section style={letter} aria-label={t('albescent.letter.aria')}>
       <div style={innerFrame} />
 
-      {/* letterhead */}
+      {/* letterhead — the engraved mono-caps below are ornament: they draw the
+          stationery (wordmark, rule, slip headings), they are not read as copy. */}
       <div style={{ position: 'relative', padding: '36px 42px 30px', textAlign: 'center' }}>
         <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 18 }}>
           <AlbescentSigil size={44} />
         </div>
-        <div style={{ ...monoCaps, fontSize: 9, letterSpacing: '0.34em', color: ACCENT, marginBottom: 6 }}>{t('albescent.letter.wordmark')}</div>
-        <div style={{ ...monoCaps, fontSize: 8, letterSpacing: '0.28em', marginBottom: 22 }}>{t('albescent.letter.letterhead')}</div>
+        <div style={{ ...monoCaps, /* ornament */ fontSize: 9, letterSpacing: '0.34em', color: ACCENT, marginBottom: 6 }}>{t('albescent.letter.wordmark')}</div>
+        <div style={{ ...monoCaps, /* ornament */ fontSize: 8, letterSpacing: '0.28em', marginBottom: 22 }}>{t('albescent.letter.letterhead')}</div>
         <div style={{ width: 54, height: 1, background: HAIRLINE, margin: '0 auto 22px' }} />
-        <div style={{ ...monoCaps, fontSize: 8, letterSpacing: '0.2em', marginBottom: 10 }}>{t('albescent.letter.handExtended')}</div>
+        <div style={{ ...monoCaps, /* ornament */ fontSize: 8, letterSpacing: '0.2em', marginBottom: 10 }}>{t('albescent.letter.handExtended')}</div>
         <h2 style={headline}>{t('albescent.letter.headline')}</h2>
         <p style={pitch}>
           {t('albescent.letter.pitch')}
@@ -121,18 +122,18 @@ export default function AlbescentInvitation({ lives, onJoined }: AlbescentInvita
 
       {/* terms slip */}
       <div style={{ position: 'relative', margin: '0 42px', borderTop: `1px solid ${RULE}`, padding: '20px 0 4px', textAlign: 'left' }}>
-        <div style={{ ...monoCaps, fontSize: 7, letterSpacing: '0.22em', marginBottom: 12 }}>{t('albescent.letter.termsHeading')}</div>
+        <div style={{ ...monoCaps, /* ornament */ fontSize: 7, letterSpacing: '0.22em', marginBottom: 12 }}>{t('albescent.letter.termsHeading')}</div>
         <div style={termsGrid}>
           {TERM_KEYS.map((term) => (
             <div key={term.label} style={{ borderBottom: `1px solid ${HAIRLINE_FAINT}`, padding: '8px 0' }}>
-              <div style={{ ...monoCaps, fontSize: 7, letterSpacing: '0.14em' }}>{tDynamic(`albescent.letter.${term.label}`)}</div>
-              <div style={{ ...serifItalic, fontSize: 18, color: INK, marginTop: 2 }}>{tDynamic(`albescent.letter.${term.value}`)}</div>
+              <div style={{ ...monoCaps, /* ornament */ fontSize: 7, letterSpacing: '0.14em' }}>{tDynamic(`albescent.letter.${term.label}`)}</div>
+              <div style={{ ...serifItalic, fontSize: 'var(--text-content)', color: INK, marginTop: 2 }}>{tDynamic(`albescent.letter.${term.value}`)}</div>
             </div>
           ))}
         </div>
         <div style={{ marginTop: 12, display: 'flex', flexWrap: 'wrap', gap: '4px 16px' }}>
           {PERK_KEYS.map((perk) => (
-            <div key={perk} style={{ ...serifItalic, fontSize: 14, color: ACCENT }}>— {tDynamic(`albescent.letter.${perk}`)}</div>
+            <div key={perk} style={{ ...serifItalic, fontSize: 'var(--text-content)', color: ACCENT }}>— {tDynamic(`albescent.letter.${perk}`)}</div>
           ))}
         </div>
       </div>
@@ -140,10 +141,10 @@ export default function AlbescentInvitation({ lives, onJoined }: AlbescentInvita
       {/* answer */}
       <div style={{ position: 'relative', padding: '24px 42px 36px' }}>
         {joined ? (
-          <div style={{ ...serifItalic, fontSize: 22, color: INK, textAlign: 'center' }}>{t('albescent.letter.joined')}</div>
+          <div style={{ ...serifItalic, fontSize: 'var(--text-title)', color: INK, textAlign: 'center' }}>{t('albescent.letter.joined')}</div>
         ) : (
           <>
-            <div style={{ ...monoCaps, fontSize: 7, letterSpacing: '0.22em', marginBottom: 10 }}>{t('albescent.letter.whoHeading')}</div>
+            <div style={{ ...monoCaps, /* ornament */ fontSize: 7, letterSpacing: '0.22em', marginBottom: 10 }}>{t('albescent.letter.whoHeading')}</div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 20 }}>
               {choices.map((life) => {
                 const selected = life.id === selectedId
@@ -155,10 +156,11 @@ export default function AlbescentInvitation({ lives, onJoined }: AlbescentInvita
                     style={{ ...lifeChip, borderColor: selected ? INK : HAIRLINE_FAINT }}
                     aria-pressed={selected}
                   >
-                    <span style={{ ...serifItalic, fontSize: 16, color: INK, lineHeight: 1.1 }}>{life.display_name}</span>
-                    <span style={{ ...monoCaps, fontSize: 7, letterSpacing: '0.08em', marginTop: 3 }}>
+                    <span style={{ ...serifItalic, fontSize: 'var(--text-content)', color: INK, lineHeight: 1.1 }}>{life.display_name}</span>
+                    <span style={{ ...monoCaps, fontSize: 'var(--text-xs)', letterSpacing: '0.08em', marginTop: 3 }}>
                       {t('albescent.letter.lifeMeta', { username: life.username, faction: factionName(life.faction_slug) })}
                     </span>
+                    {/* ornament: bullet/arrow dingbat marking the selected life */}
                     <span style={{ marginLeft: 'auto', fontSize: 12, color: MUTED, position: 'absolute', right: 14, top: '50%', transform: 'translateY(-50%)' }}>
                       {selected ? '•' : '→'}
                     </span>
@@ -170,10 +172,10 @@ export default function AlbescentInvitation({ lives, onJoined }: AlbescentInvita
               <button type="button" onClick={() => void handleAccept()} disabled={submitting} style={acceptButton}>
                 {submitting ? t('albescent.letter.acceptBusy') : t('albescent.letter.acceptIdle')}
               </button>
-              <span style={{ ...serifItalic, fontSize: 15, color: ACCENT }}>{t('albescent.letter.reassurance')}</span>
+              <span style={{ ...serifItalic, fontSize: 'var(--text-content)', color: ACCENT }}>{t('albescent.letter.reassurance')}</span>
             </div>
             {error && (
-              <p style={{ ...serifItalic, fontSize: 14, color: INK, textAlign: 'center', marginTop: 14, marginBottom: 0 }}>{error}</p>
+              <p style={{ ...serifItalic, fontSize: 'var(--text-content)', color: INK, textAlign: 'center', marginTop: 14, marginBottom: 0 }}>{error}</p>
             )}
           </>
         )}
@@ -212,14 +214,14 @@ const serifItalic: CSSProperties = {
 }
 const headline: CSSProperties = {
   ...serifItalic,
-  fontSize: 44,
+  fontSize: 'var(--text-display)',
   lineHeight: 1.05,
   color: INK,
   margin: '0 0 14px',
 }
 const pitch: CSSProperties = {
   ...serifItalic,
-  fontSize: 17,
+  fontSize: 'var(--text-content)',
   lineHeight: 1.6,
   color: ACCENT,
   maxWidth: 440,
@@ -248,6 +250,6 @@ const acceptButton: CSSProperties = {
   border: `1px solid ${INK}`,
   background: INK,
   color: BG,
-  fontSize: 20,
+  fontSize: 'var(--text-content)',
   padding: '12px 30px',
 }

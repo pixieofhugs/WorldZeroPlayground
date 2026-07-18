@@ -126,6 +126,7 @@ export function CharacterSwitcherRows({
                     background: `linear-gradient(135deg, ${factionCssVar(life.faction_slug, 'light')}, ${factionCssVar(life.faction_slug)})`,
                     fontFamily: 'var(--faction-default-card-font)',
                     fontStyle: 'italic',
+                    // ornament: monogram glyph sized to the mini avatar disc
                     fontSize: 17,
                     color: 'var(--color-text-on-accent)',
                   }}
@@ -145,7 +146,7 @@ export function CharacterSwitcherRows({
               </span>
             </span>
             {isActive ? (
-              <span aria-hidden style={{ color: 'var(--faction-default-card-muted)', fontSize: 16, flex: 'none' }}>✓</span>
+              <span aria-hidden style={{ color: 'var(--faction-default-card-muted)', /* ornament: check dingbat marking the active life */ fontSize: 16, flex: 'none' }}>✓</span>
             ) : (
               <span style={rowTapHint}>{t('fieldDesk.home.switcher.tapToUse')}</span>
             )}
@@ -173,7 +174,7 @@ const grab: CSSProperties = {
   background: 'var(--color-border-strong)', margin: '2px auto 14px',
 }
 const sheetTitle: CSSProperties = {
-  fontFamily: 'var(--font-display)', fontStyle: 'italic', fontSize: 18,
+  fontFamily: 'var(--font-display)', fontStyle: 'italic', fontSize: 'var(--text-content)',
   color: 'var(--color-text-primary)', margin: '0 4px 6px',
 }
 const switchRow: CSSProperties = {
@@ -190,24 +191,25 @@ const miniAvatarImg: CSSProperties = {
 }
 const rowName: CSSProperties = {
   display: 'block', fontFamily: 'var(--font-display)', fontStyle: 'italic',
-  fontSize: 16, color: 'var(--color-text-primary)',
+  fontSize: 'var(--text-content)', color: 'var(--color-text-primary)',
   overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
 }
 const rowMeta: CSSProperties = {
-  display: 'block', fontSize: 9, letterSpacing: '0.14em', textTransform: 'uppercase',
+  display: 'block', fontSize: 'var(--text-sm)', letterSpacing: '0.14em', textTransform: 'uppercase',
   color: 'var(--color-text-secondary)', marginTop: 3,
 }
 const rowTapHint: CSSProperties = {
-  fontSize: 8, letterSpacing: '0.1em', textTransform: 'uppercase',
+  fontSize: 'var(--text-xs)', letterSpacing: '0.1em', textTransform: 'uppercase',
   color: 'var(--color-text-tertiary)', flex: 'none',
 }
 const sheetAction: CSSProperties = {
   display: 'flex', alignItems: 'center', gap: 12, padding: '15px 4px', width: '100%',
   color: 'var(--color-text-primary)', fontFamily: 'var(--font-display)',
-  fontStyle: 'italic', fontSize: 15, cursor: 'pointer', background: 'none', border: 'none',
+  fontStyle: 'italic', fontSize: 'var(--text-content)', cursor: 'pointer', background: 'none', border: 'none',
 }
 const actionIcon: CSSProperties = {
   width: 34, height: 34, borderRadius: '50%', border: '1.5px dashed var(--color-border-strong)',
+  // ornament: '+' glyph centred in the 34px dashed action disc
   display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16,
   color: 'var(--color-text-secondary)', flex: 'none',
 }
