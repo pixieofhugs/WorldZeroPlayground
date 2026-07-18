@@ -25,7 +25,7 @@ import type { ProfileBodyProps } from '../FactionProfileBody'
 
 const EYEBROW: CSSProperties = {
   fontFamily: 'var(--font-body)',
-  fontSize: 10,
+  fontSize: 'var(--text-base)',
   letterSpacing: '0.2em',
   textTransform: 'uppercase',
   color: 'var(--color-text-tertiary)',
@@ -37,7 +37,7 @@ function SectionHeading({ title, eyebrow }: { title: string; eyebrow?: string })
     <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 14 }}>
       <h2
         className="font-display italic"
-        style={{ fontSize: 24, margin: 0, color: 'var(--color-text-primary)' }}
+        style={{ fontSize: 'var(--text-title)', margin: 0, color: 'var(--color-text-primary)' }}
       >
         {title}
       </h2>
@@ -148,7 +148,7 @@ function BadgeRow({ badge, last }: { badge: BadgeOut; last: boolean }) {
       </span>
       <div
         className="font-display italic"
-        style={{ fontSize: 15, color: 'var(--color-text-primary)', lineHeight: 1.15 }}
+        style={{ fontSize: 'var(--text-content)', color: 'var(--color-text-primary)', lineHeight: 1.15 }}
       >
         {badge.name}
       </div>
@@ -211,13 +211,13 @@ export default function DefaultProfileBody({
           >
             <div
               className="font-display italic"
-              style={{ fontSize: 19, color: 'var(--color-text-primary)' }}
+              style={{ fontSize: 'var(--text-title)', color: 'var(--color-text-primary)' }}
             >
               {t('profile.praxisEmptyTitle')}
             </div>
             <div
               className="font-body"
-              style={{ fontSize: 11, color: 'var(--color-text-secondary)', marginTop: 5 }}
+              style={{ fontSize: 'var(--text-content)', color: 'var(--color-text-secondary)', marginTop: 5 }}
             >
               {t('profile.praxisEmptyBody')}
             </div>
@@ -314,7 +314,7 @@ export default function DefaultProfileBody({
             <h1
               className="font-display italic"
               style={{
-                fontSize: 44,
+                fontSize: 'var(--text-display)',
                 lineHeight: 0.98,
                 margin: 0,
                 color: 'var(--faction-default-card-text)',
@@ -337,7 +337,7 @@ export default function DefaultProfileBody({
                 <>
                   <span
                     className="font-display italic"
-                    style={{ fontSize: 13, color: 'var(--color-text-secondary)' }}
+                    style={{ fontSize: 'var(--text-content)', color: 'var(--color-text-secondary)' }}
                   >
                     {t('profile.unaffiliatedPending')}
                   </span>
@@ -354,7 +354,7 @@ export default function DefaultProfileBody({
               )}
               <span
                 className="font-body"
-                style={{ fontSize: 11, color: 'var(--color-text-tertiary)' }}
+                style={{ fontSize: 'var(--text-content)', color: 'var(--color-text-tertiary)' }}
               >
                 {t('profile.handleJoined', { username: character.username, joined })}
               </span>
@@ -401,10 +401,10 @@ export default function DefaultProfileBody({
                       lineHeight: 1,
                     }}
                   >
-                    <span style={{ ...EYEBROW, fontSize: 7, letterSpacing: '0.1em' }}>{t('profile.lvl')}</span>
+                    <span style={{ ...EYEBROW, fontSize: 'var(--text-xs)', letterSpacing: '0.1em' }}>{t('profile.lvl')}</span>
                     <span
                       className="font-display italic"
-                      style={{ fontSize: 22, color: 'var(--color-text-primary)' }}
+                      style={{ fontSize: 'var(--text-title)', color: 'var(--color-text-primary)' }}
                     >
                       {character.level}
                     </span>
@@ -423,11 +423,11 @@ export default function DefaultProfileBody({
                   >
                     <span
                       className="font-body"
-                      style={{ fontSize: 10, color: 'var(--color-text-secondary)' }}
+                      style={{ fontSize: 'var(--text-content)', color: 'var(--color-text-secondary)' }}
                     >
                       {t('profile.ptsThisLevel', { current: pointsIntoLevel, span: levelSpan })}
                     </span>
-                    <span style={{ ...EYEBROW, fontSize: 9, letterSpacing: '0.08em' }}>
+                    <span style={{ ...EYEBROW, fontSize: 'var(--text-sm)', letterSpacing: '0.08em' }}>
                       {t('profile.nextLevel', { level: progression.nextLevel })}
                     </span>
                   </div>
@@ -451,7 +451,7 @@ export default function DefaultProfileBody({
                   </div>
                   <div
                     className="font-body"
-                    style={{ fontSize: 9, color: 'var(--color-text-tertiary)', marginTop: 5 }}
+                    style={{ fontSize: 'var(--text-content)', color: 'var(--color-text-tertiary)', marginTop: 5 }}
                   >
                     {t('profile.ptsToNext', { score: character.score, threshold: progression.nextThreshold })}
                   </div>
@@ -487,14 +487,14 @@ export default function DefaultProfileBody({
             >
               <h2
                 className="font-display italic"
-                style={{ fontSize: 22, margin: 0, color: 'var(--color-text-primary)' }}
+                style={{ fontSize: 'var(--text-title)', margin: 0, color: 'var(--color-text-primary)' }}
               >
                 {t('profile.badgesHeading')}
               </h2>
               <span
                 style={{
                   ...EYEBROW,
-                  fontSize: 9,
+                  fontSize: 'var(--text-sm)',
                   letterSpacing: '0.1em',
                   marginLeft: 'auto',
                   border: '1px solid var(--color-border-strong)',
