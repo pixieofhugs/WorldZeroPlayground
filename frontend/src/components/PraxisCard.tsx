@@ -13,6 +13,7 @@ import {
   PraxisTitle,
   PraxisTaskLink,
   PraxisByline,
+  PraxisVotedByMarker,
   PraxisScoreHero,
   PraxisStats,
   PraxisExcerpt,
@@ -114,6 +115,7 @@ function PraxisBody({
       <PraxisRoster praxis={praxis} accent={tint} paper={paper} />
       <PraxisMediaGallery praxis={praxis} accent={tint} paper={paper} />
       <PraxisByline praxis={praxis} style={{ color: muted }} />
+      <PraxisVotedByMarker praxis={praxis} style={{ color: muted }} />
       <PraxisVoteFooter praxis={praxis} />
     </>
   );
