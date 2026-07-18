@@ -7,7 +7,9 @@
  * state, the task read keyed on those filters + the viewer's character id, and
  * the signup → navigate-to-edit handler with its inline message. The free-text search (#661) rides
  * alongside them, debounced 200ms via `useDebouncedValue` — the idiom #644 set on
- * the praxis feed. The read runs through the shared `usePagedResource` growing
+ * the praxis feed — but its value lives in the URL (`?q=`, via
+ * `useSearchQueryParam`, #660) rather than local state, so a pasted or refreshed
+ * link restores it. The read runs through the shared `usePagedResource` growing
  * window (#645): filter setters (search included) reset the window and a full
  * page exposes "load more".
  */
@@ -22,6 +24,7 @@ import { useAuth } from '../../auth/AuthContext'
 import { computeDisplayPoints } from '../../utils/points'
 import { usePagedResource } from '../../hooks/usePagedResource'
 import { useDebouncedValue } from '../../hooks/useDebouncedValue'
+import { useSearchQueryParam } from '../../hooks/useSearchQueryParam'
 import type { CurrentUser } from '../../api/auth'
 
 export const LEVEL_FILTERS = [0, 1, 2, 3, 4, 5]
@@ -83,7 +86,7 @@ export function useTasks(): TasksState {
   const [status, setStatusState] = useState('All')
   const [faction, setFactionState] = useState('')
   const [level, setLevelState] = useState<number | ''>('')
-  const [query, setQueryState] = useState('')
+  const [query, setQueryState] = useSearchQueryParam()
   const [signupMsg, setSignupMsg] = useState<SignupMessage | null>(null)
 
   // Debounced so a refetch fires once the typing settles, not per keystroke —
