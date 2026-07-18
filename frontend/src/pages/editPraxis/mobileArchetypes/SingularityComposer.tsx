@@ -52,8 +52,8 @@ const kicker: CSSProperties = {
 /** Void readout panel headed by a prompt label. */
 function Panel({ title, children }: { title: string; children: ReactNode }) {
   return (
-    <section style={{ background: VOID, border: `1px solid ${signal(42)}`, padding: 14 }}>
-      <div style={{ fontFamily: FONT, fontSize: "var(--text-sm)", letterSpacing: '0.13em', textTransform: 'uppercase', color: PHOSPHOR, marginBottom: 10 }}>
+    <section style={{ background: VOID, border: `1px solid ${signal(42)}`, padding: "var(--space-md)" }}>
+      <div style={{ fontFamily: FONT, fontSize: "var(--text-sm)", letterSpacing: '0.13em', textTransform: 'uppercase', color: PHOSPHOR, marginBottom: "var(--space-sm)" }}>
         {title}
       </div>
       {children}
@@ -68,9 +68,9 @@ export default function SingularityComposer({ state }: { state: EditPraxisState 
   const task = state.task
 
   return (
-    <div data-skin="singularity" style={{ display: 'flex', flexDirection: 'column', gap: 14, fontFamily: FONT, color: PHOSPHOR, background: VOID }}>
-      <header style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-        <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
+    <div data-skin="singularity" style={{ display: 'flex', flexDirection: 'column', gap: "var(--space-md)", fontFamily: FONT, color: PHOSPHOR, background: VOID }}>
+      <header style={{ display: 'flex', flexDirection: 'column', gap: "var(--space-md)" }}>
+        <div style={{ display: 'flex', alignItems: 'baseline', gap: "var(--space-sm)" }}>
           <h1 style={{ fontFamily: FONT, fontSize: "var(--text-title)", lineHeight: 1, color: PHOSPHOR, letterSpacing: '0.03em', margin: 0 }}>
             {t('editPraxis.singularity.mobile.pageTitle')}
           </h1>
@@ -85,9 +85,9 @@ export default function SingularityComposer({ state }: { state: EditPraxisState 
           tab={tab}
           setTab={setTab}
           skin={{
-            containerStyle: { gap: 4, padding: 3, background: VOID, border: `1px solid ${signal(38)}` },
+            containerStyle: { gap: "var(--space-xs)", padding: "var(--space-xs)", background: VOID, border: `1px solid ${signal(38)}` },
             buttonStyle: (active) => ({
-              padding: '9px 10px',
+              padding: 'var(--space-sm)',
               border: 'none',
               fontFamily: FONT,
               fontSize: "var(--text-md)",
@@ -101,7 +101,7 @@ export default function SingularityComposer({ state }: { state: EditPraxisState 
       </header>
 
       {/* For-function reference */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, padding: '11px 14px', background: VOID, border: `1px solid ${signal(38)}` }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: "var(--space-sm)", padding: 'var(--space-md)', background: VOID, border: `1px solid ${signal(38)}` }}>
         <span style={kicker}>{t('editPraxis.singularity.mobile.taskRefLabel')}</span>
         <span style={{ fontFamily: FONT, fontSize: "var(--text-content)", color: PHOSPHOR, textAlign: 'right', flex: 1, lineHeight: 1.2 }}>
           {praxis.task_title}
@@ -127,7 +127,7 @@ export default function SingularityComposer({ state }: { state: EditPraxisState 
                   border: 'none',
                   outline: 'none',
                   borderBottom: `1px solid ${signal(38)}`,
-                  padding: '2px 0 8px',
+                  padding: 'var(--space-xs) 0 var(--space-sm)',
                 },
               }}
             />
@@ -146,7 +146,7 @@ export default function SingularityComposer({ state }: { state: EditPraxisState 
                   color: PHOSPHOR,
                   background: signal(6),
                   border: `1px solid ${signal(38)}`,
-                  padding: '13px 15px',
+                  padding: 'var(--space-md) var(--space-lg)',
                   outline: 'none',
                   resize: 'vertical',
                   minHeight: 180,
@@ -181,9 +181,9 @@ export default function SingularityComposer({ state }: { state: EditPraxisState 
               <MetatasksList
                 state={state}
                 skin={{
-                  containerStyle: { display: 'flex', flexDirection: 'column', gap: 4 },
+                  containerStyle: { display: 'flex', flexDirection: 'column', gap: "var(--space-xs)" },
                   rowStyle: (selected) => ({
-                    padding: '10px 12px',
+                    padding: 'var(--space-sm) var(--space-md)',
                     background: selected ? signal(12) : 'transparent',
                     border: `1px solid ${selected ? PHOSPHOR : signal(30)}`,
                   }),
@@ -198,12 +198,12 @@ export default function SingularityComposer({ state }: { state: EditPraxisState 
         </>
       ) : (
         <Panel title={t('editPraxis.singularity.mobile.previewLabel')}>
-          <div style={{ fontFamily: FONT, fontSize: "var(--text-content)", color: PHOSPHOR, marginBottom: 10 }}>
+          <div style={{ fontFamily: FONT, fontSize: "var(--text-content)", color: PHOSPHOR, marginBottom: "var(--space-sm)" }}>
             {'> '}
             {state.title || t('editPraxis.singularity.titlePlaceholder')}
           </div>
           {state.media.length > 0 && (
-            <div style={{ marginBottom: 12 }}>
+            <div style={{ marginBottom: "var(--space-md)" }}>
               <MediaGrid state={state} readOnly />
             </div>
           )}
@@ -222,8 +222,8 @@ export default function SingularityComposer({ state }: { state: EditPraxisState 
         style={{
           display: 'flex',
           alignItems: 'center',
-          gap: 12,
-          padding: '12px 0 4px',
+          gap: "var(--space-md)",
+          padding: 'var(--space-md) 0 var(--space-xs)',
           background: 'var(--color-nav-bg)',
           backdropFilter: 'blur(var(--nav-blur))',
           borderTop: `1px solid ${BORDER_HARD}`,
@@ -258,7 +258,7 @@ export default function SingularityComposer({ state }: { state: EditPraxisState 
               fontSize: "var(--text-lg)",
               letterSpacing: '0.12em',
               textTransform: 'uppercase',
-              padding: '13px 18px',
+              padding: 'var(--space-md) var(--space-lg)',
               border: `1px solid ${PHOSPHOR}`,
               boxShadow: `0 0 16px ${phosphor(30)}`,
               cursor: state.submitting ? 'wait' : 'pointer',
@@ -274,7 +274,7 @@ export default function SingularityComposer({ state }: { state: EditPraxisState 
 function MediaGrid({ state, readOnly = false }: { state: EditPraxisState; readOnly?: boolean }) {
   const { t } = useTranslation('forms')
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
+    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: "var(--space-sm)" }}>
       {state.media.map((item) => {
         const filename = item.file_path.split('/').pop() ?? item.file_path
         const src = mediaUrl(item.file_path)
@@ -327,7 +327,7 @@ function MediaGrid({ state, readOnly = false }: { state: EditPraxisState; readOn
               flexDirection: 'column',
               alignItems: 'center',
               justifyContent: 'center',
-              gap: 4,
+              gap: "var(--space-xs)",
               fontFamily: FONT,
               fontSize: "var(--text-base)",
               letterSpacing: '0.08em',

@@ -53,7 +53,7 @@ export function MobileStarVote({
 
   return (
     <div>
-      <div style={{ display: 'flex', gap: 6, justifyContent: 'center' }}>
+      <div style={{ display: 'flex', gap: 'var(--space-sm)', justifyContent: 'center' }}>
         {[1, 2, 3, 4, 5].map((value) => {
           const filled = selected >= value
           return (

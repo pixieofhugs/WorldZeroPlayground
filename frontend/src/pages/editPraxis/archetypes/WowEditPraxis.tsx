@@ -231,7 +231,7 @@ export default function WowEditPraxis({ state }: Props) {
     background: notepadBg,
     border: `1.5px solid ${notepadBorder}`,
     borderRadius: 8,
-    padding: "14px 16px",
+    padding: "var(--space-md) var(--space-lg)",
     position: "relative",
     zIndex: 9,
   };
@@ -242,7 +242,7 @@ export default function WowEditPraxis({ state }: Props) {
         {
           fontFamily: "var(--font-body)",
           color: ink,
-          padding: "32px 20px 56px",
+          padding: "var(--space-2xl) var(--space-lg) var(--space-5xl)",
           minHeight: "100vh",
           background: lightBg,
         } as React.CSSProperties
@@ -286,13 +286,13 @@ export default function WowEditPraxis({ state }: Props) {
             style={{
               display: "flex",
               alignItems: "center",
-              gap: 9,
-              padding: "9px 13px",
+              gap: "var(--space-sm)",
+              padding: "var(--space-sm) var(--space-md)",
               background: `linear-gradient(180deg, ${titleFrom}, ${titleTo})`,
               borderBottom: `2px solid ${winBorder}`,
             }}
           >
-            <div style={{ display: "flex", gap: 5 }}>
+            <div style={{ display: "flex", gap: "var(--space-xs)" }}>
               <span
                 style={{
                   width: 11,
@@ -328,7 +328,7 @@ export default function WowEditPraxis({ state }: Props) {
                 letterSpacing: "0.03em",
                 display: "flex",
                 alignItems: "center",
-                gap: 5,
+                gap: "var(--space-xs)",
               }}
             >
               <Sparkle size={11} color={titleText} />{" "}
@@ -351,7 +351,7 @@ export default function WowEditPraxis({ state }: Props) {
           <div
             style={{
               position: "relative",
-              padding: "24px 22px 26px",
+              padding: "var(--space-xl)",
               background: bodyBg,
               backgroundImage: `radial-gradient(${dot} 1.4px, transparent 1.4px)`,
               backgroundSize: "13px 13px",
@@ -365,10 +365,10 @@ export default function WowEditPraxis({ state }: Props) {
                 fontWeight: 700,
                 lineHeight: 1,
                 color: ink,
-                marginBottom: 18,
+                marginBottom: "var(--space-lg)",
                 display: "flex",
                 alignItems: "center",
-                gap: 8,
+                gap: "var(--space-sm)",
               }}
             >
               {t("editPraxis.wow.pageTitle")}
@@ -376,8 +376,8 @@ export default function WowEditPraxis({ state }: Props) {
             </div>
 
             {/* Task — notepad scrap */}
-            <div style={{ ...notepadPanel, marginBottom: 22 }}>
-              <span style={{ ...eyebrowStyle, marginBottom: 4 }}>
+            <div style={{ ...notepadPanel, marginBottom: "var(--space-xl)" }}>
+              <span style={{ ...eyebrowStyle, marginBottom: "var(--space-xs)" }}>
                 {t("editPraxis.wow.taskRefLabel")}
               </span>
               <div
@@ -387,14 +387,14 @@ export default function WowEditPraxis({ state }: Props) {
                   fontWeight: 700,
                   lineHeight: 1.1,
                   color: ink,
-                  marginTop: 4,
-                  marginBottom: 8,
+                  marginTop: "var(--space-xs)",
+                  marginBottom: "var(--space-sm)",
                 }}
               >
                 {praxis.task_title}
               </div>
               {task?.description && (
-                <div style={{ fontFamily: cardFont, fontSize: "var(--text-content)", lineHeight: 1.5, color: muted, marginBottom: 8 }}>
+                <div style={{ fontFamily: cardFont, fontSize: "var(--text-content)", lineHeight: 1.5, color: muted, marginBottom: "var(--space-sm)" }}>
                   {task.description}
                 </div>
               )}
@@ -403,14 +403,14 @@ export default function WowEditPraxis({ state }: Props) {
 
             {/* Mode — window tab chips */}
             {!state.controlsLocked && (
-              <div style={{ marginBottom: 22 }}>
-                <span style={{ ...eyebrowStyle, marginBottom: 10 }}>
+              <div style={{ marginBottom: "var(--space-xl)" }}>
+                <span style={{ ...eyebrowStyle, marginBottom: "var(--space-sm)" }}>
                   {t("editPraxis.wow.modeLabel")}
                 </span>
                 <ModePicker
                   state={state}
                   skin={{
-                    containerStyle: { display: "flex", gap: 8, flexWrap: "wrap" },
+                    containerStyle: { display: "flex", gap: "var(--space-sm)", flexWrap: "wrap" },
                     options: modeOptions,
                     allowedModes,
                     renderOption: (opt, { active, disabled, onSelect }) => (
@@ -430,7 +430,7 @@ export default function WowEditPraxis({ state }: Props) {
                           color: active ? "var(--color-text-on-accent)" : ink,
                           border: `1.5px solid ${active ? pinkDeep : notepadBorder}`,
                           borderRadius: 9,
-                          padding: "11px 14px 13px",
+                          padding: "var(--space-md)",
                           fontFamily: "var(--font-body)",
                           boxShadow: active
                             ? "0 4px 10px rgba(236,95,153,.32)"
@@ -442,7 +442,7 @@ export default function WowEditPraxis({ state }: Props) {
                             fontFamily: cardFont,
                             fontSize: "var(--text-title)",
                             fontWeight: 700,
-                            marginBottom: 2,
+                            marginBottom: "var(--space-xs)",
                           }}
                         >
                           {opt.label}
@@ -462,11 +462,11 @@ export default function WowEditPraxis({ state }: Props) {
                 <div
                   style={{
                     ...notepadPanel,
-                    marginBottom: 22,
+                    marginBottom: "var(--space-xl)",
                     borderStyle: "dashed",
                   }}
                 >
-                  <span style={{ ...eyebrowStyle, marginBottom: 10 }}>
+                  <span style={{ ...eyebrowStyle, marginBottom: "var(--space-sm)" }}>
                     {state.duelMode
                       ? t("editPraxis.wow.inviteLabelDuel")
                       : t("editPraxis.wow.inviteLabel")}
@@ -488,8 +488,8 @@ export default function WowEditPraxis({ state }: Props) {
               )}
 
             {/* Title — notepad panel */}
-            <div style={{ ...notepadPanel, marginBottom: 18 }}>
-              <span style={{ ...eyebrowStyle, marginBottom: 8 }}>
+            <div style={{ ...notepadPanel, marginBottom: "var(--space-lg)" }}>
+              <span style={{ ...eyebrowStyle, marginBottom: "var(--space-sm)" }}>
                 {t("editPraxis.wow.titleLabel")}
               </span>
               <TitleField
@@ -505,13 +505,13 @@ export default function WowEditPraxis({ state }: Props) {
                     border: "none",
                     outline: "none",
                     borderBottom: `2px solid ${notepadBorder}`,
-                    padding: "4px 0 8px",
+                    padding: "var(--space-xs) 0 var(--space-sm)",
                   },
                 }}
               />
               <div
                 style={{
-                  marginTop: 6,
+                  marginTop: "var(--space-xs)",
                   display: "flex",
                   justifyContent: "space-between",
                 }}
@@ -528,8 +528,8 @@ export default function WowEditPraxis({ state }: Props) {
             </div>
 
             {/* Body — notepad panel */}
-            <div style={{ ...notepadPanel, marginBottom: 18 }}>
-              <span style={{ ...eyebrowStyle, marginBottom: 8 }}>
+            <div style={{ ...notepadPanel, marginBottom: "var(--space-lg)" }}>
+              <span style={{ ...eyebrowStyle, marginBottom: "var(--space-sm)" }}>
                 {t("editPraxis.wow.bodyLabel", { words: state.wordCount })}
               </span>
               <BodyTextarea
@@ -545,7 +545,7 @@ export default function WowEditPraxis({ state }: Props) {
                     background: bodyBg,
                     border: `1.5px solid ${notepadBorder}`,
                     borderRadius: 7,
-                    padding: "16px 18px",
+                    padding: "var(--space-lg)",
                     outline: "none",
                     resize: "vertical",
                     minHeight: 220,
@@ -556,14 +556,14 @@ export default function WowEditPraxis({ state }: Props) {
                 state={state}
                 skin={{
                   wrapperStyle: {
-                    marginTop: 14,
+                    marginTop: "var(--space-md)",
                     background: bodyBg,
                     border: `1.5px solid ${notepadBorder}`,
                     borderRadius: 7,
-                    padding: "16px 18px",
+                    padding: "var(--space-lg)",
                   },
                   label: (
-                    <span style={{ ...eyebrowStyle, marginBottom: 6 }}>
+                    <span style={{ ...eyebrowStyle, marginBottom: "var(--space-xs)" }}>
                       {t("editPraxis.wow.previewLabel")}
                     </span>
                   ),
@@ -577,13 +577,13 @@ export default function WowEditPraxis({ state }: Props) {
             </div>
 
             {/* Media — notepad panel */}
-            <div style={{ ...notepadPanel, marginBottom: 18 }}>
-              <span style={{ ...eyebrowStyle, marginBottom: 12 }}>
+            <div style={{ ...notepadPanel, marginBottom: "var(--space-lg)" }}>
+              <span style={{ ...eyebrowStyle, marginBottom: "var(--space-md)" }}>
                 {t("editPraxis.wow.filesLabel", {
                   pasted: state.media.length,
                 })}
               </span>
-              <div style={{ display: "flex", flexWrap: "wrap", gap: 14 }}>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: "var(--space-md)" }}>
                 {state.media.map((item) => {
                   const filename =
                     item.file_path.split("/").pop() ?? item.file_path;
@@ -623,7 +623,7 @@ export default function WowEditPraxis({ state }: Props) {
                   );
                 })}
               </div>
-              <div style={{ marginTop: 14 }}>
+              <div style={{ marginTop: "var(--space-md)" }}>
                 <FilePicker
                   state={state}
                   skin={{
@@ -642,14 +642,14 @@ export default function WowEditPraxis({ state }: Props) {
                       alignItems: "center",
                       justifyContent: "center",
                       flexDirection: "column",
-                      gap: 4,
+                      gap: "var(--space-xs)",
                     },
                     buttonLabel: t("editPraxis.wow.fileButton"),
                     helperText: t("editPraxis.wow.fileHelper"),
                     helperStyle: {
                       fontSize: "var(--text-sm)",
                       color: muted,
-                      marginTop: 6,
+                      marginTop: "var(--space-xs)",
                     },
                   }}
                 />
@@ -661,24 +661,24 @@ export default function WowEditPraxis({ state }: Props) {
               <div
                 style={{
                   ...notepadPanel,
-                  marginBottom: 18,
+                  marginBottom: "var(--space-lg)",
                   borderStyle: "dashed",
                 }}
               >
-                <span style={{ ...eyebrowStyle, marginBottom: 8 }}>
+                <span style={{ ...eyebrowStyle, marginBottom: "var(--space-sm)" }}>
                   {t("editPraxis.wow.metatasksLabel")}
                 </span>
                 <MetatasksList
                   state={state}
                   skin={{
                     rowStyle: (selected) => ({
-                      padding: "8px 6px",
+                      padding: "var(--space-sm) var(--space-xs)",
                       background: selected ? lightBg : "transparent",
                       border: selected
                         ? `1.5px solid ${pinkDeep}`
                         : `1.5px solid transparent`,
                       borderRadius: 6,
-                      marginBottom: 4,
+                      marginBottom: "var(--space-xs)",
                     }),
                     titleColor: ink,
                     descColor: muted,
@@ -695,10 +695,10 @@ export default function WowEditPraxis({ state }: Props) {
             <div
               style={{
                 display: "flex",
-                gap: 12,
+                gap: "var(--space-md)",
                 alignItems: "center",
-                marginTop: 22,
-                paddingTop: 20,
+                marginTop: "var(--space-xl)",
+                paddingTop: "var(--space-lg)",
                 borderTop: `1.5px dashed ${notepadBorder}`,
                 flexWrap: "wrap",
               }}
@@ -730,7 +730,7 @@ export default function WowEditPraxis({ state }: Props) {
                   style: {
                     display: "inline-flex",
                     alignItems: "center",
-                    gap: 6,
+                    gap: "var(--space-xs)",
                     background: `linear-gradient(180deg, ${pink}, ${pinkDeep})`,
                     color: "var(--color-text-on-accent)",
                     fontFamily: "var(--font-body)",
@@ -738,7 +738,7 @@ export default function WowEditPraxis({ state }: Props) {
                     fontWeight: 600,
                     textTransform: "uppercase",
                     letterSpacing: "0.1em",
-                    padding: "11px 22px",
+                    padding: "var(--space-md) var(--space-xl)",
                     border: `1.5px solid ${pinkDeep}`,
                     borderRadius: 9,
                     cursor: state.submitting ? "wait" : "pointer",
@@ -807,7 +807,7 @@ function MediaTile({
       style={{
         position: "relative",
         background: tileBg,
-        padding: "6px 6px 22px",
+        padding: "var(--space-xs) var(--space-xs) var(--space-xl)",
         borderRadius: 9,
         border: `1.5px solid ${borderColor}`,
         boxShadow: "0 3px 7px rgba(190,60,120,.16)",

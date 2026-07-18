@@ -50,8 +50,8 @@ const kicker: CSSProperties = {
 /** A cotton sheet headed by a quiet mono title. */
 function Sheet({ title, children }: { title: string; children: ReactNode }) {
   return (
-    <section style={{ background: SHEET, border: `1px solid ${ink(10)}`, padding: 14 }}>
-      <div style={{ fontFamily: MONO, fontSize: "var(--text-xs)", letterSpacing: '0.22em', textTransform: 'uppercase', color: ink(40), marginBottom: 10 }}>
+    <section style={{ background: SHEET, border: `1px solid ${ink(10)}`, padding: "var(--space-md)" }}>
+      <div style={{ fontFamily: MONO, fontSize: "var(--text-xs)", letterSpacing: '0.22em', textTransform: 'uppercase', color: ink(40), marginBottom: "var(--space-sm)" }}>
         {title}
       </div>
       {children}
@@ -66,9 +66,9 @@ export default function AlbescentComposer({ state }: { state: EditPraxisState })
   const task = state.task
 
   return (
-    <div data-skin="albescent" style={{ display: 'flex', flexDirection: 'column', gap: 14, fontFamily: MONO, color: INK, background: PAGE }}>
-      <header style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+    <div data-skin="albescent" style={{ display: 'flex', flexDirection: 'column', gap: "var(--space-md)", fontFamily: MONO, color: INK, background: PAGE }}>
+      <header style={{ display: 'flex', flexDirection: 'column', gap: "var(--space-md)" }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: "var(--space-sm)" }}>
           <AlbescentSigil size={22} />
           <h1 style={{ fontFamily: FONT, fontStyle: 'italic', fontWeight: 300, fontSize: "var(--text-title)", lineHeight: 1, color: INK, margin: 0 }}>
             {t('editPraxis.albescent.pageTitle')}
@@ -86,7 +86,7 @@ export default function AlbescentComposer({ state }: { state: EditPraxisState })
           skin={{
             containerStyle: { gap: 0, border: `1px solid ${ink(14)}` },
             buttonStyle: (active) => ({
-              padding: '9px 10px',
+              padding: 'var(--space-sm)',
               border: 'none',
               fontFamily: MONO,
               fontSize: "var(--text-base)",
@@ -100,7 +100,7 @@ export default function AlbescentComposer({ state }: { state: EditPraxisState })
       </header>
 
       {/* In-answer-to reference */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, padding: '11px 14px', background: SHEET, border: `1px solid ${ink(10)}` }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: "var(--space-sm)", padding: 'var(--space-md)', background: SHEET, border: `1px solid ${ink(10)}` }}>
         <span style={kicker}>{t('editPraxis.albescent.taskRefLabel')}</span>
         <span style={{ fontFamily: FONT, fontStyle: 'italic', fontWeight: 300, fontSize: "var(--text-content)", color: INK, textAlign: 'right', flex: 1, lineHeight: 1.15 }}>
           {praxis.task_title}
@@ -128,7 +128,7 @@ export default function AlbescentComposer({ state }: { state: EditPraxisState })
                   border: 'none',
                   outline: 'none',
                   borderBottom: `1px solid ${ink(12)}`,
-                  padding: '2px 0 8px',
+                  padding: 'var(--space-xs) 0 var(--space-sm)',
                 },
               }}
             />
@@ -148,7 +148,7 @@ export default function AlbescentComposer({ state }: { state: EditPraxisState })
                   color: INK,
                   background: ink(2),
                   border: `1px solid ${ink(10)}`,
-                  padding: '13px 15px',
+                  padding: 'var(--space-md) var(--space-lg)',
                   outline: 'none',
                   resize: 'vertical',
                   minHeight: 180,
@@ -183,9 +183,9 @@ export default function AlbescentComposer({ state }: { state: EditPraxisState })
               <MetatasksList
                 state={state}
                 skin={{
-                  containerStyle: { display: 'flex', flexDirection: 'column', gap: 4 },
+                  containerStyle: { display: 'flex', flexDirection: 'column', gap: "var(--space-xs)" },
                   rowStyle: (selected) => ({
-                    padding: '10px 12px',
+                    padding: 'var(--space-sm) var(--space-md)',
                     background: selected ? ink(3) : 'transparent',
                     border: `1px solid ${selected ? ink(24) : ink(10)}`,
                   }),
@@ -200,11 +200,11 @@ export default function AlbescentComposer({ state }: { state: EditPraxisState })
         </>
       ) : (
         <Sheet title={t('editPraxis.albescent.previewLabel')}>
-          <div style={{ fontFamily: FONT, fontStyle: 'italic', fontWeight: 300, fontSize: "var(--text-title)", color: INK, marginBottom: 10 }}>
+          <div style={{ fontFamily: FONT, fontStyle: 'italic', fontWeight: 300, fontSize: "var(--text-title)", color: INK, marginBottom: "var(--space-sm)" }}>
             {state.title || t('editPraxis.albescent.titlePlaceholder')}
           </div>
           {state.media.length > 0 && (
-            <div style={{ marginBottom: 12 }}>
+            <div style={{ marginBottom: "var(--space-md)" }}>
               <MediaGrid state={state} readOnly />
             </div>
           )}
@@ -223,8 +223,8 @@ export default function AlbescentComposer({ state }: { state: EditPraxisState })
         style={{
           display: 'flex',
           alignItems: 'center',
-          gap: 12,
-          padding: '12px 0 4px',
+          gap: "var(--space-md)",
+          padding: 'var(--space-md) 0 var(--space-xs)',
           background: 'var(--color-nav-bg)',
           backdropFilter: 'blur(var(--nav-blur))',
           borderTop: `1px solid ${ink(14)}`,
@@ -260,7 +260,7 @@ export default function AlbescentComposer({ state }: { state: EditPraxisState })
               fontSize: "var(--text-md)",
               letterSpacing: '0.16em',
               textTransform: 'uppercase',
-              padding: '13px 18px',
+              padding: 'var(--space-md) var(--space-lg)',
               border: `1px solid ${INK}`,
               cursor: state.submitting ? 'wait' : 'pointer',
             },
@@ -275,7 +275,7 @@ export default function AlbescentComposer({ state }: { state: EditPraxisState })
 function MediaGrid({ state, readOnly = false }: { state: EditPraxisState; readOnly?: boolean }) {
   const { t } = useTranslation('forms')
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
+    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: "var(--space-sm)" }}>
       {state.media.map((item) => {
         const filename = item.file_path.split('/').pop() ?? item.file_path
         const src = mediaUrl(item.file_path)
@@ -330,7 +330,7 @@ function MediaGrid({ state, readOnly = false }: { state: EditPraxisState; readOn
               flexDirection: 'column',
               alignItems: 'center',
               justifyContent: 'center',
-              gap: 4,
+              gap: "var(--space-xs)",
               fontFamily: MONO,
               fontSize: "var(--text-sm)",
               letterSpacing: '0.1em',

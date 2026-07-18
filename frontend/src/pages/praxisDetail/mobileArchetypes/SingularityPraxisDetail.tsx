@@ -47,13 +47,13 @@ const kicker: CSSProperties = {
 /** Void readout panel with a signal hairline, headed by a prompt title. */
 function Panel({ title, children }: { title: string; children: ReactNode }) {
   return (
-    <section style={{ position: 'relative', overflow: 'hidden', background: VOID, border: `1px solid ${signal(42)}`, padding: 13 }}>
+    <section style={{ position: 'relative', overflow: 'hidden', background: VOID, border: `1px solid ${signal(42)}`, padding: 'var(--space-md)' }}>
       <div
         aria-hidden
         style={{ position: 'absolute', inset: 0, pointerEvents: 'none', background: `repeating-linear-gradient(to bottom, transparent, transparent 2px, ${phosphor(1.2)} 2px, ${phosphor(1.2)} 4px)` }}
       />
       <div style={{ position: 'relative' }}>
-        <div style={{ fontFamily: FONT, fontSize: 'var(--text-sm)', letterSpacing: '0.13em', textTransform: 'uppercase', color: PHOSPHOR, marginBottom: 10 }}>
+        <div style={{ fontFamily: FONT, fontSize: 'var(--text-sm)', letterSpacing: '0.13em', textTransform: 'uppercase', color: PHOSPHOR, marginBottom: 'var(--space-md)' }}>
           {title}
         </div>
         {children}
@@ -71,7 +71,7 @@ export default function SingularityPraxisDetail({ state }: { state: PraxisDetail
   const initial = (praxis.created_by_display_name || '?')[0]?.toUpperCase() ?? '?'
 
   return (
-    <div data-skin="singularity" className="page" style={{ display: 'flex', flexDirection: 'column', gap: 14, fontFamily: FONT, color: PHOSPHOR, background: VOID }}>
+    <div data-skin="singularity" className="page" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-lg)', fontFamily: FONT, color: PHOSPHOR, background: VOID }}>
       {/* Behavior slots (invariant) */}
       <PraxisStatusBanners state={state} />
       <PraxisAdminBar state={state} />
@@ -92,7 +92,7 @@ export default function SingularityPraxisDetail({ state }: { state: PraxisDetail
             praxis={praxis}
             linkStyle={{ fontFamily: FONT, fontSize: 'var(--text-xl)', color: PHOSPHOR, lineHeight: 1, textDecoration: 'none' }}
           />
-          <div className="truncate" style={{ ...kicker, marginTop: 3 }}>
+          <div className="truncate" style={{ ...kicker, marginTop: 'var(--space-xs)' }}>
             {t('detail.singularity.mobile.node')} · {formatTimestamp(sealedDate)}
           </div>
         </div>
@@ -107,7 +107,7 @@ export default function SingularityPraxisDetail({ state }: { state: PraxisDetail
 
       {/* Finding */}
       <div>
-        <div style={{ ...kicker, marginBottom: 4, color: SIGNAL }}>{t('detail.singularity.mobile.output')}</div>
+        <div style={{ ...kicker, marginBottom: 'var(--space-xs)', color: SIGNAL }}>{t('detail.singularity.mobile.output')}</div>
         <h1 style={{ fontFamily: FONT, fontSize: 'var(--text-title)', lineHeight: 1.2, margin: 0, color: PHOSPHOR, letterSpacing: '0.02em', overflowWrap: 'anywhere' }}>
           {'> '}
           {praxis.title ?? t('detail.singularity.untitled')}
@@ -136,10 +136,10 @@ export default function SingularityPraxisDetail({ state }: { state: PraxisDetail
 
       {/* Amplify caster */}
       <Panel title={t('detail.singularity.mobile.consensus')}>
-        <div className="flex items-center justify-center content-text" style={{ marginBottom: 12, fontFamily: FONT, color: PHOSPHOR }}>
+        <div className="flex items-center justify-center content-text" style={{ marginBottom: 'var(--space-md)', fontFamily: FONT, color: PHOSPHOR }}>
           {t('detail.singularity.mobile.amplify')}
         </div>
-        <div style={{ marginBottom: 12 }}>
+        <div style={{ marginBottom: 'var(--space-md)' }}>
           <PraxisScoreBreakdown state={state} align="center" accent={PHOSPHOR} font={FONT} />
         </div>
         <MobileStarVote
