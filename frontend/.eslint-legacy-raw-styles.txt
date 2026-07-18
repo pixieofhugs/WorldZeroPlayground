@@ -44,7 +44,6 @@ src/components/home/ActivityTicker.tsx
 src/components/imageEdit/ImageEditModal.tsx
 src/components/InvitationLetterPopup.tsx
 src/components/layout/MobileLayout.tsx
-src/components/layout/MobileTabBar.tsx
 src/components/LevelUpPopup.tsx
 src/components/MediaGallery.tsx
 src/components/NavBar.tsx
@@ -64,7 +63,6 @@ src/components/vote/SnideVote.tsx
 src/components/vote/UaVote.tsx
 src/components/vote/VoteShell.tsx
 src/components/vote/WowVote.tsx
-src/pages/Admin.tsx
 src/pages/admin/AccountsTab.tsx
 src/pages/admin/ModerationTab.tsx
 src/pages/admin/TasksTab.tsx
