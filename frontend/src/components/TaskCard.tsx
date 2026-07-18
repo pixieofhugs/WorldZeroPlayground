@@ -10,7 +10,7 @@ import SingularityTaskCard from './cards/SingularityTaskCard'
 import EverymenTaskCard from './cards/EverymenTaskCard'
 import AlbescentTaskCard from './cards/AlbescentTaskCard'
 import DefaultTaskCard from './cards/DefaultTaskCard'
-import { factionCssVar, factionName } from '../utils/factions'
+import { factionCssVar, factionFill, factionName } from '../utils/factions'
 import { pickVariant } from '../utils/factionDispatch'
 import type { ComponentType } from 'react'
 
@@ -68,8 +68,6 @@ export default function TaskCard({ task, displayPoints, onSignup }: CardProps) {
         >
           <span
             style={{
-              background: factionCssVar(task.metatask_faction_slug),
-              color: factionCssVar(task.metatask_faction_slug, 'on-fill'),
               fontFamily: "'Courier Prime', monospace",
               fontSize: 8,
               fontWeight: 700,
@@ -78,6 +76,9 @@ export default function TaskCard({ task, displayPoints, onSignup }: CardProps) {
               padding: '2px 8px',
               border: `1.5px solid ${factionCssVar(task.metatask_faction_slug, 'border')}`,
               textShadow: '0 1px 2px rgba(0,0,0,0.3)',
+              // na → rainbow frame (overrides the faction border below); real
+              // faction → solid hue + on-fill ink, keeping its 1.5px border.
+              ...factionFill(task.metatask_faction_slug, 'pill'),
             }}
           >
             META

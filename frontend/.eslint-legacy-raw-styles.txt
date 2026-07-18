@@ -133,7 +133,6 @@ src/pages/fieldDesk/mobileArchetypes/UaHome.tsx
 src/pages/fieldDesk/mobileArchetypes/WowFieldDesk.tsx
 src/pages/Home.tsx
 src/pages/Leaderboard.tsx
-src/pages/players/mobileArchetypes/DefaultPlayers.tsx
 src/pages/praxes/MobilePraxisFeed.tsx
 src/pages/praxisDetail/archetypes/AlbescentPraxisDetail.tsx
 src/pages/praxisDetail/archetypes/DefaultPraxisDetail.tsx
