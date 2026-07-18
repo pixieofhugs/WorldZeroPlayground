@@ -7,7 +7,21 @@
     "title": "Praxis",
     "intro": "Proof of action. All praxes from across World Zero.",
     "loading": "Loading praxis...",
-    "empty": "No praxes yet. Be the first."
+    "empty": "No praxes yet. Be the first.",
+    "emptyFiltered": "Nothing filed under those terms. Clear the search or pick a different faction.",
+    "count": "{{count}} shown",
+    "loadMore": "Load more",
+    "filter": {
+      "typeLabel": "type:",
+      "showLabel": "show:",
+      "searchPlaceholder": "Search proof or task…",
+      "searchLabel": "Search praxes",
+      "all": "All",
+      "needsMyVote": "needs my vote",
+      "voted": "voted",
+      "sortNewest": "newest",
+      "sortOldest": "oldest"
+    }
   },
   "mobileFeed": {
     "unaffiliated": "Unaffiliated",
@@ -34,6 +48,7 @@
     "points": "{{points}} pts",
     "solo": "solo",
     "crew": "+{{count}} crew",
+    "votedBy": "voted by {{name}}",
     "adminStatus": {
       "underReview": "under review",
       "failed": "failed",
