@@ -95,7 +95,7 @@ function TheStanding({
       </div>
 
       {/* Headline: points earned · appraisal headcount */}
-      <div style={{ display: 'flex', marginBottom: voters.length ? 20 : 0 }}>
+      <div style={{ display: 'flex', marginBottom: voters.length ? "var(--space-xl)" : 0 }}>
         <div style={{ flex: 1, paddingRight: 'var(--space-lg)' }}>
           <div style={{ fontFamily: DISPLAY, fontStyle: 'italic', fontWeight: 700, fontSize: 'var(--text-display)', lineHeight: 0.85, color: 'var(--ua-orange)', whiteSpace: 'nowrap' }}>
             {base}

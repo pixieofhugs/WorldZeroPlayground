@@ -187,7 +187,7 @@ export default function DefaultPraxisDetail({
 
             {/* Applied metatasks */}
             {state.praxis.applied_metatasks && state.praxis.applied_metatasks.length > 0 ? (
-              <div style={{ marginBottom: canEdit ? 12 : 0 }}>
+              <div style={{ marginBottom: canEdit ? "var(--space-md)" : 0 }}>
                 <span className="eyebrow" style={{ display: "block", marginBottom: 'var(--space-sm)' }}>{t('detail.metatasks.applied')}</span>
                 {state.praxis.applied_metatasks.map((metatask) => (
                   <div key={metatask.id} className="flex items-center gap-2 mb-1" style={{ padding: "var(--space-xs) var(--space-sm)", background: "var(--color-surface-soft)", fontSize: 'var(--text-md)' }}>
@@ -206,7 +206,7 @@ export default function DefaultPraxisDetail({
                 ))}
               </div>
             ) : (
-              <p className="font-body" style={{ fontSize: 'var(--text-base)', color: "var(--color-text-tertiary)", marginBottom: canEdit ? 12 : 0 }}>
+              <p className="font-body" style={{ fontSize: 'var(--text-base)', color: "var(--color-text-tertiary)", marginBottom: canEdit ? "var(--space-md)" : 0 }}>
                 {t('detail.metatasks.appliedEmpty')}
               </p>
             )}
