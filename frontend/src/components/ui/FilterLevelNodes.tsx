@@ -35,7 +35,7 @@ export default function FilterLevelNodes({ levels, value, onChange }: Props) {
                 background: active ? 'var(--color-text-primary)' : 'var(--color-bg-surface)',
                 color: active ? 'var(--color-bg-page)' : 'var(--color-text-tertiary)',
                 fontFamily: "'Courier Prime', monospace",
-                fontSize: 10,
+                fontSize: 'var(--text-base)',
                 fontWeight: 700,
                 cursor: 'pointer',
                 display: 'flex',

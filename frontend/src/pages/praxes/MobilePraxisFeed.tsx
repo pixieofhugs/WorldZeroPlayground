@@ -51,7 +51,7 @@ export default function MobilePraxisFeed({ state }: { state: PraxesFeedState }) 
         </div>
         <h1
           className="font-display italic"
-          style={{ fontSize: 30, lineHeight: 1, color: 'var(--color-text-primary)', margin: 0 }}
+          style={{ fontSize: 'var(--text-heading)', lineHeight: 1, color: 'var(--color-text-primary)', margin: 0 }}
         >
           {t('listPage.title')}
         </h1>

@@ -37,7 +37,7 @@ export default function FilterFactionTabs({
               background: factionCssVar(faction.slug),
               color: "var(--color-text-on-accent)",
               fontFamily: "'Courier Prime', monospace",
-              fontSize: 9,
+              fontSize: "var(--text-sm)",
               fontWeight: 700,
               textTransform: "uppercase",
               letterSpacing: "0.07em",

@@ -104,7 +104,7 @@ export default function FieldDesk() {
             ) : (
               <span style={{ ...pillAvatar, display: 'inline-block' }} />
             )}
-            <span style={{ fontSize: 9, color: 'var(--color-text-secondary)' }}>
+            <span style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-secondary)' }}>
               @{active.username} ·{' '}
               <b style={{ color: 'var(--color-text-primary)' }}>
                 {t('fieldDesk.livesInPlay', { count: lives.length })}
@@ -194,7 +194,7 @@ function NewSelfDossier({
       <button type="button" onClick={onBegin} style={dossierUnlocked} title={t('fieldDesk.beginNewSelfTitle')}>
         <div style={folderTab} />
         <div style={medallion}>+</div>
-        <div style={{ fontFamily: 'var(--font-display)', fontStyle: 'italic', fontWeight: 700, fontSize: 23, color: 'var(--color-text-primary)' }}>
+        <div style={{ fontFamily: 'var(--font-display)', fontStyle: 'italic', fontWeight: 700, fontSize: 'var(--text-title)', color: 'var(--color-text-primary)' }}>
           {t('fieldDesk.beginNewSelf')}
         </div>
         <div style={slotOpen}>{t('fieldDesk.slotOpen')}</div>
@@ -203,11 +203,11 @@ function NewSelfDossier({
   }
   return (
     <div style={dossierLocked} aria-disabled>
-      <div style={{ fontSize: 22 }}>🔒</div>
-      <div style={{ fontFamily: 'var(--font-display)', fontStyle: 'italic', fontWeight: 700, fontSize: 21, color: 'var(--color-text-secondary)', marginTop: 8 }}>
+      <div style={{ /* ornament: padlock emoji used as an icon */ fontSize: 22 }}>🔒</div>
+      <div style={{ fontFamily: 'var(--font-display)', fontStyle: 'italic', fontWeight: 700, fontSize: 'var(--text-title)', color: 'var(--color-text-secondary)', marginTop: 8 }}>
         {t('fieldDesk.secondSelfAwaits')}
       </div>
-      <div style={{ fontSize: 9.5, lineHeight: 1.6, color: 'var(--color-text-tertiary)', marginTop: 8, maxWidth: 200 }}>
+      <div style={{ fontSize: 'var(--text-content)', lineHeight: 1.6, color: 'var(--color-text-tertiary)', marginTop: 8, maxWidth: 200 }}>
         {t('fieldDesk.gateHint', {
           gateLevel,
           eraSuffix: eraName ? t('fieldDesk.gateHintEra', { eraName }) : '',
@@ -248,7 +248,7 @@ const headingStyle: CSSProperties = {
   fontFamily: 'var(--font-display)',
   fontStyle: 'italic',
   fontWeight: 700,
-  fontSize: 44,
+  fontSize: 'var(--text-display)',
   lineHeight: 1,
   color: 'var(--color-text-primary)',
   margin: 0,
@@ -270,7 +270,7 @@ const rosterRow: CSSProperties = {
 const footerHint: CSSProperties = {
   fontFamily: 'var(--font-display)',
   fontStyle: 'italic',
-  fontSize: 11,
+  fontSize: 'var(--text-content)',
   color: 'var(--color-text-tertiary)',
   marginTop: 36,
 }
@@ -316,12 +316,13 @@ const medallion: CSSProperties = {
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'center',
+  // ornament: '+' glyph centred in the medallion disc
   fontSize: 28,
   color: 'var(--color-text-primary)',
   marginBottom: 14,
 }
 const slotOpen: CSSProperties = {
-  fontSize: 7.5,
+  fontSize: 'var(--text-xs)',
   letterSpacing: '0.14em',
   textTransform: 'uppercase',
   color: 'var(--color-success)',

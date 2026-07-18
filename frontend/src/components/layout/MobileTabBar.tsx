@@ -33,7 +33,7 @@ export default function MobileTabBar() {
           end={end}
           className="flex-1 text-center font-body py-2"
           style={({ isActive }) => ({
-            fontSize: 12,
+            fontSize: 'var(--text-lg)',
             textDecoration: 'none',
             color: isActive ? 'var(--color-text-primary)' : 'var(--color-text-secondary)',
             borderTop: isActive ? '2px solid var(--color-text-primary)' : '2px solid transparent',

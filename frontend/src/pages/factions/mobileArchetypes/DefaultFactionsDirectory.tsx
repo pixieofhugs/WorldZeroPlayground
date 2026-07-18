@@ -108,7 +108,7 @@ export default function DefaultFactionsDirectory() {
     <div className="py-4" data-testid="mobile-factions-directory">
       <h1
         className="font-display italic font-medium mb-3"
-        style={{ fontSize: 26, color: 'var(--color-text-primary)', lineHeight: 1.1 }}
+        style={{ fontSize: 'var(--text-title)', color: 'var(--color-text-primary)', lineHeight: 1.1 }}
       >
         {tc('nav.factions')}
       </h1>
@@ -152,7 +152,7 @@ export default function DefaultFactionsDirectory() {
           which owns Accept/Decline (ADR-0030, #347). */}
       {invitations.length > 0 && (
         <div className="mb-4" style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-          <span className="eyebrow" style={{ color: 'var(--color-text-tertiary)', fontSize: 9 }}>
+          <span className="eyebrow" style={{ color: 'var(--color-text-tertiary)' }}>
             {t('index.recentInvitations', { count: invitations.length })}
           </span>
           {invitations.map((inv) => (
@@ -172,7 +172,7 @@ export default function DefaultFactionsDirectory() {
               <span className="eyebrow">{t('index.inviteBadge')}</span>
               <span
                 className="font-body"
-                style={{ fontSize: 11, color: 'var(--color-text-primary)', flex: 1, lineHeight: 1.4 }}
+                style={{ fontSize: 'var(--text-content)', color: 'var(--color-text-primary)', flex: 1, lineHeight: 1.4 }}
               >
                 <Trans
                   t={t}
@@ -211,13 +211,13 @@ export default function DefaultFactionsDirectory() {
           <div>
             <div
               className="font-display italic"
-              style={{ fontSize: 16, color: 'var(--color-text-primary)' }}
+              style={{ fontSize: 'var(--text-content)', color: 'var(--color-text-primary)' }}
             >
               {t('mobile.unaffiliatedTitle')}
             </div>
             <p
               className="font-body"
-              style={{ fontSize: 11, color: 'var(--color-text-secondary)', marginTop: 2, lineHeight: 1.4 }}
+              style={{ fontSize: 'var(--text-content)', color: 'var(--color-text-secondary)', marginTop: 2, lineHeight: 1.4 }}
             >
               {t('mobile.unaffiliatedBody')}
             </p>
