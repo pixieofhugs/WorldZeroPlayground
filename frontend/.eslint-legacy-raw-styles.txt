@@ -102,7 +102,6 @@ src/pages/editPraxis/mobileArchetypes/SnideComposer.tsx
 src/pages/editPraxis/mobileArchetypes/UaComposer.tsx
 src/pages/editPraxis/mobileArchetypes/WowEditPraxis.tsx
 src/pages/FactionDetail.tsx
-src/pages/factionDetail/archetypes/SingularityFactionBody.tsx
 src/pages/factionDetail/archetypes/SnideFactionBody.tsx
 src/pages/factionDetail/archetypes/UaFactionBody.tsx
 src/pages/factionDetail/archetypes/WowFactionBody.tsx

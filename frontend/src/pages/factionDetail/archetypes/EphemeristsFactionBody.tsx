@@ -243,7 +243,7 @@ export default function EphemeristsFactionBody({ state }: { state: FactionDetail
                     >
                       {t("ephemerists.road.memberTitle")}
                     </div>
-                    <div style={{ fontFamily: SERIF, fontSize: "var(--text-xl)", color: MUTED, margin: "var(--space-sm) 0 0" }}>
+                    <div style={{ fontFamily: SERIF, fontSize: "var(--text-xl)", color: MUTED, margin: "var(--space-md) 0 0" }}>
                       <Trans t={t} i18nKey="ephemerists.road.memberStanding">
                         Standing · <span style={{ fontStyle: "italic", color: RUBRIC }}>keeper of the road</span>
                       </Trans>
