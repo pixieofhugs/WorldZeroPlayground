@@ -599,6 +599,22 @@ export default function SnideEditPraxis({ state }: Props) {
             flexWrap: "wrap",
           }}
         >
+          <DropButton
+            state={state}
+            skin={{
+              label: t("editPraxis.snide.dropLabel"),
+              style: {
+                background: "transparent",
+                color: muted,
+                fontFamily: "'Special Elite', serif",
+                fontSize: "var(--text-md)",
+                border: "none",
+                cursor: "pointer",
+                textDecoration: "underline",
+              },
+            }}
+          />
+          <div style={{ flex: 1 }} />
           <PublishButton
             state={state}
             skin={{
@@ -627,22 +643,6 @@ export default function SnideEditPraxis({ state }: Props) {
                 position: "relative",
                 transform: "rotate(-1.8deg)",
                 boxShadow: `4px 4px 0 ${ink}`,
-              },
-            }}
-          />
-          <div style={{ flex: 1 }} />
-          <DropButton
-            state={state}
-            skin={{
-              label: "cancel",
-              style: {
-                background: "transparent",
-                color: muted,
-                fontFamily: "'Special Elite', serif",
-                fontSize: "var(--text-md)",
-                border: "none",
-                cursor: "pointer",
-                textDecoration: "underline",
               },
             }}
           />

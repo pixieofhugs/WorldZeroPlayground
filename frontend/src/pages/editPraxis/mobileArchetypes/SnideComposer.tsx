@@ -235,6 +235,24 @@ export default function SnideComposer({ state }: { state: EditPraxisState }) {
           borderTop: `1px solid ${ACID}`,
         }}
       >
+        {!state.isPublished && (
+          <DropButton
+            state={state}
+            skin={{
+              label: t('editPraxis.snide.dropLabel'),
+              style: {
+                background: 'transparent',
+                border: 'none',
+                color: MUTED,
+                fontFamily: TYPE,
+                fontSize: "var(--text-lg)",
+                textTransform: 'uppercase',
+                letterSpacing: '0.06em',
+                cursor: 'pointer',
+              },
+            }}
+          />
+        )}
         <PublishButton
           state={state}
           skin={{
@@ -255,24 +273,6 @@ export default function SnideComposer({ state }: { state: EditPraxisState }) {
             },
           }}
         />
-        {!state.isPublished && (
-          <DropButton
-            state={state}
-            skin={{
-              label: t('editPraxis.snide.dropLabel'),
-              style: {
-                background: 'transparent',
-                border: 'none',
-                color: MUTED,
-                fontFamily: TYPE,
-                fontSize: "var(--text-lg)",
-                textTransform: 'uppercase',
-                letterSpacing: '0.06em',
-                cursor: 'pointer',
-              },
-            }}
-          />
-        )}
       </MobileStickyBar>
     </div>
   )

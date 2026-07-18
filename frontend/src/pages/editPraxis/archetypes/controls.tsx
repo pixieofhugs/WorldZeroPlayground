@@ -14,7 +14,8 @@ import MarkdownPreview from "../blocks/MarkdownPreview";
 import { applyMarkdown } from "../blocks/markdownToolbar";
 import type { MarkdownCommand } from "../blocks/markdownToolbar";
 import type { EditPraxisState } from "../useEditPraxis";
-import { CollabRoster } from "../../../components/collab/CollabRoster";
+import { CollabRoster, deriveCollabGate } from "../../../components/collab/CollabRoster";
+import { collabCopy } from "../../../components/collab/collabCopy";
 
 export interface InviteSearchSkin {
   inputBg?: string;
@@ -108,11 +109,6 @@ export function InviteSearch({
                   currentCharacterId={state.currentCharacterId}
                   factionSlug={praxis.task_faction_slug}
                   taskPointValue={praxis.task_point_value}
-                  action={{
-                    onCast: state.publish,
-                    onPullBack: state.pullBack,
-                    submitting: state.submitting,
-                  }}
                 />
               </div>,
               ...praxis.invites
@@ -693,17 +689,35 @@ export function PublishButton({
   skin: PublishButtonSkin;
 }) {
   if (state.isPublished) return null;
-  // Multi-member collabs cast through the CollabRoster action, not this button (#591).
-  if (state.praxis?.type === "collab" && state.praxis.members.length > 1) return null;
+  // Multi-member collabs cast (and pull back) through this same footer button
+  // (#646). The consensus gate decides the action and the faction-voiced idle
+  // label; the busy label stays the archetype's mode-agnostic present participle.
+  const praxis = state.praxis;
+  const collab =
+    praxis?.type === "collab" && praxis.members.length > 1
+      ? deriveCollabGate(praxis.members, state.currentCharacterId)
+      : null;
+  const idleLabel =
+    collab && praxis
+      ? collabCopy(
+          praxis.task_faction_slug,
+          collab.iCast
+            ? "pullBackAction"
+            : collab.castCount === collab.memberCount - 1
+              ? "castFinalAction"
+              : "castAction",
+        )
+      : skin.idleLabel;
+  const onClick = collab?.iCast ? state.pullBack : state.publish;
   return (
     <button
       type="button"
-      onClick={() => void state.publish()}
+      onClick={() => void onClick()}
       disabled={state.submitting || state.switchingMode !== null}
       style={skin.style}
     >
       {skin.ornament}
-      {state.submitting ? skin.busyLabel : skin.idleLabel}
+      {state.submitting ? skin.busyLabel : idleLabel}
     </button>
   );
 }

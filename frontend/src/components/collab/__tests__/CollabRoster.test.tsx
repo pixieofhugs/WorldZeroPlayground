@@ -49,23 +49,12 @@ describe('CollabRoster render', () => {
     expect(html).toContain('1 of 2 cast')
   })
 
-  it('offers pull-back when I have cast, cast when I have not', () => {
-    const action = { onCast: () => {}, onPullBack: () => {}, submitting: false }
-    const waiting = renderToStaticMarkup(
-      <CollabRoster members={[member(1, true), member(2, false)]} currentCharacterId={1} factionSlug={null} action={action} />,
-    )
-    expect(waiting).toContain('Pull my part back')
-    const holdout = renderToStaticMarkup(
-      <CollabRoster members={[member(1, false), member(2, true)]} currentCharacterId={1} factionSlug={null} action={action} />,
-    )
-    // castCount === memberCount - 1 → the go-live wording.
-    expect(holdout).toContain('send it live')
-  })
-
-  it('speaks the task faction voice when the faction overrides the copy', () => {
-    const action = { onCast: () => {}, onPullBack: () => {}, submitting: false }
+  // The cast / pull-back action moved to the footer's PublishButton (#646); the
+  // roster is pure display. Its faction-voiced button copy is now covered by
+  // PublishButton.test.tsx (and collabCopy.test.ts for the words themselves).
+  it('speaks the task faction voice for its display copy', () => {
     const html = renderToStaticMarkup(
-      <CollabRoster members={[member(1, true), member(2, false)]} currentCharacterId={1} factionSlug="everymen" action={action} />,
+      <CollabRoster members={[member(1, true), member(2, false)]} currentCharacterId={1} factionSlug="everymen" />,
     )
     expect(html).toContain('signed off')
     expect(html).toContain('still on the clock')

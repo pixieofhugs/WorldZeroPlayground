@@ -239,6 +239,23 @@ export default function UaComposer({ state }: { state: EditPraxisState }) {
           borderTop: `1px solid ${GOLD}`,
         }}
       >
+        {!state.isPublished && (
+          <DropButton
+            state={state}
+            skin={{
+              label: t('editPraxis.ua.dropLabel'),
+              style: {
+                background: 'transparent',
+                border: 'none',
+                color: MUTED,
+                fontFamily: DISPLAY,
+                fontStyle: 'italic',
+                fontSize: "var(--text-xl)",
+                cursor: 'pointer',
+              },
+            }}
+          />
+        )}
         <PublishButton
           state={state}
           skin={{
@@ -258,23 +275,6 @@ export default function UaComposer({ state }: { state: EditPraxisState }) {
             },
           }}
         />
-        {!state.isPublished && (
-          <DropButton
-            state={state}
-            skin={{
-              label: t('editPraxis.ua.dropLabel'),
-              style: {
-                background: 'transparent',
-                border: 'none',
-                color: MUTED,
-                fontFamily: DISPLAY,
-                fontStyle: 'italic',
-                fontSize: "var(--text-xl)",
-                cursor: 'pointer',
-              },
-            }}
-          />
-        )}
       </MobileStickyBar>
     </div>
   )

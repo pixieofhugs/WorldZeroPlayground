@@ -283,6 +283,23 @@ export default function DefaultEditPraxis({
           borderTop: `1px solid ${BORDER}`,
         }}
       >
+        {!state.isPublished && (
+          <DropButton
+            state={state}
+            skin={{
+              label: t("editPraxis.na.dropLabel"),
+              style: {
+                background: "transparent",
+                border: "none",
+                color: FAINT,
+                fontFamily: "var(--font-body)",
+                fontSize: "var(--text-md)",
+                textDecoration: "underline",
+                cursor: "pointer",
+              },
+            }}
+          />
+        )}
         <PublishButton
           state={state}
           skin={{
@@ -304,23 +321,6 @@ export default function DefaultEditPraxis({
             },
           }}
         />
-        {!state.isPublished && (
-          <DropButton
-            state={state}
-            skin={{
-              label: t("editPraxis.na.dropLabel"),
-              style: {
-                background: "transparent",
-                border: "none",
-                color: FAINT,
-                fontFamily: "var(--font-body)",
-                fontSize: "var(--text-md)",
-                textDecoration: "underline",
-                cursor: "pointer",
-              },
-            }}
-          />
-        )}
       </MobileStickyBar>
     </div>
   );
