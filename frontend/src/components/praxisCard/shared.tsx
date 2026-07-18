@@ -50,8 +50,8 @@ export function PraxisTitle({
   return (
     <Link to={`/praxes/${praxis.id}`}>
       <h3
-        className="font-display font-semibold leading-tight hover:underline"
-        style={{ fontSize: "var(--text-content)", marginBottom: "var(--space-sm)", ...style }}
+        className="content-title font-display font-semibold leading-tight hover:underline"
+        style={{ marginBottom: "var(--space-sm)", ...style }}
       >
         {praxis.title}
       </h3>
@@ -71,7 +71,7 @@ export function PraxisTaskLink({
     <Link
       to={`/tasks/${praxis.task_id}`}
       className="font-body hover:underline"
-      style={{ fontSize: "var(--text-xs)", ...style }}
+      style={{ fontSize: "var(--text-content)", ...style }}
     >
       {praxis.task_title}
     </Link>
@@ -275,9 +275,8 @@ export function PraxisExcerpt({
   if (!praxis.body_text) return null;
   return (
     <p
-      className="font-body"
+      className="card-description font-body"
       style={{
-        fontSize: "var(--text-sm)",
         marginTop: "var(--space-sm)",
         marginBottom: "0",
         lineHeight: 1.5,
@@ -365,7 +364,7 @@ export function PraxisRoster({
       </span>
       <span
         className="font-body"
-        style={{ fontSize: "var(--text-xs)", color: accent, minWidth: 0 }}
+        style={{ fontSize: "var(--text-content)", color: accent, minWidth: 0 }}
       >
         {names.join(", ")}
         {overflow > 0 ? ` ${t("mobileCard.rosterMore", { count: overflow })}` : ""}
@@ -622,9 +621,8 @@ export function AdminOverlay({
       )}
       {moderateError && (
         <p
-          className="font-body"
+          className="content-text font-body"
           style={{
-            fontSize: "var(--text-xs)",
             color: "var(--color-danger)",
             marginBottom: "var(--space-xs)",
           }}

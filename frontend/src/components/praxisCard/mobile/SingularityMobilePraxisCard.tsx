@@ -45,7 +45,7 @@ export default function SingularityMobilePraxisCard({ praxis }: { praxis: Praxis
           style={{
             marginBottom: 12,
             fontFamily: "'Share Tech Mono', monospace",
-            fontSize: 9,
+            fontSize: 'var(--text-sm)',
             letterSpacing: '0.15em',
             textTransform: 'uppercase',
             color: 'var(--faction-singularity-card-muted)',

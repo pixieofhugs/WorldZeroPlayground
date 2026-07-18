@@ -62,7 +62,7 @@ export default function WowMobilePraxisCard({ praxis }: { praxis: PraxisCardOut 
             gap: 6,
             marginBottom: 12,
             fontFamily: "'Courier Prime', monospace",
-            fontSize: 9,
+            fontSize: 'var(--text-sm)',
             letterSpacing: '0.14em',
             textTransform: 'uppercase',
             color: accent,
