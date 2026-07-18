@@ -132,56 +132,47 @@ async def can_start_as_albescent(
     Albescent is joined in the field via defection (``defect_to_faction``) —
     it is never a starting faction and never a character-creation option.
 
-    Both conditions must hold on the *same* character:
-    (a) active and at level ``era.albescent_level_required`` or above, and
-    (b) has a submitted, non-hidden qualifying praxis for every non-sentinel
-        faction in the era (i.e. every faction except ``na`` and ``albescent``).
+    ADR-0021: the unlock is **account-collective**, and the two gates are
+    **independent** — they need not be satisfied by the same character:
+
+    (a) *Level* — **some** active character on the account is at level
+        ``era.albescent_level_required`` or above in the current era.
+    (b) *Coverage* — pooled across **all** the account's lives combined, there is
+        a submitted, non-hidden praxis for **every** non-sentinel faction in the
+        era (i.e. every faction except ``na`` and ``albescent``).
+
+    Coverage pools over the account roster (active + paused, banned excluded) —
+    the same "a player's own lives" set as :data:`_ROSTER_STATUSES`. A banned
+    life's work does not carry the account through the gate.
     """
+    if not await _account_has_character_at_level(
+        account_id, era.albescent_level_required, session
+    ):
+        return False
+
     required_faction_slugs = frozenset(
         slug for slug in era.factions if slug not in _ALBESCENT_SENTINEL_SLUGS
     )
-    era_row = await get_current_era_row(session)
-
-    level_result = await session.execute(
-        select(Character.id)
-        .join(
-            CharacterStats,
-            (CharacterStats.character_id == Character.id)
-            & (CharacterStats.era_id == era_row.id),
-        )
-        .where(
-            Character.account_id == account_id,
-            Character.status == CharacterStatus.active,
-            CharacterStats.level >= era.albescent_level_required,
-        )
-    )
-    qualifying_character_ids = [row[0] for row in level_result.all()]
-
-    if not qualifying_character_ids:
-        return False
-
     if not required_faction_slugs:
         return True
 
-    for character_id in qualifying_character_ids:
-        covered_result = await session.execute(
-            select(Task.primary_faction_slug)
-            .distinct()
-            .join(Praxis, Praxis.task_id == Task.id)
-            .where(
-                Praxis.created_by_id == character_id,
-                Praxis.status == PraxisStatus.submitted,
-                Praxis.moderation_status.in_(
-                    [ModerationStatus.visible, ModerationStatus.flagged]
-                ),
-                Task.primary_faction_slug.in_(list(required_faction_slugs)),
-            )
+    covered_result = await session.execute(
+        select(Task.primary_faction_slug)
+        .distinct()
+        .join(Praxis, Praxis.task_id == Task.id)
+        .join(Character, Character.id == Praxis.created_by_id)
+        .where(
+            Character.account_id == account_id,
+            Character.status.in_(list(_ROSTER_STATUSES)),
+            Praxis.status == PraxisStatus.submitted,
+            Praxis.moderation_status.in_(
+                [ModerationStatus.visible, ModerationStatus.flagged]
+            ),
+            Task.primary_faction_slug.in_(list(required_faction_slugs)),
         )
-        covered_slugs = frozenset(row[0] for row in covered_result.all())
-        if covered_slugs >= required_faction_slugs:
-            return True
-
-    return False
+    )
+    covered_slugs = frozenset(row[0] for row in covered_result.all())
+    return covered_slugs >= required_faction_slugs
 
 
 async def get_account_invited_faction_slugs(
