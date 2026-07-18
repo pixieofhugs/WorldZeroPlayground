@@ -1,8 +1,8 @@
 import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import type { CharacterOut } from '../../api/auth'
-import { factionCssVar } from '../../utils/factions'
-import { mediaUrl } from '../../utils/media'
+import { factionCssVar, isKnownFaction } from '../../utils/factions'
+import FactionAvatar from '../../components/avatar/FactionAvatar'
 
 /** A character with its computed standing, shared by the sky and the roster. */
 export interface RankedPlayer {
@@ -22,10 +22,11 @@ interface ConstellationProps {
   myCharId: number | null
   /** How many of the top players get a star. Mobile (#657) passes a smaller N. */
   population?: number
-  /** Fixed coordinate box; positions are computed in px so equal offsets are
-   *  equal distances regardless of the fluid column width (see epic #654 §1). */
-  stageWidth?: number
-  stageHeight?: number
+  /** Measured coordinate box, supplied by `SkyCanvas` on both form factors.
+   *  Positions are computed in px so equal offsets are equal distances
+   *  regardless of the fluid column width (see epic #654 §1). */
+  stageWidth: number
+  stageHeight: number
 }
 
 const GOLDEN_ANGLE_DEG = 137.5
@@ -34,6 +35,10 @@ const RING_COUNT = 4
 const NODE_MIN = 30
 const NODE_MAX = 92
 const NODE_ZERO_STATE = 44
+/** Breathing room between the outermost ring and the stage edge, for the orb
+ *  plus its label stack. At the 900px desktop cap this leaves a ~294px radius,
+ *  roughly double the old fixed-620px stage (#730 §1). */
+const STAGE_MARGIN = 88
 // Deterministic sparkle field, expressed as fractions of the stage box so it
 // scales with any stageWidth/stageHeight (mobile reuses a smaller box).
 const SPARKLES: ReadonlyArray<{ fx: number; fy: number; r: number }> = [
@@ -49,6 +54,13 @@ const SPARKLES: ReadonlyArray<{ fx: number; fy: number; r: number }> = [
   { fx: 0.44, fy: 0.5, r: 0.9 },
 ]
 
+/** Radius of the outermost ring for a measured stage. The sky is circular, so
+ *  the SHORTER side governs — which is why capping the width alone never fixed
+ *  the cramping (`min(900, 460)` is still 460). Exported for the geometry test. */
+export function skyRadius(stageWidth: number, stageHeight: number): number {
+  return Math.min(stageWidth, stageHeight) / 2 - STAGE_MARGIN
+}
+
 interface PlacedNode {
   entry: RankedPlayer
   /** px offset from the stage centre. */
@@ -60,24 +72,26 @@ interface PlacedNode {
   pinned: boolean
 }
 
-export default function Constellation({
-  players,
-  maxScore,
-  myCharId,
-  population = 12,
-  stageWidth = 620,
-  stageHeight = 460,
-}: ConstellationProps) {
-  const { t } = useTranslation('common')
-
-  const centreX = stageWidth / 2
-  const centreY = stageHeight / 2
-  // Leave room for the largest orb + its label below the outermost ring.
-  const radius = Math.min(stageWidth, stageHeight) / 2 - 88
+/**
+ * Vogel / golden-angle spiral placement, extracted so the geometry can be
+ * asserted without a DOM (#730 — this is a layout bug you cannot screenshot).
+ * Radius rises monotonically with rank, so "closer to the sun = higher rank" is
+ * literally true (epic #654). The champion sits ON the sun.
+ */
+export function placeOrbs(
+  sky: RankedPlayer[],
+  radius: number,
+  maxScore: number,
+): PlacedNode[] {
   const zeroState = maxScore <= 0
+  const skyCount = Math.max(sky.length, 1)
 
-  const sky = players.slice(0, population)
-  const skyCount = sky.length
+  // The champion's orb is the largest and sits at r=0, so the runner-up's
+  // spiral radius (0.29r) can be smaller than the two orbs' combined radii.
+  // A floor on every non-champion orbit fixes that without breaking
+  // monotonicity; it is capped as a fraction of the radius so it stays inert on
+  // the phone's small stage rather than flinging rank 2 past the outer ring.
+  const minOrbit = Math.min(NODE_MAX + 4, radius * 0.33)
 
   const nodeSize = (points: number): number => {
     if (zeroState) return NODE_ZERO_STATE
@@ -86,18 +100,17 @@ export default function Constellation({
     return NODE_MIN + (NODE_MAX - NODE_MIN) * Math.min(fraction, 1)
   }
 
-  const placed: PlacedNode[] = sky.map((entry, index) => {
+  return sky.map((entry, index) => {
     let x: number
     let y: number
     if (zeroState) {
       // One even ring — nobody has climbed, so nobody is nearer the centre.
-      const angle = (index / Math.max(skyCount, 1)) * 2 * Math.PI - Math.PI / 2
+      const angle = (index / skyCount) * 2 * Math.PI - Math.PI / 2
       x = radius * Math.cos(angle)
       y = radius * Math.sin(angle)
     } else {
-      // Vogel / golden-angle spiral: radius rises monotonically with rank, so
-      // "closer to the sun = higher rank" is literally true. Champion at centre.
-      const nodeRadius = radius * Math.sqrt(index / Math.max(skyCount, 1))
+      const spiral = radius * Math.sqrt(index / skyCount)
+      const nodeRadius = index === 0 ? 0 : Math.max(spiral, minOrbit)
       const angle = (index * GOLDEN_ANGLE_DEG * Math.PI) / 180
       x = nodeRadius * Math.cos(angle)
       y = nodeRadius * Math.sin(angle)
@@ -112,6 +125,27 @@ export default function Constellation({
       pinned: false,
     }
   })
+}
+
+export default function Constellation({
+  players,
+  maxScore,
+  myCharId,
+  population = 12,
+  stageWidth,
+  stageHeight,
+}: ConstellationProps) {
+  const { t } = useTranslation('common')
+
+  const centreX = stageWidth / 2
+  const centreY = stageHeight / 2
+  const radius = skyRadius(stageWidth, stageHeight)
+  const zeroState = maxScore <= 0
+
+  const sky = players.slice(0, population)
+  const skyCount = sky.length
+
+  const placed = placeOrbs(sky, radius, maxScore)
 
   // Viewer outside the sky: pin their sigil just past the outermost ring on a
   // dashed tether so it never implies a truthful radius.
@@ -158,8 +192,8 @@ export default function Constellation({
         }}
       />
 
-      {/* Fixed-width stage: all px offsets are measured from its centre, so the
-          fluid column width can't distort the metaphor. */}
+      {/* The stage: all px offsets are measured from its centre, so the fluid
+          column width can't distort the metaphor. */}
       <div
         style={{
           position: 'absolute',
@@ -241,6 +275,22 @@ export default function Constellation({
   )
 }
 
+/** The crown that marks the lead. Exported so the legend chip can reuse the one
+ *  glyph instead of drawing a second crown (#730 §3). */
+export function SkyCrown({ size = 26 }: { size?: number }) {
+  return (
+    <svg
+      width={size}
+      height={Math.round(size * 0.77)}
+      viewBox="0 0 26 20"
+      fill="var(--sky-crown)"
+      aria-hidden
+    >
+      <path d="M2 6l4 4 7-8 7 8 4-4-2 12H4z" />
+    </svg>
+  )
+}
+
 function SkyNode({
   node,
   centreX,
@@ -255,7 +305,11 @@ function SkyNode({
   const { t } = useTranslation('common')
   const { entry, size, faded, crowned, pinned } = node
   const character = entry.character
-  const color = factionCssVar(character.faction_slug)
+  // factionCssVar resolves an unknown slug to the `ua` theme, so unaffiliated
+  // branches on isKnownFaction first (#636 / ADR-0039).
+  const known = isKnownFaction(character.faction_slug)
+  const pointsColor = known ? factionCssVar(character.faction_slug) : undefined
+  const badgeDim = Math.max(18, Math.round(size * 0.3))
 
   return (
     <Link
@@ -273,43 +327,35 @@ function SkyNode({
         width: Math.max(size, 84),
       }}
     >
-      {crowned && (
-        <svg
-          width={26}
-          height={20}
-          viewBox="0 0 26 20"
-          fill="var(--sky-crown)"
-          aria-hidden
-          className="mb-0.5"
-        >
-          <path d="M2 6l4 4 7-8 7 8 4-4-2 12H4z" />
-        </svg>
-      )}
+      {crowned && <SkyCrown />}
 
-      {/* Orb — faded via opacity for zero-score players; the name stays legible. */}
-      <span
-        aria-hidden
-        style={{
-          width: size,
-          height: size,
-          borderRadius: '50%',
-          overflow: 'hidden',
-          opacity: faded ? 0.4 : 1,
-          border: `2px solid ${color}`,
-          boxShadow: `0 0 ${crowned ? 22 : 12}px var(--sky-glow)`,
-          background: character.avatar_url
-            ? undefined
-            : `linear-gradient(135deg, ${factionCssVar(character.faction_slug, 'light')}, ${color})`,
-          flex: 'none',
-        }}
-      >
-        {character.avatar_url && (
-          <img
-            src={mediaUrl(character.avatar_url)}
-            alt=""
-            style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
-          />
-        )}
+      {/* ponytail: the orb IS the roster avatar at a sky-sized dim — FactionAvatar
+          already carries the faction ring, the sigil corner mark, the img/monogram
+          fallback and the unaffiliated spectrum, so the bespoke circle + <img>
+          this used to hand-roll is deleted. `glow` supplies the halo. */}
+      <span style={{ position: 'relative', lineHeight: 0, opacity: faded ? 0.4 : 1 }}>
+        <FactionAvatar character={character} size={Math.round(size)} glow />
+
+        {/* Rank badge — a small disc on the orb's shoulder. */}
+        <span
+          className="font-body flex items-center justify-center"
+          aria-hidden
+          style={{
+            position: 'absolute',
+            left: -badgeDim / 3,
+            top: -badgeDim / 3,
+            width: badgeDim,
+            height: badgeDim,
+            borderRadius: '50%',
+            background: 'var(--sky-bg)',
+            border: '1px solid var(--sky-ring)',
+            color: 'var(--sky-name)',
+            fontSize: 'var(--text-sm)',
+            lineHeight: 1,
+          }}
+        >
+          {entry.rank}
+        </span>
       </span>
 
       <span
@@ -325,10 +371,18 @@ function SkyNode({
         {character.display_name}
       </span>
 
-      {crowned && (
+      {/* Points, in the faction hue — or the shared .rainbow-ink gradient clip
+          for unaffiliated, matching the roster row (#729 / ADR-0039). */}
+      {!pinned && (
         <span
-          className="italic"
-          style={{ fontSize: 'var(--text-title)', color: 'var(--sky-name)', lineHeight: 1.1 }}
+          className={known ? 'font-body' : 'font-body rainbow-ink'}
+          style={{
+            fontSize: 'var(--text-content)',
+            fontWeight: 700,
+            lineHeight: 1.1,
+            // .rainbow-ink sets its own transparent colour — don't hand it one.
+            ...(known ? { color: pointsColor } : null),
+          }}
         >
           {entry.points}
         </span>
