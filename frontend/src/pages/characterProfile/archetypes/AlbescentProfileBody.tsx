@@ -60,7 +60,7 @@ function heading(title: string, eyebrow: string): ReactNode {
       <div
         style={{
           fontFamily: MONO,
-          fontSize: 9,
+          fontSize: 'var(--text-sm)',
           letterSpacing: '0.24em',
           textTransform: 'uppercase',
           color: MUTED,
@@ -69,7 +69,7 @@ function heading(title: string, eyebrow: string): ReactNode {
       >
         {eyebrow}
       </div>
-      <h2 style={{ fontFamily: SERIF, fontStyle: 'italic', fontWeight: 300, fontSize: 32, color: INK, margin: 0 }}>
+      <h2 style={{ fontFamily: SERIF, fontStyle: 'italic', fontWeight: 300, fontSize: 'var(--text-heading)', color: INK, margin: 0 }}>
         {title}
       </h2>
     </div>
@@ -133,7 +133,7 @@ const kit: ProfileKit = {
   },
   badgeChipStyle: {
     fontFamily: MONO,
-    fontSize: 9,
+    fontSize: 'var(--text-sm)',
     letterSpacing: '0.14em',
     textTransform: 'uppercase',
     color: MUTED,
@@ -146,7 +146,7 @@ const kit: ProfileKit = {
       badge={badge}
       last={last}
       dividerColor={RULE}
-      nameStyle={{ fontFamily: SERIF, fontStyle: 'italic', fontSize: 17, color: INK, lineHeight: 1.2 }}
+      nameStyle={{ fontFamily: SERIF, fontStyle: 'italic', color: INK, lineHeight: 1.2 }}
       medallion={(glyph) => (
         <span
           style={{

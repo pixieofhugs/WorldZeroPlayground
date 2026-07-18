@@ -31,7 +31,7 @@ function heading(title: string, eyebrow: string): ReactNode {
       <div
         style={{
           fontFamily: TYPE,
-          fontSize: 10,
+          fontSize: 'var(--text-base)',
           letterSpacing: '0.08em',
           textTransform: 'uppercase',
           color: PAPER,
@@ -43,7 +43,7 @@ function heading(title: string, eyebrow: string): ReactNode {
       <h2
         style={{
           fontFamily: IMPACT,
-          fontSize: 34,
+          fontSize: 'var(--text-heading)',
           letterSpacing: '0.02em',
           textTransform: 'uppercase',
           color: ACID,
@@ -138,7 +138,7 @@ const kit: ProfileKit = {
   },
   badgeChipStyle: {
     fontFamily: TYPE,
-    fontSize: 9,
+    fontSize: 'var(--text-sm)',
     letterSpacing: '0.1em',
     textTransform: 'uppercase',
     color: PINK,
@@ -151,7 +151,7 @@ const kit: ProfileKit = {
       badge={badge}
       last={last}
       dividerColor="rgba(20,17,11,0.25)"
-      nameStyle={{ fontFamily: MARKER, fontSize: 16, color: INK, lineHeight: 1.15 }}
+      nameStyle={{ fontFamily: MARKER, color: INK, lineHeight: 1.15 }}
       medallion={(glyph) => (
         <span
           style={{

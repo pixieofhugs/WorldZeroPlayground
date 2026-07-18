@@ -64,7 +64,13 @@ export interface ProfileKit {
   headerDecoration?: ReactNode
   /** Optional wrapper chrome placed AROUND the shared CredentialCard. */
   credentialFrame?: (card: ReactNode) => ReactNode
-  /** px font-size for the big display name (default 48). */
+  /** px font-size for the big display name (default 48).
+   *  ornament: masthead display type. Each archetype's name size is optical
+   *  compensation for its own display font (Bebas Neue at 72 and IM Fell
+   *  English at 56 read at the same optical weight) — it is the archetype's
+   *  identity (§270), sits far above the content floor, and so stays raw.
+   *  This is the ONE size a kit may carry; a kit's `badgeRow` `nameStyle`
+   *  must NOT set fontSize — the shared `BadgeRow` owns that. */
   nameSize?: number
   /** Optional CSS text-shadow / transform on the name. */
   nameExtra?: CSSProperties
@@ -210,7 +216,10 @@ export function BadgeRow({
       }}
     >
       {medallion(<Art size={16} />)}
-      <div style={nameStyle}>{badge.name}</div>
+      {/* Badge NAMES are functional text (#459: the glyph is the ornament, the
+          label is read). The shared row owns the size so no kit can drop a
+          badge name below the content floor. */}
+      <div style={{ ...nameStyle, fontSize: 'var(--text-content)' }}>{badge.name}</div>
     </div>
   )
 }
@@ -277,7 +286,7 @@ export function ProfileSkin({
             <div
               style={{
                 fontFamily: kit.displayFont,
-                fontSize: 19,
+                fontSize: 'var(--text-title)',
                 color: kit.ink,
               }}
             >
@@ -286,7 +295,7 @@ export function ProfileSkin({
             <div
               style={{
                 fontFamily: kit.bodyFont ?? kit.eyebrowFont,
-                fontSize: 11,
+                fontSize: 'var(--text-content)',
                 color: kit.muted,
                 marginTop: 5,
               }}
@@ -368,7 +377,7 @@ export function ProfileSkin({
               <div
                 style={{
                   fontFamily: kit.eyebrowFont,
-                  fontSize: 9,
+                  fontSize: 'var(--text-sm)',
                   letterSpacing: '0.22em',
                   textTransform: 'uppercase',
                   color: kit.muted,
@@ -381,6 +390,7 @@ export function ProfileSkin({
               <h1
                 style={{
                   fontFamily: kit.displayFont,
+                  // ornament: masthead display type, per-archetype identity (see ProfileKit.nameSize)
                   fontSize: kit.nameSize ?? 48,
                   lineHeight: 0.98,
                   margin: 0,
@@ -395,7 +405,8 @@ export function ProfileSkin({
               <div
                 style={{
                   fontFamily: kit.bodyFont ?? kit.eyebrowFont,
-                  fontSize: 12,
+                  // handle + join date: the handle is a name, so this is read, not scanned
+                  fontSize: 'var(--text-content)',
                   color: kit.muted,
                   marginTop: 10,
                 }}
@@ -434,7 +445,7 @@ export function ProfileSkin({
                       <span
                         style={{
                           fontFamily: kit.eyebrowFont,
-                          fontSize: 7,
+                          fontSize: 'var(--text-xs)',
                           letterSpacing: '0.12em',
                           textTransform: 'uppercase',
                           color: kit.muted,
@@ -445,7 +456,7 @@ export function ProfileSkin({
                       <span
                         style={{
                           fontFamily: kit.displayFont,
-                          fontSize: 22,
+                          fontSize: 'var(--text-title)',
                           color: kit.accent,
                         }}
                       >
@@ -467,7 +478,8 @@ export function ProfileSkin({
                       <span
                         style={{
                           fontFamily: kit.bodyFont ?? kit.eyebrowFont,
-                          fontSize: 10,
+                          // points into level: a number the player cares about
+                          fontSize: 'var(--text-content)',
                           color: kit.muted,
                         }}
                       >
@@ -476,7 +488,7 @@ export function ProfileSkin({
                       <span
                         style={{
                           fontFamily: kit.eyebrowFont,
-                          fontSize: 9,
+                          fontSize: 'var(--text-sm)',
                           letterSpacing: '0.1em',
                           textTransform: 'uppercase',
                           color: kit.muted,
@@ -507,7 +519,8 @@ export function ProfileSkin({
                       <div
                         style={{
                           fontFamily: kit.bodyFont ?? kit.eyebrowFont,
-                          fontSize: 9,
+                          // absolute score toward the next threshold: read, not scanned
+                          fontSize: 'var(--text-content)',
                           color: kit.muted,
                           marginTop: 5,
                         }}
@@ -550,7 +563,7 @@ export function ProfileSkin({
                   marginBottom: 14,
                 }}
               >
-                <h2 style={{ fontFamily: kit.displayFont, fontSize: 22, margin: 0, color: kit.ink }}>
+                <h2 style={{ fontFamily: kit.displayFont, fontSize: 'var(--text-title)', margin: 0, color: kit.ink }}>
                   {kit.badgeTitle}
                 </h2>
                 <span style={kit.badgeChipStyle}>{t('profile.badgesEarned', { count: badges.length })}</span>

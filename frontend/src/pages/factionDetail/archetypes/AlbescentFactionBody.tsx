@@ -53,7 +53,7 @@ function SectionHeading({ kicker, title, count }: { kicker: string; title: strin
       <div
         style={{
           fontFamily: MONO,
-          fontSize: 7,
+          fontSize: "var(--text-xs)",
           letterSpacing: "0.26em",
           textTransform: "uppercase",
           color: FAINT,
@@ -63,6 +63,7 @@ function SectionHeading({ kicker, title, count }: { kicker: string; title: strin
         {kicker}
         {count !== undefined ? ` · ${count}` : ""}
       </div>
+      {/* ornament: the archive's light italic plate cut, a step above the content ramp. */}
       <h2 style={{ fontFamily: FONT, fontStyle: "italic", fontWeight: 300, fontSize: 26, lineHeight: 1, color: INK, margin: 0 }}>
         {title}
       </h2>
@@ -73,7 +74,7 @@ function SectionHeading({ kicker, title, count }: { kicker: string; title: strin
 
 function Quiet({ children }: { children: ReactNode }) {
   return (
-    <p style={{ fontFamily: FONT, fontStyle: "italic", fontSize: 15, color: MUTED, margin: 0 }}>
+    <p className="content-text" style={{ fontFamily: FONT, fontStyle: "italic", color: MUTED, margin: 0 }}>
       {children}
     </p>
   );

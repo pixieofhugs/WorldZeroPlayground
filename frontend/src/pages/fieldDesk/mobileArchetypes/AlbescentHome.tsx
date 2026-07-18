@@ -27,7 +27,7 @@ const ink = (pct: number) => `color-mix(in srgb, ${INK} ${pct}%, transparent)`
 
 const kicker: CSSProperties = {
   fontFamily: MONO,
-  fontSize: 8,
+  fontSize: 'var(--text-xs)',
   letterSpacing: '0.28em',
   textTransform: 'uppercase',
   color: ink(30),
@@ -71,7 +71,7 @@ export default function AlbescentHome({ state }: { state: FieldDeskHomeState }) 
           <AlbescentSigil size={26} />
           <div style={kicker}>{t('nav.home')}</div>
         </div>
-        <h1 style={{ fontFamily: FONT, fontStyle: 'italic', fontWeight: 300, fontSize: 32, lineHeight: 1, color: INK, margin: 0 }}>
+        <h1 style={{ fontFamily: FONT, fontStyle: 'italic', fontWeight: 300, fontSize: 'var(--text-heading)', lineHeight: 1, color: INK, margin: 0 }}>
           {t('fieldDesk.home.albescent.masthead')}
         </h1>
         <div style={{ height: 1, marginTop: 10, background: ink(10) }} />
@@ -99,6 +99,7 @@ export default function AlbescentHome({ state }: { state: FieldDeskHomeState }) 
                 style={{ objectFit: 'cover' }}
               />
             ) : (
+              // ornament: avatar initial sized to its 52px ring, not text
               <span style={{ fontFamily: FONT, fontStyle: 'italic', fontWeight: 300, fontSize: 22, color: ink(55) }}>
                 {character.display_name[0]?.toUpperCase()}
               </span>
@@ -108,7 +109,7 @@ export default function AlbescentHome({ state }: { state: FieldDeskHomeState }) 
             <Link
               to={`/characters/${character.id}`}
               className="block truncate"
-              style={{ fontFamily: FONT, fontStyle: 'italic', fontWeight: 300, fontSize: 25, lineHeight: 1.05, color: INK, textDecoration: 'none' }}
+              style={{ fontFamily: FONT, fontStyle: 'italic', fontWeight: 300, fontSize: 'var(--text-title)', lineHeight: 1.05, color: INK, textDecoration: 'none' }}
             >
               {character.display_name}
             </Link>
@@ -120,7 +121,7 @@ export default function AlbescentHome({ state }: { state: FieldDeskHomeState }) 
             </div>
           </div>
           <div className="shrink-0 text-right">
-            <div style={{ fontFamily: FONT, fontStyle: 'italic', fontWeight: 300, fontSize: 26, lineHeight: 1, color: ink(60) }}>
+            <div style={{ fontFamily: FONT, fontStyle: 'italic', fontWeight: 300, fontSize: 'var(--text-title)', lineHeight: 1, color: ink(60) }}>
               {character.score?.toLocaleString() ?? '0'}
             </div>
             <div style={{ ...kicker, marginTop: 3 }}>{t('fieldDesk.home.stats.points')}</div>
@@ -134,7 +135,7 @@ export default function AlbescentHome({ state }: { state: FieldDeskHomeState }) 
               className="text-center"
               style={{ flex: '1 1 0', minWidth: 0, border: `1px solid ${ink(9)}`, padding: '11px 6px' }}
             >
-              <div className="truncate" style={{ fontFamily: FONT, fontStyle: 'italic', fontWeight: 300, fontSize: 20, lineHeight: 1, color: INK }}>
+              <div className="truncate" style={{ fontFamily: FONT, fontStyle: 'italic', fontWeight: 300, fontSize: 'var(--text-content)', lineHeight: 1, color: INK }}>
                 {stat.value}
               </div>
               <div style={{ ...kicker, marginTop: 6 }}>{stat.label}</div>
@@ -148,7 +149,7 @@ export default function AlbescentHome({ state }: { state: FieldDeskHomeState }) 
         <Link
           to="/updates?filter=requests"
           className="flex items-center justify-between"
-          style={{ background: SHEET, border: `1px solid ${ink(10)}`, padding: '11px 16px', fontFamily: FONT, fontStyle: 'italic', fontSize: 15, color: INK, textDecoration: 'none' }}
+          style={{ background: SHEET, border: `1px solid ${ink(10)}`, padding: '11px 16px', fontFamily: FONT, fontStyle: 'italic', fontSize: 'var(--text-content)', color: INK, textDecoration: 'none' }}
         >
           <span>{t('fieldDesk.home.pending', { count: pendingCount })}</span>
           <span aria-hidden style={{ color: ink(40) }}>→</span>
@@ -158,7 +159,7 @@ export default function AlbescentHome({ state }: { state: FieldDeskHomeState }) 
       {/* ── Work in hand ── */}
       <Sheet>
         <div className="flex items-center gap-2.5" style={{ marginBottom: 10 }}>
-          <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '0.2em', textTransform: 'uppercase', color: ink(40) }}>
+          <span style={{ fontFamily: MONO, fontSize: 'var(--text-sm)', letterSpacing: '0.2em', textTransform: 'uppercase', color: ink(40) }}>
             {t('fieldDesk.home.albescent.questsHeading')}
           </span>
           <span style={{ flex: 1, height: 1, background: ink(8) }} />
@@ -168,7 +169,7 @@ export default function AlbescentHome({ state }: { state: FieldDeskHomeState }) 
         </div>
 
         {activeTasks.length === 0 ? (
-          <p style={{ fontFamily: FONT, fontStyle: 'italic', fontSize: 15, color: ink(45), margin: 0 }}>
+          <p style={{ fontFamily: FONT, fontStyle: 'italic', fontSize: 'var(--text-content)', color: ink(45), margin: 0 }}>
             {t('fieldDesk.home.questsEmpty')}
           </p>
         ) : (
@@ -182,7 +183,7 @@ export default function AlbescentHome({ state }: { state: FieldDeskHomeState }) 
               >
                 <AlbescentSigil size={14} opacity={0.7} />
                 <div className="min-w-0 flex-1">
-                  <div className="truncate" style={{ fontFamily: FONT, fontStyle: 'italic', fontWeight: 300, fontSize: 17, lineHeight: 1.2, color: INK }}>
+                  <div className="truncate" style={{ fontFamily: FONT, fontStyle: 'italic', fontWeight: 300, fontSize: 'var(--text-content)', lineHeight: 1.2, color: INK }}>
                     {praxis.task_title}
                   </div>
                   <div className="truncate" style={{ ...kicker, marginTop: 3, letterSpacing: '0.14em' }}>
@@ -194,7 +195,7 @@ export default function AlbescentHome({ state }: { state: FieldDeskHomeState }) 
                 </div>
                 <span
                   className="shrink-0"
-                  style={{ fontFamily: MONO, fontSize: 8, letterSpacing: '0.14em', textTransform: 'uppercase', color: ink(35), padding: '4px 9px', border: `1px solid ${ink(12)}` }}
+                  style={{ fontFamily: MONO, fontSize: 'var(--text-xs)', letterSpacing: '0.14em', textTransform: 'uppercase', color: ink(35), padding: '4px 9px', border: `1px solid ${ink(12)}` }}
                 >
                   {t(`praxisType.${praxis.type}`)}
                 </span>
@@ -209,7 +210,7 @@ export default function AlbescentHome({ state }: { state: FieldDeskHomeState }) 
         <Link
           to="/tasks"
           className="flex-1 flex items-center justify-center"
-          style={{ fontFamily: MONO, fontSize: 10, letterSpacing: '0.16em', textTransform: 'uppercase', padding: 14, color: PAGE, background: INK, border: `1px solid ${INK}`, textDecoration: 'none' }}
+          style={{ fontFamily: MONO, fontSize: 'var(--text-base)', letterSpacing: '0.16em', textTransform: 'uppercase', padding: 14, color: PAGE, background: INK, border: `1px solid ${INK}`, textDecoration: 'none' }}
         >
           {t('fieldDesk.home.browseTasks')}
         </Link>
@@ -217,8 +218,9 @@ export default function AlbescentHome({ state }: { state: FieldDeskHomeState }) 
           <Link
             to="/propose-task"
             className="flex-1 flex items-center justify-center gap-2"
-            style={{ fontFamily: MONO, fontSize: 10, letterSpacing: '0.16em', textTransform: 'uppercase', padding: 14, color: ink(55), background: 'transparent', border: `1px solid ${ink(16)}`, textDecoration: 'none' }}
+            style={{ fontFamily: MONO, fontSize: 'var(--text-base)', letterSpacing: '0.16em', textTransform: 'uppercase', padding: 14, color: ink(55), background: 'transparent', border: `1px solid ${ink(16)}`, textDecoration: 'none' }}
           >
+            {/* ornament: "+" glyph used as an icon, sized to the button row */}
             <span aria-hidden style={{ fontSize: 13, lineHeight: 1 }}>+</span>
             <span>{t('actions.proposeTask')}</span>
           </Link>

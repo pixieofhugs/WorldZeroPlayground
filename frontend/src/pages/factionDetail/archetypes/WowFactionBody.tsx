@@ -103,36 +103,38 @@ function Tape({ color, style }: { color: string; style?: CSSProperties }) {
   );
 }
 
+const SECTION_HEADING: CSSProperties = {
+  display: "inline-block",
+  fontFamily: SCRIPT,
+  // ornament: hand-lettered Caveat on a kraft sticker — the sticker is drawn, not typeset.
+  fontSize: 28,
+  fontWeight: 700,
+  lineHeight: 1,
+  color: INK,
+  background: CARD_BG,
+  border: `1px solid ${NOTEPAD_BORDER}`,
+  borderRadius: 8,
+  padding: "1px 12px",
+  transform: "rotate(-1.5deg)",
+  boxShadow: `0 2px 5px ${BOARD_SHADOW}`,
+};
+
 /** Section heading — a Caveat label tacked to a little kraft sticker. */
 function SectionHeading({ children }: { children: ReactNode }) {
-  return (
-    <span
-      style={{
-        display: "inline-block",
-        fontFamily: SCRIPT,
-        fontSize: 28,
-        fontWeight: 700,
-        lineHeight: 1,
-        color: INK,
-        background: CARD_BG,
-        border: `1px solid ${NOTEPAD_BORDER}`,
-        borderRadius: 8,
-        padding: "1px 12px",
-        transform: "rotate(-1.5deg)",
-        boxShadow: `0 2px 5px ${BOARD_SHADOW}`,
-      }}
-    >
-      {children}
-    </span>
-  );
+  return <span style={SECTION_HEADING}>{children}</span>;
 }
 
+const KICKER: CSSProperties = {
+  fontFamily: BODY,
+  fontSize: "var(--text-sm)",
+  letterSpacing: "0.18em",
+  textTransform: "uppercase",
+  color: MUTED,
+  margin: "8px 0 2px",
+};
+
 function Kicker({ children }: { children: ReactNode }) {
-  return (
-    <div style={{ fontFamily: BODY, fontSize: 8.5, letterSpacing: "0.18em", textTransform: "uppercase", color: MUTED, margin: "8px 0 2px" }}>
-      {children}
-    </div>
-  );
+  return <div style={KICKER}>{children}</div>;
 }
 
 const initial = (name: string) => name.trim().charAt(0).toUpperCase() || "?";
@@ -199,18 +201,19 @@ export default function WowFactionBody({ state }: { state: FactionDetailState })
           >
             {/* red margin rule */}
             <div style={{ position: "absolute", left: 32, top: 0, bottom: 0, width: 2, background: `color-mix(in srgb, ${PINK} 55%, transparent)` }} />
+            {/* ornament: hand-lettered Caveat — handwriting on the board, not typeset copy. */}
             <div style={{ fontFamily: SCRIPT, fontSize: 30, fontWeight: 700, color: ACCENT, lineHeight: 1, marginBottom: 10 }}>
               {t("wow.manifesto.heading")}
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: 9 }}>
               {paragraphs.length ? (
                 paragraphs.map((para, i) => (
-                  <p key={i} style={{ fontFamily: BODY, fontSize: 11.5, lineHeight: 1.85, color: MUTED, margin: 0 }}>
+                  <p key={i} className="content-text" style={{ fontFamily: BODY, lineHeight: 1.85, color: MUTED, margin: 0 }}>
                     {para}
                   </p>
                 ))
               ) : (
-                <p style={{ fontFamily: BODY, fontSize: 11.5, lineHeight: 1.85, color: MUTED, margin: 0 }}>
+                <p className="content-text" style={{ fontFamily: BODY, lineHeight: 1.85, color: MUTED, margin: 0 }}>
                   {t("wow.manifesto.empty")}
                 </p>
               )}
@@ -223,7 +226,7 @@ export default function WowFactionBody({ state }: { state: FactionDetailState })
           <SectionHeading>{t("wow.tasks.heading")}</SectionHeading>
           <Kicker>{t("wow.tasks.kicker")}</Kicker>
           {tasks.length === 0 ? (
-            <p style={{ fontFamily: BODY, fontSize: 11, color: MUTED, marginTop: 12 }}>{t("wow.tasks.empty")}</p>
+            <p className="content-text" style={{ fontFamily: BODY, color: MUTED, marginTop: 12 }}>{t("wow.tasks.empty")}</p>
           ) : (
             <div style={{ display: "flex", flexWrap: "wrap", gap: 26, alignItems: "flex-start", marginTop: 16 }}>
               {tasks.map((task) => (
@@ -247,7 +250,7 @@ export default function WowFactionBody({ state }: { state: FactionDetailState })
           <SectionHeading>{t("wow.praxis.heading")}</SectionHeading>
           <Kicker>{t("wow.praxis.kicker")}</Kicker>
           {recentPraxis.length === 0 ? (
-            <p style={{ fontFamily: BODY, fontSize: 11, color: MUTED, marginTop: 12 }}>{t("wow.praxis.empty")}</p>
+            <p className="content-text" style={{ fontFamily: BODY, color: MUTED, marginTop: 12 }}>{t("wow.praxis.empty")}</p>
           ) : (
             <div style={{ display: "flex", flexWrap: "wrap", gap: 22, alignItems: "flex-start", marginTop: 16 }}>
               {recentPraxis.map((praxis) => (
@@ -295,7 +298,7 @@ export default function WowFactionBody({ state }: { state: FactionDetailState })
                   <span style={{ width: 9, height: 9, borderRadius: "50%", background: ACCENT }} />
                   <span style={{ width: 9, height: 9, borderRadius: "50%", background: IVY_LEAF }} />
                 </span>
-                <span style={{ marginLeft: "auto", fontFamily: BODY, fontSize: 9.5, color: TITLE_TEXT }}>{t("wow.join.windowTitle")}</span>
+                <span style={{ marginLeft: "auto", fontFamily: BODY, fontSize: "var(--text-base)", color: TITLE_TEXT }}>{t("wow.join.windowTitle")}</span>
               </div>
 
               <div style={{ background: NOTEPAD, padding: 18 }}>
@@ -304,10 +307,11 @@ export default function WowFactionBody({ state }: { state: FactionDetailState })
                     <div style={{ display: "flex", justifyContent: "center", marginBottom: 6 }}>
                       <Sparkle size={30} color={ACCENT} />
                     </div>
+                    {/* ornament: hand-lettered Caveat — handwriting on the board, not typeset copy. */}
                     <div style={{ fontFamily: SCRIPT, fontSize: 25, fontWeight: 700, color: IVY, lineHeight: 1 }}>
                       {t("wow.join.memberTitle")}
                     </div>
-                    <div style={{ fontFamily: BODY, fontSize: 10.5, color: MUTED, marginTop: 6 }}>
+                    <div style={{ fontFamily: BODY, fontSize: "var(--text-md)", color: MUTED, marginTop: 6 }}>
                       <Trans t={t} i18nKey="wow.join.memberStanding">
                         Standing · <b style={{ color: ACCENT }}>coven witch</b>
                       </Trans>
@@ -317,10 +321,11 @@ export default function WowFactionBody({ state }: { state: FactionDetailState })
 
                 {membership.state === "eligible" && !confirming && (
                   <div style={{ textAlign: "center" }}>
+                    {/* ornament: hand-lettered Caveat — handwriting on the board, not typeset copy. */}
                     <div style={{ fontFamily: SCRIPT, fontSize: 26, fontWeight: 700, color: ACCENT, lineHeight: 1, marginBottom: 6 }}>
                       {t("wow.join.eligibleTitle")}
                     </div>
-                    <div style={{ fontFamily: BODY, fontSize: 10.5, lineHeight: 1.55, color: MUTED, marginBottom: 14 }}>
+                    <div className="content-text" style={{ fontFamily: BODY, lineHeight: 1.55, color: MUTED, marginBottom: 14 }}>
                       {t("wow.join.eligibleBody")}
                     </div>
                     <button
@@ -328,7 +333,7 @@ export default function WowFactionBody({ state }: { state: FactionDetailState })
                       style={{
                         width: "100%",
                         fontFamily: BODY,
-                        fontSize: 11.5,
+                        fontSize: "var(--text-lg)",
                         fontWeight: 700,
                         letterSpacing: "0.06em",
                         textTransform: "uppercase",
@@ -348,7 +353,7 @@ export default function WowFactionBody({ state }: { state: FactionDetailState })
 
                 {membership.state === "eligible" && confirming && (
                   <div>
-                    <div style={{ fontFamily: BODY, fontSize: 10.5, lineHeight: 1.6, color: INK, marginBottom: 14 }}>
+                    <div className="content-text" style={{ fontFamily: BODY, lineHeight: 1.6, color: INK, marginBottom: 14 }}>
                       {membership.currentFactionSlug &&
                       membership.currentFactionSlug !== "na"
                         ? t("detail.join.confirmSwitch", {
@@ -358,7 +363,7 @@ export default function WowFactionBody({ state }: { state: FactionDetailState })
                         : t("detail.join.confirm", { faction: factionName(faction.slug) })}
                     </div>
                     {membership.joinError && (
-                      <div style={{ fontFamily: BODY, fontSize: 10, color: "var(--color-danger)", marginBottom: 8 }}>{membership.joinError}</div>
+                      <div className="content-text" style={{ fontFamily: BODY, color: "var(--color-danger)", marginBottom: 8 }}>{membership.joinError}</div>
                     )}
                     <div style={{ display: "flex", gap: 8 }}>
                       <button
@@ -367,7 +372,7 @@ export default function WowFactionBody({ state }: { state: FactionDetailState })
                         style={{
                           flex: 1,
                           fontFamily: BODY,
-                          fontSize: 11,
+                          fontSize: "var(--text-md)",
                           fontWeight: 700,
                           letterSpacing: "0.06em",
                           textTransform: "uppercase",
@@ -388,7 +393,7 @@ export default function WowFactionBody({ state }: { state: FactionDetailState })
                         disabled={membership.joining}
                         style={{
                           fontFamily: BODY,
-                          fontSize: 10,
+                          fontSize: "var(--text-base)",
                           letterSpacing: "0.1em",
                           textTransform: "uppercase",
                           color: MUTED,
@@ -411,11 +416,12 @@ export default function WowFactionBody({ state }: { state: FactionDetailState })
                       <span style={{ marginTop: 3 }}>
                         <Sparkle size={20} color={IVY} />
                       </span>
+                      {/* ornament: hand-lettered Caveat — handwriting on the board, not typeset copy. */}
                       <span style={{ fontFamily: SCRIPT, fontSize: 23, fontWeight: 700, color: ACCENT, lineHeight: 1.2 }}>
                         {t("wow.join.gateTitle")}
                       </span>
                     </div>
-                    <div style={{ fontFamily: BODY, fontSize: 10.5, lineHeight: 1.55, color: MUTED }}>
+                    <div className="content-text" style={{ fontFamily: BODY, lineHeight: 1.55, color: MUTED }}>
                       {t("wow.join.gateBody", { faction: factionName(faction.slug) })}
                     </div>
                   </div>
@@ -453,13 +459,14 @@ export default function WowFactionBody({ state }: { state: FactionDetailState })
                   <Avatar name={spot.display_name} size={60} />
                 </div>
                 <div style={{ padding: "8px 4px 14px", textAlign: "center" }}>
-                  <div style={{ fontFamily: BODY, fontSize: 8, letterSpacing: "0.16em", textTransform: "uppercase", color: MUTED }}>
+                  <div style={{ fontFamily: BODY, fontSize: "var(--text-xs)", letterSpacing: "0.16em", textTransform: "uppercase", color: MUTED }}>
                     {t("wow.spotlight.label")}
                   </div>
+                  {/* ornament: hand-lettered Caveat — handwriting on the board, not typeset copy. */}
                   <div style={{ fontFamily: SCRIPT, fontSize: 26, fontWeight: 700, color: ACCENT, lineHeight: 1 }}>
                     {spot.display_name}
                   </div>
-                  <div style={{ fontFamily: BODY, fontSize: 8.5, color: INK, marginTop: 2 }}>
+                  <div style={{ fontFamily: BODY, fontSize: "var(--text-sm)", color: INK, marginTop: 2 }}>
                     {t("wow.spotlight.stat", {
                       level: spot.level,
                       score: spot.all_time_score.toLocaleString(),
@@ -482,11 +489,12 @@ export default function WowFactionBody({ state }: { state: FactionDetailState })
                 padding: "14px 16px",
               }}
             >
+              {/* ornament: hand-lettered Caveat — handwriting on the board, not typeset copy. */}
               <div style={{ fontFamily: SCRIPT, fontSize: 23, fontWeight: 700, color: ACCENT, lineHeight: 1, marginBottom: 8 }}>
                 {t("wow.roster.heading")}
               </div>
               {roster.length === 0 ? (
-                <p style={{ fontFamily: BODY, fontSize: 11, color: MUTED }}>
+                <p className="content-text" style={{ fontFamily: BODY, color: MUTED }}>
                   {spot
                     ? t("wow.roster.emptyWithSpotlight")
                     : t("detail.membersEmpty")}
@@ -504,6 +512,7 @@ export default function WowFactionBody({ state }: { state: FactionDetailState })
                         flex: 1,
                         minWidth: 0,
                         fontFamily: SCRIPT,
+                        // ornament: hand-lettered Caveat roster name.
                         fontSize: 19,
                         color: INK,
                         lineHeight: 1,
@@ -514,7 +523,7 @@ export default function WowFactionBody({ state }: { state: FactionDetailState })
                     >
                       {m.display_name}
                     </span>
-                    <span style={{ fontFamily: BODY, fontSize: 9, color: ACCENT }}>
+                    <span style={{ fontFamily: BODY, fontSize: "var(--text-sm)", color: ACCENT }}>
                       {t("wow.roster.level", { level: m.level })}
                     </span>
                   </Link>

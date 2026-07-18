@@ -21,7 +21,7 @@ const BODY_FONT = 'var(--font-body)'
 
 const kicker: CSSProperties = {
   fontFamily: BODY_FONT,
-  fontSize: 8,
+  fontSize: 'var(--text-xs)',
   letterSpacing: '0.2em',
   textTransform: 'uppercase',
   color: MUTED,
@@ -51,17 +51,18 @@ export default function EverymenMobileTaskCard({ task, points }: { task: TaskOut
         {factionName(task.primary_faction_slug)}
       </span>
 
-      <h2 style={{ fontFamily: ACCENT_FONT, fontSize: 22, lineHeight: 1, letterSpacing: '0.01em', color: INK, margin: 0 }}>
+      <h2 className="content-title" style={{ fontFamily: ACCENT_FONT, lineHeight: 1, letterSpacing: '0.01em', color: INK, margin: 0 }}>
         {task.title}
       </h2>
 
       <MobileTaskDescription
         text={task.description}
-        style={{ fontFamily: BODY_FONT, fontSize: 13, lineHeight: 1.5, color: MUTED, margin: 0 }}
+        className="content-text"
+        style={{ fontFamily: BODY_FONT, lineHeight: 1.5, color: MUTED, margin: 0 }}
       />
 
       <div className="flex items-center gap-3" style={{ marginTop: 2 }}>
-        <span style={{ fontFamily: ACCENT_FONT, fontSize: 15, letterSpacing: '0.04em', color: INK, background: GOLD, padding: '3px 10px' }}>
+        <span style={{ fontFamily: ACCENT_FONT, fontSize: 'var(--text-xl)', letterSpacing: '0.04em', color: INK, background: GOLD, padding: '3px 10px' }}>
           {t('mobile.points', { points })}
         </span>
         <span style={{ ...kicker }}>{t('mobile.level', { level: task.level_required })}</span>

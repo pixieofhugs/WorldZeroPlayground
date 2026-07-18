@@ -37,8 +37,8 @@ export default function DefaultMobileTaskCard({ task, points }: { task: TaskOut;
 
       {/* Title */}
       <h2
-        className="font-display italic font-medium"
-        style={{ fontSize: 18, lineHeight: 1.15, color: 'var(--color-text-primary)' }}
+        className="content-title font-display italic font-medium"
+        style={{ lineHeight: 1.15, color: 'var(--color-text-primary)' }}
       >
         {task.title}
       </h2>
@@ -46,8 +46,8 @@ export default function DefaultMobileTaskCard({ task, points }: { task: TaskOut;
       {/* Description — clamp to two lines */}
       <MobileTaskDescription
         text={task.description}
-        className="font-body"
-        style={{ fontSize: 13, lineHeight: 1.5, color: 'var(--color-text-secondary)' }}
+        className="content-text font-body"
+        style={{ lineHeight: 1.5, color: 'var(--color-text-secondary)' }}
       />
 
       {/* Footer — points + level */}
@@ -55,7 +55,7 @@ export default function DefaultMobileTaskCard({ task, points }: { task: TaskOut;
         <span
           style={{
             fontFamily: "'Courier Prime', monospace",
-            fontSize: 12,
+            fontSize: 'var(--text-lg)',
             fontWeight: 700,
             color: 'var(--color-text-primary)',
             background: 'var(--color-bg-surface-alt)',
