@@ -58,14 +58,14 @@ export default function DefaultEditPraxis({
       style={{
         display: "flex",
         flexDirection: "column",
-        gap: 14,
+        gap: "var(--space-md)",
         fontFamily: "var(--font-body)",
         color: INK,
       }}
     >
       {/* Title + Write/Preview toggle */}
-      <header style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-        <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
+      <header style={{ display: "flex", flexDirection: "column", gap: "var(--space-md)" }}>
+        <div style={{ display: "flex", alignItems: "baseline", gap: "var(--space-sm)" }}>
           <h1
             className="font-display italic"
             style={{ fontSize: "var(--text-title)", lineHeight: 1, color: INK, margin: 0 }}
@@ -86,14 +86,14 @@ export default function DefaultEditPraxis({
           setTab={setTab}
           skin={{
             containerStyle: {
-              gap: 3,
-              padding: 3,
+              gap: "var(--space-xs)",
+              padding: "var(--space-xs)",
               background: SURFACE,
               border: `1px solid ${BORDER}`,
               borderRadius: 999,
             },
             buttonStyle: (active) => ({
-              padding: "8px 10px",
+              padding: "var(--space-sm)",
               borderRadius: 999,
               border: "none",
               fontFamily: "var(--font-body)",
@@ -114,8 +114,8 @@ export default function DefaultEditPraxis({
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
-          gap: 10,
-          padding: "11px 14px",
+          gap: "var(--space-sm)",
+          padding: "var(--space-md)",
           background: SURFACE,
           border: `1px solid ${BORDER}`,
           borderRadius: 12,
@@ -137,7 +137,7 @@ export default function DefaultEditPraxis({
       {tab === "write" ? (
         <>
           {/* Title */}
-          <label style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+          <label style={{ display: "flex", flexDirection: "column", gap: "var(--space-xs)" }}>
             <span style={eyebrow}>{t("editPraxis.na.titleLabel")}</span>
             <TitleField
               state={state}
@@ -150,7 +150,7 @@ export default function DefaultEditPraxis({
                   background: SURFACE,
                   border: `1px solid ${BORDER}`,
                   borderRadius: 10,
-                  padding: "12px 14px",
+                  padding: "var(--space-md)",
                   outline: "none",
                 },
               }}
@@ -158,7 +158,7 @@ export default function DefaultEditPraxis({
           </label>
 
           {/* Body */}
-          <label style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+          <label style={{ display: "flex", flexDirection: "column", gap: "var(--space-xs)" }}>
             <span style={eyebrow}>
               {t("editPraxis.na.bodyLabel", { words: state.wordCount })}
             </span>
@@ -175,7 +175,7 @@ export default function DefaultEditPraxis({
                   background: SURFACE,
                   border: `1px solid ${BORDER}`,
                   borderRadius: 10,
-                  padding: "12px 14px",
+                  padding: "var(--space-md)",
                   outline: "none",
                   resize: "vertical",
                   minHeight: 180,
@@ -186,7 +186,7 @@ export default function DefaultEditPraxis({
 
           {/* Invite (collab / duel) */}
           {state.showInviteBox && (
-            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-sm)" }}>
               <span style={eyebrow}>
                 {state.duelMode
                   ? t("editPraxis.na.inviteLabelDuel")
@@ -208,14 +208,14 @@ export default function DefaultEditPraxis({
           )}
 
           {/* Media grid + add */}
-          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-sm)" }}>
             <span style={eyebrow}>{t("editPraxis.na.filesLabel")}</span>
             <MediaGrid state={state} />
           </div>
 
           {/* Metatasks */}
           {state.showMetatasks && (
-            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-sm)" }}>
               <span style={eyebrow}>{t("editPraxis.na.metatasksLabel")}</span>
               <MetatasksList
                 state={state}
@@ -223,10 +223,10 @@ export default function DefaultEditPraxis({
                   containerStyle: {
                     display: "flex",
                     flexDirection: "column",
-                    gap: 4,
+                    gap: "var(--space-xs)",
                   },
                   rowStyle: (selected) => ({
-                    padding: "10px 12px",
+                    padding: "var(--space-sm) var(--space-md)",
                     background: selected ? "var(--faction-default-light)" : SURFACE,
                     border: `1px solid ${selected ? ACCENT : BORDER}`,
                     borderRadius: 10,
@@ -242,7 +242,7 @@ export default function DefaultEditPraxis({
         </>
       ) : (
         // Preview
-        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-md)" }}>
           <div
             className="font-display italic"
             style={{ fontSize: "var(--text-content)", color: INK }}
@@ -257,7 +257,7 @@ export default function DefaultEditPraxis({
                 background: SURFACE,
                 border: `1px solid ${BORDER}`,
                 borderRadius: 10,
-                padding: "14px 16px",
+                padding: "var(--space-md) var(--space-lg)",
               },
               markdownStyle: {
                 fontFamily: "var(--font-body)",
@@ -276,8 +276,8 @@ export default function DefaultEditPraxis({
         style={{
           display: "flex",
           alignItems: "center",
-          gap: 12,
-          padding: "12px 0 4px",
+          gap: "var(--space-md)",
+          padding: "var(--space-md) 0 var(--space-xs)",
           background: "var(--color-nav-bg)",
           backdropFilter: "blur(var(--nav-blur))",
           borderTop: `1px solid ${BORDER}`,
@@ -314,7 +314,7 @@ export default function DefaultEditPraxis({
               fontWeight: 700,
               letterSpacing: "0.1em",
               textTransform: "uppercase",
-              padding: "13px 18px",
+              padding: "var(--space-md) var(--space-lg)",
               border: "none",
               borderRadius: 12,
               cursor: state.submitting ? "wait" : "pointer",
@@ -340,7 +340,7 @@ function MediaGrid({
       style={{
         display: "grid",
         gridTemplateColumns: "repeat(3, 1fr)",
-        gap: 8,
+        gap: "var(--space-sm)",
       }}
     >
       {state.media.map((item) => {
@@ -419,7 +419,7 @@ function MediaGrid({
               flexDirection: "column",
               alignItems: "center",
               justifyContent: "center",
-              gap: 4,
+              gap: "var(--space-xs)",
               fontFamily: "var(--font-body)",
               fontSize: "var(--text-md)",
               letterSpacing: "0.1em",

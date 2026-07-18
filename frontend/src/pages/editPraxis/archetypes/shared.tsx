@@ -61,7 +61,7 @@ export function RainbowTitle({
             key={index}
             style={{
               borderBottom: `4px solid ${RAINBOW_VARS[index % RAINBOW_VARS.length]}`,
-              paddingBottom: 2,
+              paddingBottom: "var(--space-xs)",
             }}
           >
             {character}
@@ -96,7 +96,7 @@ export function Breadcrumb({
         fontSize: "var(--text-sm)",
         letterSpacing: "0.1em",
         color: tone,
-        marginBottom: 12,
+        marginBottom: "var(--space-md)",
         ...style,
       }}
     >
@@ -146,7 +146,7 @@ export function TaskMetaInline({
     <span
       style={{
         display: "inline-flex",
-        gap: 10,
+        gap: "var(--space-md)",
         alignItems: "center",
         flexWrap: "wrap",
         fontFamily: "'Courier Prime', monospace",
@@ -204,7 +204,7 @@ export function RainbowUnderline({
   opacity = 0.6,
 }: RainbowUnderlineProps) {
   return (
-    <div style={{ display: "flex", height, marginTop: 4, opacity }}>
+    <div style={{ display: "flex", height, marginTop: "var(--space-xs)", opacity }}>
       {RAINBOW_VARS.map((color, index) => (
         <div key={index} style={{ flex: 1, background: color }} />
       ))}
@@ -224,8 +224,8 @@ export function ErrorBanner({ message }: ErrorBannerProps) {
       style={{
         fontSize: "var(--text-md)",
         color: "var(--color-danger)",
-        marginTop: 8,
-        padding: "8px 12px",
+        marginTop: "var(--space-sm)",
+        padding: "var(--space-sm) var(--space-md)",
         background: "rgba(220,38,38,0.08)",
         border: "1px solid rgba(220,38,38,0.25)",
       }}
@@ -246,7 +246,7 @@ export function ArchetypeFrame({ children, style }: SectionProps) {
       style={{
         maxWidth: 760,
         margin: "0 auto",
-        padding: "24px 16px",
+        padding: "var(--space-xl) var(--space-lg)",
         ...style,
       }}
     >

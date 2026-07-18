@@ -53,7 +53,7 @@ export function InviteSearch({
   return (
     <div>
       <div
-        style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 8 }}
+        style={{ display: "flex", gap: "var(--space-sm)", flexWrap: "wrap", marginBottom: "var(--space-sm)" }}
       >
         {duelMode
           ? challengeAttached && (
@@ -61,10 +61,10 @@ export function InviteSearch({
                 style={{
                   display: "inline-flex",
                   alignItems: "center",
-                  gap: 6,
+                  gap: "var(--space-xs)",
                   fontFamily: skin.fontFamily,
                   fontSize: "var(--text-md)",
-                  padding: "4px 10px",
+                  padding: "var(--space-xs) var(--space-sm)",
                   background: skin.pendingBg ?? "transparent",
                   color: skin.pendingColor ?? "inherit",
                   border: "1px dashed currentColor",
@@ -119,7 +119,7 @@ export function InviteSearch({
                     style={{
                       fontFamily: skin.fontFamily,
                       fontSize: "var(--text-md)",
-                      padding: "4px 10px",
+                      padding: "var(--space-xs) var(--space-sm)",
                       background: skin.pendingBg ?? "transparent",
                       color: skin.pendingColor ?? "inherit",
                       border: "1px dashed currentColor",
@@ -142,7 +142,7 @@ export function InviteSearch({
                         fontSize: "var(--text-xl)",
                         lineHeight: 1,
                         padding: 0,
-                        marginLeft: 6,
+                        marginLeft: "var(--space-xs)",
                       }}
                     >
                       ×
@@ -172,7 +172,7 @@ export function InviteSearch({
             width: "100%",
             fontFamily: skin.fontFamily,
             fontSize: "var(--text-lg)",
-            padding: "8px 12px",
+            padding: "var(--space-sm) var(--space-md)",
             background: skin.inputBg ?? "transparent",
             color: skin.inputColor ?? "inherit",
             border: skin.inputBorder ?? "1px solid currentColor",
@@ -208,9 +208,9 @@ export function InviteSearch({
                 style={{
                   display: "flex",
                   alignItems: "center",
-                  gap: 8,
+                  gap: "var(--space-sm)",
                   width: "100%",
-                  padding: "8px 12px",
+                  padding: "var(--space-sm) var(--space-md)",
                   background: "transparent",
                   border: "none",
                   cursor: state.inviting ? "wait" : "pointer",
@@ -285,7 +285,7 @@ export function FilePicker({
           style={{
             fontSize: "var(--text-md)",
             color: skin.errorColor ?? "var(--color-danger)",
-            marginTop: 8,
+            marginTop: "var(--space-sm)",
           }}
         >
           {state.fileError}
@@ -350,7 +350,7 @@ export function MetatasksList({
             style={{
               display: "flex",
               alignItems: "flex-start",
-              gap: 12,
+              gap: "var(--space-md)",
               width: "100%",
               cursor: busy ? "wait" : "pointer",
               textAlign: "left",
@@ -366,7 +366,7 @@ export function MetatasksList({
                 background: selected
                   ? (skin.titleColor ?? "currentColor")
                   : "transparent",
-                marginTop: 2,
+                marginTop: "var(--space-xs)",
               }}
               aria-hidden
             />
@@ -515,7 +515,7 @@ export function BodyTextarea({
 
   const buttonStyle: CSSProperties = {
     minWidth: 26,
-    padding: "3px 7px",
+    padding: "var(--space-xs) var(--space-sm)",
     fontSize: "var(--text-lg)",
     fontWeight: 700,
     lineHeight: 1.2,
@@ -534,8 +534,8 @@ export function BodyTextarea({
         style={{
           display: "flex",
           flexWrap: "wrap",
-          gap: 4,
-          marginBottom: 8,
+          gap: "var(--space-xs)",
+          marginBottom: "var(--space-sm)",
           ...skin.toolbarStyle,
         }}
       >
