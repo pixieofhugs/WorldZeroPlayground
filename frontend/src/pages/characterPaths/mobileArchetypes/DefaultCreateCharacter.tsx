@@ -46,7 +46,7 @@ export default function DefaultCreateCharacter({ state }: { state: CreateCharact
         <button type="button" onClick={() => navigate('/')} style={backBtn} aria-label={t('createCharacter.cancel')}>
           ‹
         </button>
-        <span className="eyebrow" style={{ fontSize: 10 }}>{t('createCharacter.mobile.title')}</span>
+        <span className="eyebrow">{t('createCharacter.mobile.title')}</span>
         <span style={{ width: 28 }} />
       </div>
 
@@ -57,6 +57,7 @@ export default function DefaultCreateCharacter({ state }: { state: CreateCharact
             {avatarPreview ? (
               <img src={avatarPreview} alt={handle} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
             ) : (
+              // ornament: "+" is a glyph-as-icon, sized to the 104px photo ring, not text
               <span style={{ fontSize: 26, color: 'var(--color-text-secondary)' }}>+</span>
             )}
           </span>
@@ -79,6 +80,7 @@ export default function DefaultCreateCharacter({ state }: { state: CreateCharact
           maxLength={NAME_MAX}
           placeholder={t('createCharacter.namePlaceholder')}
           autoFocus
+          className="content-text"
           style={field}
         />
         <div style={metaRow}>
@@ -107,7 +109,7 @@ export default function DefaultCreateCharacter({ state }: { state: CreateCharact
                   }}
                 >
                   <span style={{ width: 12, height: 12, borderRadius: '50%', background: factionCssVar(slug), flexShrink: 0 }} />
-                  <span style={{ fontFamily: factionCssVar(slug, 'card-font'), fontSize: 14, color: 'var(--color-text-primary)' }}>
+                  <span className="content-text" style={{ fontFamily: factionCssVar(slug, 'card-font'), color: 'var(--color-text-primary)' }}>
                     {factionName(slug)}
                   </span>
                 </button>
@@ -118,9 +120,9 @@ export default function DefaultCreateCharacter({ state }: { state: CreateCharact
       )}
 
       {/* Born-unaffiliated explainer */}
-      <p style={help}>{t('createCharacter.mobile.help')}</p>
+      <p className="content-text" style={help}>{t('createCharacter.mobile.help')}</p>
 
-      {error && <p style={errorBox}>{error}</p>}
+      {error && <p className="content-text" style={errorBox}>{error}</p>}
 
       {/* Sticky Create bar */}
       <div style={stickyBar}>
@@ -149,6 +151,7 @@ const page: CSSProperties = { display: 'flex', flexDirection: 'column', gap: 22,
 const topRow: CSSProperties = { display: 'flex', alignItems: 'center', justifyContent: 'space-between' }
 const backBtn: CSSProperties = {
   width: 28, height: 28, background: 'none', border: 'none', cursor: 'pointer',
+  // ornament: the back chevron is a glyph-as-icon sized to its 28px hit target
   fontSize: 24, lineHeight: 1, color: 'var(--color-text-primary)', padding: 0,
 }
 const ringBtn: CSSProperties = {
@@ -161,18 +164,18 @@ const ringInner: CSSProperties = {
   background: 'var(--color-bg-surface-alt)',
 }
 const label: CSSProperties = {
-  display: 'block', fontSize: 9, letterSpacing: '0.16em', textTransform: 'uppercase',
+  display: 'block', fontSize: 'var(--text-sm)', letterSpacing: '0.16em', textTransform: 'uppercase',
   color: 'var(--color-text-secondary)',
 }
 const field: CSSProperties = {
   display: 'block', width: '100%', marginTop: 8, boxSizing: 'border-box',
   background: 'var(--color-bg-page)', border: '1px solid var(--color-border-strong)',
-  borderRadius: 8, outline: 'none', fontFamily: 'var(--font-body)', fontSize: 15,
+  borderRadius: 8, outline: 'none', fontFamily: 'var(--font-body)',
   color: 'var(--color-text-primary)', padding: '12px 13px',
 }
 const metaRow: CSSProperties = {
   display: 'flex', justifyContent: 'space-between', marginTop: 6,
-  fontFamily: 'var(--font-body)', fontSize: 10,
+  fontFamily: 'var(--font-body)', fontSize: 'var(--text-base)',
 }
 const pickerCell: CSSProperties = {
   display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer', width: '100%',
@@ -180,11 +183,11 @@ const pickerCell: CSSProperties = {
   borderRadius: 8, padding: '13px 14px', textAlign: 'left',
 }
 const help: CSSProperties = {
-  fontFamily: 'var(--font-body)', fontSize: 12, lineHeight: 1.6,
+  fontFamily: 'var(--font-body)', lineHeight: 1.6,
   color: 'var(--color-text-tertiary)', margin: 0,
 }
 const errorBox: CSSProperties = {
-  fontFamily: 'var(--font-body)', fontSize: 12, color: 'var(--color-danger)',
+  fontFamily: 'var(--font-body)', color: 'var(--color-danger)',
   border: '1px solid var(--color-danger)', borderRadius: 6, padding: '10px 12px', margin: 0,
 }
 const stickyBar: CSSProperties = {
@@ -194,7 +197,7 @@ const stickyBar: CSSProperties = {
   paddingTop: 8,
 }
 const primaryBtn: CSSProperties = {
-  width: '100%', cursor: 'pointer', fontFamily: 'var(--font-body)', fontSize: 13,
+  width: '100%', cursor: 'pointer', fontFamily: 'var(--font-body)', fontSize: 'var(--text-xl)',
   letterSpacing: '0.12em', textTransform: 'uppercase', fontWeight: 700,
   color: 'var(--color-bg-page)', background: 'var(--color-text-primary)',
   border: 'none', padding: '15px 24px', borderRadius: 12,
