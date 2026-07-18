@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { getFactions, getFactionStatus, type FactionOut, type FactionPageOut } from '../../../api/factions'
-import { factionCssVar, FACTION_RAINBOW_ORDER, sortFactionsByRainbowOrder } from '../../../utils/factions'
+import { factionCssVar, sortFactionsByRainbowOrder } from '../../../utils/factions'
 import FactionSelectCard, { type SelectState } from '../../../components/cards/FactionSelectCard'
 import { useAuth } from '../../../auth/AuthContext'
 import { extractError } from '../../../utils/errors'
@@ -23,11 +23,12 @@ const STATUS_CAN_RETURN = 'can_return'
  * all membership actions live (#347). Member counts are intentionally dropped —
  * no cheap per-faction count query exists (ADR-0035: real fields only).
  *
- * The stripe bar is a legend for the list: seven hard-edged spans in
- * FACTION_RAINBOW_ORDER, one per row below, so stripe N == card N. That's why
- * it is NOT `var(--faction-default-rainbow)` (a smooth gradient, no per-faction
+ * The stripe bar is a legend for the list: one hard-edged span per rendered
+ * row, in the same rainbow order, so stripe N == card N. That's why it is NOT
+ * `var(--faction-default-rainbow)` (a smooth gradient, no per-faction
  * correspondence) and why the list keeps rainbow order rather than desktop's
- * member-first sort.
+ * member-first sort. The stripe count follows the fetched list rather than a
+ * static seven — Albescent is hidden until revealed (ADR-0027).
  *
  * Self-fetches the (slug-only) faction list plus the viewer's per-faction
  * status, so the cards render real member/eligible/locked rather than a
@@ -96,21 +97,30 @@ export default function DefaultFactionsDirectory() {
       </h1>
 
       {/* Faction legend: one hard-edged stripe per faction, in the same order
-          as the cards below. Deliberately not extracted — single caller. */}
-      <div
-        aria-hidden="true"
-        style={{
-          display: 'flex',
-          height: 10,
-          borderRadius: 999,
-          overflow: 'hidden',
-          marginBottom: 20,
-        }}
-      >
-        {FACTION_RAINBOW_ORDER.map((slug) => (
-          <span key={slug} style={{ flex: 1, background: factionCssVar(slug) }} />
-        ))}
-      </div>
+          as the cards below. Deliberately not extracted — single caller.
+
+          Driven off `visible` (the rows actually rendered), NOT the static
+          FACTION_RAINBOW_ORDER: Albescent is a secret society omitted from
+          /factions until the account is revealed to it (ADR-0027, #390,
+          routers/factions.py:53). A hardcoded seven-stripe bar would both
+          break the stripe==row correspondence for unrevealed players and
+          leak Albescent's existence in its own colour. */}
+      {visible.length > 0 && (
+        <div
+          aria-hidden="true"
+          style={{
+            display: 'flex',
+            height: 10,
+            borderRadius: 999,
+            overflow: 'hidden',
+            marginBottom: 20,
+          }}
+        >
+          {visible.map((f) => (
+            <span key={f.slug} style={{ flex: 1, background: factionCssVar(f.slug) }} />
+          ))}
+        </div>
+      )}
 
       {unaffiliated && (
         <section
