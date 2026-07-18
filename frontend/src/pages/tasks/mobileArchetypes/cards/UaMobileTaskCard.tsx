@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import type { TaskOut } from '../../../../api/tasks'
 import { factionCssVar, factionName } from '../../../../utils/factions'
+import { MobileTaskDescription } from './shared'
 
 /**
  * University of Asthmatics MOBILE task card (#525/#565) — a parchment commission
@@ -58,24 +59,10 @@ export default function UaMobileTaskCard({ task, points }: { task: TaskOut; poin
         {task.title}
       </h2>
 
-      {task.description && (
-        <p
-          style={{
-            fontFamily: DISPLAY,
-            fontStyle: 'italic',
-            fontSize: 13,
-            lineHeight: 1.5,
-            color: SUB,
-            margin: 0,
-            display: '-webkit-box',
-            WebkitLineClamp: 2,
-            WebkitBoxOrient: 'vertical',
-            overflow: 'hidden',
-          }}
-        >
-          {task.description}
-        </p>
-      )}
+      <MobileTaskDescription
+        text={task.description}
+        style={{ fontFamily: DISPLAY, fontStyle: 'italic', fontSize: 13, lineHeight: 1.5, color: SUB, margin: 0 }}
+      />
 
       <div className="flex items-center gap-3" style={{ marginTop: 2 }}>
         <span style={{ fontFamily: ENGRAVED, fontSize: 12, letterSpacing: '0.04em', color: INK, background: PAPER_WARM, border: `1px solid ${GOLD}`, padding: '3px 9px' }}>
