@@ -120,6 +120,17 @@ export interface EditPraxisState {
   /** Manual continue from the success screen → the praxis detail page. */
   continueFromCollabSuccess: () => void;
 
+  /**
+   * The duel seal confirmation is up (#718). A duel is the only mode whose cast
+   * carries consequences the player can't fully undo, so it's the only mode that
+   * asks first. Transient client state; confirming calls `publish()` untouched.
+   */
+  duelSealOpen: boolean;
+  /** PublishButton's duel-mode action: open the dialog instead of publishing. */
+  requestDuelSeal: () => void;
+  /** Dismiss the dialog without casting. */
+  cancelDuelSeal: () => void;
+
   // Autosave
   autosaveAt: Date | null;
   saveStatus: SaveStatus;
@@ -222,6 +233,8 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
   const [duel, setDuel] = useState<DuelDetailOut | null>(null);
   const [duelLevelRequired, setDuelLevelRequired] = useState<number | null>(null);
   const [foeIds, setFoeIds] = useState<Set<number>>(new Set());
+  // Seal confirmation (#718) — opened by PublishButton in duel mode.
+  const [duelSealOpen, setDuelSealOpen] = useState(false);
 
   const [autosaveAt, setAutosaveAt] = useState<Date | null>(null);
   const [saveStatus, setSaveStatus] = useState<SaveStatus>("idle");
@@ -478,6 +491,10 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
   );
 
   const publish = useCallback(async () => {
+    // Any cast dismisses the seal dialog first, so a validation error or a
+    // failed submit lands on the composer in plain sight rather than behind an
+    // overlay. Harmless when the dialog was never open (#718).
+    setDuelSealOpen(false);
     if (!idParam || !title.trim()) {
       setError(i18n.t("forms:editPraxis.errors.titleRequired"));
       return;
@@ -908,6 +925,10 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
     cancel,
     collabSuccess,
     continueFromCollabSuccess,
+
+    duelSealOpen,
+    requestDuelSeal: () => setDuelSealOpen(true),
+    cancelDuelSeal: () => setDuelSealOpen(false),
 
     autosaveAt,
     saveStatus,

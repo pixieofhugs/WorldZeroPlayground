@@ -53,6 +53,28 @@ const DEFAULT_THEME: Required<Pick<DuelSlotTheme, 'muted' | 'bodyFont'>> = {
 }
 
 /* -------------------------------------------------------------------------- */
+/* Side resolution                                                            */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Split a duel into "me" and "the foe" from the viewer's character id.
+ *
+ * Every duel surface needs this and each one used to spell it differently (the
+ * read page keyed off the praxis id, the composer off the character id). One
+ * helper, so a viewer who is neither side (a spectator) falls back predictably
+ * to the challenger's point of view.
+ */
+export function duelSides(
+  duel: DuelDetailOut,
+  viewerCharacterId: number | null | undefined,
+): { me: DuelSideOut; foe: DuelSideOut } {
+  const iAmOpponent = viewerCharacterId != null && duel.opponent.character_id === viewerCharacterId
+  return iAmOpponent
+    ? { me: duel.opponent, foe: duel.challenger }
+    : { me: duel.challenger, foe: duel.opponent }
+}
+
+/* -------------------------------------------------------------------------- */
 /* Stakes arithmetic                                                          */
 /* -------------------------------------------------------------------------- */
 
