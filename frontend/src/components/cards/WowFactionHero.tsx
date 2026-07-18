@@ -110,7 +110,7 @@ export default function WowFactionHero({
   ];
 
   return (
-    <header style={{ marginBottom: 32 }}>
+    <header style={{ marginBottom: "var(--space-2xl)" }}>
       <div style={{ position: "relative", transform: "rotate(-0.6deg)" }}>
         {/* two pushpins tack the banner to the board */}
         <Pushpin color={PINK} style={{ top: -11, left: 34 }} />
@@ -121,12 +121,12 @@ export default function WowFactionHero({
             position: "relative",
             display: "flex",
             alignItems: "center",
-            gap: 24,
+            gap: "var(--space-xl)",
             flexWrap: "wrap",
             background: `linear-gradient(135deg, ${NOTEPAD}, ${CARD_BG})`,
             border: `1.5px solid ${WIN_BORDER}`,
             borderRadius: 14,
-            padding: "22px 26px",
+            padding: "var(--space-xl)",
             boxShadow: `0 12px 26px ${BOARD_SHADOW}`,
             overflow: "hidden",
           }}
@@ -156,7 +156,7 @@ export default function WowFactionHero({
                 letterSpacing: "0.2em",
                 textTransform: "uppercase",
                 color: MUTED,
-                marginBottom: 2,
+                marginBottom: "var(--space-xs)",
               }}
             >
               {i18n.t("feed:factionHero.wow.eyebrow")}
@@ -164,7 +164,7 @@ export default function WowFactionHero({
             <h1
               style={{
                 fontFamily: SCRIPT,
-                // ornament: hand-script wordmark — the Whimsy hero's display type
+                // eslint-disable-next-line local/no-raw-style-values -- ornament: hand-script wordmark — the Whimsy hero's display type
                 fontSize: 52,
                 fontWeight: 700,
                 lineHeight: 0.9,
@@ -175,7 +175,7 @@ export default function WowFactionHero({
             >
               {name}
             </h1>
-            <div style={{ fontFamily: SCRIPT, fontSize: "var(--text-title)", color: PINK, marginTop: 2 }}>
+            <div style={{ fontFamily: SCRIPT, fontSize: "var(--text-title)", color: PINK, marginTop: "var(--space-xs)" }}>
               {i18n.t("feed:factionHero.wow.motto")}
             </div>
             <p
@@ -185,7 +185,7 @@ export default function WowFactionHero({
                 lineHeight: 1.6,
                 color: MUTED,
                 maxWidth: 440,
-                margin: "8px 0 0",
+                margin: "var(--space-sm) 0 0",
               }}
             >
               {description ?? i18n.t("feed:factionHero.wow.descriptionFallback")}
@@ -193,7 +193,7 @@ export default function WowFactionHero({
           </div>
 
           {/* stats on the side — taped sticker charms stacked in a side column */}
-          <div style={{ position: "relative", flexShrink: 0, display: "flex", flexDirection: "column", gap: 9 }}>
+          <div style={{ position: "relative", flexShrink: 0, display: "flex", flexDirection: "column", gap: "var(--space-sm)" }}>
             {statTags.map((s) => (
               <div
                 key={s.label}
@@ -201,17 +201,18 @@ export default function WowFactionHero({
                   position: "relative",
                   display: "flex",
                   alignItems: "center",
-                  gap: 8,
+                  gap: "var(--space-sm)",
                   background: NOTEPAD,
                   border: `3px solid ${NOTEPAD}`,
                   borderRadius: 18,
+                  // eslint-disable-next-line local/no-raw-style-values -- ornament: inset of a rotated taped charm sticker; rounding reflows the stack.
                   padding: "5px 14px 5px 10px",
                   boxShadow: `0 4px 9px ${BOARD_SHADOW}`,
                   transform: `rotate(${s.rot})`,
                 }}
               >
                 <Sparkle size={18} color={s.color} />
-                {/* ornament: charm numeral in the hand-script face; above the content floor already */}
+                {/* eslint-disable-next-line local/no-raw-style-values -- ornament: charm numeral in the hand-script face; above the content floor already */}
                 <span style={{ fontFamily: SCRIPT, fontSize: 28, fontWeight: 700, lineHeight: 1, color: s.color }}>
                   {s.value}
                 </span>
