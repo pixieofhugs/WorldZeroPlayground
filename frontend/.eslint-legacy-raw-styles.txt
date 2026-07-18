@@ -158,7 +158,6 @@ src/pages/taskDetail/archetypes/AlbescentTaskDetail.tsx
 src/pages/taskDetail/archetypes/DefaultTaskDetail.tsx
 src/pages/taskDetail/archetypes/EphemeristsTaskDetail.tsx
 src/pages/taskDetail/archetypes/EverymenTaskDetail.tsx
-src/pages/taskDetail/archetypes/shared.tsx
 src/pages/taskDetail/archetypes/SingularityTaskDetail.tsx
 src/pages/taskDetail/archetypes/SnideTaskDetail.tsx
 src/pages/taskDetail/archetypes/UaTaskDetail.tsx
@@ -167,7 +166,6 @@ src/pages/taskDetail/mobileArchetypes/AlbescentTaskDetail.tsx
 src/pages/taskDetail/mobileArchetypes/DefaultTaskDetail.tsx
 src/pages/taskDetail/mobileArchetypes/EphemeristsTaskDetail.tsx
 src/pages/taskDetail/mobileArchetypes/EverymenTaskDetail.tsx
-src/pages/taskDetail/mobileArchetypes/shared.tsx
 src/pages/taskDetail/mobileArchetypes/SingularityTaskDetail.tsx
 src/pages/taskDetail/mobileArchetypes/SnideTaskDetail.tsx
 src/pages/taskDetail/mobileArchetypes/UaTaskDetail.tsx
