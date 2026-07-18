@@ -152,7 +152,7 @@ export default function WowFactionHero({
             <div
               style={{
                 fontFamily: BODY,
-                fontSize: 10,
+                fontSize: "var(--text-base)",
                 letterSpacing: "0.2em",
                 textTransform: "uppercase",
                 color: MUTED,
@@ -164,6 +164,7 @@ export default function WowFactionHero({
             <h1
               style={{
                 fontFamily: SCRIPT,
+                // ornament: hand-script wordmark — the Whimsy hero's display type
                 fontSize: 52,
                 fontWeight: 700,
                 lineHeight: 0.9,
@@ -174,13 +175,13 @@ export default function WowFactionHero({
             >
               {name}
             </h1>
-            <div style={{ fontFamily: SCRIPT, fontSize: 24, color: PINK, marginTop: 2 }}>
+            <div style={{ fontFamily: SCRIPT, fontSize: "var(--text-title)", color: PINK, marginTop: 2 }}>
               {i18n.t("feed:factionHero.wow.motto")}
             </div>
             <p
+              className="content-text"
               style={{
                 fontFamily: BODY,
-                fontSize: 11,
                 lineHeight: 1.6,
                 color: MUTED,
                 maxWidth: 440,
@@ -210,13 +211,14 @@ export default function WowFactionHero({
                 }}
               >
                 <Sparkle size={18} color={s.color} />
+                {/* ornament: charm numeral in the hand-script face; above the content floor already */}
                 <span style={{ fontFamily: SCRIPT, fontSize: 28, fontWeight: 700, lineHeight: 1, color: s.color }}>
                   {s.value}
                 </span>
                 <span
                   style={{
                     fontFamily: BODY,
-                    fontSize: 8,
+                    fontSize: "var(--text-xs)",
                     letterSpacing: "0.1em",
                     textTransform: "uppercase",
                     color: INK,

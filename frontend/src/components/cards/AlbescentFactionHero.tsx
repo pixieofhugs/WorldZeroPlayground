@@ -78,7 +78,7 @@ export default function AlbescentFactionHero({
           <div
             style={{
               fontFamily: MONO,
-              fontSize: 7.5,
+              fontSize: "var(--text-xs)",
               letterSpacing: "0.28em",
               textTransform: "uppercase",
               color: ink(22),
@@ -96,6 +96,7 @@ export default function AlbescentFactionHero({
               fontFamily: FONT,
               fontStyle: "italic",
               fontWeight: 300,
+              // ornament: vellum wordmark — the Albescent hero's display type
               fontSize: 60,
               lineHeight: 0.94,
               color: INK,
@@ -110,7 +111,7 @@ export default function AlbescentFactionHero({
           <div
             style={{
               fontFamily: MONO,
-              fontSize: 9,
+              fontSize: "var(--text-sm)",
               letterSpacing: "0.34em",
               textTransform: "uppercase",
               color: ink(28),
@@ -122,7 +123,7 @@ export default function AlbescentFactionHero({
 
           {/* Blurb — the faction's own description */}
           {description && (
-            <p style={{ fontFamily: MONO, fontSize: 9.5, lineHeight: 1.74, color: ink(46), maxWidth: 490, marginBottom: 26 }}>
+            <p className="content-text" style={{ fontFamily: MONO, lineHeight: 1.74, color: ink(46), maxWidth: 490, marginBottom: 26 }}>
               {description}
             </p>
           )}
@@ -131,10 +132,11 @@ export default function AlbescentFactionHero({
           <div style={{ display: "flex", gap: 26, flexWrap: "wrap" }}>
             {stats.map((s) => (
               <div key={s.label} style={{ paddingTop: 12, borderTop: `1px solid ${BORDER}`, minWidth: 80 }}>
+                {/* ornament: ledger numeral in the vellum display face, sized to its cap-height; already above the content floor */}
                 <div style={{ fontFamily: FONT, fontStyle: "italic", fontWeight: 300, fontSize: 26, lineHeight: 1, color: ink(68), marginBottom: 5 }}>
                   {s.value}
                 </div>
-                <div style={{ fontFamily: MONO, fontSize: 7, letterSpacing: "0.2em", textTransform: "uppercase", color: ink(26) }}>
+                <div style={{ fontFamily: MONO, fontSize: "var(--text-xs)", letterSpacing: "0.2em", textTransform: "uppercase", color: ink(26) }}>
                   {s.label}
                 </div>
               </div>

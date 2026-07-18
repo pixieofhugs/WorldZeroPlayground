@@ -93,7 +93,7 @@ export default function UaFactionHero({
               <div
                 style={{
                   fontFamily: ENGRAVED,
-                  fontSize: 11,
+                  fontSize: "var(--text-md)",
                   letterSpacing: "0.16em",
                   textTransform: "uppercase",
                   color: ACCENT,
@@ -106,7 +106,7 @@ export default function UaFactionHero({
               <div
                 style={{
                   fontFamily: ENGRAVED,
-                  fontSize: 8,
+                  fontSize: "var(--text-xs)",
                   letterSpacing: "0.3em",
                   textTransform: "uppercase",
                   color: MUTED,
@@ -122,6 +122,7 @@ export default function UaFactionHero({
                   fontFamily: DISPLAY,
                   fontStyle: "italic",
                   fontWeight: 700,
+                  // ornament: gilt regal wordmark — the UA hero's display type
                   fontSize: 54,
                   lineHeight: 1.04,
                   letterSpacing: "0.01em",
@@ -140,10 +141,10 @@ export default function UaFactionHero({
 
               {/* statement */}
               <p
+                className="content-text"
                 style={{
                   fontFamily: DISPLAY,
                   fontStyle: "italic",
-                  fontSize: 15,
                   lineHeight: 1.7,
                   color: SUB,
                   maxWidth: 560,
@@ -172,7 +173,7 @@ export default function UaFactionHero({
                   <span
                     style={{
                       fontFamily: ENGRAVED,
-                      fontSize: 8.5,
+                      fontSize: "var(--text-xs)",
                       letterSpacing: "0.12em",
                       textTransform: "uppercase",
                       color: MUTED,
@@ -181,11 +182,11 @@ export default function UaFactionHero({
                     {s.label}
                   </span>
                   <span
+                    className="content-title"
                     style={{
                       fontFamily: DISPLAY,
                       fontStyle: "italic",
                       fontWeight: 700,
-                      fontSize: 23,
                       lineHeight: 1,
                       color: ACCENT,
                     }}

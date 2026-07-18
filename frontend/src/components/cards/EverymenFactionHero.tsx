@@ -119,7 +119,7 @@ export default function EverymenFactionHero({
             <div
               style={{
                 fontFamily: "var(--font-body)",
-                fontSize: 10,
+                fontSize: "var(--text-base)",
                 letterSpacing: "0.3em",
                 textTransform: "uppercase",
                 color: GOLD,
@@ -131,6 +131,7 @@ export default function EverymenFactionHero({
             <h1
               style={{
                 fontFamily: "var(--font-accent)",
+                // ornament: union-poster wordmark — accent face at 0.82 leading, hard drop shadow
                 fontSize: 76,
                 lineHeight: 0.82,
                 letterSpacing: "0.01em",
@@ -148,6 +149,7 @@ export default function EverymenFactionHero({
                 marginTop: 12,
                 background: INK,
                 color: GOLD,
+                // ornament: struck motto plaque — poster type set to the ink block
                 fontFamily: "var(--font-accent)",
                 fontSize: 17,
                 letterSpacing: "0.18em",
@@ -157,9 +159,9 @@ export default function EverymenFactionHero({
               {i18n.t("feed:factionHero.everymen.motto")}
             </div>
             <p
+              className="content-text"
               style={{
                 fontFamily: "var(--font-body)",
-                fontSize: 12.5,
                 lineHeight: 1.6,
                 maxWidth: 560,
                 margin: "13px 0 0",
@@ -199,7 +201,7 @@ export default function EverymenFactionHero({
               <span
                 style={{
                   fontFamily: "var(--font-body)",
-                  fontSize: 9,
+                  fontSize: "var(--text-sm)",
                   letterSpacing: "0.14em",
                   textTransform: "uppercase",
                   color: CREAM,
@@ -208,6 +210,7 @@ export default function EverymenFactionHero({
               >
                 {s.label}
               </span>
+              {/* ornament: ledger numeral in the poster face, sized to its cap-height; above the floor already */}
               <span style={{ fontFamily: "var(--font-accent)", fontSize: 34, lineHeight: 0.8, color: GOLD }}>
                 {s.value}
               </span>

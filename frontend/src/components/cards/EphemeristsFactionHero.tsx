@@ -80,7 +80,7 @@ export default function EphemeristsFactionHero({
           <div
             style={{
               fontFamily: "var(--eph-serif)",
-              fontSize: 10,
+              fontSize: "var(--text-base)",
               letterSpacing: "0.28em",
               textTransform: "uppercase",
               color: "var(--eph-gold-light)",
@@ -93,6 +93,7 @@ export default function EphemeristsFactionHero({
             style={{
               fontFamily: "var(--eph-display)",
               fontWeight: 800,
+              // ornament: codex wordmark — display serif at 0.88 leading with a letterpress shadow
               fontSize: 52,
               lineHeight: 0.88,
               letterSpacing: "0.02em",
@@ -111,7 +112,7 @@ export default function EphemeristsFactionHero({
               color: "var(--eph-gold-light)",
               fontFamily: "var(--eph-display)",
               fontWeight: 600,
-              fontSize: 14,
+              fontSize: "var(--text-xl)",
               letterSpacing: "0.26em",
               padding: "5px 16px",
               border: "1px solid var(--eph-gold-deep)",
@@ -120,9 +121,9 @@ export default function EphemeristsFactionHero({
             {i18n.t("feed:factionHero.ephemerists.motto")}
           </div>
           <p
+            className="content-text"
             style={{
               fontFamily: "var(--eph-serif)",
-              fontSize: 13.5,
               lineHeight: 1.6,
               maxWidth: 580,
               margin: "14px 0 0",
@@ -130,12 +131,14 @@ export default function EphemeristsFactionHero({
             }}
           >
             {description ?? i18n.t("feed:factionHero.ephemerists.descriptionFallback")}
+            {/* Gloss is a full catalog sentence -> content floor; the script face and
+                the dimmed parchment carry the hierarchy instead of a smaller size. */}
             <span
+              className="content-text"
               style={{
                 display: "block",
                 fontFamily: "var(--eph-script)",
                 fontStyle: "italic",
-                fontSize: 11.5,
                 color: "color-mix(in srgb, var(--eph-parchment) 62%, transparent)",
                 marginTop: 8,
               }}
@@ -167,10 +170,10 @@ export default function EphemeristsFactionHero({
                   borderTop: i > 0 ? "1px solid color-mix(in srgb, var(--eph-gold-light) 18%, transparent)" : undefined,
                 }}
               >
-                <span style={{ fontFamily: "var(--eph-serif)", fontSize: 9, letterSpacing: "0.14em", textTransform: "uppercase", color: "color-mix(in srgb, var(--eph-parchment) 75%, transparent)" }}>
+                <span style={{ fontFamily: "var(--eph-serif)", fontSize: "var(--text-sm)", letterSpacing: "0.14em", textTransform: "uppercase", color: "color-mix(in srgb, var(--eph-parchment) 75%, transparent)" }}>
                   {s.label}
                 </span>
-                <span style={{ fontFamily: "var(--eph-display)", fontWeight: 700, fontSize: 24, lineHeight: 0.85, color: "var(--eph-gold-light)" }}>
+                <span className="content-title" style={{ fontFamily: "var(--eph-display)", fontWeight: 700, lineHeight: 0.85, color: "var(--eph-gold-light)" }}>
                   {s.value}
                 </span>
               </div>

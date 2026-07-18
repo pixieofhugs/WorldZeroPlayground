@@ -119,7 +119,7 @@ export function EphEyebrow({
           style={{
             fontFamily: "var(--eph-script)",
             fontStyle: "italic",
-            fontSize: 8.5,
+            fontSize: "var(--text-xs)",
             color: dark
               ? "var(--eph-muted)"
               : "color-mix(in srgb, var(--eph-parchment) 65%, transparent)",
