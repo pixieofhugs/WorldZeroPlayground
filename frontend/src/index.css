@@ -350,7 +350,7 @@
      only and are deliberately NOT repeated under [data-theme="dark"] — the
      canvas never flips (epic #654 decision #8; same pattern as the rank colors
      above and the "Constants keep their role in both themes" faction tokens).
-     Decorative tokens (glow/ring/sparkle/tether) carry no AA duty. The three
+     Decorative tokens (glow/ring/sparkle/you-ring) carry no AA duty. The three
      text-bearing tokens are measured against --sky-bg and clear AA:
        --sky-name        #efe6d4 → 15.48:1
        --sky-crown       #f0c85a → 11.99:1 (gilt icon)
@@ -360,10 +360,39 @@
   --sky-glow: rgba(240, 202, 94, 0.16); /* warm gilt "sun" glow — central + orb boxShadow */
   --sky-ring: rgba(239, 230, 212, 0.12); /* faint orbit-ring stroke */
   --sky-sparkle: rgba(239, 230, 212, 0.55); /* starfield dots */
-  --sky-tether: rgba(239, 230, 212, 0.35); /* dashed pinned-viewer tether */
   --sky-crown: #f0c85a; /* gilt rank-1 crown */
   --sky-name: #efe6d4; /* node name/score — AA 15.48:1 */
   --sky-name-muted: #8a8070; /* faded/zero names + zero-state — AA 4.94:1 */
+  --sky-you: rgba(239, 230, 212, 0.7); /* "you" ring around the viewer's own orb (#684 §7) */
+
+  /* ── Meadow field (Players redesign, #684) ──
+     The Constellation's LIGHT-theme sibling. The --sky-* tokens above are
+     measured against a night canvas and invert into AA failures on a daylit
+     field, so this is a separate family rather than a re-point (#684 §9). The
+     Meadow only ever renders under the light theme (the dispatch in
+     Leaderboard.tsx hands dark to the Constellation), so these live in :root —
+     light's own scope — and are deliberately NOT repeated under
+     [data-theme="dark"].
+
+     Decorative tokens (bg/glow/field/stem/pollen/petal/you-ring) carry no AA
+     duty — the same carve-out the sky's ornament tokens got. Petal colour comes
+     from the faction palette at render time; NAMES ARE INK, never a faction
+     hue, exactly as the sky keeps names near-white and faction colour in the
+     orb border. The three text-bearing tokens are measured against
+     --meadow-bg (#eef4e2, relative luminance 0.8835) and clear AA:
+       --meadow-name        #1e1c17 → 15.13:1
+       --meadow-champion    #6d4b06 →  7.02:1 (champion's printed score)
+       --meadow-name-muted  #6b6553 →  5.17:1 (zero-score names + zero-state copy) */
+  --meadow-bg: #eef4e2; /* daylit field canvas */
+  --meadow-glow: rgba(255, 236, 168, 0.55); /* low sun glow behind the front bloom */
+  --meadow-field: rgba(140, 178, 108, 0.28); /* receding grass bands */
+  --meadow-stem: #7fa05a; /* flower stems */
+  --meadow-pollen: rgba(214, 168, 40, 0.55); /* drifting pollen motes */
+  --meadow-champion-petal: #f0c85a; /* golden bloom petals — decorative, not text */
+  --meadow-you: rgba(45, 40, 30, 0.55); /* "you" ring around the viewer's own bloom (#684 §7) */
+  --meadow-name: #1e1c17; /* bloom name — AA 15.13:1 */
+  --meadow-name-muted: #6b6553; /* faded/zero names + zero-state — AA 5.17:1 */
+  --meadow-champion: #6d4b06; /* champion's score — AA 7.02:1 */
 
   /* ── Level track node colors ── */
   --color-level-inactive: #c8c0b0;

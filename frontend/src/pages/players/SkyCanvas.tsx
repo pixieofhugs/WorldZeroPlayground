@@ -1,5 +1,16 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, type ComponentType } from 'react'
 import Constellation, { type RankedPlayer } from './Constellation'
+
+/** What a visualization must accept to be swappable into this canvas. The
+ *  Constellation and the Meadow are siblings on exactly these props (#684 §2). */
+export interface PlayersVizProps {
+  players: RankedPlayer[]
+  maxScore: number
+  myCharId: number | null
+  population?: number
+  stageWidth: number
+  stageHeight: number
+}
 
 /** Desktop cap. Uncapped the sky sprawls on an ultrawide and shoves the roster
  *  far down the page; 900px keeps it a hero, not a horizon (#730 §1). */
@@ -25,6 +36,10 @@ export interface SkyCanvasProps {
   /** Cap the stage; omit for the phone, where the column is the cap. */
   maxWidth?: number
   aspect?: number
+  /** Which viz to draw into the measured stage. Defaults to the Constellation,
+   *  so mobile (#657's concern, still sky-only) is untouched; the desktop
+   *  Leaderboard passes the Meadow under the light theme (#684 §§2, 10). */
+  viz?: ComponentType<PlayersVizProps>
 }
 
 /**
@@ -47,6 +62,7 @@ export default function SkyCanvas({
   population,
   maxWidth,
   aspect = DESKTOP_SKY_ASPECT,
+  viz: Viz = Constellation,
 }: SkyCanvasProps) {
   const ref = useRef<HTMLDivElement>(null)
   // Seeded, never 0: see FALLBACK_SKY_WIDTH. The measurement then corrects it on
@@ -68,7 +84,7 @@ export default function SkyCanvas({
 
   return (
     <div ref={ref} className="mx-auto" style={{ maxWidth }}>
-      <Constellation
+      <Viz
         players={players}
         maxScore={maxScore}
         myCharId={myCharId}
