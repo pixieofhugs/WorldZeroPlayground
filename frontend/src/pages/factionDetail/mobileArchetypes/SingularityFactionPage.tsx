@@ -34,7 +34,7 @@ const signal = (pct: number): string => `color-mix(in srgb, ${SIGNAL} ${pct}%, t
 
 const kicker: CSSProperties = {
   fontFamily: FONT,
-  fontSize: 8,
+  fontSize: 'var(--text-xs)',
   letterSpacing: '0.2em',
   textTransform: 'uppercase',
   color: signal(60),
@@ -57,6 +57,7 @@ function NodeGlyph({ name, size }: { name: string; size: number }) {
         alignItems: 'center',
         justifyContent: 'center',
         fontFamily: FONT,
+        // ornament: avatar monogram, sized from the node it sits in — geometry, not text.
         fontSize: size * 0.36,
         color: SIGNAL,
       }}
@@ -69,7 +70,7 @@ function NodeGlyph({ name, size }: { name: string; size: number }) {
 function SectionHead({ children }: { children: ReactNode }) {
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
-      <span style={{ fontFamily: FONT, fontSize: 11, letterSpacing: '0.1em', textTransform: 'uppercase', color: PHOSPHOR }}>
+      <span style={{ fontFamily: FONT, fontSize: 'var(--text-md)', letterSpacing: '0.1em', textTransform: 'uppercase', color: PHOSPHOR }}>
         {children}
       </span>
       <span style={{ flex: 1, height: 1, background: signal(30) }} />
@@ -80,7 +81,7 @@ function SectionHead({ children }: { children: ReactNode }) {
 const joinButton: CSSProperties = {
   width: '100%',
   fontFamily: FONT,
-  fontSize: 13,
+  fontSize: 'var(--text-xl)',
   letterSpacing: '0.12em',
   textTransform: 'uppercase',
   color: VOID,
@@ -113,11 +114,12 @@ export default function SingularityFactionPage({ state }: { state: FactionDetail
         />
         <div style={{ position: 'relative' }}>
           <div style={{ ...kicker, color: PHOSPHOR }}>{t('singularity.mobile.eyebrow')}</div>
+          {/* ornament: masthead display type — the terminal banner is the skin's identity (§4/§270). */}
           <h1 style={{ fontFamily: FONT, fontSize: 26, lineHeight: 1.05, color: PHOSPHOR, letterSpacing: '0.03em', margin: '6px 0 0' }}>
             {'> '}
             {name}
           </h1>
-          <p style={{ fontFamily: FONT, fontSize: 11, lineHeight: 1.7, color: phosphor(60), margin: '10px 0 0' }}>
+          <p className="content-text" style={{ fontFamily: FONT, lineHeight: 1.7, color: phosphor(60), margin: '10px 0 0' }}>
             {factionDescription(faction.slug)}
           </p>
           <div style={{ display: 'flex', gap: 8, marginTop: 15 }}>
@@ -135,7 +137,7 @@ export default function SingularityFactionPage({ state }: { state: FactionDetail
       <section className="mt-6">
         <SectionHead>{t('mobile.topMembers')}</SectionHead>
         {topMembers.length === 0 ? (
-          <p style={{ fontFamily: FONT, fontSize: 12, color: phosphor(50), margin: 0 }}>{t('mobile.membersEmpty')}</p>
+          <p className="content-text" style={{ fontFamily: FONT, color: phosphor(50), margin: 0 }}>{t('mobile.membersEmpty')}</p>
         ) : (
           <div className="flex flex-col gap-2">
             {topMembers.map((m, index) => (
@@ -149,7 +151,7 @@ export default function SingularityFactionPage({ state }: { state: FactionDetail
       <section className="mt-6">
         <SectionHead>{t('mobile.recentPraxis')}</SectionHead>
         {recentPraxis.length === 0 ? (
-          <p style={{ fontFamily: FONT, fontSize: 12, color: phosphor(50), margin: 0 }}>{t('mobile.praxisEmpty')}</p>
+          <p className="content-text" style={{ fontFamily: FONT, color: phosphor(50), margin: 0 }}>{t('mobile.praxisEmpty')}</p>
         ) : (
           <div className="flex flex-col gap-3">
             {recentPraxis.map((p) => (
@@ -160,7 +162,7 @@ export default function SingularityFactionPage({ state }: { state: FactionDetail
       </section>
 
       {membership.state === 'gate' && (
-        <p style={{ fontFamily: FONT, fontSize: 12, color: phosphor(55), marginTop: 24 }}>
+        <p className="content-text" style={{ fontFamily: FONT, color: phosphor(55), marginTop: 24 }}>
           {t('mobile.gateHint', { faction: name })}
         </p>
       )}
@@ -169,7 +171,7 @@ export default function SingularityFactionPage({ state }: { state: FactionDetail
       {membership.state === 'eligible' && (
         <MobileStickyBar>
           {membership.joinError && (
-            <p style={{ fontFamily: FONT, fontSize: 12, color: 'var(--color-danger)' }}>{membership.joinError}</p>
+            <p className="content-text" style={{ fontFamily: FONT, color: 'var(--color-danger)' }}>{membership.joinError}</p>
           )}
           {!confirming ? (
             <button type="button" onClick={() => setConfirming(true)} style={joinButton}>
@@ -177,7 +179,7 @@ export default function SingularityFactionPage({ state }: { state: FactionDetail
             </button>
           ) : (
             <>
-              <p style={{ fontFamily: FONT, fontSize: 12, lineHeight: 1.6, color: phosphor(72) }}>
+              <p className="content-text" style={{ fontFamily: FONT, lineHeight: 1.6, color: phosphor(72) }}>
                 {switching
                   ? t('detail.join.confirmSwitch', { faction: name, current: factionName(currentSlug) })
                   : t('detail.join.confirm', { faction: name })}
@@ -197,7 +199,7 @@ export default function SingularityFactionPage({ state }: { state: FactionDetail
                   disabled={membership.joining}
                   style={{
                     fontFamily: FONT,
-                    fontSize: 11,
+                    fontSize: 'var(--text-md)',
                     letterSpacing: '0.1em',
                     textTransform: 'uppercase',
                     color: signal(60),
@@ -221,7 +223,7 @@ export default function SingularityFactionPage({ state }: { state: FactionDetail
 function HeroStat({ value, label }: { value: number; label: string }) {
   return (
     <div style={{ flex: '1 1 0', textAlign: 'center', background: signal(8), border: `1px solid ${signal(28)}`, padding: '10px 6px' }}>
-      <b style={{ fontFamily: FONT, fontSize: 18, display: 'block', lineHeight: 1, color: PHOSPHOR }}>
+      <b className="content-title" style={{ fontFamily: FONT, display: 'block', lineHeight: 1, color: PHOSPHOR }}>
         {value}
       </b>
       <span style={{ ...kicker, marginTop: 5, display: 'block' }}>{label}</span>
@@ -245,14 +247,14 @@ function MemberRow({ rank, member }: { rank: number; member: CharacterOut }) {
         textDecoration: 'none',
       }}
     >
-      <span style={{ fontFamily: FONT, fontSize: 14, color: SIGNAL, width: 16, flex: 'none' }}>{rank}</span>
+      <span style={{ fontFamily: FONT, fontSize: 'var(--text-xl)', color: SIGNAL, width: 16, flex: 'none' }}>{rank}</span>
       <NodeGlyph name={member.display_name} size={28} />
       <span
+        className="content-text"
         style={{
           flex: 1,
           minWidth: 0,
           fontFamily: FONT,
-          fontSize: 13,
           color: PHOSPHOR,
           overflow: 'hidden',
           textOverflow: 'ellipsis',
@@ -261,7 +263,7 @@ function MemberRow({ rank, member }: { rank: number; member: CharacterOut }) {
       >
         {member.display_name}
       </span>
-      <span style={{ fontFamily: FONT, fontSize: 9, letterSpacing: '0.04em', color: AMBER, flex: 'none' }}>
+      <span style={{ fontFamily: FONT, fontSize: 'var(--text-sm)', letterSpacing: '0.04em', color: AMBER, flex: 'none' }}>
         {t('mobile.memberStat', { level: member.level, score: member.all_time_score.toLocaleString() })}
       </span>
     </Link>

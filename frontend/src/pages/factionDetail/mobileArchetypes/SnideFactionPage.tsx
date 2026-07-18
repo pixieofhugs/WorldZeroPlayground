@@ -41,7 +41,7 @@ const CARD_SHADOW = '5px 6px 0 rgba(0,0,0,.5)'
 
 const kicker: CSSProperties = {
   fontFamily: TYPE,
-  fontSize: 8,
+  fontSize: 'var(--text-xs)',
   letterSpacing: '0.24em',
   textTransform: 'uppercase',
   color: MUTED,
@@ -62,6 +62,7 @@ function Mug({ name, size }: { name: string; size: number }) {
         alignItems: 'center',
         justifyContent: 'center',
         fontFamily: IMPACT,
+        // ornament: avatar monogram, sized from the mugshot it sits in — geometry, not text.
         fontSize: size * 0.46,
         color: INK,
       }}
@@ -74,7 +75,7 @@ function Mug({ name, size }: { name: string; size: number }) {
 function SectionHead({ children }: { children: ReactNode }) {
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
-      <span style={{ fontFamily: COND, fontSize: 15, letterSpacing: '0.06em', textTransform: 'uppercase', color: ACID }}>
+      <span style={{ fontFamily: COND, fontSize: 'var(--text-xl)', letterSpacing: '0.06em', textTransform: 'uppercase', color: ACID }}>
         {children}
       </span>
       <span style={{ flex: 1, height: 1, background: LINE }} />
@@ -85,7 +86,7 @@ function SectionHead({ children }: { children: ReactNode }) {
 const joinButton: CSSProperties = {
   width: '100%',
   fontFamily: BLACK,
-  fontSize: 13,
+  fontSize: 'var(--text-xl)',
   letterSpacing: '0.06em',
   textTransform: 'uppercase',
   color: PAPER,
@@ -116,10 +117,11 @@ export default function SnideFactionPage({ state }: { state: FactionDetailState 
         <span aria-hidden style={{ position: 'absolute', top: -11, left: 26, width: 64, height: 24, background: TAPE, transform: 'rotate(-5deg)', opacity: 0.92 }} />
         <div style={{ position: 'relative' }}>
           <div style={{ ...kicker, color: ACID }}>{t('snide.mobile.eyebrow')}</div>
+          {/* ornament: masthead display type — the flyposted title is the skin's identity (§4/§270). */}
           <h1 style={{ fontFamily: COND, fontSize: 34, letterSpacing: '0.02em', lineHeight: 1.02, color: TEXT, margin: '4px 0 0' }}>
             {name}
           </h1>
-          <p style={{ fontFamily: TYPE, fontSize: 12.5, lineHeight: 1.6, color: MUTED, margin: '8px 0 0' }}>
+          <p className="content-text" style={{ fontFamily: TYPE, lineHeight: 1.6, color: MUTED, margin: '8px 0 0' }}>
             {factionDescription(faction.slug)}
           </p>
           <div style={{ display: 'flex', gap: 8, marginTop: 15 }}>
@@ -137,7 +139,7 @@ export default function SnideFactionPage({ state }: { state: FactionDetailState 
       <section className="mt-6">
         <SectionHead>{t('mobile.topMembers')}</SectionHead>
         {topMembers.length === 0 ? (
-          <p style={{ fontFamily: MARKER, fontSize: 14, color: MUTED, margin: 0, transform: 'rotate(-1deg)' }}>{t('mobile.membersEmpty')}</p>
+          <p className="content-text" style={{ fontFamily: MARKER, color: MUTED, margin: 0, transform: 'rotate(-1deg)' }}>{t('mobile.membersEmpty')}</p>
         ) : (
           <div className="flex flex-col gap-2">
             {topMembers.map((m, index) => (
@@ -151,7 +153,7 @@ export default function SnideFactionPage({ state }: { state: FactionDetailState 
       <section className="mt-6">
         <SectionHead>{t('mobile.recentPraxis')}</SectionHead>
         {recentPraxis.length === 0 ? (
-          <p style={{ fontFamily: MARKER, fontSize: 14, color: MUTED, margin: 0, transform: 'rotate(-1deg)' }}>{t('mobile.praxisEmpty')}</p>
+          <p className="content-text" style={{ fontFamily: MARKER, color: MUTED, margin: 0, transform: 'rotate(-1deg)' }}>{t('mobile.praxisEmpty')}</p>
         ) : (
           <div className="flex flex-col gap-3">
             {recentPraxis.map((p) => (
@@ -162,7 +164,7 @@ export default function SnideFactionPage({ state }: { state: FactionDetailState 
       </section>
 
       {membership.state === 'gate' && (
-        <p style={{ fontFamily: MARKER, fontSize: 14, color: MUTED, marginTop: 24, transform: 'rotate(-1deg)' }}>
+        <p className="content-text" style={{ fontFamily: MARKER, color: MUTED, marginTop: 24, transform: 'rotate(-1deg)' }}>
           {t('mobile.gateHint', { faction: name })}
         </p>
       )}
@@ -171,7 +173,7 @@ export default function SnideFactionPage({ state }: { state: FactionDetailState 
       {membership.state === 'eligible' && (
         <MobileStickyBar>
           {membership.joinError && (
-            <p style={{ fontFamily: TYPE, fontSize: 12, color: 'var(--color-danger)' }}>{membership.joinError}</p>
+            <p className="content-text" style={{ fontFamily: TYPE, color: 'var(--color-danger)' }}>{membership.joinError}</p>
           )}
           {!confirming ? (
             <button type="button" onClick={() => setConfirming(true)} style={joinButton}>
@@ -179,7 +181,7 @@ export default function SnideFactionPage({ state }: { state: FactionDetailState 
             </button>
           ) : (
             <>
-              <p style={{ fontFamily: COND, fontSize: 15, letterSpacing: '0.02em', color: WALL_TEXT }}>
+              <p className="content-text" style={{ fontFamily: COND, letterSpacing: '0.02em', color: WALL_TEXT }}>
                 {switching
                   ? t('detail.join.confirmSwitch', { faction: name, current: factionName(currentSlug) })
                   : t('detail.join.confirm', { faction: name })}
@@ -199,7 +201,7 @@ export default function SnideFactionPage({ state }: { state: FactionDetailState 
                   disabled={membership.joining}
                   style={{
                     fontFamily: TYPE,
-                    fontSize: 11,
+                    fontSize: 'var(--text-md)',
                     letterSpacing: '0.06em',
                     textTransform: 'uppercase',
                     color: MUTED,
@@ -223,7 +225,7 @@ export default function SnideFactionPage({ state }: { state: FactionDetailState 
 function HeroStat({ value, label }: { value: number; label: string }) {
   return (
     <div style={{ flex: '1 1 0', textAlign: 'center', background: 'rgba(255,255,255,0.04)', border: `1px solid ${LINE}`, padding: '10px 6px' }}>
-      <b style={{ fontFamily: IMPACT, fontSize: 20, display: 'block', lineHeight: 1, color: ACID }}>
+      <b className="content-title" style={{ fontFamily: IMPACT, display: 'block', lineHeight: 1, color: ACID }}>
         {value}
       </b>
       <span style={{ ...kicker, marginTop: 5, display: 'block' }}>{label}</span>
@@ -248,14 +250,14 @@ function MemberRow({ rank, member }: { rank: number; member: CharacterOut }) {
         textDecoration: 'none',
       }}
     >
-      <span style={{ fontFamily: IMPACT, fontSize: 16, color: ACID, width: 16, flex: 'none' }}>{rank}</span>
+      <span style={{ fontFamily: IMPACT, fontSize: 'var(--text-xl)', color: ACID, width: 16, flex: 'none' }}>{rank}</span>
       <Mug name={member.display_name} size={28} />
       <span
+        className="content-text"
         style={{
           flex: 1,
           minWidth: 0,
           fontFamily: COND,
-          fontSize: 16,
           letterSpacing: '0.02em',
           color: TEXT,
           overflow: 'hidden',
@@ -265,7 +267,7 @@ function MemberRow({ rank, member }: { rank: number; member: CharacterOut }) {
       >
         {member.display_name}
       </span>
-      <span style={{ fontFamily: TYPE, fontSize: 9, letterSpacing: '0.06em', color: MUTED, flex: 'none' }}>
+      <span style={{ fontFamily: TYPE, fontSize: 'var(--text-sm)', letterSpacing: '0.06em', color: MUTED, flex: 'none' }}>
         {t('mobile.memberStat', { level: member.level, score: member.all_time_score.toLocaleString() })}
       </span>
     </Link>
