@@ -75,7 +75,9 @@ function RansomChar({ ch, index }: { ch: string; index: number }) {
         fontSize: sz,
         lineHeight: 1,
         fontWeight: 700,
+        // eslint-disable-next-line local/no-raw-style-values -- ornament: ransom-note letter tile; the mat is cut tight around one glyph.
         padding: "2px 6px",
+        // eslint-disable-next-line local/no-raw-style-values -- ornament: the scraps overlap into a word; a 4px gutter would space them out into a row of chips.
         margin: "2px 1px",
         transform: `rotate(${rot}deg)`,
         boxShadow: "1px 1px 0 rgba(0,0,0,.2)",
@@ -121,7 +123,7 @@ export default function SnideEditPraxis({ state }: Props) {
         color: ink,
         fontFamily: "'Courier Prime', monospace",
         position: "relative",
-        padding: "34px 28px 48px",
+        padding: "var(--space-3xl) var(--space-xl) var(--space-4xl)",
         minHeight: "100vh",
         backgroundImage: `repeating-linear-gradient(7deg, ${lightBg} 0, ${lightBg} 1px, transparent 1px, transparent 4px), repeating-linear-gradient(-93deg, rgba(0,0,0,.015) 0, rgba(0,0,0,.015) 1px, transparent 1px, transparent 5px)`,
       }}
@@ -135,12 +137,12 @@ export default function SnideEditPraxis({ state }: Props) {
         />
 
         {/* Top punk header */}
-        <div style={{ marginBottom: 18, position: "relative" }}>
+        <div style={{ marginBottom: "var(--space-lg)", position: "relative" }}>
           <div
             style={{
               background: accentDeep,
               color: "var(--color-text-on-accent)",
-              padding: "8px 14px",
+              padding: "var(--space-sm) var(--space-md)",
               transform: "rotate(-1.2deg)",
               fontFamily: "'Bebas Neue', sans-serif",
               letterSpacing: "0.2em",
@@ -153,7 +155,7 @@ export default function SnideEditPraxis({ state }: Props) {
           </div>
         </div>
 
-        <div style={{ marginBottom: 18 }}>
+        <div style={{ marginBottom: "var(--space-lg)" }}>
           <RainbowTitle
             text={t("editPraxis.snide.pageTitle")}
             size={40}
@@ -165,10 +167,10 @@ export default function SnideEditPraxis({ state }: Props) {
         <div
           style={{
             position: "relative",
-            marginBottom: 24,
+            marginBottom: "var(--space-xl)",
             background: surface,
             color: ink,
-            padding: "14px 18px",
+            padding: "var(--space-md) var(--space-lg)",
             transform: "rotate(-1deg)",
             fontFamily: "'Special Elite', serif",
             borderTop: `3px solid ${accent}`,
@@ -181,15 +183,15 @@ export default function SnideEditPraxis({ state }: Props) {
           >
             {t("editPraxis.snide.taskRefLabel")}
           </span>
-          <div style={{ fontSize: "var(--text-content)", lineHeight: 1.25, marginTop: 6 }}>
+          <div style={{ fontSize: "var(--text-content)", lineHeight: 1.25, marginTop: "var(--space-xs)" }}>
             {praxis.task_title}
           </div>
           {task?.description && (
-            <div style={{ fontSize: "var(--text-content)", lineHeight: 1.45, color: muted, marginTop: 6 }}>
+            <div style={{ fontSize: "var(--text-content)", lineHeight: 1.45, color: muted, marginTop: "var(--space-xs)" }}>
               {task.description}
             </div>
           )}
-          <div style={{ marginTop: 8 }}>
+          <div style={{ marginTop: "var(--space-sm)" }}>
             <TaskMetaInline
               praxis={praxis}
               task={task}
@@ -200,7 +202,7 @@ export default function SnideEditPraxis({ state }: Props) {
 
         {/* Mode */}
         {!state.controlsLocked && (
-          <div style={{ marginBottom: 22 }}>
+          <div style={{ marginBottom: "var(--space-xl)" }}>
             <div
               style={{
                 display: "inline-block",
@@ -208,8 +210,8 @@ export default function SnideEditPraxis({ state }: Props) {
                 color: ink,
                 fontFamily: "'Permanent Marker', cursive",
                 fontSize: "var(--text-lg)",
-                padding: "3px 12px",
-                marginBottom: 10,
+                padding: "var(--space-xs) var(--space-md)",
+                marginBottom: "var(--space-sm)",
                 transform: "rotate(-1.5deg)",
               }}
             >
@@ -218,7 +220,7 @@ export default function SnideEditPraxis({ state }: Props) {
             <ModePicker
               state={state}
               skin={{
-                containerStyle: { display: "flex", gap: 12, flexWrap: "wrap" },
+                containerStyle: { display: "flex", gap: "var(--space-md)", flexWrap: "wrap" },
                 options: modeOptions,
                 allowedModes,
                 renderOption: (opt, { active, disabled, onSelect, index }) => {
@@ -243,7 +245,7 @@ export default function SnideEditPraxis({ state }: Props) {
                         border: active
                           ? `2.5px solid ${accentDeep}`
                           : `2px dashed ${accentDeep}`,
-                        padding: "12px 16px",
+                        padding: "var(--space-md) var(--space-lg)",
                         position: "relative",
                         fontFamily: opt.font,
                         transform: `rotate(${active ? (index % 2 ? 1.5 : -1.8) : index % 2 ? -0.5 : 0.5}deg)`,
@@ -252,7 +254,7 @@ export default function SnideEditPraxis({ state }: Props) {
                       }}
                     >
                       <div
-                        style={{ fontSize: "var(--text-title)", lineHeight: 1, marginBottom: 4 }}
+                        style={{ fontSize: "var(--text-title)", lineHeight: 1, marginBottom: "var(--space-xs)" }}
                       >
                         {opt.label}
                       </div>
@@ -277,15 +279,15 @@ export default function SnideEditPraxis({ state }: Props) {
         {state.showInviteBox && (
             <div
               style={{
-                marginBottom: 22,
-                padding: "14px 16px",
+                marginBottom: "var(--space-xl)",
+                padding: "var(--space-md) var(--space-lg)",
                 border: `2px solid ${accentDeep}`,
                 background: `repeating-linear-gradient(135deg, ${surface} 0, ${surface} 16px, ${lightBg} 16px, ${lightBg} 32px)`,
               }}
             >
               <span
                 className="eyebrow"
-                style={{ color: hot, display: "block", marginBottom: 8 }}
+                style={{ color: hot, display: "block", marginBottom: "var(--space-sm)" }}
               >
                 {state.duelMode
                   ? t("editPraxis.snide.inviteLabelDuel")
@@ -312,8 +314,8 @@ export default function SnideEditPraxis({ state }: Props) {
         {/* Title — ransom note + editable input */}
         <div
           style={{
-            marginBottom: 22,
-            padding: "18px 14px",
+            marginBottom: "var(--space-xl)",
+            padding: "var(--space-lg) var(--space-md)",
             background: lightBg,
             border: `2px dashed ${accentDeep}`,
           }}
@@ -322,7 +324,7 @@ export default function SnideEditPraxis({ state }: Props) {
             style={{
               display: "flex",
               justifyContent: "space-between",
-              marginBottom: 10,
+              marginBottom: "var(--space-sm)",
             }}
           >
             <span className="eyebrow" style={{ color: accentDeep }}>
@@ -330,7 +332,7 @@ export default function SnideEditPraxis({ state }: Props) {
             </span>
             <TitleCounter length={state.title.length} color={accentDeep} />
           </div>
-          <div style={{ minHeight: 60, lineHeight: 1.4, marginBottom: 10 }}>
+          <div style={{ minHeight: 60, lineHeight: 1.4, marginBottom: "var(--space-sm)" }}>
             {state.title.split("").map((ch, index) => (
               <RansomChar key={index} ch={ch} index={index} />
             ))}
@@ -347,7 +349,7 @@ export default function SnideEditPraxis({ state }: Props) {
               inputStyle: {
                 width: "100%",
                 fontFamily: "'Courier Prime', monospace",
-                padding: "6px 10px",
+                padding: "var(--space-xs) var(--space-sm)",
                 background: surface,
                 color: ink,
                 border: `1.5px dashed ${accentDeep}`,
@@ -359,10 +361,10 @@ export default function SnideEditPraxis({ state }: Props) {
         </div>
 
         {/* Body */}
-        <div style={{ marginBottom: 24 }}>
+        <div style={{ marginBottom: "var(--space-xl)" }}>
           <span
             className="eyebrow"
-            style={{ display: "block", marginBottom: 8, color: accentDeep }}
+            style={{ display: "block", marginBottom: "var(--space-sm)", color: accentDeep }}
           >
             {t("editPraxis.snide.bodyLabel", { words: state.wordCount })}
           </span>
@@ -379,7 +381,7 @@ export default function SnideEditPraxis({ state }: Props) {
                   color: ink,
                   background: surface,
                   border: `2px solid ${accentDeep}`,
-                  padding: "20px 22px",
+                  padding: "var(--space-lg) var(--space-xl)",
                   outline: "none",
                   resize: "vertical",
                   minHeight: 220,
@@ -392,19 +394,19 @@ export default function SnideEditPraxis({ state }: Props) {
             state={state}
             skin={{
               wrapperStyle: {
-                marginTop: 14,
+                marginTop: "var(--space-md)",
                 background: surface,
                 border: `2px solid ${accentDeep}`,
-                padding: "20px 22px",
+                padding: "var(--space-lg) var(--space-xl)",
                 columnCount: 2,
-                columnGap: 22,
+                columnGap: "var(--space-xl)",
                 columnRule: `0.5px solid ${accentDeep}`,
                 boxShadow: `4px 4px 0 ${accentDeep}`,
               },
               label: (
                 <span
                   className="eyebrow"
-                  style={{ color: accentDeep, display: "block", marginBottom: 6 }}
+                  style={{ color: accentDeep, display: "block", marginBottom: "var(--space-xs)" }}
                 >
                   {t("editPraxis.snide.previewLabel")}
                 </span>
@@ -420,14 +422,14 @@ export default function SnideEditPraxis({ state }: Props) {
 
         {/* Existing media */}
         {state.media.length > 0 && (
-          <div style={{ marginBottom: 22 }}>
+          <div style={{ marginBottom: "var(--space-xl)" }}>
             <span
               className="eyebrow"
-              style={{ display: "block", marginBottom: 10, color: accentDeep }}
+              style={{ display: "block", marginBottom: "var(--space-sm)", color: accentDeep }}
             >
               {t("editPraxis.snide.mediaOnPageLabel")}
             </span>
-            <div style={{ display: "flex", gap: 14, flexWrap: "wrap" }}>
+            <div style={{ display: "flex", gap: "var(--space-md)", flexWrap: "wrap" }}>
               {state.media.map((item, index) => {
                 const src = mediaUrl(item.file_path);
                 const filename =
@@ -438,7 +440,7 @@ export default function SnideEditPraxis({ state }: Props) {
                     style={{
                       position: "relative",
                       border: `2px solid ${accentDeep}`,
-                      padding: 6,
+                      padding: "var(--space-xs)",
                       background: surface,
                       transform: `rotate(${index % 2 ? 2 : -2.4}deg)`,
                       boxShadow: `2px 2px 0 ${accentDeep}`,
@@ -478,7 +480,7 @@ export default function SnideEditPraxis({ state }: Props) {
                     <div
                       style={{
                         fontSize: "var(--text-sm)",
-                        marginTop: 4,
+                        marginTop: "var(--space-xs)",
                         fontStyle: "italic",
                         fontFamily: "'Special Elite', serif",
                         color: accentDeep,
@@ -517,10 +519,10 @@ export default function SnideEditPraxis({ state }: Props) {
         )}
 
         {/* New files */}
-        <div style={{ marginBottom: 24 }}>
+        <div style={{ marginBottom: "var(--space-xl)" }}>
           <span
             className="eyebrow"
-            style={{ display: "block", marginBottom: 10, color: accentDeep }}
+            style={{ display: "block", marginBottom: "var(--space-sm)", color: accentDeep }}
           >
             {t("editPraxis.snide.filesLabel")}
           </span>
@@ -532,7 +534,7 @@ export default function SnideEditPraxis({ state }: Props) {
                 color: "var(--color-text-on-accent)",
                 fontFamily: "'Permanent Marker', cursive",
                 fontSize: "var(--text-xl)",
-                padding: "8px 18px",
+                padding: "var(--space-sm) var(--space-lg)",
                 border: `2px solid ${accentDeep}`,
                 cursor: "pointer",
                 transform: "rotate(-1deg)",
@@ -542,7 +544,7 @@ export default function SnideEditPraxis({ state }: Props) {
               helperStyle: {
                 fontSize: "var(--text-sm)",
                 color: muted,
-                marginTop: 6,
+                marginTop: "var(--space-xs)",
                 fontStyle: "italic",
               },
             }}
@@ -553,15 +555,15 @@ export default function SnideEditPraxis({ state }: Props) {
         {state.showMetatasks && (
           <div
             style={{
-              marginBottom: 22,
-              padding: "14px 16px",
+              marginBottom: "var(--space-xl)",
+              padding: "var(--space-md) var(--space-lg)",
               border: `2px dashed ${accentDeep}`,
               background: lightBg,
             }}
           >
             <span
               className="eyebrow"
-              style={{ display: "block", marginBottom: 10, color: accentDeep }}
+              style={{ display: "block", marginBottom: "var(--space-sm)", color: accentDeep }}
             >
               {t("editPraxis.snide.metatasksLabel")}
             </span>
@@ -569,12 +571,12 @@ export default function SnideEditPraxis({ state }: Props) {
               state={state}
               skin={{
                 rowStyle: (selected) => ({
-                  padding: "10px 8px",
+                  padding: "var(--space-sm)",
                   background: selected ? surface : "transparent",
                   border: selected
                     ? `1.5px solid ${accentDeep}`
                     : "1.5px solid transparent",
-                  marginBottom: 4,
+                  marginBottom: "var(--space-xs)",
                 }),
                 titleColor: ink,
                 descColor: muted,
@@ -591,10 +593,10 @@ export default function SnideEditPraxis({ state }: Props) {
         <div
           style={{
             display: "flex",
-            gap: 16,
+            gap: "var(--space-lg)",
             alignItems: "center",
-            marginTop: 24,
-            paddingTop: 20,
+            marginTop: "var(--space-xl)",
+            paddingTop: "var(--space-lg)",
             borderTop: `2px dashed ${accentDeep}`,
             flexWrap: "wrap",
           }}
@@ -636,7 +638,7 @@ export default function SnideEditPraxis({ state }: Props) {
                 color: "var(--color-text-on-accent)",
                 fontFamily: "'Permanent Marker', cursive",
                 fontSize: "var(--text-title)",
-                padding: "14px 28px",
+                padding: "var(--space-md) var(--space-xl)",
                 border: `3px solid ${accentDeep}`,
                 borderRadius: 0,
                 cursor: state.submitting ? "wait" : "pointer",
@@ -650,7 +652,7 @@ export default function SnideEditPraxis({ state }: Props) {
 
         <div
           style={{
-            marginTop: 14,
+            marginTop: "var(--space-md)",
             fontSize: "var(--text-base)",
             color: muted,
             fontFamily: "'Special Elite', serif",

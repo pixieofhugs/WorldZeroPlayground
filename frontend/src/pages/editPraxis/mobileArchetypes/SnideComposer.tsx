@@ -57,9 +57,9 @@ const kicker: CSSProperties = {
 /** A dark taped card headed by an acid kicker. */
 function Plate({ title, children }: { title: string; children: ReactNode }) {
   return (
-    <section style={{ position: 'relative', background: INK, color: TEXT, border: `1px solid ${LINE}`, boxShadow: CARD_SHADOW, padding: 14, overflow: 'hidden' }}>
+    <section style={{ position: 'relative', background: INK, color: TEXT, border: `1px solid ${LINE}`, boxShadow: CARD_SHADOW, padding: "var(--space-md)", overflow: 'hidden' }}>
       <span aria-hidden style={{ position: 'absolute', top: -10, left: 18, width: 56, height: 22, background: TAPE, transform: 'rotate(-4deg)', opacity: 0.92 }} />
-      <div style={{ fontFamily: COND, fontSize: "var(--text-lg)", letterSpacing: '0.08em', textTransform: 'uppercase', color: ACID, marginBottom: 10 }}>
+      <div style={{ fontFamily: COND, fontSize: "var(--text-lg)", letterSpacing: '0.08em', textTransform: 'uppercase', color: ACID, marginBottom: "var(--space-sm)" }}>
         {title}
       </div>
       {children}
@@ -74,9 +74,9 @@ export default function SnideComposer({ state }: { state: EditPraxisState }) {
   const task = state.task
 
   return (
-    <div data-skin="snide" style={{ display: 'flex', flexDirection: 'column', gap: 14, fontFamily: TYPE, color: WALL_TEXT, background: WALL }}>
-      <header style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-        <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
+    <div data-skin="snide" style={{ display: 'flex', flexDirection: 'column', gap: "var(--space-md)", fontFamily: TYPE, color: WALL_TEXT, background: WALL }}>
+      <header style={{ display: 'flex', flexDirection: 'column', gap: "var(--space-md)" }}>
+        <div style={{ display: 'flex', alignItems: 'baseline', gap: "var(--space-sm)" }}>
           <h1 style={{ fontFamily: COND, fontSize: "var(--text-heading)", letterSpacing: '0.03em', lineHeight: 1, color: WALL_TEXT, margin: 0, textTransform: 'uppercase' }}>
             {t('editPraxis.snide.pageTitle')}
           </h1>
@@ -91,9 +91,9 @@ export default function SnideComposer({ state }: { state: EditPraxisState }) {
           tab={tab}
           setTab={setTab}
           skin={{
-            containerStyle: { gap: 4, padding: 3, background: INK, border: `1px solid ${LINE}` },
+            containerStyle: { gap: "var(--space-xs)", padding: "var(--space-xs)", background: INK, border: `1px solid ${LINE}` },
             buttonStyle: (active) => ({
-              padding: '9px 10px',
+              padding: 'var(--space-sm)',
               border: 'none',
               fontFamily: BLACK,
               fontSize: "var(--text-md)",
@@ -107,7 +107,7 @@ export default function SnideComposer({ state }: { state: EditPraxisState }) {
       </header>
 
       {/* For-completion reference */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, padding: '11px 14px', background: INK, color: TEXT, border: `1px solid ${LINE}` }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: "var(--space-sm)", padding: 'var(--space-md)', background: INK, color: TEXT, border: `1px solid ${LINE}` }}>
         <span style={kicker}>{t('editPraxis.snide.taskRefLabel')}</span>
         <span style={{ fontFamily: COND, fontSize: "var(--text-content)", letterSpacing: '0.03em', color: TEXT, textAlign: 'right', flex: 1, lineHeight: 1.1 }}>
           {praxis.task_title}
@@ -134,7 +134,7 @@ export default function SnideComposer({ state }: { state: EditPraxisState }) {
                   border: 'none',
                   outline: 'none',
                   borderBottom: `1px solid ${LINE}`,
-                  padding: '2px 0 8px',
+                  padding: 'var(--space-xs) 0 var(--space-sm)',
                 },
               }}
             />
@@ -153,7 +153,7 @@ export default function SnideComposer({ state }: { state: EditPraxisState }) {
                   color: TEXT,
                   background: 'rgba(255,255,255,0.04)',
                   border: `1px solid ${LINE}`,
-                  padding: '13px 15px',
+                  padding: 'var(--space-md) var(--space-lg)',
                   outline: 'none',
                   resize: 'vertical',
                   minHeight: 180,
@@ -188,9 +188,9 @@ export default function SnideComposer({ state }: { state: EditPraxisState }) {
               <MetatasksList
                 state={state}
                 skin={{
-                  containerStyle: { display: 'flex', flexDirection: 'column', gap: 4 },
+                  containerStyle: { display: 'flex', flexDirection: 'column', gap: "var(--space-xs)" },
                   rowStyle: (selected) => ({
-                    padding: '10px 12px',
+                    padding: 'var(--space-sm) var(--space-md)',
                     background: selected ? 'rgba(182,255,46,0.08)' : 'transparent',
                     border: `1px solid ${selected ? ACID : LINE}`,
                   }),
@@ -205,11 +205,11 @@ export default function SnideComposer({ state }: { state: EditPraxisState }) {
         </>
       ) : (
         <Plate title={t('editPraxis.snide.previewLabel')}>
-          <div style={{ fontFamily: COND, fontSize: "var(--text-title)", letterSpacing: '0.02em', color: TEXT, marginBottom: 10 }}>
+          <div style={{ fontFamily: COND, fontSize: "var(--text-title)", letterSpacing: '0.02em', color: TEXT, marginBottom: "var(--space-sm)" }}>
             {state.title || t('editPraxis.snide.titlePlaceholder')}
           </div>
           {state.media.length > 0 && (
-            <div style={{ marginBottom: 12 }}>
+            <div style={{ marginBottom: "var(--space-md)" }}>
               <MediaGrid state={state} readOnly />
             </div>
           )}
@@ -228,8 +228,8 @@ export default function SnideComposer({ state }: { state: EditPraxisState }) {
         style={{
           display: 'flex',
           alignItems: 'center',
-          gap: 12,
-          padding: '12px 0 4px',
+          gap: "var(--space-md)",
+          padding: 'var(--space-md) 0 var(--space-xs)',
           background: 'var(--color-nav-bg)',
           backdropFilter: 'blur(var(--nav-blur))',
           borderTop: `1px solid ${ACID}`,
@@ -266,7 +266,7 @@ export default function SnideComposer({ state }: { state: EditPraxisState }) {
               fontSize: "var(--text-lg)",
               letterSpacing: '0.06em',
               textTransform: 'uppercase',
-              padding: '13px 18px',
+              padding: 'var(--space-md) var(--space-lg)',
               border: 'none',
               boxShadow: '2px 3px 0 rgba(0,0,0,.4)',
               cursor: state.submitting ? 'wait' : 'pointer',
@@ -282,7 +282,7 @@ export default function SnideComposer({ state }: { state: EditPraxisState }) {
 function MediaGrid({ state, readOnly = false }: { state: EditPraxisState; readOnly?: boolean }) {
   const { t } = useTranslation('forms')
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
+    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: "var(--space-sm)" }}>
       {state.media.map((item) => {
         const filename = item.file_path.split('/').pop() ?? item.file_path
         const src = mediaUrl(item.file_path)
@@ -336,7 +336,7 @@ function MediaGrid({ state, readOnly = false }: { state: EditPraxisState; readOn
               flexDirection: 'column',
               alignItems: 'center',
               justifyContent: 'center',
-              gap: 4,
+              gap: "var(--space-xs)",
               fontFamily: TYPE,
               fontSize: "var(--text-base)",
               letterSpacing: '0.06em',

@@ -56,8 +56,8 @@ function Plate({ children, style }: { children: ReactNode; style?: CSSProperties
         border: "1px solid var(--ua-line)",
         boxShadow:
           "0 8px 22px color-mix(in srgb, var(--ua-ink) 12%, transparent), inset 0 0 0 4px var(--ua-paper), inset 0 0 0 5px var(--ua-line-soft)",
-        padding: "20px 24px",
-        marginBottom: 22,
+        padding: "var(--space-lg) var(--space-xl)",
+        marginBottom: "var(--space-xl)",
         ...style,
       }}
     >
@@ -69,7 +69,7 @@ function Plate({ children, style }: { children: ReactNode; style?: CSSProperties
 /** Small-caps section label with a fading gold rule, like the read sheet. */
 function RegaliaLabel({ children }: { children: ReactNode }) {
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
+    <div style={{ display: "flex", alignItems: "center", gap: "var(--space-sm)", marginBottom: "var(--space-md)" }}>
       <span style={{ fontFamily: REGALIA, fontSize: "var(--text-sm)", letterSpacing: "0.2em", color: "var(--ua-gold)", whiteSpace: "nowrap" }}>
         {children}
       </span>
@@ -100,7 +100,7 @@ export default function UaEditPraxis({ state }: Props) {
         backgroundSize: "22px 22px, 100% 100%",
         fontFamily: SERIF,
         color: "var(--ua-ink)",
-        padding: "32px 24px 56px",
+        padding: "var(--space-2xl) var(--space-xl) var(--space-5xl)",
         minHeight: "100vh",
       }}
     >
@@ -113,19 +113,19 @@ export default function UaEditPraxis({ state }: Props) {
         />
 
         {/* Masthead — the salon submission sheet's letterhead */}
-        <Plate style={{ padding: 0, marginBottom: 26 }}>
+        <Plate style={{ padding: 0, marginBottom: "var(--space-xl)" }}>
           {/* burnt-amber ribbon — crest + house line */}
           <div
             style={{
               display: "flex",
               alignItems: "center",
               justifyContent: "space-between",
-              gap: 14,
-              padding: "10px 20px",
+              gap: "var(--space-md)",
+              padding: "var(--space-sm) var(--space-lg)",
               background: "var(--ua-orange)",
             }}
           >
-            <span style={{ display: "inline-flex", alignItems: "center", gap: 10, minWidth: 0 }}>
+            <span style={{ display: "inline-flex", alignItems: "center", gap: "var(--space-sm)", minWidth: 0 }}>
               <UaSigil width={22} height={26} />
               <span style={{ fontFamily: REGALIA, fontSize: "var(--text-base)", letterSpacing: "0.14em", color: "var(--ua-paper-warm)" }}>
                 {t("editPraxis.ua.masthead", { number: praxis.id })}
@@ -139,28 +139,28 @@ export default function UaEditPraxis({ state }: Props) {
                 : t("editPraxis.ua.autosaveUnsaved")}
             </span>
           </div>
-          <div style={{ padding: "22px 24px 22px" }}>
-            <h1 style={{ fontFamily: DISPLAY, fontStyle: "italic", fontWeight: 600, fontSize: "var(--text-display)", lineHeight: 1.04, color: "var(--ua-ink)", margin: "0 0 14px" }}>
+          <div style={{ padding: "var(--space-xl)" }}>
+            <h1 style={{ fontFamily: DISPLAY, fontStyle: "italic", fontWeight: 600, fontSize: "var(--text-display)", lineHeight: 1.04, color: "var(--ua-ink)", margin: "0 0 var(--space-md)" }}>
               {t("editPraxis.ua.pageTitle")}
             </h1>
             {/* red/gold dashed rule */}
-            <div style={{ height: 0, borderTop: "1.5px dashed var(--ua-gold)", marginBottom: 18 }} />
+            <div style={{ height: 0, borderTop: "1.5px dashed var(--ua-gold)", marginBottom: "var(--space-lg)" }} />
             {/* commission reference slip — crest, task, points, era mark */}
-            <div style={{ display: "flex", alignItems: "center", gap: 14, border: "1px solid var(--ua-line)", background: "var(--ua-paper-warm)", padding: "12px 16px" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "var(--space-md)", border: "1px solid var(--ua-line)", background: "var(--ua-paper-warm)", padding: "var(--space-md) var(--space-lg)" }}>
               <UaSigil width={50} height={60} />
               <div style={{ minWidth: 0 }}>
-                <div style={{ fontFamily: MONO, fontSize: "var(--text-xs)", letterSpacing: "0.2em", textTransform: "uppercase", color: "var(--ua-muted)", marginBottom: 4 }}>
+                <div style={{ fontFamily: MONO, fontSize: "var(--text-xs)", letterSpacing: "0.2em", textTransform: "uppercase", color: "var(--ua-muted)", marginBottom: "var(--space-xs)" }}>
                   {t("editPraxis.ua.commissionLabel")}
                 </div>
                 <div style={{ fontFamily: DISPLAY, fontStyle: "italic", fontSize: "var(--text-content)", color: "var(--ua-ink)", lineHeight: 1.15, overflowWrap: "anywhere" }}>
                   {praxis.task_title}
                 </div>
                 {task?.description && (
-                  <div style={{ fontFamily: MONO, fontSize: "var(--text-content)", lineHeight: 1.45, color: "var(--ua-muted)", marginTop: 6, overflowWrap: "anywhere" }}>
+                  <div style={{ fontFamily: MONO, fontSize: "var(--text-content)", lineHeight: 1.45, color: "var(--ua-muted)", marginTop: "var(--space-xs)", overflowWrap: "anywhere" }}>
                     {task.description}
                   </div>
                 )}
-                <div style={{ fontFamily: REGALIA, fontSize: "var(--text-base)", letterSpacing: "0.12em", color: "var(--ua-gold)", marginTop: 4 }}>
+                <div style={{ fontFamily: REGALIA, fontSize: "var(--text-base)", letterSpacing: "0.12em", color: "var(--ua-gold)", marginTop: "var(--space-xs)" }}>
                   {t("editPraxis.ua.pointsLabel", {
                     points: praxis.task_point_value,
                   })}
@@ -172,12 +172,12 @@ export default function UaEditPraxis({ state }: Props) {
 
         {/* Mode — engraved plates */}
         {!state.controlsLocked && (
-          <div style={{ marginBottom: 24 }}>
+          <div style={{ marginBottom: "var(--space-xl)" }}>
             <RegaliaLabel>{t("editPraxis.ua.modeLabel")}</RegaliaLabel>
             <ModePicker
               state={state}
               skin={{
-                containerStyle: { display: "flex", gap: 12, flexWrap: "wrap" },
+                containerStyle: { display: "flex", gap: "var(--space-md)", flexWrap: "wrap" },
                 options: modeOptions,
                 allowedModes,
                 renderOption: (opt, { active, disabled, onSelect }) => (
@@ -190,7 +190,7 @@ export default function UaEditPraxis({ state }: Props) {
                     style={{
                       minWidth: 150,
                       textAlign: "left",
-                      padding: "12px 16px",
+                      padding: "var(--space-md) var(--space-lg)",
                       cursor: disabled && !active ? "not-allowed" : "pointer",
                       background: active ? "var(--ua-gilt)" : "var(--ua-paper)",
                       border: active ? "none" : "1px solid var(--ua-line)",
@@ -202,7 +202,7 @@ export default function UaEditPraxis({ state }: Props) {
                     <div style={{ fontFamily: DISPLAY, fontStyle: "italic", fontWeight: 700, fontSize: "var(--text-content)", color: active ? "var(--ua-paper)" : "var(--ua-ink)", lineHeight: 1 }}>
                       {opt.label}
                     </div>
-                    <div style={{ fontFamily: MONO, fontSize: "var(--text-xs)", letterSpacing: "0.06em", textTransform: "uppercase", color: active ? "var(--ua-paper)" : "var(--ua-muted)", marginTop: 5 }}>
+                    <div style={{ fontFamily: MONO, fontSize: "var(--text-xs)", letterSpacing: "0.06em", textTransform: "uppercase", color: active ? "var(--ua-paper)" : "var(--ua-muted)", marginTop: "var(--space-xs)" }}>
                       {opt.desc}
                     </div>
                   </button>
@@ -254,11 +254,11 @@ export default function UaEditPraxis({ state }: Props) {
                 border: "none",
                 outline: "none",
                 borderBottom: "1px solid var(--ua-line-soft)",
-                padding: "2px 0 8px",
+                padding: "var(--space-xs) 0 var(--space-sm)",
               },
             }}
           />
-          <div style={{ marginTop: 8 }}>
+          <div style={{ marginTop: "var(--space-sm)" }}>
             <TitleCounter length={state.title.length} color="var(--ua-muted)" />
           </div>
         </Plate>
@@ -283,16 +283,16 @@ export default function UaEditPraxis({ state }: Props) {
                 outline: "none",
                 resize: "vertical",
                 minHeight: 200,
-                padding: "12px 14px",
+                padding: "var(--space-md)",
               },
             }}
           />
           <BodyPreview
             state={state}
             skin={{
-              wrapperStyle: { borderTop: "1px solid var(--ua-line-soft)", marginTop: 14, paddingTop: 12 },
+              wrapperStyle: { borderTop: "1px solid var(--ua-line-soft)", marginTop: "var(--space-md)", paddingTop: "var(--space-md)" },
               label: (
-                <div style={{ fontFamily: REGALIA, fontSize: "var(--text-sm)", letterSpacing: "0.2em", color: "var(--ua-gold)", marginBottom: 8 }}>
+                <div style={{ fontFamily: REGALIA, fontSize: "var(--text-sm)", letterSpacing: "0.2em", color: "var(--ua-gold)", marginBottom: "var(--space-sm)" }}>
                   {t("editPraxis.ua.previewLabel")}
                 </div>
               ),
@@ -302,9 +302,9 @@ export default function UaEditPraxis({ state }: Props) {
         </Plate>
 
         {/* The plates — media */}
-        <div style={{ marginBottom: 22 }}>
+        <div style={{ marginBottom: "var(--space-xl)" }}>
           <RegaliaLabel>{t("editPraxis.ua.filesLabel")}</RegaliaLabel>
-          <div style={{ display: "flex", gap: 16, flexWrap: "wrap", alignItems: "flex-start" }}>
+          <div style={{ display: "flex", gap: "var(--space-lg)", flexWrap: "wrap", alignItems: "flex-start" }}>
             {state.media.map((item) => {
               const filename = item.file_path.split("/").pop() ?? item.file_path;
               const src = mediaUrl(item.file_path);
@@ -338,12 +338,12 @@ export default function UaEditPraxis({ state }: Props) {
                   alignItems: "center",
                   justifyContent: "center",
                   flexDirection: "column",
-                  gap: 4,
+                  gap: "var(--space-xs)",
                 },
                 buttonLabel: t("editPraxis.ua.fileButton"),
                 errorColor: "var(--ua-orange-deep)",
                 helperText: t("editPraxis.ua.fileHelper"),
-                helperStyle: { fontFamily: MONO, fontSize: "var(--text-xs)", letterSpacing: "0.08em", color: "var(--ua-muted)", marginTop: 8, fontStyle: "italic" },
+                helperStyle: { fontFamily: MONO, fontSize: "var(--text-xs)", letterSpacing: "0.08em", color: "var(--ua-muted)", marginTop: "var(--space-sm)", fontStyle: "italic" },
               }}
             />
           </div>
@@ -357,10 +357,10 @@ export default function UaEditPraxis({ state }: Props) {
               state={state}
               skin={{
                 rowStyle: (selected) => ({
-                  padding: "8px 10px",
+                  padding: "var(--space-sm)",
                   background: selected ? "color-mix(in srgb, var(--ua-gold-pale) 22%, var(--ua-paper))" : "transparent",
                   border: selected ? "1px solid var(--ua-line)" : "1px solid transparent",
-                  marginBottom: 4,
+                  marginBottom: "var(--space-xs)",
                   fontFamily: SERIF,
                 }),
                 titleColor: "var(--ua-ink)",
@@ -375,7 +375,7 @@ export default function UaEditPraxis({ state }: Props) {
         <ErrorBanner message={state.error} />
 
         {/* CTAs */}
-        <div style={{ display: "flex", gap: 18, alignItems: "center", marginTop: 26, flexWrap: "wrap" }}>
+        <div style={{ display: "flex", gap: "var(--space-lg)", alignItems: "center", marginTop: "var(--space-xl)", flexWrap: "wrap" }}>
           <DropButton
             state={state}
             skin={{
@@ -403,7 +403,7 @@ export default function UaEditPraxis({ state }: Props) {
                 fontFamily: REGALIA,
                 fontSize: "var(--text-lg)",
                 letterSpacing: "0.1em",
-                padding: "12px 24px",
+                padding: "var(--space-md) var(--space-xl)",
                 border: "none",
                 borderRadius: 0,
                 cursor: state.submitting ? "wait" : "pointer",
@@ -429,10 +429,10 @@ function GiltPlate({
 }) {
   const { t } = useTranslation("forms");
   return (
-    <div style={{ position: "relative", background: "var(--ua-gilt)", padding: 5, boxShadow: "0 8px 18px color-mix(in srgb, var(--ua-ink) 20%, transparent)" }}>
-      <div style={{ background: "var(--ua-paper)", padding: 4 }}>
+    <div style={{ position: "relative", background: "var(--ua-gilt)", padding: "var(--space-xs)", boxShadow: "0 8px 18px color-mix(in srgb, var(--ua-ink) 20%, transparent)" }}>
+      <div style={{ background: "var(--ua-paper)", padding: "var(--space-xs)" }}>
         <div style={{ width: 140, height: 100, overflow: "hidden" }}>{children}</div>
-        <div style={{ fontFamily: MONO, fontSize: "var(--text-xs)", letterSpacing: "0.04em", color: "var(--ua-muted)", textAlign: "center", marginTop: 4, maxWidth: 140, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+        <div style={{ fontFamily: MONO, fontSize: "var(--text-xs)", letterSpacing: "0.04em", color: "var(--ua-muted)", textAlign: "center", marginTop: "var(--space-xs)", maxWidth: 140, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
           {caption}
         </div>
       </div>

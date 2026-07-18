@@ -86,8 +86,8 @@ function Window({ title, children }: { title: string; children: ReactNode }) {
         style={{
           display: "flex",
           alignItems: "center",
-          gap: 7,
-          padding: "8px 12px",
+          gap: "var(--space-sm)",
+          padding: "var(--space-sm) var(--space-md)",
           background:
             "linear-gradient(180deg, var(--faction-wow-title-from), var(--faction-wow-title-to))",
           borderBottom: `2px solid ${WIN_BORDER}`,
@@ -114,7 +114,7 @@ function Window({ title, children }: { title: string; children: ReactNode }) {
             marginLeft: "auto",
             display: "inline-flex",
             alignItems: "center",
-            gap: 5,
+            gap: "var(--space-xs)",
             fontFamily: SCRIPT,
             fontSize: "var(--text-content)",
             color: TITLE_TEXT,
@@ -126,7 +126,7 @@ function Window({ title, children }: { title: string; children: ReactNode }) {
       </div>
       <div
         style={{
-          padding: 12,
+          padding: "var(--space-md)",
           background: BODY_BG,
           backgroundImage: `radial-gradient(${DOT} 1.4px, transparent 1.4px)`,
           backgroundSize: "13px 13px",
@@ -137,7 +137,7 @@ function Window({ title, children }: { title: string; children: ReactNode }) {
             background: NOTEPAD_BG,
             border: `1.5px solid ${NOTEPAD_BORDER}`,
             borderRadius: 9,
-            padding: 13,
+            padding: "var(--space-md)",
           }}
         >
           {children}
@@ -159,7 +159,7 @@ export default function WowEditPraxis({ state }: { state: EditPraxisState }) {
       style={{
         display: "flex",
         flexDirection: "column",
-        gap: 14,
+        gap: "var(--space-md)",
         fontFamily: BODY,
         color: CARD_TEXT,
         background: BODY_BG,
@@ -167,8 +167,8 @@ export default function WowEditPraxis({ state }: { state: EditPraxisState }) {
         backgroundSize: "15px 15px",
       }}
     >
-      <header style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+      <header style={{ display: "flex", flexDirection: "column", gap: "var(--space-md)" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "var(--space-sm)" }}>
           <h1
             style={{
               fontFamily: SCRIPT,
@@ -178,7 +178,7 @@ export default function WowEditPraxis({ state }: { state: EditPraxisState }) {
               margin: 0,
               display: "inline-flex",
               alignItems: "center",
-              gap: 8,
+              gap: "var(--space-sm)",
             }}
           >
             {t("editPraxis.wow.pageTitle")}
@@ -198,14 +198,14 @@ export default function WowEditPraxis({ state }: { state: EditPraxisState }) {
           setTab={setTab}
           skin={{
             containerStyle: {
-              gap: 4,
-              padding: 3,
+              gap: "var(--space-xs)",
+              padding: "var(--space-xs)",
               background: NOTEPAD_BG,
               border: `1.5px solid ${NOTEPAD_BORDER}`,
               borderRadius: 999,
             },
             buttonStyle: (active) => ({
-              padding: "9px 10px",
+              padding: "var(--space-sm)",
               borderRadius: 999,
               border: active ? `1.5px solid ${PINK_DEEP}` : "1.5px solid transparent",
               fontFamily: BODY,
@@ -228,8 +228,8 @@ export default function WowEditPraxis({ state }: { state: EditPraxisState }) {
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
-          gap: 10,
-          padding: "11px 14px",
+          gap: "var(--space-sm)",
+          padding: "var(--space-md)",
           background: NOTEPAD_BG,
           border: `1.5px solid ${NOTEPAD_BORDER}`,
           borderRadius: 12,
@@ -270,7 +270,7 @@ export default function WowEditPraxis({ state }: { state: EditPraxisState }) {
                   border: "none",
                   outline: "none",
                   borderBottom: `2px solid ${NOTEPAD_BORDER}`,
-                  padding: "2px 0 8px",
+                  padding: "var(--space-xs) 0 var(--space-sm)",
                 },
               }}
             />
@@ -290,7 +290,7 @@ export default function WowEditPraxis({ state }: { state: EditPraxisState }) {
                   background: BODY_BG,
                   border: `1.5px solid ${NOTEPAD_BORDER}`,
                   borderRadius: 7,
-                  padding: "13px 15px",
+                  padding: "var(--space-md) var(--space-lg)",
                   outline: "none",
                   resize: "vertical",
                   minHeight: 180,
@@ -334,10 +334,10 @@ export default function WowEditPraxis({ state }: { state: EditPraxisState }) {
                   containerStyle: {
                     display: "flex",
                     flexDirection: "column",
-                    gap: 4,
+                    gap: "var(--space-xs)",
                   },
                   rowStyle: (selected) => ({
-                    padding: "10px 12px",
+                    padding: "var(--space-sm) var(--space-md)",
                     background: selected ? BODY_BG : "transparent",
                     border: `1.5px solid ${selected ? PINK_DEEP : "transparent"}`,
                     borderRadius: 7,
@@ -358,13 +358,13 @@ export default function WowEditPraxis({ state }: { state: EditPraxisState }) {
               fontFamily: SCRIPT,
               fontSize: "var(--text-title)",
               color: TITLE_TEXT,
-              marginBottom: 10,
+              marginBottom: "var(--space-sm)",
             }}
           >
             {state.title || t("editPraxis.wow.titlePlaceholder")}
           </div>
           {state.media.length > 0 && (
-            <div style={{ marginBottom: 12 }}>
+            <div style={{ marginBottom: "var(--space-md)" }}>
               <MediaGrid state={state} readOnly />
             </div>
           )}
@@ -387,8 +387,8 @@ export default function WowEditPraxis({ state }: { state: EditPraxisState }) {
         style={{
           display: "flex",
           alignItems: "center",
-          gap: 12,
-          padding: "12px 0 4px",
+          gap: "var(--space-md)",
+          padding: "var(--space-md) 0 var(--space-xs)",
           background: "var(--color-nav-bg)",
           backdropFilter: "blur(var(--nav-blur))",
           borderTop: `1.5px solid ${WIN_BORDER}`,
@@ -422,7 +422,7 @@ export default function WowEditPraxis({ state }: { state: EditPraxisState }) {
               display: "inline-flex",
               alignItems: "center",
               justifyContent: "center",
-              gap: 7,
+              gap: "var(--space-sm)",
               background: `linear-gradient(180deg, ${PINK}, ${PINK_DEEP})`,
               color: ON_ACCENT,
               fontFamily: BODY,
@@ -430,7 +430,7 @@ export default function WowEditPraxis({ state }: { state: EditPraxisState }) {
               fontWeight: 700,
               letterSpacing: "0.12em",
               textTransform: "uppercase",
-              padding: "13px 18px",
+              padding: "var(--space-md) var(--space-lg)",
               border: `1.5px solid ${PINK_DEEP}`,
               borderRadius: 14,
               cursor: state.submitting ? "wait" : "pointer",
@@ -456,7 +456,7 @@ function MediaGrid({
       style={{
         display: "grid",
         gridTemplateColumns: "repeat(3, 1fr)",
-        gap: 8,
+        gap: "var(--space-sm)",
       }}
     >
       {state.media.map((item) => {
@@ -535,7 +535,7 @@ function MediaGrid({
               flexDirection: "column",
               alignItems: "center",
               justifyContent: "center",
-              gap: 4,
+              gap: "var(--space-xs)",
               fontFamily: SCRIPT,
               fontSize: "var(--text-xl)",
               fontWeight: 700,
