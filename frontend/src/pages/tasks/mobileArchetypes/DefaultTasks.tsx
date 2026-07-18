@@ -30,6 +30,8 @@ export default function DefaultTasks({ state }: { state: TasksState }) {
     setFaction,
     level,
     setLevel,
+    query,
+    setQuery,
     hasMore,
     loadMore,
     displayPointsFor,
@@ -44,6 +46,24 @@ export default function DefaultTasks({ state }: { state: TasksState }) {
         {tc('nav.tasks')}
       </h1>
       <p className="eyebrow mb-3">{t('mobile.count', { count: tasks.length })}</p>
+
+      {/* Search */}
+      <input
+        type="search"
+        value={query}
+        onChange={(event) => setQuery(event.target.value)}
+        placeholder={t('listPage.filter.searchPlaceholder')}
+        aria-label={t('listPage.filter.searchLabel')}
+        className="font-body w-full mb-3"
+        style={{
+          fontSize: 'var(--text-md)',
+          padding: 'var(--space-sm) var(--space-md)',
+          background: 'var(--color-bg-surface)',
+          border: '1px solid var(--color-border-strong)',
+          color: 'var(--color-text-primary)',
+          borderRadius: 6,
+        }}
+      />
 
       {/* Status chips */}
       <ChipRow label={tc('filters.status')}>
@@ -73,7 +93,7 @@ export default function DefaultTasks({ state }: { state: TasksState }) {
 
       {/* Results */}
       <div className="mt-4">
-        {loading ? (
+        {loading && tasks.length === 0 ? (
           <p className="font-body text-muted">{t('listPage.loading')}</p>
         ) : error ? (
           <p className="font-body text-sm text-red-600 border-2 border-red-300 px-3 py-2">
