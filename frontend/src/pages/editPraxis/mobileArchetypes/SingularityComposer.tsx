@@ -229,6 +229,22 @@ export default function SingularityComposer({ state }: { state: EditPraxisState 
           borderTop: `1px solid ${BORDER_HARD}`,
         }}
       >
+        {!state.isPublished && (
+          <DropButton
+            state={state}
+            skin={{
+              label: t('editPraxis.singularity.dropLabel'),
+              style: {
+                background: 'transparent',
+                border: 'none',
+                color: signal(60),
+                fontFamily: FONT,
+                fontSize: "var(--text-lg)",
+                cursor: 'pointer',
+              },
+            }}
+          />
+        )}
         <PublishButton
           state={state}
           skin={{
@@ -249,22 +265,6 @@ export default function SingularityComposer({ state }: { state: EditPraxisState 
             },
           }}
         />
-        {!state.isPublished && (
-          <DropButton
-            state={state}
-            skin={{
-              label: t('editPraxis.singularity.dropLabel'),
-              style: {
-                background: 'transparent',
-                border: 'none',
-                color: signal(60),
-                fontFamily: FONT,
-                fontSize: "var(--text-lg)",
-                cursor: 'pointer',
-              },
-            }}
-          />
-        )}
       </MobileStickyBar>
     </div>
   )

@@ -394,6 +394,23 @@ export default function WowEditPraxis({ state }: { state: EditPraxisState }) {
           borderTop: `1.5px solid ${WIN_BORDER}`,
         }}
       >
+        {!state.isPublished && (
+          <DropButton
+            state={state}
+            skin={{
+              label: t("editPraxis.wow.dropLabel"),
+              style: {
+                background: "transparent",
+                border: "none",
+                color: CARD_MUTED,
+                fontFamily: SCRIPT,
+                fontSize: "var(--text-content)",
+                fontWeight: 700,
+                cursor: "pointer",
+              },
+            }}
+          />
+        )}
         <PublishButton
           state={state}
           skin={{
@@ -420,23 +437,6 @@ export default function WowEditPraxis({ state }: { state: EditPraxisState }) {
             },
           }}
         />
-        {!state.isPublished && (
-          <DropButton
-            state={state}
-            skin={{
-              label: t("editPraxis.wow.dropLabel"),
-              style: {
-                background: "transparent",
-                border: "none",
-                color: CARD_MUTED,
-                fontFamily: SCRIPT,
-                fontSize: "var(--text-content)",
-                fontWeight: 700,
-                cursor: "pointer",
-              },
-            }}
-          />
-        )}
       </MobileStickyBar>
     </div>
   );

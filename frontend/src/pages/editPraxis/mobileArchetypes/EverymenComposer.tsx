@@ -228,6 +228,23 @@ export default function EverymenComposer({ state }: { state: EditPraxisState }) 
           borderTop: `2px solid ${INK}`,
         }}
       >
+        {!state.isPublished && (
+          <DropButton
+            state={state}
+            skin={{
+              label: t('editPraxis.everymen.dropLabel'),
+              style: {
+                background: 'transparent',
+                border: 'none',
+                color: MUTED,
+                fontFamily: BODY_FONT,
+                fontSize: "var(--text-lg)",
+                textDecoration: 'underline',
+                cursor: 'pointer',
+              },
+            }}
+          />
+        )}
         <PublishButton
           state={state}
           skin={{
@@ -246,23 +263,6 @@ export default function EverymenComposer({ state }: { state: EditPraxisState }) 
             },
           }}
         />
-        {!state.isPublished && (
-          <DropButton
-            state={state}
-            skin={{
-              label: t('editPraxis.everymen.dropLabel'),
-              style: {
-                background: 'transparent',
-                border: 'none',
-                color: MUTED,
-                fontFamily: BODY_FONT,
-                fontSize: "var(--text-lg)",
-                textDecoration: 'underline',
-                cursor: 'pointer',
-              },
-            }}
-          />
-        )}
       </MobileStickyBar>
     </div>
   )
