@@ -60,10 +60,10 @@ const PLATE: CSSProperties = {
 const KICKER: CSSProperties = {
   fontFamily: SCRIPT,
   fontStyle: "italic",
-  // ornament: calligraphic marginal flourish under the rubric, not copy.
+  // eslint-disable-next-line local/no-raw-style-values -- ornament: calligraphic marginal flourish under the rubric, not copy.
   fontSize: 13,
   color: MUTED,
-  margin: "4px 0 18px",
+  margin: "var(--space-xs) 0 var(--space-lg)",
 };
 
 function Kicker({ children }: { children: ReactNode }) {
@@ -73,7 +73,7 @@ function Kicker({ children }: { children: ReactNode }) {
 const SECTION_HEADING: CSSProperties = {
   fontFamily: DISPLAY,
   fontWeight: 700,
-  // ornament: the codex's Cinzel rubric cut, a step above the content ramp.
+  // eslint-disable-next-line local/no-raw-style-values -- ornament: the codex's Cinzel rubric cut, a step above the content ramp.
   fontSize: 30,
   letterSpacing: "0.03em",
   margin: 0,
@@ -134,18 +134,18 @@ export default function EphemeristsFactionBody({ state }: { state: FactionDetail
   return (
     <div className="wz-faction-grid">
       {/* ── MAIN COLUMN ── */}
-      <div style={{ display: "flex", flexDirection: "column", gap: 46 }}>
+      <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-2xl)" }}>
         {/* ② THE APPARATUS */}
-        <div style={{ ...PLATE, padding: "26px 30px 28px" }}>
+        <div style={{ ...PLATE, padding: "var(--space-xl) var(--space-2xl)" }}>
           <Foxing opacity={0.5} />
-          <div style={{ position: "relative", zIndex: 2, display: "flex", alignItems: "center", gap: 12, marginBottom: 16 }}>
+          <div style={{ position: "relative", zIndex: 2, display: "flex", alignItems: "center", gap: "var(--space-md)", marginBottom: "var(--space-lg)" }}>
             <EphemeristsSigil size={15} color={RUBRIC} />
             <span style={{ fontFamily: DISPLAY, fontWeight: 600, fontSize: "var(--text-md)", letterSpacing: "0.22em", textTransform: "uppercase", color: GOLD_DEEP }}>
               {t("ephemerists.apparatus.heading")}
             </span>
             <span style={{ flex: 1, height: 1, background: `linear-gradient(90deg, ${GOLD}, transparent)` }} />
           </div>
-          <div style={{ position: "relative", zIndex: 2, display: "flex", flexDirection: "column", gap: 12 }}>
+          <div style={{ position: "relative", zIndex: 2, display: "flex", flexDirection: "column", gap: "var(--space-md)" }}>
             {paragraphs.length ? (
               paragraphs.map((para, i) => (
                 <p key={i} className="content-text" style={{ fontFamily: SERIF, lineHeight: 1.78, color: TEXT, margin: 0 }}>
@@ -169,7 +169,7 @@ export default function EphemeristsFactionBody({ state }: { state: FactionDetail
               {t("ephemerists.tasks.empty")}
             </p>
           ) : (
-            <div style={{ display: "flex", flexWrap: "wrap", gap: 24, alignItems: "flex-start" }}>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: "var(--space-xl)", alignItems: "flex-start" }}>
               {tasks.map((task) => (
                 <TaskCard
                   key={task.id}
@@ -195,7 +195,7 @@ export default function EphemeristsFactionBody({ state }: { state: FactionDetail
               {t("ephemerists.praxis.empty")}
             </p>
           ) : (
-            <div style={{ display: "flex", flexWrap: "wrap", gap: 16, alignItems: "flex-start" }}>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: "var(--space-lg)", alignItems: "flex-start" }}>
               {recentPraxis.map((praxis) => (
                 <div key={praxis.id} style={{ position: "relative", flex: "1 1 280px", minWidth: 280 }}>
                   {/* ⑤ Task Crown (ADR-0028) — the skin's own corner medallion,
@@ -219,23 +219,31 @@ export default function EphemeristsFactionBody({ state }: { state: FactionDetail
       </div>
 
       {/* ── RIGHT RAIL ── */}
-      <div style={{ display: "flex", flexDirection: "column", gap: 46 }}>
+      <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-2xl)" }}>
         {/* ③ THE ROAD — join / gate / standing */}
         {membership.state !== "none" && (
           <div style={{ ...PLATE, boxShadow: "0 8px 24px color-mix(in srgb, var(--eph-ink) 12%, transparent)", padding: 0 }}>
-            <div style={{ background: LAPIS, color: PARCHMENT, padding: "9px 16px", fontFamily: DISPLAY, fontWeight: 600, fontSize: "var(--text-lg)", letterSpacing: "0.2em", textTransform: "uppercase", boxShadow: `inset 0 -2px 0 ${GOLD}` }}>
+            <div style={{ background: LAPIS, color: PARCHMENT, padding: "var(--space-sm) var(--space-lg)", fontFamily: DISPLAY, fontWeight: 600, fontSize: "var(--text-lg)", letterSpacing: "0.2em", textTransform: "uppercase", boxShadow: `inset 0 -2px 0 ${GOLD}` }}>
               {t("ephemerists.road.heading")}
             </div>
-            <div style={{ position: "relative", padding: "22px 20px" }}>
+            <div style={{ position: "relative", padding: "var(--space-xl)" }}>
               <Foxing opacity={0.4} />
               <div style={{ position: "relative", zIndex: 2 }}>
                 {membership.state === "member" && (
                   <div>
-                    {/* ornament: Cinzel codex display title. */}
-                    <div style={{ fontFamily: DISPLAY, fontWeight: 700, fontSize: 22, lineHeight: 1.02, color: INK }}>
+                    <div
+                      style={{
+                        fontFamily: DISPLAY,
+                        fontWeight: 700,
+                        // eslint-disable-next-line local/no-raw-style-values -- ornament: Cinzel codex display title.
+                        fontSize: 22,
+                        lineHeight: 1.02,
+                        color: INK,
+                      }}
+                    >
                       {t("ephemerists.road.memberTitle")}
                     </div>
-                    <div style={{ fontFamily: SERIF, fontSize: "var(--text-xl)", color: MUTED, margin: "10px 0 0" }}>
+                    <div style={{ fontFamily: SERIF, fontSize: "var(--text-xl)", color: MUTED, margin: "var(--space-sm) 0 0" }}>
                       <Trans t={t} i18nKey="ephemerists.road.memberStanding">
                         Standing · <span style={{ fontStyle: "italic", color: RUBRIC }}>keeper of the road</span>
                       </Trans>
@@ -245,19 +253,37 @@ export default function EphemeristsFactionBody({ state }: { state: FactionDetail
 
                 {membership.state === "eligible" && !confirming && (
                   <div>
-                    {/* ornament: calligraphic flourish + Cinzel codex display title. */}
-                    <div style={{ fontFamily: SCRIPT, fontStyle: "italic", fontSize: 13, color: GOLD_DEEP, marginBottom: 5 }}>
+                    <div
+                      style={{
+                        fontFamily: SCRIPT,
+                        fontStyle: "italic",
+                        // eslint-disable-next-line local/no-raw-style-values -- ornament: calligraphic flourish above the codex title.
+                        fontSize: 13,
+                        color: GOLD_DEEP,
+                        marginBottom: "var(--space-xs)",
+                      }}
+                    >
                       {t("ephemerists.road.eligibleKicker")}
                     </div>
-                    <div style={{ fontFamily: DISPLAY, fontWeight: 700, fontSize: 23, lineHeight: 1.02, color: INK, marginBottom: 10 }}>
+                    <div
+                      style={{
+                        fontFamily: DISPLAY,
+                        fontWeight: 700,
+                        // eslint-disable-next-line local/no-raw-style-values -- ornament: Cinzel codex display title.
+                        fontSize: 23,
+                        lineHeight: 1.02,
+                        color: INK,
+                        marginBottom: "var(--space-md)",
+                      }}
+                    >
                       {t("ephemerists.road.eligibleTitle")}
                     </div>
-                    <div className="content-text" style={{ fontFamily: SERIF, lineHeight: 1.6, color: TEXT, marginBottom: 18 }}>
+                    <div className="content-text" style={{ fontFamily: SERIF, lineHeight: 1.6, color: TEXT, marginBottom: "var(--space-lg)" }}>
                       {t("ephemerists.road.eligibleBody")}
                     </div>
                     <button
                       onClick={() => setConfirming(true)}
-                      style={{ width: "100%", fontFamily: DISPLAY, fontWeight: 600, fontSize: "var(--text-xl)", letterSpacing: "0.14em", color: PARCHMENT, background: LAPIS, border: "none", padding: 12, boxShadow: `inset 0 0 0 1px ${GOLD}, 0 6px 16px color-mix(in srgb, var(--eph-field-deep) 40%, transparent)`, cursor: "pointer" }}
+                      style={{ width: "100%", fontFamily: DISPLAY, fontWeight: 600, fontSize: "var(--text-xl)", letterSpacing: "0.14em", color: PARCHMENT, background: LAPIS, border: "none", padding: "var(--space-md)", boxShadow: `inset 0 0 0 1px ${GOLD}, 0 6px 16px color-mix(in srgb, var(--eph-field-deep) 40%, transparent)`, cursor: "pointer" }}
                     >
                       {t("ephemerists.road.joinButton")}
                     </button>
@@ -266,7 +292,7 @@ export default function EphemeristsFactionBody({ state }: { state: FactionDetail
 
                 {membership.state === "eligible" && confirming && (
                   <div>
-                    <div className="content-text" style={{ fontFamily: SERIF, lineHeight: 1.6, color: TEXT, marginBottom: 14 }}>
+                    <div className="content-text" style={{ fontFamily: SERIF, lineHeight: 1.6, color: TEXT, marginBottom: "var(--space-lg)" }}>
                       {membership.currentFactionSlug &&
                       membership.currentFactionSlug !== "na"
                         ? t("detail.join.confirmSwitch", {
@@ -276,13 +302,13 @@ export default function EphemeristsFactionBody({ state }: { state: FactionDetail
                         : t("detail.join.confirm", { faction: factionName(faction.slug) })}
                     </div>
                     {membership.joinError && (
-                      <div className="content-text" style={{ fontFamily: SERIF, color: "var(--color-danger)", marginBottom: 8 }}>{membership.joinError}</div>
+                      <div className="content-text" style={{ fontFamily: SERIF, color: "var(--color-danger)", marginBottom: "var(--space-sm)" }}>{membership.joinError}</div>
                     )}
-                    <div style={{ display: "flex", gap: 8 }}>
+                    <div style={{ display: "flex", gap: "var(--space-sm)" }}>
                       <button
                         onClick={() => void membership.join()}
                         disabled={membership.joining}
-                        style={{ flex: 1, fontFamily: DISPLAY, fontWeight: 600, fontSize: "var(--text-lg)", letterSpacing: "0.12em", color: PARCHMENT, background: LAPIS, border: "none", padding: 11, boxShadow: `inset 0 0 0 1px ${GOLD}`, cursor: membership.joining ? "not-allowed" : "pointer" }}
+                        style={{ flex: 1, fontFamily: DISPLAY, fontWeight: 600, fontSize: "var(--text-lg)", letterSpacing: "0.12em", color: PARCHMENT, background: LAPIS, border: "none", padding: "var(--space-md)", boxShadow: `inset 0 0 0 1px ${GOLD}`, cursor: membership.joining ? "not-allowed" : "pointer" }}
                       >
                         {membership.joining
                           ? t("ephemerists.road.joining")
@@ -291,7 +317,7 @@ export default function EphemeristsFactionBody({ state }: { state: FactionDetail
                       <button
                         onClick={() => setConfirming(false)}
                         disabled={membership.joining}
-                        style={{ fontFamily: SERIF, fontStyle: "italic", fontSize: "var(--text-lg)", letterSpacing: "0.06em", color: MUTED, background: "transparent", border: `1px solid ${HAIRLINE}`, padding: "11px 14px", cursor: membership.joining ? "not-allowed" : "pointer" }}
+                        style={{ fontFamily: SERIF, fontStyle: "italic", fontSize: "var(--text-lg)", letterSpacing: "0.06em", color: MUTED, background: "transparent", border: `1px solid ${HAIRLINE}`, padding: "var(--space-md) var(--space-lg)", cursor: membership.joining ? "not-allowed" : "pointer" }}
                       >
                         {t("detail.join.cancel")}
                       </button>
@@ -301,11 +327,29 @@ export default function EphemeristsFactionBody({ state }: { state: FactionDetail
 
                 {membership.state === "gate" && (
                   <div>
-                    {/* ornament: calligraphic flourish + Cinzel codex display title. */}
-                    <div style={{ fontFamily: SCRIPT, fontStyle: "italic", fontSize: 13, color: GOLD_DEEP, marginBottom: 5 }}>
+                    <div
+                      style={{
+                        fontFamily: SCRIPT,
+                        fontStyle: "italic",
+                        // eslint-disable-next-line local/no-raw-style-values -- ornament: calligraphic flourish above the codex title.
+                        fontSize: 13,
+                        color: GOLD_DEEP,
+                        marginBottom: "var(--space-xs)",
+                      }}
+                    >
                       {t("ephemerists.road.gateKicker")}
                     </div>
-                    <div style={{ fontFamily: DISPLAY, fontWeight: 700, fontSize: 21, lineHeight: 1.08, color: INK, marginBottom: 11 }}>
+                    <div
+                      style={{
+                        fontFamily: DISPLAY,
+                        fontWeight: 700,
+                        // eslint-disable-next-line local/no-raw-style-values -- ornament: Cinzel codex display title.
+                        fontSize: 21,
+                        lineHeight: 1.08,
+                        color: INK,
+                        marginBottom: "var(--space-md)",
+                      }}
+                    >
                       {t("ephemerists.road.gateTitle")}
                     </div>
                     <div className="content-text" style={{ fontFamily: SERIF, lineHeight: 1.65, color: TEXT }}>
@@ -319,7 +363,7 @@ export default function EphemeristsFactionBody({ state }: { state: FactionDetail
         )}
 
         {/* ⑥ MEMBERS — keeper of the road + the keepers */}
-        <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-xl)" }}>
           {spot && (
             <Link to={`/characters/${spot.id}`} style={{ textDecoration: "none" }}>
               <div
@@ -343,19 +387,36 @@ export default function EphemeristsFactionBody({ state }: { state: FactionDetail
                     backgroundImage: `repeating-linear-gradient(0deg, ${GOLD_LIGHT} 0 1px, transparent 1px 20px), repeating-linear-gradient(90deg, ${GOLD_LIGHT} 0 1px, transparent 1px 20px)`,
                   }}
                 />
-                <div style={{ position: "relative", zIndex: 2, padding: "20px 18px 18px" }}>
-                  {/* ornament: calligraphic caption on the illuminated plate. */}
-                  <div style={{ fontFamily: SCRIPT, fontStyle: "italic", fontSize: 11, letterSpacing: "0.06em", color: GOLD_LIGHT, marginBottom: 12 }}>
+                <div style={{ position: "relative", zIndex: 2, padding: "var(--space-xl) var(--space-lg) var(--space-lg)" }}>
+                  <div
+                    style={{
+                      fontFamily: SCRIPT,
+                      fontStyle: "italic",
+                      // eslint-disable-next-line local/no-raw-style-values -- ornament: calligraphic caption on the illuminated plate.
+                      fontSize: 11,
+                      letterSpacing: "0.06em",
+                      color: GOLD_LIGHT,
+                      marginBottom: "var(--space-md)",
+                    }}
+                  >
                     {t("ephemerists.spotlight.label")}
                   </div>
-                  <div style={{ display: "flex", justifyContent: "center", marginBottom: 12 }}>
+                  <div style={{ display: "flex", justifyContent: "center", marginBottom: "var(--space-md)" }}>
                     <Medallion name={spot.display_name} size={72} spotlight />
                   </div>
-                  {/* ornament: Cinzel name plate on the illuminated spotlight. */}
-                  <div style={{ fontFamily: DISPLAY, fontWeight: 700, fontSize: 22, lineHeight: 1, color: PARCHMENT }}>
+                  <div
+                    style={{
+                      fontFamily: DISPLAY,
+                      fontWeight: 700,
+                      // eslint-disable-next-line local/no-raw-style-values -- ornament: Cinzel name plate on the illuminated spotlight.
+                      fontSize: 22,
+                      lineHeight: 1,
+                      color: PARCHMENT,
+                    }}
+                  >
                     {spot.display_name}
                   </div>
-                  <div style={{ fontFamily: SERIF, fontSize: "var(--text-sm)", letterSpacing: "0.1em", textTransform: "uppercase", color: `color-mix(in srgb, ${PARCHMENT} 70%, transparent)`, marginTop: 6 }}>
+                  <div style={{ fontFamily: SERIF, fontSize: "var(--text-sm)", letterSpacing: "0.1em", textTransform: "uppercase", color: `color-mix(in srgb, ${PARCHMENT} 70%, transparent)`, marginTop: "var(--space-sm)" }}>
                     {t("ephemerists.spotlight.stat", {
                       grade: grade(spot.level),
                       score: spot.all_time_score.toLocaleString(),
@@ -366,9 +427,9 @@ export default function EphemeristsFactionBody({ state }: { state: FactionDetail
             </Link>
           )}
 
-          <div style={{ ...PLATE, boxShadow: "0 4px 14px color-mix(in srgb, var(--eph-ink) 8%, transparent)", padding: "18px 20px 14px" }}>
+          <div style={{ ...PLATE, boxShadow: "0 4px 14px color-mix(in srgb, var(--eph-ink) 8%, transparent)", padding: "var(--space-lg) var(--space-xl) var(--space-lg)" }}>
             <Foxing opacity={0.4} />
-            <div style={{ position: "relative", zIndex: 2, fontFamily: DISPLAY, fontWeight: 600, fontSize: "var(--text-md)", letterSpacing: "0.2em", textTransform: "uppercase", color: GOLD_DEEP, marginBottom: 12 }}>
+            <div style={{ position: "relative", zIndex: 2, fontFamily: DISPLAY, fontWeight: 600, fontSize: "var(--text-md)", letterSpacing: "0.2em", textTransform: "uppercase", color: GOLD_DEEP, marginBottom: "var(--space-md)" }}>
               {t("ephemerists.roster.heading")}
             </div>
             {roster.length === 0 ? (
@@ -382,7 +443,7 @@ export default function EphemeristsFactionBody({ state }: { state: FactionDetail
                 <Link
                   key={m.id}
                   to={`/characters/${m.id}`}
-                  style={{ position: "relative", zIndex: 2, display: "flex", alignItems: "center", gap: 12, padding: "8px 0", borderBottom: `1px solid ${DIVIDER}`, textDecoration: "none" }}
+                  style={{ position: "relative", zIndex: 2, display: "flex", alignItems: "center", gap: "var(--space-md)", padding: "var(--space-sm) 0", borderBottom: `1px solid ${DIVIDER}`, textDecoration: "none" }}
                 >
                   <Medallion name={m.display_name} size={32} />
                   <div style={{ flex: 1, minWidth: 0 }}>
