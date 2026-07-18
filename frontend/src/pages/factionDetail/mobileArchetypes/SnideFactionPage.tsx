@@ -97,6 +97,19 @@ const joinButton: CSSProperties = {
   cursor: 'pointer',
 }
 
+/** The Cancel affordance beside Join — static, so it lives at module scope (#586). */
+const cancelButton: CSSProperties = {
+  fontFamily: TYPE,
+  fontSize: 'var(--text-md)',
+  letterSpacing: '0.06em',
+  textTransform: 'uppercase',
+  color: MUTED,
+  background: 'transparent',
+  border: `1px solid ${LINE}`,
+  padding: '11px 16px',
+  cursor: 'pointer',
+}
+
 export default function SnideFactionPage({ state }: { state: FactionDetailState }) {
   const { t } = useTranslation('factions')
   const { faction, members, tasks, recentPraxis, membership } = state
@@ -199,17 +212,7 @@ export default function SnideFactionPage({ state }: { state: FactionDetailState 
                   type="button"
                   onClick={() => setConfirming(false)}
                   disabled={membership.joining}
-                  style={{
-                    fontFamily: TYPE,
-                    fontSize: 'var(--text-md)',
-                    letterSpacing: '0.06em',
-                    textTransform: 'uppercase',
-                    color: MUTED,
-                    background: 'transparent',
-                    border: `1px solid ${LINE}`,
-                    padding: '11px 16px',
-                    cursor: 'pointer',
-                  }}
+                  style={cancelButton}
                 >
                   {t('detail.join.cancel')}
                 </button>

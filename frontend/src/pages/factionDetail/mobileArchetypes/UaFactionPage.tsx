@@ -64,7 +64,7 @@ function Medallion({ name, size }: { name: string; size: number }) {
         fontFamily: DISPLAY,
         fontStyle: 'italic',
         fontWeight: 700,
-        // ornament: avatar monogram, sized from the medallion it sits in - geometry, not text.
+        // ornament: avatar monogram, sized from the medallion it sits in — geometry, not text.
         fontSize: size * 0.42,
         color: ACCENT,
       }}
@@ -99,6 +99,19 @@ const joinButton: CSSProperties = {
   cursor: 'pointer',
 }
 
+/** The Cancel affordance beside Join — static, so it lives at module scope (#586). */
+const cancelButton: CSSProperties = {
+  fontFamily: ENGRAVED,
+  fontSize: 'var(--text-md)',
+  letterSpacing: '0.1em',
+  textTransform: 'uppercase',
+  color: SUB,
+  background: 'transparent',
+  border: `1px solid ${LINE}`,
+  padding: '11px 16px',
+  cursor: 'pointer',
+}
+
 export default function UaFactionPage({ state }: { state: FactionDetailState }) {
   const { t } = useTranslation('factions')
   const { faction, members, tasks, recentPraxis, membership } = state
@@ -128,7 +141,7 @@ export default function UaFactionPage({ state }: { state: FactionDetailState }) 
             }}
           >
             <div style={{ ...kicker, color: ACCENT }}>{t('ua.mobile.eyebrow')}</div>
-            {/* ornament: masthead display type - the engraved title is the skin's identity (§4/§270). */}
+            {/* ornament: masthead display type — the engraved title is the skin's identity (§4/§270). */}
             <h1 style={{ fontFamily: DISPLAY, fontStyle: 'italic', fontWeight: 700, fontSize: 34, lineHeight: 1.05, color: INK, margin: '4px 0 0' }}>
               {name}
             </h1>
@@ -211,17 +224,7 @@ export default function UaFactionPage({ state }: { state: FactionDetailState }) 
                   type="button"
                   onClick={() => setConfirming(false)}
                   disabled={membership.joining}
-                  style={{
-                    fontFamily: ENGRAVED,
-                    fontSize: 'var(--text-md)',
-                    letterSpacing: '0.1em',
-                    textTransform: 'uppercase',
-                    color: SUB,
-                    background: 'transparent',
-                    border: `1px solid ${LINE}`,
-                    padding: '11px 16px',
-                    cursor: 'pointer',
-                  }}
+                  style={cancelButton}
                 >
                   {t('detail.join.cancel')}
                 </button>

@@ -96,6 +96,19 @@ const joinButton: CSSProperties = {
   cursor: 'pointer',
 }
 
+/** The Cancel affordance beside Join — static, so it lives at module scope (#586). */
+const cancelButton: CSSProperties = {
+  fontFamily: DISPLAY,
+  fontSize: 'var(--text-md)',
+  letterSpacing: '0.1em',
+  textTransform: 'uppercase',
+  color: MUTED,
+  background: 'transparent',
+  border: `1px solid ${GOLD_DEEP}`,
+  padding: '11px 16px',
+  cursor: 'pointer',
+}
+
 export default function EphemeristsFactionPage({ state }: { state: FactionDetailState }) {
   const { t } = useTranslation('factions')
   const { faction, members, tasks, recentPraxis, membership } = state
@@ -197,17 +210,7 @@ export default function EphemeristsFactionPage({ state }: { state: FactionDetail
                   type="button"
                   onClick={() => setConfirming(false)}
                   disabled={membership.joining}
-                  style={{
-                    fontFamily: DISPLAY,
-                    fontSize: 'var(--text-md)',
-                    letterSpacing: '0.1em',
-                    textTransform: 'uppercase',
-                    color: MUTED,
-                    background: 'transparent',
-                    border: `1px solid ${GOLD_DEEP}`,
-                    padding: '11px 16px',
-                    cursor: 'pointer',
-                  }}
+                  style={cancelButton}
                 >
                   {t('detail.join.cancel')}
                 </button>

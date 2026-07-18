@@ -103,6 +103,18 @@ const joinButton: CSSProperties = {
   cursor: 'pointer',
 }
 
+/** The Cancel affordance beside Join — static, so it lives at module scope (#586). */
+const cancelButton: CSSProperties = {
+  fontFamily: ACCENT_FONT,
+  fontSize: 'var(--text-xl)',
+  letterSpacing: '0.06em',
+  color: MUTED,
+  background: PAPER_DEEP,
+  border: `1.5px solid ${INK}`,
+  padding: '11px 16px',
+  cursor: 'pointer',
+}
+
 export default function EverymenFactionPage({ state }: { state: FactionDetailState }) {
   const { t } = useTranslation('factions')
   const { faction, members, tasks, recentPraxis, membership } = state
@@ -207,16 +219,7 @@ export default function EverymenFactionPage({ state }: { state: FactionDetailSta
                   type="button"
                   onClick={() => setConfirming(false)}
                   disabled={membership.joining}
-                  style={{
-                    fontFamily: ACCENT_FONT,
-                    fontSize: 'var(--text-xl)',
-                    letterSpacing: '0.06em',
-                    color: MUTED,
-                    background: PAPER_DEEP,
-                    border: `1.5px solid ${INK}`,
-                    padding: '11px 16px',
-                    cursor: 'pointer',
-                  }}
+                  style={cancelButton}
                 >
                   {t('detail.join.cancel')}
                 </button>

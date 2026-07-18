@@ -90,6 +90,19 @@ const joinButton: CSSProperties = {
   cursor: 'pointer',
 }
 
+/** The Cancel affordance beside Join — static, so it lives at module scope (#586). */
+const cancelButton: CSSProperties = {
+  fontFamily: MONO,
+  fontSize: 'var(--text-base)',
+  letterSpacing: '0.12em',
+  textTransform: 'uppercase',
+  color: ink(45),
+  background: 'transparent',
+  border: `1px solid ${ink(14)}`,
+  padding: '11px 16px',
+  cursor: 'pointer',
+}
+
 export default function AlbescentFactionPage({ state }: { state: FactionDetailState }) {
   const { t } = useTranslation('factions')
   const { faction, members, tasks, recentPraxis, membership } = state
@@ -199,17 +212,7 @@ export default function AlbescentFactionPage({ state }: { state: FactionDetailSt
                   type="button"
                   onClick={() => setConfirming(false)}
                   disabled={membership.joining}
-                  style={{
-                    fontFamily: MONO,
-                    fontSize: 'var(--text-base)',
-                    letterSpacing: '0.12em',
-                    textTransform: 'uppercase',
-                    color: ink(45),
-                    background: 'transparent',
-                    border: `1px solid ${ink(14)}`,
-                    padding: '11px 16px',
-                    cursor: 'pointer',
-                  }}
+                  style={cancelButton}
                 >
                   {t('detail.join.cancel')}
                 </button>

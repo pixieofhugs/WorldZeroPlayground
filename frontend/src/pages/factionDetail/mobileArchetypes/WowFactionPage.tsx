@@ -64,7 +64,7 @@ function Avatar({ name, size }: { name: string; size: number }) {
         alignItems: 'center',
         justifyContent: 'center',
         fontFamily: SCRIPT,
-        // ornament: avatar monogram, sized from the sticker it sits in - geometry, not text.
+        // ornament: avatar monogram, sized from the sticker it sits in — geometry, not text.
         fontSize: size * 0.5,
         color: ON_ACCENT,
       }}
@@ -103,6 +103,20 @@ const joinButton: CSSProperties = {
   borderRadius: 14,
   padding: '13px 16px',
   boxShadow: `0 6px 16px color-mix(in srgb, ${PINK} 30%, transparent)`,
+  cursor: 'pointer',
+}
+
+/** The Cancel affordance beside Join — static, so it lives at module scope (#586). */
+const cancelButton: CSSProperties = {
+  fontFamily: BODY,
+  fontSize: 'var(--text-md)',
+  letterSpacing: '0.1em',
+  textTransform: 'uppercase',
+  color: CARD_MUTED,
+  background: 'transparent',
+  border: `1.5px solid ${NOTEPAD_BORDER}`,
+  borderRadius: 12,
+  padding: '11px 16px',
   cursor: 'pointer',
 }
 
@@ -169,7 +183,7 @@ export default function WowFactionPage({ state }: { state: FactionDetailState })
             color: TITLE_TEXT,
           }}
         >
-          {/* ornament: masthead display type - the hand-lettered title is the skin's identity (§4/§270). */}
+          {/* ornament: masthead display type — the hand-lettered title is the skin's identity (§4/§270). */}
           <h1 style={{ display: 'inline-flex', alignItems: 'center', gap: 8, fontFamily: SCRIPT, fontSize: 36, lineHeight: 0.95, margin: 0 }}>
             <Sparkle size={18} color={TITLE_TEXT} />
             {name}
@@ -253,18 +267,7 @@ export default function WowFactionPage({ state }: { state: FactionDetailState })
                   type="button"
                   onClick={() => setConfirming(false)}
                   disabled={membership.joining}
-                  style={{
-                    fontFamily: BODY,
-                    fontSize: 'var(--text-md)',
-                    letterSpacing: '0.1em',
-                    textTransform: 'uppercase',
-                    color: CARD_MUTED,
-                    background: 'transparent',
-                    border: `1.5px solid ${NOTEPAD_BORDER}`,
-                    borderRadius: 12,
-                    padding: '11px 16px',
-                    cursor: 'pointer',
-                  }}
+                  style={cancelButton}
                 >
                   {t('detail.join.cancel')}
                 </button>

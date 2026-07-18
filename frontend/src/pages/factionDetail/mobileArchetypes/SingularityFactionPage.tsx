@@ -92,6 +92,19 @@ const joinButton: CSSProperties = {
   cursor: 'pointer',
 }
 
+/** The Cancel affordance beside Join — static, so it lives at module scope (#586). */
+const cancelButton: CSSProperties = {
+  fontFamily: FONT,
+  fontSize: 'var(--text-md)',
+  letterSpacing: '0.1em',
+  textTransform: 'uppercase',
+  color: signal(60),
+  background: 'transparent',
+  border: `1px solid ${signal(38)}`,
+  padding: '11px 16px',
+  cursor: 'pointer',
+}
+
 export default function SingularityFactionPage({ state }: { state: FactionDetailState }) {
   const { t } = useTranslation('factions')
   const { faction, members, tasks, recentPraxis, membership } = state
@@ -197,17 +210,7 @@ export default function SingularityFactionPage({ state }: { state: FactionDetail
                   type="button"
                   onClick={() => setConfirming(false)}
                   disabled={membership.joining}
-                  style={{
-                    fontFamily: FONT,
-                    fontSize: 'var(--text-md)',
-                    letterSpacing: '0.1em',
-                    textTransform: 'uppercase',
-                    color: signal(60),
-                    background: 'transparent',
-                    border: `1px solid ${signal(38)}`,
-                    padding: '11px 16px',
-                    cursor: 'pointer',
-                  }}
+                  style={cancelButton}
                 >
                   {t('detail.join.cancel')}
                 </button>
