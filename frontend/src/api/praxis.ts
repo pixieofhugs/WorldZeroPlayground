@@ -115,6 +115,13 @@ export interface PraxisCardOut {
   media_items?: MediaItemOut[]
   /** The authenticated viewer's own cast value (1–5); null/absent if unvoted. */
   viewer_vote?: number | null
+  /**
+   * Display name of an account-mate character who voted on this praxis — the
+   * "voted by {name}" marker (#644, §7). Account-scoped, so it can be set even
+   * when the *carried* character has no star of its own (`viewer_vote` null).
+   * Null/absent when no character on the viewer's account has voted.
+   */
+  voted_by_name?: string | null
 }
 
 export interface PraxisCreate {
@@ -140,6 +147,16 @@ export async function listPraxes(filters?: {
   type?: PraxisType
   status?: PraxisStatus
   faction?: string
+  /** Free-text search over praxis title, praxis body, and task title (#644 §4). */
+  q?: string
+  /**
+   * Account-scoped vote filter (#644 §6). `no` = "needs my vote" (votable and
+   * unvoted, excluding praxes my account is a member of); `yes` = any vote from
+   * any of my characters. The two are deliberately not complements.
+   */
+  voted?: 'yes' | 'no'
+  /** Seal-date order (#644 §2). Defaults server-side to `newest`. */
+  sort?: 'newest' | 'oldest'
   limit?: number
   offset?: number
 }): Promise<PraxisCardOut[]> {
