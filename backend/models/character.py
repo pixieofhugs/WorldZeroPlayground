@@ -28,9 +28,11 @@ class Character(TimestampMixin, Base):
     bio: Mapped[str] = mapped_column(Text, nullable=False, server_default="")
     avatar_url: Mapped[str] = mapped_column(String, nullable=False, server_default="")
     location: Mapped[str] = mapped_column(String, nullable=False, server_default="")
-    # faction_slug defaults to "ua" — the starting faction for all new characters
+    # ADR-0019: characters are born Unaffiliated ("na"); factions are invite-gated.
+    # services.character.create_character always sets this explicitly — the default
+    # is only a backstop for direct inserts, and must not contradict ADR-0019.
     faction_slug: Mapped[str] = mapped_column(
-        ForeignKey("faction.slug"), nullable=False, server_default="ua"
+        ForeignKey("faction.slug"), nullable=False, server_default="na"
     )
     status: Mapped[CharacterStatus] = mapped_column(
         Enum(CharacterStatus, create_type=False), nullable=False, default=CharacterStatus.active

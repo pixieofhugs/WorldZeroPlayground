@@ -754,3 +754,25 @@ async def test_votes_received_with_votes(
     data = resp.json()
     assert data["character_id"] == character.id
     assert data["votes_received"] == 1
+
+
+@pytest.mark.asyncio
+async def test_faction_slug_db_default_is_unaffiliated(
+    db_session: AsyncSession, account: Account, era: Era, faction_ua: Faction
+):
+    """A direct insert that omits faction_slug falls back to 'na', not 'ua' (#697).
+
+    ADR-0019: characters are born Unaffiliated. create_character always sets the
+    slug explicitly, so this guards the column default itself against drifting
+    back to a real faction.
+    """
+    bare = Character(
+        account_id=account.id,
+        username="defaultfaction",
+        display_name="Default Faction",
+    )
+    db_session.add(bare)
+    await db_session.commit()
+    await db_session.refresh(bare)
+
+    assert bare.faction_slug == "na"
