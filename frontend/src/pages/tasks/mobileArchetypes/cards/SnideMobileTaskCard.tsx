@@ -25,7 +25,7 @@ const CARD_SHADOW = '5px 6px 0 rgba(0,0,0,.5)'
 
 const kicker: CSSProperties = {
   fontFamily: TYPE,
-  fontSize: 8,
+  fontSize: 'var(--text-xs)',
   letterSpacing: '0.24em',
   textTransform: 'uppercase',
   color: MUTED,
@@ -56,22 +56,23 @@ export default function SnideMobileTaskCard({ task, points }: { task: TaskOut; p
         aria-hidden
         style={{ position: 'absolute', inset: 0, pointerEvents: 'none', backgroundImage: 'radial-gradient(rgba(182,255,46,0.07) 32%, transparent 34%)', backgroundSize: '5px 5px' }}
       />
-      <span style={{ position: 'relative', display: 'inline-flex', alignItems: 'center', gap: 6, fontFamily: TYPE, fontSize: 9, letterSpacing: '0.1em', textTransform: 'uppercase', color }}>
+      <span style={{ position: 'relative', display: 'inline-flex', alignItems: 'center', gap: 6, fontFamily: TYPE, fontSize: 'var(--text-sm)', letterSpacing: '0.1em', textTransform: 'uppercase', color }}>
         <i style={{ width: 7, height: 7, background: color, flex: 'none' }} />
         {factionName(task.primary_faction_slug)}
       </span>
 
-      <h2 style={{ position: 'relative', fontFamily: COND, fontSize: 21, letterSpacing: '0.02em', lineHeight: 1.1, color: TEXT, margin: 0 }}>
+      <h2 className="content-title" style={{ position: 'relative', fontFamily: COND, letterSpacing: '0.02em', lineHeight: 1.1, color: TEXT, margin: 0 }}>
         {task.title}
       </h2>
 
       <MobileTaskDescription
         text={task.description}
-        style={{ position: 'relative', fontFamily: TYPE, fontSize: 12.5, lineHeight: 1.5, color: MUTED, margin: 0 }}
+        className="content-text"
+        style={{ position: 'relative', fontFamily: TYPE, lineHeight: 1.5, color: MUTED, margin: 0 }}
       />
 
       <div className="flex items-center gap-3" style={{ position: 'relative', marginTop: 2 }}>
-        <span style={{ fontFamily: IMPACT, fontSize: 13, letterSpacing: '0.02em', color: INK, background: ACID, padding: '3px 9px' }}>
+        <span style={{ fontFamily: IMPACT, fontSize: 'var(--text-xl)', letterSpacing: '0.02em', color: INK, background: ACID, padding: '3px 9px' }}>
           {t('mobile.points', { points })}
         </span>
         <span style={{ ...kicker, color: MUTED }}>{t('mobile.level', { level: task.level_required })}</span>

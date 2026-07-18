@@ -24,7 +24,7 @@ const MONO = 'var(--font-body)'
 
 const kicker: CSSProperties = {
   fontFamily: MONO,
-  fontSize: 8,
+  fontSize: 'var(--text-xs)',
   letterSpacing: '0.24em',
   textTransform: 'uppercase',
   color: MUTED,
@@ -50,22 +50,23 @@ export default function UaMobileTaskCard({ task, points }: { task: TaskOut; poin
         textDecoration: 'none',
       }}
     >
-      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontFamily: ENGRAVED, fontSize: 9, letterSpacing: '0.1em', textTransform: 'uppercase', color }}>
+      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontFamily: ENGRAVED, fontSize: 'var(--text-sm)', letterSpacing: '0.1em', textTransform: 'uppercase', color }}>
         <i style={{ width: 7, height: 7, borderRadius: '50%', background: color, flex: 'none' }} />
         {factionName(task.primary_faction_slug)}
       </span>
 
-      <h2 style={{ fontFamily: DISPLAY, fontStyle: 'italic', fontWeight: 700, fontSize: 19, lineHeight: 1.15, color: INK, margin: 0 }}>
+      <h2 className="content-title" style={{ fontFamily: DISPLAY, fontStyle: 'italic', fontWeight: 700, lineHeight: 1.15, color: INK, margin: 0 }}>
         {task.title}
       </h2>
 
       <MobileTaskDescription
         text={task.description}
-        style={{ fontFamily: DISPLAY, fontStyle: 'italic', fontSize: 13, lineHeight: 1.5, color: SUB, margin: 0 }}
+        className="content-text"
+        style={{ fontFamily: DISPLAY, fontStyle: 'italic', lineHeight: 1.5, color: SUB, margin: 0 }}
       />
 
       <div className="flex items-center gap-3" style={{ marginTop: 2 }}>
-        <span style={{ fontFamily: ENGRAVED, fontSize: 12, letterSpacing: '0.04em', color: INK, background: PAPER_WARM, border: `1px solid ${GOLD}`, padding: '3px 9px' }}>
+        <span style={{ fontFamily: ENGRAVED, fontSize: 'var(--text-lg)', letterSpacing: '0.04em', color: INK, background: PAPER_WARM, border: `1px solid ${GOLD}`, padding: '3px 9px' }}>
           {t('mobile.points', { points })}
         </span>
         <span style={{ ...kicker, color: MUTED }}>{t('mobile.level', { level: task.level_required })}</span>
