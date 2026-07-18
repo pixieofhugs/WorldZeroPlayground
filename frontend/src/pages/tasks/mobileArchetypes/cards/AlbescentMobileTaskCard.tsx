@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next'
 import type { TaskOut } from '../../../../api/tasks'
 import { factionName } from '../../../../utils/factions'
 import AlbescentSigil from '../../../../components/cards/AlbescentSigil'
+import { MobileTaskDescription } from './shared'
 
 /**
  * Albescent MOBILE task card (#528/#565) — a quiet cotton Ledger entry: the
@@ -54,23 +55,10 @@ export default function AlbescentMobileTaskCard({ task, points }: { task: TaskOu
         {task.title}
       </h2>
 
-      {task.description && (
-        <p
-          style={{
-            fontFamily: MONO,
-            fontSize: 10,
-            lineHeight: 1.6,
-            color: ink(42),
-            margin: 0,
-            display: '-webkit-box',
-            WebkitLineClamp: 2,
-            WebkitBoxOrient: 'vertical',
-            overflow: 'hidden',
-          }}
-        >
-          {task.description}
-        </p>
-      )}
+      <MobileTaskDescription
+        text={task.description}
+        style={{ fontFamily: MONO, fontSize: 10, lineHeight: 1.6, color: ink(42), margin: 0 }}
+      />
 
       <div className="flex items-center justify-between" style={{ marginTop: 2, borderTop: `1px solid ${ink(7)}`, paddingTop: 10 }}>
         <span style={{ ...kicker, letterSpacing: '0.2em', color: ink(24) }}>{t('mobile.level', { level: task.level_required })}</span>

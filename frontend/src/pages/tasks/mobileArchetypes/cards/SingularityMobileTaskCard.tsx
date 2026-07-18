@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import type { TaskOut } from '../../../../api/tasks'
 import { factionCssVar, factionName } from '../../../../utils/factions'
+import { MobileTaskDescription } from './shared'
 
 /**
  * Singularity MOBILE task card (#526/#565) — a bracketed readout card on a void
@@ -56,23 +57,10 @@ export default function SingularityMobileTaskCard({ task, points }: { task: Task
         {task.title}
       </h2>
 
-      {task.description && (
-        <p
-          style={{
-            fontFamily: FONT,
-            fontSize: 11,
-            lineHeight: 1.5,
-            color: phosphor(55),
-            margin: 0,
-            display: '-webkit-box',
-            WebkitLineClamp: 2,
-            WebkitBoxOrient: 'vertical',
-            overflow: 'hidden',
-          }}
-        >
-          {task.description}
-        </p>
-      )}
+      <MobileTaskDescription
+        text={task.description}
+        style={{ fontFamily: FONT, fontSize: 11, lineHeight: 1.5, color: phosphor(55), margin: 0 }}
+      />
 
       <div className="flex items-center gap-3" style={{ marginTop: 2, borderTop: `1px solid ${signal(20)}`, paddingTop: 8 }}>
         <span style={{ fontFamily: FONT, fontSize: 12, letterSpacing: '0.04em', color: PHOSPHOR, border: `1px solid ${signal(38)}`, padding: '3px 9px' }}>
