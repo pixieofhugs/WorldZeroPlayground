@@ -50,7 +50,7 @@ function Leaf({ children }: { children: ReactNode }) {
         background: VELLUM,
         border: `1px solid ${GOLD_DEEP}`,
         boxShadow: '0 10px 24px rgba(42,29,18,0.14)',
-        padding: 16,
+        padding: 'var(--space-lg)',
       }}
     >
       {children}
@@ -72,23 +72,23 @@ export default function EphemeristsHome({ state }: { state: FieldDeskHomeState }
     <div
       data-skin="ephemerists"
       className="page"
-      style={{ display: 'flex', flexDirection: 'column', gap: 14, fontFamily: SERIF, color: TEXT, background: VELLUM_DEEP }}
+      style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-lg)', fontFamily: SERIF, color: TEXT, background: VELLUM_DEEP }}
     >
       {/* Cinzel running-head */}
       <header>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: RUBRIC }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-sm)', color: RUBRIC }}>
           <EphemeristsSigil size={13} color={LAPIS} />
           <span style={kicker}>{t('nav.home')}</span>
         </div>
-        <h1 style={{ fontFamily: DISPLAY, fontWeight: 700, fontSize: 'var(--text-title)', lineHeight: 1.05, color: TEXT, margin: '4px 0 0' }}>
+        <h1 style={{ fontFamily: DISPLAY, fontWeight: 700, fontSize: 'var(--text-title)', lineHeight: 1.05, color: TEXT, margin: 'var(--space-xs) 0 0' }}>
           {t('fieldDesk.home.ephemerists.masthead')}
         </h1>
-        <div style={{ height: 1, marginTop: 9, background: goldRule }} />
+        <div style={{ height: 1, marginTop: 'var(--space-sm)', background: goldRule }} />
       </header>
 
       {/* ── Observer leaf ── */}
       <Leaf>
-        <div className="flex items-center justify-between" style={{ marginBottom: 14 }}>
+        <div className="flex items-center justify-between" style={{ marginBottom: 'var(--space-lg)' }}>
           <span style={{ ...kicker, color: RUBRIC }}>{t('fieldDesk.home.ephemerists.charEyebrow')}</span>
           <Link to={`/characters/${character.id}/edit`} style={{ ...kicker, color: LAPIS, textDecoration: 'none' }}>
             {t('fieldDesk.home.edit')}
@@ -96,7 +96,17 @@ export default function EphemeristsHome({ state }: { state: FieldDeskHomeState }
         </div>
 
         <div className="flex items-center gap-3">
-          <div className="shrink-0" style={{ width: 56, height: 56, borderRadius: '50%', padding: 2, background: GOLD_DEEP }}>
+          <div
+            className="shrink-0"
+            style={{
+              width: 56,
+              height: 56,
+              borderRadius: '50%',
+              // eslint-disable-next-line local/no-raw-style-values -- ornament: gold ring thickness drawn around a 56px avatar; the nearest rung (4px) doubles the band.
+              padding: 2,
+              background: GOLD_DEEP,
+            }}
+          >
             {character.avatar_url ? (
               <img
                 src={mediaUrl(character.avatar_url)}
@@ -107,7 +117,7 @@ export default function EphemeristsHome({ state }: { state: FieldDeskHomeState }
             ) : (
               <span
                 className="flex w-full h-full items-center justify-center rounded-full"
-                // ornament: avatar initial sized to its 56px gilt ring, not text
+                // eslint-disable-next-line local/no-raw-style-values -- ornament: avatar initial sized to its 56px gilt ring, not text
                 style={{ background: VELLUM_DEEP, fontFamily: DISPLAY, fontWeight: 700, fontSize: 24, color: RUBRIC }}
               >
                 {character.display_name[0]?.toUpperCase()}
@@ -122,7 +132,7 @@ export default function EphemeristsHome({ state }: { state: FieldDeskHomeState }
             >
               {character.display_name}
             </Link>
-            <div className="truncate" style={{ marginTop: 5, fontFamily: DISPLAY, fontSize: 'var(--text-sm)', letterSpacing: '0.12em', textTransform: 'uppercase', color: MUTED }}>
+            <div className="truncate" style={{ marginTop: 'var(--space-xs)', fontFamily: DISPLAY, fontSize: 'var(--text-sm)', letterSpacing: '0.12em', textTransform: 'uppercase', color: MUTED }}>
               {t('sidebar.characterCard.factionLevel', {
                 faction: factionName(character.faction_slug),
                 level: character.level,
@@ -133,21 +143,21 @@ export default function EphemeristsHome({ state }: { state: FieldDeskHomeState }
             <div style={{ fontFamily: DISPLAY, fontWeight: 700, fontSize: 'var(--text-title)', lineHeight: 1, color: RUBRIC }}>
               {character.score?.toLocaleString() ?? '0'}
             </div>
-            <div style={{ ...kicker, marginTop: 2 }}>{t('fieldDesk.home.stats.points')}</div>
+            <div style={{ ...kicker, marginTop: 'var(--space-xs)' }}>{t('fieldDesk.home.stats.points')}</div>
           </div>
         </div>
 
-        <div className="flex gap-2" style={{ marginTop: 16 }}>
+        <div className="flex gap-2" style={{ marginTop: 'var(--space-lg)' }}>
           {stats.map((stat) => (
             <div
               key={stat.label}
               className="text-center"
-              style={{ flex: '1 1 0', minWidth: 0, background: VELLUM_DEEP, border: `1px solid ${GOLD_DEEP}`, padding: '11px 6px' }}
+              style={{ flex: '1 1 0', minWidth: 0, background: VELLUM_DEEP, border: `1px solid ${GOLD_DEEP}`, padding: 'var(--space-md) var(--space-sm)' }}
             >
               <div className="truncate" style={{ fontFamily: DISPLAY, fontWeight: 700, fontSize: 'var(--text-content)', lineHeight: 1, color: TEXT }}>
                 {stat.value}
               </div>
-              <div style={{ ...kicker, marginTop: 6 }}>{stat.label}</div>
+              <div style={{ ...kicker, marginTop: 'var(--space-sm)' }}>{stat.label}</div>
             </div>
           ))}
         </div>
@@ -158,7 +168,7 @@ export default function EphemeristsHome({ state }: { state: FieldDeskHomeState }
         <Link
           to="/updates?filter=requests"
           className="flex items-center justify-between"
-          style={{ background: VELLUM, border: `1px solid ${GOLD_DEEP}`, padding: '10px 16px', fontFamily: SCRIPT, fontStyle: 'italic', fontSize: 'var(--text-content)', color: TEXT, textDecoration: 'none' }}
+          style={{ background: VELLUM, border: `1px solid ${GOLD_DEEP}`, padding: 'var(--space-md) var(--space-lg)', fontFamily: SCRIPT, fontStyle: 'italic', fontSize: 'var(--text-content)', color: TEXT, textDecoration: 'none' }}
         >
           <span>{t('fieldDesk.home.pending', { count: pendingCount })}</span>
           <span aria-hidden style={{ color: RUBRIC }}>›</span>
@@ -167,7 +177,7 @@ export default function EphemeristsHome({ state }: { state: FieldDeskHomeState }
 
       {/* ── Surveys underway ── */}
       <Leaf>
-        <div className="flex items-center gap-2.5" style={{ marginBottom: 10 }}>
+        <div className="flex items-center gap-2.5" style={{ marginBottom: 'var(--space-md)' }}>
           <span style={{ fontFamily: DISPLAY, fontSize: 'var(--text-md)', letterSpacing: '0.1em', textTransform: 'uppercase', color: TEXT }}>
             {t('fieldDesk.home.ephemerists.questsHeading')}
           </span>
@@ -188,14 +198,14 @@ export default function EphemeristsHome({ state }: { state: FieldDeskHomeState }
                 key={praxis.id}
                 to={`/praxes/${praxis.id}/edit`}
                 className="flex items-center gap-3"
-                style={{ padding: '12px 0', borderTop: index === 0 ? undefined : `1px solid ${GOLD_DEEP}`, textDecoration: 'none' }}
+                style={{ padding: 'var(--space-md) 0', borderTop: index === 0 ? undefined : `1px solid ${GOLD_DEEP}`, textDecoration: 'none' }}
               >
                 <span className="shrink-0" style={{ width: 9, height: 9, borderRadius: '50%', background: RUBRIC }} />
                 <div className="min-w-0 flex-1">
                   <div className="truncate" style={{ fontFamily: DISPLAY, fontWeight: 700, fontSize: 'var(--text-content)', lineHeight: 1.15, color: TEXT }}>
                     {praxis.task_title}
                   </div>
-                  <div className="truncate" style={{ marginTop: 3, fontFamily: DISPLAY, fontSize: 'var(--text-xs)', letterSpacing: '0.1em', textTransform: 'uppercase', color: MUTED }}>
+                  <div className="truncate" style={{ marginTop: 'var(--space-xs)', fontFamily: DISPLAY, fontSize: 'var(--text-xs)', letterSpacing: '0.1em', textTransform: 'uppercase', color: MUTED }}>
                     {t('fieldDesk.home.taskMeta', {
                       faction: factionName(praxis.task_faction_slug),
                       points: praxis.task_point_value,
@@ -204,7 +214,7 @@ export default function EphemeristsHome({ state }: { state: FieldDeskHomeState }
                 </div>
                 <span
                   className="shrink-0"
-                  style={{ fontFamily: DISPLAY, fontSize: 'var(--text-xs)', letterSpacing: '0.1em', textTransform: 'uppercase', color: LAPIS, padding: '4px 9px', border: `1px solid ${GOLD_DEEP}` }}
+                  style={{ fontFamily: DISPLAY, fontSize: 'var(--text-xs)', letterSpacing: '0.1em', textTransform: 'uppercase', color: LAPIS, padding: 'var(--space-xs) var(--space-sm)', border: `1px solid ${GOLD_DEEP}` }}
                 >
                   {t(`praxisType.${praxis.type}`)}
                 </span>
@@ -219,7 +229,7 @@ export default function EphemeristsHome({ state }: { state: FieldDeskHomeState }
         <Link
           to="/tasks"
           className="flex-1 flex items-center justify-center"
-          style={{ fontFamily: DISPLAY, fontWeight: 700, fontSize: 'var(--text-lg)', letterSpacing: '0.1em', textTransform: 'uppercase', padding: 14, color: PARCHMENT, background: RUBRIC, border: `1px solid ${GOLD}`, textDecoration: 'none' }}
+          style={{ fontFamily: DISPLAY, fontWeight: 700, fontSize: 'var(--text-lg)', letterSpacing: '0.1em', textTransform: 'uppercase', padding: 'var(--space-lg)', color: PARCHMENT, background: RUBRIC, border: `1px solid ${GOLD}`, textDecoration: 'none' }}
         >
           {t('fieldDesk.home.browseTasks')}
         </Link>
@@ -227,9 +237,9 @@ export default function EphemeristsHome({ state }: { state: FieldDeskHomeState }
           <Link
             to="/propose-task"
             className="flex-1 flex items-center justify-center gap-2"
-            style={{ fontFamily: DISPLAY, fontWeight: 700, fontSize: 'var(--text-lg)', letterSpacing: '0.1em', textTransform: 'uppercase', padding: 14, color: TEXT, background: VELLUM, border: `1px solid ${GOLD_DEEP}`, textDecoration: 'none' }}
+            style={{ fontFamily: DISPLAY, fontWeight: 700, fontSize: 'var(--text-lg)', letterSpacing: '0.1em', textTransform: 'uppercase', padding: 'var(--space-lg)', color: TEXT, background: VELLUM, border: `1px solid ${GOLD_DEEP}`, textDecoration: 'none' }}
           >
-            {/* ornament: "+" glyph used as an icon, sized to the button row */}
+            {/* eslint-disable-next-line local/no-raw-style-values -- ornament: "+" glyph used as an icon, sized to the button row */}
             <span aria-hidden style={{ fontSize: 15, lineHeight: 1 }}>+</span>
             <span>{t('actions.proposeTask')}</span>
           </Link>

@@ -1,9 +1,1 @@
-src/pages/fieldDesk/mobileArchetypes/AlbescentHome.tsx
-src/pages/fieldDesk/mobileArchetypes/DefaultFieldDesk.tsx
-src/pages/fieldDesk/mobileArchetypes/EphemeristsHome.tsx
-src/pages/fieldDesk/mobileArchetypes/EverymenHome.tsx
-src/pages/fieldDesk/mobileArchetypes/SingularityHome.tsx
-src/pages/fieldDesk/mobileArchetypes/SnideHome.tsx
-src/pages/fieldDesk/mobileArchetypes/UaHome.tsx
-src/pages/fieldDesk/mobileArchetypes/WowFieldDesk.tsx
 src/pages/Leaderboard.tsx

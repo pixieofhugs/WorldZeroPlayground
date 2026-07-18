@@ -60,7 +60,7 @@ function Plate({ children, style }: { children: ReactNode; style?: CSSProperties
         backgroundImage: 'radial-gradient(color-mix(in srgb, var(--everymen-ink) 6%, transparent) 0.6px, transparent 0.9px)',
         backgroundSize: '5px 5px',
         border: `2px solid ${INK}`,
-        padding: 16,
+        padding: 'var(--space-lg)',
         ...style,
       }}
     >
@@ -71,7 +71,7 @@ function Plate({ children, style }: { children: ReactNode; style?: CSSProperties
 
 function SectionHead({ title, trailing }: { title: string; trailing?: ReactNode }) {
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
+    <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-md)', marginBottom: 'var(--space-md)' }}>
       <span style={{ fontFamily: ACCENT_FONT, fontSize: 'var(--text-content)', letterSpacing: '0.06em', color: INK, whiteSpace: 'nowrap' }}>
         {title}
       </span>
@@ -95,7 +95,7 @@ export default function EverymenHome({ state }: { state: FieldDeskHomeState }) {
     <div
       data-skin="everymen"
       className="page"
-      style={{ display: 'flex', flexDirection: 'column', gap: 14, fontFamily: BODY_FONT, color: INK, background: PAPER }}
+      style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-lg)', fontFamily: BODY_FONT, color: INK, background: PAPER }}
     >
       {/* Masthead billboard */}
       <header style={{ border: `3px solid ${INK}`, background: RED, color: CREAM, overflow: 'hidden' }}>
@@ -103,10 +103,10 @@ export default function EverymenHome({ state }: { state: FieldDeskHomeState }) {
           style={{
             display: 'flex',
             alignItems: 'center',
-            gap: 8,
+            gap: 'var(--space-sm)',
             background: INK,
             color: GOLD,
-            padding: '8px 14px',
+            padding: 'var(--space-sm) var(--space-lg)',
           }}
         >
           <CogSeal size={16} />
@@ -125,7 +125,7 @@ export default function EverymenHome({ state }: { state: FieldDeskHomeState }) {
             color: CREAM,
             textShadow: `2px 2px 0 ${INK}`,
             margin: 0,
-            padding: '16px 16px 18px',
+            padding: 'var(--space-lg) var(--space-lg) var(--space-lg)',
           }}
         >
           {t('fieldDesk.home.title')}
@@ -134,7 +134,7 @@ export default function EverymenHome({ state }: { state: FieldDeskHomeState }) {
 
       {/* ── The worker on the roll ── */}
       <Plate>
-        <div className="flex items-center justify-between" style={{ marginBottom: 14 }}>
+        <div className="flex items-center justify-between" style={{ marginBottom: 'var(--space-lg)' }}>
           <span style={kicker}>{t('fieldDesk.home.everymen.charEyebrow')}</span>
           <Link to={`/characters/${character.id}/edit`} style={{ ...kicker, color: RED, textDecoration: 'none' }}>
             {t('fieldDesk.home.edit')}
@@ -142,7 +142,17 @@ export default function EverymenHome({ state }: { state: FieldDeskHomeState }) {
         </div>
 
         <div className="flex items-center gap-3">
-          <div className="shrink-0" style={{ width: 56, height: 56, padding: 3, background: GOLD, border: `2px solid ${INK}` }}>
+          <div
+            className="shrink-0"
+            style={{
+              width: 56,
+              height: 56,
+              // eslint-disable-next-line local/no-raw-style-values -- ornament: gold ring thickness inside the 2px ink border of a 56px avatar; the nearest rung (4px) thickens the band by a third.
+              padding: 3,
+              background: GOLD,
+              border: `2px solid ${INK}`,
+            }}
+          >
             {character.avatar_url ? (
               <img
                 src={mediaUrl(character.avatar_url)}
@@ -153,7 +163,7 @@ export default function EverymenHome({ state }: { state: FieldDeskHomeState }) {
             ) : (
               <span
                 className="flex w-full h-full items-center justify-center"
-                // ornament: avatar initial sized to its 56px gold plate, not text
+                // eslint-disable-next-line local/no-raw-style-values -- ornament: avatar initial sized to its 56px gold plate, not text
                 style={{ background: PAPER_DEEP, fontFamily: ACCENT_FONT, fontSize: 26, color: RED }}
               >
                 {character.display_name[0]?.toUpperCase()}
@@ -168,7 +178,7 @@ export default function EverymenHome({ state }: { state: FieldDeskHomeState }) {
             >
               {character.display_name}
             </Link>
-            <div className="truncate" style={{ ...kicker, marginTop: 5 }}>
+            <div className="truncate" style={{ ...kicker, marginTop: 'var(--space-xs)' }}>
               {t('sidebar.characterCard.factionLevel', {
                 faction: factionName(character.faction_slug),
                 level: character.level,
@@ -179,22 +189,22 @@ export default function EverymenHome({ state }: { state: FieldDeskHomeState }) {
             <div style={{ fontFamily: ACCENT_FONT, fontSize: 'var(--text-title)', lineHeight: 0.9, color: RED }}>
               {character.score?.toLocaleString() ?? '0'}
             </div>
-            <div style={{ ...kicker, marginTop: 2 }}>{t('fieldDesk.home.stats.points')}</div>
+            <div style={{ ...kicker, marginTop: 'var(--space-xs)' }}>{t('fieldDesk.home.stats.points')}</div>
           </div>
         </div>
 
         {/* Points seals */}
-        <div className="flex gap-2" style={{ marginTop: 16 }}>
+        <div className="flex gap-2" style={{ marginTop: 'var(--space-lg)' }}>
           {stats.map((stat) => (
             <div
               key={stat.label}
               className="text-center"
-              style={{ flex: '1 1 0', minWidth: 0, background: PAPER_DEEP, border: `1.5px solid ${INK}`, padding: '11px 6px' }}
+              style={{ flex: '1 1 0', minWidth: 0, background: PAPER_DEEP, border: `1.5px solid ${INK}`, padding: 'var(--space-md) var(--space-sm)' }}
             >
               <div className="truncate" style={{ fontFamily: ACCENT_FONT, fontSize: 'var(--text-title)', lineHeight: 0.9, color: INK }}>
                 {stat.value}
               </div>
-              <div style={{ ...kicker, marginTop: 6 }}>{stat.label}</div>
+              <div style={{ ...kicker, marginTop: 'var(--space-sm)' }}>{stat.label}</div>
             </div>
           ))}
         </div>
@@ -205,7 +215,7 @@ export default function EverymenHome({ state }: { state: FieldDeskHomeState }) {
         <Link
           to="/updates?filter=requests"
           className="flex items-center justify-between"
-          style={{ background: PAPER, border: `1.5px solid ${INK}`, padding: '10px 16px', fontFamily: ACCENT_FONT, fontSize: 'var(--text-content)', letterSpacing: '0.04em', color: INK, textDecoration: 'none' }}
+          style={{ background: PAPER, border: `1.5px solid ${INK}`, padding: 'var(--space-md) var(--space-lg)', fontFamily: ACCENT_FONT, fontSize: 'var(--text-content)', letterSpacing: '0.04em', color: INK, textDecoration: 'none' }}
         >
           <span>{t('fieldDesk.home.pending', { count: pendingCount })}</span>
           <span aria-hidden style={{ color: RED }}>›</span>
@@ -234,14 +244,14 @@ export default function EverymenHome({ state }: { state: FieldDeskHomeState }) {
                 key={praxis.id}
                 to={`/praxes/${praxis.id}/edit`}
                 className="flex items-center gap-3"
-                style={{ padding: '12px 0', borderTop: index === 0 ? undefined : `1px solid color-mix(in srgb, var(--everymen-ink) 20%, transparent)`, textDecoration: 'none' }}
+                style={{ padding: 'var(--space-md) 0', borderTop: index === 0 ? undefined : `1px solid color-mix(in srgb, var(--everymen-ink) 20%, transparent)`, textDecoration: 'none' }}
               >
                 <span className="shrink-0" style={{ width: 10, height: 10, background: RED }} />
                 <div className="min-w-0 flex-1">
                   <div className="truncate" style={{ fontFamily: ACCENT_FONT, fontSize: 'var(--text-content)', lineHeight: 1.05, color: INK }}>
                     {praxis.task_title}
                   </div>
-                  <div className="truncate" style={{ ...kicker, marginTop: 3 }}>
+                  <div className="truncate" style={{ ...kicker, marginTop: 'var(--space-xs)' }}>
                     {t('fieldDesk.home.taskMeta', {
                       faction: factionName(praxis.task_faction_slug),
                       points: praxis.task_point_value,
@@ -250,7 +260,7 @@ export default function EverymenHome({ state }: { state: FieldDeskHomeState }) {
                 </div>
                 <span
                   className="shrink-0"
-                  style={{ fontFamily: BODY_FONT, fontSize: 'var(--text-xs)', letterSpacing: '0.1em', textTransform: 'uppercase', color: CREAM, background: INK, padding: '4px 9px' }}
+                  style={{ fontFamily: BODY_FONT, fontSize: 'var(--text-xs)', letterSpacing: '0.1em', textTransform: 'uppercase', color: CREAM, background: INK, padding: 'var(--space-xs) var(--space-sm)' }}
                 >
                   {t(`praxisType.${praxis.type}`)}
                 </span>
@@ -265,7 +275,7 @@ export default function EverymenHome({ state }: { state: FieldDeskHomeState }) {
         <Link
           to="/tasks"
           className="flex-1 flex items-center justify-center"
-          style={{ fontFamily: ACCENT_FONT, fontSize: 'var(--text-xl)', letterSpacing: '0.08em', padding: 14, color: CREAM, background: RED, border: `2px solid ${INK}`, textDecoration: 'none' }}
+          style={{ fontFamily: ACCENT_FONT, fontSize: 'var(--text-xl)', letterSpacing: '0.08em', padding: 'var(--space-lg)', color: CREAM, background: RED, border: `2px solid ${INK}`, textDecoration: 'none' }}
         >
           {t('fieldDesk.home.browseTasks')}
         </Link>
@@ -273,9 +283,9 @@ export default function EverymenHome({ state }: { state: FieldDeskHomeState }) {
           <Link
             to="/propose-task"
             className="flex-1 flex items-center justify-center gap-2"
-            style={{ fontFamily: ACCENT_FONT, fontSize: 'var(--text-xl)', letterSpacing: '0.08em', padding: 14, color: INK, background: PAPER_DEEP, border: `2px solid ${INK}`, textDecoration: 'none' }}
+            style={{ fontFamily: ACCENT_FONT, fontSize: 'var(--text-xl)', letterSpacing: '0.08em', padding: 'var(--space-lg)', color: INK, background: PAPER_DEEP, border: `2px solid ${INK}`, textDecoration: 'none' }}
           >
-            {/* ornament: "+" glyph used as an icon, sized to the button row */}
+            {/* eslint-disable-next-line local/no-raw-style-values -- ornament: "+" glyph used as an icon, sized to the button row */}
             <span aria-hidden style={{ fontSize: 15, lineHeight: 1 }}>+</span>
             <span>{t('actions.proposeTask')}</span>
           </Link>

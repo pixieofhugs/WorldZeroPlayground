@@ -57,8 +57,8 @@ function Window({ title, children }: { title: string; children: ReactNode }) {
         style={{
           display: 'flex',
           alignItems: 'center',
-          gap: 7,
-          padding: '8px 12px',
+          gap: 'var(--space-sm)',
+          padding: 'var(--space-sm) var(--space-md)',
           background: 'linear-gradient(180deg, var(--faction-wow-title-from), var(--faction-wow-title-to))',
           borderBottom: `2px solid ${WIN_BORDER}`,
         }}
@@ -70,7 +70,7 @@ function Window({ title, children }: { title: string; children: ReactNode }) {
           />
         ))}
         <span
-          style={{ marginLeft: 'auto', display: 'inline-flex', alignItems: 'center', gap: 5, fontFamily: SCRIPT, fontSize: 'var(--text-content)', color: TITLE_TEXT }}
+          style={{ marginLeft: 'auto', display: 'inline-flex', alignItems: 'center', gap: 'var(--space-xs)', fontFamily: SCRIPT, fontSize: 'var(--text-content)', color: TITLE_TEXT }}
         >
           <Sparkle size={11} color={TITLE_TEXT} />
           {title}
@@ -79,13 +79,13 @@ function Window({ title, children }: { title: string; children: ReactNode }) {
       {/* dotted board */}
       <div
         style={{
-          padding: 12,
+          padding: 'var(--space-md)',
           background: BODY_BG,
           backgroundImage: `radial-gradient(${DOT} 1.4px, transparent 1.4px)`,
           backgroundSize: '13px 13px',
         }}
       >
-        <div style={{ background: NOTEPAD_BG, border: `1.5px solid ${NOTEPAD_BORDER}`, borderRadius: 9, padding: 13 }}>
+        <div style={{ background: NOTEPAD_BG, border: `1.5px solid ${NOTEPAD_BORDER}`, borderRadius: 9, padding: 'var(--space-md)' }}>
           {children}
         </div>
       </div>
@@ -98,13 +98,13 @@ const pinkButton: CSSProperties = {
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'center',
-  gap: 7,
+  gap: 'var(--space-sm)',
   fontFamily: BODY,
   fontSize: 'var(--text-lg)',
   letterSpacing: '0.12em',
   textTransform: 'uppercase',
   fontWeight: 700,
-  padding: 15,
+  padding: 'var(--space-lg)',
   borderRadius: 14,
   color: ON_ACCENT,
   border: `1.5px solid ${WIN_BORDER}`,
@@ -117,12 +117,12 @@ const ghostButton: CSSProperties = {
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'center',
-  gap: 6,
+  gap: 'var(--space-sm)',
   fontFamily: BODY,
   fontSize: 'var(--text-lg)',
   letterSpacing: '0.12em',
   textTransform: 'uppercase',
-  padding: 15,
+  padding: 'var(--space-lg)',
   borderRadius: 14,
   color: TITLE_TEXT,
   border: `1.5px solid ${NOTEPAD_BORDER}`,
@@ -147,7 +147,7 @@ export default function WowFieldDesk({ state }: { state: FieldDeskHomeState }) {
       style={{
         display: 'flex',
         flexDirection: 'column',
-        gap: 14,
+        gap: 'var(--space-lg)',
         fontFamily: BODY,
         color: CARD_TEXT,
         background: BODY_BG,
@@ -164,7 +164,7 @@ export default function WowFieldDesk({ state }: { state: FieldDeskHomeState }) {
 
       {/* ── Character window ── */}
       <Window title={t('fieldDesk.home.wow.charWindow')}>
-        <div className="flex items-center justify-between" style={{ marginBottom: 12 }}>
+        <div className="flex items-center justify-between" style={{ marginBottom: 'var(--space-md)' }}>
           <span className="eyebrow" style={{ color: CARD_MUTED }}>
             {t('fieldDesk.home.wow.charEyebrow')}
           </span>
@@ -178,7 +178,17 @@ export default function WowFieldDesk({ state }: { state: FieldDeskHomeState }) {
         </div>
 
         <div className="flex items-center gap-3">
-          <div className="shrink-0" style={{ width: 56, height: 56, borderRadius: '50%', padding: 3, background: PINK }}>
+          <div
+            className="shrink-0"
+            style={{
+              width: 56,
+              height: 56,
+              borderRadius: '50%',
+              // eslint-disable-next-line local/no-raw-style-values -- ornament: pink ring thickness drawn around a 56px avatar; the nearest rung (4px) thickens the band by a third.
+              padding: 3,
+              background: PINK,
+            }}
+          >
             {character.avatar_url ? (
               <img
                 src={mediaUrl(character.avatar_url)}
@@ -192,7 +202,7 @@ export default function WowFieldDesk({ state }: { state: FieldDeskHomeState }) {
                 style={{
                   background: 'radial-gradient(circle at 35% 28%, var(--faction-wow-title-from), var(--faction-wow))',
                   fontFamily: SCRIPT,
-                  // ornament: avatar initial sized to its 56px medallion, not text
+                  // eslint-disable-next-line local/no-raw-style-values -- ornament: avatar initial sized to its 56px medallion, not text
                   fontSize: 24,
                   color: ON_ACCENT,
                 }}
@@ -211,7 +221,7 @@ export default function WowFieldDesk({ state }: { state: FieldDeskHomeState }) {
             </Link>
             <div
               className="truncate"
-              style={{ marginTop: 4, fontSize: 'var(--text-base)', letterSpacing: '0.12em', textTransform: 'uppercase', color: CARD_MUTED }}
+              style={{ marginTop: 'var(--space-xs)', fontSize: 'var(--text-base)', letterSpacing: '0.12em', textTransform: 'uppercase', color: CARD_MUTED }}
             >
               {t('sidebar.characterCard.factionLevel', {
                 faction: factionName(character.faction_slug),
@@ -229,7 +239,7 @@ export default function WowFieldDesk({ state }: { state: FieldDeskHomeState }) {
           </div>
         </div>
 
-        <div className="flex gap-2" style={{ marginTop: 14 }}>
+        <div className="flex gap-2" style={{ marginTop: 'var(--space-lg)' }}>
           {stats.map((stat) => (
             <div
               key={stat.label}
@@ -240,13 +250,13 @@ export default function WowFieldDesk({ state }: { state: FieldDeskHomeState }) {
                 background: 'var(--faction-wow-scrap-mid)',
                 border: `1px solid ${NOTEPAD_BORDER}`,
                 borderRadius: 12,
-                padding: '11px 6px',
+                padding: 'var(--space-md) var(--space-sm)',
               }}
             >
               <div className="truncate" style={{ fontFamily: SCRIPT, fontSize: 'var(--text-title)', lineHeight: 1, color: TITLE_TEXT }}>
                 {stat.value}
               </div>
-              <div className="eyebrow" style={{ marginTop: 5, color: CARD_MUTED }}>
+              <div className="eyebrow" style={{ marginTop: 'var(--space-xs)', color: CARD_MUTED }}>
                 {stat.label}
               </div>
             </div>
@@ -263,13 +273,13 @@ export default function WowFieldDesk({ state }: { state: FieldDeskHomeState }) {
             background: NOTEPAD_BG,
             border: `1.5px solid ${NOTEPAD_BORDER}`,
             borderRadius: 999,
-            padding: '10px 16px',
+            padding: 'var(--space-md) var(--space-lg)',
             fontSize: 'var(--text-content)',
             color: TITLE_TEXT,
             textDecoration: 'none',
           }}
         >
-          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 7 }}>
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 'var(--space-sm)' }}>
             <Sparkle size={12} color={PINK} />
             {t('fieldDesk.home.pending', { count: pendingCount })}
           </span>
@@ -279,8 +289,8 @@ export default function WowFieldDesk({ state }: { state: FieldDeskHomeState }) {
 
       {/* ── Quests window ── */}
       <Window title={t('fieldDesk.home.wow.questsWindow')}>
-        <div className="flex items-center gap-2.5" style={{ marginBottom: 8 }}>
-          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontFamily: SCRIPT, fontSize: 'var(--text-content)', color: TITLE_TEXT }}>
+        <div className="flex items-center gap-2.5" style={{ marginBottom: 'var(--space-sm)' }}>
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 'var(--space-xs)', fontFamily: SCRIPT, fontSize: 'var(--text-content)', color: TITLE_TEXT }}>
             <Sparkle size={12} color={PINK} />
             {t('fieldDesk.home.wow.questsHeading')}
           </span>
@@ -302,7 +312,7 @@ export default function WowFieldDesk({ state }: { state: FieldDeskHomeState }) {
                 to={`/praxes/${praxis.id}/edit`}
                 className="flex items-center gap-3"
                 style={{
-                  padding: '12px 0',
+                  padding: 'var(--space-md) 0',
                   borderTop: index === 0 ? undefined : `1px solid ${NOTEPAD_BORDER}`,
                   textDecoration: 'none',
                 }}
@@ -314,7 +324,7 @@ export default function WowFieldDesk({ state }: { state: FieldDeskHomeState }) {
                   </div>
                   <div
                     className="truncate"
-                    style={{ marginTop: 4, fontSize: 'var(--text-sm)', letterSpacing: '0.1em', textTransform: 'uppercase', color: CARD_MUTED }}
+                    style={{ marginTop: 'var(--space-xs)', fontSize: 'var(--text-sm)', letterSpacing: '0.1em', textTransform: 'uppercase', color: CARD_MUTED }}
                   >
                     {t('fieldDesk.home.taskMeta', {
                       faction: factionName(praxis.task_faction_slug),
@@ -324,7 +334,7 @@ export default function WowFieldDesk({ state }: { state: FieldDeskHomeState }) {
                 </div>
                 <span
                   className="shrink-0 eyebrow"
-                  style={{ color: PINK, padding: '4px 9px', border: `1.5px solid ${NOTEPAD_BORDER}`, borderRadius: 999 }}
+                  style={{ color: PINK, padding: 'var(--space-xs) var(--space-sm)', border: `1.5px solid ${NOTEPAD_BORDER}`, borderRadius: 999 }}
                 >
                   {t(`praxisType.${praxis.type}`)}
                 </span>
@@ -342,7 +352,7 @@ export default function WowFieldDesk({ state }: { state: FieldDeskHomeState }) {
         </Link>
         {canProposeTask && (
           <Link to="/propose-task" style={ghostButton}>
-            {/* ornament: "+" glyph used as an icon, sized to the button row */}
+            {/* eslint-disable-next-line local/no-raw-style-values -- ornament: "+" glyph used as an icon, sized to the button row */}
             <span aria-hidden style={{ fontSize: 15, lineHeight: 1 }}>+</span>
             {t('actions.proposeTask')}
           </Link>
