@@ -1,7 +1,7 @@
 from typing import Optional
 
 from fastapi import HTTPException
-from sqlalchemy import select
+from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from game_config import CURRENT_ERA, EraConfig
@@ -199,6 +199,7 @@ async def list_tasks(
     exclude_character_id: Optional[int] = None,
     created_by: Optional[int] = None,
     task_type: Optional[str] = None,
+    q: Optional[str] = None,
     sort: Optional[str] = None,
     limit: int = 50,
     offset: int = 0,
@@ -216,6 +217,14 @@ async def list_tasks(
     callers) must be at or above the gate to receive them, mirroring the
     spec's "below level 6 cannot see the metatask list". ``skip_level_check``
     is the admin escape hatch, mirroring :func:`propose_task`.
+
+    ``q`` is a free-text ``ilike`` over the task title AND its description
+    (#661), mirroring the praxis-feed search in :func:`services.praxis.list_praxes`.
+    Metatasks are deliberately NOT excluded: whatever the type filter and the
+    ``level_to_see_metatasks`` gate already let this viewer see stays
+    searchable. It composes with every other filter as one more AND clause —
+    no special interaction with ``exclude_character_id``, faction, level, or
+    status.
 
     ``sort='newest'`` orders by creation time (newest first); the default
     ordering surfaces the easiest, highest-value tasks first.
@@ -271,6 +280,22 @@ async def list_tasks(
         query = query.where(Task.point_value >= min_points)
     if max_points is not None:
         query = query.where(Task.point_value <= max_points)
+
+    if q:
+        term = q.strip()
+        if term:
+            # ponytail: `ILIKE '%term%'` is a leading-wildcard match, so it is a
+            # sequential scan no index can serve. Free at this row count (tens
+            # of tasks) and it keeps the query one AND clause. If the task table
+            # ever grows to where this bites, the upgrade path is Postgres
+            # full-text (`to_tsvector`/`plainto_tsquery` + a GIN index) — noted,
+            # not built.
+            query = query.where(
+                or_(
+                    Task.title.ilike(f"%{term}%"),
+                    Task.description.ilike(f"%{term}%"),
+                )
+            )
 
     # Exclude tasks from hidden/deprecated factions
     if hidden_slugs:

@@ -42,6 +42,8 @@ export interface TaskFilters {
   exclude_character_id?: number
   created_by?: number
   task_type?: TaskType
+  /** Free-text search over task title and task description (#661). */
+  q?: string
   /** 'newest' orders by creation time (newest first); default sorts by level/points. */
   sort?: string
   limit?: number

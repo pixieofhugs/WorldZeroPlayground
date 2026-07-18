@@ -2,7 +2,11 @@
   "listPage": {
     "loading": "Loading tasks...",
     "empty": "No tasks match your filters.",
-    "loadMore": "Load more"
+    "loadMore": "Load more",
+    "filter": {
+      "searchPlaceholder": "Search tasks...",
+      "searchLabel": "Search tasks"
+    }
   },
   "mobile": {
     "count": "{{count}} shown",

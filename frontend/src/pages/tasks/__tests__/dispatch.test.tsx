@@ -35,6 +35,8 @@ const CANNED: TasksState = {
   setFaction: () => {},
   level: '',
   setLevel: () => {},
+  query: '',
+  setQuery: () => {},
   hasMore: false,
   loadMore: () => {},
   signupMsg: null,

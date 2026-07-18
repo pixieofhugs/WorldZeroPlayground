@@ -39,6 +39,8 @@ function DesktopTasks({ state }: { state: TasksState }) {
     setFaction,
     level,
     setLevel,
+    query,
+    setQuery,
     hasMore,
     loadMore,
     signupMsg,
@@ -55,6 +57,23 @@ function DesktopTasks({ state }: { state: TasksState }) {
         <FilterStamps options={statusFilters} value={status} onChange={setStatus} />
         <FilterFactionTabs factions={factions} value={faction} onChange={setFaction} />
         <FilterLevelNodes levels={levelFilters} value={level} onChange={setLevel} />
+        <input
+          type="search"
+          value={query}
+          onChange={(event) => setQuery(event.target.value)}
+          placeholder={t('listPage.filter.searchPlaceholder')}
+          aria-label={t('listPage.filter.searchLabel')}
+          className="font-body"
+          style={{
+            fontSize: 'var(--text-sm)',
+            padding: 'var(--space-sm) var(--space-md)',
+            maxWidth: 320,
+            background: 'var(--color-bg-surface)',
+            border: '1px solid var(--color-border-strong)',
+            color: 'var(--color-text-primary)',
+            borderRadius: 4,
+          }}
+        />
       </div>
 
       {signupMsg && (
@@ -63,7 +82,7 @@ function DesktopTasks({ state }: { state: TasksState }) {
         </p>
       )}
 
-      {loading ? (
+      {loading && tasks.length === 0 ? (
         <p className="font-body text-muted">{t('listPage.loading')}</p>
       ) : error ? (
         <p className="font-body text-sm text-red-600 border-2 border-red-300 px-3 py-2">
