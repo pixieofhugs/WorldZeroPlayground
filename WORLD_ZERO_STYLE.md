@@ -187,19 +187,11 @@ The sidebar contains: character card, active tasks panel, recent activity panel,
 
 Cards are arranged in a `flex-wrap` container with varied heights and slight rotations. This is intentional — they are NOT on a strict grid.
 
-| Faction     | Card type          | Primary color     | Key visual metaphor                                 | Headline font    |
-| ----------- | ------------------ | ----------------- | --------------------------------------------------- | ---------------- |
-| UA          | Sticky note        | `#7c3aed` purple  | Push pin, clipped corner, faded lavender            | IM Fell English  |
-| Everymen    | Field journal page | `#ca8a04` yellow  | Red margin rule, horizontal lines, torn bottom edge | Special Elite    |
-| Warriors of Whimsy | Paper collage | `#be185d` magenta | 3 layered scraps, scotch tape strip               | Caveat           |
-| S.N.I.D.E.  | Ransom dispatch    | `#6fae00` acid green | Photocopier-ink demand note, cut-out ransom letters, halftone + scotch tape; intentionally the loudest, largest card | Permanent Marker (+ punk set) |
-| Ephemerists | Discordant map     | `#1d6e72` lapis   | Three irreconcilable coordinate grids, one word in the lapis, House-of-Leaves apparatus on aged vellum | Cinzel           |
-| Singularity | Terminal printout  | `#2563eb` blue    | Always dark, green text, sprocket holes, scanlines  | Share Tech Mono  |
-| UA Masters  | Gazette article    | `#c2410c` orange  | Corner-snipped edges, proper masthead, two columns  | UnifrakturCook   |
-
-**Faction card colors** (backgrounds, text, accents) are defined as CSS variables: `--faction-{slug}-card-bg`, `--faction-{slug}-card-text`, `--faction-{slug}-card-accent`. Dark mode variants are automatic via the cascade.
+Each faction's archetype lives in its card component — see `frontend/src/components/cards/*TaskCard.tsx`. Every one carries a one-line docstring naming its archetype (metaphor, colors, headline font); that docstring is the source of truth and is edited in the same commit as any redesign. A table here would only cache — and drift from — what those components already state. Colors are CSS variables (§3).
 
 **Singularity** is always dark in both themes — no light variant needed.
+
+**UA Masters** (dormant, deferred to Era 2 per ADR-0004): gazette-article archetype — proper masthead, corner-snipped edges, two columns, UnifrakturCook. No component exists yet, so this line is the only place it lives.
 
 **Reuse pattern:** The faction card aesthetic should be used as a wrapper for any faction-branded context: profile headers, praxis bylines, proposal form wrappers, podium cards. The card component handles the visual treatment; the parent provides the content.
 
