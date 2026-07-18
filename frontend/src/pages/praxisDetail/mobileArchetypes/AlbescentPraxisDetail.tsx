@@ -45,7 +45,7 @@ const kicker: CSSProperties = {
 /** Quiet mono section divider, e.g. "The Plates" / "Bear witness". */
 function Divider({ label }: { label: string }) {
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '4px 0 4px' }}>
+    <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-md)', margin: 'var(--space-xs) 0 var(--space-xs)' }}>
       <div style={{ height: 1, flex: 1, background: ink(8) }} />
       <span style={{ ...kicker, whiteSpace: 'nowrap' }}>{label}</span>
       <div style={{ height: 1, flex: 1, background: ink(8) }} />
@@ -56,7 +56,7 @@ function Divider({ label }: { label: string }) {
 /** A cotton sheet holding filed evidence. */
 function Sheet({ children }: { children: ReactNode }) {
   return (
-    <div style={{ background: SHEET, border: `1px solid ${ink(10)}`, padding: 12 }}>{children}</div>
+    <div style={{ background: SHEET, border: `1px solid ${ink(10)}`, padding: 'var(--space-md)' }}>{children}</div>
   )
 }
 
@@ -69,7 +69,7 @@ export default function AlbescentPraxisDetail({ state }: { state: PraxisDetailSt
   const initial = (praxis.created_by_display_name || '?')[0]?.toUpperCase() ?? '?'
 
   return (
-    <div data-skin="albescent" className="page" style={{ display: 'flex', flexDirection: 'column', gap: 14, fontFamily: MONO, color: INK, background: PAGE }}>
+    <div data-skin="albescent" className="page" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-lg)', fontFamily: MONO, color: INK, background: PAGE }}>
       {/* Behavior slots (invariant) */}
       <PraxisStatusBanners state={state} />
       <PraxisAdminBar state={state} />
@@ -90,7 +90,7 @@ export default function AlbescentPraxisDetail({ state }: { state: PraxisDetailSt
             praxis={praxis}
             linkStyle={{ fontFamily: FONT, fontStyle: 'italic', fontWeight: 300, fontSize: 'var(--text-content)', color: INK, lineHeight: 1, textDecoration: 'none' }}
           />
-          <div className="truncate" style={{ ...kicker, marginTop: 3 }}>
+          <div className="truncate" style={{ ...kicker, marginTop: 'var(--space-xs)' }}>
             {t('detail.albescent.acquiringHand')} · {formatTimestamp(sealedDate)}
           </div>
         </div>
@@ -108,7 +108,7 @@ export default function AlbescentPraxisDetail({ state }: { state: PraxisDetailSt
 
       {/* The finding */}
       <div>
-        <div style={{ ...kicker, marginBottom: 4, color: ink(40) }}>{t('detail.albescent.mobile.theAccount')}</div>
+        <div style={{ ...kicker, marginBottom: 'var(--space-xs)', color: ink(40) }}>{t('detail.albescent.mobile.theAccount')}</div>
         <h1 style={{ fontFamily: FONT, fontStyle: 'italic', fontWeight: 300, fontSize: 'var(--text-heading)', lineHeight: 1.1, margin: 0, color: INK, overflowWrap: 'anywhere' }}>
           {praxis.title ?? t('detail.albescent.untitled')}
         </h1>
@@ -137,10 +137,10 @@ export default function AlbescentPraxisDetail({ state }: { state: PraxisDetailSt
       {/* Bear witness caster */}
       <div>
         <Divider label={t('detail.albescent.mobile.witness')} />
-        <div className="flex items-center justify-center content-text" style={{ margin: '10px 0 12px', fontFamily: FONT, fontStyle: 'italic', color: ink(50) }}>
+        <div className="flex items-center justify-center content-text" style={{ margin: 'var(--space-md) 0 var(--space-md)', fontFamily: FONT, fontStyle: 'italic', color: ink(50) }}>
           {t('detail.albescent.witnessPrompt')}
         </div>
-        <div style={{ marginBottom: 12 }}>
+        <div style={{ marginBottom: 'var(--space-md)' }}>
           <PraxisScoreBreakdown state={state} align="center" accent={INK} font={FONT} />
         </div>
         <MobileStarVote

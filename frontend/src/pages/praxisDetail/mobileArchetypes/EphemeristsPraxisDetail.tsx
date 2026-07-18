@@ -48,8 +48,8 @@ const kicker: CSSProperties = {
 /** A ledger leaf bound in a gold-deep hairline on aged vellum. */
 function Leaf({ title, children }: { title: string; children: ReactNode }) {
   return (
-    <section style={{ background: VELLUM, border: `1px solid ${GOLD_DEEP}`, padding: 13 }}>
-      <div style={{ fontFamily: DISPLAY, fontSize: 'var(--text-sm)', letterSpacing: '0.13em', textTransform: 'uppercase', color: RUBRIC, marginBottom: 10 }}>
+    <section style={{ background: VELLUM, border: `1px solid ${GOLD_DEEP}`, padding: 'var(--space-md)' }}>
+      <div style={{ fontFamily: DISPLAY, fontSize: 'var(--text-sm)', letterSpacing: '0.13em', textTransform: 'uppercase', color: RUBRIC, marginBottom: 'var(--space-md)' }}>
         {title}
       </div>
       {children}
@@ -66,7 +66,7 @@ export default function EphemeristsPraxisDetail({ state }: { state: PraxisDetail
   const initial = (praxis.created_by_display_name || '?')[0]?.toUpperCase() ?? '?'
 
   return (
-    <div data-skin="ephemerists" className="page" style={{ display: 'flex', flexDirection: 'column', gap: 14, fontFamily: SERIF, color: TEXT, background: VELLUM_DEEP }}>
+    <div data-skin="ephemerists" className="page" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-lg)', fontFamily: SERIF, color: TEXT, background: VELLUM_DEEP }}>
       {/* Behavior slots (invariant) */}
       <PraxisStatusBanners state={state} />
       <PraxisAdminBar state={state} />
@@ -87,7 +87,7 @@ export default function EphemeristsPraxisDetail({ state }: { state: PraxisDetail
             praxis={praxis}
             linkStyle={{ fontFamily: DISPLAY, fontWeight: 700, fontSize: 'var(--text-content)', color: TEXT, lineHeight: 1, textDecoration: 'none' }}
           />
-          <div className="truncate" style={{ ...kicker, marginTop: 3 }}>
+          <div className="truncate" style={{ ...kicker, marginTop: 'var(--space-xs)' }}>
             {t('detail.ephemerists.acquiringHand')} · {formatTimestamp(sealedDate)}
           </div>
         </div>
@@ -103,7 +103,7 @@ export default function EphemeristsPraxisDetail({ state }: { state: PraxisDetail
 
       {/* Finding headline */}
       <div>
-        <div style={{ ...kicker, marginBottom: 4, color: LAPIS }}>{t('detail.ephemerists.mobile.theFinding')}</div>
+        <div style={{ ...kicker, marginBottom: 'var(--space-xs)', color: LAPIS }}>{t('detail.ephemerists.mobile.theFinding')}</div>
         <h1 style={{ fontFamily: DISPLAY, fontWeight: 700, fontSize: 'var(--text-heading)', lineHeight: 1.1, margin: 0, color: TEXT, overflowWrap: 'anywhere' }}>
           {praxis.title ?? t('detail.ephemerists.untitled')}
         </h1>
@@ -131,10 +131,10 @@ export default function EphemeristsPraxisDetail({ state }: { state: PraxisDetail
 
       {/* Concordance caster */}
       <Leaf title={t('detail.ephemerists.concordance')}>
-        <div className="flex items-center justify-center content-text" style={{ marginBottom: 12, fontFamily: SCRIPT, fontStyle: 'italic', color: TEXT }}>
+        <div className="flex items-center justify-center content-text" style={{ marginBottom: 'var(--space-md)', fontFamily: SCRIPT, fontStyle: 'italic', color: TEXT }}>
           {t('detail.ephemerists.mobile.appraise')}
         </div>
-        <div style={{ marginBottom: 12 }}>
+        <div style={{ marginBottom: 'var(--space-md)' }}>
           <PraxisScoreBreakdown state={state} align="center" accent={RUBRIC} font={DISPLAY} />
         </div>
         <MobileStarVote

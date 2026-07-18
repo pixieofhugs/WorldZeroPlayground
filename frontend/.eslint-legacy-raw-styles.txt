@@ -140,14 +140,6 @@ src/pages/praxisDetail/archetypes/SingularityPraxisDetail.tsx
 src/pages/praxisDetail/archetypes/SnidePraxisDetail.tsx
 src/pages/praxisDetail/archetypes/UaPraxisDetail.tsx
 src/pages/praxisDetail/archetypes/WowPraxisDetail.tsx
-src/pages/praxisDetail/mobileArchetypes/AlbescentPraxisDetail.tsx
-src/pages/praxisDetail/mobileArchetypes/DefaultPraxisDetail.tsx
-src/pages/praxisDetail/mobileArchetypes/EphemeristsPraxisDetail.tsx
-src/pages/praxisDetail/mobileArchetypes/EverymenPraxisDetail.tsx
-src/pages/praxisDetail/mobileArchetypes/SingularityPraxisDetail.tsx
-src/pages/praxisDetail/mobileArchetypes/SnidePraxisDetail.tsx
-src/pages/praxisDetail/mobileArchetypes/UaPraxisDetail.tsx
-src/pages/praxisDetail/mobileArchetypes/WowPraxisDetail.tsx
 src/pages/ProposeTask.tsx
 src/pages/proposeTask/archetypes/DefaultProposeTask.tsx
 src/pages/settings/mobileArchetypes/DefaultSettings.tsx
