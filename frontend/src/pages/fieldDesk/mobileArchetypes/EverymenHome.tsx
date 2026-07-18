@@ -125,7 +125,7 @@ export default function EverymenHome({ state }: { state: FieldDeskHomeState }) {
             color: CREAM,
             textShadow: `2px 2px 0 ${INK}`,
             margin: 0,
-            padding: 'var(--space-lg) var(--space-lg) var(--space-lg)',
+            padding: 'var(--space-lg)',
           }}
         >
           {t('fieldDesk.home.title')}
