@@ -60,8 +60,8 @@ function SectionHead({ children }: { children: React.ReactNode }) {
       style={{
         display: "flex",
         alignItems: "center",
-        gap: 12,
-        marginBottom: 18,
+        gap: "var(--space-md)",
+        marginBottom: "var(--space-lg)",
       }}
     >
       <Sparkle size={18} color={PINK} />
@@ -100,7 +100,7 @@ function PartyRow({
   const { t } = useTranslation("tasks");
   return (
     <div
-      style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}
+      style={{ display: "flex", alignItems: "center", gap: "var(--space-sm)", flexWrap: "wrap" }}
     >
       {signups.map((m, index) => {
         const rel = relationOf(m.character_id, friends, foes);
@@ -172,7 +172,7 @@ function PartyRow({
           fontFamily: SCRIPT,
           fontSize: "var(--text-content)",
           color: PINK,
-          marginLeft: 6,
+          marginLeft: "var(--space-sm)",
         }}
       >
         {t("wow.inTheParty")}
@@ -221,11 +221,11 @@ export default function WowTaskDetail({ state }: { state: TaskDetailState }) {
   const pill: CSSProperties = {
     display: "inline-flex",
     alignItems: "center",
-    gap: 6,
+    gap: "var(--space-sm)",
     fontSize: "var(--text-md)",
     letterSpacing: "0.06em",
     textTransform: "uppercase",
-    padding: "6px 14px",
+    padding: "var(--space-sm) var(--space-lg)",
     borderRadius: 20,
     background: "var(--faction-wow-light)",
     color: CARD_TEXT,
@@ -247,15 +247,15 @@ export default function WowTaskDetail({ state }: { state: TaskDetailState }) {
         <Link to="/tasks" style={{ color: PINK, textDecoration: "none" }}>
           {t("wow.breadcrumb")}
         </Link>
-        <span style={{ opacity: 0.5, margin: "0 8px" }}>›</span>
+        <span style={{ opacity: 0.5, margin: "0 var(--space-sm)" }}>›</span>
         <span style={{ fontFamily: SCRIPT, fontSize: "var(--text-content)" }}>
           {t("wow.faction")}
         </span>
-        <span style={{ opacity: 0.5, margin: "0 8px" }}>›</span>
+        <span style={{ opacity: 0.5, margin: "0 var(--space-sm)" }}>›</span>
         <span style={{ color: PINK }}>{task.title}</span>
       </nav>
 
-      <div style={{ maxWidth: 920, display: "flex", flexDirection: "column", gap: 30 }}>
+      <div style={{ maxWidth: 920, display: "flex", flexDirection: "column", gap: "var(--space-2xl)" }}>
         {/* ── HERO · whimsy.exe window ── */}
         <div
           style={{
@@ -271,8 +271,8 @@ export default function WowTaskDetail({ state }: { state: TaskDetailState }) {
             style={{
               display: "flex",
               alignItems: "center",
-              gap: 8,
-              padding: "9px 14px",
+              gap: "var(--space-sm)",
+              padding: "var(--space-sm) var(--space-lg)",
               background: `linear-gradient(180deg, var(--faction-wow-title-from), var(--faction-wow-title-to))`,
               borderBottom: `2px solid ${WIN_BORDER}`,
             }}
@@ -308,7 +308,7 @@ export default function WowTaskDetail({ state }: { state: TaskDetailState }) {
           <div
             style={{
               position: "relative",
-              padding: "30px 34px 32px",
+              padding: "var(--space-2xl) var(--space-2xl) var(--space-2xl)",
               background: NOTEPAD_BG,
               backgroundImage: `radial-gradient(${DOT} 1.3px, transparent 1.3px)`,
               backgroundSize: "14px 14px",
@@ -340,7 +340,7 @@ export default function WowTaskDetail({ state }: { state: TaskDetailState }) {
                 textTransform: "uppercase",
                 letterSpacing: "0.16em",
                 color: CARD_MUTED,
-                marginBottom: 8,
+                marginBottom: "var(--space-sm)",
               }}
             >
               {task.status === "active" ? t("wow.statusOpen") : task.status}
@@ -351,7 +351,7 @@ export default function WowTaskDetail({ state }: { state: TaskDetailState }) {
                 fontFamily: SCRIPT,
                 lineHeight: 0.92,
                 color: TITLE_TEXT,
-                marginBottom: 18,
+                marginBottom: "var(--space-lg)",
                 overflowWrap: "anywhere",
               }}
             >
@@ -361,7 +361,7 @@ export default function WowTaskDetail({ state }: { state: TaskDetailState }) {
               style={{
                 display: "flex",
                 alignItems: "center",
-                gap: 12,
+                gap: "var(--space-md)",
                 flexWrap: "wrap",
               }}
             >
@@ -374,7 +374,7 @@ export default function WowTaskDetail({ state }: { state: TaskDetailState }) {
                 style={{
                   display: "inline-flex",
                   alignItems: "center",
-                  gap: 7,
+                  gap: "var(--space-sm)",
                   fontFamily: SCRIPT,
                   color: PINK,
                 }}
@@ -407,12 +407,12 @@ export default function WowTaskDetail({ state }: { state: TaskDetailState }) {
               style={{
                 display: "flex",
                 alignItems: "center",
-                gap: 18,
+                gap: "var(--space-lg)",
                 flexWrap: "wrap",
                 border: `2px solid ${WIN_BORDER}`,
                 borderRadius: 12,
                 background: NOTEPAD_BG,
-                padding: "16px 20px",
+                padding: "var(--space-lg) var(--space-xl)",
                 boxShadow: `4px 4px 0 var(--faction-wow-scrap-deep)`,
               }}
             >
@@ -425,7 +425,7 @@ export default function WowTaskDetail({ state }: { state: TaskDetailState }) {
                   textTransform: "uppercase",
                   letterSpacing: "0.12em",
                   color: ON_ACCENT,
-                  padding: "13px 24px",
+                  padding: "var(--space-md) var(--space-xl)",
                   border: `1.5px solid ${WIN_BORDER}`,
                   borderRadius: 10,
                   background: `linear-gradient(180deg, ${PINK}, var(--faction-wow-card-muted))`,
@@ -464,12 +464,12 @@ export default function WowTaskDetail({ state }: { state: TaskDetailState }) {
             style={{
               display: "flex",
               alignItems: "center",
-              gap: 16,
+              gap: "var(--space-lg)",
               flexWrap: "wrap",
               border: `2px solid ${NOTEPAD_BORDER}`,
               borderRadius: 12,
               background: NOTEPAD_BG,
-              padding: "14px 20px",
+              padding: "var(--space-lg) var(--space-xl)",
             }}
           >
             <span className="content-text" style={{ fontFamily: SCRIPT, color: TITLE_TEXT }}>
@@ -483,7 +483,7 @@ export default function WowTaskDetail({ state }: { state: TaskDetailState }) {
                 textTransform: "uppercase",
                 letterSpacing: "0.12em",
                 color: ON_ACCENT,
-                padding: "10px 20px",
+                padding: "var(--space-md) var(--space-xl)",
                 border: `1.5px solid ${WIN_BORDER}`,
                 borderRadius: 10,
                 background: `linear-gradient(180deg, ${PINK}, var(--faction-wow-card-muted))`,
@@ -501,12 +501,12 @@ export default function WowTaskDetail({ state }: { state: TaskDetailState }) {
             style={{
               display: "flex",
               alignItems: "center",
-              gap: 16,
+              gap: "var(--space-lg)",
               flexWrap: "wrap",
               border: `2px solid ${NOTEPAD_BORDER}`,
               borderRadius: 12,
               background: NOTEPAD_BG,
-              padding: "14px 20px",
+              padding: "var(--space-lg) var(--space-xl)",
             }}
           >
             <span className="content-text" style={{ fontFamily: SCRIPT, color: TITLE_TEXT }}>
@@ -520,7 +520,7 @@ export default function WowTaskDetail({ state }: { state: TaskDetailState }) {
                 textTransform: "uppercase",
                 letterSpacing: "0.12em",
                 color: ON_ACCENT,
-                padding: "10px 20px",
+                padding: "var(--space-md) var(--space-xl)",
                 border: `1.5px solid ${WIN_BORDER}`,
                 borderRadius: 10,
                 background: `linear-gradient(180deg, ${PINK}, var(--faction-wow-card-muted))`,
@@ -561,7 +561,7 @@ export default function WowTaskDetail({ state }: { state: TaskDetailState }) {
               border: `2px solid ${NOTEPAD_BORDER}`,
               borderRadius: 12,
               background: NOTEPAD_BG,
-              padding: "24px 28px",
+              padding: "var(--space-xl) var(--space-2xl)",
               maxWidth: 640,
             }}
           >
@@ -584,7 +584,7 @@ export default function WowTaskDetail({ state }: { state: TaskDetailState }) {
         <section>
           <SectionHead>{t("wow.loveHeading")}</SectionHead>
           {voteCount > 0 ? (
-            <div style={{ display: "flex", alignItems: "flex-end", gap: 12 }}>
+            <div style={{ display: "flex", alignItems: "flex-end", gap: "var(--space-md)" }}>
               <span
                 className="content-title"
                 style={{
@@ -595,7 +595,7 @@ export default function WowTaskDetail({ state }: { state: TaskDetailState }) {
               >
                 {topScore}
               </span>
-              <div style={{ paddingBottom: 6 }}>
+              <div style={{ paddingBottom: "var(--space-sm)" }}>
                 <div
                   className="content-text"
                   style={{
@@ -625,11 +625,11 @@ export default function WowTaskDetail({ state }: { state: TaskDetailState }) {
               alignItems: "center",
               justifyContent: "space-between",
               flexWrap: "wrap",
-              gap: 12,
-              marginBottom: 18,
+              gap: "var(--space-md)",
+              marginBottom: "var(--space-lg)",
             }}
           >
-            <div style={{ display: "flex", alignItems: "center", gap: 12, flex: 1 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "var(--space-md)", flex: 1 }}>
               <Sparkle size={18} color={PINK} />
               <h2
                 className="content-title"
@@ -655,7 +655,7 @@ export default function WowTaskDetail({ state }: { state: TaskDetailState }) {
                       fontSize: "var(--text-sm)",
                       textTransform: "uppercase",
                       letterSpacing: "0.1em",
-                      padding: "5px 12px",
+                      padding: "var(--space-xs) var(--space-md)",
                       borderRadius: on ? 8 : 0,
                       background: on ? PINK : "transparent",
                       color: on ? ON_ACCENT : CARD_MUTED,
@@ -682,12 +682,12 @@ export default function WowTaskDetail({ state }: { state: TaskDetailState }) {
                 style={{
                   display: "flex",
                   flexWrap: "wrap",
-                  gap: "30px 24px",
+                  gap: "var(--space-2xl) var(--space-xl)",
                   alignItems: "flex-start",
                 }}
               >
                 {sortedSubmissions.slice(0, 4).map((s) => (
-                  <div key={s.id} style={{ position: "relative", paddingTop: 22 }}>
+                  <div key={s.id} style={{ position: "relative", paddingTop: "var(--space-xl)" }}>
                     {s.id === topId && (
                       <div
                         style={{
@@ -698,13 +698,13 @@ export default function WowTaskDetail({ state }: { state: TaskDetailState }) {
                           zIndex: 3,
                           display: "inline-flex",
                           alignItems: "center",
-                          gap: 5,
+                          gap: "var(--space-xs)",
                           whiteSpace: "nowrap",
                           background: PINK,
                           color: ON_ACCENT,
                           fontFamily: SCRIPT,
                           fontSize: "var(--text-content)",
-                          padding: "2px 14px",
+                          padding: "var(--space-xs) var(--space-lg)",
                           borderRadius: 14,
                           boxShadow: `2px 3px 0 var(--faction-wow-scrap-deep)`,
                         }}
@@ -718,7 +718,7 @@ export default function WowTaskDetail({ state }: { state: TaskDetailState }) {
                 ))}
               </div>
               {submissions.length > 4 && (
-                <div style={{ marginTop: 18 }}>
+                <div style={{ marginTop: "var(--space-lg)" }}>
                   <Link
                     to={`/praxes?task_id=${task.id}`}
                     className="content-text"
