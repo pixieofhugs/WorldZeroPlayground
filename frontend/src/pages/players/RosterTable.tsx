@@ -4,10 +4,11 @@ import { useTranslation } from 'react-i18next'
 import {
   factionCssVar,
   factionName,
+  isKnownFaction,
   sortFactionsByRainbowOrder,
 } from '../../utils/factions'
-import { mediaUrl } from '../../utils/media'
 import { badgeArtFor } from '../../components/badges/badgeArt'
+import FactionAvatar from '../../components/avatar/FactionAvatar'
 import LevelGem from '../../components/ui/LevelGem'
 import type { RankedPlayer } from './Constellation'
 
@@ -169,24 +170,31 @@ export default function RosterTable({ players, myCharId }: RosterTableProps) {
 
 function RosterRow({ row, isMe }: { row: RankedPlayer; isMe: boolean }) {
   const { character, rank, points } = row
-  const color = factionCssVar(character.faction_slug)
+  // Unaffiliated players own the spectrum, not a borrowed orange: factionCssVar
+  // silently resolves an unknown slug to the `ua` theme (#636 / ADR-0039), so
+  // every faction-coloured ornament here branches on isKnownFaction first.
+  const known = isKnownFaction(character.faction_slug)
+  const color = known ? factionCssVar(character.faction_slug) : 'var(--faction-default)'
+  const accent = known ? color : 'var(--faction-default-rainbow)'
   const badges = character.badges ?? []
 
   return (
     <div
-      className="leaderboard-row grid items-center"
+      className="leaderboard-row divider-curved grid items-center"
       style={{
         gridTemplateColumns: '56px 1fr 120px 64px 72px',
         padding: 'var(--space-md) var(--space-lg)',
-        borderBottom: '1px dashed var(--color-border)',
-        position: 'relative',
-        background: isMe ? factionCssVar(character.faction_slug, 'light') : 'transparent',
+        background: isMe
+          ? known
+            ? factionCssVar(character.faction_slug, 'light')
+            : 'var(--faction-default-light)'
+          : 'transparent',
       }}
     >
       {/* Faction left accent */}
       <div
         aria-hidden
-        style={{ position: 'absolute', left: 0, top: '20%', bottom: '20%', width: 3, background: color }}
+        style={{ position: 'absolute', left: 0, top: '20%', bottom: '20%', width: 3, background: accent }}
       />
 
       <span
@@ -201,31 +209,22 @@ function RosterRow({ row, isMe }: { row: RankedPlayer; isMe: boolean }) {
       </span>
 
       <div className="flex items-center gap-2 min-w-0">
-        {character.avatar_url ? (
-          <img
-            src={mediaUrl(character.avatar_url)}
-            alt=""
-            style={{ width: 34, height: 34, borderRadius: '50%', objectFit: 'cover', flex: 'none' }}
-          />
-        ) : (
-          <span
-            aria-hidden
-            style={{
-              width: 34,
-              height: 34,
-              borderRadius: '50%',
-              flex: 'none',
-              background: `linear-gradient(135deg, ${factionCssVar(character.faction_slug, 'light')}, ${color})`,
-            }}
-          />
-        )}
+        {/* The shared avatar brings the faction ring, the corner sigil and the
+            unaffiliated spectrum for free — hence no FactionSigil beside the
+            name: a second copy of the same glyph 40px away reads as a bug. */}
+        <span style={{ flex: 'none', lineHeight: 0 }}>
+          <FactionAvatar character={character} size={34} glow />
+        </span>
         <div className="min-w-0">
           <Link
             to={`/characters/${character.id}`}
             className="font-display italic block truncate"
             style={{
               fontSize: 'var(--text-content)',
-              color: isMe ? color : 'var(--color-text-primary)',
+              // Names are white on every row, including your own: faction colour
+              // lives on ornament only. The tinted row background above is what
+              // still answers "which one is me".
+              color: 'var(--color-text-primary)',
               textDecoration: 'none',
             }}
           >
@@ -255,8 +254,14 @@ function RosterRow({ row, isMe }: { row: RankedPlayer; isMe: boolean }) {
 
       <div style={{ textAlign: 'right' }}>
         <span
-          className="font-body"
-          style={{ fontSize: 'var(--text-content)', fontWeight: 700, color: 'var(--color-text-primary)' }}
+          className={known ? 'font-body' : 'font-body rainbow-ink'}
+          style={{
+            fontSize: 'var(--text-content)',
+            fontWeight: 700,
+            // Unaffiliated points are gradient-clipped by .rainbow-ink, which
+            // sets its own transparent colour — don't hand it one here.
+            ...(known ? { color } : null),
+          }}
         >
           {points}
         </span>
