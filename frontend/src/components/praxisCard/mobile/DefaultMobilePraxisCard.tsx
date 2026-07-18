@@ -24,8 +24,7 @@ export default function DefaultMobilePraxisCard({ praxis }: { praxis: PraxisCard
     <div
       style={{
         borderRadius: 10,
-        // eslint-disable-next-line local/no-raw-style-values -- ornament: the padding IS the rainbow frame drawn around the card — a border width, not a gutter.
-        padding: 4,
+        padding: 'var(--space-xs)',
         background: 'var(--faction-default-rainbow)',
       }}
     >

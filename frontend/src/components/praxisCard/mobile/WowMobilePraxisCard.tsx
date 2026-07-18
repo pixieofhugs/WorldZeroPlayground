@@ -24,8 +24,7 @@ export default function WowMobilePraxisCard({ praxis }: { praxis: PraxisCardOut 
     <div
       style={{
         position: 'relative',
-        // eslint-disable-next-line local/no-raw-style-values -- ornament: clearance for the rotated scrap-tape strip below (top: 2, height: 26); stays in register with that raw geometry.
-        paddingTop: 8,
+        paddingTop: 'var(--space-sm)',
       }}
     >
       <div

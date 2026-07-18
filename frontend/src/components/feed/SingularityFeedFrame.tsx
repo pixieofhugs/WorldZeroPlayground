@@ -71,8 +71,7 @@ export default function SingularityFeedFrame({ children }: { children: ReactNode
           zIndex: 2,
           display: 'flex',
           alignItems: 'center',
-          // eslint-disable-next-line local/no-raw-style-values -- ornament: boot/prompt chrome strip, sized around its raw 7px terminal type.
-          gap: 8,
+          gap: 'var(--space-sm)',
           // eslint-disable-next-line local/no-raw-style-values -- ornament: boot/prompt chrome strip, sized around its raw 7px terminal type.
           padding: '6px 12px',
           borderBottom: `1px solid ${signal(20)}`,

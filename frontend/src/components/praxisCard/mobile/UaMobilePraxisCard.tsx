@@ -24,8 +24,7 @@ export default function UaMobilePraxisCard({ praxis }: { praxis: PraxisCardOut }
   return (
     <div
       style={{
-        // eslint-disable-next-line local/no-raw-style-values -- ornament: the padding IS the gilt frame drawn around the card — a border width, not a gutter.
-        padding: 4,
+        padding: 'var(--space-xs)',
         background: 'var(--ua-gilt)',
         borderRadius: 2,
       }}
