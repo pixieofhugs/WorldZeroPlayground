@@ -31,10 +31,12 @@ import AlbescentTaskDetail from '../pages/taskDetail/archetypes/AlbescentTaskDet
 import AlbescentVote from '../components/vote/AlbescentVote'
 import { AlbescentPraxisCard } from '../components/PraxisCard'
 import { AlbescentSigilAdapter } from '../components/cards/FactionSigil'
+import { AlbescentSelectCard } from '../components/cards/FactionSelectCard'
 
 export const ALBESCENT_MANIFEST: FactionManifest = {
   slug: 'albescent',
 
+  factionSelectCard: () => AlbescentSelectCard,
   taskCard: () => AlbescentTaskCard,
   praxisCard: () => AlbescentPraxisCard,
   avatar: () => AlbescentAvatar,

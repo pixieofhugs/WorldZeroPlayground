@@ -32,11 +32,13 @@ import EphemeristsVote from '../components/vote/EphemeristsVote'
 import { EphemeristsPraxisCard } from '../components/PraxisCard'
 import { EphemeristsSigil } from '../components/cards/ephemeristsAtoms'
 import { EphemeristsCard } from '../components/cards/FactionCard'
+import { EphemeristsSelectCard } from '../components/cards/FactionSelectCard'
 
 export const EPHEMERISTS_MANIFEST: FactionManifest = {
   slug: 'ephemerists',
 
   factionCard: () => EphemeristsCard,
+  factionSelectCard: () => EphemeristsSelectCard,
   taskCard: () => EphemeristsTaskCard,
   praxisCard: () => EphemeristsPraxisCard,
   avatar: () => EphemeristsAvatar,

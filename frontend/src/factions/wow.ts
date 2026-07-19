@@ -36,11 +36,13 @@ import WowVote from '../components/vote/WowVote'
 import { WowPraxisCard } from '../components/PraxisCard'
 import { WowSigil } from '../components/cards/WowSigil'
 import { WowCard } from '../components/cards/FactionCard'
+import { WOWSelectCard } from '../components/cards/FactionSelectCard'
 
 export const WOW_MANIFEST: FactionManifest = {
   slug: 'wow',
 
   factionCard: () => WowCard,
+  factionSelectCard: () => WOWSelectCard,
   taskCard: () => WowTaskCard,
   praxisCard: () => WowPraxisCard,
   avatar: () => WowAvatar,

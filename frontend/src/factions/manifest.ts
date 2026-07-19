@@ -49,6 +49,7 @@ import type { SigilVariantProps } from '../components/cards/FactionSigil'
 import type { CommentComponent } from '../components/comments/shared'
 import type { VoteUIProps } from '../components/vote/VoteUI'
 import type { FactionCardProps } from '../components/cards/FactionCard'
+import type { FactionSelectCardProps } from '../components/cards/FactionSelectCard'
 import type { DuelSealConfirmProps } from '../components/duel/DuelSealConfirm'
 import type { DuelRailSkinProps } from '../pages/praxisDetail/DuelCrossLink'
 import type { FactionHeroProps } from '../pages/FactionDetail'
@@ -79,6 +80,9 @@ export interface FactionManifest {
   readonly taskCard?: Lazy<ComponentType<CardProps>>
   readonly praxisCard?: Lazy<ComponentType<PraxisCardProps>>
   readonly factionCard?: Lazy<ComponentType<FactionCardProps>>
+  readonly factionSelectCard?: Lazy<
+    ComponentType<Omit<FactionSelectCardProps, 'slug' | 'faction'>>
+  >
   readonly avatar?: Lazy<ComponentType<FactionAvatarProps>>
   readonly backdrop?: Lazy<ComponentType>
   readonly sigil?: Lazy<ComponentType<SigilVariantProps>>
@@ -130,6 +134,7 @@ export const SURFACE_KEYS = [
   'taskCard',
   'praxisCard',
   'factionCard',
+  'factionSelectCard',
   'avatar',
   'backdrop',
   'sigil',

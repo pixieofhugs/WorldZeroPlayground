@@ -32,11 +32,13 @@ import SnideVote from '../components/vote/SnideVote'
 import { SnidePraxisCard } from '../components/PraxisCard'
 import { SnideSigil } from '../components/cards/SnideSigil'
 import { SnideCard } from '../components/cards/FactionCard'
+import { SnideSelectCard } from '../components/cards/FactionSelectCard'
 
 export const SNIDE_MANIFEST: FactionManifest = {
   slug: 'snide',
 
   factionCard: () => SnideCard,
+  factionSelectCard: () => SnideSelectCard,
   taskCard: () => SnideTaskCard,
   praxisCard: () => SnidePraxisCard,
   avatar: () => SnideAvatar,

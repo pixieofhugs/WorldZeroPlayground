@@ -32,11 +32,13 @@ import SingularityVote from '../components/vote/SingularityVote'
 import { SingularityPraxisCard } from '../components/PraxisCard'
 import { SingularitySigilAdapter } from '../components/cards/FactionSigil'
 import { SingularityCard } from '../components/cards/FactionCard'
+import { SingularitySelectCard } from '../components/cards/FactionSelectCard'
 
 export const SINGULARITY_MANIFEST: FactionManifest = {
   slug: 'singularity',
 
   factionCard: () => SingularityCard,
+  factionSelectCard: () => SingularitySelectCard,
   taskCard: () => SingularityTaskCard,
   praxisCard: () => SingularityPraxisCard,
   avatar: () => SingularityAvatar,

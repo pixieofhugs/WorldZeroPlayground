@@ -32,11 +32,13 @@ import EverymenVote from '../components/vote/EverymenVote'
 import { EverymenPraxisCard } from '../components/PraxisCard'
 import { EverymenSigil } from '../components/cards/EverymenSigil'
 import EverymenCard from '../components/cards/EverymenFactionCard'
+import { EverymenSelectCard } from '../components/cards/FactionSelectCard'
 
 export const EVERYMEN_MANIFEST: FactionManifest = {
   slug: 'everymen',
 
   factionCard: () => EverymenCard,
+  factionSelectCard: () => EverymenSelectCard,
   taskCard: () => EverymenTaskCard,
   praxisCard: () => EverymenPraxisCard,
   avatar: () => EverymenAvatar,

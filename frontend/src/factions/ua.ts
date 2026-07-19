@@ -32,11 +32,13 @@ import UaVote from '../components/vote/UaVote'
 import { UaPraxisCard } from '../components/PraxisCard'
 import { UaSigilAdapter } from '../components/cards/FactionSigil'
 import { UaCard } from '../components/cards/FactionCard'
+import { UaSelectCard } from '../components/cards/FactionSelectCard'
 
 export const UA_MANIFEST: FactionManifest = {
   slug: 'ua',
 
   factionCard: () => UaCard,
+  factionSelectCard: () => UaSelectCard,
   taskCard: () => UaTaskCard,
   praxisCard: () => UaPraxisCard,
   avatar: () => UaAvatar,
