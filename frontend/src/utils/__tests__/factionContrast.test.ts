@@ -40,6 +40,9 @@ const BOTH_THEMES: Theme[] = ["light", "dark"];
 /** Every faction that supplies the standard `--faction-{key}-card-*` block (§3). */
 const CARD_KEYS = [
   "ua",
+  // `wow` supplies the §3 block and nothing more (#812) — it has a colour but
+  // no archetype, so it appears here and NOT in ARCHETYPE_PAIRS below.
+  "wow",
   "everymen",
   "coven",
   "snide",

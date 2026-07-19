@@ -34,23 +34,26 @@ describe("isKnownFaction", () => {
       "snide",
       "ephemerists",
       "singularity",
+      "wow",
     ]) {
       expect(isKnownFaction(slug), `${slug} should be known`).toBe(true);
     }
   });
 
   /**
-   * The THIRD inhabitant of the unthemed side (#784), and the only temporary
-   * one. `na` is not a faction; `albescent` is a faction that hides. `wow` is
-   * a faction that is merely mid-redesign: its lo-fi pink `.exe` block became
-   * --faction-coven-* when the aesthetic moved to Cozy Coven, and its gold
-   * replacement is a sibling issue. Until that lands there is no
-   * --faction-wow-* block to point at, so CSS_KEY maps it to `default` and the
-   * predicate reports it unknown. Delete this test when the gold block ships.
+   * `wow` briefly sat on the unthemed side (#784) as its only *temporary*
+   * inhabitant — `na` is not a faction and `albescent` is a faction that hides,
+   * but WOW was merely mid-redesign, its pink block having left with the
+   * aesthetic. #812 gave it a yellow block of its own, so it is back above.
+   *
+   * It keeps a dedicated test because "known" here means *themed*, and WOW is
+   * the repo's only faction that is themed WITHOUT being skinned: its manifest
+   * is empty and every surface still renders Default. Anyone who reads this
+   * predicate as "has a bespoke archetype" gets WOW wrong.
    */
-  it("returns false for `wow` — themeless while its redesign is pending", () => {
-    expect(isKnownFaction("wow")).toBe(false);
-    expect(factionCssVar("wow")).toBe("var(--faction-default)");
+  it("returns true for `wow` — themed yellow, though it still has no skin", () => {
+    expect(isKnownFaction("wow")).toBe(true);
+    expect(factionCssVar("wow")).toBe("var(--faction-wow)");
   });
 
   it("returns false for an unregistered slug", () => {

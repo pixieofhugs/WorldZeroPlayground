@@ -39,10 +39,10 @@ const FACTION_FALLBACKS: Record<string, FactionConfig> = {
   everymen: { slug: "everymen", color: "#c1272d" },
   coven: { slug: "coven", color: "#ec5f99" },
   snide: { slug: "snide", color: "#6fae00" },
-  // `wow` is deliberately absent (#784). The pink above WAS its colour; the
-  // whole --faction-wow-* block moved to `coven` with the aesthetic, and
-  // Warriors of Whimsy's replacement gold identity is a sibling issue. Until
-  // that ships, factionColor('wow') hands back the same neutral grey as `na`.
+  // `wow` returns (#812) with the yellow the owner settled on — NOT the pink it
+  // lost to `coven` in #784. Must equal --faction-wow in :root (§4 item 7 of
+  // SPEC-faction-ui-profile.md) so JS and CSS agree before the API hydrates.
+  wow: { slug: "wow", color: "#e0a800" },
   ephemerists: { slug: "ephemerists", color: "#1d6e72" },
   singularity: { slug: "singularity", color: "#2563eb" },
   // `albescent` is deliberately absent (#783). It was first-class here (#232)
@@ -74,14 +74,14 @@ const CSS_KEY: Record<string, string> = {
   everymen: "everymen",
   coven: "coven",
   snide: "snide",
-  // Warriors of Whimsy is themeless in the interim (#784), so it points at
-  // `default` exactly like `albescent` below — but for a THIRD reason again:
-  // not secrecy, not statelessness, just a gap. Its lo-fi pink `.exe` block
-  // became --faction-coven-*, and its gold replacement is a sibling issue.
-  // Pointing it anywhere else would name a token that does not exist: that
-  // lints clean and renders broken. When the gold block ships this flips back
-  // to `wow: "wow"` and `wow` rejoins FACTION_RAINBOW_ORDER.
-  wow: "default",
+  // Warriors of Whimsy is themed again (#812) — this is the flip the #784
+  // comment anticipated, and the --faction-wow-* yellow block it was waiting on
+  // now exists in index.css. This ONE line is what re-themes WOW, because
+  // isKnownFaction tests the mapped VALUE (`!== "default"`), not key presence
+  // (#749). WOW's colour is back; its SKIN is not — it still registers no
+  // manifest at all, so every surface renders its Default* archetype and WOW
+  // reads as a yellow-tinted unaffiliated player until the real design ships.
+  wow: "wow",
   ephemerists: "ephemerists",
   singularity: "singularity",
   // Albescent is registered but NOT themed (#783). It is a secret society
@@ -277,7 +277,9 @@ export function getAllFactions(): FactionConfig[] {
 
 /**
  * Canonical rainbow display order for faction strips/pennants (issue #352):
- * Everymen → UA → S.N.I.D.E. → Ephemerists → Singularity → Warriors of Whimsy.
+ * Everymen → UA → Warriors of Whimsy → S.N.I.D.E. → Ephemerists → Singularity
+ * → Cozy Coven. Red, orange, yellow, green, teal, blue, pink — the order is the
+ * spectrum, so a slug's position is decided by its hue and nothing else.
  *
  * Albescent is deliberately absent (#783). It is a secret society hiding in
  * plain sight: /factions omits it server-side until an account is revealed to it
@@ -293,19 +295,13 @@ export function getAllFactions(): FactionConfig[] {
 export const FACTION_RAINBOW_ORDER: readonly string[] = [
   "everymen",
   "ua",
+  // Yellow, between UA's orange and S.N.I.D.E.'s green (#812). The array is a
+  // literal spectrum, so once WOW is yellow this is the only index it can hold.
+  "wow",
   "snide",
   "ephemerists",
   "singularity",
-  // Cozy Coven takes the pink slot, because it took the pink (#784). Warriors
-  // of Whimsy is NOT here in the interim: the array is a spectrum, every
-  // consumer paints straight off it, and `wow` currently resolves to `default`
-  // — a grey stop mid-rainbow on the Leaderboard and DefaultPlayers bars and a
-  // grey petal in Meadow's bloom. That is the same shape of defect #783 removed
-  // Albescent to fix, so an unthemed slug stays out on the same principle.
-  //
-  // #784 anticipated `wow` sitting near gold once it is gold. That is the
-  // sibling redesign's job — it ships the --faction-wow-* block and this slug
-  // rejoins between "ua" and "snide", taking the order to seven.
+  // Cozy Coven takes the pink slot, because it took the pink (#784).
   "coven",
 ];
 

@@ -1,20 +1,28 @@
 /**
- * Warriors of Whimsy's interim state (#784).
+ * Warriors of Whimsy has a COLOUR but not a SKIN (#784, then #812).
  *
- * Its lo-fi pink `.exe` identity moved wholesale to Cozy Coven, so `wow` now
- * registers no manifest and no theme. That is intended — a clean slate for the
- * gold redesign — but it opens a specific, quiet failure mode.
+ * #784 moved its lo-fi pink `.exe` identity wholesale to Cozy Coven, leaving
+ * `wow` with no manifest and no theme. #812 gave back only the second of those:
+ * a minimal yellow `--faction-wow-*` block, so WOW rejoins the rainbow and its
+ * members get faction-coloured ornament. The manifest is still empty, and that
+ * is the settled intent — "most other aspects of them will be indistinguishable
+ * from na until we ship the design".
  *
- * The dangerous failure is NOT a crash. A faction that renders `Default` looks
- * fine. The failure is `factionName()` falling through to `names.na` and
- * silently labelling a real, populated, joinable faction "Unaffiliated" for
- * however long the redesign takes. Nothing else in the suite would notice:
- * there is no type error, no thrown key, no visual diff a build can see. So
- * this file asserts both halves together — falls back everywhere AND still has
- * words — because it is their combination that means "clean slate" rather than
- * "broken faction".
+ * That split is the whole point of this file, and it is fragile in BOTH
+ * directions, neither of which crashes:
  *
- * DELETE THIS FILE when the gold identity ships and `wow` has a manifest again.
+ *  - Register a component "helpfully" and WOW starts wearing a half-built skin
+ *    nobody designed, most likely one borrowed from the faction that took its
+ *    old one.
+ *  - Let the theme lapse and `factionName()` falls through to `names.na`,
+ *    silently labelling a real, populated, joinable faction "Unaffiliated".
+ *
+ * Neither produces a type error, a thrown key, or a visual diff a build can
+ * see. So the three halves are asserted together — falls back on every surface,
+ * AND resolves its own theme, AND still has words — because it is their
+ * combination that means "colour, not skin" rather than "broken faction".
+ *
+ * DELETE THIS FILE when WOW's real design ships and it registers a manifest.
  */
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, it, expect } from 'vitest'
@@ -26,6 +34,7 @@ import {
   factionCssVar,
   factionColor,
   factionDescription,
+  factionFill,
   factionName,
   isKnownFaction,
 } from '../../utils/factions'
@@ -53,14 +62,32 @@ describe('wow falls back to Default on every surface', () => {
     })
   }
 
-  it('reads the neutral theme rather than a token that no longer exists', () => {
-    // --faction-wow-* moved to --faction-coven-*. Resolving anywhere else would
-    // emit a var() naming a declaration that is not in index.css: valid CSS,
-    // lints clean, renders as nothing.
-    expect(factionCssVar('wow')).toBe('var(--faction-default)')
-    expect(factionCssVar('wow', 'card-bg')).toBe('var(--faction-default-card-bg)')
-    expect(isKnownFaction('wow')).toBe(false)
-    expect(factionColor('wow')).toBe(factionColor('na'))
+  it('reads its OWN theme — the fallback is a skin fallback, not a colour one', () => {
+    // Every var() named here has a real declaration in index.css (#812). A
+    // slug pointed at a token that is not declared emits valid CSS, lints
+    // clean, and renders as nothing — which is why this asserts the resolved
+    // names rather than trusting CSS_KEY to be internally consistent.
+    expect(factionCssVar('wow')).toBe('var(--faction-wow)')
+    expect(factionCssVar('wow', 'card-bg')).toBe('var(--faction-wow-card-bg)')
+    expect(factionCssVar('wow', 'on-fill')).toBe('var(--faction-wow-on-fill)')
+  })
+
+  it('is a known faction, so its members get coloured ornament', () => {
+    // The predicate reads the mapped VALUE, not key presence (#749) — this is
+    // the single assertion that separates #812's state from #784's.
+    expect(isKnownFaction('wow')).toBe(true)
+    expect(factionColor('wow')).not.toBe(factionColor('na'))
+  })
+
+  it('has a solid fill, not the unaffiliated spectrum', () => {
+    // ADR-0039: a gradient is `na`'s identity. A real faction returns its hue
+    // for every shape, with the paired AA ink on a pill.
+    expect(factionFill('wow', 'bar')).toEqual({ background: 'var(--faction-wow)' })
+    expect(factionFill('wow', 'dot')).toEqual({ background: 'var(--faction-wow)' })
+    expect(factionFill('wow', 'pill')).toEqual({
+      background: 'var(--faction-wow)',
+      color: 'var(--faction-wow-on-fill)',
+    })
   })
 })
 

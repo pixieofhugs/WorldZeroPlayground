@@ -15,6 +15,7 @@ describe("sortFactionsByRainbowOrder", () => {
       { slug: "ephemerists" },
       { slug: "ua" },
       { slug: "snide" },
+      { slug: "wow" },
     ];
     expect(sortFactionsByRainbowOrder(shuffled).map((f) => f.slug)).toEqual([
       ...FACTION_RAINBOW_ORDER,
@@ -143,11 +144,9 @@ describe("FACTION_RAINBOW_ORDER does not leak Albescent (#783, ADR-0027)", () =>
   it("still carries every faction that is publicly visible AND themed", () => {
     // Guards the opposite mistake: closing the leak by emptying the spectrum.
     //
-    // `wow` is the one publicly-visible faction absent here, and only until its
-    // redesign ships (#784). Cozy Coven took the pink block, so `wow` resolves
-    // to `default` — putting it back now would paint a grey stop mid-rainbow,
-    // the same defect Albescent was removed to fix. It rejoins between "ua" and
-    // "snide" once it has a gold block of its own.
+    // Albescent is the only permitted absence, and only because it is hidden.
+    // `wow` was absent for one release (#784) after Cozy Coven took its pink
+    // block; it rejoined at index 2 in #812 once it had a yellow one.
     expect([...FACTION_RAINBOW_ORDER].sort()).toEqual([
       "coven",
       "ephemerists",
@@ -155,6 +154,49 @@ describe("FACTION_RAINBOW_ORDER does not leak Albescent (#783, ADR-0027)", () =>
       "singularity",
       "snide",
       "ua",
+      "wow",
+    ]);
+  });
+});
+
+describe("FACTION_RAINBOW_ORDER is a spectrum, not a roster", () => {
+  /**
+   * The general form of both defects above. #783 pulled Albescent out and #784
+   * pulled `wow` out for the SAME underlying reason — an entry that resolves to
+   * `default` paints a grey stop mid-rainbow, because every consumer (the
+   * Leaderboard and DefaultPlayers stripe bars, Meadow's bloom) maps straight
+   * off this array. Both fixes were spelled as a hardcoded list, which catches
+   * the two slugs we already know about and nothing else.
+   *
+   * This is the invariant those lists were standing in for.
+   */
+  it("resolves every entry to its own theme, never to default", () => {
+    for (const slug of FACTION_RAINBOW_ORDER) {
+      expect(factionCssVar(slug), `${slug} would paint a grey stop`).toBe(
+        `var(--faction-${slug})`,
+      );
+    }
+  });
+
+  it("gives every entry a solid fill, so no stop is a nested gradient", () => {
+    for (const slug of FACTION_RAINBOW_ORDER) {
+      expect(factionFill(slug, "bar")).toEqual({
+        background: `var(--faction-${slug})`,
+      });
+    }
+  });
+
+  it("runs red → orange → yellow → green → teal → blue → pink", () => {
+    // The order is the spectrum. A slug's index is decided by its hue and
+    // nothing else — not join date, not prominence, not alphabetically.
+    expect([...FACTION_RAINBOW_ORDER]).toEqual([
+      "everymen",
+      "ua",
+      "wow",
+      "snide",
+      "ephemerists",
+      "singularity",
+      "coven",
     ]);
   });
 });
