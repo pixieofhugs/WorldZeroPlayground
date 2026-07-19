@@ -58,6 +58,22 @@ ERA_1_FACTIONS = {
         duel_win_modifier=1.5,
         duel_loss_modifier=0.5,
     ),
+    # Cozy Coven (#784) — the eighth faction. It inherits Warriors of Whimsy's
+    # lo-fi pink `.exe` AESTHETIC only; the modifiers below are the Era 1
+    # baseline, deliberately NOT wow's +10% own/collab pair above. Whether Cozy
+    # Coven should carry that bonus is a game-balance decision for the owner, not
+    # a consequence of the visual move, so it starts flat and is flagged rather
+    # than inherited silently.
+    "coven": FactionConfig(
+        slug="coven",
+        can_always_rejoin=False,
+        own_task_modifier=1.0,
+        other_task_modifier=1.0,
+        collab_own_modifier=1.0,
+        collab_other_modifier=1.0,
+        duel_win_modifier=1.5,
+        duel_loss_modifier=0.5,
+    ),
     "ephemerists": FactionConfig(
         slug="ephemerists",
         can_always_rejoin=False,
