@@ -23,7 +23,7 @@ export interface FactionSigilProps {
   color?: string;
 }
 
-type SigilVariantProps = { size?: number; color?: string };
+export type SigilVariantProps = { size?: number; color?: string };
 
 function UaSigilAdapter({ size }: SigilVariantProps) {
   const dim = size ?? 22;

@@ -11,7 +11,7 @@ import EverymenMobilePraxisCard from './EverymenMobilePraxisCard'
 import AlbescentMobilePraxisCard from './AlbescentMobilePraxisCard'
 import DefaultMobilePraxisCard from './DefaultMobilePraxisCard'
 
-type MobilePraxisCardProps = { praxis: PraxisCardOut }
+export type MobilePraxisCardProps = { praxis: PraxisCardOut }
 
 /**
  * Per-item MOBILE praxis-card dispatch (#573). Each proof in the mobile stream

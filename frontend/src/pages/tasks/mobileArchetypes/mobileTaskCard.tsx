@@ -10,7 +10,7 @@ import SingularityMobileTaskCard from './cards/SingularityMobileTaskCard'
 import EphemeristsMobileTaskCard from './cards/EphemeristsMobileTaskCard'
 import AlbescentMobileTaskCard from './cards/AlbescentMobileTaskCard'
 
-type MobileTaskCardProps = { task: TaskOut; points: number }
+export type MobileTaskCardProps = { task: TaskOut; points: number }
 
 /**
  * Per-item MOBILE task-card dispatch (#565). Each card in the mobile browse feed
