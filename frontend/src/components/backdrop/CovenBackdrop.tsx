@@ -1,0 +1,8 @@
+/**
+ * Warriors of Whimsy full-page backdrop — a lo-fi pastel "desktop": soft pink field with a
+ * dotted grid and a gentle corner glow. Theme-aware via the `.coven-backdrop`
+ * rule in index.css. Fixed behind page content at z-index 0.
+ */
+export default function CovenBackdrop() {
+  return <div className="coven-backdrop" aria-hidden="true" />
+}

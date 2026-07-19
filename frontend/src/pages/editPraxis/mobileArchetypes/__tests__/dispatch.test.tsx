@@ -2,7 +2,7 @@
  * Edit-praxis form-factor dispatch (#498) — the composer twin of the TaskDetail
  * / FieldDesk mobile-dispatch seams. Renders <EditPraxis /> with useFormFactor
  * mocked and useEditPraxis stubbed, and pins:
- *   - phone + the WOW pilot → its bespoke mobile composer (data-skin="wow"),
+ *   - phone + the COVEN pilot → its bespoke mobile composer (data-skin="coven"),
  *   - phone + an unregistered faction → the Default mobile composer,
  *   - desktop → the existing desktop archetype (skin dispatch untouched).
  * It also asserts each mobile skin surfaces the body editor, media-add, and
@@ -134,9 +134,9 @@ function render(slug: string | null): string {
 }
 
 describe("edit-praxis form-factor dispatch", () => {
-  it("renders the WOW bespoke composer on mobile for a WOW task", () => {
+  it("renders the COVEN bespoke composer on mobile for a COVEN task", () => {
     mocks.formFactor = "mobile";
-    expect(render("wow")).toContain('data-skin="wow"');
+    expect(render("coven")).toContain('data-skin="coven"');
   });
 
   it("renders the SNIDE bespoke composer on mobile for a SNIDE task", () => {
@@ -148,14 +148,16 @@ describe("edit-praxis form-factor dispatch", () => {
     mocks.formFactor = "mobile";
     const html = render("na");
     expect(html).toContain('data-skin="default"');
-    expect(html).not.toContain('data-skin="wow"');
+    expect(html).not.toContain('data-skin="coven"');
   });
 
   it("renders the desktop archetype on desktop (skin dispatch untouched)", () => {
     mocks.formFactor = "desktop";
-    const html = render("wow");
+    const html = render("coven");
     expect(html).not.toContain("data-skin=");
-    // wow.exe desktop window chrome, not the mobile skin.
+    // The literal "wow.exe" window chrome, not the mobile skin. The window
+    // title is COPY, and Cozy Coven's display naming is deliberately deferred
+    // (#784) — the aesthetic moved pixel-identical, wording included.
     expect(html).toContain("wow.exe");
   });
 });
@@ -163,7 +165,7 @@ describe("edit-praxis form-factor dispatch", () => {
 describe("mobile composer content slots", () => {
   for (const [label, slug] of [
     ["Default", "na"],
-    ["WOW", "wow"],
+    ["COVEN", "coven"],
     ["SNIDE", "snide"],
   ] as const) {
     it(`${label} mobile composer renders body editor + media-add + submit`, () => {

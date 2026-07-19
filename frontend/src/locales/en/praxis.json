@@ -315,7 +315,7 @@
         "appraise": "call the job"
       }
     },
-    "wow": {
+    "coven": {
       "mode": {
         "collab": "cast together",
         "solo": "filed solo"
@@ -396,7 +396,7 @@
       "masthead": "EVERYMEN · DISPATCH FROM THE FLOOR",
       "edited": "revised"
     },
-    "wow": {
+    "coven": {
       "edited": "edited"
     },
     "snide": {

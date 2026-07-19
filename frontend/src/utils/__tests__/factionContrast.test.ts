@@ -41,7 +41,7 @@ const BOTH_THEMES: Theme[] = ["light", "dark"];
 const CARD_KEYS = [
   "ua",
   "everymen",
-  "wow",
+  "coven",
   "snide",
   "ephemerists",
   "singularity",
@@ -167,7 +167,7 @@ const BASELINE: Record<string, { ratio: number; issue: number }> = {
   // Card accents used as metadata text (§3: "metadata / decorative accent").
   "light | ua card accent": { ratio: 4.27, issue: 651 },
   "light | everymen card accent": { ratio: 4.49, issue: 651 },
-  "light | wow card accent": { ratio: 2.81, issue: 651 },
+  "light | coven card accent": { ratio: 2.81, issue: 651 },
   "dark | ua card accent": { ratio: 4.27, issue: 651 },
   "dark | everymen card accent": { ratio: 4.16, issue: 651 },
   "dark | ephemerists card accent": { ratio: 3.72, issue: 651 },

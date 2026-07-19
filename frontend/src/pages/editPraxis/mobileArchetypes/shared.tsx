@@ -1,6 +1,6 @@
 /**
  * Shared mobile-composer primitives (#498). The two phone skins (Default + the
- * WOW pilot) diverge visually but share three load-bearing behaviours: the
+ * COVEN pilot) diverge visually but share three load-bearing behaviours: the
  * Write/Preview segmented toggle, the fluid media grid, and the sticky submit
  * bar that must ride above the fixed MobileTabBar (and, on a phone, the
  * on-screen keyboard). Kept here so both skins stay thin and neither

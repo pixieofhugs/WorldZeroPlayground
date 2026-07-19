@@ -1,6 +1,6 @@
 /**
  * Mobile praxis-read content-slot invariant — the mobile twin of
- * archetypeSlots.test. Walks surfaceMap('mobilePraxisDetail') (the WOW pilot) plus the
+ * archetypeSlots.test. Walks surfaceMap('mobilePraxisDetail') (the COVEN pilot) plus the
  * Default mobile skin and asserts each still emits the invariant CONTENT slots:
  * the finding title, the account body, the re-task link, and the author byline.
  * The shared Task Crown banner is checked separately. Rendered to static markup

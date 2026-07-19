@@ -27,7 +27,7 @@
       "{{from_name}} finished what {{to_name}} couldn't start."
     ]
   },
-  "wow": {
+  "coven": {
     "score_overtake": [
       "The collective lifts {{from_name}} above {{to_name}}. Together, always.",
       "{{from_name}} rose past {{to_name}}. The whole is greater than the parts."

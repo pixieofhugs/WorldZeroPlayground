@@ -49,7 +49,7 @@ function WindowDot({ color }: { color: string }) {
   );
 }
 
-export default function WowTaskCard({
+export default function CovenTaskCard({
   task,
   displayPoints,
   onSignup,
@@ -62,7 +62,7 @@ export default function WowTaskCard({
         flex: "0 1 196px",
         borderRadius: 12,
         overflow: "hidden",
-        border: "2px solid var(--faction-wow-win-border)",
+        border: "2px solid var(--faction-coven-win-border)",
         fontFamily: "var(--font-body)",
         transition: "border-color 150ms",
       }}
@@ -75,8 +75,8 @@ export default function WowTaskCard({
           gap: "var(--space-sm)",
           padding: "var(--space-sm) var(--space-sm)",
           background:
-            "linear-gradient(180deg, var(--faction-wow-title-from), var(--faction-wow-title-to))",
-          borderBottom: "2px solid var(--faction-wow-win-border)",
+            "linear-gradient(180deg, var(--faction-coven-title-from), var(--faction-coven-title-to))",
+          borderBottom: "2px solid var(--faction-coven-win-border)",
         }}
       >
         <div style={{ display: "flex", gap: "var(--space-xs)" }}>
@@ -91,11 +91,11 @@ export default function WowTaskCard({
             gap: "var(--space-xs)",
             fontSize: "var(--text-base)",
             letterSpacing: "0.03em",
-            color: "var(--faction-wow-title-text)",
+            color: "var(--faction-coven-title-text)",
           }}
         >
-          <Sparkle size={9} color="var(--faction-wow-title-text)" />
-          {i18n.t("feed:taskCard.wow.windowTitle")}
+          <Sparkle size={9} color="var(--faction-coven-title-text)" />
+          {i18n.t("feed:taskCard.coven.windowTitle")}
         </span>
         <span
           style={{
@@ -103,7 +103,7 @@ export default function WowTaskCard({
             fontSize: "var(--text-base)",
             opacity: 0.75,
             letterSpacing: "1.5px",
-            color: "var(--faction-wow-title-text)",
+            color: "var(--faction-coven-title-text)",
           }}
         >
           ▭ ✕
@@ -115,9 +115,9 @@ export default function WowTaskCard({
         style={
           {
             padding: "var(--space-md) var(--space-md) var(--space-md)",
-            background: "var(--faction-wow-body-bg)",
+            background: "var(--faction-coven-body-bg)",
             backgroundImage:
-              "radial-gradient(var(--faction-wow-dot) 1.4px, transparent 1.4px)",
+              "radial-gradient(var(--faction-coven-dot) 1.4px, transparent 1.4px)",
             backgroundSize: "13px 13px",
           } as React.CSSProperties
         }
@@ -125,8 +125,8 @@ export default function WowTaskCard({
         {/* notepad panel */}
         <div
           style={{
-            background: "var(--faction-wow-notepad-bg)",
-            border: "1.5px solid var(--faction-wow-notepad-border)",
+            background: "var(--faction-coven-notepad-bg)",
+            border: "1.5px solid var(--faction-coven-notepad-border)",
             borderRadius: 7,
             padding: "var(--space-sm) var(--space-md)",
             marginBottom: "var(--space-md)",
@@ -134,9 +134,9 @@ export default function WowTaskCard({
         >
           <div
             className="card-meta"
-            style={{ color: "var(--faction-wow-card-accent)" }}
+            style={{ color: "var(--faction-coven-card-accent)" }}
           >
-            {i18n.t("feed:taskCard.wow.questMeta", { points: displayPoints })}
+            {i18n.t("feed:taskCard.coven.questMeta", { points: displayPoints })}
           </div>
 
           <Link
@@ -146,11 +146,11 @@ export default function WowTaskCard({
             <div
               className="content-title"
               style={{
-                fontFamily: "var(--faction-wow-card-font)",
+                fontFamily: "var(--faction-coven-card-font)",
                 fontWeight: 700,
                 lineHeight: 1.05,
                 marginBottom: "var(--space-xs)",
-                color: "var(--faction-wow-card-text)",
+                color: "var(--faction-coven-card-text)",
                 overflowWrap: "anywhere",
               }}
             >
@@ -161,7 +161,7 @@ export default function WowTaskCard({
           {task.description && (
             <div
               className="card-description"
-              style={{ color: "var(--faction-wow-card-muted)" }}
+              style={{ color: "var(--faction-coven-card-muted)" }}
             >
               {task.description}
             </div>
@@ -174,23 +174,23 @@ export default function WowTaskCard({
             className="btn-primary"
             style={{ fontSize: "var(--text-xs)", padding: "var(--space-xs) var(--space-sm)", marginBottom: "var(--space-sm)" }}
           >
-            {i18n.t("feed:taskCard.wow.signup")}
+            {i18n.t("feed:taskCard.coven.signup")}
           </button>
         )}
 
         {/* status row */}
         <div className="card-footer">
-          <LevelGem level={task.level_required} factionSlug="wow" />
+          <LevelGem level={task.level_required} factionSlug="coven" />
           {/* Points shown as a ◆ corner-counter — a badge/counter, so it stays
               label-tier per the role vocabulary (§4), not a plain score number. */}
           <span
             style={{
               fontSize: "var(--text-sm)",
               letterSpacing: "0.1em",
-              color: "var(--faction-wow-card-accent)",
+              color: "var(--faction-coven-card-accent)",
             }}
           >
-            ◆ {i18n.t("feed:taskCard.wow.points", { points: displayPoints })}
+            ◆ {i18n.t("feed:taskCard.coven.points", { points: displayPoints })}
           </span>
         </div>
       </div>

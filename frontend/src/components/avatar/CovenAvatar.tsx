@@ -16,19 +16,19 @@ function MoonGlyph({ size, color }: { size: number; color: string }) {
  * Warriors of Whimsy avatar — the standard circle with a pink "coven" moon membership
  * badge clipped to the lower-right.
  */
-export default function WowAvatar({ character, size }: FactionAvatarProps) {
+export default function CovenAvatar({ character, size }: FactionAvatarProps) {
   return (
     <BadgedAvatar
       character={character}
       size={size}
       circle={{
-        borderColor: 'var(--faction-wow-win-border)',
-        bg: 'var(--faction-wow-notepad-bg)',
-        textColor: 'var(--faction-wow-card-text)',
-        fontFamily: 'var(--faction-wow-card-font)',
+        borderColor: 'var(--faction-coven-win-border)',
+        bg: 'var(--faction-coven-notepad-bg)',
+        textColor: 'var(--faction-coven-card-text)',
+        fontFamily: 'var(--faction-coven-card-font)',
       }}
-      badgeBg="var(--faction-wow)"
-      badgeRing="var(--faction-wow-notepad-bg)"
+      badgeBg="var(--faction-coven)"
+      badgeRing="var(--faction-coven-notepad-bg)"
       glyph={(s, color) => <MoonGlyph size={s} color={color} />}
     />
   )

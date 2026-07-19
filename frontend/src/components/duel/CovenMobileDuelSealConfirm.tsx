@@ -21,17 +21,17 @@ import {
 } from './shared'
 import type { DuelSealConfirmProps } from './DuelSealConfirm'
 
-const WIN_BORDER = 'var(--faction-wow-win-border)'
-const TITLE_FROM = 'var(--faction-wow-title-from)'
-const TITLE_TO = 'var(--faction-wow-title-to)'
-const TITLE_TEXT = 'var(--faction-wow-title-text)'
-const BODY_BG = 'var(--faction-wow-body-bg)'
-const NOTEPAD_BG = 'var(--faction-wow-notepad-bg)'
-const NOTEPAD_BORDER = 'var(--faction-wow-notepad-border)'
-const DOT = 'var(--faction-wow-dot)'
-const CARD_TEXT = 'var(--faction-wow-card-text)'
-const CARD_MUTED = 'var(--faction-wow-card-muted)'
-const SCRIPT = 'var(--faction-wow-card-font)'
+const WIN_BORDER = 'var(--faction-coven-win-border)'
+const TITLE_FROM = 'var(--faction-coven-title-from)'
+const TITLE_TO = 'var(--faction-coven-title-to)'
+const TITLE_TEXT = 'var(--faction-coven-title-text)'
+const BODY_BG = 'var(--faction-coven-body-bg)'
+const NOTEPAD_BG = 'var(--faction-coven-notepad-bg)'
+const NOTEPAD_BORDER = 'var(--faction-coven-notepad-border)'
+const DOT = 'var(--faction-coven-dot)'
+const CARD_TEXT = 'var(--faction-coven-card-text)'
+const CARD_MUTED = 'var(--faction-coven-card-muted)'
+const SCRIPT = 'var(--faction-coven-card-font)'
 
 /** The sheet's grab handle, standing in for the desktop window's traffic lights. */
 function SheetHandle({ color }: { color: string }) {
@@ -51,7 +51,7 @@ function SheetHandle({ color }: { color: string }) {
   )
 }
 
-export default function WowMobileDuelSealConfirm({
+export default function CovenMobileDuelSealConfirm({
   duel,
   viewerCharacterId,
   taskPointValue,

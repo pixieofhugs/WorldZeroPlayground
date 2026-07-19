@@ -111,6 +111,7 @@ const knownPennantFillStyle = (slug: string): CSSProperties => ({
 const FACTION_DESCRIPTOR_KEY = {
   na: "proposeTask.factionDescriptor.na",
   ua: "proposeTask.factionDescriptor.ua",
+  coven: "proposeTask.factionDescriptor.coven",
   wow: "proposeTask.factionDescriptor.wow",
   everymen: "proposeTask.factionDescriptor.everymen",
   snide: "proposeTask.factionDescriptor.snide",

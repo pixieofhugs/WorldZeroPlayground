@@ -220,14 +220,14 @@ export function EverymenPraxisCard({ praxis, adminProps, showCrown }: ArchetypeP
   );
 }
 
-/** The two offset scrap layers behind the WOW card, plus its tape. Static (#586). */
+/** The two offset scrap layers behind the COVEN card, plus its tape. Static (#586). */
 const wowScrapDeep: CSSProperties = {
   position: "absolute",
   top: 10,
   left: -4,
   right: -4,
   height: 24,
-  background: "var(--faction-wow-scrap-deep)",
+  background: "var(--faction-coven-scrap-deep)",
   border: "1.5px solid rgba(0,0,0,0.12)",
   transform: "rotate(-4deg)",
   borderRadius: 1,
@@ -239,7 +239,7 @@ const wowScrapMid: CSSProperties = {
   left: -2,
   right: -2,
   height: 36,
-  background: "var(--faction-wow-scrap-mid)",
+  background: "var(--faction-coven-scrap-mid)",
   border: "1.5px solid rgba(0,0,0,0.12)",
   transform: "rotate(3deg)",
   borderRadius: 1,
@@ -252,11 +252,11 @@ const wowTape: CSSProperties = {
   transform: "translateX(-50%) rotate(-1deg)",
   width: 48,
   height: 14,
-  background: "var(--faction-wow-tape)",
+  background: "var(--faction-coven-tape)",
   borderRadius: 1,
 };
 
-export function WowPraxisCard({ praxis, adminProps, showCrown }: ArchetypeProps) {
+export function CovenPraxisCard({ praxis, adminProps, showCrown }: ArchetypeProps) {
   return (
     <div
       style={{
@@ -270,12 +270,12 @@ export function WowPraxisCard({ praxis, adminProps, showCrown }: ArchetypeProps)
       <div
         style={{
           position: "relative",
-          background: factionCssVar("wow", "card-bg"),
+          background: factionCssVar("coven", "card-bg"),
           border: "1.5px solid rgba(0,0,0,0.12)",
           transform: "rotate(-2deg)",
           padding: "var(--space-xl) var(--space-lg) var(--space-lg)",
           fontFamily: "'Courier Prime', monospace",
-          color: factionCssVar("wow", "card-text"),
+          color: factionCssVar("coven", "card-text"),
           zIndex: 2,
           transition: "background 150ms, color 150ms",
           boxSizing: "border-box",
@@ -285,9 +285,9 @@ export function WowPraxisCard({ praxis, adminProps, showCrown }: ArchetypeProps)
         <AdminOverlay {...adminProps} />
         <PraxisBody
           praxis={praxis}
-          tint={factionCssVar("wow", "card-accent")}
-          muted={factionCssVar("wow", "card-muted")}
-          paper={factionCssVar("wow", "card-bg")}
+          tint={factionCssVar("coven", "card-accent")}
+          muted={factionCssVar("coven", "card-muted")}
+          paper={factionCssVar("coven", "card-bg")}
           showCrown={showCrown}
         />
       </div>

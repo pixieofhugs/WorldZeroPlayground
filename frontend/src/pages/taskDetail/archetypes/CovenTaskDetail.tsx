@@ -20,15 +20,15 @@ import type { TaskDetailState } from "../useTaskDetail";
  * <PraxisCard> and the shared state replace them.
  */
 
-const PINK = "var(--faction-wow)";
-const TITLE_TEXT = "var(--faction-wow-title-text)";
-const CARD_TEXT = "var(--faction-wow-card-text)";
-const CARD_MUTED = "var(--faction-wow-card-muted)";
-const WIN_BORDER = "var(--faction-wow-win-border)";
-const NOTEPAD_BG = "var(--faction-wow-notepad-bg)";
-const NOTEPAD_BORDER = "var(--faction-wow-notepad-border)";
-const DOT = "var(--faction-wow-dot)";
-const SCRIPT = "var(--faction-wow-card-font)"; // Caveat
+const PINK = "var(--faction-coven)";
+const TITLE_TEXT = "var(--faction-coven-title-text)";
+const CARD_TEXT = "var(--faction-coven-card-text)";
+const CARD_MUTED = "var(--faction-coven-card-muted)";
+const WIN_BORDER = "var(--faction-coven-win-border)";
+const NOTEPAD_BG = "var(--faction-coven-notepad-bg)";
+const NOTEPAD_BORDER = "var(--faction-coven-notepad-border)";
+const DOT = "var(--faction-coven-dot)";
+const SCRIPT = "var(--faction-coven-card-font)"; // Caveat
 const BODY = "var(--font-body)"; // Courier Prime
 const ACCENT = "var(--font-accent)"; // Bebas Neue
 const ON_ACCENT = "var(--color-text-on-accent)";
@@ -104,7 +104,7 @@ function PartyRow({
     >
       {signups.map((m, index) => {
         const rel = relationOf(m.character_id, friends, foes);
-        const relColor = rel === "friend" ? PINK : "var(--faction-wow-ivy)";
+        const relColor = rel === "friend" ? PINK : "var(--faction-coven-ivy)";
         return (
           <Link
             key={m.character_id}
@@ -175,13 +175,13 @@ function PartyRow({
           marginLeft: "var(--space-sm)",
         }}
       >
-        {t("wow.inTheParty")}
+        {t("coven.inTheParty")}
       </span>
     </div>
   );
 }
 
-export default function WowTaskDetail({ state }: { state: TaskDetailState }) {
+export default function CovenTaskDetail({ state }: { state: TaskDetailState }) {
   const { t } = useTranslation("tasks");
   const {
     task,
@@ -227,9 +227,9 @@ export default function WowTaskDetail({ state }: { state: TaskDetailState }) {
     textTransform: "uppercase",
     padding: "var(--space-sm) var(--space-lg)",
     borderRadius: 20,
-    background: "var(--faction-wow-light)",
+    background: "var(--faction-coven-light)",
     color: CARD_TEXT,
-    border: `1.5px solid var(--faction-wow-border)`,
+    border: `1.5px solid var(--faction-coven-border)`,
   };
 
   return (
@@ -245,11 +245,11 @@ export default function WowTaskDetail({ state }: { state: TaskDetailState }) {
         }}
       >
         <Link to="/tasks" style={{ color: PINK, textDecoration: "none" }}>
-          {t("wow.breadcrumb")}
+          {t("coven.breadcrumb")}
         </Link>
         <span style={{ opacity: 0.5, margin: "0 var(--space-sm)" }}>›</span>
         <span style={{ fontFamily: SCRIPT, fontSize: "var(--text-content)" }}>
-          {t("wow.faction")}
+          {t("coven.faction")}
         </span>
         <span style={{ opacity: 0.5, margin: "0 var(--space-sm)" }}>›</span>
         <span style={{ color: PINK }}>{task.title}</span>
@@ -273,11 +273,11 @@ export default function WowTaskDetail({ state }: { state: TaskDetailState }) {
               alignItems: "center",
               gap: "var(--space-sm)",
               padding: "var(--space-sm) var(--space-lg)",
-              background: `linear-gradient(180deg, var(--faction-wow-title-from), var(--faction-wow-title-to))`,
+              background: `linear-gradient(180deg, var(--faction-coven-title-from), var(--faction-coven-title-to))`,
               borderBottom: `2px solid ${WIN_BORDER}`,
             }}
           >
-            {["var(--faction-wow-scrap-deep)", "var(--faction-wow-tape)", "var(--faction-wow-ivy-leaf)"].map(
+            {["var(--faction-coven-scrap-deep)", "var(--faction-coven-tape)", "var(--faction-coven-ivy-leaf)"].map(
               (lightColor) => (
                 <span
                   key={lightColor}
@@ -300,7 +300,7 @@ export default function WowTaskDetail({ state }: { state: TaskDetailState }) {
                 textShadow: `1px 1px 0 ${TITLE_TEXT}`,
               }}
             >
-              {t("wow.window")}
+              {t("coven.window")}
             </span>
           </div>
 
@@ -316,7 +316,7 @@ export default function WowTaskDetail({ state }: { state: TaskDetailState }) {
           >
             <Sparkle
               size={22}
-              color="var(--faction-wow-tape)"
+              color="var(--faction-coven-tape)"
               style={{
                 position: "absolute",
                 top: 18,
@@ -343,7 +343,7 @@ export default function WowTaskDetail({ state }: { state: TaskDetailState }) {
                 marginBottom: "var(--space-sm)",
               }}
             >
-              {task.status === "active" ? t("wow.statusOpen") : task.status}
+              {task.status === "active" ? t("coven.statusOpen") : task.status}
             </div>
             <div
               className="content-title"
@@ -367,7 +367,7 @@ export default function WowTaskDetail({ state }: { state: TaskDetailState }) {
             >
               <span style={pill}>
                 <Sparkle size={11} color={PINK} />{" "}
-                {t("wow.level", { level: task.level_required })}
+                {t("coven.level", { level: task.level_required })}
               </span>
               <span
                 className="content-title"
@@ -388,10 +388,10 @@ export default function WowTaskDetail({ state }: { state: TaskDetailState }) {
                     strokeLinejoin="round"
                   />
                 </svg>
-                {t("wow.sparks", { points: modifiedPoints })}
+                {t("coven.sparks", { points: modifiedPoints })}
               </span>
               <span style={pill}>
-                {t("wow.onView", {
+                {t("coven.onView", {
                   signups: signups.length,
                   completed: submissions.length,
                 })}
@@ -413,7 +413,7 @@ export default function WowTaskDetail({ state }: { state: TaskDetailState }) {
                 borderRadius: 12,
                 background: NOTEPAD_BG,
                 padding: "var(--space-lg) var(--space-xl)",
-                boxShadow: `4px 4px 0 var(--faction-wow-scrap-deep)`,
+                boxShadow: `4px 4px 0 var(--faction-coven-scrap-deep)`,
               }}
             >
               <button
@@ -428,14 +428,14 @@ export default function WowTaskDetail({ state }: { state: TaskDetailState }) {
                   padding: "var(--space-md) var(--space-xl)",
                   border: `1.5px solid ${WIN_BORDER}`,
                   borderRadius: 10,
-                  background: `linear-gradient(180deg, ${PINK}, var(--faction-wow-card-muted))`,
+                  background: `linear-gradient(180deg, ${PINK}, var(--faction-coven-card-muted))`,
                   boxShadow: `0 4px 10px color-mix(in srgb, ${PINK} 35%, transparent)`,
                 }}
               >
-                {t("wow.signup.cta", { points: modifiedPoints })}
+                {t("coven.signup.cta", { points: modifiedPoints })}
               </button>
               <div className="content-text" style={{ fontFamily: SCRIPT, color: PINK }}>
-                {t("wow.signup.note")}
+                {t("coven.signup.note")}
               </div>
               <div
                 style={{
@@ -447,10 +447,10 @@ export default function WowTaskDetail({ state }: { state: TaskDetailState }) {
                 }}
               >
                 <div>
-                  {t("wow.signup.slots", { open: slotsOpen, max: maxTaskSlots })}
+                  {t("coven.signup.slots", { open: slotsOpen, max: maxTaskSlots })}
                 </div>
                 <div>
-                  {t("wow.signup.levelRequired", { level: task.level_required })}
+                  {t("coven.signup.levelRequired", { level: task.level_required })}
                 </div>
               </div>
             </div>
@@ -473,7 +473,7 @@ export default function WowTaskDetail({ state }: { state: TaskDetailState }) {
             }}
           >
             <span className="content-text" style={{ fontFamily: SCRIPT, color: TITLE_TEXT }}>
-              {t("wow.submitted.text")}
+              {t("coven.submitted.text")}
             </span>
             <Link
               to={`/praxes/${mySubmission.id}/edit`}
@@ -486,11 +486,11 @@ export default function WowTaskDetail({ state }: { state: TaskDetailState }) {
                 padding: "var(--space-md) var(--space-xl)",
                 border: `1.5px solid ${WIN_BORDER}`,
                 borderRadius: 10,
-                background: `linear-gradient(180deg, ${PINK}, var(--faction-wow-card-muted))`,
+                background: `linear-gradient(180deg, ${PINK}, var(--faction-coven-card-muted))`,
                 textDecoration: "none",
               }}
             >
-              {t("wow.submitted.edit")}
+              {t("coven.submitted.edit")}
             </Link>
           </div>
         )}
@@ -510,7 +510,7 @@ export default function WowTaskDetail({ state }: { state: TaskDetailState }) {
             }}
           >
             <span className="content-text" style={{ fontFamily: SCRIPT, color: TITLE_TEXT }}>
-              {t("wow.inProgress.text")}
+              {t("coven.inProgress.text")}
             </span>
             <Link
               to={`/praxes/${inProgressPraxisId}/edit`}
@@ -523,11 +523,11 @@ export default function WowTaskDetail({ state }: { state: TaskDetailState }) {
                 padding: "var(--space-md) var(--space-xl)",
                 border: `1.5px solid ${WIN_BORDER}`,
                 borderRadius: 10,
-                background: `linear-gradient(180deg, ${PINK}, var(--faction-wow-card-muted))`,
+                background: `linear-gradient(180deg, ${PINK}, var(--faction-coven-card-muted))`,
                 textDecoration: "none",
               }}
             >
-              {t("wow.inProgress.continue")}
+              {t("coven.inProgress.continue")}
             </Link>
             <button
               onClick={handleDrop}
@@ -540,7 +540,7 @@ export default function WowTaskDetail({ state }: { state: TaskDetailState }) {
                 color: CARD_MUTED,
               }}
             >
-              {t("wow.inProgress.drop")}
+              {t("coven.inProgress.drop")}
             </button>
           </div>
         )}
@@ -548,14 +548,14 @@ export default function WowTaskDetail({ state }: { state: TaskDetailState }) {
         {/* ── The party so far (signups) ── */}
         {signups.length > 0 && (
           <section>
-            <SectionHead>{t("wow.partyHeading")}</SectionHead>
+            <SectionHead>{t("coven.partyHeading")}</SectionHead>
             <PartyRow signups={signups} friends={friends} foes={foes} />
           </section>
         )}
 
         {/* ── What we're asking (description) ── */}
         <section>
-          <SectionHead>{t("wow.askingHeading")}</SectionHead>
+          <SectionHead>{t("coven.askingHeading")}</SectionHead>
           <div
             style={{
               border: `2px solid ${NOTEPAD_BORDER}`,
@@ -575,14 +575,14 @@ export default function WowTaskDetail({ state }: { state: TaskDetailState }) {
                 whiteSpace: "pre-wrap",
               }}
             >
-              {task.description || t("wow.askingEmpty")}
+              {task.description || t("coven.askingEmpty")}
             </p>
           </div>
         </section>
 
         {/* ── The love so far (vote aggregate) ── */}
         <section>
-          <SectionHead>{t("wow.loveHeading")}</SectionHead>
+          <SectionHead>{t("coven.loveHeading")}</SectionHead>
           {voteCount > 0 ? (
             <div style={{ display: "flex", alignItems: "flex-end", gap: "var(--space-md)" }}>
               <span
@@ -603,16 +603,16 @@ export default function WowTaskDetail({ state }: { state: TaskDetailState }) {
                     color: TITLE_TEXT,
                   }}
                 >
-                  {t("wow.love.top")}
+                  {t("coven.love.top")}
                 </div>
                 <div style={{ fontSize: "var(--text-base)", color: CARD_MUTED }}>
-                  {t("wow.love.adored", { count: voteCount })}
+                  {t("coven.love.adored", { count: voteCount })}
                 </div>
               </div>
             </div>
           ) : (
             <p className="content-text" style={{ fontFamily: SCRIPT, color: PINK }}>
-              {t("wow.love.none")}
+              {t("coven.love.none")}
             </p>
           )}
         </section>
@@ -640,7 +640,7 @@ export default function WowTaskDetail({ state }: { state: TaskDetailState }) {
                   whiteSpace: "nowrap",
                 }}
               >
-                {t("wow.spellsHeading", { count: submissions.length })}
+                {t("coven.spellsHeading", { count: submissions.length })}
               </h2>
             </div>
             <div style={{ display: "flex", gap: 0 }}>
@@ -664,8 +664,8 @@ export default function WowTaskDetail({ state }: { state: TaskDetailState }) {
                     }}
                   >
                     {sort === "score"
-                      ? t("wow.sort.mostLoved")
-                      : t("wow.sort.recent")}
+                      ? t("coven.sort.mostLoved")
+                      : t("coven.sort.recent")}
                   </button>
                 );
               })}
@@ -674,7 +674,7 @@ export default function WowTaskDetail({ state }: { state: TaskDetailState }) {
 
           {sortedSubmissions.length === 0 ? (
             <p className="content-text" style={{ fontFamily: SCRIPT, color: PINK }}>
-              {t("wow.empty")}
+              {t("coven.empty")}
             </p>
           ) : (
             <>
@@ -706,11 +706,11 @@ export default function WowTaskDetail({ state }: { state: TaskDetailState }) {
                           fontSize: "var(--text-content)",
                           padding: "var(--space-xs) var(--space-lg)",
                           borderRadius: 14,
-                          boxShadow: `2px 3px 0 var(--faction-wow-scrap-deep)`,
+                          boxShadow: `2px 3px 0 var(--faction-coven-scrap-deep)`,
                         }}
                       >
                         <span style={{ fontSize: "var(--text-lg)", lineHeight: 1 }}>⚜</span>{" "}
-                        {t("wow.mostLoved")}
+                        {t("coven.mostLoved")}
                       </div>
                     )}
                     <PraxisCard praxis={s} />
@@ -728,7 +728,7 @@ export default function WowTaskDetail({ state }: { state: TaskDetailState }) {
                       textDecoration: "none",
                     }}
                   >
-                    {t("wow.viewAll", { count: submissions.length })}
+                    {t("coven.viewAll", { count: submissions.length })}
                   </Link>
                 </div>
               )}

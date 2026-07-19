@@ -5,8 +5,8 @@
  * account body, and a big thumb-sized star caster. Single-column; ported from
  * the Field Kit `wow-treatment` §05 praxis detail. Renders the same invariant
  * CONTENT + behavior slots as every archetype (shared module) — only the dress
- * changes. Grounds on the `--faction-wow-*` tokens already in index.css (same
- * set WowPraxisDetail / WowFieldDesk use). Presentation-only.
+ * changes. Grounds on the `--faction-coven-*` tokens already in index.css (same
+ * set CovenPraxisDetail / CovenFieldDesk use). Presentation-only.
  */
 import type { CSSProperties, ReactNode } from 'react'
 import { Link } from 'react-router-dom'
@@ -27,16 +27,16 @@ import {
 } from '../shared'
 import { MobileStarVote } from './shared'
 
-const PINK = 'var(--faction-wow)'
-const TITLE_TEXT = 'var(--faction-wow-title-text)'
-const CARD_TEXT = 'var(--faction-wow-card-text)'
-const CARD_MUTED = 'var(--faction-wow-card-muted)'
-const WIN_BORDER = 'var(--faction-wow-win-border)'
-const NOTEPAD_BG = 'var(--faction-wow-notepad-bg)'
-const NOTEPAD_BORDER = 'var(--faction-wow-notepad-border)'
-const BODY_BG = 'var(--faction-wow-body-bg)'
-const DOT = 'var(--faction-wow-dot)'
-const SCRIPT = 'var(--faction-wow-card-font)' // Caveat
+const PINK = 'var(--faction-coven)'
+const TITLE_TEXT = 'var(--faction-coven-title-text)'
+const CARD_TEXT = 'var(--faction-coven-card-text)'
+const CARD_MUTED = 'var(--faction-coven-card-muted)'
+const WIN_BORDER = 'var(--faction-coven-win-border)'
+const NOTEPAD_BG = 'var(--faction-coven-notepad-bg)'
+const NOTEPAD_BORDER = 'var(--faction-coven-notepad-border)'
+const BODY_BG = 'var(--faction-coven-body-bg)'
+const DOT = 'var(--faction-coven-dot)'
+const SCRIPT = 'var(--faction-coven-card-font)' // Caveat
 const BODY = 'var(--font-body)' // Courier Prime
 const ON_ACCENT = 'var(--color-text-on-accent)'
 
@@ -69,11 +69,11 @@ function Window({ title, children }: { title: string; children: ReactNode }) {
           alignItems: 'center',
           gap: 'var(--space-sm)',
           padding: 'var(--space-sm) var(--space-md)',
-          background: 'linear-gradient(180deg, var(--faction-wow-title-from), var(--faction-wow-title-to))',
+          background: 'linear-gradient(180deg, var(--faction-coven-title-from), var(--faction-coven-title-to))',
           borderBottom: `2px solid ${WIN_BORDER}`,
         }}
       >
-        {['var(--faction-wow-scrap-deep)', 'var(--faction-wow-tape)', 'var(--faction-wow-ivy-leaf)'].map((c) => (
+        {['var(--faction-coven-scrap-deep)', 'var(--faction-coven-tape)', 'var(--faction-coven-ivy-leaf)'].map((c) => (
           <span
             key={c}
             style={{ width: 9, height: 9, borderRadius: '50%', background: c, border: '1.2px solid rgba(255,255,255,0.7)' }}
@@ -102,7 +102,7 @@ function Window({ title, children }: { title: string; children: ReactNode }) {
   )
 }
 
-export default function WowPraxisDetail({ state }: { state: PraxisDetailState }) {
+export default function CovenPraxisDetail({ state }: { state: PraxisDetailState }) {
   const { t } = useTranslation('praxis')
   const { praxis } = state
   if (!praxis) return null
@@ -112,7 +112,7 @@ export default function WowPraxisDetail({ state }: { state: PraxisDetailState })
 
   return (
     <div
-      data-skin="wow"
+      data-skin="coven"
       className="page"
       style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-lg)', fontFamily: BODY, color: CARD_TEXT, background: BODY_BG }}
     >
@@ -128,7 +128,7 @@ export default function WowPraxisDetail({ state }: { state: PraxisDetailState })
             style={{
               width: 40,
               height: 40,
-              background: `linear-gradient(150deg, ${PINK}, var(--faction-wow-card-muted))`,
+              background: `linear-gradient(150deg, ${PINK}, var(--faction-coven-card-muted))`,
               border: `1.5px solid ${WIN_BORDER}`,
               color: ON_ACCENT,
               fontFamily: SCRIPT,
@@ -152,7 +152,7 @@ export default function WowPraxisDetail({ state }: { state: PraxisDetailState })
 
       {/* praxis.exe window — full media inside */}
       {praxis.media_items.length > 0 && (
-        <Window title={t('detail.wow.windows.keepsakes')}>
+        <Window title={t('detail.coven.windows.keepsakes')}>
           <MediaGallery media={praxis.media_items} layout="grid" />
         </Window>
       )}
@@ -160,10 +160,10 @@ export default function WowPraxisDetail({ state }: { state: PraxisDetailState })
       {/* Finding headline */}
       <div>
         <div style={{ fontSize: 'var(--text-sm)', textTransform: 'uppercase', letterSpacing: '0.2em', color: CARD_MUTED, marginBottom: 'var(--space-xs)' }}>
-          {t('detail.wow.theFinding')}
+          {t('detail.coven.theFinding')}
         </div>
         <h1 style={{ fontFamily: SCRIPT, fontWeight: 700, fontSize: 'var(--text-heading)', lineHeight: 1.12, margin: 0, color: TITLE_TEXT, overflowWrap: 'anywhere' }}>
-          {praxis.title ?? t('detail.wow.untitled')}
+          {praxis.title ?? t('detail.coven.untitled')}
         </h1>
       </div>
 
@@ -172,11 +172,11 @@ export default function WowPraxisDetail({ state }: { state: PraxisDetailState })
 
       {/* re: task link */}
       <div style={{ fontSize: 'var(--text-sm)', color: CARD_MUTED, letterSpacing: '0.04em' }}>
-        {t('detail.wow.re')}{' '}
+        {t('detail.coven.re')}{' '}
         <Link to={`/tasks/${praxis.task_id}`} style={{ color: TITLE_TEXT, fontWeight: 700, textDecoration: 'none' }}>
           {praxis.task_title}
         </Link>{' '}
-        {t('detail.wow.lvlSealed', { level: praxis.task_level_required, date: formatTimestamp(sealedDate) })}
+        {t('detail.coven.lvlSealed', { level: praxis.task_level_required, date: formatTimestamp(sealedDate) })}
       </div>
 
       {/* Account body */}
@@ -189,13 +189,13 @@ export default function WowPraxisDetail({ state }: { state: PraxisDetailState })
       )}
 
       {/* hearts.exe — the touch star caster */}
-      <Window title={t('detail.wow.windows.hearts')}>
+      <Window title={t('detail.coven.windows.hearts')}>
         <div
           className="flex items-center justify-center gap-2 content-title"
           style={{ marginBottom: 'var(--space-md)', fontFamily: SCRIPT, color: TITLE_TEXT }}
         >
           <Sparkle size={13} color={PINK} />
-          {t('detail.wow.sendLove')}
+          {t('detail.coven.sendLove')}
         </div>
         <div style={{ marginBottom: 'var(--space-md)' }}>
           <PraxisScoreBreakdown state={state} align="center" accent={PINK} font={SCRIPT} />

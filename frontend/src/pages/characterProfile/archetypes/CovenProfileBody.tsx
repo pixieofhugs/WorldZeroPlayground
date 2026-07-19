@@ -1,28 +1,28 @@
 /**
- * WowProfileBody — Warriors of Whimsy scrapbook player-profile skin (#460).
+ * CovenProfileBody — Warriors of Whimsy scrapbook player-profile skin (#460).
  * Ported from docs/design/profile/templates/Warriors of Whimsy Profile.dc.html:
  * a cork-board mat with push-pin dots, slight tilts, washi-tape strips, and an
- * ".exe window" progression panel. WOW follows the global light/dark cascade —
- * it reads --faction-wow-* / --faction-wow-card-* tokens (which flip with the
+ * ".exe window" progression panel. COVEN follows the global light/dark cascade —
+ * it reads --faction-coven-* / --faction-coven-card-* tokens (which flip with the
  * theme) and never pins a fixed data-theme.
  *
  * Structure is DefaultProfileBody's locked spine via ProfileSkin. No hardcoded
- * hex — colours via --faction-wow-* vars.
+ * hex — colours via --faction-coven-* vars.
  */
 import type { ReactNode } from 'react'
 
 import type { ProfileBodyProps } from '../FactionProfileBody'
 import { BadgeRow, ProfileSkin, SpectrumLaurel, type ProfileKit } from './profileSkin'
 
-const INK = 'var(--faction-wow-card-text)'
-const MUTED = 'var(--faction-wow-card-muted)'
-const ACCENT = 'var(--faction-wow-card-accent)'
-const SURFACE = 'var(--faction-wow-notepad-bg)'
-const BORDER = 'var(--faction-wow-win-border)'
-const MAT = 'var(--faction-wow-light)'
+const INK = 'var(--faction-coven-card-text)'
+const MUTED = 'var(--faction-coven-card-muted)'
+const ACCENT = 'var(--faction-coven-card-accent)'
+const SURFACE = 'var(--faction-coven-notepad-bg)'
+const BORDER = 'var(--faction-coven-win-border)'
+const MAT = 'var(--faction-coven-light)'
 const DISPLAY = 'var(--font-faction-script)' // Caveat
 const EYEBROW = 'var(--font-body)'
-const BAR = 'linear-gradient(90deg, var(--faction-wow-title-from), var(--faction-wow-card-accent))'
+const BAR = 'linear-gradient(90deg, var(--faction-coven-title-from), var(--faction-coven-card-accent))'
 
 function Pin({ left, right }: { left?: number; right?: number }) {
   return (
@@ -52,7 +52,7 @@ function heading(title: string, eyebrow: string): ReactNode {
           fontFamily: DISPLAY,
           fontSize: 'var(--text-heading)',
           color: ACCENT,
-          background: 'var(--faction-wow-tape)',
+          background: 'var(--faction-coven-tape)',
           padding: 'var(--space-xs) var(--space-md)',
           transform: 'rotate(-1.5deg)',
           display: 'inline-block',
@@ -66,9 +66,9 @@ function heading(title: string, eyebrow: string): ReactNode {
 }
 
 const kit: ProfileKit = {
-  slug: 'wow',
+  slug: 'coven',
   pageBackground: MAT,
-  pageOverlay: 'radial-gradient(var(--faction-wow-dot) 1px, transparent 1px)',
+  pageOverlay: 'radial-gradient(var(--faction-coven-dot) 1px, transparent 1px)',
   ink: INK,
   muted: MUTED,
   accent: ACCENT,
@@ -77,7 +77,7 @@ const kit: ProfileKit = {
   displayFont: DISPLAY,
   eyebrowFont: EYEBROW,
   headerStyle: {
-    background: 'var(--faction-wow-notepad-bg)',
+    background: 'var(--faction-coven-notepad-bg)',
     border: `1px solid ${BORDER}`,
     borderRadius: 16,
     padding: 'var(--space-2xl)',
@@ -111,7 +111,7 @@ const kit: ProfileKit = {
   },
   ringLabel: 'lvl',
   barFill: BAR,
-  barTrack: 'var(--faction-wow-notepad-border)',
+  barTrack: 'var(--faction-coven-notepad-border)',
   nextLevelLabel: (next) => `next · lvl ${next}`,
   sectionHeading: heading,
   praxisEyebrow: (name) => `sealed by ${name}`,
@@ -149,7 +149,7 @@ const kit: ProfileKit = {
     <BadgeRow
       badge={badge}
       last={last}
-      dividerColor="var(--faction-wow-notepad-border)"
+      dividerColor="var(--faction-coven-notepad-border)"
       nameStyle={{ fontFamily: DISPLAY, color: INK, lineHeight: 1.15 }}
       medallion={(glyph) => (
         <span
@@ -158,7 +158,7 @@ const kit: ProfileKit = {
             width: 34,
             height: 34,
             borderRadius: '50%',
-            background: 'radial-gradient(circle at 30% 30%, var(--faction-wow-scrap-mid), var(--faction-wow-scrap-deep))',
+            background: 'radial-gradient(circle at 30% 30%, var(--faction-coven-scrap-mid), var(--faction-coven-scrap-deep))',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -173,6 +173,6 @@ const kit: ProfileKit = {
   ),
 }
 
-export default function WowProfileBody(props: ProfileBodyProps) {
+export default function CovenProfileBody(props: ProfileBodyProps) {
   return <ProfileSkin props={props} kit={kit} />
 }

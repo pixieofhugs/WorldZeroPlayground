@@ -152,14 +152,14 @@ export default function ActivityTicker() {
       >
         <div
           className="eyebrow"
-          style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-sm)', color: 'var(--faction-wow)' }}
+          style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-sm)', color: 'var(--faction-coven)' }}
         >
           <span
             style={{
               width: 7,
               height: 7,
               borderRadius: '50%',
-              background: 'var(--faction-wow)',
+              background: 'var(--faction-coven)',
               display: 'inline-block',
               animation: 'wz-blink 1.4s ease-in-out infinite',
             }}

@@ -16,7 +16,7 @@ import { findDuplicateJsonKeys } from './findDuplicateJsonKeys'
 const FACTION_SLUGS = [
   'ephemerists',
   'everymen',
-  'wow',
+  'coven',
   'snide',
   'singularity',
   'ua',

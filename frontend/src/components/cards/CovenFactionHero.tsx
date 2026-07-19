@@ -9,34 +9,34 @@ import i18n from "../../i18n";
  * in a SIDE column (never a full-width band). Two pushpins tack the banner down.
  * Ported from the WoW design kit; conforms to {@link FactionHeroProps}.
  *
- * Theme-aware through the cascade: every colour resolves to a --faction-wow-*
+ * Theme-aware through the cascade: every colour resolves to a --faction-coven-*
  * token (which already carries light + dark values), so the board never mutates
  * the global theme. The script face is the WoW card-font token (Caveat); body
- * copy uses --font-body, matching WowTaskCard / the WoW PraxisCard branch.
+ * copy uses --font-body, matching CovenTaskCard / the WoW PraxisCard branch.
  *
  * The page passes raw counts; the faction labels them in its own whimsy voice.
  * Motto is a faction constant (not a backend field).
  */
 
-// Token shorthands — every value resolves to a --faction-wow-* var.
-const PINK = "var(--faction-wow)";
-const CARD_BG = "var(--faction-wow-card-bg)";
-const INK = "var(--faction-wow-card-text)";
-const ACCENT = "var(--faction-wow-card-accent)";
-const MUTED = "var(--faction-wow-card-muted)";
-const NOTEPAD = "var(--faction-wow-notepad-bg)";
-const WIN_BORDER = "var(--faction-wow-win-border)";
-const TITLE_TO = "var(--faction-wow-title-to)";
-const IVY = "var(--faction-wow-ivy)";
-const IVY_LEAF = "var(--faction-wow-ivy-leaf)";
-const DOT = "var(--faction-wow-dot)";
+// Token shorthands — every value resolves to a --faction-coven-* var.
+const PINK = "var(--faction-coven)";
+const CARD_BG = "var(--faction-coven-card-bg)";
+const INK = "var(--faction-coven-card-text)";
+const ACCENT = "var(--faction-coven-card-accent)";
+const MUTED = "var(--faction-coven-card-muted)";
+const NOTEPAD = "var(--faction-coven-notepad-bg)";
+const WIN_BORDER = "var(--faction-coven-win-border)";
+const TITLE_TO = "var(--faction-coven-title-to)";
+const IVY = "var(--faction-coven-ivy)";
+const IVY_LEAF = "var(--faction-coven-ivy-leaf)";
+const DOT = "var(--faction-coven-dot)";
 
-const SCRIPT = "var(--faction-wow-card-font)";
+const SCRIPT = "var(--faction-coven-card-font)";
 const BODY = "var(--font-body)";
 
 // The board's board-brown shadow has no dedicated token; the WoW atoms use a raw
 // warm-brown rgba for their pinned-paper drop shadows. Reuse the same value.
-// ponytail: no --faction-wow-board-shadow token exists; matching the atoms' rgba.
+// ponytail: no --faction-coven-board-shadow token exists; matching the atoms' rgba.
 const BOARD_SHADOW = "rgba(80,50,30,0.3)";
 
 /** Tiny four-point sparkle — same glyph the WoW task/window chrome uses. */
@@ -93,7 +93,7 @@ function Pushpin({ color, style }: { color: string; style?: CSSProperties }) {
   );
 }
 
-export default function WowFactionHero({
+export default function CovenFactionHero({
   name,
   description,
   members,
@@ -104,9 +104,9 @@ export default function WowFactionHero({
   // ponytail: three real counts. seasonRank / total-points-won aren't sourced yet
   // (no leaderboard/aggregate endpoint) — add charms when they are.
   const statTags = [
-    { value: members, label: i18n.t("feed:factionHero.wow.stats.members"), color: PINK, rot: "-3deg" },
-    { value: tasks, label: i18n.t("feed:factionHero.wow.stats.tasks"), color: IVY, rot: "2.5deg" },
-    { value: praxes, label: i18n.t("feed:factionHero.wow.stats.praxes"), color: ACCENT, rot: "-2deg" },
+    { value: members, label: i18n.t("feed:factionHero.coven.stats.members"), color: PINK, rot: "-3deg" },
+    { value: tasks, label: i18n.t("feed:factionHero.coven.stats.tasks"), color: IVY, rot: "2.5deg" },
+    { value: praxes, label: i18n.t("feed:factionHero.coven.stats.praxes"), color: ACCENT, rot: "-2deg" },
   ];
 
   return (
@@ -159,7 +159,7 @@ export default function WowFactionHero({
                 marginBottom: "var(--space-xs)",
               }}
             >
-              {i18n.t("feed:factionHero.wow.eyebrow")}
+              {i18n.t("feed:factionHero.coven.eyebrow")}
             </div>
             <h1
               style={{
@@ -176,7 +176,7 @@ export default function WowFactionHero({
               {name}
             </h1>
             <div style={{ fontFamily: SCRIPT, fontSize: "var(--text-title)", color: PINK, marginTop: "var(--space-xs)" }}>
-              {i18n.t("feed:factionHero.wow.motto")}
+              {i18n.t("feed:factionHero.coven.motto")}
             </div>
             <p
               className="content-text"
@@ -188,7 +188,7 @@ export default function WowFactionHero({
                 margin: "var(--space-sm) 0 0",
               }}
             >
-              {description ?? i18n.t("feed:factionHero.wow.descriptionFallback")}
+              {description ?? i18n.t("feed:factionHero.coven.descriptionFallback")}
             </p>
           </div>
 

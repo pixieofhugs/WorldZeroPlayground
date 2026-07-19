@@ -34,7 +34,7 @@ export default function EverymenMobileDuelRail({
 }: DuelRailSkinProps) {
   // ponytail: `maxWidth` is intentionally ignored. The rail is full-bleed inside
   // the phone column, so the desktop archetype-width map has nothing to line up
-  // with here — the same call WowMobileDuelRail makes.
+  // with here — the same call CovenMobileDuelRail makes.
   const shell: CSSProperties = {
     margin: 'var(--space-md) 0',
     background: PAPER,

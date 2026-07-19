@@ -8,7 +8,7 @@
  *
  * Invariant behavior slots (admin bar, banners, owner actions, flag) come from
  * the shared module — this archetype owns only presentation. WoW flips with the
- * theme normally, so every color reads from --faction-wow* tokens (light + dark
+ * theme normally, so every color reads from --faction-coven* tokens (light + dark
  * already defined in index.css). No document-theme mutation, no hardcoded hex.
  * The author byline themes to the AUTHOR's faction, not the task's.
  */
@@ -24,24 +24,24 @@ import { formatTimestamp } from '../../../utils/dates'
 import { PraxisAdminBar, PraxisStatusBanners, PraxisOwnerActions, PraxisFlagBlock, PraxisVoterBreakdown, PraxisScoreBreakdown, MemberByline } from '../shared'
 import type { PraxisDetailState } from '../usePraxisDetail'
 
-// ── whimsy.exe token vocabulary (same as WowTaskDetail) ──────────────────────
-const PINK = 'var(--faction-wow)'
-const TITLE_TEXT = 'var(--faction-wow-title-text)'
-const CARD_TEXT = 'var(--faction-wow-card-text)'
-const CARD_MUTED = 'var(--faction-wow-card-muted)'
-const WIN_BORDER = 'var(--faction-wow-win-border)'
-const NOTEPAD_BG = 'var(--faction-wow-notepad-bg)'
-const NOTEPAD_BORDER = 'var(--faction-wow-notepad-border)'
-const DOT = 'var(--faction-wow-dot)'
-const SCRIPT = 'var(--faction-wow-card-font)' // Caveat
+// ── whimsy.exe token vocabulary (same as CovenTaskDetail) ──────────────────────
+const PINK = 'var(--faction-coven)'
+const TITLE_TEXT = 'var(--faction-coven-title-text)'
+const CARD_TEXT = 'var(--faction-coven-card-text)'
+const CARD_MUTED = 'var(--faction-coven-card-muted)'
+const WIN_BORDER = 'var(--faction-coven-win-border)'
+const NOTEPAD_BG = 'var(--faction-coven-notepad-bg)'
+const NOTEPAD_BORDER = 'var(--faction-coven-notepad-border)'
+const DOT = 'var(--faction-coven-dot)'
+const SCRIPT = 'var(--faction-coven-card-font)' // Caveat
 const BODY = 'var(--font-body)' // Courier Prime
 const ON_ACCENT = 'var(--color-text-on-accent)'
 
 /** Party-voiced label for the filing mode. A duel side is a solo praxis
  * (ADR-0011) — its duel context is shown by the shared DuelCrossLink, not here. */
 function modeVoice(type: string, t: TFunction<'praxis'>): string {
-  if (type === 'collab') return t('detail.wow.mode.collab')
-  return t('detail.wow.mode.solo')
+  if (type === 'collab') return t('detail.coven.mode.collab')
+  return t('detail.coven.mode.solo')
 }
 
 /** Sparkle charm — the kit's signature four-point star. */
@@ -60,7 +60,7 @@ function Sparkle({ size, color, style }: { size: number; color: string; style?: 
 function Divider({ label }: { label: string }) {
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-md)', margin: 'var(--space-xl) 0 var(--space-lg)' }}>
-      <span style={{ flex: 1, height: 0, borderTop: `2px dotted var(--faction-wow-border)` }} />
+      <span style={{ flex: 1, height: 0, borderTop: `2px dotted var(--faction-coven-border)` }} />
       <span
         style={{
           display: 'inline-flex',
@@ -76,7 +76,7 @@ function Divider({ label }: { label: string }) {
       >
         <Sparkle size={9} color={PINK} /> {label}
       </span>
-      <span style={{ flex: 1, height: 0, borderTop: `2px dotted var(--faction-wow-border)` }} />
+      <span style={{ flex: 1, height: 0, borderTop: `2px dotted var(--faction-coven-border)` }} />
     </div>
   )
 }
@@ -90,11 +90,11 @@ function TitleBar({ name }: { name: string }) {
         alignItems: 'center',
         gap: 'var(--space-sm)',
         padding: 'var(--space-sm) var(--space-lg)',
-        background: `linear-gradient(180deg, var(--faction-wow-title-from), var(--faction-wow-title-to))`,
+        background: `linear-gradient(180deg, var(--faction-coven-title-from), var(--faction-coven-title-to))`,
         borderBottom: `2px solid ${WIN_BORDER}`,
       }}
     >
-      {['var(--faction-wow-scrap-deep)', 'var(--faction-wow-tape)', 'var(--faction-wow-ivy-leaf)'].map((lightColor) => (
+      {['var(--faction-coven-scrap-deep)', 'var(--faction-coven-tape)', 'var(--faction-coven-ivy-leaf)'].map((lightColor) => (
         <span
           key={lightColor}
           style={{
@@ -124,7 +124,7 @@ function TitleBar({ name }: { name: string }) {
   )
 }
 
-export default function WowPraxisDetail({ state }: { state: PraxisDetailState }) {
+export default function CovenPraxisDetail({ state }: { state: PraxisDetailState }) {
   const { t } = useTranslation('praxis')
   const { praxis } = state
   if (!praxis) return null
@@ -141,9 +141,9 @@ export default function WowPraxisDetail({ state }: { state: PraxisDetailState })
     textTransform: 'uppercase',
     padding: 'var(--space-xs) var(--space-md)',
     borderRadius: 20,
-    background: 'var(--faction-wow-light)',
+    background: 'var(--faction-coven-light)',
     color: CARD_TEXT,
-    border: `1px solid var(--faction-wow-border)`,
+    border: `1px solid var(--faction-coven-border)`,
     whiteSpace: 'nowrap',
   }
 
@@ -164,7 +164,7 @@ export default function WowPraxisDetail({ state }: { state: PraxisDetailState })
             boxShadow: `0 14px 34px color-mix(in srgb, ${PINK} 30%, transparent)`,
           }}
         >
-          <TitleBar name={t('detail.wow.windows.praxis')} />
+          <TitleBar name={t('detail.coven.windows.praxis')} />
 
           {/* desktop body — dotted grid */}
           <div
@@ -178,7 +178,7 @@ export default function WowPraxisDetail({ state }: { state: PraxisDetailState })
           >
             <Sparkle
               size={20}
-              color="var(--faction-wow-tape)"
+              color="var(--faction-coven-tape)"
               style={{ position: 'absolute', top: 18, right: 22, transform: 'rotate(10deg)' }}
             />
 
@@ -197,21 +197,21 @@ export default function WowPraxisDetail({ state }: { state: PraxisDetailState })
                   padding: 'var(--space-xs) var(--space-md)',
                   borderRadius: 20,
                   fontWeight: 700,
-                  boxShadow: `0 3px 8px var(--faction-wow-light)`,
+                  boxShadow: `0 3px 8px var(--faction-coven-light)`,
                 }}
               >
-                <Sparkle size={10} color={ON_ACCENT} /> {t('detail.wow.sealed')}
+                <Sparkle size={10} color={ON_ACCENT} /> {t('detail.coven.sealed')}
               </span>
               <span style={pill}>{modeVoice(praxis.type, t)}</span>
               <span style={{ fontSize: 'var(--text-sm)', color: CARD_MUTED, letterSpacing: '0.04em' }}>
-                {t('detail.wow.re')}{' '}
+                {t('detail.coven.re')}{' '}
                 <Link
                   to={`/tasks/${praxis.task_id}`}
                   style={{ color: TITLE_TEXT, fontWeight: 700, textDecoration: 'none' }}
                 >
                   {praxis.task_title}
                 </Link>{' '}
-                {t('detail.wow.lvlSealed', { level: praxis.task_level_required, date: formatTimestamp(sealedDate) })}
+                {t('detail.coven.lvlSealed', { level: praxis.task_level_required, date: formatTimestamp(sealedDate) })}
               </span>
               {praxis.moderation_status === 'flagged' && (
                 <span
@@ -222,7 +222,7 @@ export default function WowPraxisDetail({ state }: { state: PraxisDetailState })
                     background: 'transparent',
                   }}
                 >
-                  {t('detail.wow.flagged')}
+                  {t('detail.coven.flagged')}
                 </span>
               )}
             </div>
@@ -237,7 +237,7 @@ export default function WowPraxisDetail({ state }: { state: PraxisDetailState })
                 marginBottom: 'var(--space-sm)',
               }}
             >
-              {t('detail.wow.theFinding')}
+              {t('detail.coven.theFinding')}
             </div>
             <h1
               style={{
@@ -250,7 +250,7 @@ export default function WowPraxisDetail({ state }: { state: PraxisDetailState })
                 overflowWrap: 'anywhere',
               }}
             >
-              {praxis.title ?? t('detail.wow.untitled')}
+              {praxis.title ?? t('detail.coven.untitled')}
             </h1>
 
             {/* ── Owner actions (invariant) ── */}
@@ -266,7 +266,7 @@ export default function WowPraxisDetail({ state }: { state: PraxisDetailState })
                 gap: 'var(--space-md)',
                 paddingTop: 'var(--space-lg)',
                 marginTop: 'var(--space-lg)',
-                borderTop: `2px dotted var(--faction-wow-border)`,
+                borderTop: `2px dotted var(--faction-coven-border)`,
               }}
             >
               <Link to={`/characters/${praxis.created_by_id}`} style={{ flexShrink: 0 }}>
@@ -303,7 +303,7 @@ export default function WowPraxisDetail({ state }: { state: PraxisDetailState })
                 <div
                   style={{ fontSize: 'var(--text-sm)', color: CARD_MUTED, letterSpacing: '0.06em', marginTop: 'var(--space-xs)' }}
                 >
-                  {t('detail.wow.witchWhoCast')}
+                  {t('detail.coven.witchWhoCast')}
                 </div>
               </div>
               <div style={{ marginLeft: 'auto', textAlign: 'right', flexShrink: 0 }}>
@@ -319,7 +319,7 @@ export default function WowPraxisDetail({ state }: { state: PraxisDetailState })
                     marginTop: 'var(--space-xs)',
                   }}
                 >
-                  {t('detail.wow.basePoints')}
+                  {t('detail.coven.basePoints')}
                 </div>
               </div>
             </div>
@@ -327,7 +327,7 @@ export default function WowPraxisDetail({ state }: { state: PraxisDetailState })
             {/* ── 3 · the account (body text) ── */}
             {praxis.body_text && (
               <>
-                <Divider label={t('detail.wow.whatIDid')} />
+                <Divider label={t('detail.coven.whatIDid')} />
                 <MarkdownPreview
                   source={praxis.body_text}
                   className="markdown-preview content-text"
@@ -340,7 +340,7 @@ export default function WowPraxisDetail({ state }: { state: PraxisDetailState })
             {praxis.media_items.length > 0 && (
               <>
                 <Divider
-                  label={t('detail.wow.keepsakes', { count: praxis.media_items.length })}
+                  label={t('detail.coven.keepsakes', { count: praxis.media_items.length })}
                 />
                 <div
                   style={{
@@ -350,7 +350,7 @@ export default function WowPraxisDetail({ state }: { state: PraxisDetailState })
                     boxShadow: `0 6px 16px color-mix(in srgb, ${PINK} 18%, transparent)`,
                   }}
                 >
-                  <TitleBar name={t('detail.wow.windows.keepsakes')} />
+                  <TitleBar name={t('detail.coven.windows.keepsakes')} />
                   <div
                     style={{
                       padding: 'var(--space-md)',
@@ -376,7 +376,7 @@ export default function WowPraxisDetail({ state }: { state: PraxisDetailState })
             boxShadow: `0 10px 26px color-mix(in srgb, ${PINK} 26%, transparent)`,
           }}
         >
-          <TitleBar name={t('detail.wow.windows.hearts')} />
+          <TitleBar name={t('detail.coven.windows.hearts')} />
           <div
             style={{
               padding: 'var(--space-xl) var(--space-xl) var(--space-xl)',
@@ -405,7 +405,7 @@ export default function WowPraxisDetail({ state }: { state: PraxisDetailState })
                   color: TITLE_TEXT,
                 }}
               >
-                <Sparkle size={14} color={PINK} /> {t('detail.wow.sendLove')}
+                <Sparkle size={14} color={PINK} /> {t('detail.coven.sendLove')}
               </span>
               <PraxisScoreBreakdown state={state} align="right" accent={PINK} muted={CARD_MUTED} font={SCRIPT} />
             </div>

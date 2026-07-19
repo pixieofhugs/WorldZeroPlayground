@@ -1,7 +1,7 @@
 /**
  * Singularity MOBILE duel seal-confirm (#723).
  *
- * The desktop dialog thumbed down. Where Wow's phone skin is a bottom sheet
+ * The desktop dialog thumbed down. Where Coven's phone skin is a bottom sheet
  * pinned to a rounded edge over the page, Singularity takes the whole screen:
  * the phone IS the terminal. That also answers the light-mode question for the
  * mobile path — the ground is the faction's own always-dark token rather than

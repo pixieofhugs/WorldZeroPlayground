@@ -2,7 +2,7 @@ import i18n from "../../i18n";
 import { pickVariant } from "../../utils/factionDispatch";
 import { surfaceMap } from "../../factions";
 import { UaSigil } from "./UaSigil";
-import { WowSigil } from "./WowSigil";
+import { CovenSigil } from "./CovenSigil";
 import { SnideSigil } from "../snide/snideAtoms";
 import { EphemeristsSigil } from "./ephemeristsAtoms";
 import { SingularitySigil } from "./SingularitySigil";
@@ -88,8 +88,8 @@ export function UaSelectCard({ state = "locked", members, onVisit }: Omit<Factio
   );
 }
 
-export function WOWSelectCard({ state = "locked", members, onVisit }: Omit<FactionSelectCardProps, "faction">) {
-  const status = i18n.t(`feed:factionSelect.wow.status.${state}` as const);
+export function COVENSelectCard({ state = "locked", members, onVisit }: Omit<FactionSelectCardProps, "faction">) {
+  const status = i18n.t(`feed:factionSelect.coven.status.${state}` as const);
   return (
     <div style={{
       width: "100%", maxWidth: 360, minHeight: 300, boxSizing: "border-box", position: "relative", overflow: "hidden",
@@ -104,31 +104,31 @@ export function WOWSelectCard({ state = "locked", members, onVisit }: Omit<Facti
         <span style={{ display: "flex", gap: 6 }}>
           {["#f6c75e", "#7fc59e", "#ec5f99"].map((color) => <i key={color} style={{ width: 11, height: 11, borderRadius: "50%", background: color, border: "1px solid rgba(0,0,0,0.15)" }} />)}
         </span>
-        <span style={{ fontSize: "var(--text-lg)", color: "var(--gestalt-title-text)", letterSpacing: "0.02em" }}>{i18n.t("feed:identity.wow.windowTitle")}</span>
+        <span style={{ fontSize: "var(--text-lg)", color: "var(--gestalt-title-text)", letterSpacing: "0.02em" }}>{i18n.t("feed:identity.coven.windowTitle")}</span>
         {/* eslint-disable-next-line local/no-raw-style-values -- ornament: ▢ ✕ are drawn window-chrome glyphs used as icons, not text */}
         <span style={{ marginLeft: "auto", fontSize: 12, color: "var(--gestalt-title-text)", opacity: 0.7 }}>▢ ✕</span>
       </div>
       <div style={{ flex: 1, padding: "var(--space-lg) var(--space-xl) 0", position: "relative" }}>
         {/* eslint-disable-next-line local/no-raw-style-values -- ornament: hand-script faction name, the whimsy.exe window's display type */}
         <div style={{ fontFamily: "var(--font-faction-script)", fontWeight: 700, fontSize: 27, lineHeight: 1.1, color: "var(--gestalt-ink)", whiteSpace: "nowrap" }}>
-          <span style={{ display: "inline-block", verticalAlign: "-3px", marginRight: "var(--space-sm)" }}><WowSigil size={18} color="var(--faction-wow)" /></span>{i18n.t("feed:factionSelect.wow.name")}
+          <span style={{ display: "inline-block", verticalAlign: "-3px", marginRight: "var(--space-sm)" }}><CovenSigil size={18} color="var(--faction-coven)" /></span>{i18n.t("feed:factionSelect.coven.name")}
         </div>
         <p className="content-text" style={{ margin: "var(--space-md) 0 0", lineHeight: 1.6, color: "var(--gestalt-ink-soft)" }}>
-          {i18n.t("feed:factionSelect.wow.blurb")}
+          {i18n.t("feed:factionSelect.coven.blurb")}
         </p>
       </div>
       <div style={{ padding: "0 var(--space-xl) var(--space-lg)" }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "var(--space-md)", marginBottom: "var(--space-md)" }}>
           {/* eslint-disable-next-line local/no-raw-style-values -- ornament: inset of the rotated status sticker; rounding reflows the sticker. */}
           <div style={{ transform: "rotate(-1.5deg)", background: "var(--gestalt-pink-lt)", color: "var(--gestalt-ink)", fontSize: "var(--text-md)", padding: "5px 10px", borderRadius: 4 }}>{status}</div>
-          {members != null && <div style={{ flexShrink: 0, fontSize: "var(--text-sm)", letterSpacing: "0.04em", color: "var(--gestalt-label)" }}>{i18n.t("feed:factionSelect.wow.members", { count: members })}</div>}
+          {members != null && <div style={{ flexShrink: 0, fontSize: "var(--text-sm)", letterSpacing: "0.04em", color: "var(--gestalt-label)" }}>{i18n.t("feed:factionSelect.coven.members", { count: members })}</div>}
         </div>
         <button onClick={onVisit} style={{
           width: "100%", cursor: "pointer",
           border: "1.5px solid var(--gestalt-pink)", borderRadius: 7, background: "var(--gestalt-pink)", color: "#fff",
           // eslint-disable-next-line local/no-raw-style-values -- ornament: CTA is set in the faction's hand-script at display size; a label token would flatten the archetype (§270)
           fontFamily: "var(--font-faction-script)", fontWeight: 700, fontSize: 21, padding: "var(--space-sm) var(--space-lg)",
-        }}>{i18n.t("feed:factionSelect.wow.cta")}</button>
+        }}>{i18n.t("feed:factionSelect.coven.cta")}</button>
       </div>
     </div>
   );
@@ -374,7 +374,7 @@ export function AlbescentSelectCard({ state = "locked", members, onVisit }: Omit
 // change (these two slugs are not in FACTION_ALIASES), so it is left alone here
 // and tracked as follow-up.
 const LEGACY_SLUG: Record<string, string> = {
-  gestalt: "wow",
+  gestalt: "coven",
   journeymen: "ephemerists",
 };
 

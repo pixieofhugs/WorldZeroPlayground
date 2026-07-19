@@ -10,7 +10,7 @@ import { pickVariant } from '../../../../utils/factionDispatch'
 import { surfaceMap } from '../../../../factions'
 import DefaultMobilePraxisCard from '../DefaultMobilePraxisCard'
 import UaMobilePraxisCard from '../UaMobilePraxisCard'
-import WowMobilePraxisCard from '../WowMobilePraxisCard'
+import CovenMobilePraxisCard from '../CovenMobilePraxisCard'
 import SnideMobilePraxisCard from '../SnideMobilePraxisCard'
 import EphemeristsMobilePraxisCard from '../EphemeristsMobilePraxisCard'
 import SingularityMobilePraxisCard from '../SingularityMobilePraxisCard'
@@ -18,7 +18,7 @@ import EverymenMobilePraxisCard from '../EverymenMobilePraxisCard'
 
 const CARD_BY_SLUG = {
   ua: UaMobilePraxisCard,
-  wow: WowMobilePraxisCard,
+  coven: CovenMobilePraxisCard,
   snide: SnideMobilePraxisCard,
   ephemerists: EphemeristsMobilePraxisCard,
   singularity: SingularityMobilePraxisCard,

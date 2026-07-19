@@ -19,7 +19,7 @@ const FACTION_SLUGS = [
   'snide',
   'singularity',
   'ua',
-  'wow',
+  'coven',
   'albescent',
 ] as const
 
@@ -27,8 +27,8 @@ const SHARED_KEYS = Object.keys(forms.editPraxis.collab) as CollabCopyKey[]
 
 describe('collabCopy — faction override resolution', () => {
   it('resolves a faction override when one exists', () => {
-    // wow keeps the witch-walk diction; everymen files a work report.
-    expect(collabCopy('wow', 'pillWeaving')).toBe('still walking')
+    // coven keeps the witch-walk diction; everymen files a work report.
+    expect(collabCopy('coven', 'pillWeaving')).toBe('still walking')
     expect(collabCopy('everymen', 'pillWeaving')).toBe('still on the clock')
     expect(collabCopy('singularity', 'pillWeaving')).toBe('pending')
   })

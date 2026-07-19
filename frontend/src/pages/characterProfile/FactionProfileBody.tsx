@@ -16,7 +16,7 @@
  * below and its players adopt the bespoke skin with no other change (#460):
  *
  *   ua:          UaProfileBody,
- *   wow:         WowProfileBody,
+ *   wow:         CovenProfileBody,
  *   snide:       SnideProfileBody,
  *   ephemerists: EphemeristsProfileBody,
  *   singularity: SingularityProfileBody,

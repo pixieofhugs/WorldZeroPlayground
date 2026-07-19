@@ -9,7 +9,7 @@ import {
 describe("sortFactionsByRainbowOrder", () => {
   it("orders known factions into canonical rainbow order", () => {
     const shuffled = [
-      { slug: "wow" },
+      { slug: "coven" },
       { slug: "singularity" },
       { slug: "everymen" },
       { slug: "ephemerists" },
@@ -25,31 +25,31 @@ describe("sortFactionsByRainbowOrder", () => {
     // Albescent is registered but not themed, so it sorts with the unknowns
     // rather than claiming a slot in the spectrum. See the leak suite below.
     expect(
-      sortFactionsByRainbowOrder([{ slug: "albescent" }, { slug: "wow" }]).map(
+      sortFactionsByRainbowOrder([{ slug: "albescent" }, { slug: "coven" }]).map(
         (f) => f.slug,
       ),
-    ).toEqual(["wow", "albescent"]);
+    ).toEqual(["coven", "albescent"]);
   });
 
   it("sorts unknown slugs last, preserving their relative order", () => {
     const factions = [
       { slug: "mystery_b" },
-      { slug: "wow" },
+      { slug: "coven" },
       { slug: "mystery_a" },
       { slug: "everymen" },
     ];
     expect(sortFactionsByRainbowOrder(factions).map((f) => f.slug)).toEqual([
       "everymen",
-      "wow",
+      "coven",
       "mystery_b",
       "mystery_a",
     ]);
   });
 
   it("does not mutate the input array", () => {
-    const factions = [{ slug: "wow" }, { slug: "everymen" }];
+    const factions = [{ slug: "coven" }, { slug: "everymen" }];
     sortFactionsByRainbowOrder(factions);
-    expect(factions.map((f) => f.slug)).toEqual(["wow", "everymen"]);
+    expect(factions.map((f) => f.slug)).toEqual(["coven", "everymen"]);
   });
 });
 
@@ -113,9 +113,9 @@ describe("factionFill (#636 / ADR-0039)", () => {
   });
 
   it("pairs a real faction fill with its on-fill AA ink for a pill (#649)", () => {
-    expect(factionFill("wow", "pill")).toEqual({
-      background: "var(--faction-wow)",
-      color: "var(--faction-wow-on-fill)",
+    expect(factionFill("coven", "pill")).toEqual({
+      background: "var(--faction-coven)",
+      color: "var(--faction-coven-on-fill)",
     });
   });
 });
@@ -140,15 +140,21 @@ describe("FACTION_RAINBOW_ORDER does not leak Albescent (#783, ADR-0027)", () =>
     expect(JSON.stringify(fills)).not.toContain("albescent");
   });
 
-  it("still carries every faction that is publicly visible", () => {
+  it("still carries every faction that is publicly visible AND themed", () => {
     // Guards the opposite mistake: closing the leak by emptying the spectrum.
+    //
+    // `wow` is the one publicly-visible faction absent here, and only until its
+    // redesign ships (#784). Cozy Coven took the pink block, so `wow` resolves
+    // to `default` — putting it back now would paint a grey stop mid-rainbow,
+    // the same defect Albescent was removed to fix. It rejoins between "ua" and
+    // "snide" once it has a gold block of its own.
     expect([...FACTION_RAINBOW_ORDER].sort()).toEqual([
+      "coven",
       "ephemerists",
       "everymen",
       "singularity",
       "snide",
       "ua",
-      "wow",
     ]);
   });
 });

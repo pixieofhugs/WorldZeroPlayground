@@ -64,7 +64,7 @@ describe("FactionProfileBody dispatch", () => {
     // member's profile IS the default one. That is the point — a profile is
     // exactly where a secret society would give itself away.
     expect(Object.keys(surfaceMap("profileBody")).sort()).toEqual(
-      ["ephemerists", "everymen", "singularity", "snide", "ua", "wow"].sort(),
+      ["ephemerists", "everymen", "singularity", "snide", "ua", "coven"].sort(),
     );
   });
 
@@ -96,7 +96,7 @@ describe("FactionProfileBody dispatch", () => {
   it("renders a profile for every faction slug (bespoke skin or default)", () => {
     for (const slug of [
       "ua",
-      "wow",
+      "coven",
       "snide",
       "ephemerists",
       "singularity",

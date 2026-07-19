@@ -10,12 +10,12 @@ import CredentialCard from '../CredentialCard'
 describe('CredentialCard', () => {
   it('skins to the faction token set and shows the faction pill', () => {
     const html = renderToStaticMarkup(
-      <CredentialCard displayName="Marlow Quill" handle="marlowquill" bio="x" factionSlug="wow" level={3} score={42} />,
+      <CredentialCard displayName="Marlow Quill" handle="marlowquill" bio="x" factionSlug="coven" level={3} score={42} />,
     )
-    expect(html).toContain('--faction-wow-card-bg')
+    expect(html).toContain('--faction-coven-card-bg')
     expect(html).toContain('Marlow Quill')
     expect(html).toContain('@marlowquill')
-    expect(html).toContain('Warriors of Whimsy') // faction pill label
+    expect(html).toContain('Cozy Coven') // faction pill label
     expect(html).toContain('42')
   })
 

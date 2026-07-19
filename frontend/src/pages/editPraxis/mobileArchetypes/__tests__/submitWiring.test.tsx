@@ -32,7 +32,7 @@ vi.mock("../../archetypes/controls", async (importActual) => {
 });
 
 import DefaultMobileEditPraxis from "../DefaultEditPraxis";
-import WowMobileEditPraxis from "../WowEditPraxis";
+import CovenMobileEditPraxis from "../CovenEditPraxis";
 
 const praxis = {
   id: 55,
@@ -128,7 +128,7 @@ function stateWith(publish: () => Promise<void>): EditPraxisState {
 describe("mobile composer submit wiring", () => {
   for (const [label, Skin] of [
     ["Default", DefaultMobileEditPraxis],
-    ["WOW", WowMobileEditPraxis],
+    ["COVEN", CovenMobileEditPraxis],
   ] as const) {
     it(`${label} hands the submit control the hook's publish handler`, () => {
       captured.state = null;

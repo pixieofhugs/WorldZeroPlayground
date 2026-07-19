@@ -13,25 +13,25 @@ import type { FactionDetailState } from '../useFactionDetail'
  * member/task counts, top members, recent praxis, and the invite-gated Join model
  * via `state.membership`, ADR-0019) — only the dress changes: a pink scrapbook
  * "wow.exe" window hero on a dotted board, Caveat script, sparkle accents, rose
- * accent. Grounds on the `--faction-wow-*` window tokens already in index.css (the
- * set the WOW pilots use); always-light. Reuses the shared `mobile.*` faction copy
+ * accent. Grounds on the `--faction-coven-*` window tokens already in index.css (the
+ * set the COVEN pilots use); always-light. Reuses the shared `mobile.*` faction copy
  * so the slot contract holds. Presentation-only — all data + the join handler
  * arrive via {@link FactionDetailState}.
  */
 
 const NA_SLUG = 'na'
 
-const PINK = 'var(--faction-wow)'
-const PINK_DEEP = 'var(--faction-wow-card-accent)'
-const TITLE_TEXT = 'var(--faction-wow-title-text)'
-const CARD_TEXT = 'var(--faction-wow-card-text)'
-const CARD_MUTED = 'var(--faction-wow-card-muted)'
-const WIN_BORDER = 'var(--faction-wow-win-border)'
-const NOTEPAD_BG = 'var(--faction-wow-notepad-bg)'
-const NOTEPAD_BORDER = 'var(--faction-wow-notepad-border)'
-const BODY_BG = 'var(--faction-wow-body-bg)'
-const DOT = 'var(--faction-wow-dot)'
-const SCRIPT = 'var(--faction-wow-card-font)' // Caveat
+const PINK = 'var(--faction-coven)'
+const PINK_DEEP = 'var(--faction-coven-card-accent)'
+const TITLE_TEXT = 'var(--faction-coven-title-text)'
+const CARD_TEXT = 'var(--faction-coven-card-text)'
+const CARD_MUTED = 'var(--faction-coven-card-muted)'
+const WIN_BORDER = 'var(--faction-coven-win-border)'
+const NOTEPAD_BG = 'var(--faction-coven-notepad-bg)'
+const NOTEPAD_BORDER = 'var(--faction-coven-notepad-border)'
+const BODY_BG = 'var(--faction-coven-body-bg)'
+const DOT = 'var(--faction-coven-dot)'
+const SCRIPT = 'var(--faction-coven-card-font)' // Caveat
 const BODY = 'var(--font-body)' // Courier Prime
 const ON_ACCENT = 'var(--color-text-on-accent)'
 
@@ -58,7 +58,7 @@ function Avatar({ name, size }: { name: string; size: number }) {
         width: size,
         height: size,
         borderRadius: '50%',
-        background: `linear-gradient(150deg, var(--faction-wow-title-from), ${PINK})`,
+        background: `linear-gradient(150deg, var(--faction-coven-title-from), ${PINK})`,
         border: `1.5px solid ${WIN_BORDER}`,
         display: 'flex',
         alignItems: 'center',
@@ -120,7 +120,7 @@ const cancelButton: CSSProperties = {
   cursor: 'pointer',
 }
 
-export default function WowFactionPage({ state }: { state: FactionDetailState }) {
+export default function CovenFactionPage({ state }: { state: FactionDetailState }) {
   const { t } = useTranslation('factions')
   const { faction, members, tasks, recentPraxis, membership } = state
   const [confirming, setConfirming] = useState(false)
@@ -134,7 +134,7 @@ export default function WowFactionPage({ state }: { state: FactionDetailState })
 
   return (
     <div
-      data-skin="wow"
+      data-skin="coven"
       className="py-4"
       style={{
         fontFamily: BODY,
@@ -164,22 +164,22 @@ export default function WowFactionPage({ state }: { state: FactionDetailState })
             alignItems: 'center',
             gap: 'var(--space-sm)',
             padding: 'var(--space-sm) var(--space-md)',
-            background: 'linear-gradient(180deg, var(--faction-wow-title-from), var(--faction-wow-title-to))',
+            background: 'linear-gradient(180deg, var(--faction-coven-title-from), var(--faction-coven-title-to))',
             borderBottom: `2px solid ${WIN_BORDER}`,
           }}
         >
-          {['var(--faction-wow-scrap-deep)', 'var(--faction-wow-tape)', 'var(--faction-wow-ivy-leaf)'].map((c) => (
+          {['var(--faction-coven-scrap-deep)', 'var(--faction-coven-tape)', 'var(--faction-coven-ivy-leaf)'].map((c) => (
             <span key={c} style={{ width: 9, height: 9, borderRadius: '50%', background: c, border: '1.2px solid rgba(255,255,255,0.7)' }} />
           ))}
           <span style={{ marginLeft: 'auto', display: 'inline-flex', alignItems: 'center', gap: 'var(--space-xs)', fontFamily: SCRIPT, fontSize: 'var(--text-content)', color: TITLE_TEXT }}>
             <Sparkle size={11} color={TITLE_TEXT} />
-            {t('wow.mobile.eyebrow')}
+            {t('coven.mobile.eyebrow')}
           </span>
         </div>
         <div
           style={{
             padding: 'var(--space-xl) var(--space-lg) var(--space-xl)',
-            background: 'linear-gradient(160deg, var(--faction-wow-title-from), var(--faction-wow-card-muted) 60%, var(--faction-wow))',
+            background: 'linear-gradient(160deg, var(--faction-coven-title-from), var(--faction-coven-card-muted) 60%, var(--faction-coven))',
             color: TITLE_TEXT,
           }}
         >

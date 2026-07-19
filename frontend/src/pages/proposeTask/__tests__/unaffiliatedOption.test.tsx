@@ -85,7 +85,7 @@ describe('propose task — unaffiliated option', () => {
 
     const affiliated = render({
       canProposeMetatask: true,
-      factionSlug: 'wow',
+      factionSlug: 'coven',
     }).replace(/<[^>]*>/g, '')
     expect(affiliated).toContain('applies as a bonus to all')
   })

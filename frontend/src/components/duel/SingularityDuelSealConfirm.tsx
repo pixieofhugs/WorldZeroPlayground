@@ -216,7 +216,7 @@ export default function SingularityDuelSealConfirm({
           </div>
           {/* ponytail: SealActions keeps the shared btn-outline / btn-primary
               pair rather than growing a terminal-button skin slot, on the same
-              reasoning WowDuelSealConfirm recorded — the global
+              reasoning CovenDuelSealConfirm recorded — the global
               [Cancel] … [Submit] order (#646) is worth more than a bracketed
               `[ SEAL ]`, and a skin prop on the shared component is foundation
               work, not a skin change. */}

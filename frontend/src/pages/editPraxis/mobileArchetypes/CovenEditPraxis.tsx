@@ -4,8 +4,8 @@
  * (Write/Preview toggle, fluid media grid, sticky submit bar) dressed in the
  * pink window chrome: dotted board, notepad panels, sparkle-titled bars.
  * Ported from the Field Kit `wow-treatment` composer; grounds on the
- * `--faction-wow-*` tokens already in index.css (the set WowFieldDesk /
- * WowEditPraxis desktop use). Consumes `useEditPraxis` verbatim — no editor,
+ * `--faction-coven-*` tokens already in index.css (the set CovenFieldDesk /
+ * CovenEditPraxis desktop use). Consumes `useEditPraxis` verbatim — no editor,
  * upload, or submit logic lives here. Presentation-only.
  */
 import { useState } from "react";
@@ -29,17 +29,17 @@ import {
 import type { EditPraxisState } from "../useEditPraxis";
 import { MobileStickyBar, SegToggle, type ComposerTab } from "./shared";
 
-const PINK = "var(--faction-wow)";
-const PINK_DEEP = "var(--faction-wow-card-accent)";
-const TITLE_TEXT = "var(--faction-wow-title-text)";
-const CARD_TEXT = "var(--faction-wow-card-text)";
-const CARD_MUTED = "var(--faction-wow-card-muted)";
-const WIN_BORDER = "var(--faction-wow-win-border)";
-const NOTEPAD_BG = "var(--faction-wow-notepad-bg)";
-const NOTEPAD_BORDER = "var(--faction-wow-notepad-border)";
-const BODY_BG = "var(--faction-wow-body-bg)";
-const DOT = "var(--faction-wow-dot)";
-const SCRIPT = "var(--faction-wow-card-font)";
+const PINK = "var(--faction-coven)";
+const PINK_DEEP = "var(--faction-coven-card-accent)";
+const TITLE_TEXT = "var(--faction-coven-title-text)";
+const CARD_TEXT = "var(--faction-coven-card-text)";
+const CARD_MUTED = "var(--faction-coven-card-muted)";
+const WIN_BORDER = "var(--faction-coven-win-border)";
+const NOTEPAD_BG = "var(--faction-coven-notepad-bg)";
+const NOTEPAD_BORDER = "var(--faction-coven-notepad-border)";
+const BODY_BG = "var(--faction-coven-body-bg)";
+const DOT = "var(--faction-coven-dot)";
+const SCRIPT = "var(--faction-coven-card-font)";
 const BODY = "var(--font-body)";
 const ON_ACCENT = "var(--color-text-on-accent)";
 
@@ -89,14 +89,14 @@ function Window({ title, children }: { title: string; children: ReactNode }) {
           gap: "var(--space-sm)",
           padding: "var(--space-sm) var(--space-md)",
           background:
-            "linear-gradient(180deg, var(--faction-wow-title-from), var(--faction-wow-title-to))",
+            "linear-gradient(180deg, var(--faction-coven-title-from), var(--faction-coven-title-to))",
           borderBottom: `2px solid ${WIN_BORDER}`,
         }}
       >
         {[
-          "var(--faction-wow-scrap-deep)",
-          "var(--faction-wow-tape)",
-          "var(--faction-wow-ivy-leaf)",
+          "var(--faction-coven-scrap-deep)",
+          "var(--faction-coven-tape)",
+          "var(--faction-coven-ivy-leaf)",
         ].map((color) => (
           <span
             key={color}
@@ -147,7 +147,7 @@ function Window({ title, children }: { title: string; children: ReactNode }) {
   );
 }
 
-export default function WowEditPraxis({ state }: { state: EditPraxisState }) {
+export default function CovenEditPraxis({ state }: { state: EditPraxisState }) {
   const { t } = useTranslation("forms");
   const [tab, setTab] = useState<ComposerTab>("write");
   const praxis = state.praxis!;
@@ -155,7 +155,7 @@ export default function WowEditPraxis({ state }: { state: EditPraxisState }) {
 
   return (
     <div
-      data-skin="wow"
+      data-skin="coven"
       style={{
         display: "flex",
         flexDirection: "column",
@@ -181,15 +181,15 @@ export default function WowEditPraxis({ state }: { state: EditPraxisState }) {
               gap: "var(--space-sm)",
             }}
           >
-            {t("editPraxis.wow.pageTitle")}
+            {t("editPraxis.coven.pageTitle")}
             <Sparkle size={16} color={PINK} />
           </h1>
           <span style={{ ...eyebrow, color: CARD_MUTED, marginLeft: "auto" }}>
             {state.autosaveAt
-              ? t("editPraxis.wow.autosaveSaved", {
+              ? t("editPraxis.coven.autosaveSaved", {
                   ago: formatAutosave(state.autosaveAt),
                 })
-              : t("editPraxis.wow.autosaveUnsaved")}
+              : t("editPraxis.coven.autosaveUnsaved")}
           </span>
         </div>
 
@@ -235,7 +235,7 @@ export default function WowEditPraxis({ state }: { state: EditPraxisState }) {
           borderRadius: 12,
         }}
       >
-        <span style={eyebrow}>{t("editPraxis.wow.taskRefLabel")}</span>
+        <span style={eyebrow}>{t("editPraxis.coven.taskRefLabel")}</span>
         <span
           style={{
             fontFamily: SCRIPT,
@@ -256,11 +256,11 @@ export default function WowEditPraxis({ state }: { state: EditPraxisState }) {
 
       {tab === "write" ? (
         <>
-          <Window title={t("editPraxis.wow.titleLabel")}>
+          <Window title={t("editPraxis.coven.titleLabel")}>
             <TitleField
               state={state}
               skin={{
-                placeholder: t("editPraxis.wow.titlePlaceholder"),
+                placeholder: t("editPraxis.coven.titlePlaceholder"),
                 inputStyle: {
                   width: "100%",
                   fontFamily: SCRIPT,
@@ -276,12 +276,12 @@ export default function WowEditPraxis({ state }: { state: EditPraxisState }) {
             />
           </Window>
 
-          <Window title={t("editPraxis.wow.bodyLabel", { words: state.wordCount })}>
+          <Window title={t("editPraxis.coven.bodyLabel", { words: state.wordCount })}>
             <BodyTextarea
               state={state}
               skin={{
                 rows: 10,
-                placeholder: t("editPraxis.wow.bodyPlaceholder"),
+                placeholder: t("editPraxis.coven.bodyPlaceholder"),
                 textareaStyle: {
                   width: "100%",
                   fontFamily: BODY,
@@ -303,8 +303,8 @@ export default function WowEditPraxis({ state }: { state: EditPraxisState }) {
             <Window
               title={
                 state.duelMode
-                  ? t("editPraxis.wow.inviteLabelDuel")
-                  : t("editPraxis.wow.inviteLabel")
+                  ? t("editPraxis.coven.inviteLabelDuel")
+                  : t("editPraxis.coven.inviteLabel")
               }
             >
               <InviteSearch
@@ -316,18 +316,18 @@ export default function WowEditPraxis({ state }: { state: EditPraxisState }) {
                   inputBorder: `1.5px solid ${NOTEPAD_BORDER}`,
                   acceptedBg: PINK,
                   acceptedColor: ON_ACCENT,
-                  placeholder: t("editPraxis.wow.invitePlaceholder"),
+                  placeholder: t("editPraxis.coven.invitePlaceholder"),
                 }}
               />
             </Window>
           )}
 
-          <Window title={t("editPraxis.wow.filesLabel", { pasted: state.media.length })}>
+          <Window title={t("editPraxis.coven.filesLabel", { pasted: state.media.length })}>
             <MediaGrid state={state} />
           </Window>
 
           {state.showMetatasks && (
-            <Window title={t("editPraxis.wow.metatasksLabel")}>
+            <Window title={t("editPraxis.coven.metatasksLabel")}>
               <MetatasksList
                 state={state}
                 skin={{
@@ -352,7 +352,7 @@ export default function WowEditPraxis({ state }: { state: EditPraxisState }) {
           )}
         </>
       ) : (
-        <Window title={t("editPraxis.wow.previewLabel")}>
+        <Window title={t("editPraxis.coven.previewLabel")}>
           <div
             style={{
               fontFamily: SCRIPT,
@@ -361,7 +361,7 @@ export default function WowEditPraxis({ state }: { state: EditPraxisState }) {
               marginBottom: "var(--space-sm)",
             }}
           >
-            {state.title || t("editPraxis.wow.titlePlaceholder")}
+            {state.title || t("editPraxis.coven.titlePlaceholder")}
           </div>
           {state.media.length > 0 && (
             <div style={{ marginBottom: "var(--space-md)" }}>
@@ -398,7 +398,7 @@ export default function WowEditPraxis({ state }: { state: EditPraxisState }) {
           <DropButton
             state={state}
             skin={{
-              label: t("editPraxis.wow.dropLabel"),
+              label: t("editPraxis.coven.dropLabel"),
               style: {
                 background: "transparent",
                 border: "none",
@@ -415,8 +415,8 @@ export default function WowEditPraxis({ state }: { state: EditPraxisState }) {
           state={state}
           skin={{
             ornament: <Sparkle size={13} color={ON_ACCENT} />,
-            idleLabel: t("editPraxis.wow.publishIdle"),
-            busyLabel: t("editPraxis.wow.publishBusy"),
+            idleLabel: t("editPraxis.coven.publishIdle"),
+            busyLabel: t("editPraxis.coven.publishBusy"),
             style: {
               flex: 1,
               display: "inline-flex",
@@ -442,7 +442,7 @@ export default function WowEditPraxis({ state }: { state: EditPraxisState }) {
   );
 }
 
-/** Fluid 3-column media grid in the WOW notepad idiom. */
+/** Fluid 3-column media grid in the COVEN notepad idiom. */
 function MediaGrid({
   state,
   readOnly = false,
@@ -541,7 +541,7 @@ function MediaGrid({
               fontWeight: 700,
               color: PINK,
             },
-            buttonLabel: t("editPraxis.wow.fileButton"),
+            buttonLabel: t("editPraxis.coven.fileButton"),
           }}
         />
       )}

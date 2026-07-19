@@ -4,7 +4,7 @@
  *
  * A skin owns the FRAME and may arrange the slots however its faction likes; it
  * may never DROP one and may never recompute one. Both registries are walked
- * (plus their Default fallback), so the faction skins that follow Wow fail here
+ * (plus their Default fallback), so the faction skins that follow Coven fail here
  * the moment one of them loses a slot.
  *
  * Two registries, two techniques:
@@ -144,7 +144,7 @@ describe('duel seal skins render every slot', () => {
    * irreversible consequence (the forfeit mode added in #751). This is the
    * #769 guard, ported to the seal surface as that issue asked.
    *
-   * Both Wow seal skins carried the matching defect on their note, as #800
+   * Both Coven seal skins carried the matching defect on their note, as #800
    * named. Writing this guard against every registered skin (not just the
    * two named ones) also caught the same defect, previously unreported, on
    * both Snide seal skins — fixed alongside the named ones so the guard
