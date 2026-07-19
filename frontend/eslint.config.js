@@ -209,13 +209,21 @@ export default [
       'sonarjs/no-identical-functions': 'error',
     },
   },
-  {
-    // Ratchet: existing violations are grandfathered until migrated.
-    files: LEGACY_RAW_STYLE_FILES,
-    rules: {
-      'local/no-raw-style-values': 'off',
-    },
-  },
+  // Ratchet: existing violations are grandfathered until migrated. Spread
+  // conditionally — ESLint rejects `files: []` outright ("Expected value to be
+  // a non-empty array"), so an empty list crashed the whole lint run. That made
+  // FINISHING the migration the one thing that broke the build (#750). The list
+  // is empty now; this guard is what lets it stay that way.
+  ...(LEGACY_RAW_STYLE_FILES.length > 0
+    ? [
+        {
+          files: LEGACY_RAW_STYLE_FILES,
+          rules: {
+            'local/no-raw-style-values': 'off',
+          },
+        },
+      ]
+    : []),
   {
     // Test files assert on literal strings by design.
     files: [
