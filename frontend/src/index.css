@@ -490,8 +490,6 @@
   --faction-default-card-muted: #9b9080;
   --glow-neutral: rgba(255, 255, 255, 0.75);
 
-     the deliberately-ghosted AlbescentFeedFrame masthead. Functional text uses
-
   /* ══ Ephemerists palette (dark) — pigments stay vivid; vellum darkens
      to aged tobacco and its text flips ink→parchment. The card contract
      inherits these via the :root var() rebind. ══ */
