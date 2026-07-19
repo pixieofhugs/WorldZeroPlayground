@@ -16,7 +16,6 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, it, expect } from "vitest";
 import FactionFeedFrame from "../feed/FactionFeedFrame";
-import AlbescentFeedFrame from "../feed/AlbescentFeedFrame";
 
 const CARD = <span>card-body</span>;
 
@@ -27,7 +26,6 @@ const DESIGNED_FACTIONS = [
   "snide",
   "singularity",
   "ua",
-  "albescent",
 ];
 
 function frameFor(slug: string | null): string {
@@ -37,7 +35,7 @@ function frameFor(slug: string | null): string {
 }
 
 describe("FactionFeedFrame dispatch", () => {
-  it("gives all seven designed factions a bespoke frame", () => {
+  it("gives all six designed factions a bespoke frame", () => {
     // Every designed faction must render something OTHER than the neutral
     // default tint, and must keep the card body intact inside its chrome.
     const neutral = frameFor("no-such-faction");
@@ -52,12 +50,12 @@ describe("FactionFeedFrame dispatch", () => {
     }
   });
 
-  it("wraps the card in the Albescent Record frame without swallowing it (#232)", () => {
-    const html = renderToStaticMarkup(
-      <AlbescentFeedFrame>{CARD}</AlbescentFeedFrame>,
-    );
-    expect(html).not.toBe("<span>card-body</span>");
-    expect(html).toContain("<span>card-body</span>");
+  it("frames an Albescent card exactly like an unaffiliated one (#783)", () => {
+    // Albescent is a secret society hiding in plain sight (ADR-0027): its feed
+    // card must be indistinguishable from an unaffiliated player's. Asserted
+    // against `na`'s OUTPUT rather than against a named component, so it stays
+    // true however the neutral frame is later rebuilt.
+    expect(frameFor("albescent")).toBe(frameFor("na"));
   });
 
   it("passes a null/neutral slug straight through", () => {

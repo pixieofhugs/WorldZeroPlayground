@@ -15,7 +15,6 @@ import SnideMobilePraxisCard from '../SnideMobilePraxisCard'
 import EphemeristsMobilePraxisCard from '../EphemeristsMobilePraxisCard'
 import SingularityMobilePraxisCard from '../SingularityMobilePraxisCard'
 import EverymenMobilePraxisCard from '../EverymenMobilePraxisCard'
-import AlbescentMobilePraxisCard from '../AlbescentMobilePraxisCard'
 
 const CARD_BY_SLUG = {
   ua: UaMobilePraxisCard,
@@ -24,7 +23,6 @@ const CARD_BY_SLUG = {
   ephemerists: EphemeristsMobilePraxisCard,
   singularity: SingularityMobilePraxisCard,
   everymen: EverymenMobilePraxisCard,
-  albescent: AlbescentMobilePraxisCard,
 } as const
 
 describe('mobile praxis-card per-item dispatch', () => {
@@ -35,7 +33,7 @@ describe('mobile praxis-card per-item dispatch', () => {
   }
 
   it('an unregistered / factionless praxis falls through to the Default mobile card', () => {
-    for (const slug of ['__unregistered__', 'na', null]) {
+    for (const slug of ['__unregistered__', 'na', 'albescent', null]) {
       expect(pickVariant(surfaceMap('mobilePraxisCard'), slug, DefaultMobilePraxisCard)).toBe(
         DefaultMobilePraxisCard,
       )

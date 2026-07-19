@@ -41,8 +41,9 @@ const FACTION_FALLBACKS: Record<string, FactionConfig> = {
   snide: { slug: "snide", color: "#6fae00" },
   ephemerists: { slug: "ephemerists", color: "#1d6e72" },
   singularity: { slug: "singularity", color: "#2563eb" },
-  // First-class identity (#232): near-black ink, no hue — the order refuses the palette.
-  albescent: { slug: "albescent", color: "#1c1c1a" },
+  // `albescent` is deliberately ABSENT (#783). It is a secret society hiding in
+  // plain sight (ADR-0027), so it has no colour of its own to report:
+  // factionColor('albescent') falls through to the same neutral grey `na` gets.
 };
 
 /** Live registry — color-only, static (nothing hydrates it from the API). */
@@ -71,7 +72,14 @@ const CSS_KEY: Record<string, string> = {
   snide: "snide",
   ephemerists: "ephemerists",
   singularity: "singularity",
-  albescent: "albescent", // first-class (#232) — its own --faction-albescent-* set
+  // `albescent` is deliberately ABSENT, so it resolves to `default` exactly as
+  // an unregistered slug does, and isKnownFaction('albescent') is FALSE (#783).
+  // That is the whole mechanism: Albescent is a secret society that must be
+  // indistinguishable from an unaffiliated player at a glance (ADR-0027), and
+  // every surface branching on isKnownFaction gives it the unaffiliated
+  // treatment automatically — including surfaces built later. Adding a key back
+  // here re-themes it everywhere at once. Note the parallel with `na` below:
+  // both are "no resolvable theme", reached by different routes.
   // `na` (unaffiliated) is a state, not a faction: it reads the neutral/rainbow
   // --faction-default-* set (#418), so factionCssVar('na') is grey, never a
   // borrowed `ua` orange. The spectrum reaches fills through factionFill(), and

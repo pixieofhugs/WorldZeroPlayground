@@ -56,12 +56,13 @@ function renderBody(overrides: Partial<CharacterOut> = {}) {
 }
 
 describe("FactionProfileBody dispatch", () => {
-  it("registers the seven bespoke faction skins (#460)", () => {
+  it("registers the six bespoke faction skins (#460)", () => {
     // Each faction claims the surface in its own manifest; the dispatcher just
-    // reads them, so this asserts the manifests still cover all seven.
+    // reads them, so this asserts the manifests still cover all six. Albescent
+    // is deliberately absent — it registers no surfaces and falls through to
+    // the Default/unaffiliated skin everywhere (#783).
     expect(Object.keys(surfaceMap("profileBody")).sort()).toEqual(
       [
-        "albescent",
         "ephemerists",
         "everymen",
         "singularity",

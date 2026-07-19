@@ -8,13 +8,12 @@ import { SnideSigil } from "../snide/snideAtoms";
 import { EphemeristsSigil } from "./ephemeristsAtoms";
 import { SingularitySigil } from "./SingularitySigil";
 import { EverymenSigil } from "./EverymenSigil";
-import AlbescentSigil from "./AlbescentSigil";
 
 /**
  * FactionSelectCard — the faction-DIRECTORY tile, one per faction. The compact
  * card a player meets when browsing "Choose your faction": each renders in its
  * faction's full archetype (gilt placard, whimsy.exe window, ransom dispatch,
- * codex leaf, terminal printout, union poster, vellum letter) at a UNIFORM
+ * codex leaf, terminal printout, union poster) at a UNIFORM
  * 360×300 ceiling so the desktop grid stays tidy. The box is FLUID, not fixed:
  * `width: 100%` up to a 360 max, `minHeight` rather than a hard height, so the
  * same art survives a 375px phone in the single-column mobile directory (#732).
@@ -33,7 +32,7 @@ import AlbescentSigil from "./AlbescentSigil";
 export type SelectState = "locked" | "eligible" | "member";
 
 export interface FactionSelectCardProps {
-  /** Faction slug (raw slug wins; legacy slugs fall back via LEGACY_SLUG). */
+  /** Faction slug. Unregistered slugs render the neutral DefaultSelectCard. */
   faction: string;
   /** Viewer's relationship to the faction — drives the status line. */
   state?: SelectState;
@@ -308,41 +307,6 @@ export function EverymenSelectCard({ state = "locked", members, onVisit }: Omit<
           // eslint-disable-next-line local/no-raw-style-values -- ornament: CTA is poster type; the shout is the archetype, a label token would flatten it (§270)
           fontFamily: "var(--font-faction-poster)", fontSize: 22, letterSpacing: "0.1em", padding: "var(--space-sm)",
         }}>{i18n.t("feed:factionSelect.everymen.cta")}{members != null ? ` ${i18n.t("feed:factionSelect.everymen.members", { count: members })}` : ""}</button>
-      </div>
-    </div>
-  );
-}
-
-export function AlbescentSelectCard({ state = "locked", members, onVisit }: Omit<FactionSelectCardProps, "faction">) {
-  const status = i18n.t(`feed:factionSelect.albescent.status.${state}` as const);
-  return (
-    <div style={{
-      width: "100%", maxWidth: 360, minHeight: 300, boxSizing: "border-box", position: "relative", overflow: "hidden",
-      background: "var(--al-surface)", color: "var(--al-text)", fontFamily: "var(--font-faction-vellum)",
-      border: "1px solid var(--al-border)", boxShadow: "var(--al-shadow)", display: "flex", flexDirection: "column",
-    }}>
-      <div style={{ position: "absolute", inset: 12, border: "1px solid var(--al-border-faint)", pointerEvents: "none" }} />
-      <div style={{ position: "relative", flex: 1, padding: "var(--space-xl) var(--space-2xl) 0", display: "flex", flexDirection: "column" }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-          <div style={{ fontFamily: "var(--font-body)", fontSize: "var(--text-sm)", letterSpacing: "0.34em", color: "var(--al-text-muted)", textTransform: "uppercase" }}>{i18n.t("feed:factionSelect.albescent.eyebrow")}</div>
-          <AlbescentSigil size={26} color="var(--al-ink)" />
-        </div>
-        {/* eslint-disable-next-line local/no-raw-style-values -- ornament: vellum-letter name — the archetype's calligraphic display type */}
-        <div style={{ fontFamily: "var(--font-faction-vellum)", fontStyle: "italic", fontWeight: 600, fontSize: 40, lineHeight: 1, letterSpacing: "0.01em", marginTop: "var(--space-lg)" }}>{i18n.t("feed:factionSelect.albescent.name")}</div>
-        <div style={{ width: 44, height: 1, background: "var(--al-text)", opacity: 0.5, margin: "var(--space-md) 0" }} />
-        <p className="content-text" style={{ margin: 0, fontStyle: "italic", lineHeight: 1.45, color: "var(--al-ink)" }}>
-          {i18n.t("feed:factionSelect.albescent.blurb")}
-        </p>
-      </div>
-      <div style={{ position: "relative", padding: "var(--space-lg) var(--space-2xl) var(--space-xl)" }}>
-        <div style={{ fontFamily: "var(--font-body)", fontSize: "var(--text-sm)", letterSpacing: "0.06em", color: "var(--al-text-muted)", marginBottom: "var(--space-md)", textTransform: "uppercase" }}>{status}{members != null && ` · ${i18n.t("feed:factionSelect.albescent.members", { count: members })}`}</div>
-        <button onClick={onVisit} style={{
-          width: "100%", cursor: "pointer", border: "1px solid var(--al-text)", background: "transparent", color: "var(--al-text)",
-          fontFamily: "var(--font-body)", fontSize: "var(--text-md)", letterSpacing: "0.22em", padding: "var(--space-md)", textTransform: "uppercase", transition: "background 140ms, color 140ms",
-        }}
-          onMouseEnter={(e) => { e.currentTarget.style.background = "var(--al-text)"; e.currentTarget.style.color = "var(--al-surface)"; }}
-          onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "var(--al-text)"; }}
-        >{i18n.t("feed:factionSelect.albescent.cta")}</button>
       </div>
     </div>
   );

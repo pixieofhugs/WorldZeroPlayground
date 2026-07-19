@@ -34,7 +34,6 @@ describe("isKnownFaction", () => {
       "snide",
       "ephemerists",
       "singularity",
-      "albescent",
     ]) {
       expect(isKnownFaction(slug), `${slug} should be known`).toBe(true);
     }
@@ -42,6 +41,26 @@ describe("isKnownFaction", () => {
 
   it("returns false for an unregistered slug", () => {
     expect(isKnownFaction("bogus")).toBe(false);
+  });
+
+  /**
+   * Albescent is REGISTERED but not THEMED (#783). It keeps its slug, its
+   * catalog copy and its reveal mechanics, but holds no CSS_KEY entry — so it
+   * lands on `default` and the predicate calls it unknown. That is the intended
+   * outcome, not the #749 regression in reverse: #749 was a slug wrongly called
+   * KNOWN because a key existed; this is a slug correctly called UNKNOWN
+   * because no key does. A secret society must render as unaffiliated
+   * (ADR-0027), and this predicate is what routes it there on every surface.
+   */
+  it("returns false for `albescent` — registered, but deliberately unthemed", () => {
+    expect(isKnownFaction("albescent")).toBe(false);
+  });
+
+  it("resolves albescent exactly like na, not like a faction", () => {
+    expect(factionCssVar("albescent")).toBe(factionCssVar("na"));
+    expect(factionCssVar("albescent", "card-bg")).toBe(
+      factionCssVar("na", "card-bg"),
+    );
   });
 
   /**
