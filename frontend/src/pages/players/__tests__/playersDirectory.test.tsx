@@ -196,13 +196,27 @@ describe('light-theme meadow (#684)', () => {
   })
 
   // The unaffiliated spectrum is never a single faction hue (ADR-0039): the
-  // `na` bloom wears one faction per petal.
+  // `na` bloom wears one faction per petal, cycling FACTION_RAINBOW_ORDER.
   it('paints an unaffiliated bloom with the whole spectrum, not one faction', () => {
     const { html } = render(
       <Meadow players={ranked(PLAYERS)} maxScore={2140} myCharId={null} {...STAGE} />,
     )
-    expect(html).toContain('--faction-everymen')
-    expect(html).toContain('--faction-albescent')
+    // Assert the SPREAD rather than any one member, so the test survives the
+    // order changing size (it went 7 → 6 in #783, and gains `coven` in #784).
+    const painted = FACTION_RAINBOW_ORDER.filter((slug) =>
+      html.includes(`--faction-${slug})`),
+    )
+    expect(painted).toEqual([...FACTION_RAINBOW_ORDER])
+  })
+
+  // Albescent is a secret society (ADR-0027 / #390): it holds no slot in the
+  // rainbow order, so the bloom that advertises the spectrum to every viewer
+  // must never paint a petal in its colour (#783).
+  it('never paints an Albescent petal', () => {
+    const { html } = render(
+      <Meadow players={ranked(PLAYERS)} maxScore={2140} myCharId={null} {...STAGE} />,
+    )
+    expect(html).not.toContain('--faction-albescent')
   })
 })
 

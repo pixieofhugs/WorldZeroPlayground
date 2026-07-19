@@ -13,12 +13,22 @@ describe("sortFactionsByRainbowOrder", () => {
       { slug: "singularity" },
       { slug: "everymen" },
       { slug: "ephemerists" },
-      { slug: "albescent" },
       { slug: "ua" },
       { slug: "snide" },
     ];
     expect(sortFactionsByRainbowOrder(shuffled).map((f) => f.slug)).toEqual([
       ...FACTION_RAINBOW_ORDER,
+    ]);
+  });
+
+  it("sorts albescent last, alongside the other unthemed slugs (#783)", () => {
+    // Albescent holds no slot in the order, so it sorts with the unknowns —
+    // exactly the treatment `na` gets.
+    const factions = [{ slug: "albescent" }, { slug: "wow" }, { slug: "na" }];
+    expect(sortFactionsByRainbowOrder(factions).map((f) => f.slug)).toEqual([
+      "wow",
+      "albescent",
+      "na",
     ]);
   });
 
@@ -41,6 +51,29 @@ describe("sortFactionsByRainbowOrder", () => {
     const factions = [{ slug: "wow" }, { slug: "everymen" }];
     sortFactionsByRainbowOrder(factions);
     expect(factions.map((f) => f.slug)).toEqual(["wow", "everymen"]);
+  });
+});
+
+describe("faction stripe bars never leak Albescent (#783, ADR-0027 / #390)", () => {
+  // `Leaderboard.tsx` and `DefaultPlayers.tsx` both build their stripe bar as
+  // `linear-gradient(90deg, ...FACTION_RAINBOW_ORDER.map(factionCssVar))`, and
+  // that bar renders for EVERY viewer — including accounts Albescent has never
+  // been revealed to. A slot in the order therefore announces the society in
+  // its own colour. This is the regression that already shipped once.
+  const stripeBar = FACTION_RAINBOW_ORDER.map((slug) => factionCssVar(slug));
+
+  it("draws no Albescent-derived colour", () => {
+    for (const stop of stripeBar) {
+      expect(stop).not.toContain("albescent");
+    }
+  });
+
+  it("resolves every stop to a real faction theme, never the default grey", () => {
+    // Guards the other half: a slug that stopped being themed must LEAVE the
+    // order rather than linger and render a grey stop in the rainbow.
+    for (const stop of stripeBar) {
+      expect(stop).not.toBe("var(--faction-default)");
+    }
   });
 });
 

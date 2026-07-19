@@ -230,7 +230,16 @@ export function getAllFactions(): FactionConfig[] {
 
 /**
  * Canonical rainbow display order for faction strips/pennants (issue #352):
- * Everymen → UA → S.N.I.D.E. → Ephemerists → Singularity → Albescent → Warriors of Whimsy.
+ * Everymen → UA → S.N.I.D.E. → Ephemerists → Singularity → Warriors of Whimsy.
+ *
+ * Albescent is deliberately ABSENT (#783). This array feeds stripe bars that
+ * render for every viewer — `Leaderboard.tsx` and `DefaultPlayers.tsx` build a
+ * gradient straight from it — so a slot here leaks the society's existence, in
+ * its own colour, to accounts it has never been revealed to (ADR-0027, #390).
+ * `DefaultFactionsDirectory` already drove its legend off the visible rows to
+ * dodge exactly that; removing the slot fixes the other two at the source.
+ * Albescent has no theme to contribute either way now — it renders as
+ * unaffiliated (`isKnownFaction('albescent') === false`).
  */
 export const FACTION_RAINBOW_ORDER: readonly string[] = [
   "everymen",
@@ -238,7 +247,6 @@ export const FACTION_RAINBOW_ORDER: readonly string[] = [
   "snide",
   "ephemerists",
   "singularity",
-  "albescent",
   "wow",
 ];
 
