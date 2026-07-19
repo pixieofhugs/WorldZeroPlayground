@@ -57,18 +57,24 @@ export function EphemeristsSigil({
   );
 }
 
-/* ── Faint age-foxing stains (multiply-blended), for vellum surfaces ── */
+/* ── Faint age-foxing stains, for vellum surfaces ──
+   The blend MODE lives in `.eph-foxing` (index.css), not here: foxing
+   darkens light vellum (`multiply`) but must lighten the dark-theme
+   tobacco vellum (`screen`), or the blotches disappear into it. That flip
+   is a cascade job — a `dark ? …` ternary is forbidden (§8). Everything
+   else about the stain is theme-agnostic because the four blotch colours
+   are already --eph-* tokens. */
 export function Foxing({ opacity = 0.5 }: { opacity?: number }) {
   return (
     <div
       aria-hidden="true"
+      className="eph-foxing"
       style={{
         position: "absolute",
         inset: 0,
         pointerEvents: "none",
         opacity,
         zIndex: 1,
-        mixBlendMode: "multiply",
         backgroundImage: `
           radial-gradient(8px 6px at 18% 24%, color-mix(in srgb, var(--eph-ink) 14%, transparent), transparent 70%),
           radial-gradient(5px 5px at 78% 16%, color-mix(in srgb, var(--eph-gold-deep) 16%, transparent), transparent 70%),
