@@ -1,8 +1,9 @@
-import type { ComponentType, CSSProperties } from "react";
+import type { CSSProperties } from "react";
 import { useTranslation } from "react-i18next";
 import type { PraxisCardOut } from "../api/praxis";
 import { factionCssVar } from "../utils/factions";
 import { pickVariant } from "../utils/factionDispatch";
+import { surfaceMap } from "../factions";
 import { useVotedPraxis } from "./vote/useVotedPraxis";
 import SnideMasthead from "./cards/SnideMasthead";
 import AlbescentSigil from "./cards/AlbescentSigil";
@@ -127,7 +128,7 @@ function PraxisBody({
  * "Acquisition · filed" regalia line. Matches the UA praxis-read sheet, UaVote,
  * and the DS FactionPraxisCard reference. All colors via --ua-* tokens.
  */
-function UaPraxisCard({ praxis, adminProps, showCrown }: ArchetypeProps) {
+export function UaPraxisCard({ praxis, adminProps, showCrown }: ArchetypeProps) {
   const { t } = useTranslation("praxis");
   return (
     // Gilt frame: gold-leaf gradient border, then the parchment plate.
@@ -189,7 +190,7 @@ const everymenMarginRule: CSSProperties = {
   background: "rgba(220,80,80,0.2)",
 };
 
-function EverymenPraxisCard({ praxis, adminProps, showCrown }: ArchetypeProps) {
+export function EverymenPraxisCard({ praxis, adminProps, showCrown }: ArchetypeProps) {
   return (
     <div
       style={{
@@ -256,7 +257,7 @@ const wowTape: CSSProperties = {
   borderRadius: 1,
 };
 
-function WowPraxisCard({ praxis, adminProps, showCrown }: ArchetypeProps) {
+export function WowPraxisCard({ praxis, adminProps, showCrown }: ArchetypeProps) {
   return (
     <div
       style={{
@@ -310,7 +311,7 @@ const snideTornBase: CSSProperties = {
 const snideTornTop: CSSProperties = { ...snideTornBase, top: -1 };
 const snideTornBottom: CSSProperties = { ...snideTornBase, bottom: -1 };
 
-function SnidePraxisCard({ praxis, adminProps, showCrown }: ArchetypeProps) {
+export function SnidePraxisCard({ praxis, adminProps, showCrown }: ArchetypeProps) {
   const { t } = useTranslation("praxis");
   return (
     <div
@@ -344,7 +345,7 @@ function SnidePraxisCard({ praxis, adminProps, showCrown }: ArchetypeProps) {
  * The Ephemerists (ephemerists slug) — a sealed ephemeris entry. A foxed vellum
  * leaf with a lapis-ruled running head, the sigil, and rubric-accented text.
  */
-function EphemeristsPraxisCard({ praxis, adminProps, showCrown }: ArchetypeProps) {
+export function EphemeristsPraxisCard({ praxis, adminProps, showCrown }: ArchetypeProps) {
   const { t } = useTranslation("praxis");
   return (
     <div
@@ -470,7 +471,7 @@ const cornerBottomRight: CSSProperties = {
   borderRight: cornerRule,
 };
 
-function SingularityPraxisCard({ praxis, adminProps, showCrown }: ArchetypeProps) {
+export function SingularityPraxisCard({ praxis, adminProps, showCrown }: ArchetypeProps) {
   const { t } = useTranslation("praxis");
   return (
     <div
@@ -535,13 +536,13 @@ function SingularityPraxisCard({ praxis, adminProps, showCrown }: ArchetypeProps
  * Albescent — a filed account in the Register. Vellum correspondence: pure white
  * sheet, a hairline architectural inset border, the surveyor's Mark and a quiet
  * "Account · filed" running head in mono, then the shared body in Cormorant
- * Garamond italic. Always-light — never dims. First-class identity: the explicit
- * PRAXIS_CARD_BY_SLUG['albescent'] entry beats the albescent→ua alias in
- * pickVariant, so it renders immediately. Reads its own --faction-albescent-*
+ * Garamond italic. Always-light — never dims. First-class identity: albescent's
+ * manifest claims `praxisCard`, so it renders immediately. Reads its own
+ * --faction-albescent-*
  * tokens directly (not factionCssVar('albescent', …), which resolves to ua until
  * the alias drops in slice 2 of #232). Ported from docs/design/albescent-kit.
  */
-function AlbescentPraxisCard({ praxis, adminProps, showCrown }: ArchetypeProps) {
+export function AlbescentPraxisCard({ praxis, adminProps, showCrown }: ArchetypeProps) {
   const { t } = useTranslation("praxis");
   const ink = (pct: number) =>
     `color-mix(in srgb, var(--faction-albescent-card-text) ${pct}%, transparent)`;
@@ -669,24 +670,13 @@ export function DefaultPraxisCard({ praxis, adminProps, showCrown }: ArchetypePr
 
 // ─── Dispatcher ───────────────────────────────────────────────────────────────
 
-export const PRAXIS_CARD_BY_SLUG: Record<string, ComponentType<ArchetypeProps>> = {
-  ua: UaPraxisCard,
-  everymen: EverymenPraxisCard,
-  wow: WowPraxisCard,
-  snide: SnidePraxisCard,
-  ephemerists: EphemeristsPraxisCard,
-  singularity: SingularityPraxisCard,
-  // First-class Albescent identity (#232 slice 1) — beats the albescent→ua alias.
-  albescent: AlbescentPraxisCard,
-};
-
 export default function PraxisCard({ praxis, onModerated, showCrown = true }: Props) {
   const { localPraxis, adminProps } = usePraxisCard(praxis, onModerated);
   // Merge the viewer's own just-cast vote (#626) before the skin sees it, so the
   // score hero, footer meta and vote tally all move together on one object.
   const voted = useVotedPraxis(localPraxis);
   const Card = pickVariant(
-    PRAXIS_CARD_BY_SLUG,
+    surfaceMap('praxisCard'),
     voted.task_faction_slug,
     DefaultPraxisCard,
   );

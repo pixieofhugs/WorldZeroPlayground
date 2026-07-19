@@ -7,62 +7,16 @@
  * Mirrors the TaskDetail / EditPraxis dispatchers. The loading / error /
  * not-found guards live here so archetypes can assume a non-null praxis.
  */
-import type { ComponentType } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Navigate, useParams } from 'react-router-dom'
 import { usePraxisDetail } from './praxisDetail/usePraxisDetail'
-import type { PraxisDetailState } from './praxisDetail/usePraxisDetail'
 import { pickVariant } from '../utils/factionDispatch'
+import { surfaceMap } from '../factions'
 import { useFormFactor } from '../hooks/useFormFactor'
 import DefaultPraxisDetail from './praxisDetail/archetypes/DefaultPraxisDetail'
 import DefaultMobilePraxisDetail from './praxisDetail/mobileArchetypes/DefaultPraxisDetail'
-import WowMobilePraxisDetail from './praxisDetail/mobileArchetypes/WowPraxisDetail'
-import UAMobilePraxisDetail from './praxisDetail/mobileArchetypes/UaPraxisDetail'
-import SingularityMobilePraxisDetail from './praxisDetail/mobileArchetypes/SingularityPraxisDetail'
-import EverymenMobilePraxisDetail from './praxisDetail/mobileArchetypes/EverymenPraxisDetail'
-import EphemeristsMobilePraxisDetail from './praxisDetail/mobileArchetypes/EphemeristsPraxisDetail'
-import AlbescentMobilePraxisDetail from './praxisDetail/mobileArchetypes/AlbescentPraxisDetail'
-import SnideMobilePraxisDetail from './praxisDetail/mobileArchetypes/SnidePraxisDetail'
-import EphemeristsPraxisDetail from './praxisDetail/archetypes/EphemeristsPraxisDetail'
-import SnidePraxisDetail from './praxisDetail/archetypes/SnidePraxisDetail'
-import SingularityPraxisDetail from './praxisDetail/archetypes/SingularityPraxisDetail'
-import EverymenPraxisDetail from './praxisDetail/archetypes/EverymenPraxisDetail'
-import WowPraxisDetail from './praxisDetail/archetypes/WowPraxisDetail'
-import UaPraxisDetail from './praxisDetail/archetypes/UaPraxisDetail'
-import AlbescentPraxisDetail from './praxisDetail/archetypes/AlbescentPraxisDetail'
 import CommentThread from '../components/comments/CommentThread'
 import DuelCrossLink from './praxisDetail/DuelCrossLink'
-
-/**
- * Per-faction praxis-read archetype map. Keyed by task faction slug.
- * Add one row per faction as its read-page design lands (ADR-0017, gap tracker).
- */
-export const ARCHETYPE_BY_SLUG: Record<string, ComponentType<{ state: PraxisDetailState }>> = {
-  ephemerists: EphemeristsPraxisDetail,
-  snide: SnidePraxisDetail,
-  singularity: SingularityPraxisDetail,
-  everymen: EverymenPraxisDetail,
-  wow: WowPraxisDetail,
-  ua: UaPraxisDetail,
-  // First-class read-surface identity (#231); explicit entry beats the
-  // albescent→ua alias via pickVariant. Global alias stays until #232.
-  albescent: AlbescentPraxisDetail,
-}
-
-/**
- * Parallel MOBILE registry (#499). Every faction falls through to the Default
- * mobile skin until it registers a bespoke one; WOW is the pilot (its Field Kit
- * praxis-detail treatment), mirroring the mobile FieldDesk + TaskDetail seams.
- */
-export const MOBILE_ARCHETYPE_BY_SLUG: Record<string, ComponentType<{ state: PraxisDetailState }>> = {
-  wow: WowMobilePraxisDetail,
-  ua: UAMobilePraxisDetail,
-  singularity: SingularityMobilePraxisDetail,
-  everymen: EverymenMobilePraxisDetail,
-  ephemerists: EphemeristsMobilePraxisDetail,
-  albescent: AlbescentMobilePraxisDetail,
-  snide: SnideMobilePraxisDetail,
-}
 
 export default function PraxisDetail() {
   const { t } = useTranslation('praxis')
@@ -90,8 +44,8 @@ export default function PraxisDetail() {
 
   const Archetype =
     formFactor === 'mobile'
-      ? pickVariant(MOBILE_ARCHETYPE_BY_SLUG, state.praxis.task_faction_slug, DefaultMobilePraxisDetail)
-      : pickVariant(ARCHETYPE_BY_SLUG, state.praxis.task_faction_slug, DefaultPraxisDetail)
+      ? pickVariant(surfaceMap('mobilePraxisDetail'), state.praxis.task_faction_slug, DefaultMobilePraxisDetail)
+      : pickVariant(surfaceMap('praxisDetail'), state.praxis.task_faction_slug, DefaultPraxisDetail)
   return (
     <>
       {/* Duel cross-link is neutral chrome above every archetype (#313); one

@@ -117,19 +117,17 @@ Hand this to whoever wires the faction after design is delivered. (Designer only
 7. `utils/factions.ts` → a `FACTION_FALLBACKS` entry **and** a `CSS_KEY` entry (underscore-slug → hyphen-css-key). Keep the fallback `color` equal to the light primary so JS and CSS agree on first paint before the API hydrates.
 8. Fonts: only if the archetype needs a face not already loaded.
 
-**Frontend dispatch — register the faction in each dispatcher**
-9. `components/TaskCard.tsx` → `CARD_COMPONENTS`.
-10. `components/cards/FactionCard.tsx` → the `switch`.
-11. `pages/EditPraxis.tsx` → `ARCHETYPE_BY_SLUG`.
-12. The Tier-3 dispatchers, each a `Record<slug, Component>` + global default mirroring `CARD_COMPONENTS` — omit a faction to inherit the default for that surface:
-    - **vote** → `components/vote/VoteUI.tsx` `FACTION_VOTE`
-    - **backdrop** → `components/backdrop/FactionBackdrop.tsx` `FACTION_BACKDROPS`
-    - **avatar** → `components/avatar/FactionAvatar.tsx` `FACTION_AVATARS`
-    - **activity-feed frame** → `components/feed/FactionFeedFrame.tsx` `FACTION_FEED_FRAMES` (wraps the event-type card; dispatches on the item's server-derived `context_faction_slug`)
-    - *(progression/level is token-tinted, not a dispatcher — no map to register; #9.)*
-13. **Comment (#14, ADR-0006):** `COMMENT_COMPONENTS` (`Record<slug, Component>` + `DefaultComment`), one archetype rendered in `row`/`composer` modes. Omit a faction to inherit `DefaultComment`. The thread container is neutral — do not register it.
-14. Leave the slug out of the `Factions.tsx` hidden list unless it should be hidden.
-15. **Contrast:** verify every text/background color pair in the faction's tokens (light **and** dark) meets WCAG AA — 4.5:1 for normal text, 3:1 for large text and UI components — before registering the faction.
+**Frontend dispatch**
+
+9. `src/factions/<slug>.ts` → one manifest module declaring only the surfaces this faction overrides, plus one line adding it to `src/factions/index.ts`. That is the whole dispatch step.
+
+   The manifest is **override-only**: any surface it does not declare renders that surface's `Default*` archetype. A faction that declares nothing already renders correctly everywhere, including on surfaces that do not exist yet — partial registration is the normal case, not a degraded one. Entries are thunks (`taskCard: () => MyTaskCard`) because dispatcher and archetype modules import each other; see the note in `src/factions/manifest.ts`.
+
+   There is deliberately **no list of dispatchers here**. The previous version of this section enumerated seven of them, was wrong the day it was written, and drifted further every time a surface was added — it never mentioned any mobile registry, the profile bodies, the faction bodies or the duel skins. `src/factions/manifest.ts` now carries the authoritative surface list in a form the compiler checks, and `src/factions/__tests__/addAFaction.test.tsx` proves a manifest-only faction renders on every one of them. Read those, not prose.
+
+10. Leave the slug out of the `Factions.tsx` hidden list unless it should be hidden.
+
+11. **Contrast:** verify every text/background color pair in the faction's tokens (light **and** dark) meets WCAG AA — 4.5:1 for normal text, 3:1 for large text and UI components — before registering the faction.
 
 ---
 
@@ -148,6 +146,21 @@ Hand this to whoever wires the faction after design is delivered. (Designer only
 
 ## 6. Change log
 
+- **2026-07-18** — **§4's dispatcher list removed; faction registration inverted (#782).**
+  Each faction now owns one manifest module (`src/factions/<slug>.ts`) declaring the
+  surfaces it overrides, and the dispatchers read from it via `surfaceMap()`; the 31
+  surface-owned slug→component registries are gone. The checklist's per-dispatcher steps
+  were deleted rather than corrected **because they were unverifiable by construction**:
+  prose cannot be compiled, so it went stale silently and the cost landed on whoever added
+  the next faction. The replacement is executable — a golden test registers a fake faction
+  through the manifest index alone and asserts it renders on every surface, and fails
+  loudly if a new dispatcher declares its own registry instead of routing through the
+  manifest. What is left in §4 is only what a test cannot assert: backend `FactionConfig`
+  registration, seeding and the `Faction` row upsert, visibility, fonts, tokens and
+  contrast. Worth recording: the census for that refactor was wrong three times over
+  (21 registries claimed, 30 found by hand, 31 found by the test) — the one nobody spotted
+  was named `BY_FACTION` instead of `*_BY_SLUG`, which is exactly why the guard is a test
+  and not a list.
 - **2026-07-17** — **Removed §7 "current coverage matrix"** (docs consolidation, PR #692).
   It was audited-from-code state that had to be re-synced by hand; the dispatchers in
   `frontend/src` are the source of truth. §1 stays the contract; §4's field list corrected

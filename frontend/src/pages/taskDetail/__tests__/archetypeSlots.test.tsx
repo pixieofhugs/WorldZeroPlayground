@@ -5,7 +5,7 @@
  * salon, ransom dossier, terminal printout, union poster…) but must render the
  * same CONTENT slots. The slots are convention-only — an archetype may *arrange*
  * them freely but may not *drop* one. This test walks the real
- * `ARCHETYPE_BY_SLUG` registry (plus the Default fallback) and asserts every
+ * `surfaceMap('taskDetail')` registry (plus the Default fallback) and asserts every
  * registered archetype still emits the invariant slots. A new faction that drops
  * a slot fails here, so the guard scales free as factions are added.
  *
@@ -18,10 +18,10 @@
  * PraxisCard composition is guarded separately by factionCardSlots.test.tsx.
  */
 import { renderToStaticMarkup } from "react-dom/server";
+import { surfaceMap } from "../../../factions";
 import { MemoryRouter } from "react-router-dom";
 import type { ReactElement } from "react";
 import { describe, it, expect } from "vitest";
-import { ARCHETYPE_BY_SLUG } from "../../TaskDetail";
 import DefaultTaskDetail from "../archetypes/DefaultTaskDetail";
 import type { TaskDetailState } from "../useTaskDetail";
 import type { TaskOut } from "../../../api/tasks";
@@ -106,7 +106,7 @@ function baseState(overrides: Partial<TaskDetailState>): TaskDetailState {
 }
 
 // Default fallback is a registered renderable too — guard it alongside the map.
-const archetypes = { ...ARCHETYPE_BY_SLUG, __default__: DefaultTaskDetail };
+const archetypes = { ...surfaceMap('taskDetail'), __default__: DefaultTaskDetail };
 
 describe("task-detail content-slot invariant", () => {
   for (const [slug, Archetype] of Object.entries(archetypes)) {

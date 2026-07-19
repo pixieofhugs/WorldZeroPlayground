@@ -27,6 +27,7 @@ import { useAuth } from "../auth/AuthContext";
 import { useGameConfig } from "../hooks/useGameConfig";
 import { useFormFactor } from "../hooks/useFormFactor";
 import { pickVariant } from "../utils/factionDispatch";
+import { surfaceMap } from "../factions";
 import { extractError } from "../utils/errors";
 import { factionFill } from "../utils/factions";
 import { useFactionBackdrop } from "../components/backdrop/BackdropContext";
@@ -35,14 +36,6 @@ import FactionProfileBody, {
   type ProfileProgression,
 } from "./characterProfile/FactionProfileBody";
 import DefaultProfile from "./characterProfile/mobileArchetypes/DefaultProfile";
-
-// Parallel MOBILE profile registry, mirroring FACTION_PROFILE_BODIES. Empty for
-// now — every phone render falls through to the Default (na) mobile profile
-// skin (#517); bespoke faction mobile profiles register here in follow-ups.
-export const MOBILE_PROFILE_BY_SLUG: Record<
-  string,
-  (props: ProfileBodyProps) => JSX.Element
-> = {};
 
 export default function CharacterProfile() {
   const { t } = useTranslation("common");
@@ -345,7 +338,7 @@ export default function CharacterProfile() {
   // registers its own); desktop → the existing faction-dispatched body.
   if (formFactor === "mobile") {
     const Mobile = pickVariant(
-      MOBILE_PROFILE_BY_SLUG,
+      surfaceMap("mobileProfile"),
       character.faction_slug,
       DefaultProfile,
     );

@@ -19,7 +19,7 @@ const NA_SLUG = 'na'
  * `state.membership`: only an "eligible" viewer gets the Join CTA (with a
  * confirm step — switching factions is irreversible); a member sees a standing
  * badge, a gated viewer a soft hint, and a logged-out / UA non-member nothing.
- * Bespoke faction page skins register in FactionDetail's MOBILE_ARCHETYPE_BY_SLUG.
+ * Bespoke faction page skins claim `mobileFactionPage` in their manifest.
  */
 export default function DefaultFactionPage({ state }: { state: FactionDetailState }) {
   const { t } = useTranslation('factions')

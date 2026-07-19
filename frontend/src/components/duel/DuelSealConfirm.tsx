@@ -23,15 +23,14 @@
  * and nothing else. Skins own the FRAME only — every figure and every branch
  * lives in `duel/shared.tsx`.
  */
-import type { ComponentType } from 'react'
+import type { } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { DuelDetailOut } from '../../api/duel'
 import { useFormFactor } from '../../hooks/useFormFactor'
 import { factionCssVar } from '../../utils/factions'
 import { pickVariant } from '../../utils/factionDispatch'
+import { surfaceMap } from '../../factions'
 import { duelSides, RaceRoster, SealActions, StakesTiles, type DuelSlotTheme } from './shared'
-import WowDuelSealConfirm from './WowDuelSealConfirm'
-import WowMobileDuelSealConfirm from './WowMobileDuelSealConfirm'
 
 export interface DuelSealConfirmProps {
   duel: DuelDetailOut
@@ -129,20 +128,6 @@ export function DefaultDuelSealConfirm({
 }
 
 /**
- * Per-faction seal dialogs. Every unregistered faction gets the Default skin;
- * each bespoke skin is a purely visual follow-up that can never be urgent.
- * Wow is first (#720) — it is the only faction with a design in hand.
- */
-export const DUEL_SEAL_BY_SLUG: Record<string, ComponentType<DuelSealConfirmProps>> = {
-  wow: WowDuelSealConfirm,
-}
-
-/** Parallel MOBILE registry (#494 form-factor dispatch). */
-export const MOBILE_DUEL_SEAL_BY_SLUG: Record<string, ComponentType<DuelSealConfirmProps>> = {
-  wow: WowMobileDuelSealConfirm,
-}
-
-/**
  * The dispatcher the composer mounts. Skinned by the TASK's faction (the
  * composer's own archetype is chosen the same way), not the opponent's — the
  * dialog is a piece of the composer, and only its tokens are foreign.
@@ -154,7 +139,7 @@ export default function DuelSealConfirm({
   const formFactor = useFormFactor()
   const Skin =
     formFactor === 'mobile'
-      ? pickVariant(MOBILE_DUEL_SEAL_BY_SLUG, taskFactionSlug, DefaultDuelSealConfirm)
-      : pickVariant(DUEL_SEAL_BY_SLUG, taskFactionSlug, DefaultDuelSealConfirm)
+      ? pickVariant(surfaceMap('mobileDuelSeal'), taskFactionSlug, DefaultDuelSealConfirm)
+      : pickVariant(surfaceMap('duelSeal'), taskFactionSlug, DefaultDuelSealConfirm)
   return <Skin {...props} />
 }

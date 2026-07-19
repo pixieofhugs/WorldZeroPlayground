@@ -1,13 +1,7 @@
-import type { ComponentType } from 'react'
+import type { } from 'react'
 import { pickVariant } from '../../utils/factionDispatch'
+import { surfaceMap } from '../../factions'
 import VoteStamps from '../ui/VoteStamps'
-import EverymenVote from './EverymenVote'
-import WowVote from './WowVote'
-import SnideVote from './SnideVote'
-import EphemeristsVote from './EphemeristsVote'
-import SingularityVote from './SingularityVote'
-import UaVote from './UaVote'
-import AlbescentVote from './AlbescentVote'
 
 /**
  * Per-faction vote/rating UI dispatcher (Tier-3 surface). Keyed by the voted
@@ -22,20 +16,10 @@ export interface VoteUIProps {
   totalVotes?: number
 }
 
-const FACTION_VOTE: Record<string, ComponentType<VoteUIProps>> = {
-  everymen: EverymenVote,
-  wow: WowVote,
-  snide: SnideVote,
-  ephemerists: EphemeristsVote,
-  singularity: SingularityVote,
-  ua: UaVote,
-  albescent: AlbescentVote,
-}
-
 export default function VoteUI({
   factionSlug,
   ...props
 }: VoteUIProps & { factionSlug?: string | null }) {
-  const Variant = pickVariant(FACTION_VOTE, factionSlug, VoteStamps)
+  const Variant = pickVariant(surfaceMap('vote'), factionSlug, VoteStamps)
   return <Variant {...props} />
 }

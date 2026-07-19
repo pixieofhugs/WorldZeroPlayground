@@ -28,11 +28,12 @@
  *              winner / "you forfeited" for the thrower; the thrown-side link
  *              404s gracefully (it's a plain link, so it never breaks this page).
  */
-import type { CSSProperties, ComponentType, ReactNode } from "react";
+import type { CSSProperties, ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import { factionCssVar, factionName } from "../../utils/factions";
 import { pickVariant } from "../../utils/factionDispatch";
+import { surfaceMap } from "../../factions";
 import { useFormFactor } from "../../hooks/useFormFactor";
 import { mediaUrl } from "../../utils/media";
 import type { PraxisOut } from "../../api/praxis";
@@ -43,8 +44,6 @@ import {
   StakesTiles,
   type DuelSlotTheme,
 } from "../../components/duel/shared";
-import WowDuelRail from "./duelRails/WowDuelRail";
-import WowMobileDuelRail from "./duelRails/WowMobileDuelRail";
 
 /**
  * The rail is mounted by the dispatcher, above the archetype, so it can't read
@@ -135,16 +134,6 @@ export function DefaultDuelRail({
   );
 }
 
-/** Per-faction rail skins (#720 registers Wow; one issue per faction after). */
-export const DUEL_RAIL_BY_SLUG: Record<string, ComponentType<DuelRailSkinProps>> = {
-  wow: WowDuelRail,
-};
-
-/** Parallel MOBILE registry (#494 form-factor dispatch). */
-export const MOBILE_DUEL_RAIL_BY_SLUG: Record<string, ComponentType<DuelRailSkinProps>> = {
-  wow: WowMobileDuelRail,
-};
-
 function OpponentBadge({ side }: { side: DuelSideOut }) {
   const { t } = useTranslation("praxis");
   const border = factionCssVar(side.faction_slug, "border");
@@ -204,12 +193,12 @@ export default function DuelCrossLink({
   const Skin =
     formFactor === "mobile"
       ? pickVariant(
-          MOBILE_DUEL_RAIL_BY_SLUG,
+          surfaceMap('mobileDuelRail'),
           praxis.task_faction_slug,
           DefaultDuelRail,
         )
       : pickVariant(
-          DUEL_RAIL_BY_SLUG,
+          surfaceMap('duelRail'),
           praxis.task_faction_slug,
           DefaultDuelRail,
         );

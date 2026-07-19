@@ -7,6 +7,7 @@ import ImageEditModal from '../components/imageEdit/ImageEditModal'
 import { AVATAR_ASPECT } from '../components/imageEdit/imageEditHelpers'
 import { useFormFactor } from '../hooks/useFormFactor'
 import { pickVariant } from '../utils/factionDispatch'
+import { surfaceMap } from '../factions'
 import {
   useCreateCharacter,
   NAME_MAX,
@@ -25,18 +26,12 @@ import DefaultCreateCharacter from './characterPaths/mobileArchetypes/DefaultCre
  * registry; every faction falls through to the Default skin. Desktop unchanged.
  */
 
-type MobileSkin = (props: { state: CreateCharacterState }) => JSX.Element
-
-// Only factions with a bespoke mobile create screen register here; na and the
-// rest fall through to DefaultCreateCharacter (mirrors Tasks/FieldDesk).
-export const MOBILE_ARCHETYPE_BY_SLUG: Record<string, MobileSkin> = {}
-
 export default function CreateCharacter() {
   const state = useCreateCharacter()
   const formFactor = useFormFactor()
 
   if (formFactor === 'mobile') {
-    const Mobile = pickVariant(MOBILE_ARCHETYPE_BY_SLUG, null, DefaultCreateCharacter)
+    const Mobile = pickVariant(surfaceMap('mobileCreateCharacter'), null, DefaultCreateCharacter)
     return <Mobile state={state} />
   }
 

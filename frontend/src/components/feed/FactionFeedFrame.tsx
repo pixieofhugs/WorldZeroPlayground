@@ -6,35 +6,15 @@
  * event-type card (FeedCardRouter) in the frame for `item.context_faction_slug`,
  * falling back to a neutral passthrough until design delivers an archetype.
  *
- * Wiring is ready ahead of the components: add one row to FACTION_FEED_FRAMES
+ * Wiring is ready ahead of the components: claim `feedFrame` in the faction's manifest
  * (e.g. `everymen: EverymenFeedFrame`) and that faction's feed cards adopt its
- * skin with no other change. Mirrors CARD_COMPONENTS / FACTION_BACKDROPS.
+ * skin with no other change. Mirrors the `taskCard` / `backdrop` surfaces.
  */
-import type { ComponentType, ReactNode } from 'react'
+import type { ReactNode } from 'react'
 
 import { pickVariant } from '../../utils/factionDispatch'
+import { surfaceMap } from '../../factions'
 import { factionCssVar } from '../../utils/factions'
-import EverymenFeedFrame from './EverymenFeedFrame'
-import EphemeristsFeedFrame from './EphemeristsFeedFrame'
-import WowFeedFrame from './WowFeedFrame'
-import SnideFeedFrame from './SnideFeedFrame'
-import SingularityFeedFrame from './SingularityFeedFrame'
-import UaFeedFrame from './UaFeedFrame'
-import AlbescentFeedFrame from './AlbescentFeedFrame'
-
-type FrameProps = { children: ReactNode }
-
-/** Per-faction frames. Each row makes that faction's feed cards bespoke.
- *  Albescent renders its own "Record" frame (#232 slice 2). */
-const FACTION_FEED_FRAMES: Record<string, ComponentType<FrameProps>> = {
-  everymen: EverymenFeedFrame,
-  ephemerists: EphemeristsFeedFrame,
-  wow: WowFeedFrame,
-  snide: SnideFeedFrame,
-  singularity: SingularityFeedFrame,
-  ua: UaFeedFrame,
-  albescent: AlbescentFeedFrame,
-}
 
 /** Neutral fallback. Owns the per-faction tint that the event cards used to
  *  hand-roll (card-bg fill + accent border), so a faction with a bespoke frame
@@ -62,10 +42,10 @@ interface Props {
 }
 
 export default function FactionFeedFrame({ slug, children }: Props) {
-  const Frame = pickVariant(FACTION_FEED_FRAMES, slug, DefaultFeedFrame)
+  const Frame = pickVariant(surfaceMap('feedFrame'), slug, DefaultFeedFrame)
   // Only the default frame needs the slug (to tint); bespoke frames are slug-blind.
   if (Frame === DefaultFeedFrame) return <DefaultFeedFrame slug={slug}>{children}</DefaultFeedFrame>
   return <Frame>{children}</Frame>
 }
 
-export { FACTION_FEED_FRAMES, DefaultFeedFrame }
+export { DefaultFeedFrame }

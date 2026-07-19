@@ -5,19 +5,19 @@
  * mobile home. Mirrors the UA dispatch test.
  */
 import { describe, it, expect } from 'vitest'
-import { MOBILE_ARCHETYPE_BY_SLUG } from '../../FieldDesk'
 import { pickVariant } from '../../../utils/factionDispatch'
+import { surfaceMap } from '../../../factions'
 import DefaultFieldDesk from '../mobileArchetypes/DefaultFieldDesk'
 import EphemeristsHome from '../mobileArchetypes/EphemeristsHome'
 
 describe('mobile FieldDesk-home Ephemerists dispatch', () => {
   it('mobile + an Ephemerists life resolves to the bespoke codex home skin', () => {
-    expect(pickVariant(MOBILE_ARCHETYPE_BY_SLUG, 'ephemerists', DefaultFieldDesk)).toBe(EphemeristsHome)
+    expect(pickVariant(surfaceMap('mobileFieldDesk'), 'ephemerists', DefaultFieldDesk)).toBe(EphemeristsHome)
   })
 
   it('mobile + any other slug falls through to the Default home skin', () => {
     for (const slug of ['__unregistered__', 'na', null]) {
-      expect(pickVariant(MOBILE_ARCHETYPE_BY_SLUG, slug, DefaultFieldDesk)).toBe(DefaultFieldDesk)
+      expect(pickVariant(surfaceMap('mobileFieldDesk'), slug, DefaultFieldDesk)).toBe(DefaultFieldDesk)
     }
   })
 })

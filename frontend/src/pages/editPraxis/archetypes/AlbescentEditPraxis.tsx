@@ -10,9 +10,8 @@
  * so every --faction-albescent-* token reads identically in both themes and we
  * style with them directly without touching data-theme.
  *
- * Albescent is a FIRST-CLASS identity here (not a ua alias): the explicit
- * ARCHETYPE_BY_SLUG['albescent'] entry beats the albescent→ua alias via
- * pickVariant, so this renders immediately. Behaviour (autosave, mode-switch
+ * Albescent is a FIRST-CLASS identity here: its manifest claims `editPraxis`,
+ * so this renders immediately. Behaviour (autosave, mode-switch
  * guards, invite, media, publish) comes from the shared control primitives; this
  * archetype owns only presentation. Ported from
  * docs/design/albescent-kit/Albescent Edit Praxis.dc.html. No hardcoded hex

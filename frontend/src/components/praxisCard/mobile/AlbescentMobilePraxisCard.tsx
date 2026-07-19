@@ -7,7 +7,7 @@ import { MobilePraxisBody, type MobileSlotTheme } from './shared'
  * Albescent MOBILE praxis card (#573) — a filed account in the Register: a pure
  * cotton sheet, a hairline architectural inset, the surveyor's Mark and a quiet
  * "Account · filed" running head, then Cormorant italic. First-class identity —
- * the explicit dispatcher entry beats the albescent→ua alias. Reads its own
+ * declared as `mobilePraxisCard` in albescent's manifest. Reads its own
  * --faction-albescent-* tokens directly (always-light, one hue of ink).
  */
 const ink = (pct: number) => `color-mix(in srgb, var(--faction-albescent-card-text) ${pct}%, transparent)`

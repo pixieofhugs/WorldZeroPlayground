@@ -4,7 +4,7 @@
  * The player profile renders ONE faction-agnostic contract; the skin is
  * derived client-side from `character.faction_slug`, never stored. This is
  * the single seam where a faction's bespoke profile skin plugs in — mirrors
- * FACTION_FEED_FRAMES / CARD_COMPONENTS / PRAXIS_CARD_BY_SLUG.
+ * the `feedFrame` / `taskCard` / `praxisCard` surfaces.
  *
  * Every profile lays out the same locked section spine (§player-profile
  * contract): ① identity + progression (shared CredentialCard as header),
@@ -23,20 +23,14 @@
  *   everymen:    EverymenProfileBody,
  *   albescent:   AlbescentProfileBody,
  */
-import type { ComponentType, ReactNode } from 'react'
+import type { ReactNode } from 'react'
 
 import type { CharacterOut } from '../../api/auth'
 import type { PraxisCardOut } from '../../api/praxis'
 import type { TaskOut } from '../../api/tasks'
 import { pickVariant } from '../../utils/factionDispatch'
-import AlbescentProfileBody from './archetypes/AlbescentProfileBody'
+import { surfaceMap } from '../../factions'
 import DefaultProfileBody from './archetypes/DefaultProfileBody'
-import EphemeristsProfileBody from './archetypes/EphemeristsProfileBody'
-import EverymenProfileBody from './archetypes/EverymenProfileBody'
-import SingularityProfileBody from './archetypes/SingularityProfileBody'
-import SnideProfileBody from './archetypes/SnideProfileBody'
-import UaProfileBody from './archetypes/UaProfileBody'
-import WowProfileBody from './archetypes/WowProfileBody'
 
 export interface ProfileProgression {
   /** The level the current score is climbing toward (capped at max level). */
@@ -62,28 +56,12 @@ export interface ProfileBodyProps {
   identityActions: ReactNode
 }
 
-/** Per-faction profile skins (#460). Each renders the SAME locked section spine
- *  as DefaultProfileBody (via ProfileSkin) in the faction's costume; the default
- *  spectrum-band skin remains the fallback for na / unaffiliated / unknown.
- *  The explicit `albescent` entry beats the albescent→ua alias in pickVariant,
- *  so it renders its own colorless skin immediately. */
-const FACTION_PROFILE_BODIES: Record<string, ComponentType<ProfileBodyProps>> = {
-  ua: UaProfileBody,
-  wow: WowProfileBody,
-  snide: SnideProfileBody,
-  ephemerists: EphemeristsProfileBody,
-  singularity: SingularityProfileBody,
-  everymen: EverymenProfileBody,
-  albescent: AlbescentProfileBody,
-}
-
 export default function FactionProfileBody(props: ProfileBodyProps) {
   const Body = pickVariant(
-    FACTION_PROFILE_BODIES,
+    surfaceMap('profileBody'),
     props.character.faction_slug,
     DefaultProfileBody,
   )
   return <Body {...props} />
 }
 
-export { FACTION_PROFILE_BODIES }

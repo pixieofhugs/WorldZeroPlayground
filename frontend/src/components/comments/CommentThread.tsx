@@ -11,10 +11,10 @@ import {
 import { useAuth } from '../../auth/AuthContext'
 import FactionAvatar from '../avatar/FactionAvatar'
 import { pickVariant } from '../../utils/factionDispatch'
+import { surfaceMap } from '../../factions'
 import { factionCssVar } from '../../utils/factions'
 import { formatCommentTime } from '../../utils/commentTime'
 import {
-  type CommentComponent,
   type CommentProps,
   authorToCharacter,
   ComposerControls,
@@ -22,13 +22,6 @@ import {
 } from './shared'
 import { CommentEditor, OwnerControls, useOwnerEdit } from './OwnerControls'
 import { CommentFlagControl } from './FlagControl'
-import UaComment from './voices/UaComment'
-import EverymenComment from './voices/EverymenComment'
-import WowComment from './voices/WowComment'
-import SnideComment from './voices/SnideComment'
-import EphemeristsComment from './voices/EphemeristsComment'
-import SingularityComment from './voices/SingularityComment'
-import AlbescentComment from './voices/AlbescentComment'
 
 /**
  * Neutral fallback voice — invariant slots themed only by the faction CSS vars +
@@ -87,18 +80,6 @@ export function DefaultComment(props: CommentProps) {
   )
 }
 
-/** Seven faction comment archetypes (ADR-0018). Albescent is explicit, so it
- *  beats the albescent→ua alias for comments while still aliasing elsewhere. */
-export const COMMENT_COMPONENTS: Record<string, CommentComponent> = {
-  ua: UaComment,
-  everymen: EverymenComment,
-  wow: WowComment,
-  snide: SnideComment,
-  ephemerists: EphemeristsComment,
-  singularity: SingularityComment,
-  albescent: AlbescentComment,
-}
-
 function CommentRow({
   comment,
   onEdited,
@@ -108,7 +89,7 @@ function CommentRow({
   onEdited: (updated: CommentOut) => void
   onWithdrawn: (id: number) => void
 }) {
-  const Variant = pickVariant(COMMENT_COMPONENTS, comment.author.faction_slug, DefaultComment)
+  const Variant = pickVariant(surfaceMap('comment'), comment.author.faction_slug, DefaultComment)
   return (
     <Variant mode="row" comment={comment} onEdited={onEdited} onWithdrawn={onWithdrawn} />
   )
@@ -123,7 +104,7 @@ function CommentComposer({
 }) {
   const [value, setValue] = useState('')
   const [submitting, setSubmitting] = useState(false)
-  const Variant = pickVariant(COMMENT_COMPONENTS, character.faction_slug, DefaultComment)
+  const Variant = pickVariant(surfaceMap('comment'), character.faction_slug, DefaultComment)
   const submit = async () => {
     const body = value.trim()
     if (!body || submitting) return

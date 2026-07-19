@@ -1,4 +1,6 @@
 import i18n from "../../i18n";
+import { pickVariant } from "../../utils/factionDispatch";
+import { surfaceMap } from "../../factions";
 import { UaSigil } from "./UaSigil";
 import { WowSigil } from "./WowSigil";
 import { SnideSigil } from "../snide/snideAtoms";
@@ -43,7 +45,7 @@ export interface FactionSelectCardProps {
 
 // ─── Per-faction archetypes ───────────────────────────────────────────────────
 
-function UaSelectCard({ state = "locked", members, onVisit }: Omit<FactionSelectCardProps, "faction">) {
+export function UaSelectCard({ state = "locked", members, onVisit }: Omit<FactionSelectCardProps, "faction">) {
   const status = i18n.t(`feed:factionSelect.ua.status.${state}` as const);
   return (
     <div style={{
@@ -86,7 +88,7 @@ function UaSelectCard({ state = "locked", members, onVisit }: Omit<FactionSelect
   );
 }
 
-function WOWSelectCard({ state = "locked", members, onVisit }: Omit<FactionSelectCardProps, "faction">) {
+export function WOWSelectCard({ state = "locked", members, onVisit }: Omit<FactionSelectCardProps, "faction">) {
   const status = i18n.t(`feed:factionSelect.wow.status.${state}` as const);
   return (
     <div style={{
@@ -132,7 +134,7 @@ function WOWSelectCard({ state = "locked", members, onVisit }: Omit<FactionSelec
   );
 }
 
-function SnideSelectCard({ state = "locked", members, onVisit }: Omit<FactionSelectCardProps, "faction">) {
+export function SnideSelectCard({ state = "locked", members, onVisit }: Omit<FactionSelectCardProps, "faction">) {
   const status = i18n.t(`feed:factionSelect.snide.status.${state}` as const);
   return (
     <div style={{
@@ -173,7 +175,7 @@ function SnideSelectCard({ state = "locked", members, onVisit }: Omit<FactionSel
   );
 }
 
-function EphemeristsSelectCard({ state = "locked", members, onVisit }: Omit<FactionSelectCardProps, "faction">) {
+export function EphemeristsSelectCard({ state = "locked", members, onVisit }: Omit<FactionSelectCardProps, "faction">) {
   const status = i18n.t(`feed:factionSelect.ephemerists.status.${state}` as const);
   return (
     <div style={{
@@ -213,7 +215,7 @@ function EphemeristsSelectCard({ state = "locked", members, onVisit }: Omit<Fact
   );
 }
 
-function SingularitySelectCard({ state = "locked", members, onVisit }: Omit<FactionSelectCardProps, "faction">) {
+export function SingularitySelectCard({ state = "locked", members, onVisit }: Omit<FactionSelectCardProps, "faction">) {
   const status = i18n.t(`feed:factionSelect.singularity.status.${state}` as const);
   const green = "#4ade80";
   return (
@@ -256,7 +258,7 @@ function SingularitySelectCard({ state = "locked", members, onVisit }: Omit<Fact
   );
 }
 
-function EverymenSelectCard({ state = "locked", members, onVisit }: Omit<FactionSelectCardProps, "faction">) {
+export function EverymenSelectCard({ state = "locked", members, onVisit }: Omit<FactionSelectCardProps, "faction">) {
   const status = i18n.t(`feed:factionSelect.everymen.status.${state}` as const);
   return (
     <div style={{
@@ -310,7 +312,7 @@ function EverymenSelectCard({ state = "locked", members, onVisit }: Omit<Faction
   );
 }
 
-function AlbescentSelectCard({ state = "locked", members, onVisit }: Omit<FactionSelectCardProps, "faction">) {
+export function AlbescentSelectCard({ state = "locked", members, onVisit }: Omit<FactionSelectCardProps, "faction">) {
   const status = i18n.t(`feed:factionSelect.albescent.status.${state}` as const);
   return (
     <div style={{
@@ -345,28 +347,28 @@ function AlbescentSelectCard({ state = "locked", members, onVisit }: Omit<Factio
   );
 }
 
-// ─── Switcher ─────────────────────────────────────────────────────────────────
+// ─── Dispatcher ──────────────────────────────────────────────────────────────
 
-const BY_FACTION: Record<string, (p: Omit<FactionSelectCardProps, "faction">) => JSX.Element> = {
-  ua: UaSelectCard,
-  wow: WOWSelectCard,
-  snide: SnideSelectCard,
-  ephemerists: EphemeristsSelectCard,
-  singularity: SingularitySelectCard,
-  everymen: EverymenSelectCard,
-  albescent: AlbescentSelectCard,
-};
-
-// Retired/renamed slugs → their live archetype. Raw slug wins first so
-// `albescent` renders its own card (the repo's FACTION_ALIASES maps
-// albescent→ua for the legacy skins; the select cards are first-class).
+// Retired/renamed slugs → their live archetype. Raw slug wins first, so a
+// first-class faction always renders its own card rather than a legacy skin.
+//
+// This is a SECOND alias table, parallel to FACTION_ALIASES in utils/factions.ts
+// which pickVariant already consults. Folding the two together is a behaviour
+// change (these two slugs are not in FACTION_ALIASES), so it is left alone here
+// and tracked as follow-up.
 const LEGACY_SLUG: Record<string, string> = {
   gestalt: "wow",
   journeymen: "ephemerists",
 };
 
 export default function FactionSelectCard({ faction, ...rest }: FactionSelectCardProps) {
-  const key = BY_FACTION[faction] ? faction : LEGACY_SLUG[faction] ?? faction;
-  const Card = BY_FACTION[key] ?? UaSelectCard;
+  const cards = surfaceMap("factionSelectCard");
+  const key = cards[faction] ? faction : LEGACY_SLUG[faction] ?? faction;
+  // NOTE: the fallback is UA's card, not a neutral default — an unknown or `na`
+  // slug renders UA's costume. That predates #782 and is preserved here
+  // verbatim to keep this refactor a visual no-op, but it is the same class of
+  // bug as #418/#636 (na must never borrow UA's identity) and wants its own
+  // issue.
+  const Card = pickVariant(cards, key, UaSelectCard);
   return <Card {...rest} />;
 }

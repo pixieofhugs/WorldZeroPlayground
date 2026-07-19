@@ -8,6 +8,7 @@ import { FACTION_RAINBOW_ORDER, factionCssVar } from '../utils/factions'
 import type { CharacterOut, CurrentUser } from '../api/auth'
 import { useFormFactor } from '../hooks/useFormFactor'
 import { pickVariant } from '../utils/factionDispatch'
+import { surfaceMap } from '../factions'
 import { useTheme } from '../hooks/useTheme'
 import Constellation, { type RankedPlayer } from './players/Constellation'
 import Meadow from './players/Meadow'
@@ -15,17 +16,9 @@ import SkyCanvas, { DESKTOP_SKY_MAX_WIDTH } from './players/SkyCanvas'
 import SkyLegend from './players/SkyLegend'
 import RosterTable from './players/RosterTable'
 import DefaultPlayers, {
-  type PlayersDirectoryProps,
 } from './players/mobileArchetypes/DefaultPlayers'
 
-type MobileSkin = (props: PlayersDirectoryProps) => JSX.Element
 type ScoreMode = 'era' | 'alltime'
-
-// Parallel MOBILE registry, mirroring Tasks. The players directory isn't keyed
-// by a single faction slug, so this stays empty and every phone render falls
-// through to the Default directory skin; bespoke faction directories can
-// register here later.
-export const MOBILE_ARCHETYPE_BY_SLUG: Record<string, MobileSkin> = {}
 
 /** Orbs in the desktop sky. Mobile shows 6 (`DefaultPlayers`); at the ~294px
  *  radius the 900px stage yields there is room for 12 (#730 §2). */
@@ -42,7 +35,7 @@ export default function Leaderboard() {
   const characters = data ?? []
 
   if (formFactor === 'mobile') {
-    const Mobile = pickVariant(MOBILE_ARCHETYPE_BY_SLUG, null, DefaultPlayers)
+    const Mobile = pickVariant(surfaceMap('mobilePlayersDirectory'), null, DefaultPlayers)
     return (
       <Mobile
         characters={characters}

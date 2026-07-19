@@ -26,8 +26,8 @@ vi.mock("react-i18next", async (importActual) => {
 // factionName/factionCssVar read the raw i18n instance, not the hook — init it.
 import "../../../i18n";
 
-import { MOBILE_ARCHETYPE_BY_SLUG, ARCHETYPE_BY_SLUG } from "../../TaskDetail";
 import { pickVariant } from "../../../utils/factionDispatch";
+import { surfaceMap } from "../../../factions";
 import DefaultMobileTaskDetail from "../mobileArchetypes/DefaultTaskDetail";
 import EverymenMobileTaskDetail from "../mobileArchetypes/EverymenTaskDetail";
 import DefaultDesktopTaskDetail from "../archetypes/DefaultTaskDetail";
@@ -105,21 +105,21 @@ function findOnClick(
 describe("mobile task-detail dispatch", () => {
   it("mobile + the pilot faction resolves to the bespoke Everymen skin", () => {
     expect(
-      pickVariant(MOBILE_ARCHETYPE_BY_SLUG, "everymen", DefaultMobileTaskDetail),
+      pickVariant(surfaceMap('mobileTaskDetail'), "everymen", DefaultMobileTaskDetail),
     ).toBe(EverymenMobileTaskDetail);
   });
 
   it("mobile + any other slug falls through to the Default mobile skin", () => {
     for (const slug of ['__unregistered__', 'na', null]) {
       expect(
-        pickVariant(MOBILE_ARCHETYPE_BY_SLUG, slug, DefaultMobileTaskDetail),
+        pickVariant(surfaceMap('mobileTaskDetail'), slug, DefaultMobileTaskDetail),
       ).toBe(DefaultMobileTaskDetail);
     }
   });
 
   it("desktop keeps its own archetype and never the mobile skin", () => {
     const desktop = pickVariant(
-      ARCHETYPE_BY_SLUG,
+      surfaceMap('taskDetail'),
       "everymen",
       DefaultDesktopTaskDetail,
     );

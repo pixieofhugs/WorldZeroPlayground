@@ -1,7 +1,7 @@
 /**
  * Vote-reframe registry guard (issue #194).
  *
- * VOTE_REFRAMES must have an entry for every faction registered in FACTION_VOTE,
+ * VOTE_REFRAMES must have an entry for every faction claiming the `vote` surface,
  * each with exactly tiers 1–5 bearing a non-empty label. Also verifies that the
  * Everymen archetype renders its tile labels from the registry so a label edit
  * in voteReframes.ts propagates without touching the archetype.

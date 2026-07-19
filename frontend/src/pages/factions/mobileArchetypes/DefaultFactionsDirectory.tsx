@@ -42,7 +42,7 @@ const STATUS_CAN_RETURN = 'can_return'
  * Self-fetches the (slug-only) faction list plus the viewer's per-faction
  * status, so the cards render real member/eligible/locked rather than a
  * uniform neutral. Bespoke faction directory skins register in Factions'
- * MOBILE_ARCHETYPE_BY_SLUG.
+ * the `mobileFactionsDirectory` surface.
  */
 export default function DefaultFactionsDirectory() {
   const { t } = useTranslation('factions')

@@ -13,12 +13,13 @@
  * title) keep the substring checks from colliding with incidental markup.
  */
 import { renderToStaticMarkup } from "react-dom/server";
+import { surfaceMap } from "../../factions";
 import { MemoryRouter } from "react-router-dom";
 import type { ReactElement } from "react";
 import { describe, it, expect } from "vitest";
-import { PRAXIS_CARD_BY_SLUG, DefaultPraxisCard } from "../PraxisCard";
-import { CARD_COMPONENTS, DEFAULT_CARD } from "../TaskCard";
-import { COMMENT_COMPONENTS, DefaultComment } from "../comments/CommentThread";
+import { DefaultPraxisCard } from "../PraxisCard";
+import { DEFAULT_CARD } from "../TaskCard";
+import { DefaultComment } from "../comments/CommentThread";
 import i18n from "../../i18n";
 import { factionName } from "../../utils/factions";
 import type { PraxisCardOut, PraxisMemberOut, MediaItemOut } from "../../api/praxis";
@@ -67,7 +68,7 @@ const PRAXIS_ADMIN = {
 
 // Default fallback is a registered renderable too — guard it alongside the map.
 const praxisArchetypes = {
-  ...PRAXIS_CARD_BY_SLUG,
+  ...surfaceMap('praxisCard'),
   __default__: DefaultPraxisCard,
 };
 
@@ -267,7 +268,7 @@ const TASK: TaskOut = {
 };
 
 const taskArchetypes = {
-  ...CARD_COMPONENTS,
+  ...surfaceMap('taskCard'),
   __default__: DEFAULT_CARD,
 };
 
@@ -306,7 +307,7 @@ const COMMENT: CommentOut = {
 };
 
 const commentArchetypes = {
-  ...COMMENT_COMPONENTS,
+  ...surfaceMap('comment'),
   __default__: DefaultComment,
 };
 

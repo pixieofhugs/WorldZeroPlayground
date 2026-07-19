@@ -1,15 +1,9 @@
-import type { ComponentType, ReactNode } from 'react'
+import type { ReactNode } from 'react'
 import type { CharacterOut } from '../../api/auth'
 import { mediaUrl } from '../../utils/media'
 import { pickVariant } from '../../utils/factionDispatch'
+import { surfaceMap } from '../../factions'
 import { factionCssVar, isKnownFaction } from '../../utils/factions'
-import EverymenAvatar from './EverymenAvatar'
-import WowAvatar from './WowAvatar'
-import SnideAvatar from './SnideAvatar'
-import EphemeristsAvatar from './EphemeristsAvatar'
-import SingularityAvatar from './SingularityAvatar'
-import UaAvatar from './UaAvatar'
-import AlbescentAvatar from './AlbescentAvatar'
 import DefaultSigil from '../cards/DefaultSigil'
 
 /**
@@ -207,18 +201,8 @@ export function BadgedAvatar({
   )
 }
 
-const FACTION_AVATARS: Record<string, ComponentType<FactionAvatarProps>> = {
-  everymen: EverymenAvatar,
-  wow: WowAvatar,
-  snide: SnideAvatar,
-  ephemerists: EphemeristsAvatar,
-  singularity: SingularityAvatar,
-  ua: UaAvatar,
-  albescent: AlbescentAvatar,
-}
-
 export default function FactionAvatar({ character, size, glow = false }: FactionAvatarProps) {
-  const Variant = pickVariant(FACTION_AVATARS, character.faction_slug, DefaultAvatar)
+  const Variant = pickVariant(surfaceMap('avatar'), character.faction_slug, DefaultAvatar)
   const avatar = <Variant character={character} size={size} />
   if (!glow) return avatar
 

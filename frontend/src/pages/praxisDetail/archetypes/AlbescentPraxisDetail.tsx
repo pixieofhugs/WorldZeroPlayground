@@ -6,9 +6,8 @@
  * and the "bear witness" framing around the interactive caster. Ported from the
  * design bundle's EntryRead onto the real PraxisDetailState.
  *
- * Albescent is a FIRST-CLASS identity on this surface (not a ua alias): the
- * explicit ARCHETYPE_BY_SLUG['albescent'] entry beats the albescent→ua alias via
- * pickVariant, and the archetype reads its own component-private
+ * Albescent is a FIRST-CLASS identity on this surface: its manifest claims
+ * `praxisDetail`, and the archetype reads its own component-private
  * --faction-albescent-* tokens (identical light/dark — always-light, never dims).
  * The behavior slots come from the shared module; this archetype owns only
  * presentation.

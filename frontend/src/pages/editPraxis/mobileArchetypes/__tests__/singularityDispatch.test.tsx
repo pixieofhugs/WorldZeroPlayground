@@ -6,21 +6,21 @@
  */
 import { describe, it, expect } from 'vitest'
 import { pickVariant } from '../../../../utils/factionDispatch'
-import { MOBILE_ARCHETYPE_BY_SLUG } from '../../../EditPraxis'
+import { surfaceMap } from '../../../../factions'
 import DefaultMobileEditPraxis from '../DefaultEditPraxis'
 import SingularityMobileEditPraxis from '../SingularityComposer'
 import SingularityDesktopEditPraxis from '../../archetypes/SingularityEditPraxis'
 
 describe('mobile composer Singularity dispatch', () => {
   it('resolves singularity to the bespoke terminal mobile composer', () => {
-    const skin = pickVariant(MOBILE_ARCHETYPE_BY_SLUG, 'singularity', DefaultMobileEditPraxis)
+    const skin = pickVariant(surfaceMap('mobileEditPraxis'), 'singularity', DefaultMobileEditPraxis)
     expect(skin).toBe(SingularityMobileEditPraxis)
     expect(skin).not.toBe(SingularityDesktopEditPraxis)
   })
 
   it('falls through to the Default mobile composer for other slugs', () => {
     for (const slug of ['__unregistered__', 'na', null]) {
-      expect(pickVariant(MOBILE_ARCHETYPE_BY_SLUG, slug, DefaultMobileEditPraxis)).toBe(DefaultMobileEditPraxis)
+      expect(pickVariant(surfaceMap('mobileEditPraxis'), slug, DefaultMobileEditPraxis)).toBe(DefaultMobileEditPraxis)
     }
   })
 })

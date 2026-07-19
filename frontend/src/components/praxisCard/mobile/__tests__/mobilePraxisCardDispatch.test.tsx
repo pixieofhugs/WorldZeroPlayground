@@ -7,7 +7,7 @@
  */
 import { describe, it, expect } from 'vitest'
 import { pickVariant } from '../../../../utils/factionDispatch'
-import { MOBILE_PRAXIS_CARD_BY_SLUG } from '../MobilePraxisCard'
+import { surfaceMap } from '../../../../factions'
 import DefaultMobilePraxisCard from '../DefaultMobilePraxisCard'
 import UaMobilePraxisCard from '../UaMobilePraxisCard'
 import WowMobilePraxisCard from '../WowMobilePraxisCard'
@@ -30,13 +30,13 @@ const CARD_BY_SLUG = {
 describe('mobile praxis-card per-item dispatch', () => {
   for (const [slug, Card] of Object.entries(CARD_BY_SLUG)) {
     it(`a ${slug} praxis resolves to its bespoke mobile card`, () => {
-      expect(pickVariant(MOBILE_PRAXIS_CARD_BY_SLUG, slug, DefaultMobilePraxisCard)).toBe(Card)
+      expect(pickVariant(surfaceMap('mobilePraxisCard'), slug, DefaultMobilePraxisCard)).toBe(Card)
     })
   }
 
   it('an unregistered / factionless praxis falls through to the Default mobile card', () => {
     for (const slug of ['__unregistered__', 'na', null]) {
-      expect(pickVariant(MOBILE_PRAXIS_CARD_BY_SLUG, slug, DefaultMobilePraxisCard)).toBe(
+      expect(pickVariant(surfaceMap('mobilePraxisCard'), slug, DefaultMobilePraxisCard)).toBe(
         DefaultMobilePraxisCard,
       )
     }

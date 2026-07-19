@@ -1,18 +1,18 @@
 /**
  * Mobile task-detail slot invariant — the mobile twin of archetypeSlots.test.
- * Walks the MOBILE_ARCHETYPE_BY_SLUG registry plus the Default mobile skin and
+ * Walks the surfaceMap('mobileTaskDetail') registry plus the Default mobile skin and
  * asserts each still emits the invariant content slots (title, description,
  * all-tasks breadcrumb, sort toggle, signup CTA, edit/continue controls). Guards
  * the Default fallback plus every bespoke mobile skin — Everymen is the first
  * (#497); the rest land in #496–#500.
  */
 import { renderToStaticMarkup } from "react-dom/server";
+import { surfaceMap } from "../../../factions";
 import { MemoryRouter } from "react-router-dom";
 import type { ReactElement } from "react";
 import { describe, it, expect } from "vitest";
 // Initialize the i18n catalog so shared copy keys resolve to English text.
 import "../../../i18n";
-import { MOBILE_ARCHETYPE_BY_SLUG } from "../../TaskDetail";
 import DefaultMobileTaskDetail from "../mobileArchetypes/DefaultTaskDetail";
 import type { TaskDetailState } from "../useTaskDetail";
 import type { TaskOut } from "../../../api/tasks";
@@ -92,7 +92,7 @@ function baseState(overrides: Partial<TaskDetailState>): TaskDetailState {
   };
 }
 
-const archetypes = { ...MOBILE_ARCHETYPE_BY_SLUG, __default__: DefaultMobileTaskDetail };
+const archetypes = { ...surfaceMap('mobileTaskDetail'), __default__: DefaultMobileTaskDetail };
 
 describe("mobile task-detail content-slot invariant", () => {
   for (const [slug, Archetype] of Object.entries(archetypes)) {
