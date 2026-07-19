@@ -69,6 +69,12 @@ class FactionConfig:
     collab_other_modifier: float     # collaborative other-faction task multiplier
     duel_win_modifier: float         # duel win multiplier (applied to base points)
     duel_loss_modifier: float        # duel loss multiplier (applied to base points)
+    # Levels ABOVE the character's own level that a member may reach when signing
+    # up for a task, once per level (#811). 0 = no such ability (the baseline for
+    # every faction); 1 = may claim a single task exactly one level up per level.
+    # Read via services.level_jump — never branch on a faction slug in a service.
+    # Defaulted so existing/new era files only state it where it is non-zero.
+    level_jump_reach: int = 0
 
 
 @dataclass(frozen=True)
