@@ -201,8 +201,15 @@ describe('light-theme meadow (#684)', () => {
     const { html } = render(
       <Meadow players={ranked(PLAYERS)} maxScore={2140} myCharId={null} {...STAGE} />,
     )
-    expect(html).toContain('--faction-everymen')
-    expect(html).toContain('--faction-albescent')
+    // Every faction in the spectrum, each exactly once — asserted off the array
+    // so the bloom cannot silently drop or double a hue when the order changes.
+    for (const slug of FACTION_RAINBOW_ORDER) {
+      expect(html, `${slug} petal`).toContain(`--faction-${slug})`)
+    }
+    // Albescent hides in plain sight (#783): it is not in the spectrum, so it
+    // must never appear as a petal. This bloom is what an unrevealed player
+    // sees, and a near-black petal would announce the society exists.
+    expect(html).not.toContain('--faction-albescent')
   })
 })
 
