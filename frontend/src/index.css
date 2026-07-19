@@ -1240,6 +1240,31 @@
   background: radial-gradient(120% 90% at 50% 6%, transparent 46%, color-mix(in srgb, var(--eph-vellum-deep) 58%, transparent));
 }
 
+/* ══════════════════════════════════════════════════════════════
+   EPHEMERISTS AGE-FOXING BLEND (#724) — the one Ephemerist ornament
+   that cannot be a colour token, because it is a *blend mode*.
+
+   Foxing is a stain: on light vellum it DARKENS the sheet, so `multiply`
+   is the physically right operator. On the dark-theme vellum
+   (--eph-vellum flips to a near-black tobacco) `multiply` has almost
+   nothing left to take away — the blotches vanish and, where they don't,
+   they read as mud. Dark-theme foxing is instead an age *bloom*: the
+   same four blotches lightening the sheet, so the operator flips to
+   `screen`.
+
+   This lives here rather than inline on the `Foxing` atom because a
+   `dark ? 'multiply' : 'screen'` ternary is exactly what §8 forbids;
+   the cascade owns the flip. (Only the MODE is set here — callers keep
+   passing their own `opacity` inline, which would win over any opacity
+   declared in this rule anyway.)
+   ══════════════════════════════════════════════════════════════ */
+.eph-foxing {
+  mix-blend-mode: multiply;
+}
+[data-theme="dark"] .eph-foxing {
+  mix-blend-mode: screen;
+}
+
 /* Homepage activity ticker — horizontal marquee + blinking "LIVE" dot. */
 @keyframes ticker-roll { from { transform: translateX(0); } to { transform: translateX(-50%); } }
 @keyframes wz-blink { 50% { opacity: 0; } }
