@@ -28,7 +28,6 @@ const REGISTERED_SLUGS = [
   'snide',
   'singularity',
   'ua',
-  'albescent',
 ] as const
 
 describe('VOTE_REFRAMES registry', () => {
@@ -84,10 +83,14 @@ describe('reframeLabel', () => {
     expect(reframeLabel('snide', 1)).toBe('meh')
   })
 
-  it('labels albescent in its own first-class "bear witness" vocabulary (#232)', () => {
-    // No longer aliases to ua — albescent has its own witness scale.
-    expect(reframeLabel('albescent', 3)).toBe('Witnessed')
-    expect(reframeLabel('albescent', 5)).toBe('Inscribed')
+  it('labels albescent in plain numbers, like any unthemed slug (#783)', () => {
+    // The "bear witness" vocabulary (Unseeing → Inscribed) was a PLAIN-TEXT
+    // tell: reframeLabel looks the slug up dynamically, so voter tiles on an
+    // Albescent task spelled the society out in its own words to every viewer,
+    // with no bespoke component involved. A secret society hiding in plain
+    // sight gets the same arabic numerals an unaffiliated task gets.
+    expect(reframeLabel('albescent', 3)).toBe(reframeLabel('na', 3))
+    expect(reframeLabel('albescent', 5)).toBe('5')
   })
 
   it('falls back to the arabic number when no reframe exists', () => {

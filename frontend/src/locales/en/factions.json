@@ -52,9 +52,6 @@
     }
   },
   "albescent": {
-    "mobile": {
-      "eyebrow": "The Record"
-    },
     "sealed": {
       "eyebrow": "— no such account —",
       "line": "You know not what you seek."
@@ -89,21 +86,6 @@
       "acceptIdle": "Accept the order",
       "reassurance": "you need not persuade us.",
       "declineError": "The order declined, and gave no reason."
-    },
-    "keepers": {
-      "kicker": "The Houses",
-      "title": "Keepers",
-      "empty": "No keepers on record."
-    },
-    "ledger": {
-      "kicker": "Open Work",
-      "title": "The Ledger",
-      "empty": "The ledger is clear."
-    },
-    "returned": {
-      "kicker": "Attended To",
-      "title": "Lately Returned",
-      "empty": "Nothing returned yet. The Record waits."
     },
     "invitation": {
       "kicker": "the Record is attended —",

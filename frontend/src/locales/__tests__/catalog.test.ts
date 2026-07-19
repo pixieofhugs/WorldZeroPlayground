@@ -18,7 +18,6 @@ const FACTION_SLUGS = [
   'snide',
   'singularity',
   'ua',
-  'albescent',
 ] as const
 const EXPECTED_TIER_COUNT = 5
 

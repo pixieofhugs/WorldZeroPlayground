@@ -74,17 +74,6 @@ export const VOTE_REFRAMES: Record<string, VoteReframe> = {
       { value: 5, label: i18n.t('votes:ua.masterwork') },
     ],
   },
-  // Albescent "bear witness" vocabulary (#232) — how completely a task was
-  // attended, Unseeing → Inscribed. Words from docs/design/albescent-kit.
-  albescent: {
-    tiers: [
-      { value: 1, label: i18n.t('votes:albescent.unseeing') },
-      { value: 2, label: i18n.t('votes:albescent.glimpsed') },
-      { value: 3, label: i18n.t('votes:albescent.witnessed') },
-      { value: 4, label: i18n.t('votes:albescent.verified') },
-      { value: 5, label: i18n.t('votes:albescent.inscribed') },
-    ],
-  },
 }
 
 /**

@@ -41,13 +41,6 @@
     "distinguished": "distinguished",
     "masterwork": "masterwork"
   },
-  "albescent": {
-    "unseeing": "Unseeing",
-    "glimpsed": "Glimpsed",
-    "witnessed": "Witnessed",
-    "verified": "Verified",
-    "inscribed": "Inscribed"
-  },
   "chrome": {
     "loginGate": "Log in to vote",
     "voted": "Voted {{stars}} pts",
