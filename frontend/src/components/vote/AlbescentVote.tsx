@@ -124,7 +124,6 @@ export default function AlbescentVote({
           muted: 'var(--faction-albescent-card-muted)',
           accent: 'var(--faction-albescent-card-accent)',
           accentFont: FONT,
-          avgFontSize: 16,
           errorColor: 'var(--faction-albescent-card-accent)',
           avgLetterSpacing: '0.04em',
         }}

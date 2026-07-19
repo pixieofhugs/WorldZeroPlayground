@@ -203,7 +203,18 @@ fontSize: 19,
 
 A file only moves to phase 2 when it is clean on **both** axes — no un-annotated raw `fontSize` *and* no raw `padding`/`margin`/`gap`. Tokenizing only the type leaves it in phase 1.
 
-**Enforcement.** The `local/no-raw-style-values` ESLint rule fails the build on a raw numeric `fontSize`/`padding`/`margin`/`gap` in an inline style. Files not yet migrated are grandfathered in `frontend/.eslint-legacy-raw-styles.txt`. **That list only ever shrinks** — migrating a file means deleting its line; no file may ever be added to it. The hatch above is what keeps that literally true: ornament is not a permanent residue on the list, it is a per-line directive on a delisted file. The list reaches **empty** when #750 (the spacing sweep) closes and the last file moves to phase 2.
+**Enforcement.** The `local/no-raw-style-values` ESLint rule fails the build on a raw numeric `fontSize`/`padding`/`margin`/`gap` in an inline style. Files not yet migrated are grandfathered in `frontend/.eslint-legacy-raw-styles.txt`. **That list only ever shrinks** — migrating a file means deleting its line; no file may ever be added to it. The hatch above is what keeps that literally true: ornament is not a permanent residue on the list, it is a per-line directive on a delisted file. The list reaches **empty** when #750 (the spacing sweep) closes and the last file moves to phase 2. **It is empty now** — so a newly-flagged violation is fixed in place or hatched per-line, never grandfathered.
+
+**What the rule sees.** A raw value is a raw value whichever notation carries it, so the rule covers three shapes: a numeric inline style (`padding: 6`), a length string including `rem`/`em` (`padding: '0.6rem 1.2rem'`), and an **arbitrary Tailwind spacing utility** (`mt-[6px]`, `px-[10px]`) — the last of these leaves the style object entirely and so needs a separate `className` check (#763). It walks ternaries, `&&` chains and template literals, because the recurring lesson of #770/#789 is that *any* indirection hid the value from a literal-only check.
+
+**What it deliberately does not see**, each a judgement rather than an oversight:
+
+| Gap | Why it stays open |
+| --- | --- |
+| `text-sm` / `text-xs` on prose | Needs to know prose from chrome; a className carries no role signal. `text-sm` is right on a timestamp and wrong on a paragraph. Review-only. |
+| `text-[13px]` | A `--text-*` token names a **tier**. Flagging arbitrary type mechanically would pin ornament to a tier it was never part of — the coupling this section forbids. |
+| `calc(...)` | Named above; composing around the scale is a review rule, not a regex. |
+| `w-`/`h-`/`top-`/`inset-` | Ornament geometry, already carved out above. |
 
 ---
 

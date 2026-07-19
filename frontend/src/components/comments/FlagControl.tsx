@@ -61,7 +61,7 @@ export function CommentFlagControl({ comment }: { comment: CommentOut }) {
     return (
       <button
         onClick={() => { setOpen(true); setError(null) }}
-        className="btn-outline text-[8px] px-[8px] py-[2px]"
+        className="btn-outline text-[8px] px-2 py-1"
         style={{ borderColor: 'rgba(220,38,38,0.4)', color: 'var(--color-danger)' }}
       >
         {t('detail.flag.flag')}
@@ -70,7 +70,7 @@ export function CommentFlagControl({ comment }: { comment: CommentOut }) {
   }
 
   return (
-    <div className="w-full mt-[6px]">
+    <div className="w-full mt-2">
       <div className="flex items-center gap-2 flex-wrap" role="radiogroup" aria-label={t('detail.flag.reasonGroupLabel')}>
         {flagReasonOptions().map(({ value, label }) => (
           <button
@@ -79,7 +79,7 @@ export function CommentFlagControl({ comment }: { comment: CommentOut }) {
             aria-checked={reason === value}
             onClick={() => { setReason(value); setError(null) }}
             disabled={submitting}
-            className="btn-outline text-[9px] px-[8px] py-[3px]"
+            className="btn-outline text-[9px] px-2 py-1"
             style={
               reason === value
                 ? { background: 'var(--color-danger)', borderColor: 'var(--color-danger)', color: 'var(--color-bg-surface)' }

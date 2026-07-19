@@ -151,7 +151,7 @@ function Tile({
 }) {
   return (
     <div
-      className="flex flex-col gap-[2px] px-[10px] py-[6px]"
+      className="flex flex-col gap-1 px-3 py-2"
       style={{
         border: `1px solid ${theme.accent}`,
         fontFamily: theme.bodyFont ?? DEFAULT_THEME.bodyFont,
@@ -201,7 +201,7 @@ export function StakesTiles({
   if (status === 'pending') {
     return (
       <p
-        className="mt-[6px]"
+        className="mt-2"
         style={{ fontFamily: font, fontSize: 'var(--text-sm)', color: muted }}
       >
         {t('duelStakes.soloFallback', {
@@ -213,8 +213,8 @@ export function StakesTiles({
   }
 
   return (
-    <div className="mt-[8px]">
-      <div className="flex gap-[8px]">
+    <div className="mt-2">
+      <div className="flex gap-2">
         <Tile
           label={t('duelStakes.winLabel')}
           value={formatPoints(stakes.win)}
@@ -229,7 +229,7 @@ export function StakesTiles({
         />
       </div>
       <p
-        className="mt-[6px]"
+        className="mt-2"
         style={{ fontFamily: font, fontSize: 'var(--text-xs)', color: muted }}
       >
         {t('duelStakes.tieLine', { points: formatPoints(stakes.tie) })}{' '}
@@ -255,7 +255,7 @@ function RosterRow({
   const { t } = useTranslation('praxis')
   return (
     <li
-      className="flex items-center justify-between gap-[8px]"
+      className="flex items-center justify-between gap-2"
       style={{
         fontFamily: theme.bodyFont ?? DEFAULT_THEME.bodyFont,
         fontSize: 'var(--text-sm)',
@@ -288,7 +288,7 @@ export function RaceRoster({
 }) {
   const { t } = useTranslation('praxis')
   return (
-    <ul className="flex flex-col gap-[3px] mt-[8px]">
+    <ul className="flex flex-col gap-1 mt-2">
       <RosterRow name={t('duelRoster.you')} cast={me.is_submitted} theme={theme} />
       <RosterRow name={foe.display_name} cast={foe.is_submitted} theme={theme} />
     </ul>
@@ -326,7 +326,7 @@ export function NextStepLine({
   if (duel.forfeited_by_character_id != null) {
     const iForfeited = duel.forfeited_by_character_id === me.character_id
     return (
-      <p style={style} className="mt-[6px]">
+      <p style={style} className="mt-2">
         {iForfeited
           ? t('duelNextStep.youForfeited')
           : t('duelNextStep.wonByDefault', { name: foe.display_name })}
@@ -355,7 +355,7 @@ export function NextStepLine({
   }
 
   return (
-    <p style={style} className="mt-[6px]">
+    <p style={style} className="mt-2">
       {line}
     </p>
   )
@@ -386,11 +386,11 @@ export function SealActions({
 }) {
   const { t } = useTranslation('praxis')
   return (
-    <div className="flex items-center justify-end gap-[8px] w-full">
+    <div className="flex items-center justify-end gap-2 w-full">
       <button
         type="button"
         onClick={onCancel}
-        className="btn-outline px-[14px] py-[6px]"
+        className="btn-outline px-4 py-2"
         style={{ fontSize: 'var(--text-sm)', fontFamily: theme.bodyFont ?? DEFAULT_THEME.bodyFont }}
       >
         {cancelLabel ?? t('duelSeal.cancel')}
@@ -400,7 +400,7 @@ export function SealActions({
         autoFocus
         disabled={busy}
         onClick={onConfirm}
-        className="btn-primary px-[18px] py-[6px]"
+        className="btn-primary px-4 py-2"
         style={{
           fontSize: 'var(--text-sm)',
           fontFamily: theme.bodyFont ?? DEFAULT_THEME.bodyFont,

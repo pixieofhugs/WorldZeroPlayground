@@ -113,7 +113,6 @@ export default function EphemeristsVote({
           muted: "var(--eph-muted)",
           accent: "var(--eph-rubric)",
           accentFont: "var(--eph-display)",
-          avgFontSize: 15,
           errorColor: "var(--eph-rubric)",
           avgLetterSpacing: "0.02em",
         }}

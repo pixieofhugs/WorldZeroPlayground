@@ -170,11 +170,13 @@ export default function RosterTable({ players, myCharId }: RosterTableProps) {
 
 function RosterRow({ row, isMe }: { row: RankedPlayer; isMe: boolean }) {
   const { character, rank, points } = row
-  // Unaffiliated players own the spectrum, not a borrowed orange: factionCssVar
-  // silently resolves an unknown slug to the `ua` theme (#636 / ADR-0039), so
-  // every faction-coloured ornament here branches on isKnownFaction first.
+  // Unaffiliated players own the spectrum, not a borrowed orange (ADR-0039).
+  // `known` gates only the ornaments that can actually hold a gradient — the
+  // left accent bar and the .rainbow-ink points numeral. `color` is scalar-only
+  // and needs no branch: factionCssVar maps `na` to --faction-default itself.
+  // See the isKnownFaction docblock in utils/factions for why (#749/#754).
   const known = isKnownFaction(character.faction_slug)
-  const color = known ? factionCssVar(character.faction_slug) : 'var(--faction-default)'
+  const color = factionCssVar(character.faction_slug)
   const accent = known ? color : 'var(--faction-default-rainbow)'
   const badges = character.badges ?? []
 
@@ -184,11 +186,10 @@ function RosterRow({ row, isMe }: { row: RankedPlayer; isMe: boolean }) {
       style={{
         gridTemplateColumns: '56px 1fr 120px 64px 72px',
         padding: 'var(--space-md) var(--space-lg)',
-        background: isMe
-          ? known
-            ? factionCssVar(character.faction_slug, 'light')
-            : 'var(--faction-default-light)'
-          : 'transparent',
+        // Flat tint for every slug: it sits behind body text, where no single
+        // ink is legible across the spectrum (#649). `na` resolves to
+        // --faction-default-light on its own.
+        background: isMe ? factionCssVar(character.faction_slug, 'light') : 'transparent',
       }}
     >
       {/* Faction left accent */}

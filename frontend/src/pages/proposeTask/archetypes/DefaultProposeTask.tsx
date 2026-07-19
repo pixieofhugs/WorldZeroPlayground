@@ -3,8 +3,17 @@ import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import PageTitle from "../../../components/ui/PageTitle";
 import FilterLevelNodes from "../../../components/ui/FilterLevelNodes";
-import { factionCssVar, factionName, getAllFactions } from "../../../utils/factions";
-import type { ProposeTaskState } from "../useProposeTask";
+import {
+  factionCssVar,
+  factionFill,
+  factionName,
+  getAllFactions,
+  isKnownFaction,
+} from "../../../utils/factions";
+import {
+  UNAFFILIATED_FACTION_SLUG,
+  type ProposeTaskState,
+} from "../useProposeTask";
 
 const LEVEL_OPTIONS = [0, 1, 2, 3, 4, 5, 6, 7, 8];
 
@@ -80,7 +89,27 @@ const submitDashStyle: CSSProperties = {
   pointerEvents: "none",
 };
 
+/** Shape/type of the selector pennant; the FILL is picked per-slug below. */
+const basePennantStyle: CSSProperties = {
+  display: "block",
+  fontFamily: "'Courier Prime', monospace",
+  fontSize: "var(--text-xs)",
+  fontWeight: 700,
+  textTransform: "uppercase",
+  letterSpacing: "0.07em",
+  padding: "var(--space-xs) var(--space-md)",
+  marginBottom: "var(--space-xs)",
+};
+
+/** Solid-hue pennant fill — only for slugs that pass isKnownFaction. */
+const knownPennantFillStyle = (slug: string): CSSProperties => ({
+  background: factionCssVar(slug),
+  color: "var(--color-text-on-accent)",
+  textShadow: "0 1px 2px rgba(0,0,0,0.3)",
+});
+
 const FACTION_DESCRIPTOR_KEY = {
+  na: "proposeTask.factionDescriptor.na",
   ua: "proposeTask.factionDescriptor.ua",
   wow: "proposeTask.factionDescriptor.wow",
   everymen: "proposeTask.factionDescriptor.everymen",
@@ -134,6 +163,15 @@ export default function DefaultProposeTask({
 
   const color = factionCssVar(factionSlug);
   const fname = factionName(factionSlug);
+
+  // Unaffiliated leads the picker: it is the default, and it is a state rather
+  // than a faction, so it is an extra option here rather than a registry entry
+  // (ADR-0039). Everything after it comes from the API, falling back to the
+  // static registry before the fetch lands.
+  const factionOptions: string[] = [
+    UNAFFILIATED_FACTION_SLUG,
+    ...(factions.length > 0 ? factions : getAllFactions()).map((f) => f.slug),
+  ];
 
   if (success) {
     return (
@@ -219,10 +257,9 @@ export default function DefaultProposeTask({
               {t("proposeTask.factionSelectorLabel")}
             </span>
             <div style={{ display: "flex", flexWrap: "wrap", gap: "var(--space-sm)" }}>
-              {(factions.length > 0 ? factions : getAllFactions()).map((f) => {
-                const slug =
-                  "slug" in f ? f.slug : (f as { slug: string }).slug;
+              {factionOptions.map((slug) => {
                 const active = factionSlug === slug;
+                const known = isKnownFaction(slug);
                 return (
                   <button
                     key={slug}
@@ -244,17 +281,14 @@ export default function DefaultProposeTask({
                     <span
                       className="pennant-shape"
                       style={{
-                        display: "block",
-                        background: factionCssVar(slug),
-                        color: "var(--color-text-on-accent)",
-                        fontFamily: "'Courier Prime', monospace",
-                        fontSize: "var(--text-xs)",
-                        fontWeight: 700,
-                        textTransform: "uppercase",
-                        letterSpacing: "0.07em",
-                        padding: "var(--space-xs) var(--space-md)",
-                        textShadow: "0 1px 2px rgba(0,0,0,0.3)",
-                        marginBottom: "var(--space-xs)",
+                        ...basePennantStyle,
+                        // A real faction flies its solid hue with on-accent ink.
+                        // `na` has no hue — it gets the spectrum as a FRAME
+                        // around paper with ink text, because no single ink is
+                        // legible across the rainbow (ADR-0039, factionFill).
+                        ...(known
+                          ? knownPennantFillStyle(slug)
+                          : factionFill(slug, "pill")),
                       }}
                     >
                       {factionName(slug)}
@@ -497,10 +531,11 @@ export default function DefaultProposeTask({
                         color: "var(--color-text-tertiary)",
                       }}
                     >
-                      {t("proposeTask.metaToggle.hint", {
-                        faction:
-                          factionSlug !== "na" ? factionName(factionSlug) : "",
-                      })}
+                      {isKnownFaction(factionSlug)
+                        ? t("proposeTask.metaToggle.hint", {
+                            faction: factionName(factionSlug),
+                          })
+                        : t("proposeTask.metaToggle.hintNoFaction")}
                     </span>
                   </label>
                 </div>

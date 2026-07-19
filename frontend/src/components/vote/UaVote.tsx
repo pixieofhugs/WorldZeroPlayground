@@ -107,7 +107,6 @@ export default function UaVote({
           muted: 'var(--faction-ua-card-muted)',
           accent: 'var(--faction-ua-card-accent)',
           accentFont: PLATE_FONT,
-          avgFontSize: 16,
           errorColor: 'var(--ua-orange-deep)',
           avgLetterSpacing: '0.04em',
         }}

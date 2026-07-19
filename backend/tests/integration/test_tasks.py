@@ -9,6 +9,7 @@ from models.character import Character
 from models.character_stats import CharacterStats
 from models.faction import Faction, FactionStatus
 from models.task import Task, TaskStatus
+from services.faction_service import UNAFFILIATED_FACTION_SLUG
 
 
 async def _set_character_level(
@@ -559,6 +560,28 @@ async def test_propose_task_faction_slug_stored(
     assert resp.status_code == 201
     data = resp.json()
     assert data["primary_faction_slug"] == "ua"
+
+
+@pytest.mark.asyncio
+async def test_propose_task_without_faction_is_unaffiliated(
+    client: AsyncClient,
+    character2: Character,
+    auth_headers2: dict,
+):
+    """Omitting primary_faction_slug proposes an UNAFFILIATED (cross-faction)
+    task rather than defaulting to some faction. This is the contract the
+    propose-task form's "Unaffiliated" option relies on (#704)."""
+    resp = await client.post(
+        "/tasks",
+        json={
+            "title": "Cross-Faction Task",
+            "point_value": 10,
+            "level_required": 0,
+        },
+        headers=auth_headers2,
+    )
+    assert resp.status_code == 201
+    assert resp.json()["primary_faction_slug"] == UNAFFILIATED_FACTION_SLUG
 
 
 @pytest.mark.asyncio

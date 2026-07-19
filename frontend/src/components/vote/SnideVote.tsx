@@ -104,7 +104,6 @@ export default function SnideVote({ praxisId, currentValue, points, totalVotes }
           muted: 'var(--color-text-secondary)',
           accent: 'var(--faction-snide)',
           accentFont: 'var(--faction-snide-font-impact)',
-          avgFontSize: 18,
           errorColor: 'var(--color-danger)',
         }}
       />
