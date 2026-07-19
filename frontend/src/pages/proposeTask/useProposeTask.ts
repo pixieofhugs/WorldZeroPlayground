@@ -19,6 +19,15 @@ import { useAuth } from "../../auth/AuthContext";
 import { extractError } from "../../utils/errors";
 import i18n from "../../i18n";
 
+/**
+ * The unaffiliated sentinel (ADR-0030 / ADR-0039). Mirrors the backend's
+ * `UNAFFILIATED_FACTION_SLUG` (`services/faction_service.py`): a task carrying
+ * this slug is generic / cross-faction, owned by no faction. Unaffiliated is a
+ * state rather than a faction, so it is deliberately absent from the faction
+ * registry — the picker offers it as an explicit extra option (#704).
+ */
+export const UNAFFILIATED_FACTION_SLUG = "na";
+
 export interface ProposeTaskState {
   // Gating (faction-agnostic guards live in the dispatcher)
   isLoggedIn: boolean;
@@ -65,7 +74,9 @@ export function useProposeTask(): ProposeTaskState {
   const [description, setDescription] = useState("");
   const [pointValue, setPointValue] = useState<string>("10");
   const [levelRequired, setLevelRequired] = useState<number | "">(0);
-  const [factionSlug, setFactionSlug] = useState("ua");
+  // Cross-faction is the neutral starting point: a default must not quietly
+  // encode an affiliation the proposer never chose (#704, #709).
+  const [factionSlug, setFactionSlug] = useState(UNAFFILIATED_FACTION_SLUG);
   const [notes, setNotes] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -93,7 +104,9 @@ export function useProposeTask(): ProposeTaskState {
     // admin). If the viewer isn't eligible the 403 surfaces via extractError.
     if (
       isMetaTask &&
-      (!factionSlug || factionSlug === "na" || factionSlug === "ua")
+      (!factionSlug ||
+        factionSlug === UNAFFILIATED_FACTION_SLUG ||
+        factionSlug === "ua")
     ) {
       setError(i18n.t("forms:proposeTask.errors.metaFactionRequired"));
       return;
