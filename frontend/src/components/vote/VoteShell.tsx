@@ -14,11 +14,15 @@ export function VoteLoginGate() {
   return <p className="eyebrow">{t('chrome.loginGate')}</p>
 }
 
+/**
+ * A skin carries font, colour and letter-spacing — never a size. The shared
+ * chrome owns every size here, off the `--text-*` scale (WORLD_ZERO_STYLE §4a:
+ * "if a skin is setting a size, the size has escaped the scale").
+ */
 export interface VoteSummaryTheme {
   muted: string
   accent: string
   accentFont: string
-  avgFontSize: number
   errorColor: string
   avgLetterSpacing?: string
 }
@@ -64,11 +68,14 @@ export function VoteSummary({
             values={{ points }}
             components={{
               1: (
+                // The points figure is emphasis inside a running sentence, so it
+                // inherits the paragraph's --text-content (18px) rather than
+                // carrying a size of its own. The skin's contribution is the
+                // accent colour and face; weight comes from <b>.
                 <b
                   style={{
                     color: theme.accent,
                     fontFamily: theme.accentFont,
-                    fontSize: theme.avgFontSize,
                   }}
                 />
               ),

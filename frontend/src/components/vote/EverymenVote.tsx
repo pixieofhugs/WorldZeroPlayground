@@ -110,7 +110,6 @@ export default function EverymenVote({ praxisId, currentValue, points, totalVote
           muted: 'var(--everymen-muted)',
           accent: 'var(--everymen-red)',
           accentFont: 'var(--faction-everymen-card-font)',
-          avgFontSize: 15,
           errorColor: 'var(--everymen-red)',
           avgLetterSpacing: '0.04em',
         }}
