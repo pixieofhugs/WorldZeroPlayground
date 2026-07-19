@@ -52,9 +52,6 @@
     }
   },
   "albescent": {
-    "mobile": {
-      "eyebrow": "The Record"
-    },
     "sealed": {
       "eyebrow": "— no such account —",
       "line": "You know not what you seek."
@@ -89,53 +86,6 @@
       "acceptIdle": "Accept the order",
       "reassurance": "you need not persuade us.",
       "declineError": "The order declined, and gave no reason."
-    },
-    "keepers": {
-      "kicker": "The Houses",
-      "title": "Keepers",
-      "empty": "No keepers on record."
-    },
-    "ledger": {
-      "kicker": "Open Work",
-      "title": "The Ledger",
-      "empty": "The ledger is clear."
-    },
-    "returned": {
-      "kicker": "Attended To",
-      "title": "Lately Returned",
-      "empty": "Nothing returned yet. The Record waits."
-    },
-    "invitation": {
-      "kicker": "the Record is attended —",
-      "headline": "Keep the quiet work",
-      "pitch": "/Albescent asks no colours and keeps no banners. There is only the Record, and the work of tending it — returned to, quietly, again and again. If word has reached you, the Houses already know your hand.",
-      "terms": [
-        {
-          "label": "obligation",
-          "value": "one thing, returned to"
-        },
-        {
-          "label": "required skills",
-          "value": "discretion, and care"
-        },
-        {
-          "label": "expected output",
-          "value": "work, attended and returned"
-        },
-        {
-          "label": "your standing",
-          "value": "keeper, on record"
-        }
-      ],
-      "perks": [
-        "A Record that remembers what was tended",
-        "Work that turns a Tuesday into an attending",
-        "Your praxis, entered to the ledger without fanfare"
-      ],
-      "cta": {
-        "join": "Attend the Record",
-        "joined": "your name is on record"
-      }
     }
   },
   "ephemerists": {

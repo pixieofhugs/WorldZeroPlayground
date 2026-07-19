@@ -312,35 +312,52 @@ export function EverymenSelectCard({ state = "locked", members, onVisit }: Omit<
   );
 }
 
+/**
+ * Albescent — the one tile that still wears the society's own face (#783).
+ *
+ * Albescent has no theme any more: it renders Default everywhere a player is
+ * seen, so a member is indistinguishable from an unaffiliated one. This card is
+ * the exception for the same reason the invitation letter is — it is a REVEAL
+ * surface. `/factions` omits Albescent server-side until an account has been
+ * revealed to it (ADR-0027, #390, routers/factions.py), so anyone who can see
+ * this tile at all already knows the society exists. It reads
+ * `--albescent-reveal-*`, never `factionCssVar('albescent', …)`, which resolves
+ * to the neutral default.
+ *
+ * It is also load-bearing for the hiding itself, which is the less obvious part.
+ * The dispatcher below falls back to UA's costume rather than a neutral card
+ * (#796 — there is no DefaultSelectCard to fall back to). Delete this component
+ * and an Albescent tile does not go quietly grey; it goes UA orange.
+ */
 export function AlbescentSelectCard({ state = "locked", members, onVisit }: Omit<FactionSelectCardProps, "faction">) {
   const status = i18n.t(`feed:factionSelect.albescent.status.${state}` as const);
   return (
     <div style={{
       width: "100%", maxWidth: 360, minHeight: 300, boxSizing: "border-box", position: "relative", overflow: "hidden",
-      background: "var(--al-surface)", color: "var(--al-text)", fontFamily: "var(--font-faction-vellum)",
-      border: "1px solid var(--al-border)", boxShadow: "var(--al-shadow)", display: "flex", flexDirection: "column",
+      background: "var(--albescent-reveal-surface)", color: "var(--albescent-reveal-text)", fontFamily: "var(--font-faction-vellum)",
+      border: "1px solid var(--albescent-reveal-border)", boxShadow: "var(--albescent-reveal-shadow)", display: "flex", flexDirection: "column",
     }}>
-      <div style={{ position: "absolute", inset: 12, border: "1px solid var(--al-border-faint)", pointerEvents: "none" }} />
+      <div style={{ position: "absolute", inset: 12, border: "1px solid var(--albescent-reveal-border-faint)", pointerEvents: "none" }} />
       <div style={{ position: "relative", flex: 1, padding: "var(--space-xl) var(--space-2xl) 0", display: "flex", flexDirection: "column" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-          <div style={{ fontFamily: "var(--font-body)", fontSize: "var(--text-sm)", letterSpacing: "0.34em", color: "var(--al-text-muted)", textTransform: "uppercase" }}>{i18n.t("feed:factionSelect.albescent.eyebrow")}</div>
-          <AlbescentSigil size={26} color="var(--al-ink)" />
+          <div style={{ fontFamily: "var(--font-body)", fontSize: "var(--text-sm)", letterSpacing: "0.34em", color: "var(--albescent-reveal-text-muted)", textTransform: "uppercase" }}>{i18n.t("feed:factionSelect.albescent.eyebrow")}</div>
+          <AlbescentSigil size={26} color="var(--albescent-reveal-ink)" />
         </div>
         {/* eslint-disable-next-line local/no-raw-style-values -- ornament: vellum-letter name — the archetype's calligraphic display type */}
         <div style={{ fontFamily: "var(--font-faction-vellum)", fontStyle: "italic", fontWeight: 600, fontSize: 40, lineHeight: 1, letterSpacing: "0.01em", marginTop: "var(--space-lg)" }}>{i18n.t("feed:factionSelect.albescent.name")}</div>
-        <div style={{ width: 44, height: 1, background: "var(--al-text)", opacity: 0.5, margin: "var(--space-md) 0" }} />
-        <p className="content-text" style={{ margin: 0, fontStyle: "italic", lineHeight: 1.45, color: "var(--al-ink)" }}>
+        <div style={{ width: 44, height: 1, background: "var(--albescent-reveal-text)", opacity: 0.5, margin: "var(--space-md) 0" }} />
+        <p className="content-text" style={{ margin: 0, fontStyle: "italic", lineHeight: 1.45, color: "var(--albescent-reveal-ink)" }}>
           {i18n.t("feed:factionSelect.albescent.blurb")}
         </p>
       </div>
       <div style={{ position: "relative", padding: "var(--space-lg) var(--space-2xl) var(--space-xl)" }}>
-        <div style={{ fontFamily: "var(--font-body)", fontSize: "var(--text-sm)", letterSpacing: "0.06em", color: "var(--al-text-muted)", marginBottom: "var(--space-md)", textTransform: "uppercase" }}>{status}{members != null && ` · ${i18n.t("feed:factionSelect.albescent.members", { count: members })}`}</div>
+        <div style={{ fontFamily: "var(--font-body)", fontSize: "var(--text-sm)", letterSpacing: "0.06em", color: "var(--albescent-reveal-text-muted)", marginBottom: "var(--space-md)", textTransform: "uppercase" }}>{status}{members != null && ` · ${i18n.t("feed:factionSelect.albescent.members", { count: members })}`}</div>
         <button onClick={onVisit} style={{
-          width: "100%", cursor: "pointer", border: "1px solid var(--al-text)", background: "transparent", color: "var(--al-text)",
+          width: "100%", cursor: "pointer", border: "1px solid var(--albescent-reveal-text)", background: "transparent", color: "var(--albescent-reveal-text)",
           fontFamily: "var(--font-body)", fontSize: "var(--text-md)", letterSpacing: "0.22em", padding: "var(--space-md)", textTransform: "uppercase", transition: "background 140ms, color 140ms",
         }}
-          onMouseEnter={(e) => { e.currentTarget.style.background = "var(--al-text)"; e.currentTarget.style.color = "var(--al-surface)"; }}
-          onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "var(--al-text)"; }}
+          onMouseEnter={(e) => { e.currentTarget.style.background = "var(--albescent-reveal-text)"; e.currentTarget.style.color = "var(--albescent-reveal-surface)"; }}
+          onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "var(--albescent-reveal-text)"; }}
         >{i18n.t("feed:factionSelect.albescent.cta")}</button>
       </div>
     </div>

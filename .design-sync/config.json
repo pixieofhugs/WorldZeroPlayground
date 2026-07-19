@@ -10,15 +10,7 @@
     "component": "DSProvider"
   },
   "componentSrcMap": {
-    "AlbescentAvatar": "src/components/avatar/AlbescentAvatar.tsx",
-    "AlbescentBackdrop": "src/components/backdrop/AlbescentBackdrop.tsx",
-    "AlbescentComment": "src/components/comments/voices/AlbescentComment.tsx",
-    "AlbescentFactionHero": "src/components/cards/AlbescentFactionHero.tsx",
-    "AlbescentFeedFrame": "src/components/feed/AlbescentFeedFrame.tsx",
     "AlbescentInvitation": "src/components/AlbescentInvitation.tsx",
-    "AlbescentMark": "src/components/cards/AlbescentMark.tsx",
-    "AlbescentTaskCard": "src/components/cards/AlbescentTaskCard.tsx",
-    "AlbescentVote": "src/components/vote/AlbescentVote.tsx",
     "CharacterBadge": "src/components/CharacterBadge.tsx",
     "CollaborationCard": "src/components/CollaborationCard.tsx",
     "CommentThread": "src/components/comments/CommentThread.tsx",
@@ -99,7 +91,6 @@
     "DefaultCreateCharacter": "src/pages/characterPaths/mobileArchetypes/DefaultCreateCharacter.tsx",
     "DefaultEditCharacter": "src/pages/characterPaths/mobileArchetypes/DefaultEditCharacter.tsx",
     "DefaultProfile": "src/pages/characterProfile/mobileArchetypes/DefaultProfile.tsx",
-    "AlbescentComposer": "src/pages/editPraxis/mobileArchetypes/AlbescentComposer.tsx",
     "DefaultEditPraxis": "src/pages/editPraxis/mobileArchetypes/DefaultEditPraxis.tsx",
     "EphemeristsComposer": "src/pages/editPraxis/mobileArchetypes/EphemeristsComposer.tsx",
     "EverymenComposer": "src/pages/editPraxis/mobileArchetypes/EverymenComposer.tsx",
@@ -107,7 +98,6 @@
     "SnideComposer": "src/pages/editPraxis/mobileArchetypes/SnideComposer.tsx",
     "UaComposer": "src/pages/editPraxis/mobileArchetypes/UaComposer.tsx",
     "WowEditPraxis": "src/pages/editPraxis/mobileArchetypes/WowEditPraxis.tsx",
-    "AlbescentFactionPage": "src/pages/factionDetail/mobileArchetypes/AlbescentFactionPage.tsx",
     "DefaultFactionPage": "src/pages/factionDetail/mobileArchetypes/DefaultFactionPage.tsx",
     "EphemeristsFactionPage": "src/pages/factionDetail/mobileArchetypes/EphemeristsFactionPage.tsx",
     "EverymenFactionPage": "src/pages/factionDetail/mobileArchetypes/EverymenFactionPage.tsx",
@@ -116,7 +106,6 @@
     "UaFactionPage": "src/pages/factionDetail/mobileArchetypes/UaFactionPage.tsx",
     "WowFactionPage": "src/pages/factionDetail/mobileArchetypes/WowFactionPage.tsx",
     "DefaultFactionsDirectory": "src/pages/factions/mobileArchetypes/DefaultFactionsDirectory.tsx",
-    "AlbescentHome": "src/pages/fieldDesk/mobileArchetypes/AlbescentHome.tsx",
     "DefaultFieldDesk": "src/pages/fieldDesk/mobileArchetypes/DefaultFieldDesk.tsx",
     "EphemeristsHome": "src/pages/fieldDesk/mobileArchetypes/EphemeristsHome.tsx",
     "EverymenHome": "src/pages/fieldDesk/mobileArchetypes/EverymenHome.tsx",
@@ -125,7 +114,6 @@
     "UaHome": "src/pages/fieldDesk/mobileArchetypes/UaHome.tsx",
     "WowFieldDesk": "src/pages/fieldDesk/mobileArchetypes/WowFieldDesk.tsx",
     "DefaultPlayers": "src/pages/players/mobileArchetypes/DefaultPlayers.tsx",
-    "AlbescentPraxisDetail": "src/pages/praxisDetail/mobileArchetypes/AlbescentPraxisDetail.tsx",
     "DefaultPraxisDetail": "src/pages/praxisDetail/mobileArchetypes/DefaultPraxisDetail.tsx",
     "EphemeristsPraxisDetail": "src/pages/praxisDetail/mobileArchetypes/EphemeristsPraxisDetail.tsx",
     "EverymenPraxisDetail": "src/pages/praxisDetail/mobileArchetypes/EverymenPraxisDetail.tsx",
@@ -134,7 +122,6 @@
     "UaPraxisDetail": "src/pages/praxisDetail/mobileArchetypes/UaPraxisDetail.tsx",
     "WowPraxisDetail": "src/pages/praxisDetail/mobileArchetypes/WowPraxisDetail.tsx",
     "DefaultSettings": "src/pages/settings/mobileArchetypes/DefaultSettings.tsx",
-    "AlbescentTaskDetail": "src/pages/taskDetail/mobileArchetypes/AlbescentTaskDetail.tsx",
     "DefaultTaskDetail": "src/pages/taskDetail/mobileArchetypes/DefaultTaskDetail.tsx",
     "EphemeristsTaskDetail": "src/pages/taskDetail/mobileArchetypes/EphemeristsTaskDetail.tsx",
     "EverymenTaskDetail": "src/pages/taskDetail/mobileArchetypes/EverymenTaskDetail.tsx",
@@ -142,7 +129,6 @@
     "SnideTaskDetail": "src/pages/taskDetail/mobileArchetypes/SnideTaskDetail.tsx",
     "UaTaskDetail": "src/pages/taskDetail/mobileArchetypes/UaTaskDetail.tsx",
     "WowTaskDetail": "src/pages/taskDetail/mobileArchetypes/WowTaskDetail.tsx",
-    "AlbescentTaskList": "src/pages/tasks/mobileArchetypes/AlbescentTaskList.tsx",
     "DefaultTasks": "src/pages/tasks/mobileArchetypes/DefaultTasks.tsx",
     "EphemeristsTaskList": "src/pages/tasks/mobileArchetypes/EphemeristsTaskList.tsx",
     "EverymenTaskList": "src/pages/tasks/mobileArchetypes/EverymenTaskList.tsx",
@@ -177,10 +163,6 @@
       "viewport": "480x320"
     },
     "EverymenBackdrop": {
-      "cardMode": "single",
-      "viewport": "480x320"
-    },
-    "AlbescentBackdrop": {
       "cardMode": "single",
       "viewport": "480x320"
     },
@@ -220,10 +202,6 @@
       "cardMode": "single",
       "viewport": "390x760"
     },
-    "AlbescentComposer": {
-      "cardMode": "single",
-      "viewport": "390x760"
-    },
     "DefaultEditPraxis": {
       "cardMode": "single",
       "viewport": "390x760"
@@ -249,10 +227,6 @@
       "viewport": "390x760"
     },
     "WowEditPraxis": {
-      "cardMode": "single",
-      "viewport": "390x760"
-    },
-    "AlbescentFactionPage": {
       "cardMode": "single",
       "viewport": "390x760"
     },
@@ -288,10 +262,6 @@
       "cardMode": "single",
       "viewport": "390x760"
     },
-    "AlbescentHome": {
-      "cardMode": "single",
-      "viewport": "390x760"
-    },
     "DefaultFieldDesk": {
       "cardMode": "single",
       "viewport": "390x760"
@@ -321,10 +291,6 @@
       "viewport": "390x760"
     },
     "DefaultPlayers": {
-      "cardMode": "single",
-      "viewport": "390x760"
-    },
-    "AlbescentPraxisDetail": {
       "cardMode": "single",
       "viewport": "390x760"
     },
@@ -360,10 +326,6 @@
       "cardMode": "single",
       "viewport": "390x760"
     },
-    "AlbescentTaskDetail": {
-      "cardMode": "single",
-      "viewport": "390x760"
-    },
     "DefaultTaskDetail": {
       "cardMode": "single",
       "viewport": "390x760"
@@ -389,10 +351,6 @@
       "viewport": "390x760"
     },
     "WowTaskDetail": {
-      "cardMode": "single",
-      "viewport": "390x760"
-    },
-    "AlbescentTaskList": {
       "cardMode": "single",
       "viewport": "390x760"
     },

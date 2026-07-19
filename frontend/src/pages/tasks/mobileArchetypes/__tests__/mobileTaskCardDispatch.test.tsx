@@ -15,7 +15,6 @@ import SnideMobileTaskCard from '../cards/SnideMobileTaskCard'
 import EverymenMobileTaskCard from '../cards/EverymenMobileTaskCard'
 import SingularityMobileTaskCard from '../cards/SingularityMobileTaskCard'
 import EphemeristsMobileTaskCard from '../cards/EphemeristsMobileTaskCard'
-import AlbescentMobileTaskCard from '../cards/AlbescentMobileTaskCard'
 
 const CARD_BY_SLUG = {
   ua: UaMobileTaskCard,
@@ -24,7 +23,6 @@ const CARD_BY_SLUG = {
   everymen: EverymenMobileTaskCard,
   singularity: SingularityMobileTaskCard,
   ephemerists: EphemeristsMobileTaskCard,
-  albescent: AlbescentMobileTaskCard,
 } as const
 
 describe('mobile task-card per-item dispatch', () => {
@@ -34,8 +32,8 @@ describe('mobile task-card per-item dispatch', () => {
     })
   }
 
-  it('an unregistered / factionless task falls through to the Default mobile card', () => {
-    for (const slug of ['__unregistered__', 'na', null]) {
+  it('unregistered, factionless AND albescent tasks fall through to the Default mobile card', () => {
+    for (const slug of ['__unregistered__', 'na', 'albescent', null]) {
       expect(pickVariant(surfaceMap('mobileTaskCard'), slug, DefaultMobileTaskCard)).toBe(DefaultMobileTaskCard)
     }
   })

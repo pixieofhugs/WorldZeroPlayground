@@ -1,6 +1,6 @@
 import type { CSSProperties } from 'react'
 import { useTranslation } from 'react-i18next'
-import { factionName } from '../utils/factions'
+import { factionName, isKnownFaction } from '../utils/factions'
 
 /**
  * Skinnable faction credential card (#271). Color + font only — one structure,
@@ -26,19 +26,18 @@ export interface CredentialCardProps {
   onAvatarClick?: () => void
 }
 
-/** Faction slugs with a bespoke `--faction-<key>-card-*` token set in index.css.
- *  Everything else (na, factionless, unknown) → neutral field treatment.
- *  NB: do not route through factions.ts FACTION_ALIASES — albescent keeps its own
- *  identity here, and na must stay neutral (not aliased to ua). */
-const CARD_KEY: Record<string, string> = {
-  ua: 'ua',
-  everymen: 'everymen',
-  wow: 'wow',
-  snide: 'snide',
-  ephemerists: 'ephemerists',
-  singularity: 'singularity',
-  albescent: 'albescent',
-}
+/* This used to be a private slug→key table listing the factions with a bespoke
+ * `--faction-<key>-card-*` set — a fourth hand-maintained copy of CSS_KEY, and
+ * it drifted exactly as you would expect: it still claimed `albescent` had a
+ * token set for a whole commit after that set was deleted (#783), painting an
+ * Albescent credential from `--faction-albescent-card-bg` and friends, which no
+ * longer resolve to anything.
+ *
+ * `isKnownFaction` answers the identical question — "does this slug have a
+ * resolvable theme?" — and every entry in the old table mapped a slug to itself,
+ * so this is a behaviour-preserving swap for the six themed factions, for `na`,
+ * and for unknown slugs. It cannot drift again, because there is now one table.
+ */
 
 interface Skin {
   bg: string
@@ -50,9 +49,10 @@ interface Skin {
 }
 
 function skinFor(slug: string | null | undefined): Skin | null {
-  const key = CARD_KEY[slug ?? '']
-  if (!key) return null
-  const v = (prop: string) => `var(--faction-${key}-card-${prop})`
+  // null = the neutral field treatment: na, factionless, unknown — and
+  // albescent, which is registered but deliberately unthemed (#783).
+  if (!isKnownFaction(slug)) return null
+  const v = (prop: string) => `var(--faction-${slug}-card-${prop})`
   return {
     bg: v('bg'),
     text: v('text'),

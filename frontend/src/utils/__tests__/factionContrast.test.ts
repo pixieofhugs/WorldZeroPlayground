@@ -22,9 +22,8 @@
  * index.css states verbatim ("text on gold/parchment elements", "bright text
  * on dark elements", "primary text on vellum").
  *
- * ALPHA IS COMPOSITED. Several inks are rgba (`--faction-albescent-ink`), and
- * measuring them un-composited is exactly what let #594's 2.78:1 muted ink
- * ship green.
+ * ALPHA IS COMPOSITED. Several inks are rgba, and measuring them un-composited
+ * is exactly what let #594's 2.78:1 muted ink ship green.
  */
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
@@ -46,7 +45,6 @@ const CARD_KEYS = [
   "snide",
   "ephemerists",
   "singularity",
-  "albescent",
   "default",
 ] as const;
 
@@ -118,15 +116,26 @@ const ARCHETYPE_PAIRS: Pair[] = [
   { what: "ua sheet, mono labels", surface: "--ua-paper", text: "--ua-muted" },
   { what: "ua wall, ink", surface: "--ua-wall", text: "--ua-ink" },
 
-  // Albescent — always-light vellum register; the whole palette is one hue at
-  // varying alpha over the sheet, so compositing is the entire question.
-  { what: "albescent sheet, ink", surface: "--faction-albescent-surface", text: "--faction-albescent-ink" },
-  { what: "albescent sheet, faint", surface: "--faction-albescent-surface", text: "--faction-albescent-text-faint" },
-  { what: "albescent warm sheet, ink", surface: "--faction-albescent-surface-warm", text: "--faction-albescent-ink" },
+  // Albescent's FACTION tokens are gone (#783) — it renders Default's surfaces,
+  // which `default` already covers. What remains is the always-light palette
+  // private to the reveal surfaces (invitation letter, secret placeholder). It
+  // still carries body text, and it is where #594's 2.78:1 muted ink shipped, so
+  // it stays measured. The whole palette is one hue at varying alpha over the
+  // sheet, which makes compositing the entire question.
   {
-    what: "albescent warm sheet, faint",
-    surface: "--faction-albescent-surface-warm",
-    text: "--faction-albescent-text-faint",
+    what: "albescent reveal sheet, ink",
+    surface: "--albescent-reveal-surface",
+    text: "--albescent-reveal-ink",
+  },
+  {
+    what: "albescent reveal sheet, muted",
+    surface: "--albescent-reveal-surface",
+    text: "--albescent-reveal-text-muted",
+  },
+  {
+    what: "albescent reveal sheet, text",
+    surface: "--albescent-reveal-surface",
+    text: "--albescent-reveal-text",
   },
 ];
 
@@ -153,10 +162,6 @@ const BASELINE: Record<string, { ratio: number; issue: number }> = {
   //    faction fill in both themes, so the 7 failing white-on-fill pairs are gone. ──
 
   // ── Albescent faint ink — the sibling #594 left alive (named in #651) ──
-  "light | albescent sheet, faint": { ratio: 1.59, issue: 651 },
-  "light | albescent warm sheet, faint": { ratio: 1.58, issue: 651 },
-  "dark | albescent sheet, faint": { ratio: 1.59, issue: 651 },
-  "dark | albescent warm sheet, faint": { ratio: 1.58, issue: 651 },
 
   // ── Found by this sweep — awaiting triage into children (#651 audit comment) ──
   // Card accents used as metadata text (§3: "metadata / decorative accent").

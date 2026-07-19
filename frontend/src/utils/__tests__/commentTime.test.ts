@@ -31,9 +31,17 @@ describe('formatCommentTime — per-faction dialects', () => {
     expect(formatCommentTime('everymen', ago(0), NOW)).toBe('Shift 1')
   })
 
-  it('albescent keeps vigil in ordinal words', () => {
-    expect(formatCommentTime('albescent', ago(0), NOW)).toBe('Vigil the First')
-    expect(formatCommentTime('albescent', ago(2 * 1440), NOW)).toBe('Vigil the Third')
+  it('albescent timestamps read exactly like unaffiliated ones (#783)', () => {
+    // The inverse of "albescent keeps vigil in ordinal words". This dialect
+    // keyed on the comment AUTHOR's faction, so "Vigil the Third" announced a
+    // member every time they commented — to anyone, revealed or not. It is the
+    // same tell as the vote vocabulary, on a far more trafficked surface.
+    for (const minutes of [0, 90, 2 * 1440]) {
+      expect(formatCommentTime('albescent', ago(minutes), NOW)).toBe(
+        formatCommentTime(null, ago(minutes), NOW),
+      )
+    }
+    expect(formatCommentTime('albescent', ago(2 * 1440), NOW)).toBe('2 days ago')
   })
 
   it('singularity uses a bare terse terminal clock (no T-#### fluff)', () => {

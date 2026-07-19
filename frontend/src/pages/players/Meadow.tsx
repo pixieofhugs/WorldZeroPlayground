@@ -37,8 +37,15 @@ interface MeadowProps {
 }
 
 const GOLDEN_ANGLE_DEG = 137.5
-/** Petals per bloom — seven, one per faction, echoing the spectrum sigil. */
-const PETAL_COUNT = 7
+/**
+ * Petals per bloom — one per faction, echoing the spectrum sigil. Derived rather
+ * than hardcoded because the unaffiliated bloom paints petal `i` with
+ * `FACTION_RAINBOW_ORDER[i % length]`: any mismatch wraps the cycle and lands
+ * the same hue on two ADJACENT petals (petal 0 and the last petal are
+ * neighbours on the circle), which reads as one fat blob rather than a
+ * spectrum. Albescent leaving the order (#783) took this from 7 to 6.
+ */
+const PETAL_COUNT = FACTION_RAINBOW_ORDER.length
 // Bloom diameters (px). Deliberately the same ramp as the sky's orbs so the two
 // viz read at the same weight when the theme flips.
 const BLOOM_MIN = 30

@@ -21,7 +21,10 @@
  *   ephemerists: EphemeristsProfileBody,
  *   singularity: SingularityProfileBody,
  *   everymen:    EverymenProfileBody,
- *   albescent:   AlbescentProfileBody,
+ *
+ * Albescent claims no profile skin (#783): a member's profile is the default
+ * one, because a profile is exactly where a secret society would give itself
+ * away.
  */
 import type { ReactNode } from 'react'
 

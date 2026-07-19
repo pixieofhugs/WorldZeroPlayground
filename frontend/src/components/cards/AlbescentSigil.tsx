@@ -12,7 +12,7 @@ import type { CSSProperties } from "react";
  */
 export default function AlbescentSigil({
   size = 20,
-  color = "var(--faction-albescent-card-text)",
+  color = "var(--albescent-reveal-text)",
   opacity = 1,
   style,
 }: {

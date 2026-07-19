@@ -10,7 +10,7 @@
  * kit (tokens, fonts, copy, chrome slots) and delegates here.
  *
  * No hardcoded hex: kits reference the repo's `--faction-<slug>-*` CSS vars.
- * Always-dark (snide, singularity) / always-light (albescent, ua) factions scope
+ * Always-dark (snide, singularity) / always-light (ua) factions scope
  * their tokens to the skin container and NEVER mutate the global [data-theme].
  */
 import type { CSSProperties, ReactNode } from 'react'

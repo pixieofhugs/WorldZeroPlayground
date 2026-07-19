@@ -41,8 +41,9 @@ const FACTION_FALLBACKS: Record<string, FactionConfig> = {
   snide: { slug: "snide", color: "#6fae00" },
   ephemerists: { slug: "ephemerists", color: "#1d6e72" },
   singularity: { slug: "singularity", color: "#2563eb" },
-  // First-class identity (#232): near-black ink, no hue — the order refuses the palette.
-  albescent: { slug: "albescent", color: "#1c1c1a" },
+  // `albescent` is deliberately absent (#783). It was first-class here (#232)
+  // with a near-black #1c1c1a; it now has no colour at all, so factionColor()
+  // hands it the same neutral grey as `na`. See that function's docblock.
 };
 
 /** Live registry — color-only, static (nothing hydrates it from the API). */
@@ -71,7 +72,13 @@ const CSS_KEY: Record<string, string> = {
   snide: "snide",
   ephemerists: "ephemerists",
   singularity: "singularity",
-  albescent: "albescent", // first-class (#232) — its own --faction-albescent-* set
+  // Albescent is registered but NOT themed (#783). It is a secret society
+  // hiding in plain sight, so it points at `default` exactly like `na` below:
+  // same neutral scalars, same rainbow through factionFill, and — because the
+  // predicate reads the mapped VALUE — isKnownFaction('albescent') === false.
+  // That is the intended outcome, not a gap. It was first-class (#232) with a
+  // 35-declaration --faction-albescent-* block; the block is gone.
+  albescent: "default",
   // `na` (unaffiliated) is a state, not a faction: it reads the neutral/rainbow
   // --faction-default-* set (#418), so factionCssVar('na') is grey, never a
   // borrowed `ua` orange. The spectrum reaches fills through factionFill(), and
@@ -186,13 +193,41 @@ export function factionFill(
  * value, not key presence, is what keeps those two meanings apart — presence
  * alone reported `na` as a real faction and turned every unaffiliated ornament
  * grey (#749). Aliases resolve first, so a derived slug counts as known.
+ *
+ * `albescent` now sits on that same unthemed side (#783), and it is there for a
+ * different reason than `na`: it IS a faction, it just refuses to look like one.
+ * This is why the value test matters twice over — Albescent is a registered slug
+ * with a manifest and a membership roster, and only the mapped `default` keeps
+ * it out of the spectrum. Anything that starts testing key presence again will
+ * both grey out unaffiliated players AND expose a secret society.
  */
 export function isKnownFaction(slug: string | null | undefined): boolean {
   const resolved = FACTION_ALIASES[slug ?? ""] ?? slug ?? "";
   return resolved in CSS_KEY && CSS_KEY[resolved] !== "default";
 }
 
-/** Get faction color by slug, with fallback (raw hex — light mode only) */
+/**
+ * Get faction color by slug, with fallback (raw hex — light mode only).
+ *
+ * Unlike the CSS path this has NO rainbow branch: every slug without a registry
+ * entry — `na`, null, an unregistered slug, and `albescent` (#783) — returns the
+ * same neutral grey. For Albescent that is the point, not a gap: grey is
+ * precisely what an unaffiliated player already gets, so the two are
+ * indistinguishable at every call site. `factionAlbescentHidesInPlainSight`
+ * asserts that equality directly.
+ *
+ * The four call sites are all feed cards (`FeedRowContent`,
+ * `FeedCardInvitationLetter`, `FeedCardCollabInvite`, `FeedCardDuelChallenge`).
+ * None of them branches on `isKnownFaction`, so the whole feed renders `na` as
+ * flat grey rather than the spectrum. That is pre-existing ADR-0039 debt owed to
+ * *unaffiliated* players, not something Albescent introduces — and it must be
+ * paid for both slugs at once, or the two stop matching and Albescent becomes
+ * conspicuous again.
+ *
+ * Prefer {@link factionFill} for any `background:` that renders a dynamic slug.
+ * This function survives for raw-hex contexts (canvas, SVG, `${hex}88` alpha
+ * suffixes) where a `var()` reference will not do.
+ */
 export function factionColor(slug: string | null | undefined): string {
   return factionRegistry[slug ?? ""]?.color ?? "#6b6a7a";
 }
@@ -230,7 +265,18 @@ export function getAllFactions(): FactionConfig[] {
 
 /**
  * Canonical rainbow display order for faction strips/pennants (issue #352):
- * Everymen → UA → S.N.I.D.E. → Ephemerists → Singularity → Albescent → Warriors of Whimsy.
+ * Everymen → UA → S.N.I.D.E. → Ephemerists → Singularity → Warriors of Whimsy.
+ *
+ * Albescent is deliberately absent (#783). It is a secret society hiding in
+ * plain sight: /factions omits it server-side until an account is revealed to it
+ * (ADR-0027, #390), so any bar built from this array would have leaked its
+ * existence — in its own near-black, no less — to every unrevealed player.
+ * `DefaultFactionsDirectory` worked around that by driving its legend off the
+ * visible rows; `Leaderboard` and `DefaultPlayers` did not, and shipped the
+ * leak. Removing the slug closes all three at the source.
+ *
+ * Consumers must not assume a length. `Meadow`'s bloom paints one petal per
+ * entry, and the stripe bars distribute stops evenly across whatever is here.
  */
 export const FACTION_RAINBOW_ORDER: readonly string[] = [
   "everymen",
@@ -238,7 +284,6 @@ export const FACTION_RAINBOW_ORDER: readonly string[] = [
   "snide",
   "ephemerists",
   "singularity",
-  "albescent",
   "wow",
 ];
 

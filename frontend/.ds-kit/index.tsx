@@ -1,15 +1,7 @@
 // AUTO-GENERATED barrel for design-sync. Named re-exports so the IIFE bundle
 // assigns each component to window.WZ.<Name> (esbuild export* drops defaults).
 export { DSProvider } from "./provider";
-export { default as AlbescentAvatar } from "../src/components/avatar/AlbescentAvatar";
-export { default as AlbescentBackdrop } from "../src/components/backdrop/AlbescentBackdrop";
-export { default as AlbescentComment } from "../src/components/comments/voices/AlbescentComment";
-export { default as AlbescentFactionHero } from "../src/components/cards/AlbescentFactionHero";
-export { default as AlbescentFeedFrame } from "../src/components/feed/AlbescentFeedFrame";
 export { default as AlbescentInvitation } from "../src/components/AlbescentInvitation";
-export { default as AlbescentMark } from "../src/components/cards/AlbescentMark";
-export { default as AlbescentTaskCard } from "../src/components/cards/AlbescentTaskCard";
-export { default as AlbescentVote } from "../src/components/vote/AlbescentVote";
 export { default as CharacterBadge } from "../src/components/CharacterBadge";
 export { default as CollaborationCard } from "../src/components/CollaborationCard";
 export { default as CommentThread } from "../src/components/comments/CommentThread";
@@ -90,7 +82,6 @@ export { default as WowVote } from "../src/components/vote/WowVote";
 export { default as DefaultCreateCharacter } from "../src/pages/characterPaths/mobileArchetypes/DefaultCreateCharacter";
 export { default as DefaultEditCharacter } from "../src/pages/characterPaths/mobileArchetypes/DefaultEditCharacter";
 export { default as DefaultProfile } from "../src/pages/characterProfile/mobileArchetypes/DefaultProfile";
-export { default as AlbescentComposer } from "../src/pages/editPraxis/mobileArchetypes/AlbescentComposer";
 export { default as DefaultEditPraxis } from "../src/pages/editPraxis/mobileArchetypes/DefaultEditPraxis";
 export { default as EphemeristsComposer } from "../src/pages/editPraxis/mobileArchetypes/EphemeristsComposer";
 export { default as EverymenComposer } from "../src/pages/editPraxis/mobileArchetypes/EverymenComposer";
@@ -98,7 +89,6 @@ export { default as SingularityComposer } from "../src/pages/editPraxis/mobileAr
 export { default as SnideComposer } from "../src/pages/editPraxis/mobileArchetypes/SnideComposer";
 export { default as UaComposer } from "../src/pages/editPraxis/mobileArchetypes/UaComposer";
 export { default as WowEditPraxis } from "../src/pages/editPraxis/mobileArchetypes/WowEditPraxis";
-export { default as AlbescentFactionPage } from "../src/pages/factionDetail/mobileArchetypes/AlbescentFactionPage";
 export { default as DefaultFactionPage } from "../src/pages/factionDetail/mobileArchetypes/DefaultFactionPage";
 export { default as EphemeristsFactionPage } from "../src/pages/factionDetail/mobileArchetypes/EphemeristsFactionPage";
 export { default as EverymenFactionPage } from "../src/pages/factionDetail/mobileArchetypes/EverymenFactionPage";
@@ -107,7 +97,6 @@ export { default as SnideFactionPage } from "../src/pages/factionDetail/mobileAr
 export { default as UaFactionPage } from "../src/pages/factionDetail/mobileArchetypes/UaFactionPage";
 export { default as WowFactionPage } from "../src/pages/factionDetail/mobileArchetypes/WowFactionPage";
 export { default as DefaultFactionsDirectory } from "../src/pages/factions/mobileArchetypes/DefaultFactionsDirectory";
-export { default as AlbescentHome } from "../src/pages/fieldDesk/mobileArchetypes/AlbescentHome";
 export { default as DefaultFieldDesk } from "../src/pages/fieldDesk/mobileArchetypes/DefaultFieldDesk";
 export { default as EphemeristsHome } from "../src/pages/fieldDesk/mobileArchetypes/EphemeristsHome";
 export { default as EverymenHome } from "../src/pages/fieldDesk/mobileArchetypes/EverymenHome";
@@ -116,7 +105,6 @@ export { default as SnideHome } from "../src/pages/fieldDesk/mobileArchetypes/Sn
 export { default as UaHome } from "../src/pages/fieldDesk/mobileArchetypes/UaHome";
 export { default as WowFieldDesk } from "../src/pages/fieldDesk/mobileArchetypes/WowFieldDesk";
 export { default as DefaultPlayers } from "../src/pages/players/mobileArchetypes/DefaultPlayers";
-export { default as AlbescentPraxisDetail } from "../src/pages/praxisDetail/mobileArchetypes/AlbescentPraxisDetail";
 export { default as DefaultPraxisDetail } from "../src/pages/praxisDetail/mobileArchetypes/DefaultPraxisDetail";
 export { default as EphemeristsPraxisDetail } from "../src/pages/praxisDetail/mobileArchetypes/EphemeristsPraxisDetail";
 export { default as EverymenPraxisDetail } from "../src/pages/praxisDetail/mobileArchetypes/EverymenPraxisDetail";
@@ -125,7 +113,6 @@ export { default as SnidePraxisDetail } from "../src/pages/praxisDetail/mobileAr
 export { default as UaPraxisDetail } from "../src/pages/praxisDetail/mobileArchetypes/UaPraxisDetail";
 export { default as WowPraxisDetail } from "../src/pages/praxisDetail/mobileArchetypes/WowPraxisDetail";
 export { default as DefaultSettings } from "../src/pages/settings/mobileArchetypes/DefaultSettings";
-export { default as AlbescentTaskDetail } from "../src/pages/taskDetail/mobileArchetypes/AlbescentTaskDetail";
 export { default as DefaultTaskDetail } from "../src/pages/taskDetail/mobileArchetypes/DefaultTaskDetail";
 export { default as EphemeristsTaskDetail } from "../src/pages/taskDetail/mobileArchetypes/EphemeristsTaskDetail";
 export { default as EverymenTaskDetail } from "../src/pages/taskDetail/mobileArchetypes/EverymenTaskDetail";
@@ -133,7 +120,6 @@ export { default as SingularityTaskDetail } from "../src/pages/taskDetail/mobile
 export { default as SnideTaskDetail } from "../src/pages/taskDetail/mobileArchetypes/SnideTaskDetail";
 export { default as UaTaskDetail } from "../src/pages/taskDetail/mobileArchetypes/UaTaskDetail";
 export { default as WowTaskDetail } from "../src/pages/taskDetail/mobileArchetypes/WowTaskDetail";
-export { default as AlbescentTaskList } from "../src/pages/tasks/mobileArchetypes/AlbescentTaskList";
 export { default as DefaultTasks } from "../src/pages/tasks/mobileArchetypes/DefaultTasks";
 export { default as EphemeristsTaskList } from "../src/pages/tasks/mobileArchetypes/EphemeristsTaskList";
 export { default as EverymenTaskList } from "../src/pages/tasks/mobileArchetypes/EverymenTaskList";

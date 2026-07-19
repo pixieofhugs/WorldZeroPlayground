@@ -60,7 +60,6 @@
   --faction-snide-on-fill: #14110b; /* #6fae00 — white only 2.72:1; ink 6.93:1 */
   --faction-ephemerists-on-fill: #ffffff; /* #1d6e72 — 5.96:1 */
   --faction-singularity-on-fill: #ffffff; /* #2563eb — 5.17:1 */
-  --faction-albescent-on-fill: #ffffff; /* #1c1c1a — 17.07:1 */
 
   /* ── Faction tints (backgrounds, highlights) ── */
   --faction-ua-light: rgba(194, 84, 31, 0.08);
@@ -253,37 +252,6 @@
   --faction-everymen-card-muted: var(--everymen-muted);
   --faction-everymen-card-font: var(--font-accent); /* Bebas Neue */
 
-  /* ── Albescent · vellum register (always-light — identical in both themes,
-     same mechanism Singularity uses to stay always-dark; #231/#232). First-class
-     content identity across four surfaces (task card, praxis card, edit praxis,
-     task detail) + the read page. The global albescent→ua alias stays until the
-     second slice of #232, so these components read these tokens directly rather
-     than via factionCssVar('albescent', …) (which resolves the alias to ua).
-     Values ported from docs/design/albescent-kit/albescent.css. ── */
-  --faction-albescent-card-bg: #ffffff;
-  --faction-albescent-card-text: #1c1c1a; /* near-black ink, no hue */
-  --faction-albescent-card-accent: rgba(28, 28, 26, 0.72);
-  /* Muted ink over the #ffffff card. Deepened from 0.44 → 0.61 so body/meta text
-     clears WCAG AA: near-black #1c1c1a at 0.61α renders ~#757573 for a 4.64:1
-     contrast ratio against white (was 2.78:1, failing AA). #594. */
-  --faction-albescent-card-muted: rgba(28, 28, 26, 0.61);
-  --faction-albescent-card-font: "Cormorant Garamond", Georgia, serif;
-  /* Full vellum-correspondence set — the whole palette is one near-black hue. */
-  --faction-albescent-primary: #1c1c1a; /* near-black ink */
-  --faction-albescent: var(--faction-albescent-primary); /* bare primary — first-class, no longer aliases ua (#232) */
-  --faction-albescent-light: #faf9f7; /* warm off-white sheet */
-  --faction-albescent-border: rgba(0, 0, 0, 0.1);
-  --faction-albescent-surface: #ffffff; /* the sheet */
-  --faction-albescent-surface-warm: #faf9f7;
-  --faction-albescent-ink: rgba(28, 28, 26, 0.72);
-  /* Decorative-only (1.59:1 on the white sheet — below AA on purpose). Drives
-     the deliberately-ghosted AlbescentFeedFrame masthead. Functional text uses
-     -card-muted; do not repoint functional text here. #653. */
-  --faction-albescent-text-faint: rgba(28, 28, 26, 0.22);
-  --faction-albescent-border-faint: rgba(0, 0, 0, 0.055);
-  --faction-albescent-border-rule: rgba(0, 0, 0, 0.07);
-  --faction-albescent-page: #f7f4ee; /* cream backdrop */
-  --faction-albescent-mono: "Courier Prime", "Courier New", monospace;
 
   /* ── Vote stamp colors (orange → yellow → green → blue → magenta) ── */
   --vote-1: #c2410c;
@@ -461,7 +429,7 @@
 
   /* ── Text on faction fills (dark, #649) ── The dark primaries brighten to pop
      against the dark page, which makes white-on-fill worse. These three flip to
-     ink; ua/albescent (white) and wow/snide (ink) are theme-invariant and inherit
+     ink; ua (white) and wow/snide (ink) are theme-invariant and inherit
      their :root on-fill value. */
   --faction-everymen-on-fill: #14110b; /* #ef5350 — white only 3.49:1; ink 5.45:1 */
   --faction-ephemerists-on-fill: #14110b; /* #3aa0a4 — white only 3.11:1; ink 6.05:1 */
@@ -521,31 +489,6 @@
   --faction-default-card-accent: #f0e6d0;
   --faction-default-card-muted: #9b9080;
   --glow-neutral: rgba(255, 255, 255, 0.75);
-
-  /* Albescent — always-light: identical to the :root values so the vellum
-     register never dims, regardless of the global theme (#231/#232). */
-  --faction-albescent-card-bg: #ffffff;
-  --faction-albescent-card-text: #1c1c1a;
-  --faction-albescent-card-accent: rgba(28, 28, 26, 0.72);
-  /* Always-light: card bg stays #ffffff in dark mode, so it carries the same
-     AA-clearing 0.61α muted ink as :root. #594. */
-  --faction-albescent-card-muted: rgba(28, 28, 26, 0.61);
-  --faction-albescent-card-font: "Cormorant Garamond", Georgia, serif;
-  --faction-albescent-primary: #1c1c1a;
-  --faction-albescent: var(--faction-albescent-primary); /* bare primary — first-class, no longer aliases ua (#232) */
-  --faction-albescent-light: #faf9f7;
-  --faction-albescent-border: rgba(0, 0, 0, 0.1);
-  --faction-albescent-surface: #ffffff;
-  --faction-albescent-surface-warm: #faf9f7;
-  --faction-albescent-ink: rgba(28, 28, 26, 0.72);
-  /* Decorative-only (1.59:1 on the white sheet — below AA on purpose). Drives
-     the deliberately-ghosted AlbescentFeedFrame masthead. Functional text uses
-     -card-muted; do not repoint functional text here. #653. */
-  --faction-albescent-text-faint: rgba(28, 28, 26, 0.22);
-  --faction-albescent-border-faint: rgba(0, 0, 0, 0.055);
-  --faction-albescent-border-rule: rgba(0, 0, 0, 0.07);
-  --faction-albescent-page: #f7f4ee;
-  --faction-albescent-mono: "Courier Prime", "Courier New", monospace;
 
   /* ══ Ephemerists palette (dark) — pigments stay vivid; vellum darkens
      to aged tobacco and its text flips ink→parchment. The card contract
@@ -1361,14 +1304,31 @@
   --snide-paper: #f4f1e8;
   --snide-pink: #ff2d8b;
   --snide-tape: rgba(228, 214, 120, 0.62);
-  /* ALBESCENT · vellum correspondence (always-light) */
-  --al-surface: #ffffff;
-  --al-text: #1c1c1a;
-  --al-text-muted: rgba(28, 28, 26, 0.44);
-  --al-ink: rgba(28, 28, 26, 0.72);
-  --al-border: rgba(0, 0, 0, 0.1);
-  --al-border-faint: rgba(0, 0, 0, 0.055);
-  --al-shadow: 0 2px 18px rgba(0, 0, 0, 0.055), 0 1px 3px rgba(0, 0, 0, 0.04);
+  /* ALBESCENT · vellum correspondence — THE REVEAL SURFACES ONLY (#783).
+     Always-light, the same mechanism Singularity uses to stay always-dark.
+
+     This is NOT a faction theme and must never become one. Albescent has no
+     --faction-albescent-* block: it renders as unaffiliated everywhere, because
+     it is a secret society hiding in plain sight, and factionCssVar('albescent')
+     deliberately resolves to --faction-default-*. These tokens are reached only
+     by direct reference, from the two or three components that ARE the reveal
+     (the invitation letter, the secret placeholder, and the sigil they draw) —
+     the one moment the society shows its face. Renamed from --al-* so nobody
+     mistakes it for the theme that was removed.
+
+     Do not point an ordinary Albescent surface at these. If a card, a feed row,
+     or a profile reads --albescent-reveal-*, the society is no longer hidden. */
+  --albescent-reveal-surface: #ffffff;
+  --albescent-reveal-text: #1c1c1a; /* near-black ink, no hue */
+  /* Muted ink over the #ffffff sheet, at the AA-cleared alpha #594 landed on:
+     #1c1c1a at 0.61α composites to ~#757573 for 4.64:1. It was 0.44 here (a
+     stale copy of the pre-#594 value, 2.78:1 — failing) while the faction block
+     carried 0.61. Consolidating the two kept the fixed one. */
+  --albescent-reveal-text-muted: rgba(28, 28, 26, 0.61);
+  --albescent-reveal-ink: rgba(28, 28, 26, 0.72);
+  --albescent-reveal-border: rgba(0, 0, 0, 0.1);
+  --albescent-reveal-border-faint: rgba(0, 0, 0, 0.055);
+  --albescent-reveal-shadow: 0 2px 18px rgba(0, 0, 0, 0.055), 0 1px 3px rgba(0, 0, 0, 0.04);
 }
 [data-theme="dark"] {
   /* GESTALT flips in dark; snide + albescent stay put */

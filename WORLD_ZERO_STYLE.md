@@ -67,6 +67,19 @@ All color values are CSS custom properties defined in `index.css`. See that file
 
 **Rule:** If you're about to hardcode a hex value in a component, stop. Add it as a CSS variable first.
 
+### Albescent has no theme, on purpose (#783)
+
+Albescent is a secret society hiding in plain sight, so it is the one faction with **no `--faction-albescent-*` block and no slot in `FACTION_RAINBOW_ORDER`**. It maps to `default` in `CSS_KEY`, exactly as `na` does, which makes `isKnownFaction('albescent')` **false**. That is the intended outcome, not a gap: every surface that branches on that predicate hands Albescent the unaffiliated treatment automatically, including surfaces built later.
+
+Its manifest (`factions/albescent.ts`) is therefore almost empty, and that is the design — the override-only seam means declaring nothing renders Default everywhere. Do not add wrappers that "render Default for Albescent"; a wrapper that adds nothing is a place for divergence to creep back in.
+
+Two traps, both of which have already been sprung:
+
+- **Do not give it a token block cloned from `--faction-default-*`.** `isKnownFaction` would go true, Albescent would take the real-faction branch, and it would get a **solid** fill while an unaffiliated player beside it gets `factionFill`'s **gradient** — flatter and greyer, so *more* conspicuous. Pointing the token at a gradient does not help either: the same token is read in scalar contexts (`color:`, `border-color:`) where a gradient is invalid.
+- **A per-faction voice is as identifying as a per-faction colour.** Albescent's vote vocabulary ("Unseeing → Inscribed") and comment dialect ("Vigil the Third") both had to go, because they rendered to every viewer on ordinary surfaces. If you add a per-faction *word*, ask the same question you would ask of a hue.
+
+The one exception is the **reveal surfaces** — the invitation letter, the sealed placeholder, the `/factions` tile — which are only ever shown to an account already revealed to the society. They read the private `--albescent-reveal-*` palette by direct reference, never through `factionCssVar`. That palette is not a theme and must not become one.
+
 ---
 
 ## 4. Typography
@@ -287,7 +300,7 @@ Full-bleed SVG with blurred ellipses in four corners. Opacity controlled by `--w
 
 ### Faction Component Naming
 
-Faction-specific components are named with a **Title-cased slug prefix** — `Ua`, `Snide`, `Wow`, `Everymen`, `Ephemerists`, `Singularity`, `Albescent` — never an ALL-CAPS acronym (`UA`, `SNIDE`). The file name, the component's default export, and any private per-faction helper (sigil, crest, card) all share that Title-cased prefix. Only the lowercase backend **slug** (`ua`, `snide`) stays lowercase — it is the string key in dispatch registries (`FACTION_*_BY_SLUG`, `pickVariant`) and in CSS variables (`--faction-ua-*`), and must never be recased. This keeps a single, greppable identifier per faction across every surface.
+Faction-specific components are named with a **Title-cased slug prefix** — `Ua`, `Snide`, `Wow`, `Everymen`, `Ephemerists`, `Singularity`, `Albescent` — never an ALL-CAPS acronym (`UA`, `SNIDE`). The file name, the component's default export, and any private per-faction helper (sigil, crest, card) all share that Title-cased prefix. Only the lowercase backend **slug** (`ua`, `snide`) stays lowercase — it is the string key in the per-faction manifests (`factions/<slug>.ts`, `pickVariant`) and in CSS variables (`--faction-ua-*`), and must never be recased. This keeps a single, greppable identifier per faction across every surface.
 
 ---
 
