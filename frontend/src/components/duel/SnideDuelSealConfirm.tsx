@@ -155,7 +155,7 @@ export default function SnideDuelSealConfirm({
             <p
               style={{
                 marginTop: 'var(--space-sm)',
-                fontSize: 'var(--text-sm)',
+                fontSize: 'var(--text-content)',
                 color: ACID,
               }}
             >

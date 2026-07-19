@@ -130,7 +130,7 @@ export default function WowMobileDuelSealConfirm({
             <p
               style={{
                 marginTop: 'var(--space-sm)',
-                fontSize: 'var(--text-sm)',
+                fontSize: 'var(--text-content)',
                 color: 'var(--color-success)',
               }}
             >

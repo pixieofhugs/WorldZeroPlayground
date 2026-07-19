@@ -120,9 +120,8 @@ export function DefaultDuelSealConfirm({
         </h2>
 
         <p
-          className="font-body"
+          className="font-body content-text"
           style={{
-            fontSize: 'var(--text-sm)',
             color: copy.danger ? 'var(--color-danger)' : 'var(--color-text-secondary)',
           }}
         >
@@ -131,8 +130,8 @@ export function DefaultDuelSealConfirm({
 
         {copy.note && (
           <p
-            className="font-body"
-            style={{ fontSize: 'var(--text-xs)', color: 'var(--color-success)' }}
+            className="font-body content-text"
+            style={{ color: 'var(--color-success)' }}
           >
             {copy.note}
           </p>

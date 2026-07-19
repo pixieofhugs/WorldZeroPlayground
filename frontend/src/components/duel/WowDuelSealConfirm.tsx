@@ -135,7 +135,7 @@ export default function WowDuelSealConfirm({
             <p
               style={{
                 marginTop: 'var(--space-sm)',
-                fontSize: 'var(--text-sm)',
+                fontSize: 'var(--text-content)',
                 color: 'var(--color-success)',
               }}
             >
