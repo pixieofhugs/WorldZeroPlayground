@@ -40,6 +40,32 @@ from models.task import Task, TaskStatus, TaskType
 HIDDEN_FACTION_SLUGS = frozenset({"aged_out", "na"})
 
 
+async def upsert_era_factions(session, era) -> int:
+    """Give every faction in the era config a `Faction` row, and return how many
+    were added.
+
+    The `Faction` table is a thin display mirror of the era config — slug plus
+    status, no rules (ADR-0038) — so this is idempotent and safe to run against
+    an already-seeded database. That matters because factions are added between
+    seeds: `Faction.slug` is a plain string primary key and `character.
+    faction_slug` a plain string foreign key, so a new faction needs a row here
+    and never an Alembic migration.
+    """
+    added = 0
+    for slug in era.factions:
+        existing = await session.execute(
+            select(Faction).where(Faction.slug == slug)
+        )
+        if existing.scalar_one_or_none() is None:
+            status = FactionStatus.hidden if slug in HIDDEN_FACTION_SLUGS else FactionStatus.visible
+            # ADR-0038: the row is slug + status only; name/description prose
+            # lives in frontend/src/locales/en/factions.json.
+            session.add(Faction(slug=slug, status=status))
+            added += 1
+    await session.flush()
+    return added
+
+
 # ---------------------------------------------------------------------------
 # Dev-only demo content
 # ---------------------------------------------------------------------------
@@ -156,6 +182,15 @@ async def seed(env: str, yes: bool) -> None:
 
         if pixie_acc and task_count > 0:
             print("Database already fully seeded (pixie account + tasks exist).")
+            # A faction added to the era config AFTER a database was seeded would
+            # otherwise never get its row: this branch used to return before
+            # Phase 1 ran (#784, Cozy Coven). The Faction table is a thin display
+            # mirror of the era config, so topping it up is always safe and needs
+            # no migration.
+            new_factions = await upsert_era_factions(session, era)
+            if new_factions > 0:
+                await session.commit()
+                print(f"  >Factions ({new_factions} new)")
             if env == "dev":
                 await seed_dev_demo(session)  # idempotent — tops up demo content
             await engine.dispose()
@@ -166,21 +201,7 @@ async def seed(env: str, yes: bool) -> None:
         # ------------------------------------------------------------------
         # Phase 1: Factions (from era config, upsert)
         # ------------------------------------------------------------------
-        faction_count = 0
-        for slug, faction_config in era.factions.items():
-            existing = await session.execute(
-                select(Faction).where(Faction.slug == slug)
-            )
-            if existing.scalar_one_or_none() is None:
-                status = FactionStatus.hidden if slug in HIDDEN_FACTION_SLUGS else FactionStatus.visible
-                # ADR-0038: the row is slug + status only; name/description prose
-                # lives in frontend/src/locales/en/factions.json.
-                session.add(Faction(
-                    slug=slug,
-                    status=status,
-                ))
-                faction_count += 1
-        await session.flush()
+        faction_count = await upsert_era_factions(session, era)
         if faction_count > 0:
             print(f"  >Factions ({faction_count} new)")
         else:
