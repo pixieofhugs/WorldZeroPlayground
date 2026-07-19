@@ -10,13 +10,13 @@
  * figure and the `pending`/`active` copy branch is the shared one. No new locale
  * keys — per-faction voice was declined for this epic (#718).
  */
-import { useTranslation } from 'react-i18next'
 import { factionCssVar } from '../../utils/factions'
 import {
   duelSides,
   RaceRoster,
   SealActions,
   StakesTiles,
+  useDuelSealCopy,
   type DuelSlotTheme,
 } from './shared'
 import type { DuelSealConfirmProps } from './DuelSealConfirm'
@@ -58,9 +58,10 @@ export default function WowMobileDuelSealConfirm({
   onConfirm,
   onCancel,
   busy,
+  mode = 'submit',
 }: DuelSealConfirmProps) {
-  const { t } = useTranslation('praxis')
   const { me, foe } = duelSides(duel, viewerCharacterId)
+  const copy = useDuelSealCopy(mode, duel, viewerCharacterId, taskPointValue)
 
   const accent = factionCssVar(foe.faction_slug, 'card-accent')
   const theme: DuelSlotTheme = { accent, muted: CARD_MUTED, bodyFont: 'var(--font-body)' }
@@ -69,7 +70,7 @@ export default function WowMobileDuelSealConfirm({
     <div
       role="dialog"
       aria-modal="true"
-      aria-label={t('duelSeal.heading')}
+      aria-label={copy.heading}
       className="fixed inset-0 z-50 flex flex-col justify-end"
       style={{ background: 'var(--color-bg-page)' }}
     >
@@ -103,7 +104,7 @@ export default function WowMobileDuelSealConfirm({
               textAlign: 'center',
             }}
           >
-            {t('duelSeal.heading')}
+            {copy.heading}
           </h2>
         </div>
 
@@ -115,13 +116,17 @@ export default function WowMobileDuelSealConfirm({
             backgroundSize: '13px 13px',
           }}
         >
-          <p style={{ fontSize: 'var(--text-content)', lineHeight: 1.5 }}>
-            {duel.status === 'pending'
-              ? t('duelSeal.bodyPending', { name: foe.display_name })
-              : t('duelSeal.bodyActive', { name: foe.display_name })}
+          <p
+            style={{
+              fontSize: 'var(--text-content)',
+              lineHeight: 1.5,
+              ...(copy.danger ? { color: 'var(--color-danger)', fontWeight: 700 } : {}),
+            }}
+          >
+            {copy.body}
           </p>
 
-          {duel.status === 'active' && !foe.is_submitted && (
+          {copy.note && (
             <p
               style={{
                 marginTop: 'var(--space-sm)',
@@ -129,7 +134,7 @@ export default function WowMobileDuelSealConfirm({
                 color: 'var(--color-success)',
               }}
             >
-              {t('duelSeal.reopenNote', { name: foe.display_name })}
+              {copy.note}
             </p>
           )}
 
@@ -157,7 +162,14 @@ export default function WowMobileDuelSealConfirm({
               styling would need a skin slot on the shared component, which is
               foundation work, not a skin change. */}
           <div style={{ marginTop: 'var(--space-lg)' }}>
-            <SealActions onConfirm={onConfirm} onCancel={onCancel} busy={busy} theme={theme} />
+            <SealActions
+              onConfirm={onConfirm}
+              onCancel={onCancel}
+              busy={busy}
+              confirmLabel={copy.confirmLabel}
+              danger={copy.danger}
+              theme={theme}
+            />
           </div>
         </div>
       </div>

@@ -17,13 +17,13 @@
  * Copy is faction-neutral by decision (#718): the design's witch voice is tone
  * reference, not strings. No new locale keys.
  */
-import { useTranslation } from 'react-i18next'
 import { factionCssVar } from '../../utils/factions'
 import {
   duelSides,
   RaceRoster,
   SealActions,
   StakesTiles,
+  useDuelSealCopy,
   type DuelSlotTheme,
 } from './shared'
 import type { DuelSealConfirmProps } from './DuelSealConfirm'
@@ -58,9 +58,10 @@ export default function WowDuelSealConfirm({
   onConfirm,
   onCancel,
   busy,
+  mode = 'submit',
 }: DuelSealConfirmProps) {
-  const { t } = useTranslation('praxis')
   const { me, foe } = duelSides(duel, viewerCharacterId)
+  const copy = useDuelSealCopy(mode, duel, viewerCharacterId, taskPointValue)
 
   // Opponent tokens, same rule as the Default dialog and the rail: the foreign
   // duelist looks foreign even inside Wow's window.
@@ -71,7 +72,7 @@ export default function WowDuelSealConfirm({
     <div
       role="dialog"
       aria-modal="true"
-      aria-label={t('duelSeal.heading')}
+      aria-label={copy.heading}
       className="fixed inset-0 z-50 flex items-center justify-center"
       style={{
         padding: 'var(--space-lg)',
@@ -104,7 +105,7 @@ export default function WowDuelSealConfirm({
         >
           <Sparkle size={12} color={TITLE_TEXT} />
           <h2 style={{ fontFamily: SCRIPT, fontSize: 'var(--text-title)', fontWeight: 700 }}>
-            {t('duelSeal.heading')}
+            {copy.heading}
           </h2>
         </div>
 
@@ -117,15 +118,20 @@ export default function WowDuelSealConfirm({
             backgroundSize: '13px 13px',
           }}
         >
-          <p style={{ fontSize: 'var(--text-content)', lineHeight: 1.5 }}>
-            {duel.status === 'pending'
-              ? t('duelSeal.bodyPending', { name: foe.display_name })
-              : t('duelSeal.bodyActive', { name: foe.display_name })}
+          <p
+            style={{
+              fontSize: 'var(--text-content)',
+              lineHeight: 1.5,
+              ...(copy.danger ? { color: 'var(--color-danger)', fontWeight: 700 } : {}),
+            }}
+          >
+            {copy.body}
           </p>
 
           {/* The free-reopen half of the truth — same condition as the Default
-              skin, because it is the same fact, not a Wow flourish. */}
-          {duel.status === 'active' && !foe.is_submitted && (
+              skin, because it is the same fact, not a Wow flourish. A forfeit
+              has no such note, and `copy.note` is null there. */}
+          {copy.note && (
             <p
               style={{
                 marginTop: 'var(--space-sm)',
@@ -133,7 +139,7 @@ export default function WowDuelSealConfirm({
                 color: 'var(--color-success)',
               }}
             >
-              {t('duelSeal.reopenNote', { name: foe.display_name })}
+              {copy.note}
             </p>
           )}
 
@@ -159,7 +165,14 @@ export default function WowDuelSealConfirm({
           </div>
 
           <div style={{ marginTop: 'var(--space-lg)' }}>
-            <SealActions onConfirm={onConfirm} onCancel={onCancel} busy={busy} theme={theme} />
+            <SealActions
+              onConfirm={onConfirm}
+              onCancel={onCancel}
+              busy={busy}
+              confirmLabel={copy.confirmLabel}
+              danger={copy.danger}
+              theme={theme}
+            />
           </div>
           {/* ponytail: SealActions keeps its shared btn-outline / btn-primary
               pair rather than growing a Wow gradient-button skin slot. The

@@ -375,12 +375,111 @@ export function NextStepLine({
 }
 
 /* -------------------------------------------------------------------------- */
+/* Seal copy — the one thing that differs between the two modes               */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Which irreversible beat the seal dialog is standing in for (#751).
+ *
+ *  - `submit` — casting your side. Today's dialog, unchanged.
+ *  - `forfeit` — pulling back a SETTLED duel side, which hands the win to the
+ *    opponent permanently. Used to be an inline expand on the praxis-detail
+ *    page: the one duel moment with a genuinely irreversible consequence, and
+ *    the only one with no skinnable surface.
+ *
+ * Deliberately NOT a second pair of surface keys. A forfeit dialog is the seal
+ * dialog with different words — same frame, same stakes, same roster, same
+ * footer — so each faction writes two files, not four (#751, ADR-free ruling on
+ * the manifest seam after #782).
+ */
+export type DuelSealMode = 'submit' | 'forfeit'
+
+/** Everything that varies between the modes, resolved once for every skin. */
+export interface DuelSealCopy {
+  /** Dialog title, also its `aria-label`. */
+  heading: string
+  /** The main body line. */
+  body: string
+  /**
+   * Reassurance line under the body, or `null` when the state has none. Only
+   * `submit` has one (the free-reopen note); a forfeit has nothing reassuring
+   * left to say, which is the point.
+   */
+  note: string | null
+  /** Confirm-button label. */
+  confirmLabel: string
+  /** Whether the confirm button should wear the destructive tone. */
+  danger: boolean
+}
+
+/**
+ * The mode branch, written once so no skin re-implements it.
+ *
+ * Copy is the shipped `duelSeal.*` / `duelForfeit.*` catalog verbatim — the
+ * forfeit strings are the ones the inline prompt already used, so promoting it
+ * to a dialog changes the frame and nothing a player reads. `duelForfeit.cost`
+ * needs live stakes, so this is a hook; the figures come from the same
+ * `useDuelStakes` the rail and the tiles use, which is how a Snide duelist is
+ * correctly told they keep 0 rather than some invented "half".
+ */
+export function useDuelSealCopy(
+  mode: DuelSealMode,
+  duel: DuelDetailOut,
+  viewerCharacterId: number | null | undefined,
+  taskPointValue: number | null | undefined,
+): DuelSealCopy {
+  const { t } = useTranslation('praxis')
+  const { me, foe } = duelSides(duel, viewerCharacterId)
+  // Unconditional: hooks may not sit behind the mode branch.
+  const stakes = useDuelStakes(me.faction_slug, foe.faction_slug, taskPointValue)
+
+  if (mode === 'forfeit') {
+    const cost = stakes
+      ? t('duelForfeit.cost', {
+          name: foe.display_name,
+          points: formatPoints(stakes.lose),
+          win: formatPoints(stakes.win),
+        })
+      : null
+    return {
+      heading: t('duelForfeit.action'),
+      // Falls back to the prompt alone until the game config lands, rather
+      // than rendering a sentence with a hole where the number goes.
+      body: cost ? `${t('duelForfeit.confirmPrompt')} ${cost}` : t('duelForfeit.confirmPrompt'),
+      note: null,
+      confirmLabel: t('duelForfeit.action'),
+      danger: true,
+    }
+  }
+
+  return {
+    heading: t('duelSeal.heading'),
+    body:
+      duel.status === 'pending'
+        ? t('duelSeal.bodyPending', { name: foe.display_name })
+        : t('duelSeal.bodyActive', { name: foe.display_name }),
+    // The free-reopen half of the truth: until they cast, nothing is stuck.
+    // Only meaningful once the duel is live — a pending duel can't settle.
+    note:
+      duel.status === 'active' && !foe.is_submitted
+        ? t('duelSeal.reopenNote', { name: foe.display_name })
+        : null,
+    confirmLabel: t('duelSeal.confirm'),
+    danger: false,
+  }
+}
+
+/* -------------------------------------------------------------------------- */
 /* SealActions — the confirm / cancel pair                                    */
 /* -------------------------------------------------------------------------- */
 
 /**
  * The dialog's action pair. Global order is [Cancel] … [Submit] (#646), so the
  * affirmative sits on the right on every surface.
+ *
+ * `danger` repaints the confirm button destructively for the forfeit mode
+ * (#751). It lives here rather than in each skin because the tone is a fact
+ * about the action, not a faction flourish — a forfeit is red in every voice.
  */
 export function SealActions({
   onConfirm,
@@ -388,6 +487,7 @@ export function SealActions({
   busy,
   confirmLabel,
   cancelLabel,
+  danger,
   theme,
 }: {
   onConfirm: () => void
@@ -395,6 +495,7 @@ export function SealActions({
   busy?: boolean
   confirmLabel?: ReactNode
   cancelLabel?: ReactNode
+  danger?: boolean
   theme: DuelSlotTheme
 }) {
   const { t } = useTranslation('praxis')
@@ -418,6 +519,13 @@ export function SealActions({
           fontSize: 'var(--text-sm)',
           fontFamily: theme.bodyFont ?? DEFAULT_THEME.bodyFont,
           opacity: busy ? 0.5 : 1,
+          ...(danger
+            ? {
+                background: 'var(--color-danger)',
+                borderColor: 'var(--color-danger)',
+                color: 'var(--color-text-on-accent)',
+              }
+            : {}),
         }}
       >
         {confirmLabel ?? t('duelSeal.confirm')}

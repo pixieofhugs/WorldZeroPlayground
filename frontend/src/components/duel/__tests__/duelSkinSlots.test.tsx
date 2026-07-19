@@ -74,6 +74,24 @@ const DUEL = {
   opponent: side({ character_id: 2, praxis_id: 11, display_name: 'Rax', faction_slug: 'snide' }),
 } as unknown as DuelDetailOut
 
+/**
+ * A settled duel with both sides cast — the only state in which unsubmitting is
+ * a forfeit (`praxis.py` forfeits at `status == settled` only), so it is the
+ * state the forfeit dialog actually opens in.
+ */
+const SETTLED_DUEL = {
+  ...DUEL,
+  status: 'settled',
+  challenger: side({ character_id: 1, display_name: 'Ada', faction_slug: 'wow', is_submitted: true }),
+  opponent: side({
+    character_id: 2,
+    praxis_id: 11,
+    display_name: 'Rax',
+    faction_slug: 'snide',
+    is_submitted: true,
+  }),
+} as unknown as DuelDetailOut
+
 describe('duel seal skins render every slot', () => {
   // Annotated as a tuple array rather than `as const`: the spreads widen to
   // (string | ComponentType)[] otherwise, and it.each then can't match the
@@ -86,14 +104,25 @@ describe('duel seal skins render every slot', () => {
     ),
   ]
 
-  it.each(skins)('%s keeps stakes, roster and actions', (_name, Skin) => {
+  // Both modes, every skin (#751). The seal dialog doubles as the forfeit
+  // dialog, so a skin that renders every slot in `submit` and quietly drops one
+  // in `forfeit` — the mode with the irreversible consequence — fails here
+  // rather than in front of a player.
+  const cases: [string, ComponentType<DuelSealConfirmProps>, 'submit' | 'forfeit', DuelDetailOut][] =
+    skins.flatMap(([name, Skin]) => [
+      [name, Skin, 'submit', DUEL] as const,
+      [name, Skin, 'forfeit', SETTLED_DUEL] as const,
+    ])
+
+  it.each(cases)('%s keeps stakes, roster and actions in %s mode', (_name, Skin, mode, duel) => {
     const html = renderToStaticMarkup(
       <Skin
-        duel={DUEL}
+        duel={duel}
         viewerCharacterId={1}
         taskPointValue={60}
         onConfirm={() => {}}
         onCancel={() => {}}
+        mode={mode}
       />,
     )
     const text = html.replace(/<[^>]*>/g, ' ')
@@ -106,6 +135,50 @@ describe('duel seal skins render every slot', () => {
     expect(html.match(/<button/g) ?? []).toHaveLength(2)
     // The dialog contract the composer relies on.
     expect(html).toContain('role="dialog"')
+  })
+
+  // The mode branch itself: each mode must actually SAY its own thing, so a
+  // skin can't satisfy the slot walk above by hardcoding the submit copy.
+  it.each(skins)('%s speaks the forfeit copy in forfeit mode', (_name, Skin) => {
+    const render = (mode: 'submit' | 'forfeit', duel: DuelDetailOut) =>
+      renderToStaticMarkup(
+        <Skin
+          duel={duel}
+          viewerCharacterId={1}
+          taskPointValue={60}
+          onConfirm={() => {}}
+          onCancel={() => {}}
+          mode={mode}
+        />,
+      ).replace(/<[^>]*>/g, ' ')
+
+    const forfeit = render('forfeit', SETTLED_DUEL)
+    // duelForfeit.confirmPrompt + duelForfeit.action, the shipped keys the
+    // inline prompt already used.
+    expect(forfeit).toContain('FORFEITS the duel')
+    expect(forfeit).toContain('Forfeit')
+    // duelForfeit.cost, interpolated with the SNIDE-aware lose figure.
+    expect(forfeit).toContain('Rax wins by default')
+    // The submit-mode heading must NOT leak into the forfeit dialog.
+    expect(forfeit).not.toContain('Seal the duel?')
+
+    const submit = render('submit', DUEL)
+    expect(submit).toContain('Seal the duel?')
+    expect(submit).not.toContain('FORFEITS the duel')
+  })
+
+  // Default mode is `submit`, so every existing mount site is untouched.
+  it('defaults to submit mode when no mode is passed', () => {
+    const html = renderToStaticMarkup(
+      <DefaultDuelSealConfirm
+        duel={DUEL}
+        viewerCharacterId={1}
+        taskPointValue={60}
+        onConfirm={() => {}}
+        onCancel={() => {}}
+      />,
+    )
+    expect(html.replace(/<[^>]*>/g, ' ')).toContain('Seal the duel?')
   })
 })
 
