@@ -72,6 +72,11 @@ const DEFAULT_RAIL_WIDTH = "42rem";
  * `accent`/`soft` are the OPPONENT's faction tokens (the foreign element looks
  * foreign, per #310) and are handed down pre-resolved so a skin never re-reads
  * the faction registry either.
+ *
+ * A skin must NOT set `fontSize` on its wrapper (#769). Every slot arrives
+ * already sized by its own role class, and a wrapper size silently overrides
+ * all of them at once — which is exactly how the rail body ended up at 9px.
+ * A skin owns font, colour and ornament, never type size (WORLD_ZERO_STYLE §4a).
  */
 export interface DuelRailSkinProps {
   /** Opponent-faction accent, pre-resolved to a CSS var reference. */
@@ -107,11 +112,13 @@ export function DefaultDuelRail({
     borderLeft: `3px solid ${accent}`,
     background: soft,
     fontFamily: "var(--font-body)",
-    fontSize: "var(--text-sm)",
     color: "var(--color-text)",
   };
   return (
-    <div style={wrapper}>
+    // .content-text, not a wrapper `fontSize` (#769). This wrapper used to set
+    // var(--text-sm) — 9px, Label tier — and every slot inside it inherited
+    // that. A skin owns font, colour and ornament, never type size (§4a).
+    <div className="content-text" style={wrapper}>
       {tally ? (
         <div
           style={{
@@ -344,14 +351,16 @@ export default function DuelCrossLink({
         </span>
       }
       tally={
-        <span style={{ whiteSpace: "nowrap" }}>
+        /* A live score pair: a number the player cares about, so content tier
+           (.content-title) rather than whatever the frame happens to set. */
+        <span className="content-title" style={{ whiteSpace: "nowrap" }}>
           <strong>{me.points_from_votes}</strong>
           <span style={{ opacity: 0.6 }}> — </span>
           <strong>{foe.points_from_votes}</strong>
         </span>
       }
       note={
-        <div style={{ marginTop: "var(--space-xs)", fontSize: "var(--text-xs)", opacity: 0.85 }}>
+        <div className="content-text" style={{ marginTop: "var(--space-xs)", opacity: 0.85 }}>
           {t("duelCrossLink.live", { standing })}
         </div>
       }

@@ -68,7 +68,8 @@ export default function WowMobileDuelRail({
     borderLeft: `4px solid ${accent}`,
     boxShadow: `0 8px 22px color-mix(in srgb, ${accent} 20%, transparent)`,
     fontFamily: 'var(--font-body)',
-    fontSize: 'var(--text-sm)',
+    // No `fontSize` here (#769): the slots size themselves, and a wrapper size
+    // overrides every one of them at once. A skin owns font, colour, ornament.
     color: CARD_TEXT,
   }
 
@@ -103,7 +104,8 @@ export default function WowMobileDuelRail({
           <div
             style={{
               fontFamily: SCRIPT,
-              fontSize: 'var(--text-title)',
+              // The tally arrives on .content-title already (#769) — this
+              // scoreboard block contributes the script face and centring only.
               fontWeight: 700,
               textAlign: 'center',
               marginBottom: 'var(--space-xs)',
