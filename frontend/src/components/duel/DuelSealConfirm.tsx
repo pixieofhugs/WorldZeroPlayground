@@ -18,19 +18,42 @@
  * useFormFactor(), primary action autofocuses, no focus trap. Mounted once from
  * the EditPraxis dispatcher, so all 16 composer surfaces inherit it.
  *
- * The Default skin below is the only one this issue ships; the registries exist
- * so per-faction skins (#720 for Wow, one issue per faction after) are a map row
- * and nothing else. Skins own the FRAME only — every figure and every branch
- * lives in `duel/shared.tsx`.
+ * The Default skin below is the only one this issue ships; the manifest seam
+ * exists so per-faction skins (#720 for Wow, one issue per faction after) are a
+ * `duelSeal` / `mobileDuelSeal` row and nothing else. Skins own the FRAME only —
+ * every figure and every branch lives in `duel/shared.tsx`.
+ *
+ * TWO MODES, ONE SURFACE (#751)
+ * -----------------------------
+ * The same dialog also confirms a FORFEIT — pulling back a settled duel side,
+ * which was an inline text expand on the praxis-detail page until now. It is the
+ * one duel moment with a genuinely irreversible consequence and was the only one
+ * with no skinnable surface, while the *reversible* moment (this one) got a full
+ * dialog in #718.
+ *
+ * It rides the `mode` prop rather than a `duelForfeit` / `mobileDuelForfeit`
+ * pair of manifest keys, because the two dialogs are ~90% the same component:
+ * same frame, same roster, same stakes tiles, same footer. Only the title, the
+ * body, and the confirm label differ, and `useDuelSealCopy` owns all three. Each
+ * faction therefore stays TWO files that each handle two modes, instead of four
+ * files — which is the whole reason this landed before the six skin issues
+ * (#721–#726).
  */
 import type { } from 'react'
-import { useTranslation } from 'react-i18next'
 import type { DuelDetailOut } from '../../api/duel'
 import { useFormFactor } from '../../hooks/useFormFactor'
 import { factionCssVar } from '../../utils/factions'
 import { pickVariant } from '../../utils/factionDispatch'
 import { surfaceMap } from '../../factions'
-import { duelSides, RaceRoster, SealActions, StakesTiles, type DuelSlotTheme } from './shared'
+import {
+  duelSides,
+  RaceRoster,
+  SealActions,
+  StakesTiles,
+  useDuelSealCopy,
+  type DuelSealMode,
+  type DuelSlotTheme,
+} from './shared'
 
 export interface DuelSealConfirmProps {
   duel: DuelDetailOut
@@ -41,6 +64,11 @@ export interface DuelSealConfirmProps {
   onConfirm: () => void
   onCancel: () => void
   busy?: boolean
+  /**
+   * Which beat this dialog is confirming (#751). Optional and defaulting to
+   * `'submit'`, so every existing mount site is unchanged. See `DuelSealMode`.
+   */
+  mode?: DuelSealMode
 }
 
 export function DefaultDuelSealConfirm({
@@ -50,11 +78,12 @@ export function DefaultDuelSealConfirm({
   onConfirm,
   onCancel,
   busy,
+  mode = 'submit',
 }: DuelSealConfirmProps) {
-  const { t } = useTranslation('praxis')
   const formFactor = useFormFactor()
   const isMobile = formFactor === 'mobile'
   const { me, foe } = duelSides(duel, viewerCharacterId)
+  const copy = useDuelSealCopy(mode, duel, viewerCharacterId, taskPointValue)
 
   // Tokens come from the OPPONENT's faction, matching the read-page rail: the
   // opponent is the foreign element and should look foreign (grilled #310).
@@ -65,7 +94,7 @@ export function DefaultDuelSealConfirm({
     <div
       role="dialog"
       aria-modal="true"
-      aria-label={t('duelSeal.heading')}
+      aria-label={copy.heading}
       className="fixed inset-0 z-50 flex items-center justify-center p-4"
       style={{
         background: isMobile
@@ -87,26 +116,25 @@ export function DefaultDuelSealConfirm({
           className="font-display"
           style={{ fontSize: 'var(--text-content)', color: 'var(--color-text-primary)' }}
         >
-          {t('duelSeal.heading')}
+          {copy.heading}
         </h2>
 
         <p
           className="font-body"
-          style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-secondary)' }}
+          style={{
+            fontSize: 'var(--text-sm)',
+            color: copy.danger ? 'var(--color-danger)' : 'var(--color-text-secondary)',
+          }}
         >
-          {duel.status === 'pending'
-            ? t('duelSeal.bodyPending', { name: foe.display_name })
-            : t('duelSeal.bodyActive', { name: foe.display_name })}
+          {copy.body}
         </p>
 
-        {/* The free-reopen half of the truth: until they cast, nothing is stuck.
-            Only meaningful once the duel is live — a pending duel can't settle. */}
-        {duel.status === 'active' && !foe.is_submitted && (
+        {copy.note && (
           <p
             className="font-body"
             style={{ fontSize: 'var(--text-xs)', color: 'var(--color-success)' }}
           >
-            {t('duelSeal.reopenNote', { name: foe.display_name })}
+            {copy.note}
           </p>
         )}
 
@@ -121,7 +149,14 @@ export function DefaultDuelSealConfirm({
 
         <RaceRoster me={me} foe={foe} theme={theme} />
 
-        <SealActions onConfirm={onConfirm} onCancel={onCancel} busy={busy} theme={theme} />
+        <SealActions
+          onConfirm={onConfirm}
+          onCancel={onCancel}
+          busy={busy}
+          confirmLabel={copy.confirmLabel}
+          danger={copy.danger}
+          theme={theme}
+        />
       </div>
     </div>
   )
