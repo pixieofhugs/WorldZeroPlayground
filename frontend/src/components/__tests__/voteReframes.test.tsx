@@ -28,7 +28,6 @@ const REGISTERED_SLUGS = [
   'snide',
   'singularity',
   'ua',
-  'albescent',
 ] as const
 
 describe('VOTE_REFRAMES registry', () => {
@@ -84,10 +83,14 @@ describe('reframeLabel', () => {
     expect(reframeLabel('snide', 1)).toBe('meh')
   })
 
-  it('labels albescent in its own first-class "bear witness" vocabulary (#232)', () => {
-    // No longer aliases to ua — albescent has its own witness scale.
-    expect(reframeLabel('albescent', 3)).toBe('Witnessed')
-    expect(reframeLabel('albescent', 5)).toBe('Inscribed')
+  it('labels albescent in plain numerals, exactly like unaffiliated (#783)', () => {
+    // The inverse of what this case asserted. Albescent had its own "bear
+    // witness" scale, Witnessed → Inscribed (#232) — and vote tiers render to
+    // every voter on an Albescent-filed task, so the vocabulary announced the
+    // society to people who had never been revealed to it. It now has no vote
+    // voice, which is the same as having none: the arabic fallback.
+    expect(reframeLabel('albescent', 3)).toBe(reframeLabel(null, 3))
+    expect(reframeLabel('albescent', 5)).toBe('5')
   })
 
   it('falls back to the arabic number when no reframe exists', () => {
