@@ -63,7 +63,8 @@ export default function WowDuelRail({
     borderLeft: `4px solid ${accent}`,
     boxShadow: `0 10px 24px color-mix(in srgb, ${accent} 20%, transparent)`,
     fontFamily: 'var(--font-body)',
-    fontSize: 'var(--text-sm)',
+    // No `fontSize` here (#769): the slots size themselves, and a wrapper size
+    // overrides every one of them at once. A skin owns font, colour, ornament.
     color: CARD_TEXT,
   }
 
