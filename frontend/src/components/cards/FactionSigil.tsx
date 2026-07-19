@@ -4,7 +4,6 @@ import { surfaceMap } from "../../factions";
 import { factionCssVar } from "../../utils/factions";
 import { SingularitySigil } from "./SingularitySigil";
 import { UaSigil } from "./UaSigil";
-import AlbescentSigil from "./AlbescentSigil";
 import DefaultSigil from "./DefaultSigil";
 
 /**
@@ -35,10 +34,6 @@ export function SingularitySigilAdapter({ size, color }: SigilVariantProps) {
       color={color ?? factionCssVar("singularity")}
     />
   );
-}
-
-export function AlbescentSigilAdapter({ size, color }: SigilVariantProps) {
-  return <AlbescentSigil size={size} color={color} />;
 }
 
 function DefaultSigilAdapter({ size }: SigilVariantProps) {

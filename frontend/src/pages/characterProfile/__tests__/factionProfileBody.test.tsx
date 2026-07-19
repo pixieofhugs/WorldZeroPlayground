@@ -56,20 +56,34 @@ function renderBody(overrides: Partial<CharacterOut> = {}) {
 }
 
 describe("FactionProfileBody dispatch", () => {
-  it("registers the seven bespoke faction skins (#460)", () => {
+  it("registers the six bespoke faction skins (#460)", () => {
     // Each faction claims the surface in its own manifest; the dispatcher just
-    // reads them, so this asserts the manifests still cover all seven.
+    // reads them, so this asserts the manifests still cover all six.
+    //
+    // Albescent is absent on purpose (#783): it claims no profile skin, so a
+    // member's profile IS the default one. That is the point — a profile is
+    // exactly where a secret society would give itself away.
     expect(Object.keys(surfaceMap("profileBody")).sort()).toEqual(
-      [
-        "albescent",
-        "ephemerists",
-        "everymen",
-        "singularity",
-        "snide",
-        "ua",
-        "wow",
-      ].sort(),
+      ["ephemerists", "everymen", "singularity", "snide", "ua", "wow"].sort(),
     );
+  });
+
+  it("gives an albescent profile the same skin as an unaffiliated one (#783)", () => {
+    // The requirement stated at the surface a reader actually looks at, and
+    // stated about TREATMENT rather than markup. The two profiles are not
+    // byte-identical and should not be: an Albescent member has a faction, so
+    // their profile names it, where an unaffiliated player's says "faction
+    // pending". Copy differs; the skin must not — that is what would make a
+    // member visually identifiable in a list of players.
+    const skinOf = (slug: string | null): string[] =>
+      [...renderBody({ faction_slug: slug }).matchAll(/--fc-[a-z]+:([^;"]+)/g)].map(
+        (match) => match[1],
+      );
+    expect(skinOf("albescent")).toEqual(skinOf("na"));
+    expect(skinOf("albescent").length).toBeGreaterThan(0);
+    // And no trace of the deleted token block. This is the assertion that
+    // caught CredentialCard still painting from --faction-albescent-card-bg.
+    expect(renderBody({ faction_slug: "albescent" })).not.toContain("albescent");
   });
 
   it("renders the default skin for an unaffiliated (null) character", () => {
