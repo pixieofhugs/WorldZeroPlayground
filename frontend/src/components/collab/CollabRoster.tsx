@@ -76,7 +76,7 @@ export function CollabRoster({
           : null
 
   return (
-    <div className="flex flex-col gap-[8px]">
+    <div className="flex flex-col gap-2">
       {/* Header: label + cast progress chip */}
       <div className="flex items-center gap-2" style={{ justifyContent: 'space-between' }}>
         <span className="eyebrow text-[10px]" style={{ color: 'var(--color-text-secondary)' }}>
@@ -97,14 +97,14 @@ export function CollabRoster({
       </div>
 
       {/* Roster rows */}
-      <div className="flex flex-col gap-[4px]">
+      <div className="flex flex-col gap-1">
         {members.map((member) => {
           const isMe = member.character_id === currentCharacterId
           const cast = member.has_submitted
           return (
             <div
               key={member.id}
-              className="flex items-center gap-2 px-[10px] py-[5px]"
+              className="flex items-center gap-2 px-3 py-1"
               style={{
                 borderRadius: 4,
                 border: cast ? `1.5px solid ${accent}` : '1.5px dashed var(--color-border)',
@@ -131,7 +131,7 @@ export function CollabRoster({
       {/* Per-state banner */}
       {banner && (
         <p
-          className="font-body text-[11px] px-[10px] py-[6px]"
+          className="font-body text-[11px] px-3 py-2"
           style={{
             borderRadius: 4,
             color: banner.tone,

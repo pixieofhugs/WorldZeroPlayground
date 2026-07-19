@@ -67,7 +67,7 @@ export function DefaultDuelSealConfirm({
       role="dialog"
       aria-modal="true"
       aria-label={t('duelSeal.heading')}
-      className="fixed inset-0 z-50 flex items-center justify-center p-[16px]"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4"
       style={{
         background: isMobile
           ? 'var(--color-bg-page)'
@@ -75,7 +75,7 @@ export function DefaultDuelSealConfirm({
       }}
     >
       <div
-        className={`flex flex-col gap-[12px] p-[24px] ${
+        className={`flex flex-col gap-3 p-6 ${
           isMobile ? 'w-full h-full justify-center' : 'w-full max-w-[420px]'
         }`}
         style={{
