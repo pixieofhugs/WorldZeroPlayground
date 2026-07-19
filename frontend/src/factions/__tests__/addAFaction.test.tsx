@@ -88,7 +88,7 @@ const SRC = join(dirname(fileURLToPath(import.meta.url)), '..', '..')
 
 /** Slug-keyed literal whose value is a component reference, e.g. `ua: UaCard`. */
 const REGISTRY_ROW =
-  /^\s*(ua|wow|snide|ephemerists|singularity|everymen|albescent)\s*:\s*[A-Z]\w*\s*,?\s*$/gm
+  /^\s*(ua|wow|coven|snide|ephemerists|singularity|everymen|albescent)\s*:\s*[A-Z]\w*\s*,?\s*$/gm
 
 /**
  * Files allowed to map faction slugs to capitalised values.

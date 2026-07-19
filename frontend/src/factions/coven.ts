@@ -1,5 +1,5 @@
 /**
- * wow — the surfaces this faction overrides (#782).
+ * coven — the surfaces this faction overrides (#782).
  *
  * Override-only: any surface absent here renders that surface's `Default*`
  * archetype via `pickVariant`. Adding a surface is one line; no dispatcher is
@@ -38,8 +38,8 @@ import { CovenSigil } from '../components/cards/CovenSigil'
 import { CovenCard } from '../components/cards/FactionCard'
 import { COVENSelectCard } from '../components/cards/FactionSelectCard'
 
-export const WOW_MANIFEST: FactionManifest = {
-  slug: 'wow',
+export const COVEN_MANIFEST: FactionManifest = {
+  slug: 'coven',
 
   factionCard: () => CovenCard,
   factionSelectCard: () => COVENSelectCard,

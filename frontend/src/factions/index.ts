@@ -28,12 +28,12 @@
 import type { FactionManifest, FactionSurface } from './manifest'
 
 import { ALBESCENT_MANIFEST } from './albescent'
+import { COVEN_MANIFEST } from './coven'
 import { EPHEMERISTS_MANIFEST } from './ephemerists'
 import { EVERYMEN_MANIFEST } from './everymen'
 import { SINGULARITY_MANIFEST } from './singularity'
 import { SNIDE_MANIFEST } from './snide'
 import { UA_MANIFEST } from './ua'
-import { WOW_MANIFEST } from './wow'
 
 export type { FactionManifest, FactionSurface } from './manifest'
 export { SURFACE_KEYS } from './manifest'
@@ -43,6 +43,14 @@ export { SURFACE_KEYS } from './manifest'
  * consumer that iterates gets the house order for free. `na` / unaffiliated is a
  * state rather than a faction and deliberately has no manifest: it falls through
  * to the neutral `Default*` skins everywhere (ADR-0039).
+ *
+ * `wow` has no manifest either, for a different reason (#784): Warriors of
+ * Whimsy's lo-fi pink `.exe` identity moved wholesale to Cozy Coven, and its
+ * replacement gold identity is a sibling issue. Registering nothing is exactly
+ * what the override-only contract wants in the meantime — every surface hands
+ * `wow` its `Default*` archetype, which is a clean slate rather than a gap. Its
+ * name and description still resolve from the catalog, so it reads as a real
+ * faction throughout; `wowRendersDefault.test.tsx` pins both halves of that.
  */
 export const FACTION_MANIFESTS: readonly FactionManifest[] = [
   EVERYMEN_MANIFEST,
@@ -51,7 +59,7 @@ export const FACTION_MANIFESTS: readonly FactionManifest[] = [
   EPHEMERISTS_MANIFEST,
   SINGULARITY_MANIFEST,
   ALBESCENT_MANIFEST,
-  WOW_MANIFEST,
+  COVEN_MANIFEST,
 ]
 
 /** A slug-keyed map of one surface, in the shape `pickVariant` consumes. */
