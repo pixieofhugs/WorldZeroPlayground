@@ -1250,6 +1250,31 @@
   background: radial-gradient(120% 90% at 50% 6%, transparent 46%, color-mix(in srgb, var(--eph-vellum-deep) 58%, transparent));
 }
 
+/* ══════════════════════════════════════════════════════════════
+   EPHEMERISTS AGE-FOXING BLEND (#724) — the one Ephemerist ornament
+   that cannot be a colour token, because it is a *blend mode*.
+
+   Foxing is a stain: on light vellum it DARKENS the sheet, so `multiply`
+   is the physically right operator. On the dark-theme vellum
+   (--eph-vellum flips to a near-black tobacco) `multiply` has almost
+   nothing left to take away — the blotches vanish and, where they don't,
+   they read as mud. Dark-theme foxing is instead an age *bloom*: the
+   same four blotches lightening the sheet, so the operator flips to
+   `screen`.
+
+   This lives here rather than inline on the `Foxing` atom because a
+   `dark ? 'multiply' : 'screen'` ternary is exactly what §8 forbids;
+   the cascade owns the flip. (Only the MODE is set here — callers keep
+   passing their own `opacity` inline, which would win over any opacity
+   declared in this rule anyway.)
+   ══════════════════════════════════════════════════════════════ */
+.eph-foxing {
+  mix-blend-mode: multiply;
+}
+[data-theme="dark"] .eph-foxing {
+  mix-blend-mode: screen;
+}
+
 /* Homepage activity ticker — horizontal marquee + blinking "LIVE" dot. */
 @keyframes ticker-roll { from { transform: translateX(0); } to { transform: translateX(-50%); } }
 @keyframes wz-blink { 50% { opacity: 0; } }
@@ -1271,6 +1296,22 @@
 @media (prefers-reduced-motion: no-preference) {
   .sg-pulse { animation: sg-pulse 2.6s ease-in-out infinite; }
   .sg-rotate { animation: sg-rotate 120s linear infinite; }
+}
+
+/* S.N.I.D.E. duel rail — the settled-state dot flickers like a failing xerox
+   lamp. Class-gated on reduced-motion like every other faction animation, so a
+   component never writes `animation:` inline and bypasses the gate. (#722) */
+@keyframes snide-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+@media (prefers-reduced-motion: no-preference) {
+  .snide-pulse { animation: snide-pulse 1.6s ease-in-out infinite; }
+}
+
+/* Everymen duel rail — the "live" dot on the settled-standing strip pulses like a
+   dispatch-board indicator (#721). Stilled for reduced-motion, same as its
+   neighbours: the dot's meaning is carried by the note's copy, never by motion. */
+@keyframes ev-duel-pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.35; transform: scale(0.82); } }
+@media (prefers-reduced-motion: no-preference) {
+  .ev-duel-pulse { animation: ev-duel-pulse 1.1s ease-in-out infinite; }
 }
 
 /* Character-sidebar progress bar — rainbow fill drifts left→right. Stilled for reduced-motion. */

@@ -13,12 +13,16 @@ import type { FactionManifest } from './manifest'
 import EverymenAvatar from '../components/avatar/EverymenAvatar'
 import EverymenBackdrop from '../components/backdrop/EverymenBackdrop'
 import EverymenComment from '../components/comments/voices/EverymenComment'
+import EverymenDuelRail from '../pages/praxisDetail/duelRails/EverymenDuelRail'
+import EverymenDuelSealConfirm from '../components/duel/EverymenDuelSealConfirm'
 import EverymenEditPraxis from '../pages/editPraxis/archetypes/EverymenEditPraxis'
 import EverymenFactionBody from '../pages/factionDetail/archetypes/EverymenFactionBody'
 import EverymenFactionHero from '../components/cards/EverymenFactionHero'
 import EverymenFactionPage from '../pages/factionDetail/mobileArchetypes/EverymenFactionPage'
 import EverymenFeedFrame from '../components/feed/EverymenFeedFrame'
 import EverymenHome from '../pages/fieldDesk/mobileArchetypes/EverymenHome'
+import EverymenMobileDuelRail from '../pages/praxisDetail/duelRails/EverymenMobileDuelRail'
+import EverymenMobileDuelSealConfirm from '../components/duel/EverymenMobileDuelSealConfirm'
 import EverymenMobileEditPraxis from '../pages/editPraxis/mobileArchetypes/EverymenComposer'
 import EverymenMobilePraxisCard from '../components/praxisCard/mobile/EverymenMobilePraxisCard'
 import EverymenMobilePraxisDetail from '../pages/praxisDetail/mobileArchetypes/EverymenPraxisDetail'
@@ -53,6 +57,8 @@ export const EVERYMEN_MANIFEST: FactionManifest = {
   factionHero: () => EverymenFactionHero,
   factionBody: () => EverymenFactionBody,
   profileBody: () => EverymenProfileBody,
+  duelSeal: () => EverymenDuelSealConfirm,
+  duelRail: () => EverymenDuelRail,
   mobileTaskCard: () => EverymenMobileTaskCard,
   mobilePraxisCard: () => EverymenMobilePraxisCard,
   mobileTaskDetail: () => EverymenMobileTaskDetail,
@@ -60,4 +66,6 @@ export const EVERYMEN_MANIFEST: FactionManifest = {
   mobileEditPraxis: () => EverymenMobileEditPraxis,
   mobileFactionPage: () => EverymenFactionPage,
   mobileFieldDesk: () => EverymenHome,
+  mobileDuelSeal: () => EverymenMobileDuelSealConfirm,
+  mobileDuelRail: () => EverymenMobileDuelRail,
 }
