@@ -95,7 +95,7 @@ function DesktopCreateCharacter({ state }: { state: CreateCharacterState }) {
           </div>
 
           {/* About */}
-          <label style={{ ...eyebrow, marginTop: 20 }}>{t('createCharacter.aboutLabel')}</label>
+          <label style={{ ...eyebrow, marginTop: 'var(--space-xl)' }}>{t('createCharacter.aboutLabel')}</label>
           <textarea
             value={bio}
             onChange={(e) => setBio(e.target.value)}
@@ -110,20 +110,20 @@ function DesktopCreateCharacter({ state }: { state: CreateCharacterState }) {
           </div>
 
           {/* Portrait — reuses the existing avatar uploader (POST /characters/{id}/avatar) */}
-          <label style={{ ...eyebrow, marginTop: 20 }}>{t('createCharacter.portraitLabel')} <span style={{ textTransform: 'none', letterSpacing: 0 }}>{t('createCharacter.optional')}</span></label>
+          <label style={{ ...eyebrow, marginTop: 'var(--space-xl)' }}>{t('createCharacter.portraitLabel')} <span style={{ textTransform: 'none', letterSpacing: 0 }}>{t('createCharacter.optional')}</span></label>
           <input
             ref={fileInputRef}
             type="file"
             accept="image/*"
             onChange={handleFile}
             className="font-body text-sm"
-            style={{ marginTop: 6 }}
+            style={{ marginTop: 'var(--space-sm)' }}
           />
 
           {/* Faction picker — only when the account holds invitations (ADR-0019) */}
           {showPicker && (
             <>
-              <label style={{ ...eyebrow, marginTop: 22 }}>
+              <label style={{ ...eyebrow, marginTop: 'var(--space-xl)' }}>
                 {t('createCharacter.callingLabel')} <span style={{ textTransform: 'none', letterSpacing: 0 }}>{t('createCharacter.callingOptional')}</span>
               </label>
               <div style={pickerGrid}>
@@ -152,7 +152,7 @@ function DesktopCreateCharacter({ state }: { state: CreateCharacterState }) {
 
           {error && <p style={errorBox}>{error}</p>}
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginTop: 24 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-lg)', marginTop: 'var(--space-xl)' }}>
             <button type="submit" disabled={!canSubmit} style={primaryBtn}>
               {submitting ? t('createCharacter.submitBusy') : t('createCharacter.submitIdle')}
             </button>
@@ -196,50 +196,50 @@ function DesktopCreateCharacter({ state }: { state: CreateCharacterState }) {
 
 const backLink: CSSProperties = {
   background: 'none', border: 'none', cursor: 'pointer',
-  fontSize: 'var(--text-sm)', color: 'var(--color-text-secondary)', padding: 0, marginBottom: 16,
+  fontSize: 'var(--text-sm)', color: 'var(--color-text-secondary)', padding: 0, marginBottom: 'var(--space-lg)',
 }
-const twoCol: CSSProperties = { display: 'flex', flexWrap: 'wrap', gap: 48, alignItems: 'flex-start' }
+const twoCol: CSSProperties = { display: 'flex', flexWrap: 'wrap', gap: 'var(--space-4xl)', alignItems: 'flex-start' }
 const titleStyle: CSSProperties = {
   fontFamily: 'var(--font-display)', fontStyle: 'italic', fontWeight: 700,
-  fontSize: 'var(--text-heading)', lineHeight: 1.02, color: 'var(--color-text-primary)', margin: '0 0 24px',
+  fontSize: 'var(--text-heading)', lineHeight: 1.02, color: 'var(--color-text-primary)', margin: '0 0 var(--space-xl)',
 }
 const eyebrow: CSSProperties = {
   display: 'block', fontSize: 'var(--text-sm)', letterSpacing: '0.16em', textTransform: 'uppercase',
   color: 'var(--color-text-secondary)',
 }
 const nameInput: CSSProperties = {
-  display: 'block', width: '100%', marginTop: 8, background: 'transparent', border: 'none',
+  display: 'block', width: '100%', marginTop: 'var(--space-sm)', background: 'transparent', border: 'none',
   borderBottom: '1.5px solid var(--color-text-primary)', outline: 'none',
   fontFamily: 'var(--font-display)', fontStyle: 'italic', fontSize: 'var(--text-title)',
-  color: 'var(--color-text-primary)', padding: '2px 0 8px',
+  color: 'var(--color-text-primary)', padding: 'var(--space-xs) 0 var(--space-sm)',
 }
 const bioInput: CSSProperties = {
-  display: 'block', width: '100%', marginTop: 6, boxSizing: 'border-box', resize: 'none',
+  display: 'block', width: '100%', marginTop: 'var(--space-sm)', boxSizing: 'border-box', resize: 'none',
   background: 'var(--color-bg-surface)', border: '1px solid var(--color-border-strong)',
   borderRadius: 5, outline: 'none', fontFamily: 'var(--font-body)', fontSize: 'var(--text-content)',
-  lineHeight: 1.6, color: 'var(--color-text-primary)', padding: '10px 12px',
+  lineHeight: 1.6, color: 'var(--color-text-primary)', padding: 'var(--space-md)',
 }
 const metaRow: CSSProperties = {
-  display: 'flex', justifyContent: 'space-between', marginTop: 6,
+  display: 'flex', justifyContent: 'space-between', marginTop: 'var(--space-sm)',
   fontFamily: 'var(--font-body)', fontSize: 'var(--text-sm)',
 }
 const pickerGrid: CSSProperties = {
-  display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginTop: 10,
+  display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--space-md)', marginTop: 'var(--space-md)',
 }
 const pickerCell: CSSProperties = {
-  display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer',
+  display: 'flex', alignItems: 'center', gap: 'var(--space-sm)', cursor: 'pointer',
   background: 'var(--color-bg-surface)', border: '1px solid var(--color-border-strong)',
-  borderRadius: 6, padding: '10px 12px', textAlign: 'left',
+  borderRadius: 6, padding: 'var(--space-md)', textAlign: 'left',
 }
 const dot: CSSProperties = { width: 12, height: 12, borderRadius: '50%', flexShrink: 0 }
 const errorBox: CSSProperties = {
-  marginTop: 16, fontFamily: 'var(--font-body)', fontSize: 'var(--text-content)', color: 'var(--color-danger)',
-  border: '1px solid var(--color-danger)', borderRadius: 4, padding: '8px 10px',
+  marginTop: 'var(--space-lg)', fontFamily: 'var(--font-body)', fontSize: 'var(--text-content)', color: 'var(--color-danger)',
+  border: '1px solid var(--color-danger)', borderRadius: 4, padding: 'var(--space-sm) var(--space-md)',
 }
 const primaryBtn: CSSProperties = {
   cursor: 'pointer', fontFamily: 'var(--font-body)', fontSize: 'var(--text-base)', letterSpacing: '0.12em',
   textTransform: 'uppercase', color: 'var(--color-bg-page)', background: 'var(--color-text-primary)',
-  border: 'none', padding: '12px 24px', borderRadius: 5,
+  border: 'none', padding: 'var(--space-md) var(--space-xl)', borderRadius: 5,
 }
 const cancelBtn: CSSProperties = {
   cursor: 'pointer', background: 'none', border: 'none', fontFamily: 'var(--font-body)',

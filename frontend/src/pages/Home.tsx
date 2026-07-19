@@ -99,13 +99,13 @@ export default function Home() {
   return (
     <div className="pb-12">
       {loginRequired && (
-        <p className="font-body text-sm text-muted mt-6 border-2 border-border px-4 py-2 inline-block">
+        <p className="font-body content-text text-muted mt-6 border-2 border-border px-4 py-2 inline-block">
           {t('loginRequired')}
         </p>
       )}
 
       {/* ── HERO ── */}
-      <section className="relative text-center" style={{ padding: '72px 8px 56px' }}>
+      <section className="relative text-center" style={{ padding: 'var(--space-5xl) var(--space-sm) var(--space-4xl)' }}>
         {/* Faint spotlight behind the wordmark */}
         <div
           aria-hidden="true"
@@ -119,11 +119,11 @@ export default function Home() {
         />
         <div
           className="relative"
-          style={{ fontFamily: 'var(--font-faction-script)', fontSize: 'var(--text-content)', color: 'var(--color-text-secondary)', marginBottom: 16, letterSpacing: '0.06em' }}
+          style={{ fontFamily: 'var(--font-faction-script)', fontSize: 'var(--text-content)', color: 'var(--color-text-secondary)', marginBottom: 'var(--space-lg)', letterSpacing: '0.06em' }}
         >
           {t('hero.eyebrow')}
         </div>
-        <div className="relative" style={{ marginBottom: 18 }}>
+        <div className="relative" style={{ marginBottom: 'var(--space-lg)' }}>
           <span
             className="font-display italic"
             style={{
@@ -131,7 +131,7 @@ export default function Home() {
               lineHeight: 0.9,
               color: 'var(--color-text-primary)',
               display: 'inline-block',
-              paddingBottom: 6,
+              paddingBottom: 'var(--space-sm)',
               backgroundImage:
                 'linear-gradient(var(--color-bg-page), var(--color-bg-page)), linear-gradient(90deg, var(--underline-3), var(--underline-2), var(--underline-6), var(--underline-5))',
               backgroundSize: '100% calc(100% - 6px), 100% 6px',
@@ -144,23 +144,23 @@ export default function Home() {
         </div>
         <div
           className="relative mx-auto"
-          style={{ fontFamily: 'var(--font-faction-script)', fontSize: 'var(--text-title)', lineHeight: 1.4, color: 'var(--color-text-secondary)', marginBottom: 40, maxWidth: 560 }}
+          style={{ fontFamily: 'var(--font-faction-script)', fontSize: 'var(--text-title)', lineHeight: 1.4, color: 'var(--color-text-secondary)', marginBottom: 'var(--space-3xl)', maxWidth: 560 }}
         >
           {t('hero.tagline')}
         </div>
         <button
           onClick={handlePrimaryCta}
           className="btn-primary relative"
-          style={{ ...markerButton, padding: '14px 48px' }}
+          style={{ ...markerButton, padding: 'var(--space-lg) var(--space-4xl)' }}
         >
           {user ? t('hero.cta.loggedIn') : t('hero.cta.loggedOut')}
         </button>
         {!user && import.meta.env.DEV && (
-          <div className="relative" style={{ marginTop: 14 }}>
+          <div className="relative" style={{ marginTop: 'var(--space-lg)' }}>
             <button
               onClick={async () => { await devLogin(); await refetch() }}
               className="btn-outline"
-              style={{ padding: '0.25rem 0.75rem' }}
+              style={{ padding: 'var(--space-xs) var(--space-md)' }}
             >
               {t('hero.devLogin')}
             </button>
@@ -170,19 +170,19 @@ export default function Home() {
 
       {/* ── ACTIVITY TICKER (logged-in only — feed requires auth) ── */}
       {user && (
-        <div style={{ marginBottom: 8 }}>
+        <div style={{ marginBottom: 'var(--space-sm)' }}>
           <ActivityTicker />
         </div>
       )}
 
       {signupMsg && (
-        <p className="font-body text-sm mt-6 border-2 border-red-300 text-red-600 px-3 py-2">
+        <p className="font-body content-text mt-6 border-2 border-red-300 text-red-600 px-3 py-2">
           {signupMsg}
         </p>
       )}
 
       {/* ── FEATURED PRAXIS ── */}
-      <section style={{ paddingTop: 48 }}>
+      <section style={{ paddingTop: 'var(--space-4xl)' }}>
         <SectionHeader title={t('sections.featuredPraxis.title')} href="/praxes" linkLabel={t('sections.featuredPraxis.link')} />
         {feed.length === 0 ? (
           <p className="font-body text-muted">{t('sections.featuredPraxis.empty')}</p>
@@ -194,7 +194,7 @@ export default function Home() {
       </section>
 
       {/* ── NEWEST TASK ── */}
-      <section style={{ paddingTop: 48 }}>
+      <section style={{ paddingTop: 'var(--space-4xl)' }}>
         <SectionHeader title={t('sections.newestTask.title')} href="/tasks" linkLabel={t('sections.newestTask.link')} />
         {newestTask ? (
           <TaskCard
@@ -213,16 +213,16 @@ export default function Home() {
       </section>
 
       {/* ── CLOSING CTA ── */}
-      <section className="text-center" style={{ paddingTop: 64 }}>
+      <section className="text-center" style={{ paddingTop: 'var(--space-5xl)' }}>
         <div
-          style={{ fontFamily: 'var(--font-faction-marker)', fontSize: 'var(--text-heading)', lineHeight: 1.1, color: 'var(--color-text-primary)', marginBottom: 24, transform: 'rotate(-1.2deg)' }}
+          style={{ fontFamily: 'var(--font-faction-marker)', fontSize: 'var(--text-heading)', lineHeight: 1.1, color: 'var(--color-text-primary)', marginBottom: 'var(--space-xl)', transform: 'rotate(-1.2deg)' }}
         >
           {t('closing.prompt')}
         </div>
         <button
           onClick={handleRandomTask}
           className="btn-outline"
-          style={{ ...markerButton, padding: '14px 52px' }}
+          style={{ ...markerButton, padding: 'var(--space-lg) var(--space-4xl)' }}
         >
           {t('closing.randomTask')}
         </button>

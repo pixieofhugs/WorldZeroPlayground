@@ -15,8 +15,8 @@ export default function OverviewTab() {
       .catch((err) => setError(extractError(err, t('overview.loadError'))))
   }, [t])
 
-  if (error) return <p className="font-body text-sm text-red-600">{error}</p>
-  if (!stats) return <div className="font-body text-muted text-sm">{t('common:loading')}</div>
+  if (error) return <p className="font-body content-text text-red-600">{error}</p>
+  if (!stats) return <div className="font-body text-muted content-text">{t('common:loading')}</div>
 
   const items = [
     { label: t('overview.stats.accounts'), value: stats.accounts },

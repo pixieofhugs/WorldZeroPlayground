@@ -83,9 +83,9 @@ function DesktopUpdates({ state }: { state: UpdatesState }) {
           color: active ? 'var(--color-bg-page)' : 'var(--color-text-primary)',
           fontFamily: "'Courier Prime', monospace",
           fontSize: 'var(--text-base)', fontWeight: 700, textTransform: 'uppercase',
-          letterSpacing: '0.1em', padding: '5px 10px',
+          letterSpacing: '0.1em', padding: 'var(--space-xs) var(--space-md)',
           cursor: 'pointer', transition: 'all 120ms',
-          display: 'flex', alignItems: 'center', gap: 5,
+          display: 'flex', alignItems: 'center', gap: 'var(--space-xs)',
         }}
       >
         {active && <span style={{ position: 'absolute', inset: 2, border: '1px dashed var(--stamp-active-dashed)', pointerEvents: 'none' }} />}
@@ -94,7 +94,7 @@ function DesktopUpdates({ state }: { state: UpdatesState }) {
           <span style={{
             background: hasRedBadge ? 'var(--color-danger)' : (active ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.1)'),
             color: hasRedBadge ? 'var(--color-text-on-accent)' : 'inherit',
-            fontSize: 'var(--text-xs)', padding: '0 5px', borderRadius: 8, minWidth: 16, textAlign: 'center',
+            fontSize: 'var(--text-xs)', padding: '0 var(--space-xs)', borderRadius: 8, minWidth: 16, textAlign: 'center',
           }}>
             {count}
           </span>
@@ -108,14 +108,14 @@ function DesktopUpdates({ state }: { state: UpdatesState }) {
       <PageTitle title="Updates" eyebrow="Activity Feed" />
 
       {/* ── Filter Tabs ── */}
-      <div style={{ marginBottom: 20 }}>
+      <div style={{ marginBottom: 'var(--space-xl)' }}>
         {/* Row 1 */}
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 6, alignItems: 'center' }}>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-sm)', marginBottom: 'var(--space-sm)', alignItems: 'center' }}>
           <span className="eyebrow">{t('page.show')}</span>
           {ROW_1_FILTERS.map(renderFilterButton)}
         </div>
         {/* Row 2 */}
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, alignItems: 'center', paddingLeft: 36 }}>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-sm)', alignItems: 'center', paddingLeft: 'var(--space-3xl)' }}>
           {ROW_2_FILTERS.map(renderFilterButton)}
         </div>
       </div>
@@ -124,32 +124,32 @@ function DesktopUpdates({ state }: { state: UpdatesState }) {
       {loading ? (
         <div className="py-8 font-body text-muted">{t('page.loading')}</div>
       ) : fetchError ? (
-        <p className="font-body text-sm text-red-600 border-2 border-red-300 px-3 py-2">
+        <p className="font-body content-text text-red-600 border-2 border-red-300 px-3 py-2">
           {fetchError}{' '}
           <button onClick={() => window.location.reload()} className="underline">{tc('states.tryRefreshing')}</button>
         </p>
       ) : items.length === 0 ? (
-        <div className="sidebar-card" style={{ padding: 20, textAlign: 'center' }}>
+        <div className="sidebar-card" style={{ padding: 'var(--space-xl)', textAlign: 'center' }}>
           <p className="font-body content-text" style={{ color: 'var(--color-text-tertiary)' }}>
             {t('page.empty')}
           </p>
         </div>
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-sm)' }}>
           {renderFeedWithDividers()}
         </div>
       )}
 
       {/* ── Load More error (inline) ── */}
       {loadMoreError && !loading && !fetchError && (
-        <p className="font-body text-sm text-red-600" style={{ textAlign: 'center', marginTop: 12 }}>
+        <p className="font-body content-text text-red-600" style={{ textAlign: 'center', marginTop: 'var(--space-md)' }}>
           {loadMoreError}
         </p>
       )}
 
       {/* ── Load More ── */}
       {nextCursor && !loading && !fetchError && (
-        <div style={{ textAlign: 'center', marginTop: 24 }}>
+        <div style={{ textAlign: 'center', marginTop: 'var(--space-xl)' }}>
           <button
             onClick={loadMore}
             disabled={loadingMore}
@@ -163,7 +163,7 @@ function DesktopUpdates({ state }: { state: UpdatesState }) {
               color: '#c49a3a',
               border: 'none',
               cursor: loadingMore ? 'not-allowed' : 'pointer',
-              padding: '8px 16px',
+              padding: 'var(--space-sm) var(--space-lg)',
             }}
           >
             {loadingMore ? 'Loading...' : 'Load Older Updates →'}

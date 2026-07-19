@@ -51,10 +51,10 @@ export default function AlbescentSecretPlaceholder() {
           color: INK,
           maxWidth: 520,
           width: '100%',
-          padding: '64px 48px',
+          padding: 'var(--space-5xl) var(--space-4xl)',
         }}
       >
-        <div className="flex justify-center" style={{ marginBottom: 28 }}>
+        <div className="flex justify-center" style={{ marginBottom: 'var(--space-2xl)' }}>
           <FleurMark />
         </div>
         <div
@@ -64,7 +64,7 @@ export default function AlbescentSecretPlaceholder() {
             letterSpacing: '0.28em',
             textTransform: 'uppercase',
             color: ink(30),
-            marginBottom: 20,
+            marginBottom: 'var(--space-xl)',
           }}
         >
           {t('albescent.sealed.eyebrow')}
@@ -81,7 +81,7 @@ export default function AlbescentSecretPlaceholder() {
         >
           {t('albescent.sealed.line')}
         </p>
-        <div style={{ height: 1, width: 64, margin: '28px auto 0', background: ink(16) }} />
+        <div style={{ height: 1, width: 64, margin: 'var(--space-2xl) auto 0', background: ink(16) }} />
       </div>
     </div>
   )

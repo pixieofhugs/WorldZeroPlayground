@@ -161,7 +161,7 @@ export default function CharacterProfile() {
   if (error)
     return (
       <div className="py-8">
-        <p className="font-body text-sm text-red-600 border-2 border-red-300 px-3 py-2">
+        <p className="font-body content-text text-red-600 border-2 border-red-300 px-3 py-2">
           {extractError(error, "Couldn't load this character.")}{" "}
           <button
             onClick={() => window.location.reload()}
@@ -211,7 +211,7 @@ export default function CharacterProfile() {
         style={{
           display: "flex",
           flexDirection: "column",
-          gap: 4,
+          gap: "var(--space-xs)",
           width: "100%",
         }}
       >
@@ -231,7 +231,7 @@ export default function CharacterProfile() {
                 fontSize: "var(--text-xs)",
                 textTransform: "uppercase",
                 letterSpacing: "0.1em",
-                padding: "4px 0",
+                padding: "var(--space-xs) 0",
                 textAlign: "center",
                 borderRadius: 2,
               }}
@@ -285,7 +285,7 @@ export default function CharacterProfile() {
                 fontSize: "var(--text-xs)",
                 textTransform: "uppercase",
                 letterSpacing: "0.1em",
-                padding: "4px 0",
+                padding: "var(--space-xs) 0",
                 border: "none",
                 cursor: "pointer",
                 borderRadius: 2,
@@ -306,7 +306,7 @@ export default function CharacterProfile() {
                 fontSize: "var(--text-xs)",
                 textTransform: "uppercase",
                 letterSpacing: "0.1em",
-                padding: "3px 0",
+                padding: "var(--space-xs) 0",
                 border: "1.5px solid var(--color-danger)",
                 cursor: "pointer",
                 borderRadius: 2,
@@ -323,7 +323,7 @@ export default function CharacterProfile() {
             style={{
               fontSize: "var(--text-content)",
               color: "var(--color-danger)",
-              marginTop: 4,
+              marginTop: "var(--space-xs)",
               textAlign: "center",
             }}
           >

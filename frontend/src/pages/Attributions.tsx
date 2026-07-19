@@ -64,7 +64,7 @@ export default function Attributions() {
             >
               {item.name}
             </a>
-            <p className="font-body text-sm text-muted mt-1">{item.description}</p>
+            <p className="font-body content-text text-muted mt-1">{item.description}</p>
           </div>
         ))}
       </div>

@@ -105,13 +105,13 @@ export default function TasksTab() {
     filter === "all" ? tasks : tasks.filter((task) => task.status === filter);
 
   if (loading)
-    return <div className="font-body text-muted text-sm">{t("common:loading")}</div>;
-  if (error) return <p className="font-body text-sm text-red-600">{error}</p>;
+    return <div className="font-body text-muted content-text">{t("common:loading")}</div>;
+  if (error) return <p className="font-body content-text text-red-600">{error}</p>;
 
   return (
     <div>
       {actionError && (
-        <p className="font-body text-sm text-red-600 border-2 border-red-300 px-3 py-2 mb-4">
+        <p className="font-body content-text text-red-600 border-2 border-red-300 px-3 py-2 mb-4">
           {actionError}
         </p>
       )}
@@ -136,7 +136,7 @@ export default function TasksTab() {
 
       {/* Tasks list */}
       {filtered.length === 0 ? (
-        <p className="font-body text-sm text-muted">
+        <p className="font-body content-text text-muted">
           {t("tasks.empty", { filter: t(`tasks.filters.${filter}`) })}
         </p>
       ) : (
@@ -147,7 +147,7 @@ export default function TasksTab() {
                 /* Inline edit form */
                 <div className="flex flex-col gap-2">
                   <input
-                    className="font-body text-sm border border-border bg-surface px-2 py-1"
+                    className="font-body content-text border border-border bg-surface px-2 py-1"
                     value={editState.title}
                     onChange={(e) =>
                       setEditState({ ...editState, title: e.target.value })
@@ -155,7 +155,7 @@ export default function TasksTab() {
                     placeholder={t("tasks.titlePlaceholder")}
                   />
                   <textarea
-                    className="font-body text-sm border border-border bg-surface px-2 py-1 resize-y"
+                    className="font-body content-text border border-border bg-surface px-2 py-1 resize-y"
                     rows={4}
                     value={editState.description}
                     onChange={(e) =>
@@ -172,7 +172,7 @@ export default function TasksTab() {
                       <input
                         type="number"
                         min={1}
-                        className="font-body text-sm border border-border bg-surface px-2 py-1 w-20"
+                        className="font-body content-text border border-border bg-surface px-2 py-1 w-24"
                         value={editState.point_value}
                         onChange={(e) =>
                           setEditState({
@@ -188,7 +188,7 @@ export default function TasksTab() {
                         type="number"
                         min={0}
                         max={8}
-                        className="font-body text-sm border border-border bg-surface px-2 py-1 w-16"
+                        className="font-body content-text border border-border bg-surface px-2 py-1 w-24"
                         value={editState.level_required}
                         onChange={(e) =>
                           setEditState({
@@ -226,7 +226,7 @@ export default function TasksTab() {
                       <span
                         className="eyebrow"
                         style={{
-                          padding: "1px 6px",
+                          padding: "var(--space-xs) var(--space-sm)",
                           border: "1px solid var(--color-border)",
                           color:
                             task.status === "active"

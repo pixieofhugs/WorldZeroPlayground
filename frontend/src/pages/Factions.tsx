@@ -137,7 +137,7 @@ function DesktopFactions() {
       <PageTitle title="Factions" />
 
       {error && (
-        <p className="font-body text-sm text-red-600 border-2 border-red-300 px-3 py-2 mb-4">{error}</p>
+        <p className="font-body content-text text-red-600 border-2 border-red-300 px-3 py-2 mb-4">{error}</p>
       )}
 
       {/* Invitation letters — collapsible; each card also surfaces its own status below */}
@@ -155,8 +155,8 @@ function DesktopFactions() {
               fontSize: 'var(--text-sm)',
               display: 'inline-flex',
               alignItems: 'center',
-              gap: 6,
-              marginBottom: invitationsExpanded ? 8 : 0,
+              gap: 'var(--space-sm)',
+              marginBottom: invitationsExpanded ? 'var(--space-sm)' : 0,
             }}
             aria-expanded={invitationsExpanded}
           >
@@ -166,7 +166,7 @@ function DesktopFactions() {
             </span>
           </button>
           {invitationsExpanded && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-sm)' }}>
               {invitations.map((inv) => {
                 return (
                   <div
@@ -174,8 +174,8 @@ function DesktopFactions() {
                     style={{
                       display: 'flex',
                       alignItems: 'center',
-                      gap: 8,
-                      padding: '8px 12px',
+                      gap: 'var(--space-sm)',
+                      padding: 'var(--space-sm) var(--space-md)',
                       background: `linear-gradient(135deg, ${factionCssVar(inv.faction_slug, 'light')}, transparent)`,
                       borderLeft: `3px solid ${factionCssVar(inv.faction_slug, 'border')}`,
                     }}
@@ -205,14 +205,14 @@ function DesktopFactions() {
 
       {/* Logged-out hint */}
       {!character && (
-        <p className="font-body text-sm text-muted mb-6">
+        <p className="font-body content-text text-muted mb-6">
           {t('index.loggedOutHint')}
         </p>
       )}
 
       {/* Faction directory grid — one uniform 360×300 archetype tile per faction.
           The tile's CTA visits the faction's detail page, which owns the Join block. */}
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 28, alignItems: 'flex-start' }}>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-2xl)', alignItems: 'flex-start' }}>
         {sortedFactions.map((f) => (
           <div
             key={f.slug}

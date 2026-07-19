@@ -37,15 +37,15 @@ export default function EphemeristsMobileTaskCard({ task, points }: { task: Task
       style={{
         display: 'flex',
         flexDirection: 'column',
-        gap: 8,
-        padding: '14px 16px',
+        gap: 'var(--space-sm)',
+        padding: 'var(--space-md) var(--space-lg)',
         background: VELLUM,
         border: `1px solid ${GOLD_DEEP}`,
         borderLeft: `4px solid ${color}`,
         textDecoration: 'none',
       }}
     >
-      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontFamily: DISPLAY, fontSize: 'var(--text-sm)', letterSpacing: '0.1em', textTransform: 'uppercase', color }}>
+      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 'var(--space-sm)', fontFamily: DISPLAY, fontSize: 'var(--text-sm)', letterSpacing: '0.1em', textTransform: 'uppercase', color }}>
         <i style={{ width: 7, height: 7, borderRadius: '50%', background: color, flex: 'none' }} />
         {factionName(task.primary_faction_slug)}
       </span>
@@ -60,8 +60,8 @@ export default function EphemeristsMobileTaskCard({ task, points }: { task: Task
         style={{ fontFamily: SCRIPT, fontStyle: 'italic', lineHeight: 1.5, color: MUTED, margin: 0 }}
       />
 
-      <div className="flex items-center gap-3" style={{ marginTop: 2 }}>
-        <span style={{ fontFamily: DISPLAY, fontSize: 'var(--text-lg)', letterSpacing: '0.04em', color: TEXT, background: VELLUM_DEEP, border: `1px solid ${GOLD}`, padding: '3px 9px' }}>
+      <div className="flex items-center gap-3" style={{ marginTop: 'var(--space-xs)' }}>
+        <span style={{ fontFamily: DISPLAY, fontSize: 'var(--text-lg)', letterSpacing: '0.04em', color: TEXT, background: VELLUM_DEEP, border: `1px solid ${GOLD}`, padding: 'var(--space-xs) var(--space-sm)' }}>
           {t('mobile.points', { points })}
         </span>
         <span style={{ ...kicker, color: MUTED }}>{t('mobile.level', { level: task.level_required })}</span>

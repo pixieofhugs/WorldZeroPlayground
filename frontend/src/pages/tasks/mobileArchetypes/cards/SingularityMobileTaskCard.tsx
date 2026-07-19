@@ -39,15 +39,15 @@ export default function SingularityMobileTaskCard({ task, points }: { task: Task
       style={{
         display: 'flex',
         flexDirection: 'column',
-        gap: 8,
-        padding: '14px 16px',
+        gap: 'var(--space-sm)',
+        padding: 'var(--space-md) var(--space-lg)',
         background: VOID,
         border: `1px solid ${signal(38)}`,
         borderLeft: `3px solid ${color}`,
         textDecoration: 'none',
       }}
     >
-      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontFamily: FONT, fontSize: 'var(--text-xs)', letterSpacing: '0.14em', textTransform: 'uppercase', color: SIGNAL }}>
+      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 'var(--space-sm)', fontFamily: FONT, fontSize: 'var(--text-xs)', letterSpacing: '0.14em', textTransform: 'uppercase', color: SIGNAL }}>
         <i style={{ width: 7, height: 7, background: color, flex: 'none' }} />
         {factionName(task.primary_faction_slug)}
       </span>
@@ -63,8 +63,8 @@ export default function SingularityMobileTaskCard({ task, points }: { task: Task
         style={{ fontFamily: FONT, lineHeight: 1.5, color: phosphor(55), margin: 0 }}
       />
 
-      <div className="flex items-center gap-3" style={{ marginTop: 2, borderTop: `1px solid ${signal(20)}`, paddingTop: 8 }}>
-        <span style={{ fontFamily: FONT, fontSize: 'var(--text-lg)', letterSpacing: '0.04em', color: PHOSPHOR, border: `1px solid ${signal(38)}`, padding: '3px 9px' }}>
+      <div className="flex items-center gap-3" style={{ marginTop: 'var(--space-xs)', borderTop: `1px solid ${signal(20)}`, paddingTop: 'var(--space-sm)' }}>
+        <span style={{ fontFamily: FONT, fontSize: 'var(--text-lg)', letterSpacing: '0.04em', color: PHOSPHOR, border: `1px solid ${signal(38)}`, padding: 'var(--space-xs) var(--space-sm)' }}>
           {t('mobile.points', { points })}
         </span>
         <span style={{ ...kicker }}>{t('mobile.level', { level: task.level_required })}</span>

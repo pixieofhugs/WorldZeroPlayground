@@ -56,7 +56,7 @@ export default function MobileUpdates({ state }: { state: UpdatesState }) {
       {/* Filter chips — one horizontal-scroll row of touch targets. */}
       <div
         className="flex gap-2 mb-4"
-        style={{ overflowX: 'auto', paddingBottom: 4, scrollbarWidth: 'none' }}
+        style={{ overflowX: 'auto', paddingBottom: 'var(--space-xs)', scrollbarWidth: 'none' }}
       >
         {ALL_FILTERS.map((option) => {
           const active = filter === option
@@ -72,7 +72,7 @@ export default function MobileUpdates({ state }: { state: UpdatesState }) {
                 flex: 'none',
                 display: 'inline-flex',
                 alignItems: 'center',
-                gap: 6,
+                gap: 'var(--space-sm)',
                 fontFamily: "'Courier Prime', monospace",
                 fontSize: 'var(--text-md)',
                 fontWeight: active ? 700 : 400,
@@ -82,7 +82,7 @@ export default function MobileUpdates({ state }: { state: UpdatesState }) {
                 background: active ? 'var(--color-text-primary)' : 'var(--color-bg-surface)',
                 border: `1px solid ${active ? 'transparent' : 'var(--color-border-strong)'}`,
                 borderRadius: 999,
-                padding: '9px 15px',
+                padding: 'var(--space-sm) var(--space-lg)',
                 minHeight: 38,
                 whiteSpace: 'nowrap',
                 cursor: 'pointer',
@@ -100,7 +100,7 @@ export default function MobileUpdates({ state }: { state: UpdatesState }) {
                     color: hasRedBadge ? 'var(--color-text-on-accent)' : 'var(--color-text-primary)',
                     fontSize: 'var(--text-sm)',
                     fontWeight: 700,
-                    padding: '1px 6px',
+                    padding: 'var(--space-xs) var(--space-sm)',
                     borderRadius: 999,
                     minWidth: 16,
                     textAlign: 'center',
@@ -118,32 +118,32 @@ export default function MobileUpdates({ state }: { state: UpdatesState }) {
       {loading ? (
         <p className="font-body text-muted">{t('page.loading')}</p>
       ) : fetchError ? (
-        <p className="font-body text-sm text-red-600 border-2 border-red-300 px-3 py-2">
+        <p className="font-body content-text text-red-600 border-2 border-red-300 px-3 py-2">
           {fetchError}{' '}
           <button onClick={() => window.location.reload()} className="underline">
             {tc('states.tryRefreshing')}
           </button>
         </p>
       ) : items.length === 0 ? (
-        <div className="sidebar-card" style={{ padding: 20, textAlign: 'center' }}>
+        <div className="sidebar-card" style={{ padding: 'var(--space-xl)', textAlign: 'center' }}>
           <p className="font-body content-text" style={{ color: 'var(--color-text-tertiary)' }}>
             {t('page.empty')}
           </p>
         </div>
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-md)' }}>
           {renderStream(items)}
         </div>
       )}
 
       {loadMoreError && !loading && !fetchError && (
-        <p className="font-body text-sm text-red-600" style={{ textAlign: 'center', marginTop: 12 }}>
+        <p className="font-body content-text text-red-600" style={{ textAlign: 'center', marginTop: 'var(--space-md)' }}>
           {loadMoreError}
         </p>
       )}
 
       {nextCursor && !loading && !fetchError && (
-        <div style={{ marginTop: 20 }}>
+        <div style={{ marginTop: 'var(--space-xl)' }}>
           <button
             type="button"
             onClick={loadMore}
@@ -161,7 +161,7 @@ export default function MobileUpdates({ state }: { state: UpdatesState }) {
               borderRadius: 0,
               minHeight: 48,
               cursor: loadingMore ? 'not-allowed' : 'pointer',
-              padding: '12px 16px',
+              padding: 'var(--space-md) var(--space-lg)',
             }}
           >
             {loadingMore ? t('mobile.loadingMore') : t('mobile.loadMore')}

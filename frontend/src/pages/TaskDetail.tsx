@@ -71,7 +71,7 @@ export default function TaskDetail() {
   if (state.fetchError)
     return (
       <div className="py-8">
-        <p className="font-body text-sm text-red-600 border-2 border-red-300 px-3 py-2">
+        <p className="font-body content-text text-red-600 border-2 border-red-300 px-3 py-2">
           {state.fetchError}{" "}
           <Trans
             t={t}

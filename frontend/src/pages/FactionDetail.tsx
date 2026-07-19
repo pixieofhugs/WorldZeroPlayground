@@ -107,7 +107,7 @@ export default function FactionDetail({ slug: slugProp }: { slug?: string } = {}
   if (fetchError)
     return (
       <div className="py-8">
-        <p className="font-body text-sm text-red-600 border-2 border-red-300 px-3 py-2">
+        <p className="font-body content-text text-red-600 border-2 border-red-300 px-3 py-2">
           {fetchError}{" "}
           <button onClick={() => window.location.reload()} className="underline">
             {t("detail.retry")}
@@ -159,9 +159,9 @@ export default function FactionDetail({ slug: slugProp }: { slug?: string } = {}
           {/* ── Description ── PLACEHOLDER: design to restyle ── */}
           <div
             className="sidebar-card mb-6"
-            style={{ borderLeft: `4px solid ${accent}`, padding: "14px 16px" }}
+            style={{ borderLeft: `4px solid ${accent}`, padding: "var(--space-md) var(--space-lg)" }}
           >
-            <p className="font-body text-sm text-ink">
+            <p className="font-body content-text text-ink">
               {description}
             </p>
           </div>

@@ -20,8 +20,8 @@ export default function DefaultMobileTaskCard({ task, points }: { task: TaskOut;
       style={{
         display: 'flex',
         flexDirection: 'column',
-        gap: 8,
-        padding: '14px 16px 14px 18px',
+        gap: 'var(--space-sm)',
+        padding: 'var(--space-md) var(--space-lg)',
         borderLeft: `4px solid ${color}`,
         textDecoration: 'none',
       }}
@@ -29,7 +29,7 @@ export default function DefaultMobileTaskCard({ task, points }: { task: TaskOut;
       {/* Faction tag */}
       <span
         className="eyebrow"
-        style={{ display: 'inline-flex', alignItems: 'center', gap: 6, color }}
+        style={{ display: 'inline-flex', alignItems: 'center', gap: 'var(--space-sm)', color }}
       >
         <i style={{ width: 8, height: 8, borderRadius: 2, background: color, flex: 'none' }} />
         {factionName(task.primary_faction_slug)}
@@ -51,7 +51,7 @@ export default function DefaultMobileTaskCard({ task, points }: { task: TaskOut;
       />
 
       {/* Footer — points + level */}
-      <div className="flex items-center gap-3" style={{ marginTop: 2 }}>
+      <div className="flex items-center gap-3" style={{ marginTop: 'var(--space-xs)' }}>
         <span
           style={{
             fontFamily: "'Courier Prime', monospace",
@@ -60,7 +60,7 @@ export default function DefaultMobileTaskCard({ task, points }: { task: TaskOut;
             color: 'var(--color-text-primary)',
             background: 'var(--color-bg-surface-alt)',
             border: '1px solid var(--color-border)',
-            padding: '3px 9px',
+            padding: 'var(--space-xs) var(--space-sm)',
           }}
         >
           {t('mobile.points', { points })}

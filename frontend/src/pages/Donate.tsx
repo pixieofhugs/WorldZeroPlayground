@@ -21,7 +21,7 @@ export default function Donate() {
         </a>
       </div>
 
-      <p className="font-body text-sm text-muted">
+      <p className="font-body content-text text-muted">
         {t('donate.outro')}
       </p>
     </div>

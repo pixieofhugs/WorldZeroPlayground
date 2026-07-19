@@ -54,14 +54,14 @@ export default function WowMobileTaskCard({ task, points }: { task: TaskOut; poi
     >
       <div
         style={{
-          padding: 10,
+          padding: 'var(--space-md)',
           background: BODY_BG,
           backgroundImage: `radial-gradient(${DOT} 1.4px, transparent 1.4px)`,
           backgroundSize: '13px 13px',
         }}
       >
-        <div style={{ background: NOTEPAD_BG, border: `1.5px solid ${NOTEPAD_BORDER}`, borderRadius: 9, padding: '13px 15px', display: 'flex', flexDirection: 'column', gap: 7 }}>
-          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 'var(--text-sm)', letterSpacing: '0.14em', textTransform: 'uppercase', color }}>
+        <div style={{ background: NOTEPAD_BG, border: `1.5px solid ${NOTEPAD_BORDER}`, borderRadius: 9, padding: 'var(--space-md) var(--space-lg)', display: 'flex', flexDirection: 'column', gap: 'var(--space-sm)' }}>
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 'var(--space-sm)', fontSize: 'var(--text-sm)', letterSpacing: '0.14em', textTransform: 'uppercase', color }}>
             <Sparkle size={10} color={color} />
             {t('wow.mobile.cardMeta', { faction: factionName(task.primary_faction_slug), points })}
           </span>
@@ -76,8 +76,8 @@ export default function WowMobileTaskCard({ task, points }: { task: TaskOut; poi
             style={{ fontFamily: BODY, lineHeight: 1.5, color: CARD_MUTED, margin: 0 }}
           />
 
-          <div className="flex items-center gap-3" style={{ marginTop: 2 }}>
-            <span style={{ fontFamily: BODY, fontSize: 'var(--text-lg)', fontWeight: 700, color: PINK_DEEP, background: BODY_BG, border: `1px solid ${NOTEPAD_BORDER}`, borderRadius: 999, padding: '3px 11px' }}>
+          <div className="flex items-center gap-3" style={{ marginTop: 'var(--space-xs)' }}>
+            <span style={{ fontFamily: BODY, fontSize: 'var(--text-lg)', fontWeight: 700, color: PINK_DEEP, background: BODY_BG, border: `1px solid ${NOTEPAD_BORDER}`, borderRadius: 999, padding: 'var(--space-xs) var(--space-md)' }}>
               {t('mobile.points', { points })}
             </span>
             <span style={{ fontSize: 'var(--text-sm)', letterSpacing: '0.12em', textTransform: 'uppercase', color: CARD_MUTED }}>

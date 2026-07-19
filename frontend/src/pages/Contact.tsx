@@ -63,7 +63,7 @@ export default function Contact() {
             value={form.name}
             onChange={handleChange}
             disabled={submitting}
-            className="w-full border-2 border-border bg-card font-body text-sm px-3 py-2 focus:outline-none focus:shadow-sketch-sm disabled:opacity-50"
+            className="w-full border-2 border-border bg-card font-body content-text px-3 py-2 focus:outline-none focus:shadow-sketch-sm disabled:opacity-50"
           />
           <span className={`font-body text-xs self-end ${form.name.length >= 90 ? 'text-red-600' : 'text-muted'}`} style={{ textAlign: 'right', display: 'block' }}>{form.name.length}/100</span>
         </div>
@@ -81,7 +81,7 @@ export default function Contact() {
             value={form.email}
             onChange={handleChange}
             disabled={submitting}
-            className="w-full border-2 border-border bg-card font-body text-sm px-3 py-2 focus:outline-none focus:shadow-sketch-sm disabled:opacity-50"
+            className="w-full border-2 border-border bg-card font-body content-text px-3 py-2 focus:outline-none focus:shadow-sketch-sm disabled:opacity-50"
           />
         </div>
 
@@ -98,13 +98,13 @@ export default function Contact() {
             value={form.message}
             onChange={handleChange}
             disabled={submitting}
-            className="w-full border-2 border-border bg-card font-body text-sm px-3 py-2 focus:outline-none focus:shadow-sketch-sm disabled:opacity-50 resize-y"
+            className="w-full border-2 border-border bg-card font-body content-text px-3 py-2 focus:outline-none focus:shadow-sketch-sm disabled:opacity-50 resize-y"
           />
           <span className={`font-body text-xs ${form.message.length >= 4500 ? 'text-red-600' : 'text-muted'}`} style={{ textAlign: 'right', display: 'block' }}>{form.message.length}/5000</span>
         </div>
 
         {error && (
-          <p className="font-body text-sm border-2 border-border px-3 py-2">
+          <p className="font-body content-text border-2 border-border px-3 py-2">
             {error}
           </p>
         )}
