@@ -594,9 +594,10 @@
       "heading": "Meta task proposed!",
       "body": "An admin will review it. Once activated, {{faction}} players can apply it to their praxes for a points bonus."
     },
-    "factionSelectorLabel": "Choose a faction for this task",
+    "factionSelectorLabel": "Choose a faction for this task, or leave it open to everyone",
     "factionDescriptor": {
-      "ua": "Unaffiliated",
+      "na": "Anyone",
+      "ua": "Academy",
       "wow": "Collective",
       "everymen": "Mobilize",
       "snide": "Mischief",
@@ -635,7 +636,8 @@
     },
     "metaToggle": {
       "label": "Create as meta task",
-      "hint": "applies as a bonus to all {{faction}} submissions"
+      "hint": "applies as a bonus to all {{faction}} submissions",
+      "hintNoFaction": "pick a faction above — meta tasks must belong to one"
     },
     "preview": {
       "metaHeading": "Meta task preview — {{faction}}",
