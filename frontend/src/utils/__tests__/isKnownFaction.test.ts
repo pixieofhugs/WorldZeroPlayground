@@ -26,7 +26,7 @@ describe("isKnownFaction", () => {
     expect(isKnownFaction("snide")).toBe(true);
   });
 
-  it("returns true for every registered faction", () => {
+  it("returns true for every themed faction", () => {
     for (const slug of [
       "ua",
       "everymen",
@@ -34,7 +34,6 @@ describe("isKnownFaction", () => {
       "snide",
       "ephemerists",
       "singularity",
-      "albescent",
     ]) {
       expect(isKnownFaction(slug), `${slug} should be known`).toBe(true);
     }
@@ -42,6 +41,19 @@ describe("isKnownFaction", () => {
 
   it("returns false for an unregistered slug", () => {
     expect(isKnownFaction("bogus")).toBe(false);
+  });
+
+  /**
+   * The second inhabitant of the unthemed side, and the subtler one (#783).
+   * `na` is not known because it is not a faction. `albescent` IS a faction —
+   * registered, with a manifest and members — that deliberately has no theme,
+   * because it is a secret society hiding in plain sight. Both land on
+   * `default`, and only the mapped-value test keeps them there: revert this
+   * predicate to key presence and you grey out unaffiliated players (#749) and
+   * simultaneously paint a secret society into the spectrum.
+   */
+  it("returns false for `albescent` — registered, but deliberately unthemed", () => {
+    expect(isKnownFaction("albescent")).toBe(false);
   });
 
   /**

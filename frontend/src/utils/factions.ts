@@ -41,8 +41,9 @@ const FACTION_FALLBACKS: Record<string, FactionConfig> = {
   snide: { slug: "snide", color: "#6fae00" },
   ephemerists: { slug: "ephemerists", color: "#1d6e72" },
   singularity: { slug: "singularity", color: "#2563eb" },
-  // First-class identity (#232): near-black ink, no hue — the order refuses the palette.
-  albescent: { slug: "albescent", color: "#1c1c1a" },
+  // `albescent` is deliberately absent (#783). It was first-class here (#232)
+  // with a near-black #1c1c1a; it now has no colour at all, so factionColor()
+  // hands it the same neutral grey as `na`. See that function's docblock.
 };
 
 /** Live registry — color-only, static (nothing hydrates it from the API). */
@@ -71,7 +72,13 @@ const CSS_KEY: Record<string, string> = {
   snide: "snide",
   ephemerists: "ephemerists",
   singularity: "singularity",
-  albescent: "albescent", // first-class (#232) — its own --faction-albescent-* set
+  // Albescent is registered but NOT themed (#783). It is a secret society
+  // hiding in plain sight, so it points at `default` exactly like `na` below:
+  // same neutral scalars, same rainbow through factionFill, and — because the
+  // predicate reads the mapped VALUE — isKnownFaction('albescent') === false.
+  // That is the intended outcome, not a gap. It was first-class (#232) with a
+  // 35-declaration --faction-albescent-* block; the block is gone.
+  albescent: "default",
   // `na` (unaffiliated) is a state, not a faction: it reads the neutral/rainbow
   // --faction-default-* set (#418), so factionCssVar('na') is grey, never a
   // borrowed `ua` orange. The spectrum reaches fills through factionFill(), and
@@ -186,6 +193,13 @@ export function factionFill(
  * value, not key presence, is what keeps those two meanings apart — presence
  * alone reported `na` as a real faction and turned every unaffiliated ornament
  * grey (#749). Aliases resolve first, so a derived slug counts as known.
+ *
+ * `albescent` now sits on that same unthemed side (#783), and it is there for a
+ * different reason than `na`: it IS a faction, it just refuses to look like one.
+ * This is why the value test matters twice over — Albescent is a registered slug
+ * with a manifest and a membership roster, and only the mapped `default` keeps
+ * it out of the spectrum. Anything that starts testing key presence again will
+ * both grey out unaffiliated players AND expose a secret society.
  */
 export function isKnownFaction(slug: string | null | undefined): boolean {
   const resolved = FACTION_ALIASES[slug ?? ""] ?? slug ?? "";
