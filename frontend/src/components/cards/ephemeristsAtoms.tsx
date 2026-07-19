@@ -200,6 +200,7 @@ export function LapisLastWord({
         <sup
           style={{
             fontFamily: "var(--eph-serif)",
+            // eslint-disable-next-line local/no-raw-style-values -- ornament: superscript footnote marker. `em` here is a RELATIONSHIP to the parent's size, not a size drawn from the scale — a --text-* token would pin the marker to a tier and break the half-height it needs to read as a footnote.
             fontSize: "0.5em",
             color: "var(--eph-lapis)",
             fontWeight: 400,
