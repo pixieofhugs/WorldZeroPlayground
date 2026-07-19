@@ -33,15 +33,6 @@ function ordinal(n: number): string {
   }
 }
 
-const ORDINAL_WORDS = [
-  'First', 'Second', 'Third', 'Fourth', 'Fifth', 'Sixth', 'Seventh',
-  'Eighth', 'Ninth', 'Tenth',
-]
-
-function ordinalWord(n: number): string {
-  return ORDINAL_WORDS[n - 1] ?? ordinal(n)
-}
-
 /** Plain relative time, full words (UA register, and the singularity fallback). */
 function relative(d: TimeDelta): string {
   if (d.days >= 1) return `${d.days} day${d.days === 1 ? '' : 's'} ago`
@@ -77,8 +68,10 @@ export function formatCommentTime(
       return `the ${ordinal(Math.max(1, d.days))} day`
     case 'everymen':
       return `Shift ${d.days + 1}`
-    case 'albescent':
-      return `Vigil the ${ordinalWord(d.days + 1)}`
+    // Albescent has no dialect (#783). It had "Vigil the Third", keyed on the
+    // comment AUTHOR's faction — so a member revealed themselves simply by
+    // commenting, anywhere, to anyone. It falls to the plain relative form the
+    // default branch gives `na` and unknown slugs.
     case 'singularity':
       // Bare terminal clock (terse, no "ago" — avoids "now ago" at t<1m).
       return terse(d)
