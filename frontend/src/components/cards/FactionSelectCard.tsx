@@ -1,5 +1,6 @@
 import i18n from "../../i18n";
 import { pickVariant } from "../../utils/factionDispatch";
+import { factionDescription, factionFill, factionName } from "../../utils/factions";
 import { surfaceMap } from "../../factions";
 import { UaSigil } from "./UaSigil";
 import { WowSigil } from "./WowSigil";
@@ -347,28 +348,54 @@ export function AlbescentSelectCard({ state = "locked", members, onVisit }: Omit
   );
 }
 
-// ─── Dispatcher ──────────────────────────────────────────────────────────────
+export function DefaultSelectCard({ faction, state = "locked", members, onVisit }: FactionSelectCardProps) {
+  const status = i18n.t(`feed:factionSelect.default.status.${state}` as const);
+  return (
+    <div style={{
+      width: "100%", maxWidth: 360, minHeight: 300, boxSizing: "border-box", position: "relative", overflow: "hidden",
+      background: "var(--faction-default-card-bg)", color: "var(--faction-default-card-text)", fontFamily: "var(--font-body)",
+      border: "1px solid var(--faction-default-border)", boxShadow: "0 6px 24px rgba(0,0,0,0.10)",
+      display: "flex", flexDirection: "column",
+    }}>
+      {/* The spectrum as a top edge bar — the unaffiliated identity is a gradient,
+          never a hue, so it arrives via factionFill's "bar" shape (ADR-0039). */}
+      <div style={{ height: 4, flexShrink: 0, ...factionFill(null, "bar") }} />
+      <div style={{ position: "relative", flex: 1, padding: "var(--space-xl) var(--space-xl) 0", display: "flex", flexDirection: "column" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "var(--space-md)" }}>
+          <div className="eyebrow">{i18n.t("feed:factionSelect.default.eyebrow")}</div>
+          {/* Neutral mark: the spectrum as a conic dot, the `na` sigil equivalent. */}
+          <span style={{ width: 26, height: 26, borderRadius: "50%", flexShrink: 0, ...factionFill(null, "dot") }} />
+        </div>
+        <div className="content-title" style={{ fontFamily: "var(--faction-default-card-font)", fontStyle: "italic", fontWeight: 600, lineHeight: 1.1, marginTop: "var(--space-lg)" }}>
+          {factionName(faction)}
+        </div>
+        <div style={{ height: 1, background: "var(--faction-default-border)", margin: "var(--space-md) 0" }} />
+        <p className="content-text" style={{ margin: 0, lineHeight: 1.5, color: "var(--faction-default-card-muted)" }}>
+          {factionDescription(faction)}
+        </p>
+      </div>
+      <div style={{ position: "relative", padding: "var(--space-lg) var(--space-xl) var(--space-xl)" }}>
+        <div className="eyebrow" style={{ marginBottom: "var(--space-md)" }}>
+          {status}{members != null && ` · ${i18n.t("feed:factionSelect.default.members", { count: members })}`}
+        </div>
+        <button onClick={onVisit} style={{
+          width: "100%", cursor: "pointer", border: "1px solid var(--faction-default-card-text)", background: "transparent",
+          color: "var(--faction-default-card-text)", fontFamily: "var(--font-body)", fontSize: "var(--text-md)",
+          letterSpacing: "0.18em", padding: "var(--space-md)", textTransform: "uppercase",
+        }}>{i18n.t("feed:factionSelect.default.cta")}</button>
+      </div>
+    </div>
+  );
+}
 
-// Retired/renamed slugs → their live archetype. Raw slug wins first, so a
-// first-class faction always renders its own card rather than a legacy skin.
-//
-// This is a SECOND alias table, parallel to FACTION_ALIASES in utils/factions.ts
-// which pickVariant already consults. Folding the two together is a behaviour
-// change (these two slugs are not in FACTION_ALIASES), so it is left alone here
-// and tracked as follow-up.
-const LEGACY_SLUG: Record<string, string> = {
-  gestalt: "wow",
-  journeymen: "ephemerists",
-};
+// ─── Dispatcher ──────────────────────────────────────────────────────────────
 
 export default function FactionSelectCard({ faction, ...rest }: FactionSelectCardProps) {
   const cards = surfaceMap("factionSelectCard");
-  const key = cards[faction] ? faction : LEGACY_SLUG[faction] ?? faction;
-  // NOTE: the fallback is UA's card, not a neutral default — an unknown or `na`
-  // slug renders UA's costume. That predates #782 and is preserved here
-  // verbatim to keep this refactor a visual no-op, but it is the same class of
-  // bug as #418/#636 (na must never borrow UA's identity) and wants its own
-  // issue.
-  const Card = pickVariant(cards, key, UaSelectCard);
-  return <Card {...rest} />;
+  // Unknown / `na` / unregistered slugs get the NEUTRAL card, never UA's
+  // costume (#796, same bug class as #418/#636; ADR-0030 + ADR-0039). Albescent
+  // rides this path deliberately after #783 — a secret society must be
+  // indistinguishable from an unaffiliated player at first glance.
+  const Card = pickVariant(cards, faction, DefaultSelectCard);
+  return <Card faction={faction} {...rest} />;
 }

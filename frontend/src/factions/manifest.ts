@@ -80,9 +80,11 @@ export interface FactionManifest {
   readonly taskCard?: Lazy<ComponentType<CardProps>>
   readonly praxisCard?: Lazy<ComponentType<PraxisCardProps>>
   readonly factionCard?: Lazy<ComponentType<FactionCardProps>>
-  readonly factionSelectCard?: Lazy<
-    ComponentType<Omit<FactionSelectCardProps, 'faction'>>
-  >
+  // Takes the FULL props including `faction`: the neutral DefaultSelectCard
+  // renders for any unregistered slug, so it needs the slug to name itself
+  // (#796). Per-faction archetypes keep their `Omit<…, 'faction'>` signatures
+  // and just ignore the extra prop — structurally assignable.
+  readonly factionSelectCard?: Lazy<ComponentType<FactionSelectCardProps>>
   readonly avatar?: Lazy<ComponentType<FactionAvatarProps>>
   readonly backdrop?: Lazy<ComponentType>
   readonly sigil?: Lazy<ComponentType<SigilVariantProps>>

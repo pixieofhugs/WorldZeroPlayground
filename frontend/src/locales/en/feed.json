@@ -282,6 +282,17 @@
     }
   },
   "factionSelect": {
+    "default": {
+      "eyebrow": "World Zero",
+      "status": {
+        "locked": "Unaffiliated — no allegiance on record.",
+        "eligible": "Open to anyone who asks.",
+        "member": "Standing — on the record."
+      },
+      "members_one": "{{count}} player",
+      "members_other": "{{count}} players",
+      "cta": "Visit →"
+    },
     "ua": {
       "masthead": "World Zero · Nº I",
       "wordmark": "UA",
