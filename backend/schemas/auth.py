@@ -36,3 +36,9 @@ class CurrentUser(BaseModel):
     can_see_retired_tasks: bool = False
     can_see_pending_tasks: bool = False
     can_comment: bool = False
+    # Faction level-jump allowance (#811). reach = levels above own level this
+    # faction grants (0 = no such ability, so hide the affordance entirely);
+    # available = unspent at the current level. Neither is short-circuited by
+    # is_admin — the jump is a faction perk, not a level gate.
+    level_jump_reach: int = 0
+    level_jump_available: bool = False

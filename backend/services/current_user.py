@@ -31,6 +31,7 @@ async def build_current_user(
 
     char_out = None
     character_level: int | None = None
+    level_jump_used_at_level: int | None = None
     if character:
         stats = await load_current_era_stats(character.id, session)
         # #243: surface the active life's own current-era invitation letters so the
@@ -40,6 +41,7 @@ async def build_current_user(
         )
         char_out = build_character_out(character, stats, invitations=invitations)
         character_level = stats.level if stats else 0
+        level_jump_used_at_level = stats.level_jump_used_at_level if stats else None
 
     is_admin = await account_has_admin_role(account.id, session)
 
@@ -52,7 +54,13 @@ async def build_current_user(
         can_create_more = False
         can_albescent = False
 
-    capabilities = compute_capabilities(character_level, is_admin)
+    capabilities = compute_capabilities(
+        character_level,
+        is_admin,
+        era,
+        faction_slug=character.faction_slug if character else None,
+        level_jump_used_at_level=level_jump_used_at_level,
+    )
 
     return CurrentUser(
         account_id=account.id,
