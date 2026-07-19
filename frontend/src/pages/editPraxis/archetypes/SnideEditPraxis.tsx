@@ -620,8 +620,8 @@ export default function SnideEditPraxis({ state }: Props) {
           <PublishButton
             state={state}
             skin={{
-              idleLabel: "FILE IT & RUN",
-              busyLabel: "running...",
+              idleLabel: t("editPraxis.snide.publishIdle"),
+              busyLabel: t("editPraxis.snide.publishBusy"),
               ornament: (
                 <span
                   aria-hidden
