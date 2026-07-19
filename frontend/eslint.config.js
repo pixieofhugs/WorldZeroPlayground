@@ -107,7 +107,12 @@ const STYLE_PROPS = new Set([
   'rowGap',
   'columnGap',
 ])
-const RAW_PX_COMPONENT = /^-?\d+(\.\d+)?px$/
+// `rem`/`em` are the same violation wearing a different unit: `padding:
+// '0.6rem 1.2rem'` is a raw value that left the scale, and a px-only pattern
+// waved it through (#763, pattern 7). Note `calc(...)` still escapes this by
+// construction — that is the separate concern §4a already names ("never
+// compose with calc() to dodge the scale") and is not silently in scope here.
+const RAW_LENGTH_COMPONENT = /^-?\d+(\.\d+)?(px|rem|em)$/
 
 // A shorthand string is a violation if ANY of its components is a raw pixel
 // value. Matching the WHOLE string against a px-only pattern (as this once did)
@@ -115,7 +120,46 @@ const RAW_PX_COMPONENT = /^-?\d+(\.\d+)?px$/
 // `"0 0 14px"`, `"12px 0"` and `"0 auto 26px"` all passed silently — and a file
 // carrying them could be delisted while still holding raw values (#750).
 function hasRawPxComponent(value) {
-  return value.trim().split(/\s+/).some((part) => RAW_PX_COMPONENT.test(part))
+  return value.trim().split(/\s+/).some((part) => RAW_LENGTH_COMPONENT.test(part))
+}
+
+// Pattern 6 (#763): an arbitrary Tailwind utility takes the value out of the
+// inline style object entirely, so the Property visitor below never sees it.
+// `mt-[6px]` and `padding: 6` are the same decision; only one was enforced.
+//
+// Deliberately limited to the SPACING utilities. Two exclusions, both from §4a:
+//   - `w-`/`h-`/`top-`/`left-`/`inset-`/`max-w-` are ornament GEOMETRY, which
+//     §4a explicitly leaves in raw pixels ("not covered by the rule").
+//   - `text-[13px]` is NOT included; see the type-scale gap note by the rule.
+const TAILWIND_SPACING_PREFIX =
+  '(?:m|mt|mr|mb|ml|mx|my|p|pt|pr|pb|pl|px|py|gap|gap-x|gap-y|space-x|space-y)'
+const ARBITRARY_SPACING_CLASS = new RegExp(
+  `(?:^|\\s)-?${TAILWIND_SPACING_PREFIX}-\\[-?\\d+(?:\\.\\d+)?(?:px|rem|em)\\]`,
+)
+
+// Walk the shapes a className actually takes: a plain string, a template
+// literal, and the ternaries/`&&` chains that wrap conditional classes. Missing
+// these would reproduce the exact Literal-only blind spot that let patterns 1-3
+// through (#770, #789).
+function findRawSpacingClass(node) {
+  if (!node) return false
+  switch (node.type) {
+    case 'Literal':
+      return typeof node.value === 'string' && ARBITRARY_SPACING_CLASS.test(node.value)
+    case 'TemplateLiteral':
+      return node.quasis.some((quasi) => ARBITRARY_SPACING_CLASS.test(quasi.value.raw))
+        || node.expressions.some(findRawSpacingClass)
+    case 'ConditionalExpression':
+      return findRawSpacingClass(node.consequent) || findRawSpacingClass(node.alternate)
+    case 'LogicalExpression':
+      return findRawSpacingClass(node.left) || findRawSpacingClass(node.right)
+    case 'JSXExpressionContainer':
+      return findRawSpacingClass(node.expression)
+    case 'BinaryExpression':
+      return findRawSpacingClass(node.left) || findRawSpacingClass(node.right)
+    default:
+      return false
+  }
 }
 
 function isRawPxValue(node) {
@@ -161,6 +205,16 @@ const noRawStyleValues = {
               context.report({
                 node,
                 message: `Raw pixel value for "${node.key.name}" — use a --text-*/--space-* token instead of a hardcoded number.`,
+              })
+            }
+          },
+          JSXAttribute(node) {
+            if (node.name.type !== 'JSXIdentifier' || node.name.name !== 'className') return
+            if (findRawSpacingClass(node.value)) {
+              context.report({
+                node,
+                message:
+                  'Arbitrary Tailwind spacing utility (e.g. `mt-[6px]`) — use a scale class such as `mt-2`. The value is raw spacing wearing a class name.',
               })
             }
           },
