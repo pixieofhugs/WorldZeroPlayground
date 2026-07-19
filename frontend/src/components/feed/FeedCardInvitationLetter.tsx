@@ -12,6 +12,12 @@ interface Props {
 
 export default function FeedCardInvitationLetter({ item }: Props) {
   const { faction_slug } = item.payload;
+  // Audited in #783: every use below is SCALAR (`color:`), so the #6b6a7a grey
+  // an unregistered slug resolves to is the correct answer, not a gap. The
+  // spectrum has no scalar form — `factionFill` returns a background and knows
+  // only bar/dot/pill (#794) — and inventing one here would mean a new token.
+  // Albescent lands on that grey deliberately: a letter set in the society's
+  // own ink would announce it before the player has been revealed.
   const color = factionColor(faction_slug);
 
   return (

@@ -13,7 +13,7 @@ import {
   leavePraxis,
 } from "../../api/praxis";
 import { extractError } from "../../utils/errors";
-import { factionColor } from "../../utils/factions";
+import { factionColor, factionFill, isKnownFaction } from "../../utils/factions";
 import { relativeTime } from "../../utils/dates";
 import FeedBadge from "./FeedBadge";
 
@@ -35,6 +35,18 @@ export default function FeedCardCollabInvite({ item }: Props) {
   } = item.payload;
   const taskColor = factionColor(task_faction_slug);
   const actorColor = factionColor(item.actor_faction_slug);
+  // `factionColor` has no rainbow fallback — an unregistered slug (`na`, and
+  // Albescent since #783) resolves to a flat #6b6a7a grey. That is fine in the
+  // scalar contexts below, but a FILLED disc beside six hued ones reads as
+  // "broken", so the fills branch to the spectrum like the CSS surfaces do
+  // (ADR-0039). Only these two discs change; the six real factions are
+  // untouched. See #794 for why there is no scalar spectrum token.
+  const taskFill = isKnownFaction(task_faction_slug)
+    ? { background: taskColor }
+    : factionFill(task_faction_slug, "dot");
+  const actorFill = isKnownFaction(item.actor_faction_slug)
+    ? { background: `linear-gradient(135deg, ${actorColor}, ${actorColor}88)` }
+    : factionFill(item.actor_faction_slug, "dot");
   const navigate = useNavigate();
 
   const { user } = useAuth();
@@ -118,7 +130,7 @@ export default function FeedCardCollabInvite({ item }: Props) {
                 width: 28,
                 height: 28,
                 borderRadius: "50%",
-                background: `linear-gradient(135deg, ${actorColor}, ${actorColor}88)`,
+                ...actorFill,
                 flexShrink: 0,
                 marginTop: "var(--space-xs)",
               }}
@@ -190,7 +202,7 @@ export default function FeedCardCollabInvite({ item }: Props) {
               width: 8,
               height: 8,
               borderRadius: "50%",
-              background: taskColor,
+              ...taskFill,
               flexShrink: 0,
             }}
           />

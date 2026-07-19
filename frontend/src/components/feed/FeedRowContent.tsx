@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom'
 import i18n from '../../i18n'
-import { factionColor } from '../../utils/factions'
+import { factionColor, factionFill, isKnownFaction } from '../../utils/factions'
 import { mediaUrl } from '../../utils/media'
 import FeedBadge from './FeedBadge'
 import type { FeedRow } from './normalizeFeedItem'
@@ -20,6 +20,14 @@ export default function FeedRowContent({
   avatarUrl: string | null
 }) {
   const accent = factionColor(row.slug)
+  // `factionColor` has no rainbow fallback — an unregistered slug (`na`, and
+  // Albescent since #783) resolves to a flat #6b6a7a grey. Fine in the scalar
+  // contexts below, but a FILLED disc beside six hued ones reads as broken, so
+  // the fills branch to the spectrum like the CSS surfaces do (ADR-0039). The
+  // six real factions are untouched. #794: there is no scalar spectrum token.
+  const accentFill = isKnownFaction(row.slug)
+    ? { background: `linear-gradient(135deg, ${accent}, ${accent}88)` }
+    : factionFill(row.slug, 'dot')
   const initial = row.actor?.[0]?.toUpperCase() ?? '·'
 
   const actorNode = row.actor ? (
@@ -56,7 +64,7 @@ export default function FeedRowContent({
                   width: 28,
                   height: 28,
                   borderRadius: '50%',
-                  background: `linear-gradient(135deg, ${accent}, ${accent}88)`,
+                  ...accentFill,
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
