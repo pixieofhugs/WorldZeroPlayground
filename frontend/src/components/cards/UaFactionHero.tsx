@@ -7,7 +7,8 @@ import { UaSigil, MottoRibbon } from "./UaSigil";
  * The masthead reads as an art-academy museum plate: a gold museum frame
  * (--ua-gilt) around a parchment field, a heraldic crest, a regal serif
  * wordmark, a Latin motto cartouche, and the three counts engraved as salon
- * regalia (patrons / commissions / acquisitions). Ported from the UA design kit
+ * regalia. The regalia wording lives in the copy catalog
+ * (feed:factionHero.ua.stats.*), not here. Ported from the UA design kit
  * (UaTaskDetail hero / ua.css); conforms to {@link FactionHeroProps}.
  *
  * UA is ALWAYS LIGHT: its --faction-ua-* / --ua-* tokens are identical in both
@@ -47,9 +48,9 @@ export default function UaFactionHero({
 }: FactionHeroProps) {
   // The salon engraves its own counts — page passes raw numbers only.
   const stats = [
-    { value: members, label: "patrons" },
-    { value: tasks, label: "commissions" },
-    { value: praxes, label: "acquisitions" },
+    { value: members, label: i18n.t("feed:factionHero.ua.stats.members") },
+    { value: tasks, label: i18n.t("feed:factionHero.ua.stats.tasks") },
+    { value: praxes, label: i18n.t("feed:factionHero.ua.stats.praxes") },
   ];
 
   return (
