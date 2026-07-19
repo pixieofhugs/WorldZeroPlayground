@@ -34,7 +34,7 @@ export default function DefaultSettings({ character, dark, onToggleTheme, onSign
   const charactersHref = character ? `/characters/${character.id}/edit` : '/characters/create'
 
   return (
-    <div data-testid="mobile-settings" style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+    <div data-testid="mobile-settings" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-lg)' }}>
       <header>
         <h1
           className="font-display italic"
@@ -50,17 +50,23 @@ export default function DefaultSettings({ character, dark, onToggleTheme, onSign
           background: 'var(--color-bg-surface)',
           border: '1px solid var(--color-border)',
           borderRadius: 'var(--radius-xl)',
-          padding: 16,
+          padding: 'var(--space-lg)',
         }}
       >
-        <div className="eyebrow" style={{ color: 'var(--color-text-secondary)', marginBottom: 12 }}>
+        <div className="eyebrow" style={{ color: 'var(--color-text-secondary)', marginBottom: 'var(--space-md)' }}>
           {t('settings.account.eyebrow')}
         </div>
         {character ? (
           <div className="flex items-center gap-3.5">
             <div
               className="shrink-0 rounded-full"
-              style={{ width: 52, height: 52, padding: 3, background: 'var(--faction-default-ring)' }}
+              style={{
+                width: 52,
+                height: 52,
+                // eslint-disable-next-line local/no-raw-style-values -- ornament: spectrum ring thickness drawn around a 52px avatar; the nearest rung (4px) thickens the band by a third.
+                padding: 3,
+                background: 'var(--faction-default-ring)',
+              }}
             >
               {character.avatar_url ? (
                 <img
@@ -88,7 +94,7 @@ export default function DefaultSettings({ character, dark, onToggleTheme, onSign
               <div
                 className="truncate"
                 style={{
-                  marginTop: 4,
+                  marginTop: 'var(--space-xs)',
                   fontFamily: 'var(--font-body)',
                   fontSize: 'var(--text-base)',
                   letterSpacing: '0.14em',
@@ -110,7 +116,7 @@ export default function DefaultSettings({ character, dark, onToggleTheme, onSign
                 textDecoration: 'none',
                 border: '1px solid var(--color-border-strong)',
                 borderRadius: 999,
-                padding: '6px 11px',
+                padding: 'var(--space-sm) var(--space-md)',
               }}
             >
               {t('settings.account.viewProfile')}
@@ -131,18 +137,25 @@ export default function DefaultSettings({ character, dark, onToggleTheme, onSign
           background: 'var(--color-bg-surface)',
           border: '1px solid var(--color-border)',
           borderRadius: 'var(--radius-xl)',
-          padding: '16px',
+          padding: 'var(--space-lg)',
           textDecoration: 'none',
         }}
       >
         <div className="min-w-0 flex-1">
           <div style={{ fontSize: 'var(--text-content)', color: 'var(--color-text-primary)' }}>{t('settings.characters.label')}</div>
-          <div style={{ marginTop: 2, fontSize: 'var(--text-content)', color: 'var(--color-text-secondary)' }}>
+          <div style={{ marginTop: 'var(--space-xs)', fontSize: 'var(--text-content)', color: 'var(--color-text-secondary)' }}>
             {t('settings.characters.hint')}
           </div>
         </div>
-        {/* ornament: chevron dingbat used as a row-affordance icon, not text */}
-        <span aria-hidden style={{ color: 'var(--color-text-tertiary)', fontSize: 18, lineHeight: 1 }}>
+        <span
+          aria-hidden
+          style={{
+            color: 'var(--color-text-tertiary)',
+            // eslint-disable-next-line local/no-raw-style-values -- ornament: chevron dingbat used as a row-affordance icon, not text
+            fontSize: 18,
+            lineHeight: 1,
+          }}
+        >
           ›
         </span>
       </Link>
@@ -153,10 +166,10 @@ export default function DefaultSettings({ character, dark, onToggleTheme, onSign
           background: 'var(--color-bg-surface)',
           border: '1px solid var(--color-border)',
           borderRadius: 'var(--radius-xl)',
-          padding: '16px',
+          padding: 'var(--space-lg)',
         }}
       >
-        <div className="eyebrow" style={{ color: 'var(--color-text-secondary)', marginBottom: 12 }}>
+        <div className="eyebrow" style={{ color: 'var(--color-text-secondary)', marginBottom: 'var(--space-md)' }}>
           {t('settings.appearance.eyebrow')}
         </div>
         <div className="flex items-center gap-3">
@@ -207,7 +220,7 @@ export default function DefaultSettings({ character, dark, onToggleTheme, onSign
         data-testid="settings-sign-out"
         className="font-body"
         style={{
-          padding: 15,
+          padding: 'var(--space-lg)',
           borderRadius: 12,
           fontSize: 'var(--text-lg)',
           letterSpacing: '0.12em',

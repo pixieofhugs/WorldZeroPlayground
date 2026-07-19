@@ -57,15 +57,22 @@ export default function DefaultCreateCharacter({ state }: { state: CreateCharact
             {avatarPreview ? (
               <img src={avatarPreview} alt={handle} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
             ) : (
-              // ornament: "+" is a glyph-as-icon, sized to the 104px photo ring, not text
-              <span style={{ fontSize: 26, color: 'var(--color-text-secondary)' }}>+</span>
+              <span
+                style={{
+                  // eslint-disable-next-line local/no-raw-style-values -- ornament: "+" is a glyph-as-icon, sized to the 104px photo ring, not text
+                  fontSize: 26,
+                  color: 'var(--color-text-secondary)',
+                }}
+              >
+                +
+              </span>
             )}
           </span>
         </button>
-        <div className="eyebrow" style={{ marginTop: 12, color: 'var(--faction-default-card-muted)' }}>
+        <div className="eyebrow" style={{ marginTop: 'var(--space-md)', color: 'var(--faction-default-card-muted)' }}>
           {avatarPreview ? t('createCharacter.mobile.changePhoto') : t('createCharacter.mobile.addPhoto')}
         </div>
-        <div className="eyebrow" style={{ marginTop: 6, color: 'var(--color-text-tertiary)' }}>
+        <div className="eyebrow" style={{ marginTop: 'var(--space-sm)', color: 'var(--color-text-tertiary)' }}>
           {t('createCharacter.mobile.step')}
         </div>
       </div>
@@ -95,7 +102,7 @@ export default function DefaultCreateCharacter({ state }: { state: CreateCharact
       {showPicker && (
         <div>
           <label style={label}>{t('createCharacter.callingLabel')}</label>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 8 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-sm)', marginTop: 'var(--space-sm)' }}>
             {invited.map((slug) => {
               const selected = factionSlug === slug
               return (
@@ -147,15 +154,19 @@ export default function DefaultCreateCharacter({ state }: { state: CreateCharact
 
 // --- token-driven styles (single column, no hardcoded hex) ------------------
 
-const page: CSSProperties = { display: 'flex', flexDirection: 'column', gap: 22, paddingBottom: 96 }
+const page: CSSProperties = { display: 'flex', flexDirection: 'column', gap: 'var(--space-xl)', paddingBottom: 'var(--space-6xl)' }
 const topRow: CSSProperties = { display: 'flex', alignItems: 'center', justifyContent: 'space-between' }
 const backBtn: CSSProperties = {
   width: 28, height: 28, background: 'none', border: 'none', cursor: 'pointer',
-  // ornament: the back chevron is a glyph-as-icon sized to its 28px hit target
-  fontSize: 24, lineHeight: 1, color: 'var(--color-text-primary)', padding: 0,
+  // eslint-disable-next-line local/no-raw-style-values -- ornament: the back chevron is a glyph-as-icon sized to its 28px hit target
+  fontSize: 24,
+  lineHeight: 1, color: 'var(--color-text-primary)', padding: 0,
 }
 const ringBtn: CSSProperties = {
-  width: 104, height: 104, borderRadius: '50%', padding: 3, cursor: 'pointer',
+  width: 104, height: 104, borderRadius: '50%',
+  // eslint-disable-next-line local/no-raw-style-values -- ornament: rainbow ring thickness drawn around the 104px photo well; the nearest rung (4px) thickens the band by a third.
+  padding: 3,
+  cursor: 'pointer',
   border: 'none', background: 'var(--faction-default-rainbow)',
 }
 const ringInner: CSSProperties = {
@@ -168,19 +179,19 @@ const label: CSSProperties = {
   color: 'var(--color-text-secondary)',
 }
 const field: CSSProperties = {
-  display: 'block', width: '100%', marginTop: 8, boxSizing: 'border-box',
+  display: 'block', width: '100%', marginTop: 'var(--space-sm)', boxSizing: 'border-box',
   background: 'var(--color-bg-page)', border: '1px solid var(--color-border-strong)',
   borderRadius: 8, outline: 'none', fontFamily: 'var(--font-body)',
-  color: 'var(--color-text-primary)', padding: '12px 13px',
+  color: 'var(--color-text-primary)', padding: 'var(--space-md)',
 }
 const metaRow: CSSProperties = {
-  display: 'flex', justifyContent: 'space-between', marginTop: 6,
+  display: 'flex', justifyContent: 'space-between', marginTop: 'var(--space-sm)',
   fontFamily: 'var(--font-body)', fontSize: 'var(--text-base)',
 }
 const pickerCell: CSSProperties = {
-  display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer', width: '100%',
+  display: 'flex', alignItems: 'center', gap: 'var(--space-md)', cursor: 'pointer', width: '100%',
   background: 'var(--color-bg-surface)', border: '1px solid var(--color-border-strong)',
-  borderRadius: 8, padding: '13px 14px', textAlign: 'left',
+  borderRadius: 8, padding: 'var(--space-md) var(--space-lg)', textAlign: 'left',
 }
 const help: CSSProperties = {
   fontFamily: 'var(--font-body)', lineHeight: 1.6,
@@ -188,17 +199,17 @@ const help: CSSProperties = {
 }
 const errorBox: CSSProperties = {
   fontFamily: 'var(--font-body)', color: 'var(--color-danger)',
-  border: '1px solid var(--color-danger)', borderRadius: 6, padding: '10px 12px', margin: 0,
+  border: '1px solid var(--color-danger)', borderRadius: 6, padding: 'var(--space-md)', margin: 0,
 }
 const stickyBar: CSSProperties = {
   position: 'sticky',
   bottom: 'calc(3.5rem + env(safe-area-inset-bottom))',
   marginTop: 'auto',
-  paddingTop: 8,
+  paddingTop: 'var(--space-sm)',
 }
 const primaryBtn: CSSProperties = {
   width: '100%', cursor: 'pointer', fontFamily: 'var(--font-body)', fontSize: 'var(--text-xl)',
   letterSpacing: '0.12em', textTransform: 'uppercase', fontWeight: 700,
   color: 'var(--color-bg-page)', background: 'var(--color-text-primary)',
-  border: 'none', padding: '15px 24px', borderRadius: 12,
+  border: 'none', padding: 'var(--space-lg) var(--space-xl)', borderRadius: 12,
 }

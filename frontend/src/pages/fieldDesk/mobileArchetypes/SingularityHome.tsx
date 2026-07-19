@@ -46,7 +46,7 @@ function Cursor() {
         display: 'inline-block',
         width: 6,
         height: 11,
-        marginLeft: 4,
+        marginLeft: 'var(--space-xs)',
         verticalAlign: 'middle',
         background: PHOSPHOR,
         animation: 'blink 1s step-end infinite',
@@ -58,7 +58,7 @@ function Cursor() {
 /** Void readout panel with a signal-blue hairline and corner brackets. */
 function Panel({ children }: { children: ReactNode }) {
   return (
-    <div style={{ position: 'relative', overflow: 'hidden', background: VOID, border: `1px solid ${signal(42)}`, padding: 16 }}>
+    <div style={{ position: 'relative', overflow: 'hidden', background: VOID, border: `1px solid ${signal(42)}`, padding: 'var(--space-lg)' }}>
       {/* Scanline overlay */}
       <div
         aria-hidden
@@ -88,22 +88,22 @@ export default function SingularityHome({ state }: { state: FieldDeskHomeState }
     <div
       data-skin="singularity"
       className="page"
-      style={{ display: 'flex', flexDirection: 'column', gap: 14, fontFamily: FONT, color: PHOSPHOR, background: VOID }}
+      style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-lg)', fontFamily: FONT, color: PHOSPHOR, background: VOID }}
     >
       {/* Prompt masthead */}
       <header>
         <div style={kicker}>{t('nav.home')}</div>
-        <h1 style={{ fontFamily: FONT, fontSize: 'var(--text-title)', lineHeight: 1, color: PHOSPHOR, letterSpacing: '0.04em', margin: '4px 0 0' }}>
+        <h1 style={{ fontFamily: FONT, fontSize: 'var(--text-title)', lineHeight: 1, color: PHOSPHOR, letterSpacing: '0.04em', margin: 'var(--space-xs) 0 0' }}>
           {'> '}
           {t('fieldDesk.home.singularity.masthead')}
           <Cursor />
         </h1>
-        <div style={{ height: 1, marginTop: 10, background: `linear-gradient(90deg, ${BORDER_HARD}, transparent)` }} />
+        <div style={{ height: 1, marginTop: 'var(--space-md)', background: `linear-gradient(90deg, ${BORDER_HARD}, transparent)` }} />
       </header>
 
       {/* ── Node panel ── */}
       <Panel>
-        <div className="flex items-center justify-between" style={{ marginBottom: 14 }}>
+        <div className="flex items-center justify-between" style={{ marginBottom: 'var(--space-lg)' }}>
           <span style={kicker}>{t('fieldDesk.home.singularity.charEyebrow')}</span>
           <Link to={`/characters/${character.id}/edit`} style={{ ...kicker, color: PHOSPHOR, textDecoration: 'none' }}>
             {t('fieldDesk.home.edit')}
@@ -125,7 +125,7 @@ export default function SingularityHome({ state }: { state: FieldDeskHomeState }
             ) : (
               <span
                 className="flex w-full h-full items-center justify-center"
-                // ornament: avatar initial sized to its 52px node ring, not text
+                // eslint-disable-next-line local/no-raw-style-values -- ornament: avatar initial sized to its 52px node ring, not text
                 style={{ fontFamily: FONT, fontSize: 20, color: SIGNAL }}
               >
                 {character.display_name[0]?.toUpperCase()}
@@ -140,7 +140,7 @@ export default function SingularityHome({ state }: { state: FieldDeskHomeState }
             >
               {character.display_name}
             </Link>
-            <div className="truncate" style={{ marginTop: 5, fontFamily: FONT, fontSize: 'var(--text-sm)', letterSpacing: '0.1em', textTransform: 'uppercase', color: signal(60) }}>
+            <div className="truncate" style={{ marginTop: 'var(--space-xs)', fontFamily: FONT, fontSize: 'var(--text-sm)', letterSpacing: '0.1em', textTransform: 'uppercase', color: signal(60) }}>
               {t('sidebar.characterCard.factionLevel', {
                 faction: factionName(character.faction_slug),
                 level: character.level,
@@ -151,21 +151,21 @@ export default function SingularityHome({ state }: { state: FieldDeskHomeState }
             <div style={{ fontFamily: FONT, fontSize: 'var(--text-title)', lineHeight: 1, color: PHOSPHOR }}>
               {character.score?.toLocaleString() ?? '0'}
             </div>
-            <div style={{ ...kicker, marginTop: 3 }}>{t('fieldDesk.home.stats.points')}</div>
+            <div style={{ ...kicker, marginTop: 'var(--space-xs)' }}>{t('fieldDesk.home.stats.points')}</div>
           </div>
         </div>
 
-        <div className="flex gap-2" style={{ marginTop: 16 }}>
+        <div className="flex gap-2" style={{ marginTop: 'var(--space-lg)' }}>
           {stats.map((stat) => (
             <div
               key={stat.label}
               className="text-center"
-              style={{ flex: '1 1 0', minWidth: 0, background: signal(8), border: `1px solid ${signal(28)}`, padding: '11px 6px' }}
+              style={{ flex: '1 1 0', minWidth: 0, background: signal(8), border: `1px solid ${signal(28)}`, padding: 'var(--space-md) var(--space-sm)' }}
             >
               <div className="truncate" style={{ fontFamily: FONT, fontSize: 'var(--text-content)', lineHeight: 1, color: PHOSPHOR }}>
                 {stat.value}
               </div>
-              <div style={{ ...kicker, marginTop: 6 }}>{stat.label}</div>
+              <div style={{ ...kicker, marginTop: 'var(--space-sm)' }}>{stat.label}</div>
             </div>
           ))}
         </div>
@@ -176,7 +176,7 @@ export default function SingularityHome({ state }: { state: FieldDeskHomeState }
         <Link
           to="/updates?filter=requests"
           className="flex items-center justify-between"
-          style={{ background: VOID, border: `1px solid ${signal(42)}`, padding: '11px 16px', fontFamily: FONT, fontSize: 'var(--text-content)', color: PHOSPHOR, textDecoration: 'none' }}
+          style={{ background: VOID, border: `1px solid ${signal(42)}`, padding: 'var(--space-md) var(--space-lg)', fontFamily: FONT, fontSize: 'var(--text-content)', color: PHOSPHOR, textDecoration: 'none' }}
         >
           <span>{t('fieldDesk.home.pending', { count: pendingCount })}</span>
           <span aria-hidden style={{ color: SIGNAL }}>›</span>
@@ -185,7 +185,7 @@ export default function SingularityHome({ state }: { state: FieldDeskHomeState }
 
       {/* ── Running functions ── */}
       <Panel>
-        <div className="flex items-center gap-2.5" style={{ marginBottom: 10 }}>
+        <div className="flex items-center gap-2.5" style={{ marginBottom: 'var(--space-md)' }}>
           <span style={{ fontFamily: FONT, fontSize: 'var(--text-md)', letterSpacing: '0.1em', textTransform: 'uppercase', color: PHOSPHOR }}>
             {t('fieldDesk.home.singularity.questsHeading')}
           </span>
@@ -206,15 +206,15 @@ export default function SingularityHome({ state }: { state: FieldDeskHomeState }
                 key={praxis.id}
                 to={`/praxes/${praxis.id}/edit`}
                 className="flex items-center gap-3"
-                style={{ padding: '12px 0', borderTop: index === 0 ? undefined : `1px solid ${signal(14)}`, textDecoration: 'none' }}
+                style={{ padding: 'var(--space-md) 0', borderTop: index === 0 ? undefined : `1px solid ${signal(14)}`, textDecoration: 'none' }}
               >
-                {/* ornament: the prompt caret is a list bullet glyph, not text */}
+                {/* eslint-disable-next-line local/no-raw-style-values -- ornament: the prompt caret is a list bullet glyph, not text */}
                 <span className="shrink-0" style={{ fontFamily: FONT, fontSize: 13, color: PHOSPHOR }}>›</span>
                 <div className="min-w-0 flex-1">
                   <div className="truncate" style={{ fontFamily: FONT, fontSize: 'var(--text-content)', lineHeight: 1.2, color: PHOSPHOR }}>
                     {praxis.task_title}
                   </div>
-                  <div className="truncate" style={{ marginTop: 3, fontFamily: FONT, fontSize: 'var(--text-xs)', letterSpacing: '0.1em', textTransform: 'uppercase', color: signal(55) }}>
+                  <div className="truncate" style={{ marginTop: 'var(--space-xs)', fontFamily: FONT, fontSize: 'var(--text-xs)', letterSpacing: '0.1em', textTransform: 'uppercase', color: signal(55) }}>
                     {t('fieldDesk.home.taskMeta', {
                       faction: factionName(praxis.task_faction_slug),
                       points: praxis.task_point_value,
@@ -223,7 +223,7 @@ export default function SingularityHome({ state }: { state: FieldDeskHomeState }
                 </div>
                 <span
                   className="shrink-0"
-                  style={{ fontFamily: FONT, fontSize: 'var(--text-xs)', letterSpacing: '0.1em', textTransform: 'uppercase', color: AMBER, padding: '4px 9px', border: `1px solid ${signal(30)}` }}
+                  style={{ fontFamily: FONT, fontSize: 'var(--text-xs)', letterSpacing: '0.1em', textTransform: 'uppercase', color: AMBER, padding: 'var(--space-xs) var(--space-sm)', border: `1px solid ${signal(30)}` }}
                 >
                   {t(`praxisType.${praxis.type}`)}
                 </span>
@@ -238,7 +238,7 @@ export default function SingularityHome({ state }: { state: FieldDeskHomeState }
         <Link
           to="/tasks"
           className="flex-1 flex items-center justify-center"
-          style={{ fontFamily: FONT, fontSize: 'var(--text-lg)', letterSpacing: '0.12em', textTransform: 'uppercase', padding: 14, color: VOID, background: PHOSPHOR, border: `1px solid ${PHOSPHOR}`, boxShadow: `0 0 16px ${phosphor(30)}`, textDecoration: 'none' }}
+          style={{ fontFamily: FONT, fontSize: 'var(--text-lg)', letterSpacing: '0.12em', textTransform: 'uppercase', padding: 'var(--space-lg)', color: VOID, background: PHOSPHOR, border: `1px solid ${PHOSPHOR}`, boxShadow: `0 0 16px ${phosphor(30)}`, textDecoration: 'none' }}
         >
           {t('fieldDesk.home.browseTasks')}
         </Link>
@@ -246,9 +246,9 @@ export default function SingularityHome({ state }: { state: FieldDeskHomeState }
           <Link
             to="/propose-task"
             className="flex-1 flex items-center justify-center gap-2"
-            style={{ fontFamily: FONT, fontSize: 'var(--text-lg)', letterSpacing: '0.12em', textTransform: 'uppercase', padding: 14, color: PHOSPHOR, background: 'transparent', border: `1px solid ${signal(40)}`, textDecoration: 'none' }}
+            style={{ fontFamily: FONT, fontSize: 'var(--text-lg)', letterSpacing: '0.12em', textTransform: 'uppercase', padding: 'var(--space-lg)', color: PHOSPHOR, background: 'transparent', border: `1px solid ${signal(40)}`, textDecoration: 'none' }}
           >
-            {/* ornament: "+" glyph used as an icon, sized to the button row */}
+            {/* eslint-disable-next-line local/no-raw-style-values -- ornament: "+" glyph used as an icon, sized to the button row */}
             <span aria-hidden style={{ fontSize: 15, lineHeight: 1 }}>+</span>
             <span>{t('actions.proposeTask')}</span>
           </Link>

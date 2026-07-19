@@ -34,7 +34,7 @@ const EYEBROW: CSSProperties = {
 /** Section heading: display-italic title + optional eyebrow + a soft rainbow rule. */
 function SectionHeading({ title, eyebrow }: { title: string; eyebrow?: string }) {
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 14 }}>
+    <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-md)', marginBottom: 'var(--space-lg)' }}>
       <h2
         className="font-display italic"
         style={{ fontSize: 'var(--text-title)', margin: 0, color: 'var(--color-text-primary)' }}
@@ -112,8 +112,8 @@ function BadgeRow({ badge, last }: { badge: BadgeOut; last: boolean }) {
       style={{
         display: 'flex',
         alignItems: 'center',
-        gap: 11,
-        padding: '10px 0',
+        gap: 'var(--space-md)',
+        padding: 'var(--space-md) 0',
         borderBottom: last ? 'none' : '1px solid var(--color-border)',
       }}
     >
@@ -123,6 +123,7 @@ function BadgeRow({ badge, last }: { badge: BadgeOut; last: boolean }) {
           width: 34,
           height: 34,
           borderRadius: '50%',
+          // eslint-disable-next-line local/no-raw-style-values -- ornament: spectrum ring thickness on a 34px medallion; the nearest rung (4px) is a 60% thicker ring and visibly shrinks the inner disc.
           padding: 2.5,
           background: 'var(--faction-default-ring)',
           display: 'flex',
@@ -192,7 +193,7 @@ export default function DefaultProfileBody({
     : 0
 
   const mainColumn = (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 34, minWidth: 0 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2xl)', minWidth: 0 }}>
       {/* ── ⑤ Praxis ── */}
       <section>
         <SectionHeading
@@ -204,7 +205,7 @@ export default function DefaultProfileBody({
             style={{
               border: '1.5px dashed var(--color-border-strong)',
               borderRadius: 12,
-              padding: 30,
+              padding: 'var(--space-2xl)',
               textAlign: 'center',
               background: 'var(--color-bg-surface-alt)',
             }}
@@ -217,7 +218,7 @@ export default function DefaultProfileBody({
             </div>
             <div
               className="font-body"
-              style={{ fontSize: 'var(--text-content)', color: 'var(--color-text-secondary)', marginTop: 5 }}
+              style={{ fontSize: 'var(--text-content)', color: 'var(--color-text-secondary)', marginTop: 'var(--space-xs)' }}
             >
               {t('profile.praxisEmptyBody')}
             </div>
@@ -261,19 +262,19 @@ export default function DefaultProfileBody({
           position: 'relative',
           overflow: 'hidden',
           borderRadius: 16,
-          padding: 5,
+          padding: 'var(--space-xs)',
           background: 'var(--faction-default-rainbow)',
           boxShadow: '0 20px 50px -26px rgba(0,0,0,0.4)',
-          marginBottom: 30,
+          marginBottom: 'var(--space-2xl)',
         }}
       >
         <div
           style={{
             borderRadius: 12,
             background: 'var(--faction-default-card-bg)',
-            padding: '26px 28px',
+            padding: 'var(--space-xl)',
             display: 'flex',
-            gap: 30,
+            gap: 'var(--space-2xl)',
             alignItems: 'center',
             flexWrap: 'wrap',
           }}
@@ -291,7 +292,7 @@ export default function DefaultProfileBody({
           </div>
 
           <div style={{ flex: 1, minWidth: 280 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-md)', marginBottom: 'var(--space-sm)' }}>
               <span
                 aria-hidden
                 style={{
@@ -328,9 +329,9 @@ export default function DefaultProfileBody({
               style={{
                 display: 'flex',
                 alignItems: 'center',
-                gap: 10,
+                gap: 'var(--space-md)',
                 flexWrap: 'wrap',
-                marginTop: 10,
+                marginTop: 'var(--space-md)',
               }}
             >
               {isUnaffiliated && (
@@ -364,14 +365,14 @@ export default function DefaultProfileBody({
             {progression && (
               <div
                 style={{
-                  marginTop: 20,
+                  marginTop: 'var(--space-xl)',
                   border: '1px solid var(--color-border-strong)',
                   borderRadius: 12,
-                  padding: '14px 16px',
+                  padding: 'var(--space-lg)',
                   background: 'var(--color-bg-surface-alt)',
                   display: 'flex',
                   alignItems: 'center',
-                  gap: 16,
+                  gap: 'var(--space-lg)',
                   maxWidth: 440,
                 }}
               >
@@ -418,7 +419,7 @@ export default function DefaultProfileBody({
                       display: 'flex',
                       justifyContent: 'space-between',
                       alignItems: 'baseline',
-                      marginBottom: 6,
+                      marginBottom: 'var(--space-sm)',
                     }}
                   >
                     <span
@@ -451,7 +452,7 @@ export default function DefaultProfileBody({
                   </div>
                   <div
                     className="font-body"
-                    style={{ fontSize: 'var(--text-content)', color: 'var(--color-text-tertiary)', marginTop: 5 }}
+                    style={{ fontSize: 'var(--text-content)', color: 'var(--color-text-tertiary)', marginTop: 'var(--space-xs)' }}
                   >
                     {t('profile.ptsToNext', { score: character.score, threshold: progression.nextThreshold })}
                   </div>
@@ -461,7 +462,7 @@ export default function DefaultProfileBody({
 
             {/* friend/foe — kept feature, faction-skinned, folded into the header */}
             {identityActions && (
-              <div style={{ marginTop: 16, maxWidth: 220 }}>{identityActions}</div>
+              <div style={{ marginTop: 'var(--space-lg)', maxWidth: 220 }}>{identityActions}</div>
             )}
           </div>
         </div>
@@ -474,7 +475,7 @@ export default function DefaultProfileBody({
           style={{
             display: 'grid',
             gridTemplateColumns: 'minmax(0, 1fr) fit-content(300px)',
-            gap: 30,
+            gap: 'var(--space-2xl)',
             alignItems: 'start',
           }}
         >
@@ -483,7 +484,7 @@ export default function DefaultProfileBody({
           {/* ── ③ Badges — hidden entirely when the character has none ── */}
           <aside>
             <div
-              style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}
+              style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-md)', marginBottom: 'var(--space-lg)' }}
             >
               <h2
                 className="font-display italic"
@@ -499,7 +500,7 @@ export default function DefaultProfileBody({
                   marginLeft: 'auto',
                   border: '1px solid var(--color-border-strong)',
                   borderRadius: 20,
-                  padding: '3px 9px',
+                  padding: 'var(--space-xs) var(--space-sm)',
                 }}
               >
                 {t('profile.badgesEarned', { count: badges.length })}
@@ -510,7 +511,7 @@ export default function DefaultProfileBody({
                 border: '1px solid var(--color-border)',
                 borderRadius: 12,
                 background: 'var(--color-bg-surface-alt)',
-                padding: '4px 14px',
+                padding: 'var(--space-xs) var(--space-lg)',
               }}
             >
               {badges.map((badge, index) => (

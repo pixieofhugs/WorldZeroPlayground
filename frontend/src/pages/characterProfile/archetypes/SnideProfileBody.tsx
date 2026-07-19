@@ -27,7 +27,7 @@ const JAGGED =
 
 function heading(title: string, eyebrow: string): ReactNode {
   return (
-    <div style={{ marginBottom: 16 }}>
+    <div style={{ marginBottom: 'var(--space-lg)' }}>
       <div
         style={{
           fontFamily: TYPE,
@@ -35,7 +35,7 @@ function heading(title: string, eyebrow: string): ReactNode {
           letterSpacing: '0.08em',
           textTransform: 'uppercase',
           color: PAPER,
-          marginBottom: 5,
+          marginBottom: 'var(--space-xs)',
         }}
       >
         {eyebrow}
@@ -54,7 +54,7 @@ function heading(title: string, eyebrow: string): ReactNode {
       >
         {title}
       </h2>
-      <div style={{ height: 2, marginTop: 8, borderTop: `2px dashed ${PINK}` }} />
+      <div style={{ height: 2, marginTop: 'var(--space-sm)', borderTop: `2px dashed ${PINK}` }} />
     </div>
   )
 }
@@ -76,8 +76,8 @@ const kit: ProfileKit = {
     background: INK,
     border: `1px solid ${ACID}`,
     boxShadow: '8px 10px 0 rgba(0,0,0,0.55)',
-    padding: '38px 34px 30px',
-    marginBottom: 40,
+    padding: 'var(--space-3xl) var(--space-2xl) var(--space-2xl)',
+    marginBottom: 'var(--space-3xl)',
   },
   headerDecoration: (
     <div
@@ -103,13 +103,13 @@ const kit: ProfileKit = {
   nameExtra: { transform: 'skewX(-5deg)', textShadow: `3px 3px 0 ${PINK}`, textTransform: 'uppercase' },
   playerEyebrow: 'Player · S.N.I.D.E.',
   progressionStyle: {
-    marginTop: 22,
+    marginTop: 'var(--space-xl)',
     background: INK,
     border: `2px solid ${ACID}`,
-    padding: '16px 18px',
+    padding: 'var(--space-lg)',
     display: 'flex',
     alignItems: 'center',
-    gap: 16,
+    gap: 'var(--space-lg)',
     maxWidth: 440,
   },
   ringLabel: 'lvl',
@@ -125,7 +125,7 @@ const kit: ProfileKit = {
   },
   emptyStateStyle: {
     border: `2px dashed ${ACID}`,
-    padding: 30,
+    padding: 'var(--space-2xl)',
     textAlign: 'center',
     background: INK,
   },
@@ -134,7 +134,7 @@ const kit: ProfileKit = {
   badgeBoardStyle: {
     border: `2px solid ${ACID}`,
     background: PAPER,
-    padding: '4px 14px',
+    padding: 'var(--space-xs) var(--space-lg)',
   },
   badgeChipStyle: {
     fontFamily: TYPE,
@@ -144,7 +144,7 @@ const kit: ProfileKit = {
     color: PINK,
     marginLeft: 'auto',
     border: `1px solid ${PINK}`,
-    padding: '3px 9px',
+    padding: 'var(--space-xs) var(--space-sm)',
   },
   badgeRow: (badge, last) => (
     <BadgeRow

@@ -41,7 +41,7 @@ function Sheet({ children }: { children: ReactNode }) {
         background: SHEET,
         border: `1px solid ${ink(10)}`,
         boxShadow: '0 2px 18px rgba(0,0,0,0.045), 0 1px 3px rgba(0,0,0,0.04)',
-        padding: 18,
+        padding: 'var(--space-lg)',
       }}
     >
       {children}
@@ -63,23 +63,23 @@ export default function AlbescentHome({ state }: { state: FieldDeskHomeState }) 
     <div
       data-skin="albescent"
       className="page"
-      style={{ display: 'flex', flexDirection: 'column', gap: 14, fontFamily: MONO, color: INK, background: PAGE }}
+      style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-lg)', fontFamily: MONO, color: INK, background: PAGE }}
     >
       {/* Masthead — the Mark and a hairline */}
       <header>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-md)', marginBottom: 'var(--space-sm)' }}>
           <AlbescentSigil size={26} />
           <div style={kicker}>{t('nav.home')}</div>
         </div>
         <h1 style={{ fontFamily: FONT, fontStyle: 'italic', fontWeight: 300, fontSize: 'var(--text-heading)', lineHeight: 1, color: INK, margin: 0 }}>
           {t('fieldDesk.home.albescent.masthead')}
         </h1>
-        <div style={{ height: 1, marginTop: 10, background: ink(10) }} />
+        <div style={{ height: 1, marginTop: 'var(--space-md)', background: ink(10) }} />
       </header>
 
       {/* ── The keeper's sheet ── */}
       <Sheet>
-        <div className="flex items-center justify-between" style={{ marginBottom: 14 }}>
+        <div className="flex items-center justify-between" style={{ marginBottom: 'var(--space-lg)' }}>
           <span style={kicker}>{t('fieldDesk.home.albescent.charEyebrow')}</span>
           <Link to={`/characters/${character.id}/edit`} style={{ ...kicker, color: ink(50), textDecoration: 'none', borderBottom: `1px solid ${ink(20)}` }}>
             {t('fieldDesk.home.edit')}
@@ -99,7 +99,7 @@ export default function AlbescentHome({ state }: { state: FieldDeskHomeState }) 
                 style={{ objectFit: 'cover' }}
               />
             ) : (
-              // ornament: avatar initial sized to its 52px ring, not text
+              // eslint-disable-next-line local/no-raw-style-values -- ornament: avatar initial sized to its 52px ring, not text
               <span style={{ fontFamily: FONT, fontStyle: 'italic', fontWeight: 300, fontSize: 22, color: ink(55) }}>
                 {character.display_name[0]?.toUpperCase()}
               </span>
@@ -113,7 +113,7 @@ export default function AlbescentHome({ state }: { state: FieldDeskHomeState }) 
             >
               {character.display_name}
             </Link>
-            <div className="truncate" style={{ ...kicker, marginTop: 5, letterSpacing: '0.14em' }}>
+            <div className="truncate" style={{ ...kicker, marginTop: 'var(--space-xs)', letterSpacing: '0.14em' }}>
               {t('sidebar.characterCard.factionLevel', {
                 faction: factionName(character.faction_slug),
                 level: character.level,
@@ -124,21 +124,21 @@ export default function AlbescentHome({ state }: { state: FieldDeskHomeState }) 
             <div style={{ fontFamily: FONT, fontStyle: 'italic', fontWeight: 300, fontSize: 'var(--text-title)', lineHeight: 1, color: ink(60) }}>
               {character.score?.toLocaleString() ?? '0'}
             </div>
-            <div style={{ ...kicker, marginTop: 3 }}>{t('fieldDesk.home.stats.points')}</div>
+            <div style={{ ...kicker, marginTop: 'var(--space-xs)' }}>{t('fieldDesk.home.stats.points')}</div>
           </div>
         </div>
 
-        <div className="flex gap-2" style={{ marginTop: 16 }}>
+        <div className="flex gap-2" style={{ marginTop: 'var(--space-lg)' }}>
           {stats.map((stat) => (
             <div
               key={stat.label}
               className="text-center"
-              style={{ flex: '1 1 0', minWidth: 0, border: `1px solid ${ink(9)}`, padding: '11px 6px' }}
+              style={{ flex: '1 1 0', minWidth: 0, border: `1px solid ${ink(9)}`, padding: 'var(--space-md) var(--space-sm)' }}
             >
               <div className="truncate" style={{ fontFamily: FONT, fontStyle: 'italic', fontWeight: 300, fontSize: 'var(--text-content)', lineHeight: 1, color: INK }}>
                 {stat.value}
               </div>
-              <div style={{ ...kicker, marginTop: 6 }}>{stat.label}</div>
+              <div style={{ ...kicker, marginTop: 'var(--space-sm)' }}>{stat.label}</div>
             </div>
           ))}
         </div>
@@ -149,7 +149,7 @@ export default function AlbescentHome({ state }: { state: FieldDeskHomeState }) 
         <Link
           to="/updates?filter=requests"
           className="flex items-center justify-between"
-          style={{ background: SHEET, border: `1px solid ${ink(10)}`, padding: '11px 16px', fontFamily: FONT, fontStyle: 'italic', fontSize: 'var(--text-content)', color: INK, textDecoration: 'none' }}
+          style={{ background: SHEET, border: `1px solid ${ink(10)}`, padding: 'var(--space-md) var(--space-lg)', fontFamily: FONT, fontStyle: 'italic', fontSize: 'var(--text-content)', color: INK, textDecoration: 'none' }}
         >
           <span>{t('fieldDesk.home.pending', { count: pendingCount })}</span>
           <span aria-hidden style={{ color: ink(40) }}>→</span>
@@ -158,7 +158,7 @@ export default function AlbescentHome({ state }: { state: FieldDeskHomeState }) 
 
       {/* ── Work in hand ── */}
       <Sheet>
-        <div className="flex items-center gap-2.5" style={{ marginBottom: 10 }}>
+        <div className="flex items-center gap-2.5" style={{ marginBottom: 'var(--space-md)' }}>
           <span style={{ fontFamily: MONO, fontSize: 'var(--text-sm)', letterSpacing: '0.2em', textTransform: 'uppercase', color: ink(40) }}>
             {t('fieldDesk.home.albescent.questsHeading')}
           </span>
@@ -179,14 +179,14 @@ export default function AlbescentHome({ state }: { state: FieldDeskHomeState }) 
                 key={praxis.id}
                 to={`/praxes/${praxis.id}/edit`}
                 className="flex items-center gap-3"
-                style={{ padding: '12px 0', borderTop: index === 0 ? undefined : `1px solid ${ink(8)}`, textDecoration: 'none' }}
+                style={{ padding: 'var(--space-md) 0', borderTop: index === 0 ? undefined : `1px solid ${ink(8)}`, textDecoration: 'none' }}
               >
                 <AlbescentSigil size={14} opacity={0.7} />
                 <div className="min-w-0 flex-1">
                   <div className="truncate" style={{ fontFamily: FONT, fontStyle: 'italic', fontWeight: 300, fontSize: 'var(--text-content)', lineHeight: 1.2, color: INK }}>
                     {praxis.task_title}
                   </div>
-                  <div className="truncate" style={{ ...kicker, marginTop: 3, letterSpacing: '0.14em' }}>
+                  <div className="truncate" style={{ ...kicker, marginTop: 'var(--space-xs)', letterSpacing: '0.14em' }}>
                     {t('fieldDesk.home.taskMeta', {
                       faction: factionName(praxis.task_faction_slug),
                       points: praxis.task_point_value,
@@ -195,7 +195,7 @@ export default function AlbescentHome({ state }: { state: FieldDeskHomeState }) 
                 </div>
                 <span
                   className="shrink-0"
-                  style={{ fontFamily: MONO, fontSize: 'var(--text-xs)', letterSpacing: '0.14em', textTransform: 'uppercase', color: ink(35), padding: '4px 9px', border: `1px solid ${ink(12)}` }}
+                  style={{ fontFamily: MONO, fontSize: 'var(--text-xs)', letterSpacing: '0.14em', textTransform: 'uppercase', color: ink(35), padding: 'var(--space-xs) var(--space-sm)', border: `1px solid ${ink(12)}` }}
                 >
                   {t(`praxisType.${praxis.type}`)}
                 </span>
@@ -210,7 +210,7 @@ export default function AlbescentHome({ state }: { state: FieldDeskHomeState }) 
         <Link
           to="/tasks"
           className="flex-1 flex items-center justify-center"
-          style={{ fontFamily: MONO, fontSize: 'var(--text-base)', letterSpacing: '0.16em', textTransform: 'uppercase', padding: 14, color: PAGE, background: INK, border: `1px solid ${INK}`, textDecoration: 'none' }}
+          style={{ fontFamily: MONO, fontSize: 'var(--text-base)', letterSpacing: '0.16em', textTransform: 'uppercase', padding: 'var(--space-lg)', color: PAGE, background: INK, border: `1px solid ${INK}`, textDecoration: 'none' }}
         >
           {t('fieldDesk.home.browseTasks')}
         </Link>
@@ -218,9 +218,9 @@ export default function AlbescentHome({ state }: { state: FieldDeskHomeState }) 
           <Link
             to="/propose-task"
             className="flex-1 flex items-center justify-center gap-2"
-            style={{ fontFamily: MONO, fontSize: 'var(--text-base)', letterSpacing: '0.16em', textTransform: 'uppercase', padding: 14, color: ink(55), background: 'transparent', border: `1px solid ${ink(16)}`, textDecoration: 'none' }}
+            style={{ fontFamily: MONO, fontSize: 'var(--text-base)', letterSpacing: '0.16em', textTransform: 'uppercase', padding: 'var(--space-lg)', color: ink(55), background: 'transparent', border: `1px solid ${ink(16)}`, textDecoration: 'none' }}
           >
-            {/* ornament: "+" glyph used as an icon, sized to the button row */}
+            {/* eslint-disable-next-line local/no-raw-style-values -- ornament: "+" glyph used as an icon, sized to the button row */}
             <span aria-hidden style={{ fontSize: 13, lineHeight: 1 }}>+</span>
             <span>{t('actions.proposeTask')}</span>
           </Link>

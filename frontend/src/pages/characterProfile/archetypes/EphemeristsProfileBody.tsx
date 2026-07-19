@@ -57,8 +57,8 @@ function toRoman(value: number): string {
 
 function heading(title: string, eyebrow: string): ReactNode {
   return (
-    <div style={{ marginBottom: 18 }}>
-      <div style={{ fontFamily: SCRIPT, fontStyle: 'italic', fontSize: 'var(--text-lg)', color: MUTED, marginBottom: 4 }}>
+    <div style={{ marginBottom: 'var(--space-lg)' }}>
+      <div style={{ fontFamily: SCRIPT, fontStyle: 'italic', fontSize: 'var(--text-lg)', color: MUTED, marginBottom: 'var(--space-xs)' }}>
         {eyebrow}
       </div>
       <h2
@@ -92,9 +92,9 @@ const kit: ProfileKit = {
     background: `linear-gradient(160deg, ${LAPIS}, var(--eph-lapis-deep))`,
     border: `2px solid ${GOLD}`,
     boxShadow: `0 0 0 4px ${CREAM}, 0 0 0 6px var(--eph-ink), 0 18px 40px -20px rgba(0,0,0,0.6)`,
-    padding: '34px 40px',
-    marginBottom: 44,
-    marginTop: 6,
+    padding: 'var(--space-2xl) var(--space-3xl)',
+    marginBottom: 'var(--space-4xl)',
+    marginTop: 'var(--space-sm)',
   },
   headerDecoration: (
     <>
@@ -118,14 +118,14 @@ const kit: ProfileKit = {
   nameExtra: { color: CREAM, textShadow: '0 2px 6px rgba(5,19,28,0.6)', letterSpacing: '0.02em' },
   playerEyebrow: 'Player · The Ephemerists',
   progressionStyle: {
-    marginTop: 22,
+    marginTop: 'var(--space-xl)',
     background: 'rgba(5,19,28,0.35)',
     border: `1px solid ${GOLD}`,
     boxShadow: `inset 0 0 0 3px rgba(5,19,28,0.25)`,
-    padding: '16px 18px',
+    padding: 'var(--space-lg)',
     display: 'flex',
     alignItems: 'center',
-    gap: 16,
+    gap: 'var(--space-lg)',
     maxWidth: 440,
   },
   ringLabel: 'grade',
@@ -142,7 +142,7 @@ const kit: ProfileKit = {
   },
   emptyStateStyle: {
     border: `1.5px dashed ${GOLD_DEEP}`,
-    padding: 30,
+    padding: 'var(--space-2xl)',
     textAlign: 'center',
     background: VELLUM,
   },
@@ -151,7 +151,7 @@ const kit: ProfileKit = {
   badgeBoardStyle: {
     border: `1px solid ${GOLD_DEEP}`,
     background: VELLUM,
-    padding: '4px 14px',
+    padding: 'var(--space-xs) var(--space-lg)',
   },
   badgeChipStyle: {
     fontFamily: DISPLAY,
@@ -161,7 +161,7 @@ const kit: ProfileKit = {
     color: MUTED,
     marginLeft: 'auto',
     border: `1px solid ${GOLD_DEEP}`,
-    padding: '3px 9px',
+    padding: 'var(--space-xs) var(--space-sm)',
   },
   badgeRow: (badge, last) => (
     <BadgeRow

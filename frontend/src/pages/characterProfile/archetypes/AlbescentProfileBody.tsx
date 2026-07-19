@@ -56,7 +56,7 @@ function InkLaurel() {
 
 function heading(title: string, eyebrow: string): ReactNode {
   return (
-    <div style={{ marginBottom: 18 }}>
+    <div style={{ marginBottom: 'var(--space-lg)' }}>
       <div
         style={{
           fontFamily: MONO,
@@ -64,7 +64,7 @@ function heading(title: string, eyebrow: string): ReactNode {
           letterSpacing: '0.24em',
           textTransform: 'uppercase',
           color: MUTED,
-          marginBottom: 8,
+          marginBottom: 'var(--space-sm)',
         }}
       >
         {eyebrow}
@@ -92,20 +92,20 @@ const kit: ProfileKit = {
     background: SURFACE,
     border: `1px solid ${BORDER}`,
     boxShadow: '0 4px 20px -12px rgba(0,0,0,0.18)',
-    padding: '40px 44px',
-    marginBottom: 44,
+    padding: 'var(--space-3xl) var(--space-4xl)',
+    marginBottom: 'var(--space-4xl)',
   },
   nameSize: 62,
   nameExtra: { fontStyle: 'italic', fontWeight: 300 },
   playerEyebrow: 'Player · Albescent · the unranked order',
   progressionStyle: {
-    marginTop: 24,
+    marginTop: 'var(--space-xl)',
     background: SURFACE,
     border: `1px solid ${RULE}`,
-    padding: '18px 20px',
+    padding: 'var(--space-lg) var(--space-xl)',
     display: 'flex',
     alignItems: 'center',
-    gap: 18,
+    gap: 'var(--space-lg)',
     maxWidth: 440,
   },
   ringLabel: 'lvl',
@@ -120,7 +120,7 @@ const kit: ProfileKit = {
   },
   emptyStateStyle: {
     border: `1px dashed ${ACCENT}`,
-    padding: 34,
+    padding: 'var(--space-2xl)',
     textAlign: 'center',
     background: SURFACE,
   },
@@ -129,7 +129,7 @@ const kit: ProfileKit = {
   badgeBoardStyle: {
     border: `1px solid ${BORDER}`,
     background: SURFACE,
-    padding: '4px 16px',
+    padding: 'var(--space-xs) var(--space-lg)',
   },
   badgeChipStyle: {
     fontFamily: MONO,
@@ -139,7 +139,7 @@ const kit: ProfileKit = {
     color: MUTED,
     marginLeft: 'auto',
     border: `1px solid ${BORDER}`,
-    padding: '3px 9px',
+    padding: 'var(--space-xs) var(--space-sm)',
   },
   badgeRow: (badge, last) => (
     <BadgeRow

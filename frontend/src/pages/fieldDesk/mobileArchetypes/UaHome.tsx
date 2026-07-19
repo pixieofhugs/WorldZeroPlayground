@@ -44,12 +44,18 @@ function Plate({ children }: { children: ReactNode }) {
   return (
     <div
       style={{
-        padding: 8,
+        padding: 'var(--space-sm)',
         background: GILT,
         boxShadow: '0 10px 24px rgba(60,40,10,.18), inset 0 0 0 1px rgba(255,255,255,0.45)',
       }}
     >
-      <div style={{ padding: 3, background: `linear-gradient(135deg, ${GOLD}, ${GOLD_PALE})` }}>
+      <div
+        style={{
+          // eslint-disable-next-line local/no-raw-style-values -- ornament: inner gold rule of the gilt double-border frame; the nearest rung (4px) merges it into the outer gilt band.
+          padding: 3,
+          background: `linear-gradient(135deg, ${GOLD}, ${GOLD_PALE})`,
+        }}
+      >
         <div
           style={{
             position: 'relative',
@@ -58,7 +64,7 @@ function Plate({ children }: { children: ReactNode }) {
             backgroundImage: 'radial-gradient(rgba(60,40,10,.03) 1px, transparent 1px)',
             backgroundSize: '5px 5px',
             border: `1px solid ${LINE}`,
-            padding: 16,
+            padding: 'var(--space-lg)',
           }}
         >
           {children}
@@ -82,20 +88,20 @@ export default function UaHome({ state }: { state: FieldDeskHomeState }) {
     <div
       data-skin="ua"
       className="page"
-      style={{ display: 'flex', flexDirection: 'column', gap: 14, fontFamily: MONO, color: INK, background: WALL }}
+      style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-lg)', fontFamily: MONO, color: INK, background: WALL }}
     >
       {/* Engraved masthead */}
       <header>
         <div style={kicker}>{t('nav.home')}</div>
-        <h1 style={{ fontFamily: DISPLAY, fontStyle: 'italic', fontWeight: 700, fontSize: 'var(--text-heading)', lineHeight: 1, color: INK, margin: '2px 0 0' }}>
+        <h1 style={{ fontFamily: DISPLAY, fontStyle: 'italic', fontWeight: 700, fontSize: 'var(--text-heading)', lineHeight: 1, color: INK, margin: 'var(--space-xs) 0 0' }}>
           {t('fieldDesk.home.ua.masthead')}
         </h1>
-        <div style={{ height: 1, marginTop: 9, background: `linear-gradient(90deg, ${GOLD}, transparent)` }} />
+        <div style={{ height: 1, marginTop: 'var(--space-sm)', background: `linear-gradient(90deg, ${GOLD}, transparent)` }} />
       </header>
 
       {/* ── Sitter plate ── */}
       <Plate>
-        <div className="flex items-center justify-between" style={{ marginBottom: 14 }}>
+        <div className="flex items-center justify-between" style={{ marginBottom: 'var(--space-lg)' }}>
           <span style={kicker}>{t('fieldDesk.home.ua.charEyebrow')}</span>
           <Link to={`/characters/${character.id}/edit`} style={{ ...kicker, color: ACCENT, textDecoration: 'none' }}>
             {t('fieldDesk.home.edit')}
@@ -103,7 +109,17 @@ export default function UaHome({ state }: { state: FieldDeskHomeState }) {
         </div>
 
         <div className="flex items-center gap-3">
-          <div className="shrink-0" style={{ width: 56, height: 56, borderRadius: '50%', padding: 3, background: `linear-gradient(135deg, ${GOLD}, ${GOLD_PALE})` }}>
+          <div
+            className="shrink-0"
+            style={{
+              width: 56,
+              height: 56,
+              borderRadius: '50%',
+              // eslint-disable-next-line local/no-raw-style-values -- ornament: gilt ring thickness drawn around a 56px avatar; the nearest rung (4px) thickens the band by a third.
+              padding: 3,
+              background: `linear-gradient(135deg, ${GOLD}, ${GOLD_PALE})`,
+            }}
+          >
             {character.avatar_url ? (
               <img
                 src={mediaUrl(character.avatar_url)}
@@ -114,7 +130,7 @@ export default function UaHome({ state }: { state: FieldDeskHomeState }) {
             ) : (
               <span
                 className="flex w-full h-full items-center justify-center rounded-full"
-                // ornament: avatar initial sized to its 56px medallion, not text
+                // eslint-disable-next-line local/no-raw-style-values -- ornament: avatar initial sized to its 56px medallion, not text
                 style={{ background: PAPER_WARM, fontFamily: DISPLAY, fontStyle: 'italic', fontWeight: 700, fontSize: 24, color: ACCENT }}
               >
                 {character.display_name[0]?.toUpperCase()}
@@ -129,7 +145,7 @@ export default function UaHome({ state }: { state: FieldDeskHomeState }) {
             >
               {character.display_name}
             </Link>
-            <div className="truncate" style={{ marginTop: 5, fontFamily: ENGRAVED, fontSize: 'var(--text-sm)', letterSpacing: '0.12em', textTransform: 'uppercase', color: SUB }}>
+            <div className="truncate" style={{ marginTop: 'var(--space-xs)', fontFamily: ENGRAVED, fontSize: 'var(--text-sm)', letterSpacing: '0.12em', textTransform: 'uppercase', color: SUB }}>
               {t('sidebar.characterCard.factionLevel', {
                 faction: factionName(character.faction_slug),
                 level: character.level,
@@ -140,21 +156,21 @@ export default function UaHome({ state }: { state: FieldDeskHomeState }) {
             <div style={{ fontFamily: DISPLAY, fontStyle: 'italic', fontWeight: 700, fontSize: 'var(--text-title)', lineHeight: 1, color: INK }}>
               {character.score?.toLocaleString() ?? '0'}
             </div>
-            <div style={{ ...kicker, marginTop: 2 }}>{t('fieldDesk.home.stats.points')}</div>
+            <div style={{ ...kicker, marginTop: 'var(--space-xs)' }}>{t('fieldDesk.home.stats.points')}</div>
           </div>
         </div>
 
-        <div className="flex gap-2" style={{ marginTop: 16 }}>
+        <div className="flex gap-2" style={{ marginTop: 'var(--space-lg)' }}>
           {stats.map((stat) => (
             <div
               key={stat.label}
               className="text-center"
-              style={{ flex: '1 1 0', minWidth: 0, background: PAPER_WARM, border: `1px solid ${LINE}`, padding: '11px 6px' }}
+              style={{ flex: '1 1 0', minWidth: 0, background: PAPER_WARM, border: `1px solid ${LINE}`, padding: 'var(--space-md) var(--space-sm)' }}
             >
               <div className="truncate" style={{ fontFamily: DISPLAY, fontStyle: 'italic', fontWeight: 700, fontSize: 'var(--text-content)', lineHeight: 1, color: INK }}>
                 {stat.value}
               </div>
-              <div style={{ ...kicker, marginTop: 6 }}>{stat.label}</div>
+              <div style={{ ...kicker, marginTop: 'var(--space-sm)' }}>{stat.label}</div>
             </div>
           ))}
         </div>
@@ -165,7 +181,7 @@ export default function UaHome({ state }: { state: FieldDeskHomeState }) {
         <Link
           to="/updates?filter=requests"
           className="flex items-center justify-between"
-          style={{ background: PAPER, border: `1px solid ${LINE}`, borderRadius: 999, padding: '10px 16px', fontFamily: DISPLAY, fontStyle: 'italic', fontSize: 'var(--text-content)', color: INK, textDecoration: 'none' }}
+          style={{ background: PAPER, border: `1px solid ${LINE}`, borderRadius: 999, padding: 'var(--space-md) var(--space-lg)', fontFamily: DISPLAY, fontStyle: 'italic', fontSize: 'var(--text-content)', color: INK, textDecoration: 'none' }}
         >
           <span>{t('fieldDesk.home.pending', { count: pendingCount })}</span>
           <span aria-hidden style={{ color: ACCENT }}>›</span>
@@ -174,7 +190,7 @@ export default function UaHome({ state }: { state: FieldDeskHomeState }) {
 
       {/* ── Commissions at the easel ── */}
       <Plate>
-        <div className="flex items-center gap-2.5" style={{ marginBottom: 10 }}>
+        <div className="flex items-center gap-2.5" style={{ marginBottom: 'var(--space-md)' }}>
           <span style={{ fontFamily: ENGRAVED, fontSize: 'var(--text-md)', letterSpacing: '0.1em', textTransform: 'uppercase', color: INK }}>
             {t('fieldDesk.home.ua.questsHeading')}
           </span>
@@ -195,14 +211,14 @@ export default function UaHome({ state }: { state: FieldDeskHomeState }) {
                 key={praxis.id}
                 to={`/praxes/${praxis.id}/edit`}
                 className="flex items-center gap-3"
-                style={{ padding: '12px 0', borderTop: index === 0 ? undefined : `1px solid ${LINE}`, textDecoration: 'none' }}
+                style={{ padding: 'var(--space-md) 0', borderTop: index === 0 ? undefined : `1px solid ${LINE}`, textDecoration: 'none' }}
               >
                 <span className="shrink-0" style={{ width: 9, height: 9, borderRadius: '50%', background: ACCENT }} />
                 <div className="min-w-0 flex-1">
                   <div className="truncate" style={{ fontFamily: DISPLAY, fontStyle: 'italic', fontWeight: 700, fontSize: 'var(--text-content)', lineHeight: 1.15, color: INK }}>
                     {praxis.task_title}
                   </div>
-                  <div className="truncate" style={{ marginTop: 3, fontFamily: ENGRAVED, fontSize: 'var(--text-xs)', letterSpacing: '0.1em', textTransform: 'uppercase', color: SUB }}>
+                  <div className="truncate" style={{ marginTop: 'var(--space-xs)', fontFamily: ENGRAVED, fontSize: 'var(--text-xs)', letterSpacing: '0.1em', textTransform: 'uppercase', color: SUB }}>
                     {t('fieldDesk.home.taskMeta', {
                       faction: factionName(praxis.task_faction_slug),
                       points: praxis.task_point_value,
@@ -211,7 +227,7 @@ export default function UaHome({ state }: { state: FieldDeskHomeState }) {
                 </div>
                 <span
                   className="shrink-0"
-                  style={{ fontFamily: MONO, fontSize: 'var(--text-xs)', letterSpacing: '0.1em', textTransform: 'uppercase', color: GOLD, padding: '4px 9px', border: `1px solid ${LINE}` }}
+                  style={{ fontFamily: MONO, fontSize: 'var(--text-xs)', letterSpacing: '0.1em', textTransform: 'uppercase', color: GOLD, padding: 'var(--space-xs) var(--space-sm)', border: `1px solid ${LINE}` }}
                 >
                   {t(`praxisType.${praxis.type}`)}
                 </span>
@@ -226,7 +242,7 @@ export default function UaHome({ state }: { state: FieldDeskHomeState }) {
         <Link
           to="/tasks"
           className="flex-1 flex items-center justify-center"
-          style={{ fontFamily: ENGRAVED, fontSize: 'var(--text-lg)', letterSpacing: '0.12em', textTransform: 'uppercase', padding: 14, color: PAPER_WARM, background: ACCENT, border: `1px solid ${ACCENT}`, boxShadow: '0 6px 16px rgba(194,84,31,.28)', textDecoration: 'none' }}
+          style={{ fontFamily: ENGRAVED, fontSize: 'var(--text-lg)', letterSpacing: '0.12em', textTransform: 'uppercase', padding: 'var(--space-lg)', color: PAPER_WARM, background: ACCENT, border: `1px solid ${ACCENT}`, boxShadow: '0 6px 16px rgba(194,84,31,.28)', textDecoration: 'none' }}
         >
           {t('fieldDesk.home.browseTasks')}
         </Link>
@@ -234,9 +250,9 @@ export default function UaHome({ state }: { state: FieldDeskHomeState }) {
           <Link
             to="/propose-task"
             className="flex-1 flex items-center justify-center gap-2"
-            style={{ fontFamily: ENGRAVED, fontSize: 'var(--text-lg)', letterSpacing: '0.12em', textTransform: 'uppercase', padding: 14, color: INK, background: PAPER, border: `1px solid ${LINE}`, textDecoration: 'none' }}
+            style={{ fontFamily: ENGRAVED, fontSize: 'var(--text-lg)', letterSpacing: '0.12em', textTransform: 'uppercase', padding: 'var(--space-lg)', color: INK, background: PAPER, border: `1px solid ${LINE}`, textDecoration: 'none' }}
           >
-            {/* ornament: "+" glyph used as an icon, sized to the button row */}
+            {/* eslint-disable-next-line local/no-raw-style-values -- ornament: "+" glyph used as an icon, sized to the button row */}
             <span aria-hidden style={{ fontSize: 15, lineHeight: 1 }}>+</span>
             <span>{t('actions.proposeTask')}</span>
           </Link>

@@ -62,11 +62,11 @@ export default function DefaultProfile({
         )}
         <h1
           className="font-display italic font-medium"
-          style={{ fontSize: 'var(--text-heading)', marginTop: 12, color: 'var(--color-text-primary)', overflowWrap: 'anywhere' }}
+          style={{ fontSize: 'var(--text-heading)', marginTop: 'var(--space-md)', color: 'var(--color-text-primary)', overflowWrap: 'anywhere' }}
         >
           {character.display_name}
         </h1>
-        <div className="eyebrow" style={{ marginTop: 5, display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+        <div className="eyebrow" style={{ marginTop: 'var(--space-xs)', display: 'inline-flex', alignItems: 'center', gap: 'var(--space-sm)' }}>
           <i style={{ width: 8, height: 8, borderRadius: 2, background: color, flex: 'none' }} />
           {t('leaderboard.mobile.factionLevel', {
             faction: factionName(character.faction_slug),
@@ -75,14 +75,14 @@ export default function DefaultProfile({
         </div>
 
         {/* friend/foe — kept feature (#459), faction-skinned, folded under identity */}
-        {identityActions && <div style={{ marginTop: 14, maxWidth: 220, width: '100%' }}>{identityActions}</div>}
+        {identityActions && <div style={{ marginTop: 'var(--space-lg)', maxWidth: 220, width: '100%' }}>{identityActions}</div>}
       </div>
 
       {/* ── Stats row — real fields only ── */}
       <div
         style={{
           display: 'flex',
-          margin: '18px 0',
+          margin: 'var(--space-lg) 0',
           border: '1px solid var(--color-border)',
           borderRadius: 12,
           background: 'var(--color-bg-surface-alt)',
@@ -96,8 +96,8 @@ export default function DefaultProfile({
 
       {/* ── ③ Badges — hidden entirely when empty ── */}
       {badges.length > 0 && (
-        <div style={{ marginBottom: 18 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+        <div style={{ marginBottom: 'var(--space-lg)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-sm)', marginBottom: 'var(--space-sm)' }}>
             <h2 className="font-display italic" style={{ fontSize: 'var(--text-title)', color: 'var(--color-text-primary)' }}>
               {t('profile.badgesHeading')}
             </h2>
@@ -110,7 +110,7 @@ export default function DefaultProfile({
               border: '1px solid var(--color-border)',
               borderRadius: 12,
               background: 'var(--color-bg-surface-alt)',
-              padding: '2px 14px',
+              padding: 'var(--space-xs) var(--space-lg)',
             }}
           >
             {badges.map((badge, index) => (
@@ -124,12 +124,12 @@ export default function DefaultProfile({
       <div
         style={{
           display: 'flex',
-          gap: 4,
-          padding: 4,
+          gap: 'var(--space-xs)',
+          padding: 'var(--space-xs)',
           borderRadius: 999,
           background: 'var(--color-bg-surface-alt)',
           border: '1px solid var(--color-border)',
-          marginBottom: 14,
+          marginBottom: 'var(--space-lg)',
         }}
       >
         <SegTab on={segment === 'praxis'} onClick={() => setSegment('praxis')}>
@@ -170,14 +170,14 @@ function Stat({ label, value, divider }: { label: string; value: number; divider
       style={{
         flex: 1,
         textAlign: 'center',
-        padding: '12px 6px',
+        padding: 'var(--space-md) var(--space-sm)',
         borderLeft: divider ? '1px solid var(--color-border)' : undefined,
       }}
     >
       <div className="font-display italic" style={{ fontSize: 'var(--text-title)', fontWeight: 700, color: 'var(--color-text-primary)' }}>
         {value}
       </div>
-      <div className="eyebrow" style={{ color: 'var(--color-text-tertiary)', marginTop: 2 }}>
+      <div className="eyebrow" style={{ color: 'var(--color-text-tertiary)', marginTop: 'var(--space-xs)' }}>
         {label}
       </div>
     </div>
@@ -191,8 +191,8 @@ function BadgeRow({ badge, last }: { badge: BadgeOut; last: boolean }) {
       style={{
         display: 'flex',
         alignItems: 'center',
-        gap: 11,
-        padding: '10px 0',
+        gap: 'var(--space-md)',
+        padding: 'var(--space-md) 0',
         borderBottom: last ? 'none' : '1px solid var(--color-border)',
       }}
     >
@@ -202,6 +202,7 @@ function BadgeRow({ badge, last }: { badge: BadgeOut; last: boolean }) {
           width: 34,
           height: 34,
           borderRadius: '50%',
+          // eslint-disable-next-line local/no-raw-style-values -- ornament: spectrum ring thickness on a 34px medallion; the nearest rung (4px) is a 60% thicker ring and visibly shrinks the inner disc.
           padding: 2.5,
           background: 'var(--faction-default-ring)',
           display: 'flex',
@@ -248,7 +249,7 @@ function SegTab({ on, onClick, children }: { on: boolean; onClick: () => void; c
         background: on ? 'var(--color-text-primary)' : 'transparent',
         border: 'none',
         borderRadius: 999,
-        padding: '9px 0',
+        padding: 'var(--space-sm) 0',
         minHeight: 36,
         cursor: 'pointer',
       }}

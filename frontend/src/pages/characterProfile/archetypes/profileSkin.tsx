@@ -210,8 +210,8 @@ export function BadgeRow({
       style={{
         display: 'flex',
         alignItems: 'center',
-        gap: 11,
-        padding: '10px 0',
+        gap: 'var(--space-md)',
+        padding: 'var(--space-md) 0',
         borderBottom: last ? 'none' : `1px solid ${dividerColor}`,
       }}
     >
@@ -277,7 +277,7 @@ export function ProfileSkin({
   )
 
   const mainColumn = (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 34, minWidth: 0 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2xl)', minWidth: 0 }}>
       {/* ── ⑤ Praxis ── */}
       <section>
         {kit.sectionHeading('Praxis', kit.praxisEyebrow(character.display_name))}
@@ -297,7 +297,7 @@ export function ProfileSkin({
                 fontFamily: kit.bodyFont ?? kit.eyebrowFont,
                 fontSize: 'var(--text-content)',
                 color: kit.muted,
-                marginTop: 5,
+                marginTop: 'var(--space-xs)',
               }}
             >
               {kit.praxisEmpty.body}
@@ -339,7 +339,9 @@ export function ProfileSkin({
       style={{
         position: 'relative',
         background: kit.pageBackground,
-        padding: '32px 28px',
+        // asymmetric inset: the 28px side rounds DOWN so the page frame keeps
+        // its taller-than-wide shape instead of flattening to a uniform box.
+        padding: 'var(--space-2xl) var(--space-xl)',
         borderRadius: 16,
         overflow: 'hidden',
       }}
@@ -364,7 +366,7 @@ export function ProfileSkin({
               position: 'relative',
               zIndex: 2,
               display: 'flex',
-              gap: 34,
+              gap: 'var(--space-2xl)',
               alignItems: 'center',
               flexWrap: 'wrap',
             }}
@@ -381,7 +383,7 @@ export function ProfileSkin({
                   letterSpacing: '0.22em',
                   textTransform: 'uppercase',
                   color: kit.muted,
-                  marginBottom: 8,
+                  marginBottom: 'var(--space-sm)',
                 }}
               >
                 {kit.playerEyebrow}
@@ -390,7 +392,9 @@ export function ProfileSkin({
               <h1
                 style={{
                   fontFamily: kit.displayFont,
-                  // ornament: masthead display type, per-archetype identity (see ProfileKit.nameSize)
+                  // ornament: masthead display type, per-archetype identity (see ProfileKit.nameSize).
+                  // No eslint-disable here: the rule does not recurse into `??`, so this
+                  // never reports and a directive would be flagged as unused.
                   fontSize: kit.nameSize ?? 48,
                   lineHeight: 0.98,
                   margin: 0,
@@ -408,7 +412,7 @@ export function ProfileSkin({
                   // handle + join date: the handle is a name, so this is read, not scanned
                   fontSize: 'var(--text-content)',
                   color: kit.muted,
-                  marginTop: 10,
+                  marginTop: 'var(--space-md)',
                 }}
               >
                 {t('profile.handleJoined', { username: character.username, joined })}
@@ -472,7 +476,7 @@ export function ProfileSkin({
                         display: 'flex',
                         justifyContent: 'space-between',
                         alignItems: 'baseline',
-                        marginBottom: 6,
+                        marginBottom: 'var(--space-sm)',
                       }}
                     >
                       <span
@@ -522,7 +526,7 @@ export function ProfileSkin({
                           // absolute score toward the next threshold: read, not scanned
                           fontSize: 'var(--text-content)',
                           color: kit.muted,
-                          marginTop: 5,
+                          marginTop: 'var(--space-xs)',
                         }}
                       >
                         {kit.scoreFootnote(character.score, progression.nextThreshold)}
@@ -534,7 +538,7 @@ export function ProfileSkin({
 
               {/* friend/foe — kept feature, faction-skinned, folded into header */}
               {identityActions && (
-                <div style={{ marginTop: 16, maxWidth: 220 }}>{identityActions}</div>
+                <div style={{ marginTop: 'var(--space-lg)', maxWidth: 220 }}>{identityActions}</div>
               )}
             </div>
           </div>
@@ -547,7 +551,7 @@ export function ProfileSkin({
             style={{
               display: 'grid',
               gridTemplateColumns: 'minmax(0, 1fr) 300px',
-              gap: 30,
+              gap: 'var(--space-2xl)',
               alignItems: 'start',
             }}
           >
@@ -559,8 +563,8 @@ export function ProfileSkin({
                 style={{
                   display: 'flex',
                   alignItems: 'center',
-                  gap: 10,
-                  marginBottom: 14,
+                  gap: 'var(--space-md)',
+                  marginBottom: 'var(--space-lg)',
                 }}
               >
                 <h2 style={{ fontFamily: kit.displayFont, fontSize: 'var(--text-title)', margin: 0, color: kit.ink }}>

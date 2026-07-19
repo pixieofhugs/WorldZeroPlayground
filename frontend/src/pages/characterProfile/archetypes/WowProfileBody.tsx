@@ -46,14 +46,14 @@ function Pin({ left, right }: { left?: number; right?: number }) {
 
 function heading(title: string, eyebrow: string): ReactNode {
   return (
-    <div style={{ marginBottom: 16, display: 'inline-flex', alignItems: 'center', gap: 10 }}>
+    <div style={{ marginBottom: 'var(--space-lg)', display: 'inline-flex', alignItems: 'center', gap: 'var(--space-md)' }}>
       <span
         style={{
           fontFamily: DISPLAY,
           fontSize: 'var(--text-heading)',
           color: ACCENT,
           background: 'var(--faction-wow-tape)',
-          padding: '2px 12px',
+          padding: 'var(--space-xs) var(--space-md)',
           transform: 'rotate(-1.5deg)',
           display: 'inline-block',
         }}
@@ -80,8 +80,8 @@ const kit: ProfileKit = {
     background: 'var(--faction-wow-notepad-bg)',
     border: `1px solid ${BORDER}`,
     borderRadius: 16,
-    padding: '30px 34px',
-    marginBottom: 34,
+    padding: 'var(--space-2xl)',
+    marginBottom: 'var(--space-2xl)',
     transform: 'rotate(-0.4deg)',
     boxShadow: '0 12px 30px -18px rgba(0,0,0,0.4)',
   },
@@ -99,14 +99,14 @@ const kit: ProfileKit = {
   nameSize: 56,
   playerEyebrow: 'Player · Warriors of Whimsy',
   progressionStyle: {
-    marginTop: 22,
+    marginTop: 'var(--space-xl)',
     background: SURFACE,
     border: `1px solid ${BORDER}`,
     borderRadius: 10,
-    padding: '16px 18px',
+    padding: 'var(--space-lg)',
     display: 'flex',
     alignItems: 'center',
-    gap: 16,
+    gap: 'var(--space-lg)',
     maxWidth: 440,
   },
   ringLabel: 'lvl',
@@ -122,7 +122,7 @@ const kit: ProfileKit = {
   emptyStateStyle: {
     border: `1.5px dashed ${ACCENT}`,
     borderRadius: 14,
-    padding: 30,
+    padding: 'var(--space-2xl)',
     textAlign: 'center',
     background: SURFACE,
   },
@@ -132,7 +132,7 @@ const kit: ProfileKit = {
     border: `1px solid ${BORDER}`,
     borderRadius: 12,
     background: SURFACE,
-    padding: '4px 14px',
+    padding: 'var(--space-xs) var(--space-lg)',
   },
   badgeChipStyle: {
     fontFamily: EYEBROW,
@@ -143,7 +143,7 @@ const kit: ProfileKit = {
     marginLeft: 'auto',
     border: `1px solid ${BORDER}`,
     borderRadius: 20,
-    padding: '3px 9px',
+    padding: 'var(--space-xs) var(--space-sm)',
   },
   badgeRow: (badge, last) => (
     <BadgeRow

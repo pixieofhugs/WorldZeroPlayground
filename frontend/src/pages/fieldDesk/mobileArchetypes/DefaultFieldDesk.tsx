@@ -35,19 +35,19 @@ const statTileStyle: CSSProperties = {
   background: 'var(--color-bg-surface-alt)',
   border: '1px solid var(--color-border)',
   borderRadius: 9,
-  padding: '11px 6px',
+  padding: 'var(--space-md) var(--space-sm)',
   minWidth: 0,
 }
 const pendingPillStyle: CSSProperties = {
   background: 'var(--color-bg-surface)',
   border: '1px solid var(--color-border)',
   borderRadius: 999,
-  padding: '10px 16px',
+  padding: 'var(--space-md) var(--space-lg)',
   color: 'var(--color-text-primary)',
   textDecoration: 'none',
 }
 const primaryActionStyle: CSSProperties = {
-  padding: 15,
+  padding: 'var(--space-lg)',
   borderRadius: 12,
   fontSize: 'var(--text-lg)',
   letterSpacing: '0.12em',
@@ -78,7 +78,7 @@ export default function DefaultFieldDesk({ state }: { state: FieldDeskHomeState 
   ]
 
   return (
-    <div data-skin="default" className="page" style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+    <div data-skin="default" className="page" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-lg)' }}>
       {/* App-bar row: kicker + FieldDesk title */}
       <header>
         <div className="eyebrow" style={{ color: 'var(--color-text-secondary)' }}>
@@ -97,7 +97,7 @@ export default function DefaultFieldDesk({ state }: { state: FieldDeskHomeState 
           background: 'var(--color-bg-surface)',
           border: '1px solid var(--color-border)',
           borderRadius: 'var(--radius-xl)',
-          padding: 16,
+          padding: 'var(--space-lg)',
         }}
       >
         <span
@@ -111,11 +111,11 @@ export default function DefaultFieldDesk({ state }: { state: FieldDeskHomeState 
             background: 'var(--faction-default-rainbow)',
           }}
         />
-        <div className="flex items-center justify-between mb-4" style={{ marginTop: 4 }}>
+        <div className="flex items-center justify-between mb-4" style={{ marginTop: 'var(--space-xs)' }}>
           <span className="eyebrow" style={{ color: 'var(--color-text-secondary)' }}>
             {t('fieldDesk.home.charEyebrow')}
           </span>
-          <div className="flex items-center" style={{ gap: 14 }}>
+          <div className="flex items-center" style={{ gap: 'var(--space-lg)' }}>
             <button
               type="button"
               onClick={() => setSwitcherOpen(true)}
@@ -137,7 +137,13 @@ export default function DefaultFieldDesk({ state }: { state: FieldDeskHomeState 
         <div className="flex items-center gap-3.5">
           <div
             className="shrink-0 rounded-full"
-            style={{ width: 56, height: 56, padding: 3, background: 'var(--faction-default-ring)' }}
+            style={{
+              width: 56,
+              height: 56,
+              // eslint-disable-next-line local/no-raw-style-values -- ornament: spectrum ring thickness drawn around a 56px avatar; the nearest rung (4px) thickens the band by a third.
+              padding: 3,
+              background: 'var(--faction-default-ring)',
+            }}
           >
             {character.avatar_url ? (
               <img
@@ -169,7 +175,7 @@ export default function DefaultFieldDesk({ state }: { state: FieldDeskHomeState 
                 type="button"
                 onClick={() => setSwitcherOpen(true)}
                 aria-label={t('fieldDesk.home.switcher.title')}
-                // ornament: ▾ dingbat used as an icon, sized to the name row
+                // eslint-disable-next-line local/no-raw-style-values -- ornament: ▾ dingbat used as an icon, sized to the name row
                 style={{ flex: 'none', background: 'none', border: 'none', padding: 0, cursor: 'pointer', fontSize: 14, lineHeight: 1, color: 'var(--color-text-tertiary)' }}
               >
                 <span aria-hidden>{CARET_DOWN}</span>
@@ -178,7 +184,7 @@ export default function DefaultFieldDesk({ state }: { state: FieldDeskHomeState 
             <div
               className="truncate"
               style={{
-                marginTop: 5,
+                marginTop: 'var(--space-xs)',
                 fontFamily: 'var(--font-body)',
                 fontSize: 'var(--text-base)',
                 letterSpacing: '0.14em',
@@ -202,7 +208,7 @@ export default function DefaultFieldDesk({ state }: { state: FieldDeskHomeState 
           </div>
         </div>
 
-        <div className="flex gap-2" style={{ marginTop: 16 }}>
+        <div className="flex gap-2" style={{ marginTop: 'var(--space-lg)' }}>
           {stats.map((stat) => (
             <div
               key={stat.label}
@@ -214,7 +220,7 @@ export default function DefaultFieldDesk({ state }: { state: FieldDeskHomeState 
               </div>
               <div
                 className="eyebrow"
-                style={{ marginTop: 6, color: 'var(--color-text-secondary)' }}
+                style={{ marginTop: 'var(--space-sm)', color: 'var(--color-text-secondary)' }}
               >
                 {stat.label}
               </div>
@@ -241,7 +247,7 @@ export default function DefaultFieldDesk({ state }: { state: FieldDeskHomeState 
           background: 'var(--color-bg-surface)',
           border: '1px solid var(--color-border)',
           borderRadius: 'var(--radius-xl)',
-          padding: 16,
+          padding: 'var(--space-lg)',
         }}
       >
         <div className="flex items-center gap-2.5 mb-3">
@@ -270,7 +276,7 @@ export default function DefaultFieldDesk({ state }: { state: FieldDeskHomeState 
                 to={`/praxes/${praxis.id}/edit`}
                 className="flex items-center gap-3"
                 style={{
-                  padding: '12px 0',
+                  padding: 'var(--space-md) 0',
                   borderTop: index === 0 ? undefined : '1px solid var(--color-border)',
                   textDecoration: 'none',
                 }}
@@ -286,7 +292,7 @@ export default function DefaultFieldDesk({ state }: { state: FieldDeskHomeState 
                   <div
                     className="truncate"
                     style={{
-                      marginTop: 3,
+                      marginTop: 'var(--space-xs)',
                       fontFamily: 'var(--font-body)',
                       fontSize: 'var(--text-sm)',
                       letterSpacing: '0.1em',
@@ -304,7 +310,7 @@ export default function DefaultFieldDesk({ state }: { state: FieldDeskHomeState 
                   className="shrink-0 eyebrow"
                   style={{
                     color: 'var(--faction-default-card-muted)',
-                    padding: '4px 9px',
+                    padding: 'var(--space-xs) var(--space-sm)',
                     border: '1px solid var(--color-border-strong)',
                     borderRadius: 999,
                   }}
@@ -332,7 +338,7 @@ export default function DefaultFieldDesk({ state }: { state: FieldDeskHomeState 
             className="font-body flex-1 flex items-center justify-center gap-2"
             style={secondaryActionStyle}
           >
-            {/* ornament: "+" glyph used as an icon, sized to the button row */}
+            {/* eslint-disable-next-line local/no-raw-style-values -- ornament: "+" glyph used as an icon, sized to the button row */}
             <span aria-hidden style={{ fontSize: 15, lineHeight: 1 }}>+</span>
             <span>{t('actions.proposeTask')}</span>
           </Link>
