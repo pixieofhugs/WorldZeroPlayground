@@ -40,7 +40,7 @@ type Archetype = (props: { state: EditPraxisState }) => JSX.Element;
 // ua owns the gilt-salon Atelier archetype. albescent is a FIRST-CLASS
 // identity (#232 slice 1) with its own entry. StickyNote remains the fallback
 // for `na` / unknown factions.
-const ARCHETYPE_BY_SLUG: Record<string, Archetype> = {
+export const ARCHETYPE_BY_SLUG: Record<string, Archetype> = {
   everymen: EverymenEditPraxis,
   snide: SnideEditPraxis,
   singularity: SingularityEditPraxis,

@@ -25,13 +25,13 @@ export interface FactionSigilProps {
 
 export type SigilVariantProps = { size?: number; color?: string };
 
-function UaSigilAdapter({ size }: SigilVariantProps) {
+export function UaSigilAdapter({ size }: SigilVariantProps) {
   const dim = size ?? 22;
   // UA draws its own --ua-* tokens internally; it has no color prop.
   return <UaSigil width={dim} height={dim} />;
 }
 
-function SingularitySigilAdapter({ size, color }: SigilVariantProps) {
+export function SingularitySigilAdapter({ size, color }: SigilVariantProps) {
   return (
     <SingularitySigil
       size={size ?? 22}
@@ -40,7 +40,7 @@ function SingularitySigilAdapter({ size, color }: SigilVariantProps) {
   );
 }
 
-function AlbescentSigilAdapter({ size, color }: SigilVariantProps) {
+export function AlbescentSigilAdapter({ size, color }: SigilVariantProps) {
   return <AlbescentSigil size={size} color={color} />;
 }
 
@@ -49,7 +49,7 @@ function DefaultSigilAdapter({ size }: SigilVariantProps) {
   return <DefaultSigil size={size} />;
 }
 
-const FACTION_SIGILS: Record<string, ComponentType<SigilVariantProps>> = {
+export const FACTION_SIGILS: Record<string, ComponentType<SigilVariantProps>> = {
   everymen: EverymenSigil,
   wow: WowSigil,
   snide: SnideSigil,

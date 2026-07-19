@@ -127,7 +127,7 @@ function PraxisBody({
  * "Acquisition · filed" regalia line. Matches the UA praxis-read sheet, UaVote,
  * and the DS FactionPraxisCard reference. All colors via --ua-* tokens.
  */
-function UaPraxisCard({ praxis, adminProps, showCrown }: ArchetypeProps) {
+export function UaPraxisCard({ praxis, adminProps, showCrown }: ArchetypeProps) {
   const { t } = useTranslation("praxis");
   return (
     // Gilt frame: gold-leaf gradient border, then the parchment plate.
@@ -189,7 +189,7 @@ const everymenMarginRule: CSSProperties = {
   background: "rgba(220,80,80,0.2)",
 };
 
-function EverymenPraxisCard({ praxis, adminProps, showCrown }: ArchetypeProps) {
+export function EverymenPraxisCard({ praxis, adminProps, showCrown }: ArchetypeProps) {
   return (
     <div
       style={{
@@ -256,7 +256,7 @@ const wowTape: CSSProperties = {
   borderRadius: 1,
 };
 
-function WowPraxisCard({ praxis, adminProps, showCrown }: ArchetypeProps) {
+export function WowPraxisCard({ praxis, adminProps, showCrown }: ArchetypeProps) {
   return (
     <div
       style={{
@@ -310,7 +310,7 @@ const snideTornBase: CSSProperties = {
 const snideTornTop: CSSProperties = { ...snideTornBase, top: -1 };
 const snideTornBottom: CSSProperties = { ...snideTornBase, bottom: -1 };
 
-function SnidePraxisCard({ praxis, adminProps, showCrown }: ArchetypeProps) {
+export function SnidePraxisCard({ praxis, adminProps, showCrown }: ArchetypeProps) {
   const { t } = useTranslation("praxis");
   return (
     <div
@@ -344,7 +344,7 @@ function SnidePraxisCard({ praxis, adminProps, showCrown }: ArchetypeProps) {
  * The Ephemerists (ephemerists slug) — a sealed ephemeris entry. A foxed vellum
  * leaf with a lapis-ruled running head, the sigil, and rubric-accented text.
  */
-function EphemeristsPraxisCard({ praxis, adminProps, showCrown }: ArchetypeProps) {
+export function EphemeristsPraxisCard({ praxis, adminProps, showCrown }: ArchetypeProps) {
   const { t } = useTranslation("praxis");
   return (
     <div
@@ -470,7 +470,7 @@ const cornerBottomRight: CSSProperties = {
   borderRight: cornerRule,
 };
 
-function SingularityPraxisCard({ praxis, adminProps, showCrown }: ArchetypeProps) {
+export function SingularityPraxisCard({ praxis, adminProps, showCrown }: ArchetypeProps) {
   const { t } = useTranslation("praxis");
   return (
     <div
@@ -541,7 +541,7 @@ function SingularityPraxisCard({ praxis, adminProps, showCrown }: ArchetypeProps
  * tokens directly (not factionCssVar('albescent', …), which resolves to ua until
  * the alias drops in slice 2 of #232). Ported from docs/design/albescent-kit.
  */
-function AlbescentPraxisCard({ praxis, adminProps, showCrown }: ArchetypeProps) {
+export function AlbescentPraxisCard({ praxis, adminProps, showCrown }: ArchetypeProps) {
   const { t } = useTranslation("praxis");
   const ink = (pct: number) =>
     `color-mix(in srgb, var(--faction-albescent-card-text) ${pct}%, transparent)`;

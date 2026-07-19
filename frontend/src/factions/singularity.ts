@@ -1,11 +1,56 @@
 /**
- * singularity — surfaces this faction overrides (#782).
+ * singularity — the surfaces this faction overrides (#782).
  *
- * Override-only: anything absent here renders that surface's `Default*`
- * archetype. Add a field, and the surface picks it up with no dispatcher edit.
+ * Override-only: any surface absent here renders that surface's `Default*`
+ * archetype via `pickVariant`. Adding a surface is one line; no dispatcher is
+ * touched. Removing one hands the surface back to the default.
  */
 import type { FactionManifest } from './manifest'
 
+import SingularityAvatar from '../components/avatar/SingularityAvatar'
+import SingularityBackdrop from '../components/backdrop/SingularityBackdrop'
+import SingularityComment from '../components/comments/voices/SingularityComment'
+import SingularityEditPraxis from '../pages/editPraxis/archetypes/SingularityEditPraxis'
+import SingularityFactionBody from '../pages/factionDetail/archetypes/SingularityFactionBody'
+import SingularityFactionHero from '../components/cards/SingularityFactionHero'
+import SingularityFactionPage from '../pages/factionDetail/mobileArchetypes/SingularityFactionPage'
+import SingularityFeedFrame from '../components/feed/SingularityFeedFrame'
+import SingularityHome from '../pages/fieldDesk/mobileArchetypes/SingularityHome'
+import SingularityMobileEditPraxis from '../pages/editPraxis/mobileArchetypes/SingularityComposer'
+import SingularityMobilePraxisCard from '../components/praxisCard/mobile/SingularityMobilePraxisCard'
+import SingularityMobilePraxisDetail from '../pages/praxisDetail/mobileArchetypes/SingularityPraxisDetail'
+import SingularityMobileTaskCard from '../pages/tasks/mobileArchetypes/cards/SingularityMobileTaskCard'
+import SingularityMobileTaskDetail from '../pages/taskDetail/mobileArchetypes/SingularityTaskDetail'
+import SingularityPraxisDetail from '../pages/praxisDetail/archetypes/SingularityPraxisDetail'
+import SingularityProfileBody from '../pages/characterProfile/archetypes/SingularityProfileBody'
+import SingularityTaskCard from '../components/cards/SingularityTaskCard'
+import SingularityTaskDetail from '../pages/taskDetail/archetypes/SingularityTaskDetail'
+import SingularityVote from '../components/vote/SingularityVote'
+import { SingularityPraxisCard } from '../components/PraxisCard'
+import { SingularitySigilAdapter } from '../components/cards/FactionSigil'
+
 export const SINGULARITY_MANIFEST: FactionManifest = {
   slug: 'singularity',
+
+  taskCard: SingularityTaskCard,
+  praxisCard: SingularityPraxisCard,
+  avatar: SingularityAvatar,
+  backdrop: SingularityBackdrop,
+  sigil: SingularitySigilAdapter,
+  comment: SingularityComment,
+  feedFrame: SingularityFeedFrame,
+  vote: SingularityVote,
+  taskDetail: SingularityTaskDetail,
+  praxisDetail: SingularityPraxisDetail,
+  editPraxis: SingularityEditPraxis,
+  factionHero: SingularityFactionHero,
+  factionBody: SingularityFactionBody,
+  profileBody: SingularityProfileBody,
+  mobileTaskCard: SingularityMobileTaskCard,
+  mobilePraxisCard: SingularityMobilePraxisCard,
+  mobileTaskDetail: SingularityMobileTaskDetail,
+  mobilePraxisDetail: SingularityMobilePraxisDetail,
+  mobileEditPraxis: SingularityMobileEditPraxis,
+  mobileFactionPage: SingularityFactionPage,
+  mobileFieldDesk: SingularityHome,
 }

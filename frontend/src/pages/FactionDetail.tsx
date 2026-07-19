@@ -53,7 +53,7 @@ export interface FactionHeroProps {
   praxes: number;
 }
 
-const FACTION_HEROES: Record<string, ComponentType<FactionHeroProps>> = {
+export const FACTION_HEROES: Record<string, ComponentType<FactionHeroProps>> = {
   ephemerists: EphemeristsFactionHero,
   snide: SnideFactionHero,
   singularity: SingularityFactionHero,
@@ -66,7 +66,7 @@ const FACTION_HEROES: Record<string, ComponentType<FactionHeroProps>> = {
 // The standardized six-section body, dispatched per faction. The explicit
 // albescent row renders "The Record" skin now (#232); it beats the albescent→ua
 // alias in pickVariant, so it no longer inherits the UA body.
-const FACTION_BODIES: Record<string, ComponentType<{ state: FactionDetailState }>> = {
+export const FACTION_BODIES: Record<string, ComponentType<{ state: FactionDetailState }>> = {
   everymen: EverymenFactionBody,
   ua: UaFactionBody,
   singularity: SingularityFactionBody,

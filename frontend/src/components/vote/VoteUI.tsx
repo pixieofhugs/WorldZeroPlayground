@@ -22,7 +22,7 @@ export interface VoteUIProps {
   totalVotes?: number
 }
 
-const FACTION_VOTE: Record<string, ComponentType<VoteUIProps>> = {
+export const FACTION_VOTE: Record<string, ComponentType<VoteUIProps>> = {
   everymen: EverymenVote,
   wow: WowVote,
   snide: SnideVote,

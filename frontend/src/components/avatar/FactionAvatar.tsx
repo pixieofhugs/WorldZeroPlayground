@@ -207,7 +207,7 @@ export function BadgedAvatar({
   )
 }
 
-const FACTION_AVATARS: Record<string, ComponentType<FactionAvatarProps>> = {
+export const FACTION_AVATARS: Record<string, ComponentType<FactionAvatarProps>> = {
   everymen: EverymenAvatar,
   wow: WowAvatar,
   snide: SnideAvatar,
