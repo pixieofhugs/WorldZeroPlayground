@@ -91,7 +91,6 @@ export function MobileStarVote({
             muted: 'var(--color-text-tertiary)',
             accent,
             accentFont,
-            avgFontSize: 15,
             errorColor: 'var(--color-danger)',
           }}
         />
