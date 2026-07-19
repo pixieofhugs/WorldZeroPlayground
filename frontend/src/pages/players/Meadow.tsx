@@ -274,8 +274,9 @@ export function MeadowBloom({
   champion?: boolean
 }) {
   const slug = character?.faction_slug ?? null
-  // factionCssVar resolves an unknown slug to the `ua` theme, so unaffiliated
-  // branches on isKnownFaction first (#636 / ADR-0039).
+  // The bloom spends its spectrum across petals, so it must know whether the
+  // slug has one hue or seven before asking for a colour (ADR-0039). See the
+  // isKnownFaction docblock in utils/factions for why `na` is not known (#749).
   const known = isKnownFaction(slug)
   const petalColor = (index: number): string => {
     if (champion) return 'var(--meadow-champion-petal)'

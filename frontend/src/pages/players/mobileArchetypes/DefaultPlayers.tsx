@@ -192,7 +192,10 @@ function Roster({ players, myCharId }: { players: RankedPlayer[]; myCharId: numb
   const resetPaging = () => setVisible(PAGE_STEP)
 
   return (
-    <section className="mt-8">
+    // Every roster player may also be an orb in the sky above, so their profile
+    // link appears twice on the page; the testid lets a test say which one it
+    // means (#754).
+    <section className="mt-8" data-testid="mobile-roster">
       <h2
         className="font-display italic content-title mb-3"
         style={{ color: 'var(--color-text-primary)' }}
@@ -230,9 +233,14 @@ function Roster({ players, myCharId }: { players: RankedPlayer[]; myCharId: numb
           {t('leaderboard.mobile.allFactions')}
         </Chip>
         {factionChips.map(({ slug }) => {
-          // factionCssVar resolves an unknown slug to the `ua` theme, so the
-          // unaffiliated ring branches on isKnownFaction first (#636/ADR-0039).
-          const ring = isKnownFaction(slug) ? factionCssVar(slug) : 'var(--faction-default)'
+          // Scalar-only, so no isKnownFaction branch: Chip spends `tint` on a
+          // border colour and a box-shadow ring, and a gradient is invalid in
+          // both. The unaffiliated selection ring stays neutral by necessity —
+          // the spectrum arrives on this chip through the FactionSigil glyph
+          // below, which draws --faction-default-ring. factionCssVar already
+          // maps `na` to --faction-default; see the isKnownFaction docblock in
+          // utils/factions for why that is the design, not a fallback (#754).
+          const ring = factionCssVar(slug)
           return (
             <Chip
               key={slug}
@@ -298,10 +306,13 @@ function Roster({ players, myCharId }: { players: RankedPlayer[]; myCharId: numb
 function PlayerRow({ row, isMe }: { row: RankedPlayer; isMe: boolean }) {
   const { t } = useTranslation('common')
   const { character, rank, points } = row
-  // See RosterTable: factionCssVar resolves an unknown slug to the `ua` theme,
-  // so unaffiliated ornament branches on isKnownFaction first (#636/ADR-0039).
+  // `known` gates the one ornament that CAN carry the spectrum here: the points
+  // numeral, which swaps to the .rainbow-ink gradient clip below (ADR-0039).
+  // `color` is scalar-only — a 4px border-left and two text colours — so it has
+  // no gradient branch to make; factionCssVar maps `na` to --faction-default by
+  // itself. See the isKnownFaction docblock in utils/factions (#749/#754).
   const known = isKnownFaction(character.faction_slug)
-  const color = known ? factionCssVar(character.faction_slug) : 'var(--faction-default)'
+  const color = factionCssVar(character.faction_slug)
   const badges = character.badges ?? []
 
   return (
@@ -316,11 +327,11 @@ function PlayerRow({ row, isMe }: { row: RankedPlayer; isMe: boolean }) {
         // points numeral already carry the spectrum for an unaffiliated row.
         borderLeft: `4px solid ${color}`,
         textDecoration: 'none',
-        background: isMe
-          ? known
-            ? factionCssVar(character.faction_slug, 'light')
-            : 'var(--faction-default-light)'
-          : undefined,
+        // Your own row's wash stays a flat tint for every slug: it sits behind
+        // body text, and no single ink is legible across the spectrum (#649), so
+        // factionFill has no wash shape to reach for. `na` resolves to
+        // --faction-default-light on its own.
+        background: isMe ? factionCssVar(character.faction_slug, 'light') : undefined,
       }}
     >
       {/* Rank */}

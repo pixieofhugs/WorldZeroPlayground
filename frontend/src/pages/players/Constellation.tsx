@@ -277,8 +277,9 @@ function SkyNode({
   const { t } = useTranslation('common')
   const { entry, size, faded, crowned } = node
   const character = entry.character
-  // factionCssVar resolves an unknown slug to the `ua` theme, so unaffiliated
-  // branches on isKnownFaction first (#636 / ADR-0039).
+  // Unaffiliated hands its points no colour at all, leaving the .rainbow-ink
+  // gradient clip to paint them (ADR-0039). See the isKnownFaction docblock in
+  // utils/factions for what `known` means and why `na` is outside it (#749).
   const known = isKnownFaction(character.faction_slug)
   const pointsColor = known ? factionCssVar(character.faction_slug) : undefined
   const badgeDim = Math.max(18, Math.round(size * 0.3))
