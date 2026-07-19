@@ -80,6 +80,19 @@ Two traps, both of which have already been sprung:
 
 The one exception is the **reveal surfaces** — the invitation letter, the sealed placeholder, the `/factions` tile — which are only ever shown to an account already revealed to the society. They read the private `--albescent-reveal-*` palette by direct reference, never through `factionCssVar`. That palette is not a theme and must not become one.
 
+### Warriors of Whimsy has a colour but no skin (#812)
+
+Read this next to the Albescent note above. They are the repo's two partly-registered factions, and they are partial on **different axes** — theme and skin are independent, and knowing which one a faction is missing is what tells you whether a Default-looking surface is correct or broken.
+
+Albescent has **neither**, on purpose: no theme and an all-but-empty manifest, because it is hiding. WOW has a **theme but no skin**, purely by timing: #784 moved its lo-fi pink `.exe` aesthetic wholesale to Cozy Coven, and #812 gave it back a colour — yellow — without giving it back a design. So it has the full §3 token block and `isKnownFaction('wow')` is **true** (its members get faction-coloured ornament, and it holds index 2 of `FACTION_RAINBOW_ORDER`, between UA's orange and S.N.I.D.E.'s green), while `factions/wow.ts` stays **empty**, so every surface renders its `Default*` archetype. A WOW profile and an unaffiliated one are structurally identical and differ only in hue. That is the target state until the redesign ships, not a half-built skin.
+
+Two consequences worth stating, because both look like omissions:
+
+- **Its block is nine tokens, not forty.** Only the §3 contract, no archetype-private primitives. Coven's block is fat because it carries 22 bespoke `.exe` chrome tokens for components WOW no longer has; cloning that shape here would be dead weight the redesign has to delete first.
+- **Its headline font is the shared display face, not Caveat.** Caveat left with the script aesthetic. Choosing a replacement display face is a design decision, and this issue was explicitly a colour — so WOW stays typographically identical to unaffiliated, and colour is the only axis that differs.
+
+**On the hue.** Yellow is the palette's hard case (#651, #669, #677), for two reasons that pull in opposite directions. A yellow saturated enough to read as yellow needs **dark ink** on it, never white — hence `--faction-wow-on-fill` is ink in both themes. And WOW sits **adjacent to UA** in the spectrum, so the two are painted touching in the Leaderboard/DefaultPlayers stripe bars and Meadow's bloom; a goldenrod too near UA's burnt orange reads as a second brown at that size. The shipped light value resolves this by pushing hue rather than lightness — clear of orange, deep enough to stay legible. The `card-accent` is deliberately **not** the primary in light mode: §3 calls the accent metadata, metadata is text, and no readable yellow pays 4.5:1 on a light card, so the accent is the primary walked down until it clears.
+
 ---
 
 ## 4. Typography
@@ -98,7 +111,8 @@ All fonts loaded from Google Fonts.
 | ----------- | ------------------ | --------------------------------- |
 | UA          | `IM Fell English`  | `--faction-ua-card-font`          |
 | Everymen    | `Special Elite`    | `--faction-everymen-card-font`    |
-| Warriors of Whimsy | `Caveat`    | `--faction-wow-card-font`         |
+| Cozy Coven  | `Caveat`           | `--faction-coven-card-font`       |
+| Warriors of Whimsy | `Lora` — the shared display face, not a faction face (see §3) | `--faction-wow-card-font` |
 | S.N.I.D.E.  | `Permanent Marker` (+ a punk set: Anton / Bebas Neue / Archivo Black / Special Elite, via `--faction-snide-font-*`) | `--faction-snide-card-font`       |
 | Ephemerists | `Cinzel`           | `--faction-ephemerists-card-font` |
 | Singularity | `Share Tech Mono`  | `--faction-singularity-card-font` |
