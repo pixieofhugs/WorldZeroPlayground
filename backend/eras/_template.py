@@ -51,6 +51,9 @@ from game_config import (
 #   collab_other_modifier   -- collaborative task from another faction
 #   duel_win_modifier       -- base points when you win a duel
 #   duel_loss_modifier      -- base points when you lose a duel
+#   level_jump_reach        -- levels above own level this faction may reach when
+#                              signing up, once per level. Optional, defaults to 0
+#                              (no ability). Era 1 gives wow 1; everyone else 0.
 
 ERA_N_FACTIONS = {
     # --- Required system factions (copy and customize) ---

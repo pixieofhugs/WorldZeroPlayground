@@ -17,6 +17,7 @@ from services.praxis import (
     can_submit_praxis_for_task,
     is_task_eligible_for_character,
 )
+from services.level_jump import available_level_reach
 
 
 async def propose_task(
@@ -154,7 +155,12 @@ async def build_task_out_for_viewer(
     base.can_submit_praxis = await can_submit_praxis_for_task(viewer, task, session, era)
     base.allowed_modes = [m.value for m in allowed_praxis_modes(viewer, stats.level, era)]
     base.eligible_for_current_user = is_task_eligible_for_character(
-        viewer, task, stats.level
+        viewer,
+        task,
+        stats.level,
+        available_level_reach(
+            viewer.faction_slug, stats.level, stats.level_jump_used_at_level, era
+        ),
     )
     return base
 
