@@ -13,7 +13,7 @@
     "excellent": "excellent",
     "legendary": "legendary"
   },
-  "wow": {
+  "coven": {
     "a-start": "a start",
     "solid": "solid",
     "good": "good",
@@ -56,7 +56,7 @@
     "everymen": {
       "rateAria": "Rate {{value}} — {{label}}"
     },
-    "wow": {
+    "coven": {
       "rateAria": "Rate {{value}} — {{label}}"
     },
     "snide": {

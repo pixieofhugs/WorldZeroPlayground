@@ -22,7 +22,7 @@ const CARD = <span>card-body</span>;
 const DESIGNED_FACTIONS = [
   "everymen",
   "ephemerists",
-  "wow",
+  "coven",
   "snide",
   "singularity",
   "ua",

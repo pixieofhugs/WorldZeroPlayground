@@ -163,10 +163,10 @@ export default function CovenFieldDesk({ state }: { state: FieldDeskHomeState })
       </header>
 
       {/* ── Character window ── */}
-      <Window title={t('fieldDesk.home.wow.charWindow')}>
+      <Window title={t('fieldDesk.home.coven.charWindow')}>
         <div className="flex items-center justify-between" style={{ marginBottom: 'var(--space-md)' }}>
           <span className="eyebrow" style={{ color: CARD_MUTED }}>
-            {t('fieldDesk.home.wow.charEyebrow')}
+            {t('fieldDesk.home.coven.charEyebrow')}
           </span>
           <Link
             to={`/characters/${character.id}/edit`}
@@ -288,11 +288,11 @@ export default function CovenFieldDesk({ state }: { state: FieldDeskHomeState })
       )}
 
       {/* ── Quests window ── */}
-      <Window title={t('fieldDesk.home.wow.questsWindow')}>
+      <Window title={t('fieldDesk.home.coven.questsWindow')}>
         <div className="flex items-center gap-2.5" style={{ marginBottom: 'var(--space-sm)' }}>
           <span style={{ display: 'inline-flex', alignItems: 'center', gap: 'var(--space-xs)', fontFamily: SCRIPT, fontSize: 'var(--text-content)', color: TITLE_TEXT }}>
             <Sparkle size={12} color={PINK} />
-            {t('fieldDesk.home.wow.questsHeading')}
+            {t('fieldDesk.home.coven.questsHeading')}
           </span>
           <span style={{ flex: 1, height: 2, background: `repeating-linear-gradient(90deg, ${PINK} 0 8px, transparent 8px 14px)` }} />
           <Link to="/tasks" className="eyebrow" style={{ color: PINK, textDecoration: 'none' }}>

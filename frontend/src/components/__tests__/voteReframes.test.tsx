@@ -24,7 +24,7 @@ vi.mock('../../auth/AuthContext', () => ({
 const REGISTERED_SLUGS = [
   'ephemerists',
   'everymen',
-  'wow',
+  'coven',
   'snide',
   'singularity',
   'ua',

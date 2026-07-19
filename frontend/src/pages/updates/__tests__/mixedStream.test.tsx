@@ -52,7 +52,7 @@ function render(state: UpdatesState): { html: string; text: string } {
 
 describe('mobile Updates mixed multi-faction stream', () => {
   const items = [
-    completion('wow', 1, 'Cast a small spell'),
+    completion('coven', 1, 'Cast a small spell'),
     completion('ua', 2, 'Hang the canvas'),
     completion('snide', 3, 'Map the boring'),
   ]

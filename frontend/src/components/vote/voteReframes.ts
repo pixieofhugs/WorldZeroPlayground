@@ -38,13 +38,13 @@ export const VOTE_REFRAMES: Record<string, VoteReframe> = {
       { value: 5, label: i18n.t('votes:everymen.legendary') },
     ],
   },
-  wow: {
+  coven: {
     tiers: [
-      { value: 1, label: i18n.t('votes:wow.a-start') },
-      { value: 2, label: i18n.t('votes:wow.solid') },
-      { value: 3, label: i18n.t('votes:wow.good') },
-      { value: 4, label: i18n.t('votes:wow.excellent') },
-      { value: 5, label: i18n.t('votes:wow.legendary') },
+      { value: 1, label: i18n.t('votes:coven.a-start') },
+      { value: 2, label: i18n.t('votes:coven.solid') },
+      { value: 3, label: i18n.t('votes:coven.good') },
+      { value: 4, label: i18n.t('votes:coven.excellent') },
+      { value: 5, label: i18n.t('votes:coven.legendary') },
     ],
   },
   snide: {

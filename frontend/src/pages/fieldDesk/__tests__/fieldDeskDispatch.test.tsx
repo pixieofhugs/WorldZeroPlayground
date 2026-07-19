@@ -88,7 +88,7 @@ function render(): string {
 describe('FieldDesk form-factor dispatch', () => {
   it('renders the COVEN bespoke home skin on mobile for a COVEN life', () => {
     mocks.formFactor = 'mobile'
-    mocks.user = currentUser('wow')
+    mocks.user = currentUser('coven')
     expect(render()).toContain('data-skin="coven"')
   })
 
@@ -108,7 +108,7 @@ describe('FieldDesk form-factor dispatch', () => {
 
   it('renders the desktop roster on desktop (skin dispatch untouched)', () => {
     mocks.formFactor = 'desktop'
-    mocks.user = currentUser('wow')
+    mocks.user = currentUser('coven')
     const html = render()
     expect(html).not.toContain('data-skin=')
     expect(html.replace(/<[^>]*>/g, '')).toContain('Whose shoes today?')

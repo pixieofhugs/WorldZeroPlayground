@@ -83,7 +83,7 @@ export default function CovenFeedFrame({ children }: { children: ReactNode }) {
             color: TITLE_TEXT,
           }}
         >
-          {i18n.t('feed:identity.wow.windowTitle')}
+          {i18n.t('feed:identity.coven.windowTitle')}
           <Sparkle size={12} />
         </span>
       </div>

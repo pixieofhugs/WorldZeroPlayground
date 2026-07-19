@@ -173,7 +173,7 @@ export default function CovenFactionPage({ state }: { state: FactionDetailState 
           ))}
           <span style={{ marginLeft: 'auto', display: 'inline-flex', alignItems: 'center', gap: 'var(--space-xs)', fontFamily: SCRIPT, fontSize: 'var(--text-content)', color: TITLE_TEXT }}>
             <Sparkle size={11} color={TITLE_TEXT} />
-            {t('wow.mobile.eyebrow')}
+            {t('coven.mobile.eyebrow')}
           </span>
         </div>
         <div

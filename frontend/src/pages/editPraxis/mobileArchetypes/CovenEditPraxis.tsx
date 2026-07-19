@@ -181,15 +181,15 @@ export default function CovenEditPraxis({ state }: { state: EditPraxisState }) {
               gap: "var(--space-sm)",
             }}
           >
-            {t("editPraxis.wow.pageTitle")}
+            {t("editPraxis.coven.pageTitle")}
             <Sparkle size={16} color={PINK} />
           </h1>
           <span style={{ ...eyebrow, color: CARD_MUTED, marginLeft: "auto" }}>
             {state.autosaveAt
-              ? t("editPraxis.wow.autosaveSaved", {
+              ? t("editPraxis.coven.autosaveSaved", {
                   ago: formatAutosave(state.autosaveAt),
                 })
-              : t("editPraxis.wow.autosaveUnsaved")}
+              : t("editPraxis.coven.autosaveUnsaved")}
           </span>
         </div>
 
@@ -235,7 +235,7 @@ export default function CovenEditPraxis({ state }: { state: EditPraxisState }) {
           borderRadius: 12,
         }}
       >
-        <span style={eyebrow}>{t("editPraxis.wow.taskRefLabel")}</span>
+        <span style={eyebrow}>{t("editPraxis.coven.taskRefLabel")}</span>
         <span
           style={{
             fontFamily: SCRIPT,
@@ -256,11 +256,11 @@ export default function CovenEditPraxis({ state }: { state: EditPraxisState }) {
 
       {tab === "write" ? (
         <>
-          <Window title={t("editPraxis.wow.titleLabel")}>
+          <Window title={t("editPraxis.coven.titleLabel")}>
             <TitleField
               state={state}
               skin={{
-                placeholder: t("editPraxis.wow.titlePlaceholder"),
+                placeholder: t("editPraxis.coven.titlePlaceholder"),
                 inputStyle: {
                   width: "100%",
                   fontFamily: SCRIPT,
@@ -276,12 +276,12 @@ export default function CovenEditPraxis({ state }: { state: EditPraxisState }) {
             />
           </Window>
 
-          <Window title={t("editPraxis.wow.bodyLabel", { words: state.wordCount })}>
+          <Window title={t("editPraxis.coven.bodyLabel", { words: state.wordCount })}>
             <BodyTextarea
               state={state}
               skin={{
                 rows: 10,
-                placeholder: t("editPraxis.wow.bodyPlaceholder"),
+                placeholder: t("editPraxis.coven.bodyPlaceholder"),
                 textareaStyle: {
                   width: "100%",
                   fontFamily: BODY,
@@ -303,8 +303,8 @@ export default function CovenEditPraxis({ state }: { state: EditPraxisState }) {
             <Window
               title={
                 state.duelMode
-                  ? t("editPraxis.wow.inviteLabelDuel")
-                  : t("editPraxis.wow.inviteLabel")
+                  ? t("editPraxis.coven.inviteLabelDuel")
+                  : t("editPraxis.coven.inviteLabel")
               }
             >
               <InviteSearch
@@ -316,18 +316,18 @@ export default function CovenEditPraxis({ state }: { state: EditPraxisState }) {
                   inputBorder: `1.5px solid ${NOTEPAD_BORDER}`,
                   acceptedBg: PINK,
                   acceptedColor: ON_ACCENT,
-                  placeholder: t("editPraxis.wow.invitePlaceholder"),
+                  placeholder: t("editPraxis.coven.invitePlaceholder"),
                 }}
               />
             </Window>
           )}
 
-          <Window title={t("editPraxis.wow.filesLabel", { pasted: state.media.length })}>
+          <Window title={t("editPraxis.coven.filesLabel", { pasted: state.media.length })}>
             <MediaGrid state={state} />
           </Window>
 
           {state.showMetatasks && (
-            <Window title={t("editPraxis.wow.metatasksLabel")}>
+            <Window title={t("editPraxis.coven.metatasksLabel")}>
               <MetatasksList
                 state={state}
                 skin={{
@@ -352,7 +352,7 @@ export default function CovenEditPraxis({ state }: { state: EditPraxisState }) {
           )}
         </>
       ) : (
-        <Window title={t("editPraxis.wow.previewLabel")}>
+        <Window title={t("editPraxis.coven.previewLabel")}>
           <div
             style={{
               fontFamily: SCRIPT,
@@ -361,7 +361,7 @@ export default function CovenEditPraxis({ state }: { state: EditPraxisState }) {
               marginBottom: "var(--space-sm)",
             }}
           >
-            {state.title || t("editPraxis.wow.titlePlaceholder")}
+            {state.title || t("editPraxis.coven.titlePlaceholder")}
           </div>
           {state.media.length > 0 && (
             <div style={{ marginBottom: "var(--space-md)" }}>
@@ -398,7 +398,7 @@ export default function CovenEditPraxis({ state }: { state: EditPraxisState }) {
           <DropButton
             state={state}
             skin={{
-              label: t("editPraxis.wow.dropLabel"),
+              label: t("editPraxis.coven.dropLabel"),
               style: {
                 background: "transparent",
                 border: "none",
@@ -415,8 +415,8 @@ export default function CovenEditPraxis({ state }: { state: EditPraxisState }) {
           state={state}
           skin={{
             ornament: <Sparkle size={13} color={ON_ACCENT} />,
-            idleLabel: t("editPraxis.wow.publishIdle"),
-            busyLabel: t("editPraxis.wow.publishBusy"),
+            idleLabel: t("editPraxis.coven.publishIdle"),
+            busyLabel: t("editPraxis.coven.publishBusy"),
             style: {
               flex: 1,
               display: "inline-flex",
@@ -541,7 +541,7 @@ function MediaGrid({
               fontWeight: 700,
               color: PINK,
             },
-            buttonLabel: t("editPraxis.wow.fileButton"),
+            buttonLabel: t("editPraxis.coven.fileButton"),
           }}
         />
       )}

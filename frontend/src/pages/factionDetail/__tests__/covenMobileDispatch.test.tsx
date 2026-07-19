@@ -12,7 +12,7 @@ import CovenFactionPage from '../mobileArchetypes/CovenFactionPage'
 
 describe('mobile faction-page COVEN dispatch', () => {
   it('mobile + the COVEN faction resolves to the bespoke COVEN page', () => {
-    expect(pickVariant(surfaceMap('mobileFactionPage'), 'wow', DefaultFactionPage)).toBe(CovenFactionPage)
+    expect(pickVariant(surfaceMap('mobileFactionPage'), 'coven', DefaultFactionPage)).toBe(CovenFactionPage)
   })
 
   it('every other faction falls through to the Default mobile page', () => {

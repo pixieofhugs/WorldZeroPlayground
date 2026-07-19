@@ -110,7 +110,7 @@
     "ephemerists": {
       "wordmark": "THE EPHEMERISTS"
     },
-    "wow": {
+    "coven": {
       "windowTitle": "whimsy.exe"
     },
     "singularity": {
@@ -170,7 +170,7 @@
       "pointsLine": "UA · {{points}} pts",
       "signup": "Matriculate"
     },
-    "wow": {
+    "coven": {
       "windowTitle": "wow.exe",
       "questMeta": "new quest · {{points}} pts",
       "signup": "sign up",
@@ -270,7 +270,7 @@
         "praxes": "acquisitions"
       }
     },
-    "wow": {
+    "coven": {
       "eyebrow": "World Zero · Faction · est. MMXXI",
       "motto": "make it weird, make it matter",
       "descriptionFallback": "Nobody said the work couldn't be fun. Cast something.",
@@ -296,7 +296,7 @@
       "members_other": "{{count}} residents",
       "cta": "Enter the Salon →"
     },
-    "wow": {
+    "coven": {
       "name": "Warriors of Whimsy",
       "blurb": "A little magic, a lot of mischief. World Zero’s coven for the soft and the strange — take a quest, cast a small spell, let the circle cheer.",
       "status": {

@@ -18,7 +18,7 @@ import EphemeristsMobileTaskCard from '../cards/EphemeristsMobileTaskCard'
 
 const CARD_BY_SLUG = {
   ua: UaMobileTaskCard,
-  wow: CovenMobileTaskCard,
+  coven: CovenMobileTaskCard,
   snide: SnideMobileTaskCard,
   everymen: EverymenMobileTaskCard,
   singularity: SingularityMobileTaskCard,

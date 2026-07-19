@@ -136,7 +136,7 @@ function render(slug: string | null): string {
 describe("edit-praxis form-factor dispatch", () => {
   it("renders the COVEN bespoke composer on mobile for a COVEN task", () => {
     mocks.formFactor = "mobile";
-    expect(render("wow")).toContain('data-skin="coven"');
+    expect(render("coven")).toContain('data-skin="coven"');
   });
 
   it("renders the SNIDE bespoke composer on mobile for a SNIDE task", () => {
@@ -153,9 +153,11 @@ describe("edit-praxis form-factor dispatch", () => {
 
   it("renders the desktop archetype on desktop (skin dispatch untouched)", () => {
     mocks.formFactor = "desktop";
-    const html = render("wow");
+    const html = render("coven");
     expect(html).not.toContain("data-skin=");
-    // wow.exe desktop window chrome, not the mobile skin.
+    // The literal "wow.exe" window chrome, not the mobile skin. The window
+    // title is COPY, and Cozy Coven's display naming is deliberately deferred
+    // (#784) — the aesthetic moved pixel-identical, wording included.
     expect(html).toContain("wow.exe");
   });
 });
@@ -163,7 +165,7 @@ describe("edit-praxis form-factor dispatch", () => {
 describe("mobile composer content slots", () => {
   for (const [label, slug] of [
     ["Default", "na"],
-    ["COVEN", "wow"],
+    ["COVEN", "coven"],
     ["SNIDE", "snide"],
   ] as const) {
     it(`${label} mobile composer renders body editor + media-add + submit`, () => {

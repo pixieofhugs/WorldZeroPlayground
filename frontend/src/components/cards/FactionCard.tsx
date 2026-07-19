@@ -293,7 +293,7 @@ export function CovenCard({
               letterSpacing: "0.03em",
             }}
           >
-            <CovenSigil size={10} color={titleText} /> {i18n.t("feed:identity.wow.windowTitle")}
+            <CovenSigil size={10} color={titleText} /> {i18n.t("feed:identity.coven.windowTitle")}
           </span>
           <span
             style={{
@@ -361,7 +361,7 @@ export function CovenCard({
                 marginBottom: "var(--space-xs)",
               }}
             >
-              <StatusBadge status={status} slug="wow" />
+              <StatusBadge status={status} slug="coven" />
             </div>
             <div
               style={{

@@ -95,7 +95,7 @@ export default function CovenTaskCard({
           }}
         >
           <Sparkle size={9} color="var(--faction-coven-title-text)" />
-          {i18n.t("feed:taskCard.wow.windowTitle")}
+          {i18n.t("feed:taskCard.coven.windowTitle")}
         </span>
         <span
           style={{
@@ -136,7 +136,7 @@ export default function CovenTaskCard({
             className="card-meta"
             style={{ color: "var(--faction-coven-card-accent)" }}
           >
-            {i18n.t("feed:taskCard.wow.questMeta", { points: displayPoints })}
+            {i18n.t("feed:taskCard.coven.questMeta", { points: displayPoints })}
           </div>
 
           <Link
@@ -174,7 +174,7 @@ export default function CovenTaskCard({
             className="btn-primary"
             style={{ fontSize: "var(--text-xs)", padding: "var(--space-xs) var(--space-sm)", marginBottom: "var(--space-sm)" }}
           >
-            {i18n.t("feed:taskCard.wow.signup")}
+            {i18n.t("feed:taskCard.coven.signup")}
           </button>
         )}
 
@@ -190,7 +190,7 @@ export default function CovenTaskCard({
               color: "var(--faction-coven-card-accent)",
             }}
           >
-            ◆ {i18n.t("feed:taskCard.wow.points", { points: displayPoints })}
+            ◆ {i18n.t("feed:taskCard.coven.points", { points: displayPoints })}
           </span>
         </div>
       </div>

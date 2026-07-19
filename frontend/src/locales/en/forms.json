@@ -488,7 +488,7 @@
       "publishBusy": "hanging…",
       "dropLabel": "Withdraw Work"
     },
-    "wow": {
+    "coven": {
       "collab": {
         "castStatus": "{{cast}} of {{total}} have cast",
         "pillCast": "cast",
@@ -598,6 +598,7 @@
     "factionDescriptor": {
       "na": "Anyone",
       "ua": "Academy",
+      "coven": "Circle",
       "wow": "Collective",
       "everymen": "Mobilize",
       "snide": "Mischief",

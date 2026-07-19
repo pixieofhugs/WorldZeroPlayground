@@ -194,8 +194,8 @@ export default function CovenEditPraxis({ state }: Props) {
     ["solo", "collab", "duel"] as const
   ).map((key) => ({
     key,
-    label: t(`editPraxis.wow.mode.${key}.label`),
-    desc: t(`editPraxis.wow.mode.${key}.desc`),
+    label: t(`editPraxis.coven.mode.${key}.label`),
+    desc: t(`editPraxis.coven.mode.${key}.desc`),
   }));
 
   const pink = factionCssVar("coven");
@@ -332,7 +332,7 @@ export default function CovenEditPraxis({ state }: Props) {
               }}
             >
               <Sparkle size={11} color={titleText} />{" "}
-              {t("editPraxis.wow.windowTitle")}
+              {t("editPraxis.coven.windowTitle")}
             </span>
             <span
               style={{
@@ -371,14 +371,14 @@ export default function CovenEditPraxis({ state }: Props) {
                 gap: "var(--space-sm)",
               }}
             >
-              {t("editPraxis.wow.pageTitle")}
+              {t("editPraxis.coven.pageTitle")}
               <StarSticker size={26} color="#f47aa6" />
             </div>
 
             {/* Task — notepad scrap */}
             <div style={{ ...notepadPanel, marginBottom: "var(--space-xl)" }}>
               <span style={{ ...eyebrowStyle, marginBottom: "var(--space-xs)" }}>
-                {t("editPraxis.wow.taskRefLabel")}
+                {t("editPraxis.coven.taskRefLabel")}
               </span>
               <div
                 style={{
@@ -405,7 +405,7 @@ export default function CovenEditPraxis({ state }: Props) {
             {!state.controlsLocked && (
               <div style={{ marginBottom: "var(--space-xl)" }}>
                 <span style={{ ...eyebrowStyle, marginBottom: "var(--space-sm)" }}>
-                  {t("editPraxis.wow.modeLabel")}
+                  {t("editPraxis.coven.modeLabel")}
                 </span>
                 <ModePicker
                   state={state}
@@ -468,8 +468,8 @@ export default function CovenEditPraxis({ state }: Props) {
                 >
                   <span style={{ ...eyebrowStyle, marginBottom: "var(--space-sm)" }}>
                     {state.duelMode
-                      ? t("editPraxis.wow.inviteLabelDuel")
-                      : t("editPraxis.wow.inviteLabel")}
+                      ? t("editPraxis.coven.inviteLabelDuel")
+                      : t("editPraxis.coven.inviteLabel")}
                   </span>
                   <InviteSearch
                     state={state}
@@ -481,7 +481,7 @@ export default function CovenEditPraxis({ state }: Props) {
                       pillBg: lightBg,
                       acceptedBg: pink,
                       acceptedColor: "var(--color-text-on-accent)",
-                      placeholder: t("editPraxis.wow.invitePlaceholder"),
+                      placeholder: t("editPraxis.coven.invitePlaceholder"),
                     }}
                   />
                 </div>
@@ -490,12 +490,12 @@ export default function CovenEditPraxis({ state }: Props) {
             {/* Title — notepad panel */}
             <div style={{ ...notepadPanel, marginBottom: "var(--space-lg)" }}>
               <span style={{ ...eyebrowStyle, marginBottom: "var(--space-sm)" }}>
-                {t("editPraxis.wow.titleLabel")}
+                {t("editPraxis.coven.titleLabel")}
               </span>
               <TitleField
                 state={state}
                 skin={{
-                  placeholder: t("editPraxis.wow.titlePlaceholder"),
+                  placeholder: t("editPraxis.coven.titlePlaceholder"),
                   inputStyle: {
                     width: "100%",
                     fontFamily: cardFont,
@@ -519,10 +519,10 @@ export default function CovenEditPraxis({ state }: Props) {
                 <TitleCounter length={state.title.length} color={muted} />
                 <span style={{ ...eyebrowStyle, color: muted, fontSize: "var(--text-xs)" }}>
                   {state.autosaveAt
-                    ? t("editPraxis.wow.autosaveSaved", {
+                    ? t("editPraxis.coven.autosaveSaved", {
                         ago: formatAutosave(state.autosaveAt),
                       })
-                    : t("editPraxis.wow.autosaveUnsaved")}
+                    : t("editPraxis.coven.autosaveUnsaved")}
                 </span>
               </div>
             </div>
@@ -530,13 +530,13 @@ export default function CovenEditPraxis({ state }: Props) {
             {/* Body — notepad panel */}
             <div style={{ ...notepadPanel, marginBottom: "var(--space-lg)" }}>
               <span style={{ ...eyebrowStyle, marginBottom: "var(--space-sm)" }}>
-                {t("editPraxis.wow.bodyLabel", { words: state.wordCount })}
+                {t("editPraxis.coven.bodyLabel", { words: state.wordCount })}
               </span>
               <BodyTextarea
                 state={state}
                 skin={{
                   rows: 12,
-                  placeholder: t("editPraxis.wow.bodyPlaceholder"),
+                  placeholder: t("editPraxis.coven.bodyPlaceholder"),
                   textareaStyle: {
                     width: "100%",
                     fontFamily: "var(--font-body)",
@@ -564,7 +564,7 @@ export default function CovenEditPraxis({ state }: Props) {
                   },
                   label: (
                     <span style={{ ...eyebrowStyle, marginBottom: "var(--space-xs)" }}>
-                      {t("editPraxis.wow.previewLabel")}
+                      {t("editPraxis.coven.previewLabel")}
                     </span>
                   ),
                   markdownStyle: {
@@ -579,7 +579,7 @@ export default function CovenEditPraxis({ state }: Props) {
             {/* Media — notepad panel */}
             <div style={{ ...notepadPanel, marginBottom: "var(--space-lg)" }}>
               <span style={{ ...eyebrowStyle, marginBottom: "var(--space-md)" }}>
-                {t("editPraxis.wow.filesLabel", {
+                {t("editPraxis.coven.filesLabel", {
                   pasted: state.media.length,
                 })}
               </span>
@@ -644,8 +644,8 @@ export default function CovenEditPraxis({ state }: Props) {
                       flexDirection: "column",
                       gap: "var(--space-xs)",
                     },
-                    buttonLabel: t("editPraxis.wow.fileButton"),
-                    helperText: t("editPraxis.wow.fileHelper"),
+                    buttonLabel: t("editPraxis.coven.fileButton"),
+                    helperText: t("editPraxis.coven.fileHelper"),
                     helperStyle: {
                       fontSize: "var(--text-sm)",
                       color: muted,
@@ -666,7 +666,7 @@ export default function CovenEditPraxis({ state }: Props) {
                 }}
               >
                 <span style={{ ...eyebrowStyle, marginBottom: "var(--space-sm)" }}>
-                  {t("editPraxis.wow.metatasksLabel")}
+                  {t("editPraxis.coven.metatasksLabel")}
                 </span>
                 <MetatasksList
                   state={state}
@@ -706,7 +706,7 @@ export default function CovenEditPraxis({ state }: Props) {
               <DropButton
                 state={state}
                 skin={{
-                  label: t("editPraxis.wow.dropLabel"),
+                  label: t("editPraxis.coven.dropLabel"),
                   style: {
                     background: "transparent",
                     color: muted,
@@ -725,8 +725,8 @@ export default function CovenEditPraxis({ state }: Props) {
                   ornament: (
                     <Sparkle size={12} color="var(--color-text-on-accent)" />
                   ),
-                  idleLabel: t("editPraxis.wow.publishIdle"),
-                  busyLabel: t("editPraxis.wow.publishBusy"),
+                  idleLabel: t("editPraxis.coven.publishIdle"),
+                  busyLabel: t("editPraxis.coven.publishBusy"),
                   style: {
                     display: "inline-flex",
                     alignItems: "center",

@@ -214,7 +214,7 @@ export default function CovenFactionBody({ state }: { state: FactionDetailState 
                 marginBottom: "var(--space-md)",
               }}
             >
-              {t("wow.manifesto.heading")}
+              {t("coven.manifesto.heading")}
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-sm)" }}>
               {paragraphs.length ? (
@@ -225,7 +225,7 @@ export default function CovenFactionBody({ state }: { state: FactionDetailState 
                 ))
               ) : (
                 <p className="content-text" style={{ fontFamily: BODY, lineHeight: 1.85, color: MUTED, margin: 0 }}>
-                  {t("wow.manifesto.empty")}
+                  {t("coven.manifesto.empty")}
                 </p>
               )}
             </div>
@@ -234,10 +234,10 @@ export default function CovenFactionBody({ state }: { state: FactionDetailState 
 
         {/* ④ TASKS */}
         <div>
-          <SectionHeading>{t("wow.tasks.heading")}</SectionHeading>
-          <Kicker>{t("wow.tasks.kicker")}</Kicker>
+          <SectionHeading>{t("coven.tasks.heading")}</SectionHeading>
+          <Kicker>{t("coven.tasks.kicker")}</Kicker>
           {tasks.length === 0 ? (
-            <p className="content-text" style={{ fontFamily: BODY, color: MUTED, marginTop: "var(--space-md)" }}>{t("wow.tasks.empty")}</p>
+            <p className="content-text" style={{ fontFamily: BODY, color: MUTED, marginTop: "var(--space-md)" }}>{t("coven.tasks.empty")}</p>
           ) : (
             <div style={{ display: "flex", flexWrap: "wrap", gap: "var(--space-xl)", alignItems: "flex-start", marginTop: "var(--space-lg)" }}>
               {tasks.map((task) => (
@@ -258,10 +258,10 @@ export default function CovenFactionBody({ state }: { state: FactionDetailState 
 
         {/* ⑤ PRAXIS */}
         <div>
-          <SectionHeading>{t("wow.praxis.heading")}</SectionHeading>
-          <Kicker>{t("wow.praxis.kicker")}</Kicker>
+          <SectionHeading>{t("coven.praxis.heading")}</SectionHeading>
+          <Kicker>{t("coven.praxis.kicker")}</Kicker>
           {recentPraxis.length === 0 ? (
-            <p className="content-text" style={{ fontFamily: BODY, color: MUTED, marginTop: "var(--space-md)" }}>{t("wow.praxis.empty")}</p>
+            <p className="content-text" style={{ fontFamily: BODY, color: MUTED, marginTop: "var(--space-md)" }}>{t("coven.praxis.empty")}</p>
           ) : (
             <div style={{ display: "flex", flexWrap: "wrap", gap: "var(--space-xl)", alignItems: "flex-start", marginTop: "var(--space-lg)" }}>
               {recentPraxis.map((praxis) => (
@@ -309,7 +309,7 @@ export default function CovenFactionBody({ state }: { state: FactionDetailState 
                   <span style={{ width: 9, height: 9, borderRadius: "50%", background: ACCENT }} />
                   <span style={{ width: 9, height: 9, borderRadius: "50%", background: IVY_LEAF }} />
                 </span>
-                <span style={{ marginLeft: "auto", fontFamily: BODY, fontSize: "var(--text-base)", color: TITLE_TEXT }}>{t("wow.join.windowTitle")}</span>
+                <span style={{ marginLeft: "auto", fontFamily: BODY, fontSize: "var(--text-base)", color: TITLE_TEXT }}>{t("coven.join.windowTitle")}</span>
               </div>
 
               <div style={{ background: NOTEPAD, padding: "var(--space-lg)" }}>
@@ -328,10 +328,10 @@ export default function CovenFactionBody({ state }: { state: FactionDetailState 
                         lineHeight: 1,
                       }}
                     >
-                      {t("wow.join.memberTitle")}
+                      {t("coven.join.memberTitle")}
                     </div>
                     <div style={{ fontFamily: BODY, fontSize: "var(--text-md)", color: MUTED, marginTop: "var(--space-sm)" }}>
-                      <Trans t={t} i18nKey="wow.join.memberStanding">
+                      <Trans t={t} i18nKey="coven.join.memberStanding">
                         Standing · <b style={{ color: ACCENT }}>coven witch</b>
                       </Trans>
                     </div>
@@ -351,10 +351,10 @@ export default function CovenFactionBody({ state }: { state: FactionDetailState 
                         marginBottom: "var(--space-sm)",
                       }}
                     >
-                      {t("wow.join.eligibleTitle")}
+                      {t("coven.join.eligibleTitle")}
                     </div>
                     <div className="content-text" style={{ fontFamily: BODY, lineHeight: 1.55, color: MUTED, marginBottom: "var(--space-lg)" }}>
-                      {t("wow.join.eligibleBody")}
+                      {t("coven.join.eligibleBody")}
                     </div>
                     <button
                       onClick={() => setConfirming(true)}
@@ -374,7 +374,7 @@ export default function CovenFactionBody({ state }: { state: FactionDetailState 
                         cursor: "pointer",
                       }}
                     >
-                      {t("wow.join.joinButton")}
+                      {t("coven.join.joinButton")}
                     </button>
                   </div>
                 )}
@@ -413,8 +413,8 @@ export default function CovenFactionBody({ state }: { state: FactionDetailState 
                         }}
                       >
                         {membership.joining
-                          ? t("wow.join.joining")
-                          : t("wow.join.confirmButton")}
+                          ? t("coven.join.joining")
+                          : t("coven.join.confirmButton")}
                       </button>
                       <button
                         onClick={() => setConfirming(false)}
@@ -455,11 +455,11 @@ export default function CovenFactionBody({ state }: { state: FactionDetailState 
                           lineHeight: 1.2,
                         }}
                       >
-                        {t("wow.join.gateTitle")}
+                        {t("coven.join.gateTitle")}
                       </span>
                     </div>
                     <div className="content-text" style={{ fontFamily: BODY, lineHeight: 1.55, color: MUTED }}>
-                      {t("wow.join.gateBody", { faction: factionName(faction.slug) })}
+                      {t("coven.join.gateBody", { faction: factionName(faction.slug) })}
                     </div>
                   </div>
                 )}
@@ -501,7 +501,7 @@ export default function CovenFactionBody({ state }: { state: FactionDetailState 
                 {/* eslint-disable-next-line local/no-raw-style-values -- ornament: the polaroid's caption chin, sized with the mat above. */}
                 <div style={{ padding: "8px 4px 14px", textAlign: "center" }}>
                   <div style={{ fontFamily: BODY, fontSize: "var(--text-xs)", letterSpacing: "0.16em", textTransform: "uppercase", color: MUTED }}>
-                    {t("wow.spotlight.label")}
+                    {t("coven.spotlight.label")}
                   </div>
                   <div
                     style={{
@@ -516,7 +516,7 @@ export default function CovenFactionBody({ state }: { state: FactionDetailState 
                     {spot.display_name}
                   </div>
                   <div style={{ fontFamily: BODY, fontSize: "var(--text-sm)", color: INK, marginTop: "var(--space-xs)" }}>
-                    {t("wow.spotlight.stat", {
+                    {t("coven.spotlight.stat", {
                       level: spot.level,
                       score: spot.all_time_score.toLocaleString(),
                     })}
@@ -549,12 +549,12 @@ export default function CovenFactionBody({ state }: { state: FactionDetailState 
                   marginBottom: "var(--space-sm)",
                 }}
               >
-                {t("wow.roster.heading")}
+                {t("coven.roster.heading")}
               </div>
               {roster.length === 0 ? (
                 <p className="content-text" style={{ fontFamily: BODY, color: MUTED }}>
                   {spot
-                    ? t("wow.roster.emptyWithSpotlight")
+                    ? t("coven.roster.emptyWithSpotlight")
                     : t("detail.membersEmpty")}
                 </p>
               ) : (
@@ -582,7 +582,7 @@ export default function CovenFactionBody({ state }: { state: FactionDetailState 
                       {m.display_name}
                     </span>
                     <span style={{ fontFamily: BODY, fontSize: "var(--text-sm)", color: ACCENT }}>
-                      {t("wow.roster.level", { level: m.level })}
+                      {t("coven.roster.level", { level: m.level })}
                     </span>
                   </Link>
                 ))

@@ -18,7 +18,7 @@ import EverymenMobilePraxisCard from '../EverymenMobilePraxisCard'
 
 const CARD_BY_SLUG = {
   ua: UaMobilePraxisCard,
-  wow: CovenMobilePraxisCard,
+  coven: CovenMobilePraxisCard,
   snide: SnideMobilePraxisCard,
   ephemerists: EphemeristsMobilePraxisCard,
   singularity: SingularityMobilePraxisCard,

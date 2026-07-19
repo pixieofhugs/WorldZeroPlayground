@@ -175,7 +175,7 @@ function PartyRow({
           marginLeft: "var(--space-sm)",
         }}
       >
-        {t("wow.inTheParty")}
+        {t("coven.inTheParty")}
       </span>
     </div>
   );
@@ -245,11 +245,11 @@ export default function CovenTaskDetail({ state }: { state: TaskDetailState }) {
         }}
       >
         <Link to="/tasks" style={{ color: PINK, textDecoration: "none" }}>
-          {t("wow.breadcrumb")}
+          {t("coven.breadcrumb")}
         </Link>
         <span style={{ opacity: 0.5, margin: "0 var(--space-sm)" }}>›</span>
         <span style={{ fontFamily: SCRIPT, fontSize: "var(--text-content)" }}>
-          {t("wow.faction")}
+          {t("coven.faction")}
         </span>
         <span style={{ opacity: 0.5, margin: "0 var(--space-sm)" }}>›</span>
         <span style={{ color: PINK }}>{task.title}</span>
@@ -300,7 +300,7 @@ export default function CovenTaskDetail({ state }: { state: TaskDetailState }) {
                 textShadow: `1px 1px 0 ${TITLE_TEXT}`,
               }}
             >
-              {t("wow.window")}
+              {t("coven.window")}
             </span>
           </div>
 
@@ -343,7 +343,7 @@ export default function CovenTaskDetail({ state }: { state: TaskDetailState }) {
                 marginBottom: "var(--space-sm)",
               }}
             >
-              {task.status === "active" ? t("wow.statusOpen") : task.status}
+              {task.status === "active" ? t("coven.statusOpen") : task.status}
             </div>
             <div
               className="content-title"
@@ -367,7 +367,7 @@ export default function CovenTaskDetail({ state }: { state: TaskDetailState }) {
             >
               <span style={pill}>
                 <Sparkle size={11} color={PINK} />{" "}
-                {t("wow.level", { level: task.level_required })}
+                {t("coven.level", { level: task.level_required })}
               </span>
               <span
                 className="content-title"
@@ -388,10 +388,10 @@ export default function CovenTaskDetail({ state }: { state: TaskDetailState }) {
                     strokeLinejoin="round"
                   />
                 </svg>
-                {t("wow.sparks", { points: modifiedPoints })}
+                {t("coven.sparks", { points: modifiedPoints })}
               </span>
               <span style={pill}>
-                {t("wow.onView", {
+                {t("coven.onView", {
                   signups: signups.length,
                   completed: submissions.length,
                 })}
@@ -432,10 +432,10 @@ export default function CovenTaskDetail({ state }: { state: TaskDetailState }) {
                   boxShadow: `0 4px 10px color-mix(in srgb, ${PINK} 35%, transparent)`,
                 }}
               >
-                {t("wow.signup.cta", { points: modifiedPoints })}
+                {t("coven.signup.cta", { points: modifiedPoints })}
               </button>
               <div className="content-text" style={{ fontFamily: SCRIPT, color: PINK }}>
-                {t("wow.signup.note")}
+                {t("coven.signup.note")}
               </div>
               <div
                 style={{
@@ -447,10 +447,10 @@ export default function CovenTaskDetail({ state }: { state: TaskDetailState }) {
                 }}
               >
                 <div>
-                  {t("wow.signup.slots", { open: slotsOpen, max: maxTaskSlots })}
+                  {t("coven.signup.slots", { open: slotsOpen, max: maxTaskSlots })}
                 </div>
                 <div>
-                  {t("wow.signup.levelRequired", { level: task.level_required })}
+                  {t("coven.signup.levelRequired", { level: task.level_required })}
                 </div>
               </div>
             </div>
@@ -473,7 +473,7 @@ export default function CovenTaskDetail({ state }: { state: TaskDetailState }) {
             }}
           >
             <span className="content-text" style={{ fontFamily: SCRIPT, color: TITLE_TEXT }}>
-              {t("wow.submitted.text")}
+              {t("coven.submitted.text")}
             </span>
             <Link
               to={`/praxes/${mySubmission.id}/edit`}
@@ -490,7 +490,7 @@ export default function CovenTaskDetail({ state }: { state: TaskDetailState }) {
                 textDecoration: "none",
               }}
             >
-              {t("wow.submitted.edit")}
+              {t("coven.submitted.edit")}
             </Link>
           </div>
         )}
@@ -510,7 +510,7 @@ export default function CovenTaskDetail({ state }: { state: TaskDetailState }) {
             }}
           >
             <span className="content-text" style={{ fontFamily: SCRIPT, color: TITLE_TEXT }}>
-              {t("wow.inProgress.text")}
+              {t("coven.inProgress.text")}
             </span>
             <Link
               to={`/praxes/${inProgressPraxisId}/edit`}
@@ -527,7 +527,7 @@ export default function CovenTaskDetail({ state }: { state: TaskDetailState }) {
                 textDecoration: "none",
               }}
             >
-              {t("wow.inProgress.continue")}
+              {t("coven.inProgress.continue")}
             </Link>
             <button
               onClick={handleDrop}
@@ -540,7 +540,7 @@ export default function CovenTaskDetail({ state }: { state: TaskDetailState }) {
                 color: CARD_MUTED,
               }}
             >
-              {t("wow.inProgress.drop")}
+              {t("coven.inProgress.drop")}
             </button>
           </div>
         )}
@@ -548,14 +548,14 @@ export default function CovenTaskDetail({ state }: { state: TaskDetailState }) {
         {/* ── The party so far (signups) ── */}
         {signups.length > 0 && (
           <section>
-            <SectionHead>{t("wow.partyHeading")}</SectionHead>
+            <SectionHead>{t("coven.partyHeading")}</SectionHead>
             <PartyRow signups={signups} friends={friends} foes={foes} />
           </section>
         )}
 
         {/* ── What we're asking (description) ── */}
         <section>
-          <SectionHead>{t("wow.askingHeading")}</SectionHead>
+          <SectionHead>{t("coven.askingHeading")}</SectionHead>
           <div
             style={{
               border: `2px solid ${NOTEPAD_BORDER}`,
@@ -575,14 +575,14 @@ export default function CovenTaskDetail({ state }: { state: TaskDetailState }) {
                 whiteSpace: "pre-wrap",
               }}
             >
-              {task.description || t("wow.askingEmpty")}
+              {task.description || t("coven.askingEmpty")}
             </p>
           </div>
         </section>
 
         {/* ── The love so far (vote aggregate) ── */}
         <section>
-          <SectionHead>{t("wow.loveHeading")}</SectionHead>
+          <SectionHead>{t("coven.loveHeading")}</SectionHead>
           {voteCount > 0 ? (
             <div style={{ display: "flex", alignItems: "flex-end", gap: "var(--space-md)" }}>
               <span
@@ -603,16 +603,16 @@ export default function CovenTaskDetail({ state }: { state: TaskDetailState }) {
                     color: TITLE_TEXT,
                   }}
                 >
-                  {t("wow.love.top")}
+                  {t("coven.love.top")}
                 </div>
                 <div style={{ fontSize: "var(--text-base)", color: CARD_MUTED }}>
-                  {t("wow.love.adored", { count: voteCount })}
+                  {t("coven.love.adored", { count: voteCount })}
                 </div>
               </div>
             </div>
           ) : (
             <p className="content-text" style={{ fontFamily: SCRIPT, color: PINK }}>
-              {t("wow.love.none")}
+              {t("coven.love.none")}
             </p>
           )}
         </section>
@@ -640,7 +640,7 @@ export default function CovenTaskDetail({ state }: { state: TaskDetailState }) {
                   whiteSpace: "nowrap",
                 }}
               >
-                {t("wow.spellsHeading", { count: submissions.length })}
+                {t("coven.spellsHeading", { count: submissions.length })}
               </h2>
             </div>
             <div style={{ display: "flex", gap: 0 }}>
@@ -664,8 +664,8 @@ export default function CovenTaskDetail({ state }: { state: TaskDetailState }) {
                     }}
                   >
                     {sort === "score"
-                      ? t("wow.sort.mostLoved")
-                      : t("wow.sort.recent")}
+                      ? t("coven.sort.mostLoved")
+                      : t("coven.sort.recent")}
                   </button>
                 );
               })}
@@ -674,7 +674,7 @@ export default function CovenTaskDetail({ state }: { state: TaskDetailState }) {
 
           {sortedSubmissions.length === 0 ? (
             <p className="content-text" style={{ fontFamily: SCRIPT, color: PINK }}>
-              {t("wow.empty")}
+              {t("coven.empty")}
             </p>
           ) : (
             <>
@@ -710,7 +710,7 @@ export default function CovenTaskDetail({ state }: { state: TaskDetailState }) {
                         }}
                       >
                         <span style={{ fontSize: "var(--text-lg)", lineHeight: 1 }}>⚜</span>{" "}
-                        {t("wow.mostLoved")}
+                        {t("coven.mostLoved")}
                       </div>
                     )}
                     <PraxisCard praxis={s} />
@@ -728,7 +728,7 @@ export default function CovenTaskDetail({ state }: { state: TaskDetailState }) {
                       textDecoration: "none",
                     }}
                   >
-                    {t("wow.viewAll", { count: submissions.length })}
+                    {t("coven.viewAll", { count: submissions.length })}
                   </Link>
                 </div>
               )}

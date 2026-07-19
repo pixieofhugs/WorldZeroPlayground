@@ -71,7 +71,7 @@ export default function CovenComment(props: CommentProps) {
             <span>
               {' · '}
               {formatCommentTime(slug, comment.created_at)}
-              {comment.is_edited ? ` · ${t('comments.wow.edited')}` : ''}
+              {comment.is_edited ? ` · ${t('comments.coven.edited')}` : ''}
             </span>
             <OwnerControls owner={owner} />
             <CommentFlagControl comment={comment} />

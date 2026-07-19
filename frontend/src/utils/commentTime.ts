@@ -41,7 +41,7 @@ function relative(d: TimeDelta): string {
   return 'just now'
 }
 
-/** Terse relative time (wow / singularity terminal). */
+/** Terse relative time (coven / singularity terminal). */
 function terse(d: TimeDelta): string {
   if (d.days >= 1) return `${d.days}d`
   if (d.hours >= 1) return `${d.hours}h`
@@ -60,7 +60,7 @@ export function formatCommentTime(
 ): string {
   const d = timeDelta(iso, now)
   switch (slug) {
-    case 'wow':
+    case 'coven':
       return terse(d)
     case 'snide':
       return `${String(d.hours).padStart(3, '0')}H AGO`

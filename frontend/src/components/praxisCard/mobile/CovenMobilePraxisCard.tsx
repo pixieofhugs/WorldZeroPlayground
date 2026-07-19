@@ -74,7 +74,7 @@ export default function CovenMobilePraxisCard({ praxis }: { praxis: PraxisCardOu
           }}
         >
           <CovenSigil size={11} color={accent} />
-          {i18n.t('feed:identity.wow.windowTitle')}
+          {i18n.t('feed:identity.coven.windowTitle')}
         </div>
         <MobilePraxisBody praxis={praxis} theme={theme} />
       </div>

@@ -12,8 +12,8 @@ describe('formatCommentTime — per-faction dialects', () => {
   })
 
   it('wow is terse', () => {
-    expect(formatCommentTime('wow', ago(3 * 60), NOW)).toBe('3h')
-    expect(formatCommentTime('wow', ago(5), NOW)).toBe('5m')
+    expect(formatCommentTime('coven', ago(3 * 60), NOW)).toBe('3h')
+    expect(formatCommentTime('coven', ago(5), NOW)).toBe('5m')
   })
 
   it('snide zero-pads hours and shouts', () => {

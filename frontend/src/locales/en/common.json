@@ -165,7 +165,7 @@
       "pending_one": "{{count}} pending request",
       "pending_other": "{{count}} pending requests",
       "browseTasks": "Browse Tasks",
-      "wow": {
+      "coven": {
         "charWindow": "you",
         "questsWindow": "quests",
         "charEyebrow": "you",

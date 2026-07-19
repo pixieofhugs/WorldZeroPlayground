@@ -15,7 +15,7 @@ describe('CredentialCard', () => {
     expect(html).toContain('--faction-coven-card-bg')
     expect(html).toContain('Marlow Quill')
     expect(html).toContain('@marlowquill')
-    expect(html).toContain('Warriors of Whimsy') // faction pill label
+    expect(html).toContain('Cozy Coven') // faction pill label
     expect(html).toContain('42')
   })
 

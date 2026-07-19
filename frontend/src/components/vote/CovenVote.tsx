@@ -25,7 +25,7 @@ const HEART_FILLS: Record<number, string> = {
 
 const HEART_TILE = 40
 
-const TIERS = VOTE_REFRAMES['wow'].tiers
+const TIERS = VOTE_REFRAMES['coven'].tiers
 
 /** Inline heart glyph — filled (ramp color) or outline-only when empty. */
 function HeartGlyph({ filled, color, size = 30 }: { filled: boolean; color: string; size?: number }) {
@@ -65,7 +65,7 @@ export default function CovenVote({ praxisId, currentValue, points, totalVotes }
               <button
                 disabled={saving}
                 onClick={() => void vote(tier.value)}
-                aria-label={t('chrome.wow.rateAria', { value: tier.value, label: tier.label })}
+                aria-label={t('chrome.coven.rateAria', { value: tier.value, label: tier.label })}
                 style={{
                   width: HEART_TILE,
                   height: HEART_TILE,

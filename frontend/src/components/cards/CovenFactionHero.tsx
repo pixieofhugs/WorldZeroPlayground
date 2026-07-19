@@ -104,9 +104,9 @@ export default function CovenFactionHero({
   // ponytail: three real counts. seasonRank / total-points-won aren't sourced yet
   // (no leaderboard/aggregate endpoint) — add charms when they are.
   const statTags = [
-    { value: members, label: i18n.t("feed:factionHero.wow.stats.members"), color: PINK, rot: "-3deg" },
-    { value: tasks, label: i18n.t("feed:factionHero.wow.stats.tasks"), color: IVY, rot: "2.5deg" },
-    { value: praxes, label: i18n.t("feed:factionHero.wow.stats.praxes"), color: ACCENT, rot: "-2deg" },
+    { value: members, label: i18n.t("feed:factionHero.coven.stats.members"), color: PINK, rot: "-3deg" },
+    { value: tasks, label: i18n.t("feed:factionHero.coven.stats.tasks"), color: IVY, rot: "2.5deg" },
+    { value: praxes, label: i18n.t("feed:factionHero.coven.stats.praxes"), color: ACCENT, rot: "-2deg" },
   ];
 
   return (
@@ -159,7 +159,7 @@ export default function CovenFactionHero({
                 marginBottom: "var(--space-xs)",
               }}
             >
-              {i18n.t("feed:factionHero.wow.eyebrow")}
+              {i18n.t("feed:factionHero.coven.eyebrow")}
             </div>
             <h1
               style={{
@@ -176,7 +176,7 @@ export default function CovenFactionHero({
               {name}
             </h1>
             <div style={{ fontFamily: SCRIPT, fontSize: "var(--text-title)", color: PINK, marginTop: "var(--space-xs)" }}>
-              {i18n.t("feed:factionHero.wow.motto")}
+              {i18n.t("feed:factionHero.coven.motto")}
             </div>
             <p
               className="content-text"
@@ -188,7 +188,7 @@ export default function CovenFactionHero({
                 margin: "var(--space-sm) 0 0",
               }}
             >
-              {description ?? i18n.t("feed:factionHero.wow.descriptionFallback")}
+              {description ?? i18n.t("feed:factionHero.coven.descriptionFallback")}
             </p>
           </div>
 

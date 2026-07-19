@@ -63,7 +63,7 @@ export default function CovenMobileTaskCard({ task, points }: { task: TaskOut; p
         <div style={{ background: NOTEPAD_BG, border: `1.5px solid ${NOTEPAD_BORDER}`, borderRadius: 9, padding: 'var(--space-md) var(--space-lg)', display: 'flex', flexDirection: 'column', gap: 'var(--space-sm)' }}>
           <span style={{ display: 'inline-flex', alignItems: 'center', gap: 'var(--space-sm)', fontSize: 'var(--text-sm)', letterSpacing: '0.14em', textTransform: 'uppercase', color }}>
             <Sparkle size={10} color={color} />
-            {t('wow.mobile.cardMeta', { faction: factionName(task.primary_faction_slug), points })}
+            {t('coven.mobile.cardMeta', { faction: factionName(task.primary_faction_slug), points })}
           </span>
 
           <h2 className="content-title" style={{ fontFamily: SCRIPT, lineHeight: 1.05, color: TITLE_TEXT, margin: 0, overflowWrap: 'anywhere' }}>

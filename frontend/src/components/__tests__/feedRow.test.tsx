@@ -17,10 +17,10 @@ function item(type: string, payload: Record<string, unknown>): ActivityFeedItem 
     type,
     timestamp: '2026-01-01T00:00:00Z',
     actor_display_name: 'Ada',
-    actor_faction_slug: 'wow',
+    actor_faction_slug: 'coven',
     actor_avatar_url: null,
     payload,
-    context_faction_slug: 'wow',
+    context_faction_slug: 'coven',
   }
 }
 
@@ -61,7 +61,7 @@ describe('normalizeFeedItem', () => {
       item('foe_taunt', {
         from_character_id: 9,
         taunt_id: 9,
-        faction_slug: 'wow',
+        faction_slug: 'coven',
         trigger_type: 'score_overtake',
         from_name: 'Ada',
         to_name: 'Bo',

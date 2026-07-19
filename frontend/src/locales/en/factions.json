@@ -2,6 +2,7 @@
   "names": {
     "ua": "UA",
     "snide": "S.N.I.D.E.",
+    "coven": "Cozy Coven",
     "wow": "Warriors of Whimsy",
     "ephemerists": "The Ephemerists",
     "everymen": "Everymen",
@@ -12,6 +13,7 @@
   "descriptions": {
     "ua": "The Gilt Salon — a regal academy. Full points on all tasks.",
     "snide": "Specialists in one-on-one competition. Bonus points for winning duels.",
+    "coven": "A soft-lit circle of makers. Full points on every task.",
     "wow": "Collective-minded. Excel at their own faction's tasks; reduced elsewhere.",
     "ephemerists": "Wanderers who set down fleeting truths before the road moves on. Task Vision — access to select retired tasks.",
     "everymen": "No inner circle, no waiting to be chosen. Reliable hands who do the work in front of them and finish what they start.",
@@ -464,7 +466,7 @@
       }
     }
   },
-  "wow": {
+  "coven": {
     "manifesto": {
       "heading": "the manifesto ✦",
       "empty": "No manifesto scribbled yet."

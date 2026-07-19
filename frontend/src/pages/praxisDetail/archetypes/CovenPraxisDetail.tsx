@@ -40,8 +40,8 @@ const ON_ACCENT = 'var(--color-text-on-accent)'
 /** Party-voiced label for the filing mode. A duel side is a solo praxis
  * (ADR-0011) — its duel context is shown by the shared DuelCrossLink, not here. */
 function modeVoice(type: string, t: TFunction<'praxis'>): string {
-  if (type === 'collab') return t('detail.wow.mode.collab')
-  return t('detail.wow.mode.solo')
+  if (type === 'collab') return t('detail.coven.mode.collab')
+  return t('detail.coven.mode.solo')
 }
 
 /** Sparkle charm — the kit's signature four-point star. */
@@ -164,7 +164,7 @@ export default function CovenPraxisDetail({ state }: { state: PraxisDetailState 
             boxShadow: `0 14px 34px color-mix(in srgb, ${PINK} 30%, transparent)`,
           }}
         >
-          <TitleBar name={t('detail.wow.windows.praxis')} />
+          <TitleBar name={t('detail.coven.windows.praxis')} />
 
           {/* desktop body — dotted grid */}
           <div
@@ -200,18 +200,18 @@ export default function CovenPraxisDetail({ state }: { state: PraxisDetailState 
                   boxShadow: `0 3px 8px var(--faction-coven-light)`,
                 }}
               >
-                <Sparkle size={10} color={ON_ACCENT} /> {t('detail.wow.sealed')}
+                <Sparkle size={10} color={ON_ACCENT} /> {t('detail.coven.sealed')}
               </span>
               <span style={pill}>{modeVoice(praxis.type, t)}</span>
               <span style={{ fontSize: 'var(--text-sm)', color: CARD_MUTED, letterSpacing: '0.04em' }}>
-                {t('detail.wow.re')}{' '}
+                {t('detail.coven.re')}{' '}
                 <Link
                   to={`/tasks/${praxis.task_id}`}
                   style={{ color: TITLE_TEXT, fontWeight: 700, textDecoration: 'none' }}
                 >
                   {praxis.task_title}
                 </Link>{' '}
-                {t('detail.wow.lvlSealed', { level: praxis.task_level_required, date: formatTimestamp(sealedDate) })}
+                {t('detail.coven.lvlSealed', { level: praxis.task_level_required, date: formatTimestamp(sealedDate) })}
               </span>
               {praxis.moderation_status === 'flagged' && (
                 <span
@@ -222,7 +222,7 @@ export default function CovenPraxisDetail({ state }: { state: PraxisDetailState 
                     background: 'transparent',
                   }}
                 >
-                  {t('detail.wow.flagged')}
+                  {t('detail.coven.flagged')}
                 </span>
               )}
             </div>
@@ -237,7 +237,7 @@ export default function CovenPraxisDetail({ state }: { state: PraxisDetailState 
                 marginBottom: 'var(--space-sm)',
               }}
             >
-              {t('detail.wow.theFinding')}
+              {t('detail.coven.theFinding')}
             </div>
             <h1
               style={{
@@ -250,7 +250,7 @@ export default function CovenPraxisDetail({ state }: { state: PraxisDetailState 
                 overflowWrap: 'anywhere',
               }}
             >
-              {praxis.title ?? t('detail.wow.untitled')}
+              {praxis.title ?? t('detail.coven.untitled')}
             </h1>
 
             {/* ── Owner actions (invariant) ── */}
@@ -303,7 +303,7 @@ export default function CovenPraxisDetail({ state }: { state: PraxisDetailState 
                 <div
                   style={{ fontSize: 'var(--text-sm)', color: CARD_MUTED, letterSpacing: '0.06em', marginTop: 'var(--space-xs)' }}
                 >
-                  {t('detail.wow.witchWhoCast')}
+                  {t('detail.coven.witchWhoCast')}
                 </div>
               </div>
               <div style={{ marginLeft: 'auto', textAlign: 'right', flexShrink: 0 }}>
@@ -319,7 +319,7 @@ export default function CovenPraxisDetail({ state }: { state: PraxisDetailState 
                     marginTop: 'var(--space-xs)',
                   }}
                 >
-                  {t('detail.wow.basePoints')}
+                  {t('detail.coven.basePoints')}
                 </div>
               </div>
             </div>
@@ -327,7 +327,7 @@ export default function CovenPraxisDetail({ state }: { state: PraxisDetailState 
             {/* ── 3 · the account (body text) ── */}
             {praxis.body_text && (
               <>
-                <Divider label={t('detail.wow.whatIDid')} />
+                <Divider label={t('detail.coven.whatIDid')} />
                 <MarkdownPreview
                   source={praxis.body_text}
                   className="markdown-preview content-text"
@@ -340,7 +340,7 @@ export default function CovenPraxisDetail({ state }: { state: PraxisDetailState 
             {praxis.media_items.length > 0 && (
               <>
                 <Divider
-                  label={t('detail.wow.keepsakes', { count: praxis.media_items.length })}
+                  label={t('detail.coven.keepsakes', { count: praxis.media_items.length })}
                 />
                 <div
                   style={{
@@ -350,7 +350,7 @@ export default function CovenPraxisDetail({ state }: { state: PraxisDetailState 
                     boxShadow: `0 6px 16px color-mix(in srgb, ${PINK} 18%, transparent)`,
                   }}
                 >
-                  <TitleBar name={t('detail.wow.windows.keepsakes')} />
+                  <TitleBar name={t('detail.coven.windows.keepsakes')} />
                   <div
                     style={{
                       padding: 'var(--space-md)',
@@ -376,7 +376,7 @@ export default function CovenPraxisDetail({ state }: { state: PraxisDetailState 
             boxShadow: `0 10px 26px color-mix(in srgb, ${PINK} 26%, transparent)`,
           }}
         >
-          <TitleBar name={t('detail.wow.windows.hearts')} />
+          <TitleBar name={t('detail.coven.windows.hearts')} />
           <div
             style={{
               padding: 'var(--space-xl) var(--space-xl) var(--space-xl)',
@@ -405,7 +405,7 @@ export default function CovenPraxisDetail({ state }: { state: PraxisDetailState 
                   color: TITLE_TEXT,
                 }}
               >
-                <Sparkle size={14} color={PINK} /> {t('detail.wow.sendLove')}
+                <Sparkle size={14} color={PINK} /> {t('detail.coven.sendLove')}
               </span>
               <PraxisScoreBreakdown state={state} align="right" accent={PINK} muted={CARD_MUTED} font={SCRIPT} />
             </div>

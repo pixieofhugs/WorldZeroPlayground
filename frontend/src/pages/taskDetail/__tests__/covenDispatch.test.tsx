@@ -12,7 +12,7 @@ import CovenDesktopTaskDetail from "../archetypes/CovenTaskDetail";
 
 describe("mobile task-detail COVEN dispatch", () => {
   it("mobile + a COVEN task resolves to the bespoke COVEN mobile skin", () => {
-    expect(pickVariant(surfaceMap('mobileTaskDetail'), "wow", DefaultMobileTaskDetail)).toBe(
+    expect(pickVariant(surfaceMap('mobileTaskDetail'), "coven", DefaultMobileTaskDetail)).toBe(
       CovenMobileTaskDetail,
     );
   });
@@ -26,7 +26,7 @@ describe("mobile task-detail COVEN dispatch", () => {
   });
 
   it("desktop keeps its own COVEN archetype, never the mobile skin", () => {
-    const desktop = pickVariant(surfaceMap('taskDetail'), "wow", DefaultMobileTaskDetail);
+    const desktop = pickVariant(surfaceMap('taskDetail'), "coven", DefaultMobileTaskDetail);
     expect(desktop).toBe(CovenDesktopTaskDetail);
     expect(desktop).not.toBe(CovenMobileTaskDetail);
   });
