@@ -3,6 +3,8 @@ import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 
+import { readThemes } from "./cssVars";
+
 /**
  * Guard for the "looks tokenized, is not" failure class (#806).
  *
@@ -19,7 +21,12 @@ const SOURCE_EXTENSIONS = [".ts", ".tsx", ".js", ".jsx", ".css"];
 function collectSourceFiles(directory: string): string[] {
   return readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
     const path = join(directory, entry.name);
-    if (entry.isDirectory()) return collectSourceFiles(path);
+    // Tests never render; they quote token names as prose and fixtures.
+    // (This file's own docstring trips the guard otherwise — which is a
+    // pleasant demonstration that the guard works.)
+    if (entry.isDirectory()) {
+      return entry.name === "__tests__" ? [] : collectSourceFiles(path);
+    }
     return SOURCE_EXTENSIONS.some((ext) => entry.name.endsWith(ext))
       ? [path]
       : [];
@@ -31,9 +38,13 @@ function matchAll(text: string, pattern: RegExp): string[] {
 }
 
 describe("faction CSS custom properties (#806)", () => {
-  const stylesheet = readFileSync(join(SRC_DIR, "index.css"), "utf-8");
+  // readThemes strips comments and reads both theme blocks, so a token merely
+  // *mentioned* in a comment never counts as declared.
+  const themes = readThemes(readFileSync(join(SRC_DIR, "index.css"), "utf-8"));
   const declared = new Set(
-    matchAll(stylesheet, /(--faction-[A-Za-z0-9-]+)\s*:/g),
+    [...themes.light.keys(), ...themes.dark.keys()].filter((name) =>
+      name.startsWith("--faction-"),
+    ),
   );
 
   it("declares faction tokens in index.css at all (sanity check on the parse)", () => {
