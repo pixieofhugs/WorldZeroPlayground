@@ -3,16 +3,48 @@
 from game_config import ERA_1
 
 
-def test_wow_solo_modifiers():
+def test_wow_modifiers_are_flat():
+    # #811: WOW's perk is the level jump, not a multiplier. Its former +10%
+    # own/collab pair moved to Cozy Coven, leaving every modifier at baseline.
     config = ERA_1.factions["wow"]
-    assert config.own_task_modifier == 1.1
+    assert config.own_task_modifier == 1.0
     assert config.other_task_modifier == 1.0
-
-
-def test_wow_collab_modifiers():
-    config = ERA_1.factions["wow"]
-    assert config.collab_own_modifier == 1.1
+    assert config.collab_own_modifier == 1.0
     assert config.collab_other_modifier == 1.0
+
+
+def test_wow_level_jump_reach():
+    # #811: once per level, a WOW member may claim ONE task exactly one level up.
+    assert ERA_1.factions["wow"].level_jump_reach == 1
+
+
+def test_coven_collab_own_bonus():
+    # #811: Cozy Coven inherits the collaboration bonus WOW gave up.
+    config = ERA_1.factions["coven"]
+    assert config.collab_own_modifier == 1.1
+    assert config.own_task_modifier == 1.0
+    assert config.collab_other_modifier == 1.0
+
+
+def test_coven_is_the_only_faction_with_a_modifier():
+    # #811 states this explicitly: after the swap, Cozy Coven's collab_own is the
+    # single non-1.0 task modifier in Era 1. Duel modifiers are a separate axis.
+    with_modifiers = {
+        slug for slug, config in ERA_1.factions.items()
+        if 1.0 != config.own_task_modifier
+        or 1.0 != config.other_task_modifier
+        or 1.0 != config.collab_own_modifier
+        or 1.0 != config.collab_other_modifier
+    }
+    assert with_modifiers == {"coven"}
+
+
+def test_level_jump_is_wow_only():
+    granted = {
+        slug for slug, config in ERA_1.factions.items()
+        if config.level_jump_reach > 0
+    }
+    assert granted == {"wow"}
 
 
 def test_snide_duel_modifiers():

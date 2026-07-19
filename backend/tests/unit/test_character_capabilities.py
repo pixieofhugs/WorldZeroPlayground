@@ -85,4 +85,7 @@ def test_compute_capabilities_reads_from_era_arg() -> None:
         can_see_retired_tasks=False,
         can_see_pending_tasks=False,
         can_comment=True,
+        # No faction_slug passed, so no faction grants a jump (#811).
+        level_jump_reach=0,
+        level_jump_available=False,
     )
