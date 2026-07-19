@@ -192,7 +192,28 @@ export function isKnownFaction(slug: string | null | undefined): boolean {
   return resolved in CSS_KEY && CSS_KEY[resolved] !== "default";
 }
 
-/** Get faction color by slug, with fallback (raw hex — light mode only) */
+/**
+ * Get faction color by slug, with fallback (raw hex — light mode only).
+ *
+ * Unlike the CSS path this has NO rainbow branch: every slug without a registry
+ * entry — `na`, null, an unregistered slug, and `albescent` (#783) — returns the
+ * same neutral grey. For Albescent that is the point, not a gap: grey is
+ * precisely what an unaffiliated player already gets, so the two are
+ * indistinguishable at every call site. `factionAlbescentHidesInPlainSight`
+ * asserts that equality directly.
+ *
+ * The four call sites are all feed cards (`FeedRowContent`,
+ * `FeedCardInvitationLetter`, `FeedCardCollabInvite`, `FeedCardDuelChallenge`).
+ * None of them branches on `isKnownFaction`, so the whole feed renders `na` as
+ * flat grey rather than the spectrum. That is pre-existing ADR-0039 debt owed to
+ * *unaffiliated* players, not something Albescent introduces — and it must be
+ * paid for both slugs at once, or the two stop matching and Albescent becomes
+ * conspicuous again.
+ *
+ * Prefer {@link factionFill} for any `background:` that renders a dynamic slug.
+ * This function survives for raw-hex contexts (canvas, SVG, `${hex}88` alpha
+ * suffixes) where a `var()` reference will not do.
+ */
 export function factionColor(slug: string | null | undefined): string {
   return factionRegistry[slug ?? ""]?.color ?? "#6b6a7a";
 }
