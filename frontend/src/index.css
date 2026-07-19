@@ -42,6 +42,7 @@
 
   /* ── Faction primary colors (rainbow palette) ── */
   --faction-ua: var(--ua-orange); /* burnt amber — gilt salon (#240) */
+  --faction-wow: #e0a800; /* yellow (deep — see the WOW note below) */
   --faction-coven: #ec5f99; /* redesign pink */
   --faction-snide: #6fae00; /* acid green (deep — legible on light chrome) */
   --faction-ephemerists: #1d6e72; /* lapis-verdigris — Ephemerists reskin of the teal slot */
@@ -55,6 +56,7 @@
      overrides (for fills that brighten in dark) live in the dark block; tokens
      omitted there inherit these :root values through the cascade. */
   --faction-ua-on-fill: #ffffff; /* #c2541f — 4.58:1 */
+  --faction-wow-on-fill: #14110b; /* #e0a800 — white only 2.15:1; ink 8.76:1 */
   --faction-everymen-on-fill: #ffffff; /* #c1272d — 5.84:1 */
   --faction-coven-on-fill: #14110b; /* #ec5f99 — white only 3.15:1; ink 5.98:1 */
   --faction-snide-on-fill: #14110b; /* #6fae00 — white only 2.72:1; ink 6.93:1 */
@@ -63,6 +65,7 @@
 
   /* ── Faction tints (backgrounds, highlights) ── */
   --faction-ua-light: rgba(194, 84, 31, 0.08);
+  --faction-wow-light: rgba(224, 168, 0, 0.12);
   --faction-coven-light: rgba(236, 95, 153, 0.1);
   --faction-snide-light: rgba(182, 255, 46, 0.16);
   --faction-ephemerists-light: rgba(29, 110, 114, 0.1);
@@ -70,6 +73,7 @@
 
   /* ── Faction borders ── */
   --faction-ua-border: rgba(194, 84, 31, 0.3);
+  --faction-wow-border: rgba(224, 168, 0, 0.4);
   --faction-coven-border: rgba(236, 95, 153, 0.3);
   --faction-snide-border: rgba(111, 174, 0, 0.45);
   --faction-ephemerists-border: rgba(29, 110, 114, 0.35);
@@ -77,6 +81,7 @@
 
   /* ── Faction card backgrounds (light mode) ── */
   --faction-ua-card-bg: var(--ua-paper); /* parchment sheet */
+  --faction-wow-card-bg: #fffcf0; /* Default's paper, warmed a shade */
   --faction-coven-card-bg: #fdeef3; /* blush collage */
   --faction-snide-card-bg: #14110b; /* photocopier ink (dark-in-light, Singularity precedent) */
   --faction-ephemerists-card-bg: var(--eph-vellum); /* Ephemerists: aged manuscript stock */
@@ -84,6 +89,7 @@
 
   /* ── Faction card text (light mode) ── */
   --faction-ua-card-text: var(--ua-ink);
+  --faction-wow-card-text: #1a1209; /* 18.01:1 — same ink as Default */
   --faction-coven-card-text: #581c39;
   --faction-snide-card-text: #f4f1e8; /* warm xerox paper on ink */
   --faction-ephemerists-card-text: var(--eph-vellum-text);
@@ -91,6 +97,12 @@
 
   /* ── Faction card accents (light mode) ── */
   --faction-ua-card-accent: var(--ua-orange);
+  /* NOT --faction-wow. §3 calls the accent "metadata / decorative accent" and
+     metadata is text, so it owes 4.5:1 on card-bg — which no yellow bright
+     enough to read as yellow can pay. This is the primary walked down until it
+     clears (6.73:1). The three factions that skipped that step are exactly the
+     three sitting in factionContrast's BASELINE allowlist. */
+  --faction-wow-card-accent: #7a5200; /* deep amber — 6.73:1 */
   --faction-coven-card-accent: #ec5f99;
   --faction-snide-card-accent: #b6ff2e; /* toxic acid */
   --faction-ephemerists-card-accent: var(--eph-rubric);
@@ -98,6 +110,7 @@
 
   /* ── Faction card secondary text (descriptions, metadata) ── */
   --faction-ua-card-muted: var(--ua-sub);
+  --faction-wow-card-muted: #6b5320; /* 7.09:1 */
   --faction-coven-card-muted: #831843;
   --faction-snide-card-muted: #d8d6c8; /* faded newsprint grey on ink */
   --faction-ephemerists-card-muted: var(--eph-muted);
@@ -105,10 +118,40 @@
 
   /* ── Faction headline fonts (per-faction display) ── */
   --faction-ua-card-font: var(--font-faction-old);
+  /* Default's face on purpose, NOT Caveat — Caveat went to Coven with the
+     script aesthetic in #784, and picking a replacement display face is the
+     redesign's call, not this issue's. WOW's headline stays typographically
+     identical to unaffiliated so that COLOUR is the only thing that differs. */
+  --faction-wow-card-font: var(--font-display);
   --faction-coven-card-font: var(--font-faction-script);
   --faction-snide-card-font: var(--font-faction-marker);
   --faction-ephemerists-card-font: var(--eph-display);
   --faction-singularity-card-font: var(--font-faction-terminal);
+
+  /* ── WARRIORS OF WHIMSY · a colour, not a skin (#812) ──
+     WOW's nine tokens are scattered through the suffix groups above rather than
+     gathered here, like every other faction. What is worth stating in one place
+     is why there are only nine.
+
+     WOW lost its lo-fi pink `.exe` identity to Cozy Coven in #784 and has been
+     unthemed since. The owner has settled its replacement colour — yellow — but
+     NOT its design. So this block is deliberately the bare §3 contract and
+     nothing else: no archetype-private primitives, no chrome tokens, and an
+     empty manifest at factions/wow.ts, which means every surface renders its
+     Default* archetype. A WOW profile and an unaffiliated one are structurally
+     identical; only the hue differs. Anything more here is dead weight the real
+     redesign has to delete first.
+
+     ON THE HUE. Yellow is the palette's hard case (#651, #669, #677). This one
+     is deep (l44) rather than bright, for two independent reasons:
+       - Hue 45° puts clear daylight between it and UA's burnt-orange 20°. The
+         two sit ADJACENT in FACTION_RAINBOW_ORDER, so they are painted touching
+         in the Leaderboard/DefaultPlayers stripe bars and in Meadow's bloom.
+         A goldenrod nearer 40° reads as a second brown at that size.
+       - Every text ink measured against it clears AA with room to spare.
+     It is a shade brighter and yellower than the rainbow gradient's own yellow
+     stop (#ca8a04), which is unchanged — that gradient is `na`'s spectrum and
+     answers to nobody's hue but its own. */
 
   /* ── DEFAULT · unaffiliated (no faction; rainbow = every path still open) ──
      Not a rainbow-spine faction — the blank-slate / first-life state (na). Its
@@ -422,6 +465,7 @@
 
   /* ── Faction primary colors (dark — brightened rainbow) ── */
   --faction-ua: var(--ua-orange); /* always-light salon — never dims (#240) */
+  --faction-wow: #f5c542; /* yellow lifted for dark — WOW */
   --faction-coven: #f472b6; /* magenta */
   --faction-snide: #b6ff2e; /* acid green (bright — pops on dark) */
   --faction-ephemerists: #3aa0a4; /* lapis-verdigris lifted for dark — Ephemerists */
@@ -437,6 +481,7 @@
 
   /* ── Faction tints (dark) ── */
   --faction-ua-light: rgba(194, 84, 31, 0.08);
+  --faction-wow-light: rgba(245, 197, 66, 0.1);
   --faction-coven-light: rgba(244, 114, 182, 0.08);
   --faction-snide-light: rgba(182, 255, 46, 0.12);
   --faction-ephemerists-light: rgba(58, 160, 164, 0.1);
@@ -444,6 +489,7 @@
 
   /* ── Faction borders (dark) ── */
   --faction-ua-border: rgba(194, 84, 31, 0.3);
+  --faction-wow-border: rgba(245, 197, 66, 0.3);
   --faction-coven-border: rgba(244, 114, 182, 0.25);
   --faction-snide-border: rgba(182, 255, 46, 0.3);
   --faction-ephemerists-border: rgba(58, 160, 164, 0.35);
@@ -451,6 +497,7 @@
 
   /* ── Faction card backgrounds (dark mode) ── */
   --faction-ua-card-bg: var(--ua-paper); /* salon never dims (#240) */
+  --faction-wow-card-bg: #231c0e; /* Default's dark card, warmed a shade */
   --faction-coven-card-bg: #2a0d1c;
   --faction-snide-card-bg: #0c0a07; /* deeper ink */
   /* ephemerists card-bg inherits the :root var(--eph-vellum) rebind (flips below) */
@@ -458,18 +505,23 @@
 
   /* ── Faction card text (dark mode) ── */
   --faction-ua-card-text: var(--ua-ink);
+  --faction-wow-card-text: #f5ecd6; /* 14.35:1 */
   --faction-coven-card-text: #fbcfe0;
   --faction-snide-card-text: #f4f1e8;
   --faction-singularity-card-text: #4ade80;
 
   /* ── Faction card accents (dark mode) ── */
   --faction-ua-card-accent: var(--ua-orange);
+  /* Dark inverts the light-mode problem: on a dark card the bright primary is
+     the legible choice, so here the accent CAN be the faction colour. */
+  --faction-wow-card-accent: #f5c542; /* 10.41:1 */
   --faction-coven-card-accent: #f472b6;
   --faction-snide-card-accent: #b6ff2e;
   --faction-singularity-card-accent: #4ade80; /* terminal green */
 
   /* ── Faction card secondary text (dark mode) ── */
   --faction-ua-card-muted: var(--ua-sub);
+  --faction-wow-card-muted: #b9a473; /* 6.93:1 */
   --faction-coven-card-muted: #dd719c;
   --faction-snide-card-muted: #cfcdbf;
   /* SNIDE flyposted wall flips to concrete-at-night */
