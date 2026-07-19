@@ -130,6 +130,12 @@ function isRawPxValue(node) {
   if (node.type === 'ConditionalExpression') {
     return isRawPxValue(node.consequent) || isRawPxValue(node.alternate)
   }
+  // Same hole, different operator: `fontSize: kit.nameSize ?? 48` hid a raw
+  // default behind ??/||, and adding a disable directive there reported as an
+  // UNUSED directive — proof the rule never saw it at all (#750).
+  if (node.type === 'LogicalExpression') {
+    return isRawPxValue(node.left) || isRawPxValue(node.right)
+  }
   if (node.type !== 'Literal') return false
   if (typeof node.value === 'number') return true
   if (typeof node.value === 'string') return hasRawPxComponent(node.value)
