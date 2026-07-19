@@ -10,7 +10,7 @@ NotNullViolation in ``seed.py``.
 
 Idempotent: fresh DBs built from 0001 never had these columns.
 
-Revision ID: 0006_faction_drop_name_description
+Revision ID: 0006_faction_drop_prose
 Revises: 0005_character_stats_level_jump
 Create Date: 2026-07-19
 """
@@ -18,7 +18,7 @@ from typing import Sequence, Union
 
 from alembic import op
 
-revision: str = "0006_faction_drop_name_description"
+revision: str = "0006_faction_drop_prose"
 down_revision: Union[str, None] = "0005_character_stats_level_jump"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
