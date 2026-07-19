@@ -13,6 +13,7 @@ import type { ReactElement } from 'react'
 import { describe, it, expect, vi } from 'vitest'
 import '../../../i18n'
 import type { CharacterOut, CurrentUser } from '../../../api/auth'
+import { FACTION_RAINBOW_ORDER } from '../../../utils/factions'
 
 const mocks = vi.hoisted(() => ({
   formFactor: 'desktop' as 'mobile' | 'desktop',
@@ -379,5 +380,66 @@ describe('Default players directory content + navigation', () => {
       <DefaultPlayers characters={[]} loading={false} error={null} myCharId={null} />,
     )
     expect(text).toContain('No players match this filter.')
+  })
+})
+
+/**
+ * #754 — the roster row's faction treatment, asserted as the property a reader
+ * would check on screen rather than as a token spelling: an unaffiliated row
+ * borrows *no* faction's hue and wears the spectrum, an affiliated row wears
+ * exactly its own and no spectrum.
+ *
+ * This is the boundary #749 broke. That regression made isKnownFaction('na')
+ * true, which silently dropped .rainbow-ink from the points numeral and greyed
+ * every unaffiliated ornament — caught below by the rainbow-ink assertion.
+ */
+describe('roster row faction treatment (#754)', () => {
+  // Scope assertions to one roster row. Two things would otherwise be measured
+  // by mistake: the page header paints a rainbow rule out of all seven faction
+  // variables, and every roster player may also be an orb in the sky above, so
+  // the same profile link appears twice with different ornament rules.
+  function rowHtml(html: string, characterId: number): string {
+    const roster = html.indexOf('data-testid="mobile-roster"')
+    expect(roster, 'roster section rendered').toBeGreaterThan(-1)
+    const link = html.indexOf(`href="/characters/${characterId}"`, roster)
+    expect(link, `roster row ${characterId} rendered`).toBeGreaterThan(-1)
+    // Back up to the opening `<a`: href renders last, so slicing from it would
+    // drop the row's own style attribute (its border-left and isMe wash).
+    return html.slice(html.lastIndexOf('<a', link), html.indexOf('</a>', link))
+  }
+
+  const factionHuesIn = (markup: string): string[] =>
+    FACTION_RAINBOW_ORDER.filter((slug) => markup.includes(`--faction-${slug}`))
+
+  it('gives the unaffiliated row the spectrum and no borrowed faction hue', () => {
+    const { html } = render(
+      <DefaultPlayers characters={PLAYERS} loading={false} error={null} myCharId={null} />,
+    )
+    const row = rowHtml(html, 33) // Molly, faction_slug: null
+
+    expect(row, 'points are gradient-clipped').toContain('rainbow-ink')
+    expect(factionHuesIn(row), 'wears no single faction hue').toEqual([])
+  })
+
+  it('gives an affiliated row its own solid hue and no spectrum', () => {
+    const { html } = render(
+      <DefaultPlayers characters={PLAYERS} loading={false} error={null} myCharId={null} />,
+    )
+    const row = rowHtml(html, 11) // Perpetua, faction_slug: 'everymen'
+
+    expect(row, 'a solid hue needs no gradient clip').not.toContain('rainbow-ink')
+    expect(factionHuesIn(row), 'wears its own hue, alone').toEqual(['everymen'])
+  })
+
+  it('washes your own unaffiliated row neutral rather than in a faction tint', () => {
+    const { html } = render(
+      <DefaultPlayers characters={PLAYERS} loading={false} error={null} myCharId={33} />,
+    )
+    const row = rowHtml(html, 33)
+
+    // The wash sits behind body text, where no ink is legible across seven
+    // stops (#649) — so it stays flat, but it still must not borrow a hue.
+    expect(factionHuesIn(row), 'own-row tint borrows no faction').toEqual([])
+    expect(row, 'still the neutral tint, not a bare surface').toContain('--faction-default-light')
   })
 })

@@ -192,7 +192,10 @@ function Roster({ players, myCharId }: { players: RankedPlayer[]; myCharId: numb
   const resetPaging = () => setVisible(PAGE_STEP)
 
   return (
-    <section className="mt-8">
+    // Every roster player may also be an orb in the sky above, so their profile
+    // link appears twice on the page; the testid lets a test say which one it
+    // means (#754).
+    <section className="mt-8" data-testid="mobile-roster">
       <h2
         className="font-display italic content-title mb-3"
         style={{ color: 'var(--color-text-primary)' }}
