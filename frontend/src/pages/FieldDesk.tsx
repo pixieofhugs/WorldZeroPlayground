@@ -20,7 +20,7 @@ import DefaultFieldDesk from './fieldDesk/mobileArchetypes/DefaultFieldDesk'
  *
  * On a phone (#500) the carried life gets a mobile-native home instead of the
  * roster: `useFormFactor() === 'mobile'` dispatches through
- * MOBILE_ARCHETYPE_BY_SLUG to a per-faction skin (Default fallback), mirroring
+ * the `mobileFieldDesk` surface to a per-faction skin (Default fallback), mirroring
  * the TaskDetail mobile seam. A brand-new account with no active life still
  * falls through to the roster below so it can create one.
  */

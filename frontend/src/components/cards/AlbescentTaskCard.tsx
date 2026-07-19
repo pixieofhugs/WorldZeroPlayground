@@ -9,10 +9,9 @@ import AlbescentSigil from "./AlbescentSigil";
  * surveyor's Mark as the only sigil. The card whispers. There is no colour, no
  * shout — a task here is an act of devotion with no audience.
  *
- * Albescent is a FIRST-CLASS identity on this surface: the explicit
- * CARD_COMPONENTS['albescent'] entry beats the albescent→ua alias via
- * pickVariant (map[slug] is looked up before the alias), so this renders as soon
- * as it is registered — it is not dead code. It reads its own component-private
+ * Albescent is a FIRST-CLASS identity on this surface: its manifest claims
+ * `taskCard`, so this renders as soon as it is declared. It reads its own
+ * component-private
  * --faction-albescent-* tokens (identical light/dark — always-light, never
  * dims) rather than factionCssVar('albescent', …), which would resolve the alias
  * to ua until the alias drops in slice 2 of #232.

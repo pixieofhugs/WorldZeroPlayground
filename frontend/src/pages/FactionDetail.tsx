@@ -14,7 +14,7 @@ import DefaultFactionPage from "./factionDetail/mobileArchetypes/DefaultFactionP
  * SPEC-faction-ui-profile.md: shows the faction's description, its members, its
  * tasks, and recently completed praxis.
  *
- * The frontispiece is dispatched per-faction via FACTION_HEROES: a faction opts
+ * The frontispiece is dispatched per-faction via the `factionHero` surface: a faction opts
  * into a bespoke hero by registering here; otherwise the shared title +
  * description chrome is used. The body (members / tasks / recent-praxis) is
  * always DefaultFactionBody for now — add a pickVariant dispatch here when a
@@ -74,7 +74,7 @@ export default function FactionDetail({ slug: slugProp }: { slug?: string } = {}
   const name = factionName(faction.slug);
   const description = factionDescription(faction.slug);
 
-  // A faction may register a bespoke frontispiece in FACTION_HEROES; otherwise
+  // A faction may claim `factionHero` in its manifest; otherwise
   // (Hero is undefined) the shared title + description chrome is used. The page
   // backdrop is themed per-faction by useFactionDetail either way.
   const Hero = pickVariant(surfaceMap('factionHero'), faction.slug);

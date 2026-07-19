@@ -536,9 +536,9 @@ export function SingularityPraxisCard({ praxis, adminProps, showCrown }: Archety
  * Albescent — a filed account in the Register. Vellum correspondence: pure white
  * sheet, a hairline architectural inset border, the surveyor's Mark and a quiet
  * "Account · filed" running head in mono, then the shared body in Cormorant
- * Garamond italic. Always-light — never dims. First-class identity: the explicit
- * PRAXIS_CARD_BY_SLUG['albescent'] entry beats the albescent→ua alias in
- * pickVariant, so it renders immediately. Reads its own --faction-albescent-*
+ * Garamond italic. Always-light — never dims. First-class identity: albescent's
+ * manifest claims `praxisCard`, so it renders immediately. Reads its own
+ * --faction-albescent-*
  * tokens directly (not factionCssVar('albescent', …), which resolves to ua until
  * the alias drops in slice 2 of #232). Ported from docs/design/albescent-kit.
  */

@@ -357,9 +357,8 @@ const BY_FACTION: Record<string, (p: Omit<FactionSelectCardProps, "faction">) =>
   albescent: AlbescentSelectCard,
 };
 
-// Retired/renamed slugs → their live archetype. Raw slug wins first so
-// `albescent` renders its own card (the repo's FACTION_ALIASES maps
-// albescent→ua for the legacy skins; the select cards are first-class).
+// Retired/renamed slugs → their live archetype. Raw slug wins first, so a
+// first-class faction always renders its own card rather than a legacy skin.
 const LEGACY_SLUG: Record<string, string> = {
   gestalt: "wow",
   journeymen: "ephemerists",

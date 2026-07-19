@@ -4,7 +4,7 @@
  * The player profile renders ONE faction-agnostic contract; the skin is
  * derived client-side from `character.faction_slug`, never stored. This is
  * the single seam where a faction's bespoke profile skin plugs in — mirrors
- * FACTION_FEED_FRAMES / CARD_COMPONENTS / PRAXIS_CARD_BY_SLUG.
+ * the `feedFrame` / `taskCard` / `praxisCard` surfaces.
  *
  * Every profile lays out the same locked section spine (§player-profile
  * contract): ① identity + progression (shared CredentialCard as header),

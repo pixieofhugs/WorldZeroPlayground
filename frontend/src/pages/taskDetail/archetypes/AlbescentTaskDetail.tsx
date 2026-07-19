@@ -16,9 +16,8 @@ import type { TaskDetailState } from "../useTaskDetail";
  * wall of returned accounts (the finest is most-witnessed). To take a task is to
  * "Acknowledge" it — no portfolio, no announcement.
  *
- * Albescent is a FIRST-CLASS identity here (not a ua alias): the explicit
- * ARCHETYPE_BY_SLUG['albescent'] entry beats the albescent→ua alias via
- * pickVariant, so this renders immediately. The sheet never dims — Albescent is
+ * Albescent is a FIRST-CLASS identity here: its manifest claims `taskDetail`,
+ * so this renders immediately. The sheet never dims — Albescent is
  * always-light, so every --faction-albescent-* token reads identically in both
  * themes and we style with them directly. Ported from
  * docs/design/albescent-kit/Albescent Task Detail.dc.html; wired to the real

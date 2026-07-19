@@ -6,9 +6,9 @@
  * event-type card (FeedCardRouter) in the frame for `item.context_faction_slug`,
  * falling back to a neutral passthrough until design delivers an archetype.
  *
- * Wiring is ready ahead of the components: add one row to FACTION_FEED_FRAMES
+ * Wiring is ready ahead of the components: claim `feedFrame` in the faction's manifest
  * (e.g. `everymen: EverymenFeedFrame`) and that faction's feed cards adopt its
- * skin with no other change. Mirrors CARD_COMPONENTS / FACTION_BACKDROPS.
+ * skin with no other change. Mirrors the `taskCard` / `backdrop` surfaces.
  */
 import type { ReactNode } from 'react'
 
