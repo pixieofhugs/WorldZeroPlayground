@@ -69,7 +69,7 @@ describe('mobile Updates mixed multi-faction stream', () => {
     expect(text, 'COVEN window chrome').toContain('whimsy.exe')
     expect(text, 'UA salon masthead').toContain('University of Asthmatics')
     expect(html, 'SNIDE dossier tokens').toContain('--faction-snide')
-    expect(html, 'COVEN scrapbook tokens').toContain('--faction-wow')
+    expect(html, 'COVEN scrapbook tokens').toContain('--faction-coven')
   })
 
   it('renders every card body (the shared FeedRowContent rows)', () => {

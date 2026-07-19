@@ -10,14 +10,14 @@ import i18n from '../../i18n'
  * not a reimplementation of the card. Flips with the theme via the WoW tokens.
  */
 
-const WIN_BORDER = 'var(--faction-wow-win-border)'
-const TITLE_FROM = 'var(--faction-wow-title-from)'
-const TITLE_TO = 'var(--faction-wow-title-to)'
-const TITLE_TEXT = 'var(--faction-wow-title-text)'
-const NOTEPAD_BG = 'var(--faction-wow-notepad-bg)'
-const NOTEPAD_BORDER = 'var(--faction-wow-notepad-border)'
-const SCRIPT = 'var(--faction-wow-card-font)'
-const PINK = 'var(--faction-wow)'
+const WIN_BORDER = 'var(--faction-coven-win-border)'
+const TITLE_FROM = 'var(--faction-coven-title-from)'
+const TITLE_TO = 'var(--faction-coven-title-to)'
+const TITLE_TEXT = 'var(--faction-coven-title-text)'
+const NOTEPAD_BG = 'var(--faction-coven-notepad-bg)'
+const NOTEPAD_BORDER = 'var(--faction-coven-notepad-border)'
+const SCRIPT = 'var(--faction-coven-card-font)'
+const PINK = 'var(--faction-coven)'
 
 /** The four-point sparkle charm — WoW's signature window flourish. */
 function Sparkle({ size }: { size: number }) {
@@ -55,9 +55,9 @@ export default function CovenFeedFrame({ children }: { children: ReactNode }) {
         }}
       >
         {[
-          'var(--faction-wow-scrap-deep)',
-          'var(--faction-wow-tape)',
-          'var(--faction-wow-ivy-leaf)',
+          'var(--faction-coven-scrap-deep)',
+          'var(--faction-coven-tape)',
+          'var(--faction-coven-ivy-leaf)',
         ].map((lightColor) => (
           <span
             key={lightColor}

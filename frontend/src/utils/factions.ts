@@ -37,8 +37,12 @@ export interface FactionConfig {
 const FACTION_FALLBACKS: Record<string, FactionConfig> = {
   ua: { slug: "ua", color: "#c2541f" },
   everymen: { slug: "everymen", color: "#c1272d" },
-  wow: { slug: "wow", color: "#ec5f99" },
+  coven: { slug: "coven", color: "#ec5f99" },
   snide: { slug: "snide", color: "#6fae00" },
+  // `wow` is deliberately absent (#784). The pink above WAS its colour; the
+  // whole --faction-wow-* block moved to `coven` with the aesthetic, and
+  // Warriors of Whimsy's replacement gold identity is a sibling issue. Until
+  // that ships, factionColor('wow') hands back the same neutral grey as `na`.
   ephemerists: { slug: "ephemerists", color: "#1d6e72" },
   singularity: { slug: "singularity", color: "#2563eb" },
   // `albescent` is deliberately absent (#783). It was first-class here (#232)
@@ -68,8 +72,16 @@ export const FACTION_ALIASES: Record<string, string> = {};
 const CSS_KEY: Record<string, string> = {
   ua: "ua",
   everymen: "everymen",
-  wow: "wow",
+  coven: "coven",
   snide: "snide",
+  // Warriors of Whimsy is themeless in the interim (#784), so it points at
+  // `default` exactly like `albescent` below — but for a THIRD reason again:
+  // not secrecy, not statelessness, just a gap. Its lo-fi pink `.exe` block
+  // became --faction-coven-*, and its gold replacement is a sibling issue.
+  // Pointing it anywhere else would name a token that does not exist: that
+  // lints clean and renders broken. When the gold block ships this flips back
+  // to `wow: "wow"` and `wow` rejoins FACTION_RAINBOW_ORDER.
+  wow: "default",
   ephemerists: "ephemerists",
   singularity: "singularity",
   // Albescent is registered but NOT themed (#783). It is a secret society
@@ -284,7 +296,17 @@ export const FACTION_RAINBOW_ORDER: readonly string[] = [
   "snide",
   "ephemerists",
   "singularity",
-  "wow",
+  // Cozy Coven takes the pink slot, because it took the pink (#784). Warriors
+  // of Whimsy is NOT here in the interim: the array is a spectrum, every
+  // consumer paints straight off it, and `wow` currently resolves to `default`
+  // — a grey stop mid-rainbow on the Leaderboard and DefaultPlayers bars and a
+  // grey petal in Meadow's bloom. That is the same shape of defect #783 removed
+  // Albescent to fix, so an unthemed slug stays out on the same principle.
+  //
+  // #784 anticipated `wow` sitting near gold once it is gold. That is the
+  // sibling redesign's job — it ships the --faction-wow-* block and this slug
+  // rejoins between "ua" and "snide", taking the order to seven.
+  "coven",
 ];
 
 /**

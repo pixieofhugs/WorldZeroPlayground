@@ -12,21 +12,21 @@ import type { TaskDetailState } from '../useTaskDetail'
  * we're asking" brief, the love-so-far aggregate, the spells cast (completions),
  * and a sparkle-stamped **sticky action bar** ("join the party") pinned above the
  * tab bar. Single-column, no fixed-px grid. Reuses the same {@link TaskDetailState},
- * the shared mobile sticky bar, and the `wow.*` copy + `--faction-wow-*` tokens as
+ * the shared mobile sticky bar, and the `wow.*` copy + `--faction-coven-*` tokens as
  * the desktop archetype and the other COVEN pilots. Always-light: COVEN is native-light.
  */
 
-const PINK = 'var(--faction-wow)'
-const PINK_DEEP = 'var(--faction-wow-card-accent)'
-const TITLE_TEXT = 'var(--faction-wow-title-text)'
-const CARD_TEXT = 'var(--faction-wow-card-text)'
-const CARD_MUTED = 'var(--faction-wow-card-muted)'
-const WIN_BORDER = 'var(--faction-wow-win-border)'
-const NOTEPAD_BG = 'var(--faction-wow-notepad-bg)'
-const NOTEPAD_BORDER = 'var(--faction-wow-notepad-border)'
-const BODY_BG = 'var(--faction-wow-body-bg)'
-const DOT = 'var(--faction-wow-dot)'
-const SCRIPT = 'var(--faction-wow-card-font)' // Caveat
+const PINK = 'var(--faction-coven)'
+const PINK_DEEP = 'var(--faction-coven-card-accent)'
+const TITLE_TEXT = 'var(--faction-coven-title-text)'
+const CARD_TEXT = 'var(--faction-coven-card-text)'
+const CARD_MUTED = 'var(--faction-coven-card-muted)'
+const WIN_BORDER = 'var(--faction-coven-win-border)'
+const NOTEPAD_BG = 'var(--faction-coven-notepad-bg)'
+const NOTEPAD_BORDER = 'var(--faction-coven-notepad-border)'
+const BODY_BG = 'var(--faction-coven-body-bg)'
+const DOT = 'var(--faction-coven-dot)'
+const SCRIPT = 'var(--faction-coven-card-font)' // Caveat
 const BODY = 'var(--font-body)' // Courier Prime
 const ON_ACCENT = 'var(--color-text-on-accent)'
 
@@ -86,7 +86,7 @@ export default function CovenTaskDetail({ state }: { state: TaskDetailState }) {
 
   return (
     <div
-      data-skin="wow"
+      data-skin="coven"
       className="py-4"
       style={{
         fontFamily: BODY,
@@ -125,11 +125,11 @@ export default function CovenTaskDetail({ state }: { state: TaskDetailState }) {
             alignItems: 'center',
             gap: "var(--space-sm)",
             padding: "var(--space-sm) var(--space-md)",
-            background: 'linear-gradient(180deg, var(--faction-wow-title-from), var(--faction-wow-title-to))',
+            background: 'linear-gradient(180deg, var(--faction-coven-title-from), var(--faction-coven-title-to))',
             borderBottom: `2px solid ${WIN_BORDER}`,
           }}
         >
-          {['var(--faction-wow-scrap-deep)', 'var(--faction-wow-tape)', 'var(--faction-wow-ivy-leaf)'].map((c) => (
+          {['var(--faction-coven-scrap-deep)', 'var(--faction-coven-tape)', 'var(--faction-coven-ivy-leaf)'].map((c) => (
             <span key={c} style={{ width: 9, height: 9, borderRadius: '50%', background: c, border: '1.2px solid rgba(255,255,255,0.7)' }} />
           ))}
           <span style={{ marginLeft: "auto", display: 'inline-flex', alignItems: 'center', gap: "var(--space-xs)", fontFamily: SCRIPT, fontSize: "var(--text-content)", color: TITLE_TEXT }}>
@@ -249,7 +249,7 @@ export default function CovenTaskDetail({ state }: { state: TaskDetailState }) {
                         fontSize: "var(--text-xl)",
                         padding: "var(--space-xs) var(--space-lg)",
                         borderRadius: 14,
-                        boxShadow: '2px 3px 0 var(--faction-wow-scrap-deep)',
+                        boxShadow: '2px 3px 0 var(--faction-coven-scrap-deep)',
                       }}
                     >
                       <span style={{ fontSize: "var(--text-lg)", lineHeight: 1 }}>⚜</span>
@@ -275,7 +275,7 @@ export default function CovenTaskDetail({ state }: { state: TaskDetailState }) {
       {canSignUp && (
         <MobileStickyBar>
           {signupError && (
-            <div style={{ fontFamily: BODY, fontSize: "var(--text-lg)", color: 'var(--color-danger)', padding: "var(--space-sm) var(--space-md)", background: 'var(--faction-wow-light)', border: `1.5px solid ${NOTEPAD_BORDER}`, borderRadius: 9 }}>
+            <div style={{ fontFamily: BODY, fontSize: "var(--text-lg)", color: 'var(--color-danger)', padding: "var(--space-sm) var(--space-md)", background: 'var(--faction-coven-light)', border: `1.5px solid ${NOTEPAD_BORDER}`, borderRadius: 9 }}>
               {signupError}
             </div>
           )}

@@ -20,15 +20,15 @@ import type { TaskDetailState } from "../useTaskDetail";
  * <PraxisCard> and the shared state replace them.
  */
 
-const PINK = "var(--faction-wow)";
-const TITLE_TEXT = "var(--faction-wow-title-text)";
-const CARD_TEXT = "var(--faction-wow-card-text)";
-const CARD_MUTED = "var(--faction-wow-card-muted)";
-const WIN_BORDER = "var(--faction-wow-win-border)";
-const NOTEPAD_BG = "var(--faction-wow-notepad-bg)";
-const NOTEPAD_BORDER = "var(--faction-wow-notepad-border)";
-const DOT = "var(--faction-wow-dot)";
-const SCRIPT = "var(--faction-wow-card-font)"; // Caveat
+const PINK = "var(--faction-coven)";
+const TITLE_TEXT = "var(--faction-coven-title-text)";
+const CARD_TEXT = "var(--faction-coven-card-text)";
+const CARD_MUTED = "var(--faction-coven-card-muted)";
+const WIN_BORDER = "var(--faction-coven-win-border)";
+const NOTEPAD_BG = "var(--faction-coven-notepad-bg)";
+const NOTEPAD_BORDER = "var(--faction-coven-notepad-border)";
+const DOT = "var(--faction-coven-dot)";
+const SCRIPT = "var(--faction-coven-card-font)"; // Caveat
 const BODY = "var(--font-body)"; // Courier Prime
 const ACCENT = "var(--font-accent)"; // Bebas Neue
 const ON_ACCENT = "var(--color-text-on-accent)";
@@ -104,7 +104,7 @@ function PartyRow({
     >
       {signups.map((m, index) => {
         const rel = relationOf(m.character_id, friends, foes);
-        const relColor = rel === "friend" ? PINK : "var(--faction-wow-ivy)";
+        const relColor = rel === "friend" ? PINK : "var(--faction-coven-ivy)";
         return (
           <Link
             key={m.character_id}
@@ -227,9 +227,9 @@ export default function CovenTaskDetail({ state }: { state: TaskDetailState }) {
     textTransform: "uppercase",
     padding: "var(--space-sm) var(--space-lg)",
     borderRadius: 20,
-    background: "var(--faction-wow-light)",
+    background: "var(--faction-coven-light)",
     color: CARD_TEXT,
-    border: `1.5px solid var(--faction-wow-border)`,
+    border: `1.5px solid var(--faction-coven-border)`,
   };
 
   return (
@@ -273,11 +273,11 @@ export default function CovenTaskDetail({ state }: { state: TaskDetailState }) {
               alignItems: "center",
               gap: "var(--space-sm)",
               padding: "var(--space-sm) var(--space-lg)",
-              background: `linear-gradient(180deg, var(--faction-wow-title-from), var(--faction-wow-title-to))`,
+              background: `linear-gradient(180deg, var(--faction-coven-title-from), var(--faction-coven-title-to))`,
               borderBottom: `2px solid ${WIN_BORDER}`,
             }}
           >
-            {["var(--faction-wow-scrap-deep)", "var(--faction-wow-tape)", "var(--faction-wow-ivy-leaf)"].map(
+            {["var(--faction-coven-scrap-deep)", "var(--faction-coven-tape)", "var(--faction-coven-ivy-leaf)"].map(
               (lightColor) => (
                 <span
                   key={lightColor}
@@ -316,7 +316,7 @@ export default function CovenTaskDetail({ state }: { state: TaskDetailState }) {
           >
             <Sparkle
               size={22}
-              color="var(--faction-wow-tape)"
+              color="var(--faction-coven-tape)"
               style={{
                 position: "absolute",
                 top: 18,
@@ -413,7 +413,7 @@ export default function CovenTaskDetail({ state }: { state: TaskDetailState }) {
                 borderRadius: 12,
                 background: NOTEPAD_BG,
                 padding: "var(--space-lg) var(--space-xl)",
-                boxShadow: `4px 4px 0 var(--faction-wow-scrap-deep)`,
+                boxShadow: `4px 4px 0 var(--faction-coven-scrap-deep)`,
               }}
             >
               <button
@@ -428,7 +428,7 @@ export default function CovenTaskDetail({ state }: { state: TaskDetailState }) {
                   padding: "var(--space-md) var(--space-xl)",
                   border: `1.5px solid ${WIN_BORDER}`,
                   borderRadius: 10,
-                  background: `linear-gradient(180deg, ${PINK}, var(--faction-wow-card-muted))`,
+                  background: `linear-gradient(180deg, ${PINK}, var(--faction-coven-card-muted))`,
                   boxShadow: `0 4px 10px color-mix(in srgb, ${PINK} 35%, transparent)`,
                 }}
               >
@@ -486,7 +486,7 @@ export default function CovenTaskDetail({ state }: { state: TaskDetailState }) {
                 padding: "var(--space-md) var(--space-xl)",
                 border: `1.5px solid ${WIN_BORDER}`,
                 borderRadius: 10,
-                background: `linear-gradient(180deg, ${PINK}, var(--faction-wow-card-muted))`,
+                background: `linear-gradient(180deg, ${PINK}, var(--faction-coven-card-muted))`,
                 textDecoration: "none",
               }}
             >
@@ -523,7 +523,7 @@ export default function CovenTaskDetail({ state }: { state: TaskDetailState }) {
                 padding: "var(--space-md) var(--space-xl)",
                 border: `1.5px solid ${WIN_BORDER}`,
                 borderRadius: 10,
-                background: `linear-gradient(180deg, ${PINK}, var(--faction-wow-card-muted))`,
+                background: `linear-gradient(180deg, ${PINK}, var(--faction-coven-card-muted))`,
                 textDecoration: "none",
               }}
             >
@@ -706,7 +706,7 @@ export default function CovenTaskDetail({ state }: { state: TaskDetailState }) {
                           fontSize: "var(--text-content)",
                           padding: "var(--space-xs) var(--space-lg)",
                           borderRadius: 14,
-                          boxShadow: `2px 3px 0 var(--faction-wow-scrap-deep)`,
+                          boxShadow: `2px 3px 0 var(--faction-coven-scrap-deep)`,
                         }}
                       >
                         <span style={{ fontSize: "var(--text-lg)", lineHeight: 1 }}>⚜</span>{" "}

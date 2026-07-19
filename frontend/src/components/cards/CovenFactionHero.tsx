@@ -9,7 +9,7 @@ import i18n from "../../i18n";
  * in a SIDE column (never a full-width band). Two pushpins tack the banner down.
  * Ported from the WoW design kit; conforms to {@link FactionHeroProps}.
  *
- * Theme-aware through the cascade: every colour resolves to a --faction-wow-*
+ * Theme-aware through the cascade: every colour resolves to a --faction-coven-*
  * token (which already carries light + dark values), so the board never mutates
  * the global theme. The script face is the WoW card-font token (Caveat); body
  * copy uses --font-body, matching CovenTaskCard / the WoW PraxisCard branch.
@@ -18,25 +18,25 @@ import i18n from "../../i18n";
  * Motto is a faction constant (not a backend field).
  */
 
-// Token shorthands — every value resolves to a --faction-wow-* var.
-const PINK = "var(--faction-wow)";
-const CARD_BG = "var(--faction-wow-card-bg)";
-const INK = "var(--faction-wow-card-text)";
-const ACCENT = "var(--faction-wow-card-accent)";
-const MUTED = "var(--faction-wow-card-muted)";
-const NOTEPAD = "var(--faction-wow-notepad-bg)";
-const WIN_BORDER = "var(--faction-wow-win-border)";
-const TITLE_TO = "var(--faction-wow-title-to)";
-const IVY = "var(--faction-wow-ivy)";
-const IVY_LEAF = "var(--faction-wow-ivy-leaf)";
-const DOT = "var(--faction-wow-dot)";
+// Token shorthands — every value resolves to a --faction-coven-* var.
+const PINK = "var(--faction-coven)";
+const CARD_BG = "var(--faction-coven-card-bg)";
+const INK = "var(--faction-coven-card-text)";
+const ACCENT = "var(--faction-coven-card-accent)";
+const MUTED = "var(--faction-coven-card-muted)";
+const NOTEPAD = "var(--faction-coven-notepad-bg)";
+const WIN_BORDER = "var(--faction-coven-win-border)";
+const TITLE_TO = "var(--faction-coven-title-to)";
+const IVY = "var(--faction-coven-ivy)";
+const IVY_LEAF = "var(--faction-coven-ivy-leaf)";
+const DOT = "var(--faction-coven-dot)";
 
-const SCRIPT = "var(--faction-wow-card-font)";
+const SCRIPT = "var(--faction-coven-card-font)";
 const BODY = "var(--font-body)";
 
 // The board's board-brown shadow has no dedicated token; the WoW atoms use a raw
 // warm-brown rgba for their pinned-paper drop shadows. Reuse the same value.
-// ponytail: no --faction-wow-board-shadow token exists; matching the atoms' rgba.
+// ponytail: no --faction-coven-board-shadow token exists; matching the atoms' rgba.
 const BOARD_SHADOW = "rgba(80,50,30,0.3)";
 
 /** Tiny four-point sparkle — same glyph the WoW task/window chrome uses. */

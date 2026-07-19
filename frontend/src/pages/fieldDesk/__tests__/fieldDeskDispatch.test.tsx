@@ -89,7 +89,7 @@ describe('FieldDesk form-factor dispatch', () => {
   it('renders the COVEN bespoke home skin on mobile for a COVEN life', () => {
     mocks.formFactor = 'mobile'
     mocks.user = currentUser('wow')
-    expect(render()).toContain('data-skin="wow"')
+    expect(render()).toContain('data-skin="coven"')
   })
 
   it('renders the SNIDE bespoke home skin on mobile for a SNIDE life', () => {
@@ -103,7 +103,7 @@ describe('FieldDesk form-factor dispatch', () => {
     mocks.user = currentUser('na')
     const html = render()
     expect(html).toContain('data-skin="default"')
-    expect(html).not.toContain('data-skin="wow"')
+    expect(html).not.toContain('data-skin="coven"')
   })
 
   it('renders the desktop roster on desktop (skin dispatch untouched)', () => {

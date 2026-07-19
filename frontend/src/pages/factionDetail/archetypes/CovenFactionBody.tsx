@@ -21,37 +21,37 @@ import type { FactionDetailState } from "../useFactionDetail";
  * Witch-of-the-week polaroid + coven roster, and the FDL laurel on the single
  * top-scoring praxis.
  *
- * Every colour resolves to a --faction-wow-* token (dark-mode-aware via the
+ * Every colour resolves to a --faction-coven-* token (dark-mode-aware via the
  * cascade). The script face is the WoW card-font token (Caveat); body copy uses
  * --font-body, matching CovenTaskCard and the WoW PraxisCard branch.
  */
 
-const PINK = "var(--faction-wow)";
-const CARD_BG = "var(--faction-wow-card-bg)";
-const INK = "var(--faction-wow-card-text)";
-const ACCENT = "var(--faction-wow-card-accent)";
-const MUTED = "var(--faction-wow-card-muted)";
-const NOTEPAD = "var(--faction-wow-notepad-bg)";
-const NOTEPAD_BORDER = "var(--faction-wow-notepad-border)";
-const WIN_BORDER = "var(--faction-wow-win-border)";
-const TITLE_FROM = "var(--faction-wow-title-from)";
-const TITLE_TO = "var(--faction-wow-title-to)";
-const TITLE_TEXT = "var(--faction-wow-title-text)";
-const TAPE = "var(--faction-wow-tape)";
-const IVY = "var(--faction-wow-ivy)";
-const IVY_LEAF = "var(--faction-wow-ivy-leaf)";
+const PINK = "var(--faction-coven)";
+const CARD_BG = "var(--faction-coven-card-bg)";
+const INK = "var(--faction-coven-card-text)";
+const ACCENT = "var(--faction-coven-card-accent)";
+const MUTED = "var(--faction-coven-card-muted)";
+const NOTEPAD = "var(--faction-coven-notepad-bg)";
+const NOTEPAD_BORDER = "var(--faction-coven-notepad-border)";
+const WIN_BORDER = "var(--faction-coven-win-border)";
+const TITLE_FROM = "var(--faction-coven-title-from)";
+const TITLE_TO = "var(--faction-coven-title-to)";
+const TITLE_TEXT = "var(--faction-coven-title-text)";
+const TAPE = "var(--faction-coven-tape)";
+const IVY = "var(--faction-coven-ivy)";
+const IVY_LEAF = "var(--faction-coven-ivy-leaf)";
 
-const SCRIPT = "var(--faction-wow-card-font)";
+const SCRIPT = "var(--faction-coven-card-font)";
 const BODY = "var(--font-body)";
 
 // The board's warm-brown drop shadow + the index card's ruling have no dedicated
 // tokens; the WoW atoms hardcode the same warm rgba pair for their pinned paper.
 // Reuse them so this skin matches the atoms exactly.
-// ponytail: no --faction-wow-board-shadow / -rule token exists yet.
+// ponytail: no --faction-coven-board-shadow / -rule token exists yet.
 const BOARD_SHADOW = "rgba(80,50,30,0.28)";
 const PIN_SHADOW = "rgba(80,50,30,0.4)";
 // Faint hairline for a card edge — a muted mix of the notepad border.
-const HAIRLINE = "color-mix(in srgb, var(--faction-wow-notepad-border) 55%, transparent)";
+const HAIRLINE = "color-mix(in srgb, var(--faction-coven-notepad-border) 55%, transparent)";
 
 /** Tiny four-point sparkle — the WoW chrome's signature glyph. */
 function Sparkle({ size = 12, color = "currentColor" }: { size?: number; color?: string }) {

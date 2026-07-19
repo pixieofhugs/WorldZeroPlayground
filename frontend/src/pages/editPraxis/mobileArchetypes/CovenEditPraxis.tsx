@@ -4,7 +4,7 @@
  * (Write/Preview toggle, fluid media grid, sticky submit bar) dressed in the
  * pink window chrome: dotted board, notepad panels, sparkle-titled bars.
  * Ported from the Field Kit `wow-treatment` composer; grounds on the
- * `--faction-wow-*` tokens already in index.css (the set CovenFieldDesk /
+ * `--faction-coven-*` tokens already in index.css (the set CovenFieldDesk /
  * CovenEditPraxis desktop use). Consumes `useEditPraxis` verbatim — no editor,
  * upload, or submit logic lives here. Presentation-only.
  */
@@ -29,17 +29,17 @@ import {
 import type { EditPraxisState } from "../useEditPraxis";
 import { MobileStickyBar, SegToggle, type ComposerTab } from "./shared";
 
-const PINK = "var(--faction-wow)";
-const PINK_DEEP = "var(--faction-wow-card-accent)";
-const TITLE_TEXT = "var(--faction-wow-title-text)";
-const CARD_TEXT = "var(--faction-wow-card-text)";
-const CARD_MUTED = "var(--faction-wow-card-muted)";
-const WIN_BORDER = "var(--faction-wow-win-border)";
-const NOTEPAD_BG = "var(--faction-wow-notepad-bg)";
-const NOTEPAD_BORDER = "var(--faction-wow-notepad-border)";
-const BODY_BG = "var(--faction-wow-body-bg)";
-const DOT = "var(--faction-wow-dot)";
-const SCRIPT = "var(--faction-wow-card-font)";
+const PINK = "var(--faction-coven)";
+const PINK_DEEP = "var(--faction-coven-card-accent)";
+const TITLE_TEXT = "var(--faction-coven-title-text)";
+const CARD_TEXT = "var(--faction-coven-card-text)";
+const CARD_MUTED = "var(--faction-coven-card-muted)";
+const WIN_BORDER = "var(--faction-coven-win-border)";
+const NOTEPAD_BG = "var(--faction-coven-notepad-bg)";
+const NOTEPAD_BORDER = "var(--faction-coven-notepad-border)";
+const BODY_BG = "var(--faction-coven-body-bg)";
+const DOT = "var(--faction-coven-dot)";
+const SCRIPT = "var(--faction-coven-card-font)";
 const BODY = "var(--font-body)";
 const ON_ACCENT = "var(--color-text-on-accent)";
 
@@ -89,14 +89,14 @@ function Window({ title, children }: { title: string; children: ReactNode }) {
           gap: "var(--space-sm)",
           padding: "var(--space-sm) var(--space-md)",
           background:
-            "linear-gradient(180deg, var(--faction-wow-title-from), var(--faction-wow-title-to))",
+            "linear-gradient(180deg, var(--faction-coven-title-from), var(--faction-coven-title-to))",
           borderBottom: `2px solid ${WIN_BORDER}`,
         }}
       >
         {[
-          "var(--faction-wow-scrap-deep)",
-          "var(--faction-wow-tape)",
-          "var(--faction-wow-ivy-leaf)",
+          "var(--faction-coven-scrap-deep)",
+          "var(--faction-coven-tape)",
+          "var(--faction-coven-ivy-leaf)",
         ].map((color) => (
           <span
             key={color}
@@ -155,7 +155,7 @@ export default function CovenEditPraxis({ state }: { state: EditPraxisState }) {
 
   return (
     <div
-      data-skin="wow"
+      data-skin="coven"
       style={{
         display: "flex",
         flexDirection: "column",

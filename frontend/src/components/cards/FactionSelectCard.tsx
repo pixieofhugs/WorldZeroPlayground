@@ -111,7 +111,7 @@ export function COVENSelectCard({ state = "locked", members, onVisit }: Omit<Fac
       <div style={{ flex: 1, padding: "var(--space-lg) var(--space-xl) 0", position: "relative" }}>
         {/* eslint-disable-next-line local/no-raw-style-values -- ornament: hand-script faction name, the whimsy.exe window's display type */}
         <div style={{ fontFamily: "var(--font-faction-script)", fontWeight: 700, fontSize: 27, lineHeight: 1.1, color: "var(--gestalt-ink)", whiteSpace: "nowrap" }}>
-          <span style={{ display: "inline-block", verticalAlign: "-3px", marginRight: "var(--space-sm)" }}><CovenSigil size={18} color="var(--faction-wow)" /></span>{i18n.t("feed:factionSelect.wow.name")}
+          <span style={{ display: "inline-block", verticalAlign: "-3px", marginRight: "var(--space-sm)" }}><CovenSigil size={18} color="var(--faction-coven)" /></span>{i18n.t("feed:factionSelect.wow.name")}
         </div>
         <p className="content-text" style={{ margin: "var(--space-md) 0 0", lineHeight: 1.6, color: "var(--gestalt-ink-soft)" }}>
           {i18n.t("feed:factionSelect.wow.blurb")}

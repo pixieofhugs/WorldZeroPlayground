@@ -3,11 +3,11 @@
  *
  * The single canonical COVEN emblem, drawn once and reused everywhere the sparkle
  * appears (faction-select tile, the wow.exe title bar, mobile praxis card).
- * Colors come from the --faction-wow token by default — never hardcode hex.
+ * Colors come from the --faction-coven token by default — never hardcode hex.
  */
 export function CovenSigil({
   size = 22,
-  color = "var(--faction-wow)",
+  color = "var(--faction-coven)",
 }: {
   size?: number;
   color?: string;

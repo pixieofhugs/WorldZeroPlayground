@@ -198,23 +198,23 @@ export default function CovenEditPraxis({ state }: Props) {
     desc: t(`editPraxis.wow.mode.${key}.desc`),
   }));
 
-  const pink = factionCssVar("wow");
-  const pinkDeep = factionCssVar("wow", "card-accent");
-  const ink = factionCssVar("wow", "card-text");
-  const muted = factionCssVar("wow", "card-muted");
-  const lightBg = factionCssVar("wow", "light");
-  const cardFont = factionCssVar("wow", "card-font");
+  const pink = factionCssVar("coven");
+  const pinkDeep = factionCssVar("coven", "card-accent");
+  const ink = factionCssVar("coven", "card-text");
+  const muted = factionCssVar("coven", "card-muted");
+  const lightBg = factionCssVar("coven", "light");
+  const cardFont = factionCssVar("coven", "card-font");
 
-  const winBorder = factionCssVar("wow", "win-border");
-  const titleFrom = factionCssVar("wow", "title-from");
-  const titleTo = factionCssVar("wow", "title-to");
-  const titleText = factionCssVar("wow", "title-text");
-  const bodyBg = factionCssVar("wow", "body-bg");
-  const notepadBg = factionCssVar("wow", "notepad-bg");
-  const notepadBorder = factionCssVar("wow", "notepad-border");
-  const dot = factionCssVar("wow", "dot");
-  const ivy = factionCssVar("wow", "ivy");
-  const ivyLeaf = factionCssVar("wow", "ivy-leaf");
+  const winBorder = factionCssVar("coven", "win-border");
+  const titleFrom = factionCssVar("coven", "title-from");
+  const titleTo = factionCssVar("coven", "title-to");
+  const titleText = factionCssVar("coven", "title-text");
+  const bodyBg = factionCssVar("coven", "body-bg");
+  const notepadBg = factionCssVar("coven", "notepad-bg");
+  const notepadBorder = factionCssVar("coven", "notepad-border");
+  const dot = factionCssVar("coven", "dot");
+  const ivy = factionCssVar("coven", "ivy");
+  const ivyLeaf = factionCssVar("coven", "ivy-leaf");
 
   const allowedModes = task?.allowed_modes ?? ["solo", "collab", "duel"];
 

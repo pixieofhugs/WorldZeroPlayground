@@ -34,7 +34,7 @@ function HeartGlyph({ filled, color, size = 30 }: { filled: boolean; color: stri
       <path
         d="M18 31C7 23 3 17 6.5 11 9 6.8 14 6.5 16 10c.9 1.5 1.6 2.7 2 3.4.4-.7 1.1-1.9 2-3.4 2-3.5 7-3.2 9.5 1C33 17 29 23 18 31Z"
         fill={filled ? color : 'none'}
-        stroke={filled ? '#fff' : 'var(--faction-wow-border)'}
+        stroke={filled ? '#fff' : 'var(--faction-coven-border)'}
         strokeWidth={filled ? 2.2 : 2}
         strokeLinejoin="round"
       />
@@ -75,9 +75,9 @@ export default function CovenVote({ praxisId, currentValue, points, totalVotes }
                   cursor: saving ? 'default' : 'pointer',
                   padding: 0,
                   borderRadius: 9,
-                  border: `1.5px solid ${filled ? 'var(--faction-wow)' : 'var(--faction-wow-border)'}`,
-                  background: filled ? 'var(--faction-wow-notepad-bg)' : 'transparent',
-                  boxShadow: filled ? '0 3px 7px var(--faction-wow-light)' : 'none',
+                  border: `1.5px solid ${filled ? 'var(--faction-coven)' : 'var(--faction-coven-border)'}`,
+                  background: filled ? 'var(--faction-coven-notepad-bg)' : 'transparent',
+                  boxShadow: filled ? '0 3px 7px var(--faction-coven-light)' : 'none',
                   transform: active ? 'scale(1.08)' : 'none',
                   transition: 'all 120ms',
                 } as React.CSSProperties}
@@ -90,7 +90,7 @@ export default function CovenVote({ praxisId, currentValue, points, totalVotes }
                   fontSize: 'var(--text-xs)',
                   textTransform: 'uppercase',
                   letterSpacing: '0.04em',
-                  color: filled ? fill : 'var(--faction-wow-card-muted)',
+                  color: filled ? fill : 'var(--faction-coven-card-muted)',
                   maxWidth: HEART_TILE + 2,
                   textAlign: 'center',
                   lineHeight: 1.2,
@@ -109,9 +109,9 @@ export default function CovenVote({ praxisId, currentValue, points, totalVotes }
         totalVotes={totalVotes}
         error={error}
         theme={{
-          muted: 'var(--faction-wow-card-muted)',
-          accent: 'var(--faction-wow)',
-          accentFont: 'var(--faction-wow-card-font)',
+          muted: 'var(--faction-coven-card-muted)',
+          accent: 'var(--faction-coven)',
+          accentFont: 'var(--faction-coven-card-font)',
           errorColor: 'var(--color-danger)',
         }}
       />

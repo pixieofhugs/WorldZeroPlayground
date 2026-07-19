@@ -5,7 +5,7 @@
  * account body, and a big thumb-sized star caster. Single-column; ported from
  * the Field Kit `wow-treatment` §05 praxis detail. Renders the same invariant
  * CONTENT + behavior slots as every archetype (shared module) — only the dress
- * changes. Grounds on the `--faction-wow-*` tokens already in index.css (same
+ * changes. Grounds on the `--faction-coven-*` tokens already in index.css (same
  * set CovenPraxisDetail / CovenFieldDesk use). Presentation-only.
  */
 import type { CSSProperties, ReactNode } from 'react'
@@ -27,16 +27,16 @@ import {
 } from '../shared'
 import { MobileStarVote } from './shared'
 
-const PINK = 'var(--faction-wow)'
-const TITLE_TEXT = 'var(--faction-wow-title-text)'
-const CARD_TEXT = 'var(--faction-wow-card-text)'
-const CARD_MUTED = 'var(--faction-wow-card-muted)'
-const WIN_BORDER = 'var(--faction-wow-win-border)'
-const NOTEPAD_BG = 'var(--faction-wow-notepad-bg)'
-const NOTEPAD_BORDER = 'var(--faction-wow-notepad-border)'
-const BODY_BG = 'var(--faction-wow-body-bg)'
-const DOT = 'var(--faction-wow-dot)'
-const SCRIPT = 'var(--faction-wow-card-font)' // Caveat
+const PINK = 'var(--faction-coven)'
+const TITLE_TEXT = 'var(--faction-coven-title-text)'
+const CARD_TEXT = 'var(--faction-coven-card-text)'
+const CARD_MUTED = 'var(--faction-coven-card-muted)'
+const WIN_BORDER = 'var(--faction-coven-win-border)'
+const NOTEPAD_BG = 'var(--faction-coven-notepad-bg)'
+const NOTEPAD_BORDER = 'var(--faction-coven-notepad-border)'
+const BODY_BG = 'var(--faction-coven-body-bg)'
+const DOT = 'var(--faction-coven-dot)'
+const SCRIPT = 'var(--faction-coven-card-font)' // Caveat
 const BODY = 'var(--font-body)' // Courier Prime
 const ON_ACCENT = 'var(--color-text-on-accent)'
 
@@ -69,11 +69,11 @@ function Window({ title, children }: { title: string; children: ReactNode }) {
           alignItems: 'center',
           gap: 'var(--space-sm)',
           padding: 'var(--space-sm) var(--space-md)',
-          background: 'linear-gradient(180deg, var(--faction-wow-title-from), var(--faction-wow-title-to))',
+          background: 'linear-gradient(180deg, var(--faction-coven-title-from), var(--faction-coven-title-to))',
           borderBottom: `2px solid ${WIN_BORDER}`,
         }}
       >
-        {['var(--faction-wow-scrap-deep)', 'var(--faction-wow-tape)', 'var(--faction-wow-ivy-leaf)'].map((c) => (
+        {['var(--faction-coven-scrap-deep)', 'var(--faction-coven-tape)', 'var(--faction-coven-ivy-leaf)'].map((c) => (
           <span
             key={c}
             style={{ width: 9, height: 9, borderRadius: '50%', background: c, border: '1.2px solid rgba(255,255,255,0.7)' }}
@@ -112,7 +112,7 @@ export default function CovenPraxisDetail({ state }: { state: PraxisDetailState 
 
   return (
     <div
-      data-skin="wow"
+      data-skin="coven"
       className="page"
       style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-lg)', fontFamily: BODY, color: CARD_TEXT, background: BODY_BG }}
     >
@@ -128,7 +128,7 @@ export default function CovenPraxisDetail({ state }: { state: PraxisDetailState 
             style={{
               width: 40,
               height: 40,
-              background: `linear-gradient(150deg, ${PINK}, var(--faction-wow-card-muted))`,
+              background: `linear-gradient(150deg, ${PINK}, var(--faction-coven-card-muted))`,
               border: `1.5px solid ${WIN_BORDER}`,
               color: ON_ACCENT,
               fontFamily: SCRIPT,

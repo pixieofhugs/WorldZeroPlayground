@@ -213,7 +213,7 @@ export function CovenCard({
 }: FactionCardProps) {
   const fullDesc = factionDescription(faction.slug);
   const desc = fullDesc.slice(0, 100) + (fullDesc.length > 100 ? "…" : "");
-  const titleText = "var(--faction-wow-title-text)";
+  const titleText = "var(--faction-coven-title-text)";
   return (
     <div
       style={
@@ -232,7 +232,7 @@ export function CovenCard({
             position: "relative",
             borderRadius: 12,
             overflow: "hidden",
-            border: "2px solid var(--faction-wow-win-border)",
+            border: "2px solid var(--faction-coven-win-border)",
             transition: "background 150ms, color 150ms",
             boxSizing: "border-box",
           } as React.CSSProperties
@@ -248,8 +248,8 @@ export function CovenCard({
               // eslint-disable-next-line local/no-raw-style-values -- ornament: inset of the drawn window title bar; rounding reflows the chrome.
               padding: "7px 11px",
               background:
-                "linear-gradient(180deg, var(--faction-wow-title-from), var(--faction-wow-title-to))",
-              borderBottom: "2px solid var(--faction-wow-win-border)",
+                "linear-gradient(180deg, var(--faction-coven-title-from), var(--faction-coven-title-to))",
+              borderBottom: "2px solid var(--faction-coven-win-border)",
             } as React.CSSProperties
           }
         >
@@ -314,9 +314,9 @@ export function CovenCard({
             {
               position: "relative",
               padding: "var(--space-lg) var(--space-lg) var(--space-md)",
-              background: "var(--faction-wow-body-bg)",
+              background: "var(--faction-coven-body-bg)",
               backgroundImage:
-                "radial-gradient(var(--faction-wow-dot) 1.4px, transparent 1.4px)",
+                "radial-gradient(var(--faction-coven-dot) 1.4px, transparent 1.4px)",
               backgroundSize: "13px 13px",
             } as React.CSSProperties
           }
@@ -333,8 +333,8 @@ export function CovenCard({
             }}
           >
             <CovenIvySticker
-              stem="var(--faction-wow-ivy)"
-              leaf="var(--faction-wow-ivy-leaf)"
+              stem="var(--faction-coven-ivy)"
+              leaf="var(--faction-coven-ivy-leaf)"
             />
           </span>
           {invitationNote && (
@@ -346,8 +346,8 @@ export function CovenCard({
               {
                 position: "relative",
                 zIndex: 2,
-                background: "var(--faction-wow-notepad-bg)",
-                border: "1.5px solid var(--faction-wow-notepad-border)",
+                background: "var(--faction-coven-notepad-bg)",
+                border: "1.5px solid var(--faction-coven-notepad-border)",
                 borderRadius: 7,
                 padding: "var(--space-md)",
                 marginBottom: "var(--space-md)",
@@ -357,7 +357,7 @@ export function CovenCard({
             <div
               className="card-meta"
               style={{
-                color: factionCssVar("wow", "card-accent"),
+                color: factionCssVar("coven", "card-accent"),
                 marginBottom: "var(--space-xs)",
               }}
             >
@@ -365,12 +365,12 @@ export function CovenCard({
             </div>
             <div
               style={{
-                fontFamily: factionCssVar("wow", "card-font"),
+                fontFamily: factionCssVar("coven", "card-font"),
                 // eslint-disable-next-line local/no-raw-style-values -- ornament: faction name in Caveat at notepad-headline size — the archetype's voice
                 fontSize: 26,
                 fontWeight: 700,
                 lineHeight: 1.05,
-                color: factionCssVar("wow", "card-text"),
+                color: factionCssVar("coven", "card-text"),
                 marginBottom: "var(--space-xs)",
               }}
             >
@@ -381,7 +381,7 @@ export function CovenCard({
                 className="card-description"
                 style={{
                   lineHeight: 1.5,
-                  color: factionCssVar("wow", "card-muted"),
+                  color: factionCssVar("coven", "card-muted"),
                 }}
               >
                 {desc}

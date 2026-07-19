@@ -30,13 +30,27 @@ describe("isKnownFaction", () => {
     for (const slug of [
       "ua",
       "everymen",
-      "wow",
+      "coven",
       "snide",
       "ephemerists",
       "singularity",
     ]) {
       expect(isKnownFaction(slug), `${slug} should be known`).toBe(true);
     }
+  });
+
+  /**
+   * The THIRD inhabitant of the unthemed side (#784), and the only temporary
+   * one. `na` is not a faction; `albescent` is a faction that hides. `wow` is
+   * a faction that is merely mid-redesign: its lo-fi pink `.exe` block became
+   * --faction-coven-* when the aesthetic moved to Cozy Coven, and its gold
+   * replacement is a sibling issue. Until that lands there is no
+   * --faction-wow-* block to point at, so CSS_KEY maps it to `default` and the
+   * predicate reports it unknown. Delete this test when the gold block ships.
+   */
+  it("returns false for `wow` — themeless while its redesign is pending", () => {
+    expect(isKnownFaction("wow")).toBe(false);
+    expect(factionCssVar("wow")).toBe("var(--faction-default)");
   });
 
   it("returns false for an unregistered slug", () => {

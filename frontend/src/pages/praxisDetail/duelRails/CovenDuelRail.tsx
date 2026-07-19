@@ -14,7 +14,7 @@
  * rail keeps its existing mount above the archetype; no praxis-detail surface
  * has a two-column layout and mobile forbids one outright).
  *
- * Tokens are the `--faction-wow-*` set CovenEditPraxis / CovenPraxisDetail already
+ * Tokens are the `--faction-coven-*` set CovenEditPraxis / CovenPraxisDetail already
  * use — no new variables. `accent`/`soft` still arrive from the OPPONENT's
  * faction and are spent on the edge that faces them, so a foreign duelist keeps
  * tinting the window even inside Coven chrome.
@@ -22,16 +22,16 @@
 import type { CSSProperties } from 'react'
 import type { DuelRailSkinProps } from '../DuelCrossLink'
 
-const WIN_BORDER = 'var(--faction-wow-win-border)'
-const TITLE_FROM = 'var(--faction-wow-title-from)'
-const TITLE_TO = 'var(--faction-wow-title-to)'
-const TITLE_TEXT = 'var(--faction-wow-title-text)'
-const BODY_BG = 'var(--faction-wow-body-bg)'
-const NOTEPAD_BG = 'var(--faction-wow-notepad-bg)'
-const NOTEPAD_BORDER = 'var(--faction-wow-notepad-border)'
-const DOT = 'var(--faction-wow-dot)'
-const CARD_TEXT = 'var(--faction-wow-card-text)'
-const SCRIPT = 'var(--faction-wow-card-font)'
+const WIN_BORDER = 'var(--faction-coven-win-border)'
+const TITLE_FROM = 'var(--faction-coven-title-from)'
+const TITLE_TO = 'var(--faction-coven-title-to)'
+const TITLE_TEXT = 'var(--faction-coven-title-text)'
+const BODY_BG = 'var(--faction-coven-body-bg)'
+const NOTEPAD_BG = 'var(--faction-coven-notepad-bg)'
+const NOTEPAD_BORDER = 'var(--faction-coven-notepad-border)'
+const DOT = 'var(--faction-coven-dot)'
+const CARD_TEXT = 'var(--faction-coven-card-text)'
+const SCRIPT = 'var(--faction-coven-card-font)'
 
 /** The kit's four-point sparkle, the window-title ornament on every Coven surface. */
 function Sparkle({ size, color }: { size: number; color: string }) {

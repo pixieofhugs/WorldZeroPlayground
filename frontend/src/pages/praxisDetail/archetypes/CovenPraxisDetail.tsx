@@ -8,7 +8,7 @@
  *
  * Invariant behavior slots (admin bar, banners, owner actions, flag) come from
  * the shared module — this archetype owns only presentation. WoW flips with the
- * theme normally, so every color reads from --faction-wow* tokens (light + dark
+ * theme normally, so every color reads from --faction-coven* tokens (light + dark
  * already defined in index.css). No document-theme mutation, no hardcoded hex.
  * The author byline themes to the AUTHOR's faction, not the task's.
  */
@@ -25,15 +25,15 @@ import { PraxisAdminBar, PraxisStatusBanners, PraxisOwnerActions, PraxisFlagBloc
 import type { PraxisDetailState } from '../usePraxisDetail'
 
 // ── whimsy.exe token vocabulary (same as CovenTaskDetail) ──────────────────────
-const PINK = 'var(--faction-wow)'
-const TITLE_TEXT = 'var(--faction-wow-title-text)'
-const CARD_TEXT = 'var(--faction-wow-card-text)'
-const CARD_MUTED = 'var(--faction-wow-card-muted)'
-const WIN_BORDER = 'var(--faction-wow-win-border)'
-const NOTEPAD_BG = 'var(--faction-wow-notepad-bg)'
-const NOTEPAD_BORDER = 'var(--faction-wow-notepad-border)'
-const DOT = 'var(--faction-wow-dot)'
-const SCRIPT = 'var(--faction-wow-card-font)' // Caveat
+const PINK = 'var(--faction-coven)'
+const TITLE_TEXT = 'var(--faction-coven-title-text)'
+const CARD_TEXT = 'var(--faction-coven-card-text)'
+const CARD_MUTED = 'var(--faction-coven-card-muted)'
+const WIN_BORDER = 'var(--faction-coven-win-border)'
+const NOTEPAD_BG = 'var(--faction-coven-notepad-bg)'
+const NOTEPAD_BORDER = 'var(--faction-coven-notepad-border)'
+const DOT = 'var(--faction-coven-dot)'
+const SCRIPT = 'var(--faction-coven-card-font)' // Caveat
 const BODY = 'var(--font-body)' // Courier Prime
 const ON_ACCENT = 'var(--color-text-on-accent)'
 
@@ -60,7 +60,7 @@ function Sparkle({ size, color, style }: { size: number; color: string; style?: 
 function Divider({ label }: { label: string }) {
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-md)', margin: 'var(--space-xl) 0 var(--space-lg)' }}>
-      <span style={{ flex: 1, height: 0, borderTop: `2px dotted var(--faction-wow-border)` }} />
+      <span style={{ flex: 1, height: 0, borderTop: `2px dotted var(--faction-coven-border)` }} />
       <span
         style={{
           display: 'inline-flex',
@@ -76,7 +76,7 @@ function Divider({ label }: { label: string }) {
       >
         <Sparkle size={9} color={PINK} /> {label}
       </span>
-      <span style={{ flex: 1, height: 0, borderTop: `2px dotted var(--faction-wow-border)` }} />
+      <span style={{ flex: 1, height: 0, borderTop: `2px dotted var(--faction-coven-border)` }} />
     </div>
   )
 }
@@ -90,11 +90,11 @@ function TitleBar({ name }: { name: string }) {
         alignItems: 'center',
         gap: 'var(--space-sm)',
         padding: 'var(--space-sm) var(--space-lg)',
-        background: `linear-gradient(180deg, var(--faction-wow-title-from), var(--faction-wow-title-to))`,
+        background: `linear-gradient(180deg, var(--faction-coven-title-from), var(--faction-coven-title-to))`,
         borderBottom: `2px solid ${WIN_BORDER}`,
       }}
     >
-      {['var(--faction-wow-scrap-deep)', 'var(--faction-wow-tape)', 'var(--faction-wow-ivy-leaf)'].map((lightColor) => (
+      {['var(--faction-coven-scrap-deep)', 'var(--faction-coven-tape)', 'var(--faction-coven-ivy-leaf)'].map((lightColor) => (
         <span
           key={lightColor}
           style={{
@@ -141,9 +141,9 @@ export default function CovenPraxisDetail({ state }: { state: PraxisDetailState 
     textTransform: 'uppercase',
     padding: 'var(--space-xs) var(--space-md)',
     borderRadius: 20,
-    background: 'var(--faction-wow-light)',
+    background: 'var(--faction-coven-light)',
     color: CARD_TEXT,
-    border: `1px solid var(--faction-wow-border)`,
+    border: `1px solid var(--faction-coven-border)`,
     whiteSpace: 'nowrap',
   }
 
@@ -178,7 +178,7 @@ export default function CovenPraxisDetail({ state }: { state: PraxisDetailState 
           >
             <Sparkle
               size={20}
-              color="var(--faction-wow-tape)"
+              color="var(--faction-coven-tape)"
               style={{ position: 'absolute', top: 18, right: 22, transform: 'rotate(10deg)' }}
             />
 
@@ -197,7 +197,7 @@ export default function CovenPraxisDetail({ state }: { state: PraxisDetailState 
                   padding: 'var(--space-xs) var(--space-md)',
                   borderRadius: 20,
                   fontWeight: 700,
-                  boxShadow: `0 3px 8px var(--faction-wow-light)`,
+                  boxShadow: `0 3px 8px var(--faction-coven-light)`,
                 }}
               >
                 <Sparkle size={10} color={ON_ACCENT} /> {t('detail.wow.sealed')}
@@ -266,7 +266,7 @@ export default function CovenPraxisDetail({ state }: { state: PraxisDetailState 
                 gap: 'var(--space-md)',
                 paddingTop: 'var(--space-lg)',
                 marginTop: 'var(--space-lg)',
-                borderTop: `2px dotted var(--faction-wow-border)`,
+                borderTop: `2px dotted var(--faction-coven-border)`,
               }}
             >
               <Link to={`/characters/${praxis.created_by_id}`} style={{ flexShrink: 0 }}>
