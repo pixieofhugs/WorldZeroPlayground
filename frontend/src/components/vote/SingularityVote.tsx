@@ -126,7 +126,6 @@ export default function SingularityVote({ praxisId, currentValue, points, totalV
           muted: 'color-mix(in srgb, var(--faction-singularity-card-muted) 60%, transparent)',
           accent: 'var(--faction-singularity-card-accent)',
           accentFont: 'var(--font-faction-terminal)',
-          avgFontSize: 17,
           errorColor: 'var(--color-danger)',
           avgLetterSpacing: '0.08em',
         }}

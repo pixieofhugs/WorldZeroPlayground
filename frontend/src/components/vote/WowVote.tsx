@@ -112,7 +112,6 @@ export default function WowVote({ praxisId, currentValue, points, totalVotes }: 
           muted: 'var(--faction-wow-card-muted)',
           accent: 'var(--faction-wow)',
           accentFont: 'var(--faction-wow-card-font)',
-          avgFontSize: 16,
           errorColor: 'var(--color-danger)',
         }}
       />
