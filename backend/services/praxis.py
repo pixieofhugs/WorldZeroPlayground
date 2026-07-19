@@ -44,6 +44,7 @@ from services import collab_consensus
 from services.character_stats import recalculate_character_stats
 from services.faction_service import faction_permits
 from services.era import get_current_era_row, get_or_create_stats
+from services.level_jump import available_level_reach, consume_level_jump
 from models.duel import Duel, DuelStatus
 from services.vote_tally import crowned_praxis_ids, get_tally, tally_votes, ViewerVote
 
@@ -581,7 +582,9 @@ async def list_praxes(
     return praxes
 
 
-def meets_task_level(character_level: int, task: Task) -> bool:
+def meets_task_level(
+    character_level: int, task: Task, level_reach: int = 0
+) -> bool:
     """Whether ``character_level`` clears the task's own level bar (#292).
 
     The single home for the **task-level** gate — the "level half" that used to
@@ -590,8 +593,15 @@ def meets_task_level(character_level: int, task: Task) -> bool:
     (the faction half, #171) and from the era-config thresholds
     (collab/flag/comment/metatask-apply), which each already sit in their own
     purpose-named predicate and share a single ``era.*`` source for their value.
+
+    ``level_reach`` is the faction level-jump allowance (#811): levels above the
+    character's own that they may currently reach. It is 0 for everyone without
+    the ability and for anyone who has already spent it at this level — see
+    :func:`services.level_jump.available_level_reach`, which is the only thing
+    that should compute it. Extending the gate here (rather than per mode) is
+    what gives the ability identical behaviour across solo, collab and duel.
     """
-    return character_level >= task.level_required
+    return character_level + level_reach >= task.level_required
 
 
 class SignupDenialReason(str, Enum):
@@ -631,7 +641,10 @@ async def evaluate_signup(
     era_row = await get_current_era_row(session)
     stats = await get_or_create_stats(session, character.id, era_row.id)
 
-    if not meets_task_level(stats.level, task):
+    level_reach = available_level_reach(
+        character.faction_slug, stats.level, stats.level_jump_used_at_level, era
+    )
+    if not meets_task_level(stats.level, task, level_reach):
         return SignupEligibility(False, SignupDenialReason.below_level)
 
     if task.status == TaskStatus.retired and character.faction_slug not in era.allow_praxis_on_retired_task_factions:
@@ -735,8 +748,22 @@ async def create_praxis(
     - Character level meets task.level_required
     - Bank cap: era.max_task_signups = max concurrent in_progress praxes per character
     - Duel/collab type requires minimum level
+    - Spends the faction level-jump allowance if the claim needed it (#811)
     """
-    await _check_create_preconditions(task_id, praxis_type, character_id, session, era)
+    task = await _check_create_preconditions(
+        task_id, praxis_type, character_id, session, era
+    )
+
+    # #811: the preconditions above already allowed this claim, so if the task
+    # still sits above the character's level the only thing that let them in was
+    # the level jump — stamp it spent. Deliberately never refunded: withdrawing
+    # or deleting the praxis does not give it back, or it could be farmed by
+    # claiming and backing out.
+    era_row = await get_current_era_row(session)
+    stats = await get_or_create_stats(session, character_id, era_row.id)
+    if task.level_required > stats.level:
+        consume_level_jump(stats)
+        await session.flush()
 
     praxis = Praxis(
         task_id=task_id,
@@ -1120,6 +1147,7 @@ def is_task_eligible_for_character(
     character: Optional[Character],
     task: Task,
     character_level: int,
+    level_reach: int = 0,
 ) -> bool:
     """Return True if ``character`` is eligible to act on ``task``.
 
@@ -1139,7 +1167,9 @@ def is_task_eligible_for_character(
     if character is None:
         return False
     # Two named single-purpose gates, no bundled inline checks (#171, #292).
-    if not meets_task_level(character_level, task):
+    # ``level_reach`` (#811) is threaded through so the "eligible" affordance
+    # matches what evaluate_signup would actually allow.
+    if not meets_task_level(character_level, task, level_reach):
         return False
     if not faction_permits(character, task):
         return False

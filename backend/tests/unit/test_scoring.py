@@ -199,9 +199,11 @@ def test_faction_multiplier_unaffiliated_task():
 
 
 def test_faction_multiplier_own_faction():
+    # #811 flattened wow's own-task modifier to baseline; the multiplier still
+    # resolves from the faction's own config, it is just 1.0 now.
     result = compute_faction_multiplier("wow", "wow", ERA_1)
     assert result == ERA_1.factions["wow"].own_task_modifier
-    assert result == 1.1
+    assert result == 1.0
 
 
 def test_faction_multiplier_other_faction():
@@ -225,12 +227,24 @@ def test_faction_multiplier_empty_task_faction():
 
 
 def test_collab_own_faction():
+    # #811 moved the +10% collab-own bonus from wow to coven. This is the live
+    # assertion that the bonus is actually applied by the scoring path at all.
+    result = compute_faction_multiplier(
+        "coven", "coven", ERA_1,
+        collaboration_mode=COLLABORATION_MODE_COLLAB,
+    )
+    assert result == ERA_1.factions["coven"].collab_own_modifier
+    assert result == 1.1
+
+
+def test_collab_own_faction_wow_has_no_bonus():
+    # The other half of the #811 swap: wow's collab-own is plain baseline.
     result = compute_faction_multiplier(
         "wow", "wow", ERA_1,
         collaboration_mode=COLLABORATION_MODE_COLLAB,
     )
     assert result == ERA_1.factions["wow"].collab_own_modifier
-    assert result == 1.1
+    assert result == 1.0
 
 
 def test_collab_other_faction():

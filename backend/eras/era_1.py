@@ -48,28 +48,30 @@ ERA_1_FACTIONS = {
         duel_win_modifier=2.0,        # duel win: 200% of base (Snide high-risk bonus)
         duel_loss_modifier=0.0,       # duel loss: 0% of base (Snide high-risk penalty)
     ),
+    # Warriors of Whimsy (#811). Its perk is MECHANICAL, not multiplicative: the
+    # level jump below is WOW's only perk, so every modifier drops to the Era 1
+    # baseline. The +10% own/collab pair it used to carry moved to Cozy Coven.
     "wow": FactionConfig(
         slug="wow",
         can_always_rejoin=False,
-        own_task_modifier=1.1,        # +10% on solo own-faction
+        own_task_modifier=1.0,
         other_task_modifier=1.0,
-        collab_own_modifier=1.1,      # +10% on collab own-faction
+        collab_own_modifier=1.0,
         collab_other_modifier=1.0,
         duel_win_modifier=1.5,
         duel_loss_modifier=0.5,
+        level_jump_reach=1,           # once per level, claim ONE task 1 level up
     ),
-    # Cozy Coven (#784) — the eighth faction. It inherits Warriors of Whimsy's
-    # lo-fi pink `.exe` AESTHETIC only; the modifiers below are the Era 1
-    # baseline, deliberately NOT wow's +10% own/collab pair above. Whether Cozy
-    # Coven should carry that bonus is a game-balance decision for the owner, not
-    # a consequence of the visual move, so it starts flat and is flagged rather
-    # than inherited silently.
+    # Cozy Coven (#784) — the eighth faction. It inherited Warriors of Whimsy's
+    # lo-fi pink `.exe` aesthetic in #784; #811 hands it WOW's collaboration
+    # bonus too, so Coven is now the only faction in Era 1 carrying a non-1.0
+    # modifier.
     "coven": FactionConfig(
         slug="coven",
         can_always_rejoin=False,
         own_task_modifier=1.0,
         other_task_modifier=1.0,
-        collab_own_modifier=1.0,
+        collab_own_modifier=1.1,      # +10% on collab own-faction
         collab_other_modifier=1.0,
         duel_win_modifier=1.5,
         duel_loss_modifier=0.5,

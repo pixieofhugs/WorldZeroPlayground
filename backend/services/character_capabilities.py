@@ -11,12 +11,17 @@ Design choices:
 - ``is_admin=True`` short-circuits every flag to True. Mirrors the existing
   ``skip_level_check`` admin escape hatch in ``services.task.propose_task``.
 - ``character_level=None`` (no active character) makes every flag False.
+- The faction level-jump fields (#811) take ``faction_slug`` and the stats row's
+  ``level_jump_used_at_level`` for the same reason — passing the two scalars
+  keeps this function pure and DB-free. The rule itself lives in
+  ``services.level_jump``, shared with the sign-up gate so they cannot drift.
 - Never imports CURRENT_ERA inside the function body — it is the default arg
   only, per CLAUDE.md config architecture rules.
 """
 from dataclasses import dataclass
 
 from game_config import CURRENT_ERA, EraConfig
+from services.level_jump import available_level_reach, faction_level_jump_reach
 
 
 @dataclass(frozen=True)
@@ -28,13 +33,35 @@ class CharacterCapabilities:
     can_see_retired_tasks: bool
     can_see_pending_tasks: bool
     can_comment: bool
+    # Faction level-jump allowance (#811). ``level_jump_reach`` is what the
+    # faction grants at all (0 for everyone without the ability), so the frontend
+    # can hide the affordance entirely rather than showing it spent forever;
+    # ``level_jump_available`` is whether it is unspent at the current level.
+    # Unlike the flags above, these are NOT short-circuited by is_admin: the jump
+    # is a faction perk, not a level gate, and an admin claiming to hold an
+    # ability their faction does not grant would be a lie in the UI.
+    level_jump_reach: int
+    level_jump_available: bool
 
 
 def compute_capabilities(
     character_level: int | None,
     is_admin: bool,
     era: EraConfig = CURRENT_ERA,
+    faction_slug: str | None = None,
+    level_jump_used_at_level: int | None = None,
 ) -> CharacterCapabilities:
+    granted_reach = faction_level_jump_reach(faction_slug, era)
+    if character_level is None:
+        jump_available = False
+    else:
+        jump_available = (
+            available_level_reach(
+                faction_slug, character_level, level_jump_used_at_level, era
+            )
+            > 0
+        )
+
     if is_admin:
         return CharacterCapabilities(
             can_propose_task=True,
@@ -43,6 +70,8 @@ def compute_capabilities(
             can_see_retired_tasks=True,
             can_see_pending_tasks=True,
             can_comment=True,
+            level_jump_reach=granted_reach,
+            level_jump_available=jump_available,
         )
 
     if character_level is None:
@@ -53,6 +82,8 @@ def compute_capabilities(
             can_see_retired_tasks=False,
             can_see_pending_tasks=False,
             can_comment=False,
+            level_jump_reach=granted_reach,
+            level_jump_available=False,
         )
 
     return CharacterCapabilities(
@@ -62,4 +93,6 @@ def compute_capabilities(
         can_see_retired_tasks=character_level >= era.level_to_see_retired_tasks,
         can_see_pending_tasks=character_level >= era.level_to_see_pending_tasks,
         can_comment=character_level >= era.comment_level_required,
+        level_jump_reach=granted_reach,
+        level_jump_available=jump_available,
     )

@@ -33,6 +33,14 @@ class CharacterStats(Base):
     votes_spent_this_era: Mapped[int] = mapped_column(
         Integer, nullable=False, server_default="0"
     )
+    # The character's level at the moment they last spent their faction's
+    # level-jump allowance (#811); NULL means never spent this era. The allowance
+    # is available iff this differs from `level`, so levelling up restores it with
+    # no reset job, and the per-(character, era) row shape clears it on era reset
+    # for free. Read/written only through services.level_jump.
+    level_jump_used_at_level: Mapped[int | None] = mapped_column(
+        Integer, nullable=True
+    )
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=func.now(), onupdate=func.now()
     )
