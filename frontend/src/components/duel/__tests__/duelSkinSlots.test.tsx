@@ -137,6 +137,46 @@ describe('duel seal skins render every slot', () => {
     expect(html).toContain('role="dialog"')
   })
 
+  /**
+   * #800: the Default dialog's body and reopen note sat at `--text-sm` (9px)
+   * and `--text-xs` (8px) — half and less than half of the 18px content floor
+   * — for text a player reads at the one duel moment with a genuinely
+   * irreversible consequence (the forfeit mode added in #751). This is the
+   * #769 guard, ported to the seal surface as that issue asked.
+   *
+   * Both Wow seal skins carried the matching defect on their note, as #800
+   * named. Writing this guard against every registered skin (not just the
+   * two named ones) also caught the same defect, previously unreported, on
+   * both Snide seal skins — fixed alongside the named ones so the guard
+   * ships green.
+   *
+   * Scoped to `<p>` tags so SealActions' buttons — legitimate `--text-sm`
+   * button chrome, same exemption the rail guard carves out — don't false-
+   * positive the check.
+   */
+  const LABEL_TIER = ['--text-xs', '--text-sm', '--text-base', '--text-md', '--text-lg']
+
+  it.each(cases)(
+    '%s does not sink body copy below the content floor in %s mode',
+    (_name, Skin, mode, duel) => {
+      const html = renderToStaticMarkup(
+        <Skin
+          duel={duel}
+          viewerCharacterId={1}
+          taskPointValue={60}
+          onConfirm={() => {}}
+          onCancel={() => {}}
+          mode={mode}
+        />,
+      )
+      const paragraphs = html.match(/<p[^>]*>/g) ?? []
+      const offenders = paragraphs.filter((tag) =>
+        LABEL_TIER.some((token) => tag.includes(`var(${token})`)),
+      )
+      expect(offenders).toEqual([])
+    },
+  )
+
   // The mode branch itself: each mode must actually SAY its own thing, so a
   // skin can't satisfy the slot walk above by hardcoding the submit copy.
   it.each(skins)('%s speaks the forfeit copy in forfeit mode', (_name, Skin) => {
