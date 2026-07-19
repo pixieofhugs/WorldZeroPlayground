@@ -1263,6 +1263,14 @@
   .sg-rotate { animation: sg-rotate 120s linear infinite; }
 }
 
+/* S.N.I.D.E. duel rail — the settled-state dot flickers like a failing xerox
+   lamp. Class-gated on reduced-motion like every other faction animation, so a
+   component never writes `animation:` inline and bypasses the gate. (#722) */
+@keyframes snide-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+@media (prefers-reduced-motion: no-preference) {
+  .snide-pulse { animation: snide-pulse 1.6s ease-in-out infinite; }
+}
+
 /* Character-sidebar progress bar — rainbow fill drifts left→right. Stilled for reduced-motion. */
 @keyframes cs-shimmer { to { background-position: 200% 0; } }
 @media (prefers-reduced-motion: no-preference) {

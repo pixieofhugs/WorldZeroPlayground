@@ -11,6 +11,10 @@
 import type { FactionManifest } from './manifest'
 
 import SnideAvatar from '../components/avatar/SnideAvatar'
+import SnideDuelRail from '../pages/praxisDetail/duelRails/SnideDuelRail'
+import SnideDuelSealConfirm from '../components/duel/SnideDuelSealConfirm'
+import SnideMobileDuelRail from '../pages/praxisDetail/duelRails/SnideMobileDuelRail'
+import SnideMobileDuelSealConfirm from '../components/duel/SnideMobileDuelSealConfirm'
 import SnideBackdrop from '../components/backdrop/SnideBackdrop'
 import SnideComment from '../components/comments/voices/SnideComment'
 import SnideEditPraxis from '../pages/editPraxis/archetypes/SnideEditPraxis'
@@ -53,6 +57,8 @@ export const SNIDE_MANIFEST: FactionManifest = {
   factionHero: () => SnideFactionHero,
   factionBody: () => SnideFactionBody,
   profileBody: () => SnideProfileBody,
+  duelSeal: () => SnideDuelSealConfirm,
+  duelRail: () => SnideDuelRail,
   mobileTaskCard: () => SnideMobileTaskCard,
   mobilePraxisCard: () => SnideMobilePraxisCard,
   mobileTaskDetail: () => SnideMobileTaskDetail,
@@ -60,4 +66,6 @@ export const SNIDE_MANIFEST: FactionManifest = {
   mobileEditPraxis: () => SnideMobileEditPraxis,
   mobileFactionPage: () => SnideFactionPage,
   mobileFieldDesk: () => SnideHome,
+  mobileDuelSeal: () => SnideMobileDuelSealConfirm,
+  mobileDuelRail: () => SnideMobileDuelRail,
 }
