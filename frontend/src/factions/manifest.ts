@@ -81,7 +81,7 @@ export interface FactionManifest {
   readonly praxisCard?: Lazy<ComponentType<PraxisCardProps>>
   readonly factionCard?: Lazy<ComponentType<FactionCardProps>>
   readonly factionSelectCard?: Lazy<
-    ComponentType<Omit<FactionSelectCardProps, 'slug' | 'faction'>>
+    ComponentType<Omit<FactionSelectCardProps, 'faction'>>
   >
   readonly avatar?: Lazy<ComponentType<FactionAvatarProps>>
   readonly backdrop?: Lazy<ComponentType>
