@@ -130,6 +130,12 @@ function isRawPxValue(node) {
   if (node.type === 'ConditionalExpression') {
     return isRawPxValue(node.consequent) || isRawPxValue(node.alternate)
   }
+  // Same hole, different operator: `fontSize: kit.nameSize ?? 48` hid a raw
+  // default behind ??/||, and adding a disable directive there reported as an
+  // UNUSED directive — proof the rule never saw it at all (#750).
+  if (node.type === 'LogicalExpression') {
+    return isRawPxValue(node.left) || isRawPxValue(node.right)
+  }
   if (node.type !== 'Literal') return false
   if (typeof node.value === 'number') return true
   if (typeof node.value === 'string') return hasRawPxComponent(node.value)
@@ -203,13 +209,21 @@ export default [
       'sonarjs/no-identical-functions': 'error',
     },
   },
-  {
-    // Ratchet: existing violations are grandfathered until migrated.
-    files: LEGACY_RAW_STYLE_FILES,
-    rules: {
-      'local/no-raw-style-values': 'off',
-    },
-  },
+  // Ratchet: existing violations are grandfathered until migrated. Spread
+  // conditionally — ESLint rejects `files: []` outright ("Expected value to be
+  // a non-empty array"), so an empty list crashed the whole lint run. That made
+  // FINISHING the migration the one thing that broke the build (#750). The list
+  // is empty now; this guard is what lets it stay that way.
+  ...(LEGACY_RAW_STYLE_FILES.length > 0
+    ? [
+        {
+          files: LEGACY_RAW_STYLE_FILES,
+          rules: {
+            'local/no-raw-style-values': 'off',
+          },
+        },
+      ]
+    : []),
   {
     // Test files assert on literal strings by design.
     files: [

@@ -392,9 +392,7 @@ export function ProfileSkin({
               <h1
                 style={{
                   fontFamily: kit.displayFont,
-                  // ornament: masthead display type, per-archetype identity (see ProfileKit.nameSize).
-                  // No eslint-disable here: the rule does not recurse into `??`, so this
-                  // never reports and a directive would be flagged as unused.
+                  // eslint-disable-next-line local/no-raw-style-values -- ornament: masthead display type, per-archetype identity (see ProfileKit.nameSize); §6 keeps each archetype's display cut rather than regularizing it.
                   fontSize: kit.nameSize ?? 48,
                   lineHeight: 0.98,
                   margin: 0,
