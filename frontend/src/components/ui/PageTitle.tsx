@@ -36,6 +36,7 @@ export default function PageTitle({ title, eyebrow }: Props) {
               key={index}
               style={{
                 borderBottom: `4px solid ${color}`,
+                // eslint-disable-next-line local/no-raw-style-values -- ornament: lead between the glyph and its drawn 4px underline bar; a rung pushes the bar off the letter.
                 paddingBottom: 2,
               }}
             >

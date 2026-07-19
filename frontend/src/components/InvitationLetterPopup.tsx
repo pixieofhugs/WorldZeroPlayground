@@ -139,14 +139,14 @@ export default function InvitationLetterPopup({
         background: PAPER,
         border: `2px solid ${border}`,
         borderRadius: 12,
-        padding: '26px 26px 22px',
+        padding: 'var(--space-xl)',
         boxShadow: '0 18px 46px -14px rgba(26,18,9,0.5)',
         textAlign: 'left',
         fontFamily: FONT_BODY,
       }}
     >
       {/* masthead: sigil dot + faction name + prospectus overline */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-md)', marginBottom: 'var(--space-lg)' }}>
         <span
           aria-hidden
           style={{
@@ -191,7 +191,7 @@ export default function InvitationLetterPopup({
           letterSpacing: '0.18em',
           textTransform: 'uppercase',
           color: accent,
-          margin: '0 0 6px',
+          margin: '0 0 var(--space-sm)',
         }}
       >
         {tKey(t, `${base}.kicker`)}
@@ -206,7 +206,7 @@ export default function InvitationLetterPopup({
           fontSize: 'var(--text-title)',
           lineHeight: 1.12,
           color: INK,
-          margin: '0 0 10px',
+          margin: '0 0 var(--space-md)',
         }}
       >
         {tKey(t, `${base}.headline`)}
@@ -219,7 +219,7 @@ export default function InvitationLetterPopup({
           fontSize: 'var(--text-content)',
           lineHeight: 1.55,
           color: MUTED,
-          margin: '0 0 16px',
+          margin: '0 0 var(--space-lg)',
         }}
       >
         {tKey(t, `${base}.pitch`)}
@@ -231,8 +231,8 @@ export default function InvitationLetterPopup({
           style={{
             border: `1px solid ${border}`,
             borderRadius: 8,
-            padding: '12px 14px',
-            marginBottom: 16,
+            padding: 'var(--space-md) var(--space-lg)',
+            marginBottom: 'var(--space-lg)',
             background: factionCssVar(factionSlug, 'light'),
           }}
         >
@@ -243,7 +243,7 @@ export default function InvitationLetterPopup({
               letterSpacing: '0.2em',
               textTransform: 'uppercase',
               color: FAINT,
-              marginBottom: 8,
+              marginBottom: 'var(--space-sm)',
             }}
           >
             {t('invitation.termsHeading')}
@@ -254,8 +254,8 @@ export default function InvitationLetterPopup({
               style={{
                 display: 'flex',
                 justifyContent: 'space-between',
-                gap: 12,
-                padding: '5px 0',
+                gap: 'var(--space-md)',
+                padding: 'var(--space-xs) 0',
                 borderTop: idx === 0 ? 'none' : `1px dashed ${border}`,
               }}
             >
@@ -288,18 +288,18 @@ export default function InvitationLetterPopup({
 
       {/* perks */}
       {perksList.length > 0 && (
-        <ul style={{ listStyle: 'none', margin: '0 0 20px', padding: 0 }}>
+        <ul style={{ listStyle: 'none', margin: '0 0 var(--space-xl)', padding: 0 }}>
           {perksList.map((perk, idx) => (
             <li
               key={idx}
               style={{
                 display: 'flex',
-                gap: 10,
+                gap: 'var(--space-md)',
                 alignItems: 'flex-start',
-                marginBottom: 8,
+                marginBottom: 'var(--space-sm)',
               }}
             >
-              {/* ornament: four-pointed-star dingbat used as a bullet */}
+              {/* eslint-disable-next-line local/no-raw-style-values -- ornament: four-pointed-star dingbat used as a bullet */}
               <span style={{ color: accent, fontSize: 12, lineHeight: 1.4, flex: 'none' }}>
                 &#x2726;
               </span>
@@ -321,7 +321,7 @@ export default function InvitationLetterPopup({
 
       {/* CTA row — ENLIST arms a one-way join confirm (#493); dismiss defers. */}
       {!confirming ? (
-        <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+        <div style={{ display: 'flex', gap: 'var(--space-md)', alignItems: 'center' }}>
           <button
             type="button"
             autoFocus
@@ -338,17 +338,17 @@ export default function InvitationLetterPopup({
         </div>
       ) : (
         <div>
-          <p style={{ fontFamily: FONT_BODY, fontSize: 'var(--text-content)', lineHeight: 1.5, color: MUTED, margin: '0 0 10px' }}>
+          <p style={{ fontFamily: FONT_BODY, fontSize: 'var(--text-content)', lineHeight: 1.5, color: MUTED, margin: '0 0 var(--space-md)' }}>
             {isSwitch
               ? t('detail.join.confirmSwitch', { faction: name, current: factionName(currentSlug as string) })
               : t('detail.join.confirm', { faction: name })}
           </p>
           {joinError && (
-            <p style={{ fontFamily: FONT_MONO, fontSize: 'var(--text-content)', color: 'var(--color-danger)', margin: '0 0 10px' }}>
+            <p style={{ fontFamily: FONT_MONO, fontSize: 'var(--text-content)', color: 'var(--color-danger)', margin: '0 0 var(--space-md)' }}>
               {joinError}
             </p>
           )}
-          <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+          <div style={{ display: 'flex', gap: 'var(--space-md)', alignItems: 'center' }}>
             <button
               type="button"
               autoFocus
@@ -381,7 +381,7 @@ export default function InvitationLetterPopup({
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        padding: 24,
+        padding: 'var(--space-xl)',
         zIndex: 1000,
         background: 'radial-gradient(ellipse at 50% 42%, rgba(26,18,9,0.30), rgba(26,18,9,0.66))',
       }}

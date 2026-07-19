@@ -126,7 +126,7 @@ export function CharacterSwitcherRows({
                     background: `linear-gradient(135deg, ${factionCssVar(life.faction_slug, 'light')}, ${factionCssVar(life.faction_slug)})`,
                     fontFamily: 'var(--faction-default-card-font)',
                     fontStyle: 'italic',
-                    // ornament: monogram glyph sized to the mini avatar disc
+                    // eslint-disable-next-line local/no-raw-style-values -- ornament: monogram glyph sized to the mini avatar disc
                     fontSize: 17,
                     color: 'var(--color-text-on-accent)',
                   }}
@@ -146,7 +146,11 @@ export function CharacterSwitcherRows({
               </span>
             </span>
             {isActive ? (
-              <span aria-hidden style={{ color: 'var(--faction-default-card-muted)', /* ornament: check dingbat marking the active life */ fontSize: 16, flex: 'none' }}>✓</span>
+              <span aria-hidden style={{
+                color: 'var(--faction-default-card-muted)', flex: 'none',
+                // eslint-disable-next-line local/no-raw-style-values -- ornament: check dingbat marking the active life
+                fontSize: 16,
+              }}>✓</span>
             ) : (
               <span style={rowTapHint}>{t('fieldDesk.home.switcher.tapToUse')}</span>
             )}
@@ -166,25 +170,27 @@ const scrim: CSSProperties = {
 const sheet: CSSProperties = {
   position: 'fixed', left: 0, right: 0, bottom: 0, zIndex: 41,
   background: 'var(--color-bg-surface)', borderRadius: '22px 22px 0 0',
-  padding: '10px 16px calc(26px + env(safe-area-inset-bottom))',
+  padding: 'var(--space-md) var(--space-lg) calc(var(--space-xl) + env(safe-area-inset-bottom))',
   boxShadow: '0 -12px 34px rgba(0,0,0,0.3)', maxHeight: '80vh', overflowY: 'auto',
 }
 const grab: CSSProperties = {
   display: 'block', width: 38, height: 4, borderRadius: 999,
-  background: 'var(--color-border-strong)', margin: '2px auto 14px',
+  background: 'var(--color-border-strong)', margin: 'var(--space-xs) auto var(--space-lg)',
 }
 const sheetTitle: CSSProperties = {
   fontFamily: 'var(--font-display)', fontStyle: 'italic', fontSize: 'var(--text-content)',
-  color: 'var(--color-text-primary)', margin: '0 4px 6px',
+  color: 'var(--color-text-primary)', margin: '0 var(--space-xs) var(--space-sm)',
 }
 const switchRow: CSSProperties = {
-  display: 'flex', alignItems: 'center', gap: 12, padding: '12px 4px',
+  display: 'flex', alignItems: 'center', gap: 'var(--space-md)', padding: 'var(--space-md) var(--space-xs)',
   borderBottom: '1px solid var(--color-border)', cursor: 'pointer',
   background: 'none', border: 'none', borderBottomStyle: 'solid',
   borderBottomWidth: 1, borderBottomColor: 'var(--color-border)', width: '100%',
 }
 const miniRing: CSSProperties = {
-  width: 44, height: 44, borderRadius: '50%', padding: 2, flex: 'none',
+  width: 44, height: 44, borderRadius: '50%', flex: 'none',
+  // eslint-disable-next-line local/no-raw-style-values -- ornament: this inset *is* the drawn ring stroke around the mini avatar, not spacing
+  padding: 2,
 }
 const miniAvatarImg: CSSProperties = {
   width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover',
@@ -196,20 +202,20 @@ const rowName: CSSProperties = {
 }
 const rowMeta: CSSProperties = {
   display: 'block', fontSize: 'var(--text-sm)', letterSpacing: '0.14em', textTransform: 'uppercase',
-  color: 'var(--color-text-secondary)', marginTop: 3,
+  color: 'var(--color-text-secondary)', marginTop: 'var(--space-xs)',
 }
 const rowTapHint: CSSProperties = {
   fontSize: 'var(--text-xs)', letterSpacing: '0.1em', textTransform: 'uppercase',
   color: 'var(--color-text-tertiary)', flex: 'none',
 }
 const sheetAction: CSSProperties = {
-  display: 'flex', alignItems: 'center', gap: 12, padding: '15px 4px', width: '100%',
+  display: 'flex', alignItems: 'center', gap: 'var(--space-md)', padding: 'var(--space-lg) var(--space-xs)', width: '100%',
   color: 'var(--color-text-primary)', fontFamily: 'var(--font-display)',
   fontStyle: 'italic', fontSize: 'var(--text-content)', cursor: 'pointer', background: 'none', border: 'none',
 }
 const actionIcon: CSSProperties = {
   width: 34, height: 34, borderRadius: '50%', border: '1.5px dashed var(--color-border-strong)',
-  // ornament: '+' glyph centred in the 34px dashed action disc
+  // eslint-disable-next-line local/no-raw-style-values -- ornament: '+' glyph centred in the 34px dashed action disc
   display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16,
   color: 'var(--color-text-secondary)', flex: 'none',
 }

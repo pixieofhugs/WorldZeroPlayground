@@ -158,7 +158,7 @@ export function OwnerControls({ owner }: { owner: OwnerEdit }) {
           display: 'inline-flex',
           alignItems: 'baseline',
           flexWrap: 'wrap',
-          gap: 6,
+          gap: 'var(--space-sm)',
           fontSize: 'var(--text-content)',
         }}
       >
@@ -191,7 +191,7 @@ export function OwnerControls({ owner }: { owner: OwnerEdit }) {
   }
 
   return (
-    <span style={{ display: 'inline-flex', alignItems: 'baseline', gap: 6 }}>
+    <span style={{ display: 'inline-flex', alignItems: 'baseline', gap: 'var(--space-sm)' }}>
       <button
         onClick={owner.startEdit}
         aria-label={t('comments.edit')}
@@ -250,7 +250,7 @@ export function CommentEditor({
         onCancel={owner.cancelEdit}
       />
       {owner.error && (
-        <p style={{ fontSize: 'var(--text-content)', color: 'var(--color-danger)', marginTop: 4 }}>{owner.error}</p>
+        <p style={{ fontSize: 'var(--text-content)', color: 'var(--color-danger)', marginTop: 'var(--space-xs)' }}>{owner.error}</p>
       )}
     </div>
   )

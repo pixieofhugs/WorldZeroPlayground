@@ -154,7 +154,7 @@ export function ComposerControls({
             color: text,
             border: `1px solid ${accent}`,
             borderRadius: 6,
-            padding: '8px 10px',
+            padding: 'var(--space-sm) var(--space-md)',
             font: 'inherit',
             fontFamily: 'inherit',
             boxSizing: 'border-box',
@@ -173,8 +173,8 @@ export function ComposerControls({
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
-          gap: 8,
-          marginTop: 6,
+          gap: 'var(--space-sm)',
+          marginTop: 'var(--space-sm)',
         }}
       >
         {maxLength != null ? (
@@ -184,7 +184,7 @@ export function ComposerControls({
         ) : (
           <span />
         )}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-sm)' }}>
           {onCancel && (
             <button
               onClick={onCancel}
@@ -193,7 +193,7 @@ export function ComposerControls({
                 background: 'none',
                 border: 'none',
                 cursor: 'pointer',
-                padding: '4px 6px',
+                padding: 'var(--space-xs) var(--space-sm)',
                 color: 'var(--color-text-tertiary)',
               }}
             >
@@ -208,7 +208,7 @@ export function ComposerControls({
               color: '#fff',
               border: 'none',
               borderRadius: 4,
-              padding: '4px 14px',
+              padding: 'var(--space-xs) var(--space-lg)',
               cursor: disabled ? 'default' : 'pointer',
               fontSize: 'var(--text-lg)',
               letterSpacing: '0.04em',

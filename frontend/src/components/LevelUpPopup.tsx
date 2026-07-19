@@ -56,7 +56,11 @@ function RainbowText({ text, fontSize = 34 }: { text: string; fontSize?: number 
         }
         const color = RAINBOW[i++ % RAINBOW.length]
         return (
-          <span key={idx} style={{ borderBottom: `4px solid ${color}`, paddingBottom: 2 }}>
+          <span key={idx} style={{
+            borderBottom: `4px solid ${color}`,
+            // eslint-disable-next-line local/no-raw-style-values -- ornament: lead between the glyph and its drawn 4px underline bar; a rung detaches the bar
+            paddingBottom: 2,
+          }}>
             {ch}
           </span>
         )
@@ -83,12 +87,13 @@ function SealStamp({ level, sealRing = 'rainbow' }: { level: number; sealRing?: 
         RAINBOW.map((c, idx) => `${c} ${idx * 60}deg ${(idx + 1) * 60}deg`).join(',') +
         ')'
   return (
-    <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 18 }}>
+    <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 'var(--space-lg)' }}>
       <div
         style={{
           width: 100,
           height: 100,
           borderRadius: '50%',
+          // eslint-disable-next-line local/no-raw-style-values -- ornament: this inset *is* the seal's drawn ring band, not spacing
           padding: 6,
           transform: 'rotate(-7deg)',
           background: ringBg,
@@ -106,12 +111,14 @@ function SealStamp({ level, sealRing = 'rainbow' }: { level: number; sealRing?: 
             boxShadow: `inset 0 0 0 2px ${PAPER}, inset 0 0 0 3px ${INK}`,
           }}
         >
-          {/* ornament: the LVL caption and numeral are engraved into the wax seal;
-              both sizes draw the stamp rather than set readable text. */}
+          {/* The LVL caption and numeral are engraved into the wax seal; both
+              sizes draw the stamp rather than set readable text. */}
           <div style={{ textAlign: 'center' }}>
+            {/* eslint-disable-next-line local/no-raw-style-values -- ornament: engraved LVL caption on the wax seal */}
             <div style={{ fontFamily: FONT_BODY, fontSize: 8, letterSpacing: '0.24em', color: INK }}>
               LVL
             </div>
+            {/* eslint-disable-next-line local/no-raw-style-values -- ornament: engraved numeral on the wax seal */}
             <div style={{ fontFamily: FONT_DISPLAY, fontStyle: 'italic', fontSize: 38, lineHeight: 0.85, color: INK }}>
               {level}
             </div>
@@ -130,20 +137,20 @@ function AbilityRow({ ability, color }: { ability: LevelUnlock; color: string })
   const name = tKey(t, `unlocks.${ability.key}.name`)
   const desc = tKey(t, `unlocks.${ability.key}.desc`)
   return (
-    <div style={{ display: 'flex', gap: 13, textAlign: 'left', alignItems: 'flex-start', marginBottom: 15 }}>
-      {/* ornament: sense/ability dingbat used as a bullet */}
+    <div style={{ display: 'flex', gap: 'var(--space-md)', textAlign: 'left', alignItems: 'flex-start', marginBottom: 'var(--space-lg)' }}>
+      {/* eslint-disable-next-line local/no-raw-style-values -- ornament: sense/ability dingbat used as a bullet */}
       <span style={{ fontSize: 15, lineHeight: 1.1, flex: 'none', width: 18, textAlign: 'center', color }}>
         {isSense ? '✦' : '■'}
       </span>
       <div>
-        <div style={{ fontFamily: FONT_BODY, fontSize: 'var(--text-xs)', letterSpacing: '0.18em', textTransform: 'uppercase', color: FAINT, marginBottom: 3 }}>
+        <div style={{ fontFamily: FONT_BODY, fontSize: 'var(--text-xs)', letterSpacing: '0.18em', textTransform: 'uppercase', color: FAINT, marginBottom: 'var(--space-xs)' }}>
           {isSense ? t('popup.senseEyebrow') : t('popup.abilityEyebrow')}
         </div>
         <div style={{ fontFamily: FONT_DISPLAY, fontStyle: 'italic', fontSize: 'var(--text-content)', lineHeight: 1.2, color: INK }}>
           {name}
         </div>
         {desc && (
-          <div style={{ fontFamily: FONT_BODY, fontSize: 'var(--text-content)', lineHeight: 1.55, color: MUTED, marginTop: 3 }}>
+          <div style={{ fontFamily: FONT_BODY, fontSize: 'var(--text-content)', lineHeight: 1.55, color: MUTED, marginTop: 'var(--space-xs)' }}>
             {desc}
           </div>
         )}
@@ -228,7 +235,7 @@ function MobileLevelUpCard({
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        padding: 24,
+        padding: 'var(--space-xl)',
         overflow: 'hidden',
         background: 'radial-gradient(ellipse at 50% 42%, rgba(26,18,9,0.44), rgba(26,18,9,0.74))',
       }}
@@ -248,7 +255,7 @@ function MobileLevelUpCard({
           background: PAPER,
           border: `1px solid ${BORDER}`,
           borderRadius: 20,
-          padding: '26px 22px 22px',
+          padding: 'var(--space-xl)',
           textAlign: 'center',
           fontFamily: FONT_BODY,
           boxShadow: '0 20px 50px -12px rgba(26,18,9,0.5)',
@@ -256,14 +263,14 @@ function MobileLevelUpCard({
       >
         <SealStamp level={level} sealRing={sealRing} />
 
-        <p style={{ fontFamily: FONT_BODY, fontSize: 'var(--text-sm)', textTransform: 'uppercase', letterSpacing: '0.15em', color: FAINT, margin: '0 0 4px' }}>
+        <p style={{ fontFamily: FONT_BODY, fontSize: 'var(--text-sm)', textTransform: 'uppercase', letterSpacing: '0.15em', color: FAINT, margin: '0 0 var(--space-xs)' }}>
           {t('popup.levelReached')}
         </p>
         <RainbowText text={rank} fontSize={28} />
 
-        <RainbowRule style={{ margin: '14px 0 16px' }} />
+        <RainbowRule style={{ margin: 'var(--space-lg) 0' }} />
 
-        <div style={{ fontFamily: FONT_BODY, fontSize: 'var(--text-xs)', letterSpacing: '0.2em', textTransform: 'uppercase', color: FAINT, marginBottom: 14 }}>
+        <div style={{ fontFamily: FONT_BODY, fontSize: 'var(--text-xs)', letterSpacing: '0.2em', textTransform: 'uppercase', color: FAINT, marginBottom: 'var(--space-lg)' }}>
           {t('popup.nowUnlocked')}
         </div>
 
@@ -276,7 +283,7 @@ function MobileLevelUpCard({
           autoFocus
           onClick={onContinue}
           style={{
-            marginTop: 20,
+            marginTop: 'var(--space-xl)',
             width: '100%',
             fontFamily: FONT_BODY,
             textTransform: 'uppercase',
@@ -355,7 +362,9 @@ export default function LevelUpPopup({
         background: PAPER,
         border: `1px solid ${BORDER}`,
         borderRadius: 12,
-        padding: '30px 28px 24px',
+        // §4a asymmetric-inset exception: the tie at 28 rounds DOWN so the card
+        // keeps its heavier top inset instead of flattening to a uniform box.
+        padding: 'var(--space-2xl) var(--space-xl) var(--space-xl)',
         boxShadow: '0 18px 46px -14px rgba(26,18,9,0.5)',
         textAlign: 'center',
         fontFamily: FONT_BODY,
@@ -363,14 +372,14 @@ export default function LevelUpPopup({
     >
       <SealStamp level={level} sealRing={sealRing} />
 
-      <p style={{ fontFamily: FONT_BODY, fontSize: 'var(--text-sm)', textTransform: 'uppercase', letterSpacing: '0.15em', color: FAINT, margin: '0 0 4px' }}>
+      <p style={{ fontFamily: FONT_BODY, fontSize: 'var(--text-sm)', textTransform: 'uppercase', letterSpacing: '0.15em', color: FAINT, margin: '0 0 var(--space-xs)' }}>
         {t('popup.levelReached')}
       </p>
       <RainbowText text={rank} />
 
-      <RainbowRule style={{ margin: '14px 0 16px' }} />
+      <RainbowRule style={{ margin: 'var(--space-lg) 0' }} />
 
-      <div style={{ fontFamily: FONT_BODY, fontSize: 'var(--text-xs)', letterSpacing: '0.2em', textTransform: 'uppercase', color: FAINT, marginBottom: 14 }}>
+      <div style={{ fontFamily: FONT_BODY, fontSize: 'var(--text-xs)', letterSpacing: '0.2em', textTransform: 'uppercase', color: FAINT, marginBottom: 'var(--space-lg)' }}>
         {t('popup.nowUnlocked')}
       </div>
 
@@ -383,7 +392,7 @@ export default function LevelUpPopup({
         autoFocus
         onClick={onContinue}
         style={{
-          marginTop: 20,
+          marginTop: 'var(--space-xl)',
           width: '100%',
           fontFamily: FONT_BODY,
           textTransform: 'uppercase',
@@ -415,7 +424,7 @@ export default function LevelUpPopup({
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        padding: 24,
+        padding: 'var(--space-xl)',
         zIndex: 1000,
         background: 'radial-gradient(ellipse at 50% 42%, rgba(26,18,9,0.30), rgba(26,18,9,0.66))',
       }}

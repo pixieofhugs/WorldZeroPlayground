@@ -41,7 +41,7 @@ export default function FilterFactionTabs({
               fontWeight: 700,
               textTransform: "uppercase",
               letterSpacing: "0.07em",
-              padding: "4px 12px",
+              padding: "var(--space-xs) var(--space-md)",
               cursor: "pointer",
               border: "none",
               borderRadius: 0,

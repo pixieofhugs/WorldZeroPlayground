@@ -45,6 +45,7 @@ function DefaultAvatar({ character, size = 'md' }: FactionAvatarProps) {
           width: dim,
           height: dim,
           borderRadius: '50%',
+          // eslint-disable-next-line local/no-raw-style-values -- ornament: this inset *is* the spectrum ring's drawn stroke width, not spacing; a rung doubles the ring.
           padding: 2,
           boxSizing: 'border-box',
           background: 'var(--faction-default-rainbow)',

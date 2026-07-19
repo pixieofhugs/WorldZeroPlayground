@@ -37,11 +37,11 @@ export default function VoteStamps({ praxisId, currentValue, points, totalVotes 
       {!user ? (
         <p className="eyebrow">{t('voteStamps.loginPrompt')}</p>
       ) : (
-        <div style={{ display: 'flex', gap: 8, marginBottom: 10 }}>
+        <div style={{ display: 'flex', gap: 'var(--space-sm)', marginBottom: 'var(--space-md)' }}>
           {stamps.map((stamp) => {
             const active = selected === stamp.value
             return (
-              <div key={stamp.value} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3 }}>
+              <div key={stamp.value} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 'var(--space-xs)' }}>
                 <button
                   disabled={saving}
                   onClick={() => void vote(stamp.value)}
@@ -84,7 +84,7 @@ export default function VoteStamps({ praxisId, currentValue, points, totalVotes 
 
       {/* Vote economy info */}
       {selected > 0 && (
-        <p className="font-body content-text" style={{ color: 'var(--color-text-tertiary)', marginBottom: 8 }}>
+        <p className="font-body content-text" style={{ color: 'var(--color-text-tertiary)', marginBottom: 'var(--space-sm)' }}>
           {t('voteStamps.voted', { count: selected })}
         </p>
       )}
@@ -96,7 +96,7 @@ export default function VoteStamps({ praxisId, currentValue, points, totalVotes 
         </p>
       )}
 
-      {error && <p className="font-body content-text" style={{ color: 'var(--color-danger)', marginTop: 4 }}>{error}</p>}
+      {error && <p className="font-body content-text" style={{ color: 'var(--color-danger)', marginTop: 'var(--space-xs)' }}>{error}</p>}
     </div>
   )
 }

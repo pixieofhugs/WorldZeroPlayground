@@ -92,7 +92,7 @@ export function CommentFlagControl({ comment }: { comment: CommentOut }) {
       </div>
       {reason !== null && (
         <textarea
-          className="border-2 border-border bg-card px-3 py-2 font-body text-sm focus:outline-none focus:border-ink w-full resize-none mt-[6px]"
+          className="border-2 border-border bg-card px-3 py-2 font-body content-text focus:outline-none focus:border-ink w-full resize-none mt-2"
           rows={2}
           placeholder={t('detail.flag.notePlaceholder')}
           value={detail}
@@ -100,17 +100,17 @@ export function CommentFlagControl({ comment }: { comment: CommentOut }) {
           disabled={submitting}
         />
       )}
-      <div className="flex items-center gap-2 mt-[6px]">
+      <div className="flex items-center gap-2 mt-2">
         {reason !== null && (
-          <button onClick={() => void submit()} disabled={submitting} className="btn-primary text-[9px] px-[10px] py-[3px]" style={{ background: 'var(--color-danger)', borderColor: 'var(--color-danger)' }}>
+          <button onClick={() => void submit()} disabled={submitting} className="btn-primary text-[9px] px-3 py-1" style={{ background: 'var(--color-danger)', borderColor: 'var(--color-danger)' }}>
             {submitting ? t('detail.flag.submitting') : t('detail.flag.submit')}
           </button>
         )}
-        <button onClick={() => { setOpen(false); setReason(null); setDetail(''); setError(null) }} disabled={submitting} className="btn-outline text-[9px] px-[10px] py-[3px]">
+        <button onClick={() => { setOpen(false); setReason(null); setDetail(''); setError(null) }} disabled={submitting} className="btn-outline text-[9px] px-3 py-1">
           {t('detail.flag.cancel')}
         </button>
       </div>
-      {error && <p className="font-body text-xs mt-[4px]" style={{ color: 'var(--color-danger)' }}>{error}</p>}
+      {error && <p className="font-body content-text mt-1" style={{ color: 'var(--color-danger)' }}>{error}</p>}
     </div>
   )
 }

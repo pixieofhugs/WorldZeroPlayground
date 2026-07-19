@@ -21,7 +21,7 @@ function frame(): React.CSSProperties {
     color: 'var(--faction-singularity-card-text)',
     border: '1px solid var(--faction-singularity-border-hard)',
     fontFamily: FONT,
-    padding: '12px 14px',
+    padding: 'var(--space-md) var(--space-lg)',
     overflow: 'hidden',
   }
 }
@@ -45,12 +45,12 @@ export default function SingularityComment(props: CommentProps) {
     return (
       <div style={frame()}>
         <Brackets />
-        <div style={{ position: 'relative', display: 'flex', gap: 11, alignItems: 'flex-start' }}>
+        <div style={{ position: 'relative', display: 'flex', gap: 'var(--space-md)', alignItems: 'flex-start' }}>
           <FactionAvatar character={character} size="sm" />
           <div style={{ flex: 1 }}>
-            <div style={{ fontSize: 'var(--text-sm)', color: 'var(--faction-singularity-card-muted)', textTransform: 'uppercase', letterSpacing: '0.14em', marginBottom: 6 }}>
+            <div style={{ fontSize: 'var(--text-sm)', color: 'var(--faction-singularity-card-muted)', textTransform: 'uppercase', letterSpacing: '0.14em', marginBottom: 'var(--space-sm)' }}>
               {t('comments.singularity.protocol')}
-              <span style={{ display: 'inline-block', width: 5, height: 9, background: 'var(--faction-singularity-card-text)', marginLeft: 4, verticalAlign: 'middle', animation: 'blink 1s step-end infinite' }} />
+              <span style={{ display: 'inline-block', width: 5, height: 9, background: 'var(--faction-singularity-card-text)', marginLeft: 'var(--space-xs)', verticalAlign: 'middle', animation: 'blink 1s step-end infinite' }} />
             </div>
             <ComposerControls value={value} onChange={onChange} onSubmit={onSubmit} submitting={submitting} accent="var(--faction-singularity-card-text)" bg="#0a1f12" text="var(--faction-singularity-card-text)" />
           </div>
@@ -64,21 +64,21 @@ export default function SingularityComment(props: CommentProps) {
   return (
     <div style={frame()}>
       <Brackets />
-      <div style={{ position: 'relative', display: 'flex', gap: 11, alignItems: 'flex-start' }}>
+      <div style={{ position: 'relative', display: 'flex', gap: 'var(--space-md)', alignItems: 'flex-start' }}>
         <FactionAvatar character={authorToCharacter(comment.author)} size="sm" />
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 10 }}>
+          <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 'var(--space-md)' }}>
             <Link to={`/characters/${comment.author.id}`} style={{ fontSize: 'var(--text-content)', color: 'var(--faction-singularity-card-text)', textDecoration: 'none' }}>
               {comment.author.username}
             </Link>
-            <span style={{ fontSize: 'var(--text-md)', color: 'var(--faction-singularity-card-muted)', whiteSpace: 'nowrap', display: 'inline-flex', alignItems: 'baseline', gap: 8 }}>
+            <span style={{ fontSize: 'var(--text-md)', color: 'var(--faction-singularity-card-muted)', whiteSpace: 'nowrap', display: 'inline-flex', alignItems: 'baseline', gap: 'var(--space-sm)' }}>
               {formatCommentTime(slug, comment.created_at)}
               {comment.is_edited ? ` [${t('comments.singularity.edited')}]` : ''}
               <OwnerControls owner={owner} />
               <CommentFlagControl comment={comment} />
             </span>
           </div>
-          <div style={{ fontSize: 'var(--text-content)', lineHeight: 1.55, marginTop: 4 }}>
+          <div style={{ fontSize: 'var(--text-content)', lineHeight: 1.55, marginTop: 'var(--space-xs)' }}>
             {owner.editing ? (
               <CommentEditor owner={owner} accent="var(--faction-singularity-card-text)" bg="#0a1f12" text="var(--faction-singularity-card-text)" />
             ) : (

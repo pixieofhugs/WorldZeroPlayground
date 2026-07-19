@@ -43,7 +43,7 @@ export default function MobileLayout({ children }: { children: ReactNode }) {
               to="/updates"
               aria-label={t('nav.updates')}
               className="relative flex items-center"
-              style={{ color: 'var(--color-text-secondary)', textDecoration: 'none', padding: '4px 2px' }}
+              style={{ color: 'var(--color-text-secondary)', textDecoration: 'none', padding: 'var(--space-xs)' }}
             >
               <svg
                 width="20"
@@ -68,7 +68,7 @@ export default function MobileLayout({ children }: { children: ReactNode }) {
                     right: -4,
                     minWidth: 15,
                     height: 15,
-                    padding: '0 3px',
+                    padding: '0 var(--space-xs)',
                     borderRadius: 999,
                     fontSize: 'var(--text-sm)',
                     fontWeight: 700,
@@ -90,7 +90,7 @@ export default function MobileLayout({ children }: { children: ReactNode }) {
               style={{
                 color: 'var(--color-text-secondary)',
                 textDecoration: 'none',
-                padding: '4px 2px',
+                padding: 'var(--space-xs)',
               }}
             >
               {t('settings.open')}

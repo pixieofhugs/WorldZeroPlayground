@@ -24,11 +24,12 @@ const SERIF = "'Playfair Display', Georgia, serif"
 const LABEL = "'Marcellus', Georgia, serif"
 
 /** Gilt museum frame — gold-leaf border around the parchment plate. */
-function GiltFrame({ children, gap }: { children: ReactNode; gap: number }) {
+function GiltFrame({ children, gap }: { children: ReactNode; gap: string }) {
   return (
     <div
       style={{
         background: GILT,
+        // eslint-disable-next-line local/no-raw-style-values -- ornament: this inset *is* the gold-leaf border drawn around the parchment plate, not spacing
         padding: 3,
         borderRadius: 6,
         boxShadow: 'inset 0 0 0 1px color-mix(in srgb, white 40%, transparent)',
@@ -40,7 +41,7 @@ function GiltFrame({ children, gap }: { children: ReactNode; gap: number }) {
           color: INK,
           border: '1px solid var(--ua-line-soft)',
           borderRadius: 4,
-          padding: '13px 18px',
+          padding: 'var(--space-md) var(--space-lg)',
           display: 'flex',
           gap,
           alignItems: 'flex-start',
@@ -57,10 +58,10 @@ export default function UaComment(props: CommentProps) {
   if (props.mode === 'composer') {
     const { character, value, onChange, onSubmit, submitting } = props
     return (
-      <GiltFrame gap={12}>
+      <GiltFrame gap="var(--space-md)">
         <FactionAvatar character={character} size="sm" />
         <div style={{ flex: 1 }}>
-          <div style={{ fontFamily: LABEL, fontSize: 'var(--text-base)', letterSpacing: '0.14em', textTransform: 'uppercase', color: ORANGE, marginBottom: 6 }}>
+          <div style={{ fontFamily: LABEL, fontSize: 'var(--text-base)', letterSpacing: '0.14em', textTransform: 'uppercase', color: ORANGE, marginBottom: 'var(--space-sm)' }}>
             {t('comments.ua.house')}
           </div>
           <ComposerControls value={value} onChange={onChange} onSubmit={onSubmit} submitting={submitting} accent={ORANGE} bg={PAPER_WARM} text={INK} />
@@ -72,24 +73,24 @@ export default function UaComment(props: CommentProps) {
   const slug = comment.author.faction_slug
   const owner = useOwnerEdit({ comment, onEdited, onWithdrawn })
   return (
-    <GiltFrame gap={14}>
+    <GiltFrame gap="var(--space-lg)">
       <FactionAvatar character={authorToCharacter(comment.author)} size="sm" />
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ fontFamily: LABEL, fontSize: 'var(--text-base)', letterSpacing: '0.14em', textTransform: 'uppercase', color: ORANGE }}>
           {t('comments.ua.house')}
         </div>
-        <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 10 }}>
+        <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 'var(--space-md)' }}>
           <Link to={`/characters/${comment.author.id}`} style={{ fontFamily: SERIF, fontStyle: 'italic', fontWeight: 600, fontSize: 'var(--text-content)', color: INK, textDecoration: 'none' }}>
             {comment.author.display_name}
           </Link>
-          <span style={{ fontFamily: SERIF, fontStyle: 'italic', fontSize: 'var(--text-lg)', color: SUB, whiteSpace: 'nowrap', display: 'inline-flex', alignItems: 'baseline', gap: 8 }}>
+          <span style={{ fontFamily: SERIF, fontStyle: 'italic', fontSize: 'var(--text-lg)', color: SUB, whiteSpace: 'nowrap', display: 'inline-flex', alignItems: 'baseline', gap: 'var(--space-sm)' }}>
             {formatCommentTime(slug, comment.created_at)}
             {comment.is_edited ? ` · ${t('comments.ua.edited')}` : ''}
             <OwnerControls owner={owner} />
             <CommentFlagControl comment={comment} />
           </span>
         </div>
-        <div style={{ height: 1, background: 'color-mix(in srgb, var(--ua-gold) 55%, transparent)', margin: '8px 0 9px' }} />
+        <div style={{ height: 1, background: 'color-mix(in srgb, var(--ua-gold) 55%, transparent)', margin: 'var(--space-sm) 0' }} />
         <div style={{ fontFamily: SERIF, fontStyle: 'italic', fontSize: 'var(--text-content)', lineHeight: 1.5, color: INK }}>
           {owner.editing ? (
             <CommentEditor owner={owner} accent={ORANGE} bg={PAPER_WARM} text={INK} />

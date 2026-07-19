@@ -61,7 +61,7 @@ export default function TaskCard({ task, displayPoints, onSignup }: CardProps) {
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'flex-start',
-            gap: 2,
+            gap: 'var(--space-xs)',
             zIndex: 5,
             pointerEvents: 'none',
           }}
@@ -73,7 +73,7 @@ export default function TaskCard({ task, displayPoints, onSignup }: CardProps) {
               fontWeight: 700,
               textTransform: 'uppercase',
               letterSpacing: '0.15em',
-              padding: '2px 8px',
+              padding: 'var(--space-xs) var(--space-sm)',
               border: `1.5px solid ${factionCssVar(task.metatask_faction_slug, 'border')}`,
               textShadow: '0 1px 2px rgba(0,0,0,0.3)',
               // na → rainbow frame (overrides the faction border below); real
@@ -92,7 +92,7 @@ export default function TaskCard({ task, displayPoints, onSignup }: CardProps) {
               fontWeight: 700,
               textTransform: 'uppercase',
               letterSpacing: '0.1em',
-              padding: '1px 6px',
+              padding: 'var(--space-xs) var(--space-sm)',
               border: `1px solid ${factionCssVar(task.metatask_faction_slug, 'border')}`,
             }}
           >
@@ -104,7 +104,7 @@ export default function TaskCard({ task, displayPoints, onSignup }: CardProps) {
         <div
           style={{
             position: 'absolute', bottom: 4, right: 4,
-            display: 'flex', gap: 3, zIndex: 10,
+            display: 'flex', gap: 'var(--space-xs)', zIndex: 10,
           }}
         >
           {task.status === 'active' && (
@@ -140,7 +140,7 @@ function AdminStatusButton({
       onClick={onClick}
       className="eyebrow"
       style={{
-        padding: '1px 5px',
+        padding: 'var(--space-xs) var(--space-sm)',
         border: `1px solid color-mix(in srgb, ${toneVar} 30%, transparent)`,
         color: toneVar,
         background: 'var(--color-surface-scrim)',
