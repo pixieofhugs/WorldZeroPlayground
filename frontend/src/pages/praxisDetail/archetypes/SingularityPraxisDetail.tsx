@@ -41,7 +41,7 @@ function Sprockets({ position }: { position: 'top' | 'bottom' }) {
         justifyContent: 'space-between',
         alignItems: 'center',
         padding: 'var(--space-xs) var(--space-md)',
-        background: 'color-mix(in srgb, var(--faction-singularity-muted) 10%, transparent)',
+        background: 'color-mix(in srgb, var(--faction-singularity-card-muted) 10%, transparent)',
         ...border,
       }}
     >
@@ -53,7 +53,7 @@ function Sprockets({ position }: { position: 'top' | 'bottom' }) {
             height: 7,
             borderRadius: '50%',
             background: 'var(--faction-singularity-card-bg)',
-            border: '1px solid color-mix(in srgb, var(--faction-singularity-muted) 45%, transparent)',
+            border: '1px solid color-mix(in srgb, var(--faction-singularity-card-muted) 45%, transparent)',
           }}
         />
       ))}
@@ -81,7 +81,7 @@ function SgDivider({ label }: { label: string }) {
         style={{
           flex: 1,
           height: 1,
-          background: 'color-mix(in srgb, var(--faction-singularity-muted) 28%, transparent)',
+          background: 'color-mix(in srgb, var(--faction-singularity-card-muted) 28%, transparent)',
         }}
       />
     </div>
@@ -112,7 +112,7 @@ export default function SingularityPraxisDetail({ state }: { state: PraxisDetail
         background: 'var(--faction-singularity-card-bg)',
         border: '1px solid var(--faction-singularity-border-hard)',
         boxShadow:
-          '0 0 0 1px color-mix(in srgb, var(--faction-singularity-muted) 12%, transparent), 0 0 40px -20px color-mix(in srgb, var(--faction-singularity-card-accent) 30%, transparent)',
+          '0 0 0 1px color-mix(in srgb, var(--faction-singularity-card-muted) 12%, transparent), 0 0 40px -20px color-mix(in srgb, var(--faction-singularity-card-accent) 30%, transparent)',
         overflow: 'hidden',
         padding: 0,
       }}
@@ -143,7 +143,7 @@ export default function SingularityPraxisDetail({ state }: { state: PraxisDetail
             gap: 'var(--space-md)',
             flexWrap: 'wrap',
             padding: 'var(--space-md) var(--space-xl)',
-            borderBottom: '1px solid color-mix(in srgb, var(--faction-singularity-muted) 28%, transparent)',
+            borderBottom: '1px solid color-mix(in srgb, var(--faction-singularity-card-muted) 28%, transparent)',
             background: 'color-mix(in srgb, var(--faction-singularity-card-accent) 3%, transparent)',
           }}
         >
@@ -152,7 +152,7 @@ export default function SingularityPraxisDetail({ state }: { state: PraxisDetail
               fontSize: 'var(--text-sm)',
               letterSpacing: '0.22em',
               textTransform: 'uppercase',
-              color: 'var(--faction-singularity-muted)',
+              color: 'var(--faction-singularity-card-muted)',
             }}
           >
             {t('detail.singularity.sealedProtocol')}
@@ -161,7 +161,7 @@ export default function SingularityPraxisDetail({ state }: { state: PraxisDetail
             style={{
               fontSize: 'var(--text-xs)',
               letterSpacing: '0.12em',
-              color: 'color-mix(in srgb, var(--faction-singularity-muted) 55%, transparent)',
+              color: 'color-mix(in srgb, var(--faction-singularity-card-muted) 55%, transparent)',
             }}
           >
             {t('detail.singularity.signalTrace', { date: formatTimestamp(sealedDate) })}
@@ -203,8 +203,8 @@ export default function SingularityPraxisDetail({ state }: { state: PraxisDetail
               style={{
                 fontSize: 'var(--text-xs)',
                 padding: 'var(--space-xs) var(--space-md)',
-                border: '1px solid color-mix(in srgb, var(--faction-singularity-muted) 40%, transparent)',
-                color: 'color-mix(in srgb, var(--faction-singularity-muted) 80%, transparent)',
+                border: '1px solid color-mix(in srgb, var(--faction-singularity-card-muted) 40%, transparent)',
+                color: 'color-mix(in srgb, var(--faction-singularity-card-muted) 80%, transparent)',
                 letterSpacing: '0.14em',
               }}
             >
@@ -221,19 +221,19 @@ export default function SingularityPraxisDetail({ state }: { state: PraxisDetail
             >
               {t('detail.singularity.re', { task: praxis.task_title })}
             </Link>
-            <span style={{ color: 'color-mix(in srgb, var(--faction-singularity-muted) 35%, transparent)', fontSize: 'var(--text-xs)' }}>·</span>
+            <span style={{ color: 'color-mix(in srgb, var(--faction-singularity-card-muted) 35%, transparent)', fontSize: 'var(--text-xs)' }}>·</span>
             <span
               style={{
                 fontSize: 'var(--text-xs)',
                 letterSpacing: '0.1em',
-                color: 'color-mix(in srgb, var(--faction-singularity-muted) 60%, transparent)',
+                color: 'color-mix(in srgb, var(--faction-singularity-card-muted) 60%, transparent)',
               }}
             >
               {t('detail.singularity.gradeCredits', { grade, points: praxis.task_point_value })}
             </span>
             {praxis.moderation_status === 'flagged' && (
               <>
-                <span style={{ color: 'color-mix(in srgb, var(--faction-singularity-muted) 35%, transparent)', fontSize: 'var(--text-xs)' }}>·</span>
+                <span style={{ color: 'color-mix(in srgb, var(--faction-singularity-card-muted) 35%, transparent)', fontSize: 'var(--text-xs)' }}>·</span>
                 <span
                   style={{
                     fontSize: 'var(--text-xs)',
@@ -257,7 +257,7 @@ export default function SingularityPraxisDetail({ state }: { state: PraxisDetail
                 fontSize: 'var(--text-xs)',
                 letterSpacing: '0.2em',
                 marginBottom: 'var(--space-sm)',
-                color: 'color-mix(in srgb, var(--faction-singularity-muted) 55%, transparent)',
+                color: 'color-mix(in srgb, var(--faction-singularity-card-muted) 55%, transparent)',
               }}
             >
               {t('detail.singularity.output')}
@@ -300,7 +300,7 @@ export default function SingularityPraxisDetail({ state }: { state: PraxisDetail
               gap: 'var(--space-md)',
               paddingBottom: 'var(--space-lg)',
               marginBottom: 'var(--space-sm)',
-              borderBottom: '1px dashed color-mix(in srgb, var(--faction-singularity-muted) 28%, transparent)',
+              borderBottom: '1px dashed color-mix(in srgb, var(--faction-singularity-card-muted) 28%, transparent)',
             }}
           >
             <Link to={`/characters/${praxis.created_by_id}`}>
@@ -315,7 +315,7 @@ export default function SingularityPraxisDetail({ state }: { state: PraxisDetail
                   justifyContent: 'center',
                   fontSize: 'var(--text-base)',
                   letterSpacing: '0.06em',
-                  color: 'var(--faction-singularity-muted)',
+                  color: 'var(--faction-singularity-card-muted)',
                   background: `color-mix(in srgb, ${factionCssVar(praxis.created_by_faction_slug, 'card-accent')} 20%, var(--faction-singularity-card-bg))`,
                   border: `1px solid ${factionCssVar(praxis.created_by_faction_slug, 'card-accent')}`,
                 }}
@@ -337,7 +337,7 @@ export default function SingularityPraxisDetail({ state }: { state: PraxisDetail
                 style={{
                   fontSize: 'var(--text-xs)',
                   letterSpacing: '0.06em',
-                  color: 'color-mix(in srgb, var(--faction-singularity-muted) 50%, transparent)',
+                  color: 'color-mix(in srgb, var(--faction-singularity-card-muted) 50%, transparent)',
                 }}
               >
                 {t('detail.singularity.instanceLabel', { instance: instance.toLowerCase() })}
@@ -353,7 +353,7 @@ export default function SingularityPraxisDetail({ state }: { state: PraxisDetail
                   fontSize: 'var(--text-xs)',
                   letterSpacing: '0.12em',
                   marginTop: 'var(--space-xs)',
-                  color: 'color-mix(in srgb, var(--faction-singularity-muted) 50%, transparent)',
+                  color: 'color-mix(in srgb, var(--faction-singularity-card-muted) 50%, transparent)',
                 }}
               >
                 {t('detail.singularity.baseCredits')}
@@ -385,8 +385,8 @@ export default function SingularityPraxisDetail({ state }: { state: PraxisDetail
               />
               <div
                 style={{
-                  border: '1px solid color-mix(in srgb, var(--faction-singularity-muted) 30%, transparent)',
-                  background: 'color-mix(in srgb, var(--faction-singularity-muted) 6%, transparent)',
+                  border: '1px solid color-mix(in srgb, var(--faction-singularity-card-muted) 30%, transparent)',
+                  background: 'color-mix(in srgb, var(--faction-singularity-card-muted) 6%, transparent)',
                   padding: 'var(--space-md)',
                 }}
               >
@@ -403,7 +403,7 @@ export default function SingularityPraxisDetail({ state }: { state: PraxisDetail
                 state={state}
                 align="right"
                 accent="var(--faction-singularity-card-accent)"
-                muted="color-mix(in srgb, var(--faction-singularity-muted) 55%, transparent)"
+                muted="color-mix(in srgb, var(--faction-singularity-card-muted) 55%, transparent)"
               />
             </div>
             <VoteUI
