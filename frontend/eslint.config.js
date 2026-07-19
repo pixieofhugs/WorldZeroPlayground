@@ -186,6 +186,30 @@ function isRawPxValue(node) {
   return false
 }
 
+// KNOWN GAPS — documented on purpose (#763 ask 4). A documented gap beats a
+// silent one: the #750 audit's real finding was not that values escaped, but
+// that they escaped while the ratchet reported CLEAN.
+//
+// Gap A — `text-sm` / `text-xs` on prose (pattern 5). NOT enforceable here.
+//   The rule would have to know whether a given element is prose or chrome, and
+//   a className carries no role signal to read. `text-sm` is correct on a
+//   timestamp and wrong on a paragraph, and nothing in the AST distinguishes
+//   them. An audit of all 46 remaining usages (#763) found every one to be
+//   legitimate Label tier, so there is no live defect behind this gap today —
+//   but it will not stay that way on its own, and only review catches it.
+//   Note the trap: a naive `grep text-sm` also matches the CSS variable
+//   `--text-sm`, which inflates the count roughly 5x.
+//
+// Gap B — `text-[13px]` (arbitrary Tailwind type). Deliberately NOT flagged.
+//   4a: "Ornament type keeps its raw value even when the number happens to sit
+//   on a rung", because a --text-* token names a TIER, not merely a number.
+//   Flagging these mechanically would push ornament type onto a tier it was
+//   never part of — the exact coupling 4a forbids. The 9 current uses live in
+//   faction skins where that judgement needs eyes, not a regex.
+//
+// Gap C — `calc()`. `calc(3.5rem + env(safe-area-inset-bottom))` passes, since
+//   the component split never sees a bare length. 4a already names this
+//   ("never compose with calc() to dodge the scale"); it is a review rule.
 const noRawStyleValues = {
   rules: {
     'no-raw-style-values': {
