@@ -1,4 +1,3 @@
-﻿src/components/AlbescentInvitation.tsx
 src/pages/characterPaths/mobileArchetypes/DefaultCreateCharacter.tsx
 src/pages/characterPaths/mobileArchetypes/DefaultEditCharacter.tsx
 src/pages/characterProfile/archetypes/AlbescentProfileBody.tsx
