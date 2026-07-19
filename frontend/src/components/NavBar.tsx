@@ -151,7 +151,7 @@ export default function NavBar() {
                   {t('nav.createCharacter')}
                 </NavLink>
               )}
-              <button onClick={handleLogout} className="btn-outline" style={{ padding: '0.25rem 0.75rem' }}>
+              <button onClick={handleLogout} className="btn-outline" style={{ padding: 'var(--space-xs) var(--space-md)' }}>
                 {t('nav.logout')}
               </button>
             </>

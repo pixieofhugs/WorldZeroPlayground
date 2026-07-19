@@ -48,7 +48,7 @@ export function CollabSuccess({
       role="dialog"
       aria-modal="true"
       aria-label={collabCopy(factionSlug, 'successHeading')}
-      className="fixed inset-0 z-50 flex items-center justify-center p-[16px]"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4"
       style={{
         // Mobile fills the screen outright; desktop dims the composer behind.
         background: isMobile
@@ -57,7 +57,7 @@ export function CollabSuccess({
       }}
     >
       <div
-        className={`flex flex-col items-center gap-[14px] p-[24px] ${
+        className={`flex flex-col items-center gap-4 p-6 ${
           isMobile ? 'w-full h-full justify-center' : 'w-full max-w-[420px]'
         }`}
         style={{
@@ -89,11 +89,11 @@ export function CollabSuccess({
 
         {/* Everyone who was woven in, each credited with the full task value —
             a collab pays every member in full (SPEC-game-rules). */}
-        <ul className="flex flex-col gap-[4px] w-full">
+        <ul className="flex flex-col gap-1 w-full">
           {members.map((member) => (
             <li
               key={member.id}
-              className="flex items-center justify-between gap-2 px-[10px] py-[5px]"
+              className="flex items-center justify-between gap-2 px-3 py-1"
               style={{
                 borderRadius: 4,
                 border: `1.5px solid ${accent}`,
@@ -129,7 +129,7 @@ export function CollabSuccess({
           type="button"
           autoFocus
           onClick={onContinue}
-          className="btn-primary px-[18px] py-[8px]"
+          className="btn-primary px-4 py-2"
           style={{ fontSize: 'var(--text-sm)' }}
         >
           {collabCopy(factionSlug, 'successContinue')}
