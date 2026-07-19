@@ -5,19 +5,19 @@
  * Mirrors the other surfaces' ua-dispatch tests.
  */
 import { describe, it, expect } from 'vitest'
-import { MOBILE_ARCHETYPE_BY_SLUG } from '../../FactionDetail'
 import { pickVariant } from '../../../utils/factionDispatch'
+import { surfaceMap } from '../../../factions'
 import DefaultFactionPage from '../mobileArchetypes/DefaultFactionPage'
 import UaFactionPage from '../mobileArchetypes/UaFactionPage'
 
 describe('mobile faction-page UA dispatch', () => {
   it('mobile + the UA faction resolves to the bespoke UA page', () => {
-    expect(pickVariant(MOBILE_ARCHETYPE_BY_SLUG, 'ua', DefaultFactionPage)).toBe(UaFactionPage)
+    expect(pickVariant(surfaceMap('mobileFactionPage'), 'ua', DefaultFactionPage)).toBe(UaFactionPage)
   })
 
   it('every other faction falls through to the Default mobile page', () => {
     for (const slug of ['__unregistered__', 'na', null]) {
-      expect(pickVariant(MOBILE_ARCHETYPE_BY_SLUG, slug, DefaultFactionPage)).toBe(DefaultFactionPage)
+      expect(pickVariant(surfaceMap('mobileFactionPage'), slug, DefaultFactionPage)).toBe(DefaultFactionPage)
     }
   })
 })

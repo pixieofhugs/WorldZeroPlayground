@@ -47,12 +47,11 @@ vi.mock('../../../hooks/useGameConfig', () => ({
   useGameConfig: () => CONFIG,
 }))
 
-const { DefaultDuelSealConfirm, DUEL_SEAL_BY_SLUG, MOBILE_DUEL_SEAL_BY_SLUG } = await import(
-  '../DuelSealConfirm'
-)
-const { DefaultDuelRail, DUEL_RAIL_BY_SLUG, MOBILE_DUEL_RAIL_BY_SLUG } = await import(
-  '../../../pages/praxisDetail/DuelCrossLink'
-)
+const { DefaultDuelSealConfirm } = await import('../DuelSealConfirm')
+const { DefaultDuelRail } = await import('../../../pages/praxisDetail/DuelCrossLink')
+// Loaded after the mock, like the dispatchers above. surfaceMap resolves the
+// faction skins lazily, so the manifests are the only registration seam.
+const { surfaceMap } = await import('../../../factions')
 
 function side(overrides: Partial<DuelSideOut>): DuelSideOut {
   return {
@@ -81,8 +80,8 @@ describe('duel seal skins render every slot', () => {
   // two-arg callback signature.
   const skins: [string, ComponentType<DuelSealConfirmProps>][] = [
     ['default', DefaultDuelSealConfirm],
-    ...Object.entries(DUEL_SEAL_BY_SLUG),
-    ...Object.entries(MOBILE_DUEL_SEAL_BY_SLUG).map(
+    ...Object.entries(surfaceMap('duelSeal')),
+    ...Object.entries(surfaceMap('mobileDuelSeal')).map(
       ([slug, skin]) => [`${slug} (mobile)`, skin] as [string, ComponentType<DuelSealConfirmProps>],
     ),
   ]
@@ -113,8 +112,8 @@ describe('duel seal skins render every slot', () => {
 describe('duel rail skins render every slot', () => {
   const skins: [string, ComponentType<DuelRailSkinProps>][] = [
     ['default', DefaultDuelRail],
-    ...Object.entries(DUEL_RAIL_BY_SLUG),
-    ...Object.entries(MOBILE_DUEL_RAIL_BY_SLUG).map(
+    ...Object.entries(surfaceMap('duelRail')),
+    ...Object.entries(surfaceMap('mobileDuelRail')).map(
       ([slug, skin]) => [`${slug} (mobile)`, skin] as [string, ComponentType<DuelRailSkinProps>],
     ),
   ]

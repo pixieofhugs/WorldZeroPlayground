@@ -11,53 +11,13 @@ import { useParams } from "react-router-dom";
 import { Trans, useTranslation } from "react-i18next";
 import PageTitle from "../components/ui/PageTitle";
 import { pickVariant } from "../utils/factionDispatch";
+import { surfaceMap } from "../factions";
 import { useFormFactor } from "../hooks/useFormFactor";
-import { useTaskDetail, type TaskDetailState } from "./taskDetail/useTaskDetail";
+import { useTaskDetail } from "./taskDetail/useTaskDetail";
 import DefaultTaskDetail from "./taskDetail/archetypes/DefaultTaskDetail";
 import DefaultMobileTaskDetail from "./taskDetail/mobileArchetypes/DefaultTaskDetail";
-import EverymenMobileTaskDetail from "./taskDetail/mobileArchetypes/EverymenTaskDetail";
-import UAMobileTaskDetail from "./taskDetail/mobileArchetypes/UaTaskDetail";
-import SingularityMobileTaskDetail from "./taskDetail/mobileArchetypes/SingularityTaskDetail";
-import WowMobileTaskDetail from "./taskDetail/mobileArchetypes/WowTaskDetail";
-import EphemeristsMobileTaskDetail from "./taskDetail/mobileArchetypes/EphemeristsTaskDetail";
-import AlbescentMobileTaskDetail from "./taskDetail/mobileArchetypes/AlbescentTaskDetail";
-import SnideMobileTaskDetail from "./taskDetail/mobileArchetypes/SnideTaskDetail";
-import SnideTaskDetail from "./taskDetail/archetypes/SnideTaskDetail";
-import EverymenTaskDetail from "./taskDetail/archetypes/EverymenTaskDetail";
-import WowTaskDetail from "./taskDetail/archetypes/WowTaskDetail";
-import EphemeristsTaskDetail from "./taskDetail/archetypes/EphemeristsTaskDetail";
-import SingularityTaskDetail from "./taskDetail/archetypes/SingularityTaskDetail";
-import UaTaskDetail from "./taskDetail/archetypes/UaTaskDetail";
-import AlbescentTaskDetail from "./taskDetail/archetypes/AlbescentTaskDetail";
 import CommentThread from "../components/comments/CommentThread";
 
-type Archetype = (props: { state: TaskDetailState }) => JSX.Element | null;
-
-// Only factions with a bespoke archetype are listed; everything else (incl.
-// na) falls through to DefaultTaskDetail below. albescent is a FIRST-CLASS
-// identity (#232 slice 1) with its own entry.
-export const ARCHETYPE_BY_SLUG: Record<string, Archetype> = {
-  snide: SnideTaskDetail,
-  everymen: EverymenTaskDetail,
-  wow: WowTaskDetail,
-  ephemerists: EphemeristsTaskDetail,
-  singularity: SingularityTaskDetail,
-  ua: UaTaskDetail,
-  albescent: AlbescentTaskDetail,
-};
-
-// Parallel MOBILE registry. Bespoke faction mobile skins land incrementally
-// (#496–#500) exactly like the desktop archetypes above; every unlisted faction
-// falls through to the Default mobile skin. Everymen is the first pilot (#497).
-export const MOBILE_ARCHETYPE_BY_SLUG: Record<string, Archetype> = {
-  everymen: EverymenMobileTaskDetail,
-  ua: UAMobileTaskDetail,
-  singularity: SingularityMobileTaskDetail,
-  wow: WowMobileTaskDetail,
-  ephemerists: EphemeristsMobileTaskDetail,
-  albescent: AlbescentMobileTaskDetail,
-  snide: SnideMobileTaskDetail,
-};
 
 export default function TaskDetail() {
   const { id } = useParams<{ id: string }>();
@@ -96,8 +56,8 @@ export default function TaskDetail() {
   const slug = state.task.primary_faction_slug ?? null;
   const Archetype =
     formFactor === "mobile"
-      ? pickVariant(MOBILE_ARCHETYPE_BY_SLUG, slug, DefaultMobileTaskDetail)
-      : pickVariant(ARCHETYPE_BY_SLUG, slug, DefaultTaskDetail);
+      ? pickVariant(surfaceMap('mobileTaskDetail'), slug, DefaultMobileTaskDetail)
+      : pickVariant(surfaceMap('taskDetail'), slug, DefaultTaskDetail);
 
   return (
     <>

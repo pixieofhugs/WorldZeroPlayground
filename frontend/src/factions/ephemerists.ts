@@ -4,6 +4,9 @@
  * Override-only: any surface absent here renders that surface's `Default*`
  * archetype via `pickVariant`. Adding a surface is one line; no dispatcher is
  * touched. Removing one hands the surface back to the default.
+ *
+ * Entries are thunks (`() => Component`) so they are read at render time, never
+ * during module evaluation — see the cycle note in `./manifest.ts`.
  */
 import type { FactionManifest } from './manifest'
 
@@ -32,25 +35,25 @@ import { EphemeristsSigil } from '../components/cards/ephemeristsAtoms'
 export const EPHEMERISTS_MANIFEST: FactionManifest = {
   slug: 'ephemerists',
 
-  taskCard: EphemeristsTaskCard,
-  praxisCard: EphemeristsPraxisCard,
-  avatar: EphemeristsAvatar,
-  backdrop: EphemeristsBackdrop,
-  sigil: EphemeristsSigil,
-  comment: EphemeristsComment,
-  feedFrame: EphemeristsFeedFrame,
-  vote: EphemeristsVote,
-  taskDetail: EphemeristsTaskDetail,
-  praxisDetail: EphemeristsPraxisDetail,
-  editPraxis: EphemeristsEditPraxis,
-  factionHero: EphemeristsFactionHero,
-  factionBody: EphemeristsFactionBody,
-  profileBody: EphemeristsProfileBody,
-  mobileTaskCard: EphemeristsMobileTaskCard,
-  mobilePraxisCard: EphemeristsMobilePraxisCard,
-  mobileTaskDetail: EphemeristsMobileTaskDetail,
-  mobilePraxisDetail: EphemeristsMobilePraxisDetail,
-  mobileEditPraxis: EphemeristsMobileEditPraxis,
-  mobileFactionPage: EphemeristsFactionPage,
-  mobileFieldDesk: EphemeristsHome,
+  taskCard: () => EphemeristsTaskCard,
+  praxisCard: () => EphemeristsPraxisCard,
+  avatar: () => EphemeristsAvatar,
+  backdrop: () => EphemeristsBackdrop,
+  sigil: () => EphemeristsSigil,
+  comment: () => EphemeristsComment,
+  feedFrame: () => EphemeristsFeedFrame,
+  vote: () => EphemeristsVote,
+  taskDetail: () => EphemeristsTaskDetail,
+  praxisDetail: () => EphemeristsPraxisDetail,
+  editPraxis: () => EphemeristsEditPraxis,
+  factionHero: () => EphemeristsFactionHero,
+  factionBody: () => EphemeristsFactionBody,
+  profileBody: () => EphemeristsProfileBody,
+  mobileTaskCard: () => EphemeristsMobileTaskCard,
+  mobilePraxisCard: () => EphemeristsMobilePraxisCard,
+  mobileTaskDetail: () => EphemeristsMobileTaskDetail,
+  mobilePraxisDetail: () => EphemeristsMobilePraxisDetail,
+  mobileEditPraxis: () => EphemeristsMobileEditPraxis,
+  mobileFactionPage: () => EphemeristsFactionPage,
+  mobileFieldDesk: () => EphemeristsHome,
 }

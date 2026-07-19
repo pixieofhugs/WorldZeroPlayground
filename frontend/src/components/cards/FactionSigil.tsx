@@ -1,10 +1,7 @@
-import type { ComponentType } from "react";
+import type { } from "react";
 import { pickVariant } from "../../utils/factionDispatch";
+import { surfaceMap } from "../../factions";
 import { factionCssVar } from "../../utils/factions";
-import { EverymenSigil } from "./EverymenSigil";
-import { WowSigil } from "./WowSigil";
-import { SnideSigil } from "./SnideSigil";
-import { EphemeristsSigil } from "./ephemeristsAtoms";
 import { SingularitySigil } from "./SingularitySigil";
 import { UaSigil } from "./UaSigil";
 import AlbescentSigil from "./AlbescentSigil";
@@ -49,17 +46,7 @@ function DefaultSigilAdapter({ size }: SigilVariantProps) {
   return <DefaultSigil size={size} />;
 }
 
-export const FACTION_SIGILS: Record<string, ComponentType<SigilVariantProps>> = {
-  everymen: EverymenSigil,
-  wow: WowSigil,
-  snide: SnideSigil,
-  ephemerists: EphemeristsSigil,
-  singularity: SingularitySigilAdapter,
-  ua: UaSigilAdapter,
-  albescent: AlbescentSigilAdapter,
-};
-
 export default function FactionSigil({ slug, size, color }: FactionSigilProps) {
-  const Variant = pickVariant(FACTION_SIGILS, slug, DefaultSigilAdapter);
+  const Variant = pickVariant(surfaceMap('sigil'), slug, DefaultSigilAdapter);
   return <Variant size={size} color={color} />;
 }

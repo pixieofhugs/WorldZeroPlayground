@@ -17,13 +17,26 @@
  * SURFACE: one field here, one entry in `SURFACE_KEYS`, and the dispatcher calls
  * `surfaceMap('<key>')` instead of declaring its own map.
  *
- * IMPORT DISCIPLINE — this module must stay type-only. The manifest index
- * transitively imports every faction component, and some of those components
- * import a dispatcher module back (e.g. `UaFactionBody` imports `TaskCard`,
- * whose own dispatcher reads the index). That cycle is harmless as long as
- * nothing *reads* across it at module-evaluation time, which is why
- * `surfaceMap()` resolves lazily rather than materialising a module-level const.
- * See the note in `./index.ts`.
+ * WHY EVERY ENTRY IS A THUNK (`taskCard: () => UaTaskCard`)
+ * ---------------------------------------------------------
+ * Dispatcher modules and archetype modules already import each other: an
+ * archetype pulls shared atoms out of its dispatcher (`AlbescentAvatar` imports
+ * `BadgedAvatar` from `FactionAvatar`), and ten archetypes are defined *inside*
+ * their dispatcher outright (the seven praxis cards in `PraxisCard.tsx`, the
+ * three sigil adapters in `FactionSigil.tsx`). Once a dispatcher also reads the
+ * manifest index, that closes a module cycle.
+ *
+ * A plain object literal — `{ sigil: UaSigilAdapter }` — READS the imported
+ * binding while the modules are still evaluating. Whenever the dispatcher
+ * happens to enter the cycle first, that read lands on an uninitialised binding
+ * and the manifest silently captures `undefined`, so the faction falls back to
+ * the Default skin forever. This is not hypothetical: it is exactly how UA lost
+ * its heraldic sigil during this refactor, and it is invisible to `tsc`.
+ *
+ * Wrapping each entry in `() =>` defers the read to render time, by which point
+ * every module has finished evaluating. It costs one arrow per row and makes the
+ * seam correct by construction, independent of import order — which matters
+ * because a faction manifest may name a component from anywhere in the tree.
  */
 import type { ComponentType } from 'react'
 
@@ -49,6 +62,12 @@ import type { FieldDeskHomeState } from '../pages/fieldDesk/useFieldDeskHome'
 import type { CreateCharacterState } from '../pages/characterPaths/useCreateCharacter'
 import type { EditCharacterState } from '../pages/characterPaths/useEditCharacter'
 
+/**
+ * A deferred reference to a component. See the thunk note above: manifest
+ * entries must not be read at module-evaluation time.
+ */
+type Lazy<T> = () => T
+
 /** The `{ state }` prop shape the page-level archetypes all share. */
 type Stateful<S> = ComponentType<{ state: S }>
 
@@ -57,43 +76,43 @@ export interface FactionManifest {
   readonly slug: string
 
   // ─── Cards & chrome (desktop) ──────────────────────────────────────────────
-  readonly taskCard?: ComponentType<CardProps>
-  readonly praxisCard?: ComponentType<PraxisCardProps>
-  readonly factionCard?: ComponentType<FactionCardProps>
-  readonly avatar?: ComponentType<FactionAvatarProps>
-  readonly backdrop?: ComponentType
-  readonly sigil?: ComponentType<SigilVariantProps>
-  readonly comment?: CommentComponent
-  readonly feedFrame?: ComponentType<{ children: React.ReactNode }>
-  readonly vote?: ComponentType<VoteUIProps>
+  readonly taskCard?: Lazy<ComponentType<CardProps>>
+  readonly praxisCard?: Lazy<ComponentType<PraxisCardProps>>
+  readonly factionCard?: Lazy<ComponentType<FactionCardProps>>
+  readonly avatar?: Lazy<ComponentType<FactionAvatarProps>>
+  readonly backdrop?: Lazy<ComponentType>
+  readonly sigil?: Lazy<ComponentType<SigilVariantProps>>
+  readonly comment?: Lazy<CommentComponent>
+  readonly feedFrame?: Lazy<ComponentType<{ children: React.ReactNode }>>
+  readonly vote?: Lazy<ComponentType<VoteUIProps>>
 
   // ─── Pages (desktop) ───────────────────────────────────────────────────────
-  readonly taskDetail?: Stateful<TaskDetailState>
-  readonly praxisDetail?: Stateful<PraxisDetailState>
-  readonly editPraxis?: Stateful<EditPraxisState>
-  readonly factionHero?: ComponentType<FactionHeroProps>
-  readonly factionBody?: Stateful<FactionDetailState>
-  readonly profileBody?: ComponentType<ProfileBodyProps>
+  readonly taskDetail?: Lazy<Stateful<TaskDetailState>>
+  readonly praxisDetail?: Lazy<Stateful<PraxisDetailState>>
+  readonly editPraxis?: Lazy<Stateful<EditPraxisState>>
+  readonly factionHero?: Lazy<ComponentType<FactionHeroProps>>
+  readonly factionBody?: Lazy<Stateful<FactionDetailState>>
+  readonly profileBody?: Lazy<ComponentType<ProfileBodyProps>>
 
   // ─── Duel surfaces (desktop) ───────────────────────────────────────────────
-  readonly duelSeal?: ComponentType<DuelSealConfirmProps>
-  readonly duelRail?: ComponentType<DuelRailSkinProps>
+  readonly duelSeal?: Lazy<ComponentType<DuelSealConfirmProps>>
+  readonly duelRail?: Lazy<ComponentType<DuelRailSkinProps>>
 
   // ─── Mobile twins (#494 form-factor dispatch) ──────────────────────────────
-  readonly mobileTaskCard?: ComponentType<MobileTaskCardProps>
-  readonly mobilePraxisCard?: ComponentType<MobilePraxisCardProps>
-  readonly mobileTaskDetail?: Stateful<TaskDetailState>
-  readonly mobilePraxisDetail?: Stateful<PraxisDetailState>
-  readonly mobileEditPraxis?: Stateful<EditPraxisState>
-  readonly mobileFactionPage?: Stateful<FactionDetailState>
-  readonly mobileFieldDesk?: Stateful<FieldDeskHomeState>
-  readonly mobileCreateCharacter?: Stateful<CreateCharacterState>
-  readonly mobileEditCharacter?: Stateful<EditCharacterState>
-  readonly mobileProfile?: ComponentType<ProfileBodyProps>
-  readonly mobileFactionsDirectory?: ComponentType
-  readonly mobilePlayersDirectory?: ComponentType<PlayersDirectoryProps>
-  readonly mobileDuelSeal?: ComponentType<DuelSealConfirmProps>
-  readonly mobileDuelRail?: ComponentType<DuelRailSkinProps>
+  readonly mobileTaskCard?: Lazy<ComponentType<MobileTaskCardProps>>
+  readonly mobilePraxisCard?: Lazy<ComponentType<MobilePraxisCardProps>>
+  readonly mobileTaskDetail?: Lazy<Stateful<TaskDetailState>>
+  readonly mobilePraxisDetail?: Lazy<Stateful<PraxisDetailState>>
+  readonly mobileEditPraxis?: Lazy<Stateful<EditPraxisState>>
+  readonly mobileFactionPage?: Lazy<Stateful<FactionDetailState>>
+  readonly mobileFieldDesk?: Lazy<Stateful<FieldDeskHomeState>>
+  readonly mobileCreateCharacter?: Lazy<Stateful<CreateCharacterState>>
+  readonly mobileEditCharacter?: Lazy<Stateful<EditCharacterState>>
+  readonly mobileProfile?: Lazy<ComponentType<ProfileBodyProps>>
+  readonly mobileFactionsDirectory?: Lazy<ComponentType>
+  readonly mobilePlayersDirectory?: Lazy<ComponentType<PlayersDirectoryProps>>
+  readonly mobileDuelSeal?: Lazy<ComponentType<DuelSealConfirmProps>>
+  readonly mobileDuelRail?: Lazy<ComponentType<DuelRailSkinProps>>
 }
 
 /** Every surface key except `slug`. */

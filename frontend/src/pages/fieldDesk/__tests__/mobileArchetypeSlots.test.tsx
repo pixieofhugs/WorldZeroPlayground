@@ -1,6 +1,6 @@
 /**
  * Mobile FieldDesk-home slot invariant — the home twin of the taskDetail
- * mobileArchetypeSlots test. Walks MOBILE_ARCHETYPE_BY_SLUG plus the Default
+ * mobileArchetypeSlots test. Walks surfaceMap('mobileFieldDesk') plus the Default
  * mobile home and asserts each skin emits the invariant content slots from the
  * (hand-built) FieldDeskHomeState: character header (name + faction + level +
  * points), the Points/Votes/Era stat tiles, the active-tasks list, the empty
@@ -8,12 +8,12 @@
  * no hooks or network are involved.
  */
 import { renderToStaticMarkup } from 'react-dom/server'
+import { surfaceMap } from '../../../factions'
 import { MemoryRouter } from 'react-router-dom'
 import type { ReactElement } from 'react'
 import { describe, it, expect } from 'vitest'
 // Initialize the i18n catalog so shared copy keys resolve to English text.
 import '../../../i18n'
-import { MOBILE_ARCHETYPE_BY_SLUG } from '../../FieldDesk'
 import DefaultFieldDesk from '../mobileArchetypes/DefaultFieldDesk'
 import type { FieldDeskHomeState } from '../useFieldDeskHome'
 import type { CharacterOut } from '../../../api/auth'
@@ -75,7 +75,7 @@ function baseState(overrides: Partial<FieldDeskHomeState> = {}): FieldDeskHomeSt
   }
 }
 
-const archetypes = { ...MOBILE_ARCHETYPE_BY_SLUG, __default__: DefaultFieldDesk }
+const archetypes = { ...surfaceMap('mobileFieldDesk'), __default__: DefaultFieldDesk }
 
 describe('mobile FieldDesk-home content-slot invariant', () => {
   for (const [slug, Skin] of Object.entries(archetypes)) {

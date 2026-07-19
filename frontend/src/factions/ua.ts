@@ -4,6 +4,9 @@
  * Override-only: any surface absent here renders that surface's `Default*`
  * archetype via `pickVariant`. Adding a surface is one line; no dispatcher is
  * touched. Removing one hands the surface back to the default.
+ *
+ * Entries are thunks (`() => Component`) so they are read at render time, never
+ * during module evaluation — see the cycle note in `./manifest.ts`.
  */
 import type { FactionManifest } from './manifest'
 
@@ -32,25 +35,25 @@ import { UaSigilAdapter } from '../components/cards/FactionSigil'
 export const UA_MANIFEST: FactionManifest = {
   slug: 'ua',
 
-  taskCard: UaTaskCard,
-  praxisCard: UaPraxisCard,
-  avatar: UaAvatar,
-  backdrop: UaBackdrop,
-  sigil: UaSigilAdapter,
-  comment: UaComment,
-  feedFrame: UaFeedFrame,
-  vote: UaVote,
-  taskDetail: UaTaskDetail,
-  praxisDetail: UaPraxisDetail,
-  editPraxis: UaEditPraxis,
-  factionHero: UaFactionHero,
-  factionBody: UaFactionBody,
-  profileBody: UaProfileBody,
-  mobileTaskCard: UaMobileTaskCard,
-  mobilePraxisCard: UaMobilePraxisCard,
-  mobileTaskDetail: UaMobileTaskDetail,
-  mobilePraxisDetail: UaMobilePraxisDetail,
-  mobileEditPraxis: UaMobileEditPraxis,
-  mobileFactionPage: UaFactionPage,
-  mobileFieldDesk: UaHome,
+  taskCard: () => UaTaskCard,
+  praxisCard: () => UaPraxisCard,
+  avatar: () => UaAvatar,
+  backdrop: () => UaBackdrop,
+  sigil: () => UaSigilAdapter,
+  comment: () => UaComment,
+  feedFrame: () => UaFeedFrame,
+  vote: () => UaVote,
+  taskDetail: () => UaTaskDetail,
+  praxisDetail: () => UaPraxisDetail,
+  editPraxis: () => UaEditPraxis,
+  factionHero: () => UaFactionHero,
+  factionBody: () => UaFactionBody,
+  profileBody: () => UaProfileBody,
+  mobileTaskCard: () => UaMobileTaskCard,
+  mobilePraxisCard: () => UaMobilePraxisCard,
+  mobileTaskDetail: () => UaMobileTaskDetail,
+  mobilePraxisDetail: () => UaMobilePraxisDetail,
+  mobileEditPraxis: () => UaMobileEditPraxis,
+  mobileFactionPage: () => UaFactionPage,
+  mobileFieldDesk: () => UaHome,
 }

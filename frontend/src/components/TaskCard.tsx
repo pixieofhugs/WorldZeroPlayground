@@ -2,35 +2,16 @@ import type { TaskOut } from '../api/tasks'
 import { useAuth } from '../auth/AuthContext'
 import { useAdminMode } from '../auth/AdminModeContext'
 import { updateTaskStatus } from '../api/admin'
-import UaTaskCard from './cards/UaTaskCard'
-import WowTaskCard from './cards/WowTaskCard'
-import SnideTaskCard from './cards/SnideTaskCard'
-import EphemeristsTaskCard from './cards/EphemeristsTaskCard'
-import SingularityTaskCard from './cards/SingularityTaskCard'
-import EverymenTaskCard from './cards/EverymenTaskCard'
-import AlbescentTaskCard from './cards/AlbescentTaskCard'
 import DefaultTaskCard from './cards/DefaultTaskCard'
 import { factionCssVar, factionFill, factionName } from '../utils/factions'
 import { pickVariant } from '../utils/factionDispatch'
-import type { ComponentType } from 'react'
+import { surfaceMap } from '../factions'
+import type { } from 'react'
 
 export interface CardProps {
   task: TaskOut
   displayPoints: number
   onSignup?: (id: number) => void
-}
-
-/** Style Guide §6 — one card archetype per faction. */
-export const CARD_COMPONENTS: Record<string, ComponentType<CardProps>> = {
-  ua: UaTaskCard,
-  everymen: EverymenTaskCard,
-  wow: WowTaskCard,
-  snide: SnideTaskCard,
-  ephemerists: EphemeristsTaskCard,
-  singularity: SingularityTaskCard,
-  // First-class Albescent identity (#232 slice 1). The explicit entry beats the
-  // albescent→ua alias in pickVariant, so it renders immediately.
-  albescent: AlbescentTaskCard,
 }
 
 // `na` / unaffiliated + any faction without a bespoke card → the spectrum
@@ -47,7 +28,7 @@ export default function TaskCard({ task, displayPoints, onSignup }: CardProps) {
     window.location.reload()
   }
 
-  const Card = pickVariant(CARD_COMPONENTS, task.primary_faction_slug, DEFAULT_CARD)
+  const Card = pickVariant(surfaceMap('taskCard'), task.primary_faction_slug, DEFAULT_CARD)
   const isMetatask = task.task_type === 'metatask'
   return (
     <div style={{ position: 'relative' }}>

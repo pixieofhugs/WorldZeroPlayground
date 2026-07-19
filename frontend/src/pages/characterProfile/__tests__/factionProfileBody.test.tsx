@@ -12,9 +12,9 @@ import { describe, it, expect } from "vitest";
 
 import type { CharacterOut } from "../../../api/auth";
 import FactionProfileBody, {
-  FACTION_PROFILE_BODIES,
   type ProfileBodyProps,
 } from "../FactionProfileBody";
+import { surfaceMap } from "../../../factions";
 
 function makeCharacter(overrides: Partial<CharacterOut> = {}): CharacterOut {
   return {
@@ -57,7 +57,9 @@ function renderBody(overrides: Partial<CharacterOut> = {}) {
 
 describe("FactionProfileBody dispatch", () => {
   it("registers the seven bespoke faction skins (#460)", () => {
-    expect(Object.keys(FACTION_PROFILE_BODIES).sort()).toEqual(
+    // Each faction claims the surface in its own manifest; the dispatcher just
+    // reads them, so this asserts the manifests still cover all seven.
+    expect(Object.keys(surfaceMap("profileBody")).sort()).toEqual(
       [
         "albescent",
         "ephemerists",

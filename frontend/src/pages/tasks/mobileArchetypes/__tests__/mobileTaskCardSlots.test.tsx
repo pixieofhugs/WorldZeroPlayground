@@ -13,13 +13,13 @@
  * card stops passing its own typography through `style`, these fail.
  */
 import { renderToStaticMarkup } from 'react-dom/server'
+import { surfaceMap } from '../../../../factions'
 import { MemoryRouter } from 'react-router-dom'
 import type { ComponentType } from 'react'
 import { describe, it, expect } from 'vitest'
 // Initialize the i18n catalog so the points/level keys resolve to English text.
 import '../../../../i18n'
 import type { TaskOut } from '../../../../api/tasks'
-import { MOBILE_TASK_CARD_BY_SLUG } from '../mobileTaskCard'
 import DefaultMobileTaskCard from '../cards/DefaultMobileTaskCard'
 
 type MobileTaskCardProps = { task: TaskOut; points: number }
@@ -55,7 +55,7 @@ function render(Card: ComponentType<MobileTaskCardProps>, item: TaskOut) {
 }
 
 const cards: Record<string, ComponentType<MobileTaskCardProps>> = {
-  ...MOBILE_TASK_CARD_BY_SLUG,
+  ...surfaceMap('mobileTaskCard'),
   __default__: DefaultMobileTaskCard,
 }
 

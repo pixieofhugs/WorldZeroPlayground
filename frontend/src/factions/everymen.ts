@@ -4,6 +4,9 @@
  * Override-only: any surface absent here renders that surface's `Default*`
  * archetype via `pickVariant`. Adding a surface is one line; no dispatcher is
  * touched. Removing one hands the surface back to the default.
+ *
+ * Entries are thunks (`() => Component`) so they are read at render time, never
+ * during module evaluation — see the cycle note in `./manifest.ts`.
  */
 import type { FactionManifest } from './manifest'
 
@@ -32,25 +35,25 @@ import { EverymenSigil } from '../components/cards/EverymenSigil'
 export const EVERYMEN_MANIFEST: FactionManifest = {
   slug: 'everymen',
 
-  taskCard: EverymenTaskCard,
-  praxisCard: EverymenPraxisCard,
-  avatar: EverymenAvatar,
-  backdrop: EverymenBackdrop,
-  sigil: EverymenSigil,
-  comment: EverymenComment,
-  feedFrame: EverymenFeedFrame,
-  vote: EverymenVote,
-  taskDetail: EverymenTaskDetail,
-  praxisDetail: EverymenPraxisDetail,
-  editPraxis: EverymenEditPraxis,
-  factionHero: EverymenFactionHero,
-  factionBody: EverymenFactionBody,
-  profileBody: EverymenProfileBody,
-  mobileTaskCard: EverymenMobileTaskCard,
-  mobilePraxisCard: EverymenMobilePraxisCard,
-  mobileTaskDetail: EverymenMobileTaskDetail,
-  mobilePraxisDetail: EverymenMobilePraxisDetail,
-  mobileEditPraxis: EverymenMobileEditPraxis,
-  mobileFactionPage: EverymenFactionPage,
-  mobileFieldDesk: EverymenHome,
+  taskCard: () => EverymenTaskCard,
+  praxisCard: () => EverymenPraxisCard,
+  avatar: () => EverymenAvatar,
+  backdrop: () => EverymenBackdrop,
+  sigil: () => EverymenSigil,
+  comment: () => EverymenComment,
+  feedFrame: () => EverymenFeedFrame,
+  vote: () => EverymenVote,
+  taskDetail: () => EverymenTaskDetail,
+  praxisDetail: () => EverymenPraxisDetail,
+  editPraxis: () => EverymenEditPraxis,
+  factionHero: () => EverymenFactionHero,
+  factionBody: () => EverymenFactionBody,
+  profileBody: () => EverymenProfileBody,
+  mobileTaskCard: () => EverymenMobileTaskCard,
+  mobilePraxisCard: () => EverymenMobilePraxisCard,
+  mobileTaskDetail: () => EverymenMobileTaskDetail,
+  mobilePraxisDetail: () => EverymenMobilePraxisDetail,
+  mobileEditPraxis: () => EverymenMobileEditPraxis,
+  mobileFactionPage: () => EverymenFactionPage,
+  mobileFieldDesk: () => EverymenHome,
 }

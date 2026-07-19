@@ -4,6 +4,9 @@
  * Override-only: any surface absent here renders that surface's `Default*`
  * archetype via `pickVariant`. Adding a surface is one line; no dispatcher is
  * touched. Removing one hands the surface back to the default.
+ *
+ * Entries are thunks (`() => Component`) so they are read at render time, never
+ * during module evaluation — see the cycle note in `./manifest.ts`.
  */
 import type { FactionManifest } from './manifest'
 
@@ -36,29 +39,29 @@ import { WowSigil } from '../components/cards/WowSigil'
 export const WOW_MANIFEST: FactionManifest = {
   slug: 'wow',
 
-  taskCard: WowTaskCard,
-  praxisCard: WowPraxisCard,
-  avatar: WowAvatar,
-  backdrop: WowBackdrop,
-  sigil: WowSigil,
-  comment: WowComment,
-  feedFrame: WowFeedFrame,
-  vote: WowVote,
-  taskDetail: WowTaskDetail,
-  praxisDetail: WowPraxisDetail,
-  editPraxis: WowEditPraxis,
-  factionHero: WowFactionHero,
-  factionBody: WowFactionBody,
-  profileBody: WowProfileBody,
-  duelSeal: WowDuelSealConfirm,
-  duelRail: WowDuelRail,
-  mobileTaskCard: WowMobileTaskCard,
-  mobilePraxisCard: WowMobilePraxisCard,
-  mobileTaskDetail: WowMobileTaskDetail,
-  mobilePraxisDetail: WowMobilePraxisDetail,
-  mobileEditPraxis: WowMobileEditPraxis,
-  mobileFactionPage: WowFactionPage,
-  mobileFieldDesk: WowFieldDesk,
-  mobileDuelSeal: WowMobileDuelSealConfirm,
-  mobileDuelRail: WowMobileDuelRail,
+  taskCard: () => WowTaskCard,
+  praxisCard: () => WowPraxisCard,
+  avatar: () => WowAvatar,
+  backdrop: () => WowBackdrop,
+  sigil: () => WowSigil,
+  comment: () => WowComment,
+  feedFrame: () => WowFeedFrame,
+  vote: () => WowVote,
+  taskDetail: () => WowTaskDetail,
+  praxisDetail: () => WowPraxisDetail,
+  editPraxis: () => WowEditPraxis,
+  factionHero: () => WowFactionHero,
+  factionBody: () => WowFactionBody,
+  profileBody: () => WowProfileBody,
+  duelSeal: () => WowDuelSealConfirm,
+  duelRail: () => WowDuelRail,
+  mobileTaskCard: () => WowMobileTaskCard,
+  mobilePraxisCard: () => WowMobilePraxisCard,
+  mobileTaskDetail: () => WowMobileTaskDetail,
+  mobilePraxisDetail: () => WowMobilePraxisDetail,
+  mobileEditPraxis: () => WowMobileEditPraxis,
+  mobileFactionPage: () => WowFactionPage,
+  mobileFieldDesk: () => WowFieldDesk,
+  mobileDuelSeal: () => WowMobileDuelSealConfirm,
+  mobileDuelRail: () => WowMobileDuelRail,
 }

@@ -4,7 +4,7 @@
  * Every per-faction praxis-read archetype wears a different skin (gilt salon,
  * ransom dossier, terminal printout, union poster, whimsy.exe, illuminated
  * vellum) but must render the same CONTENT slots — an archetype may *arrange*
- * them freely but may not *drop* one. This walks the real `ARCHETYPE_BY_SLUG`
+ * them freely but may not *drop* one. This walks the real `surfaceMap('praxisDetail')`
  * registry (plus the Default fallback) and asserts every registered archetype
  * still emits the invariant slots, so a new faction that drops one fails here.
  *
@@ -14,12 +14,12 @@
  * finding text, the "re:" task link, and the author-byline character link.
  */
 import { renderToStaticMarkup } from "react-dom/server";
+import { surfaceMap } from "../../../factions";
 import { MemoryRouter } from "react-router-dom";
 import type { ReactElement } from "react";
 import { describe, it, expect } from "vitest";
 // Initialize the i18n catalog so shared-chrome copy keys resolve to English text.
 import "../../../i18n";
-import { ARCHETYPE_BY_SLUG } from "../../PraxisDetail";
 import DefaultPraxisDetail from "../archetypes/DefaultPraxisDetail";
 import type { PraxisDetailState } from "../usePraxisDetail";
 import type { PraxisOut } from "../../../api/praxis";
@@ -119,7 +119,7 @@ function state(): PraxisDetailState {
 }
 
 // Default fallback is a registered renderable too — guard it alongside the map.
-const archetypes = { ...ARCHETYPE_BY_SLUG, __default__: DefaultPraxisDetail };
+const archetypes = { ...surfaceMap('praxisDetail'), __default__: DefaultPraxisDetail };
 
 describe("praxis-read content-slot invariant", () => {
   for (const [slug, Archetype] of Object.entries(archetypes)) {

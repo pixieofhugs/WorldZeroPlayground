@@ -1,8 +1,9 @@
-import type { ComponentType, CSSProperties } from "react";
+import type { CSSProperties } from "react";
 import { useTranslation } from "react-i18next";
 import type { PraxisCardOut } from "../api/praxis";
 import { factionCssVar } from "../utils/factions";
 import { pickVariant } from "../utils/factionDispatch";
+import { surfaceMap } from "../factions";
 import { useVotedPraxis } from "./vote/useVotedPraxis";
 import SnideMasthead from "./cards/SnideMasthead";
 import AlbescentSigil from "./cards/AlbescentSigil";
@@ -669,24 +670,13 @@ export function DefaultPraxisCard({ praxis, adminProps, showCrown }: ArchetypePr
 
 // ─── Dispatcher ───────────────────────────────────────────────────────────────
 
-export const PRAXIS_CARD_BY_SLUG: Record<string, ComponentType<ArchetypeProps>> = {
-  ua: UaPraxisCard,
-  everymen: EverymenPraxisCard,
-  wow: WowPraxisCard,
-  snide: SnidePraxisCard,
-  ephemerists: EphemeristsPraxisCard,
-  singularity: SingularityPraxisCard,
-  // First-class Albescent identity (#232 slice 1) — beats the albescent→ua alias.
-  albescent: AlbescentPraxisCard,
-};
-
 export default function PraxisCard({ praxis, onModerated, showCrown = true }: Props) {
   const { localPraxis, adminProps } = usePraxisCard(praxis, onModerated);
   // Merge the viewer's own just-cast vote (#626) before the skin sees it, so the
   // score hero, footer meta and vote tally all move together on one object.
   const voted = useVotedPraxis(localPraxis);
   const Card = pickVariant(
-    PRAXIS_CARD_BY_SLUG,
+    surfaceMap('praxisCard'),
     voted.task_faction_slug,
     DefaultPraxisCard,
   );

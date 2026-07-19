@@ -4,6 +4,9 @@
  * Override-only: any surface absent here renders that surface's `Default*`
  * archetype via `pickVariant`. Adding a surface is one line; no dispatcher is
  * touched. Removing one hands the surface back to the default.
+ *
+ * Entries are thunks (`() => Component`) so they are read at render time, never
+ * during module evaluation — see the cycle note in `./manifest.ts`.
  */
 import type { FactionManifest } from './manifest'
 
@@ -32,25 +35,25 @@ import { SingularitySigilAdapter } from '../components/cards/FactionSigil'
 export const SINGULARITY_MANIFEST: FactionManifest = {
   slug: 'singularity',
 
-  taskCard: SingularityTaskCard,
-  praxisCard: SingularityPraxisCard,
-  avatar: SingularityAvatar,
-  backdrop: SingularityBackdrop,
-  sigil: SingularitySigilAdapter,
-  comment: SingularityComment,
-  feedFrame: SingularityFeedFrame,
-  vote: SingularityVote,
-  taskDetail: SingularityTaskDetail,
-  praxisDetail: SingularityPraxisDetail,
-  editPraxis: SingularityEditPraxis,
-  factionHero: SingularityFactionHero,
-  factionBody: SingularityFactionBody,
-  profileBody: SingularityProfileBody,
-  mobileTaskCard: SingularityMobileTaskCard,
-  mobilePraxisCard: SingularityMobilePraxisCard,
-  mobileTaskDetail: SingularityMobileTaskDetail,
-  mobilePraxisDetail: SingularityMobilePraxisDetail,
-  mobileEditPraxis: SingularityMobileEditPraxis,
-  mobileFactionPage: SingularityFactionPage,
-  mobileFieldDesk: SingularityHome,
+  taskCard: () => SingularityTaskCard,
+  praxisCard: () => SingularityPraxisCard,
+  avatar: () => SingularityAvatar,
+  backdrop: () => SingularityBackdrop,
+  sigil: () => SingularitySigilAdapter,
+  comment: () => SingularityComment,
+  feedFrame: () => SingularityFeedFrame,
+  vote: () => SingularityVote,
+  taskDetail: () => SingularityTaskDetail,
+  praxisDetail: () => SingularityPraxisDetail,
+  editPraxis: () => SingularityEditPraxis,
+  factionHero: () => SingularityFactionHero,
+  factionBody: () => SingularityFactionBody,
+  profileBody: () => SingularityProfileBody,
+  mobileTaskCard: () => SingularityMobileTaskCard,
+  mobilePraxisCard: () => SingularityMobilePraxisCard,
+  mobileTaskDetail: () => SingularityMobileTaskDetail,
+  mobilePraxisDetail: () => SingularityMobilePraxisDetail,
+  mobileEditPraxis: () => SingularityMobileEditPraxis,
+  mobileFactionPage: () => SingularityFactionPage,
+  mobileFieldDesk: () => SingularityHome,
 }

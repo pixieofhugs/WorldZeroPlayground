@@ -1,7 +1,7 @@
 /**
  * Mobile faction-page + directory dispatch invariant — the faction twin of the
  * task-browse mobileArchetypeSlots test. Walks FactionDetail's
- * MOBILE_ARCHETYPE_BY_SLUG plus the Default mobile faction-page skin and asserts
+ * surfaceMap('mobileFactionPage') plus the Default mobile faction-page skin and asserts
  * each emits the invariant slots (colour-washed hero name + tagline, real
  * member/task stats, top members, recent praxis) and honours the invite-gated
  * Join model. Also proves Factions' directory registry falls through to the
@@ -9,13 +9,12 @@
  * this mainly guards the Default fallbacks and any bespoke skin added later.
  */
 import { renderToStaticMarkup } from 'react-dom/server'
+import { surfaceMap } from '../../../factions'
 import { MemoryRouter } from 'react-router-dom'
 import type { ReactElement } from 'react'
 import { describe, it, expect } from 'vitest'
 // Initialize the i18n catalog so faction copy keys resolve to English text.
 import '../../../i18n'
-import { MOBILE_ARCHETYPE_BY_SLUG } from '../../FactionDetail'
-import { MOBILE_ARCHETYPE_BY_SLUG as DIRECTORY_BY_SLUG } from '../../Factions'
 import DefaultFactionPage from '../mobileArchetypes/DefaultFactionPage'
 import DefaultFactionsDirectory from '../../factions/mobileArchetypes/DefaultFactionsDirectory'
 import type { FactionDetailState, Membership } from '../useFactionDetail'
@@ -91,7 +90,7 @@ function baseState(overrides: Partial<FactionDetailState> = {}): FactionDetailSt
   }
 }
 
-const archetypes = { ...MOBILE_ARCHETYPE_BY_SLUG, __default__: DefaultFactionPage }
+const archetypes = { ...surfaceMap('mobileFactionPage'), __default__: DefaultFactionPage }
 
 describe('mobile faction-page content-slot invariant', () => {
   for (const [slug, Archetype] of Object.entries(archetypes)) {
@@ -121,7 +120,7 @@ describe('mobile faction-page content-slot invariant', () => {
 
 describe('mobile faction directory dispatch', () => {
   it('registry is an object (bespoke directory skins register here)', () => {
-    expect(typeof DIRECTORY_BY_SLUG).toBe('object')
+    expect(typeof surfaceMap('mobileFactionsDirectory')).toBe('object')
   })
 
   it('Default directory skin renders the heading + unaffiliated banner', () => {

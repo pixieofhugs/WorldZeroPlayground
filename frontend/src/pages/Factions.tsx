@@ -12,15 +12,8 @@ import { relativeTime } from '../utils/dates'
 import { useAuth } from '../auth/AuthContext'
 import { useFormFactor } from '../hooks/useFormFactor'
 import { pickVariant } from '../utils/factionDispatch'
+import { surfaceMap } from '../factions'
 import DefaultFactionsDirectory from './factions/mobileArchetypes/DefaultFactionsDirectory'
-
-type MobileDirectory = () => JSX.Element
-
-// Parallel MOBILE registry, mirroring the faction-page dispatch. The directory
-// isn't keyed by a single faction slug, so this stays empty and every mobile
-// render falls through to the Default directory skin; bespoke faction directory
-// skins can register here later.
-export const MOBILE_ARCHETYPE_BY_SLUG: Record<string, MobileDirectory> = {}
 
 const NA_SLUG = 'na'
 
@@ -46,7 +39,7 @@ export default function Factions() {
   const formFactor = useFormFactor()
 
   if (formFactor === 'mobile') {
-    const Mobile = pickVariant(MOBILE_ARCHETYPE_BY_SLUG, null, DefaultFactionsDirectory)
+    const Mobile = pickVariant(surfaceMap('mobileFactionsDirectory'), null, DefaultFactionsDirectory)
     return <Mobile />
   }
 

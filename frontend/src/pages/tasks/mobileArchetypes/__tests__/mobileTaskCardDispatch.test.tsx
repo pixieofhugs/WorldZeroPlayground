@@ -7,7 +7,7 @@
  */
 import { describe, it, expect } from 'vitest'
 import { pickVariant } from '../../../../utils/factionDispatch'
-import { MOBILE_TASK_CARD_BY_SLUG } from '../mobileTaskCard'
+import { surfaceMap } from '../../../../factions'
 import DefaultMobileTaskCard from '../cards/DefaultMobileTaskCard'
 import UaMobileTaskCard from '../cards/UaMobileTaskCard'
 import WowMobileTaskCard from '../cards/WowMobileTaskCard'
@@ -30,13 +30,13 @@ const CARD_BY_SLUG = {
 describe('mobile task-card per-item dispatch', () => {
   for (const [slug, Card] of Object.entries(CARD_BY_SLUG)) {
     it(`a ${slug} task resolves to its bespoke mobile card`, () => {
-      expect(pickVariant(MOBILE_TASK_CARD_BY_SLUG, slug, DefaultMobileTaskCard)).toBe(Card)
+      expect(pickVariant(surfaceMap('mobileTaskCard'), slug, DefaultMobileTaskCard)).toBe(Card)
     })
   }
 
   it('an unregistered / factionless task falls through to the Default mobile card', () => {
     for (const slug of ['__unregistered__', 'na', null]) {
-      expect(pickVariant(MOBILE_TASK_CARD_BY_SLUG, slug, DefaultMobileTaskCard)).toBe(DefaultMobileTaskCard)
+      expect(pickVariant(surfaceMap('mobileTaskCard'), slug, DefaultMobileTaskCard)).toBe(DefaultMobileTaskCard)
     }
   })
 })

@@ -8,16 +8,10 @@ import CredentialCard from '../components/CredentialCard'
 import AlbescentInvitation from '../components/AlbescentInvitation'
 import { mediaUrl } from '../utils/media'
 import { pickVariant } from '../utils/factionDispatch'
+import { surfaceMap } from '../factions'
 import { useFormFactor } from '../hooks/useFormFactor'
-import { useFieldDeskHome, type FieldDeskHomeState } from './fieldDesk/useFieldDeskHome'
+import { useFieldDeskHome } from './fieldDesk/useFieldDeskHome'
 import DefaultFieldDesk from './fieldDesk/mobileArchetypes/DefaultFieldDesk'
-import WowFieldDesk from './fieldDesk/mobileArchetypes/WowFieldDesk'
-import UaHome from './fieldDesk/mobileArchetypes/UaHome'
-import SingularityHome from './fieldDesk/mobileArchetypes/SingularityHome'
-import EverymenHome from './fieldDesk/mobileArchetypes/EverymenHome'
-import EphemeristsHome from './fieldDesk/mobileArchetypes/EphemeristsHome'
-import AlbescentHome from './fieldDesk/mobileArchetypes/AlbescentHome'
-import SnideHome from './fieldDesk/mobileArchetypes/SnideHome'
 
 /**
  * FieldDesk roster — the authenticated account home (#274). "Whose shoes today?":
@@ -30,21 +24,6 @@ import SnideHome from './fieldDesk/mobileArchetypes/SnideHome'
  * the TaskDetail mobile seam. A brand-new account with no active life still
  * falls through to the roster below so it can create one.
  */
-
-type MobileHomeSkin = (props: { state: FieldDeskHomeState }) => JSX.Element
-
-// Only factions with a bespoke mobile home are listed; everything else (incl.
-// na) falls through to DefaultFieldDesk. Grows one row per faction skin (#500 +
-// per-faction follow-ups), exactly like MOBILE_ARCHETYPE_BY_SLUG in TaskDetail.
-export const MOBILE_ARCHETYPE_BY_SLUG: Record<string, MobileHomeSkin> = {
-  wow: WowFieldDesk,
-  ua: UaHome,
-  singularity: SingularityHome,
-  everymen: EverymenHome,
-  ephemerists: EphemeristsHome,
-  albescent: AlbescentHome,
-  snide: SnideHome,
-}
 
 // Deterministic slight tilt per card — index-keyed so it's stable across renders.
 const TILTS = [-2.5, 1.8, -1.2, 2.4, -2.0, 1.4]
@@ -89,7 +68,7 @@ export default function FieldDesk() {
 
   // Phone + a carried life → the mobile-native home skin for that faction.
   if (formFactor === 'mobile' && homeState) {
-    const Skin = pickVariant(MOBILE_ARCHETYPE_BY_SLUG, homeState.character.faction_slug, DefaultFieldDesk)
+    const Skin = pickVariant(surfaceMap('mobileFieldDesk'), homeState.character.faction_slug, DefaultFieldDesk)
     return <Skin state={homeState} />
   }
 

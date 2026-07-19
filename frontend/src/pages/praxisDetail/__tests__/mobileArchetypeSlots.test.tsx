@@ -1,6 +1,6 @@
 /**
  * Mobile praxis-read content-slot invariant — the mobile twin of
- * archetypeSlots.test. Walks MOBILE_ARCHETYPE_BY_SLUG (the WOW pilot) plus the
+ * archetypeSlots.test. Walks surfaceMap('mobilePraxisDetail') (the WOW pilot) plus the
  * Default mobile skin and asserts each still emits the invariant CONTENT slots:
  * the finding title, the account body, the re-task link, and the author byline.
  * The shared Task Crown banner is checked separately. Rendered to static markup
@@ -8,11 +8,11 @@
  * shows its login gate rather than throwing.
  */
 import { renderToStaticMarkup } from 'react-dom/server'
+import { surfaceMap } from '../../../factions'
 import { MemoryRouter } from 'react-router-dom'
 import type { ReactElement } from 'react'
 import { describe, it, expect } from 'vitest'
 import '../../../i18n'
-import { MOBILE_ARCHETYPE_BY_SLUG } from '../../PraxisDetail'
 import DefaultMobilePraxisDetail from '../mobileArchetypes/DefaultPraxisDetail'
 import type { PraxisDetailState } from '../usePraxisDetail'
 import type { PraxisOut } from '../../../api/praxis'
@@ -102,7 +102,7 @@ function state(): PraxisDetailState {
   }
 }
 
-const archetypes = { ...MOBILE_ARCHETYPE_BY_SLUG, __default__: DefaultMobilePraxisDetail }
+const archetypes = { ...surfaceMap('mobilePraxisDetail'), __default__: DefaultMobilePraxisDetail }
 
 describe('mobile praxis-read content-slot invariant', () => {
   for (const [slug, Archetype] of Object.entries(archetypes)) {

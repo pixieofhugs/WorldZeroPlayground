@@ -5,21 +5,21 @@
  * single-column Default mobile faction page.
  */
 import { describe, it, expect } from 'vitest'
-import { MOBILE_ARCHETYPE_BY_SLUG } from '../../FactionDetail'
 import { pickVariant } from '../../../utils/factionDispatch'
+import { surfaceMap } from '../../../factions'
 import DefaultFactionPage from '../mobileArchetypes/DefaultFactionPage'
 import EphemeristsFactionPage from '../mobileArchetypes/EphemeristsFactionPage'
 
 describe('mobile faction-page Ephemerists dispatch', () => {
   it('mobile + the Ephemerists slug resolves to the bespoke codex faction page', () => {
-    expect(pickVariant(MOBILE_ARCHETYPE_BY_SLUG, 'ephemerists', DefaultFactionPage)).toBe(
+    expect(pickVariant(surfaceMap('mobileFactionPage'), 'ephemerists', DefaultFactionPage)).toBe(
       EphemeristsFactionPage,
     )
   })
 
   it('mobile + any other slug falls through to the Default faction page', () => {
     for (const slug of ['__unregistered__', 'na', null]) {
-      expect(pickVariant(MOBILE_ARCHETYPE_BY_SLUG, slug, DefaultFactionPage)).toBe(DefaultFactionPage)
+      expect(pickVariant(surfaceMap('mobileFactionPage'), slug, DefaultFactionPage)).toBe(DefaultFactionPage)
     }
   })
 })

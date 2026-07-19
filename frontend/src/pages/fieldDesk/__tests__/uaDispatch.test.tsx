@@ -5,19 +5,19 @@
  * Mirrors the taskDetail mobileArchetypeDispatch pattern.
  */
 import { describe, it, expect } from 'vitest'
-import { MOBILE_ARCHETYPE_BY_SLUG } from '../../FieldDesk'
 import { pickVariant } from '../../../utils/factionDispatch'
+import { surfaceMap } from '../../../factions'
 import DefaultFieldDesk from '../mobileArchetypes/DefaultFieldDesk'
 import UaHome from '../mobileArchetypes/UaHome'
 
 describe('mobile FieldDesk-home UA dispatch', () => {
   it('mobile + a UA life resolves to the bespoke UA home skin', () => {
-    expect(pickVariant(MOBILE_ARCHETYPE_BY_SLUG, 'ua', DefaultFieldDesk)).toBe(UaHome)
+    expect(pickVariant(surfaceMap('mobileFieldDesk'), 'ua', DefaultFieldDesk)).toBe(UaHome)
   })
 
   it('mobile + any other slug falls through to the Default home skin', () => {
     for (const slug of ['__unregistered__', 'na', null]) {
-      expect(pickVariant(MOBILE_ARCHETYPE_BY_SLUG, slug, DefaultFieldDesk)).toBe(DefaultFieldDesk)
+      expect(pickVariant(surfaceMap('mobileFieldDesk'), slug, DefaultFieldDesk)).toBe(DefaultFieldDesk)
     }
   })
 })

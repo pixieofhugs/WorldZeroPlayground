@@ -4,6 +4,9 @@
  * Override-only: any surface absent here renders that surface's `Default*`
  * archetype via `pickVariant`. Adding a surface is one line; no dispatcher is
  * touched. Removing one hands the surface back to the default.
+ *
+ * Entries are thunks (`() => Component`) so they are read at render time, never
+ * during module evaluation — see the cycle note in `./manifest.ts`.
  */
 import type { FactionManifest } from './manifest'
 
@@ -32,25 +35,25 @@ import { AlbescentSigilAdapter } from '../components/cards/FactionSigil'
 export const ALBESCENT_MANIFEST: FactionManifest = {
   slug: 'albescent',
 
-  taskCard: AlbescentTaskCard,
-  praxisCard: AlbescentPraxisCard,
-  avatar: AlbescentAvatar,
-  backdrop: AlbescentBackdrop,
-  sigil: AlbescentSigilAdapter,
-  comment: AlbescentComment,
-  feedFrame: AlbescentFeedFrame,
-  vote: AlbescentVote,
-  taskDetail: AlbescentTaskDetail,
-  praxisDetail: AlbescentPraxisDetail,
-  editPraxis: AlbescentEditPraxis,
-  factionHero: AlbescentFactionHero,
-  factionBody: AlbescentFactionBody,
-  profileBody: AlbescentProfileBody,
-  mobileTaskCard: AlbescentMobileTaskCard,
-  mobilePraxisCard: AlbescentMobilePraxisCard,
-  mobileTaskDetail: AlbescentMobileTaskDetail,
-  mobilePraxisDetail: AlbescentMobilePraxisDetail,
-  mobileEditPraxis: AlbescentMobileEditPraxis,
-  mobileFactionPage: AlbescentFactionPage,
-  mobileFieldDesk: AlbescentHome,
+  taskCard: () => AlbescentTaskCard,
+  praxisCard: () => AlbescentPraxisCard,
+  avatar: () => AlbescentAvatar,
+  backdrop: () => AlbescentBackdrop,
+  sigil: () => AlbescentSigilAdapter,
+  comment: () => AlbescentComment,
+  feedFrame: () => AlbescentFeedFrame,
+  vote: () => AlbescentVote,
+  taskDetail: () => AlbescentTaskDetail,
+  praxisDetail: () => AlbescentPraxisDetail,
+  editPraxis: () => AlbescentEditPraxis,
+  factionHero: () => AlbescentFactionHero,
+  factionBody: () => AlbescentFactionBody,
+  profileBody: () => AlbescentProfileBody,
+  mobileTaskCard: () => AlbescentMobileTaskCard,
+  mobilePraxisCard: () => AlbescentMobilePraxisCard,
+  mobileTaskDetail: () => AlbescentMobileTaskDetail,
+  mobilePraxisDetail: () => AlbescentMobilePraxisDetail,
+  mobileEditPraxis: () => AlbescentMobileEditPraxis,
+  mobileFactionPage: () => AlbescentFactionPage,
+  mobileFieldDesk: () => AlbescentHome,
 }

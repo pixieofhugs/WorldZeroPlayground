@@ -4,21 +4,21 @@
  * faction falls through to the Default mobile composer.
  */
 import { describe, it, expect } from 'vitest'
-import { MOBILE_ARCHETYPE_BY_SLUG } from '../../../EditPraxis'
 import { pickVariant } from '../../../../utils/factionDispatch'
+import { surfaceMap } from '../../../../factions'
 import DefaultMobileEditPraxis from '../DefaultEditPraxis'
 import EverymenMobileEditPraxis from '../EverymenComposer'
 
 describe('mobile composer Everymen dispatch', () => {
   it('mobile + an Everymen task resolves to the bespoke Everymen composer', () => {
-    expect(pickVariant(MOBILE_ARCHETYPE_BY_SLUG, 'everymen', DefaultMobileEditPraxis)).toBe(
+    expect(pickVariant(surfaceMap('mobileEditPraxis'), 'everymen', DefaultMobileEditPraxis)).toBe(
       EverymenMobileEditPraxis,
     )
   })
 
   it('mobile + any other slug falls through to the Default composer', () => {
     for (const slug of ['__unregistered__', 'na', null]) {
-      expect(pickVariant(MOBILE_ARCHETYPE_BY_SLUG, slug, DefaultMobileEditPraxis)).not.toBe(
+      expect(pickVariant(surfaceMap('mobileEditPraxis'), slug, DefaultMobileEditPraxis)).not.toBe(
         EverymenMobileEditPraxis,
       )
     }

@@ -7,6 +7,7 @@ import ImageEditModal from '../components/imageEdit/ImageEditModal'
 import { AVATAR_ASPECT } from '../components/imageEdit/imageEditHelpers'
 import { useFormFactor } from '../hooks/useFormFactor'
 import { pickVariant } from '../utils/factionDispatch'
+import { surfaceMap } from '../factions'
 import { useEditCharacter, type EditCharacterState } from './characterPaths/useEditCharacter'
 import DefaultEditCharacter from './characterPaths/mobileArchetypes/DefaultEditCharacter'
 
@@ -25,12 +26,6 @@ import DefaultEditCharacter from './characterPaths/mobileArchetypes/DefaultEditC
  * Default skin. Desktop unchanged.
  */
 const DISPLAY = 'var(--faction-default-card-font)'
-
-type MobileSkin = (props: { state: EditCharacterState }) => JSX.Element
-
-// Only factions with a bespoke mobile edit screen register here; na and the
-// rest fall through to DefaultEditCharacter (mirrors Tasks/FieldDesk).
-export const MOBILE_ARCHETYPE_BY_SLUG: Record<string, MobileSkin> = {}
 
 const inputStyle: CSSProperties = {
   width: '100%',
@@ -86,7 +81,7 @@ export default function EditCharacter() {
   const formFactor = useFormFactor()
 
   if (formFactor === 'mobile') {
-    const Mobile = pickVariant(MOBILE_ARCHETYPE_BY_SLUG, null, DefaultEditCharacter)
+    const Mobile = pickVariant(surfaceMap('mobileEditCharacter'), null, DefaultEditCharacter)
     return <Mobile state={state} />
   }
 

@@ -57,7 +57,7 @@ export const FACTION_MANIFESTS: readonly FactionManifest[] = [
 /** A slug-keyed map of one surface, in the shape `pickVariant` consumes. */
 export type SurfaceMap<K extends FactionSurface> = Record<
   string,
-  NonNullable<FactionManifest[K]>
+  ReturnType<NonNullable<FactionManifest[K]>>
 >
 
 /**
@@ -72,7 +72,9 @@ export function buildSurfaceMap<K extends FactionSurface>(
   const map: SurfaceMap<K> = {}
   for (const manifest of manifests) {
     const variant = manifest[surface]
-    if (variant) map[manifest.slug] = variant as NonNullable<FactionManifest[K]>
+    // Calling the thunk HERE — at render time, not module-evaluation time — is
+    // what keeps the dispatcher/archetype cycle harmless. See ./manifest.ts.
+    if (variant) map[manifest.slug] = (variant as () => SurfaceMap<K>[string])()
   }
   return map
 }

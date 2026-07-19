@@ -4,6 +4,9 @@
  * Override-only: any surface absent here renders that surface's `Default*`
  * archetype via `pickVariant`. Adding a surface is one line; no dispatcher is
  * touched. Removing one hands the surface back to the default.
+ *
+ * Entries are thunks (`() => Component`) so they are read at render time, never
+ * during module evaluation — see the cycle note in `./manifest.ts`.
  */
 import type { FactionManifest } from './manifest'
 
@@ -32,25 +35,25 @@ import { SnideSigil } from '../components/cards/SnideSigil'
 export const SNIDE_MANIFEST: FactionManifest = {
   slug: 'snide',
 
-  taskCard: SnideTaskCard,
-  praxisCard: SnidePraxisCard,
-  avatar: SnideAvatar,
-  backdrop: SnideBackdrop,
-  sigil: SnideSigil,
-  comment: SnideComment,
-  feedFrame: SnideFeedFrame,
-  vote: SnideVote,
-  taskDetail: SnideTaskDetail,
-  praxisDetail: SnidePraxisDetail,
-  editPraxis: SnideEditPraxis,
-  factionHero: SnideFactionHero,
-  factionBody: SnideFactionBody,
-  profileBody: SnideProfileBody,
-  mobileTaskCard: SnideMobileTaskCard,
-  mobilePraxisCard: SnideMobilePraxisCard,
-  mobileTaskDetail: SnideMobileTaskDetail,
-  mobilePraxisDetail: SnideMobilePraxisDetail,
-  mobileEditPraxis: SnideMobileEditPraxis,
-  mobileFactionPage: SnideFactionPage,
-  mobileFieldDesk: SnideHome,
+  taskCard: () => SnideTaskCard,
+  praxisCard: () => SnidePraxisCard,
+  avatar: () => SnideAvatar,
+  backdrop: () => SnideBackdrop,
+  sigil: () => SnideSigil,
+  comment: () => SnideComment,
+  feedFrame: () => SnideFeedFrame,
+  vote: () => SnideVote,
+  taskDetail: () => SnideTaskDetail,
+  praxisDetail: () => SnidePraxisDetail,
+  editPraxis: () => SnideEditPraxis,
+  factionHero: () => SnideFactionHero,
+  factionBody: () => SnideFactionBody,
+  profileBody: () => SnideProfileBody,
+  mobileTaskCard: () => SnideMobileTaskCard,
+  mobilePraxisCard: () => SnideMobilePraxisCard,
+  mobileTaskDetail: () => SnideMobileTaskDetail,
+  mobilePraxisDetail: () => SnideMobilePraxisDetail,
+  mobileEditPraxis: () => SnideMobileEditPraxis,
+  mobileFactionPage: () => SnideFactionPage,
+  mobileFieldDesk: () => SnideHome,
 }

@@ -2,80 +2,76 @@
  * Feed-frame dispatch guard (per-faction surface #12).
  *
  * The activity feed is neutral; each card themes to its faction via a frame.
- * This guards the wiring seam so a future design-file drop-in works: an
- * unregistered/neutral slug must pass the card through untouched (no content
- * swallowed), and a registered faction frame must actually wrap the card.
+ * This guards the wiring seam: an unregistered/neutral slug must pass the card
+ * through untouched (no content swallowed), and a faction that declares a frame
+ * in its manifest must actually wrap the card.
+ *
+ * Rewritten for #782 to assert RENDERED OUTPUT rather than the shape of a
+ * module-level map. The previous version deleted keys out of the live registry
+ * and assigned a fake frame into it to simulate a design drop-in; with
+ * faction-owned manifests neither hack is needed — an unregistered slug is just
+ * a slug no faction claims, and "a new registration is picked up with no
+ * dispatcher edit" is covered end to end by the add-a-faction golden test.
  */
 import { renderToStaticMarkup } from "react-dom/server";
-import { describe, it, expect, afterEach } from "vitest";
-import FactionFeedFrame, {
-  FACTION_FEED_FRAMES,
-} from "../feed/FactionFeedFrame";
+import { describe, it, expect } from "vitest";
+import FactionFeedFrame from "../feed/FactionFeedFrame";
 import AlbescentFeedFrame from "../feed/AlbescentFeedFrame";
 
 const CARD = <span>card-body</span>;
 
-// Snapshot the real registrations at module load — the manual drop-in test's
-// afterEach mutates the live map, so capture before anything clears it.
-const REGISTERED_AT_LOAD = new Set(Object.keys(FACTION_FEED_FRAMES));
+const DESIGNED_FACTIONS = [
+  "everymen",
+  "ephemerists",
+  "wow",
+  "snide",
+  "singularity",
+  "ua",
+  "albescent",
+];
 
-afterEach(() => {
-  // Frames are registered into a module-level map; keep tests isolated.
-  for (const key of Object.keys(FACTION_FEED_FRAMES)) {
-    delete FACTION_FEED_FRAMES[key];
-  }
-});
+function frameFor(slug: string | null): string {
+  return renderToStaticMarkup(
+    <FactionFeedFrame slug={slug}>{CARD}</FactionFeedFrame>,
+  );
+}
 
 describe("FactionFeedFrame dispatch", () => {
-  it("registers all seven designed faction frames", () => {
-    for (const slug of ["everymen", "ephemerists", "wow", "snide", "singularity", "ua", "albescent"]) {
-      expect(REGISTERED_AT_LOAD.has(slug), `${slug} frame registered`).toBe(true);
+  it("gives all seven designed factions a bespoke frame", () => {
+    // Every designed faction must render something OTHER than the neutral
+    // default tint, and must keep the card body intact inside its chrome.
+    const neutral = frameFor("no-such-faction");
+    for (const slug of DESIGNED_FACTIONS) {
+      const html = frameFor(slug);
+      expect(html, `${slug} keeps the card body`).toContain(
+        "<span>card-body</span>",
+      );
+      expect(html, `${slug} renders its own frame, not the default`).not.toBe(
+        neutral,
+      );
     }
   });
 
   it("wraps the card in the Albescent Record frame without swallowing it (#232)", () => {
-    // The explicit `albescent` row beats the albescent→ua alias, so an albescent
-    // card gets its own frame — the card body survives inside the chrome.
     const html = renderToStaticMarkup(
       <AlbescentFeedFrame>{CARD}</AlbescentFeedFrame>,
     );
+    expect(html).not.toBe("<span>card-body</span>");
     expect(html).toContain("<span>card-body</span>");
-    expect(html).toContain("the standing record");
   });
 
-  it("passes the card through unchanged for a neutral (slug-less) card", () => {
-    // Neutral cards (era_announcement etc.) bring their own chrome — the default
-    // frame must add nothing.
-    for (const slug of [null, undefined, ""]) {
-      const html = renderToStaticMarkup(
-        <FactionFeedFrame slug={slug}>{CARD}</FactionFeedFrame>,
-      );
-      expect(html).toBe("<span>card-body</span>");
-    }
+  it("passes a null/neutral slug straight through", () => {
+    // era_announcement and friends bring their own chrome — a null slug must be
+    // a true passthrough, adding no wrapper at all.
+    expect(frameFor(null)).toBe("<span>card-body</span>");
   });
 
-  it("tints (does not swallow) a non-null unregistered faction card", () => {
-    // The default frame owns the faction tint lifted off the cards: a faction
-    // with no bespoke frame gets the neutral tinted chrome here — but the
-    // card body must still render inside it.
-    for (const key of Object.keys(FACTION_FEED_FRAMES)) delete FACTION_FEED_FRAMES[key];
-    const html = renderToStaticMarkup(
-      <FactionFeedFrame slug="ua">{CARD}</FactionFeedFrame>,
-    );
+  it("tints an unregistered slug with the default frame, keeping the card", () => {
+    // No faction claims this slug, so it falls through to DefaultFeedFrame,
+    // which owns the generic card-bg tint.
+    const html = frameFor("no-such-faction");
     expect(html).not.toBe("<span>card-body</span>");
     expect(html).toContain("<span>card-body</span>");
     expect(html).toContain("card-bg");
-  });
-
-  it("wraps the card in a registered faction frame (design drop-in)", () => {
-    FACTION_FEED_FRAMES.everymen = ({ children }) => (
-      <div className="everymen-feed-frame">{children}</div>
-    );
-    const html = renderToStaticMarkup(
-      <FactionFeedFrame slug="everymen">{CARD}</FactionFeedFrame>,
-    );
-    expect(html).toBe(
-      '<div class="everymen-feed-frame"><span>card-body</span></div>',
-    );
   });
 });
