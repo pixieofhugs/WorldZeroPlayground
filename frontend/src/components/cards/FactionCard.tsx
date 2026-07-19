@@ -1,7 +1,8 @@
 import type { FactionOut } from "../../api/factions";
 import i18n from "../../i18n";
 import { factionCssVar, factionName, factionDescription } from "../../utils/factions";
-import EverymenCard from "./EverymenFactionCard";
+import { pickVariant } from "../../utils/factionDispatch";
+import { surfaceMap } from "../../factions";
 import SnideMasthead from "./SnideMasthead";
 import { EphSeal, LapisLastWord } from "./ephemeristsAtoms";
 import { WowSigil } from "./WowSigil";
@@ -112,7 +113,7 @@ function InvitationNote({ slug, note }: { slug: string; note: string }) {
 
 const ROTATIONS = [-2, 1.5, -1, 2.5];
 
-function UaCard({
+export function UaCard({
   faction,
   status,
   invitationNote,
@@ -205,7 +206,7 @@ function WowIvySticker({
   );
 }
 
-function WowCard({
+export function WowCard({
   faction,
   status,
   invitationNote,
@@ -396,7 +397,7 @@ function WowCard({
 const SNIDE_TORN_CLIP =
   "polygon(0% 0%, 4% 100%, 8% 20%, 12% 90%, 16% 10%, 20% 80%, 24% 0%, 28% 100%, 32% 15%, 36% 85%, 40% 5%, 44% 95%, 48% 20%, 52% 80%, 56% 0%, 60% 100%, 64% 15%, 68% 90%, 72% 5%, 76% 85%, 80% 0%, 84% 100%, 88% 20%, 92% 80%, 96% 10%, 100% 0%)";
 
-function SnideCard({
+export function SnideCard({
   faction,
   status,
   invitationNote,
@@ -499,7 +500,7 @@ function SnideCard({
  * masthead with the sigil seal, gold rules, the name with one word in the blue,
  * and a vellum body. Colors via the --eph-* tokens (theme-aware).
  */
-function EphemeristsCard({
+export function EphemeristsCard({
   faction,
   status,
   invitationNote,
@@ -619,7 +620,7 @@ function SingularityHoles() {
   );
 }
 
-function SingularityCard({
+export function SingularityCard({
   faction,
   status,
   invitationNote,
@@ -758,24 +759,16 @@ function SingularityCard({
 }
 
 
-// ─── Switcher ─────────────────────────────────────────────────────────────────
+// ─── Default archetype ───────────────────────────────────────────────────────
 
-export default function FactionCard(props: FactionCardProps) {
-  switch (props.faction.slug) {
-    case "ua":
-      return <UaCard {...props} />;
-    case "wow":
-      return <WowCard {...props} />;
-    case "snide":
-      return <SnideCard {...props} />;
-    case "ephemerists":
-      return <EphemeristsCard {...props} />;
-    case "singularity":
-      return <SingularityCard {...props} />;
-    case "everymen":
-      return <EverymenCard {...props} />;
-    default:
-      // Fallback: generic styled card using faction CSS vars
+/**
+ * Generic card built from the faction CSS vars. Every faction without a bespoke
+ * `factionCard` in its manifest lands here — including albescent, which has
+ * never had one. (Converting the old raw switch did NOT change that: the switch
+ * had no `albescent` case because there is no `AlbescentCard` to name, so
+ * albescent fell to this same default branch before and after.)
+ */
+export function DefaultFactionCard(props: FactionCardProps) {
       return (
         <div
           style={{
@@ -818,5 +811,15 @@ export default function FactionCard(props: FactionCardProps) {
           </div>
         </div>
       );
-  }
+}
+
+// ─── Dispatcher ──────────────────────────────────────────────────────────────
+
+export default function FactionCard(props: FactionCardProps) {
+  const Card = pickVariant(
+    surfaceMap("factionCard"),
+    props.faction.slug,
+    DefaultFactionCard,
+  );
+  return <Card {...props} />;
 }

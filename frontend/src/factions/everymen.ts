@@ -31,10 +31,12 @@ import EverymenTaskDetail from '../pages/taskDetail/archetypes/EverymenTaskDetai
 import EverymenVote from '../components/vote/EverymenVote'
 import { EverymenPraxisCard } from '../components/PraxisCard'
 import { EverymenSigil } from '../components/cards/EverymenSigil'
+import EverymenCard from '../components/cards/EverymenFactionCard'
 
 export const EVERYMEN_MANIFEST: FactionManifest = {
   slug: 'everymen',
 
+  factionCard: () => EverymenCard,
   taskCard: () => EverymenTaskCard,
   praxisCard: () => EverymenPraxisCard,
   avatar: () => EverymenAvatar,

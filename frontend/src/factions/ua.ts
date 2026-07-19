@@ -31,10 +31,12 @@ import UaTaskDetail from '../pages/taskDetail/archetypes/UaTaskDetail'
 import UaVote from '../components/vote/UaVote'
 import { UaPraxisCard } from '../components/PraxisCard'
 import { UaSigilAdapter } from '../components/cards/FactionSigil'
+import { UaCard } from '../components/cards/FactionCard'
 
 export const UA_MANIFEST: FactionManifest = {
   slug: 'ua',
 
+  factionCard: () => UaCard,
   taskCard: () => UaTaskCard,
   praxisCard: () => UaPraxisCard,
   avatar: () => UaAvatar,

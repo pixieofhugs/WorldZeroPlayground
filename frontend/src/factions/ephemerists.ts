@@ -31,10 +31,12 @@ import EphemeristsTaskDetail from '../pages/taskDetail/archetypes/EphemeristsTas
 import EphemeristsVote from '../components/vote/EphemeristsVote'
 import { EphemeristsPraxisCard } from '../components/PraxisCard'
 import { EphemeristsSigil } from '../components/cards/ephemeristsAtoms'
+import { EphemeristsCard } from '../components/cards/FactionCard'
 
 export const EPHEMERISTS_MANIFEST: FactionManifest = {
   slug: 'ephemerists',
 
+  factionCard: () => EphemeristsCard,
   taskCard: () => EphemeristsTaskCard,
   praxisCard: () => EphemeristsPraxisCard,
   avatar: () => EphemeristsAvatar,
