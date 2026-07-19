@@ -4,13 +4,13 @@
  * Styled in the Albescent "Register" idiom (ADR-0017 / #231): always-light
  * vellum, near-black ink, Cormorant Garamond italic, quiet mono label, faint
  * fleur-de-lis glyph. Albescent surfaces never dim in dark mode — the
- * `--faction-albescent-*` tokens carry identical values in both themes.
+ * `--albescent-reveal-*` tokens carry identical values in both themes.
  */
 import { useTranslation } from 'react-i18next'
 
-const BG = 'var(--faction-albescent-card-bg)'
-const INK = 'var(--faction-albescent-card-text)'
-const FONT = 'var(--faction-albescent-card-font)'
+const BG = 'var(--albescent-reveal-surface)'
+const INK = 'var(--albescent-reveal-text)'
+const FONT = 'var(--font-faction-vellum)'
 const MONO = 'var(--font-body)'
 
 /** A translucent wash of Albescent ink at the given opacity percentage. */

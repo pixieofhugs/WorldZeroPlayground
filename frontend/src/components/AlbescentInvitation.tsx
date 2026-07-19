@@ -34,11 +34,11 @@ export function eligibleLives(lives: CharacterOut[]): CharacterOut[] {
 
 // Albescent vellum tokens (index.css). Albescent is always-light by design —
 // these vars are identical in both themes, so the letter never flips dark.
-const BG = 'var(--faction-albescent-card-bg)'
-const INK = 'var(--faction-albescent-card-text)'
-const ACCENT = 'var(--faction-albescent-card-accent)'
-const MUTED = 'var(--faction-albescent-card-muted)'
-const SERIF = 'var(--faction-albescent-card-font)'
+const BG = 'var(--albescent-reveal-surface)'
+const INK = 'var(--albescent-reveal-text)'
+const ACCENT = 'var(--albescent-reveal-ink)'
+const MUTED = 'var(--albescent-reveal-text-muted)'
+const SERIF = 'var(--font-faction-vellum)'
 const MONO = "'Courier Prime', monospace"
 // Structural hairlines — no token exists; mirrors AlbescentComment's practice.
 const HAIRLINE = 'rgba(0,0,0,0.10)'

@@ -116,8 +116,27 @@ const ARCHETYPE_PAIRS: Pair[] = [
   { what: "ua sheet, mono labels", surface: "--ua-paper", text: "--ua-muted" },
   { what: "ua wall, ink", surface: "--ua-wall", text: "--ua-ink" },
 
-  // Albescent has no rows here on purpose (#783): it has no tokens left to
-  // measure. It renders Default's surfaces, which `default` already covers.
+  // Albescent's FACTION tokens are gone (#783) — it renders Default's surfaces,
+  // which `default` already covers. What remains is the always-light palette
+  // private to the reveal surfaces (invitation letter, secret placeholder). It
+  // still carries body text, and it is where #594's 2.78:1 muted ink shipped, so
+  // it stays measured. The whole palette is one hue at varying alpha over the
+  // sheet, which makes compositing the entire question.
+  {
+    what: "albescent reveal sheet, ink",
+    surface: "--albescent-reveal-surface",
+    text: "--albescent-reveal-ink",
+  },
+  {
+    what: "albescent reveal sheet, muted",
+    surface: "--albescent-reveal-surface",
+    text: "--albescent-reveal-text-muted",
+  },
+  {
+    what: "albescent reveal sheet, text",
+    surface: "--albescent-reveal-surface",
+    text: "--albescent-reveal-text",
+  },
 ];
 
 const PAIRS: Pair[] = [...CARD_PAIRS, ...FILL_PAIRS, ...ARCHETYPE_PAIRS];

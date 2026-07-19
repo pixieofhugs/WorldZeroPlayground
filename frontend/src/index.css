@@ -1306,14 +1306,31 @@
   --snide-paper: #f4f1e8;
   --snide-pink: #ff2d8b;
   --snide-tape: rgba(228, 214, 120, 0.62);
-  /* ALBESCENT · vellum correspondence (always-light) */
-  --al-surface: #ffffff;
-  --al-text: #1c1c1a;
-  --al-text-muted: rgba(28, 28, 26, 0.44);
-  --al-ink: rgba(28, 28, 26, 0.72);
-  --al-border: rgba(0, 0, 0, 0.1);
-  --al-border-faint: rgba(0, 0, 0, 0.055);
-  --al-shadow: 0 2px 18px rgba(0, 0, 0, 0.055), 0 1px 3px rgba(0, 0, 0, 0.04);
+  /* ALBESCENT · vellum correspondence — THE REVEAL SURFACES ONLY (#783).
+     Always-light, the same mechanism Singularity uses to stay always-dark.
+
+     This is NOT a faction theme and must never become one. Albescent has no
+     --faction-albescent-* block: it renders as unaffiliated everywhere, because
+     it is a secret society hiding in plain sight, and factionCssVar('albescent')
+     deliberately resolves to --faction-default-*. These tokens are reached only
+     by direct reference, from the two or three components that ARE the reveal
+     (the invitation letter, the secret placeholder, and the sigil they draw) —
+     the one moment the society shows its face. Renamed from --al-* so nobody
+     mistakes it for the theme that was removed.
+
+     Do not point an ordinary Albescent surface at these. If a card, a feed row,
+     or a profile reads --albescent-reveal-*, the society is no longer hidden. */
+  --albescent-reveal-surface: #ffffff;
+  --albescent-reveal-text: #1c1c1a; /* near-black ink, no hue */
+  /* Muted ink over the #ffffff sheet, at the AA-cleared alpha #594 landed on:
+     #1c1c1a at 0.61α composites to ~#757573 for 4.64:1. It was 0.44 here (a
+     stale copy of the pre-#594 value, 2.78:1 — failing) while the faction block
+     carried 0.61. Consolidating the two kept the fixed one. */
+  --albescent-reveal-text-muted: rgba(28, 28, 26, 0.61);
+  --albescent-reveal-ink: rgba(28, 28, 26, 0.72);
+  --albescent-reveal-border: rgba(0, 0, 0, 0.1);
+  --albescent-reveal-border-faint: rgba(0, 0, 0, 0.055);
+  --albescent-reveal-shadow: 0 2px 18px rgba(0, 0, 0, 0.055), 0 1px 3px rgba(0, 0, 0, 0.04);
 }
 [data-theme="dark"] {
   /* GESTALT flips in dark; snide + albescent stay put */
