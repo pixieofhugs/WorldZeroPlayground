@@ -31,6 +31,17 @@
  *
  * Copy is faction-neutral by decision (#718) — plain typed `t()` keys, not a
  * `collabCopy`-style dynamic resolver. Per-faction identity lives in the skins.
+ *
+ * TYPE SIZE (#769). Every slot here sets its OWN size, via a `.content-*` role
+ * class, and no rail skin may set `fontSize` on its wrapper. That inversion is
+ * the fix for #769: the rail wrappers each carried `fontSize: var(--text-sm)`
+ * (9px, Label tier), and because these slots inherited it, the roster, the
+ * next-step line and the stakes copy — all functional text a player reads — sat
+ * at half the 18px content floor. `DuelSlotTheme` deliberately carries no size
+ * field: a skin owns font, colour and ornament, never type size
+ * (WORLD_ZERO_STYLE §4a). Genuine Label-tier bits keep their own token
+ * explicitly — the tile captions stay on `.eyebrow`, the seal buttons on
+ * `--text-sm` as button chrome.
  */
 import type { CSSProperties, ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -162,7 +173,11 @@ function Tile({
       <span className="eyebrow" style={{ color: theme.muted ?? DEFAULT_THEME.muted }}>
         {label}
       </span>
-      <span style={{ fontSize: 'var(--text-xl)', fontWeight: 700, color }}>{value}</span>
+      {/* The figure is a score — "numbers a player cares about" are content tier
+          (WORLD_ZERO_STYLE §4), and this figure is the whole point of the tile. */}
+      <span className="content-title" style={{ fontWeight: 700, color }}>
+        {value}
+      </span>
     </div>
   )
 }
@@ -201,8 +216,8 @@ export function StakesTiles({
   if (status === 'pending') {
     return (
       <p
-        className="mt-2"
-        style={{ fontFamily: font, fontSize: 'var(--text-sm)', color: muted }}
+        className="mt-2 content-text"
+        style={{ fontFamily: font, color: muted }}
       >
         {t('duelStakes.soloFallback', {
           name: opponentName,
@@ -229,8 +244,8 @@ export function StakesTiles({
         />
       </div>
       <p
-        className="mt-2"
-        style={{ fontFamily: font, fontSize: 'var(--text-xs)', color: muted }}
+        className="mt-2 content-text"
+        style={{ fontFamily: font, color: muted }}
       >
         {t('duelStakes.tieLine', { points: formatPoints(stakes.tie) })}{' '}
         {t('duelStakes.beforeVotes')}
@@ -255,10 +270,9 @@ function RosterRow({
   const { t } = useTranslation('praxis')
   return (
     <li
-      className="flex items-center justify-between gap-2"
+      className="flex items-center justify-between gap-2 content-text"
       style={{
         fontFamily: theme.bodyFont ?? DEFAULT_THEME.bodyFont,
-        fontSize: 'var(--text-sm)',
       }}
     >
       <span style={{ fontWeight: 700 }}>{name}</span>
@@ -319,14 +333,13 @@ export function NextStepLine({
   const { t } = useTranslation('praxis')
   const style: CSSProperties = {
     fontFamily: theme.bodyFont ?? DEFAULT_THEME.bodyFont,
-    fontSize: 'var(--text-sm)',
     color: theme.muted ?? DEFAULT_THEME.muted,
   }
 
   if (duel.forfeited_by_character_id != null) {
     const iForfeited = duel.forfeited_by_character_id === me.character_id
     return (
-      <p style={style} className="mt-2">
+      <p style={style} className="mt-2 content-text">
         {iForfeited
           ? t('duelNextStep.youForfeited')
           : t('duelNextStep.wonByDefault', { name: foe.display_name })}
@@ -355,7 +368,7 @@ export function NextStepLine({
   }
 
   return (
-    <p style={style} className="mt-2">
+    <p style={style} className="mt-2 content-text">
       {line}
     </p>
   )
