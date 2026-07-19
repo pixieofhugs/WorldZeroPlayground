@@ -136,6 +136,37 @@ describe('duel rail skins render every slot', () => {
     expect(html).toContain('SLOT_BODY')
   })
 
+  /**
+   * #769: every rail skin set `fontSize: var(--text-sm)` (9px) on its wrapper,
+   * so the roster, next-step line and stakes copy inherited half the 18px
+   * content floor — functional text, at Label size, with no line of that text
+   * naming a size anywhere. The slots now own their size and a frame owns none.
+   *
+   * The assertion is on the frame, not on the slots: the sentinels passed in
+   * carry no styling, so ANY Label-tier font-size in the output came from the
+   * skin's own chrome. A skin needing a small size for genuine ornament should
+   * put it on that ornament's element with a raw value and an ornament comment
+   * (WORLD_ZERO_STYLE §4a) — not on a container the slots sit inside.
+   */
+  const LABEL_TIER = ['--text-xs', '--text-sm', '--text-base', '--text-md', '--text-lg']
+
+  it.each(skins)('%s does not impose a Label-tier size on its slots', (_name, Skin) => {
+    const html = renderToStaticMarkup(
+      <Skin
+        accent="var(--faction-snide)"
+        soft="var(--faction-snide-light)"
+        maxWidth="42rem"
+        headline={<span>SLOT_HEADLINE</span>}
+        tally={<span>SLOT_TALLY</span>}
+        note={<span>SLOT_NOTE</span>}
+        body={<span>SLOT_BODY</span>}
+      />,
+    )
+    const sizes = html.match(/font-size:\s*var\((--text-[a-z]+)\)/g) ?? []
+    const offenders = sizes.filter((decl) => LABEL_TIER.some((token) => decl.includes(token)))
+    expect(offenders).toEqual([])
+  })
+
   // declined / forfeited legitimately arrive with no race left; a skin must not
   // crash or invent one.
   it.each(skins)('%s survives the empty-body states', (_name, Skin) => {
