@@ -136,8 +136,8 @@
      WOW lost its lo-fi pink `.exe` identity to Cozy Coven in #784 and has been
      unthemed since. The owner has settled its replacement colour — yellow — but
      NOT its design. So this block is deliberately the bare §3 contract and
-     nothing else: no archetype-private primitives, no chrome tokens, and an
-     empty manifest at factions/wow.ts, which means every surface renders its
+     nothing else: no archetype-private primitives, no chrome tokens, and no
+     manifest in src/factions at all, which means every surface renders its
      Default* archetype. A WOW profile and an unaffiliated one are structurally
      identical; only the hue differs. Anything more here is dead weight the real
      redesign has to delete first.

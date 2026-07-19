@@ -45,12 +45,19 @@ export { SURFACE_KEYS } from './manifest'
  * to the neutral `Default*` skins everywhere (ADR-0039).
  *
  * `wow` has no manifest either, for a different reason (#784): Warriors of
- * Whimsy's lo-fi pink `.exe` identity moved wholesale to Cozy Coven, and its
- * replacement gold identity is a sibling issue. Registering nothing is exactly
- * what the override-only contract wants in the meantime — every surface hands
- * `wow` its `Default*` archetype, which is a clean slate rather than a gap. Its
- * name and description still resolve from the catalog, so it reads as a real
- * faction throughout; `wowRendersDefault.test.tsx` pins both halves of that.
+ * Whimsy's lo-fi pink `.exe` identity moved wholesale to Cozy Coven. Registering
+ * nothing is exactly what the override-only contract wants in the meantime —
+ * every surface hands `wow` its `Default*` archetype, which is a clean slate
+ * rather than a gap.
+ *
+ * Note that #812 has since given `wow` a yellow THEME, so it is a known faction
+ * with coloured ornament and a slot in the rainbow. That changed nothing here,
+ * and the gap between the two is the point: WOW is the one faction that is
+ * themed without being skinned, so a WOW surface is *supposed* to look like an
+ * unaffiliated one in every respect but hue. Do not "finish" it by registering
+ * components — the design has not been made yet. Its name and description
+ * resolve from the catalog, so it reads as a real faction throughout;
+ * `wowRendersDefault.test.tsx` pins all three halves of that.
  */
 export const FACTION_MANIFESTS: readonly FactionManifest[] = [
   EVERYMEN_MANIFEST,

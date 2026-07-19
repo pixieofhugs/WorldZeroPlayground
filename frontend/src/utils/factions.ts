@@ -78,10 +78,9 @@ const CSS_KEY: Record<string, string> = {
   // comment anticipated, and the --faction-wow-* yellow block it was waiting on
   // now exists in index.css. This ONE line is what re-themes WOW, because
   // isKnownFaction tests the mapped VALUE (`!== "default"`), not key presence
-  // (#749). WOW's colour is back; its SKIN is not — the manifest at
-  // factions/wow.ts stays empty on purpose, so every surface still renders its
-  // Default* archetype and WOW reads as a yellow-tinted unaffiliated player
-  // until the real design ships. Do not register components here by proxy.
+  // (#749). WOW's colour is back; its SKIN is not — it still registers no
+  // manifest at all, so every surface renders its Default* archetype and WOW
+  // reads as a yellow-tinted unaffiliated player until the real design ships.
   wow: "wow",
   ephemerists: "ephemerists",
   singularity: "singularity",
