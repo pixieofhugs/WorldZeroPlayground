@@ -42,7 +42,7 @@ function HeartGlyph({ filled, color, size = 30 }: { filled: boolean; color: stri
   )
 }
 
-export default function WowVote({ praxisId, currentValue, points, totalVotes }: VoteUIProps) {
+export default function CovenVote({ praxisId, currentValue, points, totalVotes }: VoteUIProps) {
   const { t } = useTranslation('votes')
   const { user, selected, saving, error, vote } = useVote(praxisId, currentValue)
 

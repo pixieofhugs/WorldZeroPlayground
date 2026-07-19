@@ -220,7 +220,7 @@ export function EverymenPraxisCard({ praxis, adminProps, showCrown }: ArchetypeP
   );
 }
 
-/** The two offset scrap layers behind the WOW card, plus its tape. Static (#586). */
+/** The two offset scrap layers behind the COVEN card, plus its tape. Static (#586). */
 const wowScrapDeep: CSSProperties = {
   position: "absolute",
   top: 10,
@@ -256,7 +256,7 @@ const wowTape: CSSProperties = {
   borderRadius: 1,
 };
 
-export function WowPraxisCard({ praxis, adminProps, showCrown }: ArchetypeProps) {
+export function CovenPraxisCard({ praxis, adminProps, showCrown }: ArchetypeProps) {
   return (
     <div
       style={{

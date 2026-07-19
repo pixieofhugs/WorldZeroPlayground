@@ -1,8 +1,8 @@
 /**
- * WowProfileBody — Warriors of Whimsy scrapbook player-profile skin (#460).
+ * CovenProfileBody — Warriors of Whimsy scrapbook player-profile skin (#460).
  * Ported from docs/design/profile/templates/Warriors of Whimsy Profile.dc.html:
  * a cork-board mat with push-pin dots, slight tilts, washi-tape strips, and an
- * ".exe window" progression panel. WOW follows the global light/dark cascade —
+ * ".exe window" progression panel. COVEN follows the global light/dark cascade —
  * it reads --faction-wow-* / --faction-wow-card-* tokens (which flip with the
  * theme) and never pins a fixed data-theme.
  *
@@ -173,6 +173,6 @@ const kit: ProfileKit = {
   ),
 }
 
-export default function WowProfileBody(props: ProfileBodyProps) {
+export default function CovenProfileBody(props: ProfileBodyProps) {
   return <ProfileSkin props={props} kit={kit} />
 }

@@ -34,7 +34,7 @@ function Window({ title, children }: { title: string; children: React.ReactNode 
   )
 }
 
-export default function WowComment(props: CommentProps) {
+export default function CovenComment(props: CommentProps) {
   const { t } = useTranslation('praxis')
   if (props.mode === 'composer') {
     const { character, value, onChange, onSubmit, submitting } = props

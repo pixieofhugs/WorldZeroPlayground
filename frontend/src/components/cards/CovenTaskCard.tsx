@@ -49,7 +49,7 @@ function WindowDot({ color }: { color: string }) {
   );
 }
 
-export default function WowTaskCard({
+export default function CovenTaskCard({
   task,
   displayPoints,
   onSignup,

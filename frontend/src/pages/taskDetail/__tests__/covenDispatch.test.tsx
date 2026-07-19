@@ -1,5 +1,5 @@
 /**
- * Mobile task-detail WOW dispatch (#531). Asserts the mobile registry resolves a
+ * Mobile task-detail COVEN dispatch (#531). Asserts the mobile registry resolves a
  * `wow` task to the quest.exe scrapbook skin, that other factions fall through to
  * the Default mobile detail, and that the desktop archetype is untouched.
  */
@@ -7,13 +7,13 @@ import { describe, it, expect } from "vitest";
 import { pickVariant } from "../../../utils/factionDispatch";
 import { surfaceMap } from "../../../factions";
 import DefaultMobileTaskDetail from "../mobileArchetypes/DefaultTaskDetail";
-import WowMobileTaskDetail from "../mobileArchetypes/WowTaskDetail";
-import WowDesktopTaskDetail from "../archetypes/WowTaskDetail";
+import CovenMobileTaskDetail from "../mobileArchetypes/CovenTaskDetail";
+import CovenDesktopTaskDetail from "../archetypes/CovenTaskDetail";
 
-describe("mobile task-detail WOW dispatch", () => {
-  it("mobile + a WOW task resolves to the bespoke WOW mobile skin", () => {
+describe("mobile task-detail COVEN dispatch", () => {
+  it("mobile + a COVEN task resolves to the bespoke COVEN mobile skin", () => {
     expect(pickVariant(surfaceMap('mobileTaskDetail'), "wow", DefaultMobileTaskDetail)).toBe(
-      WowMobileTaskDetail,
+      CovenMobileTaskDetail,
     );
   });
 
@@ -25,9 +25,9 @@ describe("mobile task-detail WOW dispatch", () => {
     }
   });
 
-  it("desktop keeps its own WOW archetype, never the mobile skin", () => {
+  it("desktop keeps its own COVEN archetype, never the mobile skin", () => {
     const desktop = pickVariant(surfaceMap('taskDetail'), "wow", DefaultMobileTaskDetail);
-    expect(desktop).toBe(WowDesktopTaskDetail);
-    expect(desktop).not.toBe(WowMobileTaskDetail);
+    expect(desktop).toBe(CovenDesktopTaskDetail);
+    expect(desktop).not.toBe(CovenMobileTaskDetail);
   });
 });

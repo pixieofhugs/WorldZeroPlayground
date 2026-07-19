@@ -50,7 +50,7 @@ function TitleDots() {
   )
 }
 
-export default function WowMobileDuelRail({
+export default function CovenMobileDuelRail({
   accent,
   headline,
   tally,

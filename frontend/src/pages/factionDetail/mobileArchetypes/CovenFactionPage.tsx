@@ -14,7 +14,7 @@ import type { FactionDetailState } from '../useFactionDetail'
  * via `state.membership`, ADR-0019) — only the dress changes: a pink scrapbook
  * "wow.exe" window hero on a dotted board, Caveat script, sparkle accents, rose
  * accent. Grounds on the `--faction-wow-*` window tokens already in index.css (the
- * set the WOW pilots use); always-light. Reuses the shared `mobile.*` faction copy
+ * set the COVEN pilots use); always-light. Reuses the shared `mobile.*` faction copy
  * so the slot contract holds. Presentation-only — all data + the join handler
  * arrive via {@link FactionDetailState}.
  */
@@ -120,7 +120,7 @@ const cancelButton: CSSProperties = {
   cursor: 'pointer',
 }
 
-export default function WowFactionPage({ state }: { state: FactionDetailState }) {
+export default function CovenFactionPage({ state }: { state: FactionDetailState }) {
   const { t } = useTranslation('factions')
   const { faction, members, tasks, recentPraxis, membership } = state
   const [confirming, setConfirming] = useState(false)

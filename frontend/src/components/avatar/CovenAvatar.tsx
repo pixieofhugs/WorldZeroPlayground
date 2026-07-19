@@ -16,7 +16,7 @@ function MoonGlyph({ size, color }: { size: number; color: string }) {
  * Warriors of Whimsy avatar — the standard circle with a pink "coven" moon membership
  * badge clipped to the lower-right.
  */
-export default function WowAvatar({ character, size }: FactionAvatarProps) {
+export default function CovenAvatar({ character, size }: FactionAvatarProps) {
   return (
     <BadgedAvatar
       character={character}

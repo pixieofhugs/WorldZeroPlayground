@@ -24,7 +24,7 @@ import { formatTimestamp } from '../../../utils/dates'
 import { PraxisAdminBar, PraxisStatusBanners, PraxisOwnerActions, PraxisFlagBlock, PraxisVoterBreakdown, PraxisScoreBreakdown, MemberByline } from '../shared'
 import type { PraxisDetailState } from '../usePraxisDetail'
 
-// ── whimsy.exe token vocabulary (same as WowTaskDetail) ──────────────────────
+// ── whimsy.exe token vocabulary (same as CovenTaskDetail) ──────────────────────
 const PINK = 'var(--faction-wow)'
 const TITLE_TEXT = 'var(--faction-wow-title-text)'
 const CARD_TEXT = 'var(--faction-wow-card-text)'
@@ -124,7 +124,7 @@ function TitleBar({ name }: { name: string }) {
   )
 }
 
-export default function WowPraxisDetail({ state }: { state: PraxisDetailState }) {
+export default function CovenPraxisDetail({ state }: { state: PraxisDetailState }) {
   const { t } = useTranslation('praxis')
   const { praxis } = state
   if (!praxis) return null

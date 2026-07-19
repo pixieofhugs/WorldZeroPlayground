@@ -185,7 +185,7 @@ function Ivy({
   );
 }
 
-export default function WowEditPraxis({ state }: Props) {
+export default function CovenEditPraxis({ state }: Props) {
   const { t } = useTranslation("forms");
   const praxis = state.praxis!;
   const task = state.task;

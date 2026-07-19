@@ -10,7 +10,7 @@ import { pickVariant } from '../../../../utils/factionDispatch'
 import { surfaceMap } from '../../../../factions'
 import DefaultMobileTaskCard from '../cards/DefaultMobileTaskCard'
 import UaMobileTaskCard from '../cards/UaMobileTaskCard'
-import WowMobileTaskCard from '../cards/WowMobileTaskCard'
+import CovenMobileTaskCard from '../cards/CovenMobileTaskCard'
 import SnideMobileTaskCard from '../cards/SnideMobileTaskCard'
 import EverymenMobileTaskCard from '../cards/EverymenMobileTaskCard'
 import SingularityMobileTaskCard from '../cards/SingularityMobileTaskCard'
@@ -18,7 +18,7 @@ import EphemeristsMobileTaskCard from '../cards/EphemeristsMobileTaskCard'
 
 const CARD_BY_SLUG = {
   ua: UaMobileTaskCard,
-  wow: WowMobileTaskCard,
+  wow: CovenMobileTaskCard,
   snide: SnideMobileTaskCard,
   everymen: EverymenMobileTaskCard,
   singularity: SingularityMobileTaskCard,

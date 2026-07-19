@@ -14,10 +14,10 @@
  * rail keeps its existing mount above the archetype; no praxis-detail surface
  * has a two-column layout and mobile forbids one outright).
  *
- * Tokens are the `--faction-wow-*` set WowEditPraxis / WowPraxisDetail already
+ * Tokens are the `--faction-wow-*` set CovenEditPraxis / CovenPraxisDetail already
  * use — no new variables. `accent`/`soft` still arrive from the OPPONENT's
  * faction and are spent on the edge that faces them, so a foreign duelist keeps
- * tinting the window even inside Wow chrome.
+ * tinting the window even inside Coven chrome.
  */
 import type { CSSProperties } from 'react'
 import type { DuelRailSkinProps } from '../DuelCrossLink'
@@ -33,7 +33,7 @@ const DOT = 'var(--faction-wow-dot)'
 const CARD_TEXT = 'var(--faction-wow-card-text)'
 const SCRIPT = 'var(--faction-wow-card-font)'
 
-/** The kit's four-point sparkle, the window-title ornament on every Wow surface. */
+/** The kit's four-point sparkle, the window-title ornament on every Coven surface. */
 function Sparkle({ size, color }: { size: number; color: string }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" aria-hidden>
@@ -45,7 +45,7 @@ function Sparkle({ size, color }: { size: number; color: string }) {
   )
 }
 
-export default function WowDuelRail({
+export default function CovenDuelRail({
   accent,
   maxWidth,
   headline,
@@ -58,7 +58,7 @@ export default function WowDuelRail({
     margin: 'var(--space-lg) 0',
     borderRadius: 12,
     overflow: 'hidden',
-    // The opponent's colour rides the left edge; the rest of the window is Wow's.
+    // The opponent's colour rides the left edge; the rest of the window is Coven's.
     border: `2px solid ${WIN_BORDER}`,
     borderLeft: `4px solid ${accent}`,
     boxShadow: `0 10px 24px color-mix(in srgb, ${accent} 20%, transparent)`,
@@ -71,7 +71,7 @@ export default function WowDuelRail({
   return (
     <div style={shell}>
       {/* title bar — headline left, live tally right, exactly the .exe chrome
-          WowEditPraxis and WowPraxisDetail already wear */}
+          CovenEditPraxis and CovenPraxisDetail already wear */}
       <div
         style={{
           display: 'flex',
@@ -118,7 +118,7 @@ export default function WowDuelRail({
             board renders as a bare dotted strip under the title bar. That is the
             correct empty state — there is no race left — and it costs no branch
             here, so no bespoke "duel is over" ornament is drawn for it.
-            ponytail: the design's soft `background: soft` wash is dropped; Wow's
+            ponytail: the design's soft `background: soft` wash is dropped; Coven's
             own BODY_BG already reads as a tinted surface and layering the
             opponent's wash under the dot grid muddied both. */}
       </div>

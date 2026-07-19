@@ -13,7 +13,7 @@ import type { FieldDeskHomeState } from '../useFieldDeskHome'
  * mobile home — character header, stat tiles, active-tasks list, primary
  * actions — only the dress changes. Ported from the Field Kit `wow-treatment`
  * §02 home; grounds entirely on the `--faction-wow-*` window tokens already in
- * index.css (same set WowTaskDetail uses). Presentation-only.
+ * index.css (same set CovenTaskDetail uses). Presentation-only.
  */
 
 const PINK = 'var(--faction-wow)'
@@ -130,7 +130,7 @@ const ghostButton: CSSProperties = {
   textDecoration: 'none',
 }
 
-export default function WowFieldDesk({ state }: { state: FieldDeskHomeState }) {
+export default function CovenFieldDesk({ state }: { state: FieldDeskHomeState }) {
   const { t } = useTranslation('common')
   const { character, eraName, votesReceived, activeTasks, pendingCount, canProposeTask } = state
 

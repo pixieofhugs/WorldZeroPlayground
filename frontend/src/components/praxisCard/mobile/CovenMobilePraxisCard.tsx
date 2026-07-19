@@ -1,16 +1,16 @@
 import type { PraxisCardOut } from '../../../api/praxis'
 import { factionCssVar } from '../../../utils/factions'
-import { WowSigil } from '../../cards/WowSigil'
+import { CovenSigil } from '../../cards/CovenSigil'
 import i18n from '../../../i18n'
 import { MobilePraxisBody, type MobileSlotTheme } from './shared'
 
 /**
  * Warriors of Whimsy MOBILE praxis card (#573) — a taped scrap of the proof
  * board: a torn pink strip peeking behind the tilted notepad, a strip of tape,
- * sparkle marks. Mirrors the desktop WOW praxis frame; --faction-wow-* tokens,
+ * sparkle marks. Mirrors the desktop COVEN praxis frame; --faction-wow-* tokens,
  * always-light.
  */
-export default function WowMobilePraxisCard({ praxis }: { praxis: PraxisCardOut }) {
+export default function CovenMobilePraxisCard({ praxis }: { praxis: PraxisCardOut }) {
   const accent = factionCssVar('wow', 'card-accent')
   const theme: MobileSlotTheme = {
     ink: factionCssVar('wow', 'card-text'),
@@ -73,7 +73,7 @@ export default function WowMobilePraxisCard({ praxis }: { praxis: PraxisCardOut 
             color: accent,
           }}
         >
-          <WowSigil size={11} color={accent} />
+          <CovenSigil size={11} color={accent} />
           {i18n.t('feed:identity.wow.windowTitle')}
         </div>
         <MobilePraxisBody praxis={praxis} theme={theme} />

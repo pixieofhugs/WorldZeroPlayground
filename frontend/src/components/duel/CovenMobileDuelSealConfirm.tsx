@@ -51,7 +51,7 @@ function SheetHandle({ color }: { color: string }) {
   )
 }
 
-export default function WowMobileDuelSealConfirm({
+export default function CovenMobileDuelSealConfirm({
   duel,
   viewerCharacterId,
   taskPointValue,

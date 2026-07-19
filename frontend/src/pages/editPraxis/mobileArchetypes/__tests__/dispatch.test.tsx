@@ -2,7 +2,7 @@
  * Edit-praxis form-factor dispatch (#498) — the composer twin of the TaskDetail
  * / FieldDesk mobile-dispatch seams. Renders <EditPraxis /> with useFormFactor
  * mocked and useEditPraxis stubbed, and pins:
- *   - phone + the WOW pilot → its bespoke mobile composer (data-skin="wow"),
+ *   - phone + the COVEN pilot → its bespoke mobile composer (data-skin="wow"),
  *   - phone + an unregistered faction → the Default mobile composer,
  *   - desktop → the existing desktop archetype (skin dispatch untouched).
  * It also asserts each mobile skin surfaces the body editor, media-add, and
@@ -134,7 +134,7 @@ function render(slug: string | null): string {
 }
 
 describe("edit-praxis form-factor dispatch", () => {
-  it("renders the WOW bespoke composer on mobile for a WOW task", () => {
+  it("renders the COVEN bespoke composer on mobile for a COVEN task", () => {
     mocks.formFactor = "mobile";
     expect(render("wow")).toContain('data-skin="wow"');
   });
@@ -163,7 +163,7 @@ describe("edit-praxis form-factor dispatch", () => {
 describe("mobile composer content slots", () => {
   for (const [label, slug] of [
     ["Default", "na"],
-    ["WOW", "wow"],
+    ["COVEN", "wow"],
     ["SNIDE", "snide"],
   ] as const) {
     it(`${label} mobile composer renders body editor + media-add + submit`, () => {

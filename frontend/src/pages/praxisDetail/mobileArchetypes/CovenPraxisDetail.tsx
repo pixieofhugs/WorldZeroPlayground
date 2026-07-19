@@ -6,7 +6,7 @@
  * the Field Kit `wow-treatment` §05 praxis detail. Renders the same invariant
  * CONTENT + behavior slots as every archetype (shared module) — only the dress
  * changes. Grounds on the `--faction-wow-*` tokens already in index.css (same
- * set WowPraxisDetail / WowFieldDesk use). Presentation-only.
+ * set CovenPraxisDetail / CovenFieldDesk use). Presentation-only.
  */
 import type { CSSProperties, ReactNode } from 'react'
 import { Link } from 'react-router-dom'
@@ -102,7 +102,7 @@ function Window({ title, children }: { title: string; children: ReactNode }) {
   )
 }
 
-export default function WowPraxisDetail({ state }: { state: PraxisDetailState }) {
+export default function CovenPraxisDetail({ state }: { state: PraxisDetailState }) {
   const { t } = useTranslation('praxis')
   const { praxis } = state
   if (!praxis) return null

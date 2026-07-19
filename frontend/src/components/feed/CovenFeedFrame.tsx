@@ -31,7 +31,7 @@ function Sparkle({ size }: { size: number }) {
   )
 }
 
-export default function WowFeedFrame({ children }: { children: ReactNode }) {
+export default function CovenFeedFrame({ children }: { children: ReactNode }) {
   return (
     <div
       style={{

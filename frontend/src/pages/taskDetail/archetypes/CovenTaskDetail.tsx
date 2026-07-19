@@ -181,7 +181,7 @@ function PartyRow({
   );
 }
 
-export default function WowTaskDetail({ state }: { state: TaskDetailState }) {
+export default function CovenTaskDetail({ state }: { state: TaskDetailState }) {
   const { t } = useTranslation("tasks");
   const {
     task,

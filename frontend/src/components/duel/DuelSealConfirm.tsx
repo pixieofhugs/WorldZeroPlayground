@@ -19,7 +19,7 @@
  * the EditPraxis dispatcher, so all 16 composer surfaces inherit it.
  *
  * The Default skin below is the only one this issue ships; the manifest seam
- * exists so per-faction skins (#720 for Wow, one issue per faction after) are a
+ * exists so per-faction skins (#720 for Coven, one issue per faction after) are a
  * `duelSeal` / `mobileDuelSeal` row and nothing else. Skins own the FRAME only —
  * every figure and every branch lives in `duel/shared.tsx`.
  *

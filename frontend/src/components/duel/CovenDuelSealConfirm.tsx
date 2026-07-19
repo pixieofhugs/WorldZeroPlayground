@@ -3,7 +3,7 @@
  *
  * The Default dialog's content, re-hung inside a centred `wow.exe` window:
  * traffic-light title bar, dotted board, notepad scrap for the stakes and the
- * roster, lo-fi pink confirm. Same beat, Wow's hand.
+ * roster, lo-fi pink confirm. Same beat, Coven's hand.
  *
  * Pure frame. `StakesTiles` computes the win/lose figures from `useGameConfig()`
  * and the viewer's own faction (Snide's 0.0× lose falls out by construction),
@@ -11,7 +11,7 @@
  * the same one the Default skin makes. Nothing here recomputes or drops any of it.
  *
  * The design's hardcoded `+90 / +30` and `0.5×` are deliberately absent: those
- * are Wow's live numbers and the slot owns them. So is 2c's "can't edit while the
+ * are Coven's live numbers and the slot owns them. So is 2c's "can't edit while the
  * duel runs" — during `active` the reopen is free, and #718's `reopenNote` says so.
  *
  * Copy is faction-neutral by decision (#718): the design's witch voice is tone
@@ -51,7 +51,7 @@ function Sparkle({ size, color }: { size: number; color: string }) {
   )
 }
 
-export default function WowDuelSealConfirm({
+export default function CovenDuelSealConfirm({
   duel,
   viewerCharacterId,
   taskPointValue,
@@ -64,7 +64,7 @@ export default function WowDuelSealConfirm({
   const copy = useDuelSealCopy(mode, duel, viewerCharacterId, taskPointValue)
 
   // Opponent tokens, same rule as the Default dialog and the rail: the foreign
-  // duelist looks foreign even inside Wow's window.
+  // duelist looks foreign even inside Coven's window.
   const accent = factionCssVar(foe.faction_slug, 'card-accent')
   const theme: DuelSlotTheme = { accent, muted: CARD_MUTED, bodyFont: 'var(--font-body)' }
 
@@ -129,7 +129,7 @@ export default function WowDuelSealConfirm({
           </p>
 
           {/* The free-reopen half of the truth — same condition as the Default
-              skin, because it is the same fact, not a Wow flourish. A forfeit
+              skin, because it is the same fact, not a Coven flourish. A forfeit
               has no such note, and `copy.note` is null there. */}
           {copy.note && (
             <p
@@ -175,7 +175,7 @@ export default function WowDuelSealConfirm({
             />
           </div>
           {/* ponytail: SealActions keeps its shared btn-outline / btn-primary
-              pair rather than growing a Wow gradient-button skin slot. The
+              pair rather than growing a Coven gradient-button skin slot. The
               global [Cancel] … [Submit] order (#646) is worth more here than a
               pink button, and adding a skin prop would be foundation work. */}
         </div>

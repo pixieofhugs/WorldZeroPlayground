@@ -4,8 +4,8 @@
  * (Write/Preview toggle, fluid media grid, sticky submit bar) dressed in the
  * pink window chrome: dotted board, notepad panels, sparkle-titled bars.
  * Ported from the Field Kit `wow-treatment` composer; grounds on the
- * `--faction-wow-*` tokens already in index.css (the set WowFieldDesk /
- * WowEditPraxis desktop use). Consumes `useEditPraxis` verbatim — no editor,
+ * `--faction-wow-*` tokens already in index.css (the set CovenFieldDesk /
+ * CovenEditPraxis desktop use). Consumes `useEditPraxis` verbatim — no editor,
  * upload, or submit logic lives here. Presentation-only.
  */
 import { useState } from "react";
@@ -147,7 +147,7 @@ function Window({ title, children }: { title: string; children: ReactNode }) {
   );
 }
 
-export default function WowEditPraxis({ state }: { state: EditPraxisState }) {
+export default function CovenEditPraxis({ state }: { state: EditPraxisState }) {
   const { t } = useTranslation("forms");
   const [tab, setTab] = useState<ComposerTab>("write");
   const praxis = state.praxis!;
@@ -442,7 +442,7 @@ export default function WowEditPraxis({ state }: { state: EditPraxisState }) {
   );
 }
 
-/** Fluid 3-column media grid in the WOW notepad idiom. */
+/** Fluid 3-column media grid in the COVEN notepad idiom. */
 function MediaGrid({
   state,
   readOnly = false,

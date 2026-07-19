@@ -5,7 +5,7 @@ import { pickVariant } from "../../utils/factionDispatch";
 import { surfaceMap } from "../../factions";
 import SnideMasthead from "./SnideMasthead";
 import { EphSeal, LapisLastWord } from "./ephemeristsAtoms";
-import { WowSigil } from "./WowSigil";
+import { CovenSigil } from "./CovenSigil";
 
 /**
  * FactionCard — faction-archetype switcher.
@@ -184,7 +184,7 @@ export function UaCard({
 // ─── Warriors of Whimsy ".exe" window atoms ──────────────────────────────────────────────
 
 /** A tiny white die-cut ivy sticker peeking off the window corner. */
-function WowIvySticker({
+function CovenIvySticker({
   stem,
   leaf,
 }: {
@@ -206,7 +206,7 @@ function WowIvySticker({
   );
 }
 
-export function WowCard({
+export function CovenCard({
   faction,
   status,
   invitationNote,
@@ -293,7 +293,7 @@ export function WowCard({
               letterSpacing: "0.03em",
             }}
           >
-            <WowSigil size={10} color={titleText} /> {i18n.t("feed:identity.wow.windowTitle")}
+            <CovenSigil size={10} color={titleText} /> {i18n.t("feed:identity.wow.windowTitle")}
           </span>
           <span
             style={{
@@ -332,7 +332,7 @@ export function WowCard({
               pointerEvents: "none",
             }}
           >
-            <WowIvySticker
+            <CovenIvySticker
               stem="var(--faction-wow-ivy)"
               leaf="var(--faction-wow-ivy-leaf)"
             />

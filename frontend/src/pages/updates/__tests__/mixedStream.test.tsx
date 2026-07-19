@@ -2,7 +2,7 @@
  * Mobile Updates = a MIXED, multi-faction stream (#532), not seven per-faction
  * screens. Renders MobileUpdates with a feed whose items carry DIFFERENT
  * `context_faction_slug` values and proves each card keeps its OWN faction frame
- * (distinct WOW / UA / SNIDE chrome coexisting in one render) — never one
+ * (distinct COVEN / UA / SNIDE chrome coexisting in one render) — never one
  * uniform tint. Reuses the shared FeedCardRouter + normalizeFeedItem path.
  */
 import { renderToStaticMarkup } from 'react-dom/server'
@@ -62,14 +62,14 @@ describe('mobile Updates mixed multi-faction stream', () => {
     expect(html).toContain('data-feed="mobile"')
   })
 
-  it('keeps each card in its OWN faction frame — WOW + UA chrome coexist', () => {
+  it('keeps each card in its OWN faction frame — COVEN + UA chrome coexist', () => {
     const { text, html } = render(baseState({ items }))
     // Distinct per-faction frame markers appearing TOGETHER in one render
     // prove a mixed stream, not one uniform tint.
-    expect(text, 'WOW window chrome').toContain('whimsy.exe')
+    expect(text, 'COVEN window chrome').toContain('whimsy.exe')
     expect(text, 'UA salon masthead').toContain('University of Asthmatics')
     expect(html, 'SNIDE dossier tokens').toContain('--faction-snide')
-    expect(html, 'WOW scrapbook tokens').toContain('--faction-wow')
+    expect(html, 'COVEN scrapbook tokens').toContain('--faction-wow')
   })
 
   it('renders every card body (the shared FeedRowContent rows)', () => {

@@ -54,7 +54,7 @@ import {
  */
 const RAIL_WIDTH_BY_SLUG: Record<string, string> = {
   everymen: "46rem", // EverymenPraxisDetail
-  wow: "720px", // WowPraxisDetail
+  wow: "720px", // CovenPraxisDetail
 };
 const DEFAULT_RAIL_WIDTH = "42rem";
 

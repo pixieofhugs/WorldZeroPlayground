@@ -12,7 +12,7 @@ import i18n from "../../i18n";
  * Theme-aware through the cascade: every colour resolves to a --faction-wow-*
  * token (which already carries light + dark values), so the board never mutates
  * the global theme. The script face is the WoW card-font token (Caveat); body
- * copy uses --font-body, matching WowTaskCard / the WoW PraxisCard branch.
+ * copy uses --font-body, matching CovenTaskCard / the WoW PraxisCard branch.
  *
  * The page passes raw counts; the faction labels them in its own whimsy voice.
  * Motto is a faction constant (not a backend field).
@@ -93,7 +93,7 @@ function Pushpin({ color, style }: { color: string; style?: CSSProperties }) {
   );
 }
 
-export default function WowFactionHero({
+export default function CovenFactionHero({
   name,
   description,
   members,

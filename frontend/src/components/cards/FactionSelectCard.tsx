@@ -2,7 +2,7 @@ import i18n from "../../i18n";
 import { pickVariant } from "../../utils/factionDispatch";
 import { surfaceMap } from "../../factions";
 import { UaSigil } from "./UaSigil";
-import { WowSigil } from "./WowSigil";
+import { CovenSigil } from "./CovenSigil";
 import { SnideSigil } from "../snide/snideAtoms";
 import { EphemeristsSigil } from "./ephemeristsAtoms";
 import { SingularitySigil } from "./SingularitySigil";
@@ -88,7 +88,7 @@ export function UaSelectCard({ state = "locked", members, onVisit }: Omit<Factio
   );
 }
 
-export function WOWSelectCard({ state = "locked", members, onVisit }: Omit<FactionSelectCardProps, "faction">) {
+export function COVENSelectCard({ state = "locked", members, onVisit }: Omit<FactionSelectCardProps, "faction">) {
   const status = i18n.t(`feed:factionSelect.wow.status.${state}` as const);
   return (
     <div style={{
@@ -111,7 +111,7 @@ export function WOWSelectCard({ state = "locked", members, onVisit }: Omit<Facti
       <div style={{ flex: 1, padding: "var(--space-lg) var(--space-xl) 0", position: "relative" }}>
         {/* eslint-disable-next-line local/no-raw-style-values -- ornament: hand-script faction name, the whimsy.exe window's display type */}
         <div style={{ fontFamily: "var(--font-faction-script)", fontWeight: 700, fontSize: 27, lineHeight: 1.1, color: "var(--gestalt-ink)", whiteSpace: "nowrap" }}>
-          <span style={{ display: "inline-block", verticalAlign: "-3px", marginRight: "var(--space-sm)" }}><WowSigil size={18} color="var(--faction-wow)" /></span>{i18n.t("feed:factionSelect.wow.name")}
+          <span style={{ display: "inline-block", verticalAlign: "-3px", marginRight: "var(--space-sm)" }}><CovenSigil size={18} color="var(--faction-wow)" /></span>{i18n.t("feed:factionSelect.wow.name")}
         </div>
         <p className="content-text" style={{ margin: "var(--space-md) 0 0", lineHeight: 1.6, color: "var(--gestalt-ink-soft)" }}>
           {i18n.t("feed:factionSelect.wow.blurb")}

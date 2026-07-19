@@ -37,7 +37,7 @@ function Sparkle({ size, color, style }: { size: number; color: string; style?: 
 }
 
 /** A pink scrapbook quest sticker-card: dotted board + inner notepad. */
-export default function WowMobileTaskCard({ task, points }: { task: TaskOut; points: number }) {
+export default function CovenMobileTaskCard({ task, points }: { task: TaskOut; points: number }) {
   const { t } = useTranslation('tasks')
   const color = factionCssVar(task.primary_faction_slug)
   return (

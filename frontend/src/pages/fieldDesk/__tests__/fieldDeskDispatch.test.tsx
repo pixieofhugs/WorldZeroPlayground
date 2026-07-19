@@ -86,7 +86,7 @@ function render(): string {
 }
 
 describe('FieldDesk form-factor dispatch', () => {
-  it('renders the WOW bespoke home skin on mobile for a WOW life', () => {
+  it('renders the COVEN bespoke home skin on mobile for a COVEN life', () => {
     mocks.formFactor = 'mobile'
     mocks.user = currentUser('wow')
     expect(render()).toContain('data-skin="wow"')

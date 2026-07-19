@@ -13,7 +13,7 @@ import type { TaskDetailState } from '../useTaskDetail'
  * and a sparkle-stamped **sticky action bar** ("join the party") pinned above the
  * tab bar. Single-column, no fixed-px grid. Reuses the same {@link TaskDetailState},
  * the shared mobile sticky bar, and the `wow.*` copy + `--faction-wow-*` tokens as
- * the desktop archetype and the other WOW pilots. Always-light: WOW is native-light.
+ * the desktop archetype and the other COVEN pilots. Always-light: COVEN is native-light.
  */
 
 const PINK = 'var(--faction-wow)'
@@ -56,7 +56,7 @@ function SectionHead({ title, trailing }: { title: string; trailing?: ReactNode 
   )
 }
 
-export default function WowTaskDetail({ state }: { state: TaskDetailState }) {
+export default function CovenTaskDetail({ state }: { state: TaskDetailState }) {
   const { t } = useTranslation('tasks')
   const {
     task,

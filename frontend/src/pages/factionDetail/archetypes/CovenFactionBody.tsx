@@ -12,7 +12,7 @@ import type { FactionDetailState } from "../useFactionDetail";
 /**
  * Warriors of Whimsy faction-body — the whimsy.exe cork-memo-board skin of the
  * standardized six-section spine (② About, ③ join.exe, ④ Tasks, ⑤ Praxis,
- * ⑥ Members). Section ① (hero + side stat charms) is WowFactionHero, above.
+ * ⑥ Members). Section ① (hero + side stat charms) is CovenFactionHero, above.
  *
  * Same shape as EverymenFactionBody / UaFactionBody — Tasks/Praxis reuse the
  * app-wide per-faction cards (TaskCard / PraxisCard already dispatch to the WoW
@@ -23,7 +23,7 @@ import type { FactionDetailState } from "../useFactionDetail";
  *
  * Every colour resolves to a --faction-wow-* token (dark-mode-aware via the
  * cascade). The script face is the WoW card-font token (Caveat); body copy uses
- * --font-body, matching WowTaskCard and the WoW PraxisCard branch.
+ * --font-body, matching CovenTaskCard and the WoW PraxisCard branch.
  */
 
 const PINK = "var(--faction-wow)";
@@ -166,7 +166,7 @@ function Avatar({ name, size }: { name: string; size: number }) {
   );
 }
 
-export default function WowFactionBody({ state }: { state: FactionDetailState }) {
+export default function CovenFactionBody({ state }: { state: FactionDetailState }) {
   const { t } = useTranslation("factions");
   const { faction, members, tasks, recentPraxis, viewerFactionSlug, gameFactions, membership } = state;
   const [confirming, setConfirming] = useState(false);
