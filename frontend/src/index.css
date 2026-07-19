@@ -157,6 +157,16 @@
   /* ── Singularity terminal border (blue brand) ── */
   --faction-singularity-border-hard: #2563eb;
 
+  /* Dim sage phosphor (#723) — the SECOND green. `card-text` and `card-accent`
+     are the same bright #4ade80, so a Singularity surface had one weight of
+     green and reached for `color-mix(… accent N%, transparent)` whenever it
+     wanted a quieter one. That is fine for a hairline rule and wrong for body
+     copy: translucent text has no fixed contrast ratio (#651). This is a SOLID
+     dim green, 7.25:1 on --faction-singularity-card-bg, so prose can sit below
+     the accent without sitting below AA. Terminal tokens are theme-invariant
+     (Singularity is always-dark), so this one value serves both themes. */
+  --faction-singularity-phosphor-dim: #7ba98a;
+
   /* ══ Ephemerists illuminated-codex palette (the ephemerists slot) ══
      The card contract above rebinds to these. CONSTANTS (gold/rubric/
      lapis/verdigris/ink) keep their role in both themes; the VELLUM
