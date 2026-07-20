@@ -67,7 +67,9 @@
       "rateAria": "Rate {{value}} of 5"
     },
     "ephemerists": {
-      "rateAria": "Mark {{value}} — {{label}}"
+      "rateAria": "Mark {{value}} — {{label}}",
+      "idle": "attest the record",
+      "tag": "sealed"
     },
     "everymen": {
       "rateAria": "Rate {{value}} — {{label}}"
