@@ -59,8 +59,7 @@ export default function Rubric({
           style={{
             fontFamily: "var(--eph-display)",
             fontWeight: 600,
-            // ornament: the rubric numeral is the mark's own optical size —
-            // engraved caps struck at 28, not a step on the text scale (§4a).
+            // eslint-disable-next-line local/no-raw-style-values -- ornament: the rubric numeral is the mark's own optical size, engraved caps struck at 28, not a step on the text scale (§4a)
             fontSize: 28,
             lineHeight: 0.8,
             color,
