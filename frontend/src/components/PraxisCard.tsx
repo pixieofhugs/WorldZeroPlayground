@@ -14,7 +14,6 @@ import {
   PraxisTaskLink,
   PraxisByline,
   PraxisVotedByMarker,
-  PraxisScoreHero,
   PraxisStats,
   PraxisExcerpt,
   PraxisModeChip,
@@ -79,8 +78,6 @@ function PraxisBody({
   paper,
   titleStyle,
   showCrown,
-  scoreStamp,
-  mediaPlaceholder,
 }: {
   praxis: PraxisCardOut;
   tint: string;
@@ -89,14 +86,6 @@ function PraxisBody({
   paper?: string;
   titleStyle?: CSSProperties;
   showCrown?: boolean;
-  /**
-   * Render the conditional {@link PraxisScoreStamp} (ADR-0047) instead of the
-   * legacy `PraxisScoreHero`. Opt-in: the spectrum Default card sets it (#820);
-   * #821 rolls it to every faction, at which point the hero retires.
-   */
-  scoreStamp?: boolean;
-  /** Show the empty-media drop-target placeholder (spectrum Default, #820). */
-  mediaPlaceholder?: boolean;
 }) {
   return (
     <>
@@ -113,26 +102,22 @@ function PraxisBody({
           <PraxisTaskLink praxis={praxis} style={{ color: muted }} />
           <PraxisExcerpt praxis={praxis} style={{ color: muted }} />
         </div>
-        {scoreStamp ? (
-          <PraxisScoreStamp
-            praxis={praxis}
-            theme={{ color: tint, border: tint, muted, paper }}
-            showCrown={showCrown}
-          />
-        ) : (
-          <PraxisScoreHero
-            praxis={praxis}
-            color={tint}
-            border={tint}
-            paper={paper}
-            showCrown={showCrown}
-          />
-        )}
+        {/*
+         * The conditional score stamp (ADR-0047) on EVERY faction (#821). It
+         * replaced the legacy `PraxisScoreHero` here — the hero survives only on
+         * the praxis-detail surfaces that have not yet migrated.
+         */}
+        <PraxisScoreStamp
+          praxis={praxis}
+          theme={{ color: tint, border: tint, muted, paper }}
+          showCrown={showCrown}
+        />
       </div>
       <PraxisStats praxis={praxis} style={{ color: muted, marginTop: "var(--space-sm)" }} />
       <PraxisModeChip praxis={praxis} />
       <PraxisRoster praxis={praxis} accent={tint} paper={paper} />
-      <PraxisMediaGallery praxis={praxis} accent={tint} paper={paper} showPlaceholder={mediaPlaceholder} />
+      {/* Every card shows the media slot — a drop target when empty (#821). */}
+      <PraxisMediaGallery praxis={praxis} accent={tint} paper={paper} showPlaceholder />
       <PraxisByline praxis={praxis} style={{ color: muted }} />
       <PraxisVotedByMarker praxis={praxis} style={{ color: muted }} />
       <PraxisVoteFooter praxis={praxis} />
@@ -603,8 +588,6 @@ export function DefaultPraxisCard({ praxis, adminProps, showCrown }: ArchetypePr
           muted="var(--faction-default-card-muted)"
           paper="var(--faction-default-card-bg)"
           showCrown={showCrown}
-          scoreStamp
-          mediaPlaceholder
         />
       </div>
     </div>

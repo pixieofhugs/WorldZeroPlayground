@@ -491,19 +491,9 @@ export function MobileVoteFooter({ praxis }: { praxis: PraxisCardOut }) {
 export function MobilePraxisBody({
   praxis,
   theme,
-  scoreStrip,
-  mediaPlaceholder,
 }: {
   praxis: PraxisCardOut
   theme: MobileSlotTheme
-  /**
-   * Render the conditional {@link PraxisScoreStrip} (ADR-0047) high in the card.
-   * Opt-in: the spectrum Default card sets it (#820); #821 rolls it to every
-   * mobile faction skin.
-   */
-  scoreStrip?: boolean
-  /** Show the empty-media drop-target placeholder (spectrum Default, #820). */
-  mediaPlaceholder?: boolean
 }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-md)' }}>
@@ -522,15 +512,15 @@ export function MobilePraxisBody({
         <MobileTitle praxis={praxis} theme={theme} />
         <MobileBody praxis={praxis} theme={theme} />
       </div>
-      {scoreStrip && (
-        <PraxisScoreStrip
-          praxis={praxis}
-          theme={{ ink: theme.ink, muted: theme.muted, accent: theme.accent }}
-        />
-      )}
+      {/* Conditional score strip (ADR-0047) on every mobile faction card (#821). */}
+      <PraxisScoreStrip
+        praxis={praxis}
+        theme={{ ink: theme.ink, muted: theme.muted, accent: theme.accent }}
+      />
       <MobileModeChip praxis={praxis} theme={theme} />
       <MobileRoster praxis={praxis} theme={theme} />
-      <MobileMediaGallery praxis={praxis} theme={theme} showPlaceholder={mediaPlaceholder} />
+      {/* Every card shows the media slot — a drop target when empty (#821). */}
+      <MobileMediaGallery praxis={praxis} theme={theme} showPlaceholder />
       <div style={{ borderTop: `1px solid ${theme.accent}`, paddingTop: 'var(--space-md)' }}>
         <MobileVotedByMarker praxis={praxis} theme={theme} />
         <MobileVoteFooter praxis={praxis} />
