@@ -370,6 +370,27 @@
   --faction-everymen-card-muted: var(--everymen-muted);
   --faction-everymen-card-font: var(--font-accent); /* Bebas Neue */
 
+  /* ── Gearworks vote widget (#821) — reached gears heat a cold→ember ramp with
+     pale hubs; unreached gears are edge-only outlines; rank 5 throws sparks. The
+     edge + rank-5 glow flip in the dark cascade (see the dark block). ── */
+  --faction-everymen-vote-heat-1: #6e747e;
+  --faction-everymen-vote-heat-2: #9c7d4a;
+  --faction-everymen-vote-heat-3: #c8842a;
+  --faction-everymen-vote-heat-4: #eb5f14;
+  --faction-everymen-vote-heat-5: #ffcf6e;
+  --faction-everymen-vote-hub-1: #f4ecd6;
+  --faction-everymen-vote-hub-2: #f4ecd6;
+  --faction-everymen-vote-hub-3: #fbe6c2;
+  --faction-everymen-vote-hub-4: #ffe6b0;
+  --faction-everymen-vote-hub-5: #fff3c8;
+  --faction-everymen-vote-edge: #c9b58f;
+  --faction-everymen-vote-spark-a: #ffe08a;
+  --faction-everymen-vote-spark-b: #ff9838;
+  --faction-everymen-vote-spark-glow: #ffb347;
+  --faction-everymen-vote-glow-2: drop-shadow(0 0 2px rgba(180, 120, 40, 0.5));
+  --faction-everymen-vote-glow-3: drop-shadow(0 0 4px rgba(210, 132, 42, 0.7));
+  --faction-everymen-vote-glow-4: drop-shadow(0 0 6px rgba(235, 95, 20, 0.8));
+  --faction-everymen-vote-glow-5: drop-shadow(0 1px 1px rgba(120, 60, 10, 0.55)) drop-shadow(0 0 7px rgba(235, 120, 20, 0.85));
 
   /* ── Vote stamp colors (orange → yellow → green → blue → magenta) ── */
   --vote-1: #c2410c;
@@ -725,6 +746,10 @@
   --everymen-muted: #b6a079;
   --everymen-field: #3c1416;
   --everymen-field-deep: #5a1d20;
+  /* Gearworks: cooler edge for cold gears, a brighter single-halo rank-5 glow on
+     the dark paper (the light double-drop-shadow would muddy against it). */
+  --faction-everymen-vote-edge: #8a7856;
+  --faction-everymen-vote-glow-5: drop-shadow(0 0 9px rgba(255, 175, 60, 0.95));
 }
 
 /* ══ Everymen poster-wall backdrop (faction-context pages; theme-aware) ══ */
@@ -1461,6 +1486,20 @@
   .wow-balloon-float { animation: wow-bounce 2.2s ease-in-out infinite; animation-delay: var(--tw-delay, 0s); }
   .wow-balloon-cheer { animation: wow-group-bounce 1.05s ease-in-out infinite; }
   .wow-balloon-eye { transform-box: fill-box; transform-origin: center; animation: wow-eye-wiggle 1.4s ease-in-out infinite; }
+}
+
+/* Everymen — gearworks: reached gears turn (odd tiers clockwise, even counter),
+   rank-5 sparks fly outward. Per-gear duration (--ev-gear-dur) and per-spark
+   travel/tempo (--ev-sx/--ev-sy/--ev-spark-dur/--ev-spark-delay) arrive as inline
+   custom properties. Class-gated on reduced-motion: stilled, the gears keep their
+   heat/glow (that carries the rank) and the sparks stay hidden (opacity:0 inline). */
+@keyframes ev-gear-cw { to { transform: rotate(360deg); } }
+@keyframes ev-gear-ccw { to { transform: rotate(-360deg); } }
+@keyframes ev-gear-spark { 0% { opacity: 0; transform: translate(0, 0) scale(1); } 10% { opacity: 1; } 100% { opacity: 0; transform: translate(var(--ev-sx, 0), var(--ev-sy, 0)) scale(0.3); } }
+@media (prefers-reduced-motion: no-preference) {
+  .ev-gear--cw { transform-origin: center; animation: ev-gear-cw var(--ev-gear-dur, 3s) linear infinite; }
+  .ev-gear--ccw { transform-origin: center; animation: ev-gear-ccw var(--ev-gear-dur, 3s) linear infinite; }
+  .ev-gear-spark { animation: ev-gear-spark var(--ev-spark-dur, 1s) ease-out infinite; animation-delay: var(--ev-spark-delay, 0s); }
 }
 
 /* Albescent — the secret-society tell (#821, ADR-0048): the na spectrum card

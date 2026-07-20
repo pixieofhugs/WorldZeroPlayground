@@ -31,7 +31,7 @@ export const VOTE_REFRAMES: Record<string, VoteReframe> = {
   },
   everymen: {
     tiers: [
-      { value: 1, label: i18n.t('votes:everymen.a-start') },
+      { value: 1, label: i18n.t('votes:everymen.fair') },
       { value: 2, label: i18n.t('votes:everymen.solid') },
       { value: 3, label: i18n.t('votes:everymen.good') },
       { value: 4, label: i18n.t('votes:everymen.excellent') },
