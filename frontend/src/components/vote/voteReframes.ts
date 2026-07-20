@@ -75,12 +75,16 @@ export const VOTE_REFRAMES: Record<string, VoteReframe> = {
     ],
   },
   ua: {
+    // The growing-mandala vote widget (#821): each rank is a "reading" of the
+    // filed work as the mandala blooms fuller/warmer — faint → radiant. These
+    // words are the mandala's per-rank captions AND UA's app-wide vote
+    // vocabulary (the voter-breakdown resolver reads them via reframeLabel).
     tiers: [
-      { value: 1, label: i18n.t('votes:ua.rough-sketch') },
-      { value: 2, label: i18n.t('votes:ua.study') },
-      { value: 3, label: i18n.t('votes:ua.accomplished') },
-      { value: 4, label: i18n.t('votes:ua.distinguished') },
-      { value: 5, label: i18n.t('votes:ua.masterwork') },
+      { value: 1, label: i18n.t('votes:ua.faint') },
+      { value: 2, label: i18n.t('votes:ua.forming') },
+      { value: 3, label: i18n.t('votes:ua.true') },
+      { value: 4, label: i18n.t('votes:ua.alive') },
+      { value: 5, label: i18n.t('votes:ua.radiant') },
     ],
   },
   // Albescent has no vote voice (#783). It had the "bear witness" vocabulary
