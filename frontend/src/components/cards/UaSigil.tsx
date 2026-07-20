@@ -80,7 +80,7 @@ export function MottoRibbon({
         width: "fit-content",
         background: "var(--ua-orange)",
         color: "var(--ua-paper-warm)",
-        fontFamily: '"Marcellus", Georgia, serif',
+        fontFamily: 'var(--faction-ua-body-font)',
         fontSize,
         letterSpacing: "0.1em",
         padding,

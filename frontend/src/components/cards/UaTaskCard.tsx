@@ -8,14 +8,14 @@ import { UaSigil, MottoRibbon } from "./UaSigil";
  * UA — Gilt salon crest placard (the University of Asthmatics archetype).
  * A gold-framed acquisition plate on the salon wall, center-composed around the
  * heraldic crest: masthead ("University of Asthmatics · EST · MMXX"), motto
- * ribbon, Playfair-italic title, and a "Matriculate" sign-up affordance. The
+ * ribbon, Cormorant-italic title, and a "Matriculate" sign-up affordance. The
  * crest + motto are shared with UaFactionHero (see UaSigil.tsx), not re-drawn.
  * All colors via --ua-* tokens (never hardcode hex — CLAUDE.md); the salon is
  * always-light, so tokens read identically in both themes.
  */
 
-const REGALIA = "'Marcellus SC', serif";
-const DISPLAY = "'Playfair Display', serif";
+const REGALIA = "var(--faction-ua-body-font)";
+const DISPLAY = "var(--faction-ua-card-font)";
 const SERIF = "'EB Garamond', serif";
 
 interface Props {

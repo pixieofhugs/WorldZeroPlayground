@@ -28,7 +28,7 @@ export function UaPraxisCard({ praxis, adminProps, showCrown }: ArchetypeProps) 
           background: factionCssVar("ua", "card-bg"),
           border: "1px solid color-mix(in srgb, var(--ua-ink) 30%, transparent)",
           padding: "var(--space-lg)",
-          fontFamily: "'EB Garamond', serif",
+          fontFamily: "var(--faction-ua-body-font)",
           color: factionCssVar("ua", "card-text"),
           backgroundImage:
             "radial-gradient(color-mix(in srgb, var(--ua-ink) 4%, transparent) 1px, transparent 1px)",
@@ -37,7 +37,7 @@ export function UaPraxisCard({ praxis, adminProps, showCrown }: ArchetypeProps) 
       >
         <div
           style={{
-            fontFamily: "'Marcellus SC', serif",
+            fontFamily: "var(--faction-ua-body-font)",
             fontSize: "var(--text-xs)",
             letterSpacing: "0.12em",
             textTransform: "uppercase",
@@ -53,7 +53,7 @@ export function UaPraxisCard({ praxis, adminProps, showCrown }: ArchetypeProps) 
           tint={factionCssVar("ua", "card-accent")}
           muted={factionCssVar("ua", "card-muted")}
           paper={factionCssVar("ua", "card-bg")}
-          titleStyle={{ fontFamily: "'Playfair Display', serif", fontStyle: "italic" }}
+          titleStyle={{ fontFamily: "var(--faction-ua-card-font)", fontStyle: "italic" }}
           showCrown={showCrown}
         />
       </div>

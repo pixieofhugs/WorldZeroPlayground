@@ -3,7 +3,7 @@
  *
  * Built from the UA canon: an acquisition sheet exhibited on a salon wall —
  * burnt-amber/cream/gold/brown-ink palette, gilt-framed plate for the evidence,
- * Playfair italics for the headline, EB-Garamond serif body, Marcellus-SC small
+ * Cormorant italics for the headline, EB-Garamond serif body, EB-Garamond small
  * caps for the regalia labels. The salon never dims: UA is always-light, so its
  * --faction-ua* / --ua-* tokens are identical in both themes and we style the
  * container with them directly without mutating the document theme.
@@ -29,8 +29,8 @@ import type { PraxisDetailState } from '../usePraxisDetail'
 import type { PraxisOut } from '../../../api/praxis'
 import type { VoteSummary, VoterDetail } from '../../../api/votes'
 
-const DISPLAY = "'Playfair Display', serif"
-const REGALIA = "'Marcellus SC', serif"
+const DISPLAY = "var(--faction-ua-card-font)"
+const REGALIA = "var(--faction-ua-body-font)"
 const SERIF = "'EB Garamond', serif"
 const MONO = "'Courier Prime', monospace"
 

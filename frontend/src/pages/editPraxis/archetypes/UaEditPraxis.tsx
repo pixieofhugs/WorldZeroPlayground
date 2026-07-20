@@ -3,8 +3,8 @@
  *
  * The gilt-salon counterpart to the read-page sheet (UaPraxisDetail) and UaVote:
  * a work-in-progress acquisition being prepared on the salon's workbench. Gilt
- * frames, parchment grounds, Playfair italic display, EB-Garamond serif body,
- * Marcellus small-caps regalia, burnt-amber accent. The salon never dims — UA
+ * frames, parchment grounds, Cormorant italic display, EB-Garamond serif body,
+ * EB-Garamond small-caps regalia, burnt-amber accent. The salon never dims — UA
  * is always-light, so every --ua-* token reads identically in both themes and
  * we style with them directly without touching data-theme.
  *
@@ -42,8 +42,8 @@ interface Props {
   state: EditPraxisState;
 }
 
-const DISPLAY = "'Playfair Display', serif";
-const REGALIA = "'Marcellus SC', serif";
+const DISPLAY = "var(--faction-ua-card-font)";
+const REGALIA = "var(--faction-ua-body-font)";
 const SERIF = "'EB Garamond', serif";
 const MONO = "'Courier Prime', monospace";
 

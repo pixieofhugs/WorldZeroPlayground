@@ -26,7 +26,7 @@ export function WowPraxisCard({ praxis, adminProps, showCrown }: ArchetypeProps)
         headerTo: "var(--faction-wow-chronicle-header-to)",
         headerText: "var(--faction-wow-chronicle-header-text)",
         shadow: "var(--faction-wow-chronicle-shadow)",
-        titleFont: "var(--font-display)",
+        titleFont: factionCssVar("wow", "card-font"),
         bodyFont: "'EB Garamond', serif",
       }}
     />
