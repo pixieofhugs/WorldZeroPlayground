@@ -42,6 +42,8 @@ const FACTION_FALLBACKS: Record<string, FactionConfig> = {
   // `wow` returns (#812) with the yellow the owner settled on — NOT the pink it
   // lost to `coven` in #784. Must equal --faction-wow in :root (§4 item 7 of
   // SPEC-faction-ui-profile.md) so JS and CSS agree before the API hydrates.
+  // This is the RAINBOW SPINE hue only. WOW's skin is the cream/gold/plum
+  // chronicle and never appears here; #838 / ADR-0050 keep the two apart.
   wow: { slug: "wow", color: "#e0a800" },
   ephemerists: { slug: "ephemerists", color: "#1d6e72" },
   singularity: { slug: "singularity", color: "#2563eb" },
@@ -75,12 +77,12 @@ const CSS_KEY: Record<string, string> = {
   coven: "coven",
   snide: "snide",
   // Warriors of Whimsy is themed again (#812) — this is the flip the #784
-  // comment anticipated, and the --faction-wow-* yellow block it was waiting on
-  // now exists in index.css. This ONE line is what re-themes WOW, because
+  // comment anticipated. This ONE line is what re-themes WOW, because
   // isKnownFaction tests the mapped VALUE (`!== "default"`), not key presence
-  // (#749). WOW's colour is back; its SKIN is not — it still registers no
-  // manifest at all, so every surface renders its Default* archetype and WOW
-  // reads as a yellow-tinted unaffiliated player until the real design ships.
+  // (#749). Its colour is the rainbow's yellow; its SKIN is the cream/gold/plum
+  // chronicle, which is a different thing and does not follow the hue (#838,
+  // ADR-0050). WOW still registers only a few manifest surfaces, so the rest
+  // fall back to Default* until #840.
   wow: "wow",
   ephemerists: "ephemerists",
   singularity: "singularity",

@@ -4,10 +4,11 @@ import { factionCssVar } from '../../../utils/factions'
 import { MobilePraxisBody, type MobileSlotTheme } from './shared'
 
 /**
- * Cozy Coven MOBILE praxis card (#821) — the gold/plum CHRONICLE: a vellum leaf
- * with a plum→pink running-head band and a moon device. Mirrors the desktop
- * chronicle frame; replaces the old taped-scrap collage. Single column, tokens
- * only. Frame pixel-fidelity flagged for human QA.
+ * Cozy Coven MOBILE praxis card (#821) — PINK, with a moon device. The gold/plum
+ * chronicle it wore was WOW's (#838 / ADR-0050); its tokens are now the pink
+ * marker sticker's, though it still renders through the shared chronicle
+ * STRUCTURE until #840 rebuilds it as a sticker. Single column, tokens only.
+ * Frame pixel-fidelity flagged for human QA.
  */
 export default function CovenMobilePraxisCard({ praxis }: { praxis: PraxisCardOut }) {
   const { t } = useTranslation('praxis')

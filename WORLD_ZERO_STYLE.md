@@ -80,18 +80,29 @@ Two traps, both of which have already been sprung:
 
 The one exception is the **reveal surfaces** — the invitation letter, the sealed placeholder, the `/factions` tile — which are only ever shown to an account already revealed to the society. They read the private `--albescent-reveal-*` palette by direct reference, never through `factionCssVar`. That palette is not a theme and must not become one.
 
-### Warriors of Whimsy has a colour but no skin (#812)
+### A faction's SPINE HUE and its SKIN are two different things (#812, #814, #838)
 
-Read this next to the Albescent note above. They are the repo's two partly-registered factions, and they are partial on **different axes** — theme and skin are independent, and knowing which one a faction is missing is what tells you whether a Default-looking surface is correct or broken.
+Warriors of Whimsy is the case that proves it, and the case that got it wrong twice.
 
-Albescent has **neither**, on purpose: no theme and an all-but-empty manifest, because it is hiding. WOW has a **theme but no skin**, purely by timing: #784 moved its lo-fi pink `.exe` aesthetic wholesale to Cozy Coven, and #812 gave it back a colour — yellow — without giving it back a design. So it has the full §3 token block and `isKnownFaction('wow')` is **true** (its members get faction-coloured ornament, and it holds index 2 of `FACTION_RAINBOW_ORDER`, between UA's orange and S.N.I.D.E.'s green), while it registers **no manifest at all** (there is no `factions/wow.ts`), so every surface renders its `Default*` archetype. A WOW profile and an unaffiliated one are structurally identical and differ only in hue. That is the target state until the redesign ships, not a half-built skin.
+WOW's **spine hue is yellow**: `--faction-wow` (#e0a800 light / #f5c542 dark) and its stop in `--faction-default-rainbow`. That is its membership of the rainbow — index 2 of `FACTION_RAINBOW_ORDER`, between UA's orange and S.N.I.D.E.'s green — and it is why `isKnownFaction('wow')` is true and its members get faction-coloured ornament.
 
-Two consequences worth stating, because both look like omissions:
+WOW's **skin is the chronicle**: cream parchment (`#fbf4e0`), a gold frame (`#c8a02a`) and plum ink (`#7a4a9e` light → `#c79be0` dark), MedievalSharp for display, the `✦` glyph, the googly-balloon verdict and an archaic register. None of that is yellow, and none of it should be pulled toward yellow.
 
-- **Its block is nine tokens, not forty.** Only the §3 contract, no archetype-private primitives. Coven's block is fat because it carries 22 bespoke `.exe` chrome tokens for components WOW no longer has; cloning that shape here would be dead weight the redesign has to delete first.
-- **Its headline font is the shared display face, not Caveat.** Caveat left with the script aesthetic. Choosing a replacement display face is a design decision, and this issue was explicitly a colour — so WOW stays typographically identical to unaffiliated, and colour is the only axis that differs.
+The two axes are independent, and #830 collapsed them: it read a mislabelled mockup heading, gave the chronicle to Cozy Coven, and then *derived a whole yellow skin for WOW from its spine hue*, out of nothing. #838 retired that ramp. **ADR-0050** is the record, and `.design-sync/praxis-cards/LABELS.md` is the short version — every design artifact for this faction pair is labelled backwards, so go by tokens and metaphor:
 
-**On the hue.** Yellow is the palette's hard case (#651, #669, #677), for two reasons that pull in opposite directions. A yellow saturated enough to read as yellow needs **dark ink** on it, never white — hence `--faction-wow-on-fill` is ink in both themes. And WOW sits **adjacent to UA** in the spectrum, so the two are painted touching in the Leaderboard/DefaultPlayers stripe bars and Meadow's bloom; a goldenrod too near UA's burnt orange reads as a second brown at that size. The shipped light value resolves this by pushing hue rather than lightness — clear of orange, deep enough to stay legible. The `card-accent` is deliberately **not** the primary in light mode: §3 calls the accent metadata, metadata is text, and no readable yellow pays 4.5:1 on a light card, so the accent is the primary walked down until it clears.
+| | **`wow`** (Warriors of Whimsy) | **`coven`** (Cozy Coven) |
+|---|---|---|
+| Card | cream / gold / **plum** chronicle | **pink** marker sticker |
+| Widget | googly **balloons** | **moon phases** on a night plate |
+| Glyph | `✦` | `✨` |
+| Tier ladder | `a start … excellent · legendary` | `sweet · lovely · wonderful · magical · iconic` |
+| Register | archaic — *"Cast thy Verdict"* | cozy-casual — *"how'd this land?"* |
+
+**On the hue.** Yellow is the palette's hard case (#651, #669, #677), for two reasons that pull in opposite directions. A yellow saturated enough to read as yellow needs **dark ink** on it, never white — hence `--faction-wow-on-fill` is ink in both themes. And WOW sits **adjacent to UA** in the spectrum, so the two are painted touching in the Leaderboard/DefaultPlayers stripe bars and Meadow's bloom; a goldenrod too near UA's burnt orange reads as a second brown at that size. The shipped light value resolves this by pushing hue rather than lightness — clear of orange, deep enough to stay legible.
+
+**On the gold.** `#c8a02a` is **theme-invariant** — it is the same value in light and dark, because a metal-leaf frame does not brighten when the lights go out. The plum is what carries the theme flip. The gold is a *frame and rule* colour, never an ink: it measures 2.24:1 on the cream, so nothing legible is ever painted in it. Where the chronicle's running head needs text, both gradient stops are deepened until cream clears 4.5:1 across the band — a declared deviation from the design's undimmed gold/plum stripe, which carries no text.
+
+Read this next to the Albescent note above: those are the repo's two partly-registered factions, partial on **different axes**. Albescent has neither theme nor skin, on purpose, because it is hiding. WOW now has both, but only a few manifest surfaces claim it, so the rest still render `Default*` until the card rebuild lands.
 
 ---
 
@@ -112,7 +123,7 @@ All fonts loaded from Google Fonts.
 | UA          | `IM Fell English`  | `--faction-ua-card-font`          |
 | Everymen    | `Special Elite`    | `--faction-everymen-card-font`    |
 | Cozy Coven  | `Caveat`           | `--faction-coven-card-font`       |
-| Warriors of Whimsy | `Lora` — the shared display face, not a faction face (see §3) | `--faction-wow-card-font` |
+| Warriors of Whimsy | `MedievalSharp` — the chronicle's display face; `Lora` italic is its secondary (§3) | `--faction-wow-card-font` |
 | S.N.I.D.E.  | `Permanent Marker` (+ a punk set: Anton / Bebas Neue / Archivo Black / Special Elite, via `--faction-snide-font-*`) | `--faction-snide-card-font`       |
 | Ephemerists | `Cinzel`           | `--faction-ephemerists-card-font` |
 | Singularity | `Share Tech Mono`  | `--faction-singularity-card-font` |

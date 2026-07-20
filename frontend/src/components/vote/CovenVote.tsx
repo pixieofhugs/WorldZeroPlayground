@@ -8,9 +8,10 @@ import { VOTE_REFRAMES } from './voteReframes'
 /**
  * Cozy Coven vote UI (#821) — the 1-5 rating rendered as witchy MOON PHASES on a
  * night plate. Each reached moon waxes gold toward full; the rank-5 moon gets a
- * little face and sparkles. This is the recombination the redesign calls for: the
- * moon-phase metaphor (the prototype's `WowVote`) lands on Coven, while the old
- * pink hearts retire. The plate is a night surface that reads in both themes, so
+ * little face and sparkles. No recombination was ever needed here: the
+ * moon phases were always the PINK faction's metaphor. The prototype files them
+ * under a "WOW" heading only because both identities were still called Warriors
+ * of Whimsy when it was drawn (ADR-0050). The plate is a night surface that reads in both themes, so
  * its inner colours do not flip — only the caption ink does.
  *
  * Plugs into the vote dispatcher via the shared {@link useVote} hook so the
