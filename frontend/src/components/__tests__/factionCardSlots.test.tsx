@@ -17,7 +17,7 @@ import { surfaceMap } from "../../factions";
 import { MemoryRouter } from "react-router-dom";
 import type { ReactElement } from "react";
 import { describe, it, expect } from "vitest";
-import { DefaultPraxisCard } from "../PraxisCard";
+import DefaultPraxisCard from "../praxisCard/desktop/DefaultPraxisCard";
 import { DEFAULT_CARD } from "../TaskCard";
 import { DefaultComment } from "../comments/CommentThread";
 import i18n from "../../i18n";

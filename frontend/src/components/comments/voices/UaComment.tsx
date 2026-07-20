@@ -10,7 +10,7 @@ import { CommentFlagControl } from '../FlagControl'
 /**
  * UA — University of Asthmatics. The gilt salon (ADR-0026, superseding
  * ADR-0018's comment-scoped orange letterhead): a gold museum-frame around a
- * parchment plate, Marcellus small-caps house line, Playfair-italic body. Mirrors
+ * parchment plate, EB-Garamond small-caps house line, Cormorant-italic body. Mirrors
  * UaFeedFrame / UaPraxisDetail; all colors via --ua-* tokens (no hex — CLAUDE.md).
  * UA is always-light, so tokens read identically in both themes.
  */
@@ -20,8 +20,8 @@ const PAPER_WARM = 'var(--ua-paper-warm)'
 const INK = 'var(--ua-ink)'
 const ORANGE = 'var(--ua-orange)'
 const SUB = 'var(--ua-sub)'
-const SERIF = "'Playfair Display', Georgia, serif"
-const LABEL = "'Marcellus', Georgia, serif"
+const SERIF = "var(--faction-ua-card-font)"
+const LABEL = "var(--faction-ua-body-font)"
 
 /** Gilt museum frame — gold-leaf border around the parchment plate. */
 function GiltFrame({ children, gap }: { children: ReactNode; gap: string }) {

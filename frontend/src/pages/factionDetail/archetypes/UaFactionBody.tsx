@@ -37,7 +37,7 @@ const LINE_SOFT = "var(--ua-line-soft)";
 const GILT = "var(--ua-gilt)";
 
 const DISPLAY = "var(--faction-ua-card-font)";
-const ENGRAVED = '"Marcellus", Georgia, serif';
+const ENGRAVED = 'var(--faction-ua-body-font)';
 const MONO = "var(--font-body)";
 
 /** Parchment card with the salon's inset gold-leaf border. */

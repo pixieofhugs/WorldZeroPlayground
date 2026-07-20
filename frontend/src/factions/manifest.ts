@@ -48,6 +48,7 @@ import type { FactionAvatarProps } from '../components/avatar/FactionAvatar'
 import type { SigilVariantProps } from '../components/cards/FactionSigil'
 import type { CommentComponent } from '../components/comments/shared'
 import type { VoteUIProps } from '../components/vote/VoteUI'
+import type { ScoreStampProps } from '../components/praxisCard/scoreStamp/ScoreStamp'
 import type { FactionCardProps } from '../components/cards/FactionCard'
 import type { FactionSelectCardProps } from '../components/cards/FactionSelectCard'
 import type { DuelSealConfirmProps } from '../components/duel/DuelSealConfirm'
@@ -89,6 +90,11 @@ export interface FactionManifest {
   readonly comment?: Lazy<CommentComponent>
   readonly feedFrame?: Lazy<ComponentType<{ children: React.ReactNode }>>
   readonly vote?: Lazy<ComponentType<VoteUIProps>>
+  /**
+   * The praxis-card score stamp (ADR-0049). Size-agnostic — the same component
+   * serves the desktop card, the mobile card and the detail surfaces.
+   */
+  readonly scoreStamp?: Lazy<ComponentType<ScoreStampProps>>
 
   // ─── Pages (desktop) ───────────────────────────────────────────────────────
   readonly taskDetail?: Lazy<Stateful<TaskDetailState>>
@@ -141,6 +147,7 @@ export const SURFACE_KEYS = [
   'comment',
   'feedFrame',
   'vote',
+  'scoreStamp',
   'taskDetail',
   'praxisDetail',
   'editPraxis',

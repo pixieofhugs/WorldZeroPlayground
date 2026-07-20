@@ -33,7 +33,7 @@ import SingularityProfileBody from '../pages/characterProfile/archetypes/Singula
 import SingularityTaskCard from '../components/cards/SingularityTaskCard'
 import SingularityTaskDetail from '../pages/taskDetail/archetypes/SingularityTaskDetail'
 import SingularityVote from '../components/vote/SingularityVote'
-import { SingularityPraxisCard } from '../components/PraxisCard'
+import SingularityPraxisCard from '../components/praxisCard/desktop/SingularityPraxisCard'
 import { SingularitySigilAdapter } from '../components/cards/FactionSigil'
 import { SingularityCard } from '../components/cards/FactionCard'
 import { SingularitySelectCard } from '../components/cards/FactionSelectCard'

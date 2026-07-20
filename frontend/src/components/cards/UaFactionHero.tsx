@@ -33,7 +33,7 @@ const LINE = "var(--ua-line)"; // hairline borders
 // Regal serif faces. The display face is the UA card-font token (a loaded
 // serif); engraved regalia labels fall back to Georgia serif.
 const DISPLAY = "var(--faction-ua-card-font)";
-const ENGRAVED = '"Marcellus", Georgia, serif';
+const ENGRAVED = 'var(--faction-ua-body-font)';
 
 // color-mix helper for shades with no dedicated token.
 const ink = (pct: number): string =>

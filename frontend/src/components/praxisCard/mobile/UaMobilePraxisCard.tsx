@@ -17,7 +17,7 @@ export default function UaMobilePraxisCard({ praxis }: { praxis: PraxisCardOut }
     muted: factionCssVar('ua', 'card-muted'),
     accent: factionCssVar('ua', 'card-accent'),
     paper: factionCssVar('ua', 'card-bg'),
-    displayFont: "'Playfair Display', serif",
+    displayFont: "var(--faction-ua-card-font)",
     bodyFont: "'EB Garamond', serif",
     titleStyle: { fontStyle: 'italic' },
   }
@@ -46,7 +46,7 @@ export default function UaMobilePraxisCard({ praxis }: { praxis: PraxisCardOut }
             alignItems: 'center',
             gap: 'var(--space-sm)',
             marginBottom: 'var(--space-md)',
-            fontFamily: "'Marcellus SC', serif",
+            fontFamily: "var(--faction-ua-body-font)",
             fontSize: 'var(--text-sm)',
             letterSpacing: '0.14em',
             textTransform: 'uppercase',

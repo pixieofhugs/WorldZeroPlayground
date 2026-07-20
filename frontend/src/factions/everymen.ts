@@ -33,7 +33,7 @@ import EverymenProfileBody from '../pages/characterProfile/archetypes/EverymenPr
 import EverymenTaskCard from '../components/cards/EverymenTaskCard'
 import EverymenTaskDetail from '../pages/taskDetail/archetypes/EverymenTaskDetail'
 import EverymenVote from '../components/vote/EverymenVote'
-import { EverymenPraxisCard } from '../components/PraxisCard'
+import EverymenPraxisCard from '../components/praxisCard/desktop/EverymenPraxisCard'
 import { EverymenSigil } from '../components/cards/EverymenSigil'
 import EverymenCard from '../components/cards/EverymenFactionCard'
 import { EverymenSelectCard } from '../components/cards/FactionSelectCard'

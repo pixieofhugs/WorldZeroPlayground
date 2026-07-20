@@ -116,13 +116,22 @@
   --faction-ephemerists-card-muted: var(--eph-muted);
   --faction-singularity-card-muted: #60a5fa; /* blue brand chrome */
 
-  /* ── Faction headline fonts (per-faction display) ── */
-  --faction-ua-card-font: var(--font-faction-old);
-  /* Default's face on purpose, NOT Caveat — Caveat went to Coven with the
-     script aesthetic in #784, and picking a replacement display face is the
-     redesign's call, not this issue's. WOW's headline stays typographically
-     identical to unaffiliated so that COLOUR is the only thing that differs. */
-  --faction-wow-card-font: var(--font-display);
+  /* ── Faction headline fonts (per-faction display) ──
+     Each of these must resolve to a face the design actually names for that
+     faction, AND that face must be in the index.html loader. A family that is
+     named but not loaded renders as a generic fallback and no check we run can
+     see it — which is how UA spent months in IM Fell English (#839). */
+  --faction-ua-card-font: var(--font-faction-gilt); /* Cormorant Garamond */
+  /* UA's second face. The design pairs a Cormorant display with EB Garamond for
+     the eyebrow, "for:" line, byline and italic description. */
+  --faction-ua-body-font: var(--font-faction-codex-script); /* EB Garamond */
+  /* WOW's display face, chosen by the praxis-card redesign (#818) — the earlier
+     "stays typographically identical to unaffiliated so COLOUR is the only
+     difference" note explicitly deferred this to the redesign. Caveat stayed
+     with Coven in #784; MedievalSharp is WOW's half of the design's
+     "Caveat / MedievalSharp" pair, so the two share an aesthetic without
+     sharing a face. */
+  --faction-wow-card-font: var(--font-faction-medieval);
   --faction-coven-card-font: var(--font-faction-script);
   --faction-snide-card-font: var(--font-faction-marker);
   --faction-ephemerists-card-font: var(--eph-display);
@@ -167,7 +176,9 @@
   --faction-default-card-text: #1a1209;
   --faction-default-card-accent: #1a1209;
   --faction-default-card-muted: #6b6050;
-  --faction-default-card-font: var(--font-display);
+  /* Bebas Neue, the design's unaffiliated face — NOT --font-display (Lora), a
+     serif the design never names here (#839). */
+  --faction-default-card-font: var(--font-accent);
   /* Spectrum-sweep vote widget (ADR-0039): unreached dots wear this hairline
      ring; the reached dots fill with --faction-default-rainbow. The two caption
      colours are the widget's warm on/off text — flipped in dark below, so the
@@ -1624,6 +1635,7 @@
   --font-faction-codex-script: "EB Garamond", Georgia, serif;
   --font-faction-poster: "Bebas Neue", Impact, sans-serif;
   --font-faction-vellum: "Cormorant Garamond", Georgia, serif;
+  --font-faction-medieval: "MedievalSharp", cursive;
 }
 
 /* ── Bare faction extension tokens consumed by FactionSelectCard (design
