@@ -355,6 +355,24 @@
   --faction-wow-vote-on: #a9700a;
   --faction-wow-vote-off: #b79a52;
 
+  /* Ephemerists — constellation-attestation vote plate (#821). A night sky read
+     in BOTH themes (the plate is a fixed dark surface like coven's moon plate),
+     so these stay constant across the cascade; only the caption ink (--eph-*)
+     flips. Reached stars light gold, the rank-5 star whitens, a dashed gold line
+     ties the reached stars together. */
+  --faction-ephemerists-vote-plate-from: #1c2e40;
+  --faction-ephemerists-vote-plate-to: #0a121c;
+  --faction-ephemerists-vote-plate-border: #122b3d;
+  --faction-ephemerists-vote-dust: #5a6b7d;
+  --faction-ephemerists-vote-line: #d4ab55; /* dashed gold constellation line */
+  --faction-ephemerists-vote-star-on: #d4ab55; /* reached star (tiers I–IV) */
+  --faction-ephemerists-vote-star-top: #fff4cf; /* reached rank-5 (canonical) star */
+  --faction-ephemerists-vote-star-off: #3a4655; /* unreached star */
+  --faction-ephemerists-vote-core-on: #fff1c8; /* reached star core */
+  --faction-ephemerists-vote-core-top: #ffffff; /* rank-5 star core */
+  --faction-ephemerists-vote-core-off: #556374; /* unreached star core */
+  --faction-ephemerists-vote-spark: #fff4cf; /* rank-5 corner sparkles */
+
   /* ══ Everymen — the rainbow's missing red (union/WW2 poster) ══
      Constants (cream/gold/ink) keep their role in both themes; the paper
      surface + its text FLIP in dark; accent red stays vivid; field is the
@@ -1481,6 +1499,15 @@
 @media (prefers-reduced-motion: no-preference) {
   .coven-moon-sparkle { animation: coven-twinkle 1.2s ease-in-out infinite; animation-delay: var(--tw-delay, 0s); }
   .coven-moon-dust { animation: eph-twinkle 3.2s ease-in-out infinite; animation-delay: var(--tw-delay, 0s); }
+}
+
+/* Ephemerists — constellation plate: reached stars (tiers I–IV) breathe on the
+   opacity `eph-twinkle`; the rank-5 star's four corner sparkles twinkle on the
+   shared scale/rotate `coven-twinkle`. Reached stars still light and the gold
+   line still connects them when stilled — motion is decoration, not meaning. */
+@media (prefers-reduced-motion: no-preference) {
+  .eph-vote-star { animation: eph-twinkle 3s ease-in-out infinite; animation-delay: var(--tw-delay, 0s); }
+  .eph-vote-sparkle { animation: coven-twinkle 1.2s ease-in-out infinite; animation-delay: var(--tw-delay, 0s); }
 }
 
 /* S.N.I.D.E. — amp/EQ meter: at rank 5 the lit segments jump like a party VU. */
