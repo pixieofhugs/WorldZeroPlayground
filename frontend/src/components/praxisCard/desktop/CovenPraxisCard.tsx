@@ -17,7 +17,7 @@ export function CovenPraxisCard({ praxis, adminProps, showCrown }: ArchetypeProp
         bg: "var(--faction-coven-chronicle-bg)",
         ink: factionCssVar("coven", "card-text"),
         muted: factionCssVar("coven", "card-muted"),
-        accent: "var(--faction-coven-chronicle-plum)",
+        accent: "var(--faction-coven-chronicle-accent)",
         headerFrom: "var(--faction-coven-chronicle-header-from)",
         headerTo: "var(--faction-coven-chronicle-header-to)",
         headerText: "var(--faction-coven-chronicle-header-text)",

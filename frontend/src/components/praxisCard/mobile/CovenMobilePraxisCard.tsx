@@ -14,7 +14,7 @@ export default function CovenMobilePraxisCard({ praxis }: { praxis: PraxisCardOu
   const theme: MobileSlotTheme = {
     ink: factionCssVar('coven', 'card-text'),
     muted: factionCssVar('coven', 'card-muted'),
-    accent: 'var(--faction-coven-chronicle-plum)',
+    accent: 'var(--faction-coven-chronicle-accent)',
     paper: 'var(--faction-coven-chronicle-bg)',
     displayFont: 'var(--font-faction-script)',
     bodyFont: "'EB Garamond', serif",
@@ -25,7 +25,7 @@ export default function CovenMobilePraxisCard({ praxis }: { praxis: PraxisCardOu
         position: 'relative',
         overflow: 'hidden',
         background: 'var(--faction-coven-chronicle-bg)',
-        border: '2px solid var(--faction-coven-chronicle-plum)',
+        border: '2px solid var(--faction-coven-chronicle-accent)',
         borderRadius: 7,
         boxShadow: '0 12px 26px -12px var(--faction-coven-chronicle-shadow)',
       }}
