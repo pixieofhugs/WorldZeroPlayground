@@ -259,12 +259,16 @@ _Avoid_: "praxis score" as a per-praxis number with multipliers baked in (that c
 what the recalc path and the read path currently disagree on).
 
 **Merit** *(the faction-neutral praxis number)*:
-`task base + points_from_votes` — no faction/duel multiplier, **viewer-independent**. What a
-**praxis card** shows and what task submissions sort by: it compares the *work*, not whose
-faction multiplier was luckier. Distinct from **Contribution** (per-character, multiplied,
-feeds standings + the detail-page breakdown). Splitting Merit from Contribution is the
-locality win of the praxis-scoring deepening — one well-defined number per surface instead of
-one conflated `score` field computed two disagreeing ways.
+`task base + points_from_votes` — no faction/duel multiplier, **viewer-independent**. What
+task submissions sort by, and the number a **collab** praxis card shows (a collab has no single
+faction multiplier). Distinct from **Contribution** (per-character, multiplied, feeds standings
++ the detail-page breakdown). Splitting Merit from Contribution is the locality win of the
+praxis-scoring deepening — one well-defined number per surface instead of one conflated `score`
+field computed two disagreeing ways.
+_Note (ADR-0047):_ **solo** and **duel** praxis cards no longer show Merit — they show the
+computed **total** via the conditional score stamp (solo: `base × faction + votes`; duel: the
+side's own total with faction×duel combined). The multiplier/metatask rows appear only when
+non-identity. Merit remains the collab-card number and the submission sort key.
 
 **Metatask**:
 A flat-points **add-on to a praxis**, not a doable task — it has no praxis, no votes, no
