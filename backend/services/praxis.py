@@ -607,7 +607,7 @@ def meets_task_level(
     :func:`services.duel.respond_to_duel_challenge`) is a deliberate exception:
     it never calls this predicate. The opponent's only level check is the flat
     ``era.duel_level_required`` floor — reaching above your own level is the
-    point of a duel. See ADR-0049.
+    point of a duel. See ADR-0051.
     """
     return character_level + level_reach >= task.level_required
 

@@ -1,4 +1,4 @@
-# ADR-0049 — Duel acceptance bypasses the task-level gate
+# ADR-0051 — Duel acceptance bypasses the task-level gate
 
 **Status:** Accepted
 **Date:** 2026-07-20

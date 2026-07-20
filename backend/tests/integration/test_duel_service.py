@@ -4,7 +4,7 @@ respond_to_duel_challenge enforces exactly one level check on the opponent:
 a flat era.duel_level_required floor. It does NOT call meets_task_level /
 compare against task.level_required — that gate covers solo signup, collab
 signup, and duel *initiation* (the challenger) only. Duel acceptance is a
-deliberate carve-out (ADR-0049, #815). This file pins that behaviour.
+deliberate carve-out (ADR-0051, #815). This file pins that behaviour.
 """
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -28,7 +28,7 @@ async def test_accept_duel_at_duel_level_but_below_task_level_succeeds(
     era: Era,
 ) -> None:
     """Opponent at era.duel_level_required but below task.level_required still
-    accepts successfully (ADR-0049) — duel acceptance has no task-level gate.
+    accepts successfully (ADR-0051) — duel acceptance has no task-level gate.
     """
     # A task well above the level any duel-eligible opponent could reach —
     # if respond_to_duel_challenge ever gained a meets_task_level check, this
