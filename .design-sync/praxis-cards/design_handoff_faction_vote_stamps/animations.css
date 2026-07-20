@@ -1,0 +1,45 @@
+/* Faction Vote Widgets + card chrome — keyframes & effect classes
+ * Load this on any page that renders the widgets.
+ * The @keyframes are required by the widgets; the .wow-* / .alb-* classes
+ * are card-chrome decorations (sweep, rainbow shimmer, sparkles) used by the
+ * faction card frames, not the vote widgets themselves. */
+
+/* ---- vote widget keyframes ---- */
+@keyframes amp-party   { 0%,100%{transform:scaleY(1);} 50%{transform:scaleY(1.9);} }
+@keyframes gear-cw     { to{transform:rotate(360deg);} }
+@keyframes gear-ccw    { to{transform:rotate(-360deg);} }
+@keyframes gear-spark  { 0%{opacity:0;transform:translate(0,0) scale(1);} 10%{opacity:1;} 100%{opacity:0;transform:translate(var(--sx),var(--sy)) scale(0.3);} }
+@keyframes wow-twinkle { 0%,100%{opacity:0.25;transform:scale(0.6) rotate(0deg);} 50%{opacity:1;transform:scale(1.15) rotate(20deg);} }
+@keyframes eph-twinkle { 0%,100%{opacity:0.3;} 50%{opacity:1;} }
+@keyframes spec-rise   { 0%,100%{transform:translateY(0);} 50%{transform:translateY(var(--bounce,-3px));} }
+@keyframes ringGrow    { 0%{transform:scale(.4);opacity:0} 100%{transform:scale(1);opacity:1} }
+@keyframes uaspin      { to{transform:rotate(360deg)} }
+@keyframes voteBloom   { 0%{transform:scale(.5) rotate(-24deg);opacity:.3} 55%{transform:scale(1.18) rotate(4deg)} 78%{transform:scale(.96)} 100%{transform:scale(1) rotate(0);opacity:1} }
+@keyframes haloPulse   { 0%{transform:scale(.6);opacity:.55} 100%{transform:scale(1.9);opacity:0} }
+@keyframes voteTwist   { 0%{transform:rotate(-5deg) scale(1)} 50%{transform:rotate(5deg) scale(1.05)} 100%{transform:rotate(-5deg) scale(1)} }
+
+/* ---- card-chrome keyframes ---- */
+@keyframes term-blink  { 0%,49%{opacity:1;} 50%,100%{opacity:0;} }
+@keyframes scan-sweep  { 0%{top:-24%;} 100%{top:120%;} }
+@keyframes hud-pulse   { 0%,100%{opacity:1;} 50%{opacity:0.22;} }
+@keyframes wowBounce   { 0%,100%{transform:translateY(0)} 30%{transform:translateY(-9px)} 55%{transform:translateY(0)} 72%{transform:translateY(-4px)} }
+@keyframes wowSweep    { 0%{left:-55%} 100%{left:120%} }
+@keyframes wowConfetti { 0%{transform:translateY(-4px) rotate(0deg);opacity:0} 20%{opacity:1} 100%{transform:translateY(34px) rotate(220deg);opacity:0} }
+@keyframes wowWiggle   { 0%,100%{transform:translate(0,0)} 25%{transform:translate(1.5px,-1px)} 50%{transform:translate(-1px,1.5px)} 75%{transform:translate(1px,1px)} }
+@keyframes wowGroupBounce { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-4px)} }
+@keyframes alb-shift   { from{background-position:0 0} to{background-position:220px 0} }
+@keyframes albSpark    { 0%,100%{opacity:0;transform:scale(.5) rotate(0)} 50%{opacity:.75;transform:scale(1) rotate(28deg)} }
+
+/* ---- card-chrome effect classes (Cozy Coven balloon variant + Albescent shimmer) ---- */
+.wow-gballoon        { padding:0; background:transparent; border:0; cursor:pointer; position:relative; z-index:1; transition:transform .16s; }
+.wow-gballoon:hover  { transform:translateY(-3px); }
+.wow-gballoon.bounce { animation:wowBounce 2.2s ease-in-out infinite; }
+.wow-gpupil          { transform-box:fill-box; transform-origin:center; animation:wowWiggle 1.4s ease-in-out infinite; }
+.wow-gcheer          { animation:wowGroupBounce 1.05s ease-in-out infinite; }
+.wow-sweep           { position:absolute; inset:0; overflow:hidden; border-radius:10px; pointer-events:none; z-index:0; }
+.wow-sweep::after    { content:""; position:absolute; top:-12%; bottom:-12%; left:-55%; width:46%; background:linear-gradient(100deg,transparent,rgba(255,90,90,.26),rgba(255,205,80,.3),rgba(120,220,150,.26),rgba(90,170,220,.26),rgba(150,95,205,.3),transparent); transform:skewX(-16deg); mix-blend-mode:screen; animation:wowSweep 3.2s linear infinite; }
+.wow-confetti        { position:absolute; width:5px; height:7px; border-radius:1px; animation:wowConfetti 1.3s ease-in infinite; pointer-events:none; }
+.alb-rainbow         { position:absolute; left:-45%; top:-45%; width:190%; height:190%; transform:rotate(24deg); pointer-events:none; z-index:0; background-image:linear-gradient(90deg,rgba(193,39,45,.3),rgba(202,138,4,.3),rgba(22,163,74,.3),rgba(37,99,235,.3),rgba(190,24,93,.3),rgba(193,39,45,.3)); background-size:220px 100%; background-repeat:repeat; animation:alb-shift 18s linear infinite; mix-blend-mode:multiply; opacity:.55; }
+.alb-rainbow.d       { background-image:linear-gradient(90deg,rgba(255,96,84,.6),rgba(247,193,74,.6),rgba(74,222,128,.6),rgba(96,165,250,.6),rgba(244,114,182,.6),rgba(255,96,84,.6)); mix-blend-mode:screen; opacity:.5; }
+.alb-spark           { position:absolute; z-index:0; pointer-events:none; color:#bf7f3a; animation:albSpark 4.5s ease-in-out infinite; }
+.alb-spark.d         { color:#f2cc72; }
