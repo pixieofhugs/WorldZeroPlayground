@@ -96,6 +96,7 @@ export default function PointsRoundel({
         fontFamily="var(--font-faction-typewriter)"
         fontSize={7.5}
         letterSpacing={2}
+        style={{ textTransform: "uppercase" }}
       >
         {unitLabel}
       </text>

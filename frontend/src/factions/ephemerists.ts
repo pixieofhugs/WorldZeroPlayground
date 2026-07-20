@@ -34,6 +34,7 @@ import EphemeristsTaskCard from '../components/cards/EphemeristsTaskCard'
 import EphemeristsTaskDetail from '../pages/taskDetail/archetypes/EphemeristsTaskDetail'
 import EphemeristsVote from '../components/vote/EphemeristsVote'
 import EphemeristsPraxisCard from '../components/praxisCard/desktop/EphemeristsPraxisCard'
+import EphemeristsScoreStamp from '../components/praxisCard/scoreStamp/EphemeristsScoreStamp'
 import { EphemeristsSigil } from '../components/cards/ephemeristsAtoms'
 import { EphemeristsCard } from '../components/cards/FactionCard'
 import { EphemeristsSelectCard } from '../components/cards/FactionSelectCard'
@@ -45,6 +46,7 @@ export const EPHEMERISTS_MANIFEST: FactionManifest = {
   factionSelectCard: () => EphemeristsSelectCard,
   taskCard: () => EphemeristsTaskCard,
   praxisCard: () => EphemeristsPraxisCard,
+  scoreStamp: () => EphemeristsScoreStamp,
   avatar: () => EphemeristsAvatar,
   backdrop: () => EphemeristsBackdrop,
   sigil: () => EphemeristsSigil,
