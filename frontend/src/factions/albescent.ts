@@ -28,6 +28,8 @@
 import type { FactionManifest } from './manifest'
 
 import { AlbescentSelectCard } from '../components/cards/FactionSelectCard'
+import { AlbescentPraxisCard } from '../components/PraxisCard'
+import AlbescentMobilePraxisCard from '../components/praxisCard/mobile/AlbescentMobilePraxisCard'
 
 export const ALBESCENT_MANIFEST: FactionManifest = {
   slug: 'albescent',
@@ -40,4 +42,15 @@ export const ALBESCENT_MANIFEST: FactionManifest = {
    * UA's costume, not a neutral card (#796).
    */
   factionSelectCard: () => AlbescentSelectCard,
+
+  /**
+   * The praxis-card tell (#821, ADR-0048). These are NOT bespoke skins: each
+   * renders the exact spectrum `Default` card an unaffiliated player sees, with
+   * a slow rainbow DRIFT washed over it — the flourish that reveals the society
+   * to someone already looking. A repaint in Albescent's own colours would put
+   * it back in the spectrum and un-hide it, so this stays "NA + drift". Every
+   * other surface still falls through to Default (#783).
+   */
+  praxisCard: () => AlbescentPraxisCard,
+  mobilePraxisCard: () => AlbescentMobilePraxisCard,
 }
