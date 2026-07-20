@@ -58,7 +58,7 @@ export default function CovenVote({ praxisId, currentValue, points, totalVotes }
   }
 
   const active = hovered || selected
-  const caption = active ? TIERS[active - 1].label : t('coven.idle')
+  const caption = active ? TIERS[active - 1].label : t('chrome.coven.idle')
 
   return (
     <div>
@@ -214,7 +214,7 @@ export default function CovenVote({ praxisId, currentValue, points, totalVotes }
               color: 'var(--faction-coven-vote-off)',
             }}
           >
-            {`· ${t('coven.tag')}`}
+            {`· ${t('chrome.coven.tag')}`}
           </span>
         )}
       </div>

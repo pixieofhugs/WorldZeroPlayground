@@ -209,6 +209,16 @@
   --faction-snide-font-type: var(--font-faction-typewriter); /* Special Elite */
   --faction-snide-font-marker: var(--font-faction-marker); /* Permanent Marker */
 
+  /* S.N.I.D.E. amp/EQ-meter vote widget (#821). The panel is an amp face — a
+     dark surface that reads in both themes, so its inner values do not flip. */
+  --faction-snide-amber: #f0c400;
+  --faction-snide-amp-panel-from: #100d09;
+  --faction-snide-amp-panel-to: #070603;
+  --faction-snide-amp-panel-border: #2c2a20;
+  --faction-snide-amp-seg-off: rgba(255, 255, 255, 0.07);
+  --faction-snide-amp-screw: #3a3830;
+  --faction-snide-vote-off: #8a9a6a;
+
   /* ── Singularity terminal border (blue brand) ── */
   --faction-singularity-border-hard: #2563eb;
 
@@ -1435,6 +1445,12 @@
 @media (prefers-reduced-motion: no-preference) {
   .coven-moon-sparkle { animation: coven-twinkle 1.2s ease-in-out infinite; animation-delay: var(--tw-delay, 0s); }
   .coven-moon-dust { animation: eph-twinkle 3.2s ease-in-out infinite; animation-delay: var(--tw-delay, 0s); }
+}
+
+/* S.N.I.D.E. — amp/EQ meter: at rank 5 the lit segments jump like a party VU. */
+@keyframes snide-amp-party { 0%, 100% { transform: scaleY(1); } 50% { transform: scaleY(1.9); } }
+@media (prefers-reduced-motion: no-preference) {
+  .snide-amp-party { transform-origin: center; animation: snide-amp-party var(--amp-dur, 0.4s) ease-in-out infinite; animation-delay: var(--amp-delay, 0s); }
 }
 
 /* WOW — googly-balloon plate: reached balloons bob, rank-5 group-cheers, eyes wiggle. */

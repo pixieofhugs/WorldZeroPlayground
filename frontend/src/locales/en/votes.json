@@ -18,18 +18,14 @@
     "solid": "solid",
     "good": "good",
     "excellent": "excellent",
-    "legendary": "legendary",
-    "idle": "cast a spell",
-    "tag": "sealed"
+    "legendary": "legendary"
   },
   "wow": {
     "sweet": "sweet",
     "lovely": "lovely",
     "wonderful": "wonderful",
     "magical": "magical",
-    "iconic": "iconic",
-    "idle": "tap to cheer",
-    "tag": "yay!"
+    "iconic": "iconic"
   },
   "snide": {
     "meh": "meh",
@@ -77,13 +73,19 @@
       "rateAria": "Rate {{value}} — {{label}}"
     },
     "coven": {
-      "rateAria": "Rate {{value}} — {{label}}"
+      "rateAria": "Rate {{value}} — {{label}}",
+      "idle": "cast a spell",
+      "tag": "sealed"
     },
     "wow": {
-      "rateAria": "Cheer {{value}} — {{label}}"
+      "rateAria": "Cheer {{value}} — {{label}}",
+      "idle": "tap to cheer",
+      "tag": "yay!"
     },
     "snide": {
-      "rateAria": "Rate {{value}} — {{label}}"
+      "rateAria": "Rate {{value}} — {{label}}",
+      "idle": "call it",
+      "tag": "locked in"
     },
     "singularity": {
       "rateAria": "Cast {{value}} — {{label}}",

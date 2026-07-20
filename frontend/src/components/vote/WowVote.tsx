@@ -67,7 +67,7 @@ export default function WowVote({ praxisId, currentValue, points, totalVotes }: 
 
   const active = hovered || selected
   const cheering = active >= 5
-  const caption = active ? TIERS[active - 1].label : t('wow.idle')
+  const caption = active ? TIERS[active - 1].label : t('chrome.wow.idle')
 
   return (
     <div>
@@ -142,7 +142,7 @@ export default function WowVote({ praxisId, currentValue, points, totalVotes }: 
               color: 'var(--faction-wow-vote-off)',
             }}
           >
-            {`· ${t('wow.tag')}`}
+            {`· ${t('chrome.wow.tag')}`}
           </span>
         )}
       </div>
