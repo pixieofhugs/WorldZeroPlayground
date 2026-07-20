@@ -94,6 +94,16 @@ class PraxisCardOut(BaseModel):
     submit_proposed_at: Optional[datetime] = None  # collab pending-publish chip (#521, ADR-0012)
     member_count: int
     score: float
+    # Scoring breakdown for the score stamp (ADR-0047). Computed for the praxis
+    # AUTHOR (created_by), not the viewer — the card shows the points the praxis
+    # banked for whoever made it. ``display_multiplier`` is the single resolved
+    # multiplier: faction_mult for solo, faction×duel for a duel side, and None
+    # for collab (no single multiplier → the stamp collapses to Merit).
+    base_points: int = 0
+    metatask_points: int = 0
+    display_multiplier: Optional[float] = None
+    points_from_votes: int = 0
+    total: float = 0.0
     voter_count: int = 0
     is_top_for_task: bool = False  # Task Crown: top submitted praxis for its task (ADR-0028)
     task_faction_slug: Optional[str] = None

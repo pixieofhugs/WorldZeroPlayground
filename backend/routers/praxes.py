@@ -44,6 +44,7 @@ from services.praxis import (
     _build_invite_out,
     _require_member,
     apply_metatask,
+    author_contributions_for,
     build_praxis_card_out,
     build_praxis_out,
     can_view_praxis,
@@ -155,9 +156,17 @@ async def list_praxes_route(
         if viewer
         else {}
     )
+    # Score breakdown (ADR-0047): one scoring pass per distinct author for the
+    # whole page — not per card. Grouped by author because the breakdown is the
+    # AUTHOR's banked points, not the viewer's.
+    author_contributions = await author_contributions_for(praxes, session)
     return [
         await build_praxis_card_out(
-            praxis, session, crowned_ids=crowned, viewer_votes=viewer_votes
+            praxis,
+            session,
+            crowned_ids=crowned,
+            viewer_votes=viewer_votes,
+            author_contributions=author_contributions,
         )
         for praxis in praxes
     ]
