@@ -17,7 +17,12 @@ import { surfaceMap } from '../../../../factions'
 import { scoreBreakdown, formatMult } from '../scoreBreakdown'
 import DefaultScoreStamp from '../DefaultScoreStamp'
 
-function praxis(overrides: Partial<PraxisCardOut>): PraxisCardOut {
+/**
+ * Overrides are loosely typed on purpose: several cases below feed `null` into
+ * fields the API declares non-nullable, which is exactly the defensive `?? 0`
+ * path in `scoreBreakdown` that a wire-shape drift would otherwise hit unseen.
+ */
+function praxis(overrides: Record<string, unknown>): PraxisCardOut {
   return {
     base_points: 12,
     display_multiplier: 0.8,
