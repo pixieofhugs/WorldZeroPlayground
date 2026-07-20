@@ -56,11 +56,22 @@ The split between shared and bespoke is drawn at **logic vs. presentation**:
 registered `scoreStamp` renders the neutral default. `na`/unaffiliated has no
 manifest and keeps that behaviour.
 
-**Faction marks are React SVG components** under `components/factionMarks/`, not
-files under `public/`. This is forced rather than stylistic: an external `.svg`
-referenced by `<img>` cannot read CSS custom properties, so shipping the ensō as
-an asset would reintroduce hardcoded hex and make the mark un-themeable in dark
-mode. As components, every `fill` reads a token.
+**Faction marks live in `components/factionMarks/`, and the requirement is that a
+mark is tintable from a token** — never that its colour is baked in. An `<img
+src="…svg">` cannot read CSS custom properties, so the naive "just ship the SVG"
+route would reintroduce hardcoded hex and break dark mode. Two implementations
+satisfy the requirement; pick per mark:
+
+- **Inline React SVG** — for small and/or multi-colour marks. Every `fill` and
+  `stroke` reads a var. `lotus.svg` (9 KB, radial-gradient fills) goes here.
+- **`public/` asset + CSS `mask-image`**, tinted by `background-color:
+  var(--token)` — for large single-colour marks. `enso-detailed.svg` is **705 KB**
+  across 284 paths with exactly two fill values; inlining it would put three
+  quarters of a megabyte into the main JS bundle. As a mask it stays out of the
+  bundle, caches separately, and is still coloured entirely by a token.
+
+Either way `factionMarks/` is the single module that owns marks, so consumers have
+one import site and do not care which mechanism is underneath.
 
 ## Alternatives rejected
 
