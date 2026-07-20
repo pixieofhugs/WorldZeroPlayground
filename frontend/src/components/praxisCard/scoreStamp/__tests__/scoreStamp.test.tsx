@@ -11,11 +11,21 @@
  * `Default*` fall-through, like every other surface (ADR-0039).
  */
 import { describe, it, expect } from 'vitest'
+import { renderToStaticMarkup } from 'react-dom/server'
+import '../../../../i18n'
 import type { PraxisCardOut } from '../../../../api/praxis'
 import { pickVariant } from '../../../../utils/factionDispatch'
 import { surfaceMap } from '../../../../factions'
 import { scoreBreakdown, formatMult } from '../scoreBreakdown'
 import DefaultScoreStamp from '../DefaultScoreStamp'
+import EverymenScoreStamp from '../EverymenScoreStamp'
+import EphemeristsScoreStamp from '../EphemeristsScoreStamp'
+
+/** No hex may reach a stamp's markup — every colour is a token (ADR-0049). */
+const HEX = /#[0-9a-fA-F]{3,8}\b/
+
+/** Strip tags so a copy assertion cannot be satisfied by an attribute value. */
+const text = (html: string) => html.replace(/<[^>]*>/g, '')
 
 /**
  * Overrides are loosely typed on purpose: several cases below feed `null` into
@@ -81,9 +91,73 @@ describe('scoreBreakdown row selection (ADR-0047)', () => {
 })
 
 describe('scoreStamp surface dispatch (ADR-0049)', () => {
-  it('falls through to the Default stamp for every slug until a faction claims it', () => {
-    for (const slug of ['ua', 'snide', 'everymen', 'ephemerists', 'singularity', 'coven', 'wow', 'albescent', 'na', null]) {
+  it('falls through to the Default stamp for every slug that has not claimed it', () => {
+    for (const slug of ['ua', 'snide', 'singularity', 'coven', 'wow', 'albescent', 'na', null]) {
       expect(pickVariant(surfaceMap('scoreStamp'), slug, DefaultScoreStamp)).toBe(DefaultScoreStamp)
     }
+  })
+
+  it('gives Everymen and the Ephemerists their own stamps (#841)', () => {
+    expect(pickVariant(surfaceMap('scoreStamp'), 'everymen', DefaultScoreStamp)).toBe(
+      EverymenScoreStamp,
+    )
+    expect(pickVariant(surfaceMap('scoreStamp'), 'ephemerists', DefaultScoreStamp)).toBe(
+      EphemeristsScoreStamp,
+    )
+  })
+})
+
+/**
+ * The five conditional states of design v2, on both #841 stamps. The failure
+ * mode this guards is not a missing row — `scoreBreakdown` is tested above —
+ * but a stamp that stops READING as itself when a row drops out: a tally whose
+ * subtotal rule floats with nothing above it, or a rubric with no working over
+ * it. Each state must still print the total and its own device.
+ */
+describe('#841 stamps across the conditional states (ADR-0047)', () => {
+  const STATES = [
+    ['base only', { display_multiplier: 1, metatask_points: 0, points_from_votes: 0, total: 12 }],
+    ['+ votes', { display_multiplier: 1, metatask_points: 0, points_from_votes: 4, total: 16 }],
+    ['× mult', { display_multiplier: 0.8, metatask_points: 0, points_from_votes: 0, total: 9.6 }],
+    ['+ metatask', { display_multiplier: 1, metatask_points: 20, points_from_votes: 0, total: 32 }],
+    ['full formula', { display_multiplier: 0.8, metatask_points: 20, points_from_votes: 4, total: 29.6 }],
+  ] as const
+
+  for (const [name, fields] of STATES) {
+    it(`Everymen prints the tally and the roundel — ${name}`, () => {
+      const html = text(renderToStaticMarkup(<EverymenScoreStamp praxis={praxis({ ...fields })} />))
+      expect(html).toContain('TALLY')
+      expect(html).toContain('ON THE RECORD')
+      // The roundel carries the total whichever rows are present.
+      expect(html).toContain(fields.total.toFixed(1))
+      // The votes row survives at 0 — the deliberate ADR-0047 deviation.
+      expect(html).toContain('votes')
+      expect(html).not.toMatch(HEX)
+    })
+
+    it(`Ephemerists prints the working and the rubric — ${name}`, () => {
+      const html = text(
+        renderToStaticMarkup(<EphemeristsScoreStamp praxis={praxis({ ...fields })} />),
+      )
+      expect(html).toContain('base')
+      expect(html).toContain('from votes')
+      expect(html).toContain(fields.total.toFixed(1))
+      expect(html).not.toMatch(HEX)
+    })
+  }
+
+  it('draws the Everymen subtotal rule only when a metatask AND a multiplier are both live', () => {
+    const full = text(
+      renderToStaticMarkup(
+        <EverymenScoreStamp praxis={praxis({ display_multiplier: 0.8, metatask_points: 20 })} />,
+      ),
+    )
+    const metaOnly = text(
+      renderToStaticMarkup(
+        <EverymenScoreStamp praxis={praxis({ display_multiplier: 1, metatask_points: 20 })} />,
+      ),
+    )
+    expect(full).toContain('group')
+    expect(metaOnly).not.toContain('group')
   })
 })

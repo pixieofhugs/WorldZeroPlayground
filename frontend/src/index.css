@@ -279,6 +279,10 @@
   --eph-parchment: #f1e8cf; /* bright text on dark elements */
   --eph-field: #1d4f6e; /* lapis celestial-diagram field */
   --eph-field-deep: #143b54;
+  /* Codex chrome (#841) — the folio is bound in GOLD, not in a neutral rule.
+     Paler than --eph-gold so the frame reads as leaf, not as ochre ink. */
+  --eph-frame: #cdae6a; /* card + score-box border */
+  --eph-stamp-bg: #f8f0d9; /* the score box's brighter leaf */
   /* Ephemerist faces — Cinzel display caps, EB Garamond body, Cormorant flourishes */
   --eph-display: "Cinzel", "Trajan Pro", Georgia, serif;
   --eph-serif: "EB Garamond", Georgia, serif;
@@ -449,6 +453,17 @@
   --faction-everymen-card-accent: var(--everymen-red);
   --faction-everymen-card-muted: var(--everymen-muted);
   --faction-everymen-card-font: var(--font-accent); /* Bebas Neue */
+
+  /* ── Broadsheet chrome (#841) — the masthead bar, the frame ink and the
+     rubber TALLY stamp. The praxis card's border is the faction INK, not the
+     neutral --color-border: on a broadsheet the rule around the sheet is part
+     of the printing, not the app's chrome. ── */
+  --everymen-frame: #221a12; /* frame rule — the ink, not --color-border */
+  --everymen-masthead-text: #fbf3dd; /* cream on the red bar (5.2:1) */
+  --everymen-stamp-field: rgba(193, 39, 45, 0.05); /* stamped ink wash */
+  --everymen-stamp-ink: #a3402f; /* typewriter row labels */
+  --everymen-stamp-numeral: #7a1f18; /* the filled-in figures */
+  --everymen-stamp-mult: #a9741a; /* gold — the multiplier figure only */
 
   /* ── Gearworks vote widget (#821) — reached gears heat a cold→ember ramp with
      pale hubs; unreached gears are edge-only outlines; rank 5 throws sparks. The
@@ -743,6 +758,11 @@
   --eph-parchment: #efe3c6;
   --eph-field: #102a3a; /* celestial field deepens */
   --eph-field-deep: #0a1d2a;
+  /* Codex chrome (#841): the gilt binding would glare on the dark leaf, so the
+     frame goes to the faction's verdigris at low alpha — the design's own dark
+     value. The stamp leaf darkens with the vellum rather than lightening. */
+  --eph-frame: rgba(58, 160, 164, 0.35);
+  --eph-stamp-bg: #181208;
 
   /* ── Warriors of Whimsy collage scrap layers (dark) ── */
   --faction-coven-scrap-deep: #091209;
@@ -837,10 +857,36 @@
   --everymen-muted: #b6a079;
   --everymen-field: #3c1416;
   --everymen-field-deep: #5a1d20;
+  /* Broadsheet chrome (#841): the frame rule lifts off near-black (the light
+     ink would vanish), and the masthead's red bar carries INK, not cream —
+     white/cream on #e2433f fails AA, which is the same call
+     --faction-everymen-on-fill already makes. */
+  --everymen-frame: #3e3320;
+  --everymen-masthead-text: #161009;
+  --everymen-stamp-field: rgba(226, 67, 63, 0.08);
+  --everymen-stamp-ink: #d67b6a;
+  --everymen-stamp-numeral: #ece1c6;
+  --everymen-stamp-mult: #e6b34a;
   /* Gearworks: cooler edge for cold gears, a brighter single-halo rank-5 glow on
      the dark paper (the light double-drop-shadow would muddy against it). */
   --faction-everymen-vote-edge: #8a7856;
   --faction-everymen-vote-glow-5: drop-shadow(0 0 9px rgba(255, 175, 60, 0.95));
+}
+
+/* ══ Everymen rubber-stamp print (#841) ══
+   The tally stamp and the points roundel are INKED onto the sheet, so in light
+   they multiply into the paper's rule lines. On the dark broadsheet multiply
+   would subtract the mark to nothing, so the dark cascade drops the blend and
+   lifts the opacity instead — the theme switch belongs here, never in a
+   `dark ? a : b` ternary (§8). */
+.everymen-stamp-print {
+  mix-blend-mode: multiply;
+  opacity: 0.9;
+}
+
+[data-theme="dark"] .everymen-stamp-print {
+  mix-blend-mode: normal;
+  opacity: 0.95;
 }
 
 /* ══ Everymen poster-wall backdrop (faction-context pages; theme-aware) ══ */

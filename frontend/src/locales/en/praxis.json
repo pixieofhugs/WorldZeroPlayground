@@ -57,7 +57,10 @@
       "total": "total",
       "totalShort": "tot",
       "fromVotes": "+ {{votes}} from votes",
-      "points": "points"
+      "points": "points",
+      "tally": "TALLY",
+      "group": "group",
+      "onTheRecord": "★ VERIFIED ★ ON THE RECORD "
     },
     "mediaEmpty": "no proof attached",
     "adminStatus": {
@@ -76,6 +79,7 @@
     "masthead": {
       "ua": "Acquisition · filed",
       "ephemerists": "Ephemeris · sealed entry",
+      "everymen": "The Everymen",
       "snide": "evidence locker",
       "albescent": "Account · filed",
       "singularity": "singularity protocol",

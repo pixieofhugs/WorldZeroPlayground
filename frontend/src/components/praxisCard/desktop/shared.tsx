@@ -1,4 +1,4 @@
-import type { CSSProperties } from "react";
+import type { CSSProperties, ReactNode } from "react";
 import type { PraxisCardOut } from "../../../api/praxis";
 import {
   PraxisTitle,
@@ -77,6 +77,7 @@ export function PraxisBody({
   paper,
   titleStyle,
   showCrown,
+  eyebrow,
 }: {
   praxis: PraxisCardOut;
   tint: string;
@@ -85,6 +86,14 @@ export function PraxisBody({
   paper?: string;
   titleStyle?: CSSProperties;
   showCrown?: boolean;
+  /**
+   * An optional running head, rendered INSIDE the left column above the title
+   * (#841). Some archetypes carry their eyebrow as a full-width bar across the
+   * frame (Everymen's masthead); others — the Ephemerists' codex folio line —
+   * draw it as the first line of the entry itself, where it must sit in the
+   * text column and stop at the score stamp rather than run under it.
+   */
+  eyebrow?: ReactNode;
 }) {
   return (
     <>
@@ -97,6 +106,7 @@ export function PraxisBody({
         }}
       >
         <div style={{ flex: 1, minWidth: 0 }}>
+          {eyebrow}
           <PraxisTitle praxis={praxis} style={titleStyle} />
           <PraxisTaskLink praxis={praxis} style={{ color: muted }} />
           <PraxisExcerpt praxis={praxis} style={{ color: muted }} />

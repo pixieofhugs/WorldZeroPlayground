@@ -22,27 +22,41 @@ import { VOTE_REFRAMES } from './voteReframes'
  * stilled; motion is decoration, not meaning.
  */
 
-/** Star anchor points on the 284×68 plate — ornament geometry, kept raw. */
+/**
+ * Star anchor points on the plate — ornament geometry, kept raw.
+ *
+ * GEOMETRY RE-SOLVE (#841). The design draws the constellation on a 284×68
+ * plate at intrinsic star sizes (21/28px). #821 kept that plate but hung 44px
+ * touch targets off the same anchors, and a 44px box centred on y=18 starts at
+ * −4: every outer star's hit box hung off the top or bottom edge of its own
+ * plate, so a third of each target was unclickable.
+ *
+ * Touch targets win, but a port is not a drop-in (`design-fidelity.md`): the
+ * layout is RE-SOLVED rather than the target shrunk. The constellation's shape
+ * is untouched — every anchor moves down by the same 8px and the plate grows to
+ * 84 — which leaves each 44px box inside the plate with room to spare while the
+ * figure the stars draw is bit-identical to the design's.
+ */
 const STAR_POINTS = [
-  [24, 44],
-  [80, 18],
-  [136, 50],
-  [196, 20],
-  [256, 42],
+  [24, 52],
+  [80, 26],
+  [136, 58],
+  [196, 28],
+  [256, 50],
 ]
 const PLATE_W = 284
-const PLATE_H = 68
-/** Touch-target box centred on each star (WCAG ≥44px). */
+const PLATE_H = 84
+/** Touch-target box centred on each star (WCAG ≥44px). Never shrink this. */
 const HIT = 44
 
 /** Faint background dust motes scattered across the plate — ornament, raw. */
 const DUST = [
-  [40, 12],
-  [110, 60],
-  [172, 10],
-  [232, 60],
-  [270, 16],
-  [60, 54],
+  [40, 20],
+  [110, 68],
+  [172, 18],
+  [232, 68],
+  [270, 24],
+  [60, 62],
 ]
 /** Corner-sparkle offsets around the rank-5 star (marginLeft/Top from centre). */
 const SPARK_SPOTS = [
@@ -237,7 +251,8 @@ export default function EphemeristsVote({
           style={{
             fontFamily: 'var(--eph-serif)',
             fontStyle: 'italic',
-            fontSize: 'var(--text-content)',
+            // eslint-disable-next-line local/no-raw-style-values -- ornament: the widget's tier word is part of the mark, set at the design's 15 in the codex hand (#841, design-fidelity.md standing carve-out)
+            fontSize: 15,
             letterSpacing: '0.02em',
             color: active ? 'var(--eph-rubric)' : 'var(--eph-muted)',
             transition: 'color 140ms',
