@@ -20,6 +20,10 @@ const FACTION_SLUGS = [
   'snide',
   'singularity',
   'ua',
+  // WOW gained a vote voice with its first bespoke skin (#821) — the balloon
+  // widget's whimsical tiers. Its idle/tag prompt lives under chrome.wow, not
+  // here, so this block stays exactly the five tier labels.
+  'wow',
 ] as const
 const EXPECTED_TIER_COUNT = 5
 

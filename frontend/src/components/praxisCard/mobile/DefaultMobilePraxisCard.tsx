@@ -54,7 +54,7 @@ export default function DefaultMobilePraxisCard({ praxis }: { praxis: PraxisCard
           <DefaultSigil size={18} />
           {t('card.masthead.default')}
         </div>
-        <MobilePraxisBody praxis={praxis} theme={theme} scoreStrip mediaPlaceholder />
+        <MobilePraxisBody praxis={praxis} theme={theme} />
       </div>
     </div>
   )
