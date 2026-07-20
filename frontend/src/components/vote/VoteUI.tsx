@@ -1,13 +1,14 @@
 import type { } from 'react'
 import { pickVariant } from '../../utils/factionDispatch'
 import { surfaceMap } from '../../factions'
-import VoteStamps from '../ui/VoteStamps'
+import UnaffiliatedVote from './UnaffiliatedVote'
 
 /**
  * Per-faction vote/rating UI dispatcher (Tier-3 surface). Keyed by the voted
- * praxis's task faction (praxis.task_faction_slug). Faction variants register
- * in Sessions 3-4 and share useVote(); until then every praxis uses the global
- * VoteStamps. See docs/spec/SPEC-faction-ui-profile.md §1-2.
+ * praxis's task faction (praxis.task_faction_slug). A faction that registers a
+ * `vote` variant in its manifest gets its bespoke widget; `na` and every
+ * themed-but-unskinned faction fall through to the global spectrum-sweep
+ * {@link UnaffiliatedVote} (#820, ADR-0039). See SPEC-faction-ui-profile §1-2.
  */
 export interface VoteUIProps {
   praxisId: number
@@ -20,6 +21,6 @@ export default function VoteUI({
   factionSlug,
   ...props
 }: VoteUIProps & { factionSlug?: string | null }) {
-  const Variant = pickVariant(surfaceMap('vote'), factionSlug, VoteStamps)
+  const Variant = pickVariant(surfaceMap('vote'), factionSlug, UnaffiliatedVote)
   return <Variant {...props} />
 }

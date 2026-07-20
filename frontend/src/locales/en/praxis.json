@@ -49,6 +49,15 @@
     "solo": "solo",
     "crew": "+{{count}} crew",
     "votedBy": "voted by {{name}}",
+    "stamp": {
+      "base": "base",
+      "mult": "mult",
+      "meta": "meta",
+      "votes": "votes",
+      "total": "total",
+      "totalShort": "tot"
+    },
+    "mediaEmpty": "no proof attached",
     "adminStatus": {
       "underReview": "under review",
       "failed": "failed",

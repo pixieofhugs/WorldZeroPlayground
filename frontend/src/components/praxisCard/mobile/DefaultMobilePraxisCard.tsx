@@ -4,11 +4,12 @@ import DefaultSigil from '../../cards/DefaultSigil'
 import { MobilePraxisBody, type MobileSlotTheme } from './shared'
 
 /**
- * Default MOBILE praxis card (#573) — the spectrum fallback skin for `na` /
- * unaffiliated proof and any task faction without a bespoke card. A clean sheet
- * banded in the spectrum rainbow and marked with the seven-segment ring.
- * Mirrors the desktop DefaultPraxisCard; --faction-default-* tokens, flips
- * light/dark.
+ * Default MOBILE praxis card (#573, #820) — the SPECTRUM fallback skin for `na`
+ * / unaffiliated proof and any themed-but-unskinned task faction. A clean sheet
+ * banded in the community rainbow and marked with the seven-segment ring,
+ * carrying the conditional score strip (ADR-0047) and the empty-media drop
+ * target. Mirrors the desktop DefaultPraxisCard; --faction-default-* tokens,
+ * flips light/dark through the [data-theme] cascade.
  */
 export default function DefaultMobilePraxisCard({ praxis }: { praxis: PraxisCardOut }) {
   const { t } = useTranslation('praxis')
@@ -53,7 +54,7 @@ export default function DefaultMobilePraxisCard({ praxis }: { praxis: PraxisCard
           <DefaultSigil size={18} />
           {t('card.masthead.default')}
         </div>
-        <MobilePraxisBody praxis={praxis} theme={theme} />
+        <MobilePraxisBody praxis={praxis} theme={theme} scoreStrip mediaPlaceholder />
       </div>
     </div>
   )

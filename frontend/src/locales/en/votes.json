@@ -41,6 +41,15 @@
     "distinguished": "distinguished",
     "masterwork": "masterwork"
   },
+  "unaffiliated": {
+    "so-so": "so-so",
+    "decent": "decent",
+    "good": "good",
+    "great": "great",
+    "brilliant": "brilliant",
+    "idle": "cast a vote",
+    "tag": "your vote"
+  },
   "chrome": {
     "loginGate": "Log in to vote",
     "voted": "Voted {{stars}} pts",
@@ -75,6 +84,9 @@
     "albescent": {
       "rateAria": "Witness {{value}} — {{label}}",
       "prompt": "Bear Witness"
+    },
+    "unaffiliated": {
+      "rateAria": "Rate {{value}} — {{label}}"
     }
   }
 }
