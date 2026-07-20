@@ -38,22 +38,26 @@ export const VOTE_REFRAMES: Record<string, VoteReframe> = {
       { value: 5, label: i18n.t('votes:everymen.legendary') },
     ],
   },
+  // The two ladders below were inverted between these slugs by #821 and are put
+  // back by #838. Coven is the cozy-casual voice (moon phases, "how'd this
+  // land?"); WOW is the archaic one (balloon verdict, "Cast thy Verdict").
+  // ADR-0050 / .design-sync/praxis-cards/LABELS.md — go by metaphor, not label.
   coven: {
     tiers: [
-      { value: 1, label: i18n.t('votes:coven.a-start') },
-      { value: 2, label: i18n.t('votes:coven.solid') },
-      { value: 3, label: i18n.t('votes:coven.good') },
-      { value: 4, label: i18n.t('votes:coven.excellent') },
-      { value: 5, label: i18n.t('votes:coven.legendary') },
+      { value: 1, label: i18n.t('votes:coven.sweet') },
+      { value: 2, label: i18n.t('votes:coven.lovely') },
+      { value: 3, label: i18n.t('votes:coven.wonderful') },
+      { value: 4, label: i18n.t('votes:coven.magical') },
+      { value: 5, label: i18n.t('votes:coven.iconic') },
     ],
   },
   wow: {
     tiers: [
-      { value: 1, label: i18n.t('votes:wow.sweet') },
-      { value: 2, label: i18n.t('votes:wow.lovely') },
-      { value: 3, label: i18n.t('votes:wow.wonderful') },
-      { value: 4, label: i18n.t('votes:wow.magical') },
-      { value: 5, label: i18n.t('votes:wow.iconic') },
+      { value: 1, label: i18n.t('votes:wow.a-start') },
+      { value: 2, label: i18n.t('votes:wow.solid') },
+      { value: 3, label: i18n.t('votes:wow.good') },
+      { value: 4, label: i18n.t('votes:wow.excellent') },
+      { value: 5, label: i18n.t('votes:wow.legendary') },
     ],
   },
   snide: {

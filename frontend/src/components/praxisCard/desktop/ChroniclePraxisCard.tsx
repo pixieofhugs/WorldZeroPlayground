@@ -2,12 +2,14 @@ import { AdminOverlay } from "../shared";
 import { PraxisBody, frameBase, type ArchetypeProps } from "./shared";
 
 /**
- * The gold/plum + WOW-yellow CHRONICLE frame (#821). A bound almanac leaf: a
- * gradient running-head band over a vellum sheet ruled in the faction's accent.
- * Both Cozy Coven (gold/plum) and Warriors of Whimsy (yellow) share this
- * structure and differ only in tokens — never mix the two palettes. Frame
- * pixel-fidelity vs. the prototype is flagged for human QA (the `.dc.html` is
- * not reachable from here).
+ * The CHRONICLE frame (#821). A bound almanac leaf: a gradient running-head band
+ * over a sheet ruled in the faction's accent.
+ *
+ * The chronicle is Warriors of Whimsy's aesthetic — cream, gold and plum
+ * (ADR-0050). Cozy Coven also renders through this structure, but wearing the
+ * pink marker sticker's tokens since #838; that pairing is temporary and #840
+ * replaces it with a sticker archetype. Never mix the two palettes. Frame
+ * pixel-fidelity vs. the prototype is flagged for human QA.
  */
 export interface ChronicleTheme {
   /** Vellum sheet colour (also the Task Crown inner disc). */
