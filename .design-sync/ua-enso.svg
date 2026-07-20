@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200" fill="none" role="img" aria-label="Ensō — University of Asthmatics sigil">
+  <g transform="rotate(-7 100 100)" stroke="#DD5A1E" stroke-linecap="round" fill="none">
+
+    <path d="M134 41.2 A68 68 0 1 1 66 158.8" stroke-width="22"></path>
+
+    <path d="M66 158.8 A68 68 0 0 1 66 41.2" stroke-width="10" stroke-opacity="0.85"></path>
+  </g>
+</svg>
