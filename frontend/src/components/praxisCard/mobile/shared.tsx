@@ -6,6 +6,7 @@ import { factionName } from '../../../utils/factions'
 import { relativeTime } from '../../../utils/dates'
 import { mediaUrl } from '../../../utils/media'
 import { rosterNames } from '../shared'
+import { PraxisScoreStrip } from '../PraxisScoreStamp'
 import { TaskCrown } from '../../cards/TaskCrown'
 import VoteUI from '../../vote/VoteUI'
 
@@ -322,13 +323,39 @@ export function MobileModeChip({
 export function MobileMediaGallery({
   praxis,
   theme,
+  showPlaceholder,
 }: {
   praxis: PraxisCardOut
   theme: MobileSlotTheme
+  /** Empty gallery renders a dashed drop-target placeholder (spectrum, #820). */
+  showPlaceholder?: boolean
 }) {
   const { t } = useTranslation('praxis')
   const items = praxis.media_items ?? []
-  if (items.length === 0) return null
+  if (items.length === 0) {
+    if (!showPlaceholder) return null
+    return (
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          height: 88,
+          borderRadius: 4,
+          border: `1px dashed color-mix(in srgb, ${theme.accent} 45%, transparent)`,
+          background: `color-mix(in srgb, ${theme.accent} 4%, transparent)`,
+          color: theme.accent,
+          fontFamily: theme.bodyFont,
+          fontSize: 'var(--text-xs)',
+          letterSpacing: '0.14em',
+          textTransform: 'uppercase',
+          opacity: 0.7,
+        }}
+      >
+        {t('card.mediaEmpty')}
+      </div>
+    )
+  }
   const tiles = items.slice(0, 3)
   const overflow = items.length - tiles.length
   return (
@@ -485,9 +512,15 @@ export function MobilePraxisBody({
         <MobileTitle praxis={praxis} theme={theme} />
         <MobileBody praxis={praxis} theme={theme} />
       </div>
+      {/* Conditional score strip (ADR-0047) on every mobile faction card (#821). */}
+      <PraxisScoreStrip
+        praxis={praxis}
+        theme={{ ink: theme.ink, muted: theme.muted, accent: theme.accent }}
+      />
       <MobileModeChip praxis={praxis} theme={theme} />
       <MobileRoster praxis={praxis} theme={theme} />
-      <MobileMediaGallery praxis={praxis} theme={theme} />
+      {/* Every card shows the media slot — a drop target when empty (#821). */}
+      <MobileMediaGallery praxis={praxis} theme={theme} showPlaceholder />
       <div style={{ borderTop: `1px solid ${theme.accent}`, paddingTop: 'var(--space-md)' }}>
         <MobileVotedByMarker praxis={praxis} theme={theme} />
         <MobileVoteFooter praxis={praxis} />

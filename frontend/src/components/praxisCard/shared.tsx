@@ -449,14 +449,42 @@ export function PraxisMediaGallery({
   praxis,
   accent,
   paper,
+  showPlaceholder,
 }: {
   praxis: PraxisCardOut;
   accent: string;
   paper?: string;
+  /**
+   * When set, an empty gallery renders a neutral dashed drop-target placeholder
+   * (the mock's "media slot") instead of nothing. Opt-in so it stays off the
+   * dense faction cards; the spectrum Default card turns it on (#820).
+   */
+  showPlaceholder?: boolean;
 }) {
   const { t } = useTranslation("praxis");
   const items = praxis.media_items ?? [];
-  if (items.length === 0) return null;
+  if (items.length === 0) {
+    if (!showPlaceholder) return null;
+    return (
+      <div
+        className="flex items-center justify-center font-body"
+        style={{
+          marginTop: "var(--space-sm)",
+          height: 96,
+          borderRadius: 4,
+          border: `1px dashed color-mix(in srgb, ${accent} 45%, transparent)`,
+          background: `color-mix(in srgb, ${accent} 4%, transparent)`,
+          color: accent,
+          fontSize: "var(--text-xs)",
+          letterSpacing: "0.14em",
+          textTransform: "uppercase",
+          opacity: 0.7,
+        }}
+      >
+        {t("card.mediaEmpty")}
+      </div>
+    );
+  }
   const tiles = items.slice(0, 3);
   const overflow = items.length - tiles.length;
   return (

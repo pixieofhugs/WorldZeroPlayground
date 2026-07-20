@@ -1,28 +1,26 @@
 /**
- * Warriors of Whimsy has a COLOUR but not a SKIN (#784, then #812).
+ * Warriors of Whimsy is THEMED and PARTLY SKINNED (#784, #812, then #821).
  *
  * #784 moved its lo-fi pink `.exe` identity wholesale to Cozy Coven, leaving
- * `wow` with no manifest and no theme. #812 gave back only the second of those:
- * a minimal yellow `--faction-wow-*` block, so WOW rejoins the rainbow and its
- * members get faction-coloured ornament. The manifest is still empty, and that
- * is the settled intent — "most other aspects of them will be indistinguishable
- * from na until we ship the design".
+ * `wow` with no manifest and no theme. #812 gave back a minimal yellow
+ * `--faction-wow-*` block, so WOW rejoins the rainbow. #821 ships its FIRST
+ * bespoke surfaces: the praxis card, its mobile twin, and the vote widget. Every
+ * OTHER surface still falls through to `Default*` — WOW is themed-and-partly-
+ * skinned, not fully dressed, and definitely not "broken faction".
  *
- * That split is the whole point of this file, and it is fragile in BOTH
- * directions, neither of which crashes:
+ * That split is fragile in BOTH directions, neither of which crashes:
  *
- *  - Register a component "helpfully" and WOW starts wearing a half-built skin
- *    nobody designed, most likely one borrowed from the faction that took its
- *    old one.
+ *  - Register a component "helpfully" on an UNCLAIMED surface and WOW starts
+ *    wearing a half-built skin nobody designed, most likely one borrowed from the
+ *    faction that took its old one.
  *  - Let the theme lapse and `factionName()` falls through to `names.na`,
  *    silently labelling a real, populated, joinable faction "Unaffiliated".
  *
- * Neither produces a type error, a thrown key, or a visual diff a build can
- * see. So the three halves are asserted together — falls back on every surface,
- * AND resolves its own theme, AND still has words — because it is their
- * combination that means "colour, not skin" rather than "broken faction".
+ * So this file pins the exact skinned set AND the theme AND the words together:
+ * only the three redesign surfaces are claimed, the rest fall back, WOW resolves
+ * its own hue, and it still has a name and description of its own.
  *
- * DELETE THIS FILE when WOW's real design ships and it registers a manifest.
+ * DELETE (or re-scope) THIS FILE when WOW's remaining surfaces ship.
  */
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, it, expect } from 'vitest'
@@ -43,19 +41,34 @@ function Sentinel() {
   return <div>default-sentinel</div>
 }
 
-describe('wow falls back to Default on every surface', () => {
-  it('registers no manifest at all', () => {
-    expect(FACTION_MANIFESTS.map((manifest) => manifest.slug)).not.toContain('wow')
+/** The three surfaces #821 skinned. Every other surface must fall back. */
+const WOW_SKINNED: ReadonlySet<FactionSurface> = new Set([
+  'praxisCard',
+  'mobilePraxisCard',
+  'vote',
+])
+
+describe('wow is partly skinned: three surfaces claimed, the rest fall back', () => {
+  it('registers a manifest now (#821)', () => {
+    expect(FACTION_MANIFESTS.map((manifest) => manifest.slug)).toContain('wow')
   })
 
   for (const surface of SURFACE_KEYS) {
-    it(`claims nothing on the ${surface} surface, so it gets the fallback`, () => {
+    const claimed = WOW_SKINNED.has(surface as FactionSurface)
+    it(`${claimed ? 'claims' : 'falls back on'} the ${surface} surface`, () => {
       const map = surfaceMap(surface as FactionSurface)
 
-      // Unclaimed: no bespoke component is registered for the slug...
-      expect(map['wow'], `${surface} should be unclaimed by wow`).toBeUndefined()
+      if (claimed) {
+        // A bespoke component is registered for the slug, so the dispatcher
+        // hands it back rather than the caller's Default.
+        expect(map['wow'], `${surface} should be claimed by wow`).toBeDefined()
+        const Resolved = pickVariant(map as Record<string, typeof Sentinel>, 'wow', Sentinel)
+        expect(Resolved).not.toBe(Sentinel)
+        return
+      }
 
-      // ...so the dispatcher hands back the caller's Default, and it renders.
+      // Unclaimed: no component for the slug, so the caller's Default renders.
+      expect(map['wow'], `${surface} should be unclaimed by wow`).toBeUndefined()
       const Resolved = pickVariant(map as Record<string, typeof Sentinel>, 'wow', Sentinel)
       expect(Resolved).toBe(Sentinel)
       expect(renderToStaticMarkup(<Resolved />)).toContain('default-sentinel')

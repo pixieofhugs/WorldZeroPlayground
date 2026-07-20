@@ -49,6 +49,15 @@
     "solo": "solo",
     "crew": "+{{count}} crew",
     "votedBy": "voted by {{name}}",
+    "stamp": {
+      "base": "base",
+      "mult": "mult",
+      "meta": "meta",
+      "votes": "votes",
+      "total": "total",
+      "totalShort": "tot"
+    },
+    "mediaEmpty": "no proof attached",
     "adminStatus": {
       "underReview": "under review",
       "failed": "failed",
@@ -68,6 +77,8 @@
       "snide": "evidence locker",
       "albescent": "Account · filed",
       "singularity": "singularity protocol",
+      "coven": "Grimoire · entry",
+      "wow": "Chronicle of Whimsy",
       "default": "Praxis · unaffiliated"
     }
   },

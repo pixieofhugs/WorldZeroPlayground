@@ -168,6 +168,19 @@
   --faction-default-card-accent: #1a1209;
   --faction-default-card-muted: #6b6050;
   --faction-default-card-font: var(--font-display);
+  /* Spectrum-sweep vote widget (ADR-0039): unreached dots wear this hairline
+     ring; the reached dots fill with --faction-default-rainbow. The two caption
+     colours are the widget's warm on/off text — flipped in dark below, so the
+     widget never branches on a `dark` boolean. The five glow hues are the
+     community rainbow's per-dot cast; identity colours, so theme-independent. */
+  --faction-default-dot-ring: #d6cfbf;
+  --faction-default-vote-on: #c2541f;
+  --faction-default-vote-off: #a8895a;
+  --spectrum-glow-1: #c1352a;
+  --spectrum-glow-2: #cf861a;
+  --spectrum-glow-3: #16a34a;
+  --spectrum-glow-4: #2f7fb8;
+  --spectrum-glow-5: #a4277e;
   /* Neutral glow for unaffiliated surfaces (#728): a rainbow has no single
      colour to cast, so na glows colourless. Light mode uses a soft grey — a
      literally-white glow on a light page is invisible; dark mode is white. */
@@ -196,6 +209,16 @@
   --faction-snide-font-type: var(--font-faction-typewriter); /* Special Elite */
   --faction-snide-font-marker: var(--font-faction-marker); /* Permanent Marker */
 
+  /* S.N.I.D.E. amp/EQ-meter vote widget (#821). The panel is an amp face — a
+     dark surface that reads in both themes, so its inner values do not flip. */
+  --faction-snide-amber: #f0c400;
+  --faction-snide-amp-panel-from: #100d09;
+  --faction-snide-amp-panel-to: #070603;
+  --faction-snide-amp-panel-border: #2c2a20;
+  --faction-snide-amp-seg-off: rgba(255, 255, 255, 0.07);
+  --faction-snide-amp-screw: #3a3830;
+  --faction-snide-vote-off: #8a9a6a;
+
   /* ── Singularity terminal border (blue brand) ── */
   --faction-singularity-border-hard: #2563eb;
 
@@ -208,6 +231,17 @@
      the accent without sitting below AA. Terminal tokens are theme-invariant
      (Singularity is always-dark), so this one value serves both themes. */
   --faction-singularity-phosphor-dim: #7ba98a;
+
+  /* ── Singularity decode-strip vote widget (#821) ──
+     The terminal decode strip: unreached tiers scramble katakana in dim green;
+     reached tiers resolve to density glyphs in phosphor green, with the rank-5
+     "verified" tier in cyan. Terminal tokens are theme-invariant (Singularity is
+     always-dark), so these serve both themes — no [data-theme] override. */
+  --faction-singularity-vote-reached: #4ade80; /* phosphor green — resolved glyphs */
+  --faction-singularity-vote-verified: #60a5fa; /* cyan — rank 5 "verified" */
+  --faction-singularity-vote-scramble: rgba(74, 222, 128, 0.24); /* dim, unreached noise */
+  --faction-singularity-vote-reached-bg: rgba(74, 222, 128, 0.05); /* faint lit key */
+  --faction-singularity-vote-off: #3f7a58; /* idle caption ink */
 
   /* ══ Ephemerists illuminated-codex palette (the ephemerists slot) ══
      The card contract above rebinds to these. CONSTANTS (gold/rubric/
@@ -252,6 +286,21 @@
   --ua-line-soft: #e3cb98;
   --ua-gilt: linear-gradient(135deg, #eec06a 0%, #9c6a1a 24%, #f0c878 50%, #9c6a1a 76%, #dd9322 100%);
 
+  /* ── UA growing-mandala vote widget (#821) ──
+     Per-rank fill ramp: the mandala blooms taupe→deep-red as the reading warms
+     (faint → radiant). Cores are punched to the sheet colour so the mandala
+     reads as an aperture. UA is always-light (the salon never dims, #240), so
+     these theme-invariant values need no [data-theme="dark"] override; the core
+     punch tracks --faction-ua-card-bg, which is parchment in both themes. */
+  --faction-ua-vote-rank-1: #a69c8c;
+  --faction-ua-vote-rank-2: #c0894f;
+  --faction-ua-vote-rank-3: #d2762f;
+  --faction-ua-vote-rank-4: #dd5a1e;
+  --faction-ua-vote-rank-5: #b5361a;
+  --faction-ua-vote-core: var(--faction-ua-card-bg); /* punch cores to the sheet */
+  --faction-ua-vote-halo: var(--faction-ua-vote-rank-4); /* bloom pulse ring */
+  --faction-ua-vote-reading: #b8471a; /* the lowercase reading word */
+
   /* ── Warriors of Whimsy collage scrap layers (legacy — kept for back-compat) ── */
   --faction-coven-scrap-deep: #fbcfe0;
   --faction-coven-scrap-mid: #fce7ef;
@@ -268,6 +317,76 @@
   --faction-coven-dot: rgba(214, 90, 150, 0.2);
   --faction-coven-ivy: #7cbf99;
   --faction-coven-ivy-leaf: #9ad3b1;
+
+  /* ══ Praxis-card redesign (#821) — chronicle frames + bespoke vote widgets ══
+     Coven wears a gold/plum chronicle; WOW wears the same structure recoloured
+     to its yellow. The moon-phase + balloon vote plates are always night/warm
+     plates, so their inner values do not flip — only the chronicle chrome does. */
+
+  /* Coven — gold/plum chronicle frame */
+  --faction-coven-chronicle-bg: #f6ecd6; /* vellum */
+  --faction-coven-chronicle-plum: #7a4a9e;
+  --faction-coven-chronicle-gold: #b8892f; /* readable gold for rules/labels */
+  --faction-coven-chronicle-header-from: #7a4a9e;
+  --faction-coven-chronicle-header-to: #ec5f99;
+  --faction-coven-chronicle-header-text: #fbeef5;
+  --faction-coven-chronicle-shadow: rgba(90, 40, 110, 0.24);
+
+  /* Coven — moon-phase vote plate (night plate; same in both themes) */
+  --faction-coven-moon-plate-from: #3a2352;
+  --faction-coven-moon-plate-to: #190f2b;
+  --faction-coven-moon-plate-border: #4a3168;
+  --faction-coven-moon-disc-on: #2a1740;
+  --faction-coven-moon-disc-off: #241a33;
+  --faction-coven-moon-gold: #f4d98a;
+  --faction-coven-moon-lit-off: #4a3a5e;
+  --faction-coven-moon-ring-on: #e6b8d6;
+  --faction-coven-moon-ring-off: #4a3560;
+  --faction-coven-moon-face: #6a2f7e;
+  --faction-coven-moon-cheek: rgba(236, 95, 153, 0.45);
+  --faction-coven-moon-star: #f0d36e;
+  --faction-coven-moon-dust: #b98fd6;
+  --faction-coven-vote-on: #d63f86;
+  --faction-coven-vote-off: #a76389;
+
+  /* WOW — yellow chronicle frame (NOT gold/plum; that is coven's) */
+  --faction-wow-chronicle-bg: #fffbe8;
+  --faction-wow-chronicle-header-from: #e0a800;
+  --faction-wow-chronicle-header-to: #f5c542;
+  --faction-wow-chronicle-header-text: #3a2a00;
+  --faction-wow-chronicle-shadow: rgba(160, 120, 0, 0.24);
+
+  /* WOW — googly-balloon vote plate (warm plate) */
+  --faction-wow-balloon-plate-from: #fff4c8;
+  --faction-wow-balloon-plate-to: #ffe9a0;
+  --faction-wow-balloon-plate-border: #e6c257;
+  --faction-wow-balloon-1: #f7e08a;
+  --faction-wow-balloon-2: #f5d15a;
+  --faction-wow-balloon-3: #f5c542;
+  --faction-wow-balloon-4: #e0a800;
+  --faction-wow-balloon-5: #c98a00;
+  --faction-wow-balloon-string: #b9902a;
+  --faction-wow-balloon-eye: #14110b;
+  --faction-wow-vote-on: #a9700a;
+  --faction-wow-vote-off: #b79a52;
+
+  /* Ephemerists — constellation-attestation vote plate (#821). A night sky read
+     in BOTH themes (the plate is a fixed dark surface like coven's moon plate),
+     so these stay constant across the cascade; only the caption ink (--eph-*)
+     flips. Reached stars light gold, the rank-5 star whitens, a dashed gold line
+     ties the reached stars together. */
+  --faction-ephemerists-vote-plate-from: #1c2e40;
+  --faction-ephemerists-vote-plate-to: #0a121c;
+  --faction-ephemerists-vote-plate-border: #122b3d;
+  --faction-ephemerists-vote-dust: #5a6b7d;
+  --faction-ephemerists-vote-line: #d4ab55; /* dashed gold constellation line */
+  --faction-ephemerists-vote-star-on: #d4ab55; /* reached star (tiers I–IV) */
+  --faction-ephemerists-vote-star-top: #fff4cf; /* reached rank-5 (canonical) star */
+  --faction-ephemerists-vote-star-off: #3a4655; /* unreached star */
+  --faction-ephemerists-vote-core-on: #fff1c8; /* reached star core */
+  --faction-ephemerists-vote-core-top: #ffffff; /* rank-5 star core */
+  --faction-ephemerists-vote-core-off: #556374; /* unreached star core */
+  --faction-ephemerists-vote-spark: #fff4cf; /* rank-5 corner sparkles */
 
   /* ══ Everymen — the rainbow's missing red (union/WW2 poster) ══
      Constants (cream/gold/ink) keep their role in both themes; the paper
@@ -295,6 +414,27 @@
   --faction-everymen-card-muted: var(--everymen-muted);
   --faction-everymen-card-font: var(--font-accent); /* Bebas Neue */
 
+  /* ── Gearworks vote widget (#821) — reached gears heat a cold→ember ramp with
+     pale hubs; unreached gears are edge-only outlines; rank 5 throws sparks. The
+     edge + rank-5 glow flip in the dark cascade (see the dark block). ── */
+  --faction-everymen-vote-heat-1: #6e747e;
+  --faction-everymen-vote-heat-2: #9c7d4a;
+  --faction-everymen-vote-heat-3: #c8842a;
+  --faction-everymen-vote-heat-4: #eb5f14;
+  --faction-everymen-vote-heat-5: #ffcf6e;
+  --faction-everymen-vote-hub-1: #f4ecd6;
+  --faction-everymen-vote-hub-2: #f4ecd6;
+  --faction-everymen-vote-hub-3: #fbe6c2;
+  --faction-everymen-vote-hub-4: #ffe6b0;
+  --faction-everymen-vote-hub-5: #fff3c8;
+  --faction-everymen-vote-edge: #c9b58f;
+  --faction-everymen-vote-spark-a: #ffe08a;
+  --faction-everymen-vote-spark-b: #ff9838;
+  --faction-everymen-vote-spark-glow: #ffb347;
+  --faction-everymen-vote-glow-2: drop-shadow(0 0 2px rgba(180, 120, 40, 0.5));
+  --faction-everymen-vote-glow-3: drop-shadow(0 0 4px rgba(210, 132, 42, 0.7));
+  --faction-everymen-vote-glow-4: drop-shadow(0 0 6px rgba(235, 95, 20, 0.8));
+  --faction-everymen-vote-glow-5: drop-shadow(0 1px 1px rgba(120, 60, 10, 0.55)) drop-shadow(0 0 7px rgba(235, 120, 20, 0.85));
 
   /* ── Vote stamp colors (orange → yellow → green → blue → magenta) ── */
   --vote-1: #c2410c;
@@ -540,6 +680,10 @@
   --faction-default-card-text: #f0e6d0;
   --faction-default-card-accent: #f0e6d0;
   --faction-default-card-muted: #9b9080;
+  /* Spectrum-sweep vote widget — dark palette (the glow hues stay identity). */
+  --faction-default-dot-ring: rgba(240, 230, 208, 0.3);
+  --faction-default-vote-on: #e07a3a;
+  --faction-default-vote-off: #b0925f;
   --glow-neutral: rgba(255, 255, 255, 0.75);
 
   /* ══ Ephemerists palette (dark) — pigments stay vivid; vellum darkens
@@ -578,6 +722,33 @@
   --faction-coven-dot: rgba(244, 114, 182, 0.16);
   --faction-coven-ivy: #5fa882;
   --faction-coven-ivy-leaf: #7fc59e;
+
+  /* ══ Praxis-card redesign (#821) — chronicle frames flip; vote plates hold ══
+     The moon/balloon plates are night/warm surfaces that read in both themes,
+     so only the chronicle chrome + caption inks are overridden here. */
+
+  /* Coven — gold/plum chronicle (dark) */
+  --faction-coven-chronicle-bg: #241733;
+  --faction-coven-chronicle-plum: #b98fd6;
+  --faction-coven-chronicle-gold: #e6c273;
+  --faction-coven-chronicle-header-from: #4a2a63;
+  --faction-coven-chronicle-header-to: #8e2f5c;
+  --faction-coven-chronicle-header-text: #fbe4f0;
+  --faction-coven-chronicle-shadow: rgba(0, 0, 0, 0.5);
+  --faction-coven-vote-on: #f472b6;
+  --faction-coven-vote-off: #c78aa6;
+
+  /* WOW — yellow chronicle (dark) */
+  --faction-wow-chronicle-bg: #231c0e;
+  --faction-wow-chronicle-header-from: #8a6600;
+  --faction-wow-chronicle-header-to: #c99a1a;
+  --faction-wow-chronicle-header-text: #fff4cf;
+  --faction-wow-chronicle-shadow: rgba(0, 0, 0, 0.5);
+  --faction-wow-balloon-plate-from: #3a2f0e;
+  --faction-wow-balloon-plate-to: #241c08;
+  --faction-wow-balloon-plate-border: #7a6320;
+  --faction-wow-vote-on: #f5c542;
+  --faction-wow-vote-off: #b9a473;
 
   /* ── Watercolor splash opacities (dimmer in dark) ── */
   --wc-opacity-blob: 0.15;
@@ -619,6 +790,10 @@
   --everymen-muted: #b6a079;
   --everymen-field: #3c1416;
   --everymen-field-deep: #5a1d20;
+  /* Gearworks: cooler edge for cold gears, a brighter single-halo rank-5 glow on
+     the dark paper (the light double-drop-shadow would muddy against it). */
+  --faction-everymen-vote-edge: #8a7856;
+  --faction-everymen-vote-glow-5: drop-shadow(0 0 9px rgba(255, 175, 60, 0.95));
 }
 
 /* ══ Everymen poster-wall backdrop (faction-context pages; theme-aware) ══ */
@@ -1285,6 +1460,19 @@
   .eph-depth { animation: eph-depth 16s ease-in-out infinite; }
 }
 
+/* Unaffiliated spectrum-sweep vote widget (#820) — reached dots bob in a rising
+   wave (left-to-right via per-dot --spec-delay). Class-gated on reduced-motion
+   so the widget never writes `animation:` inline and bypass the gate; the dot
+   still fills with the rainbow when stilled, only the bob stops. Per-dot
+   duration/delay/travel arrive as inline custom properties. */
+@keyframes spec-rise { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(var(--spec-bounce, -3px)); } }
+@media (prefers-reduced-motion: no-preference) {
+  .spectrum-dot--reached {
+    animation: spec-rise var(--spec-dur, 1.6s) ease-in-out infinite;
+    animation-delay: var(--spec-delay, 0s);
+  }
+}
+
 /* Singularity terminal — phosphor glow breathes, sigil turns. (#222) */
 @keyframes sg-pulse { 0%, 100% { opacity: 0.55; transform: scale(1); } 50% { opacity: 0.85; transform: scale(1.04); } }
 @keyframes sg-rotate { to { transform: rotate(360deg); } }
@@ -1313,6 +1501,111 @@
 @keyframes cs-shimmer { to { background-position: 200% 0; } }
 @media (prefers-reduced-motion: no-preference) {
   .cs-shimmer { animation: cs-shimmer 4s linear infinite; }
+}
+
+/* ══ Praxis-card redesign vote widgets (#821) ══
+   Every animation is gated on reduced-motion and driven by a class, never an
+   inline `animation:` (the widgets would bypass the gate otherwise). Meaning is
+   carried by the fill/selection, not the motion — the widgets read correctly
+   stilled. */
+
+/* Coven — moon-phase plate: rank-5 sparkles twinkle, dust drifts. */
+@keyframes coven-twinkle { 0%, 100% { opacity: 0.25; transform: scale(0.6) rotate(0deg); } 50% { opacity: 1; transform: scale(1.15) rotate(20deg); } }
+@media (prefers-reduced-motion: no-preference) {
+  .coven-moon-sparkle { animation: coven-twinkle 1.2s ease-in-out infinite; animation-delay: var(--tw-delay, 0s); }
+  .coven-moon-dust { animation: eph-twinkle 3.2s ease-in-out infinite; animation-delay: var(--tw-delay, 0s); }
+}
+
+/* Ephemerists — constellation plate: reached stars (tiers I–IV) breathe on the
+   opacity `eph-twinkle`; the rank-5 star's four corner sparkles twinkle on the
+   shared scale/rotate `coven-twinkle`. Reached stars still light and the gold
+   line still connects them when stilled — motion is decoration, not meaning. */
+@media (prefers-reduced-motion: no-preference) {
+  .eph-vote-star { animation: eph-twinkle 3s ease-in-out infinite; animation-delay: var(--tw-delay, 0s); }
+  .eph-vote-sparkle { animation: coven-twinkle 1.2s ease-in-out infinite; animation-delay: var(--tw-delay, 0s); }
+}
+
+/* S.N.I.D.E. — amp/EQ meter: at rank 5 the lit segments jump like a party VU. */
+@keyframes snide-amp-party { 0%, 100% { transform: scaleY(1); } 50% { transform: scaleY(1.9); } }
+@media (prefers-reduced-motion: no-preference) {
+  .snide-amp-party { transform-origin: center; animation: snide-amp-party var(--amp-dur, 0.4s) ease-in-out infinite; animation-delay: var(--amp-delay, 0s); }
+}
+
+/* WOW — googly-balloon plate: reached balloons bob, rank-5 group-cheers, eyes wiggle. */
+@keyframes wow-bounce { 0%, 100% { transform: translateY(0); } 30% { transform: translateY(-9px); } 55% { transform: translateY(0); } 72% { transform: translateY(-4px); } }
+@keyframes wow-group-bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
+@keyframes wow-eye-wiggle { 0%, 100% { transform: translate(0, 0); } 25% { transform: translate(1.5px, -1px); } 50% { transform: translate(-1px, 1.5px); } 75% { transform: translate(1px, 1px); } }
+@media (prefers-reduced-motion: no-preference) {
+  .wow-balloon-float { animation: wow-bounce 2.2s ease-in-out infinite; animation-delay: var(--tw-delay, 0s); }
+  .wow-balloon-cheer { animation: wow-group-bounce 1.05s ease-in-out infinite; }
+  .wow-balloon-eye { transform-box: fill-box; transform-origin: center; animation: wow-eye-wiggle 1.4s ease-in-out infinite; }
+}
+
+/* Everymen — gearworks: reached gears turn (odd tiers clockwise, even counter),
+   rank-5 sparks fly outward. Per-gear duration (--ev-gear-dur) and per-spark
+   travel/tempo (--ev-sx/--ev-sy/--ev-spark-dur/--ev-spark-delay) arrive as inline
+   custom properties. Class-gated on reduced-motion: stilled, the gears keep their
+   heat/glow (that carries the rank) and the sparks stay hidden (opacity:0 inline). */
+@keyframes ev-gear-cw { to { transform: rotate(360deg); } }
+@keyframes ev-gear-ccw { to { transform: rotate(-360deg); } }
+@keyframes ev-gear-spark { 0% { opacity: 0; transform: translate(0, 0) scale(1); } 10% { opacity: 1; } 100% { opacity: 0; transform: translate(var(--ev-sx, 0), var(--ev-sy, 0)) scale(0.3); } }
+@media (prefers-reduced-motion: no-preference) {
+  .ev-gear--cw { transform-origin: center; animation: ev-gear-cw var(--ev-gear-dur, 3s) linear infinite; }
+  .ev-gear--ccw { transform-origin: center; animation: ev-gear-ccw var(--ev-gear-dur, 3s) linear infinite; }
+  .ev-gear-spark { animation: ev-gear-spark var(--ev-spark-dur, 1s) ease-out infinite; animation-delay: var(--ev-spark-delay, 0s); }
+}
+
+/* Albescent — the secret-society tell (#821, ADR-0048): the na spectrum card
+   with a slow rainbow drift washed over the whole sheet. A skin-fallthrough
+   faction, so this is a flourish LAYERED over Default, never a repaint. */
+@keyframes alb-drift { from { background-position: 0 0; } to { background-position: 220px 0; } }
+.alb-rainbow {
+  position: absolute;
+  left: -45%;
+  top: -45%;
+  width: 190%;
+  height: 190%;
+  transform: rotate(24deg);
+  pointer-events: none;
+  z-index: 0;
+  background-image: linear-gradient(90deg, rgba(193, 39, 45, 0.3), rgba(202, 138, 4, 0.3), rgba(22, 163, 74, 0.3), rgba(37, 99, 235, 0.3), rgba(190, 24, 93, 0.3), rgba(193, 39, 45, 0.3));
+  background-size: 220px 100%;
+  background-repeat: repeat;
+  mix-blend-mode: multiply;
+  opacity: 0.5;
+}
+[data-theme="dark"] .alb-rainbow {
+  background-image: linear-gradient(90deg, rgba(255, 96, 84, 0.55), rgba(247, 193, 74, 0.55), rgba(74, 222, 128, 0.55), rgba(96, 165, 250, 0.55), rgba(244, 114, 182, 0.55), rgba(255, 96, 84, 0.55));
+  mix-blend-mode: screen;
+  opacity: 0.45;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .alb-rainbow { animation: alb-drift 18s linear infinite; }
+}
+
+/* UA — growing mandala: each rank blooms a fuller mandala; the emphasized cell
+   pops (bloom), rank-5 breathes (twist), rings turn (spin) and a halo pulses out
+   on selection. Every motion is class-gated on reduced-motion so the widget
+   never writes `animation:` inline; meaning is carried by the mandala's fullness
+   and the reading word, not the motion — it reads correctly stilled. Per-cell
+   spin duration/direction/grow-delay and twist tempo arrive as custom props. */
+@keyframes ua-ring-grow { 0% { transform: scale(0.4); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+@keyframes ua-spin { to { transform: rotate(360deg); } }
+@keyframes ua-bloom { 0% { transform: scale(0.5) rotate(-24deg); opacity: 0.3; } 55% { transform: scale(1.18) rotate(4deg); } 78% { transform: scale(0.96); } 100% { transform: scale(1) rotate(0); opacity: 1; } }
+@keyframes ua-halo-pulse { 0% { transform: scale(0.6); opacity: 0.55; } 100% { transform: scale(1.9); opacity: 0; } }
+@keyframes ua-twist { 0% { transform: rotate(-5deg) scale(1); } 50% { transform: rotate(5deg) scale(1.05); } 100% { transform: rotate(-5deg) scale(1); } }
+@media (prefers-reduced-motion: no-preference) {
+  .ua-mandala-ring {
+    transform-box: fill-box;
+    transform-origin: center;
+    animation:
+      ua-ring-grow 0.5s var(--ua-grow-delay, 0s) both ease-out,
+      ua-spin var(--ua-spin-dur, 34s) linear infinite;
+    animation-direction: normal, var(--ua-spin-dir, normal);
+  }
+  .ua-mandala-bloom { animation: ua-bloom 0.7s cubic-bezier(0.2, 1.25, 0.35, 1) both; }
+  .ua-mandala-halo { animation: ua-halo-pulse 0.7s ease-out both; }
+  .ua-mandala-alive { animation: ua-twist var(--ua-twist-dur, 2s) ease-in-out infinite; }
 }
 
 /* FieldDesk life-card hover-lift (#274). The CredentialCard owns its own rotation;

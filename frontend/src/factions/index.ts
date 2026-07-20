@@ -34,6 +34,7 @@ import { EVERYMEN_MANIFEST } from './everymen'
 import { SINGULARITY_MANIFEST } from './singularity'
 import { SNIDE_MANIFEST } from './snide'
 import { UA_MANIFEST } from './ua'
+import { WOW_MANIFEST } from './wow'
 
 export type { FactionManifest, FactionSurface } from './manifest'
 export { SURFACE_KEYS } from './manifest'
@@ -44,24 +45,18 @@ export { SURFACE_KEYS } from './manifest'
  * state rather than a faction and deliberately has no manifest: it falls through
  * to the neutral `Default*` skins everywhere (ADR-0039).
  *
- * `wow` has no manifest either, for a different reason (#784): Warriors of
- * Whimsy's lo-fi pink `.exe` identity moved wholesale to Cozy Coven. Registering
- * nothing is exactly what the override-only contract wants in the meantime —
- * every surface hands `wow` its `Default*` archetype, which is a clean slate
- * rather than a gap.
- *
- * Note that #812 has since given `wow` a yellow THEME, so it is a known faction
- * with coloured ornament and a slot in the rainbow. That changed nothing here,
- * and the gap between the two is the point: WOW is the one faction that is
- * themed without being skinned, so a WOW surface is *supposed* to look like an
- * unaffiliated one in every respect but hue. Do not "finish" it by registering
- * components — the design has not been made yet. Its name and description
- * resolve from the catalog, so it reads as a real faction throughout;
- * `wowRendersDefault.test.tsx` pins all three halves of that.
+ * `wow` (Warriors of Whimsy) began with no manifest (#784 moved its old pink
+ * identity to Cozy Coven) and then only a yellow THEME (#812). #821 gives it its
+ * FIRST bespoke surfaces: the praxis card (a yellow chronicle), its mobile twin,
+ * and the balloon vote widget. It is still override-only — every OTHER surface
+ * hands `wow` its `Default*` archetype, so WOW is themed-and-partly-skinned, not
+ * fully dressed. `wowRendersDefault.test.tsx` pins which three surfaces are
+ * claimed and that the rest fall back.
  */
 export const FACTION_MANIFESTS: readonly FactionManifest[] = [
   EVERYMEN_MANIFEST,
   UA_MANIFEST,
+  WOW_MANIFEST,
   SNIDE_MANIFEST,
   EPHEMERISTS_MANIFEST,
   SINGULARITY_MANIFEST,

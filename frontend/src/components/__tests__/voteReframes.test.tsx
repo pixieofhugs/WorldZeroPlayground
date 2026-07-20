@@ -79,7 +79,7 @@ describe('EverymenVote renders from registry', () => {
 
 describe('reframeLabel', () => {
   it('labels a value in the task faction vocabulary', () => {
-    expect(reframeLabel('ua', 5)).toBe('masterwork')
+    expect(reframeLabel('ua', 5)).toBe('radiant')
     expect(reframeLabel('snide', 1)).toBe('meh')
   })
 

@@ -100,6 +100,21 @@ export interface PraxisCardOut {
   member_count: number
   score: number
   voter_count: number
+  // Scoring breakdown for the conditional score stamp (ADR-0047, #819). The
+  // backend resolves `display_multiplier` per praxis type: the faction multiplier
+  // for solo, the combined faction×duel multiplier for duel, and `null` for a
+  // collab (no single multiplier exists → the stamp hides the row and shows
+  // Merit). The card no longer derives vote-points by subtraction.
+  /** Task base points (before multiplier/votes). */
+  base_points: number
+  /** Points contributed by applied metatasks; the meta row shows only when > 0. */
+  metatask_points: number
+  /** Resolved display multiplier; `null` (collab) or `1.0` hides the mult row. */
+  display_multiplier: number | null
+  /** Points scored from votes (`+0` is valid — the votes row always shows). */
+  points_from_votes: number
+  /** The computed total shown as the stamp headline, to 1 decimal (ADR-0047). */
+  total: number
   /** Task Crown — top-scoring submitted praxis for its task (ADR-0028). */
   is_top_for_task: boolean
   task_faction_slug: string | null

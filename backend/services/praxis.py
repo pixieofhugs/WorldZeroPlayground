@@ -29,6 +29,7 @@ from models.praxis import (
     PraxisType,
 )
 from models.era import Era
+from models.character_stats import CharacterStats
 from models.task import Task, TaskStatus, TaskType
 from models.vote import Vote
 from schemas.task import TaskOut
@@ -42,6 +43,7 @@ from schemas.praxis import (
 )
 from services import collab_consensus
 from services.character_stats import recalculate_character_stats
+from services.praxis_scoring import Contribution, compute_contributions
 from services.faction_service import faction_permits
 from services.era import get_current_era_row, get_or_create_stats
 from services.level_jump import available_level_reach, consume_level_jump
@@ -247,6 +249,108 @@ async def build_praxis_out(
     )
 
 
+async def author_contributions_for(
+    praxes: list[Praxis],
+    session: AsyncSession,
+    era: EraConfig = CURRENT_ERA,
+) -> dict[int, Contribution]:
+    """Scoring breakdown for each praxis, computed for its AUTHOR (ADR-0047).
+
+    The card's score stamp shows the points the praxis banked for whoever made
+    it, so the scoring subject is ``praxis.created_by`` — not the viewer. This
+    differs from ``compute_contributions``'s usual per-viewer use (ADR-0014).
+
+    Praxes are grouped by author so a feed makes O(distinct authors) scoring
+    passes, not O(praxes) — ``compute_contributions`` applies a single
+    character's faction/level to the whole batch it is handed, so one call per
+    author is required. List routes precompute this once and hand it to
+    :func:`build_praxis_card_out` via ``author_contributions``.
+    """
+    if not praxes:
+        return {}
+
+    era_row = await get_current_era_row(session)
+
+    author_ids = {p.created_by_id for p in praxes}
+    authors_result = await session.execute(
+        select(Character).where(Character.id.in_(author_ids))
+    )
+    authors_by_id: dict[int, Character] = {c.id: c for c in authors_result.scalars()}
+
+    # Author level gates metatask points (compute_contributions passes it through
+    # to get_meta_task_points_bulk). One bulk fetch, not one per author.
+    levels_result = await session.execute(
+        select(CharacterStats.character_id, CharacterStats.level).where(
+            CharacterStats.character_id.in_(author_ids),
+            CharacterStats.era_id == era_row.id,
+        )
+    )
+    level_by_author: dict[int, int] = {cid: lvl for cid, lvl in levels_result.all()}
+
+    praxes_by_author: dict[int, list[Praxis]] = {}
+    for praxis in praxes:
+        praxes_by_author.setdefault(praxis.created_by_id, []).append(praxis)
+
+    contributions: dict[int, Contribution] = {}
+    for author_id, author_praxes in praxes_by_author.items():
+        author = authors_by_id.get(author_id)
+        if author is None:
+            continue
+        contributions.update(
+            await compute_contributions(
+                author_praxes,
+                author,
+                era,
+                session,
+                character_level=level_by_author.get(author_id, 0),
+            )
+        )
+    return contributions
+
+
+def _resolve_card_scoring(
+    praxis: Praxis, contribution: Optional[Contribution], task_point_value: int, tally_votes_points: int
+) -> tuple[int, int, Optional[float], int, float]:
+    """Resolve the score-stamp fields from a Contribution (ADR-0047).
+
+    Returns ``(base_points, metatask_points, display_multiplier, points_from_votes,
+    total)``. ``display_multiplier`` is the single value the stamp renders:
+    faction_mult for solo, faction×duel combined for a duel side, and ``None``
+    for collab (members span factions → no single multiplier → stamp collapses
+    to Merit = base + votes).
+    """
+    if contribution is None:
+        # Defensive fallback (author missing / unscoreable): Merit only.
+        display = None if praxis.type == PraxisType.collab else 1.0
+        return (
+            task_point_value,
+            0,
+            display,
+            tally_votes_points,
+            float(task_point_value + tally_votes_points),
+        )
+
+    if praxis.type == PraxisType.collab:
+        # No single multiplier exists (ADR-0047 §Decision): collapse to Merit.
+        return (
+            contribution.base_points,
+            contribution.metatask_points,
+            None,
+            contribution.points_from_votes,
+            float(contribution.base_points + contribution.points_from_votes),
+        )
+
+    # Solo or duel side: one combined multiplier (duel_multiplier is 1.0 for a
+    # plain solo, so faction×duel reduces to faction for solo).
+    return (
+        contribution.base_points,
+        contribution.metatask_points,
+        contribution.faction_multiplier * contribution.duel_multiplier,
+        contribution.points_from_votes,
+        contribution.total,
+    )
+
+
 async def build_praxis_card_out(
     praxis: Praxis,
     session: AsyncSession,
@@ -254,10 +358,15 @@ async def build_praxis_card_out(
     *,
     crowned_ids: Optional[set[int]] = None,
     viewer_votes: Optional[dict[int, ViewerVote]] = None,
+    author_contributions: Optional[dict[int, Contribution]] = None,
 ) -> PraxisCardOut:
     """Lightweight card for list views.
 
-    score = Merit = task base + points_from_votes (viewer-independent; ADR-0014).
+    ``score`` stays Merit = task base + points_from_votes (viewer-independent;
+    ADR-0014) to preserve the current frontend's vote-derivation until the
+    redesign reads ``total``. The score stamp reads the explicit breakdown
+    fields (``base_points``/``metatask_points``/``display_multiplier``/
+    ``points_from_votes``/``total``), computed for the praxis AUTHOR per ADR-0047.
 
     ``crowned_ids`` are the Task Crown holders (ADR-0028); list routes
     precompute them once via :func:`~services.vote_tally.crowned_praxis_ids`
@@ -268,6 +377,11 @@ async def build_praxis_card_out(
     :func:`~services.vote_tally.viewer_votes_for` so neither the viewer's own-star
     highlight nor the account-mate marker becomes a per-card query. ``None``
     (anonymous viewer) leaves both ``viewer_vote`` and ``voted_by_name`` unset.
+
+    ``author_contributions`` maps praxis id → the author's :class:`Contribution`;
+    list routes precompute it once via :func:`author_contributions_for` so the
+    score breakdown is not re-derived per card. When absent, this builder scores
+    the single praxis itself (single-card callers).
     """
     task_title = praxis.task.title if praxis.task else ""
     task_point_value = praxis.task.point_value if praxis.task else 0
@@ -279,6 +393,21 @@ async def build_praxis_card_out(
     tally_map = await tally_votes([praxis.id], session)
     tally = get_tally(tally_map, praxis.id)
     score = float(task_point_value + tally.points_from_votes)
+
+    # Score breakdown (ADR-0047), computed for the AUTHOR. Reuse the precomputed
+    # map when the list route supplies it; otherwise score this praxis alone.
+    contribution = author_contributions.get(praxis.id) if author_contributions else None
+    if contribution is None:
+        contribution = (
+            await author_contributions_for([praxis], session, era)
+        ).get(praxis.id)
+    (
+        base_points,
+        metatask_points,
+        display_multiplier,
+        points_from_votes,
+        total,
+    ) = _resolve_card_scoring(praxis, contribution, task_point_value, tally.points_from_votes)
 
     # Task Crown (ADR-0028): top submitted praxis for this task, computed live.
     if crowned_ids is None:
@@ -302,6 +431,11 @@ async def build_praxis_card_out(
         submit_proposed_at=praxis.submit_proposed_at,
         member_count=len(praxis.members),
         score=score,
+        base_points=base_points,
+        metatask_points=metatask_points,
+        display_multiplier=display_multiplier,
+        points_from_votes=points_from_votes,
+        total=total,
         voter_count=tally.voter_count,
         is_top_for_task=praxis.id in crowned_ids,
         task_faction_slug=praxis.task.primary_faction_slug if praxis.task else None,
@@ -1635,6 +1769,7 @@ __all__ = [
     "active_member_task_ids_subquery",
     "allowed_praxis_modes",
     "apply_metatask",
+    "author_contributions_for",
     "build_praxis_out",
     "build_praxis_card_out",
     "cancel_pending_publish_on_edit",

@@ -7,7 +7,7 @@
     "canonical": "canonical"
   },
   "everymen": {
-    "a-start": "a start",
+    "fair": "fair",
     "solid": "solid",
     "good": "good",
     "excellent": "excellent",
@@ -19,6 +19,13 @@
     "good": "good",
     "excellent": "excellent",
     "legendary": "legendary"
+  },
+  "wow": {
+    "sweet": "sweet",
+    "lovely": "lovely",
+    "wonderful": "wonderful",
+    "magical": "magical",
+    "iconic": "iconic"
   },
   "snide": {
     "meh": "meh",
@@ -35,11 +42,20 @@
     "verified": "VERIFIED"
   },
   "ua": {
-    "rough-sketch": "rough sketch",
-    "study": "study",
-    "accomplished": "accomplished",
-    "distinguished": "distinguished",
-    "masterwork": "masterwork"
+    "faint": "faint",
+    "forming": "forming",
+    "true": "true",
+    "alive": "alive",
+    "radiant": "radiant"
+  },
+  "unaffiliated": {
+    "so-so": "so-so",
+    "decent": "decent",
+    "good": "good",
+    "great": "great",
+    "brilliant": "brilliant",
+    "idle": "cast a vote",
+    "tag": "your vote"
   },
   "chrome": {
     "loginGate": "Log in to vote",
@@ -51,21 +67,36 @@
       "rateAria": "Rate {{value}} of 5"
     },
     "ephemerists": {
-      "rateAria": "Mark {{value}} — {{label}}"
+      "rateAria": "Mark {{value}} — {{label}}",
+      "idle": "attest the record",
+      "tag": "sealed"
     },
     "everymen": {
-      "rateAria": "Rate {{value}} — {{label}}"
+      "rateAria": "Rate {{value}} — {{label}}",
+      "idle": "awaiting",
+      "tag": "earned"
     },
     "coven": {
-      "rateAria": "Rate {{value}} — {{label}}"
+      "rateAria": "Rate {{value}} — {{label}}",
+      "idle": "cast a spell",
+      "tag": "sealed"
+    },
+    "wow": {
+      "rateAria": "Cheer {{value}} — {{label}}",
+      "idle": "tap to cheer",
+      "tag": "yay!"
     },
     "snide": {
-      "rateAria": "Rate {{value}} — {{label}}"
+      "rateAria": "Rate {{value}} — {{label}}",
+      "idle": "call it",
+      "tag": "locked in"
     },
     "singularity": {
       "rateAria": "Cast {{value}} — {{label}}",
       "prompt": "Cast Signal",
-      "promptHint": "how confidently does this output hold?"
+      "promptHint": "how confidently does this output hold?",
+      "idle": "no signal",
+      "tag": "locked"
     },
     "ua": {
       "rateAria": "Appraise {{value}} — {{label}}",
@@ -75,6 +106,9 @@
     "albescent": {
       "rateAria": "Witness {{value}} — {{label}}",
       "prompt": "Bear Witness"
+    },
+    "unaffiliated": {
+      "rateAria": "Rate {{value}} — {{label}}"
     }
   }
 }

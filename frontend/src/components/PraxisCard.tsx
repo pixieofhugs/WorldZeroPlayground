@@ -14,7 +14,6 @@ import {
   PraxisTaskLink,
   PraxisByline,
   PraxisVotedByMarker,
-  PraxisScoreHero,
   PraxisStats,
   PraxisExcerpt,
   PraxisModeChip,
@@ -23,6 +22,7 @@ import {
   PraxisVoteFooter,
   type AdminProps,
 } from "./praxisCard/shared";
+import { PraxisScoreStamp } from "./praxisCard/PraxisScoreStamp";
 import { usePraxisCard } from "./praxisCard/usePraxisCard";
 
 interface Props {
@@ -102,18 +102,22 @@ function PraxisBody({
           <PraxisTaskLink praxis={praxis} style={{ color: muted }} />
           <PraxisExcerpt praxis={praxis} style={{ color: muted }} />
         </div>
-        <PraxisScoreHero
+        {/*
+         * The conditional score stamp (ADR-0047) on EVERY faction (#821). It
+         * replaced the legacy `PraxisScoreHero` here — the hero survives only on
+         * the praxis-detail surfaces that have not yet migrated.
+         */}
+        <PraxisScoreStamp
           praxis={praxis}
-          color={tint}
-          border={tint}
-          paper={paper}
+          theme={{ color: tint, border: tint, muted, paper }}
           showCrown={showCrown}
         />
       </div>
       <PraxisStats praxis={praxis} style={{ color: muted, marginTop: "var(--space-sm)" }} />
       <PraxisModeChip praxis={praxis} />
       <PraxisRoster praxis={praxis} accent={tint} paper={paper} />
-      <PraxisMediaGallery praxis={praxis} accent={tint} paper={paper} />
+      {/* Every card shows the media slot — a drop target when empty (#821). */}
+      <PraxisMediaGallery praxis={praxis} accent={tint} paper={paper} showPlaceholder />
       <PraxisByline praxis={praxis} style={{ color: muted }} />
       <PraxisVotedByMarker praxis={praxis} style={{ color: muted }} />
       <PraxisVoteFooter praxis={praxis} />
@@ -220,78 +224,150 @@ export function EverymenPraxisCard({ praxis, adminProps, showCrown }: ArchetypeP
   );
 }
 
-/** The two offset scrap layers behind the COVEN card, plus its tape. Static (#586). */
-const wowScrapDeep: CSSProperties = {
-  position: "absolute",
-  top: 10,
-  left: -4,
-  right: -4,
-  height: 24,
-  background: "var(--faction-coven-scrap-deep)",
-  border: "1.5px solid rgba(0,0,0,0.12)",
-  transform: "rotate(-4deg)",
-  borderRadius: 1,
-};
+/**
+ * The gold/plum + WOW-yellow CHRONICLE frame (#821). A bound almanac leaf: a
+ * gradient running-head band over a vellum sheet ruled in the faction's accent.
+ * Both Cozy Coven (gold/plum) and Warriors of Whimsy (yellow) share this
+ * structure and differ only in tokens — never mix the two palettes. Frame
+ * pixel-fidelity vs. the prototype is flagged for human QA (the `.dc.html` is
+ * not reachable from here).
+ */
+interface ChronicleTheme {
+  /** Vellum sheet colour (also the Task Crown inner disc). */
+  bg: string;
+  /** Primary ink. */
+  ink: string;
+  /** Muted / secondary text. */
+  muted: string;
+  /** Accent — border, ruled hairline, score stamp. */
+  accent: string;
+  /** Running-head gradient stops + its text colour. */
+  headerFrom: string;
+  headerTo: string;
+  headerText: string;
+  /** Drop-shadow colour. */
+  shadow: string;
+  titleFont: string;
+  bodyFont: string;
+}
 
-const wowScrapMid: CSSProperties = {
-  position: "absolute",
-  top: 4,
-  left: -2,
-  right: -2,
-  height: 36,
-  background: "var(--faction-coven-scrap-mid)",
-  border: "1.5px solid rgba(0,0,0,0.12)",
-  transform: "rotate(3deg)",
-  borderRadius: 1,
-};
-
-const wowTape: CSSProperties = {
-  position: "absolute",
-  top: 5,
-  left: "50%",
-  transform: "translateX(-50%) rotate(-1deg)",
-  width: 48,
-  height: 14,
-  background: "var(--faction-coven-tape)",
-  borderRadius: 1,
-};
-
-export function CovenPraxisCard({ praxis, adminProps, showCrown }: ArchetypeProps) {
+function ChroniclePraxisCard({
+  praxis,
+  adminProps,
+  showCrown,
+  masthead,
+  device,
+  theme,
+}: ArchetypeProps & {
+  masthead: string;
+  /** A small signature glyph shown left of the masthead in the running head. */
+  device: string;
+  theme: ChronicleTheme;
+}) {
   return (
     <div
       style={{
-        position: "relative",
         ...frameBase,
-        minHeight: 140,
+        position: "relative",
+        overflow: "hidden",
+        background: theme.bg,
+        color: theme.ink,
+        border: `2px solid ${theme.accent}`,
+        borderRadius: 7,
+        boxShadow: `0 12px 26px -12px ${theme.shadow}`,
+        fontFamily: theme.bodyFont,
+        transition: "background 150ms, color 150ms",
       }}
     >
-      <div style={wowScrapDeep} />
-      <div style={wowScrapMid} />
+      {/* running head — gradient band with a signature device + masthead */}
       <div
         style={{
-          position: "relative",
-          background: factionCssVar("coven", "card-bg"),
-          border: "1.5px solid rgba(0,0,0,0.12)",
-          transform: "rotate(-2deg)",
-          padding: "var(--space-xl) var(--space-lg) var(--space-lg)",
-          fontFamily: "'Courier Prime', monospace",
-          color: factionCssVar("coven", "card-text"),
-          zIndex: 2,
-          transition: "background 150ms, color 150ms",
-          boxSizing: "border-box",
+          display: "flex",
+          alignItems: "center",
+          gap: "var(--space-sm)",
+          padding: "var(--space-sm) var(--space-lg)",
+          background: `linear-gradient(90deg, ${theme.headerFrom}, ${theme.headerTo})`,
+          color: theme.headerText,
+          fontFamily: theme.titleFont,
+          fontSize: "var(--text-xs)",
+          letterSpacing: "0.16em",
+          textTransform: "uppercase",
         }}
       >
-        <div style={wowTape} />
+        {/* eslint-disable-next-line local/no-raw-style-values -- ornament: signature dingbat sized as a glyph, not read as text */}
+        <span aria-hidden style={{ fontSize: 15, lineHeight: 1 }}>
+          {device}
+        </span>
+        {masthead}
+      </div>
+      <div style={{ padding: "var(--space-lg)" }}>
         <AdminOverlay {...adminProps} />
         <PraxisBody
           praxis={praxis}
-          tint={factionCssVar("coven", "card-accent")}
-          muted={factionCssVar("coven", "card-muted")}
-          paper={factionCssVar("coven", "card-bg")}
+          tint={theme.accent}
+          muted={theme.muted}
+          paper={theme.bg}
+          titleStyle={{ fontFamily: theme.titleFont, color: theme.ink }}
           showCrown={showCrown}
         />
       </div>
     </div>
+  );
+}
+
+/** Cozy Coven — the gold/plum chronicle (moon-phase vote widget). */
+export function CovenPraxisCard({ praxis, adminProps, showCrown }: ArchetypeProps) {
+  const { t } = useTranslation("praxis");
+  return (
+    <ChroniclePraxisCard
+      praxis={praxis}
+      adminProps={adminProps}
+      showCrown={showCrown}
+      masthead={t("card.masthead.coven")}
+      device="☾"
+      theme={{
+        bg: "var(--faction-coven-chronicle-bg)",
+        ink: factionCssVar("coven", "card-text"),
+        muted: factionCssVar("coven", "card-muted"),
+        accent: "var(--faction-coven-chronicle-plum)",
+        headerFrom: "var(--faction-coven-chronicle-header-from)",
+        headerTo: "var(--faction-coven-chronicle-header-to)",
+        headerText: "var(--faction-coven-chronicle-header-text)",
+        shadow: "var(--faction-coven-chronicle-shadow)",
+        titleFont: "var(--font-faction-script)",
+        bodyFont: "'EB Garamond', serif",
+      }}
+    />
+  );
+}
+
+/**
+ * Warriors of Whimsy — the SAME chronicle structure recoloured to WOW yellow
+ * (balloon vote widget). WOW's first bespoke skin (#821, #812). Uses only
+ * `--faction-wow-*` tokens; deliberately NOT coven's gold/plum.
+ */
+export function WowPraxisCard({ praxis, adminProps, showCrown }: ArchetypeProps) {
+  const { t } = useTranslation("praxis");
+  return (
+    <ChroniclePraxisCard
+      praxis={praxis}
+      adminProps={adminProps}
+      showCrown={showCrown}
+      masthead={t("card.masthead.wow")}
+      device="✦"
+      theme={{
+        bg: "var(--faction-wow-chronicle-bg)",
+        ink: factionCssVar("wow", "card-text"),
+        muted: factionCssVar("wow", "card-muted"),
+        accent: factionCssVar("wow", "card-accent"),
+        headerFrom: "var(--faction-wow-chronicle-header-from)",
+        headerTo: "var(--faction-wow-chronicle-header-to)",
+        headerText: "var(--faction-wow-chronicle-header-text)",
+        shadow: "var(--faction-wow-chronicle-shadow)",
+        titleFont: "var(--font-display)",
+        bodyFont: "'EB Garamond', serif",
+      }}
+    />
   );
 }
 
@@ -533,10 +609,11 @@ export function SingularityPraxisCard({ praxis, adminProps, showCrown }: Archety
 
 /**
  * Fallback praxis card for `na` / unaffiliated + any task faction without a
- * bespoke archetype — the spectrum default skin (#418). A clean sheet wrapped in
- * the spectrum band and marked with the seven-segment ring; the shared
- * PraxisBody inside. No longer borrows the task faction's costume. All colours
- * via --faction-default-* tokens; flips light/dark.
+ * bespoke archetype — the SPECTRUM card (#820, ADR-0039). A clean sheet wrapped
+ * in the community-rainbow band and marked with the seven-segment ring, holding
+ * the conditional score stamp (ADR-0047) and the empty-media drop target. No
+ * longer borrows the task faction's costume. All colours via --faction-default-*
+ * / --spectrum-* tokens; flips light/dark through the [data-theme] cascade.
  */
 export function DefaultPraxisCard({ praxis, adminProps, showCrown }: ArchetypeProps) {
   const { t } = useTranslation("praxis");
@@ -545,15 +622,16 @@ export function DefaultPraxisCard({ praxis, adminProps, showCrown }: ArchetypePr
     <div
       style={{
         ...frameBase,
-        borderRadius: 10,
+        borderRadius: 8,
         padding: "var(--space-xs)",
         background: "var(--faction-default-rainbow)",
-        boxShadow: "0 12px 26px -14px rgba(0,0,0,0.4)",
+        boxShadow: "0 12px 26px -14px color-mix(in srgb, black 40%, transparent)",
       }}
     >
       <div
         style={{
           position: "relative",
+          overflow: "hidden",
           background: "var(--faction-default-card-bg)",
           color: "var(--faction-default-card-text)",
           borderRadius: 5,
@@ -584,6 +662,24 @@ export function DefaultPraxisCard({ praxis, adminProps, showCrown }: ArchetypePr
           showCrown={showCrown}
         />
       </div>
+    </div>
+  );
+}
+
+/**
+ * Albescent — the secret-society tell (#821, ADR-0048). NOT a from-scratch skin:
+ * it is the exact spectrum {@link DefaultPraxisCard} an unaffiliated player sees,
+ * with a slow rainbow DRIFT (`.alb-rainbow`) washed over the whole sheet — the
+ * one flourish that reveals the society to someone already looking. A repaint in
+ * Albescent's own colours would put it back in the spectrum and un-hide it, so
+ * this stays "NA + drift". The overlay is pointer-events:none and blends over the
+ * card; reduced-motion stills the drift (the wash remains).
+ */
+export function AlbescentPraxisCard(props: ArchetypeProps) {
+  return (
+    <div style={{ ...frameBase, position: "relative", overflow: "hidden", borderRadius: 8 }}>
+      <DefaultPraxisCard {...props} />
+      <span aria-hidden className="alb-rainbow" />
     </div>
   );
 }
