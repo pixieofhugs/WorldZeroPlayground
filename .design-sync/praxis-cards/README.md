@@ -51,9 +51,12 @@ states: base only, `+ votes`, `× multiplier`, `+ metatask`, and the full formul
   as `(12 + 20) × 0.80 + 4 = 29.6`, so the metatask's *multiplied* contribution
   (`+16`) reads in place. This matches ADR-0047.
 - **Row visibility: a line drops out entirely when the API returns a no-op —
-  `votes = 0`, `multiplier = 1.0`, or no metatask applied.** Note that
-  `votes = 0` hiding **contradicts ADR-0047**, which rules the votes row always
-  shows because `+0` is valid. Do not silently pick one; see the ADR.
+  `votes = 0`, `multiplier = 1.0`, or no metatask applied.**
+- ⚠️ **DELIBERATE DEVIATION, decided 2026-07-20: we keep the votes row at `0`.**
+  The design hides it; **ADR-0047 wins** — `+0 from votes` tells a viewer that
+  nobody has voted yet, which an absent row cannot. Everything else follows the
+  design: mult hides at `×1.0`, meta hides at `≤ 0`, base always shows.
+  Net effect: `scoreBreakdown()` is **already correct** and needs no change.
 - Only UA, Snide, Singularity, Everymen and Unaffiliated are drawn. The file
   states the rest — Ephemerists, Cozy Coven (= our `wow`), Coven, Albescent —
   "follow the Unaffiliated mechanism exactly".
