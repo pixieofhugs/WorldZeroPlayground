@@ -17,7 +17,7 @@ export function EphemeristsPraxisCard({ praxis, adminProps, showCrown }: Archety
         overflow: "hidden",
         background: "var(--eph-vellum)",
         color: "var(--eph-vellum-text)",
-        border: "1px solid color-mix(in srgb, var(--eph-vellum-text) 30%, transparent)",
+        border: "2px solid color-mix(in srgb, var(--eph-vellum-text) 30%, transparent)",
         fontFamily: "var(--eph-serif)",
         boxShadow: "0 1px 0 rgba(0,0,0,0.04), 0 8px 20px -16px rgba(0,0,0,0.6)",
         transition: "background 150ms, color 150ms",
@@ -54,7 +54,7 @@ export function EphemeristsPraxisCard({ praxis, adminProps, showCrown }: Archety
         style={{
           position: "relative",
           zIndex: 2,
-          padding: "var(--space-md) var(--space-lg) var(--space-lg)",
+          padding: "var(--space-md) var(--space-xl) var(--space-xl)",
         }}
       >
         <AdminOverlay {...adminProps} />

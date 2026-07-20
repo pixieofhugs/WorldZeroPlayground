@@ -19,11 +19,11 @@ export function EverymenPraxisCard({ praxis, adminProps, showCrown }: ArchetypeP
       style={{
         ...frameBase,
         background: factionCssVar("everymen", "card-bg"),
-        border: "1px solid var(--color-border)",
+        border: "2px solid var(--color-border)",
         clipPath:
           "polygon(0 0, 100% 0, 100% 90%, 92% 100%, 80% 95%, 68% 100%, 56% 93%, 44% 100%, 32% 94%, 20% 100%, 8% 94%, 0 100%)",
         position: "relative",
-        padding: "var(--space-lg) var(--space-lg) var(--space-xl) var(--space-2xl)",
+        padding: "var(--space-xl) var(--space-xl) var(--space-2xl) var(--space-2xl)",
         fontFamily: "'Special Elite', serif",
         color: factionCssVar("everymen", "card-text"),
         backgroundImage:

@@ -12,7 +12,7 @@ import { frameBase, type ArchetypeProps } from "./shared";
  */
 export function AlbescentPraxisCard(props: ArchetypeProps) {
   return (
-    <div style={{ ...frameBase, position: "relative", overflow: "hidden", borderRadius: 8 }}>
+    <div style={{ ...frameBase, position: "relative", overflow: "hidden" }}>
       <DefaultPraxisCard {...props} />
       <span aria-hidden className="alb-rainbow" />
     </div>

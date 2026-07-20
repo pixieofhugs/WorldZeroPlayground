@@ -28,7 +28,7 @@ export function SnidePraxisCard({ praxis, adminProps, showCrown }: ArchetypeProp
         ...frameBase,
         background: factionCssVar("snide", "card-bg"),
         position: "relative",
-        padding: "var(--space-lg)",
+        padding: "var(--space-xl)",
         fontFamily: "'Special Elite', serif",
         color: factionCssVar("snide", "card-text"),
         transition: "background 150ms, color 150ms",

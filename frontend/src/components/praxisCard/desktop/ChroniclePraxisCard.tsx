@@ -50,7 +50,6 @@ export function ChroniclePraxisCard({
         background: theme.bg,
         color: theme.ink,
         border: `2px solid ${theme.accent}`,
-        borderRadius: 7,
         boxShadow: `0 12px 26px -12px ${theme.shadow}`,
         fontFamily: theme.bodyFont,
         transition: "background 150ms, color 150ms",
@@ -62,7 +61,7 @@ export function ChroniclePraxisCard({
           display: "flex",
           alignItems: "center",
           gap: "var(--space-sm)",
-          padding: "var(--space-sm) var(--space-lg)",
+          padding: "var(--space-sm) var(--space-xl)",
           background: `linear-gradient(90deg, ${theme.headerFrom}, ${theme.headerTo})`,
           color: theme.headerText,
           fontFamily: theme.titleFont,
@@ -77,7 +76,7 @@ export function ChroniclePraxisCard({
         </span>
         {masthead}
       </div>
-      <div style={{ padding: "var(--space-lg)" }}>
+      <div style={{ padding: "var(--space-xl)" }}>
         <AdminOverlay {...adminProps} />
         <PraxisBody
           praxis={praxis}

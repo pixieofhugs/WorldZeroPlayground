@@ -36,15 +36,23 @@ export type ArchetypeProps = {
 };
 
 /**
- * Outer-frame sizing shared by every faction archetype's root element. Each
+ * Outer-frame geometry shared by every faction archetype's root element. Each
  * archetype spreads this then layers its own bespoke frame styling on top.
  * Mirrors Sidebar.tsx's `panelStyle` pattern — one place to change the sizing.
+ *
+ * The design's card is ~394px wide with a 7px radius. The width is carried as a
+ * flex BASIS rather than a max-width: every surface that renders praxis cards
+ * lays them out in a wrapping flex row, so 394 is the target each card grows
+ * from, and a hard cap would only maroon a card in a wide single column. Five
+ * archetypes (UA, Everymen, Snide, Ephemerists, Singularity) previously set no
+ * radius at all, which is why this one lives here and not in each frame.
  */
 export const frameBase: CSSProperties = {
   width: "100%",
-  flex: "1 1 280px",
+  flex: "1 1 394px",
   minWidth: 280,
   boxSizing: "border-box",
+  borderRadius: 7,
 };
 
 /**

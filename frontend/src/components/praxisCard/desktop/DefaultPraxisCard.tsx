@@ -18,7 +18,6 @@ export function DefaultPraxisCard({ praxis, adminProps, showCrown }: ArchetypePr
     <div
       style={{
         ...frameBase,
-        borderRadius: 8,
         padding: "var(--space-xs)",
         background: "var(--faction-default-rainbow)",
         boxShadow: "0 12px 26px -14px color-mix(in srgb, black 40%, transparent)",
@@ -30,8 +29,8 @@ export function DefaultPraxisCard({ praxis, adminProps, showCrown }: ArchetypePr
           overflow: "hidden",
           background: "var(--faction-default-card-bg)",
           color: "var(--faction-default-card-text)",
-          borderRadius: 5,
-          padding: "var(--space-lg)",
+          borderRadius: 4,
+          padding: "var(--space-xl)",
         }}
       >
         <div

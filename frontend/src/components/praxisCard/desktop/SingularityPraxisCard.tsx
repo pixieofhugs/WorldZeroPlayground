@@ -78,7 +78,7 @@ export function SingularityPraxisCard({ praxis, adminProps, showCrown }: Archety
       style={{
         ...frameBase,
         background: "var(--faction-singularity-card-bg)",
-        border: "1px solid var(--faction-singularity-border-hard)",
+        border: "2px solid var(--faction-singularity-border-hard)",
         position: "relative",
         fontFamily: "'Share Tech Mono', monospace",
         color: "var(--faction-singularity-card-text)",
@@ -93,7 +93,7 @@ export function SingularityPraxisCard({ praxis, adminProps, showCrown }: Archety
       <SingularityHoles />
       <div
         style={{
-          padding: "var(--space-sm) var(--space-lg) var(--space-md)",
+          padding: "var(--space-sm) var(--space-xl) var(--space-md)",
           position: "relative",
           zIndex: 2,
         }}

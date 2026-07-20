@@ -26,8 +26,9 @@ export function UaPraxisCard({ praxis, adminProps, showCrown }: ArchetypeProps) 
         style={{
           position: "relative",
           background: factionCssVar("ua", "card-bg"),
-          border: "1px solid color-mix(in srgb, var(--ua-ink) 30%, transparent)",
-          padding: "var(--space-lg)",
+          border: "2px solid color-mix(in srgb, var(--ua-ink) 30%, transparent)",
+          borderRadius: 4,
+          padding: "var(--space-xl)",
           fontFamily: "var(--faction-ua-body-font)",
           color: factionCssVar("ua", "card-text"),
           backgroundImage:
