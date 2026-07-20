@@ -21,11 +21,32 @@ import { VOTE_REFRAMES } from './voteReframes'
  * what carries the rank — and the sparks stay hidden.
  */
 
+// Full literal var() strings, one per tier — NOT built by template literal:
+// the #806 factionTokensDeclared guard scans for literal `var(--faction-*)` and
+// a `...-heat-${v}` construction reads as the undeclared bare prefix `...-heat-`.
 /** Heat ramp + pale hub, one token per tier (cold slate → ember). */
-const GEAR_HEAT = [1, 2, 3, 4, 5].map((v) => `var(--faction-everymen-vote-heat-${v})`)
-const GEAR_HUB = [1, 2, 3, 4, 5].map((v) => `var(--faction-everymen-vote-hub-${v})`)
+const GEAR_HEAT = [
+  'var(--faction-everymen-vote-heat-1)',
+  'var(--faction-everymen-vote-heat-2)',
+  'var(--faction-everymen-vote-heat-3)',
+  'var(--faction-everymen-vote-heat-4)',
+  'var(--faction-everymen-vote-heat-5)',
+]
+const GEAR_HUB = [
+  'var(--faction-everymen-vote-hub-1)',
+  'var(--faction-everymen-vote-hub-2)',
+  'var(--faction-everymen-vote-hub-3)',
+  'var(--faction-everymen-vote-hub-4)',
+  'var(--faction-everymen-vote-hub-5)',
+]
 /** Glow filter per tier (tier 1 gets none); the rank-5 entry flips in the dark cascade. */
-const GEAR_GLOW = ['none', ...[2, 3, 4, 5].map((v) => `var(--faction-everymen-vote-glow-${v})`)]
+const GEAR_GLOW = [
+  'none',
+  'var(--faction-everymen-vote-glow-2)',
+  'var(--faction-everymen-vote-glow-3)',
+  'var(--faction-everymen-vote-glow-4)',
+  'var(--faction-everymen-vote-glow-5)',
+]
 
 /** Per-tier gear diameter (px) — ornament geometry, kept raw. */
 const GEAR_SIZES = [32, 35, 37, 40, 42]
