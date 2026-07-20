@@ -37,7 +37,11 @@ renders a **conditional stamp** with these rules, per praxis type:
 - **Solo** — full Contribution total: `(base + meta) × faction_mult + votes`.
   - The **multiplier** row shows only when `faction_mult ≠ 1.0`.
   - The **metatask** row shows only when `metatask_points > 0`.
-  - The **votes** row always shows (`+0` is valid).
+  - The **votes** row always shows (`+0` is valid). **Re-affirmed 2026-07-20**
+    against the design's `SCORE STAMP · CONDITIONAL STATES` section, which draws
+    the votes row as *hidden* at `0`. We deviate deliberately: an absent row
+    cannot say "nobody has voted yet", and that is information the card owes the
+    viewer. Every other row rule here matches the design exactly.
 - **Collab** — no single multiplier exists, so the stamp **collapses to Merit**:
   `base + votes = total`, **no multiplier row**. (This is the one case ADR-0014's
   reasoning still governs.)
