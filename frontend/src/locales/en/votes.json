@@ -7,7 +7,7 @@
     "canonical": "canonical"
   },
   "everymen": {
-    "a-start": "a start",
+    "fair": "fair",
     "solid": "solid",
     "good": "good",
     "excellent": "excellent",
@@ -72,7 +72,9 @@
       "tag": "sealed"
     },
     "everymen": {
-      "rateAria": "Rate {{value}} — {{label}}"
+      "rateAria": "Rate {{value}} — {{label}}",
+      "idle": "awaiting",
+      "tag": "earned"
     },
     "coven": {
       "rateAria": "Rate {{value}} — {{label}}",
