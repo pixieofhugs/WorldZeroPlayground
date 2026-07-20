@@ -47,6 +47,15 @@ export const VOTE_REFRAMES: Record<string, VoteReframe> = {
       { value: 5, label: i18n.t('votes:coven.legendary') },
     ],
   },
+  wow: {
+    tiers: [
+      { value: 1, label: i18n.t('votes:wow.sweet') },
+      { value: 2, label: i18n.t('votes:wow.lovely') },
+      { value: 3, label: i18n.t('votes:wow.wonderful') },
+      { value: 4, label: i18n.t('votes:wow.magical') },
+      { value: 5, label: i18n.t('votes:wow.iconic') },
+    ],
+  },
   snide: {
     tiers: [
       { value: 1, label: i18n.t('votes:snide.meh') },

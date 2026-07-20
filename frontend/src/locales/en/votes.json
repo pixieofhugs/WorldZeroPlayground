@@ -18,7 +18,18 @@
     "solid": "solid",
     "good": "good",
     "excellent": "excellent",
-    "legendary": "legendary"
+    "legendary": "legendary",
+    "idle": "cast a spell",
+    "tag": "sealed"
+  },
+  "wow": {
+    "sweet": "sweet",
+    "lovely": "lovely",
+    "wonderful": "wonderful",
+    "magical": "magical",
+    "iconic": "iconic",
+    "idle": "tap to cheer",
+    "tag": "yay!"
   },
   "snide": {
     "meh": "meh",
@@ -67,6 +78,9 @@
     },
     "coven": {
       "rateAria": "Rate {{value}} — {{label}}"
+    },
+    "wow": {
+      "rateAria": "Cheer {{value}} — {{label}}"
     },
     "snide": {
       "rateAria": "Rate {{value}} — {{label}}"

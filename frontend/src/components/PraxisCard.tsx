@@ -224,78 +224,150 @@ export function EverymenPraxisCard({ praxis, adminProps, showCrown }: ArchetypeP
   );
 }
 
-/** The two offset scrap layers behind the COVEN card, plus its tape. Static (#586). */
-const wowScrapDeep: CSSProperties = {
-  position: "absolute",
-  top: 10,
-  left: -4,
-  right: -4,
-  height: 24,
-  background: "var(--faction-coven-scrap-deep)",
-  border: "1.5px solid rgba(0,0,0,0.12)",
-  transform: "rotate(-4deg)",
-  borderRadius: 1,
-};
+/**
+ * The gold/plum + WOW-yellow CHRONICLE frame (#821). A bound almanac leaf: a
+ * gradient running-head band over a vellum sheet ruled in the faction's accent.
+ * Both Cozy Coven (gold/plum) and Warriors of Whimsy (yellow) share this
+ * structure and differ only in tokens — never mix the two palettes. Frame
+ * pixel-fidelity vs. the prototype is flagged for human QA (the `.dc.html` is
+ * not reachable from here).
+ */
+interface ChronicleTheme {
+  /** Vellum sheet colour (also the Task Crown inner disc). */
+  bg: string;
+  /** Primary ink. */
+  ink: string;
+  /** Muted / secondary text. */
+  muted: string;
+  /** Accent — border, ruled hairline, score stamp. */
+  accent: string;
+  /** Running-head gradient stops + its text colour. */
+  headerFrom: string;
+  headerTo: string;
+  headerText: string;
+  /** Drop-shadow colour. */
+  shadow: string;
+  titleFont: string;
+  bodyFont: string;
+}
 
-const wowScrapMid: CSSProperties = {
-  position: "absolute",
-  top: 4,
-  left: -2,
-  right: -2,
-  height: 36,
-  background: "var(--faction-coven-scrap-mid)",
-  border: "1.5px solid rgba(0,0,0,0.12)",
-  transform: "rotate(3deg)",
-  borderRadius: 1,
-};
-
-const wowTape: CSSProperties = {
-  position: "absolute",
-  top: 5,
-  left: "50%",
-  transform: "translateX(-50%) rotate(-1deg)",
-  width: 48,
-  height: 14,
-  background: "var(--faction-coven-tape)",
-  borderRadius: 1,
-};
-
-export function CovenPraxisCard({ praxis, adminProps, showCrown }: ArchetypeProps) {
+function ChroniclePraxisCard({
+  praxis,
+  adminProps,
+  showCrown,
+  masthead,
+  device,
+  theme,
+}: ArchetypeProps & {
+  masthead: string;
+  /** A small signature glyph shown left of the masthead in the running head. */
+  device: string;
+  theme: ChronicleTheme;
+}) {
   return (
     <div
       style={{
-        position: "relative",
         ...frameBase,
-        minHeight: 140,
+        position: "relative",
+        overflow: "hidden",
+        background: theme.bg,
+        color: theme.ink,
+        border: `2px solid ${theme.accent}`,
+        borderRadius: 7,
+        boxShadow: `0 12px 26px -12px ${theme.shadow}`,
+        fontFamily: theme.bodyFont,
+        transition: "background 150ms, color 150ms",
       }}
     >
-      <div style={wowScrapDeep} />
-      <div style={wowScrapMid} />
+      {/* running head — gradient band with a signature device + masthead */}
       <div
         style={{
-          position: "relative",
-          background: factionCssVar("coven", "card-bg"),
-          border: "1.5px solid rgba(0,0,0,0.12)",
-          transform: "rotate(-2deg)",
-          padding: "var(--space-xl) var(--space-lg) var(--space-lg)",
-          fontFamily: "'Courier Prime', monospace",
-          color: factionCssVar("coven", "card-text"),
-          zIndex: 2,
-          transition: "background 150ms, color 150ms",
-          boxSizing: "border-box",
+          display: "flex",
+          alignItems: "center",
+          gap: "var(--space-sm)",
+          padding: "var(--space-sm) var(--space-lg)",
+          background: `linear-gradient(90deg, ${theme.headerFrom}, ${theme.headerTo})`,
+          color: theme.headerText,
+          fontFamily: theme.titleFont,
+          fontSize: "var(--text-xs)",
+          letterSpacing: "0.16em",
+          textTransform: "uppercase",
         }}
       >
-        <div style={wowTape} />
+        {/* eslint-disable-next-line local/no-raw-style-values -- ornament: signature dingbat sized as a glyph, not read as text */}
+        <span aria-hidden style={{ fontSize: 15, lineHeight: 1 }}>
+          {device}
+        </span>
+        {masthead}
+      </div>
+      <div style={{ padding: "var(--space-lg)" }}>
         <AdminOverlay {...adminProps} />
         <PraxisBody
           praxis={praxis}
-          tint={factionCssVar("coven", "card-accent")}
-          muted={factionCssVar("coven", "card-muted")}
-          paper={factionCssVar("coven", "card-bg")}
+          tint={theme.accent}
+          muted={theme.muted}
+          paper={theme.bg}
+          titleStyle={{ fontFamily: theme.titleFont, color: theme.ink }}
           showCrown={showCrown}
         />
       </div>
     </div>
+  );
+}
+
+/** Cozy Coven — the gold/plum chronicle (moon-phase vote widget). */
+export function CovenPraxisCard({ praxis, adminProps, showCrown }: ArchetypeProps) {
+  const { t } = useTranslation("praxis");
+  return (
+    <ChroniclePraxisCard
+      praxis={praxis}
+      adminProps={adminProps}
+      showCrown={showCrown}
+      masthead={t("card.masthead.coven")}
+      device="☾"
+      theme={{
+        bg: "var(--faction-coven-chronicle-bg)",
+        ink: factionCssVar("coven", "card-text"),
+        muted: factionCssVar("coven", "card-muted"),
+        accent: "var(--faction-coven-chronicle-plum)",
+        headerFrom: "var(--faction-coven-chronicle-header-from)",
+        headerTo: "var(--faction-coven-chronicle-header-to)",
+        headerText: "var(--faction-coven-chronicle-header-text)",
+        shadow: "var(--faction-coven-chronicle-shadow)",
+        titleFont: "var(--font-faction-script)",
+        bodyFont: "'EB Garamond', serif",
+      }}
+    />
+  );
+}
+
+/**
+ * Warriors of Whimsy — the SAME chronicle structure recoloured to WOW yellow
+ * (balloon vote widget). WOW's first bespoke skin (#821, #812). Uses only
+ * `--faction-wow-*` tokens; deliberately NOT coven's gold/plum.
+ */
+export function WowPraxisCard({ praxis, adminProps, showCrown }: ArchetypeProps) {
+  const { t } = useTranslation("praxis");
+  return (
+    <ChroniclePraxisCard
+      praxis={praxis}
+      adminProps={adminProps}
+      showCrown={showCrown}
+      masthead={t("card.masthead.wow")}
+      device="✦"
+      theme={{
+        bg: "var(--faction-wow-chronicle-bg)",
+        ink: factionCssVar("wow", "card-text"),
+        muted: factionCssVar("wow", "card-muted"),
+        accent: factionCssVar("wow", "card-accent"),
+        headerFrom: "var(--faction-wow-chronicle-header-from)",
+        headerTo: "var(--faction-wow-chronicle-header-to)",
+        headerText: "var(--faction-wow-chronicle-header-text)",
+        shadow: "var(--faction-wow-chronicle-shadow)",
+        titleFont: "var(--font-display)",
+        bodyFont: "'EB Garamond', serif",
+      }}
+    />
   );
 }
 

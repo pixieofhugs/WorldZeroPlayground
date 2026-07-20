@@ -1,81 +1,57 @@
 import type { PraxisCardOut } from '../../../api/praxis'
+import { useTranslation } from 'react-i18next'
 import { factionCssVar } from '../../../utils/factions'
-import { CovenSigil } from '../../cards/CovenSigil'
-import i18n from '../../../i18n'
 import { MobilePraxisBody, type MobileSlotTheme } from './shared'
 
 /**
- * Warriors of Whimsy MOBILE praxis card (#573) — a taped scrap of the proof
- * board: a torn pink strip peeking behind the tilted notepad, a strip of tape,
- * sparkle marks. Mirrors the desktop COVEN praxis frame; --faction-coven-* tokens,
- * always-light.
+ * Cozy Coven MOBILE praxis card (#821) — the gold/plum CHRONICLE: a vellum leaf
+ * with a plum→pink running-head band and a moon device. Mirrors the desktop
+ * chronicle frame; replaces the old taped-scrap collage. Single column, tokens
+ * only. Frame pixel-fidelity flagged for human QA.
  */
 export default function CovenMobilePraxisCard({ praxis }: { praxis: PraxisCardOut }) {
-  const accent = factionCssVar('coven', 'card-accent')
+  const { t } = useTranslation('praxis')
   const theme: MobileSlotTheme = {
     ink: factionCssVar('coven', 'card-text'),
     muted: factionCssVar('coven', 'card-muted'),
-    accent,
-    paper: factionCssVar('coven', 'card-bg'),
-    displayFont: 'var(--faction-coven-card-font)',
-    bodyFont: "'Courier Prime', monospace",
+    accent: 'var(--faction-coven-chronicle-plum)',
+    paper: 'var(--faction-coven-chronicle-bg)',
+    displayFont: 'var(--font-faction-script)',
+    bodyFont: "'EB Garamond', serif",
   }
   return (
     <div
       style={{
         position: 'relative',
-        paddingTop: 'var(--space-sm)',
+        overflow: 'hidden',
+        background: 'var(--faction-coven-chronicle-bg)',
+        border: '2px solid var(--faction-coven-chronicle-plum)',
+        borderRadius: 7,
+        boxShadow: '0 12px 26px -12px var(--faction-coven-chronicle-shadow)',
       }}
     >
       <div
         style={{
-          position: 'absolute',
-          top: 2,
-          left: -3,
-          right: -3,
-          height: 26,
-          background: 'var(--faction-coven-scrap-mid)',
-          border: '1.5px solid rgba(0,0,0,0.12)',
-          transform: 'rotate(-3deg)',
-        }}
-      />
-      <div
-        style={{
-          position: 'relative',
-          background: factionCssVar('coven', 'card-bg'),
-          border: '1.5px solid rgba(0,0,0,0.12)',
-          padding: 'var(--space-lg) var(--space-lg) var(--space-md)',
-          zIndex: 2,
+          display: 'flex',
+          alignItems: 'center',
+          gap: 'var(--space-sm)',
+          padding: 'var(--space-sm) var(--space-lg)',
+          background:
+            'linear-gradient(90deg, var(--faction-coven-chronicle-header-from), var(--faction-coven-chronicle-header-to))',
+          color: 'var(--faction-coven-chronicle-header-text)',
+          fontFamily: 'var(--font-faction-script)',
+          fontSize: 'var(--text-sm)',
+          letterSpacing: '0.16em',
+          textTransform: 'uppercase',
         }}
       >
-        <div
-          style={{
-            position: 'absolute',
-            top: -6,
-            left: '50%',
-            transform: 'translateX(-50%) rotate(-2deg)',
-            width: 54,
-            height: 14,
-            background: 'var(--faction-coven-tape)',
-            borderRadius: 1,
-          }}
-        />
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 'var(--space-sm)',
-            marginBottom: 'var(--space-md)',
-            fontFamily: "'Courier Prime', monospace",
-            fontSize: 'var(--text-sm)',
-            letterSpacing: '0.14em',
-            textTransform: 'uppercase',
-            color: accent,
-          }}
-        >
-          <CovenSigil size={11} color={accent} />
-          {i18n.t('feed:identity.coven.windowTitle')}
-        </div>
+        {/* eslint-disable-next-line local/no-raw-style-values -- ornament: moon dingbat sized as a glyph, not read as text */}
+        <span aria-hidden style={{ fontSize: 15, lineHeight: 1 }}>
+          {'☾'}
+        </span>
+        {t('card.masthead.coven')}
+      </div>
+      <div style={{ padding: 'var(--space-lg)' }}>
         <MobilePraxisBody praxis={praxis} theme={theme} />
       </div>
     </div>

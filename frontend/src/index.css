@@ -282,6 +282,58 @@
   --faction-coven-ivy: #7cbf99;
   --faction-coven-ivy-leaf: #9ad3b1;
 
+  /* ══ Praxis-card redesign (#821) — chronicle frames + bespoke vote widgets ══
+     Coven wears a gold/plum chronicle; WOW wears the same structure recoloured
+     to its yellow. The moon-phase + balloon vote plates are always night/warm
+     plates, so their inner values do not flip — only the chronicle chrome does. */
+
+  /* Coven — gold/plum chronicle frame */
+  --faction-coven-chronicle-bg: #f6ecd6; /* vellum */
+  --faction-coven-chronicle-plum: #7a4a9e;
+  --faction-coven-chronicle-gold: #b8892f; /* readable gold for rules/labels */
+  --faction-coven-chronicle-header-from: #7a4a9e;
+  --faction-coven-chronicle-header-to: #ec5f99;
+  --faction-coven-chronicle-header-text: #fbeef5;
+  --faction-coven-chronicle-shadow: rgba(90, 40, 110, 0.24);
+
+  /* Coven — moon-phase vote plate (night plate; same in both themes) */
+  --faction-coven-moon-plate-from: #3a2352;
+  --faction-coven-moon-plate-to: #190f2b;
+  --faction-coven-moon-plate-border: #4a3168;
+  --faction-coven-moon-disc-on: #2a1740;
+  --faction-coven-moon-disc-off: #241a33;
+  --faction-coven-moon-gold: #f4d98a;
+  --faction-coven-moon-lit-off: #4a3a5e;
+  --faction-coven-moon-ring-on: #e6b8d6;
+  --faction-coven-moon-ring-off: #4a3560;
+  --faction-coven-moon-face: #6a2f7e;
+  --faction-coven-moon-cheek: rgba(236, 95, 153, 0.45);
+  --faction-coven-moon-star: #f0d36e;
+  --faction-coven-moon-dust: #b98fd6;
+  --faction-coven-vote-on: #d63f86;
+  --faction-coven-vote-off: #a76389;
+
+  /* WOW — yellow chronicle frame (NOT gold/plum; that is coven's) */
+  --faction-wow-chronicle-bg: #fffbe8;
+  --faction-wow-chronicle-header-from: #e0a800;
+  --faction-wow-chronicle-header-to: #f5c542;
+  --faction-wow-chronicle-header-text: #3a2a00;
+  --faction-wow-chronicle-shadow: rgba(160, 120, 0, 0.24);
+
+  /* WOW — googly-balloon vote plate (warm plate) */
+  --faction-wow-balloon-plate-from: #fff4c8;
+  --faction-wow-balloon-plate-to: #ffe9a0;
+  --faction-wow-balloon-plate-border: #e6c257;
+  --faction-wow-balloon-1: #f7e08a;
+  --faction-wow-balloon-2: #f5d15a;
+  --faction-wow-balloon-3: #f5c542;
+  --faction-wow-balloon-4: #e0a800;
+  --faction-wow-balloon-5: #c98a00;
+  --faction-wow-balloon-string: #b9902a;
+  --faction-wow-balloon-eye: #14110b;
+  --faction-wow-vote-on: #a9700a;
+  --faction-wow-vote-off: #b79a52;
+
   /* ══ Everymen — the rainbow's missing red (union/WW2 poster) ══
      Constants (cream/gold/ink) keep their role in both themes; the paper
      surface + its text FLIP in dark; accent red stays vivid; field is the
@@ -595,6 +647,33 @@
   --faction-coven-dot: rgba(244, 114, 182, 0.16);
   --faction-coven-ivy: #5fa882;
   --faction-coven-ivy-leaf: #7fc59e;
+
+  /* ══ Praxis-card redesign (#821) — chronicle frames flip; vote plates hold ══
+     The moon/balloon plates are night/warm surfaces that read in both themes,
+     so only the chronicle chrome + caption inks are overridden here. */
+
+  /* Coven — gold/plum chronicle (dark) */
+  --faction-coven-chronicle-bg: #241733;
+  --faction-coven-chronicle-plum: #b98fd6;
+  --faction-coven-chronicle-gold: #e6c273;
+  --faction-coven-chronicle-header-from: #4a2a63;
+  --faction-coven-chronicle-header-to: #8e2f5c;
+  --faction-coven-chronicle-header-text: #fbe4f0;
+  --faction-coven-chronicle-shadow: rgba(0, 0, 0, 0.5);
+  --faction-coven-vote-on: #f472b6;
+  --faction-coven-vote-off: #c78aa6;
+
+  /* WOW — yellow chronicle (dark) */
+  --faction-wow-chronicle-bg: #231c0e;
+  --faction-wow-chronicle-header-from: #8a6600;
+  --faction-wow-chronicle-header-to: #c99a1a;
+  --faction-wow-chronicle-header-text: #fff4cf;
+  --faction-wow-chronicle-shadow: rgba(0, 0, 0, 0.5);
+  --faction-wow-balloon-plate-from: #3a2f0e;
+  --faction-wow-balloon-plate-to: #241c08;
+  --faction-wow-balloon-plate-border: #7a6320;
+  --faction-wow-vote-on: #f5c542;
+  --faction-wow-vote-off: #b9a473;
 
   /* ── Watercolor splash opacities (dimmer in dark) ── */
   --wc-opacity-blob: 0.15;
@@ -1343,6 +1422,57 @@
 @keyframes cs-shimmer { to { background-position: 200% 0; } }
 @media (prefers-reduced-motion: no-preference) {
   .cs-shimmer { animation: cs-shimmer 4s linear infinite; }
+}
+
+/* ══ Praxis-card redesign vote widgets (#821) ══
+   Every animation is gated on reduced-motion and driven by a class, never an
+   inline `animation:` (the widgets would bypass the gate otherwise). Meaning is
+   carried by the fill/selection, not the motion — the widgets read correctly
+   stilled. */
+
+/* Coven — moon-phase plate: rank-5 sparkles twinkle, dust drifts. */
+@keyframes coven-twinkle { 0%, 100% { opacity: 0.25; transform: scale(0.6) rotate(0deg); } 50% { opacity: 1; transform: scale(1.15) rotate(20deg); } }
+@media (prefers-reduced-motion: no-preference) {
+  .coven-moon-sparkle { animation: coven-twinkle 1.2s ease-in-out infinite; animation-delay: var(--tw-delay, 0s); }
+  .coven-moon-dust { animation: eph-twinkle 3.2s ease-in-out infinite; animation-delay: var(--tw-delay, 0s); }
+}
+
+/* WOW — googly-balloon plate: reached balloons bob, rank-5 group-cheers, eyes wiggle. */
+@keyframes wow-bounce { 0%, 100% { transform: translateY(0); } 30% { transform: translateY(-9px); } 55% { transform: translateY(0); } 72% { transform: translateY(-4px); } }
+@keyframes wow-group-bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
+@keyframes wow-eye-wiggle { 0%, 100% { transform: translate(0, 0); } 25% { transform: translate(1.5px, -1px); } 50% { transform: translate(-1px, 1.5px); } 75% { transform: translate(1px, 1px); } }
+@media (prefers-reduced-motion: no-preference) {
+  .wow-balloon-float { animation: wow-bounce 2.2s ease-in-out infinite; animation-delay: var(--tw-delay, 0s); }
+  .wow-balloon-cheer { animation: wow-group-bounce 1.05s ease-in-out infinite; }
+  .wow-balloon-eye { transform-box: fill-box; transform-origin: center; animation: wow-eye-wiggle 1.4s ease-in-out infinite; }
+}
+
+/* Albescent — the secret-society tell (#821, ADR-0048): the na spectrum card
+   with a slow rainbow drift washed over the whole sheet. A skin-fallthrough
+   faction, so this is a flourish LAYERED over Default, never a repaint. */
+@keyframes alb-drift { from { background-position: 0 0; } to { background-position: 220px 0; } }
+.alb-rainbow {
+  position: absolute;
+  left: -45%;
+  top: -45%;
+  width: 190%;
+  height: 190%;
+  transform: rotate(24deg);
+  pointer-events: none;
+  z-index: 0;
+  background-image: linear-gradient(90deg, rgba(193, 39, 45, 0.3), rgba(202, 138, 4, 0.3), rgba(22, 163, 74, 0.3), rgba(37, 99, 235, 0.3), rgba(190, 24, 93, 0.3), rgba(193, 39, 45, 0.3));
+  background-size: 220px 100%;
+  background-repeat: repeat;
+  mix-blend-mode: multiply;
+  opacity: 0.5;
+}
+[data-theme="dark"] .alb-rainbow {
+  background-image: linear-gradient(90deg, rgba(255, 96, 84, 0.55), rgba(247, 193, 74, 0.55), rgba(74, 222, 128, 0.55), rgba(96, 165, 250, 0.55), rgba(244, 114, 182, 0.55), rgba(255, 96, 84, 0.55));
+  mix-blend-mode: screen;
+  opacity: 0.45;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .alb-rainbow { animation: alb-drift 18s linear infinite; }
 }
 
 /* FieldDesk life-card hover-lift (#274). The CredentialCard owns its own rotation;
