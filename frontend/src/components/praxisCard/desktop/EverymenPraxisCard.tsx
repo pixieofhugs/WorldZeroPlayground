@@ -18,6 +18,7 @@ export function EverymenPraxisCard({ praxis, adminProps, showCrown }: ArchetypeP
     <div
       style={{
         ...frameBase,
+        borderRadius: 2, // broadsheet — near-square
         background: factionCssVar("everymen", "card-bg"),
         border: "2px solid var(--color-border)",
         clipPath:

@@ -77,6 +77,7 @@ export function SingularityPraxisCard({ praxis, adminProps, showCrown }: Archety
     <div
       style={{
         ...frameBase,
+        borderRadius: 8, // terminal slab
         background: "var(--faction-singularity-card-bg)",
         border: "2px solid var(--faction-singularity-border-hard)",
         position: "relative",

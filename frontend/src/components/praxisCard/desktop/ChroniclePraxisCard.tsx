@@ -45,6 +45,7 @@ export function ChroniclePraxisCard({
     <div
       style={{
         ...frameBase,
+        borderRadius: 9, // chronicle parchment
         position: "relative",
         overflow: "hidden",
         background: theme.bg,

@@ -40,19 +40,26 @@ export type ArchetypeProps = {
  * archetype spreads this then layers its own bespoke frame styling on top.
  * Mirrors Sidebar.tsx's `panelStyle` pattern — one place to change the sizing.
  *
- * The design's card is ~394px wide with a 7px radius. The width is carried as a
- * flex BASIS rather than a max-width: every surface that renders praxis cards
- * lays them out in a wrapping flex row, so 394 is the target each card grows
- * from, and a hard cap would only maroon a card in a wide single column. Five
- * archetypes (UA, Everymen, Snide, Ephemerists, Singularity) previously set no
- * radius at all, which is why this one lives here and not in each frame.
+ * The width is carried as a flex BASIS rather than a max-width: every surface
+ * that renders praxis cards lays them out in a wrapping flex row, so this is the
+ * target each card grows from, and a hard cap would only maroon a card in a wide
+ * single column.
+ *
+ * DEVIATION: the prototype's frames run 380-398px (Singularity 380, UA 394, the
+ * rest 398). Collapsed to a single 394px basis — under flex the difference is
+ * absorbed by the row anyway, and nine bespoke bases would be nine things to
+ * keep in sync for a <5% delta. The RADIUS is not collapsed; see below.
  */
 export const frameBase: CSSProperties = {
   width: "100%",
   flex: "1 1 394px",
   minWidth: 280,
   boxSizing: "border-box",
-  borderRadius: 7,
+  // NO borderRadius here on purpose. The prototype's frame radius is per-faction
+  // (Snide 0 · Everymen 2 · UA 7 · Singularity/Ephemerists 8 · chronicle 9 ·
+  // Default/Albescent 10 · Coven's sticker 16). A shared value flattens the very
+  // thing that distinguishes an evidence slab from a sticker. Each archetype sets
+  // its own.
 };
 
 /**

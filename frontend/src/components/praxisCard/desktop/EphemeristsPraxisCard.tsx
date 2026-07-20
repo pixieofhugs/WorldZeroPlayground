@@ -14,6 +14,7 @@ export function EphemeristsPraxisCard({ praxis, adminProps, showCrown }: Archety
       style={{
         position: "relative",
         ...frameBase,
+        borderRadius: 8, // codex folio
         overflow: "hidden",
         background: "var(--eph-vellum)",
         color: "var(--eph-vellum-text)",

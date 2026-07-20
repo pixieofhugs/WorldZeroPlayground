@@ -26,6 +26,7 @@ export function SnidePraxisCard({ praxis, adminProps, showCrown }: ArchetypeProp
     <div
       style={{
         ...frameBase,
+        // No borderRadius: the evidence slab has hard corners in the prototype.
         background: factionCssVar("snide", "card-bg"),
         position: "relative",
         padding: "var(--space-xl)",

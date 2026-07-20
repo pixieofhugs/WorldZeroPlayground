@@ -16,6 +16,7 @@ export function UaPraxisCard({ praxis, adminProps, showCrown }: ArchetypeProps) 
     <div
       style={{
         ...frameBase,
+        borderRadius: 7, // ensō salon sheet
         padding: "var(--space-xs)",
         background: "var(--ua-gilt)",
         boxShadow:
