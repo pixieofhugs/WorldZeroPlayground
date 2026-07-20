@@ -268,6 +268,11 @@ async def respond_to_duel_challenge(
         )
 
     # Opponent level check.
+    # ponytail: deliberately just the flat era.duel_level_required floor — no
+    # meets_task_level / task.level_required check here. A duel is meant to be
+    # a reach above your own level, so acceptance is a carve-out from the
+    # shared task-level gate that solo, collab, and duel-initiation share
+    # (#292). Do not add a task-level check here without revisiting ADR-0049.
     era_row = await get_current_era_row(session)
     opponent_stats = await get_or_create_stats(session, character_id, era_row.id)
     if opponent_stats.level < era.duel_level_required:
