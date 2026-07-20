@@ -232,6 +232,17 @@
      (Singularity is always-dark), so this one value serves both themes. */
   --faction-singularity-phosphor-dim: #7ba98a;
 
+  /* ── Singularity decode-strip vote widget (#821) ──
+     The terminal decode strip: unreached tiers scramble katakana in dim green;
+     reached tiers resolve to density glyphs in phosphor green, with the rank-5
+     "verified" tier in cyan. Terminal tokens are theme-invariant (Singularity is
+     always-dark), so these serve both themes — no [data-theme] override. */
+  --faction-singularity-vote-reached: #4ade80; /* phosphor green — resolved glyphs */
+  --faction-singularity-vote-verified: #60a5fa; /* cyan — rank 5 "verified" */
+  --faction-singularity-vote-scramble: rgba(74, 222, 128, 0.24); /* dim, unreached noise */
+  --faction-singularity-vote-reached-bg: rgba(74, 222, 128, 0.05); /* faint lit key */
+  --faction-singularity-vote-off: #3f7a58; /* idle caption ink */
+
   /* ══ Ephemerists illuminated-codex palette (the ephemerists slot) ══
      The card contract above rebinds to these. CONSTANTS (gold/rubric/
      lapis/verdigris/ink) keep their role in both themes; the VELLUM

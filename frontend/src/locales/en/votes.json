@@ -90,7 +90,9 @@
     "singularity": {
       "rateAria": "Cast {{value}} — {{label}}",
       "prompt": "Cast Signal",
-      "promptHint": "how confidently does this output hold?"
+      "promptHint": "how confidently does this output hold?",
+      "idle": "no signal",
+      "tag": "locked"
     },
     "ua": {
       "rateAria": "Appraise {{value}} — {{label}}",
