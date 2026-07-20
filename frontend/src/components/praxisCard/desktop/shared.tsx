@@ -13,7 +13,7 @@ import {
   PraxisVoteFooter,
   type AdminProps,
 } from "../shared";
-import { PraxisScoreStamp } from "../PraxisScoreStamp";
+import ScoreStamp from "../scoreStamp/ScoreStamp";
 
 /**
  * Bespoke DESKTOP praxis-card shared pieces (#839).
@@ -87,15 +87,14 @@ export function PraxisBody({
           <PraxisExcerpt praxis={praxis} style={{ color: muted }} />
         </div>
         {/*
-         * The conditional score stamp (ADR-0047) on EVERY faction (#821). It
-         * replaced the legacy `PraxisScoreHero` here — the hero survives only on
-         * the praxis-detail surfaces that have not yet migrated.
+         * The conditional score stamp (ADR-0047) on EVERY faction (#821), now a
+         * dispatched faction SURFACE (ADR-0049) rather than one presentation
+         * tinted by four colour props — a faction's total mark is its own
+         * signature device, not a recolour. It replaced the legacy
+         * `PraxisScoreHero` here — the hero survives only on the praxis-detail
+         * surfaces that have not yet migrated.
          */}
-        <PraxisScoreStamp
-          praxis={praxis}
-          theme={{ color: tint, border: tint, muted, paper }}
-          showCrown={showCrown}
-        />
+        <ScoreStamp praxis={praxis} showCrown={showCrown} />
       </div>
       <PraxisStats praxis={praxis} style={{ color: muted, marginTop: "var(--space-sm)" }} />
       <PraxisModeChip praxis={praxis} />

@@ -6,7 +6,7 @@ import { factionName } from '../../../utils/factions'
 import { relativeTime } from '../../../utils/dates'
 import { mediaUrl } from '../../../utils/media'
 import { rosterNames } from '../shared'
-import { PraxisScoreStrip } from '../PraxisScoreStamp'
+import ScoreStamp from '../scoreStamp/ScoreStamp'
 import { TaskCrown } from '../../cards/TaskCrown'
 import VoteUI from '../../vote/VoteUI'
 
@@ -512,11 +512,14 @@ export function MobilePraxisBody({
         <MobileTitle praxis={praxis} theme={theme} />
         <MobileBody praxis={praxis} theme={theme} />
       </div>
-      {/* Conditional score strip (ADR-0047) on every mobile faction card (#821). */}
-      <PraxisScoreStrip
-        praxis={praxis}
-        theme={{ ink: theme.ink, muted: theme.muted, accent: theme.accent }}
-      />
+      {/*
+       * The faction's own score stamp (ADR-0047 rows, ADR-0049 surface). Mobile
+       * renders the SAME component as desktop — a stamp is size-agnostic and the
+       * design's mobile guidance reuses the card's score presentation unchanged,
+       * so the invented horizontal BASE ∣ MULT ∣ VOTES ∣ TOT strip is gone. The
+       * crown is suppressed here because the mobile body floats its own.
+       */}
+      <ScoreStamp praxis={praxis} showCrown={false} />
       <MobileModeChip praxis={praxis} theme={theme} />
       <MobileRoster praxis={praxis} theme={theme} />
       {/* Every card shows the media slot — a drop target when empty (#821). */}

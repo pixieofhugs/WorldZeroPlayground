@@ -55,7 +55,9 @@
       "meta": "meta",
       "votes": "votes",
       "total": "total",
-      "totalShort": "tot"
+      "totalShort": "tot",
+      "fromVotes": "+ {{votes}} from votes",
+      "points": "points"
     },
     "mediaEmpty": "no proof attached",
     "adminStatus": {
