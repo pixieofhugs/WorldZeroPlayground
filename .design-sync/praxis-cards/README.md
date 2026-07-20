@@ -39,6 +39,40 @@ life of the epic, and removed at the end of it.
 under `Warriors of Whimsy`). They are only needed by #840 and #835 and will be
 pulled at that point. See `LABELS.md` before touching either.
 
+## Update 2026-07-20 — the two missing states landed
+
+`Faction Praxis Cards.dc.html` gained two sections (purely additive, +454 lines).
+These were the gaps the epic deliberately deferred; they are now specified.
+
+**`SCORE STAMP · CONDITIONAL STATES`** — every stamp archetype drawn in five
+states: base only, `+ votes`, `× multiplier`, `+ metatask`, and the full formula.
+
+- Arithmetic: **`Total = (base + metatask) × faction multiplier + votes`**, worked
+  as `(12 + 20) × 0.80 + 4 = 29.6`, so the metatask's *multiplied* contribution
+  (`+16`) reads in place. This matches ADR-0047.
+- **Row visibility: a line drops out entirely when the API returns a no-op —
+  `votes = 0`, `multiplier = 1.0`, or no metatask applied.**
+- ⚠️ **DELIBERATE DEVIATION, decided 2026-07-20: we keep the votes row at `0`.**
+  The design hides it; **ADR-0047 wins** — `+0 from votes` tells a viewer that
+  nobody has voted yet, which an absent row cannot. Everything else follows the
+  design: mult hides at `×1.0`, meta hides at `≤ 0`, base always shows.
+  Net effect: `scoreBreakdown()` is **already correct** and needs no change.
+- Only UA, Snide, Singularity, Everymen and Unaffiliated are drawn. The file
+  states the rest — Ephemerists, Cozy Coven (= our `wow`), Coven, Albescent —
+  "follow the Unaffiliated mechanism exactly".
+
+**`LOGGED OUT · VOTE GATE`** — a signed-out viewer sees the whole card *including
+the score stamp, read-only*. Only the widget is gated: one shared
+`VoteLoginGate` renders a single eyebrow line in the faction's voice
+(`> log in to vote`, `LOG IN TO VOTE`, …), keyed `votes.chrome.loginGate`. The
+prompt heading stays. Explicitly **no stamps and no disabled buttons**.
+
+⚠️ The bundle's own `design_handoff_faction_vote_stamps/README.md` was **not**
+re-issued and is byte-identical to v1 — so it still says *"The approved Wow widget
+is the moon-phase `WowVote`"*, which the `.dc.html` contradicts at the
+`COZY COVEN (WOW)` section (`"the approved googly-balloon verdict"`). The
+`.dc.html` wins. See `LABELS.md`.
+
 ## The one rule
 
 The design value is the default. House rules — tokens, the content-text floor,
