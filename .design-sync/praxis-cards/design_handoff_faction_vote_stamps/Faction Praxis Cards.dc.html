@@ -71,6 +71,460 @@
     <p style="font-size:12px;line-height:1.7;color:#6a6150;margin:0;"><b>Snide</b> — locked (<a href="#3a">3A</a>) · <b>Singularity</b> — chosen (<a href="#sigA">A · system slab</a>) · <b>UA</b> — the ensō &amp; mandala · <b>Snide</b> · <b>Singularity</b> · <b>Ephemerists</b> — the constellation · <b>Everymen</b> · <b>Cozy Coven</b> + <b>Coven</b> · <b>Unaffiliated</b> · <b>Albescent</b>. Each light &amp; dark.</p>
   </div>
 
+  <!-- ================= SCORE STAMP · CONDITIONAL STATES ================= -->
+  <section>
+    <div style="display:flex;align-items:center;gap:14px;margin-bottom:10px;">
+      <span style="font-family:'Anton',Impact,sans-serif;font-size:24px;letter-spacing:0.03em;color:#14110b;">Score stamp · what shows when</span>
+      <span style="flex:1;height:6px;background:repeating-linear-gradient(90deg,#14110b 0 14px,transparent 14px 24px);"></span>
+    </div>
+    <p style="max-width:860px;font-size:12.5px;line-height:1.75;color:#413a2c;margin:0 0 6px;text-wrap:pretty;">The stamp only prints the lines it needs. Base is always shown. A line drops out entirely when the API returns a no-op value — <b>votes = 0</b>, <b>multiplier = 1.0</b>, or <b>no metatask applied</b>. Below, every stamp archetype in the four single-modifier states so you can see each row appear and disappear. <b>Total = (base + metatask) × faction multiplier + votes.</b></p>
+    <p style="max-width:860px;font-size:11.5px;line-height:1.6;color:#6a6150;margin:0 0 26px;">Base 12 in every column · <b>+ votes</b> = 12 + 4 = <b>16</b> · <b>× mult</b> = 12 × 0.80 = <b>9.6</b> · <b>+ metatask</b> = 12 + 20 = <b>32</b>. The <b>Full formula</b> column stacks the whole equation inside the stamp — (base + metatask) grouped first, then <b>× 0.80</b>, then <b>+ 4</b> votes, giving <b>29.6</b> — so the metatask's multiplied contribution (<b>+16</b>) reads in place. The remaining box-pattern factions (Ephemerists, Cozy Coven, Coven, Albescent) follow the Unaffiliated mechanism exactly.</p>
+
+    <div style="display:flex;flex-direction:column;gap:38px;">
+
+      <!-- UA archetype -->
+      <div>
+        <div style="font-family:'Cormorant Garamond',serif;font-weight:600;font-size:17px;color:#B8471A;margin-bottom:14px;">UA · box + ensō roundel</div>
+        <div style="display:flex;flex-wrap:wrap;gap:30px;align-items:flex-start;">
+
+          <div style="display:flex;flex-direction:column;align-items:center;gap:9px;width:150px;">
+            <span style="font-family:'Courier Prime',monospace;font-size:10px;letter-spacing:0.14em;text-transform:uppercase;color:#6a6150;">Base only</span>
+            <div style="box-sizing:border-box;width:134px;border:1px solid #DBCBB3;border-radius:6px;background:#FDF0DF;padding:7px 11px;">
+              <div style="display:flex;align-items:center;gap:7px;white-space:nowrap;"><span style="font-family:'EB Garamond',serif;font-size:10.5px;letter-spacing:0.16em;text-transform:uppercase;color:#8B7C67;">base</span><span style="font-family:'Cormorant Garamond',serif;font-weight:600;font-size:25px;line-height:0.8;color:#2E2820;">12</span></div>
+            </div>
+            <div style="position:relative;width:118px;height:118px;margin-top:-4px;">
+              <img src="enso-detailed.svg" width="118" height="118" alt="" aria-hidden="true" style="display:block;">
+              <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;"><span style="font-family:'Cormorant Garamond',serif;font-weight:600;font-size:34px;line-height:0.8;color:#B5361A;">12</span><span style="font-family:'EB Garamond',serif;font-size:8px;letter-spacing:0.2em;text-transform:uppercase;color:#DD5A1E;">Points</span></div>
+            </div>
+            <span style="font-family:'Courier Prime',monospace;font-size:9.5px;line-height:1.4;color:#a49a86;text-align:center;">no mult · no votes · no meta</span>
+          </div>
+
+          <div style="display:flex;flex-direction:column;align-items:center;gap:9px;width:150px;">
+            <span style="font-family:'Courier Prime',monospace;font-size:10px;letter-spacing:0.14em;text-transform:uppercase;color:#6a6150;">+ Votes</span>
+            <div style="box-sizing:border-box;width:134px;border:1px solid #DBCBB3;border-radius:6px;background:#FDF0DF;padding:7px 11px;">
+              <div style="display:flex;align-items:center;gap:7px;white-space:nowrap;"><span style="font-family:'EB Garamond',serif;font-size:10.5px;letter-spacing:0.16em;text-transform:uppercase;color:#8B7C67;">base</span><span style="font-family:'Cormorant Garamond',serif;font-weight:600;font-size:25px;line-height:0.8;color:#2E2820;">12</span></div>
+              <div style="font-family:'EB Garamond',serif;font-style:italic;font-size:12px;color:#8B7C67;margin-top:3px;">+ 4 from votes</div>
+            </div>
+            <div style="position:relative;width:118px;height:118px;margin-top:-4px;">
+              <img src="enso-detailed.svg" width="118" height="118" alt="" aria-hidden="true" style="display:block;">
+              <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;"><span style="font-family:'Cormorant Garamond',serif;font-weight:600;font-size:34px;line-height:0.8;color:#B5361A;">16</span><span style="font-family:'EB Garamond',serif;font-size:8px;letter-spacing:0.2em;text-transform:uppercase;color:#DD5A1E;">Points</span></div>
+            </div>
+            <span style="font-family:'Courier Prime',monospace;font-size:9.5px;line-height:1.4;color:#a49a86;text-align:center;">mult 1.0 &amp; meta hidden</span>
+          </div>
+
+          <div style="display:flex;flex-direction:column;align-items:center;gap:9px;width:150px;">
+            <span style="font-family:'Courier Prime',monospace;font-size:10px;letter-spacing:0.14em;text-transform:uppercase;color:#6a6150;">× Multiplier</span>
+            <div style="box-sizing:border-box;width:134px;border:1px solid #DBCBB3;border-radius:6px;background:#FDF0DF;padding:7px 11px;">
+              <div style="display:flex;align-items:center;gap:7px;white-space:nowrap;"><span style="font-family:'EB Garamond',serif;font-size:10.5px;letter-spacing:0.16em;text-transform:uppercase;color:#8B7C67;">base</span><span style="font-family:'Cormorant Garamond',serif;font-weight:600;font-size:25px;line-height:0.8;color:#2E2820;">12</span><span style="margin-left:auto;font-family:'Cormorant Garamond',serif;font-weight:600;font-size:13px;color:#FCF7EF;background:#B8471A;border-radius:3px;padding:2px 7px;">×0.80</span></div>
+            </div>
+            <div style="position:relative;width:118px;height:118px;margin-top:-4px;">
+              <img src="enso-detailed.svg" width="118" height="118" alt="" aria-hidden="true" style="display:block;">
+              <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;"><span style="font-family:'Cormorant Garamond',serif;font-weight:600;font-size:34px;line-height:0.8;color:#B5361A;">9.6</span><span style="font-family:'EB Garamond',serif;font-size:8px;letter-spacing:0.2em;text-transform:uppercase;color:#DD5A1E;">Points</span></div>
+            </div>
+            <span style="font-family:'Courier Prime',monospace;font-size:9.5px;line-height:1.4;color:#a49a86;text-align:center;">votes 0 &amp; meta hidden</span>
+          </div>
+
+          <div style="display:flex;flex-direction:column;align-items:center;gap:9px;width:150px;">
+            <span style="font-family:'Courier Prime',monospace;font-size:10px;letter-spacing:0.14em;text-transform:uppercase;color:#6a6150;">+ Metatask</span>
+            <div style="box-sizing:border-box;width:134px;border:1px solid #DBCBB3;border-radius:6px;background:#FDF0DF;padding:7px 11px;">
+              <div style="display:flex;align-items:center;gap:7px;white-space:nowrap;"><span style="font-family:'EB Garamond',serif;font-size:10.5px;letter-spacing:0.16em;text-transform:uppercase;color:#8B7C67;">base</span><span style="font-family:'Cormorant Garamond',serif;font-weight:600;font-size:25px;line-height:0.8;color:#2E2820;">12</span></div>
+              <div style="font-family:'EB Garamond',serif;font-style:italic;font-size:12px;color:#B8471A;margin-top:3px;">+ 20 metatask</div>
+            </div>
+            <div style="position:relative;width:118px;height:118px;margin-top:-4px;">
+              <img src="enso-detailed.svg" width="118" height="118" alt="" aria-hidden="true" style="display:block;">
+              <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;"><span style="font-family:'Cormorant Garamond',serif;font-weight:600;font-size:34px;line-height:0.8;color:#B5361A;">32</span><span style="font-family:'EB Garamond',serif;font-size:8px;letter-spacing:0.2em;text-transform:uppercase;color:#DD5A1E;">Points</span></div>
+            </div>
+            <span style="font-family:'EB Garamond',serif;font-style:italic;font-size:11px;line-height:1.35;color:#B8471A;text-align:center;">metatask · “Zero-Waste July”</span>
+          </div>
+
+          <div style="display:flex;flex-direction:column;align-items:center;gap:9px;width:172px;">
+            <span style="font-family:'Courier Prime',monospace;font-size:10px;letter-spacing:0.14em;text-transform:uppercase;color:#B8471A;">Full formula</span>
+            <div style="box-sizing:border-box;width:152px;border:1px solid #DBCBB3;border-radius:6px;background:#FDF0DF;padding:9px 12px;font-family:'EB Garamond',serif;color:#2E2820;">
+              <div style="display:flex;justify-content:space-between;align-items:baseline;"><span style="font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:#8B7C67;">base</span><span style="font-family:'Cormorant Garamond',serif;font-weight:600;font-size:20px;line-height:0.9;">12</span></div>
+              <div style="display:flex;justify-content:space-between;align-items:baseline;margin-top:2px;color:#B8471A;"><span style="font-size:10px;letter-spacing:0.1em;text-transform:uppercase;">+ metatask</span><span style="font-family:'Cormorant Garamond',serif;font-weight:600;font-size:20px;line-height:0.9;">20</span></div>
+              <div style="display:flex;align-items:center;gap:6px;margin:5px 0 3px;"><span style="flex:1;height:1px;background:#DBCBB3;"></span><span style="font-style:italic;font-size:9px;color:#8B7C67;">grouped</span><span style="flex:1;height:1px;background:#DBCBB3;"></span></div>
+              <div style="display:flex;justify-content:space-between;align-items:baseline;"><span style="font-style:italic;font-size:11px;color:#8B7C67;">(base + meta)</span><span style="font-family:'Cormorant Garamond',serif;font-weight:600;font-size:20px;line-height:0.9;">32</span></div>
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-top:4px;"><span style="font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:#8B7C67;">× mult</span><span style="font-family:'Cormorant Garamond',serif;font-weight:600;font-size:13px;color:#FCF7EF;background:#B8471A;border-radius:3px;padding:1px 8px;">×0.80</span></div>
+              <div style="display:flex;justify-content:space-between;align-items:baseline;margin-top:4px;"><span style="font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:#8B7C67;">+ votes</span><span style="font-family:'Cormorant Garamond',serif;font-weight:600;font-size:20px;line-height:0.9;">4</span></div>
+            </div>
+            <div style="position:relative;width:118px;height:118px;margin-top:2px;">
+              <img src="enso-detailed.svg" width="118" height="118" alt="" aria-hidden="true" style="display:block;">
+              <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;"><span style="font-family:'Cormorant Garamond',serif;font-weight:600;font-size:32px;line-height:0.8;color:#B5361A;">29.6</span><span style="font-family:'EB Garamond',serif;font-size:8px;letter-spacing:0.2em;text-transform:uppercase;color:#DD5A1E;">Points</span></div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Snide archetype -->
+      <div>
+        <div style="font-family:'Anton',Impact,sans-serif;font-size:16px;letter-spacing:0.04em;color:#14110b;margin-bottom:14px;">Snide · evidence tag</div>
+        <div style="display:flex;flex-wrap:wrap;gap:30px;align-items:flex-start;">
+
+          <div style="display:flex;flex-direction:column;align-items:center;gap:11px;width:150px;">
+            <span style="font-family:'Courier Prime',monospace;font-size:10px;letter-spacing:0.14em;text-transform:uppercase;color:#6a6150;">Base only</span>
+            <div style="position:relative;min-width:116px;transform:rotate(-3deg);background:#14110b;border:2px solid #b6ff2e;box-shadow:3px 4px 0 rgba(0,0,0,0.4);padding:9px 12px 11px;">
+              <div style="display:flex;align-items:center;gap:7px;"><span style="font-family:'Courier Prime',monospace;font-size:9px;letter-spacing:0.1em;color:#8a9a6a;">BASE</span><span style="font-family:'Anton',Impact,sans-serif;font-size:27px;line-height:0.8;color:#b6ff2e;">12</span></div>
+              <div style="height:0;border-top:2px dashed #6fae00;margin:8px 0 7px;opacity:0.75;"></div>
+              <div style="display:flex;align-items:baseline;gap:5px;"><span style="font-family:'Anton',Impact,sans-serif;font-size:30px;line-height:0.78;color:#b6ff2e;text-shadow:2px 2px 0 #ff2d8b;">12</span><span style="font-family:'Courier Prime',monospace;font-size:8px;letter-spacing:0.14em;color:#d8d6c8;">PTS</span></div>
+            </div>
+            <span style="font-family:'Courier Prime',monospace;font-size:9.5px;line-height:1.4;color:#a49a86;text-align:center;">no mult · no votes · no meta</span>
+          </div>
+
+          <div style="display:flex;flex-direction:column;align-items:center;gap:11px;width:150px;">
+            <span style="font-family:'Courier Prime',monospace;font-size:10px;letter-spacing:0.14em;text-transform:uppercase;color:#6a6150;">+ Votes</span>
+            <div style="position:relative;min-width:116px;transform:rotate(-3deg);background:#14110b;border:2px solid #b6ff2e;box-shadow:3px 4px 0 rgba(0,0,0,0.4);padding:9px 12px 11px;">
+              <div style="display:flex;align-items:center;gap:7px;"><span style="font-family:'Courier Prime',monospace;font-size:9px;letter-spacing:0.1em;color:#8a9a6a;">BASE</span><span style="font-family:'Anton',Impact,sans-serif;font-size:27px;line-height:0.8;color:#b6ff2e;">12</span></div>
+              <div style="font-family:'Courier Prime',monospace;font-size:11px;font-weight:700;letter-spacing:0.06em;color:#b6ff2e;margin-top:6px;">+ 4 FROM VOTES</div>
+              <div style="height:0;border-top:2px dashed #6fae00;margin:8px 0 7px;opacity:0.75;"></div>
+              <div style="display:flex;align-items:baseline;gap:5px;"><span style="font-family:'Anton',Impact,sans-serif;font-size:30px;line-height:0.78;color:#b6ff2e;text-shadow:2px 2px 0 #ff2d8b;">16</span><span style="font-family:'Courier Prime',monospace;font-size:8px;letter-spacing:0.14em;color:#d8d6c8;">PTS</span></div>
+            </div>
+            <span style="font-family:'Courier Prime',monospace;font-size:9.5px;line-height:1.4;color:#a49a86;text-align:center;">mult 1.0 &amp; meta hidden</span>
+          </div>
+
+          <div style="display:flex;flex-direction:column;align-items:center;gap:11px;width:150px;">
+            <span style="font-family:'Courier Prime',monospace;font-size:10px;letter-spacing:0.14em;text-transform:uppercase;color:#6a6150;">× Multiplier</span>
+            <div style="position:relative;min-width:116px;transform:rotate(-3deg);background:#14110b;border:2px solid #b6ff2e;box-shadow:3px 4px 0 rgba(0,0,0,0.4);padding:9px 12px 11px;">
+              <div style="display:flex;align-items:center;gap:7px;"><span style="font-family:'Courier Prime',monospace;font-size:9px;letter-spacing:0.1em;color:#8a9a6a;">BASE</span><span style="font-family:'Anton',Impact,sans-serif;font-size:27px;line-height:0.8;color:#b6ff2e;">12</span><span style="margin-left:auto;font-family:'Archivo Black',sans-serif;font-size:11px;color:#14110b;background:#ff2d8b;padding:2px 5px;transform:rotate(3deg);white-space:nowrap;">×.80</span></div>
+              <div style="height:0;border-top:2px dashed #6fae00;margin:8px 0 7px;opacity:0.75;"></div>
+              <div style="display:flex;align-items:baseline;gap:5px;"><span style="font-family:'Anton',Impact,sans-serif;font-size:30px;line-height:0.78;color:#b6ff2e;text-shadow:2px 2px 0 #ff2d8b;">9.6</span><span style="font-family:'Courier Prime',monospace;font-size:8px;letter-spacing:0.14em;color:#d8d6c8;">PTS</span></div>
+            </div>
+            <span style="font-family:'Courier Prime',monospace;font-size:9.5px;line-height:1.4;color:#a49a86;text-align:center;">votes 0 &amp; meta hidden</span>
+          </div>
+
+          <div style="display:flex;flex-direction:column;align-items:center;gap:11px;width:150px;">
+            <span style="font-family:'Courier Prime',monospace;font-size:10px;letter-spacing:0.14em;text-transform:uppercase;color:#6a6150;">+ Metatask</span>
+            <div style="position:relative;min-width:116px;transform:rotate(-3deg);background:#14110b;border:2px solid #b6ff2e;box-shadow:3px 4px 0 rgba(0,0,0,0.4);padding:9px 12px 11px;">
+              <div style="display:flex;align-items:center;gap:7px;"><span style="font-family:'Courier Prime',monospace;font-size:9px;letter-spacing:0.1em;color:#8a9a6a;">BASE</span><span style="font-family:'Anton',Impact,sans-serif;font-size:27px;line-height:0.8;color:#b6ff2e;">12</span></div>
+              <div style="display:flex;align-items:center;gap:5px;margin-top:6px;"><span style="font-family:'Archivo Black',sans-serif;font-size:9px;color:#14110b;background:#b6ff2e;padding:1px 5px;">META</span><span style="font-family:'Courier Prime',monospace;font-size:11px;font-weight:700;color:#b6ff2e;">+ 20</span></div>
+              <div style="height:0;border-top:2px dashed #6fae00;margin:8px 0 7px;opacity:0.75;"></div>
+              <div style="display:flex;align-items:baseline;gap:5px;"><span style="font-family:'Anton',Impact,sans-serif;font-size:30px;line-height:0.78;color:#b6ff2e;text-shadow:2px 2px 0 #ff2d8b;">32</span><span style="font-family:'Courier Prime',monospace;font-size:8px;letter-spacing:0.14em;color:#d8d6c8;">PTS</span></div>
+            </div>
+            <span style="font-family:'Special Elite',serif;font-size:10px;line-height:1.35;color:#6fae00;text-align:center;">metatask · “ZERO-WASTE JULY”</span>
+          </div>
+
+          <div style="display:flex;flex-direction:column;align-items:center;gap:11px;width:172px;">
+            <span style="font-family:'Courier Prime',monospace;font-size:10px;letter-spacing:0.14em;text-transform:uppercase;color:#14110b;">Full formula</span>
+            <div style="position:relative;min-width:138px;transform:rotate(-3deg);background:#14110b;border:2px solid #b6ff2e;box-shadow:3px 4px 0 rgba(0,0,0,0.4);padding:10px 13px 12px;font-family:'Courier Prime',monospace;color:#b6ff2e;">
+              <div style="display:flex;justify-content:space-between;align-items:baseline;"><span style="font-size:9px;letter-spacing:0.1em;color:#8a9a6a;">BASE</span><span style="font-family:'Anton',Impact,sans-serif;font-size:20px;line-height:0.8;">12</span></div>
+              <div style="display:flex;justify-content:space-between;align-items:baseline;margin-top:3px;"><span style="font-size:9px;letter-spacing:0.1em;color:#8a9a6a;">+ META</span><span style="font-family:'Anton',Impact,sans-serif;font-size:20px;line-height:0.8;">20</span></div>
+              <div style="height:0;border-top:1px dashed #6fae00;margin:6px 0 5px;opacity:0.6;"></div>
+              <div style="display:flex;justify-content:space-between;align-items:baseline;"><span style="font-size:9px;letter-spacing:0.06em;color:#d8d6c8;">(BASE+META)</span><span style="font-family:'Anton',Impact,sans-serif;font-size:20px;line-height:0.8;">32</span></div>
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-top:4px;"><span style="font-size:9px;letter-spacing:0.1em;color:#8a9a6a;">× MULT</span><span style="font-family:'Archivo Black',sans-serif;font-size:11px;color:#14110b;background:#ff2d8b;padding:2px 6px;transform:rotate(2deg);">×.80</span></div>
+              <div style="display:flex;justify-content:space-between;align-items:baseline;margin-top:4px;"><span style="font-size:9px;letter-spacing:0.1em;color:#8a9a6a;">+ VOTES</span><span style="font-family:'Anton',Impact,sans-serif;font-size:20px;line-height:0.8;">4</span></div>
+              <div style="height:0;border-top:2px dashed #6fae00;margin:7px 0 6px;opacity:0.85;"></div>
+              <div style="display:flex;justify-content:space-between;align-items:baseline;"><span style="font-size:9px;letter-spacing:0.14em;color:#d8d6c8;">TOTAL</span><span style="font-family:'Anton',Impact,sans-serif;font-size:30px;line-height:0.78;text-shadow:2px 2px 0 #ff2d8b;">29.6</span></div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Singularity archetype -->
+      <div>
+        <div style="font-family:'Share Tech Mono',monospace;font-size:16px;letter-spacing:0.05em;color:#2f7a52;margin-bottom:14px;">Singularity · terminal readout</div>
+        <div style="display:flex;flex-wrap:wrap;gap:30px;align-items:flex-start;">
+
+          <div style="display:flex;flex-direction:column;align-items:center;gap:9px;width:150px;">
+            <span style="font-family:'Courier Prime',monospace;font-size:10px;letter-spacing:0.14em;text-transform:uppercase;color:#6a6150;">Base only</span>
+            <div style="min-width:120px;background:#030b06;border:1px solid rgba(96,165,250,0.5);border-radius:4px;box-shadow:inset 0 0 12px rgba(96,165,250,0.1);padding:9px 11px 10px;font-family:'Share Tech Mono',monospace;">
+              <div style="display:flex;justify-content:space-between;font-size:10px;color:#7fae90;"><span>BASE</span><span style="color:#d7ffe6;">12</span></div>
+              <div style="height:1px;background:rgba(74,222,128,0.25);margin:7px 0 6px;"></div>
+              <div style="display:flex;justify-content:space-between;align-items:baseline;"><span style="font-size:8px;letter-spacing:0.12em;color:#3f7a58;">TOT</span><span style="font-size:22px;line-height:0.8;color:#60a5fa;text-shadow:0 0 8px rgba(96,165,250,0.7);">12.00</span></div>
+            </div>
+            <span style="font-family:'Courier Prime',monospace;font-size:9.5px;line-height:1.4;color:#a49a86;text-align:center;">MULT/VOTES/META rows absent</span>
+          </div>
+
+          <div style="display:flex;flex-direction:column;align-items:center;gap:9px;width:150px;">
+            <span style="font-family:'Courier Prime',monospace;font-size:10px;letter-spacing:0.14em;text-transform:uppercase;color:#6a6150;">+ Votes</span>
+            <div style="min-width:120px;background:#030b06;border:1px solid rgba(96,165,250,0.5);border-radius:4px;box-shadow:inset 0 0 12px rgba(96,165,250,0.1);padding:9px 11px 10px;font-family:'Share Tech Mono',monospace;">
+              <div style="display:flex;justify-content:space-between;font-size:10px;color:#7fae90;"><span>BASE</span><span style="color:#d7ffe6;">12</span></div>
+              <div style="display:flex;justify-content:space-between;font-size:10px;color:#7fae90;margin-top:3px;"><span>VOTES</span><span style="color:#d7ffe6;">+04</span></div>
+              <div style="height:1px;background:rgba(74,222,128,0.25);margin:7px 0 6px;"></div>
+              <div style="display:flex;justify-content:space-between;align-items:baseline;"><span style="font-size:8px;letter-spacing:0.12em;color:#3f7a58;">TOT</span><span style="font-size:22px;line-height:0.8;color:#60a5fa;text-shadow:0 0 8px rgba(96,165,250,0.7);">16.00</span></div>
+            </div>
+            <span style="font-family:'Courier Prime',monospace;font-size:9.5px;line-height:1.4;color:#a49a86;text-align:center;">MULT/META rows absent</span>
+          </div>
+
+          <div style="display:flex;flex-direction:column;align-items:center;gap:9px;width:150px;">
+            <span style="font-family:'Courier Prime',monospace;font-size:10px;letter-spacing:0.14em;text-transform:uppercase;color:#6a6150;">× Multiplier</span>
+            <div style="min-width:120px;background:#030b06;border:1px solid rgba(96,165,250,0.5);border-radius:4px;box-shadow:inset 0 0 12px rgba(96,165,250,0.1);padding:9px 11px 10px;font-family:'Share Tech Mono',monospace;">
+              <div style="display:flex;justify-content:space-between;font-size:10px;color:#7fae90;"><span>BASE</span><span style="color:#d7ffe6;">12</span></div>
+              <div style="display:flex;justify-content:space-between;font-size:10px;color:#7fae90;margin-top:3px;"><span>MULT</span><span style="color:#f0c400;">×0.80</span></div>
+              <div style="height:1px;background:rgba(74,222,128,0.25);margin:7px 0 6px;"></div>
+              <div style="display:flex;justify-content:space-between;align-items:baseline;"><span style="font-size:8px;letter-spacing:0.12em;color:#3f7a58;">TOT</span><span style="font-size:22px;line-height:0.8;color:#60a5fa;text-shadow:0 0 8px rgba(96,165,250,0.7);">9.60</span></div>
+            </div>
+            <span style="font-family:'Courier Prime',monospace;font-size:9.5px;line-height:1.4;color:#a49a86;text-align:center;">VOTES/META rows absent</span>
+          </div>
+
+          <div style="display:flex;flex-direction:column;align-items:center;gap:9px;width:150px;">
+            <span style="font-family:'Courier Prime',monospace;font-size:10px;letter-spacing:0.14em;text-transform:uppercase;color:#6a6150;">+ Metatask</span>
+            <div style="min-width:120px;background:#030b06;border:1px solid rgba(96,165,250,0.5);border-radius:4px;box-shadow:inset 0 0 12px rgba(96,165,250,0.1);padding:9px 11px 10px;font-family:'Share Tech Mono',monospace;">
+              <div style="display:flex;justify-content:space-between;font-size:10px;color:#7fae90;"><span>BASE</span><span style="color:#d7ffe6;">12</span></div>
+              <div style="display:flex;justify-content:space-between;font-size:10px;color:#7fae90;margin-top:3px;"><span>META</span><span style="color:#f472b6;">+20</span></div>
+              <div style="height:1px;background:rgba(74,222,128,0.25);margin:7px 0 6px;"></div>
+              <div style="display:flex;justify-content:space-between;align-items:baseline;"><span style="font-size:8px;letter-spacing:0.12em;color:#3f7a58;">TOT</span><span style="font-size:22px;line-height:0.8;color:#60a5fa;text-shadow:0 0 8px rgba(96,165,250,0.7);">32.00</span></div>
+            </div>
+            <span style="font-family:'Share Tech Mono',monospace;font-size:9px;line-height:1.35;color:#4ade80;text-align:center;">metatask · zero_waste_july</span>
+          </div>
+
+          <div style="display:flex;flex-direction:column;align-items:center;gap:9px;width:172px;">
+            <span style="font-family:'Courier Prime',monospace;font-size:10px;letter-spacing:0.14em;text-transform:uppercase;color:#2f7a52;">Full formula</span>
+            <div style="min-width:138px;background:#030b06;border:1px solid rgba(96,165,250,0.5);border-radius:4px;box-shadow:inset 0 0 12px rgba(96,165,250,0.1);padding:9px 11px 10px;font-family:'Share Tech Mono',monospace;">
+              <div style="display:flex;justify-content:space-between;font-size:10px;color:#7fae90;"><span>BASE</span><span style="color:#d7ffe6;">12</span></div>
+              <div style="display:flex;justify-content:space-between;font-size:10px;color:#7fae90;margin-top:3px;"><span>+ META</span><span style="color:#f472b6;">+20</span></div>
+              <div style="height:1px;background:rgba(74,222,128,0.18);margin:6px 0 5px;"></div>
+              <div style="display:flex;justify-content:space-between;font-size:10px;color:#7fae90;"><span>SUBTOT</span><span style="color:#d7ffe6;">32</span></div>
+              <div style="display:flex;justify-content:space-between;font-size:10px;color:#7fae90;margin-top:3px;"><span>× MULT</span><span style="color:#f0c400;">×0.80</span></div>
+              <div style="display:flex;justify-content:space-between;font-size:10px;color:#7fae90;margin-top:3px;"><span>+ VOTES</span><span style="color:#d7ffe6;">+04</span></div>
+              <div style="height:1px;background:rgba(74,222,128,0.25);margin:7px 0 6px;"></div>
+              <div style="display:flex;justify-content:space-between;align-items:baseline;"><span style="font-size:8px;letter-spacing:0.12em;color:#3f7a58;">TOT</span><span style="font-size:22px;line-height:0.8;color:#60a5fa;text-shadow:0 0 8px rgba(96,165,250,0.7);">29.60</span></div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Everymen archetype -->
+      <div>
+        <div style="font-family:'Bebas Neue',Impact,sans-serif;font-size:17px;letter-spacing:0.05em;color:#c1272d;margin-bottom:14px;">Everymen · tally stamp + roundel</div>
+        <div style="display:flex;flex-wrap:wrap;gap:30px;align-items:flex-start;">
+
+          <div style="display:flex;flex-direction:column;align-items:center;gap:10px;width:150px;">
+            <span style="font-family:'Courier Prime',monospace;font-size:10px;letter-spacing:0.14em;text-transform:uppercase;color:#6a6150;">Base only</span>
+            <div style="width:118px;transform:rotate(1.3deg);mix-blend-mode:multiply;opacity:0.9;border:2px solid #c1272d;outline:1px solid #c1272d;outline-offset:2px;border-radius:2px;padding:5px 9px 6px;background:rgba(193,39,45,0.05);font-family:'Special Elite',serif;color:#a3402f;">
+              <div style="display:flex;align-items:center;gap:5px;margin-bottom:5px;"><span style="flex:1;height:1px;background:#c1272d;opacity:0.45;"></span><span style="font-size:8px;letter-spacing:0.2em;color:#c1272d;">TALLY</span><span style="flex:1;height:1px;background:#c1272d;opacity:0.45;"></span></div>
+              <div style="display:flex;justify-content:space-between;align-items:flex-end;"><span style="font-size:11px;letter-spacing:0.06em;">BASE</span><b style="font-family:'Bebas Neue',Impact,sans-serif;font-size:17px;line-height:0.8;color:#7a1f18;border-bottom:1px dashed rgba(193,39,45,0.55);min-width:38px;text-align:center;">12</b></div>
+            </div>
+            <svg viewBox="0 0 100 100" width="92" height="92" style="transform:rotate(-6deg);overflow:visible;opacity:0.9;mix-blend-mode:multiply;">
+              <circle cx="50" cy="50" r="46" fill="none" stroke="#c1272d" stroke-width="2.5"></circle>
+              <circle cx="50" cy="50" r="40" fill="none" stroke="#c1272d" stroke-width="1"></circle>
+              <text fill="#c1272d" font-family="'Special Elite',serif" font-size="8" letter-spacing="1.6"><textPath href="#evArc" startOffset="2%">★ VERIFIED ★ ON THE RECORD </textPath></text>
+              <text x="50" y="54" text-anchor="middle" fill="#c1272d" font-family="'Bebas Neue',Impact,sans-serif" font-size="33">12</text>
+              <text x="50" y="68" text-anchor="middle" fill="#c1272d" font-family="'Special Elite',serif" font-size="7.5" letter-spacing="2">POINTS</text>
+            </svg>
+            <span style="font-family:'Courier Prime',monospace;font-size:9.5px;line-height:1.4;color:#a49a86;text-align:center;">only BASE tallied</span>
+          </div>
+
+          <div style="display:flex;flex-direction:column;align-items:center;gap:10px;width:150px;">
+            <span style="font-family:'Courier Prime',monospace;font-size:10px;letter-spacing:0.14em;text-transform:uppercase;color:#6a6150;">+ Votes</span>
+            <div style="width:118px;transform:rotate(1.3deg);mix-blend-mode:multiply;opacity:0.9;border:2px solid #c1272d;outline:1px solid #c1272d;outline-offset:2px;border-radius:2px;padding:5px 9px 6px;background:rgba(193,39,45,0.05);font-family:'Special Elite',serif;color:#a3402f;">
+              <div style="display:flex;align-items:center;gap:5px;margin-bottom:5px;"><span style="flex:1;height:1px;background:#c1272d;opacity:0.45;"></span><span style="font-size:8px;letter-spacing:0.2em;color:#c1272d;">TALLY</span><span style="flex:1;height:1px;background:#c1272d;opacity:0.45;"></span></div>
+              <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:4px;"><span style="font-size:11px;letter-spacing:0.06em;">BASE</span><b style="font-family:'Bebas Neue',Impact,sans-serif;font-size:17px;line-height:0.8;color:#7a1f18;border-bottom:1px dashed rgba(193,39,45,0.55);min-width:38px;text-align:center;">12</b></div>
+              <div style="display:flex;justify-content:space-between;align-items:flex-end;"><span style="font-size:11px;letter-spacing:0.06em;">VOTES</span><b style="font-family:'Bebas Neue',Impact,sans-serif;font-size:17px;line-height:0.8;color:#7a1f18;border-bottom:1px dashed rgba(193,39,45,0.55);min-width:38px;text-align:center;">+4</b></div>
+            </div>
+            <svg viewBox="0 0 100 100" width="92" height="92" style="transform:rotate(-6deg);overflow:visible;opacity:0.9;mix-blend-mode:multiply;">
+              <circle cx="50" cy="50" r="46" fill="none" stroke="#c1272d" stroke-width="2.5"></circle>
+              <circle cx="50" cy="50" r="40" fill="none" stroke="#c1272d" stroke-width="1"></circle>
+              <text fill="#c1272d" font-family="'Special Elite',serif" font-size="8" letter-spacing="1.6"><textPath href="#evArc" startOffset="2%">★ VERIFIED ★ ON THE RECORD </textPath></text>
+              <text x="50" y="54" text-anchor="middle" fill="#c1272d" font-family="'Bebas Neue',Impact,sans-serif" font-size="33">16</text>
+              <text x="50" y="68" text-anchor="middle" fill="#c1272d" font-family="'Special Elite',serif" font-size="7.5" letter-spacing="2">POINTS</text>
+            </svg>
+            <span style="font-family:'Courier Prime',monospace;font-size:9.5px;line-height:1.4;color:#a49a86;text-align:center;">MULT/META rows absent</span>
+          </div>
+
+          <div style="display:flex;flex-direction:column;align-items:center;gap:10px;width:150px;">
+            <span style="font-family:'Courier Prime',monospace;font-size:10px;letter-spacing:0.14em;text-transform:uppercase;color:#6a6150;">× Multiplier</span>
+            <div style="width:118px;transform:rotate(1.3deg);mix-blend-mode:multiply;opacity:0.9;border:2px solid #c1272d;outline:1px solid #c1272d;outline-offset:2px;border-radius:2px;padding:5px 9px 6px;background:rgba(193,39,45,0.05);font-family:'Special Elite',serif;color:#a3402f;">
+              <div style="display:flex;align-items:center;gap:5px;margin-bottom:5px;"><span style="flex:1;height:1px;background:#c1272d;opacity:0.45;"></span><span style="font-size:8px;letter-spacing:0.2em;color:#c1272d;">TALLY</span><span style="flex:1;height:1px;background:#c1272d;opacity:0.45;"></span></div>
+              <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:4px;"><span style="font-size:11px;letter-spacing:0.06em;">BASE</span><b style="font-family:'Bebas Neue',Impact,sans-serif;font-size:17px;line-height:0.8;color:#7a1f18;border-bottom:1px dashed rgba(193,39,45,0.55);min-width:38px;text-align:center;">12</b></div>
+              <div style="display:flex;justify-content:space-between;align-items:flex-end;"><span style="font-size:11px;letter-spacing:0.06em;">MULT</span><b style="font-family:'Bebas Neue',Impact,sans-serif;font-size:17px;line-height:0.8;color:#a9741a;border-bottom:1px dashed rgba(193,39,45,0.55);min-width:38px;text-align:center;">×0.80</b></div>
+            </div>
+            <svg viewBox="0 0 100 100" width="92" height="92" style="transform:rotate(-6deg);overflow:visible;opacity:0.9;mix-blend-mode:multiply;">
+              <circle cx="50" cy="50" r="46" fill="none" stroke="#c1272d" stroke-width="2.5"></circle>
+              <circle cx="50" cy="50" r="40" fill="none" stroke="#c1272d" stroke-width="1"></circle>
+              <text fill="#c1272d" font-family="'Special Elite',serif" font-size="8" letter-spacing="1.6"><textPath href="#evArc" startOffset="2%">★ VERIFIED ★ ON THE RECORD </textPath></text>
+              <text x="50" y="54" text-anchor="middle" fill="#c1272d" font-family="'Bebas Neue',Impact,sans-serif" font-size="33">9.6</text>
+              <text x="50" y="68" text-anchor="middle" fill="#c1272d" font-family="'Special Elite',serif" font-size="7.5" letter-spacing="2">POINTS</text>
+            </svg>
+            <span style="font-family:'Courier Prime',monospace;font-size:9.5px;line-height:1.4;color:#a49a86;text-align:center;">VOTES/META rows absent</span>
+          </div>
+
+          <div style="display:flex;flex-direction:column;align-items:center;gap:10px;width:150px;">
+            <span style="font-family:'Courier Prime',monospace;font-size:10px;letter-spacing:0.14em;text-transform:uppercase;color:#6a6150;">+ Metatask</span>
+            <div style="width:118px;transform:rotate(1.3deg);mix-blend-mode:multiply;opacity:0.9;border:2px solid #c1272d;outline:1px solid #c1272d;outline-offset:2px;border-radius:2px;padding:5px 9px 6px;background:rgba(193,39,45,0.05);font-family:'Special Elite',serif;color:#a3402f;">
+              <div style="display:flex;align-items:center;gap:5px;margin-bottom:5px;"><span style="flex:1;height:1px;background:#c1272d;opacity:0.45;"></span><span style="font-size:8px;letter-spacing:0.2em;color:#c1272d;">TALLY</span><span style="flex:1;height:1px;background:#c1272d;opacity:0.45;"></span></div>
+              <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:4px;"><span style="font-size:11px;letter-spacing:0.06em;">BASE</span><b style="font-family:'Bebas Neue',Impact,sans-serif;font-size:17px;line-height:0.8;color:#7a1f18;border-bottom:1px dashed rgba(193,39,45,0.55);min-width:38px;text-align:center;">12</b></div>
+              <div style="display:flex;justify-content:space-between;align-items:flex-end;"><span style="font-size:11px;letter-spacing:0.06em;">META</span><b style="font-family:'Bebas Neue',Impact,sans-serif;font-size:17px;line-height:0.8;color:#7a1f18;border-bottom:1px dashed rgba(193,39,45,0.55);min-width:38px;text-align:center;">+20</b></div>
+            </div>
+            <svg viewBox="0 0 100 100" width="92" height="92" style="transform:rotate(-6deg);overflow:visible;opacity:0.9;mix-blend-mode:multiply;">
+              <circle cx="50" cy="50" r="46" fill="none" stroke="#c1272d" stroke-width="2.5"></circle>
+              <circle cx="50" cy="50" r="40" fill="none" stroke="#c1272d" stroke-width="1"></circle>
+              <text fill="#c1272d" font-family="'Special Elite',serif" font-size="8" letter-spacing="1.6"><textPath href="#evArc" startOffset="2%">★ VERIFIED ★ ON THE RECORD </textPath></text>
+              <text x="50" y="54" text-anchor="middle" fill="#c1272d" font-family="'Bebas Neue',Impact,sans-serif" font-size="33">32</text>
+              <text x="50" y="68" text-anchor="middle" fill="#c1272d" font-family="'Special Elite',serif" font-size="7.5" letter-spacing="2">POINTS</text>
+            </svg>
+            <span style="font-family:'Special Elite',serif;font-size:10px;line-height:1.35;color:#c1272d;text-align:center;">metatask · “Zero-Waste July”</span>
+          </div>
+
+          <div style="display:flex;flex-direction:column;align-items:center;gap:10px;width:172px;">
+            <span style="font-family:'Courier Prime',monospace;font-size:10px;letter-spacing:0.14em;text-transform:uppercase;color:#c1272d;">Full formula</span>
+            <div style="width:138px;transform:rotate(1.3deg);mix-blend-mode:multiply;opacity:0.9;border:2px solid #c1272d;outline:1px solid #c1272d;outline-offset:2px;border-radius:2px;padding:6px 11px 7px;background:rgba(193,39,45,0.05);font-family:'Special Elite',serif;color:#a3402f;">
+              <div style="display:flex;align-items:center;gap:5px;margin-bottom:5px;"><span style="flex:1;height:1px;background:#c1272d;opacity:0.45;"></span><span style="font-size:8px;letter-spacing:0.2em;color:#c1272d;">TALLY</span><span style="flex:1;height:1px;background:#c1272d;opacity:0.45;"></span></div>
+              <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:3px;"><span style="font-size:10px;letter-spacing:0.06em;">BASE</span><b style="font-family:'Bebas Neue',Impact,sans-serif;font-size:16px;line-height:0.8;color:#7a1f18;">12</b></div>
+              <div style="display:flex;justify-content:space-between;align-items:flex-end;"><span style="font-size:10px;letter-spacing:0.06em;">+ META</span><b style="font-family:'Bebas Neue',Impact,sans-serif;font-size:16px;line-height:0.8;color:#7a1f18;">20</b></div>
+              <div style="height:1px;background:#c1272d;opacity:0.4;margin:5px 0;"></div>
+              <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:3px;"><span style="font-size:10px;letter-spacing:0.06em;">GROUP</span><b style="font-family:'Bebas Neue',Impact,sans-serif;font-size:16px;line-height:0.8;color:#7a1f18;">32</b></div>
+              <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:3px;"><span style="font-size:10px;letter-spacing:0.06em;">× MULT</span><b style="font-family:'Bebas Neue',Impact,sans-serif;font-size:16px;line-height:0.8;color:#a9741a;">×0.80</b></div>
+              <div style="display:flex;justify-content:space-between;align-items:flex-end;"><span style="font-size:10px;letter-spacing:0.06em;">+ VOTES</span><b style="font-family:'Bebas Neue',Impact,sans-serif;font-size:16px;line-height:0.8;color:#7a1f18;">+4</b></div>
+            </div>
+            <svg viewBox="0 0 100 100" width="92" height="92" style="transform:rotate(-6deg);overflow:visible;opacity:0.9;mix-blend-mode:multiply;">
+              <circle cx="50" cy="50" r="46" fill="none" stroke="#c1272d" stroke-width="2.5"></circle>
+              <circle cx="50" cy="50" r="40" fill="none" stroke="#c1272d" stroke-width="1"></circle>
+              <text fill="#c1272d" font-family="'Special Elite',serif" font-size="8" letter-spacing="1.6"><textPath href="#evArc" startOffset="2%">★ VERIFIED ★ ON THE RECORD </textPath></text>
+              <text x="50" y="54" text-anchor="middle" fill="#c1272d" font-family="'Bebas Neue',Impact,sans-serif" font-size="31">29.6</text>
+              <text x="50" y="68" text-anchor="middle" fill="#c1272d" font-family="'Special Elite',serif" font-size="7.5" letter-spacing="2">POINTS</text>
+            </svg>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Unaffiliated / box-pattern archetype -->
+      <div>
+        <div style="font-family:'Bebas Neue',Impact,sans-serif;font-size:17px;letter-spacing:0.05em;background:linear-gradient(90deg,#c1272d,#ca8a04 33%,#16a34a 50%,#2563eb 72%,#be185d);-webkit-background-clip:text;background-clip:text;color:transparent;margin-bottom:4px;">Unaffiliated · shared box pattern</div>
+        <div style="font-family:'Courier Prime',monospace;font-size:10.5px;color:#6a6150;margin-bottom:14px;">Also drives Ephemerists, Cozy Coven, Coven &amp; Albescent — same rows, faction palette.</div>
+        <div style="display:flex;flex-wrap:wrap;gap:30px;align-items:flex-start;">
+
+          <div style="display:flex;flex-direction:column;align-items:center;gap:9px;width:150px;">
+            <span style="font-family:'Courier Prime',monospace;font-size:10px;letter-spacing:0.14em;text-transform:uppercase;color:#6a6150;">Base only</span>
+            <div style="min-width:116px;background:#fff;border:1px solid #e6ddc8;border-radius:8px;box-shadow:0 2px 6px rgba(34,26,18,0.1);transform:rotate(-1deg);padding:9px 12px 11px;">
+              <div style="display:flex;align-items:center;gap:7px;"><span style="font-family:'Courier Prime',monospace;font-size:9px;letter-spacing:0.1em;text-transform:uppercase;color:#a8895a;">Base</span><span style="font-family:'Bebas Neue',Impact,sans-serif;font-size:26px;line-height:0.8;color:#221a12;">12</span></div>
+              <div style="height:1px;background:linear-gradient(90deg,#c1272d,#ca8a04 33%,#16a34a 50%,#2563eb 72%,#be185d);margin:8px 0 12px;"></div>
+              <div style="display:flex;align-items:baseline;gap:5px;line-height:1;"><span style="font-family:'Bebas Neue',Impact,sans-serif;font-size:30px;line-height:1.15;background:linear-gradient(90deg,#c1272d,#ca8a04 40%,#16a34a 60%,#2563eb);-webkit-background-clip:text;background-clip:text;color:transparent;">12</span><span style="font-family:'Bebas Neue',Impact,sans-serif;font-size:10px;letter-spacing:0.06em;color:#ca8a04;">POINTS</span></div>
+            </div>
+            <span style="font-family:'Courier Prime',monospace;font-size:9.5px;line-height:1.4;color:#a49a86;text-align:center;">no mult · no votes · no meta</span>
+          </div>
+
+          <div style="display:flex;flex-direction:column;align-items:center;gap:9px;width:150px;">
+            <span style="font-family:'Courier Prime',monospace;font-size:10px;letter-spacing:0.14em;text-transform:uppercase;color:#6a6150;">+ Votes</span>
+            <div style="min-width:116px;background:#fff;border:1px solid #e6ddc8;border-radius:8px;box-shadow:0 2px 6px rgba(34,26,18,0.1);transform:rotate(-1deg);padding:9px 12px 11px;">
+              <div style="display:flex;align-items:center;gap:7px;"><span style="font-family:'Courier Prime',monospace;font-size:9px;letter-spacing:0.1em;text-transform:uppercase;color:#a8895a;">Base</span><span style="font-family:'Bebas Neue',Impact,sans-serif;font-size:26px;line-height:0.8;color:#221a12;">12</span></div>
+              <div style="font-family:'Courier Prime',monospace;font-size:10px;letter-spacing:0.04em;color:#6c5a40;margin-top:5px;">+ 4 from votes</div>
+              <div style="height:1px;background:linear-gradient(90deg,#c1272d,#ca8a04 33%,#16a34a 50%,#2563eb 72%,#be185d);margin:8px 0 12px;"></div>
+              <div style="display:flex;align-items:baseline;gap:5px;line-height:1;"><span style="font-family:'Bebas Neue',Impact,sans-serif;font-size:30px;line-height:1.15;background:linear-gradient(90deg,#c1272d,#ca8a04 40%,#16a34a 60%,#2563eb);-webkit-background-clip:text;background-clip:text;color:transparent;">16</span><span style="font-family:'Bebas Neue',Impact,sans-serif;font-size:10px;letter-spacing:0.06em;color:#ca8a04;">POINTS</span></div>
+            </div>
+            <span style="font-family:'Courier Prime',monospace;font-size:9.5px;line-height:1.4;color:#a49a86;text-align:center;">mult 1.0 &amp; meta hidden</span>
+          </div>
+
+          <div style="display:flex;flex-direction:column;align-items:center;gap:9px;width:150px;">
+            <span style="font-family:'Courier Prime',monospace;font-size:10px;letter-spacing:0.14em;text-transform:uppercase;color:#6a6150;">× Multiplier</span>
+            <div style="min-width:116px;background:#fff;border:1px solid #e6ddc8;border-radius:8px;box-shadow:0 2px 6px rgba(34,26,18,0.1);transform:rotate(-1deg);padding:9px 12px 11px;">
+              <div style="display:flex;align-items:center;gap:7px;"><span style="font-family:'Courier Prime',monospace;font-size:9px;letter-spacing:0.1em;text-transform:uppercase;color:#a8895a;">Base</span><span style="font-family:'Bebas Neue',Impact,sans-serif;font-size:26px;line-height:0.8;color:#221a12;">12</span><span style="margin-left:auto;font-family:'Bebas Neue',Impact,sans-serif;font-size:12px;letter-spacing:0.04em;color:#fff;background:linear-gradient(90deg,#16a34a,#2563eb);border-radius:3px;padding:1px 6px;white-space:nowrap;">×0.80</span></div>
+              <div style="height:1px;background:linear-gradient(90deg,#c1272d,#ca8a04 33%,#16a34a 50%,#2563eb 72%,#be185d);margin:8px 0 12px;"></div>
+              <div style="display:flex;align-items:baseline;gap:5px;line-height:1;"><span style="font-family:'Bebas Neue',Impact,sans-serif;font-size:30px;line-height:1.15;background:linear-gradient(90deg,#c1272d,#ca8a04 40%,#16a34a 60%,#2563eb);-webkit-background-clip:text;background-clip:text;color:transparent;">9.6</span><span style="font-family:'Bebas Neue',Impact,sans-serif;font-size:10px;letter-spacing:0.06em;color:#ca8a04;">POINTS</span></div>
+            </div>
+            <span style="font-family:'Courier Prime',monospace;font-size:9.5px;line-height:1.4;color:#a49a86;text-align:center;">votes 0 &amp; meta hidden</span>
+          </div>
+
+          <div style="display:flex;flex-direction:column;align-items:center;gap:9px;width:150px;">
+            <span style="font-family:'Courier Prime',monospace;font-size:10px;letter-spacing:0.14em;text-transform:uppercase;color:#6a6150;">+ Metatask</span>
+            <div style="min-width:116px;background:#fff;border:1px solid #e6ddc8;border-radius:8px;box-shadow:0 2px 6px rgba(34,26,18,0.1);transform:rotate(-1deg);padding:9px 12px 11px;">
+              <div style="display:flex;align-items:center;gap:7px;"><span style="font-family:'Courier Prime',monospace;font-size:9px;letter-spacing:0.1em;text-transform:uppercase;color:#a8895a;">Base</span><span style="font-family:'Bebas Neue',Impact,sans-serif;font-size:26px;line-height:0.8;color:#221a12;">12</span></div>
+              <div style="display:flex;align-items:center;gap:5px;margin-top:5px;"><span style="font-family:'Bebas Neue',Impact,sans-serif;font-size:10px;letter-spacing:0.06em;color:#fff;background:#16a34a;border-radius:3px;padding:1px 5px;">META</span><span style="font-family:'Courier Prime',monospace;font-size:10px;color:#6c5a40;">+ 20</span></div>
+              <div style="height:1px;background:linear-gradient(90deg,#c1272d,#ca8a04 33%,#16a34a 50%,#2563eb 72%,#be185d);margin:8px 0 12px;"></div>
+              <div style="display:flex;align-items:baseline;gap:5px;line-height:1;"><span style="font-family:'Bebas Neue',Impact,sans-serif;font-size:30px;line-height:1.15;background:linear-gradient(90deg,#c1272d,#ca8a04 40%,#16a34a 60%,#2563eb);-webkit-background-clip:text;background-clip:text;color:transparent;">32</span><span style="font-family:'Bebas Neue',Impact,sans-serif;font-size:10px;letter-spacing:0.06em;color:#ca8a04;">POINTS</span></div>
+            </div>
+            <span style="font-family:'Courier Prime',monospace;font-size:9.5px;line-height:1.4;color:#16a34a;text-align:center;">metatask · “Zero-Waste July”</span>
+          </div>
+
+          <div style="display:flex;flex-direction:column;align-items:center;gap:9px;width:172px;">
+            <span style="font-family:'Courier Prime',monospace;font-size:10px;letter-spacing:0.14em;text-transform:uppercase;color:#16a34a;">Full formula</span>
+            <div style="min-width:138px;background:#fff;border:1px solid #e6ddc8;border-radius:8px;box-shadow:0 2px 6px rgba(34,26,18,0.1);transform:rotate(-1deg);padding:9px 12px 11px;font-family:'Courier Prime',monospace;">
+              <div style="display:flex;justify-content:space-between;align-items:baseline;"><span style="font-size:9px;letter-spacing:0.1em;text-transform:uppercase;color:#a8895a;">Base</span><span style="font-family:'Bebas Neue',Impact,sans-serif;font-size:20px;line-height:0.8;color:#221a12;">12</span></div>
+              <div style="display:flex;justify-content:space-between;align-items:baseline;margin-top:3px;"><span style="font-size:9px;letter-spacing:0.1em;text-transform:uppercase;color:#16a34a;">+ Meta</span><span style="font-family:'Bebas Neue',Impact,sans-serif;font-size:20px;line-height:0.8;color:#221a12;">20</span></div>
+              <div style="height:1px;background:#e6ddc8;margin:6px 0 5px;"></div>
+              <div style="display:flex;justify-content:space-between;align-items:baseline;"><span style="font-size:9px;letter-spacing:0.06em;text-transform:uppercase;color:#a8895a;">(base+meta)</span><span style="font-family:'Bebas Neue',Impact,sans-serif;font-size:20px;line-height:0.8;color:#221a12;">32</span></div>
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-top:4px;"><span style="font-size:9px;letter-spacing:0.1em;text-transform:uppercase;color:#a8895a;">× Mult</span><span style="font-family:'Bebas Neue',Impact,sans-serif;font-size:12px;letter-spacing:0.04em;color:#fff;background:linear-gradient(90deg,#16a34a,#2563eb);border-radius:3px;padding:1px 6px;">×0.80</span></div>
+              <div style="display:flex;justify-content:space-between;align-items:baseline;margin-top:4px;"><span style="font-size:9px;letter-spacing:0.1em;text-transform:uppercase;color:#a8895a;">+ Votes</span><span style="font-family:'Bebas Neue',Impact,sans-serif;font-size:20px;line-height:0.8;color:#221a12;">4</span></div>
+              <div style="height:2px;background:linear-gradient(90deg,#c1272d,#ca8a04 33%,#16a34a 50%,#2563eb 72%,#be185d);margin:8px 0 8px;"></div>
+              <div style="display:flex;justify-content:space-between;align-items:baseline;"><span style="font-size:9px;letter-spacing:0.1em;text-transform:uppercase;color:#a8895a;">Total</span><span style="font-family:'Bebas Neue',Impact,sans-serif;font-size:28px;line-height:0.9;background:linear-gradient(90deg,#c1272d,#ca8a04 40%,#16a34a 60%,#2563eb);-webkit-background-clip:text;background-clip:text;color:transparent;">29.6</span></div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ================= LOGGED OUT · VOTE GATE ================= -->
+  <section>
+    <div style="display:flex;align-items:center;gap:14px;margin-bottom:10px;">
+      <span style="font-family:'Anton',Impact,sans-serif;font-size:24px;letter-spacing:0.03em;color:#14110b;">Logged out · the vote gate</span>
+      <span style="flex:1;height:6px;background:repeating-linear-gradient(90deg,#14110b 0 14px,transparent 14px 24px);"></span>
+    </div>
+    <p style="max-width:860px;font-size:12.5px;line-height:1.75;color:#413a2c;margin:0 0 26px;text-wrap:pretty;">A signed-out viewer still sees the whole card — headline, media, and the score stamp (read-only). Only the interactive widget is gated: every faction's vote control short-circuits to one shared component that renders a single eyebrow line, <b>“Log in to vote,”</b> in that faction's voice. No stamps, no disabled buttons. The prompt heading stays; the widget below it is replaced.</p>
+
+    <div style="display:flex;flex-wrap:wrap;gap:26px;align-items:flex-start;">
+
+      <div style="width:220px;display:flex;flex-direction:column;gap:8px;">
+        <span style="font-family:'Cormorant Garamond',serif;font-weight:600;font-size:15px;color:#B8471A;">UA</span>
+        <div style="background:linear-gradient(158deg,#FDF0DF,#F7E7D2 46%,#F2E0CB);border:2px solid #B8471A;border-radius:7px;padding:16px 18px;">
+          <span style="display:block;font-family:'EB Garamond',serif;font-size:11px;letter-spacing:0.2em;text-transform:uppercase;color:#8B7C67;">How true did it land</span>
+          <div style="height:0;border-top:1.5px dashed #DD5A1E;opacity:0.4;margin:12px 0;"></div>
+          <span style="display:block;font-family:'EB Garamond',serif;font-size:12px;letter-spacing:0.16em;text-transform:uppercase;color:#B8471A;">Log in to vote</span>
+        </div>
+      </div>
+
+      <div style="width:220px;display:flex;flex-direction:column;gap:8px;">
+        <span style="font-family:'Anton',Impact,sans-serif;font-size:13px;letter-spacing:0.1em;color:#14110b;">SNIDE</span>
+        <div style="background:#14110b;border:1.5px solid #6fae00;box-shadow:4px 5px 0 rgba(0,0,0,0.4);padding:16px 18px;background-image:radial-gradient(rgba(244,241,232,0.05) 1px,transparent 1px);background-size:3px 3px;">
+          <span style="display:block;font-family:'Special Elite',serif;font-size:9px;letter-spacing:0.2em;text-transform:uppercase;color:#8a9a6a;">how sick is it</span>
+          <div style="height:2px;background:repeating-linear-gradient(90deg,#6fae00 0 6px,transparent 6px 11px);margin:12px 0;opacity:0.7;"></div>
+          <span style="display:block;font-family:'Courier Prime',monospace;font-size:12px;font-weight:700;letter-spacing:0.16em;text-transform:uppercase;color:#b6ff2e;">Log in to vote</span>
+        </div>
+      </div>
+
+      <div style="width:220px;display:flex;flex-direction:column;gap:8px;">
+        <span style="font-family:'Share Tech Mono',monospace;font-size:13px;letter-spacing:0.06em;color:#2f7a52;">SINGULARITY</span>
+        <div style="background:#050f08;border:1px solid rgba(74,222,128,0.35);border-radius:8px;padding:16px 18px;background-image:repeating-linear-gradient(to bottom,transparent 0 2px,rgba(74,222,128,0.03) 2px 3px);">
+          <span style="display:block;font-family:'Share Tech Mono',monospace;font-size:8px;letter-spacing:0.18em;text-transform:uppercase;color:#3f7a58;">&gt; rate signal</span>
+          <div style="height:1px;background:rgba(74,222,128,0.25);margin:12px 0;"></div>
+          <span style="display:block;font-family:'Share Tech Mono',monospace;font-size:12px;letter-spacing:0.06em;color:#4ade80;text-shadow:0 0 8px rgba(74,222,128,0.5);">&gt; log in to vote</span>
+        </div>
+      </div>
+
+      <div style="width:220px;display:flex;flex-direction:column;gap:8px;">
+        <span style="font-family:'Bebas Neue',Impact,sans-serif;font-size:14px;letter-spacing:0.1em;color:#c1272d;">EVERYMEN</span>
+        <div style="background:#f4ecd6;border:1px solid #221a12;padding:16px 18px;background-image:repeating-linear-gradient(to bottom,transparent,transparent 17px,rgba(100,140,200,0.08) 17px,rgba(100,140,200,0.08) 18px);">
+          <span style="display:block;font-family:'Bebas Neue',Impact,sans-serif;font-size:13px;letter-spacing:0.14em;color:#9a8556;">PUT IN THE WORK</span>
+          <div style="height:2px;background:repeating-linear-gradient(90deg,#c1272d 0 6px,transparent 6px 11px);margin:12px 0;opacity:0.65;"></div>
+          <span style="display:block;font-family:'Bebas Neue',Impact,sans-serif;font-size:15px;letter-spacing:0.14em;color:#c1272d;">LOG IN TO VOTE</span>
+        </div>
+      </div>
+
+      <div style="width:220px;display:flex;flex-direction:column;gap:8px;">
+        <span style="font-family:'Cinzel',serif;font-weight:600;font-size:14px;color:#9c3622;">EPHEMERISTS</span>
+        <div style="background:#f1e8cf;border:1px solid #cdae6a;border-radius:8px;padding:16px 18px;background-image:radial-gradient(rgba(42,29,18,0.03) 1px,transparent 1px);background-size:6px 6px;">
+          <span style="display:block;font-family:'Cinzel',serif;font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:#8a7a4e;">Attest the record</span>
+          <div style="height:2px;background:linear-gradient(90deg,transparent,#cdae6a 20%,#1d6e72 50%,#cdae6a 80%,transparent);margin:12px 0;opacity:0.7;"></div>
+          <span style="display:block;font-family:'Cinzel',serif;font-size:12px;letter-spacing:0.1em;text-transform:uppercase;color:#9c3622;">Log in to vote</span>
+        </div>
+      </div>
+
+      <div style="width:220px;display:flex;flex-direction:column;gap:8px;">
+        <span style="font-family:'MedievalSharp',cursive;font-size:15px;color:#7A4A9E;">COZY COVEN</span>
+        <div style="background:#FBF4E0;border:2px solid #C8A02A;border-radius:9px;padding:16px 18px;">
+          <span style="display:block;font-family:'MedievalSharp',cursive;font-size:15px;color:#7A4A9E;">Cast thy Verdict</span>
+          <div style="height:2px;background:linear-gradient(90deg,transparent,#C8A02A 20%,#7A4A9E 50%,#C8A02A 80%,transparent);margin:12px 0;opacity:0.75;"></div>
+          <span style="display:block;font-family:'MedievalSharp',cursive;font-size:16px;color:#7A4A9E;">Log in to vote</span>
+        </div>
+      </div>
+
+      <div style="width:220px;display:flex;flex-direction:column;gap:8px;">
+        <span style="font-family:'Bebas Neue',Impact,sans-serif;font-size:14px;letter-spacing:0.08em;background:linear-gradient(90deg,#c1272d,#ca8a04 33%,#16a34a 50%,#2563eb 72%,#be185d);-webkit-background-clip:text;background-clip:text;color:transparent;">UNAFFILIATED</span>
+        <div style="background:#fffdf9;border:1px solid #e6ddc8;border-radius:10px;padding:16px 18px;">
+          <span style="display:block;font-family:'Bebas Neue',Impact,sans-serif;font-size:13px;letter-spacing:0.14em;color:#9a8556;">RATE IT</span>
+          <div style="height:2px;background:linear-gradient(90deg,#c1272d,#ca8a04 33%,#16a34a 50%,#2563eb 72%,#be185d);opacity:0.4;margin:12px 0;"></div>
+          <span style="display:block;font-family:'Bebas Neue',Impact,sans-serif;font-size:15px;letter-spacing:0.1em;background:linear-gradient(90deg,#16a34a,#2563eb);-webkit-background-clip:text;background-clip:text;color:transparent;">LOG IN TO VOTE</span>
+        </div>
+      </div>
+
+    </div>
+    <p style="max-width:860px;font-size:11.5px;line-height:1.6;color:#6a6150;margin:22px 0 0;">One shared <code style="font-family:'Courier Prime',monospace;">VoteLoginGate</code> component drives all of them — same copy (<code style="font-family:'Courier Prime',monospace;">votes.chrome.loginGate</code>), faction eyebrow styling. Albescent and Coven inherit the Unaffiliated / Coven treatments.</p>
+  </section>
+
   <!-- ================= UA ================= -->
   <section>
     <div style="display:flex;align-items:center;gap:14px;margin-bottom:10px;">
