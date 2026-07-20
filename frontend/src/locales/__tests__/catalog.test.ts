@@ -125,7 +125,7 @@ describe('i18next runtime', () => {
   })
 
   it('resolves kebab-case keys for multi-word labels', () => {
-    expect(i18n.t('votes:everymen.a-start')).toBe('a start')
+    expect(i18n.t('votes:coven.a-start')).toBe('a start')
     expect(i18n.t('votes:snide.not-bad')).toBe('not bad')
   })
 

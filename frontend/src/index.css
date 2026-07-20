@@ -232,6 +232,17 @@
      (Singularity is always-dark), so this one value serves both themes. */
   --faction-singularity-phosphor-dim: #7ba98a;
 
+  /* ── Singularity decode-strip vote widget (#821) ──
+     The terminal decode strip: unreached tiers scramble katakana in dim green;
+     reached tiers resolve to density glyphs in phosphor green, with the rank-5
+     "verified" tier in cyan. Terminal tokens are theme-invariant (Singularity is
+     always-dark), so these serve both themes — no [data-theme] override. */
+  --faction-singularity-vote-reached: #4ade80; /* phosphor green — resolved glyphs */
+  --faction-singularity-vote-verified: #60a5fa; /* cyan — rank 5 "verified" */
+  --faction-singularity-vote-scramble: rgba(74, 222, 128, 0.24); /* dim, unreached noise */
+  --faction-singularity-vote-reached-bg: rgba(74, 222, 128, 0.05); /* faint lit key */
+  --faction-singularity-vote-off: #3f7a58; /* idle caption ink */
+
   /* ══ Ephemerists illuminated-codex palette (the ephemerists slot) ══
      The card contract above rebinds to these. CONSTANTS (gold/rubric/
      lapis/verdigris/ink) keep their role in both themes; the VELLUM
@@ -359,6 +370,24 @@
   --faction-wow-vote-on: #a9700a;
   --faction-wow-vote-off: #b79a52;
 
+  /* Ephemerists — constellation-attestation vote plate (#821). A night sky read
+     in BOTH themes (the plate is a fixed dark surface like coven's moon plate),
+     so these stay constant across the cascade; only the caption ink (--eph-*)
+     flips. Reached stars light gold, the rank-5 star whitens, a dashed gold line
+     ties the reached stars together. */
+  --faction-ephemerists-vote-plate-from: #1c2e40;
+  --faction-ephemerists-vote-plate-to: #0a121c;
+  --faction-ephemerists-vote-plate-border: #122b3d;
+  --faction-ephemerists-vote-dust: #5a6b7d;
+  --faction-ephemerists-vote-line: #d4ab55; /* dashed gold constellation line */
+  --faction-ephemerists-vote-star-on: #d4ab55; /* reached star (tiers I–IV) */
+  --faction-ephemerists-vote-star-top: #fff4cf; /* reached rank-5 (canonical) star */
+  --faction-ephemerists-vote-star-off: #3a4655; /* unreached star */
+  --faction-ephemerists-vote-core-on: #fff1c8; /* reached star core */
+  --faction-ephemerists-vote-core-top: #ffffff; /* rank-5 star core */
+  --faction-ephemerists-vote-core-off: #556374; /* unreached star core */
+  --faction-ephemerists-vote-spark: #fff4cf; /* rank-5 corner sparkles */
+
   /* ══ Everymen — the rainbow's missing red (union/WW2 poster) ══
      Constants (cream/gold/ink) keep their role in both themes; the paper
      surface + its text FLIP in dark; accent red stays vivid; field is the
@@ -385,6 +414,27 @@
   --faction-everymen-card-muted: var(--everymen-muted);
   --faction-everymen-card-font: var(--font-accent); /* Bebas Neue */
 
+  /* ── Gearworks vote widget (#821) — reached gears heat a cold→ember ramp with
+     pale hubs; unreached gears are edge-only outlines; rank 5 throws sparks. The
+     edge + rank-5 glow flip in the dark cascade (see the dark block). ── */
+  --faction-everymen-vote-heat-1: #6e747e;
+  --faction-everymen-vote-heat-2: #9c7d4a;
+  --faction-everymen-vote-heat-3: #c8842a;
+  --faction-everymen-vote-heat-4: #eb5f14;
+  --faction-everymen-vote-heat-5: #ffcf6e;
+  --faction-everymen-vote-hub-1: #f4ecd6;
+  --faction-everymen-vote-hub-2: #f4ecd6;
+  --faction-everymen-vote-hub-3: #fbe6c2;
+  --faction-everymen-vote-hub-4: #ffe6b0;
+  --faction-everymen-vote-hub-5: #fff3c8;
+  --faction-everymen-vote-edge: #c9b58f;
+  --faction-everymen-vote-spark-a: #ffe08a;
+  --faction-everymen-vote-spark-b: #ff9838;
+  --faction-everymen-vote-spark-glow: #ffb347;
+  --faction-everymen-vote-glow-2: drop-shadow(0 0 2px rgba(180, 120, 40, 0.5));
+  --faction-everymen-vote-glow-3: drop-shadow(0 0 4px rgba(210, 132, 42, 0.7));
+  --faction-everymen-vote-glow-4: drop-shadow(0 0 6px rgba(235, 95, 20, 0.8));
+  --faction-everymen-vote-glow-5: drop-shadow(0 1px 1px rgba(120, 60, 10, 0.55)) drop-shadow(0 0 7px rgba(235, 120, 20, 0.85));
 
   /* ── Vote stamp colors (orange → yellow → green → blue → magenta) ── */
   --vote-1: #c2410c;
@@ -740,6 +790,10 @@
   --everymen-muted: #b6a079;
   --everymen-field: #3c1416;
   --everymen-field-deep: #5a1d20;
+  /* Gearworks: cooler edge for cold gears, a brighter single-halo rank-5 glow on
+     the dark paper (the light double-drop-shadow would muddy against it). */
+  --faction-everymen-vote-edge: #8a7856;
+  --faction-everymen-vote-glow-5: drop-shadow(0 0 9px rgba(255, 175, 60, 0.95));
 }
 
 /* ══ Everymen poster-wall backdrop (faction-context pages; theme-aware) ══ */
@@ -1462,6 +1516,15 @@
   .coven-moon-dust { animation: eph-twinkle 3.2s ease-in-out infinite; animation-delay: var(--tw-delay, 0s); }
 }
 
+/* Ephemerists — constellation plate: reached stars (tiers I–IV) breathe on the
+   opacity `eph-twinkle`; the rank-5 star's four corner sparkles twinkle on the
+   shared scale/rotate `coven-twinkle`. Reached stars still light and the gold
+   line still connects them when stilled — motion is decoration, not meaning. */
+@media (prefers-reduced-motion: no-preference) {
+  .eph-vote-star { animation: eph-twinkle 3s ease-in-out infinite; animation-delay: var(--tw-delay, 0s); }
+  .eph-vote-sparkle { animation: coven-twinkle 1.2s ease-in-out infinite; animation-delay: var(--tw-delay, 0s); }
+}
+
 /* S.N.I.D.E. — amp/EQ meter: at rank 5 the lit segments jump like a party VU. */
 @keyframes snide-amp-party { 0%, 100% { transform: scaleY(1); } 50% { transform: scaleY(1.9); } }
 @media (prefers-reduced-motion: no-preference) {
@@ -1476,6 +1539,20 @@
   .wow-balloon-float { animation: wow-bounce 2.2s ease-in-out infinite; animation-delay: var(--tw-delay, 0s); }
   .wow-balloon-cheer { animation: wow-group-bounce 1.05s ease-in-out infinite; }
   .wow-balloon-eye { transform-box: fill-box; transform-origin: center; animation: wow-eye-wiggle 1.4s ease-in-out infinite; }
+}
+
+/* Everymen — gearworks: reached gears turn (odd tiers clockwise, even counter),
+   rank-5 sparks fly outward. Per-gear duration (--ev-gear-dur) and per-spark
+   travel/tempo (--ev-sx/--ev-sy/--ev-spark-dur/--ev-spark-delay) arrive as inline
+   custom properties. Class-gated on reduced-motion: stilled, the gears keep their
+   heat/glow (that carries the rank) and the sparks stay hidden (opacity:0 inline). */
+@keyframes ev-gear-cw { to { transform: rotate(360deg); } }
+@keyframes ev-gear-ccw { to { transform: rotate(-360deg); } }
+@keyframes ev-gear-spark { 0% { opacity: 0; transform: translate(0, 0) scale(1); } 10% { opacity: 1; } 100% { opacity: 0; transform: translate(var(--ev-sx, 0), var(--ev-sy, 0)) scale(0.3); } }
+@media (prefers-reduced-motion: no-preference) {
+  .ev-gear--cw { transform-origin: center; animation: ev-gear-cw var(--ev-gear-dur, 3s) linear infinite; }
+  .ev-gear--ccw { transform-origin: center; animation: ev-gear-ccw var(--ev-gear-dur, 3s) linear infinite; }
+  .ev-gear-spark { animation: ev-gear-spark var(--ev-spark-dur, 1s) ease-out infinite; animation-delay: var(--ev-spark-delay, 0s); }
 }
 
 /* Albescent — the secret-society tell (#821, ADR-0048): the na spectrum card

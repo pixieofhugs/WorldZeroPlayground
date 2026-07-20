@@ -7,7 +7,7 @@
     "canonical": "canonical"
   },
   "everymen": {
-    "a-start": "a start",
+    "fair": "fair",
     "solid": "solid",
     "good": "good",
     "excellent": "excellent",
@@ -67,10 +67,14 @@
       "rateAria": "Rate {{value}} of 5"
     },
     "ephemerists": {
-      "rateAria": "Mark {{value}} — {{label}}"
+      "rateAria": "Mark {{value}} — {{label}}",
+      "idle": "attest the record",
+      "tag": "sealed"
     },
     "everymen": {
-      "rateAria": "Rate {{value}} — {{label}}"
+      "rateAria": "Rate {{value}} — {{label}}",
+      "idle": "awaiting",
+      "tag": "earned"
     },
     "coven": {
       "rateAria": "Rate {{value}} — {{label}}",
@@ -90,7 +94,9 @@
     "singularity": {
       "rateAria": "Cast {{value}} — {{label}}",
       "prompt": "Cast Signal",
-      "promptHint": "how confidently does this output hold?"
+      "promptHint": "how confidently does this output hold?",
+      "idle": "no signal",
+      "tag": "locked"
     },
     "ua": {
       "rateAria": "Appraise {{value}} — {{label}}",
