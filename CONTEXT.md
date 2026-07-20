@@ -270,6 +270,38 @@ computed **total** via the conditional score stamp (solo: `base × faction + vot
 side's own total with faction×duel combined). The multiplier/metatask rows appear only when
 non-identity. Merit remains the collab-card number and the submission sort key.
 
+**Score stamp** *(the pair, not one object)*:
+The praxis card's right column. It is **two** distinct things and conflating them is what
+lost every faction's signature device in #821:
+- **Score box** — the bordered pill carrying the working: `base` numeral, the coloured
+  `×0.80` multiplier chip, and `+ N from votes`. Broadly the same *shape* across factions;
+  which rows exist is decided by `scoreBreakdown()` under ADR-0047.
+- **Total mark** — the faction's own **faction mark** holding the total over a `POINTS`
+  label. Frequently not a box at all: UA's is the ensō, Everymen's a rubber-stamp roundel
+  with arced text under `mix-blend-mode: multiply`, Ephemerists' a rubric, Snide's an Anton
+  numeral with a hot-pink text-shadow, Unaffiliated's the total background-clipped to the
+  rainbow.
+Shared logic, bespoke presentation: one `scoreBreakdown()` decides *which numbers show*; each
+faction's registered `scoreStamp` surface decides *what they look like* (ADR-0049).
+_Avoid_: "the score stamp" for the score box alone; "stamp" for the total mark; assuming one
+themed component can carry both.
+
+**Faction mark**:
+A faction's signature graphic device — ensō (UA), rubber-stamp roundel (Everymen), rubric
+(Ephemerists), `✦` (WOW), `✨` (Coven). Lives as a **React SVG component** in
+`components/factionMarks/`, never as a file under `public/`: an external `.svg` behind an
+`<img>` cannot read CSS custom properties, so it would reintroduce hardcoded hex and break in
+dark mode. As a component every `fill` reads a token.
+_Avoid_: sigil (that's the existing roster/avatar surface), logo, icon, asset.
+
+**Ornament text**:
+Type that is part of a mark rather than something to read — a vote widget's tier label, a
+stamp's `POINTS`, a plate's caption. **Exempt from the content-text floor** (#623/#627) and
+takes the design's per-faction size; the floor governs body copy, descriptions and task text.
+Forcing all eight vote captions to `--text-content` is what flattened the widgets' tonal
+hierarchy in #821.
+_Avoid_: treating every string as content text; using `--text-content` inside a widget.
+
 **Metatask**:
 A flat-points **add-on to a praxis**, not a doable task — it has no praxis, no votes, no
 lifecycle of its own beyond **propose → approve → retire**. Owned by a faction
