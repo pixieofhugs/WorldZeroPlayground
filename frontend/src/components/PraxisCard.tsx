@@ -23,6 +23,7 @@ import {
   PraxisVoteFooter,
   type AdminProps,
 } from "./praxisCard/shared";
+import { PraxisScoreStamp } from "./praxisCard/PraxisScoreStamp";
 import { usePraxisCard } from "./praxisCard/usePraxisCard";
 
 interface Props {
@@ -78,6 +79,8 @@ function PraxisBody({
   paper,
   titleStyle,
   showCrown,
+  scoreStamp,
+  mediaPlaceholder,
 }: {
   praxis: PraxisCardOut;
   tint: string;
@@ -86,6 +89,14 @@ function PraxisBody({
   paper?: string;
   titleStyle?: CSSProperties;
   showCrown?: boolean;
+  /**
+   * Render the conditional {@link PraxisScoreStamp} (ADR-0047) instead of the
+   * legacy `PraxisScoreHero`. Opt-in: the spectrum Default card sets it (#820);
+   * #821 rolls it to every faction, at which point the hero retires.
+   */
+  scoreStamp?: boolean;
+  /** Show the empty-media drop-target placeholder (spectrum Default, #820). */
+  mediaPlaceholder?: boolean;
 }) {
   return (
     <>
@@ -102,18 +113,26 @@ function PraxisBody({
           <PraxisTaskLink praxis={praxis} style={{ color: muted }} />
           <PraxisExcerpt praxis={praxis} style={{ color: muted }} />
         </div>
-        <PraxisScoreHero
-          praxis={praxis}
-          color={tint}
-          border={tint}
-          paper={paper}
-          showCrown={showCrown}
-        />
+        {scoreStamp ? (
+          <PraxisScoreStamp
+            praxis={praxis}
+            theme={{ color: tint, border: tint, muted, paper }}
+            showCrown={showCrown}
+          />
+        ) : (
+          <PraxisScoreHero
+            praxis={praxis}
+            color={tint}
+            border={tint}
+            paper={paper}
+            showCrown={showCrown}
+          />
+        )}
       </div>
       <PraxisStats praxis={praxis} style={{ color: muted, marginTop: "var(--space-sm)" }} />
       <PraxisModeChip praxis={praxis} />
       <PraxisRoster praxis={praxis} accent={tint} paper={paper} />
-      <PraxisMediaGallery praxis={praxis} accent={tint} paper={paper} />
+      <PraxisMediaGallery praxis={praxis} accent={tint} paper={paper} showPlaceholder={mediaPlaceholder} />
       <PraxisByline praxis={praxis} style={{ color: muted }} />
       <PraxisVotedByMarker praxis={praxis} style={{ color: muted }} />
       <PraxisVoteFooter praxis={praxis} />
@@ -533,10 +552,11 @@ export function SingularityPraxisCard({ praxis, adminProps, showCrown }: Archety
 
 /**
  * Fallback praxis card for `na` / unaffiliated + any task faction without a
- * bespoke archetype — the spectrum default skin (#418). A clean sheet wrapped in
- * the spectrum band and marked with the seven-segment ring; the shared
- * PraxisBody inside. No longer borrows the task faction's costume. All colours
- * via --faction-default-* tokens; flips light/dark.
+ * bespoke archetype — the SPECTRUM card (#820, ADR-0039). A clean sheet wrapped
+ * in the community-rainbow band and marked with the seven-segment ring, holding
+ * the conditional score stamp (ADR-0047) and the empty-media drop target. No
+ * longer borrows the task faction's costume. All colours via --faction-default-*
+ * / --spectrum-* tokens; flips light/dark through the [data-theme] cascade.
  */
 export function DefaultPraxisCard({ praxis, adminProps, showCrown }: ArchetypeProps) {
   const { t } = useTranslation("praxis");
@@ -545,15 +565,16 @@ export function DefaultPraxisCard({ praxis, adminProps, showCrown }: ArchetypePr
     <div
       style={{
         ...frameBase,
-        borderRadius: 10,
+        borderRadius: 8,
         padding: "var(--space-xs)",
         background: "var(--faction-default-rainbow)",
-        boxShadow: "0 12px 26px -14px rgba(0,0,0,0.4)",
+        boxShadow: "0 12px 26px -14px color-mix(in srgb, black 40%, transparent)",
       }}
     >
       <div
         style={{
           position: "relative",
+          overflow: "hidden",
           background: "var(--faction-default-card-bg)",
           color: "var(--faction-default-card-text)",
           borderRadius: 5,
@@ -582,6 +603,8 @@ export function DefaultPraxisCard({ praxis, adminProps, showCrown }: ArchetypePr
           muted="var(--faction-default-card-muted)"
           paper="var(--faction-default-card-bg)"
           showCrown={showCrown}
+          scoreStamp
+          mediaPlaceholder
         />
       </div>
     </div>

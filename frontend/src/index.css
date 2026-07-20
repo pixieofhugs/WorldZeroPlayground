@@ -168,6 +168,19 @@
   --faction-default-card-accent: #1a1209;
   --faction-default-card-muted: #6b6050;
   --faction-default-card-font: var(--font-display);
+  /* Spectrum-sweep vote widget (ADR-0039): unreached dots wear this hairline
+     ring; the reached dots fill with --faction-default-rainbow. The two caption
+     colours are the widget's warm on/off text — flipped in dark below, so the
+     widget never branches on a `dark` boolean. The five glow hues are the
+     community rainbow's per-dot cast; identity colours, so theme-independent. */
+  --faction-default-dot-ring: #d6cfbf;
+  --faction-default-vote-on: #c2541f;
+  --faction-default-vote-off: #a8895a;
+  --spectrum-glow-1: #c1352a;
+  --spectrum-glow-2: #cf861a;
+  --spectrum-glow-3: #16a34a;
+  --spectrum-glow-4: #2f7fb8;
+  --spectrum-glow-5: #a4277e;
   /* Neutral glow for unaffiliated surfaces (#728): a rainbow has no single
      colour to cast, so na glows colourless. Light mode uses a soft grey — a
      literally-white glow on a light page is invisible; dark mode is white. */
@@ -540,6 +553,10 @@
   --faction-default-card-text: #f0e6d0;
   --faction-default-card-accent: #f0e6d0;
   --faction-default-card-muted: #9b9080;
+  /* Spectrum-sweep vote widget — dark palette (the glow hues stay identity). */
+  --faction-default-dot-ring: rgba(240, 230, 208, 0.3);
+  --faction-default-vote-on: #e07a3a;
+  --faction-default-vote-off: #b0925f;
   --glow-neutral: rgba(255, 255, 255, 0.75);
 
   /* ══ Ephemerists palette (dark) — pigments stay vivid; vellum darkens
@@ -1283,6 +1300,19 @@
   .eph-spin-rev { animation: eph-spin 100s linear infinite reverse; }
   .eph-twinkle { animation: eph-twinkle 5s ease-in-out infinite; }
   .eph-depth { animation: eph-depth 16s ease-in-out infinite; }
+}
+
+/* Unaffiliated spectrum-sweep vote widget (#820) — reached dots bob in a rising
+   wave (left-to-right via per-dot --spec-delay). Class-gated on reduced-motion
+   so the widget never writes `animation:` inline and bypass the gate; the dot
+   still fills with the rainbow when stilled, only the bob stops. Per-dot
+   duration/delay/travel arrive as inline custom properties. */
+@keyframes spec-rise { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(var(--spec-bounce, -3px)); } }
+@media (prefers-reduced-motion: no-preference) {
+  .spectrum-dot--reached {
+    animation: spec-rise var(--spec-dur, 1.6s) ease-in-out infinite;
+    animation-delay: var(--spec-delay, 0s);
+  }
 }
 
 /* Singularity terminal — phosphor glow breathes, sigil turns. (#222) */

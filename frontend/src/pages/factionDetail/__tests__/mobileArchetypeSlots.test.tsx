@@ -59,6 +59,11 @@ const PRAXIS: PraxisCardOut = {
   member_count: 1,
   score: 24,
   voter_count: 3,
+  base_points: 20,
+  metatask_points: 0,
+  display_multiplier: null,
+  points_from_votes: 4,
+  total: 24,
   is_top_for_task: false,
   task_faction_slug: 'everymen',
 }
