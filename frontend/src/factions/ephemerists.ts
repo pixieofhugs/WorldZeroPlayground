@@ -33,7 +33,7 @@ import EphemeristsProfileBody from '../pages/characterProfile/archetypes/Ephemer
 import EphemeristsTaskCard from '../components/cards/EphemeristsTaskCard'
 import EphemeristsTaskDetail from '../pages/taskDetail/archetypes/EphemeristsTaskDetail'
 import EphemeristsVote from '../components/vote/EphemeristsVote'
-import { EphemeristsPraxisCard } from '../components/PraxisCard'
+import EphemeristsPraxisCard from '../components/praxisCard/desktop/EphemeristsPraxisCard'
 import { EphemeristsSigil } from '../components/cards/ephemeristsAtoms'
 import { EphemeristsCard } from '../components/cards/FactionCard'
 import { EphemeristsSelectCard } from '../components/cards/FactionSelectCard'

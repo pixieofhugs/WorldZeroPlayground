@@ -33,7 +33,7 @@ import CovenProfileBody from '../pages/characterProfile/archetypes/CovenProfileB
 import CovenTaskCard from '../components/cards/CovenTaskCard'
 import CovenTaskDetail from '../pages/taskDetail/archetypes/CovenTaskDetail'
 import CovenVote from '../components/vote/CovenVote'
-import { CovenPraxisCard } from '../components/PraxisCard'
+import CovenPraxisCard from '../components/praxisCard/desktop/CovenPraxisCard'
 import { CovenSigil } from '../components/cards/CovenSigil'
 import { CovenCard } from '../components/cards/FactionCard'
 import { COVENSelectCard } from '../components/cards/FactionSelectCard'
