@@ -81,7 +81,7 @@
 
   /* ── Faction card backgrounds (light mode) ── */
   --faction-ua-card-bg: var(--ua-paper); /* parchment sheet */
-  --faction-wow-card-bg: #fffcf0; /* Default's paper, warmed a shade */
+  --faction-wow-card-bg: #fbf4e0; /* chronicle cream parchment (#838) */
   --faction-coven-card-bg: #fdeef3; /* blush collage */
   --faction-snide-card-bg: #14110b; /* photocopier ink (dark-in-light, Singularity precedent) */
   --faction-ephemerists-card-bg: var(--eph-vellum); /* Ephemerists: aged manuscript stock */
@@ -89,7 +89,7 @@
 
   /* ── Faction card text (light mode) ── */
   --faction-ua-card-text: var(--ua-ink);
-  --faction-wow-card-text: #1a1209; /* 18.01:1 — same ink as Default */
+  --faction-wow-card-text: #2b2412; /* chronicle body ink — 14.02:1 */
   --faction-coven-card-text: #581c39;
   --faction-snide-card-text: #f4f1e8; /* warm xerox paper on ink */
   --faction-ephemerists-card-text: var(--eph-vellum-text);
@@ -97,12 +97,14 @@
 
   /* ── Faction card accents (light mode) ── */
   --faction-ua-card-accent: var(--ua-orange);
-  /* NOT --faction-wow. §3 calls the accent "metadata / decorative accent" and
-     metadata is text, so it owes 4.5:1 on card-bg — which no yellow bright
-     enough to read as yellow can pay. This is the primary walked down until it
-     clears (6.73:1). The three factions that skipped that step are exactly the
-     three sitting in factionContrast's BASELINE allowlist. */
-  --faction-wow-card-accent: #7a5200; /* deep amber — 6.73:1 */
+  /* NOT --faction-wow. WOW's skin is the cream/gold/plum chronicle (#838,
+     ADR-0050); the yellow is its RAINBOW-SPINE hue and stays in --faction-wow
+     alone. §3 calls the accent "metadata / decorative accent" and metadata is
+     text, so it owes 4.5:1 on card-bg — the design's plum pays it outright
+     (5.79:1) where no readable yellow ever could. The gold #c8a02a is the
+     chronicle's frame/rule colour, not an ink: it measures 2.24:1 on the cream
+     and never carries text. */
+  --faction-wow-card-accent: #7a4a9e; /* chronicle plum — 5.79:1 */
   --faction-coven-card-accent: #ec5f99;
   --faction-snide-card-accent: #b6ff2e; /* toxic acid */
   --faction-ephemerists-card-accent: var(--eph-rubric);
@@ -110,7 +112,10 @@
 
   /* ── Faction card secondary text (descriptions, metadata) ── */
   --faction-ua-card-muted: var(--ua-sub);
-  --faction-wow-card-muted: #6b5320; /* 7.09:1 */
+  /* The design's metadata olive is #8a7b54, which measures 3.79:1 on the cream
+     and is body text — the contrast house rule wins, so it is walked down to
+     the nearest compliant shade of the same hue (4.76:1). */
+  --faction-wow-card-muted: #7a6b45;
   --faction-coven-card-muted: #831843;
   --faction-snide-card-muted: #d8d6c8; /* faded newsprint grey on ink */
   --faction-ephemerists-card-muted: var(--eph-muted);
@@ -137,30 +142,30 @@
   --faction-ephemerists-card-font: var(--eph-display);
   --faction-singularity-card-font: var(--font-faction-terminal);
 
-  /* ── WARRIORS OF WHIMSY · a colour, not a skin (#812) ──
-     WOW's nine tokens are scattered through the suffix groups above rather than
-     gathered here, like every other faction. What is worth stating in one place
-     is why there are only nine.
+  /* ── WARRIORS OF WHIMSY · yellow SPINE, cream/gold/plum SKIN (#812, #838) ──
+     These are two different things and conflating them is the mistake ADR-0050
+     exists to stop.
 
-     WOW lost its lo-fi pink `.exe` identity to Cozy Coven in #784 and has been
-     unthemed since. The owner has settled its replacement colour — yellow — but
-     NOT its design. So this block is deliberately the bare §3 contract and
-     nothing else: no archetype-private primitives, no chrome tokens, and no
-     manifest in src/factions at all, which means every surface renders its
-     Default* archetype. A WOW profile and an unaffiliated one are structurally
-     identical; only the hue differs. Anything more here is dead weight the real
-     redesign has to delete first.
+     THE SPINE. `--faction-wow` is yellow (#e0a800 light / #f5c542 dark) and its
+     stop in --faction-default-rainbow is yellow. That is WOW's membership of the
+     rainbow, settled in #812/#814, and #838 does not touch it. Yellow is the
+     palette's hard case (#651, #669, #677); this one is deep (l44) rather than
+     bright, because hue 45° puts daylight between it and UA's burnt-orange 20°
+     — the two sit ADJACENT in FACTION_RAINBOW_ORDER and are painted touching in
+     the Leaderboard/DefaultPlayers stripe bars and Meadow's bloom, where a
+     goldenrod nearer 40° reads as a second brown. Every ink measured against it
+     clears AA with room to spare. It is a shade brighter and yellower than the
+     rainbow gradient's own yellow stop (#ca8a04), which is unchanged — that
+     gradient is `na`'s spectrum and answers to nobody's hue but its own.
 
-     ON THE HUE. Yellow is the palette's hard case (#651, #669, #677). This one
-     is deep (l44) rather than bright, for two independent reasons:
-       - Hue 45° puts clear daylight between it and UA's burnt-orange 20°. The
-         two sit ADJACENT in FACTION_RAINBOW_ORDER, so they are painted touching
-         in the Leaderboard/DefaultPlayers stripe bars and in Meadow's bloom.
-         A goldenrod nearer 40° reads as a second brown at that size.
-       - Every text ink measured against it clears AA with room to spare.
-     It is a shade brighter and yellower than the rainbow gradient's own yellow
-     stop (#ca8a04), which is unchanged — that gradient is `na`'s spectrum and
-     answers to nobody's hue but its own. */
+     THE SKIN. WOW's surfaces are the CHRONICLE: cream parchment, a gold frame
+     (#c8a02a, theme-invariant — it does not lift in dark) and plum ink (#7a4a9e
+     light → #c79be0 dark, which is what carries the theme flip). Its widget is
+     the googly-balloon verdict, its glyph is ✦, its face is MedievalSharp.
+     #830 authored a yellow chronicle + yellow balloon ramp for WOW from no
+     design source at all, on the strength of a mislabelled mockup heading; #838
+     retired it. The chronicle was never Coven's — see ADR-0050 and
+     .design-sync/praxis-cards/LABELS.md before moving anything here. */
 
   /* ── DEFAULT · unaffiliated (no faction; rainbow = every path still open) ──
      Not a rainbow-spine faction — the blank-slate / first-life state (na). Its
@@ -333,19 +338,29 @@
   --faction-coven-ivy: #7cbf99;
   --faction-coven-ivy-leaf: #9ad3b1;
 
-  /* ══ Praxis-card redesign (#821) — chronicle frames + bespoke vote widgets ══
-     Coven wears a gold/plum chronicle; WOW wears the same structure recoloured
-     to its yellow. The moon-phase + balloon vote plates are always night/warm
-     plates, so their inner values do not flip — only the chronicle chrome does. */
+  /* ══ Praxis-card redesign (#821, repointed by #838) ══
+     WOW wears the cream/gold/plum CHRONICLE + the googly-balloon verdict; Coven
+     wears the PINK MARKER STICKER + the moon-phase plate. #830 had these two
+     inverted — it took a mislabelled mockup heading at face value and authored a
+     yellow chronicle for WOW out of nothing. ADR-0050 is the record; go by
+     tokens and metaphor, never by a label. The moon plate is a night surface
+     that reads in both themes, so its inner values do not flip.
 
-  /* Coven — gold/plum chronicle frame */
-  --faction-coven-chronicle-bg: #f6ecd6; /* vellum */
-  --faction-coven-chronicle-plum: #7a4a9e;
-  --faction-coven-chronicle-gold: #b8892f; /* readable gold for rules/labels */
-  --faction-coven-chronicle-header-from: #7a4a9e;
-  --faction-coven-chronicle-header-to: #ec5f99;
-  --faction-coven-chronicle-header-text: #fbeef5;
-  --faction-coven-chronicle-shadow: rgba(90, 40, 110, 0.24);
+     Coven's surfaces still render through the shared ChroniclePraxisCard
+     structure, so the `-chronicle-` family name survives here as the frame
+     contract it feeds; the VALUES are the pink sticker's. #840 replaces the
+     structure and can then rename the family. */
+
+  /* Coven — pink marker-sticker frame */
+  --faction-coven-chronicle-bg: #fffdfa; /* sticker ground */
+  --faction-coven-chronicle-accent: #ec5f99; /* border, rules, stamp */
+  /* The running head carries small uppercase text, so its two stops each owe
+     4.5:1 to the header ink. #ec5f99 pays only 3.10:1 against the near-white,
+     so the band deepens to the sticker's own ink range. */
+  --faction-coven-chronicle-header-from: #b93a72;
+  --faction-coven-chronicle-header-to: #8e2f5c;
+  --faction-coven-chronicle-header-text: #fffdfa;
+  --faction-coven-chronicle-shadow: rgba(214, 90, 150, 0.35);
 
   /* Coven — moon-phase vote plate (night plate; same in both themes) */
   --faction-coven-moon-plate-from: #3a2352;
@@ -364,26 +379,36 @@
   --faction-coven-vote-on: #d63f86;
   --faction-coven-vote-off: #a76389;
 
-  /* WOW — yellow chronicle frame (NOT gold/plum; that is coven's) */
-  --faction-wow-chronicle-bg: #fffbe8;
-  --faction-wow-chronicle-header-from: #e0a800;
-  --faction-wow-chronicle-header-to: #f5c542;
-  --faction-wow-chronicle-header-text: #3a2a00;
-  --faction-wow-chronicle-shadow: rgba(160, 120, 0, 0.24);
+  /* WOW — cream/gold/plum chronicle frame (the chronicle is WOW's, ADR-0050) */
+  --faction-wow-chronicle-bg: var(--faction-wow-card-bg); /* cream parchment */
+  --faction-wow-chronicle-gold: #c8a02a; /* frame + rules; theme-invariant */
+  --faction-wow-chronicle-panel: #f3e7c4; /* the inset parchment plate */
+  /* The design's running head is a 6px gold/plum stripe with NO text on it;
+     ChroniclePraxisCard puts the masthead there, and no ink clears 4.5:1 on both
+     a #c8a02a gold and a #7a4a9e plum (cream measures 2.24 on the gold, ink 2.65
+     on the plum). Both stops therefore deepen one step — the design's own
+     "gold bright" #8a5a16 into the plum — so cream reads across the whole band
+     (5.38:1 → 5.79:1). The undimmed gold survives as the frame and the rules. */
+  --faction-wow-chronicle-header-from: #8a5a16;
+  --faction-wow-chronicle-header-to: #7a4a9e;
+  --faction-wow-chronicle-header-text: #fbf4e0;
+  --faction-wow-chronicle-shadow: rgba(74, 56, 10, 0.5);
 
-  /* WOW — googly-balloon vote plate (warm plate) */
-  --faction-wow-balloon-plate-from: #fff4c8;
-  --faction-wow-balloon-plate-to: #ffe9a0;
-  --faction-wow-balloon-plate-border: #e6c257;
-  --faction-wow-balloon-1: #f7e08a;
-  --faction-wow-balloon-2: #f5d15a;
-  --faction-wow-balloon-3: #f5c542;
-  --faction-wow-balloon-4: #e0a800;
-  --faction-wow-balloon-5: #c98a00;
-  --faction-wow-balloon-string: #b9902a;
-  --faction-wow-balloon-eye: #14110b;
-  --faction-wow-vote-on: #a9700a;
-  --faction-wow-vote-off: #b79a52;
+  /* WOW — googly-balloon vote plate. The balloon ramp climbs plum → gold and is
+     THEME-INVARIANT (the prototype ships one ramp for both themes); only the
+     plate and the caption inks flip. */
+  --faction-wow-balloon-plate-from: var(--faction-wow-card-bg);
+  --faction-wow-balloon-plate-to: var(--faction-wow-chronicle-panel);
+  --faction-wow-balloon-plate-border: var(--faction-wow-chronicle-gold);
+  --faction-wow-balloon-1: #7a4a9e;
+  --faction-wow-balloon-2: #9c5e8e;
+  --faction-wow-balloon-3: #be7370;
+  --faction-wow-balloon-4: #d69a48;
+  --faction-wow-balloon-5: #e7b94e;
+  --faction-wow-balloon-string: rgba(60, 44, 6, 0.42);
+  --faction-wow-balloon-eye: #241c0b;
+  --faction-wow-vote-on: var(--faction-wow-card-accent); /* plum — 5.79:1 */
+  --faction-wow-vote-off: var(--faction-wow-card-muted); /* olive — 4.76:1 */
 
   /* Ephemerists — constellation-attestation vote plate (#821). A night sky read
      in BOTH themes (the plate is a fixed dark surface like coven's moon plate),
@@ -663,7 +688,7 @@
 
   /* ── Faction card backgrounds (dark mode) ── */
   --faction-ua-card-bg: var(--ua-paper); /* salon never dims (#240) */
-  --faction-wow-card-bg: #231c0e; /* Default's dark card, warmed a shade */
+  --faction-wow-card-bg: #1b1508; /* chronicle deep ground (#838) */
   --faction-coven-card-bg: #2a0d1c;
   --faction-snide-card-bg: #0c0a07; /* deeper ink */
   /* ephemerists card-bg inherits the :root var(--eph-vellum) rebind (flips below) */
@@ -671,7 +696,7 @@
 
   /* ── Faction card text (dark mode) ── */
   --faction-ua-card-text: var(--ua-ink);
-  --faction-wow-card-text: #f5ecd6; /* 14.35:1 */
+  --faction-wow-card-text: #f3e7c4; /* chronicle parchment ink — 14.72:1 */
   --faction-coven-card-text: #fbcfe0;
   --faction-snide-card-text: #f4f1e8;
   --faction-singularity-card-text: #4ade80;
@@ -679,15 +704,17 @@
   /* ── Faction card accents (dark mode) ── */
   --faction-ua-card-accent: var(--ua-orange);
   /* Dark inverts the light-mode problem: on a dark card the bright primary is
-     the legible choice, so here the accent CAN be the faction colour. */
-  --faction-wow-card-accent: #f5c542; /* 10.41:1 */
+     the legible choice, so here the accent CAN be the faction colour — for the
+     factions whose skin IS their spine hue. WOW's is not (#838): the plum lifts
+     instead, which is the flip the chronicle's gold deliberately does not make. */
+  --faction-wow-card-accent: #c79be0; /* chronicle plum, lifted — 7.94:1 */
   --faction-coven-card-accent: #f472b6;
   --faction-snide-card-accent: #b6ff2e;
   --faction-singularity-card-accent: #4ade80; /* terminal green */
 
   /* ── Faction card secondary text (dark mode) ── */
   --faction-ua-card-muted: var(--ua-sub);
-  --faction-wow-card-muted: #b9a473; /* 6.93:1 */
+  --faction-wow-card-muted: #b69c64; /* chronicle metadata — 6.85:1 */
   --faction-coven-card-muted: #dd719c;
   --faction-snide-card-muted: #cfcdbf;
   /* SNIDE flyposted wall flips to concrete-at-night */
@@ -754,32 +781,41 @@
   --faction-coven-ivy: #5fa882;
   --faction-coven-ivy-leaf: #7fc59e;
 
-  /* ══ Praxis-card redesign (#821) — chronicle frames flip; vote plates hold ══
-     The moon/balloon plates are night/warm surfaces that read in both themes,
-     so only the chronicle chrome + caption inks are overridden here. */
+  /* ══ Praxis-card redesign (#821, repointed by #838) — dark ══
+     Re-DERIVED against the pink/chronicle assignment, not translated from the
+     inverted one: Coven's old dark surfaces were tuned for plum-on-black and
+     pink does not clear the same slots by substitution (ADR-0050). The moon and
+     balloon ramps are fixed surfaces that read in both themes, so only the frame
+     chrome, the balloon plate and the caption inks are overridden here. */
 
-  /* Coven — gold/plum chronicle (dark) */
-  --faction-coven-chronicle-bg: #241733;
-  --faction-coven-chronicle-plum: #b98fd6;
-  --faction-coven-chronicle-gold: #e6c273;
-  --faction-coven-chronicle-header-from: #4a2a63;
-  --faction-coven-chronicle-header-to: #8e2f5c;
-  --faction-coven-chronicle-header-text: #fbe4f0;
+  /* Coven — pink marker-sticker frame (dark) */
+  --faction-coven-chronicle-bg: #2a0d1c;
+  --faction-coven-chronicle-accent: #f472b6;
+  --faction-coven-chronicle-header-from: #7a3358; /* ink 6.18:1 */
+  --faction-coven-chronicle-header-to: #5e2a46; /* ink 7.97:1 */
+  --faction-coven-chronicle-header-text: #fbcfe0;
   --faction-coven-chronicle-shadow: rgba(0, 0, 0, 0.5);
   --faction-coven-vote-on: #f472b6;
   --faction-coven-vote-off: #c78aa6;
 
-  /* WOW — yellow chronicle (dark) */
-  --faction-wow-chronicle-bg: #231c0e;
-  --faction-wow-chronicle-header-from: #8a6600;
-  --faction-wow-chronicle-header-to: #c99a1a;
-  --faction-wow-chronicle-header-text: #fff4cf;
-  --faction-wow-chronicle-shadow: rgba(0, 0, 0, 0.5);
-  --faction-wow-balloon-plate-from: #3a2f0e;
-  --faction-wow-balloon-plate-to: #241c08;
-  --faction-wow-balloon-plate-border: #7a6320;
-  --faction-wow-vote-on: #f5c542;
-  --faction-wow-vote-off: #b9a473;
+  /* WOW — cream/gold/plum chronicle (dark). The gold #c8a02a does NOT lift; the
+     plum is what carries the flip (#7a4a9e → #c79be0). */
+  --faction-wow-chronicle-bg: var(--faction-wow-card-bg);
+  --faction-wow-chronicle-panel: #2a2210; /* the inset parchment plate, darkened */
+  /* Same masthead-legibility problem as light, one step further: the design's
+     dark stripe pairs #c8a02a with #8a5aae, and parchment ink measures 4.10:1 on
+     that plum. Both stops deepen until the band carries text (6.52 / 7.18). */
+  --faction-wow-chronicle-header-from: #6b4a12;
+  --faction-wow-chronicle-header-to: #5e3a7c;
+  --faction-wow-chronicle-header-text: #f3e7c4;
+  --faction-wow-chronicle-shadow: rgba(0, 0, 0, 0.8);
+  --faction-wow-balloon-plate-from: var(--faction-wow-chronicle-panel);
+  --faction-wow-balloon-plate-to: var(--faction-wow-card-bg);
+  /* plate-border inherits the theme-invariant --faction-wow-chronicle-gold */
+  /* The prototype has no dark balloon variant. Its outline rgba(60,44,6,.42) is
+     invisible on a dark plate, so the unreached-balloon hairline inverts to
+     parchment; the reached fills stay the one authored ramp. */
+  --faction-wow-balloon-string: rgba(243, 231, 196, 0.45);
 
   /* ── Watercolor splash opacities (dimmer in dark) ── */
   --wc-opacity-blob: 0.15;

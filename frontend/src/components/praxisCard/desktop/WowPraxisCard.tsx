@@ -4,9 +4,10 @@ import ChroniclePraxisCard from "./ChroniclePraxisCard";
 import type { ArchetypeProps } from "./shared";
 
 /**
- * Warriors of Whimsy — the SAME chronicle structure recoloured to WOW yellow
- * (balloon vote widget). WOW's first bespoke skin (#821, #812). Uses only
- * `--faction-wow-*` tokens; deliberately NOT coven's gold/plum.
+ * Warriors of Whimsy — the CHRONICLE OF PROOF (#821, #812): cream parchment, a
+ * gold frame, plum ink, the ✦ device and the googly-balloon verdict. This is
+ * WOW's own aesthetic, not a recolour of Coven's — #838 repointed the tokens
+ * after ADR-0050 found the two factions wearing each other's identity.
  */
 export function WowPraxisCard({ praxis, adminProps, showCrown }: ArchetypeProps) {
   const { t } = useTranslation("praxis");
