@@ -42,11 +42,11 @@
     "verified": "VERIFIED"
   },
   "ua": {
-    "rough-sketch": "rough sketch",
-    "study": "study",
-    "accomplished": "accomplished",
-    "distinguished": "distinguished",
-    "masterwork": "masterwork"
+    "faint": "faint",
+    "forming": "forming",
+    "true": "true",
+    "alive": "alive",
+    "radiant": "radiant"
   },
   "unaffiliated": {
     "so-so": "so-so",

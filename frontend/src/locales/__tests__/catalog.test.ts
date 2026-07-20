@@ -134,9 +134,9 @@ describe('i18next runtime', () => {
     expect(i18n.t('votes:snide.anarchy')).toBe('ANARCHY')
   })
 
-  it('resolves the salon-critique values for UA labels', () => {
-    expect(i18n.t('votes:ua.masterwork')).toBe('masterwork')
-    expect(i18n.t('votes:ua.distinguished')).toBe('distinguished')
+  it('resolves the growing-mandala reading values for UA labels', () => {
+    expect(i18n.t('votes:ua.radiant')).toBe('radiant')
+    expect(i18n.t('votes:ua.faint')).toBe('faint')
   })
 
   it('throws on a missing key outside production', () => {
