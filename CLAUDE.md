@@ -41,6 +41,7 @@ identity + era-as-ruleset in ADR-0041 / ADR-0042.
 | User-facing frontend copy (i18n catalogs) | `frontend/src/locales/en/*.json` — editor guide: `frontend/src/locales/README.md` |
 | Testing approach | `docs/spec/SPEC-testing.md` |
 | Design intent, UX, faction archetypes | `WORLD_ZERO_STYLE.md` |
+| Building against a Claude design (fidelity rule, vendor-then-delete, what a green build misses) | `docs/agents/design-fidelity.md` |
 | CSS variables (colors, type, themes) | `frontend/src/index.css` |
 | JS faction config | `frontend/src/utils/factions.ts` |
 | Open work / issues | GitHub Issues — `gh issue list` (see `docs/agents/issue-tracker.md`) |

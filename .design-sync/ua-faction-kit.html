@@ -1,0 +1,807 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<link rel="stylesheet" href="_ds/world-zero-frontend-kit-11486504-5815-4db4-b388-26d1cb494917/_ds_bundle.css">
+<link rel="stylesheet" href="_ds/world-zero-frontend-kit-11486504-5815-4db4-b388-26d1cb494917/styles.css">
+<script src="_ds/world-zero-frontend-kit-11486504-5815-4db4-b388-26d1cb494917/_ds_bundle.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=EB+Garamond:ital,wght@0,400;0,500;1,400&family=Caveat&display=swap" rel="stylesheet">
+<style>
+  body{margin:0;background:#E7DCC9;color:#362F27;font-family:'EB Garamond',Georgia,serif;-webkit-font-smoothing:antialiased;transition:background .35s ease,color .35s ease}
+  a{color:#B8471A;text-decoration:none}
+  a:hover{color:#8F3712}
+  @keyframes stoneDrop{0%{transform:translateY(-10px);opacity:0}62%{transform:translateY(1.5px)}100%{transform:translateY(0);opacity:1}}
+  @keyframes ringGrow{0%{transform:scale(.4);opacity:0}100%{transform:scale(1);opacity:1}}
+  @keyframes brushSweep{0%{stroke-dashoffset:var(--len)}100%{stroke-dashoffset:0}}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  @keyframes voteBloom{0%{transform:scale(.5) rotate(-24deg);opacity:.3}55%{transform:scale(1.18) rotate(4deg)}78%{transform:scale(.96)}100%{transform:scale(1) rotate(0);opacity:1}}
+  @keyframes haloPulse{0%{transform:scale(.6);opacity:.55}100%{transform:scale(1.9);opacity:0}}
+  @keyframes voteTwist{0%{transform:rotate(-5deg) scale(1)}50%{transform:rotate(5deg) scale(1.05)}100%{transform:rotate(-5deg) scale(1)}}
+  @keyframes settle{0%{transform:translateY(-12px);opacity:0}55%{transform:translateY(2px)}78%{transform:translateY(-1px)}100%{transform:translateY(0);opacity:1}}
+</style>
+</helmet>
+
+<div ref="{{ setWrap }}" style="--page:#E7DCC9;--bg:#F7E7D2;--panel:#F2E0CB;--lift:#FDF0DF;--ink:#2E2820;--text:#544A3C;--muted:#6E6252;--border:#DBCBB3;--hair:#E4D8C3;--ua:#C24A18;--glow:#DD5A1E;--ua-deep:#A5400F;--vermil:#B5361A;--onua:#FCF7EF;--body:#362F27;background:var(--page);min-height:100vh;padding:56px 64px 96px;box-sizing:border-box;min-width:1240px;transition:background .35s ease">
+
+  <div style="display:flex;justify-content:space-between;align-items:flex-start;max-width:1100px;margin:0 0 34px;gap:24px">
+    <div>
+      <div style="font-family:'Caveat',cursive;font-size:22px;color:var(--ua-deep);letter-spacing:.02em">University of Asthmatics — faction identity kit · issue #786</div>
+      <h1 style="font-family:'Cormorant Garamond',serif;font-weight:600;font-size:56px;line-height:1.02;margin:6px 0 14px;letter-spacing:-.01em;color:var(--ink)">A daily practice</h1>
+      <p style="font-size:19px;line-height:1.5;max-width:820px;color:var(--text);margin:0">
+        The complete UA kit — orange ensō, sun-bleached mesa neutrals, patient mandala geometry, no gold anywhere. Every surface below is built from one set of tokens and reads correctly in <em>both</em> themes (use the toggle). Values, fonts, and copy are literal so a build agent can work straight from this page.
+      </p>
+    </div>
+    <button onClick="{{ toggleTheme }}" style="appearance:none;flex:0 0 auto;border:1px solid var(--border);background:var(--bg);color:var(--ink);font-family:'EB Garamond',serif;font-size:13px;letter-spacing:.14em;text-transform:uppercase;padding:10px 18px;border-radius:3px;cursor:pointer;transition:.18s;white-space:nowrap" style-hover="border-color:var(--ua)">{{ themeLabel }} mode</button>
+  </div>
+
+  <div style="max-width:1100px;margin:0 0 44px;display:flex;flex-wrap:wrap;gap:8px 18px;font-family:'EB Garamond',serif;font-size:14px">
+    <span style="color:var(--muted);letter-spacing:.14em;text-transform:uppercase;font-size:11px;align-self:center">Contents</span>
+    <a href="#tok">tokens</a><a href="#enso">ensō</a><a href="#mandala">mandala</a><a href="#px">praxis card</a><a href="#3a">task card</a><a href="#vote">vote</a><a href="#join">join card</a><a href="#pennant">pennant</a><a href="#level">level</a><a href="#avatar">avatar</a><a href="#feed">feed</a><a href="#comment">comment</a><a href="#edit">edit-praxis</a><a href="#detail">faction page</a><a href="#backdrop">backdrop</a><a href="#mobile">mobile</a><a href="#copy">copy</a>
+  </div>
+
+  <div style="max-width:1100px;margin:0 0 18px">
+    <div style="font-family:'Caveat',cursive;font-size:20px;color:var(--ua-deep)">the praxis card · <a href="#px">px</a></div>
+  </div>
+
+  <!-- ============ PRAXIS CARD ============ -->
+  <div id="px" style="width:560px;margin-bottom:64px">
+
+    <div style="position:relative;overflow:hidden;border:2px solid var(--ua-deep);border-radius:7px;background:linear-gradient(158deg,var(--lift) 0%,var(--bg) 46%,var(--panel) 100%);box-shadow:0 0 0 1px var(--bg) inset,0 18px 46px -22px rgba(20,12,6,.62)">
+      <img src="lotus.svg" width="230" height="230" alt="" aria-hidden="true" style="position:absolute;left:-92px;top:-96px;opacity:.1;pointer-events:none">
+
+      <div style="position:relative;padding:26px 32px 22px">
+
+        <div style="font-family:'EB Garamond',serif;font-size:11.5px;letter-spacing:.22em;text-transform:uppercase;color:var(--muted);margin-bottom:12px">Praxis №501 · Sealed</div>
+
+        <h2 style="font-family:'Cormorant Garamond',serif;font-weight:600;font-size:34px;line-height:1.06;color:var(--ink);margin:0 0 10px;letter-spacing:-.01em">Charcoal study, north portico</h2>
+        <div style="font-family:'EB Garamond',serif;font-size:15px;color:var(--text);margin:0 0 4px">
+          <span style="color:var(--muted)">for:</span> <a href="#px" style="color:var(--ua-deep)">Render the old library façade in charcoal</a>
+        </div>
+        <p style="font-family:'EB Garamond',serif;font-style:italic;font-size:14px;line-height:1.5;color:var(--muted);margin:0 0 20px;max-width:340px">Let the cornice go soft; pressed hard only where the light broke.</p>
+
+        <!-- player + score row -->
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:20px;margin-bottom:22px">
+          <div style="display:flex;align-items:center;gap:16px">
+            <div style="position:relative;width:104px;height:104px;flex:0 0 auto">
+              <img src="lotus.svg" width="440" height="440" alt="" aria-hidden="true" style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);max-width:none;opacity:.42;pointer-events:none">
+              <div style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:70px;height:70px;border-radius:50%;overflow:hidden;background:var(--panel);box-shadow:0 0 0 3px var(--bg),0 5px 16px -6px rgba(20,12,6,.5)">
+                <x-import component-from-global-scope="image-slot" from="./image-slot.js" id="px-avatar" shape="circle" placeholder="" hint-size="70px,70px"></x-import>
+              </div>
+            </div>
+            <div style="font-family:'EB Garamond',serif;font-size:12.5px;letter-spacing:.06em;color:var(--muted)">
+              <div style="font-family:'Cormorant Garamond',serif;color:var(--ink);font-size:20px;font-weight:600;line-height:1.1">Ada Reed</div>
+              <div style="margin-top:3px">level 2 · solo · jul 1</div>
+            </div>
+          </div>
+
+          <!-- score: enlarged ensō, caption below -->
+          <div style="display:flex;flex-direction:column;align-items:center;gap:4px;flex:0 0 auto">
+            <div style="position:relative;width:152px;height:152px">
+              <img src="enso-detailed.svg" width="152" height="152" alt="" aria-hidden="true" style="display:block">
+              <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center">
+                <span style="font-family:'Cormorant Garamond',serif;font-size:52px;font-weight:600;color:var(--vermil);line-height:.82">42</span>
+                <span style="font-family:'EB Garamond',serif;font-size:10px;letter-spacing:.24em;text-transform:uppercase;color:var(--muted);margin-top:2px">marks</span>
+              </div>
+            </div>
+            <div style="font-family:'EB Garamond',serif;font-size:13.5px;color:var(--muted);letter-spacing:.04em;margin-top:-16px">30 base · +12 votes</div>
+          </div>
+        </div>
+
+        <!-- media preview -->
+        <div style="position:relative;width:100%;height:250px;border:1px solid var(--border);border-radius:4px;overflow:hidden;background:var(--panel)">
+          <x-import component-from-global-scope="image-slot" from="./image-slot.js" id="px-artifact" shape="rect" fit="cover" placeholder="Preview the work — drop the charcoal study" hint-size="100%,100%"></x-import>
+        </div>
+        <div style="font-family:'EB Garamond',serif;font-style:italic;font-size:12.5px;color:var(--muted);margin:8px 2px 0">Vine charcoal on cotton rag · 18 × 24 in</div>
+
+        <!-- dashed divider -->
+        <div style="height:0;border-top:1.5px dashed var(--ua);opacity:.4;margin:22px 0 14px"></div>
+
+        <!-- rating: stacking stones -->
+        <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:6px" data-comment-anchor="4d05c4202d-div">
+          <span style="font-family:'EB Garamond',serif;font-size:11.5px;letter-spacing:.22em;text-transform:uppercase;color:var(--muted)">How true did it land</span>
+          <span style="font-family:'EB Garamond',serif;font-size:12px;color:var(--muted)">{{ marksCast }}</span>
+        </div>
+        <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:20px">
+          <div style="display:flex;align-items:flex-end;gap:10px">{{ scale }}</div>
+          <div style="min-width:0;text-align:right;padding-bottom:20px">
+            <div style="font-family:'Cormorant Garamond',serif;font-weight:600;font-size:30px;line-height:1;color:var(--ua-deep);text-transform:lowercase">{{ reading }}</div>
+            <div style="display:inline-flex;align-items:center;gap:7px;margin-top:8px;font-family:'EB Garamond',serif;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--ua-deep)">
+              <span style="width:6px;height:6px;border-radius:50%;background:var(--ua)"></span>{{ hint }}
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- footer -->
+      <div style="position:relative;display:flex;align-items:center;justify-content:space-between;gap:16px;padding:15px 32px;border-top:1px solid var(--hair);background:var(--panel)">
+        <div style="display:flex;align-items:center;gap:8px;font-family:'EB Garamond',serif;font-size:11.5px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted)">
+          <span style="width:7px;height:7px;border-radius:50%;background:var(--ua)"></span>University of Asthmatics · sealed
+        </div>
+        <a href="#px" style="font-family:'EB Garamond',serif;font-size:14px;letter-spacing:.06em;color:var(--muted);white-space:nowrap" style-hover="color:var(--ua-deep)">Read in full</a>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ============ REFERENCE — APPROVED TASK CARD ============ -->
+  <div style="max-width:1100px;margin:0 0 18px;padding-top:20px;border-top:1px solid var(--border)">
+    <div style="font-family:'Caveat',cursive;font-size:20px;color:var(--muted)">for reference · the approved task card (3a Ink Column)</div>
+  </div>
+
+  <div id="3a" style="width:360px">
+    <div style="position:relative;overflow:hidden;background:var(--bg);border:1px solid var(--border);border-radius:4px;padding:30px 30px 24px;box-shadow:0 1px 0 rgba(255,255,255,.4) inset,0 10px 30px -18px rgba(20,12,6,.5)">
+      <img src="lotus.svg" width="410" height="410" alt="" aria-hidden="true" style="position:absolute;right:-118px;bottom:-128px;opacity:.225;pointer-events:none">
+      <div style="position:absolute;left:20px;top:30px;bottom:24px;width:2px;background:linear-gradient(180deg,transparent,var(--ua) 12%,var(--ua) 88%,transparent);opacity:.34"></div>
+
+      <div style="position:relative;padding-left:22px">
+        <div style="display:flex;align-items:center;justify-content:center;gap:16px;margin-bottom:22px">
+          <div style="position:relative;width:96px;height:96px;flex:0 0 auto">
+            <img src="enso-detailed.svg" width="96" height="96" alt="Ensō" style="display:block">
+            <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center">
+              <div style="font-family:'Cormorant Garamond',serif;font-size:32px;font-weight:600;line-height:.9;color:var(--ink)">30</div>
+              <div style="font-family:'EB Garamond',serif;font-size:9px;letter-spacing:.22em;text-transform:uppercase;color:var(--muted)">marks</div>
+            </div>
+          </div>
+        </div>
+
+        <h3 style="font-family:'Cormorant Garamond',serif;font-weight:600;font-size:28px;line-height:1.14;color:var(--ink);margin:0 0 10px;letter-spacing:-.005em">Render the old library façade in charcoal</h3>
+        <p style="font-size:15px;line-height:1.55;color:var(--text);margin:0 0 22px;max-width:250px">Sit with the building until you stop seeing a building. Draw only what the light is doing.</p>
+
+        <div style="display:flex;align-items:center;justify-content:space-between;border-top:1px solid var(--border);padding-top:16px">
+          <span style="font-family:'EB Garamond',serif;font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted)">Level 2</span>
+          <button style="appearance:none;border:1.5px solid var(--ua);background:var(--bg);color:var(--ua-deep);font-family:'EB Garamond',serif;font-size:14px;letter-spacing:.12em;text-transform:uppercase;padding:9px 22px;border-radius:2px;cursor:pointer;transition:.18s;white-space:nowrap" style-hover="background:var(--ua);color:var(--onua)" data-comment-anchor="d32bca067a-button">Sign up</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ COLOR TOKENS ============ -->
+  <div id="tok" style="max-width:1100px;margin:82px 0 24px;padding-top:28px;border-top:1px solid var(--border)">
+    <div style="font-family:'Caveat',cursive;font-size:20px;color:var(--ua-deep)">§6 · full colour token block · <a href="#tok">tok</a></div>
+    <h2 style="font-family:'Cormorant Garamond',serif;font-weight:600;font-size:40px;margin:4px 0 8px;color:var(--ink)">Tokens — <code style="font-family:'EB Garamond',serif;font-size:.72em;color:var(--ua-deep)">--faction-ua-*</code></h2>
+    <p style="font-size:17px;line-height:1.5;max-width:820px;color:var(--text);margin:0">The whole legacy <code style="color:var(--ua-deep)">--ua-*</code> gilt family (gold / gilt / gold-lt / gold-pale) is <strong>deleted</strong>. Everything ships under <code style="color:var(--ua-deep)">--faction-ua-*</code> with a light and a <code style="color:var(--ua-deep)">[data-theme="dark"]</code> value — dark works purely through the cascade, no ternaries. Sun-bleached desert neutrals; orange is the one saturated note.</p>
+  </div>
+
+  <div style="max-width:1100px;display:flex;flex-wrap:wrap;gap:12px;margin-bottom:26px">
+    <!-- required contract -->
+    <div style="width:100%;font-family:'EB Garamond',serif;font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--muted);margin:2px 0 -2px">Required contract (§3)</div>
+    <div style="display:flex;gap:12px;align-items:flex-start;width:338px;padding:12px;border:1px solid var(--border);border-radius:5px;background:var(--bg)"><span style="flex:0 0 auto;width:40px;height:40px;border-radius:4px;background:#C24A18;box-shadow:inset 0 0 0 1px rgba(0,0,0,.14)"></span><div><div style="font-size:13px;color:var(--ink);font-weight:600">--faction-ua</div><div style="font-size:12px;color:var(--muted)">primary brand orange · fills, 10px dot</div><div style="font-size:11.5px;color:var(--text);margin-top:4px">L #C24A18 · D #E8703A</div></div></div>
+    <div style="display:flex;gap:12px;align-items:flex-start;width:338px;padding:12px;border:1px solid var(--border);border-radius:5px;background:var(--bg)"><span style="flex:0 0 auto;width:40px;height:40px;border-radius:4px;background:#F2E0CB;box-shadow:inset 0 0 0 1px rgba(0,0,0,.14)"></span><div><div style="font-size:13px;color:var(--ink);font-weight:600">--faction-ua-light</div><div style="font-size:12px;color:var(--muted)">faint tint background</div><div style="font-size:11.5px;color:var(--text);margin-top:4px">L #F2E0CB · D #241E18</div></div></div>
+    <div style="display:flex;gap:12px;align-items:flex-start;width:338px;padding:12px;border:1px solid var(--border);border-radius:5px;background:var(--bg)"><span style="flex:0 0 auto;width:40px;height:40px;border-radius:4px;background:#F7E7D2;box-shadow:inset 0 0 0 1px rgba(194,74,24,.28)"></span><div><div style="font-size:13px;color:var(--ink);font-weight:600">--faction-ua-border</div><div style="font-size:12px;color:var(--muted)">hairline / rgba border</div><div style="font-size:11.5px;color:var(--text);margin-top:4px">L rgba(194,74,24,.28) · D rgba(232,112,58,.32)</div></div></div>
+    <div style="display:flex;gap:12px;align-items:flex-start;width:338px;padding:12px;border:1px solid var(--border);border-radius:5px;background:var(--bg)"><span style="flex:0 0 auto;width:40px;height:40px;border-radius:4px;background:#F7E7D2;box-shadow:inset 0 0 0 1px rgba(0,0,0,.14)"></span><div><div style="font-size:13px;color:var(--ink);font-weight:600">--faction-ua-card-bg</div><div style="font-size:12px;color:var(--muted)">card surface</div><div style="font-size:11.5px;color:var(--text);margin-top:4px">L #F7E7D2 · D #241E18</div></div></div>
+    <div style="display:flex;gap:12px;align-items:flex-start;width:338px;padding:12px;border:1px solid var(--border);border-radius:5px;background:var(--bg)"><span style="flex:0 0 auto;width:40px;height:40px;border-radius:4px;background:#2E2820"></span><div><div style="font-size:13px;color:var(--ink);font-weight:600">--faction-ua-card-text</div><div style="font-size:12px;color:var(--muted)">card body text · 11.9:1</div><div style="font-size:11.5px;color:var(--text);margin-top:4px">L #2E2820 · D #F1E8DA</div></div></div>
+    <div style="display:flex;gap:12px;align-items:flex-start;width:338px;padding:12px;border:1px solid var(--border);border-radius:5px;background:var(--bg)"><span style="flex:0 0 auto;width:40px;height:40px;border-radius:4px;background:#A5400F"></span><div><div style="font-size:13px;color:var(--ink);font-weight:600">--faction-ua-card-accent</div><div style="font-size:12px;color:var(--muted)">metadata / links · 5.2:1</div><div style="font-size:11.5px;color:var(--text);margin-top:4px">L #A5400F · D #F0894A</div></div></div>
+    <div style="display:flex;gap:12px;align-items:flex-start;width:338px;padding:12px;border:1px solid var(--border);border-radius:5px;background:var(--bg)"><span style="flex:0 0 auto;width:40px;height:40px;border-radius:4px;background:#6E6252"></span><div><div style="font-size:13px;color:var(--ink);font-weight:600">--faction-ua-card-muted</div><div style="font-size:12px;color:var(--muted)">secondary text · 5.0:1</div><div style="font-size:11.5px;color:var(--text);margin-top:4px">L #6E6252 · D #A08C72</div></div></div>
+    <div style="display:flex;gap:12px;align-items:flex-start;width:338px;padding:12px;border:1px solid var(--border);border-radius:5px;background:var(--bg)"><span style="flex:0 0 auto;width:40px;height:40px;border-radius:4px;background:#F7E7D2;display:flex;align-items:center;justify-content:center;font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:600;color:#2E2820;box-shadow:inset 0 0 0 1px rgba(0,0,0,.14)">Aa</span><div><div style="font-size:13px;color:var(--ink);font-weight:600">--faction-ua-card-font</div><div style="font-size:12px;color:var(--muted)">headline face → --font-*</div><div style="font-size:11.5px;color:var(--text);margin-top:4px">Cormorant Garamond (already loaded)</div></div></div>
+    <div style="display:flex;gap:12px;align-items:flex-start;width:338px;padding:12px;border:1px solid var(--border);border-radius:5px;background:var(--bg)"><span style="flex:0 0 auto;width:40px;height:40px;border-radius:4px;background:#C24A18;display:flex;align-items:center;justify-content:center;font-family:'EB Garamond',serif;font-size:15px;color:#FCF7EF">Ab</span><div><div style="font-size:13px;color:var(--ink);font-weight:600">--faction-ua-on-fill</div><div style="font-size:12px;color:var(--muted)">ink on solid fill · 4.6:1 / 5.5:1</div><div style="font-size:11.5px;color:var(--text);margin-top:4px">L #FCF7EF (white) · D #201A14 (ink)</div></div></div>
+
+    <!-- archetype-private -->
+    <div style="width:100%;font-family:'EB Garamond',serif;font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--muted);margin:12px 0 -2px">Archetype-private primitives</div>
+    <div style="display:flex;gap:12px;align-items:flex-start;width:338px;padding:12px;border:1px solid var(--border);border-radius:5px;background:var(--bg)"><span style="flex:0 0 auto;width:40px;height:40px;border-radius:4px;background:#E7DCC9;box-shadow:inset 0 0 0 1px rgba(0,0,0,.14)"></span><div><div style="font-size:13px;color:var(--ink);font-weight:600">--faction-ua-page</div><div style="font-size:12px;color:var(--muted)">app ground · mesa sand</div><div style="font-size:11.5px;color:var(--text);margin-top:4px">L #E7DCC9 · D #191410</div></div></div>
+    <div style="display:flex;gap:12px;align-items:flex-start;width:338px;padding:12px;border:1px solid var(--border);border-radius:5px;background:var(--bg)"><span style="flex:0 0 auto;width:40px;height:40px;border-radius:4px;background:#F2E0CB;box-shadow:inset 0 0 0 1px rgba(0,0,0,.14)"></span><div><div style="font-size:13px;color:var(--ink);font-weight:600">--faction-ua-panel</div><div style="font-size:12px;color:var(--muted)">inset panel / media well</div><div style="font-size:11.5px;color:var(--text);margin-top:4px">L #F2E0CB · D #2D261F</div></div></div>
+    <div style="display:flex;gap:12px;align-items:flex-start;width:338px;padding:12px;border:1px solid var(--border);border-radius:5px;background:var(--bg)"><span style="flex:0 0 auto;width:40px;height:40px;border-radius:4px;background:#FDF0DF;box-shadow:inset 0 0 0 1px rgba(0,0,0,.14)"></span><div><div style="font-size:13px;color:var(--ink);font-weight:600">--faction-ua-lift</div><div style="font-size:12px;color:var(--muted)">raised highlight</div><div style="font-size:11.5px;color:var(--text);margin-top:4px">L #FDF0DF · D #372E25</div></div></div>
+    <div style="display:flex;gap:12px;align-items:flex-start;width:338px;padding:12px;border:1px solid var(--border);border-radius:5px;background:var(--bg)"><span style="flex:0 0 auto;width:40px;height:40px;border-radius:4px;background:#DD5A1E"></span><div><div style="font-size:13px;color:var(--ink);font-weight:600">--faction-ua-glow</div><div style="font-size:12px;color:var(--muted)">ornament only · ensō, mandala (no text)</div><div style="font-size:11.5px;color:var(--text);margin-top:4px">L #DD5A1E · D #F08A4E</div></div></div>
+    <div style="display:flex;gap:12px;align-items:flex-start;width:338px;padding:12px;border:1px solid var(--border);border-radius:5px;background:var(--bg)"><span style="flex:0 0 auto;width:40px;height:40px;border-radius:4px;background:#B5361A"></span><div><div style="font-size:13px;color:var(--ink);font-weight:600">--faction-ua-vermil</div><div style="font-size:12px;color:var(--muted)">ensō score ink · deep vermilion</div><div style="font-size:11.5px;color:var(--text);margin-top:4px">L #B5361A · D #D9542A</div></div></div>
+    <div style="display:flex;gap:12px;align-items:flex-start;width:338px;padding:12px;border:1px solid var(--border);border-radius:5px;background:var(--bg)"><span style="flex:0 0 auto;width:40px;height:40px;border-radius:4px;overflow:hidden;display:flex"><i style="flex:1;background:#A69C8C"></i><i style="flex:1;background:#C0894F"></i><i style="flex:1;background:#D2762F"></i><i style="flex:1;background:#DD5A1E"></i><i style="flex:1;background:#B5361A"></i></span><div><div style="font-size:13px;color:var(--ink);font-weight:600">--faction-ua-rank-1…5</div><div style="font-size:12px;color:var(--muted)">mandala vote ramp (faint→radiant)</div><div style="font-size:11.5px;color:var(--text);margin-top:4px">#A69C8C #C0894F #D2762F #DD5A1E #B5361A</div></div></div>
+  </div>
+
+  <!-- contrast + adjacency notes -->
+  <div style="max-width:1100px;display:flex;flex-wrap:wrap;gap:16px;margin-bottom:20px">
+    <div style="flex:1 1 340px;padding:16px 18px;border:1px solid var(--border);border-left:3px solid var(--ua);border-radius:4px;background:var(--panel)">
+      <div style="font-family:'EB Garamond',serif;font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--ua-deep);margin-bottom:8px">AA targets — met in both themes</div>
+      <div style="font-size:14px;line-height:1.7;color:var(--text)">card-text / card-bg — <strong>11.9:1</strong> L, <strong>15:1</strong> D · card-muted / card-bg — <strong>5.0:1</strong> / <strong>5.1:1</strong> · card-accent / card-bg — <strong>5.2:1</strong> / <strong>6.4:1</strong> · white on-fill / primary — <strong>4.6:1</strong> (L) · ink on-fill / primary — <strong>5.5:1</strong> (D). All clear AA-normal 4.5:1; the bright <code style="color:var(--ua-deep)">--glow</code> is ornament-only and carries no text, so it is exempt.</div>
+    </div>
+    <div style="flex:1 1 340px;padding:16px 18px;border:1px solid var(--border);border-left:3px solid var(--vermil);border-radius:4px;background:var(--panel)">
+      <div style="font-family:'EB Garamond',serif;font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--ua-deep);margin-bottom:8px">Gold adjacency — Warriors of Whimsy</div>
+      <div style="font-size:14px;line-height:1.7;color:var(--text)">UA primary is a red-shifted burnt sienna (<strong>#C24A18</strong>, hue ~18°), not a yellow-orange. Against WoW gold (~45–50°) the two are &gt;25° apart in hue and differ in luminance, so a 10&nbsp;px faction dot, a rainbow-bar stripe, and a filter pennant all stay legibly distinct at small sizes. Rule: UA never uses a value lighter than <code style="color:var(--ua-deep)">--glow</code> for the dot; gold is reserved entirely for WoW.</div>
+    </div>
+  </div>
+
+  <div style="max-width:1100px;display:flex;align-items:center;gap:18px;margin-bottom:16px;padding:14px 18px;border:1px dashed var(--ua);border-radius:4px;opacity:.95">
+    <span style="font-family:'EB Garamond',serif;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);white-space:nowrap">10px dot on the rainbow bar →</span>
+    <div style="flex:1;display:flex;align-items:center;gap:0;height:12px;border-radius:6px;overflow:hidden;max-width:520px">
+      <i style="flex:1;height:100%;background:#C24A18"></i><i style="flex:1;height:100%;background:#E0A11E"></i><i style="flex:1;height:100%;background:#4C8C4A"></i><i style="flex:1;height:100%;background:#2E7D8A"></i><i style="flex:1;height:100%;background:#5B54B0"></i><i style="flex:1;height:100%;background:#B0477E"></i><i style="flex:1;height:100%;background:#8A8578"></i>
+    </div>
+    <span style="font-family:'EB Garamond',serif;font-size:12px;color:var(--muted);white-space:nowrap"><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#C24A18;vertical-align:middle;margin-right:6px"></span>UA · <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#E0A11E;vertical-align:middle;margin:0 6px"></span>WoW gold</span>
+  </div>
+
+  <!-- ============ ENSŌ SIGIL ============ -->
+  <div id="enso" style="max-width:1100px;margin:74px 0 24px;padding-top:28px;border-top:1px solid var(--border)">
+    <div style="font-family:'Caveat',cursive;font-size:20px;color:var(--ua-deep)">the sigil · <a href="#enso">enso</a></div>
+    <h2 style="font-family:'Cormorant Garamond',serif;font-weight:600;font-size:40px;margin:4px 0 8px;color:var(--ink)">The ensō</h2>
+    <p style="font-size:17px;line-height:1.5;max-width:820px;color:var(--text);margin:0">A single hand-drawn brushstroke circle in orange. Inline SVG — there is no asset pipeline. The two details that get lost in translation to code, spelled out below: the <strong>weight variation along the stroke</strong> and the <strong>open gap</strong>.</p>
+  </div>
+
+  <div style="max-width:1100px;display:flex;flex-wrap:wrap;gap:28px;align-items:center;margin-bottom:16px">
+    <div style="flex:0 0 auto;width:220px;height:220px;display:flex;align-items:center;justify-content:center;border:1px solid var(--border);border-radius:6px;background:var(--bg);position:relative">
+      <img src="enso-detailed.svg" width="176" height="176" alt="Ensō sigil">
+      <span style="position:absolute;left:26px;bottom:24px;font-family:'Caveat',cursive;font-size:17px;color:var(--ua-deep);transform:rotate(-6deg)">the gap ↙</span>
+      <span style="position:absolute;right:16px;top:30px;font-family:'Caveat',cursive;font-size:17px;color:var(--ua-deep)">↘ the press</span>
+    </div>
+    <div style="flex:1 1 380px;min-width:320px">
+      <div style="font-size:15.5px;line-height:1.7;color:var(--text)">
+        <p style="margin:0 0 12px"><strong style="color:var(--ink)">One stroke, ~330° arc.</strong> Two overlapping <code style="color:var(--ua-deep)">&lt;path&gt;</code> arcs on the same circle, both rotated <code style="color:var(--ua-deep)">-7°</code> so the axis reads organic, not upright. <code style="color:var(--ua-deep)">stroke-linecap:round</code> on both.</p>
+        <p style="margin:0 0 12px"><strong style="color:var(--ink)">Weight variation is the signature.</strong> The heavy arc (the long sweep) is <code style="color:var(--ua-deep)">stroke-width 22</code> — the <em>press</em>, where the brush loads at ~1 o'clock. A second, lighter arc closes the tail at <code style="color:var(--ua-deep)">stroke-width 10</code>, <code style="color:var(--ua-deep)">stroke-opacity .85</code> — the <em>lift</em>, where the brush runs dry. Never one uniform width; the taper from 22→10 is what makes it a brushstroke and not a ring.</p>
+        <p style="margin:0"><strong style="color:var(--ink)">The gap is left open</strong> at the lower-left (~7–8 o'clock) — the two arcs stop short of meeting. Colour is <code style="color:var(--ua-deep)">--faction-ua-glow</code> (#DD5A1E). Reserved for the <em>score</em> and the faction mark — never used as a container border. Files: <code style="color:var(--ua-deep)">enso.svg</code> (mark) · <code style="color:var(--ua-deep)">enso-detailed.svg</code> (textured score ring).</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ MANDALA GEOMETRY ============ -->
+  <div id="mandala" style="max-width:1100px;margin:74px 0 24px;padding-top:28px;border-top:1px solid var(--border)">
+    <div style="font-family:'Caveat',cursive;font-size:20px;color:var(--ua-deep)">the pattern · <a href="#mandala">mandala</a></div>
+    <h2 style="font-family:'Cormorant Garamond',serif;font-weight:600;font-size:40px;margin:4px 0 8px;color:var(--ink)">Mandala geometry — one primitive, three strengths</h2>
+    <p style="font-size:17px;line-height:1.5;max-width:820px;color:var(--text);margin:0">Concentric radial pattern is expensive to hand-build per surface, so it is <strong>one parameterized SVG primitive</strong> — <code style="color:var(--ua-deep)">Mandala({ rings, size, hue, opacity })</code> — the generalized form of the vote-cell renderer already in this file. Rank drives ring count; every surface calls the same primitive at one of three strengths.</p>
+  </div>
+
+  <div style="max-width:1100px;display:flex;flex-wrap:wrap;gap:16px;margin-bottom:20px">
+    <div style="flex:1 1 300px;padding:18px;border:1px solid var(--border);border-radius:5px;background:var(--bg)">
+      <div style="font-family:'EB Garamond',serif;font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--ua-deep);margin-bottom:6px">Full strength</div>
+      <div style="font-family:'Cormorant Garamond',serif;font-size:22px;color:var(--ink);margin-bottom:6px">The vote control only</div>
+      <div style="font-size:14px;line-height:1.6;color:var(--text)">Foreground, animated, interactive. Each 1–5 rank <em>is</em> a mandala that grows more rings, warmer, and fuller as it rises. This is the one place the pattern earns full detail. See <a href="#vote">vote</a>.</div>
+    </div>
+    <div style="flex:1 1 300px;padding:18px;border:1px solid var(--border);border-radius:5px;background:var(--bg)">
+      <div style="font-family:'EB Garamond',serif;font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--ua-deep);margin-bottom:6px">Faint texture</div>
+      <div style="font-family:'Cormorant Garamond',serif;font-size:22px;color:var(--ink);margin-bottom:6px">6–22% behind surfaces</div>
+      <div style="font-size:14px;line-height:1.6;color:var(--text)">Bled off a corner, low opacity, static: card grounds, the page backdrop, faction hero, the avatar ring. Present but never competing with text. (The lotus corner-bleed on the cards is this tier.)</div>
+    </div>
+    <div style="flex:1 1 300px;padding:18px;border:1px solid var(--border);border-radius:5px;background:var(--bg)">
+      <div style="font-family:'EB Garamond',serif;font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--ua-deep);margin-bottom:6px">Absent</div>
+      <div style="font-family:'Cormorant Garamond',serif;font-size:22px;color:var(--ink);margin-bottom:6px">Dense / text surfaces</div>
+      <div style="font-size:14px;line-height:1.6;color:var(--text)">Feed rows, comments, edit-form fields, filter tabs, the level pill. These stay clean — a dashed orange rule or a single ensō dot is the only ornament. Cheap to build, calm to read.</div>
+    </div>
+  </div>
+
+  <!-- ============ VOTE CALLOUT ============ -->
+  <div id="vote" style="max-width:1100px;margin:74px 0 18px;padding-top:28px;border-top:1px solid var(--border)">
+    <div style="font-family:'Caveat',cursive;font-size:20px;color:var(--ua-deep)">§8 · vote / rating UI (1–5) · <a href="#vote">vote</a></div>
+    <h2 style="font-family:'Cormorant Garamond',serif;font-weight:600;font-size:40px;margin:4px 0 8px;color:var(--ink)">The mark deepens</h2>
+    <p style="font-size:17px;line-height:1.5;max-width:820px;color:var(--text);margin:0 0 8px">The 1–5 control is the full-strength mandala. Marking from faint → radiant grows rings and warms the ramp; the chosen mark blooms and a halo pulses once. Live below — tap a mandala. (It also sits inline in the <a href="#px">praxis card</a> footer.)</p>
+  </div>
+
+  <div style="max-width:1100px;padding:26px 30px;border:1px solid var(--border);border-radius:6px;background:var(--bg);margin-bottom:8px">
+    <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:14px">
+      <span style="font-family:'EB Garamond',serif;font-size:11.5px;letter-spacing:.22em;text-transform:uppercase;color:var(--muted)">How true did it land</span>
+      <span style="font-family:'EB Garamond',serif;font-size:12px;color:var(--muted)">{{ marksCast }}</span>
+    </div>
+    <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:20px">
+      <div style="display:flex;align-items:flex-end;gap:12px">{{ scale }}</div>
+      <div style="min-width:0;text-align:right;padding-bottom:20px">
+        <div style="font-family:'Cormorant Garamond',serif;font-weight:600;font-size:32px;line-height:1;color:var(--ua-deep);text-transform:lowercase">{{ reading }}</div>
+        <div style="display:inline-flex;align-items:center;gap:7px;margin-top:8px;font-family:'EB Garamond',serif;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--ua-deep)"><span style="width:6px;height:6px;border-radius:50%;background:var(--ua)"></span>{{ hint }}</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ FACTION-SELECTION CARD ============ -->
+  <div id="join" style="max-width:1100px;margin:74px 0 24px;padding-top:28px;border-top:1px solid var(--border)">
+    <div style="font-family:'Caveat',cursive;font-size:20px;color:var(--ua-deep)">§4 · faction-selection card · <a href="#join">join</a></div>
+    <h2 style="font-family:'Cormorant Garamond',serif;font-weight:600;font-size:40px;margin:4px 0 8px;color:var(--ink)">Join card</h2>
+    <p style="font-size:17px;line-height:1.5;max-width:820px;color:var(--text);margin:0">The bespoke "join me" card in the recruit grid. Reads the faction primary + ensō; a quiet invitation, not a sales pitch. Full ensō sits behind the crest at faint strength.</p>
+  </div>
+
+  <div id="join-card" style="width:360px;margin-bottom:8px">
+    <div style="position:relative;overflow:hidden;border:1px solid var(--border);border-radius:6px;background:linear-gradient(160deg,var(--lift),var(--bg) 60%);box-shadow:0 12px 34px -20px rgba(20,12,6,.55)">
+      <div style="position:relative;height:150px;display:flex;align-items:center;justify-content:center;background:var(--panel);border-bottom:1px solid var(--hair);overflow:hidden">
+        <img src="lotus.svg" width="300" height="300" alt="" aria-hidden="true" style="position:absolute;left:50%;top:52%;transform:translate(-50%,-50%);opacity:.16;pointer-events:none">
+        <img src="enso-detailed.svg" width="104" height="104" alt="Ensō">
+      </div>
+      <div style="padding:22px 26px 24px;text-align:center">
+        <div style="font-family:'EB Garamond',serif;font-size:11px;letter-spacing:.24em;text-transform:uppercase;color:var(--muted)">The University of Asthmatics</div>
+        <h3 style="font-family:'Cormorant Garamond',serif;font-weight:600;font-size:27px;line-height:1.1;color:var(--ink);margin:8px 0 8px">Make one true mark a day</h3>
+        <p style="font-size:14.5px;line-height:1.55;color:var(--text);margin:0 0 18px">We practise. Not for the badge — for the mark itself. Come sit with the work.</p>
+        <div style="display:flex;align-items:center;justify-content:center;gap:22px;margin-bottom:20px;font-family:'EB Garamond',serif;font-size:12px;color:var(--muted)">
+          <span><span style="font-family:'Cormorant Garamond',serif;font-size:20px;color:var(--ink);font-weight:600;display:block;line-height:1">214</span>practising</span>
+          <span style="width:1px;height:26px;background:var(--hair)"></span>
+          <span><span style="font-family:'Cormorant Garamond',serif;font-size:20px;color:var(--ink);font-weight:600;display:block;line-height:1">daily</span>rhythm</span>
+        </div>
+        <button style="appearance:none;width:100%;border:none;background:var(--ua);color:var(--onua);font-family:'EB Garamond',serif;font-size:15px;letter-spacing:.14em;text-transform:uppercase;padding:12px;border-radius:3px;cursor:pointer;transition:.18s" style-hover="background:var(--ua-deep)">Begin the practice</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ FILTER PENNANT + LEVEL ============ -->
+  <div id="pennant" style="max-width:1100px;margin:74px 0 24px;padding-top:28px;border-top:1px solid var(--border)">
+    <div style="font-family:'Caveat',cursive;font-size:20px;color:var(--ua-deep)">§7 · filter pennant · <a href="#pennant">pennant</a></div>
+    <h2 style="font-family:'Cormorant Garamond',serif;font-weight:600;font-size:40px;margin:4px 0 8px;color:var(--ink)">Filter pennant &amp; level</h2>
+    <p style="font-size:17px;line-height:1.5;max-width:820px;color:var(--text);margin:0">Shared pennant <em>shape</em>, faction fill. The active UA tab carries the primary at full saturation with on-fill ink; inactive tabs are quiet. No mandala here — a text surface stays clean.</p>
+  </div>
+
+  <div style="max-width:1100px;display:flex;align-items:flex-end;gap:6px;margin-bottom:14px;border-bottom:1px solid var(--border);padding-bottom:0">
+    <div style="font-family:'EB Garamond',serif;font-size:14px;letter-spacing:.04em;padding:10px 18px 12px;color:var(--muted);border-bottom:2px solid transparent;cursor:pointer">All</div>
+    <div style="position:relative;font-family:'EB Garamond',serif;font-size:14px;letter-spacing:.04em;padding:10px 18px 12px;color:var(--onua);background:var(--ua);border-radius:4px 4px 0 0;cursor:pointer;display:flex;align-items:center;gap:8px"><span style="width:8px;height:8px;border-radius:50%;background:var(--onua);opacity:.85"></span>University of Asthmatics</div>
+    <div style="font-family:'EB Garamond',serif;font-size:14px;letter-spacing:.04em;padding:10px 18px 12px;color:var(--muted);border-bottom:2px solid transparent;cursor:pointer;display:flex;align-items:center;gap:8px"><span style="width:8px;height:8px;border-radius:50%;background:#E0A11E"></span>Warriors of Whimsy</div>
+    <div style="font-family:'EB Garamond',serif;font-size:14px;letter-spacing:.04em;padding:10px 18px 12px;color:var(--muted);border-bottom:2px solid transparent;cursor:pointer;display:flex;align-items:center;gap:8px"><span style="width:8px;height:8px;border-radius:50%;background:#2E7D8A"></span>Ephemerists</div>
+  </div>
+
+  <div id="level" style="max-width:1100px;margin:40px 0 16px">
+    <div style="font-family:'Caveat',cursive;font-size:20px;color:var(--ua-deep)">§9 · progression / level indicator · <a href="#level">level</a></div>
+    <p style="font-size:15px;line-height:1.5;max-width:820px;color:var(--text);margin:6px 0 0">Tint only — the one shared <code style="color:var(--ua-deep)">LevelPill</code> shape, faction-coloured via <code style="color:var(--ua-deep)">factionCssVar('ua','…')</code>. No bespoke UA shape is wired. UA fills with <code style="color:var(--ua-deep)">--faction-ua-light</code> + accent text.</p>
+  </div>
+  <div style="max-width:1100px;display:flex;flex-wrap:wrap;gap:14px;align-items:center;margin-bottom:8px">
+    <span style="display:inline-flex;align-items:center;gap:7px;font-family:'EB Garamond',serif;font-size:13px;padding:5px 14px;border-radius:999px;background:var(--panel);border:1px solid var(--border);color:var(--ua-deep)"><span style="width:7px;height:7px;border-radius:50%;background:var(--ua)"></span>Level 1</span>
+    <span style="display:inline-flex;align-items:center;gap:7px;font-family:'EB Garamond',serif;font-size:13px;padding:5px 14px;border-radius:999px;background:var(--panel);border:1px solid var(--border);color:var(--ua-deep)"><span style="width:7px;height:7px;border-radius:50%;background:var(--ua)"></span>Level 2</span>
+    <span style="display:inline-flex;align-items:center;gap:7px;font-family:'EB Garamond',serif;font-size:13px;padding:5px 14px;border-radius:999px;background:var(--ua);border:1px solid var(--ua);color:var(--onua)"><span style="width:7px;height:7px;border-radius:50%;background:var(--onua);opacity:.85"></span>Level 5 · current</span>
+    <span style="font-family:'EB Garamond',serif;font-size:13px;color:var(--muted)">← same pill shape as every faction; only the fill is UA orange</span>
+  </div>
+
+  <!-- ============ AVATAR + BADGE ============ -->
+  <div id="avatar" style="max-width:1100px;margin:74px 0 24px;padding-top:28px;border-top:1px solid var(--border)">
+    <div style="font-family:'Caveat',cursive;font-size:20px;color:var(--ua-deep)">§11 · avatar + membership badge · <a href="#avatar">avatar</a></div>
+    <h2 style="font-family:'Cormorant Garamond',serif;font-weight:600;font-size:40px;margin:4px 0 8px;color:var(--ink)">Avatar &amp; badge</h2>
+    <p style="font-size:17px;line-height:1.5;max-width:820px;color:var(--text);margin:0">A faint ensō ring frames the portrait; the membership badge is a small ensō medallion at the corner. Frame + badge only — the portrait itself is untouched app data.</p>
+  </div>
+
+  <div style="max-width:1100px;display:flex;flex-wrap:wrap;gap:36px;align-items:flex-end;margin-bottom:8px">
+    <div style="text-align:center">
+      <div style="position:relative;width:120px;height:120px;margin:0 auto">
+        <img src="enso-detailed.svg" width="120" height="120" alt="" aria-hidden="true" style="position:absolute;inset:0">
+        <div style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:82px;height:82px;border-radius:50%;overflow:hidden;background:var(--panel);box-shadow:0 0 0 3px var(--bg)">
+          <x-import component-from-global-scope="image-slot" from="./image-slot.js" id="av-1" shape="circle" placeholder="" hint-size="82px,82px"></x-import>
+        </div>
+      </div>
+      <div style="font-family:'Cormorant Garamond',serif;font-size:17px;color:var(--ink);margin-top:8px">Ada Reed</div>
+      <div style="font-family:'EB Garamond',serif;font-size:12px;color:var(--muted)">practising · level 2</div>
+    </div>
+    <div style="text-align:center">
+      <div style="position:relative;width:88px;height:88px;margin:0 auto">
+        <div style="width:88px;height:88px;border-radius:50%;overflow:hidden;background:var(--panel);box-shadow:0 0 0 2px var(--border)">
+          <x-import component-from-global-scope="image-slot" from="./image-slot.js" id="av-2" shape="circle" placeholder="" hint-size="88px,88px"></x-import>
+        </div>
+        <span style="position:absolute;right:-4px;bottom:-4px;width:34px;height:34px;border-radius:50%;background:var(--bg);box-shadow:0 0 0 2px var(--bg),0 2px 6px -2px rgba(20,12,6,.5);display:flex;align-items:center;justify-content:center"><img src="enso-detailed.svg" width="26" height="26" alt="UA member"></span>
+      </div>
+      <div style="font-family:'EB Garamond',serif;font-size:12px;color:var(--muted);margin-top:10px">badge — corner medallion</div>
+    </div>
+    <div style="text-align:center">
+      <span style="display:inline-flex;align-items:center;gap:8px;font-family:'EB Garamond',serif;font-size:13px;padding:6px 12px 6px 6px;border-radius:999px;background:var(--panel);border:1px solid var(--border);color:var(--ink)"><span style="width:26px;height:26px;border-radius:50%;overflow:hidden;background:var(--bg);display:inline-flex"><img src="enso-detailed.svg" width="26" height="26" alt=""></span>UA member</span>
+      <div style="font-family:'EB Garamond',serif;font-size:12px;color:var(--muted);margin-top:10px">inline chip variant</div>
+    </div>
+  </div>
+
+  <!-- ============ ACTIVITY FEED ROW ============ -->
+  <div id="feed" style="max-width:1100px;margin:74px 0 24px;padding-top:28px;border-top:1px solid var(--border)">
+    <div style="font-family:'Caveat',cursive;font-size:20px;color:var(--ua-deep)">§12 · activity-feed card / row · <a href="#feed">feed</a></div>
+    <h2 style="font-family:'Cormorant Garamond',serif;font-weight:600;font-size:40px;margin:4px 0 8px;color:var(--ink)">Feed row</h2>
+    <p style="font-size:17px;line-height:1.5;max-width:820px;color:var(--text);margin:0">The <code style="color:var(--ua-deep)">FactionFeedFrame</code> owns the whole row for any "someone did X" event, filling the shared slots — actor · action · headline · points/level · time. Slot order and data are fixed (ADR-0016); only the dress is UA. A left ensō-orange rule and a small mark; no mandala.</p>
+  </div>
+
+  <div style="max-width:720px;margin-bottom:8px;border:1px solid var(--border);border-radius:6px;overflow:hidden;background:var(--bg)">
+    <div style="display:flex;gap:14px;align-items:center;padding:16px 20px;border-left:3px solid var(--ua);border-bottom:1px solid var(--hair)">
+      <span style="flex:0 0 auto;width:44px;height:44px;border-radius:50%;overflow:hidden;background:var(--panel);box-shadow:0 0 0 1.5px var(--border)"><x-import component-from-global-scope="image-slot" from="./image-slot.js" id="feed-a1" shape="circle" placeholder="" hint-size="44px,44px"></x-import></span>
+      <div style="flex:1;min-width:0">
+        <div style="font-family:'EB Garamond',serif;font-size:14px;color:var(--text);line-height:1.4"><strong style="color:var(--ink)">Ada Reed</strong> sealed a praxis</div>
+        <div style="font-family:'Cormorant Garamond',serif;font-size:19px;color:var(--ink);line-height:1.15;margin-top:1px">Charcoal study, north portico</div>
+      </div>
+      <div style="flex:0 0 auto;text-align:right;font-family:'EB Garamond',serif">
+        <div style="font-size:16px;color:var(--vermil);font-weight:600">+42</div>
+        <div style="font-size:11.5px;color:var(--muted);margin-top:2px">2h ago</div>
+      </div>
+    </div>
+    <div style="display:flex;gap:14px;align-items:center;padding:16px 20px;border-left:3px solid var(--ua);border-bottom:1px solid var(--hair)">
+      <span style="flex:0 0 auto;width:44px;height:44px;border-radius:50%;overflow:hidden;background:var(--panel);box-shadow:0 0 0 1.5px var(--border)"><x-import component-from-global-scope="image-slot" from="./image-slot.js" id="feed-a2" shape="circle" placeholder="" hint-size="44px,44px"></x-import></span>
+      <div style="flex:1;min-width:0">
+        <div style="font-family:'EB Garamond',serif;font-size:14px;color:var(--text);line-height:1.4"><strong style="color:var(--ink)">Jun Park</strong> reached a new level</div>
+        <div style="font-family:'Cormorant Garamond',serif;font-size:19px;color:var(--ink);line-height:1.15;margin-top:1px">Level 3 · steady hand</div>
+      </div>
+      <div style="flex:0 0 auto;text-align:right;font-family:'EB Garamond',serif">
+        <div style="font-size:13px;color:var(--ua-deep);font-weight:600;letter-spacing:.04em">LVL 3</div>
+        <div style="font-size:11.5px;color:var(--muted);margin-top:2px">5h ago</div>
+      </div>
+    </div>
+    <div style="display:flex;gap:14px;align-items:center;padding:16px 20px;border-left:3px solid var(--ua)">
+      <span style="flex:0 0 auto;width:44px;height:44px;border-radius:50%;overflow:hidden;background:var(--panel);box-shadow:0 0 0 1.5px var(--border)"><x-import component-from-global-scope="image-slot" from="./image-slot.js" id="feed-a3" shape="circle" placeholder="" hint-size="44px,44px"></x-import></span>
+      <div style="flex:1;min-width:0">
+        <div style="font-family:'EB Garamond',serif;font-size:14px;color:var(--text);line-height:1.4"><strong style="color:var(--ink)">Mira Osei</strong> began a task</div>
+        <div style="font-family:'Cormorant Garamond',serif;font-size:19px;color:var(--ink);line-height:1.15;margin-top:1px">Render the old library façade in charcoal</div>
+      </div>
+      <div style="flex:0 0 auto;text-align:right;font-family:'EB Garamond',serif">
+        <div style="font-size:11.5px;color:var(--muted)">just now</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ COMMENT ============ -->
+  <div id="comment" style="max-width:1100px;margin:74px 0 24px;padding-top:28px;border-top:1px solid var(--border)">
+    <div style="font-family:'Caveat',cursive;font-size:20px;color:var(--ua-deep)">§14 · comment — posted row + composer · <a href="#comment">comment</a></div>
+    <h2 style="font-family:'Cormorant Garamond',serif;font-weight:600;font-size:40px;margin:4px 0 8px;color:var(--ink)">Comment — the marginal note</h2>
+    <p style="font-size:17px;line-height:1.5;max-width:820px;color:var(--text);margin:0"><strong>Supersedes the "gilt salon" identity of ADR-0026.</strong> UA comments are now <em>quiet marginalia</em> — a note written in the margin of the work: rag paper, a single dashed orange rule, an ensō dot, no ornament and no gold. Invariant slots kept: author · body · timestamp+edited (ADR-0016). Two modes below.</p>
+  </div>
+
+  <div style="max-width:640px;margin-bottom:16px">
+    <div style="font-family:'EB Garamond',serif;font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--muted);margin-bottom:8px">Posted row</div>
+    <div style="display:flex;gap:14px;padding:16px 18px;border:1px solid var(--border);border-radius:5px;background:var(--bg);border-left:2px dashed var(--ua)">
+      <span style="flex:0 0 auto;width:38px;height:38px;border-radius:50%;overflow:hidden;background:var(--panel);box-shadow:0 0 0 1.5px var(--border)"><x-import component-from-global-scope="image-slot" from="./image-slot.js" id="cmt-a1" shape="circle" placeholder="" hint-size="38px,38px"></x-import></span>
+      <div style="flex:1;min-width:0">
+        <div style="display:flex;align-items:baseline;gap:10px"><span style="font-family:'Cormorant Garamond',serif;font-size:17px;font-weight:600;color:var(--ink)">Jun Park</span><span style="font-family:'EB Garamond',serif;font-size:12px;color:var(--muted)">jul 2 · edited</span></div>
+        <p style="font-family:'EB Garamond',serif;font-size:15px;line-height:1.55;color:var(--text);margin:5px 0 0">The way you let the cornice dissolve — that's the whole thing. I keep pressing too hard there. Sitting with this one.</p>
+      </div>
+    </div>
+  </div>
+
+  <div style="max-width:640px;margin-bottom:8px">
+    <div style="font-family:'EB Garamond',serif;font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--muted);margin-bottom:8px">Composer</div>
+    <div style="display:flex;gap:14px;padding:16px 18px;border:1px solid var(--ua);border-radius:5px;background:var(--lift)">
+      <span style="flex:0 0 auto;width:38px;height:38px;border-radius:50%;overflow:hidden;background:var(--panel);box-shadow:0 0 0 1.5px var(--border);display:inline-flex"><img src="enso-detailed.svg" width="38" height="38" alt=""></span>
+      <div style="flex:1;min-width:0">
+        <div style="font-family:'EB Garamond',serif;font-size:15px;color:var(--muted);font-style:italic;padding:2px 0 14px">Leave a note in the margin…</div>
+        <div style="display:flex;align-items:center;justify-content:space-between;border-top:1px solid var(--hair);padding-top:12px">
+          <span style="font-family:'EB Garamond',serif;font-size:12px;color:var(--muted)">Kept brief. Kept kind.</span>
+          <button style="appearance:none;border:none;background:var(--ua);color:var(--onua);font-family:'EB Garamond',serif;font-size:13px;letter-spacing:.12em;text-transform:uppercase;padding:8px 20px;border-radius:3px;cursor:pointer;transition:.18s" style-hover="background:var(--ua-deep)">Post</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ EDIT-PRAXIS EDITOR ============ -->
+  <div id="edit" style="max-width:1100px;margin:74px 0 24px;padding-top:28px;border-top:1px solid var(--border)">
+    <div style="font-family:'Caveat',cursive;font-size:20px;color:var(--ua-deep)">§3 · edit-praxis editor · <a href="#edit">edit</a></div>
+    <h2 style="font-family:'Cormorant Garamond',serif;font-weight:600;font-size:40px;margin:4px 0 8px;color:var(--ink)">Edit-praxis editor</h2>
+    <p style="font-size:17px;line-height:1.5;max-width:820px;color:var(--text);margin:0">The praxis archetype as a form — same dress as the card, in composer mode. Quiet labels, generous space, one ensō at the head. Same slots the card renders (title · for-task · note · media · mode) so data parity holds (ADR-0016).</p>
+  </div>
+
+  <div style="width:560px;margin-bottom:8px">
+    <div style="position:relative;overflow:hidden;border:1px solid var(--ua-deep);border-radius:7px;background:linear-gradient(158deg,var(--lift),var(--bg) 55%,var(--panel));box-shadow:0 16px 42px -24px rgba(20,12,6,.6)">
+      <img src="lotus.svg" width="220" height="220" alt="" aria-hidden="true" style="position:absolute;right:-96px;top:-92px;opacity:.1;pointer-events:none">
+      <div style="position:relative;padding:26px 30px 24px">
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px"><img src="enso-detailed.svg" width="40" height="40" alt=""><div style="font-family:'EB Garamond',serif;font-size:11.5px;letter-spacing:.22em;text-transform:uppercase;color:var(--muted)">Seal a praxis</div></div>
+
+        <div style="font-family:'EB Garamond',serif;font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);margin-bottom:6px">Title</div>
+        <div style="font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:600;color:var(--ink);border-bottom:1px solid var(--border);padding-bottom:10px;margin-bottom:18px">Charcoal study, north portico</div>
+
+        <div style="font-family:'EB Garamond',serif;font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);margin-bottom:6px">For the task</div>
+        <div style="display:flex;align-items:center;gap:8px;font-family:'EB Garamond',serif;font-size:15px;color:var(--ua-deep);padding:9px 12px;border:1px solid var(--border);border-radius:4px;background:var(--panel);margin-bottom:18px"><span style="width:6px;height:6px;border-radius:50%;background:var(--ua)"></span>Render the old library façade in charcoal</div>
+
+        <div style="font-family:'EB Garamond',serif;font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);margin-bottom:6px">A note on the mark</div>
+        <div style="font-family:'EB Garamond',serif;font-style:italic;font-size:15px;line-height:1.55;color:var(--muted);padding:12px;border:1px solid var(--border);border-radius:4px;background:var(--bg);min-height:66px;margin-bottom:18px">Let the cornice go soft; pressed hard only where the light broke.</div>
+
+        <div style="display:flex;gap:16px;margin-bottom:22px">
+          <div style="flex:1">
+            <div style="font-family:'EB Garamond',serif;font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);margin-bottom:6px">The work</div>
+            <div style="height:92px;border:1px dashed var(--ua);border-radius:4px;background:var(--panel);display:flex;align-items:center;justify-content:center;font-family:'EB Garamond',serif;font-size:13px;color:var(--muted)">＋ add the study</div>
+          </div>
+          <div style="flex:0 0 auto">
+            <div style="font-family:'EB Garamond',serif;font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);margin-bottom:6px">Mode</div>
+            <div style="display:flex;gap:6px">
+              <span style="font-family:'EB Garamond',serif;font-size:13px;padding:8px 14px;border-radius:999px;background:var(--ua);color:var(--onua)">Solo</span>
+              <span style="font-family:'EB Garamond',serif;font-size:13px;padding:8px 14px;border-radius:999px;background:var(--panel);border:1px solid var(--border);color:var(--muted)">Crew</span>
+            </div>
+          </div>
+        </div>
+
+        <div style="display:flex;align-items:center;justify-content:space-between;border-top:1px solid var(--hair);padding-top:16px">
+          <span style="font-family:'EB Garamond',serif;font-size:12.5px;color:var(--muted);font-style:italic">Once sealed, the mark stands.</span>
+          <button style="appearance:none;border:none;background:var(--ua);color:var(--onua);font-family:'EB Garamond',serif;font-size:14px;letter-spacing:.14em;text-transform:uppercase;padding:11px 26px;border-radius:3px;cursor:pointer;transition:.18s" style-hover="background:var(--ua-deep)">Seal it</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ FACTION DETAIL PAGE ============ -->
+  <div id="detail" style="max-width:1100px;margin:74px 0 24px;padding-top:28px;border-top:1px solid var(--border)">
+    <div style="font-family:'Caveat',cursive;font-size:20px;color:var(--ua-deep)">§13 · faction detail page · <a href="#detail">detail</a></div>
+    <h2 style="font-family:'Cormorant Garamond',serif;font-weight:600;font-size:40px;margin:4px 0 8px;color:var(--ink)">Faction page — <code style="font-family:'EB Garamond',serif;font-size:.66em;color:var(--ua-deep)">/factions/ua</code></h2>
+    <p style="font-size:17px;line-height:1.5;max-width:820px;color:var(--text);margin:0">Description · those practising · today's marks · sealed work. Themed by the page backdrop. The old <em>prospectus</em> framing is retired — this is <strong>The Practice</strong>.</p>
+  </div>
+
+  <div style="max-width:900px;margin-bottom:8px;border:1px solid var(--border);border-radius:8px;overflow:hidden;background:var(--bg)">
+    <div style="position:relative;padding:46px 40px 38px;background:linear-gradient(160deg,var(--lift),var(--panel));border-bottom:1px solid var(--hair);overflow:hidden">
+      <img src="lotus.svg" width="420" height="420" alt="" aria-hidden="true" style="position:absolute;right:-140px;top:-150px;opacity:.14;pointer-events:none">
+      <div style="position:relative;display:flex;align-items:center;gap:22px">
+        <img src="enso-detailed.svg" width="96" height="96" alt="Ensō">
+        <div>
+          <div style="font-family:'EB Garamond',serif;font-size:11.5px;letter-spacing:.24em;text-transform:uppercase;color:var(--muted)">The Practice</div>
+          <h3 style="font-family:'Cormorant Garamond',serif;font-weight:600;font-size:38px;color:var(--ink);margin:4px 0 8px;line-height:1">University of Asthmatics</h3>
+          <p style="font-size:16px;line-height:1.5;color:var(--text);margin:0;max-width:520px">We practise art as a daily, deliberate thing. One true mark, then another. The satisfaction is in the making, not the tally.</p>
+        </div>
+      </div>
+    </div>
+    <div style="display:flex;flex-wrap:wrap;gap:0;border-bottom:1px solid var(--hair)">
+      <div style="flex:1;min-width:120px;padding:18px 24px;border-right:1px solid var(--hair)"><div style="font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:600;color:var(--ink);line-height:1">214</div><div style="font-family:'EB Garamond',serif;font-size:12px;color:var(--muted);margin-top:2px">practising</div></div>
+      <div style="flex:1;min-width:120px;padding:18px 24px;border-right:1px solid var(--hair)"><div style="font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:600;color:var(--ink);line-height:1">1,489</div><div style="font-family:'EB Garamond',serif;font-size:12px;color:var(--muted);margin-top:2px">marks sealed</div></div>
+      <div style="flex:1;min-width:120px;padding:18px 24px"><div style="font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:600;color:var(--ink);line-height:1">daily</div><div style="font-family:'EB Garamond',serif;font-size:12px;color:var(--muted);margin-top:2px">rhythm</div></div>
+    </div>
+    <div style="padding:26px 30px">
+      <div style="font-family:'EB Garamond',serif;font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--ua-deep);margin-bottom:14px">Those practising</div>
+      <div style="display:flex;flex-wrap:wrap;gap:14px;margin-bottom:26px">
+        <span style="display:inline-flex;align-items:center;gap:9px;font-family:'EB Garamond',serif;font-size:14px;color:var(--text)"><span style="width:32px;height:32px;border-radius:50%;overflow:hidden;background:var(--panel);box-shadow:0 0 0 1.5px var(--border)"><x-import component-from-global-scope="image-slot" from="./image-slot.js" id="fp-m1" shape="circle" placeholder="" hint-size="32px,32px"></x-import></span>Ada Reed</span>
+        <span style="display:inline-flex;align-items:center;gap:9px;font-family:'EB Garamond',serif;font-size:14px;color:var(--text)"><span style="width:32px;height:32px;border-radius:50%;overflow:hidden;background:var(--panel);box-shadow:0 0 0 1.5px var(--border)"><x-import component-from-global-scope="image-slot" from="./image-slot.js" id="fp-m2" shape="circle" placeholder="" hint-size="32px,32px"></x-import></span>Jun Park</span>
+        <span style="display:inline-flex;align-items:center;gap:9px;font-family:'EB Garamond',serif;font-size:14px;color:var(--text)"><span style="width:32px;height:32px;border-radius:50%;overflow:hidden;background:var(--panel);box-shadow:0 0 0 1.5px var(--border)"><x-import component-from-global-scope="image-slot" from="./image-slot.js" id="fp-m3" shape="circle" placeholder="" hint-size="32px,32px"></x-import></span>Mira Osei</span>
+      </div>
+      <div style="font-family:'EB Garamond',serif;font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--ua-deep);margin-bottom:14px">Today's marks</div>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:16px;padding:12px 16px;border:1px solid var(--border);border-radius:4px;background:var(--panel)"><span style="font-family:'Cormorant Garamond',serif;font-size:18px;color:var(--ink)">Render the old library façade in charcoal</span><span style="font-family:'EB Garamond',serif;font-size:12px;color:var(--muted);white-space:nowrap">lvl 2 · 30 marks</span></div>
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:16px;padding:12px 16px;border:1px solid var(--border);border-radius:4px;background:var(--panel)"><span style="font-family:'Cormorant Garamond',serif;font-size:18px;color:var(--ink)">Ten thumbnails before breakfast</span><span style="font-family:'EB Garamond',serif;font-size:12px;color:var(--muted);white-space:nowrap">lvl 1 · 15 marks</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ PAGE BACKDROP ============ -->
+  <div id="backdrop" style="max-width:1100px;margin:74px 0 24px;padding-top:28px;border-top:1px solid var(--border)">
+    <div style="font-family:'Caveat',cursive;font-size:20px;color:var(--ua-deep)">§10 · page backdrop · <a href="#backdrop">backdrop</a></div>
+    <h2 style="font-family:'Cormorant Garamond',serif;font-weight:600;font-size:40px;margin:4px 0 8px;color:var(--ink)">Page backdrop</h2>
+    <p style="font-size:17px;line-height:1.5;max-width:820px;color:var(--text);margin:0">Mesa-sand ground (<code style="color:var(--ua-deep)">--faction-ua-page</code>) with one very faint ensō/mandala bleed off a corner — it must sit <em>behind</em> unrelated content without fighting it. It themes a page only when UA is that page's single context; on any mixed or neutral page it <strong>degrades to the global rainbow watercolour</strong> (never theme a mixed page to one faction).</p>
+  </div>
+
+  <div style="max-width:900px;display:flex;flex-wrap:wrap;gap:16px;margin-bottom:8px">
+    <div style="flex:1 1 420px;position:relative;overflow:hidden;border:1px solid var(--border);border-radius:8px;background:var(--page);min-height:220px;padding:24px">
+      <img src="enso-detailed.svg" width="300" height="300" alt="" aria-hidden="true" style="position:absolute;right:-70px;bottom:-80px;opacity:.08;pointer-events:none">
+      <img src="lotus.svg" width="240" height="240" alt="" aria-hidden="true" style="position:absolute;left:-80px;top:-70px;opacity:.07;pointer-events:none">
+      <div style="position:relative">
+        <div style="font-family:'EB Garamond',serif;font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--ua-deep);margin-bottom:8px">UA-themed page</div>
+        <div style="background:var(--bg);border:1px solid var(--border);border-radius:5px;padding:14px 16px;font-family:'EB Garamond',serif;font-size:14px;color:var(--text);max-width:300px">Unrelated content sits cleanly on top — the backdrop stays under 8% opacity so body copy never loses contrast.</div>
+      </div>
+    </div>
+    <div style="flex:1 1 320px;position:relative;overflow:hidden;border:1px solid var(--border);border-radius:8px;min-height:220px;padding:24px;background:linear-gradient(135deg,rgba(194,74,24,.14),rgba(224,161,30,.12),rgba(76,140,74,.12),rgba(46,125,138,.12),rgba(91,84,176,.12),rgba(176,71,126,.12))">
+      <div style="font-family:'EB Garamond',serif;font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--ink);margin-bottom:8px">Mixed / neutral page →</div>
+      <div style="font-family:'Cormorant Garamond',serif;font-size:22px;color:var(--ink);line-height:1.25;max-width:240px">Falls back to the global rainbow watercolour. UA does not claim it.</div>
+    </div>
+  </div>
+
+  <!-- ============ MOBILE ============ -->
+  <div id="mobile" style="max-width:1100px;margin:74px 0 24px;padding-top:28px;border-top:1px solid var(--border)">
+    <div style="font-family:'Caveat',cursive;font-size:20px;color:var(--ua-deep)">§1a · mobile skins · <a href="#mobile">mobile</a></div>
+    <h2 style="font-family:'Cormorant Garamond',serif;font-weight:600;font-size:40px;margin:4px 0 8px;color:var(--ink)">Mobile — single column, 375px</h2>
+    <p style="font-size:17px;line-height:1.5;max-width:820px;color:var(--text);margin:0">Form factor is a second axis (§1a). The mobile path stacks single-column with flow/wrap — <strong>no fixed-px grids</strong> — and survives 375px. Same tokens, same slots; presentation only. Bottom-tab nav, one-handed reach.</p>
+  </div>
+
+  <div style="display:flex;flex-wrap:wrap;gap:28px;margin-bottom:8px">
+    <!-- phone: task list -->
+    <div style="width:375px;flex:0 0 auto;border:10px solid var(--ink);border-radius:38px;overflow:hidden;background:var(--page);box-shadow:0 20px 50px -24px rgba(20,12,6,.55)">
+      <div style="position:relative;padding:18px 18px 90px;min-height:640px">
+        <img src="enso-detailed.svg" width="240" height="240" alt="" aria-hidden="true" style="position:absolute;right:-56px;top:-40px;opacity:.07;pointer-events:none">
+        <div style="position:relative;display:flex;align-items:center;gap:10px;margin-bottom:16px"><img src="enso-detailed.svg" width="34" height="34" alt=""><div><div style="font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:600;color:var(--ink);line-height:1">Today's marks</div><div style="font-family:'EB Garamond',serif;font-size:12px;color:var(--muted)">University of Asthmatics</div></div></div>
+        <div style="position:relative;display:flex;flex-direction:column;gap:12px">
+          <div style="border:1px solid var(--border);border-radius:6px;background:var(--bg);padding:16px;position:relative;overflow:hidden">
+            <div style="position:absolute;left:14px;top:16px;bottom:16px;width:2px;background:linear-gradient(180deg,transparent,var(--ua),transparent);opacity:.34"></div>
+            <div style="padding-left:16px">
+              <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px"><span style="position:relative;width:52px;height:52px;flex:0 0 auto"><img src="enso-detailed.svg" width="52" height="52" alt=""><span style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:600;color:var(--ink)">30</span></span><span style="font-family:'EB Garamond',serif;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)">Level 2</span></div>
+              <div style="font-family:'Cormorant Garamond',serif;font-size:21px;font-weight:600;color:var(--ink);line-height:1.15;margin-bottom:6px">Render the old library façade in charcoal</div>
+              <p style="font-family:'EB Garamond',serif;font-size:13.5px;line-height:1.5;color:var(--text);margin:0 0 12px">Draw only what the light is doing.</p>
+              <button style="appearance:none;width:100%;border:1.5px solid var(--ua);background:var(--bg);color:var(--ua-deep);font-family:'EB Garamond',serif;font-size:13px;letter-spacing:.12em;text-transform:uppercase;padding:11px;border-radius:3px">Sign up</button>
+            </div>
+          </div>
+          <div style="border:1px solid var(--border);border-radius:6px;background:var(--bg);padding:16px">
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px"><span style="position:relative;width:52px;height:52px;flex:0 0 auto"><img src="enso-detailed.svg" width="52" height="52" alt=""><span style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:600;color:var(--ink)">15</span></span><span style="font-family:'EB Garamond',serif;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)">Level 1</span></div>
+            <div style="font-family:'Cormorant Garamond',serif;font-size:21px;font-weight:600;color:var(--ink);line-height:1.15">Ten thumbnails before breakfast</div>
+          </div>
+        </div>
+      </div>
+      <div style="position:relative;margin-top:-74px;display:flex;justify-content:space-around;padding:14px 8px;border-top:1px solid var(--hair);background:var(--panel);font-family:'EB Garamond',serif;font-size:11px;letter-spacing:.1em;text-transform:uppercase">
+        <span style="color:var(--ua-deep);display:flex;flex-direction:column;align-items:center;gap:4px"><span style="width:6px;height:6px;border-radius:50%;background:var(--ua)"></span>Marks</span>
+        <span style="color:var(--muted)">Practice</span>
+        <span style="color:var(--muted)">Circle</span>
+        <span style="color:var(--muted)">You</span>
+      </div>
+    </div>
+
+    <!-- phone: praxis detail -->
+    <div style="width:375px;flex:0 0 auto;border:10px solid var(--ink);border-radius:38px;overflow:hidden;background:var(--page);box-shadow:0 20px 50px -24px rgba(20,12,6,.55)">
+      <div style="padding:18px 18px 24px;min-height:640px">
+        <div style="font-family:'EB Garamond',serif;font-size:11.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--muted);margin-bottom:8px">Praxis №501 · Sealed</div>
+        <h3 style="font-family:'Cormorant Garamond',serif;font-weight:600;font-size:28px;line-height:1.08;color:var(--ink);margin:0 0 10px">Charcoal study, north portico</h3>
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px"><span style="width:44px;height:44px;border-radius:50%;overflow:hidden;background:var(--panel);box-shadow:0 0 0 2px var(--bg)"><x-import component-from-global-scope="image-slot" from="./image-slot.js" id="mob-av" shape="circle" placeholder="" hint-size="44px,44px"></x-import></span><div style="font-family:'EB Garamond',serif;font-size:13px;color:var(--muted)"><div style="font-family:'Cormorant Garamond',serif;font-size:17px;color:var(--ink);font-weight:600">Ada Reed</div>level 2 · solo · jul 1</div><div style="margin-left:auto;position:relative;width:76px;height:76px;flex:0 0 auto"><img src="enso-detailed.svg" width="76" height="76" alt=""><span style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:600;color:var(--vermil)">42</span></div></div>
+        <div style="height:200px;border:1px solid var(--border);border-radius:5px;overflow:hidden;background:var(--panel);margin-bottom:8px"><x-import component-from-global-scope="image-slot" from="./image-slot.js" id="mob-art" shape="rect" fit="cover" placeholder="the work" hint-size="100%,100%"></x-import></div>
+        <div style="font-family:'EB Garamond',serif;font-style:italic;font-size:12.5px;color:var(--muted);margin-bottom:16px">Vine charcoal on cotton rag · 18 × 24 in</div>
+        <div style="height:0;border-top:1.5px dashed var(--ua);opacity:.4;margin:0 0 14px"></div>
+        <div style="font-family:'EB Garamond',serif;font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--muted);margin-bottom:10px">How true did it land</div>
+        <div style="display:flex;justify-content:space-between;gap:6px">{{ mscale }}</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ COPY DECK ============ -->
+  <div id="copy" style="max-width:1100px;margin:74px 0 24px;padding-top:28px;border-top:1px solid var(--border)">
+    <div style="font-family:'Caveat',cursive;font-size:20px;color:var(--ua-deep)">the voice · <a href="#copy">copy</a></div>
+    <h2 style="font-family:'Cormorant Garamond',serif;font-weight:600;font-size:40px;margin:4px 0 8px;color:var(--ink)">Copy deck</h2>
+    <p style="font-size:17px;line-height:1.5;max-width:820px;color:var(--text);margin:0">Full voice rewrite. Quiet, deliberate, present-tense, low on exclamation. Names written to survive a later faction rename — they lean on <em>practice</em> and <em>the mark</em>, not on "university" or "asthmatics". All strings are literal, ready for the locale catalog keyed by slug.</p>
+  </div>
+
+  <div style="max-width:1100px;display:flex;flex-wrap:wrap;gap:16px;margin-bottom:8px">
+    <div style="flex:1 1 340px;padding:18px 20px;border:1px solid var(--border);border-radius:6px;background:var(--bg)">
+      <div style="font-family:'EB Garamond',serif;font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--ua-deep);margin-bottom:10px">Name &amp; description</div>
+      <div style="font-size:14.5px;line-height:1.7;color:var(--text)">
+        <div><span style="color:var(--muted)">name (kept for now)</span> — University of Asthmatics</div>
+        <div style="margin-top:6px"><span style="color:var(--muted)">short descriptor</span> — "A daily practice of making marks."</div>
+        <div style="margin-top:6px"><span style="color:var(--muted)">propose-task descriptor</span> — "Practise with us — one true mark a day."</div>
+        <div style="margin-top:6px"><span style="color:var(--muted)">description</span> — "We practise art as a daily, deliberate thing. One true mark, then another. The satisfaction is in the making, not the tally."</div>
+      </div>
+    </div>
+    <div style="flex:1 1 340px;padding:18px 20px;border:1px solid var(--border);border-radius:6px;background:var(--bg)">
+      <div style="font-family:'EB Garamond',serif;font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--ua-deep);margin-bottom:10px">Faction page — rename <code style="text-transform:none">prospectus</code></div>
+      <div style="font-size:14.5px;line-height:1.7;color:var(--text)">
+        <div><span style="color:var(--muted)">framing</span> — <strong>The Practice</strong> (retires the academic "prospectus")</div>
+        <div style="margin-top:6px"><span style="color:var(--muted)">tasks</span> — "Today's marks"</div>
+        <div><span style="color:var(--muted)">praxis</span> — "Sealed work"</div>
+        <div><span style="color:var(--muted)">registry</span> — "Those practising"</div>
+        <div><span style="color:var(--muted)">spotlight</span> — "Held up"</div>
+        <div><span style="color:var(--muted)">roster</span> — "The circle"</div>
+        <div><span style="color:var(--muted)">invitation</span> — "Come sit with the work."</div>
+      </div>
+    </div>
+    <div style="flex:1 1 340px;padding:18px 20px;border:1px solid var(--border);border-radius:6px;background:var(--bg)">
+      <div style="font-family:'EB Garamond',serif;font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--ua-deep);margin-bottom:10px">Surface voice</div>
+      <div style="font-size:14.5px;line-height:1.7;color:var(--text)">
+        <div><span style="color:var(--muted)">task list</span> — "Today's marks"</div>
+        <div><span style="color:var(--muted)">vote UI</span> — "How true did it land" · faint · forming · true · alive · radiant</div>
+        <div><span style="color:var(--muted)">praxis masthead</span> — "Praxis №{​{n}​} · Sealed"</div>
+        <div><span style="color:var(--muted)">comment</span> — "Leave a note in the margin…"</div>
+        <div><span style="color:var(--muted)">feed</span> — "{​{actor}​} sealed a praxis"</div>
+        <div><span style="color:var(--muted)">edit-praxis</span> — "Seal a praxis" · "Once sealed, the mark stands."</div>
+        <div><span style="color:var(--muted)">field desk (home)</span> — "One mark today. Begin."</div>
+      </div>
+    </div>
+  </div>
+
+  <div style="max-width:1100px;display:flex;flex-wrap:wrap;gap:16px;margin-bottom:8px">
+    <div style="flex:1 1 440px;padding:18px 20px;border:1px solid var(--vermil);border-left:3px solid var(--vermil);border-radius:6px;background:var(--panel)">
+      <div style="font-family:'EB Garamond',serif;font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--ua-deep);margin-bottom:10px">Taunts — the deliberate answer</div>
+      <div style="font-size:14.5px;line-height:1.65;color:var(--text)">
+        <p style="margin:0 0 10px"><strong style="color:var(--ink)">UA does not taunt.</strong> A contemplative faction gloating is off-voice — but the generic fallback set <em>is</em> a gloat, so UA must override it with its own quiet <em>acknowledgements</em> rather than fall through. Recommended: ship these, do not keep the fallback.</p>
+        <div style="font-family:'EB Garamond',serif;font-size:13.5px;line-height:1.7;color:var(--text);border-top:1px dashed var(--ua);padding-top:10px">
+          <div><span style="color:var(--muted)">overtake</span> — "{​{to_name}​} has passed {​{from_name}​}. The mark is the same either way."</div>
+          <div>— "{​{from_name}​}, {​{to_name}​} is ahead today. Tomorrow is another sheet."</div>
+          <div style="margin-top:6px"><span style="color:var(--muted)">level up</span> — "{​{to_name}​} settles a little deeper into the practice."</div>
+          <div>— "A quieter hand, {​{to_name}​}. Well drawn."</div>
+          <div style="margin-top:6px"><span style="color:var(--muted)">praxis complete</span> — "{​{to_name}​} sealed a mark. It stands."</div>
+          <div>— "One more true thing from {​{to_name}​}."</div>
+        </div>
+      </div>
+    </div>
+    <div style="flex:1 1 340px;padding:18px 20px;border:1px solid var(--border);border-radius:6px;background:var(--bg)">
+      <div style="font-family:'EB Garamond',serif;font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--ua-deep);margin-bottom:10px">Comment identity — supersedes ADR-0026</div>
+      <div style="font-size:14.5px;line-height:1.7;color:var(--text)">
+        <p style="margin:0 0 8px">The "gilt salon" identity is <strong>replaced by "the marginal note"</strong>: a comment is a quiet margin note on the work — rag paper, one dashed orange rule, an ensō dot, no ornament, no gold. Record this in the ADR so it is updated rather than silently contradicted.</p>
+        <p style="margin:0;color:var(--muted);font-style:italic">Author · body · timestamp+edited slots unchanged (ADR-0016). Row → author's faction; composer → current character's faction.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- reference-only note -->
+  <div style="max-width:1100px;margin:26px 0 0;padding:16px 20px;border:1px dashed var(--muted);border-radius:5px;background:transparent">
+    <div style="font-family:'EB Garamond',serif;font-size:13.5px;line-height:1.6;color:var(--muted)"><strong style="color:var(--ink)">Reference only — not wired:</strong> global chrome (nav, sidebar, modals, toasts) and the generic button/tab/chip/empty-state controls stay shared and are not redesigned here. Spacing, radii, and the type scale reuse the shared design-system tokens — UA picks a headline face (Cormorant Garamond), not a new scale. New fonts: none required; Cormorant, EB Garamond, and Caveat are already loaded.</div>
+  </div>
+
+  <!-- KIT-END -->
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  constructor(props){
+    super(props);
+    this.state = { theme:'light', rating:4, userRating:null, hover:null, marks:9 };
+    this.rankColor = ['','#A69C8C','#C0894F','#D2762F','#DD5A1E','#B5361A'];
+    this.rankWord  = ['','faint','forming','true','alive','radiant'];
+  }
+  palette(theme){
+    const LIGHT = {'--page':'#E7DCC9','--bg':'#F7E7D2','--panel':'#F2E0CB','--lift':'#FDF0DF','--ink':'#2E2820','--text':'#544A3C','--muted':'#6E6252','--border':'#DBCBB3','--hair':'#E4D8C3','--ua':'#C24A18','--glow':'#DD5A1E','--ua-deep':'#A5400F','--vermil':'#B5361A','--onua':'#FCF7EF','--body':'#362F27'};
+    const DARK  = {'--page':'#191410','--bg':'#241E18','--panel':'#2D261F','--lift':'#372E25','--ink':'#F1E8DA','--text':'#D6C9B2','--muted':'#A08C72','--border':'#3B3229','--hair':'#332B22','--ua':'#E8703A','--glow':'#F08A4E','--ua-deep':'#F0894A','--vermil':'#D9542A','--onua':'#201A14','--body':'#E7DCC9'};
+    return theme==='dark' ? DARK : LIGHT;
+  }
+  applyTheme(theme){
+    const P = this.palette(theme);
+    if(this.wrap){ for(const k in P) this.wrap.style.setProperty(k,P[k]); }
+    document.body.style.background = P['--page'];
+    document.body.style.color = P['--body'];
+  }
+  toggleTheme(){
+    const t = this.state.theme==='light' ? 'dark' : 'light';
+    this.setState({ theme:t });
+    this.applyTheme(t);
+  }
+  castRating(k){
+    const first = !this.state.userRating;
+    this.setState({ userRating:k, marks: first ? this.state.marks + 1 : this.state.marks });
+  }
+  petalPath(c, ang, r0, len, wid){
+    const ox=Math.cos(ang), oy=Math.sin(ang), px=-oy, py=ox;
+    const bx=c+ox*r0, by=c+oy*r0, tx=c+ox*(r0+len), ty=c+oy*(r0+len);
+    const s1x=bx+px*wid, s1y=by+py*wid, s2x=bx-px*wid, s2y=by-py*wid;
+    const m1x=tx+px*wid*0.32, m1y=ty+py*wid*0.32, m2x=tx-px*wid*0.32, m2y=ty-py*wid*0.32;
+    return 'M '+bx+' '+by+' Q '+s1x+' '+s1y+' '+m1x+' '+m1y+' Q '+tx+' '+ty+' '+m2x+' '+m2y+' Q '+s2x+' '+s2y+' '+bx+' '+by+' Z';
+  }
+  // layered growing mandala — concentric petal rings, more with each rank
+  mandalaCell(rank, emph, bloom, alive){
+    const size = 34 + rank*11, c = size/2;
+    const col = this.rankColor[rank];
+    const deep = this.rankColor[Math.min(5, rank+1)];
+    const kids = [ React.createElement('circle', { key:'bg', cx:c, cy:c, r:c-1, fill:col, opacity:0.07 }) ];
+    for(let ring=1; ring<=rank; ring++){
+      const pet = 8 + ring*4;
+      const r0 = (ring-1)/rank*(c*0.5) + 1.5;
+      const len = (c-2)/rank*0.74;
+      const wid = 2.4 + ring*0.7;
+      const fill = ring%2 ? col : deep;
+      const grp = [];
+      for(let j=0;j<pet;j++){
+        const a = (j/pet)*Math.PI*2 + (ring%2 ? Math.PI/pet : 0);
+        grp.push(React.createElement('path', { key:j, d:this.petalPath(c, a, r0, len, wid),
+          fill, opacity: 0.32 + ring/rank*0.55 }));
+        // dotted accents between rings on outer rings
+        if(ring>=3){
+          const rr = r0 + len*0.6;
+          grp.push(React.createElement('circle', { key:'d'+j, cx:c+Math.cos(a+Math.PI/pet)*rr, cy:c+Math.sin(a+Math.PI/pet)*rr, r:0.8, fill:'var(--bg)', opacity:0.8 }));
+        }
+      }
+      const dir = ring%2 ? 1 : -1;
+      kids.push(React.createElement('g', { key:'r'+ring,
+        style:{ transformOrigin:c+'px '+c+'px', animation:'ringGrow .5s '+(ring*0.06)+'s both ease-out, spin '+(30 - ring*3)+'s linear infinite '+(dir>0?'':'reverse') } }, ...grp));
+    }
+    // center rosette
+    const cf = [];
+    for(let j=0;j<8;j++){ cf.push(React.createElement('path', { key:j, d:this.petalPath(c, (j/8)*Math.PI*2, 0, 3+rank*0.7, 1.5), fill:this.rankColor[5], opacity:0.92 })); }
+    kids.push(React.createElement('g', { key:'cf' }, ...cf));
+    kids.push(React.createElement('circle', { key:'core', cx:c, cy:c, r:1.3+rank*0.35, fill:'var(--bg)' }));
+    const halo = bloom ? React.createElement('span', { key:'halo', style:{ position:'absolute', inset:0,
+      borderRadius:'50%', border:'2px solid var(--ua)', animation:'haloPulse .7s ease-out both',
+      transformOrigin:'center', pointerEvents:'none' } }) : null;
+    return React.createElement('div', {
+      key: rank + '-' + (emph?1:0),
+      onClick: () => this.castRating(rank),
+      onMouseEnter: () => this.setState({ hover:rank }),
+      onMouseLeave: () => this.setState({ hover:null }),
+      title: rank + ' of 5',
+      style:{ position:'relative', display:'flex', flexDirection:'column', alignItems:'center', gap:'5px', width:'74px',
+              cursor:'pointer' } },
+      React.createElement('div', { style:{ position:'relative', height:'84px', display:'flex', alignItems:'flex-end',
+        filter: emph ? 'none' : 'saturate(.45) opacity(.5)',
+        transform: emph ? 'scale(1.08)' : 'scale(.9)', transformOrigin:'bottom center',
+        transition:'filter .28s ease, transform .28s ease' } },
+        React.createElement('div', { style:{ position:'relative', width:size+'px', height:size+'px', transformOrigin:'center', animation: alive ? ('voteTwist '+(2 + rank*0.22)+'s ease-in-out infinite') : 'none' } },
+          halo,
+          React.createElement('svg', { width:size, height:size, viewBox:'0 0 '+size+' '+size,
+            style: Object.assign({ position:'absolute', inset:0 }, bloom ? { animation:'voteBloom .7s cubic-bezier(.2,1.25,.35,1) both' } : {}) }, ...kids))),
+      React.createElement('div', { style:{ fontFamily:"'EB Garamond',serif", fontSize:'11px',
+        fontWeight: emph?600:400, color: emph ? 'var(--ua-deep)' : 'var(--muted)' } }, rank)
+    );
+  }
+  miniCell(rank, emph){
+    const size = 22 + rank*7, c = size/2;
+    const col = this.rankColor[rank], deep = this.rankColor[Math.min(5, rank+1)];
+    const kids = [ React.createElement('circle', { key:'bg', cx:c, cy:c, r:c-1, fill:col, opacity:0.08 }) ];
+    for(let ring=1; ring<=rank; ring++){
+      const pet = 6 + ring*3;
+      const r0 = (ring-1)/rank*(c*0.5) + 1;
+      const len = (c-1.5)/rank*0.78;
+      const wid = 1.6 + ring*0.5;
+      const fill = ring%2 ? col : deep;
+      const grp = [];
+      for(let j=0;j<pet;j++){
+        const a = (j/pet)*Math.PI*2 + (ring%2 ? Math.PI/pet : 0);
+        grp.push(React.createElement('path', { key:j, d:this.petalPath(c, a, r0, len, wid), fill, opacity:0.34 + ring/rank*0.5 }));
+      }
+      kids.push(React.createElement('g', { key:'r'+ring }, ...grp));
+    }
+    kids.push(React.createElement('circle', { key:'core', cx:c, cy:c, r:1+rank*0.3, fill:'var(--bg)' }));
+    return React.createElement('div', { key:rank, style:{ display:'flex', flexDirection:'column', alignItems:'center', gap:'4px', flex:'1' } },
+      React.createElement('div', { style:{ height:'52px', display:'flex', alignItems:'flex-end', filter: emph ? 'none' : 'saturate(.5) opacity(.55)' } },
+        React.createElement('svg', { width:size, height:size, viewBox:'0 0 '+size+' '+size }, ...kids)),
+      React.createElement('div', { style:{ fontFamily:"'EB Garamond',serif", fontSize:'10px', fontWeight: emph?600:400, color: emph ? 'var(--ua-deep)' : 'var(--muted)' } }, rank));
+  }
+  renderVals(){
+    const { theme, rating, userRating, hover, marks } = this.state;
+    const active = hover || userRating || rating;
+    return {
+      setWrap: (el) => { this.wrap = el; },
+      themeLabel: theme==='dark' ? 'Light' : 'Dark',
+      toggleTheme: () => this.toggleTheme(),
+      scale: [1,2,3,4,5].map(k => this.mandalaCell(k, k<=active, k===active, active===5)),
+      mscale: [1,2,3,4,5].map(k => this.miniCell(k, k===4)),
+      reading: this.rankWord[active],
+      hint: userRating ? 'your mark · tap to change' : 'tap a mandala to mark it',
+      marksCast: marks + ' marks cast'
+    };
+  }
+}
+</script>
+</body>
+</html>
