@@ -123,8 +123,19 @@ export async function getAccountDetail(id: number): Promise<AccountDetail> {
   return data
 }
 
+/**
+ * Every task, for the admin table. The explicit `limit` and `sort` are load-bearing
+ * (#909): `/tasks` defaults to 50 rows ordered easiest-first, which silently dropped
+ * the hardest tasks — including every proposed metatask — off the admin list.
+ *
+ * ponytail: two requests (this plus `getPendingTasks`) cover an admin table of tens
+ * of rows; when the task table outgrows 500, move status filtering server-side and
+ * paginate.
+ */
 export async function getAllTasks(): Promise<TaskOut[]> {
-  const { data } = await api.get<TaskOut[]>('/tasks', { params: { status: 'all' } })
+  const { data } = await api.get<TaskOut[]>('/tasks', {
+    params: { status: 'all', limit: 500, sort: 'newest' },
+  })
   return data
 }
 
