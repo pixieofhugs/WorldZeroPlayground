@@ -35,6 +35,16 @@
  * stay unclaimed on purpose — the kit drew the faction HERO, not the page
  * beneath it, so those keep defaulting until they are designed.
  *
+ * #901 adds THE FIELD PAVILION — the six general MOBILE surfaces. The kit drew
+ * exactly one phone screen, which maps to `mobileFieldDesk` and
+ * `mobileTaskCard`; `mobileTaskDetail`, `mobilePraxisDetail`,
+ * `mobileFactionPage` and `mobileProfile` are DERIVED from that screen's chrome
+ * plus the matching desktop archetype, and each names its source in its own
+ * docstring. The shared vocabulary lives in `components/cards/wowMobile.tsx`.
+ * `mobileCreateCharacter`, `mobileEditCharacter`, `mobileFactionsDirectory` and
+ * `mobilePlayersDirectory` stay unclaimed on purpose — nothing in the kit
+ * describes them.
+ *
  * Override-only, like every manifest: WOW still falls through to the `Default*`
  * archetype on every OTHER surface — it is themed-and-partly-skinned now, not
  * fully dressed. `wowRendersDefault.test.tsx` pins exactly which surfaces are
@@ -64,6 +74,12 @@ import WowDuelSealConfirm from '../components/duel/WowDuelSealConfirm'
 import WowMobileDuelSealConfirm from '../components/duel/WowMobileDuelSealConfirm'
 import WowDuelRail from '../pages/praxisDetail/duelRails/WowDuelRail'
 import WowMobileDuelRail from '../pages/praxisDetail/duelRails/WowMobileDuelRail'
+import WowFieldDesk from '../pages/fieldDesk/mobileArchetypes/WowFieldDesk'
+import WowMobileTaskCard from '../pages/tasks/mobileArchetypes/cards/WowMobileTaskCard'
+import WowMobileTaskDetail from '../pages/taskDetail/mobileArchetypes/WowTaskDetail'
+import WowMobilePraxisDetail from '../pages/praxisDetail/mobileArchetypes/WowPraxisDetail'
+import WowMobileFactionPage from '../pages/factionDetail/mobileArchetypes/WowFactionPage'
+import WowMobileProfile from '../pages/characterProfile/mobileArchetypes/WowProfile'
 
 export const WOW_MANIFEST: FactionManifest = {
   slug: 'wow',
@@ -91,4 +107,15 @@ export const WOW_MANIFEST: FactionManifest = {
   duelRail: () => WowDuelRail,
   mobileDuelSeal: () => WowMobileDuelSealConfirm,
   mobileDuelRail: () => WowMobileDuelRail,
+
+  // #901 — the field pavilion: WOW's six general MOBILE surfaces. The kit drew
+  // ONE phone screen, which is the `mobileFieldDesk` and the `mobileTaskCard`;
+  // the other four are derived from that screen's chrome plus the matching
+  // desktop archetype, and each says which in its own docstring.
+  mobileFieldDesk: () => WowFieldDesk,
+  mobileTaskCard: () => WowMobileTaskCard,
+  mobileTaskDetail: () => WowMobileTaskDetail,
+  mobilePraxisDetail: () => WowMobilePraxisDetail,
+  mobileFactionPage: () => WowMobileFactionPage,
+  mobileProfile: () => WowMobileProfile,
 }
