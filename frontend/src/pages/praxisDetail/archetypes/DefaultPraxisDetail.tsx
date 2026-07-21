@@ -6,6 +6,7 @@ import VoteUI from '../../../components/vote/VoteUI'
 import type { PraxisDetailState } from '../usePraxisDetail'
 import { PraxisAdminBar, PraxisStatusBanners, PraxisOwnerActions, PraxisFlagBlock, PraxisVoterBreakdown, PraxisScoreBreakdown, MemberByline } from '../shared'
 import MarkdownPreview from '../../editPraxis/blocks/MarkdownPreview'
+import MetaTaskSeal from '../../../components/metaTaskSeal/MetaTaskSeal'
 
 /** Style Guide §12.3 */
 const RAINBOW_COLORS = ['var(--underline-1)', 'var(--underline-2)', 'var(--underline-3)', 'var(--underline-4)', 'var(--underline-5)', 'var(--underline-6)', 'var(--underline-1)', 'var(--underline-2)']
@@ -108,6 +109,15 @@ export default function DefaultPraxisDetail({
           {t('detail.default.points', { points: praxis.task_point_value })}
         </span>
       </div>
+
+      {/* ── Metatask Seals (#928) — read-only stack, below the byline/context,
+          above the media preview. The compose surface (#933) wires the
+          removable/add controls; here they are proven end to end read-only. ── */}
+      {praxis.applied_metatasks.length > 0 && (
+        <div className="mb-5">
+          <MetaTaskSeal metatasks={praxis.applied_metatasks} />
+        </div>
+      )}
 
       {/* ── Media Gallery (§12.5) ── */}
       {praxis.media_items.length > 0 && (

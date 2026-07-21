@@ -181,6 +181,12 @@
       "applying": "...",
       "readOnlyNote": "Reach level 7 to apply metatasks."
     },
+    "seal": {
+      "label": "{{faction}} Metatask",
+      "bonus": "+{{points}} PTS",
+      "remove": "Remove metatask",
+      "add": "+ Add a metatask"
+    },
     "default": {
       "breadcrumbTasks": "Tasks",
       "breadcrumbPraxis": "Praxis",
