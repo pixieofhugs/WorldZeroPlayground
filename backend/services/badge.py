@@ -8,6 +8,7 @@ on a list path: :func:`build_badge_contexts` folds the whole page into a fixed
 number of set-based queries and assembles each context in memory (#655). The
 rule is "never *per-character* on list paths", not "never on list paths".
 """
+from dataclasses import dataclass
 from typing import Iterable, Optional
 
 from sqlalchemy import func, or_, select
@@ -18,6 +19,7 @@ from sqlalchemy.orm import aliased
 from badges import ALL_BADGES, BadgeContext
 from models.character import Character
 from models.duel import Duel, DuelStatus
+from models.era import Era
 from models.praxis import Praxis
 from schemas.character import BadgeOut
 from services.duel_outcome import duel_winner
@@ -34,16 +36,44 @@ BADGE_DUEL_STATUSES: tuple[DuelStatus, ...] = (
 )
 
 
-async def _duel_winning_character_ids(
+@dataclass(frozen=True)
+class DuelWinnerFacts:
+    """The two per-character duel facts, read out of one pass over the duels."""
+
+    # Won or winning, live or frozen, however long ago — the `duelist` badge (#748).
+    winners: frozenset[int] = frozenset()
+    # Frozen winner of a duel resolved at the close of the previous era — the
+    # `duel_victor` badge (#823). Always a subset of `winners`.
+    last_era_winners: frozenset[int] = frozenset()
+
+
+async def _previous_era_id(session: AsyncSession) -> Optional[int]:
+    """Id of the era before the current one, or None if none has ever closed.
+
+    ``Era`` rows are append-only, one per reset, so "the era before this one" is
+    the second-highest id. Reading the *table* rather than comparing timestamps is
+    the whole point: a duel's ``resolved_at`` lands microseconds *after* the
+    incoming era's ``started_at`` (the reset inserts the row first), so a boundary
+    comparison would file every frozen duel under the era it did not belong to.
+    """
+    result = await session.execute(
+        select(Era.id).order_by(Era.id.desc()).offset(1).limit(1)
+    )
+    return result.scalar_one_or_none()
+
+
+async def _duel_winner_facts(
     character_ids: set[int],
     session: AsyncSession,
-) -> set[int]:
-    """Ids of the given characters that have won or are winning a duel (#748).
+) -> DuelWinnerFacts:
+    """Both duel facts for the given characters, from one pass over their duels.
 
-    Two set-based queries regardless of page size: one for every badge-eligible
+    Three set-based queries regardless of page size: one for every badge-eligible
     duel any of these characters is a side of (joined to the challenger's praxis,
-    which is where the challenger's character id lives), then one
-    :func:`tally_votes` over the *live* sides' praxis ids.
+    which is where the challenger's character id lives), one
+    :func:`tally_votes` over the *live* sides' praxis ids, and one for the previous
+    era's id. The last-era fact (#823) rides the same duel rows rather than
+    querying again — it is a filter on the winners, not a second source.
 
     Frozen and live split the same way :mod:`services.praxis_scoring` splits
     them:
@@ -59,7 +89,7 @@ async def _duel_winning_character_ids(
     score, frozen or live.
     """
     if not character_ids:
-        return set()
+        return DuelWinnerFacts()
 
     challenger_praxis = aliased(Praxis)
     duel_rows = (
@@ -72,6 +102,7 @@ async def _duel_winning_character_ids(
                 Duel.forfeited_by_character_id,
                 Duel.status,
                 Duel.winner_character_id,
+                Duel.resolved_era_id,
             )
             .join(
                 challenger_praxis,
@@ -87,7 +118,11 @@ async def _duel_winning_character_ids(
         )
     ).all()
     if not duel_rows:
-        return set()
+        return DuelWinnerFacts()
+
+    # Unconditional, so the query count does not depend on *which* duels a page
+    # happens to contain (the batch guard compares pages, ADR-0033).
+    previous_era_id = await _previous_era_id(session)
 
     # Only the live duels need a tally: a resolved duel's winner is already
     # frozen on the row, so tallying its sides would be wasted work.
@@ -101,6 +136,7 @@ async def _duel_winning_character_ids(
     tallies = await tally_votes(list(praxis_ids), session)
 
     winners: set[int] = set()
+    last_era_winners: set[int] = set()
     for row in duel_rows:
         if row.status == DuelStatus.resolved:
             # Frozen fact (#824): trust the recorded winner, never the points.
@@ -120,9 +156,23 @@ async def _duel_winning_character_ids(
                 opponent_points=opponent_points,
                 forfeited_by_character_id=row.forfeited_by_character_id,
             )
-        if winner_character_id is not None and winner_character_id in character_ids:
-            winners.add(winner_character_id)
-    return winners
+        if winner_character_id is None or winner_character_id not in character_ids:
+            continue
+        winners.add(winner_character_id)
+        # "Last era" is a property of the *freeze*, not of the win: only a
+        # resolved duel carries a `resolved_era_id`, and only the era immediately
+        # before the current one counts. An older frozen win keeps `duelist` and
+        # loses `duel_victor` — the badge lapses one era after it is earned.
+        if (
+            row.status == DuelStatus.resolved
+            and previous_era_id is not None
+            and row.resolved_era_id == previous_era_id
+        ):
+            last_era_winners.add(winner_character_id)
+    return DuelWinnerFacts(
+        winners=frozenset(winners),
+        last_era_winners=frozenset(last_era_winners),
+    )
 
 
 async def build_badge_contexts(
@@ -140,9 +190,10 @@ async def build_badge_contexts(
     The sibling count is deliberately unfiltered by status: a puppet is a puppet
     whether or not the list path would surface it.
 
-    The duel-winner fact (#748) is per-*character*, so it gets its own
-    set-based pass over the page (:func:`_duel_winning_character_ids`) rather
-    than a query inside the loop.
+    The two duel facts (#748, #823) are per-*character*, so they get their own
+    set-based pass over the page (:func:`_duel_winner_facts`) rather than a query
+    inside the loop — one pass for both, since "won last era" is a filter on the
+    same winners rather than a second source.
     """
     characters = list(characters)
     account_ids = {character.account_id for character in characters}
@@ -170,7 +221,7 @@ async def build_badge_contexts(
         for account_id, character_count, earliest_id in result.all()
     }
 
-    duel_winners = await _duel_winning_character_ids(
+    duel_facts = await _duel_winner_facts(
         {character.id for character in characters}, session
     )
 
@@ -182,7 +233,8 @@ async def build_badge_contexts(
         contexts[character.id] = BadgeContext(
             account_character_count=character_count,
             is_earliest_on_account=character.id == earliest_id,
-            is_duel_winner=character.id in duel_winners,
+            is_duel_winner=character.id in duel_facts.winners,
+            won_duel_last_era=character.id in duel_facts.last_era_winners,
         )
     return contexts
 
