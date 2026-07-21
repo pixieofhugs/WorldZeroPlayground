@@ -53,9 +53,10 @@ function Sentinel() {
  * of #836, its `mobileEditPraxis` twin — the composer is the one surface WOW
  * dresses on BOTH form factors — #897's `sigil` (the crest) and the `avatar`
  * that mounts it, #899's three repeating desktop surfaces (the decree
- * `taskCard`, the `comment` voice and the herald's-dispatch `feedFrame`), and
+ * `taskCard`, the `comment` voice and the herald's-dispatch `feedFrame`),
  * #900's four page-level desktop surfaces (`factionHero`, `backdrop`,
- * `profileBody`, `factionSelectCard`).
+ * `profileBody`, `factionSelectCard`), and #895's four DUEL surfaces (the
+ * Lists seal and the praxis rail, each on both form factors).
  *
  * `factionBody` and `factionCard` are still UNCLAIMED and that is deliberate,
  * not an oversight: the kit drew WOW's faction HERO, not the page beneath it,
@@ -78,9 +79,13 @@ const WOW_SKINNED: ReadonlySet<FactionSurface> = new Set([
   'backdrop',
   'profileBody',
   'factionSelectCard',
+  'duelSeal',
+  'duelRail',
+  'mobileDuelSeal',
+  'mobileDuelRail',
 ])
 
-describe('wow is partly skinned: fifteen surfaces claimed, the rest fall back', () => {
+describe('wow is partly skinned: nineteen surfaces claimed, the rest fall back', () => {
   it('registers a manifest now (#821)', () => {
     expect(FACTION_MANIFESTS.map((manifest) => manifest.slug)).toContain('wow')
   })

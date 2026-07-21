@@ -499,7 +499,22 @@
     "cancel": "Not yet",
     "bodyActive": "{{name}} has accepted. Casting now seals the duel — once you have both cast, pulling back is a permanent forfeit.",
     "bodyPending": "{{name}} hasn't accepted yet. You can cast now; if they decline, this scores as an ordinary praxis.",
-    "reopenNote": "Until {{name}} casts, you can still pull this back for free — no forfeit."
+    "reopenNote": "Until {{name}} casts, you can still pull this back for free — no forfeit.",
+    "wow": {
+      "submit": {
+        "sub": "Enter the lists · submitting proof",
+        "confirm": "Take the Field",
+        "cancel": "Withdraw"
+      },
+      "forfeit": {
+        "sub": "Leave the lists · yielding the joust",
+        "confirm": "Yield the Field",
+        "cancel": "Hold thy Ground"
+      },
+      "rosterLabel": "The Roster",
+      "stakesLabel": "The Stakes",
+      "ribbonLine": "A ribbon for the courage to enter — in our lists both riders are honoured."
+    }
   },
   "duelForfeit": {
     "confirmPrompt": "Pulling back now FORFEITS the duel.",

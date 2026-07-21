@@ -190,6 +190,58 @@ const ARCHETYPE_PAIRS: Pair[] = [
     text: "--faction-wow-avatar-pill-text",
   },
 
+  // WOW — THE LISTS (#895), the duel seal and the duel rail. The kit states its
+  // own four `--faction-wow-duel-*` tokens and a contrast table, and the table
+  // is wrong in BOTH directions: it claims 7.2:1 for champion/ink (measures
+  // 7.78:1 against its own stated ink, 10.27:1 against the token that actually
+  // ships) and 5.3:1 for ribbon/parchment (measures 6.34:1). So these rows exist
+  // to hold the measurement, not to restate the claim.
+  //
+  // Only three of the kit's pairs name a token that is not already gated above:
+  // its "headline / card" and "opp name / card" pairs are `--faction-wow-card-*`
+  // on the cream, which CARD_PAIRS covers in both themes.
+  //
+  // The opponent's faction accent is deliberately ABSENT from this list. It can
+  // be any hue in the palette, and the whole design of these two surfaces is
+  // that it lands only as a rosette ring, a plate edge and a bar — never as an
+  // ink and never as a text ground — so there is no text pair to measure. If a
+  // future edit paints a string in it, THAT is what needs a row here.
+  {
+    // The winning stakes tile: WOW's ink on the champion gold. Both are
+    // per-theme, so this measures the pairing twice.
+    what: "wow duel champion tile, ink",
+    surface: "--faction-wow-duel-champion",
+    text: "--faction-wow-on-fill",
+  },
+  {
+    // The losing tile — the ribbon. `--faction-wow-stamp-chip-text` is the
+    // parchment that stays parchment in both themes (light: the panel; dark:
+    // the card text), which is exactly the kit's #F3E7C4 on its plum.
+    what: "wow duel ribbon, parchment ink",
+    surface: "--faction-wow-duel-ribbon",
+    text: "--faction-wow-stamp-chip-text",
+  },
+  {
+    // The lists ground carries the rail headline and the seal body — the two
+    // longest strings on either surface.
+    what: "wow duel lists ground, body ink",
+    surface: "--faction-wow-duel-lists-bg",
+    text: "--faction-wow-card-text",
+  },
+  {
+    // ...and the section eyebrows ("The Roster", "The Stakes") in the same
+    // olive-gold #896 walked down off the kit's failing #8a6d1f.
+    what: "wow duel lists ground, eyebrow ink",
+    surface: "--faction-wow-duel-lists-bg",
+    text: "--faction-wow-accent-deep",
+  },
+  {
+    // The ribbon line and the settled standing note, both plum on the ground.
+    what: "wow duel lists ground, plum",
+    surface: "--faction-wow-duel-lists-bg",
+    text: "--faction-wow-card-accent",
+  },
+
   // Albescent's FACTION tokens are gone (#783) — it renders Default's surfaces,
   // which `default` already covers. What remains is the always-light palette
   // private to the reveal surfaces (invitation letter, secret placeholder). It

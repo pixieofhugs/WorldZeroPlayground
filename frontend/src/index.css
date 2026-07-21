@@ -2278,6 +2278,71 @@
   --gestalt-win-border: #f472b6;
 }
 
+/* ──────────────────────────────────────────────────────────────────────────
+   WOW — THE LISTS (#895): the duel seal and the duel rail.
+
+   Appended as its own :root / [data-theme="dark"] pair rather than edited into
+   the WOW blocks above, so this slice never rewrites a line another WOW slice
+   is also touching. The cascade merges it; `readThemes` in the contrast test
+   merges it too (it collects EVERY `:root` body, later wins).
+
+   The kit ships four `--faction-wow-duel-*` names. Two of them are values WOW
+   already owns under a different name, and re-declaring the literal would be
+   the "tokenized-looking, not tokenized" trap #896 caught on the avatar ring —
+   so those two are declared as REFERENCES and only the genuinely new values are
+   literals:
+
+     duel-hold      = the kit's #C8A02A, which is `--faction-wow-chronicle-gold`
+                      to the byte AND to the role (frame + rule, never an ink).
+                      Theme-invariant for the same reason: struck metal.
+     duel-lists-bg  = the kit's light #FBF4E0 is `--faction-wow-card-bg`. Its
+                      DARK #221A0C is not (#1b1508), so dark carries a literal:
+                      the seal and the rail sit ON the page, a step lighter than
+                      the chronicle ground so the gold frame reads as an edge.
+     duel-champion  = the gold the winning stakes tile is struck in. New.
+     duel-ribbon    = the plum the losing tile wears — the "ribbon" that makes
+                      the loss floor read as generosity rather than punishment.
+
+   Verified ratios (measured, not taken from the kit's table — which is wrong in
+   both directions: it claims 7.2:1 for champion/ink where the pair measures
+   7.78:1, and 5.3:1 for ribbon/parchment where it measures 6.34:1):
+
+     champion / --faction-wow-on-fill          10.27:1 light · 10.07:1 dark
+     ribbon   / --faction-wow-stamp-chip-text   6.34:1 light ·  7.39:1 dark
+     lists-bg / --faction-wow-card-text        14.02:1 light · 13.95:1 dark
+     lists-bg / --faction-wow-accent-deep       5.32:1 light ·  8.37:1 dark
+
+   `--faction-wow-duel-scrim` is a house addition, not a kit name: the kit draws
+   its modal wash inline on a documentation plate, and a dialog overlay is a
+   colour, so it may not live in TSX. It is the kit's own plum→bitumen radial. */
+:root {
+  --faction-wow-duel-champion: #e7b94e;
+  --faction-wow-duel-ribbon: #6e3a93;
+  --faction-wow-duel-lists-bg: var(--faction-wow-card-bg);
+  --faction-wow-duel-hold: var(--faction-wow-chronicle-gold);
+  --faction-wow-duel-scrim: radial-gradient(
+    circle at 50% 20%,
+    rgba(122, 74, 158, 0.34),
+    rgba(30, 20, 4, 0.62)
+  );
+}
+
+[data-theme="dark"] {
+  --faction-wow-duel-champion: #e3b84a;
+  --faction-wow-duel-ribbon: #5e3a6e;
+  --faction-wow-duel-lists-bg: #221a0c;
+  /* hold does NOT flip — see above. */
+  --faction-wow-duel-scrim: radial-gradient(
+    circle at 50% 20%,
+    rgba(122, 74, 158, 0.3),
+    rgba(0, 0, 0, 0.78)
+  );
+}
+
+/* WOW — THE LISTS: motion. Both marks are pure ornament and carry no state, so
+   they are stilled wholesale under reduced motion. Neither needs a new keyframe:
+   the ✦ reuses the crest's twinkle and the ❦ reuses the seal's sway, which is
+   the point of ornament being one primitive at named strengths (§6). */
 /* ══════════════════════════════════════════════════════════════════════════
    WOW — THE PAGE SURFACES (#900): faction hero, page backdrop, profile body,
    faction select card. The kit's §08/§13/§14/§15.
@@ -2473,6 +2538,28 @@
   display: inline-block;
 }
 @media (prefers-reduced-motion: no-preference) {
+  .wow-duel-twinkle {
+    display: inline-block;
+    animation: wow-twinkle 2.4s ease-in-out infinite;
+  }
+  .wow-duel-ribbon-sway {
+    display: inline-block;
+    transform-origin: top center;
+    animation: wow-seal-sway 4s ease-in-out infinite;
+  }
+}
+
+/* The seal's action pair. `SealActions` is shared and owns its own markup, so
+   the design's 46px thumb targets (above the 44 minimum — the kit specifies 46
+   and #895 says keep it) are applied from the skin's wrapper rather than by
+   growing a size prop on the shared component. Desktop keeps the shared height;
+   only the mobile wrapper opts in. */
+.wow-seal-actions--mobile > div {
+  width: 100%;
+}
+.wow-seal-actions--mobile button {
+  flex: 1 1 0;
+  min-height: 46px;
   .wow-backdrop-twinkle {
     display: inline-block;
     animation: wow-twinkle 2.4s ease-in-out infinite;
