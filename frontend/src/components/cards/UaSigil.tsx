@@ -1,4 +1,5 @@
 import i18n from "../../i18n";
+import { Enso } from "../factionMarks";
 
 /**
  * Shared UA (University of Asthmatics) identity atoms — the ensō sigil and the
@@ -10,7 +11,7 @@ import i18n from "../../i18n";
  * dark mode, and its mark is the ensō — the hand-drawn circle, made in one
  * breath, left open.
  *
- * Drawn once here and dropped into every UA surface that carries the mark
+ * Assembled once here and dropped into every UA surface that carries the mark
  * (faction hero, task card, avatar badge, edit-praxis masthead) rather than
  * re-drawn per file. All colours via tokens (never hardcode hex — CLAUDE.md),
  * and every token below has both themes, so the mark follows the
@@ -18,49 +19,39 @@ import i18n from "../../i18n";
  */
 
 /**
- * Ensō — UA's sigil (#849, brief §4).
+ * Ensō — UA's sigil (#849, brief §4; consolidated by #908).
  *
- * Two arcs, not one path: a HEAVY sweep (stroke-width 22) that carries most of
- * the circle, then a LIGHT return (10, slightly transparent) that closes toward
- * the start and stops short. The gap sits at the lower left, ~7-8 o'clock, and
- * the whole figure is rotated -7° so it reads as a stroke of the hand rather
- * than as geometry. The taper is done with two stroke-widths instead of a
- * variable-width outline — the cheap approximation, and at sigil sizes
- * (16-150px) it is the one that survives.
+ * ONE ENSŌ. This used to draw its own two-arc approximation — a heavy sweep
+ * plus a light return, rotated -7° — as a stand-in that avoided shipping the
+ * kit's 705 KB brush study site-wide. That left UA with two different circles,
+ * the good one on a single surface. Owner ruling 2026-07-21: "No two ensō's on
+ * purpose." The approximation is deleted; every UA surface now renders the
+ * vendored `enso.svg` — 284 hand-drawn strokes and a turbulence filter — at
+ * every size, from the 13px inline mark to the 420px backdrop.
  *
- * This is deliberately NOT the kit's `enso-detailed.svg`, which is 705 KB across
- * 284 hand-drawn paths. That asset does ship — as the praxis card's total mark,
- * where it is drawn at 118-138px and loaded as a masked file outside the JS
- * bundle (`components/factionMarks/Enso.tsx`, #839). Two ensōs on purpose:
- * different sizes, different consumers, different delivery. Do not consolidate.
+ * Delivery is {@link Enso}'s: a static asset under `public/` painted through a
+ * CSS mask, so the file supplies only the alpha and the ink comes from a token.
+ * The asset stays out of the JS bundle, is cached after first paint, and is
+ * non-blocking — the page renders whether or not the mask has arrived. Colour
+ * is unchanged from the arcs: `--faction-ua-glow`, which carries both themes,
+ * so the mark follows the `[data-theme="dark"]` cascade with no ternary.
  *
  * The ensō is reserved for the SCORE and the FACTION MARK. It is never a
  * container border — a card outlined in an ensō is the mark spent as decoration.
  *
- * The viewBox is square. Callers that pass a non-square width/height (a legacy
- * shield ratio, e.g. 72x86) get the circle centred and letterboxed by the
- * default `preserveAspectRatio`, which is the correct read.
+ * The drawing is square. Callers that pass a non-square width/height (e.g. the
+ * mobile praxis card's 16x19) get the circle centred and letterboxed by
+ * `mask-size: contain` + `mask-position: center`, which is the correct read and
+ * matches what the old `preserveAspectRatio` did.
  */
 export function UaSigil({ width, height }: { width: number; height: number }) {
   return (
-    <svg
-      width={width}
+    <Enso
+      size={width}
       height={height}
-      viewBox="0 0 200 200"
-      fill="none"
-      aria-hidden="true"
-      style={{ display: "block", flexShrink: 0 }}
-    >
-      <g
-        transform="rotate(-7 100 100)"
-        stroke="var(--faction-ua-glow)"
-        strokeLinecap="round"
-        fill="none"
-      >
-        <path d="M134 41.2 A68 68 0 1 1 66 158.8" strokeWidth="22" />
-        <path d="M66 158.8 A68 68 0 0 1 66 41.2" strokeWidth="10" strokeOpacity="0.85" />
-      </g>
-    </svg>
+      color="var(--faction-ua-glow)"
+      style={{ flexShrink: 0 }}
+    />
   );
 }
 
