@@ -15,6 +15,7 @@ import {
   PraxisScoreBreakdown,
   MemberByline,
 } from '../shared'
+import { VoteFactionContext } from '../../../components/vote/VoteShell'
 import { MobileStarVote } from './shared'
 
 /**
@@ -137,11 +138,13 @@ export default function EphemeristsPraxisDetail({ state }: { state: PraxisDetail
         <div style={{ marginBottom: 'var(--space-md)' }}>
           <PraxisScoreBreakdown state={state} align="center" accent={RUBRIC} font={DISPLAY} />
         </div>
-        <MobileStarVote
-          praxisId={praxis.id}
-          accent={RUBRIC}
-          accentFont={DISPLAY}
-        />
+        <VoteFactionContext.Provider value="ephemerists">
+          <MobileStarVote
+            praxisId={praxis.id}
+            accent={RUBRIC}
+            accentFont={DISPLAY}
+          />
+        </VoteFactionContext.Provider>
       </Leaf>
 
       {/* Flag + voter breakdown (invariant) */}

@@ -13,6 +13,7 @@ import { MemoryRouter } from 'react-router-dom'
 import type { ReactElement } from 'react'
 import { describe, it, expect } from 'vitest'
 import '../../../i18n'
+import i18n from '../../../i18n'
 import DefaultMobilePraxisDetail from '../mobileArchetypes/DefaultPraxisDetail'
 import type { PraxisDetailState } from '../usePraxisDetail'
 import type { PraxisOut } from '../../../api/praxis'
@@ -153,6 +154,57 @@ describe('mobile praxis-read earned-points breakdown', () => {
       expect(text, 'multiplier value').toContain('1.1')
       expect(text, 'multiplier operator').toContain('×')
       expect(text, 'vote points').toContain('14')
+    })
+  }
+})
+
+// ─── Logged-out vote gate voice (#864) ───────────────────────────────────────
+// The mobile caster does NOT go through VoteUI, so nothing published the task
+// faction to the shared gate chrome and every mobile gate spoke the
+// unaffiliated spectrum while desktop spoke its faction's. Each archetype now
+// publishes its own slug on VoteFactionContext. `state()` leaves `user` null, so
+// MobileStarVote renders the gate rather than the caster.
+
+/**
+ * The gate's own style attribute — isolated by the copy that follows the tag, so
+ * a faction token used ELSEWHERE in the skin (its accent is all over the page)
+ * can't satisfy the assertion. Singularity's caret prefix sits between the two.
+ */
+function gateStyle(html: string): string {
+  const copy = i18n.t('votes:chrome.loginGate')
+  const match = html.match(
+    new RegExp(`<p[^>]*class="eyebrow"[^>]*style="([^"]*)"[^>]*>[^<]*${copy}`),
+  )
+  expect(match, 'logged-out gate is rendered').not.toBeNull()
+  return match![1]
+}
+
+/** A gate wearing the spectrum is the bug this describes — the default voice. */
+const SPECTRUM = '--faction-default-rainbow'
+
+describe('mobile praxis-read logged-out vote gate', () => {
+  for (const [slug, Archetype] of Object.entries(surfaceMap('mobilePraxisDetail'))) {
+    it(`${slug} speaks in its own voice, not the unaffiliated default`, () => {
+      const style = gateStyle(render(<Archetype state={state()} />).html)
+      expect(style, 'faction accent').toContain(`--faction-${slug}-card-accent`)
+      expect(style, 'default spectrum').not.toContain(SPECTRUM)
+    })
+  }
+
+  it('gives wow the chronicle voice through the default archetype', () => {
+    // wow has no mobile archetype of its own, so the default skin has to carry
+    // the slug through — a constant would have silently unthemed it.
+    const style = gateStyle(render(<DefaultMobilePraxisDetail state={state()} />).html)
+    expect(style, 'faction accent').toContain('--faction-wow-card-accent')
+    expect(style, 'default spectrum').not.toContain(SPECTRUM)
+  })
+
+  for (const slug of ['na', 'albescent']) {
+    it(`keeps ${slug} on the unaffiliated spectrum`, () => {
+      const unaffiliated = state()
+      unaffiliated.praxis = { ...PRAXIS, task_faction_slug: slug }
+      const style = gateStyle(render(<DefaultMobilePraxisDetail state={unaffiliated} />).html)
+      expect(style, 'default spectrum').toContain(SPECTRUM)
     })
   }
 })
