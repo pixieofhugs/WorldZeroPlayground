@@ -286,6 +286,8 @@ The sidebar contains: character card, active tasks panel, recent activity panel,
 
 **The level gem** is the one shape shared across every archetype: a 45°-rotated square, always outlined and never filled, with a faction-coloured numeral and a mandatory tiny "LVL" caption. It is deliberately the exception to "no uniform shapes" — the level is a game-wide fact, not a faction one, and a player should recognise it instantly whether it sits on a ransom note or a roster row. Faction identity enters as stroke colour and glow only. Unaffiliated takes the spectrum on both stroke and numeral (ADR-0039); it never degrades to grey, and it never borrows another faction's hue.
 
+**Badge art is the second game-wide shape**, for the same reason. `badgeArtFor(key)` (`components/badges/badgeArt.tsx`) dispatches on the badge key and nothing else — a badge means the same thing to every player, so it must not acquire a faction seam. Most glyphs are line art in `currentColor` and inherit the surrounding skin's ink; a badge whose design *is* a colour (the `duel_victor` seal carries the ADR-0039 spectrum) names its own tokens instead. Either way, nothing about a badge is chosen by who is wearing it.
+
 Cards are arranged in a `flex-wrap` container with varied heights and slight rotations. This is intentional — they are NOT on a strict grid.
 
 Each faction's archetype lives in its card component — see `frontend/src/components/cards/*TaskCard.tsx`. Every one carries a one-line docstring naming its archetype (metaphor, colors, headline font); that docstring is the source of truth and is edited in the same commit as any redesign. A table here would only cache — and drift from — what those components already state. Colors are CSS variables (§3).
