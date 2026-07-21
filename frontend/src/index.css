@@ -41,7 +41,7 @@
   --color-surface-scrim: rgba(255, 255, 255, 0.9);
 
   /* ── Faction primary colors (rainbow palette) ── */
-  --faction-ua: var(--ua-orange); /* burnt amber — gilt salon (#240) */
+  --faction-ua: #c24a18; /* burnt sienna — the practice's one hue (#848) */
   --faction-wow: #e0a800; /* yellow (deep — see the WOW note below) */
   --faction-coven: #ec5f99; /* redesign pink */
   --faction-snide: #6fae00; /* acid green (deep — legible on light chrome) */
@@ -55,7 +55,7 @@
      factionCssVar(slug, 'on-fill'); guarded by factionContrast.test.ts. Dark
      overrides (for fills that brighten in dark) live in the dark block; tokens
      omitted there inherit these :root values through the cascade. */
-  --faction-ua-on-fill: #ffffff; /* #c2541f — 4.58:1 */
+  --faction-ua-on-fill: #fcf7ef; /* #c24a18 — 4.59:1 (warm white, not pure) */
   --faction-wow-on-fill: #14110b; /* #e0a800 — white only 2.15:1; ink 8.76:1 */
   --faction-everymen-on-fill: #ffffff; /* #c1272d — 5.84:1 */
   --faction-coven-on-fill: #14110b; /* #ec5f99 — white only 3.15:1; ink 5.98:1 */
@@ -64,7 +64,7 @@
   --faction-singularity-on-fill: #ffffff; /* #2563eb — 5.17:1 */
 
   /* ── Faction tints (backgrounds, highlights) ── */
-  --faction-ua-light: rgba(194, 84, 31, 0.08);
+  --faction-ua-light: #f2e0cb; /* sand tint — opaque, same stock as -panel */
   --faction-wow-light: rgba(224, 168, 0, 0.12);
   --faction-coven-light: rgba(236, 95, 153, 0.1);
   --faction-snide-light: rgba(182, 255, 46, 0.16);
@@ -72,7 +72,9 @@
   --faction-singularity-light: rgba(37, 99, 235, 0.1);
 
   /* ── Faction borders ── */
-  --faction-ua-border: rgba(194, 84, 31, 0.3);
+  /* The ORANGE hairline. Its neutral sibling is --faction-ua-rule; the two are
+     different tokens and the design kit calls both of them "border". */
+  --faction-ua-border: rgba(194, 74, 24, 0.28);
   --faction-wow-border: rgba(224, 168, 0, 0.4);
   --faction-coven-border: rgba(236, 95, 153, 0.3);
   --faction-snide-border: rgba(111, 174, 0, 0.45);
@@ -80,7 +82,7 @@
   --faction-singularity-border: rgba(37, 99, 235, 0.35);
 
   /* ── Faction card backgrounds (light mode) ── */
-  --faction-ua-card-bg: var(--ua-paper); /* parchment sheet */
+  --faction-ua-card-bg: #f7e7d2; /* sun-bleached sheet */
   --faction-wow-card-bg: #fbf4e0; /* chronicle cream parchment (#838) */
   --faction-coven-card-bg: #fdeef3; /* blush collage */
   --faction-snide-card-bg: #14110b; /* photocopier ink (dark-in-light, Singularity precedent) */
@@ -88,7 +90,7 @@
   --faction-singularity-card-bg: #050f08; /* terminal black */
 
   /* ── Faction card text (light mode) ── */
-  --faction-ua-card-text: var(--ua-ink);
+  --faction-ua-card-text: #2e2820; /* body ink — 12.02:1 */
   --faction-wow-card-text: #2b2412; /* chronicle body ink — 14.02:1 */
   --faction-coven-card-text: #581c39;
   --faction-snide-card-text: #f4f1e8; /* warm xerox paper on ink */
@@ -96,7 +98,9 @@
   --faction-singularity-card-text: #4ade80;
 
   /* ── Faction card accents (light mode) ── */
-  --faction-ua-card-accent: var(--ua-orange);
+  /* Metadata and links, so it owes 4.5:1 as text: a deeper sienna than
+     --faction-ua itself, which is a FILL colour (4.04:1 here) and never body ink. */
+  --faction-ua-card-accent: #a5400f; /* 5.18:1 */
   /* NOT --faction-wow. WOW's skin is the cream/gold/plum chronicle (#838,
      ADR-0050); the yellow is its RAINBOW-SPINE hue and stays in --faction-wow
      alone. §3 calls the accent "metadata / decorative accent" and metadata is
@@ -111,7 +115,10 @@
   --faction-singularity-card-accent: #4ade80; /* terminal green */
 
   /* ── Faction card secondary text (descriptions, metadata) ── */
-  --faction-ua-card-muted: var(--ua-sub);
+  /* Walked down from the kit's #6e6252, which passes on the card (4.90:1) but
+     fails on --faction-ua-page (4.38:1) — and the kit puts muted text on the
+     page ground. This clears every UA surface: 4.87 page, 5.13 panel, 5.45 card. */
+  --faction-ua-card-muted: #675b4c;
   /* The design's metadata olive is #8a7b54, which measures 3.79:1 on the cream
      and is body text — the contrast house rule wins, so it is walked down to
      the nearest compliant shade of the same hue (4.76:1). */
@@ -126,7 +133,7 @@
      faction, AND that face must be in the index.html loader. A family that is
      named but not loaded renders as a generic fallback and no check we run can
      see it — which is how UA spent months in IM Fell English (#839). */
-  --faction-ua-card-font: var(--font-faction-gilt); /* Cormorant Garamond */
+  --faction-ua-card-font: var(--font-faction-serif); /* Cormorant Garamond (#848) */
   /* UA's second face. The design pairs a Cormorant display with EB Garamond for
      the eyebrow, "for:" line, byline and italic description. */
   --faction-ua-body-font: var(--font-faction-codex-script); /* EB Garamond */
@@ -288,9 +295,12 @@
   --eph-serif: "EB Garamond", Georgia, serif;
   --eph-script: "Cormorant Garamond", Georgia, serif;
 
-  /* ── UA · gilt salon (art academy; always-light — never dims; #240) ──
-     Base palette UA surfaces draw from. NOT redefined under
-     [data-theme="dark"], so every UA surface stays gilt in both themes. */
+  /* ── UA · LEGACY gilt-salon palette — scheduled for deletion (#853) ──
+     The old art-academy skin. Superseded by the --faction-ua-* block above and
+     the sun-bleached primitives below; it survives only because ~20 components
+     still read these names directly rather than through factionCssVar(), so it
+     has to be unwound file-by-file. Do not paint anything new with it, and do
+     not add a [data-theme="dark"] override — it is going away, not dimming. */
   --ua-orange: #c2541f; /* burnt amber — the accent */
   --ua-orange-deep: #a8431a;
   --ua-gold: #9c6a1a; /* old gold — frames & regalia */
@@ -306,12 +316,32 @@
   --ua-line-soft: #e3cb98;
   --ua-gilt: linear-gradient(135deg, #eec06a 0%, #9c6a1a 24%, #f0c878 50%, #9c6a1a 76%, #dd9322 100%);
 
+  /* ── UA · sun-bleached practice — archetype-private primitives (#788, #848) ──
+     The surfaces and inks the UA skin paints with that the shared §3 card
+     contract has no name for. Every one of these is redefined under
+     [data-theme="dark"] below — UA dims now (#848 reversed the ruling that kept
+     it light in both themes). No gold anywhere; gold went to WOW.
+     Contrast is enforced by factionContrast.test.ts, not by this comment. */
+  --faction-ua-page: #e7dcc9; /* app ground — mesa sand */
+  --faction-ua-page-text: #362f27; /* text directly on the ground — 9.72:1 */
+  --faction-ua-panel: #f2e0cb; /* inset panel, media well */
+  --faction-ua-lift: #fdf0df; /* raised highlight */
+  --faction-ua-card-body: #544a3c; /* running prose, a step above muted — 7.15:1 */
+  --faction-ua-rule: #dbcbb3; /* neutral hairline / divider (cf. -border, orange) */
+  --faction-ua-hair: #e4d8c3; /* faintest divider, below -rule */
+  --faction-ua-glow: #dd5a1e; /* ORNAMENT ONLY — ensō, mandala. 3.12:1. Never text. */
+  --faction-ua-vermil: #b5361a; /* the ensō score numeral — large display type only */
+
   /* ── UA growing-mandala vote widget (#821) ──
      Per-rank fill ramp: the mandala blooms taupe→deep-red as the reading warms
      (faint → radiant). Cores are punched to the sheet colour so the mandala
-     reads as an aperture. UA is always-light (the salon never dims, #240), so
-     these theme-invariant values need no [data-theme="dark"] override; the core
-     punch tracks --faction-ua-card-bg, which is parchment in both themes. */
+     reads as an aperture: the punch tracks --faction-ua-card-bg, full stop —
+     which is now how it keeps working, since card-bg flips in dark.
+     THE RAMP ITSELF STILL HAS NO DARK VALUES (#849 owns them). Chosen against
+     parchment, it inverts on a dark card — "radiant" deep vermilion becomes the
+     dimmest swatch. Light ascends toward depth, dark must ascend toward
+     brightness. Until #849 lands, this widget is the one UA surface that has
+     not been re-read for dark mode. */
   --faction-ua-vote-rank-1: #a69c8c;
   --faction-ua-vote-rank-2: #c0894f;
   --faction-ua-vote-rank-3: #d2762f;
@@ -655,7 +685,7 @@
   --color-surface-scrim: rgba(19, 18, 26, 0.85);
 
   /* ── Faction primary colors (dark — brightened rainbow) ── */
-  --faction-ua: var(--ua-orange); /* always-light salon — never dims (#240) */
+  --faction-ua: #e8703a; /* sienna lifted for dark — UA */
   --faction-wow: #f5c542; /* yellow lifted for dark — WOW */
   --faction-coven: #f472b6; /* magenta */
   --faction-snide: #b6ff2e; /* acid green (bright — pops on dark) */
@@ -663,15 +693,15 @@
   --faction-singularity: #60a5fa; /* blue */
 
   /* ── Text on faction fills (dark, #649) ── The dark primaries brighten to pop
-     against the dark page, which makes white-on-fill worse. These three flip to
-     ink; ua (white) and wow/snide (ink) are theme-invariant and inherit
-     their :root on-fill value. */
+     against the dark page, which makes white-on-fill worse. These flip to
+     ink; wow/snide (ink) are theme-invariant and inherit their :root value. */
+  --faction-ua-on-fill: #201a14; /* #e8703a — warm white only 2.89:1; ink 5.59:1 */
   --faction-everymen-on-fill: #14110b; /* #ef5350 — white only 3.49:1; ink 5.45:1 */
   --faction-ephemerists-on-fill: #14110b; /* #3aa0a4 — white only 3.11:1; ink 6.05:1 */
   --faction-singularity-on-fill: #14110b; /* #60a5fa — white only 2.54:1; ink 7.41:1 */
 
   /* ── Faction tints (dark) ── */
-  --faction-ua-light: rgba(194, 84, 31, 0.08);
+  --faction-ua-light: #241e18; /* sand tint, dimmed — same stock as the card */
   --faction-wow-light: rgba(245, 197, 66, 0.1);
   --faction-coven-light: rgba(244, 114, 182, 0.08);
   --faction-snide-light: rgba(182, 255, 46, 0.12);
@@ -679,7 +709,7 @@
   --faction-singularity-light: rgba(96, 165, 250, 0.1);
 
   /* ── Faction borders (dark) ── */
-  --faction-ua-border: rgba(194, 84, 31, 0.3);
+  --faction-ua-border: rgba(232, 112, 58, 0.32); /* the orange hairline, lifted */
   --faction-wow-border: rgba(245, 197, 66, 0.3);
   --faction-coven-border: rgba(244, 114, 182, 0.25);
   --faction-snide-border: rgba(182, 255, 46, 0.3);
@@ -687,7 +717,7 @@
   --faction-singularity-border: rgba(96, 165, 250, 0.25);
 
   /* ── Faction card backgrounds (dark mode) ── */
-  --faction-ua-card-bg: var(--ua-paper); /* salon never dims (#240) */
+  --faction-ua-card-bg: #241e18; /* the sheet at dusk — UA dims now (#848) */
   --faction-wow-card-bg: #1b1508; /* chronicle deep ground (#838) */
   --faction-coven-card-bg: #2a0d1c;
   --faction-snide-card-bg: #0c0a07; /* deeper ink */
@@ -695,14 +725,14 @@
   --faction-singularity-card-bg: #050f08;
 
   /* ── Faction card text (dark mode) ── */
-  --faction-ua-card-text: var(--ua-ink);
+  --faction-ua-card-text: #f1e8da; /* body ink, inverted — 13.58:1 */
   --faction-wow-card-text: #f3e7c4; /* chronicle parchment ink — 14.72:1 */
   --faction-coven-card-text: #fbcfe0;
   --faction-snide-card-text: #f4f1e8;
   --faction-singularity-card-text: #4ade80;
 
   /* ── Faction card accents (dark mode) ── */
-  --faction-ua-card-accent: var(--ua-orange);
+  --faction-ua-card-accent: #f0894a; /* 6.58:1 */
   /* Dark inverts the light-mode problem: on a dark card the bright primary is
      the legible choice, so here the accent CAN be the faction colour — for the
      factions whose skin IS their spine hue. WOW's is not (#838): the plum lifts
@@ -713,7 +743,10 @@
   --faction-singularity-card-accent: #4ade80; /* terminal green */
 
   /* ── Faction card secondary text (dark mode) ── */
-  --faction-ua-card-muted: var(--ua-sub);
+  /* Walked up from the kit's #a08c72, which measures 4.11:1 on
+     --faction-ua-lift. This clears every UA surface: 4.55 lift, 5.10 panel,
+     5.64 card, 6.25 page. */
+  --faction-ua-card-muted: #a8947a;
   --faction-wow-card-muted: #b69c64; /* chronicle metadata — 6.85:1 */
   --faction-coven-card-muted: #dd719c;
   --faction-snide-card-muted: #cfcdbf;
@@ -722,6 +755,21 @@
   --faction-snide-wall-deep: #0b0a08;
   --faction-snide-wall-text: #e9e6da;
   --faction-singularity-card-muted: #60a5fa; /* blue brand chrome */
+
+  /* ── UA · sun-bleached practice, after dark (#788, #848) ──
+     The mesa at night, not a parchment held up to a black page. Surfaces sink
+     (page darkest, then card, panel, lift), inks rise, and the sienna lifts —
+     the same ordering the light block has, mirrored. This block is what makes
+     UA a two-theme faction for the first time (#848). */
+  --faction-ua-page: #191410; /* app ground — mesa at night */
+  --faction-ua-page-text: #e7dcc9; /* text directly on the ground — 13.47:1 */
+  --faction-ua-panel: #2d261f; /* inset panel, media well */
+  --faction-ua-lift: #372e25; /* raised highlight — the shallowest surface */
+  --faction-ua-card-body: #d6c9b2; /* running prose — 10.09:1 */
+  --faction-ua-rule: #3b3229; /* neutral hairline / divider */
+  --faction-ua-hair: #332b22; /* faintest divider, below -rule */
+  --faction-ua-glow: #f08a4e; /* ORNAMENT ONLY — ensō, mandala. Never text. */
+  --faction-ua-vermil: #d9542a; /* the ensō score numeral — large display only */
 
   /* ── DEFAULT · unaffiliated (dark — brightened spectrum) ── */
   --faction-default: #8b8aa0;
@@ -999,6 +1047,11 @@
   --font-faction-script: "Caveat", cursive;
   --font-faction-old: "IM Fell English", Georgia, serif;
   --font-faction-engraved: "Cinzel", serif;
+  /* Shared headline serif (#848). Cormorant Garamond is already loaded in
+     index.html. Deliberately NOT --eph-script, which is the same face but is
+     Ephemerists' private flourish token: a faction reading another faction's
+     private token is how a later Ephemerists retype would silently restyle UA. */
+  --font-faction-serif: "Cormorant Garamond", Georgia, serif;
 
   /* Shared faction-page body grid — main column + right rail; collapses to one
      column on narrow viewports (rule below). Every faction skin reuses this. */
