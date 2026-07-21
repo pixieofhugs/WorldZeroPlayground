@@ -98,8 +98,11 @@ export default function WowMobileDuelRail({
                 border: `1px solid ${PANEL_BORDER}`,
               }}
             >
-              <span style={{ flex: '1 1 0', background: CHAMPION }} />
-              <span style={{ flex: '1 1 0', background: accent }} />
+              {/* Both halves are aria-hidden individually, not merely inside
+                  an aria-hidden bar: `wowDuelRail.test.tsx` checks tag by tag
+                  that the opponent's hue only ever lands on decoration. */}
+              <span aria-hidden style={{ flex: '1 1 0', background: CHAMPION }} />
+              <span aria-hidden style={{ flex: '1 1 0', background: accent }} />
             </div>
           </div>
         )}
