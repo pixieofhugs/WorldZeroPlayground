@@ -238,6 +238,35 @@
      literally-white glow on a light page is invisible; dark mode is white. */
   --glow-neutral: rgba(120, 120, 130, 0.55);
 
+  /* ── Duel Victor badge · the Fleur-de-Lis seal (#823) ──
+     The badge is a crowned fleur-de-lis CUT OUT of a solid frame, so the
+     spectrum below shows through the glyph while the disc around it stays
+     frame-coloured. Its ramp is the `na`/default spectrum in the ADR-0039
+     sense — the community rainbow, answering to no faction's hue — but it is
+     deliberately NOT --faction-default-rainbow: that token is a 7-stop 90deg
+     ramp sized for a horizontal BAR, and this one is a 10-stop diagonal sized
+     to traverse a disc corner-to-corner without banding. Same argument the
+     --faction-default-chip / -total-rainbow pair already makes above: the
+     spectrum comes in ramps cut for their geometry, and substituting the bar
+     ramp here flattens the sweep.
+
+     These are SCALAR stops, not a gradient token, because SVG <stop> cannot
+     read a CSS linear-gradient() — it resolves stop-color as a colour, so the
+     glyph composes its own <linearGradient> from these. They do NOT flip in
+     dark: the rainbow is an identity, like --spectrum-glow-* above. Only the
+     frame flips (2a ivory / 2b ink in the design). */
+  --badge-victor-frame: #fffdf9;
+  --badge-victor-stop-1: #a30f16;
+  --badge-victor-stop-2: #c1272d;
+  --badge-victor-stop-3: #e0431f;
+  --badge-victor-stop-4: #ca8a04;
+  --badge-victor-stop-5: #16a34a;
+  --badge-victor-stop-6: #1d6e72;
+  --badge-victor-stop-7: #2563eb;
+  --badge-victor-stop-8: #6d28d9;
+  --badge-victor-stop-9: #be185d;
+  --badge-victor-stop-10: #8a1046;
+
   /* ── S.N.I.D.E. punk extension — ransom/xerox/spray pigments + font set ──
      Extra named pigments beyond the standard suffix set, namespaced to the
      faction (sanctioned exception, see SPEC-faction-ui-profile.md §3). Card
@@ -1001,6 +1030,13 @@
   --faction-default-total-rainbow: linear-gradient(90deg, #e2433f, #e6b34a 40%, #4ade80 60%, #60a5fa);
   --faction-default-eyebrow-rainbow: linear-gradient(90deg, #4ade80, #60a5fa, #f472b6);
   --glow-neutral: rgba(255, 255, 255, 0.75);
+
+  /* Duel Victor seal, lights out (#823): the design's 2b. Only the frame
+     flips — ivory sheet to ink — because the seal is a cut-out and the frame
+     is the ONLY painted part. The ten spectrum stops are identity and stay put
+     (see the light block); brightening them would put a lit rainbow behind an
+     unlit frame and break the cut. */
+  --badge-victor-frame: #14100b;
 
   /* ══ Ephemerists palette (dark) — pigments stay vivid; vellum darkens
      to aged tobacco and its text flips ink→parchment. The card contract
