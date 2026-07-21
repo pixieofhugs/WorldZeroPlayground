@@ -14,6 +14,7 @@ import {
   PraxisScoreBreakdown,
   MemberByline,
 } from '../shared'
+import { VoteFactionContext } from '../../../components/vote/VoteShell'
 import { MobileStarVote } from './shared'
 
 /**
@@ -140,11 +141,13 @@ export default function SnidePraxisDetail({ state }: { state: PraxisDetailState 
         <div style={{ marginBottom: 'var(--space-md)' }}>
           <PraxisScoreBreakdown state={state} align="center" accent={ACID} font={IMPACT} />
         </div>
-        <MobileStarVote
-          praxisId={praxis.id}
-          accent={ACID}
-          accentFont={IMPACT}
-        />
+        <VoteFactionContext.Provider value="snide">
+          <MobileStarVote
+            praxisId={praxis.id}
+            accent={ACID}
+            accentFont={IMPACT}
+          />
+        </VoteFactionContext.Provider>
       </Plate>
 
       {/* Flag + voter breakdown (invariant) */}

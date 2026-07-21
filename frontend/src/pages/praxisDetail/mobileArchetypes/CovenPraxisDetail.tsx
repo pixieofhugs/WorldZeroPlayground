@@ -25,6 +25,7 @@ import {
   PraxisScoreBreakdown,
   MemberByline,
 } from '../shared'
+import { VoteFactionContext } from '../../../components/vote/VoteShell'
 import { MobileStarVote } from './shared'
 
 const PINK = 'var(--faction-coven)'
@@ -200,11 +201,13 @@ export default function CovenPraxisDetail({ state }: { state: PraxisDetailState 
         <div style={{ marginBottom: 'var(--space-md)' }}>
           <PraxisScoreBreakdown state={state} align="center" accent={PINK} font={SCRIPT} />
         </div>
-        <MobileStarVote
-          praxisId={praxis.id}
-          accent={PINK}
-          accentFont={SCRIPT}
-        />
+        <VoteFactionContext.Provider value="coven">
+          <MobileStarVote
+            praxisId={praxis.id}
+            accent={PINK}
+            accentFont={SCRIPT}
+          />
+        </VoteFactionContext.Provider>
       </Window>
 
       {/* Flag + voter breakdown (invariant) */}

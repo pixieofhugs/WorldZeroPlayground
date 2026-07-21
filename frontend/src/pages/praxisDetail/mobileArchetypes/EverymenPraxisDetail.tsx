@@ -14,6 +14,7 @@ import {
   PraxisScoreBreakdown,
   MemberByline,
 } from '../shared'
+import { VoteFactionContext } from '../../../components/vote/VoteShell'
 import { MobileStarVote } from './shared'
 
 /**
@@ -133,11 +134,13 @@ export default function EverymenPraxisDetail({ state }: { state: PraxisDetailSta
         <div style={{ marginBottom: 'var(--space-md)' }}>
           <PraxisScoreBreakdown state={state} align="center" accent={RED} font={ACCENT_FONT} />
         </div>
-        <MobileStarVote
-          praxisId={praxis.id}
-          accent={RED}
-          accentFont={ACCENT_FONT}
-        />
+        <VoteFactionContext.Provider value="everymen">
+          <MobileStarVote
+            praxisId={praxis.id}
+            accent={RED}
+            accentFont={ACCENT_FONT}
+          />
+        </VoteFactionContext.Provider>
       </Plate>
 
       {/* Flag + voter breakdown (invariant) */}
