@@ -6,7 +6,7 @@ import { MobileStickyBar, MobileStickyCaption } from './shared'
 import type { TaskDetailState } from '../useTaskDetail'
 
 /**
- * Warriors of Whimsy MOBILE task-detail skin (#531) — the quest.exe window on a
+ * Cozy Coven MOBILE task-detail skin (#531) — the quest.exe window on a
  * phone. A pink scrapbook window hero (traffic-light title bar, dotted board,
  * inner notepad) carries the Caveat title + sparks/level plates, then the "what
  * we're asking" brief, the love-so-far aggregate, the spells cast (completions),

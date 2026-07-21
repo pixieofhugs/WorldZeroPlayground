@@ -1,5 +1,5 @@
 /**
- * CovenSigil — the Warriors of Whimsy four-point sparkle, the faction's only mark.
+ * CovenSigil — the Cozy Coven four-point sparkle, the faction's only mark.
  *
  * The single canonical COVEN emblem, drawn once and reused everywhere the sparkle
  * appears (faction-select tile, the wow.exe title bar, mobile praxis card).

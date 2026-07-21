@@ -9,7 +9,7 @@ import type { PraxisCardOut } from "../../../api/praxis";
 import type { TaskDetailState } from "../useTaskDetail";
 
 /**
- * Warriors of Whimsy task-detail archetype — the job rendered as a
+ * Cozy Coven task-detail archetype — the job rendered as a
  * "whimsy.exe" desktop window: a pink computer-witch chrome with a
  * traffic-light title bar, a dotted desktop body, Caveat-script headings,
  * sparkle charms, "spells cast" completions (the most-loved one wears a

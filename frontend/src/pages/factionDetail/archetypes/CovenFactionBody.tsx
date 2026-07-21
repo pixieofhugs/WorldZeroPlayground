@@ -10,20 +10,20 @@ import type { CharacterOut } from "../../../api/auth";
 import type { FactionDetailState } from "../useFactionDetail";
 
 /**
- * Warriors of Whimsy faction-body — the whimsy.exe cork-memo-board skin of the
+ * Cozy Coven faction-body — the whimsy.exe cork-memo-board skin of the
  * standardized six-section spine (② About, ③ join.exe, ④ Tasks, ⑤ Praxis,
  * ⑥ Members). Section ① (hero + side stat charms) is CovenFactionHero, above.
  *
  * Same shape as EverymenFactionBody / UaFactionBody — Tasks/Praxis reuse the
- * app-wide per-faction cards (TaskCard / PraxisCard already dispatch to the WoW
+ * app-wide per-faction cards (TaskCard / PraxisCard already dispatch to the Coven
  * atoms) so this file only owns the board chrome the design adds around them: the
  * two-column layout, the taped index cards, the pinned join.exe window, the
  * Witch-of-the-week polaroid + coven roster, and the FDL laurel on the single
  * top-scoring praxis.
  *
  * Every colour resolves to a --faction-coven-* token (dark-mode-aware via the
- * cascade). The script face is the WoW card-font token (Caveat); body copy uses
- * --font-body, matching CovenTaskCard and the WoW PraxisCard branch.
+ * cascade). The script face is the Coven card-font token (Caveat); body copy uses
+ * --font-body, matching CovenTaskCard and the Coven PraxisCard branch.
  */
 
 const PINK = "var(--faction-coven)";
@@ -45,7 +45,7 @@ const SCRIPT = "var(--faction-coven-card-font)";
 const BODY = "var(--font-body)";
 
 // The board's warm-brown drop shadow + the index card's ruling have no dedicated
-// tokens; the WoW atoms hardcode the same warm rgba pair for their pinned paper.
+// tokens; the Coven atoms hardcode the same warm rgba pair for their pinned paper.
 // Reuse them so this skin matches the atoms exactly.
 // ponytail: no --faction-coven-board-shadow / -rule token exists yet.
 const BOARD_SHADOW = "rgba(80,50,30,0.28)";
@@ -53,7 +53,7 @@ const PIN_SHADOW = "rgba(80,50,30,0.4)";
 // Faint hairline for a card edge — a muted mix of the notepad border.
 const HAIRLINE = "color-mix(in srgb, var(--faction-coven-notepad-border) 55%, transparent)";
 
-/** Tiny four-point sparkle — the WoW chrome's signature glyph. */
+/** Tiny four-point sparkle — the Coven chrome's signature glyph. */
 function Sparkle({ size = 12, color = "currentColor" }: { size?: number; color?: string }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" aria-hidden="true" style={{ display: "block", flexShrink: 0 }}>

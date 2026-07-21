@@ -7,7 +7,7 @@ import { CommentEditor, OwnerControls, useOwnerEdit } from '../OwnerControls'
 import { CommentFlagControl } from '../FlagControl'
 
 /**
- * Warriors of Whimsy — `{handle}.exe` (ADR-0018). Reuses the task-card window
+ * Cozy Coven — `{handle}.exe` (ADR-0018). Reuses the task-card window
  * chrome verbatim (--faction-coven-win-border / title gradient / dotted body),
  * retitled to the author's handle. Handwritten Caveat body.
  */

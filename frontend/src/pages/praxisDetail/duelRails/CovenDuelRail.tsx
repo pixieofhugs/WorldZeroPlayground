@@ -1,5 +1,5 @@
 /**
- * Warriors of Whimsy DESKTOP duel rail (#720) — the duel context as a second
+ * Cozy Coven DESKTOP duel rail (#720) — the duel context as a second
  * `wow.exe` window docked above the praxis, matching the design's panels 2b/2c.
  *
  * Pure frame. Every slot arrives pre-rendered from `DuelCrossLink`: the

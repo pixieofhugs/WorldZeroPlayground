@@ -3,7 +3,7 @@ import type { FactionHeroProps } from "../../pages/FactionDetail";
 import i18n from "../../i18n";
 
 /**
- * Warriors of Whimsy faction-page hero — whimsy.exe pinned to a cork memo board.
+ * Cozy Coven faction-page hero — whimsy.exe pinned to a cork memo board.
  * A pastel "app window" charm, a Caveat-script wordmark + motto, the blurb, and —
  * per the faction-page standardization — the three counts as taped sticker charms
  * in a SIDE column (never a full-width band). Two pushpins tack the banner down.
@@ -11,8 +11,8 @@ import i18n from "../../i18n";
  *
  * Theme-aware through the cascade: every colour resolves to a --faction-coven-*
  * token (which already carries light + dark values), so the board never mutates
- * the global theme. The script face is the WoW card-font token (Caveat); body
- * copy uses --font-body, matching CovenTaskCard / the WoW PraxisCard branch.
+ * the global theme. The script face is the Coven card-font token (Caveat); body
+ * copy uses --font-body, matching CovenTaskCard / the Coven PraxisCard branch.
  *
  * The page passes raw counts; the faction labels them in its own whimsy voice.
  * Motto is a faction constant (not a backend field).
@@ -34,12 +34,12 @@ const DOT = "var(--faction-coven-dot)";
 const SCRIPT = "var(--faction-coven-card-font)";
 const BODY = "var(--font-body)";
 
-// The board's board-brown shadow has no dedicated token; the WoW atoms use a raw
+// The board's board-brown shadow has no dedicated token; the Coven atoms use a raw
 // warm-brown rgba for their pinned-paper drop shadows. Reuse the same value.
 // ponytail: no --faction-coven-board-shadow token exists; matching the atoms' rgba.
 const BOARD_SHADOW = "rgba(80,50,30,0.3)";
 
-/** Tiny four-point sparkle — same glyph the WoW task/window chrome uses. */
+/** Tiny four-point sparkle — same glyph the Coven task/window chrome uses. */
 function Sparkle({ size = 12, color = "currentColor" }: { size?: number; color?: string }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" aria-hidden="true" style={{ display: "block" }}>

@@ -6,7 +6,7 @@ import { factionCssVar, factionName } from '../../../../utils/factions'
 import { MobileTaskDescription } from './shared'
 
 /**
- * Warriors of Whimsy MOBILE task card (#531/#565) — a pink scrapbook "quest"
+ * Cozy Coven MOBILE task card (#531/#565) — a pink scrapbook "quest"
  * sticker-card: dotted board, inner notepad, sparkle accents, Caveat title.
  * Reads `task.primary_faction_slug` for its own faction tint. Grounds on the
  * `--faction-coven-*` window tokens; always-light. Presentation-only.

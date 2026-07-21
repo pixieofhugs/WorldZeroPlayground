@@ -1,5 +1,5 @@
 /**
- * Warriors of Whimsy MOBILE praxis-detail skin (#499) — the praxis.exe window on
+ * Cozy Coven MOBILE praxis-detail skin (#499) — the praxis.exe window on
  * a phone: a pink computer-witch window (traffic-light title bar, dotted board,
  * inner notepad) holds the full media, then a Caveat "finding" headline, the
  * account body, and a big thumb-sized star caster. Single-column; ported from

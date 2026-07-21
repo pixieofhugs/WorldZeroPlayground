@@ -4,7 +4,7 @@ import i18n from "../../i18n";
 import LevelGem from "../ui/LevelGem";
 
 /**
- * Warriors of Whimsy — wow.exe.
+ * Cozy Coven — wow.exe.
  * Lo-fi computer-witch window: pastel title bar with window dots, a faint
  * dotted-grid body, and an inner "notepad" panel holding the task in the
  * Caveat headline font. Visuals only — same prop contract as the other cards.
