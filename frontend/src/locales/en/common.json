@@ -39,6 +39,19 @@
         "praxis": "Praxis",
         "tasks": "Tasks"
       }
+    },
+    "wow": {
+      "eyebrow": "Of the Court of Whimsy",
+      "honours": "Honours & Credentials",
+      "tabPraxis": "Chronicles",
+      "tabTasks": "Quests Decreed",
+      "stats": {
+        "points": "Huzzahs",
+        "praxis": "Chronicles",
+        "tasks": "Quests"
+      },
+      "praxisEmpty": "No chronicle yet. The Court waits.",
+      "tasksEmpty": "No quest decreed by this knight, as yet."
     }
   },
   "leaderboard": {
@@ -203,7 +216,9 @@
       },
       "wow": {
         "greeting": "Good morrow, Sir {{name}}.",
-        "masthead": "Thy crusade awaits. The noodle sword is where thou left it."
+        "masthead": "Thy crusade awaits. The noodle sword is where thou left it.",
+        "charEyebrow": "Thy Standing",
+        "questsHeading": "Thy Open Quests"
       }
     }
   },

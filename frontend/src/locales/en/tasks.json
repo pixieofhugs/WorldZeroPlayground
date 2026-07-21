@@ -395,5 +395,44 @@
     "empty": "The Register holds no accounts against this correspondence. Be the first to return one, unsigned.",
     "mostWitnessed": "most witnessed",
     "viewAll": "all {{count}} accounts →"
+  },
+  "wow": {
+    "breadcrumb": "The Quest Roll",
+    "decree": "By Royal Decree",
+    "statusOpen": "open · a champion is sought",
+    "level": "Rank {{level}} required",
+    "points": "✦{{points}}",
+    "askingHeading": "What the Court Asks",
+    "askingEmpty": "No charge is written. Do something gloriously daft and report back.",
+    "gloryHeading": "Glory So Far",
+    "glory": {
+      "top": "the highest chronicle",
+      "judged_one": "{{count}} verdict cast",
+      "judged_other": "{{count}} verdicts cast",
+      "none": "No glory yet. Be the first to take it up."
+    },
+    "chroniclesHeading": "Chronicles Sealed · {{count}}",
+    "sort": {
+      "mostGlorious": "most glorious",
+      "recent": "most recent"
+    },
+    "empty": "No chronicle sealed. This quest stands unclaimed.",
+    "viewAll": "Read all {{count}} chronicles ✦",
+    "signup": {
+      "cta": "Take Up the Quest",
+      "slots": "{{open}} of {{max}} places at the lists"
+    },
+    "submitted": {
+      "text": "✦ thy chronicle is sealed",
+      "edit": "Amend"
+    },
+    "inProgress": {
+      "text": "✦ thy quest is underway",
+      "continue": "Continue",
+      "drop": "Lay down the quest"
+    },
+    "mobile": {
+      "cardMeta": "{{faction}} · +{{points}} pts"
+    }
   }
 }

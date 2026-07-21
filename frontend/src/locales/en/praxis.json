@@ -395,7 +395,13 @@
       }
     },
     "wow": {
-      "intro": "Herein lies the sworn account, submitted to the Court for its solemn and giggling judgment."
+      "intro": "Herein lies the sworn account, submitted to the Court for its solemn and giggling judgment.",
+      "theChronicle": "The Chronicle",
+      "untitled": "An Unnamed Deed",
+      "re": "re:",
+      "lvlSealed": "· rank {{level}} · sealed {{date}}",
+      "evidence": "Evidence Presented",
+      "verdict": "Cast thy Verdict"
     }
   },
   "comments": {
