@@ -2,6 +2,8 @@ import i18n from "../../i18n";
 import { pickVariant } from "../../utils/factionDispatch";
 import { surfaceMap } from "../../factions";
 import { UaSigil } from "./UaSigil";
+import UaMandala from "./UaMandala";
+import { UA_DISPLAY, UA_EYEBROW, UA_TEXT, uaShade } from "./uaAtoms";
 import { CovenSigil } from "./CovenSigil";
 import { SnideSigil } from "../snide/snideAtoms";
 import { EphemeristsSigil } from "./ephemeristsAtoms";
@@ -45,43 +47,64 @@ export interface FactionSelectCardProps {
 
 // ─── Per-faction archetypes ───────────────────────────────────────────────────
 
+/**
+ * UA join card — a quiet invitation, not a sales pitch (kit §4, #851).
+ *
+ * The crest band carries the ensō over the mandala at TEXTURE strength — one of
+ * the three surfaces the pattern is allowed on (brief §5). Everything below is
+ * centred, sentence-case and hairline-ruled. The gilt double border, the gold
+ * rule and the ghost-outline CTA went with the salon.
+ */
 export function UaSelectCard({ state = "locked", members, onVisit }: Omit<FactionSelectCardProps, "faction">) {
   const status = i18n.t(`feed:factionSelect.ua.status.${state}` as const);
   return (
     <div style={{
       width: "100%", maxWidth: 360, minHeight: 300, boxSizing: "border-box", position: "relative", overflow: "hidden",
-      background: "var(--ua-paper)", color: "var(--ua-ink)", fontFamily: "var(--font-body)",
-      border: "1px solid var(--ua-line)", boxShadow: "0 6px 24px rgba(61,36,16,0.12)",
+      background: "linear-gradient(160deg, var(--faction-ua-lift), var(--faction-ua-card-bg) 60%)",
+      color: "var(--faction-ua-card-text)", fontFamily: UA_TEXT,
+      border: "1px solid var(--faction-ua-rule)", borderRadius: "var(--radius-md)",
+      boxShadow: `0 12px 34px -20px ${uaShade(55)}`,
       display: "flex", flexDirection: "column",
     }}>
-      <div style={{ position: "absolute", inset: 6, border: "2px solid var(--ua-gold)", pointerEvents: "none" }} />
-      <div style={{ position: "absolute", inset: 9, border: "1px solid var(--ua-line-soft)", pointerEvents: "none" }} />
-      <div style={{ position: "relative", flex: 1, padding: "var(--space-xl) var(--space-xl) 0", display: "flex", flexDirection: "column" }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-          <div>
-            <div style={{ fontFamily: "var(--font-faction-engraved-caps)", fontSize: "var(--text-base)", letterSpacing: "0.32em", color: "var(--ua-gold)", textTransform: "uppercase" }}>{i18n.t("feed:factionSelect.ua.masthead")}</div>
-            {/* eslint-disable-next-line local/no-raw-style-values -- ornament: gilt-placard wordmark — display type at 0.9 leading, the UA archetype's voice */}
-            <div style={{ fontFamily: "var(--font-faction-gilt)", fontStyle: "italic", fontWeight: 800, fontSize: 52, lineHeight: 0.9, letterSpacing: "0.01em", marginTop: "var(--space-sm)" }}>{i18n.t("feed:factionSelect.ua.wordmark")}</div>
-            <div style={{ fontFamily: "var(--font-faction-engraved-caps)", fontSize: "var(--text-lg)", letterSpacing: "0.24em", color: "var(--ua-sub)", textTransform: "uppercase", marginTop: "var(--space-xs)" }}>{i18n.t("feed:factionSelect.ua.subtitle")}</div>
-          </div>
-          <UaSigil width={44} height={53} />
-        </div>
-        <div style={{ height: 2, background: "var(--ua-gilt)", margin: "var(--space-lg) 0 var(--space-md)", opacity: 0.85 }} />
-        <p className="content-text" style={{ margin: 0, fontFamily: "var(--font-faction-gilt)", fontStyle: "italic", lineHeight: 1.4, color: "var(--ua-ink)" }}>
+      {/* crest band — the mark over the pattern */}
+      <div style={{
+        position: "relative", height: 132, display: "flex", alignItems: "center", justifyContent: "center",
+        background: "var(--faction-ua-panel)", borderBottom: "1px solid var(--faction-ua-hair)", overflow: "hidden",
+      }}>
+        <UaMandala
+          size={300}
+          strength="texture"
+          opacity={0.16}
+          rings={4}
+          petalsPerRing={14}
+          style={{ position: "absolute", left: "50%", top: "52%", transform: "translate(-50%, -50%)" }}
+        />
+        <span style={{ position: "relative" }}><UaSigil width={96} height={96} /></span>
+      </div>
+
+      <div style={{ position: "relative", flex: 1, padding: "var(--space-xl) var(--space-xl) 0", textAlign: "center" }}>
+        <div style={{ ...UA_EYEBROW, letterSpacing: "0.24em" }}>{i18n.t("feed:factionSelect.ua.masthead")}</div>
+        <div style={{ fontFamily: UA_DISPLAY, fontWeight: 600, fontSize: "var(--text-display)", lineHeight: 1, letterSpacing: "-0.01em", marginTop: "var(--space-sm)" }}>{i18n.t("feed:factionSelect.ua.wordmark")}</div>
+        {/* #850 made the subtitle a full sentence. A sentence cannot be set in
+            0.24em all-caps, so it takes the display cut here rather than the
+            kicker treatment it inherited. */}
+        <div style={{ fontFamily: UA_DISPLAY, fontWeight: 600, fontSize: "var(--text-title)", lineHeight: 1.1, marginTop: "var(--space-sm)" }}>{i18n.t("feed:factionSelect.ua.subtitle")}</div>
+        <p className="content-text" style={{ margin: "var(--space-md) 0 0", fontFamily: UA_TEXT, lineHeight: 1.55, color: "var(--faction-ua-card-body)" }}>
           {i18n.t("feed:factionSelect.ua.blurb")}
         </p>
       </div>
-      <div style={{ position: "relative", padding: "0 var(--space-xl) var(--space-lg)" }}>
-        <div style={{ fontSize: "var(--text-base)", letterSpacing: "0.04em", color: "var(--ua-sub)", marginBottom: "var(--space-md)" }}>
-          {status}{members != null && <> · <span style={{ color: "var(--ua-muted)" }}>{i18n.t("feed:factionSelect.ua.members", { count: members })}</span></>}
+      <div style={{ position: "relative", padding: "var(--space-lg) var(--space-xl)", textAlign: "center" }}>
+        <div style={{ fontFamily: UA_TEXT, fontSize: "var(--text-content)", color: "var(--faction-ua-card-muted)", marginBottom: "var(--space-md)" }}>
+          {status}{members != null && <> · <span>{i18n.t("feed:factionSelect.ua.members", { count: members })}</span></>}
         </div>
         <button onClick={onVisit} style={{
-          width: "100%", cursor: "pointer", border: "1px solid var(--ua-gold)", background: "transparent",
-          color: "var(--ua-orange)", fontFamily: "var(--font-faction-engraved-caps)", fontSize: "var(--text-xl)", letterSpacing: "0.18em",
-          textTransform: "uppercase", padding: "var(--space-md)", transition: "background 140ms, color 140ms",
+          width: "100%", cursor: "pointer", border: "none", borderRadius: "var(--radius-sm)",
+          background: "var(--faction-ua)", color: "var(--faction-ua-on-fill)",
+          fontFamily: UA_TEXT, fontSize: "var(--text-xl)", letterSpacing: "0.14em",
+          textTransform: "uppercase", padding: "var(--space-md)", transition: "background 140ms",
         }}
-          onMouseEnter={(e) => { e.currentTarget.style.background = "var(--ua-orange)"; e.currentTarget.style.color = "var(--ua-paper)"; }}
-          onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "var(--ua-orange)"; }}
+          onMouseEnter={(e) => { e.currentTarget.style.background = "var(--faction-ua-card-accent)"; }}
+          onMouseLeave={(e) => { e.currentTarget.style.background = "var(--faction-ua)"; }}
         >{i18n.t("feed:factionSelect.ua.cta")}</button>
       </div>
     </div>
