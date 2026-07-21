@@ -84,9 +84,17 @@
       "snide": "evidence locker",
       "albescent": "Account · filed",
       "singularity": "singularity protocol",
-      "coven": "Grimoire · entry",
-      "wow": "Chronicle of Whimsy",
+      "coven": "dispatch no. {{id}} · all done! ✿",
+      "wow": "Chronicle of proof · № {{id}}",
       "default": "Praxis · unaffiliated"
+    },
+    "wow": {
+      "forQuest": "for the quest —",
+      "sealed": "Sealed by the Court",
+      "illumination": "❦ here, an illumination ❦"
+    },
+    "coven": {
+      "mediaEmpty": "Drop a happy little photo ✿"
     }
   },
   "detail": {

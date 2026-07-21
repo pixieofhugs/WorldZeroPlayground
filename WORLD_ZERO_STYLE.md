@@ -100,9 +100,11 @@ The two axes are independent, and #830 collapsed them: it read a mislabelled moc
 
 **On the hue.** Yellow is the palette's hard case (#651, #669, #677), for two reasons that pull in opposite directions. A yellow saturated enough to read as yellow needs **dark ink** on it, never white — hence `--faction-wow-on-fill` is ink in both themes. And WOW sits **adjacent to UA** in the spectrum, so the two are painted touching in the Leaderboard/DefaultPlayers stripe bars and Meadow's bloom; a goldenrod too near UA's burnt orange reads as a second brown at that size. The shipped light value resolves this by pushing hue rather than lightness — clear of orange, deep enough to stay legible.
 
-**On the gold.** `#c8a02a` is **theme-invariant** — it is the same value in light and dark, because a metal-leaf frame does not brighten when the lights go out. The plum is what carries the theme flip. The gold is a *frame and rule* colour, never an ink: it measures 2.24:1 on the cream, so nothing legible is ever painted in it. Where the chronicle's running head needs text, both gradient stops are deepened until cream clears 4.5:1 across the band — a declared deviation from the design's undimmed gold/plum stripe, which carries no text.
+**On the gold.** `#c8a02a` is **theme-invariant** — it is the same value in light and dark, because a metal-leaf frame does not brighten when the lights go out. The plum is what carries the theme flip. The gold is a *frame and rule* colour, never an ink: it measures 2.24:1 on the cream, so nothing legible is ever painted in it.
 
-Read this next to the Albescent note above: those are the repo's two partly-registered factions, partial on **different axes**. Albescent has neither theme nor skin, on purpose, because it is hiding. WOW now has both, but only a few manifest surfaces claim it, so the rest still render `Default*` until the card rebuild lands.
+That constraint used to cost the design a deviation: #838's chronicle put the masthead **on** the gold/plum band, so both gradient stops had to be deepened until cream cleared 4.5:1 across it. #840 removed the cause rather than the symptom — the design's running head is a 6px stripe carrying **no text**, and the masthead is an eyebrow line inside the text column. With nothing painted on the band, the undimmed gold/plum stripe ships as drawn. **A contrast fix that fights the design is usually a structure bug**: check what put text on the surface before you dim the surface.
+
+Read this next to the Albescent note above: those are the repo's two partly-registered factions, partial on **different axes**. Albescent has neither theme nor skin, on purpose, because it is hiding. WOW now has both, but only four manifest surfaces claim it (praxis card, its mobile twin, the score stamp, the vote widget), so the rest still render `Default*`.
 
 ---
 
@@ -291,6 +293,18 @@ Each faction's archetype lives in its card component — see `frontend/src/compo
 **UA Masters** (dormant, deferred to Era 2 per ADR-0004): gazette-article archetype — proper masthead, corner-snipped edges, two columns, UnifrakturCook. No component exists yet, so this line is the only place it lives.
 
 **Reuse pattern:** The faction card aesthetic should be used as a wrapper for any faction-branded context: profile headers, praxis bylines, proposal form wrappers, podium cards. The card component handles the visual treatment; the parent provides the content.
+
+### A faction's ornament is one primitive at named strengths (#849)
+
+A faction's signature device is drawn **once**, as one parameterized component, and consumed everywhere. It is never re-drawn per surface — a hero with its own hand-tuned rosette and a join card with another is how a faction stops looking like one faction.
+
+Two rules follow, and UA is the worked example:
+
+**A mark is reserved, and reserving it is the point.** UA's ensō (`components/cards/UaSigil.tsx`) is for the **score** and the **faction mark**. It is never a container border. A mark spent as decoration stops meaning anything; the restraint is the identity.
+
+**Where an ornament may appear is part of its API, including where it may not.** `UaMandala` takes a `strength` of `full` (one surface — the vote control), `texture` (6–22%, behind page backdrop / faction hero / join card) or `absent`, which renders `null`. Dense, text-heavy surfaces — feed rows, comments, task lists, the editor — ask for `absent`. Encoding the third case as a strength rather than as "just don't use it" is deliberate: the ruling survives in the type instead of in a comment someone has to remember.
+
+Where a mark ships as an inline SVG and where as a masked `public/` asset is a **weight** decision, not a style one — see `components/factionMarks/index.ts`. Both are token-tinted, so both follow the dark cascade. The same faction can legitimately carry two versions of one device at different sizes for different consumers; do not consolidate them on sight.
 
 ---
 

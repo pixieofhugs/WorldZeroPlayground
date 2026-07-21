@@ -10,12 +10,18 @@ import { VOTE_REFRAMES } from './voteReframes'
  * approval is cast as a mandala that blooms fuller and warmer per rank: rank 1 is
  * a faint asterisk, and each rung adds a turning ring of petals until rank 5 is a
  * full, breathing bloom. A lowercase "reading" word sits below — faint · forming
- * · true · alive · radiant — the salon's verdict on the filed work. The mandala
- * cores are punched out to the sheet colour so the figure reads as an aperture.
+ * · true · alive · radiant — the practice's verdict on the sealed work. The
+ * mandala cores are punched out to the sheet colour so the figure reads as an
+ * aperture.
  *
- * UA is always-light (the salon never dims, #240), so every colour token is
- * theme-invariant and the core punch simply tracks --faction-ua-card-bg, which
- * is parchment in both themes — no `data-theme` branch, no `dark` ternary.
+ * THIS IS THE ONE SURFACE THAT SHOWS THE MANDALA AT FULL STRENGTH (#849). Every
+ * other UA surface that wants the pattern takes it as faint backdrop texture at
+ * 6-22% via the `UaMandala` primitive; nothing else draws it solid.
+ *
+ * The colours all flip with `[data-theme="dark"]` — UA dims now (#848). The core
+ * punch tracks --faction-ua-card-bg because the figure must be an aperture onto
+ * whatever the card is, full stop; there is no `data-theme` branch and no `dark`
+ * ternary here because the tokens already carry both themes.
  *
  * Same 1-5 data model as every faction; a pure visual reskin driven by the shared
  * {@link useVote} hook so cast/refetch/tally-override logic lives in one place.
@@ -23,18 +29,21 @@ import { VOTE_REFRAMES } from './voteReframes'
  * the mandala's fullness and the reading word carry the meaning when stilled.
  */
 
-/** Per-rank fill ramp (index 1-5) — taupe → deep red as the reading warms. */
+/**
+ * Per-rank fill ramp (index 1-5). The direction is theme-dependent and lives in
+ * index.css: light climbs toward depth, dark climbs toward brightness (#849).
+ */
 const RANK_COLOR = [
   '',
-  'var(--faction-ua-vote-rank-1)',
-  'var(--faction-ua-vote-rank-2)',
-  'var(--faction-ua-vote-rank-3)',
-  'var(--faction-ua-vote-rank-4)',
-  'var(--faction-ua-vote-rank-5)',
+  'var(--faction-ua-rank-1)',
+  'var(--faction-ua-rank-2)',
+  'var(--faction-ua-rank-3)',
+  'var(--faction-ua-rank-4)',
+  'var(--faction-ua-rank-5)',
 ]
 
-/** Cormorant Garamond — UA's gilt display face, already loaded for the salon. */
-const READING_FONT = 'var(--font-faction-gilt)'
+/** Cormorant Garamond — the practice's headline face, via UA's card contract. */
+const READING_FONT = 'var(--faction-ua-card-font)'
 
 const TIERS = VOTE_REFRAMES['ua'].tiers
 
@@ -299,7 +308,9 @@ export default function UaVote({ praxisId, currentValue, points, totalVotes }: V
           muted: 'var(--faction-ua-card-muted)',
           accent: 'var(--faction-ua-card-accent)',
           accentFont: 'var(--faction-ua-card-font)',
-          errorColor: 'var(--ua-orange-deep)',
+          // Error text owes body contrast in BOTH themes; the legacy
+          // --ua-orange-deep had only a light value (#853 deletes the family).
+          errorColor: 'var(--faction-ua-card-accent)',
           avgLetterSpacing: '0.04em',
         }}
       />

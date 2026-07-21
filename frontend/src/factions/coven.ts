@@ -34,6 +34,7 @@ import CovenTaskCard from '../components/cards/CovenTaskCard'
 import CovenTaskDetail from '../pages/taskDetail/archetypes/CovenTaskDetail'
 import CovenVote from '../components/vote/CovenVote'
 import CovenPraxisCard from '../components/praxisCard/desktop/CovenPraxisCard'
+import CovenScoreStamp from '../components/praxisCard/scoreStamp/CovenScoreStamp'
 import { CovenSigil } from '../components/cards/CovenSigil'
 import { CovenCard } from '../components/cards/FactionCard'
 import { COVENSelectCard } from '../components/cards/FactionSelectCard'
@@ -45,6 +46,7 @@ export const COVEN_MANIFEST: FactionManifest = {
   factionSelectCard: () => COVENSelectCard,
   taskCard: () => CovenTaskCard,
   praxisCard: () => CovenPraxisCard,
+  scoreStamp: () => CovenScoreStamp,
   avatar: () => CovenAvatar,
   backdrop: () => CovenBackdrop,
   sigil: () => CovenSigil,
