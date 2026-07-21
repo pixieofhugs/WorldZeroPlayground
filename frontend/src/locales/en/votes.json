@@ -104,8 +104,7 @@
       "plateTopMark": "✦"
     },
     "albescent": {
-      "rateAria": "Witness {{value}} — {{label}}",
-      "prompt": "Bear Witness"
+      "rateAria": "Rate {{value}} of 5"
     },
     "unaffiliated": {
       "rateAria": "Rate {{value}} — {{label}}"
