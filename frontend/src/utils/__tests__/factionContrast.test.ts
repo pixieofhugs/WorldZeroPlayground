@@ -213,11 +213,10 @@ const BASELINE: Record<string, { ratio: number; issue: number }> = {
   "dark | ephemerists card accent": { ratio: 3.72, issue: 651 },
   // The same rubric vermilion, reached through its archetype-private primitive.
   "dark | ephemerists vellum, rubric": { ratio: 3.72, issue: 651 },
-  // UA mono metadata labels on the legacy gilt sheet. Both themes measure the
-  // same because the legacy family has no dark values; #853 deletes the family,
-  // which is what retires these two entries.
-  "light | ua sheet, mono labels": { ratio: 3.06, issue: 651 },
-  "dark | ua sheet, mono labels": { ratio: 3.06, issue: 651 },
+  // (UA mono metadata labels on the legacy gilt sheet measured 3.06:1 in both
+  // themes and were listed here until #853 deleted the legacy family, exactly
+  // as this entry predicted. The surfaces that used to paint that pair now read
+  // --faction-ua-card-muted, which clears AA on every UA surface.)
 };
 
 function key(theme: Theme, pair: Pair): string {
