@@ -1,29 +1,51 @@
-import type { CSSProperties } from 'react'
+import UaMandala from '../cards/UaMandala'
+import { UaSigil } from '../cards/UaSigil'
 
 /**
- * UA full-page backdrop — the gilt salon: a parchment wall (`--ua-wall`) lit by
- * a low gilt glow from the corners and overlaid with a faint ledger dot-grid.
- * UA is always-light: its `--ua-*` / `--faction-ua-*` tokens are identical in
- * both themes, so this never flips with data-theme. Fixed behind page content
- * at z-index 0.
+ * UA page backdrop — mesa sand (kit §10, #851).
+ *
+ * The ground is one flat token, `--faction-ua-page`, with two figures bled off
+ * opposite corners: the mandala at TEXTURE strength and one ensō. Both sit at
+ * 6-8% so unrelated content can be read straight through them — the backdrop's
+ * whole job is to be felt and not seen. That is the second of the mandala's
+ * three strengths (brief §5); full strength belongs to the vote control alone.
+ *
+ * It themes a page only when UA is that page's single context. A mixed or
+ * neutral page keeps the global rainbow watercolour — never theme a mixed page
+ * to one faction — and the dispatcher, not this file, makes that call.
+ *
+ * Both themes come from the `[data-theme="dark"]` cascade. The gilt wall and
+ * its ledger dot-grid are gone, and so is the always-light ruling behind them.
  */
-const backdropStyle: CSSProperties = {
-  position: 'fixed',
-  inset: 0,
-  zIndex: 0,
-  pointerEvents: 'none',
-  backgroundColor: 'var(--ua-wall)',
-  backgroundImage: [
-    // low gilt glow — top-left origin (old gold, light)
-    'radial-gradient(70% 50% at 8% 0%, color-mix(in srgb, var(--ua-gold-lt) 7%, transparent), transparent 70%)',
-    // burnt-amber echo — top-right
-    'radial-gradient(60% 50% at 100% 8%, color-mix(in srgb, var(--ua-orange) 6%, transparent), transparent 70%)',
-    // faint ledger dot-grid (gilt ink)
-    'radial-gradient(color-mix(in srgb, var(--ua-gold) 5%, transparent) 1px, transparent 1px)',
-  ].join(', '),
-  backgroundSize: 'auto, auto, 6px 6px',
-}
-
 export default function UaBackdrop() {
-  return <div style={backdropStyle} aria-hidden="true" />
+  return (
+    <div
+      aria-hidden="true"
+      style={{
+        position: 'fixed',
+        inset: 0,
+        zIndex: 0,
+        pointerEvents: 'none',
+        overflow: 'hidden',
+        backgroundColor: 'var(--faction-ua-page)',
+      }}
+    >
+      {/* mandala, bled off the lower right */}
+      <UaMandala
+        size={620}
+        strength="texture"
+        opacity={0.07}
+        rings={4}
+        petalsPerRing={16}
+        rotation={-9}
+        style={{ position: 'absolute', right: -180, bottom: -210 }}
+      />
+      {/* the mark, bled off the upper left */}
+      <span
+        style={{ position: 'absolute', left: -130, top: -120, opacity: 0.06 }}
+      >
+        <UaSigil width={420} height={420} />
+      </span>
+    </div>
+  )
 }
