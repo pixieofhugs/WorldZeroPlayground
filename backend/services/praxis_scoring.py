@@ -19,6 +19,7 @@ from models.character import Character
 from models.duel import Duel, DuelStatus
 from models.praxis import ModerationStatus, Praxis, PraxisType
 from models.task import Task
+from services.duel_outcome import duel_winner
 from services.meta_task import get_meta_task_points_bulk
 from services.scoring import (
     COLLABORATION_MODE_COLLAB,
@@ -80,13 +81,17 @@ async def compute_contributions(
     tallies = await tally_votes(praxis_ids, session)
 
     # ── duel info for solo praxes ────────────────────────────────────────────
-    # A solo praxis may be a duel side (ADR-0011). Fetch all active/settled
-    # duels that reference any of our praxes in one query.
+    # A solo praxis may be a duel side (ADR-0011). Fetch all active/settled/
+    # resolved duels that reference any of our praxes in one query. `resolved`
+    # is included so an era-frozen duel keeps its win/loss modifier (ADR-0052) —
+    # dropping it there would silently rescore every past duel at era close.
     duel_result = await session.execute(
         select(Duel).where(
             (Duel.challenger_praxis_id.in_(praxis_ids))
             | (Duel.opponent_praxis_id.in_(praxis_ids)),
-            Duel.status.in_([DuelStatus.active, DuelStatus.settled]),
+            Duel.status.in_(
+                [DuelStatus.active, DuelStatus.settled, DuelStatus.resolved]
+            ),
         )
     )
     duels = list(duel_result.scalars().all())
@@ -176,26 +181,39 @@ async def compute_contributions(
                 character_faction, task_faction, era,
                 collaboration_mode=COLLABORATION_MODE_SOLO,
             )
-            if duel.forfeited_by_character_id is not None:
-                # ADR-0011 §Forfeit: the opponent wins by default; vote tallies
-                # don't decide the outcome. The forfeiter takes the loss modifier.
-                duel_multiplier = compute_duel_multiplier(
-                    character_faction,
-                    opponent_faction,
-                    is_winner=character.id != duel.forfeited_by_character_id,
-                    is_tied=False,
-                    era=era,
-                )
+            # One shared rule decides the winner (ADR-0052): forfeit first, then
+            # strictly-greater points_from_votes, else a tie. Read live here; the
+            # same call freezes Duel.winner_character_id at era close — after
+            # which the frozen winner is authoritative and the tally stops moving
+            # the multiplier.
+            if duel.status == DuelStatus.resolved:
+                winner_character_id: Optional[int] = duel.winner_character_id
             else:
-                own_pts = own_tally.points_from_votes
-                opp_pts = opp_tally.points_from_votes
-                duel_multiplier = compute_duel_multiplier(
-                    character_faction,
-                    opponent_faction,
-                    is_winner=own_pts > opp_pts,
-                    is_tied=own_pts == opp_pts,
-                    era=era,
+                if duel.challenger_praxis_id == praxis.id:
+                    challenger_character_id: Optional[int] = character.id
+                    challenger_points = own_tally.points_from_votes
+                    opponent_points = opp_tally.points_from_votes
+                else:
+                    challenger_character_id = (
+                        opp_praxis.created_by_id if opp_praxis is not None else None
+                    )
+                    challenger_points = opp_tally.points_from_votes
+                    opponent_points = own_tally.points_from_votes
+
+                winner_character_id = duel_winner(
+                    challenger_character_id=challenger_character_id,
+                    opponent_character_id=duel.opponent_character_id,
+                    challenger_points=challenger_points,
+                    opponent_points=opponent_points,
+                    forfeited_by_character_id=duel.forfeited_by_character_id,
                 )
+            duel_multiplier = compute_duel_multiplier(
+                character_faction,
+                opponent_faction,
+                is_winner=winner_character_id == character.id,
+                is_tied=winner_character_id is None,
+                era=era,
+            )
 
         else:
             # Plain solo praxis

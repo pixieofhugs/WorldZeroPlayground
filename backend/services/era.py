@@ -1,11 +1,17 @@
+from datetime import datetime, timezone
+
 from fastapi import HTTPException
 from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from game_config import CURRENT_ERA, EraConfig
 from models.character_stats import CharacterStats
+from models.duel import Duel, DuelStatus
 from models.era import Era
 from models.faction_defection_history import FactionDefectionHistory
+from models.praxis import Praxis
+from services.duel_outcome import duel_winner
+from services.vote_tally import get_tally, tally_votes
 
 ERA_RESET_DEFAULT_FACTION: str = "na"
 
@@ -98,6 +104,92 @@ async def get_or_create_stats(
     return stats
 
 
+async def resolve_duels_at_era_close(
+    session: AsyncSession,
+    resolved_at: datetime | None = None,
+) -> list[Duel]:
+    """Freeze every unresolved duel's outcome (ADR-0052). Returns the frozen rows.
+
+    A duel has no winner until the era closes — the tally floats live until this
+    runs (ADR-0011). Here every ``active`` or ``settled`` duel gets:
+
+    - ``winner_character_id`` from the one shared rule (``duel_winner``): forfeit
+      → the non-forfeiter, else strictly greater ``points_from_votes``, tie → NULL.
+    - a snapshot of both sides' ``points_from_votes``, so a resolved surface can
+      show vote shares without the live tally moving under it.
+    - ``resolved_at`` and the terminal ``resolved`` status.
+
+    ``active`` duels (accepted, but never both-submitted) never became votable, so
+    they resolve as a **no-contest**: null winner, zero snapshots. ``pending``
+    duels — never accepted, so never a contest at all — are left untouched, as are
+    ``declined`` ones.
+
+    Deliberately emits **no** per-duel activity-feed event: every duel resolves at
+    the same instant, so N identical-timestamp cards would flood the feed. The
+    single ``era_announcement`` the new ``Era`` row already produces is the
+    notification (ADR-0052).
+    """
+    resolved_at = resolved_at or datetime.now(timezone.utc)
+
+    duel_result = await session.execute(
+        select(Duel).where(Duel.status.in_([DuelStatus.active, DuelStatus.settled]))
+    )
+    duels = list(duel_result.scalars().all())
+    if not duels:
+        return []
+
+    # Bulk: one praxis fetch (for the challenger's character id), one vote tally.
+    praxis_ids: list[int] = []
+    for duel in duels:
+        praxis_ids.append(duel.challenger_praxis_id)
+        if duel.opponent_praxis_id is not None:
+            praxis_ids.append(duel.opponent_praxis_id)
+
+    praxis_result = await session.execute(
+        select(Praxis).where(Praxis.id.in_(praxis_ids))
+    )
+    praxes_by_id: dict[int, Praxis] = {p.id: p for p in praxis_result.scalars()}
+    tallies = await tally_votes(praxis_ids, session)
+
+    for duel in duels:
+        is_contest = duel.status == DuelStatus.settled
+        if is_contest:
+            challenger_points = get_tally(
+                tallies, duel.challenger_praxis_id
+            ).points_from_votes
+            opponent_points = (
+                get_tally(tallies, duel.opponent_praxis_id).points_from_votes
+                if duel.opponent_praxis_id is not None
+                else 0
+            )
+        else:
+            # No-contest: never votable, so there is nothing to snapshot.
+            challenger_points = 0
+            opponent_points = 0
+
+        challenger_praxis = praxes_by_id.get(duel.challenger_praxis_id)
+        duel.winner_character_id = (
+            duel_winner(
+                challenger_character_id=(
+                    challenger_praxis.created_by_id if challenger_praxis else None
+                ),
+                opponent_character_id=duel.opponent_character_id,
+                challenger_points=challenger_points,
+                opponent_points=opponent_points,
+                forfeited_by_character_id=duel.forfeited_by_character_id,
+            )
+            if is_contest
+            else None
+        )
+        duel.challenger_final_points = challenger_points
+        duel.opponent_final_points = opponent_points
+        duel.resolved_at = resolved_at
+        duel.status = DuelStatus.resolved
+
+    await session.flush()
+    return duels
+
+
 async def apply_era_reset(
     characters: list,
     new_era_row: Era,
@@ -106,8 +198,14 @@ async def apply_era_reset(
 ) -> None:
     """Create new CharacterStats rows for each character under the new era.
 
-    Preserves historical stats rows for prior eras.
+    Preserves historical stats rows for prior eras. Also freezes every unresolved
+    duel outcome — era close is the moment a duel acquires a definitive winner
+    (ADR-0011 / ADR-0052).
     """
+    # Freeze duels first: the outcome must be computed against the closing era's
+    # tallies, before any stats row for the new era exists.
+    await resolve_duels_at_era_close(session)
+
     for character in characters:
         # Find previous stats to carry all_time_score forward
         prev_result = await session.execute(

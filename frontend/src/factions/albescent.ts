@@ -28,6 +28,7 @@
 import type { FactionManifest } from './manifest'
 
 import { AlbescentSelectCard } from '../components/cards/FactionSelectCard'
+import AlbescentVote from '../components/vote/AlbescentVote'
 import AlbescentPraxisCard from '../components/praxisCard/desktop/AlbescentPraxisCard'
 import AlbescentMobilePraxisCard from '../components/praxisCard/mobile/AlbescentMobilePraxisCard'
 
@@ -53,4 +54,15 @@ export const ALBESCENT_MANIFEST: FactionManifest = {
    */
   praxisCard: () => AlbescentPraxisCard,
   mobilePraxisCard: () => AlbescentMobilePraxisCard,
+
+  /**
+   * The ferrofluid vote widget (#843, the eighth of #821's eight). Same rule as
+   * the cards above: it is the neutral spectrum row an unaffiliated player sees,
+   * with the blobs slowly morphing between polygon lobe counts — a flourish over
+   * Default's structure, not a repaint in Albescent's colours. Without this
+   * registration Albescent fell through to `UnaffiliatedVote`, which looked
+   * plausible enough that the gap went unnoticed. Its tier WORDS stay gone
+   * (#783): the widget prints plain numerals via `reframeLabel`.
+   */
+  vote: () => AlbescentVote,
 }

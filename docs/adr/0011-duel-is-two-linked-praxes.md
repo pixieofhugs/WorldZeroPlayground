@@ -48,6 +48,12 @@ A duel is **two separate praxes that compete**, joined by a new `Duel` row.
   always-live-on-read scoring model; there is no per-duel voting window or freeze. The
   duel win/loss multiplier is applied per side at scoring time from the current tally.
 
+  > **Amendment (2026-07-20, ADR-0052).** "Until era reset" is now implemented:
+  > the era reset freezes every `active`/`settled` duel into a terminal `resolved`
+  > state with `winner_character_id` + a vote snapshot. Per-duel voting windows
+  > remain rejected — the freeze is global and era-scoped, and the winner still
+  > floats right up to it.
+
 ### Forfeit
 
 Once a duel is `settled`, backing out of it forfeits the contest rather than reopening it.
@@ -75,3 +81,4 @@ Once a duel is `settled`, backing out of it forfeits the contest rather than reo
   (issue #181 tracks the broader projection-vs-event-log question).
 - There is no discrete "X won the duel" moment; a definitive winner only exists at era
   close. The `settled` transition feed event is "duel is live for voting."
+  Era-close resolution is specified in **ADR-0052**.
