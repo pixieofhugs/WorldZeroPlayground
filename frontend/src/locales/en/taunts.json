@@ -88,5 +88,22 @@
     "praxis_complete": [
       "{{from_name}} executed. {{to_name}} is still in the queue."
     ]
+  },
+  "wow": {
+    "score_overtake": [
+      "Stand aside, {{to_name}} — {{from_name}} advances, noodle sword held high and dignity fully intact.",
+      "By order of the Court, {{from_name}} hath vaulted clean past {{to_name}}. Trumpets were requested. A kazoo was available.",
+      "{{to_name}}, thy lead hath wilted like an un-serenaded fern. {{from_name}} now reigns, gravely and absurdly."
+    ],
+    "level_up": [
+      "Kneel, {{from_name}}. Now rise, {{from_name}} — one rank grander and not one whit less ridiculous.",
+      "The Court elevates {{from_name}}! A fresh pauldron has been glued on. It is mostly straight.",
+      "Huzzah for {{from_name}}, promoted this day for distinguished services to gleeful nonsense."
+    ],
+    "praxis_complete": [
+      "{{from_name}} hath furnished proof. The fern has been formally notified.",
+      "Deed sealed. {{from_name}} adds one more glorious absurdity to the eternal ledger of whimsy.",
+      "The Court reviewed {{from_name}}'s chronicle, wept a single joyful tear, and stamped it GLORIOUS."
+    ]
   }
 }

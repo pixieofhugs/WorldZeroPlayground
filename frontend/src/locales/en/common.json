@@ -200,6 +200,10 @@
         "masthead": "The Job Board",
         "charEyebrow": "on file",
         "questsHeading": "jobs in play"
+      },
+      "wow": {
+        "greeting": "Good morrow, Sir {{name}}.",
+        "masthead": "Thy crusade awaits. The noodle sword is where thou left it."
       }
     }
   },
