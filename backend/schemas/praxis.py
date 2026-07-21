@@ -64,7 +64,15 @@ class PraxisOut(BaseModel):
     members: List[PraxisMemberOut]
     invites: List[PraxisInviteOut]
     media_items: List[MediaItemOut]
-    score: float                # populated by build_praxis_out; = Merit (ADR-0014)
+    # The one authoritative number for this praxis (ADR-0053, supersedes
+    # ADR-0047). Computed for the praxis AUTHOR, for every type incl. collab:
+    #   score = (task_point_value + metatask_points) × display_multiplier
+    #           + points_from_votes
+    # "Merit" (base + votes, multipliers ignored) is retired.
+    score: float                # populated by build_praxis_out; the computed total
+    metatask_points: int = 0    # populated by build_praxis_out
+    display_multiplier: float = 1.0  # faction × duel collapsed; 1.0 when nothing applies
+    points_from_votes: int = 0  # populated by build_praxis_out
     voter_count: int = 0        # populated by build_praxis_out via vote_tally
     is_top_for_task: bool = False  # Task Crown: top submitted praxis for its task (ADR-0028)
     # duel_id is set when this praxis is a side of a duel (ADR-0011).
@@ -93,17 +101,18 @@ class PraxisCardOut(BaseModel):
     submitted_at: Optional[datetime] = None
     submit_proposed_at: Optional[datetime] = None  # collab pending-publish chip (#521, ADR-0012)
     member_count: int
+    # The computed total — the one number a praxis has (ADR-0053, supersedes
+    # ADR-0047). Computed for the praxis AUTHOR (created_by), not the viewer:
+    # the card shows the points the praxis banked for whoever made it.
+    #   score = (task_point_value + metatask_points) × display_multiplier
+    #           + points_from_votes
+    # ``display_multiplier`` is faction × duel collapsed into one value, for
+    # every type including collab (one author → one faction → one multiplier).
+    # Base is ``task_point_value`` above; there is no separate ``base_points``.
     score: float
-    # Scoring breakdown for the score stamp (ADR-0047). Computed for the praxis
-    # AUTHOR (created_by), not the viewer — the card shows the points the praxis
-    # banked for whoever made it. ``display_multiplier`` is the single resolved
-    # multiplier: faction_mult for solo, faction×duel for a duel side, and None
-    # for collab (no single multiplier → the stamp collapses to Merit).
-    base_points: int = 0
     metatask_points: int = 0
-    display_multiplier: Optional[float] = None
+    display_multiplier: float = 1.0
     points_from_votes: int = 0
-    total: float = 0.0
     voter_count: int = 0
     is_top_for_task: bool = False  # Task Crown: top submitted praxis for its task (ADR-0028)
     task_faction_slug: Optional[str] = None

@@ -3,8 +3,8 @@ import { useSyncExternalStore } from 'react'
 /**
  * Client-side vote overrides (#626) — "the tally moved because I just voted".
  *
- * A card renders its tally in three sibling components (VoteSummary,
- * PraxisScoreHero, PraxisFooterMeta) that all read the praxis object, which
+ * A card renders its tally in three sibling components (VoteSummary, the
+ * faction score stamp, PraxisFooterMeta) that all read the praxis object, which
  * useVote has no way to reach. Rather than drill an onVoted callback through
  * eight faction variants that only draw stamps and hearts, a cast publishes
  * here and the two card dispatchers + usePraxisDetail merge it back in.

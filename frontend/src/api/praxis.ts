@@ -67,7 +67,18 @@ export interface PraxisOut {
   members: PraxisMemberOut[]
   invites: PraxisInviteOut[]
   media_items: MediaItemOut[]
+  // The one authoritative number for this praxis (ADR-0053), computed for its
+  // AUTHOR for every type including collab, with the terms behind it:
+  //   score = (task_point_value + metatask_points) × display_multiplier
+  //           + points_from_votes
+  /** The computed total. Never derive its parts by subtraction — read the terms. */
   score: number
+  /** Points contributed by applied metatasks; the meta row shows only when > 0. */
+  metatask_points: number
+  /** faction × duel collapsed into one value; `1.0` hides the mult row. */
+  display_multiplier: number
+  /** Points scored from votes (`+0` is valid — the votes row always shows). */
+  points_from_votes: number
   /** Task Crown — top-scoring submitted praxis for its task (ADR-0028). */
   is_top_for_task: boolean
   /** Set when this praxis is one side of a duel (ADR-0011). */
@@ -98,23 +109,21 @@ export interface PraxisCardOut {
    */
   submit_proposed_at?: string | null
   member_count: number
+  // The computed total and the terms behind it (ADR-0053, supersedes ADR-0047),
+  // resolved for the praxis AUTHOR for every type including collab:
+  //   score = (task_point_value + metatask_points) × display_multiplier
+  //           + points_from_votes
+  // "Merit" (base + votes, multipliers discarded) is retired, and nothing
+  // derives vote-points or a multiplier by subtraction.
+  /** The computed total — the stamp headline, shown to 1 decimal. */
   score: number
   voter_count: number
-  // Scoring breakdown for the conditional score stamp (ADR-0047, #819). The
-  // backend resolves `display_multiplier` per praxis type: the faction multiplier
-  // for solo, the combined faction×duel multiplier for duel, and `null` for a
-  // collab (no single multiplier exists → the stamp hides the row and shows
-  // Merit). The card no longer derives vote-points by subtraction.
-  /** Task base points (before multiplier/votes). */
-  base_points: number
   /** Points contributed by applied metatasks; the meta row shows only when > 0. */
   metatask_points: number
-  /** Resolved display multiplier; `null` (collab) or `1.0` hides the mult row. */
-  display_multiplier: number | null
+  /** faction × duel collapsed into one value; `1.0` hides the mult row. */
+  display_multiplier: number
   /** Points scored from votes (`+0` is valid — the votes row always shows). */
   points_from_votes: number
-  /** The computed total shown as the stamp headline, to 1 decimal (ADR-0047). */
-  total: number
   /** Task Crown — top-scoring submitted praxis for its task (ADR-0028). */
   is_top_for_task: boolean
   task_faction_slug: string | null

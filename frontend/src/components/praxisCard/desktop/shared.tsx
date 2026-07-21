@@ -143,9 +143,9 @@ export function PraxisBody({
          * The conditional score stamp (ADR-0047) on EVERY faction (#821), now a
          * dispatched faction SURFACE (ADR-0049) rather than one presentation
          * tinted by four colour props — a faction's total mark is its own
-         * signature device, not a recolour. It replaced the legacy
-         * `PraxisScoreHero` here — the hero survives only on the praxis-detail
-         * surfaces that have not yet migrated.
+         * signature device, not a recolour. It replaced the legacy score hero,
+         * now deleted (ADR-0053); the praxis-detail surfaces keep their own
+         * inline presentation but share this module's arithmetic.
          */}
         <ScoreStamp praxis={praxis} showCrown={showCrown} />
       </div>

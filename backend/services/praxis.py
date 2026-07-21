@@ -180,11 +180,19 @@ async def build_praxis_out(
 
     media_items = [MediaItemOut.model_validate(item) for item in praxis.media_items]
 
-    # Merit = task base + points_from_votes (viewer-independent; ADR-0014).
+    # The score is the computed total, author-scoped (ADR-0053) — the same
+    # number and the same resolver the card uses, so detail and card cannot
+    # disagree. This is a single-praxis route, so the extra scoring queries are
+    # acceptable; list routes precompute via ``author_contributions_for``.
     tally_map = await tally_votes([praxis.id], session)
     tally = get_tally(tally_map, praxis.id)
-    task_base = praxis.task.point_value if praxis.task else 0
-    score = float(task_base + tally.points_from_votes)
+    contribution = (await author_contributions_for([praxis], session, era)).get(praxis.id)
+    (
+        metatask_points,
+        display_multiplier,
+        points_from_votes,
+        score,
+    ) = _resolve_card_scoring(contribution, task_point_value, tally.points_from_votes)
 
     # Look up the Duel row if this praxis is a duel side (ADR-0011). `resolved`
     # is included so a card keeps its duel link after the era froze the outcome
@@ -250,6 +258,9 @@ async def build_praxis_out(
         invites=invites,
         media_items=media_items,
         score=score,
+        metatask_points=metatask_points,
+        display_multiplier=display_multiplier,
+        points_from_votes=points_from_votes,
         voter_count=tally.voter_count,
         is_top_for_task=praxis.id in crowned_ids,
         duel_id=duel_id,
@@ -318,41 +329,35 @@ async def author_contributions_for(
 
 
 def _resolve_card_scoring(
-    praxis: Praxis, contribution: Optional[Contribution], task_point_value: int, tally_votes_points: int
-) -> tuple[int, int, Optional[float], int, float]:
-    """Resolve the score-stamp fields from a Contribution (ADR-0047).
+    contribution: Optional[Contribution], task_point_value: int, tally_votes_points: int
+) -> tuple[int, float, int, float]:
+    """Resolve the score fields from a Contribution (ADR-0053).
 
-    Returns ``(base_points, metatask_points, display_multiplier, points_from_votes,
-    total)``. ``display_multiplier`` is the single value the stamp renders:
-    faction_mult for solo, faction×duel combined for a duel side, and ``None``
-    for collab (members span factions → no single multiplier → stamp collapses
-    to Merit = base + votes).
+    Returns ``(metatask_points, display_multiplier, points_from_votes, score)``.
+    ``display_multiplier`` is faction × duel collapsed into one value, and
+    ``score`` is the contribution's own total — for EVERY praxis type. There is
+    no collab carve-out: a collab praxis has exactly one author, so it has
+    exactly one faction and one multiplier (ADR-0053 supersedes ADR-0047, whose
+    collab branch contradicted its own author-scoping principle).
+
+    The invariant the payload upholds, with no exception::
+
+        score = (task_point_value + metatask_points) × display_multiplier
+                + points_from_votes
+
+    A duel side's multiplier is LIVE and PROVISIONAL — it moves when the
+    opponent is voted, and a currently-behind Snide side reads ×0.0 (ADR-0052).
     """
     if contribution is None:
-        # Defensive fallback (author missing / unscoreable): Merit only.
-        display = None if praxis.type == PraxisType.collab else 1.0
+        # Defensive fallback (author missing / unscoreable): base + votes at ×1.0.
         return (
-            task_point_value,
             0,
-            display,
+            1.0,
             tally_votes_points,
             float(task_point_value + tally_votes_points),
         )
 
-    if praxis.type == PraxisType.collab:
-        # No single multiplier exists (ADR-0047 §Decision): collapse to Merit.
-        return (
-            contribution.base_points,
-            contribution.metatask_points,
-            None,
-            contribution.points_from_votes,
-            float(contribution.base_points + contribution.points_from_votes),
-        )
-
-    # Solo or duel side: one combined multiplier (duel_multiplier is 1.0 for a
-    # plain solo, so faction×duel reduces to faction for solo).
     return (
-        contribution.base_points,
         contribution.metatask_points,
         contribution.faction_multiplier * contribution.duel_multiplier,
         contribution.points_from_votes,
@@ -371,11 +376,11 @@ async def build_praxis_card_out(
 ) -> PraxisCardOut:
     """Lightweight card for list views.
 
-    ``score`` stays Merit = task base + points_from_votes (viewer-independent;
-    ADR-0014) to preserve the current frontend's vote-derivation until the
-    redesign reads ``total``. The score stamp reads the explicit breakdown
-    fields (``base_points``/``metatask_points``/``display_multiplier``/
-    ``points_from_votes``/``total``), computed for the praxis AUTHOR per ADR-0047.
+    ``score`` is the computed total (ADR-0053), not Merit: the points the praxis
+    banked for its AUTHOR, multipliers and metatask points included. The score
+    stamp reads it alongside the breakdown terms
+    (``metatask_points``/``display_multiplier``/``points_from_votes``) and the
+    base it already carries as ``task_point_value``.
 
     ``crowned_ids`` are the Task Crown holders (ADR-0028); list routes
     precompute them once via :func:`~services.vote_tally.crowned_praxis_ids`
@@ -401,22 +406,20 @@ async def build_praxis_card_out(
 
     tally_map = await tally_votes([praxis.id], session)
     tally = get_tally(tally_map, praxis.id)
-    score = float(task_point_value + tally.points_from_votes)
 
-    # Score breakdown (ADR-0047), computed for the AUTHOR. Reuse the precomputed
-    # map when the list route supplies it; otherwise score this praxis alone.
+    # Score (ADR-0053), computed for the AUTHOR. Reuse the precomputed map when
+    # the list route supplies it; otherwise score this praxis alone.
     contribution = author_contributions.get(praxis.id) if author_contributions else None
     if contribution is None:
         contribution = (
             await author_contributions_for([praxis], session, era)
         ).get(praxis.id)
     (
-        base_points,
         metatask_points,
         display_multiplier,
         points_from_votes,
-        total,
-    ) = _resolve_card_scoring(praxis, contribution, task_point_value, tally.points_from_votes)
+        score,
+    ) = _resolve_card_scoring(contribution, task_point_value, tally.points_from_votes)
 
     # Task Crown (ADR-0028): top submitted praxis for this task, computed live.
     if crowned_ids is None:
@@ -440,11 +443,9 @@ async def build_praxis_card_out(
         submit_proposed_at=praxis.submit_proposed_at,
         member_count=len(praxis.members),
         score=score,
-        base_points=base_points,
         metatask_points=metatask_points,
         display_multiplier=display_multiplier,
         points_from_votes=points_from_votes,
-        total=total,
         voter_count=tally.voter_count,
         is_top_for_task=praxis.id in crowned_ids,
         task_faction_slug=praxis.task.primary_faction_slug if praxis.task else None,
