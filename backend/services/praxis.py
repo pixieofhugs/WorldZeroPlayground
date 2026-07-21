@@ -45,6 +45,7 @@ from services import collab_consensus
 from services.character_stats import recalculate_character_stats
 from services.praxis_scoring import Contribution, compute_contributions
 from services.faction_service import faction_permits
+from services.meta_task import metatask_cap_for_level
 from services.era import get_current_era_row, get_or_create_stats
 from services.level_jump import available_level_reach, consume_level_jump
 from models.duel import Duel, DuelStatus
@@ -1739,6 +1740,23 @@ async def apply_metatask(
         raise HTTPException(
             status_code=409,
             detail="This metatask is already applied to the praxis.",
+        )
+
+    # Quantity cap: how many metatasks this praxis may hold rises with the
+    # applying character's level (metatasks_per_praxis_max_level).
+    cap = metatask_cap_for_level(stats.level, era)
+    current_count = await session.scalar(
+        select(func.count())
+        .select_from(PraxisMetaTask)
+        .where(PraxisMetaTask.praxis_id == praxis_id)
+    )
+    if current_count >= cap:
+        raise HTTPException(
+            status_code=422,
+            detail=(
+                f"This praxis already holds the maximum of {cap} "
+                f"metatask{'s' if cap != 1 else ''} at your level."
+            ),
         )
 
     session.add(PraxisMetaTask(praxis_id=praxis_id, task_id=task_id))
