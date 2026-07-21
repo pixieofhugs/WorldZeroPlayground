@@ -26,6 +26,7 @@ import UaMobileTaskCard from '../pages/tasks/mobileArchetypes/cards/UaMobileTask
 import UaMobileTaskDetail from '../pages/taskDetail/mobileArchetypes/UaTaskDetail'
 import UaPraxisDetail from '../pages/praxisDetail/archetypes/UaPraxisDetail'
 import UaProfileBody from '../pages/characterProfile/archetypes/UaProfileBody'
+import UaScoreStamp from '../components/praxisCard/scoreStamp/UaScoreStamp'
 import UaTaskCard from '../components/cards/UaTaskCard'
 import UaTaskDetail from '../pages/taskDetail/archetypes/UaTaskDetail'
 import UaVote from '../components/vote/UaVote'
@@ -41,6 +42,7 @@ export const UA_MANIFEST: FactionManifest = {
   factionSelectCard: () => UaSelectCard,
   taskCard: () => UaTaskCard,
   praxisCard: () => UaPraxisCard,
+  scoreStamp: () => UaScoreStamp,
   avatar: () => UaAvatar,
   backdrop: () => UaBackdrop,
   sigil: () => UaSigilAdapter,
