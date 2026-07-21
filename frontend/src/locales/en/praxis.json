@@ -189,39 +189,39 @@
         "underReview": "Under review",
         "returned": "Returned",
         "withdrawn": "Withdrawn from view",
-        "exhibited": "Exhibited"
+        "exhibited": "Sealed"
       },
       "mode": {
-        "solo": "a sole acquisition",
-        "collab": "a collaborative acquisition",
-        "duel": "a dueling acquisition"
+        "solo": "a mark made alone",
+        "collab": "a mark made together",
+        "duel": "a mark made against another"
       },
       "re": "re: {{task}}",
-      "acquisitionGrade": "Acquisition · Grade {{grade}}",
-      "returnedToSalon": "returned to the Salon {{date}}",
-      "untitled": "Untitled acquisition",
-      "acquiringHand": "The acquiring hand",
+      "acquisitionGrade": "Sealed work · Level {{grade}}",
+      "returnedToSalon": "sealed {{date}}",
+      "untitled": "Untitled mark",
+      "acquiringHand": "The hand",
       "ptsAtStake": "pts at stake",
-      "theProcess": "The Process",
-      "thePlate_one": "The Plate · {{count}} work",
-      "thePlate_other": "The Plate · {{count}} works",
+      "theProcess": "The making",
+      "thePlate_one": "The sheet · {{count}} work",
+      "thePlate_other": "The sheet · {{count}} works",
       "standing": {
         "heading": "The Standing",
         "pointsEarned": "points earned",
-        "appraisal_one": "appraisal",
-        "appraisal_other": "appraisals",
-        "appraisedBy": "Appraised by",
-        "patronsTotal_one": "{{count}} patron · total",
-        "patronsTotal_other": "{{count}} patrons · total",
+        "appraisal_one": "reading",
+        "appraisal_other": "readings",
+        "appraisedBy": "Read by",
+        "patronsTotal_one": "{{count}} reader · total",
+        "patronsTotal_other": "{{count}} readers · total",
         "pts": "{{points}} pts"
       },
-      "patronage": "The Patronage",
+      "patronage": "The readers",
       "mobile": {
-        "back": "The Salon",
+        "back": "The Practice",
         "re": "re:",
-        "theAcquisition": "The acquisition",
-        "plate": "The Plate",
-        "appraise": "Offer an appraisal"
+        "theAcquisition": "The mark",
+        "plate": "The sheet",
+        "appraise": "Leave a reading"
       }
     },
     "ephemerists": {
@@ -408,7 +408,8 @@
     "withdrawError": "Could not withdraw the comment.",
     "ua": {
       "house": "University of Asthmatics",
-      "edited": "edited"
+      "edited": "edited",
+      "prompt": "Leave a note in the margin…"
     },
     "everymen": {
       "masthead": "EVERYMEN · DISPATCH FROM THE FLOOR",

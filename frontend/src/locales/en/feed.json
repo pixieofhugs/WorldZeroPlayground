@@ -166,9 +166,9 @@
       "levelPill": "lvl {{level}}"
     },
     "ua": {
-      "estLine": "EST · MMXX",
-      "pointsLine": "UA · {{points}} pts",
-      "signup": "Matriculate"
+      "estLine": "A daily practice",
+      "pointsLine": "{{points}} marks",
+      "signup": "Sign up"
     },
     "coven": {
       "windowTitle": "wow.exe",
@@ -262,12 +262,12 @@
       }
     },
     "ua": {
-      "eyebrow": "World Zero · The Salon · Est · MMXX",
-      "descriptionFallback": "Any medium, any madness. The Salon decides what endures.",
+      "eyebrow": "World Zero · A daily practice",
+      "descriptionFallback": "One true mark, then another. The satisfaction is in the making, not the tally.",
       "stats": {
-        "members": "patrons",
-        "tasks": "commissions",
-        "praxes": "acquisitions"
+        "members": "practising",
+        "tasks": "marks open",
+        "praxes": "marks sealed"
       }
     },
     "coven": {
@@ -285,16 +285,16 @@
     "ua": {
       "masthead": "World Zero · Nº I",
       "wordmark": "UA",
-      "subtitle": "The Gilt Salon",
-      "blurb": "“Ars longa, spiritus brevis.” A regal academy that frames good work in gold and hangs it where the world walks.",
+      "subtitle": "A daily practice of making marks.",
+      "blurb": "“Ars longa, spiritus brevis.” We practise. Not for the badge — for the mark itself. Come sit with the work.",
       "status": {
-        "locked": "Exhibit work to earn your matriculation.",
-        "eligible": "A place in the Salon awaits you.",
-        "member": "Matriculated — Artist in Residence."
+        "locked": "Seal work worth holding up to earn your place.",
+        "eligible": "A seat is kept for you.",
+        "member": "Practising — one true mark a day."
       },
-      "members_one": "{{count}} resident",
-      "members_other": "{{count}} residents",
-      "cta": "Enter the Salon →"
+      "members_one": "{{count}} practising",
+      "members_other": "{{count}} practising",
+      "cta": "Come sit with the work →"
     },
     "coven": {
       "name": "Warriors of Whimsy",
