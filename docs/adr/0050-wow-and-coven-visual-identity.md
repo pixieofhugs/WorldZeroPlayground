@@ -82,3 +82,54 @@ Two things the swap does **not** carry:
   two slugs and must swap with everything else.
 - This ADR exists mainly so the inversion cannot happen a third time. The cost of
   the second one was a full build wave.
+
+## Field notes, folded in from the vendored bundle (#844)
+
+The praxis-card epic vendored its design sources at `.design-sync/praxis-cards/`
+for the life of the epic, with a `LABELS.md` crib restating this ADR at the point
+of use. That directory is deleted by #844 — the repo does not accumulate design
+snapshots (`docs/agents/design-fidelity.md`). Three things it recorded proved
+load-bearing during the build and outlive it:
+
+- **The artifacts are labelled backwards — go by tokens and metaphor, never by a
+  filename, a section heading or a sample byline.** This is the decision above;
+  it is repeated here because it was the single fact every slice had to be told.
+- **The moon phases are filed under `WowVote` in the handoff's
+  `FactionVoteWidgets.jsx`, and they are Coven's.** The balloons are WOW's. The
+  bundle's own `README.md` said the opposite ("the approved Wow widget is the
+  moon-phase `WowVote`") and the prototype `.dc.html` contradicted it at its own
+  `COZY COVEN (WOW)` section. The prototype wins; so does this table.
+- **The retired `✦` survives in exactly one place as a faction mark:** WOW's
+  TOTAL MARK on the score stamp, in
+  `frontend/src/components/praxisCard/scoreStamp/WowScoreStamp.tsx`, pinned by
+  `scoreStamp.test.tsx`. (`✦` still appears elsewhere as generic ornament —
+  Albescent's sparks, the level-up popup — that is not the identity device.)
+
+**Where the un-vendored sources live.** Neither faction kit was ever vendored;
+both are DesignSync projects, and both are misnamed in exactly the way this ADR
+describes:
+
+| DesignSync project | Files named | Actually |
+|---|---|---|
+| `d0a6fdd7-a2f3-4f61-834a-3a06ab4acf07` | "WoW Faction Kit" | **`wow`** — cream/gold/plum |
+| `32c7198b-e7e7-43be-ad4f-590309b1093d` | "Warriors of Whimsy …" (nine surfaces) | **`coven`** — pink |
+
+Yes: the project whose every file says "Warriors of Whimsy" is the *Coven* kit.
+Subagents cannot reach `claude.ai` design URLs — the orchestrating session must
+read them and paste the findings into the dispatch prompt.
+
+## Open, as of the epic's close (#844)
+
+**WOW's tier ladder is unresolved and the shipped one was kept pending an owner
+ruling.** Two readings disagree:
+
+- the design bundle draws `a start · quite solid · jolly good · splendid! ·
+  legendary!`;
+- issue #840's body, the vendored `LABELS.md` and `WORLD_ZERO_STYLE.md` all say
+  `… excellent · legendary`.
+
+`frontend/src/locales/en/votes.json` currently ships the second —
+`a start · solid · good · excellent · legendary` — which is also the Everymen
+ladder. Coven's (`sweet · lovely · wonderful · magical · iconic`) is not in
+dispute. This is recorded here rather than left to the deleted bundle precisely
+because it is *unresolved*; it must not vanish with the directory.
