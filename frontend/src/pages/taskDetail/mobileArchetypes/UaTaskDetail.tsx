@@ -2,40 +2,54 @@ import type { CSSProperties, ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import PraxisCard from '../../../components/PraxisCard'
+import UaMandala from '../../../components/cards/UaMandala'
+import { UaSigil } from '../../../components/cards/UaSigil'
 import { toRoman } from '../../../components/cards/ephemeristsAtoms'
 import { MobileStickyBar, MobileStickyCaption } from './shared'
 import type { TaskDetailState } from '../useTaskDetail'
 
 /**
- * University of Asthmatics MOBILE task-detail skin (#525) — the salon
- * commission on a phone. A gilt-framed parchment hero (engraved masthead, title
- * in Cormorant italic, Anno + points plates, the commission brief), the
- * exhibited works, and a stamped **sticky action bar** ("Submit to the Salon")
- * pinned above the tab bar. Single-column, no fixed-px grid — the desktop
- * salon's wide plate would overflow a phone. Reuses the same
- * {@link TaskDetailState}, the shared mobile sticky bar, and the `ua.*` copy +
- * `--faction-ua-*` tokens as the desktop archetype. Always-light: UA never dims.
+ * University of Asthmatics MOBILE task-detail skin (#525/#852) — one sheet, read
+ * top to bottom.
+ *
+ * The gilt-framed commission plate is gone with the salon (#788). The hero is a
+ * single sun-bleached sheet on the mesa-sand ground: an eyebrow, the title in
+ * Cormorant, one dashed orange rule, and the point value written inside the
+ * ensō. Sections are separated by a neutral hairline instead of a gold gradient.
+ * Single-column and flow-laid throughout — no fixed-px grid survives 375px
+ * (SPEC-faction-ui-profile §1a).
+ *
+ * The mandala appears exactly once, as `texture` behind the hero — the one
+ * strength a hero is entitled to. Everything below it is a dense list and asks
+ * for nothing.
+ *
+ * Same {@link TaskDetailState}, same `ua.*` copy keys, same shared sticky bar as
+ * before; only the dress changes (ADR-0016). Every colour is a
+ * `--faction-ua-*` token with both themes, so this surface dims through the
+ * `[data-theme="dark"]` cascade — the "always-light" ruling is reversed.
  */
 
-const PAPER = 'var(--faction-ua-card-bg)'
-const PAPER_WARM = 'var(--ua-paper-warm)'
-const WALL = 'var(--ua-wall)'
+const PAGE = 'var(--faction-ua-page)'
+const PAGE_TEXT = 'var(--faction-ua-page-text)'
+const SHEET = 'var(--faction-ua-card-bg)'
+const PANEL = 'var(--faction-ua-panel)'
+const LIFT = 'var(--faction-ua-lift)'
 const INK = 'var(--faction-ua-card-text)'
+const BODY = 'var(--faction-ua-card-body)'
+const MUTED = 'var(--faction-ua-card-muted)'
 const ACCENT = 'var(--faction-ua-card-accent)'
-const SUB = 'var(--faction-ua-card-muted)'
-const MUTED = 'var(--ua-muted)'
-const GOLD = 'var(--ua-gold)'
-const GOLD_PALE = 'var(--ua-gold-pale)'
-const LINE = 'var(--ua-line)'
-const GILT = 'var(--ua-gilt)'
+const RULE = 'var(--faction-ua-rule)'
+const FILL = 'var(--faction-ua)'
+const ON_FILL = 'var(--faction-ua-on-fill)'
+const VERMIL = 'var(--faction-ua-vermil)'
 const DISPLAY = 'var(--faction-ua-card-font)'
-const ENGRAVED = 'var(--font-faction-engraved)'
-const MONO = 'var(--font-body)'
+const SERIF = 'var(--faction-ua-body-font)'
 
-const kicker: CSSProperties = {
-  fontFamily: MONO,
-  fontSize: "var(--text-xs)",
-  letterSpacing: '0.24em',
+/** The label voice: EB Garamond, tracked small caps. No Cinzel, no gold. */
+const smallCaps: CSSProperties = {
+  fontFamily: SERIF,
+  fontSize: 'var(--text-md)',
+  letterSpacing: '0.16em',
   textTransform: 'uppercase',
   color: MUTED,
 }
@@ -43,23 +57,18 @@ const kicker: CSSProperties = {
 // "Anno {roman}"; level 0 shows an em-dash (matches the desktop UA convention).
 const anno = (level: number) => (level > 0 ? toRoman(level) : '—')
 
-function SectionHead({ title, trailing }: { title: string; trailing?: ReactNode }) {
-  return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: "var(--space-md)", marginBottom: "var(--space-md)" }}>
-      <h2 className="content-title" style={{ fontFamily: ENGRAVED, letterSpacing: '0.08em', textTransform: 'uppercase', margin: 0, color: INK, whiteSpace: 'nowrap' }}>
-        {title}
-      </h2>
-      <span style={{ flex: 1, height: 1, background: `linear-gradient(90deg, ${GOLD}, transparent)` }} />
-      {trailing}
-    </div>
-  )
+/** The signature divider — one dashed orange rule, held back to a whisper. */
+function DashedRule({ margin }: { margin: string }) {
+  return <div aria-hidden style={{ height: 0, borderTop: `1.5px dashed ${FILL}`, opacity: 0.4, margin }} />
 }
 
-function plate(background: string, textColor: string, border: string, label: string) {
+function SectionHead({ title, trailing }: { title: string; trailing?: ReactNode }) {
   return (
-    <span className="content-title" style={{ fontFamily: ENGRAVED, letterSpacing: '0.04em', color: textColor, background, border: `1px solid ${border}`, padding: "var(--space-xs) var(--space-md)" }}>
-      {label}
-    </span>
+    <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 'var(--space-md)', marginBottom: 'var(--space-md)' }}>
+      <h2 style={{ ...smallCaps, color: INK, margin: 0 }}>{title}</h2>
+      <span aria-hidden style={{ flex: 1, minWidth: 'var(--space-xl)', height: 1, background: RULE }} />
+      {trailing}
+    </div>
   )
 }
 
@@ -92,86 +101,136 @@ export default function UaTaskDetail({ state }: { state: TaskDetailState }) {
     : null
 
   return (
-    <div className="py-4" style={{ fontFamily: MONO, color: INK, background: WALL, marginLeft: -16, marginRight: -16, paddingLeft: "var(--space-lg)", paddingRight: "var(--space-lg)" }}>
+    <div
+      className="py-4"
+      style={{
+        fontFamily: SERIF,
+        color: PAGE_TEXT,
+        background: PAGE,
+        marginLeft: 'calc(-1 * var(--space-lg))',
+        marginRight: 'calc(-1 * var(--space-lg))',
+        paddingLeft: 'var(--space-lg)',
+        paddingRight: 'var(--space-lg)',
+      }}
+    >
       {/* Breadcrumb */}
-      <nav className="mb-3" style={{ fontFamily: MONO, fontSize: "var(--text-sm)", letterSpacing: '0.1em', textTransform: 'uppercase', color: MUTED }}>
+      <nav className="mb-3" style={smallCaps}>
         <Link to="/tasks" style={{ color: ACCENT, textDecoration: 'none' }}>
           {t('default.breadcrumb')}
         </Link>
-        <span aria-hidden style={{ margin: "0 var(--space-sm)", color: GOLD }}>›</span>
-        <span style={{ color: SUB }}>{task.title}</span>
+        <span aria-hidden style={{ margin: '0 var(--space-sm)', color: MUTED }}>
+          ›
+        </span>
+        <span style={{ color: BODY }}>{task.title}</span>
       </nav>
 
-      {/* Hero — gilt-framed commission plate */}
-      <div style={{ padding: "var(--space-sm)", background: GILT, boxShadow: '0 12px 28px rgba(60,40,10,.2), inset 0 0 0 1px rgba(255,255,255,0.45)', marginBottom: "var(--space-xl)" }}>
-        <div style={{ padding: "var(--space-xs)", background: `linear-gradient(135deg, ${GOLD}, ${GOLD_PALE})` }}>
-          <div
-            style={{
-              position: 'relative',
-              overflow: 'hidden',
-              background: PAPER,
-              backgroundImage: 'radial-gradient(rgba(60,40,10,.03) 1px, transparent 1px)',
-              backgroundSize: '5px 5px',
-              border: `1px solid ${LINE}`,
-              padding: "var(--space-xl) var(--space-xl) var(--space-xl)",
-            }}
+      {/* Hero — one sheet, the mandala felt rather than read behind it */}
+      <section
+        style={{
+          position: 'relative',
+          overflow: 'hidden',
+          background: SHEET,
+          border: `1px solid ${RULE}`,
+          borderRadius: 6,
+          padding: 'var(--space-xl)',
+          marginBottom: 'var(--space-xl)',
+        }}
+      >
+        <UaMandala
+          size={240}
+          strength="texture"
+          style={{ position: 'absolute', right: -72, top: -64, pointerEvents: 'none' }}
+        />
+
+        <div style={{ position: 'relative' }}>
+          <div className="flex items-center justify-between flex-wrap" style={{ gap: 'var(--space-sm)', marginBottom: 'var(--space-md)' }}>
+            <span style={{ ...smallCaps, color: ACCENT }}>{t('ua.masthead')}</span>
+            <span style={smallCaps}>{t('ua.statusOpen')}</span>
+          </div>
+
+          <h1
+            className="content-title"
+            style={{ fontFamily: DISPLAY, fontWeight: 600, lineHeight: 1.08, color: INK, margin: 0, overflowWrap: 'anywhere' }}
           >
-            <div className="flex items-center justify-between" style={{ marginBottom: "var(--space-md)" }}>
-              <span style={{ fontFamily: ENGRAVED, fontSize: "var(--text-sm)", letterSpacing: '0.13em', textTransform: 'uppercase', color: ACCENT }}>
-                {t('ua.masthead')}
+            {task.title}
+          </h1>
+
+          <DashedRule margin="var(--space-lg) 0" />
+
+          <div className="flex items-center flex-wrap" style={{ gap: 'var(--space-lg)' }}>
+            <span style={{ position: 'relative', width: 76, height: 76, flex: 'none' }}>
+              <UaSigil width={76} height={76} />
+              <span
+                className="content-title"
+                style={{
+                  position: 'absolute',
+                  inset: 0,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontFamily: DISPLAY,
+                  fontWeight: 600,
+                  lineHeight: 1,
+                  color: VERMIL,
+                }}
+              >
+                {modifiedPoints}
               </span>
-              <span style={kicker}>{t('ua.statusOpen')}</span>
-            </div>
-
-            <h1 className="content-title" style={{ fontFamily: DISPLAY, fontStyle: 'italic', fontWeight: 700, lineHeight: 1.05, color: INK, margin: 0, overflowWrap: 'anywhere' }}>
-              {task.title}
-            </h1>
-            <div style={{ height: 1, margin: "var(--space-lg) 0 var(--space-lg)", background: `linear-gradient(90deg, ${GOLD}, transparent)` }} />
-
-            <div className="flex items-center gap-2 flex-wrap">
-              {plate(PAPER_WARM, INK, GOLD, `${t('ua.stats.anno')} ${anno(task.level_required)}`)}
-              {plate(ACCENT, PAPER_WARM, ACCENT, t('mobile.points', { points: modifiedPoints }))}
+            </span>
+            <div>
+              <div style={{ ...smallCaps, color: INK }}>{t('ua.stats.honoraria')}</div>
+              <div style={{ ...smallCaps, marginTop: 'var(--space-xs)' }}>
+                {`${t('ua.stats.anno')} ${anno(task.level_required)}`}
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      </section>
 
-      {/* The Commission — brief */}
-      <section style={{ marginBottom: "var(--space-xl)" }}>
+      {/* The brief */}
+      <section style={{ marginBottom: 'var(--space-xl)' }}>
         <SectionHead title={t('ua.commissionHeading')} />
-        <div style={{ background: PAPER, border: `1px solid ${LINE}`, padding: "var(--space-lg) var(--space-xl)" }}>
-          <p className="content-text" style={{ fontFamily: DISPLAY, fontStyle: 'italic', lineHeight: 1.75, color: task.description ? INK : SUB, margin: 0, whiteSpace: 'pre-wrap' }}>
+        <div style={{ background: SHEET, border: `1px solid ${RULE}`, borderRadius: 6, padding: 'var(--space-lg)' }}>
+          <p
+            className="content-text"
+            style={{ fontFamily: SERIF, lineHeight: 1.7, color: task.description ? BODY : MUTED, margin: 0, whiteSpace: 'pre-wrap' }}
+          >
             {task.description || t('ua.commissionEmpty')}
           </p>
         </div>
       </section>
 
-      {/* The Standing — read-only aggregate */}
-      <section style={{ marginBottom: "var(--space-xl)" }}>
+      {/* The reading — read-only aggregate */}
+      <section style={{ marginBottom: 'var(--space-xl)' }}>
         <SectionHead title={t('ua.critiqueHeading')} />
         {voteCount > 0 ? (
-          <div style={{ display: 'flex', alignItems: 'flex-end', gap: "var(--space-md)" }}>
-            <span className="content-title" style={{ fontFamily: DISPLAY, fontStyle: 'italic', fontWeight: 700, lineHeight: 0.85, color: ACCENT }}>
+          <div style={{ display: 'flex', alignItems: 'flex-end', flexWrap: 'wrap', gap: 'var(--space-md)' }}>
+            <span
+              className="content-title"
+              style={{ fontFamily: DISPLAY, fontWeight: 600, lineHeight: 0.85, color: VERMIL }}
+            >
               {topScore}
             </span>
-            <div style={{ paddingBottom: "var(--space-xs)" }}>
-              <div style={{ fontFamily: ENGRAVED, fontSize: "var(--text-lg)", letterSpacing: '0.06em', textTransform: 'uppercase', color: INK }}>
-                {t('ua.critique.finest')}
+            <div style={{ paddingBottom: 'var(--space-xs)' }}>
+              <div style={{ ...smallCaps, color: INK }}>{t('ua.critique.finest')}</div>
+              <div style={{ ...smallCaps, marginTop: 'var(--space-xs)' }}>
+                {t('ua.critique.appraised', { count: voteCount })}
               </div>
-              <div style={{ ...kicker, marginTop: "var(--space-xs)" }}>{t('ua.critique.appraised', { count: voteCount })}</div>
             </div>
           </div>
         ) : (
-          <p className="content-text" style={{ fontFamily: DISPLAY, fontStyle: 'italic', color: SUB, margin: 0 }}>{t('ua.critique.none')}</p>
+          <p className="content-text" style={{ fontFamily: SERIF, color: MUTED, margin: 0 }}>
+            {t('ua.critique.none')}
+          </p>
         )}
       </section>
 
-      {/* Works exhibited (completions) */}
+      {/* Sealed work */}
       <section>
         <SectionHead
           title={t('ua.salonWallHeading')}
           trailing={
-            <div style={{ display: 'flex' }}>
+            <div style={{ display: 'flex', flexWrap: 'wrap' }}>
               {(['score', 'recent'] as const).map((sort) => {
                 const on = submissionSort === sort
                 return (
@@ -179,14 +238,14 @@ export default function UaTaskDetail({ state }: { state: TaskDetailState }) {
                     key={sort}
                     onClick={() => setSubmissionSort(sort)}
                     style={{
-                      fontFamily: MONO,
-                      fontSize: "var(--text-xs)",
-                      letterSpacing: '0.1em',
+                      fontFamily: SERIF,
+                      fontSize: 'var(--text-md)',
+                      letterSpacing: '0.12em',
                       textTransform: 'uppercase',
-                      padding: "var(--space-xs) var(--space-md)",
-                      background: on ? ACCENT : 'transparent',
-                      color: on ? PAPER_WARM : MUTED,
-                      border: `1px solid ${on ? ACCENT : LINE}`,
+                      padding: 'var(--space-xs) var(--space-md)',
+                      background: on ? FILL : 'transparent',
+                      color: on ? ON_FILL : MUTED,
+                      border: `1px solid ${on ? FILL : RULE}`,
                       cursor: 'pointer',
                     }}
                   >
@@ -198,7 +257,9 @@ export default function UaTaskDetail({ state }: { state: TaskDetailState }) {
           }
         />
         {sortedSubmissions.length === 0 ? (
-          <p className="content-text" style={{ fontFamily: DISPLAY, fontStyle: 'italic', color: SUB, margin: 0 }}>{t('ua.empty')}</p>
+          <p className="content-text" style={{ fontFamily: SERIF, color: MUTED, margin: 0 }}>
+            {t('ua.empty')}
+          </p>
         ) : (
           <>
             <div className="flex flex-col gap-4">
@@ -213,14 +274,13 @@ export default function UaTaskDetail({ state }: { state: TaskDetailState }) {
                         transform: 'translateX(-50%)',
                         zIndex: 3,
                         whiteSpace: 'nowrap',
-                        background: GOLD,
-                        color: PAPER_WARM,
-                        fontFamily: ENGRAVED,
-                        fontSize: "var(--text-base)",
-                        letterSpacing: '0.1em',
+                        background: FILL,
+                        color: ON_FILL,
+                        fontFamily: SERIF,
+                        fontSize: 'var(--text-md)',
+                        letterSpacing: '0.14em',
                         textTransform: 'uppercase',
-                        padding: "var(--space-xs) var(--space-md)",
-                        boxShadow: '0 3px 8px rgba(60,40,10,0.3)',
+                        padding: 'var(--space-xs) var(--space-md)',
                       }}
                     >
                       {t('ua.finestHand')}
@@ -231,8 +291,8 @@ export default function UaTaskDetail({ state }: { state: TaskDetailState }) {
               ))}
             </div>
             {submissions.length > 4 && (
-              <div style={{ marginTop: "var(--space-lg)" }}>
-                <Link to={`/praxes?task_id=${task.id}`} style={{ fontFamily: ENGRAVED, fontSize: "var(--text-lg)", letterSpacing: '0.06em', color: ACCENT, textDecoration: 'none' }}>
+              <div style={{ marginTop: 'var(--space-lg)' }}>
+                <Link to={`/praxes?task_id=${task.id}`} style={{ ...smallCaps, color: ACCENT, textDecoration: 'none' }}>
                   {t('ua.viewAll', { count: submissions.length })}
                 </Link>
               </div>
@@ -245,7 +305,19 @@ export default function UaTaskDetail({ state }: { state: TaskDetailState }) {
       {canSignUp && (
         <MobileStickyBar>
           {signupError && (
-            <div style={{ fontFamily: MONO, fontSize: "var(--text-lg)", color: 'var(--color-danger)', padding: "var(--space-sm) var(--space-md)", background: 'var(--faction-ua-light)', border: `1px solid ${LINE}` }}>
+            /* #848 turned --faction-ua-light opaque, so it can no longer whisper
+               behind an error line. A failure is lifted, not tinted: the raised
+               surface plus the shared danger ink, both themed. */
+            <div
+              className="content-text"
+              style={{
+                fontFamily: SERIF,
+                color: 'var(--color-danger)',
+                padding: 'var(--space-sm) var(--space-md)',
+                background: LIFT,
+                borderLeft: '3px solid var(--color-danger)',
+              }}
+            >
               {signupError}
             </div>
           )}
@@ -253,14 +325,15 @@ export default function UaTaskDetail({ state }: { state: TaskDetailState }) {
             onClick={handleSignup}
             style={{
               width: '100%',
-              background: ACCENT,
-              color: PAPER_WARM,
-              fontFamily: ENGRAVED,
-              fontSize: "var(--text-xl)",
-              letterSpacing: '0.1em',
+              background: FILL,
+              color: ON_FILL,
+              fontFamily: SERIF,
+              fontSize: 'var(--text-xl)',
+              letterSpacing: '0.12em',
               textTransform: 'uppercase',
-              padding: "var(--space-lg) var(--space-xl)",
+              padding: 'var(--space-lg)',
               border: 'none',
+              borderRadius: 3,
               cursor: 'pointer',
             }}
           >
@@ -273,13 +346,23 @@ export default function UaTaskDetail({ state }: { state: TaskDetailState }) {
       )}
 
       {mySubmission && (
-        <MobileStickyBar style={{ flexDirection: 'row', alignItems: 'center' }}>
-          <span className="content-text" style={{ fontFamily: DISPLAY, fontStyle: 'italic', fontWeight: 700, color: GOLD, flex: 1 }}>
+        <MobileStickyBar style={{ flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap' }}>
+          <span className="content-text" style={{ fontFamily: DISPLAY, fontWeight: 600, color: ACCENT, flex: 1 }}>
             {t('ua.submitted.text')}
           </span>
           <Link
             to={`/praxes/${mySubmission.id}/edit`}
-            style={{ fontFamily: ENGRAVED, fontSize: "var(--text-base)", letterSpacing: '0.12em', textTransform: 'uppercase', padding: "var(--space-md) var(--space-lg)", background: INK, color: PAPER_WARM, textDecoration: 'none' }}
+            style={{
+              fontFamily: SERIF,
+              fontSize: 'var(--text-md)',
+              letterSpacing: '0.14em',
+              textTransform: 'uppercase',
+              padding: 'var(--space-md) var(--space-lg)',
+              background: PANEL,
+              color: INK,
+              border: `1px solid ${RULE}`,
+              textDecoration: 'none',
+            }}
           >
             {t('ua.submitted.edit')}
           </Link>
@@ -287,16 +370,26 @@ export default function UaTaskDetail({ state }: { state: TaskDetailState }) {
       )}
 
       {!mySubmission && isInProgress && inProgressPraxisId !== null && (
-        <MobileStickyBar style={{ flexDirection: 'row', alignItems: 'center', gap: "var(--space-md)" }}>
+        <MobileStickyBar style={{ flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 'var(--space-md)' }}>
           <button
             onClick={handleDrop}
-            style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: MONO, fontSize: "var(--text-base)", letterSpacing: '0.1em', textTransform: 'uppercase', color: MUTED }}
+            style={{ background: 'none', border: 'none', cursor: 'pointer', ...smallCaps }}
           >
             {t('ua.inProgress.drop')}
           </button>
           <Link
             to={`/praxes/${inProgressPraxisId}/edit`}
-            style={{ marginLeft: "auto", fontFamily: ENGRAVED, fontSize: "var(--text-md)", letterSpacing: '0.12em', textTransform: 'uppercase', padding: "var(--space-md) var(--space-xl)", background: ACCENT, color: PAPER_WARM, textDecoration: 'none' }}
+            style={{
+              marginLeft: 'auto',
+              fontFamily: SERIF,
+              fontSize: 'var(--text-md)',
+              letterSpacing: '0.14em',
+              textTransform: 'uppercase',
+              padding: 'var(--space-md) var(--space-xl)',
+              background: FILL,
+              color: ON_FILL,
+              textDecoration: 'none',
+            }}
           >
             {t('ua.inProgress.continue')}
           </Link>
