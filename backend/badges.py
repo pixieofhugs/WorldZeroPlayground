@@ -25,6 +25,10 @@ class BadgeContext:
     account_character_count: int
     # True when this character is the account's earliest by (created_at, id).
     is_earliest_on_account: bool
+    # True when this character is winning at least one *live* duel (#748) —
+    # strictly ahead on votes right now, or holding a forfeit win. The first
+    # per-character (rather than per-account) fact in the context.
+    is_duel_winner: bool
 
 
 @dataclass(frozen=True)
@@ -44,7 +48,19 @@ def _is_sock_puppet(context: BadgeContext) -> bool:
     return context.account_character_count > 1 and not context.is_earliest_on_account
 
 
+def _is_duelist(context: BadgeContext) -> bool:
+    """Winning a live duel — provisionally on votes, or outright by forfeit (#748).
+
+    Provisional by design (ADR-0011): mid-era a duel has no discrete winner, the
+    tally floats, and so does this badge. A forfeit win is sticky for as long as
+    the duel stays live. "Won a duel last era" is a separate, frozen fact (#823)
+    and deliberately not this badge.
+    """
+    return context.is_duel_winner
+
+
 ALL_BADGES: tuple[Badge, ...] = (
     Badge(key="sock_puppeteer", name="Sock Puppeteer", condition=_is_sock_puppeteer),
     Badge(key="sock_puppet", name="Sock Puppet", condition=_is_sock_puppet),
+    Badge(key="duelist", name="Duelist", condition=_is_duelist),
 )
