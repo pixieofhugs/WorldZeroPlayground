@@ -99,7 +99,8 @@
       "tag": "locked"
     },
     "ua": {
-      "rateAria": "Appraise {{value}} — {{label}}",
+      "rateAria": "Mark {{value}} — {{label}}",
+      "prompt": "How true did it land",
       "plateNumber": "№{{value}}",
       "plateTopMark": "✦"
     },

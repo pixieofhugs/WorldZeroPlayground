@@ -3,8 +3,10 @@ import { fileURLToPath } from 'node:url'
 import { dirname, join, relative } from 'node:path'
 import { describe, it, expect } from 'vitest'
 import i18n from '../../i18n'
+import factions from '../en/factions.json'
 import forms from '../en/forms.json'
 import praxis from '../en/praxis.json'
+import taunts from '../en/taunts.json'
 import votes from '../en/votes.json'
 import { findDuplicateJsonKeys } from './findDuplicateJsonKeys'
 
@@ -58,6 +60,52 @@ describe('en copy catalog shape', () => {
 
   it('has the praxis charLimit.terminal key referenced by ADR-0010/ADR-0032', () => {
     expect(praxis.charLimit).toHaveProperty('terminal')
+  })
+
+  // #850: the academic "prospectus" framing is retired for UA. The key itself
+  // was renamed, not just its value — a key named `prospectus` holding "The
+  // Practice" is the drift this rename exists to stop. The top-level
+  // `invitation.prospectus` string is a DIFFERENT key: it is the overline of the
+  // one adaptive popup shared by every faction and deliberately survives.
+  it('frames the UA faction page as the practice, not a prospectus', () => {
+    expect(factions.ua).not.toHaveProperty('prospectus')
+    expect(factions.ua.practice.heading).toBe('The Practice')
+    expect(factions.ua.practice.empty).toBe('Nothing written down yet.')
+  })
+
+  it('keeps the shared invitation prospectus overline', () => {
+    expect(factions.invitation.prospectus).toBe('a prospectus')
+  })
+})
+
+// #850: UA used to have no taunt branch at all and fell through to `default`,
+// which is a gloat. A contemplative faction gloating is off-voice, so UA
+// overrides with its own quiet acknowledgements — real entries, not a fallback.
+describe('UA taunts', () => {
+  const TRIGGERS = ['score_overtake', 'level_up', 'praxis_complete'] as const
+
+  it('covers every trigger the default branch covers', () => {
+    for (const trigger of TRIGGERS) {
+      expect(taunts.ua[trigger].length).toBeGreaterThan(0)
+    }
+  })
+
+  it('names the achiever with from_name, matching the resolver contract', () => {
+    // TauntMessage.faction_slug is the SENDER's faction and `from_name` is the
+    // sender — the one who overtook / levelled / sealed. A variant that only
+    // interpolates to_name would credit the wrong character.
+    for (const trigger of TRIGGERS) {
+      for (const variant of taunts.ua[trigger]) {
+        expect(variant).toContain('{{from_name}}')
+      }
+    }
+  })
+
+  it('does not gloat', () => {
+    const all = TRIGGERS.flatMap((trigger) => taunts.ua[trigger]).join(' ')
+    for (const gloat of ['napping', 'dust', "doesn't lie", 'still thinking']) {
+      expect(all).not.toContain(gloat)
+    }
   })
 })
 
