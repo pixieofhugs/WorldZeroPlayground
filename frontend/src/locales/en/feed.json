@@ -41,7 +41,12 @@
     "points": "{{points}} pts",
     "pointsEarned": "+{{points}} pts",
     "level": "lvl {{level}}",
-    "quotedHeadline": "“{{headline}}”"
+    "quotedHeadline": "“{{headline}}”",
+    "wow": {
+      "questTaken": "{{name}} took up a quest, breastplate agleam.",
+      "praxisSealed": "{{name}} sealed a chronicle of proof.",
+      "levelUp": "{{name}} was elevated a rank by the Court."
+    }
   },
   "dateDivider": {
     "today": "Today",
@@ -175,6 +180,9 @@
       "questMeta": "new quest · {{points}} pts",
       "signup": "sign up",
       "points": "{{points}} pts"
+    },
+    "wow": {
+      "signup": "Take Up the Quest"
     }
   },
   "factionCard": {
@@ -307,6 +315,9 @@
       "members_one": "{{count}} witch ✦",
       "members_other": "{{count}} witches ✦",
       "cta": "peek inside ✦"
+    },
+    "wow": {
+      "tagline": "Whimsy for everyone. — Imsy-whay or-fay every-oneway."
     },
     "snide": {
       "masthead": "Field Dispatch · Nº 0666",
