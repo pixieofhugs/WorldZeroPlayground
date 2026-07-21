@@ -47,19 +47,22 @@ export default function SnideVote({ praxisId, currentValue, points, totalVotes }
         style={{
           position: 'relative',
           display: 'flex',
-          gap: 'var(--space-xs)',
+          // eslint-disable-next-line local/no-raw-style-values -- ornament: the amp face's 5px inter-column gap, drawn geometry of the chassis (§4a)
+          gap: 5,
           alignItems: 'flex-end',
-          padding: 'var(--space-sm) var(--space-md)',
+          // eslint-disable-next-line local/no-raw-style-values -- ornament: the amp face's own inset, the design's 11/13 (§4a)
+          padding: '11px 13px',
           background:
             'linear-gradient(var(--faction-snide-amp-panel-from), var(--faction-snide-amp-panel-to))',
           border: '2px solid var(--faction-snide-amp-panel-border)',
           borderRadius: 6,
-          boxShadow: 'inset 0 2px 7px rgba(0, 0, 0, 0.75)',
+          boxShadow:
+            'inset 0 2px 7px rgba(0, 0, 0, 0.75), inset 0 0 0 1px var(--faction-snide-amp-panel-sheen)',
         }}
       >
         {/* screws */}
-        <span aria-hidden style={{ position: 'absolute', top: 5, left: 5, width: 4, height: 4, borderRadius: '50%', background: 'var(--faction-snide-amp-screw)' }} />
-        <span aria-hidden style={{ position: 'absolute', top: 5, right: 5, width: 4, height: 4, borderRadius: '50%', background: 'var(--faction-snide-amp-screw)' }} />
+        <span aria-hidden style={{ position: 'absolute', top: 5, left: 5, width: 4, height: 4, borderRadius: '50%', background: 'var(--faction-snide-amp-screw)', boxShadow: 'inset 0 0 0 1px var(--faction-snide-amp-screw-rim)' }} />
+        <span aria-hidden style={{ position: 'absolute', top: 5, right: 5, width: 4, height: 4, borderRadius: '50%', background: 'var(--faction-snide-amp-screw)', boxShadow: 'inset 0 0 0 1px var(--faction-snide-amp-screw-rim)' }} />
 
         {TIERS.map((tier) => {
           const reached = active >= tier.value
@@ -68,7 +71,7 @@ export default function SnideVote({ praxisId, currentValue, points, totalVotes }
             const lit = reached && i < tier.value
             const litColor = SEG_COLORS[i]
             const cellStyle: CSSProperties = {
-              width: 30,
+              width: 32,
               height: 5,
               borderRadius: 1,
               background: lit ? litColor : 'var(--faction-snide-amp-seg-off)',
@@ -123,7 +126,8 @@ export default function SnideVote({ praxisId, currentValue, points, totalVotes }
         <span
           style={{
             fontFamily: 'var(--faction-snide-font-marker)',
-            fontSize: 'var(--text-content)',
+            // eslint-disable-next-line local/no-raw-style-values -- ornament: marker-scrawled verdict beside the meter, the design's 14; Permanent Marker's optical size is not the text scale (§4a)
+            fontSize: 14,
             color: active ? 'var(--faction-snide-acid)' : 'var(--faction-snide-vote-off)',
             transition: 'color 140ms',
           }}

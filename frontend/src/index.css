@@ -199,6 +199,25 @@
   --faction-default-dot-ring: #d6cfbf;
   --faction-default-vote-on: #c2541f;
   --faction-default-vote-off: #a8895a;
+  /* The unaffiliated PLAIN CREAM SHEET (#842). The design's card is a quiet
+     sheet, and the rainbow appears in exactly four places on it — the eyebrow
+     text-clip, the score-box rule, the total, and one 2px divider. The
+     full-bleed rainbow BAND #820 wrapped the sheet in had no counterpart in the
+     prototype and is gone; these tokens are what replaced it. `card-line` is
+     the sheet + stamp hairline, `stamp-bg` the whiter plate the score sits on,
+     `gold` the POINTS caption. The last two gradients are deliberately NOT the
+     seven-stop spectrum: the design draws the chip and the total with their own
+     shorter ramps, and substituting --faction-default-rainbow would flatten a
+     green→blue chip into a full spectrum smear at 40px wide. */
+  --faction-default-card-line: #e6ddc8;
+  --faction-default-stamp-bg: #ffffff;
+  --faction-default-gold: #ca8a04;
+  --faction-default-chip: linear-gradient(90deg, #16a34a, #2563eb);
+  /* White in BOTH themes: the chip is a saturated green→blue pill in either,
+     and the ink has to answer to the pill, not to the page. */
+  --faction-default-chip-text: #ffffff;
+  --faction-default-total-rainbow: linear-gradient(90deg, #c1272d, #ca8a04 40%, #16a34a 60%, #2563eb);
+  --faction-default-eyebrow-rainbow: linear-gradient(90deg, #16a34a, #2563eb, #be185d);
   --spectrum-glow-1: #c1352a;
   --spectrum-glow-2: #cf861a;
   --spectrum-glow-3: #16a34a;
@@ -240,7 +259,22 @@
   --faction-snide-amp-panel-border: #2c2a20;
   --faction-snide-amp-seg-off: rgba(255, 255, 255, 0.07);
   --faction-snide-amp-screw: #3a3830;
+  /* The screw's countersunk rim and the faint acid sheen along the amp face's
+     inner edge (#842) — both were dropped when the widget was first built, and
+     without them the panel reads as a flat rectangle rather than a chassis. */
+  --faction-snide-amp-screw-rim: #000000;
+  --faction-snide-amp-panel-sheen: rgba(182, 255, 46, 0.06);
   --faction-snide-vote-off: #8a9a6a;
+
+  /* S.N.I.D.E. EVIDENCE SLAB (#842) — the praxis card and its score box. The
+     slab is a photocopier-black plate with a hard drop shadow (no blur: it is
+     printed, not floating) and a 3px dot tooth; the score box is a darker well
+     punched into it, tilted -3deg. Like the amp face these are ink-dark in both
+     themes, so only the two shadow alphas deepen under [data-theme="dark"]. */
+  --faction-snide-slab-shadow: rgba(0, 0, 0, 0.4);
+  --faction-snide-slab-tooth: rgba(244, 241, 232, 0.05);
+  --faction-snide-stamp-bg: rgba(0, 0, 0, 0.4);
+  --faction-snide-stamp-shadow: rgba(0, 0, 0, 0.5);
 
   /* ── Singularity terminal border (blue brand) ── */
   --faction-singularity-border-hard: #2563eb;
@@ -265,6 +299,28 @@
   --faction-singularity-vote-scramble: rgba(74, 222, 128, 0.24); /* dim, unreached noise */
   --faction-singularity-vote-reached-bg: rgba(74, 222, 128, 0.05); /* faint lit key */
   --faction-singularity-vote-off: #3f7a58; /* idle caption ink */
+
+  /* ── Singularity SYSTEM SLAB (#842) — the praxis card and its computed stamp.
+     A booted terminal: pale-mint body ink (NOT the bright phosphor accent, which
+     is a chrome colour and burns as running text), a green hairline frame, four
+     cyan corner brackets, a slow cyan scanline sweep, and the stamp as a darker
+     well with a glowing cyan total. Terminal tokens are theme-invariant —
+     Singularity is always-dark (§6) — so there is no [data-theme] override for
+     this group, deliberately. */
+  --faction-singularity-terminal-ink: #d7ffe6; /* pale mint — titles + body */
+  --faction-singularity-frame: rgba(74, 222, 128, 0.35);
+  --faction-singularity-rule: rgba(74, 222, 128, 0.2);
+  --faction-singularity-bracket: #60a5fa; /* cyan corner brackets */
+  --faction-singularity-scan: rgba(96, 165, 250, 0.16); /* scanline sweep peak */
+  --faction-singularity-scanline: rgba(74, 222, 128, 0.03); /* the standing raster */
+  --faction-singularity-stamp-bg: #030b06;
+  --faction-singularity-stamp-border: rgba(96, 165, 250, 0.5);
+  --faction-singularity-stamp-rule: rgba(74, 222, 128, 0.25);
+  --faction-singularity-stamp-glow: rgba(96, 165, 250, 0.1); /* inner box glow */
+  --faction-singularity-total-glow: rgba(96, 165, 250, 0.7); /* the TOT halo */
+  --faction-singularity-led-red: #ff5f56;
+  --faction-singularity-led-amber: #f0c400;
+  --faction-singularity-led-green: #4ade80;
 
   /* ══ Ephemerists illuminated-codex palette (the ephemerists slot) ══
      The card contract above rebinds to these. CONSTANTS (gold/rubric/
@@ -368,7 +424,7 @@
   --faction-coven-ivy: #7cbf99;
   --faction-coven-ivy-leaf: #9ad3b1;
 
-  /* ══ Praxis-card redesign (#821, repointed by #838) ══
+  /* ══ Praxis-card redesign (#821, repointed by #838, rebuilt by #840) ══
      WOW wears the cream/gold/plum CHRONICLE + the googly-balloon verdict; Coven
      wears the PINK MARKER STICKER + the moon-phase plate. #830 had these two
      inverted — it took a mislabelled mockup heading at face value and authored a
@@ -376,21 +432,42 @@
      tokens and metaphor, never by a label. The moon plate is a night surface
      that reads in both themes, so its inner values do not flip.
 
-     Coven's surfaces still render through the shared ChroniclePraxisCard
-     structure, so the `-chronicle-` family name survives here as the frame
-     contract it feeds; the VALUES are the pink sticker's. #840 replaces the
-     structure and can then rename the family. */
+     #840 rebuilt both surfaces off the vendored prototype and this block moved
+     with them:
+
+      • Coven's family is renamed `-chronicle-` → `-sticker-`. The old name was
+        the borrowed FRAME it rendered through until its own sticker existed; a
+        pink faction carrying "chronicle" in its token names is the exact naming
+        trap ADR-0050 is about.
+      • BOTH running-head gradients are gone. #838 had to deepen four header
+        stops so small uppercase text would clear 4.5:1 on them — but the design
+        puts no text on either band: the chronicle's running head is a 6px
+        gold/plum STRIPE, and the sticker has no band at all. The masthead is an
+        eyebrow line inside the text column on both cards now, so there is
+        nothing left for those stops to protect.
+      • The score stamps get their own token families. Each is a distinct
+        OBJECT in the design (a tilted parchment plate; a dashed sticker), not
+        the card ground reused. */
 
   /* Coven — pink marker-sticker frame */
-  --faction-coven-chronicle-bg: #fffdfa; /* sticker ground */
-  --faction-coven-chronicle-accent: #ec5f99; /* border, rules, stamp */
-  /* The running head carries small uppercase text, so its two stops each owe
-     4.5:1 to the header ink. #ec5f99 pays only 3.10:1 against the near-white,
-     so the band deepens to the sticker's own ink range. */
-  --faction-coven-chronicle-header-from: #b93a72;
-  --faction-coven-chronicle-header-to: #8e2f5c;
-  --faction-coven-chronicle-header-text: #fffdfa;
-  --faction-coven-chronicle-shadow: rgba(214, 90, 150, 0.35);
+  --faction-coven-sticker-bg: #fffdfa; /* sticker ground */
+  --faction-coven-sticker-border: #f3b6d2; /* the 1px hairline edge */
+  --faction-coven-sticker-accent: #ec5f99; /* rules, eyebrow, roster ring */
+  /* The design's metadata ink #a8728e pays only 3.80:1 on the near-white
+     ground; deepened one step to 5.22:1 so the meta line is real text. */
+  --faction-coven-sticker-muted: #8f5c78;
+  --faction-coven-sticker-shadow: rgba(214, 90, 150, 0.14);
+
+  /* Coven — the score STICKER: a dashed 2px card struck at -3deg, its own
+     object with its own ground, not a tint of the card's. */
+  --faction-coven-stamp-bg: #fff0f6;
+  --faction-coven-stamp-edge: #ec9cc0;
+  --faction-coven-stamp-shadow: rgba(236, 95, 153, 0.22);
+  /* The multiplier chip is the design's one non-pink note — a highlighter
+     yellow, carried into dark unchanged (it is a marker stroke, not a
+     surface). Its ink is the sticker's own heading plum-pink. */
+  --faction-coven-stamp-chip-bg: #ffe08a;
+  --faction-coven-stamp-chip-text: #8e2f5c;
 
   /* Coven — moon-phase vote plate (night plate; same in both themes) */
   --faction-coven-moon-plate-from: #3a2352;
@@ -412,17 +489,23 @@
   /* WOW — cream/gold/plum chronicle frame (the chronicle is WOW's, ADR-0050) */
   --faction-wow-chronicle-bg: var(--faction-wow-card-bg); /* cream parchment */
   --faction-wow-chronicle-gold: #c8a02a; /* frame + rules; theme-invariant */
+  /* The FRAME, split out of the accent (#860 ask 2). ChronicleTheme carried one
+     `accent` doing duty as border AND rule AND ink tint, so the card bound
+     itself in plum and the design's gold frame never shipped. */
+  --faction-wow-chronicle-border: var(--faction-wow-chronicle-gold);
   --faction-wow-chronicle-panel: #f3e7c4; /* the inset parchment plate */
-  /* The design's running head is a 6px gold/plum stripe with NO text on it;
-     ChroniclePraxisCard puts the masthead there, and no ink clears 4.5:1 on both
-     a #c8a02a gold and a #7a4a9e plum (cream measures 2.24 on the gold, ink 2.65
-     on the plum). Both stops therefore deepen one step — the design's own
-     "gold bright" #8a5a16 into the plum — so cream reads across the whole band
-     (5.38:1 → 5.79:1). The undimmed gold survives as the frame and the rules. */
-  --faction-wow-chronicle-header-from: #8a5a16;
-  --faction-wow-chronicle-header-to: #7a4a9e;
-  --faction-wow-chronicle-header-text: #fbf4e0;
   --faction-wow-chronicle-shadow: rgba(74, 56, 10, 0.5);
+  /* The secondary face: Lora italic, the design's whole quiet register
+     ("for the quest —", "Sealed by the Court"). #860 ask 1 — it had no token,
+     so the cards were passing a raw font stack around. */
+  --faction-wow-body-font: var(--font-display); /* Lora */
+  /* The score stamp: the inset parchment plate struck at -2deg, with the
+     "gold bright" total the design reserves for the bottom line. */
+  --faction-wow-stamp-bg: var(--faction-wow-chronicle-panel);
+  --faction-wow-stamp-total: #8a5a16;
+  --faction-wow-stamp-shadow: rgba(74, 56, 10, 0.22);
+  --faction-wow-stamp-chip-bg: var(--faction-wow-card-accent); /* plum */
+  --faction-wow-stamp-chip-text: var(--faction-wow-chronicle-panel);
 
   /* WOW — googly-balloon vote plate. The balloon ramp climbs plum → gold and is
      THEME-INVARIANT (the prototype ships one ramp for both themes); only the
@@ -435,8 +518,36 @@
   --faction-wow-balloon-3: #be7370;
   --faction-wow-balloon-4: #d69a48;
   --faction-wow-balloon-5: #e7b94e;
+  /* An UNREACHED balloon is drawn, not outlined-and-hollow: the design fills it
+     with a dead parchment #EDE4C8 so the whole bunch is present and only the
+     colour climbs (#860 ask 3). #821 made it transparent, which read as four
+     missing balloons. */
+  --faction-wow-balloon-idle: #ede4c8;
+  /* Every balloon carries the same dark ink outline — the googly-cartoon line,
+     not a state signal (#860 ask 3). */
+  --faction-wow-balloon-outline: rgba(60, 44, 6, 0.42);
   --faction-wow-balloon-string: rgba(60, 44, 6, 0.42);
   --faction-wow-balloon-eye: #241c0b;
+  --faction-wow-balloon-eye-ring: #3a2a0c;
+  /* The rainbow sweep that travels behind the balloon row. Screen-blended over
+     the parchment plate, so these are the design's own translucent stops. */
+  --faction-wow-sweep: linear-gradient(
+    100deg,
+    transparent,
+    rgba(255, 90, 90, 0.26),
+    rgba(255, 205, 80, 0.3),
+    rgba(120, 220, 150, 0.26),
+    rgba(90, 170, 220, 0.26),
+    rgba(150, 95, 205, 0.3),
+    transparent
+  );
+  /* Rank-5 confetti — the six community-rainbow stops, reused as flecks. */
+  --faction-wow-confetti-1: #e0562e;
+  --faction-wow-confetti-2: #e7b94e;
+  --faction-wow-confetti-3: #6fbf73;
+  --faction-wow-confetti-4: #5fb0c9;
+  --faction-wow-confetti-5: #7a4a9e;
+  --faction-wow-confetti-6: #e86fa6;
   --faction-wow-vote-on: var(--faction-wow-card-accent); /* plum — 5.79:1 */
   --faction-wow-vote-off: var(--faction-wow-card-muted); /* olive — 4.76:1 */
 
@@ -754,6 +865,11 @@
   --faction-snide-wall: #141310;
   --faction-snide-wall-deep: #0b0a08;
   --faction-snide-wall-text: #e9e6da;
+  /* The evidence slab, lights out (#842): the plate itself is already ink, so
+     only its printed shadow and the score well deepen. */
+  --faction-snide-slab-shadow: rgba(0, 0, 0, 0.5);
+  --faction-snide-stamp-bg: rgba(0, 0, 0, 0.5);
+  --faction-snide-stamp-shadow: rgba(0, 0, 0, 0.6);
   --faction-singularity-card-muted: #60a5fa; /* blue brand chrome */
 
   /* ── UA · sun-bleached practice, after dark (#788, #848) ──
@@ -785,6 +901,15 @@
   --faction-default-dot-ring: rgba(240, 230, 208, 0.3);
   --faction-default-vote-on: #e07a3a;
   --faction-default-vote-off: #b0925f;
+  /* The cream sheet, lights out (#842) — the design's own dark card, not an
+     inversion: the hairline becomes a white scrim, the stamp plate lifts off
+     the sheet rather than sinking into it, and both narrow rainbows swap their
+     stops for the brightened spectrum's. */
+  --faction-default-card-line: rgba(255, 255, 255, 0.14);
+  --faction-default-stamp-bg: #26252f;
+  --faction-default-gold: #e6b34a;
+  --faction-default-total-rainbow: linear-gradient(90deg, #e2433f, #e6b34a 40%, #4ade80 60%, #60a5fa);
+  --faction-default-eyebrow-rainbow: linear-gradient(90deg, #4ade80, #60a5fa, #f472b6);
   --glow-neutral: rgba(255, 255, 255, 0.75);
 
   /* ══ Ephemerists palette (dark) — pigments stay vivid; vellum darkens
@@ -836,13 +961,21 @@
      balloon ramps are fixed surfaces that read in both themes, so only the frame
      chrome, the balloon plate and the caption inks are overridden here. */
 
-  /* Coven — pink marker-sticker frame (dark) */
-  --faction-coven-chronicle-bg: #2a0d1c;
-  --faction-coven-chronicle-accent: #f472b6;
-  --faction-coven-chronicle-header-from: #7a3358; /* ink 6.18:1 */
-  --faction-coven-chronicle-header-to: #5e2a46; /* ink 7.97:1 */
-  --faction-coven-chronicle-header-text: #fbcfe0;
-  --faction-coven-chronicle-shadow: rgba(0, 0, 0, 0.5);
+  /* Coven — pink marker-sticker frame (dark). NOT a cascade freebie: the design
+     draws this variant explicitly (a deep plum-black ground under a pink dashed
+     sticker), and every value below is read off it rather than derived. */
+  --faction-coven-sticker-bg: #2a0d1c;
+  --faction-coven-sticker-border: rgba(244, 114, 182, 0.28);
+  --faction-coven-sticker-accent: #f472b6;
+  --faction-coven-sticker-muted: #c98aa8;
+  --faction-coven-sticker-shadow: rgba(0, 0, 0, 0.5);
+  --faction-coven-stamp-bg: #3a1228;
+  --faction-coven-stamp-edge: #a84a7a;
+  --faction-coven-stamp-shadow: rgba(0, 0, 0, 0.35);
+  /* The highlighter chip does not darken — a marker stroke is the same ink on
+     either sheet — but its text flips to the sticker ground so it stays legible
+     on the yellow (#3a1228 on #ffe08a = 12.1:1). */
+  --faction-coven-stamp-chip-text: #3a1228;
   --faction-coven-vote-on: #f472b6;
   --faction-coven-vote-off: #c78aa6;
 
@@ -850,19 +983,21 @@
      plum is what carries the flip (#7a4a9e → #c79be0). */
   --faction-wow-chronicle-bg: var(--faction-wow-card-bg);
   --faction-wow-chronicle-panel: #2a2210; /* the inset parchment plate, darkened */
-  /* Same masthead-legibility problem as light, one step further: the design's
-     dark stripe pairs #c8a02a with #8a5aae, and parchment ink measures 4.10:1 on
-     that plum. Both stops deepen until the band carries text (6.52 / 7.18). */
-  --faction-wow-chronicle-header-from: #6b4a12;
-  --faction-wow-chronicle-header-to: #5e3a7c;
-  --faction-wow-chronicle-header-text: #f3e7c4;
   --faction-wow-chronicle-shadow: rgba(0, 0, 0, 0.8);
+  --faction-wow-stamp-total: #e3b84a; /* the design's dark "gold bright" */
+  --faction-wow-stamp-shadow: rgba(0, 0, 0, 0.4);
+  /* The plum chip lifts to the design's dark secondary plum, one step below the
+     text plum, so the chip stays a chip and not a second heading. */
+  --faction-wow-stamp-chip-bg: #8a5aae;
+  --faction-wow-stamp-chip-text: var(--faction-wow-card-text);
   --faction-wow-balloon-plate-from: var(--faction-wow-chronicle-panel);
   --faction-wow-balloon-plate-to: var(--faction-wow-card-bg);
   /* plate-border inherits the theme-invariant --faction-wow-chronicle-gold */
-  /* The prototype has no dark balloon variant. Its outline rgba(60,44,6,.42) is
-     invisible on a dark plate, so the unreached-balloon hairline inverts to
-     parchment; the reached fills stay the one authored ramp. */
+  /* The prototype's dark card reuses the light balloon SVG verbatim, ink outline
+     and all. That works for the OUTLINE — every balloon is filled now, so the
+     dark line lands on parchment or on a ramp colour either way, and it stays
+     put. It does not work for the STRING, whose tail hangs off the balloon onto
+     the dark plate; that one hairline inverts to parchment. */
   --faction-wow-balloon-string: rgba(243, 231, 196, 0.45);
 
   /* ── Watercolor splash opacities (dimmer in dark) ── */
@@ -1627,6 +1762,21 @@
   .sg-rotate { animation: sg-rotate 120s linear infinite; }
 }
 
+/* Singularity system slab (#842) — the praxis card's two terminal motions: a
+   cyan SCANLINE that sweeps down the slab every 5s, and the block CURSOR
+   trailing the computed total. Both are class-gated on reduced-motion, so the
+   slab stills into a legible screenshot: the sweep parks off-slab and the
+   cursor stops blinking but stays drawn (it is punctuation on the number, not
+   an indicator, so it must not vanish). The sweep element is a scrim, not
+   content — the card gives it `position:absolute; pointer-events:none`. */
+@keyframes sg-scan-sweep { 0% { top: -24%; } 100% { top: 120%; } }
+@keyframes sg-term-blink { 0%, 49% { opacity: 1; } 50%, 100% { opacity: 0; } }
+.sg-scan { top: -24%; }
+@media (prefers-reduced-motion: no-preference) {
+  .sg-scan { animation: sg-scan-sweep 5s linear infinite; }
+  .sg-cursor { animation: sg-term-blink 1s steps(1) infinite; }
+}
+
 /* S.N.I.D.E. duel rail — the settled-state dot flickers like a failing xerox
    lamp. Class-gated on reduced-motion like every other faction animation, so a
    component never writes `animation:` inline and bypasses the gate. (#722) */
@@ -1677,14 +1827,56 @@
   .snide-amp-party { transform-origin: center; animation: snide-amp-party var(--amp-dur, 0.4s) ease-in-out infinite; animation-delay: var(--amp-delay, 0s); }
 }
 
-/* WOW — googly-balloon plate: reached balloons bob, rank-5 group-cheers, eyes wiggle. */
+/* WOW — googly-balloon plate: reached balloons bob, rank-5 group-cheers, eyes
+   wiggle, and a rainbow sweep travels behind the whole row (#840). The sweep is
+   pure decoration layered UNDER the balloons — it carries no rank, so stilling
+   it costs nothing; the same is true of the rank-5 confetti, which is hidden
+   entirely at rest rather than frozen mid-fall. */
 @keyframes wow-bounce { 0%, 100% { transform: translateY(0); } 30% { transform: translateY(-9px); } 55% { transform: translateY(0); } 72% { transform: translateY(-4px); } }
 @keyframes wow-group-bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
 @keyframes wow-eye-wiggle { 0%, 100% { transform: translate(0, 0); } 25% { transform: translate(1.5px, -1px); } 50% { transform: translate(-1px, 1.5px); } 75% { transform: translate(1px, 1px); } }
+@keyframes wow-sweep { 0% { left: -55%; } 100% { left: 120%; } }
+@keyframes wow-confetti {
+  0% { transform: translateY(-4px) rotate(0deg); opacity: 0; }
+  20% { opacity: 1; }
+  100% { transform: translateY(34px) rotate(220deg); opacity: 0; }
+}
+/* The sweep's TRACK clips at all times — the travelling band must never escape
+   the plate — so only the band itself lives behind the motion gate. */
+.wow-balloon-sweep {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  border-radius: 12px;
+  pointer-events: none;
+  z-index: 0;
+}
+/* Confetti is opacity:0 at rest; the keyframes are what reveal it. */
+.wow-balloon-confetti {
+  position: absolute;
+  width: 5px;
+  height: 7px;
+  border-radius: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
 @media (prefers-reduced-motion: no-preference) {
   .wow-balloon-float { animation: wow-bounce 2.2s ease-in-out infinite; animation-delay: var(--tw-delay, 0s); }
   .wow-balloon-cheer { animation: wow-group-bounce 1.05s ease-in-out infinite; }
   .wow-balloon-eye { transform-box: fill-box; transform-origin: center; animation: wow-eye-wiggle 1.4s ease-in-out infinite; }
+  .wow-balloon-sweep::after {
+    content: "";
+    position: absolute;
+    top: -12%;
+    bottom: -12%;
+    left: -55%;
+    width: 46%;
+    background: var(--faction-wow-sweep);
+    transform: skewX(-16deg);
+    mix-blend-mode: screen;
+    animation: wow-sweep 3.2s linear infinite;
+  }
+  .wow-balloon-confetti { animation: wow-confetti 1.3s ease-in infinite; animation-delay: var(--tw-delay, 0s); }
 }
 
 /* Everymen — gearworks: reached gears turn (odd tiers clockwise, even counter),
@@ -1727,6 +1919,30 @@
 }
 @media (prefers-reduced-motion: no-preference) {
   .alb-rainbow { animation: alb-drift 18s linear infinite; }
+}
+
+/* The other half of the tell (#842). The design draws the drift AND three faint
+   gold ✦ sparks scattered over the sheet; #821 shipped only the drift, so the
+   sheet shimmered but never caught the light. Each spark carries its own
+   position, size and animation-delay at the call site, so the three never
+   pulse together.
+
+   Unlike .alb-rainbow, the spark's motion IS the mark: a spark frozen at its
+   own keyframe start would be invisible (opacity 0), so reduced motion parks it
+   at a steady low opacity rather than freezing the animation. The glyph is a
+   typographic ✦, not an emoji (§10), and stays behind the card content. */
+@keyframes alb-spark { 0%, 100% { opacity: 0; transform: scale(0.5) rotate(0); } 50% { opacity: 0.75; transform: scale(1) rotate(28deg); } }
+.alb-spark {
+  position: absolute;
+  z-index: 0;
+  pointer-events: none;
+  line-height: 1;
+  color: #bf7f3a;
+  opacity: 0.4;
+}
+[data-theme="dark"] .alb-spark { color: #f2cc72; }
+@media (prefers-reduced-motion: no-preference) {
+  .alb-spark { opacity: 0; animation: alb-spark 4.5s ease-in-out infinite; }
 }
 
 /* UA — growing mandala: each rank blooms a fuller mandala; the emphasized cell

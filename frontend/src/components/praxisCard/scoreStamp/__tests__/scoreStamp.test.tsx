@@ -20,6 +20,10 @@ import { scoreBreakdown, formatMult } from '../scoreBreakdown'
 import DefaultScoreStamp from '../DefaultScoreStamp'
 import EverymenScoreStamp from '../EverymenScoreStamp'
 import EphemeristsScoreStamp from '../EphemeristsScoreStamp'
+import SnideScoreStamp from '../SnideScoreStamp'
+import SingularityScoreStamp from '../SingularityScoreStamp'
+import WowScoreStamp from '../WowScoreStamp'
+import CovenScoreStamp from '../CovenScoreStamp'
 
 /** No hex may reach a stamp's markup — every colour is a token (ADR-0049). */
 const HEX = /#[0-9a-fA-F]{3,8}\b/
@@ -92,9 +96,16 @@ describe('scoreBreakdown row selection (ADR-0047)', () => {
 
 describe('scoreStamp surface dispatch (ADR-0049)', () => {
   it('falls through to the Default stamp for every slug that has not claimed it', () => {
-    for (const slug of ['ua', 'snide', 'singularity', 'coven', 'wow', 'albescent', 'na', null]) {
+    for (const slug of ['ua', 'albescent', 'na', null]) {
       expect(pickVariant(surfaceMap('scoreStamp'), slug, DefaultScoreStamp)).toBe(DefaultScoreStamp)
     }
+  })
+
+  it('gives S.N.I.D.E. and Singularity their own stamps (#842)', () => {
+    expect(pickVariant(surfaceMap('scoreStamp'), 'snide', DefaultScoreStamp)).toBe(SnideScoreStamp)
+    expect(pickVariant(surfaceMap('scoreStamp'), 'singularity', DefaultScoreStamp)).toBe(
+      SingularityScoreStamp,
+    )
   })
 
   it('gives Everymen and the Ephemerists their own stamps (#841)', () => {
@@ -104,6 +115,17 @@ describe('scoreStamp surface dispatch (ADR-0049)', () => {
     expect(pickVariant(surfaceMap('scoreStamp'), 'ephemerists', DefaultScoreStamp)).toBe(
       EphemeristsScoreStamp,
     )
+  })
+
+  /**
+   * The one dispatch pair worth naming explicitly. ADR-0050's whole failure mode
+   * is these two slugs holding each other's presentation, and a swap here would
+   * still resolve, still render, and still be wrong — so assert the identity of
+   * each, not merely that both are claimed.
+   */
+  it('gives WOW the chronicle plate and Coven the sticker, not the reverse (#840)', () => {
+    expect(pickVariant(surfaceMap('scoreStamp'), 'wow', DefaultScoreStamp)).toBe(WowScoreStamp)
+    expect(pickVariant(surfaceMap('scoreStamp'), 'coven', DefaultScoreStamp)).toBe(CovenScoreStamp)
   })
 })
 
@@ -146,6 +168,41 @@ describe('#841 stamps across the conditional states (ADR-0047)', () => {
     })
   }
 
+  for (const [name, fields] of STATES) {
+    it(`WOW prints the working and keeps the star — ${name}`, () => {
+      const html = text(renderToStaticMarkup(<WowScoreStamp praxis={praxis({ ...fields })} />))
+      expect(html).toContain('base')
+      expect(html).toContain('from votes')
+      expect(html).toContain(fields.total.toFixed(1))
+      // The retired ✦ survives here and only here — see ADR-0050 / the design
+      // README's carve-out. Losing it is half of what #840 exists to fix.
+      expect(html).toContain('✦')
+      expect(html).not.toMatch(HEX)
+    })
+
+    it(`Coven prints the working and keeps the sparkle — ${name}`, () => {
+      const html = text(renderToStaticMarkup(<CovenScoreStamp praxis={praxis({ ...fields })} />))
+      expect(html).toContain('base')
+      expect(html).toContain('from votes')
+      expect(html).toContain(fields.total.toFixed(1))
+      expect(html).toContain('✨')
+      expect(html).not.toMatch(HEX)
+    })
+  }
+
+  /**
+   * The sticker is not a rectangle and the plate is not upright — #821 replaced
+   * both with the same level bordered box. Geometry, unlike copy, has no other
+   * assertion that would catch it going flat again.
+   */
+  it('keeps each faction its own geometry: WOW struck at -2deg, Coven a dashed sticker at -3deg', () => {
+    const wow = renderToStaticMarkup(<WowScoreStamp praxis={praxis({})} />)
+    const coven = renderToStaticMarkup(<CovenScoreStamp praxis={praxis({})} />)
+    expect(wow).toContain('rotate(-2deg)')
+    expect(coven).toContain('rotate(-3deg)')
+    expect(coven).toContain('dashed')
+  })
+
   it('draws the Everymen subtotal rule only when a metatask AND a multiplier are both live', () => {
     const full = text(
       renderToStaticMarkup(
@@ -160,4 +217,54 @@ describe('#841 stamps across the conditional states (ADR-0047)', () => {
     expect(full).toContain('group')
     expect(metaOnly).not.toContain('group')
   })
+})
+
+/**
+ * The same five states on the #842 stamps, whose total marks are TYPOGRAPHIC —
+ * a numeral carrying its own device rather than a drawn one. The failure mode
+ * is the same: a working that stops reading as itself when a row drops out.
+ * Both faction stamps also format the numbers in their own voice, which
+ * ADR-0047 permits (it fixes which rows exist, not their notation), so the
+ * assertions below are deliberately notation-aware.
+ */
+describe('#842 stamps across the conditional states (ADR-0047)', () => {
+  const STATES = [
+    ['base only', { display_multiplier: 1, metatask_points: 0, points_from_votes: 0, total: 12 }],
+    ['+ votes', { display_multiplier: 1, metatask_points: 0, points_from_votes: 4, total: 16 }],
+    ['× mult', { display_multiplier: 0.8, metatask_points: 0, points_from_votes: 0, total: 9.6 }],
+    ['+ metatask', { display_multiplier: 1, metatask_points: 20, points_from_votes: 0, total: 32 }],
+    ['full formula', { display_multiplier: 0.8, metatask_points: 20, points_from_votes: 4, total: 29.6 }],
+  ] as const
+
+  for (const [name, fields] of STATES) {
+    it(`S.N.I.D.E. prints the working and the total in pts — ${name}`, () => {
+      const html = text(renderToStaticMarkup(<SnideScoreStamp praxis={praxis({ ...fields })} />))
+      expect(html).toContain('base')
+      expect(html).toContain('from votes')
+      expect(html).toContain(fields.total.toFixed(1))
+      expect(html).toContain('pts')
+      expect(html).not.toMatch(HEX)
+    })
+
+    it(`Singularity prints the register and the two-decimal total — ${name}`, () => {
+      const html = text(
+        renderToStaticMarkup(<SingularityScoreStamp praxis={praxis({ ...fields })} />),
+      )
+      expect(html).toContain('base')
+      expect(html).toContain('tot')
+      // The terminal pads its output: two decimals, and a zero-padded votes row.
+      expect(html).toContain(fields.total.toFixed(2))
+      expect(html).toContain(`+${String(fields.points_from_votes).padStart(2, '0')}`)
+      expect(html).not.toMatch(HEX)
+    })
+
+    it(`the unaffiliated sheet prints the working and the total — ${name}`, () => {
+      const html = text(renderToStaticMarkup(<DefaultScoreStamp praxis={praxis({ ...fields })} />))
+      expect(html).toContain('base')
+      expect(html).toContain('from votes')
+      expect(html).toContain(fields.total.toFixed(1))
+      expect(html).toContain('points')
+      expect(html).not.toMatch(HEX)
+    })
+  }
 })

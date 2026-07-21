@@ -4,57 +4,52 @@ import { factionCssVar } from '../../../utils/factions'
 import { MobilePraxisBody, type MobileSlotTheme } from './shared'
 
 /**
- * Cozy Coven MOBILE praxis card (#821) — PINK, with a moon device. The gold/plum
- * chronicle it wore was WOW's (#838 / ADR-0050); its tokens are now the pink
- * marker sticker's, though it still renders through the shared chronicle
- * STRUCTURE until #840 rebuilds it as a sticker. Single column, tokens only.
- * Frame pixel-fidelity flagged for human QA.
+ * Cozy Coven MOBILE praxis card (#840) — the pink sticker, stacked.
+ *
+ * The chronicle STRUCTURE it borrowed is gone here too (ADR-0050): no
+ * running-head band, a 1px hairline instead of a 2px binding, the sticker's 16px
+ * radius, and the dispatch line written as the card's first line. Single column,
+ * tokens only — the dark values are the design's own, not a cascade freebie.
  */
 export default function CovenMobilePraxisCard({ praxis }: { praxis: PraxisCardOut }) {
   const { t } = useTranslation('praxis')
   const theme: MobileSlotTheme = {
     ink: factionCssVar('coven', 'card-text'),
-    muted: factionCssVar('coven', 'card-muted'),
-    accent: 'var(--faction-coven-chronicle-accent)',
-    paper: 'var(--faction-coven-chronicle-bg)',
-    displayFont: 'var(--font-faction-script)',
-    bodyFont: "'EB Garamond', serif",
+    muted: 'var(--faction-coven-sticker-muted)',
+    accent: 'var(--faction-coven-sticker-accent)',
+    paper: 'var(--faction-coven-sticker-bg)',
+    displayFont: 'var(--faction-coven-card-font)',
+    bodyFont: 'var(--faction-coven-card-font)',
+    titleStyle: { fontWeight: 700 },
   }
   return (
     <div
       style={{
         position: 'relative',
-        overflow: 'hidden',
-        background: 'var(--faction-coven-chronicle-bg)',
-        border: '2px solid var(--faction-coven-chronicle-accent)',
-        borderRadius: 7,
-        boxShadow: '0 12px 26px -12px var(--faction-coven-chronicle-shadow)',
+        background: 'var(--faction-coven-sticker-bg)',
+        border: '1px solid var(--faction-coven-sticker-border)',
+        borderRadius: 16,
+        boxShadow: '0 4px 18px var(--faction-coven-sticker-shadow)',
+        padding: 'var(--space-lg)',
       }}
     >
-      <div
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: 'var(--space-sm)',
-          padding: 'var(--space-sm) var(--space-lg)',
-          background:
-            'linear-gradient(90deg, var(--faction-coven-chronicle-header-from), var(--faction-coven-chronicle-header-to))',
-          color: 'var(--faction-coven-chronicle-header-text)',
-          fontFamily: 'var(--font-faction-script)',
-          fontSize: 'var(--text-sm)',
-          letterSpacing: '0.16em',
-          textTransform: 'uppercase',
-        }}
-      >
-        {/* eslint-disable-next-line local/no-raw-style-values -- ornament: moon dingbat sized as a glyph, not read as text */}
-        <span aria-hidden style={{ fontSize: 15, lineHeight: 1 }}>
-          {'☾'}
-        </span>
-        {t('card.masthead.coven')}
-      </div>
-      <div style={{ padding: 'var(--space-lg)' }}>
-        <MobilePraxisBody praxis={praxis} theme={theme} />
-      </div>
+      <MobilePraxisBody
+        praxis={praxis}
+        theme={theme}
+        eyebrow={
+          <div
+            style={{
+              fontFamily: 'var(--faction-coven-card-font)',
+              fontWeight: 700,
+              fontSize: 'var(--text-content)',
+              color: 'var(--faction-coven-sticker-accent)',
+            }}
+          >
+            {t('card.masthead.coven', { id: praxis.id })}
+          </div>
+        }
+        mediaEmptyLabel={t('card.coven.mediaEmpty')}
+      />
     </div>
   )
 }
