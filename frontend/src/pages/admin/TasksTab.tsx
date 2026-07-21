@@ -1,7 +1,14 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { getAllTasks, updateTaskStatus, adminPatchTask } from "../../api/admin";
+import {
+  getAllTasks,
+  getPendingTasks,
+  updateTaskStatus,
+  adminPatchTask,
+} from "../../api/admin";
 import type { TaskOut } from "../../api/tasks";
+import { mergeAdminTaskRows } from "./adminTaskRows";
+import type { AdminTaskRow } from "./adminTaskRows";
 import { extractError } from "../../utils/errors";
 
 type StatusFilter = "all" | "pending" | "active" | "retired";
@@ -28,7 +35,7 @@ export default function TasksTab() {
       | undefined;
     return known ? t(`tasks.status.${known}`) : status;
   };
-  const [tasks, setTasks] = useState<TaskOut[]>([]);
+  const [tasks, setTasks] = useState<AdminTaskRow[]>([]);
   const [filter, setFilter] = useState<StatusFilter>("all");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -37,10 +44,15 @@ export default function TasksTab() {
   const [editState, setEditState] = useState<EditState | null>(null);
   const [saving, setSaving] = useState(false);
 
+  // Both sources refetch together: approving a pending task changes its status
+  // in one and removes it from the other, so refreshing only one leaves a stale
+  // row (#909).
   const refresh = () => {
     setError(null);
-    getAllTasks()
-      .then(setTasks)
+    Promise.all([getAllTasks(), getPendingTasks()])
+      .then(([allTasks, pendingTasks]) =>
+        setTasks(mergeAdminTaskRows(allTasks, pendingTasks)),
+      )
       .catch((err) => setError(extractError(err, t("tasks.loadError"))))
       .finally(() => setLoading(false));
   };
@@ -247,6 +259,15 @@ export default function TasksTab() {
                           task.primary_faction_slug ?? t("tasks.crossFaction"),
                       })}
                     </p>
+                    {/* Only /admin/tasks/pending carries a proposer, and it is
+                        empty for admin-created rows — render nothing then. */}
+                    {task.status === "pending" && task.created_by_name && (
+                      <p className="font-body text-xs text-muted">
+                        {t("tasks.proposedBy", {
+                          name: task.created_by_name,
+                        })}
+                      </p>
+                    )}
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
                     {(task.status === "pending" ||
