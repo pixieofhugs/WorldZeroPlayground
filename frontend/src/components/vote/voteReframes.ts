@@ -41,7 +41,7 @@ export const VOTE_REFRAMES: Record<string, VoteReframe> = {
   // The two ladders below were inverted between these slugs by #821 and are put
   // back by #838. Coven is the cozy-casual voice (moon phases, "how'd this
   // land?"); WOW is the archaic one (balloon verdict, "Cast thy Verdict").
-  // ADR-0050 / .design-sync/praxis-cards/LABELS.md — go by metaphor, not label.
+  // ADR-0050 — go by metaphor, not label.
   coven: {
     tiers: [
       { value: 1, label: i18n.t('votes:coven.sweet') },

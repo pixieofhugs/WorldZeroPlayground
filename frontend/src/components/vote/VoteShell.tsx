@@ -66,8 +66,8 @@ const DEFAULT_GATE: GateTreatment = {
  * Per-faction gate voices, from the vendored design's `LOGGED OUT · VOTE GATE`
  * board. The board draws seven tiles; the `wow` entry is the one labelled
  * "Cozy Coven" there (MedievalSharp, plum) — every artifact in this epic labels
- * WOW and Coven backwards, see `.design-sync/praxis-cards/LABELS.md` and
- * ADR-0050. `coven` therefore keeps its own pink marker voice.
+ * WOW and Coven backwards, see ADR-0050. `coven` therefore keeps its own pink
+ * marker voice.
  */
 const GATE_TREATMENTS: Record<string, GateTreatment> = {
   ua: {
