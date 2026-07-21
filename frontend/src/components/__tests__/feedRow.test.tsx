@@ -74,7 +74,24 @@ describe('normalizeFeedItem', () => {
   })
 
   it('falls back to the default faction when a faction has no taunt entry', () => {
-    // ua has no taunts branch; default/level_up has 2 variants, id 2 -> index 0.
+    // albescent has no taunts branch; default/level_up has 2 variants, id 2 -> index 0.
+    const row = normalizeFeedItem(
+      item('foe_taunt', {
+        from_character_id: 4,
+        taunt_id: 2,
+        faction_slug: 'albescent',
+        trigger_type: 'level_up',
+        from_name: 'Cy',
+        to_name: 'Di',
+      }),
+    )!
+    expect(row.headline).toBe('Cy leveled up while Di was napping.')
+  })
+
+  it('gives UA a quiet acknowledgement instead of the default gloat', () => {
+    // #850: UA used to fall through to `default`, which gloats. It now
+    // overrides with its own acknowledgements. ua/level_up has 2 variants,
+    // id 2 -> index 0. `from_name` is the achiever (the taunt's sender).
     const row = normalizeFeedItem(
       item('foe_taunt', {
         from_character_id: 4,
@@ -85,7 +102,8 @@ describe('normalizeFeedItem', () => {
         to_name: 'Di',
       }),
     )!
-    expect(row.headline).toBe('Cy leveled up while Di was napping.')
+    expect(row.headline).toBe('Cy settles a little deeper into the practice.')
+    expect(row.headline).not.toContain('napping')
   })
 
   it('has an actorless system row for a global task', () => {

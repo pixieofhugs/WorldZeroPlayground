@@ -1,6 +1,6 @@
 /**
  * Mobile praxis-detail UA dispatch (#525). Asserts the mobile registry resolves a
- * `ua`-task praxis to the gilt-salon acquisition skin, that other factions fall
+ * `ua`-task praxis to the bespoke UA skin, that other factions fall
  * through to the Default mobile detail, and the desktop archetype is untouched.
  */
 import { describe, it, expect } from 'vitest'

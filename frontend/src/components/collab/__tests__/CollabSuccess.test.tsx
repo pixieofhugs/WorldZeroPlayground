@@ -89,7 +89,7 @@ describe('CollabSuccess render', () => {
         onContinue={() => {}}
       />,
     )
-    expect(html).toContain('Hung in the Salon')
+    expect(html).toContain('Sealed')
     expect(html).toContain('Every hand has signed.')
     expect(html).toContain('View the work')
     expect(html).not.toContain('The proof is woven')

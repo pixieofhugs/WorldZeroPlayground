@@ -14,6 +14,20 @@
       "{{from_name}} submitted praxis. {{to_name}}... did not."
     ]
   },
+  "ua": {
+    "score_overtake": [
+      "{{from_name}} has passed {{to_name}}. The mark is the same either way.",
+      "{{to_name}}, {{from_name}} is ahead today. Tomorrow is another sheet."
+    ],
+    "level_up": [
+      "{{from_name}} settles a little deeper into the practice.",
+      "A quieter hand, {{from_name}}. Well drawn."
+    ],
+    "praxis_complete": [
+      "{{from_name}} sealed a mark. It stands.",
+      "One more true thing from {{from_name}}."
+    ]
+  },
   "snide": {
     "score_overtake": [
       "{{from_name}} danced past {{to_name}} on the scoreboard. Elegant, really.",

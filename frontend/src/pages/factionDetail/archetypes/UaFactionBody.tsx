@@ -12,7 +12,7 @@ import type { FactionDetailState } from "../useFactionDetail";
 
 /**
  * UA (University of Asthmatics) faction-body — the gilt-salon skin of the
- * standardized six-section spine (② Prospectus, ③ The Registry, ④ Tasks,
+ * standardized six-section spine (② The Practice, ③ The Registry, ④ Tasks,
  * ⑤ Praxis, ⑥ Members). Section ① (hero + side stats) is UaFactionHero above.
  *
  * Same shape as EverymenFactionBody — Tasks/Praxis reuse the app-wide per-faction
@@ -20,7 +20,9 @@ import type { FactionDetailState } from "../useFactionDetail";
  * owns the salon chrome: the two-column layout, fixed "Tasks"/"Praxis" titles
  * with salon kickers, the enroll/gate registry block, the artist-in-residence
  * spotlight + register, and the FDL laurel on the top-scoring praxis. Levels read
- * as "Anno {roman}". Always light — UA's faction tokens never dim.
+ * as "Anno {roman}". UA has a real dark mode as of #848; the styling of this
+ * file is being reworked under #851, which owns everything here except the copy
+ * keys.
  */
 
 const PAPER = "var(--faction-ua-card-bg)";
@@ -147,12 +149,12 @@ export default function UaFactionBody({ state }: { state: FactionDetailState }) 
     <div className="wz-faction-grid">
       {/* ── MAIN COLUMN ── */}
       <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-2xl)" }}>
-        {/* ② THE PROSPECTUS */}
+        {/* ② THE PRACTICE */}
         <div style={{ ...PLATE, padding: "var(--space-xl) var(--space-2xl)" }}>
           <Grain />
           <div style={{ position: "relative", display: "flex", alignItems: "center", gap: "var(--space-md)", marginBottom: "var(--space-lg)" }}>
             <span style={{ fontFamily: MONO, fontSize: "var(--text-xs)", letterSpacing: "0.26em", textTransform: "uppercase", color: MUTED }}>
-              {t("ua.prospectus.heading")}
+              {t("ua.practice.heading")}
             </span>
             <span style={{ flex: 1, height: 1, background: `linear-gradient(90deg, ${GOLD_LT}, transparent)` }} />
           </div>
@@ -165,7 +167,7 @@ export default function UaFactionBody({ state }: { state: FactionDetailState }) 
               ))
             ) : (
               <p className="content-text" style={{ fontFamily: DISPLAY, fontStyle: "italic", lineHeight: 1.75, color: SUB, margin: 0 }}>
-                {t("ua.prospectus.empty")}
+                {t("ua.practice.empty")}
               </p>
             )}
           </div>
