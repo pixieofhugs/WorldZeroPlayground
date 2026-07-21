@@ -1,5 +1,5 @@
 /**
- * Warriors of Whimsy DESKTOP duel seal-confirm (#720) — design panel 2b.
+ * Cozy Coven DESKTOP duel seal-confirm (#720) — design panel 2b.
  *
  * The Default dialog's content, re-hung inside a centred `wow.exe` window:
  * traffic-light title bar, dotted board, notepad scrap for the stakes and the

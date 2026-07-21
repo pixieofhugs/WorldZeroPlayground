@@ -8,7 +8,7 @@ import type { CharacterOut } from '../../../api/auth'
 import type { FactionDetailState } from '../useFactionDetail'
 
 /**
- * Warriors of Whimsy MOBILE faction page (#531) — the coven, phone shaped. The
+ * Cozy Coven MOBILE faction page (#531) — the coven, phone shaped. The
  * same single-column slots as the Default mobile faction page (a hero with real
  * member/task counts, top members, recent praxis, and the invite-gated Join model
  * via `state.membership`, ADR-0019) — only the dress changes: a pink scrapbook

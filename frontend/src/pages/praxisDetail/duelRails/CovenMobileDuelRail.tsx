@@ -1,5 +1,5 @@
 /**
- * Warriors of Whimsy MOBILE duel rail (#720) — panel 1c of the design.
+ * Cozy Coven MOBILE duel rail (#720) — panel 1c of the design.
  *
  * The desktop window, thumbed down: the title bar loses its side-by-side tally
  * (a score pair and a script headline on one phone-width row wrap into mush) and

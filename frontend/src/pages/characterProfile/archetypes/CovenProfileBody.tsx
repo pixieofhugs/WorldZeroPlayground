@@ -1,5 +1,5 @@
 /**
- * CovenProfileBody — Warriors of Whimsy scrapbook player-profile skin (#460).
+ * CovenProfileBody — Cozy Coven scrapbook player-profile skin (#460).
  * Ported from docs/design/profile/templates/Warriors of Whimsy Profile.dc.html:
  * a cork-board mat with push-pin dots, slight tilts, washi-tape strips, and an
  * ".exe window" progression panel. COVEN follows the global light/dark cascade —

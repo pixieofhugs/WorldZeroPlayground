@@ -6,7 +6,7 @@ import { mediaUrl } from '../../../utils/media'
 import type { FieldDeskHomeState } from '../useFieldDeskHome'
 
 /**
- * Warriors of Whimsy MOBILE FieldDesk home (#500) — the scrapbook window idiom
+ * Cozy Coven MOBILE FieldDesk home (#500) — the scrapbook window idiom
  * on a phone: the carried life and its in-progress quests each become a little
  * pink "window" (traffic-light dots + sparkle-titled bar, a dotted board and an
  * inner notepad), taped to a rose board. Same content slots as the Default

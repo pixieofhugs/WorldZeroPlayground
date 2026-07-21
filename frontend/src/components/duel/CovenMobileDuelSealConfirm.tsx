@@ -1,5 +1,5 @@
 /**
- * Warriors of Whimsy MOBILE duel seal-confirm (#720) — design panel 1b.
+ * Cozy Coven MOBILE duel seal-confirm (#720) — design panel 1b.
  *
  * The same content as the desktop window (2b is explicitly "the mobile sheet laid
  * out for the wider frame"), rebuilt as a bottom sheet: full-bleed on the page

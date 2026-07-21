@@ -3,11 +3,11 @@ import type { ReactNode } from 'react'
 import i18n from '../../i18n'
 
 /**
- * Warriors of Whimsy feed frame — the neutral feed card dressed as a tiny
+ * Cozy Coven feed frame — the neutral feed card dressed as a tiny
  * "whimsy.exe" desktop window. A pink title bar (traffic-light dots + a script
  * window name + a sparkle charm) sits above a notepad/paper body that holds the
  * untouched card `{children}`. Frame-level chrome only: this is a thin wrapper,
- * not a reimplementation of the card. Flips with the theme via the WoW tokens.
+ * not a reimplementation of the card. Flips with the theme via the Coven tokens.
  */
 
 const WIN_BORDER = 'var(--faction-coven-win-border)'
@@ -19,7 +19,7 @@ const NOTEPAD_BORDER = 'var(--faction-coven-notepad-border)'
 const SCRIPT = 'var(--faction-coven-card-font)'
 const PINK = 'var(--faction-coven)'
 
-/** The four-point sparkle charm — WoW's signature window flourish. */
+/** The four-point sparkle charm — Coven's signature window flourish. */
 function Sparkle({ size }: { size: number }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" aria-hidden="true">

@@ -1,5 +1,5 @@
 /**
- * Warriors of Whimsy praxis-read archetype — the sealed praxis rendered as a
+ * Cozy Coven praxis-read archetype — the sealed praxis rendered as a
  * "praxis.exe" desktop window: pink computer-witch chrome with a traffic-light
  * title bar, a dotted desktop body, Caveat-script "finding" headline, sparkle
  * charms, dotted-running-rule section dividers, and a window-framed evidence
@@ -7,7 +7,7 @@
  * Praxis.html / whimsy-exe.jsx); wired to the real {@link PraxisDetailState}.
  *
  * Invariant behavior slots (admin bar, banners, owner actions, flag) come from
- * the shared module — this archetype owns only presentation. WoW flips with the
+ * the shared module — this archetype owns only presentation. Coven flips with the
  * theme normally, so every color reads from --faction-coven* tokens (light + dark
  * already defined in index.css). No document-theme mutation, no hardcoded hex.
  * The author byline themes to the AUTHOR's faction, not the task's.
