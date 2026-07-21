@@ -104,9 +104,26 @@ async def get_or_create_stats(
     return stats
 
 
+async def get_closing_era_id(new_era_row: Era, session: AsyncSession) -> int | None:
+    """The era being closed by the reset that inserted ``new_era_row``.
+
+    The row immediately before it by id — ``Era`` rows are only ever appended, one
+    per reset. Returns None when there is no earlier era (the very first reset),
+    which is also the "nothing has ever closed" state Era 1 is in today.
+    """
+    result = await session.execute(
+        select(Era.id)
+        .where(Era.id < new_era_row.id)
+        .order_by(Era.id.desc())
+        .limit(1)
+    )
+    return result.scalar_one_or_none()
+
+
 async def resolve_duels_at_era_close(
     session: AsyncSession,
     resolved_at: datetime | None = None,
+    closing_era_id: int | None = None,
 ) -> list[Duel]:
     """Freeze every unresolved duel's outcome (ADR-0052). Returns the frozen rows.
 
@@ -118,6 +135,10 @@ async def resolve_duels_at_era_close(
     - a snapshot of both sides' ``points_from_votes``, so a resolved surface can
       show vote shares without the live tally moving under it.
     - ``resolved_at`` and the terminal ``resolved`` status.
+    - ``resolved_era_id`` — the era being closed, so "which era was this duel?"
+      survives as a fact rather than a timestamp comparison (#823). ``resolved_at``
+      cannot answer it: the new ``Era`` row is inserted before this runs, so every
+      frozen duel timestamps *after* the incoming era's ``started_at``.
 
     ``active`` duels (accepted, but never both-submitted) never became votable, so
     they resolve as a **no-contest**: null winner, zero snapshots. ``pending``
@@ -184,6 +205,7 @@ async def resolve_duels_at_era_close(
         duel.challenger_final_points = challenger_points
         duel.opponent_final_points = opponent_points
         duel.resolved_at = resolved_at
+        duel.resolved_era_id = closing_era_id
         duel.status = DuelStatus.resolved
 
     await session.flush()
@@ -203,8 +225,11 @@ async def apply_era_reset(
     (ADR-0011 / ADR-0052).
     """
     # Freeze duels first: the outcome must be computed against the closing era's
-    # tallies, before any stats row for the new era exists.
-    await resolve_duels_at_era_close(session)
+    # tallies, before any stats row for the new era exists. The closing era is the
+    # row before ``new_era_row``, and is stamped on each duel so a later read can
+    # tell "last era" from "this era" without comparing timestamps (#823).
+    closing_era_id = await get_closing_era_id(new_era_row, session)
+    await resolve_duels_at_era_close(session, closing_era_id=closing_era_id)
 
     for character in characters:
         # Find previous stats to carry all_time_score forward
