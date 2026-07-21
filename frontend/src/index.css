@@ -206,6 +206,9 @@
   --faction-default-stamp-bg: #ffffff;
   --faction-default-gold: #ca8a04;
   --faction-default-chip: linear-gradient(90deg, #16a34a, #2563eb);
+  /* White in BOTH themes: the chip is a saturated green→blue pill in either,
+     and the ink has to answer to the pill, not to the page. */
+  --faction-default-chip-text: #ffffff;
   --faction-default-total-rainbow: linear-gradient(90deg, #c1272d, #ca8a04 40%, #16a34a 60%, #2563eb);
   --faction-default-eyebrow-rainbow: linear-gradient(90deg, #16a34a, #2563eb, #be185d);
   --spectrum-glow-1: #c1352a;

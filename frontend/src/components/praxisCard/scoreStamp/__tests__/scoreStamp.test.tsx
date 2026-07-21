@@ -20,6 +20,8 @@ import { scoreBreakdown, formatMult } from '../scoreBreakdown'
 import DefaultScoreStamp from '../DefaultScoreStamp'
 import EverymenScoreStamp from '../EverymenScoreStamp'
 import EphemeristsScoreStamp from '../EphemeristsScoreStamp'
+import SnideScoreStamp from '../SnideScoreStamp'
+import SingularityScoreStamp from '../SingularityScoreStamp'
 
 /** No hex may reach a stamp's markup — every colour is a token (ADR-0049). */
 const HEX = /#[0-9a-fA-F]{3,8}\b/
@@ -92,9 +94,16 @@ describe('scoreBreakdown row selection (ADR-0047)', () => {
 
 describe('scoreStamp surface dispatch (ADR-0049)', () => {
   it('falls through to the Default stamp for every slug that has not claimed it', () => {
-    for (const slug of ['ua', 'snide', 'singularity', 'coven', 'wow', 'albescent', 'na', null]) {
+    for (const slug of ['ua', 'coven', 'wow', 'albescent', 'na', null]) {
       expect(pickVariant(surfaceMap('scoreStamp'), slug, DefaultScoreStamp)).toBe(DefaultScoreStamp)
     }
+  })
+
+  it('gives S.N.I.D.E. and Singularity their own stamps (#842)', () => {
+    expect(pickVariant(surfaceMap('scoreStamp'), 'snide', DefaultScoreStamp)).toBe(SnideScoreStamp)
+    expect(pickVariant(surfaceMap('scoreStamp'), 'singularity', DefaultScoreStamp)).toBe(
+      SingularityScoreStamp,
+    )
   })
 
   it('gives Everymen and the Ephemerists their own stamps (#841)', () => {
@@ -160,4 +169,54 @@ describe('#841 stamps across the conditional states (ADR-0047)', () => {
     expect(full).toContain('group')
     expect(metaOnly).not.toContain('group')
   })
+})
+
+/**
+ * The same five states on the #842 stamps, whose total marks are TYPOGRAPHIC —
+ * a numeral carrying its own device rather than a drawn one. The failure mode
+ * is the same: a working that stops reading as itself when a row drops out.
+ * Both faction stamps also format the numbers in their own voice, which
+ * ADR-0047 permits (it fixes which rows exist, not their notation), so the
+ * assertions below are deliberately notation-aware.
+ */
+describe('#842 stamps across the conditional states (ADR-0047)', () => {
+  const STATES = [
+    ['base only', { display_multiplier: 1, metatask_points: 0, points_from_votes: 0, total: 12 }],
+    ['+ votes', { display_multiplier: 1, metatask_points: 0, points_from_votes: 4, total: 16 }],
+    ['× mult', { display_multiplier: 0.8, metatask_points: 0, points_from_votes: 0, total: 9.6 }],
+    ['+ metatask', { display_multiplier: 1, metatask_points: 20, points_from_votes: 0, total: 32 }],
+    ['full formula', { display_multiplier: 0.8, metatask_points: 20, points_from_votes: 4, total: 29.6 }],
+  ] as const
+
+  for (const [name, fields] of STATES) {
+    it(`S.N.I.D.E. prints the working and the total in pts — ${name}`, () => {
+      const html = text(renderToStaticMarkup(<SnideScoreStamp praxis={praxis({ ...fields })} />))
+      expect(html).toContain('base')
+      expect(html).toContain('from votes')
+      expect(html).toContain(fields.total.toFixed(1))
+      expect(html).toContain('pts')
+      expect(html).not.toMatch(HEX)
+    })
+
+    it(`Singularity prints the register and the two-decimal total — ${name}`, () => {
+      const html = text(
+        renderToStaticMarkup(<SingularityScoreStamp praxis={praxis({ ...fields })} />),
+      )
+      expect(html).toContain('base')
+      expect(html).toContain('tot')
+      // The terminal pads its output: two decimals, and a zero-padded votes row.
+      expect(html).toContain(fields.total.toFixed(2))
+      expect(html).toContain(`+${String(fields.points_from_votes).padStart(2, '0')}`)
+      expect(html).not.toMatch(HEX)
+    })
+
+    it(`the unaffiliated sheet prints the working and the total — ${name}`, () => {
+      const html = text(renderToStaticMarkup(<DefaultScoreStamp praxis={praxis({ ...fields })} />))
+      expect(html).toContain('base')
+      expect(html).toContain('from votes')
+      expect(html).toContain(fields.total.toFixed(1))
+      expect(html).toContain('points')
+      expect(html).not.toMatch(HEX)
+    })
+  }
 })
