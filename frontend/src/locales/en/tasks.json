@@ -314,46 +314,46 @@
   "ua": {
     "faction": "UA",
     "masthead": "University of Asthmatics",
-    "commissionLine": "COMMISSION №{{number}} · EST · MMXX",
-    "statusOpen": "On View · Open Salon",
+    "commissionLine": "MARK №{{number}}",
+    "statusOpen": "Open · any hand",
     "stats": {
       "anno": "ANNO",
-      "honoraria": "HONORARIA",
+      "honoraria": "MARKS",
       "honorariaUnit": "pts",
-      "onView": "ON VIEW",
-      "onViewValue": "{{signups}} sitting · {{completed}} hung"
+      "onView": "AT WORK",
+      "onViewValue": "{{signups}} at work · {{completed}} sealed"
     },
     "signup": {
-      "cta": "Matriculate ▸ earn up to {{points}} pts",
-      "meta": "{{open}} of {{max}} easels reserved · Anno {{level}} standing met"
+      "cta": "Sign up ▸ earn up to {{points}} pts",
+      "meta": "{{open}} of {{max}} hands signed up · Anno {{level}} standing met"
     },
     "submitted": {
-      "text": "✦ Your work hangs on the Salon Wall",
+      "text": "✦ Your mark is sealed",
       "edit": "edit"
     },
     "inProgress": {
-      "text": "Your easel is at the salon",
+      "text": "Your sheet is out",
       "continue": "continue",
       "drop": "drop"
     },
-    "commissionHeading": "The Commission",
-    "commissionEmpty": "No commission posted yet. The Salon awaits its brief — render the light before it leaves and pin your work to the wall.",
-    "matriculatedHeading": "Matriculated",
-    "matriculated": "matriculated",
-    "critiqueHeading": "The Critique",
+    "commissionHeading": "The Mark",
+    "commissionEmpty": "Nothing set down yet. Render the light before it leaves, then seal what you made.",
+    "matriculatedHeading": "Practising",
+    "matriculated": "practising",
+    "critiqueHeading": "The Reading",
     "critique": {
-      "finest": "Finest Critique",
-      "appraised_one": "{{count}} work appraised",
-      "appraised_other": "{{count}} works appraised",
-      "none": "The Salon has rendered no verdict yet. Be the first hand to hang a work."
+      "finest": "Truest Reading",
+      "appraised_one": "{{count}} work read",
+      "appraised_other": "{{count}} works read",
+      "none": "Nothing read yet. Be the first hand to seal a work."
     },
-    "salonWallHeading": "The Salon Wall",
+    "salonWallHeading": "Sealed work",
     "sort": {
-      "finest": "Finest",
+      "finest": "Truest",
       "recent": "recent"
     },
-    "empty": "The wall is bare. Be the first hand to file a work against this commission.",
-    "finestHand": "FINEST HAND",
+    "empty": "The sheet is bare. Be the first hand to seal a work against this mark.",
+    "finestHand": "TRUEST HAND",
     "viewAll": "View all {{count}} works →"
   },
   "albescent": {

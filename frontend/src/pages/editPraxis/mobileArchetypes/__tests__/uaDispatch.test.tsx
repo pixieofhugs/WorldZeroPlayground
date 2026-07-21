@@ -1,6 +1,6 @@
 /**
  * Mobile composer UA dispatch (#525). Asserts the mobile registry resolves a `ua`
- * task to the gilt-salon "Submit to the Salon" composer, and that every other
+ * task to the bespoke UA "Seal a praxis" composer, and that every other
  * faction falls through to the Default mobile composer.
  */
 import { describe, it, expect } from 'vitest'

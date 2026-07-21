@@ -11,7 +11,7 @@
     "na": "Unaffiliated"
   },
   "descriptions": {
-    "ua": "The Gilt Salon — a regal academy. Full points on all tasks.",
+    "ua": "We practise art as a daily, deliberate thing. One true mark, then another. The satisfaction is in the making, not the tally.",
     "snide": "Specialists in one-on-one competition. Bonus points for winning duels.",
     "coven": "A soft-lit circle of makers. Full points on every task.",
     "wow": "Collective-minded. Excel at their own faction's tasks; reduced elsewhere.",
@@ -391,56 +391,56 @@
     }
   },
   "ua": {
-    "prospectus": {
-      "heading": "The prospectus",
-      "empty": "No prospectus written yet."
+    "practice": {
+      "heading": "The Practice",
+      "empty": "Nothing written down yet."
     },
     "tasks": {
-      "heading": "Tasks",
-      "kicker": "Now accepting submissions",
-      "empty": "No commissions open."
+      "heading": "Today's marks",
+      "kicker": "Open to any hand",
+      "empty": "Nothing set down today."
     },
     "praxis": {
-      "heading": "Praxis",
-      "kicker": "Recently exhibited & critiqued",
-      "empty": "Nothing exhibited yet."
+      "heading": "Sealed work",
+      "kicker": "Recently sealed",
+      "empty": "Nothing sealed yet."
     },
     "registry": {
-      "heading": "The Registry",
-      "memberTitle": "Your name is on the wall",
-      "memberStanding": "Standing · <1>enrolled</1>",
-      "eligibleKicker": "The easels are warm —",
-      "eligibleTitle": "Submit your portfolio",
-      "eligibleBody": "All media welcome, talent optional. Enroll and take your first commission today.",
-      "joinButton": "Enroll ▸",
-      "confirmSwitch": "Enroll in {{faction}}? You won't be able to rejoin {{current}} after leaving.",
-      "confirm": "Enroll in {{faction}}?",
-      "joining": "Enrolling…",
+      "heading": "Those practising",
+      "memberTitle": "You practise here",
+      "memberStanding": "Standing · <1>practising</1>",
+      "eligibleKicker": "Come sit with the work —",
+      "eligibleTitle": "Make one true mark a day",
+      "eligibleBody": "We practise. Not for the badge — for the mark itself. Begin whenever you are ready.",
+      "joinButton": "Begin the practice",
+      "confirmSwitch": "Begin the practice with {{faction}}? You won't be able to rejoin {{current}} after leaving.",
+      "confirm": "Begin the practice with {{faction}}?",
+      "joining": "Beginning…",
       "confirmButton": "Confirm",
-      "gateKicker": "Not enrolled — yet",
-      "gateTitle": "Earn your enrollment",
-      "gateBody": "Exhibit work worthy of {{faction}} and the Salon will send an invitation. Keep at it — talent is optional, persistence isn't."
+      "gateKicker": "Not practising — yet",
+      "gateTitle": "Earn your place at the table",
+      "gateBody": "Seal work worth holding up and {{faction}} will send an invitation. Keep at it — talent is optional, the daily mark isn't."
     },
     "spotlight": {
-      "label": "Artist in Residence",
+      "label": "Held up",
       "stat": "Anno {{anno}} · {{score}} pts"
     },
     "roster": {
-      "heading": "The register",
-      "emptyWithSpotlight": "No other names on the wall yet.",
+      "heading": "The circle",
+      "emptyWithSpotlight": "No one else at the table yet.",
       "level": "Anno {{anno}}"
     },
     "mobile": {
-      "eyebrow": "The Gilt Salon"
+      "eyebrow": "A daily practice"
     },
     "invitation": {
-      "kicker": "the salon is enrolling",
-      "headline": "Take up the brush",
-      "pitch": "The University of Asthmatics keeps World Zero's easels warm. Every task is a commission, every submission an acquisition — hung in the Salon and put to the gentlest possible Critique. Bring nerve. Bring an inhaler. Bring something made.",
+      "kicker": "come sit with the work",
+      "headline": "Make one true mark a day",
+      "pitch": "We practise art as a daily, deliberate thing. Every task is a sheet to work on, every submission a mark you seal and let stand. Not for the badge — for the mark itself. Bring something made.",
       "terms": [
         {
-          "label": "matriculation fee",
-          "value": "one honest piece"
+          "label": "asked of you",
+          "value": "one true mark"
         },
         {
           "label": "required skills",
@@ -448,7 +448,7 @@
         },
         {
           "label": "expected output",
-          "value": "work, hung & signed"
+          "value": "work, sealed & signed"
         },
         {
           "label": "season seat",
@@ -456,13 +456,13 @@
         }
       ],
       "perks": [
-        "A Salon that critiques kindly, and honestly",
-        "Commissions that turn a Tuesday into a sitting",
-        "Your praxis framed in gilt and exhibited"
+        "A circle that reads your work closely, and kindly",
+        "Marks that turn a Tuesday into an hour worth having",
+        "Your praxis sealed, and held up"
       ],
       "cta": {
-        "join": "Matriculate",
-        "joined": "your easel is reserved"
+        "join": "Begin the practice",
+        "joined": "a seat is kept for you"
       }
     }
   },
