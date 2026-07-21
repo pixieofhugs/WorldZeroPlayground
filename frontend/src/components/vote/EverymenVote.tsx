@@ -212,7 +212,8 @@ export default function EverymenVote({ praxisId, currentValue, points, totalVote
         <span
           style={{
             fontFamily: 'var(--faction-everymen-card-font)',
-            fontSize: 'var(--text-content)',
+            // eslint-disable-next-line local/no-raw-style-values -- ornament: the widget's tier word is part of the mark, struck at the design's 17 in the poster face (#841, design-fidelity.md standing carve-out)
+            fontSize: 17,
             letterSpacing: '0.06em',
             color: active ? 'var(--everymen-red)' : 'var(--everymen-muted)',
             transition: 'color 140ms',

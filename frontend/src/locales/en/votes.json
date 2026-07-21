@@ -14,18 +14,18 @@
     "legendary": "legendary"
   },
   "coven": {
-    "a-start": "a start",
-    "solid": "solid",
-    "good": "good",
-    "excellent": "excellent",
-    "legendary": "legendary"
-  },
-  "wow": {
     "sweet": "sweet",
     "lovely": "lovely",
     "wonderful": "wonderful",
     "magical": "magical",
     "iconic": "iconic"
+  },
+  "wow": {
+    "a-start": "a start",
+    "solid": "solid",
+    "good": "good",
+    "excellent": "excellent",
+    "legendary": "legendary"
   },
   "snide": {
     "meh": "meh",
@@ -77,14 +77,14 @@
       "tag": "earned"
     },
     "coven": {
-      "rateAria": "Rate {{value}} — {{label}}",
-      "idle": "cast a spell",
-      "tag": "sealed"
-    },
-    "wow": {
       "rateAria": "Cheer {{value}} — {{label}}",
       "idle": "tap to cheer",
       "tag": "yay!"
+    },
+    "wow": {
+      "rateAria": "Judge {{value}} — {{label}}",
+      "idle": "awaiting thy judgment",
+      "tag": "thy verdict"
     },
     "snide": {
       "rateAria": "Rate {{value}} — {{label}}",

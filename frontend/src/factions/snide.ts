@@ -33,7 +33,7 @@ import SnideProfileBody from '../pages/characterProfile/archetypes/SnideProfileB
 import SnideTaskCard from '../components/cards/SnideTaskCard'
 import SnideTaskDetail from '../pages/taskDetail/archetypes/SnideTaskDetail'
 import SnideVote from '../components/vote/SnideVote'
-import { SnidePraxisCard } from '../components/PraxisCard'
+import SnidePraxisCard from '../components/praxisCard/desktop/SnidePraxisCard'
 import { SnideSigil } from '../components/cards/SnideSigil'
 import { SnideCard } from '../components/cards/FactionCard'
 import { SnideSelectCard } from '../components/cards/FactionSelectCard'

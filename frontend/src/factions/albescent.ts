@@ -28,7 +28,7 @@
 import type { FactionManifest } from './manifest'
 
 import { AlbescentSelectCard } from '../components/cards/FactionSelectCard'
-import { AlbescentPraxisCard } from '../components/PraxisCard'
+import AlbescentPraxisCard from '../components/praxisCard/desktop/AlbescentPraxisCard'
 import AlbescentMobilePraxisCard from '../components/praxisCard/mobile/AlbescentMobilePraxisCard'
 
 export const ALBESCENT_MANIFEST: FactionManifest = {

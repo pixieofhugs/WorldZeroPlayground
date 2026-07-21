@@ -21,8 +21,9 @@ const FACTION_SLUGS = [
   'singularity',
   'ua',
   // WOW gained a vote voice with its first bespoke skin (#821) — the balloon
-  // widget's whimsical tiers. Its idle/tag prompt lives under chrome.wow, not
-  // here, so this block stays exactly the five tier labels.
+  // verdict's archaic tiers (#838 put them back on the right slug; #821 had
+  // WOW and Coven wearing each other's, see ADR-0050). Its idle/tag prompt
+  // lives under chrome.wow, not here, so this block stays five tier labels.
   'wow',
 ] as const
 const EXPECTED_TIER_COUNT = 5
@@ -125,7 +126,7 @@ describe('i18next runtime', () => {
   })
 
   it('resolves kebab-case keys for multi-word labels', () => {
-    expect(i18n.t('votes:coven.a-start')).toBe('a start')
+    expect(i18n.t('votes:wow.a-start')).toBe('a start')
     expect(i18n.t('votes:snide.not-bad')).toBe('not bad')
   })
 

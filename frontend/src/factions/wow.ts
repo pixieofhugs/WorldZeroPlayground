@@ -19,7 +19,7 @@ import type { FactionManifest } from './manifest'
 
 import WowVote from '../components/vote/WowVote'
 import WowMobilePraxisCard from '../components/praxisCard/mobile/WowMobilePraxisCard'
-import { WowPraxisCard } from '../components/PraxisCard'
+import WowPraxisCard from '../components/praxisCard/desktop/WowPraxisCard'
 
 export const WOW_MANIFEST: FactionManifest = {
   slug: 'wow',

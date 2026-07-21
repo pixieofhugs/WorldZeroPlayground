@@ -7,17 +7,18 @@ import { VOTE_REFRAMES } from './voteReframes'
 
 /**
  * Warriors of Whimsy vote UI (#821) — the 1-5 rating rendered as a row of GOOGLY
- * BALLOONS on a warm plate, WOW's first bespoke skin. Reached balloons fill the
- * yellow ramp and bob; the whole bunch group-cheers when you reach the top. This
- * is the balloon variant the prototype bundled with the chronicle chrome (its
- * `.wow-gballoon*` classes) — recoloured to WOW yellow, never coven's gold/plum.
+ * BALLOONS on a parchment plate, WOW's first bespoke skin. Reached balloons fill
+ * the ramp (plum climbing to gold) and bob; the whole bunch group-cheers when you
+ * reach the top. The prototype bundles these balloons with the chronicle chrome
+ * (its `.wow-gballoon*` classes) and both belong to WOW — #838 repointed the
+ * ramp off the yellow #830 invented for it (ADR-0050).
  *
  * Plugs into the vote dispatcher via the shared {@link useVote} hook. Every
  * motion is a reduced-motion-gated CSS class (never inline `animation:`); the
  * balloons still fill and read when stilled.
  */
 
-/** Balloon fill ramp (yellow, deepening) — one token per tier. */
+/** Balloon fill ramp (plum climbing to gold) — one token per tier. */
 const BALLOON_FILLS = [
   'var(--faction-wow-balloon-1)',
   'var(--faction-wow-balloon-2)',

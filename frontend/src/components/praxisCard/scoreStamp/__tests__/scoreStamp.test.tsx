@@ -1,0 +1,163 @@
+/**
+ * The score stamp's two halves (ADR-0047, ADR-0049).
+ *
+ * `scoreBreakdown` is the SHARED half: one selector deciding which rows any
+ * faction's stamp may show. It had no test before #839 — the row rules lived
+ * only in a docstring, which is exactly how #821 shipped nine skins that each
+ * re-decided them. These cases pin the rules so a faction slice cannot quietly
+ * drop a row.
+ *
+ * The dispatch cases pin the other half: the stamp resolves per faction with
+ * `Default*` fall-through, like every other surface (ADR-0039).
+ */
+import { describe, it, expect } from 'vitest'
+import { renderToStaticMarkup } from 'react-dom/server'
+import '../../../../i18n'
+import type { PraxisCardOut } from '../../../../api/praxis'
+import { pickVariant } from '../../../../utils/factionDispatch'
+import { surfaceMap } from '../../../../factions'
+import { scoreBreakdown, formatMult } from '../scoreBreakdown'
+import DefaultScoreStamp from '../DefaultScoreStamp'
+import EverymenScoreStamp from '../EverymenScoreStamp'
+import EphemeristsScoreStamp from '../EphemeristsScoreStamp'
+
+/** No hex may reach a stamp's markup — every colour is a token (ADR-0049). */
+const HEX = /#[0-9a-fA-F]{3,8}\b/
+
+/** Strip tags so a copy assertion cannot be satisfied by an attribute value. */
+const text = (html: string) => html.replace(/<[^>]*>/g, '')
+
+/**
+ * Overrides are loosely typed on purpose: several cases below feed `null` into
+ * fields the API declares non-nullable, which is exactly the defensive `?? 0`
+ * path in `scoreBreakdown` that a wire-shape drift would otherwise hit unseen.
+ */
+function praxis(overrides: Record<string, unknown>): PraxisCardOut {
+  return {
+    base_points: 12,
+    display_multiplier: 0.8,
+    metatask_points: 0,
+    points_from_votes: 4,
+    total: 13.6,
+    ...overrides,
+  } as PraxisCardOut
+}
+
+describe('scoreBreakdown row selection (ADR-0047)', () => {
+  it('reads the #819 breakdown fields straight through', () => {
+    expect(scoreBreakdown(praxis({}))).toEqual({
+      base: 12,
+      mult: 0.8,
+      meta: null,
+      votes: 4,
+      total: 13.6,
+    })
+  })
+
+  it('hides the mult row at ×1.0 and when absent (collab)', () => {
+    expect(scoreBreakdown(praxis({ display_multiplier: 1 })).mult).toBeNull()
+    expect(scoreBreakdown(praxis({ display_multiplier: null })).mult).toBeNull()
+  })
+
+  it('hides the meta row at 0 or below, shows it above', () => {
+    expect(scoreBreakdown(praxis({ metatask_points: 0 })).meta).toBeNull()
+    expect(scoreBreakdown(praxis({ metatask_points: null })).meta).toBeNull()
+    expect(scoreBreakdown(praxis({ metatask_points: 3 })).meta).toBe(3)
+  })
+
+  it('always keeps the votes row — +0 is a real value, not an absent one', () => {
+    expect(scoreBreakdown(praxis({ points_from_votes: 0 })).votes).toBe(0)
+  })
+
+  it('never derives vote points by subtraction (the old Merit assumption)', () => {
+    // total is authoritative and unrelated to base/votes arithmetic here.
+    const rows = scoreBreakdown(praxis({ base_points: 12, points_from_votes: 4, total: 99 }))
+    expect(rows.votes).toBe(4)
+    expect(rows.total).toBe(99)
+  })
+
+  it('treats missing numerics as zero rather than NaN', () => {
+    expect(
+      scoreBreakdown(
+        praxis({ base_points: null, points_from_votes: null, total: null }),
+      ),
+    ).toEqual({ base: 0, mult: 0.8, meta: null, votes: 0, total: 0 })
+  })
+
+  it('formats the multiplier to two decimals', () => {
+    expect(formatMult(0.8)).toBe('×0.80')
+    expect(formatMult(2)).toBe('×2.00')
+  })
+})
+
+describe('scoreStamp surface dispatch (ADR-0049)', () => {
+  it('falls through to the Default stamp for every slug that has not claimed it', () => {
+    for (const slug of ['ua', 'snide', 'singularity', 'coven', 'wow', 'albescent', 'na', null]) {
+      expect(pickVariant(surfaceMap('scoreStamp'), slug, DefaultScoreStamp)).toBe(DefaultScoreStamp)
+    }
+  })
+
+  it('gives Everymen and the Ephemerists their own stamps (#841)', () => {
+    expect(pickVariant(surfaceMap('scoreStamp'), 'everymen', DefaultScoreStamp)).toBe(
+      EverymenScoreStamp,
+    )
+    expect(pickVariant(surfaceMap('scoreStamp'), 'ephemerists', DefaultScoreStamp)).toBe(
+      EphemeristsScoreStamp,
+    )
+  })
+})
+
+/**
+ * The five conditional states of design v2, on both #841 stamps. The failure
+ * mode this guards is not a missing row — `scoreBreakdown` is tested above —
+ * but a stamp that stops READING as itself when a row drops out: a tally whose
+ * subtotal rule floats with nothing above it, or a rubric with no working over
+ * it. Each state must still print the total and its own device.
+ */
+describe('#841 stamps across the conditional states (ADR-0047)', () => {
+  const STATES = [
+    ['base only', { display_multiplier: 1, metatask_points: 0, points_from_votes: 0, total: 12 }],
+    ['+ votes', { display_multiplier: 1, metatask_points: 0, points_from_votes: 4, total: 16 }],
+    ['× mult', { display_multiplier: 0.8, metatask_points: 0, points_from_votes: 0, total: 9.6 }],
+    ['+ metatask', { display_multiplier: 1, metatask_points: 20, points_from_votes: 0, total: 32 }],
+    ['full formula', { display_multiplier: 0.8, metatask_points: 20, points_from_votes: 4, total: 29.6 }],
+  ] as const
+
+  for (const [name, fields] of STATES) {
+    it(`Everymen prints the tally and the roundel — ${name}`, () => {
+      const html = text(renderToStaticMarkup(<EverymenScoreStamp praxis={praxis({ ...fields })} />))
+      expect(html).toContain('TALLY')
+      expect(html).toContain('ON THE RECORD')
+      // The roundel carries the total whichever rows are present.
+      expect(html).toContain(fields.total.toFixed(1))
+      // The votes row survives at 0 — the deliberate ADR-0047 deviation.
+      expect(html).toContain('votes')
+      expect(html).not.toMatch(HEX)
+    })
+
+    it(`Ephemerists prints the working and the rubric — ${name}`, () => {
+      const html = text(
+        renderToStaticMarkup(<EphemeristsScoreStamp praxis={praxis({ ...fields })} />),
+      )
+      expect(html).toContain('base')
+      expect(html).toContain('from votes')
+      expect(html).toContain(fields.total.toFixed(1))
+      expect(html).not.toMatch(HEX)
+    })
+  }
+
+  it('draws the Everymen subtotal rule only when a metatask AND a multiplier are both live', () => {
+    const full = text(
+      renderToStaticMarkup(
+        <EverymenScoreStamp praxis={praxis({ display_multiplier: 0.8, metatask_points: 20 })} />,
+      ),
+    )
+    const metaOnly = text(
+      renderToStaticMarkup(
+        <EverymenScoreStamp praxis={praxis({ display_multiplier: 1, metatask_points: 20 })} />,
+      ),
+    )
+    expect(full).toContain('group')
+    expect(metaOnly).not.toContain('group')
+  })
+})

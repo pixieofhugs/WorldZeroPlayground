@@ -4,10 +4,11 @@ import { factionCssVar } from '../../../utils/factions'
 import { MobilePraxisBody, type MobileSlotTheme } from './shared'
 
 /**
- * Warriors of Whimsy MOBILE praxis card (#821) — the SAME chronicle structure as
- * Coven's, recoloured to WOW yellow (`--faction-wow-*`), never gold/plum. WOW's
- * first bespoke mobile skin (#812 gave it a colour, this gives it a card).
- * Single column, tokens only. Frame pixel-fidelity flagged for human QA.
+ * Warriors of Whimsy MOBILE praxis card (#821) — the CHRONICLE, which is WOW's
+ * own aesthetic and not a recolour of anyone's: cream parchment, a gold frame
+ * and plum ink (`--faction-wow-*`, repointed by #838; the yellow it briefly wore
+ * came from a mislabelled mockup, see ADR-0050). Single column, tokens only.
+ * Frame pixel-fidelity flagged for human QA.
  */
 export default function WowMobilePraxisCard({ praxis }: { praxis: PraxisCardOut }) {
   const { t } = useTranslation('praxis')
