@@ -550,8 +550,8 @@
           "desc": "Summon fellow knights to share the glory."
         },
         "duel": {
-          "label": "Duel",
-          "desc": "Two knights, one field of honour."
+          "label": "Tourney Joust",
+          "desc": "Ride against a rival in the lists — the Court shall judge which knight prevails."
         }
       },
       "inviteLabel": "Summon Fellow Knights",
