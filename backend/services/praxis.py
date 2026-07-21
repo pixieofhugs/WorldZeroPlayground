@@ -186,11 +186,20 @@ async def build_praxis_out(
     task_base = praxis.task.point_value if praxis.task else 0
     score = float(task_base + tally.points_from_votes)
 
-    # Look up the Duel row if this praxis is a duel side (ADR-0011).
+    # Look up the Duel row if this praxis is a duel side (ADR-0011). `resolved`
+    # is included so a card keeps its duel link after the era froze the outcome
+    # (ADR-0052) — otherwise a past duel's praxis reads back as a plain solo.
     duel_result = await session.execute(
         select(Duel).where(
             (Duel.challenger_praxis_id == praxis.id) | (Duel.opponent_praxis_id == praxis.id),
-            Duel.status.in_([DuelStatus.pending, DuelStatus.active, DuelStatus.settled]),
+            Duel.status.in_(
+                [
+                    DuelStatus.pending,
+                    DuelStatus.active,
+                    DuelStatus.settled,
+                    DuelStatus.resolved,
+                ]
+            ),
         )
     )
     duel_row = duel_result.scalar_one_or_none()

@@ -44,7 +44,7 @@ ENUMS: list[tuple[str, list[str]]] = [
     ("relationshiptype", ["friend", "foe"]),
     ("relationshipstatus", ["active", "blocked"]),
     ("taunttriggertype", ["score_overtake", "level_up", "praxis_complete"]),
-    ("duelstatus", ["pending", "active", "settled", "declined"]),
+    ("duelstatus", ["pending", "active", "settled", "declined", "resolved"]),
 ]
 
 

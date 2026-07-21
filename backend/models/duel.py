@@ -19,17 +19,22 @@ class DuelStatus(enum.Enum):
     active = "active"
     settled = "settled"
     declined = "declined"
+    resolved = "resolved"
 
 
 class Duel(CreatedAtMixin, Base):
     """Links two solo praxes as competing sides of a duel (ADR-0011).
 
-    Lifecycle: pending → active → settled (terminal), or pending → declined (terminal).
+    Lifecycle: pending → active → settled → resolved (terminal), or
+    pending → declined (terminal).
     - pending: challenger's praxis created; opponent has been challenged.
     - active: opponent accepted; opponent's praxis created.
     - settled: both praxes submitted; voting is open.
     - declined: opponent declined or challenger cancelled; challenger's praxis
       reverts to a plain solo praxis (Duel row is kept for history).
+    - resolved: the era closed and the outcome was frozen (ADR-0052). Every
+      active/settled duel lands here at era reset; an `active` duel never became
+      votable and resolves as a no-contest (null winner).
     """
 
     __tablename__ = "duel"
@@ -59,6 +64,19 @@ class Duel(CreatedAtMixin, Base):
     forfeited_by_character_id: Mapped[Optional[int]] = mapped_column(
         ForeignKey("character.id"), nullable=True
     )
+
+    # ── frozen outcome, written once at era close (ADR-0052) ────────────────
+    # NULL winner on a resolved duel = tie, or no-contest (never became votable).
+    winner_character_id: Mapped[Optional[int]] = mapped_column(
+        ForeignKey("character.id"), nullable=True
+    )
+    resolved_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    # Snapshot of each side's points_from_votes at the moment of resolution, so a
+    # resolved surface can show vote shares without the live tally moving under it.
+    challenger_final_points: Mapped[Optional[int]] = mapped_column(nullable=True)
+    opponent_final_points: Mapped[Optional[int]] = mapped_column(nullable=True)
 
     challenger_praxis: Mapped["Praxis"] = relationship(
         "Praxis", foreign_keys=[challenger_praxis_id], lazy="selectin"
