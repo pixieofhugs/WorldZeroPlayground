@@ -160,8 +160,12 @@ function authorAsCharacter(praxis: PraxisCardOut): CharacterOut {
   };
 }
 
-/** The byline portrait's diameter. Not a spacing value — a drawn disc. */
-// eslint-disable-next-line local/no-raw-style-values -- ornament: the portrait disc's drawn diameter (§4a), passed as a number to FactionAvatar's size API.
+/**
+ * The byline portrait's diameter. An argument to `FactionAvatar`'s own size API
+ * (which takes `'sm' | 'md' | px`), not a style value — it sits between the two
+ * named steps because the byline wants a face bigger than the roster's 24 and
+ * smaller than a profile's 32.
+ */
 const BYLINE_PORTRAIT_SIZE = 28;
 
 /**

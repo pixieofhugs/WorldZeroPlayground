@@ -15,8 +15,8 @@ export default function SingularityMobilePraxisCard({ praxis }: { praxis: Praxis
     muted: 'var(--faction-singularity-card-muted)',
     accent: 'var(--faction-singularity-card-accent)',
     paper: 'var(--faction-singularity-card-bg)',
-    displayFont: "'Share Tech Mono', monospace",
-    bodyFont: "'Share Tech Mono', monospace",
+    displayFont: 'var(--faction-singularity-card-font)',
+    bodyFont: 'var(--faction-singularity-card-font)',
   }
   return (
     <div
@@ -44,7 +44,7 @@ export default function SingularityMobilePraxisCard({ praxis }: { praxis: Praxis
         <div
           style={{
             marginBottom: 'var(--space-md)',
-            fontFamily: "'Share Tech Mono', monospace",
+            fontFamily: 'var(--faction-singularity-card-font)',
             fontSize: 'var(--text-sm)',
             letterSpacing: '0.15em',
             textTransform: 'uppercase',

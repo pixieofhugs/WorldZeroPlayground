@@ -147,6 +147,12 @@
   --faction-coven-card-font: var(--font-faction-script);
   --faction-snide-card-font: var(--font-faction-marker);
   --faction-ephemerists-card-font: var(--eph-display);
+  /* The codex's READING face — the other half of the Ephemerists pair (#888).
+     `--eph-serif` already held this value; naming it in the --faction-* family
+     is what lets the praxis-card font seam ask every faction the same two
+     questions (display face, body face) instead of one faction answering from
+     a legacy namespace. Same shape as --faction-ua-body-font / -wow-body-font. */
+  --faction-ephemerists-body-font: var(--eph-serif);
   --faction-singularity-card-font: var(--font-faction-terminal);
 
   /* ── WARRIORS OF WHIMSY · yellow SPINE, cream/gold/plum SKIN (#812, #838) ──

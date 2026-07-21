@@ -23,7 +23,10 @@ export default function DefaultMobilePraxisCard({ praxis }: { praxis: PraxisCard
     accent: 'var(--faction-default-card-accent)',
     paper: 'var(--faction-default-card-bg)',
     displayFont: 'var(--faction-default-card-font)',
-    bodyFont: "'Courier Prime', monospace",
+    // The house body face, by its token (#888). A font STRING passes the style
+    // ratchet — it is not a size or a hex — while being exactly the laundering
+    // the ratchet exists to catch.
+    bodyFont: 'var(--font-body)',
   }
   return (
     <div

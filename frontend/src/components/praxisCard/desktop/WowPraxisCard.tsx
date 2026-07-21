@@ -72,6 +72,12 @@ export function WowPraxisCard({ praxis, adminProps, showCrown }: ArchetypeProps)
             color: "var(--faction-wow-card-text)",
           }}
           showCrown={showCrown}
+          // MedievalSharp illuminates, Lora reads — the chronicle's own pair,
+          // matching the WOW mobile card (#888).
+          fonts={{
+            display: "var(--faction-wow-card-font)",
+            body: "var(--faction-wow-body-font)",
+          }}
           eyebrow={
             <div
               className="eyebrow"
