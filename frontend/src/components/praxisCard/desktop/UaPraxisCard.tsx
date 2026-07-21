@@ -1,62 +1,102 @@
 import { useTranslation } from "react-i18next";
-import { factionCssVar } from "../../../utils/factions";
+import { Lotus } from "../../factionMarks";
 import { AdminOverlay } from "../shared";
 import { PraxisBody, frameBase, type ArchetypeProps } from "./shared";
 
 /**
- * UA — Gilt salon placard, filed. A gold-framed acquisition plate: gilt-leaf
- * gradient border, parchment ground with a faint dotted tooth, an engraved
- * "Acquisition · filed" regalia line. Matches the UA praxis-read sheet, UaVote,
- * and the DS FactionPraxisCard reference. All colors via --ua-* tokens.
+ * UA — the vellum sheet, sealed. A single 2px vermilion rule around a parchment
+ * ground that runs highlight-to-shadow across the sheet at 158°, with the
+ * {@link Lotus} floated off the left edge as a ground watermark and the ensō
+ * carrying the total in the right column (see `UaScoreStamp`).
+ *
+ * WHY THIS CARD IS WARM WHEN THE FACTION IS NOT (#857). UA has two live plans
+ * and the owner split them by surface on 2026-07-20: the PRAXIS HANDOFF wins
+ * the praxis card; the UA IDENTITY KIT (#788, #848–853) wins every other UA
+ * surface. So this card keeps its parchment-and-vermilion salon voice and its
+ * ensō even as the rest of UA becomes a sun-bleached, gold-free practice. It is
+ * a deliberate exception — do not harmonise it with the kit.
+ *
+ * What makes the exception survivable is the TOKEN CONTRACT: every colour here
+ * resolves from the `--faction-ua-card-*` block minted for this surface, and
+ * nothing reads the legacy gilt-salon token family (ua-gold, ua-gilt, ua-ink,
+ * ua-paper, ua-line …) that #853 deletes. That is an acceptance gate, not a
+ * preference: this file must stay at zero hits for that prefix.
+ *
+ * The gilt double-frame that used to wrap this card was invented, not designed
+ * — the handoff draws ONE border, and #848 took gold out of UA entirely. #839
+ * fixed the radius at 7; this slice removed the second frame and the dotted
+ * tooth. Do not reintroduce either.
  */
 export function UaPraxisCard({ praxis, adminProps, showCrown }: ArchetypeProps) {
   const { t } = useTranslation("praxis");
   return (
-    // Gilt frame: gold-leaf gradient border, then the parchment plate.
     <div
       style={{
         ...frameBase,
+        position: "relative",
+        overflow: "hidden",
         borderRadius: 7, // ensō salon sheet
-        padding: "var(--space-xs)",
-        background: "var(--ua-gilt)",
+        background: "var(--faction-ua-card-parchment)",
+        border: "2px solid var(--faction-ua-card-frame)",
         boxShadow:
-          "0 12px 26px color-mix(in srgb, var(--ua-ink) 22%, transparent), inset 0 0 0 1px color-mix(in srgb, white 45%, transparent)",
+          "0 14px 40px -22px color-mix(in srgb, var(--faction-ua-card-text) 50%, transparent)",
+        padding: "var(--space-xl) var(--space-xl) var(--space-lg)",
+        fontFamily: "var(--faction-ua-body-font)",
+        color: "var(--faction-ua-card-text)",
       }}
     >
-      <div
+      {/*
+       * The ground watermark: the lotus hangs off the left edge with its centre
+       * pulled up onto the sheet. Raw geometry on purpose — an ornament's
+       * position is illustration, not layout spacing (§4a). Its opacity is a
+       * token so dark mode lifts it through the cascade, never a ternary; the
+       * design's `filter: brightness(2)` is folded into the dark ink instead.
+       */}
+      <Lotus
+        size={420}
+        color="var(--faction-ua-card-lotus)"
         style={{
-          position: "relative",
-          background: factionCssVar("ua", "card-bg"),
-          border: "2px solid color-mix(in srgb, var(--ua-ink) 30%, transparent)",
-          borderRadius: 4,
-          padding: "var(--space-xl)",
-          fontFamily: "var(--faction-ua-body-font)",
-          color: factionCssVar("ua", "card-text"),
-          backgroundImage:
-            "radial-gradient(color-mix(in srgb, var(--ua-ink) 4%, transparent) 1px, transparent 1px)",
-          backgroundSize: "5px 5px",
+          position: "absolute",
+          left: -150,
+          top: 250,
+          transform: "translateY(-50%)",
+          opacity: "var(--faction-ua-card-lotus-opacity)",
+          pointerEvents: "none",
         }}
-      >
-        <div
-          style={{
-            fontFamily: "var(--faction-ua-body-font)",
-            fontSize: "var(--text-xs)",
-            letterSpacing: "0.12em",
-            textTransform: "uppercase",
-            color: factionCssVar("ua", "card-accent"),
-            marginBottom: "var(--space-sm)",
-          }}
-        >
-          {t("card.masthead.ua")}
-        </div>
+      />
+
+      <div style={{ position: "relative" }}>
         <AdminOverlay {...adminProps} />
         <PraxisBody
           praxis={praxis}
-          tint={factionCssVar("ua", "card-accent")}
-          muted={factionCssVar("ua", "card-muted")}
-          paper={factionCssVar("ua", "card-bg")}
-          titleStyle={{ fontFamily: "var(--faction-ua-card-font)", fontStyle: "italic" }}
+          tint="var(--faction-ua-card-accent)"
+          muted="var(--faction-ua-card-muted)"
+          paper="var(--faction-ua-card-bg)"
+          titleStyle={{
+            fontFamily: "var(--faction-ua-card-font)",
+            fontWeight: 600,
+            letterSpacing: "-0.01em",
+          }}
           showCrown={showCrown}
+          eyebrow={
+            /*
+             * The running head sits INSIDE the text column, above the title, so
+             * it stops at the score box rather than running under the ensō —
+             * the `eyebrow` slot #841 added for exactly this shape.
+             */
+            <div
+              style={{
+                fontFamily: "var(--faction-ua-body-font)",
+                fontSize: "var(--text-base)",
+                letterSpacing: "0.22em",
+                textTransform: "uppercase",
+                color: "var(--faction-ua-card-muted)",
+                marginBottom: "var(--space-sm)",
+              }}
+            >
+              {t("card.masthead.ua")}
+            </div>
+          }
         />
       </div>
     </div>

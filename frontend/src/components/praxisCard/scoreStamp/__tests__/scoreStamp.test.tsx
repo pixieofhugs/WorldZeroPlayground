@@ -24,6 +24,7 @@ import SnideScoreStamp from '../SnideScoreStamp'
 import SingularityScoreStamp from '../SingularityScoreStamp'
 import WowScoreStamp from '../WowScoreStamp'
 import CovenScoreStamp from '../CovenScoreStamp'
+import UaScoreStamp from '../UaScoreStamp'
 
 /** No hex may reach a stamp's markup — every colour is a token (ADR-0049). */
 const HEX = /#[0-9a-fA-F]{3,8}\b/
@@ -96,7 +97,7 @@ describe('scoreBreakdown row selection (ADR-0047)', () => {
 
 describe('scoreStamp surface dispatch (ADR-0049)', () => {
   it('falls through to the Default stamp for every slug that has not claimed it', () => {
-    for (const slug of ['ua', 'albescent', 'na', null]) {
+    for (const slug of ['albescent', 'na', null]) {
       expect(pickVariant(surfaceMap('scoreStamp'), slug, DefaultScoreStamp)).toBe(DefaultScoreStamp)
     }
   })
@@ -126,6 +127,10 @@ describe('scoreStamp surface dispatch (ADR-0049)', () => {
   it('gives WOW the chronicle plate and Coven the sticker, not the reverse (#840)', () => {
     expect(pickVariant(surfaceMap('scoreStamp'), 'wow', DefaultScoreStamp)).toBe(WowScoreStamp)
     expect(pickVariant(surfaceMap('scoreStamp'), 'coven', DefaultScoreStamp)).toBe(CovenScoreStamp)
+  })
+
+  it('gives UA its own stamp — the ensō (#857)', () => {
+    expect(pickVariant(surfaceMap('scoreStamp'), 'ua', DefaultScoreStamp)).toBe(UaScoreStamp)
   })
 })
 
@@ -166,6 +171,20 @@ describe('#841 stamps across the conditional states (ADR-0047)', () => {
       expect(html).toContain(fields.total.toFixed(1))
       expect(html).not.toMatch(HEX)
     })
+
+    it(`UA prints the score box and the ensō — ${name}`, () => {
+      const markup = renderToStaticMarkup(<UaScoreStamp praxis={praxis({ ...fields })} />)
+      const html = text(markup)
+      expect(html).toContain('base')
+      // The votes row survives at 0 — the deliberate ADR-0047 deviation.
+      expect(html).toContain('from votes')
+      expect(html).toContain(fields.total.toFixed(1))
+      expect(html).toContain('points')
+      // The total mark is the ensō, masked from the asset and tinted by a token.
+      expect(markup).toContain('/factionMarks/enso.svg')
+      expect(markup).toContain('var(--faction-ua-card-enso)')
+      expect(markup).not.toMatch(HEX)
+    })
   }
 
   for (const [name, fields] of STATES) {
@@ -201,6 +220,34 @@ describe('#841 stamps across the conditional states (ADR-0047)', () => {
     expect(wow).toContain('rotate(-2deg)')
     expect(coven).toContain('rotate(-3deg)')
     expect(coven).toContain('dashed')
+  })
+
+  it('shows the UA multiplier chip only when a multiplier is live', () => {
+    const withMult = text(
+      renderToStaticMarkup(<UaScoreStamp praxis={praxis({ display_multiplier: 0.8 })} />),
+    )
+    const withoutMult = text(
+      renderToStaticMarkup(<UaScoreStamp praxis={praxis({ display_multiplier: 1 })} />),
+    )
+    expect(withMult).toContain('×0.80')
+    expect(withoutMult).not.toContain('×')
+  })
+
+  it('draws the UA grouped subtotal only when a metatask AND a multiplier are both live', () => {
+    const full = text(
+      renderToStaticMarkup(
+        <UaScoreStamp praxis={praxis({ display_multiplier: 0.8, metatask_points: 20 })} />,
+      ),
+    )
+    const metaOnly = text(
+      renderToStaticMarkup(
+        <UaScoreStamp praxis={praxis({ display_multiplier: 1, metatask_points: 20 })} />,
+      ),
+    )
+    // (base + meta) = 32, under the plate's rule.
+    expect(full).toContain('group')
+    expect(full).toContain('32')
+    expect(metaOnly).not.toContain('group')
   })
 
   it('draws the Everymen subtotal rule only when a metatask AND a multiplier are both live', () => {
