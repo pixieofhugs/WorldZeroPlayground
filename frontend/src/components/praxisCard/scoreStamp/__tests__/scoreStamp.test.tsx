@@ -39,17 +39,17 @@ const text = (html: string) => html.replace(/<[^>]*>/g, '')
  */
 function praxis(overrides: Record<string, unknown>): PraxisCardOut {
   return {
-    base_points: 12,
+    task_point_value: 12,
     display_multiplier: 0.8,
     metatask_points: 0,
     points_from_votes: 4,
-    total: 13.6,
+    score: 13.6,
     ...overrides,
   } as PraxisCardOut
 }
 
-describe('scoreBreakdown row selection (ADR-0047)', () => {
-  it('reads the #819 breakdown fields straight through', () => {
+describe('scoreBreakdown row selection (ADR-0053)', () => {
+  it('reads the breakdown fields straight through', () => {
     expect(scoreBreakdown(praxis({}))).toEqual({
       base: 12,
       mult: 0.8,
@@ -59,9 +59,13 @@ describe('scoreBreakdown row selection (ADR-0047)', () => {
     })
   })
 
-  it('hides the mult row at ×1.0 and when absent (collab)', () => {
+  it('hides the mult row at exactly 1.0', () => {
     expect(scoreBreakdown(praxis({ display_multiplier: 1 })).mult).toBeNull()
-    expect(scoreBreakdown(praxis({ display_multiplier: null })).mult).toBeNull()
+  })
+
+  it('shows a 0.0 multiplier — a losing Snide duel side is not a hidden row', () => {
+    // ADR-0053: the multiplier is never absent, and ×0.0 is a real, live value.
+    expect(scoreBreakdown(praxis({ display_multiplier: 0, score: 4 })).mult).toBe(0)
   })
 
   it('hides the meta row at 0 or below, shows it above', () => {
@@ -75,8 +79,8 @@ describe('scoreBreakdown row selection (ADR-0047)', () => {
   })
 
   it('never derives vote points by subtraction (the old Merit assumption)', () => {
-    // total is authoritative and unrelated to base/votes arithmetic here.
-    const rows = scoreBreakdown(praxis({ base_points: 12, points_from_votes: 4, total: 99 }))
+    // score is authoritative and unrelated to base/votes arithmetic here.
+    const rows = scoreBreakdown(praxis({ task_point_value: 12, points_from_votes: 4, score: 99 }))
     expect(rows.votes).toBe(4)
     expect(rows.total).toBe(99)
   })
@@ -84,7 +88,7 @@ describe('scoreBreakdown row selection (ADR-0047)', () => {
   it('treats missing numerics as zero rather than NaN', () => {
     expect(
       scoreBreakdown(
-        praxis({ base_points: null, points_from_votes: null, total: null }),
+        praxis({ task_point_value: null, points_from_votes: null, score: null }),
       ),
     ).toEqual({ base: 0, mult: 0.8, meta: null, votes: 0, total: 0 })
   })
@@ -143,11 +147,11 @@ describe('scoreStamp surface dispatch (ADR-0049)', () => {
  */
 describe('#841 stamps across the conditional states (ADR-0047)', () => {
   const STATES = [
-    ['base only', { display_multiplier: 1, metatask_points: 0, points_from_votes: 0, total: 12 }],
-    ['+ votes', { display_multiplier: 1, metatask_points: 0, points_from_votes: 4, total: 16 }],
-    ['× mult', { display_multiplier: 0.8, metatask_points: 0, points_from_votes: 0, total: 9.6 }],
-    ['+ metatask', { display_multiplier: 1, metatask_points: 20, points_from_votes: 0, total: 32 }],
-    ['full formula', { display_multiplier: 0.8, metatask_points: 20, points_from_votes: 4, total: 29.6 }],
+    ['base only', { display_multiplier: 1, metatask_points: 0, points_from_votes: 0, score: 12 }],
+    ['+ votes', { display_multiplier: 1, metatask_points: 0, points_from_votes: 4, score: 16 }],
+    ['× mult', { display_multiplier: 0.8, metatask_points: 0, points_from_votes: 0, score: 9.6 }],
+    ['+ metatask', { display_multiplier: 1, metatask_points: 20, points_from_votes: 0, score: 32 }],
+    ['full formula', { display_multiplier: 0.8, metatask_points: 20, points_from_votes: 4, score: 29.6 }],
   ] as const
 
   for (const [name, fields] of STATES) {
@@ -156,7 +160,7 @@ describe('#841 stamps across the conditional states (ADR-0047)', () => {
       expect(html).toContain('TALLY')
       expect(html).toContain('ON THE RECORD')
       // The roundel carries the total whichever rows are present.
-      expect(html).toContain(fields.total.toFixed(1))
+      expect(html).toContain(fields.score.toFixed(1))
       // The votes row survives at 0 — the deliberate ADR-0047 deviation.
       expect(html).toContain('votes')
       expect(html).not.toMatch(HEX)
@@ -168,7 +172,7 @@ describe('#841 stamps across the conditional states (ADR-0047)', () => {
       )
       expect(html).toContain('base')
       expect(html).toContain('from votes')
-      expect(html).toContain(fields.total.toFixed(1))
+      expect(html).toContain(fields.score.toFixed(1))
       expect(html).not.toMatch(HEX)
     })
 
@@ -178,7 +182,7 @@ describe('#841 stamps across the conditional states (ADR-0047)', () => {
       expect(html).toContain('base')
       // The votes row survives at 0 — the deliberate ADR-0047 deviation.
       expect(html).toContain('from votes')
-      expect(html).toContain(fields.total.toFixed(1))
+      expect(html).toContain(fields.score.toFixed(1))
       expect(html).toContain('points')
       // The total mark is the ensō, masked from the asset and tinted by a token.
       expect(markup).toContain('/factionMarks/enso.svg')
@@ -192,7 +196,7 @@ describe('#841 stamps across the conditional states (ADR-0047)', () => {
       const html = text(renderToStaticMarkup(<WowScoreStamp praxis={praxis({ ...fields })} />))
       expect(html).toContain('base')
       expect(html).toContain('from votes')
-      expect(html).toContain(fields.total.toFixed(1))
+      expect(html).toContain(fields.score.toFixed(1))
       // The retired ✦ survives here and only here — see ADR-0050 / the design
       // README's carve-out. Losing it is half of what #840 exists to fix.
       expect(html).toContain('✦')
@@ -203,7 +207,7 @@ describe('#841 stamps across the conditional states (ADR-0047)', () => {
       const html = text(renderToStaticMarkup(<CovenScoreStamp praxis={praxis({ ...fields })} />))
       expect(html).toContain('base')
       expect(html).toContain('from votes')
-      expect(html).toContain(fields.total.toFixed(1))
+      expect(html).toContain(fields.score.toFixed(1))
       expect(html).toContain('✨')
       expect(html).not.toMatch(HEX)
     })
@@ -276,11 +280,11 @@ describe('#841 stamps across the conditional states (ADR-0047)', () => {
  */
 describe('#842 stamps across the conditional states (ADR-0047)', () => {
   const STATES = [
-    ['base only', { display_multiplier: 1, metatask_points: 0, points_from_votes: 0, total: 12 }],
-    ['+ votes', { display_multiplier: 1, metatask_points: 0, points_from_votes: 4, total: 16 }],
-    ['× mult', { display_multiplier: 0.8, metatask_points: 0, points_from_votes: 0, total: 9.6 }],
-    ['+ metatask', { display_multiplier: 1, metatask_points: 20, points_from_votes: 0, total: 32 }],
-    ['full formula', { display_multiplier: 0.8, metatask_points: 20, points_from_votes: 4, total: 29.6 }],
+    ['base only', { display_multiplier: 1, metatask_points: 0, points_from_votes: 0, score: 12 }],
+    ['+ votes', { display_multiplier: 1, metatask_points: 0, points_from_votes: 4, score: 16 }],
+    ['× mult', { display_multiplier: 0.8, metatask_points: 0, points_from_votes: 0, score: 9.6 }],
+    ['+ metatask', { display_multiplier: 1, metatask_points: 20, points_from_votes: 0, score: 32 }],
+    ['full formula', { display_multiplier: 0.8, metatask_points: 20, points_from_votes: 4, score: 29.6 }],
   ] as const
 
   for (const [name, fields] of STATES) {
@@ -288,7 +292,7 @@ describe('#842 stamps across the conditional states (ADR-0047)', () => {
       const html = text(renderToStaticMarkup(<SnideScoreStamp praxis={praxis({ ...fields })} />))
       expect(html).toContain('base')
       expect(html).toContain('from votes')
-      expect(html).toContain(fields.total.toFixed(1))
+      expect(html).toContain(fields.score.toFixed(1))
       expect(html).toContain('pts')
       expect(html).not.toMatch(HEX)
     })
@@ -300,7 +304,7 @@ describe('#842 stamps across the conditional states (ADR-0047)', () => {
       expect(html).toContain('base')
       expect(html).toContain('tot')
       // The terminal pads its output: two decimals, and a zero-padded votes row.
-      expect(html).toContain(fields.total.toFixed(2))
+      expect(html).toContain(fields.score.toFixed(2))
       expect(html).toContain(`+${String(fields.points_from_votes).padStart(2, '0')}`)
       expect(html).not.toMatch(HEX)
     })
@@ -309,7 +313,7 @@ describe('#842 stamps across the conditional states (ADR-0047)', () => {
       const html = text(renderToStaticMarkup(<DefaultScoreStamp praxis={praxis({ ...fields })} />))
       expect(html).toContain('base')
       expect(html).toContain('from votes')
-      expect(html).toContain(fields.total.toFixed(1))
+      expect(html).toContain(fields.score.toFixed(1))
       expect(html).toContain('points')
       expect(html).not.toMatch(HEX)
     })

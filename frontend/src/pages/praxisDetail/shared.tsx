@@ -20,8 +20,8 @@ import { CollabRoster } from '../../components/collab/CollabRoster'
 import DuelSealConfirm from '../../components/duel/DuelSealConfirm'
 import type { PraxisDetailState } from './usePraxisDetail'
 import type { PraxisMemberOut, PraxisOut } from '../../api/praxis'
-import type { VoteSummary } from '../../api/votes'
 import { flagReasonOptions } from '../../utils/flagReasons'
+import { scoreBreakdown } from '../../components/praxisCard/scoreStamp/scoreBreakdown'
 
 // ── Egalitarian byline (#387) ────────────────────────────────────────────────
 //
@@ -539,16 +539,19 @@ export function PraxisVoterBreakdown({ state }: { state: PraxisDetailState }) {
   )
 }
 
-// ── Single earned-points breakdown (#641) ────────────────────────────────────
+// ── Single earned-points breakdown (#641, ADR-0053) ──────────────────────────
 //
-// The one explicit score readout a detail page shows, mirroring the card's
-// PraxisScoreHero idiom (`{base} + {votes}`). ADR-0014 merit is
-// `base × multiplier + points_from_votes`; the multiplier is fixed WHEN the
-// praxis was scored (never viewer-relative, so this is derived from the praxis's
-// own `score`, not computeDisplayPoints). Today every praxis scores at ×1.0, so
-// the plain `{base} + {votes}` form renders; a future era's own-faction bonus
-// would surface the `{base} × {mult} + {votes}` form. The vote number is the
-// authoritative `votes.total_score`.
+// The one explicit score readout a detail page shows. The arithmetic is NOT
+// done here: `scoreBreakdown()` is the single resolver for cards and detail
+// alike, so the two surfaces cannot disagree. What lives here is the detail
+// page's own PRESENTATION — the inline `{base} × {mult} + {votes}` form and the
+// per-faction accent/muted/font theming each of the 14 archetypes passes in.
+//
+// This used to derive the multiplier as `(score − votePoints) / base`. Against
+// Merit (`base + votes`) that reduced to `base / base` — 1.0 unconditionally —
+// so the `× {mult}` branch was unreachable and a Snide duel loss at ×0.0 read
+// as ×1.0. `score` is now the computed total and the multiplier is a payload
+// field, so the branch is live.
 
 /** Format a multiplier for display: 1.1 → "1.1", 1.10 → "1.1", 1.25 → "1.25". */
 function formatMultiplier(multiplier: number): string {
@@ -560,25 +563,24 @@ export interface PraxisBreakdownParts {
   votePoints: number
   multiplier: number
   multiplierLabel: string
-  /** True when the multiplier is effectively 1.0 (the common case). */
+  /** True when the multiplier is exactly 1.0 — the `× {mult}` term is omitted. */
   isPlain: boolean
 }
 
 /**
- * The numbers behind the earned-points breakdown, derived on the frontend from
- * the detail response (no backend change — PraxisOut already carries the raw
- * base `task_point_value` and the full merit `score`; the votes object carries
- * the authoritative vote-point subtotal `total_score`).
+ * The numbers behind the earned-points breakdown, delegated to the shared
+ * `scoreBreakdown()` selector (ADR-0053). Nothing is derived by subtraction.
  */
-export function praxisBreakdownParts(
-  praxis: PraxisOut,
-  votes: VoteSummary | null,
-): PraxisBreakdownParts {
-  const base = praxis.task_point_value
-  const votePoints = votes?.total_score ?? 0
-  const multiplier = base > 0 ? (praxis.score - votePoints) / base : 1
-  const isPlain = Math.abs(multiplier - 1) < 0.005
-  return { base, votePoints, multiplier, multiplierLabel: formatMultiplier(multiplier), isPlain }
+export function praxisBreakdownParts(praxis: PraxisOut): PraxisBreakdownParts {
+  const { base, mult, votes } = scoreBreakdown(praxis)
+  const multiplier = mult ?? 1
+  return {
+    base,
+    votePoints: votes,
+    multiplier,
+    multiplierLabel: formatMultiplier(multiplier),
+    isPlain: mult === null,
+  }
 }
 
 /**
@@ -600,9 +602,9 @@ export function PraxisScoreBreakdown({
   align?: 'left' | 'center' | 'right'
 }) {
   const { t } = useTranslation('praxis')
-  const { praxis, votes } = state
+  const { praxis } = state
   if (!praxis) return null
-  const { base, votePoints, isPlain, multiplierLabel } = praxisBreakdownParts(praxis, votes)
+  const { base, votePoints, isPlain, multiplierLabel } = praxisBreakdownParts(praxis)
 
   return (
     <div style={{ textAlign: align, lineHeight: 1 }}>

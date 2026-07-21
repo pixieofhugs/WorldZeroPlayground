@@ -58,11 +58,9 @@ const ACTIVE_TASK: PraxisCardOut = {
   member_count: 1,
   score: 0,
   voter_count: 0,
-  base_points: 0,
   metatask_points: 0,
-  display_multiplier: null,
+  display_multiplier: 1.0,
   points_from_votes: 0,
-  total: 0,
   is_top_for_task: false,
   task_faction_slug: 'wow',
 }

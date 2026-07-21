@@ -5,8 +5,8 @@ import { useVoteOverride } from './voteOverrides'
  * Merge the viewer's own just-cast vote into a praxis (#626).
  *
  * Both card dispatchers (desktop PraxisCard, mobile MobilePraxisCard) call this
- * before picking a faction skin, so every slot below them — PraxisScoreHero's
- * `{base} + {votes}`, PraxisFooterMeta's score, and the VoteUI tally — reads one
+ * before picking a faction skin, so every slot below them — the score stamp's
+ * breakdown, PraxisFooterMeta's score, and the VoteUI tally — reads one
  * already-correct object instead of each learning about the cast separately.
  *
  * Returns the praxis unchanged when there's no override, so the common case

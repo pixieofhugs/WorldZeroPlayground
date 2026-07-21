@@ -258,24 +258,28 @@ sum of their Contributions' `total`.
 _Avoid_: "praxis score" as a per-praxis number with multipliers baked in (that conflation is
 what the recalc path and the read path currently disagree on).
 
-**Merit** *(the faction-neutral praxis number)*:
-`task base + points_from_votes` — no faction/duel multiplier, **viewer-independent**. What
-task submissions sort by, and the number a **collab** praxis card shows (a collab has no single
-faction multiplier). Distinct from **Contribution** (per-character, multiplied, feeds standings
-+ the detail-page breakdown). Splitting Merit from Contribution is the locality win of the
-praxis-scoring deepening — one well-defined number per surface instead of one conflated `score`
-field computed two disagreeing ways.
-_Note (ADR-0047):_ **solo** and **duel** praxis cards no longer show Merit — they show the
-computed **total** via the conditional score stamp (solo: `base × faction + votes`; duel: the
-side's own total with faction×duel combined). The multiplier/metatask rows appear only when
-non-identity. Merit remains the collab-card number and the submission sort key.
+**Merit** *(RETIRED — ADR-0053)*:
+`task base + points_from_votes`, no faction/duel multiplier. **Nothing computes it.** Kept
+here only so the term stays recognisable in older ADRs and commit history — do not
+reintroduce it, and do not describe any live surface as showing it.
+
+A praxis now has exactly **one** number: `score`, the computed total, resolved for its
+**author** for every type including collab, with the terms behind it on the same payload:
+`score = (task_point_value + metatask_points) × display_multiplier + points_from_votes`.
+See **Contribution** for the underlying model, which ADR-0053 did not change.
+
+Merit existed to dodge "a collab has no single multiplier" — but once the scoring subject is
+the author (and it is), a collab has exactly one author, one faction, one multiplier. Two
+names for one number is also what let the praxis-detail page read the wrong one and render
+every multiplier as ×1.0 for the whole of Era 1. The Task Crown (ADR-0028) ranks by vote
+points directly in SQL; it never read a Merit field.
 
 **Score stamp** *(the pair, not one object)*:
 The praxis card's right column. It is **two** distinct things and conflating them is what
 lost every faction's signature device in #821:
 - **Score box** — the bordered pill carrying the working: `base` numeral, the coloured
   `×0.80` multiplier chip, and `+ N from votes`. Broadly the same *shape* across factions;
-  which rows exist is decided by `scoreBreakdown()` under ADR-0047.
+  which rows exist is decided by `scoreBreakdown()` under ADR-0053.
 - **Total mark** — the faction's own **faction mark** holding the total over a `POINTS`
   label. Frequently not a box at all: UA's is the ensō, Everymen's a rubber-stamp roundel
   with arced text under `mix-blend-mode: multiply`, Ephemerists' a rubric, Snide's an Anton

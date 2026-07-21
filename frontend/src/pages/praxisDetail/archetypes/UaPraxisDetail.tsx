@@ -81,9 +81,9 @@ function TheStanding({
 }) {
   const { t } = useTranslation('praxis')
   if (!votes || votes.total_votes === 0) return null
-  // The single earned-points breakdown (#641) — merit = base × mult + votes,
-  // ×1.0 today so it reads `{base} + {votes}` like the card's PraxisScoreHero.
-  const { base, votePoints, isPlain, multiplierLabel } = praxisBreakdownParts(praxis, votes)
+  // The single earned-points breakdown (#641, ADR-0053): the payload's own
+  // terms, `{base} × {mult} + {votes}`, with the `× {mult}` term omitted at ×1.0.
+  const { base, votePoints, isPlain, multiplierLabel } = praxisBreakdownParts(praxis)
 
   return (
     <div
