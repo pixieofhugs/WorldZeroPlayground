@@ -99,6 +99,13 @@ export function EverymenPraxisCard({ praxis, adminProps, showCrown }: ArchetypeP
           muted={factionCssVar("everymen", "card-muted")}
           paper={factionCssVar("everymen", "card-bg")}
           showCrown={showCrown}
+          // Bebas Neue is Everymen's declared card font and, until #888, reached
+          // task and faction cards but never a praxis card. The broadsheet's own
+          // Special Elite stays on the reading matter.
+          fonts={{
+            display: "var(--faction-everymen-card-font)",
+            body: "var(--font-faction-typewriter)",
+          }}
         />
       </div>
     </div>

@@ -143,6 +143,13 @@ export function SingularityPraxisCard({ praxis, adminProps, showCrown }: Archety
           muted="var(--faction-singularity-phosphor-dim)"
           paper="var(--faction-singularity-card-bg)"
           showCrown={showCrown}
+          // A terminal has one face by definition, so Singularity answers both
+          // questions with Share Tech Mono — via its own card token, not the
+          // raw family (#888).
+          fonts={{
+            display: "var(--faction-singularity-card-font)",
+            body: "var(--faction-singularity-card-font)",
+          }}
           titleStyle={{
             fontFamily: "var(--font-faction-terminal)",
             textTransform: "uppercase",

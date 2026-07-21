@@ -55,6 +55,13 @@ export function CovenPraxisCard({ praxis, adminProps, showCrown }: ArchetypeProp
           color: factionCssVar("coven", "card-text"),
         }}
         showCrown={showCrown}
+        // Coven answers both questions with Caveat (#888). The sticker's voice
+        // IS the handwriting — the pair does not force a second face on a
+        // faction that only has one, it just stops asking `font-body` instead.
+        fonts={{
+          display: "var(--faction-coven-card-font)",
+          body: "var(--faction-coven-card-font)",
+        }}
         eyebrow={
           <div
             style={{

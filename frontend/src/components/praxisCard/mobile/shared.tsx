@@ -474,14 +474,18 @@ export function MobileVotedByMarker({
   )
 }
 
+/**
+ * Slot: the vote footer. Passes NO `points`/`totalVotes` (#888, closing #663) —
+ * `VoteShell`'s `points != null` guard then hides the "N pts · M votes" tally,
+ * leaving the score stamp as the card's only statement of the total. Same
+ * deletion as the desktop footer; `VoteShell` itself is untouched.
+ */
 export function MobileVoteFooter({ praxis }: { praxis: PraxisCardOut }) {
   return (
     <VoteUI
       factionSlug={praxis.task_faction_slug}
       praxisId={praxis.id}
       currentValue={praxis.viewer_vote ?? undefined}
-      points={praxis.score}
-      totalVotes={praxis.voter_count}
     />
   )
 }

@@ -14,8 +14,12 @@ export default function EverymenMobilePraxisCard({ praxis }: { praxis: PraxisCar
     muted: factionCssVar('everymen', 'card-muted'),
     accent: factionCssVar('everymen', 'card-accent'),
     paper: factionCssVar('everymen', 'card-bg'),
-    displayFont: "'Special Elite', serif",
-    bodyFont: "'Special Elite', serif",
+    // Special Elite by its token (#888). The DESKTOP card lifts its display
+    // face to Bebas Neue, Everymen's declared card font; the mobile broadsheet
+    // is left on one typewriter face, since that is what it renders today and
+    // this pass is tokenization, not a mobile restyle.
+    displayFont: 'var(--font-faction-typewriter)',
+    bodyFont: 'var(--font-faction-typewriter)',
   }
   return (
     <div

@@ -401,6 +401,12 @@ async def build_praxis_card_out(
     task_point_value = praxis.task.point_value if praxis.task else 0
     task_level_required = praxis.task.level_required if praxis.task else 0
     created_by_display_name = praxis.created_by.display_name if praxis.created_by else ""
+    # The author's portrait for the card byline (#888). ``created_by`` is already
+    # loaded on every path into this builder (it is what feeds the display name),
+    # so this costs no additional query.
+    created_by_avatar_url = (
+        praxis.created_by.avatar_url if praxis.created_by else None
+    ) or ""
 
     viewer_vote_info = viewer_votes.get(praxis.id) if viewer_votes else None
 
@@ -437,6 +443,7 @@ async def build_praxis_card_out(
         moderation_status=praxis.moderation_status,
         created_by_id=praxis.created_by_id,
         created_by_display_name=created_by_display_name,
+        created_by_avatar_url=created_by_avatar_url,
         created_at=praxis.created_at,
         updated_at=praxis.updated_at,
         submitted_at=praxis.submitted_at,

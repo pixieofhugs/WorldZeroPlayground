@@ -12,6 +12,7 @@ import {
   PraxisMediaGallery,
   PraxisVoteFooter,
   type AdminProps,
+  type PraxisCardFonts,
 } from "../shared";
 import ScoreStamp from "../scoreStamp/ScoreStamp";
 
@@ -83,6 +84,7 @@ export function PraxisBody({
   mediaEmptyLabel,
   mediaEmptyStyle,
   footnote,
+  fonts,
 }: {
   praxis: PraxisCardOut;
   tint: string;
@@ -122,6 +124,18 @@ export function PraxisBody({
    * `PraxisStats` already carries the level/crew/date facts.
    */
   footnote?: ReactNode;
+  /**
+   * The archetype's two typefaces (#888) — display for identity (title, author
+   * name, mode chip), body for reading (task line, excerpt, meta line). Before
+   * this, `../shared` declared no `fontFamily` at all, so every faction's card
+   * body was Courier Prime however loudly its frame declared otherwise.
+   *
+   * Each archetype passes its OWN pair. The slots deliberately do not resolve
+   * `--faction-{slug}-card-font` themselves: that would be a second dispatch
+   * mechanism, and it collapses the display/body split that keeps a Permanent
+   * Marker faction's excerpt readable.
+   */
+  fonts?: PraxisCardFonts;
 }) {
   return (
     <>
@@ -135,9 +149,14 @@ export function PraxisBody({
       >
         <div style={{ flex: 1, minWidth: 0 }}>
           {eyebrow}
-          <PraxisTitle praxis={praxis} style={titleStyle} />
-          <PraxisTaskLink praxis={praxis} style={{ color: muted }} lead={taskLead} />
-          <PraxisExcerpt praxis={praxis} style={{ color: muted }} />
+          <PraxisTitle praxis={praxis} style={titleStyle} fonts={fonts} />
+          <PraxisTaskLink
+            praxis={praxis}
+            style={{ color: muted }}
+            lead={taskLead}
+            fonts={fonts}
+          />
+          <PraxisExcerpt praxis={praxis} style={{ color: muted }} fonts={fonts} />
         </div>
         {/*
          * The conditional score stamp (ADR-0047) on EVERY faction (#821), now a
@@ -149,8 +168,12 @@ export function PraxisBody({
          */}
         <ScoreStamp praxis={praxis} showCrown={showCrown} />
       </div>
-      <PraxisStats praxis={praxis} style={{ color: muted, marginTop: "var(--space-sm)" }} />
-      <PraxisModeChip praxis={praxis} />
+      <PraxisStats
+        praxis={praxis}
+        style={{ color: muted, marginTop: "var(--space-sm)" }}
+        fonts={fonts}
+      />
+      <PraxisModeChip praxis={praxis} fonts={fonts} />
       <PraxisRoster praxis={praxis} accent={tint} paper={paper} />
       {/* Every card shows the media slot — a drop target when empty (#821). */}
       <PraxisMediaGallery
@@ -160,9 +183,10 @@ export function PraxisBody({
         showPlaceholder
         emptyLabel={mediaEmptyLabel}
         emptyStyle={mediaEmptyStyle}
+        fonts={fonts}
       />
       {footnote}
-      <PraxisByline praxis={praxis} style={{ color: muted }} />
+      <PraxisByline praxis={praxis} style={{ color: muted }} fonts={fonts} />
       <PraxisVotedByMarker praxis={praxis} style={{ color: muted }} />
       {voteRule}
       <PraxisVoteFooter praxis={praxis} />

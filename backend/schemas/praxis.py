@@ -96,6 +96,12 @@ class PraxisCardOut(BaseModel):
     moderation_status: ModerationStatus
     created_by_id: int
     created_by_display_name: str
+    # The author's portrait, for the card byline (#888). Relative media path or
+    # "" — an empty string is the ordinary case (no portrait uploaded) and the
+    # byline degrades to the shared monogram avatar, not a placeholder image.
+    # Deliberately card-only: ``PraxisOut`` gets it if the detail byline ever
+    # needs a face.
+    created_by_avatar_url: str = ""
     created_at: datetime
     updated_at: datetime
     submitted_at: Optional[datetime] = None

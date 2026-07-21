@@ -78,6 +78,12 @@ export function UaPraxisCard({ praxis, adminProps, showCrown }: ArchetypeProps) 
             letterSpacing: "-0.01em",
           }}
           showCrown={showCrown}
+          // Cormorant engraves, EB Garamond reads — the same pair the UA mobile
+          // card already carried (#888).
+          fonts={{
+            display: "var(--faction-ua-card-font)",
+            body: "var(--faction-ua-body-font)",
+          }}
           eyebrow={
             /*
              * The running head sits INSIDE the text column, above the title, so

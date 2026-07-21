@@ -43,6 +43,12 @@ export function DefaultPraxisCard({ praxis, adminProps, showCrown }: ArchetypePr
         muted="var(--faction-default-card-muted)"
         paper="var(--faction-default-card-bg)"
         showCrown={showCrown}
+        // Bebas Neue carries the sheet's identity; Courier Prime reads the
+        // proof. The quiet sheet keeps the house body face on purpose (#888).
+        fonts={{
+          display: "var(--faction-default-card-font)",
+          body: "var(--font-body)",
+        }}
         titleStyle={{
           fontFamily: "var(--faction-default-card-font)",
           letterSpacing: "0.02em",

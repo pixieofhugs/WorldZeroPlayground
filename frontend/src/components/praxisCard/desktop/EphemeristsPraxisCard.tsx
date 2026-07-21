@@ -51,6 +51,13 @@ export function EphemeristsPraxisCard({ praxis, adminProps, showCrown }: Archety
         paper="var(--eph-vellum)"
         titleStyle={{ fontFamily: "var(--eph-display)", color: "var(--eph-vellum-text)" }}
         showCrown={showCrown}
+        // Cinzel for the rubric, EB Garamond for the entry — the codex pair,
+        // named in the --faction-* family rather than the legacy --eph-* one
+        // (#888). Same values either way; one namespace to ask.
+        fonts={{
+          display: "var(--faction-ephemerists-card-font)",
+          body: "var(--faction-ephemerists-body-font)",
+        }}
         eyebrow={
           <div
             className="eyebrow"

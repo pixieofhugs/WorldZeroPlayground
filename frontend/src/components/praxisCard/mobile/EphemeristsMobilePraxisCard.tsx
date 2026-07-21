@@ -16,8 +16,10 @@ export default function EphemeristsMobilePraxisCard({ praxis }: { praxis: Praxis
     muted: 'var(--eph-muted)',
     accent: 'var(--eph-rubric)',
     paper: 'var(--eph-vellum)',
-    displayFont: 'var(--eph-display)',
-    bodyFont: 'var(--eph-serif)',
+    // Same faces, asked for in the --faction-* family the other seven cards use
+    // (#888). --eph-* stays the declaration site; this is the seam's namespace.
+    displayFont: 'var(--faction-ephemerists-card-font)',
+    bodyFont: 'var(--faction-ephemerists-body-font)',
   }
   return (
     <div
