@@ -33,6 +33,14 @@ import { CommentFlagControl } from '../FlagControl'
  * Both themes come from the `[data-theme="dark"]` cascade.
  */
 
+/**
+ * The kit sets the crest beside the counsel at 44px, wider than the shared
+ * `sm` (24px) — a seal that small stops reading as a seal. Below #897's 56px
+ * motto floor, so the band drops its lettering and keeps its ring, which is
+ * exactly what the kit draws here.
+ */
+const CREST_AVATAR = 44
+
 /** The parchment slip: gold hairline all round, plum rule down the margin. */
 const SLIP: CSSProperties = {
   display: 'flex',
@@ -54,7 +62,7 @@ export default function WowComment(props: CommentProps) {
     const { character, value, onChange, onSubmit, submitting } = props
     return (
       <div style={SLIP}>
-        <FactionAvatar character={character} size="sm" />
+        <FactionAvatar character={character} size={CREST_AVATAR} />
         <div style={{ flex: 1, minWidth: 0 }}>
           <div
             style={{
@@ -87,7 +95,7 @@ export default function WowComment(props: CommentProps) {
 
   return (
     <div style={SLIP}>
-      <FactionAvatar character={authorToCharacter(comment.author)} size="sm" />
+      <FactionAvatar character={authorToCharacter(comment.author)} size={CREST_AVATAR} />
       <div style={{ flex: 1, minWidth: 0 }}>
         <div
           style={{
