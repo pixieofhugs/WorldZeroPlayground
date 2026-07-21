@@ -3,10 +3,18 @@ import type { PraxisCardOut } from '../../../api/praxis'
 import { MobilePraxisBody, type MobileSlotTheme } from './shared'
 
 /**
- * Singularity MOBILE praxis card (#573) — a terminal readout on a scanline void:
- * bracketed corners, a blinking prompt masthead, mono phosphor. No sigil (the
- * faction carries none). Mirrors the desktop Singularity praxis frame;
- * --faction-singularity-* tokens read identically in both themes (always-dark).
+ * Singularity MOBILE praxis card (#573) — a terminal readout on a scanline
+ * void: a scanline scrim, a masthead trailed by a blinking block cursor, mono
+ * phosphor. No sigil (the faction carries none). Mirrors the desktop
+ * Singularity praxis frame; --faction-singularity-* tokens read identically in
+ * both themes (always-dark).
+ *
+ * The cursor is design-backed — the mobile design names the blinking prompt as
+ * a signature of the treatment — but its blink belongs to `.sg-cursor` in
+ * index.css, not here. This file used to inject its own `<style>` keyframe
+ * (#867): a component-injected stylesheet duplicates on every mount, sits
+ * outside the `[data-theme="dark"]` cascade, and bypasses the reduced-motion
+ * guard that the class already carries. Never write `animation:` inline.
  */
 export default function SingularityMobilePraxisCard({ praxis }: { praxis: PraxisCardOut }) {
   const { t } = useTranslation('praxis')
@@ -53,6 +61,8 @@ export default function SingularityMobilePraxisCard({ praxis }: { praxis: Praxis
         >
           {t('card.masthead.singularity')}
           <span
+            aria-hidden
+            className="sg-cursor"
             style={{
               display: 'inline-block',
               width: 5,
@@ -60,13 +70,11 @@ export default function SingularityMobilePraxisCard({ praxis }: { praxis: Praxis
               marginLeft: 'var(--space-xs)',
               background: 'var(--faction-singularity-card-text)',
               verticalAlign: 'middle',
-              animation: 'blink 1s step-end infinite',
             }}
           />
         </div>
         <MobilePraxisBody praxis={praxis} theme={theme} />
       </div>
-      <style>{'@keyframes blink { 50% { opacity: 0; } }'}</style>
     </div>
   )
 }

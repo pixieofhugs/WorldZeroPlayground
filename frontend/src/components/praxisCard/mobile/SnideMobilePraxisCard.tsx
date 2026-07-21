@@ -4,13 +4,16 @@ import { factionCssVar } from '../../../utils/factions'
 import { SnideSigil } from '../../snide/snideAtoms'
 import { MobilePraxisBody, type MobileSlotTheme } from './shared'
 
-const TORN_CLIP =
-  'polygon(0% 0%, 4% 100%, 8% 20%, 12% 90%, 16% 10%, 20% 80%, 24% 0%, 28% 100%, 32% 15%, 36% 85%, 40% 5%, 44% 95%, 48% 20%, 52% 80%, 56% 0%, 60% 100%, 64% 15%, 68% 90%, 72% 5%, 76% 85%, 80% 0%, 84% 100%, 88% 20%, 92% 80%, 96% 10%, 100% 0%)'
-
 /**
- * S.N.I.D.E. MOBILE praxis card (#573) — a dark evidence file with a torn top
- * edge, a strip of tape, and the struck-through circle-S sigil. Mirrors the
- * desktop SNIDE praxis frame; --faction-snide-* tokens, native-dark.
+ * S.N.I.D.E. MOBILE praxis card (#573) — a dark evidence file with a strip of
+ * tape and the struck-through circle-S sigil. Mirrors the desktop SNIDE praxis
+ * frame; --faction-snide-* tokens, native-dark.
+ *
+ * The tape is design-backed and stays: the mobile design draws `.snide-tape`
+ * and calls this card "lifted from the real SNIDETaskCard. Nothing invented."
+ * The torn top edge that used to sit above it was NOT — a 26-point clip-path
+ * with no counterpart in any design — so #867 deleted it here, as #842 had on
+ * desktop. Do not reinstate it.
  */
 export default function SnideMobilePraxisCard({ praxis }: { praxis: PraxisCardOut }) {
   const { t } = useTranslation('praxis')
@@ -34,17 +37,6 @@ export default function SnideMobilePraxisCard({ praxis }: { praxis: PraxisCardOu
         boxShadow: '5px 6px 0 rgba(0,0,0,.5)',
       }}
     >
-      <div
-        style={{
-          position: 'absolute',
-          top: -1,
-          left: 0,
-          right: 0,
-          height: 6,
-          background: 'var(--color-bg-page)',
-          clipPath: TORN_CLIP,
-        }}
-      />
       <div className="snide-tape" style={{ top: -8, left: 20, transform: 'rotate(-8deg)' }} />
       <div
         style={{
