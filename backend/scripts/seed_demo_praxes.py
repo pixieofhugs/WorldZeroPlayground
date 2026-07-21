@@ -382,7 +382,8 @@ async def seed_score_fixtures(
 
 def print_login_recipe(era: EraConfig = CURRENT_ERA) -> None:
     _, display_name, faction_slug = METATASK_PLAYER
-    print("\nScore-breakdown fixtures (#891) — log in as the metatask owner:")
+    # ASCII only: this prints to a cp1252 console on Windows.
+    print("\nScore-breakdown fixtures (#891) - log in as the metatask owner:")
     print(
         f"  curl -X POST 'http://localhost:8000/auth/dev-login"
         f"?key={METATASK_PLAYER_KEY}'"
