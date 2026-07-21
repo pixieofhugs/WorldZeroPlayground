@@ -351,26 +351,19 @@
   --eph-serif: "EB Garamond", Georgia, serif;
   --eph-script: "Cormorant Garamond", Georgia, serif;
 
-  /* ── UA · LEGACY gilt-salon palette — scheduled for deletion (#853) ──
-     The old art-academy skin. Superseded by the --faction-ua-* block above and
-     the sun-bleached primitives below; it survives only because ~20 components
-     still read these names directly rather than through factionCssVar(), so it
-     has to be unwound file-by-file. Do not paint anything new with it, and do
-     not add a [data-theme="dark"] override — it is going away, not dimming. */
-  --ua-orange: #c2541f; /* burnt amber — the accent */
-  --ua-orange-deep: #a8431a;
-  --ua-gold: #9c6a1a; /* old gold — frames & regalia */
-  --ua-gold-lt: #dd9322;
-  --ua-gold-pale: #eec06a;
-  --ua-ink: #3d2410; /* brown ink — all text */
-  --ua-sub: #8f6a3a; /* secondary serif text */
-  --ua-muted: #a8895a; /* mono labels / metadata */
-  --ua-paper: #fdf6ea; /* sheet / card surface */
-  --ua-paper-warm: #fef7ea;
-  --ua-wall: #ece4d2; /* page wall */
-  --ua-line: #cdab63; /* hairline borders */
-  --ua-line-soft: #e3cb98;
-  --ua-gilt: linear-gradient(135deg, #eec06a 0%, #9c6a1a 24%, #f0c878 50%, #9c6a1a 76%, #dd9322 100%);
+  /* The UA LEGACY gilt-salon palette stood here until #853 deleted it: a
+     fourteen-token second naming scheme (orange, gold, gilt, ink, sub, muted,
+     paper, wall, line and their variants) from the old art-academy skin, all
+     under a bare `ua` prefix. It is DELETED, not renamed — a rename would have preserved exactly
+     the thing that made it a problem, a private palette that components read as
+     bare var() strings instead of through factionCssVar(), which nothing
+     type-checks. Everything UA paints with is now named below or in the §3 card
+     contract, and UA's gold went to Warriors of Whimsy (#838).
+
+     Do not reintroduce a `--ua-*` COLOUR. The names that legitimately survive
+     under that prefix are the four animation-local properties on the mandala
+     keyframes (--ua-grow-delay, --ua-spin-dur, --ua-spin-dir, --ua-twist-dur),
+     which are timing, not palette. */
 
   /* ── UA · sun-bleached practice — archetype-private primitives (#788, #848) ──
      The surfaces and inks the UA skin paints with that the shared §3 card
@@ -397,12 +390,11 @@
      of UA becomes a sun-bleached, gold-free practice. That is a DELIBERATE
      EXCEPTION. Do not "harmonise" it away when you read #848.
 
-     WHAT MAKES IT SURVIVABLE: the card reads NOTHING from the legacy `--ua-*`
-     family above (--ua-gold, --ua-gilt, --ua-ink, --ua-paper, --ua-line, …),
-     which #853 deletes wholesale. Everything it needs is named here, in its own
-     `--faction-ua-card-*` namespace, so #853 can run its grep and delete the
-     legacy family without touching this surface. `UaPraxisCard.tsx` and
-     `UaMobilePraxisCard.tsx` are asserted at zero `--ua-` hits.
+     WHAT MADE IT SURVIVABLE: the card read NOTHING from the legacy gilt-salon
+     family, so #853 could delete that family wholesale without touching this
+     surface. Everything the card needs is named here, in its own
+     `--faction-ua-card-*` namespace. `UaPraxisCard.tsx` and
+     `UaMobilePraxisCard.tsx` are asserted at zero legacy hits.
 
      Values are the design handoff's UA band verbatim
      (.design-sync/praxis-cards/design_handoff_faction_vote_stamps). Where #848

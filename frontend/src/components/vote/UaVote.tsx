@@ -309,7 +309,7 @@ export default function UaVote({ praxisId, currentValue, points, totalVotes }: V
           accent: 'var(--faction-ua-card-accent)',
           accentFont: 'var(--faction-ua-card-font)',
           // Error text owes body contrast in BOTH themes; the legacy
-          // --ua-orange-deep had only a light value (#853 deletes the family).
+          // legacy deep-orange token had only a light value (deleted in #853).
           errorColor: 'var(--faction-ua-card-accent)',
           avgLetterSpacing: '0.04em',
         }}

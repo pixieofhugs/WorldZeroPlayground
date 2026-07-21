@@ -67,7 +67,7 @@ export function UaSigil({ width, height }: { width: number; height: number }) {
 /**
  * The motto cartouche — a solid sienna ribbon with notched ends.
  *
- * Kept as-is structurally; only repointed off the legacy `--ua-*` family onto
+ * Kept as-is structurally; only repointed off the legacy gilt-salon family onto
  * the fill/on-fill pair, which carries both themes (4.59:1 light, 5.59:1 dark).
  * Whether the practice still wants a motto ribbon at all is an archetype
  * question and belongs to the surfaces that draw it, not to this file.

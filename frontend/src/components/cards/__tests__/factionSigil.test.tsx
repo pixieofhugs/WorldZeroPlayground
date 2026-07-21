@@ -34,7 +34,7 @@ describe("FactionSigil dispatcher (#659)", () => {
     const html = renderToStaticMarkup(<FactionSigil slug="ua" />);
     expect(html).toContain("var(--faction-ua-glow)");
     // The salon is dead: no gilt shield, no legacy gold, no raw hex.
-    expect(html).not.toContain("var(--ua-gold)");
+    expect(html).not.toMatch(/var\(--ua-[a-z]/); // the whole legacy family, deleted in #853
     expect(html).not.toContain("#");
   });
 
@@ -54,7 +54,7 @@ describe("FactionSigil dispatcher (#659)", () => {
     const html = renderToStaticMarkup(<FactionSigil slug="totally-unknown" />);
     expect(html).toContain("var(--faction-default-ring)");
     expect(html).not.toContain("var(--faction-snide-acid)");
-    expect(html).not.toContain("var(--ua-gold)");
+    expect(html).not.toMatch(/var\(--ua-[a-z]/); // the whole legacy family, deleted in #853
     expect(html).not.toContain("var(--everymen-red)");
   });
 
