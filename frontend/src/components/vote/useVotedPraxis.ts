@@ -21,6 +21,7 @@ export function useVotedPraxis(praxis: PraxisCardOut): PraxisCardOut {
   return {
     ...praxis,
     score: praxis.score + delta.score,
+    points_from_votes: praxis.points_from_votes + delta.score,
     voter_count: praxis.voter_count + delta.voters,
   }
 }
