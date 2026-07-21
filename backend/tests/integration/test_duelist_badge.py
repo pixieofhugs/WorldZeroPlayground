@@ -1,9 +1,14 @@
-"""The duelist badge — winning a *live* duel (#748, ADR-0033, ADR-0011).
+"""The duelist badge — having won *or* being ahead in a duel (#748, ADR-0033, ADR-0011).
 
-The badge holds when a character is currently ahead on votes in a live duel, or
-holds a forfeit win. It is provisional by design (ADR-0011: mid-era the tally
-floats); a `resolved` duel is a frozen past-era fact and belongs to the deferred
-"won a duel last era" badge (#823), so it must NOT grant this one.
+The badge holds when a character is currently ahead on votes in a live duel,
+holds a forfeit win, or is the frozen winner of a `resolved` duel. Live wins are
+provisional by design (ADR-0011: mid-era the tally floats); the resolved case is
+the frozen one — owner ruling 2026-07-21 made the badge survive era close, so a
+win does not silently vanish when #824 resolves every live duel at reset.
+
+The resolved case reads `Duel.winner_character_id` and never recomputes: a
+forfeit winner can hold the *lower* frozen score, which is what
+`test_resolved_forfeit_winner_with_the_lower_score_keeps_the_badge` pins.
 
 The last test is the load-bearing one: the per-character duel fact must resolve
 in a fixed number of set-based queries, not one per character (ADR-0033's
@@ -214,10 +219,10 @@ async def test_forfeit_hands_the_badge_to_the_other_side(
 
 
 @pytest.mark.asyncio
-async def test_resolved_duel_does_not_grant_the_badge(
+async def test_resolved_duel_grants_the_badge_to_its_frozen_winner(
     db_session: AsyncSession, era: Era, faction_ua: Faction
 ):
-    """A frozen past-era win is #823's badge, not this one."""
+    """The badge survives era close: "won or winning" (owner ruling 2026-07-21)."""
     duel, challenger, opponent = await _make_duel(
         db_session,
         era,
@@ -230,7 +235,100 @@ async def test_resolved_duel_does_not_grant_the_badge(
     duel.winner_character_id = challenger.id
     await db_session.commit()
 
+    assert await _badge_keys(db_session, challenger) == ["duelist"]
+    assert await _badge_keys(db_session, opponent) == []
+
+
+@pytest.mark.asyncio
+async def test_resolved_duel_frozen_to_the_opponent_leaves_the_loser_bare(
+    db_session: AsyncSession, era: Era, faction_ua: Faction
+):
+    duel, challenger, opponent = await _make_duel(
+        db_session,
+        era,
+        label="lost",
+        challenger_votes=0,
+        opponent_votes=5,
+        status=DuelStatus.active,
+    )
+    duel.status = DuelStatus.resolved
+    duel.winner_character_id = opponent.id
+    await db_session.commit()
+
     assert await _badge_keys(db_session, challenger) == []
+    assert await _badge_keys(db_session, opponent) == ["duelist"]
+
+
+@pytest.mark.asyncio
+async def test_resolved_duel_with_no_frozen_winner_grants_nothing(
+    db_session: AsyncSession, era: Era, faction_ua: Faction
+):
+    """A tie / no-contest froze `winner_character_id` as NULL — nobody won."""
+    duel, challenger, opponent = await _make_duel(
+        db_session,
+        era,
+        label="draw",
+        challenger_votes=3,
+        opponent_votes=3,
+        status=DuelStatus.active,
+    )
+    duel.status = DuelStatus.resolved
+    duel.winner_character_id = None
+    await db_session.commit()
+
+    assert await _badge_keys(db_session, challenger) == []
+    assert await _badge_keys(db_session, opponent) == []
+
+
+@pytest.mark.asyncio
+async def test_resolved_forfeit_winner_with_the_lower_score_keeps_the_badge(
+    db_session: AsyncSession, era: Era, faction_ua: Faction
+):
+    """The frozen field is authoritative — never inferred from the snapshot points.
+
+    The opponent forfeited while holding the *higher* tally, so #824 froze the
+    challenger as winner on the lower score. Comparing points would hand the
+    badge to the wrong side.
+    """
+    duel, challenger, opponent = await _make_duel(
+        db_session,
+        era,
+        label="ffpast",
+        challenger_votes=1,
+        opponent_votes=9,
+        status=DuelStatus.active,
+        forfeiter="opponent",
+    )
+    duel.status = DuelStatus.resolved
+    duel.winner_character_id = challenger.id
+    await db_session.commit()
+
+    assert await _badge_keys(db_session, challenger) == ["duelist"]
+    assert await _badge_keys(db_session, opponent) == []
+
+
+@pytest.mark.asyncio
+async def test_resolved_duel_ignores_a_live_tally_that_disagrees(
+    db_session: AsyncSession, era: Era, faction_ua: Faction
+):
+    """Recomputing at all is the bug: the frozen winner trails on live votes.
+
+    No forfeit is recorded, so `duel_winner` over the tally would name the
+    opponent. Only reading `Duel.winner_character_id` gets this right.
+    """
+    duel, challenger, opponent = await _make_duel(
+        db_session,
+        era,
+        label="drift",
+        challenger_votes=1,
+        opponent_votes=9,
+        status=DuelStatus.active,
+    )
+    duel.status = DuelStatus.resolved
+    duel.winner_character_id = challenger.id
+    await db_session.commit()
+
+    assert await _badge_keys(db_session, challenger) == ["duelist"]
     assert await _badge_keys(db_session, opponent) == []
 
 
@@ -280,10 +378,12 @@ async def test_endpoint_surfaces_the_duelist_badge(
 async def test_batch_path_is_constant_query_count(
     db_connection, db_session: AsyncSession, era: Era, faction_ua: Faction
 ):
-    """A 6-character page costs the same number of queries as a 2-character one.
+    """An 8-character page costs the same number of queries as a 2-character one.
 
     Guards ADR-0033's amended rule: the per-character duel fact must fold into
-    set-based queries, never one query per character in the loop.
+    set-based queries, never one query per character in the loop. The large page
+    mixes live and `resolved` duels, so the frozen-vs-live split must not cost a
+    query either.
     """
     _, one_challenger, one_opponent = await _make_duel(
         db_session, era, label="b1", challenger_votes=5, opponent_votes=1
@@ -294,6 +394,12 @@ async def test_batch_path_is_constant_query_count(
     _, three_challenger, three_opponent = await _make_duel(
         db_session, era, label="b3", forfeiter="challenger"
     )
+    four_duel, four_challenger, four_opponent = await _make_duel(
+        db_session, era, label="b4", challenger_votes=2, opponent_votes=7
+    )
+    four_duel.status = DuelStatus.resolved
+    four_duel.winner_character_id = four_challenger.id
+    await db_session.commit()
 
     statements: list[str] = []
 
@@ -317,6 +423,8 @@ async def test_batch_path_is_constant_query_count(
                 two_opponent,
                 three_challenger,
                 three_opponent,
+                four_challenger,
+                four_opponent,
             ],
             db_session,
         )
@@ -333,3 +441,6 @@ async def test_batch_path_is_constant_query_count(
     assert large[two_challenger.id].is_duel_winner is False
     assert large[three_opponent.id].is_duel_winner is True
     assert large[three_challenger.id].is_duel_winner is False
+    # Frozen winner, despite trailing the live tally 2-7.
+    assert large[four_challenger.id].is_duel_winner is True
+    assert large[four_opponent.id].is_duel_winner is False

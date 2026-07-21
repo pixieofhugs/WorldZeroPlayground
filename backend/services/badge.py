@@ -23,27 +23,40 @@ from schemas.character import BadgeOut
 from services.duel_outcome import duel_winner
 from services.vote_tally import get_tally, tally_votes
 
-# A duel only feeds the duelist badge while it is still live. `resolved` duels
-# are excluded on purpose (#748): their outcome is a frozen, *past-era* fact and
-# belongs to the deferred "won a duel last era" badge (#823), not this one.
-LIVE_DUEL_STATUSES: tuple[DuelStatus, ...] = (DuelStatus.active, DuelStatus.settled)
+# Every duel status that can feed the duelist badge. `resolved` is included
+# (owner ruling on #748, 2026-07-21): the badge means "won *or* winning", not
+# "winning right now", so a win survives the era close #824 freezes it at.
+# #823 narrows to the last-era-only case.
+BADGE_DUEL_STATUSES: tuple[DuelStatus, ...] = (
+    DuelStatus.active,
+    DuelStatus.settled,
+    DuelStatus.resolved,
+)
 
 
 async def _duel_winning_character_ids(
     character_ids: set[int],
     session: AsyncSession,
 ) -> set[int]:
-    """Ids of the given characters that are winning at least one live duel (#748).
+    """Ids of the given characters that have won or are winning a duel (#748).
 
-    Two set-based queries regardless of page size: one for every live duel any
-    of these characters is a side of (joined to the challenger's praxis, which
-    is where the challenger's character id lives), then one
-    :func:`tally_votes` over both sides' praxis ids.
+    Two set-based queries regardless of page size: one for every badge-eligible
+    duel any of these characters is a side of (joined to the challenger's praxis,
+    which is where the challenger's character id lives), then one
+    :func:`tally_votes` over the *live* sides' praxis ids.
 
-    The winner of each duel comes from the one shared rule
-    (:func:`services.duel_outcome.duel_winner`, ADR-0052) — forfeit first, then
-    strictly-greater ``points_from_votes``, else a tie. Never infer a winner
-    from the points: a forfeit winner can hold the *lower* score.
+    Frozen and live split the same way :mod:`services.praxis_scoring` splits
+    them:
+
+    * ``resolved`` — read the frozen ``Duel.winner_character_id`` directly.
+      #824 froze it at era close on purpose; recomputing would re-open a settled
+      fact, and these duels need no tally row at all.
+    * ``active`` / ``settled`` — the winner comes from the one shared rule
+      (:func:`services.duel_outcome.duel_winner`, ADR-0052) over the live tally:
+      forfeit first, then strictly-greater ``points_from_votes``, else a tie.
+
+    Never infer a winner from the points: a forfeit winner can hold the *lower*
+    score, frozen or live.
     """
     if not character_ids:
         return set()
@@ -57,13 +70,15 @@ async def _duel_winning_character_ids(
                 Duel.challenger_praxis_id,
                 Duel.opponent_praxis_id,
                 Duel.forfeited_by_character_id,
+                Duel.status,
+                Duel.winner_character_id,
             )
             .join(
                 challenger_praxis,
                 challenger_praxis.id == Duel.challenger_praxis_id,
             )
             .where(
-                Duel.status.in_(LIVE_DUEL_STATUSES),
+                Duel.status.in_(BADGE_DUEL_STATUSES),
                 or_(
                     challenger_praxis.created_by_id.in_(character_ids),
                     Duel.opponent_character_id.in_(character_ids),
@@ -74,30 +89,37 @@ async def _duel_winning_character_ids(
     if not duel_rows:
         return set()
 
-    praxis_ids = {row.challenger_praxis_id for row in duel_rows}
+    # Only the live duels need a tally: a resolved duel's winner is already
+    # frozen on the row, so tallying its sides would be wasted work.
+    live_rows = [row for row in duel_rows if row.status != DuelStatus.resolved]
+    praxis_ids = {row.challenger_praxis_id for row in live_rows}
     praxis_ids.update(
         row.opponent_praxis_id
-        for row in duel_rows
+        for row in live_rows
         if row.opponent_praxis_id is not None
     )
     tallies = await tally_votes(list(praxis_ids), session)
 
     winners: set[int] = set()
     for row in duel_rows:
-        opponent_points = (
-            get_tally(tallies, row.opponent_praxis_id).points_from_votes
-            if row.opponent_praxis_id is not None
-            else 0
-        )
-        winner_character_id: Optional[int] = duel_winner(
-            challenger_character_id=row.challenger_character_id,
-            opponent_character_id=row.opponent_character_id,
-            challenger_points=get_tally(
-                tallies, row.challenger_praxis_id
-            ).points_from_votes,
-            opponent_points=opponent_points,
-            forfeited_by_character_id=row.forfeited_by_character_id,
-        )
+        if row.status == DuelStatus.resolved:
+            # Frozen fact (#824): trust the recorded winner, never the points.
+            winner_character_id: Optional[int] = row.winner_character_id
+        else:
+            opponent_points = (
+                get_tally(tallies, row.opponent_praxis_id).points_from_votes
+                if row.opponent_praxis_id is not None
+                else 0
+            )
+            winner_character_id = duel_winner(
+                challenger_character_id=row.challenger_character_id,
+                opponent_character_id=row.opponent_character_id,
+                challenger_points=get_tally(
+                    tallies, row.challenger_praxis_id
+                ).points_from_votes,
+                opponent_points=opponent_points,
+                forfeited_by_character_id=row.forfeited_by_character_id,
+            )
         if winner_character_id is not None and winner_character_id in character_ids:
             winners.add(winner_character_id)
     return winners
