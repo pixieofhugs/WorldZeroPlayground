@@ -143,7 +143,9 @@ async def recalculate_character_stats(
     contributions = await compute_contributions(
         all_praxes, author, era, session, character_level=author_level
     )
-    total_score = int(sum(c.total for c in contributions.values()))
+    # round(), not int(): int() truncates toward zero, so a true total of 49.9
+    # banked as 49 (ADR-0053). compute_level is directly downstream.
+    total_score = round(sum(c.total for c in contributions.values()))
 
     # Vote budget is computed on read (services.scoring.compute_votes_available)
     # from stats.score and stats.votes_spent_this_era, so no bookkeeping needed here.
