@@ -126,7 +126,7 @@
      faction, AND that face must be in the index.html loader. A family that is
      named but not loaded renders as a generic fallback and no check we run can
      see it — which is how UA spent months in IM Fell English (#839). */
-  --faction-ua-card-font: var(--font-faction-gilt); /* Cormorant Garamond */
+  --faction-ua-card-font: var(--font-faction-serif); /* Cormorant Garamond (#848) */
   /* UA's second face. The design pairs a Cormorant display with EB Garamond for
      the eyebrow, "for:" line, byline and italic description. */
   --faction-ua-body-font: var(--font-faction-codex-script); /* EB Garamond */
@@ -999,6 +999,11 @@
   --font-faction-script: "Caveat", cursive;
   --font-faction-old: "IM Fell English", Georgia, serif;
   --font-faction-engraved: "Cinzel", serif;
+  /* Shared headline serif (#848). Cormorant Garamond is already loaded in
+     index.html. Deliberately NOT --eph-script, which is the same face but is
+     Ephemerists' private flourish token: a faction reading another faction's
+     private token is how a later Ephemerists retype would silently restyle UA. */
+  --font-faction-serif: "Cormorant Garamond", Georgia, serif;
 
   /* Shared faction-page body grid — main column + right rail; collapses to one
      column on narrow viewports (rule below). Every faction skin reuses this. */
