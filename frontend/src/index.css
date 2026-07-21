@@ -2560,6 +2560,16 @@
 .wow-seal-actions--mobile button {
   flex: 1 1 0;
   min-height: 46px;
+}
+
+/* REPAIRED BY #901. Landing #895 hand-merged this file and the rule above
+   swallowed the opener of the motion block below, so `.wow-backdrop-twinkle`
+   (#900), `.wow-btn::after` (#899) and `.wow-tw` (#899) were left NESTED inside
+   `.wow-seal-actions--mobile button` — i.e. they only matched as descendants of
+   a duel-seal button and matched nothing in practice. Every WOW motion except
+   the duel pair was silently dead on main, and no build step could see it:
+   native CSS nesting is valid syntax. Restored verbatim; nothing here is new. */
+@media (prefers-reduced-motion: no-preference) {
   .wow-backdrop-twinkle {
     display: inline-block;
     animation: wow-twinkle 2.4s ease-in-out infinite;
@@ -2579,4 +2589,52 @@
     z-index: 1;
   }
   .wow-tw { animation: wow-twinkle 2.4s ease-in-out infinite; animation-delay: var(--wow-twinkle-delay, 0s); }
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   WOW — THE FIELD PAVILION (#901): the mobile skins.
+
+   The kit drew ONE mobile screen (`10-mobile-skins.html`) — a status/header
+   block, a quest list and a bottom nav — plus a complete two-theme contract in
+   its `mobileThemes` array. Almost every value in that array is already a
+   shipped `--faction-wow-*` token, so this block declares exactly TWO names.
+   The mapping, for the next reader (kit key → what it ships as here):
+
+     bezel     — dropped. It is the MOCKUP's phone shell, not a surface.
+     page      → --faction-wow-ground-from/-to. The kit's flat #F6EFDA / #151007
+                 sits a hair off WOW's own page wallpaper; using the wallpaper
+                 makes the phone ground and the desktop backdrop literally the
+                 same surface, and inherits #900's dark-ground audit (the kit's
+                 #241c0b family was measured and rejected there).
+     rim       → --faction-wow-plate-border  (kit rgba(200,160,42,.35) vs the
+                 shipped .34, and dark #4A3A0E exactly).
+     field     → --faction-wow-avatar-field  (exact, both themes).
+     headerA/B → the two names below.
+     name      → --faction-wow-card-text     (exact, both themes).
+     sub       → --faction-wow-card-muted on the CARD; see the deviation note.
+     plumTx    → --faction-wow-card-accent   (exact in dark; light ships #7a4a9e
+                 rather than the kit's #6e3a93, measured 5.53:1 on the ground —
+                 a fourth plum would be a duplicated value, not a new meaning).
+     plum      → --faction-wow-plum-surface  (the checker bar is a SURFACE and is
+                 theme-invariant — #900's note 1).
+     cardBg    → --faction-wow-card-bg       (exact, both themes).
+     gold      → --faction-wow-stamp-total   (exact, both themes).
+
+   ONE MEASURED DEVIATION. The kit sets the header's byline in `sub`. On the
+   header's LOWER gradient stop (#f1e3b8) --faction-wow-card-muted measures
+   4.10:1 — under AA — so the header byline alone takes
+   --faction-wow-accent-deep instead (4.58:1 light, 8.87:1 dark). On the quest
+   card and the page ground, `sub` stays card-muted (4.76:1 and 4.55:1). This is
+   the epic's standing lesson that the kit's own contrast claims do not survive
+   measurement; every pair above was recomputed rather than trusted. */
+:root {
+  /* The pavilion header's wash. Light IS the page ground's pair; dark LIFTS off
+     it (the kit's dark header is a shade above its dark page), which is why this
+     cannot simply reference one existing pair in both themes. */
+  --faction-wow-mobile-header-from: var(--faction-wow-ground-from);
+  --faction-wow-mobile-header-to: var(--faction-wow-ground-to);
+}
+[data-theme="dark"] {
+  --faction-wow-mobile-header-from: var(--faction-wow-avatar-field);
+  --faction-wow-mobile-header-to: var(--faction-wow-card-bg);
 }
