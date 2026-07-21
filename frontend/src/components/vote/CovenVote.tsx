@@ -17,6 +17,11 @@ import { VOTE_REFRAMES } from './voteReframes'
  * Plugs into the vote dispatcher via the shared {@link useVote} hook so the
  * cast/refetch logic lives in exactly one place. All motion is a reduced-motion-
  * gated CSS class (never inline `animation:`); a stilled plate still fills.
+ *
+ * #840 restored two things from the source: the PROMPT the design writes above
+ * the plate ("how'd this land?"), and the caption at the prototype's own 19px
+ * Caveat rather than the --text-content floor — ornament type keeps its drawn
+ * size (§4a). The rest of the widget was already a faithful port.
  */
 
 const R = 12
@@ -63,6 +68,18 @@ export default function CovenVote({ praxisId, currentValue, points, totalVotes }
 
   return (
     <div>
+      <div
+        style={{
+          fontFamily: 'var(--faction-coven-card-font)',
+          fontWeight: 700,
+          fontSize: 'var(--text-content)',
+          color: 'var(--faction-coven-vote-off)',
+          marginBottom: 'var(--space-xs)',
+        }}
+      >
+        {t('chrome.coven.prompt')}
+      </div>
+
       <div
         onMouseLeave={() => setHovered(0)}
         style={{
@@ -198,7 +215,9 @@ export default function CovenVote({ praxisId, currentValue, points, totalVotes }
         <span
           style={{
             fontFamily: 'var(--faction-coven-card-font)',
-            fontSize: 'var(--text-content)',
+            fontWeight: 700,
+            // eslint-disable-next-line local/no-raw-style-values -- ornament exemption: the design's own caption size (19, Caveat), not the --text-* ramp (§4a)
+            fontSize: 19,
             letterSpacing: '0.02em',
             color: active ? 'var(--faction-coven-vote-on)' : 'var(--faction-coven-vote-off)',
             transition: 'color 140ms',
