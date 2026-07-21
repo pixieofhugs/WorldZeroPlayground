@@ -14,6 +14,7 @@ import {
   PraxisScoreBreakdown,
   MemberByline,
 } from '../shared'
+import { VoteFactionContext } from '../../../components/vote/VoteShell'
 import { MobileStarVote } from './shared'
 
 /**
@@ -142,11 +143,13 @@ export default function SingularityPraxisDetail({ state }: { state: PraxisDetail
         <div style={{ marginBottom: 'var(--space-md)' }}>
           <PraxisScoreBreakdown state={state} align="center" accent={PHOSPHOR} font={FONT} />
         </div>
-        <MobileStarVote
-          praxisId={praxis.id}
-          accent={PHOSPHOR}
-          accentFont={FONT}
-        />
+        <VoteFactionContext.Provider value="singularity">
+          <MobileStarVote
+            praxisId={praxis.id}
+            accent={PHOSPHOR}
+            accentFont={FONT}
+          />
+        </VoteFactionContext.Provider>
       </Panel>
 
       {/* Flag + voter breakdown (invariant) */}
