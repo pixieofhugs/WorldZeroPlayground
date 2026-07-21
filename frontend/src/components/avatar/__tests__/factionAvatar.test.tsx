@@ -40,7 +40,7 @@ describe("FactionAvatar — UA variant (#200)", () => {
     expect(html).toContain("var(--faction-ua)");
     expect(html).toContain("var(--faction-ua-card-font)");
     expect(html).toContain("var(--faction-ua-lift)");
-    expect(html).not.toContain("var(--ua-gold)");
+    expect(html).not.toMatch(/var\(--ua-[a-z]/); // the whole legacy family, deleted in #853
     // The sigil badge is present — the ensō's heavy sweep (#849 retired the
     // gilt shield, so the 100x120 viewBox marker is gone with it).
     expect(html).toContain('d="M134 41.2 A68 68 0 1 1 66 158.8"');
@@ -62,7 +62,7 @@ describe("FactionAvatar — UA variant (#200)", () => {
       <FactionAvatar character={character({ faction_slug: "totally-unknown" })} />,
     );
     // No UA tokens and no ensō badge on the fallback circle.
-    expect(html).not.toContain("var(--ua-orange)");
+    expect(html).not.toMatch(/var\(--ua-[a-z]/); // the whole legacy family, deleted in #853
     expect(html).not.toContain('d="M134 41.2 A68 68 0 1 1 66 158.8"');
     // Default renders the plain initial circle.
     expect(html).toContain("I");

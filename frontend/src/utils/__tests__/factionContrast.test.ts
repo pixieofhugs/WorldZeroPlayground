@@ -113,13 +113,9 @@ const ARCHETYPE_PAIRS: Pair[] = [
   { what: "snide deep wall", surface: "--faction-snide-wall-deep", text: "--faction-snide-wall-text" },
   { what: "snide xerox paper, ink", surface: "--faction-snide-paper", text: "--faction-snide-ink" },
 
-  // UA — LEGACY gilt-salon family, awaiting deletion in #853. Still measured
-  // because ~20 components still paint with it; --ua-ink is "brown ink — all
-  // text". It has no dark values and is not getting any: it is going away.
-  { what: "ua sheet, ink", surface: "--ua-paper", text: "--ua-ink" },
-  { what: "ua sheet, secondary", surface: "--ua-paper", text: "--ua-sub" },
-  { what: "ua sheet, mono labels", surface: "--ua-paper", text: "--ua-muted" },
-  { what: "ua wall, ink", surface: "--ua-wall", text: "--ua-ink" },
+  // (The legacy UA gilt-salon family was measured here until #853 deleted it.
+  // Every surface that painted with it now reads the sun-bleached primitives
+  // below, which are measured in BOTH themes rather than light only.)
 
   // UA — the sun-bleached practice (#788, #848). UA is the first faction with
   // FOUR themed surfaces (page ground, card, inset panel, raised lift) rather

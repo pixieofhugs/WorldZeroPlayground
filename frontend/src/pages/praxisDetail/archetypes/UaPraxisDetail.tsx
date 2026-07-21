@@ -1,20 +1,26 @@
 /**
- * The University of Asthmatics (UA) praxis-read page archetype — the GILT SALON.
+ * The University of Asthmatics (UA) praxis-read page archetype.
  *
- * Built from the UA canon: an acquisition sheet exhibited on a salon wall —
- * burnt-amber/cream/gold/brown-ink palette, gilt-framed plate for the evidence,
- * Cormorant italics for the headline, EB-Garamond serif body, EB-Garamond small
- * caps for the regalia labels. The salon never dims: UA is always-light, so its
- * --faction-ua* / --ua-* tokens are identical in both themes and we style the
- * container with them directly without mutating the document theme.
+ * REPOINTED, NOT REBUILT (#853). The layout, ornament and language here are
+ * still the old "gilt salon" — an acquisition sheet exhibited on a salon wall,
+ * with regalia labels and an "appraisal" ledger. #853 only swapped the colour
+ * names: every reference to the deleted legacy `--ua-*` family now reads the
+ * `--faction-ua-*` sun-bleached primitives instead, so the page stops painting
+ * with tokens that no longer exist. Gold is gone (it moved to WOW) and the
+ * evidence plate's gilt double-frame is now a sand/neutral mat. A real rebuild
+ * against the UA identity kit is a separate, future issue.
+ *
+ * It also dims now. The old "the salon never dims" claim died with #848: every
+ * `--faction-ua-*` token has a [data-theme="dark"] value, so this container
+ * follows the theme without any JS branch.
  *
  * Invariant behavior slots (admin bar, banners, owner actions, flag) come from
  * the shared module — this archetype owns only presentation. Voting routes
  * through the <VoteUI factionSlug=…> dispatcher, which falls back to the global
  * vote stamps for UA (no bespoke UA vote component exists).
  *
- * All colors via --faction-ua* + the gilt private palette (--ua-*), index.css.
- * Actor-scoped byline themes to the AUTHOR's faction, not the task's.
+ * All colors via --faction-ua-* in index.css. Actor-scoped byline themes to the
+ * AUTHOR's faction, not the task's.
  */
 import type { TFunction } from 'i18next'
 import { useTranslation } from 'react-i18next'
@@ -84,20 +90,20 @@ function TheStanding({
       style={{
         marginTop: 'var(--space-sm)',
         marginBottom: 'var(--space-xl)',
-        background: 'var(--ua-paper)',
-        border: '1px solid var(--ua-line)',
-        boxShadow: 'inset 0 0 0 4px var(--ua-paper), inset 0 0 0 5px var(--ua-line-soft)',
+        background: 'var(--faction-ua-card-bg)',
+        border: '1px solid var(--faction-ua-rule)',
+        boxShadow: 'inset 0 0 0 4px var(--faction-ua-card-bg), inset 0 0 0 5px var(--faction-ua-hair)',
         padding: 'var(--space-xl) var(--space-xl)',
       }}
     >
-      <div style={{ fontFamily: REGALIA, fontSize: 'var(--text-base)', letterSpacing: '0.2em', color: 'var(--ua-gold)', marginBottom: 'var(--space-lg)' }}>
+      <div style={{ fontFamily: REGALIA, fontSize: 'var(--text-base)', letterSpacing: '0.2em', color: 'var(--faction-ua-card-accent)', marginBottom: 'var(--space-lg)' }}>
         {t('detail.ua.standing.heading')}
       </div>
 
       {/* Headline: points earned · appraisal headcount */}
       <div style={{ display: 'flex', marginBottom: voters.length ? "var(--space-xl)" : 0 }}>
         <div style={{ flex: 1, paddingRight: 'var(--space-lg)' }}>
-          <div style={{ fontFamily: DISPLAY, fontStyle: 'italic', fontWeight: 700, fontSize: 'var(--text-display)', lineHeight: 0.85, color: 'var(--ua-orange)', whiteSpace: 'nowrap' }}>
+          <div style={{ fontFamily: DISPLAY, fontStyle: 'italic', fontWeight: 700, fontSize: 'var(--text-display)', lineHeight: 0.85, color: 'var(--faction-ua-card-accent)', whiteSpace: 'nowrap' }}>
             {base}
             {!isPlain && (
               <>
@@ -108,16 +114,16 @@ function TheStanding({
             <span style={{ opacity: 0.55, margin: '0 var(--space-xs)' }}>+</span>
             {votePoints}
           </div>
-          <div style={{ fontFamily: MONO, fontSize: 'var(--text-xs)', letterSpacing: '0.16em', textTransform: 'uppercase', color: 'var(--ua-sub)', marginTop: 'var(--space-sm)' }}>
+          <div style={{ fontFamily: MONO, fontSize: 'var(--text-xs)', letterSpacing: '0.16em', textTransform: 'uppercase', color: 'var(--faction-ua-card-body)', marginTop: 'var(--space-sm)' }}>
             {t('detail.ua.standing.pointsEarned')}
           </div>
         </div>
-        <div style={{ flex: 1, paddingLeft: 'var(--space-lg)', borderLeft: '1px solid var(--ua-line)' }}>
-          <div style={{ fontFamily: DISPLAY, fontStyle: 'italic', fontWeight: 700, fontSize: 'var(--text-display)', lineHeight: 0.85, color: 'var(--ua-ink)', display: 'flex', alignItems: 'center', gap: 'var(--space-sm)' }}>
-            <span style={{ fontSize: 'var(--text-content)', color: 'var(--ua-gold)' }}>✦</span>
+        <div style={{ flex: 1, paddingLeft: 'var(--space-lg)', borderLeft: '1px solid var(--faction-ua-rule)' }}>
+          <div style={{ fontFamily: DISPLAY, fontStyle: 'italic', fontWeight: 700, fontSize: 'var(--text-display)', lineHeight: 0.85, color: 'var(--faction-ua-card-text)', display: 'flex', alignItems: 'center', gap: 'var(--space-sm)' }}>
+            <span style={{ fontSize: 'var(--text-content)', color: 'var(--faction-ua-card-accent)' }}>✦</span>
             {votes.total_votes}
           </div>
-          <div style={{ fontFamily: MONO, fontSize: 'var(--text-xs)', letterSpacing: '0.16em', textTransform: 'uppercase', color: 'var(--ua-sub)', marginTop: 'var(--space-sm)' }}>
+          <div style={{ fontFamily: MONO, fontSize: 'var(--text-xs)', letterSpacing: '0.16em', textTransform: 'uppercase', color: 'var(--faction-ua-card-body)', marginTop: 'var(--space-sm)' }}>
             {t('detail.ua.standing.appraisal', { count: votes.total_votes })}
           </div>
         </div>
@@ -126,7 +132,7 @@ function TheStanding({
       {/* Appraisers' ledger — each patron + the rung they gave (value / 5) */}
       {voters.length > 0 && (
         <>
-          <div style={{ borderTop: '1px dashed var(--ua-line-soft)', paddingTop: 'var(--space-lg)', fontFamily: MONO, fontSize: 'var(--text-xs)', letterSpacing: '0.16em', textTransform: 'uppercase', color: 'var(--ua-sub)', marginBottom: 'var(--space-md)' }}>
+          <div style={{ borderTop: '1px dashed var(--faction-ua-hair)', paddingTop: 'var(--space-lg)', fontFamily: MONO, fontSize: 'var(--text-xs)', letterSpacing: '0.16em', textTransform: 'uppercase', color: 'var(--faction-ua-card-body)', marginBottom: 'var(--space-md)' }}>
             {t('detail.ua.standing.appraisedBy')}
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-md)' }}>
@@ -141,12 +147,12 @@ function TheStanding({
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      background: 'color-mix(in srgb, var(--ua-gold-pale) 28%, var(--ua-paper))',
-                      border: '1.5px solid var(--ua-line)',
+                      background: 'color-mix(in srgb, var(--faction-ua-panel) 28%, var(--faction-ua-card-bg))',
+                      border: '1.5px solid var(--faction-ua-rule)',
                       fontFamily: MONO,
                       fontWeight: 700,
                       fontSize: 'var(--text-sm)',
-                      color: 'var(--ua-orange)',
+                      color: 'var(--faction-ua-card-accent)',
                     }}
                   >
                     {initials(voter.display_name)}
@@ -154,24 +160,24 @@ function TheStanding({
                 </Link>
                 <Link
                   to={`/characters/${voter.character_id}`}
-                  style={{ width: 96, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontFamily: SERIF, fontSize: 'var(--text-lg)', color: 'var(--ua-ink)', textDecoration: 'none' }}
+                  style={{ width: 96, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontFamily: SERIF, fontSize: 'var(--text-lg)', color: 'var(--faction-ua-card-text)', textDecoration: 'none' }}
                 >
                   {voter.display_name}
                 </Link>
-                <div style={{ flex: 1, height: 9, background: 'color-mix(in srgb, var(--ua-gold-pale) 20%, var(--ua-paper))', border: '1px solid var(--ua-line-soft)', position: 'relative', overflow: 'hidden' }}>
-                  <div style={{ position: 'absolute', inset: 0, width: `${(voter.value / 5) * 100}%`, background: 'var(--ua-orange)', opacity: 0.9 }} />
+                <div style={{ flex: 1, height: 9, background: 'color-mix(in srgb, var(--faction-ua-panel) 20%, var(--faction-ua-card-bg))', border: '1px solid var(--faction-ua-hair)', position: 'relative', overflow: 'hidden' }}>
+                  <div style={{ position: 'absolute', inset: 0, width: `${(voter.value / 5) * 100}%`, background: 'var(--faction-ua-card-accent)', opacity: 0.9 }} />
                 </div>
-                <span style={{ width: 40, textAlign: 'right', whiteSpace: 'nowrap', fontFamily: DISPLAY, fontStyle: 'italic', fontWeight: 700, fontSize: 'var(--text-xl)', color: 'var(--ua-orange)' }}>
+                <span style={{ width: 40, textAlign: 'right', whiteSpace: 'nowrap', fontFamily: DISPLAY, fontStyle: 'italic', fontWeight: 700, fontSize: 'var(--text-xl)', color: 'var(--faction-ua-card-accent)' }}>
                   {voter.value === 5 ? '✦' : `№${voter.value}`}
                 </span>
               </div>
             ))}
           </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', borderTop: '1px solid var(--ua-line)', marginTop: 'var(--space-md)', paddingTop: 'var(--space-md)' }}>
-            <span style={{ fontFamily: MONO, fontSize: 'var(--text-xs)', letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--ua-sub)' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', borderTop: '1px solid var(--faction-ua-rule)', marginTop: 'var(--space-md)', paddingTop: 'var(--space-md)' }}>
+            <span style={{ fontFamily: MONO, fontSize: 'var(--text-xs)', letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--faction-ua-card-body)' }}>
               {t('detail.ua.standing.patronsTotal', { count: voters.length })}
             </span>
-            <span style={{ fontFamily: DISPLAY, fontStyle: 'italic', fontWeight: 700, fontSize: 'var(--text-title)', color: 'var(--ua-orange)' }}>
+            <span style={{ fontFamily: DISPLAY, fontStyle: 'italic', fontWeight: 700, fontSize: 'var(--text-title)', color: 'var(--faction-ua-card-accent)' }}>
               {t('detail.ua.standing.pts', { points: votes.total_score })}
             </span>
           </div>
@@ -193,12 +199,12 @@ export default function UaPraxisDetail({ state }: { state: PraxisDetailState }) 
       className="py-8 max-w-2xl"
       style={{
         position: 'relative',
-        background: 'var(--ua-paper)',
+        background: 'var(--faction-ua-card-bg)',
         // gilt salon double-frame: paper inset, then a thin gold line
-        border: '1px solid var(--ua-line)',
-        boxShadow: `0 16px 38px color-mix(in srgb, var(--ua-ink) 16%, transparent),
-                    inset 0 0 0 4px var(--ua-paper),
-                    inset 0 0 0 5px var(--ua-line-soft)`,
+        border: '1px solid var(--faction-ua-rule)',
+        boxShadow: `0 16px 38px var(--color-overlay-medium),
+                    inset 0 0 0 4px var(--faction-ua-card-bg),
+                    inset 0 0 0 5px var(--faction-ua-hair)`,
         padding: 0,
       }}
     >
@@ -210,8 +216,8 @@ export default function UaPraxisDetail({ state }: { state: PraxisDetailState }) 
           justifyContent: 'space-between',
           gap: 'var(--space-lg)',
           padding: 'var(--space-md) var(--space-xl)',
-          borderBottom: '1px solid var(--ua-line-soft)',
-          background: 'linear-gradient(180deg, color-mix(in srgb, var(--ua-gold-pale) 28%, var(--ua-paper)), var(--ua-paper))',
+          borderBottom: '1px solid var(--faction-ua-hair)',
+          background: 'linear-gradient(180deg, color-mix(in srgb, var(--faction-ua-panel) 28%, var(--faction-ua-card-bg)), var(--faction-ua-card-bg))',
         }}
       >
         <Link
@@ -220,7 +226,7 @@ export default function UaPraxisDetail({ state }: { state: PraxisDetailState }) 
             fontFamily: REGALIA,
             fontSize: 'var(--text-base)',
             letterSpacing: '0.14em',
-            color: 'var(--ua-gold)',
+            color: 'var(--faction-ua-card-accent)',
             textDecoration: 'none',
           }}
         >
@@ -259,7 +265,7 @@ export default function UaPraxisDetail({ state }: { state: PraxisDetailState }) 
             fontSize: 'var(--text-xs)',
             letterSpacing: '0.22em',
             textTransform: 'uppercase',
-            color: 'var(--ua-muted)',
+            color: 'var(--faction-ua-card-muted)',
             marginBottom: 'var(--space-md)',
             display: 'flex',
             flexWrap: 'wrap',
@@ -268,10 +274,10 @@ export default function UaPraxisDetail({ state }: { state: PraxisDetailState }) 
           }}
         >
           <span>{t('detail.ua.acquisitionGrade', { grade: praxis.task_level_required > 0 ? praxis.task_level_required : '—' })}</span>
-          <span style={{ color: 'var(--ua-line)' }}>·</span>
+          <span style={{ color: 'var(--faction-ua-rule)' }}>·</span>
           <span>{modeLabel(praxis.type, t)}</span>
-          <span style={{ color: 'var(--ua-line)' }}>·</span>
-          <span style={{ fontFamily: SERIF, fontSize: 'var(--text-md)', fontStyle: 'italic', letterSpacing: 0, textTransform: 'none', color: 'var(--ua-sub)' }}>
+          <span style={{ color: 'var(--faction-ua-rule)' }}>·</span>
+          <span style={{ fontFamily: SERIF, fontSize: 'var(--text-md)', fontStyle: 'italic', letterSpacing: 0, textTransform: 'none', color: 'var(--faction-ua-card-body)' }}>
             {t('detail.ua.returnedToSalon', { date: formatTimestamp(sealedDate) })}
           </span>
         </div>
@@ -284,7 +290,7 @@ export default function UaPraxisDetail({ state }: { state: PraxisDetailState }) 
             fontWeight: 600,
             fontSize: 'var(--text-display)',
             lineHeight: 1.06,
-            color: 'var(--ua-ink)',
+            color: 'var(--faction-ua-card-text)',
             marginBottom: 'var(--space-lg)',
           }}
         >
@@ -302,7 +308,7 @@ export default function UaPraxisDetail({ state }: { state: PraxisDetailState }) 
             gap: 'var(--space-lg)',
             paddingBottom: 'var(--space-xl)',
             marginBottom: 'var(--space-xl)',
-            borderBottom: '1px solid var(--ua-line-soft)',
+            borderBottom: '1px solid var(--faction-ua-hair)',
           }}
         >
           <Link to={`/characters/${praxis.created_by_id}`}>
@@ -325,7 +331,7 @@ export default function UaPraxisDetail({ state }: { state: PraxisDetailState }) 
                 fontStyle: 'italic',
                 fontWeight: 500,
                 fontSize: 'var(--text-xl)',
-                color: 'var(--ua-ink)',
+                color: 'var(--faction-ua-card-text)',
                 textDecoration: 'none',
               }}
             />
@@ -334,7 +340,7 @@ export default function UaPraxisDetail({ state }: { state: PraxisDetailState }) 
                 fontFamily: MONO,
                 fontSize: 'var(--text-xs)',
                 letterSpacing: '0.06em',
-                color: 'var(--ua-muted)',
+                color: 'var(--faction-ua-card-muted)',
               }}
             >
               {t('detail.ua.acquiringHand')}
@@ -349,7 +355,7 @@ export default function UaPraxisDetail({ state }: { state: PraxisDetailState }) 
                 fontWeight: 700,
                 fontSize: 'var(--text-heading)',
                 lineHeight: 1,
-                color: 'var(--ua-orange)',
+                color: 'var(--faction-ua-card-accent)',
               }}
             >
               {praxis.task_point_value}
@@ -359,7 +365,7 @@ export default function UaPraxisDetail({ state }: { state: PraxisDetailState }) 
                 fontFamily: REGALIA,
                 fontSize: 'var(--text-xs)',
                 letterSpacing: '0.1em',
-                color: 'var(--ua-muted)',
+                color: 'var(--faction-ua-card-muted)',
                 marginTop: 'var(--space-xs)',
               }}
             >
@@ -372,11 +378,11 @@ export default function UaPraxisDetail({ state }: { state: PraxisDetailState }) 
         {praxis.body_text && (
           <div style={{ marginBottom: 'var(--space-xl)' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-md)', margin: '0 0 var(--space-lg)' }}>
-              <div style={{ height: 1, flex: 1, background: 'var(--ua-line-soft)' }} />
-              <span style={{ fontFamily: REGALIA, fontSize: 'var(--text-sm)', letterSpacing: '0.22em', color: 'var(--ua-gold)', whiteSpace: 'nowrap' }}>
+              <div style={{ height: 1, flex: 1, background: 'var(--faction-ua-hair)' }} />
+              <span style={{ fontFamily: REGALIA, fontSize: 'var(--text-sm)', letterSpacing: '0.22em', color: 'var(--faction-ua-card-accent)', whiteSpace: 'nowrap' }}>
                 {t('detail.ua.theProcess')}
               </span>
-              <div style={{ height: 1, flex: 1, background: 'var(--ua-line-soft)' }} />
+              <div style={{ height: 1, flex: 1, background: 'var(--faction-ua-hair)' }} />
             </div>
             <MarkdownPreview
               source={praxis.body_text}
@@ -384,7 +390,7 @@ export default function UaPraxisDetail({ state }: { state: PraxisDetailState }) 
               style={{
                 fontFamily: SERIF,
                 lineHeight: 1.85,
-                color: 'var(--ua-sub)',
+                color: 'var(--faction-ua-card-body)',
               }}
             />
           </div>
@@ -394,28 +400,30 @@ export default function UaPraxisDetail({ state }: { state: PraxisDetailState }) 
         {praxis.media_items.length > 0 && (
           <div style={{ marginBottom: 'var(--space-xl)' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-md)', margin: '0 0 var(--space-lg)' }}>
-              <div style={{ height: 1, flex: 1, background: 'var(--ua-line-soft)' }} />
-              <span style={{ fontFamily: REGALIA, fontSize: 'var(--text-sm)', letterSpacing: '0.22em', color: 'var(--ua-gold)', whiteSpace: 'nowrap' }}>
+              <div style={{ height: 1, flex: 1, background: 'var(--faction-ua-hair)' }} />
+              <span style={{ fontFamily: REGALIA, fontSize: 'var(--text-sm)', letterSpacing: '0.22em', color: 'var(--faction-ua-card-accent)', whiteSpace: 'nowrap' }}>
                 {t('detail.ua.thePlate', { count: praxis.media_items.length })}
               </span>
-              <div style={{ height: 1, flex: 1, background: 'var(--ua-line-soft)' }} />
+              <div style={{ height: 1, flex: 1, background: 'var(--faction-ua-hair)' }} />
             </div>
-            {/* gilt frame: gold-leaf outer, gold inner mat, then the gallery */}
+            {/* Sheet frame: sand outer, a neutral inner mat, then the gallery.
+                Was a gilt double-frame; the gilt gradient died with the legacy
+                family (#853) and gold now belongs to WOW. */}
             <div
               style={{
                 padding: 'var(--space-sm)',
-                background: 'var(--ua-gilt)',
-                boxShadow: `0 10px 22px color-mix(in srgb, var(--ua-ink) 20%, transparent),
-                            inset 0 0 0 1px color-mix(in srgb, white 40%, transparent)`,
+                background: 'var(--faction-ua-panel)',
+                boxShadow: `0 10px 22px var(--color-overlay-medium),
+                            inset 0 0 0 1px var(--faction-ua-hair)`,
               }}
             >
               <div
                 style={{
                   padding: 'var(--space-xs)',
-                  background: 'linear-gradient(135deg, var(--ua-gold), var(--ua-gold-pale))',
+                  background: 'var(--faction-ua-rule)',
                 }}
               >
-                <div style={{ background: 'var(--ua-paper)', padding: 'var(--space-sm)' }}>
+                <div style={{ background: 'var(--faction-ua-card-bg)', padding: 'var(--space-sm)' }}>
                   <MediaGallery media={praxis.media_items} layout="grid" />
                 </div>
               </div>
@@ -428,8 +436,8 @@ export default function UaPraxisDetail({ state }: { state: PraxisDetailState }) 
 
         {/* ── The Patronage (cast your appraisal) ── */}
         <div style={{ marginBottom: 'var(--space-lg)' }}>
-          <div style={{ marginBottom: 'var(--space-lg)', paddingTop: 'var(--space-lg)', borderTop: '1px solid var(--ua-line-soft)' }}>
-            <span style={{ fontFamily: REGALIA, fontSize: 'var(--text-base)', letterSpacing: '0.2em', color: 'var(--ua-gold)' }}>
+          <div style={{ marginBottom: 'var(--space-lg)', paddingTop: 'var(--space-lg)', borderTop: '1px solid var(--faction-ua-hair)' }}>
+            <span style={{ fontFamily: REGALIA, fontSize: 'var(--text-base)', letterSpacing: '0.2em', color: 'var(--faction-ua-card-accent)' }}>
               {t('detail.ua.patronage')}
             </span>
           </div>

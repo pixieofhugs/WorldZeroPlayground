@@ -22,20 +22,26 @@ import { MobileStarVote } from './shared'
  * (full media); a Cormorant-italic finding headline, the account body, and a
  * thumb-sized appraisal caster follow. Renders the same invariant CONTENT +
  * behavior slots as every archetype (the shared praxisDetail module) — only the
- * dress changes. Grounds on `--faction-ua-*` / `--ua-*` tokens; always-light.
+ * dress changes.
+ *
+ * REPOINTED, NOT REBUILT (#853): the constants below keep their old salon names
+ * (GOLD, GILT, …) but no longer resolve to gold — the legacy `--ua-*` family was
+ * deleted and each one now points at the nearest `--faction-ua-*` primitive. The
+ * skin therefore also dims with the theme (#848 ended UA's always-light rule).
+ * A rebuild against the UA identity kit is a separate, future issue.
  */
 
 const PAPER = 'var(--faction-ua-card-bg)'
-const PAPER_WARM = 'var(--ua-paper-warm)'
-const WALL = 'var(--ua-wall)'
+const PAPER_WARM = 'var(--faction-ua-lift)'
+const WALL = 'var(--faction-ua-page)'
 const INK = 'var(--faction-ua-card-text)'
 const ACCENT = 'var(--faction-ua-card-accent)'
 const SUB = 'var(--faction-ua-card-muted)'
-const MUTED = 'var(--ua-muted)'
-const GOLD = 'var(--ua-gold)'
-const GOLD_PALE = 'var(--ua-gold-pale)'
-const LINE = 'var(--ua-line)'
-const GILT = 'var(--ua-gilt)'
+const MUTED = 'var(--faction-ua-card-muted)'
+const GOLD = 'var(--faction-ua-card-accent)'
+const GOLD_PALE = 'var(--faction-ua-panel)'
+const LINE = 'var(--faction-ua-rule)'
+const GILT = 'var(--faction-ua-panel)'
 const DISPLAY = 'var(--faction-ua-card-font)'
 const ENGRAVED = 'var(--font-faction-engraved)'
 const MONO = 'var(--font-body)'
