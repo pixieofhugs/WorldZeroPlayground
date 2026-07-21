@@ -14,6 +14,7 @@ import {
   PraxisScoreBreakdown,
   MemberByline,
 } from '../shared'
+import { VoteFactionContext } from '../../../components/vote/VoteShell'
 import { MobileStarVote } from './shared'
 
 /**
@@ -149,11 +150,13 @@ export default function UaPraxisDetail({ state }: { state: PraxisDetailState }) 
         <div style={{ marginBottom: 'var(--space-md)' }}>
           <PraxisScoreBreakdown state={state} align="center" accent={ACCENT} font={DISPLAY} />
         </div>
-        <MobileStarVote
-          praxisId={praxis.id}
-          accent={ACCENT}
-          accentFont={DISPLAY}
-        />
+        <VoteFactionContext.Provider value="ua">
+          <MobileStarVote
+            praxisId={praxis.id}
+            accent={ACCENT}
+            accentFont={DISPLAY}
+          />
+        </VoteFactionContext.Provider>
       </Plate>
 
       {/* Flag + voter breakdown (invariant) */}

@@ -8,6 +8,15 @@
  * (48px star buttons) for the feed-detail surface. Logged-out viewers get the
  * shared VoteLoginGate; the points/vote tally reuses the shared VoteSummary
  * (#375: a running tally, never an average).
+ *
+ * The mobile path does not go through {@link VoteUI}, so nothing publishes the
+ * task faction to that shared chrome here — which left every mobile gate
+ * speaking the unaffiliated spectrum voice while desktop spoke its faction's
+ * (#864). Each mobile archetype therefore wraps its caster in
+ * `VoteFactionContext.Provider` with its own slug (the default skin passes
+ * `praxis.task_faction_slug`, since it serves whichever factions have no mobile
+ * archetype). A NEW mobile praxis-detail archetype must do the same, or its gate
+ * silently falls back to the spectrum.
  */
 import { useTranslation } from 'react-i18next'
 import { useVote } from '../../../components/vote/useVote'

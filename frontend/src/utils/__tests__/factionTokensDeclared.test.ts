@@ -6,17 +6,69 @@ import { describe, expect, it } from "vitest";
 import { readThemes } from "./cssVars";
 
 /**
- * Guard for the "looks tokenized, is not" failure class (#806).
+ * Guard for the "looks tokenized, is not" failure class (#806, widened by #879).
  *
  * `var(--faction-does-not-exist)` passes tsc, eslint and the no-raw-style-values
  * ratchet — a var() reference looks correctly tokenized to every check we run.
  * At runtime the undefined custom property makes the whole declaration invalid
  * (a color-mix() containing it resolves to nothing), so the chrome silently
  * renders with no colour. Only a name-set comparison can catch it.
+ *
+ * #879: the original guard only walked `--faction-*`, which is the SAFE
+ * namespace — those names go through `factionCssVar()`, a chokepoint. The
+ * legacy families (`--ua-*`, `--eph-*`, `--everymen-*`, …) are written as bare
+ * inline `var()` strings with nothing type-checking them, so that is where the
+ * risk actually lives. Four undeclared `--ua-*` font tokens rendered live and
+ * invisible for weeks. The guard now checks EVERY `var(--…)` in `frontend/src`.
  */
 
 const SRC_DIR = join(fileURLToPath(new URL(".", import.meta.url)), "..", "..");
 const SOURCE_EXTENSIONS = [".ts", ".tsx", ".js", ".jsx", ".css"];
+
+/**
+ * A custom property declared by a CSS rule — ANY rule, not just the `:root` /
+ * `[data-theme="dark"]` token blocks. Animation-local properties are declared
+ * on the element that runs the keyframe (`--ua-spin-dur`, `--ev-spark-delay`),
+ * and those are legitimate: #879 calls them out explicitly as non-orphans.
+ */
+const DECLARED_IN_CSS = /(?:^|[;{\s])(--[\w-]+)\s*:/g;
+
+/**
+ * A custom property declared as a React inline-style key. The repo writes these
+ * three ways — `"--x": v`, `'--x': v`, and the cast form
+ * `['--fc-bg' as string]: skin.bg` that `CredentialCard` uses.
+ */
+const DECLARED_IN_STYLE_OBJECT =
+  /["'`](--[\w-]+)["'`](?:\s+as\s+[\w.]+)?\s*\]?\s*:/g;
+
+/**
+ * A `var()` reference. The trailing `[,)]` is load-bearing: it is what excludes
+ * names built by string interpolation. `` `var(--faction-${key}-card-${prop})` ``
+ * would otherwise be harvested as the bogus name `--faction-`. A dynamic name
+ * cannot be checked statically, so we skip it — `factionCssVar()` output is
+ * covered by `factions.ts` staying in sync with `index.css` instead.
+ */
+const REFERENCE = /var\(\s*(--[A-Za-z0-9_-]+)\s*[,)]/g;
+
+const COMMENT = /\/\*[\s\S]*?\*\//g;
+
+/**
+ * Pre-existing orphans, grandfathered when the guard widened past `--faction-*`
+ * (#879). Modelled on the `no-raw-style-values` ratchet: this list may SHRINK,
+ * never grow. Do not add a name here to quiet a failure — declare the token in
+ * `index.css` (or point the reference at the token that was meant). The
+ * "no dead entries" test below makes the ratchet self-enforcing.
+ *
+ * Each of these needs a design call about which declared token was intended,
+ * which is why #879 did not fix them inline. Tracked in #890.
+ */
+const GRANDFATHERED = new Set([
+  "--color-accent", // near-miss of --color-accent-primary
+  "--color-bg-card", // no such token
+  "--color-surface-soft", // no such token
+  "--color-text", // near-miss of --color-text-primary
+  "--everymen-red-light", // has a literal fallback, so it renders
+]);
 
 function collectSourceFiles(directory: string): string[] {
   return readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
@@ -33,40 +85,75 @@ function collectSourceFiles(directory: string): string[] {
   });
 }
 
+/** Comments quote token names as prose; a mention is not a declaration. */
+function stripComments(source: string): string {
+  return source.replace(COMMENT, "");
+}
+
 function matchAll(text: string, pattern: RegExp): string[] {
   return [...text.matchAll(pattern)].map((match) => match[1]);
 }
 
-describe("faction CSS custom properties (#806)", () => {
+const sources = collectSourceFiles(SRC_DIR).map((path) => ({
+  path,
+  text: stripComments(readFileSync(path, "utf-8")),
+}));
+
+/** Every custom property declared anywhere in the frontend source tree. */
+const declared = new Set(
+  sources.flatMap(({ text }) => [
+    ...matchAll(text, DECLARED_IN_CSS),
+    ...matchAll(text, DECLARED_IN_STYLE_OBJECT),
+  ]),
+);
+
+/** Every statically-resolvable `var()` name, with the files that reference it. */
+const referenced = new Map<string, string[]>();
+for (const { path, text } of sources) {
+  for (const name of matchAll(text, REFERENCE)) {
+    referenced.set(name, [...(referenced.get(name) ?? []), path]);
+  }
+}
+
+const orphans = [...referenced.keys()].filter((name) => !declared.has(name));
+
+describe("CSS custom properties are declared before use (#806, #879)", () => {
   // readThemes strips comments and reads both theme blocks, so a token merely
   // *mentioned* in a comment never counts as declared.
   const themes = readThemes(readFileSync(join(SRC_DIR, "index.css"), "utf-8"));
-  const declared = new Set(
+  const factionTokens = new Set(
     [...themes.light.keys(), ...themes.dark.keys()].filter((name) =>
       name.startsWith("--faction-"),
     ),
   );
 
   it("declares faction tokens in index.css at all (sanity check on the parse)", () => {
-    expect(declared.size).toBeGreaterThan(50);
-    expect(declared.has("--faction-singularity-card-muted")).toBe(true);
+    expect(factionTokens.size).toBeGreaterThan(50);
+    expect(factionTokens.has("--faction-singularity-card-muted")).toBe(true);
   });
 
-  it("has no var(--faction-*) reference pointing at an undeclared token", () => {
-    const orphans: string[] = [];
+  it("finds the var() references it is meant to police (sanity check on the sweep)", () => {
+    expect(referenced.size).toBeGreaterThan(200);
+    // The legacy namespace #879 exists to cover.
+    expect(referenced.has("--eph-display")).toBe(true);
+    expect(declared.has("--eph-display")).toBe(true);
+    // An interpolated name must never be harvested as a literal.
+    expect(referenced.has("--faction-")).toBe(false);
+  });
 
-    for (const file of collectSourceFiles(SRC_DIR)) {
-      const source = readFileSync(file, "utf-8");
-      for (const token of matchAll(
-        source,
-        /var\(\s*(--faction-[A-Za-z0-9-]+)/g,
-      )) {
-        if (!declared.has(token)) {
-          orphans.push(`${token} referenced in ${file}`);
-        }
-      }
-    }
+  it("has no var(--…) reference pointing at an undeclared custom property", () => {
+    const unexpected = orphans
+      .filter((name) => !GRANDFATHERED.has(name))
+      .flatMap((name) =>
+        (referenced.get(name) ?? []).map((path) => `${name} in ${path}`),
+      );
 
-    expect(orphans).toEqual([]);
+    expect(unexpected).toEqual([]);
+  });
+
+  it("keeps the grandfathered allowlist a ratchet (no dead entries)", () => {
+    const fixed = [...GRANDFATHERED].filter((name) => !orphans.includes(name));
+
+    expect(fixed).toEqual([]);
   });
 });

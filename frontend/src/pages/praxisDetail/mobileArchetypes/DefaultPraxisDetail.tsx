@@ -25,6 +25,7 @@ import {
   PraxisScoreBreakdown,
   MemberByline,
 } from '../shared'
+import { VoteFactionContext } from '../../../components/vote/VoteShell'
 import { MobileStarVote } from './shared'
 
 export default function DefaultPraxisDetail({ state }: { state: PraxisDetailState }) {
@@ -135,10 +136,16 @@ export default function DefaultPraxisDetail({ state }: { state: PraxisDetailStat
         <div style={{ marginBottom: 'var(--space-md)' }}>
           <PraxisScoreBreakdown state={state} align="center" accent={accent} />
         </div>
-        <MobileStarVote
-          praxisId={praxis.id}
-          accent={accent}
-        />
+        {/* The default skin serves every faction without a mobile archetype of
+            its own, so the gate's voice comes from the praxis, not a constant:
+            `wow` lands here and must still speak in the chronicle plum, while
+            `na`/`albescent` fall through to the spectrum (ADR-0039). */}
+        <VoteFactionContext.Provider value={praxis.task_faction_slug}>
+          <MobileStarVote
+            praxisId={praxis.id}
+            accent={accent}
+          />
+        </VoteFactionContext.Provider>
       </div>
 
       {/* Flag + voter breakdown (invariant) */}
