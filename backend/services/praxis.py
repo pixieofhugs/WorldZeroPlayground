@@ -733,7 +733,15 @@ def meets_task_level(
     the ability and for anyone who has already spent it at this level — see
     :func:`services.level_jump.available_level_reach`, which is the only thing
     that should compute it. Extending the gate here (rather than per mode) is
-    what gives the ability identical behaviour across solo, collab and duel.
+    what gives the ability identical behaviour across solo signup, collab
+    signup, and duel *initiation* (the challenger's own praxis, gated via
+    :func:`create_praxis` → :func:`evaluate_signup`).
+
+    Duel *acceptance* (the opponent, via
+    :func:`services.duel.respond_to_duel_challenge`) is a deliberate exception:
+    it never calls this predicate. The opponent's only level check is the flat
+    ``era.duel_level_required`` floor — reaching above your own level is the
+    point of a duel. See ADR-0051.
     """
     return character_level + level_reach >= task.level_required
 

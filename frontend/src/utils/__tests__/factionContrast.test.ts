@@ -113,11 +113,52 @@ const ARCHETYPE_PAIRS: Pair[] = [
   { what: "snide deep wall", surface: "--faction-snide-wall-deep", text: "--faction-snide-wall-text" },
   { what: "snide xerox paper, ink", surface: "--faction-snide-paper", text: "--faction-snide-ink" },
 
-  // UA — always-light gilt salon (#240); --ua-ink is "brown ink — all text".
+  // UA — LEGACY gilt-salon family, awaiting deletion in #853. Still measured
+  // because ~20 components still paint with it; --ua-ink is "brown ink — all
+  // text". It has no dark values and is not getting any: it is going away.
   { what: "ua sheet, ink", surface: "--ua-paper", text: "--ua-ink" },
   { what: "ua sheet, secondary", surface: "--ua-paper", text: "--ua-sub" },
   { what: "ua sheet, mono labels", surface: "--ua-paper", text: "--ua-muted" },
   { what: "ua wall, ink", surface: "--ua-wall", text: "--ua-ink" },
+
+  // UA — the sun-bleached practice (#788, #848). UA is the first faction with
+  // FOUR themed surfaces (page ground, card, inset panel, raised lift) rather
+  // than one, and a minimal desert palette sits in a narrow luminance band, so
+  // an ink that clears the card can still fail the ground two steps away. That
+  // is exactly how the design kit shipped a 4.38:1 muted; every ink is
+  // therefore measured against every surface it is allowed to sit on.
+  { what: "ua page ground, page text", surface: "--faction-ua-page", text: "--faction-ua-page-text" },
+  { what: "ua page ground, prose", surface: "--faction-ua-page", text: "--faction-ua-card-body" },
+  { what: "ua page ground, muted", surface: "--faction-ua-page", text: "--faction-ua-card-muted" },
+  { what: "ua page ground, accent", surface: "--faction-ua-page", text: "--faction-ua-card-accent" },
+  { what: "ua card, prose", surface: "--faction-ua-card-bg", text: "--faction-ua-card-body" },
+  { what: "ua panel, ink", surface: "--faction-ua-panel", text: "--faction-ua-card-text" },
+  { what: "ua panel, prose", surface: "--faction-ua-panel", text: "--faction-ua-card-body" },
+  { what: "ua panel, muted", surface: "--faction-ua-panel", text: "--faction-ua-card-muted" },
+  { what: "ua panel, accent", surface: "--faction-ua-panel", text: "--faction-ua-card-accent" },
+  { what: "ua lift, ink", surface: "--faction-ua-lift", text: "--faction-ua-card-text" },
+  { what: "ua lift, prose", surface: "--faction-ua-lift", text: "--faction-ua-card-body" },
+  { what: "ua lift, muted", surface: "--faction-ua-lift", text: "--faction-ua-card-muted" },
+  { what: "ua lift, accent", surface: "--faction-ua-lift", text: "--faction-ua-card-accent" },
+  // The two UA colours that do NOT owe 4.5:1, and why. Both are documented
+  // roles, not exemptions: --faction-ua is a fill and large-type hue (4.04:1 as
+  // body text on the card, which is why --faction-ua-card-accent exists), and
+  // --faction-ua-vermil sets the ensō score numeral at display size. There is a
+  // third UA colour below AA — --faction-ua-glow, 3.12:1 — and it is absent on
+  // purpose: it is ornament (the ensō stroke, the mandala) and never text, so
+  // it has no text/background pair to measure.
+  {
+    what: "ua primary as large display type",
+    surface: "--faction-ua-card-bg",
+    text: "--faction-ua",
+    floor: AA_LARGE,
+  },
+  {
+    what: "ua ensō numeral, large display type",
+    surface: "--faction-ua-card-bg",
+    text: "--faction-ua-vermil",
+    floor: AA_LARGE,
+  },
 
   // Albescent's FACTION tokens are gone (#783) — it renders Default's surfaces,
   // which `default` already covers. What remains is the always-light palette
@@ -168,15 +209,17 @@ const BASELINE: Record<string, { ratio: number; issue: number }> = {
 
   // ── Found by this sweep — awaiting triage into children (#651 audit comment) ──
   // Card accents used as metadata text (§3: "metadata / decorative accent").
-  "light | ua card accent": { ratio: 4.27, issue: 651 },
+  // #848 fixed both `ua card accent` entries: the sun-bleached repaint gave UA
+  // a metadata sienna that is not the fill hue (5.18:1 light, 6.58:1 dark).
   "light | everymen card accent": { ratio: 4.49, issue: 651 },
   "light | coven card accent": { ratio: 2.81, issue: 651 },
-  "dark | ua card accent": { ratio: 4.27, issue: 651 },
   "dark | everymen card accent": { ratio: 4.16, issue: 651 },
   "dark | ephemerists card accent": { ratio: 3.72, issue: 651 },
   // The same rubric vermilion, reached through its archetype-private primitive.
   "dark | ephemerists vellum, rubric": { ratio: 3.72, issue: 651 },
-  // UA mono metadata labels on the gilt sheet, both themes (UA never dims).
+  // UA mono metadata labels on the legacy gilt sheet. Both themes measure the
+  // same because the legacy family has no dark values; #853 deletes the family,
+  // which is what retires these two entries.
   "light | ua sheet, mono labels": { ratio: 3.06, issue: 651 },
   "dark | ua sheet, mono labels": { ratio: 3.06, issue: 651 },
 };
