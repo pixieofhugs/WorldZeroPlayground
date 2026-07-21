@@ -22,6 +22,8 @@ import EverymenScoreStamp from '../EverymenScoreStamp'
 import EphemeristsScoreStamp from '../EphemeristsScoreStamp'
 import SnideScoreStamp from '../SnideScoreStamp'
 import SingularityScoreStamp from '../SingularityScoreStamp'
+import WowScoreStamp from '../WowScoreStamp'
+import CovenScoreStamp from '../CovenScoreStamp'
 
 /** No hex may reach a stamp's markup — every colour is a token (ADR-0049). */
 const HEX = /#[0-9a-fA-F]{3,8}\b/
@@ -94,7 +96,7 @@ describe('scoreBreakdown row selection (ADR-0047)', () => {
 
 describe('scoreStamp surface dispatch (ADR-0049)', () => {
   it('falls through to the Default stamp for every slug that has not claimed it', () => {
-    for (const slug of ['ua', 'coven', 'wow', 'albescent', 'na', null]) {
+    for (const slug of ['ua', 'albescent', 'na', null]) {
       expect(pickVariant(surfaceMap('scoreStamp'), slug, DefaultScoreStamp)).toBe(DefaultScoreStamp)
     }
   })
@@ -113,6 +115,17 @@ describe('scoreStamp surface dispatch (ADR-0049)', () => {
     expect(pickVariant(surfaceMap('scoreStamp'), 'ephemerists', DefaultScoreStamp)).toBe(
       EphemeristsScoreStamp,
     )
+  })
+
+  /**
+   * The one dispatch pair worth naming explicitly. ADR-0050's whole failure mode
+   * is these two slugs holding each other's presentation, and a swap here would
+   * still resolve, still render, and still be wrong — so assert the identity of
+   * each, not merely that both are claimed.
+   */
+  it('gives WOW the chronicle plate and Coven the sticker, not the reverse (#840)', () => {
+    expect(pickVariant(surfaceMap('scoreStamp'), 'wow', DefaultScoreStamp)).toBe(WowScoreStamp)
+    expect(pickVariant(surfaceMap('scoreStamp'), 'coven', DefaultScoreStamp)).toBe(CovenScoreStamp)
   })
 })
 
@@ -154,6 +167,41 @@ describe('#841 stamps across the conditional states (ADR-0047)', () => {
       expect(html).not.toMatch(HEX)
     })
   }
+
+  for (const [name, fields] of STATES) {
+    it(`WOW prints the working and keeps the star — ${name}`, () => {
+      const html = text(renderToStaticMarkup(<WowScoreStamp praxis={praxis({ ...fields })} />))
+      expect(html).toContain('base')
+      expect(html).toContain('from votes')
+      expect(html).toContain(fields.total.toFixed(1))
+      // The retired ✦ survives here and only here — see ADR-0050 / the design
+      // README's carve-out. Losing it is half of what #840 exists to fix.
+      expect(html).toContain('✦')
+      expect(html).not.toMatch(HEX)
+    })
+
+    it(`Coven prints the working and keeps the sparkle — ${name}`, () => {
+      const html = text(renderToStaticMarkup(<CovenScoreStamp praxis={praxis({ ...fields })} />))
+      expect(html).toContain('base')
+      expect(html).toContain('from votes')
+      expect(html).toContain(fields.total.toFixed(1))
+      expect(html).toContain('✨')
+      expect(html).not.toMatch(HEX)
+    })
+  }
+
+  /**
+   * The sticker is not a rectangle and the plate is not upright — #821 replaced
+   * both with the same level bordered box. Geometry, unlike copy, has no other
+   * assertion that would catch it going flat again.
+   */
+  it('keeps each faction its own geometry: WOW struck at -2deg, Coven a dashed sticker at -3deg', () => {
+    const wow = renderToStaticMarkup(<WowScoreStamp praxis={praxis({})} />)
+    const coven = renderToStaticMarkup(<CovenScoreStamp praxis={praxis({})} />)
+    expect(wow).toContain('rotate(-2deg)')
+    expect(coven).toContain('rotate(-3deg)')
+    expect(coven).toContain('dashed')
+  })
 
   it('draws the Everymen subtotal rule only when a metatask AND a multiplier are both live', () => {
     const full = text(

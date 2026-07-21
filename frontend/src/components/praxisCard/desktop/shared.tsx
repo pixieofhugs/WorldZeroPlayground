@@ -79,6 +79,10 @@ export function PraxisBody({
   showCrown,
   eyebrow,
   voteRule,
+  taskLead,
+  mediaEmptyLabel,
+  mediaEmptyStyle,
+  footnote,
 }: {
   praxis: PraxisCardOut;
   tint: string;
@@ -104,6 +108,20 @@ export function PraxisBody({
    * archetype that draws no rule simply passes nothing.
    */
   voteRule?: ReactNode;
+  /**
+   * An un-linked run-in before the task title (#840) — WOW's chronicle writes
+   * this line as "for the quest — {task}" rather than a bare reference.
+   */
+  taskLead?: string;
+  /** The empty media slot's invitation + frame, in the faction's voice (#840). */
+  mediaEmptyLabel?: string;
+  mediaEmptyStyle?: CSSProperties;
+  /**
+   * An optional line under the media slot and above the byline rule (#840) —
+   * WOW's "Sealed by the Court · {date}". A closing formula, not metadata:
+   * `PraxisStats` already carries the level/crew/date facts.
+   */
+  footnote?: ReactNode;
 }) {
   return (
     <>
@@ -118,7 +136,7 @@ export function PraxisBody({
         <div style={{ flex: 1, minWidth: 0 }}>
           {eyebrow}
           <PraxisTitle praxis={praxis} style={titleStyle} />
-          <PraxisTaskLink praxis={praxis} style={{ color: muted }} />
+          <PraxisTaskLink praxis={praxis} style={{ color: muted }} lead={taskLead} />
           <PraxisExcerpt praxis={praxis} style={{ color: muted }} />
         </div>
         {/*
@@ -135,7 +153,15 @@ export function PraxisBody({
       <PraxisModeChip praxis={praxis} />
       <PraxisRoster praxis={praxis} accent={tint} paper={paper} />
       {/* Every card shows the media slot — a drop target when empty (#821). */}
-      <PraxisMediaGallery praxis={praxis} accent={tint} paper={paper} showPlaceholder />
+      <PraxisMediaGallery
+        praxis={praxis}
+        accent={tint}
+        paper={paper}
+        showPlaceholder
+        emptyLabel={mediaEmptyLabel}
+        emptyStyle={mediaEmptyStyle}
+      />
+      {footnote}
       <PraxisByline praxis={praxis} style={{ color: muted }} />
       <PraxisVotedByMarker praxis={praxis} style={{ color: muted }} />
       {voteRule}

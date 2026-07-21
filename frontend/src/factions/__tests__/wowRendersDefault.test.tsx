@@ -4,7 +4,8 @@
  * #784 moved its lo-fi pink `.exe` identity wholesale to Cozy Coven, leaving
  * `wow` with no manifest and no theme. #812 gave back a minimal yellow
  * `--faction-wow-*` block, so WOW rejoins the rainbow. #821 ships its FIRST
- * bespoke surfaces: the praxis card, its mobile twin, and the vote widget. Every
+ * bespoke surfaces: the praxis card, its mobile twin, and the vote widget; #840
+ * adds the score stamp when it rebuilds the chronicle from source. Every
  * OTHER surface still falls through to `Default*` — WOW is themed-and-partly-
  * skinned, not fully dressed, and definitely not "broken faction".
  *
@@ -41,14 +42,18 @@ function Sentinel() {
   return <div>default-sentinel</div>
 }
 
-/** The three surfaces #821 skinned. Every other surface must fall back. */
+/**
+ * The surfaces WOW has skinned: #821's three, plus the `scoreStamp` its own
+ * chronicle plate claims in #840 (ADR-0049). Every other surface must fall back.
+ */
 const WOW_SKINNED: ReadonlySet<FactionSurface> = new Set([
   'praxisCard',
   'mobilePraxisCard',
+  'scoreStamp',
   'vote',
 ])
 
-describe('wow is partly skinned: three surfaces claimed, the rest fall back', () => {
+describe('wow is partly skinned: four surfaces claimed, the rest fall back', () => {
   it('registers a manifest now (#821)', () => {
     expect(FACTION_MANIFESTS.map((manifest) => manifest.slug)).toContain('wow')
   })
