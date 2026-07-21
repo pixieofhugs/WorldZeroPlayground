@@ -23,7 +23,7 @@ export type SigilVariantProps = { size?: number; color?: string };
 
 export function UaSigilAdapter({ size }: SigilVariantProps) {
   const dim = size ?? 22;
-  // UA draws its own --ua-* tokens internally; it has no color prop.
+  // The ensō draws --faction-ua-glow internally; it has no color prop.
   return <UaSigil width={dim} height={dim} />;
 }
 
