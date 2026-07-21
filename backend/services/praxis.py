@@ -1311,11 +1311,10 @@ def is_task_eligible_for_character(
 ) -> bool:
     """Return True if ``character`` is eligible to act on ``task``.
 
-    For standard tasks the gate is only ``task.level_required``. For metatask
-    rows the character's faction must also permit it — see
-    :func:`services.faction_service.faction_permits` (same faction as the
-    metatask, or Albescent, who may act on any). Anonymous viewers are never
-    eligible.
+    The gate is ``task.level_required`` plus whatever
+    :func:`services.faction_service.faction_permits` enforces — presently
+    nothing, as metatasks are faction-open. Anonymous viewers are
+    never eligible.
 
     Note this mirrors the metatask scoring gate in
     :func:`services.meta_task.get_meta_task_points`
@@ -1658,9 +1657,10 @@ def _check_metatask_eligibility(
     era: EraConfig,
 ) -> Optional[str]:
     """Return a 403 reason string if this character can't apply ``task``, else None."""
-    # Albescent bypasses both the level and faction gates (its charter). The
-    # level gate is a separate axis; the faction decision routes through the
-    # single seam (ADR-0029, #171) — for non-Albescent it reduces to a slug match.
+    # Albescent bypasses the level gate (its charter); everyone else must meet
+    # metatask_apply_level. Metatasks are faction-open, so the seam
+    # `faction_permits` (ADR-0029, #171) currently permits every faction — the
+    # call is retained so a future faction rule is inherited here automatically.
     if character.faction_slug == ALBESCENT_FACTION_SLUG:
         return None
     if character_level < era.metatask_apply_level:
@@ -1669,10 +1669,7 @@ def _check_metatask_eligibility(
             "to apply metatasks."
         )
     if not faction_permits(character, task, era):
-        return (
-            "This metatask belongs to a different faction. "
-            "Only Albescent characters can apply any faction's metatask."
-        )
+        return "This metatask belongs to a different faction."
     return None
 
 
@@ -1689,10 +1686,11 @@ async def apply_metatask(
     - The task must be ``TaskType.metatask`` (else 400).
     - The applying character must be a member of the praxis (else 403).
     - The praxis must be ``in_progress`` (else 422).
-    - Faction gate:
-        * Albescent characters may apply any faction's metatask.
-        * Otherwise the character must be at least ``era.metatask_apply_level``
-          AND their ``faction_slug`` must match ``task.metatask_faction_slug``.
+    - Level gate: at least ``era.metatask_apply_level`` (Albescent bypasses).
+      Metatasks are faction-open — any faction may apply any
+      faction's metatask.
+    - Quantity cap: at most ``metatask_cap_for_level(level, era)`` metatasks on
+      one praxis (else 422).
     """
     praxis = await get_praxis(praxis_id, session)
     task = await session.get(Task, task_id)
