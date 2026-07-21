@@ -24,6 +24,12 @@
  * chronicle: two chromes on one palette, deliberately unalike (#785's "the
  * praxis card mirrors the task card" clause is retired for WOW).
  *
+ * #900 adds the PAGE-LEVEL desktop surfaces: the recruiting `factionHero`, the
+ * `backdrop` wallpaper every WOW-context page sits on, the crested `profileBody`
+ * and the `factionSelectCard` pledge placard. `factionBody` and `factionCard`
+ * stay unclaimed on purpose — the kit drew the faction HERO, not the page
+ * beneath it, so those keep defaulting until they are designed.
+ *
  * Override-only, like every manifest: WOW still falls through to the `Default*`
  * archetype on every OTHER surface — it is themed-and-partly-skinned now, not
  * fully dressed. `wowRendersDefault.test.tsx` pins exactly which surfaces are
@@ -35,10 +41,14 @@
 import type { FactionManifest } from './manifest'
 
 import WowAvatar from '../components/avatar/WowAvatar'
+import WowBackdrop from '../components/backdrop/WowBackdrop'
+import { WOWSelectCard } from '../components/cards/FactionSelectCard'
 import WowComment from '../components/comments/voices/WowComment'
 import WowFeedFrame from '../components/feed/WowFeedFrame'
+import WowFactionHero from '../components/cards/WowFactionHero'
 import { WowSigil } from '../components/cards/WowSigil'
 import WowTaskCard from '../components/cards/WowTaskCard'
+import WowProfileBody from '../pages/characterProfile/archetypes/WowProfileBody'
 import WowVote from '../components/vote/WowVote'
 import WowMobilePraxisCard from '../components/praxisCard/mobile/WowMobilePraxisCard'
 import WowPraxisCard from '../components/praxisCard/desktop/WowPraxisCard'
@@ -60,4 +70,10 @@ export const WOW_MANIFEST: FactionManifest = {
   vote: () => WowVote,
   editPraxis: () => WowEditPraxis,
   mobileEditPraxis: () => WowMobileEditPraxis,
+
+  // #900 — the page-level desktop surfaces.
+  factionHero: () => WowFactionHero,
+  backdrop: () => WowBackdrop,
+  profileBody: () => WowProfileBody,
+  factionSelectCard: () => WOWSelectCard,
 }

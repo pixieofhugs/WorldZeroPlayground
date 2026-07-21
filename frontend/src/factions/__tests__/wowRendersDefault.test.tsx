@@ -7,8 +7,10 @@
  * bespoke surfaces: the praxis card, its mobile twin, and the vote widget; #840
  * adds the score stamp when it rebuilds the chronicle from source; #835 adds the
  * desktop edit-praxis composer, #836 its mobile twin, #897 the crest sigil plus
- * the avatar that mounts it, and #899 the three repeating desktop surfaces (the
- * decree task card, the comment voice, the feed frame). Every OTHER surface
+ * the avatar that mounts it, #899 the three repeating desktop surfaces (the
+ * decree task card, the comment voice, the feed frame), and #900 the four
+ * page-level desktop surfaces (hero, backdrop, profile body, select card).
+ * Every OTHER surface
  * still falls through to `Default*` — WOW is themed-and-partly-skinned, and
  * definitely not "broken faction".
  *
@@ -50,10 +52,15 @@ function Sentinel() {
  * plate claims in #840 (ADR-0049), #835's DESKTOP edit-praxis composer and, as
  * of #836, its `mobileEditPraxis` twin — the composer is the one surface WOW
  * dresses on BOTH form factors — #897's `sigil` (the crest) and the `avatar`
- * that mounts it, and #899's three repeating desktop surfaces: the decree
- * `taskCard`, the `comment` voice and the herald's-dispatch `feedFrame`. Every
- * other surface is still unclaimed, which is exactly the half-dressed state this
- * file guards.
+ * that mounts it, #899's three repeating desktop surfaces (the decree
+ * `taskCard`, the `comment` voice and the herald's-dispatch `feedFrame`), and
+ * #900's four page-level desktop surfaces (`factionHero`, `backdrop`,
+ * `profileBody`, `factionSelectCard`).
+ *
+ * `factionBody` and `factionCard` are still UNCLAIMED and that is deliberate,
+ * not an oversight: the kit drew WOW's faction HERO, not the page beneath it,
+ * and #900 scoped them out. If a later slice registers either one, this list is
+ * where that decision has to be written down.
  */
 const WOW_SKINNED: ReadonlySet<FactionSurface> = new Set([
   'sigil',
@@ -67,9 +74,13 @@ const WOW_SKINNED: ReadonlySet<FactionSurface> = new Set([
   'vote',
   'editPraxis',
   'mobileEditPraxis',
+  'factionHero',
+  'backdrop',
+  'profileBody',
+  'factionSelectCard',
 ])
 
-describe('wow is partly skinned: eleven surfaces claimed, the rest fall back', () => {
+describe('wow is partly skinned: fifteen surfaces claimed, the rest fall back', () => {
   it('registers a manifest now (#821)', () => {
     expect(FACTION_MANIFESTS.map((manifest) => manifest.slug)).toContain('wow')
   })

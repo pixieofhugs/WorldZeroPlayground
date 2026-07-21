@@ -2278,6 +2278,135 @@
   --gestalt-win-border: #f472b6;
 }
 
+/* ══════════════════════════════════════════════════════════════════════════
+   WOW — THE PAGE SURFACES (#900): faction hero, page backdrop, profile body,
+   faction select card. The kit's §08/§13/§14/§15.
+
+   Everything here is the chronicle palette carried out of the card and onto the
+   page. Three deliberate splits from the existing block:
+
+   1. PLUM AS A FILL vs PLUM AS INK. `--faction-wow-card-accent` is the plum a
+      chronicle is WRITTEN in, so it lifts to #c79be0 in dark to clear AA on the
+      dark ground. The plum below is a SURFACE — the gilt checker rail, the
+      CHOSEN banner, the chronicle rule down a profile row — and it carries cream
+      lettering, so lifting it would LOWER the contrast of the thing on top of
+      it. It is therefore theme-invariant, on the same reasoning as
+      `--faction-wow-chronicle-gold`: #f3e7c4 on #7a4a9e is 5.16:1 in both
+      themes, where the kit's dark #8a5aae would have been 4.10:1 and failed.
+   2. THE FIGURES ALIAS a value rather than restate it. The hero/select/profile
+      tallies are set in the same burnt gold as the score stamp's total, so
+      `--faction-wow-figure` dereferences `--faction-wow-stamp-total` instead of
+      re-declaring #8a5a16 — the "tokenized-looking, not tokenized" trap is a
+      duplicated VALUE, not a second name for one.
+   3. THE PAGE GROUND AND GLOW ARE DIALLED DOWN from the kit, and DARK is walked
+      further than light. The kit tunes both inside a 432x300 swatch where
+      nothing but its own caption sits on them; the page backdrop carries a whole
+      composition of INDEPENDENTLY-THEMED surfaces (ADR-0002), including other
+      factions' cards and `.sidebar-card`, whose dark fill is
+      rgba(255,255,255,0.04) -- 4% white, so the ground bleeds essentially
+      undimmed through anything mounted on it.
+
+      Measured, dark, at the glow hotspot under a frosted sidebar card:
+      --color-text-secondary reads 3.76:1 at the kit's own #241c0b ground and
+      .34 glow, against a 5.14:1 house baseline. The glow was not the whole
+      cause -- the GROUND was: the kit's #241c0b still only reaches 4.32:1 with
+      the glow taken all the way down to .06. So dark ground-from becomes
+      #1b1508, which is WOW's OWN already-audited chronicle ground
+      (--faction-wow-card-bg, dark), and the glow lands at .10 for 4.52:1
+      secondary / 4.98:1 tertiary -- clear of AA with the house baseline
+      substantially preserved.
+
+      LIGHT ships the kit's ground unchanged (it measures 5.75:1, against a
+      5.99:1 baseline); only its glow comes down, .24 -> .13, the same order as
+      UaBackdrop's stated 6-8% ceiling. A backdrop's job is to be felt, not
+      seen. */
+:root {
+  /* the ground — the cream sweep both the hero plate and the page sit on */
+  --faction-wow-ground-from: #fbf4e0;
+  --faction-wow-ground-to: #f1e3b8;
+  /* the plum court-glow, off the upper right (see note 3 above) */
+  --faction-wow-court-glow: rgba(122, 74, 158, 0.13);
+  /* the 135deg gilt hatch, 2px every 24 */
+  --faction-wow-hatch: rgba(200, 160, 42, 0.16);
+  /* plum AS A SURFACE — theme-invariant (note 1 above) */
+  --faction-wow-plum-surface: #7a4a9e;
+  --faction-wow-on-plum: #f3e7c4; /* 5.16:1 on the plum above */
+  /* the tallies (note 2 above) */
+  --faction-wow-figure: var(--faction-wow-stamp-total);
+  /* the near-white plate a stat / honour / chronicle row is struck on */
+  --faction-wow-plate: #fffcf2;
+  --faction-wow-plate-border: rgba(200, 160, 42, 0.34);
+  /* the tag chip on the pledge card */
+  --faction-wow-chip-bg: #f1e3b8;
+  --faction-wow-chip-border: #d9c589;
+  /* the hairline rule between hero tallies */
+  --faction-wow-rule: rgba(200, 160, 42, 0.4);
+  /* the gilt button. from/to/ink are the avatar pill's — the kit strikes the
+     same lozenge for its buttons and its honour medallions — plus the one mid
+     stop the three-stop button gradient adds. */
+  --faction-wow-gilt-mid: #e7b94e;
+  --faction-wow-gilt-border: var(--faction-wow-avatar-pill-border);
+}
+[data-theme="dark"] {
+  /* NOT the kit's #241c0b — see note 3 above. This is --faction-wow-card-bg's
+     dark value, restated rather than referenced so the light declaration above
+     (which is NOT card-bg; the kit's hero plate starts a shade above it) and
+     this one read as one pair. */
+  --faction-wow-ground-from: #1b1508;
+  --faction-wow-ground-to: #141005;
+  --faction-wow-court-glow: rgba(138, 90, 174, 0.1);
+  --faction-wow-hatch: rgba(227, 184, 74, 0.1);
+  --faction-wow-plate: #221a0c;
+  --faction-wow-plate-border: #4a3a0e;
+  --faction-wow-chip-bg: #2a2210;
+  --faction-wow-chip-border: #4a3a0e;
+  --faction-wow-rule: #4a3a0e;
+  --faction-wow-gilt-border: #e1c877;
+  /* plum-surface, on-plum, figure and gilt-mid do NOT flip — see notes 1 and 2 */
+}
+
+/* ══ WOW page backdrop (faction-context pages; theme-aware) ══
+   Gilt checker rail along the top edge, plum court-glow off the upper right, a
+   135deg gilt hatch, and — added by WowBackdrop.tsx — the watermark crest bled
+   off the lower right plus six drifting twinkles.
+
+   The rail is drawn at the very top of the FIXED layer, which puts it behind the
+   frosted nav rather than above it. That is the kit's placement kept honestly:
+   the nav is translucent, so the rail reads as a gilt shimmer crowning the page.
+
+   Nothing here is a text ground. Every alpha is tuned so an unrelated faction's
+   card can sit on it and stay legible (ADR-0002). */
+.wow-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+  background-color: var(--faction-wow-ground-from);
+  background-image:
+    radial-gradient(58% 46% at 80% 16%, var(--faction-wow-court-glow), transparent 62%),
+    repeating-linear-gradient(135deg, transparent 0 22px, var(--faction-wow-hatch) 22px 24px),
+    linear-gradient(165deg, var(--faction-wow-ground-from), var(--faction-wow-ground-to));
+}
+.wow-backdrop::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 10px;
+  background: repeating-linear-gradient(
+    90deg,
+    var(--faction-wow-chronicle-gold) 0 12px,
+    var(--faction-wow-plum-surface) 12px 24px
+  );
+}
+
+/* The backdrop's drifting ✦ twinkles. Pure ornament carrying no state, so they
+   are gated wholesale the way #897 gates the crest's four motions, and they
+   REUSE that slice's `wow-twinkle` keyframe rather than restating it — the kit's
+   own `wowKitTwinkle` and the crest's sparkle are the same 0.3→1 pulse. The
+   stagger arrives per-element as --wow-twinkle-delay, same custom property. */
 /* ─────────────────────────────────────────────────────────────────────────────
    WOW — THE DECREE (#899): the desktop task card, comment and feed frame.
 
@@ -2344,6 +2473,11 @@
   display: inline-block;
 }
 @media (prefers-reduced-motion: no-preference) {
+  .wow-backdrop-twinkle {
+    display: inline-block;
+    animation: wow-twinkle 2.4s ease-in-out infinite;
+    animation-delay: var(--wow-twinkle-delay, 0s);
+  }
   .wow-btn::after {
     content: "";
     position: absolute;
