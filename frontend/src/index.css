@@ -249,6 +249,11 @@
   --faction-snide-amp-panel-border: #2c2a20;
   --faction-snide-amp-seg-off: rgba(255, 255, 255, 0.07);
   --faction-snide-amp-screw: #3a3830;
+  /* The screw's countersunk rim and the faint acid sheen along the amp face's
+     inner edge (#842) — both were dropped when the widget was first built, and
+     without them the panel reads as a flat rectangle rather than a chassis. */
+  --faction-snide-amp-screw-rim: #000000;
+  --faction-snide-amp-panel-sheen: rgba(182, 255, 46, 0.06);
   --faction-snide-vote-off: #8a9a6a;
 
   /* S.N.I.D.E. EVIDENCE SLAB (#842) — the praxis card and its score box. The
