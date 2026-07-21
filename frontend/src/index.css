@@ -639,6 +639,54 @@
   --faction-wow-vote-on: var(--faction-wow-card-accent); /* plum — 5.79:1 */
   --faction-wow-vote-off: var(--faction-wow-card-muted); /* olive — 4.76:1 */
 
+  /* WOW — THE CREST (#897). The seal is STRUCK METAL, so this whole family is
+     THEME-INVARIANT and declared once: the kit draws the identical coin on its
+     light decree card and on its dark one, and a gold-and-cream medal reads on
+     either ground the way a real seal on a real page does. Compare the balloon
+     ramp above, invariant for the same reason. Only the AVATAR chrome that
+     frames it (below) flips.
+
+     Deliberately NOT reusing --faction-wow-card-bg for the cream field: that
+     token IS the page ground and inverts to #1b1508 in dark, which would punch
+     a hole through the middle of the coin. */
+  --faction-wow-crest-disc-lit: #f0d882; /* radial-gradient highlight at 42%/34% */
+  --faction-wow-crest-disc-deep: #9a7b15; /* the coin's shadowed lower-right */
+  --faction-wow-crest-rim: #6e5410; /* outer edge, sword hilt, inner hairline */
+  --faction-wow-crest-rope: #7a5e12; /* the beaded rope ring, dashed */
+  --faction-wow-crest-band: #b08d22; /* the motto band, laid at 0.55 alpha */
+  --faction-wow-crest-ink: #3a2c06; /* motto lettering + unicorn silhouette */
+  --faction-wow-crest-field: #fbf4e0; /* the inner cream field the beast sits on */
+  --faction-wow-crest-field-rim: #7a4a9e; /* the plum hairline round that field */
+  --faction-wow-crest-noodle: #ebd98a; /* the floppy sword's pale blade */
+  --faction-wow-crest-noodle-line: #b79427; /* its shading pass, 0.6 alpha */
+  --faction-wow-crest-mane: #8a5aae; /* plum mane curls + the plum sparkle */
+  --faction-wow-crest-cheek: #b76bc9; /* the rosy plum cheek, 0.5 alpha */
+  --faction-wow-crest-horn: #f1e4b4; /* the spiral horn */
+  --faction-wow-crest-pupil: #241a05; /* the googly eye's pupil */
+  --faction-wow-crest-shine: #ffffff; /* pupil catchlight + the horn glint */
+
+  /* WOW — THE AVATAR (#897): crest in a gilt rope ring, plum inner rim, rank
+     pill riding the hem. The ring is composed from tokens rather than the kit's
+     own stops — its 55% stop is the kit's #8a6d1f, the same value #896 walked
+     down for failing AA, and minting a near-duplicate of it here is exactly the
+     "tokenized-looking, not tokenized" trap. --faction-wow-crest-rope is that
+     olive-gold one step deeper and reads identically as metal shadow. */
+  --faction-wow-avatar-ring-lit: #e9cb7e;
+  --faction-wow-avatar-ring: conic-gradient(
+    from 210deg,
+    var(--faction-wow-avatar-ring-lit),
+    var(--faction-wow-chronicle-gold) 30%,
+    var(--faction-wow-crest-rope) 55%,
+    var(--faction-wow-avatar-ring-lit)
+  );
+  --faction-wow-avatar-field: #fbf4e0; /* the disc the crest sits on — flips */
+  /* The rank pill is a stamped gold lozenge and does NOT flip: the kit draws the
+     same one on both avatar plates. Ink is 6.43:1 on the gradient's dark stop. */
+  --faction-wow-avatar-pill-from: #f5d583;
+  --faction-wow-avatar-pill-to: #ce9a2a;
+  --faction-wow-avatar-pill-border: #a6791c;
+  --faction-wow-avatar-pill-text: #2a1d02;
+
   /* Ephemerists — constellation-attestation vote plate (#821). A night sky read
      in BOTH themes (the plate is a fixed dark surface like coven's moon plate),
      so these stay constant across the cascade; only the caption ink (--eph-*)
@@ -1130,6 +1178,9 @@
      put. It does not work for the STRING, whose tail hangs off the balloon onto
      the dark plate; that one hairline inverts to parchment. */
   --faction-wow-balloon-string: rgba(243, 231, 196, 0.45);
+  /* The crest family is theme-invariant (struck metal — see :root). Only the
+     disc the coin is MOUNTED on flips, to the kit's dark avatar field. */
+  --faction-wow-avatar-field: #241c0b;
 
   /* ── Watercolor splash opacities (dimmer in dark) ── */
   --wc-opacity-blob: 0.15;
@@ -2021,6 +2072,36 @@
     animation: wow-sweep 3.2s linear infinite;
   }
   .wow-balloon-confetti { animation: wow-confetti 1.3s ease-in infinite; animation-delay: var(--tw-delay, 0s); }
+}
+
+/* WOW — THE CREST (#897). Four motions, all pure ornament: the whole seal sways
+   on its ribbon, the noodle sword flops, the unicorn bobs, and the sparkles (plus
+   the horn glint) twinkle. None of them carries state, so stilling every one of
+   them costs no information — which is why they are gated wholesale below rather
+   than frozen mid-frame. The kit spells its own reduced-motion block out at the
+   end of the faction-kit <head>; this is the house inversion of it (opt IN on
+   no-preference), same as the balloon plate above.
+
+   `.wow-seal` keeps the kit's class name: it is the wrapper name every WOW
+   surface in the kit puts round the crest, so a downstream slice reading the kit
+   finds the name it expects. `WowSigil` carries it itself, so the sway comes for
+   free everywhere the crest lands. */
+@keyframes wow-seal-sway { 0%, 100% { transform: rotate(-2.5deg); } 50% { transform: rotate(2.5deg); } }
+@keyframes wow-sword-wobble { 0%, 100% { transform: rotate(-7deg); } 50% { transform: rotate(8deg); } }
+@keyframes wow-crest-bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-2.5px); } }
+@keyframes wow-twinkle {
+  0%, 100% { opacity: 0.25; transform: scale(0.6); }
+  50% { opacity: 1; transform: scale(1.15); }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .wow-seal { animation: wow-seal-sway 5s ease-in-out infinite; }
+  /* transform-box:fill-box makes the SVG group's own bounding box the origin
+     frame; without it the rotation pivots on the viewport and the sword swings
+     off the coin. The kit's own origin (16px 148px) is the hilt. */
+  .wow-crest-sword { transform-box: fill-box; transform-origin: 16px 148px; animation: wow-sword-wobble 1.9s ease-in-out infinite; }
+  .wow-crest-unicorn { transform-box: fill-box; transform-origin: center; animation: wow-crest-bob 3.4s ease-in-out infinite; }
+  .wow-crest-twinkle { transform-box: fill-box; transform-origin: center; animation: wow-twinkle 2.2s ease-in-out infinite; animation-delay: var(--wow-twinkle-delay, 0s); }
+  .wow-crest-glint { transform-box: fill-box; transform-origin: center; animation: wow-twinkle 1.6s ease-in-out infinite; }
 }
 
 /* Everymen — gearworks: reached gears turn (odd tiers clockwise, even counter),

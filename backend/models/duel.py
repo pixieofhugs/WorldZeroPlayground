@@ -73,6 +73,17 @@ class Duel(CreatedAtMixin, Base):
     resolved_at: Mapped[Optional[datetime]] = mapped_column(
         DateTime(timezone=True), nullable=True
     )
+    # The era that was *closing* when this duel resolved — i.e. the era the duel
+    # was fought in, not the one the reset opened (ADR-0052: "a duel that spans an
+    # era boundary resolves in the era that was closing"). NULL until resolution.
+    #
+    # `resolved_at` alone cannot answer "which era was this?" (#823): the reset
+    # inserts the new Era row *before* stamping `resolved_at`, so every frozen
+    # duel timestamps a hair *after* the incoming era's `started_at` and a naive
+    # boundary comparison attributes it to the era it did not belong to.
+    resolved_era_id: Mapped[Optional[int]] = mapped_column(
+        ForeignKey("era.id"), nullable=True
+    )
     # Snapshot of each side's points_from_votes at the moment of resolution, so a
     # resolved surface can show vote shares without the live tally moving under it.
     challenger_final_points: Mapped[Optional[int]] = mapped_column(nullable=True)
