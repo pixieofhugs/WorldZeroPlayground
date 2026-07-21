@@ -60,6 +60,31 @@ function SockPuppetArt({ size = 18 }: BadgeArtProps) {
   )
 }
 
+/** duelist — two crossed blades, guards and pommels, meeting dead centre. */
+function DuelistArt({ size = 18 }: BadgeArtProps) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={1.8}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      role="img"
+      aria-label="Duelist badge"
+    >
+      <path d="M4.5 19.5 18.5 5.5" />
+      <path d="M19.5 19.5 5.5 5.5" />
+      <path d="M6.2 15.2 8.8 17.8" />
+      <path d="M17.8 15.2 15.2 17.8" />
+      <circle cx="3.6" cy="20.4" r="1.1" fill="currentColor" stroke="none" />
+      <circle cx="20.4" cy="20.4" r="1.1" fill="currentColor" stroke="none" />
+    </svg>
+  )
+}
+
 /** Unknown key → a plain medallion ring, so a new backend badge never renders
  *  blank while its art is pending. */
 function UnknownBadgeArt({ size = 18 }: BadgeArtProps) {
@@ -83,6 +108,7 @@ function UnknownBadgeArt({ size = 18 }: BadgeArtProps) {
 const BADGE_ART: Record<string, ComponentType<BadgeArtProps>> = {
   sock_puppeteer: SockPuppeteerArt,
   sock_puppet: SockPuppetArt,
+  duelist: DuelistArt,
 }
 
 export function badgeArtFor(key: string): ComponentType<BadgeArtProps> {
