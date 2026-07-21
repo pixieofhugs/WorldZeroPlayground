@@ -8,6 +8,8 @@ import { extractError } from '../utils/errors'
 import { useFormFactor } from '../hooks/useFormFactor'
 import { useTasks, type TasksState } from './tasks/useTasks'
 import DefaultTasks from './tasks/mobileArchetypes/DefaultTasks'
+import MetataskRow from './tasks/MetataskRow'
+import type { TaskType } from '../api/tasks'
 
 export default function Tasks() {
   const state = useTasks()
@@ -33,6 +35,8 @@ function DesktopTasks({ state }: { state: TasksState }) {
     factions,
     statusFilters,
     levelFilters,
+    taskType,
+    setTaskType,
     status,
     setStatus,
     faction,
@@ -48,12 +52,15 @@ function DesktopTasks({ state }: { state: TasksState }) {
     displayPointsFor,
   } = state
 
+  const isMetatask = taskType === 'metatask'
+
   return (
     <div className="py-8">
       <PageTitle title="Tasks" eyebrow={`${tasks.length} shown`} />
 
       {/* Filters (Style Guide §5.3) */}
       <div className="flex flex-col gap-2.5 mb-6">
+        <TaskTypeToggle value={taskType} onChange={setTaskType} />
         <FilterStamps options={statusFilters} value={status} onChange={setStatus} />
         <FilterFactionTabs factions={factions} value={faction} onChange={setFaction} />
         <FilterLevelNodes levels={levelFilters} value={level} onChange={setLevel} />
@@ -93,17 +100,27 @@ function DesktopTasks({ state }: { state: TasksState }) {
         <p className="font-body text-muted">{t('listPage.empty')}</p>
       ) : (
         <>
-          {/* Flex-wrap container — NOT a grid. Varied card sizes and rotations are intentional (Style Guide §6). */}
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-lg)', alignItems: 'flex-start' }}>
-            {tasks.map((task) => (
-              <TaskCard
-                key={task.id}
-                task={task}
-                displayPoints={displayPointsFor(task)}
-                onSignup={user && task.can_submit_praxis ? handleSignup : undefined}
-              />
-            ))}
-          </div>
+          {isMetatask ? (
+            /* Metatasks are informational — a clean issuing-faction row list, no
+               sign-up CTA (they're applied to a praxis via the picker). */
+            <div className="flex flex-col gap-3" style={{ maxWidth: 640 }}>
+              {tasks.map((task) => (
+                <MetataskRow key={task.id} task={task} points={displayPointsFor(task)} />
+              ))}
+            </div>
+          ) : (
+            /* Flex-wrap container — NOT a grid. Varied card sizes and rotations are intentional (Style Guide §6). */
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-lg)', alignItems: 'flex-start' }}>
+              {tasks.map((task) => (
+                <TaskCard
+                  key={task.id}
+                  task={task}
+                  displayPoints={displayPointsFor(task)}
+                  onSignup={user && task.can_submit_praxis ? handleSignup : undefined}
+                />
+              ))}
+            </div>
+          )}
           {hasMore && (
             <div className="flex justify-center mt-6">
               <button
@@ -127,6 +144,54 @@ function DesktopTasks({ state }: { state: TasksState }) {
           )}
         </>
       )}
+    </div>
+  )
+}
+
+/**
+ * Task / Metatask browse toggle (#934) — rubber-stamp pair, sharing the status
+ * filter's stamp voice. Switching mode resets the growing window (setter side).
+ */
+function TaskTypeToggle({
+  value,
+  onChange,
+}: {
+  value: TaskType
+  onChange: (value: TaskType) => void
+}) {
+  const { t } = useTranslation('tasks')
+  const options: ReadonlyArray<{ key: TaskType; label: string }> = [
+    { key: 'standard', label: t('browse.tasks') },
+    { key: 'metatask', label: t('browse.metatasks') },
+  ]
+  return (
+    <div className="flex gap-1.5 items-center">
+      <span className="eyebrow">{t('browse.taskType')}</span>
+      {options.map((option) => {
+        const active = value === option.key
+        return (
+          <button
+            key={option.key}
+            type="button"
+            onClick={() => onChange(option.key)}
+            className="font-body uppercase"
+            style={{
+              border: `2px solid ${active ? 'var(--color-text-primary)' : 'var(--color-border-strong)'}`,
+              borderRadius: 0,
+              background: active ? 'var(--color-text-primary)' : 'var(--color-bg-surface)',
+              color: active ? 'var(--color-bg-page)' : 'var(--color-text-primary)',
+              fontSize: 'var(--text-base)',
+              fontWeight: 700,
+              letterSpacing: '0.1em',
+              padding: 'var(--space-xs) var(--space-sm)',
+              cursor: 'pointer',
+              transition: 'all 120ms',
+            }}
+          >
+            {option.label}
+          </button>
+        )
+      })}
     </div>
   )
 }

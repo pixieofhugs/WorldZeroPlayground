@@ -29,6 +29,8 @@ const CANNED: TasksState = {
   factionConfigs: [],
   levelFilters: [0, 1, 2, 3, 4, 5],
   statusFilters: ['All', 'active'],
+  taskType: 'standard',
+  setTaskType: () => {},
   status: 'All',
   setStatus: () => {},
   faction: '',

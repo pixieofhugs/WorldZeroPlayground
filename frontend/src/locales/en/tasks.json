@@ -8,6 +8,14 @@
       "searchLabel": "Search tasks"
     }
   },
+  "browse": {
+    "taskType": "Type",
+    "tasks": "Tasks",
+    "metatasks": "Metatasks"
+  },
+  "metatask": {
+    "eyebrow": "Metatask · {{faction}}"
+  },
   "mobile": {
     "count": "{{count}} shown",
     "allFactions": "All",
