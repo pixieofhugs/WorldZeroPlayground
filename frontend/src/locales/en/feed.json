@@ -287,6 +287,16 @@
         "tasks": "quests open",
         "praxes": "spells filed"
       }
+    },
+    "wow": {
+      "eyebrow": "World Zero · the Court of Whimsy",
+      "motto": "“Whimsy for everyone.”",
+      "descriptionFallback": "Gold-clad knights who take the silly seriously. We deliver soliloquies to houseplants, joust with pool noodles, and mean every word of it.",
+      "stats": {
+        "members": "Knights",
+        "tasks": "Quests Afoot",
+        "praxes": "Chronicles Sealed"
+      }
     }
   },
   "factionSelect": {
@@ -317,7 +327,22 @@
       "cta": "peek inside ✦"
     },
     "wow": {
-      "tagline": "Whimsy for everyone. — Imsy-whay or-fay every-oneway."
+      "tagline": "Whimsy for everyone. — Imsy-whay or-fay every-oneway.",
+      "name": "Warriors of Whimsy",
+      "chosen": "CHOSEN",
+      "tags": [
+        "Playful",
+        "Ceremonial",
+        "Absurdly Sincere"
+      ],
+      "status": {
+        "locked": "Prove thou canst keep a straight face.",
+        "eligible": "The Court has a spare breastplate in thy size.",
+        "member": "Sworn, sealed and gloriously daft."
+      },
+      "members_one": "{{count}} knight",
+      "members_other": "{{count}} knights",
+      "cta": "Approach the Court"
     },
     "snide": {
       "masthead": "Field Dispatch · Nº 0666",

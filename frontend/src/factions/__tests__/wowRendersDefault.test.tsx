@@ -7,7 +7,8 @@
  * bespoke surfaces: the praxis card, its mobile twin, and the vote widget; #840
  * adds the score stamp when it rebuilds the chronicle from source; #835 adds the
  * desktop edit-praxis composer, #836 its mobile twin, and #897 the crest sigil
- * plus the avatar that mounts it. Every OTHER surface
+ * plus the avatar that mounts it, and #900 the four page-level desktop
+ * surfaces (hero, backdrop, profile body, select card). Every OTHER surface
  * still falls through to `Default*` — WOW is themed-and-partly-skinned, and
  * definitely not "broken faction".
  *
@@ -48,9 +49,14 @@ function Sentinel() {
  * The surfaces WOW has skinned: #821's three, the `scoreStamp` its own chronicle
  * plate claims in #840 (ADR-0049), #835's DESKTOP edit-praxis composer and, as
  * of #836, its `mobileEditPraxis` twin — the composer is the one surface WOW
- * dresses on BOTH form factors — plus #897's `sigil` (the crest) and the
- * `avatar` that mounts it. Every other surface is still unclaimed, which is
- * exactly the half-dressed state this file guards.
+ * dresses on BOTH form factors — #897's `sigil` (the crest) and the `avatar`
+ * that mounts it, and #900's four page-level desktop surfaces (`factionHero`,
+ * `backdrop`, `profileBody`, `factionSelectCard`).
+ *
+ * `factionBody` and `factionCard` are still UNCLAIMED and that is deliberate,
+ * not an oversight: the kit drew WOW's faction HERO, not the page beneath it,
+ * and #900 scoped them out. If a later slice registers either one, this list is
+ * where that decision has to be written down.
  */
 const WOW_SKINNED: ReadonlySet<FactionSurface> = new Set([
   'sigil',
@@ -61,9 +67,13 @@ const WOW_SKINNED: ReadonlySet<FactionSurface> = new Set([
   'vote',
   'editPraxis',
   'mobileEditPraxis',
+  'factionHero',
+  'backdrop',
+  'profileBody',
+  'factionSelectCard',
 ])
 
-describe('wow is partly skinned: eight surfaces claimed, the rest fall back', () => {
+describe('wow is partly skinned: twelve surfaces claimed, the rest fall back', () => {
   it('registers a manifest now (#821)', () => {
     expect(FACTION_MANIFESTS.map((manifest) => manifest.slug)).toContain('wow')
   })
