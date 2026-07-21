@@ -433,7 +433,10 @@ async def test_batch_path_is_constant_query_count(
         event.remove(db_connection.sync_connection, "before_cursor_execute", record)
 
     assert large_query_count == small_query_count
-    assert small_query_count <= 3, statements
+    # Four: the account roll-up, the duel rows, the live tally, and the
+    # previous-era lookup #823 added. The guard that matters is the equality
+    # above — this bound only keeps the fixed cost visible.
+    assert small_query_count <= 4, statements
 
     assert small[one_challenger.id].is_duel_winner is True
     assert small[one_opponent.id].is_duel_winner is False
