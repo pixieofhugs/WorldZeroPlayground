@@ -41,9 +41,9 @@ describe("FactionAvatar — UA variant (#200)", () => {
     expect(html).toContain("var(--faction-ua-card-font)");
     expect(html).toContain("var(--faction-ua-lift)");
     expect(html).not.toMatch(/var\(--ua-[a-z]/); // the whole legacy family, deleted in #853
-    // The sigil badge is present — the ensō's heavy sweep (#849 retired the
-    // gilt shield, so the 100x120 viewBox marker is gone with it).
-    expect(html).toContain('d="M134 41.2 A68 68 0 1 1 66 158.8"');
+    // The sigil badge is present — the masked brush ensō (#849 retired the
+    // gilt shield; #908 made this the one ensō on every UA surface).
+    expect(html).toContain("/factionMarks/enso.svg");
   });
 
   it("renders the character portrait when avatar_url is present", () => {
@@ -54,7 +54,7 @@ describe("FactionAvatar — UA variant (#200)", () => {
     );
     expect(html).toContain("isolde.png");
     // Still badged with the mark.
-    expect(html).toContain('d="M134 41.2 A68 68 0 1 1 66 158.8"');
+    expect(html).toContain("/factionMarks/enso.svg");
   });
 
   it("falls back to the plain default avatar for an unknown slug", () => {
@@ -63,7 +63,7 @@ describe("FactionAvatar — UA variant (#200)", () => {
     );
     // No UA tokens and no ensō badge on the fallback circle.
     expect(html).not.toMatch(/var\(--ua-[a-z]/); // the whole legacy family, deleted in #853
-    expect(html).not.toContain('d="M134 41.2 A68 68 0 1 1 66 158.8"');
+    expect(html).not.toContain("/factionMarks/enso.svg");
     // Default renders the plain initial circle.
     expect(html).toContain("I");
   });

@@ -107,7 +107,11 @@
      text, so it owes 4.5:1 on card-bg — the design's plum pays it outright
      (5.79:1) where no readable yellow ever could. The gold #c8a02a is the
      chronicle's frame/rule colour, not an ink: it measures 2.24:1 on the cream
-     and never carries text. */
+     and never carries text.
+     THIS TOKEN IS THE KIT'S "whimsy" PLUM. The WoW faction kit's token table
+     names #7A4A9E `whimsy`; it is byte-identical to the value below, which
+     #838 had already landed. #896 asked for a `--faction-wow-whimsy` alias and
+     it was refused: one colour, one name. Read the kit's `whimsy` as this. */
   --faction-wow-card-accent: #7a4a9e; /* chronicle plum — 5.79:1 */
   --faction-coven-card-accent: #ec5f99;
   --faction-snide-card-accent: #b6ff2e; /* toxic acid */
@@ -536,6 +540,14 @@
   /* WOW — cream/gold/plum chronicle frame (the chronicle is WOW's, ADR-0050) */
   --faction-wow-chronicle-bg: var(--faction-wow-card-bg); /* cream parchment */
   --faction-wow-chronicle-gold: #c8a02a; /* frame + rules; theme-invariant */
+  /* The kit's olive-gold eyebrow/label ink — the small caps that head a section
+     ("TASK CARD", "BY ORDER OF"). The kit states #8a6d1f, which measures
+     4.46:1 on --faction-wow-card-bg and so misses AA: that value was picked
+     against the kit's own near-white documentation plate (rgba(251,244,224,.55)
+     over white), not against WOW's cream card. Walked down to the nearest
+     compliant shade of the same 43.5deg hue — 5.32:1 on the cream card and
+     4.74:1 on the parchment panel, so it is legible on both chronicle grounds. */
+  --faction-wow-accent-deep: #7d6118;
   /* The FRAME, split out of the accent (#860 ask 2). ChronicleTheme carried one
      `accent` doing duty as border AND rule AND ink tint, so the card bound
      itself in plum and the design's gold frame never shipped. */
@@ -895,6 +907,7 @@
      the legible choice, so here the accent CAN be the faction colour — for the
      factions whose skin IS their spine hue. WOW's is not (#838): the plum lifts
      instead, which is the flip the chronicle's gold deliberately does not make. */
+  /* The kit's `whimsy · dk`, under the name it already had (see :root). */
   --faction-wow-card-accent: #c79be0; /* chronicle plum, lifted — 7.94:1 */
   --faction-coven-card-accent: #f472b6;
   --faction-snide-card-accent: #b6ff2e;
@@ -1061,6 +1074,11 @@
   --faction-wow-chronicle-bg: var(--faction-wow-card-bg);
   --faction-wow-chronicle-panel: #2a2210; /* the inset parchment plate, darkened */
   --faction-wow-chronicle-shadow: rgba(0, 0, 0, 0.8);
+  /* The eyebrow ink lifts (the kit states light only). Same 43deg olive-gold,
+     raised until it clears both dark chronicle grounds — 8.83:1 on the deep
+     ground, 7.66:1 on the darkened panel. Deliberately short of the "gold
+     bright" below, which the stamp total reserves for its own line. */
+  --faction-wow-accent-deep: #cfb268;
   --faction-wow-stamp-total: #e3b84a; /* the design's dark "gold bright" */
   --faction-wow-stamp-shadow: rgba(0, 0, 0, 0.4);
   /* The plum chip lifts to the design's dark secondary plum, one step below the

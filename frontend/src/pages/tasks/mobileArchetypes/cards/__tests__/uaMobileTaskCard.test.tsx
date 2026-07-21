@@ -40,8 +40,8 @@ const text = html.replace(/<[^>]*>/g, '')
 
 describe('UA mobile task card', () => {
   it('writes the point value inside the ensō', () => {
-    // The heavy sweep of the two-arc sigil (#849) — not the 705 KB textured one.
-    expect(html).toContain('M134 41.2 A68 68 0 1 1 66 158.8')
+    // The one ensō (#908): the vendored brush drawing, painted through a mask.
+    expect(html).toContain('/factionMarks/enso.svg')
     expect(html).toContain('var(--faction-ua-glow)')
     expect(text).toContain('30')
   })

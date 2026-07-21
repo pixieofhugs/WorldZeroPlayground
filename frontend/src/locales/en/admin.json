@@ -63,6 +63,7 @@
     "levelLabel": "Level req.",
     "meta": "{{points}} pts · lvl {{level}} · {{faction}}",
     "crossFaction": "cross-faction",
+    "proposedBy": "Proposed by {{name}}",
     "status": {
       "active": "active",
       "pending": "pending",
