@@ -532,6 +532,48 @@
       "publishBusy": "casting...",
       "dropLabel": "let it go"
     },
+    "wow": {
+      "pageTitle": "The Squire's Writ",
+      "pageSubtitle": "Commission of Proof — inscribe thy chronicle and submit it to the Court",
+      "draftChip": "❦ Draft",
+      "taskRefLabel": "The Quest · read only",
+      "modeLabel": "Manner of Quest",
+      "chosenMark": "✦",
+      "mode": {
+        "solo": {
+          "label": "Solo Quest",
+          "desc": "Thou alone shalt bear the proof."
+        },
+        "collab": {
+          "label": "Collaboration",
+          "desc": "Summon fellow knights to share the glory."
+        },
+        "duel": {
+          "label": "Duel",
+          "desc": "Two knights, one field of honour."
+        }
+      },
+      "inviteLabel": "Summon Fellow Knights",
+      "inviteLabelDuel": "Name thy Challenger",
+      "invitePlaceholder": "Search the roster by name…",
+      "inviteHelper": "accepted knights ride with thee",
+      "titleLabel": "Title of thy Chronicle",
+      "titlePlaceholder": "Name thy deed with flourish…",
+      "autosaveSaved": "✓ saved {{ago}}",
+      "autosaveUnsaved": "⚠ not saved yet",
+      "bodyLabel": "The Chronicle",
+      "bodyWords": "{{words}} words",
+      "bodyPlaceholder": "Recount thy quest in full…",
+      "previewLabel": "Illuminated Preview",
+      "filesLabel": "Illuminations & Relics",
+      "fileButton": "＋ Attach",
+      "fileHelper": "images · video · audio · 50mb apiece",
+      "metatasksLabel": "Deeds of Merit · claim thy bonuses",
+      "footerNote": "…thy chronicle, once sealed, rides to the Court for judgment…",
+      "publishIdle": "Seal & Publish",
+      "publishBusy": "Sealing the Writ…",
+      "dropLabel": "Discard the Writ"
+    },
     "albescent": {
       "collab": {
         "castStatus": "{{cast}} of {{total}} hands have entered",

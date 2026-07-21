@@ -46,12 +46,14 @@ export { SURFACE_KEYS } from './manifest'
  * to the neutral `Default*` skins everywhere (ADR-0039).
  *
  * `wow` (Warriors of Whimsy) began with no manifest (#784 moved its old pink
- * identity to Cozy Coven) and then only a yellow THEME (#812). #821 gives it its
- * FIRST bespoke surfaces: the praxis card (a yellow chronicle), its mobile twin,
- * and the balloon vote widget. It is still override-only — every OTHER surface
- * hands `wow` its `Default*` archetype, so WOW is themed-and-partly-skinned, not
- * fully dressed. `wowRendersDefault.test.tsx` pins which three surfaces are
- * claimed and that the rest fall back.
+ * identity to Cozy Coven) and then only a yellow THEME (#812). #821 gave it its
+ * FIRST bespoke surfaces: the praxis card (the cream/gold/plum chronicle), its
+ * mobile twin and the balloon vote widget; #840 added the score stamp and #835
+ * the desktop edit-praxis composer ("The Squire's Writ"). It is still
+ * override-only — every OTHER surface hands `wow` its `Default*` archetype, so
+ * WOW is themed-and-partly-skinned, not fully dressed.
+ * `wowRendersDefault.test.tsx` pins which five surfaces are claimed and that the
+ * rest fall back.
  */
 export const FACTION_MANIFESTS: readonly FactionManifest[] = [
   EVERYMEN_MANIFEST,
