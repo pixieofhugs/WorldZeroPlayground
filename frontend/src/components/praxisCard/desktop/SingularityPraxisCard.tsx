@@ -3,73 +3,84 @@ import { useTranslation } from "react-i18next";
 import { AdminOverlay } from "../shared";
 import { PraxisBody, frameBase, type ArchetypeProps } from "./shared";
 
-/** Punch-card sprocket strip — the row and one hole. Static (#586). */
-const holeRowStyle: CSSProperties = {
-  display: "flex",
-  justifyContent: "center",
-  gap: "var(--space-sm)",
-  padding: "var(--space-xs) 0",
-};
+/**
+ * Singularity — THE SYSTEM SLAB (#842). A booted terminal: near-black glass on
+ * a standing raster, a green hairline frame, four cyan corner brackets, a
+ * window-chrome header of three LEDs and a right-aligned log line, and a cyan
+ * SCANLINE that sweeps the slab every five seconds.
+ *
+ * Two inventions came off, both of which said "punch card" where the design
+ * says "screen":
+ *
+ *  • the SPROCKET-HOLE strips top and bottom — five perforations each, with no
+ *    counterpart in the prototype;
+ *  • the blinking BLOCK CURSOR in the header. The design has exactly one
+ *    cursor and it trails the computed total in the score stamp, where it is
+ *    the machine holding the line open on a number. A second one in the running
+ *    head made the card read as an input field.
+ *
+ * The corner brackets were also wrong in kind, not merely in size: 10px, at a
+ * 3px inset, drawn in the card's own text colour, so they read as a border's
+ * mitred corner. The design's are 12px CYAN at 6px — a viewfinder laid over the
+ * screen, in the brand blue rather than the phosphor green.
+ *
+ * Body ink is pale mint (`--faction-singularity-terminal-ink`), not the bright
+ * phosphor accent: the accent is a chrome colour and burns as running text.
+ *
+ * Both motions are class-gated on reduced-motion in `index.css` — the sweep
+ * parks off-slab, the cursor stops blinking but stays drawn.
+ */
 
-const holeStyle: CSSProperties = {
-  width: 6,
-  height: 4,
-  background: "rgba(10,26,14)",
-  border:
-    "1px solid var(--faction-singularity-card-accent, var(--faction-singularity-border-hard))",
-  borderRadius: 1,
-};
-
-function SingularityHoles() {
-  return (
-    <div style={holeRowStyle}>
-      {Array.from({ length: 5 }).map((_, index) => (
-        <div key={index} style={holeStyle} />
-      ))}
-    </div>
-  );
-}
-
-/** Terminal scanline wash + the four corner brackets. Static (#586). */
-const scanlineStyle: CSSProperties = {
+/** The viewfinder brackets — ornament geometry, raw px by §4a. */
+const bracketRule = "2px solid var(--faction-singularity-bracket)";
+const bracketBase: CSSProperties = {
   position: "absolute",
-  inset: 0,
-  backgroundImage:
-    "repeating-linear-gradient(to bottom, transparent, transparent 2px, rgba(74,222,128,0.015) 2px, rgba(74,222,128,0.015) 4px)",
+  width: 12,
+  height: 12,
+  pointerEvents: "none",
+  zIndex: 2,
+};
+const bracketTopLeft: CSSProperties = {
+  ...bracketBase,
+  top: 6,
+  left: 6,
+  borderTop: bracketRule,
+  borderLeft: bracketRule,
+};
+const bracketTopRight: CSSProperties = {
+  ...bracketBase,
+  top: 6,
+  right: 6,
+  borderTop: bracketRule,
+  borderRight: bracketRule,
+};
+const bracketBottomLeft: CSSProperties = {
+  ...bracketBase,
+  bottom: 6,
+  left: 6,
+  borderBottom: bracketRule,
+  borderLeft: bracketRule,
+};
+const bracketBottomRight: CSSProperties = {
+  ...bracketBase,
+  bottom: 6,
+  right: 6,
+  borderBottom: bracketRule,
+  borderRight: bracketRule,
+};
+
+/** The sweeping scanline. Its `top` and the animation live on `.sg-scan`. */
+const scanSweepStyle: CSSProperties = {
+  position: "absolute",
+  left: "-30%",
+  right: "-30%",
+  height: 34,
+  background: "linear-gradient(transparent, var(--faction-singularity-scan), transparent)",
   pointerEvents: "none",
   zIndex: 1,
 };
 
-const cornerRule = "1px solid var(--faction-singularity-card-text)";
-const cornerBase: CSSProperties = { position: "absolute", width: 10, height: 10 };
-const cornerTopLeft: CSSProperties = {
-  ...cornerBase,
-  top: 3,
-  left: 3,
-  borderTop: cornerRule,
-  borderLeft: cornerRule,
-};
-const cornerTopRight: CSSProperties = {
-  ...cornerBase,
-  top: 3,
-  right: 3,
-  borderTop: cornerRule,
-  borderRight: cornerRule,
-};
-const cornerBottomLeft: CSSProperties = {
-  ...cornerBase,
-  bottom: 3,
-  left: 3,
-  borderBottom: cornerRule,
-  borderLeft: cornerRule,
-};
-const cornerBottomRight: CSSProperties = {
-  ...cornerBase,
-  bottom: 3,
-  right: 3,
-  borderBottom: cornerRule,
-  borderRight: cornerRule,
-};
+const ledStyle: CSSProperties = { width: 7, height: 7, borderRadius: "50%", flexShrink: 0 };
 
 export function SingularityPraxisCard({ praxis, adminProps, showCrown }: ArchetypeProps) {
   const { t } = useTranslation("praxis");
@@ -78,60 +89,68 @@ export function SingularityPraxisCard({ praxis, adminProps, showCrown }: Archety
       style={{
         ...frameBase,
         borderRadius: 8, // terminal slab
-        background: "var(--faction-singularity-card-bg)",
-        border: "2px solid var(--faction-singularity-border-hard)",
         position: "relative",
-        fontFamily: "'Share Tech Mono', monospace",
-        color: "var(--faction-singularity-card-text)",
         overflow: "hidden",
+        background: "var(--faction-singularity-card-bg)",
+        border: "1px solid var(--faction-singularity-frame)",
+        boxShadow: "0 4px 18px rgba(0, 0, 0, 0.4)",
+        // The standing raster — ornament geometry, raw by §4a.
+        backgroundImage:
+          "repeating-linear-gradient(to bottom, transparent 0 2px, var(--faction-singularity-scanline) 2px 3px)",
+        padding: "var(--space-lg)",
+        fontFamily: "var(--font-faction-terminal)",
+        color: "var(--faction-singularity-terminal-ink)",
       }}
     >
-      <div style={scanlineStyle} />
-      <div style={cornerTopLeft} />
-      <div style={cornerTopRight} />
-      <div style={cornerBottomLeft} />
-      <div style={cornerBottomRight} />
-      <SingularityHoles />
-      <div
-        style={{
-          padding: "var(--space-sm) var(--space-xl) var(--space-md)",
-          position: "relative",
-          zIndex: 2,
-        }}
-      >
+      <span aria-hidden className="sg-scan" style={scanSweepStyle} />
+      <span aria-hidden style={bracketTopLeft} />
+      <span aria-hidden style={bracketTopRight} />
+      <span aria-hidden style={bracketBottomLeft} />
+      <span aria-hidden style={bracketBottomRight} />
+
+      <div style={{ position: "relative", zIndex: 2 }}>
+        {/* Window chrome: three LEDs, then the log line pushed to the rail. */}
         <div
           style={{
-            fontSize: "var(--text-xs)",
-            color: "var(--faction-singularity-card-muted)",
-            textTransform: "uppercase",
-            letterSpacing: "0.15em",
-            marginBottom: "var(--space-sm)",
+            display: "flex",
+            alignItems: "center",
+            // eslint-disable-next-line local/no-raw-style-values -- ornament: the 6px pitch of the window-chrome LEDs, drawn geometry (§4a)
+            gap: 6,
+            paddingBottom: "var(--space-sm)",
+            marginBottom: "var(--space-md)",
+            borderBottom: "1px solid var(--faction-singularity-rule)",
           }}
         >
-          {t("card.masthead.singularity")}
+          <span aria-hidden style={{ ...ledStyle, background: "var(--faction-singularity-led-red)" }} />
+          <span aria-hidden style={{ ...ledStyle, background: "var(--faction-singularity-led-amber)" }} />
+          <span aria-hidden style={{ ...ledStyle, background: "var(--faction-singularity-led-green)" }} />
           <span
+            className="eyebrow"
             style={{
-              display: "inline-block",
-              width: 5,
-              height: 9,
-              background: "var(--faction-singularity-card-text)",
-              marginLeft: "var(--space-xs)",
-              verticalAlign: "middle",
-              animation: "blink 1s step-end infinite",
+              marginLeft: "auto",
+              letterSpacing: "0.14em",
+              color: "var(--faction-singularity-vote-off)",
             }}
-          />
+          >
+            {t("card.masthead.singularity")}
+          </span>
         </div>
+
         <AdminOverlay {...adminProps} />
         <PraxisBody
           praxis={praxis}
-          tint="var(--faction-singularity-card-text)"
-          muted="var(--faction-singularity-card-muted)"
+          tint="var(--faction-singularity-card-accent)"
+          muted="var(--faction-singularity-phosphor-dim)"
           paper="var(--faction-singularity-card-bg)"
           showCrown={showCrown}
+          titleStyle={{
+            fontFamily: "var(--font-faction-terminal)",
+            textTransform: "uppercase",
+            lineHeight: 1.1,
+            color: "var(--faction-singularity-terminal-ink)",
+          }}
         />
       </div>
-      <SingularityHoles />
-      <style>{`@keyframes blink { 50% { opacity: 0; } }`}</style>
     </div>
   );
 }

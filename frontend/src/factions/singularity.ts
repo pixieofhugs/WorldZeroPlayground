@@ -34,6 +34,7 @@ import SingularityTaskCard from '../components/cards/SingularityTaskCard'
 import SingularityTaskDetail from '../pages/taskDetail/archetypes/SingularityTaskDetail'
 import SingularityVote from '../components/vote/SingularityVote'
 import SingularityPraxisCard from '../components/praxisCard/desktop/SingularityPraxisCard'
+import SingularityScoreStamp from '../components/praxisCard/scoreStamp/SingularityScoreStamp'
 import { SingularitySigilAdapter } from '../components/cards/FactionSigil'
 import { SingularityCard } from '../components/cards/FactionCard'
 import { SingularitySelectCard } from '../components/cards/FactionSelectCard'
@@ -45,6 +46,7 @@ export const SINGULARITY_MANIFEST: FactionManifest = {
   factionSelectCard: () => SingularitySelectCard,
   taskCard: () => SingularityTaskCard,
   praxisCard: () => SingularityPraxisCard,
+  scoreStamp: () => SingularityScoreStamp,
   avatar: () => SingularityAvatar,
   backdrop: () => SingularityBackdrop,
   sigil: () => SingularitySigilAdapter,

@@ -31,11 +31,14 @@ export default function DefaultScoreStamp({ praxis, showCrown }: ScoreStampProps
         flexShrink: 0,
         minWidth: 116,
         boxSizing: "border-box",
-        border: "1px solid var(--faction-default-border)",
-        borderRadius: 6,
-        background: "var(--faction-default-card-bg)",
+        border: "1px solid var(--faction-default-card-line)",
+        borderRadius: 8,
+        background: "var(--faction-default-stamp-bg)",
         color: "var(--faction-default-card-text)",
-        padding: "var(--space-sm) var(--space-md)",
+        boxShadow: "0 2px 6px rgba(34, 26, 18, 0.1)",
+        // A sheet of scrap tucked into the record, not a printed field.
+        transform: "rotate(-1deg)",
+        padding: "var(--space-sm) var(--space-md) var(--space-md)",
         lineHeight: 1.1,
       }}
     >
@@ -43,7 +46,7 @@ export default function DefaultScoreStamp({ praxis, showCrown }: ScoreStampProps
         <TaskCrown
           size={26}
           ringInset={3}
-          innerBg="var(--faction-default-card-bg)"
+          innerBg="var(--faction-default-stamp-bg)"
           glyphColor="var(--faction-default-card-accent)"
           rotate="8deg"
           style={{ position: "absolute", top: -13, right: -12, zIndex: 3 }}
@@ -65,7 +68,7 @@ export default function DefaultScoreStamp({ praxis, showCrown }: ScoreStampProps
             fontSize: "var(--text-sm)",
             letterSpacing: "0.1em",
             textTransform: "uppercase",
-            color: "var(--faction-default-card-muted)",
+            color: "var(--faction-default-vote-off)",
           }}
         >
           {t("card.stamp.base")}
@@ -86,8 +89,10 @@ export default function DefaultScoreStamp({ praxis, showCrown }: ScoreStampProps
               fontFamily: "var(--faction-default-card-font)",
               fontSize: "var(--text-lg)",
               letterSpacing: "0.04em",
-              color: "var(--faction-default-card-bg)",
-              background: "var(--faction-default-card-accent)",
+              // Rainbow appearance 2 of 4 is the RULE below; the chip carries
+              // the design's own short green-to-blue ramp, not the spectrum.
+              color: "var(--faction-default-chip-text)",
+              background: "var(--faction-default-chip)",
               borderRadius: 3,
               padding: "0 var(--space-xs)",
             }}
@@ -139,7 +144,10 @@ export default function DefaultScoreStamp({ praxis, showCrown }: ScoreStampProps
             fontFamily: "var(--faction-default-card-font)",
             fontSize: "var(--text-heading)",
             lineHeight: 1.15,
-            background: "var(--faction-default-rainbow)",
+            // Rainbow appearance 3 of 4: the total, clipped to the design's
+            // warmer four-stop ramp rather than the full seven-stop spectrum,
+            // which smears to mud at four glyphs wide.
+            background: "var(--faction-default-total-rainbow)",
             WebkitBackgroundClip: "text",
             backgroundClip: "text",
             color: "transparent",
@@ -153,7 +161,7 @@ export default function DefaultScoreStamp({ praxis, showCrown }: ScoreStampProps
             fontSize: "var(--text-base)",
             letterSpacing: "0.06em",
             textTransform: "uppercase",
-            color: "var(--faction-default-card-muted)",
+            color: "var(--faction-default-gold)",
           }}
         >
           {t("card.stamp.points")}

@@ -1,4 +1,5 @@
 import DefaultPraxisCard from "./DefaultPraxisCard";
+import { AlbescentSparks } from "../shared";
 import { frameBase, type ArchetypeProps } from "./shared";
 
 /**
@@ -9,12 +10,16 @@ import { frameBase, type ArchetypeProps } from "./shared";
  * Albescent's own colours would put it back in the spectrum and un-hide it, so
  * this stays "NA + drift". The overlay is pointer-events:none and blends over the
  * card; reduced-motion stills the drift (the wash remains).
+ *
+ * #842 added the other half of the tell: the design pairs the drift with three
+ * faint gold sparks ({@link AlbescentSparks}), and only the drift had shipped.
  */
 export function AlbescentPraxisCard(props: ArchetypeProps) {
   return (
     <div style={{ ...frameBase, borderRadius: 10, /* inherits the Default sheet */ position: "relative", overflow: "hidden" }}>
       <DefaultPraxisCard {...props} />
       <span aria-hidden className="alb-rainbow" />
+      <AlbescentSparks />
     </div>
   );
 }

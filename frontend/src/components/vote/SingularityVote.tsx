@@ -87,7 +87,8 @@ export default function SingularityVote({ praxisId, currentValue, points, totalV
     <div style={{ fontFamily: 'var(--font-faction-terminal)' }}>
       <div
         onMouseLeave={() => setHovered(0)}
-        style={{ display: 'flex', gap: 'var(--space-xs)', alignItems: 'flex-end' }}
+        // eslint-disable-next-line local/no-raw-style-values -- ornament: the decode strip's 6px column pitch, drawn geometry of the read-out (§4a)
+        style={{ display: 'flex', gap: 6, alignItems: 'flex-end' }}
       >
         {TIERS.map((tier) => {
           const reached = active >= tier.value
@@ -150,7 +151,8 @@ export default function SingularityVote({ praxisId, currentValue, points, totalV
         <span
           style={{
             fontFamily: 'var(--font-faction-terminal)',
-            fontSize: 'var(--text-content)',
+            // eslint-disable-next-line local/no-raw-style-values -- ornament: terminal read-out caption, the design's 13; monospace print, not prose (§4a)
+            fontSize: 13,
             letterSpacing: '0.08em',
             color: active
               ? 'var(--faction-singularity-vote-reached)'

@@ -1,25 +1,28 @@
-import type { CSSProperties } from "react";
 import { useTranslation } from "react-i18next";
-import { factionCssVar } from "../../../utils/factions";
-import SnideMasthead from "../../cards/SnideMasthead";
 import { AdminOverlay } from "../shared";
 import { PraxisBody, frameBase, type ArchetypeProps } from "./shared";
 
-const SNIDE_TORN_CLIP =
-  "polygon(0% 0%, 4% 100%, 8% 20%, 12% 90%, 16% 10%, 20% 80%, 24% 0%, 28% 100%, 32% 15%, 36% 85%, 40% 5%, 44% 95%, 48% 20%, 52% 80%, 56% 0%, 60% 100%, 64% 15%, 68% 90%, 72% 5%, 76% 85%, 80% 0%, 84% 100%, 88% 20%, 92% 80%, 96% 10%, 100% 0%)";
-
-/** The torn top/bottom edges of the Snide scrap. Static (#586). */
-const snideTornBase: CSSProperties = {
-  position: "absolute",
-  left: 0,
-  right: 0,
-  height: 6,
-  background: "var(--color-bg-page)",
-  clipPath: SNIDE_TORN_CLIP,
-};
-const snideTornTop: CSSProperties = { ...snideTornBase, top: -1 };
-const snideTornBottom: CSSProperties = { ...snideTornBase, bottom: -1 };
-
+/**
+ * S.N.I.D.E. — THE EVIDENCE SLAB (#842). A photocopier-black plate ruled in
+ * deep acid, printed onto the page with a hard 6px/8px drop shadow (no blur: it
+ * is stuck down, not floating) over a 3px dot tooth, with the case title struck
+ * in Anton and skewed -3deg.
+ *
+ * Three pieces of chrome came off, all inventions with no counterpart in the
+ * vendored prototype and all pulling the slab toward a different archetype:
+ *
+ *  • the TORN-PAPER top/bottom edges (a 25-point clip-path). The design's slab
+ *    is guillotined — square corners, unbroken acid rule. The tearing read as
+ *    the Updates feed's aged-paper foe note;
+ *  • the TAPE strip;
+ *  • the `Special Elite` MASTHEAD block. The design's running head is a single
+ *    Courier eyebrow line in acid, inside the text column, where it stops at
+ *    the score tag instead of running under it — so it is passed to
+ *    {@link PraxisBody} as `eyebrow`, the seam #841 opened for the codex.
+ *
+ * The dashed acid rule above the vote widget is the design's, and is the one
+ * divider the slab carries.
+ */
 export function SnidePraxisCard({ praxis, adminProps, showCrown }: ArchetypeProps) {
   const { t } = useTranslation("praxis");
   return (
@@ -27,25 +30,58 @@ export function SnidePraxisCard({ praxis, adminProps, showCrown }: ArchetypeProp
       style={{
         ...frameBase,
         // No borderRadius: the evidence slab has hard corners in the prototype.
-        background: factionCssVar("snide", "card-bg"),
         position: "relative",
-        padding: "var(--space-xl)",
-        fontFamily: "'Special Elite', serif",
-        color: factionCssVar("snide", "card-text"),
+        background: "var(--faction-snide-card-bg)",
+        border: "1.5px solid var(--faction-snide-acid-deep)",
+        boxShadow: "6px 8px 0 var(--faction-snide-slab-shadow)",
+        // The plate's xerox tooth — ornament geometry, raw by §4a.
+        backgroundImage: "radial-gradient(var(--faction-snide-slab-tooth) 1px, transparent 1px)",
+        backgroundSize: "3px 3px",
+        padding: "var(--space-xl) var(--space-xl) var(--space-lg)",
+        fontFamily: "var(--faction-snide-font-type)",
+        color: "var(--faction-snide-card-text)",
         transition: "background 150ms, color 150ms",
       }}
     >
-      <div style={snideTornTop} />
-      <div style={snideTornBottom} />
-      <div className="snide-tape" style={{ top: -10, left: 22, transform: "rotate(-8deg)" }} />
-      <SnideMasthead subtitle={t("card.masthead.snide")} />
       <AdminOverlay {...adminProps} />
       <PraxisBody
         praxis={praxis}
-        tint={factionCssVar("snide", "card-accent")}
-        muted={factionCssVar("snide", "card-muted")}
-        paper={factionCssVar("snide", "card-bg")}
+        tint="var(--faction-snide-card-accent)"
+        muted="var(--faction-snide-card-muted)"
+        paper="var(--faction-snide-card-bg)"
         showCrown={showCrown}
+        titleStyle={{
+          fontFamily: "var(--faction-snide-font-impact)",
+          textTransform: "uppercase",
+          letterSpacing: "0.04em",
+          lineHeight: 1,
+          transform: "skewX(-3deg)",
+          color: "var(--faction-snide-card-text)",
+        }}
+        eyebrow={
+          <div
+            className="eyebrow"
+            style={{
+              letterSpacing: "0.16em",
+              color: "var(--faction-snide-acid)",
+              marginBottom: "var(--space-xs)",
+            }}
+          >
+            {t("card.masthead.snide")}
+          </div>
+        }
+        voteRule={
+          <div
+            aria-hidden
+            style={{
+              height: 2,
+              opacity: 0.7,
+              background:
+                "repeating-linear-gradient(90deg, var(--faction-snide-acid-deep) 0 6px, transparent 6px 11px)",
+              margin: "var(--space-lg) 0 var(--space-md)",
+            }}
+          />
+        }
       />
     </div>
   );
