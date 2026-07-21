@@ -13,26 +13,27 @@ import UaMandala from "../UaMandala";
 describe("FactionSigil dispatcher (#659)", () => {
   it("renders the UA ensō for the ua slug", () => {
     const html = renderToStaticMarkup(<FactionSigil slug="ua" />);
-    // The ensō is two arcs on a square viewBox, not the old 100x120 shield.
-    expect(html).toContain('viewBox="0 0 200 200"');
-    expect(html).toContain('d="M134 41.2 A68 68 0 1 1 66 158.8"');
-    expect(html).toContain('d="M66 158.8 A68 68 0 0 1 66 41.2"');
+    // One ensō (#908): the vendored brush drawing, painted through a CSS mask.
+    // The two-arc approximation on a 200x200 viewBox is gone, and so is the
+    // 100x120 gilt shield it replaced.
+    expect(html).toContain("/factionMarks/enso.svg");
+    expect(html).not.toContain('viewBox="0 0 200 200"');
   });
 
-  it("tapers the ensō by stroke-width and leaves the circle open", () => {
+  it("delivers the mark as a mask, so the asset stays out of the JS bundle", () => {
     const html = renderToStaticMarkup(<FactionSigil slug="ua" />);
-    // The heavy sweep and the light return — the taper is two widths, not a
-    // variable-width outline. Two arcs only means the gap survives.
-    expect(html).toContain('stroke-width="22"');
-    expect(html).toContain('stroke-width="10"');
-    expect(html.match(/<path/g) ?? []).toHaveLength(2);
-    // Hand-drawn, not geometry.
-    expect(html).toContain("rotate(-7 100 100)");
+    // The file supplies the ALPHA only; nothing is inlined and no <path> for
+    // the mark reaches the markup.
+    expect(html).toMatch(/mask-image:url\(\/factionMarks\/enso\.svg\)/);
+    // Letterboxed and centred, so non-square callers do not stretch the circle.
+    expect(html).toContain("mask-size:contain");
+    expect(html).toContain("mask-position:center");
   });
 
   it("draws the ensō in the ornament token so it follows the dark cascade", () => {
     const html = renderToStaticMarkup(<FactionSigil slug="ua" />);
-    expect(html).toContain("var(--faction-ua-glow)");
+    // The mask takes its ink from background-color — i.e. from a token.
+    expect(html).toContain("background-color:var(--faction-ua-glow)");
     // The salon is dead: no gilt shield, no legacy gold, no raw hex.
     expect(html).not.toMatch(/var\(--ua-[a-z]/); // the whole legacy family, deleted in #853
     expect(html).not.toContain("#");

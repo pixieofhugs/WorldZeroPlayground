@@ -34,8 +34,15 @@ import UaComment from '../../comments/voices/UaComment'
 
 const SRC_DIR = join(fileURLToPath(new URL('.', import.meta.url)), '..', '..', '..')
 
-/** The ensō's heavy sweep — the one path that proves the mark is on a surface. */
-const ENSO_SWEEP = 'd="M134 41.2 A68 68 0 1 1 66 158.8"'
+/**
+ * The masked brush asset — the one string that proves the mark is on a surface.
+ *
+ * This used to pin the two-arc approximation's path geometry. #908 deleted that
+ * drawing: there is one ensō now, the vendored `enso.svg`, delivered as a CSS
+ * mask at every size (see `cards/UaSigil.tsx` and `factionMarks/Enso.tsx`).
+ * Same guard, new mechanism — the surfaces still have to render *a* mark.
+ */
+const ENSO_MARK = '/factionMarks/enso.svg'
 
 const TASK: TaskOut = {
   id: 12,
@@ -187,7 +194,7 @@ describe('the ensō is reserved for the score and the faction mark', () => {
       ['feed row', feedRow],
       ['composer', composer],
     ] as const) {
-      expect(render(), `${name} lost the ensō`).toContain(ENSO_SWEEP)
+      expect(render(), `${name} lost the ensō`).toContain(ENSO_MARK)
     }
   })
 

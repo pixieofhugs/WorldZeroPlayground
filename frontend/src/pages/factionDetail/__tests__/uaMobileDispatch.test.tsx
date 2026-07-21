@@ -82,8 +82,8 @@ describe('mobile faction-page UA dispatch', () => {
 describe('UA mobile faction page — what it draws', () => {
   it('sets the ensō beside the name as the faction mark', () => {
     const { html } = render(<UaFactionPage state={baseState()} />)
-    // The heavy sweep of the two-arc sigil (#849), not the 705 KB textured one.
-    expect(html).toContain('M134 41.2 A68 68 0 1 1 66 158.8')
+    // The one ensō (#908): the vendored brush drawing, painted through a mask.
+    expect(html).toContain('/factionMarks/enso.svg')
     expect(html).toContain('var(--faction-ua-glow)')
   })
 

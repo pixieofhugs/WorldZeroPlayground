@@ -94,8 +94,8 @@ describe('mobile FieldDesk-home UA dispatch', () => {
 describe('UA mobile home — what it draws', () => {
   it('heads the screen with the ensō', () => {
     const { html } = render(<UaHome state={baseState()} />)
-    // The heavy sweep of the two-arc sigil (#849), not the 705 KB textured one.
-    expect(html).toContain('M134 41.2 A68 68 0 1 1 66 158.8')
+    // The one ensō (#908): the vendored brush drawing, painted through a mask.
+    expect(html).toContain('/factionMarks/enso.svg')
     expect(html).toContain('var(--faction-ua-glow)')
   })
 
