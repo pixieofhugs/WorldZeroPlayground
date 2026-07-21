@@ -21,8 +21,8 @@ import { MobileTaskDescription } from './shared'
  * the vote control, not behind rows.
  *
  * Every colour is a `--faction-ua-*` token with both themes, so the card dims
- * through the `[data-theme="dark"]` cascade — the "always-light" ruling that
- * used to justify this file is reversed. Reads `task.primary_faction_slug` for
+ * through the `[data-theme="dark"]` cascade. UA dims now (#848), and the ruling
+ * that used to say otherwise is reversed. Reads `task.primary_faction_slug` for
  * the dot so a mixed feed still names the faction it came from.
  */
 

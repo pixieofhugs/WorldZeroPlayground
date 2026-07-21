@@ -26,7 +26,7 @@ import type { TaskDetailState } from '../useTaskDetail'
  * Same {@link TaskDetailState}, same `ua.*` copy keys, same shared sticky bar as
  * before; only the dress changes (ADR-0016). Every colour is a
  * `--faction-ua-*` token with both themes, so this surface dims through the
- * `[data-theme="dark"]` cascade — the "always-light" ruling is reversed.
+ * `[data-theme="dark"]` cascade. UA dims now (#848).
  */
 
 const PAGE = 'var(--faction-ua-page)'
