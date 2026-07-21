@@ -2,6 +2,7 @@ import type { } from 'react'
 import { pickVariant } from '../../utils/factionDispatch'
 import { surfaceMap } from '../../factions'
 import UnaffiliatedVote from './UnaffiliatedVote'
+import { VoteFactionContext } from './VoteShell'
 
 /**
  * Per-faction vote/rating UI dispatcher (Tier-3 surface). Keyed by the voted
@@ -22,5 +23,12 @@ export default function VoteUI({
   ...props
 }: VoteUIProps & { factionSlug?: string | null }) {
   const Variant = pickVariant(surfaceMap('vote'), factionSlug, UnaffiliatedVote)
-  return <Variant {...props} />
+  // The slug is published to the shared chrome as well as dispatched on: the
+  // logged-out gate speaks in the task faction's eyebrow voice (#855) and is
+  // returned from inside each widget, which takes no slug prop.
+  return (
+    <VoteFactionContext.Provider value={factionSlug}>
+      <Variant {...props} />
+    </VoteFactionContext.Provider>
+  )
 }
