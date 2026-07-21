@@ -54,9 +54,9 @@ export const VOTE_REFRAMES: Record<string, VoteReframe> = {
   wow: {
     tiers: [
       { value: 1, label: i18n.t('votes:wow.a-start') },
-      { value: 2, label: i18n.t('votes:wow.solid') },
-      { value: 3, label: i18n.t('votes:wow.good') },
-      { value: 4, label: i18n.t('votes:wow.excellent') },
+      { value: 2, label: i18n.t('votes:wow.quite-solid') },
+      { value: 3, label: i18n.t('votes:wow.jolly-good') },
+      { value: 4, label: i18n.t('votes:wow.splendid') },
       { value: 5, label: i18n.t('votes:wow.legendary') },
     ],
   },

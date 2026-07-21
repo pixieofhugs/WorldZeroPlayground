@@ -50,7 +50,7 @@ needed.
 | Card | cream / gold / plum chronicle | pink marker-sticker card, light **and** dark |
 | Widget | googly **balloons** | **moon phases** on a night plate |
 | Glyph | `✦` (the one place the retired `✦` survives) | `✨` |
-| Tier ladder | `…excellent · legendary` | `sweet · lovely · wonderful · magical · iconic` |
+| Tier ladder | `a start · quite solid · jolly good · splendid! · legendary!` | `sweet · lovely · wonderful · magical · iconic` |
 | Caption | `Cast thy Verdict` / `thou dubbed it legendary!` | `how'd this land?` / `magical · YAY!` |
 | Register | archaic — *"for the quest"*, *"Sealed by the Court"*, *"here, an illumination"* | cozy-casual — *"all done!"*, *"Drop a happy little photo"*, *"a crew of four"* |
 
@@ -118,18 +118,26 @@ Yes: the project whose every file says "Warriors of Whimsy" is the *Coven* kit.
 Subagents cannot reach `claude.ai` design URLs — the orchestrating session must
 read them and paste the findings into the dispatch prompt.
 
-## Open, as of the epic's close (#844)
+## Resolved after the epic's close (#844)
 
-**WOW's tier ladder is unresolved and the shipped one was kept pending an owner
-ruling.** Two readings disagree:
+**WOW's tier ladder — the design bundle wins (owner ruling, 2026-07-21).**
+At the epic's close two readings disagreed:
 
-- the design bundle draws `a start · quite solid · jolly good · splendid! ·
+- the design bundle drew `a start · quite solid · jolly good · splendid! ·
   legendary!`;
-- issue #840's body, the vendored `LABELS.md` and `WORLD_ZERO_STYLE.md` all say
-  `… excellent · legendary`.
+- issue #840's body, the vendored `LABELS.md` and `WORLD_ZERO_STYLE.md` all said
+  `… excellent · legendary`, and that is what shipped —
+  `a start · solid · good · excellent · legendary`, which is also the Everymen
+  ladder.
 
-`frontend/src/locales/en/votes.json` currently ships the second —
-`a start · solid · good · excellent · legendary` — which is also the Everymen
-ladder. Coven's (`sweet · lovely · wonderful · magical · iconic`) is not in
-dispute. This is recorded here rather than left to the deleted bundle precisely
-because it is *unresolved*; it must not vanish with the directory.
+Three sources against one, and the one won: the archaic register *is* WOW's
+chronicle voice, and #840's own sample voted string (`thou dubbed it
+legendary!`) carries the exclamation mark that only the bundle's ladder
+supplies. Duplicating the Everymen ladder gave WOW no voice of its own.
+
+`frontend/src/locales/en/votes.json` now ships the bundle's ladder, and the
+keys were renamed with the values (`solid` → `quite-solid`, `good` →
+`jolly-good`, `excellent` → `splendid`) so no key describes a value it no
+longer holds. `chrome.wow.picked` (`thou dubbed it {{label}}`) is unchanged —
+only the `{{label}}` values moved. Coven's
+(`sweet · lovely · wonderful · magical · iconic`) was never in dispute.
