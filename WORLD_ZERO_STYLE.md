@@ -292,6 +292,18 @@ Each faction's archetype lives in its card component — see `frontend/src/compo
 
 **Reuse pattern:** The faction card aesthetic should be used as a wrapper for any faction-branded context: profile headers, praxis bylines, proposal form wrappers, podium cards. The card component handles the visual treatment; the parent provides the content.
 
+### A faction's ornament is one primitive at named strengths (#849)
+
+A faction's signature device is drawn **once**, as one parameterized component, and consumed everywhere. It is never re-drawn per surface — a hero with its own hand-tuned rosette and a join card with another is how a faction stops looking like one faction.
+
+Two rules follow, and UA is the worked example:
+
+**A mark is reserved, and reserving it is the point.** UA's ensō (`components/cards/UaSigil.tsx`) is for the **score** and the **faction mark**. It is never a container border. A mark spent as decoration stops meaning anything; the restraint is the identity.
+
+**Where an ornament may appear is part of its API, including where it may not.** `UaMandala` takes a `strength` of `full` (one surface — the vote control), `texture` (6–22%, behind page backdrop / faction hero / join card) or `absent`, which renders `null`. Dense, text-heavy surfaces — feed rows, comments, task lists, the editor — ask for `absent`. Encoding the third case as a strength rather than as "just don't use it" is deliberate: the ruling survives in the type instead of in a comment someone has to remember.
+
+Where a mark ships as an inline SVG and where as a masked `public/` asset is a **weight** decision, not a style one — see `components/factionMarks/index.ts`. Both are token-tinted, so both follow the dark cascade. The same faction can legitimately carry two versions of one device at different sizes for different consumers; do not consolidate them on sight.
+
 ---
 
 ## 7. Components
