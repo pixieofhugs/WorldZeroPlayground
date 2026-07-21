@@ -393,6 +393,9 @@
         "re": "re:",
         "witness": "Bear witness"
       }
+    },
+    "wow": {
+      "intro": "Herein lies the sworn account, submitted to the Court for its solemn and giggling judgment."
     }
   },
   "comments": {
@@ -441,6 +444,12 @@
     "albescent": {
       "letterhead": "Albescent — correspondence",
       "edited": "amended"
+    },
+    "wow": {
+      "prompt": "Add thy counsel to the chronicle…",
+      "post": "Proclaim",
+      "react": "Huzzah",
+      "empty": "No counsel yet. Be the first to cry Huzzah."
     }
   },
   "duelCrossLink": {
