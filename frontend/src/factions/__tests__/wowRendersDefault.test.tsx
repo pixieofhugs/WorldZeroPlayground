@@ -6,8 +6,8 @@
  * `--faction-wow-*` block, so WOW rejoins the rainbow. #821 ships its FIRST
  * bespoke surfaces: the praxis card, its mobile twin, and the vote widget; #840
  * adds the score stamp when it rebuilds the chronicle from source; #835 adds the
- * desktop edit-praxis composer. Every OTHER surface still falls through to
- * `Default*` — WOW is themed-and-partly-skinned, not fully dressed, and
+ * desktop edit-praxis composer and #836 its mobile twin. Every OTHER surface
+ * still falls through to `Default*` — WOW is themed-and-partly-skinned, and
  * definitely not "broken faction".
  *
  * That split is fragile in BOTH directions, neither of which crashes:
@@ -45,9 +45,10 @@ function Sentinel() {
 
 /**
  * The surfaces WOW has skinned: #821's three, the `scoreStamp` its own chronicle
- * plate claims in #840 (ADR-0049), and #835's DESKTOP edit-praxis composer.
- * `mobileEditPraxis` is deliberately absent — that is #836, and the desktop skin
- * landing without it is exactly the half-dressed state this file guards.
+ * plate claims in #840 (ADR-0049), #835's DESKTOP edit-praxis composer and, as
+ * of #836, its `mobileEditPraxis` twin — the composer is the one surface WOW
+ * dresses on BOTH form factors. Every other surface is still unclaimed, which is
+ * exactly the half-dressed state this file guards.
  */
 const WOW_SKINNED: ReadonlySet<FactionSurface> = new Set([
   'praxisCard',
@@ -55,9 +56,10 @@ const WOW_SKINNED: ReadonlySet<FactionSurface> = new Set([
   'scoreStamp',
   'vote',
   'editPraxis',
+  'mobileEditPraxis',
 ])
 
-describe('wow is partly skinned: five surfaces claimed, the rest fall back', () => {
+describe('wow is partly skinned: six surfaces claimed, the rest fall back', () => {
   it('registers a manifest now (#821)', () => {
     expect(FACTION_MANIFESTS.map((manifest) => manifest.slug)).toContain('wow')
   })

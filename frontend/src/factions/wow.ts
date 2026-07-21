@@ -9,11 +9,13 @@
  * vote widget.
  *
  * #835 adds the DESKTOP edit-praxis composer — "The Squire's Writ", the kit's
- * one form surface. Mobile stays on the default until #836.
+ * one form surface — and #836 its phone twin: the same writ dress on the settled
+ * mobile composer structure (Write/Preview toggle, fluid media grid, sticky
+ * submit bar), since the kit draws no mobile composer of its own.
  *
  * Override-only, like every manifest: WOW still falls through to the `Default*`
  * archetype on every OTHER surface — it is themed-and-partly-skinned now, not
- * fully dressed. `wowRendersDefault.test.tsx` pins exactly which five surfaces
+ * fully dressed. `wowRendersDefault.test.tsx` pins exactly which six surfaces
  * are claimed and asserts the rest still fall back.
  *
  * Entries are thunks (`() => Component`) so they are read at render time, never
@@ -26,6 +28,7 @@ import WowMobilePraxisCard from '../components/praxisCard/mobile/WowMobilePraxis
 import WowPraxisCard from '../components/praxisCard/desktop/WowPraxisCard'
 import WowScoreStamp from '../components/praxisCard/scoreStamp/WowScoreStamp'
 import WowEditPraxis from '../pages/editPraxis/archetypes/WowEditPraxis'
+import WowMobileEditPraxis from '../pages/editPraxis/mobileArchetypes/WowEditPraxis'
 
 export const WOW_MANIFEST: FactionManifest = {
   slug: 'wow',
@@ -35,4 +38,5 @@ export const WOW_MANIFEST: FactionManifest = {
   mobilePraxisCard: () => WowMobilePraxisCard,
   vote: () => WowVote,
   editPraxis: () => WowEditPraxis,
+  mobileEditPraxis: () => WowMobileEditPraxis,
 }
