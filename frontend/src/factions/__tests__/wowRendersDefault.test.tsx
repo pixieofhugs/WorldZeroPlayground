@@ -49,8 +49,9 @@ function Sentinel() {
  * plate claims in #840 (ADR-0049), #835's DESKTOP edit-praxis composer and, as
  * of #836, its `mobileEditPraxis` twin — the composer is the one surface WOW
  * dresses on BOTH form factors — plus #897's `sigil` (the crest) and the
- * `avatar` that mounts it. Every other surface is still unclaimed, which is
- * exactly the half-dressed state this file guards.
+ * `avatar` that mounts it, and #895's four DUEL surfaces (the Lists seal and
+ * the praxis rail, each on both form factors). Every other surface is still
+ * unclaimed, which is exactly the half-dressed state this file guards.
  */
 const WOW_SKINNED: ReadonlySet<FactionSurface> = new Set([
   'sigil',
@@ -61,9 +62,13 @@ const WOW_SKINNED: ReadonlySet<FactionSurface> = new Set([
   'vote',
   'editPraxis',
   'mobileEditPraxis',
+  'duelSeal',
+  'duelRail',
+  'mobileDuelSeal',
+  'mobileDuelRail',
 ])
 
-describe('wow is partly skinned: eight surfaces claimed, the rest fall back', () => {
+describe('wow is partly skinned: twelve surfaces claimed, the rest fall back', () => {
   it('registers a manifest now (#821)', () => {
     expect(FACTION_MANIFESTS.map((manifest) => manifest.slug)).toContain('wow')
   })

@@ -501,13 +501,11 @@
     "reopenNote": "Until {{name}} casts, you can still pull this back for free — no forfeit.",
     "wow": {
       "submit": {
-        "title": "Seal thy Proof",
         "sub": "Enter the lists · submitting proof",
         "confirm": "Take the Field",
         "cancel": "Withdraw"
       },
       "forfeit": {
-        "title": "Quit the Lists",
         "sub": "Leave the lists · yielding the joust",
         "confirm": "Yield the Field",
         "cancel": "Hold thy Ground"

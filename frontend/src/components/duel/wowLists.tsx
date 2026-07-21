@@ -1,0 +1,214 @@
+/**
+ * WOW — THE LISTS (#895). The vocabulary the four duel surfaces share.
+ *
+ * WOW's duel conceit is a tourney joust: a gold-framed enclosure (the *lists*),
+ * a checkered barrier rail, a rosette for the rider who comes from elsewhere,
+ * and a ribbon that goes home with the loser. This module holds the pieces that
+ * would otherwise be drawn four times — the token names, the barrier band, the
+ * rosette, and the seal's voice resolver.
+ *
+ * WHY THE ROSETTE IS THE ONLY PLACE THE OPPONENT'S COLOUR LANDS
+ * -------------------------------------------------------------
+ * `accent`/`soft` are the OPPONENT's faction tokens (#310) and can be ANY hue —
+ * S.N.I.D.E.'s near-black, Singularity's petrol blue, Everymen's red. Inside
+ * cream-and-gold chrome most of those are illegible as a text ground and several
+ * are illegible as an ink. The kit's answer, and the load-bearing decision of
+ * its rail: hold the foreign colour as a RING and a BAR — never behind or as
+ * text. `Rosette` is that ring, drawn once. Nothing in these four files paints
+ * text in `accent` or on `accent`.
+ *
+ * MOTION lives in index.css behind `prefers-reduced-motion: no-preference`
+ * (`.wow-duel-twinkle`, `.wow-duel-ribbon-sway`), never inline. Both marks reuse
+ * keyframes the crest already declares.
+ */
+import type { CSSProperties } from 'react'
+import { useTranslation } from 'react-i18next'
+
+import type { DuelSealMode } from './shared'
+
+/* -------------------------------------------------------------------------- */
+/* Tokens                                                                     */
+/* -------------------------------------------------------------------------- */
+
+/** The lists ground — the page the seal and the rail are struck on. */
+export const LISTS_BG = 'var(--faction-wow-duel-lists-bg)'
+/** The barrier gold: frame, rules and band. Theme-invariant, and never an ink. */
+export const HOLD = 'var(--faction-wow-duel-hold)'
+/** The winning tile's gold. */
+export const CHAMPION = 'var(--faction-wow-duel-champion)'
+/** The losing tile's plum — the ribbon. */
+export const RIBBON = 'var(--faction-wow-duel-ribbon)'
+/** The modal wash behind the seal. */
+export const SCRIM = 'var(--faction-wow-duel-scrim)'
+
+/** The chronicle's own inks, reused so the lists read as the same faction. */
+export const INK = 'var(--faction-wow-card-text)'
+export const MUTED = 'var(--faction-wow-card-muted)'
+export const PLUM = 'var(--faction-wow-card-accent)'
+export const EYEBROW_INK = 'var(--faction-wow-accent-deep)'
+export const PANEL = 'var(--faction-wow-chronicle-panel)'
+export const PANEL_BORDER = 'var(--faction-wow-border)'
+export const SHADOW = 'var(--faction-wow-chronicle-shadow)'
+/**
+ * Parchment that stays parchment in BOTH themes (light: the panel; dark: the
+ * card ink) — what the plum ribbon band carries. 6.34:1 light, 7.39:1 dark.
+ */
+export const ON_RIBBON = 'var(--faction-wow-stamp-chip-text)'
+
+export const DISPLAY_FONT = 'var(--faction-wow-card-font)' // MedievalSharp
+export const BODY_FONT = 'var(--faction-wow-body-font)' // Lora
+
+/**
+ * The section eyebrow WOW's composer already uses (`WowEditPraxis`) — one
+ * archetype, one label voice. Label tier by role, so it keeps its own token
+ * rather than inheriting anything from a wrapper (#769).
+ */
+export const listsEyebrow: CSSProperties = {
+  display: 'block',
+  fontFamily: DISPLAY_FONT,
+  fontSize: 'var(--text-md)',
+  textTransform: 'uppercase',
+  letterSpacing: '0.14em',
+  color: EYEBROW_INK,
+}
+
+/* -------------------------------------------------------------------------- */
+/* Ornament                                                                   */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * The barrier: the gold/plum checker rail that fences the lists. Every WOW
+ * surface in the kit wears it as its top edge, so both duel frames do too.
+ * `height` is ornament geometry, hence raw pixels (WORLD_ZERO_STYLE §4a).
+ */
+export function ListsBand({ height = 9, unit = 11 }: { height?: number; unit?: number }) {
+  return (
+    <div
+      aria-hidden
+      style={{
+        height,
+        background: `repeating-linear-gradient(90deg, ${HOLD} 0 ${unit}px, ${PLUM} ${unit}px ${unit * 2}px)`,
+      }}
+    />
+  )
+}
+
+/**
+ * The opponent's rosette — a gilt ring with the foreign faction's colour laid
+ * inside it as a band, on a cream field. This is the ONLY shape the opponent's
+ * hue takes on a WOW duel surface, and the reason a hostile hue never has to
+ * clear a contrast floor here: it is a ring, not a ground and not an ink.
+ *
+ * All geometry is raw pixels on purpose — a drawn mark, not layout (§4a).
+ */
+export function Rosette({
+  accent,
+  soft,
+  size = 26,
+}: {
+  accent: string
+  soft: string
+  size?: number
+}) {
+  return (
+    <span
+      aria-hidden
+      style={{
+        flexShrink: 0,
+        display: 'inline-flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        width: size,
+        height: size,
+        borderRadius: '50%',
+        background: soft,
+        border: `2px solid ${accent}`,
+        boxShadow: `0 0 0 2px ${LISTS_BG}, 0 0 0 3.5px ${HOLD}`,
+      }}
+    />
+  )
+}
+
+/**
+ * The ✦ the kit twinkles beside every heading, and the ❦ that sways on the
+ * ribbon line. Both are dingbats used as icons — ornament, so `aria-hidden`, and
+ * their size is illustration rather than text (§4a's ornament hatch).
+ */
+export function ListsSpark({ color = HOLD }: { color?: string }) {
+  return (
+    <span aria-hidden className="wow-duel-twinkle" style={{ color, lineHeight: 1.3 }}>
+      ✦
+    </span>
+  )
+}
+
+/**
+ * U+2766 FLORAL HEART — WOW's ribbon glyph, the mark its composer and its
+ * chronicle already use. Held in a constant rather than written as JSX text
+ * because `i18next/no-literal-string`'s ornament allowlist covers the kit's
+ * other glyph (U+2726) but not this one, and widening a shared lint config from
+ * a faction slice is the wrong trade. An expression child is not JSX text, so
+ * the rule never fires — the same dodge `EphemeristsDuelSealConfirm` makes by
+ * passing its ❦ as a prop.
+ */
+const RIBBON_GLYPH = '❦'
+
+export function ListsRibbonMark({ color = PLUM }: { color?: string }) {
+  return (
+    <span aria-hidden className="wow-duel-ribbon-sway" style={{ color, lineHeight: 1.2 }}>
+      {RIBBON_GLYPH}
+    </span>
+  )
+}
+
+/* -------------------------------------------------------------------------- */
+/* Voice                                                                      */
+/* -------------------------------------------------------------------------- */
+
+/** The strings WOW's seal supplies on top of the shared, faction-neutral copy. */
+export interface WowSealVoice {
+  sub: string
+  confirm: string
+  cancel: string
+  rosterLabel: string
+  stakesLabel: string
+  ribbonLine: string
+}
+
+/**
+ * WOW's chrome voice for the seal.
+ *
+ * It deliberately does NOT replace `useDuelSealCopy`. That helper owns
+ * `heading`, `body`, `note` and `danger`, and the seal skins render all four
+ * unchanged. Two reasons, and the second one is enforced:
+ *
+ *  1. `body` and `note` carry live figures and the pending/active/forfeit
+ *     branch. Re-authoring them here would be a skin re-implementing a slot,
+ *     which `duel/shared.tsx` forbids outright.
+ *  2. `heading` is a CONTRACT, not a flourish. `duelSkinSlots.test.tsx` asserts
+ *     that every registered seal skin renders "Seal the duel?" in submit mode
+ *     and "Forfeit" in forfeit mode — that is #718's faction-neutral-copy
+ *     decision with a guard behind it. A WOW-voiced title was drafted here and
+ *     removed when the guard (correctly) caught it.
+ *
+ * What is left, and what WOW takes: the KICKER above the heading, the two
+ * section headings the kit draws, the ribbon line, and the two button labels.
+ * That is the same faction-scoped-key pattern `praxis.json`'s `card.wow` /
+ * `detail.wow` blocks already use, so the shared resolver stays neutral and only
+ * this skin reads the WOW keys.
+ *
+ * The single branch here is on `mode`, which arrives as a prop — no duel fact is
+ * re-derived.
+ */
+export function useWowSealVoice(mode: DuelSealMode): WowSealVoice {
+  const { t } = useTranslation('praxis')
+  const scope = mode === 'forfeit' ? 'forfeit' : 'submit'
+  return {
+    sub: t(`duelSeal.wow.${scope}.sub`),
+    confirm: t(`duelSeal.wow.${scope}.confirm`),
+    cancel: t(`duelSeal.wow.${scope}.cancel`),
+    rosterLabel: t('duelSeal.wow.rosterLabel'),
+    stakesLabel: t('duelSeal.wow.stakesLabel'),
+    ribbonLine: t('duelSeal.wow.ribbonLine'),
+  }
+}

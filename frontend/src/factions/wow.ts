@@ -12,6 +12,11 @@
  * imports — and its first consumer, the `avatar`: the crest set in a gilt rope
  * ring with the rank pill riding the hem.
  *
+ * #895 adds THE LISTS — the duel seal and the duel rail, on both form factors:
+ * WOW's four duel surfaces, dressed as a tourney joust (gold-framed enclosure,
+ * checkered barrier, the opponent held as a rosette ring, a ribbon for the
+ * loser). The shared vocabulary lives in `components/duel/wowLists.tsx`.
+ *
  * #835 adds the DESKTOP edit-praxis composer — "The Squire's Writ", the kit's
  * one form surface — and #836 its phone twin: the same writ dress on the settled
  * mobile composer structure (Write/Preview toggle, fluid media grid, sticky
@@ -35,6 +40,10 @@ import WowPraxisCard from '../components/praxisCard/desktop/WowPraxisCard'
 import WowScoreStamp from '../components/praxisCard/scoreStamp/WowScoreStamp'
 import WowEditPraxis from '../pages/editPraxis/archetypes/WowEditPraxis'
 import WowMobileEditPraxis from '../pages/editPraxis/mobileArchetypes/WowEditPraxis'
+import WowDuelSealConfirm from '../components/duel/WowDuelSealConfirm'
+import WowMobileDuelSealConfirm from '../components/duel/WowMobileDuelSealConfirm'
+import WowDuelRail from '../pages/praxisDetail/duelRails/WowDuelRail'
+import WowMobileDuelRail from '../pages/praxisDetail/duelRails/WowMobileDuelRail'
 
 export const WOW_MANIFEST: FactionManifest = {
   slug: 'wow',
@@ -47,4 +56,9 @@ export const WOW_MANIFEST: FactionManifest = {
   vote: () => WowVote,
   editPraxis: () => WowEditPraxis,
   mobileEditPraxis: () => WowMobileEditPraxis,
+
+  duelSeal: () => WowDuelSealConfirm,
+  duelRail: () => WowDuelRail,
+  mobileDuelSeal: () => WowMobileDuelSealConfirm,
+  mobileDuelRail: () => WowMobileDuelRail,
 }

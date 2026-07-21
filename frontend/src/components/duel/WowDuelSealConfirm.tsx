@@ -1,0 +1,265 @@
+/**
+ * Warriors of Whimsy DESKTOP duel seal-confirm (#895) — THE LISTS SEAL.
+ *
+ * The kit's `16-duel-seal.html`: a gold-framed enclosure on a plum scrim, the
+ * checkered barrier along its top edge, the crest set beside the title, the
+ * roster on a parchment plate, the stakes struck below it, and the ribbon line
+ * that makes the loss floor read as generosity rather than punishment.
+ *
+ * Pure frame. `StakesTiles` computes the win/lose figures from the VIEWER's own
+ * faction config, `RaceRoster` reads `is_submitted`, and `useDuelSealCopy` owns
+ * the pending/active/forfeit body branch. Nothing here recomputes or drops one.
+ *
+ * TWO FACES, NOT THREE. The kit draws a three-way beat picker — submit / accept
+ * / decline. `DuelSealMode` is `'submit' | 'forfeit'`; `accept` and `decline` do
+ * not exist as beats in this codebase and are not built. The FORFEIT face is not
+ * drawn by the kit at all, so it is derived: the chrome is the submit face
+ * unchanged, and only the words move, taking the withdrawal voice the kit's own
+ * rail establishes ("Thou hast withdrawn from the lists…"). `copy.danger` is
+ * true there, so the shared confirm button repaints destructive — a forfeit is
+ * red in every voice (#751) — and the ribbon line is suppressed, because a
+ * rider who quits the field has not earned the ribbon the line promises.
+ *
+ * WHAT THE KIT DRAWS THAT THIS CONTRACT CANNOT (deliberate, not missed):
+ *  - The two roster cards with the ⚔ clash medallion floated between them.
+ *    `RaceRoster` arrives as ONE node, and a skin that reached inside it to
+ *    re-render each rider would be recomputing a slot. The medallion is kept as
+ *    a mark on the roster plate's heading instead.
+ *  - The gold "prevail" tile and the plum "fall" tile. `StakesTiles` owns its
+ *    own tile chrome and its theme contract is `{accent, muted, bodyFont}` —
+ *    no per-tile ground. The pair is mounted on the champion-gold-framed plate
+ *    so the block still reads as struck metal.
+ *  - The kit's hardcoded ×1.5 / ×0.5 captions. Those are per-faction and the
+ *    slot owns them: a S.N.I.D.E. viewer on a WOW task keeps 0.0×, and this
+ *    composer skin is chosen by the TASK's faction, not the viewer's. Same
+ *    deletion `CovenDuelSealConfirm` made of the design's "+90 / +30".
+ */
+import { factionCssVar } from '../../utils/factions'
+import { WowSigil } from '../cards/WowSigil'
+import {
+  duelSides,
+  RaceRoster,
+  SealActions,
+  StakesTiles,
+  useDuelSealCopy,
+  type DuelSlotTheme,
+} from './shared'
+import type { DuelSealConfirmProps } from './DuelSealConfirm'
+import {
+  BODY_FONT,
+  CHAMPION,
+  DISPLAY_FONT,
+  HOLD,
+  INK,
+  LISTS_BG,
+  ListsBand,
+  ListsRibbonMark,
+  ListsSpark,
+  listsEyebrow,
+  MUTED,
+  ON_RIBBON,
+  PANEL,
+  PANEL_BORDER,
+  RIBBON,
+  Rosette,
+  SCRIM,
+  SHADOW,
+  useWowSealVoice,
+} from './wowLists'
+
+export default function WowDuelSealConfirm({
+  duel,
+  viewerCharacterId,
+  taskPointValue,
+  onConfirm,
+  onCancel,
+  busy,
+  mode = 'submit',
+}: DuelSealConfirmProps) {
+  const { me, foe } = duelSides(duel, viewerCharacterId)
+  const copy = useDuelSealCopy(mode, duel, viewerCharacterId, taskPointValue)
+  const voice = useWowSealVoice(mode)
+
+  // The opponent's tokens (#310) — spent on the rosette ring only. See the note
+  // in `wowLists.tsx`: a foreign hue is never a ground and never an ink here.
+  const accent = factionCssVar(foe.faction_slug, 'card-accent')
+  const soft = factionCssVar(foe.faction_slug, 'light')
+
+  // The stakes tiles take the champion gold as their rule colour, which is what
+  // makes the pair read as struck metal rather than as a form.
+  const theme: DuelSlotTheme = { accent: CHAMPION, muted: MUTED, bodyFont: BODY_FONT }
+
+  return (
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-label={copy.heading}
+      className="fixed inset-0 z-50 flex items-center justify-center"
+      style={{ padding: 'var(--space-lg)', background: SCRIM }}
+    >
+      <div
+        className="w-full max-w-[460px]"
+        style={{
+          borderRadius: 15,
+          overflow: 'hidden',
+          background: LISTS_BG,
+          color: INK,
+          fontFamily: BODY_FONT,
+          border: `2px solid ${HOLD}`,
+          boxShadow: `0 26px 54px -22px ${SHADOW}`,
+        }}
+      >
+        <ListsBand />
+
+        <div style={{ padding: 'var(--space-lg)' }}>
+          {/* ── crest + title ── */}
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 'var(--space-md)',
+              marginBottom: 'var(--space-md)',
+            }}
+          >
+            <WowSigil size={46} />
+            <div style={{ minWidth: 0 }}>
+              {/* The kicker is WOW's; the HEADING below is the shared, neutral
+                  one (#718 — and `duelSkinSlots.test.tsx` enforces it). A span,
+                  not a <p>: this line is a byline, Label tier by role, and the
+                  seal guard rightly treats a Label-sized <p> as sunk body copy. */}
+              <span
+                style={{
+                  display: 'block',
+                  fontFamily: BODY_FONT,
+                  fontStyle: 'italic',
+                  fontSize: 'var(--text-lg)',
+                  color: MUTED,
+                }}
+              >
+                {voice.sub}
+              </span>
+              <h2
+                className="content-title"
+                style={{ fontFamily: DISPLAY_FONT, color: INK, lineHeight: 1.15 }}
+              >
+                {copy.heading} <ListsSpark />
+              </h2>
+            </div>
+          </div>
+
+          {/* ── the shared, figure-bearing copy ── */}
+          <p
+            className="content-text"
+            style={{
+              fontFamily: BODY_FONT,
+              lineHeight: 1.55,
+              ...(copy.danger ? { color: 'var(--color-danger)', fontWeight: 700 } : {}),
+            }}
+          >
+            {copy.body}
+          </p>
+
+          {copy.note && (
+            <p
+              className="content-text"
+              style={{
+                marginTop: 'var(--space-sm)',
+                fontFamily: BODY_FONT,
+                color: 'var(--color-success)',
+              }}
+            >
+              {copy.note}
+            </p>
+          )}
+
+          {/* ── the roster, on a parchment plate ── */}
+          <div style={{ marginTop: 'var(--space-lg)' }}>
+            <span
+              style={{
+                ...listsEyebrow,
+                display: 'flex',
+                alignItems: 'center',
+                gap: 'var(--space-sm)',
+                marginBottom: 'var(--space-sm)',
+              }}
+            >
+              {voice.rosterLabel}
+              <Rosette accent={accent} soft={soft} size={18} />
+            </span>
+            <div
+              style={{
+                background: PANEL,
+                border: `1.5px solid ${PANEL_BORDER}`,
+                borderRadius: 11,
+                padding: 'var(--space-md) var(--space-lg)',
+              }}
+            >
+              <RaceRoster me={me} foe={foe} theme={theme} />
+            </div>
+          </div>
+
+          {/* ── the stakes, struck in gold ── */}
+          <div style={{ marginTop: 'var(--space-lg)' }}>
+            <span style={{ ...listsEyebrow, marginBottom: 'var(--space-sm)' }}>
+              {voice.stakesLabel}
+            </span>
+            <div
+              style={{
+                background: PANEL,
+                border: `1.5px solid ${HOLD}`,
+                borderRadius: 11,
+                padding: 'var(--space-md) var(--space-lg)',
+              }}
+            >
+              <StakesTiles
+                viewerFactionSlug={me.faction_slug}
+                opponentFactionSlug={foe.faction_slug}
+                opponentName={foe.display_name}
+                taskPointValue={taskPointValue}
+                status={duel.status}
+                theme={theme}
+              />
+            </div>
+
+            {/* The ribbon promise — suppressed on the forfeit face, where it
+                would be a lie: a rider who quits has not entered the lists to
+                the end. */}
+            {!copy.danger && (
+              <p
+                className="content-text"
+                style={{
+                  display: 'flex',
+                  alignItems: 'baseline',
+                  gap: 'var(--space-sm)',
+                  marginTop: 'var(--space-sm)',
+                  padding: 'var(--space-sm) var(--space-md)',
+                  borderRadius: 11,
+                  background: RIBBON,
+                  color: ON_RIBBON,
+                  fontFamily: BODY_FONT,
+                  fontStyle: 'italic',
+                }}
+              >
+                <ListsRibbonMark color={ON_RIBBON} />
+                <span>{voice.ribbonLine}</span>
+              </p>
+
+            )}
+          </div>
+
+          <div style={{ marginTop: 'var(--space-lg)' }}>
+            <SealActions
+              onConfirm={onConfirm}
+              onCancel={onCancel}
+              busy={busy}
+              confirmLabel={voice.confirm}
+              cancelLabel={voice.cancel}
+              danger={copy.danger}
+              theme={theme}
+            />
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
