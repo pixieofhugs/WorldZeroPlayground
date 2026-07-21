@@ -40,8 +40,10 @@ const BOTH_THEMES: Theme[] = ["light", "dark"];
 /** Every faction that supplies the standard `--faction-{key}-card-*` block (§3). */
 const CARD_KEYS = [
   "ua",
-  // `wow` supplies the §3 block and nothing more (#812) — it has a colour but
-  // no archetype, so it appears here and NOT in ARCHETYPE_PAIRS below.
+  // `wow` supplied the §3 block and nothing more until #896 gated the chronicle
+  // primitives, so it now appears here AND in ARCHETYPE_PAIRS below. The §3
+  // block still covers four of the kit's six stated pairs on its own — see the
+  // WOW comment down there for which.
   "wow",
   "everymen",
   "coven",
@@ -155,6 +157,28 @@ const ARCHETYPE_PAIRS: Pair[] = [
     text: "--faction-ua-vermil",
     floor: AA_LARGE,
   },
+
+  // WOW — the cream/gold/plum chronicle (#838, ADR-0050). The faction kit
+  // states six contrast pairs; FOUR of them are the §3 card block measured in
+  // both themes, so CARD_PAIRS already gates them and repeating them here would
+  // be a second name for one measurement:
+  //   text / card-bg  (both themes) = `wow card body text`
+  //   plum / card-bg  (both themes) = `wow card accent`
+  // What is left are the chronicle's own primitives, which no generator reaches.
+  //
+  // The kit's "on-fill / gold" pair puts ink on the frame gold. Its stated ink
+  // #2a1d02 has no token and does not need one: --faction-wow-on-fill is the
+  // WOW ink, is theme-invariant like the gold it sits on, and measures 7.64:1
+  // where the kit's own value manages 6.68:1 — not the 8.1:1 the kit claims.
+  { what: "wow chronicle gold element, ink", surface: "--faction-wow-chronicle-gold", text: "--faction-wow-on-fill" },
+  // The kit's "gold / card-bg dk" pair. The bright total is a *dark*-theme
+  // value; measuring the token in both themes also gates its light sibling,
+  // which the kit never states.
+  { what: "wow stamp total, on card", surface: "--faction-wow-card-bg", text: "--faction-wow-stamp-total" },
+  // The eyebrow/label ink #896 added. The kit's #8a6d1f fails AA on the cream
+  // card (4.46:1) — it was chosen against the kit's near-white documentation
+  // plate — so index.css ships it walked down the same hue.
+  { what: "wow eyebrow ink, on card", surface: "--faction-wow-card-bg", text: "--faction-wow-accent-deep" },
 
   // Albescent's FACTION tokens are gone (#783) — it renders Default's surfaces,
   // which `default` already covers. What remains is the always-light palette

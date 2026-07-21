@@ -14,7 +14,7 @@
     "ua": "We practise art as a daily, deliberate thing. One true mark, then another. The satisfaction is in the making, not the tally.",
     "snide": "Specialists in one-on-one competition. Bonus points for winning duels.",
     "coven": "A soft-lit circle of makers. Full points on every task.",
-    "wow": "Collective-minded. Excel at their own faction's tasks; reduced elsewhere.",
+    "wow": "A gold-clad order of knights sworn to the solemn crusade of inflicting joy upon a dreary world. We wield the noodle sword. We take the ridiculous with total, unsmiling seriousness — that tension is not a bug, it is the entire creed, and the Court will hear no argument. Once per level, a knight may reach one rank above their own to claim a single quest.",
     "ephemerists": "Wanderers who set down fleeting truths before the road moves on. Task Vision — access to select retired tasks.",
     "everymen": "No inner circle, no waiting to be chosen. Reliable hands who do the work in front of them and finish what they start.",
     "singularity": "embrace your digital double",
@@ -536,6 +536,41 @@
         "join": "Join the coven",
         "joined": "welcome home, witch"
       }
+    }
+  },
+  "wow": {
+    "charter": {
+      "heading": "The Charter",
+      "title": "The Charter of Whimsy",
+      "paragraphs": [
+        "Hear ye. We are the Warriors of Whimsy, and we have taken a vow so grave it loops entirely back around to silly: to bring whimsy into a world that keeps insisting on being sensible.",
+        "We march in real armour after imaginary dragons. We hold ceremonies for the frankly ceremonious. We knight houseplants. Our motto, borne on the crest in the honest tongue of Pig Latin, is Imsy-whay or-fay every-oneway — whimsy, for everyone — and we mean it with our whole gleaming breastplates.",
+        "The noodle sword is not a joke to us. It is THE joke, and we carry it with both hands and a straight face. That is the crusade. Enlist, and take the ridiculous seriously alongside us."
+      ]
+    },
+    "tasks": {
+      "heading": "Quests Awaiting a Champion",
+      "empty": "No quests afoot. The realm is, briefly and tragically, sensible."
+    },
+    "praxis": {
+      "heading": "Chronicles of Proof"
+    },
+    "join": {
+      "eligibleTitle": "Enlist in the Crusade",
+      "eligibleBody": "the armour is one-size, the oath is for life"
+    },
+    "spotlight": {
+      "label": "Champion of the Fortnight"
+    },
+    "roster": {
+      "heading": "The Muster Roll"
+    },
+    "mobile": {
+      "eyebrow": "The Field Pavilion",
+      "subtitle": "thy crusade, in the palm of thy gauntlet"
+    },
+    "invitation": {
+      "pitch": "By decree most official (we made the seal ourselves), thou art summoned to the Warriors of Whimsy. Bring a straight face. We shall supply the sword."
     }
   },
   "invitation": {
