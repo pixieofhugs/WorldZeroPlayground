@@ -95,7 +95,7 @@ The two axes are independent, and #830 collapsed them: it read a mislabelled moc
 | Card | cream / gold / **plum** chronicle | **pink** marker sticker |
 | Widget | googly **balloons** | **moon phases** on a night plate |
 | Glyph | `✦` | `✨` |
-| Tier ladder | `a start … excellent · legendary` | `sweet · lovely · wonderful · magical · iconic` |
+| Tier ladder | `a start · quite solid · jolly good · splendid! · legendary!` | `sweet · lovely · wonderful · magical · iconic` |
 | Register | archaic — *"Cast thy Verdict"* | cozy-casual — *"how'd this land?"* |
 
 **On the hue.** Yellow is the palette's hard case (#651, #669, #677), for two reasons that pull in opposite directions. A yellow saturated enough to read as yellow needs **dark ink** on it, never white — hence `--faction-wow-on-fill` is ink in both themes. And WOW sits **adjacent to UA** in the spectrum, so the two are painted touching in the Leaderboard/DefaultPlayers stripe bars and Meadow's bloom; a goldenrod too near UA's burnt orange reads as a second brown at that size. The shipped light value resolves this by pushing hue rather than lightness — clear of orange, deep enough to stay legible.
