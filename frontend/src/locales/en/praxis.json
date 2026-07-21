@@ -449,7 +449,8 @@
       "prompt": "Add thy counsel to the chronicle…",
       "post": "Proclaim",
       "react": "Huzzah",
-      "empty": "No counsel yet. Be the first to cry Huzzah."
+      "empty": "No counsel yet. Be the first to cry Huzzah.",
+      "edited": "amended"
     }
   },
   "duelCrossLink": {
