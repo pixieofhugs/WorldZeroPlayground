@@ -30,8 +30,8 @@ import {
  * The level indicator is the shared {@link LevelGem}, tinted via
  * `factionCssVar` — tint only, no bespoke UA shape (brief §9).
  *
- * Both themes come from the `[data-theme="dark"]` cascade. Nothing here is
- * always-light any more.
+ * Both themes come from the `[data-theme="dark"]` cascade; the card dims
+ * with the app like every other faction's.
  */
 
 interface Props {

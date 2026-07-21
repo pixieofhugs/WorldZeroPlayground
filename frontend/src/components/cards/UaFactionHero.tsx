@@ -13,8 +13,8 @@ import { UA_DISPLAY, UA_EYEBROW, UA_TEXT } from "./uaAtoms";
  * strip beneath, not as engraved regalia stacked in a side column.
  *
  * The gilt museum frame, the gold leaf, the dot grid and the Latin motto ribbon
- * are gone. So is the always-light ruling: both themes come from the
- * `[data-theme="dark"]` cascade.
+ * are gone, and so is the ruling that kept this surface undimmed: both themes
+ * come from the `[data-theme="dark"]` cascade.
  *
  * The page passes raw counts; the practice supplies its own labels from the
  * copy catalog (feed:factionHero.ua.stats.*), per ADR-0016 — presentation only,

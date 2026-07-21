@@ -14,8 +14,8 @@ import { UaSigil } from '../cards/UaSigil'
  * neutral page keeps the global rainbow watercolour — never theme a mixed page
  * to one faction — and the dispatcher, not this file, makes that call.
  *
- * Both themes come from the `[data-theme="dark"]` cascade. The gilt wall and
- * its ledger dot-grid are gone, and so is the always-light ruling behind them.
+ * Both themes come from the `[data-theme="dark"]` cascade. The gilt wall, its
+ * ledger dot-grid and the ruling that kept them undimmed are all gone.
  */
 export default function UaBackdrop() {
   return (

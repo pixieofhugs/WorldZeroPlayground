@@ -28,9 +28,9 @@ import type { TaskDetailState } from "../useTaskDetail";
  * three surfaces — page backdrop, faction hero, join card — and a detail page
  * is dense reading; the UA page backdrop already carries the texture behind it.
  *
- * Both themes come from the `[data-theme="dark"]` cascade. This page used to
- * declare itself always-light and paint with four font tokens that were never
- * declared anywhere (`--ua-display`, `--ua-engraved`, `--ua-mono`,
+ * Both themes come from the `[data-theme="dark"]` cascade; the page dims with
+ * the app. It also used to paint with four font tokens that are declared
+ * nowhere in index.css (`--ua-display`, `--ua-engraved`, `--ua-mono`,
  * `--ua-serif`) — undefined custom properties that silently fell back to the
  * inherited face. Both are fixed here.
  */

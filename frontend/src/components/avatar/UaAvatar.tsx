@@ -12,8 +12,7 @@ import { UaSigil } from "../cards/UaSigil";
  * one of the mark's two sanctioned uses (brief §4).
  *
  * Both themes come from the `[data-theme="dark"]` cascade; the badge sits on
- * `--faction-ua-lift`, which dims with everything else. UA is not always-light
- * any more.
+ * `--faction-ua-lift`, which dims with everything else.
  */
 export default function UaAvatar({ character, size }: FactionAvatarProps) {
   return (
