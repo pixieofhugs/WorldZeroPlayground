@@ -57,8 +57,11 @@ const PRAXIS: PraxisOut = {
   members: [],
   invites: [],
   media_items: [],
-  // Merit = base (30) × 1.0 + vote points (16) = 46 — the common ×1.0 case.
+  // score = (base 30 + meta 0) × 1.0 + vote points 16 = 46 — the common case.
   score: 46,
+  metatask_points: 0,
+  display_multiplier: 1.0,
+  points_from_votes: 16,
   is_top_for_task: false,
   duel_id: null,
   can_flag: true,
@@ -149,15 +152,15 @@ describe("praxis-read Task Crown hero", () => {
 });
 
 // ─── Single earned-points breakdown (#641) ───────────────────────────────────
-// Every detail archetype now renders exactly one explicit `{base} + {votes}`
-// breakdown (mirroring the card's PraxisScoreHero idiom) instead of a votes-only
-// score echoed in the byline, the card header, AND the vote tally. When the
-// fixed-at-award multiplier ≠ 1.0, the `{base} × {mult} + {votes}` form renders.
+// Every detail archetype renders exactly one explicit `{base} + {votes}`
+// breakdown instead of a votes-only score echoed in the byline, the card header,
+// AND the vote tally. When the multiplier ≠ 1.0, the `{base} × {mult} + {votes}`
+// form renders — live since ADR-0053, previously unreachable dead code.
 
-/** A rare non-1.0 multiplier: base 10 × 1.1 + 14 vote points = 25 merit. */
+/** A non-1.0 multiplier: base 10 × 1.1 + 14 vote points = 25. */
 function multiplierState(): PraxisDetailState {
   const s = state();
-  s.praxis = { ...PRAXIS, task_point_value: 10, score: 25 };
+  s.praxis = { ...PRAXIS, task_point_value: 10, score: 25, display_multiplier: 1.1, points_from_votes: 14 };
   s.votes = { praxis_id: 1, total_votes: 4, total_score: 14 };
   return s;
 }

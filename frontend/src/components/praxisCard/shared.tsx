@@ -4,7 +4,6 @@ import { Link } from "react-router-dom";
 import type { PraxisCardOut } from "../../api/praxis";
 import { factionName } from "../../utils/factions";
 import { mediaUrl } from "../../utils/media";
-import { TaskCrown } from "../cards/TaskCrown";
 import VoteUI from "../vote/VoteUI";
 
 /**
@@ -13,7 +12,7 @@ import VoteUI from "../vote/VoteUI";
  * Each faction's praxis card owns a bespoke FRAME (tilted memo, ruled paper,
  * scrap collage, torn evidence, vellum leaf, terminal, gazette…). The CONTENT
  * inside is broken into independently-placeable structural slots — `PraxisTitle`,
- * `PraxisTaskLink`, `PraxisScoreHero`, `PraxisStats`, `PraxisByline` — so an
+ * `PraxisTaskLink`, `PraxisStats`, `PraxisByline` — so an
  * archetype can arrange them (via the shared `PraxisBody` composition in
  * PraxisCard.tsx) instead of only re-coloring one fixed block. The dispatch stays
  * a true per-faction dispatch rather than chrome-only.
@@ -163,84 +162,6 @@ export function PraxisVotedByMarker({
   return (
     <div className="eyebrow" style={{ marginTop: "var(--space-sm)", opacity: 0.75, ...style }}>
       {t("card.votedBy", { name: praxis.voted_by_name })}
-    </div>
-  );
-}
-
-/**
- * Slot: the score hero — a completed praxis's earned-points readout, stamped as
- * `{base} + {votes}`: the task's base points plus the points scored FROM votes
- * (ADR-0014 merit = `task base + points_from_votes`, so vote-points =
- * `score - task_point_value`). This is a points sum, never a 1–5 rating or an
- * average. `voter_count` (a people-count) is deliberately not shown — the second
- * number is vote *points*, per Molly's #375 call.
- */
-export function PraxisScoreHero({
-  praxis,
-  color,
-  border,
-  paper,
-  showCrown,
-}: {
-  praxis: PraxisCardOut;
-  color?: string;
-  border?: string;
-  /** The card's paper colour — the crown medallion's inner disc (ADR-0028). */
-  paper?: string;
-  /** Set false when the surface renders its own TaskCrown (the faction pages). */
-  showCrown?: boolean;
-}) {
-  const { t } = useTranslation("praxis");
-  if (praxis.score === null || praxis.score === undefined) return null;
-  const base = praxis.task_point_value;
-  const votePoints = Math.max(0, Math.round(praxis.score - base));
-  const crowned = praxis.is_top_for_task && showCrown !== false;
-  return (
-    <div
-      style={{
-        position: "relative",
-        display: "inline-flex",
-        flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "center",
-        flexShrink: 0,
-        minWidth: 54,
-        padding: "var(--space-sm) var(--space-md)",
-        border: `2px solid ${border ?? "currentColor"}`,
-        borderRadius: 4,
-        transform: "rotate(-3deg)",
-        color: color ?? "inherit",
-        lineHeight: 1,
-      }}
-    >
-      {/* Task Crown (ADR-0028) — stamped over the score stamp's corner. */}
-      {crowned && (
-        <TaskCrown
-          size={26}
-          ringInset={3}
-          innerBg={paper}
-          glyphColor={color ?? "currentColor"}
-          rotate="8deg"
-          style={{ position: "absolute", top: -13, right: -12, zIndex: 3 }}
-        />
-      )}
-      {/* The earned-points readout — a score, so --text-content per the floor (§4). */}
-      <span className="font-display" style={{ fontWeight: 800, fontSize: "var(--text-content)", whiteSpace: "nowrap" }}>
-        {base}
-        <span style={{ opacity: 0.55, margin: "0 var(--space-xs)" }}>+</span>
-        {votePoints}
-      </span>
-      <span
-        style={{
-          fontSize: "var(--text-xs)",
-          letterSpacing: "0.16em",
-          textTransform: "uppercase",
-          marginTop: "var(--space-xs)",
-          opacity: 0.8,
-        }}
-      >
-        {t("card.ptsAndVotes")}
-      </span>
     </div>
   );
 }

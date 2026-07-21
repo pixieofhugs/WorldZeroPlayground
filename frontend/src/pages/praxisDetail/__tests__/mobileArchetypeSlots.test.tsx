@@ -47,8 +47,11 @@ const PRAXIS: PraxisOut = {
   members: [],
   invites: [],
   media_items: [],
-  // Merit = base (30) × 1.0 + vote points (16) = 46 — the common ×1.0 case.
+  // score = (base 30 + meta 0) × 1.0 + vote points 16 = 46 — the common case.
   score: 46,
+  metatask_points: 0,
+  display_multiplier: 1.0,
+  points_from_votes: 16,
   is_top_for_task: false,
   duel_id: null,
   can_flag: true,
@@ -135,7 +138,7 @@ describe('mobile praxis-read Task Crown hero', () => {
 /** A rare non-1.0 multiplier: base 10 × 1.1 + 14 vote points = 25 merit. */
 function multiplierState(): PraxisDetailState {
   const s = state()
-  s.praxis = { ...PRAXIS, task_point_value: 10, score: 25 }
+  s.praxis = { ...PRAXIS, task_point_value: 10, score: 25, display_multiplier: 1.1, points_from_votes: 14 }
   s.votes = { praxis_id: 1, total_votes: 4, total_score: 14 }
   return s
 }

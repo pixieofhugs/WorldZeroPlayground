@@ -80,7 +80,7 @@ function MultChip({ children }: { children: ReactNode }) {
 
 export default function UaScoreStamp({ praxis, showCrown }: ScoreStampProps) {
   const { t } = useTranslation("praxis");
-  if (praxis.total === null || praxis.total === undefined) return null;
+  if (praxis.score === null || praxis.score === undefined) return null;
   const { base, mult, meta, votes, total } = scoreBreakdown(praxis);
   const crowned = praxis.is_top_for_task && showCrown !== false;
 
