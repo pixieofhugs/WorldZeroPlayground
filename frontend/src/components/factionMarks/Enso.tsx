@@ -22,22 +22,38 @@ import type { FactionMarkProps } from "./Lotus";
  *
  * Both export the same component shape, so call sites do not care which
  * mechanism is underneath.
+ *
+ * This is UA's ONLY ensō (#908). The two-arc approximation that `UaSigil` used
+ * to draw is gone; `UaSigil` is now a thin wrapper over this component, so the
+ * mark is one drawing delivered one way at every size from 13px to 420px.
  */
 
 /** Where the asset lives under `public/`. */
 const ENSO_ASSET = "url(/factionMarks/enso.svg)";
 
+export interface EnsoProps extends Omit<FactionMarkProps, "lineColor"> {
+  /**
+   * Box height, when the mark must fill a non-square slot. Defaults to
+   * {@link FactionMarkProps.size}, so the ordinary call stays square. The mask
+   * is `contain`/`center`, so a non-square box letterboxes the circle rather
+   * than stretching it — the same read the old inline `<svg>` got from the
+   * default `preserveAspectRatio`.
+   */
+  height?: number;
+}
+
 export default function Enso({
   size = 138,
+  height = size,
   color = "currentColor",
   opacity = 1,
   style,
   className,
-}: Omit<FactionMarkProps, "lineColor">) {
+}: EnsoProps) {
   const maskStyle: CSSProperties = {
     display: "block",
     width: size,
-    height: size,
+    height,
     opacity,
     // The asset is the alpha channel; the colour is a token the theme owns.
     backgroundColor: color,
