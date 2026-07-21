@@ -5,9 +5,10 @@
  * `wow` with no manifest and no theme. #812 gave back a minimal yellow
  * `--faction-wow-*` block, so WOW rejoins the rainbow. #821 ships its FIRST
  * bespoke surfaces: the praxis card, its mobile twin, and the vote widget; #840
- * adds the score stamp when it rebuilds the chronicle from source. Every
- * OTHER surface still falls through to `Default*` — WOW is themed-and-partly-
- * skinned, not fully dressed, and definitely not "broken faction".
+ * adds the score stamp when it rebuilds the chronicle from source; #835 adds the
+ * desktop edit-praxis composer. Every OTHER surface still falls through to
+ * `Default*` — WOW is themed-and-partly-skinned, not fully dressed, and
+ * definitely not "broken faction".
  *
  * That split is fragile in BOTH directions, neither of which crashes:
  *
@@ -18,7 +19,7 @@
  *    silently labelling a real, populated, joinable faction "Unaffiliated".
  *
  * So this file pins the exact skinned set AND the theme AND the words together:
- * only the three redesign surfaces are claimed, the rest fall back, WOW resolves
+ * only the surfaces in WOW_SKINNED are claimed, the rest fall back, WOW resolves
  * its own hue, and it still has a name and description of its own.
  *
  * DELETE (or re-scope) THIS FILE when WOW's remaining surfaces ship.
@@ -43,17 +44,20 @@ function Sentinel() {
 }
 
 /**
- * The surfaces WOW has skinned: #821's three, plus the `scoreStamp` its own
- * chronicle plate claims in #840 (ADR-0049). Every other surface must fall back.
+ * The surfaces WOW has skinned: #821's three, the `scoreStamp` its own chronicle
+ * plate claims in #840 (ADR-0049), and #835's DESKTOP edit-praxis composer.
+ * `mobileEditPraxis` is deliberately absent — that is #836, and the desktop skin
+ * landing without it is exactly the half-dressed state this file guards.
  */
 const WOW_SKINNED: ReadonlySet<FactionSurface> = new Set([
   'praxisCard',
   'mobilePraxisCard',
   'scoreStamp',
   'vote',
+  'editPraxis',
 ])
 
-describe('wow is partly skinned: four surfaces claimed, the rest fall back', () => {
+describe('wow is partly skinned: five surfaces claimed, the rest fall back', () => {
   it('registers a manifest now (#821)', () => {
     expect(FACTION_MANIFESTS.map((manifest) => manifest.slug)).toContain('wow')
   })
