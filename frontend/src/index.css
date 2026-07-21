@@ -388,6 +388,45 @@
   --faction-ua-glow: #dd5a1e; /* ORNAMENT ONLY — ensō, mandala. 3.12:1. Never text. */
   --faction-ua-vermil: #b5361a; /* the ensō score numeral — large display type only */
 
+/* ── UA · PRAXIS CARD ONLY — the parchment-and-ensō exception (#857) ──
+     WHY THIS SURFACE KEEPS A VOICE THE FACTION NO LONGER HAS.
+     Two live plans for UA disagree on purpose, and the owner split them by
+     surface (2026-07-20): the PRAXIS HANDOFF wins the praxis card; the UA
+     IDENTITY KIT (#788, #848–853) wins every other UA surface. So this one card
+     keeps its warm vellum-and-vermilion salon voice and its ensō while the rest
+     of UA becomes a sun-bleached, gold-free practice. That is a DELIBERATE
+     EXCEPTION. Do not "harmonise" it away when you read #848.
+
+     WHAT MAKES IT SURVIVABLE: the card reads NOTHING from the legacy `--ua-*`
+     family above (--ua-gold, --ua-gilt, --ua-ink, --ua-paper, --ua-line, …),
+     which #853 deletes wholesale. Everything it needs is named here, in its own
+     `--faction-ua-card-*` namespace, so #853 can run its grep and delete the
+     legacy family without touching this surface. `UaPraxisCard.tsx` and
+     `UaMobilePraxisCard.tsx` are asserted at zero `--ua-` hits.
+
+     Values are the design handoff's UA band verbatim
+     (.design-sync/praxis-cards/design_handoff_faction_vote_stamps). Where #848
+     already ported the same hex under a primitive name, this block POINTS at it
+     rather than repeating the literal — one namespace at the call site, one
+     definition on disk. There is no gilt double-frame: #839 removed the
+     invented one and the handoff never had it. */
+  --faction-ua-card-frame: #b8471a; /* the card's 2px border — design's own */
+  --faction-ua-card-parchment: linear-gradient(
+    158deg,
+    var(--faction-ua-lift),
+    var(--faction-ua-card-bg) 46%,
+    var(--faction-ua-panel)
+  );
+  --faction-ua-card-rule: var(--faction-ua-rule); /* score box + media hairline */
+  --faction-ua-card-box-bg: var(--faction-ua-lift); /* the score box's lifted sheet */
+  --faction-ua-card-chip-bg: #b8471a; /* the ×0.80 multiplier chip */
+  --faction-ua-card-chip-ink: var(--faction-ua-on-fill);
+  --faction-ua-card-enso: var(--faction-ua-glow); /* the ensō brush ink */
+  --faction-ua-card-total: var(--faction-ua-vermil); /* the total, display size */
+  --faction-ua-card-points: var(--faction-ua-glow); /* the "points" caption */
+  --faction-ua-card-lotus: var(--faction-ua-glow); /* the ground watermark */
+  --faction-ua-card-lotus-opacity: 0.2;
+
   /* ── UA growing-mandala reading ramp (#821, re-read for dark by #849) ──
      The five rungs of the vote widget's reading — faint · forming · true ·
      alive · radiant — as the mandala blooms fuller per rank. Named
@@ -910,6 +949,23 @@
   --faction-ua-rank-3: #c77a33; /* true */
   --faction-ua-rank-4: #e0672c; /* alive */
   --faction-ua-rank-5: #f0894a; /* radiant */
+
+  /* ── UA · PRAXIS CARD ONLY, after dark (#857) ──
+     The handoff carries a `UA DARK` band for this card, so it dims like every
+     other UA surface — #848 reversed the old "the salon never dims" ruling.
+     The parchment gradient needs no dark entry: it is composed from
+     lift/card-bg/panel, all three of which flip above, and the design's dark
+     stops (#372E25, #241E18, #2D261F) are exactly those three values.
+     The design dims the ensō with `filter: brightness(1.15)` on an orange
+     asset; the repo's ensō is a MASK tinted from a token, so the lift is
+     expressed as a lighter ink instead of a filter — same result, one fewer
+     paint layer, and it stays in the cascade rather than in a component. */
+  --faction-ua-card-frame: #f0894a;
+  --faction-ua-card-box-bg: #1f1913; /* the box sinks BELOW the sheet in dark */
+  --faction-ua-card-chip-bg: #e86a2c;
+  --faction-ua-card-total: var(--faction-ua-card-accent); /* #f0894a — design's own */
+  --faction-ua-card-points: #f0a85a;
+  --faction-ua-card-lotus-opacity: 0.22;
 
   /* ── DEFAULT · unaffiliated (dark — brightened spectrum) ── */
   --faction-default: #8b8aa0;
