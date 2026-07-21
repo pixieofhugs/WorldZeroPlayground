@@ -58,6 +58,7 @@
       "totalShort": "tot",
       "fromVotes": "+ {{votes}} from votes",
       "points": "points",
+      "pointsShort": "pts",
       "tally": "TALLY",
       "group": "group",
       "onTheRecord": "★ VERIFIED ★ ON THE RECORD "

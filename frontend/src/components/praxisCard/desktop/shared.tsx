@@ -78,6 +78,7 @@ export function PraxisBody({
   titleStyle,
   showCrown,
   eyebrow,
+  voteRule,
 }: {
   praxis: PraxisCardOut;
   tint: string;
@@ -94,6 +95,15 @@ export function PraxisBody({
    * text column and stop at the score stamp rather than run under it.
    */
   eyebrow?: ReactNode;
+  /**
+   * An optional rule drawn immediately above the vote widget (#842). Several
+   * archetypes close the record with a divider before the "how did this land?"
+   * prompt — S.N.I.D.E.'s dashed acid perforation, the unaffiliated sheet's one
+   * 2px rainbow. It is a per-faction MARK (dashed vs. solid, tooth spacing,
+   * pigment, opacity), so it arrives as a node rather than a boolean; an
+   * archetype that draws no rule simply passes nothing.
+   */
+  voteRule?: ReactNode;
 }) {
   return (
     <>
@@ -128,6 +138,7 @@ export function PraxisBody({
       <PraxisMediaGallery praxis={praxis} accent={tint} paper={paper} showPlaceholder />
       <PraxisByline praxis={praxis} style={{ color: muted }} />
       <PraxisVotedByMarker praxis={praxis} style={{ color: muted }} />
+      {voteRule}
       <PraxisVoteFooter praxis={praxis} />
     </>
   );

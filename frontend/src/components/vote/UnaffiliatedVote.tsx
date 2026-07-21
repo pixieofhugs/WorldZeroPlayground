@@ -15,14 +15,29 @@ import { VoteLoginGate, VoteSummary } from './VoteShell'
  * ternary). Same 1-5 data model as every faction; drives the shared
  * {@link useVote} hook so cast/refetch/tally-override logic lives in one place.
  *
- * Each dot shows its own slice of the single rainbow via a 500%-wide background
- * positioned by index — so no pixel/gap math is needed and the row still reads
- * as one continuous spectrum. The rising-wave bob is a reduced-motion-gated CSS
- * class (`.spectrum-dot--reached`); the dot still fills when motion is stilled.
+ * THE ROW IS ONE GRADIENT, WINDOWED (#842). A single rainbow is stretched across
+ * the whole row and each dot shows the slice that falls where the dot actually
+ * sits, via `backgroundSize: <row span>` + a negative `backgroundPositionX`. The
+ * previous `500% 100%` gave every dot an equal fifth of the spectrum regardless
+ * of its size or position, so the 18px dot and the 30px dot spanned the same
+ * hues at different rates and the sweep restarted inside each dot — five little
+ * rainbows, not one. The rising-wave bob is a reduced-motion-gated CSS class
+ * (`.spectrum-dot--reached`); the dot still fills when motion is stilled.
+ *
+ * The windowing constants are DERIVED from the layout rather than copied from
+ * the design's 153px span: our buttons are ≥44px WCAG touch targets, so the row
+ * is wider than the prototype's bare dots and the offsets must be measured off
+ * the boxes we actually draw, or the gradient would drift out of register with
+ * the dots it is painting.
  */
 
 /** Rising dot diameters (px) — ornament geometry, §4a leaves these raw. */
 const DOT_SIZES = [18, 20, 23, 26, 30]
+/** ≥44px touch target (WCAG) and the pitch between dots — ornament geometry. */
+const HIT_SIZE = 44
+const ROW_GAP = 9
+/** Total row width the single rainbow is stretched across. */
+const ROW_SPAN = DOT_SIZES.length * HIT_SIZE + (DOT_SIZES.length - 1) * ROW_GAP
 const TIER_KEYS = ['so-so', 'decent', 'good', 'great', 'brilliant'] as const
 
 export default function UnaffiliatedVote({
@@ -51,12 +66,16 @@ export default function UnaffiliatedVote({
         style={{
           display: 'flex',
           alignItems: 'flex-end',
-          justifyContent: 'space-between',
-          maxWidth: 320,
+          // ornament: the dot row's own pitch, and the ruler the gradient
+          // windowing is measured against (§4a).
+          gap: ROW_GAP,
         }}
       >
         {DOT_SIZES.map((size, index) => {
           const value = index + 1
+          // Where this dot's left edge lands in the row: whole hit boxes before
+          // it, plus the inset that centres the dot inside its own box.
+          const dotOffset = index * (HIT_SIZE + ROW_GAP) + (HIT_SIZE - size) / 2
           const reached = active >= value
           const picked = selected === value
           const top = value === 5
@@ -68,9 +87,9 @@ export default function UnaffiliatedVote({
             backgroundColor: 'transparent',
             backgroundImage: reached ? 'var(--faction-default-rainbow)' : 'none',
             backgroundRepeat: 'no-repeat',
-            // A 5×-wide rainbow, windowed by index → dot 1 red … dot 5 magenta.
-            backgroundSize: '500% 100%',
-            backgroundPositionX: `${(index / (DOT_SIZES.length - 1)) * 100}%`,
+            // One rainbow across the whole row, windowed to where this dot sits.
+            backgroundSize: `${ROW_SPAN}px ${size}px`,
+            backgroundPositionX: `${-dotOffset}px`,
             boxShadow: reached
               ? `0 0 8px color-mix(in srgb, ${glow} 60%, transparent), inset 0 0 0 1px color-mix(in srgb, white 50%, transparent)${
                   top ? `, 0 0 16px color-mix(in srgb, ${glow} 53%, transparent)` : ''
@@ -99,8 +118,11 @@ export default function UnaffiliatedVote({
                 background: 'transparent',
                 padding: 0,
                 // ≥44px touch target (WCAG); the dot floats centred inside.
-                minWidth: 44,
-                minHeight: 44,
+                // FIXED, not min-: the gradient windowing above measures its
+                // offsets off these boxes, so they cannot be free to grow.
+                width: HIT_SIZE,
+                height: HIT_SIZE,
+                flexShrink: 0,
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -117,7 +139,8 @@ export default function UnaffiliatedVote({
         <span
           style={{
             fontFamily: 'var(--faction-default-card-font)',
-            fontSize: 'var(--text-content)',
+            // eslint-disable-next-line local/no-raw-style-values -- ornament: Bebas Neue verdict under the row, the design's 15; a condensed poster face is not on the text scale (§4a)
+            fontSize: 15,
             letterSpacing: '0.04em',
             color: active ? 'var(--faction-default-vote-on)' : 'var(--faction-default-vote-off)',
             transition: 'color 140ms',
