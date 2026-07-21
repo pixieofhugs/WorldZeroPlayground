@@ -417,7 +417,7 @@
     "empty": "No chronicle sealed. This quest stands unclaimed.",
     "viewAll": "Read all {{count}} chronicles ✦",
     "signup": {
-      "cta": "Take Up the Quest",
+      "cta": "Take Up the Quest ✦ earn up to {{points}} pts",
       "slots": "{{open}} of {{max}} places at the lists"
     },
     "submitted": {

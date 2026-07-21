@@ -46,7 +46,6 @@ export const WOW_PLUM = "var(--faction-wow-card-accent)";
 export const WOW_GOLD = "var(--faction-wow-chronicle-gold)";
 export const WOW_FIGURE = "var(--faction-wow-stamp-total)";
 export const WOW_CARD = "var(--faction-wow-card-bg)";
-export const WOW_RIM = "var(--faction-wow-plate-border)";
 export const WOW_PLATE = "var(--faction-wow-plate)";
 export const WOW_RULE = "var(--faction-wow-chronicle-rule)";
 export const WOW_DISPLAY = "var(--faction-wow-card-font)"; // MedievalSharp
@@ -122,7 +121,7 @@ export function WowPavilionHeader({
           <div
             style={{
               display: "flex",
-              alignItems: "baseline",
+              alignItems: "center",
               justifyContent: "space-between",
               gap: "var(--space-sm)",
               marginBottom: "var(--space-sm)",
@@ -247,7 +246,10 @@ export function WowSectionHead({
       style={{
         display: "flex",
         alignItems: "center",
-        gap: "var(--space-md)",
+        // wraps rather than overflows: at 375px a long heading beside a sort
+        // toggle has nowhere to go, and the rule between them is ornament.
+        flexWrap: "wrap",
+        gap: "var(--space-sm) var(--space-md)",
         marginBottom: "var(--space-md)",
       }}
     >
@@ -266,7 +268,7 @@ export function WowSectionHead({
       <span
         aria-hidden
         style={{
-          flex: 1,
+          flex: "1 1 var(--space-2xl)",
           height: 2,
           background: `linear-gradient(90deg, ${WOW_GOLD}, transparent)`,
         }}

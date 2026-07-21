@@ -38,6 +38,7 @@ import {
   WOW_INK,
   WOW_MUTED,
   WOW_PLATE,
+  WOW_PLUM,
   WOW_RULE,
   WowPavilionHeader,
   WowQuestFrame,
@@ -79,13 +80,37 @@ export default function WowFieldDesk({ state }: { state: FieldDeskHomeState }) {
       }}
     >
       <WowPavilionHeader
-        eyebrow={t("fieldDesk.home.wow.charEyebrow")}
+        eyebrow={
+          <>
+            {t("fieldDesk.home.wow.charEyebrow")}
+            <Link
+              to={`/characters/${character.id}/edit`}
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                minHeight: TAP,
+                marginLeft: "var(--space-sm)",
+                color: WOW_PLUM,
+                textDecoration: "none",
+              }}
+            >
+              {t("fieldDesk.home.edit")}
+            </Link>
+          </>
+        }
         tally={
           <>
             <WowSpark /> {character.score?.toLocaleString() ?? "0"}
           </>
         }
-        name={t("fieldDesk.home.wow.greeting", { name: character.display_name })}
+        name={
+          <Link
+            to={`/characters/${character.id}`}
+            style={{ color: "inherit", textDecoration: "none" }}
+          >
+            {t("fieldDesk.home.wow.greeting", { name: character.display_name })}
+          </Link>
+        }
         byline={t("sidebar.characterCard.factionLevel", {
           faction: factionName(character.faction_slug),
           level: character.level,
@@ -265,13 +290,13 @@ export default function WowFieldDesk({ state }: { state: FieldDeskHomeState }) {
         </section>
 
         {/* ── the two verbs ── */}
-        <div style={{ display: "flex", gap: "var(--space-sm)" }}>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: "var(--space-sm)" }}>
           <Link to="/tasks" className="wow-btn" style={wowGiltButton}>
             <WowSpark color="var(--faction-wow-quest-text)" />
             {t("fieldDesk.home.browseTasks")}
           </Link>
           {canProposeTask && (
-            <Link to="/propose-task" style={{ ...wowGhostButton, flex: "0 0 auto" }}>
+            <Link to="/propose-task" style={{ ...wowGhostButton, flex: "1 1 auto" }}>
               {t("actions.proposeTask")}
             </Link>
           )}

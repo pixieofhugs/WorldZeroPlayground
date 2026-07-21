@@ -257,7 +257,7 @@ export default function WowTaskDetail({ state }: { state: TaskDetailState }) {
           )}
           <button type="button" onClick={handleSignup} className="wow-btn" style={wowGiltButton}>
             <WowSpark color="var(--faction-wow-quest-text)" />
-            {t("wow.signup.cta")}
+            {t("wow.signup.cta", { points: modifiedPoints })}
           </button>
           <MobileStickyCaption color={WOW_MUTED}>
             {t("wow.signup.slots", { open: slotsOpen, max: maxTaskSlots })}
