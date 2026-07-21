@@ -8,7 +8,7 @@
  *  3. A faction VOICE: the slug reaches the gate through the context published
  *     by VoteUI, so the nine widgets keep their zero-prop call site.
  *  4. `wow` wears the chronicle plum and `coven` the marker pink — the design
- *     board labels those two backwards (ADR-0050, LABELS.md), so an inversion
+ *     board labels those two backwards (ADR-0050), so an inversion
  *     here would look correct against the artifact and be wrong.
  */
 import { describe, it, expect } from 'vitest'

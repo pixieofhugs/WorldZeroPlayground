@@ -88,7 +88,7 @@ WOW's **spine hue is yellow**: `--faction-wow` (#e0a800 light / #f5c542 dark) an
 
 WOW's **skin is the chronicle**: cream parchment (`#fbf4e0`), a gold frame (`#c8a02a`) and plum ink (`#7a4a9e` light → `#c79be0` dark), MedievalSharp for display, the `✦` glyph, the googly-balloon verdict and an archaic register. None of that is yellow, and none of it should be pulled toward yellow.
 
-The two axes are independent, and #830 collapsed them: it read a mislabelled mockup heading, gave the chronicle to Cozy Coven, and then *derived a whole yellow skin for WOW from its spine hue*, out of nothing. #838 retired that ramp. **ADR-0050** is the record, and `.design-sync/praxis-cards/LABELS.md` is the short version — every design artifact for this faction pair is labelled backwards, so go by tokens and metaphor:
+The two axes are independent, and #830 collapsed them: it read a mislabelled mockup heading, gave the chronicle to Cozy Coven, and then *derived a whole yellow skin for WOW from its spine hue*, out of nothing. #838 retired that ramp. **ADR-0050** is the record — every design artifact for this faction pair is labelled backwards, so go by tokens and metaphor:
 
 | | **`wow`** (Warriors of Whimsy) | **`coven`** (Cozy Coven) |
 |---|---|---|

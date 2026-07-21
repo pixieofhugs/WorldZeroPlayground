@@ -1,5 +1,12 @@
 /**
- * wow.exe — Warriors of Whimsy faction edit-praxis form.
+ * Cozy Coven's faction edit-praxis form — the `wow.exe` window.
+ *
+ * The WINDOW TITLE really is the literal string `wow.exe`: this skin predates
+ * #784, which split Coven off Warriors of Whimsy and handed it the pink
+ * computer-witch identity, chrome string included. The FACTION is `coven`; only
+ * the drawn window caption still says wow. Do not read that label as a slug —
+ * ADR-0050.
+ *
  * Lo-fi computer-witch desktop window: pastel pink chrome, dotted grid body,
  * notepad panels, window-tab mode chips, lo-fi pink buttons, ivy + sticker charms.
  */

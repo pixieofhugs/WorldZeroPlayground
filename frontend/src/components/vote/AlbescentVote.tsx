@@ -6,9 +6,8 @@ import { VoteLoginGate, VoteSummary } from './VoteShell'
 import { reframeLabel } from './voteReframes'
 
 /**
- * Albescent vote UI (#843) — FERROFLUID. Ported from the design handoff
- * (`.design-sync/praxis-cards/design_handoff_faction_vote_stamps/`,
- * `AlbescentVote`). It is the eighth widget; until now Albescent fell through to
+ * Albescent vote UI (#843) — FERROFLUID. Ported from the vote-stamps design
+ * handoff (`AlbescentVote`), not re-imagined — ADR-0049. It is the eighth widget; until now Albescent fell through to
  * {@link import('./UnaffiliatedVote').default} and nobody noticed, because the
  * fallback renders something plausible.
  *

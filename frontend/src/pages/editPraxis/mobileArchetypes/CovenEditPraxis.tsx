@@ -1,8 +1,11 @@
 /**
- * Warriors of Whimsy MOBILE composer (#498 pilot) — the scrapbook `.exe` window
- * idiom on a phone. Same single-column composer as the Default mobile skin
- * (Write/Preview toggle, fluid media grid, sticky submit bar) dressed in the
- * pink window chrome: dotted board, notepad panels, sparkle-titled bars.
+ * Cozy Coven MOBILE composer (#498 pilot) — the scrapbook `.exe` window idiom
+ * on a phone. (The `wow-treatment` name below is the pre-#784 label for this
+ * pink identity, not the `wow` slug — ADR-0050.)
+ *
+ * Same single-column composer as the Default mobile skin (Write/Preview toggle,
+ * fluid media grid, sticky submit bar) dressed in the pink window chrome:
+ * dotted board, notepad panels, sparkle-titled bars.
  * Ported from the Field Kit `wow-treatment` composer; grounds on the
  * `--faction-coven-*` tokens already in index.css (the set CovenFieldDesk /
  * CovenEditPraxis desktop use). Consumes `useEditPraxis` verbatim — no editor,

@@ -171,8 +171,8 @@
      the googly-balloon verdict, its glyph is ✦, its face is MedievalSharp.
      #830 authored a yellow chronicle + yellow balloon ramp for WOW from no
      design source at all, on the strength of a mislabelled mockup heading; #838
-     retired it. The chronicle was never Coven's — see ADR-0050 and
-     .design-sync/praxis-cards/LABELS.md before moving anything here. */
+     retired it. The chronicle was never Coven's — see ADR-0050 before moving
+     anything here. */
 
   /* ── DEFAULT · unaffiliated (no faction; rainbow = every path still open) ──
      Not a rainbow-spine faction — the blank-slate / first-life state (na). Its
@@ -396,8 +396,7 @@
      `--faction-ua-card-*` namespace. `UaPraxisCard.tsx` and
      `UaMobilePraxisCard.tsx` are asserted at zero legacy hits.
 
-     Values are the design handoff's UA band verbatim
-     (.design-sync/praxis-cards/design_handoff_faction_vote_stamps). Where #848
+     Values are the vote-stamps design handoff's UA band verbatim. Where #848
      already ported the same hex under a primitive name, this block POINTS at it
      rather than repeating the literal — one namespace at the call site, one
      definition on disk. There is no gilt double-frame: #839 removed the
