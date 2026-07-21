@@ -1,71 +1,77 @@
-import { useId } from "react";
 import i18n from "../../i18n";
 
 /**
- * Shared UA (University of Asthmatics) heraldic atoms — the gilt-salon sigil
- * and motto ribbon that are the faction's locked identity.
+ * Shared UA (University of Asthmatics) identity atoms — the ensō sigil and the
+ * motto ribbon.
  *
- * Extracted from UaFactionHero so the sigil is drawn once and dropped into
- * every UA surface that carries it (faction hero, task card, edit-praxis
- * masthead + commission slip) rather than re-drawn per file. All colors via
- * --ua-* tokens (never hardcode hex — CLAUDE.md); the salon is always-light,
- * so tokens read identically in both themes.
+ * THE SALON IS DEAD (#788, #848). This file used to draw a gilt heraldic shield
+ * with a rising sun and crossed brushes, in a palette that repeated itself in
+ * dark mode on purpose. UA is now a quiet, sun-bleached practice with a real
+ * dark mode, and its mark is the ensō — the hand-drawn circle, made in one
+ * breath, left open.
+ *
+ * Drawn once here and dropped into every UA surface that carries the mark
+ * (faction hero, task card, avatar badge, edit-praxis masthead) rather than
+ * re-drawn per file. All colours via tokens (never hardcode hex — CLAUDE.md),
+ * and every token below has both themes, so the mark follows the
+ * `[data-theme="dark"]` cascade with no ternary.
  */
 
-
-/** Heraldic sigil — a shield with a rising sun and crossed brushes. */
+/**
+ * Ensō — UA's sigil (#849, brief §4).
+ *
+ * Two arcs, not one path: a HEAVY sweep (stroke-width 22) that carries most of
+ * the circle, then a LIGHT return (10, slightly transparent) that closes toward
+ * the start and stops short. The gap sits at the lower left, ~7-8 o'clock, and
+ * the whole figure is rotated -7° so it reads as a stroke of the hand rather
+ * than as geometry. The taper is done with two stroke-widths instead of a
+ * variable-width outline — the cheap approximation, and at sigil sizes
+ * (16-150px) it is the one that survives.
+ *
+ * This is deliberately NOT the kit's `enso-detailed.svg`, which is 705 KB across
+ * 284 hand-drawn paths. That asset does ship — as the praxis card's total mark,
+ * where it is drawn at 118-138px and loaded as a masked file outside the JS
+ * bundle (`components/factionMarks/Enso.tsx`, #839). Two ensōs on purpose:
+ * different sizes, different consumers, different delivery. Do not consolidate.
+ *
+ * The ensō is reserved for the SCORE and the FACTION MARK. It is never a
+ * container border — a card outlined in an ensō is the mark spent as decoration.
+ *
+ * The viewBox is square. Callers that pass a non-square width/height (a legacy
+ * shield ratio, e.g. 72x86) get the circle centred and letterboxed by the
+ * default `preserveAspectRatio`, which is the correct read.
+ */
 export function UaSigil({ width, height }: { width: number; height: number }) {
-  // Unique clip id per instance — the shield is rendered many times per page
-  // (a card list, the hero, twice in edit-praxis); a shared literal id would
-  // be invalid SVG and risk cross-instance clipping.
-  const clipId = useId();
-  const shield = "M8 6 H92 V60 C92 92 66 108 50 116 C34 108 8 92 8 60 Z";
   return (
     <svg
       width={width}
       height={height}
-      viewBox="0 0 100 120"
+      viewBox="0 0 200 200"
+      fill="none"
       aria-hidden="true"
       style={{ display: "block", flexShrink: 0 }}
     >
-      <defs>
-        <clipPath id={clipId}>
-          <path d={shield} />
-        </clipPath>
-      </defs>
-      <g clipPath={`url(#${clipId})`}>
-        <rect x="0" y="0" width="100" height="120" fill="var(--ua-orange)" />
-        <rect x="0" y="60" width="100" height="60" fill="var(--ua-paper-warm)" />
-        <circle cx="50" cy="60" r="15" fill="var(--ua-gold-lt)" />
-        <g stroke="var(--ua-gold-lt)" strokeWidth="2.4" strokeLinecap="round">
-          <line x1="50" y1="60" x2="50" y2="20" />
-          <line x1="50" y1="60" x2="22" y2="30" />
-          <line x1="50" y1="60" x2="78" y2="30" />
-          <line x1="50" y1="60" x2="14" y2="48" />
-          <line x1="50" y1="60" x2="86" y2="48" />
-          <line x1="50" y1="60" x2="34" y2="22" />
-          <line x1="50" y1="60" x2="66" y2="22" />
-        </g>
-        <g transform="translate(50 84)">
-          <g transform="rotate(38)">
-            <rect x="-2" y="-30" width="4" height="44" rx="1.5" fill="var(--ua-ink)" />
-            <rect x="-3" y="10" width="6" height="6" fill="var(--ua-gold-pale)" />
-            <path d="M-3 16 L3 16 L1.5 26 L-1.5 26 Z" fill="var(--ua-orange)" />
-          </g>
-          <g transform="rotate(-38)">
-            <rect x="-2" y="-30" width="4" height="44" rx="1.5" fill="var(--ua-gold)" />
-            <rect x="-3" y="10" width="6" height="6" fill="var(--ua-gold-pale)" />
-            <path d="M-3 16 L3 16 L1.5 26 L-1.5 26 Z" fill="var(--ua-gold-lt)" />
-          </g>
-        </g>
+      <g
+        transform="rotate(-7 100 100)"
+        stroke="var(--faction-ua-glow)"
+        strokeLinecap="round"
+        fill="none"
+      >
+        <path d="M134 41.2 A68 68 0 1 1 66 158.8" strokeWidth="22" />
+        <path d="M66 158.8 A68 68 0 0 1 66 41.2" strokeWidth="10" strokeOpacity="0.85" />
       </g>
-      <path d={shield} fill="none" stroke="var(--ua-gold-lt)" strokeWidth="2.5" />
-      <path d={shield} fill="none" stroke="var(--ua-ink)" strokeWidth="0.8" />
     </svg>
   );
 }
 
-/** The motto cartouche — a burnt-amber ribbon with notched ends. */
+/**
+ * The motto cartouche — a solid sienna ribbon with notched ends.
+ *
+ * Kept as-is structurally; only repointed off the legacy `--ua-*` family onto
+ * the fill/on-fill pair, which carries both themes (4.59:1 light, 5.59:1 dark).
+ * Whether the practice still wants a motto ribbon at all is an archetype
+ * question and belongs to the surfaces that draw it, not to this file.
+ */
 export function MottoRibbon({
   fontSize = 11,
   padding = "5px 26px",
@@ -78,8 +84,8 @@ export function MottoRibbon({
       style={{
         position: "relative",
         width: "fit-content",
-        background: "var(--ua-orange)",
-        color: "var(--ua-paper-warm)",
+        background: "var(--faction-ua)",
+        color: "var(--faction-ua-on-fill)",
         fontFamily: 'var(--faction-ua-body-font)',
         fontSize,
         letterSpacing: "0.1em",

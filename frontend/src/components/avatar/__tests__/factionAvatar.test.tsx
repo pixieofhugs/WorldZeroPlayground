@@ -37,11 +37,12 @@ describe("FactionAvatar — UA variant (#200)", () => {
     // Parchment disc ringed in UA gilt tokens (never hardcoded hex).
     expect(html).toContain("var(--ua-orange)");
     expect(html).toContain("var(--faction-ua-card-font)");
-    // The heraldic sigil badge is present (UaSigil draws --ua-* shield fills).
+    // The disc's own ring/badge tokens (still legacy --ua-*, #853 deletes them).
     expect(html).toContain("var(--ua-gold)");
     expect(html).toContain("var(--ua-paper-warm)");
-    // UaSigil markup marker — the shield uses an SVG viewBox unique to the sigil.
-    expect(html).toContain('viewBox="0 0 100 120"');
+    // The sigil badge is present — the ensō's heavy sweep (#849 retired the
+    // gilt shield, so the 100x120 viewBox marker is gone with it).
+    expect(html).toContain('d="M134 41.2 A68 68 0 1 1 66 158.8"');
   });
 
   it("renders the character portrait when avatar_url is present", () => {
@@ -51,17 +52,17 @@ describe("FactionAvatar — UA variant (#200)", () => {
       />,
     );
     expect(html).toContain("isolde.png");
-    // Still badged with the crest.
-    expect(html).toContain('viewBox="0 0 100 120"');
+    // Still badged with the mark.
+    expect(html).toContain('d="M134 41.2 A68 68 0 1 1 66 158.8"');
   });
 
   it("falls back to the plain default avatar for an unknown slug", () => {
     const html = renderToStaticMarkup(
       <FactionAvatar character={character({ faction_slug: "totally-unknown" })} />,
     );
-    // No UA gilt tokens and no crest badge on the fallback circle.
+    // No UA tokens and no ensō badge on the fallback circle.
     expect(html).not.toContain("var(--ua-orange)");
-    expect(html).not.toContain('viewBox="0 0 100 120"');
+    expect(html).not.toContain('d="M134 41.2 A68 68 0 1 1 66 158.8"');
     // Default renders the plain initial circle.
     expect(html).toContain("I");
   });

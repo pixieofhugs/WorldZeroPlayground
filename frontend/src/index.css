@@ -388,24 +388,35 @@
   --faction-ua-glow: #dd5a1e; /* ORNAMENT ONLY — ensō, mandala. 3.12:1. Never text. */
   --faction-ua-vermil: #b5361a; /* the ensō score numeral — large display type only */
 
-  /* ── UA growing-mandala vote widget (#821) ──
-     Per-rank fill ramp: the mandala blooms taupe→deep-red as the reading warms
-     (faint → radiant). Cores are punched to the sheet colour so the mandala
-     reads as an aperture: the punch tracks --faction-ua-card-bg, full stop —
-     which is now how it keeps working, since card-bg flips in dark.
-     THE RAMP ITSELF STILL HAS NO DARK VALUES (#849 owns them). Chosen against
-     parchment, it inverts on a dark card — "radiant" deep vermilion becomes the
-     dimmest swatch. Light ascends toward depth, dark must ascend toward
-     brightness. Until #849 lands, this widget is the one UA surface that has
-     not been re-read for dark mode. */
-  --faction-ua-vote-rank-1: #a69c8c;
-  --faction-ua-vote-rank-2: #c0894f;
-  --faction-ua-vote-rank-3: #d2762f;
-  --faction-ua-vote-rank-4: #dd5a1e;
-  --faction-ua-vote-rank-5: #b5361a;
-  --faction-ua-vote-core: var(--faction-ua-card-bg); /* punch cores to the sheet */
-  --faction-ua-vote-halo: var(--faction-ua-vote-rank-4); /* bloom pulse ring */
-  --faction-ua-vote-reading: #b8471a; /* the lowercase reading word */
+  /* ── UA growing-mandala reading ramp (#821, re-read for dark by #849) ──
+     The five rungs of the vote widget's reading — faint · forming · true ·
+     alive · radiant — as the mandala blooms fuller per rank. Named
+     --faction-ua-rank-* (not -vote-rank-*) because the ramp is the PRACTICE's
+     ladder, not one widget's: it is the same five steps wherever intensity is
+     graded.
+
+     THE RAMP IS DIRECTIONAL, AND THE DIRECTION FLIPS WITH THE THEME. Light
+     ascends toward DEPTH (taupe → deep vermilion): on a sun-bleached sheet the
+     truest mark is the one pressed hardest into it. Transplanted onto a dark
+     card that ordering inverts — #b5361a, "radiant", would read as the DIMMEST
+     swatch of the five. So dark ascends toward BRIGHTNESS instead, and its
+     values are chosen fresh rather than lightened from these. See the dark
+     block for the mirrored ladder; both ends clear 3:1 on their card-bg. */
+  --faction-ua-rank-1: #a69c8c; /* faint */
+  --faction-ua-rank-2: #c0894f; /* forming */
+  --faction-ua-rank-3: #d2762f; /* true */
+  --faction-ua-rank-4: #dd5a1e; /* alive */
+  --faction-ua-rank-5: #b5361a; /* radiant */
+  /* Cores are punched to the sheet colour so the mandala reads as an APERTURE
+     rather than a disc — it must be whatever the card is, never a fixed
+     parchment. Tracking --faction-ua-card-bg is what makes that true, full
+     stop; it is not true because UA is light in both themes (#848 ended that). */
+  --faction-ua-vote-core: var(--faction-ua-card-bg);
+  --faction-ua-vote-halo: var(--faction-ua-rank-4); /* bloom pulse ring */
+  /* The lowercase reading word is TEXT, so it owes body contrast and takes the
+     card's accent ink — which has both themes already — rather than an ornament
+     hue of its own. */
+  --faction-ua-vote-reading: var(--faction-ua-card-accent);
 
   /* ── Warriors of Whimsy collage scrap layers (legacy — kept for back-compat) ── */
   --faction-coven-scrap-deep: #fbcfe0;
@@ -886,6 +897,19 @@
   --faction-ua-hair: #332b22; /* faintest divider, below -rule */
   --faction-ua-glow: #f08a4e; /* ORNAMENT ONLY — ensō, mandala. Never text. */
   --faction-ua-vermil: #d9542a; /* the ensō score numeral — large display only */
+
+  /* The reading ramp, mirrored (#849). Not the light ramp lightened: the light
+     ladder climbs toward depth and would arrive at its dimmest rung here, so
+     this one climbs toward brightness and rank 5 is the brightest swatch, not
+     the darkest. Contrast on --faction-ua-card-bg (#241e18), all clearing the
+     3:1 ornament floor: 3.31 / 4.39 / 4.91 / 4.82 / 6.58. Rank 5 lands on
+     --faction-ua-glow's dark value on purpose — "radiant" is the ornament hue
+     at full strength, which is what the ensō is drawn in. */
+  --faction-ua-rank-1: #7a6e5e; /* faint */
+  --faction-ua-rank-2: #a67c46; /* forming */
+  --faction-ua-rank-3: #c77a33; /* true */
+  --faction-ua-rank-4: #e0672c; /* alive */
+  --faction-ua-rank-5: #f0894a; /* radiant */
 
   /* ── DEFAULT · unaffiliated (dark — brightened spectrum) ── */
   --faction-default: #8b8aa0;
