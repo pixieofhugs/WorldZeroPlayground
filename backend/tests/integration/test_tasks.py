@@ -438,6 +438,57 @@ async def test_list_tasks_excludes_hidden_faction_tasks(
 
 
 @pytest.mark.asyncio
+async def test_list_tasks_includes_unaffiliated_tasks(
+    client: AsyncClient,
+    db_session: AsyncSession,
+    character: Character,
+):
+    """Cross-faction (`na`) tasks stay listable even though `na` is a hidden row.
+
+    The `faction_ua` fixture (pulled in via `character`) seeds `na` with
+    `FactionStatus.hidden`, mirroring a freshly seeded DB. A genuinely hidden
+    faction's task is excluded; the unaffiliated sentinel's task is not —
+    unaffiliated is a state, not a deprecated faction (issue #921).
+    """
+    from sqlalchemy import select
+
+    # A genuinely hidden/deprecated faction — its task must NOT be listed.
+    hidden_result = await db_session.execute(
+        select(Faction).where(Faction.slug == "hiddenfaction")
+    )
+    if hidden_result.scalar_one_or_none() is None:
+        db_session.add(Faction(slug="hiddenfaction", status=FactionStatus.hidden))
+        await db_session.commit()
+
+    unaffiliated_task = Task(
+        title="Cross-Faction Task",
+        description="",
+        point_value=10,
+        level_required=0,
+        status=TaskStatus.active,
+        created_by=character.id,
+        primary_faction_slug=UNAFFILIATED_FACTION_SLUG,
+    )
+    hidden_task = Task(
+        title="Hidden Faction Task",
+        description="",
+        point_value=10,
+        level_required=0,
+        status=TaskStatus.active,
+        created_by=character.id,
+        primary_faction_slug="hiddenfaction",
+    )
+    db_session.add_all([unaffiliated_task, hidden_task])
+    await db_session.commit()
+
+    resp = await client.get("/tasks")
+    assert resp.status_code == 200
+    ids = [t["id"] for t in resp.json()]
+    assert unaffiliated_task.id in ids
+    assert hidden_task.id not in ids
+
+
+@pytest.mark.asyncio
 async def test_create_praxis_for_hidden_faction_task_rejected(
     client: AsyncClient,
     db_session: AsyncSession,
