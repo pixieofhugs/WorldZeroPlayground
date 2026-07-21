@@ -122,7 +122,7 @@ All fonts loaded from Google Fonts.
 
 | Faction     | Headline font      | CSS var                           |
 | ----------- | ------------------ | --------------------------------- |
-| UA          | `IM Fell English`  | `--faction-ua-card-font`          |
+| UA          | `Cormorant Garamond` — via `--font-faction-serif`; `EB Garamond` is its secondary, on `--faction-ua-body-font` (#848) | `--faction-ua-card-font`          |
 | Everymen    | `Special Elite`    | `--faction-everymen-card-font`    |
 | Cozy Coven  | `Caveat`           | `--faction-coven-card-font`       |
 | Warriors of Whimsy | `MedievalSharp` — the chronicle's display face; `Lora` italic is its secondary (§3) | `--faction-wow-card-font` |
