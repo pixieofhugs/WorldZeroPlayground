@@ -22,10 +22,23 @@
  * mobile composer structure (Write/Preview toggle, fluid media grid, sticky
  * submit bar), since the kit draws no mobile composer of its own.
  *
+ * #899 adds the three surfaces that REPEAT everywhere: the DECREE task card —
+ * the kit calls it "the archetype the others mirror", and the comment and feed
+ * frame follow its chrome — plus that comment voice and the herald's-dispatch
+ * feed frame. A quest is ISSUED by decree and proof is RECORDED in the
+ * chronicle: two chromes on one palette, deliberately unalike (#785's "the
+ * praxis card mirrors the task card" clause is retired for WOW).
+ *
+ * #900 adds the PAGE-LEVEL desktop surfaces: the recruiting `factionHero`, the
+ * `backdrop` wallpaper every WOW-context page sits on, the crested `profileBody`
+ * and the `factionSelectCard` pledge placard. `factionBody` and `factionCard`
+ * stay unclaimed on purpose — the kit drew the faction HERO, not the page
+ * beneath it, so those keep defaulting until they are designed.
+ *
  * Override-only, like every manifest: WOW still falls through to the `Default*`
  * archetype on every OTHER surface — it is themed-and-partly-skinned now, not
- * fully dressed. `wowRendersDefault.test.tsx` pins exactly which six surfaces
- * are claimed and asserts the rest still fall back.
+ * fully dressed. `wowRendersDefault.test.tsx` pins exactly which surfaces are
+ * claimed and asserts the rest still fall back.
  *
  * Entries are thunks (`() => Component`) so they are read at render time, never
  * during module evaluation — see the cycle note in `./manifest.ts`.
@@ -33,7 +46,14 @@
 import type { FactionManifest } from './manifest'
 
 import WowAvatar from '../components/avatar/WowAvatar'
+import WowBackdrop from '../components/backdrop/WowBackdrop'
+import { WOWSelectCard } from '../components/cards/FactionSelectCard'
+import WowComment from '../components/comments/voices/WowComment'
+import WowFeedFrame from '../components/feed/WowFeedFrame'
+import WowFactionHero from '../components/cards/WowFactionHero'
 import { WowSigil } from '../components/cards/WowSigil'
+import WowTaskCard from '../components/cards/WowTaskCard'
+import WowProfileBody from '../pages/characterProfile/archetypes/WowProfileBody'
 import WowVote from '../components/vote/WowVote'
 import WowMobilePraxisCard from '../components/praxisCard/mobile/WowMobilePraxisCard'
 import WowPraxisCard from '../components/praxisCard/desktop/WowPraxisCard'
@@ -50,6 +70,9 @@ export const WOW_MANIFEST: FactionManifest = {
 
   sigil: () => WowSigil,
   avatar: () => WowAvatar,
+  taskCard: () => WowTaskCard,
+  comment: () => WowComment,
+  feedFrame: () => WowFeedFrame,
   praxisCard: () => WowPraxisCard,
   scoreStamp: () => WowScoreStamp,
   mobilePraxisCard: () => WowMobilePraxisCard,
@@ -57,6 +80,13 @@ export const WOW_MANIFEST: FactionManifest = {
   editPraxis: () => WowEditPraxis,
   mobileEditPraxis: () => WowMobileEditPraxis,
 
+  // #900 — the page-level desktop surfaces.
+  factionHero: () => WowFactionHero,
+  backdrop: () => WowBackdrop,
+  profileBody: () => WowProfileBody,
+  factionSelectCard: () => WOWSelectCard,
+
+  // #895 — the lists: the duel seal and the praxis rail, both form factors.
   duelSeal: () => WowDuelSealConfirm,
   duelRail: () => WowDuelRail,
   mobileDuelSeal: () => WowMobileDuelSealConfirm,
