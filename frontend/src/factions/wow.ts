@@ -3,13 +3,14 @@
  *
  * #784 stripped WOW's old lo-fi pink `.exe` identity (it moved to Cozy Coven),
  * and #812 gave back only a yellow THEME — no skin. This manifest is the first
- * slice of WOW's own kit: the praxis card (a yellow CHRONICLE, the same frame
- * Coven wears in gold/plum, recoloured — never gold/plum here) plus its mobile
- * twin and the googly-balloon vote widget.
+ * slice of WOW's own kit: the CHRONICLE OF PROOF praxis card (cream/gold/plum —
+ * ADR-0050; the yellow it briefly wore came from a mislabelled mockup), its
+ * score stamp with the ✦ total mark, its mobile twin, and the googly-balloon
+ * vote widget.
  *
  * Override-only, like every manifest: WOW still falls through to the `Default*`
  * archetype on every OTHER surface — it is themed-and-partly-skinned now, not
- * fully dressed. `wowRendersDefault.test.tsx` pins exactly which three surfaces
+ * fully dressed. `wowRendersDefault.test.tsx` pins exactly which four surfaces
  * are claimed and asserts the rest still fall back.
  *
  * Entries are thunks (`() => Component`) so they are read at render time, never
@@ -20,11 +21,13 @@ import type { FactionManifest } from './manifest'
 import WowVote from '../components/vote/WowVote'
 import WowMobilePraxisCard from '../components/praxisCard/mobile/WowMobilePraxisCard'
 import WowPraxisCard from '../components/praxisCard/desktop/WowPraxisCard'
+import WowScoreStamp from '../components/praxisCard/scoreStamp/WowScoreStamp'
 
 export const WOW_MANIFEST: FactionManifest = {
   slug: 'wow',
 
   praxisCard: () => WowPraxisCard,
+  scoreStamp: () => WowScoreStamp,
   mobilePraxisCard: () => WowMobilePraxisCard,
   vote: () => WowVote,
 }

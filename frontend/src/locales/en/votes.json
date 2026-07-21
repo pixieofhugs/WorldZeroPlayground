@@ -78,13 +78,15 @@
     },
     "coven": {
       "rateAria": "Cheer {{value}} — {{label}}",
+      "prompt": "how'd this land?",
       "idle": "tap to cheer",
       "tag": "yay!"
     },
     "wow": {
       "rateAria": "Judge {{value}} — {{label}}",
-      "idle": "awaiting thy judgment",
-      "tag": "thy verdict"
+      "prompt": "Cast thy Verdict",
+      "idle": "— awaiting thy judgment —",
+      "picked": "thou dubbed it {{label}}"
     },
     "snide": {
       "rateAria": "Rate {{value}} — {{label}}",

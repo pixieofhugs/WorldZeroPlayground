@@ -63,18 +63,36 @@ export function PraxisTitle({
 export function PraxisTaskLink({
   praxis,
   style,
+  lead,
 }: {
   praxis: PraxisCardOut;
   style?: CSSProperties;
+  /**
+   * An optional un-linked run-in before the task title (#840). Some factions
+   * write this line as a sentence rather than a bare reference — WOW's chronicle
+   * reads "for the quest — {task}". It sits OUTSIDE the anchor on purpose: the
+   * faction's own framing is not part of the link's accessible name.
+   */
+  lead?: string;
 }) {
+  if (!lead) {
+    return (
+      <Link
+        to={`/tasks/${praxis.task_id}`}
+        className="font-body hover:underline"
+        style={{ fontSize: "var(--text-content)", ...style }}
+      >
+        {praxis.task_title}
+      </Link>
+    );
+  }
   return (
-    <Link
-      to={`/tasks/${praxis.task_id}`}
-      className="font-body hover:underline"
-      style={{ fontSize: "var(--text-content)", ...style }}
-    >
-      {praxis.task_title}
-    </Link>
+    <span className="font-body" style={{ fontSize: "var(--text-content)", ...style }}>
+      <span style={{ marginRight: "var(--space-xs)" }}>{lead}</span>
+      <Link to={`/tasks/${praxis.task_id}`} className="hover:underline" style={{ color: "inherit" }}>
+        {praxis.task_title}
+      </Link>
+    </span>
   );
 }
 
@@ -450,6 +468,8 @@ export function PraxisMediaGallery({
   accent,
   paper,
   showPlaceholder,
+  emptyLabel,
+  emptyStyle,
 }: {
   praxis: PraxisCardOut;
   accent: string;
@@ -460,6 +480,15 @@ export function PraxisMediaGallery({
    * dense faction cards; the spectrum Default card turns it on (#820).
    */
   showPlaceholder?: boolean;
+  /**
+   * The empty slot's invitation, in the faction's own words (#840) — WOW's
+   * "❦ here, an illumination ❦", Coven's "Drop a happy little photo ✿". The
+   * TILES stay uniform across every faction; only this one line and the frame
+   * around it are a voice, and the design gives each faction its own.
+   */
+  emptyLabel?: string;
+  /** Empty-slot frame overrides (the design draws a per-faction slot). */
+  emptyStyle?: CSSProperties;
 }) {
   const { t } = useTranslation("praxis");
   const items = praxis.media_items ?? [];
@@ -479,9 +508,10 @@ export function PraxisMediaGallery({
           letterSpacing: "0.14em",
           textTransform: "uppercase",
           opacity: 0.7,
+          ...emptyStyle,
         }}
       >
-        {t("card.mediaEmpty")}
+        {emptyLabel ?? t("card.mediaEmpty")}
       </div>
     );
   }

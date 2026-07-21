@@ -1,4 +1,4 @@
-import type { CSSProperties } from 'react'
+import type { CSSProperties, ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import type { PraxisCardOut } from '../../../api/praxis'
@@ -324,11 +324,14 @@ export function MobileMediaGallery({
   praxis,
   theme,
   showPlaceholder,
+  emptyLabel,
 }: {
   praxis: PraxisCardOut
   theme: MobileSlotTheme
   /** Empty gallery renders a dashed drop-target placeholder (spectrum, #820). */
   showPlaceholder?: boolean
+  /** The empty slot's invitation in the faction's own words (#840). */
+  emptyLabel?: string
 }) {
   const { t } = useTranslation('praxis')
   const items = praxis.media_items ?? []
@@ -352,7 +355,7 @@ export function MobileMediaGallery({
           opacity: 0.7,
         }}
       >
-        {t('card.mediaEmpty')}
+        {emptyLabel ?? t('card.mediaEmpty')}
       </div>
     )
   }
@@ -491,12 +494,19 @@ export function MobileVoteFooter({ praxis }: { praxis: PraxisCardOut }) {
 export function MobilePraxisBody({
   praxis,
   theme,
+  eyebrow,
+  mediaEmptyLabel,
 }: {
   praxis: PraxisCardOut
   theme: MobileSlotTheme
+  /** A running head drawn as the card's first line (#840), not a chrome bar. */
+  eyebrow?: ReactNode
+  /** The empty media slot's invitation in the faction's own words (#840). */
+  mediaEmptyLabel?: string
 }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-md)' }}>
+      {eyebrow}
       {praxis.is_top_for_task && (
         <TaskCrown
           size={30}
@@ -523,7 +533,7 @@ export function MobilePraxisBody({
       <MobileModeChip praxis={praxis} theme={theme} />
       <MobileRoster praxis={praxis} theme={theme} />
       {/* Every card shows the media slot — a drop target when empty (#821). */}
-      <MobileMediaGallery praxis={praxis} theme={theme} showPlaceholder />
+      <MobileMediaGallery praxis={praxis} theme={theme} showPlaceholder emptyLabel={mediaEmptyLabel} />
       <div style={{ borderTop: `1px solid ${theme.accent}`, paddingTop: 'var(--space-md)' }}>
         <MobileVotedByMarker praxis={praxis} theme={theme} />
         <MobileVoteFooter praxis={praxis} />
