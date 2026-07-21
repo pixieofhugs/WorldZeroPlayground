@@ -9,8 +9,8 @@
  * desktop edit-praxis composer, #836 its mobile twin, #897 the crest sigil plus
  * the avatar that mounts it, #899 the three repeating desktop surfaces (the
  * decree task card, the comment voice, the feed frame), and #900 the four
- * page-level desktop surfaces (hero, backdrop, profile body, select card).
- * Every OTHER surface
+ * page-level desktop surfaces (hero, backdrop, profile body, select card), and
+ * #901 the six FIELD PAVILION mobile surfaces. Every OTHER surface
  * still falls through to `Default*` — WOW is themed-and-partly-skinned, and
  * definitely not "broken faction".
  *
@@ -56,12 +56,24 @@ function Sentinel() {
  * `taskCard`, the `comment` voice and the herald's-dispatch `feedFrame`),
  * #900's four page-level desktop surfaces (`factionHero`, `backdrop`,
  * `profileBody`, `factionSelectCard`), and #895's four DUEL surfaces (the
- * Lists seal and the praxis rail, each on both form factors).
+ * Lists seal and the praxis rail, each on both form factors), and #901's six
+ * FIELD PAVILION mobile surfaces (`mobileFieldDesk` and `mobileTaskCard` from
+ * the one phone screen the kit drew, plus `mobileTaskDetail`,
+ * `mobilePraxisDetail`, `mobileFactionPage` and `mobileProfile` derived from
+ * that screen's chrome and the matching desktop archetype).
  *
- * `factionBody` and `factionCard` are still UNCLAIMED and that is deliberate,
- * not an oversight: the kit drew WOW's faction HERO, not the page beneath it,
- * and #900 scoped them out. If a later slice registers either one, this list is
- * where that decision has to be written down.
+ * EIGHT SURFACES ARE STILL UNCLAIMED and every one is deliberate, not an
+ * oversight. `factionBody` and `factionCard`: the kit drew WOW's faction HERO,
+ * not the page beneath it, and #900 scoped them out. `taskDetail` and
+ * `praxisDetail` on DESKTOP: the kit draws the decree CARD and the chronicle
+ * CARD, and #899/#840 shipped both — the pages that mount them were never
+ * designed, so a desktop page skin would be invention rather than fidelity, and
+ * the mobile twins above are derived precisely because the phone screen WAS
+ * drawn. `mobileCreateCharacter` and `mobileEditCharacter`,
+ * `mobileFactionsDirectory` and `mobilePlayersDirectory`: nothing in the kit
+ * describes them, and #901 scoped them out (file a follow-up if they read wrong
+ * in use). If a later slice registers any of these, this list is where that
+ * decision has to be written down.
  */
 const WOW_SKINNED: ReadonlySet<FactionSurface> = new Set([
   'sigil',
@@ -83,9 +95,15 @@ const WOW_SKINNED: ReadonlySet<FactionSurface> = new Set([
   'duelRail',
   'mobileDuelSeal',
   'mobileDuelRail',
+  'mobileFieldDesk',
+  'mobileTaskCard',
+  'mobileTaskDetail',
+  'mobilePraxisDetail',
+  'mobileFactionPage',
+  'mobileProfile',
 ])
 
-describe('wow is partly skinned: nineteen surfaces claimed, the rest fall back', () => {
+describe('wow is partly skinned: twenty-five surfaces claimed, the rest fall back', () => {
   it('registers a manifest now (#821)', () => {
     expect(FACTION_MANIFESTS.map((manifest) => manifest.slug)).toContain('wow')
   })

@@ -398,10 +398,8 @@
   },
   "wow": {
     "breadcrumb": "The Quest Roll",
-    "decree": "By Royal Decree",
     "statusOpen": "open · a champion is sought",
     "level": "Rank {{level}} required",
-    "points": "✦{{points}}",
     "askingHeading": "What the Court Asks",
     "askingEmpty": "No charge is written. Do something gloriously daft and report back.",
     "gloryHeading": "Glory So Far",
