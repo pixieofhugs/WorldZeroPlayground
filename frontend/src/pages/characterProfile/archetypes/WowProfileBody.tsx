@@ -110,9 +110,10 @@ const kit: ProfileKit = {
   credentialFrame: (card) => (
     <div
       style={{
-        // ornament: ring-stroke inset — the 4px band IS the drawn gilt rope, and
-        // a wider rung would visibly eat the card inside it (§4a).
-        padding: 4,
+        // The 4px band IS the drawn gilt rope. §4a's ring-stroke carve-out does
+        // NOT apply here: an ON-SCALE value can never be ornament, and 4px is
+        // --space-xs exactly, so it takes the token rather than a hatch.
+        padding: 'var(--space-xs)',
         background: 'var(--faction-wow-avatar-ring)',
         borderRadius: 'var(--radius-xl)',
         boxShadow: '0 12px 30px -18px var(--faction-wow-chronicle-shadow)',

@@ -54,8 +54,10 @@ export default function WowBackdrop() {
                 color: 'var(--faction-wow-figure)',
                 // ornament: the ✦ is a drawn star used as an icon, and the kit
                 // sizes the six of them 12–22px to give the field depth. A
-                // --text-* token names a TIER, and these are not text.
-                // eslint-disable-next-line local/no-raw-style-values -- ornament: drawn twinkle glyph, sized for the composition (§4 ornament hatch)
+                // --text-* token names a TIER, and these are not text. (No
+                // eslint hatch: the size arrives from the table above, so the
+                // literal-only rule never fires here — see the laundering note
+                // in WORLD_ZERO_STYLE.md §4a. The exemption is still real.)
                 fontSize: twinkle.size,
                 '--wow-twinkle-delay': twinkle.delay,
               } as CSSProperties

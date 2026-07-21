@@ -56,15 +56,15 @@ function renderBody(overrides: Partial<CharacterOut> = {}) {
 }
 
 describe("FactionProfileBody dispatch", () => {
-  it("registers the six bespoke faction skins (#460)", () => {
+  it("registers the seven bespoke faction skins (#460, #900)", () => {
     // Each faction claims the surface in its own manifest; the dispatcher just
-    // reads them, so this asserts the manifests still cover all six.
+    // reads them, so this asserts the manifests still cover all seven.
     //
     // Albescent is absent on purpose (#783): it claims no profile skin, so a
     // member's profile IS the default one. That is the point — a profile is
     // exactly where a secret society would give itself away.
     expect(Object.keys(surfaceMap("profileBody")).sort()).toEqual(
-      ["ephemerists", "everymen", "singularity", "snide", "ua", "coven"].sort(),
+      ["ephemerists", "everymen", "singularity", "snide", "ua", "coven", "wow"].sort(),
     );
   });
 

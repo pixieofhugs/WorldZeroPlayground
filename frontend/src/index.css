@@ -2298,11 +2298,26 @@
       `--faction-wow-figure` dereferences `--faction-wow-stamp-total` instead of
       re-declaring #8a5a16 — the "tokenized-looking, not tokenized" trap is a
       duplicated VALUE, not a second name for one.
-   3. THE PAGE GLOW IS DIALLED DOWN from the kit. The kit tunes its court-glow
-      inside a 432x300 swatch where nothing but the caption sits on it; the page
-      backdrop carries a whole composition of INDEPENDENTLY-THEMED surfaces
-      (ADR-0002), including other factions' cards and the frosted sidebar that
-      lets the ground bleed through. .24/.34 became .13/.19, the same order as
+   3. THE PAGE GROUND AND GLOW ARE DIALLED DOWN from the kit, and DARK is walked
+      further than light. The kit tunes both inside a 432x300 swatch where
+      nothing but its own caption sits on them; the page backdrop carries a whole
+      composition of INDEPENDENTLY-THEMED surfaces (ADR-0002), including other
+      factions' cards and `.sidebar-card`, whose dark fill is
+      rgba(255,255,255,0.04) -- 4% white, so the ground bleeds essentially
+      undimmed through anything mounted on it.
+
+      Measured, dark, at the glow hotspot under a frosted sidebar card:
+      --color-text-secondary reads 3.76:1 at the kit's own #241c0b ground and
+      .34 glow, against a 5.14:1 house baseline. The glow was not the whole
+      cause -- the GROUND was: the kit's #241c0b still only reaches 4.32:1 with
+      the glow taken all the way down to .06. So dark ground-from becomes
+      #1b1508, which is WOW's OWN already-audited chronicle ground
+      (--faction-wow-card-bg, dark), and the glow lands at .10 for 4.52:1
+      secondary / 4.98:1 tertiary -- clear of AA with the house baseline
+      substantially preserved.
+
+      LIGHT ships the kit's ground unchanged (it measures 5.75:1, against a
+      5.99:1 baseline); only its glow comes down, .24 -> .13, the same order as
       UaBackdrop's stated 6-8% ceiling. A backdrop's job is to be felt, not
       seen. */
 :root {
@@ -2333,9 +2348,13 @@
   --faction-wow-gilt-border: var(--faction-wow-avatar-pill-border);
 }
 [data-theme="dark"] {
-  --faction-wow-ground-from: #241c0b;
+  /* NOT the kit's #241c0b — see note 3 above. This is --faction-wow-card-bg's
+     dark value, restated rather than referenced so the light declaration above
+     (which is NOT card-bg; the kit's hero plate starts a shade above it) and
+     this one read as one pair. */
+  --faction-wow-ground-from: #1b1508;
   --faction-wow-ground-to: #141005;
-  --faction-wow-court-glow: rgba(138, 90, 174, 0.19);
+  --faction-wow-court-glow: rgba(138, 90, 174, 0.1);
   --faction-wow-hatch: rgba(227, 184, 74, 0.1);
   --faction-wow-plate: #221a0c;
   --faction-wow-plate-border: #4a3a0e;
