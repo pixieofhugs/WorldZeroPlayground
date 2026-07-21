@@ -179,6 +179,16 @@ const ARCHETYPE_PAIRS: Pair[] = [
   // card (4.46:1) — it was chosen against the kit's near-white documentation
   // plate — so index.css ships it walked down the same hue.
   { what: "wow eyebrow ink, on card", surface: "--faction-wow-card-bg", text: "--faction-wow-accent-deep" },
+  // The avatar's rank pill (#897) — the one piece of REAL TEXT the crest
+  // composition carries. Ink and lozenge are both theme-invariant stamped metal
+  // (the kit draws the same pill on its light and dark avatar plates), so
+  // measuring against the gradient's DARKEST stop covers both themes and the
+  // whole run of the lozenge.
+  {
+    what: "wow avatar rank pill ink",
+    surface: "--faction-wow-avatar-pill-to",
+    text: "--faction-wow-avatar-pill-text",
+  },
 
   // Albescent's FACTION tokens are gone (#783) — it renders Default's surfaces,
   // which `default` already covers. What remains is the always-light palette

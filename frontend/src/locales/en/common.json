@@ -290,6 +290,9 @@
   "level": {
     "caption": "lvl"
   },
+  "avatar": {
+    "rank": "Lvl {{level}}"
+  },
   "praxisType": {
     "solo": "Solo",
     "collab": "Collab",

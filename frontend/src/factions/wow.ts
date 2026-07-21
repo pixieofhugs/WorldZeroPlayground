@@ -8,6 +8,10 @@
  * score stamp with the ✦ total mark, its mobile twin, and the googly-balloon
  * vote widget.
  *
+ * #897 adds THE CREST — WOW's `sigil`, the mark every other surface in the kit
+ * imports — and its first consumer, the `avatar`: the crest set in a gilt rope
+ * ring with the rank pill riding the hem.
+ *
  * #835 adds the DESKTOP edit-praxis composer — "The Squire's Writ", the kit's
  * one form surface — and #836 its phone twin: the same writ dress on the settled
  * mobile composer structure (Write/Preview toggle, fluid media grid, sticky
@@ -23,6 +27,8 @@
  */
 import type { FactionManifest } from './manifest'
 
+import WowAvatar from '../components/avatar/WowAvatar'
+import { WowSigil } from '../components/cards/WowSigil'
 import WowVote from '../components/vote/WowVote'
 import WowMobilePraxisCard from '../components/praxisCard/mobile/WowMobilePraxisCard'
 import WowPraxisCard from '../components/praxisCard/desktop/WowPraxisCard'
@@ -33,6 +39,8 @@ import WowMobileEditPraxis from '../pages/editPraxis/mobileArchetypes/WowEditPra
 export const WOW_MANIFEST: FactionManifest = {
   slug: 'wow',
 
+  sigil: () => WowSigil,
+  avatar: () => WowAvatar,
   praxisCard: () => WowPraxisCard,
   scoreStamp: () => WowScoreStamp,
   mobilePraxisCard: () => WowMobilePraxisCard,
