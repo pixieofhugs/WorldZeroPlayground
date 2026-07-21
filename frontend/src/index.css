@@ -2407,10 +2407,89 @@
    REUSE that slice's `wow-twinkle` keyframe rather than restating it — the kit's
    own `wowKitTwinkle` and the crest's sparkle are the same 0.3→1 pulse. The
    stagger arrives per-element as --wow-twinkle-delay, same custom property. */
+/* ─────────────────────────────────────────────────────────────────────────────
+   WOW — THE DECREE (#899): the desktop task card, comment and feed frame.
+
+   The task card is the kit's "archetype the others mirror", so these three
+   surfaces share one chrome: a gold/plum checker band, the crest as a wax seal,
+   and gilt lettering on cream parchment. Only the values that are genuinely new
+   are declared here — the cream, the plum, the frame gold, the parchment plate
+   and the whole crest family already ship from #838/#840/#896/#897.
+   ───────────────────────────────────────────────────────────────────────────── */
+:root {
+  /* The knobbed rod the decree hangs from. It FLIPS with the theme (the kit
+     draws a bright rod on its light scroll and a tarnished one on its dark
+     scroll), which is why it cannot simply reuse the avatar's ring stops — those
+     are struck metal and theme-invariant. The lit stop is the same gilt
+     highlight in light, so it points at the ring token rather than minting a
+     second #e9cb7e; dark redeclares all three. */
+  --faction-wow-rod-lit: var(--faction-wow-avatar-ring-lit);
+  --faction-wow-rod-deep: #c79a47;
+  --faction-wow-rod-edge: #6e3f1f; /* the drawn outline round rod and knobs */
+
+  /* The chronicle hairline — the kit's #d9c589, the 1px rule it puts round
+     inset plates, comment cards and the feed's points pill. Distinct from
+     --faction-wow-chronicle-border (2px gold frame): this is the quiet one. */
+  --faction-wow-chronicle-rule: #d9c589;
+
+  /* "Take Up the Quest" — the gilt button. Its outer stops ARE the avatar's rank
+     pill (same stamped lozenge, same metal), so they are referenced rather than
+     re-minted; only the middle stop, the sheen and the border are its own. The
+     border is the one part that flips: a dark ground needs a bright edge to keep
+     the button from dissolving into the parchment. */
+  --faction-wow-quest-from: var(--faction-wow-avatar-pill-from);
+  --faction-wow-quest-mid: #e7b94e;
+  --faction-wow-quest-to: var(--faction-wow-avatar-pill-to);
+  --faction-wow-quest-text: var(--faction-wow-avatar-pill-text);
+  --faction-wow-quest-border: var(--faction-wow-avatar-pill-border);
+  --faction-wow-quest-sheen: rgba(255, 249, 225, 0.7); /* inset top highlight */
+  --faction-wow-quest-glisten: rgba(255, 248, 214, 0.85); /* the travelling band */
+}
+[data-theme="dark"] {
+  --faction-wow-rod-lit: #8a6e2a;
+  --faction-wow-rod-deep: #5e4715;
+  --faction-wow-rod-edge: #0f0a02;
+  --faction-wow-chronicle-rule: #4a3a0e;
+  --faction-wow-quest-border: #e1c877;
+}
+
+/* The glisten travelling across the quest button, and the ✦ twinkle beside the
+   decree's byline / on the herald's dispatch band. Both are the kit's own class
+   names (`.wow-btn`, `.wow-tw`) so a later slice reading the kit finds what it
+   expects, and both follow #897's inversion: structure always on, motion opted
+   INTO on no-preference. The twinkle reuses #897's `wow-twinkle` keyframes
+   rather than minting the kit's near-identical `wowKitTwinkle` — one sparkle
+   tempo for the whole faction. */
+@keyframes wow-glisten {
+  0% { left: -60%; }
+  60%, 100% { left: 130%; }
+}
+.wow-btn {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+}
+.wow-tw {
+  display: inline-block;
+}
 @media (prefers-reduced-motion: no-preference) {
   .wow-backdrop-twinkle {
     display: inline-block;
     animation: wow-twinkle 2.4s ease-in-out infinite;
     animation-delay: var(--wow-twinkle-delay, 0s);
   }
+  .wow-btn::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: -60%;
+    width: 45%;
+    background: linear-gradient(105deg, transparent, var(--faction-wow-quest-glisten), transparent);
+    transform: skewX(-18deg);
+    animation: wow-glisten 3.4s ease-in-out infinite;
+    pointer-events: none;
+    z-index: 1;
+  }
+  .wow-tw { animation: wow-twinkle 2.4s ease-in-out infinite; animation-delay: var(--wow-twinkle-delay, 0s); }
 }

@@ -123,6 +123,9 @@
     },
     "na": {
       "sigilLabel": "Unaffiliated — all paths open"
+    },
+    "wow": {
+      "dispatch": "Herald's Dispatch"
     }
   },
   "taskCrown": {
@@ -182,7 +185,10 @@
       "points": "{{points}} pts"
     },
     "wow": {
-      "signup": "Take Up the Quest"
+      "signup": "Take Up the Quest",
+      "decree": "By Royal Decree",
+      "byOrder": "by order of the Whimsy Court",
+      "pointsUnit": "Points"
     }
   },
   "factionCard": {
