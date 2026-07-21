@@ -10,8 +10,10 @@
  * kit (tokens, fonts, copy, chrome slots) and delegates here.
  *
  * No hardcoded hex: kits reference the repo's `--faction-<slug>-*` CSS vars.
- * Always-dark (snide, singularity) / always-light (ua) factions scope
- * their tokens to the skin container and NEVER mutate the global [data-theme].
+ * A faction whose identity is pinned to one theme (snide and singularity are
+ * always-dark) scopes `dataTheme` to the skin container and NEVER mutates the
+ * global [data-theme]. UA used to pin itself light; it dims with the app now
+ * (#848, #851) and sets no `dataTheme` at all.
  */
 import type { CSSProperties, ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'

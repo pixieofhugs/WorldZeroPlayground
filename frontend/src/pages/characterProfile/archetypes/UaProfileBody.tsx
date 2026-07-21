@@ -1,37 +1,41 @@
 /**
- * UaProfileBody — University of Asthmatics gilt-salon player-profile skin (#460).
- * Ported from docs/design/profile/templates/UA Profile.dc.html: a gilt double-
- * border frame around the shared CredentialCard, paper-grain dot texture, burnt-
- * amber accent, ANNO/roman-numeral motif. UA is ALWAYS LIGHT — its --faction-ua-*
- * / --ua-* tokens are identical in both themes, so the container scopes
- * data-theme="light" to itself and never mutates the global theme.
+ * UaProfileBody — the University of Asthmatics player-profile skin (#460,
+ * rebuilt for #851).
+ *
+ * The gilt double-border frame, the paper-grain dot texture, the gold progress
+ * bar and the ANNO regalia are gone with the salon. What is left is the
+ * practice's own dress: mesa-sand ground, card stock inside a neutral hairline,
+ * an uppercase eyebrow, and orange used once — on the accent and the bar.
+ *
+ * The skin no longer scopes `data-theme="light"` to itself. UA dims now (#848),
+ * so every token below resolves through the `[data-theme="dark"]` cascade and
+ * the profile follows the app's theme like every other faction's.
  *
  * Structure is DefaultProfileBody's locked spine via ProfileSkin; only the
- * costume differs. No hardcoded hex — all colours via --ua-* / --faction-ua-*.
+ * costume differs (ADR-0016). No hardcoded hex — every colour is a token.
  */
 import type { ReactNode } from 'react'
 
 import type { ProfileBodyProps } from '../FactionProfileBody'
 import { BadgeRow, ProfileSkin, SpectrumLaurel, type ProfileKit } from './profileSkin'
+import { UA_DISPLAY, UA_TEXT, uaShade } from '../../../components/cards/uaAtoms'
 
-const INK = 'var(--ua-ink)'
-const MUTED = 'var(--ua-muted)'
-const ACCENT = 'var(--ua-orange)'
-const GILT = 'var(--ua-gilt)'
-const PAPER = 'var(--ua-paper)'
-const LINE = 'var(--ua-line)'
-const DISPLAY = 'var(--font-faction-old)' // IM Fell English — salon display serif
-const EYEBROW = 'var(--font-body)' // Courier Prime mono labels
-const BODY = "'EB Garamond', Georgia, serif"
+const INK = 'var(--faction-ua-card-text)'
+const MUTED = 'var(--faction-ua-card-muted)'
+const ACCENT = 'var(--faction-ua-card-accent)'
+const SURFACE = 'var(--faction-ua-card-bg)'
+const PANEL = 'var(--faction-ua-panel)'
+const RULE = 'var(--faction-ua-rule)'
+const HAIR = 'var(--faction-ua-hair)'
 
 function heading(title: string, eyebrow: string): ReactNode {
   return (
     <div style={{ marginBottom: 'var(--space-lg)' }}>
       <div
         style={{
-          fontFamily: EYEBROW,
-          fontSize: 'var(--text-xs)',
-          letterSpacing: '0.26em',
+          fontFamily: UA_TEXT,
+          fontSize: 'var(--text-md)',
+          letterSpacing: '0.22em',
           textTransform: 'uppercase',
           color: MUTED,
           marginBottom: 'var(--space-sm)',
@@ -39,7 +43,16 @@ function heading(title: string, eyebrow: string): ReactNode {
       >
         {eyebrow}
       </div>
-      <h2 style={{ fontFamily: DISPLAY, fontSize: 'var(--text-heading)', lineHeight: 1, color: INK, margin: 0 }}>
+      <h2
+        style={{
+          fontFamily: UA_DISPLAY,
+          fontWeight: 600,
+          fontSize: 'var(--text-heading)',
+          lineHeight: 1.05,
+          color: INK,
+          margin: 0,
+        }}
+      >
         {title}
       </h2>
     </div>
@@ -48,51 +61,46 @@ function heading(title: string, eyebrow: string): ReactNode {
 
 const kit: ProfileKit = {
   slug: 'ua',
-  dataTheme: 'light',
-  pageBackground: 'var(--ua-wall)',
+  pageBackground: 'var(--faction-ua-page)',
+  // One faint warm wash off the top-left. Mixed from the ornament token so it
+  // inverts with the theme; the mandala itself stays on the page backdrop.
   pageOverlay:
-    'radial-gradient(70% 50% at 8% 0%, rgba(221,147,34,.07), transparent 70%), radial-gradient(rgba(140,106,30,.045) 1px, transparent 1px)',
+    'radial-gradient(70% 50% at 8% 0%, color-mix(in srgb, var(--faction-ua-glow) 9%, transparent), transparent 70%)',
   ink: INK,
   muted: MUTED,
   accent: ACCENT,
-  surface: PAPER,
-  border: LINE,
-  displayFont: DISPLAY,
-  eyebrowFont: EYEBROW,
-  bodyFont: BODY,
+  surface: SURFACE,
+  border: RULE,
+  displayFont: UA_DISPLAY,
+  eyebrowFont: UA_TEXT,
+  bodyFont: UA_TEXT,
   headerStyle: {
-    background: PAPER,
-    border: `1px solid ${LINE}`,
-    boxShadow: 'inset 0 0 0 4px var(--ua-paper), inset 0 0 0 5px var(--ua-line-soft)',
+    background: SURFACE,
+    border: `1px solid ${RULE}`,
+    borderRadius: 'var(--radius-md)',
     padding: 'var(--space-2xl) var(--space-3xl)',
     marginBottom: 'var(--space-3xl)',
   },
-  headerDecoration: (
-    <div
-      aria-hidden
-      style={{
-        position: 'absolute',
-        inset: 0,
-        pointerEvents: 'none',
-        backgroundImage: 'radial-gradient(rgba(60,40,10,.03) 1px, transparent 1px)',
-        backgroundSize: '6px 6px',
-      }}
-    />
-  ),
   credentialFrame: (card) => (
-    <div style={{ padding: 'var(--space-md)', background: GILT }}>
-      <div style={{ padding: 'var(--space-xs)', background: 'linear-gradient(135deg, var(--ua-gold), var(--ua-gold-pale))' }}>
-        {card}
-      </div>
+    <div
+      style={{
+        padding: 'var(--space-xs)',
+        background: PANEL,
+        border: `1px solid ${RULE}`,
+        borderRadius: 'var(--radius-md)',
+        boxShadow: `0 12px 30px -20px ${uaShade(50)}`,
+      }}
+    >
+      {card}
     </div>
   ),
   nameSize: 56,
-  playerEyebrow: 'Player · University of Asthmatics',
+  playerEyebrow: 'Practising · University of Asthmatics',
   progressionStyle: {
     marginTop: 'var(--space-xl)',
-    background: 'var(--ua-paper-warm)',
-    border: `1px solid ${ACCENT}`,
-    boxShadow: 'inset 0 0 0 3px var(--ua-paper-warm), inset 0 0 0 4px var(--ua-line-soft)',
+    background: PANEL,
+    border: `1px solid ${RULE}`,
+    borderRadius: 'var(--radius-sm)',
     padding: 'var(--space-lg)',
     display: 'flex',
     alignItems: 'center',
@@ -100,46 +108,49 @@ const kit: ProfileKit = {
     maxWidth: 440,
   },
   ringLabel: 'anno',
-  barFill: 'linear-gradient(90deg, var(--ua-gold-lt), var(--ua-orange))',
-  barTrack: 'var(--ua-line-soft)',
-  levelUnitLabel: 'pts this anno',
+  barFill:
+    'linear-gradient(90deg, var(--faction-ua-glow), var(--faction-ua-vermil))',
+  barTrack: HAIR,
+  levelUnitLabel: 'marks this anno',
   nextLevelLabel: (next) => `next · anno ${next}`,
   sectionHeading: heading,
-  praxisEyebrow: (name) => `Exhibited by ${name}`,
+  praxisEyebrow: (name) => `Sealed by ${name}`,
   praxisEmpty: {
-    title: 'Nothing hung in the Salon yet',
-    body: 'The first piece exhibited is always the boldest.',
+    title: 'Nothing sealed yet',
+    body: 'One true mark, then another. The first is always the boldest.',
   },
   emptyStateStyle: {
-    border: `1.5px dashed ${ACCENT}`,
+    border: `1px dashed var(--faction-ua-border)`,
+    borderRadius: 'var(--radius-sm)',
     padding: 'var(--space-2xl)',
     textAlign: 'center',
-    background: PAPER,
+    background: SURFACE,
   },
-  laurel: <SpectrumLaurel centerBg={PAPER} glyphColor={ACCENT} />,
-  badgeTitle: 'Distinctions',
+  laurel: <SpectrumLaurel centerBg={SURFACE} glyphColor={ACCENT} />,
+  badgeTitle: 'Marks of the practice',
   badgeBoardStyle: {
-    border: `1px solid ${LINE}`,
-    background: PAPER,
+    border: `1px solid ${RULE}`,
+    borderRadius: 'var(--radius-sm)',
+    background: SURFACE,
     padding: 'var(--space-xs) var(--space-lg)',
   },
   badgeChipStyle: {
-    fontFamily: EYEBROW,
-    fontSize: 'var(--text-sm)',
-    letterSpacing: '0.1em',
+    fontFamily: UA_TEXT,
+    fontSize: 'var(--text-md)',
+    letterSpacing: '0.16em',
     textTransform: 'uppercase',
     color: MUTED,
     marginLeft: 'auto',
-    border: `1px solid ${LINE}`,
-    borderRadius: 20,
+    border: `1px solid ${RULE}`,
+    borderRadius: 999,
     padding: 'var(--space-xs) var(--space-sm)',
   },
   badgeRow: (badge, last) => (
     <BadgeRow
       badge={badge}
       last={last}
-      dividerColor={LINE}
-      nameStyle={{ fontFamily: DISPLAY, color: INK, lineHeight: 1.15 }}
+      dividerColor={HAIR}
+      nameStyle={{ fontFamily: UA_DISPLAY, fontWeight: 600, color: INK, lineHeight: 1.15 }}
       medallion={(glyph) => (
         <span
           style={{
@@ -147,29 +158,16 @@ const kit: ProfileKit = {
             width: 34,
             height: 34,
             borderRadius: '50%',
-            // eslint-disable-next-line local/no-raw-style-values -- ornament: gilt ring thickness on a 34px medallion; the nearest rung (4px) is a 60% thicker ring and visibly shrinks the inner disc.
-            padding: 2.5,
-            background: GILT,
+            background: PANEL,
+            border: `1px solid var(--faction-ua-border)`,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             boxSizing: 'border-box',
+            color: ACCENT,
           }}
         >
-          <span
-            style={{
-              width: '100%',
-              height: '100%',
-              borderRadius: '50%',
-              background: PAPER,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: ACCENT,
-            }}
-          >
-            {glyph}
-          </span>
+          {glyph}
         </span>
       )}
     />

@@ -1,93 +1,50 @@
 import type { ReactNode } from 'react'
 
-import i18n from '../../i18n'
+import { UaSigil } from '../cards/UaSigil'
 
 /**
- * University of Asthmatics per-faction feed frame (surface #12,
- * SPEC-faction-ui-profile.md).
+ * UA feed frame (per-faction surface #12, kit §12, #851).
  *
- * A thin presentational WRAPPER: it skins the neutral feed card (`children`) as a
- * gilt-salon submission. The frame supplies only the OUTER chrome — a gilt border
- * holding a gold-gradient liner around a parchment body, topped by an engraved
- * masthead strip — and renders the unchanged card as the salon-mounted body. It
- * must NOT reimplement the card internals; those arrive via `children`.
+ * A thin presentational WRAPPER: it dresses the neutral feed card (`children`)
+ * as a UA row and reimplements none of the card's internals, which arrive as
+ * children and keep their slot order (ADR-0016).
  *
- * UA is ALWAYS LIGHT: its --ua-* / --faction-ua-* tokens are identical in both
- * themes, so the container styles itself with them and reads as a lit salon
- * regardless of the global theme — it never mutates data-theme. (Mirror of
- * SingularityFeedFrame, which is always-dark.)
+ * The dress is two things: a 3px orange rule down the left edge and one small
+ * ensō as the faction mark. No mandala — a feed is a dense, text-heavy surface
+ * and the pattern is ABSENT there (brief §5). No gilt sandwich, no gold liner,
+ * no engraved masthead: the salon is dead, and a feed row was the worst place
+ * it lived.
+ *
+ * Both themes come from the `[data-theme="dark"]` cascade.
  */
-
-// Token shorthands — every color resolves to a --ua-* var.
-const GILT = 'var(--ua-gilt)' // gold frame gradient
-const GOLD = 'var(--ua-gold)' // old gold liner
-const GOLD_PALE = 'var(--ua-gold-pale)'
-const PAPER = 'var(--ua-paper)' // parchment body
-const INK = 'var(--ua-ink)' // brown ink — borders & shadow
-const ORANGE = 'var(--ua-orange)' // burnt amber — masthead eyebrow
-const FONT_ENGRAVED = 'var(--font-faction-engraved)' // Cinzel
-
-// color-mix helper for brown ink derivatives (border, shadow, dot texture).
-const ink = (pct: number): string =>
-  `color-mix(in srgb, ${INK} ${pct}%, transparent)`
-
 export default function UaFeedFrame({ children }: { children: ReactNode }) {
   return (
-    // Outer gilt border + soft brown drop-shadow & inset white hairline.
     <div
       style={{
-        // eslint-disable-next-line local/no-raw-style-values -- ornament: the padding IS the gilt border width, not a gutter.
-        padding: 6,
-        background: GILT,
-        boxShadow: `0 10px 24px ${ink(26)}, inset 0 0 0 1px rgba(255,255,255,0.45)`,
+        position: 'relative',
+        overflow: 'hidden',
+        background: 'var(--faction-ua-card-bg)',
+        color: 'var(--faction-ua-card-text)',
+        border: '1px solid var(--faction-ua-rule)',
+        borderLeft: '3px solid var(--faction-ua)',
+        borderRadius: 'var(--radius-md)',
+        padding: 'var(--space-lg) var(--space-xl)',
       }}
     >
-      {/* gold-gradient liner */}
-      <div
+      {/* the faction mark — one of the ensō's two sanctioned uses (brief §4) */}
+      <span
+        aria-hidden="true"
         style={{
-          // eslint-disable-next-line local/no-raw-style-values -- ornament: the padding IS the gold liner width, not a gutter.
-          padding: 3,
-          background: `linear-gradient(135deg, ${GOLD}, ${GOLD_PALE})`,
+          position: 'absolute',
+          right: 10,
+          top: 10,
+          opacity: 0.5,
+          pointerEvents: 'none',
         }}
       >
-        {/* parchment body — brown hairline + faint radial-dot texture */}
-        <div
-          style={{
-            border: `1px solid ${ink(45)}`,
-            background: PAPER,
-            backgroundImage: `radial-gradient(${ink(3)} 1px, transparent 1px)`,
-            backgroundSize: '5px 5px',
-            padding: 'var(--space-md) var(--space-lg)',
-          }}
-        >
-          {/* engraved masthead strip + gold hairline divider */}
-          <div
-            aria-hidden="true"
-            style={{
-              fontFamily: FONT_ENGRAVED,
-              // eslint-disable-next-line local/no-raw-style-values -- ornament: aria-hidden engraved masthead, part of the frame illustration
-              fontSize: 8.5,
-              letterSpacing: '0.13em',
-              textTransform: 'uppercase',
-              color: ORANGE,
-            }}
-          >
-            {i18n.t('feed:identity.ua.fullName')}
-          </div>
-          <div
-            aria-hidden="true"
-            style={{
-              height: 1,
-              // eslint-disable-next-line local/no-raw-style-values -- ornament: lead around the gold hairline divider; in register with its raw 1px rule.
-              margin: '9px 0 11px',
-              background: `linear-gradient(90deg, ${GOLD}, transparent)`,
-            }}
-          />
-
-          {/* salon-mounted body — the neutral card, unchanged */}
-          {children}
-        </div>
-      </div>
+        <UaSigil width={18} height={18} />
+      </span>
+      {children}
     </div>
   )
 }

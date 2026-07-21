@@ -28,18 +28,19 @@ function character(overrides: Partial<CharacterOut> = {}): CharacterOut {
 }
 
 describe("FactionAvatar — UA variant (#200)", () => {
-  it("renders the UA gilt-salon avatar for a ua character", () => {
+  it("renders the UA practice avatar for a ua character", () => {
     const html = renderToStaticMarkup(
       <FactionAvatar character={character({ faction_slug: "ua" })} />,
     );
     // Monogram fallback (no avatar_url) — the initial letter, uppercased.
     expect(html).toContain("I");
-    // Parchment disc ringed in UA gilt tokens (never hardcoded hex).
-    expect(html).toContain("var(--ua-orange)");
+    // The disc is ringed and badged in --faction-ua-* tokens only. The legacy
+    // gilt family is no longer read here (#851); the ring is the practice's
+    // orange and the badge sits on the lifted surface.
+    expect(html).toContain("var(--faction-ua)");
     expect(html).toContain("var(--faction-ua-card-font)");
-    // The disc's own ring/badge tokens (still legacy --ua-*, #853 deletes them).
-    expect(html).toContain("var(--ua-gold)");
-    expect(html).toContain("var(--ua-paper-warm)");
+    expect(html).toContain("var(--faction-ua-lift)");
+    expect(html).not.toContain("var(--ua-gold)");
     // The sigil badge is present — the ensō's heavy sweep (#849 retired the
     // gilt shield, so the 100x120 viewBox marker is gone with it).
     expect(html).toContain('d="M134 41.2 A68 68 0 1 1 66 158.8"');

@@ -2,40 +2,40 @@ import type { CSSProperties, ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import PraxisCard from "../../../components/PraxisCard";
+import { UaSigil } from "../../../components/cards/UaSigil";
+import {
+  UA_DISPLAY,
+  UA_EYEBROW,
+  UA_TEXT,
+  UaEnsoScore,
+  UaInkColumn,
+  uaShade,
+} from "../../../components/cards/uaAtoms";
 import { mediaUrl } from "../../../utils/media";
 import { ErrorBanner, relationOf } from "./shared";
 import type { TaskSignupOut } from "../../../api/tasks";
 import type { TaskDetailState } from "../useTaskDetail";
 
 /**
- * The UA task-detail archetype — the GILT SALON: an art-academy "acquisition"
- * voice rendered as a museum acquisition plate. A gold-framed heraldic masthead
- * (burnt amber / cream / gold / brown ink), a matriculation CTA, the commission
- * brief on parchment, the hands matriculated, "The Salon Wall" of filed praxis
- * (the finest hand wears a fleur-de-lis), and a read-only critique aggregate.
- * Ported from the UA design kit (UaTaskDetail.tsx); wired to the real
- * {@link TaskDetailState}.
+ * UA task detail — the sheet (#851).
  *
- * UA is ALWAYS-LIGHT — its --faction-ua-* / --ua-* tokens are identical in both
- * themes, so the salon never dims and we never mutate the document theme. The
- * kit's top <nav> and critique/comment thread are dropped (TaskDetail.tsx renders
- * the breadcrumb context and CommentThread). Every raw hex from the kit is mapped
- * onto the existing UA CSS vars in index.css.
+ * The gilt salon is dead: no crest shield, no gold-leaf sandwich, no dot-grid
+ * parchment, no fleur-de-lis. A task reads as a sheet of sun-bleached stock
+ * with one orange hairline down the left margin, the marks held in an ensō, and
+ * quiet uppercase labels over hairline rules.
+ *
+ * The mandala is ABSENT here (brief §5). The pattern is allowed on exactly
+ * three surfaces — page backdrop, faction hero, join card — and a detail page
+ * is dense reading; the UA page backdrop already carries the texture behind it.
+ *
+ * Both themes come from the `[data-theme="dark"]` cascade; the page dims with
+ * the app. It also used to paint with four font tokens that are declared
+ * nowhere in index.css (`--ua-display`, `--ua-engraved`, `--ua-mono`,
+ * `--ua-serif`) — undefined custom properties that silently fell back to the
+ * inherited face. Both are fixed here.
  */
 
-const INK = "var(--ua-ink)";
-const SUB = "var(--ua-sub)";
-const MUTED = "var(--ua-muted)";
-const ORANGE = "var(--ua-orange)";
-const ORANGE_DEEP = "var(--ua-orange-deep)";
-const GOLD = "var(--ua-gold)";
-const GOLD_PALE = "var(--ua-gold-pale)";
-const PAPER = "var(--ua-paper)";
-const PAPER_WARM = "var(--ua-paper-warm)";
-const LINE = "var(--ua-line)";
-const GILT = "var(--ua-gilt)";
-
-/** Roman numeral for the salon's "ANNO" (level) label. */
+/** Roman numeral for the practice's "ANNO" (level) label. */
 function romanLevel(n: number): string {
   return (
     ["I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X"][
@@ -44,89 +44,51 @@ function romanLevel(n: number): string {
   );
 }
 
-/** The UA heraldic crest — a shield, sun, and crossed brushes. */
-function CrestShield({ size = 150 }: { size?: number }) {
-  return (
-    <svg
-      width={size}
-      height={size * 1.2}
-      viewBox="0 0 100 120"
-      style={{ display: "block", flexShrink: 0 }}
-    >
-      <defs>
-        <clipPath id="ua-det-shield">
-          <path d="M8 6 H92 V60 C92 92 66 108 50 116 C34 108 8 92 8 60 Z" />
-        </clipPath>
-      </defs>
-      <g clipPath="url(#ua-det-shield)">
-        <rect x="0" y="0" width="100" height="120" fill={ORANGE} />
-        <rect
-          x="0"
-          y="60"
-          width="100"
-          height="60"
-          fill="color-mix(in srgb, var(--ua-gold-pale) 55%, var(--ua-paper))"
-        />
-        <circle cx="50" cy="60" r="15" fill={GOLD_PALE} />
-        <g stroke={GOLD_PALE} strokeWidth="2.4" strokeLinecap="round">
-          <line x1="50" y1="60" x2="50" y2="20" />
-          <line x1="50" y1="60" x2="22" y2="30" />
-          <line x1="50" y1="60" x2="78" y2="30" />
-          <line x1="50" y1="60" x2="14" y2="48" />
-          <line x1="50" y1="60" x2="86" y2="48" />
-          <line x1="50" y1="60" x2="34" y2="22" />
-          <line x1="50" y1="60" x2="66" y2="22" />
-        </g>
-        <g transform="translate(50 84)">
-          <g transform="rotate(38)">
-            <rect x="-2" y="-30" width="4" height="44" rx="1.5" fill={INK} />
-            <rect x="-3" y="10" width="6" height="6" fill={GOLD_PALE} />
-            <path d="M-3 16 L3 16 L1.5 26 L-1.5 26 Z" fill={ORANGE} />
-          </g>
-          <g transform="rotate(-38)">
-            <rect x="-2" y="-30" width="4" height="44" rx="1.5" fill={GOLD} />
-            <rect x="-3" y="10" width="6" height="6" fill={GOLD_PALE} />
-            <path d="M-3 16 L3 16 L1.5 26 L-1.5 26 Z" fill="var(--ua-gold-lt)" />
-          </g>
-        </g>
-      </g>
-      <path
-        d="M8 6 H92 V60 C92 92 66 108 50 116 C34 108 8 92 8 60 Z"
-        fill="none"
-        stroke="var(--ua-gold-lt)"
-        strokeWidth="2.5"
-      />
-      <path
-        d="M8 6 H92 V60 C92 92 66 108 50 116 C34 108 8 92 8 60 Z"
-        fill="none"
-        stroke={INK}
-        strokeWidth="0.8"
-      />
-    </svg>
-  );
-}
-
-const sectionRule: CSSProperties = {
-  flex: 1,
-  height: 1,
-  background: `linear-gradient(90deg, ${LINE}, transparent)`,
-};
-const sectionH2: CSSProperties = {
-  fontFamily: "var(--ua-engraved)",
-  letterSpacing: "0.06em",
-  margin: 0,
-  color: INK,
-  whiteSpace: "nowrap",
+const PANEL: CSSProperties = {
+  display: "flex",
+  alignItems: "center",
+  gap: "var(--space-lg)",
+  flexWrap: "wrap",
+  padding: "var(--space-lg) var(--space-xl)",
+  border: "1px solid var(--faction-ua-rule)",
+  borderRadius: "var(--radius-sm)",
+  background: "var(--faction-ua-card-bg)",
 };
 
-/** Section header — engraved-caps heading with a fading gold rule. */
-function SectionHead({
-  title,
-  trailing,
-}: {
-  title: string;
-  trailing?: ReactNode;
-}) {
+/**
+ * The banner surface for a signup error.
+ *
+ * #848 turned `--faction-ua-light` from `rgba(194,84,31,.08)` into an opaque
+ * `#f2e0cb`; what used to be a whisper behind this banner became a solid wash.
+ * It now names the panel token it was always reaching for, and takes an accent
+ * ink that clears AA on it in both themes.
+ */
+const BANNER: CSSProperties = {
+  flexBasis: "100%",
+  marginTop: 0,
+  background: "var(--faction-ua-panel)",
+  border: "1px solid var(--faction-ua-border)",
+  borderRadius: "var(--radius-sm)",
+  color: "var(--faction-ua-card-accent)",
+};
+
+/** Solid-fill affordance — the practice's one saturated note. */
+const FILLED_ACTION: CSSProperties = {
+  cursor: "pointer",
+  fontFamily: UA_TEXT,
+  fontSize: "var(--text-xl)",
+  letterSpacing: "0.14em",
+  textTransform: "uppercase",
+  color: "var(--faction-ua-on-fill)",
+  background: "var(--faction-ua)",
+  border: "none",
+  borderRadius: "var(--radius-sm)",
+  padding: "var(--space-md) var(--space-xl)",
+  textDecoration: "none",
+};
+
+/** Section header — the eyebrow over a hairline that runs to the margin. */
+function SectionHead({ title, trailing }: { title: string; trailing?: ReactNode }) {
   return (
     <div
       style={{
@@ -136,14 +98,16 @@ function SectionHead({
         marginBottom: "var(--space-lg)",
       }}
     >
-      <h2 className="content-title" style={sectionH2}>{title}</h2>
-      <span style={sectionRule} />
+      <h2 style={{ ...UA_EYEBROW, margin: 0, whiteSpace: "nowrap" }}>{title}</h2>
+      <span
+        style={{ flex: 1, height: 1, background: "var(--faction-ua-rule)" }}
+      />
       {trailing}
     </div>
   );
 }
 
-/** Hands matriculated — real signup avatars with friend/foe dots. */
+/** Those practising — signup portraits with friend/foe dots. */
 function HandsRow({
   signups,
   friends,
@@ -156,22 +120,21 @@ function HandsRow({
   const { t } = useTranslation("tasks");
   return (
     <div
-      style={{ display: "flex", alignItems: "center", gap: "var(--space-md)", flexWrap: "wrap" }}
+      style={{
+        display: "flex",
+        alignItems: "center",
+        gap: "var(--space-md)",
+        flexWrap: "wrap",
+      }}
     >
       {signups.map((hand) => {
         const rel = relationOf(hand.character_id, friends, foes);
-        const relColor = rel === "friend" ? GOLD : ORANGE;
         return (
           <Link
             key={hand.character_id}
             to={`/characters/${hand.character_id}`}
             title={`${hand.display_name}${rel ? ` · ${rel}` : ""}`}
-            style={{
-              position: "relative",
-              width: 40,
-              height: 40,
-              flexShrink: 0,
-            }}
+            style={{ position: "relative", width: 40, height: 40, flexShrink: 0 }}
           >
             {hand.avatar_url ? (
               <img
@@ -182,7 +145,7 @@ function HandsRow({
                   height: 40,
                   borderRadius: "50%",
                   objectFit: "cover",
-                  border: `2px solid ${GOLD}`,
+                  border: "1.5px solid var(--faction-ua-rule)",
                 }}
               />
             ) : (
@@ -192,13 +155,13 @@ function HandsRow({
                   width: 40,
                   height: 40,
                   borderRadius: "50%",
-                  background: INK,
-                  border: `2px solid ${GOLD}`,
+                  background: "var(--faction-ua-panel)",
+                  border: "1.5px solid var(--faction-ua-rule)",
                   alignItems: "center",
                   justifyContent: "center",
-                  color: GOLD_PALE,
-                  fontFamily: "var(--ua-display)",
-                  fontStyle: "italic",
+                  color: "var(--faction-ua-card-text)",
+                  fontFamily: UA_DISPLAY,
+                  fontWeight: 600,
                   fontSize: "var(--text-content)",
                 }}
               >
@@ -215,82 +178,60 @@ function HandsRow({
                   width: 12,
                   height: 12,
                   borderRadius: "50%",
-                  background: relColor,
-                  border: `2px solid ${PAPER_WARM}`,
+                  background:
+                    rel === "friend"
+                      ? "var(--faction-ua)"
+                      : "var(--faction-ua-vermil)",
+                  border: "2px solid var(--faction-ua-card-bg)",
                 }}
               />
             )}
           </Link>
         );
       })}
-      <span
-        style={{
-          fontFamily: "var(--ua-mono)",
-          fontSize: "var(--text-base)",
-          letterSpacing: "0.12em",
-          textTransform: "uppercase",
-          color: MUTED,
-          marginLeft: "var(--space-xs)",
-        }}
-      >
+      <span style={{ ...UA_EYEBROW, marginLeft: "var(--space-xs)" }}>
         {t("ua.matriculated")}
       </span>
     </div>
   );
 }
 
-/** An acquisition stat plate — engraved label over a didone value. */
-function StatPlate({
+/** One count from the sheet's head — a numeral over its label. */
+function StatCell({
   label,
   children,
-  accent = false,
+  last = false,
 }: {
   label: string;
   children: ReactNode;
-  accent?: boolean;
+  last?: boolean;
 }) {
   return (
     <div
       style={{
-        display: "flex",
-        flexDirection: "column",
-        gap: "var(--space-xs)",
-        padding: "var(--space-sm) var(--space-lg)",
-        border: `1px solid ${accent ? ORANGE : LINE}`,
-        background: accent ? ORANGE : PAPER,
+        flex: "1 1 140px",
+        minWidth: 140,
+        padding: "var(--space-lg) var(--space-xl)",
+        borderRight: last ? undefined : "1px solid var(--faction-ua-hair)",
       }}
     >
-      <span
+      <div
         style={{
-          fontFamily: "var(--ua-engraved)",
-          fontSize: "var(--text-xs)",
-          letterSpacing: "0.14em",
-          color: accent ? "var(--ua-paper-warm)" : MUTED,
-        }}
-      >
-        {label}
-      </span>
-      <span
-        className="content-title"
-        style={{
-          fontFamily: "var(--ua-display)",
-          fontStyle: "italic",
-          fontWeight: 700,
-          lineHeight: 0.9,
-          color: accent ? PAPER_WARM : INK,
+          fontFamily: UA_DISPLAY,
+          fontWeight: 600,
+          fontSize: "var(--text-title)",
+          lineHeight: 1,
+          color: "var(--faction-ua-card-text)",
         }}
       >
         {children}
-      </span>
+      </div>
+      <div style={{ ...UA_EYEBROW, marginTop: "var(--space-xs)" }}>{label}</div>
     </div>
   );
 }
 
-export default function UaTaskDetail({
-  state,
-}: {
-  state: TaskDetailState;
-}) {
+export default function UaTaskDetail({ state }: { state: TaskDetailState }) {
   const { t } = useTranslation("tasks");
   const {
     task,
@@ -318,14 +259,11 @@ export default function UaTaskDetail({
   // Guarded non-null by the dispatcher.
   if (!task) return null;
 
-  // Status in the salon's voice: active reads as an open salon "on view".
   const statusVoice =
     task.status === "active" ? t("ua.statusOpen") : task.status;
-
-  // Decorative: the salon's "commission №" — derived from the real task id.
   const commissionNo = String(task.id).padStart(4, "0");
 
-  // The finest hand on the Salon Wall wears the ⚜ fleur-de-lis.
+  // The truest hand on the sheet wears a quiet orange tag.
   const topId = submissions.length
     ? submissions.reduce((a, b) => ((b.score ?? 0) > (a.score ?? 0) ? b : a)).id
     : null;
@@ -333,190 +271,152 @@ export default function UaTaskDetail({
   return (
     <div
       className="py-8"
-      style={{ fontFamily: "var(--ua-mono)", color: INK }}
+      style={{ fontFamily: UA_TEXT, color: "var(--faction-ua-page-text)" }}
     >
       {/* ── Breadcrumb ── */}
-      <nav
-        className="mb-4"
-        style={{
-          fontFamily: "var(--ua-mono)",
-          fontSize: "var(--text-base)",
-          letterSpacing: "0.18em",
-          textTransform: "uppercase",
-          color: MUTED,
-        }}
-      >
-        <Link to="/tasks" style={{ color: ORANGE, textDecoration: "none" }}>
+      <nav className="mb-4" style={UA_EYEBROW}>
+        <Link
+          to="/tasks"
+          style={{ color: "var(--faction-ua-card-accent)", textDecoration: "none" }}
+        >
           {t("default.breadcrumb")}
         </Link>
-        <span style={{ opacity: 0.5, margin: "0 var(--space-sm)" }}>›</span>
-        <span style={{ fontFamily: "var(--ua-engraved)" }}>{t("ua.faction")}</span>
-        <span style={{ opacity: 0.5, margin: "0 var(--space-sm)" }}>›</span>
-        <span style={{ color: ORANGE }}>{task.title}</span>
+        <span style={{ margin: "0 var(--space-sm)" }}>·</span>
+        <span>{t("ua.faction")}</span>
+        <span style={{ margin: "0 var(--space-sm)" }}>·</span>
+        <span style={{ color: "var(--faction-ua-card-accent)" }}>{task.title}</span>
       </nav>
 
       <div style={{ maxWidth: 920 }}>
-        <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-2xl)" }}>
-          {/* ── HERO — gilt salon acquisition plate ── */}
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            gap: "var(--space-2xl)",
+          }}
+        >
+          {/* ── THE SHEET — masthead + counts ── */}
           <div
             style={{
-              padding: "var(--space-md)",
-              background: GILT,
-              boxShadow:
-                "0 18px 40px rgba(60,40,10,0.28), inset 0 0 0 1px rgba(255,255,255,0.45)",
+              position: "relative",
+              overflow: "hidden",
+              border: "1px solid var(--faction-ua-rule)",
+              borderRadius: "var(--radius-md)",
+              background: "var(--faction-ua-card-bg)",
+              boxShadow: `0 14px 38px -24px ${uaShade(52)}`,
             }}
           >
             <div
               style={{
-                padding: "var(--space-xs)",
-                background: `linear-gradient(135deg, ${GOLD}, ${GOLD_PALE})`,
+                position: "relative",
+                background:
+                  "linear-gradient(160deg, var(--faction-ua-lift), var(--faction-ua-panel))",
+                borderBottom: "1px solid var(--faction-ua-hair)",
+                padding: "var(--space-2xl) var(--space-2xl) var(--space-xl)",
               }}
             >
+              <UaInkColumn
+                style={{
+                  left: "var(--space-md)",
+                  top: "var(--space-2xl)",
+                  bottom: "var(--space-xl)",
+                }}
+              />
               <div
                 style={{
                   position: "relative",
-                  border: "1px solid color-mix(in srgb, var(--ua-ink) 45%, transparent)",
-                  background: PAPER_WARM,
-                  backgroundImage:
-                    "radial-gradient(color-mix(in srgb, var(--ua-ink) 3%, transparent) 1px, transparent 1px)",
-                  backgroundSize: "5px 5px",
-                  // eslint-disable-next-line local/no-raw-style-values -- ornament: the inset of the crest panel within its gilt border, sized to the dot-grid ground rather than the layout scale.
-                  padding: "34px 38px 30px",
+                  paddingLeft: "var(--space-lg)",
                   display: "flex",
                   gap: "var(--space-2xl)",
                   alignItems: "center",
                   flexWrap: "wrap",
                 }}
               >
-                <CrestShield size={150} />
-                <div style={{ flex: 1, minWidth: 240 }}>
-                  <div
-                    style={{
-                      fontFamily: "var(--ua-engraved)",
-                      fontSize: "var(--text-md)",
-                      letterSpacing: "0.16em",
-                      color: ORANGE,
-                      marginBottom: "var(--space-xs)",
-                    }}
-                  >
-                    {t("ua.masthead")}
-                  </div>
-                  <div
-                    style={{
-                      fontFamily: "var(--ua-mono)",
-                      fontSize: "var(--text-xs)",
-                      letterSpacing: "0.3em",
-                      color: MUTED,
-                      marginBottom: "var(--space-lg)",
-                    }}
-                  >
+                <UaEnsoScore
+                  size={124}
+                  value={modifiedPoints}
+                  unit={t("ua.stats.honoraria")}
+                  valueColor="var(--faction-ua-vermil)"
+                />
+                <div style={{ flex: 1, minWidth: 260 }}>
+                  <div style={UA_EYEBROW}>{t("ua.masthead")}</div>
+                  <div style={{ ...UA_EYEBROW, letterSpacing: "0.3em" }}>
                     {t("ua.commissionLine", { number: commissionNo })}
                   </div>
                   <h1
-                    className="content-title"
                     style={{
-                      fontFamily: "var(--ua-display)",
-                      fontStyle: "italic",
-                      fontWeight: 700,
+                      fontFamily: UA_DISPLAY,
+                      fontWeight: 600,
+                      fontSize: "var(--text-heading)",
                       lineHeight: 1.06,
-                      color: INK,
-                      margin: "0 0 var(--space-lg)",
+                      letterSpacing: "-0.01em",
+                      color: "var(--faction-ua-card-text)",
+                      margin: "var(--space-sm) 0 var(--space-md)",
                       overflowWrap: "anywhere",
                     }}
                   >
                     {task.title}
                   </h1>
-                  <div
+                  {/* The status tag. It used to paint its ink with
+                      --faction-ua-light, a background tint that was invisible
+                      at 8% alpha and pale cream once #848 made it opaque; the
+                      ink token for a solid fill is --faction-ua-on-fill. */}
+                  <span
                     style={{
-                      position: "relative",
-                      width: "fit-content",
-                      background: ORANGE,
-                      color: "var(--faction-ua-light)",
-                      fontFamily: "var(--ua-engraved)",
-                      fontSize: "var(--text-sm)",
-                      letterSpacing: "0.1em",
-                      padding: "var(--space-xs) var(--space-xl)",
-                      clipPath:
-                        "polygon(0 0,100% 0,96% 50%,100% 100%,0 100%,4% 50%)",
-                      marginBottom: "var(--space-lg)",
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: "var(--space-sm)",
+                      background: "var(--faction-ua)",
+                      color: "var(--faction-ua-on-fill)",
+                      fontFamily: UA_TEXT,
+                      fontSize: "var(--text-md)",
+                      letterSpacing: "0.16em",
+                      textTransform: "uppercase",
+                      borderRadius: "var(--radius-sm)",
+                      padding: "var(--space-xs) var(--space-md)",
                     }}
                   >
-                    <span style={{ color: PAPER_WARM }}>{statusVoice}</span>
-                  </div>
-                  <div style={{ display: "flex", gap: "var(--space-md)", flexWrap: "wrap" }}>
-                    <StatPlate label={t("ua.stats.anno")}>
-                      {romanLevel(task.level_required)}
-                    </StatPlate>
-                    <StatPlate label={t("ua.stats.honoraria")} accent>
-                      {modifiedPoints}
-                      <span
-                        style={{
-                          fontFamily: "var(--ua-engraved)",
-                          fontSize: "var(--text-sm)",
-                          marginLeft: "var(--space-xs)",
-                          fontStyle: "normal",
-                          fontWeight: 400,
-                        }}
-                      >
-                        {t("ua.stats.honorariaUnit")}
-                      </span>
-                    </StatPlate>
-                    <StatPlate label={t("ua.stats.onView")}>
-                      <span
-                        className="content-text"
-                        style={{
-                          fontWeight: 600,
-                          lineHeight: 1.2,
-                          color: SUB,
-                        }}
-                      >
-                        {t("ua.stats.onViewValue", {
-                          signups: signups.length,
-                          completed: submissions.length,
-                        })}
-                      </span>
-                    </StatPlate>
-                  </div>
+                    {statusVoice}
+                  </span>
                 </div>
               </div>
             </div>
+
+            <div style={{ display: "flex", flexWrap: "wrap" }}>
+              <StatCell label={t("ua.stats.anno")}>
+                {romanLevel(task.level_required)}
+              </StatCell>
+              <StatCell label={t("ua.stats.honorariaUnit")}>
+                {modifiedPoints}
+              </StatCell>
+              <StatCell label={t("ua.stats.onView")} last>
+                <span
+                  style={{
+                    fontSize: "var(--text-content)",
+                    lineHeight: 1.2,
+                    color: "var(--faction-ua-card-body)",
+                  }}
+                >
+                  {t("ua.stats.onViewValue", {
+                    signups: signups.length,
+                    completed: submissions.length,
+                  })}
+                </span>
+              </StatCell>
+            </div>
           </div>
 
-          {/* ── Matriculation CTA / signed-on states ── */}
+          {/* ── Sign-up / signed-on states ── */}
           {canSignUp && (
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "var(--space-lg)",
-                flexWrap: "wrap",
-                padding: "var(--space-lg) var(--space-xl)",
-                border: `1px solid ${LINE}`,
-                background: PAPER,
-              }}
-            >
-              <button
-                onClick={handleSignup}
-                style={{
-                  cursor: "pointer",
-                  fontFamily: "var(--ua-engraved)",
-                  fontSize: "var(--text-lg)",
-                  letterSpacing: "0.14em",
-                  color: PAPER_WARM,
-                  background: ORANGE,
-                  border: "none",
-                  padding: "var(--space-md) var(--space-xl)",
-                  boxShadow: "0 3px 8px rgba(194,84,31,0.3)",
-                }}
-              >
+            <div style={PANEL}>
+              <button onClick={handleSignup} style={FILLED_ACTION}>
                 {t("ua.signup.cta", { points: modifiedPoints })}
               </button>
               <div
                 style={{
-                  fontFamily: "var(--ua-serif)",
-                  fontStyle: "italic",
-                  fontSize: "var(--text-xl)",
-                  color: SUB,
+                  fontFamily: UA_TEXT,
+                  fontSize: "var(--text-content)",
+                  color: "var(--faction-ua-card-body)",
                 }}
               >
                 {t("ua.signup.meta", {
@@ -525,53 +425,23 @@ export default function UaTaskDetail({
                   level: romanLevel(task.level_required),
                 })}
               </div>
-              <ErrorBanner
-                message={signupError}
-                style={{
-                  flexBasis: "100%",
-                  marginTop: 0,
-                  background: "var(--faction-ua-light)",
-                  border: `1px solid ${ORANGE}`,
-                  color: ORANGE_DEEP,
-                }}
-              />
+              <ErrorBanner message={signupError} style={BANNER} />
             </div>
           )}
 
           {mySubmission && (
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "var(--space-lg)",
-                flexWrap: "wrap",
-                padding: "var(--space-lg) var(--space-xl)",
-                border: `1px solid ${LINE}`,
-                background: PAPER,
-              }}
-            >
+            <div style={PANEL}>
               <span
                 style={{
-                  fontFamily: "var(--ua-engraved)",
-                  fontSize: "var(--text-xl)",
-                  letterSpacing: "0.1em",
-                  color: GOLD,
+                  ...UA_EYEBROW,
+                  color: "var(--faction-ua-card-accent)",
                 }}
               >
                 {t("ua.submitted.text")}
               </span>
               <Link
                 to={`/praxes/${mySubmission.id}/edit`}
-                style={{
-                  marginLeft: "auto",
-                  fontFamily: "var(--ua-engraved)",
-                  fontSize: "var(--text-md)",
-                  letterSpacing: "0.12em",
-                  padding: "var(--space-md) var(--space-xl)",
-                  background: INK,
-                  color: PAPER_WARM,
-                  textDecoration: "none",
-                }}
+                style={{ ...FILLED_ACTION, marginLeft: "auto" }}
               >
                 {t("ua.submitted.edit")}
               </Link>
@@ -579,87 +449,54 @@ export default function UaTaskDetail({
           )}
 
           {!mySubmission && isInProgress && inProgressPraxisId !== null && (
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "var(--space-lg)",
-                flexWrap: "wrap",
-                padding: "var(--space-lg) var(--space-xl)",
-                border: `1px solid ${LINE}`,
-                background: PAPER,
-              }}
-            >
+            <div style={PANEL}>
               <span
                 style={{
-                  fontFamily: "var(--ua-engraved)",
-                  fontSize: "var(--text-xl)",
-                  letterSpacing: "0.1em",
-                  color: ORANGE,
+                  ...UA_EYEBROW,
+                  color: "var(--faction-ua-card-accent)",
                 }}
               >
                 {t("ua.inProgress.text")}
               </span>
               <Link
                 to={`/praxes/${inProgressPraxisId}/edit`}
-                style={{
-                  marginLeft: "auto",
-                  fontFamily: "var(--ua-engraved)",
-                  fontSize: "var(--text-md)",
-                  letterSpacing: "0.12em",
-                  padding: "var(--space-md) var(--space-xl)",
-                  background: ORANGE,
-                  color: PAPER_WARM,
-                  textDecoration: "none",
-                }}
+                style={{ ...FILLED_ACTION, marginLeft: "auto" }}
               >
                 {t("ua.inProgress.continue")}
               </Link>
               <button
                 onClick={handleDrop}
                 style={{
+                  ...UA_EYEBROW,
                   background: "none",
                   border: "none",
                   cursor: "pointer",
-                  fontFamily: "var(--ua-mono)",
-                  fontSize: "var(--text-base)",
-                  letterSpacing: "0.1em",
-                  textTransform: "uppercase",
-                  color: MUTED,
                 }}
               >
                 {t("ua.inProgress.drop")}
               </button>
-              <ErrorBanner
-                message={signupError}
-                style={{
-                  flexBasis: "100%",
-                  marginTop: 0,
-                  background: "var(--faction-ua-light)",
-                  border: `1px solid ${ORANGE}`,
-                  color: ORANGE_DEEP,
-                }}
-              />
+              <ErrorBanner message={signupError} style={BANNER} />
             </div>
           )}
 
-          {/* ── The Commission — the user-written brief ── */}
+          {/* ── The Mark — the user-written brief ── */}
           <section>
             <SectionHead title={t("ua.commissionHeading")} />
             <div
               style={{
-                border: `1px solid ${LINE}`,
-                background: PAPER,
-                padding: "var(--space-2xl) var(--space-2xl)",
+                border: "1px solid var(--faction-ua-rule)",
+                borderRadius: "var(--radius-sm)",
+                background: "var(--faction-ua-card-bg)",
+                padding: "var(--space-xl)",
                 maxWidth: 660,
               }}
             >
               <p
                 className="content-text"
                 style={{
-                  fontFamily: "var(--ua-serif)",
-                  lineHeight: 1.75,
-                  color: SUB,
+                  fontFamily: UA_TEXT,
+                  lineHeight: 1.7,
+                  color: "var(--faction-ua-card-body)",
                   margin: 0,
                   whiteSpace: "pre-wrap",
                 }}
@@ -669,7 +506,7 @@ export default function UaTaskDetail({
             </div>
           </section>
 
-          {/* ── Hands matriculated ── */}
+          {/* ── Those practising ── */}
           {signups.length > 0 && (
             <section>
               <SectionHead title={t("ua.matriculatedHeading")} />
@@ -677,42 +514,35 @@ export default function UaTaskDetail({
             </section>
           )}
 
-          {/* ── The Critique — read-only aggregate verdict ── */}
+          {/* ── The Reading — read-only aggregate ── */}
           <section>
             <SectionHead title={t("ua.critiqueHeading")} />
             {voteCount > 0 ? (
-              <div style={{ display: "flex", alignItems: "flex-end", gap: "var(--space-md)" }}>
-                <span
-                  className="content-title"
-                  style={{
-                    fontFamily: "var(--ua-display)",
-                    fontStyle: "italic",
-                    fontWeight: 700,
-                    lineHeight: 0.8,
-                    color: ORANGE,
-                  }}
-                >
-                  {topScore}
-                </span>
-                <div style={{ paddingBottom: "var(--space-sm)" }}>
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "var(--space-lg)",
+                }}
+              >
+                <UaEnsoScore
+                  size={96}
+                  value={topScore}
+                  valueColor="var(--faction-ua-vermil)"
+                />
+                <div>
                   <div
                     style={{
-                      fontFamily: "var(--ua-engraved)",
-                      fontSize: "var(--text-xl)",
-                      letterSpacing: "0.06em",
-                      color: INK,
+                      fontFamily: UA_DISPLAY,
+                      fontWeight: 600,
+                      fontSize: "var(--text-title)",
+                      lineHeight: 1.1,
+                      color: "var(--faction-ua-card-text)",
                     }}
                   >
                     {t("ua.critique.finest")}
                   </div>
-                  <div
-                    style={{
-                      fontFamily: "var(--ua-mono)",
-                      fontSize: "var(--text-base)",
-                      letterSpacing: "0.06em",
-                      color: MUTED,
-                    }}
-                  >
+                  <div style={{ ...UA_EYEBROW, marginTop: "var(--space-xs)" }}>
                     {t("ua.critique.appraised", { count: voteCount })}
                   </div>
                 </div>
@@ -721,9 +551,8 @@ export default function UaTaskDetail({
               <p
                 className="content-text"
                 style={{
-                  fontFamily: "var(--ua-serif)",
-                  fontStyle: "italic",
-                  color: SUB,
+                  fontFamily: UA_TEXT,
+                  color: "var(--faction-ua-card-muted)",
                 }}
               >
                 {t("ua.critique.none")}
@@ -731,12 +560,12 @@ export default function UaTaskDetail({
             )}
           </section>
 
-          {/* ── The Salon Wall — filed praxis (completions) ── */}
+          {/* ── Sealed work ── */}
           <section>
             <SectionHead
               title={t("ua.salonWallHeading")}
               trailing={
-                <div style={{ display: "flex", gap: 0 }}>
+                <div style={{ display: "flex", gap: "var(--space-sm)" }}>
                   {(["score", "recent"] as const).map((sort) => {
                     const on = submissionSort === sort;
                     return (
@@ -744,17 +573,17 @@ export default function UaTaskDetail({
                         key={sort}
                         onClick={() => setSubmissionSort(sort)}
                         style={{
-                          fontFamily: "var(--ua-engraved)",
-                          fontSize: "var(--text-base)",
-                          letterSpacing: "0.1em",
-                          textTransform: "uppercase",
+                          ...UA_EYEBROW,
                           padding: "var(--space-xs) var(--space-md)",
-                          background: on ? INK : "transparent",
-                          color: on ? PAPER_WARM : MUTED,
+                          borderRadius: "var(--radius-sm)",
+                          background: on
+                            ? "var(--faction-ua)"
+                            : "transparent",
+                          color: on
+                            ? "var(--faction-ua-on-fill)"
+                            : "var(--faction-ua-card-muted)",
                           border: `1px solid ${
-                            on
-                              ? INK
-                              : "color-mix(in srgb, var(--ua-ink) 30%, transparent)"
+                            on ? "var(--faction-ua)" : "var(--faction-ua-rule)"
                           }`,
                           cursor: "pointer",
                         }}
@@ -772,9 +601,8 @@ export default function UaTaskDetail({
               <p
                 className="content-text"
                 style={{
-                  fontFamily: "var(--ua-serif)",
-                  fontStyle: "italic",
-                  color: SUB,
+                  fontFamily: UA_TEXT,
+                  color: "var(--faction-ua-card-muted)",
                 }}
               >
                 {t("ua.empty")}
@@ -792,13 +620,16 @@ export default function UaTaskDetail({
                   {sortedSubmissions.slice(0, 4).map((s) => (
                     <div
                       key={s.id}
-                      style={{ position: "relative", paddingTop: "var(--space-xl)" }}
+                      style={{
+                        position: "relative",
+                        paddingTop: "var(--space-xl)",
+                      }}
                     >
                       {s.id === topId && (
                         <div
                           style={{
                             position: "absolute",
-                            top: -4,
+                            top: 0,
                             left: "50%",
                             transform: "translateX(-50%)",
                             zIndex: 3,
@@ -806,16 +637,17 @@ export default function UaTaskDetail({
                             alignItems: "center",
                             gap: "var(--space-xs)",
                             whiteSpace: "nowrap",
-                            background: ORANGE,
-                            color: PAPER_WARM,
-                            fontFamily: "var(--ua-engraved)",
-                            fontSize: "var(--text-sm)",
-                            letterSpacing: "0.12em",
+                            background: "var(--faction-ua)",
+                            color: "var(--faction-ua-on-fill)",
+                            fontFamily: UA_TEXT,
+                            fontSize: "var(--text-md)",
+                            letterSpacing: "0.16em",
+                            textTransform: "uppercase",
+                            borderRadius: "var(--radius-sm)",
                             padding: "var(--space-xs) var(--space-md)",
-                            boxShadow: "0 3px 8px rgba(60,40,10,0.3)",
                           }}
                         >
-                          <span style={{ fontSize: "var(--text-lg)", lineHeight: 1 }}>⚜</span>{" "}
+                          <UaSigil width={13} height={13} />
                           {t("ua.finestHand")}
                         </div>
                       )}
@@ -828,10 +660,9 @@ export default function UaTaskDetail({
                     <Link
                       to={`/praxes?task_id=${task.id}`}
                       style={{
-                        fontFamily: "var(--ua-engraved)",
-                        fontSize: "var(--text-lg)",
-                        letterSpacing: "0.06em",
-                        color: ORANGE,
+                        fontFamily: UA_TEXT,
+                        fontSize: "var(--text-content)",
+                        color: "var(--faction-ua-card-accent)",
                         textDecoration: "none",
                       }}
                     >

@@ -67,7 +67,9 @@ describe('mobile Updates mixed multi-faction stream', () => {
     // Distinct per-faction frame markers appearing TOGETHER in one render
     // prove a mixed stream, not one uniform tint.
     expect(text, 'COVEN window chrome').toContain('whimsy.exe')
-    expect(text, 'UA salon masthead').toContain('University of Asthmatics')
+    // UA's frame is dress only now (#851): a 3px orange rule and the ensō, no
+    // engraved masthead, so the marker is the token rather than a house line.
+    expect(html, 'UA ink-rule frame').toContain('3px solid var(--faction-ua)')
     expect(html, 'SNIDE dossier tokens').toContain('--faction-snide')
     expect(html, 'COVEN scrapbook tokens').toContain('--faction-coven')
   })

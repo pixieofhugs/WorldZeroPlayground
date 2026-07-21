@@ -2,16 +2,17 @@ import { BadgedAvatar, type FactionAvatarProps } from "./FactionAvatar";
 import { UaSigil } from "../cards/UaSigil";
 
 /**
- * UA (University of Asthmatics) avatar — the Salon "Artist in Residence"
- * portrait: a parchment disc ringed in gilt with a regal italic monogram (or
- * the character's uploaded portrait), plus the heraldic UA crest clipped to the
- * lower-right as the membership badge.
+ * UA avatar — the portrait ringed in the practice's own orange, with the ensō
+ * as the membership medallion at the corner (kit §11, #851).
  *
- * Reuses the shared BadgedAvatar shell (image/initial circle + corner badge)
- * and the repo's own {@link UaSigil} for the badge glyph rather than porting a
- * separate sigil. UA is ALWAYS LIGHT: its --ua-* / --faction-ua-* tokens are
- * identical in both themes, so the salon styles itself with them and never
- * mutates data-theme. All colors via tokens (never hardcode hex — CLAUDE.md).
+ * The kit frames the portrait in a faint full ensō ring. At the sizes this
+ * component actually renders (24-32px) a two-arc brushstroke around a 24px disc
+ * is mud, so the ring is the plain orange stroke the shared circle already
+ * draws and the ensō does its work in the badge, where it is the FACTION MARK —
+ * one of the mark's two sanctioned uses (brief §4).
+ *
+ * Both themes come from the `[data-theme="dark"]` cascade; the badge sits on
+ * `--faction-ua-lift`, which dims with everything else.
  */
 export default function UaAvatar({ character, size }: FactionAvatarProps) {
   return (
@@ -19,16 +20,15 @@ export default function UaAvatar({ character, size }: FactionAvatarProps) {
       character={character}
       size={size}
       circle={{
-        borderColor: "var(--ua-orange)",
-        bg: "var(--faction-ua-card-bg)",
-        textColor: "var(--ua-ink)",
+        borderColor: "var(--faction-ua)",
+        bg: "var(--faction-ua-panel)",
+        textColor: "var(--faction-ua-card-text)",
         fontFamily: "var(--faction-ua-card-font)",
       }}
-      badgeBg="var(--ua-paper-warm)"
-      badgeRing="var(--ua-gold)"
-      // The crest is a shield (100×120 viewBox); render it square at badge
-      // scale — BadgedAvatar hands us the inner glyph size and the ring color
-      // (unused here; the crest carries its own --ua-* palette).
+      badgeBg="var(--faction-ua-lift)"
+      badgeRing="var(--faction-ua-border)"
+      // The ensō is square; the badge slot is square. It carries its own
+      // --faction-ua-glow stroke, so the ring colour is unused here.
       glyph={(s) => <UaSigil width={s} height={s} />}
     />
   );

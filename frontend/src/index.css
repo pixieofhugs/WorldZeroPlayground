@@ -1459,6 +1459,19 @@
     color: var(--color-text-tertiary);
   }
 
+  /* A label slot whose content is a SENTENCE rather than a word.
+     `.eyebrow`'s uppercase + 0.15em tracking is tuned for one or two words; a
+     sentence set that way is a wall. The propose-task faction descriptors are
+     the live case — six factions answer with one word and UA answers with
+     "Practise with us — one true mark a day." (#850). Same size and colour, so
+     the row still reads as one rank of labels; only the casing gives way. */
+  .eyebrow-sentence {
+    @apply font-body;
+    font-size: var(--text-sm);
+    letter-spacing: 0.02em;
+    color: var(--color-text-tertiary);
+  }
+
   /* ── Level gem (issue #728) ──
      A square rotated 45° — outlined, never filled, so the numeral sits on
      whatever surface the gem lands on and stays AA-safe without per-faction

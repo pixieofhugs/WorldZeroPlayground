@@ -2,21 +2,37 @@ import { Link } from "react-router-dom";
 import type { TaskOut } from "../../api/tasks";
 import i18n from "../../i18n";
 import LevelGem from "../ui/LevelGem";
-import { UaSigil, MottoRibbon } from "./UaSigil";
+import {
+  UA_DISPLAY,
+  UA_EYEBROW,
+  UA_HAIRLINE,
+  UA_TEXT,
+  UaEnsoScore,
+  UaInkColumn,
+  uaShade,
+} from "./uaAtoms";
 
 /**
- * UA — Gilt salon crest placard (the University of Asthmatics archetype).
- * A gold-framed acquisition plate on the salon wall, center-composed around the
- * heraldic crest: masthead ("University of Asthmatics · EST · MMXX"), motto
- * ribbon, Cormorant-italic title, and a "Matriculate" sign-up affordance. The
- * crest + motto are shared with UaFactionHero (see UaSigil.tsx), not re-drawn.
- * All colors via --ua-* tokens (never hardcode hex — CLAUDE.md); the salon is
- * always-light, so tokens read identically in both themes.
+ * UA task card — THE INK COLUMN (kit §1 "3a", the reference surface for the
+ * whole UA redesign, #851).
+ *
+ * A sheet of sun-bleached stock with a single hairline of orange running down
+ * the left margin and the task's marks held in an ensō at the head. That is
+ * the entire ornament budget: no gilt sandwich, no rotation, no dot grid, no
+ * motto ribbon, no crest.
+ *
+ * The mandala is deliberately ABSENT here (brief §5). A task card lives in a
+ * list — dense, text-heavy, read in bulk — and the pattern is reserved for the
+ * three surfaces that can afford it. The kit draws a lotus corner-bleed on this
+ * card; the brief's strength ruling supersedes it, and the brief is the
+ * contract.
+ *
+ * The level indicator is the shared {@link LevelGem}, tinted via
+ * `factionCssVar` — tint only, no bespoke UA shape (brief §9).
+ *
+ * Both themes come from the `[data-theme="dark"]` cascade; the card dims
+ * with the app like every other faction's.
  */
-
-const REGALIA = "var(--faction-ua-body-font)";
-const DISPLAY = "var(--faction-ua-card-font)";
-const SERIF = "'EB Garamond', serif";
 
 interface Props {
   task: TaskOut;
@@ -26,121 +42,98 @@ interface Props {
 
 export default function UaTaskCard({ task, displayPoints, onSignup }: Props) {
   return (
-    // Gilt frame: gold-leaf gradient border, then the parchment plate, hung with
-    // a slight rotation like a plate on the salon wall.
-    <div
+    <article
       style={{
+        position: "relative",
+        overflow: "hidden",
         minWidth: 240,
         maxWidth: 282,
         flex: "0 1 264px",
-        padding: "var(--space-xs)",
-        background: "var(--ua-gilt)",
-        transform: "rotate(-0.6deg)",
-        boxShadow:
-          "0 10px 22px color-mix(in srgb, var(--ua-ink) 20%, transparent), inset 0 0 0 1px color-mix(in srgb, white 40%, transparent)",
+        background: "var(--faction-ua-card-bg)",
+        color: "var(--faction-ua-card-text)",
+        border: UA_HAIRLINE,
+        borderRadius: "var(--radius-sm)",
+        boxShadow: `0 10px 30px -18px ${uaShade(50)}`,
+        padding: "var(--space-xl) var(--space-xl) var(--space-lg)",
       }}
     >
-      <div
+      <UaInkColumn
         style={{
-          background: "var(--ua-paper)",
-          backgroundImage:
-            "radial-gradient(color-mix(in srgb, var(--ua-ink) 3%, transparent) 1px, transparent 1px)",
-          backgroundSize: "5px 5px",
-          border: "1px solid var(--ua-line-soft)",
-          padding: "var(--space-lg) var(--space-lg) var(--space-md)",
-          color: "var(--ua-ink)",
-          textAlign: "center",
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
+          left: "var(--space-sm)",
+          top: "var(--space-xl)",
+          bottom: "var(--space-lg)",
         }}
-      >
-        {/* Crest */}
-        <UaSigil width={72} height={86} />
+      />
 
-        {/* Masthead */}
+      <div style={{ position: "relative", paddingLeft: "var(--space-lg)" }}>
+        <div style={UA_EYEBROW}>{i18n.t("feed:taskCard.ua.estLine")}</div>
+
+        {/* The score, in the ensō — the mark's one sanctioned use besides the
+            faction mark itself. */}
         <div
           style={{
-            fontFamily: REGALIA,
-            fontSize: "var(--text-base)",
-            letterSpacing: "0.16em",
-            textTransform: "uppercase",
-            color: "var(--ua-orange)",
-            marginTop: "var(--space-sm)",
+            display: "flex",
+            justifyContent: "center",
+            margin: "var(--space-lg) 0",
           }}
         >
-          {i18n.t("feed:identity.ua.fullName")}
+          <UaEnsoScore
+            size={96}
+            value={displayPoints}
+            unit={i18n.t("tasks:ua.stats.honoraria")}
+          />
         </div>
-        <div
-          style={{
-            fontFamily: REGALIA,
-            fontSize: "var(--text-xs)",
-            letterSpacing: "0.3em",
-            textTransform: "uppercase",
-            color: "var(--ua-muted)",
-            marginBottom: "var(--space-md)",
-          }}
-        >
-          {i18n.t("feed:taskCard.ua.estLine")}
-        </div>
-
-        {/* Motto ribbon */}
-        <MottoRibbon fontSize={9} padding="4px 18px" />
 
         <Link
           to={`/tasks/${task.id}`}
           style={{ textDecoration: "none", color: "inherit" }}
         >
-          <div
+          <h3
             className="content-title"
             style={{
-              fontFamily: DISPLAY,
-              fontStyle: "italic",
+              fontFamily: UA_DISPLAY,
               fontWeight: 600,
-              lineHeight: 1.2,
-              margin: "var(--space-md) 0 var(--space-sm)",
+              lineHeight: 1.14,
+              letterSpacing: "-0.005em",
+              color: "var(--faction-ua-card-text)",
+              margin: "0 0 var(--space-sm)",
               overflowWrap: "anywhere",
             }}
           >
             {task.title}
-          </div>
+          </h3>
         </Link>
 
         {task.description && (
-          <div
+          <p
             className="card-description"
-            style={{ fontFamily: SERIF, color: "var(--ua-sub)", marginBottom: "var(--space-xs)" }}
+            style={{
+              fontFamily: UA_TEXT,
+              lineHeight: 1.55,
+              color: "var(--faction-ua-card-body)",
+              margin: "0 0 var(--space-lg)",
+            }}
           >
             {task.description}
-          </div>
+          </p>
         )}
-
-        <div
-          style={{
-            fontFamily: REGALIA,
-            fontSize: "var(--text-sm)",
-            letterSpacing: "0.12em",
-            textTransform: "uppercase",
-            color: "var(--ua-gold)",
-            margin: "var(--space-sm) 0 var(--space-md)",
-          }}
-        >
-          {i18n.t("feed:taskCard.ua.pointsLine", { points: displayPoints })}
-        </div>
 
         {onSignup && (
           <button
             onClick={() => onSignup(task.id)}
-            className="btn-primary"
             style={{
-              fontFamily: REGALIA,
-              fontSize: "var(--text-base)",
+              width: "100%",
+              cursor: "pointer",
+              fontFamily: UA_TEXT,
+              fontSize: "var(--text-xl)",
               letterSpacing: "0.12em",
               textTransform: "uppercase",
-              padding: "var(--space-sm) var(--space-xl)",
-              marginBottom: "var(--space-md)",
-              background: "var(--ua-orange)",
-              border: "none",
+              padding: "var(--space-sm) var(--space-lg)",
+              marginBottom: "var(--space-lg)",
+              background: "var(--faction-ua-card-bg)",
+              color: "var(--faction-ua-card-accent)",
+              border: "1.5px solid var(--faction-ua)",
+              borderRadius: "var(--radius-sm)",
             }}
           >
             {i18n.t("feed:taskCard.ua.signup")}
@@ -149,25 +142,14 @@ export default function UaTaskCard({ task, displayPoints, onSignup }: Props) {
 
         <div
           className="card-footer"
-          style={{
-            width: "100%",
-            borderTop: "1px solid var(--ua-line-soft)",
-          }}
+          style={{ borderTop: UA_HAIRLINE, paddingTop: "var(--space-md)" }}
         >
           <LevelGem level={task.level_required} factionSlug="ua" />
-          <span
-            className="content-title"
-            style={{
-              fontFamily: DISPLAY,
-              fontStyle: "italic",
-              fontWeight: 700,
-              color: "var(--ua-orange)",
-            }}
-          >
-            {displayPoints}
+          <span style={{ ...UA_EYEBROW, letterSpacing: "0.16em" }}>
+            {i18n.t("feed:taskCard.ua.pointsLine", { points: displayPoints })}
           </span>
         </div>
       </div>
-    </div>
+    </article>
   );
 }
