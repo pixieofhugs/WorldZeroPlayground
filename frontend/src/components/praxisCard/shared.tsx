@@ -1,9 +1,11 @@
 import type { CSSProperties, MouseEvent } from "react";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
+import type { CharacterOut } from "../../api/auth";
 import type { PraxisCardOut } from "../../api/praxis";
 import { factionName } from "../../utils/factions";
 import { mediaUrl } from "../../utils/media";
+import FactionAvatar from "../avatar/FactionAvatar";
 import VoteUI from "../vote/VoteUI";
 
 /**
@@ -27,6 +29,28 @@ import VoteUI from "../vote/VoteUI";
  */
 export const ROSTER_NAME_CAP = 7
 
+/**
+ * The two faces a desktop praxis card writes in (#888) — the same split the
+ * mobile slots have carried since #573 as `MobileSlotTheme.displayFont` /
+ * `bodyFont`. Ported here because desktop never got the seam: `shared.tsx` had
+ * no `fontFamily` at all, so every faction's card read in Courier Prime no
+ * matter what its own frame declared.
+ *
+ * It is a PAIR on purpose, not one resolved `--faction-{slug}-card-font`. A
+ * single font collapses the split, and several card fonts are display faces
+ * that stop being readable at paragraph length — S.N.I.D.E.'s is Permanent
+ * Marker, which is a fine byline and an unreadable two-line excerpt.
+ *
+ * Both values are optional: a slot given nothing keeps its `font-*` class, so
+ * an archetype that has no opinion is unchanged.
+ */
+export interface PraxisCardFonts {
+  /** The identity face — author name, title, mode chip. */
+  display?: string;
+  /** The reading face — task line, excerpt, meta line. */
+  body?: string;
+}
+
 export function rosterNames(
   members: { display_name?: string | null }[],
   cap = ROSTER_NAME_CAP,
@@ -42,15 +66,21 @@ export function rosterNames(
 export function PraxisTitle({
   praxis,
   style,
+  fonts,
 }: {
   praxis: PraxisCardOut;
   style?: CSSProperties;
+  fonts?: PraxisCardFonts;
 }) {
   return (
     <Link to={`/praxes/${praxis.id}`}>
       <h3
         className="content-title font-display font-semibold leading-tight hover:underline"
-        style={{ marginBottom: "var(--space-sm)", ...style }}
+        style={{
+          marginBottom: "var(--space-sm)",
+          fontFamily: fonts?.display,
+          ...style,
+        }}
       >
         {praxis.title}
       </h3>
@@ -63,9 +93,11 @@ export function PraxisTaskLink({
   praxis,
   style,
   lead,
+  fonts,
 }: {
   praxis: PraxisCardOut;
   style?: CSSProperties;
+  fonts?: PraxisCardFonts;
   /**
    * An optional un-linked run-in before the task title (#840). Some factions
    * write this line as a sentence rather than a bare reference — WOW's chronicle
@@ -79,14 +111,17 @@ export function PraxisTaskLink({
       <Link
         to={`/tasks/${praxis.task_id}`}
         className="font-body hover:underline"
-        style={{ fontSize: "var(--text-content)", ...style }}
+        style={{ fontSize: "var(--text-content)", fontFamily: fonts?.body, ...style }}
       >
         {praxis.task_title}
       </Link>
     );
   }
   return (
-    <span className="font-body" style={{ fontSize: "var(--text-content)", ...style }}>
+    <span
+      className="font-body"
+      style={{ fontSize: "var(--text-content)", fontFamily: fonts?.body, ...style }}
+    >
       <span style={{ marginRight: "var(--space-xs)" }}>{lead}</span>
       <Link to={`/tasks/${praxis.task_id}`} className="hover:underline" style={{ color: "inherit" }}>
         {praxis.task_title}
@@ -95,13 +130,57 @@ export function PraxisTaskLink({
   );
 }
 
-/** Slot: the author + score footer row (dashed rule on top). */
+/**
+ * The praxis author as the shared avatar surface wants them (#888).
+ *
+ * `FactionAvatar` reads only username / avatar_url / faction_slug off a
+ * `CharacterOut`; a card payload carries those three under different names, so
+ * pad the rest. Mirrors `comments/shared.tsx`'s `authorToCharacter` — reusing
+ * the one avatar convention (portrait, else monogram, else spectrum ring) is
+ * the point, so the card never grows a placeholder of its own.
+ *
+ * `display_name` stands in for `username` deliberately: it is what the byline
+ * shows, so it is what the monogram initial and the img alt should follow.
+ */
+function authorAsCharacter(praxis: PraxisCardOut): CharacterOut {
+  const name = praxis.created_by_display_name || `#${praxis.created_by_id}`;
+  return {
+    id: praxis.created_by_id,
+    username: name,
+    display_name: name,
+    avatar_url: praxis.created_by_avatar_url || null,
+    faction_slug: praxis.created_by_faction_slug ?? null,
+    bio: null,
+    location: null,
+    level: 0,
+    score: 0,
+    all_time_score: 0,
+    status: "active",
+    created_at: "",
+  };
+}
+
+/** The byline portrait's diameter. Not a spacing value — a drawn disc. */
+// eslint-disable-next-line local/no-raw-style-values -- ornament: the portrait disc's drawn diameter (§4a), passed as a number to FactionAvatar's size API.
+const BYLINE_PORTRAIT_SIZE = 28;
+
+/**
+ * Slot: the author byline (dashed rule on top) — name, portrait, faction tag.
+ *
+ * The praxis TOTAL used to sit at the right of this row. It is gone (#888,
+ * closing #663): the score stamp is the card's sole owner of that number, and
+ * a card that states its total twice invites the reader to check whether the
+ * two agree. The portrait takes the name's right-hand side; the author's
+ * faction tag takes the far edge the score vacated.
+ */
 export function PraxisByline({
   praxis,
   style,
+  fonts,
 }: {
   praxis: PraxisCardOut;
   style?: CSSProperties;
+  fonts?: PraxisCardFonts;
 }) {
   // The author's own member faction, shown only when it differs from the task
   // faction (the frame already carries the task faction's voice). Resolved via
@@ -112,32 +191,42 @@ export function PraxisByline({
     <div
       className="flex justify-between items-center font-body"
       style={{
-        fontSize: "var(--text-xs)",
+        // Byline chrome sits at the TOP of the label tier (14px), not its floor
+        // (8px). The name itself overrides up to the content tier below.
+        fontSize: "var(--text-xl)",
         marginTop: "var(--space-sm)",
         paddingTop: "var(--space-sm)",
         borderTop: "1px dashed rgba(128,128,128,0.3)",
+        gap: "var(--space-sm)",
         ...style,
       }}
     >
-      <span className="flex items-baseline" style={{ gap: "var(--space-xs)", minWidth: 0 }}>
+      <span className="flex items-center" style={{ gap: "var(--space-sm)", minWidth: 0 }}>
         <Link
           to={`/characters/${praxis.created_by_id}`}
-          className="hover:underline"
+          // A person's name is readable text, not scanned chrome: content tier
+          // (18px). It ties the task link's size, and separates from it by
+          // weight and by the faction's own display face instead.
+          className="content-text font-semibold hover:underline"
+          style={{
+            fontFamily: fonts?.display,
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+            whiteSpace: "nowrap",
+          }}
         >
           {praxis.created_by_display_name || `#${praxis.created_by_id}`}
         </Link>
-        {showFaction && (
-          <span style={{ opacity: 0.7, whiteSpace: "nowrap" }}>
-            {`· ${factionName(authorFaction)}`}
-          </span>
-        )}
+        <FactionAvatar
+          character={authorAsCharacter(praxis)}
+          size={BYLINE_PORTRAIT_SIZE}
+        />
       </span>
-      {praxis.score !== null && (
+      {showFaction && (
         <span
-          className="font-display font-bold"
-          style={{ fontSize: "var(--text-content)", color: "inherit" }}
+          style={{ fontFamily: fonts?.body, opacity: 0.7, whiteSpace: "nowrap" }}
         >
-          {praxis.score.toFixed(1)}
+          {factionName(authorFaction)}
         </span>
       )}
     </div>
@@ -166,13 +255,22 @@ export function PraxisVotedByMarker({
   );
 }
 
-/** Slot: base points + collaboration mode — a compact stat line. */
+/**
+ * Slot: level + base points + collaboration mode + date — the meta line.
+ *
+ * FOUR segments, always, in that order (#888). The level used to be conditional
+ * on `task_level_required > 0`, so a level-0 task dropped it and the separator
+ * count changed card to card — a ragged line across a wall of cards. `L0` is a
+ * real answer to "what does this need?", so it renders.
+ */
 export function PraxisStats({
   praxis,
   style,
+  fonts,
 }: {
   praxis: PraxisCardOut;
   style?: CSSProperties;
+  fonts?: PraxisCardFonts;
 }) {
   const { t } = useTranslation("praxis");
   const collaborators = praxis.member_count - 1;
@@ -182,14 +280,12 @@ export function PraxisStats({
   return (
     <div
       className="flex items-center gap-2 font-body"
-      style={{ fontSize: "var(--text-xs)", ...style }}
+      style={{ fontSize: "var(--text-xl)", fontFamily: fonts?.body, ...style }}
     >
-      {praxis.task_level_required > 0 && (
-        <>
-          <span style={{ fontWeight: 600, opacity: 0.75 }}>{t("card.level", { level: praxis.task_level_required })}</span>
-          <span aria-hidden>·</span>
-        </>
-      )}
+      <span style={{ fontWeight: 600, opacity: 0.75 }}>
+        {t("card.level", { level: praxis.task_level_required })}
+      </span>
+      <span aria-hidden>·</span>
       <span style={{ fontWeight: 700 }}>{t("card.points", { points: praxis.task_point_value })}</span>
       <span aria-hidden>·</span>
       <span>{collaborators > 0 ? t("card.crew", { count: collaborators }) : t("card.solo")}</span>
@@ -207,15 +303,18 @@ export function PraxisStats({
 export function PraxisExcerpt({
   praxis,
   style,
+  fonts,
 }: {
   praxis: PraxisCardOut;
   style?: CSSProperties;
+  fonts?: PraxisCardFonts;
 }) {
   if (!praxis.body_text) return null;
   return (
     <p
       className="card-description font-body"
       style={{
+        fontFamily: fonts?.body,
         marginTop: "var(--space-sm)",
         marginBottom: "0",
         lineHeight: 1.5,
@@ -321,9 +420,11 @@ export function PraxisRoster({
 export function PraxisModeChip({
   praxis,
   style,
+  fonts,
 }: {
   praxis: PraxisCardOut;
   style?: CSSProperties;
+  fonts?: PraxisCardFonts;
 }) {
   const { t } = useTranslation("common");
   const isDuel = praxis.type === "duel";
@@ -331,7 +432,11 @@ export function PraxisModeChip({
   const isPending = praxis.submit_proposed_at != null;
   if (!isDuel && !isCollab && !isPending) return null;
   const chip: CSSProperties = {
-    fontSize: "var(--text-xs)",
+    // A chip is a LABEL, not running text: it keeps the label tier (#888 leaves
+    // `.eyebrow`/`--text-sm` alone by design), but at the 9px step rather than
+    // the 8px floor the meta line just left.
+    fontSize: "var(--text-sm)",
+    fontFamily: fonts?.display,
     letterSpacing: "0.14em",
     textTransform: "uppercase",
     padding: "var(--space-xs) var(--space-sm)",
@@ -391,10 +496,12 @@ export function PraxisMediaGallery({
   showPlaceholder,
   emptyLabel,
   emptyStyle,
+  fonts,
 }: {
   praxis: PraxisCardOut;
   accent: string;
   paper?: string;
+  fonts?: PraxisCardFonts;
   /**
    * When set, an empty gallery renders a neutral dashed drop-target placeholder
    * (the mock's "media slot") instead of nothing. Opt-in so it stays off the
@@ -425,7 +532,9 @@ export function PraxisMediaGallery({
           border: `1px dashed color-mix(in srgb, ${accent} 45%, transparent)`,
           background: `color-mix(in srgb, ${accent} 4%, transparent)`,
           color: accent,
-          fontSize: "var(--text-xs)",
+          // Label tier, at the eyebrow step rather than the 8px floor (#888).
+          fontSize: "var(--text-sm)",
+          fontFamily: fonts?.body,
           letterSpacing: "0.14em",
           textTransform: "uppercase",
           opacity: 0.7,
@@ -472,7 +581,9 @@ export function PraxisMediaGallery({
                 </span>
                 <span
                   style={{
-                    fontSize: "var(--text-xs)",
+                    // Label tier, eyebrow step rather than the 8px floor (#888).
+                    fontSize: "var(--text-sm)",
+                    fontFamily: fonts?.body,
                     letterSpacing: "0.1em",
                     textTransform: "uppercase",
                   }}
@@ -506,8 +617,13 @@ export function PraxisMediaGallery({
 /**
  * Slot: the vote footer — the real per-faction VoteUI, keyed by the task
  * faction. Pre-highlights the viewer's own cast (`viewer_vote`); casting is
- * self-managed by VoteUI's own useVote path (no external handler). An additive
- * footer — it never replaces the score-hero stamp.
+ * self-managed by VoteUI's own useVote path (no external handler).
+ *
+ * It passes NO `points`/`totalVotes` (#888, closing #663). `VoteShell`'s
+ * existing `points != null` guard then drops the whole "N pts · M votes" tally
+ * line, leaving the star control alone. That is the entire mechanism: the guard
+ * is not re-cut here, and the praxis DETAIL page — a different caller that does
+ * pass them — keeps its tally.
  */
 export function PraxisVoteFooter({
   praxis,
@@ -522,8 +638,6 @@ export function PraxisVoteFooter({
         factionSlug={praxis.task_faction_slug}
         praxisId={praxis.id}
         currentValue={praxis.viewer_vote ?? undefined}
-        points={praxis.score}
-        totalVotes={praxis.voter_count}
       />
     </div>
   );

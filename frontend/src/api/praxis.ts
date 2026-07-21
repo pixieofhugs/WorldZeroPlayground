@@ -99,6 +99,12 @@ export interface PraxisCardOut {
   moderation_status: ModerationStatus
   created_by_id: number
   created_by_display_name: string
+  /**
+   * The author's portrait for the card byline (#888). `""` when they have none
+   * — the byline falls back to the shared monogram avatar. Optional so a stale
+   * cached payload degrades to the monogram rather than crashing the card.
+   */
+  created_by_avatar_url?: string
   created_at: string
   updated_at: string
   submitted_at: string | null
