@@ -74,6 +74,8 @@ function currentUser(faction_slug: string | null): CurrentUser {
     can_comment: true,
     second_character_level_required: 5,
     era_name: 'Era 3',
+    level_jump_reach: 0,
+    level_jump_available: false,
   }
 }
 

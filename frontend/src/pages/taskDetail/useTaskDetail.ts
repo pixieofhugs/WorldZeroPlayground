@@ -27,6 +27,7 @@ import { useAuth } from "../../auth/AuthContext";
 import { extractError } from "../../utils/errors";
 import { computeDisplayPoints } from "../../utils/points";
 import { useGameConfig } from "../../hooks/useGameConfig";
+import { isLevelJumpSignup } from "./levelJump";
 
 const DEFAULT_MAX_TASK_SLOTS = 20;
 
@@ -232,19 +233,17 @@ export function useTaskDetail(idParam: string | undefined): TaskDetailState {
   const canSignUp =
     !!user && !mySubmission && !isInProgress && !!task?.can_submit_praxis;
   // The signable task is a level-jump iff the viewer's faction grants reach, the
-  // allowance is unspent, and the task sits above the viewer's own level. We do
-  // NOT recompute eligibility — canSignUp already trusts the backend's
-  // `can_submit_praxis` (which itself threads the same reach and is false once
-  // the allowance is spent), so a signable above-level task can ONLY be signable
-  // via the allowance.
-  const viewerLevel = user?.character?.level ?? 0;
-  const levelJumpReach = user?.level_jump_reach ?? 0;
-  const levelJumpSignup =
-    canSignUp &&
-    levelJumpReach > 0 &&
-    !!user?.level_jump_available &&
-    !!task &&
-    task.level_required > viewerLevel;
+  // allowance is unspent, and the task sits above the viewer's own level. Logic
+  // lives in the pure `isLevelJumpSignup` predicate so it is testable props-in/
+  // value-out. We do NOT recompute eligibility — canSignUp already trusts the
+  // backend's `can_submit_praxis`.
+  const levelJumpSignup = isLevelJumpSignup({
+    canSignUp,
+    levelJumpReach: user?.level_jump_reach ?? 0,
+    levelJumpAvailable: !!user?.level_jump_available,
+    taskLevelRequired: task?.level_required,
+    viewerLevel: user?.character?.level ?? 0,
+  });
   const slotsOpen = maxTaskSlots - taskSlotCount;
 
   const voteCount = submissions.length;

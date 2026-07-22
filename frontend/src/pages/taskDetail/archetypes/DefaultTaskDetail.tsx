@@ -6,6 +6,7 @@ import FeedBadge from "../../../components/feed/FeedBadge";
 import DefaultSigil from "../../../components/cards/DefaultSigil";
 import { factionCssVar, factionFill, factionName } from "../../../utils/factions";
 import { mediaUrl } from "../../../utils/media";
+import { LevelJumpBanner } from "./shared";
 import type { TaskDetailState } from "../useTaskDetail";
 
 const VISIBLE_SIGNUPS = 4;
@@ -242,6 +243,7 @@ export default function DefaultTaskDetail({
           </div>
 
           {/* ── Signup Block ── */}
+          <LevelJumpBanner state={state} />
           {canSignUp && (
             <div className="sidebar-card mb-5" style={{ padding: "var(--space-lg) var(--space-xl)" }}>
               <button

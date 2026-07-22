@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import PraxisCard from "../../../components/PraxisCard";
 import { mediaUrl } from "../../../utils/media";
-import { ErrorBanner, relationOf } from "./shared";
+import { ErrorBanner, LevelJumpBanner, relationOf } from "./shared";
 import type { TaskSignupOut } from "../../../api/tasks";
 import type { PraxisCardOut } from "../../../api/praxis";
 import type { TaskDetailState } from "../useTaskDetail";
@@ -401,6 +401,7 @@ export default function CovenTaskDetail({ state }: { state: TaskDetailState }) {
         </div>
 
         {/* ── Signup CTA bar (only when sign-up is possible) ── */}
+        <LevelJumpBanner state={state} />
         {canSignUp && (
           <div>
             <div

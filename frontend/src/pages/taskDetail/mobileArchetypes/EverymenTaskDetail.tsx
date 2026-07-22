@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import PraxisCard from "../../../components/PraxisCard";
 import { MobileStickyBar, MobileStickyCaption } from "./shared";
+import { LevelJumpBanner } from "../archetypes/shared";
 import type { TaskDetailState } from "../useTaskDetail";
 
 /**
@@ -354,6 +355,7 @@ export default function EverymenTaskDetail({ state }: { state: TaskDetailState }
       {/* Sticky action bar — stamped CTA / signed-on state */}
       {canSignUp && (
         <MobileStickyBar>
+          <LevelJumpBanner state={state} />
           {signupError && (
             <div
               className="font-body"
