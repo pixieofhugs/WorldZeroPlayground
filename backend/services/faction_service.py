@@ -63,11 +63,20 @@ async def hidden_faction_slugs(session: AsyncSession) -> list[str]:
     Listing visibility is a faction-*status* axis, not a per-character permit,
     so it can't route through :func:`faction_permits`; it lives here so all
     faction-rule knowledge still has one home. Task listings exclude these.
+
+    The unaffiliated sentinel is subtracted from the result: ``na`` is seeded
+    as a ``hidden`` Faction row (``seed.py``), but hidden/deprecated factions
+    are excluded from listings because nobody should act on them, whereas
+    *unaffiliated* is a state every generic / cross-faction task carries and
+    must stay listable. Without this, player-proposed tasks — which default to
+    ``na`` (``services.task.propose_task``) — vanish from the Tasks page on a
+    freshly seeded database. This does not touch ``GET /factions``, which reads
+    ``visible`` rows directly, so ``na`` remains absent from the registry.
     """
     result = await session.execute(
         select(Faction.slug).where(Faction.status != FactionStatus.visible)
     )
-    return [row[0] for row in result.all()]
+    return [row[0] for row in result.all() if row[0] != UNAFFILIATED_FACTION_SLUG]
 
 
 # ---------------------------------------------------------------------------

@@ -10,13 +10,15 @@
  * The dispatch cases pin the other half: the stamp resolves per faction with
  * `Default*` fall-through, like every other surface (ADR-0039).
  */
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, beforeEach } from 'vitest'
 import { renderToStaticMarkup } from 'react-dom/server'
 import '../../../../i18n'
 import type { PraxisCardOut } from '../../../../api/praxis'
 import { pickVariant } from '../../../../utils/factionDispatch'
 import { surfaceMap } from '../../../../factions'
 import { scoreBreakdown, formatMult } from '../scoreBreakdown'
+import { applyVoteDelta } from '../../../vote/useVotedPraxis'
+import { recordVote, tallyDelta, __resetVoteOverrides } from '../../../vote/voteOverrides'
 import DefaultScoreStamp from '../DefaultScoreStamp'
 import EverymenScoreStamp from '../EverymenScoreStamp'
 import EphemeristsScoreStamp from '../EphemeristsScoreStamp'
@@ -96,6 +98,23 @@ describe('scoreBreakdown row selection (ADR-0053)', () => {
   it('formats the multiplier to two decimals', () => {
     expect(formatMult(0.8)).toBe('×0.80')
     expect(formatMult(2)).toBe('×2.00')
+  })
+})
+
+describe('useVotedPraxis merge feeds the stamp breakdown (#912)', () => {
+  beforeEach(() => {
+    __resetVoteOverrides()
+  })
+
+  it('moves both the votes row and the total on an active override, before any refetch', () => {
+    const base = praxis({ id: 1, voter_count: 2, points_from_votes: 4, score: 13.6 })
+    recordVote(1, 5, null)
+    const delta = tallyDelta(1)
+    if (!delta) throw new Error('expected an active override')
+    const voted = applyVoteDelta(base, delta)
+    expect(scoreBreakdown(voted)).toEqual(
+      expect.objectContaining({ votes: 9, total: 18.6 }),
+    )
   })
 })
 
