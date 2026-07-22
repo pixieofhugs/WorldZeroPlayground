@@ -1,6 +1,7 @@
 import { useTranslation } from 'react-i18next'
 import type { TasksState } from '../useTasks'
 import MobileTaskCard from './mobileTaskCard'
+import MetataskRow from '../MetataskRow'
 import FactionSigilRow from '../../../components/ui/FactionSigilRow'
 import { ChipRow, Chip } from '../../../components/ui/ChipRow'
 
@@ -24,6 +25,8 @@ export default function DefaultTasks({ state }: { state: TasksState }) {
     factions,
     statusFilters,
     levelFilters,
+    taskType,
+    setTaskType,
     status,
     setStatus,
     faction,
@@ -36,6 +39,8 @@ export default function DefaultTasks({ state }: { state: TasksState }) {
     loadMore,
     displayPointsFor,
   } = state
+
+  const isMetatask = taskType === 'metatask'
 
   return (
     <div className="py-4" data-testid="mobile-tasks-browse">
@@ -64,6 +69,16 @@ export default function DefaultTasks({ state }: { state: TasksState }) {
           borderRadius: 6,
         }}
       />
+
+      {/* Task / Metatask mode toggle (#934) */}
+      <ChipRow label={t('browse.taskType')}>
+        <Chip on={taskType === 'standard'} onClick={() => setTaskType('standard')}>
+          {t('browse.tasks')}
+        </Chip>
+        <Chip on={taskType === 'metatask'} onClick={() => setTaskType('metatask')}>
+          {t('browse.metatasks')}
+        </Chip>
+      </ChipRow>
 
       {/* Status chips */}
       <ChipRow label={tc('filters.status')}>
@@ -103,9 +118,13 @@ export default function DefaultTasks({ state }: { state: TasksState }) {
           <p className="font-body text-muted">{t('listPage.empty')}</p>
         ) : (
           <div className="flex flex-col gap-3">
-            {tasks.map((task) => (
-              <MobileTaskCard key={task.id} task={task} points={displayPointsFor(task)} />
-            ))}
+            {tasks.map((task) =>
+              isMetatask ? (
+                <MetataskRow key={task.id} task={task} points={displayPointsFor(task)} />
+              ) : (
+                <MobileTaskCard key={task.id} task={task} points={displayPointsFor(task)} />
+              ),
+            )}
             {hasMore && (
               <button
                 type="button"
