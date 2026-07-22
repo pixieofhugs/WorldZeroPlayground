@@ -111,15 +111,6 @@ class EraConfig:
     metatask_apply_level: int             # min level to apply a metatask (non-Albescent)
     flag_level_required: int              # min level to flag a praxis for moderation
 
-    # Metatask-per-praxis cap. A praxis holds at most metatasks_per_praxis_base
-    # metatasks until the applying character reaches metatasks_per_praxis_max_level,
-    # from which point the cap rises to metatasks_per_praxis_max. Level-based only
-    # (no faction bypass). Enforced in services/praxis.py::apply_metatask via
-    # services/meta_task.py::metatask_cap_for_level.
-    metatasks_per_praxis_base: int      # cap below metatasks_per_praxis_max_level
-    metatasks_per_praxis_max: int       # cap once at/above that level
-    metatasks_per_praxis_max_level: int # level that raises the cap
-
     # Comment gates (ADR-0006; enforced in services/comment.py). comment_level_required
     # is surfaced on /auth/me like the other capability gates; the flag threshold is
     # service-only.
@@ -148,6 +139,15 @@ class EraConfig:
     # ADR-0022: completed-task count (per faction) required to earn that faction's invite.
     # Defaulted so existing EraConfig constructions stay valid.
     invitation_task_threshold: int = 2
+
+    # Metatask-per-praxis cap (defaulted so bare EraConfig constructions stay valid).
+    # A praxis holds metatasks_per_praxis_base metatasks until the applying character
+    # reaches metatasks_per_praxis_max_level, from which the cap rises to
+    # metatasks_per_praxis_max. Level-based only; enforced in
+    # services/praxis.py::apply_metatask via services/meta_task.py::metatask_cap_for_level.
+    metatasks_per_praxis_base: int = 1
+    metatasks_per_praxis_max: int = 3
+    metatasks_per_praxis_max_level: int = 7
 
     # Task definitions for this era
     tasks: tuple = ()                # tuple[TaskDef, ...]
