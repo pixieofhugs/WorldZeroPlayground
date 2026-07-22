@@ -18,15 +18,13 @@ import { getFactions, type FactionOut } from "../../api/factions";
 import { useAuth } from "../../auth/AuthContext";
 import { extractError } from "../../utils/errors";
 import i18n from "../../i18n";
+// The unaffiliated sentinel now lives in utils/factions.ts (with the other
+// slug/CSS-key knowledge) so a `ui/` component can import it without depending
+// on a page module (#921). Imported for the guards below and re-exported so
+// existing importers of this module keep working.
+import { UNAFFILIATED_FACTION_SLUG } from "../../utils/factions";
 
-/**
- * The unaffiliated sentinel (ADR-0030 / ADR-0039). Mirrors the backend's
- * `UNAFFILIATED_FACTION_SLUG` (`services/faction_service.py`): a task carrying
- * this slug is generic / cross-faction, owned by no faction. Unaffiliated is a
- * state rather than a faction, so it is deliberately absent from the faction
- * registry — the picker offers it as an explicit extra option (#704).
- */
-export const UNAFFILIATED_FACTION_SLUG = "na";
+export { UNAFFILIATED_FACTION_SLUG };
 
 export interface ProposeTaskState {
   // Gating (faction-agnostic guards live in the dispatcher)
