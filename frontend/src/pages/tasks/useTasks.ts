@@ -15,7 +15,7 @@
  */
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { listTasks, type TaskOut } from '../../api/tasks'
+import { listTasks, type TaskOut, type TaskType } from '../../api/tasks'
 import { createPraxis } from '../../api/praxis'
 import { getFactions, type FactionOut } from '../../api/factions'
 import { getGameConfig, type FactionConfigOut } from '../../api/gameConfig'
@@ -54,6 +54,13 @@ export interface TasksState {
   statusFilters: string[]
 
   // Filter state (setters reset the growing window).
+  /**
+   * Browse mode (#934): 'standard' lists ordinary tasks (the default, metatasks
+   * excluded backend-side), 'metatask' lists issuing-faction metatask rows —
+   * informational, never signed up for.
+   */
+  taskType: TaskType
+  setTaskType: (taskType: TaskType) => void
   status: string
   setStatus: (status: string) => void
   faction: string
@@ -83,6 +90,7 @@ export function useTasks(): TasksState {
 
   const [factions, setFactions] = useState<FactionOut[]>([])
   const [factionConfigs, setFactionConfigs] = useState<FactionConfigOut[]>([])
+  const [taskType, setTaskTypeState] = useState<TaskType>('standard')
   const [status, setStatusState] = useState('All')
   const [faction, setFactionState] = useState('')
   const [level, setLevelState] = useState<number | ''>('')
@@ -104,6 +112,9 @@ export function useTasks(): TasksState {
   const { data, loading, error, hasMore, loadMore, resetWindow } = usePagedResource(
     (limit) =>
       listTasks({
+        // 'standard' → omit task_type so the backend applies its default
+        // (metatasks excluded); 'metatask' → list only metatask rows.
+        task_type: taskType === 'metatask' ? 'metatask' : undefined,
         status: status === 'All' ? undefined : status,
         faction: faction || undefined,
         level: level === '' ? undefined : level,
@@ -111,13 +122,14 @@ export function useTasks(): TasksState {
         exclude_character_id: characterId,
         limit,
       }),
-    [status, faction, level, trimmedQuery, characterId],
+    [taskType, status, faction, level, trimmedQuery, characterId],
     PAGE_LIMIT,
   )
   const tasks = data ?? []
 
   // Every filter change resets the window so "load more" can't strand a grown
   // page against a freshly-narrowed result set.
+  const setTaskType = (next: TaskType) => { setTaskTypeState(next); resetWindow() }
   const setStatus = (next: string) => { setStatusState(next); resetWindow() }
   const setFaction = (next: string) => { setFactionState(next); resetWindow() }
   const setLevel = (next: number | '') => { setLevelState(next); resetWindow() }
@@ -157,6 +169,8 @@ export function useTasks(): TasksState {
     levelFilters: LEVEL_FILTERS,
     statusFilters,
 
+    taskType,
+    setTaskType,
     status,
     setStatus,
     faction,

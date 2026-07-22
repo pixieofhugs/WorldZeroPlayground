@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import PraxisCard from '../../../components/PraxisCard'
 import { MobileStickyBar, MobileStickyCaption } from './shared'
+import { LevelJumpBanner } from '../archetypes/shared'
 import type { TaskDetailState } from '../useTaskDetail'
 
 /**
@@ -222,6 +223,7 @@ export default function SingularityTaskDetail({ state }: { state: TaskDetailStat
       {/* Sticky action bar */}
       {canSignUp && (
         <MobileStickyBar>
+          <LevelJumpBanner state={state} />
           {signupError && (
             <div style={{ fontFamily: FONT, fontSize: "var(--text-lg)", color: 'var(--color-danger)', padding: "var(--space-sm) var(--space-md)", background: signal(10), border: `1px solid ${signal(40)}` }}>
               {signupError}

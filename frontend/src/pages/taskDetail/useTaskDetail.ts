@@ -27,6 +27,7 @@ import { useAuth } from "../../auth/AuthContext";
 import { extractError } from "../../utils/errors";
 import { computeDisplayPoints } from "../../utils/points";
 import { useGameConfig } from "../../hooks/useGameConfig";
+import { isLevelJumpSignup } from "./levelJump";
 
 const DEFAULT_MAX_TASK_SLOTS = 20;
 
@@ -49,6 +50,15 @@ export interface TaskDetailState {
 
   // Derived gameplay numbers
   canSignUp: boolean;
+  // True when the sign-up CTA is only reachable because of the viewer's faction
+  // level-jump allowance (#811/#816): the task sits above the viewer's level but
+  // within `level_jump_reach`, the allowance is unspent, and the backend already
+  // says they may sign up. Drives a distinct "level-jump" affordance so an
+  // above-level task that IS reachable never looks identical to one that is out
+  // of reach. Config-backed — no `slug === 'wow'` branch (a second faction could
+  // gain the ability). When it goes false (spent, or plainly out of reach) the
+  // CTA simply doesn't render, so an above-level task reads as locked.
+  levelJumpSignup: boolean;
   slotsOpen: number;
   maxTaskSlots: number;
   factionMultiplier: number;
@@ -222,6 +232,18 @@ export function useTaskDetail(idParam: string | undefined): TaskDetailState {
 
   const canSignUp =
     !!user && !mySubmission && !isInProgress && !!task?.can_submit_praxis;
+  // The signable task is a level-jump iff the viewer's faction grants reach, the
+  // allowance is unspent, and the task sits above the viewer's own level. Logic
+  // lives in the pure `isLevelJumpSignup` predicate so it is testable props-in/
+  // value-out. We do NOT recompute eligibility — canSignUp already trusts the
+  // backend's `can_submit_praxis`.
+  const levelJumpSignup = isLevelJumpSignup({
+    canSignUp,
+    levelJumpReach: user?.level_jump_reach ?? 0,
+    levelJumpAvailable: !!user?.level_jump_available,
+    taskLevelRequired: task?.level_required,
+    viewerLevel: user?.character?.level ?? 0,
+  });
   const slotsOpen = maxTaskSlots - taskSlotCount;
 
   const voteCount = submissions.length;
@@ -253,6 +275,7 @@ export function useTaskDetail(idParam: string | undefined): TaskDetailState {
     inProgressPraxisId,
 
     canSignUp,
+    levelJumpSignup,
     slotsOpen,
     maxTaskSlots,
     factionMultiplier,

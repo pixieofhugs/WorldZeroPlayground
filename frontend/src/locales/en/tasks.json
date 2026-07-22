@@ -8,6 +8,14 @@
       "searchLabel": "Search tasks"
     }
   },
+  "browse": {
+    "taskType": "Type",
+    "tasks": "Tasks",
+    "metatasks": "Metatasks"
+  },
+  "metatask": {
+    "eyebrow": "Metatask · {{faction}}"
+  },
   "mobile": {
     "count": "{{count}} shown",
     "allFactions": "All",
@@ -21,7 +29,11 @@
     "fetchError": "<0>Try refreshing.</0>",
     "notFound": "Task not found.",
     "pageTitle": "Task",
-    "pageEyebrow": "Tasks · Detail"
+    "pageEyebrow": "Tasks · Detail",
+    "levelJump": {
+      "tag": "Level-jump",
+      "note": "Requires level {{level}}, one rung above you — your faction's once-a-level leap covers it."
+    }
   },
   "propose": {
     "pageTitle": "Propose a Task",

@@ -4,7 +4,7 @@ import PraxisCard from "../../../components/PraxisCard";
 import { mediaUrl } from "../../../utils/media";
 import { factionName } from "../../../utils/factions";
 import { EphemeristsSigil, Foxing, LapisLastWord } from "../../../components/cards/ephemeristsAtoms";
-import { ErrorBanner, relationOf } from "./shared";
+import { ErrorBanner, LevelJumpBanner, relationOf } from "./shared";
 import type { TaskSignupOut } from "../../../api/tasks";
 import type { TaskDetailState } from "../useTaskDetail";
 
@@ -561,6 +561,7 @@ export default function EphemeristsTaskDetail({
         </section>
 
         {/* ── Signup CTA — only when the viewer may enroll ── */}
+        <LevelJumpBanner state={state} />
         {canSignUp && (
           <section
             style={{

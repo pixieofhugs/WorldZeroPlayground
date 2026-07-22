@@ -25,6 +25,19 @@ import i18n from "../i18n";
 // pattern as utils/taunts.ts.
 const tString = i18n.t as unknown as (key: string) => string;
 
+/**
+ * The unaffiliated sentinel (ADR-0030 / ADR-0039). Mirrors the backend's
+ * `UNAFFILIATED_FACTION_SLUG` (`services/faction_service.py`): a task carrying
+ * this slug is generic / cross-faction, owned by no faction. Unaffiliated is a
+ * state rather than a faction, so it is deliberately absent from the faction
+ * registry — surfaces that offer it (the propose-task picker #704, the filter
+ * pennant row #921) do so as an explicit extra option, never via `GET /factions`.
+ *
+ * Lives here, with the other slug/CSS-key knowledge, so both a `ui/` component
+ * and a page module can import it without a page→ui dependency (#921).
+ */
+export const UNAFFILIATED_FACTION_SLUG = "na";
+
 export interface FactionConfig {
   slug: string;
   /** Primary faction color (light mode value — use factionCssVar for theme-aware styles) */

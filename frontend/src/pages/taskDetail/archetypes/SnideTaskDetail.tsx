@@ -5,7 +5,7 @@ import PraxisCard from "../../../components/PraxisCard";
 import { mediaUrl } from "../../../utils/media";
 import { factionName } from "../../../utils/factions";
 import { SnideSigil } from "../../../components/snide/snideAtoms";
-import { ErrorBanner, relationOf } from "./shared";
+import { ErrorBanner, LevelJumpBanner, relationOf } from "./shared";
 import type { TaskSignupOut } from "../../../api/tasks";
 import type { TaskDetailState } from "../useTaskDetail";
 
@@ -520,6 +520,7 @@ export default function SnideTaskDetail({
         </div>
 
         {/* ── CTA slab (black-ink dispatch bar) ── */}
+        <LevelJumpBanner state={state} />
         <div
           style={{
             display: "flex",

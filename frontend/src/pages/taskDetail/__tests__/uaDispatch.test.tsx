@@ -53,6 +53,7 @@ function baseState(overrides: Partial<TaskDetailState> = {}): TaskDetailState {
     isInProgress: false,
     inProgressPraxisId: null,
     canSignUp: true,
+    levelJumpSignup: false,
     slotsOpen: 3,
     maxTaskSlots: 8,
     factionMultiplier: 1.0,

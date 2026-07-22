@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import PraxisCard from '../../../components/PraxisCard'
 import { MobileStickyBar, MobileStickyCaption } from './shared'
+import { LevelJumpBanner } from '../archetypes/shared'
 import type { TaskDetailState } from '../useTaskDetail'
 
 /**
@@ -233,6 +234,7 @@ export default function SnideTaskDetail({ state }: { state: TaskDetailState }) {
       {/* Sticky action bar */}
       {canSignUp && (
         <MobileStickyBar>
+          <LevelJumpBanner state={state} />
           {signupError && (
             <div style={{ fontFamily: TYPE, fontSize: "var(--text-lg)", color: 'var(--color-danger)', padding: "var(--space-sm) var(--space-md)", background: 'var(--faction-snide-light)', border: `1px solid ${LINE}` }}>
               {signupError}

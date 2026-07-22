@@ -6,6 +6,7 @@ import UaMandala from '../../../components/cards/UaMandala'
 import { UaSigil } from '../../../components/cards/UaSigil'
 import { toRoman } from '../../../components/cards/ephemeristsAtoms'
 import { MobileStickyBar, MobileStickyCaption } from './shared'
+import { LevelJumpBanner } from '../archetypes/shared'
 import type { TaskDetailState } from '../useTaskDetail'
 
 /**
@@ -304,6 +305,7 @@ export default function UaTaskDetail({ state }: { state: TaskDetailState }) {
       {/* Sticky action bar */}
       {canSignUp && (
         <MobileStickyBar>
+          <LevelJumpBanner state={state} />
           {signupError && (
             /* #848 turned --faction-ua-light opaque, so it can no longer whisper
                behind an error line. A failure is lifted, not tinted: the raised
