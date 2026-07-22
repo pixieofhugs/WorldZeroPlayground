@@ -1,5 +1,20 @@
 import type { PraxisCardOut } from '../../api/praxis'
-import { useVoteOverride } from './voteOverrides'
+import { useVoteOverride, type VoteDelta } from './voteOverrides'
+
+/**
+ * The arithmetic half of the merge, pulled out so it's testable without the
+ * hook: `useSyncExternalStore`'s server snapshot is always null under
+ * `renderToStaticMarkup` (see voteOverrides.ts), so a component-rendered test
+ * can never observe an active override. `tallyDelta` + this function can.
+ */
+export function applyVoteDelta(praxis: PraxisCardOut, delta: VoteDelta): PraxisCardOut {
+  return {
+    ...praxis,
+    score: praxis.score + delta.score,
+    voter_count: praxis.voter_count + delta.voters,
+    points_from_votes: praxis.points_from_votes + delta.score,
+  }
+}
 
 /**
  * Merge the viewer's own just-cast vote into a praxis (#626).
@@ -18,9 +33,5 @@ import { useVoteOverride } from './voteOverrides'
 export function useVotedPraxis(praxis: PraxisCardOut): PraxisCardOut {
   const delta = useVoteOverride(praxis.id)
   if (!delta) return praxis
-  return {
-    ...praxis,
-    score: praxis.score + delta.score,
-    voter_count: praxis.voter_count + delta.voters,
-  }
+  return applyVoteDelta(praxis, delta)
 }
