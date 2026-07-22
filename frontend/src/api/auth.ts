@@ -50,6 +50,12 @@ export interface CurrentUser {
   // FieldDesk locked-dossier gate copy (#270/#274). Never hardcode the gate number.
   second_character_level_required: number
   era_name: string
+  // Faction level-jump allowance (#811). reach = levels above own level this
+  // faction grants (0 = no such ability, so hide the affordance entirely);
+  // available = the allowance is unspent at the character's current level.
+  // Drive UI off these config-backed fields — never a `slug === 'wow'` branch.
+  level_jump_reach: number
+  level_jump_available: boolean
 }
 
 export async function getMe(): Promise<CurrentUser> {

@@ -570,7 +570,10 @@
       "subtitle": "thy crusade, in the palm of thy gauntlet"
     },
     "invitation": {
-      "pitch": "By decree most official (we made the seal ourselves), thou art summoned to the Warriors of Whimsy. Bring a straight face. We shall supply the sword."
+      "pitch": "By decree most official (we made the seal ourselves), thou art summoned to the Warriors of Whimsy. Bring a straight face. We shall supply the sword.",
+      "perks": [
+        "The Leap of Whimsy — once each rank, a knight may storm a single quest one rung above their station and take it anyway"
+      ]
     }
   },
   "invitation": {
