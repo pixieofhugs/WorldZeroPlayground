@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next'
 import PraxisCard from '../../../components/PraxisCard'
 import { EphemeristsSigil, LapisLastWord } from '../../../components/cards/ephemeristsAtoms'
 import { MobileStickyBar, MobileStickyCaption } from './shared'
+import { LevelJumpBanner } from '../archetypes/shared'
 import type { TaskDetailState } from '../useTaskDetail'
 
 /**
@@ -222,6 +223,7 @@ export default function EphemeristsTaskDetail({ state }: { state: TaskDetailStat
       {/* Sticky action bar */}
       {canSignUp && (
         <MobileStickyBar>
+          <LevelJumpBanner state={state} />
           {signupError && (
             <div style={{ fontFamily: SERIF, fontSize: "var(--text-lg)", color: 'var(--color-danger)', padding: "var(--space-sm) var(--space-md)", background: 'var(--faction-ephemerists-light)', border: `1px solid ${GOLD_DEEP}` }}>
               {signupError}

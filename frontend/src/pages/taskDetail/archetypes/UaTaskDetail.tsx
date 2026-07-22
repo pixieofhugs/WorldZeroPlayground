@@ -12,7 +12,7 @@ import {
   uaShade,
 } from "../../../components/cards/uaAtoms";
 import { mediaUrl } from "../../../utils/media";
-import { ErrorBanner, relationOf } from "./shared";
+import { ErrorBanner, LevelJumpBanner, relationOf } from "./shared";
 import type { TaskSignupOut } from "../../../api/tasks";
 import type { TaskDetailState } from "../useTaskDetail";
 
@@ -407,6 +407,7 @@ export default function UaTaskDetail({ state }: { state: TaskDetailState }) {
           </div>
 
           {/* ── Sign-up / signed-on states ── */}
+          <LevelJumpBanner state={state} />
           {canSignUp && (
             <div style={PANEL}>
               <button onClick={handleSignup} style={FILLED_ACTION}>

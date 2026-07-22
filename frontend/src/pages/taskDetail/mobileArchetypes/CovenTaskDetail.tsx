@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import PraxisCard from '../../../components/PraxisCard'
 import { MobileStickyBar, MobileStickyCaption } from './shared'
+import { LevelJumpBanner } from '../archetypes/shared'
 import type { TaskDetailState } from '../useTaskDetail'
 
 /**
@@ -274,6 +275,7 @@ export default function CovenTaskDetail({ state }: { state: TaskDetailState }) {
       {/* Sticky action bar */}
       {canSignUp && (
         <MobileStickyBar>
+          <LevelJumpBanner state={state} />
           {signupError && (
             <div style={{ fontFamily: BODY, fontSize: "var(--text-lg)", color: 'var(--color-danger)', padding: "var(--space-sm) var(--space-md)", background: 'var(--faction-coven-light)', border: `1.5px solid ${NOTEPAD_BORDER}`, borderRadius: 9 }}>
               {signupError}

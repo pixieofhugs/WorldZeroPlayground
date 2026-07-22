@@ -49,6 +49,7 @@ import {
   wowMobilePage,
 } from "../../../components/cards/wowMobile";
 import { MobileStickyBar, MobileStickyCaption } from "./shared";
+import { LevelJumpBanner } from "../archetypes/shared";
 import type { TaskDetailState } from "../useTaskDetail";
 
 export default function WowTaskDetail({ state }: { state: TaskDetailState }) {
@@ -246,6 +247,7 @@ export default function WowTaskDetail({ state }: { state: TaskDetailState }) {
       {/* ── the one primary verb, pinned above the tab bar ── */}
       {canSignUp && (
         <MobileStickyBar>
+          <LevelJumpBanner state={state} />
           <WowCheckerBand height={3} />
           {signupError && (
             <p

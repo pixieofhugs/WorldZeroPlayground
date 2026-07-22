@@ -5,6 +5,7 @@ import LevelGem from "../../../components/ui/LevelGem";
 import DefaultSigil from "../../../components/cards/DefaultSigil";
 import { factionCssVar, factionName } from "../../../utils/factions";
 import { MobileStickyBar, MobileStickyCaption } from "./shared";
+import { LevelJumpBanner } from "../archetypes/shared";
 import type { TaskDetailState } from "../useTaskDetail";
 
 /**
@@ -156,6 +157,7 @@ export default function DefaultTaskDetail({ state }: { state: TaskDetailState })
       {/* Sticky action bar — the mobile CTA pattern; carries the one primary verb. */}
       {canSignUp && (
         <MobileStickyBar>
+          <LevelJumpBanner state={state} />
           {signupError && (
             <div
               className="font-body"
