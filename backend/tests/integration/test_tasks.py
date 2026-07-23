@@ -1516,14 +1516,14 @@ async def test_get_task_metatask_eligibility_meets_level_same_faction(
 
 
 @pytest.mark.asyncio
-async def test_get_task_metatask_eligibility_different_faction(
+async def test_get_task_metatask_eligibility_cross_faction_is_open(
     client: AsyncClient,
     character: Character,
     auth_headers: dict,
     db_session: AsyncSession,
     era,
 ):
-    """Metatask level 5, character level 6, different faction -> eligible_for_current_user=False."""
+    """Metatask level 5, character level 6, different faction -> eligible (metatasks are faction-open)."""
     from models.character_stats import CharacterStats
     from models.faction import Faction, FactionStatus
     from models.task import TaskType
@@ -1569,7 +1569,7 @@ async def test_get_task_metatask_eligibility_different_faction(
 
     resp = await client.get(f"/tasks/{meta_task.id}", headers=auth_headers)
     assert resp.status_code == 200
-    assert resp.json()["eligible_for_current_user"] is False
+    assert resp.json()["eligible_for_current_user"] is True
 
 
 @pytest.mark.asyncio

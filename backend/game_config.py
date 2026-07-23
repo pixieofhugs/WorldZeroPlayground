@@ -140,6 +140,15 @@ class EraConfig:
     # Defaulted so existing EraConfig constructions stay valid.
     invitation_task_threshold: int = 2
 
+    # Metatask-per-praxis cap (defaulted so bare EraConfig constructions stay valid).
+    # A praxis holds metatasks_per_praxis_base metatasks until the applying character
+    # reaches metatasks_per_praxis_max_level, from which the cap rises to
+    # metatasks_per_praxis_max. Level-based only; enforced in
+    # services/praxis.py::apply_metatask via services/meta_task.py::metatask_cap_for_level.
+    metatasks_per_praxis_base: int = 1
+    metatasks_per_praxis_max: int = 3
+    metatasks_per_praxis_max_level: int = 7
+
     # Task definitions for this era
     tasks: tuple = ()                # tuple[TaskDef, ...]
 

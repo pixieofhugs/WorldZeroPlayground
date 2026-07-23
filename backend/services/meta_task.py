@@ -10,8 +10,22 @@ A metatask is a Task row with ``task_type == TaskType.metatask``. Its
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from game_config import EraConfig
 from models.meta_task import PraxisMetaTask
 from models.task import Task, TaskType
+
+
+def metatask_cap_for_level(character_level: int, era: EraConfig) -> int:
+    """Max metatasks one praxis may hold, keyed off the applying character's level.
+
+    Below ``era.metatasks_per_praxis_max_level`` the cap is
+    ``metatasks_per_praxis_base``; at or above it, ``metatasks_per_praxis_max``.
+    Level-based only — no faction bypass (Albescent's apply-gate bypass does not
+    lift the quantity cap).
+    """
+    if character_level >= era.metatasks_per_praxis_max_level:
+        return era.metatasks_per_praxis_max
+    return era.metatasks_per_praxis_base
 
 
 async def get_meta_task_points(

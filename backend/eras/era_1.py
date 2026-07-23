@@ -426,21 +426,22 @@ ERA_1_LEVEL_PROFILES = (
     LevelProfile(
         rank_key="voyager",
         unlocks=(
+            LevelUnlock(LevelUnlockKind.ability, "see_metatasks"),
+            LevelUnlock(LevelUnlockKind.ability, "propose_metatask"),
+            LevelUnlock(LevelUnlockKind.ability, "apply_metatasks"),
             LevelUnlock(LevelUnlockKind.sense, "distance_taste"),
         ),
     ),
     LevelProfile(
         rank_key="chronicler",
         unlocks=(
-            LevelUnlock(LevelUnlockKind.ability, "see_metatasks"),
-            LevelUnlock(LevelUnlockKind.ability, "propose_metatask"),
             LevelUnlock(LevelUnlockKind.sense, "place_memory"),
         ),
     ),
     LevelProfile(
         rank_key="luminary",
         unlocks=(
-            LevelUnlock(LevelUnlockKind.ability, "apply_metatasks"),
+            LevelUnlock(LevelUnlockKind.ability, "multiple_metatasks"),
             LevelUnlock(LevelUnlockKind.sense, "three_plans"),
         ),
     ),
@@ -468,16 +469,20 @@ ERA_1 = EraConfig(
     level_thresholds=(0, 10, 70, 170, 330, 610, 1090, 1840, 3040),
     # Capability level gates (see SPEC-game-rules.md "Level privileges")
     level_to_propose_task=3,
-    level_to_propose_metatask=6,
-    level_to_see_metatasks=6,
+    level_to_propose_metatask=5,
+    level_to_see_metatasks=5,
     level_to_see_retired_tasks=2,
     level_to_see_pending_tasks=3,
     # Praxis / moderation / metatask gates
     duel_level_required=2,
     collaboration_level_required=1,
     collab_auto_submit_days=10,
-    metatask_apply_level=7,
+    metatask_apply_level=5,
     flag_level_required=4,
+    # Metatask-per-praxis cap: 1 until L7, then up to 3.
+    metatasks_per_praxis_base=1,
+    metatasks_per_praxis_max=3,
+    metatasks_per_praxis_max_level=7,
     # Comment gates (ADR-0006) — social layer opens at L2 in the vault
     comment_level_required=2,
     comment_flag_review_threshold=1,

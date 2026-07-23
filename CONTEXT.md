@@ -198,10 +198,10 @@ The single game-logic predicate behind the Sign-up affordance: whether a charact
 *claim* a task right now. One boolean, owned by the service layer, exposed as the
 `can_sign_up` flag — the API and frontend read it, they never assemble it. Its
 governing invariant: it is true **iff `create_praxis` would accept**, so the button
-hides exactly when the action would be rejected (level, metatask faction, **active
+hides exactly when the action would be rejected (level, **active
 membership**, task bank, Analog carve-out). See ADR-0008.
 _Avoid_: conflating with `can_submit_praxis` (the narrow dup-authorship rule only) or
-`eligible_for_current_user` (level + metatask faction only) — neither is the whole gate.
+`eligible_for_current_user` (level only) — neither is the whole gate.
 
 **Active membership**:
 A character holding a `PraxisMember` row on a non-deleted praxis for a task whose status
@@ -319,18 +319,20 @@ removed).
 `task_type` + `metatask_faction_slug` and the `TaskType` enum collapses. This reverses migration
 0006 and has **not** landed; treat the standalone-model language elsewhere as aspiration, not
 present reality.
-- **Access** is **one predicate** — `can_access_metatask` = Albescent **or**
-  (`level ≥ era.metatask_apply_level` **and** own faction). Enforced once **at apply**; the
-  "can apply" UI flag mirrors it. Replaces the three drifted gates (the per-metatask
-  `level_required` check is deleted).
+- **Access**: `can_access_metatask` = Albescent (bypasses the level gate) **or**
+  `level ≥ era.metatask_apply_level`. **Faction-open** — a character may apply
+  **any** faction's metatask, not only their own; `metatask_faction_slug` records authorship,
+  not permission. Enforced once **at apply**; the "can apply" UI flag mirrors it (minus the
+  Albescent level bypass).
 - **Praxis-wide**: once applied, **every member** of that praxis banks the bonus — scoring does
   **no** per-member access re-check; `get_meta_task_points` is a dumb sum of attached
   `point_value`s. _Avoid_: per-member metatask gating (rejected — see ADR-0015).
 - **Duel symmetry**: a metatask applies to **both** linked duel praxes (ADR-0011), so neither
   duelist gains a base-point head start. (Today's single-praxis duel already gets this via
   praxis-wide; the two-praxes model needs both-sides attachment — coordinates with #185.)
-- **Propose** (level 6) is a separate gate from **apply** (level 7) — distinct actions, not one
-  rule.
+- **See**, **propose**, and **apply** all gate at **level 5** — distinct actions that share a
+  level. A praxis holds **1** metatask until the applying character reaches **level 7**, which
+  raises the cap to **3** (`metatasks_per_praxis_base`/`_max`/`_max_level`).
 
 **Register row / Praxis Index**:
 The faction's list view of submitted praxes; the praxis **card** lives here (compact, next to
