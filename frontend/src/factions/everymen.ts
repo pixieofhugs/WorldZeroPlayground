@@ -35,6 +35,7 @@ import EverymenTaskDetail from '../pages/taskDetail/archetypes/EverymenTaskDetai
 import EverymenVote from '../components/vote/EverymenVote'
 import EverymenPraxisCard from '../components/praxisCard/desktop/EverymenPraxisCard'
 import EverymenScoreStamp from '../components/praxisCard/scoreStamp/EverymenScoreStamp'
+import EverymenSeal from '../components/metaTaskSeal/skins/EverymenSeal'
 import { EverymenSigil } from '../components/cards/EverymenSigil'
 import EverymenCard from '../components/cards/EverymenFactionCard'
 import { EverymenSelectCard } from '../components/cards/FactionSelectCard'
@@ -47,6 +48,7 @@ export const EVERYMEN_MANIFEST: FactionManifest = {
   taskCard: () => EverymenTaskCard,
   praxisCard: () => EverymenPraxisCard,
   scoreStamp: () => EverymenScoreStamp,
+  metaTaskSeal: () => EverymenSeal,
   avatar: () => EverymenAvatar,
   backdrop: () => EverymenBackdrop,
   sigil: () => EverymenSigil,

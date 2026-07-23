@@ -35,6 +35,7 @@ import SnideTaskDetail from '../pages/taskDetail/archetypes/SnideTaskDetail'
 import SnideVote from '../components/vote/SnideVote'
 import SnidePraxisCard from '../components/praxisCard/desktop/SnidePraxisCard'
 import SnideScoreStamp from '../components/praxisCard/scoreStamp/SnideScoreStamp'
+import SnideSeal from '../components/metaTaskSeal/skins/SnideSeal'
 import { SnideSigil } from '../components/cards/SnideSigil'
 import { SnideCard } from '../components/cards/FactionCard'
 import { SnideSelectCard } from '../components/cards/FactionSelectCard'
@@ -47,6 +48,7 @@ export const SNIDE_MANIFEST: FactionManifest = {
   taskCard: () => SnideTaskCard,
   praxisCard: () => SnidePraxisCard,
   scoreStamp: () => SnideScoreStamp,
+  metaTaskSeal: () => SnideSeal,
   avatar: () => SnideAvatar,
   backdrop: () => SnideBackdrop,
   sigil: () => SnideSigil,
