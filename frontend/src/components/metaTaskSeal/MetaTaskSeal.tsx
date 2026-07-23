@@ -1,19 +1,9 @@
-import type { ComponentType } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import type { TaskOut } from '../../api/tasks'
+import { surfaceMap } from '../../factions'
 import { pickVariant } from '../../utils/factionDispatch'
 import DefaultSeal from './DefaultSeal'
-import type { SealSkinProps } from './types'
-
-/**
- * Central seal-skin registry — the ONE fall-through table the per-faction seal
- * issues extend (#929/#930/#931). A metatask's `metatask_faction_slug` selects
- * its skin; anything unregistered renders {@link DefaultSeal}. Adding a faction
- * skin is one row here — no dispatcher elsewhere changes. Empty for now: every
- * seal renders the neutral Default until the skins land.
- */
-const SEAL_SKINS: Record<string, ComponentType<SealSkinProps>> = {}
 
 export interface MetaTaskSealProps {
   /**
@@ -56,7 +46,11 @@ export default function MetaTaskSeal({
   return (
     <div className="flex flex-col" style={{ gap: 'var(--space-sm)' }}>
       {metatasks.map((metatask) => {
-        const Skin = pickVariant(SEAL_SKINS, metatask.metatask_faction_slug, DefaultSeal)
+        const Skin = pickVariant(
+          surfaceMap('metaTaskSeal'),
+          metatask.metatask_faction_slug,
+          DefaultSeal,
+        )
         return (
           <Skin
             key={metatask.id}

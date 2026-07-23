@@ -41,6 +41,7 @@
 import type { ComponentType } from 'react'
 
 import type { CardProps } from '../components/TaskCard'
+import type { SealSkinProps } from '../components/metaTaskSeal/types'
 import type { ArchetypeProps as PraxisCardProps } from '../components/PraxisCard'
 import type { MobilePraxisCardProps } from '../components/praxisCard/mobile/MobilePraxisCard'
 import type { MobileTaskCardProps } from '../pages/tasks/mobileArchetypes/mobileTaskCard'
@@ -95,6 +96,12 @@ export interface FactionManifest {
    * serves the desktop card, the mobile card and the detail surfaces.
    */
   readonly scoreStamp?: Lazy<ComponentType<ScoreStampProps>>
+  /**
+   * The seal an issuing faction leaves on a praxis it metatasked (#927). One
+   * responsive component per faction — no mobile twin, the sticker renders
+   * near-identical at 340px.
+   */
+  readonly metaTaskSeal?: Lazy<ComponentType<SealSkinProps>>
 
   // ─── Pages (desktop) ───────────────────────────────────────────────────────
   readonly taskDetail?: Lazy<Stateful<TaskDetailState>>
@@ -148,6 +155,7 @@ export const SURFACE_KEYS = [
   'feedFrame',
   'vote',
   'scoreStamp',
+  'metaTaskSeal',
   'taskDetail',
   'praxisDetail',
   'editPraxis',
