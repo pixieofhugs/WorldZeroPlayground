@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <style>
+    /* Ink on transparent for light tab bars; paper on transparent for dark. */
+    .mark { fill: #1a1209; }
+    .zero { fill: #be185d; }
+    @media (prefers-color-scheme: dark) {
+      .mark { fill: #f0e6d0; }
+    }
+  </style>
+  <text
+    x="32"
+    y="33"
+    text-anchor="middle"
+    dominant-baseline="central"
+    font-family="'Arial Black', 'Helvetica Neue', Helvetica, Arial, sans-serif"
+    font-weight="900"
+    font-size="40"
+    letter-spacing="-3"
+  ><tspan class="mark">W</tspan><tspan class="zero">&#8709;</tspan></text>
+</svg>
