@@ -1,10 +1,11 @@
 /**
- * Seal skins A (#929) — snide, singularity, everymen, ephemerists.
+ * Seal skins B (#930) — coven, ua, albescent, and the na/Unaffiliated fallback.
  *
- * Each skin must honor the shared seal contract (condition = title, bonus =
- * point_value) in its own bespoke costume, dispatch off `metatask_faction_slug`
- * instead of falling through to Default, and wire `removable`/`onRemove`
- * exactly like every other skin.
+ * Each bespoke skin must honor the shared seal contract (label = issuing
+ * faction, condition = title, bonus = point_value) in its own costume, dispatch
+ * off `metatask_faction_slug` instead of falling through to Default, and wire
+ * `removable`/`onRemove`. `na` is deliberately unskinned (ADR-0039): it renders
+ * via the tuned DefaultSeal, which is what the last case asserts.
  */
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, it, expect, vi } from "vitest";
@@ -12,14 +13,15 @@ import { describe, it, expect, vi } from "vitest";
 import MetaTaskSeal from "../MetaTaskSeal";
 import DefaultSeal from "../DefaultSeal";
 import i18n from "../../../i18n";
+import { factionName } from "../../../utils/factions";
 import type { TaskOut } from "../../../api/tasks";
 
 function metatask(slug: string, overrides: Partial<TaskOut> = {}): TaskOut {
   return {
     id: 42,
-    title: "do it underwater. no cuts.",
+    title: "read it aloud to a stranger",
     description: null,
-    point_value: 50,
+    point_value: 45,
     level_required: 1,
     status: "active",
     task_type: "metatask",
@@ -39,20 +41,19 @@ function markup(element: React.ReactElement): string {
   return renderToStaticMarkup(element);
 }
 
-const SKIN_SLUGS = ["snide", "singularity", "everymen", "ephemerists"];
+const SKIN_SLUGS = ["coven", "ua", "albescent"];
 
-describe("seal skins A content-slot invariant", () => {
+describe("seal skins B content-slot invariant", () => {
   for (const slug of SKIN_SLUGS) {
     const task = metatask(slug);
     const bonus = i18n.t("praxis:detail.seal.bonus", { points: task.point_value });
+    const label = i18n.t("praxis:detail.seal.label", {
+      faction: factionName(slug),
+    });
 
     it(`${slug} renders the condition (title)`, () => {
       const html = markup(<MetaTaskSeal metatasks={[task]} />);
-      // Snide clips the condition into per-word "ransom" chips, so each word
-      // lands in its own element rather than one contiguous text node.
-      for (const word of task.title.split(" ")) {
-        expect(html).toContain(word);
-      }
+      expect(html).toContain(task.title);
     });
 
     it(`${slug} renders the bonus (+point_value PTS)`, () => {
@@ -60,21 +61,19 @@ describe("seal skins A content-slot invariant", () => {
       expect(html).toContain(bonus);
     });
 
+    it(`${slug} renders the issuing-faction label`, () => {
+      const html = markup(<MetaTaskSeal metatasks={[task]} />);
+      expect(html).toContain(label);
+    });
+
     it(`${slug} renders its own skin, not the Default fallthrough`, () => {
       const bespoke = markup(<MetaTaskSeal metatasks={[task]} />);
-      const fallback = markup(
-        <DefaultSeal metatask={task} removable={false} />,
-      );
+      const fallback = markup(<DefaultSeal metatask={task} removable={false} />);
       expect(bespoke).not.toBe(fallback);
     });
 
-    it(`${slug} wires removable + onRemove to the metatask id`, () => {
+    it(`${slug} wires the × control when removable`, () => {
       const onRemove = vi.fn();
-      renderToStaticMarkup(
-        <MetaTaskSeal metatasks={[task]} removable onRemove={onRemove} />,
-      );
-      // Static markup can't fire click handlers, but it must render the ×
-      // control when removable so there's something to click.
       const html = markup(
         <MetaTaskSeal metatasks={[task]} removable onRemove={onRemove} />,
       );
@@ -89,15 +88,25 @@ describe("seal skins A content-slot invariant", () => {
   }
 });
 
-describe("seal skins A — unregistered slug still falls through", () => {
-  it("an unrecognized metatask_faction_slug renders the Default seal", () => {
-    // `wow` has no seal skin yet (lands in #931), so it still falls through to
-    // Default — coven/ua/albescent are skinned as of #930 and no longer would.
-    const task = metatask("wow");
-    // MetaTaskSeal wraps its stack in a flex container, so compare the
-    // dispatched seal's own markup, not the wrapper around it.
+describe("seal skins B — na renders via the tuned DefaultSeal", () => {
+  it("an unaffiliated (na) metatask renders the Default seal", () => {
+    const task = metatask("na");
+    // MetaTaskSeal wraps its stack in a flex container, so compare against the
+    // dispatched seal's own markup rather than the wrapper around it.
     const html = markup(<MetaTaskSeal metatasks={[task]} />);
     const fallback = markup(<DefaultSeal metatask={task} removable={false} />);
     expect(html).toContain(fallback);
+  });
+
+  it("still shows the label, condition and bonus for na", () => {
+    const task = metatask("na");
+    const html = markup(<MetaTaskSeal metatasks={[task]} />);
+    expect(html).toContain(task.title);
+    expect(html).toContain(
+      i18n.t("praxis:detail.seal.bonus", { points: task.point_value }),
+    );
+    expect(html).toContain(
+      i18n.t("praxis:detail.seal.label", { faction: factionName("na") }),
+    );
   });
 });

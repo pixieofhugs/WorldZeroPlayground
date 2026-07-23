@@ -31,6 +31,7 @@ import { AlbescentSelectCard } from '../components/cards/FactionSelectCard'
 import AlbescentVote from '../components/vote/AlbescentVote'
 import AlbescentPraxisCard from '../components/praxisCard/desktop/AlbescentPraxisCard'
 import AlbescentMobilePraxisCard from '../components/praxisCard/mobile/AlbescentMobilePraxisCard'
+import AlbescentSeal from '../components/metaTaskSeal/skins/AlbescentSeal'
 
 export const ALBESCENT_MANIFEST: FactionManifest = {
   slug: 'albescent',
@@ -65,4 +66,14 @@ export const ALBESCENT_MANIFEST: FactionManifest = {
    * (#783): the widget prints plain numerals via `reframeLabel`.
    */
   vote: () => AlbescentVote,
+
+  /**
+   * The seal skin (#930). A seal is a FOREIGN sticker that keeps its ISSUER's
+   * voice on someone else's praxis — so an Albescent-issued metatask is a reveal
+   * moment, not a host surface Albescent has to hide on. It reads the always-
+   * light `--albescent-reveal-*` tokens (the same reveal register as the
+   * invitation letter and sigil), never a `--faction-albescent-*` theme, so the
+   * society shows its pale face only where it is doing the sealing.
+   */
+  metaTaskSeal: () => AlbescentSeal,
 }
