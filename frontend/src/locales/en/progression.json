@@ -89,6 +89,10 @@
       "name": "Apply your faction's metatasks",
       "desc": "Take on the metatasks your faction has published."
     },
+    "multiple_metatasks": {
+      "name": "Stack multiple metatasks",
+      "desc": "Attach more than one metatask to a single praxis."
+    },
     "three_plans": {
       "name": "Hold three plans at once without confusion",
       "desc": "Your mind now files contingencies the way it once filed excuses."

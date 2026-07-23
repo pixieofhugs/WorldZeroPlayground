@@ -1,8 +1,8 @@
 """Unit tests for services.character_capabilities.compute_capabilities.
 
 Pure function — no DB, no fixtures. Table-driven against the level thresholds
-defined on ``CURRENT_ERA`` (Era 1: propose_task=3, propose_metatask=6,
-see_metatasks=6, see_retired=2, see_pending=3, comment=2).
+defined on ``CURRENT_ERA`` (Era 1: propose_task=3, propose_metatask=5,
+see_metatasks=5, see_retired=2, see_pending=3, comment=2).
 """
 import pytest
 
@@ -16,7 +16,7 @@ from services.character_capabilities import (
 # (level, is_admin) -> expected (can_propose_task, can_propose_metatask,
 #                                can_see_metatasks, can_see_retired_tasks,
 #                                can_see_pending_tasks, can_comment)
-# Era 1 thresholds: 3 / 6 / 6 / 2 / 3 / 2.
+# Era 1 thresholds: 3 / 5 / 5 / 2 / 3 / 2.
 _TABLE = [
     # No character at all -> everything False.
     (None, False, False, False, False, False, False, False),
@@ -28,8 +28,8 @@ _TABLE = [
     # Meets propose_task and see_pending (both threshold 3).
     (3, False, True, False, False, True, True, True),
     (4, False, True, False, False, True, True, True),
-    (5, False, True, False, False, True, True, True),
-    # Meets every flag (propose-metatask + see-metatasks thresholds are both 6).
+    # Meets every flag (propose-metatask + see-metatasks thresholds are both 5).
+    (5, False, True, True, True, True, True, True),
     (6, False, True, True, True, True, True, True),
     (7, False, True, True, True, True, True, True),
     # Admin short-circuit — every flag True regardless of level, even None.

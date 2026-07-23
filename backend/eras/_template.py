@@ -194,6 +194,10 @@ ERA_N = EraConfig(
     collab_auto_submit_days=10,          # pending-publish silence-is-consent window (ADR-0012)
     metatask_apply_level=7,
     flag_level_required=4,
+    # Metatask-per-praxis cap: base until the max-level, then max.
+    metatasks_per_praxis_base=1,
+    metatasks_per_praxis_max=3,
+    metatasks_per_praxis_max_level=7,
     # Comment gates (ADR-0006)
     comment_level_required=2,
     comment_flag_review_threshold=1,

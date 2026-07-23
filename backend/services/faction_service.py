@@ -11,7 +11,7 @@ from models.character_stats import CharacterStats
 from models.faction import Faction, FactionStatus
 from models.faction_defection_history import FactionDefectionHistory
 from models.invitation_letter import InvitationLetter
-from models.task import Task, TaskType
+from models.task import Task
 from services.character import ALBESCENT_FACTION_SLUG, can_start_as_albescent
 from services.era import clear_defection_history_for_era, get_current_era_row, get_or_create_stats
 
@@ -35,26 +35,19 @@ def faction_permits(
     whenever a decision might be changed by the actor's or the task's faction.
     A new faction rule is then a one-function edit that every caller inherits.
 
-    Today the only faction rule concerns metatasks:
-
-    * Standard tasks are faction-open — always permitted.
-    * A metatask requires the character's faction to match
-      ``task.metatask_faction_slug``, **except** Albescent characters, who may
-      act on any faction's metatask.
+    There is currently **no** active faction gate. Standard tasks have always
+    been faction-open, and metatasks are now faction-open too: any
+    character may act on any faction's metatask, regardless of their own
+    faction. ``task.metatask_faction_slug`` now records only which faction
+    authored a metatask — it no longer gates who may apply it. The seam is kept
+    (ADR-0029) so re-introducing a faction rule stays a one-function edit that
+    every caller inherits.
 
     This is the *faction* axis only. Level gates, the task-bank cap, and
     listing visibility (see :func:`hidden_faction_slugs`) are separate axes and
-    live elsewhere. If a future rule needs to vary by action (sign-up vs. vote
-    vs. flag), add an ``action`` parameter here — not a second predicate.
+    live elsewhere.
     """
-    if task.task_type != TaskType.metatask:
-        return True
-    # Albescent's charter lets it act on any faction's metatask.
-    if character.faction_slug == ALBESCENT_FACTION_SLUG:
-        return True
-    if task.metatask_faction_slug is None:
-        return False
-    return character.faction_slug == task.metatask_faction_slug
+    return True
 
 
 async def hidden_faction_slugs(session: AsyncSession) -> list[str]:
