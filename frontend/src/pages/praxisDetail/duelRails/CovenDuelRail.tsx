@@ -52,6 +52,7 @@ export default function CovenDuelRail({
   tally,
   note,
   body,
+  actions,
 }: DuelRailSkinProps) {
   const shell: CSSProperties = {
     maxWidth,
@@ -112,6 +113,12 @@ export default function CovenDuelRail({
             }}
           >
             {body}
+          </div>
+        )}
+        {/* The owner's action row (#752), footed under the window's border rule. */}
+        {actions && (
+          <div style={{ marginTop: 'var(--space-md)', paddingTop: 'var(--space-sm)', borderTop: `1.5px solid ${NOTEPAD_BORDER}` }}>
+            {actions}
           </div>
         )}
         {/* ponytail: `declined` and `forfeited` arrive with body === null, so the

@@ -30,7 +30,12 @@ import {
 } from "../archetypes/controls";
 import { MetataskSealStack } from "../MetataskSealStack";
 import type { EditPraxisState } from "../useEditPraxis";
-import { MobileStickyBar, SegToggle, type ComposerTab } from "./shared";
+import {
+  DefaultModePicker,
+  MobileStickyBar,
+  SegToggle,
+  type ComposerTab,
+} from "./shared";
 
 const PINK = "var(--faction-coven)";
 const PINK_DEEP = "var(--faction-coven-card-accent)";
@@ -259,6 +264,9 @@ export default function CovenEditPraxis({ state }: { state: EditPraxisState }) {
 
       {tab === "write" ? (
         <>
+          {/* Mode — Solo · Collab · Duel, above the title (scrolls with content) */}
+          <DefaultModePicker state={state} />
+
           <Window title={t("editPraxis.coven.titleLabel")}>
             <TitleField
               state={state}

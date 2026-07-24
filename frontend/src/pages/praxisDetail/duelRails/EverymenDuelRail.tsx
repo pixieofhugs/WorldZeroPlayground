@@ -70,6 +70,7 @@ export default function EverymenDuelRail({
   tally,
   note,
   body,
+  actions,
 }: DuelRailSkinProps) {
   const shell: CSSProperties = {
     maxWidth,
@@ -160,6 +161,13 @@ export default function EverymenDuelRail({
             }}
           >
             {body}
+          </div>
+        )}
+
+        {/* The owner's action row (#752), filed under a heavy ink rule. */}
+        {actions && (
+          <div style={{ marginTop: 'var(--space-md)', paddingTop: 'var(--space-sm)', borderTop: `2px solid ${INK}` }}>
+            {actions}
           </div>
         )}
       </div>

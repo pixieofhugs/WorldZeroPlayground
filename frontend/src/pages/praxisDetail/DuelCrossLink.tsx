@@ -44,6 +44,8 @@ import {
   StakesTiles,
   type DuelSlotTheme,
 } from "../../components/duel/shared";
+import type { PraxisDetailState } from "./usePraxisDetail";
+import { PraxisSubmitControls } from "./shared";
 
 /**
  * The rail is mounted by the dispatcher, above the archetype, so it can't read
@@ -93,6 +95,14 @@ export interface DuelRailSkinProps {
   note: ReactNode | null;
   /** Roster + next-step + stakes. `null` for declined and forfeited, which have no race left. */
   body: ReactNode | null;
+  /**
+   * The owner's submit / pull-back / forfeit control (#752), resolved by the
+   * dispatcher — it lives here so state and the control that changes it share a
+   * surface. `null` when the viewer isn't the owner, and for `declined` /
+   * `forfeited`, which have no cast left to change. A skin renders it; it never
+   * decides WHICH action shows (the control's own branch owns that, upstream).
+   */
+  actions: ReactNode | null;
 }
 
 /** The plain rail: a soft wash with an accent edge, the shape #313 shipped. */
@@ -104,6 +114,7 @@ export function DefaultDuelRail({
   tally,
   note,
   body,
+  actions,
 }: DuelRailSkinProps) {
   const wrapper: CSSProperties = {
     maxWidth,
@@ -137,6 +148,13 @@ export function DefaultDuelRail({
       )}
       {note}
       {body}
+      {/* The owner's action row (#752): a soft-ruled footer so the control that
+          changes the duel's state sits right under the state itself. */}
+      {actions && (
+        <div style={{ marginTop: "var(--space-md)", paddingTop: "var(--space-sm)", borderTop: `1px solid ${accent}` }}>
+          {actions}
+        </div>
+      )}
     </div>
   );
 }
@@ -182,9 +200,16 @@ function OpponentBadge({ side }: { side: DuelSideOut }) {
 export default function DuelCrossLink({
   praxis,
   duel,
+  state,
 }: {
   praxis: PraxisOut;
   duel: DuelDetailOut;
+  /**
+   * The read-page state, threaded from the archetype dispatcher so the rail can
+   * own the owner's submit/pull-back/forfeit control (#752). Optional: the
+   * lifecycle tests mount the rail without it, in which case `actions` stays null.
+   */
+  state?: PraxisDetailState;
 }) {
   const { t } = useTranslation("praxis");
   const isChallenger = praxis.id === duel.challenger.praxis_id;
@@ -220,6 +245,27 @@ export default function DuelCrossLink({
   const theme: DuelSlotTheme = { accent };
   const forfeited = duel.forfeited_by_character_id != null;
 
+  // The owner's submit / pull-back / forfeit control, relocated here from the
+  // owner controls (#752) so it sits under the state it changes. Built once and
+  // passed to the branches that still have a cast to change; `declined` and
+  // `forfeited` pass `null`. `PraxisSubmitControls` self-hides for non-owners and
+  // never renders on this page for `null`, so the read-page tests (no `state`)
+  // get a null slot. `withdrawError` rides along so it lands beside the control.
+  const actions =
+    state && state.isOwner && state.praxis ? (
+      <div>
+        <PraxisSubmitControls state={state} />
+        {state.withdrawError && (
+          <p
+            className="font-body content-text"
+            style={{ color: "var(--color-danger)", marginTop: "var(--space-sm)" }}
+          >
+            {state.withdrawError}
+          </p>
+        )}
+      </div>
+    ) : null;
+
   // The rail body every live state shares: who has cast, what happens next, and
   // what it's worth. The slots own every branch inside them. `settled` passes
   // nextStep={false} — its own "live" standing line already says the same thing.
@@ -249,6 +295,7 @@ export default function DuelCrossLink({
         tally={null}
         note={null}
         body={null}
+        actions={null}
         headline={
           iForfeited ? (
             <span>{t("duelCrossLink.youForfeited")}</span>
@@ -287,6 +334,7 @@ export default function DuelCrossLink({
           <span>{t("duelCrossLink.pending", { name: foe.display_name })}</span>
         }
         body={body(true)}
+        actions={actions}
       />
     );
   }
@@ -301,6 +349,7 @@ export default function DuelCrossLink({
         tally={null}
         note={null}
         body={null}
+        actions={null}
         headline={
           <span>{t("duelCrossLink.declined", { name: foe.display_name })}</span>
         }
@@ -322,6 +371,7 @@ export default function DuelCrossLink({
           </span>
         }
         body={body(true)}
+        actions={actions}
       />
     );
   }
@@ -381,6 +431,7 @@ export default function DuelCrossLink({
           </div>
         }
         body={null}
+        actions={actions}
       />
     );
   }
@@ -424,6 +475,7 @@ export default function DuelCrossLink({
         </div>
       }
       body={body(false)}
+      actions={actions}
     />
   );
 }
