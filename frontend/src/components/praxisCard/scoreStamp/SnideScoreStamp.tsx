@@ -45,8 +45,6 @@ export default function SnideScoreStamp({ praxis, showCrown }: ScoreStampProps) 
         <TaskCrown
           size={26}
           ringInset={3}
-          innerBg="var(--faction-snide-card-bg)"
-          glyphColor="var(--faction-snide-acid)"
           rotate="7deg"
           style={{ position: "absolute", top: -13, right: -12, zIndex: 3 }}
         />

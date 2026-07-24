@@ -271,8 +271,6 @@ export default function CovenFactionBody({ state }: { state: FactionDetailState 
                   {praxis.is_top_for_task && (
                     <TaskCrown
                       size={44}
-                      innerBg={NOTEPAD}
-                      glyphColor={ACCENT}
                       rotate="-8deg"
                       shadow={`drop-shadow(1.5px 2px 0 ${BOARD_SHADOW})`}
                       style={{ position: "absolute", top: -14, right: -10, zIndex: 5 }}

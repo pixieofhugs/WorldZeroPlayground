@@ -100,8 +100,6 @@ export default function UaScoreStamp({ praxis, showCrown }: ScoreStampProps) {
         <TaskCrown
           size={26}
           ringInset={3}
-          innerBg="var(--faction-ua-card-box-bg)"
-          glyphColor="var(--faction-ua-card-frame)"
           rotate="-5deg"
           style={{ position: "absolute", top: -13, right: -10, zIndex: 3 }}
         />
