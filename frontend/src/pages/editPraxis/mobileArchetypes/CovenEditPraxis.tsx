@@ -25,7 +25,7 @@ import {
   DropButton,
   FilePicker,
   InviteSearch,
-  MetatasksList,
+  MetataskSealStack,
   PublishButton,
   TitleField,
 } from "../archetypes/controls";
@@ -329,28 +329,9 @@ export default function CovenEditPraxis({ state }: { state: EditPraxisState }) {
             <MediaGrid state={state} />
           </Window>
 
-          {state.showMetatasks && (
+          {state.showSealStack && (
             <Window title={t("editPraxis.coven.metatasksLabel")}>
-              <MetatasksList
-                state={state}
-                skin={{
-                  containerStyle: {
-                    display: "flex",
-                    flexDirection: "column",
-                    gap: "var(--space-xs)",
-                  },
-                  rowStyle: (selected) => ({
-                    padding: "var(--space-sm) var(--space-md)",
-                    background: selected ? BODY_BG : "transparent",
-                    border: `1.5px solid ${selected ? PINK_DEEP : "transparent"}`,
-                    borderRadius: 7,
-                  }),
-                  titleColor: CARD_TEXT,
-                  descColor: CARD_MUTED,
-                  pointsActiveColor: PINK_DEEP,
-                  pointsIdleColor: CARD_MUTED,
-                }}
-              />
+              <MetataskSealStack state={state} />
             </Window>
           )}
         </>

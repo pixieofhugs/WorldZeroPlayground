@@ -20,7 +20,7 @@ import {
   DropButton,
   FilePicker,
   InviteSearch,
-  MetatasksList,
+  MetataskSealStack,
   PublishButton,
   TitleField,
 } from "../archetypes/controls";
@@ -214,29 +214,10 @@ export default function DefaultEditPraxis({
           </div>
 
           {/* Metatasks */}
-          {state.showMetatasks && (
+          {state.showSealStack && (
             <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-sm)" }}>
               <span style={eyebrow}>{t("editPraxis.na.metatasksLabel")}</span>
-              <MetatasksList
-                state={state}
-                skin={{
-                  containerStyle: {
-                    display: "flex",
-                    flexDirection: "column",
-                    gap: "var(--space-xs)",
-                  },
-                  rowStyle: (selected) => ({
-                    padding: "var(--space-sm) var(--space-md)",
-                    background: selected ? "var(--faction-default-light)" : SURFACE,
-                    border: `1px solid ${selected ? ACCENT : BORDER}`,
-                    borderRadius: 10,
-                  }),
-                  titleColor: INK,
-                  descColor: MUTED,
-                  pointsActiveColor: ACCENT,
-                  pointsIdleColor: MUTED,
-                }}
-              />
+              <MetataskSealStack state={state} />
             </div>
           )}
         </>

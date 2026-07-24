@@ -24,7 +24,7 @@ import {
   DropButton,
   FilePicker,
   InviteSearch,
-  MetatasksList,
+  MetataskSealStack,
   ModePicker,
   PublishButton,
   TitleField,
@@ -552,7 +552,7 @@ export default function SnideEditPraxis({ state }: Props) {
         </div>
 
         {/* Metatasks */}
-        {state.showMetatasks && (
+        {state.showSealStack && (
           <div
             style={{
               marginBottom: "var(--space-xl)",
@@ -567,23 +567,7 @@ export default function SnideEditPraxis({ state }: Props) {
             >
               {t("editPraxis.snide.metatasksLabel")}
             </span>
-            <MetatasksList
-              state={state}
-              skin={{
-                rowStyle: (selected) => ({
-                  padding: "var(--space-sm)",
-                  background: selected ? surface : "transparent",
-                  border: selected
-                    ? `1.5px solid ${accentDeep}`
-                    : "1.5px solid transparent",
-                  marginBottom: "var(--space-xs)",
-                }),
-                titleColor: ink,
-                descColor: muted,
-                pointsActiveColor: accentDeep,
-                pointsIdleColor: muted,
-              }}
-            />
+            <MetataskSealStack state={state} />
           </div>
         )}
 

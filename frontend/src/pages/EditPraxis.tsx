@@ -20,6 +20,8 @@ import {
 import DefaultEditPraxis from "./editPraxis/archetypes/DefaultEditPraxis";
 import { Breadcrumb } from "./editPraxis/archetypes/shared";
 import DefaultMobileEditPraxis from "./editPraxis/mobileArchetypes/DefaultEditPraxis";
+import MetataskPicker from "./editPraxis/MetataskPicker";
+import MetataskRemoveConfirm from "./editPraxis/MetataskRemoveConfirm";
 
 export default function EditPraxis() {
   const { t } = useTranslation("forms");
@@ -99,6 +101,12 @@ export default function EditPraxis() {
           onCancel={state.cancelDuelSeal}
         />
       )}
+      {/* The Section-D seal picker and Section-E peel-off confirm (#933) mount
+          here, beside the duel seal — one mount covers all 16 composer surfaces
+          and both form factors. The picker is faction-neutral; each row wears
+          its own issuing faction's dress. */}
+      {state.metataskPickerOpen && <MetataskPicker state={state} />}
+      {state.metataskRemovalTarget && <MetataskRemoveConfirm state={state} />}
       {/* Praxis images crop/rotate in place before upload (#514), free-form so
           nothing is force-cropped. Sequential: keyed on identity so each queued
           image gets a fresh modal. */}

@@ -31,7 +31,7 @@ import {
   DropButton,
   FilePicker,
   InviteSearch,
-  MetatasksList,
+  MetataskSealStack,
   PublishButton,
   TitleField,
 } from "../archetypes/controls";
@@ -371,29 +371,9 @@ export default function WowEditPraxis({ state }: { state: EditPraxisState }) {
             <RelicGrid state={state} />
           </Plate>
 
-          {state.showMetatasks && (
+          {state.showSealStack && (
             <Plate title={t("editPraxis.wow.metatasksLabel")}>
-              <MetatasksList
-                state={state}
-                skin={{
-                  containerStyle: {
-                    display: "flex",
-                    flexDirection: "column",
-                    gap: "var(--space-xs)",
-                  },
-                  rowStyle: (selected) => ({
-                    padding: "var(--space-sm) var(--space-md)",
-                    background: selected ? TINT : FIELD_BG,
-                    border: `1.5px solid ${selected ? GOLD : PANEL_BORDER}`,
-                    borderRadius: 9,
-                    fontFamily: DISPLAY,
-                  }),
-                  titleColor: INK,
-                  descColor: MUTED,
-                  pointsActiveColor: GOLD_INK,
-                  pointsIdleColor: MUTED,
-                }}
-              />
+              <MetataskSealStack state={state} />
             </Plate>
           )}
         </>

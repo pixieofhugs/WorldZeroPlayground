@@ -29,7 +29,7 @@ import {
   DropButton,
   FilePicker,
   InviteSearch,
-  MetatasksList,
+  MetataskSealStack,
   ModePicker,
   PublishButton,
   TitleField,
@@ -664,7 +664,7 @@ export default function CovenEditPraxis({ state }: Props) {
             </div>
 
             {/* Metatasks */}
-            {state.showMetatasks && (
+            {state.showSealStack && (
               <div
                 style={{
                   ...notepadPanel,
@@ -675,24 +675,7 @@ export default function CovenEditPraxis({ state }: Props) {
                 <span style={{ ...eyebrowStyle, marginBottom: "var(--space-sm)" }}>
                   {t("editPraxis.coven.metatasksLabel")}
                 </span>
-                <MetatasksList
-                  state={state}
-                  skin={{
-                    rowStyle: (selected) => ({
-                      padding: "var(--space-sm) var(--space-xs)",
-                      background: selected ? lightBg : "transparent",
-                      border: selected
-                        ? `1.5px solid ${pinkDeep}`
-                        : `1.5px solid transparent`,
-                      borderRadius: 6,
-                      marginBottom: "var(--space-xs)",
-                    }),
-                    titleColor: ink,
-                    descColor: muted,
-                    pointsActiveColor: pinkDeep,
-                    pointsIdleColor: muted,
-                  }}
-                />
+                <MetataskSealStack state={state} />
               </div>
             )}
 

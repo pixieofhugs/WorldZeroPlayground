@@ -12,7 +12,7 @@ import {
   DropButton,
   FilePicker,
   InviteSearch,
-  MetatasksList,
+  MetataskSealStack,
   PublishButton,
   TitleField,
 } from '../archetypes/controls'
@@ -176,23 +176,9 @@ export default function EverymenComposer({ state }: { state: EditPraxisState }) 
             <MediaGrid state={state} />
           </Plate>
 
-          {state.showMetatasks && (
+          {state.showSealStack && (
             <Plate title={t('editPraxis.everymen.metatasksLabel')}>
-              <MetatasksList
-                state={state}
-                skin={{
-                  containerStyle: { display: 'flex', flexDirection: 'column', gap: "var(--space-xs)" },
-                  rowStyle: (selected) => ({
-                    padding: 'var(--space-sm) var(--space-md)',
-                    background: selected ? PAPER_DEEP : 'transparent',
-                    border: `1.5px solid ${selected ? RED : 'color-mix(in srgb, var(--everymen-ink) 30%, transparent)'}`,
-                  }),
-                  titleColor: PAPER_TEXT,
-                  descColor: MUTED,
-                  pointsActiveColor: RED,
-                  pointsIdleColor: MUTED,
-                }}
-              />
+              <MetataskSealStack state={state} />
             </Plate>
           )}
         </>

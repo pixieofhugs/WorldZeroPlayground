@@ -535,7 +535,7 @@ export default function EverymenEditPraxis({ state }: Props) {
         </div>
 
         {/* Metatasks */}
-        {state.showMetatasks && <MetatasksBlock state={state} />}
+        {state.showSealStack && <MetatasksBlock state={state} />}
 
         <ErrorBanner message={state.error} />
 

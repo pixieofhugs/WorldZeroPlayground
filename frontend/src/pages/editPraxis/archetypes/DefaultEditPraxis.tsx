@@ -22,7 +22,7 @@ import {
   DropButton,
   FilePicker,
   InviteSearch,
-  MetatasksList,
+  MetataskSealStack,
   ModePicker,
   PublishButton,
   TitleField,
@@ -528,7 +528,7 @@ export default function DefaultEditPraxis({ state }: Props) {
         </div>
 
         {/* Metatasks */}
-        {state.showMetatasks && (
+        {state.showSealStack && (
           <div
             style={{
               marginBottom: "var(--space-xl)",
@@ -548,24 +548,7 @@ export default function DefaultEditPraxis({ state }: Props) {
             >
               {t("editPraxis.na.metatasksLabel")}
             </div>
-            <MetatasksList
-              state={state}
-              skin={{
-                rowStyle: (selected) => ({
-                  padding: "var(--space-sm) var(--space-xs)",
-                  background: selected ? STICKY_YELLOW : "transparent",
-                  border: selected
-                    ? `1.5px solid ${SLATE_DEEP}`
-                    : `1.5px solid transparent`,
-                  marginBottom: "var(--space-xs)",
-                  fontFamily: "'Caveat', cursive",
-                }),
-                titleColor: SLATE_DEEP,
-                descColor: SLATE,
-                pointsActiveColor: "#dc2626",
-                pointsIdleColor: SLATE,
-              }}
-            />
+            <MetataskSealStack state={state} />
           </div>
         )}
 

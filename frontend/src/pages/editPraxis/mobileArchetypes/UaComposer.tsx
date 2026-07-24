@@ -13,7 +13,7 @@ import {
   DropButton,
   FilePicker,
   InviteSearch,
-  MetatasksList,
+  MetataskSealStack,
   PublishButton,
   TitleField,
 } from '../archetypes/controls'
@@ -233,24 +233,9 @@ export default function UaComposer({ state }: { state: EditPraxisState }) {
             <MediaGrid state={state} />
           </Field>
 
-          {state.showMetatasks && (
+          {state.showSealStack && (
             <Field label={t('editPraxis.ua.metatasksLabel')}>
-              <MetatasksList
-                state={state}
-                skin={{
-                  containerStyle: { display: 'flex', flexDirection: 'column', gap: 'var(--space-xs)' },
-                  rowStyle: (selected) => ({
-                    padding: 'var(--space-sm) var(--space-md)',
-                    background: selected ? PANEL : 'transparent',
-                    border: `1px solid ${selected ? FILL : RULE}`,
-                    borderRadius: 4,
-                  }),
-                  titleColor: INK,
-                  descColor: BODY,
-                  pointsActiveColor: ACCENT,
-                  pointsIdleColor: MUTED,
-                }}
-              />
+              <MetataskSealStack state={state} />
             </Field>
           )}
         </>

@@ -14,7 +14,7 @@ import {
   DropButton,
   FilePicker,
   InviteSearch,
-  MetatasksList,
+  MetataskSealStack,
   ModePicker,
   PublishButton,
   TitleField,
@@ -582,7 +582,7 @@ export default function SingularityEditPraxis({ state }: Props) {
         </div>
 
         {/* Metatasks */}
-        {state.showMetatasks && (
+        {state.showSealStack && (
           <div style={{ marginBottom: "var(--space-xl)" }}>
             <div style={{ fontSize: "var(--text-base)", color: dim, marginBottom: "var(--space-sm)" }}>
               <span style={{ color: term }}>$ </span>{t("editPraxis.singularity.terminal.metataskCommand")}
@@ -593,25 +593,7 @@ export default function SingularityEditPraxis({ state }: Props) {
                 padding: "var(--space-sm)",
               }}
             >
-              <MetatasksList
-                state={state}
-                skin={{
-                  rowStyle: (selected) => ({
-                    padding: "var(--space-sm) var(--space-xs)",
-                    background: selected
-                      ? "rgba(74,222,128,.08)"
-                      : "transparent",
-                    border: `1px solid ${selected ? term : "transparent"}`,
-                    color: term,
-                    fontFamily: "'Share Tech Mono', monospace",
-                    marginBottom: "var(--space-xs)",
-                  }),
-                  titleColor: term,
-                  descColor: dim,
-                  pointsActiveColor: term,
-                  pointsIdleColor: dim,
-                }}
-              />
+              <MetataskSealStack state={state} />
             </div>
           </div>
         )}

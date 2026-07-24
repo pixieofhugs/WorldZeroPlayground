@@ -12,7 +12,7 @@ import {
   DropButton,
   FilePicker,
   InviteSearch,
-  MetatasksList,
+  MetataskSealStack,
   PublishButton,
   TitleField,
 } from '../archetypes/controls'
@@ -187,23 +187,9 @@ export default function EphemeristsComposer({ state }: { state: EditPraxisState 
             <MediaGrid state={state} />
           </Leaf>
 
-          {state.showMetatasks && (
+          {state.showSealStack && (
             <Leaf title={t('editPraxis.ephemerists.metatasksLabel')}>
-              <MetatasksList
-                state={state}
-                skin={{
-                  containerStyle: { display: 'flex', flexDirection: 'column', gap: "var(--space-xs)" },
-                  rowStyle: (selected) => ({
-                    padding: 'var(--space-sm) var(--space-md)',
-                    background: selected ? VELLUM_DEEP : 'transparent',
-                    border: `1px solid ${selected ? GOLD : GOLD_DEEP}`,
-                  }),
-                  titleColor: TEXT,
-                  descColor: MUTED,
-                  pointsActiveColor: RUBRIC,
-                  pointsIdleColor: MUTED,
-                }}
-              />
+              <MetataskSealStack state={state} />
             </Leaf>
           )}
         </>

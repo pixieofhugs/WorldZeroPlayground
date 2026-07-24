@@ -40,7 +40,7 @@ import {
   DropButton,
   FilePicker,
   InviteSearch,
-  MetatasksList,
+  MetataskSealStack,
   ModePicker,
   PublishButton,
   TitleField,
@@ -479,30 +479,10 @@ export default function UaEditPraxis({ state }: Props) {
         </div>
 
         {/* Metatasks */}
-        {state.showMetatasks && (
+        {state.showSealStack && (
           <Plate>
             <FieldLabel>{t("editPraxis.ua.metatasksLabel")}</FieldLabel>
-            <MetatasksList
-              state={state}
-              skin={{
-                rowStyle: (selected) => ({
-                  padding: "var(--space-sm)",
-                  borderRadius: "var(--radius-sm)",
-                  background: selected
-                    ? "var(--faction-ua-panel)"
-                    : "transparent",
-                  border: `1px solid ${
-                    selected ? "var(--faction-ua-rule)" : "transparent"
-                  }`,
-                  marginBottom: "var(--space-xs)",
-                  fontFamily: UA_TEXT,
-                }),
-                titleColor: "var(--faction-ua-card-text)",
-                descColor: "var(--faction-ua-card-body)",
-                pointsActiveColor: "var(--faction-ua-card-accent)",
-                pointsIdleColor: "var(--faction-ua-card-muted)",
-              }}
-            />
+            <MetataskSealStack state={state} />
           </Plate>
         )}
 

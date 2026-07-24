@@ -7,7 +7,7 @@
  * locked-once-published rules, debounced 2s autosave on title/body, immediate save
  * for mode/metatask).
  */
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   applyMetatask,
@@ -98,11 +98,28 @@ export interface EditPraxisState {
   sendChallenge: (character: CharacterOut) => Promise<void>;
   cancelDuel: () => Promise<void>;
 
-  // Metatasks
+  // Metatasks (seal stack + Section-D picker + Section-E remove, #933)
   metaTasks: TaskOut[];
   appliedMetatasks: Set<number>;
+  /** The applied metatasks as full rows, rendered as the editable seal stack. */
+  appliedMetataskList: TaskOut[];
   applyingMetatask: number | null;
   toggleMetatask: (mt: TaskOut) => Promise<void>;
+  /** Seal a not-yet-applied metatask onto the praxis; closes the picker. */
+  addMetatask: (mt: TaskOut) => Promise<void>;
+
+  /** The neutral Section-D seal picker is open. */
+  metataskPickerOpen: boolean;
+  openMetataskPicker: () => void;
+  closeMetataskPicker: () => void;
+
+  /** The metatask awaiting peel-off confirmation (Section E), or null. */
+  metataskRemovalTarget: TaskOut | null;
+  /** A seal's × asks first: this opens the confirm for that metatask. */
+  requestRemoveMetatask: (taskId: number) => void;
+  /** Confirm the peel — removes the metatask and drops it from the stack. */
+  confirmRemoveMetatask: () => Promise<void>;
+  cancelRemoveMetatask: () => void;
 
   // Save / publish / drop
   submitting: boolean;
@@ -142,6 +159,10 @@ export interface EditPraxisState {
   /** Show the invite/challenge box: collab members, or an open duel pane. */
   showInviteBox: boolean;
   showMetatasks: boolean;
+  /** The viewer can add/remove seals (eligible + solo + still editable). */
+  canSealMetatask: boolean;
+  /** Render the seal stack at all: can seal, or read-only applied seals exist. */
+  showSealStack: boolean;
   /** The duel chip is selected (a challenge is attached or the pane is open). */
   duelMode: boolean;
   /** The duel chip is available to this viewer (level ≥ duel_level_required). */
@@ -214,10 +235,17 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
   const [imageEditQueue, setImageEditQueue] = useState<File[]>([]);
 
   const [metaTasks, setMetaTasks] = useState<TaskOut[]>([]);
-  const [appliedMetatasks, setAppliedMetatasks] = useState<Set<number>>(
-    new Set(),
+  // The applied metatasks as full rows (source of truth for the seal stack);
+  // `appliedMetatasks` (the id Set) is derived from it below.
+  const [appliedMetataskList, setAppliedMetataskList] = useState<TaskOut[]>([]);
+  const appliedMetatasks = useMemo(
+    () => new Set(appliedMetataskList.map((mt) => mt.id)),
+    [appliedMetataskList],
   );
   const [applyingMetatask, setApplyingMetatask] = useState<number | null>(null);
+  const [metataskPickerOpen, setMetataskPickerOpen] = useState(false);
+  const [metataskRemovalTarget, setMetataskRemovalTarget] =
+    useState<TaskOut | null>(null);
 
   const [inviteQuery, setInviteQuery] = useState("");
   const [inviteResults, setInviteResults] = useState<CharacterOut[]>([]);
@@ -273,6 +301,9 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
         setTitle(initialTitle);
         setBody(initialBody);
         setMedia(loaded.media_items);
+        // Seed the seal stack from the persisted seals so a reloaded draft shows
+        // what's already sealed (the picker's "already sealed" check reads this).
+        setAppliedMetataskList(loaded.applied_metatasks ?? []);
         lastSavedTitleRef.current = initialTitle;
         lastSavedBodyRef.current = initialBody;
         await Promise.all([
@@ -818,7 +849,10 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
     }
   }, [praxis]);
 
-  // ---- Metatasks ----
+  // ---- Metatasks (#933) ----
+  // Legacy toggle (apply when absent, remove when present) kept on the state
+  // shape; the new compose flow adds through the picker and removes through the
+  // confirm below. All three keep `appliedMetataskList` in sync.
   const toggleMetatask = useCallback(
     async (mt: TaskOut) => {
       if (!praxis) return;
@@ -828,14 +862,12 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
       try {
         if (appliedMetatasks.has(mt.id)) {
           await removeMetatask(praxis.id, mt.id);
-          setAppliedMetatasks((previous) => {
-            const next = new Set(previous);
-            next.delete(mt.id);
-            return next;
-          });
+          setAppliedMetataskList((previous) =>
+            previous.filter((m) => m.id !== mt.id),
+          );
         } else {
           await applyMetatask(praxis.id, mt.id);
-          setAppliedMetatasks((previous) => new Set(previous).add(mt.id));
+          setAppliedMetataskList((previous) => [...previous, mt]);
         }
       } catch (err) {
         setError(
@@ -847,6 +879,66 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
     },
     [praxis, applyingMetatask, appliedMetatasks],
   );
+
+  // Section D: the picker seals one metatask at a time, then closes.
+  const addMetatask = useCallback(
+    async (mt: TaskOut) => {
+      if (!praxis || applyingMetatask !== null) return;
+      if (appliedMetatasks.has(mt.id)) {
+        setMetataskPickerOpen(false);
+        return;
+      }
+      setApplyingMetatask(mt.id);
+      setError("");
+      try {
+        await applyMetatask(praxis.id, mt.id);
+        setAppliedMetataskList((previous) => [...previous, mt]);
+        setMetataskPickerOpen(false);
+      } catch (err) {
+        setError(
+          extractError(err, i18n.t("forms:editPraxis.errors.updateMetatask")),
+        );
+      } finally {
+        setApplyingMetatask(null);
+      }
+    },
+    [praxis, applyingMetatask, appliedMetatasks],
+  );
+
+  // Section E: the seal's × asks first — open the confirm for that metatask.
+  const requestRemoveMetatask = useCallback(
+    (taskId: number) => {
+      setMetataskRemovalTarget(
+        appliedMetataskList.find((mt) => mt.id === taskId) ?? null,
+      );
+    },
+    [appliedMetataskList],
+  );
+
+  const cancelRemoveMetatask = useCallback(
+    () => setMetataskRemovalTarget(null),
+    [],
+  );
+
+  const confirmRemoveMetatask = useCallback(async () => {
+    const target = metataskRemovalTarget;
+    if (!praxis || !target) return;
+    setApplyingMetatask(target.id);
+    setError("");
+    try {
+      await removeMetatask(praxis.id, target.id);
+      setAppliedMetataskList((previous) =>
+        previous.filter((mt) => mt.id !== target.id),
+      );
+      setMetataskRemovalTarget(null);
+    } catch (err) {
+      setError(
+        extractError(err, i18n.t("forms:editPraxis.errors.updateMetatask")),
+      );
+    } finally {
+      setApplyingMetatask(null);
+    }
+  }, [praxis, metataskRemovalTarget]);
 
   // ---- Derived ----
   const isPublished = praxis?.status === "submitted";
@@ -867,12 +959,26 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
     viewerLevel >= duelLevelRequired;
   const showInviteBox =
     !controlsLocked && !!praxis && (praxis.type === "collab" || duelMode);
-  const showMetatasks =
+  // Editable only for a still-open solo praxis with at least one metatask the
+  // viewer is eligible to seal (backend ships `eligible_for_current_user`; the
+  // load effect already filters `metaTasks` to it — the level threshold never
+  // reaches the client).
+  const canSealMetatask =
     !controlsLocked &&
     !!praxis &&
     praxis.type === "solo" &&
     !duelMode &&
     metaTasks.length > 0;
+  // Legacy name, unchanged meaning (still gates the old per-archetype block).
+  const showMetatasks = canSealMetatask;
+  // Show the stack when the viewer can seal, OR when an ineligible viewer still
+  // has seals to display read-only (no add slot, no ×).
+  const showSealStack =
+    !controlsLocked &&
+    !!praxis &&
+    praxis.type === "solo" &&
+    !duelMode &&
+    (canSealMetatask || appliedMetataskList.length > 0);
 
   const wordCount = body.trim() ? body.trim().split(/\s+/).length : 0;
 
@@ -916,8 +1022,19 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
 
     metaTasks,
     appliedMetatasks,
+    appliedMetataskList,
     applyingMetatask,
     toggleMetatask,
+    addMetatask,
+
+    metataskPickerOpen,
+    openMetataskPicker: () => setMetataskPickerOpen(true),
+    closeMetataskPicker: () => setMetataskPickerOpen(false),
+
+    metataskRemovalTarget,
+    requestRemoveMetatask,
+    confirmRemoveMetatask,
+    cancelRemoveMetatask,
 
     submitting,
     publish,
@@ -938,6 +1055,8 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
     modeIsLocked,
     showInviteBox,
     showMetatasks,
+    canSealMetatask,
+    showSealStack,
     duelMode,
     duelChipVisible,
 
