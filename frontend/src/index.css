@@ -1352,6 +1352,39 @@
   background: radial-gradient(120% 90% at 50% 6%, transparent 42%, color-mix(in srgb, var(--faction-snide-wall-deep) 60%, transparent));
 }
 
+/* ══ Default (Unaffiliated / na) spectrum backdrop (faction-context pages; theme-aware) ══
+   The full-page "all paths open" wash — five corner-anchored spectrum radials
+   over the page ground, brightened in dark. Verbatim transcription of the
+   vendored na kit's default.css (design project 1eb2665a); the raw rgba stops
+   are the ONE place na's spectrum is painted at low opacity, so they live here
+   in index.css (the only file allowed raw colour) rather than in an archetype.
+   Markup hook: `<div class="na-backdrop" />` — shared by DefaultProfile (#969),
+   Default Task Detail (#967) and the rest of the na kit. */
+.na-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(38% 44% at 8% 8%,   rgba(193,39,45,0.16),  transparent 70%),
+    radial-gradient(34% 40% at 30% 4%,  rgba(202,138,4,0.15),  transparent 70%),
+    radial-gradient(40% 46% at 94% 10%, rgba(37,99,235,0.16),  transparent 70%),
+    radial-gradient(36% 42% at 6% 92%,  rgba(190,24,93,0.15),  transparent 70%),
+    radial-gradient(40% 46% at 88% 94%, rgba(22,163,74,0.15),  transparent 70%),
+    var(--color-bg-page);
+  transition: background 300ms;
+}
+
+[data-theme="dark"] .na-backdrop {
+  background:
+    radial-gradient(38% 44% at 8% 8%,   rgba(239,83,80,0.14),   transparent 70%),
+    radial-gradient(34% 40% at 30% 4%,  rgba(230,185,79,0.12),  transparent 70%),
+    radial-gradient(40% 46% at 94% 10%, rgba(96,165,250,0.14),  transparent 70%),
+    radial-gradient(36% 42% at 6% 92%,  rgba(244,114,182,0.12), transparent 70%),
+    radial-gradient(40% 46% at 88% 94%, rgba(74,222,128,0.12),  transparent 70%),
+    var(--color-bg-page);
+}
+
 /* ── Dark mode: warmer gold text inside editable fields ── */
 [data-theme="dark"] input,
 [data-theme="dark"] textarea {
