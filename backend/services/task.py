@@ -215,8 +215,9 @@ async def list_tasks(
 ) -> list[Task]:
     """Query tasks with optional filters, excluding hidden-faction tasks.
 
-    If ``task_type`` is None or 'all', both standard and metatask rows are
-    returned. Pass 'standard' or 'metatask' to filter.
+    If ``task_type`` is None (the default) only standard rows are returned, so
+    metatasks never leak into the ordinary browse (#1001). Pass 'all' for both
+    types, or 'standard'/'metatask' for a single-type filter.
 
     Metatask rows are additionally gated by ``era.level_to_see_metatasks``
     (#453): ``viewer`` (the authenticated character, ``None`` for anonymous
@@ -260,15 +261,20 @@ async def list_tasks(
             query = query.where(Task.status == TaskStatus.active)
     # status == "all" -> no status filter, return tasks of every status
 
-    # Task type filter — default (None) and "all" both return every task type.
-    # Pass task_type="standard" or task_type="metatask" to filter.
-    if task_type is not None and task_type != "all":
+    # Task type filter — default (None) means STANDARD-ONLY so metatasks never
+    # leak into the ordinary browse (#1001); pass "all" to get every type, or
+    # "standard"/"metatask" for a single-type filter (422 on any other value).
+    if task_type == "all":
+        pass  # every type
+    elif task_type is not None:
         try:
             query = query.where(Task.task_type == TaskType(task_type))
         except ValueError:
             raise HTTPException(
                 status_code=422, detail=f"Invalid task_type: {task_type}"
             )
+    else:
+        query = query.where(Task.task_type == TaskType.standard)
 
     # Metatask visibility gate (#453): the metatask list only opens at
     # era.level_to_see_metatasks. Anonymous viewers are always below the gate.
