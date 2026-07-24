@@ -26,6 +26,7 @@ export default function SnideMobileDuelRail({
   tally,
   note,
   body,
+  actions,
 }: DuelRailSkinProps) {
   // ponytail: `maxWidth` is intentionally ignored on mobile. The rail is
   // full-bleed inside the phone column, so the desktop archetype-width map has
@@ -106,6 +107,12 @@ export default function SnideMobileDuelRail({
             }}
           >
             {body}
+          </div>
+        )}
+        {/* The owner's action row (#752), footed under a dashed acid rule. */}
+        {actions && (
+          <div style={{ marginTop: 'var(--space-md)', paddingTop: 'var(--space-sm)', borderTop: `2px dashed ${ACID}` }}>
+            {actions}
           </div>
         )}
       </div>

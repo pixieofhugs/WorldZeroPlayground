@@ -81,6 +81,7 @@ export default function SingularityDuelRail({
   tally,
   note,
   body,
+  actions,
 }: DuelRailSkinProps) {
   const shell: CSSProperties = {
     maxWidth,
@@ -148,6 +149,13 @@ export default function SingularityDuelRail({
             is the correct empty state — the duel is over — so no bespoke
             "connection closed" ornament is drawn for it. */}
       </div>
+      )}
+
+      {/* The owner's action row (#752), on its own hairline-ruled prompt block. */}
+      {actions && (
+        <div style={{ padding: 'var(--space-md) var(--space-lg)', borderTop: `1px solid ${HAIRLINE}` }}>
+          {actions}
+        </div>
       )}
 
       <style>{CURSOR_CSS}</style>

@@ -231,7 +231,7 @@ describe('duel rail skins render every slot', () => {
     ),
   ]
 
-  it.each(skins)('%s passes headline, tally, note and body through', (_name, Skin) => {
+  it.each(skins)('%s passes headline, tally, note, body and actions through', (_name, Skin) => {
     const html = renderToStaticMarkup(
       <Skin
         accent="var(--faction-snide)"
@@ -241,12 +241,17 @@ describe('duel rail skins render every slot', () => {
         tally={<span>SLOT_TALLY</span>}
         note={<span>SLOT_NOTE</span>}
         body={<span>SLOT_BODY</span>}
+        actions={<span>SLOT_ACTIONS</span>}
       />,
     )
     expect(html).toContain('SLOT_HEADLINE')
     expect(html).toContain('SLOT_TALLY')
     expect(html).toContain('SLOT_NOTE')
     expect(html).toContain('SLOT_BODY')
+    // #752: the owner's action row is a seventh slot every skin must place. A
+    // skin that forgot to render it — leaving the submit/pull-back/forfeit
+    // control stranded off-screen — fails here, in every registered face.
+    expect(html).toContain('SLOT_ACTIONS')
   })
 
   /**
@@ -273,6 +278,7 @@ describe('duel rail skins render every slot', () => {
         tally={<span>SLOT_TALLY</span>}
         note={<span>SLOT_NOTE</span>}
         body={<span>SLOT_BODY</span>}
+        actions={<span>SLOT_ACTIONS</span>}
       />,
     )
     const sizes = html.match(/font-size:\s*var\((--text-[a-z]+)\)/g) ?? []
@@ -280,8 +286,8 @@ describe('duel rail skins render every slot', () => {
     expect(offenders).toEqual([])
   })
 
-  // declined / forfeited legitimately arrive with no race left; a skin must not
-  // crash or invent one.
+  // declined / forfeited legitimately arrive with no race left AND no action row
+  // (#752: `actions` is null there too); a skin must not crash or invent either.
   it.each(skins)('%s survives the empty-body states', (_name, Skin) => {
     const html = renderToStaticMarkup(
       <Skin
@@ -292,6 +298,7 @@ describe('duel rail skins render every slot', () => {
         tally={null}
         note={null}
         body={null}
+        actions={null}
       />,
     )
     expect(html).toContain('SLOT_HEADLINE')
