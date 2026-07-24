@@ -180,15 +180,15 @@ export default function EverymenComposer({ state }: { state: EditPraxisState }) 
             </Plate>
           )}
 
-          <Plate title={t('editPraxis.everymen.filesLabel')}>
-            <MediaGrid state={state} />
-          </Plate>
-
           {state.showSealStack && (
             <Plate title={t('editPraxis.everymen.metatasksLabel')}>
               <MetataskSealStack state={state} />
             </Plate>
           )}
+
+          <Plate title={t('editPraxis.everymen.filesLabel')}>
+            <MediaGrid state={state} />
+          </Plate>
         </>
       ) : (
         <Plate title={t('editPraxis.everymen.previewLabel')}>

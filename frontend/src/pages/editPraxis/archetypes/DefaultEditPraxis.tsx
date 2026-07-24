@@ -352,6 +352,14 @@ export default function DefaultEditPraxis({ state }: Props) {
               </div>
             )}
 
+            {/* Metatask seals. */}
+            {state.showSealStack && (
+              <div style={{ marginBottom: "var(--space-xl)" }}>
+                <div style={cap}>{t("editPraxis.na.metatasksLabel")}</div>
+                <MetataskSealStack state={state} />
+              </div>
+            )}
+
             {/* Headline. */}
             <div style={{ marginBottom: "var(--space-xl)" }}>
               <div style={{ ...cap, display: "flex", justifyContent: "space-between" }}>
@@ -506,14 +514,6 @@ export default function DefaultEditPraxis({ state }: Props) {
                 />
               </div>
             </div>
-
-            {/* Metatask seals. */}
-            {state.showSealStack && (
-              <div style={{ marginBottom: "var(--space-xl)" }}>
-                <div style={cap}>{t("editPraxis.na.metatasksLabel")}</div>
-                <MetataskSealStack state={state} />
-              </div>
-            )}
 
             <ErrorBanner message={state.error} />
 

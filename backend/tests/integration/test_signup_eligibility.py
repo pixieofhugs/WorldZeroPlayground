@@ -14,7 +14,7 @@ from models.character import Character
 from models.era import Era
 from models.faction import Faction
 from models.praxis import Praxis, PraxisMember, PraxisStatus, PraxisType
-from models.task import Task, TaskStatus
+from models.task import Task, TaskStatus, TaskType
 from services.praxis import (
     SignupDenialReason,
     can_submit_praxis_for_task,
@@ -44,6 +44,7 @@ async def _make_task(
     *,
     level_required: int = 0,
     status: TaskStatus = TaskStatus.active,
+    task_type: TaskType = TaskType.standard,
 ) -> Task:
     task = Task(
         title="Extra Task",
@@ -51,6 +52,7 @@ async def _make_task(
         point_value=5,
         level_required=level_required,
         status=status,
+        task_type=task_type,
         created_by=character.id,
         primary_faction_slug="ua",
     )
@@ -95,6 +97,21 @@ async def test_evaluate_signup_task_status_closed(
     result = await evaluate_signup(character, retired, db_session)
     assert result.allowed is False
     assert result.reason is SignupDenialReason.task_status_closed
+
+
+@pytest.mark.asyncio
+async def test_evaluate_signup_metatask_rejected(
+    db_session: AsyncSession, character: Character, era: Era, faction_ua: Faction
+):
+    """Metatasks are seals applied to a praxis, never signup targets (#1001).
+
+    The gate fires before level/status work, so an otherwise-eligible character
+    is still denied purely on task_type.
+    """
+    metatask = await _make_task(db_session, character, task_type=TaskType.metatask)
+    result = await evaluate_signup(character, metatask, db_session)
+    assert result.allowed is False
+    assert result.reason is SignupDenialReason.is_metatask
 
 
 @pytest.mark.asyncio
