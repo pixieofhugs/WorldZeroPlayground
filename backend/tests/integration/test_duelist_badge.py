@@ -40,7 +40,7 @@ DUELIST_BADGE = {"key": "duelist", "name": "Duelist"}
 
 
 async def _make_character(
-    session: AsyncSession, era: Era, *, username: str
+    session: AsyncSession, era: Era, *, username: str, faction_slug: str = "ua"
 ) -> Character:
     account = Account(email=f"{username}@example.com")
     session.add(account)
@@ -49,7 +49,7 @@ async def _make_character(
         account_id=account.id,
         username=username,
         display_name=username,
-        faction_slug="ua",
+        faction_slug=faction_slug,
     )
     session.add(character)
     await session.flush()
@@ -124,10 +124,16 @@ async def _make_duel(
     status: DuelStatus = DuelStatus.settled,
     forfeiter: Optional[str] = None,
     winner_character_id: Optional[int] = None,
+    challenger_faction: str = "ua",
+    opponent_faction: str = "ua",
 ) -> tuple[Duel, Character, Character]:
     """Two fresh characters + their two solo praxes, linked as one duel."""
-    challenger = await _make_character(session, era, username=f"{label}ch")
-    opponent = await _make_character(session, era, username=f"{label}op")
+    challenger = await _make_character(
+        session, era, username=f"{label}ch", faction_slug=challenger_faction
+    )
+    opponent = await _make_character(
+        session, era, username=f"{label}op", faction_slug=opponent_faction
+    )
     voter = await _make_character(session, era, username=f"{label}v")
     task = await _make_task(session, challenger)
     challenger_praxis = await _make_solo(session, task, challenger)
@@ -188,6 +194,34 @@ async def test_a_tie_is_not_a_win(
         db_session, era, label="tie", challenger_votes=3, opponent_votes=3
     )
     assert await _badge_keys(db_session, challenger) == []
+    assert await _badge_keys(db_session, opponent) == []
+
+
+@pytest.mark.asyncio
+async def test_snide_wins_the_tie_and_earns_the_badge(
+    db_session: AsyncSession, era: Era, faction_ua: Faction
+):
+    """Snide takes ties (#748): the badge must agree with the 2.0× multiplier.
+
+    A tied duel names no winner by votes, but Snide's ability wins ties, so the
+    Snide side reads as the duel winner everywhere the tiebreak applies — the
+    live multiplier already did this; the badge was the straggler.
+    """
+    from models.faction import FactionStatus
+
+    db_session.add(Faction(slug="snide", status=FactionStatus.visible))
+    await db_session.commit()
+
+    _, challenger, opponent = await _make_duel(
+        db_session,
+        era,
+        label="snidetie",
+        challenger_votes=3,
+        opponent_votes=3,
+        challenger_faction="snide",
+        opponent_faction="ua",
+    )
+    assert await _badge_keys(db_session, challenger) == ["duelist"]
     assert await _badge_keys(db_session, opponent) == []
 
 
@@ -433,10 +467,11 @@ async def test_batch_path_is_constant_query_count(
         event.remove(db_connection.sync_connection, "before_cursor_execute", record)
 
     assert large_query_count == small_query_count
-    # Four: the account roll-up, the duel rows, the live tally, and the
-    # previous-era lookup #823 added. The guard that matters is the equality
-    # above — this bound only keeps the fixed cost visible.
-    assert small_query_count <= 4, statements
+    # Five: the account roll-up, the duel rows, the live tally, the previous-era
+    # lookup (#823), and the live sides' faction lookup (#748 Snide tiebreak). The
+    # guard that matters is the equality above — this bound only keeps the fixed
+    # cost visible.
+    assert small_query_count <= 5, statements
 
     assert small[one_challenger.id].is_duel_winner is True
     assert small[one_opponent.id].is_duel_winner is False
