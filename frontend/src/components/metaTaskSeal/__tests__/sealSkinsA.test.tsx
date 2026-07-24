@@ -91,9 +91,11 @@ describe("seal skins A content-slot invariant", () => {
 
 describe("seal skins A — unregistered slug still falls through", () => {
   it("an unrecognized metatask_faction_slug renders the Default seal", () => {
-    // `wow` has no seal skin yet (lands in #931), so it still falls through to
-    // Default — coven/ua/albescent are skinned as of #930 and no longer would.
-    const task = metatask("wow");
+    // Every real faction is skinned now (wow was the last, #931), so this uses a
+    // slug that names no faction at all to pin the Default fallthrough for any
+    // unrecognized issuer. na — a real but deliberately-unskinned faction — is
+    // covered in sealSkinsB.
+    const task = metatask("nonesuch");
     // MetaTaskSeal wraps its stack in a flex container, so compare the
     // dispatched seal's own markup, not the wrapper around it.
     const html = markup(<MetaTaskSeal metatasks={[task]} />);

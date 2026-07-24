@@ -1,5 +1,6 @@
 /**
- * Seal skins B (#930) — coven, ua, albescent, and the na/Unaffiliated fallback.
+ * Seal skins B — coven, ua, albescent (#930), wow (#931), and the na/Unaffiliated
+ * fallback.
  *
  * Each bespoke skin must honor the shared seal contract (label = issuing
  * faction, condition = title, bonus = point_value) in its own costume, dispatch
@@ -41,7 +42,7 @@ function markup(element: React.ReactElement): string {
   return renderToStaticMarkup(element);
 }
 
-const SKIN_SLUGS = ["coven", "ua", "albescent"];
+const SKIN_SLUGS = ["coven", "ua", "albescent", "wow"];
 
 describe("seal skins B content-slot invariant", () => {
   for (const slug of SKIN_SLUGS) {
