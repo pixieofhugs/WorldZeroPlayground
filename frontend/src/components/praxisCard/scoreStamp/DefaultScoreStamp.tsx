@@ -46,8 +46,6 @@ export default function DefaultScoreStamp({ praxis, showCrown }: ScoreStampProps
         <TaskCrown
           size={26}
           ringInset={3}
-          innerBg="var(--faction-default-stamp-bg)"
-          glyphColor="var(--faction-default-card-accent)"
           rotate="8deg"
           style={{ position: "absolute", top: -13, right: -12, zIndex: 3 }}
         />

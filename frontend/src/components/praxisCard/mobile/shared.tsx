@@ -515,8 +515,6 @@ export function MobilePraxisBody({
       {praxis.is_top_for_task && (
         <TaskCrown
           size={30}
-          innerBg={theme.paper}
-          glyphColor={theme.accent}
           rotate="6deg"
           style={{ position: 'absolute', top: -10, right: -8, zIndex: 4 }}
         />

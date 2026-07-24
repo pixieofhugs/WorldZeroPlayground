@@ -23,6 +23,7 @@ from models.era import Era
 from models.praxis import Praxis
 from schemas.character import BadgeOut
 from services.duel_outcome import duel_winner
+from services.scoring import snide_tie_winner_id
 from services.vote_tally import get_tally, tally_votes
 
 # Every duel status that can feed the duelist badge. `resolved` is included
@@ -135,6 +136,23 @@ async def _duel_winner_facts(
     )
     tallies = await tally_votes(list(praxis_ids), session)
 
+    # A live tie needs both sides' factions to resolve the Snide tiebreak (#748):
+    # Snide takes ties, so it must win the badge on a tie exactly as it wins the
+    # multiplier. One set-based query over the live sides, never per-character.
+    faction_by_character: dict[int, str] = {}
+    tie_side_ids = {row.challenger_character_id for row in live_rows}
+    tie_side_ids.update(row.opponent_character_id for row in live_rows)
+    tie_side_ids.discard(None)
+    if tie_side_ids:
+        faction_rows = await session.execute(
+            select(Character.id, Character.faction_slug).where(
+                Character.id.in_(tie_side_ids)
+            )
+        )
+        faction_by_character = {
+            character_id: (slug or "") for character_id, slug in faction_rows.all()
+        }
+
     winners: set[int] = set()
     last_era_winners: set[int] = set()
     for row in duel_rows:
@@ -155,6 +173,12 @@ async def _duel_winner_facts(
                 ).points_from_votes,
                 opponent_points=opponent_points,
                 forfeited_by_character_id=row.forfeited_by_character_id,
+                tie_break_winner_id=snide_tie_winner_id(
+                    faction_by_character.get(row.challenger_character_id, ""),
+                    row.challenger_character_id,
+                    faction_by_character.get(row.opponent_character_id, ""),
+                    row.opponent_character_id,
+                ),
             )
         if winner_character_id is None or winner_character_id not in character_ids:
             continue

@@ -2,24 +2,24 @@ import type { CSSProperties } from "react";
 import i18n from "../../i18n";
 
 /**
- * TaskCrown — the one praxis mark (ADR-0028).
+ * TaskCrown — the one praxis mark (ADR-0028, amended by ADR-0054).
  *
  * A rainbow medallion with a fleur-de-lis glyph, worn by the top-scoring
  * SUBMITTED praxis for its task (`is_top_for_task`, computed live server-side;
  * ties are co-champions, a sole entrant is crowned by default). It replaces the
  * retired cross-task "Faction Distinction Laurel" — same medallion chrome, new
- * glyph, new meaning. The rainbow ring is a fixed brand constant
- * (--fdl-rainbow); each skin only recolours the inner disc (`innerBg`, the
- * card's paper) and the glyph (`glyphColor`, the card's ink) so the crown sits
- * on its own paper. Albescent passes a monochrome pair.
+ * glyph, new meaning.
+ *
+ * ONE canonical look on every faction card (ADR-0054 supersedes ADR-0028's
+ * per-card recolour): the rainbow ring is a fixed brand constant
+ * (--fdl-rainbow), and the inner disc (--fdl-disc) + glyph (--fdl-glyph) are
+ * theme-aware tokens — identical on every faction, adapting only to light vs
+ * dark mode. Callers no longer pass disc/glyph colours; that is the point, so
+ * the "one praxis mark" reads as one mark.
  */
 export interface TaskCrownProps {
   /** Overall medallion diameter, px. */
   size?: number;
-  /** Fill of the inner disc — pass the card's paper colour (a CSS var). */
-  innerBg?: string;
-  /** Fleur-de-lis glyph colour — pass the card's ink colour (a CSS var). */
-  glyphColor?: string;
   /** Ring inset from the edge, px (the coloured rainbow band width). */
   ringInset?: number;
   /** Optional rotation, e.g. "-8deg". */
@@ -31,8 +31,6 @@ export interface TaskCrownProps {
 
 export function TaskCrown({
   size = 44,
-  innerBg = "var(--color-bg-card)",
-  glyphColor = "var(--color-text-primary)",
   ringInset = 4,
   rotate,
   shadow,
@@ -66,7 +64,7 @@ export function TaskCrown({
           position: "absolute",
           inset: ringInset,
           borderRadius: "50%",
-          background: innerBg,
+          background: "var(--fdl-disc)",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
@@ -78,7 +76,7 @@ export function TaskCrown({
           viewBox="0 0 40 48"
           width={glyph * (40 / 48)}
           height={glyph}
-          style={{ display: "block", color: glyphColor }}
+          style={{ display: "block", color: "var(--fdl-glyph)" }}
           aria-hidden="true"
         >
           <g fill="currentColor">

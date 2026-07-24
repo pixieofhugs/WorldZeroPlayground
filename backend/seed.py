@@ -67,6 +67,149 @@ async def upsert_era_factions(session, era) -> int:
 
 
 # ---------------------------------------------------------------------------
+# Phase 2: Admin bootstrap (idempotent)
+# ---------------------------------------------------------------------------
+
+async def bootstrap_admin(session, era, pixie_acc) -> Character:
+    """Ensure the Pixie admin account + character + admin role + Era row exist.
+
+    Idempotent: when ``pixie_acc`` is already present this returns Pixie's
+    existing character untouched; only a genuinely un-bootstrapped DB creates
+    the account, OAuth link, Era row, admin role and starting CharacterStats.
+    Returns Pixie's character (needed as ``created_by`` for seeded tasks).
+    """
+    if pixie_acc is not None:
+        print("  >Pixie account already exists — skipping account/era/admin setup")
+        return (await session.execute(
+            select(Character).where(Character.account_id == pixie_acc.id).limit(1)
+        )).scalar_one()
+
+    print("  >Pixie account")
+    pixie_acc = Account(email="pixieofhugs@gmail.com")
+    session.add(pixie_acc)
+    await session.flush()
+
+    session.add(OAuthProvider(
+        account_id=pixie_acc.id,
+        provider="google",
+        provider_user_id="google_pixie",
+        access_token="seed_token",
+    ))
+
+    pixie_char = Character(
+        account_id=pixie_acc.id,
+        username="pixie",
+        display_name="Pixie",
+        bio="",
+        faction_slug="ua",
+    )
+    session.add(pixie_char)
+    await session.flush()
+
+    print(f"  >{era.name}")
+    era_row = Era(
+        name=era.name,
+        config_key=era.config_key,
+        started_by=pixie_acc.id,
+    )
+    session.add(era_row)
+    await session.flush()
+
+    print("  >Admin role -> pixie")
+    admin_role = Role(name="admin", description="Full administrative access")
+    session.add(admin_role)
+    await session.flush()
+
+    session.add(AccountRole(
+        account_id=pixie_acc.id,
+        role_id=admin_role.id,
+        granted_by=pixie_acc.id,
+    ))
+
+    session.add(CharacterStats(
+        character_id=pixie_char.id,
+        era_id=era_row.id,
+        score=0,
+        all_time_score=0,
+        level=0,
+        votes_spent_this_era=0,
+    ))
+    await session.flush()
+    return pixie_char
+
+
+# ---------------------------------------------------------------------------
+# Phase 3: Tasks (from era config) — idempotent per-task sync
+# ---------------------------------------------------------------------------
+
+async def sync_era_tasks(session, era, created_by_id: int) -> int:
+    """Add every era-config task that is not already in the database.
+
+    Idempotent and — crucially — a genuine *sync*, not an all-or-nothing seed:
+    it upserts per task (keyed on title) so that a task added to the era config
+    after a database was first seeded actually reaches that database on the next
+    seed run. The previous implementation only seeded tasks when the table was
+    empty, so config task additions never propagated to any already-seeded
+    environment (including production). Returns how many rows were added.
+    """
+    existing_titles = set(
+        (await session.execute(select(Task.title))).scalars().all()
+    )
+    added = 0
+    for task_def in era.tasks:
+        if task_def.title in existing_titles:
+            continue
+        session.add(Task(
+            title=task_def.title,
+            description=task_def.description,
+            point_value=task_def.point_value,
+            level_required=task_def.level_required,
+            status=TaskStatus.active,
+            created_by=created_by_id,
+            primary_faction_slug=task_def.faction_slug,
+            is_task_vision_eligible=task_def.is_task_vision_eligible,
+        ))
+        added += 1
+    await session.flush()
+    return added
+
+
+# ---------------------------------------------------------------------------
+# Phase 4: Meta Tasks (placeholder) — idempotent
+# ---------------------------------------------------------------------------
+
+async def ensure_placeholder_metatask(session, created_by_id: int) -> bool:
+    """Seed a single placeholder metatask so the UI has something to render.
+
+    A metatask is a Task row with ``task_type=metatask`` (unified in migration
+    0006, SESSION M). Guarded by a count check, so this is safe on a populated
+    database. Returns True if the placeholder was created this run.
+    """
+    metatask_count = (
+        await session.execute(
+            select(func.count())
+            .select_from(Task)
+            .where(Task.task_type == TaskType.metatask)
+        )
+    ).scalar()
+    if metatask_count:
+        return False
+    session.add(Task(
+        title="Upside Down",
+        description="Do this task upside down",
+        point_value=100,
+        level_required=0,
+        status=TaskStatus.active,
+        task_type=TaskType.metatask,
+        created_by=created_by_id,
+        primary_faction_slug="ua",
+        metatask_faction_slug="ua",
+    ))
+    await session.flush()
+    return True
+
+
+# ---------------------------------------------------------------------------
 # Dev-only demo content
 # ---------------------------------------------------------------------------
 
@@ -180,23 +323,20 @@ async def seed(env: str, yes: bool) -> None:
 
         task_count = (await session.execute(select(func.count()).select_from(Task))).scalar()
 
+        # Every phase below is idempotent (upsert / count-guard / per-task sync),
+        # so a fully-seeded DB runs the exact same phases as an empty one — there
+        # is no early-return shortcut. This matters because Phases 3 and 4 add
+        # content that appears in the era config *after* the first seed (new
+        # tasks, the placeholder metatask); an early return skipped them, so
+        # config additions never reached any already-seeded environment,
+        # including production (#905). Phase 1 was already hoisted for the same
+        # reason (#784, Cozy Coven): the Faction table is a thin display mirror
+        # of the era config, safe to top up and needing no migration.
         if pixie_acc and task_count > 0:
-            print("Database already fully seeded (pixie account + tasks exist).")
-            # A faction added to the era config AFTER a database was seeded would
-            # otherwise never get its row: this branch used to return before
-            # Phase 1 ran (#784, Cozy Coven). The Faction table is a thin display
-            # mirror of the era config, so topping it up is always safe and needs
-            # no migration.
-            new_factions = await upsert_era_factions(session, era)
-            if new_factions > 0:
-                await session.commit()
-                print(f"  >Factions ({new_factions} new)")
-            if env == "dev":
-                await seed_dev_demo(session)  # idempotent — tops up demo content
-            await engine.dispose()
-            return
-
-        print("Seeding World Zero...\n")
+            print("Database already fully seeded — running idempotent top-up "
+                  "(factions, admin, task sync, metatask).")
+        else:
+            print("Seeding World Zero...\n")
 
         # ------------------------------------------------------------------
         # Phase 1: Factions (from era config, upsert)
@@ -208,124 +348,26 @@ async def seed(env: str, yes: bool) -> None:
             print("  >Factions already exist — skipping")
 
         # ------------------------------------------------------------------
-        # Phase 2: Admin bootstrap (Pixie account + character + role)
+        # Phase 2: Admin bootstrap (Pixie account + character + era + role)
         # ------------------------------------------------------------------
-        if pixie_acc:
-            print("  >Pixie account already exists — skipping account/era/admin setup")
-            pixie_char_result = await session.execute(
-                select(Character).where(Character.account_id == pixie_acc.id).limit(1)
-            )
-            pixie_char = pixie_char_result.scalar_one()
-        else:
-            print("  >Pixie account")
-            pixie_acc = Account(email="pixieofhugs@gmail.com")
-            session.add(pixie_acc)
-            await session.flush()
-
-            session.add(OAuthProvider(
-                account_id=pixie_acc.id,
-                provider="google",
-                provider_user_id="google_pixie",
-                access_token="seed_token",
-            ))
-
-            pixie_char = Character(
-                account_id=pixie_acc.id,
-                username="pixie",
-                display_name="Pixie",
-                bio="",
-                faction_slug="ua",
-            )
-            session.add(pixie_char)
-            await session.flush()
-
-            # ------------------------------------------------------------------
-            # Era
-            # ------------------------------------------------------------------
-            print(f"  >{era.name}")
-            era_row = Era(
-                name=era.name,
-                config_key=era.config_key,
-                started_by=pixie_acc.id,
-            )
-            session.add(era_row)
-            await session.flush()
-
-            # ------------------------------------------------------------------
-            # Admin role + grant
-            # ------------------------------------------------------------------
-            print("  >Admin role -> pixie")
-            admin_role = Role(name="admin", description="Full administrative access")
-            session.add(admin_role)
-            await session.flush()
-
-            session.add(AccountRole(
-                account_id=pixie_acc.id,
-                role_id=admin_role.id,
-                granted_by=pixie_acc.id,
-            ))
-
-            # ------------------------------------------------------------------
-            # CharacterStats (pixie starts at zero)
-            # ------------------------------------------------------------------
-            session.add(CharacterStats(
-                character_id=pixie_char.id,
-                era_id=era_row.id,
-                score=0,
-                all_time_score=0,
-                level=0,
-                votes_spent_this_era=0,
-            ))
-            await session.flush()
+        pixie_char = await bootstrap_admin(session, era, pixie_acc)
 
         # ------------------------------------------------------------------
-        # Phase 3: Tasks (from era config)
+        # Phase 3: Tasks (from era config) — idempotent per-task sync
         # ------------------------------------------------------------------
-        if task_count == 0:
-            print(f"  >Tasks ({len(era.tasks)})")
-            for task_def in era.tasks:
-                session.add(Task(
-                    title=task_def.title,
-                    description=task_def.description,
-                    point_value=task_def.point_value,
-                    level_required=task_def.level_required,
-                    status=TaskStatus.active,
-                    created_by=pixie_char.id,
-                    primary_faction_slug=task_def.faction_slug,
-                    is_task_vision_eligible=task_def.is_task_vision_eligible,
-                ))
+        new_tasks = await sync_era_tasks(session, era, pixie_char.id)
+        if new_tasks > 0:
+            print(f"  >Tasks ({new_tasks} new)")
         else:
             print(f"  >Tasks already exist ({task_count}) — skipping")
 
         # ------------------------------------------------------------------
-        # Phase 4: Meta Tasks (placeholder)
-        # A metatask is a Task row with task_type=metatask. See SESSION M
-        # migration (0006) for the unification. Seed a single placeholder
-        # metatask so the UI has something to render.
+        # Phase 4: Meta Tasks (placeholder) — idempotent
         # ------------------------------------------------------------------
-        from sqlalchemy import func as sqlfunc
-        metatask_count = (
-            await session.execute(
-                select(sqlfunc.count())
-                .select_from(Task)
-                .where(Task.task_type == TaskType.metatask)
-            )
-        ).scalar()
-        if metatask_count == 0:
+        if await ensure_placeholder_metatask(session, pixie_char.id):
             print("  >Metatasks (1 placeholder)")
-            session.add(Task(
-                title="Upside Down",
-                description="Do this task upside down",
-                point_value=100,
-                level_required=0,
-                status=TaskStatus.active,
-                task_type=TaskType.metatask,
-                created_by=pixie_char.id,
-                primary_faction_slug="ua",
-                metatask_faction_slug="ua",
-            ))
         else:
-            print(f"  >Metatasks already exist ({metatask_count}) — skipping")
+            print("  >Metatasks already exist — skipping")
 
         await session.commit()
 

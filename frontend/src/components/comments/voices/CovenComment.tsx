@@ -43,7 +43,7 @@ export default function CovenComment(props: CommentProps) {
         <div style={{ display: 'flex', gap: 'var(--space-md)', alignItems: 'flex-start' }}>
           <FactionAvatar character={character} size="sm" />
           <div style={{ flex: 1 }}>
-            <ComposerControls value={value} onChange={onChange} onSubmit={onSubmit} submitting={submitting} accent="var(--faction-coven-card-accent)" bg="var(--faction-coven-notepad-bg)" text="var(--faction-coven-card-text)" />
+            <ComposerControls value={value} onChange={onChange} onSubmit={onSubmit} submitting={submitting} accent="var(--faction-coven-card-accent)" onAccent="var(--faction-coven-on-accent)" bg="var(--faction-coven-notepad-bg)" text="var(--faction-coven-card-text)" />
           </div>
         </div>
       </Window>
@@ -59,7 +59,7 @@ export default function CovenComment(props: CommentProps) {
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ fontFamily: 'var(--faction-coven-card-font)', fontSize: 'var(--text-content)', lineHeight: 1.25, color: 'var(--faction-coven-card-text)' }}>
             {owner.editing ? (
-              <CommentEditor owner={owner} accent="var(--faction-coven-card-accent)" bg="var(--faction-coven-notepad-bg)" text="var(--faction-coven-card-text)" />
+              <CommentEditor owner={owner} accent="var(--faction-coven-card-accent)" onAccent="var(--faction-coven-on-accent)" bg="var(--faction-coven-notepad-bg)" text="var(--faction-coven-card-text)" />
             ) : (
               <MentionText body={comment.body_text} mentions={comment.mentions} accent="var(--faction-coven-card-accent)" />
             )}

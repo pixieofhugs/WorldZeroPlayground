@@ -226,11 +226,14 @@ export function OwnerControls({ owner }: { owner: OwnerEdit }) {
 export function CommentEditor({
   owner,
   accent,
+  onAccent,
   bg,
   text,
 }: {
   owner: OwnerEdit
   accent: string
+  /** AA ink for the Save button, painted in `accent` (#924). See ComposerControls. */
+  onAccent: string
   bg?: string
   text?: string
 }) {
@@ -243,6 +246,7 @@ export function CommentEditor({
         onSubmit={owner.save}
         submitting={owner.saving}
         accent={accent}
+        onAccent={onAccent}
         bg={bg}
         text={text}
         maxLength={MAX_COMMENT_BODY}

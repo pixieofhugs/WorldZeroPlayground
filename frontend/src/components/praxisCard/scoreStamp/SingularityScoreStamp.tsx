@@ -55,8 +55,6 @@ export default function SingularityScoreStamp({ praxis, showCrown }: ScoreStampP
         <TaskCrown
           size={26}
           ringInset={3}
-          innerBg="var(--faction-singularity-stamp-bg)"
-          glyphColor="var(--faction-singularity-bracket)"
           rotate="0deg"
           style={{ position: "absolute", top: -13, right: -12, zIndex: 3 }}
         />

@@ -1,4 +1,5 @@
 import api from './axios'
+import { notifyRequestsChanged } from '../utils/requestsBus'
 
 // ---------------------------------------------------------------------------
 // Types — match backend schemas/duel.py exactly (ADR-0011)
@@ -74,6 +75,9 @@ export async function getDuelDetail(duelId: number): Promise<DuelDetailOut> {
 
 export async function respondToChallenge(duelId: number, data: DuelRespondIn): Promise<DuelOut> {
   const { data: result } = await api.post<DuelOut>(`/duels/${duelId}/respond`, data)
+  // The challenge left your requests bucket (accept → now awaiting your
+  // submission; decline → gone). Refresh every feed surface (#updates-badge).
+  notifyRequestsChanged()
   return result
 }
 

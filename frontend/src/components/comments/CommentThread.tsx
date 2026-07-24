@@ -41,6 +41,7 @@ export function DefaultComment(props: CommentProps) {
             onSubmit={onSubmit}
             submitting={submitting}
             accent={factionCssVar(character.faction_slug, 'card-accent')}
+            onAccent={factionCssVar(character.faction_slug, 'on-accent')}
           />
         </div>
       </div>
@@ -49,6 +50,7 @@ export function DefaultComment(props: CommentProps) {
   const { comment, onEdited, onWithdrawn } = props
   const slug = comment.author.faction_slug
   const accent = factionCssVar(slug, 'card-accent')
+  const onAccent = factionCssVar(slug, 'on-accent')
   const owner = useOwnerEdit({ comment, onEdited, onWithdrawn })
   return (
     <div style={{ display: 'flex', gap: 'var(--space-md)' }}>
@@ -70,7 +72,7 @@ export function DefaultComment(props: CommentProps) {
         </div>
         <div style={{ marginTop: 'var(--space-xs)', color: 'var(--color-text-primary)', lineHeight: 1.5 }}>
           {owner.editing ? (
-            <CommentEditor owner={owner} accent={accent} />
+            <CommentEditor owner={owner} accent={accent} onAccent={onAccent} />
           ) : (
             <MentionText body={comment.body_text} mentions={comment.mentions} accent={accent} />
           )}

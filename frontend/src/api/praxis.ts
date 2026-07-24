@@ -1,5 +1,6 @@
 import api from './axios'
 import { clearVoteOverrides } from '../components/vote/voteOverrides'
+import { notifyRequestsChanged } from '../utils/requestsBus'
 import type { TaskOut } from './tasks'
 import type { FlagReason } from '../utils/flagReasons'
 
@@ -230,6 +231,7 @@ export async function updatePraxis(id: number, data: PraxisUpdate): Promise<Prax
 
 export async function deletePraxis(id: number): Promise<void> {
   await api.delete(`/praxes/${id}`)
+  notifyRequestsChanged()
 }
 
 /** Flip a praxis between solo and collab in place, preserving id/content/media (#321). */
@@ -247,11 +249,15 @@ export async function changePraxisType(id: number, type: PraxisType): Promise<Pr
 // the caller has submitted, it clears only the caller's part.
 export async function unsubmitPraxis(id: number): Promise<PraxisOut> {
   const { data } = await api.post<PraxisOut>(`/praxes/${id}/unsubmit`)
+  // A collab/duel is awaiting your submission again — refresh the badge.
+  notifyRequestsChanged()
   return data
 }
 
 export async function submitPraxis(id: number): Promise<PraxisOut> {
   const { data } = await api.post<PraxisOut>(`/praxes/${id}/submit`)
+  // Your part landed — this praxis leaves the "awaiting your submission" bucket.
+  notifyRequestsChanged()
   return data
 }
 
@@ -261,6 +267,7 @@ export async function submitPraxis(id: number): Promise<PraxisOut> {
  */
 export async function leavePraxis(id: number): Promise<PraxisOut> {
   const { data } = await api.post<PraxisOut>(`/praxes/${id}/leave`)
+  notifyRequestsChanged()
   return data
 }
 
@@ -299,6 +306,9 @@ export async function respondToInvite(
     `/praxes/${praxisId}/invite/${inviteId}/respond`,
     { accept },
   )
+  // The invite left your requests bucket (accept → now awaiting your
+  // submission; decline → gone). Refresh every feed surface (#updates-badge).
+  notifyRequestsChanged()
   return data
 }
 

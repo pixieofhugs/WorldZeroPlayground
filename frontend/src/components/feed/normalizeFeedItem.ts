@@ -29,6 +29,7 @@ export const FACTION_ROW_TYPES = new Set([
   'friend_defection',
   'global_task',
   'collaborator_submitted',
+  'awaiting_submission',
 ])
 
 export interface FeedRow {
@@ -114,6 +115,29 @@ export function normalizeFeedItem(item: ActivityFeedItem): FeedRow | null {
             ? i18n.t('feed:row.points', { points: p.task_point_value })
             : null,
         level: null,
+        time,
+      }
+    case 'awaiting_submission':
+      // Your turn: a collab/duel praxis waiting on your submission (#updates-
+      // badge). No actor — the action leads and the task title links straight
+      // to the editor. Badged by praxis type so collab/duel read distinctly.
+      return {
+        slug,
+        actor: null,
+        actorHref: null,
+        action: i18n.t('feed:row.action.awaitingSubmission'),
+        badge:
+          p.praxis_type === 'duel'
+            ? { type: 'duel', label: i18n.t('feed:badge.duel') }
+            : { type: 'collab', label: i18n.t('feed:badge.collab') },
+        headline: p.task_title ?? null,
+        headlineHref: p.praxis_id != null ? `/praxes/${p.praxis_id}/edit` : null,
+        headlineQuoted: false,
+        points:
+          p.task_point_value != null
+            ? i18n.t('feed:row.points', { points: p.task_point_value })
+            : null,
+        level: p.task_level_required ?? null,
         time,
       }
     case 'vote_on_mine':

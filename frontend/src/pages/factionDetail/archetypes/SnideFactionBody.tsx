@@ -272,8 +272,6 @@ export default function SnideFactionBody({ state }: { state: FactionDetailState 
                   {praxis.is_top_for_task && (
                     <TaskCrown
                       size={48}
-                      innerBg={PAPER}
-                      glyphColor={INK}
                       rotate="-8deg"
                       shadow="drop-shadow(2px 2px 0 rgba(0,0,0,.35))"
                       style={{ position: "absolute", top: -12, right: -8, zIndex: 5 }}

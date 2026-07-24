@@ -80,6 +80,7 @@ FEED_ITEM_TYPE_FRIEND_DEFECTION = "friend_defection"
 FEED_ITEM_TYPE_FOE_COMPLETION = "foe_completion"
 FEED_ITEM_TYPE_COMMENT_MENTION = "comment_mention"
 FEED_ITEM_TYPE_COLLABORATOR_SUBMITTED = "collaborator_submitted"
+FEED_ITEM_TYPE_AWAITING_SUBMISSION = "awaiting_submission"
 
 # --- Filter tabs ------------------------------------------------------------
 FILTER_ALL = "all"
@@ -687,6 +688,63 @@ def _collaborator_submitted_item(row: Any) -> ActivityFeedItemDC:
     )
 
 
+def _awaiting_submission_query(ctx: FeedContext) -> Select:
+    """Collab / duel praxes waiting on the VIEWER's own submission.
+
+    A ``PraxisMember`` for the viewer with ``has_submitted=False`` on a still-open
+    (in_progress / mid-consensus pending) collab or duel praxis — i.e. it's their
+    turn to post. The mirror of ``_collaborator_submitted_query`` (which surfaces
+    *others'* submissions). Solo drafts are excluded: a solo praxis-in-progress is
+    just your own draft, not an awaited action, so it would only be badge noise.
+    Ordered by ``joined_at`` — when the praxis landed in the viewer's court
+    (collab accept / duel accept both create the member row then).
+    """
+    query = (
+        select(
+            PraxisMember.id,
+            PraxisMember.joined_at,
+            PraxisMember.praxis_id,
+            Praxis.type.label("praxis_type"),
+            Task.title.label("task_title"),
+            Task.point_value.label("task_point_value"),
+            Task.primary_faction_slug.label("task_faction_slug"),
+            Task.level_required.label("task_level_required"),
+        )
+        .join(Praxis, PraxisMember.praxis_id == Praxis.id)
+        .join(Task, Praxis.task_id == Task.id)
+        .where(
+            PraxisMember.character_id == ctx.character_id,
+            PraxisMember.has_submitted.is_(False),
+            Praxis.type.in_([PraxisType.collab, PraxisType.duel]),
+            Praxis.status.in_([PraxisStatus.in_progress, PraxisStatus.pending]),
+        )
+    )
+    if ctx.before is not None:
+        query = query.where(PraxisMember.joined_at < ctx.before)
+    return query.order_by(PraxisMember.joined_at.desc()).limit(SUB_QUERY_LIMIT)
+
+
+def _awaiting_submission_item(row: Any) -> ActivityFeedItemDC:
+    # No external actor — it's the viewer's own turn. actor_faction_slug=None so
+    # the card frames to the task's faction (schema context_faction_slug fallback).
+    return ActivityFeedItemDC(
+        type=FEED_ITEM_TYPE_AWAITING_SUBMISSION,
+        timestamp=row.joined_at,
+        actor_display_name=None,
+        actor_faction_slug=None,
+        actor_avatar_url=None,
+        payload={
+            "praxis_member_id": row.id,
+            "praxis_id": row.praxis_id,
+            "praxis_type": row.praxis_type.value,
+            "task_title": row.task_title,
+            "task_point_value": row.task_point_value,
+            "task_faction_slug": row.task_faction_slug,
+            "task_level_required": row.task_level_required,
+        },
+    )
+
+
 # ---------------------------------------------------------------------------
 # The registry — one entry per feed type. Adding a type is one line here.
 # ---------------------------------------------------------------------------
@@ -754,6 +812,16 @@ FEED_SOURCES: tuple[FeedSource, ...] = (
         needs=frozenset(),
         query=_collaborator_submitted_query,
         to_item=_collaborator_submitted_item,
+    ),
+    FeedSource(
+        # "Waiting on you to submit" — collab/duel praxes in the viewer's court.
+        # In FILTER_REQUESTS so it drives the sidebar Pending Requests panel and
+        # the mobile bell badge alongside incoming invites/challenges.
+        item_type=FEED_ITEM_TYPE_AWAITING_SUBMISSION,
+        filters=frozenset({FILTER_ALL, FILTER_YOUR_STUFF, FILTER_REQUESTS}),
+        needs=frozenset(),
+        query=_awaiting_submission_query,
+        to_item=_awaiting_submission_item,
     ),
     FeedSource(
         item_type=FEED_ITEM_TYPE_INVITATION_LETTER,

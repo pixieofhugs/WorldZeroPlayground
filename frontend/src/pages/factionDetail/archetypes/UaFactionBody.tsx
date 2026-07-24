@@ -275,8 +275,6 @@ export default function UaFactionBody({ state }: { state: FactionDetailState }) 
                   {praxis.is_top_for_task && (
                     <TaskCrown
                       size={42}
-                      innerBg="var(--faction-ua-panel)"
-                      glyphColor="var(--faction-ua-card-accent)"
                       rotate="-8deg"
                       shadow={`drop-shadow(1.5px 2px 0 ${uaShade(28)})`}
                       style={{

@@ -36,7 +36,7 @@ export default function EphemeristsComment(props: CommentProps) {
           <div style={{ fontSize: 'var(--text-base)', letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--faction-ephemerists-card-accent)', marginBottom: 'var(--space-sm)' }}>
             {t('comments.ephemerists.prompt')}
           </div>
-          <ComposerControls value={value} onChange={onChange} onSubmit={onSubmit} submitting={submitting} accent="var(--faction-ephemerists-card-accent)" bg="rgba(255,255,255,0.35)" text="var(--faction-ephemerists-card-text)" />
+          <ComposerControls value={value} onChange={onChange} onSubmit={onSubmit} submitting={submitting} accent="var(--faction-ephemerists-card-accent)" onAccent="var(--faction-ephemerists-on-accent)" bg="rgba(255,255,255,0.35)" text="var(--faction-ephemerists-card-text)" />
         </div>
       </div>
     )
@@ -61,7 +61,7 @@ export default function EphemeristsComment(props: CommentProps) {
         </span>
       </div>
       {owner.editing ? (
-        <CommentEditor owner={owner} accent="var(--faction-ephemerists-card-accent)" bg="rgba(255,255,255,0.35)" text="var(--faction-ephemerists-card-text)" />
+        <CommentEditor owner={owner} accent="var(--faction-ephemerists-card-accent)" onAccent="var(--faction-ephemerists-on-accent)" bg="rgba(255,255,255,0.35)" text="var(--faction-ephemerists-card-text)" />
       ) : (
         <div style={{ fontSize: 'var(--text-content)', lineHeight: 1.55 }}>
           <span style={{

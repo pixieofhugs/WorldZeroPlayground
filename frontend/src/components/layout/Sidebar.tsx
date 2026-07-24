@@ -215,19 +215,29 @@ export default function Sidebar() {
         <section style={panelStyle}>
           <SectionHeader label={t('sidebar.pendingRequests.heading', { count: pendingRequests.length })} />
           <div className="flex flex-col gap-1.5">
-            {pendingRequests.map((item, index) => (
-              <PendingRequestRow
-                key={`${item.type}-${index}`}
-                item={item}
-                isFirst={index === 0}
-                onResolved={() => {
-                  // An accepted collab/duel becomes an in-progress praxis —
-                  // refresh both panels so the request moves bars (#346).
-                  refetchPendingRequests()
-                  refetchActiveTasks()
-                }}
-              />
-            ))}
+            {pendingRequests.map((item, index) =>
+              // "Waiting on you to submit" — a collab/duel already in your court.
+              // No accept/decline; a single link to the editor (#updates-badge).
+              item.type === 'awaiting_submission' ? (
+                <AwaitingSubmissionRow
+                  key={`${item.type}-${index}`}
+                  item={item}
+                  isFirst={index === 0}
+                />
+              ) : (
+                <PendingRequestRow
+                  key={`${item.type}-${index}`}
+                  item={item}
+                  isFirst={index === 0}
+                  onResolved={() => {
+                    // An accepted collab/duel becomes an in-progress praxis —
+                    // refresh both panels so the request moves bars (#346).
+                    refetchPendingRequests()
+                    refetchActiveTasks()
+                  }}
+                />
+              ),
+            )}
           </div>
         </section>
       )}
@@ -412,6 +422,67 @@ const REQUEST_BUTTON_BASE: CSSProperties = {
   textTransform: 'uppercase',
   letterSpacing: '0.08em',
   padding: 'var(--space-xs) var(--space-sm)',
+}
+
+/**
+ * A "waiting on you to submit" row: a collab/duel praxis already in the
+ * viewer's court (#updates-badge). Unlike PendingRequestRow there's no
+ * accept/decline — just a link into the editor to post your part.
+ */
+function AwaitingSubmissionRow({
+  item,
+  isFirst,
+}: {
+  item: ActivityFeedItem
+  isFirst: boolean
+}) {
+  const { t } = useTranslation('common')
+  const praxisId = item.payload.praxis_id
+  const isDuel = item.payload.praxis_type === 'duel'
+  return (
+    <div
+      className="py-1.5"
+      style={{ borderTop: !isFirst ? '1px dashed var(--color-border)' : undefined }}
+    >
+      <div className="flex items-center gap-2">
+        {/* task-faction dot in place of an actor avatar */}
+        <span
+          className="shrink-0 rounded-full"
+          style={{
+            width: 24,
+            height: 24,
+            background: `linear-gradient(135deg, ${factionCssVar(item.payload.task_faction_slug, 'light')}, ${factionCssVar(item.payload.task_faction_slug)})`,
+          }}
+        />
+        <div className="flex-1 min-w-0">
+          <Link
+            to={`/praxes/${praxisId}/edit`}
+            className="font-body block truncate"
+            style={{ fontSize: 'var(--text-xl)', fontWeight: 700, color: 'var(--color-text-primary)', textDecoration: 'none' }}
+          >
+            {item.payload.task_title}
+          </Link>
+          <span className="eyebrow block" style={{ color: 'var(--color-text-tertiary)' }}>
+            {isDuel ? t('requests.awaitingSubmissionDuel') : t('requests.awaitingSubmissionCollab')}
+          </span>
+        </div>
+      </div>
+      <div className="flex items-center gap-1.5" style={{ marginTop: 'var(--space-xs)', marginLeft: 'var(--space-2xl)' }}>
+        <Link
+          to={`/praxes/${praxisId}/edit`}
+          style={{
+            ...REQUEST_BUTTON_BASE,
+            background: isDuel ? 'var(--badge-duel)' : 'var(--badge-collab)',
+            color: 'var(--color-text-on-accent)',
+            border: 'none',
+            textDecoration: 'none',
+          }}
+        >
+          {t('actions.submit')}
+        </Link>
+      </div>
+    </div>
+  )
 }
 
 /**

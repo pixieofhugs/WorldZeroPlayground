@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { getActivityFeed, type ActivityFeedItem, type FeedCounts } from '../../api/activityFeed'
 import { extractError } from '../../utils/errors'
+import { onRequestsChanged } from '../../utils/requestsBus'
 
 export type FeedFilter = 'All' | 'Friends' | 'Foes' | 'Your Stuff' | 'Global' | 'Requests'
 
@@ -64,6 +65,9 @@ export function useUpdates(): UpdatesState {
   const [nextCursor, setNextCursor] = useState<string | null>(null)
   const [fetchError, setFetchError] = useState<string | null>(null)
   const [loadMoreError, setLoadMoreError] = useState<string | null>(null)
+  // Bumped when a request is accepted/declined/submitted anywhere; re-runs the
+  // load effect so the tab counts (esp. Requests) resolve without a reload.
+  const [refreshKey, setRefreshKey] = useState(0)
 
   const fetchFeed = useCallback(async (feedFilter: FeedFilter, cursor?: string) => {
     return getActivityFeed({
@@ -91,7 +95,10 @@ export function useUpdates(): UpdatesState {
       setLoading(false)
     })
     return () => { cancelled = true }
-  }, [filter, fetchFeed])
+  }, [filter, fetchFeed, refreshKey])
+
+  // Refresh the current filter (items + counts) after any accept/decline/submit.
+  useEffect(() => onRequestsChanged(() => setRefreshKey((key) => key + 1)), [])
 
   const loadMore = async () => {
     if (!nextCursor || loadingMore) return
