@@ -53,7 +53,7 @@ export default function DefaultTaskDetail({ state }: { state: TaskDetailState })
         className="font-body mb-3"
         style={{ fontSize: "var(--text-base)", letterSpacing: "0.08em", color: "var(--color-text-tertiary)" }}
       >
-        <Link to="/tasks" style={{ color: "var(--faction-ephemerists)", textDecoration: "none" }}>
+        <Link to="/tasks" style={{ color: "var(--color-text-secondary)", textDecoration: "none" }}>
           {t("default.breadcrumb")}
         </Link>
         {" › "}
@@ -144,7 +144,7 @@ export default function DefaultTaskDetail({ state }: { state: TaskDetailState })
               <div style={{ textAlign: "center", marginTop: "var(--space-lg)" }}>
                 <Link
                   to={`/praxes?task_id=${task.id}`}
-                  style={{ fontFamily: "'Courier Prime', monospace", fontSize: "var(--text-md)", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", color: "var(--faction-ephemerists)", textDecoration: "none" }}
+                  style={{ fontFamily: "'Courier Prime', monospace", fontSize: "var(--text-md)", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", color: "var(--faction-default-card-accent)", textDecoration: "none" }}
                 >
                   {t("default.viewAll", { count: submissions.length })}
                 </Link>

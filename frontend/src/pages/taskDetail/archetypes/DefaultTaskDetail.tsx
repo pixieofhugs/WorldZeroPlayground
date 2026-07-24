@@ -69,7 +69,7 @@ export default function DefaultTaskDetail({
       >
         <Link
           to="/tasks"
-          style={{ color: "var(--faction-ephemerists)", textDecoration: "none" }}
+          style={{ color: "var(--color-text-secondary)", textDecoration: "none" }}
         >
           {t("default.breadcrumb")}
         </Link>
@@ -493,7 +493,7 @@ export default function DefaultTaskDetail({
                         fontWeight: 700,
                         textTransform: "uppercase",
                         letterSpacing: "0.1em",
-                        color: "var(--faction-ephemerists)",
+                        color: "var(--faction-default-card-accent)",
                         textDecoration: "none",
                       }}
                     >
