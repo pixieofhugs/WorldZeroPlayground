@@ -255,7 +255,7 @@ export function SingularitySelectCard({ state = "locked", members, onVisit }: Om
       </div>
       <div style={{ position: "relative", flex: 1, padding: "var(--space-lg) var(--space-lg) 0" }}>
         <div style={{ fontSize: "var(--text-md)", letterSpacing: "0.14em", color: "#60a5fa", textTransform: "uppercase" }}>
-          {i18n.t("feed:identity.singularity.protocol")}<span style={{ display: "inline-block", width: 6, height: 11, background: green, marginLeft: "var(--space-xs)", verticalAlign: "middle", animation: "wz-blink 1s step-end infinite" }} />
+          {i18n.t("feed:identity.singularity.protocol")}<span aria-hidden className="sg-cursor" style={{ display: "inline-block", width: 6, height: 11, background: green, marginLeft: "var(--space-xs)", verticalAlign: "middle" }} />
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: "var(--space-md)", marginTop: "var(--space-md)" }}>
           <SingularitySigil size={30} color={green} />
@@ -277,7 +277,6 @@ export function SingularitySelectCard({ state = "locked", members, onVisit }: Om
           onMouseLeave={(e) => { e.currentTarget.style.background = "rgba(37,99,235,0.14)"; e.currentTarget.style.color = green; }}
         ><span style={{ opacity: 0.7 }}>$</span> {i18n.t("feed:factionSelect.singularity.cta")}</button>
       </div>
-      <style>{`@keyframes wz-blink { 50% { opacity: 0; } }`}</style>
     </div>
   );
 }

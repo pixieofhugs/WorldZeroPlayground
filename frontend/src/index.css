@@ -1865,19 +1865,6 @@
     background-size: 3px 3px, 4px 4px;
     background-position: 0 0, 2px 1px;
   }
-  .snide-torn-top,
-  .snide-torn-bottom {
-    position: absolute;
-    left: 0;
-    right: 0;
-    height: 7px;
-  }
-  .snide-torn-top {
-    top: -1px;
-  }
-  .snide-torn-bottom {
-    bottom: -1px;
-  }
   .snide-tape {
     position: absolute;
     height: 26px;
@@ -1962,6 +1949,10 @@
 
 /* Homepage activity ticker — horizontal marquee + blinking "LIVE" dot. */
 @keyframes ticker-roll { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+/* The one blink keyframe (#911): the ticker's LIVE dot pulses it (ease-in-out)
+   and `.sg-cursor` below hard-toggles it (step-end). It used to have four names
+   — `sg-term-blink`, `sg-blink`, bare `blink` — three of them injected inline
+   by components, bypassing the reduced-motion guard. One keyframe, one guard. */
 @keyframes wz-blink { 50% { opacity: 0; } }
 
 /* Slow motion — rings turn, points breathe. Stilled for reduced-motion. */
@@ -2004,11 +1995,10 @@
    an indicator, so it must not vanish). The sweep element is a scrim, not
    content — the card gives it `position:absolute; pointer-events:none`. */
 @keyframes sg-scan-sweep { 0% { top: -24%; } 100% { top: 120%; } }
-@keyframes sg-term-blink { 0%, 49% { opacity: 1; } 50%, 100% { opacity: 0; } }
 .sg-scan { top: -24%; }
 @media (prefers-reduced-motion: no-preference) {
   .sg-scan { animation: sg-scan-sweep 5s linear infinite; }
-  .sg-cursor { animation: sg-term-blink 1s steps(1) infinite; }
+  .sg-cursor { animation: wz-blink 1s step-end infinite; }
 }
 
 /* S.N.I.D.E. duel rail — the settled-state dot flickers like a failing xerox

@@ -102,7 +102,6 @@ const caretStyle: CSSProperties = {
   background: TERMINAL_TEXT,
   marginLeft: "var(--space-xs)",
   verticalAlign: "middle",
-  animation: "blink 1s step-end infinite",
 };
 
 const linkStyle: CSSProperties = { textDecoration: "none", color: "inherit" };
@@ -194,7 +193,7 @@ export default function SingularityTaskCard({
         {/* Header — eyebrow, stays label-tier (§4 content-text floor). */}
         <div style={eyebrowStyle}>
           {i18n.t("feed:identity.singularity.protocol")}
-          <span style={caretStyle} />
+          <span aria-hidden className="sg-cursor" style={caretStyle} />
         </div>
 
         <Link
@@ -252,7 +251,6 @@ export default function SingularityTaskCard({
 
       <SprocketHoles />
 
-      <style>{`@keyframes blink { 50% { opacity: 0; } }`}</style>
     </div>
   );
 }

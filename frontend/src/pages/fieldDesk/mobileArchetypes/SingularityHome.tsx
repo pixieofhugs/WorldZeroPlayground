@@ -42,6 +42,7 @@ function Cursor() {
   return (
     <span
       aria-hidden
+      className="sg-cursor"
       style={{
         display: 'inline-block',
         width: 6,
@@ -49,7 +50,6 @@ function Cursor() {
         marginLeft: 'var(--space-xs)',
         verticalAlign: 'middle',
         background: PHOSPHOR,
-        animation: 'blink 1s step-end infinite',
       }}
     />
   )
@@ -255,7 +255,6 @@ export default function SingularityHome({ state }: { state: FieldDeskHomeState }
         )}
       </div>
 
-      <style>{'@keyframes blink { 50% { opacity: 0; } }'}</style>
     </div>
   )
 }

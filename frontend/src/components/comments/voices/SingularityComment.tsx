@@ -50,7 +50,7 @@ export default function SingularityComment(props: CommentProps) {
           <div style={{ flex: 1 }}>
             <div style={{ fontSize: 'var(--text-sm)', color: 'var(--faction-singularity-card-muted)', textTransform: 'uppercase', letterSpacing: '0.14em', marginBottom: 'var(--space-sm)' }}>
               {t('comments.singularity.protocol')}
-              <span style={{ display: 'inline-block', width: 5, height: 9, background: 'var(--faction-singularity-card-text)', marginLeft: 'var(--space-xs)', verticalAlign: 'middle', animation: 'blink 1s step-end infinite' }} />
+              <span aria-hidden className="sg-cursor" style={{ display: 'inline-block', width: 5, height: 9, background: 'var(--faction-singularity-card-text)', marginLeft: 'var(--space-xs)', verticalAlign: 'middle' }} />
             </div>
             <ComposerControls value={value} onChange={onChange} onSubmit={onSubmit} submitting={submitting} accent="var(--faction-singularity-card-text)" onAccent="var(--faction-singularity-on-accent)" bg="#0a1f12" text="var(--faction-singularity-card-text)" />
           </div>

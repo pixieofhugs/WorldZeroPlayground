@@ -714,6 +714,8 @@ export function SingularityCard({
         >
           {i18n.t("feed:identity.singularity.protocol")}
           <span
+            aria-hidden
+            className="sg-cursor"
             style={{
               display: "inline-block",
               width: 5,
@@ -721,7 +723,6 @@ export function SingularityCard({
               background: "var(--faction-singularity-card-text)",
               marginLeft: "var(--space-xs)",
               verticalAlign: "middle",
-              animation: "blink 1s step-end infinite",
             }}
           />
         </div>
@@ -753,7 +754,6 @@ export function SingularityCard({
         )}
       </div>
       <SingularityHoles />
-      <style>{`@keyframes blink { 50% { opacity: 0; } }`}</style>
     </div>
   );
 }
