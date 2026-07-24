@@ -18,6 +18,7 @@ import { EphemeristsSigil, EphEyebrow, Foxing, LapisLastWord, toRoman } from '..
 import { factionCssVar } from '../../../utils/factions'
 import { formatTimestamp } from '../../../utils/dates'
 import { PraxisAdminBar, PraxisStatusBanners, PraxisOwnerActions, PraxisFlagBlock, PraxisVoterBreakdown, PraxisScoreBreakdown, MemberByline } from '../shared'
+import MetaTaskSeal from '../../../components/metaTaskSeal/MetaTaskSeal'
 import type { PraxisDetailState } from '../usePraxisDetail'
 
 export default function EphemeristsPraxisDetail({ state }: { state: PraxisDetailState }) {
@@ -213,6 +214,15 @@ export default function EphemeristsPraxisDetail({ state }: { state: PraxisDetail
             </span>
           </div>
         </div>
+
+        {/* ── Metatask seals (#932) — read-only stack, below the byline/points
+            block, above the evidence. Dispatched on each metatask's issuing
+            faction; an empty stack renders nothing. ── */}
+        {praxis.applied_metatasks.length > 0 && (
+          <div style={{ marginBottom: 'var(--space-xl)' }}>
+            <MetaTaskSeal metatasks={praxis.applied_metatasks} />
+          </div>
+        )}
 
         {/* ── The account ── */}
         {praxis.body_text && (

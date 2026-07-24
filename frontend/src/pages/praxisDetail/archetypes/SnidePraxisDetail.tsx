@@ -20,6 +20,7 @@ import VoteUI from '../../../components/vote/VoteUI'
 import { factionCssVar } from '../../../utils/factions'
 import { formatTimestamp } from '../../../utils/dates'
 import { PraxisAdminBar, PraxisStatusBanners, PraxisOwnerActions, PraxisFlagBlock, PraxisVoterBreakdown, PraxisScoreBreakdown, MemberByline } from '../shared'
+import MetaTaskSeal from '../../../components/metaTaskSeal/MetaTaskSeal'
 import type { PraxisDetailState } from '../usePraxisDetail'
 
 // Always-dark dossier tokens (scoped to this archetype's container).
@@ -283,6 +284,15 @@ export default function SnidePraxisDetail({ state }: { state: PraxisDetailState 
             </span>
           </div>
         </div>
+
+        {/* ── Metatask seals (#932) — read-only stack, below the byline/points
+            block, above the evidence. Each seal keeps its issuing faction's
+            voice, not SNIDE's; an empty stack renders nothing. ── */}
+        {praxis.applied_metatasks.length > 0 && (
+          <div style={{ marginBottom: 'var(--space-2xl)' }}>
+            <MetaTaskSeal metatasks={praxis.applied_metatasks} />
+          </div>
+        )}
 
         {/* ── The confession (taped notebook) ── */}
         {praxis.body_text && (

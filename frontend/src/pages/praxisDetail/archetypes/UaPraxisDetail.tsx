@@ -31,6 +31,7 @@ import VoteUI from '../../../components/vote/VoteUI'
 import { factionCssVar } from '../../../utils/factions'
 import { formatTimestamp } from '../../../utils/dates'
 import { PraxisAdminBar, PraxisStatusBanners, PraxisOwnerActions, PraxisFlagBlock, MemberByline, praxisBreakdownParts } from '../shared'
+import MetaTaskSeal from '../../../components/metaTaskSeal/MetaTaskSeal'
 import type { PraxisDetailState } from '../usePraxisDetail'
 import type { PraxisOut } from '../../../api/praxis'
 import type { VoteSummary, VoterDetail } from '../../../api/votes'
@@ -373,6 +374,15 @@ export default function UaPraxisDetail({ state }: { state: PraxisDetailState }) 
             </div>
           </div>
         </div>
+
+        {/* ── Metatask seals (#932) — read-only stack, below the byline/points
+            block, above the evidence plate. Each seal keeps its issuing
+            faction's voice, not UA's; an empty stack renders nothing. ── */}
+        {praxis.applied_metatasks.length > 0 && (
+          <div style={{ marginBottom: 'var(--space-xl)' }}>
+            <MetaTaskSeal metatasks={praxis.applied_metatasks} />
+          </div>
+        )}
 
         {/* ── The account (body) ── */}
         {praxis.body_text && (
