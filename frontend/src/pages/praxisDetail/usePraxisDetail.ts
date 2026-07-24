@@ -18,6 +18,7 @@ import {
   flagPraxis,
   applyMetatask,
   removeMetatask,
+  kickMember,
   type PraxisOut,
 } from "../../api/praxis";
 import { getVotes, getVoters, type VoteSummary, type VoterDetail } from "../../api/votes";
@@ -83,6 +84,8 @@ export interface PraxisDetailState {
   handleWithdraw: () => Promise<void>;
   handleResubmit: () => Promise<void>;
   handleFlag: () => Promise<void>;
+  /** Remove another member from the collab (#959) — target is a character id. */
+  handleKickMember: (memberId: number) => Promise<void>;
 
   // Metatasks
   metatasks: TaskOut[];
@@ -263,6 +266,22 @@ export function usePraxisDetail(idParam: string | undefined): PraxisDetailState 
     }
   };
 
+  // Kick another member from the roster (#959). Any member may kick any other
+  // (mirrors the backend guard); the confirm step lives in CollabRoster. A kick
+  // resets the group to editing (ADR-0013), so the response carries the fresh
+  // roster/cast state. On failure we re-sync from the server so the roster can't
+  // drift out of step with the backend.
+  const handleKickMember = async (memberId: number) => {
+    if (!praxis) return;
+    try {
+      const updated = await kickMember(praxis.id, memberId);
+      setPraxis(updated);
+    } catch {
+      const resynced = await getPraxis(praxis.id).catch(() => null);
+      if (resynced) setPraxis(resynced);
+    }
+  };
+
   const handleFlag = async () => {
     if (!praxis) return;
     if (flagReason === null) {
@@ -361,5 +380,6 @@ export function usePraxisDetail(idParam: string | undefined): PraxisDetailState 
     handleWithdraw,
     handleResubmit,
     handleFlag,
+    handleKickMember,
   };
 }

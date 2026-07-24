@@ -103,6 +103,7 @@
       "invite": "Could not invite {{name}}.",
       "leave": "Could not leave the collab.",
       "rescindInvite": "Could not rescind the invite.",
+      "kick": "Could not remove {{name}} from the collab.",
       "challenge": "Could not challenge {{name}}.",
       "cancelChallenge": "Could not cancel the challenge.",
       "updateMetatask": "Could not update metatask.",
@@ -114,8 +115,10 @@
       "leaveDuel": "Switching mode will cancel your duel challenge. Continue?",
       "soloDropsCoauthors": "Switching to solo will remove your co-authors — your draft stays. Continue?",
       "duelDropsCoauthors": "Switching to a duel will remove your co-authors — your draft stays. Continue?",
+      "dissolveDuel": "Dissolve this duel? It ends for both of you and each side scores as an ordinary praxis — no forfeit penalty.",
       "dropTask": "Drop this task? Your draft will be lost.",
-      "leaveCollab": "Leave this collab? You'll drop out and the others carry on without you."
+      "leaveCollab": "Leave this collab? You'll drop out and the others carry on without you.",
+      "kickMember": "Remove {{name}} from this collab? It clears everyone's cast and sends the group back to editing."
     },
     "seal": {
       "pickerTitle": "Seal a metatask onto this praxis",
@@ -146,7 +149,10 @@
       "statusPending": "pending",
       "statusSubmitted": "submitted",
       "cancelChallengeAria": "cancel challenge",
-      "rescindInviteAria": "rescind invite to {{name}}"
+      "dissolveDuelLabel": "Dissolve duel",
+      "dissolveDuelAria": "dissolve the duel",
+      "rescindInviteAria": "rescind invite to {{name}}",
+      "kickMemberAria": "kick {{name}} from the collab"
     },
     "leaveAction": "Leave collab",
     "collab": {

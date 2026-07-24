@@ -19,6 +19,7 @@
  * speaks the same states in its own voice and anything it hasn't overridden
  * falls back to the shared `editPraxis.collab.*` block (#591).
  */
+import { useTranslation } from 'react-i18next'
 import type { PraxisMemberOut } from '../../api/praxis'
 import { factionCssVar } from '../../utils/factions'
 import { collabCopy } from './collabCopy'
@@ -54,17 +55,42 @@ export function CollabRoster({
   currentCharacterId,
   factionSlug,
   taskPointValue,
+  onKick,
 }: {
   members: readonly PraxisMemberOut[]
   currentCharacterId: number | null | undefined
   factionSlug: string | null | undefined
   taskPointValue?: number | null
+  /**
+   * Remove another member (#959). Receives the target's CHARACTER id. When
+   * provided, a kick × renders on every OTHER member's pill — but only if the
+   * viewer is themselves a member, mirroring the backend `kick_member` guard
+   * ("any member may kick any other, not self"). The confirm step lives here so
+   * both the composer and the read-only detail block get it for free; the
+   * callback only has to run the API call + refresh.
+   */
+  onKick?: (memberId: number) => void | Promise<void>
 }) {
+  const { t } = useTranslation('forms')
   const gate = deriveCollabGate(members, currentCharacterId)
   if (gate.memberCount < 2) return null // solo/duel render nothing
 
   const accent = factionCssVar(factionSlug, 'card-accent')
   const pct = Math.round((gate.castCount / gate.memberCount) * 100)
+
+  // Mirror the backend: only a member may kick, and never themselves.
+  const viewerIsMember = members.some((m) => m.character_id === currentCharacterId)
+  const canKick = onKick != null && viewerIsMember
+
+  const handleKick = (member: PraxisMemberOut) => {
+    if (!onKick) return
+    // A kick resets everyone's cast (ADR-0013), so confirm before firing.
+    const ok = window.confirm(
+      t('editPraxis.confirm.kickMember', { name: member.character_display_name }),
+    )
+    if (!ok) return
+    void onKick(member.character_id)
+  }
 
   const banner =
     gate.state === 'waiting'
@@ -123,6 +149,29 @@ export function CollabRoster({
               <span className="eyebrow text-[9px]" style={{ color: cast ? accent : 'var(--color-warning)' }}>
                 {cast ? `✓ ${collabCopy(factionSlug, 'pillCast')}` : collabCopy(factionSlug, 'pillWeaving')}
               </span>
+              {/* Kick × — on every OTHER member's pill (never my own), gated to
+                  members (#959). The glyph is an ornament; the button's name is
+                  the aria-label so screen readers and the e2e locator resolve it. */}
+              {canKick && !isMe && (
+                <button
+                  type="button"
+                  onClick={() => handleKick(member)}
+                  aria-label={t('editPraxis.invite.kickMemberAria', {
+                    name: member.character_display_name,
+                  })}
+                  style={{
+                    background: 'transparent',
+                    border: 'none',
+                    color: 'var(--color-text-tertiary)',
+                    cursor: 'pointer',
+                    fontSize: 'var(--text-md)',
+                    lineHeight: 1,
+                    padding: 0,
+                  }}
+                >
+                  ×
+                </button>
+              )}
             </div>
           )
         })}
