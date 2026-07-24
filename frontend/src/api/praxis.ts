@@ -152,6 +152,15 @@ export interface PraxisCardOut {
    * Null/absent when no character on the viewer's account has voted.
    */
   voted_by_name?: string | null
+  /**
+   * The metatasks pinned to this praxis, as full TaskOut rows (not just the
+   * summed `metatask_points` above). The card's read-only seal stack dispatches
+   * on each metatask's issuing faction, so it needs the rows. The backend always
+   * emits it (empty when none); optional so a stale cached payload or an older
+   * caller degrades to no seal rather than crashing the card — matching the
+   * other late-added card fields above.
+   */
+  applied_metatasks?: TaskOut[]
 }
 
 export interface PraxisCreate {

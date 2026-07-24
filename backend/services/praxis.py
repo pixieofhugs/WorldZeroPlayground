@@ -329,6 +329,39 @@ async def author_contributions_for(
     return contributions
 
 
+async def applied_metatasks_for(
+    praxes: list[Praxis],
+    session: AsyncSession,
+) -> dict[int, list[TaskOut]]:
+    """Applied metatasks (as ``TaskOut`` rows) for each praxis, in ONE query.
+
+    The feed card's seal stack dispatches on each metatask's issuing faction, so
+    it needs the ``TaskOut`` rows, not just the summed ``metatask_points``. List
+    routes build cards in a per-praxis comprehension, so a per-card metatask
+    query would be an N+1 across the page; this batches every praxis id on the
+    page into a single join and hands the result to
+    :func:`build_praxis_card_out` via ``applied_metatasks``.
+
+    Praxis ids with no applied metatask are simply absent from the returned map
+    (the card builder treats a missing entry as an empty stack).
+    """
+    if not praxes:
+        return {}
+
+    praxis_ids = [p.id for p in praxes]
+    rows = await session.execute(
+        select(PraxisMetaTask.praxis_id, Task)
+        .join(Task, PraxisMetaTask.task_id == Task.id)
+        .where(PraxisMetaTask.praxis_id.in_(praxis_ids))
+    )
+    metatasks_by_praxis: dict[int, list[TaskOut]] = {}
+    for praxis_id, task in rows.all():
+        metatasks_by_praxis.setdefault(praxis_id, []).append(
+            TaskOut.model_validate(task)
+        )
+    return metatasks_by_praxis
+
+
 def _resolve_card_scoring(
     contribution: Optional[Contribution], task_point_value: int, tally_votes_points: int
 ) -> tuple[int, float, int, float]:
@@ -374,6 +407,7 @@ async def build_praxis_card_out(
     crowned_ids: Optional[set[int]] = None,
     viewer_votes: Optional[dict[int, ViewerVote]] = None,
     author_contributions: Optional[dict[int, Contribution]] = None,
+    applied_metatasks: Optional[dict[int, list[TaskOut]]] = None,
 ) -> PraxisCardOut:
     """Lightweight card for list views.
 
@@ -397,6 +431,12 @@ async def build_praxis_card_out(
     list routes precompute it once via :func:`author_contributions_for` so the
     score breakdown is not re-derived per card. When absent, this builder scores
     the single praxis itself (single-card callers).
+
+    ``applied_metatasks`` maps praxis id → the metatasks pinned to it (as
+    ``TaskOut`` rows) for the read-only seal stack; list routes precompute it
+    once via :func:`applied_metatasks_for` so the seal never becomes a per-card
+    query (N+1). When absent, this builder loads the single praxis's metatasks
+    itself (single-card callers). A missing entry means no metatasks applied.
     """
     task_title = praxis.task.title if praxis.task else ""
     task_point_value = praxis.task.point_value if praxis.task else 0
@@ -432,6 +472,15 @@ async def build_praxis_card_out(
     if crowned_ids is None:
         crowned_ids = await crowned_praxis_ids([praxis.task_id], session)
 
+    # Applied metatasks for the seal stack. Reuse the precomputed page-wide map
+    # when the list route supplies it; otherwise load this praxis's own.
+    if applied_metatasks is not None:
+        praxis_metatasks = applied_metatasks.get(praxis.id, [])
+    else:
+        praxis_metatasks = (await applied_metatasks_for([praxis], session)).get(
+            praxis.id, []
+        )
+
     return PraxisCardOut(
         id=praxis.id,
         task_id=praxis.task_id,
@@ -456,6 +505,7 @@ async def build_praxis_card_out(
         points_from_votes=points_from_votes,
         voter_count=tally.voter_count,
         is_top_for_task=praxis.id in crowned_ids,
+        applied_metatasks=praxis_metatasks,
         task_faction_slug=praxis.task.primary_faction_slug if praxis.task else None,
         body_text=praxis.body_text,
         created_by_faction_slug=praxis.created_by.faction_slug if praxis.created_by else None,
