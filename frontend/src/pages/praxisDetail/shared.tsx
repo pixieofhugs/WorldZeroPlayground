@@ -314,7 +314,43 @@ export function PraxisStatusBanners({ state }: { state: PraxisDetailState }) {
 
 export function PraxisOwnerActions({ state }: { state: PraxisDetailState }) {
   const { t } = useTranslation('praxis')
-  const { praxis, isOwner, user, duel, withdrawing, showWithdrawConfirm, setShowWithdrawConfirm, withdrawError, handleWithdraw, handleResubmit } = state
+  const { praxis, isOwner, withdrawError } = state
+  if (!praxis || !isOwner) return null
+
+  // A duel praxis surfaces its submit / pull-back / forfeit control in the duel
+  // RAIL now (#752), where the state that control changes already reads — one
+  // place, and never two rows of the same destructive control (the #646 bug).
+  // So the owner controls drop the cluster (and its error) for a duel and keep
+  // only the edit link; the rail renders `PraxisSubmitControls` instead. An
+  // ordinary praxis has no rail, so it keeps the cluster inline exactly as before.
+  const hasDuel = praxis.duel_id != null
+
+  return (
+    <div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-md)', marginBottom: 'var(--space-lg)' }}>
+        <Link to={`/praxes/${praxis.id}/edit`} className="font-body eyebrow hover:underline" style={{ color: 'var(--color-text-tertiary)' }}>
+          {t('detail.owner.edit')}
+        </Link>
+        {!hasDuel && <PraxisSubmitControls state={state} />}
+      </div>
+      {!hasDuel && withdrawError && <p className="font-body content-text mb-3" style={{ color: 'var(--color-danger)' }}>{withdrawError}</p>}
+    </div>
+  )
+}
+
+/**
+ * The submit / pull-back / forfeit control for a praxis you own — the one
+ * mutation seam that changes its cast state (and, for a duel side, the duel's).
+ * Extracted from PraxisOwnerActions (#752) so the duel RAIL can render it beside
+ * the state it changes; an ordinary praxis keeps it inline in the owner controls.
+ * It is rendered in exactly ONE surface per praxis, never both, so the #646
+ * double-destructive-control bug cannot recur. Every branch below is unchanged
+ * from the owner controls — this is a relocation, not a rewrite. `withdrawError`
+ * is rendered by the caller, next to wherever this control lands.
+ */
+export function PraxisSubmitControls({ state }: { state: PraxisDetailState }) {
+  const { t } = useTranslation('praxis')
+  const { praxis, isOwner, user, duel, withdrawing, showWithdrawConfirm, setShowWithdrawConfirm, handleWithdraw, handleResubmit } = state
   if (!praxis || !isOwner) return null
 
   // A SETTLED duel side's quiet unsubmit is a permanent forfeit (ADR-0011
@@ -322,8 +358,6 @@ export function PraxisOwnerActions({ state }: { state: PraxisDetailState }) {
   // existing two-step confirm rather than adding a control (#718). During
   // `active` it stays exactly as-is: until the opponent casts, pulling back is a
   // free neutral reopen with no penalty, and warning about one would be a lie.
-  // Fixed at this choke point deliberately: PraxisOwnerActions is the only path
-  // to unsubmit on the detail page, so it catches anyone who never read the rail.
   const forfeitsOnUnsubmit = duel?.status === 'settled' && duel.forfeited_by_character_id == null
 
   // On a collab that hasn't gone live yet, a member who has already submitted
@@ -347,66 +381,56 @@ export function PraxisOwnerActions({ state }: { state: PraxisDetailState }) {
   const isPendingHoldout =
     isCollab && praxis.status === 'pending' && viewerMember?.has_submitted !== true
 
-  return (
-    <div>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-md)', marginBottom: 'var(--space-lg)' }}>
-        <Link to={`/praxes/${praxis.id}/edit`} className="font-body eyebrow hover:underline" style={{ color: 'var(--color-text-tertiary)' }}>
-          {t('detail.owner.edit')}
-        </Link>
-        {praxis.status === 'in_progress' && viewerSubmittedWaiting ? (
-          <span className="eyebrow" style={{ color: 'var(--color-success)', fontWeight: 700 }}>
-            {t('detail.owner.submittedWaiting')}
-          </span>
-        ) : praxis.status === 'in_progress' || isPendingHoldout ? (
-          <button
-            onClick={handleResubmit}
-            disabled={withdrawing}
-            style={{ background: 'var(--color-success)', color: 'var(--color-text-on-accent)', fontFamily: "'Courier Prime', monospace", fontSize: 'var(--text-sm)', textTransform: 'uppercase', letterSpacing: '0.08em', padding: 'var(--space-xs) var(--space-md)', border: 'none', cursor: 'pointer', borderRadius: 0, opacity: withdrawing ? 0.5 : 1 }}
-          >
-            {withdrawing ? t('detail.owner.submitting') : t('detail.owner.submit')}
-          </button>
-        ) : forfeitsOnUnsubmit && duel ? (
-          /* A forfeit is the one irreversible duel beat, so it gets the same
-             dispatched dialog the (reversible) seal confirm got in #718 rather
-             than an inline text expand (#751). The trigger stays put and the
-             dialog mounts over it as a fixed overlay. Skinned by the TASK's
-             faction, matching the composer's own dispatch. */
-          <>
-            <button onClick={() => setShowWithdrawConfirm(true)} className="font-body eyebrow" style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-danger)' }}>
-              {t('duelForfeit.action')}
-            </button>
-            {showWithdrawConfirm && (
-              <DuelSealConfirm
-                mode="forfeit"
-                taskFactionSlug={praxis.task_faction_slug}
-                duel={duel}
-                viewerCharacterId={viewerCharacterId}
-                taskPointValue={praxis.task_point_value}
-                onConfirm={handleWithdraw}
-                onCancel={() => setShowWithdrawConfirm(false)}
-                busy={withdrawing}
-              />
-            )}
-          </>
-        ) : !showWithdrawConfirm ? (
-          <button onClick={() => setShowWithdrawConfirm(true)} className="font-body eyebrow" style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-text-tertiary)' }}>
-            {t('detail.owner.unsubmit')}
-          </button>
-        ) : (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-sm)', flexWrap: 'wrap' }}>
-            <span className="eyebrow" style={{ color: 'var(--color-text-tertiary)' }}>{t('detail.owner.confirmPrompt')}</span>
-            <button
-              onClick={handleWithdraw}
-              disabled={withdrawing}
-              style={{ background: 'rgba(220,38,38,0.1)', border: '1.5px solid var(--color-danger)', color: 'var(--color-danger)', fontFamily: "'Courier Prime', monospace", fontSize: 'var(--text-sm)', textTransform: 'uppercase', padding: 'var(--space-xs) var(--space-md)', cursor: 'pointer', borderRadius: 0 }}
-            >
-              {withdrawing ? t('detail.owner.submitting') : t('detail.owner.confirmUnsubmit')}
-            </button>
-            <button onClick={() => setShowWithdrawConfirm(false)} className="btn-outline" style={{ fontSize: 'var(--text-sm)', padding: 'var(--space-xs) var(--space-md)' }}>{t('detail.owner.cancel')}</button>
-          </div>
-        )}
-      </div>
-      {withdrawError && <p className="font-body content-text mb-3" style={{ color: 'var(--color-danger)' }}>{withdrawError}</p>}
+  return praxis.status === 'in_progress' && viewerSubmittedWaiting ? (
+    <span className="eyebrow" style={{ color: 'var(--color-success)', fontWeight: 700 }}>
+      {t('detail.owner.submittedWaiting')}
+    </span>
+  ) : praxis.status === 'in_progress' || isPendingHoldout ? (
+    <button
+      onClick={handleResubmit}
+      disabled={withdrawing}
+      style={{ background: 'var(--color-success)', color: 'var(--color-text-on-accent)', fontFamily: "'Courier Prime', monospace", fontSize: 'var(--text-sm)', textTransform: 'uppercase', letterSpacing: '0.08em', padding: 'var(--space-xs) var(--space-md)', border: 'none', cursor: 'pointer', borderRadius: 0, opacity: withdrawing ? 0.5 : 1 }}
+    >
+      {withdrawing ? t('detail.owner.submitting') : t('detail.owner.submit')}
+    </button>
+  ) : forfeitsOnUnsubmit && duel ? (
+    /* A forfeit is the one irreversible duel beat, so it gets the same
+       dispatched dialog the (reversible) seal confirm got in #718 rather
+       than an inline text expand (#751). The trigger stays put and the
+       dialog mounts over it as a fixed overlay. Skinned by the TASK's
+       faction, matching the composer's own dispatch. */
+    <>
+      <button onClick={() => setShowWithdrawConfirm(true)} className="font-body eyebrow" style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-danger)' }}>
+        {t('duelForfeit.action')}
+      </button>
+      {showWithdrawConfirm && (
+        <DuelSealConfirm
+          mode="forfeit"
+          taskFactionSlug={praxis.task_faction_slug}
+          duel={duel}
+          viewerCharacterId={viewerCharacterId}
+          taskPointValue={praxis.task_point_value}
+          onConfirm={handleWithdraw}
+          onCancel={() => setShowWithdrawConfirm(false)}
+          busy={withdrawing}
+        />
+      )}
+    </>
+  ) : !showWithdrawConfirm ? (
+    <button onClick={() => setShowWithdrawConfirm(true)} className="font-body eyebrow" style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-text-tertiary)' }}>
+      {t('detail.owner.unsubmit')}
+    </button>
+  ) : (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-sm)', flexWrap: 'wrap' }}>
+      <span className="eyebrow" style={{ color: 'var(--color-text-tertiary)' }}>{t('detail.owner.confirmPrompt')}</span>
+      <button
+        onClick={handleWithdraw}
+        disabled={withdrawing}
+        style={{ background: 'rgba(220,38,38,0.1)', border: '1.5px solid var(--color-danger)', color: 'var(--color-danger)', fontFamily: "'Courier Prime', monospace", fontSize: 'var(--text-sm)', textTransform: 'uppercase', padding: 'var(--space-xs) var(--space-md)', cursor: 'pointer', borderRadius: 0 }}
+      >
+        {withdrawing ? t('detail.owner.submitting') : t('detail.owner.confirmUnsubmit')}
+      </button>
+      <button onClick={() => setShowWithdrawConfirm(false)} className="btn-outline" style={{ fontSize: 'var(--text-sm)', padding: 'var(--space-xs) var(--space-md)' }}>{t('detail.owner.cancel')}</button>
     </div>
   )
 }

@@ -154,6 +154,7 @@ describe('WOW duel rail: the opponent colour is a ring and a bar, never a text g
         tally={<span>SLOT_TALLY</span>}
         note={<span>SLOT_NOTE</span>}
         body={<span>SLOT_BODY</span>}
+        actions={null}
       />,
     )
 

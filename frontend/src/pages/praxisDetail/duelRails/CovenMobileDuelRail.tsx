@@ -56,6 +56,7 @@ export default function CovenMobileDuelRail({
   tally,
   note,
   body,
+  actions,
 }: DuelRailSkinProps) {
   // ponytail: `maxWidth` is intentionally ignored on mobile. The rail is
   // full-bleed inside the phone column, so the desktop archetype-width map has
@@ -126,6 +127,12 @@ export default function CovenMobileDuelRail({
             }}
           >
             {body}
+          </div>
+        )}
+        {/* The owner's action row (#752), footed under the window's border rule. */}
+        {actions && (
+          <div style={{ marginTop: 'var(--space-md)', paddingTop: 'var(--space-sm)', borderTop: `1.5px solid ${NOTEPAD_BORDER}` }}>
+            {actions}
           </div>
         )}
       </div>
