@@ -18,7 +18,12 @@ import {
 } from '../archetypes/controls'
 import { MetataskSealStack } from '../MetataskSealStack'
 import type { EditPraxisState } from '../useEditPraxis'
-import { MobileStickyBar, SegToggle, type ComposerTab } from './shared'
+import {
+  DefaultModePicker,
+  MobileStickyBar,
+  SegToggle,
+  type ComposerTab,
+} from './shared'
 
 /**
  * University of Asthmatics MOBILE composer (#525/#852) — sealing a mark, on a
@@ -169,6 +174,9 @@ export default function UaComposer({ state }: { state: EditPraxisState }) {
 
       {tab === 'write' ? (
         <>
+          {/* Mode — Solo · Collab · Duel, above the title (scrolls with content) */}
+          <DefaultModePicker state={state} />
+
           <Field label={t('editPraxis.ua.titleLabel')}>
             <TitleField
               state={state}
