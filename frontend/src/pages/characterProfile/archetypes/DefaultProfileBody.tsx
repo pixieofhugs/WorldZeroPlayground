@@ -255,7 +255,13 @@ export default function DefaultProfileBody({
   )
 
   return (
-    <div className="py-8">
+    <div className="py-8" style={{ position: 'relative' }}>
+      {/* Full-page spectrum wash — the na "all paths open" backdrop. The
+          `.na-backdrop` rule (raw radial-gradient rgba + a [data-theme="dark"]
+          brighten) lives in index.css and is owned by frontend-style; port it
+          from the vendored default.css. Inert until that class lands. */}
+      <div className="na-backdrop" aria-hidden />
+      <div style={{ position: 'relative', zIndex: 1 }}>
       {/* ── ① Identity + progression — spectrum band, credential pinned ── */}
       <div
         style={{
@@ -527,6 +533,7 @@ export default function DefaultProfileBody({
       ) : (
         mainColumn
       )}
+      </div>
     </div>
   )
 }

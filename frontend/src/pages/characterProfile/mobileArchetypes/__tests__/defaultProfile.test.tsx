@@ -4,8 +4,8 @@
  * with the data + form-factor hooks mocked (phone → the Default mobile skin,
  * desktop → the existing faction-dispatched body). The content test renders the
  * Default mobile skin directly to pin the reused #459 contract fields: identity,
- * the real-fields stats row, badges, friend/foe, and the segmented Praxis/Tasks
- * toggle over the shared PraxisCard/TaskCard.
+ * the progression panel (#969, replacing the old stats row), badges, friend/foe,
+ * and the segmented Praxis/Tasks toggle over the shared PraxisCard/TaskCard.
  */
 import { renderToStaticMarkup } from 'react-dom/server'
 import { MemoryRouter, Routes, Route } from 'react-router-dom'
@@ -150,14 +150,22 @@ describe('Default mobile profile content slots', () => {
     character: character(),
     submissions: [praxis()],
     proposedTasks: [task()],
-    progression: null,
+    progression: {
+      nextLevel: 8,
+      currentThreshold: 1500,
+      nextThreshold: 2000,
+      progressPercent: 76,
+    },
     identityActions: <div>Friend</div>,
   }
 
-  it('renders identity, stats, badges and friend/foe from the #459 contract', () => {
+  it('renders identity, progression, badges and friend/foe from the #459 contract', () => {
     const { text } = html(<DefaultProfile {...props} />)
-    expect(text, 'name').toContain('Reza')
-    expect(text, 'stats row').toContain('Points')
+    expect(text, 'name (credential)').toContain('Reza')
+    // #969: the mobile stats row was replaced by the redesign's progression
+    // panel (level ring + points-into-level bar toward level+1).
+    expect(text, 'progression next-level label').toContain('next · lvl 8')
+    expect(text, 'progression points-into-level').toContain('380 / 500 pts this level')
     expect(text, 'badge').toContain('Sock Puppet')
     expect(text, 'friend/foe control').toContain('Friend')
   })
