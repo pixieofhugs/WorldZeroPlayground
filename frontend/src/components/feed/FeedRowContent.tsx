@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom'
 import i18n from '../../i18n'
-import { factionColor } from '../../utils/factions'
+import { factionColor, isKnownFaction } from '../../utils/factions'
 import { mediaUrl } from '../../utils/media'
 import FeedBadge from './FeedBadge'
 import type { FeedRow } from './normalizeFeedItem'
@@ -20,6 +20,7 @@ export default function FeedRowContent({
   avatarUrl: string | null
 }) {
   const accent = factionColor(row.slug)
+  const known = isKnownFaction(row.slug)
   const initial = row.actor?.[0]?.toUpperCase() ?? '·'
 
   const actorNode = row.actor ? (
@@ -50,7 +51,7 @@ export default function FeedRowContent({
                 alt=""
                 style={{ width: 28, height: 28, borderRadius: '50%', objectFit: 'cover', flexShrink: 0, marginTop: 'var(--space-xs)' }}
               />
-            ) : (
+            ) : known ? (
               <div
                 style={{
                   width: 28,
@@ -70,6 +71,42 @@ export default function FeedRowContent({
                 }}
               >
                 {initial}
+              </div>
+            ) : (
+              // Unaffiliated (na): no legible ink sits on the spectrum, so the
+              // rainbow is the ring and the monogram rides a neutral interior
+              // (ADR-0039 §4, the same idiom as CharacterSwitcher's miniRing).
+              <div
+                style={{
+                  width: 28,
+                  height: 28,
+                  borderRadius: '50%',
+                  background: 'var(--faction-default-ring)',
+                  // eslint-disable-next-line local/no-raw-style-values -- ornament: this inset *is* the drawn ring stroke, not spacing
+                  padding: 2,
+                  boxSizing: 'border-box',
+                  flexShrink: 0,
+                  marginTop: 'var(--space-xs)',
+                }}
+              >
+                <span
+                  style={{
+                    display: 'flex',
+                    width: '100%',
+                    height: '100%',
+                    borderRadius: '50%',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    background: 'var(--color-bg-surface-alt)',
+                    color: 'var(--color-text-primary)',
+                    fontFamily: "'Courier Prime', monospace",
+                    // eslint-disable-next-line local/no-raw-style-values -- ornament: monogram glyph sized to the 28px avatar disc
+                    fontSize: 12,
+                    fontWeight: 700,
+                  }}
+                >
+                  {initial}
+                </span>
               </div>
             )}
           </MaybeLink>
