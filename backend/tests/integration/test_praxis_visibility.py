@@ -243,3 +243,259 @@ async def test_withdraw_settled_duel_side_forfeits(
     await db_session.refresh(duel)
     assert duel.status == DuelStatus.settled
     assert duel.forfeited_by_character_id == character.id
+
+
+# ---------------------------------------------------------------------------
+# Pre-seal duel-side exposure (#999) — a submitted duel side is author-only
+# while the duel is live and incomplete (pending/active); it reveals on seal.
+# ---------------------------------------------------------------------------
+
+
+async def _submitted_solo(
+    db_session: AsyncSession, task: Task, author: Character
+) -> Praxis:
+    """A *submitted* solo praxis authored by ``author`` (with its member row)."""
+    praxis = Praxis(
+        task_id=task.id,
+        created_by_id=author.id,
+        type=PraxisType.solo,
+        status=PraxisStatus.submitted,
+        title="Duel side",
+        body_text="secret proof",
+    )
+    db_session.add(praxis)
+    await db_session.flush()
+    db_session.add(PraxisMember(praxis_id=praxis.id, character_id=author.id, has_submitted=True))
+    await db_session.commit()
+    await db_session.refresh(praxis)
+    return praxis
+
+
+@pytest.mark.asyncio
+async def test_active_incomplete_duel_side_is_author_only(
+    client: AsyncClient,
+    db_session: AsyncSession,
+    character: Character,
+    character2: Character,
+    character3: Character,
+    active_task: Task,
+    auth_headers: dict,
+    auth_headers2: dict,
+    auth_headers3: dict,
+):
+    """An `active` duel with only the challenger cast: that submitted side is
+    visible to its author only — not the opponent (no cribbing), not spectators.
+    Covers both doors: the /praxes/{id} detail gate and the feed list.
+    """
+    challenger_praxis = await _submitted_solo(db_session, active_task, character)
+    # Opponent accepted (praxis exists) but has NOT cast yet → duel is active.
+    opponent_praxis = Praxis(
+        task_id=active_task.id,
+        created_by_id=character2.id,
+        type=PraxisType.solo,
+        status=PraxisStatus.in_progress,
+        title="Opponent draft",
+        body_text="",
+    )
+    db_session.add(opponent_praxis)
+    await db_session.flush()
+    db_session.add(
+        PraxisMember(praxis_id=opponent_praxis.id, character_id=character2.id, has_submitted=False)
+    )
+    duel = Duel(
+        task_id=active_task.id,
+        challenger_praxis_id=challenger_praxis.id,
+        opponent_praxis_id=opponent_praxis.id,
+        opponent_character_id=character2.id,
+        status=DuelStatus.active,
+    )
+    db_session.add(duel)
+    await db_session.commit()
+
+    cid = challenger_praxis.id
+
+    # Detail door: author 200; opponent AND spectator AND anon all 404.
+    assert (await client.get(f"/praxes/{cid}", headers=auth_headers)).status_code == 200
+    assert (await client.get(f"/praxes/{cid}", headers=auth_headers2)).status_code == 404
+    assert (await client.get(f"/praxes/{cid}", headers=auth_headers3)).status_code == 404
+    assert (await client.get(f"/praxes/{cid}")).status_code == 404
+
+    # Feed door: absent for opponent, spectator, anon; present for the author.
+    def _ids(resp):
+        return {p["id"] for p in resp.json()}
+
+    assert cid not in _ids(await client.get("/praxes", headers=auth_headers2))
+    assert cid not in _ids(await client.get("/praxes", headers=auth_headers3))
+    assert cid not in _ids(await client.get("/praxes"))
+    assert cid in _ids(await client.get("/praxes", headers=auth_headers))
+
+
+@pytest.mark.asyncio
+async def test_pending_duel_challenger_side_is_author_only(
+    client: AsyncClient,
+    db_session: AsyncSession,
+    character: Character,
+    character2: Character,
+    active_task: Task,
+    auth_headers: dict,
+    auth_headers2: dict,
+):
+    """A `pending` duel (opponent hasn't even accepted) whose challenger has cast:
+    the submitted side is still author-only until the duel seals."""
+    challenger_praxis = await _submitted_solo(db_session, active_task, character)
+    duel = Duel(
+        task_id=active_task.id,
+        challenger_praxis_id=challenger_praxis.id,
+        opponent_character_id=character2.id,
+        status=DuelStatus.pending,
+    )
+    db_session.add(duel)
+    await db_session.commit()
+
+    cid = challenger_praxis.id
+    assert (await client.get(f"/praxes/{cid}", headers=auth_headers)).status_code == 200
+    assert (await client.get(f"/praxes/{cid}", headers=auth_headers2)).status_code == 404
+    assert cid not in {p["id"] for p in (await client.get("/praxes", headers=auth_headers2)).json()}
+
+
+@pytest.mark.asyncio
+async def test_settled_duel_both_sides_public(
+    client: AsyncClient,
+    db_session: AsyncSession,
+    character: Character,
+    character2: Character,
+    character3: Character,
+    active_task: Task,
+    auth_headers3: dict,
+):
+    """Once a duel is `settled` (both cast) both bodies go public — a spectator
+    can open either side and both appear in the feed."""
+    challenger_praxis = await _submitted_solo(db_session, active_task, character)
+    opponent_praxis = await _submitted_solo(db_session, active_task, character2)
+    duel = Duel(
+        task_id=active_task.id,
+        challenger_praxis_id=challenger_praxis.id,
+        opponent_praxis_id=opponent_praxis.id,
+        opponent_character_id=character2.id,
+        status=DuelStatus.settled,
+    )
+    db_session.add(duel)
+    await db_session.commit()
+
+    for pid in (challenger_praxis.id, opponent_praxis.id):
+        assert (await client.get(f"/praxes/{pid}", headers=auth_headers3)).status_code == 200
+    feed_ids = {p["id"] for p in (await client.get("/praxes", headers=auth_headers3)).json()}
+    assert {challenger_praxis.id, opponent_praxis.id} <= feed_ids
+
+
+@pytest.mark.asyncio
+async def test_forfeit_reveals_surviving_submitted_side(
+    client: AsyncClient,
+    db_session: AsyncSession,
+    character: Character,
+    character2: Character,
+    character3: Character,
+    active_task: Task,
+    auth_headers3: dict,
+):
+    """A forfeited duel stays `settled`; the surviving submitted side is public
+    to spectators (the forfeiter's own side, being unsubmitted, is member-only
+    via the ordinary in_progress gate — ADR-0011)."""
+    survivor_praxis = await _submitted_solo(db_session, active_task, character2)
+    # Forfeiter withdrew their side → in_progress, hidden by the ordinary gate.
+    forfeiter_praxis = Praxis(
+        task_id=active_task.id,
+        created_by_id=character.id,
+        type=PraxisType.solo,
+        status=PraxisStatus.in_progress,
+        title="Withdrawn side",
+        body_text="",
+    )
+    db_session.add(forfeiter_praxis)
+    await db_session.flush()
+    db_session.add(
+        PraxisMember(praxis_id=forfeiter_praxis.id, character_id=character.id, has_submitted=False)
+    )
+    duel = Duel(
+        task_id=active_task.id,
+        challenger_praxis_id=forfeiter_praxis.id,
+        opponent_praxis_id=survivor_praxis.id,
+        opponent_character_id=character2.id,
+        status=DuelStatus.settled,
+        forfeited_by_character_id=character.id,
+    )
+    db_session.add(duel)
+    await db_session.commit()
+
+    # Surviving submitted side: public to a spectator.
+    assert (
+        await client.get(f"/praxes/{survivor_praxis.id}", headers=auth_headers3)
+    ).status_code == 200
+    # Forfeiter's own in_progress side stays hidden (ordinary member-only gate).
+    assert (
+        await client.get(f"/praxes/{forfeiter_praxis.id}", headers=auth_headers3)
+    ).status_code == 404
+
+
+@pytest.mark.asyncio
+async def test_declined_duel_challenger_side_public(
+    client: AsyncClient,
+    db_session: AsyncSession,
+    character: Character,
+    character2: Character,
+    active_task: Task,
+    auth_headers2: dict,
+):
+    """A `declined` duel reverts to a plain solo praxis — the challenger's
+    submitted side reveals as usual (no second party to protect)."""
+    challenger_praxis = await _submitted_solo(db_session, active_task, character)
+    duel = Duel(
+        task_id=active_task.id,
+        challenger_praxis_id=challenger_praxis.id,
+        opponent_character_id=character2.id,
+        status=DuelStatus.declined,
+    )
+    db_session.add(duel)
+    await db_session.commit()
+
+    assert (
+        await client.get(f"/praxes/{challenger_praxis.id}", headers=auth_headers2)
+    ).status_code == 200
+
+
+@pytest.mark.asyncio
+async def test_can_view_and_list_service_gate_duel_side(
+    db_session: AsyncSession,
+    character: Character,
+    character2: Character,
+    character3: Character,
+    active_task: Task,
+):
+    """Service-level assertions on the shared helper: `can_view_praxis` returns
+    False for non-authors of a live-incomplete duel side, and `list_praxes`
+    omits it for them while including it for the author."""
+    from services.praxis import can_view_praxis, list_praxes
+
+    challenger_praxis = await _submitted_solo(db_session, active_task, character)
+    duel = Duel(
+        task_id=active_task.id,
+        challenger_praxis_id=challenger_praxis.id,
+        opponent_character_id=character2.id,
+        status=DuelStatus.active,
+    )
+    db_session.add(duel)
+    await db_session.commit()
+
+    # can_view_praxis: author yes; opponent, spectator, anon no.
+    assert await can_view_praxis(character, challenger_praxis, db_session) is True
+    assert await can_view_praxis(character2, challenger_praxis, db_session) is False
+    assert await can_view_praxis(character3, challenger_praxis, db_session) is False
+    assert await can_view_praxis(None, challenger_praxis, db_session) is False
+
+    # list_praxes: present for the author, absent for a spectator and for anon.
+    author_ids = {p.id for p in await list_praxes(db_session, viewer_id=character.id)}
+    spectator_ids = {p.id for p in await list_praxes(db_session, viewer_id=character3.id)}
+    anon_ids = {p.id for p in await list_praxes(db_session)}
+    assert challenger_praxis.id in author_ids
+    assert challenger_praxis.id not in spectator_ids
+    assert challenger_praxis.id not in anon_ids
