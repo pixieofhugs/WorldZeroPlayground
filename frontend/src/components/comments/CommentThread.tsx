@@ -12,7 +12,7 @@ import { useAuth } from '../../auth/AuthContext'
 import FactionAvatar from '../avatar/FactionAvatar'
 import { pickVariant } from '../../utils/factionDispatch'
 import { surfaceMap } from '../../factions'
-import { factionCssVar } from '../../utils/factions'
+import { factionCssVar, factionFill } from '../../utils/factions'
 import { formatCommentTime } from '../../utils/commentTime'
 import {
   type CommentProps,
@@ -21,14 +21,19 @@ import {
   MentionText,
 } from './shared'
 import { CommentEditor, OwnerControls, useOwnerEdit } from './OwnerControls'
-import { CommentFlagControl } from './FlagControl'
+import { CommentFlagControl, canFlagComment } from './FlagControl'
 
 /**
  * Neutral fallback voice — invariant slots themed only by the faction CSS vars +
- * FactionAvatar + the timestamp dialect. Any unregistered faction renders this.
+ * FactionAvatar + the timestamp dialect. Any unregistered faction renders this,
+ * which is also the na / Unaffiliated identity (ADR-0039): so the row wears the
+ * spectrum-band na tells — a rainbow hairline across the bubble top and
+ * gradient-clipped @mentions (#970), reached via factionFill/`--faction-default-rainbow`
+ * (NOT factionCssVar, which is neutral grey for na).
  */
 export function DefaultComment(props: CommentProps) {
   const { t } = useTranslation('praxis')
+  const { user } = useAuth()
   if (props.mode === 'composer') {
     const { character, value, onChange, onSubmit, submitting } = props
     return (
@@ -52,29 +57,70 @@ export function DefaultComment(props: CommentProps) {
   const accent = factionCssVar(slug, 'card-accent')
   const onAccent = factionCssVar(slug, 'on-accent')
   const owner = useOwnerEdit({ comment, onEdited, onWithdrawn })
+  // A quiet control row lives at the bubble foot (design intent) — but only when
+  // there is something to show: the author's edit/withdraw or a flag affordance.
+  // Hidden while editing, since the inline editor owns Save/Cancel then.
+  const showControls =
+    !owner.editing && (owner.isOwner || canFlagComment(comment, user?.character?.id))
   return (
-    <div style={{ display: 'flex', gap: 'var(--space-md)' }}>
+    <div style={{ display: 'flex', gap: 'var(--space-md)', alignItems: 'flex-start' }}>
       <FactionAvatar character={authorToCharacter(comment.author)} size="sm" />
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ display: 'flex', alignItems: 'baseline', gap: 'var(--space-sm)', flexWrap: 'wrap' }}>
-          <Link
-            to={`/characters/${comment.author.id}`}
-            style={{ fontWeight: 600, color: accent, textDecoration: 'none' }}
-          >
-            {comment.author.display_name}
-          </Link>
-          <span style={{ fontSize: 'var(--text-md)', color: 'var(--color-text-tertiary)' }}>
-            {formatCommentTime(slug, comment.created_at)}
-            {comment.is_edited ? ` · ${t('comments.edited')}` : ''}
-          </span>
-          <OwnerControls owner={owner} />
-          <CommentFlagControl comment={comment} />
-        </div>
-        <div style={{ marginTop: 'var(--space-xs)', color: 'var(--color-text-primary)', lineHeight: 1.5 }}>
-          {owner.editing ? (
-            <CommentEditor owner={owner} accent={accent} onAccent={onAccent} />
-          ) : (
-            <MentionText body={comment.body_text} mentions={comment.mentions} accent={accent} />
+      <div
+        style={{
+          flex: 1,
+          minWidth: 0,
+          background: factionCssVar(slug, 'card-bg'),
+          border: `1px solid ${factionCssVar(slug, 'border')}`,
+          borderRadius: 8,
+          overflow: 'hidden',
+          boxShadow: '0 4px 14px -10px rgba(0,0,0,0.4)',
+        }}
+      >
+        {/* spectrum hairline — the na tell; a rainbow for default/na, a solid
+            hue would never appear here because only default slugs reach this
+            voice. Reached via factionFill (rainbow), not factionCssVar (grey). */}
+        <div style={{ height: 3, ...factionFill(slug, 'bar') }} />
+        <div style={{ padding: 'var(--space-md) var(--space-lg)' }}>
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: 'var(--space-sm)', flexWrap: 'wrap' }}>
+            <Link
+              to={`/characters/${comment.author.id}`}
+              style={{
+                fontFamily: 'var(--font-display)',
+                fontStyle: 'italic',
+                fontWeight: 700,
+                color: factionCssVar(slug, 'card-text'),
+                textDecoration: 'none',
+              }}
+            >
+              {comment.author.display_name}
+            </Link>
+            <span style={{ fontSize: 'var(--text-md)', color: factionCssVar(slug, 'card-muted') }}>
+              {formatCommentTime(slug, comment.created_at)}
+              {comment.is_edited ? ` · ${t('comments.edited')}` : ''}
+            </span>
+          </div>
+          <div style={{ marginTop: 'var(--space-xs)', color: factionCssVar(slug, 'card-text'), lineHeight: 1.5 }}>
+            {owner.editing ? (
+              <CommentEditor owner={owner} accent={accent} onAccent={onAccent} />
+            ) : (
+              <MentionText body={comment.body_text} mentions={comment.mentions} accent={accent} rainbow />
+            )}
+          </div>
+          {showControls && (
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'baseline',
+                flexWrap: 'wrap',
+                gap: 'var(--space-md)',
+                marginTop: 'var(--space-sm)',
+                paddingTop: 'var(--space-sm)',
+                borderTop: `1px solid ${factionCssVar(slug, 'border')}`,
+              }}
+            >
+              <OwnerControls owner={owner} />
+              <CommentFlagControl comment={comment} />
+            </div>
           )}
         </div>
       </div>
