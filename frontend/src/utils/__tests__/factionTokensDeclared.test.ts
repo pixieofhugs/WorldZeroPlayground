@@ -52,24 +52,6 @@ const REFERENCE = /var\(\s*(--[A-Za-z0-9_-]+)\s*[,)]/g;
 
 const COMMENT = /\/\*[\s\S]*?\*\//g;
 
-/**
- * Pre-existing orphans, grandfathered when the guard widened past `--faction-*`
- * (#879). Modelled on the `no-raw-style-values` ratchet: this list may SHRINK,
- * never grow. Do not add a name here to quiet a failure — declare the token in
- * `index.css` (or point the reference at the token that was meant). The
- * "no dead entries" test below makes the ratchet self-enforcing.
- *
- * Each of these needs a design call about which declared token was intended,
- * which is why #879 did not fix them inline. Tracked in #890.
- */
-const GRANDFATHERED = new Set([
-  "--color-accent", // near-miss of --color-accent-primary
-  "--color-bg-card", // no such token
-  "--color-surface-soft", // no such token
-  "--color-text", // near-miss of --color-text-primary
-  "--everymen-red-light", // has a literal fallback, so it renders
-]);
-
 function collectSourceFiles(directory: string): string[] {
   return readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
     const path = join(directory, entry.name);
@@ -142,18 +124,10 @@ describe("CSS custom properties are declared before use (#806, #879)", () => {
   });
 
   it("has no var(--…) reference pointing at an undeclared custom property", () => {
-    const unexpected = orphans
-      .filter((name) => !GRANDFATHERED.has(name))
-      .flatMap((name) =>
-        (referenced.get(name) ?? []).map((path) => `${name} in ${path}`),
-      );
+    const unexpected = orphans.flatMap((name) =>
+      (referenced.get(name) ?? []).map((path) => `${name} in ${path}`),
+    );
 
     expect(unexpected).toEqual([]);
-  });
-
-  it("keeps the grandfathered allowlist a ratchet (no dead entries)", () => {
-    const fixed = [...GRANDFATHERED].filter((name) => !orphans.includes(name));
-
-    expect(fixed).toEqual([]);
   });
 });

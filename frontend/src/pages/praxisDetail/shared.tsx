@@ -256,7 +256,7 @@ export function PraxisStatusBanners({ state }: { state: PraxisDetailState }) {
             display: 'flex',
             alignItems: 'center',
             gap: 'var(--space-md)',
-            background: 'var(--color-bg-card)',
+            background: 'var(--color-bg-surface)',
           }}
         >
           <TaskCrown size={34} ringInset={3} />

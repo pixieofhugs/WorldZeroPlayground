@@ -57,7 +57,7 @@ export default function DefaultFactionBody({
                 style={{
                   border: `1px solid ${accent}`,
                   padding: "var(--space-sm) var(--space-md)",
-                  background: "var(--color-bg-card)",
+                  background: "var(--color-bg-surface)",
                 }}
               >
                 <CharacterBadge character={m} size="sm" />

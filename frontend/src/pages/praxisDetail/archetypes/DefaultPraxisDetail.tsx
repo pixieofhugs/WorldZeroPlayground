@@ -200,7 +200,7 @@ export default function DefaultPraxisDetail({
               <div style={{ marginBottom: canEdit ? "var(--space-md)" : 0 }}>
                 <span className="eyebrow" style={{ display: "block", marginBottom: 'var(--space-sm)' }}>{t('detail.metatasks.applied')}</span>
                 {state.praxis.applied_metatasks.map((metatask) => (
-                  <div key={metatask.id} className="flex items-center gap-2 mb-1" style={{ padding: "var(--space-xs) var(--space-sm)", background: "var(--color-surface-soft)", fontSize: 'var(--text-md)' }}>
+                  <div key={metatask.id} className="flex items-center gap-2 mb-1" style={{ padding: "var(--space-xs) var(--space-sm)", background: "var(--color-bg-surface-alt)", fontSize: 'var(--text-md)' }}>
                     <span className="flex-1 font-body">{metatask.title}</span>
                     <span className="eyebrow">{t('detail.metatasks.appliedPoints', { points: metatask.point_value })}</span>
                     {canEdit && (
@@ -236,13 +236,13 @@ export default function DefaultPraxisDetail({
                   </p>
                 ) : (
                   available.map((metatask) => (
-                    <div key={metatask.id} className="flex items-center gap-2 mb-1" style={{ padding: "var(--space-xs) var(--space-sm)", background: "var(--color-surface-soft)", fontSize: 'var(--text-md)' }}>
+                    <div key={metatask.id} className="flex items-center gap-2 mb-1" style={{ padding: "var(--space-xs) var(--space-sm)", background: "var(--color-bg-surface-alt)", fontSize: 'var(--text-md)' }}>
                       <span className="flex-1 font-body">{metatask.title}</span>
                       <span className="eyebrow">{t('detail.metatasks.appliedPoints', { points: metatask.point_value })}</span>
                       <button
                         onClick={() => void state.handleApplyMetatask(metatask.id)}
                         disabled={state.applyingMetataskId === metatask.id}
-                        style={{ background: "none", border: "1px solid var(--color-accent)", color: "var(--color-accent)", fontSize: 'var(--text-xs)', padding: "var(--space-xs) var(--space-sm)", cursor: "pointer", opacity: state.applyingMetataskId === metatask.id ? 0.5 : 1 }}
+                        style={{ background: "none", border: "1px solid var(--color-accent-primary)", color: "var(--color-accent-primary)", fontSize: 'var(--text-xs)', padding: "var(--space-xs) var(--space-sm)", cursor: "pointer", opacity: state.applyingMetataskId === metatask.id ? 0.5 : 1 }}
                       >
                         {state.applyingMetataskId === metatask.id ? t('detail.metatasks.applying') : t('detail.metatasks.apply')}
                       </button>

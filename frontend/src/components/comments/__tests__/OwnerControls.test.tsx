@@ -118,7 +118,7 @@ describe('OwnerControls', () => {
 describe('CommentEditor', () => {
   it('seeds the composer with the current body and shows Save', () => {
     const html = renderToStaticMarkup(
-      <CommentEditor owner={makeOwner({ editing: true })} accent="var(--color-accent)" onAccent="var(--faction-default-on-accent)" />,
+      <CommentEditor owner={makeOwner({ editing: true })} accent="var(--color-accent-primary)" onAccent="var(--faction-default-on-accent)" />,
     )
     expect(html).toContain('seedlings along the estuary')
     expect(html).toContain('Save')

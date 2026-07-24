@@ -736,6 +736,7 @@
   --everymen-ink: #221a12;
   --everymen-red: #c1272d;
   --everymen-red-deep: #8d1c20;
+  --everymen-red-light: rgba(193, 39, 45, 0.08); /* low-alpha red wash — error-banner field */
   --everymen-paper: #ece1c6;
   --everymen-paper-deep: #ddceac;
   --everymen-paper-text: #221a12;
@@ -1245,6 +1246,7 @@
   --everymen-ink: #0d0907;
   --everymen-red: #e2433f;
   --everymen-red-deep: #b32a28;
+  --everymen-red-light: rgba(226, 67, 63, 0.08); /* low-alpha red wash — error-banner field */
   --everymen-paper: #221a16;
   --everymen-paper-deep: #17110d;
   --everymen-paper-text: #f3e7ce;
