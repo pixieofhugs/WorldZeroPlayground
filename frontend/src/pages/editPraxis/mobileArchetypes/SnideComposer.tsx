@@ -187,15 +187,15 @@ export default function SnideComposer({ state }: { state: EditPraxisState }) {
             </Plate>
           )}
 
-          <Plate title={t('editPraxis.snide.filesLabel')}>
-            <MediaGrid state={state} />
-          </Plate>
-
           {state.showSealStack && (
             <Plate title={t('editPraxis.snide.metatasksLabel')}>
               <MetataskSealStack state={state} />
             </Plate>
           )}
+
+          <Plate title={t('editPraxis.snide.filesLabel')}>
+            <MediaGrid state={state} />
+          </Plate>
         </>
       ) : (
         <Plate title={t('editPraxis.snide.previewLabel')}>

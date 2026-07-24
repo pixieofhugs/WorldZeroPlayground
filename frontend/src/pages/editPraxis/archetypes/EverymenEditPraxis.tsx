@@ -359,6 +359,9 @@ export default function EverymenEditPraxis({ state }: Props) {
         {/* Collab invite / duel challenge */}
         {state.showInviteBox && <InviteBlock state={state} />}
 
+        {/* Metatasks */}
+        {state.showSealStack && <MetatasksBlock state={state} />}
+
         {/* The job (headline) */}
         <div style={{ marginBottom: "var(--space-xl)" }}>
           <FieldLabel
@@ -534,9 +537,6 @@ export default function EverymenEditPraxis({ state }: Props) {
             </p>
           )}
         </div>
-
-        {/* Metatasks */}
-        {state.showSealStack && <MetatasksBlock state={state} />}
 
         <ErrorBanner message={state.error} />
 

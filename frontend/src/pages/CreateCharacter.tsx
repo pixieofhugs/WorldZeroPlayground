@@ -53,7 +53,8 @@ function DesktopCreateCharacter({ state }: { state: CreateCharacterState }) {
     avatarPreview,
     avatarSource,
     setAvatarSource,
-    handleFile,
+    avatarError,
+    handleAvatarChange,
     handleAvatarConfirm,
     error,
     submitting,
@@ -110,10 +111,11 @@ function DesktopCreateCharacter({ state }: { state: CreateCharacterState }) {
             ref={fileInputRef}
             type="file"
             accept="image/*"
-            onChange={handleFile}
+            onChange={handleAvatarChange}
             className="font-body text-sm"
             style={{ marginTop: 'var(--space-sm)' }}
           />
+          {avatarError && <p className="font-body content-text text-red-600 mt-1">{avatarError}</p>}
 
           {/* Faction picker — only when the account holds invitations (ADR-0019) */}
           {showPicker && (

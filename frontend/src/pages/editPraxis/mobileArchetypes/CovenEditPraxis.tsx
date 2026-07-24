@@ -333,15 +333,15 @@ export default function CovenEditPraxis({ state }: { state: EditPraxisState }) {
             </Window>
           )}
 
-          <Window title={t("editPraxis.coven.filesLabel", { pasted: state.media.length })}>
-            <MediaGrid state={state} />
-          </Window>
-
           {state.showSealStack && (
             <Window title={t("editPraxis.coven.metatasksLabel")}>
               <MetataskSealStack state={state} />
             </Window>
           )}
+
+          <Window title={t("editPraxis.coven.filesLabel", { pasted: state.media.length })}>
+            <MediaGrid state={state} />
+          </Window>
         </>
       ) : (
         <Window title={t("editPraxis.coven.previewLabel")}>
