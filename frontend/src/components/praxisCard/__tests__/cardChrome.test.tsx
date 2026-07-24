@@ -11,8 +11,10 @@ import { describe, it, expect } from 'vitest'
 import type { ReactElement } from 'react'
 import '../../../i18n'
 import type { PraxisCardOut } from '../../../api/praxis'
+import type { TaskOut } from '../../../api/tasks'
 import { PraxisByline, PraxisStats, PraxisVoteFooter } from '../shared'
-import { MobileVoteFooter } from '../mobile/shared'
+import { PraxisBody } from '../desktop/shared'
+import { MobilePraxisBody, MobileVoteFooter } from '../mobile/shared'
 
 function praxis(overrides: Partial<PraxisCardOut>): PraxisCardOut {
   return {
@@ -27,8 +29,32 @@ function praxis(overrides: Partial<PraxisCardOut>): PraxisCardOut {
     member_count: 1,
     score: 12.5,
     voter_count: 3,
+    applied_metatasks: [],
     ...overrides,
   } as PraxisCardOut
+}
+
+function metatask(overrides: Partial<TaskOut>): TaskOut {
+  return {
+    id: 99,
+    // A unique single-word title: seal skins may wrap multi-word titles in
+    // per-word tags, so stripping markup would collapse the inter-word spaces.
+    title: 'Sealmark',
+    description: null,
+    point_value: 5,
+    level_required: 7,
+    status: 'active',
+    task_type: 'metatask',
+    created_by: 3,
+    primary_faction_slug: 'snide',
+    metatask_faction_slug: 'snide',
+    is_task_vision_eligible: false,
+    created_at: '2026-01-01T00:00:00Z',
+    can_submit_praxis: false,
+    allowed_modes: [],
+    eligible_for_current_user: false,
+    ...overrides,
+  } as TaskOut
 }
 
 const render = (node: ReactElement) =>
@@ -100,6 +126,50 @@ describe('the meta line (#888)', () => {
     const html = render(<PraxisStats praxis={praxis({})} />)
     expect(html).toContain('var(--text-xl)')
     expect(html).not.toContain('var(--text-xs)')
+  })
+})
+
+describe('the applied-metatask seal stack (#932)', () => {
+  // A WOW card carrying a Snide-issued metatask: the seal follows the metatask's
+  // ISSUING faction, not the host card's. Every seal skin prints the title.
+  const snideSeal = metatask({ metatask_faction_slug: 'snide' })
+
+  it('the desktop body renders a seal below the score when a metatask is applied', () => {
+    const html = render(
+      <PraxisBody
+        praxis={praxis({ created_by_faction_slug: 'wow', applied_metatasks: [snideSeal] })}
+        tint="#000"
+        muted="#555"
+      />,
+    )
+    expect(text(html)).toContain('Sealmark')
+  })
+
+  it('the desktop body renders no seal when nothing is applied', () => {
+    const html = render(
+      <PraxisBody praxis={praxis({ applied_metatasks: [] })} tint="#000" muted="#555" />,
+    )
+    expect(text(html)).not.toContain('Sealmark')
+  })
+
+  it('the mobile body renders a seal below the score when a metatask is applied', () => {
+    const html = render(
+      <MobilePraxisBody
+        praxis={praxis({ created_by_faction_slug: 'wow', applied_metatasks: [snideSeal] })}
+        theme={{ paper: '#fff', ink: '#000', accent: '#333', muted: '#555' }}
+      />,
+    )
+    expect(text(html)).toContain('Sealmark')
+  })
+
+  it('the mobile body renders no seal when nothing is applied', () => {
+    const html = render(
+      <MobilePraxisBody
+        praxis={praxis({ applied_metatasks: [] })}
+        theme={{ paper: '#fff', ink: '#000', accent: '#333', muted: '#555' }}
+      />,
+    )
+    expect(text(html)).not.toContain('Sealmark')
   })
 })
 

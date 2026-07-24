@@ -7,6 +7,7 @@ import { relativeTime } from '../../../utils/dates'
 import { mediaUrl } from '../../../utils/media'
 import { rosterNames } from '../shared'
 import ScoreStamp from '../scoreStamp/ScoreStamp'
+import MetaTaskSeal from '../../metaTaskSeal/MetaTaskSeal'
 import { TaskCrown } from '../../cards/TaskCrown'
 import VoteUI from '../../vote/VoteUI'
 
@@ -534,6 +535,12 @@ export function MobilePraxisBody({
        * crown is suppressed here because the mobile body floats its own.
        */}
       <ScoreStamp praxis={praxis} showCrown={false} />
+      {/*
+       * Read-only applied-metatask seal stack (#932): below the score, above the
+       * media. Each seal dispatches on its metatask's ISSUING faction, not this
+       * card's. Stacks single-column; renders nothing when empty.
+       */}
+      <MetaTaskSeal metatasks={praxis.applied_metatasks ?? []} />
       <MobileModeChip praxis={praxis} theme={theme} />
       <MobileRoster praxis={praxis} theme={theme} />
       {/* Every card shows the media slot — a drop target when empty (#821). */}
