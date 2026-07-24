@@ -76,12 +76,14 @@ describe('propose task — unaffiliated option', () => {
     expect(render({ factionSlug: 'ua' })).toContain('var(--faction-ua)')
   })
 
-  it('tells a metatask author to pick a faction while unaffiliated', () => {
+  it('reads Unaffiliated as a legitimate metatask issuer, not an error', () => {
+    // #894: `na` metatasks are allowed ("anyone"), so the helper next to the
+    // checkbox invites the choice rather than rejecting it.
     const unaffiliated = render({ canProposeMetatask: true }).replace(
       /<[^>]*>/g,
       '',
     )
-    expect(unaffiliated).toContain('meta tasks must belong to one')
+    expect(unaffiliated).toContain('Unaffiliated = anyone')
 
     const affiliated = render({
       canProposeMetatask: true,

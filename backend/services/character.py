@@ -3,7 +3,7 @@ import re
 from typing import Optional
 
 from fastapi import HTTPException
-from sqlalchemy import func, or_, select
+from sqlalchemy import case, func, or_, select
 from sqlalchemy.sql import Select, false as sa_false
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -528,6 +528,10 @@ async def list_characters_for_viewer(
     # display name can contain '@', so a leading one is a sigil to drop, not a
     # character to match (#624).
     term = search.lstrip("@") if search else None
+    # match_priority ranks recall by relevance so a prefix ("@P" → Pixie) beats a
+    # mere substring ("yum*P*") regardless of score; it is only meaningful when a
+    # term is present, so we thread it into the ORDER BY below (#989).
+    match_priority = None
     if term:
         # Match on handle OR display name so "@Mol" surfaces "Molly" (@mollusk).
         # The inserted mention is still @username; display_name only *matches*.
@@ -536,6 +540,30 @@ async def list_characters_for_viewer(
                 Character.username.ilike(f"%{term}%"),
                 Character.display_name.ilike(f"%{term}%"),
             )
+        )
+        # Substring ILIKE gives recall, but ordering by score alone buries the
+        # obvious prefix match below the row limit (#989). Rank exact matches
+        # first, then prefix, then any-substring — before score decides ties.
+        # The term is bound as a parameter throughout (no SQL injection); as with
+        # the substring ILIKE above we do not escape ``%``/``_`` in the literal, so
+        # they keep acting as wildcards, matching pre-existing behaviour.
+        term_lower = term.lower()
+        match_priority = case(
+            (
+                or_(
+                    func.lower(Character.username) == term_lower,
+                    func.lower(Character.display_name) == term_lower,
+                ),
+                0,
+            ),
+            (
+                or_(
+                    Character.username.ilike(f"{term}%"),
+                    Character.display_name.ilike(f"{term}%"),
+                ),
+                1,
+            ),
+            else_=2,
         )
     if faction_slug:
         query = query.where(Character.faction_slug == faction_slug)
@@ -560,11 +588,13 @@ async def list_characters_for_viewer(
     # and score alone leaves Postgres free to reshuffle equal-score rows between
     # requests — which flickers the sky's top-N membership and its crown, and
     # makes limit/offset paging silently duplicate and drop rows (#655).
-    query = (
-        query.order_by(CharacterStats.score.desc().nulls_last(), Character.id.asc())
-        .limit(limit)
-        .offset(offset)
+    order_columns = []
+    if match_priority is not None:
+        order_columns.append(match_priority.asc())
+    order_columns.extend(
+        [CharacterStats.score.desc().nulls_last(), Character.id.asc()]
     )
+    query = query.order_by(*order_columns).limit(limit).offset(offset)
 
     result = await session.execute(query)
     return list(result.all())

@@ -26,7 +26,12 @@ from models.character import Character
 from models.era import Era
 from models.faction import Faction
 from models.task import Task, TaskType
-from seed import ensure_placeholder_metatask, sync_era_tasks
+from seed import (
+    ONBOARDING_TASK_TITLE,
+    ensure_onboarding_task,
+    ensure_placeholder_metatask,
+    sync_era_tasks,
+)
 
 
 def _standard_task(title: str, faction_slug: str = "ua") -> TaskDef:
@@ -74,6 +79,70 @@ async def test_task_sync_propagates_new_era_task_on_seeded_db(
         await db_session.execute(select(Task).where(Task.title == "Alpha Task"))
     ).scalars().all()
     assert len(alpha_rows) == 1
+
+
+@pytest.mark.asyncio
+async def test_onboarding_task_seeded_once_and_is_the_only_level_zero_task(
+    db_session: AsyncSession,
+    era: Era,
+    character: Character,
+    faction_ua: Faction,
+):
+    """The game-wide L0 onboarding task is seeded on every run, idempotently (#511)."""
+    # The onboarding task is faction="albescent"; seed that FK target.
+    from models.faction import FactionStatus
+
+    if (
+        await db_session.execute(select(Faction).where(Faction.slug == "albescent"))
+    ).scalar_one_or_none() is None:
+        db_session.add(Faction(slug="albescent", status=FactionStatus.visible))
+        await db_session.flush()
+
+    # Simulate a populated DB with era content (none of it level 0 anymore).
+    await sync_era_tasks(
+        db_session, _era_with_tasks(_standard_task("Alpha Task")), character.id
+    )
+    # _standard_task defaults to level_required=0; overwrite that task's level so
+    # the onboarding task is genuinely the only L0 row for the assertion below.
+    alpha = (
+        await db_session.execute(select(Task).where(Task.title == "Alpha Task"))
+    ).scalar_one()
+    alpha.level_required = 1
+    await db_session.flush()
+
+    created = await ensure_onboarding_task(db_session, character.id)
+    assert created is True
+
+    onboarding_rows = (
+        await db_session.execute(
+            select(Task).where(Task.title == ONBOARDING_TASK_TITLE)
+        )
+    ).scalars().all()
+    assert len(onboarding_rows) == 1
+    assert onboarding_rows[0].level_required == 0
+    assert onboarding_rows[0].primary_faction_slug == "albescent"
+    assert onboarding_rows[0].task_type == TaskType.standard
+
+    # It is the only standard level-0 task in the database.
+    level_zero_standard = (
+        await db_session.execute(
+            select(Task).where(
+                Task.level_required == 0, Task.task_type == TaskType.standard
+            )
+        )
+    ).scalars().all()
+    assert len(level_zero_standard) == 1
+    assert level_zero_standard[0].title == ONBOARDING_TASK_TITLE
+
+    # Idempotent: a second run creates nothing.
+    created_again = await ensure_onboarding_task(db_session, character.id)
+    assert created_again is False
+    onboarding_rows = (
+        await db_session.execute(
+            select(Task).where(Task.title == ONBOARDING_TASK_TITLE)
+        )
+    ).scalars().all()
+    assert len(onboarding_rows) == 1
 
 
 @pytest.mark.asyncio

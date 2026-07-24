@@ -681,7 +681,7 @@
     "metaToggle": {
       "label": "Create as meta task",
       "hint": "applies as a bonus to all {{faction}} submissions",
-      "hintNoFaction": "pick a faction above — meta tasks must belong to one"
+      "hintNoFaction": "pick a faction above (Unaffiliated = anyone)"
     },
     "preview": {
       "metaHeading": "Meta task preview — {{faction}}",
@@ -692,7 +692,6 @@
       "pending": "Pending review"
     },
     "errors": {
-      "metaFactionRequired": "Meta tasks must belong to a specific faction.",
       "createMeta": "Could not create meta task.",
       "propose": "Could not propose task."
     },
