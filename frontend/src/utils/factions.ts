@@ -149,8 +149,12 @@ export function factionCssVar(
  * Surface geometry a faction FILL can occupy. Determines how `na`'s spectrum is
  * rendered — the wrong shape compiles fine but looks bad (a 7-stop linear on a
  * 10px dot reads as mud), so the call site picks it. See ADR-0039.
+ *
+ * `"frame"` is the border-only case (#794): a rainbow *ring* for a surface that
+ * needs a scalar accent (a selection ring, a card edge) rather than a fill, so
+ * na stops falling back to grey there too.
  */
-export type FactionFillShape = "bar" | "dot" | "pill";
+export type FactionFillShape = "bar" | "dot" | "pill" | "frame";
 
 /**
  * A faction FILL as a style object to spread onto the filled element.
@@ -165,10 +169,26 @@ export type FactionFillShape = "bar" | "dot" | "pill";
  *   - `"pill"` → the rainbow as a *frame* (border-box) around a neutral paper
  *                interior with ink text — no single ink is legible across the
  *                spectrum, so the label never sits on it.
+ *   - `"frame"` → the rainbow as a border ring only (the pill's border-box
+ *                treatment MINUS the forced ink), for a scalar accent (a
+ *                selection ring, a card edge) that would otherwise degrade to
+ *                grey. The interior is filled with the neutral card paper rather
+ *                than left see-through ON PURPOSE: a rounded gradient border with
+ *                a genuinely transparent centre is not expressible as a single
+ *                spreadable `background` — a transparent padding-box reveals the
+ *                border-box gradient straight through the middle. The pill fills
+ *                opaque paper for exactly this reason; `frame` keeps that fill but
+ *                drops the ink so the caller owns its own text colour (#794).
+ *
+ * The scalar (`border/ring`) contexts that used to reach for `factionCssVar` and
+ * land on grey now ask for `"frame"` instead. A real faction's `"frame"` is a
+ * plain solid `var(--faction-{key})` border, so `factionCssVar` + `"frame"` agree
+ * for known factions and only `na`/unregistered slugs change.
  *
  * Prefer this over `factionCssVar(slug)` for any `background:` that renders a
- * dynamic slug (one that can be `na` at runtime). Scalar contexts (`color:`,
- * borders) keep using `factionCssVar` and stay neutral grey for `na`.
+ * dynamic slug (one that can be `na` at runtime). Genuine single-ink TEXT
+ * (`color:`) keeps using `factionCssVar` and stays neutral grey for `na` — no
+ * single stop is legible across seven (#649), so that is correct, not a fallback.
  */
 export function factionFill(
   slug: string | null | undefined,
@@ -192,6 +212,22 @@ export function factionFill(
       background: `var(--faction-${key})`,
       color: `var(--faction-${key}-on-fill)`,
     };
+  }
+
+  if (shape === "frame") {
+    if (isDefault) {
+      // The pill's rainbow border-box over an opaque neutral interior, minus the
+      // forced ink (see the docblock on why the interior can't be see-through).
+      return {
+        background:
+          "linear-gradient(var(--faction-default-card-bg), var(--faction-default-card-bg)) padding-box, var(--faction-default-rainbow) border-box",
+        border: "2px solid transparent",
+        boxSizing: "border-box",
+      };
+    }
+    // A real faction degrades to a plain solid border, exactly as the other
+    // shapes degrade to a solid background — the caller keeps its own interior.
+    return { border: `2px solid var(--faction-${key})` };
   }
 
   if (isDefault) {

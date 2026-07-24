@@ -119,6 +119,63 @@ describe("factionFill (#636 / ADR-0039)", () => {
       color: "var(--faction-coven-on-fill)",
     });
   });
+
+  // ── frame: the rainbow as a scalar border ring (#794) ──
+
+  it("gives na a rainbow border ring with a neutral interior for a frame", () => {
+    const fill = factionFill("na", "frame");
+    expect(fill.border).toBe("2px solid transparent");
+    expect(fill.boxSizing).toBe("border-box");
+    expect(fill.background).toContain("border-box");
+    expect(fill.background).toContain("--faction-default-rainbow");
+  });
+
+  it("drops the pill's forced ink for a frame, so the caller owns its text", () => {
+    // The one thing that distinguishes frame from pill: no `color` key. A grey
+    // surface reaching for a rainbow *ring* keeps its own text colour (neutral
+    // ink is correct for real single-ink text, #649) — it is only the scalar
+    // accent that was falling back to grey.
+    expect(factionFill("na", "frame").color).toBeUndefined();
+    expect(factionFill("na", "pill").color).toBe(
+      "var(--faction-default-card-text)",
+    );
+  });
+
+  it("unregistered / null slugs frame like na (default), not ua", () => {
+    expect(factionFill("not_a_faction", "frame")).toEqual(
+      factionFill("na", "frame"),
+    );
+    expect(factionFill(null, "frame")).toEqual(factionFill("na", "frame"));
+  });
+
+  it("degrades a real faction's frame to a plain solid border", () => {
+    expect(factionFill("everymen", "frame")).toEqual({
+      border: "2px solid var(--faction-everymen)",
+    });
+    expect(factionFill("coven", "frame")).toEqual({
+      border: "2px solid var(--faction-coven)",
+    });
+  });
+
+  it("keeps bar / dot / pill byte-identical after adding frame", () => {
+    // Guards the refactor: the new shape must not perturb the existing three.
+    expect(factionFill("na", "bar")).toEqual({
+      background: "var(--faction-default-rainbow)",
+    });
+    expect(factionFill("na", "dot")).toEqual({
+      background: "var(--faction-default-ring)",
+    });
+    expect(factionFill("na", "pill")).toEqual({
+      background:
+        "linear-gradient(var(--faction-default-card-bg), var(--faction-default-card-bg)) padding-box, var(--faction-default-rainbow) border-box",
+      border: "2px solid transparent",
+      color: "var(--faction-default-card-text)",
+      boxSizing: "border-box",
+    });
+    expect(factionFill("snide", "bar")).toEqual({
+      background: "var(--faction-snide)",
+    });
+  });
 });
 
 describe("FACTION_RAINBOW_ORDER does not leak Albescent (#783, ADR-0027)", () => {
