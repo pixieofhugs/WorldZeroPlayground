@@ -233,18 +233,19 @@ function Roster({ players, myCharId }: { players: RankedPlayer[]; myCharId: numb
           {t('leaderboard.mobile.allFactions')}
         </Chip>
         {factionChips.map(({ slug }) => {
-          // Scalar-only, so no isKnownFaction branch: Chip spends `tint` on a
-          // border colour and a box-shadow ring, and a gradient is invalid in
-          // both. The unaffiliated selection ring stays neutral by necessity —
-          // the spectrum arrives on this chip through the FactionSigil glyph
-          // below, which draws --faction-default-ring. factionCssVar already
-          // maps `na` to --faction-default; see the isKnownFaction docblock in
-          // utils/factions for why that is the design, not a fallback (#754).
+          // Chip spends `tint` on a border colour and a box-shadow ring, and a
+          // gradient is invalid in both — so for a real faction the ring is its
+          // solid hue. `na` has no scalar hue (ADR-0039): factionCssVar maps it
+          // to grey, so instead the chip flags itself `unaffiliated` and Chip
+          // swaps the grey ring for a rainbow `frame` border (#794). The value
+          // test (not key presence) is the isKnownFaction docblock's rule (#749).
+          const unaffiliated = !isKnownFaction(slug)
           const ring = factionCssVar(slug)
           return (
             <Chip
               key={slug}
               iconOnly
+              unaffiliated={unaffiliated}
               // The visible name is gone, so the label is the only name left.
               ariaLabel={factionName(slug === UNAFFILIATED ? null : slug)}
               on={faction === slug}
