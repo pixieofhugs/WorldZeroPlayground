@@ -17,6 +17,7 @@ import i18n from '../../../i18n'
 import DefaultMobilePraxisDetail from '../mobileArchetypes/DefaultPraxisDetail'
 import type { PraxisDetailState } from '../usePraxisDetail'
 import type { PraxisOut } from '../../../api/praxis'
+import type { TaskOut } from '../../../api/tasks'
 import type { VoteSummary } from '../../../api/votes'
 
 function render(element: ReactElement): { html: string; text: string } {
@@ -143,6 +144,50 @@ function multiplierState(): PraxisDetailState {
   s.votes = { praxis_id: 1, total_votes: 4, total_score: 14 }
   return s
 }
+
+// ─── Metatask seal stack (#932) ──────────────────────────────────────────────
+// The mobile twin: each mobile detail archetype renders the read-only
+// applied-metatask seal stack in its below-byline / above-media slot when
+// `applied_metatasks` is non-empty, and nothing when empty. The seal dispatches
+// on the METATASK's issuing faction (here `snide`), not the host archetype's.
+
+const SEAL_METATASK: TaskOut = {
+  id: 501,
+  title: 'Composting',
+  description: null,
+  point_value: 60,
+  level_required: 0,
+  status: 'active',
+  task_type: 'metatask',
+  created_by: 9,
+  primary_faction_slug: null,
+  metatask_faction_slug: 'snide',
+  is_task_vision_eligible: false,
+  created_at: '2026-01-01T00:00:00Z',
+  can_submit_praxis: false,
+  allowed_modes: [],
+  eligible_for_current_user: false,
+}
+
+/** Same praxis, now carrying one applied metatask seal. */
+function sealedState(): PraxisDetailState {
+  const s = state()
+  s.praxis = { ...PRAXIS, applied_metatasks: [SEAL_METATASK] }
+  return s
+}
+
+describe('mobile praxis-read metatask seal stack', () => {
+  for (const [slug, Archetype] of Object.entries(archetypes)) {
+    it(`${slug} renders the applied seal, and nothing when none applied`, () => {
+      expect(render(<Archetype state={sealedState()} />).text, 'seal condition line').toContain(
+        'Composting',
+      )
+      expect(render(<Archetype state={state()} />).text, 'no seal when empty').not.toContain(
+        'Composting',
+      )
+    })
+  }
+})
 
 describe('mobile praxis-read earned-points breakdown', () => {
   for (const [slug, Archetype] of Object.entries(archetypes)) {

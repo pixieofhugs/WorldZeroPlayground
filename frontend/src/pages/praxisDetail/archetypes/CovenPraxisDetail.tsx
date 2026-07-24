@@ -22,6 +22,7 @@ import VoteUI from '../../../components/vote/VoteUI'
 import { factionCssVar } from '../../../utils/factions'
 import { formatTimestamp } from '../../../utils/dates'
 import { PraxisAdminBar, PraxisStatusBanners, PraxisOwnerActions, PraxisFlagBlock, PraxisVoterBreakdown, PraxisScoreBreakdown, MemberByline } from '../shared'
+import MetaTaskSeal from '../../../components/metaTaskSeal/MetaTaskSeal'
 import type { PraxisDetailState } from '../usePraxisDetail'
 
 // ── whimsy.exe token vocabulary (same as CovenTaskDetail) ──────────────────────
@@ -323,6 +324,15 @@ export default function CovenPraxisDetail({ state }: { state: PraxisDetailState 
                 </div>
               </div>
             </div>
+
+            {/* ── Metatask seals (#932) — read-only stack, below the byline/points
+                block, above the evidence. Dispatched on each metatask's issuing
+                faction, not Coven; empty stack renders nothing. ── */}
+            {praxis.applied_metatasks.length > 0 && (
+              <div style={{ marginTop: 'var(--space-lg)' }}>
+                <MetaTaskSeal metatasks={praxis.applied_metatasks} />
+              </div>
+            )}
 
             {/* ── 3 · the account (body text) ── */}
             {praxis.body_text && (

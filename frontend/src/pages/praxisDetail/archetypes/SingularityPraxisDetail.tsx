@@ -23,6 +23,7 @@ import VoteUI from '../../../components/vote/VoteUI'
 import { factionCssVar } from '../../../utils/factions'
 import { formatTimestamp } from '../../../utils/dates'
 import { PraxisAdminBar, PraxisStatusBanners, PraxisOwnerActions, PraxisFlagBlock, PraxisVoterBreakdown, PraxisScoreBreakdown, MemberByline } from '../shared'
+import MetaTaskSeal from '../../../components/metaTaskSeal/MetaTaskSeal'
 import type { PraxisDetailState } from '../usePraxisDetail'
 
 // ── Terminal atoms (presentation only — no shared behavior) ──────────────────
@@ -360,6 +361,15 @@ export default function SingularityPraxisDetail({ state }: { state: PraxisDetail
               </div>
             </div>
           </div>
+
+          {/* ── Metatask seals (#932) — read-only stack, below the byline/points
+              block, above the artifacts. Dispatched on each metatask's issuing
+              faction, not Singularity's; an empty stack renders nothing. ── */}
+          {praxis.applied_metatasks.length > 0 && (
+            <div style={{ marginTop: 'var(--space-lg)' }}>
+              <MetaTaskSeal metatasks={praxis.applied_metatasks} />
+            </div>
+          )}
 
           {/* ── The account body → PROCESS_LOG ── */}
           {praxis.body_text && (

@@ -16,6 +16,7 @@ import {
   MemberByline,
 } from '../shared'
 import { VoteFactionContext } from '../../../components/vote/VoteShell'
+import MetaTaskSeal from '../../../components/metaTaskSeal/MetaTaskSeal'
 import { MobileStarVote } from './shared'
 
 /**
@@ -94,6 +95,11 @@ export default function EphemeristsPraxisDetail({ state }: { state: PraxisDetail
         </div>
         <EphemeristsSigil size={20} color={LAPIS} />
       </div>
+
+      {/* Metatask seals (#932) — read-only stack, below the byline, above the
+          evidence. Each seal keeps its issuing faction's voice; renders nothing
+          when none are applied. */}
+      <MetaTaskSeal metatasks={praxis.applied_metatasks} />
 
       {/* Evidence plate — full media inside */}
       {praxis.media_items.length > 0 && (
