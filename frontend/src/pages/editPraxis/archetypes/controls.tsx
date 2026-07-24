@@ -142,6 +142,7 @@ export function InviteSearch({
                   currentCharacterId={state.currentCharacterId}
                   factionSlug={praxis.task_faction_slug}
                   taskPointValue={praxis.task_point_value}
+                  onKick={state.kickMember}
                 />
               </div>,
               ...praxis.invites

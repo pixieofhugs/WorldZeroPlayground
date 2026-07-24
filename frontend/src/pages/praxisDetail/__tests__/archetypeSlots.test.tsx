@@ -112,6 +112,7 @@ function state(): PraxisDetailState {
     handleWithdraw: async () => {},
     handleResubmit: async () => {},
     handleFlag: async () => {},
+    handleKickMember: async () => {},
     metatasks: [],
     metataskLoading: false,
     metataskError: null,
