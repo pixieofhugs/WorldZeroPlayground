@@ -68,6 +68,7 @@ import WowVote from '../components/vote/WowVote'
 import WowMobilePraxisCard from '../components/praxisCard/mobile/WowMobilePraxisCard'
 import WowPraxisCard from '../components/praxisCard/desktop/WowPraxisCard'
 import WowScoreStamp from '../components/praxisCard/scoreStamp/WowScoreStamp'
+import WowSeal from '../components/metaTaskSeal/skins/WowSeal'
 import WowEditPraxis from '../pages/editPraxis/archetypes/WowEditPraxis'
 import WowMobileEditPraxis from '../pages/editPraxis/mobileArchetypes/WowEditPraxis'
 import WowDuelSealConfirm from '../components/duel/WowDuelSealConfirm'
@@ -91,6 +92,7 @@ export const WOW_MANIFEST: FactionManifest = {
   feedFrame: () => WowFeedFrame,
   praxisCard: () => WowPraxisCard,
   scoreStamp: () => WowScoreStamp,
+  metaTaskSeal: () => WowSeal,
   mobilePraxisCard: () => WowMobilePraxisCard,
   vote: () => WowVote,
   editPraxis: () => WowEditPraxis,
