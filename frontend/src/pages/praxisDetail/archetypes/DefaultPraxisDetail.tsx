@@ -232,7 +232,9 @@ export default function DefaultPraxisDetail({ state }: { state: PraxisDetailStat
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 340px', gap: 'var(--space-2xl)', alignItems: 'start' }}>
 
           {/* ── THE PRAXIS SHEET — rainbow-bordered card ── */}
-          <div style={{ borderRadius: 16, padding: 6, background: 'var(--faction-default-rainbow)', boxShadow: '0 18px 44px -26px var(--color-overlay-strong)' }}>
+          {/* padding here is the rainbow-frame thickness (ornament geometry);
+              snapped from the design's 6px to --space-xs to stay on the scale. */}
+          <div style={{ borderRadius: 16, padding: 'var(--space-xs)', background: 'var(--faction-default-rainbow)', boxShadow: '0 18px 44px -26px var(--color-overlay-strong)' }}>
             <div style={{ borderRadius: 11, background: 'var(--faction-default-card-bg)', color: 'var(--faction-default-card-text)', padding: 'var(--space-2xl)' }}>
 
               {/* Eyebrow: ring dot + counts-for-everyone */}
@@ -255,7 +257,7 @@ export default function DefaultPraxisDetail({ state }: { state: PraxisDetailStat
               {/* Author row: rainbow-ring avatar · Re: task · filed · base pts */}
               <div className="flex items-center" style={{ gap: 'var(--space-md)', paddingBottom: 'var(--space-xl)', marginBottom: 'var(--space-xl)', borderBottom: '1px solid var(--faction-default-border)' }}>
                 <Link to={`/characters/${praxis.created_by_id}`} className="shrink-0">
-                  <span style={{ display: 'block', width: 40, height: 40, borderRadius: '50%', padding: 3, background: 'var(--faction-default-rainbow)' }}>
+                  <span style={{ display: 'block', width: 40, height: 40, borderRadius: '50%', padding: 'var(--space-xs)', background: 'var(--faction-default-rainbow)' }}>
                     <span className="flex items-center justify-center font-display italic" style={{ width: '100%', height: '100%', borderRadius: '50%', background: 'var(--faction-default-card-bg)', fontSize: 'var(--text-lg)', color: 'var(--faction-default-card-text)' }} aria-hidden>
                       {authorInitial}
                     </span>
@@ -291,7 +293,7 @@ export default function DefaultPraxisDetail({ state }: { state: PraxisDetailStat
               {/* Evidence plate — rainbow-bordered, "Plate I" caption */}
               {praxis.media_items.length > 0 && (
                 <div style={{ marginBottom: 'var(--space-lg)' }}>
-                  <div style={{ borderRadius: 10, padding: 5, background: 'var(--faction-default-rainbow)' }}>
+                  <div style={{ borderRadius: 10, padding: 'var(--space-xs)', background: 'var(--faction-default-rainbow)' }}>
                     <div style={{ borderRadius: 6, background: 'var(--color-bg-surface)', padding: 'var(--space-sm)' }}>
                       <MediaGallery media={praxis.media_items} layout="grid" />
                     </div>
