@@ -7,7 +7,7 @@ import { relativeTime } from '../../utils/dates'
 import { factionCssVar, factionName } from '../../utils/factions'
 import { mediaUrl } from '../../utils/media'
 import { useMyActiveTasks } from '../../hooks/useMyActiveTasks'
-import type { PraxisType } from '../../api/praxis'
+import { praxisModeLabel } from '../../utils/praxis'
 import { usePendingRequests } from '../../hooks/usePendingRequests'
 import { useRespondToRequest } from '../../hooks/useRespondToRequest'
 import { useGameConfig } from '../../hooks/useGameConfig'
@@ -62,12 +62,6 @@ export default function Sidebar() {
   const { pendingRequests, refetch: refetchPendingRequests } = usePendingRequests()
   const gameConfig = useGameConfig()
   const [globalActivity, setGlobalActivity] = useState<ActivityFeedItem[]>([])
-
-  const praxisTypeLabel: Record<PraxisType, string> = {
-    solo: t('praxisType.solo'),
-    collab: t('praxisType.collab'),
-    duel: t('praxisType.duel'),
-  }
 
   useEffect(() => {
     if (!user) return
@@ -274,7 +268,7 @@ export default function Sidebar() {
                     borderRadius: 999,
                   }}
                 >
-                  {praxisTypeLabel[praxis.type]}
+                  {praxisModeLabel(praxis, t)}
                 </span>
               </div>
             ))}

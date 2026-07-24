@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { factionCssVar, factionFill, factionName } from '../../../utils/factions'
 import { mediaUrl } from '../../../utils/media'
+import { praxisModeLabel } from '../../../utils/praxis'
 import CharacterSwitcherSheet from '../../../components/CharacterSwitcherSheet'
 import type { FieldDeskHomeState } from '../useFieldDeskHome'
 
@@ -315,7 +316,7 @@ export default function DefaultFieldDesk({ state }: { state: FieldDeskHomeState 
                     borderRadius: 999,
                   }}
                 >
-                  {t(`praxisType.${praxis.type}`)}
+                  {praxisModeLabel(praxis, t)}
                 </span>
               </Link>
             ))}

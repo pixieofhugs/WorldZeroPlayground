@@ -164,8 +164,10 @@ const COLLAB: PraxisCardOut = {
   submit_proposed_at: "2026-01-03T00:00:00Z",
 };
 
-// Duel side — a mode chip, no crew roster.
-const DUEL: PraxisCardOut = { ...PRAXIS, type: "duel" };
+// Duel side — a mode chip, no crew roster. A duel side is stored type='solo' +
+// a non-null duel_id (ADR-0011, #992), NOT type='duel'; the chip gates on
+// duel_id, so the fixture must carry it.
+const DUEL: PraxisCardOut = { ...PRAXIS, type: "solo", duel_id: 42 };
 
 // Four images → gallery caps at three tiles with a "+1" overflow badge.
 const OVERFLOW: PraxisCardOut = {

@@ -371,6 +371,49 @@ async def applied_metatasks_for(
     return metatasks_by_praxis
 
 
+async def duel_id_map(
+    praxes: list[Praxis],
+    session: AsyncSession,
+) -> dict[int, int]:
+    """Praxis id → duel id for each duel-side praxis on the page, in ONE query.
+
+    A duel side is stored ``type='solo'`` + a non-null ``duel_id`` (ADR-0011),
+    so card mode labels/chips must gate on duel presence, not ``type`` (#992).
+    Mirrors the per-praxis duel lookup in :func:`build_praxis_out` (same statuses
+    incl. ``resolved`` per ADR-0052, so a past duel's side still reads as a duel),
+    but batches every praxis id on the page into a single duel query rather than
+    one lookup per card (N+1). The result is handed to
+    :func:`build_praxis_card_out` via ``duel_ids``.
+
+    A praxis that is not a duel side is simply absent from the returned map (the
+    card builder treats a missing entry as ``duel_id=None``).
+    """
+    if not praxes:
+        return {}
+
+    praxis_ids = {p.id for p in praxes}
+    duel_result = await session.execute(
+        select(Duel).where(
+            (Duel.challenger_praxis_id.in_(praxis_ids))
+            | (Duel.opponent_praxis_id.in_(praxis_ids)),
+            Duel.status.in_(
+                [
+                    DuelStatus.pending,
+                    DuelStatus.active,
+                    DuelStatus.settled,
+                    DuelStatus.resolved,
+                ]
+            ),
+        )
+    )
+    mapping: dict[int, int] = {}
+    for duel in duel_result.scalars().all():
+        for side_id in (duel.challenger_praxis_id, duel.opponent_praxis_id):
+            if side_id in praxis_ids:
+                mapping[side_id] = duel.id
+    return mapping
+
+
 def _resolve_card_scoring(
     contribution: Optional[Contribution], task_point_value: int, tally_votes_points: int
 ) -> tuple[int, float, int, float]:
@@ -418,6 +461,7 @@ async def build_praxis_card_out(
     author_contributions: Optional[dict[int, Contribution]] = None,
     applied_metatasks: Optional[dict[int, list[TaskOut]]] = None,
     viewer_can_vote: Optional[dict[int, bool]] = None,
+    duel_ids: Optional[dict[int, int]] = None,
 ) -> PraxisCardOut:
     """Lightweight card for list views.
 
@@ -452,6 +496,12 @@ async def build_praxis_card_out(
     routes precompute it once via :func:`~services.vote.viewer_can_vote_map` so
     the ownership/duel-participation check is not a per-card query. ``None`` or a
     missing entry defaults to ``True`` (the vote module renders as usual).
+
+    ``duel_ids`` maps praxis id → its duel id when the praxis is a duel side
+    (#992, ADR-0011); list routes precompute it once via :func:`duel_id_map` so
+    the duel lookup is not a per-card query (N+1). When absent, this builder
+    loads the single praxis's duel id itself (single-card callers). A missing
+    entry means the praxis is not a duel side (``duel_id=None``).
     """
     task_title = praxis.task.title if praxis.task else ""
     task_point_value = praxis.task.point_value if praxis.task else 0
@@ -496,6 +546,13 @@ async def build_praxis_card_out(
             praxis.id, []
         )
 
+    # Duel side (#992, ADR-0011). Reuse the precomputed page-wide map when the
+    # list route supplies it; otherwise load this praxis's own duel id.
+    if duel_ids is not None:
+        praxis_duel_id = duel_ids.get(praxis.id)
+    else:
+        praxis_duel_id = (await duel_id_map([praxis], session)).get(praxis.id)
+
     return PraxisCardOut(
         id=praxis.id,
         task_id=praxis.task_id,
@@ -531,6 +588,7 @@ async def build_praxis_card_out(
         viewer_can_vote=(
             viewer_can_vote.get(praxis.id, True) if viewer_can_vote else True
         ),
+        duel_id=praxis_duel_id,
     )
 
 
@@ -1944,6 +2002,7 @@ __all__ = [
     "can_view_praxis",
     "create_praxis",
     "delete_praxis",
+    "duel_id_map",
     "evaluate_signup",
     "flag_praxis",
     "get_praxis",

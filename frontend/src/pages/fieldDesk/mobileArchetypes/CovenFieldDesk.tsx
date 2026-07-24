@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { factionName } from '../../../utils/factions'
 import { mediaUrl } from '../../../utils/media'
+import { praxisModeLabel } from '../../../utils/praxis'
 import type { FieldDeskHomeState } from '../useFieldDeskHome'
 
 /**
@@ -336,7 +337,7 @@ export default function CovenFieldDesk({ state }: { state: FieldDeskHomeState })
                   className="shrink-0 eyebrow"
                   style={{ color: PINK, padding: 'var(--space-xs) var(--space-sm)', border: `1.5px solid ${NOTEPAD_BORDER}`, borderRadius: 999 }}
                 >
-                  {t(`praxisType.${praxis.type}`)}
+                  {praxisModeLabel(praxis, t)}
                 </span>
               </Link>
             ))}

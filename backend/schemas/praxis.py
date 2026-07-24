@@ -147,6 +147,11 @@ class PraxisCardOut(BaseModel):
     # Viewer-relative (#998); see ``PraxisOut.viewer_can_vote``. Precomputed
     # page-wide by the card-list route (no N+1) via ``viewer_can_vote_map``.
     viewer_can_vote: bool = True
+    # Set when this praxis is a side of a duel (ADR-0011): a duel side is stored
+    # ``type='solo'`` + a non-null ``duel_id``, so mode labels/chips must gate on
+    # this, not ``type`` (#992). Precomputed page-wide by the card-list route (no
+    # N+1) via ``duel_id_map``; mirrors ``PraxisOut.duel_id``.
+    duel_id: Optional[int] = None
 
     model_config = {"from_attributes": True}
 

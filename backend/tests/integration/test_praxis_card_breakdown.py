@@ -744,3 +744,52 @@ async def test_under_level_author_earns_zero_but_keeps_the_seal(
     assert len(card.applied_metatasks) == 1
     assert card.applied_metatasks[0].id == metatask.id
     assert_invariant(card)
+
+
+# ---------------------------------------------------------------------------
+# duel_id on the card payload (#992)
+# ---------------------------------------------------------------------------
+#
+# A duel side is stored type='solo' + a non-null duel_id (ADR-0011); the card
+# schema previously omitted duel_id, so the sidebar/FieldDesk/chip surfaces that
+# consume PraxisCardOut labelled every accepted duel "Solo". These assert the
+# card now carries duel_id so those surfaces can gate on duel presence.
+
+
+@pytest.mark.asyncio
+async def test_duel_side_card_carries_duel_id(
+    db_session: AsyncSession, era: Era, faction_ua: Faction
+):
+    """Both sides of a duel carry the duel's id on their card (not None)."""
+    challenger = await _make_character(
+        db_session, era, faction_slug="ua", username="dchallenger", email="dch@x.com"
+    )
+    opponent = await _make_character(
+        db_session, era, faction_slug="ua", username="dopponent", email="dop@x.com"
+    )
+    task = await _make_task(db_session, challenger, faction_slug="ua", points=10)
+    challenger_praxis = await _make_solo(db_session, task, challenger)
+    opponent_praxis = await _make_solo(db_session, task, opponent)
+    await _make_duel(db_session, task, challenger_praxis, opponent, opponent_praxis)
+
+    challenger_card = await _load_card(db_session, challenger_praxis.id)
+    opponent_card = await _load_card(db_session, opponent_praxis.id)
+
+    # Stored type is solo (ADR-0011): the card must expose duel_id, not lean on
+    # type, so the frontend can label the side "Duel".
+    assert challenger_card.type == PraxisType.solo
+    assert challenger_card.duel_id is not None
+    assert opponent_card.duel_id == challenger_card.duel_id
+
+
+@pytest.mark.asyncio
+async def test_non_duel_solo_card_has_null_duel_id(
+    db_session: AsyncSession, era: Era, faction_ua: Faction, character: Character
+):
+    """A plain solo praxis (no duel) carries duel_id=None on its card."""
+    task = await _make_task(db_session, character, faction_slug="ua", points=10)
+    praxis = await _make_solo(db_session, task, character)
+
+    card = await _load_card(db_session, praxis.id)
+
+    assert card.duel_id is None
