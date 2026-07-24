@@ -42,6 +42,7 @@ import {
   NextStepLine,
   RaceRoster,
   StakesTiles,
+  duelSides,
   type DuelSlotTheme,
 } from "../../components/duel/shared";
 import type { PraxisDetailState } from "./usePraxisDetail";
@@ -201,6 +202,7 @@ export default function DuelCrossLink({
   praxis,
   duel,
   state,
+  viewerCharacterId = null,
 }: {
   praxis: PraxisOut;
   duel: DuelDetailOut;
@@ -210,11 +212,26 @@ export default function DuelCrossLink({
    * lifecycle tests mount the rail without it, in which case `actions` stays null.
    */
   state?: PraxisDetailState;
+  /**
+   * The VIEWER's own character id (#999) — the seam that decides who is "You".
+   * Threaded from `usePraxisDetail`'s authed user at the mount site. `null` for
+   * an anonymous viewer.
+   */
+  viewerCharacterId?: number | null;
 }) {
   const { t } = useTranslation("praxis");
-  const isChallenger = praxis.id === duel.challenger.praxis_id;
-  const me: DuelSideOut = isChallenger ? duel.challenger : duel.opponent;
-  const foe: DuelSideOut = isChallenger ? duel.opponent : duel.challenger;
+  // Label by the VIEWER, not by which page we are on (#999). `duelSides` resolves
+  // "my side" from the viewer's character id; `viewer_is_participant` (backend,
+  // account-level) decides party-vs-spectator. The old
+  // `praxis.id === duel.challenger.praxis_id` cast whoever's page you were on as
+  // "You" — so a spectator on the challenger's page, or the opponent viewing the
+  // challenger's page, both saw the wrong side labelled "You". A spectator now
+  // gets neutral, named sides with no "You" copy; a party sees "You" on their own
+  // side from EITHER page (for a spectator `me` is the challenger, `foe` the
+  // opponent — the `duelSides` fallback — so the neutral copy reads correctly).
+  const spectator = !duel.viewer_is_participant;
+  const { me, foe } = duelSides(duel, viewerCharacterId);
+  const meIsChallenger = me.character_id === duel.challenger.character_id;
 
   const accent = factionCssVar(foe.faction_slug);
   const soft = factionCssVar(foe.faction_slug, "light");
@@ -269,18 +286,26 @@ export default function DuelCrossLink({
   // The rail body every live state shares: who has cast, what happens next, and
   // what it's worth. The slots own every branch inside them. `settled` passes
   // nextStep={false} — its own "live" standing line already says the same thing.
+  //
+  // A spectator (#999) gets the neutral roster + status line, but NOT the stakes:
+  // StakesTiles is inherently first-person ("If you win / If you lose"), a figure
+  // only a party has any stake in, so it is suppressed for a neutral observer.
   const body = (nextStep: boolean) => (
     <>
-      <RaceRoster me={me} foe={foe} theme={theme} />
-      {nextStep && <NextStepLine duel={duel} me={me} foe={foe} theme={theme} />}
-      <StakesTiles
-        viewerFactionSlug={me.faction_slug}
-        opponentFactionSlug={foe.faction_slug}
-        opponentName={foe.display_name}
-        taskPointValue={praxis.task_point_value}
-        status={duel.status}
-        theme={theme}
-      />
+      <RaceRoster me={me} foe={foe} theme={theme} spectator={spectator} />
+      {nextStep && (
+        <NextStepLine duel={duel} me={me} foe={foe} theme={theme} spectator={spectator} />
+      )}
+      {!spectator && (
+        <StakesTiles
+          viewerFactionSlug={me.faction_slug}
+          opponentFactionSlug={foe.faction_slug}
+          opponentName={foe.display_name}
+          taskPointValue={praxis.task_point_value}
+          status={duel.status}
+          theme={theme}
+        />
+      )}
     </>
   );
 
@@ -288,7 +313,30 @@ export default function DuelCrossLink({
   // forfeit can land on a duel in any live state. The foe link 404s if the
   // thrown side was withdrawn — a plain <Link>, so it never breaks this page.
   if (forfeited) {
-    const iForfeited = duel.forfeited_by_character_id === me.character_id;
+    const meForfeited = duel.forfeited_by_character_id === me.character_id;
+    if (spectator) {
+      // Neutral: name the winner (the survivor) and the forfeiter. No link — the
+      // forfeiter's thrown side may be unsubmitted (404), and the survivor's side
+      // is often the very page this rail sits on.
+      return (
+        <Skin
+          {...frame}
+          tally={null}
+          note={null}
+          body={null}
+          actions={null}
+          headline={
+            <span>
+              {t("duelCrossLink.spectatorWonByDefault", {
+                winner: meForfeited ? foe.display_name : me.display_name,
+                loser: meForfeited ? me.display_name : foe.display_name,
+              })}
+            </span>
+          }
+        />
+      );
+    }
+    const iForfeited = meForfeited;
     return (
       <Skin
         {...frame}
@@ -331,7 +379,14 @@ export default function DuelCrossLink({
         tally={null}
         note={null}
         headline={
-          <span>{t("duelCrossLink.pending", { name: foe.display_name })}</span>
+          <span>
+            {spectator
+              ? t("duelCrossLink.spectatorPending", {
+                  challenger: me.display_name,
+                  opponent: foe.display_name,
+                })
+              : t("duelCrossLink.pending", { name: foe.display_name })}
+          </span>
         }
         body={body(true)}
         actions={actions}
@@ -367,7 +422,12 @@ export default function DuelCrossLink({
         note={null}
         headline={
           <span style={{ fontWeight: 700 }}>
-            {t("duelCrossLink.dueling", { name: foe.display_name })}
+            {spectator
+              ? t("duelCrossLink.spectatorDueling", {
+                  challenger: me.display_name,
+                  opponent: foe.display_name,
+                })
+              : t("duelCrossLink.dueling", { name: foe.display_name })}
           </span>
         }
         body={body(true)}
@@ -376,6 +436,24 @@ export default function DuelCrossLink({
     );
   }
 
+  // The settled/resolved headline: "⚔ Duel vs {opponent}". For a spectator it
+  // names BOTH sides ("⚔ Duel {challenger} vs {opponent}") so no side reads as an
+  // implicit "you" (#999). The cross-link always points at the OTHER side (`foe`).
+  const duelHeadline = (
+    <span>
+      <span style={{ fontWeight: 700 }}>{t("duelCrossLink.duel")}</span>{" "}
+      {spectator && <>{me.display_name} </>}
+      {t("duelCrossLink.vs")}{" "}
+      {foe.praxis_id != null ? (
+        <Link to={`/praxes/${foe.praxis_id}`} style={{ color: accent }}>
+          <OpponentBadge side={foe} />
+        </Link>
+      ) : (
+        <OpponentBadge side={foe} />
+      )}
+    </span>
+  );
+
   // resolved: the era closed and the outcome was FROZEN (ADR-0052, #957). Render
   // the frozen final points + winner, never the live vote tally — the standing
   // must not keep floating under a reader after the contest is over (which is
@@ -383,15 +461,23 @@ export default function DuelCrossLink({
   // became votable resolves as a no-contest: null winner AND null final points,
   // so there is no frozen pair to show.
   if (duel.status === "resolved") {
-    const myFinal = isChallenger
+    const myFinal = meIsChallenger
       ? duel.challenger_final_points
       : duel.opponent_final_points;
-    const foeFinal = isChallenger
+    const foeFinal = meIsChallenger
       ? duel.opponent_final_points
       : duel.challenger_final_points;
     const hasTally = myFinal != null && foeFinal != null;
-    const finalStanding =
-      duel.winner_character_id == null
+    const finalStanding = spectator
+      ? duel.winner_character_id == null
+        ? t("duelCrossLink.spectatorFinalStanding.tied")
+        : t("duelCrossLink.spectatorFinalStanding.won", {
+            name:
+              duel.winner_character_id === me.character_id
+                ? me.display_name
+                : foe.display_name,
+          })
+      : duel.winner_character_id == null
         ? t("duelCrossLink.finalStanding.tied")
         : duel.winner_character_id === me.character_id
         ? t("duelCrossLink.finalStanding.won")
@@ -399,19 +485,7 @@ export default function DuelCrossLink({
     return (
       <Skin
         {...frame}
-        headline={
-          <span>
-            <span style={{ fontWeight: 700 }}>{t("duelCrossLink.duel")}</span>{" "}
-            {t("duelCrossLink.vs")}{" "}
-            {foe.praxis_id != null ? (
-              <Link to={`/praxes/${foe.praxis_id}`} style={{ color: accent }}>
-                <OpponentBadge side={foe} />
-              </Link>
-            ) : (
-              <OpponentBadge side={foe} />
-            )}
-          </span>
-        }
+        headline={duelHeadline}
         tally={
           /* The FROZEN score pair — a number the player cares about, so content
              tier (.content-title), mirroring the settled tally but never moving. */
@@ -426,7 +500,9 @@ export default function DuelCrossLink({
         note={
           <div className="content-text" style={{ marginTop: "var(--space-xs)", opacity: 0.85 }}>
             {hasTally
-              ? t("duelCrossLink.final", { standing: finalStanding })
+              ? t(spectator ? "duelCrossLink.spectatorFinal" : "duelCrossLink.final", {
+                  standing: finalStanding,
+                })
               : t("duelCrossLink.finalNoContest")}
           </div>
         }
@@ -437,9 +513,15 @@ export default function DuelCrossLink({
   }
 
   // settled: both sides cast. Live tally + cross-link, on top of the shared body.
+  // A spectator sees who LEADS by name, never "you're ahead/behind" (#999).
   const diff = me.points_from_votes - foe.points_from_votes;
-  const standing =
-    diff === 0
+  const standing = spectator
+    ? diff === 0
+      ? t("duelCrossLink.spectatorStanding.tied")
+      : t("duelCrossLink.spectatorStanding.leads", {
+          name: diff > 0 ? me.display_name : foe.display_name,
+        })
+    : diff === 0
       ? t("duelCrossLink.standing.tied")
       : diff > 0
       ? t("duelCrossLink.standing.ahead")
@@ -447,19 +529,7 @@ export default function DuelCrossLink({
   return (
     <Skin
       {...frame}
-      headline={
-        <span>
-          <span style={{ fontWeight: 700 }}>{t("duelCrossLink.duel")}</span>{" "}
-          {t("duelCrossLink.vs")}{" "}
-          {foe.praxis_id != null ? (
-            <Link to={`/praxes/${foe.praxis_id}`} style={{ color: accent }}>
-              <OpponentBadge side={foe} />
-            </Link>
-          ) : (
-            <OpponentBadge side={foe} />
-          )}
-        </span>
-      }
+      headline={duelHeadline}
       tally={
         /* A live score pair: a number the player cares about, so content tier
            (.content-title) rather than whatever the frame happens to set. */
@@ -471,7 +541,7 @@ export default function DuelCrossLink({
       }
       note={
         <div className="content-text" style={{ marginTop: "var(--space-xs)", opacity: 0.85 }}>
-          {t("duelCrossLink.live", { standing })}
+          {t(spectator ? "duelCrossLink.spectatorLive" : "duelCrossLink.live", { standing })}
         </div>
       }
       body={body(false)}

@@ -50,7 +50,14 @@ export default function PraxisDetail() {
     <>
       {/* Duel cross-link is neutral chrome above every archetype (#313); one
           shared faction-tokened widget, per the grilled #310 decision. */}
-      {state.duel && <DuelCrossLink praxis={state.praxis} duel={state.duel} state={state} />}
+      {state.duel && (
+        <DuelCrossLink
+          praxis={state.praxis}
+          duel={state.duel}
+          state={state}
+          viewerCharacterId={state.user?.character?.id ?? null}
+        />
+      )}
       <Archetype state={state} />
       {/* Comments are neutral chrome below every archetype (ADR-0006); a thread
           renders on a visible praxis only. Mounted at the dispatcher so it covers

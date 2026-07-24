@@ -504,7 +504,20 @@
     },
     "final": "{{standing}} · final — frozen at era close.",
     "finalNoContest": "No contest — this duel never became votable before era close.",
-    "factionSuffix": " · {{faction}}"
+    "factionSuffix": " · {{faction}}",
+    "spectatorPending": "⚔ {{challenger}} challenged {{opponent}} — awaiting a response.",
+    "spectatorDueling": "⚔ {{challenger}} vs {{opponent}} — dueling",
+    "spectatorWonByDefault": "⚔ {{winner}} won by default — {{loser}} forfeited.",
+    "spectatorStanding": {
+      "tied": "Tied",
+      "leads": "{{name}} leads"
+    },
+    "spectatorLive": "{{standing}} · live — the winner floats with the votes until era reset.",
+    "spectatorFinalStanding": {
+      "tied": "Tied",
+      "won": "{{name}} won"
+    },
+    "spectatorFinal": "{{standing}} · final — frozen at era close."
   },
   "duelStakes": {
     "heading": "What's at stake",
@@ -529,7 +542,16 @@
     "resolvedYouLost": "The era closed — {{name}} won this duel.",
     "resolvedNoWinner": "The era closed — this duel resolved with no winner.",
     "youForfeited": "You forfeited this duel.",
-    "wonByDefault": "{{name}} forfeited — you won by default."
+    "wonByDefault": "{{name}} forfeited — you won by default.",
+    "spectator": {
+      "pending": "{{challenger}} challenged {{opponent}} — awaiting a response.",
+      "declined": "{{opponent}} declined — no duel.",
+      "active": "The duel is underway — one side still to cast.",
+      "settled": "Both sides are in. The winner floats with the votes until era reset.",
+      "resolvedWon": "The era closed — {{name}} won this duel.",
+      "resolvedNoWinner": "The era closed — this duel resolved with no winner.",
+      "wonByDefault": "{{loser}} forfeited — {{winner}} won by default."
+    }
   },
   "duelSeal": {
     "heading": "Seal the duel?",
