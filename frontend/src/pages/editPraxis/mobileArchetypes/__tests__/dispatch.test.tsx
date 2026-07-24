@@ -173,6 +173,59 @@ describe("edit-praxis form-factor dispatch", () => {
   });
 });
 
+describe("metatask seal overlays (#933)", () => {
+  const metatask: TaskOut = {
+    ...task("snide"),
+    id: 99,
+    title: "Cite a source",
+    task_type: "metatask",
+    primary_faction_slug: null,
+    metatask_faction_slug: "snide",
+  };
+
+  it("mounts the neutral Section-D picker when metataskPickerOpen", () => {
+    mocks.formFactor = "mobile";
+    mocks.state = {
+      ...baseState("na"),
+      canSealMetatask: true,
+      metaTasks: [metatask],
+      metataskPickerOpen: true,
+    };
+    const html = renderToStaticMarkup(
+      <MemoryRouter>
+        <EditPraxis />
+      </MemoryRouter>,
+    );
+    expect(html).toContain("Seal a metatask onto this praxis");
+  });
+
+  it("mounts the Section-E peel-off confirm when a removal target is set", () => {
+    mocks.formFactor = "desktop";
+    mocks.state = {
+      ...baseState("na"),
+      metataskRemovalTarget: metatask,
+    };
+    const html = renderToStaticMarkup(
+      <MemoryRouter>
+        <EditPraxis />
+      </MemoryRouter>,
+    );
+    expect(html).toContain("Peel off the metatask?");
+  });
+
+  it("leaves both overlays unmounted when closed", () => {
+    mocks.formFactor = "mobile";
+    mocks.state = baseState("na");
+    const html = renderToStaticMarkup(
+      <MemoryRouter>
+        <EditPraxis />
+      </MemoryRouter>,
+    );
+    expect(html).not.toContain("Seal a metatask onto this praxis");
+    expect(html).not.toContain("Peel off the metatask?");
+  });
+});
+
 describe("mobile composer content slots", () => {
   for (const [label, slug] of [
     ["Default", "na"],
