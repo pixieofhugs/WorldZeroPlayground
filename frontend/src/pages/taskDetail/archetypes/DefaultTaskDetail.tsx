@@ -1,21 +1,32 @@
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import PraxisCard from "../../../components/PraxisCard";
-import LevelGem from "../../../components/ui/LevelGem";
 import FeedBadge from "../../../components/feed/FeedBadge";
-import DefaultSigil from "../../../components/cards/DefaultSigil";
 import { factionCssVar, factionFill, factionName } from "../../../utils/factions";
 import { mediaUrl } from "../../../utils/media";
-import { LevelJumpBanner } from "./shared";
+import { LevelJumpBanner, ErrorBanner } from "./shared";
 import type { TaskDetailState } from "../useTaskDetail";
 
 const VISIBLE_SIGNUPS = 4;
 
 /**
- * Default task-detail archetype — the original universal layout, now consuming
- * the shared {@link TaskDetailState}. Any faction without a bespoke archetype
- * falls through to this, so it must stay visually identical to the pre-refactor
- * page.
+ * Default / na (Unaffiliated) task-detail archetype — "the task as a full open
+ * dossier" (design project 1eb2665a, #967). One centred column: a
+ * rainbow-bordered reference hero (ring glyph, "Unaffiliated · counts for
+ * everyone" eyebrow, big italic display title, Points/Level/Signed-up stat
+ * chips), a sign-up CTA bar, the brief (rainbow left-border quote block), the
+ * filed praxis (live na {@link PraxisCard} stack), and — rendered by the
+ * dispatcher below every archetype — the discussion thread.
+ *
+ * `default` ≡ `na` ≡ Unaffiliated is ONE identity, so this leans fully into the
+ * spectrum-band na kit. It is also the fallback archetype for any faction
+ * without a bespoke skin (e.g. WOW desktop, a tracked design bug — #951); those
+ * tasks show the real faction name via `factionName`, but wear the na dossier.
+ *
+ * Tokens only: `--faction-default-*` (rainbow band, ring, card sheet) reached
+ * via the token / `factionFill` (NOT `factionCssVar`, which is neutral grey for
+ * na), plus the `--color-*` chrome tokens. The full-page `.na-backdrop` spectrum
+ * wash lives in index.css.
  */
 export default function DefaultTaskDetail({
   state,
@@ -35,9 +46,7 @@ export default function DefaultTaskDetail({
     canSignUp,
     slotsOpen,
     maxTaskSlots,
-    factionMultiplier,
     modifiedPoints,
-    topScore,
     sortedSubmissions,
     submissionSort,
     setSubmissionSort,
@@ -49,308 +58,271 @@ export default function DefaultTaskDetail({
   // Guarded non-null by the dispatcher.
   if (!task) return null;
 
-  // Unaffiliated / no-faction fallback — the spectrum default skin (#418), not
-  // the borrowed UA tint. The neutral --faction-default carries buttons/borders;
-  // the rainbow band + sigil carry the "all paths open" signature.
-  const color = "var(--faction-default)";
-  const fname = factionName(task.primary_faction_slug);
-  const showMultiplierTile = factionMultiplier !== 1.0;
+  const slug = task.primary_faction_slug;
+  const isMetatask = task.task_type === "metatask";
+
+  // Reused chip shell for the hero stat readouts.
+  const statChips: { label: string; value: number }[] = [
+    { label: t("default.reference.points"), value: task.point_value },
+    { label: t("default.reference.level"), value: task.level_required },
+    { label: t("default.reference.signedUp"), value: signups.length },
+  ];
 
   return (
-    <div className="py-8">
-      {/* ── Breadcrumb ── */}
-      <nav
-        className="font-body mb-4"
-        style={{
-          fontSize: "var(--text-sm)",
-          letterSpacing: "0.1em",
-          color: "var(--color-text-tertiary)",
-        }}
-      >
-        <Link
-          to="/tasks"
-          style={{ color: "var(--color-text-secondary)", textDecoration: "none" }}
+    <div className="py-8" style={{ position: "relative" }}>
+      {/* Full-page spectrum wash — the na "all paths open" backdrop (rule in
+          index.css, shared with DefaultProfile #969). */}
+      <div className="na-backdrop" aria-hidden />
+
+      <div style={{ position: "relative", zIndex: 1, maxWidth: 920, margin: "0 auto" }}>
+        {/* ── Breadcrumb ── */}
+        <nav
+          className="font-body"
+          style={{
+            fontSize: "var(--text-base)",
+            letterSpacing: "0.14em",
+            textTransform: "uppercase",
+            color: "var(--color-text-tertiary)",
+            marginBottom: "var(--space-xl)",
+          }}
         >
-          {t("default.breadcrumb")}
-        </Link>
-        {" › "}
-        <span style={{ color: "var(--color-text-primary)" }}>{task.title}</span>
-      </nav>
-
-      {/* ── Two-Column Layout ── */}
-      <div style={{ display: "flex", gap: "var(--space-xl)", alignItems: "flex-start" }}>
-        {/* ── Main Column ── */}
-        <div style={{ flex: 1, minWidth: 0 }}>
-          {/* ── Task Hero Block ── */}
-          <div
-            className="sidebar-card mb-5"
-            style={{ borderLeft: `4px solid ${color}`, padding: "var(--space-lg) var(--space-xl)" }}
+          <Link
+            to="/tasks"
+            style={{ color: "var(--color-text-secondary)", textDecoration: "none" }}
           >
-            {/* Faction pennant + status + level */}
+            {t("default.breadcrumb")}
+          </Link>
+          <span style={{ opacity: 0.5, margin: "0 var(--space-sm)" }}>›</span>
+          <span>{factionName(slug)}</span>
+          <span style={{ opacity: 0.5, margin: "0 var(--space-sm)" }}>›</span>
+          <span style={{ color: "var(--color-text-primary)" }}>{task.title}</span>
+        </nav>
+
+        <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-2xl)" }}>
+          {/* ── HERO — the reference dossier ── */}
+          <div
+            style={{
+              borderRadius: 16,
+              padding: "var(--space-xs)",
+              background: "var(--faction-default-rainbow)",
+              boxShadow: "0 18px 44px -26px rgba(0,0,0,0.4)",
+            }}
+          >
             <div
               style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "var(--space-sm)",
-                marginBottom: "var(--space-md)",
+                borderRadius: 11,
+                background: "var(--faction-default-card-bg)",
+                color: "var(--faction-default-card-text)",
+                padding: "var(--space-2xl)",
               }}
             >
-              <DefaultSigil size={20} />
-              <span
-                className="pennant-shape"
+              {/* eyebrow row: ring glyph + Unaffiliated tagline + optional META pill */}
+              <div
                 style={{
-                  display: "inline-block",
-                  background: "var(--faction-default-rainbow)",
-                  color: "var(--color-text-on-accent)",
-                  fontFamily: "'Courier Prime', monospace",
-                  fontSize: "var(--text-sm)",
-                  fontWeight: 700,
-                  textTransform: "uppercase",
-                  letterSpacing: "0.07em",
-                  padding: "var(--space-xs) var(--space-lg)",
-                  textShadow: "0 1px 2px rgba(0,0,0,0.3)",
-                }}
-              >
-                {fname}
-              </span>
-              <span
-                className="font-body"
-                style={{
-                  fontSize: "var(--text-xs)",
-                  textTransform: "uppercase",
-                  letterSpacing: "0.1em",
-                  padding: "var(--space-xs) var(--space-sm)",
-                  borderRadius: 4,
-                  background:
-                    task.status === "active"
-                      ? "var(--faction-everymen-light)"
-                      : "var(--color-bg-surface-alt)",
-                  color:
-                    task.status === "active"
-                      ? "var(--faction-everymen)"
-                      : "var(--color-text-tertiary)",
-                }}
-              >
-                {task.status}
-              </span>
-              {task.task_type === "metatask" && (
-                <span
-                  className="font-body"
-                  style={{
-                    fontSize: "var(--text-xs)",
-                    textTransform: "uppercase",
-                    letterSpacing: "0.15em",
-                    padding: "var(--space-xs) var(--space-sm)",
-                    borderRadius: 4,
-                    fontWeight: 700,
-                    textShadow: "0 1px 2px rgba(0,0,0,0.3)",
-                    // na → rainbow frame; real faction → solid hue + on-fill ink
-                    ...factionFill(task.metatask_faction_slug, "pill"),
-                  }}
-                >
-                  {t("default.meta")}
-                </span>
-              )}
-              <LevelGem level={task.level_required} />
-            </div>
-
-            {/* Title */}
-            <h1
-              className="font-display italic font-medium content-title"
-              style={{
-                color: "var(--color-text-primary)",
-                lineHeight: 1.2,
-                marginBottom: task.task_type === "metatask" ? "var(--space-xs)" : "var(--space-md)",
-              }}
-            >
-              {task.title}
-            </h1>
-
-            {/* Metatask-for line */}
-            {task.task_type === "metatask" && (
-              <p
-                className="eyebrow"
-                style={{
-                  marginBottom: "var(--space-md)",
-                  color: factionCssVar(task.metatask_faction_slug),
-                }}
-              >
-                {t("default.metataskFor", {
-                  faction: factionName(task.metatask_faction_slug),
-                })}
-              </p>
-            )}
-
-            {/* Stats row */}
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: `repeat(${showMultiplierTile ? 5 : 4}, 1fr)`,
-                gap: "var(--space-sm)",
-                marginBottom: "var(--space-lg)",
-              }}
-            >
-              {[
-                { label: t("default.stats.basePoints"), value: task.point_value },
-                ...(showMultiplierTile
-                  ? [
-                      {
-                        label: t("default.stats.yourPoints", {
-                          multiplier: factionMultiplier,
-                        }),
-                        value: modifiedPoints,
-                      },
-                    ]
-                  : []),
-                { label: t("default.stats.completed"), value: submissions.length },
-                { label: t("default.stats.inProgress"), value: signups.length },
-                { label: t("default.stats.topScore"), value: topScore },
-              ].map((stat) => (
-                <div
-                  key={stat.label}
-                  className="text-center py-2"
-                  style={{
-                    border: "1px solid var(--color-border)",
-                    background: "var(--color-bg-surface)",
-                  }}
-                >
-                  <div
-                    className="font-body font-bold text-lg"
-                    style={{ color: "var(--color-text-primary)" }}
-                  >
-                    {stat.value}
-                  </div>
-                  <div className="eyebrow">
-                    {stat.label}
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {/* Description */}
-            {task.description && (
-              <p
-                className="font-body content-text"
-                style={{
-                  lineHeight: 1.7,
-                  color: "var(--color-text-secondary)",
-                  whiteSpace: "pre-wrap",
-                }}
-              >
-                {task.description}
-              </p>
-            )}
-          </div>
-
-          {/* ── Signup Block ── */}
-          <LevelJumpBanner state={state} />
-          {canSignUp && (
-            <div className="sidebar-card mb-5" style={{ padding: "var(--space-lg) var(--space-xl)" }}>
-              <button
-                onClick={handleSignup}
-                style={{
-                  width: "100%",
-                  background: color,
-                  color: "var(--color-text-on-accent)",
-                  fontFamily: "'Courier Prime', monospace",
-                  fontSize: "var(--text-lg)",
-                  fontWeight: 700,
-                  textTransform: "uppercase",
-                  letterSpacing: "0.15em",
-                  padding: "var(--space-md) var(--space-xl)",
-                  border: "none",
-                  cursor: "pointer",
-                  position: "relative",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "var(--space-md)",
+                  flexWrap: "wrap",
+                  marginBottom: "var(--space-lg)",
                 }}
               >
                 <span
+                  aria-hidden
                   style={{
-                    position: "absolute",
-                    inset: 3,
-                    border: "1px dashed rgba(255,255,255,0.25)",
-                    pointerEvents: "none",
+                    width: 44,
+                    height: 44,
+                    borderRadius: "50%",
+                    flex: "none",
+                    background: "var(--faction-default-ring)",
+                    WebkitMask: "radial-gradient(circle, transparent 38%, #000 40%)",
+                    mask: "radial-gradient(circle, transparent 38%, #000 40%)",
                   }}
                 />
-                {t("default.signup.cta", { points: modifiedPoints })}
-              </button>
-
-              <div
-                className="eyebrow"
-                style={{
-                  marginTop: "var(--space-sm)",
-                  display: "flex",
-                  justifyContent: "space-between",
-                }}
-              >
-                <span>
-                  {t("default.signup.slots", {
-                    open: slotsOpen,
-                    max: maxTaskSlots,
-                  })}
-                </span>
-                <span>
-                  {t("default.signup.levelRequired", {
-                    level: task.level_required,
-                  })}{" "}
-                  <span className="eyebrow">{t("default.signup.met")}</span>
-                </span>
-              </div>
-
-              {signupError && (
-                <div
-                  className="font-body"
+                <span
                   style={{
-                    fontSize: "var(--text-md)",
-                    color: "var(--color-danger)",
-                    marginTop: "var(--space-sm)",
-                    padding: "var(--space-sm) var(--space-md)",
-                    background: "rgba(220,38,38,0.06)",
-                    border: "1px solid rgba(220,38,38,0.2)",
+                    fontSize: "var(--text-sm)",
+                    letterSpacing: "0.2em",
+                    textTransform: "uppercase",
+                    color: "var(--faction-default-card-muted)",
                   }}
                 >
-                  {signupError}
-                </div>
+                  {factionName(slug)} · {t("default.reference.eyebrowTag")}
+                </span>
+                {isMetatask && (
+                  <span
+                    className="font-body"
+                    style={{
+                      fontSize: "var(--text-xs)",
+                      textTransform: "uppercase",
+                      letterSpacing: "0.15em",
+                      padding: "var(--space-xs) var(--space-sm)",
+                      borderRadius: 4,
+                      fontWeight: 700,
+                      // na → rainbow frame; real faction → solid hue + on-fill ink
+                      ...factionFill(task.metatask_faction_slug, "pill"),
+                    }}
+                  >
+                    {t("default.meta")}
+                  </span>
+                )}
+              </div>
+
+              {/* Title */}
+              <h1
+                className="font-display italic"
+                style={{
+                  fontSize: "var(--text-display)",
+                  fontWeight: 700,
+                  lineHeight: 1,
+                  margin: 0,
+                  color: "var(--faction-default-card-text)",
+                  overflowWrap: "anywhere",
+                }}
+              >
+                {task.title}
+              </h1>
+
+              {/* Metatask-for line */}
+              {isMetatask && (
+                <p
+                  className="eyebrow"
+                  style={{
+                    marginTop: "var(--space-sm)",
+                    marginBottom: 0,
+                    color: factionCssVar(task.metatask_faction_slug),
+                  }}
+                >
+                  {t("default.metataskFor", {
+                    faction: factionName(task.metatask_faction_slug),
+                  })}
+                </p>
               )}
+
+              {/* Stat chips */}
+              <div
+                style={{
+                  display: "flex",
+                  gap: "var(--space-md)",
+                  flexWrap: "wrap",
+                  marginTop: "var(--space-xl)",
+                }}
+              >
+                {statChips.map((chip) => (
+                  <div
+                    key={chip.label}
+                    style={{
+                      borderRadius: 8,
+                      border: "1px solid var(--faction-default-border)",
+                      padding: "var(--space-sm) var(--space-lg)",
+                    }}
+                  >
+                    <div
+                      style={{
+                        fontSize: "var(--text-xs)",
+                        letterSpacing: "0.16em",
+                        textTransform: "uppercase",
+                        color: "var(--faction-default-card-muted)",
+                      }}
+                    >
+                      {chip.label}
+                    </div>
+                    <div
+                      style={{
+                        fontFamily: "var(--font-accent)",
+                        fontSize: "var(--text-title)",
+                        lineHeight: 0.9,
+                        color: "var(--faction-default-card-text)",
+                        marginTop: "var(--space-xs)",
+                      }}
+                    >
+                      {chip.value}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* ── CTA bar / status bars ── */}
+          {canSignUp && (
+            <div>
+              <LevelJumpBanner state={state} />
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "var(--space-lg)",
+                  flexWrap: "wrap",
+                  borderRadius: 10,
+                  background: "var(--color-bg-surface-alt)",
+                  border: "1px solid var(--color-border)",
+                  padding: "var(--space-lg)",
+                }}
+              >
+                <button
+                  onClick={handleSignup}
+                  style={{
+                    cursor: "pointer",
+                    border: "none",
+                    borderRadius: 6,
+                    fontFamily: "var(--font-accent)",
+                    fontSize: "var(--text-xl)",
+                    letterSpacing: "0.04em",
+                    padding: "var(--space-md) var(--space-xl)",
+                    color: "var(--color-bg-page)",
+                    background: "var(--color-text-primary)",
+                  }}
+                >
+                  {t("default.signup.cta", { points: modifiedPoints })}
+                </button>
+                <div
+                  className="font-display italic"
+                  style={{ fontSize: "var(--text-md)", color: "var(--color-text-secondary)" }}
+                >
+                  {t("default.signup.slots", { open: slotsOpen, max: maxTaskSlots })}
+                </div>
+                <div
+                  style={{
+                    marginLeft: "auto",
+                    fontSize: "var(--text-base)",
+                    letterSpacing: "0.1em",
+                    textTransform: "uppercase",
+                    color: "var(--color-text-tertiary)",
+                  }}
+                >
+                  {t("default.cta.noFaction")}
+                </div>
+              </div>
+              <ErrorBanner message={signupError} />
             </div>
           )}
 
-          {/* Already signed up / submitted states */}
           {mySubmission && (
             <div
-              className="sidebar-card mb-5"
               style={{
-                padding: "var(--space-lg) var(--space-xl)",
                 display: "flex",
                 alignItems: "center",
-                gap: "var(--space-md)",
+                gap: "var(--space-lg)",
+                flexWrap: "wrap",
+                borderRadius: 10,
+                background: "var(--color-bg-surface-alt)",
+                border: "1px solid var(--color-border)",
+                padding: "var(--space-lg)",
               }}
             >
-              <div
-                style={{
-                  background: "var(--faction-default-light)",
-                  border: "1.5px solid var(--faction-default-border)",
-                  borderRadius: 8,
-                  padding: "var(--space-sm) var(--space-lg)",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "var(--space-sm)",
-                  flex: 1,
-                }}
+              <span
+                className="eyebrow"
+                style={{ color: "var(--faction-default-card-accent)" }}
               >
-                <span className="eyebrow" style={{ color }}>
-                  {t("default.submitted.badge")}
-                </span>
-                <span
-                  className="font-body content-text"
-                  style={{ color: "var(--color-text-primary)" }}
-                >
-                  {t("default.submitted.text")}
-                </span>
-              </div>
+                {t("default.submitted.badge")}
+              </span>
+              <span className="font-body content-text" style={{ color: "var(--color-text-primary)" }}>
+                {t("default.submitted.text")}
+              </span>
               <Link
                 to={`/praxes/${mySubmission.id}/edit`}
                 className="btn-outline"
-                style={{ fontSize: "var(--text-xs)", padding: "var(--space-xs) var(--space-md)" }}
+                style={{ marginLeft: "auto" }}
               >
                 {t("default.submitted.edit")}
               </Link>
@@ -359,59 +331,40 @@ export default function DefaultTaskDetail({
 
           {!mySubmission && isInProgress && inProgressPraxisId !== null && (
             <div
-              className="sidebar-card mb-5"
               style={{
-                padding: "var(--space-lg) var(--space-xl)",
                 display: "flex",
                 alignItems: "center",
-                gap: "var(--space-md)",
+                gap: "var(--space-lg)",
+                flexWrap: "wrap",
+                borderRadius: 10,
+                background: "var(--color-bg-surface-alt)",
+                border: "1px solid var(--color-border)",
+                padding: "var(--space-lg)",
               }}
             >
-              <div
-                style={{
-                  background: "var(--faction-default-light)",
-                  border: "1.5px solid var(--faction-default-border)",
-                  borderRadius: 8,
-                  padding: "var(--space-sm) var(--space-lg)",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "var(--space-sm)",
-                  flex: 1,
-                }}
+              <span
+                className="eyebrow"
+                style={{ color: "var(--faction-default-card-accent)" }}
               >
-                <span className="eyebrow" style={{ color }}>
-                  {t("default.inProgress.badge")}
-                </span>
-                <span
-                  className="font-body content-text"
-                  style={{ color: "var(--color-text-primary)" }}
-                >
-                  {t("default.inProgress.text")}
-                </span>
-              </div>
+                {t("default.inProgress.badge")}
+              </span>
+              <span className="font-body content-text" style={{ color: "var(--color-text-primary)" }}>
+                {t("default.inProgress.text")}
+              </span>
               <Link
                 to={`/praxes/${inProgressPraxisId}/edit`}
                 style={{
-                  background: color,
-                  color: "var(--color-text-on-accent)",
-                  fontFamily: "'Courier Prime', monospace",
-                  fontSize: "var(--text-md)",
-                  fontWeight: 700,
-                  textTransform: "uppercase",
-                  letterSpacing: "0.12em",
+                  marginLeft: "auto",
+                  borderRadius: 6,
+                  fontFamily: "var(--font-accent)",
+                  fontSize: "var(--text-lg)",
+                  letterSpacing: "0.04em",
                   padding: "var(--space-sm) var(--space-lg)",
+                  color: "var(--color-bg-page)",
+                  background: "var(--color-text-primary)",
                   textDecoration: "none",
-                  position: "relative",
                 }}
               >
-                <span
-                  style={{
-                    position: "absolute",
-                    inset: 3,
-                    border: "1px dashed rgba(255,255,255,0.25)",
-                    pointerEvents: "none",
-                  }}
-                />
                 {t("default.inProgress.continue")}
               </Link>
               <button
@@ -429,35 +382,86 @@ export default function DefaultTaskDetail({
             </div>
           )}
 
-          {/* ── Completed Praxis Section ── */}
-          <div className="mt-2">
+          {/* ── THE BRIEF ── */}
+          <div>
+            <div
+              className="font-display italic"
+              style={{
+                display: "inline-block",
+                fontSize: "var(--text-title)",
+                color: "var(--color-text-primary)",
+                marginBottom: "var(--space-md)",
+              }}
+            >
+              {t("default.brief.heading")}
+            </div>
+            <div
+              style={{
+                borderRadius: 12,
+                background: "var(--color-bg-surface-alt)",
+                border: "1px solid var(--color-border)",
+                borderLeft: "4px solid transparent",
+                // The rainbow quote rule — na's "every path open" tell. Painted
+                // via border-image so the gradient token can carry the border.
+                borderImage: "var(--faction-default-rainbow) 1",
+                padding: "var(--space-xl)",
+                maxWidth: 660,
+              }}
+            >
+              {task.description && (
+                <p
+                  className="font-body content-text"
+                  style={{
+                    lineHeight: 1.8,
+                    color: "var(--color-text-secondary)",
+                    whiteSpace: "pre-wrap",
+                    margin: "0 0 var(--space-lg)",
+                  }}
+                >
+                  {task.description}
+                </p>
+              )}
+              <p
+                className="font-body content-text"
+                style={{ lineHeight: 1.8, color: "var(--color-text-secondary)", margin: 0 }}
+              >
+                {t("default.brief.secondary")}
+              </p>
+            </div>
+          </div>
+
+          {/* ── FILED PRAXIS ── */}
+          <div>
             <div
               style={{
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "space-between",
-                marginBottom: "var(--space-md)",
+                gap: "var(--space-md)",
+                flexWrap: "wrap",
+                marginBottom: "var(--space-lg)",
               }}
             >
-              <span className="eyebrow">
-                {t("default.completedHeading", { count: submissions.length })}
+              <span
+                className="font-display italic"
+                style={{ fontSize: "var(--text-title)", color: "var(--color-text-primary)" }}
+              >
+                {t("default.filedHeading")}
               </span>
               <div style={{ display: "flex", gap: 0 }}>
                 {(["score", "recent"] as const).map((sort) => (
                   <button
                     key={sort}
                     onClick={() => setSubmissionSort(sort)}
+                    className="font-body"
                     style={{
-                      fontFamily: "'Courier Prime', monospace",
                       fontSize: "var(--text-xs)",
                       fontWeight: 700,
                       textTransform: "uppercase",
                       letterSpacing: "0.1em",
                       padding: "var(--space-xs) var(--space-md)",
                       background:
-                        submissionSort === sort
-                          ? "var(--color-text-primary)"
-                          : "transparent",
+                        submissionSort === sort ? "var(--color-text-primary)" : "transparent",
                       color:
                         submissionSort === sort
                           ? "var(--color-bg-page)"
@@ -487,8 +491,8 @@ export default function DefaultTaskDetail({
                   <div style={{ textAlign: "center", marginTop: "var(--space-lg)" }}>
                     <Link
                       to={`/praxes?task_id=${task.id}`}
+                      className="font-body"
                       style={{
-                        fontFamily: "'Courier Prime', monospace",
                         fontSize: "var(--text-base)",
                         fontWeight: 700,
                         textTransform: "uppercase",
@@ -504,86 +508,94 @@ export default function DefaultTaskDetail({
               </>
             )}
           </div>
-        </div>
 
-        {/* ── Right Sidebar Column ── */}
-        <div style={{ width: 240, flexShrink: 0 }}>
-          {/* Players in Progress */}
-          <div className="sidebar-card mb-3">
-            <p className="eyebrow mb-2">
-              {t("default.playersInProgress", { count: signups.length })}
-            </p>
-            <div
-              style={{ display: "flex", flexDirection: "column", gap: "var(--space-sm)" }}
-            >
-              {signups.slice(0, VISIBLE_SIGNUPS).map((signup) => {
-                const isFriend = friends.has(signup.character_id);
-                const isFoe = foes.has(signup.character_id);
-                return (
-                  <div
-                    key={signup.character_id}
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "var(--space-sm)",
-                      padding: "var(--space-xs) 0",
-                    }}
-                  >
-                    <Link to={`/characters/${signup.character_id}`}>
-                      {signup.avatar_url ? (
-                        <img
-                          src={mediaUrl(signup.avatar_url)}
-                          alt={signup.display_name}
-                          style={{
-                            width: 24,
-                            height: 24,
-                            borderRadius: "50%",
-                            objectFit: "cover",
-                          }}
-                        />
-                      ) : (
-                        <div
-                          style={{
-                            width: 24,
-                            height: 24,
-                            borderRadius: "50%",
-                            background: `linear-gradient(135deg, ${factionCssVar(signup.faction_slug, "light")}, ${factionCssVar(signup.faction_slug)})`,
-                          }}
-                        />
-                      )}
-                    </Link>
-                    <Link
-                      to={`/characters/${signup.character_id}`}
-                      className="font-body"
+          {/* ── PLAYERS IN PROGRESS ── (kept from the pre-redesign page; the
+              design's single-column dossier drew no roster, but this is live
+              signup data, so it stays as a modest section). */}
+          {signups.length > 0 && (
+            <div>
+              <span
+                className="font-display italic"
+                style={{
+                  display: "inline-block",
+                  fontSize: "var(--text-title)",
+                  color: "var(--color-text-primary)",
+                  marginBottom: "var(--space-md)",
+                }}
+              >
+                {t("default.playersInProgress", { count: signups.length })}
+              </span>
+              <div
+                style={{
+                  display: "flex",
+                  flexWrap: "wrap",
+                  gap: "var(--space-lg)",
+                  maxWidth: 660,
+                }}
+              >
+                {signups.slice(0, VISIBLE_SIGNUPS).map((signup) => {
+                  const isFriend = friends.has(signup.character_id);
+                  const isFoe = foes.has(signup.character_id);
+                  return (
+                    <div
+                      key={signup.character_id}
                       style={{
-                        fontSize: "var(--text-base)",
-                        fontWeight: 700,
-                        color: "var(--color-text-primary)",
-                        textDecoration: "none",
-                        flex: 1,
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "var(--space-sm)",
                       }}
                     >
-                      {signup.display_name}
-                    </Link>
-                    {isFriend && (
-                      <FeedBadge type="friend" label={t("default.friend")} />
-                    )}
-                    {isFoe && <FeedBadge type="duel" label={t("default.foe")} />}
-                  </div>
-                );
-              })}
-            </div>
-            {signups.length > VISIBLE_SIGNUPS && (
-              <p
-                className="eyebrow"
-                style={{ marginTop: "var(--space-sm)", color: "var(--color-text-tertiary)" }}
-              >
-                {t("default.moreSignups", {
-                  count: signups.length - VISIBLE_SIGNUPS,
+                      <Link to={`/characters/${signup.character_id}`}>
+                        {signup.avatar_url ? (
+                          <img
+                            src={mediaUrl(signup.avatar_url)}
+                            alt={signup.display_name}
+                            style={{
+                              width: 28,
+                              height: 28,
+                              borderRadius: "50%",
+                              objectFit: "cover",
+                            }}
+                          />
+                        ) : (
+                          <div
+                            style={{
+                              width: 28,
+                              height: 28,
+                              borderRadius: "50%",
+                              background: `linear-gradient(135deg, ${factionCssVar(signup.faction_slug, "light")}, ${factionCssVar(signup.faction_slug)})`,
+                            }}
+                          />
+                        )}
+                      </Link>
+                      <Link
+                        to={`/characters/${signup.character_id}`}
+                        className="font-body"
+                        style={{
+                          fontSize: "var(--text-base)",
+                          fontWeight: 700,
+                          color: "var(--color-text-primary)",
+                          textDecoration: "none",
+                        }}
+                      >
+                        {signup.display_name}
+                      </Link>
+                      {isFriend && <FeedBadge type="friend" label={t("default.friend")} />}
+                      {isFoe && <FeedBadge type="duel" label={t("default.foe")} />}
+                    </div>
+                  );
                 })}
-              </p>
-            )}
-          </div>
+                {signups.length > VISIBLE_SIGNUPS && (
+                  <span
+                    className="eyebrow"
+                    style={{ alignSelf: "center", color: "var(--color-text-tertiary)" }}
+                  >
+                    {t("default.moreSignups", { count: signups.length - VISIBLE_SIGNUPS })}
+                  </span>
+                )}
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>

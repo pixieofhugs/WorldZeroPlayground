@@ -51,6 +51,20 @@
       "inProgress": "In Progress",
       "topScore": "Top Score"
     },
+    "reference": {
+      "eyebrowTag": "counts for everyone",
+      "points": "Points",
+      "level": "Level",
+      "signedUp": "Signed up"
+    },
+    "brief": {
+      "heading": "The brief",
+      "secondary": "Anyone can take this on — you don't need to have chosen a side. File a praxis when you're done and the community will weigh in."
+    },
+    "cta": {
+      "noFaction": "no faction required"
+    },
+    "filedHeading": "What people filed",
     "signup": {
       "cta": "Sign up · earn up to {{points}} pts",
       "slots": "You have {{open}} of {{max}} task slots open",
