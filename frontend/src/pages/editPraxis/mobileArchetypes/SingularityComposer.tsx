@@ -180,15 +180,15 @@ export default function SingularityComposer({ state }: { state: EditPraxisState 
             </Panel>
           )}
 
-          <Panel title={t('editPraxis.singularity.mobile.filesLabel')}>
-            <MediaGrid state={state} />
-          </Panel>
-
           {state.showSealStack && (
             <Panel title={t('editPraxis.singularity.mobile.metatasksLabel')}>
               <MetataskSealStack state={state} />
             </Panel>
           )}
+
+          <Panel title={t('editPraxis.singularity.mobile.filesLabel')}>
+            <MediaGrid state={state} />
+          </Panel>
         </>
       ) : (
         <Panel title={t('editPraxis.singularity.mobile.previewLabel')}>

@@ -297,6 +297,23 @@ export default function SingularityEditPraxis({ state }: Props) {
             </div>
           )}
 
+        {/* Metatasks */}
+        {state.showSealStack && (
+          <div style={{ marginBottom: "var(--space-xl)" }}>
+            <div style={{ fontSize: "var(--text-base)", color: dim, marginBottom: "var(--space-sm)" }}>
+              <span style={{ color: term }}>$ </span>{t("editPraxis.singularity.terminal.metataskCommand")}
+            </div>
+            <div
+              style={{
+                border: `1px dashed ${accent}`,
+                padding: "var(--space-sm)",
+              }}
+            >
+              <MetataskSealStack state={state} />
+            </div>
+          </div>
+        )}
+
         {/* Title */}
         <div style={{ marginBottom: "var(--space-xl)" }}>
           <div style={{ fontSize: "var(--text-base)", color: dim, marginBottom: "var(--space-xs)" }}>
@@ -580,23 +597,6 @@ export default function SingularityEditPraxis({ state }: Props) {
             />
           </div>
         </div>
-
-        {/* Metatasks */}
-        {state.showSealStack && (
-          <div style={{ marginBottom: "var(--space-xl)" }}>
-            <div style={{ fontSize: "var(--text-base)", color: dim, marginBottom: "var(--space-sm)" }}>
-              <span style={{ color: term }}>$ </span>{t("editPraxis.singularity.terminal.metataskCommand")}
-            </div>
-            <div
-              style={{
-                border: `1px dashed ${accent}`,
-                padding: "var(--space-sm)",
-              }}
-            >
-              <MetataskSealStack state={state} />
-            </div>
-          </div>
-        )}
 
         <ErrorBanner message={state.error} />
 

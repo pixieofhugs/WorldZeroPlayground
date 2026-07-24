@@ -191,15 +191,15 @@ export default function EphemeristsComposer({ state }: { state: EditPraxisState 
             </Leaf>
           )}
 
-          <Leaf title={t('editPraxis.ephemerists.filesLabel')}>
-            <MediaGrid state={state} />
-          </Leaf>
-
           {state.showSealStack && (
             <Leaf title={t('editPraxis.ephemerists.metatasksLabel')}>
               <MetataskSealStack state={state} />
             </Leaf>
           )}
+
+          <Leaf title={t('editPraxis.ephemerists.filesLabel')}>
+            <MediaGrid state={state} />
+          </Leaf>
         </>
       ) : (
         <Leaf title={t('editPraxis.ephemerists.previewLabel')}>

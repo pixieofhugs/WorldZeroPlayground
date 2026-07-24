@@ -215,12 +215,6 @@ export default function DefaultEditPraxis({
             </div>
           )}
 
-          {/* Media grid + add */}
-          <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-sm)" }}>
-            <span style={eyebrow}>{t("editPraxis.na.filesLabel")}</span>
-            <MediaGrid state={state} />
-          </div>
-
           {/* Metatasks */}
           {state.showSealStack && (
             <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-sm)" }}>
@@ -228,6 +222,12 @@ export default function DefaultEditPraxis({
               <MetataskSealStack state={state} />
             </div>
           )}
+
+          {/* Media grid + add */}
+          <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-sm)" }}>
+            <span style={eyebrow}>{t("editPraxis.na.filesLabel")}</span>
+            <MediaGrid state={state} />
+          </div>
         </>
       ) : (
         // Preview
