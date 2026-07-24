@@ -54,6 +54,7 @@ from services.praxis import (
     change_praxis_type,
     create_praxis,
     delete_praxis,
+    duel_id_map,
     flag_praxis,
     get_praxis,
     invite_to_praxis,
@@ -170,6 +171,10 @@ async def list_praxes_route(
     # page — not the per-praxis predicate per card. Hides the vote module for a
     # logged-in viewer who owns the praxis or is a participant in its duel.
     viewer_can_vote = await viewer_can_vote_map(praxes, viewer, session)
+    # Duel sides (#992): one duel query for the whole page — not the per-praxis
+    # duel lookup per card. A duel side is stored type='solo' + a non-null
+    # duel_id (ADR-0011), so the card mode label/chip gates on this, not type.
+    duel_ids = await duel_id_map(praxes, session)
     return [
         await build_praxis_card_out(
             praxis,
@@ -179,6 +184,7 @@ async def list_praxes_route(
             author_contributions=author_contributions,
             applied_metatasks=applied_metatasks,
             viewer_can_vote=viewer_can_vote,
+            duel_ids=duel_ids,
         )
         for praxis in praxes
     ]
