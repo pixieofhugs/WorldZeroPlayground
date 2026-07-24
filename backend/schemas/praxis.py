@@ -121,6 +121,12 @@ class PraxisCardOut(BaseModel):
     points_from_votes: int = 0
     voter_count: int = 0
     is_top_for_task: bool = False  # Task Crown: top submitted praxis for its task (ADR-0028)
+    # The metatasks pinned to this praxis, as full TaskOut rows (not just the
+    # summed ``metatask_points`` above). The feed card renders a read-only seal
+    # stack that dispatches on each metatask's issuing faction, so it needs the
+    # rows. Populated page-wide in one query by the feed router (no N+1); the
+    # card builder falls back to a single-praxis query for other callers.
+    applied_metatasks: List[TaskOut] = []
     task_faction_slug: Optional[str] = None
     # Full-fidelity fields for bespoke mobile praxis cards (#573).
     body_text: Optional[str] = None
