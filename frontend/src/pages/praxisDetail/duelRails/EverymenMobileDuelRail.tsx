@@ -31,6 +31,7 @@ export default function EverymenMobileDuelRail({
   tally,
   note,
   body,
+  actions,
 }: DuelRailSkinProps) {
   // ponytail: `maxWidth` is intentionally ignored. The rail is full-bleed inside
   // the phone column, so the desktop archetype-width map has nothing to line up
@@ -128,6 +129,13 @@ export default function EverymenMobileDuelRail({
             }}
           >
             {body}
+          </div>
+        )}
+
+        {/* The owner's action row (#752), filed under a heavy ink rule. */}
+        {actions && (
+          <div style={{ marginTop: 'var(--space-md)', paddingTop: 'var(--space-sm)', borderTop: `2px solid ${INK}` }}>
+            {actions}
           </div>
         )}
       </div>

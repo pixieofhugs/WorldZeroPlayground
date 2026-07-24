@@ -72,6 +72,7 @@ export default function WowDuelRail({
   tally,
   note,
   body,
+  actions,
 }: DuelRailSkinProps) {
   const shell: CSSProperties = {
     maxWidth,
@@ -173,6 +174,20 @@ export default function WowDuelRail({
             }}
           >
             {body}
+          </div>
+        )}
+
+        {/* ── the owner's action row (#752), footed on a champion-gold rule so
+              the control that changes the duel sits under its state ── */}
+        {actions && (
+          <div
+            style={{
+              marginTop: 'var(--space-md)',
+              paddingTop: 'var(--space-sm)',
+              borderTop: `1px solid ${CHAMPION}`,
+            }}
+          >
+            {actions}
           </div>
         )}
       </div>

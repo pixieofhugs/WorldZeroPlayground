@@ -1,5 +1,5 @@
 /**
- * Settled-duel forfeit escalation on PraxisOwnerActions (#718).
+ * Settled-duel forfeit escalation on the submit/pull-back/forfeit control (#718).
  *
  * The asymmetry this guards is the whole point of the issue, and it is exactly
  * the kind of thing a "warn on any duel" implementation gets wrong:
@@ -13,6 +13,11 @@
  *
  * The cost figures come from the mocked game config, so a Snide side is told it
  * keeps 0 rather than an invented "half".
+ *
+ * #752 relocated this control from the owner controls into the duel RAIL, so the
+ * duel cases below mount `PraxisSubmitControls` (its new home) directly. The
+ * last two cases pin the relocation itself: the owner controls suppress the
+ * cluster for a duel, and keep it for an ordinary praxis.
  */
 import { renderToStaticMarkup } from 'react-dom/server'
 import { MemoryRouter } from 'react-router-dom'
@@ -44,7 +49,7 @@ const CONFIG = {
 
 vi.mock('../../../hooks/useGameConfig', () => ({ useGameConfig: () => CONFIG }))
 
-const { PraxisOwnerActions } = await import('../shared')
+const { PraxisOwnerActions, PraxisSubmitControls } = await import('../shared')
 
 function text(element: ReactElement): string {
   return renderToStaticMarkup(<MemoryRouter>{element}</MemoryRouter>).replace(/<[^>]*>/g, '')
@@ -212,10 +217,10 @@ function state(overrides: Partial<PraxisDetailState>): PraxisDetailState {
   } as PraxisDetailState
 }
 
-describe('PraxisOwnerActions forfeit escalation (#718)', () => {
+describe('forfeit escalation (#718)', () => {
   it('settled duel: the confirm warns, names the winner, and quotes the cost', () => {
     const t = text(
-      <PraxisOwnerActions
+      <PraxisSubmitControls
         state={state({ duel: duel('settled', true), showWithdrawConfirm: true })}
       />,
     )
@@ -226,13 +231,13 @@ describe('PraxisOwnerActions forfeit escalation (#718)', () => {
   })
 
   it('settled duel: the quiet unsubmit control takes the forfeit verb', () => {
-    const t = text(<PraxisOwnerActions state={state({ duel: duel('settled', true) })} />)
+    const t = text(<PraxisSubmitControls state={state({ duel: duel('settled', true) })} />)
     expect(t).toMatch(/Forfeit/i)
   })
 
   it('active duel: no warning — the reopen is still free', () => {
     const t = text(
-      <PraxisOwnerActions
+      <PraxisSubmitControls
         state={state({ duel: duel('active', false), showWithdrawConfirm: true })}
       />,
     )
@@ -241,7 +246,34 @@ describe('PraxisOwnerActions forfeit escalation (#718)', () => {
   })
 
   it('no duel at all: the ordinary confirm is untouched', () => {
-    const t = text(<PraxisOwnerActions state={state({ showWithdrawConfirm: true })} />)
+    const t = text(<PraxisSubmitControls state={state({ showWithdrawConfirm: true })} />)
     expect(t).not.toMatch(/FORFEIT/i)
+  })
+})
+
+// #752: the control was relocated into the duel rail, so the owner controls must
+// no longer render it for a duel praxis — otherwise a settled-duel Forfeit would
+// sit in the rail AND an unsubmit in the owner controls, the #646 double control.
+describe('owner controls suppress the duel action cluster (#752)', () => {
+  it('settled duel: the owner controls render no submit/forfeit — the rail owns it', () => {
+    const t = text(
+      <PraxisOwnerActions
+        state={state({ duel: duel('settled', true), showWithdrawConfirm: true })}
+      />,
+    )
+    expect(t).not.toMatch(/FORFEIT/i)
+    expect(t).not.toMatch(/wins by default/i)
+    // the edit link is the only owner control left for a duel praxis.
+    expect(t).toMatch(/Edit/i)
+  })
+
+  it('ordinary praxis: the owner controls still render the cluster inline', () => {
+    // No duel_id, so `hasDuel` is false and the cluster stays in the owner
+    // controls (there is no rail to move it to).
+    const ordinary = { ...praxis(), duel_id: null }
+    const t = text(
+      <PraxisOwnerActions state={state({ praxis: ordinary, showWithdrawConfirm: true })} />,
+    )
+    expect(t).toMatch(/Yes, unsubmit/i)
   })
 })
