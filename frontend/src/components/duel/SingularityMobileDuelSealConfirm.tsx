@@ -46,7 +46,7 @@ const TERMINAL_GROUND = {
   ].join(', '),
 }
 
-/** The one blinking block cursor; `sg-cursor` carries the reduced-motion guard. */
+/** The one blinking block cursor; `sg-cursor` carries the reduced-motion-guarded blink from index.css. */
 function BlockCursor() {
   return (
     <span
@@ -63,12 +63,6 @@ function BlockCursor() {
     />
   )
 }
-
-/** Blink + its reduced-motion opt-out. Duplicate declarations are idempotent. */
-const CURSOR_CSS =
-  '@keyframes blink { 50% { opacity: 0; } }' +
-  '.sg-cursor { animation: blink 1.05s step-end infinite; }' +
-  '@media (prefers-reduced-motion: reduce) { .sg-cursor { animation: none; } }'
 
 export default function SingularityMobileDuelSealConfirm({
   duel,
@@ -171,8 +165,6 @@ export default function SingularityMobileDuelSealConfirm({
           />
         </div>
       </div>
-
-      <style>{CURSOR_CSS}</style>
     </div>
   )
 }

@@ -47,9 +47,9 @@ const GLASS = `color-mix(in srgb, ${PHOSPHOR} 5%, transparent)`
 
 /**
  * The signature blinking block cursor, used ONCE per surface — here on the
- * state headline, the rail's only heading. `sg-cursor` exists so the
- * reduced-motion guard in the stylesheet below can reach it; an inline style
- * cannot carry a media query.
+ * state headline, the rail's only heading. `sg-cursor` carries the
+ * reduced-motion-guarded blink from index.css; an inline style cannot hold a
+ * media query, so the animation lives on the class.
  */
 function BlockCursor() {
   return (
@@ -67,12 +67,6 @@ function BlockCursor() {
     />
   )
 }
-
-/** Blink + its reduced-motion opt-out. Duplicate declarations are idempotent. */
-const CURSOR_CSS =
-  '@keyframes blink { 50% { opacity: 0; } }' +
-  '.sg-cursor { animation: blink 1.05s step-end infinite; }' +
-  '@media (prefers-reduced-motion: reduce) { .sg-cursor { animation: none; } }'
 
 export default function SingularityDuelRail({
   accent,
@@ -157,8 +151,6 @@ export default function SingularityDuelRail({
           {actions}
         </div>
       )}
-
-      <style>{CURSOR_CSS}</style>
     </div>
   )
 }
