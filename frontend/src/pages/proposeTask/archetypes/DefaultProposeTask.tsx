@@ -164,6 +164,11 @@ export default function DefaultProposeTask({
 
   const color = factionCssVar(factionSlug);
   const fname = factionName(factionSlug);
+  // The form opens on unaffiliated, whose accent (`color`) resolves to neutral
+  // grey. A real faction paints its solid hue; `na` gets the spectrum as a
+  // border `frame` / fill instead of falling back to grey (ADR-0039, #794).
+  // Only the scalar ACCENTS switch — `color:` text stays neutral ink (#649).
+  const selectedKnown = isKnownFaction(factionSlug);
 
   // Unaffiliated leads the picker: it is the default, and it is a state rather
   // than a faction, so it is an extra option here rather than a registry entry
@@ -311,7 +316,11 @@ export default function DefaultProposeTask({
             <div
               className="sidebar-card"
               style={{
-                borderLeft: `4px solid ${color}`,
+                // A real faction accents its left edge; `na` is framed in the
+                // spectrum (a gradient can't be a scalar border-colour).
+                ...(selectedKnown
+                  ? { borderLeft: `4px solid ${color}` }
+                  : factionFill(factionSlug, "frame")),
                 padding: "var(--space-lg) var(--space-xl)",
                 marginBottom: "var(--space-lg)",
               }}
@@ -577,8 +586,14 @@ export default function DefaultProposeTask({
             {title && (
               <div
                 style={{
-                  background: factionCssVar(factionSlug, "light"),
-                  border: `1.5px solid ${factionCssVar(factionSlug, "border")}`,
+                  // Known factions tint the strip in their light/border pair;
+                  // `na` gets the rainbow as a frame around a neutral interior.
+                  ...(selectedKnown
+                    ? {
+                        background: factionCssVar(factionSlug, "light"),
+                        border: `1.5px solid ${factionCssVar(factionSlug, "border")}`,
+                      }
+                    : factionFill(factionSlug, "frame")),
                   borderRadius: 8,
                   padding: "var(--space-md) var(--space-lg)",
                   marginBottom: "var(--space-lg)",
@@ -666,15 +681,19 @@ export default function DefaultProposeTask({
                 type="submit"
                 disabled={submitting}
                 style={{
-                  background: color,
-                  color: "var(--color-text-on-accent)",
+                  // A real faction fills the CTA with its solid hue + on-accent
+                  // ink. `na` has no legible single ink across the spectrum, so
+                  // it takes the `pill` — rainbow frame, neutral paper, dark ink
+                  // — instead of a grey block (ADR-0039, #649).
+                  ...(selectedKnown
+                    ? { background: color, color: "var(--color-text-on-accent)", border: "none" }
+                    : factionFill(factionSlug, "pill")),
                   fontFamily: "'Courier Prime', monospace",
                   fontSize: "var(--text-lg)",
                   fontWeight: 700,
                   textTransform: "uppercase",
                   letterSpacing: "0.15em",
                   padding: "var(--space-md) var(--space-xl)",
-                  border: "none",
                   cursor: submitting ? "wait" : "pointer",
                   position: "relative",
                   opacity: submitting ? 0.6 : 1,

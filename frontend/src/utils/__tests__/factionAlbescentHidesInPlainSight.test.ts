@@ -42,7 +42,7 @@ const SUFFIXES = [
   "on-fill",
 ];
 
-const SHAPES: FactionFillShape[] = ["bar", "dot", "pill"];
+const SHAPES: FactionFillShape[] = ["bar", "dot", "pill", "frame"];
 
 describe("Albescent is indistinguishable from unaffiliated", () => {
   it("resolves every CSS variable to exactly what `na` resolves to", () => {
