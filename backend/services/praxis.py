@@ -216,6 +216,14 @@ async def build_praxis_out(
 
     can_flag = await can_flag_praxis(viewer, praxis, session, era)
 
+    # Vote eligibility (#998): hide the whole vote module for a logged-in viewer
+    # who owns this praxis (A) or is a participant in its duel (B). Anonymous →
+    # True (the client shows its own login gate). Same predicate the vote
+    # endpoint enforces, so the UI cannot disagree with a 403.
+    from services.vote import viewer_can_vote as _viewer_can_vote
+
+    can_vote = await _viewer_can_vote(viewer, praxis, session)
+
     # Task Crown (ADR-0028): top submitted praxis for this task, computed live.
     if crowned_ids is None:
         crowned_ids = await crowned_praxis_ids([praxis.task_id], session)
@@ -267,6 +275,7 @@ async def build_praxis_out(
         duel_id=duel_id,
         can_flag=can_flag,
         applied_metatasks=applied_metatasks,
+        viewer_can_vote=can_vote,
     )
 
 
@@ -408,6 +417,7 @@ async def build_praxis_card_out(
     viewer_votes: Optional[dict[int, ViewerVote]] = None,
     author_contributions: Optional[dict[int, Contribution]] = None,
     applied_metatasks: Optional[dict[int, list[TaskOut]]] = None,
+    viewer_can_vote: Optional[dict[int, bool]] = None,
 ) -> PraxisCardOut:
     """Lightweight card for list views.
 
@@ -437,6 +447,11 @@ async def build_praxis_card_out(
     once via :func:`applied_metatasks_for` so the seal never becomes a per-card
     query (N+1). When absent, this builder loads the single praxis's metatasks
     itself (single-card callers). A missing entry means no metatasks applied.
+
+    ``viewer_can_vote`` maps praxis id → whether the viewer may vote (#998); list
+    routes precompute it once via :func:`~services.vote.viewer_can_vote_map` so
+    the ownership/duel-participation check is not a per-card query. ``None`` or a
+    missing entry defaults to ``True`` (the vote module renders as usual).
     """
     task_title = praxis.task.title if praxis.task else ""
     task_point_value = praxis.task.point_value if praxis.task else 0
@@ -513,6 +528,9 @@ async def build_praxis_card_out(
         media_items=[MediaItemOut.model_validate(item) for item in praxis.media_items],
         viewer_vote=viewer_vote_info.value if viewer_vote_info else None,
         voted_by_name=viewer_vote_info.voted_by_name if viewer_vote_info else None,
+        viewer_can_vote=(
+            viewer_can_vote.get(praxis.id, True) if viewer_can_vote else True
+        ),
     )
 
 

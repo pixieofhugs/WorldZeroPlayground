@@ -1,6 +1,7 @@
 import type { } from 'react'
 import { pickVariant } from '../../utils/factionDispatch'
 import { surfaceMap } from '../../factions'
+import { useAuth } from '../../auth/AuthContext'
 import UnaffiliatedVote from './UnaffiliatedVote'
 import { VoteFactionContext } from './VoteShell'
 
@@ -16,12 +17,28 @@ export interface VoteUIProps {
   currentValue?: number
   points?: number | null
   totalVotes?: number
+  /**
+   * The backend's viewer-relative ``praxis.viewer_can_vote`` (#998). ``false``
+   * only when the logged-in viewer's account owns the praxis or is a duel
+   * participant — the two PERMANENT vote blocks the client can't compute itself.
+   * When ``false`` for a logged-in viewer the whole module is hidden; anonymous
+   * viewers fall through to each widget's own login gate regardless.
+   */
+  viewerCanVote?: boolean
 }
 
 export default function VoteUI({
   factionSlug,
+  viewerCanVote,
   ...props
 }: VoteUIProps & { factionSlug?: string | null }) {
+  const { user } = useAuth()
+  // Hide the whole module for a logged-in viewer the backend says can never
+  // vote here (ownership / duel participation, #998). Anonymous viewers fall
+  // through to the per-widget login gate — the login CTA is deliberate.
+  if (user && viewerCanVote === false) {
+    return null
+  }
   const Variant = pickVariant(surfaceMap('vote'), factionSlug, UnaffiliatedVote)
   // The slug is published to the shared chrome as well as dispatched on: the
   // logged-out gate speaks in the task faction's eyebrow voice (#855) and is

@@ -69,7 +69,7 @@ from services.praxis import (
     unsubmit_praxis,
 )
 from services.media import process_and_save_media
-from services.vote import cast_vote_on_praxis
+from services.vote import cast_vote_on_praxis, viewer_can_vote_map
 from services.vote_tally import crowned_praxis_ids, viewer_votes_for
 
 logger = logging.getLogger(__name__)
@@ -166,6 +166,10 @@ async def list_praxes_route(
     # metatask's issuing faction, so it needs the TaskOut rows, not just the
     # summed metatask_points the card already carries.
     applied_metatasks = await applied_metatasks_for(praxes, session)
+    # Vote eligibility (#998): one ownership query + one duel query for the whole
+    # page — not the per-praxis predicate per card. Hides the vote module for a
+    # logged-in viewer who owns the praxis or is a participant in its duel.
+    viewer_can_vote = await viewer_can_vote_map(praxes, viewer, session)
     return [
         await build_praxis_card_out(
             praxis,
@@ -174,6 +178,7 @@ async def list_praxes_route(
             viewer_votes=viewer_votes,
             author_contributions=author_contributions,
             applied_metatasks=applied_metatasks,
+            viewer_can_vote=viewer_can_vote,
         )
         for praxis in praxes
     ]
