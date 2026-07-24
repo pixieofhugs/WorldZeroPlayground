@@ -49,6 +49,16 @@ export function InviteSearch({
   const onPick = duelMode ? state.sendChallenge : state.sendInvite;
   // Cast progress drives the roster + hides "invite another" once weaving starts (#591).
   const castCount = praxis.members.filter((m) => m.has_submitted).length;
+  // A non-creator collab member can drop out from here (#958) — a standalone exit
+  // that doesn't require the bank-full drop-to-accept modal. The creator instead
+  // deletes/drops the whole draft (DropButton), so the leave control is hidden for
+  // them; duel mode has no membership to leave.
+  const isCreator = praxis.created_by_id === state.currentCharacterId;
+  const canLeaveCollab =
+    !duelMode &&
+    praxis.type === "collab" &&
+    !isCreator &&
+    praxis.members.some((member) => member.character_id === state.currentCharacterId);
   return (
     <div>
       <div
@@ -240,6 +250,24 @@ export function InviteSearch({
           </div>
         )}
       </div>
+      )}
+      {canLeaveCollab && (
+        <button
+          type="button"
+          onClick={() => void state.leaveCollab()}
+          className="font-body eyebrow hover:underline"
+          style={{
+            display: "block",
+            marginTop: "var(--space-sm)",
+            background: "none",
+            border: "none",
+            padding: 0,
+            cursor: "pointer",
+            color: "var(--color-text-tertiary)",
+          }}
+        >
+          {t("editPraxis.leaveAction")}
+        </button>
       )}
     </div>
   );

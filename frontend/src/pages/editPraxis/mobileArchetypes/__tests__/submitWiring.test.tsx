@@ -115,6 +115,7 @@ function stateWith(publish: () => Promise<void>): EditPraxisState {
     submitting: false,
     publish,
     pullBack: async () => {},
+    leaveCollab: async () => {},
     collabSuccess: false,
     continueFromCollabSuccess: () => {},
     duelSealOpen: false,
