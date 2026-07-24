@@ -46,8 +46,6 @@ export default function EphemeristsScoreStamp({ praxis, showCrown }: ScoreStampP
         <TaskCrown
           size={26}
           ringInset={3}
-          innerBg="var(--eph-stamp-bg)"
-          glyphColor="var(--eph-gold)"
           rotate="6deg"
           style={{ position: "absolute", top: -13, right: -12, zIndex: 3 }}
         />

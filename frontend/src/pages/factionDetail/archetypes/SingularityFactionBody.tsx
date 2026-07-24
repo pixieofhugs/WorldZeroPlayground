@@ -242,8 +242,6 @@ export default function SingularityFactionBody({ state }: { state: FactionDetail
                   {praxis.is_top_for_task && (
                     <TaskCrown
                       size={38}
-                      innerBg={VOID}
-                      glyphColor={PHOSPHOR}
                       ringInset={3}
                       shadow={`drop-shadow(0 0 4px ${phosphor(35)})`}
                       style={{ position: "absolute", top: -12, right: -8, zIndex: 5 }}

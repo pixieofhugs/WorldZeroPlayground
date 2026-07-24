@@ -223,18 +223,20 @@ async def _make_metatask(
     *,
     issuing_faction_slug: str,
     points: int,
+    level_required: int = 0,
 ) -> Task:
     """A Task with ``task_type == metatask``, issued by ``issuing_faction_slug``.
 
     The card's seal dispatches on ``metatask_faction_slug``, so the metatask's
     issuing faction is what the frontend reads — independent of the host card's
-    faction (a WOW card can carry a Snide seal).
+    faction (a WOW card can carry a Snide seal). ``level_required`` gates the
+    metatask's points: an author below it earns 0 while the seal stays attached.
     """
     task = Task(
         title=f"{issuing_faction_slug} metatask",
         description="metatask",
         point_value=points,
-        level_required=0,
+        level_required=level_required,
         status=TaskStatus.active,
         task_type=TaskType.metatask,
         created_by=creator.id,
@@ -594,3 +596,151 @@ async def test_applied_metatasks_for_batches_the_page_in_one_map(
     assert [row.id for row in result[sealed.id]] == [metatask.id]
     # A card builder given this map falls back to [] for the bare praxis.
     assert result.get(bare.id, []) == []
+
+
+# ---------------------------------------------------------------------------
+# every praxis type earns metatask points (#882 / ADR-0051)
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.asyncio
+async def test_collab_earns_metatask_points(
+    db_session: AsyncSession, era: Era, faction_ua: Faction
+):
+    """A collab praxis carrying a metatask now scores the bonus (#882).
+
+    Before #882 the scoring pass filtered metatask points to solo-non-duel ids,
+    so a sealed collab read ``metatask_points: 0``. The bonus now rides the
+    (base + meta) × faction + votes formula like any other praxis.
+    """
+    author = await _make_character(
+        db_session, era, faction_slug="ua", username="collabmeta", email="cm@x.com"
+    )
+    member = await _make_character(
+        db_session, era, faction_slug="ua", username="collabmetamem", email="cmm@x.com"
+    )
+    task = await _make_task(db_session, author, faction_slug="ua", points=10)
+    praxis = await _make_collab(db_session, task, author, member)
+    metatask = await _make_metatask(
+        db_session, author, issuing_faction_slug="ua", points=5
+    )
+    await _apply_metatask(db_session, praxis, metatask)
+
+    card = await _load_card(db_session, praxis.id)
+
+    assert card.metatask_points == 5
+    # (10 + 5) × 1.0 + 0 = 15.0 — was 10.0 (meta filtered out) before #882.
+    assert card.score == pytest.approx(15.0)
+    assert_invariant(card)
+
+
+@pytest.mark.asyncio
+async def test_duel_side_earns_metatask_points(
+    db_session: AsyncSession, era: Era, faction_ua: Faction
+):
+    """A duel-side praxis carrying a metatask scores the bonus, times the outcome.
+
+    The metatask rides both multipliers: the winning UA side's ×1.5 duel
+    modifier multiplies (base + meta). Before #882 duel sides were filtered out
+    of the metatask pass and read ``metatask_points: 0``.
+    """
+    challenger = await _make_character(
+        db_session, era, faction_slug="ua", username="dmetawin", email="dmw@x.com"
+    )
+    opponent = await _make_character(
+        db_session, era, faction_slug="ua", username="dmetaopp", email="dmo@x.com"
+    )
+    voter = await _make_character(
+        db_session, era, faction_slug="ua", username="dmetavoter", email="dmv@x.com"
+    )
+    task = await _make_task(db_session, challenger, faction_slug="ua", points=10)
+    challenger_praxis = await _make_solo(db_session, task, challenger)
+    opponent_praxis = await _make_solo(db_session, task, opponent)
+    metatask = await _make_metatask(
+        db_session, challenger, issuing_faction_slug="ua", points=5
+    )
+    await _apply_metatask(db_session, challenger_praxis, metatask)
+
+    # Challenger wins (5 > 2).
+    await _cast_vote(db_session, challenger_praxis, voter, 5)
+    await _cast_vote(db_session, opponent_praxis, voter, 2)
+    await _make_duel(db_session, task, challenger_praxis, opponent, opponent_praxis)
+
+    winner_card = await _load_card(db_session, challenger_praxis.id)
+
+    assert winner_card.metatask_points == 5
+    assert winner_card.display_multiplier == pytest.approx(1.5)
+    # (10 + 5) × 1.5 + 5 = 27.5.
+    assert winner_card.score == pytest.approx(27.5)
+    assert_invariant(winner_card)
+
+
+@pytest.mark.asyncio
+async def test_snide_duel_loss_zeroes_the_metatask(
+    db_session: AsyncSession, era: Era, faction_ua: Faction
+):
+    """A losing Snide side's ×0.0 wipes the metatask along with the base (#882).
+
+    The metatask is part of the submission the duel judged, so the loss forfeits
+    it. Votes still survive the wipeout. ``metatask_points`` still reports the
+    level-met bonus (5); the ×0.0 multiplier zeroes it inside the score.
+    """
+    await _ensure_faction(db_session, "snide")
+    challenger = await _make_character(
+        db_session, era, faction_slug="ua", username="smetawin", email="smw@x.com"
+    )
+    loser = await _make_character(
+        db_session, era, faction_slug="snide", username="smetalose", email="sml@x.com"
+    )
+    voter = await _make_character(
+        db_session, era, faction_slug="ua", username="smetavoter", email="smv@x.com"
+    )
+    task = await _make_task(db_session, challenger, faction_slug="ua", points=10)
+    challenger_praxis = await _make_solo(db_session, task, challenger)
+    loser_praxis = await _make_solo(db_session, task, loser)
+    metatask = await _make_metatask(
+        db_session, loser, issuing_faction_slug="snide", points=5
+    )
+    await _apply_metatask(db_session, loser_praxis, metatask)
+
+    await _cast_vote(db_session, challenger_praxis, voter, 5)
+    await _cast_vote(db_session, loser_praxis, voter, 2)
+    await _make_duel(db_session, task, challenger_praxis, loser, loser_praxis)
+
+    loser_card = await _load_card(db_session, loser_praxis.id)
+
+    assert loser_card.metatask_points == 5
+    assert loser_card.display_multiplier == pytest.approx(0.0)
+    # (10 + 5) × 0.0 + 2 = 2.0 — the metatask is forfeit with the base.
+    assert loser_card.score == pytest.approx(2.0)
+    assert_invariant(loser_card)
+
+
+@pytest.mark.asyncio
+async def test_under_level_author_earns_zero_but_keeps_the_seal(
+    db_session: AsyncSession, era: Era, faction_ua: Faction
+):
+    """An author below the metatask's level bar scores +0 but keeps the seal.
+
+    The level gate lives in the same pass as the points, so ``metatask_points``
+    reads 0 while ``applied_metatasks`` still carries the row — a legitimate
+    ``+0`` seal (unchanged by #882).
+    """
+    author = await _make_character(
+        db_session, era, faction_slug="ua", username="underlvl", email="ul@x.com", level=0
+    )
+    task = await _make_task(db_session, author, faction_slug="ua", points=10)
+    praxis = await _make_solo(db_session, task, author)
+    metatask = await _make_metatask(
+        db_session, author, issuing_faction_slug="ua", points=5, level_required=7
+    )
+    await _apply_metatask(db_session, praxis, metatask)
+
+    card = await _load_card(db_session, praxis.id)
+
+    # Points gated to 0 by level, but the seal row stays attached (+0).
+    assert card.metatask_points == 0
+    assert card.score == pytest.approx(10.0)
+    assert len(card.applied_metatasks) == 1
+    assert card.applied_metatasks[0].id == metatask.id
+    assert_invariant(card)

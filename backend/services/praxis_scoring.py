@@ -129,14 +129,17 @@ async def compute_contributions(
     if opponent_praxis_ids:
         opp_tallies = await tally_votes(list(opponent_praxis_ids), session)
 
-    # ── meta task points for non-duel solo praxes ───────────────────────────
-    # Collab and duel praxes get 0 metatask points (preserving current behaviour).
-    solo_non_duel_ids = [
-        p.id for p in praxes
-        if p.type == PraxisType.solo and p.id not in duel_by_own_praxis
-    ]
+    # ── meta task points for EVERY praxis (ADR-0051) ─────────────────────────
+    # All praxis types earn metatask points. The bonus rides both multipliers
+    # inside compute_praxis_score's (base + meta) × faction × duel + votes, so a
+    # collab keeps its metatask and a duel side's metatask is multiplied by the
+    # duel outcome — a Snide loss at ×0.0 zeroes the metatask along with the
+    # base, which is intended (the metatask is part of what the duel judged).
+    # This reads the same PraxisMetaTask rows as applied_metatasks_for (the seal
+    # set): the level gate here can zero the points while the seal stays
+    # attached, so metatask_points == 0 beside a non-null seal is legitimate.
     meta_points = await get_meta_task_points_bulk(
-        solo_non_duel_ids, character_level=character_level, session=session
+        praxis_ids, character_level=character_level, session=session
     )
 
     # ── assemble contributions ───────────────────────────────────────────────
@@ -151,7 +154,7 @@ async def compute_contributions(
         task_faction = task.primary_faction_slug or "na"
         own_tally = get_tally(tallies, praxis.id)
         base_points = task.point_value
-        metatask_points = 0
+        metatask_points = meta_points.get(praxis.id, 0)
 
         if praxis.type == PraxisType.collab:
             faction_multiplier = compute_faction_multiplier(
@@ -222,7 +225,6 @@ async def compute_contributions(
                 collaboration_mode=COLLABORATION_MODE_SOLO,
             )
             duel_multiplier = 1.0
-            metatask_points = meta_points.get(praxis.id, 0)
 
         total = compute_praxis_score(
             base_points,
