@@ -158,6 +158,71 @@ async def test_list_characters_search_ignores_handle_sigil(
     assert character2.id not in ids
 
 
+async def _seed_scored_character(
+    db_session: AsyncSession,
+    era: Era,
+    *,
+    email: str,
+    username: str,
+    score: int,
+) -> Character:
+    """Create an active 'ua' character with an explicit current-era score."""
+    account = Account(email=email)
+    db_session.add(account)
+    await db_session.flush()
+    ch = Character(
+        account_id=account.id,
+        username=username,
+        display_name=username.capitalize(),
+        faction_slug="ua",
+    )
+    db_session.add(ch)
+    await db_session.flush()
+    db_session.add(
+        CharacterStats(
+            character_id=ch.id,
+            era_id=era.id,
+            score=score,
+            all_time_score=score,
+            level=0,
+            votes_spent_this_era=0,
+        )
+    )
+    await db_session.commit()
+    await db_session.refresh(ch)
+    return ch
+
+
+@pytest.mark.asyncio
+async def test_list_characters_search_ranks_prefix_above_higher_score_substring(
+    client: AsyncClient,
+    db_session: AsyncSession,
+    era: Era,
+    faction_ua: Faction,
+):
+    """A prefix match outranks a higher-score substring match (#989).
+
+    "@P" should surface "Pixie" (a prefix match, low score) above "yump" (a
+    mere substring match, high score) — relevance is ranked before score, so
+    the obvious match no longer sinks below the row limit.
+    """
+    prefix_match = await _seed_scored_character(
+        db_session, era, email="pixie@example.com", username="pixie", score=1
+    )
+    substring_match = await _seed_scored_character(
+        db_session, era, email="yump@example.com", username="yump", score=9999
+    )
+
+    resp = await client.get("/characters", params={"search": "p"})
+    assert resp.status_code == 200
+    ids = [c["id"] for c in resp.json()]
+    assert prefix_match.id in ids
+    assert substring_match.id in ids
+    # Prefix (priority 1) must sort ahead of substring (priority 2), despite the
+    # substring match having the far higher score.
+    assert ids.index(prefix_match.id) < ids.index(substring_match.id)
+
+
 @pytest.mark.asyncio
 async def test_list_characters_filter_by_faction(
     client: AsyncClient, character: Character, character2: Character
