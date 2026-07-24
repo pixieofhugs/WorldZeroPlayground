@@ -5,12 +5,14 @@ from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from game_config import CURRENT_ERA, EraConfig
+from models.character import Character
 from models.character_stats import CharacterStats
 from models.duel import Duel, DuelStatus
 from models.era import Era
 from models.faction_defection_history import FactionDefectionHistory
 from models.praxis import Praxis
 from services.duel_outcome import duel_winner
+from services.scoring import snide_tie_winner_id
 from services.vote_tally import get_tally, tally_votes
 
 ERA_RESET_DEFAULT_FACTION: str = "na"
@@ -172,6 +174,23 @@ async def resolve_duels_at_era_close(
     praxes_by_id: dict[int, Praxis] = {p.id: p for p in praxis_result.scalars()}
     tallies = await tally_votes(praxis_ids, session)
 
+    # Both sides' factions, so a tie freezes to the Snide tiebreak winner rather
+    # than a permanent NULL (#748: Snide wins ties — the one duel_winner rule must
+    # freeze what the live multiplier already shows).
+    character_ids = {duel.opponent_character_id for duel in duels}
+    character_ids.update(
+        praxis.created_by_id
+        for praxis in praxes_by_id.values()
+    )
+    faction_result = await session.execute(
+        select(Character.id, Character.faction_slug).where(
+            Character.id.in_(character_ids)
+        )
+    )
+    faction_by_character: dict[int, str] = {
+        character_id: (slug or "") for character_id, slug in faction_result.all()
+    }
+
     for duel in duels:
         is_contest = duel.status == DuelStatus.settled
         if is_contest:
@@ -189,15 +208,22 @@ async def resolve_duels_at_era_close(
             opponent_points = 0
 
         challenger_praxis = praxes_by_id.get(duel.challenger_praxis_id)
+        challenger_character_id = (
+            challenger_praxis.created_by_id if challenger_praxis else None
+        )
         duel.winner_character_id = (
             duel_winner(
-                challenger_character_id=(
-                    challenger_praxis.created_by_id if challenger_praxis else None
-                ),
+                challenger_character_id=challenger_character_id,
                 opponent_character_id=duel.opponent_character_id,
                 challenger_points=challenger_points,
                 opponent_points=opponent_points,
                 forfeited_by_character_id=duel.forfeited_by_character_id,
+                tie_break_winner_id=snide_tie_winner_id(
+                    faction_by_character.get(challenger_character_id, ""),
+                    challenger_character_id,
+                    faction_by_character.get(duel.opponent_character_id, ""),
+                    duel.opponent_character_id,
+                ),
             )
             if is_contest
             else None
