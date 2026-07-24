@@ -175,6 +175,58 @@ async def sync_era_tasks(session, era, created_by_id: int) -> int:
 
 
 # ---------------------------------------------------------------------------
+# Phase 3b: Onboarding task (game-wide, era-independent) — idempotent
+# ---------------------------------------------------------------------------
+
+# The single game-wide level-0 task (#511). It is NOT era content — it lives in
+# no `era_N.tasks` list — so it is seeded here on every run and exists in every
+# era regardless of era config. Level 0 is reserved for this one task; every
+# faction's roster content lives in levels 1-7 (#904). Faction is Albescent
+# (owner's call): task signup is gated on level only (`meets_task_level`), never
+# faction, so a brand-new unaffiliated (na) player can sign up, and Albescent
+# renders neutral/rainbow (#783/#794) so it reads as neutral to a newcomer.
+ONBOARDING_TASK_TITLE = "Take a Picture of \"Yourself\""
+ONBOARDING_TASK_DESCRIPTION = (
+    "Point a camera at yourself — but the quotation marks are doing work. "
+    "\"Yourself\" can be your face, or it can be the mug you can't start a "
+    "morning without, the view from where you think, the shoes that have "
+    "carried you, the desk that's unmistakably yours. Show us who you are. A "
+    "literal selfie is allowed, but never required."
+)
+ONBOARDING_TASK_FACTION_SLUG = "albescent"
+ONBOARDING_TASK_POINT_VALUE = 10
+
+
+async def ensure_onboarding_task(session, created_by_id: int) -> bool:
+    """Upsert the single game-wide level-0 onboarding task (keyed on title).
+
+    Mirrors ``ensure_placeholder_metatask``: this runs on every seed so the
+    onboarding self-portrait exists in every era, independent of era config
+    (#511). Guarded by a title lookup, so it is safe on a populated database.
+    Returns True if the task was created this run.
+    """
+    existing = (
+        await session.execute(
+            select(Task).where(Task.title == ONBOARDING_TASK_TITLE)
+        )
+    ).scalar_one_or_none()
+    if existing is not None:
+        return False
+    session.add(Task(
+        title=ONBOARDING_TASK_TITLE,
+        description=ONBOARDING_TASK_DESCRIPTION,
+        point_value=ONBOARDING_TASK_POINT_VALUE,
+        level_required=0,
+        status=TaskStatus.active,
+        task_type=TaskType.standard,
+        created_by=created_by_id,
+        primary_faction_slug=ONBOARDING_TASK_FACTION_SLUG,
+    ))
+    await session.flush()
+    return True
+
+
+# ---------------------------------------------------------------------------
 # Phase 4: Meta Tasks (placeholder) — idempotent
 # ---------------------------------------------------------------------------
 
@@ -360,6 +412,14 @@ async def seed(env: str, yes: bool) -> None:
             print(f"  >Tasks ({new_tasks} new)")
         else:
             print(f"  >Tasks already exist ({task_count}) — skipping")
+
+        # ------------------------------------------------------------------
+        # Phase 3b: Onboarding task (game-wide level-0, era-independent)
+        # ------------------------------------------------------------------
+        if await ensure_onboarding_task(session, pixie_char.id):
+            print("  >Onboarding task (1 game-wide level-0)")
+        else:
+            print("  >Onboarding task already exists — skipping")
 
         # ------------------------------------------------------------------
         # Phase 4: Meta Tasks (placeholder) — idempotent
