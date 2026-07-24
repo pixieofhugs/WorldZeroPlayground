@@ -56,6 +56,7 @@ import {
   PraxisVoterBreakdown,
 } from "../shared";
 import { VoteFactionContext } from "../../../components/vote/VoteShell";
+import MetaTaskSeal from "../../../components/metaTaskSeal/MetaTaskSeal";
 import { MobileStarVote } from "./shared";
 import type { PraxisDetailState } from "../usePraxisDetail";
 
@@ -168,6 +169,11 @@ export default function WowPraxisDetail({ state }: { state: PraxisDetailState })
       </div>
 
       <PraxisOwnerActions state={state} />
+
+      {/* Metatask seals (#932) — read-only stack, below the byline/score block,
+          above the quest reference and evidence. Each seal keeps its issuing
+          faction's voice, not the Court's; renders nothing when none applied. */}
+      <MetaTaskSeal metatasks={praxis.applied_metatasks} />
 
       {/* ── re: the quest ── */}
       <div

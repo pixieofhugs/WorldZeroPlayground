@@ -26,6 +26,7 @@ import {
   MemberByline,
 } from '../shared'
 import { VoteFactionContext } from '../../../components/vote/VoteShell'
+import MetaTaskSeal from '../../../components/metaTaskSeal/MetaTaskSeal'
 import { MobileStarVote } from './shared'
 
 export default function DefaultPraxisDetail({ state }: { state: PraxisDetailState }) {
@@ -115,6 +116,11 @@ export default function DefaultPraxisDetail({ state }: { state: PraxisDetailStat
           {t('detail.default.points', { points: praxis.task_point_value })}
         </span>
       </Link>
+
+      {/* Metatask seals (#932) — read-only stack, below the task/points context,
+          above the media. Each seal keeps its issuing faction's voice; renders
+          nothing when none are applied. */}
+      <MetaTaskSeal metatasks={praxis.applied_metatasks} />
 
       {/* Full media */}
       {praxis.media_items.length > 0 && <MediaGallery media={praxis.media_items} />}

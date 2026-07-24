@@ -15,6 +15,7 @@ import {
   MemberByline,
 } from '../shared'
 import { VoteFactionContext } from '../../../components/vote/VoteShell'
+import MetaTaskSeal from '../../../components/metaTaskSeal/MetaTaskSeal'
 import { MobileStarVote } from './shared'
 
 /**
@@ -98,6 +99,11 @@ export default function SingularityPraxisDetail({ state }: { state: PraxisDetail
           </div>
         </div>
       </div>
+
+      {/* Metatask seals (#932) — read-only stack, below the byline, above the
+          artifacts. Each seal keeps its issuing faction's voice; renders nothing
+          when none are applied. */}
+      <MetaTaskSeal metatasks={praxis.applied_metatasks} />
 
       {/* Output artifacts — full media inside */}
       {praxis.media_items.length > 0 && (
