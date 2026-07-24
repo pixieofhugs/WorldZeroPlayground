@@ -1,18 +1,20 @@
 /**
- * Sticky Note — UA / Albescent / Aged Out / fallback.
- * Cork board, big yellow sticky as the editor surface, mini-stickies for modes.
+ * Default / na / Albescent / fallback — the UNAFFILIATED reference-slip kit.
+ * `default` ≡ `na` ≡ Unaffiliated is ONE identity (ADR-0039/0046/0048): a clean
+ * editorial "reference slip" on the global --faction-default-* tokens (flips
+ * light/dark), with the spectrum rainbow used only as accent — the top band, the
+ * frame around the task reference, and the active-mode border. No bespoke
+ * metaphor, no faction fonts: body/display/accent are the system token faces.
  */
 import { useTranslation } from "react-i18next";
 import { mediaUrl } from "../../../utils/media";
 import { type PraxisType } from "../../../api/praxis";
+import DefaultSigil from "../../../components/cards/DefaultSigil";
 import MediaArt from "../blocks/MediaArt";
 import { pickArtKey } from "../blocks/useMediaArt";
 import {
   Breadcrumb,
   ErrorBanner,
-  RainbowTitle,
-  RainbowUnderline,
-  TaskMetaInline,
   TitleCounter,
   formatAutosave,
 } from "./shared";
@@ -33,18 +35,24 @@ interface Props {
   state: EditPraxisState;
 }
 
-const MODE_BG: Record<PraxisType, string> = {
-  solo: "#fb7185",
-  collab: "#4ade80",
-  duel: "#c084fc",
-};
+// The na kit runs entirely on the global --faction-default-* tokens so it flips
+// light/dark through the cascade; the rainbow appears only as an accent.
+const SURFACE = "var(--faction-default-card-bg)";
+const TEXT = "var(--faction-default-card-text)";
+const MUTED = "var(--faction-default-card-muted)";
+const BORDER = "var(--faction-default-border)";
+const RAINBOW = "var(--faction-default-rainbow)";
 
-const STICKY_YELLOW = "#fde68a";
-const STICKY_PAPER = "#fffefa";
-const CORK = "#c8a874";
-const CORK_DEEP = "#a17c4f";
-const SLATE = "#475569";
-const SLATE_DEEP = "#1e293b";
+// Section micro-label ("How did you work?", "Give it a headline"…). Label tier:
+// uppercase, letter-spaced, scanned not read (§4).
+const cap: React.CSSProperties = {
+  fontFamily: "var(--font-body)",
+  fontSize: "var(--text-base)",
+  letterSpacing: "0.18em",
+  textTransform: "uppercase",
+  color: MUTED,
+  marginBottom: "var(--space-md)",
+};
 
 export default function DefaultEditPraxis({ state }: Props) {
   const { t } = useTranslation("forms");
@@ -53,652 +61,560 @@ export default function DefaultEditPraxis({ state }: Props) {
 
   const allowedModes = task?.allowed_modes ?? ["solo", "collab", "duel"];
 
-  const modeOptions: Array<{
-    key: PraxisType;
-    label: string;
-    desc: string;
-    bg: string;
-  }> = (["solo", "collab", "duel"] as const).map((key) => ({
+  const modeOptions: Array<{ key: PraxisType; label: string; desc: string }> = (
+    ["solo", "collab", "duel"] as const
+  ).map((key) => ({
     key,
     label: t(`editPraxis.na.mode.${key}.label`),
     desc: t(`editPraxis.na.mode.${key}.desc`),
-    bg: MODE_BG[key],
   }));
 
   return (
     <div
       style={{
-        background: CORK,
-        backgroundImage: `radial-gradient(circle at 10% 10%, rgba(0,0,0,.08) 1px, transparent 1.5px), radial-gradient(circle at 30% 70%, rgba(0,0,0,.08) 1px, transparent 1.5px), radial-gradient(circle at 60% 30%, rgba(0,0,0,.08) 1px, transparent 1.5px), radial-gradient(circle at 85% 85%, rgba(0,0,0,.08) 1px, transparent 1.5px), linear-gradient(135deg, ${CORK} 0%, ${CORK_DEEP} 100%)`,
-        backgroundSize: "40px 40px, 35px 35px, 50px 50px, 45px 45px, 100% 100%",
-        fontFamily: "'Caveat', cursive",
-        color: SLATE_DEEP,
-        padding: "var(--space-2xl) var(--space-xl) var(--space-4xl)",
-        minHeight: "100vh",
-        position: "relative",
+        padding: "var(--space-2xl) var(--space-lg) var(--space-4xl)",
+        fontFamily: "var(--font-body)",
+        color: TEXT,
       }}
     >
-      <div style={{ maxWidth: 760, margin: "0 auto" }}>
+      <div style={{ maxWidth: 620, margin: "0 auto" }}>
         <Breadcrumb
           praxisId={praxis.id}
           taskId={praxis.task_id}
           taskTitle={praxis.task_title}
-          inkColor="#fef3c7"
         />
 
-        {/* Header sticky */}
+        {/* Reference-slip card: rainbow band → header → intro → task ref. */}
         <div
           style={{
-            background: "#60a5fa",
-            padding: "var(--space-sm) var(--space-lg)",
-            transform: "rotate(-3deg)",
-            display: "inline-block",
-            boxShadow: "3px 4px 6px rgba(0,0,0,.2)",
-            marginBottom: "var(--space-lg)",
-            position: "relative",
+            background: SURFACE,
+            border: `1px solid ${BORDER}`,
+            borderRadius: 10,
+            overflow: "hidden",
+            boxShadow: "0 16px 40px -24px rgba(0,0,0,0.5)",
           }}
         >
-          <div
-            aria-hidden
-            style={{
-              position: "absolute",
-              top: 4,
-              left: "50%",
-              transform: "translateX(-50%)",
-              width: 14,
-              height: 14,
-              background: "#dc2626",
-              borderRadius: "50%",
-              boxShadow: "inset -2px -2px 3px rgba(0,0,0,.3)",
-            }}
-          />
-          <div
-            style={{
-              marginTop: "var(--space-xs)",
-              fontFamily: "'Permanent Marker', cursive",
-              fontSize: "var(--text-xl)",
-              color: SLATE_DEEP,
-              letterSpacing: "0.05em",
-            }}
-          >
-            {t("editPraxis.na.masthead")}
-          </div>
-        </div>
+          {/* 6px spectrum band across the top — the "all paths open" accent. */}
+          <div style={{ height: 6, background: RAINBOW }} />
 
-        {/* Title sticky — big yellow */}
-        <div
-          style={{
-            background: STICKY_YELLOW,
-            padding: "var(--space-lg) var(--space-xl) var(--space-xl)",
-            transform: "rotate(-1.2deg)",
-            boxShadow: "4px 6px 10px rgba(0,0,0,.22)",
-            marginBottom: "var(--space-xl)",
-            position: "relative",
-            backgroundImage:
-              "linear-gradient(180deg, rgba(241,201,69,0.2) 0%, transparent 8%)",
-          }}
-        >
-          <div
-            style={{
-              position: "absolute",
-              top: 6,
-              right: 14,
-              fontSize: "var(--text-lg)",
-              color: SLATE,
-              fontFamily: "'Caveat', cursive",
-              fontStyle: "italic",
-            }}
-          >
-            {state.autosaveAt
-              ? t("editPraxis.na.autosaveSaved", {
-                  ago: formatAutosave(state.autosaveAt),
-                })
-              : t("editPraxis.na.autosaveUnsaved")}
-          </div>
-          <div style={{ marginBottom: "var(--space-xs)" }}>
-            <RainbowTitle
-              text={t("editPraxis.na.pageTitle")}
-              size={42}
-              color={SLATE_DEEP}
-            />
-          </div>
-          <div
-            style={{
-              fontSize: "var(--text-title)",
-              color: SLATE_DEEP,
-              lineHeight: 1.25,
-              marginTop: "var(--space-sm)",
-              fontFamily: "'Caveat', cursive",
-            }}
-          >
-            <span
-              style={{
-                fontFamily: "'Courier Prime', monospace",
-                fontSize: "var(--text-sm)",
-                textTransform: "uppercase",
-                letterSpacing: "0.15em",
-                color: SLATE,
-                marginRight: "var(--space-sm)",
-              }}
-            >
-              {t("editPraxis.na.taskRefLabel")}
-            </span>
-            {praxis.task_title}
-          </div>
-          {task?.description && (
-            <div style={{ fontSize: "var(--text-content)", lineHeight: 1.5, color: SLATE, marginTop: "var(--space-sm)" }}>
-              {task.description}
-            </div>
-          )}
-          <div style={{ marginTop: "var(--space-sm)" }}>
-            <TaskMetaInline praxis={praxis} task={task} textColor={SLATE} />
-          </div>
-        </div>
-
-        {/* Mode — three small stickies */}
-        {!state.controlsLocked && (
-          <div
-            style={{
-              marginBottom: "var(--space-xl)",
-              display: "flex",
-              gap: "var(--space-lg)",
-              alignItems: "flex-start",
-              flexWrap: "wrap",
-            }}
-          >
+          <div style={{ padding: "var(--space-xl) var(--space-2xl) var(--space-2xl)" }}>
+            {/* Header: sigil + eyebrow + display H2, autosave to the right. */}
             <div
               style={{
-                fontFamily: "'Permanent Marker', cursive",
-                fontSize: "var(--text-xl)",
-                color: "#fef3c7",
-                alignSelf: "center",
-                transform: "rotate(-2deg)",
-                textShadow: "1px 1px 2px rgba(0,0,0,.4)",
+                display: "flex",
+                alignItems: "center",
+                gap: "var(--space-md)",
+                marginBottom: "var(--space-sm)",
               }}
             >
-              {t("editPraxis.na.modeLabel")}
+              <DefaultSigil size={30} />
+              <div>
+                <div
+                  style={{
+                    fontSize: "var(--text-sm)",
+                    letterSpacing: "0.2em",
+                    textTransform: "uppercase",
+                    color: MUTED,
+                  }}
+                >
+                  {t("editPraxis.na.eyebrow")}
+                </div>
+                <h2
+                  style={{
+                    fontFamily: "var(--font-display)",
+                    fontStyle: "italic",
+                    fontWeight: 700,
+                    fontSize: "var(--text-heading)",
+                    lineHeight: 1,
+                    margin: "var(--space-xs) 0 0",
+                    color: TEXT,
+                  }}
+                >
+                  {t("editPraxis.na.pageTitle")}
+                </h2>
+              </div>
+              <span
+                style={{
+                  marginLeft: "auto",
+                  alignSelf: "flex-start",
+                  fontSize: "var(--text-sm)",
+                  letterSpacing: "0.12em",
+                  textTransform: "uppercase",
+                  color: MUTED,
+                }}
+              >
+                {state.autosaveAt
+                  ? t("editPraxis.na.autosaveSaved", {
+                      ago: formatAutosave(state.autosaveAt),
+                    })
+                  : t("editPraxis.na.autosaveUnsaved")}
+              </span>
             </div>
-            <ModePicker
-              state={state}
-              skin={{
-                containerStyle: { display: "contents" },
-                options: modeOptions,
-                allowedModes,
-                renderOption: (opt, { active, disabled, onSelect, index }) => (
-                  <button
-                    key={opt.key}
-                    type="button"
-                    aria-pressed={active}
-                    onClick={onSelect}
-                    disabled={disabled && !active}
-                    style={{
-                      background: opt.bg,
-                      padding: "var(--space-md) var(--space-lg)",
-                      border: "none",
-                      cursor: disabled ? "not-allowed" : "pointer",
-                      transform: `rotate(${active ? (index % 2 ? 2 : -2.5) : index % 2 ? -1 : 1}deg) scale(${active ? 1.08 : 1})`,
-                      boxShadow: active
-                        ? "4px 5px 8px rgba(0,0,0,.25)"
-                        : "2px 3px 5px rgba(0,0,0,.15)",
-                      fontFamily: "'Caveat', cursive",
-                      textAlign: "left",
-                      minWidth: 120,
-                      position: "relative",
-                    }}
-                  >
-                    <div
-                      style={{
-                        fontFamily: "'Permanent Marker', cursive",
-                        fontSize: "var(--text-title)",
-                        color: SLATE_DEEP,
-                        lineHeight: 1,
-                        marginBottom: "var(--space-xs)",
-                      }}
-                    >
-                      {opt.label}
-                    </div>
-                    <div style={{ fontSize: "var(--text-content)", color: SLATE }}>{opt.desc}</div>
-                    {active && (
-                      <span
-                        style={{
-                          position: "absolute",
-                          top: -8,
-                          right: -8,
-                          fontFamily: "'Permanent Marker', cursive",
-                          fontSize: "var(--text-xl)",
-                          color: "#dc2626",
-                          transform: "rotate(20deg)",
-                        }}
-                      >
-                        ✓
-                      </span>
-                    )}
-                  </button>
-                ),
-              }}
-            />
-          </div>
-        )}
 
-        {/* Invite */}
-        {state.showInviteBox && (
+            {/* Neutral intro — a full sentence, so it reads at the content floor. */}
+            <p
+              style={{
+                // design: 11.5px → var(--text-content) (18px) because the
+                // content-text floor governs readable sentences (§4).
+                fontSize: "var(--text-content)",
+                lineHeight: 1.55,
+                color: MUTED,
+                margin: "0 0 var(--space-xl)",
+                maxWidth: 460,
+              }}
+            >
+              {t("editPraxis.na.intro")}
+            </p>
+
+            {/* Reference slip — rainbow-framed task context (padding/border trick). */}
             <div
               style={{
-                background: STICKY_PAPER,
-                padding: "var(--space-md) var(--space-lg)",
-                transform: "rotate(0.4deg)",
-                boxShadow: "3px 4px 7px rgba(0,0,0,.2)",
+                borderRadius: 8,
+                padding: "var(--space-xs)",
+                background: RAINBOW,
                 marginBottom: "var(--space-xl)",
               }}
             >
               <div
                 style={{
-                  fontFamily: "'Permanent Marker', cursive",
-                  fontSize: "var(--text-lg)",
-                  color: SLATE,
-                  marginBottom: "var(--space-xs)",
+                  background: SURFACE,
+                  borderRadius: 5,
+                  padding: "var(--space-lg)",
+                  display: "flex",
+                  gap: "var(--space-md)",
+                  alignItems: "flex-start",
                 }}
               >
-                {state.duelMode
-                  ? t("editPraxis.na.inviteLabelDuel")
-                  : t("editPraxis.na.inviteLabel")}
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div
+                    style={{
+                      fontSize: "var(--text-xs)",
+                      letterSpacing: "0.18em",
+                      textTransform: "uppercase",
+                      color: MUTED,
+                      marginBottom: "var(--space-xs)",
+                    }}
+                  >
+                    {t("editPraxis.na.taskRefLabel")}
+                  </div>
+                  <div
+                    style={{
+                      fontFamily: "var(--font-display)",
+                      fontStyle: "italic",
+                      fontSize: "var(--text-content)",
+                      lineHeight: 1.1,
+                      color: TEXT,
+                      overflowWrap: "anywhere",
+                    }}
+                  >
+                    {praxis.task_title}
+                  </div>
+                  {task?.description && (
+                    <div
+                      style={{
+                        // design: 11px → var(--text-content) (18px) because
+                        // task.description is content, below the floor (§4).
+                        fontSize: "var(--text-content)",
+                        lineHeight: 1.5,
+                        color: MUTED,
+                        marginTop: "var(--space-sm)",
+                      }}
+                    >
+                      {task.description}
+                    </div>
+                  )}
+                </div>
+                <div style={{ flexShrink: 0, textAlign: "right" }}>
+                  <div
+                    style={{
+                      fontFamily: "var(--font-accent)",
+                      fontSize: "var(--text-title)",
+                      lineHeight: 1,
+                      color: TEXT,
+                    }}
+                  >
+                    {task?.point_value ?? 0}
+                    <span
+                      style={{
+                        fontSize: "var(--text-base)",
+                        marginLeft: "var(--space-xs)",
+                        color: MUTED,
+                      }}
+                    >
+                      {t("editPraxis.na.ptsLabel")}
+                    </span>
+                  </div>
+                  {task && (
+                    <div
+                      style={{
+                        fontSize: "var(--text-sm)",
+                        letterSpacing: "0.1em",
+                        textTransform: "uppercase",
+                        color: MUTED,
+                        marginTop: "var(--space-xs)",
+                      }}
+                    >
+                      {t("editPraxis.na.lvlLabel", { level: task.level_required })}
+                    </div>
+                  )}
+                </div>
               </div>
-              <InviteSearch
+            </div>
+
+            {/* Mode selector — active option wears a rainbow border. */}
+            {!state.controlsLocked && (
+              <div style={{ marginBottom: "var(--space-xl)" }}>
+                <div style={cap}>{t("editPraxis.na.modeLabel")}</div>
+                <ModePicker
+                  state={state}
+                  skin={{
+                    containerStyle: {
+                      display: "flex",
+                      gap: "var(--space-sm)",
+                      flexWrap: "wrap",
+                    },
+                    options: modeOptions,
+                    allowedModes,
+                    renderOption: (opt, { active, disabled, onSelect }) => (
+                      <button
+                        key={opt.key}
+                        type="button"
+                        aria-pressed={active}
+                        onClick={onSelect}
+                        disabled={disabled && !active}
+                        style={{
+                          cursor: disabled ? "not-allowed" : "pointer",
+                          textAlign: "left",
+                          minWidth: 150,
+                          padding: "var(--space-md) var(--space-lg)",
+                          borderRadius: 7,
+                          background: SURFACE,
+                          color: TEXT,
+                          border: active
+                            ? "1.5px solid transparent"
+                            : `1.5px solid ${BORDER}`,
+                          backgroundImage: active
+                            ? `linear-gradient(${SURFACE},${SURFACE}), ${RAINBOW}`
+                            : "none",
+                          backgroundOrigin: "border-box",
+                          backgroundClip: active
+                            ? "padding-box, border-box"
+                            : "border-box",
+                        }}
+                      >
+                        <div
+                          style={{
+                            fontFamily: "var(--font-display)",
+                            fontStyle: "italic",
+                            fontWeight: 600,
+                            fontSize: "var(--text-xl)",
+                            lineHeight: 1,
+                          }}
+                        >
+                          {opt.label}
+                        </div>
+                        <div
+                          style={{
+                            fontSize: "var(--text-sm)",
+                            color: MUTED,
+                            marginTop: "var(--space-xs)",
+                          }}
+                        >
+                          {opt.desc}
+                        </div>
+                      </button>
+                    ),
+                  }}
+                />
+              </div>
+            )}
+
+            {/* Invite / opponent picker (collab + duel). */}
+            {state.showInviteBox && (
+              <div style={{ marginBottom: "var(--space-xl)" }}>
+                <div style={cap}>
+                  {state.duelMode
+                    ? t("editPraxis.na.inviteLabelDuel")
+                    : t("editPraxis.na.inviteLabel")}
+                </div>
+                <InviteSearch
+                  state={state}
+                  skin={{
+                    fontFamily: "var(--font-body)",
+                    inputBg: SURFACE,
+                    inputColor: TEXT,
+                    inputBorder: `1px solid ${BORDER}`,
+                    acceptedBg: "var(--faction-default)",
+                    acceptedColor: "var(--color-text-on-accent)",
+                    placeholder: t("editPraxis.na.invitePlaceholder"),
+                  }}
+                />
+              </div>
+            )}
+
+            {/* Headline. */}
+            <div style={{ marginBottom: "var(--space-xl)" }}>
+              <div style={{ ...cap, display: "flex", justifyContent: "space-between" }}>
+                <span>{t("editPraxis.na.titleLabel")}</span>
+                <span style={{ letterSpacing: 0 }}>
+                  <TitleCounter length={state.title.length} color={MUTED} />
+                </span>
+              </div>
+              <TitleField
                 state={state}
                 skin={{
-                  fontFamily: "'Caveat', cursive",
-                  inputBg: "transparent",
-                  inputColor: SLATE_DEEP,
-                  inputBorder: `1.5px dashed ${SLATE}`,
-                  acceptedBg: "#4ade80",
-                  acceptedColor: SLATE_DEEP,
-                  placeholder: t("editPraxis.na.invitePlaceholder"),
+                  placeholder: t("editPraxis.na.titlePlaceholder"),
+                  inputStyle: {
+                    width: "100%",
+                    border: "none",
+                    borderBottom: `2px solid ${BORDER}`,
+                    background: "transparent",
+                    fontFamily: "var(--font-display)",
+                    fontStyle: "italic",
+                    color: TEXT,
+                    padding: "var(--space-xs) var(--space-xs) var(--space-sm)",
+                    outline: "none",
+                  },
                 }}
               />
             </div>
-          )}
 
-        {/* Title sticky */}
-        <div
-          style={{
-            background: STICKY_PAPER,
-            padding: "var(--space-md) var(--space-lg)",
-            transform: "rotate(0.6deg)",
-            boxShadow: "3px 4px 7px rgba(0,0,0,.2)",
-            marginBottom: "var(--space-xl)",
-          }}
-        >
-          <div
-            style={{
-              fontFamily: "'Permanent Marker', cursive",
-              fontSize: "var(--text-md)",
-              color: SLATE,
-              marginBottom: "var(--space-xs)",
-              letterSpacing: "0.05em",
-            }}
-          >
-            {t("editPraxis.na.titleLabel")}
-          </div>
-          <TitleField
-            state={state}
-            skin={{
-              placeholder: t("editPraxis.na.titlePlaceholder"),
-              inputStyle: {
-                width: "100%",
-                fontFamily: "'Caveat', cursive",
-                color: SLATE_DEEP,
-                fontWeight: 700,
-                background: "transparent",
-                border: "none",
-                outline: "none",
-                borderBottom: `2px dashed ${SLATE}`,
-                padding: "var(--space-xs) 0",
-              },
-            }}
-          />
-          <RainbowUnderline opacity={0.55} height={2} />
-          <div style={{ marginTop: "var(--space-xs)" }}>
-            <TitleCounter length={state.title.length} color={SLATE} />
-          </div>
-        </div>
-
-        {/* Body — big white sticky */}
-        <div
-          style={{
-            background: STICKY_PAPER,
-            padding: "var(--space-lg) var(--space-xl)",
-            transform: "rotate(-0.4deg)",
-            boxShadow: "4px 5px 9px rgba(0,0,0,.22)",
-            marginBottom: "var(--space-xl)",
-            position: "relative",
-          }}
-        >
-          <div
-            aria-hidden
-            style={{
-              position: "absolute",
-              top: -6,
-              left: "50%",
-              transform: "translateX(-50%)",
-              width: 16,
-              height: 16,
-              borderRadius: "50%",
-              background:
-                "radial-gradient(circle at 35% 35%, #ff6b6b, #c41e3a 70%, #6b0c1a)",
-              boxShadow: "1px 2px 3px rgba(0,0,0,.3)",
-            }}
-          />
-          <div
-            style={{
-              fontFamily: "'Permanent Marker', cursive",
-              fontSize: "var(--text-lg)",
-              color: SLATE,
-              marginBottom: "var(--space-sm)",
-            }}
-          >
-            {t("editPraxis.na.bodyLabel", { words: state.wordCount })}
-          </div>
-          <BodyTextarea
-            state={state}
-            skin={{
-              rows: 10,
-              placeholder: t("editPraxis.na.bodyPlaceholder"),
-              textareaStyle: {
-                width: "100%",
-                fontFamily: "'Caveat', cursive",
-                lineHeight: 1.5,
-                color: SLATE_DEEP,
-                background: "transparent",
-                border: "none",
-                outline: "none",
-                resize: "vertical",
-                minHeight: 200,
-              },
-            }}
-          />
-          <BodyPreview
-            state={state}
-            skin={{
-              wrapperStyle: {
-                borderTop: `1px dashed ${SLATE}`,
-                marginTop: "var(--space-md)",
-                paddingTop: "var(--space-sm)",
-              },
-              label: (
-                <div
-                  style={{
-                    fontFamily: "'Permanent Marker', cursive",
-                    fontSize: "var(--text-md)",
-                    color: SLATE,
-                    marginBottom: "var(--space-xs)",
-                  }}
-                >
-                  {t("editPraxis.na.previewLabel")}
-                </div>
-              ),
-              markdownStyle: {
-                fontFamily: "'Caveat', cursive",
-                lineHeight: 1.5,
-                color: SLATE_DEEP,
-              },
-            }}
-          />
-        </div>
-
-        {/* Photos */}
-        <div
-          style={{
-            marginBottom: "var(--space-xl)",
-            display: "flex",
-            gap: "var(--space-lg)",
-            flexWrap: "wrap",
-            alignItems: "flex-start",
-          }}
-        >
-          <div
-            style={{
-              fontFamily: "'Permanent Marker', cursive",
-              fontSize: "var(--text-xl)",
-              color: "#fef3c7",
-              alignSelf: "center",
-              transform: "rotate(-3deg)",
-              textShadow: "1px 1px 2px rgba(0,0,0,.4)",
-            }}
-          >
-            {t("editPraxis.na.filesLabel")}
-          </div>
-          {state.media.map((item, index) => {
-            const filename = item.file_path.split("/").pop() ?? item.file_path;
-            const src = mediaUrl(item.file_path);
-            return (
-              <PolaroidStickie
-                key={item.id}
-                rotation={index % 2 ? 2.5 : -2.2}
-                caption={filename}
-                onRemove={() => void state.removeMedia(item)}
-              >
-                {item.type === "image" ? (
-                  <img
-                    src={src}
-                    alt=""
-                    style={{ width: 140, height: 100, objectFit: "cover" }}
-                  />
-                ) : item.type === "video" ? (
-                  <video
-                    src={src}
-                    style={{ width: 140, height: 100, objectFit: "cover" }}
-                  />
-                ) : (
-                  <MediaArt art={pickArtKey(filename, "audio")} />
-                )}
-              </PolaroidStickie>
-            );
-          })}
-          <FilePicker
-            state={state}
-            skin={{
-              buttonStyle: {
-                width: 152,
-                height: 130,
-                background: "rgba(255,254,250,.4)",
-                border: `2.5px dashed ${SLATE_DEEP}`,
-                cursor: "pointer",
-                fontFamily: "'Permanent Marker', cursive",
-                fontSize: "var(--text-xl)",
-                color: SLATE_DEEP,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                flexDirection: "column",
-                gap: "var(--space-xs)",
-                transform: "rotate(1.4deg)",
-              },
-              buttonLabel: t("editPraxis.na.fileButton"),
-              errorColor: "#dc2626",
-              helperText: t("editPraxis.na.fileHelper"),
-              helperStyle: {
-                fontSize: "var(--text-lg)",
-                color: "#fef3c7",
-                marginTop: "var(--space-xs)",
-                fontStyle: "italic",
-                textShadow: "1px 1px 2px rgba(0,0,0,.4)",
-              },
-            }}
-          />
-        </div>
-
-        {/* Metatasks */}
-        {state.showSealStack && (
-          <div
-            style={{
-              marginBottom: "var(--space-xl)",
-              background: STICKY_PAPER,
-              padding: "var(--space-md) var(--space-lg)",
-              transform: "rotate(-0.6deg)",
-              boxShadow: "3px 4px 7px rgba(0,0,0,.2)",
-            }}
-          >
-            <div
-              style={{
-                fontFamily: "'Permanent Marker', cursive",
-                fontSize: "var(--text-lg)",
-                color: SLATE,
-                marginBottom: "var(--space-sm)",
-              }}
-            >
-              {t("editPraxis.na.metatasksLabel")}
+            {/* Account (body). */}
+            <div style={{ marginBottom: "var(--space-xl)" }}>
+              <div style={{ ...cap, display: "flex", justifyContent: "space-between" }}>
+                <span>{t("editPraxis.na.accountLabel")}</span>
+                <span style={{ letterSpacing: 0 }}>
+                  {t("editPraxis.na.accountMeta", { words: state.wordCount })}
+                </span>
+              </div>
+              <BodyTextarea
+                state={state}
+                skin={{
+                  rows: 6,
+                  placeholder: t("editPraxis.na.bodyPlaceholder"),
+                  textareaStyle: {
+                    width: "100%",
+                    resize: "vertical",
+                    borderRadius: 7,
+                    border: `1px solid ${BORDER}`,
+                    background: "transparent",
+                    fontFamily: "var(--font-body)",
+                    lineHeight: 1.7,
+                    color: TEXT,
+                    padding: "var(--space-md)",
+                    outline: "none",
+                    boxSizing: "border-box",
+                    minHeight: 140,
+                  },
+                }}
+              />
+              <BodyPreview
+                state={state}
+                skin={{
+                  wrapperStyle: {
+                    borderTop: `1px solid ${BORDER}`,
+                    marginTop: "var(--space-md)",
+                    paddingTop: "var(--space-sm)",
+                  },
+                  label: <div style={cap}>{t("editPraxis.na.previewLabel")}</div>,
+                  markdownStyle: {
+                    fontFamily: "var(--font-body)",
+                    lineHeight: 1.7,
+                    color: TEXT,
+                  },
+                }}
+              />
             </div>
-            <MetataskSealStack state={state} />
-          </div>
-        )}
 
-        <ErrorBanner message={state.error} />
-
-        {/* CTAs */}
-        <div
-          style={{
-            display: "flex",
-            gap: "var(--space-lg)",
-            alignItems: "center",
-            marginTop: "var(--space-xl)",
-            flexWrap: "wrap",
-          }}
-        >
-          <DropButton
-            state={state}
-            skin={{
-              label: t("editPraxis.na.dropLabel"),
-              style: {
-                background: "transparent",
-                border: "none",
-                color: SLATE_DEEP,
-                fontFamily: "'Caveat', cursive",
-                fontSize: "var(--text-xl)",
-                textDecoration: "underline",
-                cursor: "pointer",
-              },
-            }}
-          />
-          <PublishButton
-            state={state}
-            skin={{
-              idleLabel: t("editPraxis.na.publishIdle"),
-              busyLabel: t("editPraxis.na.publishBusy"),
-              ornament: (
-                <span
-                  aria-hidden
-                  style={{
-                    position: "absolute",
-                    inset: 4,
-                    border: "1.5px dashed rgba(255,255,255,.5)",
-                    pointerEvents: "none",
+            {/* Evidence — existing media + dashed dropzone. */}
+            <div style={{ marginBottom: "var(--space-xl)" }}>
+              <div style={cap}>
+                {t("editPraxis.na.filesLabel")}{" "}
+                <span style={{ letterSpacing: 0, textTransform: "none", color: MUTED }}>
+                  {t("editPraxis.na.filesOptional")}
+                </span>
+              </div>
+              <div
+                style={{
+                  display: "flex",
+                  gap: "var(--space-lg)",
+                  alignItems: "center",
+                  flexWrap: "wrap",
+                }}
+              >
+                {state.media.map((item) => {
+                  const filename =
+                    item.file_path.split("/").pop() ?? item.file_path;
+                  const src = mediaUrl(item.file_path);
+                  return (
+                    <MediaTile
+                      key={item.id}
+                      caption={filename}
+                      onRemove={() => void state.removeMedia(item)}
+                    >
+                      {item.type === "image" ? (
+                        <img
+                          src={src}
+                          alt=""
+                          style={{ width: 120, height: 120, objectFit: "cover" }}
+                        />
+                      ) : item.type === "video" ? (
+                        <video
+                          src={src}
+                          style={{ width: 120, height: 120, objectFit: "cover" }}
+                        />
+                      ) : (
+                        <MediaArt
+                          art={pickArtKey(filename, "audio")}
+                          width={120}
+                          height={120}
+                        />
+                      )}
+                    </MediaTile>
+                  );
+                })}
+                <FilePicker
+                  state={state}
+                  skin={{
+                    buttonStyle: {
+                      cursor: "pointer",
+                      background: "transparent",
+                      border: `1.5px dashed ${BORDER}`,
+                      borderRadius: 8,
+                      padding: "var(--space-lg) var(--space-xl)",
+                      display: "flex",
+                      flexDirection: "column",
+                      alignItems: "center",
+                      gap: "var(--space-sm)",
+                      color: MUTED,
+                      fontFamily: "var(--font-accent)",
+                      fontSize: "var(--text-base)",
+                      letterSpacing: "0.06em",
+                    },
+                    buttonLabel: t("editPraxis.na.fileButton"),
+                    helperText: t("editPraxis.na.fileHelper"),
+                    helperStyle: {
+                      fontSize: "var(--text-base)",
+                      fontStyle: "italic",
+                      color: MUTED,
+                      maxWidth: 200,
+                      lineHeight: 1.5,
+                      fontFamily: "var(--font-display)",
+                      marginTop: "var(--space-xs)",
+                    },
                   }}
                 />
-              ),
-              style: {
-                background: "#dc2626",
-                color: STICKY_PAPER,
-                fontFamily: "'Permanent Marker', cursive",
-                fontSize: "var(--text-title)",
-                padding: "var(--space-md) var(--space-xl)",
-                border: "none",
-                borderRadius: 0,
-                cursor: state.submitting ? "wait" : "pointer",
-                letterSpacing: "0.04em",
-                transform: "rotate(-2deg)",
-                boxShadow: "4px 5px 8px rgba(0,0,0,.3)",
-                position: "relative",
-              },
-            }}
-          />
-          <div style={{ flex: 1 }} />
-          <span
-            style={{
-              fontFamily: "'Caveat', cursive",
-              fontSize: "var(--text-xl)",
-              color: "#fef3c7",
-              fontStyle: "italic",
-              maxWidth: 220,
-              lineHeight: 1.3,
-              textShadow: "1px 1px 2px rgba(0,0,0,.4)",
-              transform: "rotate(-1deg)",
-            }}
-          >
-            {t("editPraxis.na.footer")}
-          </span>
+              </div>
+            </div>
+
+            {/* Metatask seals. */}
+            {state.showSealStack && (
+              <div style={{ marginBottom: "var(--space-xl)" }}>
+                <div style={cap}>{t("editPraxis.na.metatasksLabel")}</div>
+                <MetataskSealStack state={state} />
+              </div>
+            )}
+
+            <ErrorBanner message={state.error} />
+
+            {/* Footer CTAs. */}
+            <div
+              style={{
+                borderTop: `1px solid ${BORDER}`,
+                paddingTop: "var(--space-xl)",
+                marginTop: "var(--space-xl)",
+                display: "flex",
+                alignItems: "center",
+                gap: "var(--space-lg)",
+                flexWrap: "wrap",
+              }}
+            >
+              <PublishButton
+                state={state}
+                skin={{
+                  idleLabel: t("editPraxis.na.publishIdle"),
+                  busyLabel: t("editPraxis.na.publishBusy"),
+                  style: {
+                    cursor: state.submitting ? "wait" : "pointer",
+                    border: "none",
+                    borderRadius: 6,
+                    padding: "var(--space-md) var(--space-xl)",
+                    fontFamily: "var(--font-accent)",
+                    fontSize: "var(--text-xl)",
+                    letterSpacing: "0.04em",
+                    color: SURFACE,
+                    background: TEXT,
+                  },
+                }}
+              />
+              <DropButton
+                state={state}
+                skin={{
+                  label: t("editPraxis.na.dropLabel"),
+                  style: {
+                    background: "transparent",
+                    border: "none",
+                    color: MUTED,
+                    fontFamily: "var(--font-body)",
+                    fontSize: "var(--text-lg)",
+                    textDecoration: "underline",
+                    cursor: "pointer",
+                  },
+                }}
+              />
+              <div style={{ flex: 1 }} />
+              <span
+                style={{
+                  fontFamily: "var(--font-display)",
+                  fontStyle: "italic",
+                  fontSize: "var(--text-lg)",
+                  color: MUTED,
+                }}
+              >
+                {t("editPraxis.na.footer")}
+              </span>
+            </div>
+          </div>
         </div>
       </div>
     </div>
   );
 }
 
-interface PolaroidStickieProps {
+interface MediaTileProps {
   children: React.ReactNode;
   caption: string;
-  rotation: number;
   onRemove: () => void;
 }
 
-function PolaroidStickie({
-  children,
-  caption,
-  rotation,
-  onRemove,
-}: PolaroidStickieProps) {
+/** Neutral reference-slip thumbnail for an already-uploaded media item. */
+function MediaTile({ children, caption, onRemove }: MediaTileProps) {
   const { t } = useTranslation("forms");
   return (
     <div
       style={{
         position: "relative",
-        background: STICKY_PAPER,
-        padding: "var(--space-xs)",
-        transform: `rotate(${rotation}deg)`,
-        boxShadow: "3px 4px 7px rgba(0,0,0,.25)",
+        background: SURFACE,
+        border: `1px solid ${BORDER}`,
+        borderRadius: 8,
+        overflow: "hidden",
       }}
     >
-      <div
-        aria-hidden
-        style={{
-          position: "absolute",
-          top: -6,
-          left: "50%",
-          transform: "translateX(-50%)",
-          width: 12,
-          height: 12,
-          borderRadius: "50%",
-          background:
-            "radial-gradient(circle at 35% 35%, #fef08a, #ca8a04 70%)",
-          boxShadow: "1px 1px 2px rgba(0,0,0,.3)",
-        }}
-      />
-      <div style={{ width: 140, height: 100, overflow: "hidden" }}>
-        {children}
-      </div>
-      <div
-        style={{
-          fontSize: "var(--text-lg)",
-          fontFamily: "'Caveat', cursive",
-          color: SLATE_DEEP,
-          textAlign: "center",
-          marginTop: "var(--space-xs)",
-        }}
-      >
-        {caption}
-      </div>
+      <div style={{ width: 120, height: 120, overflow: "hidden" }}>{children}</div>
       <button
         type="button"
         onClick={onRemove}
         aria-label={t("media.removeAria", { name: caption })}
         style={{
           position: "absolute",
-          top: -8,
-          right: -8,
+          top: 4,
+          right: 4,
           width: 22,
           height: 22,
           borderRadius: "50%",
-          background: "#fef3c7",
-          border: `1.5px solid ${SLATE_DEEP}`,
-          color: SLATE_DEEP,
+          background: "var(--faction-default-card-bg)",
+          border: `1px solid ${BORDER}`,
+          color: TEXT,
           fontSize: "var(--text-md)",
           fontWeight: 700,
           cursor: "pointer",
