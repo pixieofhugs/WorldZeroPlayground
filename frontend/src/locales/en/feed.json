@@ -182,7 +182,7 @@
       "signup": "Sign up"
     },
     "coven": {
-      "windowTitle": "wow.exe",
+      "windowTitle": "coven.exe",
       "questMeta": "new quest · {{points}} pts",
       "signup": "sign up",
       "points": "{{points}} pts"
@@ -324,7 +324,7 @@
       "cta": "Come sit with the work →"
     },
     "coven": {
-      "name": "Warriors of Whimsy",
+      "name": "Cozy Coven",
       "blurb": "A little magic, a lot of mischief. World Zero’s coven for the soft and the strange — take a quest, cast a small spell, let the circle cheer.",
       "status": {
         "locked": "Do the tiny brave thing to be invited ✦",

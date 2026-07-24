@@ -503,12 +503,12 @@
       "level": "lvl {{level}}"
     },
     "mobile": {
-      "eyebrow": "wow.exe"
+      "eyebrow": "coven.exe"
     },
     "invitation": {
       "kicker": "the circle is recruiting",
       "headline": "Come be a little magic",
-      "pitch": "Warriors of Whimsy is World Zero's coven for the soft and the strange. No spectators here — only witches mid-spell. Take a quest, do the tiny brave thing, and let the circle cheer you on.",
+      "pitch": "Cozy Coven is World Zero's circle for the soft and the strange. No spectators here — only witches mid-spell. Take a quest, do the tiny brave thing, and let the circle cheer you on.",
       "terms": [
         {
           "label": "membership fee",
@@ -570,10 +570,34 @@
       "subtitle": "thy crusade, in the palm of thy gauntlet"
     },
     "invitation": {
+      "kicker": "the Court is mustering —",
+      "headline": "Take up the noodle sword",
       "pitch": "By decree most official (we made the seal ourselves), thou art summoned to the Warriors of Whimsy. Bring a straight face. We shall supply the sword.",
+      "terms": [
+        {
+          "label": "oath of fealty",
+          "value": "one quest, met with a straight face"
+        },
+        {
+          "label": "required arms",
+          "value": "none — the Court supplies the sword"
+        },
+        {
+          "label": "expected output",
+          "value": "the ridiculous, taken gravely seriously"
+        },
+        {
+          "label": "thy standing",
+          "value": "knight, freshly sworn"
+        }
+      ],
       "perks": [
         "The Leap of Whimsy — once each rank, a knight may storm a single quest one rung above their station and take it anyway"
-      ]
+      ],
+      "cta": {
+        "join": "Take the oath",
+        "joined": "sworn and sealed, knight"
+      }
     }
   },
   "invitation": {
