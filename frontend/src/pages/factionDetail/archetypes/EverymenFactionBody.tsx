@@ -221,8 +221,6 @@ export default function EverymenFactionBody({ state }: { state: FactionDetailSta
                   {praxis.is_top_for_task && (
                     <TaskCrown
                       size={44}
-                      innerBg={CREAM}
-                      glyphColor={INK}
                       rotate="-8deg"
                       shadow="drop-shadow(1.5px 2px 0 color-mix(in srgb, var(--everymen-ink) 30%, transparent))"
                       style={{ position: "absolute", top: -14, right: -10, zIndex: 5 }}
