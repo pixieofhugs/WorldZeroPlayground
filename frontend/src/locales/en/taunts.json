@@ -43,14 +43,14 @@
   },
   "coven": {
     "score_overtake": [
-      "The collective lifts {{from_name}} above {{to_name}}. Together, always.",
-      "{{from_name}} rose past {{to_name}}. The whole is greater than the parts."
+      "{{from_name}} drifts up past {{to_name}} on a little homemade magic. The circle lights a candle to celebrate.",
+      "One small spell, quietly cast — and {{from_name}} slips ahead of {{to_name}}. No hard feelings, only glitter."
     ],
     "level_up": [
-      "{{from_name}} grew stronger through community. {{to_name}} walks alone."
+      "{{from_name}} glows one rank brighter tonight. Mind the sparks, {{to_name}}."
     ],
     "praxis_complete": [
-      "{{from_name}} contributed to the whole. {{to_name}} remained apart."
+      "{{from_name}} laid fresh proof on the hearth, sealed and hearted by the circle — while {{to_name}} lingers at the door."
     ]
   },
   "ephemerists": {

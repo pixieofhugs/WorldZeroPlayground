@@ -124,3 +124,29 @@ downstream. It now uses `round()`.
 `16.5` each show `49.5` while the profile banks `49`. Which praxis "lost" the
 half point is unanswerable, and answering it is a scoring-semantics decision
 deserving its own ADR. Not decided here.
+
+## Amendment (2026-07-24, #882): every praxis type earns metatask points
+
+This ADR's Consequences claimed a collab card "now reflects... its metatask
+points", but the scoring service did not yet deliver that. `praxis_scoring.py`
+fed only *solo, non-duel* praxis ids to `get_meta_task_points_bulk` — a leftover
+filter, not a ruling — so a sealed collab or duel side scored `metatask_points:
+0` regardless of what the payload was told to report. #882 deletes the filter:
+**all praxis ids** now flow through the metatask pass.
+
+There is **no arithmetic change** to the formula. The metatask already sits
+inside the parenthesis of `score = (base + meta) × faction × duel + votes`, so:
+
+- A **collab** now banks its metatask like any solo praxis.
+- A **duel side's** metatask is multiplied by the duel outcome. A **Snide loss
+  at ×0.0 zeroes the metatask along with the base** — intended: the metatask is
+  part of the submission the duel judged (consistent with ADR-0015's "the duel
+  multiplier is a deliberate faction perk and should keep applying to metatask
+  points"). The reported `metatask_points` still shows the level-met bonus; the
+  ×0.0 multiplier zeroes it inside `score`.
+
+The scored set and the **seal set** (`applied_metatasks_for`, #932) now read the
+same `PraxisMetaTask` rows for every praxis type, so they cannot desync. The
+author-level gate still zeroes points for an under-level author while the seal
+stays attached — `metatask_points: 0` beside a non-null seal is a legitimate
+`+0` state, unchanged here.
