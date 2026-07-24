@@ -63,10 +63,19 @@ export function MentionText({
   body,
   mentions,
   accent,
+  rainbow = false,
 }: {
   body: string
   mentions: CommentMention[]
   accent?: string
+  /**
+   * Opt-in na / Unaffiliated tell (#970): render resolved @mentions as
+   * gradient-clipped spectrum text via the shared `.rainbow-ink` class
+   * (`--faction-default-rainbow`), instead of the flat `accent` ink. Only the
+   * Default (na) voice passes this; every other voice omits it and renders
+   * byte-identically.
+   */
+  rainbow?: boolean
 }) {
   if (mentions.length === 0) return <>{body}</>
   const byHandle = new Map(mentions.map((m) => [m.username.toLowerCase(), m]))
@@ -81,7 +90,14 @@ export function MentionText({
               <Link
                 key={index}
                 to={`/characters/${mention.character_id}`}
-                style={{ color: accent ?? 'inherit', fontWeight: 600, textDecoration: 'none' }}
+                className={rainbow ? 'rainbow-ink' : undefined}
+                // rainbow: omit inline `color` so `.rainbow-ink`'s transparent
+                // fill can reveal the gradient clip; a flat color would win.
+                style={{
+                  ...(rainbow ? null : { color: accent ?? 'inherit' }),
+                  fontWeight: rainbow ? 700 : 600,
+                  textDecoration: 'none',
+                }}
               >
                 {part}
               </Link>
