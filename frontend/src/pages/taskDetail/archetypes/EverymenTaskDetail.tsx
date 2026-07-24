@@ -466,7 +466,7 @@ export default function EverymenTaskDetail({
                 message={signupError}
                 style={{
                   flexBasis: "100%",
-                  background: "var(--everymen-red-light, rgba(193,39,45,0.08))",
+                  background: "var(--everymen-red-light)",
                   border: `1px solid ${RED}`,
                   color: RED_DEEP,
                 }}
@@ -574,7 +574,7 @@ export default function EverymenTaskDetail({
                 message={signupError}
                 style={{
                   flexBasis: "100%",
-                  background: "var(--everymen-red-light, rgba(193,39,45,0.08))",
+                  background: "var(--everymen-red-light)",
                   border: `1px solid ${RED}`,
                   color: RED_DEEP,
                 }}

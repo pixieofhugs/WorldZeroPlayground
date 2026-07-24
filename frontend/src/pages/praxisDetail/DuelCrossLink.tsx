@@ -123,7 +123,7 @@ export function DefaultDuelRail({
     borderLeft: `3px solid ${accent}`,
     background: soft,
     fontFamily: "var(--font-body)",
-    color: "var(--color-text)",
+    color: "var(--color-text-primary)",
   };
   return (
     // .content-text, not a wrapper `fontSize` (#769). This wrapper used to set

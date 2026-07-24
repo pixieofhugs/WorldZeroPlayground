@@ -44,7 +44,7 @@ export function MobileStarVote({
   currentValue,
   points,
   totalVotes,
-  accent = 'var(--color-accent)',
+  accent = 'var(--color-accent-primary)',
   accentFont = 'var(--font-display)',
 }: {
   praxisId: number

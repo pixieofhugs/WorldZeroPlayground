@@ -773,7 +773,7 @@ export function DefaultFactionCard(props: FactionCardProps) {
         <div
           style={{
             width: "100%",
-            background: "var(--color-bg-card)",
+            background: "var(--color-bg-surface)",
             border: `2px solid ${factionCssVar(props.faction.slug, "border")}`,
             padding: "var(--space-md) var(--space-lg)",
             fontFamily: "var(--font-body)",
