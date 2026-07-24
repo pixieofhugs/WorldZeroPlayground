@@ -196,7 +196,23 @@
       "pointsFromVotes": "Points earned from votes",
       "pts": "pts",
       "submitted": "Submitted {{date}}",
-      "flagged": "flagged"
+      "flagged": "flagged",
+      "praxisEyebrow": "A praxis · unaffiliated · counts for everyone",
+      "basePts": "base pts",
+      "filedRe": "Re: {{task}} · filed {{date}}",
+      "evidence": "Evidence",
+      "plate": "Plate I",
+      "theAccount": "The account",
+      "castHeading": "Cast your vote",
+      "castPrompt": "How much did this move you?",
+      "ledgerAwarded": "pts awarded by votes",
+      "ledgerBacked_one": "person backed it",
+      "ledgerBacked_other": "people backed it",
+      "ledgerBackedBy": "Backed by",
+      "ledgerBackers_one": "{{count}} backer",
+      "ledgerBackers_other": "{{count}} backers",
+      "ledgerTotal": "+{{points}} pts",
+      "ledgerEmpty": "No votes yet — be the first to back it."
     },
     "ua": {
       "status": {
