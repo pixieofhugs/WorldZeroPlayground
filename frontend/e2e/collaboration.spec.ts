@@ -176,3 +176,200 @@ test.describe('collaboration lifecycle', () => {
     }
   })
 })
+
+/* ==========================================================================
+ * UI-DRIVEN collab flow (#955) — every collab action goes through a REAL
+ * clicked button. Only account scaffolding (dev-login) and the task lookup
+ * (GET /tasks) stay on the API; there are no real buttons for those.
+ *
+ * The seed's only level-0 task is Snide-faction ("FLIP THE SYSTEM"), so the
+ * composer, task page, and cast button render the SNIDE archetype. The labels
+ * below are that faction's voiced copy; the invite-search box, the feed Accept
+ * button, and the detail-page unsubmit control are shared (faction-invariant)
+ * strings from the `forms`/`feed`/`praxis` catalogs.
+ *
+ * The four red steps (C1–C4) are `test.fail()` — the button is missing or
+ * wrong today, and the named fix issue flips each one green (deletes its
+ * `test.fail()`). See #953 for the full action → button investigation.
+ * ========================================================================== */
+
+// Snide (the level-0 task's faction) control labels.
+const SNIDE_SIGNUP = /PULL THIS JOB/i //   task page: create the draft
+const SNIDE_COLLAB_MODE = /THE GANG/i //   ModePicker: the collab option
+const SNIDE_CAST = /count me in/i //       PublishButton: cast + cast-final
+
+/** First `count` distinct-titled tasks any high-level character may attempt. */
+async function pickTasks(
+  player: Player,
+  count: number,
+): Promise<Array<{ id: number; title: string }>> {
+  const res = await player.ctx.request.get(`${API}/tasks`)
+  const tasks = await res.json()
+  const seen = new Set<string>()
+  const usable: Array<{ id: number; title: string }> = []
+  for (const task of tasks as any[]) {
+    if ((task.level_required ?? 0) > 8) continue
+    if (seen.has(task.title)) continue
+    seen.add(task.title)
+    usable.push({ id: task.id, title: task.title })
+    if (usable.length === count) break
+  }
+  expect(
+    usable.length,
+    `need ${count} distinct seeded tasks for the >5-invite test`,
+  ).toBe(count)
+  return usable
+}
+
+test.describe('collaboration UI (clicked buttons)', () => {
+  // The happy path drives create → invite → accept → cast → publish entirely
+  // through real buttons. It stays green: every control on this path ships today.
+  test('create via ModePicker, invite, accept, cast, and publish', async ({ browser }) => {
+    const s = pairSeq++
+    const alice = await login(browser, `ua-${RUN}-${s}`, `UA${s}-${RUN}`, 1)
+    const bob = await login(browser, `ub-${RUN}-${s}`, `UB${s}-${RUN}`, 0)
+    const task = await pickOpenTask(alice)
+    try {
+      // 1. Alice signs up on the task → lands on the (solo) composer.
+      const aPage = await alice.ctx.newPage()
+      await aPage.goto(`/tasks/${task.id}`)
+      await aPage.getByRole('button', { name: SNIDE_SIGNUP }).click()
+      await aPage.waitForURL(/\/praxes\/\d+\/edit/)
+      const praxisId = Number(aPage.url().match(/\/praxes\/(\d+)\/edit/)![1])
+
+      // 2. Flip solo → collab through the ModePicker.
+      await aPage.getByRole('button', { name: SNIDE_COLLAB_MODE }).click()
+
+      // 3. Invite Bob through the InviteSearch box (shared aria-label), picking
+      //    his result from the live search dropdown.
+      const search = aPage.getByRole('textbox', { name: 'search players to invite' })
+      await search.fill(bob.name)
+      await aPage.getByRole('listbox').getByRole('button', { name: bob.name }).click()
+      // The pending-invite pill confirms the invite landed.
+      await expect(aPage.getByText(bob.name)).toBeVisible()
+
+      // 4. Bob accepts on the collab feed card (Requests tab of Updates). The
+      //    accept navigates him onto the shared composer.
+      const bPage = await bob.ctx.newPage()
+      await bPage.goto('/updates?filter=requests')
+      await bPage.getByRole('main').getByRole('button', { name: 'Accept' }).click()
+      await bPage.waitForURL(/\/praxes\/\d+\/edit/)
+
+      // 5. Both edit the body, then cast through the footer PublishButton.
+      //    Alice reloads so her roster reflects Bob's membership (her cast label
+      //    depends on the live member count) before she casts.
+      await aPage.goto(`/praxes/${praxisId}/edit`)
+      await aPage.locator('textarea').first().fill('Alice weaves her part')
+      await aPage.getByRole('button', { name: SNIDE_CAST }).click()
+
+      await bPage.goto(`/praxes/${praxisId}/edit`)
+      await bPage.locator('textarea').first().fill('Bob weaves his part')
+      await bPage.getByRole('button', { name: SNIDE_CAST }).click()
+
+      // The last cast seals consensus → the closing beat renders for Bob.
+      await expect(bPage.getByText(/out there/i)).toBeVisible()
+
+      // 6. The published praxis renders on its detail page (creator byline in
+      //    main — mirrors the green API-driven lifecycle assertion above).
+      const view = await alice.ctx.newPage()
+      await view.goto(`/praxes/${praxisId}`)
+      await expect(
+        view.getByRole('main').getByRole('link', { name: alice.name }),
+      ).toBeVisible()
+    } finally {
+      await alice.ctx.close()
+      await bob.ctx.close()
+    }
+  })
+
+  // C1 (→ #959): a kick control on another member's roster pill removes them.
+  // CollabRoster renders member pills but ships NO kick affordance, so
+  // POST /praxes/{id}/kick/{member_id} is unreachable from the UI.
+  test('C1: a member can kick a co-author from the roster pill', async ({ browser }) => {
+    test.fail()
+    const seed = await seedCollabDraft(browser, 'ui-kick')
+    try {
+      const page = await seed.alice.ctx.newPage()
+      await page.goto(`/praxes/${seed.praxisId}/edit`)
+      await expect(
+        page.getByRole('button', {
+          name: new RegExp(`(kick|remove).*${seed.bob.name}`, 'i'),
+        }),
+      ).toBeVisible()
+    } finally {
+      await seed.alice.ctx.close()
+      await seed.bob.ctx.close()
+    }
+  })
+
+  // C2 (→ #958): a standalone "Leave collab" button on the composer. Today the
+  // only way to leave is via the bank-full drop-to-accept modal, so a member
+  // who simply wants out has no button.
+  test('C2: a member can leave the collab from a standalone control', async ({ browser }) => {
+    test.fail()
+    const seed = await seedCollabDraft(browser, 'ui-leave')
+    try {
+      const page = await seed.bob.ctx.newPage()
+      await page.goto(`/praxes/${seed.praxisId}/edit`)
+      await expect(page.getByRole('button', { name: /leave/i })).toBeVisible()
+    } finally {
+      await seed.alice.ctx.close()
+      await seed.bob.ctx.close()
+    }
+  })
+
+  // C3 (→ #958): a holdout (hasn't cast) viewing a `pending` collab on the
+  // detail page should see a CAST control. Today the page falls through to the
+  // owner "unsubmit" control, which 422s because the holdout never submitted.
+  test('C3: a holdout on a pending collab is not shown the unsubmit control', async ({ browser }) => {
+    test.fail()
+    const seed = await seedCollabDraft(browser, 'ui-holdout')
+    try {
+      // Alice casts (API) → the collab enters `pending`; Bob is the holdout.
+      await seed.alice.ctx.request.post(`${API}/praxes/${seed.praxisId}/submit`)
+      const page = await seed.bob.ctx.newPage()
+      await page.goto(`/praxes/${seed.praxisId}`)
+      // The unsubmit control must NOT be offered to a member who never cast.
+      await expect(
+        page.getByRole('button', { name: 'unsubmit', exact: true }),
+      ).toHaveCount(0)
+    } finally {
+      await seed.alice.ctx.close()
+      await seed.bob.ctx.close()
+    }
+  })
+
+  // C4 (→ #960): with more than 5 pending invites the oldest must stay
+  // accept-reachable. The requests inbox (usePendingRequests) caps its fetch at
+  // 5, so the sixth-oldest invite silently falls off with no other surface.
+  test('C4: the oldest of six pending invites is still reachable', async ({ browser }) => {
+    test.fail()
+    const s = pairSeq++
+    const inviter = await login(browser, `ci-${RUN}-${s}`, `CI${s}-${RUN}`, 8)
+    const bob = await login(browser, `cb-${RUN}-${s}`, `CB${s}-${RUN}`, 0)
+    const tasks = await pickTasks(inviter, 6)
+    try {
+      // Six collabs, one per task, oldest first — all invite the same Bob.
+      const oldestTaskTitle = tasks[0].title
+      for (const task of tasks) {
+        const created = await inviter.ctx.request.post(`${API}/praxes`, {
+          data: { task_id: task.id, type: 'collab', title: `C4 ${task.id}`, body_text: 'x' },
+        })
+        expect(created.ok(), `collab create failed: ${await created.text()}`).toBeTruthy()
+        const praxis = await created.json()
+        const invited = await inviter.ctx.request.post(`${API}/praxes/${praxis.id}/invite`, {
+          data: { invitee_id: bob.characterId },
+        })
+        expect(invited.ok(), `invite failed: ${await invited.text()}`).toBeTruthy()
+      }
+      const page = await bob.ctx.newPage()
+      await page.goto('/')
+      // Bob's pending-requests inbox lives in the sidebar; the oldest invite's
+      // task must still show there (it's dropped by the limit-5 fetch today).
+      await expect(page.locator('aside').getByText(oldestTaskTitle)).toBeVisible()
+    } finally {
+      await inviter.ctx.close()
+      await bob.ctx.close()
+    }
+  })
+})
