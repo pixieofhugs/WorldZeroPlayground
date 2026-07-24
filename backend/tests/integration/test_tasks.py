@@ -867,22 +867,23 @@ async def test_my_tasks_with_status_filter(
 
 
 # ---------------------------------------------------------------------------
-# Bug 9 — default list_tasks returns both standard and metatask rows
+# #1001 — default browse is standard-only; 'all' is the both-types escape hatch
 # ---------------------------------------------------------------------------
 
 
 @pytest.mark.asyncio
-async def test_list_tasks_default_returns_both_types(
+async def test_list_tasks_default_excludes_metatasks_at_see_gate(
     client: AsyncClient,
     db_session: AsyncSession,
     character: Character,
     auth_headers: dict,
     era,
 ):
-    """GET /tasks with no task_type filter returns both standard and metatasks.
+    """GET /tasks with no task_type filter returns ONLY standard tasks (#1001).
 
-    The viewer sits at ``era.level_to_see_metatasks`` — below the gate the
-    metatask row would be filtered out (#453, covered separately below).
+    The viewer sits AT ``era.level_to_see_metatasks`` — high enough to clear the
+    #453 visibility gate — yet the metatask still never appears in the default
+    browse, because the default is now standard-only regardless of level.
     """
     from models.task import TaskType
 
@@ -918,6 +919,63 @@ async def test_list_tasks_default_returns_both_types(
     )
 
     resp = await client.get("/tasks", headers=auth_headers)
+    assert resp.status_code == 200
+    data = resp.json()
+    ids = {t["id"] for t in data}
+    assert standard_task.id in ids
+    assert meta_task.id not in ids
+    assert all(t["task_type"] == "standard" for t in data)
+
+
+@pytest.mark.asyncio
+async def test_list_tasks_all_returns_both_types(
+    client: AsyncClient,
+    db_session: AsyncSession,
+    character: Character,
+    auth_headers: dict,
+    era,
+):
+    """GET /tasks?task_type=all returns both standard and metatasks (#1001).
+
+    The viewer sits at ``era.level_to_see_metatasks`` so the #453 gate is clear;
+    'all' is the explicit both-types escape hatch.
+    """
+    from models.task import TaskType
+
+    standard_task = Task(
+        title="Standard Task",
+        description="",
+        point_value=10,
+        level_required=0,
+        status=TaskStatus.active,
+        task_type=TaskType.standard,
+        created_by=character.id,
+        primary_faction_slug="ua",
+    )
+    meta_task = Task(
+        title="Metatask",
+        description="",
+        point_value=5,
+        level_required=0,
+        status=TaskStatus.active,
+        task_type=TaskType.metatask,
+        created_by=character.id,
+        primary_faction_slug="ua",
+        metatask_faction_slug="ua",
+    )
+    db_session.add(standard_task)
+    db_session.add(meta_task)
+    await db_session.commit()
+    await db_session.refresh(standard_task)
+    await db_session.refresh(meta_task)
+
+    await _set_character_level(
+        db_session, character.id, era.id, CURRENT_ERA.level_to_see_metatasks
+    )
+
+    resp = await client.get(
+        "/tasks", params={"task_type": "all"}, headers=auth_headers
+    )
     assert resp.status_code == 200
     data = resp.json()
     ids = {t["id"] for t in data}
@@ -1105,18 +1163,21 @@ async def test_metatask_list_visible_at_see_gate(
     auth_headers: dict,
     era,
 ):
-    """A character at era.level_to_see_metatasks sees metatask rows."""
+    """A character at era.level_to_see_metatasks sees metatask rows when they
+    request them — the default browse stays standard-only (#1001)."""
     standard_task, meta_task = await _seed_standard_and_metatask(db_session, character)
     await _set_character_level(
         db_session, character.id, era.id, CURRENT_ERA.level_to_see_metatasks
     )
 
+    # Default browse is standard-only regardless of level (#1001).
     resp = await client.get("/tasks", headers=auth_headers)
     assert resp.status_code == 200
     ids = {t["id"] for t in resp.json()}
     assert standard_task.id in ids
-    assert meta_task.id in ids
+    assert meta_task.id not in ids
 
+    # Explicitly requesting the metatask list clears the #453 gate at level.
     resp_meta = await client.get(
         "/tasks", params={"task_type": "metatask"}, headers=auth_headers
     )
