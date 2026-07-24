@@ -5,6 +5,7 @@ import UaMandala from '../../../components/cards/UaMandala'
 import { UaSigil } from '../../../components/cards/UaSigil'
 import { factionName } from '../../../utils/factions'
 import { mediaUrl } from '../../../utils/media'
+import { praxisModeLabel } from '../../../utils/praxis'
 import type { FieldDeskHomeState } from '../useFieldDeskHome'
 
 /**
@@ -247,7 +248,7 @@ export default function UaHome({ state }: { state: FieldDeskHomeState }) {
                   className="shrink-0"
                   style={{ ...smallCaps, color: ACCENT, padding: 'var(--space-xs) var(--space-sm)', border: `1px solid ${RULE}` }}
                 >
-                  {t(`praxisType.${praxis.type}`)}
+                  {praxisModeLabel(praxis, t)}
                 </span>
               </Link>
             ))}

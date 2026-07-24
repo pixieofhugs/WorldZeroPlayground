@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { factionName } from '../../../utils/factions'
 import { mediaUrl } from '../../../utils/media'
+import { praxisModeLabel } from '../../../utils/praxis'
 import type { FieldDeskHomeState } from '../useFieldDeskHome'
 
 /**
@@ -262,7 +263,7 @@ export default function EverymenHome({ state }: { state: FieldDeskHomeState }) {
                   className="shrink-0"
                   style={{ fontFamily: BODY_FONT, fontSize: 'var(--text-xs)', letterSpacing: '0.1em', textTransform: 'uppercase', color: CREAM, background: INK, padding: 'var(--space-xs) var(--space-sm)' }}
                 >
-                  {t(`praxisType.${praxis.type}`)}
+                  {praxisModeLabel(praxis, t)}
                 </span>
               </Link>
             ))}

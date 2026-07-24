@@ -176,6 +176,13 @@ export interface PraxisCardOut {
    * degrades to showing the module rather than hiding it.
    */
   viewer_can_vote?: boolean
+  /**
+   * Set when this praxis is a side of a duel (ADR-0011): a duel side is stored
+   * `type='solo'` + a non-null `duel_id`, so mode labels/chips must gate on this,
+   * not `type` (#992). Null/absent when the praxis is not a duel side. Mirrors
+   * `PraxisOut.duel_id`; precomputed page-wide by the feed route (no N+1).
+   */
+  duel_id?: number | null
 }
 
 export interface PraxisCreate {

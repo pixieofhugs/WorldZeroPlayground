@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import type { PraxisCardOut } from '../../../api/praxis'
 import { factionName } from '../../../utils/factions'
+import { isDuelPraxis } from '../../../utils/praxis'
 import { relativeTime } from '../../../utils/dates'
 import { mediaUrl } from '../../../utils/media'
 import { rosterNames } from '../shared'
@@ -274,7 +275,9 @@ export function MobileModeChip({
   theme: MobileSlotTheme
 }) {
   const { t } = useTranslation('common')
-  const isDuel = praxis.type === 'duel'
+  // A duel side is stored type='solo' + a non-null duel_id (ADR-0011), so
+  // `type === 'duel'` never fires (#992) — gate on duel presence instead.
+  const isDuel = isDuelPraxis(praxis)
   const isPending = praxis.submit_proposed_at != null
   if (!isDuel && !isPending) return null
   const chip: CSSProperties = {

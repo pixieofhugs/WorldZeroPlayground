@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import type { CharacterOut } from "../../api/auth";
 import type { PraxisCardOut } from "../../api/praxis";
 import { factionName } from "../../utils/factions";
+import { isDuelPraxis } from "../../utils/praxis";
 import { mediaUrl } from "../../utils/media";
 import FactionAvatar from "../avatar/FactionAvatar";
 import VoteUI from "../vote/VoteUI";
@@ -431,7 +432,9 @@ export function PraxisModeChip({
   fonts?: PraxisCardFonts;
 }) {
   const { t } = useTranslation("common");
-  const isDuel = praxis.type === "duel";
+  // A duel side is stored type='solo' + a non-null duel_id (ADR-0011), so
+  // `type === 'duel'` never fires (#992) — gate on duel presence instead.
+  const isDuel = isDuelPraxis(praxis);
   const isCollab = praxis.type === "collab";
   const isPending = praxis.submit_proposed_at != null;
   if (!isDuel && !isCollab && !isPending) return null;
