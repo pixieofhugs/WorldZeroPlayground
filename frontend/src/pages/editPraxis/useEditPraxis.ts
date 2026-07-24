@@ -17,6 +17,7 @@ import {
   cancelInvite as cancelInviteApi,
   getPraxis,
   inviteToPraxis,
+  kickMember as kickMemberApi,
   leavePraxis,
   removeMetatask,
   submitPraxis,
@@ -92,6 +93,8 @@ export interface EditPraxisState {
   inviting: boolean;
   sendInvite: (character: CharacterOut) => Promise<void>;
   cancelInvite: (inviteId: number) => Promise<void>;
+  /** Remove another member from the collab (#959) — target is a character id. */
+  kickMember: (memberId: number) => Promise<void>;
 
   // Duel challenge (#311) — selecting duel attaches a challenge to this praxis;
   // the praxis stays type='solo' and gains a duel_id.
@@ -828,6 +831,34 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
     [praxis],
   );
 
+  // Remove another member from the collab (#959). Any member may kick any other
+  // (mirrors the backend guard); the confirm step lives in CollabRoster, so this
+  // just fires the call and reloads — the kick resets the group to editing, so
+  // the refreshed praxis carries the reset roster + cast state (ADR-0013).
+  const kickMember = useCallback(
+    async (memberId: number) => {
+      if (!praxis) return;
+      setError("");
+      try {
+        const updated = await kickMemberApi(praxis.id, memberId);
+        setPraxis(updated);
+      } catch (err) {
+        const kicked = praxis.members.find(
+          (member) => member.character_id === memberId,
+        );
+        setError(
+          extractError(
+            err,
+            i18n.t("forms:editPraxis.errors.kick", {
+              name: kicked?.character_display_name ?? "",
+            }),
+          ),
+        );
+      }
+    },
+    [praxis],
+  );
+
   // ---- Duel challenge (#311): pick an opponent, cancel a pending challenge ----
   const sendChallenge = useCallback(
     async (character: CharacterOut) => {
@@ -1043,6 +1074,7 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
     inviting,
     sendInvite,
     cancelInvite,
+    kickMember,
 
     duel,
     sendChallenge,

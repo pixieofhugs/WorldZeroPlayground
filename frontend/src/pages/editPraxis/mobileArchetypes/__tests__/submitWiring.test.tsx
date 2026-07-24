@@ -96,6 +96,7 @@ function stateWith(publish: () => Promise<void>): EditPraxisState {
     inviting: false,
     sendInvite: async () => {},
     cancelInvite: async () => {},
+    kickMember: async () => {},
     duel: null,
     sendChallenge: async () => {},
     cancelDuel: async () => {},

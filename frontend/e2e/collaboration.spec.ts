@@ -286,7 +286,6 @@ test.describe('collaboration UI (clicked buttons)', () => {
   // CollabRoster renders member pills but ships NO kick affordance, so
   // POST /praxes/{id}/kick/{member_id} is unreachable from the UI.
   test('C1: a member can kick a co-author from the roster pill', async ({ browser }) => {
-    test.fail()
     const seed = await seedCollabDraft(browser, 'ui-kick')
     try {
       const page = await seed.alice.ctx.newPage()
