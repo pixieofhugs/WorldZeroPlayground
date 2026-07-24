@@ -19,7 +19,7 @@
  * markup — a mis-wire surfaces there, not as a bare identity check here.
  */
 import { describe, it, expect } from 'vitest'
-import { surfaceMap } from '..'
+import { surfaceMap, SURFACE_KEYS } from '..'
 import type { FactionSurface } from '..'
 
 // The table asserts each surface's registry CONTENTS: a bespoke slug has an
@@ -65,3 +65,48 @@ for (const [surface, bespoke] of Object.entries(BESPOKE)) {
     })
   })
 }
+
+/* -------------------------------------------------------------------------- */
+/* WOW + Coven completeness (owner ruling, 2026-07-23)                        */
+/*                                                                            */
+/* Coven and WOW are distinct factions that must never fall back on each      */
+/* other aesthetically, and a faction missing a custom experience is a design */
+/* bug. Any fallback goes to the generic Default (N/A) — pickVariant has no    */
+/* cross-faction path (FACTION_ALIASES is empty) — so this enforces the second */
+/* half: both must be bespoke on every surface the core factions are.         */
+/* -------------------------------------------------------------------------- */
+
+// The bar, derived so a new core surface raises it automatically: every surface
+// the reference core factions all skin. Excludes the duel surfaces (ua leaves
+// them Default) and mobileProfile (only wow has it) by construction.
+const REFERENCE_FACTIONS = ['snide', 'ephemerists', 'singularity', 'everymen', 'ua']
+const REQUIRED = SURFACE_KEYS.filter((surface) =>
+  REFERENCE_FACTIONS.every((faction) => surfaceMap(surface)[faction] !== undefined),
+)
+
+// WOW desktop pages the design kit never drew — tracked by #951. Each must ship
+// a bespoke skin; until then WOW renders the generic Default (N/A), not Coven.
+// When a skin ships, drop the surface here and the "still pending" guard below
+// fails, forcing this allowlist to shrink in lockstep with the fix.
+const WOW_PENDING: ReadonlySet<string> = new Set([
+  'taskDetail',
+  'praxisDetail',
+  'factionCard',
+  'factionBody',
+])
+
+describe('Coven is bespoke on every core surface, never the Default', () => {
+  it.each(REQUIRED)('coven skins %s', (surface) => {
+    expect(surfaceMap(surface)['coven']).toBeDefined()
+  })
+})
+
+describe('WOW is bespoke on every core surface except the #951 pending set', () => {
+  it.each(REQUIRED.filter((surface) => !WOW_PENDING.has(surface)))('wow skins %s', (surface) => {
+    expect(surfaceMap(surface)['wow']).toBeDefined()
+  })
+
+  it.each([...WOW_PENDING])('%s is still pending a WOW skin (#951) — falls to Default', (surface) => {
+    expect(surfaceMap(surface as FactionSurface)['wow']).toBeUndefined()
+  })
+})

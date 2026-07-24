@@ -64,18 +64,23 @@ function Sentinel() {
  * `metaTaskSeal` — WOW's court-writ seal, the last faction seal skin, built from
  * the chronicle identity since the kit drew no wow specimen.
  *
- * EIGHT SURFACES ARE STILL UNCLAIMED and every one is deliberate, not an
- * oversight. `factionBody` and `factionCard`: the kit drew WOW's faction HERO,
- * not the page beneath it, and #900 scoped them out. `taskDetail` and
- * `praxisDetail` on DESKTOP: the kit draws the decree CARD and the chronicle
- * CARD, and #899/#840 shipped both — the pages that mount them were never
- * designed, so a desktop page skin would be invention rather than fidelity, and
- * the mobile twins above are derived precisely because the phone screen WAS
- * drawn. `mobileCreateCharacter` and `mobileEditCharacter`,
- * `mobileFactionsDirectory` and `mobilePlayersDirectory`: nothing in the kit
- * describes them, and #901 scoped them out (file a follow-up if they read wrong
- * in use). If a later slice registers any of these, this list is where that
- * decision has to be written down.
+ * EIGHT SURFACES ARE STILL UNCLAIMED, in two groups.
+ *
+ * `factionBody`, `factionCard`, and DESKTOP `taskDetail` / `praxisDetail` are
+ * PENDING DESIGN BUGS, tracked by #951. #899/#900/#840 scoped them out on a
+ * design-fidelity argument (the kit drew WOW's cards and hero, not the desktop
+ * pages beneath them, so a page skin would be invention), but the owner ruled
+ * (2026-07-23) that a faction missing a custom experience is a bug regardless:
+ * WOW players get the generic Default on those pages. They fall to the neutral
+ * Default (N/A), never to Coven — which is the point of pinning the set here.
+ * When #951 ships a skin, move that surface into WOW_SKINNED and this list
+ * shrinks; `surfaceDispatch.test.ts` enforces the same #951 allowlist.
+ *
+ * `mobileCreateCharacter` and `mobileEditCharacter`, `mobileFactionsDirectory`
+ * and `mobilePlayersDirectory`: nothing in the kit describes them, #901 scoped
+ * them out, and NO faction skins them — Default-for-everyone, not a WOW gap. If
+ * a later slice registers any surface, this list is where that decision has to
+ * be written down.
  */
 const WOW_SKINNED: ReadonlySet<FactionSurface> = new Set([
   'sigil',
