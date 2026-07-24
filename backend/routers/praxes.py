@@ -190,7 +190,7 @@ async def get_praxis_route(
     praxis = await get_praxis(praxis_id, session)
     # 404 (not 403) when not viewable — don't reveal existence of hidden or
     # of another character's in_progress draft (ADR-0024).
-    if not can_view_praxis(viewer, praxis):
+    if not await can_view_praxis(viewer, praxis, session):
         raise HTTPException(status_code=404, detail="Praxis not found.")
     return await build_praxis_out(praxis, session, viewer=viewer)
 

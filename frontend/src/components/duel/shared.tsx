@@ -290,20 +290,30 @@ function RosterRow({
 /**
  * Per-side cast status, straight off `DuelSideOut.is_submitted` — the field that
  * has been on the wire since #313 and, until now, was never rendered anywhere.
+ *
+ * `spectator` (#999): a viewer who is not a party to the duel names BOTH sides by
+ * `display_name` — never "You". The seal-confirm skins always render for the
+ * caster (a party), so they leave it at the default and keep the "You" row.
  */
 export function RaceRoster({
   me,
   foe,
   theme,
+  spectator = false,
 }: {
   me: DuelSideOut
   foe: DuelSideOut
   theme: DuelSlotTheme
+  spectator?: boolean
 }) {
   const { t } = useTranslation('praxis')
   return (
     <ul className="flex flex-col gap-1 mt-2">
-      <RosterRow name={t('duelRoster.you')} cast={me.is_submitted} theme={theme} />
+      <RosterRow
+        name={spectator ? me.display_name : t('duelRoster.you')}
+        cast={me.is_submitted}
+        theme={theme}
+      />
       <RosterRow name={foe.display_name} cast={foe.is_submitted} theme={theme} />
     </ul>
   )
@@ -324,11 +334,19 @@ export function NextStepLine({
   me,
   foe,
   theme,
+  spectator = false,
 }: {
   duel: DuelDetailOut
   me: DuelSideOut
   foe: DuelSideOut
   theme: DuelSlotTheme
+  /**
+   * A viewer who is not a party to the duel (#999): every line is neutral
+   * third-person, keyed off the two sides' names, never "You". `me` is the
+   * challenger side under a spectator (the `duelSides` fallback), `foe` the
+   * opponent — so the names read correctly regardless of which page it renders on.
+   */
+  spectator?: boolean
 }) {
   const { t } = useTranslation('praxis')
   const style: CSSProperties = {
@@ -337,10 +355,20 @@ export function NextStepLine({
   }
 
   if (duel.forfeited_by_character_id != null) {
-    const iForfeited = duel.forfeited_by_character_id === me.character_id
+    const meForfeited = duel.forfeited_by_character_id === me.character_id
+    if (spectator) {
+      return (
+        <p style={style} className="mt-2 content-text">
+          {t('duelNextStep.spectator.wonByDefault', {
+            loser: meForfeited ? me.display_name : foe.display_name,
+            winner: meForfeited ? foe.display_name : me.display_name,
+          })}
+        </p>
+      )
+    }
     return (
       <p style={style} className="mt-2 content-text">
-        {iForfeited
+        {meForfeited
           ? t('duelNextStep.youForfeited')
           : t('duelNextStep.wonByDefault', { name: foe.display_name })}
       </p>
@@ -348,33 +376,64 @@ export function NextStepLine({
   }
 
   let line: string
-  switch (duel.status) {
-    case 'pending':
-      line = t('duelNextStep.pending', { name: foe.display_name })
-      break
-    case 'declined':
-      line = t('duelNextStep.declined', { name: foe.display_name })
-      break
-    case 'active':
-      // Both sides having cast is what SETTLES a duel, so inside `active` at
-      // most one side is submitted. Either they owe a cast, or you do.
-      line = me.is_submitted
-        ? t('duelNextStep.activeWaitingOnThem', { name: foe.display_name })
-        : t('duelNextStep.activeWaitingOnYou', { name: foe.display_name })
-      break
-    case 'settled':
-      line = t('duelNextStep.settled')
-      break
-    case 'resolved':
-      // The era closed and the outcome is frozen (ADR-0052). A null winner is a
-      // tie or a no-contest (an `active` duel that never became votable).
-      line =
-        duel.winner_character_id == null
-          ? t('duelNextStep.resolvedNoWinner')
-          : duel.winner_character_id === me.character_id
-            ? t('duelNextStep.resolvedYouWon', { name: foe.display_name })
-            : t('duelNextStep.resolvedYouLost', { name: foe.display_name })
-      break
+  if (spectator) {
+    switch (duel.status) {
+      case 'pending':
+        line = t('duelNextStep.spectator.pending', {
+          challenger: me.display_name,
+          opponent: foe.display_name,
+        })
+        break
+      case 'declined':
+        line = t('duelNextStep.spectator.declined', { opponent: foe.display_name })
+        break
+      case 'active':
+        line = t('duelNextStep.spectator.active')
+        break
+      case 'settled':
+        line = t('duelNextStep.spectator.settled')
+        break
+      case 'resolved':
+        line =
+          duel.winner_character_id == null
+            ? t('duelNextStep.spectator.resolvedNoWinner')
+            : t('duelNextStep.spectator.resolvedWon', {
+                name:
+                  duel.winner_character_id === me.character_id
+                    ? me.display_name
+                    : foe.display_name,
+              })
+        break
+    }
+  } else {
+    switch (duel.status) {
+      case 'pending':
+        line = t('duelNextStep.pending', { name: foe.display_name })
+        break
+      case 'declined':
+        line = t('duelNextStep.declined', { name: foe.display_name })
+        break
+      case 'active':
+        // Both sides having cast is what SETTLES a duel, so inside `active` at
+        // most one side is submitted. Either they owe a cast, or you do.
+        line = me.is_submitted
+          ? t('duelNextStep.activeWaitingOnThem', { name: foe.display_name })
+          : t('duelNextStep.activeWaitingOnYou', { name: foe.display_name })
+        break
+      case 'settled':
+        line = t('duelNextStep.settled')
+        break
+      case 'resolved':
+        // The era closed and the outcome is frozen (ADR-0052). A null winner is a
+        // tie or a no-contest (an `active` duel that never became votable).
+        line =
+          duel.winner_character_id == null
+            ? t('duelNextStep.resolvedNoWinner')
+            : duel.winner_character_id === me.character_id
+              ? t('duelNextStep.resolvedYouWon', { name: foe.display_name })
+              : t('duelNextStep.resolvedYouLost', { name: foe.display_name })
+        break
+    }
   }
 
   return (

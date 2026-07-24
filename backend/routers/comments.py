@@ -35,7 +35,7 @@ async def list_praxis_comments(
     # A draft's discussion is member-only too (ADR-0024): mirror the detail 404
     # so the comments on an in_progress praxis don't leak to non-members.
     praxis = await get_praxis(praxis_id, session)
-    if not can_view_praxis(viewer, praxis):
+    if not await can_view_praxis(viewer, praxis, session):
         raise HTTPException(status_code=404, detail="Praxis not found.")
     comments = await list_comments(praxis_id=praxis_id, session=session)
     return [build_comment_out(c) for c in comments]
