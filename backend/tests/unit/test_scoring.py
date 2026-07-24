@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 
 from game_config import ERA_1
+from services.duel_outcome import duel_winner
 from services.scoring import (
     COLLABORATION_MODE_COLLAB,
     COLLABORATION_MODE_DUEL,
@@ -11,6 +12,8 @@ from services.scoring import (
     compute_praxis_score,
     compute_vote_budget,
     compute_votes_available,
+    snide_tie_winner_id,
+    snide_tie_winner_slug,
 )
 
 
@@ -313,6 +316,61 @@ def test_duel_tie_both_snide():
     # Both Snide → both get 1.0 (not one-is-snide rule)
     result = compute_duel_multiplier("snide", "snide", is_winner=False, is_tied=True, era=ERA_1)
     assert result == 1.0
+
+
+def test_snide_tie_winner_slug_sole_snide_wins():
+    assert snide_tie_winner_slug("snide", "wow") == "snide"
+    assert snide_tie_winner_slug("wow", "snide") == "snide"
+
+
+def test_snide_tie_winner_slug_no_or_both_snide_is_a_real_tie():
+    assert snide_tie_winner_slug("wow", "ua") is None
+    assert snide_tie_winner_slug("snide", "snide") is None
+
+
+def test_snide_tie_winner_id_resolves_to_the_snide_side():
+    # Snide is the challenger → the challenger id wins the tie.
+    assert snide_tie_winner_id("snide", 1, "wow", 2) == 1
+    # Snide is the opponent → the opponent id wins the tie.
+    assert snide_tie_winner_id("wow", 1, "snide", 2) == 2
+    # No Snide → nobody wins the tie.
+    assert snide_tie_winner_id("wow", 1, "ua", 2) is None
+
+
+def test_duel_winner_returns_tiebreak_on_equal_points():
+    # Equal points, no forfeit → the pre-resolved tiebreak winner (Snide's id).
+    assert (
+        duel_winner(
+            challenger_character_id=1,
+            opponent_character_id=2,
+            challenger_points=3,
+            opponent_points=3,
+            tie_break_winner_id=1,
+        )
+        == 1
+    )
+    # A real tie (no tiebreak) is still None.
+    assert (
+        duel_winner(
+            challenger_character_id=1,
+            opponent_character_id=2,
+            challenger_points=3,
+            opponent_points=3,
+        )
+        is None
+    )
+    # Forfeit outranks any tiebreak.
+    assert (
+        duel_winner(
+            challenger_character_id=1,
+            opponent_character_id=2,
+            challenger_points=3,
+            opponent_points=3,
+            forfeited_by_character_id=1,
+            tie_break_winner_id=1,
+        )
+        == 2
+    )
 
 
 def test_duel_faction_multiplier_ignores_duel_mode():
