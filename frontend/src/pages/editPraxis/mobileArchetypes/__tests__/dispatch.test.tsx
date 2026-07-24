@@ -242,7 +242,7 @@ describe("mobile composer content slots", () => {
       expect(html, "media-add slot").toContain('type="file"');
       // Submit affordance: the faction-voiced publish label from the mocked state.
       const text = html.replace(/<[^>]*>/g, "").toLowerCase();
-      expect(text, "submit slot").toMatch(/tack it up|cast it into the world|file it &amp; run/);
+      expect(text, "submit slot").toMatch(/file praxis|cast it into the world|file it &amp; run/);
     });
   }
 });
