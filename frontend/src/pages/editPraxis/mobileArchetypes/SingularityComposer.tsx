@@ -12,10 +12,10 @@ import {
   DropButton,
   FilePicker,
   InviteSearch,
-  MetatasksList,
   PublishButton,
   TitleField,
 } from '../archetypes/controls'
+import { MetataskSealStack } from '../MetataskSealStack'
 import type { EditPraxisState } from '../useEditPraxis'
 import { MobileStickyBar, SegToggle, type ComposerTab } from './shared'
 
@@ -176,23 +176,9 @@ export default function SingularityComposer({ state }: { state: EditPraxisState 
             <MediaGrid state={state} />
           </Panel>
 
-          {state.showMetatasks && (
+          {state.showSealStack && (
             <Panel title={t('editPraxis.singularity.mobile.metatasksLabel')}>
-              <MetatasksList
-                state={state}
-                skin={{
-                  containerStyle: { display: 'flex', flexDirection: 'column', gap: "var(--space-xs)" },
-                  rowStyle: (selected) => ({
-                    padding: 'var(--space-sm) var(--space-md)',
-                    background: selected ? signal(12) : 'transparent',
-                    border: `1px solid ${selected ? PHOSPHOR : signal(30)}`,
-                  }),
-                  titleColor: PHOSPHOR,
-                  descColor: signal(60),
-                  pointsActiveColor: PHOSPHOR,
-                  pointsIdleColor: SIGNAL,
-                }}
-              />
+              <MetataskSealStack state={state} />
             </Panel>
           )}
         </>

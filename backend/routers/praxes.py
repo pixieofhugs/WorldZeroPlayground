@@ -44,6 +44,7 @@ from services.praxis import (
     _build_invite_out,
     _require_member,
     apply_metatask,
+    applied_metatasks_for,
     author_contributions_for,
     build_praxis_card_out,
     build_praxis_out,
@@ -160,6 +161,11 @@ async def list_praxes_route(
     # whole page — not per card. Grouped by author because the breakdown is the
     # AUTHOR's banked points, not the viewer's.
     author_contributions = await author_contributions_for(praxes, session)
+    # Applied metatasks for the seal stack (#932): one page-wide join for every
+    # praxis id — not a per-card query. The card's seal dispatches on each
+    # metatask's issuing faction, so it needs the TaskOut rows, not just the
+    # summed metatask_points the card already carries.
+    applied_metatasks = await applied_metatasks_for(praxes, session)
     return [
         await build_praxis_card_out(
             praxis,
@@ -167,6 +173,7 @@ async def list_praxes_route(
             crowned_ids=crowned,
             viewer_votes=viewer_votes,
             author_contributions=author_contributions,
+            applied_metatasks=applied_metatasks,
         )
         for praxis in praxes
     ]

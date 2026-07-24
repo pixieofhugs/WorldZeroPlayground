@@ -12,10 +12,10 @@ import {
   DropButton,
   FilePicker,
   InviteSearch,
-  MetatasksList,
   PublishButton,
   TitleField,
 } from '../archetypes/controls'
+import { MetataskSealStack } from '../MetataskSealStack'
 import type { EditPraxisState } from '../useEditPraxis'
 import { MobileStickyBar, SegToggle, type ComposerTab } from './shared'
 
@@ -183,23 +183,9 @@ export default function SnideComposer({ state }: { state: EditPraxisState }) {
             <MediaGrid state={state} />
           </Plate>
 
-          {state.showMetatasks && (
+          {state.showSealStack && (
             <Plate title={t('editPraxis.snide.metatasksLabel')}>
-              <MetatasksList
-                state={state}
-                skin={{
-                  containerStyle: { display: 'flex', flexDirection: 'column', gap: "var(--space-xs)" },
-                  rowStyle: (selected) => ({
-                    padding: 'var(--space-sm) var(--space-md)',
-                    background: selected ? 'rgba(182,255,46,0.08)' : 'transparent',
-                    border: `1px solid ${selected ? ACID : LINE}`,
-                  }),
-                  titleColor: TEXT,
-                  descColor: MUTED,
-                  pointsActiveColor: ACID,
-                  pointsIdleColor: MUTED,
-                }}
-              />
+              <MetataskSealStack state={state} />
             </Plate>
           )}
         </>

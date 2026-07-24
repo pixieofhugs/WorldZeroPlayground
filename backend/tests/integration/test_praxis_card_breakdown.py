@@ -31,11 +31,16 @@ from models.character_stats import CharacterStats
 from models.duel import Duel, DuelStatus
 from models.era import Era
 from models.faction import Faction, FactionStatus
+from models.meta_task import PraxisMetaTask
 from models.praxis import Praxis, PraxisMember, PraxisStatus, PraxisType
-from models.task import Task, TaskStatus
+from models.task import Task, TaskStatus, TaskType
 from models.vote import Vote
 from services.character_stats import recalculate_character_stats
-from services.praxis import build_praxis_card_out, build_praxis_out
+from services.praxis import (
+    applied_metatasks_for,
+    build_praxis_card_out,
+    build_praxis_out,
+)
 
 
 # ---------------------------------------------------------------------------
@@ -210,6 +215,42 @@ async def _make_collab(
     )
     await session.flush()
     return praxis
+
+
+async def _make_metatask(
+    session: AsyncSession,
+    creator: Character,
+    *,
+    issuing_faction_slug: str,
+    points: int,
+) -> Task:
+    """A Task with ``task_type == metatask``, issued by ``issuing_faction_slug``.
+
+    The card's seal dispatches on ``metatask_faction_slug``, so the metatask's
+    issuing faction is what the frontend reads — independent of the host card's
+    faction (a WOW card can carry a Snide seal).
+    """
+    task = Task(
+        title=f"{issuing_faction_slug} metatask",
+        description="metatask",
+        point_value=points,
+        level_required=0,
+        status=TaskStatus.active,
+        task_type=TaskType.metatask,
+        created_by=creator.id,
+        primary_faction_slug=issuing_faction_slug,
+        metatask_faction_slug=issuing_faction_slug,
+    )
+    session.add(task)
+    await session.flush()
+    return task
+
+
+async def _apply_metatask(
+    session: AsyncSession, praxis: Praxis, metatask: Task
+) -> None:
+    session.add(PraxisMetaTask(praxis_id=praxis.id, task_id=metatask.id))
+    await session.flush()
 
 
 async def _make_duel(
@@ -472,3 +513,84 @@ async def test_fractional_totals_bank_by_rounding_not_truncation(
     stats = stats_result.scalar_one()
     # 3 × 16.3 = 48.9 → 49, not 48.
     assert stats.score == 49
+
+
+# ---------------------------------------------------------------------------
+# applied metatasks — the card seal stack (#932)
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.asyncio
+async def test_card_carries_applied_metatask_rows_for_the_seal(
+    db_session: AsyncSession, era: Era, faction_ua: Faction
+):
+    """The card payload carries the pinned metatasks as TaskOut rows.
+
+    The feed seal stack dispatches on each metatask's issuing faction, so the
+    card must surface the rows (not just the summed ``metatask_points``). A WOW
+    praxis carrying a Snide-issued metatask reads a Snide seal — the seal
+    follows the metatask's faction, not the host card's.
+    """
+    await _ensure_faction(db_session, "wow")
+    await _ensure_faction(db_session, "snide")
+    author = await _make_character(
+        db_session, era, faction_slug="wow", username="sealauthor", email="seal@x.com"
+    )
+    task = await _make_task(db_session, author, faction_slug="wow", points=10)
+    praxis = await _make_solo(db_session, task, author)
+    metatask = await _make_metatask(
+        db_session, author, issuing_faction_slug="snide", points=5
+    )
+    await _apply_metatask(db_session, praxis, metatask)
+
+    card = await _load_card(db_session, praxis.id)
+
+    assert len(card.applied_metatasks) == 1
+    seal = card.applied_metatasks[0]
+    assert seal.id == metatask.id
+    # Cross-faction: the seal dispatches on the metatask's issuing faction.
+    assert seal.metatask_faction_slug == "snide"
+    assert seal.task_type == TaskType.metatask.value
+
+
+@pytest.mark.asyncio
+async def test_card_applied_metatasks_is_empty_when_none_applied(
+    db_session: AsyncSession, era: Era, faction_ua: Faction, character: Character
+):
+    """No metatasks pinned → the card carries an empty stack (seal renders nothing)."""
+    task = await _make_task(db_session, character, faction_slug="ua", points=10)
+    praxis = await _make_solo(db_session, task, character)
+
+    card = await _load_card(db_session, praxis.id)
+
+    assert card.applied_metatasks == []
+
+
+@pytest.mark.asyncio
+async def test_applied_metatasks_for_batches_the_page_in_one_map(
+    db_session: AsyncSession, era: Era, faction_ua: Faction
+):
+    """The page-wide helper returns a praxis-id → rows map; bare praxes are absent.
+
+    This is the feed path (no N+1): one join for every praxis id on the page.
+    A praxis with no metatask is simply missing from the map, which the card
+    builder treats as an empty stack.
+    """
+    await _ensure_faction(db_session, "snide")
+    author = await _make_character(
+        db_session, era, faction_slug="ua", username="batchauthor", email="batch@x.com"
+    )
+    task = await _make_task(db_session, author, faction_slug="ua", points=10)
+    sealed = await _make_solo(db_session, task, author)
+    bare = await _make_solo(db_session, task, author)
+    metatask = await _make_metatask(
+        db_session, author, issuing_faction_slug="snide", points=5
+    )
+    await _apply_metatask(db_session, sealed, metatask)
+
+    result = await applied_metatasks_for([sealed, bare], db_session)
+
+    assert set(result.keys()) == {sealed.id}
+    assert [row.id for row in result[sealed.id]] == [metatask.id]
+    # A card builder given this map falls back to [] for the bare praxis.
+    assert result.get(bare.id, []) == []

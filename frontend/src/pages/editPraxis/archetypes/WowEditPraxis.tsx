@@ -35,11 +35,11 @@ import {
   DropButton,
   FilePicker,
   InviteSearch,
-  MetatasksList,
   ModePicker,
   PublishButton,
   TitleField,
 } from "./controls";
+import { MetataskSealStack } from "../MetataskSealStack";
 import type { EditPraxisState } from "../useEditPraxis";
 
 interface Props {
@@ -613,34 +613,14 @@ export default function WowEditPraxis({ state }: Props) {
             </div>
 
             {/* ── deeds of merit ── */}
-            {state.showMetatasks && (
+            {state.showSealStack && (
               <div style={plate}>
                 <span
                   style={{ ...eyebrowStyle, marginBottom: "var(--space-md)" }}
                 >
                   {t("editPraxis.wow.metatasksLabel")}
                 </span>
-                <MetatasksList
-                  state={state}
-                  skin={{
-                    containerStyle: {
-                      display: "flex",
-                      flexDirection: "column",
-                      gap: "var(--space-sm)",
-                    },
-                    rowStyle: (selected) => ({
-                      background: selected ? tint : fieldBg,
-                      border: `2px solid ${selected ? gold : panelBorder}`,
-                      borderRadius: 10,
-                      padding: "var(--space-md) var(--space-lg)",
-                      fontFamily: displayFont,
-                    }),
-                    titleColor: ink,
-                    descColor: muted,
-                    pointsActiveColor: goldInk,
-                    pointsIdleColor: muted,
-                  }}
-                />
+                <MetataskSealStack state={state} />
               </div>
             )}
 

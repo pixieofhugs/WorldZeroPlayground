@@ -15,6 +15,7 @@ import {
   type PraxisCardFonts,
 } from "../shared";
 import ScoreStamp from "../scoreStamp/ScoreStamp";
+import MetaTaskSeal from "../../metaTaskSeal/MetaTaskSeal";
 
 /**
  * Bespoke DESKTOP praxis-card shared pieces (#839).
@@ -168,6 +169,12 @@ export function PraxisBody({
          */}
         <ScoreStamp praxis={praxis} showCrown={showCrown} />
       </div>
+      {/*
+       * Read-only applied-metatask seal stack (#932): below the score, above the
+       * media. Each seal dispatches on its metatask's ISSUING faction, not this
+       * card's — a WOW card can carry a Snide seal. Renders nothing when empty.
+       */}
+      <MetaTaskSeal metatasks={praxis.applied_metatasks ?? []} />
       <PraxisStats
         praxis={praxis}
         style={{ color: muted, marginTop: "var(--space-sm)" }}
