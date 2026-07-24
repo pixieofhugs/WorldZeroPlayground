@@ -79,6 +79,12 @@ class PraxisOut(BaseModel):
     duel_id: Optional[int] = None
     applied_metatasks: List[TaskOut] = []
     can_flag: bool = False      # populated by build_praxis_out; viewer-relative
+    # Viewer-relative (#998): False only when the viewer's account owns this
+    # praxis (author/collab co-owner, ADR-0013) or is a participant in its duel
+    # (#309) — the two PERMANENT vote blocks. Budget exhaustion is excluded (the
+    # module stays visible). Anonymous → True (client shows the login gate).
+    # Drives hiding the whole vote module for logged-in-but-ineligible viewers.
+    viewer_can_vote: bool = True
 
     model_config = {"from_attributes": True}
 
@@ -138,6 +144,9 @@ class PraxisCardOut(BaseModel):
     # viewer's account who voted this praxis, set only when the carried character
     # did not vote it. None otherwise (incl. anonymous). Computed, no column.
     voted_by_name: Optional[str] = None
+    # Viewer-relative (#998); see ``PraxisOut.viewer_can_vote``. Precomputed
+    # page-wide by the card-list route (no N+1) via ``viewer_can_vote_map``.
+    viewer_can_vote: bool = True
 
     model_config = {"from_attributes": True}
 
