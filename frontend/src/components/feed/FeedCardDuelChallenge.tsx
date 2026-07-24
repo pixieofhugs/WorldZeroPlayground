@@ -9,7 +9,7 @@ import { useGameConfig } from "../../hooks/useGameConfig";
 import { useAuth } from "../../auth/AuthContext";
 import { deletePraxis, leavePraxis } from "../../api/praxis";
 import { cancelChallenge, respondToChallenge } from "../../api/duel";
-import { factionColor } from "../../utils/factions";
+import { factionColor, factionFill, isKnownFaction } from "../../utils/factions";
 import { relativeTime } from "../../utils/dates";
 import { extractError } from "../../utils/errors";
 import FeedBadge from "./FeedBadge";
@@ -37,8 +37,11 @@ export default function FeedCardDuelChallenge({ item }: Props) {
     task_faction_slug,
     challenger_character_id,
   } = item.payload;
-  const taskColor = factionColor(task_faction_slug);
   const actorColor = factionColor(item.actor_faction_slug);
+  // na actors get the spectrum, real factions keep their tinted disc (ADR-0039).
+  const actorAvatarFill = isKnownFaction(item.actor_faction_slug)
+    ? { background: `linear-gradient(135deg, ${actorColor}, ${actorColor}88)` }
+    : factionFill(item.actor_faction_slug, "dot");
   const navigate = useNavigate();
 
   const { user } = useAuth();
@@ -147,7 +150,7 @@ export default function FeedCardDuelChallenge({ item }: Props) {
                 width: 28,
                 height: 28,
                 borderRadius: "50%",
-                background: `linear-gradient(135deg, ${actorColor}, ${actorColor}88)`,
+                ...actorAvatarFill,
                 flexShrink: 0,
                 marginTop: "var(--space-xs)",
               }}
@@ -219,7 +222,7 @@ export default function FeedCardDuelChallenge({ item }: Props) {
               width: 8,
               height: 8,
               borderRadius: "50%",
-              background: taskColor,
+              ...factionFill(task_faction_slug, "dot"),
               flexShrink: 0,
             }}
           />
