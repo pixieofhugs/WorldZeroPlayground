@@ -19,7 +19,9 @@ export function usePendingRequests() {
       return
     }
     setLoading(true)
-    getActivityFeed({ filter: 'requests', limit: 5 })
+    // Surface all pending invites/challenges — a "requests" feed is inherently
+    // small (unresolved invites only), so pull the backend's max page (#960).
+    getActivityFeed({ filter: 'requests', limit: 100 })
       .then((response) => setPendingRequests(response.items))
       .catch(() => {})
       .finally(() => setLoading(false))

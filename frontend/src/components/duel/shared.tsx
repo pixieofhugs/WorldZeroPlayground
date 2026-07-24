@@ -365,6 +365,16 @@ export function NextStepLine({
     case 'settled':
       line = t('duelNextStep.settled')
       break
+    case 'resolved':
+      // The era closed and the outcome is frozen (ADR-0052). A null winner is a
+      // tie or a no-contest (an `active` duel that never became votable).
+      line =
+        duel.winner_character_id == null
+          ? t('duelNextStep.resolvedNoWinner')
+          : duel.winner_character_id === me.character_id
+            ? t('duelNextStep.resolvedYouWon', { name: foe.display_name })
+            : t('duelNextStep.resolvedYouLost', { name: foe.display_name })
+      break
   }
 
   return (

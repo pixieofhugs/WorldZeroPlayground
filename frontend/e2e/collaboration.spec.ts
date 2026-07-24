@@ -286,7 +286,6 @@ test.describe('collaboration UI (clicked buttons)', () => {
   // CollabRoster renders member pills but ships NO kick affordance, so
   // POST /praxes/{id}/kick/{member_id} is unreachable from the UI.
   test('C1: a member can kick a co-author from the roster pill', async ({ browser }) => {
-    test.fail()
     const seed = await seedCollabDraft(browser, 'ui-kick')
     try {
       const page = await seed.alice.ctx.newPage()
@@ -341,7 +340,6 @@ test.describe('collaboration UI (clicked buttons)', () => {
   // accept-reachable. The requests inbox (usePendingRequests) caps its fetch at
   // 5, so the sixth-oldest invite silently falls off with no other surface.
   test('C4: the oldest of six pending invites is still reachable', async ({ browser }) => {
-    test.fail()
     const s = pairSeq++
     const inviter = await login(browser, `ci-${RUN}-${s}`, `CI${s}-${RUN}`, 8)
     const bob = await login(browser, `cb-${RUN}-${s}`, `CB${s}-${RUN}`, 0)

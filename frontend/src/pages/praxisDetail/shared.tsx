@@ -208,7 +208,7 @@ export function PraxisAdminBar({ state }: { state: PraxisDetailState }) {
  * self-hides on a solo/duel praxis (<2 members).
  */
 export function CollabRosterBlock({ state }: { state: PraxisDetailState }) {
-  const { praxis, user } = state
+  const { praxis, user, handleKickMember } = state
   if (!praxis) return null
   if (praxis.status !== 'in_progress' && praxis.status !== 'pending') return null
   return (
@@ -218,6 +218,9 @@ export function CollabRosterBlock({ state }: { state: PraxisDetailState }) {
         currentCharacterId={user?.character?.id ?? null}
         factionSlug={praxis.task_faction_slug}
         taskPointValue={praxis.task_point_value}
+        // Any member may kick another from the roster (#959). CollabRoster gates
+        // the control to members and hides it on the viewer's own pill.
+        onKick={handleKickMember}
       />
     </div>
   )

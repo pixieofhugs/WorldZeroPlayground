@@ -4,7 +4,7 @@ import api from './axios'
 // Types — match backend schemas/duel.py exactly (ADR-0011)
 // ---------------------------------------------------------------------------
 
-export type DuelStatus = 'pending' | 'active' | 'settled' | 'declined'
+export type DuelStatus = 'pending' | 'active' | 'settled' | 'declined' | 'resolved'
 
 export interface DuelOut {
   id: number
@@ -45,6 +45,12 @@ export interface DuelDetailOut {
   challenger: DuelSideOut
   opponent: DuelSideOut
   viewer_is_participant: boolean
+  // Frozen outcome, populated once the duel is `resolved` at era close
+  // (ADR-0052); null on live duels. A resolved rail renders these instead of the
+  // live vote tally. null winner on a resolved duel = tie, or no-contest.
+  winner_character_id: number | null
+  challenger_final_points: number | null
+  opponent_final_points: number | null
 }
 
 // ---------------------------------------------------------------------------

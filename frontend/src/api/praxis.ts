@@ -310,6 +310,20 @@ export async function cancelInvite(
   await api.delete(`/praxes/${praxisId}/invite/${inviteId}`)
 }
 
+/**
+ * Remove another member from a collab (#959). Any member may kick any other, but
+ * not themselves (that is `leavePraxis`) — mirrors the backend `kick_member`
+ * guard. `memberId` is the target's CHARACTER id. A kick resets the whole group
+ * back to editing (ADR-0013), so the returned praxis reflects the reset state.
+ */
+export async function kickMember(
+  praxisId: number,
+  memberId: number,
+): Promise<PraxisOut> {
+  const { data } = await api.post<PraxisOut>(`/praxes/${praxisId}/kick/${memberId}`)
+  return data
+}
+
 // ---------------------------------------------------------------------------
 // Metatasks — metatasks are Task rows with task_type='metatask' attached
 // to a praxis via POST /praxes/{id}/metatasks.
