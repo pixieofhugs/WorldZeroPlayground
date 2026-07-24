@@ -72,6 +72,9 @@
     "taskMeta": "{{points}} pts · winner takes the points",
     "accept": "Accept Duel",
     "decline": "Decline",
+    "withdraw": "Withdraw",
+    "withdrawn": "Withdrawn — the duel was called off",
+    "withdrawError": "Could not withdraw the challenge. Try again.",
     "accepted": "Duel Accepted — view duel",
     "declined": "Declined",
     "bankFull": {

@@ -100,6 +100,7 @@ function stateWith(publish: () => Promise<void>): EditPraxisState {
     duel: null,
     sendChallenge: async () => {},
     cancelDuel: async () => {},
+    dissolveDuel: async () => {},
     metaTasks: [],
     appliedMetatasks: new Set(),
     applyingMetatask: null,

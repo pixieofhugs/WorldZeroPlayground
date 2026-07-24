@@ -108,6 +108,7 @@ function baseState(): EditPraxisState {
     duel: null,
     sendChallenge: async () => {},
     cancelDuel: async () => {},
+    dissolveDuel: async () => {},
     metaTasks: [],
     appliedMetatasks: new Set(),
     applyingMetatask: null,
