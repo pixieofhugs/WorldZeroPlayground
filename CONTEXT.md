@@ -19,8 +19,16 @@ voice (e.g. S.N.I.D.E.'s ransom-clipping task card). One faction, one surface, o
 _Avoid_: variant (reserve "variant" for the `pickVariant` mechanism), skin, theme.
 
 **Default archetype**:
-The faction-agnostic fallback rendering of a surface, used when a faction registers no
-archetype of its own. Named `DefaultXxx` (e.g. `DefaultFactionBody`).
+The **`na` / Unaffiliated** rendering of a surface — *not* a personality-free generic.
+`default` ≡ `na` ≡ Unaffiliated are **one visual identity**: the spectrum-band editorial
+kit (neutral paper + `--faction-default-*` tokens + system fonts, rainbow as accent;
+ADR-0039 / ADR-0046 / ADR-0048). So `DefaultXxx` **is the na kit**, serving both
+unaffiliated characters and the fall-through for any faction that registers no archetype
+of its own. A `Default*` that invents its own metaphor or voice, or borrows another
+faction's display font (as the retired cork-board `DefaultEditPraxis` did with Caveat +
+Permanent Marker), is **stale** — the wrong identity, not a neutral one. Named `DefaultXxx`
+(e.g. `DefaultFactionBody`).
+_Avoid_: reading "faction-agnostic" as "no identity" — the identity is Unaffiliated.
 
 **Dispatcher**:
 The per-surface map (`Record<slug, Component>`) plus the `pickVariant` call that turns a
