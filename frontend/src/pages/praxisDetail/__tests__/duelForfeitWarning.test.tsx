@@ -123,6 +123,9 @@ function duel(status: DuelStatus, foeSubmitted: boolean): DuelDetailOut {
     challenger: ME,
     opponent: { ...FOE, is_submitted: foeSubmitted },
     viewer_is_participant: true,
+    winner_character_id: null,
+    challenger_final_points: null,
+    opponent_final_points: null,
   }
 }
 
