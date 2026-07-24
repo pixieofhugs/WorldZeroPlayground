@@ -103,6 +103,7 @@ function DesktopEditCharacter({ state }: { state: EditCharacterState }) {
     setBio,
     location,
     setLocation,
+    avatarPreview,
     avatarSource,
     setAvatarSource,
     avatarError,
@@ -119,6 +120,9 @@ function DesktopEditCharacter({ state }: { state: EditCharacterState }) {
 
   // Monogram tracks the display name as you type (falls back to the handle).
   const initial = (displayName.trim()[0] || character.username[0] || '?').toUpperCase()
+  // A freshly cropped portrait (object URL) shows immediately, before Save (#985);
+  // otherwise fall back to the persisted avatar.
+  const portraitSrc = avatarPreview ?? (character.avatar_url ? mediaUrl(character.avatar_url) : null)
 
   return (
     <div className="py-8" style={{ maxWidth: 640, margin: '0 auto' }}>
@@ -186,9 +190,9 @@ function DesktopEditCharacter({ state }: { state: EditCharacterState }) {
                   lineHeight: 1,
                 }}
               >
-                {character.avatar_url ? (
+                {portraitSrc ? (
                   <img
-                    src={mediaUrl(character.avatar_url)}
+                    src={portraitSrc}
                     alt={character.username}
                     style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                   />
