@@ -266,7 +266,7 @@ export function InviteSearch({
             color: "var(--color-text-tertiary)",
           }}
         >
-          {t("editPraxis.collab.leaveAction")}
+          {t("editPraxis.leaveAction")}
         </button>
       )}
     </div>

@@ -148,6 +148,7 @@
       "cancelChallengeAria": "cancel challenge",
       "rescindInviteAria": "rescind invite to {{name}}"
     },
+    "leaveAction": "Leave collab",
     "collab": {
       "castStatus": "{{cast}} of {{total}} cast",
       "pillCast": "cast",
@@ -160,7 +161,6 @@
       "castAction": "Cast my part",
       "castFinalAction": "Cast — send it live",
       "pullBackAction": "Pull my part back",
-      "leaveAction": "Leave collab",
       "successHeading": "The proof is woven",
       "successBody": "Every part is cast — your collab is live.",
       "successContinue": "View the praxis"
