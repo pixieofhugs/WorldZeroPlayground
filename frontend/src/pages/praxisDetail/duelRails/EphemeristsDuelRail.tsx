@@ -91,6 +91,7 @@ export default function EphemeristsDuelRail({
   tally,
   note,
   body,
+  actions,
 }: DuelRailSkinProps) {
   const sheet: CSSProperties = {
     maxWidth,
@@ -213,6 +214,19 @@ export default function EphemeristsDuelRail({
                 {body}
               </div>
             </>
+          )}
+
+          {/* The owner's action row (#752), ruled off with an ochre hairline. */}
+          {actions && (
+            <div
+              style={{
+                marginTop: 'var(--space-md)',
+                paddingTop: 'var(--space-sm)',
+                borderTop: `1px solid color-mix(in srgb, ${OCHRE} 55%, transparent)`,
+              }}
+            >
+              {actions}
+            </div>
           )}
         </div>
       </div>

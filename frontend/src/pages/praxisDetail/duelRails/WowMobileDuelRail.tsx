@@ -43,6 +43,7 @@ export default function WowMobileDuelRail({
   tally,
   note,
   body,
+  actions,
 }: DuelRailSkinProps) {
   const shell: CSSProperties = {
     margin: 'var(--space-md) 0',
@@ -136,6 +137,19 @@ export default function WowMobileDuelRail({
             }}
           >
             {body}
+          </div>
+        )}
+
+        {/* the owner's action row (#752), footed on a champion-gold rule */}
+        {actions && (
+          <div
+            style={{
+              marginTop: 'var(--space-md)',
+              paddingTop: 'var(--space-sm)',
+              borderTop: `1px solid ${CHAMPION}`,
+            }}
+          >
+            {actions}
           </div>
         )}
       </div>

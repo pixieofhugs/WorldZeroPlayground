@@ -58,6 +58,7 @@ export default function SingularityMobileDuelRail({
   tally,
   note,
   body,
+  actions,
 }: DuelRailSkinProps) {
   const shell: CSSProperties = {
     margin: 'var(--space-md) 0',
@@ -122,6 +123,13 @@ export default function SingularityMobileDuelRail({
               {body}
             </div>
           )}
+        </div>
+      )}
+
+      {/* The owner's action row (#752), on its own hairline-ruled block. */}
+      {actions && (
+        <div style={{ padding: 'var(--space-md)', borderTop: `1px solid ${HAIRLINE}` }}>
+          {actions}
         </div>
       )}
 

@@ -71,6 +71,7 @@ export default function SnideDuelRail({
   tally,
   note,
   body,
+  actions,
 }: DuelRailSkinProps) {
   const shell: CSSProperties = {
     ...HALFTONE,
@@ -154,6 +155,12 @@ export default function SnideDuelRail({
             }}
           >
             {body}
+          </div>
+        )}
+        {/* The owner's action row (#752), footed under a dashed acid rule. */}
+        {actions && (
+          <div style={{ marginTop: 'var(--space-md)', paddingTop: 'var(--space-sm)', borderTop: `2px dashed ${ACID}` }}>
+            {actions}
           </div>
         )}
       </div>
