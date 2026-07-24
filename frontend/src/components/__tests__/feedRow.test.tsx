@@ -139,4 +139,17 @@ describe('FeedRowContent', () => {
     expect(html).toContain('Reforest')
     expect(html).toContain('href="/praxes/7"')
   })
+
+  // ADR-0039: an unaffiliated (na) actor's monogram avatar is the rainbow ring,
+  // not the flat grey a scalar factionColor would hand it. Real factions keep
+  // their tinted disc.
+  it('gives an na actor the rainbow-ring avatar, a real faction a tinted disc', () => {
+    const naRow = normalizeFeedItem({ ...item('friend_completion', { character_id: 3, praxis_id: 7, task_title: 'Reforest', task_point_value: 40 }), context_faction_slug: 'na' })!
+    const naHtml = renderToStaticMarkup(<MemoryRouter><FeedRowContent row={naRow} avatarUrl={null} /></MemoryRouter>)
+    expect(naHtml).toContain('--faction-default-ring')
+
+    const covenRow = normalizeFeedItem(item('friend_completion', { character_id: 3, praxis_id: 7, task_title: 'Reforest', task_point_value: 40 }))!
+    const covenHtml = renderToStaticMarkup(<MemoryRouter><FeedRowContent row={covenRow} avatarUrl={null} /></MemoryRouter>)
+    expect(covenHtml).not.toContain('--faction-default-ring')
+  })
 })
