@@ -20,7 +20,26 @@ from models.character import Character
 from models.character_stats import CharacterStats
 from models.era import Era
 from models.praxis import ModerationStatus, Praxis, PraxisMember, PraxisStatus
-from models.task import Task, TaskStatus
+from models.task import Task, TaskStatus, TaskType
+
+
+async def _make_metatask(db_session: AsyncSession, character: Character) -> Task:
+    """Seed an active metatask row (a praxis seal, never a signup target)."""
+    metatask = Task(
+        title="Seal Metatask",
+        description="",
+        point_value=5,
+        level_required=0,
+        status=TaskStatus.active,
+        task_type=TaskType.metatask,
+        created_by=character.id,
+        primary_faction_slug="ua",
+        metatask_faction_slug="ua",
+    )
+    db_session.add(metatask)
+    await db_session.commit()
+    await db_session.refresh(metatask)
+    return metatask
 
 
 # ---------------------------------------------------------------------------
@@ -68,6 +87,24 @@ async def test_create_solo_praxis(
     assert len(data["members"]) == 1
     assert data["members"][0]["character_id"] == character.id
     assert data["members"][0]["has_submitted"] is False
+
+
+@pytest.mark.asyncio
+async def test_create_solo_praxis_on_metatask_rejected(
+    client: AsyncClient,
+    db_session: AsyncSession,
+    character: Character,
+    auth_headers: dict,
+):
+    """POST /praxes (solo) against a metatask row is a 400, not a created praxis (#1001)."""
+    metatask = await _make_metatask(db_session, character)
+    resp = await client.post(
+        "/praxes",
+        json={"task_id": metatask.id, "type": "solo", "title": "Nope"},
+        headers=auth_headers,
+    )
+    assert resp.status_code == 400
+    assert "metatask" in resp.json()["detail"].lower()
 
 
 @pytest.mark.asyncio
@@ -973,6 +1010,27 @@ async def test_create_collab_praxis(
     assert data["status"] == "in_progress"
     member_ids = [m["character_id"] for m in data["members"]]
     assert character2.id in member_ids
+
+
+@pytest.mark.asyncio
+async def test_create_collab_praxis_on_metatask_rejected(
+    client: AsyncClient,
+    db_session: AsyncSession,
+    character2: Character,
+    auth_headers2: dict,
+):
+    """POST /praxes (collab) against a metatask row is a 400, not a created praxis (#1001).
+
+    character2 is level 5 and meets the collab gate — the metatask gate fires first.
+    """
+    metatask = await _make_metatask(db_session, character2)
+    resp = await client.post(
+        "/praxes",
+        json={"task_id": metatask.id, "type": "collab", "title": "Nope"},
+        headers=auth_headers2,
+    )
+    assert resp.status_code == 400
+    assert "metatask" in resp.json()["detail"].lower()
 
 
 @pytest.mark.asyncio
