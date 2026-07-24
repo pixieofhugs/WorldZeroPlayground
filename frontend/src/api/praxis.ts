@@ -86,6 +86,14 @@ export interface PraxisOut {
   duel_id: number | null
   can_flag: boolean
   applied_metatasks: TaskOut[]
+  /**
+   * Viewer-relative (#998). `false` only when the logged-in viewer's account
+   * owns this praxis (author/collab co-owner) or is a participant in its duel —
+   * the two PERMANENT vote blocks the client can't compute itself. Drives hiding
+   * the whole vote module. Default `true` (incl. anonymous — the client shows
+   * its own login gate). Optional so a stale payload degrades to showing it.
+   */
+  viewer_can_vote?: boolean
 }
 
 export interface PraxisCardOut {
@@ -162,6 +170,12 @@ export interface PraxisCardOut {
    * other late-added card fields above.
    */
   applied_metatasks?: TaskOut[]
+  /**
+   * Viewer-relative (#998); see `PraxisOut.viewer_can_vote`. Precomputed
+   * page-wide by the feed route (no N+1). Optional so a stale cached payload
+   * degrades to showing the module rather than hiding it.
+   */
+  viewer_can_vote?: boolean
 }
 
 export interface PraxisCreate {

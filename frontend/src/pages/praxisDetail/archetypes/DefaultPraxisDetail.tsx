@@ -331,7 +331,7 @@ export default function DefaultPraxisDetail({ state }: { state: PraxisDetailStat
               <div className="font-display italic" style={{ fontSize: 'var(--text-content)', color: 'var(--color-text-secondary)', marginBottom: 'var(--space-md)', lineHeight: 1.4 }}>
                 {t('detail.default.castPrompt')}
               </div>
-              <VoteUI factionSlug={praxis.task_faction_slug} praxisId={praxis.id} />
+              <VoteUI factionSlug={praxis.task_faction_slug} praxisId={praxis.id} viewerCanVote={praxis.viewer_can_vote} />
             </div>
 
             {/* Points + backers ledger */}

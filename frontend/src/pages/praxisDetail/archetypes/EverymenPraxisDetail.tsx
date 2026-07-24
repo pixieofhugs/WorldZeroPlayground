@@ -254,6 +254,7 @@ export default function EverymenPraxisDetail({ state }: { state: PraxisDetailSta
           <VoteUI
             factionSlug={praxis.task_faction_slug}
             praxisId={praxis.id}
+            viewerCanVote={praxis.viewer_can_vote}
           />
         </div>
 
