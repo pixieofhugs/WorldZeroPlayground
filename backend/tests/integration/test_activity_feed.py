@@ -292,3 +292,57 @@ async def test_activity_feed_shows_collaborator_submitted(
     assert not [
         i for i in own.json()["items"] if i["type"] == "collaborator_submitted"
     ]
+
+
+@pytest.mark.asyncio
+async def test_activity_feed_awaiting_submission_in_requests(
+    client: AsyncClient,
+    character: Character,
+    character2: Character,
+    active_task: Task,
+    auth_headers: dict,
+    auth_headers2: dict,
+):
+    """A collab awaiting the viewer's own submission surfaces as an
+    ``awaiting_submission`` request (panel + badge), and clears once they
+    submit (#updates-badge — 'waiting on you to submit')."""
+    create = await client.post(
+        "/praxes",
+        json={"task_id": active_task.id, "type": "collab", "title": "Team"},
+        headers=auth_headers2,
+    )
+    praxis_id = create.json()["id"]
+    inv = await client.post(
+        f"/praxes/{praxis_id}/invite",
+        json={"invitee_id": character.id},
+        headers=auth_headers2,
+    )
+    await client.post(
+        f"/praxes/{praxis_id}/invite/{inv.json()['id']}/respond",
+        json={"accept": True},
+        headers=auth_headers,
+    )
+
+    # character joined but hasn't submitted -> it's in their court.
+    requests = (
+        await client.get(
+            "/activity-feed", params={"filter": "requests", "limit": 100},
+            headers=auth_headers,
+        )
+    ).json()
+    awaiting = [i for i in requests["items"] if i["type"] == "awaiting_submission"]
+    assert len(awaiting) == 1, requests["items"]
+    assert awaiting[0]["payload"]["praxis_id"] == praxis_id
+    assert awaiting[0]["payload"]["praxis_type"] == "collab"
+    # Count/badge stays consistent with the fetch (ADR-0036 invariant).
+    assert requests["counts"]["requests"] == len(requests["items"])
+
+    # Once character submits their part, the praxis leaves their requests bucket.
+    await client.post(f"/praxes/{praxis_id}/submit", headers=auth_headers)
+    after = (
+        await client.get(
+            "/activity-feed", params={"filter": "requests", "limit": 100},
+            headers=auth_headers,
+        )
+    ).json()
+    assert not [i for i in after["items"] if i["type"] == "awaiting_submission"]

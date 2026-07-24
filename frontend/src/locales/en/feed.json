@@ -36,7 +36,8 @@
       "votedOnYourPraxis": "voted on your praxis",
       "tauntsYou": "taunts you",
       "defected": "defected from {{oldFaction}} to {{newFaction}}",
-      "globalTaskActivated": "A new task has been activated"
+      "globalTaskActivated": "A new task has been activated",
+      "awaitingSubmission": "Waiting on your submission"
     },
     "points": "{{points}} pts",
     "pointsEarned": "+{{points}} pts",
