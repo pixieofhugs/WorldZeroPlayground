@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { getActivityFeed, type ActivityFeedItem } from '../api/activityFeed'
 import { useAuth } from '../auth/AuthContext'
+import { onRequestsChanged } from '../utils/requestsBus'
 
 /**
  * Hook to fetch pending collab invites and duel challenges.
@@ -29,6 +30,9 @@ export function usePendingRequests() {
 
   useEffect(() => {
     refetch()
+    // Respond/submit/leave anywhere in the app invalidates this count (#346):
+    // refetch so the sidebar panel and mobile bell badge resolve immediately.
+    return onRequestsChanged(refetch)
   }, [refetch])
 
   return { pendingRequests, loading, refetch } as const
