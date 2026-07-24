@@ -17,7 +17,12 @@ import {
 } from '../archetypes/controls'
 import { MetataskSealStack } from '../MetataskSealStack'
 import type { EditPraxisState } from '../useEditPraxis'
-import { MobileStickyBar, SegToggle, type ComposerTab } from './shared'
+import {
+  DefaultModePicker,
+  MobileStickyBar,
+  SegToggle,
+  type ComposerTab,
+} from './shared'
 
 /**
  * Singularity MOBILE composer (#526) — "TRANSMIT SIGNAL" on a phone. The same
@@ -114,6 +119,9 @@ export default function SingularityComposer({ state }: { state: EditPraxisState 
 
       {tab === 'write' ? (
         <>
+          {/* Mode — Solo · Collab · Duel, above the title (scrolls with content) */}
+          <DefaultModePicker state={state} />
+
           <Panel title={t('editPraxis.singularity.mobile.titleLabel')}>
             <TitleField
               state={state}

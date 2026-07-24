@@ -17,7 +17,12 @@ import {
 } from '../archetypes/controls'
 import { MetataskSealStack } from '../MetataskSealStack'
 import type { EditPraxisState } from '../useEditPraxis'
-import { MobileStickyBar, SegToggle, type ComposerTab } from './shared'
+import {
+  DefaultModePicker,
+  MobileStickyBar,
+  SegToggle,
+  type ComposerTab,
+} from './shared'
 
 /**
  * S.N.I.D.E. MOBILE composer (#530) — "FILE IT & RUN" on a phone. The same
@@ -120,6 +125,9 @@ export default function SnideComposer({ state }: { state: EditPraxisState }) {
 
       {tab === 'write' ? (
         <>
+          {/* Mode — Solo · Collab · Duel, above the title (scrolls with content) */}
+          <DefaultModePicker state={state} />
+
           <Plate title={t('editPraxis.snide.titleLabel')}>
             <TitleField
               state={state}
