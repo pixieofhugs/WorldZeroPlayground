@@ -134,6 +134,9 @@ async def get_duel_detail(
         challenger=_side(challenger_character, challenger_praxis, duel.challenger_praxis_id),
         opponent=_side(opponent_character, opponent_praxis, duel.opponent_praxis_id),
         viewer_is_participant=viewer_is_participant,
+        winner_character_id=duel.winner_character_id,
+        challenger_final_points=duel.challenger_final_points,
+        opponent_final_points=duel.opponent_final_points,
     )
 
 

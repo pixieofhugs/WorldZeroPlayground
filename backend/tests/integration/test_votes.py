@@ -1069,3 +1069,80 @@ async def test_duel_detail_marks_forfeited_side(
     assert body["opponent"]["is_submitted"] is False
     assert body["opponent"]["display_name"] == character2.display_name
     assert "body_text" not in body["opponent"]
+
+
+@pytest.mark.asyncio
+async def test_duel_detail_serializes_frozen_resolved_outcome(
+    client: AsyncClient,
+    db_session: AsyncSession,
+    character: Character,
+    character2: Character,
+    active_task: Task,
+    auth_headers: dict,
+    auth_headers2: dict,
+    era: Era,
+):
+    """A ``resolved`` duel exposes its frozen outcome (ADR-0052).
+
+    The detail view must serialize ``winner_character_id`` +
+    ``challenger_final_points`` / ``opponent_final_points`` — the snapshot taken
+    at era close — so the rail can render the frozen standing instead of a live
+    tally that would otherwise keep moving after resolution.
+    """
+    from models.duel import Duel, DuelStatus
+
+    challenger_pid = await _create_and_submit_solo(client, active_task, auth_headers)
+    opponent_pid = await _create_and_submit_solo(client, active_task, auth_headers2)
+    duel = Duel(
+        task_id=active_task.id,
+        challenger_praxis_id=challenger_pid,
+        opponent_character_id=character2.id,
+        opponent_praxis_id=opponent_pid,
+        status=DuelStatus.resolved,
+        winner_character_id=character.id,
+        challenger_final_points=7,
+        opponent_final_points=3,
+    )
+    db_session.add(duel)
+    await db_session.commit()
+
+    resp = await client.get(f"/duels/{duel.id}/detail")
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["status"] == "resolved"
+    assert body["winner_character_id"] == character.id
+    assert body["challenger_final_points"] == 7
+    assert body["opponent_final_points"] == 3
+
+
+@pytest.mark.asyncio
+async def test_duel_detail_frozen_fields_null_on_live_duel(
+    client: AsyncClient,
+    db_session: AsyncSession,
+    character: Character,
+    character2: Character,
+    active_task: Task,
+    auth_headers: dict,
+    auth_headers2: dict,
+    era: Era,
+):
+    """A live (settled) duel leaves the frozen-outcome fields null — the rail
+    keeps rendering the live tally until era close writes the snapshot."""
+    from models.duel import Duel, DuelStatus
+
+    challenger_pid = await _create_and_submit_solo(client, active_task, auth_headers)
+    opponent_pid = await _create_and_submit_solo(client, active_task, auth_headers2)
+    duel = Duel(
+        task_id=active_task.id,
+        challenger_praxis_id=challenger_pid,
+        opponent_character_id=character2.id,
+        opponent_praxis_id=opponent_pid,
+        status=DuelStatus.settled,
+    )
+    db_session.add(duel)
+    await db_session.commit()
+
+    body = (await client.get(f"/duels/{duel.id}/detail")).json()
+    assert body["winner_character_id"] is None
+    assert body["challenger_final_points"] is None
+    assert body["opponent_final_points"] is None

@@ -481,6 +481,13 @@
       "behind": "You're behind"
     },
     "live": "{{standing}} · live — the winner floats with the votes until era reset.",
+    "finalStanding": {
+      "won": "You won",
+      "lost": "You lost",
+      "tied": "Tied"
+    },
+    "final": "{{standing}} · final — frozen at era close.",
+    "finalNoContest": "No contest — this duel never became votable before era close.",
     "factionSuffix": " · {{faction}}"
   },
   "duelStakes": {
@@ -502,6 +509,9 @@
     "activeWaitingOnYou": "{{name}} accepted. Cast your praxis to seal the duel.",
     "activeWaitingOnThem": "You've cast. Waiting for {{name}} — the duel seals when they do.",
     "settled": "Both sides are in. The winner floats with the votes until era reset.",
+    "resolvedYouWon": "The era closed — you won this duel against {{name}}.",
+    "resolvedYouLost": "The era closed — {{name}} won this duel.",
+    "resolvedNoWinner": "The era closed — this duel resolved with no winner.",
     "youForfeited": "You forfeited this duel.",
     "wonByDefault": "{{name}} forfeited — you won by default."
   },
