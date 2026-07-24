@@ -821,6 +821,7 @@ class SignupDenialReason(str, Enum):
     task_status_closed = "task_status_closed"
     already_active_member = "already_active_member"
     bank_full = "bank_full"
+    is_metatask = "is_metatask"
 
 
 @dataclass(frozen=True)
@@ -838,8 +839,9 @@ async def evaluate_signup(
     era: EraConfig = CURRENT_ERA,
 ) -> SignupEligibility:
     """The single sign-up predicate — true iff ``create_praxis``'s **type-agnostic**
-    gates would accept (ADR-0008). Owns the four gates every claim shares: level,
-    retired/pending faction carve-out, active-member, and the task-bank cap. The
+    gates would accept (ADR-0008). Owns the gates every claim shares: the task is
+    not a metatask, level, retired/pending faction carve-out, active-member, and
+    the task-bank cap. The
     mode-specific gates (duel-via-challenge, collab level) stay in
     :func:`allowed_praxis_modes` and are applied by :func:`_check_create_preconditions`.
 
@@ -847,6 +849,11 @@ async def evaluate_signup(
     """
     if character is None:
         return SignupEligibility(allowed=False)
+
+    # Metatasks are stickers applied to a praxis (edit-praxis seal stack), never
+    # signup targets — reject before any level/status work (#1001).
+    if task.task_type == TaskType.metatask:
+        return SignupEligibility(False, SignupDenialReason.is_metatask)
 
     era_row = await get_current_era_row(session)
     stats = await get_or_create_stats(session, character.id, era_row.id)
@@ -876,6 +883,11 @@ def _signup_denial_to_http(
     reason: Optional[SignupDenialReason], task: Task, era: EraConfig
 ) -> HTTPException:
     """Map a :class:`SignupDenialReason` to the route error it has always raised."""
+    if reason == SignupDenialReason.is_metatask:
+        return HTTPException(
+            status_code=400,
+            detail="Metatasks are applied to a praxis, not signed up for.",
+        )
     if reason == SignupDenialReason.below_level:
         return HTTPException(
             status_code=403, detail=f"This task requires level {task.level_required}."
