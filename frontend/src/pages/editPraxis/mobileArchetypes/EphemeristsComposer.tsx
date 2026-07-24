@@ -17,7 +17,12 @@ import {
 } from '../archetypes/controls'
 import { MetataskSealStack } from '../MetataskSealStack'
 import type { EditPraxisState } from '../useEditPraxis'
-import { MobileStickyBar, SegToggle, type ComposerTab } from './shared'
+import {
+  DefaultModePicker,
+  MobileStickyBar,
+  SegToggle,
+  type ComposerTab,
+} from './shared'
 
 /**
  * The Ephemerists MOBILE composer (#527) — "Seal & Enter" on a phone. The same
@@ -121,6 +126,9 @@ export default function EphemeristsComposer({ state }: { state: EditPraxisState 
 
       {tab === 'write' ? (
         <>
+          {/* Mode — Solo · Collab · Duel, above the title (scrolls with content) */}
+          <DefaultModePicker state={state} />
+
           <Leaf title={t('editPraxis.ephemerists.titleLabel')}>
             <TitleField
               state={state}

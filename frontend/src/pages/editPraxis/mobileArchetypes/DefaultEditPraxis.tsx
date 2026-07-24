@@ -25,7 +25,12 @@ import {
 } from "../archetypes/controls";
 import { MetataskSealStack } from "../MetataskSealStack";
 import type { EditPraxisState } from "../useEditPraxis";
-import { MobileStickyBar, SegToggle, type ComposerTab } from "./shared";
+import {
+  DefaultModePicker,
+  MobileStickyBar,
+  SegToggle,
+  type ComposerTab,
+} from "./shared";
 
 const ACCENT = "var(--faction-default)";
 const SURFACE = "var(--color-bg-surface)";
@@ -136,6 +141,9 @@ export default function DefaultEditPraxis({
 
       {tab === "write" ? (
         <>
+          {/* Mode — Solo · Collab · Duel, above the title (scrolls with content) */}
+          <DefaultModePicker state={state} />
+
           {/* Title */}
           <label style={{ display: "flex", flexDirection: "column", gap: "var(--space-xs)" }}>
             <span style={eyebrow}>{t("editPraxis.na.titleLabel")}</span>
