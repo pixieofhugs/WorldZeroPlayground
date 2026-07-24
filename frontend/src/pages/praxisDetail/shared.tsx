@@ -335,26 +335,33 @@ export function PraxisOwnerActions({ state }: { state: PraxisDetailState }) {
   const viewerSubmittedWaiting =
     isCollab && praxis.status === 'in_progress' && viewerMember?.has_submitted === true
 
+  // A collab goes `pending` once a co-author casts (collab_consensus.on_submit,
+  // ADR-0012). A member who has NOT cast is a holdout: the unsubmit branch below
+  // would 422 for them ("already in editing mode", praxis.py) since they have
+  // nothing of their own to pull back. Show them the CAST control instead —
+  // mirroring the composer footer's gate (deriveCollabGate) — so casting is the
+  // one action offered. A member who HAS cast keeps the unsubmit path (#958).
+  const isPendingHoldout =
+    isCollab && praxis.status === 'pending' && viewerMember?.has_submitted !== true
+
   return (
     <div>
       <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-md)', marginBottom: 'var(--space-lg)' }}>
         <Link to={`/praxes/${praxis.id}/edit`} className="font-body eyebrow hover:underline" style={{ color: 'var(--color-text-tertiary)' }}>
           {t('detail.owner.edit')}
         </Link>
-        {praxis.status === 'in_progress' ? (
-          viewerSubmittedWaiting ? (
-            <span className="eyebrow" style={{ color: 'var(--color-success)', fontWeight: 700 }}>
-              {t('detail.owner.submittedWaiting')}
-            </span>
-          ) : (
-            <button
-              onClick={handleResubmit}
-              disabled={withdrawing}
-              style={{ background: 'var(--color-success)', color: 'var(--color-text-on-accent)', fontFamily: "'Courier Prime', monospace", fontSize: 'var(--text-sm)', textTransform: 'uppercase', letterSpacing: '0.08em', padding: 'var(--space-xs) var(--space-md)', border: 'none', cursor: 'pointer', borderRadius: 0, opacity: withdrawing ? 0.5 : 1 }}
-            >
-              {withdrawing ? t('detail.owner.submitting') : t('detail.owner.submit')}
-            </button>
-          )
+        {praxis.status === 'in_progress' && viewerSubmittedWaiting ? (
+          <span className="eyebrow" style={{ color: 'var(--color-success)', fontWeight: 700 }}>
+            {t('detail.owner.submittedWaiting')}
+          </span>
+        ) : praxis.status === 'in_progress' || isPendingHoldout ? (
+          <button
+            onClick={handleResubmit}
+            disabled={withdrawing}
+            style={{ background: 'var(--color-success)', color: 'var(--color-text-on-accent)', fontFamily: "'Courier Prime', monospace", fontSize: 'var(--text-sm)', textTransform: 'uppercase', letterSpacing: '0.08em', padding: 'var(--space-xs) var(--space-md)', border: 'none', cursor: 'pointer', borderRadius: 0, opacity: withdrawing ? 0.5 : 1 }}
+          >
+            {withdrawing ? t('detail.owner.submitting') : t('detail.owner.submit')}
+          </button>
         ) : forfeitsOnUnsubmit && duel ? (
           /* A forfeit is the one irreversible duel beat, so it gets the same
              dispatched dialog the (reversible) seal confirm got in #718 rather

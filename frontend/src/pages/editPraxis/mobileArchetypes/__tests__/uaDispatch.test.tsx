@@ -124,6 +124,7 @@ function baseState(): EditPraxisState {
     submitting: false,
     publish: async () => {},
     pullBack: async () => {},
+    leaveCollab: async () => {},
     collabSuccess: false,
     continueFromCollabSuccess: () => {},
     duelSealOpen: false,

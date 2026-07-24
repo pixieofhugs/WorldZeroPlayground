@@ -306,7 +306,6 @@ test.describe('collaboration UI (clicked buttons)', () => {
   // only way to leave is via the bank-full drop-to-accept modal, so a member
   // who simply wants out has no button.
   test('C2: a member can leave the collab from a standalone control', async ({ browser }) => {
-    test.fail()
     const seed = await seedCollabDraft(browser, 'ui-leave')
     try {
       const page = await seed.bob.ctx.newPage()
@@ -322,7 +321,6 @@ test.describe('collaboration UI (clicked buttons)', () => {
   // detail page should see a CAST control. Today the page falls through to the
   // owner "unsubmit" control, which 422s because the holdout never submitted.
   test('C3: a holdout on a pending collab is not shown the unsubmit control', async ({ browser }) => {
-    test.fail()
     const seed = await seedCollabDraft(browser, 'ui-holdout')
     try {
       // Alice casts (API) → the collab enters `pending`; Bob is the holdout.

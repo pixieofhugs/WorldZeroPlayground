@@ -17,6 +17,7 @@ import {
   cancelInvite as cancelInviteApi,
   getPraxis,
   inviteToPraxis,
+  leavePraxis,
   removeMetatask,
   submitPraxis,
   unsubmitPraxis,
@@ -134,6 +135,12 @@ export interface EditPraxisState {
   publish: () => Promise<void>;
   /** Pull my own cast back on a pending collab (#591). */
   pullBack: () => Promise<void>;
+  /**
+   * Leave a collab I was invited into — drop my own membership without the
+   * bank-full drop-to-accept modal (#958). Creator can't leave (they delete/drop
+   * the whole draft via `cancel`); the button is hidden for them.
+   */
+  leaveCollab: () => Promise<void>;
   cancel: () => Promise<void>;
 
   /**
@@ -598,6 +605,27 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
     }
   }, [idParam, refetch]);
 
+  // Drop my own membership from a collab I was invited into (#958). Distinct from
+  // `cancel` (creator deletes the whole draft) and `pullBack` (retract my cast but
+  // stay a member): leaving removes me entirely, so I'm sent back to the task list.
+  // Backend `leave_praxis` re-checks membership and can complete consensus for
+  // whoever stays; the gate on the button already hides it from the creator.
+  const leaveCollab = useCallback(async () => {
+    if (!praxis) return;
+    const confirmed = window.confirm(
+      i18n.t("forms:editPraxis.confirm.leaveCollab"),
+    );
+    if (!confirmed) return;
+    try {
+      await leavePraxis(praxis.id);
+      await refetch();
+    } catch (err) {
+      setError(extractError(err, i18n.t("forms:editPraxis.errors.leave")));
+      return;
+    }
+    navigate("/tasks");
+  }, [praxis, navigate, refetch]);
+
   // The success screen's only exit: an explicit "it's on the public board" tap.
   // Deliberately not a timer — the player leaves when they've read it (#591).
   const continueFromCollabSuccess = useCallback(() => {
@@ -1058,6 +1086,7 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
     submitting,
     publish,
     pullBack,
+    leaveCollab,
     cancel,
     collabSuccess,
     continueFromCollabSuccess,
