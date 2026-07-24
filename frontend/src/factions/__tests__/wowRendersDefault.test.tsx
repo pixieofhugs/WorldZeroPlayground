@@ -60,7 +60,9 @@ function Sentinel() {
  * FIELD PAVILION mobile surfaces (`mobileFieldDesk` and `mobileTaskCard` from
  * the one phone screen the kit drew, plus `mobileTaskDetail`,
  * `mobilePraxisDetail`, `mobileFactionPage` and `mobileProfile` derived from
- * that screen's chrome and the matching desktop archetype).
+ * that screen's chrome and the matching desktop archetype), and #931's
+ * `metaTaskSeal` — WOW's court-writ seal, the last faction seal skin, built from
+ * the chronicle identity since the kit drew no wow specimen.
  *
  * EIGHT SURFACES ARE STILL UNCLAIMED and every one is deliberate, not an
  * oversight. `factionBody` and `factionCard`: the kit drew WOW's faction HERO,
@@ -101,9 +103,10 @@ const WOW_SKINNED: ReadonlySet<FactionSurface> = new Set([
   'mobilePraxisDetail',
   'mobileFactionPage',
   'mobileProfile',
+  'metaTaskSeal',
 ])
 
-describe('wow is partly skinned: twenty-five surfaces claimed, the rest fall back', () => {
+describe('wow is partly skinned: twenty-six surfaces claimed, the rest fall back', () => {
   it('registers a manifest now (#821)', () => {
     expect(FACTION_MANIFESTS.map((manifest) => manifest.slug)).toContain('wow')
   })
