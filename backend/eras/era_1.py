@@ -359,10 +359,86 @@ ERA_1_TASKS = (
         description="Have a meal, and try to identify each ingredient. Then, make that meal yourself, and then try again to identify each ingredient again",
         faction_slug="everymen", level_required=2, point_value=10,
     ),
+    # -------------------------------------------------------------------------
+    # #904 — bring every faction (except Albescent, which hides — ADR-0048) to
+    # >=6 tasks in levels 1-7. Point ramp by level: L1->5, L2->10, L3->25,
+    # L4->50, L5->75, L6->100, L7->500. (Level 0 is reserved for the single
+    # game-wide onboarding task, seeded in seed.py, not here — #511.)
+    # -------------------------------------------------------------------------
+    # Cozy Coven — 6 new (soft-lit makers, tiny victories, gentle care).
     TaskDef(
-        title="FLIP THE SYSTEM",
-        description="TBD",
-        faction_slug="snide", level_required=0, point_value=500,
+        title="A Light Left On",
+        description="Leave a small comfort for whoever arrives after you — a note, a snack, a lamp switched on in a dark hall. Make the next person's moment softer than you found it.",
+        faction_slug="coven", level_required=1, point_value=5,
+    ),
+    TaskDef(
+        title="Mend, Don't End",
+        description="Repair something instead of replacing it. Darn the sock, glue the mug, patch the knee. Give a tired object one more season by your own hand.",
+        faction_slug="coven", level_required=2, point_value=10,
+    ),
+    TaskDef(
+        title="The Comfort Bake",
+        description="Bake something warm and give most of it away. The kitchen should smell like welcome by the time you're done. Store-bought is a different spell — this one you make.",
+        faction_slug="coven", level_required=3, point_value=25,
+    ),
+    TaskDef(
+        title="Gather the Weird Ones",
+        description="Host a small, low-stakes gathering for people who don't usually get invited — a tea, a craft night, a bad-movie evening. Cozy, not grand. Everyone leaves warmer than they came.",
+        faction_slug="coven", level_required=4, point_value=50,
+    ),
+    TaskDef(
+        title="A Room That Holds You",
+        description="Make a space cozier for someone else — a reading nook, a softened corner, a shelf of small comforts. When you're done it should feel like the room is gently keeping them.",
+        faction_slug="coven", level_required=6, point_value=100,
+    ),
+    TaskDef(
+        title="Keep a Light On All Year",
+        description="Take up an ongoing act of care for your circle across a full season — a standing soup night, a mending drawer, a monthly welcome for newcomers. Keep a light on for the weird ones long after the spell is cast.",
+        faction_slug="coven", level_required=7, point_value=500,
+    ),
+    # Snide — 4 new (sardonic, contrarian, subversive, intellectually sharp).
+    TaskDef(
+        title="Ruin a Perfectly Good Thing",
+        description="Take something everyone agrees is \"nice\" and make it interesting instead — improve it by breaking a rule it was too polite to question. Document the before, the crime, and the after.",
+        faction_slug="snide", level_required=2, point_value=10,
+    ),
+    TaskDef(
+        title="Steelman Your Enemy",
+        description="Take an idea you despise and argue it so well its believers would nod. Then explain, precisely, why you still think it's wrong. Contempt is easy; understanding is the sharper blade.",
+        faction_slug="snide", level_required=3, point_value=25,
+    ),
+    TaskDef(
+        title="Unsanctioned Maintenance",
+        description="Improve something without permission and without credit — reword the passive-aggressive break-room sign, fix the link nobody maintains, straighten what everyone ignores. Competence as quiet rebellion.",
+        faction_slug="snide", level_required=4, point_value=50,
+    ),
+    TaskDef(
+        title="Organize the Ungovernable",
+        description="Rally people around a small act of coordinated defiance against a pointless rule: a dress-code mutiny, a wave of scrupulously polite complaints. Harmless, deniable, impossible to ignore.",
+        faction_slug="snide", level_required=6, point_value=100,
+    ),
+    # Singularity — 2 new (systems, patterns, recursion, absurd-analytical).
+    TaskDef(
+        title="Sort Your Life",
+        description="Pick a messy, unsortable part of your life and impose a taxonomy on it anyway — your socks, your regrets, your browser tabs. Share the categories and defend the edge cases.",
+        faction_slug="singularity", level_required=1, point_value=5,
+    ),
+    TaskDef(
+        title="The Map Is the Territory",
+        description="Model a real system you're part of as nodes and flows. Then change one input in real life and record exactly how the model failed to predict it.",
+        faction_slug="singularity", level_required=4, point_value=50,
+    ),
+    # Ephemerists — 1 new (transience, absence, the overlooked).
+    TaskDef(
+        title="Archive of a Single Hour",
+        description="Record everything about one ordinary hour that will never happen exactly so again — the light, the sounds, who passed, what you almost said. Then let it go. Share the record, not the hour.",
+        faction_slug="ephemerists", level_required=5, point_value=75,
+    ),
+    # Everymen — 1 new (the commons, ordinary dignity, for-all).
+    TaskDef(
+        title="The Commons",
+        description="Improve something that belongs to everyone and no one — a shared path, a little free library, a bus-stop bench. Leave a public thing better than you found it, no name attached.",
+        faction_slug="everymen", level_required=4, point_value=50,
     ),
 )
 
