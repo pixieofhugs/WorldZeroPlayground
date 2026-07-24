@@ -14,11 +14,11 @@ import {
   DropButton,
   FilePicker,
   InviteSearch,
-  MetataskSealStack,
   ModePicker,
   PublishButton,
   TitleField,
 } from "./controls";
+import { MetataskSealStack } from "../MetataskSealStack";
 import type { EditPraxisState } from "../useEditPraxis";
 
 interface Props {

@@ -28,6 +28,7 @@ import {
   PublishButton,
   TitleField,
 } from "./controls";
+import { MetataskSealStack } from "../MetataskSealStack";
 import type { EditPraxisState } from "../useEditPraxis";
 import { EverymenSigil } from "../../../components/cards/EverymenSigil";
 
@@ -749,85 +750,9 @@ function MetatasksBlock({ state }: { state: EditPraxisState }) {
       <FieldLabel meta={t("editPraxis.everymen.metatasksMeta")}>
         {t("editPraxis.everymen.metatasksLabel")}
       </FieldLabel>
-      {state.metaTasks.map((mt) => {
-        const selected = state.appliedMetatasks.has(mt.id);
-        const busy = state.applyingMetatask === mt.id;
-        return (
-          <button
-            key={mt.id}
-            type="button"
-            disabled={busy}
-            onClick={() => void state.toggleMetatask(mt)}
-            style={{
-              display: "flex",
-              alignItems: "flex-start",
-              gap: "var(--space-md)",
-              width: "100%",
-              padding: "var(--space-sm) var(--space-xs)",
-              background: "transparent",
-              border: "none",
-              cursor: busy ? "wait" : "pointer",
-              textAlign: "left",
-            }}
-          >
-            <span
-              style={{
-                width: 22,
-                height: 22,
-                flexShrink: 0,
-                border: `2px solid ${INK}`,
-                background: selected ? RED : CREAM,
-                marginTop: "var(--space-xs)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
-              {selected && (
-                <svg width="22" height="22" viewBox="0 0 22 22" aria-hidden>
-                  <path
-                    d="M3 12 L9 18 L20 4"
-                    stroke={CREAM}
-                    strokeWidth="2.5"
-                    fill="none"
-                    strokeLinecap="round"
-                  />
-                </svg>
-              )}
-            </span>
-            <div style={{ flex: 1 }}>
-              <div
-                style={{ fontSize: "var(--text-xl)", color: PAPER_TEXT, fontWeight: 700 }}
-              >
-                {mt.title}
-              </div>
-              {mt.description && (
-                <div
-                  style={{
-                    fontSize: "var(--text-md)",
-                    color: MUTED,
-                    fontStyle: "italic",
-                  }}
-                >
-                  {mt.description}
-                </div>
-              )}
-            </div>
-            <span
-              style={{
-                fontFamily: ACCENT_FONT,
-                fontSize: "var(--text-xl)",
-                color: selected ? OLIVE : RED,
-                whiteSpace: "nowrap",
-              }}
-            >
-              {t("editPraxis.everymen.metatasksPoints", {
-                points: mt.point_value,
-              })}
-            </span>
-          </button>
-        );
-      })}
+      {/* The seal stack + neutral picker (#933) replace the old hand-rolled
+          checklist; the Everymen paper-and-ink frame and label stay. */}
+      <MetataskSealStack state={state} />
     </div>
   );
 }

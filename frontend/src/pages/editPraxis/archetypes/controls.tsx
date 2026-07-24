@@ -7,7 +7,6 @@
 import { useRef } from "react";
 import type { CSSProperties, ReactNode } from "react";
 import { useTranslation } from "react-i18next";
-import MetaTaskSeal from "../../../components/metaTaskSeal/MetaTaskSeal";
 import { factionCssVar, factionName } from "../../../utils/factions";
 import type { PraxisType } from "../../../api/praxis";
 import MarkdownPreview from "../blocks/MarkdownPreview";
@@ -319,30 +318,9 @@ export function DropButton({
   );
 }
 
-/* -------------------------------------------------------------------------- */
-/* MetataskSealStack — the editable seal stack (#933). Replaces the old skinned */
-/* MetatasksList: renders the applied metatasks as foreign seals (each          */
-/* dispatched on its issuing faction) plus the dashed "+ Add a metatask" slot   */
-/* when the viewer can seal. The `×` on each seal routes through the confirm     */
-/* (Section E) rather than removing directly; the add slot opens the neutral     */
-/* Section-D picker. Both the picker and the confirm are mounted once from the   */
-/* EditPraxis dispatcher, so archetypes just drop this stack where the old list  */
-/* sat (below the score, above media).                                          */
-/*                                                                              */
-/* An ineligible viewer (`canSealMetatask === false`) still sees already-sealed */
-/* metatasks READ-ONLY: no `×`, no add slot — MetaTaskSeal renders nothing when  */
-/* there is neither a seal nor an `onAdd`.                                       */
-/* -------------------------------------------------------------------------- */
-export function MetataskSealStack({ state }: { state: EditPraxisState }) {
-  return (
-    <MetaTaskSeal
-      metatasks={state.appliedMetataskList}
-      removable={state.canSealMetatask}
-      onRemove={state.canSealMetatask ? state.requestRemoveMetatask : undefined}
-      onAdd={state.canSealMetatask ? state.openMetataskPicker : undefined}
-    />
-  );
-}
+/* The editable seal stack (#933) lives in `../MetataskSealStack` — deliberately
+ * OUTSIDE this module so `controls.tsx` never imports MetaTaskSeal (and through
+ * it the faction registry). See that file's header for why the cycle matters. */
 
 /* -------------------------------------------------------------------------- */
 /* TitleField — the single 200-char title input.                              */

@@ -31,10 +31,10 @@ import {
   DropButton,
   FilePicker,
   InviteSearch,
-  MetataskSealStack,
   PublishButton,
   TitleField,
 } from "../archetypes/controls";
+import { MetataskSealStack } from "../MetataskSealStack";
 import type { EditPraxisState } from "../useEditPraxis";
 import { MobileStickyBar, SegToggle, type ComposerTab } from "./shared";
 

@@ -21,11 +21,11 @@ import {
   DropButton,
   FilePicker,
   InviteSearch,
-  MetataskSealStack,
   ModePicker,
   PublishButton,
   TitleField,
 } from "./controls";
+import { MetataskSealStack } from "../MetataskSealStack";
 import { EphemeristsSigil, Foxing, LapisLastWord, toRoman } from "../../../components/cards/ephemeristsAtoms";
 import type { EditPraxisState } from "../useEditPraxis";
 
