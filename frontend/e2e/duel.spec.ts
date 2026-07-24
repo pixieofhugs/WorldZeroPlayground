@@ -24,7 +24,7 @@ import {
  * Happy path (steps buttons exist for today → GREEN, or expose a real bug):
  *   challenge → accept → both seal → settled rail.
  *
- * Red steps (test.fail() — no control exists yet, flipped green by the fix):
+ * Dissolve steps (were red until #956 added the controls, now GREEN):
  *   D1 (dissolve an active duel)          → #956
  *   D2 (opponent withdraws a pending one) → #956
  * D3 (resolved rail) lives in the isolated duel-zzz-resolved.spec.ts because it
@@ -95,15 +95,13 @@ test.describe('duel lifecycle', () => {
     }
   })
 
-  // D1 (RED — #956): after accept, EITHER participant can neutrally cancel the
-  // ACTIVE duel (→ declined, no forfeit penalty). Backend already allows it
-  // (services/duel.py). Today the only cancel control is the composer chip's ×,
-  // rendered for a PENDING challenge only (controls.tsx) — an active duel has no
-  // dissolve button anywhere. Expected to fail until #956 adds one; that fix
-  // should give the control an accessible name matching the pattern below (or
-  // update this locator) and then delete test.fail().
+  // D1 (#956, GREEN): after accept, EITHER participant can neutrally cancel the
+  // ACTIVE duel (→ declined, no forfeit penalty). Backend already allowed it
+  // (services/duel.py); #956 added the composer-chip "dissolve duel" control
+  // (aria-label "dissolve the duel") reachable while the duel is active. Alice's
+  // in_progress praxis redirects /praxes/{id} → the edit composer, where the chip
+  // (and its dissolve button) live.
   test('D1: an active duel can be neutrally dissolved by a participant', async ({ browser }) => {
-    test.fail()
     const seed = await seedChallenge(browser)
     const { alice, bob, alicePraxisId } = seed
     try {
@@ -125,14 +123,12 @@ test.describe('duel lifecycle', () => {
     }
   })
 
-  // D2 (RED — #956): the OPPONENT can cancel/withdraw a still-PENDING challenge,
-  // not only Decline. Today the opponent's feed card offers Accept + Decline only;
-  // cancel is challenger-only (the composer chip ×). Expected to fail until #956
-  // adds a withdraw control to the opponent's challenge card, then delete
-  // test.fail(). Scoped to the challenge card (the Accept button's action row) so
-  // an unrelated "cancel" elsewhere on /updates can't satisfy it.
+  // D2 (#956, GREEN): the OPPONENT can cancel/withdraw a still-PENDING challenge,
+  // not only Decline. #956 added a "Withdraw" button to the opponent's challenge
+  // card action row (FeedCardDuelChallenge), hitting the same /duels/{id}/cancel
+  // endpoint. Scoped to the challenge card (the Accept button's action row) so an
+  // unrelated "cancel" elsewhere on /updates can't satisfy it.
   test('D2: the opponent can withdraw a pending challenge', async ({ browser }) => {
-    test.fail()
     const seed = await seedChallenge(browser)
     const { alice, bob, alicePraxisId } = seed
     try {

@@ -97,7 +97,15 @@ export interface EditPraxisState {
   // the praxis stays type='solo' and gains a duel_id.
   duel: DuelDetailOut | null;
   sendChallenge: (character: CharacterOut) => Promise<void>;
+  /** Withdraw a still-pending challenge (challenger's composer chip ×). */
   cancelDuel: () => Promise<void>;
+  /**
+   * Dissolve an already-accepted (active) duel (#956). Either participant may do
+   * it; the backend recalculates both sides back to plain-solo scoring with no
+   * forfeit penalty. Asks first (it ends the duel for both) — otherwise the same
+   * neutral cancel as `cancelDuel`.
+   */
+  dissolveDuel: () => Promise<void>;
 
   // Metatasks (seal stack + Section-D picker + Section-E remove, #933)
   metaTasks: TaskOut[];
@@ -689,9 +697,11 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
         return;
       }
 
-      // Only a *pending* challenge can be cancelled (the backend forbids
-      // unilaterally cancelling an accepted duel). Once the opponent has
-      // accepted, the challenger can't switch away.
+      // Mode-switching away from an ACCEPTED duel is blocked here: an active duel
+      // is dissolved through the dedicated "dissolve duel" control (#956), which
+      // asks first, rather than silently as a side effect of picking solo/collab.
+      // (The backend permits cancelling an active duel — services/duel.py — so
+      // this guard is a UI choice, not a backend limitation.)
       if (inDuel && duel && duel.status !== "pending") {
         setError(i18n.t("forms:editPraxis.errors.duelUnderway"));
         return;
@@ -877,6 +887,14 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
     }
   }, [praxis]);
 
+  // Dissolve an *active* duel (#956). Same neutral cancel as `cancelDuel`, but
+  // gated behind a confirm because it ends an accepted duel for both sides.
+  const dissolveDuel = useCallback(async () => {
+    if (!praxis?.duel_id) return;
+    if (!window.confirm(i18n.t("forms:editPraxis.confirm.dissolveDuel"))) return;
+    await cancelDuel();
+  }, [praxis?.duel_id, cancelDuel]);
+
   // ---- Metatasks (#933) ----
   // Legacy toggle (apply when absent, remove when present) kept on the state
   // shape; the new compose flow adds through the picker and removes through the
@@ -1047,6 +1065,7 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
     duel,
     sendChallenge,
     cancelDuel,
+    dissolveDuel,
 
     metaTasks,
     appliedMetatasks,
