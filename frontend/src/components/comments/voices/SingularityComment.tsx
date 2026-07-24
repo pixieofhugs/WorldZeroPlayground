@@ -52,7 +52,7 @@ export default function SingularityComment(props: CommentProps) {
               {t('comments.singularity.protocol')}
               <span style={{ display: 'inline-block', width: 5, height: 9, background: 'var(--faction-singularity-card-text)', marginLeft: 'var(--space-xs)', verticalAlign: 'middle', animation: 'blink 1s step-end infinite' }} />
             </div>
-            <ComposerControls value={value} onChange={onChange} onSubmit={onSubmit} submitting={submitting} accent="var(--faction-singularity-card-text)" bg="#0a1f12" text="var(--faction-singularity-card-text)" />
+            <ComposerControls value={value} onChange={onChange} onSubmit={onSubmit} submitting={submitting} accent="var(--faction-singularity-card-text)" onAccent="var(--faction-singularity-on-accent)" bg="#0a1f12" text="var(--faction-singularity-card-text)" />
           </div>
         </div>
       </div>
@@ -80,7 +80,7 @@ export default function SingularityComment(props: CommentProps) {
           </div>
           <div style={{ fontSize: 'var(--text-content)', lineHeight: 1.55, marginTop: 'var(--space-xs)' }}>
             {owner.editing ? (
-              <CommentEditor owner={owner} accent="var(--faction-singularity-card-text)" bg="#0a1f12" text="var(--faction-singularity-card-text)" />
+              <CommentEditor owner={owner} accent="var(--faction-singularity-card-text)" onAccent="var(--faction-singularity-on-accent)" bg="#0a1f12" text="var(--faction-singularity-card-text)" />
             ) : (
               <>
                 <span style={{ color: 'var(--faction-singularity-card-muted)' }}>&gt; </span>

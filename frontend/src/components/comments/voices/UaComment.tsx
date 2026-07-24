@@ -75,6 +75,7 @@ export default function UaComment(props: CommentProps) {
             onSubmit={onSubmit}
             submitting={submitting}
             accent="var(--faction-ua-card-accent)"
+            onAccent="var(--faction-ua-on-accent)"
             bg="var(--faction-ua-panel)"
             text="var(--faction-ua-card-text)"
           />
@@ -140,6 +141,7 @@ export default function UaComment(props: CommentProps) {
             <CommentEditor
               owner={owner}
               accent="var(--faction-ua-card-accent)"
+              onAccent="var(--faction-ua-on-accent)"
               bg="var(--faction-ua-panel)"
               text="var(--faction-ua-card-text)"
             />

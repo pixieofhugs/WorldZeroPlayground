@@ -41,7 +41,7 @@ export default function EverymenComment(props: CommentProps) {
         <div style={{ padding: 'var(--space-md) var(--space-lg)', display: 'flex', gap: 'var(--space-md)', alignItems: 'flex-start' }}>
           <FactionAvatar character={character} size="sm" />
           <div style={{ flex: 1 }}>
-            <ComposerControls value={value} onChange={onChange} onSubmit={onSubmit} submitting={submitting} accent="var(--faction-everymen-card-accent)" bg="rgba(0,0,0,0.03)" text="var(--faction-everymen-card-text)" />
+            <ComposerControls value={value} onChange={onChange} onSubmit={onSubmit} submitting={submitting} accent="var(--faction-everymen-card-accent)" onAccent="var(--faction-everymen-on-accent)" bg="rgba(0,0,0,0.03)" text="var(--faction-everymen-card-text)" />
           </div>
         </div>
       </div>
@@ -69,7 +69,7 @@ export default function EverymenComment(props: CommentProps) {
           </div>
           <div style={{ fontSize: 'var(--text-content)', lineHeight: 1.4, marginTop: 'var(--space-xs)' }}>
             {owner.editing ? (
-              <CommentEditor owner={owner} accent="var(--faction-everymen-card-accent)" bg="rgba(0,0,0,0.03)" text="var(--faction-everymen-card-text)" />
+              <CommentEditor owner={owner} accent="var(--faction-everymen-card-accent)" onAccent="var(--faction-everymen-on-accent)" bg="rgba(0,0,0,0.03)" text="var(--faction-everymen-card-text)" />
             ) : (
               <MentionText body={comment.body_text} mentions={comment.mentions} accent="var(--faction-everymen-card-accent)" />
             )}

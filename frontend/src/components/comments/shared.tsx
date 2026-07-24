@@ -104,6 +104,7 @@ export function ComposerControls({
   onSubmit,
   submitting,
   accent,
+  onAccent,
   bg = 'transparent',
   text = 'inherit',
   maxLength,
@@ -116,6 +117,12 @@ export function ComposerControls({
   onSubmit: () => void
   submitting: boolean
   accent: string
+  /**
+   * AA-legible ink for the submit button, which is painted in `accent` (#924).
+   * A voice passes `var(--faction-{slug}-on-accent)` — the ink measured on its
+   * composer accent, which is NOT `-on-fill` (that ink is measured on the fill).
+   */
+  onAccent: string
   bg?: string
   text?: string
   /** Cap the body length (edit mode passes MAX_COMMENT_BODY) + light a live count. */
@@ -205,7 +212,7 @@ export function ComposerControls({
             disabled={disabled}
             style={{
               background: accent,
-              color: '#fff',
+              color: onAccent,
               border: 'none',
               borderRadius: 4,
               padding: 'var(--space-xs) var(--space-lg)',

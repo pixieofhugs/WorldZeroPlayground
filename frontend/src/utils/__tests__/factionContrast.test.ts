@@ -89,6 +89,32 @@ const FILL_PAIRS: Pair[] = FILL_KEYS.map((key) => ({
 }));
 
 /**
+ * #924 — text on each comment voice's COMPOSER ACCENT. The submit button is
+ * painted in the accent the voice passes, NOT the fill, so this is a distinct
+ * question from FILL_PAIRS: WOW's accent is plum (white legible), its fill is
+ * gold (ink legible). The surface here is the exact var each voice hands
+ * `ComposerControls` as `accent` — most send `card-accent`, but SNIDE sends
+ * `--faction-snide-pink` and Singularity sends `--faction-singularity-card-text`,
+ * so the surface column cannot be generated from the key. `default` (na) is
+ * INCLUDED here where FILL_PAIRS omits it: the na composer paints its button in a
+ * solid accent (not the rainbow), so `--faction-default-on-accent` is real text.
+ */
+const ACCENT_PAIRS: Pair[] = [
+  { key: "ua", accent: "--faction-ua-card-accent" },
+  { key: "everymen", accent: "--faction-everymen-card-accent" },
+  { key: "coven", accent: "--faction-coven-card-accent" },
+  { key: "snide", accent: "--faction-snide-pink" },
+  { key: "wow", accent: "--faction-wow-card-accent" },
+  { key: "ephemerists", accent: "--faction-ephemerists-card-accent" },
+  { key: "singularity", accent: "--faction-singularity-card-text" },
+  { key: "default", accent: "--faction-default-card-accent" },
+].map(({ key, accent }) => ({
+  what: `${key} composer accent, on-accent`,
+  surface: accent,
+  text: `--faction-${key}-on-accent`,
+}));
+
+/**
  * Archetype-private primitives. Each entry is a role index.css states in
  * words; nothing here is inferred from how a component happens to use a token.
  */
@@ -265,7 +291,7 @@ const ARCHETYPE_PAIRS: Pair[] = [
   },
 ];
 
-const PAIRS: Pair[] = [...CARD_PAIRS, ...FILL_PAIRS, ...ARCHETYPE_PAIRS];
+const PAIRS: Pair[] = [...CARD_PAIRS, ...FILL_PAIRS, ...ACCENT_PAIRS, ...ARCHETYPE_PAIRS];
 
 /**
  * Part C — the baseline allowlist (the ratchet).

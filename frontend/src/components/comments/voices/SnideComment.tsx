@@ -81,7 +81,7 @@ export default function SnideComment(props: CommentProps) {
             }}>
               {t('comments.snide.prompt')}
             </div>
-            <ComposerControls value={value} onChange={onChange} onSubmit={onSubmit} submitting={submitting} accent="var(--faction-snide-pink)" bg="rgba(255,255,255,0.04)" text="var(--faction-snide-card-text)" />
+            <ComposerControls value={value} onChange={onChange} onSubmit={onSubmit} submitting={submitting} accent="var(--faction-snide-pink)" onAccent="var(--faction-snide-on-accent)" bg="rgba(255,255,255,0.04)" text="var(--faction-snide-card-text)" />
           </div>
         </div>
       </div>
@@ -109,7 +109,7 @@ export default function SnideComment(props: CommentProps) {
           </div>
           <div style={{ fontFamily: 'var(--faction-snide-font-cond)', textTransform: 'uppercase', fontSize: 'var(--text-content)', lineHeight: 1.4, letterSpacing: '0.02em' }}>
             {owner.editing ? (
-              <CommentEditor owner={owner} accent="var(--faction-snide-pink)" bg="rgba(255,255,255,0.04)" text="var(--faction-snide-card-text)" />
+              <CommentEditor owner={owner} accent="var(--faction-snide-pink)" onAccent="var(--faction-snide-on-accent)" bg="rgba(255,255,255,0.04)" text="var(--faction-snide-card-text)" />
             ) : (
               <MentionText body={comment.body_text} mentions={comment.mentions} accent="var(--faction-snide-acid)" />
             )}
