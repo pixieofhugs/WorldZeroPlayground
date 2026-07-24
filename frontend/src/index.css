@@ -63,6 +63,23 @@
   --faction-ephemerists-on-fill: #ffffff; /* #1d6e72 — 5.96:1 */
   --faction-singularity-on-fill: #ffffff; /* #2563eb — 5.17:1 */
 
+  /* ── Text on the comment-composer ACCENT (#924) ── The AA-legible ink for the
+     submit button, which is painted in the voice's card-accent (NOT the fill), so
+     it is a different question from -on-fill: e.g. WOW's accent is plum, not the
+     gold its -on-fill measures. Each voice passes its own `accent` — most send
+     --faction-{key}-card-accent, SNIDE sends --faction-snide-pink, Singularity
+     sends --faction-singularity-card-text, na/Default sends the resolved
+     card-accent. Threaded into ComposerControls as `onAccent`; guarded by the
+     ACCENT_PAIRS block in factionContrast.test.ts. Dark overrides live below. */
+  --faction-ua-on-accent: #fcf7ef; /* #a5400f — 5.89:1 (warm white, matches on-fill) */
+  --faction-everymen-on-accent: #ffffff; /* #c1272d — 5.84:1 */
+  --faction-coven-on-accent: #14110b; /* #ec5f99 — white only 3.15:1; ink 5.98:1 */
+  --faction-snide-on-accent: #14110b; /* #ff2d8b (snide-pink) — white 3.50:1; ink 5.38:1 */
+  --faction-wow-on-accent: #ffffff; /* #7a4a9e plum — ink only 2.96:1; white 6.36:1 */
+  --faction-ephemerists-on-accent: #ffffff; /* #9c3622 rubric — 7.08:1 */
+  --faction-singularity-on-accent: #14110b; /* #4ade80 green — white only 1.74:1; ink 10.81:1 */
+  --faction-default-on-accent: #ffffff; /* #1a1209 — 18.51:1 (na has no on-fill; this is its own) */
+
   /* ── Faction tints (backgrounds, highlights) ── */
   --faction-ua-light: #f2e0cb; /* sand tint — opaque, same stock as -panel */
   --faction-wow-light: rgba(224, 168, 0, 0.12);
@@ -947,6 +964,18 @@
   --faction-ephemerists-on-fill: #14110b; /* #3aa0a4 — white only 3.11:1; ink 6.05:1 */
   --faction-singularity-on-fill: #14110b; /* #60a5fa — white only 2.54:1; ink 7.41:1 */
 
+  /* ── Text on the comment-composer ACCENT (dark, #924) ── The accents brighten in
+     dark, so most flip to ink. Ephemerists is the exception: its dark rubric
+     #c0533a takes WHITE (ink 4.07 fails; warm-white 4.34 fails — pure white only).
+     snide (pink) and singularity (green) have theme-invariant accents and inherit
+     their :root ink through the cascade. */
+  --faction-ua-on-accent: #201a14; /* #f0894a — warm white only 2.35:1; ink 6.87:1 */
+  --faction-everymen-on-accent: #14110b; /* #e2433f — white only 4.11:1; ink 4.58:1 */
+  --faction-coven-on-accent: #14110b; /* #f472b6 — white only 2.65:1; ink 7.11:1 */
+  --faction-wow-on-accent: #14110b; /* #c79be0 plum lifted — white only 2.28:1; ink 8.25:1 */
+  --faction-ephemerists-on-accent: #ffffff; /* #c0533a — ink 4.07 & warm-white 4.34 fail; white 4.63:1 */
+  --faction-default-on-accent: #14110b; /* #f0e6d0 — white only 1.24:1; ink 15.19:1 */
+
   /* ── Faction tints (dark) ── */
   --faction-ua-light: #241e18; /* sand tint, dimmed — same stock as the card */
   --faction-wow-light: rgba(245, 197, 66, 0.1);
@@ -1373,11 +1402,21 @@
   /* Shared faction-page body grid — main column + right rail; collapses to one
      column on narrow viewports (rule below). Every faction skin reuses this. */
 
-  /* ── Task Crown ── the per-task top-praxis mark (ADR-0028; the retired
-     Faction Distinction Laurel's medallion, re-glyphed). Fixed brand rainbow;
-     the medallion's inner disc + glyph are recoloured per-faction by the
-     caller (see components/cards/TaskCrown.tsx). */
+  /* ── Task Crown ── the per-task top-praxis mark (ADR-0028, amended by
+     ADR-0054). Fixed brand rainbow ring plus ONE canonical inner look: the
+     disc + glyph no longer follow the card, they follow the global theme, so
+     the "one praxis mark" reads as one mark on every faction card. Only the
+     light/dark pair below vary (see components/cards/TaskCrown.tsx). */
   --fdl-rainbow: conic-gradient(from 90deg, #fbbf24, #f97316, #be185d, #4f46e5, #0e7490, #16a34a, #fbbf24);
+  --fdl-disc: #faf6ee; /* ivory disc under the fleur (light theme) */
+  --fdl-glyph: #1a1209; /* dark fleur ink (light theme) */
+}
+
+/* Task Crown, dark theme: the disc goes near-black, the fleur goes light ink.
+   The rainbow ring (--fdl-rainbow) is a fixed brand constant in both themes. */
+[data-theme="dark"] {
+  --fdl-disc: #1a1712;
+  --fdl-glyph: #f0e6d0;
 }
 
 /* Faction-page body: main column + fixed right rail, collapsing to one column

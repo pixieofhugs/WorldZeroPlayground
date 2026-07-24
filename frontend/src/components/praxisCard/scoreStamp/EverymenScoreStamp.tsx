@@ -67,8 +67,6 @@ export default function EverymenScoreStamp({ praxis, showCrown }: ScoreStampProp
         <TaskCrown
           size={26}
           ringInset={3}
-          innerBg="var(--faction-everymen-card-bg)"
-          glyphColor="var(--everymen-red)"
           rotate="8deg"
           style={{ position: "absolute", top: -13, right: -10, zIndex: 3 }}
         />

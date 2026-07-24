@@ -31,7 +31,8 @@ from services.era import apply_era_reset
 
 
 async def _make_character(
-    session: AsyncSession, era: Era, *, username: str, email: str
+    session: AsyncSession, era: Era, *, username: str, email: str,
+    faction_slug: str = "ua",
 ) -> Character:
     account = Account(email=email)
     session.add(account)
@@ -40,7 +41,7 @@ async def _make_character(
         account_id=account.id,
         username=username,
         display_name=username,
-        faction_slug="ua",
+        faction_slug=faction_slug,
     )
     session.add(character)
     await session.flush()
@@ -119,13 +120,17 @@ async def _make_duel(
     challenger_votes: int | None,
     opponent_votes: int | None,
     forfeiter: str | None = None,
+    challenger_faction: str = "ua",
+    opponent_faction: str = "ua",
 ) -> tuple[Duel, Character, Character]:
     """Build a full duel: two characters, two solo praxes, optional votes."""
     challenger = await _make_character(
-        session, era, username=f"{label}_ch", email=f"{label}_ch@x.com"
+        session, era, username=f"{label}_ch", email=f"{label}_ch@x.com",
+        faction_slug=challenger_faction,
     )
     opponent = await _make_character(
-        session, era, username=f"{label}_op", email=f"{label}_op@x.com"
+        session, era, username=f"{label}_op", email=f"{label}_op@x.com",
+        faction_slug=opponent_faction,
     )
     voter = await _make_character(
         session, era, username=f"{label}_v", email=f"{label}_v@x.com"
@@ -268,6 +273,35 @@ async def test_era_reset_freezes_a_mix_of_duels(
     assert incomplete_duel.winner_character_id is None
     assert incomplete_duel.challenger_final_points == 0
     assert incomplete_duel.opponent_final_points == 0
+
+
+@pytest.mark.asyncio
+async def test_era_reset_freezes_the_snide_tie_to_snide(
+    db_session: AsyncSession, era: Era, account: Account, faction_ua: Faction
+):
+    """A tied duel with a lone Snide side freezes to Snide, not a NULL winner (#748).
+
+    Snide wins ties everywhere the live multiplier applies; the permanent frozen
+    record must agree, or `duel_victor` (#823) would lose a win the site showed.
+    """
+    from models.faction import FactionStatus
+
+    db_session.add(Faction(slug="snide", status=FactionStatus.visible))
+    await db_session.commit()
+
+    duel, challenger, _opponent = await _make_duel(
+        db_session, era, label="snidefreeze", status=DuelStatus.settled,
+        challenger_votes=3, opponent_votes=3,
+        challenger_faction="snide", opponent_faction="ua",
+    )
+
+    await _close_the_era(db_session, account)
+
+    await db_session.refresh(duel)
+    assert duel.status == DuelStatus.resolved
+    assert duel.winner_character_id == challenger.id
+    assert duel.challenger_final_points == 3
+    assert duel.opponent_final_points == 3
 
 
 @pytest.mark.asyncio

@@ -58,8 +58,6 @@ export default function WowScoreStamp({ praxis, showCrown }: ScoreStampProps) {
         <TaskCrown
           size={26}
           ringInset={3}
-          innerBg="var(--faction-wow-stamp-bg)"
-          glyphColor="var(--faction-wow-chronicle-gold)"
           rotate="8deg"
           style={{ position: "absolute", top: -13, right: -12, zIndex: 3 }}
         />
