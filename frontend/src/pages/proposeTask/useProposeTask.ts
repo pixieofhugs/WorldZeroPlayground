@@ -4,16 +4,23 @@
  * proposal-form treatment without re-implementing the data plumbing.
  *
  * Behaviour preserved 1:1 from the original page (faction list fetch, the
- * title/description length guards, the metatask faction guard, proposeTask vs
- * proposeMetatask branch, success state). The returned {@link ProposeTaskState}
- * is the stable contract every propose-task archetype consumes. The dispatch
- * key is the user-selected `factionSlug`, so a faction can ship a bespoke form
- * that appears once its pennant is chosen.
+ * title/description length guards, proposeTask vs proposeMetatask branch,
+ * success state). The returned {@link ProposeTaskState} is the stable contract
+ * every propose-task archetype consumes. The dispatch key is the user-selected
+ * `factionSlug`, so a faction can ship a bespoke form that appears once its
+ * pennant is chosen.
+ *
+ * Note: there is deliberately no "metatask faction guard" here. The picker is
+ * dual-purpose — its slug is a standard task's `primary_faction_slug` and a
+ * metatask's issuing `metatask_faction_slug` — and Unaffiliated (`na`) is a
+ * legitimate metatask issuer ("anyone"): the backend only requires a truthy
+ * slug and metatasks are faction-open, so anyone may apply an `na` metatask
+ * (#894).
  */
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { proposeTask } from "../../api/tasks";
-import { proposeMetatask } from "../../api/metaTasks";
+import { proposeTask, type TaskCreate } from "../../api/tasks";
+import { proposeMetatask, type MetataskProposal } from "../../api/metaTasks";
 import { getFactions, type FactionOut } from "../../api/factions";
 import { useAuth } from "../../auth/AuthContext";
 import { extractError } from "../../utils/errors";
@@ -25,6 +32,59 @@ import i18n from "../../i18n";
 import { UNAFFILIATED_FACTION_SLUG } from "../../utils/factions";
 
 export { UNAFFILIATED_FACTION_SLUG };
+
+/** Raw form fields the submission planner reads. */
+export interface ProposalFields {
+  isMetaTask: boolean;
+  title: string;
+  description: string;
+  pointValue: string;
+  metaBonusValue: string;
+  levelRequired: number | "";
+  factionSlug: string;
+}
+
+/** Which endpoint {@link handleSubmit} will hit, plus its ready-built body. */
+export type ProposalPlan =
+  | { kind: "metatask"; body: MetataskProposal }
+  | { kind: "standard"; body: TaskCreate };
+
+/**
+ * Pure decision core of the submit handler: pick the endpoint and build its
+ * body from the raw form fields. Extracted so the routing — especially the
+ * Unaffiliated-metatask path (#894) — is unit-testable in a repo with no
+ * DOM/renderHook.
+ *
+ * The faction picker is dual-purpose: its slug becomes a standard task's
+ * `primary_faction_slug` and a metatask's issuing `metatask_faction_slug`. Any
+ * slug routes through unchanged, including `na` (Unaffiliated = anyone); the
+ * backend only requires a truthy slug and metatasks are faction-open (#894).
+ */
+export function planProposalSubmission(fields: ProposalFields): ProposalPlan {
+  const level = fields.levelRequired === "" ? 0 : fields.levelRequired;
+  if (fields.isMetaTask) {
+    return {
+      kind: "metatask",
+      body: {
+        title: fields.title,
+        description: fields.description,
+        metatask_faction_slug: fields.factionSlug,
+        point_value: parseInt(fields.metaBonusValue) || 10,
+        level_required: level,
+      },
+    };
+  }
+  return {
+    kind: "standard",
+    body: {
+      title: fields.title,
+      description: fields.description || undefined,
+      point_value: parseInt(fields.pointValue) || 10,
+      level_required: level,
+      primary_faction_slug: fields.factionSlug || undefined,
+    },
+  };
+}
 
 export interface ProposeTaskState {
   // Gating (faction-agnostic guards live in the dispatcher)
@@ -100,34 +160,24 @@ export function useProposeTask(): ProposeTaskState {
     }
     // Backend authoritatively enforces metatask proposal gating (level 6 or
     // admin). If the viewer isn't eligible the 403 surfaces via extractError.
-    if (
-      isMetaTask &&
-      (!factionSlug ||
-        factionSlug === UNAFFILIATED_FACTION_SLUG ||
-        factionSlug === "ua")
-    ) {
-      setError(i18n.t("forms:proposeTask.errors.metaFactionRequired"));
-      return;
-    }
+    // No faction guard: any picked slug — including `na` (Unaffiliated =
+    // anyone) — is a valid metatask issuer (#894).
     setSubmitting(true);
     setError(null);
     try {
-      if (isMetaTask) {
-        await proposeMetatask({
-          title,
-          description,
-          metatask_faction_slug: factionSlug,
-          point_value: parseInt(metaBonusValue) || 10,
-          level_required: levelRequired === "" ? 0 : levelRequired,
-        });
+      const plan = planProposalSubmission({
+        isMetaTask,
+        title,
+        description,
+        pointValue,
+        metaBonusValue,
+        levelRequired,
+        factionSlug,
+      });
+      if (plan.kind === "metatask") {
+        await proposeMetatask(plan.body);
       } else {
-        await proposeTask({
-          title,
-          description: description || undefined,
-          point_value: parseInt(pointValue) || 10,
-          level_required: levelRequired === "" ? 0 : levelRequired,
-          primary_faction_slug: factionSlug || undefined,
-        });
+        await proposeTask(plan.body);
       }
       setSuccess(true);
     } catch (err) {
