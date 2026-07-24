@@ -36,7 +36,12 @@ import {
 } from "../archetypes/controls";
 import { MetataskSealStack } from "../MetataskSealStack";
 import type { EditPraxisState } from "../useEditPraxis";
-import { MobileStickyBar, SegToggle, type ComposerTab } from "./shared";
+import {
+  DefaultModePicker,
+  MobileStickyBar,
+  SegToggle,
+  type ComposerTab,
+} from "./shared";
 
 /* The chronicle palette, straight off the post-#838 token block. */
 const GOLD = factionCssVar("wow", "chronicle-gold"); // gilt frame + rules
@@ -276,6 +281,9 @@ export default function WowEditPraxis({ state }: { state: EditPraxisState }) {
 
       {tab === "write" ? (
         <>
+          {/* Mode — Solo · Collab · Duel, above the title (scrolls with content) */}
+          <DefaultModePicker state={state} />
+
           <Plate
             title={t("editPraxis.wow.titleLabel")}
             aside={<TitleCounter length={state.title.length} color={MUTED} />}
