@@ -56,7 +56,7 @@ describe('normalizeFeedItem', () => {
 
   it('resolves a taunt from the catalog, quotes it, and drops points', () => {
     // ADR-0031: payload is a structured reference; the catalog owns the words.
-    // wow/score_overtake has 2 variants; taunt_id 9 -> 9 % 2 = 1 -> the second.
+    // coven/score_overtake has 2 variants; taunt_id 9 -> 9 % 2 = 1 -> the second.
     const row = normalizeFeedItem(
       item('foe_taunt', {
         from_character_id: 9,
@@ -68,7 +68,7 @@ describe('normalizeFeedItem', () => {
       }),
     )!
     expect(row.action).toBe('taunts you')
-    expect(row.headline).toBe('Ada rose past Bo. The whole is greater than the parts.')
+    expect(row.headline).toBe('One small spell, quietly cast — and Ada slips ahead of Bo. No hard feelings, only glitter.')
     expect(row.headlineQuoted).toBe(true)
     expect(row.points).toBeNull()
   })
