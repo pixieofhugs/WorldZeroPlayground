@@ -115,6 +115,24 @@
       "duelDropsCoauthors": "Switching to a duel will remove your co-authors — your draft stays. Continue?",
       "dropTask": "Drop this task? Your draft will be lost."
     },
+    "seal": {
+      "pickerTitle": "Seal a metatask onto this praxis",
+      "pickerSubtitle": "Pin one extra condition to earn its bonus on completion.",
+      "filterAll": "All",
+      "filterAria": "Filter metatasks by issuing faction",
+      "searchPlaceholder": "Search metatasks…",
+      "searchAria": "Search metatasks",
+      "empty": "No metatasks match.",
+      "alreadySealed": "Sealed",
+      "addAria": "Seal “{{title}}”",
+      "pending": "Sealing the {{faction}} metatask · +{{points}} pts on completion",
+      "cancel": "Not now",
+      "confirm": "Add it on",
+      "removeTitle": "Peel off the metatask?",
+      "removeBody": "This removes the {{faction}} metatask and its +{{points}} pts bonus.",
+      "removeCancel": "Keep it",
+      "removeConfirm": "Peel it off"
+    },
     "invite": {
       "searchPlaceholder": "search player name or @handle",
       "searchPlaceholderDuel": "search an opponent to challenge",

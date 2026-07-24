@@ -7,7 +7,6 @@
 import { useRef } from "react";
 import type { CSSProperties, ReactNode } from "react";
 import { useTranslation } from "react-i18next";
-import LevelGem from "../../../components/ui/LevelGem";
 import { factionCssVar, factionName } from "../../../utils/factions";
 import type { PraxisType } from "../../../api/praxis";
 import MarkdownPreview from "../blocks/MarkdownPreview";
@@ -319,86 +318,9 @@ export function DropButton({
   );
 }
 
-export interface MetataskListSkin {
-  containerStyle?: CSSProperties;
-  rowStyle?: (selected: boolean) => CSSProperties;
-  titleColor?: string;
-  descColor?: string;
-  pointsActiveColor?: string;
-  pointsIdleColor?: string;
-}
-
-export function MetatasksList({
-  state,
-  skin,
-}: {
-  state: EditPraxisState;
-  skin: MetataskListSkin;
-}) {
-  const { t } = useTranslation("forms");
-  return (
-    <div style={skin.containerStyle}>
-      {state.metaTasks.map((mt) => {
-        const selected = state.appliedMetatasks.has(mt.id);
-        const busy = state.applyingMetatask === mt.id;
-        return (
-          <button
-            key={mt.id}
-            type="button"
-            disabled={busy}
-            onClick={() => void state.toggleMetatask(mt)}
-            style={{
-              display: "flex",
-              alignItems: "flex-start",
-              gap: "var(--space-md)",
-              width: "100%",
-              cursor: busy ? "wait" : "pointer",
-              textAlign: "left",
-              ...(skin.rowStyle ? skin.rowStyle(selected) : {}),
-            }}
-          >
-            <span
-              style={{
-                width: 16,
-                height: 16,
-                flexShrink: 0,
-                border: `2px solid ${skin.titleColor ?? "currentColor"}`,
-                background: selected
-                  ? (skin.titleColor ?? "currentColor")
-                  : "transparent",
-                marginTop: "var(--space-xs)",
-              }}
-              aria-hidden
-            />
-            <div style={{ flex: 1 }}>
-              <div style={{ fontSize: "var(--text-lg)", color: skin.titleColor }}>
-                {mt.title}
-              </div>
-              {mt.description && (
-                <div style={{ fontSize: "var(--text-base)", color: skin.descColor }}>
-                  {mt.description}
-                </div>
-              )}
-            </div>
-            <span
-              style={{
-                fontSize: "var(--text-lg)",
-                fontWeight: 700,
-                color: selected
-                  ? (skin.pointsActiveColor ?? "var(--color-success)")
-                  : (skin.pointsIdleColor ?? "inherit"),
-                whiteSpace: "nowrap",
-              }}
-            >
-              {t("metatasks.bonusPoints", { points: mt.point_value })}
-            </span>
-            {mt.level_required > 0 && <LevelGem level={mt.level_required} />}
-          </button>
-        );
-      })}
-    </div>
-  );
-}
+/* The editable seal stack (#933) lives in `../MetataskSealStack` — deliberately
+ * OUTSIDE this module so `controls.tsx` never imports MetaTaskSeal (and through
+ * it the faction registry). See that file's header for why the cycle matters. */
 
 /* -------------------------------------------------------------------------- */
 /* TitleField — the single 200-char title input.                              */

@@ -10,7 +10,6 @@
  */
 import type { CSSProperties, ReactNode } from "react";
 import { Trans, useTranslation } from "react-i18next";
-import { factionCssVar } from "../../../utils/factions";
 import { mediaUrl } from "../../../utils/media";
 import { type PraxisType } from "../../../api/praxis";
 import MediaArt from "../blocks/MediaArt";
@@ -22,11 +21,11 @@ import {
   DropButton,
   FilePicker,
   InviteSearch,
-  MetatasksList,
   ModePicker,
   PublishButton,
   TitleField,
 } from "./controls";
+import { MetataskSealStack } from "../MetataskSealStack";
 import { EphemeristsSigil, Foxing, LapisLastWord, toRoman } from "../../../components/cards/ephemeristsAtoms";
 import type { EditPraxisState } from "../useEditPraxis";
 
@@ -419,26 +418,12 @@ export default function EphemeristsEditPraxis({ state }: Props) {
         </div>
 
         {/* metatasks */}
-        {state.showMetatasks && (
+        {state.showSealStack && (
           <div style={{ marginBottom: "var(--space-2xl)" }}>
             <FieldLabel meta={t("editPraxis.ephemerists.metatasksMeta")}>
               {t("editPraxis.ephemerists.metatasksLabel")}
             </FieldLabel>
-            <MetatasksList
-              state={state}
-              skin={{
-                rowStyle: (selected) => ({
-                  padding: "var(--space-sm) var(--space-xs)",
-                  background: selected ? factionCssVar("ephemerists", "light") : "transparent",
-                  border: selected ? `1.5px solid ${GOLD}` : "1.5px solid transparent",
-                  marginBottom: "var(--space-xs)",
-                }),
-                titleColor: TEXT,
-                descColor: MUTED,
-                pointsActiveColor: RUBRIC,
-                pointsIdleColor: MUTED,
-              }}
-            />
+            <MetataskSealStack state={state} />
           </div>
         )}
 
