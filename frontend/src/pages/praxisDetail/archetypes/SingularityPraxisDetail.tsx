@@ -276,7 +276,7 @@ export default function SingularityPraxisDetail({ state }: { state: PraxisDetail
             >
               {praxis.title ?? t('detail.singularity.untitled')}
               <span
-                className="sg-blink"
+                className="sg-cursor"
                 aria-hidden
                 style={{
                   display: 'inline-block',

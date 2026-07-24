@@ -68,9 +68,9 @@ const TERMINAL_GROUND = {
 }
 
 /**
- * The blinking block cursor — solid phosphor, `step-end`, used once per surface.
- * `sg-cursor` exists so the reduced-motion guard in the stylesheet below can
- * reach it; an inline style cannot carry a media query.
+ * The blinking block cursor — solid phosphor, used once per surface.
+ * `sg-cursor` carries the reduced-motion-guarded blink from index.css; an
+ * inline style cannot hold a media query, so the animation lives on the class.
  */
 function BlockCursor() {
   return (
@@ -88,12 +88,6 @@ function BlockCursor() {
     />
   )
 }
-
-/** Blink + its reduced-motion opt-out. Duplicate declarations are idempotent. */
-const CURSOR_CSS =
-  '@keyframes blink { 50% { opacity: 0; } }' +
-  '.sg-cursor { animation: blink 1.05s step-end infinite; }' +
-  '@media (prefers-reduced-motion: reduce) { .sg-cursor { animation: none; } }'
 
 export default function SingularityDuelSealConfirm({
   duel,
@@ -222,8 +216,6 @@ export default function SingularityDuelSealConfirm({
               work, not a skin change. */}
         </div>
       </div>
-
-      <style>{CURSOR_CSS}</style>
     </div>
   )
 }

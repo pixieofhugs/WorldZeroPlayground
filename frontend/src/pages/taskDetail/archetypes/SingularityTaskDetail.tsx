@@ -231,8 +231,6 @@ export default function SingularityTaskDetail({
           "repeating-linear-gradient(to bottom, transparent, transparent 2px, rgba(74,222,128,0.022) 2px, rgba(74,222,128,0.022) 4px), radial-gradient(80% 60% at 50% 0%, rgba(37,99,235,0.10), transparent 70%)",
       }}
     >
-      <style>{`@keyframes sg-blink { 50% { opacity: 0; } }`}</style>
-
       <div style={{ maxWidth: 920, margin: "0 auto", padding: "0 var(--space-xl)" }}>
         {/* ── Breadcrumb ── */}
         <nav
@@ -313,6 +311,8 @@ export default function SingularityTaskDetail({
               >
                 {task.title}
                 <span
+                  aria-hidden
+                  className="sg-cursor"
                   style={{
                     display: "inline-block",
                     width: 14,
@@ -320,7 +320,6 @@ export default function SingularityTaskDetail({
                     background: GREEN,
                     marginLeft: "var(--space-sm)",
                     verticalAlign: -4,
-                    animation: "sg-blink 1s step-end infinite",
                   }}
                 />
               </h1>
