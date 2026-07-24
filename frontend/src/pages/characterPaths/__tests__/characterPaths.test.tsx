@@ -9,10 +9,11 @@
 import { renderToStaticMarkup } from 'react-dom/server'
 import { MemoryRouter } from 'react-router-dom'
 import type { ReactElement } from 'react'
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi, afterEach } from 'vitest'
 // Initialize the i18n catalog so shared copy keys resolve to English text.
 import '../../../i18n'
 import { buildCreatePayload, type CreateCharacterState } from '../useCreateCharacter'
+import { createObjectUrlSlot } from '../useAvatarPicker'
 import type { EditCharacterState } from '../useEditCharacter'
 import DefaultCreateCharacter from '../mobileArchetypes/DefaultCreateCharacter'
 import DefaultEditCharacter from '../mobileArchetypes/DefaultEditCharacter'
@@ -54,7 +55,8 @@ function createState(overrides: Partial<CreateCharacterState>): CreateCharacterS
     avatarPreview: null,
     avatarSource: null,
     setAvatarSource: () => {},
-    handleFile: () => {},
+    avatarError: '',
+    handleAvatarChange: () => {},
     handleAvatarConfirm: () => {},
     error: null,
     submitting: false,
@@ -81,6 +83,7 @@ function editState(overrides: Partial<EditCharacterState>): EditCharacterState {
     avatarFile: null,
     avatarSource: null,
     setAvatarSource: () => {},
+    avatarPreview: null,
     avatarError: '',
     handleAvatarChange: () => {},
     handleAvatarConfirm: () => {},
@@ -137,6 +140,52 @@ describe('DefaultEditCharacter mobile skin', () => {
   it('links out to a joined faction detail page', () => {
     const { html } = render(<DefaultEditCharacter state={editState({ character: character({ faction_slug: 'wow' }) })} />)
     expect(html).toContain('href="/factions/wow"')
+  })
+
+  it('shows a freshly cropped portrait (preview) over the persisted avatar (#985)', () => {
+    const state = editState({
+      avatarPreview: 'blob:preview-123',
+      character: character({ avatar_url: 'avatars/old.png' }),
+    })
+    const { html } = render(<DefaultEditCharacter state={state} />)
+    expect(html, 'the preview object URL is rendered').toContain('src="blob:preview-123"')
+    expect(html, 'the stale persisted avatar is not').not.toContain('old.png')
+  })
+})
+
+describe('useAvatarPicker preview lifecycle — createObjectUrlSlot (#985)', () => {
+  afterEach(() => {
+    vi.restoreAllMocks()
+  })
+
+  it('mints a preview URL on confirm and revokes the prior one when replaced', () => {
+    let counter = 0
+    const create = vi.fn(() => `blob:preview-${++counter}`)
+    const revoke = vi.fn()
+    // jsdom-less node has no object-URL API — provide the spies directly.
+    vi.stubGlobal('URL', { createObjectURL: create, revokeObjectURL: revoke })
+
+    const slot = createObjectUrlSlot()
+    const blob = new Blob(['x'])
+
+    // First confirm: a URL is minted, nothing to revoke yet.
+    const first = slot.set(blob)
+    expect(first).toBe('blob:preview-1')
+    expect(create).toHaveBeenCalledTimes(1)
+    expect(revoke).not.toHaveBeenCalled()
+
+    // Replacing the crop revokes the prior URL and mints a fresh one.
+    const second = slot.set(blob)
+    expect(second).toBe('blob:preview-2')
+    expect(create).toHaveBeenCalledTimes(2)
+    expect(revoke).toHaveBeenCalledTimes(1)
+    expect(revoke).toHaveBeenCalledWith('blob:preview-1')
+
+    // Unmount cleanup releases the outstanding URL exactly once.
+    slot.revoke()
+    expect(revoke).toHaveBeenCalledTimes(2)
+    expect(revoke).toHaveBeenLastCalledWith('blob:preview-2')
+    expect(slot.current()).toBeNull()
   })
 })
 

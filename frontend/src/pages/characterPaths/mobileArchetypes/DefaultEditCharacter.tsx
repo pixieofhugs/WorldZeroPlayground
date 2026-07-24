@@ -31,6 +31,7 @@ export default function DefaultEditCharacter({ state }: { state: EditCharacterSt
     setDisplayName,
     bio,
     setBio,
+    avatarPreview,
     avatarSource,
     setAvatarSource,
     avatarError,
@@ -50,6 +51,9 @@ export default function DefaultEditCharacter({ state }: { state: EditCharacterSt
   const initial = (displayName.trim()[0] || character.username[0] || '?').toUpperCase()
   const factionSlug = character.faction_slug
   const factionHref = factionSlug ? `/factions/${factionSlug}` : '/factions'
+  // A freshly cropped portrait (object URL) shows immediately, before Save (#985);
+  // otherwise fall back to the persisted avatar.
+  const portraitSrc = avatarPreview ?? (character.avatar_url ? mediaUrl(character.avatar_url) : null)
 
   return (
     <form data-skin="default" data-testid="mobile-edit-character" onSubmit={handleSubmit} style={page}>
@@ -66,8 +70,8 @@ export default function DefaultEditCharacter({ state }: { state: EditCharacterSt
       <div style={{ textAlign: 'center' }}>
         <button type="button" onClick={() => fileRef.current?.click()} style={ringBtn}>
           <span style={ringInner}>
-            {character.avatar_url ? (
-              <img src={mediaUrl(character.avatar_url)} alt={character.username} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            {portraitSrc ? (
+              <img src={portraitSrc} alt={character.username} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
             ) : (
               <span
                 style={{

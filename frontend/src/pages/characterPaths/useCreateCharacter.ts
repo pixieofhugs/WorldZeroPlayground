@@ -4,7 +4,7 @@ import { useAuth } from '../../auth/AuthContext'
 import { createCharacter, uploadCharacterAvatar, type CharacterCreate } from '../../api/characters'
 import { getInvitedFactions } from '../../api/me'
 import { extractError } from '../../utils/errors'
-import { blobToFile } from '../../components/imageEdit/imageEditHelpers'
+import { useAvatarPicker } from './useAvatarPicker'
 
 /**
  * Shared read/write model for Adaptive Character Creation (#273, ADR-0019),
@@ -16,7 +16,6 @@ import { blobToFile } from '../../components/imageEdit/imageEditHelpers'
 
 export const NAME_MAX = 22
 export const BIO_MAX = 160
-const MAX_AVATAR_SIZE = 10 * 1024 * 1024 // 10 MB
 
 /** Mirror of the server @handle derivation (services/character._derive_unique_username). */
 export function previewHandle(displayName: string): string {
@@ -52,7 +51,8 @@ export interface CreateCharacterState {
   avatarPreview: string | null
   avatarSource: File | null
   setAvatarSource: (file: File | null) => void
-  handleFile: (event: React.ChangeEvent<HTMLInputElement>) => void
+  avatarError: string
+  handleAvatarChange: (event: React.ChangeEvent<HTMLInputElement>) => void
   handleAvatarConfirm: (blob: Blob) => void
   error: string | null
   submitting: boolean
@@ -70,35 +70,23 @@ export function useCreateCharacter(): CreateCharacterState {
   const [bio, setBio] = useState('')
   const [factionSlug, setFactionSlug] = useState<string>('') // '' = born na
   const [invited, setInvited] = useState<string[]>([])
-  const [avatarFile, setAvatarFile] = useState<File | null>(null)
-  const [avatarPreview, setAvatarPreview] = useState<string | null>(null)
-  const [avatarSource, setAvatarSource] = useState<File | null>(null) // in the crop modal
   const [error, setError] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
+
+  // Avatar pick/crop/preview/validate — shared with edit (#985).
+  const {
+    avatarFile,
+    avatarSource,
+    setAvatarSource,
+    avatarPreview,
+    avatarError,
+    handleAvatarChange,
+    handleAvatarConfirm,
+  } = useAvatarPicker()
 
   useEffect(() => {
     void getInvitedFactions().then(setInvited).catch(() => setInvited([]))
   }, [])
-
-  const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0] ?? null
-    e.target.value = ''
-    if (!file) return
-    if (file.size > MAX_AVATAR_SIZE) {
-      setError('Portrait must be under 10 MB.')
-      return
-    }
-    setError(null)
-    // Crop/rotate to a square before it becomes the portrait (#514).
-    setAvatarSource(file)
-  }
-
-  const handleAvatarConfirm = (blob: Blob) => {
-    const file = blobToFile(blob, avatarSource?.name ?? 'avatar')
-    setAvatarFile(file)
-    setAvatarPreview(URL.createObjectURL(file))
-    setAvatarSource(null)
-  }
 
   const trimmedName = displayName.trim()
   const canSubmit = trimmedName.length > 0 && !submitting
@@ -133,7 +121,8 @@ export function useCreateCharacter(): CreateCharacterState {
     avatarPreview,
     avatarSource,
     setAvatarSource,
-    handleFile,
+    avatarError,
+    handleAvatarChange,
     handleAvatarConfirm,
     error,
     submitting,

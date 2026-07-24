@@ -29,7 +29,8 @@ export default function DefaultCreateCharacter({ state }: { state: CreateCharact
     avatarPreview,
     avatarSource,
     setAvatarSource,
-    handleFile,
+    avatarError,
+    handleAvatarChange,
     handleAvatarConfirm,
     error,
     submitting,
@@ -75,8 +76,9 @@ export default function DefaultCreateCharacter({ state }: { state: CreateCharact
         <div className="eyebrow" style={{ marginTop: 'var(--space-sm)', color: 'var(--color-text-tertiary)' }}>
           {t('createCharacter.mobile.step')}
         </div>
+        {avatarError && <p className="content-text" style={{ ...errorBox, marginTop: 'var(--space-sm)' }}>{avatarError}</p>}
       </div>
-      <input ref={fileRef} type="file" accept="image/*" onChange={handleFile} style={{ display: 'none' }} />
+      <input ref={fileRef} type="file" accept="image/*" onChange={handleAvatarChange} style={{ display: 'none' }} />
 
       {/* Name */}
       <div>
