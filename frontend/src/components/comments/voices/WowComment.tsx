@@ -80,6 +80,7 @@ export default function WowComment(props: CommentProps) {
             onSubmit={onSubmit}
             submitting={submitting}
             accent="var(--faction-wow-card-accent)"
+            onAccent="var(--faction-wow-on-accent)"
             bg="var(--faction-wow-chronicle-panel)"
             text="var(--faction-wow-card-text)"
             submitLabel={t('comments.wow.post')}
@@ -144,6 +145,7 @@ export default function WowComment(props: CommentProps) {
             <CommentEditor
               owner={owner}
               accent="var(--faction-wow-card-accent)"
+              onAccent="var(--faction-wow-on-accent)"
               bg="var(--faction-wow-chronicle-panel)"
               text="var(--faction-wow-card-text)"
             />
