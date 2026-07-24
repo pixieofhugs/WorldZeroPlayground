@@ -54,3 +54,10 @@ class DuelDetailOut(BaseModel):
     challenger: DuelSideOut
     opponent: DuelSideOut
     viewer_is_participant: bool
+    # Frozen outcome, populated once the duel is ``resolved`` at era close
+    # (ADR-0052); NULL on live duels. A resolved surface renders these instead of
+    # the live vote tally so the final standing never moves under the reader.
+    # NULL winner on a resolved duel = tie, or no-contest (never became votable).
+    winner_character_id: Optional[int] = None
+    challenger_final_points: Optional[int] = None
+    opponent_final_points: Optional[int] = None

@@ -46,6 +46,9 @@ function duel(over: Partial<DuelDetailOut>): DuelDetailOut {
     challenger: ME,
     opponent: FOE,
     viewer_is_participant: false,
+    winner_character_id: null,
+    challenger_final_points: null,
+    opponent_final_points: null,
     ...over,
   };
 }
@@ -119,6 +122,58 @@ describe("DuelCrossLink", () => {
   it("forfeited by me: you forfeited", () => {
     const t = text(duel({ forfeited_by_character_id: ME.character_id }));
     expect(t).toMatch(/You forfeited/i);
+  });
+
+  // ── #957 resolved: frozen final points + winner, never the live tally ───────
+
+  it("resolved: shows the FROZEN final points, not the live tally", () => {
+    const html = renderToStaticMarkup(
+      <MemoryRouter>
+        <DuelCrossLink
+          praxis={PRAXIS}
+          duel={duel({
+            status: "resolved",
+            winner_character_id: ME.character_id,
+            // Frozen values deliberately differ from the live points_from_votes
+            // (12 / 7) so a live-tally fallthrough would fail this test.
+            challenger_final_points: 9,
+            opponent_final_points: 4,
+          })}
+        />
+      </MemoryRouter>,
+    );
+    const t = html.replace(/<[^>]*>/g, "");
+    expect(t).toMatch(/9/);
+    expect(t).toMatch(/4/);
+    expect(t).not.toMatch(/12/); // the live tally must NOT appear
+    expect(t).toMatch(/You won/i);
+    expect(t).toMatch(/final/i);
+    expect(t).not.toMatch(/live/i); // never the floating live standing
+  });
+
+  it("resolved: a loss reads as such", () => {
+    const t = text(
+      duel({
+        status: "resolved",
+        winner_character_id: FOE.character_id,
+        challenger_final_points: 4,
+        opponent_final_points: 9,
+      }),
+    );
+    expect(t).toMatch(/You lost/i);
+  });
+
+  it("resolved no-contest: null winner + null final points shows no tally", () => {
+    const t = text(
+      duel({
+        status: "resolved",
+        winner_character_id: null,
+        challenger_final_points: null,
+        opponent_final_points: null,
+      }),
+    );
+    expect(t).toMatch(/No contest/i);
+    expect(t).not.toMatch(/ahead|behind|live/i);
   });
 
   // ── #718 rail content ──────────────────────────────────────────────────────

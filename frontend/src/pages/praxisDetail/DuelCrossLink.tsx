@@ -326,6 +326,65 @@ export default function DuelCrossLink({
     );
   }
 
+  // resolved: the era closed and the outcome was FROZEN (ADR-0052, #957). Render
+  // the frozen final points + winner, never the live vote tally — the standing
+  // must not keep floating under a reader after the contest is over (which is
+  // exactly what the old settled-fallthrough did). An `active` duel that never
+  // became votable resolves as a no-contest: null winner AND null final points,
+  // so there is no frozen pair to show.
+  if (duel.status === "resolved") {
+    const myFinal = isChallenger
+      ? duel.challenger_final_points
+      : duel.opponent_final_points;
+    const foeFinal = isChallenger
+      ? duel.opponent_final_points
+      : duel.challenger_final_points;
+    const hasTally = myFinal != null && foeFinal != null;
+    const finalStanding =
+      duel.winner_character_id == null
+        ? t("duelCrossLink.finalStanding.tied")
+        : duel.winner_character_id === me.character_id
+        ? t("duelCrossLink.finalStanding.won")
+        : t("duelCrossLink.finalStanding.lost");
+    return (
+      <Skin
+        {...frame}
+        headline={
+          <span>
+            <span style={{ fontWeight: 700 }}>{t("duelCrossLink.duel")}</span>{" "}
+            {t("duelCrossLink.vs")}{" "}
+            {foe.praxis_id != null ? (
+              <Link to={`/praxes/${foe.praxis_id}`} style={{ color: accent }}>
+                <OpponentBadge side={foe} />
+              </Link>
+            ) : (
+              <OpponentBadge side={foe} />
+            )}
+          </span>
+        }
+        tally={
+          /* The FROZEN score pair — a number the player cares about, so content
+             tier (.content-title), mirroring the settled tally but never moving. */
+          hasTally ? (
+            <span className="content-title" style={{ whiteSpace: "nowrap" }}>
+              <strong>{myFinal}</strong>
+              <span style={{ opacity: 0.6 }}> — </span>
+              <strong>{foeFinal}</strong>
+            </span>
+          ) : null
+        }
+        note={
+          <div className="content-text" style={{ marginTop: "var(--space-xs)", opacity: 0.85 }}>
+            {hasTally
+              ? t("duelCrossLink.final", { standing: finalStanding })
+              : t("duelCrossLink.finalNoContest")}
+          </div>
+        }
+        body={null}
+      />
+    );
+  }
+
   // settled: both sides cast. Live tally + cross-link, on top of the shared body.
   const diff = me.points_from_votes - foe.points_from_votes;
   const standing =
