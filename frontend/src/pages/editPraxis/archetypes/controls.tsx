@@ -78,8 +78,8 @@ export function InviteSearch({
                     ? t("editPraxis.invite.statusAccepted")
                     : t("editPraxis.invite.statusChallenged")}
                 </em>
-                {/* Only a pending challenge can be withdrawn (backend forbids
-                    cancelling an accepted duel). */}
+                {/* A still-pending challenge is withdrawn with the compact × —
+                    nothing is at stake yet. */}
                 {(state.duel == null || state.duel.status === "pending") && (
                   <button
                     type="button"
@@ -96,6 +96,30 @@ export function InviteSearch({
                     }}
                   >
                     ×
+                  </button>
+                )}
+                {/* Once accepted, either participant can still dissolve the duel
+                    neutrally (#956) — the backend recalculates both sides back to
+                    solo scoring, no forfeit. It's a heavier action than the ×, so
+                    it's a labelled button behind a confirm (state.dissolveDuel). */}
+                {state.duel?.status === "active" && (
+                  <button
+                    type="button"
+                    onClick={() => void state.dissolveDuel()}
+                    aria-label={t("editPraxis.invite.dissolveDuelAria")}
+                    style={{
+                      background: "transparent",
+                      border: "1px solid currentColor",
+                      color: "inherit",
+                      cursor: "pointer",
+                      fontFamily: skin.fontFamily,
+                      fontSize: "var(--text-sm)",
+                      lineHeight: 1,
+                      padding: "var(--space-xs) var(--space-sm)",
+                      marginLeft: "var(--space-xs)",
+                    }}
+                  >
+                    {t("editPraxis.invite.dissolveDuelLabel")}
                   </button>
                 )}
               </span>

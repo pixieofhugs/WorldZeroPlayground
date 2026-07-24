@@ -8,7 +8,7 @@ import { useMyActiveTasks } from "../../hooks/useMyActiveTasks";
 import { useGameConfig } from "../../hooks/useGameConfig";
 import { useAuth } from "../../auth/AuthContext";
 import { deletePraxis, leavePraxis } from "../../api/praxis";
-import { respondToChallenge } from "../../api/duel";
+import { cancelChallenge, respondToChallenge } from "../../api/duel";
 import { factionColor } from "../../utils/factions";
 import { relativeTime } from "../../utils/dates";
 import { extractError } from "../../utils/errors";
@@ -53,6 +53,13 @@ export default function FeedCardDuelChallenge({ item }: Props) {
   // the modal instead, so we need our own channel for drop/retry failures.
   const [dropError, setDropError] = useState("");
   const [busy, setBusy] = useState(false);
+  // Withdraw is the OPPONENT's mirror of the challenger's composer-chip × (#956):
+  // either participant may neutrally call off a still-pending challenge, not only
+  // Decline it. Hits the same /duels/{id}/cancel endpoint. Local terminal state
+  // so the card settles to a "withdrawn" note once acted on.
+  const [withdrawn, setWithdrawn] = useState(false);
+  const [withdrawing, setWithdrawing] = useState(false);
+  const [withdrawError, setWithdrawError] = useState("");
 
   const landOnPraxis = (praxisId: number | null) => {
     // Accepting creates the opponent's fresh praxis server-side — land the
@@ -80,6 +87,22 @@ export default function FeedCardDuelChallenge({ item }: Props) {
   };
 
   const handleDecline = () => decline();
+
+  const handleWithdraw = async () => {
+    if (withdrawing) return;
+    setWithdrawing(true);
+    setWithdrawError("");
+    try {
+      await cancelChallenge(duel_id);
+      setWithdrawn(true);
+    } catch (err) {
+      setWithdrawError(
+        extractError(err, i18n.t("feed:duelChallenge.withdrawError")),
+      );
+    } finally {
+      setWithdrawing(false);
+    }
+  };
 
   // Drop the chosen in-progress praxis to free a slot, then retry the accept.
   //   authored solo  → deletePraxis  (removes the praxis)
@@ -220,8 +243,8 @@ export default function FeedCardDuelChallenge({ item }: Props) {
           <span style={{ fontSize: 12 }}>&#x2694;</span>
         </div>
 
-        {/* Accept/Decline buttons */}
-        {isPending && (
+        {/* Accept / Decline / Withdraw buttons */}
+        {isPending && !withdrawn && (
           <div
             style={{
               marginTop: "var(--space-md)",
@@ -234,7 +257,7 @@ export default function FeedCardDuelChallenge({ item }: Props) {
           >
             <button
               onClick={handleAccept}
-              disabled={loading || busy}
+              disabled={loading || busy || withdrawing}
               style={{
                 fontFamily: "'Courier Prime', monospace",
                 fontSize: "var(--text-sm)",
@@ -252,7 +275,7 @@ export default function FeedCardDuelChallenge({ item }: Props) {
             </button>
             <button
               onClick={handleDecline}
-              disabled={loading || busy}
+              disabled={loading || busy || withdrawing}
               style={{
                 fontFamily: "'Courier Prime', monospace",
                 fontSize: "var(--text-sm)",
@@ -268,6 +291,26 @@ export default function FeedCardDuelChallenge({ item }: Props) {
             >
               {i18n.t("feed:duelChallenge.decline")}
             </button>
+            {/* Either participant can neutrally call off a pending challenge —
+                the opponent's mirror of the challenger's × (#956). */}
+            <button
+              onClick={handleWithdraw}
+              disabled={loading || busy || withdrawing}
+              style={{
+                fontFamily: "'Courier Prime', monospace",
+                fontSize: "var(--text-sm)",
+                fontWeight: 700,
+                textTransform: "uppercase",
+                letterSpacing: "0.1em",
+                background: "transparent",
+                color: "var(--color-text-tertiary)",
+                border: "1px solid var(--color-border)",
+                padding: "var(--space-xs) var(--space-lg)",
+                cursor: loading || busy || withdrawing ? "not-allowed" : "pointer",
+              }}
+            >
+              {i18n.t("feed:duelChallenge.withdraw")}
+            </button>
             {error && !showDropModal && (
               <span
                 className="eyebrow"
@@ -276,6 +319,25 @@ export default function FeedCardDuelChallenge({ item }: Props) {
                 {error}
               </span>
             )}
+            {withdrawError && (
+              <span
+                className="eyebrow"
+                style={{ color: "var(--color-danger)" }}
+              >
+                {withdrawError}
+              </span>
+            )}
+          </div>
+        )}
+
+        {withdrawn && (
+          <div style={{ marginTop: "var(--space-sm)", marginLeft: "var(--space-3xl)" }}>
+            <span
+              className="eyebrow"
+              style={{ color: "var(--color-text-tertiary)" }}
+            >
+              {i18n.t("feed:duelChallenge.withdrawn")}
+            </span>
           </div>
         )}
 

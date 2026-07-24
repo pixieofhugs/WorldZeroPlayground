@@ -113,6 +113,7 @@
       "leaveDuel": "Switching mode will cancel your duel challenge. Continue?",
       "soloDropsCoauthors": "Switching to solo will remove your co-authors — your draft stays. Continue?",
       "duelDropsCoauthors": "Switching to a duel will remove your co-authors — your draft stays. Continue?",
+      "dissolveDuel": "Dissolve this duel? It ends for both of you and each side scores as an ordinary praxis — no forfeit penalty.",
       "dropTask": "Drop this task? Your draft will be lost."
     },
     "seal": {
@@ -144,6 +145,8 @@
       "statusPending": "pending",
       "statusSubmitted": "submitted",
       "cancelChallengeAria": "cancel challenge",
+      "dissolveDuelLabel": "Dissolve duel",
+      "dissolveDuelAria": "dissolve the duel",
       "rescindInviteAria": "rescind invite to {{name}}"
     },
     "collab": {
