@@ -237,15 +237,15 @@ export default function UaComposer({ state }: { state: EditPraxisState }) {
             </Field>
           )}
 
-          <Field label={t('editPraxis.ua.filesLabel')}>
-            <MediaGrid state={state} />
-          </Field>
-
           {state.showSealStack && (
             <Field label={t('editPraxis.ua.metatasksLabel')}>
               <MetataskSealStack state={state} />
             </Field>
           )}
+
+          <Field label={t('editPraxis.ua.filesLabel')}>
+            <MediaGrid state={state} />
+          </Field>
         </>
       ) : (
         <Field label={t('editPraxis.ua.previewLabel')}>

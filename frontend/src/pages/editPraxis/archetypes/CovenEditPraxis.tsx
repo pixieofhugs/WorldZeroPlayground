@@ -494,6 +494,22 @@ export default function CovenEditPraxis({ state }: Props) {
                 </div>
               )}
 
+            {/* Metatasks */}
+            {state.showSealStack && (
+              <div
+                style={{
+                  ...notepadPanel,
+                  marginBottom: "var(--space-lg)",
+                  borderStyle: "dashed",
+                }}
+              >
+                <span style={{ ...eyebrowStyle, marginBottom: "var(--space-sm)" }}>
+                  {t("editPraxis.coven.metatasksLabel")}
+                </span>
+                <MetataskSealStack state={state} />
+              </div>
+            )}
+
             {/* Title — notepad panel */}
             <div style={{ ...notepadPanel, marginBottom: "var(--space-lg)" }}>
               <span style={{ ...eyebrowStyle, marginBottom: "var(--space-sm)" }}>
@@ -662,22 +678,6 @@ export default function CovenEditPraxis({ state }: Props) {
                 />
               </div>
             </div>
-
-            {/* Metatasks */}
-            {state.showSealStack && (
-              <div
-                style={{
-                  ...notepadPanel,
-                  marginBottom: "var(--space-lg)",
-                  borderStyle: "dashed",
-                }}
-              >
-                <span style={{ ...eyebrowStyle, marginBottom: "var(--space-sm)" }}>
-                  {t("editPraxis.coven.metatasksLabel")}
-                </span>
-                <MetataskSealStack state={state} />
-              </div>
-            )}
 
             <ErrorBanner message={state.error} />
 

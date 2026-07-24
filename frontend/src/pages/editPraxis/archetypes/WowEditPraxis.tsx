@@ -403,6 +403,18 @@ export default function WowEditPraxis({ state }: Props) {
               </div>
             )}
 
+            {/* ── deeds of merit ── */}
+            {state.showSealStack && (
+              <div style={plate}>
+                <span
+                  style={{ ...eyebrowStyle, marginBottom: "var(--space-md)" }}
+                >
+                  {t("editPraxis.wow.metatasksLabel")}
+                </span>
+                <MetataskSealStack state={state} />
+              </div>
+            )}
+
             {/* ── title of thy chronicle ── */}
             <div style={plate}>
               <div
@@ -611,18 +623,6 @@ export default function WowEditPraxis({ state }: Props) {
                 })}
               </div>
             </div>
-
-            {/* ── deeds of merit ── */}
-            {state.showSealStack && (
-              <div style={plate}>
-                <span
-                  style={{ ...eyebrowStyle, marginBottom: "var(--space-md)" }}
-                >
-                  {t("editPraxis.wow.metatasksLabel")}
-                </span>
-                <MetataskSealStack state={state} />
-              </div>
-            )}
 
             <ErrorBanner message={state.error} />
 

@@ -281,6 +281,16 @@ export default function EphemeristsEditPraxis({ state }: Props) {
           </div>
         )}
 
+        {/* metatasks */}
+        {state.showSealStack && (
+          <div style={{ marginBottom: "var(--space-2xl)" }}>
+            <FieldLabel meta={t("editPraxis.ephemerists.metatasksMeta")}>
+              {t("editPraxis.ephemerists.metatasksLabel")}
+            </FieldLabel>
+            <MetataskSealStack state={state} />
+          </div>
+        )}
+
         {/* the finding (headline) */}
         <div style={{ marginBottom: "var(--space-xl)" }}>
           <FieldLabel
@@ -416,16 +426,6 @@ export default function EphemeristsEditPraxis({ state }: Props) {
             }}
           />
         </div>
-
-        {/* metatasks */}
-        {state.showSealStack && (
-          <div style={{ marginBottom: "var(--space-2xl)" }}>
-            <FieldLabel meta={t("editPraxis.ephemerists.metatasksMeta")}>
-              {t("editPraxis.ephemerists.metatasksLabel")}
-            </FieldLabel>
-            <MetataskSealStack state={state} />
-          </div>
-        )}
 
         <ErrorBanner message={state.error} />
 

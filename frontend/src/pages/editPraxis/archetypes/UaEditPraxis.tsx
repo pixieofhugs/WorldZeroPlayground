@@ -322,6 +322,14 @@ export default function UaEditPraxis({ state }: Props) {
           </Plate>
         )}
 
+        {/* Metatasks */}
+        {state.showSealStack && (
+          <Plate>
+            <FieldLabel>{t("editPraxis.ua.metatasksLabel")}</FieldLabel>
+            <MetataskSealStack state={state} />
+          </Plate>
+        )}
+
         {/* Title */}
         <Plate>
           <FieldLabel>{t("editPraxis.ua.titleLabel")}</FieldLabel>
@@ -477,14 +485,6 @@ export default function UaEditPraxis({ state }: Props) {
             />
           </div>
         </div>
-
-        {/* Metatasks */}
-        {state.showSealStack && (
-          <Plate>
-            <FieldLabel>{t("editPraxis.ua.metatasksLabel")}</FieldLabel>
-            <MetataskSealStack state={state} />
-          </Plate>
-        )}
 
         <ErrorBanner message={state.error} />
 

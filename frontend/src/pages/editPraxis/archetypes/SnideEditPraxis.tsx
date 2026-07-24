@@ -311,6 +311,26 @@ export default function SnideEditPraxis({ state }: Props) {
             </div>
           )}
 
+        {/* Metatasks */}
+        {state.showSealStack && (
+          <div
+            style={{
+              marginBottom: "var(--space-xl)",
+              padding: "var(--space-md) var(--space-lg)",
+              border: `2px dashed ${accentDeep}`,
+              background: lightBg,
+            }}
+          >
+            <span
+              className="eyebrow"
+              style={{ display: "block", marginBottom: "var(--space-sm)", color: accentDeep }}
+            >
+              {t("editPraxis.snide.metatasksLabel")}
+            </span>
+            <MetataskSealStack state={state} />
+          </div>
+        )}
+
         {/* Title — ransom note + editable input */}
         <div
           style={{
@@ -550,26 +570,6 @@ export default function SnideEditPraxis({ state }: Props) {
             }}
           />
         </div>
-
-        {/* Metatasks */}
-        {state.showSealStack && (
-          <div
-            style={{
-              marginBottom: "var(--space-xl)",
-              padding: "var(--space-md) var(--space-lg)",
-              border: `2px dashed ${accentDeep}`,
-              background: lightBg,
-            }}
-          >
-            <span
-              className="eyebrow"
-              style={{ display: "block", marginBottom: "var(--space-sm)", color: accentDeep }}
-            >
-              {t("editPraxis.snide.metatasksLabel")}
-            </span>
-            <MetataskSealStack state={state} />
-          </div>
-        )}
 
         <ErrorBanner message={state.error} />
 

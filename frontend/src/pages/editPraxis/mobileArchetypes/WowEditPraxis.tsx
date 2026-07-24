@@ -372,18 +372,18 @@ export default function WowEditPraxis({ state }: { state: EditPraxisState }) {
             </Plate>
           )}
 
+          {state.showSealStack && (
+            <Plate title={t("editPraxis.wow.metatasksLabel")}>
+              <MetataskSealStack state={state} />
+            </Plate>
+          )}
+
           <Plate
             title={t("editPraxis.wow.filesLabel")}
             aside={<Marginalia>{t("editPraxis.wow.fileHelper")}</Marginalia>}
           >
             <RelicGrid state={state} />
           </Plate>
-
-          {state.showSealStack && (
-            <Plate title={t("editPraxis.wow.metatasksLabel")}>
-              <MetataskSealStack state={state} />
-            </Plate>
-          )}
         </>
       ) : (
         <Plate title={t("editPraxis.wow.previewLabel")}>
