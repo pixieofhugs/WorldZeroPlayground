@@ -1769,10 +1769,10 @@
    at the 1200 content cap. The two ray alphas are tokens because they differ
    per theme; the rule itself never branches on the theme. */
 .em-broadsheet {
-  position: fixed;
-  inset: 0;
-  z-index: 0;
-  pointer-events: none;
+  /* Painted on the detail COLUMN, not the viewport — the site background shows
+     around it (owner QA on #1055, applied to every task-detail skin). The
+     archetype supplies position / z-index / radius / padding; this rule owns
+     only the newsprint and its rising-sun rays. */
   background-color: var(--everymen-paper-deep);
   background-image:
     repeating-conic-gradient(from 200deg at 50% 118%, var(--faction-everymen-sheet-ray) 0 2.6deg, transparent 2.6deg 6.4deg),

@@ -912,15 +912,21 @@ export default function EverymenTaskDetail({
 
   return (
     <div className="py-8" style={{ position: "relative", color: INK }}>
-      {/* The sheet itself — newsprint under a rising sun (index.css). */}
-      <div className="em-broadsheet" aria-hidden />
-
+      {/* The sheet itself — newsprint under a rising sun (index.css). It paints
+          the detail COLUMN, not the viewport: the owner's rule for this surface
+          is that the site background still shows around the component (QA on
+          #1055, applied to every skin). Was `position: fixed; inset: 0`. */}
       <div
+        className="em-broadsheet"
         style={{
           position: "relative",
           zIndex: 1,
           maxWidth: 1200,
           margin: "0 auto",
+          borderRadius: 18,
+          padding: desktop ? "var(--space-2xl)" : "var(--space-lg)",
+          overflow: "hidden",
+          boxSizing: "border-box",
         }}
       >
         <div
