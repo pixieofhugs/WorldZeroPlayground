@@ -23,6 +23,13 @@ class PraxisMemberOut(BaseModel):
     character_display_name: str  # populated by build_praxis_out
     has_submitted: bool
     joined_at: datetime
+    # When the VIEWER last nudged this member about this praxis (#1083), and
+    # NULL once that 24h window lapses — so "there is a timestamp here" and "you
+    # may not nudge again yet" are one fact, resolved server-side by
+    # `services.nudge.NUDGE_COOLDOWN`. The roster button reads its disabled
+    # state from this rather than from local React state, which is what made the
+    # design's version dishonest: a reload un-nudged it.
+    nudged_at: Optional[datetime] = None
 
     model_config = {"from_attributes": True}
 

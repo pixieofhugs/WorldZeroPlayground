@@ -27,6 +27,7 @@ from models.comment import Comment, CommentMention
 from models.era import Era
 from models.faction_defection_history import FactionDefectionHistory
 from models.invitation_letter import InvitationLetter
+from models.nudge import Nudge
 from models.relationship import Relationship, RelationshipStatus, RelationshipType
 from models.duel import Duel, DuelStatus
 from models.praxis import ModerationStatus, Praxis, PraxisInvite, PraxisInviteStatus, PraxisMember, PraxisStatus, PraxisType
@@ -81,6 +82,7 @@ FEED_ITEM_TYPE_FOE_COMPLETION = "foe_completion"
 FEED_ITEM_TYPE_COMMENT_MENTION = "comment_mention"
 FEED_ITEM_TYPE_COLLABORATOR_SUBMITTED = "collaborator_submitted"
 FEED_ITEM_TYPE_AWAITING_SUBMISSION = "awaiting_submission"
+FEED_ITEM_TYPE_NUDGE = "nudge"
 
 # --- Filter tabs ------------------------------------------------------------
 FILTER_ALL = "all"
@@ -745,6 +747,68 @@ def _awaiting_submission_item(row: Any) -> ActivityFeedItemDC:
     )
 
 
+def _nudge_query(ctx: FeedContext) -> Select:
+    """Nudges the viewer has RECEIVED (#1083).
+
+    The nudge's whole delivery mechanism. It is not a message: the ``Message``
+    model has no player-facing reader, only the admin moderation tab, so a nudge
+    posted there would arrive nowhere. The feed is where this game already puts
+    "someone did a thing involving you", and this row lands beside the
+    ``awaiting_submission`` row the recipient already has for the same praxis.
+
+    ``Nudge.praxis_id`` is always the praxis the RECIPIENT owes, so the join to
+    ``Praxis``/``Task`` gives the card a title and a link the recipient can
+    actually open — their own editor.
+    """
+    sender = aliased(Character)
+    query = (
+        select(
+            Nudge.id,
+            Nudge.created_at,
+            Nudge.praxis_id,
+            Nudge.from_character_id,
+            Praxis.type.label("praxis_type"),
+            Task.title.label("task_title"),
+            Task.point_value.label("task_point_value"),
+            Task.primary_faction_slug.label("task_faction_slug"),
+            sender.display_name.label("from_display_name"),
+            sender.faction_slug.label("from_faction_slug"),
+            sender.avatar_url.label("from_avatar_url"),
+        )
+        .join(Praxis, Nudge.praxis_id == Praxis.id)
+        .join(Task, Praxis.task_id == Task.id)
+        .join(sender, Nudge.from_character_id == sender.id)
+        .where(Nudge.to_character_id == ctx.character_id)
+    )
+    if ctx.before is not None:
+        query = query.where(Nudge.created_at < ctx.before)
+    return query.order_by(Nudge.created_at.desc()).limit(SUB_QUERY_LIMIT)
+
+
+def _nudge_item(row: Any) -> ActivityFeedItemDC:
+    return ActivityFeedItemDC(
+        type=FEED_ITEM_TYPE_NUDGE,
+        timestamp=row.created_at,
+        actor_display_name=row.from_display_name,
+        actor_faction_slug=row.from_faction_slug,
+        actor_avatar_url=row.from_avatar_url,
+        payload={
+            "nudge_id": row.id,
+            "praxis_id": row.praxis_id,
+            # A duel side is `type='solo'` + a Duel row (ADR-0011), so this
+            # reads 'solo' for a duel and the card badges off it the same way
+            # `awaiting_submission` does — deliberately not re-deriving the duel
+            # here, where the row it sits beside is the one that carries it.
+            "praxis_type": row.praxis_type.value,
+            "from_character_id": row.from_character_id,
+            "from_name": row.from_display_name,
+            "task_title": row.task_title,
+            "task_point_value": row.task_point_value,
+            "task_faction_slug": row.task_faction_slug,
+        },
+    )
+
+
 # ---------------------------------------------------------------------------
 # The registry — one entry per feed type. Adding a type is one line here.
 # ---------------------------------------------------------------------------
@@ -822,6 +886,19 @@ FEED_SOURCES: tuple[FeedSource, ...] = (
         needs=frozenset(),
         query=_awaiting_submission_query,
         to_item=_awaiting_submission_item,
+    ),
+    FeedSource(
+        # A nudge received (#1083). ALL + YOUR_STUFF, deliberately NOT REQUESTS:
+        # the obligation it refers to is already a `requests` row
+        # (`awaiting_submission`) for the same praxis, so counting the poke there
+        # too would badge one outstanding action twice — and a bell that
+        # increments because someone pressed a button at you is the wrong shape
+        # for a tab whose other members all want a decision.
+        item_type=FEED_ITEM_TYPE_NUDGE,
+        filters=frozenset({FILTER_ALL, FILTER_YOUR_STUFF}),
+        needs=frozenset(),
+        query=_nudge_query,
+        to_item=_nudge_item,
     ),
     FeedSource(
         item_type=FEED_ITEM_TYPE_INVITATION_LETTER,
