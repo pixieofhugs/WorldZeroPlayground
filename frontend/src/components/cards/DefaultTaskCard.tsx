@@ -18,10 +18,9 @@ import { useFormFactor } from "../../hooks/useFormFactor";
  * the tick beside the in-progress count. Lora italic carries the title, Courier
  * Prime everything else.
  *
- * ONE RESPONSIVE COMPONENT (ADR-0056, a reversible experiment): `useFormFactor`
- * picks the size set, not a different card. The dormant
- * `mobileArchetypes/cards/DefaultMobileTaskCard` is still in the tree for the
- * revert.
+ * ONE RESPONSIVE COMPONENT (ADR-0056): `useFormFactor` picks the size set, not
+ * a different card. There is no mobile twin: ADR-0056 was accepted and the
+ * `mobileTaskCard` surface retired, so this file serves both form factors.
  *
  * All colour via `--faction-default-*` tokens — no hardcoded hex (CLAUDE.md);
  * light/dark flips through the `[data-theme="dark"]` cascade, never a ternary.

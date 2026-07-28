@@ -22,7 +22,6 @@ import UaHome from '../pages/fieldDesk/mobileArchetypes/UaHome'
 import UaMobileEditPraxis from '../pages/editPraxis/mobileArchetypes/UaComposer'
 import UaMobilePraxisCard from '../components/praxisCard/mobile/UaMobilePraxisCard'
 import UaMobilePraxisDetail from '../pages/praxisDetail/mobileArchetypes/UaPraxisDetail'
-import UaMobileTaskCard from '../pages/tasks/mobileArchetypes/cards/UaMobileTaskCard'
 import UaMobileTaskDetail from '../pages/taskDetail/mobileArchetypes/UaTaskDetail'
 import UaPraxisDetail from '../pages/praxisDetail/archetypes/UaPraxisDetail'
 import UaProfileBody from '../pages/characterProfile/archetypes/UaProfileBody'
@@ -57,7 +56,6 @@ export const UA_MANIFEST: FactionManifest = {
   factionHero: () => UaFactionHero,
   factionBody: () => UaFactionBody,
   profileBody: () => UaProfileBody,
-  mobileTaskCard: () => UaMobileTaskCard,
   mobilePraxisCard: () => UaMobilePraxisCard,
   mobileTaskDetail: () => UaMobileTaskDetail,
   mobilePraxisDetail: () => UaMobilePraxisDetail,

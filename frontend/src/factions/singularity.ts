@@ -26,7 +26,6 @@ import SingularityMobileDuelSealConfirm from '../components/duel/SingularityMobi
 import SingularityMobileEditPraxis from '../pages/editPraxis/mobileArchetypes/SingularityComposer'
 import SingularityMobilePraxisCard from '../components/praxisCard/mobile/SingularityMobilePraxisCard'
 import SingularityMobilePraxisDetail from '../pages/praxisDetail/mobileArchetypes/SingularityPraxisDetail'
-import SingularityMobileTaskCard from '../pages/tasks/mobileArchetypes/cards/SingularityMobileTaskCard'
 import SingularityMobileTaskDetail from '../pages/taskDetail/mobileArchetypes/SingularityTaskDetail'
 import SingularityPraxisDetail from '../pages/praxisDetail/archetypes/SingularityPraxisDetail'
 import SingularityProfileBody from '../pages/characterProfile/archetypes/SingularityProfileBody'
@@ -63,7 +62,6 @@ export const SINGULARITY_MANIFEST: FactionManifest = {
   profileBody: () => SingularityProfileBody,
   duelSeal: () => SingularityDuelSealConfirm,
   duelRail: () => SingularityDuelRail,
-  mobileTaskCard: () => SingularityMobileTaskCard,
   mobilePraxisCard: () => SingularityMobilePraxisCard,
   mobileTaskDetail: () => SingularityMobileTaskDetail,
   mobilePraxisDetail: () => SingularityMobilePraxisDetail,
