@@ -83,9 +83,9 @@ function Balloon({ fill, width, height }: { fill: string; width: number; height:
         strokeWidth={1.2}
       />
       <ellipse cx={10} cy={9.5} rx={2.4} ry={3.3} fill="rgba(255,255,255,0.5)" />
-      <circle cx={12} cy={15.5} r={4} fill="#fff" stroke="var(--faction-wow-balloon-eye-ring)" strokeWidth={1} />
+      <circle cx={12} cy={15.5} r={4} fill="var(--faction-wow-balloon-eye-white)" stroke="var(--faction-wow-balloon-eye-ring)" strokeWidth={1} />
       <circle className="wow-balloon-eye" cx={12} cy={16.5} r={1.8} fill="var(--faction-wow-balloon-eye)" />
-      <circle cx={22} cy={15.5} r={4} fill="#fff" stroke="var(--faction-wow-balloon-eye-ring)" strokeWidth={1} />
+      <circle cx={22} cy={15.5} r={4} fill="var(--faction-wow-balloon-eye-white)" stroke="var(--faction-wow-balloon-eye-ring)" strokeWidth={1} />
       <circle className="wow-balloon-eye" cx={22} cy={16.5} r={1.8} fill="var(--faction-wow-balloon-eye)" />
       <path
         d="M13.5,23.5 q3.5,3.5 7,0"
