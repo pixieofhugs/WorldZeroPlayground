@@ -16,7 +16,7 @@ describe("FactionSigil dispatcher (#659)", () => {
     // One ensō (#908): the vendored brush drawing, painted through a CSS mask.
     // The two-arc approximation on a 200x200 viewBox is gone, and so is the
     // 100x120 gilt shield it replaced.
-    expect(html).toContain("/factionMarks/enso.svg");
+    expect(html).toContain("/factionMarks/enso.webp");
     expect(html).not.toContain('viewBox="0 0 200 200"');
   });
 
@@ -24,7 +24,7 @@ describe("FactionSigil dispatcher (#659)", () => {
     const html = renderToStaticMarkup(<FactionSigil slug="ua" />);
     // The file supplies the ALPHA only; nothing is inlined and no <path> for
     // the mark reaches the markup.
-    expect(html).toMatch(/mask-image:url\(\/factionMarks\/enso\.svg\)/);
+    expect(html).toMatch(/mask-image:url\(\/factionMarks\/enso\.webp\)/);
     // Letterboxed and centred, so non-square callers do not stretch the circle.
     expect(html).toContain("mask-size:contain");
     expect(html).toContain("mask-position:center");
