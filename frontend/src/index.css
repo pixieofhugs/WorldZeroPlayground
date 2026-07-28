@@ -3512,3 +3512,86 @@
     animation: cvn-flicker 5.5s ease-in-out infinite;
   }
 }
+
+/* ══ WOW — TASK DETAIL, the parchment field (#1037) ══
+   WOW's first DESKTOP task-detail skin: gold-and-plum parchment under a fine dot
+   texture, bunting across the head, a struck points plaque, wavy gold→plum rules
+   and a bunch of googly balloons. Until this slice a WOW task rendered the na
+   dossier on desktop — one of #951's four bullets.
+
+   ALMOST NOTHING IS NEW. #1023's quest decree already minted the ribbon, the
+   plaque shadow, the blade, the balloon ramp and the eye parts, and this page
+   reads them verbatim rather than growing a parallel set. FIVE roles had no
+   name, and they are the whole block.
+
+   THREE PAIRINGS FROM THE DESIGN DID NOT SURVIVE MEASUREMENT, all against the
+   new page field (which is DARKER than the cream card, so every light-mode
+   claim measured on the card had to be recomputed):
+     • The design sets label text in its `muted` grey. On the field that is
+       --faction-wow-card-muted at 4.20:1 — under AA. Labels on the field take
+       --faction-wow-accent-deep instead (4.70:1 light, 9.49:1 dark), the same
+       walked-down olive-gold #860 landed on for the cards.
+     • The design's third text tier (`dim`, #a79668 light) is ~2.4:1 on its own
+       page and is not shipped at all; its lines fold into card-muted on a panel
+       and accent-deep on the field.
+     • The design paints the CTA in `t.plum`, which in dark is the LIFTED
+       #c79be0 under cream text. That is plum-as-ink used as a fill. The CTA and
+       the ×mult chip take the theme-invariant --faction-wow-plum-surface
+       (5.16:1 in both themes) — note 1 by that declaration already settled it.
+   Measured on the field: plum ink 5.11:1 light / 8.54:1 dark; body ink 12.38:1
+   light / 15.83:1 dark. Inside the plate: card-muted 4.52:1 light / 6.43:1 dark,
+   accent-deep 5.06:1 light. */
+:root {
+  /* The page ground. NOT --faction-wow-ground-from (the WowBackdrop wallpaper):
+     that is a full-page wash a WOW *viewer* carries between pages, while this is
+     the sheet this one page is printed on, and it is a shade deeper so the cream
+     cards read as laid ON something. */
+  --faction-wow-detail-field: #efe6ce;
+  /* The fine dot texture, 1px on a 5px grid. Ink-on-parchment in light, gilt
+     specks in dark — the only way a dot stays visible on both grounds. */
+  --faction-wow-detail-dot: rgba(74, 56, 10, 0.05);
+  /* The plate's inner boxes: a shade off the cream card so the two nested
+     parchments separate without a second border. */
+  --faction-wow-detail-inset: #f7eed8;
+  /* The edge of a plum FILL. Theme-invariant, because the surface it edges
+     (--faction-wow-plum-surface) is — a struck border does not repaint itself
+     when the lights go out, same reasoning as the gold (§3). */
+  --faction-wow-plum-edge: #5b3277;
+  /* The page's lift. Deeper than the card's --faction-wow-quest-shadow: a whole
+     plate throws a longer shadow than a card does. */
+  --faction-wow-detail-shadow: 0 12px 30px -16px rgba(74, 56, 10, 0.5);
+}
+[data-theme="dark"] {
+  --faction-wow-detail-field: #100c05;
+  --faction-wow-detail-dot: rgba(227, 184, 74, 0.06);
+  --faction-wow-detail-inset: #231b0c;
+  /* --faction-wow-plum-edge is theme-invariant; see the note above. */
+  --faction-wow-detail-shadow: 0 18px 44px -18px rgba(0, 0, 0, 0.8);
+}
+
+/* The parchment ground for the task-detail COLUMN, not the viewport — the site
+   background shows around it (owner QA on #1055, applied to every task-detail
+   skin). The archetype supplies position / z-index / radius / padding; this rule
+   owns only the field and its dot texture.
+   (It was modelled on `.na-backdrop`, which IS a real full-viewport wash — but
+   that pattern was retired from this surface, not copied onto it.) */
+.wow-detail-field {
+  background-color: var(--faction-wow-detail-field);
+  background-image: radial-gradient(var(--faction-wow-detail-dot) 1px, transparent 1px);
+  background-size: 5px 5px;
+  transition: background-color 300ms;
+}
+
+/* The balloon bunch bobs and tilts. Class-gated on reduced-motion like every
+   other faction motion in the house, so the skin never writes `animation:`
+   inline and bypasses the gate; the bunch is pure ornament, carries no state,
+   and reads correctly stilled. The pupils inside it travel on the existing
+   `.wow-balloon-eye` wiggle. */
+@keyframes wow-balloon-bob {
+  0%, 100% { transform: translateY(0) rotate(3deg); }
+  40% { transform: translateY(-7px) rotate(-2deg); }
+  70% { transform: translateY(-3px) rotate(2deg); }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .wow-balloon-bunch { animation: wow-balloon-bob 6s ease-in-out infinite; }
+}

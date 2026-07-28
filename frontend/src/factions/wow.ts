@@ -29,6 +29,14 @@
  * chronicle: two chromes on one palette, deliberately unalike (#785's "the
  * praxis card mirrors the task card" clause is retired for WOW).
  *
+ * #1037 adds the desktop `taskDetail` — THE PARCHMENT FIELD: gold-and-plum
+ * parchment under a dot texture, bunting across the head, a struck points
+ * plaque, wavy gold→plum rules and a bunch of googly balloons. It is the first
+ * of #951's four missing desktop surfaces to ship; `praxisDetail`, `factionCard`
+ * and `factionBody` are still unclaimed. The `mobileTaskDetail` row below stays
+ * registered but DORMANT (ADR-0058) — the desktop archetype is responsive and
+ * serves both form factors.
+ *
  * #900 adds the PAGE-LEVEL desktop surfaces: the recruiting `factionHero`, the
  * `backdrop` wallpaper every WOW-context page sits on, the crested `profileBody`
  * and the `factionSelectCard` pledge placard. `factionBody` and `factionCard`
@@ -78,6 +86,7 @@ import WowMobileDuelSealConfirm from '../components/duel/WowMobileDuelSealConfir
 import WowDuelRail from '../pages/praxisDetail/duelRails/WowDuelRail'
 import WowMobileDuelRail from '../pages/praxisDetail/duelRails/WowMobileDuelRail'
 import WowFieldDesk from '../pages/fieldDesk/mobileArchetypes/WowFieldDesk'
+import WowTaskDetail from '../pages/taskDetail/archetypes/WowTaskDetail'
 import WowMobileTaskDetail from '../pages/taskDetail/mobileArchetypes/WowTaskDetail'
 import WowMobilePraxisDetail from '../pages/praxisDetail/mobileArchetypes/WowPraxisDetail'
 import WowMobileFactionPage from '../pages/factionDetail/mobileArchetypes/WowFactionPage'
@@ -89,6 +98,10 @@ export const WOW_MANIFEST: FactionManifest = {
   sigil: () => WowSigil,
   avatar: () => WowAvatar,
   taskCard: () => WowTaskCard,
+  // #1037 — the parchment field: WOW's FIRST desktop task-detail page. Until
+  // this row a WOW task rendered the na dossier on desktop (one of #951's four
+  // bullets; praxisDetail, factionCard and factionBody are still open).
+  taskDetail: () => WowTaskDetail,
   comment: () => WowComment,
   feedFrame: () => WowFeedFrame,
   praxisCard: () => WowPraxisCard,

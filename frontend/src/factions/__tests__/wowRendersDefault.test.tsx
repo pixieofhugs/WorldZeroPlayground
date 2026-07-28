@@ -66,17 +66,22 @@ function Sentinel() {
  * `metaTaskSeal` — WOW's court-writ seal, the last faction seal skin, built from
  * the chronicle identity since the kit drew no wow specimen.
  *
- * EIGHT SURFACES ARE STILL UNCLAIMED, in two groups.
+ * and #1037's desktop `taskDetail` — THE PARCHMENT FIELD, the first of #951's
+ * four missing desktop surfaces to ship.
  *
- * `factionBody`, `factionCard`, and DESKTOP `taskDetail` / `praxisDetail` are
- * PENDING DESIGN BUGS, tracked by #951. #899/#900/#840 scoped them out on a
+ * SEVEN SURFACES ARE STILL UNCLAIMED, in two groups.
+ *
+ * `factionBody`, `factionCard` and DESKTOP `praxisDetail` are PENDING DESIGN
+ * BUGS, tracked by #951. #899/#900/#840 scoped them out on a
  * design-fidelity argument (the kit drew WOW's cards and hero, not the desktop
  * pages beneath them, so a page skin would be invention), but the owner ruled
  * (2026-07-23) that a faction missing a custom experience is a bug regardless:
  * WOW players get the generic Default on those pages. They fall to the neutral
  * Default (N/A), never to Coven — which is the point of pinning the set here.
  * When #951 ships a skin, move that surface into WOW_SKINNED and this list
- * shrinks; `surfaceDispatch.test.ts` enforces the same #951 allowlist.
+ * shrinks; `surfaceDispatch.test.ts` enforces the same #951 allowlist. #1037 is
+ * that shrink happening once: `taskDetail` moved down into WOW_SKINNED and out
+ * of both allowlists in the same commit.
  *
  * `mobileCreateCharacter` and `mobileEditCharacter`, `mobileFactionsDirectory`
  * and `mobilePlayersDirectory`: nothing in the kit describes them, #901 scoped
@@ -88,6 +93,7 @@ const WOW_SKINNED: ReadonlySet<FactionSurface> = new Set([
   'sigil',
   'avatar',
   'taskCard',
+  'taskDetail',
   'comment',
   'feedFrame',
   'praxisCard',
@@ -112,7 +118,7 @@ const WOW_SKINNED: ReadonlySet<FactionSurface> = new Set([
   'metaTaskSeal',
 ])
 
-describe('wow is partly skinned: twenty-five surfaces claimed, the rest fall back', () => {
+describe('wow is partly skinned: twenty-six surfaces claimed, the rest fall back', () => {
   it('registers a manifest now (#821)', () => {
     expect(FACTION_MANIFESTS.map((manifest) => manifest.slug)).toContain('wow')
   })
