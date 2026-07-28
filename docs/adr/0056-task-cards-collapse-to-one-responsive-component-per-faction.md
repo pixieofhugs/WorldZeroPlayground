@@ -1,8 +1,8 @@
-# ADR-0056 — Task cards collapse to one responsive component per faction
+# ADR-0056 — Task cards (and task detail) collapse to one responsive component per faction
 
 **Status:** Proposed — under evaluation, not settled law
-**Date:** 2026-07-27
-**Relates to:** #1020 (epic), #1022, #1023
+**Date:** 2026-07-27 (amended 2026-07-27 to cover task detail)
+**Relates to:** #1020 (epic), #1022, #1023; #1028 (epic), #1029
 **Tension with:** ADR-0035 (distinct mobile screens; a responsive squeeze of one
 component was rejected at the time)
 
@@ -46,3 +46,21 @@ design's conditional ornament), **as a reversible experiment**.
 - Status stays **Proposed** until that verdict — a marker for future readers that the
   mobile-unification half of task-cards-v2 is provisional, unlike ADR-0055's
   multiplier-display decision, which is settled.
+
+## Amendment (2026-07-27) — task detail collapses the same way
+
+The v2 **task-detail** designs (#1028, project `0711d3a7-0074-4a60-8907-270f44168261`)
+are authored the same way: one responsive component per faction with a `platform` prop.
+Task detail joins this experiment rather than getting its own ADR — same posture, same
+one-line revert, and if the owner rejects the unified cards, both surfaces flip back
+together.
+
+- The mobile task-detail path is `TaskDetail.tsx`'s `formFactor === "mobile"` branch
+  (which dispatches through the `mobileTaskDetail` surface) exactly as the card path is
+  `DefaultTasks.tsx`'s call site. Rewire that branch to the shared desktop archetype and
+  the revert is putting the branch back.
+- `pages/taskDetail/mobileArchetypes/*` and the `mobileTaskDetail` rows on every faction
+  manifest **stay registered but dormant** — not deleted, for the same reason and on the
+  same deferred-cleanup terms as the card surface.
+- One verdict covers both. There is no separate ADR for the task-detail collapse; if the
+  cards experiment is rejected, this branch is restored alongside `DefaultTasks.tsx`'s.

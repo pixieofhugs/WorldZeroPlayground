@@ -16,6 +16,8 @@ _Avoid_: widget, element, component (a surface may be built from many components
 **Archetype**:
 A faction's bespoke rendering of a surface — its whole shape, layout, ornament, and copy
 voice (e.g. S.N.I.D.E.'s ransom-clipping task card). One faction, one surface, one archetype.
+The one carve-out is **task detail**, where ADR-0057 keeps the dress faction-specific but
+makes the copy a single shared neutral set — there, an archetype owns presentation only.
 _Avoid_: variant (reserve "variant" for the `pickVariant` mechanism), skin, theme.
 
 **Default archetype**:
@@ -29,6 +31,16 @@ faction's display font (as the retired cork-board `DefaultEditPraxis` did with C
 Permanent Marker), is **stale** — the wrong identity, not a neutral one. Named `DefaultXxx`
 (e.g. `DefaultFactionBody`).
 _Avoid_: reading "faction-agnostic" as "no identity" — the identity is Unaffiliated.
+
+**Albescent**:
+A first-class faction — own slug, members, roster, invitation flow and level-8 unlock —
+whose *look* is deliberately the Unaffiliated one with extra frills: quiet tells (a slow
+rainbow drift, a morphing vote blob) layered over the Default kit's structure, so a member
+reads as unaffiliated at a glance and reveals itself only to someone already looking
+(ADR-0027 / ADR-0048). Where a design exists, Albescent wears it; where none does yet, it
+falls through to Default like any undressed faction. Its faction page stays hidden until an
+account has been revealed to the society.
+_Avoid_: "Albescent is na", "Albescent is an alias" — below the skin it is its own faction.
 
 **Dispatcher**:
 The per-surface map (`Record<slug, Component>`) plus the `pickVariant` call that turns a
@@ -47,10 +59,12 @@ A slug once kept after a rebrand to dodge DB/plumbing churn: `analog` shown as "
 top source of doc/code drift and **has been reversed** — every slug now matches identity.
 Do not introduce new legacy slugs.
 
-**Alias slug**:
-A slug that inherits another faction's archetype by design rather than rebrand:
-`albescent` and `aged_out` both render as `ua`. Encoded in `SLUG_ALIASES` in
-`utils/factionDispatch.ts`.
+**Alias slug** *(retired — no aliases remain)*:
+A slug that inherited another faction's archetype by design rather than rebrand. Only two
+ever existed — `albescent → ua` and `aged_out → ua` — and both are retired (#232, #428).
+`FACTION_ALIASES` is empty and `pickVariant`'s alias step is a dormant seam.
+_Avoid_: describing Albescent as an alias. Falling through to the Default archetype on an
+undressed surface is the ordinary partial-registry behaviour every faction has, not aliasing.
 
 **Content slot**:
 An invariant piece of data a surface always renders (a task card's title, description,
