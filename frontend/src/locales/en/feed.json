@@ -183,7 +183,11 @@
       "pointsLabel": "PTS:",
       "levelLabel": "LVL: {{level}}",
       "signup": "sign up",
-      "levelPill": "lvl {{level}}"
+      "levelPill": "lvl {{level}}",
+      "windowTitle": "task.proc — singularity",
+      "bootPrefix": "> query",
+      "levelCaption": "lvl",
+      "pointsUnit": "pts"
     },
     "ua": {
       "estLine": "A daily practice",

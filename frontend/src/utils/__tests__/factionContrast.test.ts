@@ -334,6 +334,24 @@ const ARCHETYPE_PAIRS: Pair[] = [
   { what: "ephemerists medallion disc, unit", surface: "--faction-ephemerists-plate-disc", text: "--faction-ephemerists-plate-muted" },
   { what: "ephemerists plate CTA band", surface: "--faction-ephemerists-plate-cta-bg", text: "--faction-ephemerists-plate-cta-ink" },
 
+  // Singularity — THE TERMINAL SESSION (task card v2, #1023). The one card in
+  // the wave that is DARK IN BOTH THEMES (§6), so every row here is measured
+  // twice against a near-black ground rather than once against a light one. The
+  // light half is the tighter of the two — its chassis is the LIGHTER black —
+  // and the design annotated it as though the reverse held, so `-blue` and
+  // `-dim` ship walked UP. The chrome bar is the binding surface for both,
+  // being lighter than the chassis, so it is what the label rows measure.
+  { what: "singularity terminal chassis, title", surface: "--faction-singularity-term-bg", text: "--faction-singularity-term-bright" },
+  { what: "singularity terminal chassis, brief", surface: "--faction-singularity-term-bg", text: "--faction-singularity-term-dim" },
+  { what: "singularity terminal chassis, boot line", surface: "--faction-singularity-term-bg", text: "--faction-singularity-term-blue" },
+  { what: "singularity window bar, process name", surface: "--faction-singularity-term-chrome", text: "--faction-singularity-term-dim" },
+  { what: "singularity window bar, ordinal", surface: "--faction-singularity-term-chrome", text: "--faction-singularity-term-blue" },
+  // The points well. Its ground is a RESOLVED colour rather than the design's
+  // alpha-over-chassis, precisely so this row can exist at all.
+  { what: "singularity points well, total", surface: "--faction-singularity-term-readout", text: "--faction-singularity-term-blue-bright" },
+  { what: "singularity points well, unit", surface: "--faction-singularity-term-readout", text: "--faction-singularity-term-blue" },
+  { what: "singularity CTA, prompt", surface: "--faction-singularity-term-cta-bg", text: "--faction-singularity-term-cta-ink" },
+
   // Albescent's FACTION tokens are gone (#783) — it renders Default's surfaces,
   // which `default` already covers. What remains is the always-light palette
   // private to the reveal surfaces (invitation letter, secret placeholder). It

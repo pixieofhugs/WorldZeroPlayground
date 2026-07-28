@@ -385,6 +385,53 @@
   --faction-singularity-led-amber: #f0c400;
   --faction-singularity-led-green: #4ade80;
 
+  /* ══ Singularity — THE TERMINAL SESSION (task card v2, #1023) ══
+     A windowed terminal: a chrome bar with three LEDs, a boot line, a LEVEL +
+     POINTS readout, a standing raster and a slow scan sweep.
+
+     THIS FAMILY IS DARK IN BOTH THEMES, and that is the one place it diverges
+     from every other card in the wave. WORLD_ZERO_STYLE §6: "Singularity is
+     always dark in both themes." The design says the same in its own header —
+     "theme tunes phosphor contrast, not the black chassis" — and ships two
+     near-black grounds (#07130C light, #050F08 dark) rather than a light
+     variant. So there IS a [data-theme="dark"] block below, and what it flips is
+     the PHOSPHOR, not the chassis. Do not "fix" the light half into a pale card.
+
+     Distinct from the always-dark terminal family above, which is theme-INvariant
+     and declares no dark override at all; this one is a two-theme contract whose
+     both halves happen to be dark.
+
+     TWO INKS ARE WALKED UP from the design, both in the light half and both for
+     the same reason: the light chassis is LIGHTER than the dark one, so its inks
+     have LESS room, and the design annotated them as if the reverse were true.
+       • blue #2563eb → #4c7fef (3.29:1 → 4.53:1 on the chrome bar) — boot line
+       • dim  #3d8b5e → #409363 (4.10:1 → 4.52:1 on the chrome bar) — window
+         title, captions and the brief
+     The dark half is 5.10:1 and up as drawn and ships unchanged. */
+  --faction-singularity-term-bg: #07130c; /* the chassis */
+  --faction-singularity-term-chrome: #0c2016; /* the window bar */
+  --faction-singularity-term-ink: #22c55e; /* the card's inherited phosphor */
+  --faction-singularity-term-bright: #4ade80; /* title, level, CTA border */
+  --faction-singularity-term-dim: #409363; /* captions + brief — walked up */
+  --faction-singularity-term-blue: #4c7fef; /* boot line, unit labels — walked up */
+  --faction-singularity-term-blue-bright: #3b82f6; /* the points numeral */
+  --faction-singularity-term-border: rgba(37, 99, 235, 0.4);
+  --faction-singularity-term-hair: rgba(74, 222, 128, 0.22);
+  /* The points readout's well. Declared as the RESOLVED colour rather than the
+     design's rgba(37,99,235,0.12), because the numeral inside it owes AA against
+     what it actually sits on — an alpha over the chassis has no fixed ratio
+     (#651), and the same call --faction-singularity-phosphor-dim already makes. */
+  --faction-singularity-term-readout: #0b1d27;
+  --faction-singularity-term-scan: rgba(74, 222, 128, 0.05); /* standing raster */
+  --faction-singularity-term-sweep: linear-gradient(
+    rgba(37, 99, 235, 0),
+    rgba(37, 99, 235, 0.14),
+    rgba(37, 99, 235, 0)
+  );
+  --faction-singularity-term-cta-bg: #4ade80;
+  --faction-singularity-term-cta-ink: #04120a;
+  --faction-singularity-term-shadow: 0 16px 42px -26px rgba(0, 0, 0, 0.7), inset 0 0 0 1px rgba(74, 222, 128, 0.1);
+
   /* ══ Ephemerists illuminated-codex palette (the ephemerists slot) ══
      The card contract above rebinds to these. CONSTANTS (gold/rubric/
      lapis/verdigris/ink) keep their role in both themes; the VELLUM
@@ -1150,6 +1197,30 @@
   --faction-snide-stamp-bg: rgba(0, 0, 0, 0.5);
   --faction-snide-stamp-shadow: rgba(0, 0, 0, 0.6);
   --faction-singularity-card-muted: #60a5fa; /* blue brand chrome */
+
+  /* ── Singularity terminal session, lights out (#1023) ──
+     The chassis stays black (§6) — what moves is the phosphor. Every ink here is
+     BRIGHTER than its light-half counterpart, because the dark chassis is darker
+     and the design tunes contrast rather than inverting the card. Measured
+     5.10:1 (dim on the chrome bar) and up, as drawn: only the light half needed
+     walking. */
+  --faction-singularity-term-bg: #050f08;
+  --faction-singularity-term-chrome: #0a1a10;
+  --faction-singularity-term-ink: #4ade80;
+  --faction-singularity-term-bright: #86efac;
+  --faction-singularity-term-dim: #3a9e63;
+  --faction-singularity-term-blue: #60a5fa;
+  --faction-singularity-term-blue-bright: #93c5fd;
+  --faction-singularity-term-border: rgba(96, 165, 250, 0.3);
+  --faction-singularity-term-hair: rgba(74, 222, 128, 0.2);
+  --faction-singularity-term-readout: #0e1e20;
+  --faction-singularity-term-scan: rgba(74, 222, 128, 0.045);
+  --faction-singularity-term-sweep: linear-gradient(
+    rgba(96, 165, 250, 0),
+    rgba(96, 165, 250, 0.16),
+    rgba(96, 165, 250, 0)
+  );
+  --faction-singularity-term-shadow: 0 16px 42px -24px rgba(0, 0, 0, 0.85), inset 0 0 0 1px rgba(74, 222, 128, 0.12);
 
   /* ── UA · sun-bleached practice, after dark (#788, #848) ──
      The mesa at night, not a parchment held up to a black page. Surfaces sink

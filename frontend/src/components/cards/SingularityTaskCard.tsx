@@ -2,249 +2,353 @@ import type { CSSProperties } from "react";
 import { Link } from "react-router-dom";
 import type { CardProps } from "../TaskCard";
 import i18n from "../../i18n";
-import { factionCssVar } from "../../utils/factions";
+import { isNeutralMultiplier } from "../../utils/points";
+import { useFormFactor } from "../../hooks/useFormFactor";
 
 /**
- * Singularity — Terminal Printout.
- * Always dark background, green terminal text, corner brackets, sprocket holes,
- * scanline overlay, blinking cursor. Same in light and dark mode.
+ * Singularity — THE TERMINAL SESSION (task card v2, #1023).
  *
- * This card uses CSS variables for its colors even though it's always dark,
- * because the Singularity CSS vars are identical in both themes.
+ * A windowed terminal: a chrome bar carrying three LEDs, the process name and
+ * the task's ordinal; a boot line echoing the query; a LEVEL + POINTS readout
+ * with the total in a lit blue well; a standing raster over the whole chassis
+ * and a slow scan sweep travelling down it. Share Tech Mono throughout — the
+ * faction has one face and this card uses it for everything, chrome and copy
+ * alike.
+ *
+ * This replaces the sprocket-holed "Terminal Printout" wholesale (ADR-0055 /
+ * ADR-0056 — a metaphor swap, not a tweak): the perforated fanfold paper is
+ * gone, and what remains is the screen it was printed from.
+ *
+ * ALWAYS DARK, IN BOTH THEMES (WORLD_ZERO_STYLE §6). This is the one card in the
+ * wave whose light variant is still a black chassis; the design's own header
+ * says "theme tunes phosphor contrast, not the black chassis". It is NOT a
+ * theme-invariant surface either — `--faction-singularity-term-*` is a real
+ * two-theme contract, and what the cascade flips is the phosphor. There is no
+ * ternary here; both halves live in index.css.
+ *
+ * ONE RESPONSIVE COMPONENT (ADR-0056): `useFormFactor` picks the size set, not a
+ * different card. The dormant `mobileArchetypes/cards/SingularityMobileTaskCard`
+ * stays in the tree for the revert.
+ *
+ * Motion is entirely index.css's (#911 retired component-injected `<style>`):
+ * the design names `sgBlink`/`sgSweep`/`sgPulse` and defines none of them, and
+ * all three already exist here under the repo's names — `.sg-cursor`, `.sg-scan`
+ * and `.sg-pulse` — each behind the shared `prefers-reduced-motion` guard. No
+ * new keyframe was needed.
  */
 
-// Static style objects, hoisted to module scope (#586) -- none of these close
-// over a prop, so re-allocating them on every render bought nothing.
+const MONO = "var(--faction-singularity-card-font)"; /* Share Tech Mono */
 
-const TERMINAL_TEXT = "var(--faction-singularity-card-text)";
-const HARD_BORDER = "var(--faction-singularity-border-hard)";
-const MUTED = "var(--faction-singularity-card-muted)";
+const BG = "var(--faction-singularity-term-bg)";
+const BRIGHT = "var(--faction-singularity-term-bright)";
+const DIM = "var(--faction-singularity-term-dim)";
+const BLUE = "var(--faction-singularity-term-blue)";
+const HAIR = "var(--faction-singularity-term-hair)";
 
-const sprocketRowStyle: CSSProperties = {
-  display: "flex",
-  justifyContent: "space-around",
-  gap: "var(--space-sm)",
-  padding: "var(--space-xs) var(--space-lg)",
-};
+interface SizeSet {
+  /** Card width. Geometry, so a raw px number (WORLD_ZERO_STYLE §4a). */
+  cardWidth: number;
+  bodyPad: string;
+  titleSize: string;
+  levelSize: string;
+  pointsSize: string;
+}
 
-const sprocketHoleStyle: CSSProperties = {
-  width: 6,
-  height: 4,
-  background: "rgba(10,26,14)",
-  border: `1px solid var(--faction-singularity-card-accent, ${HARD_BORDER})`,
-  borderRadius: 1,
-};
-
-const cardShellStyle: CSSProperties = {
-  minWidth: 180,
-  maxWidth: 224,
-  flex: "0 1 204px",
-  background: "var(--faction-singularity-card-bg)",
-  border: `1px solid ${HARD_BORDER}`,
-  position: "relative",
-  fontFamily: factionCssVar("singularity", "card-font"),
-  color: TERMINAL_TEXT,
-  overflow: "hidden",
-};
-
-const scanlineStyle: CSSProperties = {
-  position: "absolute",
-  inset: 0,
-  backgroundImage:
-    "repeating-linear-gradient(to bottom, transparent, transparent 2px, rgba(74,222,128,0.015) 2px, rgba(74,222,128,0.015) 4px)",
-  pointerEvents: "none",
-  zIndex: 1,
+const SIZES: Record<"desktop" | "mobile", SizeSet> = {
+  desktop: {
+    cardWidth: 384,
+    bodyPad: "var(--space-lg) var(--space-lg) var(--space-xl)",
+    titleSize: "var(--text-title)",
+    levelSize: "var(--text-heading)",
+    pointsSize: "var(--text-heading)",
+  },
+  mobile: {
+    cardWidth: 340,
+    bodyPad: "var(--space-lg) var(--space-md) var(--space-lg)",
+    titleSize: "var(--text-content)",
+    levelSize: "var(--text-title)",
+    pointsSize: "var(--text-title)",
+  },
 };
 
-/** Corner brackets -- one per corner; only the two drawn edges differ. */
-const cornerBase: CSSProperties = { position: "absolute", width: 10, height: 10 };
-const cornerTopLeft: CSSProperties = {
-  ...cornerBase, top: 3, left: 3,
-  borderTop: `1px solid ${TERMINAL_TEXT}`, borderLeft: `1px solid ${TERMINAL_TEXT}`,
-};
-const cornerTopRight: CSSProperties = {
-  ...cornerBase, top: 3, right: 3,
-  borderTop: `1px solid ${TERMINAL_TEXT}`, borderRight: `1px solid ${TERMINAL_TEXT}`,
-};
-const cornerBottomLeft: CSSProperties = {
-  ...cornerBase, bottom: 3, left: 3,
-  borderBottom: `1px solid ${TERMINAL_TEXT}`, borderLeft: `1px solid ${TERMINAL_TEXT}`,
-};
-const cornerBottomRight: CSSProperties = {
-  ...cornerBase, bottom: 3, right: 3,
-  borderBottom: `1px solid ${TERMINAL_TEXT}`, borderRight: `1px solid ${TERMINAL_TEXT}`,
-};
-
-const bodyStyle: CSSProperties = {
-  padding: "var(--space-xs) var(--space-md) var(--space-sm)",
-  position: "relative",
-  zIndex: 2,
-};
-
-const eyebrowStyle: CSSProperties = {
-  fontSize: "var(--text-xs)",
-  color: MUTED,
+/** Terminal caption voice — every label on the chassis speaks in it. */
+const LABEL: CSSProperties = {
+  fontFamily: MONO,
+  letterSpacing: "0.14em",
   textTransform: "uppercase",
-  letterSpacing: "0.15em",
-  marginBottom: "var(--space-sm)",
+  color: DIM,
 };
 
-const caretStyle: CSSProperties = {
-  display: "inline-block",
-  width: 5,
-  height: 9,
-  background: TERMINAL_TEXT,
-  marginLeft: "var(--space-xs)",
-  verticalAlign: "middle",
-};
+/** A dashed terminal rule. */
+function Rule({ style }: { style?: CSSProperties }) {
+  return <div aria-hidden="true" style={{ height: 0, borderTop: `1px dashed ${HAIR}`, ...style }} />;
+}
 
-const linkStyle: CSSProperties = { textDecoration: "none", color: "inherit" };
-
-const titleStyle: CSSProperties = {
-  marginBottom: "var(--space-sm)",
-  lineHeight: 1.3,
-  overflowWrap: "anywhere",
-};
-
-const metaStyle: CSSProperties = {
-  fontSize: "var(--text-xs)",
-  color: MUTED,
-  lineHeight: 1.6,
-  marginBottom: "var(--space-sm)",
-};
-
-const pointsStyle: CSSProperties = { color: TERMINAL_TEXT, fontWeight: 700 };
-
-const descriptionStyle: CSSProperties = {
-  color: MUTED,
-  lineHeight: 1.4,
-  marginBottom: "var(--space-sm)",
-  overflow: "hidden",
-  display: "-webkit-box",
-  WebkitLineClamp: 2,
-  WebkitBoxOrient: "vertical",
-};
-
-const signupStyle: CSSProperties = {
-  background: "transparent",
-  color: TERMINAL_TEXT,
-  border: `1px solid ${TERMINAL_TEXT}`,
-  fontFamily: factionCssVar("singularity", "card-font"),
-  fontSize: "var(--text-xs)",
-  textTransform: "uppercase",
-  letterSpacing: "0.1em",
-  padding: "var(--space-xs) var(--space-sm)",
-  cursor: "pointer",
-  marginBottom: "var(--space-xs)",
-};
-
-const footerStyle: CSSProperties = {
-  display: "flex",
-  justifyContent: "flex-end",
-  borderTop: `1px solid ${HARD_BORDER}`,
-  paddingTop: "var(--space-xs)",
-};
-
-const levelPillStyle: CSSProperties = {
-  border: `1px solid ${TERMINAL_TEXT}`,
-  color: TERMINAL_TEXT,
-  fontSize: "var(--text-xs)",
-  padding: "0 var(--space-xs)",
-  borderRadius: 6,
-  textTransform: "uppercase",
-};
-
-/** Row of sprocket holes */
-function SprocketHoles() {
+/** One of the chrome bar's three lamps. Ornament geometry, so raw px. */
+function Lamp({ fill }: { fill: string }) {
   return (
-    <div style={sprocketRowStyle}>
-      {Array.from({ length: 5 }).map((_, index) => (
-        <div key={index} style={sprocketHoleStyle} />
-      ))}
-    </div>
+    <span
+      aria-hidden="true"
+      style={{ width: 8, height: 8, borderRadius: "50%", background: fill, display: "block" }}
+    />
   );
 }
 
 export default function SingularityTaskCard({
   task,
   basePoints,
+  multiplier,
+  inProgressCount,
   onSignup,
 }: CardProps) {
+  const formFactor = useFormFactor();
+  const size = SIZES[formFactor];
+  const showMultiplier = !isNeutralMultiplier(multiplier);
+  const ordinal = i18n.t("feed:taskCard.ordinal", { id: task.id });
+
   return (
-    <div style={cardShellStyle}>
-      {/* Scanline overlay */}
-      <div style={scanlineStyle} />
+    <div
+      data-form-factor={formFactor}
+      style={{ width: size.cardWidth, maxWidth: "100%", boxSizing: "border-box" }}
+    >
+      <article
+        style={{
+          position: "relative",
+          overflow: "hidden",
+          boxSizing: "border-box",
+          width: "100%",
+          background: BG,
+          border: "1px solid var(--faction-singularity-term-border)",
+          borderRadius: 8,
+          boxShadow: "var(--faction-singularity-term-shadow)",
+          color: "var(--faction-singularity-term-ink)",
+          fontFamily: MONO,
+        }}
+      >
+        {/* The standing raster — a fixed scrim, no motion. */}
+        <div
+          aria-hidden="true"
+          style={{
+            position: "absolute",
+            inset: 0,
+            pointerEvents: "none",
+            zIndex: 3,
+            background:
+              "repeating-linear-gradient(0deg, var(--faction-singularity-term-scan) 0 1px, transparent 1px 3px)",
+          }}
+        />
 
-      {/* Corner brackets */}
-      <div style={cornerTopLeft} />
-      <div style={cornerTopRight} />
-      <div style={cornerBottomLeft} />
-      <div style={cornerBottomRight} />
+        {/* The scan sweep. `.sg-scan` owns both the resting offset and the
+            reduced-motion-guarded travel (#842's keyframe, reused). */}
+        <div
+          aria-hidden="true"
+          className="sg-scan"
+          style={{
+            position: "absolute",
+            left: "-30%",
+            right: "-30%",
+            height: 34,
+            pointerEvents: "none",
+            zIndex: 3,
+            background: "var(--faction-singularity-term-sweep)",
+          }}
+        />
 
-      <SprocketHoles />
-
-      <div style={bodyStyle}>
-        {/* Header — eyebrow, stays label-tier (§4 content-text floor). */}
-        <div style={eyebrowStyle}>
-          {i18n.t("feed:identity.singularity.protocol")}
-          <span aria-hidden className="sg-cursor" style={caretStyle} />
-        </div>
-
-        <Link
-          to={`/tasks/${task.id}`}
-          style={linkStyle}
+        {/* Window chrome — lamps, the process name, the task's ordinal. */}
+        <div
+          style={{
+            position: "relative",
+            zIndex: 2,
+            display: "flex",
+            alignItems: "center",
+            gap: "var(--space-sm)",
+            padding: "var(--space-sm) var(--space-md)",
+            background: "var(--faction-singularity-term-chrome)",
+            borderBottom: `1px solid ${HAIR}`,
+          }}
         >
-          {/* Task title — a title, so .content-title per #627's re-cut (§4). */}
-          <div className="content-title" style={titleStyle}>
-            {"> "}
-            {task.title}
-          </div>
-        </Link>
-
-        <div style={metaStyle}>
-          <div>
-            {i18n.t("feed:taskCard.singularity.pointsLabel")}{" "}
-            {/* Points value — a score, so .content-title per #627's re-cut (§4). */}
-            <span className="content-title" style={pointsStyle}>
-              {basePoints}
-            </span>
-          </div>
-          <div>
-            {i18n.t("feed:taskCard.singularity.levelLabel", {
-              level: task.level_required,
-            })}
-          </div>
-        </div>
-
-        {task.description && (
-          /* Body copy on the content floor (.content-text, 18px). The card was
-             widened to ~204px in #628 so the floor has no exceptions. */
-          <div className="content-text" style={descriptionStyle}>
-            {task.description}
-          </div>
-        )}
-
-        {onSignup && (
-          <button
-            onClick={() => onSignup(task.id)}
-            style={signupStyle}
-          >
-            {">"} {i18n.t("feed:taskCard.singularity.signup")}
-          </button>
-        )}
-
-        <div style={footerStyle}>
-          {/* Level pill — badge label, stays label-tier (§4). */}
-          <span style={levelPillStyle}>
-            {i18n.t("feed:taskCard.singularity.levelPill", {
-              level: task.level_required,
-            })}
+          <span aria-hidden="true" style={{ display: "flex", gap: "var(--space-xs)" }}>
+            <Lamp fill="var(--faction-singularity-led-red)" />
+            <Lamp fill="var(--faction-singularity-led-amber)" />
+            <Lamp fill="var(--faction-singularity-led-green)" />
+          </span>
+          {/* eslint-disable-next-line local/no-raw-style-values -- ornament: window-bar lettering, sized to the 8px lamps beside it rather than the label ramp (§4a). */}
+          <span style={{ ...LABEL, fontSize: 10.5 }}>
+            {i18n.t("feed:taskCard.singularity.windowTitle")}
+          </span>
+          {/* eslint-disable-next-line local/no-raw-style-values -- ornament: the window bar's right-hand slug, set to its neighbour. */}
+          <span style={{ ...LABEL, fontSize: 10.5, color: BLUE, marginLeft: "auto" }}>
+            {ordinal}
           </span>
         </div>
-      </div>
 
-      <SprocketHoles />
+        <div style={{ position: "relative", zIndex: 2, padding: size.bodyPad }}>
+          {/* Everything but the CTA reads the full call — a card-sized target
+              that stays valid HTML (no <button> nested in an <a>). */}
+          <Link to={`/tasks/${task.id}`} style={{ display: "block", textDecoration: "none", color: "inherit" }}>
+            {/* The boot line — the terminal's echo of the query, and this card's
+                eyebrow. The design put a hex id here and in the window bar; the
+                ordinal is uniform across all nine cards (#1020), so the hex is
+                gone and both slots read the same "Task {id}" the rest do. */}
+            {/* eslint-disable-next-line local/no-raw-style-values -- ornament: command echo, set to the window bar it answers. */}
+            <div style={{ ...LABEL, fontSize: 10.5, color: BLUE, marginBottom: "var(--space-md)" }}>
+              {i18n.t("feed:taskCard.singularity.bootPrefix")}{" "}
+              <span style={{ color: BRIGHT }}>{ordinal}</span>
+            </div>
 
+            <div style={{ display: "flex", alignItems: "flex-end", gap: "var(--space-md)", marginBottom: "var(--space-lg)" }}>
+              <div style={{ flex: "0 0 auto", display: "flex", flexDirection: "column", alignItems: "flex-start", lineHeight: 1 }}>
+                <span style={{ ...LABEL, fontSize: "var(--text-sm)", marginBottom: "var(--space-xs)" }}>
+                  {i18n.t("feed:taskCard.singularity.levelCaption")}
+                </span>
+                <span style={{ fontFamily: MONO, fontSize: size.levelSize, lineHeight: 0.85, color: BRIGHT }}>
+                  {String(task.level_required).padStart(2, "0")}
+                </span>
+              </div>
+
+              <Rule style={{ flex: 1, marginBottom: "var(--space-md)" }} />
+
+              {/* The faction modifier — hidden at ×1.00, so invisible under
+                  era_1's neutralized modifiers and automatic the day one moves
+                  (ADR-0055). */}
+              {showMultiplier && (
+                <div style={{ flex: "0 0 auto", display: "flex", flexDirection: "column", alignItems: "center", gap: "var(--space-xs)" }}>
+                  <span
+                    style={{
+                      fontFamily: MONO,
+                      fontSize: "var(--text-lg)",
+                      lineHeight: 1,
+                      color: "var(--faction-singularity-term-cta-ink)",
+                      background: BRIGHT,
+                      borderRadius: 4,
+                      padding: "var(--space-xs) var(--space-sm)",
+                      whiteSpace: "nowrap",
+                    }}
+                  >
+                    {i18n.t("feed:taskCard.multiplier", { value: multiplier.toFixed(2) })}
+                  </span>
+                  <span style={{ ...LABEL, fontSize: "var(--text-xs)" }}>
+                    {i18n.t("feed:taskCard.modifierCaption")}
+                  </span>
+                </div>
+              )}
+
+              {/* The points, in a lit well. */}
+              <div
+                style={{
+                  flex: "0 0 auto",
+                  display: "flex",
+                  alignItems: "baseline",
+                  gap: "var(--space-xs)",
+                  padding: "var(--space-sm) var(--space-md)",
+                  background: "var(--faction-singularity-term-readout)",
+                  border: "1px solid var(--faction-singularity-term-border)",
+                  borderRadius: 5,
+                }}
+              >
+                <span
+                  style={{
+                    fontFamily: MONO,
+                    fontSize: size.pointsSize,
+                    lineHeight: 0.85,
+                    color: "var(--faction-singularity-term-blue-bright)",
+                  }}
+                >
+                  {basePoints}
+                </span>
+                <span style={{ ...LABEL, fontSize: "var(--text-base)", color: BLUE }}>
+                  {i18n.t("feed:taskCard.singularity.pointsUnit")}
+                </span>
+              </div>
+            </div>
+
+            <h3
+              style={{
+                fontFamily: MONO,
+                fontWeight: 400,
+                fontSize: size.titleSize,
+                lineHeight: 1.22,
+                color: BRIGHT,
+                margin: "0 0 var(--space-sm)",
+                overflowWrap: "anywhere",
+              }}
+            >
+              {task.title}
+            </h3>
+
+            {task.description && (
+              <p
+                className="card-description"
+                style={{ fontFamily: MONO, lineHeight: 1.55, color: DIM, margin: "0 0 var(--space-md)" }}
+              >
+                {task.description}
+              </p>
+            )}
+
+            <Rule style={{ margin: "0 0 var(--space-md)" }} />
+
+            {inProgressCount > 0 && (
+              <div style={{ display: "flex", alignItems: "center", gap: "var(--space-sm)" }}>
+                <span
+                  aria-hidden="true"
+                  className="sg-pulse"
+                  style={{
+                    width: 7,
+                    height: 7,
+                    borderRadius: "50%",
+                    background: "var(--faction-singularity-term-blue-bright)",
+                    display: "block",
+                    flex: "0 0 auto",
+                  }}
+                />
+                <span style={{ fontFamily: MONO, fontSize: "var(--text-xl)", color: DIM }}>
+                  {i18n.t("feed:taskCard.inProgress", { count: inProgressCount })}
+                </span>
+              </div>
+            )}
+          </Link>
+
+          {onSignup && (
+            <div style={{ display: "flex", justifyContent: "center", marginTop: "var(--space-lg)" }}>
+              <button
+                onClick={() => onSignup(task.id)}
+                style={{
+                  cursor: "pointer",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  whiteSpace: "nowrap",
+                  fontFamily: MONO,
+                  fontSize: "var(--text-xl)",
+                  letterSpacing: "0.02em",
+                  padding: "var(--space-sm) var(--space-xl)",
+                  borderRadius: 5,
+                  color: "var(--faction-singularity-term-cta-ink)",
+                  background: "var(--faction-singularity-term-cta-bg)",
+                  border: `1.5px solid ${BRIGHT}`,
+                }}
+              >
+                {i18n.t("feed:taskCard.singularity.signup")}
+                {/* The block cursor trailing the prompt. `.sg-cursor` carries the
+                    reduced-motion-guarded blink; stilled it stays drawn, because
+                    it is punctuation on the prompt, not an indicator. */}
+                <span
+                  aria-hidden="true"
+                  className="sg-cursor"
+                  style={{
+                    display: "inline-block",
+                    width: 6,
+                    height: 13,
+                    marginLeft: "var(--space-xs)",
+                    background: "currentColor",
+                    verticalAlign: "-0.12em",
+                  }}
+                />
+              </button>
+            </div>
+          )}
+        </div>
+      </article>
     </div>
   );
 }

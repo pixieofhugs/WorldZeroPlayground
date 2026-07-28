@@ -36,6 +36,7 @@ import CovenTaskCard from '../CovenTaskCard'
 import EphemeristsTaskCard from '../EphemeristsTaskCard'
 import EverymenTaskCard from '../EverymenTaskCard'
 import AlbescentTaskCard from '../AlbescentTaskCard'
+import SingularityTaskCard from '../SingularityTaskCard'
 import DefaultTaskCard from '../DefaultTaskCard'
 import { surfaceMap } from '../../../factions'
 
@@ -88,6 +89,7 @@ const SKINS: Skin[] = [
     Card: AlbescentTaskCard,
     signup: i18n.t('feed:taskCard.na.signup'),
   },
+  { slug: 'singularity', Card: SingularityTaskCard, signup: i18n.t('feed:taskCard.singularity.signup') },
 ]
 
 function markup(element: ReactElement): { html: string; text: string } {
