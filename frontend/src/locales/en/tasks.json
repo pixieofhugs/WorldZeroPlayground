@@ -33,6 +33,52 @@
     "levelJump": {
       "tag": "Level-jump",
       "note": "Requires level {{level}}, one rung above you — your faction's once-a-level leap covers it."
+    },
+    "breadcrumb": {
+      "tasks": "Tasks",
+      "current": "Task №{{number}}"
+    },
+    "meta": "META",
+    "metataskFor": "Metatask for {{faction}}",
+    "author": "author · lvl {{level}}",
+    "stats": {
+      "level": "Level",
+      "inProgress": "In progress"
+    },
+    "points": {
+      "base": "base",
+      "multiplier": "×{{multiplier}}",
+      "total": "POINTS"
+    },
+    "signup": {
+      "cta": "Sign up",
+      "slots": "You have {{open}} of {{max}} task slots open",
+      "levelMet": "Level {{level}} met"
+    },
+    "inProgress": {
+      "text": "You're on this task",
+      "continue": "Continue editing",
+      "drop": "drop"
+    },
+    "submitted": {
+      "text": "You've filed praxis for this task",
+      "edit": "Edit praxis"
+    },
+    "brief": {
+      "heading": "Task Description"
+    },
+    "gallery": {
+      "heading": "{{count}} completed praxis",
+      "sort": {
+        "top": "Top rated",
+        "recent": "Recent"
+      },
+      "viewAll": "View all {{count}} praxis →",
+      "showFewer": "Show fewer ↑",
+      "empty": "No praxis filed yet. Be the first."
+    },
+    "comments": {
+      "heading": "Discussion"
     }
   },
   "propose": {

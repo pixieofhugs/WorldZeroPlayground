@@ -4,8 +4,9 @@
  * behaviour (friend/foe resolution, breadcrumb, error banner) without inheriting
  * each other's look. Mirrors editPraxis/archetypes/shared.tsx.
  */
-import type { CSSProperties } from "react";
+import type { CSSProperties, ReactNode } from "react";
 import { useTranslation } from "react-i18next";
+import CommentThread from "../../../components/comments/CommentThread";
 import type { TaskDetailState } from "../useTaskDetail";
 
 /** Resolve a signup character's relationship to the viewer (for badges). */
@@ -68,6 +69,44 @@ export function LevelJumpBanner({ state }: { state: TaskDetailState }) {
         {t("detail.levelJump.note", { level: state.task.level_required })}
       </span>
     </div>
+  );
+}
+
+/**
+ * TaskDetailComments — the one comments slot every task-detail archetype mounts.
+ *
+ * The dispatcher used to render `<CommentThread>` below whichever archetype it
+ * picked; #1030 moved the thread inside the archetypes so each skin can dress
+ * its own section head and place the thread in its own layout. Putting the
+ * `status === "active"` gate here (rather than copy-pasting it into nine files)
+ * is the point: comments are open while a task is active (ADR-0006), and one
+ * faction forgetting that gate is exactly the drift this prevents.
+ *
+ * Pass `heading` to supply a dressed section head; the thread's own
+ * `{n} comments` `<h3>` is then suppressed so the page carries one heading, not
+ * two. Omit it and the thread draws its default heading — which is what the
+ * not-yet-redesigned faction archetypes want.
+ */
+export function TaskDetailComments({
+  state,
+  heading,
+  style,
+}: {
+  state: TaskDetailState;
+  heading?: ReactNode;
+  style?: CSSProperties;
+}) {
+  const { task } = state;
+  if (!task || task.status !== "active") return null;
+  return (
+    <section style={style}>
+      {heading}
+      <CommentThread
+        target="tasks"
+        targetId={task.id}
+        showHeading={heading === undefined}
+      />
+    </section>
   );
 }
 
