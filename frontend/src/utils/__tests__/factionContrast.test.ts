@@ -298,6 +298,25 @@ const ARCHETYPE_PAIRS: Pair[] = [
     text: "--faction-coven-slip-deep",
   },
 
+  // Coven — THE CANDLELIT WARD (task detail v2, #1031). The detail page opens
+  // the slip out, so the same three inks meet two NEW grounds: the page wash the
+  // header sits directly on, and the panel the brief sits on. Both are flat, not
+  // gradients, which is why they measure as scalars here — but the page ground
+  // additionally carries a haze, and that composited worst case is written out
+  // in index.css beside the `--faction-coven-ward-haze` declaration (this test
+  // measures declared token values; a radial-gradient bloom is not one).
+  { what: "coven ward page, ink", surface: "--faction-coven-ward-page", text: "--faction-coven-slip-ink" },
+  { what: "coven ward page, brief", surface: "--faction-coven-ward-page", text: "--faction-coven-slip-soft" },
+  { what: "coven ward page, caption", surface: "--faction-coven-ward-page", text: "--faction-coven-slip-label" },
+  { what: "coven ward panel, ink", surface: "--faction-coven-ward-card", text: "--faction-coven-slip-ink" },
+  { what: "coven ward panel, brief", surface: "--faction-coven-ward-card", text: "--faction-coven-slip-soft" },
+  { what: "coven ward panel, caption", surface: "--faction-coven-ward-card", text: "--faction-coven-slip-label" },
+  // The "you already hold this task" band. Candle gold, theme-INVARIANT except
+  // for its upper stop, which reads --faction-coven-slip-gold and so brightens
+  // in dark; both stops are measured because the ink runs across the whole band.
+  { what: "coven hold band top", surface: "--faction-coven-slip-gold", text: "--faction-coven-ward-hold-ink" },
+  { what: "coven hold band foot", surface: "--faction-coven-ward-hold-to", text: "--faction-coven-ward-hold-ink" },
+
   // Everymen — THE HELP WANTED BILL (task card v2, #1023). Short, because the
   // design's palette IS the `--everymen-*` family measured above; only the roles
   // that family had no home for are new.
