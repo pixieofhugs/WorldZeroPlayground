@@ -36,17 +36,23 @@ const DIST = join(dirname(fileURLToPath(import.meta.url)), '..', 'dist')
 /**
  * Gzipped bytes on the critical path.
  *
- * Ledger: the unsplit bundle was JS 420 KB / CSS 15 KB. Splitting the faction
- * archetypes (#1045) took JS to 291 KB — verified in a browser as a 310 KB
- * initial load, after which only the archetypes actually on screen are fetched.
- * Making the 23 page routes lazy is the next step and should reach ~150 KB.
+ * Ledger (#1045): the unsplit bundle was JS 420 KB. Splitting the faction
+ * archetypes took it to 291 KB; making the 23 page routes lazy took it to
+ * 139 KB. Verified in a browser as a 157 KB blocking load, after which only
+ * the route and the archetypes actually on screen are fetched — the fully
+ * populated landing page now costs 227 KB in total, less than the old entry
+ * chunk on its own.
+ *
+ * Next levers, if this needs to go lower: the markdown stack (~568 KB
+ * unminified, serving one preview component) and react-easy-crop (one modal)
+ * are still eager, and axios does what fetch does.
  *
  * WARN sits just above today's number so any real growth speaks up immediately,
  * while the build stays green. Ratchet WARN downward each time a chunk moves
  * off the entry path — the budget is a ledger of progress, not a fixed wall.
  */
 const BUDGETS = {
-  js: { warn: 310_000, fail: 350_000, target: 180_000 },
+  js: { warn: 150_000, fail: 180_000, target: 120_000 },
   css: { warn: 20_000, fail: 25_000, target: 20_000 },
 }
 
