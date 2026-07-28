@@ -592,6 +592,10 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
 
   // Pull my own part back out of a pending collab (#591) — clears my cast so the
   // composer unlocks for editing. Backend re-opens only my membership (#590).
+  // Also the duel side's neutral reopen (#1077): same endpoint, and for a duel
+  // still at `active` it takes the praxis back to `in_progress` without touching
+  // `forfeited_by_character_id` — forfeit begins only at `settled` (ADR-0011
+  // §Forfeit). No confirm: the consequence-free case earns none.
   const pullBack = useCallback(async () => {
     if (!idParam) return;
     setSubmitting(true);

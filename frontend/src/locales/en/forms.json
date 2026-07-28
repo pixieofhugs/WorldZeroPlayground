@@ -167,6 +167,7 @@
       "castAction": "Cast my part",
       "castFinalAction": "Cast — send it live",
       "pullBackAction": "Pull my part back",
+      "duelPullBackAction": "Pull my entry back",
       "successHeading": "The proof is woven",
       "successBody": "Every part is cast — your collab is live.",
       "successContinue": "View the praxis",
