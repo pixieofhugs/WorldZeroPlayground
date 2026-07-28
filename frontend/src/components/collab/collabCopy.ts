@@ -52,6 +52,15 @@ export type CollabCopyKey =
   | 'deleteAction'
   | 'deleteDescription'
   | 'deleteConfirm'
+  // The in-page confirm dialog's wording for the three collab exits (#1082).
+  | 'leaveTitle'
+  | 'leaveConfirm'
+  | 'leaveConfirmSolo'
+  | 'leaveConfirmLast'
+  | 'leaveConfirmAction'
+  | 'kickTitle'
+  | 'kickConfirm'
+  | 'kickAction'
   // The post-cast waiting surface (#1080, ADR-0059). Collab first, then the
   // duel guise of the same surface.
   | 'awaitingStatusMeta'
@@ -61,6 +70,7 @@ export type CollabCopyKey =
   | 'awaitingWriteUpLabel'
   | 'awaitingWriteUpEmpty'
   | 'awaitingEditAction'
+  | 'awaitingEditTitle'
   | 'awaitingEditDescription'
   | 'awaitingEditConfirm'
   | 'awaitingClockLabel'
@@ -98,6 +108,13 @@ export type CollabCopyKey =
  * flourish here risks reading as a consequence. Shared voice until a faction
  * asks for its own.
  *
+ * The confirm-dialog wording for leave and kick (#1082) joins them on the same
+ * grounds as `deleteConfirm` did: the three exits are one mechanic each — who
+ * loses what when you go, and whose cast a kick clears (ADR-0013, ADR-0060) —
+ * and a dialog whose whole job is to state a consequence plainly is the worst
+ * place in the composer to be in character. Adding them here is also what keeps
+ * a new shared key from silently owing eight faction translations.
+ *
  * The whole `awaiting*` / `duelAwaiting*` block (#1080) joins them for the same
  * reason, plus one of its own: the waiting surface is **one shared, token-themed
  * screen** for every faction and both form factors (epic #1071, decision 7), the
@@ -113,6 +130,14 @@ export const SHARED_DEFAULT_COLLAB_KEYS: readonly CollabCopyKey[] = [
   'deleteAction',
   'deleteDescription',
   'deleteConfirm',
+  'leaveTitle',
+  'leaveConfirm',
+  'leaveConfirmSolo',
+  'leaveConfirmLast',
+  'leaveConfirmAction',
+  'kickTitle',
+  'kickConfirm',
+  'kickAction',
   'duelPullBackAction',
   'awaitingStatusMeta',
   'awaitingHeading',
@@ -121,6 +146,7 @@ export const SHARED_DEFAULT_COLLAB_KEYS: readonly CollabCopyKey[] = [
   'awaitingWriteUpLabel',
   'awaitingWriteUpEmpty',
   'awaitingEditAction',
+  'awaitingEditTitle',
   'awaitingEditDescription',
   'awaitingEditConfirm',
   'awaitingClockLabel',

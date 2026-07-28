@@ -19,9 +19,12 @@
  * speaks the same states in its own voice and anything it hasn't overridden
  * falls back to the shared `editPraxis.collab.*` block (#591).
  */
+import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { PraxisMemberOut } from '../../api/praxis'
 import { factionCssVar } from '../../utils/factions'
+import ConfirmDialog from '../confirm/ConfirmDialog'
+import { kickMemberConfirm } from '../confirm/composerConfirms'
 import { collabCopy } from './collabCopy'
 
 export type CollabState = 'writing' | 'waiting' | 'holdout' | 'published'
@@ -73,6 +76,9 @@ export function CollabRoster({
   onKick?: (memberId: number) => void | Promise<void>
 }) {
   const { t } = useTranslation('forms')
+  // The member a kick is waiting on confirmation for (#1082). Declared before
+  // the solo early-return so the hook order never changes.
+  const [pendingKick, setPendingKick] = useState<PraxisMemberOut | null>(null)
   const gate = deriveCollabGate(members, currentCharacterId)
   if (gate.memberCount < 2) return null // solo/duel render nothing
 
@@ -88,13 +94,15 @@ export function CollabRoster({
   const viewerIsMember = members.some((m) => m.character_id === currentCharacterId)
   const canKick = onKick != null && viewerIsMember && gate.state !== 'published'
 
-  const handleKick = (member: PraxisMemberOut) => {
-    if (!onKick) return
-    // A kick resets everyone's cast (ADR-0013), so confirm before firing.
-    const ok = window.confirm(
-      t('editPraxis.confirm.kickMember', { name: member.character_display_name }),
-    )
-    if (!ok) return
+  // A kick resets everyone's cast (ADR-0013), so it confirms before firing.
+  // The dialog is mounted from HERE rather than from the EditPraxis dispatcher
+  // like the composer's other six confirms: this component is also mounted by
+  // the read-only praxis-detail block, and the confirm has always belonged to
+  // the roster so both consumers get it without wiring anything (#1082).
+  const confirmKick = () => {
+    const member = pendingKick
+    setPendingKick(null)
+    if (!member || !onKick) return
     void onKick(member.character_id)
   }
 
@@ -161,7 +169,7 @@ export function CollabRoster({
               {canKick && !isMe && (
                 <button
                   type="button"
-                  onClick={() => handleKick(member)}
+                  onClick={() => setPendingKick(member)}
                   aria-label={t('editPraxis.invite.kickMemberAria', {
                     name: member.character_display_name,
                   })}
@@ -196,6 +204,21 @@ export function CollabRoster({
         >
           {banner.text}
         </p>
+      )}
+
+      {/* Nested inside the roster, but drawn at the document root — the dialog
+          portals itself out, so a faction panel's transform can't capture its
+          fixed overlay. */}
+      {pendingKick && (
+        <ConfirmDialog
+          request={kickMemberConfirm(
+            factionSlug,
+            pendingKick.character_display_name,
+          )}
+          factionSlug={factionSlug}
+          onConfirm={confirmKick}
+          onDismiss={() => setPendingKick(null)}
+        />
       )}
     </div>
   )
