@@ -1004,6 +1004,34 @@
   --faction-everymen-bill-glow-olive: rgba(91, 98, 56, 0.1);
   --faction-everymen-bill-shadow: 0 12px 32px -16px rgba(34, 26, 18, 0.5);
 
+  /* ══ Everymen — THE BROADSHEET SHEET (task detail v2, #1033) ══
+     The task-detail page printed as a union broadsheet: newsprint with
+     rising-sun rays fanning up from the BOTTOM edge, a cog masthead, dashed red
+     rules and a rubber-stamp points seal.
+
+     Short for the same reason the bill block above is short — the design's
+     TOKENS object is the `--everymen-*` family almost value-for-value in BOTH
+     themes (its `ink` is `--everymen-paper-text`, `page` is
+     `--everymen-paper-deep`, `paper`/`red`/`redDeep`/`gold`/`goldDeep`/`olive`/
+     `muted` all match), and its masthead is the bill's theme-invariant red bar,
+     so this surface reuses `--faction-everymen-bill-mast(-ink)` rather than
+     minting a second red. Only the roles with no existing home live here.
+
+     The one that is NOT a duplicate: the design's `cream` is a lighter PANEL
+     surface that flips dark at night (#f4ecd6 → #2c231c), whereas
+     `--everymen-cream` is a constant cream in both themes. Aliasing the two
+     would print cream boxes onto the dark broadsheet. */
+  --faction-everymen-sheet-panel: #f4ecd6;
+  --faction-everymen-sheet-hair: rgba(34, 26, 18, 0.22);
+  /* Red as TEXT, which is a different job from red as a rule or a fill.
+     `--everymen-red` pays 4.95:1 on the light panel but only 3.73:1 on the dark
+     one, so the dark cascade walks the same hue up until it clears (5.45:1).
+     Dashed rules and filled bars keep `--everymen-red`; only ink uses this. */
+  --faction-everymen-sheet-accent: #c1272d;
+  /* Rising-sun ornament alphas — opacity decisions, not component numbers. */
+  --faction-everymen-sheet-ray: rgba(193, 39, 45, 0.1);
+  --faction-everymen-sheet-glow: rgba(193, 39, 45, 0.12);
+
   /* ── Gearworks vote widget (#821) — reached gears heat a cold→ember ramp with
      pale hubs; unreached gears are edge-only outlines; rank 5 throws sparks. The
      edge + rank-5 glow flip in the dark cascade (see the dark block). ── */
@@ -1619,6 +1647,15 @@
   --faction-everymen-bill-glow-gold: rgba(231, 185, 79, 0.1);
   --faction-everymen-bill-glow-olive: rgba(138, 149, 90, 0.08);
   --faction-everymen-bill-shadow: 0 12px 32px -14px rgba(0, 0, 0, 0.8);
+  /* ── The broadsheet sheet (dark, #1033) ── The panel becomes a lifted plate on
+     the near-black newsprint (the design's own dark `cream`), the hairline
+     inverts, and red-as-ink lifts to clear AA on it (5.45:1 on the panel,
+     6.18:1 on the paper; the light #c1272d would pay 3.73:1). */
+  --faction-everymen-sheet-panel: #2c231c;
+  --faction-everymen-sheet-hair: rgba(243, 231, 206, 0.2);
+  --faction-everymen-sheet-accent: #f4726c;
+  --faction-everymen-sheet-ray: rgba(226, 67, 63, 0.13);
+  --faction-everymen-sheet-glow: rgba(226, 67, 63, 0.12);
   /* Gearworks: cooler edge for cold gears, a brighter single-halo rank-5 glow on
      the dark paper (the light double-drop-shadow would muddy against it). */
   --faction-everymen-vote-edge: #8a7856;
@@ -1663,6 +1700,25 @@
   position: absolute;
   inset: 0;
   background: radial-gradient(120% 90% at 50% 8%, transparent 40%, color-mix(in srgb, var(--everymen-paper-deep) 55%, transparent));
+}
+
+/* ══ Everymen broadsheet backdrop (task detail v2, #1033; theme-aware) ══
+   The rising sun the union prints its bills under — rays fanning UP from below
+   the bottom edge, over the newsprint. Distinct from `.em-backdrop` above,
+   whose rays fall from the top: that one dresses the faction-context pages, this
+   one is the sheet the task detail is printed on. Fixed, like every other
+   faction backdrop, so the paper runs to the viewport edge instead of stopping
+   at the 1200 content cap. The two ray alphas are tokens because they differ
+   per theme; the rule itself never branches on the theme. */
+.em-broadsheet {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-color: var(--everymen-paper-deep);
+  background-image:
+    repeating-conic-gradient(from 200deg at 50% 118%, var(--faction-everymen-sheet-ray) 0 2.6deg, transparent 2.6deg 6.4deg),
+    radial-gradient(58% 46% at 50% 116%, var(--faction-everymen-sheet-glow), transparent 72%);
 }
 
 /* ══ Cozy Coven lo-fi desktop backdrop (faction-context pages; theme-aware) ══ */
