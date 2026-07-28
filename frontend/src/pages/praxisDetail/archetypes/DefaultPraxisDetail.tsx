@@ -39,8 +39,9 @@
  *
  * ## Reused, not rebuilt
  *
- * `TaskCrown` (via the shared crown banner) · `ScoreStamp` (#1091 restyles it;
- * this file only mounts it) · `VoteUI`, which dispatches the vote surface on the
+ * `TaskCrown` (via the shared crown banner) · `ScoreStamp`, which since #1091
+ * carries the whole score rail — disc, ruled rows and votes tally — so this file
+ * only mounts it · `VoteUI`, which dispatches the vote surface on the
  * TASK's faction so an unskinned faction still votes in its own voice ·
  * `CollabRoster` for the members · `MediaGallery` · `MetaTaskSeal`, read-only:
  * `apply_metatask` requires `in_progress`, so the design's "Available" chips
@@ -60,10 +61,6 @@ import MediaGallery from '../../../components/MediaGallery'
 import MarkdownPreview from '../../editPraxis/blocks/MarkdownPreview'
 import VoteUI from '../../../components/vote/VoteUI'
 import ScoreStamp from '../../../components/praxisCard/scoreStamp/ScoreStamp'
-import {
-  scoreBreakdown,
-  formatMult,
-} from '../../../components/praxisCard/scoreStamp/scoreBreakdown'
 import MetaTaskSeal from '../../../components/metaTaskSeal/MetaTaskSeal'
 import { CollabRoster } from '../../../components/collab/CollabRoster'
 import { useFormFactor } from '../../../hooks/useFormFactor'
@@ -146,8 +143,6 @@ export default function DefaultPraxisDetail({ state }: { state: PraxisDetailStat
   // PUBLISHED half of that same fact, so it takes the complement — one roster
   // on the page, never two.
   const rosterInBanners = praxis.status === 'in_progress' || praxis.status === 'pending'
-
-  const { base, mult, meta, votes, total } = scoreBreakdown(praxis)
 
   /** A spectrum hairline running out from a label — the page's only rule. */
   const sectionHead = (label: ReactNode, trailing?: ReactNode) => (
@@ -407,53 +402,23 @@ export default function DefaultPraxisDetail({ state }: { state: PraxisDetailStat
 
   // ── Score (built once; aside on desktop, above the proof on mobile) ────────
   //
-  // Reads twice, as the design specifies: the stamp carries the total mark, and
-  // the strip below it spells the working out. Neither number is computed here —
-  // `scoreBreakdown()` is the single resolver (ADR-0053), so the two readouts
-  // and every praxis card agree by construction. The design's own arithmetic
-  // (a multiplier derived from the vote average) is NOT built; #1091 restyles
-  // the stamp.
-  const scoreRow = (label: string, value: ReactNode) => (
-    <div
-      style={{
-        display: 'flex',
-        alignItems: 'baseline',
-        justifyContent: 'space-between',
-        gap: 'var(--space-md)',
-        padding: 'var(--space-xs) 0',
-      }}
-    >
-      <span className="eyebrow" style={{ color: 'var(--faction-default-card-muted)' }}>
-        {label}
-      </span>
-      <span
-        className="font-body"
-        style={{ fontSize: 'var(--text-content)', color: 'var(--faction-default-card-text)' }}
-      >
-        {value}
-      </span>
-    </div>
-  )
-
+  // ONE readout, and it is not this file's (#1091). `ScoreStamp` carries the
+  // struck disc, the ruled leader-line rows and the votes tally — the whole of
+  // the design's score rail — dispatched on the task's faction so an unskinned
+  // faction still gets its own total mark here. #1088 drew a second strip of
+  // rows under the stamp that restated exactly the same terms; it is gone, so
+  // card, composer and detail cannot drift apart.
+  //
+  // The design's own arithmetic is NOT built. It derives a multiplier from the
+  // VOTE AVERAGE, calls it the faction multiplier, and prints votes as a count.
+  // The model is `(base + meta) × faction_mult + votes` (ADR-0014/0047/0053),
+  // resolved once by `scoreBreakdown()` inside the stamp.
   const scoreBlock = (
     <section style={panel}>
       {sectionHead(t('detail.score.heading'))}
-      <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 'var(--space-lg)' }}>
+      <div style={{ display: 'flex', justifyContent: 'center' }}>
         {/* The crown already has its own hero banner above; one mark per page. */}
         <ScoreStamp praxis={praxis} showCrown={false} />
-      </div>
-      {scoreRow(t('detail.score.base'), base)}
-      {mult !== null && scoreRow(t('detail.score.multiplier'), formatMult(mult))}
-      {meta !== null && scoreRow(t('detail.score.meta'), `+${meta}`)}
-      {scoreRow(t('detail.score.votes'), `+${votes}`)}
-      <div
-        style={{
-          borderTop: '1px solid var(--faction-default-card-line)',
-          marginTop: 'var(--space-xs)',
-          paddingTop: 'var(--space-xs)',
-        }}
-      >
-        {scoreRow(t('detail.score.total'), total.toFixed(1))}
       </div>
     </section>
   )

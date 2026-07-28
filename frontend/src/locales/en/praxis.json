@@ -189,12 +189,7 @@
     },
     "score": {
       "ptsMultVotes": "pts × bonus + votes",
-      "heading": "Score",
-      "base": "Base",
-      "multiplier": "Multiplier",
-      "meta": "Metatasks",
-      "votes": "From votes",
-      "total": "Total"
+      "heading": "Score"
     },
     "metatasks": {
       "heading": "Metatasks"

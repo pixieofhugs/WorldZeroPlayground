@@ -673,11 +673,18 @@ export function PraxisVoterBreakdown({ state }: { state: PraxisDetailState }) {
 
 // ── Single earned-points breakdown (#641, ADR-0053) ──────────────────────────
 //
-// The one explicit score readout a detail page shows. The arithmetic is NOT
-// done here: `scoreBreakdown()` is the single resolver for cards and detail
-// alike, so the two surfaces cannot disagree. What lives here is the detail
-// page's own PRESENTATION — the inline `{base} × {mult} + {votes}` form and the
-// per-faction accent/muted/font theming each of the 14 archetypes passes in.
+// LEGACY, AND ON ITS WAY OUT WITH #1089. This is the inline readout the SIX
+// legacy desktop archetypes and the EIGHT mobile ones still render; #1091
+// removed its last non-legacy caller by giving the rebuilt Unaffiliated page the
+// dispatched `ScoreStamp` instead. It cannot be deleted here because every
+// remaining caller is a file #1089 deletes — so it dies with them, along with
+// `detail.score.ptsMultVotes`, rather than being ripped out from under fourteen
+// shipped skins. Do not add a new caller.
+//
+// The arithmetic is NOT done here: `scoreBreakdown()` is the single resolver for
+// cards and detail alike, so the two surfaces cannot disagree. What lives here
+// is the detail page's own PRESENTATION — the inline `{base} × {mult} + {votes}`
+// form and the per-faction accent/muted/font theming each archetype passes in.
 //
 // This used to derive the multiplier as `(score − votePoints) / base`. Against
 // Merit (`base + votes`) that reduced to `base / base` — 1.0 unconditionally —
