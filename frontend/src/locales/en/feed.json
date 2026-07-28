@@ -210,7 +210,8 @@
       "signup": "Take Up the Quest",
       "decree": "By Royal Decree",
       "byOrder": "by order of the Whimsy Court",
-      "pointsUnit": "Points"
+      "pointsUnit": "points",
+      "levelCaption": "level"
     }
   },
   "factionCard": {

@@ -747,6 +747,46 @@
   --faction-wow-stamp-chip-bg: var(--faction-wow-card-accent); /* plum */
   --faction-wow-stamp-chip-text: var(--faction-wow-chronicle-panel);
 
+  /* ══ WOW — THE QUEST DECREE (task card v2, #1023) ══
+     A gold-framed parchment decree under a gold/plum barber ribbon: the level
+     and a crowned points plaque lead, wavy gold→plum rules divide, a
+     sword-and-shield marks the muster, and a bundle of googly balloons is tucked
+     into the corner. MedievalSharp for display, Lora italic for the quiet
+     register — WOW's two faces, §3.
+
+     NOT THE COVEN CARD. The design file's header reads "Warrior of Whimsy (Cozy
+     Coven)"; the parenthetical is a stale label of exactly the kind ADR-0050
+     records, and following it once already gave the chronicle to Coven and
+     derived a whole yellow skin for WOW out of nothing. Gold + plum +
+     MedievalSharp + sword-and-shield + balloons is WOW. Coven is wave A's pink
+     spell slip.
+
+     ALMOST NOTHING IS NEW, and where the design and the shipped tokens disagree
+     the tokens win — twice, both already-decided questions:
+       • The CTA and the modifier chip take the theme-INVARIANT
+         `--faction-wow-plum-surface` (5.16:1 in both themes), not the design's
+         dark #8a5aae, which note 1 by that declaration already measured at
+         4.10:1 and rejected. The design's own A/B `ctaGold` prop is dropped
+         with it: gold is a frame colour that measures 2.24:1 on the cream, so
+         nothing legible is ever painted on it (§3).
+       • The plaque's shadow, its panel, the burnt-gold total and the balloon
+         ramp are all read from the chronicle/stamp/balloon families verbatim.
+     What remained were two roles nothing had a name for. */
+  /* The crossed swords' blades: gilt on the cream leaf, bone-white on the dark
+     one — the one emblem part that CANNOT be the theme-invariant gold, because
+     a #c8a02a blade on the dark card disappears into its own hilt. This is the
+     design's `em` ternary, which is what a ternary in a skin always is: a token
+     that had not been declared yet. */
+  --faction-wow-quest-blade: #c8a02a;
+  /* The barber ribbon along the decree's head. A composed gradient rather than
+     the raw string three other WOW surfaces already re-type inline. */
+  --faction-wow-quest-ribbon: repeating-linear-gradient(
+    90deg,
+    var(--faction-wow-chronicle-gold) 0 11px,
+    var(--faction-wow-plum-surface) 11px 22px
+  );
+  --faction-wow-quest-shadow: 0 8px 24px -12px rgba(74, 56, 10, 0.5), inset 0 0 0 1px rgba(138, 109, 31, 0.28);
+
   /* WOW — googly-balloon vote plate. The balloon ramp climbs plum → gold and is
      THEME-INVARIANT (the prototype ships one ramp for both themes); only the
      plate and the caption inks flip. */
@@ -769,6 +809,10 @@
   --faction-wow-balloon-string: rgba(60, 44, 6, 0.42);
   --faction-wow-balloon-eye: #241c0b;
   --faction-wow-balloon-eye-ring: #3a2a0c;
+  /* The googly's white. Theme-invariant on the same reasoning as the ramp — a
+     cartoon eye is white in both themes — and named rather than left as the raw
+     `#fff` the vote widget still writes. */
+  --faction-wow-balloon-eye-white: #ffffff;
   /* The rainbow sweep that travels behind the balloon row. Screen-blended over
      the parchment plate, so these are the design's own translucent stops. */
   --faction-wow-sweep: linear-gradient(
@@ -1494,6 +1538,12 @@
      text plum, so the chip stays a chip and not a second heading. */
   --faction-wow-stamp-chip-bg: #8a5aae;
   --faction-wow-stamp-chip-text: var(--faction-wow-card-text);
+  /* The quest decree, lights out (#1023). Only two of its roles move: the blade
+     goes bone-white so the swords read against their own hilts, and the drop
+     shadow loses the light card's gilt inset ring. The ribbon is composed from
+     two theme-invariant surfaces, so it does not appear here at all. */
+  --faction-wow-quest-blade: #f3e7c4;
+  --faction-wow-quest-shadow: 0 8px 24px -12px rgba(0, 0, 0, 0.8);
   --faction-wow-balloon-plate-from: var(--faction-wow-chronicle-panel);
   --faction-wow-balloon-plate-to: var(--faction-wow-card-bg);
   /* plate-border inherits the theme-invariant --faction-wow-chronicle-gold */
@@ -2436,7 +2486,10 @@
 @media (prefers-reduced-motion: no-preference) {
   .wow-balloon-float { animation: wow-bounce 2.2s ease-in-out infinite; animation-delay: var(--tw-delay, 0s); }
   .wow-balloon-cheer { animation: wow-group-bounce 1.05s ease-in-out infinite; }
-  .wow-balloon-eye { transform-box: fill-box; transform-origin: center; animation: wow-eye-wiggle 1.4s ease-in-out infinite; }
+  /* --wow-eye-delay lets a caller stagger a bunch so no two pupils travel
+     together (#1023's quest decree does); it defaults to 0s, which is the
+     vote widget's existing behaviour unchanged. */
+  .wow-balloon-eye { transform-box: fill-box; transform-origin: center; animation: wow-eye-wiggle 1.4s ease-in-out infinite; animation-delay: var(--wow-eye-delay, 0s); }
   .wow-balloon-sweep::after {
     content: "";
     position: absolute;

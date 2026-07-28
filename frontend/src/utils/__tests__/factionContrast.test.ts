@@ -389,6 +389,20 @@ const ARCHETYPE_PAIRS: Pair[] = [
   { what: "ua leaf darkest stop, score numeral", surface: "--faction-ua-panel", text: "--faction-ua-card-accent" },
   { what: "ua leaf CTA", surface: "--faction-ua-card-chip-bg", text: "--faction-ua-card-chip-ink" },
 
+  // WOW — THE QUEST DECREE (task card v2, #1023). Every pairing on this card
+  // resolves to a family measured somewhere above, which is the whole finding:
+  // the design's palette IS WOW's shipped skin, and where the two disagreed the
+  // repo was already right. Its dark CTA plum (#8a5aae) measures 4.10:1 under
+  // cream — the exact value note 1 beside `--faction-wow-plum-surface` rejected
+  // when it made that token theme-invariant — so the card takes the token and
+  // the two rows below pin the pairing rather than a new hue.
+  { what: "wow decree CTA / modifier chip", surface: "--faction-wow-plum-surface", text: "--faction-wow-on-plum" },
+  // The plaque: a burnt-gold total and a plum unit on the parchment plate. The
+  // ✦ between them is a DINGBAT, not text, which is the only reason it may be
+  // painted in the 2.00:1 chronicle gold — so it is deliberately not a row here.
+  { what: "wow decree plaque, total", surface: "--faction-wow-chronicle-panel", text: "--faction-wow-stamp-total" },
+  { what: "wow decree plaque, unit", surface: "--faction-wow-chronicle-panel", text: "--faction-wow-card-accent" },
+
   // Albescent's FACTION tokens are gone (#783) — it renders Default's surfaces,
   // which `default` already covers. What remains is the always-light palette
   // private to the reveal surfaces (invitation letter, secret placeholder). It
