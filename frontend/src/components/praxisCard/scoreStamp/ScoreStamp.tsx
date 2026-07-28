@@ -1,4 +1,4 @@
-import type { PraxisCardOut } from "../../../api/praxis";
+import type { ScoredPraxis } from "./scoreBreakdown";
 import { pickVariant } from "../../../utils/factionDispatch";
 import { surfaceMap } from "../../../factions";
 import DefaultScoreStamp from "./DefaultScoreStamp";
@@ -23,8 +23,30 @@ import DefaultScoreStamp from "./DefaultScoreStamp";
  * mobile guidance reuses the card's score presentation unchanged), which is why
  * the invented mobile `BASE ∣ MULT ∣ VOTES ∣ TOT` strip is gone.
  */
+/**
+ * Everything ANY stamp reads off a praxis — structural, like the `ScoredPraxis`
+ * it extends, so both `PraxisCardOut` (cards) and `PraxisOut` (detail, and the
+ * composer) satisfy it without a cast (#1079).
+ *
+ * The score terms belong to `scoreBreakdown`'s contract; these two do not, so
+ * they are declared HERE rather than pushed into `ScoredPraxis`. `ScoredPraxis`
+ * is the arithmetic the shared selector performs — a crown flag and a dispatch
+ * slug are presentation inputs of this surface, and a future consumer that only
+ * wants the rows shouldn't have to carry them.
+ *
+ * These are the only two extras, verified across all eight registered stamps:
+ * every skin reads `score` + the breakdown terms, plus `is_top_for_task` for the
+ * crown; the dispatcher alone reads `task_faction_slug`.
+ */
+export interface StampablePraxis extends ScoredPraxis {
+  /** Task Crown — top-scoring submitted praxis for its task (ADR-0028). */
+  is_top_for_task: boolean;
+  /** The task's faction: what the stamp surface dispatches on (ADR-0039). */
+  task_faction_slug: string | null;
+}
+
 export interface ScoreStampProps {
-  praxis: PraxisCardOut;
+  praxis: StampablePraxis;
   /**
    * Set false when the surface draws its own TaskCrown (the faction pages, and
    * the mobile cards, whose body already floats one over the frame).

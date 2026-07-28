@@ -64,8 +64,9 @@ export function CollabRoster({
   /**
    * Remove another member (#959). Receives the target's CHARACTER id. When
    * provided, a kick × renders on every OTHER member's pill — but only if the
-   * viewer is themselves a member, mirroring the backend `kick_member` guard
-   * ("any member may kick any other, not self"). The confirm step lives here so
+   * viewer is themselves a member and the collab is still open, mirroring the
+   * backend `kick_member` guard ("any member may kick any other, not self, and
+   * only while in_progress/pending" — #1076). The confirm step lives here so
    * both the composer and the read-only detail block get it for free; the
    * callback only has to run the API call + refresh.
    */
@@ -78,9 +79,14 @@ export function CollabRoster({
   const accent = factionCssVar(factionSlug, 'card-accent')
   const pct = Math.round((gate.castCount / gate.memberCount) * 100)
 
-  // Mirror the backend: only a member may kick, and never themselves.
+  // Mirror the backend: only a member may kick, never themselves, and only
+  // while the praxis is still open (#1076). `published` is that last condition
+  // in roster terms — the backend seals a collab to `submitted` exactly when
+  // every member has cast, and every route back out clears all of them, so S4
+  // and `status === 'submitted'` are the same fact. Keeping it derived means the
+  // rule lives in this one component, not re-stated at each call site.
   const viewerIsMember = members.some((m) => m.character_id === currentCharacterId)
-  const canKick = onKick != null && viewerIsMember
+  const canKick = onKick != null && viewerIsMember && gate.state !== 'published'
 
   const handleKick = (member: PraxisMemberOut) => {
     if (!onKick) return
