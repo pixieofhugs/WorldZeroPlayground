@@ -951,6 +951,31 @@
   --faction-ephemerists-plate-wash: linear-gradient(180deg, rgba(227, 197, 106, 0.24), transparent);
   --faction-ephemerists-plate-shadow: 0 18px 44px -26px rgba(42, 32, 16, 0.45);
 
+  /* ── THE VALLEY PLATE, page-sized (task detail v2, #1032) ──
+     The task card is one plate on the app's own page ground; task detail IS the
+     plate, so it needs a ground of its own, a second sheet for the panel cells,
+     and two hairline weights the card never had to name.
+
+     TWO VALUES ARE WALKED DOWN, for the same reason `-brass` became `-caption`
+     in the block above — the design's inks were measured against the plate, and
+     detail sets quiet type on the darker PAGE as well:
+       · design `faint` #9a8c6c → 2.43:1 on the plate. Unusable as an ink at any
+         size; there is no `-faint` token. Quiet type takes `-quiet` below.
+       · design `muted` #6b5f45 (`-plate-muted`) clears 4.60:1 on the plate but
+         only 4.31:1 on the page. `-quiet` is that same brown taken down until it
+         clears on ALL THREE grounds (page 5.25, plate 5.60, inner 6.20), so a
+         skin never has to know which sheet a label landed on.
+       · design `nile` #2e6e6a measures 4.34:1 on the plate / 4.24:1 on the page —
+         a near miss on the one hue that carries links and the "level met" yes.
+         Walked to #276460: page 4.70, plate 5.01, inner 5.55.
+     Dark needs no walk-down: the same roles clear 5.5–7.5 on the night plate. */
+  --faction-ephemerists-plate-page: #e4d5b0; /* the page ground under the plate */
+  --faction-ephemerists-plate-inner: #f2e7cb; /* the action panel's two cells */
+  --faction-ephemerists-plate-quiet: #5f5238; /* quiet ink — AA on all 3 grounds */
+  --faction-ephemerists-plate-nile: #276460; /* links, affirmations, the eye */
+  --faction-ephemerists-plate-rule: rgba(42, 36, 24, 0.1); /* journal ruling */
+  --faction-ephemerists-plate-line: rgba(42, 36, 24, 0.24); /* hairline borders */
+
   /* ══ Everymen — the rainbow's missing red (union/WW2 poster) ══
      Constants (cream/gold/ink) keep their role in both themes; the paper
      surface + its text FLIP in dark; accent red stays vivid; field is the
@@ -1475,6 +1500,13 @@
   --faction-ephemerists-plate-cta-ink: #12151f;
   --faction-ephemerists-plate-wash: none;
   --faction-ephemerists-plate-shadow: 0 20px 50px -26px rgba(0, 0, 0, 0.8);
+  /* Page-sized plate (#1032) — the night half of the block above. */
+  --faction-ephemerists-plate-page: #101320;
+  --faction-ephemerists-plate-inner: #1d2130;
+  --faction-ephemerists-plate-quiet: #a2977a;
+  --faction-ephemerists-plate-nile: #5fb3a6;
+  --faction-ephemerists-plate-rule: rgba(201, 162, 75, 0.12);
+  --faction-ephemerists-plate-line: rgba(201, 162, 75, 0.28);
 
   /* ── Warriors of Whimsy collage scrap layers (dark) ── */
   --faction-coven-scrap-deep: #091209;
@@ -2597,6 +2629,51 @@
     animation: epg-breathe 19s ease-in-out infinite;
     animation-delay: var(--epg-delay, 0s);
   }
+}
+
+/* Ephemerists — the sheet a page-sized Valley plate is printed on (task detail
+   v2, #1032). The archetype's own content column wears it: this whole page IS
+   the plate, so the papyrus is the column's surface, not a tint under it.
+
+   NOT a fixed full-bleed backdrop, and that is the point. #1056 pulled that
+   pattern off the na build after live QA, and the layout says why: the routed
+   page sits inside a `position: relative; z-index: 5` wrapper, so a fixed
+   `z-index: 0` child of it is a POSITIONED descendant of that stacking context
+   and paints over the non-positioned sidebar beside it.
+
+   Deliberately NOT `.eph-backdrop` either — that is the illuminated-codex ground
+   (`--eph-*`) every OTHER Ephemerists surface still paints on. The v2 plate is a
+   full metaphor swap (ADR-0055) and the two grounds must not be confused.
+
+   The wash only LIGHTENS (a gold bloom off the cornice) and never darkens. Both
+   inks this ground carries were walked down to a measured margin over the FLAT
+   page value, and a darkening vignette eats that margin exactly where the page
+   runs longest: `-nile` falls from 4.70 to 4.29 under a 5% black veil. That is
+   how a decorative gradient fails AA without anything reporting it. */
+.eph-plate-sheet {
+  background:
+    radial-gradient(58% 40% at 50% 0%, rgba(227, 197, 106, 0.16), transparent 72%),
+    var(--faction-ephemerists-plate-page);
+  transition: background 300ms;
+}
+[data-theme="dark"] .eph-plate-sheet {
+  background:
+    radial-gradient(58% 40% at 50% 0%, rgba(201, 162, 75, 0.1), transparent 72%),
+    var(--faction-ephemerists-plate-page);
+}
+
+/* The winged disc crowning the action panel (#1032). The design lifts the gold
+   off the papyrus with a hard night-blue offset plus a soft cast, and drops to a
+   plain soft cast on the dark plate where the hard edge would only smear. That
+   choice arrives here as a cascade rule rather than as the design's
+   `theme === 'dark' ? … : …` ternary in the component. */
+.eph-plate-crown {
+  filter:
+    drop-shadow(0 2px 0 var(--faction-ephemerists-plate-band))
+    drop-shadow(0 6px 14px rgba(30, 34, 51, 0.45));
+}
+[data-theme="dark"] .eph-plate-crown {
+  filter: drop-shadow(0 3px 7px rgba(0, 0, 0, 0.6));
 }
 
 /* Coven — the spell slip's braid (#1023): a slender celtic thread with a gold
