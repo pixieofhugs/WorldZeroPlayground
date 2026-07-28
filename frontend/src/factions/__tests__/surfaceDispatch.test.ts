@@ -91,8 +91,9 @@ const REQUIRED = SURFACE_KEYS.filter((surface) =>
 // a bespoke skin; until then WOW renders the generic Default (N/A), not Coven.
 // When a skin ships, drop the surface here and the "still pending" guard below
 // fails, forcing this allowlist to shrink in lockstep with the fix.
+// `taskDetail` left this set in #1037 — the parchment field, WOW's first
+// desktop task-detail page. Three bullets of #951 remain.
 const WOW_PENDING: ReadonlySet<string> = new Set([
-  'taskDetail',
   'praxisDetail',
   'factionCard',
   'factionBody',
