@@ -21,6 +21,7 @@ import {
   FilePicker,
   InviteSearch,
   PublishButton,
+  SaveDraftButton,
   TitleField,
 } from "../archetypes/controls";
 import { MetataskSealStack } from "../MetataskSealStack";
@@ -272,6 +273,7 @@ export default function DefaultEditPraxis({
           borderTop: `1px solid ${BORDER}`,
         }}
       >
+        <SaveDraftButton state={state} />
         {!state.isPublished && (
           <DropButton
             state={state}

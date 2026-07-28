@@ -37,6 +37,7 @@ import {
   InviteSearch,
   ModePicker,
   PublishButton,
+  SaveDraftButton,
   TitleField,
 } from "./controls";
 import { MetataskSealStack } from "../MetataskSealStack";
@@ -638,6 +639,7 @@ export default function WowEditPraxis({ state }: Props) {
                 borderTop: `1px solid ${panelBorder}`,
               }}
             >
+              <SaveDraftButton state={state} />
               <DropButton
                 state={state}
                 skin={{

@@ -14,6 +14,7 @@ import {
   FilePicker,
   InviteSearch,
   PublishButton,
+  SaveDraftButton,
   TitleField,
 } from '../archetypes/controls'
 import { MetataskSealStack } from '../MetataskSealStack'
@@ -280,6 +281,7 @@ export default function UaComposer({ state }: { state: EditPraxisState }) {
           borderTop: `1px solid ${HAIR}`,
         }}
       >
+        <SaveDraftButton state={state} />
         {!state.isPublished && (
           <DropButton
             state={state}

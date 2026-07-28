@@ -96,6 +96,7 @@
       "titleRequired": "Title is required.",
       "titleTooLong": "Title must be 200 characters or fewer.",
       "publish": "Could not publish proof.",
+      "saveDraft": "Could not save your draft — your writing is still here, so try again in a moment.",
       "drop": "Could not drop the task.",
       "changeMode": "Could not change mode.",
       "upload": "Could not upload {{name}}.",
@@ -230,6 +231,7 @@
       "table": "table"
     },
     "dropTask": "drop task",
+    "saveDraft": "save draft",
     "mobile": {
       "write": "Write",
       "preview": "Preview",

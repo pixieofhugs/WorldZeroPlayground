@@ -217,6 +217,15 @@ export interface EditPraxisState {
   // Save / publish / drop
   submitting: boolean;
   publish: () => Promise<void>;
+  /**
+   * The composer's third exit (#1081): keep the draft and leave.
+   *
+   * Flushes the queued autosave — cancel, then write the text in hand, the same
+   * two steps publish runs — and navigates to the player's own profile, where
+   * their `in_progress` praxes are listed. Refuses to leave (and says so) if the
+   * flush can't be written, so no keystroke is lost on the way out.
+   */
+  saveDraft: () => Promise<void>;
   /** Pull my own cast back on a pending collab (#591). */
   pullBack: () => Promise<void>;
   /**
@@ -321,6 +330,71 @@ export function hasUnsavedEdits(
   lastSavedBody: string | null,
 ): boolean {
   return title !== lastSavedTitle || body !== lastSavedBody;
+}
+
+/**
+ * The composer's one manual write: **cancel the queued autosave first, then
+ * persist the text in hand** — in that order, and never one without the other.
+ *
+ * The ordering is the whole correctness of a manual save (#1081). A queued
+ * debounce holds a *stale* closure over title/body; leaving it armed lets it
+ * land after the manual PUT and re-write older text, while cancelling without
+ * writing drops every keystroke typed inside the 2s window. Publish has always
+ * done both (#360); Save draft needs exactly the same two steps, so they live
+ * here once rather than being re-typed at each call site.
+ *
+ * Exported (and dependency-injected on `cancelQueuedAutosave`) so the ordering
+ * is provable in a test that calls it directly — the frontend harness runs no
+ * effects, so the debounce timer can't be exercised through the component.
+ *
+ * Returns whether a PUT actually went out: nothing changed since the last save
+ * → no request at all (#360; on a collab a PUT would reset every member's
+ * `has_submitted`, ADR-0012).
+ */
+export async function flushEdits(options: {
+  praxisId: number;
+  title: string;
+  body: string;
+  lastSavedTitle: string | null;
+  lastSavedBody: string | null;
+  cancelQueuedAutosave: () => void;
+}): Promise<boolean> {
+  const {
+    praxisId,
+    title,
+    body,
+    lastSavedTitle,
+    lastSavedBody,
+    cancelQueuedAutosave,
+  } = options;
+  // First, always — even on the clean path, where the queued write would be a
+  // no-op PUT the collab consensus rules can't afford.
+  cancelQueuedAutosave();
+  if (!hasUnsavedEdits(title, body, lastSavedTitle, lastSavedBody)) return false;
+  await updatePraxis(praxisId, { title, body_text: body || undefined });
+  return true;
+}
+
+/**
+ * Save draft can't leave when the flush it's about to run would be rejected.
+ *
+ * The backend requires a title, which is why the autosave effect sits out a
+ * blank one. That's harmless while the player stays on the page — but Save
+ * draft *navigates away*, so a blank title with unsaved body text would strand
+ * the writing with nowhere to land. Refuse the exit and say why instead (#1081).
+ *
+ * A blank title with nothing unsaved is not this case: there is no pending
+ * write to reject, so leaving is free.
+ */
+export function draftNeedsTitle(
+  title: string,
+  body: string,
+  lastSavedTitle: string | null,
+  lastSavedBody: string | null,
+): boolean {
+  return (
+    hasUnsavedEdits(title, body, lastSavedTitle, lastSavedBody) && !title.trim()
+  );
 }
 
 export function useEditPraxis(idParam: string | undefined): EditPraxisState {
@@ -634,30 +708,32 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
   );
 
   // ---- Save / publish ----
+  const cancelQueuedAutosave = useCallback(() => {
+    if (autosaveTimerRef.current) {
+      clearTimeout(autosaveTimerRef.current);
+      autosaveTimerRef.current = null;
+    }
+  }, []);
+
+  /** Cancel-then-write, then remember what was written. Resolves to whether a
+   * PUT went out — see `flushEdits` for why the order matters. */
   const persistEdits = useCallback(
     async (praxisId: number) => {
-      // Cancel any queued autosave so it can't race the manual write.
-      if (autosaveTimerRef.current) {
-        clearTimeout(autosaveTimerRef.current);
-        autosaveTimerRef.current = null;
+      const wrote = await flushEdits({
+        praxisId,
+        title,
+        body,
+        lastSavedTitle: lastSavedTitleRef.current,
+        lastSavedBody: lastSavedBodyRef.current,
+        cancelQueuedAutosave,
+      });
+      if (wrote) {
+        lastSavedTitleRef.current = title;
+        lastSavedBodyRef.current = body;
       }
-      // Nothing changed since the last save → skip the PUT entirely (#360).
-      // On a collab the PUT would reset every member's has_submitted.
-      if (
-        !hasUnsavedEdits(
-          title,
-          body,
-          lastSavedTitleRef.current,
-          lastSavedBodyRef.current,
-        )
-      ) {
-        return;
-      }
-      await updatePraxis(praxisId, { title, body_text: body || undefined });
-      lastSavedTitleRef.current = title;
-      lastSavedBodyRef.current = body;
+      return wrote;
     },
-    [title, body],
+    [title, body, cancelQueuedAutosave],
   );
 
   const publish = useCallback(async () => {
@@ -729,6 +805,58 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
       setSubmitting(false);
     }
   }, [idParam, title, persistEdits, navigate, refetch, user?.character?.id, duel]);
+
+  // The third exit (#1081). Publish files the praxis and Drop destroys it; this
+  // is the one that keeps the draft and simply leaves.
+  //
+  // Almost every byte is already persisted by the time it's pressed — title and
+  // body on the 2s debounce, media the moment it's picked — so the work here is
+  // the flush, not a save: the queued autosave is cancelled and the text in hand
+  // written in its place, exactly as publish does. Without that, the keystrokes
+  // typed inside the debounce window would be discarded by the unmount.
+  //
+  // Destination is the player's own profile, whose praxis grid shows them their
+  // own `in_progress` work (`praxis_visibility_condition` ORs in the viewer's
+  // member praxes) — i.e. the draft they just saved, waiting where they left it.
+  const saveDraft = useCallback(async () => {
+    if (!idParam) return;
+    if (
+      draftNeedsTitle(
+        title,
+        body,
+        lastSavedTitleRef.current,
+        lastSavedBodyRef.current,
+      )
+    ) {
+      // Stay put: the body is still in the box, and leaving would strand it.
+      setError(i18n.t("forms:editPraxis.errors.titleRequired"));
+      return;
+    }
+    const dirty = hasUnsavedEdits(
+      title,
+      body,
+      lastSavedTitleRef.current,
+      lastSavedBodyRef.current,
+    );
+    setError("");
+    if (dirty) setSaveStatus("saving");
+    try {
+      await persistEdits(parseInt(idParam, 10));
+    } catch (err) {
+      // The write failed, so the only copy of this text is the one on screen.
+      // Report and hold — navigating now would be the data loss the flush exists
+      // to prevent.
+      if (dirty) setSaveStatus("error");
+      setError(extractError(err, i18n.t("forms:editPraxis.errors.saveDraft")));
+      return;
+    }
+    if (dirty) {
+      setAutosaveAt(new Date());
+      setSaveStatus("saved");
+    }
+    const characterId = user?.character?.id;
+    navigate(characterId != null ? `/characters/${characterId}` : "/tasks");
+  }, [idParam, title, body, persistEdits, navigate, user?.character?.id]);
 
   // Pull my own part back out of a pending collab (#591) — clears my cast so the
   // composer unlocks for editing. Backend re-opens only my membership (#590).
@@ -824,10 +952,7 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
         : dropTaskConfirm(),
     );
     if (!confirmed) return;
-    if (autosaveTimerRef.current) {
-      clearTimeout(autosaveTimerRef.current);
-      autosaveTimerRef.current = null;
-    }
+    cancelQueuedAutosave();
     try {
       await deletePraxis(praxis.id);
     } catch (err) {
@@ -835,7 +960,7 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
       return;
     }
     navigate("/tasks");
-  }, [praxis, navigate, askConfirm]);
+  }, [praxis, navigate, askConfirm, cancelQueuedAutosave]);
 
   // ---- Mode switching ----
   const changeMode = useCallback(
@@ -1302,6 +1427,7 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
 
     submitting,
     publish,
+    saveDraft,
     pullBack,
     reopenForEdit,
     leaveCollab,

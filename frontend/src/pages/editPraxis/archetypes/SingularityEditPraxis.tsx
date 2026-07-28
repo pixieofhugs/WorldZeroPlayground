@@ -16,6 +16,7 @@ import {
   InviteSearch,
   ModePicker,
   PublishButton,
+  SaveDraftButton,
   TitleField,
 } from "./controls";
 import { MetataskSealStack } from "../MetataskSealStack";
@@ -612,6 +613,7 @@ export default function SingularityEditPraxis({ state }: Props) {
             flexWrap: "wrap",
           }}
         >
+          <SaveDraftButton state={state} />
           <DropButton
             state={state}
             skin={{

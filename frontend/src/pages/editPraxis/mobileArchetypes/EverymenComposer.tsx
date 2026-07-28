@@ -13,6 +13,7 @@ import {
   FilePicker,
   InviteSearch,
   PublishButton,
+  SaveDraftButton,
   TitleField,
 } from '../archetypes/controls'
 import { MetataskSealStack } from '../MetataskSealStack'
@@ -222,6 +223,7 @@ export default function EverymenComposer({ state }: { state: EditPraxisState }) 
           borderTop: `2px solid ${INK}`,
         }}
       >
+        <SaveDraftButton state={state} />
         {!state.isPublished && (
           <DropButton
             state={state}

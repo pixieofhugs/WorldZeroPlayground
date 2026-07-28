@@ -13,6 +13,7 @@ import {
   FilePicker,
   InviteSearch,
   PublishButton,
+  SaveDraftButton,
   TitleField,
 } from '../archetypes/controls'
 import { MetataskSealStack } from '../MetataskSealStack'
@@ -223,6 +224,7 @@ export default function SingularityComposer({ state }: { state: EditPraxisState 
           borderTop: `1px solid ${BORDER_HARD}`,
         }}
       >
+        <SaveDraftButton state={state} />
         {!state.isPublished && (
           <DropButton
             state={state}
