@@ -71,9 +71,13 @@ else — find out where before shipping the split.
 
 **4. A new font family.** `index.html` requests a Google Fonts stylesheet that
 is render-blocking and on a third-party origin. Every family added to that URL
-adds `@font-face` blocks to a file that must download before first paint. At the
-time of writing that request names families nothing in the codebase uses. Before
+adds `@font-face` blocks to a file that must download before first paint. Before
 adding one, check that the one you want isn't already there.
+
+`fontsLoaded.test.ts` guards this in both directions: a family named in source
+but not requested renders as a silent fallback (#839), and a family requested but
+named nowhere is weight nobody uses. The second half matters most when a surface
+is *deleted* — the card goes, the font request stays behind.
 
 ## Assets
 
