@@ -576,6 +576,17 @@ export default function WowTaskDetail({ state }: { state: TaskDetailState }) {
     color: MUTED,
   };
 
+  /** The line above a CTA inside the plate. A tier below a section head — the
+   *  plate's text column is ~240px wide and a 32px MedievalSharp line breaks
+   *  three ways in it (the design sets this one at 24 for the same reason). */
+  const plateHeading: CSSProperties = {
+    fontFamily: MED,
+    fontSize: size.stat,
+    lineHeight: 1.08,
+    color: INK,
+    marginBottom: "var(--space-md)",
+  };
+
   // ── The one action slot. Nothing renders when the viewer has no move to make —
   //    an unusable control is worse than none.
   const actionBody = (
@@ -604,17 +615,7 @@ export default function WowTaskDetail({ state }: { state: TaskDetailState }) {
 
       {mySubmission && (
         <div>
-          <div
-            style={{
-              fontFamily: MED,
-              fontSize: size.sectionHead,
-              lineHeight: 1.08,
-              color: INK,
-              marginBottom: "var(--space-md)",
-            }}
-          >
-            {t("detail.submitted.text")}
-          </div>
+          <div style={plateHeading}>{t("detail.submitted.text")}</div>
           <Link to={`/praxes/${mySubmission.id}/edit`} style={ctaStyle(true)}>
             <Star size={13} color={GOLD} />
             {t("detail.submitted.edit")}
@@ -624,17 +625,7 @@ export default function WowTaskDetail({ state }: { state: TaskDetailState }) {
 
       {!mySubmission && isInProgress && inProgressPraxisId !== null && (
         <div>
-          <div
-            style={{
-              fontFamily: MED,
-              fontSize: size.sectionHead,
-              lineHeight: 1.08,
-              color: INK,
-              marginBottom: "var(--space-md)",
-            }}
-          >
-            {t("detail.inProgress.text")}
-          </div>
+          <div style={plateHeading}>{t("detail.inProgress.text")}</div>
           <Link to={`/praxes/${inProgressPraxisId}/edit`} style={ctaStyle(true)}>
             <Star size={13} color={GOLD} />
             {t("detail.inProgress.continue")}
