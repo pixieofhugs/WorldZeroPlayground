@@ -44,7 +44,7 @@
  * TASK's faction so an unskinned faction still votes in its own voice ·
  * `CollabRoster` for the members · `MediaGallery` · `MetaTaskSeal`, read-only:
  * `apply_metatask` requires `in_progress`, so the design's "Available" chips
- * would 422 on every tap (#1093 removes the dead wiring).
+ * would 422 on every tap (#1093 removed the dead wiring behind them).
  *
  * ## The duel slot
  *
@@ -614,8 +614,12 @@ export default function DefaultPraxisDetail({ state }: { state: PraxisDetailStat
     </section>
   )
 
-  // Read-only (#1093 clears the dead apply wiring): `apply_metatask` requires
-  // `status == in_progress`, so a chip on this page would 422 on every tap.
+  // READ-ONLY, by construction (#1093). `MetaTaskSeal` omits the peel control
+  // and the add slot when it gets neither `removable` nor `onAdd`, and each seal
+  // wears its ISSUING faction's dress (#927/#933). The design's "Available"
+  // chips are deliberately absent: `apply_metatask` (services/praxis.py)
+  // requires `status == in_progress`, so every chip would 422 on tap — and the
+  // composer already agrees, gating `canSealMetatask` on `!controlsLocked`.
   const metatasks = praxis.applied_metatasks.length > 0 && (
     <section style={{ marginBottom: desktop ? 'var(--space-2xl)' : 'var(--space-xl)' }}>
       {sectionHead(t('detail.metatasks.heading'))}

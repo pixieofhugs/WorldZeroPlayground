@@ -128,10 +128,7 @@
       "withdraw": "Could not withdraw this praxis.",
       "resubmit": "Could not resubmit.",
       "flag": "Could not flag this praxis.",
-      "flagReasonMissing": "Pick a reason first.",
-      "metataskLoad": "Failed to load metatasks.",
-      "metataskApply": "Failed to apply metatask.",
-      "metataskRemove": "Failed to remove metatask."
+      "flagReasonMissing": "Pick a reason first."
     },
     "banners": {
       "crownLabel": "TASK CROWN",
@@ -200,18 +197,7 @@
       "total": "Total"
     },
     "metatasks": {
-      "heading": "Metatasks",
-      "loading": "loading...",
-      "applied": "Applied",
-      "appliedPoints": "+{{points}} pts",
-      "remove": "remove",
-      "removing": "...",
-      "appliedEmpty": "No metatasks applied yet.",
-      "available": "Available",
-      "availableEmpty": "No eligible metatasks available.",
-      "apply": "apply",
-      "applying": "...",
-      "readOnlyNote": "Reach level 7 to apply metatasks."
+      "heading": "Metatasks"
     },
     "seal": {
       "label": "{{faction}} Metatask",
