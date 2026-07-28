@@ -1,253 +1,153 @@
-import type { CSSProperties, ReactNode } from "react";
+import { useState, type CSSProperties, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import PraxisCard from "../../../components/PraxisCard";
+import { Lotus } from "../../../components/factionMarks";
 import { UaSigil } from "../../../components/cards/UaSigil";
 import {
   UA_DISPLAY,
   UA_EYEBROW,
   UA_TEXT,
   UaEnsoScore,
-  UaInkColumn,
   uaShade,
 } from "../../../components/cards/uaAtoms";
+import { useFormFactor } from "../../../hooks/useFormFactor";
+import { factionCssVar, factionFill, factionName } from "../../../utils/factions";
 import { mediaUrl } from "../../../utils/media";
-import { ErrorBanner, LevelJumpBanner, TaskDetailComments, relationOf } from "./shared";
-import type { TaskSignupOut } from "../../../api/tasks";
+import { isNeutralMultiplier } from "../../../utils/points";
+import { ErrorBanner, LevelJumpBanner, TaskDetailComments } from "./shared";
 import type { TaskDetailState } from "../useTaskDetail";
 
 /**
- * UA task detail — the sheet (#851).
+ * UA (University of Asthmatics) task detail — THE VELLUM LEAF, page-sized
+ * (design `.design-sync/task-details-v2/ua-task-detail.jsx`, #1036).
  *
- * The gilt salon is dead: no crest shield, no gold-leaf sandwich, no dot-grid
- * parchment, no fleur-de-lis. A task reads as a sheet of sun-bleached stock
- * with one orange hairline down the left margin, the marks held in an ensō, and
- * quiet uppercase labels over hairline rules.
+ * The shared v2 anatomy (#1030) in UA's language: a sheet of mesa-sand vellum
+ * with a lotus bleeding off the left edge, sienna rules running out from every
+ * label, Cormorant Garamond on the title and the numerals, EB Garamond on
+ * everything read. The header sits beside one 460px action panel that holds the
+ * base value, the (usually absent) ×mult badge and the total inside an ensō.
+ * Then the brief in full, the praxis gallery, the discussion.
  *
- * The mandala is ABSENT here (brief §5). The pattern is allowed on exactly
- * three surfaces — page backdrop, faction hero, join card — and a detail page
- * is dense reading; the UA page backdrop already carries the texture behind it.
+ * WHAT THIS REPLACES: the 681-line "sheet" archetype built on `ua.*` voice keys
+ * (`salonWallHeading`, `critiqueHeading`, `commissionHeading`,
+ * `matriculatedHeading`, `finestHand`, `stats.anno/honoraria/onView`). Those
+ * keys stay in `tasks.json` — the faction pages share those namespaces and the
+ * sweep is #1039 — but nothing here reads them. ADR-0057: task detail carries
+ * NO faction voice, only the shared neutral `detail.*` copy. Dress is UA's;
+ * words are not.
  *
- * Both themes come from the `[data-theme="dark"]` cascade; the page dims with
- * the app. It also used to paint with four font tokens that are declared
- * nowhere in index.css (`--ua-display`, `--ua-engraved`, `--ua-mono`,
- * `--ua-serif`) — undefined custom properties that silently fell back to the
- * inherited face. Both are fixed here.
+ * THREE CONTRACT POINTS WORTH NOT RE-DERIVING:
+ * - **No in-progress roster.** The header's "In progress" count is the only
+ *   place that population appears (owner ruling 2026-07-28, reversing epic
+ *   #1028 decision 3). The old `HandsRow` of signup portraits is deleted, not
+ *   restyled.
+ * - **The ×mult badge renders only off the identity factor.** `era_1`
+ *   neutralises every faction, so it is invisible today (ADR-0055), and the
+ *   factor comes raw off the state contract — never `modifiedPoints /
+ *   basePoints` (ADR-0053's dead arithmetic).
+ * - **The gallery expands in place.** `/praxes?task_id=N` has always dropped the
+ *   filter (the feed reads no such param), so the old "view all" link showed the
+ *   whole feed; it is a show-more/show-fewer toggle now, as on na.
+ *
+ * ONE RESPONSIVE COMPONENT (ADR-0058): `useFormFactor()` picks the size set and
+ * drops the two-column split. `pages/taskDetail/mobileArchetypes/UaTaskDetail`
+ * stays registered but dormant — restoring the dispatcher branch is the whole
+ * revert, so it is not deleted.
+ *
+ * TWO MARKS, AND THE RESTRAINT IS THE POINT (WORLD_ZERO_STYLE §6). The design
+ * draws the ensō five times — the faction line, the points ring, a seal on the
+ * sign-up button, a badge on the best-judged praxis, and again in the header.
+ * The ensō is reserved for the SCORE and the FACTION MARK, so only those two
+ * survive: the 16px mark on the faction line and the ring around the total. A
+ * seal on a button is neither. `UaTaskCard` made the same cut for the same
+ * reason. The lotus is a different device with its own scope — a ground wash —
+ * and it is drawn as the design draws it.
+ *
+ * Both marks are token-tinted components ({@link Lotus} inline,
+ * {@link UaSigil} through a CSS mask), so the design's five `filter:` recolour
+ * hacks — including the sign-up seal's `brightness(0) invert(1)` / `brightness(0)`
+ * theme flip — have no translation and are simply gone. That is what ADR-0049's
+ * "tintable from a token" buys, and it is why there is no ternary anywhere here:
+ * both themes arrive through the `[data-theme="dark"]` cascade.
+ *
+ * NO NEW TOKENS. Every colour is an already-shipped `--faction-ua-*`. The
+ * design's `gilt:#A98246` rule-stop is the one value with no home, and that is
+ * correct: #853 deleted the legacy gilt-salon family outright and UA's gold went
+ * to WOW (#838). The rules run sienna → neutral hairline → transparent instead,
+ * which is the same gesture without resurrecting the palette that was killed.
  */
 
-/** Roman numeral for the practice's "ANNO" (level) label. */
-function romanLevel(n: number): string {
-  return (
-    ["I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X"][
-      Math.max(0, Math.min(9, n - 1))
-    ] ?? String(n)
-  );
+/** Praxis shown before the gallery expands — `PraxisCard` is `flex 1 1 394px`. */
+const GALLERY_PREVIEW = 3;
+
+/** Initials fallback for an author with no uploaded avatar. */
+function initialsOf(name: string): string {
+  return name
+    .split(/\s+/)
+    .filter(Boolean)
+    .map((word) => word[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
 }
 
-const PANEL: CSSProperties = {
-  display: "flex",
-  alignItems: "center",
-  gap: "var(--space-lg)",
-  flexWrap: "wrap",
-  padding: "var(--space-lg) var(--space-xl)",
-  border: "1px solid var(--faction-ua-rule)",
-  borderRadius: "var(--radius-sm)",
-  background: "var(--faction-ua-card-bg)",
+interface SizeSet {
+  /** Action-panel width. UA runs the widest bar but Everymen; dress (§4a). */
+  panel: number;
+  /** The points ensō, and the lotus wash. Ornament geometry, so raw px. */
+  enso: number;
+  lotus: number;
+  lotusLeft: number;
+  lotusTop: number;
+  title: string;
+  level: string;
+  count: string;
+}
+
+const SIZES: Record<"desktop" | "mobile", SizeSet> = {
+  desktop: {
+    panel: 460,
+    enso: 124,
+    lotus: 880,
+    lotusLeft: -230,
+    lotusTop: -110,
+    title: "var(--text-display)",
+    level: "var(--text-heading)",
+    count: "var(--text-title)",
+  },
+  mobile: {
+    panel: 0,
+    enso: 104,
+    lotus: 560,
+    lotusLeft: -200,
+    lotusTop: 40,
+    title: "var(--text-heading)",
+    level: "var(--text-title)",
+    count: "var(--text-content)",
+  },
 };
-
-/**
- * The banner surface for a signup error.
- *
- * #848 turned `--faction-ua-light` from `rgba(194,84,31,.08)` into an opaque
- * `#f2e0cb`; what used to be a whisper behind this banner became a solid wash.
- * It now names the panel token it was always reaching for, and takes an accent
- * ink that clears AA on it in both themes.
- */
-const BANNER: CSSProperties = {
-  flexBasis: "100%",
-  marginTop: 0,
-  background: "var(--faction-ua-panel)",
-  border: "1px solid var(--faction-ua-border)",
-  borderRadius: "var(--radius-sm)",
-  color: "var(--faction-ua-card-accent)",
-};
-
-/** Solid-fill affordance — the practice's one saturated note. */
-const FILLED_ACTION: CSSProperties = {
-  cursor: "pointer",
-  fontFamily: UA_TEXT,
-  fontSize: "var(--text-xl)",
-  letterSpacing: "0.14em",
-  textTransform: "uppercase",
-  color: "var(--faction-ua-on-fill)",
-  background: "var(--faction-ua)",
-  border: "none",
-  borderRadius: "var(--radius-sm)",
-  padding: "var(--space-md) var(--space-xl)",
-  textDecoration: "none",
-};
-
-/** Section header — the eyebrow over a hairline that runs to the margin. */
-function SectionHead({ title, trailing }: { title: string; trailing?: ReactNode }) {
-  return (
-    <div
-      style={{
-        display: "flex",
-        alignItems: "center",
-        gap: "var(--space-lg)",
-        marginBottom: "var(--space-lg)",
-      }}
-    >
-      <h2 style={{ ...UA_EYEBROW, margin: 0, whiteSpace: "nowrap" }}>{title}</h2>
-      <span
-        style={{ flex: 1, height: 1, background: "var(--faction-ua-rule)" }}
-      />
-      {trailing}
-    </div>
-  );
-}
-
-/** Those practising — signup portraits with friend/foe dots. */
-function HandsRow({
-  signups,
-  friends,
-  foes,
-}: {
-  signups: TaskSignupOut[];
-  friends: Set<number>;
-  foes: Set<number>;
-}) {
-  const { t } = useTranslation("tasks");
-  return (
-    <div
-      style={{
-        display: "flex",
-        alignItems: "center",
-        gap: "var(--space-md)",
-        flexWrap: "wrap",
-      }}
-    >
-      {signups.map((hand) => {
-        const rel = relationOf(hand.character_id, friends, foes);
-        return (
-          <Link
-            key={hand.character_id}
-            to={`/characters/${hand.character_id}`}
-            title={`${hand.display_name}${rel ? ` · ${rel}` : ""}`}
-            style={{ position: "relative", width: 40, height: 40, flexShrink: 0 }}
-          >
-            {hand.avatar_url ? (
-              <img
-                src={mediaUrl(hand.avatar_url)}
-                alt={hand.display_name}
-                style={{
-                  width: 40,
-                  height: 40,
-                  borderRadius: "50%",
-                  objectFit: "cover",
-                  border: "1.5px solid var(--faction-ua-rule)",
-                }}
-              />
-            ) : (
-              <span
-                style={{
-                  display: "flex",
-                  width: 40,
-                  height: 40,
-                  borderRadius: "50%",
-                  background: "var(--faction-ua-panel)",
-                  border: "1.5px solid var(--faction-ua-rule)",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  color: "var(--faction-ua-card-text)",
-                  fontFamily: UA_DISPLAY,
-                  fontWeight: 600,
-                  fontSize: "var(--text-content)",
-                }}
-              >
-                {hand.display_name[0]?.toUpperCase()}
-              </span>
-            )}
-            {rel && (
-              <span
-                title={rel}
-                style={{
-                  position: "absolute",
-                  right: -2,
-                  bottom: -2,
-                  width: 12,
-                  height: 12,
-                  borderRadius: "50%",
-                  background:
-                    rel === "friend"
-                      ? "var(--faction-ua)"
-                      : "var(--faction-ua-vermil)",
-                  border: "2px solid var(--faction-ua-card-bg)",
-                }}
-              />
-            )}
-          </Link>
-        );
-      })}
-      <span style={{ ...UA_EYEBROW, marginLeft: "var(--space-xs)" }}>
-        {t("ua.matriculated")}
-      </span>
-    </div>
-  );
-}
-
-/** One count from the sheet's head — a numeral over its label. */
-function StatCell({
-  label,
-  children,
-  last = false,
-}: {
-  label: string;
-  children: ReactNode;
-  last?: boolean;
-}) {
-  return (
-    <div
-      style={{
-        flex: "1 1 140px",
-        minWidth: 140,
-        padding: "var(--space-lg) var(--space-xl)",
-        borderRight: last ? undefined : "1px solid var(--faction-ua-hair)",
-      }}
-    >
-      <div
-        style={{
-          fontFamily: UA_DISPLAY,
-          fontWeight: 600,
-          fontSize: "var(--text-title)",
-          lineHeight: 1,
-          color: "var(--faction-ua-card-text)",
-        }}
-      >
-        {children}
-      </div>
-      <div style={{ ...UA_EYEBROW, marginTop: "var(--space-xs)" }}>{label}</div>
-    </div>
-  );
-}
 
 export default function UaTaskDetail({ state }: { state: TaskDetailState }) {
   const { t } = useTranslation("tasks");
+  const formFactor = useFormFactor();
+  const desktop = formFactor !== "mobile";
+  const size = SIZES[formFactor];
+  const [showAllPraxis, setShowAllPraxis] = useState(false);
   const {
     task,
-    signups,
     submissions,
-    friends,
-    foes,
     mySubmission,
     isInProgress,
     inProgressPraxisId,
     canSignUp,
+    levelJumpSignup,
     slotsOpen,
     maxTaskSlots,
+    basePoints,
+    factionMultiplier,
     modifiedPoints,
-    topScore,
-    voteCount,
+    inProgressCount,
     sortedSubmissions,
     submissionSort,
     setSubmissionSort,
@@ -259,423 +159,738 @@ export default function UaTaskDetail({ state }: { state: TaskDetailState }) {
   // Guarded non-null by the dispatcher.
   if (!task) return null;
 
-  const statusVoice =
-    task.status === "active" ? t("ua.statusOpen") : task.status;
-  const commissionNo = String(task.id).padStart(4, "0");
+  const slug = task.primary_faction_slug;
+  const isMetatask = task.task_type === "metatask";
+  const showMultiplier = !isNeutralMultiplier(factionMultiplier);
+  const authorName = task.created_by_display_name ?? "";
+  const hasAction =
+    canSignUp || !!mySubmission || (isInProgress && inProgressPraxisId !== null);
 
-  // The truest hand on the sheet wears a quiet orange tag.
-  const topId = submissions.length
-    ? submissions.reduce((a, b) => ((b.score ?? 0) > (a.score ?? 0) ? b : a)).id
-    : null;
+  const innerBox: CSSProperties = {
+    background: "var(--faction-ua-card-bg)",
+    border: "1px solid var(--faction-ua-rule)",
+    borderRadius: 5,
+    padding: desktop ? "var(--space-lg)" : "var(--space-md)",
+    boxSizing: "border-box",
+  };
+  /** The practice's one saturated note. Fill + on-fill: 4.59:1 / 5.59:1. */
+  const primaryAction: CSSProperties = {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    width: "100%",
+    boxSizing: "border-box",
+    cursor: "pointer",
+    textAlign: "center",
+    textDecoration: "none",
+    fontFamily: UA_DISPLAY,
+    fontWeight: 600,
+    fontSize: desktop ? "var(--text-content)" : "var(--text-xl)",
+    letterSpacing: "0.02em",
+    color: "var(--faction-ua-on-fill)",
+    background: "var(--faction-ua)",
+    border: "1.5px solid var(--faction-ua-card-frame)",
+    borderRadius: 5,
+    padding: desktop
+      ? "var(--space-md) var(--space-xl)"
+      : "var(--space-sm) var(--space-lg)",
+  };
+  /** The quiet note under an action — slots, level, "you're on this task". */
+  const aside: CSSProperties = {
+    fontFamily: UA_TEXT,
+    fontSize: "var(--text-xl)",
+    lineHeight: 1.6,
+    color: "var(--faction-ua-card-muted)",
+  };
+
+  /**
+   * The rule that runs out from a label. The design fades sienna → gilt →
+   * transparent; UA has no gilt token any more (#853), so it fades into the
+   * neutral hairline instead.
+   */
+  const rule = (opacity: number) => (
+    <span
+      aria-hidden
+      style={{
+        flex: "1 1 20%",
+        minWidth: 20,
+        height: 1,
+        opacity,
+        background:
+          "linear-gradient(90deg, var(--faction-ua-card-frame), var(--faction-ua-rule) 55%, transparent)",
+      }}
+    />
+  );
+
+  const sectionHead = (label: ReactNode, gloss?: ReactNode) => (
+    <div
+      style={{
+        display: "flex",
+        alignItems: "baseline",
+        gap: "var(--space-md)",
+        marginBottom: "var(--space-md)",
+        flexWrap: "wrap",
+      }}
+    >
+      <span style={{ ...UA_EYEBROW, color: "var(--faction-ua-card-text)" }}>
+        {label}
+      </span>
+      {rule(0.7)}
+      {gloss}
+    </div>
+  );
+
+  // ── The worth: base, the (usually absent) ×mult badge, the total in the ensō ──
+  const worth = (
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        gap: "var(--space-sm)",
+        width: "100%",
+      }}
+    >
+      <div
+        style={{
+          display: "flex",
+          alignItems: "baseline",
+          gap: "var(--space-sm)",
+        }}
+      >
+        <span style={{ ...UA_EYEBROW, letterSpacing: "0.16em" }}>
+          {t("detail.points.base")}
+        </span>
+        <span
+          style={{
+            fontFamily: UA_DISPLAY,
+            fontWeight: 700,
+            fontSize: desktop ? "var(--text-title)" : "var(--text-content)",
+            lineHeight: 0.9,
+            color: "var(--faction-ua-card-text)",
+          }}
+        >
+          {basePoints}
+        </span>
+        {showMultiplier && (
+          <span
+            style={{
+              marginLeft: "auto",
+              fontFamily: UA_DISPLAY,
+              fontWeight: 700,
+              fontSize: "var(--text-xl)",
+              lineHeight: 1,
+              whiteSpace: "nowrap",
+              color: "var(--faction-ua-card-chip-ink)",
+              background: "var(--faction-ua-card-chip-bg)",
+              borderRadius: 4,
+              padding: "var(--space-xs) var(--space-sm)",
+            }}
+          >
+            {t("detail.points.multiplier", {
+              multiplier: factionMultiplier.toFixed(2),
+            })}
+          </span>
+        )}
+      </div>
+      <div style={{ display: "flex" }}>{rule(1)}</div>
+      <div style={{ display: "flex", justifyContent: "center" }}>
+        {/* The mark's one sanctioned use besides the faction line. `vermil` is
+            the documented ink for exactly this numeral at display size. */}
+        <UaEnsoScore
+          size={size.enso}
+          value={modifiedPoints}
+          unit={t("detail.points.total")}
+          valueColor="var(--faction-ua-vermil)"
+        />
+      </div>
+    </div>
+  );
+
+  // ── The one action slot. Nothing renders when the viewer has no move to make:
+  //    an unusable control is worse than none.
+  const actionBody = (
+    <>
+      {canSignUp && (
+        <div>
+          <LevelJumpBanner state={state} />
+          <button onClick={handleSignup} style={primaryAction}>
+            {t("detail.signup.cta")}
+          </button>
+          <div style={{ ...aside, marginTop: "var(--space-sm)" }}>
+            {t("detail.signup.slots", { open: slotsOpen, max: maxTaskSlots })}
+            {!levelJumpSignup && (
+              <>
+                {" · "}
+                <span style={{ color: "var(--faction-ua-card-accent)" }}>
+                  {t("detail.signup.levelMet", { level: task.level_required })}
+                </span>
+              </>
+            )}
+          </div>
+          <ErrorBanner message={signupError} />
+        </div>
+      )}
+
+      {mySubmission && (
+        <div>
+          <div style={{ ...aside, marginBottom: "var(--space-sm)" }}>
+            {t("detail.submitted.text")}
+          </div>
+          <Link to={`/praxes/${mySubmission.id}/edit`} style={primaryAction}>
+            {t("detail.submitted.edit")}
+          </Link>
+        </div>
+      )}
+
+      {!mySubmission && isInProgress && inProgressPraxisId !== null && (
+        <div>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "var(--space-sm)",
+              marginBottom: "var(--space-sm)",
+            }}
+          >
+            <span
+              aria-hidden
+              style={{
+                width: 6,
+                height: 6,
+                flex: "none",
+                borderRadius: "50%",
+                background: "var(--faction-ua-glow)",
+              }}
+            />
+            <span style={{ ...aside, fontStyle: "italic" }}>
+              {t("detail.inProgress.text")}
+            </span>
+          </div>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "var(--space-md)",
+              flexWrap: "wrap",
+            }}
+          >
+            <Link
+              to={`/praxes/${inProgressPraxisId}/edit`}
+              style={{ ...primaryAction, flex: 1, width: "auto" }}
+            >
+              {t("detail.inProgress.continue")}
+            </Link>
+            <button
+              onClick={handleDrop}
+              style={{
+                fontFamily: UA_TEXT,
+                fontStyle: "italic",
+                fontSize: "var(--text-lg)",
+                background: "none",
+                border: "none",
+                borderBottom: "1px solid var(--faction-ua-rule)",
+                cursor: "pointer",
+                padding: 0,
+                color: "var(--faction-ua-card-muted)",
+              }}
+            >
+              {t("detail.inProgress.drop")}
+            </button>
+          </div>
+          <ErrorBanner message={signupError} />
+        </div>
+      )}
+    </>
+  );
+
+  // The bar: worth + action inside one sienna-bound leaf.
+  const actionPanel = (
+    <div
+      style={{
+        position: "relative",
+        background: "var(--faction-ua-lift)",
+        border: "2px solid var(--faction-ua-card-frame)",
+        borderRadius: 7,
+        padding: "var(--space-xs)",
+        boxSizing: "border-box",
+        color: "var(--faction-ua-card-text)",
+        boxShadow: `0 16px 44px -30px ${uaShade(52)}`,
+      }}
+    >
+      <div
+        style={{
+          display: "flex",
+          flexDirection: desktop ? "row" : "column",
+          gap: "var(--space-xs)",
+          alignItems: "stretch",
+        }}
+      >
+        <div
+          style={{
+            ...innerBox,
+            flex: "0 0 auto",
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            minWidth: desktop ? 176 : undefined,
+          }}
+        >
+          {worth}
+        </div>
+        {hasAction && (
+          <div
+            style={{
+              ...innerBox,
+              flex: 1,
+              minWidth: 0,
+              display: "flex",
+              flexDirection: "column",
+              justifyContent: "center",
+            }}
+          >
+            {actionBody}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+
+  // ── Header: breadcrumb, faction line, title, author, the two counts ──
+  const header = (
+    <div>
+      <nav
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: "var(--space-sm)",
+          marginBottom: "var(--space-md)",
+          flexWrap: "wrap",
+        }}
+      >
+        <Link
+          to="/tasks"
+          style={{
+            ...UA_EYEBROW,
+            color: "var(--faction-ua-card-accent)",
+            textDecoration: "none",
+          }}
+        >
+          {t("detail.breadcrumb.tasks")}
+        </Link>
+        <span aria-hidden style={UA_EYEBROW}>
+          /
+        </span>
+        <span style={UA_EYEBROW}>
+          {t("detail.breadcrumb.current", { number: task.id })}
+        </span>
+      </nav>
+
+      {/* The faction line — the mark, then the name resolved from the catalog by
+          slug (ADR-0057). The design captions it 'Unbroken Ascension', which is
+          not this faction's name and not any faction's name; a shared-copy build
+          never reads it. ADR-0050 is the precedent for why that matters. */}
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: "var(--space-sm)",
+          marginBottom: "var(--space-md)",
+          flexWrap: "wrap",
+        }}
+      >
+        <UaSigil width={16} height={16} />
+        <span style={{ ...UA_EYEBROW, fontSize: "var(--text-base)" }}>
+          {factionName(slug)}
+        </span>
+        {isMetatask && (
+          <span
+            style={{
+              fontFamily: UA_TEXT,
+              fontSize: "var(--text-md)",
+              textTransform: "uppercase",
+              letterSpacing: "0.16em",
+              padding: "var(--space-xs) var(--space-sm)",
+              borderRadius: 4,
+              // The pinned faction's own fill, never UA's — that is the seal.
+              ...factionFill(task.metatask_faction_slug, "pill"),
+            }}
+          >
+            {t("detail.meta")}
+          </span>
+        )}
+      </div>
+
+      <h1
+        style={{
+          fontFamily: UA_DISPLAY,
+          fontWeight: 700,
+          fontSize: size.title,
+          lineHeight: 1.08,
+          letterSpacing: "-0.015em",
+          margin: 0,
+          marginBottom: "var(--space-md)",
+          color: "var(--faction-ua-card-text)",
+          overflowWrap: "anywhere",
+        }}
+      >
+        {task.title}
+      </h1>
+
+      {isMetatask && (
+        <p
+          style={{
+            ...UA_EYEBROW,
+            marginTop: 0,
+            marginBottom: "var(--space-md)",
+            color: factionCssVar(task.metatask_faction_slug),
+          }}
+        >
+          {t("detail.metataskFor", {
+            faction: factionName(task.metatask_faction_slug),
+          })}
+        </p>
+      )}
+
+      {/* The proposing character's byline (#1029). */}
+      {authorName && (
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "var(--space-sm)",
+            marginBottom: "var(--space-lg)",
+            flexWrap: "wrap",
+          }}
+        >
+          <Link
+            to={`/characters/${task.created_by}`}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "var(--space-sm)",
+              textDecoration: "none",
+            }}
+          >
+            {task.created_by_avatar_url ? (
+              <img
+                src={mediaUrl(task.created_by_avatar_url)}
+                alt={authorName}
+                style={{
+                  width: 30,
+                  height: 30,
+                  borderRadius: "50%",
+                  objectFit: "cover",
+                  flex: "none",
+                  boxShadow: "0 0 0 1.5px var(--faction-ua-card-frame)",
+                }}
+              />
+            ) : (
+              <span
+                aria-hidden
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  width: 30,
+                  height: 30,
+                  flex: "none",
+                  borderRadius: "50%",
+                  overflow: "hidden",
+                  fontFamily: UA_DISPLAY,
+                  fontWeight: 700,
+                  fontSize: "var(--text-lg)",
+                  background: "var(--faction-ua-panel)",
+                  color: "var(--faction-ua-card-text)",
+                  boxShadow: "0 0 0 1.5px var(--faction-ua-card-frame)",
+                }}
+              >
+                {initialsOf(authorName)}
+              </span>
+            )}
+            <span
+              style={{
+                fontFamily: UA_TEXT,
+                fontSize: "var(--text-xl)",
+                color: "var(--faction-ua-card-text)",
+                borderBottom: "1px solid var(--faction-ua-rule)",
+              }}
+            >
+              {authorName}
+            </span>
+          </Link>
+          <span style={UA_EYEBROW}>
+            {t("detail.author", { level: task.created_by_level ?? 0 })}
+          </span>
+        </div>
+      )}
+
+      {/* Exactly two counts. The completed total lives on the gallery heading,
+          and there is deliberately no roster — this is the only place the
+          in-progress population appears. */}
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: desktop ? "var(--space-xl)" : "var(--space-lg)",
+          flexWrap: "wrap",
+        }}
+      >
+        <div style={{ display: "flex", flexDirection: "column", lineHeight: 1 }}>
+          <span style={{ ...UA_EYEBROW, marginBottom: "var(--space-xs)" }}>
+            {t("detail.stats.level")}
+          </span>
+          <span
+            style={{
+              fontFamily: UA_DISPLAY,
+              fontWeight: 700,
+              fontSize: size.level,
+              lineHeight: 0.9,
+              color: "var(--faction-ua-card-text)",
+            }}
+          >
+            {task.level_required}
+          </span>
+        </div>
+        <span
+          aria-hidden
+          style={{
+            width: 1,
+            alignSelf: "stretch",
+            minHeight: 34,
+            background: "var(--faction-ua-rule)",
+          }}
+        />
+        <div style={{ display: "flex", flexDirection: "column", lineHeight: 1 }}>
+          <span style={{ ...UA_EYEBROW, marginBottom: "var(--space-xs)" }}>
+            {t("detail.stats.inProgress")}
+          </span>
+          <span
+            style={{
+              fontFamily: UA_DISPLAY,
+              fontWeight: 700,
+              fontSize: size.count,
+              lineHeight: 0.9,
+              color: "var(--faction-ua-card-text)",
+            }}
+          >
+            {inProgressCount}
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+
+  // ── The brief, in full. No clamp, no "read more". ──
+  const brief = (
+    <section
+      style={{ marginBottom: desktop ? "var(--space-2xl)" : "var(--space-xl)" }}
+    >
+      {sectionHead(t("detail.brief.heading"))}
+      {task.description && (
+        <div
+          style={{
+            background: "var(--faction-ua-lift)",
+            border: "1px solid var(--faction-ua-hair)",
+            borderRadius: 6,
+            padding: desktop ? "var(--space-xl)" : "var(--space-lg)",
+          }}
+        >
+          <p
+            className="content-text"
+            style={{
+              fontFamily: UA_TEXT,
+              lineHeight: 1.72,
+              color: "var(--faction-ua-card-body)",
+              whiteSpace: "pre-wrap",
+              margin: 0,
+            }}
+          >
+            {task.description}
+          </p>
+        </div>
+      )}
+    </section>
+  );
+
+  // ── The praxis gallery ──
+  const gallery = (
+    <section
+      style={{ marginBottom: desktop ? "var(--space-2xl)" : "var(--space-xl)" }}
+    >
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: "var(--space-md)",
+          marginBottom: "var(--space-md)",
+          flexWrap: "wrap",
+        }}
+      >
+        <span style={{ ...UA_EYEBROW, color: "var(--faction-ua-card-text)" }}>
+          {t("detail.gallery.heading", { count: submissions.length })}
+        </span>
+        {rule(0.7)}
+        <span
+          style={{
+            display: "flex",
+            gap: "var(--space-xs)",
+            padding: "var(--space-xs)",
+            border: "1px solid var(--faction-ua-rule)",
+            borderRadius: 6,
+          }}
+        >
+          {(["score", "recent"] as const).map((sort) => {
+            const on = submissionSort === sort;
+            return (
+              <button
+                key={sort}
+                onClick={() => setSubmissionSort(sort)}
+                style={{
+                  ...UA_EYEBROW,
+                  cursor: "pointer",
+                  border: "none",
+                  borderRadius: 4,
+                  padding: "var(--space-xs) var(--space-sm)",
+                  background: on ? "var(--faction-ua)" : "transparent",
+                  color: on
+                    ? "var(--faction-ua-on-fill)"
+                    : "var(--faction-ua-card-muted)",
+                }}
+              >
+                {sort === "score"
+                  ? t("detail.gallery.sort.top")
+                  : t("detail.gallery.sort.recent")}
+              </button>
+            );
+          })}
+        </span>
+      </div>
+
+      {sortedSubmissions.length === 0 ? (
+        <p
+          className="content-text"
+          style={{
+            fontFamily: UA_TEXT,
+            color: "var(--faction-ua-card-muted)",
+            margin: 0,
+          }}
+        >
+          {t("detail.gallery.empty")}
+        </p>
+      ) : (
+        <>
+          <div className="flex flex-wrap gap-4 items-start">
+            {(showAllPraxis
+              ? sortedSubmissions
+              : sortedSubmissions.slice(0, GALLERY_PREVIEW)
+            ).map((praxis) => (
+              <PraxisCard key={praxis.id} praxis={praxis} />
+            ))}
+          </div>
+          {submissions.length > GALLERY_PREVIEW && (
+            <button
+              onClick={() => setShowAllPraxis((shown) => !shown)}
+              style={{
+                display: "inline-block",
+                marginTop: "var(--space-md)",
+                padding: 0,
+                fontFamily: UA_TEXT,
+                fontStyle: "italic",
+                fontSize: "var(--text-xl)",
+                background: "none",
+                border: "none",
+                cursor: "pointer",
+                color: "var(--faction-ua-card-accent)",
+              }}
+            >
+              {showAllPraxis
+                ? t("detail.gallery.showFewer")
+                : t("detail.gallery.viewAll", { count: submissions.length })}
+            </button>
+          )}
+        </>
+      )}
+    </section>
+  );
 
   return (
     <div
       className="py-8"
-      style={{ fontFamily: UA_TEXT, color: "var(--faction-ua-page-text)" }}
+      style={{
+        position: "relative",
+        fontFamily: UA_TEXT,
+        color: "var(--faction-ua-page-text)",
+      }}
     >
-      {/* ── Breadcrumb ── */}
-      <nav className="mb-4" style={UA_EYEBROW}>
-        <Link
-          to="/tasks"
-          style={{ color: "var(--faction-ua-card-accent)", textDecoration: "none" }}
-        >
-          {t("default.breadcrumb")}
-        </Link>
-        <span style={{ margin: "0 var(--space-sm)" }}>·</span>
-        <span>{t("ua.faction")}</span>
-        <span style={{ margin: "0 var(--space-sm)" }}>·</span>
-        <span style={{ color: "var(--faction-ua-card-accent)" }}>{task.title}</span>
-      </nav>
-
-      <div style={{ maxWidth: 920 }}>
+      {/* The vellum ground belongs to the DETAIL COMPONENT, not the viewport.
+          This used to be a `position: fixed; inset: 0` span, which painted UA's
+          sand over the whole site — including behind the chrome — and left the
+          column itself unpadded, so every line of copy ran to the edge. The
+          column now carries its own surface, its own padding and its own lotus,
+          and the site background shows around it. */}
+      <div
+        style={{
+          position: "relative",
+          zIndex: 1,
+          maxWidth: 1200,
+          margin: "0 auto",
+          background: "var(--faction-ua-page)",
+          border: "1px solid var(--faction-ua-rule)",
+          borderRadius: 18,
+          padding: desktop ? "var(--space-2xl)" : "var(--space-lg)",
+          overflow: "hidden",
+          boxSizing: "border-box",
+        }}
+      >
+        {/* The lotus, bleeding off the leaf's own left edge — clipped by the
+            column's `overflow: hidden` rather than by the viewport. `zIndex: -1`
+            paints it above this column's background but beneath its copy: the
+            column is positioned, so it owns the stacking context, and a
+            positioned `zIndex: 0` sibling would have sat ON TOP of the static
+            text. Ornament geometry stays in raw px (§4a); its opacity is a
+            token, so dark mode lifts it through the cascade. */}
+        <Lotus
+          size={size.lotus}
+          color="var(--faction-ua-card-lotus)"
+          style={{
+            position: "absolute",
+            left: size.lotusLeft,
+            top: size.lotusTop,
+            zIndex: -1,
+            opacity: "var(--faction-ua-card-lotus-opacity)",
+            pointerEvents: "none",
+          }}
+        />
         <div
           style={{
             display: "flex",
-            flexDirection: "column",
-            gap: "var(--space-2xl)",
+            flexDirection: desktop ? "row" : "column",
+            alignItems: desktop ? "flex-start" : "stretch",
+            gap: "var(--space-xl)",
+            marginBottom: desktop ? "var(--space-2xl)" : "var(--space-xl)",
           }}
         >
-          {/* ── THE SHEET — masthead + counts ── */}
+          <div style={{ flex: 1, minWidth: 0 }}>{header}</div>
           <div
             style={{
-              position: "relative",
-              overflow: "hidden",
-              border: "1px solid var(--faction-ua-rule)",
-              borderRadius: "var(--radius-md)",
-              background: "var(--faction-ua-card-bg)",
-              boxShadow: `0 14px 38px -24px ${uaShade(52)}`,
+              flex: desktop ? `0 0 ${size.panel}px` : "1 1 auto",
+              width: desktop ? size.panel : "100%",
+              marginTop: desktop ? "var(--space-sm)" : 0,
             }}
           >
-            <div
-              style={{
-                position: "relative",
-                background:
-                  "linear-gradient(160deg, var(--faction-ua-lift), var(--faction-ua-panel))",
-                borderBottom: "1px solid var(--faction-ua-hair)",
-                padding: "var(--space-2xl) var(--space-2xl) var(--space-xl)",
-              }}
-            >
-              <UaInkColumn
-                style={{
-                  left: "var(--space-md)",
-                  top: "var(--space-2xl)",
-                  bottom: "var(--space-xl)",
-                }}
-              />
-              <div
-                style={{
-                  position: "relative",
-                  paddingLeft: "var(--space-lg)",
-                  display: "flex",
-                  gap: "var(--space-2xl)",
-                  alignItems: "center",
-                  flexWrap: "wrap",
-                }}
-              >
-                <UaEnsoScore
-                  size={124}
-                  value={modifiedPoints}
-                  unit={t("ua.stats.honoraria")}
-                  valueColor="var(--faction-ua-vermil)"
-                />
-                <div style={{ flex: 1, minWidth: 260 }}>
-                  <div style={UA_EYEBROW}>{t("ua.masthead")}</div>
-                  <div style={{ ...UA_EYEBROW, letterSpacing: "0.3em" }}>
-                    {t("ua.commissionLine", { number: commissionNo })}
-                  </div>
-                  <h1
-                    style={{
-                      fontFamily: UA_DISPLAY,
-                      fontWeight: 600,
-                      fontSize: "var(--text-heading)",
-                      lineHeight: 1.06,
-                      letterSpacing: "-0.01em",
-                      color: "var(--faction-ua-card-text)",
-                      margin: "var(--space-sm) 0 var(--space-md)",
-                      overflowWrap: "anywhere",
-                    }}
-                  >
-                    {task.title}
-                  </h1>
-                  {/* The status tag. It used to paint its ink with
-                      --faction-ua-light, a background tint that was invisible
-                      at 8% alpha and pale cream once #848 made it opaque; the
-                      ink token for a solid fill is --faction-ua-on-fill. */}
-                  <span
-                    style={{
-                      display: "inline-flex",
-                      alignItems: "center",
-                      gap: "var(--space-sm)",
-                      background: "var(--faction-ua)",
-                      color: "var(--faction-ua-on-fill)",
-                      fontFamily: UA_TEXT,
-                      fontSize: "var(--text-md)",
-                      letterSpacing: "0.16em",
-                      textTransform: "uppercase",
-                      borderRadius: "var(--radius-sm)",
-                      padding: "var(--space-xs) var(--space-md)",
-                    }}
-                  >
-                    {statusVoice}
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            <div style={{ display: "flex", flexWrap: "wrap" }}>
-              <StatCell label={t("ua.stats.anno")}>
-                {romanLevel(task.level_required)}
-              </StatCell>
-              <StatCell label={t("ua.stats.honorariaUnit")}>
-                {modifiedPoints}
-              </StatCell>
-              <StatCell label={t("ua.stats.onView")} last>
-                <span
-                  style={{
-                    fontSize: "var(--text-content)",
-                    lineHeight: 1.2,
-                    color: "var(--faction-ua-card-body)",
-                  }}
-                >
-                  {t("ua.stats.onViewValue", {
-                    signups: signups.length,
-                    completed: submissions.length,
-                  })}
-                </span>
-              </StatCell>
-            </div>
+            {actionPanel}
           </div>
+        </div>
 
-          {/* ── Sign-up / signed-on states ── */}
-          <LevelJumpBanner state={state} />
-          {canSignUp && (
-            <div style={PANEL}>
-              <button onClick={handleSignup} style={FILLED_ACTION}>
-                {t("ua.signup.cta", { points: modifiedPoints })}
-              </button>
-              <div
-                style={{
-                  fontFamily: UA_TEXT,
-                  fontSize: "var(--text-content)",
-                  color: "var(--faction-ua-card-body)",
-                }}
-              >
-                {t("ua.signup.meta", {
-                  open: slotsOpen,
-                  max: maxTaskSlots,
-                  level: romanLevel(task.level_required),
-                })}
-              </div>
-              <ErrorBanner message={signupError} style={BANNER} />
-            </div>
-          )}
-
-          {mySubmission && (
-            <div style={PANEL}>
-              <span
-                style={{
-                  ...UA_EYEBROW,
-                  color: "var(--faction-ua-card-accent)",
-                }}
-              >
-                {t("ua.submitted.text")}
-              </span>
-              <Link
-                to={`/praxes/${mySubmission.id}/edit`}
-                style={{ ...FILLED_ACTION, marginLeft: "auto" }}
-              >
-                {t("ua.submitted.edit")}
-              </Link>
-            </div>
-          )}
-
-          {!mySubmission && isInProgress && inProgressPraxisId !== null && (
-            <div style={PANEL}>
-              <span
-                style={{
-                  ...UA_EYEBROW,
-                  color: "var(--faction-ua-card-accent)",
-                }}
-              >
-                {t("ua.inProgress.text")}
-              </span>
-              <Link
-                to={`/praxes/${inProgressPraxisId}/edit`}
-                style={{ ...FILLED_ACTION, marginLeft: "auto" }}
-              >
-                {t("ua.inProgress.continue")}
-              </Link>
-              <button
-                onClick={handleDrop}
-                style={{
-                  ...UA_EYEBROW,
-                  background: "none",
-                  border: "none",
-                  cursor: "pointer",
-                }}
-              >
-                {t("ua.inProgress.drop")}
-              </button>
-              <ErrorBanner message={signupError} style={BANNER} />
-            </div>
-          )}
-
-          {/* ── The Mark — the user-written brief ── */}
-          <section>
-            <SectionHead title={t("ua.commissionHeading")} />
-            <div
-              style={{
-                border: "1px solid var(--faction-ua-rule)",
-                borderRadius: "var(--radius-sm)",
-                background: "var(--faction-ua-card-bg)",
-                padding: "var(--space-xl)",
-                maxWidth: 660,
-              }}
-            >
-              <p
-                className="content-text"
-                style={{
-                  fontFamily: UA_TEXT,
-                  lineHeight: 1.7,
-                  color: "var(--faction-ua-card-body)",
-                  margin: 0,
-                  whiteSpace: "pre-wrap",
-                }}
-              >
-                {task.description || t("ua.commissionEmpty")}
-              </p>
-            </div>
-          </section>
-
-          {/* ── Those practising ── */}
-          {signups.length > 0 && (
-            <section>
-              <SectionHead title={t("ua.matriculatedHeading")} />
-              <HandsRow signups={signups} friends={friends} foes={foes} />
-            </section>
-          )}
-
-          {/* ── The Reading — read-only aggregate ── */}
-          <section>
-            <SectionHead title={t("ua.critiqueHeading")} />
-            {voteCount > 0 ? (
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "var(--space-lg)",
-                }}
-              >
-                <UaEnsoScore
-                  size={96}
-                  value={topScore}
-                  valueColor="var(--faction-ua-vermil)"
-                />
-                <div>
-                  <div
-                    style={{
-                      fontFamily: UA_DISPLAY,
-                      fontWeight: 600,
-                      fontSize: "var(--text-title)",
-                      lineHeight: 1.1,
-                      color: "var(--faction-ua-card-text)",
-                    }}
-                  >
-                    {t("ua.critique.finest")}
-                  </div>
-                  <div style={{ ...UA_EYEBROW, marginTop: "var(--space-xs)" }}>
-                    {t("ua.critique.appraised", { count: voteCount })}
-                  </div>
-                </div>
-              </div>
-            ) : (
-              <p
-                className="content-text"
-                style={{
-                  fontFamily: UA_TEXT,
-                  color: "var(--faction-ua-card-muted)",
-                }}
-              >
-                {t("ua.critique.none")}
-              </p>
-            )}
-          </section>
-
-          {/* ── Sealed work ── */}
-          <section>
-            <SectionHead
-              title={t("ua.salonWallHeading")}
-              trailing={
-                <div style={{ display: "flex", gap: "var(--space-sm)" }}>
-                  {(["score", "recent"] as const).map((sort) => {
-                    const on = submissionSort === sort;
-                    return (
-                      <button
-                        key={sort}
-                        onClick={() => setSubmissionSort(sort)}
-                        style={{
-                          ...UA_EYEBROW,
-                          padding: "var(--space-xs) var(--space-md)",
-                          borderRadius: "var(--radius-sm)",
-                          background: on
-                            ? "var(--faction-ua)"
-                            : "transparent",
-                          color: on
-                            ? "var(--faction-ua-on-fill)"
-                            : "var(--faction-ua-card-muted)",
-                          border: `1px solid ${
-                            on ? "var(--faction-ua)" : "var(--faction-ua-rule)"
-                          }`,
-                          cursor: "pointer",
-                        }}
-                      >
-                        {sort === "score"
-                          ? t("ua.sort.finest")
-                          : t("ua.sort.recent")}
-                      </button>
-                    );
-                  })}
-                </div>
-              }
-            />
-            {sortedSubmissions.length === 0 ? (
-              <p
-                className="content-text"
-                style={{
-                  fontFamily: UA_TEXT,
-                  color: "var(--faction-ua-card-muted)",
-                }}
-              >
-                {t("ua.empty")}
-              </p>
-            ) : (
-              <>
-                <div
-                  style={{
-                    display: "flex",
-                    flexWrap: "wrap",
-                    gap: "var(--space-2xl) var(--space-xl)",
-                    alignItems: "flex-start",
-                  }}
-                >
-                  {sortedSubmissions.slice(0, 4).map((s) => (
-                    <div
-                      key={s.id}
-                      style={{
-                        position: "relative",
-                        paddingTop: "var(--space-xl)",
-                      }}
-                    >
-                      {s.id === topId && (
-                        <div
-                          style={{
-                            position: "absolute",
-                            top: 0,
-                            left: "50%",
-                            transform: "translateX(-50%)",
-                            zIndex: 3,
-                            display: "inline-flex",
-                            alignItems: "center",
-                            gap: "var(--space-xs)",
-                            whiteSpace: "nowrap",
-                            background: "var(--faction-ua)",
-                            color: "var(--faction-ua-on-fill)",
-                            fontFamily: UA_TEXT,
-                            fontSize: "var(--text-md)",
-                            letterSpacing: "0.16em",
-                            textTransform: "uppercase",
-                            borderRadius: "var(--radius-sm)",
-                            padding: "var(--space-xs) var(--space-md)",
-                          }}
-                        >
-                          <UaSigil width={13} height={13} />
-                          {t("ua.finestHand")}
-                        </div>
-                      )}
-                      <PraxisCard praxis={s} />
-                    </div>
-                  ))}
-                </div>
-                {submissions.length > 4 && (
-                  <div style={{ marginTop: "var(--space-lg)" }}>
-                    <Link
-                      to={`/praxes?task_id=${task.id}`}
-                      style={{
-                        fontFamily: UA_TEXT,
-                        fontSize: "var(--text-content)",
-                        color: "var(--faction-ua-card-accent)",
-                        textDecoration: "none",
-                      }}
-                    >
-                      {t("ua.viewAll", { count: submissions.length })}
-                    </Link>
-                  </div>
-                )}
-              </>
-            )}
-          </section>
-          {/* Comments — shared slot, active-task gated (ADR-0006 + #1030). */}
-          <TaskDetailComments state={state} />
+        <div style={{ minWidth: 0 }}>
+          {brief}
+          {gallery}
+          {/* Comments — the shared slot, active-task gated (ADR-0006, #1030),
+              under UA's own section head so the thread draws no second one. */}
+          <TaskDetailComments
+            state={state}
+            heading={sectionHead(t("detail.comments.heading"))}
+          />
         </div>
       </div>
     </div>
