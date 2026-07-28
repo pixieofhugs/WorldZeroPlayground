@@ -44,18 +44,19 @@ const CORE_SIX = ['coven', 'snide', 'ephemerists', 'singularity', 'everymen', 'u
 // albescent appears in only two rows below, and both are WRAPPERS over Default,
 // not bespoke skins (ADR-0048): it is a secret society hiding in plain sight, so
 // an entry here means "Default plus a flourish", never a treatment of its own.
-// It has no `mobileTaskDetail` row — task detail is one responsive component
-// (ADR-0058), so its single `taskDetail` registration covers both form factors,
-// and that row must stay OUT of `mobileTaskDetail` or the fall-through it relies
-// on breaks.
 //
-// There is no `mobileTaskCard` row: ADR-0056 retired that surface once the
-// owner's QA verdict accepted the unified card, so task cards partition on the
-// `taskCard` surface alone for both form factors.
+// TWO MOBILE ROWS ARE ABSENT BY DECISION, not by oversight, and both used to
+// exist. There is no mobile task-card row (ADR-0056, surface retired by #1044)
+// and no mobile task-detail row (ADR-0058, surface retired by #1068): each
+// owner QA verdict accepted one responsive component per faction, so task cards
+// partition on `taskCard` alone and task detail on `taskDetail` alone, for both
+// form factors. Re-adding either row means re-adding the surface, which those
+// ADRs call drift rather than a rollback. Note what that buys albescent: its
+// single `taskDetail` registration now covers the phone too, and it never needs
+// a second row it would have had to stay out of.
 const BESPOKE: Record<string, string[]> = {
   praxisDetail: CORE_SIX,
   taskDetail: [...CORE_SIX, 'wow', 'albescent'],
-  mobileTaskDetail: [...CORE_SIX, 'wow'],
   mobileFactionPage: [...CORE_SIX, 'wow'],
   mobileFieldDesk: [...CORE_SIX, 'wow'],
   mobileEditPraxis: [...CORE_SIX, 'wow'],

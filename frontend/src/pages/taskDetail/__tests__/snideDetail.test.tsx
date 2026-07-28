@@ -17,9 +17,10 @@
  *     "Namethethingeveryone…". Inline flow with real spaces is the fix, and a
  *     revert to flex is invisible on screen.
  *  3. **The retired case-file voice is gone** (ADR-0057). The 794-line archetype
- *     this replaced spoke `snide.*` — case file, accomplices, verdict. Those
- *     keys still exist in tasks.json (the namespace is shared with the faction
- *     pages; the sweep is #1039), so nothing but a test stops one drifting back.
+ *     this replaced spoke `snide.*` — case file, accomplices, verdict. #1068's
+ *     per-key sweep found nothing left reading `tasks:snide.*` and deleted the
+ *     namespace, so drifting back now means re-adding the copy rather than just
+ *     reaching for a key that happened to survive.
  */
 import { renderToStaticMarkup } from "react-dom/server";
 import { MemoryRouter } from "react-router-dom";

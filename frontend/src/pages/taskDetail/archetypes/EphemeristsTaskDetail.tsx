@@ -46,9 +46,9 @@ import type { TaskDetailState } from "../useTaskDetail";
  *   `usePraxes` reads no such param — so "view all" is a local expand.
  *
  * ONE RESPONSIVE COMPONENT (ADR-0058): `useFormFactor()` picks the size set and
- * collapses the two-column split. `pages/taskDetail/mobileArchetypes/
- * EphemeristsTaskDetail.tsx` and its `mobileTaskDetail` manifest row stay
- * registered but DORMANT — restoring the dispatcher branch is the whole revert.
+ * collapses the two-column split. The separate Ephemerists mobile skin and the
+ * manifest surface that held it were deleted by #1068 when the ADR was accepted;
+ * re-adding a dispatcher branch would be drift, not a revert.
  *
  * Every colour is a `--faction-ephemerists-plate-*` token; light/dark flips
  * through the `[data-theme="dark"]` cascade, never a ternary. `-brass` is a rule

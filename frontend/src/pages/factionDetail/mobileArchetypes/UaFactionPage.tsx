@@ -5,7 +5,7 @@ import PraxisCard from '../../../components/PraxisCard'
 import UaMandala from '../../../components/cards/UaMandala'
 import { UaSigil } from '../../../components/cards/UaSigil'
 import { factionName, factionDescription } from '../../../utils/factions'
-import { MobileStickyBar } from '../../taskDetail/mobileArchetypes/shared'
+import { MobileStickyBar } from './shared'
 import type { CharacterOut } from '../../../api/auth'
 import type { FactionDetailState } from '../useFactionDetail'
 

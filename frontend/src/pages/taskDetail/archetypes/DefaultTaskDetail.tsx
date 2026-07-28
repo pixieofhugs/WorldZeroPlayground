@@ -55,8 +55,8 @@ function initialsOf(name: string): string {
  *   never reconstructed as `modifiedPoints / basePoints`.
  *
  * One responsive component, no mobile twin (ADR-0058): `useFormFactor()` picks
- * the size set and drops the two-column split, and `pages/taskDetail/
- * mobileArchetypes/DefaultTaskDetail.tsx` is dormant, not deleted.
+ * the size set and drops the two-column split. The separate mobile skin this
+ * replaced was deleted by #1068 when the ADR was accepted.
  *
  * Copy is neutral and shared (`detail.*`, ADR-0057) — no na voice, no faction
  * voice. Dress is na's alone: `--faction-default-*` (rainbow, ring, card sheet)

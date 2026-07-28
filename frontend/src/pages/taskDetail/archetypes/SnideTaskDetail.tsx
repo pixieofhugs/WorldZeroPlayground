@@ -22,8 +22,10 @@ import type { TaskDetailState } from "../useTaskDetail";
  *
  * Replaces the 794-line "case file" archetype (`caseFile`, `jobFile`,
  * `openCase`, `casesClosed`, `accomplices`, `evidence.*`, `topMarks`,
- * `verdict.*`). Those `snide.*` keys stay in tasks.json for now — the namespace
- * is shared with the faction pages, and the sweep is #1039.
+ * `verdict.*`). Those `tasks:snide.*` keys are gone: #1039 kept them on the
+ * theory the faction pages shared the namespace, #1068's per-key sweep found no
+ * reader outside the dormant mobile twin it had just deleted, and the whole
+ * namespace went with it.
  *
  * THE CENSOR REDACTS ORNAMENT, NEVER CONTENT. The design blacks out two words of
  * every brief paragraph (`background: ink, color: transparent`) — over the task's
@@ -53,9 +55,8 @@ import type { TaskDetailState } from "../useTaskDetail";
  *   always dropped the filter and shown the whole feed.
  *
  * ONE RESPONSIVE COMPONENT (ADR-0058): `useFormFactor()` picks the size set and
- * drops the two-column split; `pages/taskDetail/mobileArchetypes/
- * SnideTaskDetail.tsx` and its `mobileTaskDetail` manifest row stay registered
- * but dormant, not deleted.
+ * drops the two-column split. The separate Snide mobile skin and the manifest
+ * surface that held it were deleted by #1068 when the ADR was accepted.
  *
  * All colour via the existing `--faction-snide-note-*` clipping family (which
  * FLIPS under `[data-theme="dark"]` — the dossier is a sheet of paper) plus the

@@ -24,8 +24,10 @@ import type { TaskDetailState } from "../useTaskDetail";
  * `partyHeading`, `sort.mostLoved`, `sparks`, `window`). Per ADR-0057 this
  * surface carries NO faction voice: all copy comes from the shared `detail.*`
  * keys, identical to what an unaffiliated player reads. The dress is Coven's;
- * the words are the game's. The `tasks:coven.*` namespace stays in the catalog —
- * the faction pages still read it, and it is swept key-by-key in #1039.
+ * the words are the game's. The `tasks:coven.*` namespace is gone: #1039 kept it
+ * on the theory the faction pages read it, #1068's per-key sweep found no reader
+ * outside the dormant mobile twin it had just deleted, and the namespace went
+ * with it.
  *
  * Contract points inherited from the na reference build (#1030), not re-derived:
  * - **No in-progress roster.** The header's "In progress" count is the only
@@ -39,8 +41,8 @@ import type { TaskDetailState } from "../useTaskDetail";
  *   its filter on every archetype — `usePraxes` reads no such param.
  *
  * ONE RESPONSIVE COMPONENT (ADR-0058): `useFormFactor()` picks the size set and
- * drops the two-column split. `pages/taskDetail/mobileArchetypes/CovenTaskDetail`
- * and the `mobileTaskDetail` manifest row stay registered but DORMANT.
+ * drops the two-column split. The separate Coven mobile skin and the manifest
+ * surface that held it were deleted by #1068 when the ADR was accepted.
  *
  * All colour via `--faction-coven-slip-*` (shared with the task card) plus the
  * `--faction-coven-ward-*` family this surface adds; the haze, the braid, the

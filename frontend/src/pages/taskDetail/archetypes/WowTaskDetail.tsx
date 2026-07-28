@@ -13,9 +13,10 @@ import type { TaskDetailState } from "../useTaskDetail";
  * Warriors of Whimsy — the task-detail page, NET-NEW (#1037).
  *
  * WOW had no desktop `taskDetail` archetype at all: `factions/wow.ts` registered
- * `mobileTaskDetail` and nothing else, so until this file a WOW task rendered
- * the **na dossier** on desktop. That is one of the four bullets in #951; the
- * other three (`praxisDetail`, `factionCard`, `factionBody`) stay open.
+ * only the phone twin (a surface since retired by ADR-0058), so until this file
+ * a WOW task rendered the **na dossier** on desktop. That is one of the four
+ * bullets in #951; the other three (`praxisDetail`, `factionCard`,
+ * `factionBody`) stay open.
  *
  * The dress, ported from the v2 design (#1037; project 0711d3a7):
  * gold-and-plum parchment under a fine dot texture, bunting strung across the
@@ -46,9 +47,9 @@ import type { TaskDetailState } from "../useTaskDetail";
  *   live in this page's section dress, not inside thumbnails we do not own.
  *
  * ONE RESPONSIVE COMPONENT (ADR-0058): `useFormFactor()` picks the size set and
- * drops the two-column split; `pages/taskDetail/mobileArchetypes/WowTaskDetail
- * .tsx` and its `mobileTaskDetail` manifest row stay registered but DORMANT
- * during the evaluation window — not deleted.
+ * drops the two-column split. The separate WOW mobile skin (#901's field
+ * pavilion detail) and the manifest surface that held it were deleted by #1068
+ * when the ADR was accepted.
  *
  * Every colour is a shipped `--faction-wow-*` token; #1023's quest decree minted
  * most of them and this page reuses them rather than growing a parallel set. The

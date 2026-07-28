@@ -27,7 +27,6 @@ const EverymenMobileDuelSealConfirm = lazyArchetype(() => import('../components/
 const EverymenMobileEditPraxis = lazyArchetype(() => import('../pages/editPraxis/mobileArchetypes/EverymenComposer'))
 const EverymenMobilePraxisCard = lazyArchetype(() => import('../components/praxisCard/mobile/EverymenMobilePraxisCard'))
 const EverymenMobilePraxisDetail = lazyArchetype(() => import('../pages/praxisDetail/mobileArchetypes/EverymenPraxisDetail'))
-const EverymenMobileTaskDetail = lazyArchetype(() => import('../pages/taskDetail/mobileArchetypes/EverymenTaskDetail'))
 const EverymenPraxisDetail = lazyArchetype(() => import('../pages/praxisDetail/archetypes/EverymenPraxisDetail'))
 const EverymenProfileBody = lazyArchetype(() => import('../pages/characterProfile/archetypes/EverymenProfileBody'))
 const EverymenTaskCard = lazyArchetype(() => import('../components/cards/EverymenTaskCard'))
@@ -64,7 +63,6 @@ export const EVERYMEN_MANIFEST: FactionManifest = {
   duelSeal: () => EverymenDuelSealConfirm,
   duelRail: () => EverymenDuelRail,
   mobilePraxisCard: () => EverymenMobilePraxisCard,
-  mobileTaskDetail: () => EverymenMobileTaskDetail,
   mobilePraxisDetail: () => EverymenMobilePraxisDetail,
   mobileEditPraxis: () => EverymenMobileEditPraxis,
   mobileFactionPage: () => EverymenFactionPage,

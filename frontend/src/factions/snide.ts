@@ -27,7 +27,6 @@ const SnideHome = lazyArchetype(() => import('../pages/fieldDesk/mobileArchetype
 const SnideMobileEditPraxis = lazyArchetype(() => import('../pages/editPraxis/mobileArchetypes/SnideComposer'))
 const SnideMobilePraxisCard = lazyArchetype(() => import('../components/praxisCard/mobile/SnideMobilePraxisCard'))
 const SnideMobilePraxisDetail = lazyArchetype(() => import('../pages/praxisDetail/mobileArchetypes/SnidePraxisDetail'))
-const SnideMobileTaskDetail = lazyArchetype(() => import('../pages/taskDetail/mobileArchetypes/SnideTaskDetail'))
 const SnidePraxisDetail = lazyArchetype(() => import('../pages/praxisDetail/archetypes/SnidePraxisDetail'))
 const SnideProfileBody = lazyArchetype(() => import('../pages/characterProfile/archetypes/SnideProfileBody'))
 const SnideTaskCard = lazyArchetype(() => import('../components/cards/SnideTaskCard'))
@@ -64,7 +63,6 @@ export const SNIDE_MANIFEST: FactionManifest = {
   duelSeal: () => SnideDuelSealConfirm,
   duelRail: () => SnideDuelRail,
   mobilePraxisCard: () => SnideMobilePraxisCard,
-  mobileTaskDetail: () => SnideMobileTaskDetail,
   mobilePraxisDetail: () => SnideMobilePraxisDetail,
   mobileEditPraxis: () => SnideMobileEditPraxis,
   mobileFactionPage: () => SnideFactionPage,

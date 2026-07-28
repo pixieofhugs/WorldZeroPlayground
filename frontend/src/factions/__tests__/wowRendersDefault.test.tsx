@@ -10,7 +10,8 @@
  * the avatar that mounts it, #899 the three repeating desktop surfaces (the
  * decree task card, the comment voice, the feed frame), and #900 the four
  * page-level desktop surfaces (hero, backdrop, profile body, select card), and
- * #901 the six FIELD PAVILION mobile surfaces. Every OTHER surface
+ * #901 the FIELD PAVILION mobile surfaces (six as built, four that outlived the
+ * ADR-0056/0058 surface retirements). Every OTHER surface
  * still falls through to `Default*` — WOW is themed-and-partly-skinned, and
  * definitely not "broken faction".
  *
@@ -56,13 +57,14 @@ function Sentinel() {
  * `taskCard`, the `comment` voice and the herald's-dispatch `feedFrame`),
  * #900's four page-level desktop surfaces (`factionHero`, `backdrop`,
  * `profileBody`, `factionSelectCard`), and #895's four DUEL surfaces (the
- * Lists seal and the praxis rail, each on both form factors), and #901's five
- * FIELD PAVILION mobile surfaces (`mobileFieldDesk` from the one phone screen
- * the kit drew, plus `mobileTaskDetail`, `mobilePraxisDetail`,
- * `mobileFactionPage` and `mobileProfile` derived from that screen's chrome and
- * the matching desktop archetype — #901 also skinned that screen's
- * `mobileTaskCard`, but ADR-0056 retired the surface itself, so the decree
- * `taskCard` above now serves WOW on both form factors), and #931's
+ * Lists seal and the praxis rail, each on both form factors), and #901's four
+ * surviving FIELD PAVILION mobile surfaces (`mobileFieldDesk` from the one phone
+ * screen the kit drew, plus `mobilePraxisDetail`, `mobileFactionPage` and
+ * `mobileProfile` derived from that screen's chrome and the matching desktop
+ * archetype — #901 skinned two further surfaces off that screen which no longer
+ * exist, its task card and its task detail, because ADR-0056 (#1044) and
+ * ADR-0058 (#1068) retired both surfaces outright, so the decree `taskCard` and
+ * the parchment `taskDetail` now serve WOW on both form factors), and #931's
  * `metaTaskSeal` — WOW's court-writ seal, the last faction seal skin, built from
  * the chronicle identity since the kit drew no wow specimen.
  *
@@ -111,14 +113,13 @@ const WOW_SKINNED: ReadonlySet<FactionSurface> = new Set([
   'mobileDuelSeal',
   'mobileDuelRail',
   'mobileFieldDesk',
-  'mobileTaskDetail',
   'mobilePraxisDetail',
   'mobileFactionPage',
   'mobileProfile',
   'metaTaskSeal',
 ])
 
-describe('wow is partly skinned: twenty-six surfaces claimed, the rest fall back', () => {
+describe('wow is partly skinned: twenty-five surfaces claimed, the rest fall back', () => {
   it('registers a manifest now (#821)', () => {
     expect(FACTION_MANIFESTS.map((manifest) => manifest.slug)).toContain('wow')
   })

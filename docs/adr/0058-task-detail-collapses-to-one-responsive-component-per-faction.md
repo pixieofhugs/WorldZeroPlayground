@@ -89,7 +89,7 @@ until that issue lands.
   own experiment and its own ADR.
 - The revert path is still in the tree but is no longer a revert path. Restoring
   `TaskDetail.tsx`'s `formFactor === "mobile"` branch would now be **drift, not a
-  rollback**. The dormant files are pending deletion, not a live option.
+  rollback**. The dormant files were pending deletion, not a live option; #1068 carried it out.
 - **The dormant files are still live consumers of the i18n catalog.** #1039's sweep cut
   114 zero-reference keys from `tasks.json` and kept 226; **178 of those survivors are
   held alive by the dormant mobile archetypes alone.** Retiring the surface therefore

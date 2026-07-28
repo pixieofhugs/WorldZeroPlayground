@@ -88,9 +88,9 @@ export const ALBESCENT_MANIFEST: FactionManifest = {
    *
    * Every word of the design's voice is cut (ADR-0057 + ADR-0027): the page
    * speaks the shared neutral `detail.*` copy, because a page that announced
-   * itself as Albescent would un-hide the society. No `mobileTaskDetail`
-   * sibling: task detail is one responsive component (ADR-0058), so this row
-   * covers both form factors.
+   * itself as Albescent would un-hide the society. No mobile sibling: task
+   * detail is one responsive component (ADR-0058), so this row covers both form
+   * factors.
    */
   taskDetail: () => AlbescentTaskDetail,
 
