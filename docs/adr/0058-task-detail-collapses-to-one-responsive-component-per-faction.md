@@ -1,10 +1,11 @@
 # ADR-0058 — Task detail collapses to one responsive component per faction
 
-**Status:** Proposed — under evaluation, not settled law
-**Date:** 2026-07-28
-**Relates to:** #1028 (epic), #1030, #1031–#1038
-**Tension with:** ADR-0035 (distinct mobile screens)
-**Parallel to:** ADR-0056 (the same collapse, for task cards — now Accepted)
+**Status:** Accepted
+**Date:** 2026-07-28 (proposed) · 2026-07-28 (accepted)
+**Relates to:** #1028 (epic), #1030, #1031–#1038, #1039
+**Supersedes ADR-0035 for task detail** — ADR-0035 stands for every other
+mobile surface; only the task-detail surface is unified here.
+**Parallel to:** ADR-0056 (the same collapse, for task cards — also Accepted)
 
 ## Context
 
@@ -41,8 +42,8 @@ through the `taskDetail` manifest surface. Each archetype calls `useFormFactor()
 internally for its own size set and conditional ornament. One responsive component per
 faction; no mobile twin.
 
-This is adopted as a **reversible experiment**, on the same terms ADR-0056 used while it
-was Proposed:
+This was originally adopted (2026-07-28, with #1030) as a **reversible experiment**, on the
+same terms ADR-0056 used while it was Proposed:
 
 - `pages/taskDetail/mobileArchetypes/*` and the `mobileTaskDetail` rows on every faction
   manifest **stay registered but dormant** — not deleted. They must keep compiling, so
@@ -51,16 +52,50 @@ was Proposed:
 - Until a verdict, the repo carries two parallel task-detail implementations per faction.
   That is expected during the evaluation window, not drift to clean up prematurely.
 
+## Verdict (2026-07-28)
+
+**Accepted.** After hands-on mobile QA of the eight merged skins the owner ruled:
+*"yup. this works for mobile."* The unified responsive task detail stands.
+
+This verdict is the task-detail one, taken on its own evidence. ADR-0056's acceptance
+was evidence for trying the collapse here, never a substitute for testing it — and the
+doubt in Context above was real, because a task detail is a full page with an action
+panel, a brief, a praxis gallery and a comment thread rather than a tile. It squeezed
+onto a phone anyway.
+
+Two things the collapse carried that the mobile twins never had, and which the verdict
+therefore ratifies: the shared anatomy of ADR-0057 (one section order, one set of neutral
+strings, resolved by slug) reaches the phone by construction rather than by a second
+author remembering to copy it; and a change to the task-detail contract is now one file
+per faction, so the two implementations can no longer disagree about what a task detail
+is.
+
+**The dormant files survive this acceptance — deliberately, and unlike ADR-0056.** #1044
+deleted the `mobileTaskCard` surface in the same breath as accepting ADR-0056 because
+that cleanup was already scoped into its epic. Here the retirement is a separate change
+with its own fallout (see below), so #1039 **files** it rather than performing it: the
+eight `pages/taskDetail/mobileArchetypes/*TaskDetail.tsx`, the `mobileTaskDetail` manifest
+field, its `SURFACE_KEYS` entry and the seven faction registrations all stay in the tree
+until that issue lands.
+
 ## Consequences
 
-- During evaluation the mobile task-detail files are dead weight that still has to
-  compile and still holds i18n keys alive. #1039's sweep will therefore delete fewer
-  keys than the raw orphan count suggests — correct, not a bug.
-- ADR-0035 still governs every other mobile surface. This licence is scoped to task
-  detail and does not generalise, for the same reason ADR-0056's did not.
-- **The verdict is the owner's and must not be inferred from silence** — including not
-  inferring it from ADR-0056's acceptance. Cards and detail are different surfaces and
-  get separate calls. #1039 asks for this verdict explicitly.
-- If accepted: file (do not perform) the follow-up that retires the dormant
-  `mobileTaskDetail` surface and its files, mirroring what #1044 did for cards.
-- If rejected: flip `TaskDetail.tsx`'s branch back, and record the outcome here.
+- Task detail is one responsive component per faction. Adding or changing a faction's
+  task detail is one file under `pages/taskDetail/archetypes/`, not two.
+- ADR-0035 still governs every other mobile surface — praxis detail, edit-praxis, field
+  desk, faction page and the rest keep their distinct mobile archetypes and their
+  `mobile*` manifest surfaces. This licence is scoped to task detail and does not
+  generalise, for the same reason ADR-0056's did not; unifying another surface needs its
+  own experiment and its own ADR.
+- The revert path is still in the tree but is no longer a revert path. Restoring
+  `TaskDetail.tsx`'s `formFactor === "mobile"` branch would now be **drift, not a
+  rollback**. The dormant files are pending deletion, not a live option.
+- **The dormant files are still live consumers of the i18n catalog.** #1039's sweep cut
+  114 zero-reference keys from `tasks.json` and kept 226; **178 of those survivors are
+  held alive by the dormant mobile archetypes alone.** Retiring the surface therefore
+  orphans them in one stroke, and the retirement issue re-runs the same per-key script.
+- **Retirement follow-up: #1068.** It is not a copy of #1044 — one piece of the dormant
+  tree is genuinely shared. `pages/taskDetail/mobileArchetypes/shared.tsx` exports
+  `MobileStickyBar`, imported by eight **live** mobile faction pages under
+  `pages/factionDetail/mobileArchetypes/`, so it must be relocated rather than deleted
+  with its neighbours.
