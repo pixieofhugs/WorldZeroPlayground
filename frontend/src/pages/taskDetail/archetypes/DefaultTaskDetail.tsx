@@ -60,7 +60,8 @@ function initialsOf(name: string): string {
  * Copy is neutral and shared (`detail.*`, ADR-0057) — no na voice, no faction
  * voice. Dress is na's alone: `--faction-default-*` (rainbow, ring, card sheet)
  * reached via the token / `factionFill`, NOT `factionCssVar`, which is neutral
- * grey for na. The full-page `.na-backdrop` wash lives in index.css.
+ * grey for na. The content column carries the page surface itself
+ * (`--faction-default-card-bg`); there is no separate backdrop element.
  */
 export default function DefaultTaskDetail({
   state,
@@ -753,16 +754,23 @@ export default function DefaultTaskDetail({
 
   return (
     <div className="py-8" style={{ position: "relative" }}>
-      {/* Full-page spectrum wash — the na "all paths open" backdrop (index.css,
-          shared with DefaultProfile #969). */}
-      <div className="na-backdrop" aria-hidden />
-
       <div
         style={{
           position: "relative",
           zIndex: 1,
           maxWidth: 1200,
           margin: "0 auto",
+          // The page surface the design puts everything on. This used to be a
+          // `<div className="na-backdrop">` whose rule was never written — the
+          // element rendered and painted nothing, so the whole column sat
+          // directly on the app shell. A class with no CSS behind it type-checks,
+          // lints and builds clean; only looking at it catches that.
+          background: "var(--faction-default-card-bg)",
+          color: "var(--faction-default-card-text)",
+          border: "1px solid var(--faction-default-border)",
+          borderRadius: 18,
+          padding: desktop ? "var(--space-2xl)" : "var(--space-lg)",
+          boxSizing: "border-box",
         }}
       >
         <div
