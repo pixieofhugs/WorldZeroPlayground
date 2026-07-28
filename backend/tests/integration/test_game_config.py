@@ -17,6 +17,10 @@ async def test_get_game_config_returns_current_era(client: AsyncClient):
     assert data["max_task_signups"] == CURRENT_ERA.max_task_signups
     assert data["vote_budget_base"] == CURRENT_ERA.vote_budget_base
 
+    # Pending-publish silence-is-consent window (ADR-0012): duration only,
+    # since submit_proposed_at (the start) is already on PraxisOut.
+    assert data["collab_auto_submit_days"] == CURRENT_ERA.collab_auto_submit_days
+
     # Every configured faction is present with its scoring modifiers.
     assert len(data["factions"]) == len(CURRENT_ERA.factions)
     slugs = {faction["slug"] for faction in data["factions"]}
