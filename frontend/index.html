@@ -26,6 +26,12 @@
         }
       })()
     </script>
+    <!-- The API is a separate origin in production, so the first data request
+         otherwise pays DNS + TCP + TLS before it can even be sent — about three
+         round trips. Warming the connection here overlaps that with the bundle
+         download. Harmless in dev, where the origin differs and the hint is
+         simply unused. -->
+    <link rel="preconnect" href="https://api.worldzero.org" crossorigin />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link

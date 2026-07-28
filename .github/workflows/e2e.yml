@@ -68,6 +68,16 @@ jobs:
       - name: Run e2e suite (reset db, migrate, seed, backend, playwright)
         run: bash frontend/e2e/run-e2e.sh
 
+      # Timing lives here, not in PR CI: a stopwatch on a shared runner flaps,
+      # and a check that flaps gets muted. The per-PR guard is the byte budget.
+      # Warn-only unless a route is catastrophically slow (>4s), so an unlucky
+      # night reports rather than blocks.
+      - name: Measure page load (nightly, warns; fails only past 4s)
+        run: bash frontend/scripts/measure-nightly.sh
+        env:
+          MEASURE_PROFILE: fast4g
+          MEASURE_RUNS: "3"
+
       - name: Upload Playwright report
         if: always()
         uses: actions/upload-artifact@v4
