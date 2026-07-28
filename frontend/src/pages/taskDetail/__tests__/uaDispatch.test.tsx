@@ -15,6 +15,7 @@ import { describe, it, expect } from "vitest";
 // Initialize the i18n catalog so copy keys resolve to English text.
 import "../../../i18n";
 import { pickVariant } from "../../../utils/factionDispatch";
+import { resolvedArchetype } from "../../../factions/lazyArchetype";
 import { surfaceMap } from "../../../factions";
 import DefaultMobileTaskDetail from "../mobileArchetypes/DefaultTaskDetail";
 import UAMobileTaskDetail from "../mobileArchetypes/UaTaskDetail";
@@ -79,21 +80,21 @@ function render(element: ReactElement): { html: string; text: string } {
 
 describe("mobile task-detail UA dispatch", () => {
   it("mobile + a UA task resolves to the bespoke UA mobile skin", () => {
-    expect(pickVariant(surfaceMap('mobileTaskDetail'), "ua", DefaultMobileTaskDetail)).toBe(
+    expect(resolvedArchetype(pickVariant(surfaceMap('mobileTaskDetail'), "ua", DefaultMobileTaskDetail))).toBe(
       UAMobileTaskDetail,
     );
   });
 
   it("mobile + any other slug falls through to the Default mobile skin", () => {
     for (const slug of ['__unregistered__', 'na', null]) {
-      expect(pickVariant(surfaceMap('mobileTaskDetail'), slug, DefaultMobileTaskDetail)).toBe(
+      expect(resolvedArchetype(pickVariant(surfaceMap('mobileTaskDetail'), slug, DefaultMobileTaskDetail))).toBe(
         DefaultMobileTaskDetail,
       );
     }
   });
 
   it("desktop keeps its own UA archetype, never the mobile skin", () => {
-    const desktop = pickVariant(surfaceMap('taskDetail'), "ua", DefaultMobileTaskDetail);
+    const desktop = resolvedArchetype(pickVariant(surfaceMap('taskDetail'), "ua", DefaultMobileTaskDetail));
     expect(desktop).toBe(UADesktopTaskDetail);
     expect(desktop).not.toBe(UAMobileTaskDetail);
   });

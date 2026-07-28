@@ -15,6 +15,7 @@ import { renderToStaticMarkup } from 'react-dom/server'
 import '../../../../i18n'
 import type { PraxisCardOut } from '../../../../api/praxis'
 import { pickVariant } from '../../../../utils/factionDispatch'
+import { resolvedArchetype } from '../../../../factions/lazyArchetype'
 import { surfaceMap } from '../../../../factions'
 import { scoreBreakdown, formatMult } from '../scoreBreakdown'
 import { applyVoteDelta } from '../../../vote/useVotedPraxis'
@@ -121,22 +122,22 @@ describe('useVotedPraxis merge feeds the stamp breakdown (#912)', () => {
 describe('scoreStamp surface dispatch (ADR-0049)', () => {
   it('falls through to the Default stamp for every slug that has not claimed it', () => {
     for (const slug of ['albescent', 'na', null]) {
-      expect(pickVariant(surfaceMap('scoreStamp'), slug, DefaultScoreStamp)).toBe(DefaultScoreStamp)
+      expect(resolvedArchetype(pickVariant(surfaceMap('scoreStamp'), slug, DefaultScoreStamp))).toBe(DefaultScoreStamp)
     }
   })
 
   it('gives S.N.I.D.E. and Singularity their own stamps (#842)', () => {
-    expect(pickVariant(surfaceMap('scoreStamp'), 'snide', DefaultScoreStamp)).toBe(SnideScoreStamp)
-    expect(pickVariant(surfaceMap('scoreStamp'), 'singularity', DefaultScoreStamp)).toBe(
+    expect(resolvedArchetype(pickVariant(surfaceMap('scoreStamp'), 'snide', DefaultScoreStamp))).toBe(SnideScoreStamp)
+    expect(resolvedArchetype(pickVariant(surfaceMap('scoreStamp'), 'singularity', DefaultScoreStamp))).toBe(
       SingularityScoreStamp,
     )
   })
 
   it('gives Everymen and the Ephemerists their own stamps (#841)', () => {
-    expect(pickVariant(surfaceMap('scoreStamp'), 'everymen', DefaultScoreStamp)).toBe(
+    expect(resolvedArchetype(pickVariant(surfaceMap('scoreStamp'), 'everymen', DefaultScoreStamp))).toBe(
       EverymenScoreStamp,
     )
-    expect(pickVariant(surfaceMap('scoreStamp'), 'ephemerists', DefaultScoreStamp)).toBe(
+    expect(resolvedArchetype(pickVariant(surfaceMap('scoreStamp'), 'ephemerists', DefaultScoreStamp))).toBe(
       EphemeristsScoreStamp,
     )
   })
@@ -148,12 +149,12 @@ describe('scoreStamp surface dispatch (ADR-0049)', () => {
    * each, not merely that both are claimed.
    */
   it('gives WOW the chronicle plate and Coven the sticker, not the reverse (#840)', () => {
-    expect(pickVariant(surfaceMap('scoreStamp'), 'wow', DefaultScoreStamp)).toBe(WowScoreStamp)
-    expect(pickVariant(surfaceMap('scoreStamp'), 'coven', DefaultScoreStamp)).toBe(CovenScoreStamp)
+    expect(resolvedArchetype(pickVariant(surfaceMap('scoreStamp'), 'wow', DefaultScoreStamp))).toBe(WowScoreStamp)
+    expect(resolvedArchetype(pickVariant(surfaceMap('scoreStamp'), 'coven', DefaultScoreStamp))).toBe(CovenScoreStamp)
   })
 
   it('gives UA its own stamp — the ensō (#857)', () => {
-    expect(pickVariant(surfaceMap('scoreStamp'), 'ua', DefaultScoreStamp)).toBe(UaScoreStamp)
+    expect(resolvedArchetype(pickVariant(surfaceMap('scoreStamp'), 'ua', DefaultScoreStamp))).toBe(UaScoreStamp)
   })
 })
 
