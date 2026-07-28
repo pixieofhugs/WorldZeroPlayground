@@ -26,7 +26,6 @@ import CovenMobileDuelSealConfirm from '../components/duel/CovenMobileDuelSealCo
 import CovenMobileEditPraxis from '../pages/editPraxis/mobileArchetypes/CovenEditPraxis'
 import CovenMobilePraxisCard from '../components/praxisCard/mobile/CovenMobilePraxisCard'
 import CovenMobilePraxisDetail from '../pages/praxisDetail/mobileArchetypes/CovenPraxisDetail'
-import CovenMobileTaskCard from '../pages/tasks/mobileArchetypes/cards/CovenMobileTaskCard'
 import CovenMobileTaskDetail from '../pages/taskDetail/mobileArchetypes/CovenTaskDetail'
 import CovenPraxisDetail from '../pages/praxisDetail/archetypes/CovenPraxisDetail'
 import CovenProfileBody from '../pages/characterProfile/archetypes/CovenProfileBody'
@@ -63,7 +62,6 @@ export const COVEN_MANIFEST: FactionManifest = {
   profileBody: () => CovenProfileBody,
   duelSeal: () => CovenDuelSealConfirm,
   duelRail: () => CovenDuelRail,
-  mobileTaskCard: () => CovenMobileTaskCard,
   mobilePraxisCard: () => CovenMobilePraxisCard,
   mobileTaskDetail: () => CovenMobileTaskDetail,
   mobilePraxisDetail: () => CovenMobilePraxisDetail,
