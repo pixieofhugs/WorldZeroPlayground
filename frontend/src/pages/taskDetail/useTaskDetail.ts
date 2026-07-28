@@ -25,7 +25,7 @@ import {
 import { listRelationships } from "../../api/relationships";
 import { useAuth } from "../../auth/AuthContext";
 import { extractError } from "../../utils/errors";
-import { computeDisplayPoints } from "../../utils/points";
+import { computeDisplayPoints, computeFactionMultiplier } from "../../utils/points";
 import { useGameConfig } from "../../hooks/useGameConfig";
 import { isLevelJumpSignup } from "./levelJump";
 
@@ -61,8 +61,36 @@ export interface TaskDetailState {
   levelJumpSignup: boolean;
   slotsOpen: number;
   maxTaskSlots: number;
+  /**
+   * The task's unmultiplied point value (`task.point_value`), 0 when no task is
+   * loaded. Task-detail skins draw this beside {@link factionMultiplier} as two
+   * legible pieces rather than one pre-multiplied number — the same contract
+   * ADR-0055 set for task cards, extended to task detail by #1030.
+   */
+  basePoints: number;
+  /**
+   * The RAW per-faction task modifier for the viewer (`own_task_modifier` /
+   * `other_task_modifier`), straight from `computeFactionMultiplier`. Never a
+   * reconstructed `modifiedPoints / basePoints` ratio — that reconstruction is
+   * the dead-arithmetic trap ADR-0053 named. `era_1` neutralises every faction
+   * to 1.0, so `isNeutralMultiplier(factionMultiplier)` is true everywhere
+   * today and the `×n` badge is correctly invisible.
+   */
   factionMultiplier: number;
+  /**
+   * Base × multiplier, rounded. Legacy single-number readout kept for the
+   * faction archetypes that have not yet moved to base + badge (C1–C8,
+   * #1031–#1038); it drops out of the contract once they have.
+   */
   modifiedPoints: number;
+  /**
+   * Characters actively working this task (`in_progress_count`, #1021), with
+   * the optional-field default applied once here rather than in nine skins.
+   * This is the ONLY place the in-progress population appears on task detail —
+   * no skin renders a roster (owner ruling 2026-07-28, reversing epic #1028
+   * decision 3).
+   */
+  inProgressCount: number;
   topScore: number; // highest submission merit — non-mean signal (ADR-0014; no averages)
   voteCount: number;
 
@@ -211,15 +239,13 @@ export function useTaskDetail(idParam: string | undefined): TaskDetailState {
   // ── Derived gameplay numbers (null-safe — run every render) ──
   const myFaction = user?.character?.faction_slug ?? null;
   const taskFaction = task?.primary_faction_slug ?? null;
-  const factionConfig =
-    myFaction && gameConfig
-      ? gameConfig.factions.find((f) => f.slug === myFaction)
-      : null;
-  const factionMultiplier = factionConfig
-    ? !taskFaction || taskFaction === myFaction || taskFaction === "na"
-      ? factionConfig.own_task_modifier
-      : factionConfig.other_task_modifier
+  // One resolver, shared with the task cards — a second hand-rolled copy of the
+  // own/other branch is exactly how the two surfaces would drift apart.
+  const factionMultiplier = gameConfig
+    ? computeFactionMultiplier(myFaction, taskFaction, gameConfig.factions)
     : 1.0;
+  const basePoints = task?.point_value ?? 0;
+  const inProgressCount = task?.in_progress_count ?? 0;
   const modifiedPoints =
     task && gameConfig
       ? computeDisplayPoints(
@@ -278,8 +304,10 @@ export function useTaskDetail(idParam: string | undefined): TaskDetailState {
     levelJumpSignup,
     slotsOpen,
     maxTaskSlots,
+    basePoints,
     factionMultiplier,
     modifiedPoints,
+    inProgressCount,
     topScore,
     voteCount,
 
