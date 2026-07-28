@@ -1,24 +1,18 @@
 /**
  * Small presentational + logic helpers shared across task-detail archetypes.
  * Kept prop-driven and skinnable so wildly-different archetypes can reuse the
- * behaviour (friend/foe resolution, breadcrumb, error banner) without inheriting
+ * behaviour (level-jump banner, error banner, comment thread) without inheriting
  * each other's look. Mirrors editPraxis/archetypes/shared.tsx.
+ *
+ * `relationOf` (friend/foe resolution for roster badges) used to live here and
+ * was removed in #1039: the v2 skins draw no in-progress roster — the header's
+ * in-progress count is the only place that number appears — so nothing resolved
+ * a relation any more. Reinstating a roster means reinstating the helper.
  */
 import type { CSSProperties, ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import CommentThread from "../../../components/comments/CommentThread";
 import type { TaskDetailState } from "../useTaskDetail";
-
-/** Resolve a signup character's relationship to the viewer (for badges). */
-export function relationOf(
-  characterId: number,
-  friends: Set<number>,
-  foes: Set<number>,
-): "friend" | "foe" | null {
-  if (friends.has(characterId)) return "friend";
-  if (foes.has(characterId)) return "foe";
-  return null;
-}
 
 interface ErrorBannerProps {
   message: string | null;
