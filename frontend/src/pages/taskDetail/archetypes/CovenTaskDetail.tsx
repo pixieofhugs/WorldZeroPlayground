@@ -886,11 +886,24 @@ export default function CovenTaskDetail({ state }: { state: TaskDetailState }) {
 
   return (
     <div className="py-8" style={{ position: "relative", color: INK, fontFamily: CHROME }}>
-      {/* The candlelight wash — full-viewport, index.css owns its blooms, its
-          drift and the light/dark flip. */}
-      <div className="coven-candle-backdrop" aria-hidden />
-
-      <div style={{ position: "relative", zIndex: 1, maxWidth: 1200, margin: "0 auto" }}>
+      {/* The candlelight wash belongs to the COMPONENT, not the viewport: the
+          owner's rule for this surface is that the site background still shows
+          around the detail column (QA on #1055, applied to every skin). It was a
+          `position: fixed; inset: 0` layer; index.css still owns its blooms, its
+          drift and the light/dark flip, but it now paints this column only. */}
+      <div
+        className="coven-candle-backdrop"
+        style={{
+          position: "relative",
+          zIndex: 1,
+          maxWidth: 1200,
+          margin: "0 auto",
+          borderRadius: 18,
+          padding: desktop ? "var(--space-2xl)" : "var(--space-lg)",
+          overflow: "hidden",
+          boxSizing: "border-box",
+        }}
+      >
         {/* The pentagram watermark, turning once every two minutes. `.cvn-wheel`
             carries the motion and its reduced-motion guard (#911/#1023). */}
         <svg

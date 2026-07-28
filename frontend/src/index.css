@@ -3394,11 +3394,12 @@
    filter layer. The FLOAT survives — it is the candle, and it lives here rather
    than in a component-injected <style> (#911). */
 .coven-candle-backdrop {
-  position: fixed;
-  inset: 0;
-  z-index: 0;
+  /* Painted on the detail COLUMN, not the viewport — the site background shows
+     around it (owner QA on #1055, applied to every task-detail skin). The
+     archetype supplies position / z-index / radius / padding; this rule owns
+     only the ground and its blooms. `overflow: hidden` stays because the
+     ::before bloom is inset -25% and must be clipped to the column. */
   overflow: hidden;
-  pointer-events: none;
   background: var(--faction-coven-ward-page);
   transition: background 300ms;
 }
