@@ -49,7 +49,7 @@ import {
   wowGiltButton,
   wowMobilePage,
 } from "../../../components/cards/wowMobile";
-import { MobileStickyBar } from "../../taskDetail/mobileArchetypes/shared";
+import { MobileStickyBar } from "./shared";
 import type { CharacterOut } from "../../../api/auth";
 import type { FactionDetailState } from "../useFactionDetail";
 

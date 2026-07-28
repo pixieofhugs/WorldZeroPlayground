@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import PraxisCard from '../../../components/PraxisCard'
 import { factionName, factionDescription } from '../../../utils/factions'
-import { MobileStickyBar } from '../../taskDetail/mobileArchetypes/shared'
+import { MobileStickyBar } from './shared'
 import type { CharacterOut } from '../../../api/auth'
 import type { FactionDetailState } from '../useFactionDetail'
 
