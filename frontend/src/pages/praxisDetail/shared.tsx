@@ -20,6 +20,7 @@ import { CollabRoster } from '../../components/collab/CollabRoster'
 import DuelSealConfirm from '../../components/duel/DuelSealConfirm'
 import type { PraxisDetailState } from './usePraxisDetail'
 import type { PraxisMemberOut, PraxisOut } from '../../api/praxis'
+import type { DuelDetailOut } from '../../api/duel'
 import { flagReasonOptions } from '../../utils/flagReasons'
 import { scoreBreakdown } from '../../components/praxisCard/scoreStamp/scoreBreakdown'
 
@@ -339,6 +340,73 @@ export function PraxisOwnerActions({ state }: { state: PraxisDetailState }) {
 }
 
 /**
+ * Which reopen the quiet unsubmit control is actually about to perform (#1094).
+ *
+ * The control used to show ONE prompt — "Sure? Points & votes will pause." — for
+ * every praxis, which is only true of a solo. Each branch below is `unsubmit_praxis`
+ * (`services/praxis.py`) read back as a sentence:
+ *
+ *  - `duelLive` — a duel still `pending` or `active`. Both are pre-settlement:
+ *    a forfeit is marked only at `status == settled` (ADR-0011 §Forfeit), so the
+ *    reopen is free and neutral and nothing is marked. `pending` sits alongside
+ *    `active` in the backend's own `_LIVE_INCOMPLETE_DUEL_STATUSES`, and #1077
+ *    already treats the pair identically in the composer's pull-back — a
+ *    challenger who casts before the rival accepts is in the same free state.
+ *    A `settled` duel never reaches here: it is caught by `forfeitsOnUnsubmit`
+ *    above and gets the forfeit dialog instead.
+ *  - `collabOwnPart` — a collab mid-consensus (`pending`) where the viewer has
+ *    cast. The backend runs `on_member_unsubmit`: only the caller's part comes
+ *    back and co-authors' casts stand. Pending praxes are unscored, so there is
+ *    no points-and-votes half to warn about.
+ *  - `collabGroup` — a published collab. The whole group reopens and EVERY
+ *    member's `has_submitted` clears, not just the viewer's.
+ *  - `solo` — the original copy, unchanged.
+ */
+export type UnsubmitCase = 'solo' | 'collabGroup' | 'collabOwnPart' | 'duelLive'
+
+export function unsubmitCase(
+  praxis: PraxisOut,
+  duel: DuelDetailOut | null,
+): UnsubmitCase {
+  if (duel && (duel.status === 'pending' || duel.status === 'active')) return 'duelLive'
+  if (praxis.members.length <= 1) return 'solo'
+  return praxis.status === 'pending' ? 'collabOwnPart' : 'collabGroup'
+}
+
+/**
+ * Trigger label / confirm prompt / confirm-button label, one row per case.
+ * `as const` keeps the literals narrow so the typed `t()` key union still
+ * checks every string here against the shipped catalog.
+ */
+const UNSUBMIT_COPY = {
+  solo: {
+    trigger: 'detail.owner.unsubmit',
+    prompt: 'detail.owner.confirmPrompt',
+    confirm: 'detail.owner.confirmUnsubmit',
+  },
+  collabGroup: {
+    trigger: 'detail.owner.unsubmit',
+    prompt: 'detail.owner.confirmPromptCollab',
+    confirm: 'detail.owner.confirmUnsubmitCollab',
+  },
+  collabOwnPart: {
+    trigger: 'detail.owner.unsubmit',
+    prompt: 'detail.owner.confirmPromptCollabPart',
+    confirm: 'detail.owner.confirmUnsubmitCollabPart',
+  },
+  // The composer's vocabulary for the same free beat (#1077, "Pull my entry
+  // back") — one event, one set of words, no consequence language.
+  duelLive: {
+    trigger: 'detail.owner.unsubmitDuelLive',
+    prompt: 'detail.owner.confirmPromptDuelLive',
+    confirm: 'detail.owner.confirmUnsubmitDuelLive',
+  },
+} as const satisfies Record<
+  UnsubmitCase,
+  { trigger: string; prompt: string; confirm: string }
+>
+
+/**
  * The submit / pull-back / forfeit control for a praxis you own — the one
  * mutation seam that changes its cast state (and, for a duel side, the duel's).
  * Extracted from PraxisOwnerActions (#752) so the duel RAIL can render it beside
@@ -381,6 +449,10 @@ export function PraxisSubmitControls({ state }: { state: PraxisDetailState }) {
   const isPendingHoldout =
     isCollab && praxis.status === 'pending' && viewerMember?.has_submitted !== true
 
+  // What the quiet unsubmit is about to do, in its own words (#1094). The
+  // settled-duel forfeit is handled above and never reaches this table.
+  const unsubmitCopy = UNSUBMIT_COPY[unsubmitCase(praxis, duel)]
+
   return praxis.status === 'in_progress' && viewerSubmittedWaiting ? (
     <span className="eyebrow" style={{ color: 'var(--color-success)', fontWeight: 700 }}>
       {t('detail.owner.submittedWaiting')}
@@ -418,17 +490,17 @@ export function PraxisSubmitControls({ state }: { state: PraxisDetailState }) {
     </>
   ) : !showWithdrawConfirm ? (
     <button onClick={() => setShowWithdrawConfirm(true)} className="font-body eyebrow" style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-text-tertiary)' }}>
-      {t('detail.owner.unsubmit')}
+      {t(unsubmitCopy.trigger)}
     </button>
   ) : (
     <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-sm)', flexWrap: 'wrap' }}>
-      <span className="eyebrow" style={{ color: 'var(--color-text-tertiary)' }}>{t('detail.owner.confirmPrompt')}</span>
+      <span className="eyebrow" style={{ color: 'var(--color-text-tertiary)' }}>{t(unsubmitCopy.prompt)}</span>
       <button
         onClick={handleWithdraw}
         disabled={withdrawing}
         style={{ background: 'rgba(220,38,38,0.1)', border: '1.5px solid var(--color-danger)', color: 'var(--color-danger)', fontFamily: "'Courier Prime', monospace", fontSize: 'var(--text-sm)', textTransform: 'uppercase', padding: 'var(--space-xs) var(--space-md)', cursor: 'pointer', borderRadius: 0 }}
       >
-        {withdrawing ? t('detail.owner.submitting') : t('detail.owner.confirmUnsubmit')}
+        {withdrawing ? t('detail.owner.submitting') : t(unsubmitCopy.confirm)}
       </button>
       <button onClick={() => setShowWithdrawConfirm(false)} className="btn-outline" style={{ fontSize: 'var(--text-sm)', padding: 'var(--space-xs) var(--space-md)' }}>{t('detail.owner.cancel')}</button>
     </div>
