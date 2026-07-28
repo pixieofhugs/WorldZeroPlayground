@@ -1283,24 +1283,16 @@ async def change_praxis_type(
             )
         praxis.type = PraxisType.collab
     else:
-        # collab → solo: the actor takes it over as their own solo praxis.
-        # A type change is a structural edit — clear any pending-publish window
-        # (ADR-0012) while this is still a collab, so a later flip back to collab
-        # can't inherit a stale, already-lapsed window and instantly auto-seal.
-        await cancel_pending_publish_on_edit(praxis, session, era)
-        # Mutate the loaded collections so the delete-orphan cascade fires *and*
-        # the returned/serialized praxis reflects the drop (session.delete alone
-        # would leave the selectin-cached collections stale).
-        praxis.type = PraxisType.solo
-        praxis.created_by_id = character_id
-        for member in list(praxis.members):
-            if member.character_id != character_id:
-                praxis.members.remove(member)
-        for invite in list(praxis.invites):
-            if invite.status == PraxisInviteStatus.pending:
-                praxis.invites.remove(invite)
+        # collab → solo: the actor takes it over as their own solo praxis. The
+        # mutation itself is shared with the ADR-0060 involuntary conversion
+        # (a collab that drops to one member) so the two cannot drift. What
+        # stays here is what makes this a *takeover*: the 422 status guard above
+        # and the choice of the actor as the new owner.
+        await collab_consensus.convert_to_solo(praxis, character_id, session, era)
 
-    # in_progress praxes aren't scored, so no stat recalc is needed here.
+    # in_progress praxes aren't scored, so no stat recalc is needed here. The
+    # ADR-0060 conversion cannot reuse that reasoning — it can fire on a
+    # submitted praxis — so it recalcs at its own call site.
     await session.flush()
     return await get_praxis(praxis_id, session)
 

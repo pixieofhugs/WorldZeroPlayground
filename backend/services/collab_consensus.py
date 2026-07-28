@@ -7,6 +7,11 @@ resets the whole group. This module owns that window/deadline math and the
 ``has_submitted`` bookkeeping so the rule lives in one place instead of leaking
 across submit/leave/kick/edit/read in ``services.praxis``.
 
+This module also owns the ``collab → solo`` mutation (:func:`convert_to_solo`),
+because a collab that drops to one member converts (ADR-0060) and the *voluntary*
+takeover in ``services.praxis.change_praxis_type`` must not drift from it. It
+lives here rather than there because ``services.praxis`` imports this module.
+
 The praxis lifecycle/membership functions call these transitions; they no longer
 carry the window logic inline. Duel settling is deliberately NOT here — it
 depends on ``services.duel`` (which imports ``services.praxis``), so keeping it
@@ -18,7 +23,7 @@ from datetime import datetime, timedelta, timezone
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from game_config import CURRENT_ERA, EraConfig
-from models.praxis import Praxis, PraxisStatus, PraxisType
+from models.praxis import Praxis, PraxisInviteStatus, PraxisStatus, PraxisType
 from services.character_stats import recalculate_character_stats
 from services.era import get_current_era_row
 
@@ -145,11 +150,73 @@ async def on_submit(
     return False
 
 
+async def convert_to_solo(
+    praxis: Praxis,
+    new_owner_character_id: int,
+    session: AsyncSession,
+    era: EraConfig = CURRENT_ERA,
+) -> None:
+    """The shared ``collab → solo`` mutation. One body, two callers, no drift.
+
+    - ``services.praxis.change_praxis_type`` — a *voluntary* takeover (#321): any
+      member may claim the praxis, and passes itself as the new owner.
+    - :func:`on_member_leave` — an *involuntary* conversion when a collab drops to
+      its last member, at any status (ADR-0060); the survivor is the new owner.
+
+    What it does: retype the praxis, hand ``created_by_id`` to the new owner, drop
+    every other member and every pending invite, and close any open ADR-0012
+    pending-publish window. Content, id and media are preserved — never
+    delete+recreate. The ``created_by_id`` reassignment is load-bearing:
+    ``delete_praxis`` is creator-only, so without it a survivor who did not start
+    the praxis could not drop it and would be stranded holding a task signup.
+
+    What it deliberately leaves at the call site: authorization, status guards
+    (the takeover keeps its own 422 — that guard protects a *choice*, and this
+    conversion is a *consequence*), and stat recalculation.
+
+    The window is cancelled *before* the retype, because ``on_member_edit``
+    no-ops on a non-collab — and only while the praxis is unpublished, because on
+    a ``submitted`` praxis ``on_member_edit`` would unpublish it and wipe every
+    cast. ADR-0060's submitted case must not do that: the praxis stays Live and
+    only its scoring model changes.
+    """
+    if praxis.status != PraxisStatus.submitted:
+        await on_member_edit(praxis, session, era)
+
+    # Mutate the loaded collections so the delete-orphan cascade fires *and* the
+    # returned/serialized praxis reflects the drop (session.delete alone would
+    # leave the selectin-cached collections stale).
+    praxis.type = PraxisType.solo
+    praxis.created_by_id = new_owner_character_id
+    for member in list(praxis.members):
+        if member.character_id != new_owner_character_id:
+            praxis.members.remove(member)
+    for invite in list(praxis.invites):
+        if invite.status == PraxisInviteStatus.pending:
+            praxis.invites.remove(invite)
+    await session.flush()
+
+
 async def on_member_leave(
     praxis: Praxis, session: AsyncSession, era: EraConfig
 ) -> None:
-    """Release a hold on leave: if everyone who stayed has already submitted, the
-    collab reaches consensus and goes Live. Call after removing the leaver."""
+    """Release a hold on leave, then convert a deserted collab. Call after
+    removing the leaver.
+
+    Two transitions, in this order:
+
+    1. If everyone who stayed has already submitted, the departure completes the
+       consensus and the collab goes Live.
+    2. ADR-0060: if exactly one member remains, the praxis is no longer a
+       collaboration — convert it to a solo praxis owned by the survivor, at any
+       status. This is why the zero-member state is unreachable: the last
+       member's exit is *drop*, not leave.
+
+    The order matters. Converting first would cancel the pending-publish window
+    and wipe the survivor's own cast, discarding a consensus the departure had
+    just completed. Sealing first, then converting, keeps the Live praxis Live
+    and merely reprices it.
+    """
     remaining = praxis.members
     if (
         remaining
@@ -157,6 +224,19 @@ async def on_member_leave(
         and all(m.has_submitted for m in remaining)
     ):
         await seal_to_live(praxis, session, era)
+
+    if praxis.type == PraxisType.collab and len(praxis.members) == 1:
+        survivor_character_id = praxis.members[0].character_id
+        await convert_to_solo(praxis, survivor_character_id, session, era)
+        if praxis.status == PraxisStatus.submitted:
+            # Unlike the takeover path, this fires on scored praxes: the
+            # collab_own/other_modifier pair gives way to own/other_task_modifier
+            # under an already-published praxis, so the survivor is repriced.
+            era_row = await get_current_era_row(session)
+            await recalculate_character_stats(
+                survivor_character_id, session, era, era_row=era_row
+            )
+            await session.flush()
 
 
 async def on_member_kicked(praxis: Praxis, session: AsyncSession) -> None:
