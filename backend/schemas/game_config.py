@@ -32,6 +32,7 @@ class GameConfigOut(BaseModel):
     level_thresholds: list[int]
     duel_level_required: int
     collaboration_level_required: int
+    collab_auto_submit_days: int
     max_task_signups: int
     vote_budget_base: int
     vote_budget_multiplier: float

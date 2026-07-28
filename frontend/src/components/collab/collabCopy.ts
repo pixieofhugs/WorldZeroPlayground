@@ -41,6 +41,29 @@ export type CollabCopyKey =
   | 'successHeading'
   | 'successBody'
   | 'successContinue'
+  | 'leaveDescription'
+  | 'deleteAction'
+  | 'deleteDescription'
+  | 'deleteConfirm'
+
+/**
+ * Keys that are content to speak in the shared voice (#1074).
+ *
+ * Most collab keys are voiced by every faction — the roster's diction is part of
+ * the faction's identity, and `collabCopy.test.ts` holds each faction to the full
+ * set. These ones ship with a shared default only: they describe the *mechanics*
+ * of leaving versus deleting a co-owned praxis (ADR-0013), which every faction
+ * agrees on, and a warning about destroying other people's work is a poor place
+ * to be clever. A faction may still override any of them; nothing here stops it,
+ * and the resolver is unchanged. The list exists so the completeness test knows
+ * which keys a silent faction is allowed to leave alone.
+ */
+export const SHARED_DEFAULT_COLLAB_KEYS: readonly CollabCopyKey[] = [
+  'leaveDescription',
+  'deleteAction',
+  'deleteDescription',
+  'deleteConfirm',
+]
 
 /**
  * Resolve one collab copy key in the given faction's voice, falling back to the

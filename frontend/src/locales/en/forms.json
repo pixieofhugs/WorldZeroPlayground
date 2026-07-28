@@ -169,7 +169,11 @@
       "pullBackAction": "Pull my part back",
       "successHeading": "The proof is woven",
       "successBody": "Every part is cast — your collab is live.",
-      "successContinue": "View the praxis"
+      "successContinue": "View the praxis",
+      "leaveDescription": "Bow out of this collab. The others keep the praxis and carry on without you.",
+      "deleteAction": "Delete for everyone",
+      "deleteDescription": "Destroys the whole collab — every member's part goes with it. To bow out on your own, leave instead.",
+      "deleteConfirm": "Delete this collab? It is destroyed for everyone, including the parts the other members have already put in. If you only want out yourself, leave instead."
     },
     "toolbar": {
       "label": "formatting",
