@@ -10,6 +10,7 @@ import { useTranslation } from "react-i18next";
 import PageTitle from "../components/ui/PageTitle";
 import ImageEditModal from "../components/imageEdit/ImageEditModal";
 import { CollabSuccess } from "../components/collab/CollabSuccess";
+import ConfirmDialog from "../components/confirm/ConfirmDialog";
 import DuelSealConfirm from "../components/duel/DuelSealConfirm";
 import { pickVariant } from "../utils/factionDispatch";
 import { surfaceMap } from "../factions";
@@ -118,6 +119,20 @@ export default function EditPraxis() {
           its own issuing faction's dress. */}
       {state.metataskPickerOpen && <MetataskPicker state={state} />}
       {state.metataskRemovalTarget && <MetataskRemoveConfirm state={state} />}
+      {/* Drop / delete / leave / re-open / mode-switch / dissolve-duel (#1082).
+          Six confirms, one dialog, mounted here beside the other three so it
+          covers every archetype, the waiting surface and both form factors —
+          and so a composer confirm can never again be OS chrome. The kick
+          confirm is the one exception: it lives inside CollabRoster, which the
+          read page mounts too. */}
+      {state.pendingConfirm && (
+        <ConfirmDialog
+          request={state.pendingConfirm}
+          factionSlug={slug}
+          onConfirm={state.acceptConfirm}
+          onDismiss={state.dismissConfirm}
+        />
+      )}
       {/* Praxis images crop/rotate in place before upload (#514), free-form so
           nothing is force-cropped. Sequential: keyed on identity so each queued
           image gets a fresh modal. */}

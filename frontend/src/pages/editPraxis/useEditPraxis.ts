@@ -35,7 +35,16 @@ import {
   type DuelDetailOut,
 } from "../../api/duel";
 import { deriveCollabGate } from "../../components/collab/CollabRoster";
-import { collabCopy } from "../../components/collab/collabCopy";
+import {
+  deleteCollabConfirm,
+  dissolveDuelConfirm,
+  dropTaskConfirm,
+  duelDropsCoauthorsConfirm,
+  leaveCollabConfirm,
+  modeSwitchConfirm,
+  reopenForEditConfirm,
+  type ConfirmRequest,
+} from "../../components/confirm/composerConfirms";
 import { getGameConfig } from "../../api/gameConfig";
 import { listRelationships } from "../../api/relationships";
 import { getTask, type TaskOut } from "../../api/tasks";
@@ -249,6 +258,21 @@ export interface EditPraxisState {
   /** Dismiss the dialog without casting. */
   cancelDuelSeal: () => void;
 
+  /**
+   * The confirm the composer is currently waiting on, or null (#1082).
+   *
+   * `EditPraxis.tsx` mounts one `ConfirmDialog` for this, beside the duel seal
+   * and the metatask peel-off, so a single mount covers all 16 composer
+   * surfaces, the waiting surface and both form factors. Every handler that
+   * used to call `window.confirm` now awaits this instead, so they still read
+   * as "ask, then act" — see `askConfirm` in the hook body.
+   */
+  pendingConfirm: ConfirmRequest | null;
+  /** The dialog's affirmative button — resumes the handler that asked. */
+  acceptConfirm: () => void;
+  /** Escape, backdrop, or "Never mind" — the handler returns without acting. */
+  dismissConfirm: () => void;
+
   // Autosave
   autosaveAt: Date | null;
   saveStatus: SaveStatus;
@@ -275,29 +299,10 @@ export interface EditPraxisState {
 
 const AUTOSAVE_DEBOUNCE_MS = 2000;
 
-/**
- * Decide whether switching to a new mode needs a confirm, and with what prompt.
- * Returns the message to confirm, or null to proceed silently.
- *
- * Mode switches are now in-place (#321 solo↔collab, #311 duel), so the draft is
- * always preserved — only genuinely destructive transitions warn:
- *  - leaving a pending/active duel  → the challenge is cancelled
- *  - collab → solo with co-authors  → they're dropped (content stays)
- */
-export function modeSwitchPrompt(
-  next: PraxisType,
-  currentType: PraxisType,
-  memberCount: number,
-  inDuel: boolean,
-): string | null {
-  if (inDuel && next !== "duel") {
-    return i18n.t("forms:editPraxis.confirm.leaveDuel");
-  }
-  if (next === "solo" && currentType === "collab" && memberCount > 1) {
-    return i18n.t("forms:editPraxis.confirm.soloDropsCoauthors");
-  }
-  return null;
-}
+/* `modeSwitchPrompt` moved to `components/confirm/composerConfirms.ts` as
+ * `modeSwitchConfirm` (#1082): it now returns a whole ConfirmRequest rather than
+ * one string for `window.confirm`, and it belongs beside the other six confirms
+ * the composer asks for. */
 
 /**
  * Dirty-check gate for the pre-submit save (#360).
@@ -365,6 +370,13 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
   // Seal confirmation (#718) — opened by PublishButton in duel mode.
   const [duelSealOpen, setDuelSealOpen] = useState(false);
 
+  // The in-page confirm (#1082) — one slot, because only one handler can be
+  // waiting on an answer at a time.
+  const [pendingConfirm, setPendingConfirm] = useState<ConfirmRequest | null>(
+    null,
+  );
+  const confirmResolverRef = useRef<((accepted: boolean) => void) | null>(null);
+
   const [autosaveAt, setAutosaveAt] = useState<Date | null>(null);
   const [saveStatus, setSaveStatus] = useState<SaveStatus>("idle");
 
@@ -373,6 +385,32 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
   const lastSavedTitleRef = useRef<string | null>(null);
   const lastSavedBodyRef = useRef<string | null>(null);
   const autosaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // ---- Confirms (#1082) ----
+  // `window.confirm` used to block the handler until the player answered; these
+  // three restore that shape without the OS dialog. `askConfirm` puts the
+  // request on screen and returns a promise the handler awaits, so each caller
+  // still reads `if (!(await askConfirm(...))) return;` — one line, in the same
+  // place, with the same control flow.
+  //
+  // The resolver lives in a ref rather than in state: it is not rendered, and
+  // storing a function in state would need the lazy-setter dance for no gain.
+  const settleConfirm = useCallback((accepted: boolean) => {
+    const resolve = confirmResolverRef.current;
+    confirmResolverRef.current = null;
+    setPendingConfirm(null);
+    resolve?.(accepted);
+  }, []);
+
+  const askConfirm = useCallback((request: ConfirmRequest) => {
+    // A second ask while one is open declines the first, so no handler is left
+    // awaiting a promise that can never settle.
+    confirmResolverRef.current?.(false);
+    setPendingConfirm(request);
+    return new Promise<boolean>((resolve) => {
+      confirmResolverRef.current = resolve;
+    });
+  }, []);
 
   // ---- Initial load ----
   useEffect(() => {
@@ -731,13 +769,13 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
   const reopenForEdit = useCallback(async () => {
     if (!praxis) return;
     if (praxis.type === "collab" && praxis.members.length > 1) {
-      const confirmed = window.confirm(
-        collabCopy(praxis.task_faction_slug, "awaitingEditConfirm"),
+      const confirmed = await askConfirm(
+        reopenForEditConfirm(praxis.task_faction_slug),
       );
       if (!confirmed) return;
     }
     await pullBack();
-  }, [praxis, pullBack]);
+  }, [praxis, pullBack, askConfirm]);
 
   // Drop my own membership from a collab (#958). Distinct from `cancel` (deletes
   // the whole praxis, everyone's part with it) and `pullBack` (retract my cast but
@@ -747,8 +785,12 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
   // consensus for whoever stays.
   const leaveCollab = useCallback(async () => {
     if (!praxis) return;
-    const confirmed = window.confirm(
-      i18n.t("forms:editPraxis.confirm.leaveCollab"),
+    // The member count is what decides which consequence this leave carries:
+    // at three or more the crew simply carries on, at two the praxis converts
+    // to solo for whoever stays (ADR-0060), and at one there is nothing left to
+    // carry on. The dialog says which of the three this is.
+    const confirmed = await askConfirm(
+      leaveCollabConfirm(praxis.task_faction_slug, praxis.members.length),
     );
     if (!confirmed) return;
     try {
@@ -759,7 +801,7 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
       return;
     }
     navigate("/tasks");
-  }, [praxis, navigate, refetch]);
+  }, [praxis, navigate, refetch, askConfirm]);
 
   // The success screen's only exit: an explicit "it's on the public board" tap.
   // Deliberately not a timer — the player leaves when they've read it (#591).
@@ -776,10 +818,10 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
     // has `leaveCollab` — the creator included (ADR-0013). Say which of the two
     // this is before it happens, in the faction's voice where it has one (#1074).
     const crewAtStake = praxis.type === "collab" && praxis.members.length > 1;
-    const confirmed = window.confirm(
+    const confirmed = await askConfirm(
       crewAtStake
-        ? collabCopy(praxis.task_faction_slug, "deleteConfirm")
-        : i18n.t("forms:editPraxis.confirm.dropTask"),
+        ? deleteCollabConfirm(praxis.task_faction_slug)
+        : dropTaskConfirm(),
     );
     if (!confirmed) return;
     if (autosaveTimerRef.current) {
@@ -793,7 +835,7 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
       return;
     }
     navigate("/tasks");
-  }, [praxis, navigate]);
+  }, [praxis, navigate, askConfirm]);
 
   // ---- Mode switching ----
   const changeMode = useCallback(
@@ -808,9 +850,7 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
         if (praxis.type === "collab") {
           if (
             praxis.members.length > 1 &&
-            !window.confirm(
-              i18n.t("forms:editPraxis.confirm.duelDropsCoauthors"),
-            )
+            !(await askConfirm(duelDropsCoauthorsConfirm()))
           ) {
             return;
           }
@@ -850,13 +890,13 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
         return;
       }
 
-      const prompt = modeSwitchPrompt(
+      const request = modeSwitchConfirm(
         next,
         praxis.type,
         praxis.members.length,
         inDuel,
       );
-      if (prompt && !window.confirm(prompt)) return;
+      if (request && !(await askConfirm(request))) return;
 
       setError("");
       setSwitchingMode(next);
@@ -882,7 +922,7 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
         setSwitchingMode(null);
       }
     },
-    [praxis, duel],
+    [praxis, duel, askConfirm],
   );
 
   // ---- Invite search (debounced via input change handler in caller, but
@@ -1062,9 +1102,9 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
   // gated behind a confirm because it ends an accepted duel for both sides.
   const dissolveDuel = useCallback(async () => {
     if (!praxis?.duel_id) return;
-    if (!window.confirm(i18n.t("forms:editPraxis.confirm.dissolveDuel"))) return;
+    if (!(await askConfirm(dissolveDuelConfirm()))) return;
     await cancelDuel();
-  }, [praxis?.duel_id, cancelDuel]);
+  }, [praxis?.duel_id, cancelDuel, askConfirm]);
 
   // ---- Metatasks (#933) ----
   // Legacy toggle (apply when absent, remove when present) kept on the state
@@ -1272,6 +1312,10 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
     duelSealOpen,
     requestDuelSeal: () => setDuelSealOpen(true),
     cancelDuelSeal: () => setDuelSealOpen(false),
+
+    pendingConfirm,
+    acceptConfirm: () => settleConfirm(true),
+    dismissConfirm: () => settleConfirm(false),
 
     autosaveAt,
     saveStatus,
