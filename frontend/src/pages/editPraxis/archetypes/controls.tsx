@@ -699,16 +699,23 @@ export function PublishButton({
 }) {
   const praxis = state.praxis;
   // The one published state that keeps its footer button (#1077). A duel side
-  // that casts goes straight to `submitted` while the duel stays `active` —
-  // meaning the rival has not answered yet, since a second cast settles it
-  // (`maybe_settle_duel`). Pulling back there is a free, neutral reopen:
-  // `unsubmit_praxis` only marks a forfeit for a *settled* duel (ADR-0011
-  // §Forfeit), so nothing is lost and nobody wins. It is also the promise the
-  // seal dialog already made on the way in (`duelSeal.reopenNote`). Every other
-  // published praxis — solo, collab, or a duel already settled, where forfeit
-  // does begin and lives on the detail page instead — still renders nothing.
+  // that casts goes straight to `submitted` while the duel is still unsettled —
+  // `active` (accepted, and the rival has not answered, because a second cast
+  // settles it: `maybe_settle_duel`) or `pending` (cast before the rival even
+  // accepted). Both are the same trap: the entry is author-only until the duel
+  // completes (#999), the composer is locked, and there is no way back into it.
+  //
+  // Pulling back from either is a free, neutral reopen. `unsubmit_praxis` marks
+  // a forfeit only for a *settled* duel (ADR-0011 §Forfeit), so the praxis just
+  // returns to `in_progress` with `forfeited_by_character_id` still NULL and the
+  // duel untouched — the promise the seal dialog already made on the way in
+  // (`duelSeal.reopenNote`). Listed, not negated: `settled`/`resolved` are where
+  // forfeit begins and belong to the detail page, and a `declined` challenge
+  // leaves an ordinary published solo praxis, which stays unpublishable-back.
   const duelPullBack =
-    state.isPublished && state.duelMode && state.duel?.status === "active";
+    state.isPublished &&
+    state.duelMode &&
+    (state.duel?.status === "active" || state.duel?.status === "pending");
   if (state.isPublished && !duelPullBack) return null;
   // Multi-member collabs cast (and pull back) through this same footer button
   // (#646). The consensus gate decides the action and the faction-voiced idle
@@ -718,8 +725,8 @@ export function PublishButton({
       ? deriveCollabGate(praxis.members, state.currentCharacterId)
       : null;
   // Neutral wording, deliberately: no forfeit language and no consequence
-  // dialog at `active` (#718 rejected that framing once already — see
-  // CovenDuelRail's header). Shared voice for now, like the other mechanics
+  // dialog before the duel settles (#718 rejected that framing once already —
+  // see CovenDuelRail's header). Shared voice for now, like the other mechanics
   // lines in `SHARED_DEFAULT_COLLAB_KEYS`.
   const idleLabel = duelPullBack
     ? collabCopy(praxis?.task_faction_slug, "duelPullBackAction")
