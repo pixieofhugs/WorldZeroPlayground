@@ -26,7 +26,7 @@ import { Enso } from "../factionMarks";
  * kit's 705 KB brush study site-wide. That left UA with two different circles,
  * the good one on a single surface. Owner ruling 2026-07-21: "No two ensō's on
  * purpose." The approximation is deleted; every UA surface now renders the
- * vendored `enso.svg` — 284 hand-drawn strokes and a turbulence filter — at
+ * vendored ensō — 284 hand-drawn strokes and a turbulence filter — at
  * every size, from the 13px inline mark to the 420px backdrop.
  *
  * Delivery is {@link Enso}'s: a static asset under `public/` painted through a

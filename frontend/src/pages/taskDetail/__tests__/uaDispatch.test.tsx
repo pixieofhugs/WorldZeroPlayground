@@ -104,7 +104,7 @@ describe("UA mobile task detail — what it draws", () => {
   it("writes the point value inside the ensō", () => {
     const { html, text } = render(<UAMobileTaskDetail state={baseState()} />);
     // The one ensō (#908): the vendored brush drawing, painted through a mask.
-    expect(html).toContain("/factionMarks/enso.svg");
+    expect(html).toContain("/factionMarks/enso.webp");
     expect(html).toContain("var(--faction-ua-vermil)");
     expect(text).toContain("42");
   });

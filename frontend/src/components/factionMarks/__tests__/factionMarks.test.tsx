@@ -24,7 +24,7 @@ describe('faction marks', () => {
 
   it('Enso masks the static asset and takes its colour from the token', () => {
     const html = renderToStaticMarkup(<Enso color="var(--faction-ua-card-accent)" size={138} />)
-    expect(html).toContain('/factionMarks/enso.svg')
+    expect(html).toContain('/factionMarks/enso.webp')
     expect(html).toContain('background-color:var(--faction-ua-card-accent)')
     expect(html).not.toMatch(HEX)
   })

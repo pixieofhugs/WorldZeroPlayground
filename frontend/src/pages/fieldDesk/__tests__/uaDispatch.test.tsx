@@ -96,7 +96,7 @@ describe('UA mobile home — what it draws', () => {
   it('heads the screen with the ensō', () => {
     const { html } = render(<UaHome state={baseState()} />)
     // The one ensō (#908): the vendored brush drawing, painted through a mask.
-    expect(html).toContain('/factionMarks/enso.svg')
+    expect(html).toContain('/factionMarks/enso.webp')
     expect(html).toContain('var(--faction-ua-glow)')
   })
 

@@ -42,6 +42,7 @@ identity + era-as-ruleset in ADR-0041 / ADR-0042.
 | Testing approach | `docs/spec/SPEC-testing.md` |
 | Design intent, UX, faction archetypes | `WORLD_ZERO_STYLE.md` |
 | Building against a Claude design (fidelity rule, vendor-then-delete, what a green build misses) | `docs/agents/design-fidelity.md` |
+| Shipping a surface without slowing the site down (payload budget, what makes a surface free, asset + font rules) | `docs/agents/load-time.md` |
 | CSS variables (colors, type, themes) | `frontend/src/index.css` |
 | JS faction config | `frontend/src/utils/factions.ts` |
 | Open work / issues | GitHub Issues — `gh issue list` (see `docs/agents/issue-tracker.md`) |

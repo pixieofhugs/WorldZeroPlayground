@@ -109,7 +109,7 @@ describe("UA task detail — the marks and the faces", () => {
     // The one ensō (#908): the vendored brush drawing, painted through a mask.
     // `Enso` emits the prefixed declaration too, so count only the -webkit- one
     // — two of those is two marks, not four.
-    expect(html.match(/-webkit-mask-image:url\(\/factionMarks\/enso\.svg\)/g)).toHaveLength(2);
+    expect(html.match(/-webkit-mask-image:url\(\/factionMarks\/enso\.webp\)/g)).toHaveLength(2);
     // The mark is reserved for the SCORE and the FACTION MARK — never a button
     // seal, never a "best judged" badge, however the design draws it.
     expect(text).toContain("24");
