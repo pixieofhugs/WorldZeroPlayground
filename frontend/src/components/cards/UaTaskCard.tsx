@@ -1,149 +1,260 @@
 import { Link } from "react-router-dom";
 import type { CardProps } from "../TaskCard";
 import i18n from "../../i18n";
-import LevelGem from "../ui/LevelGem";
-import {
-  UA_DISPLAY,
-  UA_EYEBROW,
-  UA_HAIRLINE,
-  UA_TEXT,
-  UaEnsoScore,
-  UaInkColumn,
-  uaShade,
-} from "./uaAtoms";
+import { isNeutralMultiplier } from "../../utils/points";
+import { useFormFactor } from "../../hooks/useFormFactor";
+import { Lotus } from "../factionMarks";
+import { UaSigil } from "./UaSigil";
+import { UA_DISPLAY, UA_EYEBROW, UA_TEXT, UaEnsoScore } from "./uaAtoms";
 
 /**
- * UA task card — THE INK COLUMN (kit §1 "3a", the reference surface for the
- * whole UA redesign, #851).
+ * UA — THE VELLUM LEAF (task card v2, #1023).
  *
- * A sheet of sun-bleached stock with a single hairline of orange running down
- * the left margin and the task's marks held in an ensō at the head. That is
- * the entire ornament budget: no gilt sandwich, no rotation, no dot grid, no
- * motto ribbon, no crest.
+ * A leaf of sun-bleached vellum bound in sienna, with a lotus hanging off the
+ * top-left corner as a ground wash and the task's marks held in an ensō at the
+ * centre of the hero. Cormorant Garamond carries the title and the numerals; EB
+ * Garamond carries everything read.
  *
- * The mandala is deliberately ABSENT here (brief §5). A task card lives in a
- * list — dense, text-heavy, read in bulk — and the pattern is reserved for the
- * three surfaces that can afford it. The kit draws a lotus corner-bleed on this
- * card; the brief's strength ruling supersedes it, and the brief is the
- * contract.
+ * This replaces "The Ink Column" (ADR-0055 / ADR-0056). The hairline down the
+ * left margin is gone; the gilt-sandwich salon it replaced is still gone.
  *
- * The level indicator is the shared {@link LevelGem}, tinted via
- * `factionCssVar` — tint only, no bespoke UA shape (brief §9).
+ * ONE RESPONSIVE COMPONENT (ADR-0056): `useFormFactor` picks the size set, not a
+ * different card. The dormant `mobileArchetypes/cards/UaMobileTaskCard` stays in
+ * the tree for the revert.
  *
- * Both themes come from the `[data-theme="dark"]` cascade; the card dims
- * with the app like every other faction's.
+ * TWO MARKS, AND THE COUNT IS THE POINT (WORLD_ZERO_STYLE §6). The design draws
+ * the ensō three times — beside the ordinal, behind the score, and again on the
+ * sign-up button. The third is the mark spent as decoration, so it is dropped:
+ * the ensō is reserved for the SCORE and the FACTION MARK, and a seal on a
+ * button is neither.
+ *
+ * THE LOTUS COMES BACK, and that reverses a line in this file's old docstring.
+ * #851 read the kit's corner-bleed as something "the brief's strength ruling
+ * supersedes" — but that ruling is `UaMandala`'s, and the mandala is a different
+ * mark: radial concentric geometry, `absent` on dense text surfaces. The lotus
+ * has its own precedent on exactly this kind of surface (`UaPraxisCard` floats
+ * one off its left edge at the same opacity token). The MANDALA stays absent
+ * here; the lotus is drawn as the design draws it.
+ *
+ * Both marks are inline/masked components tinted from tokens, so the design's
+ * four `filter:` recolour hacks (`brightness(0) invert(1)`, `saturate(1.35)` and
+ * friends) have no translation and are simply gone — that is what ADR-0049's
+ * "tintable from a token" buys.
+ *
+ * Every colour is an already-shipped `--faction-ua-*` token; this card added
+ * none. One ink is walked down — see the score note below.
  */
 
-export default function UaTaskCard({ task, basePoints, onSignup }: CardProps) {
+interface SizeSet {
+  /** Card width. Geometry, so a raw px number (WORLD_ZERO_STYLE §4a). */
+  cardWidth: number;
+  pad: string;
+  levelSize: string;
+  /** Diameter of the score's ensō, and of the lotus wash. Geometry. */
+  enso: number;
+  lotus: number;
+}
+
+const SIZES: Record<"desktop" | "mobile", SizeSet> = {
+  desktop: {
+    cardWidth: 384,
+    pad: "var(--space-lg) var(--space-xl) var(--space-xl)",
+    levelSize: "var(--text-heading)",
+    enso: 96,
+    lotus: 360,
+  },
+  mobile: {
+    cardWidth: 340,
+    pad: "var(--space-lg)",
+    levelSize: "var(--text-title)",
+    enso: 84,
+    lotus: 300,
+  },
+};
+
+export default function UaTaskCard({
+  task,
+  basePoints,
+  multiplier,
+  inProgressCount,
+  onSignup,
+}: CardProps) {
+  const formFactor = useFormFactor();
+  const size = SIZES[formFactor];
+  const showMultiplier = !isNeutralMultiplier(multiplier);
+
   return (
-    <article
-      style={{
-        position: "relative",
-        overflow: "hidden",
-        minWidth: 240,
-        maxWidth: 282,
-        flex: "0 1 264px",
-        background: "var(--faction-ua-card-bg)",
-        color: "var(--faction-ua-card-text)",
-        border: UA_HAIRLINE,
-        borderRadius: "var(--radius-sm)",
-        boxShadow: `0 10px 30px -18px ${uaShade(50)}`,
-        padding: "var(--space-xl) var(--space-xl) var(--space-lg)",
-      }}
+    <div
+      data-form-factor={formFactor}
+      style={{ width: size.cardWidth, maxWidth: "100%", boxSizing: "border-box" }}
     >
-      <UaInkColumn
+      <article
         style={{
-          left: "var(--space-sm)",
-          top: "var(--space-xl)",
-          bottom: "var(--space-lg)",
+          position: "relative",
+          overflow: "hidden",
+          boxSizing: "border-box",
+          width: "100%",
+          background: "var(--faction-ua-card-parchment)",
+          border: "2px solid var(--faction-ua-card-frame)",
+          borderRadius: 7,
+          color: "var(--faction-ua-card-text)",
+          fontFamily: UA_TEXT,
+          padding: size.pad,
         }}
-      />
-
-      <div style={{ position: "relative", paddingLeft: "var(--space-lg)" }}>
-        <div style={UA_EYEBROW}>{i18n.t("feed:taskCard.ua.estLine")}</div>
-
-        {/* The score, in the ensō — the mark's one sanctioned use besides the
-            faction mark itself. */}
-        <div
+      >
+        {/* The ground wash — the lotus hangs off the top-left corner with its
+            centre pulled onto the leaf. Raw geometry on purpose: an ornament's
+            position is illustration, not layout spacing (§4a). Its opacity is a
+            token, so dark mode lifts it through the cascade rather than through
+            the design's `saturate(1.35) brightness(1.2)`. */}
+        <Lotus
+          size={size.lotus}
+          color="var(--faction-ua-card-lotus)"
           style={{
-            display: "flex",
-            justifyContent: "center",
-            margin: "var(--space-lg) 0",
+            position: "absolute",
+            left: -150,
+            top: -104,
+            opacity: "var(--faction-ua-card-lotus-opacity)",
+            pointerEvents: "none",
           }}
-        >
-          <UaEnsoScore
-            size={96}
-            value={basePoints}
-            unit={i18n.t("tasks:ua.stats.honoraria")}
-          />
+        />
+
+        <div style={{ position: "relative" }}>
+          {/* Everything but the CTA reads the full call — a card-sized target
+              that stays valid HTML (no <button> nested in an <a>). */}
+          <Link to={`/tasks/${task.id}`} style={{ display: "block", textDecoration: "none", color: "inherit" }}>
+            {/* The eyebrow — the faction mark, then the uniform ordinal. */}
+            <div style={{ display: "flex", alignItems: "center", gap: "var(--space-sm)", marginBottom: "var(--space-md)" }}>
+              <UaSigil width={16} height={16} />
+              <span style={{ ...UA_EYEBROW, fontSize: "var(--text-base)" }}>
+                {i18n.t("feed:taskCard.ordinal", { id: task.id })}
+              </span>
+            </div>
+
+            <div style={{ display: "flex", alignItems: "center", gap: "var(--space-md)", marginBottom: "var(--space-md)" }}>
+              <div style={{ flex: "0 0 auto", display: "flex", flexDirection: "column", alignItems: "flex-start", lineHeight: 1 }}>
+                <span style={{ ...UA_EYEBROW, fontSize: "var(--text-sm)", marginBottom: "var(--space-xs)" }}>
+                  {i18n.t("feed:taskCard.ua.levelCaption")}
+                </span>
+                <span style={{ fontFamily: UA_DISPLAY, fontWeight: 700, fontSize: size.levelSize, lineHeight: 0.9 }}>
+                  {task.level_required}
+                </span>
+              </div>
+
+              <span aria-hidden="true" style={{ flex: 1, height: 1, background: "var(--faction-ua-hair)" }} />
+
+              {/* The faction modifier — hidden at ×1.00, so invisible under
+                  era_1's neutralized modifiers and automatic the day one moves
+                  (ADR-0055). */}
+              {showMultiplier && (
+                <div style={{ flex: "0 0 auto", display: "flex", flexDirection: "column", alignItems: "center", gap: "var(--space-xs)" }}>
+                  <span
+                    style={{
+                      fontFamily: UA_DISPLAY,
+                      fontWeight: 700,
+                      fontSize: "var(--text-xl)",
+                      lineHeight: 1,
+                      color: "var(--faction-ua-card-chip-ink)",
+                      background: "var(--faction-ua-card-chip-bg)",
+                      borderRadius: 4,
+                      padding: "var(--space-xs) var(--space-sm)",
+                      whiteSpace: "nowrap",
+                    }}
+                  >
+                    {i18n.t("feed:taskCard.multiplier", { value: multiplier.toFixed(2) })}
+                  </span>
+                  <span style={{ ...UA_EYEBROW, fontSize: "var(--text-xs)" }}>
+                    {i18n.t("feed:taskCard.modifierCaption")}
+                  </span>
+                </div>
+              )}
+
+              {/* The score, in the ensō — the mark's one sanctioned use besides
+                  the faction mark above. The numeral takes `card-accent` rather
+                  than the design's brighter `--faction-ua-glow`, which measures
+                  2.93:1 on the parchment's darkest stop and so misses even the
+                  large-text floor; the accent is 4.88:1 there and clears the
+                  normal one. */}
+              <UaEnsoScore
+                size={size.enso}
+                value={basePoints}
+                unit={i18n.t("feed:taskCard.ua.pointsUnit")}
+                valueColor="var(--faction-ua-card-accent)"
+              />
+            </div>
+
+            <h3
+              className="content-title"
+              style={{
+                fontFamily: UA_DISPLAY,
+                fontWeight: 600,
+                lineHeight: 1.08,
+                letterSpacing: "-0.01em",
+                margin: "0 0 var(--space-sm)",
+                overflowWrap: "anywhere",
+              }}
+            >
+              {task.title}
+            </h3>
+
+            {task.description && (
+              <p
+                className="card-description"
+                style={{
+                  fontFamily: UA_TEXT,
+                  lineHeight: 1.5,
+                  color: "var(--faction-ua-card-muted)",
+                  margin: "0 0 var(--space-md)",
+                }}
+              >
+                {task.description}
+              </p>
+            )}
+
+            {inProgressCount > 0 && (
+              <div style={{ display: "flex", alignItems: "center", gap: "var(--space-sm)" }}>
+                <span
+                  aria-hidden="true"
+                  style={{ width: 6, height: 6, borderRadius: "50%", background: "var(--faction-ua-glow)", display: "block", flex: "0 0 auto" }}
+                />
+                <span
+                  style={{
+                    fontFamily: UA_TEXT,
+                    fontStyle: "italic",
+                    fontSize: "var(--text-xl)",
+                    color: "var(--faction-ua-card-muted)",
+                  }}
+                >
+                  {i18n.t("feed:taskCard.inProgress", { count: inProgressCount })}
+                </span>
+              </div>
+            )}
+          </Link>
+
+          {onSignup && (
+            <div style={{ display: "flex", justifyContent: "center", marginTop: "var(--space-lg)" }}>
+              <button
+                onClick={() => onSignup(task.id)}
+                style={{
+                  cursor: "pointer",
+                  fontFamily: UA_DISPLAY,
+                  fontWeight: 600,
+                  fontSize: "var(--text-content)",
+                  letterSpacing: "0.02em",
+                  whiteSpace: "nowrap",
+                  padding: "var(--space-sm) var(--space-xl)",
+                  borderRadius: 5,
+                  color: "var(--faction-ua-card-chip-ink)",
+                  background: "var(--faction-ua-card-chip-bg)",
+                  border: "1.5px solid var(--faction-ua-card-frame)",
+                }}
+              >
+                {i18n.t("feed:taskCard.ua.signup")}
+              </button>
+            </div>
+          )}
         </div>
-
-        <Link
-          to={`/tasks/${task.id}`}
-          style={{ textDecoration: "none", color: "inherit" }}
-        >
-          <h3
-            className="content-title"
-            style={{
-              fontFamily: UA_DISPLAY,
-              fontWeight: 600,
-              lineHeight: 1.14,
-              letterSpacing: "-0.005em",
-              color: "var(--faction-ua-card-text)",
-              margin: "0 0 var(--space-sm)",
-              overflowWrap: "anywhere",
-            }}
-          >
-            {task.title}
-          </h3>
-        </Link>
-
-        {task.description && (
-          <p
-            className="card-description"
-            style={{
-              fontFamily: UA_TEXT,
-              lineHeight: 1.55,
-              color: "var(--faction-ua-card-body)",
-              margin: "0 0 var(--space-lg)",
-            }}
-          >
-            {task.description}
-          </p>
-        )}
-
-        {onSignup && (
-          <button
-            onClick={() => onSignup(task.id)}
-            style={{
-              width: "100%",
-              cursor: "pointer",
-              fontFamily: UA_TEXT,
-              fontSize: "var(--text-xl)",
-              letterSpacing: "0.12em",
-              textTransform: "uppercase",
-              padding: "var(--space-sm) var(--space-lg)",
-              marginBottom: "var(--space-lg)",
-              background: "var(--faction-ua-card-bg)",
-              color: "var(--faction-ua-card-accent)",
-              border: "1.5px solid var(--faction-ua)",
-              borderRadius: "var(--radius-sm)",
-            }}
-          >
-            {i18n.t("feed:taskCard.ua.signup")}
-          </button>
-        )}
-
-        <div
-          className="card-footer"
-          style={{ borderTop: UA_HAIRLINE, paddingTop: "var(--space-md)" }}
-        >
-          <LevelGem level={task.level_required} factionSlug="ua" />
-          <span style={{ ...UA_EYEBROW, letterSpacing: "0.16em" }}>
-            {i18n.t("feed:taskCard.ua.pointsLine", { points: basePoints })}
-          </span>
-        </div>
-      </div>
-    </article>
+      </article>
+    </div>
   );
 }

@@ -339,6 +339,47 @@
   --faction-snide-stamp-bg: rgba(0, 0, 0, 0.4);
   --faction-snide-stamp-shadow: rgba(0, 0, 0, 0.5);
 
+  /* ══ S.N.I.D.E. — THE RANSOM CLIPPING (task card v2, #1023) ══
+     A photocopied clipping pinned to the wall at half a degree off true: a
+     near-black header bar carrying the wordmark, a headline cut from four
+     different faces word by word, two words of the brief struck out by the
+     censor, the points circled in pink pen, and a full-bleed acid CTA.
+
+     THIS FAMILY FLIPS, and that is what makes it new. The `-paper`/`-ink`
+     pigments above are theme-INVARIANT by the note at the head of that block —
+     "card surfaces are ink-dark in both themes (Singularity precedent)" — which
+     is exactly wrong for a clipping, whose whole conceit is a sheet of paper.
+     So the clipping gets its own pair that inverts under [data-theme="dark"]:
+     warm xerox stock by day, photocopier black by night. Neither name is a
+     synonym for the constant above it; do not collapse them.
+
+     TWO INKS ARE WALKED DOWN from the design, both in the light half, both
+     because hot zine pink is a poster colour rather than an ink:
+       • the points caption  #ff2d8b → #be185d (3.10:1 → 5.35:1 on the stock)
+       • the modifier chip's label, which the design set in PAPER on pink
+         (3.10:1); it takes the near-black ink instead (5.38:1), one value that
+         serves both themes because the chip's pink does not flip.
+     The bright pink survives everywhere it is a DRAWN LINE — the pen circle,
+     the struck-out cross — where it is ornament and owes nothing. */
+  --faction-snide-note-paper: #f4f1e8; /* the clipping's stock (FLIPS) */
+  --faction-snide-note-ink: #14110b; /* headline, level, points numeral (FLIPS) */
+  --faction-snide-note-muted: #5f5c50; /* brief + in-progress copy */
+  --faction-snide-note-rule: rgba(20, 17, 11, 0.28);
+  --faction-snide-note-grain: rgba(20, 17, 11, 0.045); /* the xerox raster */
+  --faction-snide-note-bar: #14110b; /* the header bar */
+  --faction-snide-note-bar-ink: #f4f1e8; /* the ordinal on that bar */
+  /* The pink that is TEXT, as opposed to the pink that is a drawn line. */
+  --faction-snide-note-pink-ink: #be185d;
+  /* The headline's four cuts. Cut 2 is knocked out of the near-black ink and
+     cut 1 sits on acid: both are stated as their own pair rather than reusing
+     `-paper`/`-ink`, because those two SWAP under the dark cascade and a
+     knockout that swaps with its ground is an invisible word. */
+  --faction-snide-note-knockout-bg: #14110b;
+  --faction-snide-note-knockout-ink: #f4f1e8;
+  --faction-snide-note-cta-bg: #b6ff2e;
+  --faction-snide-note-cta-ink: #14110b;
+  --faction-snide-note-shadow: 0 12px 28px -14px rgba(20, 17, 11, 0.55);
+
   /* ── Singularity terminal border (blue brand) ── */
   --faction-singularity-border-hard: #2563eb;
 
@@ -384,6 +425,53 @@
   --faction-singularity-led-red: #ff5f56;
   --faction-singularity-led-amber: #f0c400;
   --faction-singularity-led-green: #4ade80;
+
+  /* ══ Singularity — THE TERMINAL SESSION (task card v2, #1023) ══
+     A windowed terminal: a chrome bar with three LEDs, a boot line, a LEVEL +
+     POINTS readout, a standing raster and a slow scan sweep.
+
+     THIS FAMILY IS DARK IN BOTH THEMES, and that is the one place it diverges
+     from every other card in the wave. WORLD_ZERO_STYLE §6: "Singularity is
+     always dark in both themes." The design says the same in its own header —
+     "theme tunes phosphor contrast, not the black chassis" — and ships two
+     near-black grounds (#07130C light, #050F08 dark) rather than a light
+     variant. So there IS a [data-theme="dark"] block below, and what it flips is
+     the PHOSPHOR, not the chassis. Do not "fix" the light half into a pale card.
+
+     Distinct from the always-dark terminal family above, which is theme-INvariant
+     and declares no dark override at all; this one is a two-theme contract whose
+     both halves happen to be dark.
+
+     TWO INKS ARE WALKED UP from the design, both in the light half and both for
+     the same reason: the light chassis is LIGHTER than the dark one, so its inks
+     have LESS room, and the design annotated them as if the reverse were true.
+       • blue #2563eb → #4c7fef (3.29:1 → 4.53:1 on the chrome bar) — boot line
+       • dim  #3d8b5e → #409363 (4.10:1 → 4.52:1 on the chrome bar) — window
+         title, captions and the brief
+     The dark half is 5.10:1 and up as drawn and ships unchanged. */
+  --faction-singularity-term-bg: #07130c; /* the chassis */
+  --faction-singularity-term-chrome: #0c2016; /* the window bar */
+  --faction-singularity-term-ink: #22c55e; /* the card's inherited phosphor */
+  --faction-singularity-term-bright: #4ade80; /* title, level, CTA border */
+  --faction-singularity-term-dim: #409363; /* captions + brief — walked up */
+  --faction-singularity-term-blue: #4c7fef; /* boot line, unit labels — walked up */
+  --faction-singularity-term-blue-bright: #3b82f6; /* the points numeral */
+  --faction-singularity-term-border: rgba(37, 99, 235, 0.4);
+  --faction-singularity-term-hair: rgba(74, 222, 128, 0.22);
+  /* The points readout's well. Declared as the RESOLVED colour rather than the
+     design's rgba(37,99,235,0.12), because the numeral inside it owes AA against
+     what it actually sits on — an alpha over the chassis has no fixed ratio
+     (#651), and the same call --faction-singularity-phosphor-dim already makes. */
+  --faction-singularity-term-readout: #0b1d27;
+  --faction-singularity-term-scan: rgba(74, 222, 128, 0.05); /* standing raster */
+  --faction-singularity-term-sweep: linear-gradient(
+    rgba(37, 99, 235, 0),
+    rgba(37, 99, 235, 0.14),
+    rgba(37, 99, 235, 0)
+  );
+  --faction-singularity-term-cta-bg: #4ade80;
+  --faction-singularity-term-cta-ink: #04120a;
+  --faction-singularity-term-shadow: 0 16px 42px -26px rgba(0, 0, 0, 0.7), inset 0 0 0 1px rgba(74, 222, 128, 0.1);
 
   /* ══ Ephemerists illuminated-codex palette (the ephemerists slot) ══
      The card contract above rebinds to these. CONSTANTS (gold/rubric/
@@ -659,6 +747,46 @@
   --faction-wow-stamp-chip-bg: var(--faction-wow-card-accent); /* plum */
   --faction-wow-stamp-chip-text: var(--faction-wow-chronicle-panel);
 
+  /* ══ WOW — THE QUEST DECREE (task card v2, #1023) ══
+     A gold-framed parchment decree under a gold/plum barber ribbon: the level
+     and a crowned points plaque lead, wavy gold→plum rules divide, a
+     sword-and-shield marks the muster, and a bundle of googly balloons is tucked
+     into the corner. MedievalSharp for display, Lora italic for the quiet
+     register — WOW's two faces, §3.
+
+     NOT THE COVEN CARD. The design file's header reads "Warrior of Whimsy (Cozy
+     Coven)"; the parenthetical is a stale label of exactly the kind ADR-0050
+     records, and following it once already gave the chronicle to Coven and
+     derived a whole yellow skin for WOW out of nothing. Gold + plum +
+     MedievalSharp + sword-and-shield + balloons is WOW. Coven is wave A's pink
+     spell slip.
+
+     ALMOST NOTHING IS NEW, and where the design and the shipped tokens disagree
+     the tokens win — twice, both already-decided questions:
+       • The CTA and the modifier chip take the theme-INVARIANT
+         `--faction-wow-plum-surface` (5.16:1 in both themes), not the design's
+         dark #8a5aae, which note 1 by that declaration already measured at
+         4.10:1 and rejected. The design's own A/B `ctaGold` prop is dropped
+         with it: gold is a frame colour that measures 2.24:1 on the cream, so
+         nothing legible is ever painted on it (§3).
+       • The plaque's shadow, its panel, the burnt-gold total and the balloon
+         ramp are all read from the chronicle/stamp/balloon families verbatim.
+     What remained were two roles nothing had a name for. */
+  /* The crossed swords' blades: gilt on the cream leaf, bone-white on the dark
+     one — the one emblem part that CANNOT be the theme-invariant gold, because
+     a #c8a02a blade on the dark card disappears into its own hilt. This is the
+     design's `em` ternary, which is what a ternary in a skin always is: a token
+     that had not been declared yet. */
+  --faction-wow-quest-blade: #c8a02a;
+  /* The barber ribbon along the decree's head. A composed gradient rather than
+     the raw string three other WOW surfaces already re-type inline. */
+  --faction-wow-quest-ribbon: repeating-linear-gradient(
+    90deg,
+    var(--faction-wow-chronicle-gold) 0 11px,
+    var(--faction-wow-plum-surface) 11px 22px
+  );
+  --faction-wow-quest-shadow: 0 8px 24px -12px rgba(74, 56, 10, 0.5), inset 0 0 0 1px rgba(138, 109, 31, 0.28);
+
   /* WOW — googly-balloon vote plate. The balloon ramp climbs plum → gold and is
      THEME-INVARIANT (the prototype ships one ramp for both themes); only the
      plate and the caption inks flip. */
@@ -681,6 +809,10 @@
   --faction-wow-balloon-string: rgba(60, 44, 6, 0.42);
   --faction-wow-balloon-eye: #241c0b;
   --faction-wow-balloon-eye-ring: #3a2a0c;
+  /* The googly's white. Theme-invariant on the same reasoning as the ramp — a
+     cartoon eye is white in both themes — and named rather than left as the raw
+     `#fff` the vote widget still writes. */
+  --faction-wow-balloon-eye-white: #ffffff;
   /* The rainbow sweep that travels behind the balloon row. Screen-blended over
      the parchment plate, so these are the design's own translucent stops. */
   --faction-wow-sweep: linear-gradient(
@@ -1149,7 +1281,47 @@
   --faction-snide-slab-shadow: rgba(0, 0, 0, 0.5);
   --faction-snide-stamp-bg: rgba(0, 0, 0, 0.5);
   --faction-snide-stamp-shadow: rgba(0, 0, 0, 0.6);
+
+  /* ── The ransom clipping, lights out (#1023) ──
+     The stock and its ink SWAP: the clipping is a sheet of paper, so it goes
+     photocopier-black and the type goes xerox-white, rather than staying dark
+     the way the faction's amp face and evidence slab do. Everything the design
+     ships for this half measures 5.38:1 and up as drawn, including the header
+     bar's hot-pink ordinal at 5.75:1 — only the light half needed walking. */
+  --faction-snide-note-paper: #14110b;
+  --faction-snide-note-ink: #f4f1e8;
+  --faction-snide-note-muted: #cfcdbf;
+  --faction-snide-note-rule: rgba(244, 241, 232, 0.26);
+  --faction-snide-note-grain: rgba(244, 241, 232, 0.05);
+  --faction-snide-note-bar: #080706;
+  --faction-snide-note-bar-ink: #ff2d8b; /* the bar's ordinal goes pink — 5.75:1 */
+  --faction-snide-note-pink-ink: #ff69ac;
+  --faction-snide-note-shadow: 0 14px 34px -14px rgba(0, 0, 0, 0.85);
   --faction-singularity-card-muted: #60a5fa; /* blue brand chrome */
+
+  /* ── Singularity terminal session, lights out (#1023) ──
+     The chassis stays black (§6) — what moves is the phosphor. Every ink here is
+     BRIGHTER than its light-half counterpart, because the dark chassis is darker
+     and the design tunes contrast rather than inverting the card. Measured
+     5.10:1 (dim on the chrome bar) and up, as drawn: only the light half needed
+     walking. */
+  --faction-singularity-term-bg: #050f08;
+  --faction-singularity-term-chrome: #0a1a10;
+  --faction-singularity-term-ink: #4ade80;
+  --faction-singularity-term-bright: #86efac;
+  --faction-singularity-term-dim: #3a9e63;
+  --faction-singularity-term-blue: #60a5fa;
+  --faction-singularity-term-blue-bright: #93c5fd;
+  --faction-singularity-term-border: rgba(96, 165, 250, 0.3);
+  --faction-singularity-term-hair: rgba(74, 222, 128, 0.2);
+  --faction-singularity-term-readout: #0e1e20;
+  --faction-singularity-term-scan: rgba(74, 222, 128, 0.045);
+  --faction-singularity-term-sweep: linear-gradient(
+    rgba(96, 165, 250, 0),
+    rgba(96, 165, 250, 0.16),
+    rgba(96, 165, 250, 0)
+  );
+  --faction-singularity-term-shadow: 0 16px 42px -24px rgba(0, 0, 0, 0.85), inset 0 0 0 1px rgba(74, 222, 128, 0.12);
 
   /* ── UA · sun-bleached practice, after dark (#788, #848) ──
      The mesa at night, not a parchment held up to a black page. Surfaces sink
@@ -1366,6 +1538,12 @@
      text plum, so the chip stays a chip and not a second heading. */
   --faction-wow-stamp-chip-bg: #8a5aae;
   --faction-wow-stamp-chip-text: var(--faction-wow-card-text);
+  /* The quest decree, lights out (#1023). Only two of its roles move: the blade
+     goes bone-white so the swords read against their own hilts, and the drop
+     shadow loses the light card's gilt inset ring. The ribbon is composed from
+     two theme-invariant surfaces, so it does not appear here at all. */
+  --faction-wow-quest-blade: #f3e7c4;
+  --faction-wow-quest-shadow: 0 8px 24px -12px rgba(0, 0, 0, 0.8);
   --faction-wow-balloon-plate-from: var(--faction-wow-chronicle-panel);
   --faction-wow-balloon-plate-to: var(--faction-wow-card-bg);
   /* plate-border inherits the theme-invariant --faction-wow-chronicle-gold */
@@ -2308,7 +2486,10 @@
 @media (prefers-reduced-motion: no-preference) {
   .wow-balloon-float { animation: wow-bounce 2.2s ease-in-out infinite; animation-delay: var(--tw-delay, 0s); }
   .wow-balloon-cheer { animation: wow-group-bounce 1.05s ease-in-out infinite; }
-  .wow-balloon-eye { transform-box: fill-box; transform-origin: center; animation: wow-eye-wiggle 1.4s ease-in-out infinite; }
+  /* --wow-eye-delay lets a caller stagger a bunch so no two pupils travel
+     together (#1023's quest decree does); it defaults to 0s, which is the
+     vote widget's existing behaviour unchanged. */
+  .wow-balloon-eye { transform-box: fill-box; transform-origin: center; animation: wow-eye-wiggle 1.4s ease-in-out infinite; animation-delay: var(--wow-eye-delay, 0s); }
   .wow-balloon-sweep::after {
     content: "";
     position: absolute;
@@ -2407,6 +2588,24 @@
 }
 [data-theme="dark"] .cvn-braid {
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='12' viewBox='0 0 40 12'%3E%3Cg fill='none' stroke='%23f9a8d4' stroke-width='1.2' stroke-linecap='round'%3E%3Cpath d='M0 3 C10 3, 10 9, 20 9 C24 9, 26 8.2, 28 7'/%3E%3Cpath d='M32 5 C34 3.8, 36 3, 40 3'/%3E%3Cpath d='M0 9 C4 9, 6 8.2, 8 7'/%3E%3Cpath d='M12 5 C14 3.8, 16 3, 20 3 C30 3, 30 9, 40 9'/%3E%3C/g%3E%3Ccircle cx='20' cy='6' r='1.2' fill='%23f4d472' opacity='0.9'/%3E%3C/svg%3E");
+}
+
+/* S.N.I.D.E. — the ransom clipping's CENSOR RULE (#1023): a cut-up strip of
+   redaction blocks, five in photocopier ink and two inked in colour, tiled
+   horizontally. Here rather than in the card for the reason `.cvn-braid` states
+   one block up — a data-URI SVG is a SEPARATE DOCUMENT, so `var(--…)` inside one
+   never resolves, and letting index.css own the whole mark is the only way to
+   keep the pigments out of the TSX and still flip them for dark. */
+.snd-censor {
+  display: block;
+  height: 10px;
+  background-repeat: repeat-x;
+  background-position: left center;
+  opacity: 0.85;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='132' height='10' viewBox='0 0 132 10'%3E%3Cg fill='%2314110b'%3E%3Crect x='0' y='3' width='26' height='4'/%3E%3Crect x='30' y='1' width='9' height='8'/%3E%3Crect x='43' y='3.5' width='27' height='3'/%3E%3Crect x='84' y='2.5' width='17' height='5'/%3E%3Crect x='115' y='3.5' width='17' height='3'/%3E%3C/g%3E%3Crect x='74' y='1' width='6' height='8' fill='%23ff2d8b'/%3E%3Crect x='105' y='1' width='6' height='8' fill='%236fae00'/%3E%3C/svg%3E");
+}
+[data-theme="dark"] .snd-censor {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='132' height='10' viewBox='0 0 132 10'%3E%3Cg fill='%23f4f1e8'%3E%3Crect x='0' y='3' width='26' height='4'/%3E%3Crect x='30' y='1' width='9' height='8'/%3E%3Crect x='43' y='3.5' width='27' height='3'/%3E%3Crect x='84' y='2.5' width='17' height='5'/%3E%3Crect x='115' y='3.5' width='17' height='3'/%3E%3C/g%3E%3Crect x='74' y='1' width='6' height='8' fill='%23ff2d8b'/%3E%3Crect x='105' y='1' width='6' height='8' fill='%238ed11f'/%3E%3C/svg%3E");
 }
 
 /* Coven — the spell slip's pentagram watermark turns, once every two minutes
