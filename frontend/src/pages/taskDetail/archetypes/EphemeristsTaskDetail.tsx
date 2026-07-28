@@ -1152,38 +1152,60 @@ export default function EphemeristsTaskDetail({
   );
 
   return (
-    <div className="py-8" style={{ position: "relative", color: INK }}>
-      {/* The papyrus ground, full-bleed behind the column (index.css). */}
-      <div className="eph-plate-backdrop" aria-hidden />
-
-      <div style={{ position: "relative", zIndex: 1, maxWidth: PAGE_WIDTH, margin: "0 auto" }}>
+    <div className="py-8">
+      {/* The page IS the plate: the column carries the papyrus itself, headed by
+          the cornice masthead flush to its own edges. There is deliberately no
+          fixed full-bleed backdrop element — see the `.eph-plate-sheet` note in
+          index.css for what that pattern does to the sidebar. */}
+      <div
+        className="eph-plate-sheet"
+        style={{
+          maxWidth: PAGE_WIDTH,
+          margin: "0 auto",
+          boxSizing: "border-box",
+          color: INK,
+          border: `1px solid ${LINE}`,
+          boxShadow: SHADOW,
+        }}
+      >
         {masthead}
 
         <div
           style={{
-            display: "flex",
-            flexDirection: desktop ? "row" : "column",
-            alignItems: desktop ? "flex-start" : "stretch",
-            gap: desktop ? "var(--space-2xl)" : "var(--space-xl)",
-            marginBottom: desktop ? "var(--space-2xl)" : "var(--space-xl)",
+            padding: desktop
+              ? "0 var(--space-2xl) var(--space-2xl)"
+              : "0 var(--space-lg) var(--space-lg)",
           }}
         >
-          <div style={{ flex: 1, minWidth: 0 }}>{header}</div>
           <div
             style={{
-              flex: desktop ? `0 0 ${PANEL_WIDTH}px` : "1 1 auto",
-              width: desktop ? PANEL_WIDTH : "100%",
-              maxWidth: "100%",
+              display: "flex",
+              flexDirection: desktop ? "row" : "column",
+              alignItems: desktop ? "flex-start" : "stretch",
+              gap: desktop ? "var(--space-2xl)" : "var(--space-xl)",
+              marginBottom: desktop ? "var(--space-2xl)" : "var(--space-xl)",
             }}
           >
-            {actionPanel}
+            <div style={{ flex: 1, minWidth: 0 }}>{header}</div>
+            <div
+              style={{
+                flex: desktop ? `0 0 ${PANEL_WIDTH}px` : "1 1 auto",
+                width: desktop ? PANEL_WIDTH : "100%",
+                maxWidth: "100%",
+              }}
+            >
+              {actionPanel}
+            </div>
           </div>
-        </div>
 
-        <div style={{ minWidth: 0 }}>
-          {brief}
-          {gallery}
-          <TaskDetailComments state={state} heading={sectionHead(t("detail.comments.heading"))} />
+          <div style={{ minWidth: 0 }}>
+            {brief}
+            {gallery}
+            <TaskDetailComments
+              state={state}
+              heading={sectionHead(t("detail.comments.heading"))}
+            />
+          </div>
         </div>
       </div>
     </div>

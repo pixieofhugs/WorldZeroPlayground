@@ -137,7 +137,7 @@ describe("Ephemerists task detail — the Valley plate", () => {
 
   it("wears the Valley dress — masthead band, incised registers, crowned panel", () => {
     const { html, text } = render(<EphemeristsTaskDetail state={baseState()} />);
-    expect(html, "papyrus page ground").toContain("eph-plate-backdrop");
+    expect(html, "papyrus page sheet").toContain("eph-plate-sheet");
     expect(html, "cornice masthead band").toContain("--faction-ephemerists-plate-band");
     expect(html, "incised glyph registers").toContain("epg-glyph");
     expect(html, "the disc crowning the action panel").toContain("eph-plate-crown");

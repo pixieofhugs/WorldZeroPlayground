@@ -2605,28 +2605,37 @@
   }
 }
 
-/* Ephemerists — the page ground under a page-sized Valley plate (task detail
-   v2, #1032). Sibling of `.na-backdrop`: a fixed full-bleed sheet the archetype
-   drops in behind its column, so the papyrus reaches the viewport edges instead
-   of stopping at the 1200 content cap.
+/* Ephemerists — the sheet a page-sized Valley plate is printed on (task detail
+   v2, #1032). The archetype's own content column wears it: this whole page IS
+   the plate, so the papyrus is the column's surface, not a tint under it.
 
-   Deliberately NOT `.eph-backdrop`, which is the illuminated-codex ground
+   NOT a fixed full-bleed backdrop, and that is the point. #1056 pulled that
+   pattern off the na build after live QA, and the layout says why: the routed
+   page sits inside a `position: relative; z-index: 5` wrapper, so a fixed
+   `z-index: 0` child of it is a POSITIONED descendant of that stacking context
+   and paints over the non-positioned sidebar beside it.
+
+   Deliberately NOT `.eph-backdrop` either — that is the illuminated-codex ground
    (`--eph-*`) every OTHER Ephemerists surface still paints on. The v2 plate is a
-   full metaphor swap (ADR-0055) and the two grounds must not be mistaken for
-   each other. The vignette is a corner-weighted darkening of the same papyrus,
-   kept off the reading column: quiet ink is measured against the flat page
-   value, and a wash that reached the text would invalidate that measurement. */
-.eph-plate-backdrop {
-  position: fixed;
-  inset: 0;
-  z-index: 0;
-  pointer-events: none;
+   full metaphor swap (ADR-0055) and the two grounds must not be confused.
+
+   The wash only LIGHTENS (a gold bloom off the cornice) and never darkens. Both
+   inks this ground carries were walked down to a measured margin over the FLAT
+   page value, and a darkening vignette eats that margin exactly where the page
+   runs longest: `-nile` falls from 4.70 to 4.29 under a 5% black veil. That is
+   how a decorative gradient fails AA without anything reporting it. */
+.eph-plate-sheet {
   background:
     radial-gradient(58% 40% at 50% 0%, rgba(227, 197, 106, 0.16), transparent 72%),
-    radial-gradient(120% 90% at 50% 100%, transparent 62%, rgba(42, 32, 16, 0.14)),
     var(--faction-ephemerists-plate-page);
   transition: background 300ms;
 }
+[data-theme="dark"] .eph-plate-sheet {
+  background:
+    radial-gradient(58% 40% at 50% 0%, rgba(201, 162, 75, 0.1), transparent 72%),
+    var(--faction-ephemerists-plate-page);
+}
+
 /* The winged disc crowning the action panel (#1032). The design lifts the gold
    off the papyrus with a hard night-blue offset plus a soft cast, and drops to a
    plain soft cast on the dark plate where the hard edge would only smear. That
@@ -2639,13 +2648,6 @@
 }
 [data-theme="dark"] .eph-plate-crown {
   filter: drop-shadow(0 3px 7px rgba(0, 0, 0, 0.6));
-}
-
-[data-theme="dark"] .eph-plate-backdrop {
-  background:
-    radial-gradient(58% 40% at 50% 0%, rgba(201, 162, 75, 0.1), transparent 72%),
-    radial-gradient(120% 90% at 50% 100%, transparent 62%, rgba(0, 0, 0, 0.45)),
-    var(--faction-ephemerists-plate-page);
 }
 
 /* Coven — the spell slip's braid (#1023): a slender celtic thread with a gold
