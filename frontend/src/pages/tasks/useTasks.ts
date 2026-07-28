@@ -79,7 +79,11 @@ export interface TasksState {
   signupMsg: SignupMessage | null
   handleSignup: (id: number) => Promise<void>
 
-  // Derived helper — the modified point value for a task given the viewer's faction.
+  /**
+   * Derived helper — base × the viewer's faction modifier, as one combined
+   * number. Task cards no longer take it (they take base and the factor apart,
+   * ADR-0055); it stays for any surface that wants the single figure.
+   */
   displayPointsFor: (task: TaskOut) => number
   /**
    * Derived helper — the RAW own/other task modifier the viewer earns on a

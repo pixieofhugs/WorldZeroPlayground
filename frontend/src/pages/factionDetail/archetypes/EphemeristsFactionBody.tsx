@@ -5,7 +5,7 @@ import TaskCard from "../../../components/TaskCard";
 import PraxisCard from "../../../components/PraxisCard";
 import { TaskCrown } from "../../../components/cards/TaskCrown";
 import { EphemeristsSigil, Foxing, toRoman } from "../../../components/cards/ephemeristsAtoms";
-import { computeDisplayPoints } from "../../../utils/points";
+import { computeFactionMultiplier } from "../../../utils/points";
 import { factionName, factionDescription } from "../../../utils/factions";
 import type { CharacterOut } from "../../../api/auth";
 import type { FactionDetailState } from "../useFactionDetail";
@@ -174,8 +174,8 @@ export default function EphemeristsFactionBody({ state }: { state: FactionDetail
                 <TaskCard
                   key={task.id}
                   task={task}
-                  displayPoints={computeDisplayPoints(
-                    task.point_value,
+                  basePoints={task.point_value}
+                  multiplier={computeFactionMultiplier(
                     viewerFactionSlug,
                     task.primary_faction_slug,
                     gameFactions,

@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import type { TaskOut } from "../../api/tasks";
+import type { CardProps } from "../TaskCard";
 import i18n from "../../i18n";
 import LevelGem from "../ui/LevelGem";
 import { EverymenSigil } from "./EverymenSigil";
@@ -10,12 +10,6 @@ import { EverymenSigil } from "./EverymenSigil";
  * faint sunburst + halftone wash, rubber-stamped points seal, "Report for duty"
  * call to action wired to onSignup.
  */
-
-interface Props {
-  task: TaskOut;
-  displayPoints: number;
-  onSignup?: (id: number) => void;
-}
 
 /* ── poster atoms (self-contained) ─────────────────────────────── */
 
@@ -139,7 +133,7 @@ function PointsSeal({
 
 /* ── card ───────────────────────────────────────────────────────── */
 
-export default function EverymenTaskCard({ task, displayPoints, onSignup }: Props) {
+export default function EverymenTaskCard({ task, basePoints, onSignup }: CardProps) {
   return (
     <div
       style={{
@@ -249,10 +243,10 @@ export default function EverymenTaskCard({ task, displayPoints, onSignup }: Prop
               color: "var(--everymen-red)",
             }}
           >
-            {i18n.t("feed:taskCard.everymen.points", { points: displayPoints })}
+            {i18n.t("feed:taskCard.everymen.points", { points: basePoints })}
           </span>
         </div>
-        <PointsSeal points={displayPoints} />
+        <PointsSeal points={basePoints} />
       </div>
 
       {onSignup && (

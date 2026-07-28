@@ -49,7 +49,7 @@ function DesktopTasks({ state }: { state: TasksState }) {
     loadMore,
     signupMsg,
     handleSignup,
-    displayPointsFor,
+    displayMultiplierFor,
   } = state
 
   const isMetatask = taskType === 'metatask'
@@ -114,7 +114,8 @@ function DesktopTasks({ state }: { state: TasksState }) {
                 <TaskCard
                   key={task.id}
                   task={task}
-                  displayPoints={displayPointsFor(task)}
+                  basePoints={task.point_value}
+                  multiplier={displayMultiplierFor(task)}
                   onSignup={user && task.can_submit_praxis ? handleSignup : undefined}
                 />
               ))}

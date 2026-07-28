@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import type { TaskOut } from "../../api/tasks";
+import type { CardProps } from "../TaskCard";
 import i18n from "../../i18n";
 import DefaultSigil from "./DefaultSigil";
 
@@ -15,13 +15,7 @@ import DefaultSigil from "./DefaultSigil";
  */
 const MONO = "'Courier Prime', monospace";
 
-interface Props {
-  task: TaskOut;
-  displayPoints: number;
-  onSignup?: (id: number) => void;
-}
-
-export default function DefaultTaskCard({ task, displayPoints, onSignup }: Props) {
+export default function DefaultTaskCard({ task, basePoints, onSignup }: CardProps) {
   return (
     // Spectrum band → clean inner sheet.
     <div
@@ -114,7 +108,7 @@ export default function DefaultTaskCard({ task, displayPoints, onSignup }: Props
               color: "var(--faction-default-card-text)",
             }}
           >
-            {displayPoints}
+            {basePoints}
             <span style={{ fontSize: "var(--text-md)", marginLeft: "var(--space-xs)", color: "var(--faction-default-card-muted)" }}>
               {i18n.t("feed:taskCard.na.pointsUnit")}
             </span>

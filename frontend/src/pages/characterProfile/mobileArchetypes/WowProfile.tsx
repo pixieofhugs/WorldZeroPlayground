@@ -280,7 +280,7 @@ export default function WowProfile({
         ) : (
           <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-lg)" }}>
             {proposedTasks.map((task) => (
-              <TaskCard key={task.id} task={task} displayPoints={task.point_value} />
+              <TaskCard key={task.id} task={task} basePoints={task.point_value} />
             ))}
           </div>
         )}

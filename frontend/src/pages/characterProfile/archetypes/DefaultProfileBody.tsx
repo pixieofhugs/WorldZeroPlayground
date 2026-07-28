@@ -246,7 +246,7 @@ export default function DefaultProfileBody({
         ) : (
           <div className="flex flex-wrap gap-4 items-start">
             {proposedTasks.map((task) => (
-              <TaskCard key={task.id} task={task} displayPoints={task.point_value} />
+              <TaskCard key={task.id} task={task} basePoints={task.point_value} />
             ))}
           </div>
         )}

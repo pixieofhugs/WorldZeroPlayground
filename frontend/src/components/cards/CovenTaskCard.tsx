@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import type { TaskOut } from "../../api/tasks";
+import type { CardProps } from "../TaskCard";
 import i18n from "../../i18n";
 import LevelGem from "../ui/LevelGem";
 
@@ -9,12 +9,6 @@ import LevelGem from "../ui/LevelGem";
  * dotted-grid body, and an inner "notepad" panel holding the task in the
  * Caveat headline font. Visuals only — same prop contract as the other cards.
  */
-
-interface Props {
-  task: TaskOut;
-  displayPoints: number;
-  onSignup?: (id: number) => void;
-}
 
 /** Tiny four-point sparkle used in the title bar and footer pill accent. */
 function Sparkle({
@@ -51,9 +45,9 @@ function WindowDot({ color }: { color: string }) {
 
 export default function CovenTaskCard({
   task,
-  displayPoints,
+  basePoints,
   onSignup,
-}: Props) {
+}: CardProps) {
   return (
     <div
       style={{
@@ -136,7 +130,7 @@ export default function CovenTaskCard({
             className="card-meta"
             style={{ color: "var(--faction-coven-card-accent)" }}
           >
-            {i18n.t("feed:taskCard.coven.questMeta", { points: displayPoints })}
+            {i18n.t("feed:taskCard.coven.questMeta", { points: basePoints })}
           </div>
 
           <Link
@@ -190,7 +184,7 @@ export default function CovenTaskCard({
               color: "var(--faction-coven-card-accent)",
             }}
           >
-            ◆ {i18n.t("feed:taskCard.coven.points", { points: displayPoints })}
+            ◆ {i18n.t("feed:taskCard.coven.points", { points: basePoints })}
           </span>
         </div>
       </div>

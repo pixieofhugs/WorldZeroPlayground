@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import type { TaskOut } from "../../api/tasks";
+import type { CardProps } from "../TaskCard";
 import i18n from "../../i18n";
 import LevelGem from "../ui/LevelGem";
 import {
@@ -34,13 +34,7 @@ import {
  * with the app like every other faction's.
  */
 
-interface Props {
-  task: TaskOut;
-  displayPoints: number;
-  onSignup?: (id: number) => void;
-}
-
-export default function UaTaskCard({ task, displayPoints, onSignup }: Props) {
+export default function UaTaskCard({ task, basePoints, onSignup }: CardProps) {
   return (
     <article
       style={{
@@ -79,7 +73,7 @@ export default function UaTaskCard({ task, displayPoints, onSignup }: Props) {
         >
           <UaEnsoScore
             size={96}
-            value={displayPoints}
+            value={basePoints}
             unit={i18n.t("tasks:ua.stats.honoraria")}
           />
         </div>
@@ -146,7 +140,7 @@ export default function UaTaskCard({ task, displayPoints, onSignup }: Props) {
         >
           <LevelGem level={task.level_required} factionSlug="ua" />
           <span style={{ ...UA_EYEBROW, letterSpacing: "0.16em" }}>
-            {i18n.t("feed:taskCard.ua.pointsLine", { points: displayPoints })}
+            {i18n.t("feed:taskCard.ua.pointsLine", { points: basePoints })}
           </span>
         </div>
       </div>

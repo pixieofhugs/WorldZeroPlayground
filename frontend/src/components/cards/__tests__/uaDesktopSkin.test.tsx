@@ -92,7 +92,15 @@ function routed(node: React.ReactNode): string {
 }
 
 const taskCard = () =>
-  routed(<UaTaskCard task={TASK} displayPoints={30} onSignup={() => {}} />)
+  routed(
+    <UaTaskCard
+      task={TASK}
+      basePoints={30}
+      multiplier={1}
+      inProgressCount={0}
+      onSignup={() => {}}
+    />,
+  )
 const feedRow = () => routed(<UaFeedFrame><span>card-body</span></UaFeedFrame>)
 const comment = () =>
   routed(<UaComment mode="row" comment={COMMENT} />)

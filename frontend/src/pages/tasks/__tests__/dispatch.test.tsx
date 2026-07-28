@@ -44,6 +44,7 @@ const CANNED: TasksState = {
   signupMsg: null,
   handleSignup: async () => {},
   displayPointsFor: () => 0,
+  displayMultiplierFor: () => 1,
 }
 
 vi.mock('../useTasks', () => ({
