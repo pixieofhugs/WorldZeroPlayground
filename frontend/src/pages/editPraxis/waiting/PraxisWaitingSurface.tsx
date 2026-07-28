@@ -320,6 +320,11 @@ export default function PraxisWaitingSurface({
   // A duel side is `type='solo'` + a duel_id (ADR-0011) — never `type`.
   const isDuel = praxis.duel_id != null && duel != null;
   const sides = isDuel && duel ? duelSides(duel, state.currentCharacterId) : null;
+  // The only two shapes that ever reach this surface (ADR-0059). Naming the
+  // collab positively rather than as "not a duel" keeps a solo praxis — which
+  // `deriveEditPraxisPhase` never holds — from drawing collab exits if it ever
+  // did arrive here.
+  const isCollab = !isDuel && praxis.type === "collab";
   const windowDays = autoSubmitDays ?? config?.collab_auto_submit_days ?? null;
 
   // Deleting destroys the praxis with every member's part in it, so it stays the
@@ -445,7 +450,7 @@ export default function PraxisWaitingSurface({
       </section>
 
       {/* The clock — collab only; see the elapsed line above for the duel. */}
-      {!isDuel && (
+      {isCollab && (
         <div className="mb-6">
           <CollabPublishClock
             submitProposedAt={praxis.submit_proposed_at}
@@ -458,7 +463,7 @@ export default function PraxisWaitingSurface({
 
       {/* Your write-up, read-only. The duel already showed it inside your own
           side panel, so it is not repeated here. */}
-      {!isDuel && (
+      {isCollab && (
         <section className="flex flex-col gap-2 mb-6">
           <span className="eyebrow" style={{ color: accent }}>
             {collabCopy(slug, "awaitingWriteUpLabel")}
@@ -501,7 +506,7 @@ export default function PraxisWaitingSurface({
         style={{ borderTop: "1px dashed var(--color-border-strong)" }}
       >
         <div className="flex flex-wrap items-center gap-4">
-          {!isDuel && (
+          {isCollab && (
             <button
               type="button"
               disabled={busy}
@@ -519,7 +524,7 @@ export default function PraxisWaitingSurface({
               {t("editPraxis.leaveAction")}
             </button>
           )}
-          {!isDuel && isCreator && (
+          {isCollab && isCreator && (
             <button
               type="button"
               disabled={busy}

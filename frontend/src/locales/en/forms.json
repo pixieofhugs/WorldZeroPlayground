@@ -198,7 +198,7 @@
       "duelPendingLine": "Sealed {{elapsed}}. {{name}} has not answered the challenge yet.",
       "duelPillSealed": "sealed",
       "duelPillWriting": "still writing",
-      "duelPullBackDescription": "Takes your entry back out so you can change it. Nothing is forfeited — until the duel settles, this costs you nothing."
+      "duelPullBackDescription": "Takes your entry back out so you can change it. The duel is untouched until it settles, so this costs you nothing."
     },
     "toolbar": {
       "label": "formatting",
