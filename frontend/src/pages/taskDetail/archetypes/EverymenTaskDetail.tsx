@@ -1,211 +1,177 @@
-import type { CSSProperties, ReactNode } from "react";
+import { useState, type CSSProperties, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import PraxisCard from "../../../components/PraxisCard";
+import { useFormFactor } from "../../../hooks/useFormFactor";
+import { factionCssVar, factionFill, factionName } from "../../../utils/factions";
 import { mediaUrl } from "../../../utils/media";
-import { ErrorBanner, LevelJumpBanner, TaskDetailComments, relationOf } from "./shared";
-import type { TaskSignupOut } from "../../../api/tasks";
+import { isNeutralMultiplier } from "../../../utils/points";
+import { ErrorBanner, LevelJumpBanner, TaskDetailComments } from "./shared";
 import type { TaskDetailState } from "../useTaskDetail";
 
 /**
- * The Everymen task-detail archetype — the job rendered as a UNION WORK ORDER:
- * a billboard-scale sunburst poster (cog seal, knockout Bebas headline, status
- * in the union's voice), a stamped CTA bar, a typewritten "The Order" body,
- * the hands signed on, the filed work reports (best-in-hall wears a fleur-de-lis),
- * and a read-only hall verdict. Ported from the Everymen design kit
- * (EverymenTaskDetail.tsx); wired to the real {@link TaskDetailState}.
- *
- * The kit's top <nav> and discussion thread are dropped (TaskDetail.tsx renders
- * the breadcrumb context and CommentThread). Every raw hex from the kit is
- * mapped onto the existing CSS vars in index.css so the surface flips with the
- * theme without mutating the document theme.
+ * How many praxis the gallery prints before the "view all" line. `PraxisCard`
+ * carries `flex: 1 1 394px`, so three land in a row at the 1200 cap and the row
+ * rewraps on its own below that — the design's `repeat(3,1fr)` grid would
+ * squeeze every card instead (same call as the na reference, #1030).
  */
+const GALLERY_PREVIEW = 3;
 
-const INK = "var(--everymen-ink)";
-const CREAM = "var(--everymen-cream)";
-const RED = "var(--everymen-red)";
-const RED_DEEP = "var(--everymen-red-deep)";
-const GOLD = "var(--everymen-gold)";
-const OLIVE = "var(--everymen-olive)";
+// ── The sheet's palette. Every value is a token; see the "broadsheet sheet"
+//    block in index.css for which of these are new and which the Everymen
+//    family already owned.
+/** The sheet's text ink — flips with the theme (`#221a12` → `#f3e7ce`). */
+const INK = "var(--everymen-paper-text)";
+/** The newsprint the whole page is printed on. */
+const PAPER_DEEP = "var(--everymen-paper-deep)";
+/** The pasted-on sheet: the plate the action panel and its boxes sit on. */
+const PANEL = "var(--faction-everymen-sheet-panel)";
 const MUTED = "var(--everymen-muted)";
-const PAPER = "var(--everymen-paper)";
+/** Red as a RULE or a FILL. For red as text, use {@link ACCENT}. */
+const RED = "var(--everymen-red)";
+/** Red as INK — the only red that clears AA on the panel in both themes. */
+const ACCENT = "var(--faction-everymen-sheet-accent)";
+const OLIVE = "var(--everymen-olive)";
+const GOLD = "var(--everymen-gold)";
+/** Gold walked down until the modifier badge's figures clear the paper. */
+const MULT_INK = "var(--faction-everymen-bill-mult-ink)";
+/** The masthead bar, theme-INVARIANT: a bill printed at night is the same bill. */
+const MAST = "var(--faction-everymen-bill-mast)";
+const MAST_INK = "var(--faction-everymen-bill-mast-ink)";
+/** The frame rule. NOT `--everymen-ink`, which vanishes on the dark sheet. */
+const FRAME = "var(--everymen-frame)";
+const HAIR = "var(--faction-everymen-sheet-hair)";
+const SHADOW = "var(--faction-everymen-bill-shadow)";
 
-/** The Everymen cog seal — a riveted gear, the union's mark. */
-function CogSeal({ size = 18 }: { size?: number }) {
+const BEBAS = "var(--font-accent)";
+const COURIER = "var(--font-body)";
+
+// ── The cog, the union's one glyph. Eight teeth around a hub, generated once at
+//    module load rather than per render: it is a constant, and the arithmetic is
+//    the design's own (a hand-written path would drift from it silently).
+const GEAR_TEETH = 8;
+const GEAR_RADIUS = 9.5;
+const GEAR_TIP_LENGTH = 5;
+const GEAR_TIP_HALF = 1.6;
+const GEAR_ROOT_HALF = 2.6;
+
+function buildGearPath(): string {
+  const point = (radius: number, angle: number): string =>
+    `${12 + radius * Math.cos(angle)},${12 + radius * Math.sin(angle)}`;
+  const step = (Math.PI * 2) / GEAR_TEETH;
+  const tipRadius = GEAR_RADIUS + GEAR_TIP_LENGTH;
+  let path = "";
+  for (let tooth = 0; tooth < GEAR_TEETH; tooth++) {
+    const start = tooth * step;
+    const rootBefore = point(GEAR_RADIUS, start - GEAR_ROOT_HALF / GEAR_RADIUS);
+    const tipBefore = point(tipRadius, start - GEAR_TIP_HALF / tipRadius);
+    const tipAfter = point(tipRadius, start + GEAR_TIP_HALF / tipRadius);
+    const rootAfter = point(GEAR_RADIUS, start + GEAR_ROOT_HALF / GEAR_RADIUS);
+    const nextRoot = point(
+      GEAR_RADIUS,
+      start + step - GEAR_ROOT_HALF / GEAR_RADIUS,
+    );
+    path += `${tooth === 0 ? "M" : "L"}${rootBefore}L${tipBefore}L${tipAfter}L${rootAfter}`;
+    path += `A${GEAR_RADIUS},${GEAR_RADIUS} 0 0 1 ${nextRoot}`;
+  }
+  return `${path}Z`;
+}
+
+const GEAR_PATH = buildGearPath();
+
+/** The union cog. Ornament only — every caller marks it aria-hidden. */
+function Gear({
+  size,
+  fill,
+  hole,
+}: {
+  size: number;
+  fill: string;
+  hole: string;
+}) {
   return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
-      <g fill={GOLD}>
-        {[0, 45, 90, 135, 180, 225, 270, 315].map((deg) => (
-          <rect
-            key={deg}
-            x="11"
-            y="0.5"
-            width="2"
-            height="5"
-            rx="0.5"
-            transform={`rotate(${deg} 12 12)`}
-          />
-        ))}
-      </g>
-      <circle cx="12" cy="12" r="6.5" fill="none" stroke={GOLD} strokeWidth="2.4" />
-      <circle cx="12" cy="12" r="2" fill={GOLD} />
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      aria-hidden
+      style={{ display: "block", flex: "0 0 auto" }}
+    >
+      <path d={GEAR_PATH} fill={fill} />
+      <circle cx="12" cy="12" r="3" fill={hole} />
     </svg>
   );
 }
 
-const sectionRule: CSSProperties = {
-  flex: 1,
-  height: 3,
-  background: `repeating-linear-gradient(90deg, ${RED} 0 16px, ${GOLD} 16px 26px)`,
-};
-const sectionH2: CSSProperties = {
-  fontFamily: "var(--font-accent)",
-  letterSpacing: "0.04em",
-  margin: 0,
-  color: INK,
-  whiteSpace: "nowrap",
-};
-
-/** Section header — Bebas heading with the red/gold picket rule. */
-function SectionHead({
-  title,
-  trailing,
-}: {
-  title: string;
-  trailing?: ReactNode;
-}) {
-  return (
-    <div
-      style={{
-        display: "flex",
-        alignItems: "center",
-        gap: "var(--space-lg)",
-        marginBottom: "var(--space-lg)",
-      }}
-    >
-      <h2 className="content-title" style={sectionH2}>{title}</h2>
-      <span style={sectionRule} />
-      {trailing}
-    </div>
-  );
+/** Initials fallback for an author with no uploaded avatar. */
+function initialsOf(name: string): string {
+  return name
+    .split(/\s+/)
+    .filter(Boolean)
+    .map((word) => word[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
 }
 
-/** Hands signed on — real signup avatars with friend/foe dots. */
-function HandsRow({
-  signups,
-  friends,
-  foes,
-}: {
-  signups: TaskSignupOut[];
-  friends: Set<number>;
-  foes: Set<number>;
-}) {
-  const { t } = useTranslation("tasks");
-  return (
-    <div
-      style={{ display: "flex", alignItems: "center", gap: "var(--space-md)", flexWrap: "wrap" }}
-    >
-      {signups.map((hand) => {
-        const rel = relationOf(hand.character_id, friends, foes);
-        const relColor = rel === "friend" ? OLIVE : RED;
-        return (
-          <Link
-            key={hand.character_id}
-            to={`/characters/${hand.character_id}`}
-            title={`${hand.display_name}${rel ? ` · ${rel}` : ""}`}
-            style={{
-              position: "relative",
-              width: 40,
-              height: 40,
-              flexShrink: 0,
-            }}
-          >
-            {hand.avatar_url ? (
-              <img
-                src={mediaUrl(hand.avatar_url)}
-                alt={hand.display_name}
-                style={{
-                  width: 40,
-                  height: 40,
-                  borderRadius: "50%",
-                  objectFit: "cover",
-                  border: `2px solid ${INK}`,
-                }}
-              />
-            ) : (
-              <span
-                style={{
-                  display: "flex",
-                  width: 40,
-                  height: 40,
-                  borderRadius: "50%",
-                  background: INK,
-                  border: `2px solid ${GOLD}`,
-                  alignItems: "center",
-                  justifyContent: "center",
-                  color: GOLD,
-                  fontFamily: "var(--font-accent)",
-                  fontSize: "var(--text-content)",
-                }}
-              >
-                {hand.display_name[0]?.toUpperCase()}
-              </span>
-            )}
-            {rel && (
-              <span
-                title={rel}
-                style={{
-                  position: "absolute",
-                  right: -2,
-                  bottom: -2,
-                  width: 12,
-                  height: 12,
-                  borderRadius: "50%",
-                  background: relColor,
-                  border: `2px solid ${CREAM}`,
-                }}
-              />
-            )}
-          </Link>
-        );
-      })}
-      <span
-        style={{
-          fontFamily: "var(--font-body)",
-          fontSize: "var(--text-base)",
-          letterSpacing: "0.1em",
-          textTransform: "uppercase",
-          color: MUTED,
-          marginLeft: "var(--space-xs)",
-        }}
-      >
-        {t("everymen.onTheJob")}
-      </span>
-    </div>
-  );
-}
-
+/**
+ * The Everymen task detail — the v2 shared anatomy printed as a UNION
+ * BROADSHEET (design `.design-sync/task-details-v2/everymen-task-detail.jsx`).
+ *
+ * Newsprint with rising-sun rays fanning up from the bottom edge; a red masthead
+ * bar flanked by cogs; Bebas Neue headlines over a Courier Prime dispatch;
+ * dashed red rules between everything; the points struck as a rubber stamp.
+ *
+ * Anatomy is #1030's contract, unchanged and in its order — breadcrumb ·
+ * masthead · title · author byline · Level / In-progress stats · action plate
+ * (base + the usually-absent `×mult` badge + the stamped total, sign-up /
+ * in-progress / submitted, slots, level-met, {@link LevelJumpBanner},
+ * {@link ErrorBanner}) · the brief in full · the praxis gallery with its sort
+ * toggle · comments. Only the dress is the Everymen's.
+ *
+ * Four contract points worth not re-deriving:
+ * - **No in-progress roster.** The header's count is the only place that number
+ *   appears (owner ruling 2026-07-28, reversing epic #1028 decision 3). The
+ *   design's own header comment already said "No roster section."
+ * - **The `×mult` badge renders only off a non-identity factor** (ADR-0055),
+ *   taken raw from the state contract — never reconstructed as
+ *   `modifiedPoints / basePoints`, which is ADR-0053's dead-arithmetic trap.
+ *   `era_1` neutralises every faction, so it is invisible today.
+ * - **The gallery expands in place.** It does NOT link to `/praxes?task_id=N`:
+ *   the praxis feed reads no such param, so that link has always dropped the
+ *   filter and shown the whole feed. The old Everymen build carried it.
+ * - **Copy is the shared neutral `detail.*` set** (ADR-0057). The union voice
+ *   this page used to speak — "The Order", "Hands On The Job", "The Hall's
+ *   Verdict", "Report for duty ▸", "Best in Hall" — is retired from this
+ *   surface. `tasks:everymen.*` still feeds the faction pages, so the keys stay.
+ *
+ * One responsive component, no mobile twin (ADR-0058): `useFormFactor()` picks
+ * the size set and collapses the two-column split, and
+ * `pages/taskDetail/mobileArchetypes/EverymenTaskDetail.tsx` stays dormant, not
+ * deleted.
+ */
 export default function EverymenTaskDetail({
   state,
 }: {
   state: TaskDetailState;
 }) {
   const { t } = useTranslation("tasks");
+  const desktop = useFormFactor() !== "mobile";
+  const [showAllPraxis, setShowAllPraxis] = useState(false);
   const {
     task,
-    signups,
     submissions,
-    friends,
-    foes,
     mySubmission,
     isInProgress,
     inProgressPraxisId,
     canSignUp,
+    levelJumpSignup,
     slotsOpen,
     maxTaskSlots,
+    basePoints,
+    factionMultiplier,
     modifiedPoints,
-    topScore,
-    voteCount,
+    inProgressCount,
     sortedSubmissions,
     submissionSort,
     setSubmissionSort,
@@ -217,569 +183,776 @@ export default function EverymenTaskDetail({
   // Guarded non-null by the dispatcher.
   if (!task) return null;
 
-  // Status in the union's voice: active reads as an open call for hands.
-  const statusVoice =
-    task.status === "active" ? t("everymen.statusOpen") : task.status;
+  const slug = task.primary_faction_slug;
+  const isMetatask = task.task_type === "metatask";
+  const showMultiplier = !isNeutralMultiplier(factionMultiplier);
+  const authorName = task.created_by_display_name ?? "";
+  const hasAction =
+    canSignUp || !!mySubmission || (isInProgress && inProgressPraxisId !== null);
 
-  // Top-rated work report wears the fleur-de-lis.
-  const topId = submissions.length
-    ? submissions.reduce((a, b) => ((b.score ?? 0) > (a.score ?? 0) ? b : a)).id
-    : null;
-
-  return (
+  // ── Shared dress ──
+  /** Bebas, tracked out and struck in caps — every label on the sheet. */
+  const label: CSSProperties = {
+    fontFamily: BEBAS,
+    letterSpacing: "0.18em",
+    textTransform: "uppercase",
+  };
+  /** A pasted-on sheet: panel stock inside the printed frame rule. */
+  const plateBox: CSSProperties = {
+    background: PANEL,
+    border: `2px solid ${FRAME}`,
+    borderRadius: 2,
+    padding: desktop ? "var(--space-lg)" : "var(--space-md)",
+    boxSizing: "border-box",
+  };
+  /** The dashed red rule the broadsheet separates everything with. */
+  const dashRule = (marginBottom?: string) => (
     <div
-      className="py-8"
-      style={{ fontFamily: "var(--font-body)", color: INK }}
+      aria-hidden
+      style={{ borderTop: `2px dashed ${RED}`, marginBottom }}
+    />
+  );
+  const primaryBar: CSSProperties = {
+    display: "block",
+    width: "100%",
+    cursor: "pointer",
+    textAlign: "center",
+    textDecoration: "none",
+    background: MAST,
+    color: MAST_INK,
+    border: `2px solid ${MAST}`,
+    borderRadius: 2,
+    ...label,
+    fontSize: desktop ? "var(--text-content)" : "var(--text-xl)",
+    letterSpacing: "0.16em",
+    padding: desktop
+      ? "var(--space-md) var(--space-lg)"
+      : "var(--space-sm) var(--space-md)",
+  };
+
+  /** Cog · label · dashed rule running out to an optional gloss. */
+  const sectionHead = (heading: ReactNode, gloss?: ReactNode) => (
+    <div
+      style={{
+        display: "flex",
+        alignItems: "center",
+        gap: "var(--space-sm)",
+        marginBottom: "var(--space-md)",
+        flexWrap: "wrap",
+      }}
     >
-      {/* ── Breadcrumb ── */}
-      <nav
-        className="font-body mb-4"
+      <Gear size={14} fill={RED} hole={PANEL} />
+      <span
         style={{
-          fontSize: "var(--text-base)",
-          letterSpacing: "0.16em",
-          textTransform: "uppercase",
-          color: MUTED,
+          ...label,
+          fontSize: "var(--text-xl)",
+          letterSpacing: "0.2em",
+          color: INK,
         }}
       >
-        <Link to="/tasks" style={{ color: RED, textDecoration: "none" }}>
-          {t("everymen.breadcrumb")}
+        {heading}
+      </span>
+      <span
+        aria-hidden
+        style={{
+          flex: "1 1 20%",
+          minWidth: 20,
+          height: 0,
+          borderTop: `2px dashed ${RED}`,
+        }}
+      />
+      {gloss}
+    </div>
+  );
+
+  // ── Header: breadcrumb, masthead, title, byline, stats ──
+  const header = (
+    <div>
+      <nav
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: "var(--space-sm)",
+          marginBottom: "var(--space-md)",
+          flexWrap: "wrap",
+        }}
+      >
+        <Link
+          to="/tasks"
+          className="eyebrow"
+          style={{
+            letterSpacing: "0.2em",
+            color: ACCENT,
+            textDecoration: "none",
+          }}
+        >
+          {t("detail.breadcrumb.tasks")}
         </Link>
-        <span style={{ opacity: 0.5, margin: "0 var(--space-sm)" }}>›</span>
-        <span>{t("everymen.faction")}</span>
-        <span style={{ opacity: 0.5, margin: "0 var(--space-sm)" }}>›</span>
-        <span style={{ color: RED }}>{task.title}</span>
+        <span aria-hidden className="eyebrow" style={{ color: MUTED }}>
+          /
+        </span>
+        <span
+          className="eyebrow"
+          style={{ letterSpacing: "0.2em", color: MUTED }}
+        >
+          {t("detail.breadcrumb.current", { number: task.id })}
+        </span>
       </nav>
 
-      <div style={{ maxWidth: 920 }}>
-        <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-2xl)" }}>
-          {/* ── HERO — union billboard ── */}
-          <div
+      {/* The masthead — the faction line, set as the paper's nameplate. */}
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: "var(--space-sm)",
+          padding: "var(--space-sm) var(--space-lg)",
+          marginBottom: "var(--space-lg)",
+          background: MAST,
+          border: `2px solid ${FRAME}`,
+          boxShadow: `inset 0 -6px 0 -4px ${PAPER_DEEP}`,
+        }}
+      >
+        <Gear size={14} fill={MAST_INK} hole={MAST} />
+        <span
+          style={{ ...label, fontSize: "var(--text-content)", color: MAST_INK }}
+        >
+          {factionName(slug)}
+        </span>
+        <Gear size={14} fill={MAST_INK} hole={MAST} />
+      </div>
+
+      {isMetatask && (
+        <div style={{ marginBottom: "var(--space-md)" }}>
+          <span
+            className="font-body"
             style={{
-              position: "relative",
-              overflow: "hidden",
-              border: `3px solid ${INK}`,
-              background: RED,
-              color: CREAM,
+              display: "inline-block",
+              fontSize: "var(--text-xs)",
+              textTransform: "uppercase",
+              letterSpacing: "0.15em",
+              padding: "var(--space-xs) var(--space-sm)",
+              borderRadius: 2,
+              fontWeight: 600,
+              ...factionFill(task.metatask_faction_slug, "pill"),
             }}
           >
-            {/* sunburst rays */}
-            <div
-              style={{
-                position: "absolute",
-                inset: 0,
-                pointerEvents: "none",
-                opacity: 0.5,
-                background: `repeating-conic-gradient(from 0deg at 24% 34%, ${RED_DEEP} 0deg 7deg, transparent 7deg 14deg)`,
-              }}
-            />
-            {/* halftone dot field */}
-            <div
-              style={{
-                position: "absolute",
-                inset: 0,
-                pointerEvents: "none",
-                opacity: 0.1,
-                backgroundImage: `radial-gradient(${CREAM} 0.6px, transparent 0.7px)`,
-                backgroundSize: "5px 5px",
-              }}
-            />
-            {/* seal + status banner */}
-            <div
-              style={{
-                position: "relative",
-                zIndex: 2,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                gap: "var(--space-md)",
-                flexWrap: "wrap",
-                background: INK,
-                padding: "var(--space-sm) var(--space-xl)",
-              }}
-            >
-              <div
+            {t("detail.meta")}
+          </span>
+        </div>
+      )}
+
+      <h1
+        style={{
+          fontFamily: BEBAS,
+          fontSize: desktop ? "var(--text-display)" : "var(--text-heading)",
+          lineHeight: 0.94,
+          letterSpacing: "0.01em",
+          textTransform: "uppercase",
+          color: INK,
+          margin: 0,
+          marginBottom: "var(--space-sm)",
+          overflowWrap: "anywhere",
+        }}
+      >
+        {task.title}
+      </h1>
+
+      {isMetatask && (
+        <p
+          className="eyebrow"
+          style={{
+            marginTop: 0,
+            marginBottom: "var(--space-md)",
+            color: factionCssVar(task.metatask_faction_slug),
+          }}
+        >
+          {t("detail.metataskFor", {
+            faction: factionName(task.metatask_faction_slug),
+          })}
+        </p>
+      )}
+
+      {/* Byline — the character who proposed the job (#1029). */}
+      {authorName && (
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "var(--space-md)",
+            marginBottom: "var(--space-lg)",
+            flexWrap: "wrap",
+          }}
+        >
+          <Link
+            to={`/characters/${task.created_by}`}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "var(--space-sm)",
+              textDecoration: "none",
+            }}
+          >
+            {task.created_by_avatar_url ? (
+              <img
+                src={mediaUrl(task.created_by_avatar_url)}
+                alt={authorName}
                 style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "var(--space-md)",
-                  color: GOLD,
-                }}
-              >
-                <CogSeal size={18} />
-                <span
-                  style={{
-                    fontFamily: "var(--font-accent)",
-                    fontSize: "var(--text-content)",
-                    letterSpacing: "0.2em",
-                  }}
-                >
-                  {t("everymen.masthead")}
-                </span>
-              </div>
-              <span
-                style={{
-                  fontSize: "var(--text-sm)",
-                  letterSpacing: "0.14em",
-                  textTransform: "uppercase",
-                  color: CREAM,
-                  border: `1.5px solid ${GOLD}`,
-                  padding: "var(--space-xs) var(--space-md)",
-                }}
-              >
-                {statusVoice}
-              </span>
-            </div>
-            <div
-              style={{
-                height: 4,
-                background: GOLD,
-                position: "relative",
-                zIndex: 2,
-              }}
-            />
-            <div
-              style={{ position: "relative", zIndex: 2, padding: "var(--space-2xl) var(--space-2xl) var(--space-2xl)" }}
-            >
-              <div
-                className="content-title"
-                style={{
-                  fontFamily: "var(--font-accent)",
-                  lineHeight: 0.9,
-                  letterSpacing: "0.01em",
-                  color: CREAM,
-                  textShadow: `3px 3px 0 ${INK}`,
-                  maxWidth: 660,
-                  overflowWrap: "anywhere",
-                }}
-              >
-                {task.title}
-              </div>
-              <div
-                style={{
-                  height: 3,
-                  background: GOLD,
-                  width: 120,
-                  margin: "var(--space-xl) 0 var(--space-lg)",
+                  width: 30,
+                  height: 30,
+                  flex: "none",
+                  borderRadius: "50%",
+                  objectFit: "cover",
+                  border: `2px solid ${FRAME}`,
                 }}
               />
-              <div
+            ) : (
+              <span
+                aria-hidden
                 style={{
-                  display: "flex",
+                  display: "inline-flex",
                   alignItems: "center",
-                  gap: "var(--space-lg)",
-                  flexWrap: "wrap",
-                }}
-              >
-                <span
-                  className="content-title"
-                  style={{
-                    background: INK,
-                    color: CREAM,
-                    fontFamily: "var(--font-accent)",
-                    letterSpacing: "0.06em",
-                    padding: "var(--space-sm) var(--space-lg)",
-                  }}
-                >
-                  {t("everymen.levelValue", { level: task.level_required })}
-                </span>
-                <span
-                  className="content-title"
-                  style={{
-                    background: GOLD,
-                    color: INK,
-                    fontFamily: "var(--font-accent)",
-                    letterSpacing: "0.06em",
-                    padding: "var(--space-sm) var(--space-lg)",
-                  }}
-                >
-                  {t("everymen.pointsValue", { points: modifiedPoints })}
-                </span>
-                <span
-                  style={{
-                    fontFamily: "var(--font-body)",
-                    fontSize: "var(--text-md)",
-                    letterSpacing: "0.06em",
-                    color: CREAM,
-                  }}
-                >
-                  {t("everymen.onView", {
-                    signups: signups.length,
-                    completed: submissions.length,
-                  })}
-                </span>
-              </div>
-            </div>
-          </div>
-
-          {/* ── CTA bar / signed-on states ── */}
-          <LevelJumpBanner state={state} />
-          {canSignUp && (
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "var(--space-lg)",
-                flexWrap: "wrap",
-                border: `1.5px solid ${INK}`,
-                background: PAPER,
-                padding: "var(--space-lg) var(--space-xl)",
-              }}
-            >
-              <button
-                onClick={handleSignup}
-                style={{
-                  cursor: "pointer",
-                  fontFamily: "var(--font-body)",
+                  justifyContent: "center",
+                  width: 30,
+                  height: 30,
+                  flex: "none",
+                  borderRadius: "50%",
+                  overflow: "hidden",
+                  background: PANEL,
+                  border: `2px solid ${FRAME}`,
+                  fontFamily: BEBAS,
                   fontSize: "var(--text-lg)",
-                  fontWeight: 700,
-                  letterSpacing: "0.14em",
-                  textTransform: "uppercase",
-                  padding: "var(--space-lg) var(--space-xl)",
-                  border: "none",
-                  background: RED,
-                  color: CREAM,
+                  color: ACCENT,
                 }}
               >
-                {t("everymen.signup.cta")}
-              </button>
-              <div style={{ fontSize: "var(--text-md)", color: MUTED }}>
-                {t("everymen.signup.meta", {
-                  points: modifiedPoints,
-                  open: slotsOpen,
-                  max: maxTaskSlots,
-                })}
-              </div>
-              <div
-                style={{
-                  marginLeft: "auto",
-                  fontFamily: "var(--font-accent)",
-                  fontSize: "var(--text-xl)",
-                  letterSpacing: "0.06em",
-                  color: RED,
-                }}
-              >
-                {t("everymen.signup.levelRequired", {
-                  level: task.level_required,
-                })}
-              </div>
-              <ErrorBanner
-                message={signupError}
-                style={{
-                  flexBasis: "100%",
-                  background: "var(--everymen-red-light)",
-                  border: `1px solid ${RED}`,
-                  color: RED_DEEP,
-                }}
-              />
-            </div>
-          )}
-
-          {mySubmission && (
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "var(--space-lg)",
-                flexWrap: "wrap",
-                border: `1.5px solid ${INK}`,
-                background: PAPER,
-                padding: "var(--space-lg) var(--space-xl)",
-              }}
-            >
-              <span
-                className="content-text"
-                style={{
-                  fontFamily: "var(--font-accent)",
-                  letterSpacing: "0.08em",
-                  color: OLIVE,
-                }}
-              >
-                {t("everymen.submitted.text")}
+                {initialsOf(authorName)}
               </span>
-              <Link
-                to={`/praxes/${mySubmission.id}/edit`}
-                style={{
-                  marginLeft: "auto",
-                  fontFamily: "var(--font-body)",
-                  fontSize: "var(--text-md)",
-                  fontWeight: 700,
-                  letterSpacing: "0.12em",
-                  textTransform: "uppercase",
-                  padding: "var(--space-md) var(--space-xl)",
-                  background: INK,
-                  color: CREAM,
-                  textDecoration: "none",
-                }}
-              >
-                {t("everymen.submitted.edit")}
-              </Link>
-            </div>
-          )}
-
-          {!mySubmission && isInProgress && inProgressPraxisId !== null && (
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "var(--space-lg)",
-                flexWrap: "wrap",
-                border: `1.5px solid ${INK}`,
-                background: PAPER,
-                padding: "var(--space-lg) var(--space-xl)",
-              }}
-            >
-              <span
-                className="content-text"
-                style={{
-                  fontFamily: "var(--font-accent)",
-                  letterSpacing: "0.08em",
-                  color: RED,
-                }}
-              >
-                {t("everymen.inProgress.text")}
-              </span>
-              <Link
-                to={`/praxes/${inProgressPraxisId}/edit`}
-                style={{
-                  marginLeft: "auto",
-                  fontFamily: "var(--font-body)",
-                  fontSize: "var(--text-md)",
-                  fontWeight: 700,
-                  letterSpacing: "0.12em",
-                  textTransform: "uppercase",
-                  padding: "var(--space-md) var(--space-xl)",
-                  background: RED,
-                  color: CREAM,
-                  textDecoration: "none",
-                }}
-              >
-                {t("everymen.inProgress.continue")}
-              </Link>
-              <button
-                onClick={handleDrop}
-                style={{
-                  background: "none",
-                  border: "none",
-                  cursor: "pointer",
-                  fontFamily: "var(--font-body)",
-                  fontSize: "var(--text-base)",
-                  letterSpacing: "0.1em",
-                  textTransform: "uppercase",
-                  color: MUTED,
-                }}
-              >
-                {t("everymen.inProgress.drop")}
-              </button>
-              <ErrorBanner
-                message={signupError}
-                style={{
-                  flexBasis: "100%",
-                  background: "var(--everymen-red-light)",
-                  border: `1px solid ${RED}`,
-                  color: RED_DEEP,
-                }}
-              />
-            </div>
-          )}
-
-          {/* ── THE ORDER — the work-order body ── */}
-          <section>
-            <SectionHead title={t("everymen.orderHeading")} />
-            <div
-              style={{
-                border: `1.5px solid ${INK}`,
-                background: PAPER,
-                padding: "var(--space-xl) var(--space-2xl)",
-                maxWidth: 660,
-              }}
-            >
-              <p
-                className="content-text"
-                style={{
-                  fontFamily: "var(--font-body)",
-                  lineHeight: 1.75,
-                  color: INK,
-                  margin: 0,
-                  whiteSpace: "pre-wrap",
-                }}
-              >
-                {task.description || t("everymen.orderEmpty")}
-              </p>
-            </div>
-          </section>
-
-          {/* ── Hands signed on ── */}
-          {signups.length > 0 && (
-            <section>
-              <SectionHead title={t("everymen.handsHeading")} />
-              <HandsRow signups={signups} friends={friends} foes={foes} />
-            </section>
-          )}
-
-          {/* ── Hall verdict (read-only aggregate) ── */}
-          <section>
-            <SectionHead title={t("everymen.verdictHeading")} />
-            {voteCount > 0 ? (
-              <div style={{ display: "flex", alignItems: "flex-end", gap: "var(--space-md)" }}>
-                <span
-                  className="content-title"
-                  style={{
-                    fontFamily: "var(--font-accent)",
-                    lineHeight: 0.8,
-                    color: RED,
-                  }}
-                >
-                  {topScore}
-                </span>
-                <div style={{ paddingBottom: "var(--space-sm)" }}>
-                  <div
-                    style={{
-                      fontFamily: "var(--font-accent)",
-                      fontSize: "var(--text-xl)",
-                      letterSpacing: "0.06em",
-                      color: INK,
-                    }}
-                  >
-                    {t("everymen.verdict.topMark")}
-                  </div>
-                  <div
-                    style={{
-                      fontFamily: "var(--font-body)",
-                      fontSize: "var(--text-base)",
-                      letterSpacing: "0.06em",
-                      color: MUTED,
-                    }}
-                  >
-                    {t("everymen.verdict.reports", { count: voteCount })}
-                  </div>
-                </div>
-              </div>
-            ) : (
-              <p
-                className="content-text"
-                style={{
-                  fontFamily: "var(--font-body)",
-                  color: MUTED,
-                }}
-              >
-                {t("everymen.verdict.none")}
-              </p>
             )}
-          </section>
+            <span
+              style={{
+                fontFamily: BEBAS,
+                fontSize: "var(--text-content)",
+                letterSpacing: "0.06em",
+                textTransform: "uppercase",
+                color: INK,
+                borderBottom: `2px solid ${RED}`,
+              }}
+            >
+              {authorName}
+            </span>
+          </Link>
+          <span className="eyebrow" style={{ color: MUTED }}>
+            {t("detail.author", { level: task.created_by_level ?? 0 })}
+          </span>
+        </div>
+      )}
 
-          {/* ── Work reports filed (completions) ── */}
-          <section>
-            <SectionHead
-              title={t("everymen.reportsHeading")}
-              trailing={
-                <div style={{ display: "flex", gap: 0 }}>
-                  {(["score", "recent"] as const).map((sort) => {
-                    const on = submissionSort === sort;
-                    return (
-                      <button
-                        key={sort}
-                        onClick={() => setSubmissionSort(sort)}
-                        style={{
-                          fontFamily: "var(--font-body)",
-                          fontSize: "var(--text-sm)",
-                          fontWeight: 700,
-                          letterSpacing: "0.1em",
-                          textTransform: "uppercase",
-                          padding: "var(--space-xs) var(--space-md)",
-                          background: on ? INK : "transparent",
-                          color: on ? CREAM : MUTED,
-                          border: `1.5px solid ${
-                            on
-                              ? INK
-                              : "color-mix(in srgb, var(--everymen-ink) 30%, transparent)"
-                          }`,
-                          cursor: "pointer",
-                        }}
-                      >
-                        {sort === "score"
-                          ? t("everymen.sort.topRated")
-                          : t("everymen.sort.recent")}
-                      </button>
-                    );
-                  })}
-                </div>
-              }
-            />
-            {sortedSubmissions.length === 0 ? (
-              <p
-                className="content-text"
-                style={{
-                  fontFamily: "var(--font-body)",
-                  color: MUTED,
-                }}
-              >
-                {t("everymen.empty")}
-              </p>
-            ) : (
+      {dashRule("var(--space-md)")}
+
+      {/* Header stats. Level and the in-progress count — the completed figure
+          heads the gallery, and there is deliberately no roster. */}
+      <div
+        style={{
+          display: "flex",
+          alignItems: "flex-end",
+          gap: desktop ? "var(--space-xl)" : "var(--space-lg)",
+          flexWrap: "wrap",
+        }}
+      >
+        <div style={{ display: "flex", flexDirection: "column", lineHeight: 1 }}>
+          <span
+            style={{
+              ...label,
+              fontSize: "var(--text-base)",
+              color: OLIVE,
+              marginBottom: "var(--space-xs)",
+            }}
+          >
+            {t("detail.stats.level")}
+          </span>
+          <span
+            style={{
+              fontFamily: BEBAS,
+              fontSize: desktop ? "var(--text-heading)" : "var(--text-title)",
+              lineHeight: 0.86,
+              color: INK,
+            }}
+          >
+            {task.level_required}
+          </span>
+        </div>
+        <span
+          aria-hidden
+          style={{
+            width: 2,
+            alignSelf: "stretch",
+            minHeight: 32,
+            background: HAIR,
+          }}
+        />
+        <div style={{ display: "flex", flexDirection: "column", lineHeight: 1 }}>
+          <span
+            style={{
+              ...label,
+              fontSize: "var(--text-base)",
+              color: OLIVE,
+              marginBottom: "var(--space-xs)",
+            }}
+          >
+            {t("detail.stats.inProgress")}
+          </span>
+          <span
+            style={{
+              fontFamily: BEBAS,
+              fontSize: desktop ? "var(--text-title)" : "var(--text-content)",
+              lineHeight: 0.86,
+              color: INK,
+            }}
+          >
+            {inProgressCount}
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+
+  // ── The wage box: base, the (usually absent) ×mult badge, the stamped total ──
+  const wageBox = (
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        gap: "var(--space-sm)",
+      }}
+    >
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: "var(--space-sm)",
+        }}
+      >
+        <span
+          className="eyebrow"
+          style={{ letterSpacing: "0.16em", color: MUTED }}
+        >
+          {t("detail.points.base")}
+        </span>
+        <span
+          style={{
+            fontFamily: BEBAS,
+            fontSize: desktop ? "var(--text-heading)" : "var(--text-title)",
+            lineHeight: 0.8,
+            color: INK,
+          }}
+        >
+          {basePoints}
+        </span>
+        {showMultiplier && (
+          <span
+            style={{
+              marginLeft: "auto",
+              ...label,
+              fontSize: desktop ? "var(--text-content)" : "var(--text-xl)",
+              letterSpacing: "0.04em",
+              color: MULT_INK,
+              border: `2px solid ${GOLD}`,
+              borderRadius: 2,
+              padding: "var(--space-xs) var(--space-sm)",
+              whiteSpace: "nowrap",
+            }}
+          >
+            {t("detail.points.multiplier", {
+              multiplier: factionMultiplier.toFixed(2),
+            })}
+          </span>
+        )}
+      </div>
+      {dashRule()}
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: "var(--space-md)",
+        }}
+      >
+        {/* The rubber stamp: the figure struck through a double-ringed roundel,
+            landed slightly off-square the way a hand stamp does. */}
+        <div
+          style={{
+            position: "relative",
+            flex: "0 0 auto",
+            width: desktop ? 74 : 64,
+            height: desktop ? 74 : 64,
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            transform: "rotate(-4deg)",
+          }}
+        >
+          <span
+            aria-hidden
+            style={{
+              position: "absolute",
+              inset: 0,
+              borderRadius: "50%",
+              border: `2px solid ${RED}`,
+              boxShadow: `inset 0 0 0 3px ${PANEL}, inset 0 0 0 4px ${RED}`,
+            }}
+          />
+          <span
+            style={{
+              fontFamily: BEBAS,
+              fontSize: desktop ? "var(--text-heading)" : "var(--text-title)",
+              lineHeight: 0.8,
+              color: ACCENT,
+            }}
+          >
+            {modifiedPoints}
+          </span>
+          <span
+            style={{
+              ...label,
+              fontSize: "var(--text-xs)",
+              letterSpacing: "0.22em",
+              color: ACCENT,
+              marginTop: "var(--space-xs)",
+            }}
+          >
+            {t("detail.points.total")}
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+
+  // ── The one action slot. Nothing renders when the viewer has no move to make:
+  //    an unusable control is worse than none.
+  const actionBody = (
+    <>
+      {canSignUp && (
+        <div>
+          <LevelJumpBanner state={state} />
+          <button onClick={handleSignup} style={primaryBar}>
+            {t("detail.signup.cta")}
+          </button>
+          <div
+            style={{
+              fontFamily: COURIER,
+              fontSize: "var(--text-md)",
+              lineHeight: 1.6,
+              color: MUTED,
+              marginTop: "var(--space-sm)",
+            }}
+          >
+            {t("detail.signup.slots", { open: slotsOpen, max: maxTaskSlots })}
+            {!levelJumpSignup && (
               <>
-                <div
-                  style={{
-                    display: "flex",
-                    flexWrap: "wrap",
-                    gap: "var(--space-2xl) var(--space-xl)",
-                    alignItems: "flex-start",
-                  }}
-                >
-                  {sortedSubmissions.slice(0, 4).map((s) => (
-                    <div
-                      key={s.id}
-                      style={{ position: "relative", paddingTop: "var(--space-xl)" }}
-                    >
-                      {s.id === topId && (
-                        <div
-                          style={{
-                            position: "absolute",
-                            top: -4,
-                            left: "50%",
-                            transform: "translateX(-50%)",
-                            zIndex: 3,
-                            display: "inline-flex",
-                            alignItems: "center",
-                            gap: "var(--space-xs)",
-                            whiteSpace: "nowrap",
-                            background: GOLD,
-                            color: INK,
-                            fontFamily: "var(--font-accent)",
-                            fontSize: "var(--text-lg)",
-                            letterSpacing: "0.1em",
-                            padding: "var(--space-xs) var(--space-md)",
-                            boxShadow: "0 3px 8px rgba(0,0,0,0.3)",
-                          }}
-                        >
-                          <span style={{ fontSize: "var(--text-lg)", lineHeight: 1 }}>⚜</span>{" "}
-                          {t("everymen.bestInHall")}
-                        </div>
-                      )}
-                      <PraxisCard praxis={s} />
-                    </div>
-                  ))}
-                </div>
-                {submissions.length > 4 && (
-                  <div style={{ marginTop: "var(--space-lg)" }}>
-                    <Link
-                      to={`/praxes?task_id=${task.id}`}
-                      style={{
-                        fontFamily: "var(--font-accent)",
-                        fontSize: "var(--text-xl)",
-                        letterSpacing: "0.06em",
-                        color: RED,
-                        textDecoration: "none",
-                      }}
-                    >
-                      {t("everymen.viewAll", { count: submissions.length })}
-                    </Link>
-                  </div>
-                )}
+                {" · "}
+                <span style={{ color: OLIVE }}>
+                  {t("detail.signup.levelMet", { level: task.level_required })}
+                </span>
               </>
             )}
-          </section>
-          {/* Comments — shared slot, active-task gated (ADR-0006 + #1030). */}
-          <TaskDetailComments state={state} />
+          </div>
+          <ErrorBanner
+            message={signupError}
+            style={{
+              background: "var(--everymen-red-light)",
+              border: `2px solid ${RED}`,
+              color: ACCENT,
+            }}
+          />
+        </div>
+      )}
+
+      {mySubmission && (
+        <div>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "var(--space-sm)",
+              marginBottom: "var(--space-sm)",
+            }}
+          >
+            <Gear size={13} fill={OLIVE} hole={PANEL} />
+            <span
+              style={{
+                fontFamily: COURIER,
+                fontSize: "var(--text-lg)",
+                color: MUTED,
+              }}
+            >
+              {t("detail.submitted.text")}
+            </span>
+          </div>
+          <Link to={`/praxes/${mySubmission.id}/edit`} style={primaryBar}>
+            {t("detail.submitted.edit")}
+          </Link>
+        </div>
+      )}
+
+      {!mySubmission && isInProgress && inProgressPraxisId !== null && (
+        <div>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "var(--space-sm)",
+              marginBottom: "var(--space-sm)",
+            }}
+          >
+            <Gear size={13} fill={OLIVE} hole={PANEL} />
+            <span
+              style={{
+                fontFamily: COURIER,
+                fontSize: "var(--text-lg)",
+                color: MUTED,
+              }}
+            >
+              {t("detail.inProgress.text")}
+            </span>
+          </div>
+          <Link to={`/praxes/${inProgressPraxisId}/edit`} style={primaryBar}>
+            {t("detail.inProgress.continue")}
+          </Link>
+          <button
+            onClick={handleDrop}
+            style={{
+              display: "block",
+              width: "100%",
+              marginTop: "var(--space-sm)",
+              padding: 0,
+              background: "none",
+              border: "none",
+              cursor: "pointer",
+              fontFamily: COURIER,
+              fontSize: "var(--text-md)",
+              color: MUTED,
+              textAlign: "center",
+              textDecoration: "line-through",
+            }}
+          >
+            {t("detail.inProgress.drop")}
+          </button>
+          <ErrorBanner
+            message={signupError}
+            style={{
+              background: "var(--everymen-red-light)",
+              border: `2px solid ${RED}`,
+              color: ACCENT,
+            }}
+          />
+        </div>
+      )}
+    </>
+  );
+
+  // The action plate — a sheet pasted onto the newsprint, holding the wage box
+  // and the CTA side by side. 520 on desktop: the widest panel in the set, which
+  // is dress (the others run 420–460).
+  const actionPlate = (
+    <div
+      style={{
+        background: PAPER_DEEP,
+        border: `2px solid ${FRAME}`,
+        borderRadius: 2,
+        padding: "var(--space-xs)",
+        boxShadow: SHADOW,
+        boxSizing: "border-box",
+      }}
+    >
+      <div
+        style={{
+          display: "flex",
+          flexDirection: desktop ? "row" : "column",
+          gap: "var(--space-xs)",
+          alignItems: "stretch",
+        }}
+      >
+        <div
+          style={{
+            ...plateBox,
+            flex: desktop ? "0 0 auto" : "1 1 auto",
+            minWidth: desktop ? 156 : 0,
+          }}
+        >
+          {wageBox}
+        </div>
+        {hasAction && (
+          <div
+            style={{
+              ...plateBox,
+              flex: 1,
+              minWidth: 0,
+              display: "flex",
+              flexDirection: "column",
+              justifyContent: "center",
+            }}
+          >
+            {actionBody}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+
+  // ── The brief, in full. No clamp, no "read more". ──
+  const brief = (
+    <section
+      style={{ marginBottom: desktop ? "var(--space-2xl)" : "var(--space-xl)" }}
+    >
+      {sectionHead(t("detail.brief.heading"))}
+      {task.description && (
+        <p
+          className="content-text"
+          style={{
+            fontFamily: COURIER,
+            lineHeight: 1.78,
+            color: INK,
+            whiteSpace: "pre-wrap",
+            margin: 0,
+          }}
+        >
+          {task.description}
+        </p>
+      )}
+    </section>
+  );
+
+  // ── The filed praxis ──
+  const sortToggle = (
+    <span
+      style={{
+        display: "flex",
+        gap: "var(--space-xs)",
+        padding: "var(--space-xs)",
+        border: `2px solid ${FRAME}`,
+        background: PANEL,
+      }}
+    >
+      {(["score", "recent"] as const).map((sort) => {
+        const on = submissionSort === sort;
+        return (
+          <button
+            key={sort}
+            onClick={() => setSubmissionSort(sort)}
+            style={{
+              cursor: "pointer",
+              border: "none",
+              ...label,
+              fontSize: "var(--text-md)",
+              letterSpacing: "0.14em",
+              padding: "var(--space-xs) var(--space-sm)",
+              background: on ? RED : "transparent",
+              color: on ? MAST_INK : MUTED,
+            }}
+          >
+            {sort === "score"
+              ? t("detail.gallery.sort.top")
+              : t("detail.gallery.sort.recent")}
+          </button>
+        );
+      })}
+    </span>
+  );
+
+  const gallery = (
+    <section
+      style={{ marginBottom: desktop ? "var(--space-2xl)" : "var(--space-xl)" }}
+    >
+      {sectionHead(
+        t("detail.gallery.heading", { count: submissions.length }),
+        sortToggle,
+      )}
+
+      {sortedSubmissions.length === 0 ? (
+        <p
+          className="content-text"
+          style={{ fontFamily: COURIER, color: MUTED }}
+        >
+          {t("detail.gallery.empty")}
+        </p>
+      ) : (
+        <>
+          <div className="flex flex-wrap gap-4 items-start">
+            {(showAllPraxis
+              ? sortedSubmissions
+              : sortedSubmissions.slice(0, GALLERY_PREVIEW)
+            ).map((praxis) => (
+              <PraxisCard key={praxis.id} praxis={praxis} />
+            ))}
+          </div>
+          {submissions.length > GALLERY_PREVIEW && (
+            <button
+              onClick={() => setShowAllPraxis((shown) => !shown)}
+              style={{
+                display: "inline-block",
+                marginTop: "var(--space-md)",
+                padding: 0,
+                background: "none",
+                border: "none",
+                cursor: "pointer",
+                fontFamily: COURIER,
+                fontSize: "var(--text-lg)",
+                color: ACCENT,
+              }}
+            >
+              {showAllPraxis
+                ? t("detail.gallery.showFewer")
+                : t("detail.gallery.viewAll", { count: submissions.length })}
+            </button>
+          )}
+        </>
+      )}
+    </section>
+  );
+
+  return (
+    <div className="py-8" style={{ position: "relative", color: INK }}>
+      {/* The sheet itself — newsprint under a rising sun (index.css). */}
+      <div className="em-broadsheet" aria-hidden />
+
+      <div
+        style={{
+          position: "relative",
+          zIndex: 1,
+          maxWidth: 1200,
+          margin: "0 auto",
+        }}
+      >
+        <div
+          style={{
+            display: "flex",
+            flexDirection: desktop ? "row" : "column",
+            alignItems: desktop ? "flex-start" : "stretch",
+            gap: "var(--space-xl)",
+            marginBottom: desktop ? "var(--space-2xl)" : "var(--space-xl)",
+          }}
+        >
+          <div style={{ flex: 1, minWidth: 0 }}>{header}</div>
+          <div
+            style={{
+              flex: desktop ? "0 0 520px" : "1 1 auto",
+              width: desktop ? 520 : "100%",
+              marginTop: desktop ? "var(--space-2xl)" : 0,
+            }}
+          >
+            {actionPlate}
+          </div>
+        </div>
+
+        <div style={{ minWidth: 0 }}>
+          {brief}
+          {gallery}
+          {/* Comments — the shared slot, active-task gated (ADR-0006, #1030),
+              under the sheet's own dressed section head. */}
+          <TaskDetailComments
+            state={state}
+            heading={sectionHead(t("detail.comments.heading"))}
+          />
         </div>
       </div>
     </div>
