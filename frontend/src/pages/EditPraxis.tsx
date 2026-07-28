@@ -22,6 +22,7 @@ import { Breadcrumb } from "./editPraxis/archetypes/shared";
 import DefaultMobileEditPraxis from "./editPraxis/mobileArchetypes/DefaultEditPraxis";
 import MetataskPicker from "./editPraxis/MetataskPicker";
 import MetataskRemoveConfirm from "./editPraxis/MetataskRemoveConfirm";
+import PraxisWaitingSurface from "./editPraxis/waiting/PraxisWaitingSurface";
 
 export default function EditPraxis() {
   const { t } = useTranslation("forms");
@@ -55,6 +56,9 @@ export default function EditPraxis() {
     formFactor === "mobile"
       ? pickVariant(surfaceMap('mobileEditPraxis'), slug, DefaultMobileEditPraxis)
       : pickVariant(surfaceMap('editPraxis'), slug, DefaultEditPraxis);
+  // Once your part of a multi-party praxis is filed, the composer stops being a
+  // composer (ADR-0059) and this one shared surface takes the archetype's place.
+  const waiting = state.phase === "waiting";
 
   return (
     <>
@@ -63,15 +67,22 @@ export default function EditPraxis() {
           phone composer is a dead end (#567). Render the shared desktop
           breadcrumb once here for the mobile path — present for every skin and
           every state, including the published state. Desktop archetypes render
-          their own breadcrumb, so gate this to mobile to avoid doubling up. */}
-      {formFactor === "mobile" && (
+          their own breadcrumb, so gate this to mobile to avoid doubling up.
+          The waiting surface is faction-neutral and paints none either, so it
+          takes the same shared breadcrumb at BOTH widths — the condition stays
+          an either/or so no combination draws two. */}
+      {(formFactor === "mobile" || waiting) && (
         <Breadcrumb
           praxisId={state.praxis.id}
           taskId={state.praxis.task_id}
           taskTitle={state.praxis.task_title}
         />
       )}
-      <Archetype state={state} />
+      {waiting ? (
+        <PraxisWaitingSurface state={state} />
+      ) : (
+        <Archetype state={state} />
+      )}
       {/* The cast that closes a collab's consensus gate earns a standalone beat
           rather than a silent redirect (#591). Rendered here, over whichever
           archetype is mounted, so it's one shared screen for every faction and
