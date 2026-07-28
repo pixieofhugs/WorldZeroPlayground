@@ -136,10 +136,13 @@
     "title": "Task Crown — top praxis for this task"
   },
   "taskCard": {
+    "ordinal": "Task {{id}}",
+    "inProgress": "{{count}} in progress",
+    "multiplier": "×{{value}}",
+    "modifierCaption": "modifier",
     "na": {
-      "eyebrow": "Unaffiliated · all paths",
-      "level": "lvl {{level}}",
-      "pointsUnit": "pts",
+      "levelCaption": "Level",
+      "pointsUnit": "points",
       "signup": "Sign up ↗"
     },
     "albescent": {
