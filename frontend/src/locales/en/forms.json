@@ -110,7 +110,8 @@
       "updateMetatask": "Could not update metatask.",
       "duelUnderway": "This duel is already underway — it can't be cancelled from here.",
       "fileTooLarge_one": "File too large (50 MB limit): {{names}}",
-      "fileTooLarge_other": "Files too large (50 MB limit): {{names}}"
+      "fileTooLarge_other": "Files too large (50 MB limit): {{names}}",
+      "nudge": "Could not nudge {{name}}."
     },
     "confirm": {
       "dismiss": "Never mind",
@@ -214,7 +215,14 @@
       "duelPendingLine": "Sealed {{elapsed}}. {{name}} has not answered the challenge yet.",
       "duelPillSealed": "sealed",
       "duelPillWriting": "still writing",
-      "duelPullBackDescription": "Takes your entry back out so you can change it. The duel is untouched until it settles, so this costs you nothing."
+      "duelPullBackDescription": "Takes your entry back out so you can change it. The duel is untouched until it settles, so this costs you nothing.",
+      "nudgeAction": "Nudge",
+      "nudgeSentAction": "Nudged",
+      "nudgeAria": "Nudge {{name}} to file their part",
+      "nudgeSentAria": "You already nudged {{name}} today — you can nudge them again tomorrow",
+      "nudgeDescription": "Sends one reminder to their feed. Once a day, and it is signed with your name.",
+      "duelNudgeAria": "Nudge {{name}} to answer",
+      "nudgeFeedAction": "nudged you to file your part of"
     },
     "toolbar": {
       "label": "formatting",

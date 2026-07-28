@@ -3,6 +3,7 @@ import i18n from '../../i18n'
 import { factionName } from '../../utils/factions'
 import { relativeTime } from '../../utils/dates'
 import { resolveTaunt } from '../../utils/taunts'
+import { collabCopy } from '../collab/collabCopy'
 
 /**
  * Full-adoption activity feed (#376): the faction owns the whole "someone did X"
@@ -30,6 +31,7 @@ export const FACTION_ROW_TYPES = new Set([
   'global_task',
   'collaborator_submitted',
   'awaiting_submission',
+  'nudge',
 ])
 
 export interface FeedRow {
@@ -138,6 +140,37 @@ export function normalizeFeedItem(item: ActivityFeedItem): FeedRow | null {
             ? i18n.t('feed:row.points', { points: p.task_point_value })
             : null,
         level: p.task_level_required ?? null,
+        time,
+      }
+    case 'nudge':
+      // Someone poked you to file (#1083). It lands BESIDE the
+      // `awaiting_submission` row for the same praxis — the reminder and the
+      // obligation are two cards about one thing — so it borrows that row's
+      // badge and its link straight into the editor.
+      //
+      // The action line resolves through `collabCopy`, not the `feed` catalog:
+      // it is the composer's own vocabulary, shared-default with faction
+      // overrides where authored. Framed in the SENDER's voice, because
+      // `context_faction_slug` is the actor's faction and a nudge is something a
+      // named person did to you.
+      return {
+        slug,
+        actor,
+        actorHref:
+          p.from_character_id != null ? `/characters/${p.from_character_id}` : null,
+        action: collabCopy(slug, 'nudgeFeedAction'),
+        badge:
+          p.praxis_type === 'collab'
+            ? { type: 'collab', label: i18n.t('feed:badge.collab') }
+            : { type: 'duel', label: i18n.t('feed:badge.duel') },
+        headline: p.task_title ?? null,
+        headlineHref: p.praxis_id != null ? `/praxes/${p.praxis_id}/edit` : null,
+        headlineQuoted: false,
+        points:
+          p.task_point_value != null
+            ? i18n.t('feed:row.points', { points: p.task_point_value })
+            : null,
+        level: null,
         time,
       }
     case 'vote_on_mine':

@@ -97,6 +97,7 @@ function baseState(slug: string | null): EditPraxisState {
     sendInvite: async () => {},
     cancelInvite: async () => {},
     kickMember: async () => {},
+    nudge: async () => {},
     duel: null,
     sendChallenge: async () => {},
     cancelDuel: async () => {},
