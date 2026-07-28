@@ -67,6 +67,16 @@ All color values are CSS custom properties defined in `index.css`. See that file
 
 **Rule:** If you're about to hardcode a hex value in a component, stop. Add it as a CSS variable first.
 
+### Contrast is a pairing, not a property (#1028)
+
+A measurement belongs to a **hue on a ground**. It survives exactly as long as both halves do, and the task-detail epic broke that in two ways that each turned up independently on three separate skins.
+
+**A new ground invalidates every contrast claim measured on the old one.** Everymen, WOW and Ephemerists each hit this without knowing the others had: a token that had cleared AA for releases stopped clearing the moment its surface was repainted, and nothing warns you — the token is unchanged, so it looks untouched. Ephemerists is the worked example. A task *card* is one plate sitting on the app's page ground; a task *detail* **is** the plate, so it gained a page ground of its own and a second sheet for the panel cells, and it sets quiet type on all three. The design's `muted` brown clears 4.60:1 on the plate and only 4.31:1 on the page beneath it. The fix is not to branch per ground at the call site — it is to walk the ink down until it clears on **every** ground that surface has (`--faction-ephemerists-plate-quiet`: page 5.25, plate 5.60, inner 6.20), so a skin never has to know which sheet a label landed on. **When a surface gains a sheet, re-measure the inks it already had.**
+
+**An accent can clear AA as a rule or a fill and still fail as body ink — and that is a token split, not a usage convention.** "Never paint text in this one" is a rule a future editor has to remember; a second token is a rule the cascade enforces. `--everymen-red` pays 4.95:1 on the light broadsheet panel and 3.73:1 on the dark one, so ink got its own name — `--faction-everymen-sheet-accent`, walked up in the dark cascade to 5.45:1 — while dashed rules and filled bars keep `--everymen-red`. WOW's gold and the WOW duel rail's opponent accent state the same constraint as a usage convention *because they genuinely have no text pairing*: nothing legible is ever painted in either. The moment a surface does want the accent as text, mint the ink token rather than writing the caution down.
+
+The third variant of this — a design kit's own annotations measured against the kit's plate rather than ours — is §6's, under "Reading a design kit".
+
 ### Albescent has no theme, on purpose (#783)
 
 Albescent is a secret society hiding in plain sight, so it is the one faction with **no `--faction-albescent-*` block and no slot in `FACTION_RAINBOW_ORDER`**. It maps to `default` in `CSS_KEY`, exactly as `na` does, which makes `isKnownFaction('albescent')` **false**. That is the intended outcome, not a gap: every surface that branches on that predicate hands Albescent the unaffiliated treatment automatically, including surfaces built later.
@@ -84,8 +94,8 @@ The one exception is the **reveal surfaces** — the invitation letter, the seal
 
 Three things the task-detail wrapper settled that the next unfreeze inherits:
 
-- **A flourish is clipped to the COMPONENT, not the viewport.** `.alb-detail` is the 1200 column itself and every light layer insets by `--space-2xl` top and bottom to land exactly on `DefaultTaskDetail`'s own sheet. Six task-detail skins had to be corrected for painting their faction ground `position: fixed; inset: 0`; the site background must still show around the component.
-- **On an opaque sheet, the flourish goes ON TOP, blended.** `z-index: -1` puts an overlay behind a `Default*` surface that paints its own background, i.e. nowhere. And the sheet is positioned, so a positioned overlay at `z-index: 0` paints *above the copy* with none of the blending that keeps ink legible. `multiply` light / `screen` dark at a trimmed opacity is the shape — the same call `.alb-rainbow` and `.alb-task-aurora` already make.
+- **A flourish is clipped to the COMPONENT, not the viewport** — the general rule, and what it cost the wave, are in §5. `.alb-detail` is the 1200 column itself, and every light layer insets by `--space-2xl` top and bottom to land exactly on `DefaultTaskDetail`'s own sheet.
+- **On an opaque sheet, the flourish goes ON TOP, blended** (§5 owns the stacking rule). `z-index: -1` puts an overlay *behind* a `Default*` surface that paints its own background, i.e. nowhere. `multiply` light / `screen` dark at a trimmed opacity is the shape — the same call `.alb-rainbow` and `.alb-task-aurora` already make.
 - **Structure the wrapper cannot reach goes through an optional slot on the `Default*` component, never a fork.** The design turns the score readout into a spinning prism ring; `DefaultTaskDetail` gained one optional `worthSlot` and na is unchanged when it is absent. It is a slot, not a data channel (ADR-0016): the wrapper builds the node from the same state it forwards, so the two readouts cannot disagree. A second copy of an eight-hundred-line anatomy for one circle is the thing to avoid.
 
 The **words** are covered by the same rule as the hues, and it is the easier one to get wrong: an unfrozen surface keeps `na`'s copy, including its sign-up verb. The task-detail design was the hardest case yet — `Correspondence №207`, `Albescent · in confidence`, `The Ask` / `in the hand of the keeper`, `In hand`, `14 accounts inscribed`, `most witnessed`, `Acknowledge`, `withdraw`, `Said quietly`, `Set something down, plainly…` — and **every word of it was cut** (#1038, ADR-0057 + ADR-0027). Albescent keeps the light and loses the words; a page announcing itself that loudly un-hides the society outright. `feed:taskCard.albescent.*` still sits in the catalog, orphaned since #783 deleted the card it belonged to; re-wiring it would print a word no other player's card prints, on a surface every player can see.
@@ -127,6 +137,12 @@ The kit's mobile palette is a complete two-theme contract, and all but two of it
 Read this next to the Albescent note above: those are the repo's two partly-registered factions, partial on **different axes**. Albescent has neither theme nor skin, on purpose, because it is hiding. WOW now has both, and twenty-five manifest surfaces claim it (praxis card, its mobile twin, the score stamp, the vote widget, the edit-praxis composer on both form factors, the sigil and the avatar from #897, the task card, the comment and the feed frame from #899, the faction hero, backdrop, profile body and pledge card from #900, the duel seal plus the duel rail on both form factors from #895, and #901's six mobile surfaces — field desk, task card, task detail, praxis detail, faction page and profile), so the rest still render `Default*`. The eight that remain are listed, with the reason each one is unclaimed, in `factions/__tests__/wowRendersDefault.test.tsx`.
 
 **Its task card and its praxis card do not match, on purpose.** A quest is *issued* by DECREE and proof is *recorded* in the CHRONICLE: `WowTaskCard` is a sheet hung from a knobbed rod under a gold/plum checker band, sealed with the crest; `WowPraxisCard` is a bound chronicle with a running head and a score stamp. They share the palette, the two fonts and the ✦, and nothing else. #785's "the praxis card mirrors the task card" clause is retired for this faction (#899) — the mismatch is the archetype, not a bug to reconcile.
+
+### Verify a moved `index.css` block in the BUILT stylesheet, not by counting braces
+
+`index.css` is now large enough that skin work routinely moves whole token blocks between the light declarations, the `[data-theme="dark"]` cascade and the media queries. **A dropped `}` fails nothing.** With CSS nesting and `@media` blocks, a lost closing brace produces no parse error — it silently **reparents** everything after it, and the result is valid CSS that simply applies to almost nobody. This wave a whole token block ended up nested inside `@media (prefers-reduced-motion)`; `tsc`, `eslint` and `vitest` were green throughout, and only `vite build` plus reading the emitted file caught it.
+
+Balanced brace counts prove nothing here — the file balances either way, the braces just close different things than you meant. After moving or merging a block, run `vite build` and grep the **emitted** stylesheet for the moved selectors, checking the **depth** each one sits at. The question is never "is the selector present", it is "is it still at the nesting level it was written for".
 
 ---
 
@@ -302,6 +318,17 @@ The sidebar contains: character card, active tasks panel, recent activity panel,
 
 **Exceptions:** Submit Proof and Propose Task forms drop the sidebar for a single-column writing layout.
 
+### A component's ground belongs to the component, not the viewport (#1028)
+
+A faction skin that wants a full-page ground reaches for `position: fixed; inset: 0`, and it is wrong every time: it paints over the app. **Six of the eight v2 task-detail skins shipped that way and had to be corrected** — owner QA on #1055, #1057 and #1065 caught the last of them. The watercolor background and the page shell must still show *around* the component; a skin owns its own column, never the window. This is §10's "no solid color backgrounds on the page" seen from the other side, and the correct shape is a layer inside the component's column, inset to land exactly on its own sheet.
+
+**The stacking half bites next, and it caught UA and S.N.I.D.E. independently: a positioned ornament at `z-index: 0` paints ABOVE static copy.** The content column is what establishes the stacking context, and the copy inside it is unpositioned — so `z-index: 0` on a positioned overlay is not "the bottom of the pile", it is above every static sibling. Two ways out, and which one is correct is decided by what is underneath:
+
+- `z-index: -1` puts the ornament behind the column's own content. It renders *nowhere* if the thing beneath paints its own opaque background.
+- An explicit blend — `mix-blend-mode: multiply` in light, `screen` in dark, at a trimmed opacity — keeps the ornament on top and keeps the ink under it legible. This is the one an opaque sheet needs.
+
+`z-index: 0` is neither, and it reads as if it were both. When an ornament lands over copy, the bug is almost always here rather than in the opacity.
+
 ---
 
 ## 6. Faction Card Archetypes
@@ -402,7 +429,7 @@ Controlled by `data-theme="dark"` attribute on `<html>`. All colors reference CS
 Brief design intent for each page. For implementation details, read the component code.
 
 - **Tasks:** Flex-wrap card grid with faction filter pennants, status stamps, and level nodes. Cards flow naturally with varied sizes.
-- **Task Detail:** Faction card archetype expanded to full width as hero block. Sign-up block with mode selector (Solo/Collab/Duel) as stamp buttons. Meta tasks section. Praxis gallery below.
+- **Task Detail:** Faction card archetype expanded to full width as hero block. Sign-up block with mode selector (Solo/Collab/Duel) as stamp buttons. Meta tasks section. Praxis gallery below. Since v2 (#1028) it is **one responsive component per faction** (ADR-0058) carrying **no faction voice** in its copy (ADR-0057), and it draws **no in-progress roster** — not one of the nine designs did, so the header's in-progress count is the only place that number appears. What that gives up is stated rather than forgotten: task detail is no longer where a player learns a *foe* is working the same task.
 - **Praxis Submission:** Faction-framed byline block. Media gallery with thumbnail strip. Lora prose body with drop-cap in faction color. Vote stamps (1-5, word labels) replace star ratings. Voter tile grid.
 - **Player Profile:** Faction-framed header. Level track (horizontal, 9 levels). Praxis grid. Friends/Foes panels with score deltas.
 - **Players (Leaderboard):** Top 3 podium in faction-framed cards. Your rank strip. Frosted table with faction color edge accents. Faction standings sidebar panel. In the roster rows, faction colour lives on **ornament only** — the glowing `FactionAvatar` ring, the level gem, the edge accent, the points numeral. Player names are always `--color-text-primary`, including your own row; the tinted row background is what identifies you. Unaffiliated players get the spectrum, never a borrowed faction colour (ADR-0039). Desktop rows are separated by `.divider-curved`: a neutral dashed rule that flares into an upward curl at each end. It is deliberately not applied site-wide — the other divided-row surfaces are not ranked lists.
@@ -418,6 +445,8 @@ Brief design intent for each page. For implementation details, read the componen
 - **No standard card grid** — task cards are flex-wrap with intentional chaos
 - **No sans-serif for body text** — Courier Prime is the base UI font
 - **No solid color backgrounds on the page** — the watercolor SVG is always present
+- **No `position: fixed; inset: 0` for a skin's ground** — a component's ground belongs to its own column, not the viewport (§5)
+- **No `z-index: 0` on an ornament meant to sit behind copy** — positioned beats static; use `-1` or an explicit blend (§5)
 - **No hardcoded hex values in components** — always use CSS custom properties
 - **No raw pixel values for fontSize/padding/margin/gap** — use the `--text-*` / `--space-*` scales (§4, §4a); enforced by `local/no-raw-style-values`
 - **No content text below `--text-content`** — 7px and 9px are label sizes, not reading sizes

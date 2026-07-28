@@ -33,7 +33,8 @@ function initialsOf(name: string): string {
 
 /**
  * Default / na (Unaffiliated) task detail — the v2 shared anatomy, dressed in
- * the spectrum (design `.design-sync/task-details-v2/default-task-detail.jsx`).
+ * the spectrum (task detail v2, #1030; design project 0711d3a7, unvendored
+ * by #1039).
  *
  * This is the REFERENCE implementation of the task-detail contract (#1030):
  * breadcrumb · faction line · title · author row · Level / In progress stats ·

@@ -17,7 +17,7 @@ import type { TaskDetailState } from "../useTaskDetail";
  * the **na dossier** on desktop. That is one of the four bullets in #951; the
  * other three (`praxisDetail`, `factionCard`, `factionBody`) stay open.
  *
- * The dress, ported from `.design-sync/task-details-v2/wow-task-detail.jsx`:
+ * The dress, ported from the v2 design (#1037; project 0711d3a7):
  * gold-and-plum parchment under a fine dot texture, bunting strung across the
  * head of the page, a crossed-swords shield beside the faction line, a points
  * plaque struck two degrees off true, wavy gold→plum rules dividing the

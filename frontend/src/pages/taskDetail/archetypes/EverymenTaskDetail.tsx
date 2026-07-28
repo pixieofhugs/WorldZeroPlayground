@@ -116,7 +116,7 @@ function initialsOf(name: string): string {
 
 /**
  * The Everymen task detail — the v2 shared anatomy printed as a UNION
- * BROADSHEET (design `.design-sync/task-details-v2/everymen-task-detail.jsx`).
+ * BROADSHEET (#1033; design project 0711d3a7, unvendored by #1039).
  *
  * Newsprint with rising-sun rays fanning up from the bottom edge; a red masthead
  * bar flanked by cogs; Bebas Neue headlines over a Courier Prime dispatch;

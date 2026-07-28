@@ -11,7 +11,7 @@ import type { TaskDetailState } from "../useTaskDetail";
 
 /**
  * The Ephemerists task detail — THE VALLEY PLATE at page size (task detail v2,
- * #1032, design `.design-sync/task-details-v2/ephemerists-task-detail.jsx`).
+ * #1032; design project 0711d3a7, unvendored by #1039).
  *
  * Deco × Egypt, the same metaphor the v2 task card ships (#1023): a papyrus
  * field journal out of the Valley. A cavetto-cornice masthead whose night band
