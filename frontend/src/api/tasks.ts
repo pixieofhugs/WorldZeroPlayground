@@ -15,6 +15,10 @@ export interface TaskOut {
   metatask_faction_slug: string | null
   is_task_vision_eligible: boolean
   created_at: string
+  // Derived, read-time count of characters actively working on this task —
+  // active-signup population (in_progress + pending), consistent with
+  // GET /tasks/{id}/signups (#1021).
+  in_progress_count: number
   // Server-driven viewer-specific flags. Backend computes these for the
   // authenticated viewer. Default to permissive values when absent (older
   // clients / unauthenticated reads).
