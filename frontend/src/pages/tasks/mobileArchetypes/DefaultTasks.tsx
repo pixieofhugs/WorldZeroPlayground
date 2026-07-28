@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next'
 import type { TasksState } from '../useTasks'
 import MobileTaskCard from './mobileTaskCard'
-import MetataskRow from '../MetataskRow'
+import MetaTaskSeal from '../../../components/metaTaskSeal/MetaTaskSeal'
 import FactionSigilRow from '../../../components/ui/FactionSigilRow'
 import { ChipRow, Chip } from '../../../components/ui/ChipRow'
 
@@ -118,12 +118,12 @@ export default function DefaultTasks({ state }: { state: TasksState }) {
           <p className="font-body text-muted">{t('listPage.empty')}</p>
         ) : (
           <div className="flex flex-col gap-3">
-            {tasks.map((task) =>
-              isMetatask ? (
-                <MetataskRow key={task.id} task={task} points={displayPointsFor(task)} />
-              ) : (
+            {isMetatask ? (
+              <MetaTaskSeal metatasks={tasks} />
+            ) : (
+              tasks.map((task) => (
                 <MobileTaskCard key={task.id} task={task} points={displayPointsFor(task)} />
-              ),
+              ))
             )}
             {hasMore && (
               <button
