@@ -13,16 +13,12 @@
     "tasks": "Tasks",
     "metatasks": "Metatasks"
   },
-  "metatask": {
-    "eyebrow": "Metatask · {{faction}}"
-  },
   "mobile": {
     "count": "{{count}} shown",
     "allFactions": "All",
     "anyLevel": "Any",
     "loadError": "Couldn't load tasks.",
-    "points": "+{{points}} pts",
-    "level": "Lvl {{level}}"
+    "points": "+{{points}} pts"
   },
   "detail": {
     "loading": "Loading...",
@@ -90,13 +86,6 @@
     "breadcrumb": "Tasks",
     "metataskFor": "Metatask for {{faction}}",
     "meta": "META",
-    "stats": {
-      "basePoints": "Base Pts",
-      "yourPoints": "Your Pts (×{{multiplier}})",
-      "completed": "Completed",
-      "inProgress": "In Progress",
-      "topScore": "Top Score"
-    },
     "reference": {
       "eyebrowTag": "counts for everyone",
       "points": "Points",
@@ -107,56 +96,34 @@
       "heading": "The brief",
       "secondary": "Anyone can take this on — you don't need to have chosen a side. File a praxis when you're done and the community will weigh in."
     },
-    "cta": {
-      "noFaction": "no faction required"
-    },
     "filedHeading": "What people filed",
     "signup": {
       "cta": "Sign up · earn up to {{points}} pts",
-      "slots": "You have {{open}} of {{max}} task slots open",
-      "levelRequired": "Level {{level}} required",
-      "met": "MET"
+      "slots": "You have {{open}} of {{max}} task slots open"
     },
     "submitted": {
       "badge": "DONE",
-      "text": "You've submitted praxis for this task",
       "edit": "edit"
     },
     "inProgress": {
-      "badge": "IN PROGRESS",
-      "text": "You're on this task",
       "continue": "Continue editing",
       "drop": "drop"
     },
-    "completedHeading": "{{count}} Completed Praxis",
     "sort": {
       "topRated": "Top Rated",
       "recent": "Recent"
     },
     "empty": "No submissions yet. Be the first.",
-    "viewAll": "View all {{count}} praxis →",
-    "playersInProgress": "{{count}} Players in Progress",
-    "moreSignups": "+{{count}} more →",
-    "friend": "Friend",
-    "foe": "Foe"
+    "viewAll": "View all {{count}} praxis →"
   },
   "snide": {
-    "breadcrumb": "Tasks",
-    "faction": "S.N.I.D.E.",
     "jobFile": "JOB FILE",
     "openCase": "OPEN CASE",
-    "caseFile": "S.N.I.D.E. Case File · job no. {{number}}",
-    "metataskFor": "↳ metatask for {{faction}}",
     "evidence": {
-      "points": "Points",
-      "level": "Level",
-      "levelValue": "LVL {{level}}",
-      "filed": "Filed",
-      "closed": "Closed"
+      "levelValue": "LVL {{level}}"
     },
     "signup": {
       "cta": "★ PULL THIS JOB ★",
-      "warning": "↳ no take-backs once it's filed",
       "meta": "earn up to {{points}} pts · {{open}} of {{max}} slots open · lvl {{level}} met"
     },
     "submitted": {
@@ -168,13 +135,10 @@
       "drop": "↳ ditch the job"
     },
     "verdict": {
-      "closed": "{{count}} CLOSED · TOP {{top}}",
       "none": "NO VERDICT YET"
     },
     "brief": "the brief",
     "briefEmpty": "No brief on file. Figure it out.",
-    "accomplices": "accomplices on file",
-    "onTheJob": "on the job",
     "casesClosed": "cases closed · {{count}}",
     "sort": {
       "topMarks": "top marks",
@@ -190,7 +154,6 @@
   },
   "everymen": {
     "breadcrumb": "Tasks",
-    "faction": "The Everymen",
     "masthead": "THE EVERYMEN",
     "statusOpen": "Open · accepting hands",
     "levelValue": "LVL {{level}}",
@@ -198,22 +161,18 @@
     "onView": "{{signups}} on the job · {{completed}} delivered",
     "signup": {
       "cta": "Report for duty ▸",
-      "meta": "earn up to {{points}} pts · {{open}} of {{max}} slots open",
-      "levelRequired": "Level {{level}} required · met"
+      "meta": "earn up to {{points}} pts · {{open}} of {{max}} slots open"
     },
     "submitted": {
       "text": "✓ Your report is filed",
       "edit": "edit"
     },
     "inProgress": {
-      "text": "You're on the job",
       "continue": "continue",
       "drop": "drop"
     },
     "orderHeading": "The Order",
     "orderEmpty": "No order posted yet. The work outlasts the worker — figure out what needs doing and report for duty.",
-    "handsHeading": "Hands On The Job",
-    "onTheJob": "on the job",
     "verdictHeading": "The Hall's Verdict",
     "verdict": {
       "topMark": "TOP MARK",
@@ -232,29 +191,22 @@
   },
   "coven": {
     "breadcrumb": "Tasks",
-    "faction": "Warriors of Whimsy",
     "window": "quest.exe",
     "statusOpen": "open · the party's still gathering",
     "level": "level {{level}}",
     "sparks": "{{points}} sparks",
-    "onView": "{{signups}} tried · {{completed}} pulled it off",
     "signup": {
       "cta": "join the party ✦ earn up to {{points}} pts",
-      "note": "no experience with magic required",
-      "slots": "{{open}} of {{max}} slots open",
-      "levelRequired": "level {{level}} required · met"
+      "slots": "{{open}} of {{max}} slots open"
     },
     "submitted": {
       "text": "✦ your spell is cast",
       "edit": "edit"
     },
     "inProgress": {
-      "text": "✦ your spell is half-woven",
       "continue": "continue",
       "drop": "leave the party"
     },
-    "partyHeading": "the party so far",
-    "inTheParty": "in the party",
     "askingHeading": "what we're asking",
     "askingEmpty": "No spell written yet. Trust the pull and conjure something kind.",
     "loveHeading": "the love so far",
@@ -271,34 +223,18 @@
     },
     "empty": "no spells cast yet. nobody's pulled it off.",
     "mostLoved": "most loved",
-    "viewAll": "see all {{count}} spells ✦",
-    "mobile": {
-      "masthead": "quests.exe",
-      "cardMeta": "{{faction}} · +{{points}} pts"
-    }
+    "viewAll": "see all {{count}} spells ✦"
   },
   "ephemerists": {
-    "diagram": {
-      "coordXPrefix": "x 14 · y ",
-      "coordPolar": "r 47 · θ 31°",
-      "coordVanishing": "∞ · vanishing",
-      "widthNote": "¼″ wider within than without †"
-    },
     "breadcrumb": "Tasks",
-    "faction": "The Ephemerists",
     "masthead": "THE EPHEMERISTS",
     "statusOpen": "open commission",
-    "statusLine": "{{status}} · commission {{number}}",
-    "metataskFor": "↳ metatask for {{faction}}",
     "grade": "▦ GRADE {{level}}",
     "puncta": "PVNCTA",
-    "onView": "{{signups}} triangulating · {{completed}} sealed",
-    "footnote": "† the road does not return you to where you began — <0>see †</0>",
     "commissionHeading": "The Commission",
     "commissionEmpty": "No commission is scribed. Walk the ground and let the contradictions guide you.",
     "signup": {
       "cta": "Triangulate the truth ▸ earn up to {{points}} pts",
-      "note": "bring no certainty. only instruments.",
       "meta": "{{open}} of {{max}} leaves open · grade {{level}} met"
     },
     "submitted": {
@@ -306,13 +242,9 @@
       "edit": "edit"
     },
     "inProgress": {
-      "text": "your readings are unsealed — the survey is unfinished.",
       "continue": "continue",
       "drop": "drop"
     },
-    "cartographersHeading": "The Cartographers",
-    "cartographersGloss": "{{count}} on the ground",
-    "triangulating": "triangulating",
     "credenceHeading": "The Credence",
     "credence": {
       "highest": "HIGHEST",
@@ -320,7 +252,6 @@
       "none": "no credence yet. the concordance awaits its first leaf."
     },
     "ephemeridesHeading": "Sealed Ephemerides",
-    "ephemeridesGloss": "{{count}} leaves filed",
     "sort": {
       "mostCanonical": "Most Canonical",
       "recent": "Recent"
@@ -330,25 +261,12 @@
     "viewAll": "view all {{count}} ephemerides ↗"
   },
   "singularity": {
-    "faction": "SINGULARITY",
     "statusOpen": "ACCEPTING NODES",
-    "consensusOpen": "OPEN",
-    "protocol": "> OPEN PROTOCOL #{{number}}",
     "class": "> CLASS: OBSERVATION · LVL {{level}} · {{points}} CR",
-    "statusLine": "> STATUS: {{status}}",
-    "consensusLine": "CONSENSUS:",
-    "stats": {
-      "credits": "credits",
-      "level": "level",
-      "arrays": "arrays",
-      "sealed": "sealed"
-    },
-    "observationHeading": "// the_observation",
     "observationEmpty": "No function output logged. Find the signal yourself; the array interprets, you witness.",
     "signup": {
       "cta": "> JOIN ARRAY — earn up to {{points}} pts",
-      "note": "Generate data to create a signal. · {{open}} of {{max}} node slots open",
-      "levelRequired": "LVL {{level}} REQUIRED · MET"
+      "note": "Generate data to create a signal. · {{open}} of {{max}} node slots open"
     },
     "submitted": {
       "edit": "> EDIT SIGNAL LOG",
@@ -358,17 +276,12 @@
       "continue": "> CONTINUE OBSERVATION",
       "drop": "> abort function"
     },
-    "rosterHeading": "// array_roster",
-    "rosterSynced": "{{count}} nodes synced",
-    "nodesOnArray": "nodes on array",
     "consensusHeading": "// consensus_signal",
     "consensus": {
       "peakSignal": "peak signal",
       "sealed": "{{count}} logs recorded",
       "none": "> No consensus yet. The array is silent. Coalesce and amplify the signal."
     },
-    "sealedHeading": "// signaled_praxis",
-    "sealedCount": "{{count}} signals generated",
     "sort": {
       "highestSignal": "highest signal",
       "recent": "recent"
@@ -377,23 +290,17 @@
     "highestSignal": "HIGHEST SIGNAL",
     "viewAll": "> view all {{count}} logs →",
     "mobile": {
-      "listMasthead": "> ls ./functions",
       "detailEyebrow": "> cat ./function",
       "briefHeading": "// the_function",
       "worksHeading": "// signaled_praxis"
     }
   },
   "ua": {
-    "faction": "UA",
     "masthead": "University of Asthmatics",
-    "commissionLine": "MARK №{{number}}",
     "statusOpen": "Open · any hand",
     "stats": {
       "anno": "ANNO",
-      "honoraria": "MARKS",
-      "honorariaUnit": "pts",
-      "onView": "AT WORK",
-      "onViewValue": "{{signups}} at work · {{completed}} sealed"
+      "honoraria": "MARKS"
     },
     "signup": {
       "cta": "Sign up ▸ earn up to {{points}} pts",
@@ -404,14 +311,11 @@
       "edit": "edit"
     },
     "inProgress": {
-      "text": "Your sheet is out",
       "continue": "continue",
       "drop": "drop"
     },
     "commissionHeading": "The Mark",
     "commissionEmpty": "Nothing set down yet. Render the light before it leaves, then seal what you made.",
-    "matriculatedHeading": "Practising",
-    "matriculated": "practising",
     "critiqueHeading": "The Reading",
     "critique": {
       "finest": "Truest Reading",
@@ -427,46 +331,6 @@
     "empty": "The sheet is bare. Be the first hand to seal a work against this mark.",
     "finestHand": "TRUEST HAND",
     "viewAll": "View all {{count}} works →"
-  },
-  "albescent": {
-    "faction": "Albescent",
-    "masthead": "The Record",
-    "statusOpen": "open · in confidence",
-    "correspondence": "Correspondence №{{number}} · in confidence",
-    "stats": {
-      "standing": "Standing",
-      "standingValue": "Lvl {{level}}",
-      "worth": "Worth",
-      "worthValue": "{{points}} pts",
-      "returned": "Returned"
-    },
-    "signup": {
-      "cta": "Acknowledge · earn up to {{points}} pts",
-      "note": "no portfolio. no announcement.",
-      "meta": "{{open}} of {{max}} slots open · Lvl {{level}} standing met"
-    },
-    "submitted": {
-      "text": "⚜ Your account is inscribed in the Register",
-      "edit": "edit"
-    },
-    "inProgress": {
-      "text": "Your account is unfiled, still in hand",
-      "continue": "continue",
-      "drop": "withdraw"
-    },
-    "askHeading": "The Ask",
-    "askGloss": "in the hand of the keeper",
-    "askEmpty": "No correspondence entered yet. The Register waits for the ask to be set down — plainly, in the fewest words that keep it true.",
-    "inConfidenceHeading": "Taken in Confidence",
-    "inHand": "in hand",
-    "registerHeading": "Inscribed in the Register",
-    "sort": {
-      "mostWitnessed": "most witnessed",
-      "recent": "recent"
-    },
-    "empty": "The Register holds no accounts against this correspondence. Be the first to return one, unsigned.",
-    "mostWitnessed": "most witnessed",
-    "viewAll": "all {{count}} accounts →"
   },
   "wow": {
     "breadcrumb": "The Quest Roll",
@@ -497,12 +361,8 @@
       "edit": "Amend"
     },
     "inProgress": {
-      "text": "✦ thy quest is underway",
       "continue": "Continue",
       "drop": "Lay down the quest"
-    },
-    "mobile": {
-      "cardMeta": "{{faction}} · +{{points}} pts"
     }
   }
 }
