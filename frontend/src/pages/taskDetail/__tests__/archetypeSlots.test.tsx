@@ -95,8 +95,10 @@ function baseState(overrides: Partial<TaskDetailState>): TaskDetailState {
     levelJumpSignup: false,
     slotsOpen: 13,
     maxTaskSlots: 17,
+    basePoints: 4242,
     factionMultiplier: 1.0,
     modifiedPoints: 4242,
+    inProgressCount: 0,
     topScore: 0,
     voteCount: 0,
     submissionSort: "score",
@@ -129,8 +131,17 @@ describe("task-detail content-slot invariant", () => {
       const { text } = render(
         <Archetype state={baseState({ canSignUp: true })} />,
       );
-      // Every signup CTA quotes the points-on-offer ("earn up to N pts").
-      expect(text.toLowerCase(), "signup-CTA slot").toContain("earn up to");
+      // Two vocabularies coexist while C1–C8 (#1031–#1038) land. The faction
+      // skins still speak their own voice and quote the points on the CTA
+      // ("earn up to N pts"); a skin rebuilt on the shared neutral copy
+      // (ADR-0057) says plainly "Sign up" and moves the points into the action
+      // panel's base/×mult/total readout. Either satisfies the slot; an
+      // archetype with no sign-up affordance at all satisfies neither.
+      const lower = text.toLowerCase();
+      expect(
+        lower.includes("earn up to") || lower.includes("sign up"),
+        "signup-CTA slot",
+      ).toBe(true);
     });
 
     it(`${slug} renders the edit control for a submitted praxis`, () => {

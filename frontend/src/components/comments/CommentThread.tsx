@@ -184,9 +184,17 @@ function CommentComposer({
 export default function CommentThread({
   target,
   targetId,
+  showHeading = true,
 }: {
   target: CommentTarget
   targetId: number
+  /**
+   * Draw the thread's own `{n} comments` heading. Default true — every surface
+   * that mounts the thread bare still gets one. Task-detail archetypes dress
+   * their own section head (#1030) and pass false, or the page carries two
+   * headings for one list.
+   */
+  showHeading?: boolean
 }) {
   const { t } = useTranslation('praxis')
   const { user } = useAuth()
@@ -224,9 +232,11 @@ export default function CommentThread({
 
   return (
     <section style={{ marginTop: 'var(--space-xl)' }}>
-      <h3 className="eyebrow" style={{ marginBottom: 'var(--space-md)' }}>
-        {t('comments.heading', { count: comments.length })}
-      </h3>
+      {showHeading && (
+        <h3 className="eyebrow" style={{ marginBottom: 'var(--space-md)' }}>
+          {t('comments.heading', { count: comments.length })}
+        </h3>
+      )}
       {loading && (
         <p className="font-body content-text" style={{ color: 'var(--color-text-tertiary)' }}>
           {t('comments.loading')}

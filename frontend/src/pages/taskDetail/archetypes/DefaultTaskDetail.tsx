@@ -1,32 +1,67 @@
+import { useState, type CSSProperties, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import PraxisCard from "../../../components/PraxisCard";
-import FeedBadge from "../../../components/feed/FeedBadge";
+import { useFormFactor } from "../../../hooks/useFormFactor";
 import { factionCssVar, factionFill, factionName } from "../../../utils/factions";
 import { mediaUrl } from "../../../utils/media";
-import { LevelJumpBanner, ErrorBanner } from "./shared";
+import { isNeutralMultiplier } from "../../../utils/points";
+import { ErrorBanner, LevelJumpBanner, TaskDetailComments } from "./shared";
 import type { TaskDetailState } from "../useTaskDetail";
 
-const VISIBLE_SIGNUPS = 4;
+/**
+ * Praxis cards the gallery shows before handing off to the full praxis list.
+ * `PraxisCard` carries `flex: 1 1 394px`, so at the 1200 page cap three land in
+ * one row and the row reflows on its own below that — no fixed column grid
+ * (a `repeat(3,1fr)` would squeeze every card instead of rewrapping).
+ */
+const GALLERY_PREVIEW = 3;
+
+/** The na spectrum, the one ornament this whole page is built out of. */
+const SPECTRUM = "var(--faction-default-rainbow)";
+
+/** Initials fallback for an author with no uploaded avatar. */
+function initialsOf(name: string): string {
+  return name
+    .split(/\s+/)
+    .filter(Boolean)
+    .map((word) => word[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
+}
 
 /**
- * Default / na (Unaffiliated) task-detail archetype — "the task as a full open
- * dossier" (design project 1eb2665a, #967). One centred column: a
- * rainbow-bordered reference hero (ring glyph, "Unaffiliated · counts for
- * everyone" eyebrow, big italic display title, Points/Level/Signed-up stat
- * chips), a sign-up CTA bar, the brief (rainbow left-border quote block), the
- * filed praxis (live na {@link PraxisCard} stack), and — rendered by the
- * dispatcher below every archetype — the discussion thread.
+ * Default / na (Unaffiliated) task detail — the v2 shared anatomy, dressed in
+ * the spectrum (design `.design-sync/task-details-v2/default-task-detail.jsx`).
  *
- * `default` ≡ `na` ≡ Unaffiliated is ONE identity, so this leans fully into the
- * spectrum-band na kit. It is also the fallback archetype for any faction
- * without a bespoke skin (e.g. WOW desktop, a tracked design bug — #951); those
- * tasks show the real faction name via `factionName`, but wear the na dossier.
+ * This is the REFERENCE implementation of the task-detail contract (#1030):
+ * breadcrumb · faction line · title · author row · Level / In progress stats ·
+ * action panel (base points + `×mult` badge + total, sign-up / in-progress /
+ * submitted state, slots, level-met, {@link LevelJumpBanner},
+ * {@link ErrorBanner}) · the full brief with no clamp · the praxis gallery with
+ * its sort toggle and view-all · comments. C1–C8 (#1031–#1038) copy this
+ * structure and change only the dress.
  *
- * Tokens only: `--faction-default-*` (rainbow band, ring, card sheet) reached
- * via the token / `factionFill` (NOT `factionCssVar`, which is neutral grey for
- * na), plus the `--color-*` chrome tokens. The full-page `.na-backdrop` spectrum
- * wash lives in index.css.
+ * Two contract points worth not re-deriving:
+ * - **No in-progress roster.** The header's "In progress" count is the only
+ *   place that number appears (owner ruling 2026-07-28, reversing epic #1028
+ *   decision 3). The design builds a roster const and never mounts it; that is
+ *   dead code, deliberately not ported.
+ * - **The `×mult` badge only renders when the factor is not 1.0** — `era_1`
+ *   neutralises every faction, so it is invisible today across every skin. That
+ *   is correct (ADR-0055), and the factor comes raw off the state contract,
+ *   never reconstructed as `modifiedPoints / basePoints`.
+ *
+ * One responsive component, no mobile twin (ADR-0058): `useFormFactor()` picks
+ * the size set and drops the two-column split, and `pages/taskDetail/
+ * mobileArchetypes/DefaultTaskDetail.tsx` is dormant, not deleted.
+ *
+ * Copy is neutral and shared (`detail.*`, ADR-0057) — no na voice, no faction
+ * voice. Dress is na's alone: `--faction-default-*` (rainbow, ring, card sheet)
+ * reached via the token / `factionFill`, NOT `factionCssVar`, which is neutral
+ * grey for na. The content column carries the page surface itself
+ * (`--faction-default-card-bg`); there is no separate backdrop element.
  */
 export default function DefaultTaskDetail({
   state,
@@ -34,19 +69,26 @@ export default function DefaultTaskDetail({
   state: TaskDetailState;
 }) {
   const { t } = useTranslation("tasks");
+  const desktop = useFormFactor() !== "mobile";
+  // The gallery expands in place (the design's own "View all N praxis →" /
+  // "Show fewer ↑"). It deliberately does NOT link to `/praxes?task_id=N`: the
+  // praxis feed reads no such param, so that link has always dropped the filter
+  // and shown the whole feed.
+  const [showAllPraxis, setShowAllPraxis] = useState(false);
   const {
     task,
     submissions,
-    signups,
-    friends,
-    foes,
     mySubmission,
     isInProgress,
     inProgressPraxisId,
     canSignUp,
+    levelJumpSignup,
     slotsOpen,
     maxTaskSlots,
+    basePoints,
+    factionMultiplier,
     modifiedPoints,
+    inProgressCount,
     sortedSubmissions,
     submissionSort,
     setSubmissionSort,
@@ -60,542 +102,712 @@ export default function DefaultTaskDetail({
 
   const slug = task.primary_faction_slug;
   const isMetatask = task.task_type === "metatask";
+  const showMultiplier = !isNeutralMultiplier(factionMultiplier);
+  const authorName = task.created_by_display_name ?? "";
+  const hasAction =
+    canSignUp || !!mySubmission || (isInProgress && inProgressPraxisId !== null);
 
-  // Reused chip shell for the hero stat readouts.
-  const statChips: { label: string; value: number }[] = [
-    { label: t("default.reference.points"), value: task.point_value },
-    { label: t("default.reference.level"), value: task.level_required },
-    { label: t("default.reference.signedUp"), value: signups.length },
-  ];
+  const sheet: CSSProperties = {
+    background: "var(--faction-default-card-bg)",
+    color: "var(--faction-default-card-text)",
+  };
+  const innerBox: CSSProperties = {
+    background: "var(--color-bg-page)",
+    border: "1px solid var(--faction-default-border)",
+    borderRadius: 11,
+    padding: desktop ? "var(--space-lg)" : "var(--space-md)",
+    boxSizing: "border-box",
+  };
+  const primaryButton: CSSProperties = {
+    display: "block",
+    width: "100%",
+    cursor: "pointer",
+    textAlign: "center",
+    textDecoration: "none",
+    fontFamily: "var(--font-display)",
+    fontWeight: 600,
+    fontSize: desktop ? "var(--text-content)" : "var(--text-xl)",
+    letterSpacing: "0.14em",
+    textTransform: "uppercase",
+    color: "var(--color-bg-page)",
+    background: "var(--color-text-primary)",
+    border: "1px solid var(--color-text-primary)",
+    borderRadius: 10,
+    padding: desktop
+      ? "var(--space-lg) var(--space-xl)"
+      : "var(--space-md) var(--space-lg)",
+  };
 
-  return (
-    <div className="py-8" style={{ position: "relative" }}>
-      {/* Full-page spectrum wash — the na "all paths open" backdrop (rule in
-          index.css, shared with DefaultProfile #969). */}
-      <div className="na-backdrop" aria-hidden />
+  /** A spectrum hairline that runs out from a label — the page's only rule. */
+  const sectionHead = (label: ReactNode, gloss?: ReactNode) => (
+    <div
+      style={{
+        display: "flex",
+        alignItems: "baseline",
+        gap: "var(--space-sm)",
+        marginBottom: "var(--space-md)",
+        flexWrap: "wrap",
+      }}
+    >
+      <span
+        className="eyebrow"
+        style={{ letterSpacing: "0.22em", color: "var(--color-text-primary)" }}
+      >
+        {label}
+      </span>
+      <span
+        aria-hidden
+        style={{
+          flex: "1 1 20%",
+          minWidth: 20,
+          height: 2,
+          borderRadius: 1,
+          backgroundImage: SPECTRUM,
+          opacity: 0.55,
+        }}
+      />
+      {gloss !== undefined && <span className="eyebrow">{gloss}</span>}
+    </div>
+  );
 
-      <div style={{ position: "relative", zIndex: 1, maxWidth: 920, margin: "0 auto" }}>
-        {/* ── Breadcrumb ── */}
-        <nav
-          className="font-body"
+  // ── Score readout: base, the (usually absent) ×mult badge, and the total ──
+  const scoreBody = (
+    <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-sm)" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: "var(--space-sm)" }}>
+        <span className="eyebrow" style={{ letterSpacing: "0.16em" }}>
+          {t("detail.points.base")}
+        </span>
+        <span
           style={{
-            fontSize: "var(--text-base)",
-            letterSpacing: "0.14em",
-            textTransform: "uppercase",
-            color: "var(--color-text-tertiary)",
-            marginBottom: "var(--space-xl)",
+            fontFamily: "var(--font-accent)",
+            fontSize: desktop ? "var(--text-heading)" : "var(--text-title)",
+            lineHeight: 0.8,
+            color: "var(--faction-default-card-text)",
           }}
         >
-          <Link
-            to="/tasks"
-            style={{ color: "var(--color-text-secondary)", textDecoration: "none" }}
-          >
-            {t("default.breadcrumb")}
-          </Link>
-          <span style={{ opacity: 0.5, margin: "0 var(--space-sm)" }}>›</span>
-          <span>{factionName(slug)}</span>
-          <span style={{ opacity: 0.5, margin: "0 var(--space-sm)" }}>›</span>
-          <span style={{ color: "var(--color-text-primary)" }}>{task.title}</span>
-        </nav>
-
-        <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-2xl)" }}>
-          {/* ── HERO — the reference dossier ── */}
-          <div
+          {basePoints}
+        </span>
+        {showMultiplier && (
+          <span
             style={{
-              borderRadius: 16,
+              marginLeft: "auto",
+              display: "block",
               padding: "var(--space-xs)",
-              background: "var(--faction-default-rainbow)",
-              boxShadow: "0 18px 44px -26px rgba(0,0,0,0.4)",
+              borderRadius: 7,
+              backgroundImage: SPECTRUM,
             }}
           >
-            <div
+            <span
               style={{
-                borderRadius: 11,
-                background: "var(--faction-default-card-bg)",
+                display: "block",
+                fontFamily: "var(--font-accent)",
+                fontSize: desktop ? "var(--text-title)" : "var(--text-content)",
+                lineHeight: 0.95,
+                letterSpacing: "0.02em",
                 color: "var(--faction-default-card-text)",
-                padding: "var(--space-2xl)",
+                background: "var(--color-bg-page)",
+                borderRadius: 5,
+                padding: "var(--space-xs) var(--space-sm)",
+                whiteSpace: "nowrap",
               }}
             >
-              {/* eyebrow row: ring glyph + Unaffiliated tagline + optional META pill */}
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "var(--space-md)",
-                  flexWrap: "wrap",
-                  marginBottom: "var(--space-lg)",
-                }}
-              >
-                <span
-                  aria-hidden
-                  style={{
-                    width: 44,
-                    height: 44,
-                    borderRadius: "50%",
-                    flex: "none",
-                    background: "var(--faction-default-ring)",
-                    WebkitMask: "radial-gradient(circle, transparent 38%, #000 40%)",
-                    mask: "radial-gradient(circle, transparent 38%, #000 40%)",
-                  }}
-                />
-                <span
-                  style={{
-                    fontSize: "var(--text-sm)",
-                    letterSpacing: "0.2em",
-                    textTransform: "uppercase",
-                    color: "var(--faction-default-card-muted)",
-                  }}
-                >
-                  {factionName(slug)} · {t("default.reference.eyebrowTag")}
-                </span>
-                {isMetatask && (
-                  <span
-                    className="font-body"
-                    style={{
-                      fontSize: "var(--text-xs)",
-                      textTransform: "uppercase",
-                      letterSpacing: "0.15em",
-                      padding: "var(--space-xs) var(--space-sm)",
-                      borderRadius: 4,
-                      fontWeight: 700,
-                      // na → rainbow frame; real faction → solid hue + on-fill ink
-                      ...factionFill(task.metatask_faction_slug, "pill"),
-                    }}
-                  >
-                    {t("default.meta")}
-                  </span>
-                )}
-              </div>
+              {t("detail.points.multiplier", {
+                multiplier: factionMultiplier.toFixed(2),
+              })}
+            </span>
+          </span>
+        )}
+      </div>
+      <div aria-hidden style={{ height: 1, backgroundImage: SPECTRUM }} />
+      <div
+        style={{
+          display: "flex",
+          alignItems: "baseline",
+          gap: "var(--space-xs)",
+          lineHeight: 1,
+        }}
+      >
+        <span
+          style={{
+            fontFamily: "var(--font-accent)",
+            fontSize: desktop ? "var(--text-display)" : "var(--text-heading)",
+            lineHeight: 1.02,
+            color: "var(--faction-default-card-text)",
+          }}
+        >
+          {modifiedPoints}
+        </span>
+        <span
+          style={{
+            fontFamily: "var(--font-accent)",
+            fontSize: "var(--text-lg)",
+            letterSpacing: "0.06em",
+            color: "var(--faction-default-gold)",
+          }}
+        >
+          {t("detail.points.total")}
+        </span>
+      </div>
+    </div>
+  );
 
-              {/* Title */}
-              <h1
-                className="font-display italic"
-                style={{
-                  fontSize: "var(--text-display)",
-                  fontWeight: 700,
-                  lineHeight: 1,
-                  margin: 0,
-                  color: "var(--faction-default-card-text)",
-                  overflowWrap: "anywhere",
-                }}
-              >
-                {task.title}
-              </h1>
-
-              {/* Metatask-for line */}
-              {isMetatask && (
-                <p
-                  className="eyebrow"
-                  style={{
-                    marginTop: "var(--space-sm)",
-                    marginBottom: 0,
-                    color: factionCssVar(task.metatask_faction_slug),
-                  }}
-                >
-                  {t("default.metataskFor", {
-                    faction: factionName(task.metatask_faction_slug),
-                  })}
-                </p>
-              )}
-
-              {/* Stat chips */}
-              <div
-                style={{
-                  display: "flex",
-                  gap: "var(--space-md)",
-                  flexWrap: "wrap",
-                  marginTop: "var(--space-xl)",
-                }}
-              >
-                {statChips.map((chip) => (
-                  <div
-                    key={chip.label}
-                    style={{
-                      borderRadius: 8,
-                      border: "1px solid var(--faction-default-border)",
-                      padding: "var(--space-sm) var(--space-lg)",
-                    }}
-                  >
-                    <div
-                      style={{
-                        fontSize: "var(--text-xs)",
-                        letterSpacing: "0.16em",
-                        textTransform: "uppercase",
-                        color: "var(--faction-default-card-muted)",
-                      }}
-                    >
-                      {chip.label}
-                    </div>
-                    <div
-                      style={{
-                        fontFamily: "var(--font-accent)",
-                        fontSize: "var(--text-title)",
-                        lineHeight: 0.9,
-                        color: "var(--faction-default-card-text)",
-                        marginTop: "var(--space-xs)",
-                      }}
-                    >
-                      {chip.value}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          {/* ── CTA bar / status bars ── */}
-          {canSignUp && (
-            <div>
-              <LevelJumpBanner state={state} />
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "var(--space-lg)",
-                  flexWrap: "wrap",
-                  borderRadius: 10,
-                  background: "var(--color-bg-surface-alt)",
-                  border: "1px solid var(--color-border)",
-                  padding: "var(--space-lg)",
-                }}
-              >
-                <button
-                  onClick={handleSignup}
-                  style={{
-                    cursor: "pointer",
-                    border: "none",
-                    borderRadius: 6,
-                    fontFamily: "var(--font-accent)",
-                    fontSize: "var(--text-xl)",
-                    letterSpacing: "0.04em",
-                    padding: "var(--space-md) var(--space-xl)",
-                    color: "var(--color-bg-page)",
-                    background: "var(--color-text-primary)",
-                  }}
-                >
-                  {t("default.signup.cta", { points: modifiedPoints })}
-                </button>
-                <div
-                  className="font-display italic"
-                  style={{ fontSize: "var(--text-md)", color: "var(--color-text-secondary)" }}
-                >
-                  {t("default.signup.slots", { open: slotsOpen, max: maxTaskSlots })}
-                </div>
-                <div
-                  style={{
-                    marginLeft: "auto",
-                    fontSize: "var(--text-base)",
-                    letterSpacing: "0.1em",
-                    textTransform: "uppercase",
-                    color: "var(--color-text-tertiary)",
-                  }}
-                >
-                  {t("default.cta.noFaction")}
-                </div>
-              </div>
-              <ErrorBanner message={signupError} />
-            </div>
-          )}
-
-          {mySubmission && (
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "var(--space-lg)",
-                flexWrap: "wrap",
-                borderRadius: 10,
-                background: "var(--color-bg-surface-alt)",
-                border: "1px solid var(--color-border)",
-                padding: "var(--space-lg)",
-              }}
-            >
-              <span
-                className="eyebrow"
-                style={{ color: "var(--faction-default-card-accent)" }}
-              >
-                {t("default.submitted.badge")}
-              </span>
-              <span className="font-body content-text" style={{ color: "var(--color-text-primary)" }}>
-                {t("default.submitted.text")}
-              </span>
-              <Link
-                to={`/praxes/${mySubmission.id}/edit`}
-                className="btn-outline"
-                style={{ marginLeft: "auto" }}
-              >
-                {t("default.submitted.edit")}
-              </Link>
-            </div>
-          )}
-
-          {!mySubmission && isInProgress && inProgressPraxisId !== null && (
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "var(--space-lg)",
-                flexWrap: "wrap",
-                borderRadius: 10,
-                background: "var(--color-bg-surface-alt)",
-                border: "1px solid var(--color-border)",
-                padding: "var(--space-lg)",
-              }}
-            >
-              <span
-                className="eyebrow"
-                style={{ color: "var(--faction-default-card-accent)" }}
-              >
-                {t("default.inProgress.badge")}
-              </span>
-              <span className="font-body content-text" style={{ color: "var(--color-text-primary)" }}>
-                {t("default.inProgress.text")}
-              </span>
-              <Link
-                to={`/praxes/${inProgressPraxisId}/edit`}
-                style={{
-                  marginLeft: "auto",
-                  borderRadius: 6,
-                  fontFamily: "var(--font-accent)",
-                  fontSize: "var(--text-lg)",
-                  letterSpacing: "0.04em",
-                  padding: "var(--space-sm) var(--space-lg)",
-                  color: "var(--color-bg-page)",
-                  background: "var(--color-text-primary)",
-                  textDecoration: "none",
-                }}
-              >
-                {t("default.inProgress.continue")}
-              </Link>
-              <button
-                onClick={handleDrop}
-                className="eyebrow"
-                style={{
-                  background: "none",
-                  border: "none",
-                  cursor: "pointer",
-                  color: "var(--color-text-tertiary)",
-                }}
-              >
-                {t("default.inProgress.drop")}
-              </button>
-            </div>
-          )}
-
-          {/* ── THE BRIEF ── */}
-          <div>
-            <div
-              className="font-display italic"
-              style={{
-                display: "inline-block",
-                fontSize: "var(--text-title)",
-                color: "var(--color-text-primary)",
-                marginBottom: "var(--space-md)",
-              }}
-            >
-              {t("default.brief.heading")}
-            </div>
-            <div
-              style={{
-                borderRadius: 12,
-                background: "var(--color-bg-surface-alt)",
-                border: "1px solid var(--color-border)",
-                borderLeft: "4px solid transparent",
-                // The rainbow quote rule — na's "every path open" tell. Painted
-                // via border-image so the gradient token can carry the border.
-                borderImage: "var(--faction-default-rainbow) 1",
-                padding: "var(--space-xl)",
-                maxWidth: 660,
-              }}
-            >
-              {task.description && (
-                <p
-                  className="font-body content-text"
-                  style={{
-                    lineHeight: 1.8,
-                    color: "var(--color-text-secondary)",
-                    whiteSpace: "pre-wrap",
-                    margin: "0 0 var(--space-lg)",
-                  }}
-                >
-                  {task.description}
-                </p>
-              )}
-              <p
-                className="font-body content-text"
-                style={{ lineHeight: 1.8, color: "var(--color-text-secondary)", margin: 0 }}
-              >
-                {t("default.brief.secondary")}
-              </p>
-            </div>
-          </div>
-
-          {/* ── FILED PRAXIS ── */}
-          <div>
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                gap: "var(--space-md)",
-                flexWrap: "wrap",
-                marginBottom: "var(--space-lg)",
-              }}
-            >
-              <span
-                className="font-display italic"
-                style={{ fontSize: "var(--text-title)", color: "var(--color-text-primary)" }}
-              >
-                {t("default.filedHeading")}
-              </span>
-              <div style={{ display: "flex", gap: 0 }}>
-                {(["score", "recent"] as const).map((sort) => (
-                  <button
-                    key={sort}
-                    onClick={() => setSubmissionSort(sort)}
-                    className="font-body"
-                    style={{
-                      fontSize: "var(--text-xs)",
-                      fontWeight: 700,
-                      textTransform: "uppercase",
-                      letterSpacing: "0.1em",
-                      padding: "var(--space-xs) var(--space-md)",
-                      background:
-                        submissionSort === sort ? "var(--color-text-primary)" : "transparent",
-                      color:
-                        submissionSort === sort
-                          ? "var(--color-bg-page)"
-                          : "var(--color-text-tertiary)",
-                      border: `1px solid ${submissionSort === sort ? "transparent" : "var(--color-border)"}`,
-                      cursor: "pointer",
-                    }}
-                  >
-                    {sort === "score"
-                      ? t("default.sort.topRated")
-                      : t("default.sort.recent")}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {sortedSubmissions.length === 0 ? (
-              <p className="font-body text-muted">{t("default.empty")}</p>
-            ) : (
+  // ── The one action slot: sign up / continue / edit. Nothing renders when the
+  //    viewer has no move to make — an unusable control is worse than none.
+  const actionBody = (
+    <>
+      {canSignUp && (
+        <div>
+          <LevelJumpBanner state={state} />
+          <button onClick={handleSignup} style={primaryButton}>
+            {t("detail.signup.cta")}
+          </button>
+          <div
+            className="font-body"
+            style={{
+              fontSize: "var(--text-md)",
+              lineHeight: 1.6,
+              color: "var(--color-text-secondary)",
+              marginTop: "var(--space-sm)",
+            }}
+          >
+            {t("detail.signup.slots", { open: slotsOpen, max: maxTaskSlots })}
+            {!levelJumpSignup && (
               <>
-                <div className="flex flex-wrap gap-4 items-start">
-                  {sortedSubmissions.slice(0, 4).map((s) => (
-                    <PraxisCard key={s.id} praxis={s} />
-                  ))}
-                </div>
-                {submissions.length > 4 && (
-                  <div style={{ textAlign: "center", marginTop: "var(--space-lg)" }}>
-                    <Link
-                      to={`/praxes?task_id=${task.id}`}
-                      className="font-body"
-                      style={{
-                        fontSize: "var(--text-base)",
-                        fontWeight: 700,
-                        textTransform: "uppercase",
-                        letterSpacing: "0.1em",
-                        color: "var(--faction-default-card-accent)",
-                        textDecoration: "none",
-                      }}
-                    >
-                      {t("default.viewAll", { count: submissions.length })}
-                    </Link>
-                  </div>
-                )}
+                {" · "}
+                <span style={{ color: "var(--color-success)" }}>
+                  {t("detail.signup.levelMet", { level: task.level_required })}
+                </span>
               </>
             )}
           </div>
+          <ErrorBanner message={signupError} />
+        </div>
+      )}
 
-          {/* ── PLAYERS IN PROGRESS ── (kept from the pre-redesign page; the
-              design's single-column dossier drew no roster, but this is live
-              signup data, so it stays as a modest section). */}
-          {signups.length > 0 && (
-            <div>
+      {mySubmission && (
+        <div>
+          <div
+            className="font-body"
+            style={{
+              fontSize: "var(--text-lg)",
+              color: "var(--color-text-secondary)",
+              marginBottom: "var(--space-sm)",
+            }}
+          >
+            {t("detail.submitted.text")}
+          </div>
+          <Link to={`/praxes/${mySubmission.id}/edit`} style={primaryButton}>
+            {t("detail.submitted.edit")}
+          </Link>
+        </div>
+      )}
+
+      {!mySubmission && isInProgress && inProgressPraxisId !== null && (
+        <div>
+          <div
+            className="font-body"
+            style={{
+              fontSize: "var(--text-lg)",
+              color: "var(--color-text-secondary)",
+              marginBottom: "var(--space-sm)",
+            }}
+          >
+            {t("detail.inProgress.text")}
+          </div>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "var(--space-md)",
+              flexWrap: "wrap",
+            }}
+          >
+            <Link
+              to={`/praxes/${inProgressPraxisId}/edit`}
+              style={{ ...primaryButton, flex: 1, width: "auto" }}
+            >
+              {t("detail.inProgress.continue")}
+            </Link>
+            <button
+              onClick={handleDrop}
+              className="font-body"
+              style={{
+                fontSize: "var(--text-md)",
+                background: "none",
+                border: "none",
+                borderBottom: "1px solid var(--color-border)",
+                cursor: "pointer",
+                padding: 0,
+                color: "var(--color-text-secondary)",
+              }}
+            >
+              {t("detail.inProgress.drop")}
+            </button>
+          </div>
+          <ErrorBanner message={signupError} />
+        </div>
+      )}
+    </>
+  );
+
+  // Score + action, one spectrum-framed panel. 440px on desktop (dress; other
+  // factions run 420–520), full width once the column collapses.
+  const actionPanel = (
+    <div
+      style={{
+        padding: "var(--space-xs)",
+        borderRadius: 18,
+        backgroundImage: SPECTRUM,
+        boxSizing: "border-box",
+      }}
+    >
+      <div
+        style={{
+          ...sheet,
+          borderRadius: 14,
+          padding: "var(--space-sm)",
+          boxSizing: "border-box",
+          display: "flex",
+          flexDirection: "row",
+          gap: "var(--space-sm)",
+          alignItems: "stretch",
+        }}
+      >
+        <div style={{ ...innerBox, flex: "0 0 auto", minWidth: desktop ? 168 : 122 }}>
+          {scoreBody}
+        </div>
+        {hasAction && (
+          <div
+            style={{
+              ...innerBox,
+              flex: 1,
+              minWidth: 0,
+              display: "flex",
+              flexDirection: "column",
+              justifyContent: "center",
+            }}
+          >
+            {actionBody}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+
+  // ── Header: breadcrumb, faction line, title, author, stats ──
+  const header = (
+    <div>
+      <nav
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: "var(--space-sm)",
+          marginBottom: "var(--space-md)",
+          flexWrap: "wrap",
+        }}
+      >
+        <Link
+          to="/tasks"
+          className="eyebrow"
+          style={{
+            letterSpacing: "0.2em",
+            color: "var(--faction-default-card-accent)",
+            textDecoration: "none",
+          }}
+        >
+          {t("detail.breadcrumb.tasks")}
+        </Link>
+        <span aria-hidden className="eyebrow">
+          /
+        </span>
+        <span className="eyebrow" style={{ letterSpacing: "0.2em" }}>
+          {t("detail.breadcrumb.current", { number: task.id })}
+        </span>
+      </nav>
+
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: "var(--space-sm)",
+          marginBottom: "var(--space-md)",
+          flexWrap: "wrap",
+        }}
+      >
+        <span
+          aria-hidden
+          style={{
+            width: 7,
+            height: 7,
+            borderRadius: 2,
+            flex: "none",
+            backgroundImage: SPECTRUM,
+          }}
+        />
+        <span
+          className="eyebrow"
+          style={{ fontSize: "var(--text-base)", letterSpacing: "0.2em" }}
+        >
+          {factionName(slug)}
+        </span>
+        {isMetatask && (
+          <span
+            className="font-body"
+            style={{
+              fontSize: "var(--text-xs)",
+              textTransform: "uppercase",
+              letterSpacing: "0.15em",
+              padding: "var(--space-xs) var(--space-sm)",
+              borderRadius: 4,
+              fontWeight: 600,
+              // na → rainbow frame; a real faction → solid hue + on-fill ink.
+              ...factionFill(task.metatask_faction_slug, "pill"),
+            }}
+          >
+            {t("detail.meta")}
+          </span>
+        )}
+      </div>
+
+      <h1
+        className="font-display italic"
+        style={{
+          fontWeight: 600,
+          fontSize: desktop ? "var(--text-display)" : "var(--text-heading)",
+          lineHeight: 1.12,
+          letterSpacing: "-0.01em",
+          margin: 0,
+          marginBottom: "var(--space-md)",
+          color: "var(--color-text-primary)",
+          overflowWrap: "anywhere",
+        }}
+      >
+        {task.title}
+      </h1>
+
+      {isMetatask && (
+        <p
+          className="eyebrow"
+          style={{
+            marginTop: 0,
+            marginBottom: "var(--space-md)",
+            color: factionCssVar(task.metatask_faction_slug),
+          }}
+        >
+          {t("detail.metataskFor", {
+            faction: factionName(task.metatask_faction_slug),
+          })}
+        </p>
+      )}
+
+      {/* Author row — the proposing character's byline (#1029). */}
+      {authorName && (
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "var(--space-sm)",
+            marginBottom: "var(--space-lg)",
+            flexWrap: "wrap",
+          }}
+        >
+          <Link
+            to={`/characters/${task.created_by}`}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "var(--space-sm)",
+              textDecoration: "none",
+            }}
+          >
+            {task.created_by_avatar_url ? (
+              <img
+                src={mediaUrl(task.created_by_avatar_url)}
+                alt={authorName}
+                style={{
+                  width: 30,
+                  height: 30,
+                  borderRadius: "50%",
+                  objectFit: "cover",
+                  flex: "none",
+                  boxShadow: "0 0 0 2px var(--color-border)",
+                }}
+              />
+            ) : (
               <span
-                className="font-display italic"
+                aria-hidden
+                className="font-display"
                 style={{
-                  display: "inline-block",
-                  fontSize: "var(--text-title)",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  width: 30,
+                  height: 30,
+                  flex: "none",
+                  borderRadius: "50%",
+                  overflow: "hidden",
+                  fontWeight: 600,
+                  fontSize: "var(--text-lg)",
+                  background: "var(--color-bg-page)",
                   color: "var(--color-text-primary)",
-                  marginBottom: "var(--space-md)",
+                  boxShadow: "0 0 0 2px var(--color-border)",
                 }}
               >
-                {t("default.playersInProgress", { count: signups.length })}
+                {initialsOf(authorName)}
               </span>
-              <div
-                style={{
-                  display: "flex",
-                  flexWrap: "wrap",
-                  gap: "var(--space-lg)",
-                  maxWidth: 660,
-                }}
-              >
-                {signups.slice(0, VISIBLE_SIGNUPS).map((signup) => {
-                  const isFriend = friends.has(signup.character_id);
-                  const isFoe = foes.has(signup.character_id);
-                  return (
-                    <div
-                      key={signup.character_id}
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "var(--space-sm)",
-                      }}
-                    >
-                      <Link to={`/characters/${signup.character_id}`}>
-                        {signup.avatar_url ? (
-                          <img
-                            src={mediaUrl(signup.avatar_url)}
-                            alt={signup.display_name}
-                            style={{
-                              width: 28,
-                              height: 28,
-                              borderRadius: "50%",
-                              objectFit: "cover",
-                            }}
-                          />
-                        ) : (
-                          <div
-                            style={{
-                              width: 28,
-                              height: 28,
-                              borderRadius: "50%",
-                              background: `linear-gradient(135deg, ${factionCssVar(signup.faction_slug, "light")}, ${factionCssVar(signup.faction_slug)})`,
-                            }}
-                          />
-                        )}
-                      </Link>
-                      <Link
-                        to={`/characters/${signup.character_id}`}
-                        className="font-body"
-                        style={{
-                          fontSize: "var(--text-base)",
-                          fontWeight: 700,
-                          color: "var(--color-text-primary)",
-                          textDecoration: "none",
-                        }}
-                      >
-                        {signup.display_name}
-                      </Link>
-                      {isFriend && <FeedBadge type="friend" label={t("default.friend")} />}
-                      {isFoe && <FeedBadge type="duel" label={t("default.foe")} />}
-                    </div>
-                  );
-                })}
-                {signups.length > VISIBLE_SIGNUPS && (
-                  <span
-                    className="eyebrow"
-                    style={{ alignSelf: "center", color: "var(--color-text-tertiary)" }}
-                  >
-                    {t("default.moreSignups", { count: signups.length - VISIBLE_SIGNUPS })}
-                  </span>
-                )}
-              </div>
-            </div>
+            )}
+            <span
+              className="font-display"
+              style={{
+                fontWeight: 600,
+                fontSize: "var(--text-xl)",
+                color: "var(--color-text-primary)",
+                borderBottom: "1px solid var(--color-border)",
+              }}
+            >
+              {authorName}
+            </span>
+          </Link>
+          <span className="eyebrow">
+            {t("detail.author", { level: task.created_by_level ?? 0 })}
+          </span>
+        </div>
+      )}
+
+      {/* Header stats. The design draws exactly two — the completed count lives
+          on the gallery heading, and there is deliberately no roster. */}
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: desktop ? "var(--space-xl)" : "var(--space-lg)",
+          flexWrap: "wrap",
+        }}
+      >
+        <div style={{ display: "flex", flexDirection: "column", lineHeight: 1 }}>
+          <span className="eyebrow" style={{ marginBottom: "var(--space-xs)" }}>
+            {t("detail.stats.level")}
+          </span>
+          <span
+            className="font-display"
+            style={{
+              fontWeight: 600,
+              fontSize: desktop ? "var(--text-heading)" : "var(--text-title)",
+              lineHeight: 0.9,
+              color: "var(--color-text-primary)",
+            }}
+          >
+            {task.level_required}
+          </span>
+        </div>
+        <span
+          aria-hidden
+          style={{
+            width: 1,
+            alignSelf: "stretch",
+            minHeight: 34,
+            background: "var(--color-border)",
+          }}
+        />
+        <div style={{ display: "flex", flexDirection: "column", lineHeight: 1 }}>
+          <span className="eyebrow" style={{ marginBottom: "var(--space-xs)" }}>
+            {t("detail.stats.inProgress")}
+          </span>
+          <span
+            className="font-display"
+            style={{
+              fontWeight: 600,
+              fontSize: desktop ? "var(--text-title)" : "var(--text-content)",
+              lineHeight: 0.9,
+              color: "var(--color-text-primary)",
+            }}
+          >
+            {inProgressCount}
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+
+  // ── The brief, in full. No clamp, no "read more". ──
+  const brief = (
+    <section style={{ marginBottom: desktop ? "var(--space-2xl)" : "var(--space-xl)" }}>
+      {sectionHead(t("detail.brief.heading"))}
+      {task.description && (
+        <p
+          className="font-body content-text"
+          style={{
+            lineHeight: 1.75,
+            color: "var(--color-text-primary)",
+            whiteSpace: "pre-wrap",
+            margin: 0,
+          }}
+        >
+          {task.description}
+        </p>
+      )}
+    </section>
+  );
+
+  // ── Praxis gallery ──
+  const gallery = (
+    <section style={{ marginBottom: desktop ? "var(--space-2xl)" : "var(--space-xl)" }}>
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: "var(--space-sm)",
+          marginBottom: "var(--space-md)",
+          flexWrap: "wrap",
+        }}
+      >
+        <span
+          className="eyebrow"
+          style={{ letterSpacing: "0.22em", color: "var(--color-text-primary)" }}
+        >
+          {t("detail.gallery.heading", { count: submissions.length })}
+        </span>
+        <span
+          aria-hidden
+          style={{
+            flex: "1 1 20%",
+            minWidth: 20,
+            height: 2,
+            borderRadius: 1,
+            backgroundImage: SPECTRUM,
+            opacity: 0.55,
+          }}
+        />
+        <span
+          style={{
+            display: "flex",
+            gap: "var(--space-xs)",
+            padding: "var(--space-xs)",
+            border: "1px solid var(--color-border)",
+            borderRadius: 8,
+          }}
+        >
+          {(["score", "recent"] as const).map((sort) => (
+            <button
+              key={sort}
+              onClick={() => setSubmissionSort(sort)}
+              className="eyebrow"
+              style={{
+                cursor: "pointer",
+                border: "none",
+                borderRadius: 6,
+                padding: "var(--space-xs) var(--space-sm)",
+                background:
+                  submissionSort === sort ? "var(--color-text-primary)" : "transparent",
+                color:
+                  submissionSort === sort
+                    ? "var(--color-bg-page)"
+                    : "var(--color-text-tertiary)",
+              }}
+            >
+              {sort === "score"
+                ? t("detail.gallery.sort.top")
+                : t("detail.gallery.sort.recent")}
+            </button>
+          ))}
+        </span>
+      </div>
+
+      {sortedSubmissions.length === 0 ? (
+        <p className="font-body content-text" style={{ color: "var(--color-text-tertiary)" }}>
+          {t("detail.gallery.empty")}
+        </p>
+      ) : (
+        <>
+          <div className="flex flex-wrap gap-4 items-start">
+            {(showAllPraxis
+              ? sortedSubmissions
+              : sortedSubmissions.slice(0, GALLERY_PREVIEW)
+            ).map((praxis) => (
+              <PraxisCard key={praxis.id} praxis={praxis} />
+            ))}
+          </div>
+          {submissions.length > GALLERY_PREVIEW && (
+            <button
+              onClick={() => setShowAllPraxis((shown) => !shown)}
+              className="font-body"
+              style={{
+                display: "inline-block",
+                marginTop: "var(--space-md)",
+                padding: 0,
+                fontSize: "var(--text-lg)",
+                background: "none",
+                border: "none",
+                cursor: "pointer",
+                color: "var(--faction-default-card-accent)",
+              }}
+            >
+              {showAllPraxis
+                ? t("detail.gallery.showFewer")
+                : t("detail.gallery.viewAll", { count: submissions.length })}
+            </button>
           )}
+        </>
+      )}
+    </section>
+  );
+
+  return (
+    <div className="py-8" style={{ position: "relative" }}>
+      <div
+        style={{
+          position: "relative",
+          zIndex: 1,
+          maxWidth: 1200,
+          margin: "0 auto",
+          // The page surface the design puts everything on, carried by the
+          // COLUMN rather than the viewport — the owner's rule for this surface
+          // is that the site background still shows around the component.
+          //
+          // This replaced a `<div className="na-backdrop">` full-page wash.
+          // NOTE, correcting #1056's commit message and PR body: that PR claimed
+          // `.na-backdrop` had no rule behind it. It does — index.css defines it
+          // with a dark-mode variant. The claim came from grepping a stale
+          // worktree that predated #1049. The change itself was still right (a
+          // full-bleed faction wash is not wanted here, and the column needed a
+          // surface and padding), but the stated reason was false; do not cite
+          // it as precedent for "a class with no CSS".
+          background: "var(--faction-default-card-bg)",
+          color: "var(--faction-default-card-text)",
+          border: "1px solid var(--faction-default-border)",
+          borderRadius: 18,
+          padding: desktop ? "var(--space-2xl)" : "var(--space-lg)",
+          boxSizing: "border-box",
+        }}
+      >
+        <div
+          style={{
+            display: "flex",
+            flexDirection: desktop ? "row" : "column",
+            alignItems: desktop ? "flex-start" : "stretch",
+            gap: "var(--space-xl)",
+            marginBottom: desktop ? "var(--space-2xl)" : "var(--space-xl)",
+          }}
+        >
+          <div style={{ flex: 1, minWidth: 0 }}>{header}</div>
+          <div
+            style={{
+              flex: desktop ? "0 0 440px" : "1 1 auto",
+              width: desktop ? 440 : "100%",
+              marginTop: desktop ? "var(--space-sm)" : 0,
+            }}
+          >
+            {actionPanel}
+          </div>
+        </div>
+
+        <div style={{ minWidth: 0 }}>
+          {brief}
+          {gallery}
+          <TaskDetailComments
+            state={state}
+            heading={sectionHead(t("detail.comments.heading"))}
+          />
         </div>
       </div>
     </div>

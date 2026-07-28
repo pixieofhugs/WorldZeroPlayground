@@ -16,6 +16,8 @@ from models.task import Task
 from schemas.task import TaskCreate, TaskOut
 from services.auth import get_current_account
 from services.task import (
+    UNKNOWN_TASK_AUTHOR,
+    authors_for_tasks,
     build_task_out,
     build_task_out_for_viewer,
     in_progress_counts_for_tasks,
@@ -70,23 +72,32 @@ async def list_tasks(
     in_progress_counts = await in_progress_counts_for_tasks(
         [task.id for task in tasks], session
     )
+    # One join for the whole page (#1029) — never a per-task author lookup.
+    authors = await authors_for_tasks(tasks, session)
     return [
         await build_task_out_for_viewer(
             task,
             viewer,
             session,
             in_progress_count=in_progress_counts.get(task.id, 0),
+            # Explicit fallback rather than None: passing None would make the
+            # builder resolve that one author itself, i.e. reintroduce the very
+            # per-task query this precompute exists to avoid.
+            author=authors.get(task.created_by, UNKNOWN_TASK_AUTHOR),
         )
         for task in tasks
     ]
 
 
-def _build_signup_dict(member, character, praxis) -> dict:
+def _build_signup_dict(member, character, praxis, level: int) -> dict:
     return {
         "character_id": character.id,
         "display_name": character.display_name,
         "avatar_url": character.avatar_url,
         "faction_slug": character.faction_slug,
+        # Current-era level for the roster row's "lvl N" (#1029); joined in
+        # list_signups_for_task, so the roster is still one query.
+        "level": level,
         "praxis_type": praxis.type.value,
         "joined_at": member.joined_at,
     }

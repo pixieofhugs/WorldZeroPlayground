@@ -9,35 +9,36 @@
  * during module evaluation — see the cycle note in `./manifest.ts`.
  */
 import type { FactionManifest } from './manifest'
+import { lazyArchetype } from './lazyArchetype'
 
-import EverymenAvatar from '../components/avatar/EverymenAvatar'
-import EverymenBackdrop from '../components/backdrop/EverymenBackdrop'
-import EverymenComment from '../components/comments/voices/EverymenComment'
-import EverymenDuelRail from '../pages/praxisDetail/duelRails/EverymenDuelRail'
-import EverymenDuelSealConfirm from '../components/duel/EverymenDuelSealConfirm'
-import EverymenEditPraxis from '../pages/editPraxis/archetypes/EverymenEditPraxis'
-import EverymenFactionBody from '../pages/factionDetail/archetypes/EverymenFactionBody'
-import EverymenFactionHero from '../components/cards/EverymenFactionHero'
-import EverymenFactionPage from '../pages/factionDetail/mobileArchetypes/EverymenFactionPage'
-import EverymenFeedFrame from '../components/feed/EverymenFeedFrame'
-import EverymenHome from '../pages/fieldDesk/mobileArchetypes/EverymenHome'
-import EverymenMobileDuelRail from '../pages/praxisDetail/duelRails/EverymenMobileDuelRail'
-import EverymenMobileDuelSealConfirm from '../components/duel/EverymenMobileDuelSealConfirm'
-import EverymenMobileEditPraxis from '../pages/editPraxis/mobileArchetypes/EverymenComposer'
-import EverymenMobilePraxisCard from '../components/praxisCard/mobile/EverymenMobilePraxisCard'
-import EverymenMobilePraxisDetail from '../pages/praxisDetail/mobileArchetypes/EverymenPraxisDetail'
-import EverymenMobileTaskDetail from '../pages/taskDetail/mobileArchetypes/EverymenTaskDetail'
-import EverymenPraxisDetail from '../pages/praxisDetail/archetypes/EverymenPraxisDetail'
-import EverymenProfileBody from '../pages/characterProfile/archetypes/EverymenProfileBody'
-import EverymenTaskCard from '../components/cards/EverymenTaskCard'
-import EverymenTaskDetail from '../pages/taskDetail/archetypes/EverymenTaskDetail'
-import EverymenVote from '../components/vote/EverymenVote'
-import EverymenPraxisCard from '../components/praxisCard/desktop/EverymenPraxisCard'
-import EverymenScoreStamp from '../components/praxisCard/scoreStamp/EverymenScoreStamp'
-import EverymenSeal from '../components/metaTaskSeal/skins/EverymenSeal'
-import { EverymenSigil } from '../components/cards/EverymenSigil'
-import EverymenCard from '../components/cards/EverymenFactionCard'
-import { EverymenSelectCard } from '../components/cards/FactionSelectCard'
+const EverymenAvatar = lazyArchetype(() => import('../components/avatar/EverymenAvatar'))
+const EverymenBackdrop = lazyArchetype(() => import('../components/backdrop/EverymenBackdrop'))
+const EverymenComment = lazyArchetype(() => import('../components/comments/voices/EverymenComment'))
+const EverymenDuelRail = lazyArchetype(() => import('../pages/praxisDetail/duelRails/EverymenDuelRail'))
+const EverymenDuelSealConfirm = lazyArchetype(() => import('../components/duel/EverymenDuelSealConfirm'))
+const EverymenEditPraxis = lazyArchetype(() => import('../pages/editPraxis/archetypes/EverymenEditPraxis'))
+const EverymenFactionBody = lazyArchetype(() => import('../pages/factionDetail/archetypes/EverymenFactionBody'))
+const EverymenFactionHero = lazyArchetype(() => import('../components/cards/EverymenFactionHero'))
+const EverymenFactionPage = lazyArchetype(() => import('../pages/factionDetail/mobileArchetypes/EverymenFactionPage'))
+const EverymenFeedFrame = lazyArchetype(() => import('../components/feed/EverymenFeedFrame'))
+const EverymenHome = lazyArchetype(() => import('../pages/fieldDesk/mobileArchetypes/EverymenHome'))
+const EverymenMobileDuelRail = lazyArchetype(() => import('../pages/praxisDetail/duelRails/EverymenMobileDuelRail'))
+const EverymenMobileDuelSealConfirm = lazyArchetype(() => import('../components/duel/EverymenMobileDuelSealConfirm'))
+const EverymenMobileEditPraxis = lazyArchetype(() => import('../pages/editPraxis/mobileArchetypes/EverymenComposer'))
+const EverymenMobilePraxisCard = lazyArchetype(() => import('../components/praxisCard/mobile/EverymenMobilePraxisCard'))
+const EverymenMobilePraxisDetail = lazyArchetype(() => import('../pages/praxisDetail/mobileArchetypes/EverymenPraxisDetail'))
+const EverymenMobileTaskDetail = lazyArchetype(() => import('../pages/taskDetail/mobileArchetypes/EverymenTaskDetail'))
+const EverymenPraxisDetail = lazyArchetype(() => import('../pages/praxisDetail/archetypes/EverymenPraxisDetail'))
+const EverymenProfileBody = lazyArchetype(() => import('../pages/characterProfile/archetypes/EverymenProfileBody'))
+const EverymenTaskCard = lazyArchetype(() => import('../components/cards/EverymenTaskCard'))
+const EverymenTaskDetail = lazyArchetype(() => import('../pages/taskDetail/archetypes/EverymenTaskDetail'))
+const EverymenVote = lazyArchetype(() => import('../components/vote/EverymenVote'))
+const EverymenPraxisCard = lazyArchetype(() => import('../components/praxisCard/desktop/EverymenPraxisCard'))
+const EverymenScoreStamp = lazyArchetype(() => import('../components/praxisCard/scoreStamp/EverymenScoreStamp'))
+const EverymenSeal = lazyArchetype(() => import('../components/metaTaskSeal/skins/EverymenSeal'))
+const EverymenSigil = lazyArchetype(() => import('../components/cards/EverymenSigil').then((m) => ({ default: m.EverymenSigil })))
+const EverymenCard = lazyArchetype(() => import('../components/cards/EverymenFactionCard'))
+const EverymenSelectCard = lazyArchetype(() => import('../components/cards/FactionSelectCard').then((m) => ({ default: m.EverymenSelectCard })))
 
 export const EVERYMEN_MANIFEST: FactionManifest = {
   slug: 'everymen',

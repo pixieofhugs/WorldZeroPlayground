@@ -9,31 +9,32 @@
  * during module evaluation — see the cycle note in `./manifest.ts`.
  */
 import type { FactionManifest } from './manifest'
+import { lazyArchetype } from './lazyArchetype'
 
-import UaAvatar from '../components/avatar/UaAvatar'
-import UaBackdrop from '../components/backdrop/UaBackdrop'
-import UaComment from '../components/comments/voices/UaComment'
-import UaEditPraxis from '../pages/editPraxis/archetypes/UaEditPraxis'
-import UaFactionBody from '../pages/factionDetail/archetypes/UaFactionBody'
-import UaFactionHero from '../components/cards/UaFactionHero'
-import UaFactionPage from '../pages/factionDetail/mobileArchetypes/UaFactionPage'
-import UaFeedFrame from '../components/feed/UaFeedFrame'
-import UaHome from '../pages/fieldDesk/mobileArchetypes/UaHome'
-import UaMobileEditPraxis from '../pages/editPraxis/mobileArchetypes/UaComposer'
-import UaMobilePraxisCard from '../components/praxisCard/mobile/UaMobilePraxisCard'
-import UaMobilePraxisDetail from '../pages/praxisDetail/mobileArchetypes/UaPraxisDetail'
-import UaMobileTaskDetail from '../pages/taskDetail/mobileArchetypes/UaTaskDetail'
-import UaPraxisDetail from '../pages/praxisDetail/archetypes/UaPraxisDetail'
-import UaProfileBody from '../pages/characterProfile/archetypes/UaProfileBody'
-import UaScoreStamp from '../components/praxisCard/scoreStamp/UaScoreStamp'
-import UaSeal from '../components/metaTaskSeal/skins/UaSeal'
-import UaTaskCard from '../components/cards/UaTaskCard'
-import UaTaskDetail from '../pages/taskDetail/archetypes/UaTaskDetail'
-import UaVote from '../components/vote/UaVote'
-import UaPraxisCard from '../components/praxisCard/desktop/UaPraxisCard'
-import { UaSigilAdapter } from '../components/cards/FactionSigil'
-import { UaCard } from '../components/cards/FactionCard'
-import { UaSelectCard } from '../components/cards/FactionSelectCard'
+const UaAvatar = lazyArchetype(() => import('../components/avatar/UaAvatar'))
+const UaBackdrop = lazyArchetype(() => import('../components/backdrop/UaBackdrop'))
+const UaComment = lazyArchetype(() => import('../components/comments/voices/UaComment'))
+const UaEditPraxis = lazyArchetype(() => import('../pages/editPraxis/archetypes/UaEditPraxis'))
+const UaFactionBody = lazyArchetype(() => import('../pages/factionDetail/archetypes/UaFactionBody'))
+const UaFactionHero = lazyArchetype(() => import('../components/cards/UaFactionHero'))
+const UaFactionPage = lazyArchetype(() => import('../pages/factionDetail/mobileArchetypes/UaFactionPage'))
+const UaFeedFrame = lazyArchetype(() => import('../components/feed/UaFeedFrame'))
+const UaHome = lazyArchetype(() => import('../pages/fieldDesk/mobileArchetypes/UaHome'))
+const UaMobileEditPraxis = lazyArchetype(() => import('../pages/editPraxis/mobileArchetypes/UaComposer'))
+const UaMobilePraxisCard = lazyArchetype(() => import('../components/praxisCard/mobile/UaMobilePraxisCard'))
+const UaMobilePraxisDetail = lazyArchetype(() => import('../pages/praxisDetail/mobileArchetypes/UaPraxisDetail'))
+const UaMobileTaskDetail = lazyArchetype(() => import('../pages/taskDetail/mobileArchetypes/UaTaskDetail'))
+const UaPraxisDetail = lazyArchetype(() => import('../pages/praxisDetail/archetypes/UaPraxisDetail'))
+const UaProfileBody = lazyArchetype(() => import('../pages/characterProfile/archetypes/UaProfileBody'))
+const UaScoreStamp = lazyArchetype(() => import('../components/praxisCard/scoreStamp/UaScoreStamp'))
+const UaSeal = lazyArchetype(() => import('../components/metaTaskSeal/skins/UaSeal'))
+const UaTaskCard = lazyArchetype(() => import('../components/cards/UaTaskCard'))
+const UaTaskDetail = lazyArchetype(() => import('../pages/taskDetail/archetypes/UaTaskDetail'))
+const UaVote = lazyArchetype(() => import('../components/vote/UaVote'))
+const UaPraxisCard = lazyArchetype(() => import('../components/praxisCard/desktop/UaPraxisCard'))
+const UaSigilAdapter = lazyArchetype(() => import('../components/cards/FactionSigil').then((m) => ({ default: m.UaSigilAdapter })))
+const UaCard = lazyArchetype(() => import('../components/cards/FactionCard').then((m) => ({ default: m.UaCard })))
+const UaSelectCard = lazyArchetype(() => import('../components/cards/FactionSelectCard').then((m) => ({ default: m.UaSelectCard })))
 
 export const UA_MANIFEST: FactionManifest = {
   slug: 'ua',

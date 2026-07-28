@@ -38,15 +38,15 @@ const CORE_SIX = ['coven', 'snide', 'ephemerists', 'singularity', 'everymen', 'u
 
 // surface → slugs that ship a bespoke skin there. Everything in ALL_SLUGS not
 // listed (plus a junk slug and null) must fall through to the surface Default.
-// wow is Default on desktop praxis/task detail but bespoke on every mobile
-// surface; albescent is bespoke only on the praxis card.
+// wow is Default on desktop praxis detail but bespoke on task detail (#1037)
+// and on every mobile surface; albescent is bespoke only on the praxis card.
 //
 // There is no `mobileTaskCard` row: ADR-0056 retired that surface once the
 // owner's QA verdict accepted the unified card, so task cards partition on the
 // `taskCard` surface alone for both form factors.
 const BESPOKE: Record<string, string[]> = {
   praxisDetail: CORE_SIX,
-  taskDetail: CORE_SIX,
+  taskDetail: [...CORE_SIX, 'wow'],
   mobileTaskDetail: [...CORE_SIX, 'wow'],
   mobileFactionPage: [...CORE_SIX, 'wow'],
   mobileFieldDesk: [...CORE_SIX, 'wow'],
@@ -91,8 +91,9 @@ const REQUIRED = SURFACE_KEYS.filter((surface) =>
 // a bespoke skin; until then WOW renders the generic Default (N/A), not Coven.
 // When a skin ships, drop the surface here and the "still pending" guard below
 // fails, forcing this allowlist to shrink in lockstep with the fix.
+// `taskDetail` left this set in #1037 — the parchment field, WOW's first
+// desktop task-detail page. Three bullets of #951 remain.
 const WOW_PENDING: ReadonlySet<string> = new Set([
-  'taskDetail',
   'praxisDetail',
   'factionCard',
   'factionBody',

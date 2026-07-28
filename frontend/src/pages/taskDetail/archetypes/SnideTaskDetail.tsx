@@ -1,302 +1,181 @@
-import type { CSSProperties } from "react";
+import { useState, type CSSProperties, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import PraxisCard from "../../../components/PraxisCard";
+import { useFormFactor } from "../../../hooks/useFormFactor";
+import { factionFill, factionName } from "../../../utils/factions";
 import { mediaUrl } from "../../../utils/media";
-import { factionName } from "../../../utils/factions";
-import { SnideSigil } from "../../../components/snide/snideAtoms";
-import { ErrorBanner, LevelJumpBanner, relationOf } from "./shared";
-import type { TaskSignupOut } from "../../../api/tasks";
+import { isNeutralMultiplier } from "../../../utils/points";
+import { ErrorBanner, LevelJumpBanner, TaskDetailComments } from "./shared";
 import type { TaskDetailState } from "../useTaskDetail";
 
 /**
- * S.N.I.D.E. task-detail archetype — the "ransom dispatch": an OPEN-CASE
- * DOSSIER whose title is cut from a ransom note (mixed-font chips), a black-ink
- * CTA slab, a lined-paper brief, accomplices on file, a read-only mob verdict,
- * and CASES CLOSED with a ⚜ TOP MARKS badge on the highest-scored completion.
- * Ported from the improved SNIDE design kit (SnideTaskDetail.tsx) and wired to
- * the real {@link TaskDetailState}.
+ * S.N.I.D.E. — THE RANSOM DOSSIER (task detail v2, #1035).
  *
- * Always-dark by styling its own container with --faction-snide-* tokens; it
- * does NOT mutate the document theme.
+ * The shared task-detail anatomy (#1030) in SNIDE's dress: a ransom-note dossier
+ * photocopied one too many times. A near-black header bar with a broken acid
+ * rule, a headline cut from four faces word by word, redaction rules ruling off
+ * every section, the points circled in pink pen inside an acid action plate that
+ * sits half a degree off true, and hard offset shadows with no blur — it is
+ * printed, not floating. Anton, Archivo Black, Special Elite and Permanent
+ * Marker all appear, because a ransom note mixes faces by definition.
  *
- * Decorative / not backend-backed (marked inline): the "job no." (derived from
- * task.id). EvidenceTag labels are relabelled to honest counts.
+ * Replaces the 794-line "case file" archetype (`caseFile`, `jobFile`,
+ * `openCase`, `casesClosed`, `accomplices`, `evidence.*`, `topMarks`,
+ * `verdict.*`). Those `snide.*` keys stay in tasks.json for now — the namespace
+ * is shared with the faction pages, and the sweep is #1039.
+ *
+ * THE CENSOR REDACTS ORNAMENT, NEVER CONTENT. The design blacks out two words of
+ * every brief paragraph (`background: ink, color: transparent`) — over the task's
+ * real instructions. That is the same word-level strike #1023 already ruled out
+ * of the task card, and the ruling holds harder here, where the brief is the
+ * only place a player learns what to actually do. What carries the metaphor
+ * instead is `.snd-censor`, a decorative strip of redaction blocks used as a
+ * rule, plus the cut-up headline, which RESTYLES words rather than destroying
+ * them. Do not reintroduce the strike.
+ *
+ * Contract points inherited from the na reference build, not re-derived:
+ * - **No in-progress roster.** The header's "In progress" count is the only
+ *   place that population appears (owner ruling 2026-07-28, reversing epic
+ *   #1028 decision 3 — and this design flagged the omission first).
+ * - **The `×mult` badge renders only off the identity factor**, read raw from
+ *   the state contract, never reconstructed as `modifiedPoints / basePoints`
+ *   (ADR-0053's dead-arithmetic trap, ADR-0055's rule). `era_1` neutralises
+ *   every faction, so it is correctly invisible today.
+ * - **Copy is shared and neutral** (`detail.*`, ADR-0057). The design's words —
+ *   "The task", "submissions", "highest scored", "Comments", "take the job" —
+ *   are dress notes, not authority.
+ * - **Comments mount the shared `TaskDetailComments` slot**, which owns the
+ *   `status === "active"` gate and suppresses the thread's own heading so this
+ *   page carries one dressed section head, not two (ADR-0006).
+ * - The gallery expands **in place**. It deliberately does not link to
+ *   `/praxes?task_id=N`: the praxis feed reads no such param, so that link has
+ *   always dropped the filter and shown the whole feed.
+ *
+ * ONE RESPONSIVE COMPONENT (ADR-0058): `useFormFactor()` picks the size set and
+ * drops the two-column split; `pages/taskDetail/mobileArchetypes/
+ * SnideTaskDetail.tsx` and its `mobileTaskDetail` manifest row stay registered
+ * but dormant, not deleted.
+ *
+ * All colour via the existing `--faction-snide-note-*` clipping family (which
+ * FLIPS under `[data-theme="dark"]` — the dossier is a sheet of paper) plus the
+ * theme-invariant `--faction-snide-*` pigments where the design draws a LINE
+ * rather than sets type. No new tokens: the family #1023 built for the ransom
+ * clipping is the same dress at page scale.
  */
 
-const INK = "var(--faction-snide-ink)";
-const ACID = "var(--faction-snide-acid)";
+const IMPACT = "var(--faction-snide-font-impact)"; /* Anton */
+const BLACK = "var(--faction-snide-font-black)"; /* Archivo Black */
+const TYPE = "var(--faction-snide-font-type)"; /* Special Elite */
+const MARK = "var(--faction-snide-font-marker)"; /* Permanent Marker */
+
+/** The clipping's stock and its inks — these two SWAP under the dark cascade. */
+const PAPER = "var(--faction-snide-note-paper)";
+const INK = "var(--faction-snide-note-ink)";
+const MUTED = "var(--faction-snide-note-muted)";
+/** The pink that is TEXT (AA-walked), as opposed to the pink that is a line. */
+const PINK_INK = "var(--faction-snide-note-pink-ink)";
+/** The pink that is a DRAWN LINE — pen circle, strike-out cross. Invariant. */
 const PINK = "var(--faction-snide-pink)";
-const PAPER = "var(--faction-snide-paper)";
+/** Photocopier black that does NOT flip: borders and shadows printed on acid. */
+const HARD = "var(--faction-snide-ink)";
 
-/** The shared "rap sheet" CTA skin — a skewed, acid-shadowed slab button/link. */
-function rapSheetStyle(background: string, big = false): CSSProperties {
-  return {
-    display: "inline-block",
-    cursor: "pointer",
-    border: `2px solid ${INK}`,
-    background,
-    color: "#fff",
-    fontFamily: "var(--faction-snide-font-black)",
-    fontSize: "var(--text-xl)",
-    letterSpacing: "0.03em",
-    padding: big ? "var(--space-lg) var(--space-xl)" : "var(--space-md) var(--space-xl)",
-    textDecoration: "none",
-    transform: "rotate(-1.5deg)",
-    boxShadow: `3px 4px 0 ${ACID}`,
-  };
+/** Praxis cards shown before the gallery expands. `PraxisCard` is `1 1 394px`. */
+const GALLERY_PREVIEW = 3;
+
+/**
+ * The four sources the headline is cut from — the same four the task card uses,
+ * so one title cuts identically wherever it appears. A word takes its cut by
+ * index off the task's own id, so no two neighbours share a face.
+ *
+ * Cut 2 is a knockout and names its own pair rather than reusing paper/ink:
+ * those two swap under the dark cascade, and a knockout that swaps with its
+ * ground is an invisible word.
+ */
+const CUTS: CSSProperties[] = [
+  { fontFamily: IMPACT, color: INK, textTransform: "uppercase", transform: "rotate(-1deg)" },
+  {
+    fontFamily: IMPACT,
+    color: "var(--faction-snide-note-cta-ink)",
+    background: "var(--faction-snide-acid)",
+    padding: "0 var(--space-xs)",
+    textTransform: "uppercase",
+    transform: "rotate(0.8deg)",
+  },
+  {
+    fontFamily: BLACK,
+    color: "var(--faction-snide-note-knockout-ink)",
+    background: "var(--faction-snide-note-knockout-bg)",
+    // eslint-disable-next-line local/no-raw-style-values -- ornament: the knockout's 1px bleed IS the drawn cut; a 4px rung fattens it into a label chip.
+    padding: "1px var(--space-xs)",
+    // eslint-disable-next-line local/no-raw-style-values -- ornament: a cut's size is RELATIVE to the headline it was pasted into, not a tier of the type scale.
+    fontSize: "0.8em",
+    textTransform: "uppercase",
+    transform: "rotate(-1.6deg)",
+  },
+  {
+    fontFamily: TYPE,
+    color: INK,
+    // eslint-disable-next-line local/no-raw-style-values -- ornament: as above; the smallest cut, clipped from body copy rather than a headline.
+    fontSize: "0.7em",
+    textTransform: "uppercase",
+    borderBottom: `3px solid ${PINK}`,
+    transform: "rotate(1.2deg)",
+  },
+];
+
+/** Initials fallback for an author with no uploaded avatar. */
+function initialsOf(name: string): string {
+  return name
+    .split(/\s+/)
+    .filter(Boolean)
+    .map((word) => word[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
 }
 
-/* ── Ransom title ──
- * Cut the real task title into ransom-note chips: each word (or word-half for
- * long words) gets its own font / colour / tilt, photocopied out of the page.
- * Purely visual reinterpretation of the real `task.title`. */
-const RANSOM_SKINS: ReadonlyArray<{ bg: string; color: string; font: string }> =
-  [
-    { bg: PAPER, color: INK, font: "var(--faction-snide-font-impact)" },
-    { bg: INK, color: ACID, font: "var(--faction-snide-font-black)" },
-    { bg: PINK, color: "#fff", font: "var(--faction-snide-font-impact)" },
-    { bg: ACID, color: INK, font: "var(--faction-snide-font-black)" },
-  ];
-
-/** Split the title into ransom fragments (words, long words halved). */
-function ransomFragments(title: string): string[] {
-  const out: string[] = [];
-  for (const word of title.trim().split(/\s+/).filter(Boolean)) {
-    if (word.length > 7) {
-      const mid = Math.ceil(word.length / 2);
-      out.push(word.slice(0, mid), word.slice(mid));
-    } else {
-      out.push(word);
-    }
-  }
-  return out.length ? out : [title];
+/** A tiled strip of redaction blocks. `.snd-censor` owns its pigments (#1023). */
+function CensorRule({ style }: { style?: CSSProperties }) {
+  return <span aria-hidden="true" className="snd-censor" style={style} />;
 }
 
-function RansomChip({
-  text,
-  index,
-}: {
-  text: string;
-  index: number;
-}) {
-  const skin = RANSOM_SKINS[index % RANSOM_SKINS.length];
-  const big = index % 2 === 0;
-  const rots = [-4, 3, -2, 4];
+/** The struck-out cross that flanks every call to action. */
+function XMark({ size }: { size: number }) {
   return (
-    <span
-      style={{
-        display: "inline-block",
-        background: skin.bg,
-        color: skin.color,
-        fontFamily: skin.font,
-        // The ransom title is the task title rendered as ornament — it keeps its
-        // bespoke big/small cut, but on the content tier (never a label size).
-        fontSize: big ? "var(--text-display)" : "var(--text-heading)",
-        lineHeight: 0.9,
-        // ornament: ransom-letter tile inset; the zero bottom sits the display face on
-        // the tile edge, which is the cut-from-a-magazine look.
-        // eslint-disable-next-line local/no-raw-style-values -- ornament, per above
-        padding: "2px 10px 0",
-        textTransform: "uppercase",
-        transform: `rotate(${rots[index % rots.length]}deg)`,
-        boxShadow: "1.5px 2.5px 0 rgba(0,0,0,0.4)",
-        border: skin.bg === PAPER ? `1px solid ${INK}` : "none",
-      }}
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 20 20"
+      aria-hidden="true"
+      style={{ display: "block", flex: "0 0 auto", transform: "rotate(-6deg)" }}
     >
-      {text}
-    </span>
+      <g fill="none" stroke={PINK} strokeWidth="2.6" strokeLinecap="round">
+        <path d="M3.5 3 C8 7.5 12 12 16.5 17.5" />
+        <path d="M16.5 3.5 C12.5 7 8 12 3 16.5" />
+      </g>
+    </svg>
   );
 }
 
-function EvidenceTag({
-  label,
-  value,
-  accent = false,
-}: {
-  label: string;
-  value: string | number;
-  accent?: boolean;
-}) {
-  return (
-    <div
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        gap: "var(--space-xs)",
-        padding: "var(--space-sm) var(--space-lg)",
-        border: `1.5px solid ${INK}`,
-        background: accent ? INK : "transparent",
-        transform: `rotate(${accent ? -1.5 : 1}deg)`,
-        boxShadow: accent ? `2px 3px 0 ${PINK}` : "none",
-      }}
-    >
-      <span
-        style={{
-          fontFamily: "var(--faction-snide-font-type)",
-          fontSize: "var(--text-xs)",
-          letterSpacing: "0.18em",
-          textTransform: "uppercase",
-          color: accent
-            ? ACID
-            : "color-mix(in srgb, var(--faction-snide-ink) 55%, transparent)",
-        }}
-      >
-        {label}
-      </span>
-      <span
-        className="content-title"
-        style={{
-          fontFamily: "var(--faction-snide-font-impact)",
-          lineHeight: 0.85,
-          color: accent ? ACID : INK,
-        }}
-      >
-        {value}
-      </span>
-    </div>
-  );
-}
-
-/** Section marker — acid tape tab with a marker-font label. */
-function MarkerTab({ text, rot = -1.5 }: { text: string; rot?: number }) {
-  return (
-    <div
-      className="content-title"
-      style={{
-        display: "inline-block",
-        background: ACID,
-        color: INK,
-        fontFamily: "var(--faction-snide-font-marker)",
-        padding: "var(--space-xs) var(--space-lg)",
-        transform: `rotate(${rot}deg)`,
-        boxShadow: `2px 2px 0 ${PINK}`,
-        marginBottom: "var(--space-lg)",
-      }}
-    >
-      {text}
-    </div>
-  );
-}
-
-/** Accomplices on file — real signup avatars, tilted, with friend/foe dots. */
-function AccompliceRow({
-  signups,
-  friends,
-  foes,
-}: {
-  signups: TaskSignupOut[];
-  friends: Set<number>;
-  foes: Set<number>;
-}) {
+export default function SnideTaskDetail({ state }: { state: TaskDetailState }) {
   const { t } = useTranslation("tasks");
-  return (
-    <div
-      style={{ display: "flex", alignItems: "center", gap: "var(--space-sm)", flexWrap: "wrap" }}
-    >
-      {signups.map((m, i) => {
-        const rel = relationOf(m.character_id, friends, foes);
-        const relColor = rel === "friend" ? "var(--faction-snide)" : PINK;
-        return (
-          <Link
-            key={m.character_id}
-            to={`/characters/${m.character_id}`}
-            title={`${m.display_name}${rel ? ` · ${rel}` : ""}`}
-            style={{
-              position: "relative",
-              width: 38,
-              height: 38,
-              flexShrink: 0,
-              transform: `rotate(${i % 2 ? 4 : -3}deg)`,
-              boxShadow: "1.5px 2px 0 rgba(0,0,0,0.35)",
-            }}
-          >
-            {m.avatar_url ? (
-              <img
-                src={mediaUrl(m.avatar_url)}
-                alt={m.display_name}
-                style={{
-                  width: 38,
-                  height: 38,
-                  borderRadius: "50%",
-                  objectFit: "cover",
-                  border: "2px solid var(--faction-snide)",
-                }}
-              />
-            ) : (
-              <span
-                style={{
-                  display: "flex",
-                  width: 38,
-                  height: 38,
-                  borderRadius: "50%",
-                  background: INK,
-                  border: "2px solid var(--faction-snide)",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  color: ACID,
-                  fontFamily: "var(--faction-snide-font-impact)",
-                  fontSize: "var(--text-xl)",
-                }}
-              >
-                {m.display_name[0]?.toUpperCase()}
-              </span>
-            )}
-            {rel && (
-              <span
-                title={rel}
-                style={{
-                  position: "absolute",
-                  right: -3,
-                  bottom: -3,
-                  width: 12,
-                  height: 12,
-                  borderRadius: "50%",
-                  background: relColor,
-                  border: `1.5px solid ${PAPER}`,
-                }}
-              />
-            )}
-          </Link>
-        );
-      })}
-      <span
-        style={{
-          fontFamily: "var(--faction-snide-font-type)",
-          fontSize: "var(--text-base)",
-          letterSpacing: "0.1em",
-          textTransform: "uppercase",
-          color: "color-mix(in srgb, var(--faction-snide-wall-text) 55%, transparent)",
-          marginLeft: "var(--space-sm)",
-        }}
-      >
-        {t("snide.onTheJob")}
-      </span>
-    </div>
-  );
-}
-
-export default function SnideTaskDetail({
-  state,
-}: {
-  state: TaskDetailState;
-}) {
-  const { t } = useTranslation("tasks");
+  const desktop = useFormFactor() !== "mobile";
+  const [showAllPraxis, setShowAllPraxis] = useState(false);
   const {
     task,
-    signups,
     submissions,
-    friends,
-    foes,
     mySubmission,
     isInProgress,
     inProgressPraxisId,
     canSignUp,
-    modifiedPoints,
+    levelJumpSignup,
     slotsOpen,
     maxTaskSlots,
-    topScore,
-    voteCount,
+    basePoints,
+    factionMultiplier,
+    modifiedPoints,
+    inProgressCount,
     sortedSubmissions,
     submissionSort,
     setSubmissionSort,
@@ -308,486 +187,809 @@ export default function SnideTaskDetail({
   // Guarded non-null by the dispatcher.
   if (!task) return null;
 
-  const wall = "var(--faction-snide-wall-text)";
-  const muted = "color-mix(in srgb, var(--faction-snide-wall-text) 55%, transparent)";
-  // Decorative: SNIDE invents a "case file number" — derive it from the real id.
-  const caseNo = String(task.id).padStart(4, "0");
-  const isMeta = task.task_type === "metatask";
-  const fragments = ransomFragments(task.title);
-  // The highest-scored completion wears the ⚜ TOP MARKS badge.
-  const topId = submissions.length
-    ? submissions.reduce((a, b) => ((b.score ?? 0) > (a.score ?? 0) ? b : a)).id
-    : null;
+  const slug = task.primary_faction_slug;
+  const isMetatask = task.task_type === "metatask";
+  const showMultiplier = !isNeutralMultiplier(factionMultiplier);
+  const authorName = task.created_by_display_name ?? "";
+  const hasAction =
+    canSignUp || !!mySubmission || (isInProgress && inProgressPraxisId !== null);
 
-  return (
-    <div className="py-8" style={{ fontFamily: "var(--faction-snide-font-type)", color: wall }}>
-      {/* ── Breadcrumb ── */}
-      <nav
-        className="mb-4"
+  /** Special Elite, uppercase, wide — every micro-label on the sheet. */
+  const eyebrow: CSSProperties = {
+    fontFamily: TYPE,
+    fontSize: "var(--text-sm)",
+    letterSpacing: "0.2em",
+    textTransform: "uppercase",
+    color: MUTED,
+  };
+  /** A xeroxed sheet: warm stock, raster grain, hard printed shadow. */
+  const panel: CSSProperties = {
+    background: PAPER,
+    backgroundImage:
+      "repeating-linear-gradient(0deg, var(--faction-snide-note-grain) 0 1px, transparent 1px 3px)",
+    border: `2px solid ${INK}`,
+    boxShadow: "var(--faction-snide-note-shadow)",
+    boxSizing: "border-box",
+  };
+  /** A box punched into the acid plate. Its border is printed, so invariant. */
+  const innerBox: CSSProperties = {
+    background: PAPER,
+    border: `3px solid ${HARD}`,
+    padding: "var(--space-lg)",
+    boxSizing: "border-box",
+  };
+  /**
+   * The skewed, hard-shadowed call to action. `done` inverts it — near-black
+   * plate, acid rule, pink shadow — so "continue" never looks like "sign up".
+   */
+  const plateButton = (done: boolean): CSSProperties => ({
+    position: "relative",
+    boxSizing: "border-box",
+    width: "100%",
+    cursor: "pointer",
+    textAlign: "center",
+    textDecoration: "none",
+    background: done ? HARD : "var(--faction-snide-note-cta-bg)",
+    color: done ? "var(--faction-snide-acid)" : "var(--faction-snide-note-cta-ink)",
+    fontFamily: IMPACT,
+    fontSize: desktop ? "var(--text-title)" : "var(--text-content)",
+    letterSpacing: "0.2em",
+    textTransform: "uppercase",
+    border: `3px solid ${done ? "var(--faction-snide-acid)" : HARD}`,
+    padding: desktop ? "var(--space-lg) var(--space-xl)" : "var(--space-md)",
+    boxShadow: `7px 7px 0 ${done ? PINK_INK : HARD}`,
+    transform: "skewX(-4deg) rotate(-0.8deg)",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: "var(--space-sm)",
+  });
+  /** The label rides back out of the button's skew so it stays readable. */
+  const plateLabel: CSSProperties = { transform: "skewX(4deg)" };
+
+  /** A slab headline with a redaction rule running out of it. */
+  const sectionHead = (label: ReactNode, gloss?: ReactNode) => (
+    <div
+      style={{
+        display: "flex",
+        alignItems: "center",
+        gap: "var(--space-md)",
+        marginBottom: "var(--space-md)",
+        flexWrap: "wrap",
+      }}
+    >
+      <span
         style={{
-          fontFamily: "var(--faction-snide-font-type)",
-          fontSize: "var(--text-base)",
-          letterSpacing: "0.14em",
+          fontFamily: IMPACT,
+          fontSize: desktop ? "var(--text-heading)" : "var(--text-title)",
+          lineHeight: 1.02,
+          letterSpacing: "0.01em",
           textTransform: "uppercase",
-          color: muted,
+          color: INK,
+        }}
+      >
+        {label}
+      </span>
+      <CensorRule style={{ flex: "1 1 20%", minWidth: 24 }} />
+      {gloss !== undefined && <span style={eyebrow}>{gloss}</span>}
+    </div>
+  );
+
+  /** A caption over a slab numeral — level, in progress. */
+  const statBlock = (label: ReactNode, value: ReactNode, big: boolean) => (
+    <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-xs)" }}>
+      <span style={{ ...eyebrow, letterSpacing: "0.18em" }}>{label}</span>
+      <span
+        style={{
+          fontFamily: IMPACT,
+          fontSize: big
+            ? desktop
+              ? "var(--text-display)"
+              : "var(--text-heading)"
+            : desktop
+              ? "var(--text-heading)"
+              : "var(--text-title)",
+          lineHeight: 0.82,
+          color: INK,
+          transform: big ? "rotate(-1.5deg)" : "none",
+        }}
+      >
+        {value}
+      </span>
+    </div>
+  );
+
+  // ── The worth: base chip, the (usually absent) ×mult, the circled total ──
+  const worth = (
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        gap: "var(--space-sm)",
+      }}
+    >
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: "var(--space-sm)",
+          flexWrap: "wrap",
+        }}
+      >
+        <span
+          style={{
+            fontFamily: BLACK,
+            fontSize: "var(--text-xs)",
+            letterSpacing: "0.16em",
+            textTransform: "uppercase",
+            color: "var(--faction-snide-acid)",
+            background: HARD,
+            padding: "var(--space-xs) var(--space-sm)",
+            transform: "rotate(-1.5deg)",
+            whiteSpace: "nowrap",
+          }}
+        >
+          {t("detail.points.base")} {basePoints}
+        </span>
+        {showMultiplier && (
+          <span
+            style={{
+              fontFamily: MARK,
+              fontSize: "var(--text-title)",
+              lineHeight: 1,
+              color: PINK_INK,
+              transform: "rotate(4deg)",
+              whiteSpace: "nowrap",
+            }}
+          >
+            {t("detail.points.multiplier", {
+              multiplier: factionMultiplier.toFixed(2),
+            })}
+          </span>
+        )}
+      </div>
+
+      {/* The total, circled in pink pen. */}
+      <div
+        style={{
+          position: "relative",
+          flex: "0 0 auto",
+          width: desktop ? 128 : 104,
+          height: desktop ? 100 : 81,
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+          transform: "rotate(-5deg)",
+        }}
+      >
+        <svg
+          width="100%"
+          height="100%"
+          viewBox="0 0 100 78"
+          aria-hidden="true"
+          style={{ position: "absolute", inset: 0, overflow: "visible" }}
+        >
+          <g fill="none" stroke={PINK} strokeLinecap="round">
+            <path
+              d="M14 40 C13 19 38 7 56 9 C79 11 91 24 89 40 C87 59 61 71 43 68 C23 65 12 55 13 37 C13 28 18 19 27 13"
+              strokeWidth="2.6"
+            />
+            <path d="M27 12 C16 18 11 28 11 39" strokeWidth="1.8" opacity="0.75" />
+          </g>
+        </svg>
+        <span
+          style={{
+            position: "relative",
+            fontFamily: IMPACT,
+            fontSize: desktop ? "var(--text-display)" : "var(--text-heading)",
+            lineHeight: 0.9,
+            color: INK,
+          }}
+        >
+          {modifiedPoints}
+        </span>
+        <span
+          style={{
+            position: "relative",
+            fontFamily: IMPACT,
+            // eslint-disable-next-line local/no-raw-style-values -- ornament: pen-circle caption, sized to the drawn loop rather than the label ramp (§4a).
+            fontSize: 10,
+            letterSpacing: "0.22em",
+            // eslint-disable-next-line local/no-raw-style-values -- ornament: the caption's lead inside the drawn loop; a 4px rung pushes it off the numeral.
+            marginTop: 3,
+            color: PINK_INK,
+          }}
+        >
+          {t("detail.points.total")}
+        </span>
+      </div>
+    </div>
+  );
+
+  // ── The one action slot. Nothing renders when the viewer has no move: an
+  //    unusable control is worse than none.
+  const actionBody = (
+    <>
+      {canSignUp && (
+        <div>
+          <LevelJumpBanner state={state} />
+          <button onClick={handleSignup} style={plateButton(false)}>
+            <XMark size={17} />
+            <span style={plateLabel}>{t("detail.signup.cta")}</span>
+            <XMark size={17} />
+          </button>
+          <div
+            style={{
+              fontFamily: TYPE,
+              fontSize: "var(--text-md)",
+              lineHeight: 1.55,
+              textAlign: "center",
+              color: MUTED,
+              marginTop: "var(--space-lg)",
+            }}
+          >
+            {t("detail.signup.slots", { open: slotsOpen, max: maxTaskSlots })}
+            {!levelJumpSignup && (
+              <>
+                {" · "}
+                <span style={{ color: PINK_INK }}>
+                  {t("detail.signup.levelMet", { level: task.level_required })}
+                </span>
+              </>
+            )}
+          </div>
+          <ErrorBanner message={signupError} />
+        </div>
+      )}
+
+      {mySubmission && (
+        <div>
+          <div
+            style={{
+              fontFamily: MARK,
+              fontSize: desktop ? "var(--text-title)" : "var(--text-content)",
+              lineHeight: 1.2,
+              color: INK,
+              marginBottom: "var(--space-md)",
+              transform: "rotate(-1.4deg)",
+            }}
+          >
+            {t("detail.submitted.text")}
+          </div>
+          <Link to={`/praxes/${mySubmission.id}/edit`} style={plateButton(true)}>
+            <XMark size={17} />
+            <span style={plateLabel}>{t("detail.submitted.edit")}</span>
+            <XMark size={17} />
+          </Link>
+        </div>
+      )}
+
+      {!mySubmission && isInProgress && inProgressPraxisId !== null && (
+        <div>
+          <div
+            style={{
+              fontFamily: MARK,
+              fontSize: desktop ? "var(--text-title)" : "var(--text-content)",
+              lineHeight: 1.2,
+              color: INK,
+              marginBottom: "var(--space-md)",
+              transform: "rotate(-1.4deg)",
+              textDecoration: `underline 3px ${PINK}`,
+              textDecorationSkipInk: "none",
+            }}
+          >
+            {t("detail.inProgress.text")}
+          </div>
+          <Link to={`/praxes/${inProgressPraxisId}/edit`} style={plateButton(true)}>
+            <XMark size={17} />
+            <span style={plateLabel}>{t("detail.inProgress.continue")}</span>
+            <XMark size={17} />
+          </Link>
+          <button
+            onClick={handleDrop}
+            style={{
+              display: "block",
+              width: "100%",
+              cursor: "pointer",
+              textAlign: "center",
+              background: "none",
+              border: "none",
+              marginTop: "var(--space-lg)",
+              padding: 0,
+              fontFamily: TYPE,
+              fontSize: "var(--text-md)",
+              letterSpacing: "0.1em",
+              textDecoration: "line-through",
+              color: MUTED,
+            }}
+          >
+            {t("detail.inProgress.drop")}
+          </button>
+          <ErrorBanner message={signupError} />
+        </div>
+      )}
+    </>
+  );
+
+  // The action plate: an acid sheet stapled half a degree off true, hazard tape
+  // along its head, two punched boxes inside. 452px on desktop (dress; the other
+  // skins run 420–520), full width once the column collapses.
+  const actionPlate = (
+    <div
+      style={{
+        position: "relative",
+        boxSizing: "border-box",
+        background: "var(--faction-snide-note-cta-bg)",
+        border: `3px solid ${HARD}`,
+        boxShadow: `10px 10px 0 ${PINK}, var(--faction-snide-note-shadow)`,
+        transform: "rotate(-0.6deg)",
+      }}
+    >
+      <div
+        aria-hidden="true"
+        style={{
+          height: 14,
+          background: `repeating-linear-gradient(45deg, var(--faction-snide-note-cta-bg) 0 9px, ${HARD} 9px 18px)`,
+        }}
+      />
+      <div
+        style={{
+          position: "relative",
+          padding: "var(--space-sm)",
+          display: "flex",
+          gap: "var(--space-sm)",
+          alignItems: "stretch",
+        }}
+      >
+        <div
+          style={{
+            ...innerBox,
+            flex: "0 0 auto",
+            minWidth: desktop ? 178 : 132,
+            position: "relative",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            backgroundImage:
+              "radial-gradient(var(--faction-snide-note-ink) 22%, transparent 23%), radial-gradient(var(--faction-snide-note-ink) 22%, transparent 23%)",
+            backgroundSize: "6px 6px, 6px 6px",
+            backgroundPosition: "0 0, 3px 3px",
+          }}
+        >
+          {/* The halftone reads through at the edges only — the sheet is a
+              photocopy of a photocopy, not a dot-screen illustration. */}
+          <span aria-hidden="true" style={{ position: "absolute", inset: 3, background: PAPER, opacity: 0.86 }} />
+          <span style={{ position: "relative" }}>{worth}</span>
+        </div>
+        {hasAction && (
+          <div
+            style={{
+              ...innerBox,
+              flex: 1,
+              minWidth: 0,
+              display: "flex",
+              flexDirection: "column",
+              justifyContent: "center",
+              padding: desktop ? "var(--space-xl)" : "var(--space-lg)",
+            }}
+          >
+            {actionBody}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+
+  // ── Header: breadcrumb, the bar, the cut-up headline, author, stats ──
+  const header = (
+    <div>
+      <nav
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: "var(--space-sm)",
+          marginBottom: "var(--space-md)",
+          flexWrap: "wrap",
         }}
       >
         <Link
           to="/tasks"
-          style={{ color: "var(--faction-snide)", textDecoration: "none" }}
-        >
-          {t("snide.breadcrumb")}
-        </Link>
-        <span style={{ opacity: 0.5, margin: "0 var(--space-sm)" }}>›</span>
-        <span style={{ fontFamily: "var(--faction-snide-font-cond)", letterSpacing: "0.12em" }}>
-          {t("snide.faction")}
-        </span>
-        <span style={{ opacity: 0.5, margin: "0 var(--space-sm)" }}>›</span>
-        <span style={{ color: wall }}>{task.title}</span>
-      </nav>
-
-      <div style={{ maxWidth: 760, display: "flex", flexDirection: "column", gap: "var(--space-2xl)" }}>
-        {/* ── Open-case dossier header (ransom cut-out title) ── */}
-        <div
           style={{
-            position: "relative",
-            background: PAPER,
+            ...eyebrow,
             color: INK,
-            border: `1.5px solid ${INK}`,
-            boxShadow: "6px 7px 0 rgba(0,0,0,0.25)",
-            transform: "rotate(-0.5deg)",
-            overflow: "hidden",
+            textDecoration: "none",
+            borderBottom: "2px solid var(--faction-snide-acid-deep)",
           }}
         >
-          {/* margin stripe (acid-on-green) */}
-          <div
-            style={{
-              position: "absolute",
-              left: 0,
-              top: 0,
-              bottom: 0,
-              width: 8,
-              background: "var(--faction-snide)",
-              backgroundImage:
-                "repeating-linear-gradient(180deg, transparent 0 13px, rgba(0,0,0,0.25) 13px 14px)",
-            }}
-          />
-          {/* tape top-right */}
-          <div
-            className="snide-tape"
-            style={{ top: -9, right: 44, width: 64, height: 20, transform: "rotate(6deg)" }}
-          />
-          <div style={{ position: "relative", display: "flex", gap: 0 }}>
-            {/* mugshot panel */}
-            <div
-              style={{
-                flexShrink: 0,
-                width: 138,
-                background: INK,
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                justifyContent: "center",
-                padding: "var(--space-xl) var(--space-md)",
-                backgroundImage:
-                  "repeating-linear-gradient(180deg, transparent 0 13px, rgba(182,255,46,0.16) 13px 14px)",
-              }}
-            >
-              <SnideSigil size={58} color={ACID} />
-              <div
-                style={{
-                  fontFamily: "var(--faction-snide-font-impact)",
-                  fontSize: "var(--text-lg)",
-                  letterSpacing: "0.12em",
-                  color: ACID,
-                  marginTop: "var(--space-md)",
-                }}
-              >
-                {t("snide.jobFile")}
-              </div>
-              <div
-                style={{
-                  fontFamily: "var(--faction-snide-font-type)",
-                  fontSize: "var(--text-xs)",
-                  color: "color-mix(in srgb, var(--faction-snide-acid) 60%, var(--faction-snide-ink))",
-                  letterSpacing: "0.1em",
-                  marginTop: "var(--space-xs)",
-                }}
-              >
-                {t("snide.openCase")}
-              </div>
-            </div>
-            {/* case details */}
-            <div
-              style={{
-                flex: 1,
-                minWidth: 0,
-                padding: "var(--space-xl) var(--space-xl) var(--space-xl) var(--space-lg)",
-                position: "relative",
-              }}
-            >
-              <div
-                style={{
-                  fontFamily: "var(--faction-snide-font-type)",
-                  fontSize: "var(--text-sm)",
-                  letterSpacing: "0.2em",
-                  textTransform: "uppercase",
-                  color: "color-mix(in srgb, var(--faction-snide-ink) 60%, transparent)",
-                  marginBottom: "var(--space-md)",
-                }}
-              >
-                {t("snide.caseFile", { number: caseNo })}
-              </div>
-              {/* Ransom-note title cut from the real task.title */}
-              <h1
-                style={{
-                  display: "flex",
-                  flexWrap: "wrap",
-                  gap: "var(--space-sm) var(--space-xs)",
-                  alignItems: "center",
-                  margin: "0 0 var(--space-lg)",
-                }}
-              >
-                {fragments.map((frag, i) => (
-                  <RansomChip key={i} text={frag} index={i} />
-                ))}
-              </h1>
-              {isMeta && (
-                <div
-                  style={{
-                    fontFamily: "var(--faction-snide-font-cond)",
-                    fontSize: "var(--text-md)",
-                    letterSpacing: "0.14em",
-                    textTransform: "uppercase",
-                    color: "var(--faction-snide-pink-deep)",
-                    marginBottom: "var(--space-md)",
-                  }}
-                >
-                  {t("snide.metataskFor", {
-                    faction: factionName(task.metatask_faction_slug),
-                  })}
-                </div>
-              )}
-              <div
-                style={{
-                  display: "flex",
-                  gap: "var(--space-md)",
-                  flexWrap: "wrap",
-                }}
-              >
-                <EvidenceTag
-                  label={t("snide.evidence.points")}
-                  value={modifiedPoints}
-                  accent
-                />
-                <EvidenceTag
-                  label={t("snide.evidence.level")}
-                  value={t("snide.evidence.levelValue", {
-                    level: task.level_required,
-                  })}
-                />
-                {/* Honest counts (kit's "filed N times" → real in-progress / closed) */}
-                <EvidenceTag
-                  label={t("snide.evidence.filed")}
-                  value={`${signups.length}`}
-                />
-                <EvidenceTag
-                  label={t("snide.evidence.closed")}
-                  value={`${submissions.length}`}
-                />
-              </div>
-              {/* OPEN CASE / real-status stamp */}
-              <span
-                style={{
-                  position: "absolute",
-                  bottom: 16,
-                  right: 16,
-                  fontFamily: "var(--faction-snide-font-cond)",
-                  fontSize: "var(--text-xl)",
-                  letterSpacing: "0.14em",
-                  color: "color-mix(in srgb, var(--faction-snide-pink-deep) 75%, transparent)",
-                  border: "2.5px solid color-mix(in srgb, var(--faction-snide-pink-deep) 70%, transparent)",
-                  padding: "var(--space-xs) var(--space-md)",
-                  transform: "rotate(-7deg)",
-                }}
-              >
-                {task.status === "active"
-                  ? t("snide.openCase")
-                  : task.status.toUpperCase()}
-              </span>
-            </div>
-          </div>
-        </div>
+          {t("detail.breadcrumb.tasks")}
+        </Link>
+        <span aria-hidden="true" style={eyebrow}>
+          /
+        </span>
+        <span style={eyebrow}>
+          {t("detail.breadcrumb.current", { number: task.id })}
+        </span>
+      </nav>
 
-        {/* ── CTA slab (black-ink dispatch bar) ── */}
-        <LevelJumpBanner state={state} />
+      {/* The masthead bar — the faction line, a broken acid rule, and (only on
+          a metatask) the classification stamp. */}
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: "var(--space-md)",
+          marginBottom: "var(--space-md)",
+          padding: "var(--space-sm) var(--space-md)",
+          background: "var(--faction-snide-note-bar)",
+        }}
+      >
+        <span
+          style={{
+            fontFamily: IMPACT,
+            // eslint-disable-next-line local/no-raw-style-values -- ornament: cut-out wordmark; Anton at a label-ramp size stops reading as a masthead.
+            fontSize: 20,
+            letterSpacing: "0.06em",
+            lineHeight: 1,
+            textTransform: "uppercase",
+            color: "var(--faction-snide-acid)",
+          }}
+        >
+          {factionName(slug)}
+        </span>
+        <span
+          aria-hidden="true"
+          style={{
+            flex: 1,
+            minWidth: 24,
+            height: 3,
+            background:
+              "repeating-linear-gradient(90deg, var(--faction-snide-acid) 0 6px, transparent 6px 10px)",
+          }}
+        />
+        {isMetatask && (
+          <span
+            style={{
+              fontFamily: BLACK,
+              fontSize: "var(--text-xs)",
+              textTransform: "uppercase",
+              letterSpacing: "0.15em",
+              padding: "var(--space-xs) var(--space-sm)",
+              transform: "rotate(-2deg)",
+              whiteSpace: "nowrap",
+              // na → rainbow frame; a real faction → solid hue + on-fill ink.
+              ...factionFill(task.metatask_faction_slug, "pill"),
+            }}
+          >
+            {t("detail.meta")}
+          </span>
+        )}
+      </div>
+
+      {/* The headline, cut from four sources word by word.
+          IT MUST STAY ONE READABLE STRING. The design lays the cuts out as a
+          wrapping FLEX row spaced with `gap`, which is a purely visual space: a
+          flex container discards whitespace-only children, so the heading's text
+          content came out as "Namethethingeveryone…". Ordinary inline flow
+          instead — the cuts are `inline-block`, separated by REAL spaces, and
+          they still wrap, still share a baseline, still carry their grounds
+          (the same fix #1023 made on the task card). */}
+      <h1
+        style={{
+          fontSize: desktop ? "var(--text-display)" : "var(--text-heading)",
+          fontWeight: 400,
+          lineHeight: 1.3,
+          margin: "0 0 var(--space-lg)",
+        }}
+      >
+        {task.title.split(/\s+/).map((word, index) => (
+          <span key={`${index}-${word}`}>
+            {index > 0 ? " " : ""}
+            <span
+              style={{
+                display: "inline-block",
+                maxWidth: "100%",
+                overflowWrap: "anywhere",
+                ...CUTS[(index + task.id) % CUTS.length],
+              }}
+            >
+              {word}
+            </span>
+          </span>
+        ))}
+      </h1>
+
+      {isMetatask && (
+        <p
+          style={{
+            ...eyebrow,
+            color: PINK_INK,
+            margin: "0 0 var(--space-md)",
+          }}
+        >
+          {t("detail.metataskFor", {
+            faction: factionName(task.metatask_faction_slug),
+          })}
+        </p>
+      )}
+
+      {/* Author row — the proposing character's byline (#1029). */}
+      {authorName && (
         <div
           style={{
             display: "flex",
             alignItems: "center",
-            gap: "var(--space-lg)",
+            gap: "var(--space-md)",
+            marginBottom: "var(--space-lg)",
             flexWrap: "wrap",
-            background: INK,
-            padding: "var(--space-lg) var(--space-xl)",
-            transform: "rotate(-0.4deg)",
-            boxShadow: "4px 5px 0 rgba(0,0,0,0.2)",
           }}
         >
-          {canSignUp && (
-            <>
-              <button onClick={handleSignup} style={rapSheetStyle("var(--faction-snide-acid-deep)", true)}>
-                {t("snide.signup.cta")}
-              </button>
-              <div
-                style={{
-                  fontFamily: "var(--faction-snide-font-marker)",
-                  fontSize: "var(--text-lg)",
-                  color: PINK,
-                  transform: "rotate(-1deg)",
-                }}
-              >
-                {t("snide.signup.warning")}
-              </div>
-              <div
-                style={{
-                  fontFamily: "var(--font-body)",
-                  fontSize: "var(--text-base)",
-                  letterSpacing: "0.06em",
-                  color: muted,
-                  width: "100%",
-                }}
-              >
-                {t("snide.signup.meta", {
-                  points: modifiedPoints,
-                  open: slotsOpen,
-                  max: maxTaskSlots,
-                  level: task.level_required,
-                })}
-              </div>
-            </>
-          )}
-
-          {mySubmission && (
-            <>
-              <Link
-                to={`/praxes/${mySubmission.id}/edit`}
-                style={rapSheetStyle(PINK)}
-              >
-                {t("snide.submitted.edit")}
-              </Link>
-              <div
-                style={{
-                  fontFamily: "var(--faction-snide-font-marker)",
-                  fontSize: "var(--text-lg)",
-                  color: ACID,
-                  transform: "rotate(-1deg)",
-                }}
-              >
-                {t("snide.submitted.note")}
-              </div>
-            </>
-          )}
-
-          {!mySubmission && isInProgress && inProgressPraxisId !== null && (
-            <>
-              <Link
-                to={`/praxes/${inProgressPraxisId}/edit`}
-                style={rapSheetStyle("var(--faction-snide-acid-deep)")}
-              >
-                {t("snide.inProgress.continue")}
-              </Link>
-              <button
-                onClick={handleDrop}
-                style={{
-                  background: "none",
-                  border: "none",
-                  cursor: "pointer",
-                  fontFamily: "var(--faction-snide-font-marker)",
-                  fontSize: "var(--text-lg)",
-                  color: PINK,
-                  transform: "rotate(-1deg)",
-                }}
-              >
-                {t("snide.inProgress.drop")}
-              </button>
-            </>
-          )}
-
-          {/* Mob verdict — read-only aggregate, pinned to the slab's right edge */}
-          <div
-            style={{
-              marginLeft: "auto",
-              fontFamily: "var(--faction-snide-font-impact)",
-              fontSize: "var(--text-md)",
-              letterSpacing: "0.1em",
-              color: ACID,
-            }}
-          >
-            {voteCount > 0
-              ? t("snide.verdict.closed", {
-                  count: submissions.length,
-                  top: topScore,
-                })
-              : t("snide.verdict.none")}
-          </div>
-        </div>
-        <ErrorBanner
-          message={signupError}
-          style={{
-            background: "color-mix(in srgb, var(--faction-snide-pink) 8%, transparent)",
-            border: "1px solid color-mix(in srgb, var(--faction-snide-pink) 30%, transparent)",
-          }}
-        />
-
-        {/* ── The brief (lined paper) ── */}
-        <section>
-          <MarkerTab text={t("snide.brief")} rot={-1.5} />
-          <div
-            style={{
-              position: "relative",
-              background: PAPER,
-              color: INK,
-              border: `1.5px solid ${INK}`,
-              borderLeft: "4px solid var(--faction-snide)",
-              padding: "var(--space-xl) var(--space-xl) var(--space-lg)",
-              backgroundImage:
-                "repeating-linear-gradient(180deg, transparent 0 27px, rgba(20,17,11,0.08) 27px 28px)",
-              transform: "rotate(0.3deg)",
-              boxShadow: "3px 4px 0 rgba(0,0,0,0.18)",
-              maxWidth: 640,
-            }}
-          >
-            <div
-              className="snide-tape"
-              style={{ top: -9, left: 32, width: 62, height: 18, transform: "rotate(-5deg)" }}
-            />
-            <p
-              className="content-text"
-              style={{
-                fontFamily: "var(--faction-snide-font-type)",
-                lineHeight: "28px",
-                margin: 0,
-                whiteSpace: "pre-wrap",
-              }}
-            >
-              {task.description || t("snide.briefEmpty")}
-            </p>
-          </div>
-        </section>
-
-        {/* ── Accomplices on file ── */}
-        {signups.length > 0 && (
-          <section>
-            <MarkerTab text={t("snide.accomplices")} rot={1} />
-            <AccompliceRow signups={signups} friends={friends} foes={foes} />
-          </section>
-        )}
-
-        {/* ── Cases closed (completed praxis) ── */}
-        <section>
-          <div
+          <Link
+            to={`/characters/${task.created_by}`}
             style={{
               display: "flex",
               alignItems: "center",
-              justifyContent: "space-between",
-              flexWrap: "wrap",
               gap: "var(--space-sm)",
+              textDecoration: "none",
             }}
           >
-            <MarkerTab
-              text={t("snide.casesClosed", { count: submissions.length })}
-              rot={1}
-            />
-            <div style={{ display: "flex", gap: 0, marginBottom: "var(--space-lg)" }}>
-              {(["score", "recent"] as const).map((sort) => {
-                const on = submissionSort === sort;
-                return (
-                  <button
-                    key={sort}
-                    onClick={() => setSubmissionSort(sort)}
-                    style={{
-                      fontFamily: "var(--faction-snide-font-cond)",
-                      fontSize: "var(--text-md)",
-                      letterSpacing: "0.1em",
-                      textTransform: "uppercase",
-                      padding: "var(--space-xs) var(--space-md)",
-                      background: on ? INK : "transparent",
-                      color: on ? ACID : muted,
-                      border: `1.5px solid ${on ? INK : "color-mix(in srgb, var(--faction-snide-wall-text) 30%, transparent)"}`,
-                      cursor: "pointer",
-                    }}
-                  >
-                    {sort === "score"
-                      ? t("snide.sort.topMarks")
-                      : t("snide.sort.recent")}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-          {sortedSubmissions.length === 0 ? (
-            <p
-              className="content-text"
+            {task.created_by_avatar_url ? (
+              <img
+                src={mediaUrl(task.created_by_avatar_url)}
+                alt={authorName}
+                style={{
+                  width: 30,
+                  height: 30,
+                  flex: "none",
+                  borderRadius: "50%",
+                  objectFit: "cover",
+                  boxShadow: `0 0 0 2px ${INK}`,
+                }}
+              />
+            ) : (
+              <span
+                aria-hidden="true"
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  width: 30,
+                  height: 30,
+                  flex: "none",
+                  borderRadius: "50%",
+                  overflow: "hidden",
+                  border: `2px solid ${INK}`,
+                  fontFamily: TYPE,
+                  fontSize: "var(--text-lg)",
+                  color: INK,
+                }}
+              >
+                {initialsOf(authorName)}
+              </span>
+            )}
+            <span
               style={{
-                fontFamily: "var(--faction-snide-font-marker)",
-                color: PINK,
+                fontFamily: TYPE,
+                fontSize: "var(--text-xl)",
+                color: INK,
+                borderBottom: "2px solid var(--faction-snide-acid-deep)",
               }}
             >
-              {t("snide.empty")}
-            </p>
-          ) : (
-            <>
-              <div style={{ display: "flex", flexWrap: "wrap", gap: "var(--space-2xl) var(--space-xl)", alignItems: "flex-start" }}>
-                {sortedSubmissions.slice(0, 4).map((s) => (
-                  <div key={s.id} style={{ position: "relative", paddingTop: s.id === topId ? "var(--space-xl)" : 0 }}>
-                    {s.id === topId && (
-                      <div
-                        style={{
-                          position: "absolute",
-                          top: 0,
-                          left: "50%",
-                          transform: "translateX(-50%) rotate(-3deg)",
-                          zIndex: 3,
-                          display: "inline-flex",
-                          alignItems: "center",
-                          gap: "var(--space-xs)",
-                          whiteSpace: "nowrap",
-                          background: PINK,
-                          color: "#fff",
-                          fontFamily: "var(--faction-snide-font-black)",
-                          fontSize: "var(--text-sm)",
-                          letterSpacing: "0.06em",
-                          padding: "var(--space-xs) var(--space-md)",
-                          boxShadow: `2px 3px 0 ${INK}`,
-                        }}
-                      >
-                        <span style={{ fontSize: "var(--text-lg)", lineHeight: 1 }}>⚜</span>{" "}
-                        {t("snide.topMarks")}
-                      </div>
-                    )}
-                    <PraxisCard praxis={s} />
-                  </div>
-                ))}
-              </div>
-              {submissions.length > 4 && (
-                <div style={{ marginTop: "var(--space-lg)" }}>
-                  <Link
-                    to={`/praxes?task_id=${task.id}`}
-                    style={{
-                      fontFamily: "var(--faction-snide-font-marker)",
-                      fontSize: "var(--text-xl)",
-                      color: "var(--faction-snide)",
-                      textDecoration: "none",
-                    }}
-                  >
-                    {t("snide.viewAll", { count: submissions.length })}
-                  </Link>
-                </div>
-              )}
-            </>
+              {authorName}
+            </span>
+          </Link>
+          <span style={eyebrow}>
+            {t("detail.author", { level: task.created_by_level ?? 0 })}
+          </span>
+        </div>
+      )}
+
+      {/* Header stats. Exactly two — the completed count lives on the gallery
+          heading, and there is deliberately no roster. */}
+      <div
+        style={{
+          display: "flex",
+          alignItems: "flex-end",
+          gap: desktop ? "var(--space-xl)" : "var(--space-lg)",
+          flexWrap: "wrap",
+        }}
+      >
+        {statBlock(t("detail.stats.level"), task.level_required, true)}
+        <span
+          aria-hidden="true"
+          style={{
+            width: 2,
+            alignSelf: "stretch",
+            minHeight: 34,
+            background: "var(--faction-snide-note-rule)",
+          }}
+        />
+        {statBlock(t("detail.stats.inProgress"), inProgressCount, false)}
+      </div>
+    </div>
+  );
+
+  // ── The brief, in full. No clamp, no "read more", and NOT ONE WORD REDACTED:
+  //    the censor rules the section off, it does not eat the instructions.
+  const brief = (
+    <section style={{ marginBottom: desktop ? "var(--space-2xl)" : "var(--space-xl)" }}>
+      {sectionHead(t("detail.brief.heading"))}
+      <div style={{ ...panel, padding: desktop ? "var(--space-xl)" : "var(--space-lg)" }}>
+        {task.description && (
+          <p
+            className="content-text"
+            style={{
+              fontFamily: TYPE,
+              lineHeight: 1.55,
+              color: INK,
+              whiteSpace: "pre-wrap",
+              margin: 0,
+            }}
+          >
+            {task.description}
+          </p>
+        )}
+        <CensorRule style={{ marginTop: "var(--space-lg)" }} />
+      </div>
+    </section>
+  );
+
+  // ── The praxis gallery: live PraxisCards, expanded in place ──
+  const gallery = (
+    <section style={{ marginBottom: desktop ? "var(--space-2xl)" : "var(--space-xl)" }}>
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: "var(--space-md)",
+          marginBottom: "var(--space-md)",
+          flexWrap: "wrap",
+        }}
+      >
+        <span
+          style={{
+            fontFamily: IMPACT,
+            fontSize: desktop ? "var(--text-heading)" : "var(--text-title)",
+            lineHeight: 1.02,
+            letterSpacing: "0.01em",
+            textTransform: "uppercase",
+            color: INK,
+          }}
+        >
+          {t("detail.gallery.heading", { count: submissions.length })}
+        </span>
+        <CensorRule style={{ flex: "1 1 20%", minWidth: 24 }} />
+        <span
+          style={{
+            display: "flex",
+            gap: "var(--space-xs)",
+            padding: "var(--space-xs)",
+            border: `2px solid ${INK}`,
+            background: PAPER,
+          }}
+        >
+          {(["score", "recent"] as const).map((sort) => (
+            <button
+              key={sort}
+              onClick={() => setSubmissionSort(sort)}
+              style={{
+                cursor: "pointer",
+                border: "none",
+                fontFamily: TYPE,
+                fontSize: "var(--text-xs)",
+                letterSpacing: "0.14em",
+                textTransform: "uppercase",
+                whiteSpace: "nowrap",
+                padding: "var(--space-sm) var(--space-md)",
+                background:
+                  submissionSort === sort ? "var(--faction-snide-note-cta-bg)" : "transparent",
+                color:
+                  submissionSort === sort ? "var(--faction-snide-note-cta-ink)" : MUTED,
+              }}
+            >
+              {sort === "score"
+                ? t("detail.gallery.sort.top")
+                : t("detail.gallery.sort.recent")}
+            </button>
+          ))}
+        </span>
+      </div>
+
+      {sortedSubmissions.length === 0 ? (
+        <p className="content-text" style={{ fontFamily: TYPE, color: MUTED, margin: 0 }}>
+          {t("detail.gallery.empty")}
+        </p>
+      ) : (
+        <>
+          <div className="flex flex-wrap gap-4 items-start">
+            {(showAllPraxis
+              ? sortedSubmissions
+              : sortedSubmissions.slice(0, GALLERY_PREVIEW)
+            ).map((praxis) => (
+              <PraxisCard key={praxis.id} praxis={praxis} />
+            ))}
+          </div>
+          {submissions.length > GALLERY_PREVIEW && (
+            <button
+              onClick={() => setShowAllPraxis((shown) => !shown)}
+              style={{
+                display: "inline-block",
+                marginTop: "var(--space-lg)",
+                cursor: "pointer",
+                border: "none",
+                fontFamily: IMPACT,
+                fontSize: "var(--text-content)",
+                letterSpacing: "0.04em",
+                textTransform: "uppercase",
+                background: "var(--faction-snide-note-cta-bg)",
+                color: "var(--faction-snide-note-cta-ink)",
+                padding: "var(--space-sm) var(--space-md)",
+                transform: "rotate(-0.8deg)",
+              }}
+            >
+              {showAllPraxis
+                ? t("detail.gallery.showFewer")
+                : t("detail.gallery.viewAll", { count: submissions.length })}
+            </button>
           )}
-        </section>
+        </>
+      )}
+    </section>
+  );
+
+  return (
+    <div className="py-8" style={{ position: "relative", fontFamily: TYPE, color: INK }}>
+      {/* The flyposted xerox wall, painted on the detail COLUMN rather than the
+          viewport: the owner's rule for this surface is that the site background
+          still shows around the component (QA on #1055, then #1057). This used
+          to mount `.snide-backdrop`, which is `position: fixed` because the
+          faction-context pages that share it DO want the whole page. index.css
+          now splits that rule — one paint, two mounts — so the wall cannot drift
+          between them. */}
+      <div
+        className="snd-detail-sheet"
+        style={{
+          position: "relative",
+          zIndex: 1,
+          maxWidth: 1200,
+          margin: "0 auto",
+          borderRadius: 18,
+          padding: desktop ? "var(--space-2xl)" : "var(--space-lg)",
+          overflow: "hidden",
+          boxSizing: "border-box",
+        }}
+      >
+        <div
+          style={{
+            display: "flex",
+            flexDirection: desktop ? "row" : "column",
+            alignItems: desktop ? "flex-start" : "stretch",
+            gap: "var(--space-xl)",
+            marginBottom: desktop ? "var(--space-2xl)" : "var(--space-xl)",
+          }}
+        >
+          <div style={{ flex: 1, minWidth: 0 }}>{header}</div>
+          <div
+            style={{
+              flex: desktop ? "0 0 452px" : "1 1 auto",
+              width: desktop ? 452 : "100%",
+              marginTop: desktop ? "var(--space-xl)" : 0,
+            }}
+          >
+            {actionPlate}
+          </div>
+        </div>
+
+        <div style={{ minWidth: 0 }}>
+          {brief}
+          {gallery}
+          <TaskDetailComments
+            state={state}
+            heading={sectionHead(t("detail.comments.heading"))}
+          />
+        </div>
       </div>
     </div>
   );

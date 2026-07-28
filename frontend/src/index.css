@@ -473,6 +473,24 @@
   --faction-singularity-term-cta-ink: #04120a;
   --faction-singularity-term-shadow: 0 16px 42px -26px rgba(0, 0, 0, 0.7), inset 0 0 0 1px rgba(74, 222, 128, 0.1);
 
+  /* ── Singularity task detail v2 (#1034) — four keys the task card never needed.
+     The detail page is the same terminal at PAGE scale, so it reuses the whole
+     --faction-singularity-term-* family above and adds only what a card-sized
+     surface had no use for: a raised PANEL (the card is one flat chassis; the
+     page stacks boxes on it) and the three PHOSPHOR HALOS.
+
+     Same two-theme contract as the family it extends — both halves near-black,
+     the cascade flips the phosphor, not the chassis. The halos are the one place
+     the two halves genuinely diverge in KIND rather than in value: the design
+     ships them as `none` in its light set and lit in its dark set, because a
+     glow read against the lighter of two blacks turns into a smear rather than a
+     bloom. They are declared as whole shadow values so no component ever writes
+     a `theme === 'dark' ? … : …` around one. */
+  --faction-singularity-term-panel: #0b1b12; /* raised box on the chassis */
+  --faction-singularity-term-halo-green: none; /* title bloom */
+  --faction-singularity-term-halo-blue: none; /* points-numeral bloom */
+  --faction-singularity-term-cta-glow: none; /* the lit JOIN key */
+
   /* ══ Ephemerists illuminated-codex palette (the ephemerists slot) ══
      The card contract above rebinds to these. CONSTANTS (gold/rubric/
      lapis/verdigris/ink) keep their role in both themes; the VELLUM
@@ -933,6 +951,31 @@
   --faction-ephemerists-plate-wash: linear-gradient(180deg, rgba(227, 197, 106, 0.24), transparent);
   --faction-ephemerists-plate-shadow: 0 18px 44px -26px rgba(42, 32, 16, 0.45);
 
+  /* ── THE VALLEY PLATE, page-sized (task detail v2, #1032) ──
+     The task card is one plate on the app's own page ground; task detail IS the
+     plate, so it needs a ground of its own, a second sheet for the panel cells,
+     and two hairline weights the card never had to name.
+
+     TWO VALUES ARE WALKED DOWN, for the same reason `-brass` became `-caption`
+     in the block above — the design's inks were measured against the plate, and
+     detail sets quiet type on the darker PAGE as well:
+       · design `faint` #9a8c6c → 2.43:1 on the plate. Unusable as an ink at any
+         size; there is no `-faint` token. Quiet type takes `-quiet` below.
+       · design `muted` #6b5f45 (`-plate-muted`) clears 4.60:1 on the plate but
+         only 4.31:1 on the page. `-quiet` is that same brown taken down until it
+         clears on ALL THREE grounds (page 5.25, plate 5.60, inner 6.20), so a
+         skin never has to know which sheet a label landed on.
+       · design `nile` #2e6e6a measures 4.34:1 on the plate / 4.24:1 on the page —
+         a near miss on the one hue that carries links and the "level met" yes.
+         Walked to #276460: page 4.70, plate 5.01, inner 5.55.
+     Dark needs no walk-down: the same roles clear 5.5–7.5 on the night plate. */
+  --faction-ephemerists-plate-page: #e4d5b0; /* the page ground under the plate */
+  --faction-ephemerists-plate-inner: #f2e7cb; /* the action panel's two cells */
+  --faction-ephemerists-plate-quiet: #5f5238; /* quiet ink — AA on all 3 grounds */
+  --faction-ephemerists-plate-nile: #276460; /* links, affirmations, the eye */
+  --faction-ephemerists-plate-rule: rgba(42, 36, 24, 0.1); /* journal ruling */
+  --faction-ephemerists-plate-line: rgba(42, 36, 24, 0.24); /* hairline borders */
+
   /* ══ Everymen — the rainbow's missing red (union/WW2 poster) ══
      Constants (cream/gold/ink) keep their role in both themes; the paper
      surface + its text FLIP in dark; accent red stays vivid; field is the
@@ -1003,6 +1046,34 @@
   --faction-everymen-bill-glow-gold: rgba(217, 154, 43, 0.14);
   --faction-everymen-bill-glow-olive: rgba(91, 98, 56, 0.1);
   --faction-everymen-bill-shadow: 0 12px 32px -16px rgba(34, 26, 18, 0.5);
+
+  /* ══ Everymen — THE BROADSHEET SHEET (task detail v2, #1033) ══
+     The task-detail page printed as a union broadsheet: newsprint with
+     rising-sun rays fanning up from the BOTTOM edge, a cog masthead, dashed red
+     rules and a rubber-stamp points seal.
+
+     Short for the same reason the bill block above is short — the design's
+     TOKENS object is the `--everymen-*` family almost value-for-value in BOTH
+     themes (its `ink` is `--everymen-paper-text`, `page` is
+     `--everymen-paper-deep`, `paper`/`red`/`redDeep`/`gold`/`goldDeep`/`olive`/
+     `muted` all match), and its masthead is the bill's theme-invariant red bar,
+     so this surface reuses `--faction-everymen-bill-mast(-ink)` rather than
+     minting a second red. Only the roles with no existing home live here.
+
+     The one that is NOT a duplicate: the design's `cream` is a lighter PANEL
+     surface that flips dark at night (#f4ecd6 → #2c231c), whereas
+     `--everymen-cream` is a constant cream in both themes. Aliasing the two
+     would print cream boxes onto the dark broadsheet. */
+  --faction-everymen-sheet-panel: #f4ecd6;
+  --faction-everymen-sheet-hair: rgba(34, 26, 18, 0.22);
+  /* Red as TEXT, which is a different job from red as a rule or a fill.
+     `--everymen-red` pays 4.95:1 on the light panel but only 3.73:1 on the dark
+     one, so the dark cascade walks the same hue up until it clears (5.45:1).
+     Dashed rules and filled bars keep `--everymen-red`; only ink uses this. */
+  --faction-everymen-sheet-accent: #c1272d;
+  /* Rising-sun ornament alphas — opacity decisions, not component numbers. */
+  --faction-everymen-sheet-ray: rgba(193, 39, 45, 0.1);
+  --faction-everymen-sheet-glow: rgba(193, 39, 45, 0.12);
 
   /* ── Gearworks vote widget (#821) — reached gears heat a cold→ember ramp with
      pale hubs; unreached gears are edge-only outlines; rank 5 throws sparks. The
@@ -1323,6 +1394,14 @@
   );
   --faction-singularity-term-shadow: 0 16px 42px -24px rgba(0, 0, 0, 0.85), inset 0 0 0 1px rgba(74, 222, 128, 0.12);
 
+  /* ── Singularity task detail, lights out (#1034) ──
+     The panel sinks with the chassis, and the three halos LIGHT — see the light
+     half for why they are `none` there. Values are the design's own. */
+  --faction-singularity-term-panel: #08150d;
+  --faction-singularity-term-halo-green: 0 0 16px rgba(74, 222, 128, 0.28);
+  --faction-singularity-term-halo-blue: 0 0 14px rgba(96, 165, 250, 0.3);
+  --faction-singularity-term-cta-glow: 0 0 18px rgba(74, 222, 128, 0.18);
+
   /* ── UA · sun-bleached practice, after dark (#788, #848) ──
      The mesa at night, not a parchment held up to a black page. Surfaces sink
      (page darkest, then card, panel, lift), inks rise, and the sienna lifts —
@@ -1449,6 +1528,13 @@
   --faction-ephemerists-plate-cta-ink: #12151f;
   --faction-ephemerists-plate-wash: none;
   --faction-ephemerists-plate-shadow: 0 20px 50px -26px rgba(0, 0, 0, 0.8);
+  /* Page-sized plate (#1032) — the night half of the block above. */
+  --faction-ephemerists-plate-page: #101320;
+  --faction-ephemerists-plate-inner: #1d2130;
+  --faction-ephemerists-plate-quiet: #a2977a;
+  --faction-ephemerists-plate-nile: #5fb3a6;
+  --faction-ephemerists-plate-rule: rgba(201, 162, 75, 0.12);
+  --faction-ephemerists-plate-line: rgba(201, 162, 75, 0.28);
 
   /* ── Warriors of Whimsy collage scrap layers (dark) ── */
   --faction-coven-scrap-deep: #091209;
@@ -1619,6 +1705,15 @@
   --faction-everymen-bill-glow-gold: rgba(231, 185, 79, 0.1);
   --faction-everymen-bill-glow-olive: rgba(138, 149, 90, 0.08);
   --faction-everymen-bill-shadow: 0 12px 32px -14px rgba(0, 0, 0, 0.8);
+  /* ── The broadsheet sheet (dark, #1033) ── The panel becomes a lifted plate on
+     the near-black newsprint (the design's own dark `cream`), the hairline
+     inverts, and red-as-ink lifts to clear AA on it (5.45:1 on the panel,
+     6.18:1 on the paper; the light #c1272d would pay 3.73:1). */
+  --faction-everymen-sheet-panel: #2c231c;
+  --faction-everymen-sheet-hair: rgba(243, 231, 206, 0.2);
+  --faction-everymen-sheet-accent: #f4726c;
+  --faction-everymen-sheet-ray: rgba(226, 67, 63, 0.13);
+  --faction-everymen-sheet-glow: rgba(226, 67, 63, 0.12);
   /* Gearworks: cooler edge for cold gears, a brighter single-halo rank-5 glow on
      the dark paper (the light double-drop-shadow would muddy against it). */
   --faction-everymen-vote-edge: #8a7856;
@@ -1665,6 +1760,25 @@
   background: radial-gradient(120% 90% at 50% 8%, transparent 40%, color-mix(in srgb, var(--everymen-paper-deep) 55%, transparent));
 }
 
+/* ══ Everymen broadsheet backdrop (task detail v2, #1033; theme-aware) ══
+   The rising sun the union prints its bills under — rays fanning UP from below
+   the bottom edge, over the newsprint. Distinct from `.em-backdrop` above,
+   whose rays fall from the top: that one dresses the faction-context pages, this
+   one is the sheet the task detail is printed on. Fixed, like every other
+   faction backdrop, so the paper runs to the viewport edge instead of stopping
+   at the 1200 content cap. The two ray alphas are tokens because they differ
+   per theme; the rule itself never branches on the theme. */
+.em-broadsheet {
+  /* Painted on the detail COLUMN, not the viewport — the site background shows
+     around it (owner QA on #1055, applied to every task-detail skin). The
+     archetype supplies position / z-index / radius / padding; this rule owns
+     only the newsprint and its rising-sun rays. */
+  background-color: var(--everymen-paper-deep);
+  background-image:
+    repeating-conic-gradient(from 200deg at 50% 118%, var(--faction-everymen-sheet-ray) 0 2.6deg, transparent 2.6deg 6.4deg),
+    radial-gradient(58% 46% at 50% 116%, var(--faction-everymen-sheet-glow), transparent 72%);
+}
+
 /* ══ Cozy Coven lo-fi desktop backdrop (faction-context pages; theme-aware) ══ */
 .coven-backdrop {
   position: fixed;
@@ -1686,11 +1800,15 @@
 }
 
 /* ══ S.N.I.D.E. flyposted-wall backdrop (faction-context pages; theme-aware) ══ */
-.snide-backdrop {
-  position: fixed;
-  inset: 0;
-  z-index: 0;
-  pointer-events: none;
+/* The wall PAINT, shared by two mounts with different geometry:
+     • `.snide-backdrop`   — the full-viewport wall (SnideBackdrop.tsx) on
+       faction-context pages, where covering the page IS the point.
+     • `.snd-detail-sheet` — the task-detail COLUMN's ground. The owner's rule
+       for task detail is that the site background still shows around the
+       component (QA on #1055, then #1057), so this mount must NOT be fixed.
+   One declaration, so the two can never drift apart. */
+.snide-backdrop,
+.snd-detail-sheet {
   background-color: var(--faction-snide-wall);
   background-image:
     radial-gradient(40% 30% at 100% 0%, color-mix(in srgb, var(--faction-snide-acid) 18%, transparent), transparent 70%),
@@ -1701,11 +1819,27 @@
     linear-gradient(180deg, var(--faction-snide-wall), var(--faction-snide-wall-deep));
   background-size: 100% 100%, 100% 100%, 5px 5px, auto, auto, 100% 100%;
 }
-.snide-backdrop::after {
+/* Only the full-page mount is fixed. */
+.snide-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+.snide-backdrop::after,
+.snd-detail-sheet::after {
   content: "";
   position: absolute;
   inset: 0;
   background: radial-gradient(120% 90% at 50% 6%, transparent 42%, color-mix(in srgb, var(--faction-snide-wall-deep) 60%, transparent));
+}
+/* On the column the vignette needs an explicit z-index: the column is
+   positioned, so a positioned ::after would otherwise paint OVER the copy.
+   -1 puts it above the sheet's background and beneath its content. */
+.snd-detail-sheet::after {
+  z-index: -1;
+  border-radius: inherit;
+  pointer-events: none;
 }
 
 /* ══ Default (Unaffiliated / na) spectrum backdrop (faction-context pages; theme-aware) ══
@@ -2573,6 +2707,51 @@
   }
 }
 
+/* Ephemerists — the sheet a page-sized Valley plate is printed on (task detail
+   v2, #1032). The archetype's own content column wears it: this whole page IS
+   the plate, so the papyrus is the column's surface, not a tint under it.
+
+   NOT a fixed full-bleed backdrop, and that is the point. #1056 pulled that
+   pattern off the na build after live QA, and the layout says why: the routed
+   page sits inside a `position: relative; z-index: 5` wrapper, so a fixed
+   `z-index: 0` child of it is a POSITIONED descendant of that stacking context
+   and paints over the non-positioned sidebar beside it.
+
+   Deliberately NOT `.eph-backdrop` either — that is the illuminated-codex ground
+   (`--eph-*`) every OTHER Ephemerists surface still paints on. The v2 plate is a
+   full metaphor swap (ADR-0055) and the two grounds must not be confused.
+
+   The wash only LIGHTENS (a gold bloom off the cornice) and never darkens. Both
+   inks this ground carries were walked down to a measured margin over the FLAT
+   page value, and a darkening vignette eats that margin exactly where the page
+   runs longest: `-nile` falls from 4.70 to 4.29 under a 5% black veil. That is
+   how a decorative gradient fails AA without anything reporting it. */
+.eph-plate-sheet {
+  background:
+    radial-gradient(58% 40% at 50% 0%, rgba(227, 197, 106, 0.16), transparent 72%),
+    var(--faction-ephemerists-plate-page);
+  transition: background 300ms;
+}
+[data-theme="dark"] .eph-plate-sheet {
+  background:
+    radial-gradient(58% 40% at 50% 0%, rgba(201, 162, 75, 0.1), transparent 72%),
+    var(--faction-ephemerists-plate-page);
+}
+
+/* The winged disc crowning the action panel (#1032). The design lifts the gold
+   off the papyrus with a hard night-blue offset plus a soft cast, and drops to a
+   plain soft cast on the dark plate where the hard edge would only smear. That
+   choice arrives here as a cascade rule rather than as the design's
+   `theme === 'dark' ? … : …` ternary in the component. */
+.eph-plate-crown {
+  filter:
+    drop-shadow(0 2px 0 var(--faction-ephemerists-plate-band))
+    drop-shadow(0 6px 14px rgba(30, 34, 51, 0.45));
+}
+[data-theme="dark"] .eph-plate-crown {
+  filter: drop-shadow(0 3px 7px rgba(0, 0, 0, 0.6));
+}
+
 /* Coven — the spell slip's braid (#1023): a slender celtic thread with a gold
    bead at each crossing, tiled horizontally. It lives here rather than in the
    card because a data-URI SVG is a SEPARATE DOCUMENT — `var(--…)` inside one
@@ -3221,4 +3400,218 @@
 [data-theme="dark"] {
   --faction-wow-mobile-header-from: var(--faction-wow-avatar-field);
   --faction-wow-mobile-header-to: var(--faction-wow-card-bg);
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   COVEN — THE CANDLELIT WARD (task detail v2, #1031)
+   ══════════════════════════════════════════════════════════════════════════
+   The detail page is the spell slip opened out: a candlelight haze washing the
+   whole viewport, braided thread rules (`.cvn-braid`, already shipped for the
+   task card), the turning pentagram watermark (`.cvn-wheel`, likewise) and the
+   points held inside a glowing pentagram ward.
+
+   Nearly the whole palette is ALREADY DECLARED as --faction-coven-slip-* by the
+   task card (#1023), and the design's TOKENS map onto it one-for-one — same
+   pinks, same lavenders, same gold. This block adds only what the slip family
+   has no name for: the page ground the haze sits on, the panel ground the
+   copy sits on, the stat hairline, the haze strength, and the gold "you're on
+   it" band.
+
+   THE DESIGN'S `soft` AND `label` INKS ARE NOT RE-INTRODUCED. It states
+   #b8517f / #b06a92; #1023 already measured those and walked them down to
+   #973660 / #83466a for AA. WORLD_ZERO_STYLE §6: when the kit and a shipped
+   token disagree, find out whether the disagreement is already settled. It is.
+
+   MEASURED, against the worst case each ink actually meets — the page ground
+   under the peak of a haze bloom, since the header copy sits directly on it:
+     light, page #fdeef5 under the pink bloom at 22% → #f9c9d9-ish
+       --faction-coven-slip-ink   4.85:1 floor … 5.75:1   (title, section heads)
+       --faction-coven-slip-label 4.85:1                  (eyebrows, captions)
+     dark, page #1d0a15 under the pink bloom at 28%
+       --faction-coven-slip-ink   8.5:1
+       --faction-coven-slip-label 5.05:1
+   The gold bloom is the brightest of the four and is therefore mixed to 55%
+   before it lands: at full strength it drags slip-label to 4.02:1 in dark. */
+:root {
+  /* The page ground the haze washes. Light is the design's #fdeef5 verbatim. */
+  --faction-coven-ward-page: #fdeef5;
+  /* The panel ground — brief, action-plate inner boxes, sort rail. A shade
+     ABOVE the page so a panel reads as paper laid on the wash, not as a hole. */
+  --faction-coven-ward-card: #fff6fb;
+  /* The hairline between the header stats. Ornament — nothing is painted on it. */
+  --faction-coven-ward-hair: rgba(201, 50, 122, 0.18);
+  /* Haze strength. A NUMBER, not a colour, because the two themes want the same
+     four blooms at different weights and an opacity picked in TSX is a
+     `dark ? a : b` in numeric clothing (WORLD_ZERO_STYLE §6). */
+  --faction-coven-ward-haze: 0.22;
+  /* The "you're on this task" band: candle gold instead of the pink CTA, so the
+     two states never read alike. THEME-INVARIANT, on WOW's gold reasoning (§3) —
+     a lit candle does not dim when the room does. Only the band's upper stop
+     flips, and it does so by reading --faction-coven-slip-gold. Ink #5c3a06 on
+     the lower stop #d9a521 measures 4.55:1, and better on the brighter stop. */
+  --faction-coven-ward-hold-to: #d9a521;
+  --faction-coven-ward-hold-ink: #5c3a06;
+  --faction-coven-ward-hold-border: #c08d14;
+}
+[data-theme="dark"] {
+  --faction-coven-ward-page: #1d0a15;
+  --faction-coven-ward-card: #2a0f1e;
+  --faction-coven-ward-hair: rgba(249, 168, 212, 0.2);
+  /* The night slip carries more candle, exactly as the design's own dark half
+     does (.5 → .7 there; both walked down here for the contrast floor above). */
+  --faction-coven-ward-haze: 0.28;
+}
+
+/* The full-viewport candlelight wash. Same markup hook shape as `.na-backdrop`:
+   `<div class="coven-candle-backdrop" aria-hidden />` inside the archetype.
+   The design blurs a floating gradient stack at `blur(70px)` and blends it
+   `screen` in dark; both are replaced by soft-stopped radial gradients over the
+   page ground, which is the repo's established backdrop shape and costs no
+   filter layer. The FLOAT survives — it is the candle, and it lives here rather
+   than in a component-injected <style> (#911). */
+.coven-candle-backdrop {
+  /* Painted on the detail COLUMN, not the viewport — the site background shows
+     around it (owner QA on #1055, applied to every task-detail skin). The
+     archetype supplies position / z-index / radius / padding; this rule owns
+     only the ground and its blooms. `overflow: hidden` stays because the
+     ::before bloom is inset -25% and must be clipped to the column. */
+  overflow: hidden;
+  background: var(--faction-coven-ward-page);
+  transition: background 300ms;
+}
+.coven-candle-backdrop::before {
+  content: "";
+  position: absolute;
+  inset: -25%;
+  opacity: var(--faction-coven-ward-haze);
+  background-image:
+    radial-gradient(50% 40% at 12% 8%, var(--faction-coven-slip-pk), transparent 100%),
+    radial-gradient(46% 38% at 88% 14%, var(--faction-coven-slip-lav), transparent 100%),
+    radial-gradient(42% 34% at 62% 84%, color-mix(in srgb, var(--faction-coven-slip-gold) 55%, transparent), transparent 100%),
+    radial-gradient(46% 36% at 20% 92%, var(--faction-coven-slip-vio), transparent 100%);
+}
+@keyframes cvn-haze {
+  0%,
+  100% {
+    transform: translate3d(-3%, -2%, 0) scale(1.1);
+  }
+  50% {
+    transform: translate3d(3%, 2%, 0) scale(1.18);
+  }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .coven-candle-backdrop::before {
+    animation: cvn-haze 34s ease-in-out infinite;
+  }
+}
+
+/* The ward's aura breathes like a candle. Opt-in under `no-preference`, the
+   repo's inverted form of the design's `reduce → none`: stilled, the aura is
+   simply a steady glow. */
+@keyframes cvn-flicker {
+  0%,
+  100% {
+    opacity: 0.62;
+    transform: scale(1);
+  }
+  38% {
+    opacity: 0.9;
+    transform: scale(1.06);
+  }
+  71% {
+    opacity: 0.7;
+    transform: scale(0.98);
+  }
+}
+.cvn-candle {
+  transform-origin: 50% 50%;
+  opacity: 0.72;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .cvn-candle {
+    animation: cvn-flicker 5.5s ease-in-out infinite;
+  }
+}
+
+/* ══ WOW — TASK DETAIL, the parchment field (#1037) ══
+   WOW's first DESKTOP task-detail skin: gold-and-plum parchment under a fine dot
+   texture, bunting across the head, a struck points plaque, wavy gold→plum rules
+   and a bunch of googly balloons. Until this slice a WOW task rendered the na
+   dossier on desktop — one of #951's four bullets.
+
+   ALMOST NOTHING IS NEW. #1023's quest decree already minted the ribbon, the
+   plaque shadow, the blade, the balloon ramp and the eye parts, and this page
+   reads them verbatim rather than growing a parallel set. FIVE roles had no
+   name, and they are the whole block.
+
+   THREE PAIRINGS FROM THE DESIGN DID NOT SURVIVE MEASUREMENT, all against the
+   new page field (which is DARKER than the cream card, so every light-mode
+   claim measured on the card had to be recomputed):
+     • The design sets label text in its `muted` grey. On the field that is
+       --faction-wow-card-muted at 4.20:1 — under AA. Labels on the field take
+       --faction-wow-accent-deep instead (4.70:1 light, 9.49:1 dark), the same
+       walked-down olive-gold #860 landed on for the cards.
+     • The design's third text tier (`dim`, #a79668 light) is ~2.4:1 on its own
+       page and is not shipped at all; its lines fold into card-muted on a panel
+       and accent-deep on the field.
+     • The design paints the CTA in `t.plum`, which in dark is the LIFTED
+       #c79be0 under cream text. That is plum-as-ink used as a fill. The CTA and
+       the ×mult chip take the theme-invariant --faction-wow-plum-surface
+       (5.16:1 in both themes) — note 1 by that declaration already settled it.
+   Measured on the field: plum ink 5.11:1 light / 8.54:1 dark; body ink 12.38:1
+   light / 15.83:1 dark. Inside the plate: card-muted 4.52:1 light / 6.43:1 dark,
+   accent-deep 5.06:1 light. */
+:root {
+  /* The page ground. NOT --faction-wow-ground-from (the WowBackdrop wallpaper):
+     that is a full-page wash a WOW *viewer* carries between pages, while this is
+     the sheet this one page is printed on, and it is a shade deeper so the cream
+     cards read as laid ON something. */
+  --faction-wow-detail-field: #efe6ce;
+  /* The fine dot texture, 1px on a 5px grid. Ink-on-parchment in light, gilt
+     specks in dark — the only way a dot stays visible on both grounds. */
+  --faction-wow-detail-dot: rgba(74, 56, 10, 0.05);
+  /* The plate's inner boxes: a shade off the cream card so the two nested
+     parchments separate without a second border. */
+  --faction-wow-detail-inset: #f7eed8;
+  /* The edge of a plum FILL. Theme-invariant, because the surface it edges
+     (--faction-wow-plum-surface) is — a struck border does not repaint itself
+     when the lights go out, same reasoning as the gold (§3). */
+  --faction-wow-plum-edge: #5b3277;
+  /* The page's lift. Deeper than the card's --faction-wow-quest-shadow: a whole
+     plate throws a longer shadow than a card does. */
+  --faction-wow-detail-shadow: 0 12px 30px -16px rgba(74, 56, 10, 0.5);
+}
+[data-theme="dark"] {
+  --faction-wow-detail-field: #100c05;
+  --faction-wow-detail-dot: rgba(227, 184, 74, 0.06);
+  --faction-wow-detail-inset: #231b0c;
+  /* --faction-wow-plum-edge is theme-invariant; see the note above. */
+  --faction-wow-detail-shadow: 0 18px 44px -18px rgba(0, 0, 0, 0.8);
+}
+
+/* The parchment ground for the task-detail COLUMN, not the viewport — the site
+   background shows around it (owner QA on #1055, applied to every task-detail
+   skin). The archetype supplies position / z-index / radius / padding; this rule
+   owns only the field and its dot texture.
+   (It was modelled on `.na-backdrop`, which IS a real full-viewport wash — but
+   that pattern was retired from this surface, not copied onto it.) */
+.wow-detail-field {
+  background-color: var(--faction-wow-detail-field);
+  background-image: radial-gradient(var(--faction-wow-detail-dot) 1px, transparent 1px);
+  background-size: 5px 5px;
+  transition: background-color 300ms;
+}
+
+/* The balloon bunch bobs and tilts. Class-gated on reduced-motion like every
+   other faction motion in the house, so the skin never writes `animation:`
+   inline and bypasses the gate; the bunch is pure ornament, carries no state,
+   and reads correctly stilled. The pupils inside it travel on the existing
+   `.wow-balloon-eye` wiggle. */
+@keyframes wow-balloon-bob {
+  0%, 100% { transform: translateY(0) rotate(3deg); }
+  40% { transform: translateY(-7px) rotate(-2deg); }
+  70% { transform: translateY(-3px) rotate(2deg); }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .wow-balloon-bunch { animation: wow-balloon-bob 6s ease-in-out infinite; }
 }

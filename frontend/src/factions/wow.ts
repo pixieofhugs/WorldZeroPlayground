@@ -29,6 +29,14 @@
  * chronicle: two chromes on one palette, deliberately unalike (#785's "the
  * praxis card mirrors the task card" clause is retired for WOW).
  *
+ * #1037 adds the desktop `taskDetail` — THE PARCHMENT FIELD: gold-and-plum
+ * parchment under a dot texture, bunting across the head, a struck points
+ * plaque, wavy gold→plum rules and a bunch of googly balloons. It is the first
+ * of #951's four missing desktop surfaces to ship; `praxisDetail`, `factionCard`
+ * and `factionBody` are still unclaimed. The `mobileTaskDetail` row below stays
+ * registered but DORMANT (ADR-0058) — the desktop archetype is responsive and
+ * serves both form factors.
+ *
  * #900 adds the PAGE-LEVEL desktop surfaces: the recruiting `factionHero`, the
  * `backdrop` wallpaper every WOW-context page sits on, the crested `profileBody`
  * and the `factionSelectCard` pledge placard. `factionBody` and `factionCard`
@@ -56,32 +64,34 @@
  * during module evaluation — see the cycle note in `./manifest.ts`.
  */
 import type { FactionManifest } from './manifest'
+import { lazyArchetype } from './lazyArchetype'
 
-import WowAvatar from '../components/avatar/WowAvatar'
-import WowBackdrop from '../components/backdrop/WowBackdrop'
-import { WOWSelectCard } from '../components/cards/FactionSelectCard'
-import WowComment from '../components/comments/voices/WowComment'
-import WowFeedFrame from '../components/feed/WowFeedFrame'
-import WowFactionHero from '../components/cards/WowFactionHero'
-import { WowSigil } from '../components/cards/WowSigil'
-import WowTaskCard from '../components/cards/WowTaskCard'
-import WowProfileBody from '../pages/characterProfile/archetypes/WowProfileBody'
-import WowVote from '../components/vote/WowVote'
-import WowMobilePraxisCard from '../components/praxisCard/mobile/WowMobilePraxisCard'
-import WowPraxisCard from '../components/praxisCard/desktop/WowPraxisCard'
-import WowScoreStamp from '../components/praxisCard/scoreStamp/WowScoreStamp'
-import WowSeal from '../components/metaTaskSeal/skins/WowSeal'
-import WowEditPraxis from '../pages/editPraxis/archetypes/WowEditPraxis'
-import WowMobileEditPraxis from '../pages/editPraxis/mobileArchetypes/WowEditPraxis'
-import WowDuelSealConfirm from '../components/duel/WowDuelSealConfirm'
-import WowMobileDuelSealConfirm from '../components/duel/WowMobileDuelSealConfirm'
-import WowDuelRail from '../pages/praxisDetail/duelRails/WowDuelRail'
-import WowMobileDuelRail from '../pages/praxisDetail/duelRails/WowMobileDuelRail'
-import WowFieldDesk from '../pages/fieldDesk/mobileArchetypes/WowFieldDesk'
-import WowMobileTaskDetail from '../pages/taskDetail/mobileArchetypes/WowTaskDetail'
-import WowMobilePraxisDetail from '../pages/praxisDetail/mobileArchetypes/WowPraxisDetail'
-import WowMobileFactionPage from '../pages/factionDetail/mobileArchetypes/WowFactionPage'
-import WowMobileProfile from '../pages/characterProfile/mobileArchetypes/WowProfile'
+const WowAvatar = lazyArchetype(() => import('../components/avatar/WowAvatar'))
+const WowBackdrop = lazyArchetype(() => import('../components/backdrop/WowBackdrop'))
+const WOWSelectCard = lazyArchetype(() => import('../components/cards/FactionSelectCard').then((m) => ({ default: m.WOWSelectCard })))
+const WowComment = lazyArchetype(() => import('../components/comments/voices/WowComment'))
+const WowFeedFrame = lazyArchetype(() => import('../components/feed/WowFeedFrame'))
+const WowFactionHero = lazyArchetype(() => import('../components/cards/WowFactionHero'))
+const WowSigil = lazyArchetype(() => import('../components/cards/WowSigil').then((m) => ({ default: m.WowSigil })))
+const WowTaskCard = lazyArchetype(() => import('../components/cards/WowTaskCard'))
+const WowProfileBody = lazyArchetype(() => import('../pages/characterProfile/archetypes/WowProfileBody'))
+const WowVote = lazyArchetype(() => import('../components/vote/WowVote'))
+const WowMobilePraxisCard = lazyArchetype(() => import('../components/praxisCard/mobile/WowMobilePraxisCard'))
+const WowPraxisCard = lazyArchetype(() => import('../components/praxisCard/desktop/WowPraxisCard'))
+const WowScoreStamp = lazyArchetype(() => import('../components/praxisCard/scoreStamp/WowScoreStamp'))
+const WowSeal = lazyArchetype(() => import('../components/metaTaskSeal/skins/WowSeal'))
+const WowEditPraxis = lazyArchetype(() => import('../pages/editPraxis/archetypes/WowEditPraxis'))
+const WowMobileEditPraxis = lazyArchetype(() => import('../pages/editPraxis/mobileArchetypes/WowEditPraxis'))
+const WowDuelSealConfirm = lazyArchetype(() => import('../components/duel/WowDuelSealConfirm'))
+const WowMobileDuelSealConfirm = lazyArchetype(() => import('../components/duel/WowMobileDuelSealConfirm'))
+const WowDuelRail = lazyArchetype(() => import('../pages/praxisDetail/duelRails/WowDuelRail'))
+const WowMobileDuelRail = lazyArchetype(() => import('../pages/praxisDetail/duelRails/WowMobileDuelRail'))
+const WowFieldDesk = lazyArchetype(() => import('../pages/fieldDesk/mobileArchetypes/WowFieldDesk'))
+const WowTaskDetail = lazyArchetype(() => import('../pages/taskDetail/archetypes/WowTaskDetail'))
+const WowMobileTaskDetail = lazyArchetype(() => import('../pages/taskDetail/mobileArchetypes/WowTaskDetail'))
+const WowMobilePraxisDetail = lazyArchetype(() => import('../pages/praxisDetail/mobileArchetypes/WowPraxisDetail'))
+const WowMobileFactionPage = lazyArchetype(() => import('../pages/factionDetail/mobileArchetypes/WowFactionPage'))
+const WowMobileProfile = lazyArchetype(() => import('../pages/characterProfile/mobileArchetypes/WowProfile'))
 
 export const WOW_MANIFEST: FactionManifest = {
   slug: 'wow',
@@ -89,6 +99,10 @@ export const WOW_MANIFEST: FactionManifest = {
   sigil: () => WowSigil,
   avatar: () => WowAvatar,
   taskCard: () => WowTaskCard,
+  // #1037 — the parchment field: WOW's FIRST desktop task-detail page. Until
+  // this row a WOW task rendered the na dossier on desktop (one of #951's four
+  // bullets; praxisDetail, factionCard and factionBody are still open).
+  taskDetail: () => WowTaskDetail,
   comment: () => WowComment,
   feedFrame: () => WowFeedFrame,
   praxisCard: () => WowPraxisCard,

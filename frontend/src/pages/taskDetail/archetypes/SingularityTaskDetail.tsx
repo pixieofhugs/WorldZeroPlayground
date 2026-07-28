@@ -1,175 +1,145 @@
-import type { CSSProperties } from "react";
+import { useState, type CSSProperties, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import PraxisCard from "../../../components/PraxisCard";
+import { useFormFactor } from "../../../hooks/useFormFactor";
+import { factionCssVar, factionFill, factionName } from "../../../utils/factions";
 import { mediaUrl } from "../../../utils/media";
-import { ErrorBanner, LevelJumpBanner, relationOf } from "./shared";
-import type { TaskSignupOut } from "../../../api/tasks";
+import { isNeutralMultiplier } from "../../../utils/points";
+import { ErrorBanner, LevelJumpBanner, TaskDetailComments } from "./shared";
 import type { TaskDetailState } from "../useTaskDetail";
 
 /**
- * Singularity task-detail archetype — the job rendered as a TERMINAL PRINTOUT:
- * a phosphor-on-black protocol readout with boot lines, scanlines, circuit
- * corners, sealed-praxis logs (highest signal wears a fleur-de-lis), and a
- * "JOIN ARRAY" sign-up CTA. Ported from the Singularity design kit
- * (SingularityTaskDetail.tsx); wired to the real {@link TaskDetailState}.
+ * Singularity task detail (C4, #1034) — THE TERMINAL SESSION at page scale.
  *
- * ALWAYS-DARK without theme mutation: the kit forced `data-theme="dark"` on the
- * document on mount. That effect is dropped entirely. The `--faction-singularity-*`
- * card tokens hold identical terminal-black/green values in BOTH themes, so the
- * archetype styles its own container with those tokens and reads as a terminal
- * regardless of the global theme.
+ * The v2 shared anatomy (#1030) wearing the same window the v2 task card wears:
+ * a chrome bar with three lamps, phosphor green and blue on a near-black
+ * chassis, a standing raster, a scan sweep travelling down the page, and a block
+ * cursor blinking on the prompt. Share Tech Mono for everything — the faction
+ * has one face and this surface uses it for chrome and copy alike.
+ *
+ * Ported from `.design-sync/task-details-v2/singularity-task-detail.jsx`. It
+ * replaces the 697-line "terminal printout" archetype wholesale: the boot-line
+ * stat vocabulary (`stats.arrays` / `stats.credits` / `stats.sealed`), the
+ * consensus block, the circuit corners, the fleur-de-lis "highest signal" crown
+ * and the array roster are all gone.
+ *
+ * THE PAGE IS A WINDOW. The design draws a full-bleed chassis; the archetype
+ * mounts inside the app shell under a `PageTitle`, so the chassis is capped at
+ * the epic's 1200 page width and given the card's own border, radius and
+ * shadow. The chrome bar is then literally a window title bar, which is what the
+ * three lamps were always claiming.
+ *
+ * ALWAYS DARK, IN BOTH THEMES (WORLD_ZERO_STYLE §6). Note that the design
+ * inverts the usual theme handling — `props.theme === 'light' ? 'light' :
+ * 'dark'` defaults to DARK, and BOTH of its token sets are dark-background
+ * terminals. That is intent, not a bug: this faction has no light look. It maps
+ * onto the repo's cascade honestly because `--faction-singularity-term-*` is
+ * already a real two-theme contract whose halves are both near-black (#1023) —
+ * the cascade flips the PHOSPHOR, never the chassis. There is no ternary here;
+ * both halves live in index.css, including the three halos, which the design
+ * ships as `none` in its light set and lit in its dark set.
+ *
+ * ONE RESPONSIVE COMPONENT (ADR-0058): `useFormFactor()` picks the size set and
+ * collapses the two-column split; the chrome bar swaps its lamps for a back
+ * arrow. `pages/taskDetail/mobileArchetypes/SingularityTaskDetail.tsx` and the
+ * `mobileTaskDetail` manifest row stay registered but DORMANT — not deleted.
+ *
+ * COPY IS NEUTRAL AND SHARED (`detail.*`, ADR-0057). This is the most voiced
+ * dress in the set after Albescent, and the dress is all that survives: the
+ * design's `// the_observation`, `sealed logs`, `// thread`, `JOIN ARRAY`,
+ * `highest signal` and `CR` are gone. What remains of that voice is punctuation
+ * — the `//` heading marker, the `>` prompt and the block cursor — each drawn
+ * `aria-hidden` beside a shared string rather than replacing one.
+ *
+ * Motion is entirely index.css's (#911 retired component-injected `<style>`):
+ * `.sg-scan`, `.sg-cursor` and `.sg-pulse` already exist under the shared
+ * `prefers-reduced-motion` guard, so the design's `SG_CSS` block is dropped and
+ * no keyframe was added.
  */
 
-// Terminal-fixed tokens (identical in light + dark).
-const BLACK = "var(--faction-singularity-card-bg)"; // terminal black
-const GREEN = "var(--faction-singularity-card-text)"; // phosphor green
-const BLUE = "var(--faction-singularity-card-muted)"; // blue chrome
-const HARD = "var(--faction-singularity-border-hard)"; // hard blue border
-const TERM_FONT = "var(--font-faction-terminal)"; // Share Tech Mono
+const MONO = "var(--faction-singularity-card-font)"; /* Share Tech Mono */
 
-// Shades derived from tokens (never raw hex; rgba black/white allowed for overlays).
-const RULE = "color-mix(in srgb, var(--faction-singularity-border-hard) 30%, transparent)";
-const PANEL_BORDER = "color-mix(in srgb, var(--faction-singularity-border-hard) 55%, transparent)";
-const PANEL_BG = "color-mix(in srgb, var(--faction-singularity-border-hard) 8%, transparent)";
-const BODY_BORDER = "color-mix(in srgb, var(--faction-singularity-border-hard) 25%, transparent)";
-const BODY_BG = "color-mix(in srgb, var(--faction-singularity-border-hard) 4%, transparent)";
-const BLUE_FAINT = "color-mix(in srgb, var(--faction-singularity-card-muted) 50%, transparent)";
-const BLUE_DIM = "color-mix(in srgb, var(--faction-singularity-card-muted) 45%, transparent)";
-const GREEN_DIM = "color-mix(in srgb, var(--faction-singularity-card-text) 55%, transparent)";
-const GREEN_SOFT = "color-mix(in srgb, var(--faction-singularity-card-text) 60%, transparent)";
+const BG = "var(--faction-singularity-term-bg)";
+const PANEL = "var(--faction-singularity-term-panel)";
+const CHROME = "var(--faction-singularity-term-chrome)";
+const INK = "var(--faction-singularity-term-ink)";
+const BRIGHT = "var(--faction-singularity-term-bright)";
+const DIM = "var(--faction-singularity-term-dim)";
+const BLUE = "var(--faction-singularity-term-blue)";
+const BLUE_BRIGHT = "var(--faction-singularity-term-blue-bright)";
+const BORDER = "var(--faction-singularity-term-border)";
+const HAIR = "var(--faction-singularity-term-hair)";
+const CTA_BG = "var(--faction-singularity-term-cta-bg)";
+const CTA_INK = "var(--faction-singularity-term-cta-ink)";
 
-const sectionRule: CSSProperties = { flex: 1, height: 1, background: RULE };
-const sectionH2: CSSProperties = {
-  fontSize: "var(--text-xs)",
-  letterSpacing: "0.28em",
-  margin: 0,
-  color: GREEN_SOFT,
+/**
+ * Praxis cards the gallery shows before expanding in place. `PraxisCard` carries
+ * `flex: 1 1 394px`, so three land in a row at the 1200 cap and the row reflows
+ * on its own — the design's `repeat(3,1fr)` would squeeze every card instead.
+ */
+const GALLERY_PREVIEW = 3;
+
+/** Terminal caption voice — every label on the chassis speaks in it. */
+const LABEL: CSSProperties = {
+  fontFamily: MONO,
+  fontSize: "var(--text-sm)",
+  letterSpacing: "0.14em",
   textTransform: "uppercase",
-  whiteSpace: "nowrap",
-  fontFamily: TERM_FONT,
-};
-const statBox: CSSProperties = {
-  border: `1px solid ${PANEL_BORDER}`,
-  background: PANEL_BG,
-  padding: "var(--space-md) var(--space-lg)",
-  textAlign: "center",
-  minWidth: 90,
-};
-const statLabel: CSSProperties = {
-  fontSize: "var(--text-xs)",
-  letterSpacing: "0.2em",
-  color: BLUE_FAINT,
-  textTransform: "uppercase",
-  marginTop: "var(--space-xs)",
+  color: DIM,
 };
 
-/** A single circuit-trace corner SVG (token-stroked). */
-function CircuitCorner({ flip }: { flip?: boolean }) {
+/** The task's ordinal in hex — the window's process id. Ornament, never copy. */
+function hexOf(id: number): string {
+  return `0x${id.toString(16).toUpperCase().padStart(3, "0")}`;
+}
+
+/** Initials fallback for an author with no uploaded avatar. */
+function initialsOf(name: string): string {
+  return name
+    .split(/\s+/)
+    .filter(Boolean)
+    .map((word) => word[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
+}
+
+/** A dashed terminal rule. */
+function Rule({ style }: { style?: CSSProperties }) {
   return (
-    <svg
-      width="160"
-      height="110"
-      viewBox="0 0 160 110"
-      style={{
-        position: "absolute",
-        ...(flip ? { bottom: 0, right: 0, transform: "rotate(180deg)" } : { top: 0, left: 0 }),
-        opacity: 0.6,
-      }}
-      fill="none"
-      stroke={HARD}
-      strokeWidth="1"
-    >
-      <path d="M0 28 H40 V8 H92" />
-      <path d="M0 56 H60 V40 H120" />
-      <circle cx="92" cy="8" r="2.5" fill={GREEN} stroke="none" />
-      <circle cx="120" cy="40" r="2.5" fill={GREEN} stroke="none" />
-    </svg>
+    <div aria-hidden style={{ height: 0, borderTop: `1px dashed ${HAIR}`, ...style }} />
   );
 }
 
-/** Array roster — real signup avatars with friend/foe markers. */
-function ArrayRoster({
-  signups,
-  friends,
-  foes,
-}: {
-  signups: TaskSignupOut[];
-  friends: Set<number>;
-  foes: Set<number>;
-}) {
-  const { t } = useTranslation("tasks");
+/** One of the chrome bar's three lamps. Ornament geometry, so raw px. */
+function Lamp({ fill }: { fill: string }) {
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: "var(--space-sm)", flexWrap: "wrap" }}>
-      {signups.map((member) => {
-        const rel = relationOf(member.character_id, friends, foes);
-        const relColor = rel === "friend" ? GREEN : BLUE;
-        return (
-          <Link
-            key={member.character_id}
-            to={`/characters/${member.character_id}`}
-            title={`${member.display_name}${rel ? ` · ${rel}` : ""}`}
-            style={{ position: "relative", width: 34, height: 34, flexShrink: 0 }}
-          >
-            {member.avatar_url ? (
-              <img
-                src={mediaUrl(member.avatar_url)}
-                alt={member.display_name}
-                style={{
-                  width: 34,
-                  height: 34,
-                  objectFit: "cover",
-                  border: `1px solid ${PANEL_BORDER}`,
-                }}
-              />
-            ) : (
-              <span
-                style={{
-                  display: "flex",
-                  width: 34,
-                  height: 34,
-                  background: BLACK,
-                  border: `1px solid ${PANEL_BORDER}`,
-                  alignItems: "center",
-                  justifyContent: "center",
-                  color: GREEN,
-                  fontFamily: TERM_FONT,
-                  fontSize: "var(--text-lg)",
-                }}
-              >
-                {member.display_name[0]?.toUpperCase()}
-              </span>
-            )}
-            {rel && (
-              <span
-                title={rel}
-                style={{
-                  position: "absolute",
-                  right: -3,
-                  bottom: -3,
-                  width: 10,
-                  height: 10,
-                  background: relColor,
-                  border: `1.5px solid ${BLACK}`,
-                }}
-              />
-            )}
-          </Link>
-        );
-      })}
-      <span
-        style={{
-          fontFamily: TERM_FONT,
-          fontSize: "var(--text-xs)",
-          letterSpacing: "0.14em",
-          textTransform: "uppercase",
-          color: BLUE_DIM,
-          marginLeft: "var(--space-sm)",
-        }}
-      >
-        {t("singularity.nodesOnArray")}
-      </span>
-    </div>
+    <span
+      aria-hidden
+      style={{ width: 8, height: 8, borderRadius: "50%", background: fill, display: "block" }}
+    />
+  );
+}
+
+/**
+ * The block cursor trailing a prompt. Stilled under reduced motion it stays
+ * drawn — it is punctuation on the prompt, not an indicator.
+ */
+function Cursor() {
+  return (
+    <span
+      aria-hidden
+      className="sg-cursor"
+      style={{
+        display: "inline-block",
+        width: 6,
+        height: 13,
+        marginLeft: "var(--space-xs)",
+        background: "currentColor",
+        verticalAlign: "-0.12em",
+      }}
+    />
   );
 }
 
@@ -179,21 +149,25 @@ export default function SingularityTaskDetail({
   state: TaskDetailState;
 }) {
   const { t } = useTranslation("tasks");
+  const desktop = useFormFactor() !== "mobile";
+  // The gallery expands in place. It deliberately does NOT link to
+  // `/praxes?task_id=N`: the praxis feed reads no such param, so that link has
+  // always dropped the filter and shown the whole feed (#1030 replaced it on na).
+  const [showAllPraxis, setShowAllPraxis] = useState(false);
   const {
     task,
-    signups,
     submissions,
-    friends,
-    foes,
     mySubmission,
     isInProgress,
     inProgressPraxisId,
     canSignUp,
+    levelJumpSignup,
     slotsOpen,
     maxTaskSlots,
+    basePoints,
+    factionMultiplier,
     modifiedPoints,
-    topScore,
-    voteCount,
+    inProgressCount,
     sortedSubmissions,
     submissionSort,
     setSubmissionSort,
@@ -205,491 +179,773 @@ export default function SingularityTaskDetail({
   // Guarded non-null by the dispatcher.
   if (!task) return null;
 
-  // Terminal-voiced status: an active job is a RUNNING/OPEN protocol; else the real status.
-  const statusVoice =
-    task.status === "active"
-      ? t("singularity.statusOpen")
-      : task.status.toUpperCase();
-  const consensusVoice =
-    task.status === "active"
-      ? t("singularity.consensusOpen")
-      : task.status.toUpperCase();
-  // Highest-signal log wears the fleur-de-lis.
-  const topId = submissions.length
-    ? submissions.reduce((a, b) => ((b.score ?? 0) > (a.score ?? 0) ? b : a)).id
-    : null;
+  const slug = task.primary_faction_slug;
+  const isMetatask = task.task_type === "metatask";
+  const showMultiplier = !isNeutralMultiplier(factionMultiplier);
+  const authorName = task.created_by_display_name ?? "";
+  const hasAction =
+    canSignUp || !!mySubmission || (isInProgress && inProgressPraxisId !== null);
 
-  return (
+  const innerBox: CSSProperties = {
+    background: BG,
+    border: `1px solid ${BORDER}`,
+    borderRadius: 5,
+    padding: desktop ? "var(--space-lg)" : "var(--space-md)",
+    boxSizing: "border-box",
+  };
+  const panelBox: CSSProperties = {
+    background: PANEL,
+    border: `1px solid ${BORDER}`,
+    borderRadius: 6,
+    boxSizing: "border-box",
+  };
+  /** The lit key: phosphor fill, chassis ink, a prompt and a cursor. */
+  const primaryButton: CSSProperties = {
+    display: "block",
+    width: "100%",
+    cursor: "pointer",
+    textAlign: "center",
+    textDecoration: "none",
+    fontFamily: MONO,
+    fontSize: desktop ? "var(--text-xl)" : "var(--text-lg)",
+    letterSpacing: "0.06em",
+    color: CTA_INK,
+    background: CTA_BG,
+    border: `1.5px solid ${BRIGHT}`,
+    borderRadius: 5,
+    padding: desktop
+      ? "var(--space-md) var(--space-lg)"
+      : "var(--space-sm) var(--space-md)",
+    boxShadow: "var(--faction-singularity-term-cta-glow)",
+  };
+  /** The prompt glyph. Punctuation, not copy — hidden from the a11y tree. */
+  const prompt = (
+    <span aria-hidden style={{ color: "inherit" }}>
+      {">"}&nbsp;
+    </span>
+  );
+
+  /** A commented section head: `// LABEL ------------------ gloss`. */
+  const sectionHead = (label: ReactNode, gloss?: ReactNode) => (
     <div
-      className="py-8"
       style={{
-        fontFamily: TERM_FONT,
-        color: GREEN,
-        position: "relative",
-        background: BLACK,
-        backgroundImage:
-          "repeating-linear-gradient(to bottom, transparent, transparent 2px, rgba(74,222,128,0.022) 2px, rgba(74,222,128,0.022) 4px), radial-gradient(80% 60% at 50% 0%, rgba(37,99,235,0.10), transparent 70%)",
+        display: "flex",
+        alignItems: "center",
+        gap: "var(--space-md)",
+        marginBottom: "var(--space-md)",
+        flexWrap: "wrap",
       }}
     >
-      <div style={{ maxWidth: 920, margin: "0 auto", padding: "0 var(--space-xl)" }}>
-        {/* ── Breadcrumb ── */}
-        <nav
-          className="font-body"
+      <span
+        style={{
+          fontFamily: MONO,
+          fontSize: desktop ? "var(--text-xl)" : "var(--text-lg)",
+          color: BLUE_BRIGHT,
+        }}
+      >
+        <span aria-hidden>{"// "}</span>
+        {label}
+      </span>
+      <span aria-hidden style={{ flex: "1 1 20%", minWidth: 20, borderTop: `1px dashed ${HAIR}` }} />
+      {gloss !== undefined && <span style={LABEL}>{gloss}</span>}
+    </div>
+  );
+
+  // ── Window chrome: lamps (desktop) or a back arrow (mobile), the breadcrumb,
+  //    and the process id. The design drew a second breadcrumb row inside the
+  //    header; one window title bar is enough, so the breadcrumb lives here.
+  const chrome = (
+    <div
+      style={{
+        position: "relative",
+        zIndex: 5,
+        display: "flex",
+        alignItems: "center",
+        gap: "var(--space-sm)",
+        padding: "var(--space-sm) var(--space-lg)",
+        background: CHROME,
+        borderBottom: `1px solid ${HAIR}`,
+      }}
+    >
+      {desktop ? (
+        <span aria-hidden style={{ display: "flex", gap: "var(--space-xs)", flex: "none" }}>
+          <Lamp fill="var(--faction-singularity-led-red)" />
+          <Lamp fill="var(--faction-singularity-led-amber)" />
+          <Lamp fill="var(--faction-singularity-led-green)" />
+        </span>
+      ) : (
+        <Link
+          to="/tasks"
+          aria-label={t("detail.breadcrumb.tasks")}
           style={{
-            fontSize: "var(--text-sm)",
-            letterSpacing: "0.14em",
-            textTransform: "uppercase",
-            color: BLUE_FAINT,
-            marginBottom: "var(--space-xl)",
+            fontFamily: MONO,
+            fontSize: "var(--text-xl)",
+            lineHeight: 1,
+            color: BRIGHT,
+            textDecoration: "none",
+            flex: "none",
           }}
         >
-          <Link to="/tasks" style={{ color: BLUE, textDecoration: "none" }}>
-            {t("default.breadcrumb")}
-          </Link>
-          <span style={{ opacity: 0.5, margin: "0 var(--space-sm)" }}>/</span>
-          <span>{t("singularity.faction")}</span>
-          <span style={{ opacity: 0.5, margin: "0 var(--space-sm)" }}>/</span>
-          <span style={{ color: GREEN }}>{task.title}</span>
-        </nav>
+          ←
+        </Link>
+      )}
 
-        <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-2xl)" }}>
-          {/* ── Hero — terminal protocol readout ── */}
-          <div
+      {desktop && (
+        <>
+          <Link to="/tasks" style={{ ...LABEL, color: BLUE, textDecoration: "none" }}>
+            {t("detail.breadcrumb.tasks")}
+          </Link>
+          <span aria-hidden style={LABEL}>
+            /
+          </span>
+        </>
+      )}
+      <span
+        style={{
+          ...LABEL,
+          overflow: "hidden",
+          whiteSpace: "nowrap",
+          textOverflow: "ellipsis",
+        }}
+      >
+        {t("detail.breadcrumb.current", { number: task.id })}
+      </span>
+      <span aria-hidden style={{ ...LABEL, marginLeft: "auto", color: BLUE, flex: "none" }}>
+        {hexOf(task.id)}
+      </span>
+    </div>
+  );
+
+  // ── Header: faction line, title, author, Level / In progress ──
+  const header = (
+    <div>
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: "var(--space-md)",
+          marginBottom: "var(--space-md)",
+          flexWrap: "wrap",
+        }}
+      >
+        {/* The process light — the terminal's one live thing. */}
+        <span
+          aria-hidden
+          className="sg-pulse"
+          style={{
+            width: 7,
+            height: 7,
+            borderRadius: "50%",
+            background: BLUE_BRIGHT,
+            display: "block",
+            flex: "none",
+          }}
+        />
+        <span style={{ ...LABEL, fontSize: "var(--text-base)" }}>{factionName(slug)}</span>
+        {isMetatask && (
+          <span
             style={{
-              position: "relative",
-              border: `1px solid ${PANEL_BORDER}`,
-              background: BLACK,
-              overflow: "hidden",
+              fontFamily: MONO,
+              fontSize: "var(--text-xs)",
+              textTransform: "uppercase",
+              letterSpacing: "0.15em",
+              padding: "var(--space-xs) var(--space-sm)",
+              borderRadius: 4,
+              // na → rainbow frame; a real faction → solid hue + on-fill ink.
+              ...factionFill(task.metatask_faction_slug, "pill"),
             }}
           >
-            <div
-              style={{
-                position: "absolute",
-                inset: 6,
-                border: `1px solid color-mix(in srgb, var(--faction-singularity-border-hard) 12%, transparent)`,
-                pointerEvents: "none",
-              }}
-            />
-            <CircuitCorner />
-            <CircuitCorner flip />
-            <div style={{ position: "relative", zIndex: 2, padding: "var(--space-2xl) var(--space-2xl) var(--space-2xl)" }}>
-              <div
-                style={{
-                  fontSize: "var(--text-xs)",
-                  letterSpacing: "0.16em",
-                  color: BLUE_FAINT,
-                  lineHeight: 2,
-                  marginBottom: "var(--space-lg)",
-                }}
-              >
-                <div>
-                  {t("singularity.protocol", {
-                    number: String(task.id).padStart(4, "0"),
-                  })}
-                </div>
-                <div>
-                  {t("singularity.class", {
-                    level: task.level_required,
-                    points: modifiedPoints,
-                  })}
-                </div>
-                <div>
-                  {t("singularity.statusLine", { status: statusVoice })}{" "}
-                  &nbsp;·&nbsp; {t("singularity.consensusLine")}{" "}
-                  <span style={{ color: GREEN }}>{consensusVoice}</span>
-                </div>
-              </div>
-              <h1
-                className="content-title"
-                style={{
-                  lineHeight: 1.0,
-                  letterSpacing: "0.03em",
-                  color: GREEN,
-                  margin: "0 0 var(--space-xl)",
-                  overflowWrap: "anywhere",
-                }}
-              >
-                {task.title}
-                <span
-                  aria-hidden
-                  className="sg-cursor"
-                  style={{
-                    display: "inline-block",
-                    width: 14,
-                    height: 34,
-                    background: GREEN,
-                    marginLeft: "var(--space-sm)",
-                    verticalAlign: -4,
-                  }}
-                />
-              </h1>
-              <div style={{ display: "flex", gap: "var(--space-lg)", flexWrap: "wrap" }}>
-                <div style={statBox}>
-                  <div className="content-title" style={{ lineHeight: 1, color: GREEN }}>
-                    {modifiedPoints}
-                  </div>
-                  <div style={statLabel}>{t("singularity.stats.credits")}</div>
-                </div>
-                <div style={statBox}>
-                  <div className="content-title" style={{ lineHeight: 1, color: GREEN }}>
-                    {task.level_required}
-                  </div>
-                  <div style={statLabel}>{t("singularity.stats.level")}</div>
-                </div>
-                <div style={statBox}>
-                  <div className="content-title" style={{ lineHeight: 1, color: BLUE }}>
-                    {signups.length}
-                  </div>
-                  <div style={statLabel}>{t("singularity.stats.arrays")}</div>
-                </div>
-                <div style={statBox}>
-                  <div className="content-title" style={{ lineHeight: 1, color: GREEN }}>
-                    {submissions.length}
-                  </div>
-                  <div style={statLabel}>{t("singularity.stats.sealed")}</div>
-                </div>
-              </div>
-            </div>
-            <svg
-              viewBox="0 0 1160 30"
-              preserveAspectRatio="none"
-              style={{ display: "block", width: "100%", height: 30, opacity: 0.4 }}
-              stroke={GREEN}
-              strokeWidth="1"
-              fill="none"
-            >
-              <path d="M0 15 H120 L132 4 L144 26 L156 9 L168 21 L180 15 H320 L332 7 L344 23 L356 15 H520 L532 2 L544 28 L556 12 L568 18 L580 15 H760 L772 6 L784 24 L796 15 H980 L992 9 L1004 21 L1016 15 H1160" />
-            </svg>
-          </div>
+            {t("detail.meta")}
+          </span>
+        )}
+      </div>
 
-          {/* ── The observation (task body) ── */}
-          <section>
-            <div style={{ display: "flex", alignItems: "center", gap: "var(--space-lg)", marginBottom: "var(--space-lg)" }}>
-              <h2 style={sectionH2}>{t("singularity.observationHeading")}</h2>
-              <span style={sectionRule} />
-            </div>
-            <div
-              style={{
-                border: `1px solid ${BODY_BORDER}`,
-                background: BODY_BG,
-                padding: "var(--space-xl) var(--space-2xl)",
-                maxWidth: 660,
-              }}
-            >
-              <p
-                className="content-text"
-                style={{
-                  fontFamily: TERM_FONT,
-                  lineHeight: 1.9,
-                  color: GREEN_DIM,
-                  margin: 0,
-                  whiteSpace: "pre-wrap",
-                }}
-              >
-                {task.description || t("singularity.observationEmpty")}
-              </p>
-            </div>
-          </section>
+      <h1
+        style={{
+          fontFamily: MONO,
+          fontWeight: 400,
+          fontSize: desktop ? "var(--text-heading)" : "var(--text-title)",
+          lineHeight: 1.2,
+          color: BRIGHT,
+          margin: "0 0 var(--space-lg)",
+          overflowWrap: "anywhere",
+          textShadow: "var(--faction-singularity-term-halo-green)",
+        }}
+      >
+        {task.title}
+      </h1>
 
-          {/* ── CTA bar / signed-up states ── */}
-          <LevelJumpBanner state={state} />
-          {canSignUp && (
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "var(--space-lg)",
-                flexWrap: "wrap",
-                border: `1px solid ${PANEL_BORDER}`,
-                background: PANEL_BG,
-                padding: "var(--space-lg) var(--space-xl)",
-              }}
-            >
-              <button
-                onClick={handleSignup}
-                style={{
-                  cursor: "pointer",
-                  fontFamily: TERM_FONT,
-                  fontSize: "var(--text-md)",
-                  letterSpacing: "0.1em",
-                  textTransform: "uppercase",
-                  color: BLUE,
-                  background: PANEL_BG,
-                  border: `1px solid ${BLUE}`,
-                  padding: "var(--space-md) var(--space-xl)",
-                }}
-              >
-                {t("singularity.signup.cta", { points: modifiedPoints })}
-              </button>
-              <div
-                style={{
-                  fontSize: "var(--text-xs)",
-                  letterSpacing: "0.06em",
-                  color: GREEN_DIM,
-                  fontStyle: "italic",
-                }}
-              >
-                {t("singularity.signup.note", {
-                  open: slotsOpen,
-                  max: maxTaskSlots,
-                })}
-              </div>
-              <div
-                style={{
-                  marginLeft: "auto",
-                  fontSize: "var(--text-xs)",
-                  letterSpacing: "0.14em",
-                  color: BLUE_DIM,
-                }}
-              >
-                {t("singularity.signup.levelRequired", {
-                  level: task.level_required,
-                })}
-              </div>
-            </div>
-          )}
+      {isMetatask && (
+        <p
+          style={{
+            ...LABEL,
+            margin: "0 0 var(--space-lg)",
+            color: factionCssVar(task.metatask_faction_slug),
+          }}
+        >
+          {t("detail.metataskFor", {
+            faction: factionName(task.metatask_faction_slug),
+          })}
+        </p>
+      )}
 
-          {mySubmission && (
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "var(--space-lg)",
-                flexWrap: "wrap",
-                border: `1px solid ${PANEL_BORDER}`,
-                background: PANEL_BG,
-                padding: "var(--space-lg) var(--space-xl)",
-              }}
-            >
-              <Link
-                to={`/praxes/${mySubmission.id}/edit`}
-                style={{
-                  fontFamily: TERM_FONT,
-                  fontSize: "var(--text-md)",
-                  letterSpacing: "0.1em",
-                  textTransform: "uppercase",
-                  color: GREEN,
-                  background: "color-mix(in srgb, var(--faction-singularity-card-text) 14%, transparent)",
-                  border: `1px solid ${GREEN}`,
-                  padding: "var(--space-md) var(--space-xl)",
-                  textDecoration: "none",
-                }}
-              >
-                {t("singularity.submitted.edit")}
-              </Link>
-              <div style={{ fontSize: "var(--text-xs)", letterSpacing: "0.06em", color: GREEN_DIM, fontStyle: "italic" }}>
-                {t("singularity.submitted.note")}
-              </div>
-            </div>
-          )}
-
-          {!mySubmission && isInProgress && inProgressPraxisId !== null && (
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "var(--space-lg)",
-                flexWrap: "wrap",
-                border: `1px solid ${PANEL_BORDER}`,
-                background: PANEL_BG,
-                padding: "var(--space-lg) var(--space-xl)",
-              }}
-            >
-              <Link
-                to={`/praxes/${inProgressPraxisId}/edit`}
-                style={{
-                  fontFamily: TERM_FONT,
-                  fontSize: "var(--text-md)",
-                  letterSpacing: "0.1em",
-                  textTransform: "uppercase",
-                  color: GREEN,
-                  background: "color-mix(in srgb, var(--faction-singularity-card-text) 14%, transparent)",
-                  border: `1px solid ${GREEN}`,
-                  padding: "var(--space-md) var(--space-xl)",
-                  textDecoration: "none",
-                }}
-              >
-                {t("singularity.inProgress.continue")}
-              </Link>
-              <button
-                onClick={handleDrop}
-                style={{
-                  background: "none",
-                  border: "none",
-                  cursor: "pointer",
-                  fontFamily: TERM_FONT,
-                  fontSize: "var(--text-sm)",
-                  letterSpacing: "0.1em",
-                  textTransform: "uppercase",
-                  color: BLUE_DIM,
-                }}
-              >
-                {t("singularity.inProgress.drop")}
-              </button>
-            </div>
-          )}
-
-          <ErrorBanner
-            message={signupError}
+      {/* Author row — the proposing character's byline (#1029). */}
+      {authorName && (
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "var(--space-md)",
+            marginBottom: "var(--space-lg)",
+            flexWrap: "wrap",
+          }}
+        >
+          <Link
+            to={`/characters/${task.created_by}`}
             style={{
-              background: "rgba(37,99,235,0.08)",
-              border: `1px solid ${PANEL_BORDER}`,
-              color: GREEN,
+              display: "flex",
+              alignItems: "center",
+              gap: "var(--space-sm)",
+              textDecoration: "none",
             }}
-          />
-
-          {/* ── Array roster (signups) ── */}
-          {signups.length > 0 && (
-            <section>
-              <div style={{ display: "flex", alignItems: "center", gap: "var(--space-lg)", marginBottom: "var(--space-lg)" }}>
-                <h2 style={sectionH2}>{t("singularity.rosterHeading")}</h2>
-                <span style={sectionRule} />
-                <span style={{ fontSize: "var(--text-xs)", letterSpacing: "0.12em", color: BLUE_DIM }}>
-                  {t("singularity.rosterSynced", { count: signups.length })}
-                </span>
-              </div>
-              <ArrayRoster signups={signups} friends={friends} foes={foes} />
-            </section>
-          )}
-
-          {/* ── Mob verdict (read-only vote aggregate) ── */}
-          <section>
-            <div style={{ display: "flex", alignItems: "center", gap: "var(--space-lg)", marginBottom: "var(--space-lg)" }}>
-              <h2 style={sectionH2}>{t("singularity.consensusHeading")}</h2>
-              <span style={sectionRule} />
-            </div>
-            {voteCount > 0 ? (
-              <div style={{ display: "flex", alignItems: "flex-end", gap: "var(--space-md)" }}>
-                <span className="content-title" style={{ fontFamily: TERM_FONT, lineHeight: 0.8, color: GREEN }}>
-                  {topScore}
-                </span>
-                <div style={{ paddingBottom: "var(--space-xs)" }}>
-                  <div
-                    style={{
-                      fontFamily: TERM_FONT,
-                      fontSize: "var(--text-lg)",
-                      letterSpacing: "0.1em",
-                      color: BLUE,
-                      textTransform: "uppercase",
-                    }}
-                  >
-                    {t("singularity.consensus.peakSignal")}
-                  </div>
-                  <div style={{ fontSize: "var(--text-xs)", letterSpacing: "0.1em", color: BLUE_DIM }}>
-                    {t("singularity.consensus.sealed", { count: voteCount })}
-                  </div>
-                </div>
-              </div>
+          >
+            {task.created_by_avatar_url ? (
+              <img
+                src={mediaUrl(task.created_by_avatar_url)}
+                alt={authorName}
+                style={{
+                  width: 30,
+                  height: 30,
+                  borderRadius: "50%",
+                  objectFit: "cover",
+                  flex: "none",
+                  border: `1px solid ${BORDER}`,
+                }}
+              />
             ) : (
-              <p className="content-text" style={{ fontFamily: TERM_FONT, color: GREEN_DIM, margin: 0 }}>
-                {t("singularity.consensus.none")}
-              </p>
+              <span
+                aria-hidden
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  width: 30,
+                  height: 30,
+                  flex: "none",
+                  borderRadius: "50%",
+                  overflow: "hidden",
+                  background: PANEL,
+                  border: `1px solid ${BORDER}`,
+                  fontFamily: MONO,
+                  fontSize: "var(--text-lg)",
+                  color: BRIGHT,
+                }}
+              >
+                {initialsOf(authorName)}
+              </span>
             )}
-          </section>
-
-          {/* ── Sealed praxis (completed submissions) ── */}
-          <section>
-            <div
+            <span
               style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "var(--space-lg)",
-                marginBottom: "var(--space-lg)",
-                flexWrap: "wrap",
+                fontFamily: MONO,
+                fontSize: "var(--text-xl)",
+                color: BRIGHT,
+                borderBottom: `1px solid ${BORDER}`,
               }}
             >
-              <h2 style={sectionH2}>{t("singularity.sealedHeading")}</h2>
-              <span style={sectionRule} />
-              <span style={{ fontSize: "var(--text-xs)", letterSpacing: "0.12em", color: BLUE_DIM }}>
-                {t("singularity.sealedCount", { count: submissions.length })}
-              </span>
-              <div style={{ display: "flex", gap: 0 }}>
-                {(["score", "recent"] as const).map((sort) => {
-                  const on = submissionSort === sort;
-                  return (
-                    <button
-                      key={sort}
-                      onClick={() => setSubmissionSort(sort)}
-                      style={{
-                        fontFamily: TERM_FONT,
-                        fontSize: "var(--text-xs)",
-                        letterSpacing: "0.1em",
-                        textTransform: "uppercase",
-                        padding: "var(--space-xs) var(--space-md)",
-                        background: on ? "color-mix(in srgb, var(--faction-singularity-card-text) 14%, transparent)" : "transparent",
-                        color: on ? GREEN : BLUE_DIM,
-                        border: `1px solid ${on ? GREEN : RULE}`,
-                        cursor: "pointer",
-                      }}
-                    >
-                      {sort === "score"
-                        ? t("singularity.sort.highestSignal")
-                        : t("singularity.sort.recent")}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
+              {authorName}
+            </span>
+          </Link>
+          <span style={LABEL}>
+            {t("detail.author", { level: task.created_by_level ?? 0 })}
+          </span>
+        </div>
+      )}
 
-            {sortedSubmissions.length === 0 ? (
-              <p className="content-text" style={{ fontFamily: TERM_FONT, color: GREEN_DIM, margin: 0 }}>
-                {t("singularity.empty")}
-              </p>
-            ) : (
+      {/* Two stats. The completed count lives on the gallery heading, and there
+          is deliberately NO in-progress roster on any skin — this count is the
+          only place that population appears (owner ruling 2026-07-28). */}
+      <div
+        style={{
+          display: "flex",
+          alignItems: "flex-end",
+          gap: desktop ? "var(--space-xl)" : "var(--space-lg)",
+          flexWrap: "wrap",
+        }}
+      >
+        <div style={{ display: "flex", flexDirection: "column", lineHeight: 1 }}>
+          <span style={{ ...LABEL, marginBottom: "var(--space-xs)" }}>
+            {t("detail.stats.level")}
+          </span>
+          <span
+            style={{
+              fontFamily: MONO,
+              fontSize: desktop ? "var(--text-heading)" : "var(--text-title)",
+              lineHeight: 0.85,
+              color: BRIGHT,
+            }}
+          >
+            {String(task.level_required).padStart(2, "0")}
+          </span>
+        </div>
+        <span
+          aria-hidden
+          style={{ width: 1, alignSelf: "stretch", minHeight: 32, background: HAIR }}
+        />
+        <div style={{ display: "flex", flexDirection: "column", lineHeight: 1 }}>
+          <span style={{ ...LABEL, marginBottom: "var(--space-xs)" }}>
+            {t("detail.stats.inProgress")}
+          </span>
+          <span
+            style={{
+              fontFamily: MONO,
+              fontSize: desktop ? "var(--text-title)" : "var(--text-content)",
+              lineHeight: 0.85,
+              color: BRIGHT,
+            }}
+          >
+            {inProgressCount}
+          </span>
+        </div>
+        <Rule style={{ flex: 1, minWidth: 20, marginBottom: "var(--space-sm)" }} />
+      </div>
+    </div>
+  );
+
+  // ── The readout: base, the (usually absent) ×mult badge, and the total ──
+  const scoreBody = (
+    <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-md)" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: "var(--space-sm)" }}>
+        <span style={{ ...LABEL, fontSize: "var(--text-xs)" }}>
+          {t("detail.points.base")}
+        </span>
+        <span
+          style={{
+            fontFamily: MONO,
+            fontSize: desktop ? "var(--text-title)" : "var(--text-content)",
+            lineHeight: 0.85,
+            color: INK,
+          }}
+        >
+          {basePoints}
+        </span>
+        {/* Hidden at ×1.00, so invisible under era_1's neutralized modifiers and
+            automatic the day one moves (ADR-0055). The factor is read raw off
+            the state contract, never reconstructed from total / base. */}
+        {showMultiplier && (
+          <span
+            style={{
+              marginLeft: "auto",
+              fontFamily: MONO,
+              fontSize: desktop ? "var(--text-xl)" : "var(--text-lg)",
+              color: CTA_INK,
+              background: BRIGHT,
+              borderRadius: 4,
+              padding: "var(--space-xs) var(--space-sm)",
+              whiteSpace: "nowrap",
+            }}
+          >
+            {t("detail.points.multiplier", { multiplier: factionMultiplier.toFixed(2) })}
+          </span>
+        )}
+      </div>
+      <Rule />
+      <div
+        style={{
+          display: "flex",
+          alignItems: "baseline",
+          gap: "var(--space-sm)",
+          lineHeight: 1,
+        }}
+      >
+        <span
+          style={{
+            fontFamily: MONO,
+            fontSize: desktop ? "var(--text-display)" : "var(--text-heading)",
+            lineHeight: 1,
+            color: BLUE_BRIGHT,
+            textShadow: "var(--faction-singularity-term-halo-blue)",
+          }}
+        >
+          {modifiedPoints}
+        </span>
+        <span style={{ ...LABEL, fontSize: "var(--text-md)", color: BLUE }}>
+          {t("detail.points.total")}
+        </span>
+      </div>
+    </div>
+  );
+
+  // ── The one action slot. Nothing renders when the viewer has no move to make
+  //    — an unusable control is worse than none.
+  const actionBody = (
+    <>
+      {canSignUp && (
+        <div>
+          <LevelJumpBanner state={state} />
+          <button onClick={handleSignup} style={primaryButton}>
+            {prompt}
+            {t("detail.signup.cta")}
+            <Cursor />
+          </button>
+          <div
+            style={{
+              fontFamily: MONO,
+              fontSize: "var(--text-md)",
+              lineHeight: 1.65,
+              color: DIM,
+              marginTop: "var(--space-sm)",
+            }}
+          >
+            {t("detail.signup.slots", { open: slotsOpen, max: maxTaskSlots })}
+            {!levelJumpSignup && (
               <>
-                <div style={{ display: "flex", flexWrap: "wrap", gap: "var(--space-2xl) var(--space-xl)", alignItems: "flex-start" }}>
-                  {sortedSubmissions.slice(0, 4).map((s) => (
-                    <div key={s.id} style={{ position: "relative", paddingTop: s.id === topId ? "var(--space-xl)" : 0 }}>
-                      {s.id === topId && (
-                        <div
-                          style={{
-                            position: "absolute",
-                            top: -2,
-                            left: "50%",
-                            transform: "translateX(-50%)",
-                            zIndex: 3,
-                            display: "inline-flex",
-                            alignItems: "center",
-                            gap: "var(--space-xs)",
-                            whiteSpace: "nowrap",
-                            background: BLACK,
-                            border: `1px solid ${GREEN}`,
-                            color: GREEN,
-                            fontFamily: TERM_FONT,
-                            fontSize: "var(--text-xs)",
-                            letterSpacing: "0.16em",
-                            padding: "var(--space-xs) var(--space-md)",
-                            boxShadow: "0 0 12px rgba(74,222,128,0.4)",
-                          }}
-                        >
-                          <span style={{ fontSize: "var(--text-lg)", lineHeight: 1 }}>⚜</span>{" "}
-                          {t("singularity.highestSignal")}
-                        </div>
-                      )}
-                      <PraxisCard praxis={s} />
-                    </div>
-                  ))}
-                </div>
-                {submissions.length > 4 && (
-                  <div style={{ marginTop: "var(--space-lg)" }}>
-                    <Link
-                      to={`/praxes?task_id=${task.id}`}
-                      style={{
-                        fontFamily: TERM_FONT,
-                        fontSize: "var(--text-base)",
-                        letterSpacing: "0.1em",
-                        textTransform: "uppercase",
-                        color: BLUE,
-                        textDecoration: "none",
-                      }}
-                    >
-                      {t("singularity.viewAll", { count: submissions.length })}
-                    </Link>
-                  </div>
-                )}
+                {" · "}
+                <span style={{ color: BRIGHT }}>
+                  {t("detail.signup.levelMet", { level: task.level_required })}
+                </span>
               </>
             )}
-          </section>
+          </div>
+          <ErrorBanner
+            message={signupError}
+            style={{ fontFamily: MONO, background: PANEL, border: `1px solid ${BORDER}` }}
+          />
+        </div>
+      )}
+
+      {mySubmission && (
+        <div>
+          <div
+            style={{
+              fontFamily: MONO,
+              fontSize: "var(--text-lg)",
+              color: BRIGHT,
+              marginBottom: "var(--space-md)",
+            }}
+          >
+            {t("detail.submitted.text")}
+          </div>
+          <Link to={`/praxes/${mySubmission.id}/edit`} style={primaryButton}>
+            {prompt}
+            {t("detail.submitted.edit")}
+          </Link>
+        </div>
+      )}
+
+      {!mySubmission && isInProgress && inProgressPraxisId !== null && (
+        <div>
+          <div
+            style={{
+              fontFamily: MONO,
+              fontSize: "var(--text-lg)",
+              color: BRIGHT,
+              marginBottom: "var(--space-md)",
+            }}
+          >
+            {t("detail.inProgress.text")}
+          </div>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "var(--space-md)",
+              flexWrap: "wrap",
+            }}
+          >
+            <Link
+              to={`/praxes/${inProgressPraxisId}/edit`}
+              style={{
+                ...primaryButton,
+                flex: 1,
+                width: "auto",
+                // The continue key is outlined, not lit: it is not the page's
+                // one bright action once the viewer is already on the task.
+                color: BRIGHT,
+                background: "transparent",
+                boxShadow: "none",
+              }}
+            >
+              {prompt}
+              {t("detail.inProgress.continue")}
+            </Link>
+            <button
+              onClick={handleDrop}
+              style={{
+                fontFamily: MONO,
+                fontSize: "var(--text-md)",
+                background: "none",
+                border: "none",
+                cursor: "pointer",
+                padding: 0,
+                color: DIM,
+              }}
+            >
+              {prompt}
+              {t("detail.inProgress.drop")}
+            </button>
+          </div>
+          <ErrorBanner
+            message={signupError}
+            style={{ fontFamily: MONO, background: PANEL, border: `1px solid ${BORDER}` }}
+          />
+        </div>
+      )}
+    </>
+  );
+
+  // Readout + action, two wells in one panel. 440px on desktop (dress; the other
+  // designs run 420–520), full width once the column collapses.
+  const actionPanel = (
+    <div
+      style={{
+        ...panelBox,
+        padding: "var(--space-sm)",
+        display: "flex",
+        flexDirection: "row",
+        gap: "var(--space-sm)",
+        alignItems: "stretch",
+      }}
+    >
+      <div
+        style={{
+          ...innerBox,
+          flex: "0 0 auto",
+          minWidth: desktop ? 160 : 118,
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "center",
+        }}
+      >
+        {scoreBody}
+      </div>
+      {hasAction && (
+        <div
+          style={{
+            ...innerBox,
+            flex: 1,
+            minWidth: 0,
+            display: "flex",
+            flexDirection: "column",
+            justifyContent: "center",
+          }}
+        >
+          {actionBody}
+        </div>
+      )}
+    </div>
+  );
+
+  // ── The brief, in full. No clamp, no "read more". ──
+  const brief = (
+    <section style={{ marginBottom: desktop ? "var(--space-2xl)" : "var(--space-xl)" }}>
+      {sectionHead(t("detail.brief.heading"))}
+      {task.description && (
+        <div style={{ ...panelBox, padding: desktop ? "var(--space-xl)" : "var(--space-lg)" }}>
+          <p
+            className="content-text"
+            style={{
+              fontFamily: MONO,
+              lineHeight: 1.7,
+              color: BRIGHT,
+              whiteSpace: "pre-wrap",
+              margin: 0,
+            }}
+          >
+            {task.description}
+          </p>
+        </div>
+      )}
+    </section>
+  );
+
+  // ── Praxis gallery — live PraxisCards, expanded in place ──
+  const gallery = (
+    <section style={{ marginBottom: desktop ? "var(--space-2xl)" : "var(--space-xl)" }}>
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: "var(--space-md)",
+          marginBottom: "var(--space-md)",
+          flexWrap: "wrap",
+        }}
+      >
+        <span
+          style={{
+            fontFamily: MONO,
+            fontSize: desktop ? "var(--text-xl)" : "var(--text-lg)",
+            color: BLUE_BRIGHT,
+          }}
+        >
+          {t("detail.gallery.heading", { count: submissions.length })}
+        </span>
+        <span
+          aria-hidden
+          style={{ flex: "1 1 20%", minWidth: 20, borderTop: `1px dashed ${HAIR}` }}
+        />
+        <span
+          style={{
+            display: "flex",
+            gap: "var(--space-xs)",
+            padding: "var(--space-xs)",
+            border: `1px solid ${BORDER}`,
+            borderRadius: 5,
+          }}
+        >
+          {(["score", "recent"] as const).map((sort) => {
+            const on = submissionSort === sort;
+            return (
+              <button
+                key={sort}
+                onClick={() => setSubmissionSort(sort)}
+                style={{
+                  ...LABEL,
+                  cursor: "pointer",
+                  border: "none",
+                  borderRadius: 4,
+                  padding: "var(--space-xs) var(--space-sm)",
+                  background: on ? BRIGHT : "transparent",
+                  color: on ? CTA_INK : DIM,
+                }}
+              >
+                {sort === "score"
+                  ? t("detail.gallery.sort.top")
+                  : t("detail.gallery.sort.recent")}
+              </button>
+            );
+          })}
+        </span>
+      </div>
+
+      {sortedSubmissions.length === 0 ? (
+        <p
+          className="content-text"
+          style={{ fontFamily: MONO, color: DIM, margin: 0 }}
+        >
+          {t("detail.gallery.empty")}
+        </p>
+      ) : (
+        <>
+          <div className="flex flex-wrap gap-4 items-start">
+            {(showAllPraxis
+              ? sortedSubmissions
+              : sortedSubmissions.slice(0, GALLERY_PREVIEW)
+            ).map((praxis) => (
+              <PraxisCard key={praxis.id} praxis={praxis} />
+            ))}
+          </div>
+          {submissions.length > GALLERY_PREVIEW && (
+            <button
+              onClick={() => setShowAllPraxis((shown) => !shown)}
+              style={{
+                display: "inline-block",
+                marginTop: "var(--space-md)",
+                padding: 0,
+                fontFamily: MONO,
+                fontSize: "var(--text-lg)",
+                background: "none",
+                border: "none",
+                cursor: "pointer",
+                color: BLUE,
+              }}
+            >
+              {prompt}
+              {showAllPraxis
+                ? t("detail.gallery.showFewer")
+                : t("detail.gallery.viewAll", { count: submissions.length })}
+            </button>
+          )}
+        </>
+      )}
+    </section>
+  );
+
+  return (
+    <div className="py-8">
+      <div
+        style={{
+          position: "relative",
+          overflow: "hidden",
+          maxWidth: 1200,
+          margin: "0 auto",
+          boxSizing: "border-box",
+          background: BG,
+          color: INK,
+          fontFamily: MONO,
+          border: `1px solid ${BORDER}`,
+          borderRadius: 8,
+          boxShadow: "var(--faction-singularity-term-shadow)",
+        }}
+      >
+        {/* The standing raster — a fixed scrim over the whole session. */}
+        <div
+          aria-hidden
+          style={{
+            position: "absolute",
+            inset: 0,
+            pointerEvents: "none",
+            zIndex: 4,
+            background:
+              "repeating-linear-gradient(0deg, var(--faction-singularity-term-scan) 0 1px, transparent 1px 3px)",
+          }}
+        />
+        {/* The scan sweep travelling down the page. `.sg-scan` owns both the
+            resting offset and the reduced-motion-guarded travel. */}
+        <div
+          aria-hidden
+          className="sg-scan"
+          style={{
+            position: "absolute",
+            left: "-30%",
+            right: "-30%",
+            height: 40,
+            pointerEvents: "none",
+            zIndex: 4,
+            background: "var(--faction-singularity-term-sweep)",
+          }}
+        />
+
+        {chrome}
+
+        <div
+          style={{
+            position: "relative",
+            zIndex: 2,
+            padding: desktop
+              ? "var(--space-2xl) var(--space-2xl) var(--space-3xl)"
+              : "var(--space-lg) var(--space-md) var(--space-xl)",
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              flexDirection: desktop ? "row" : "column",
+              alignItems: desktop ? "flex-start" : "stretch",
+              gap: desktop ? "var(--space-2xl)" : "var(--space-xl)",
+              marginBottom: desktop ? "var(--space-2xl)" : "var(--space-xl)",
+            }}
+          >
+            <div style={{ flex: 1, minWidth: 0 }}>{header}</div>
+            <div
+              style={{
+                flex: desktop ? "0 0 440px" : "1 1 auto",
+                width: desktop ? 440 : "100%",
+                marginTop: desktop ? "var(--space-sm)" : 0,
+              }}
+            >
+              {actionPanel}
+            </div>
+          </div>
+
+          <div style={{ minWidth: 0 }}>
+            {brief}
+            {gallery}
+            {/* Comments — the shared slot, active-task gated (ADR-0006, #1030). */}
+            <TaskDetailComments
+              state={state}
+              heading={sectionHead(t("detail.comments.heading"))}
+            />
+          </div>
         </div>
       </div>
     </div>

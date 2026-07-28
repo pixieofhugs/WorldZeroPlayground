@@ -298,6 +298,25 @@ const ARCHETYPE_PAIRS: Pair[] = [
     text: "--faction-coven-slip-deep",
   },
 
+  // Coven — THE CANDLELIT WARD (task detail v2, #1031). The detail page opens
+  // the slip out, so the same three inks meet two NEW grounds: the page wash the
+  // header sits directly on, and the panel the brief sits on. Both are flat, not
+  // gradients, which is why they measure as scalars here — but the page ground
+  // additionally carries a haze, and that composited worst case is written out
+  // in index.css beside the `--faction-coven-ward-haze` declaration (this test
+  // measures declared token values; a radial-gradient bloom is not one).
+  { what: "coven ward page, ink", surface: "--faction-coven-ward-page", text: "--faction-coven-slip-ink" },
+  { what: "coven ward page, brief", surface: "--faction-coven-ward-page", text: "--faction-coven-slip-soft" },
+  { what: "coven ward page, caption", surface: "--faction-coven-ward-page", text: "--faction-coven-slip-label" },
+  { what: "coven ward panel, ink", surface: "--faction-coven-ward-card", text: "--faction-coven-slip-ink" },
+  { what: "coven ward panel, brief", surface: "--faction-coven-ward-card", text: "--faction-coven-slip-soft" },
+  { what: "coven ward panel, caption", surface: "--faction-coven-ward-card", text: "--faction-coven-slip-label" },
+  // The "you already hold this task" band. Candle gold, theme-INVARIANT except
+  // for its upper stop, which reads --faction-coven-slip-gold and so brightens
+  // in dark; both stops are measured because the ink runs across the whole band.
+  { what: "coven hold band top", surface: "--faction-coven-slip-gold", text: "--faction-coven-ward-hold-ink" },
+  { what: "coven hold band foot", surface: "--faction-coven-ward-hold-to", text: "--faction-coven-ward-hold-ink" },
+
   // Everymen — THE HELP WANTED BILL (task card v2, #1023). Short, because the
   // design's palette IS the `--everymen-*` family measured above; only the roles
   // that family had no home for are new.
@@ -333,6 +352,23 @@ const ARCHETYPE_PAIRS: Pair[] = [
   { what: "ephemerists medallion disc, points", surface: "--faction-ephemerists-plate-disc", text: "--faction-ephemerists-plate-ink" },
   { what: "ephemerists medallion disc, unit", surface: "--faction-ephemerists-plate-disc", text: "--faction-ephemerists-plate-muted" },
   { what: "ephemerists plate CTA band", surface: "--faction-ephemerists-plate-cta-bg", text: "--faction-ephemerists-plate-cta-ink" },
+
+  // …and the three surfaces task detail (#1032) added, where the plate stops
+  // being one card on the app's ground and becomes the page. `-quiet` exists
+  // precisely because of the first row here: the DARKER page ground drops
+  // `-muted` to 4.31 and `-caption` to 4.45, both of which measure fine on the
+  // plate above. `-nile` was walked for the same reason (4.24 on the page as the
+  // design drew it) and carries every link plus the "level met" yes, so it is
+  // measured on all three grounds it lands on.
+  { what: "ephemerists page ground, quiet ink", surface: "--faction-ephemerists-plate-page", text: "--faction-ephemerists-plate-quiet" },
+  { what: "ephemerists page ground, links", surface: "--faction-ephemerists-plate-page", text: "--faction-ephemerists-plate-nile" },
+  { what: "ephemerists page ground, title", surface: "--faction-ephemerists-plate-page", text: "--faction-ephemerists-plate-ink" },
+  { what: "ephemerists plate, quiet ink", surface: "--faction-ephemerists-plate-bg", text: "--faction-ephemerists-plate-quiet" },
+  { what: "ephemerists panel cell, ink", surface: "--faction-ephemerists-plate-inner", text: "--faction-ephemerists-plate-ink" },
+  { what: "ephemerists panel cell, caption", surface: "--faction-ephemerists-plate-inner", text: "--faction-ephemerists-plate-caption" },
+  { what: "ephemerists panel cell, quiet ink", surface: "--faction-ephemerists-plate-inner", text: "--faction-ephemerists-plate-quiet" },
+  { what: "ephemerists panel cell, links", surface: "--faction-ephemerists-plate-inner", text: "--faction-ephemerists-plate-nile" },
+  { what: "ephemerists medallion disc, caption", surface: "--faction-ephemerists-plate-disc", text: "--faction-ephemerists-plate-caption" },
 
   // Singularity — THE TERMINAL SESSION (task card v2, #1023). The one card in
   // the wave that is DARK IN BOTH THEMES (§6), so every row here is measured
