@@ -8,7 +8,7 @@
  */
 import { describe, it, expect } from 'vitest'
 import '../../../i18n'
-import { collabCopy } from '../collabCopy'
+import { collabCopy, SHARED_DEFAULT_COLLAB_KEYS } from '../collabCopy'
 import type { CollabCopyKey } from '../collabCopy'
 import forms from '../../../locales/en/forms.json'
 
@@ -24,6 +24,14 @@ const FACTION_SLUGS = [
 ] as const
 
 const SHARED_KEYS = Object.keys(forms.editPraxis.collab) as CollabCopyKey[]
+// The keys a faction MUST voice. Everything else (SHARED_DEFAULT_COLLAB_KEYS)
+// carries the shared mechanics wording for leave/delete and may be left alone —
+// see the constant's docstring. A faction that does voice one of those still
+// passes: the assertions below are "covers all required" + "no stray keys",
+// not exact equality (#1074).
+const REQUIRED_KEYS = SHARED_KEYS.filter(
+  (key) => !SHARED_DEFAULT_COLLAB_KEYS.includes(key),
+)
 
 describe('collabCopy — faction override resolution', () => {
   it('resolves a faction override when one exists', () => {
@@ -54,9 +62,23 @@ describe('collabCopy — faction override resolution', () => {
 })
 
 describe('collabCopy — catalog completeness', () => {
-  it.each(FACTION_SLUGS)('%s overrides every shared collab key', (slug) => {
+  it.each(FACTION_SLUGS)('%s overrides every voiced collab key', (slug) => {
     const block = forms.editPraxis[slug].collab as Record<string, string>
-    expect(Object.keys(block).sort()).toEqual([...SHARED_KEYS].sort())
+    expect(Object.keys(block).sort()).toEqual(
+      expect.arrayContaining([...REQUIRED_KEYS].sort()),
+    )
+  })
+
+  // A key in a faction block that the shared block doesn't have is a typo or a
+  // rename that only landed on one side: it would resolve for that faction and
+  // silently throw the missing-key error for every other.
+  it.each(FACTION_SLUGS)('%s invents no collab key of its own', (slug) => {
+    const block = forms.editPraxis[slug].collab as Record<string, string>
+    expect(
+      Object.keys(block).filter(
+        (key) => !SHARED_KEYS.includes(key as CollabCopyKey),
+      ),
+    ).toEqual([])
   })
 
   it.each(FACTION_SLUGS)('%s resolves every key to non-empty copy', (slug) => {

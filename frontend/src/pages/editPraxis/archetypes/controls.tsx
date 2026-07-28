@@ -49,15 +49,18 @@ export function InviteSearch({
   const onPick = duelMode ? state.sendChallenge : state.sendInvite;
   // Cast progress drives the roster + hides "invite another" once weaving starts (#591).
   const castCount = praxis.members.filter((m) => m.has_submitted).length;
-  // A non-creator collab member can drop out from here (#958) — a standalone exit
-  // that doesn't require the bank-full drop-to-accept modal. The creator instead
-  // deletes/drops the whole draft (DropButton), so the leave control is hidden for
-  // them; duel mode has no membership to leave.
-  const isCreator = praxis.created_by_id === state.currentCharacterId;
+  // Any collab member can drop out from here (#958) — a standalone exit that
+  // doesn't require the bank-full drop-to-accept modal. That includes whoever
+  // started it: a collab is co-owned by its members and `created_by_id` is only
+  // the historical "who started it" fact, carrying no powers over the others
+  // (ADR-0013, #1074). The backend's `leave_praxis` has always agreed — it checks
+  // membership and nothing else. Leaving and deleting are different acts, not two
+  // labels for one: you leave and the crew carries on, whereas Delete (DropButton)
+  // destroys the praxis with everyone's work in it, so that one stays the
+  // creator's alone. Duel mode has no membership to leave.
   const canLeaveCollab =
     !duelMode &&
     praxis.type === "collab" &&
-    !isCreator &&
     praxis.members.some((member) => member.character_id === state.currentCharacterId);
   return (
     <div>
@@ -280,6 +283,9 @@ export function InviteSearch({
         <button
           type="button"
           onClick={() => void state.leaveCollab()}
+          // Spelling out the outcome next to a delete control that reads
+          // superficially similar: this one only removes you (#1074).
+          title={collabCopy(praxis.task_faction_slug, "leaveDescription")}
           className="font-body eyebrow hover:underline"
           style={{
             display: "block",
@@ -360,13 +366,34 @@ export function DropButton({
   skin?: DropButtonSkin;
 }) {
   const { t } = useTranslation("forms");
+  const praxis = state.praxis;
+  const isCollab = praxis?.type === "collab";
+  // Deleting destroys the praxis for the whole crew, so it stays the creator's
+  // alone — the backend is the authority (`delete_praxis`), this only declines to
+  // draw a control the viewer could never use. Every other member's exit is
+  // Leave, which is now theirs too (#1074, ADR-0013).
+  const isCreator = praxis?.created_by_id === state.currentCharacterId;
+  if (isCollab && !isCreator) return null;
+  // With other people's parts inside it, the archetype's "drop task" label
+  // undersells what the button does. Both the label and the consequence come
+  // from collabCopy, so a faction may voice them; the shared default carries the
+  // warning if it doesn't.
+  const crewAtStake = isCollab && praxis.members.length > 1;
+  const label = crewAtStake
+    ? collabCopy(praxis.task_faction_slug, "deleteAction")
+    : (skin?.label ?? t("editPraxis.dropTask"));
   return (
     <button
       type="button"
       onClick={() => void state.cancel()}
+      title={
+        crewAtStake
+          ? collabCopy(praxis.task_faction_slug, "deleteDescription")
+          : undefined
+      }
       style={skin?.style}
     >
-      {skin?.label ?? t("editPraxis.dropTask")}
+      {label}
     </button>
   );
 }
