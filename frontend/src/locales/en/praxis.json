@@ -101,6 +101,27 @@
     "loading": "Loading...",
     "retry": "Try refreshing.",
     "notFound": "Not found.",
+    "breadcrumb": {
+      "tasks": "Tasks",
+      "current": "Praxis"
+    },
+    "back": "Praxes",
+    "sections": {
+      "proof": "Proof",
+      "writeUp": "Write-up",
+      "members": "Members",
+      "comments": "Discussion"
+    },
+    "taskRef": {
+      "label": "Completing task",
+      "level": "Level {{level}}",
+      "points": "{{points}} pts"
+    },
+    "filed": "Filed {{date}}",
+    "vote": {
+      "heading": "Cast your vote",
+      "prompt": "How much did this move you?"
+    },
     "errors": {
       "load": "Couldn't load this praxis.",
       "moderate": "Moderation failed.",
@@ -119,7 +140,9 @@
       "inEditingBody": "This praxis is in editing mode. Points and votes are paused until submitted.",
       "pendingPublishLabel": "PENDING PUBLISH",
       "pendingPublishBody": "Waiting on co-authors to submit.",
-      "failedTitle": "This praxis was marked as failed."
+      "failedTitle": "This praxis was marked as failed.",
+      "flaggedLabel": "FLAGGED",
+      "flaggedBody": "This praxis is flagged and awaiting admin review."
     },
     "admin": {
       "eyebrow": "ADMIN · Status:",
@@ -172,7 +195,13 @@
       "count_other": "{{count}} votes"
     },
     "score": {
-      "ptsMultVotes": "pts × bonus + votes"
+      "ptsMultVotes": "pts × bonus + votes",
+      "heading": "Score",
+      "base": "Base",
+      "multiplier": "Multiplier",
+      "meta": "Metatasks",
+      "votes": "From votes",
+      "total": "Total"
     },
     "metatasks": {
       "heading": "Metatasks",
