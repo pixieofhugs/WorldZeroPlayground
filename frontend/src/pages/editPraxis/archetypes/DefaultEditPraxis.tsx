@@ -26,6 +26,7 @@ import {
   InviteSearch,
   ModePicker,
   PublishButton,
+  SaveDraftButton,
   TitleField,
 } from "./controls";
 import { MetataskSealStack } from "../MetataskSealStack";
@@ -547,6 +548,7 @@ export default function DefaultEditPraxis({ state }: Props) {
                   },
                 }}
               />
+              <SaveDraftButton state={state} />
               <DropButton
                 state={state}
                 skin={{

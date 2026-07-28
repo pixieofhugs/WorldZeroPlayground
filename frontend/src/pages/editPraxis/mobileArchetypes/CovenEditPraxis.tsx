@@ -26,6 +26,7 @@ import {
   FilePicker,
   InviteSearch,
   PublishButton,
+  SaveDraftButton,
   TitleField,
 } from "../archetypes/controls";
 import { MetataskSealStack } from "../MetataskSealStack";
@@ -386,6 +387,7 @@ export default function CovenEditPraxis({ state }: { state: EditPraxisState }) {
           borderTop: `1.5px solid ${WIN_BORDER}`,
         }}
       >
+        <SaveDraftButton state={state} />
         {!state.isPublished && (
           <DropButton
             state={state}
