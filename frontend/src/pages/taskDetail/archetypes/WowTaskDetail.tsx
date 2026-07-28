@@ -1005,10 +1005,23 @@ export default function WowTaskDetail({ state }: { state: TaskDetailState }) {
 
   return (
     <div className="py-8" style={{ position: "relative" }}>
-      {/* The parchment field with its fine dot texture (index.css). */}
-      <div className="wow-detail-field" aria-hidden />
-
-      <div style={{ position: "relative", zIndex: 1, maxWidth: 1200, margin: "0 auto" }}>
+      {/* The parchment field with its fine dot texture (index.css). It paints
+          the detail COLUMN, not the viewport: the owner's rule for this surface
+          is that the site background still shows around the component (QA on
+          #1055, applied to every skin). Was `position: fixed; inset: 0`. */}
+      <div
+        className="wow-detail-field"
+        style={{
+          position: "relative",
+          zIndex: 1,
+          maxWidth: 1200,
+          margin: "0 auto",
+          borderRadius: 18,
+          padding: desktop ? "var(--space-2xl)" : "var(--space-lg)",
+          overflow: "hidden",
+          boxSizing: "border-box",
+        }}
+      >
         <Bunting gap={size.buntingGap} />
 
         <div

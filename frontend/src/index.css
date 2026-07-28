@@ -3382,13 +3382,13 @@
   --faction-wow-detail-shadow: 0 18px 44px -18px rgba(0, 0, 0, 0.8);
 }
 
-/* Markup hook: `<div class="wow-detail-field" />`, the same shape as
-   `.na-backdrop` — a fixed sheet behind the page's own z-index 1 column. */
+/* The parchment ground for the task-detail COLUMN, not the viewport — the site
+   background shows around it (owner QA on #1055, applied to every task-detail
+   skin). The archetype supplies position / z-index / radius / padding; this rule
+   owns only the field and its dot texture.
+   (It was modelled on `.na-backdrop`, which IS a real full-viewport wash — but
+   that pattern was retired from this surface, not copied onto it.) */
 .wow-detail-field {
-  position: fixed;
-  inset: 0;
-  z-index: 0;
-  pointer-events: none;
   background-color: var(--faction-wow-detail-field);
   background-image: radial-gradient(var(--faction-wow-detail-dot) 1px, transparent 1px);
   background-size: 5px 5px;
