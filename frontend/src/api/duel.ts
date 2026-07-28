@@ -36,6 +36,8 @@ export interface DuelSideOut {
   avatar_url: string
   points_from_votes: number
   is_submitted: boolean
+  /** The duel twin of `PraxisMemberOut.nudged_at` (#1083); same server-owned window. */
+  nudged_at?: string | null
 }
 
 export interface DuelDetailOut {

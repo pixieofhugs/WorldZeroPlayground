@@ -88,6 +88,14 @@ export type CollabCopyKey =
   | 'duelPillSealed'
   | 'duelPillWriting'
   | 'duelPullBackDescription'
+  // Nudging the person the praxis is still waiting on (#1083).
+  | 'nudgeAction'
+  | 'nudgeSentAction'
+  | 'nudgeAria'
+  | 'nudgeSentAria'
+  | 'nudgeDescription'
+  | 'duelNudgeAria'
+  | 'nudgeFeedAction'
 
 /**
  * Keys that are content to speak in the shared voice (#1074).
@@ -114,6 +122,14 @@ export type CollabCopyKey =
  * and a dialog whose whole job is to state a consequence plainly is the worst
  * place in the composer to be in character. Adding them here is also what keeps
  * a new shared key from silently owing eight faction translations.
+ *
+ * The `nudge*` block (#1083) joins them too, and the issue asks for it by name:
+ * a voiced block historically drags all eight factions with it, and this one is
+ * four words on a button plus one feed line. What it says is a mechanic and a
+ * limit — one reminder, once a day, signed with your name — and the feed line in
+ * particular is read by the RECIPIENT, whose faction is not the sender's, so a
+ * sender-voiced quip there would land in someone else's room. Overrides stay
+ * available for whichever faction earns one first.
  *
  * The whole `awaiting*` / `duelAwaiting*` block (#1080) joins them for the same
  * reason, plus one of its own: the waiting surface is **one shared, token-themed
@@ -164,6 +180,13 @@ export const SHARED_DEFAULT_COLLAB_KEYS: readonly CollabCopyKey[] = [
   'duelPillSealed',
   'duelPillWriting',
   'duelPullBackDescription',
+  'nudgeAction',
+  'nudgeSentAction',
+  'nudgeAria',
+  'nudgeSentAria',
+  'nudgeDescription',
+  'duelNudgeAria',
+  'nudgeFeedAction',
 ]
 
 /**

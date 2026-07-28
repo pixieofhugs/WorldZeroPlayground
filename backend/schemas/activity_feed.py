@@ -17,6 +17,7 @@ class ActivityFeedItem(BaseModel):
     - collab_invite: someone invited you to collaborate
     - duel_challenge: someone challenged you to a duel
     - friend_signup: a friend signed up for a task you're doing
+    - nudge: a collaborator or duel rival poked you to file your part
     """
 
     type: str

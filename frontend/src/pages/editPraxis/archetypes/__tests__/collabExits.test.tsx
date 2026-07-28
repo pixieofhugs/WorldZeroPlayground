@@ -65,6 +65,7 @@ function praxisState({
     sendInvite: async () => {},
     sendChallenge: async () => {},
     kickMember: async () => {},
+    nudge: async () => {},
     cancelInvite: async () => {},
     leaveCollab: async () => {},
     cancel: async () => {},

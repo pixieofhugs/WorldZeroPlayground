@@ -59,6 +59,7 @@ export function CollabRoster({
   factionSlug,
   taskPointValue,
   onKick,
+  onNudge,
 }: {
   members: readonly PraxisMemberOut[]
   currentCharacterId: number | null | undefined
@@ -74,6 +75,15 @@ export function CollabRoster({
    * callback only has to run the API call + refresh.
    */
   onKick?: (memberId: number) => void | Promise<void>
+  /**
+   * Poke a member who has not cast yet (#1083). Receives the target's CHARACTER
+   * id. When provided, a Nudge button renders on every OTHER member's pill that
+   * is still weaving — but only if the VIEWER has cast, mirroring the backend
+   * rule ("any member who has cast may nudge a member who has not"): you do not
+   * get to hurry people you have not caught up with. Left undefined on the
+   * read-only detail mount, which draws no author controls at all (#646).
+   */
+  onNudge?: (characterId: number) => void | Promise<void>
 }) {
   const { t } = useTranslation('forms')
   // The member a kick is waiting on confirmation for (#1082). Declared before
@@ -93,6 +103,11 @@ export function CollabRoster({
   // rule lives in this one component, not re-stated at each call site.
   const viewerIsMember = members.some((m) => m.character_id === currentCharacterId)
   const canKick = onKick != null && viewerIsMember && gate.state !== 'published'
+
+  // Mirror the backend's nudge rule (#1083): a member who has CAST may nudge a
+  // member who has not. `gate.iCast` is that condition already derived, so the
+  // rule is read from the same place the banner is and cannot drift from it.
+  const canNudge = onNudge != null && viewerIsMember && gate.iCast
 
   // A kick resets everyone's cast (ADR-0013), so it confirms before firing.
   // The dialog is mounted from HERE rather than from the EditPraxis dispatcher
@@ -163,6 +178,41 @@ export function CollabRoster({
               <span className="eyebrow text-[9px]" style={{ color: cast ? accent : 'var(--color-warning)' }}>
                 {cast ? `✓ ${collabCopy(factionSlug, 'pillCast')}` : collabCopy(factionSlug, 'pillWeaving')}
               </span>
+              {/* Nudge — only on a member who is still weaving, never my own row
+                  (#1083). Disabled state comes from `member.nudged_at`, which the
+                  server sends and clears when the 24h window lapses; nothing
+                  about it is remembered here, so a reload cannot un-nudge it. */}
+              {canNudge && !isMe && !cast && (
+                <button
+                  type="button"
+                  disabled={member.nudged_at != null}
+                  onClick={() => onNudge?.(member.character_id)}
+                  title={collabCopy(factionSlug, 'nudgeDescription')}
+                  aria-label={collabCopy(
+                    factionSlug,
+                    member.nudged_at != null ? 'nudgeSentAria' : 'nudgeAria',
+                    { name: member.character_display_name },
+                  )}
+                  className="eyebrow text-[9px] px-2 py-1"
+                  style={{
+                    borderRadius: 4,
+                    border: `1px solid ${
+                      member.nudged_at != null ? 'var(--color-border)' : accent
+                    }`,
+                    background: 'transparent',
+                    color:
+                      member.nudged_at != null
+                        ? 'var(--color-text-tertiary)'
+                        : accent,
+                    cursor: member.nudged_at != null ? 'default' : 'pointer',
+                  }}
+                >
+                  {collabCopy(
+                    factionSlug,
+                    member.nudged_at != null ? 'nudgeSentAction' : 'nudgeAction',
+                  )}
+                </button>
+              )}
               {/* Kick × — on every OTHER member's pill (never my own), gated to
                   members (#959). The glyph is an ornament; the button's name is
                   the aria-label so screen readers and the e2e locator resolve it. */}

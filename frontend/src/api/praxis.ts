@@ -30,6 +30,15 @@ export interface PraxisMemberOut {
   character_display_name: string
   has_submitted: boolean
   joined_at: string
+  /**
+   * When the VIEWER last nudged this member about this praxis (#1083), and null
+   * once that 24h window lapses. The server owns both facts through one
+   * constant, so "there is a timestamp" and "you may not nudge again yet" can
+   * never disagree — and a reload cannot un-nudge the button, which is what made
+   * the design's local-state version dishonest. Absent on list-route cards,
+   * which have no nudge button.
+   */
+  nudged_at?: string | null
 }
 
 export interface PraxisInviteOut {

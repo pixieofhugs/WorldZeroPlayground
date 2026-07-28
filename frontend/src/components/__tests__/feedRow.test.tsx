@@ -11,6 +11,7 @@ import { normalizeFeedItem, FACTION_ROW_TYPES } from '../feed/normalizeFeedItem'
 import FeedRowContent from '../feed/FeedRowContent'
 import type { ActivityFeedItem } from '../../api/activityFeed'
 import '../../i18n'
+import { collabCopy } from '../collab/collabCopy'
 
 function item(type: string, payload: Record<string, unknown>): ActivityFeedItem {
   return {
@@ -52,6 +53,47 @@ describe('normalizeFeedItem', () => {
     expect(row.headlineHref).toBe('/praxes/12')
     expect(row.points).toBe('25 pts')
     expect(row.badge?.label).toBe('Your Stuff')
+  })
+
+  it('maps a nudge to a row linking into the recipient own editor (#1083)', () => {
+    // The nudge lands BESIDE the `awaiting_submission` row for the same praxis,
+    // so it borrows that row's badge and its /edit link — the reminder and the
+    // obligation are two cards about one thing.
+    const row = normalizeFeedItem(
+      item('nudge', {
+        nudge_id: 4,
+        praxis_id: 12,
+        praxis_type: 'collab',
+        from_character_id: 8,
+        from_name: 'Ada',
+        task_title: 'Plant a tree',
+        task_point_value: 25,
+      }),
+    )!
+    expect(row.actor).toBe('Ada')
+    // Copy comes through collabCopy (shared default + faction overrides), not
+    // the `feed` catalog — it is the composer's own vocabulary.
+    expect(row.action).toBe(collabCopy('coven', 'nudgeFeedAction'))
+    expect(row.actorHref).toBe('/characters/8')
+    expect(row.headline).toBe('Plant a tree')
+    expect(row.headlineHref).toBe('/praxes/12/edit')
+    expect(row.badge?.label).toBe('Collab')
+  })
+
+  it('badges a duel nudge as a duel', () => {
+    const row = normalizeFeedItem(
+      item('nudge', {
+        nudge_id: 5,
+        praxis_id: 13,
+        // A duel side is type='solo' + a duel_id (ADR-0011), so anything that is
+        // not a collab reads as the duel side it is.
+        praxis_type: 'solo',
+        from_character_id: 8,
+        task_title: 'Out-walk me',
+      }),
+    )!
+    expect(row.badge?.label).toBe('Duel')
+    expect(row.headlineHref).toBe('/praxes/13/edit')
   })
 
   it('resolves a taunt from the catalog, quotes it, and drops points', () => {
