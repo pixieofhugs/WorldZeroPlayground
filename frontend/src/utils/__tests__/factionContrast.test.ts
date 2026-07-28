@@ -374,6 +374,21 @@ const ARCHETYPE_PAIRS: Pair[] = [
   // `--faction-snide-pink` does not flip either.
   { what: "snide modifier chip", surface: "--faction-snide-pink", text: "--faction-snide-note-cta-ink" },
 
+  // UA — THE VELLUM LEAF (task card v2, #1023). Shortest block in the wave: the
+  // design's palette turned out to BE the shipped `--faction-ua-*` family
+  // value-for-value, `cardGrad` included (it is `--faction-ua-card-parchment`,
+  // both themes), so this card introduced no token at all. What the rows below
+  // add is the one surface nothing had measured against — the parchment
+  // gradient's DARKEST stop, which is `-panel` by day and `-card-bg` by night.
+  // Measuring the lightest stop instead is the mistake wave A caught on Coven.
+  { what: "ua leaf darkest stop, title", surface: "--faction-ua-panel", text: "--faction-ua-card-text" },
+  { what: "ua leaf darkest stop, brief", surface: "--faction-ua-panel", text: "--faction-ua-card-muted" },
+  // The score numeral. The design paints it in `--faction-ua-glow`, which is
+  // 2.93:1 here and so misses even AA_LARGE — the ONE ink this card walks down,
+  // onto the accent it already owns rather than onto a new token.
+  { what: "ua leaf darkest stop, score numeral", surface: "--faction-ua-panel", text: "--faction-ua-card-accent" },
+  { what: "ua leaf CTA", surface: "--faction-ua-card-chip-bg", text: "--faction-ua-card-chip-ink" },
+
   // Albescent's FACTION tokens are gone (#783) — it renders Default's surfaces,
   // which `default` already covers. What remains is the always-light palette
   // private to the reveal surfaces (invitation letter, secret placeholder). It

@@ -193,7 +193,9 @@
     "ua": {
       "estLine": "A daily practice",
       "pointsLine": "{{points}} marks",
-      "signup": "Sign up"
+      "signup": "Sign up",
+      "levelCaption": "Level",
+      "pointsUnit": "marks"
     },
     "coven": {
       "windowTitle": "coven.exe",

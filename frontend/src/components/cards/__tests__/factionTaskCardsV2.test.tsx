@@ -38,6 +38,7 @@ import EverymenTaskCard from '../EverymenTaskCard'
 import AlbescentTaskCard from '../AlbescentTaskCard'
 import SingularityTaskCard from '../SingularityTaskCard'
 import SnideTaskCard from '../SnideTaskCard'
+import UaTaskCard from '../UaTaskCard'
 import DefaultTaskCard from '../DefaultTaskCard'
 import { surfaceMap } from '../../../factions'
 
@@ -92,6 +93,7 @@ const SKINS: Skin[] = [
   },
   { slug: 'singularity', Card: SingularityTaskCard, signup: i18n.t('feed:taskCard.singularity.signup') },
   { slug: 'snide', Card: SnideTaskCard, signup: i18n.t('feed:taskCard.snide.signup') },
+  { slug: 'ua', Card: UaTaskCard, signup: i18n.t('feed:taskCard.ua.signup') },
 ]
 
 /**
