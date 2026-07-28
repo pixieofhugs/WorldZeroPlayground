@@ -21,6 +21,7 @@ import { MemoryRouter } from "react-router-dom";
 import type { ReactElement } from "react";
 import { describe, it, expect } from "vitest";
 import { surfaceMap } from "../../../factions";
+import { resolvedArchetype } from "../../../factions/lazyArchetype";
 import WowTaskDetail from "../archetypes/WowTaskDetail";
 import type { TaskDetailState } from "../useTaskDetail";
 import type { TaskOut, TaskSignupOut } from "../../../api/tasks";
@@ -101,7 +102,7 @@ describe("wow task detail — the surface is reachable at all", () => {
     // #951's first bullet. Before #1037 this entry was undefined and
     // `pickVariant` handed a WOW task straight to DefaultTaskDetail.
     expect(surfaceMap("taskDetail")["wow"]).toBeDefined();
-    expect(surfaceMap("taskDetail")["wow"]).toBe(WowTaskDetail);
+    expect(resolvedArchetype(surfaceMap("taskDetail")["wow"])).toBe(WowTaskDetail);
   });
 
   it("renders the task without throwing", () => {

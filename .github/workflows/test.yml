@@ -78,3 +78,7 @@ jobs:
       - name: Build (catches import/resolution errors eslint & vitest miss)
         run: npm run build
         working-directory: frontend
+
+      - name: Initial-load byte budget (warns on growth, fails past the ceiling)
+        run: npm run budget
+        working-directory: frontend

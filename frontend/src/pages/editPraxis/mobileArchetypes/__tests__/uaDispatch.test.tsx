@@ -12,6 +12,7 @@ import { describe, it, expect } from 'vitest'
 // Initialize the i18n catalog so copy keys resolve to English text.
 import '../../../../i18n'
 import { pickVariant } from '../../../../utils/factionDispatch'
+import { resolvedArchetype } from '../../../../factions/lazyArchetype'
 import { surfaceMap } from '../../../../factions'
 import DefaultMobileEditPraxis from '../DefaultEditPraxis'
 import UAMobileEditPraxis from '../UaComposer'
@@ -22,20 +23,20 @@ import type { TaskOut } from '../../../../api/tasks'
 
 describe('mobile composer UA dispatch', () => {
   it('mobile + a UA task resolves to the bespoke UA composer', () => {
-    expect(pickVariant(surfaceMap('mobileEditPraxis'), 'ua', DefaultMobileEditPraxis)).toBe(
+    expect(resolvedArchetype(pickVariant(surfaceMap('mobileEditPraxis'), 'ua', DefaultMobileEditPraxis))).toBe(
       UAMobileEditPraxis,
     )
   })
 
   it('mobile + a S.N.I.D.E. task resolves to the bespoke SNIDE composer', () => {
-    expect(pickVariant(surfaceMap('mobileEditPraxis'), 'snide', DefaultMobileEditPraxis)).toBe(
+    expect(resolvedArchetype(pickVariant(surfaceMap('mobileEditPraxis'), 'snide', DefaultMobileEditPraxis))).toBe(
       SnideMobileEditPraxis,
     )
   })
 
   it('mobile + any other slug falls through to the Default composer', () => {
     for (const slug of ['__unregistered__', 'na', null]) {
-      expect(pickVariant(surfaceMap('mobileEditPraxis'), slug, DefaultMobileEditPraxis)).toBe(
+      expect(resolvedArchetype(pickVariant(surfaceMap('mobileEditPraxis'), slug, DefaultMobileEditPraxis))).toBe(
         DefaultMobileEditPraxis,
       )
     }

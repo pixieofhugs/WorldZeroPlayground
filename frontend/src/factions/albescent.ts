@@ -30,14 +30,18 @@
  * colours puts it back in the spectrum and un-hides it.
  */
 import type { FactionManifest } from './manifest'
+import { lazyArchetype } from './lazyArchetype'
 
-import { AlbescentSelectCard } from '../components/cards/FactionSelectCard'
-import AlbescentTaskCard from '../components/cards/AlbescentTaskCard'
-import AlbescentVote from '../components/vote/AlbescentVote'
-import AlbescentPraxisCard from '../components/praxisCard/desktop/AlbescentPraxisCard'
-import AlbescentMobilePraxisCard from '../components/praxisCard/mobile/AlbescentMobilePraxisCard'
-import AlbescentSeal from '../components/metaTaskSeal/skins/AlbescentSeal'
-import AlbescentTaskDetail from '../pages/taskDetail/archetypes/AlbescentTaskDetail'
+const AlbescentSelectCard = lazyArchetype(() => import('../components/cards/FactionSelectCard').then((m) => ({ default: m.AlbescentSelectCard })))
+const AlbescentTaskCard = lazyArchetype(() => import('../components/cards/AlbescentTaskCard'))
+const AlbescentVote = lazyArchetype(() => import('../components/vote/AlbescentVote'))
+const AlbescentPraxisCard = lazyArchetype(() => import('../components/praxisCard/desktop/AlbescentPraxisCard'))
+const AlbescentMobilePraxisCard = lazyArchetype(() => import('../components/praxisCard/mobile/AlbescentMobilePraxisCard'))
+const AlbescentSeal = lazyArchetype(() => import('../components/metaTaskSeal/skins/AlbescentSeal'))
+// #1038 — the task-detail unfreeze. Lazy like its siblings (#1063): a wrapper
+// that pulls in the whole na anatomy is exactly the weight route-splitting exists
+// to keep off the initial load.
+const AlbescentTaskDetail = lazyArchetype(() => import('../pages/taskDetail/archetypes/AlbescentTaskDetail'))
 
 export const ALBESCENT_MANIFEST: FactionManifest = {
   slug: 'albescent',

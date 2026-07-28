@@ -35,6 +35,7 @@ import type { ReactElement } from "react";
 import { describe, it, expect } from "vitest";
 import EphemeristsTaskDetail from "../archetypes/EphemeristsTaskDetail";
 import { surfaceMap } from "../../../factions";
+import { resolvedArchetype } from "../../../factions/lazyArchetype";
 import { readThemes } from "../../../utils/__tests__/cssVars";
 import type { TaskDetailState } from "../useTaskDetail";
 import type { TaskOut, TaskSignupOut } from "../../../api/tasks";
@@ -110,7 +111,7 @@ function render(element: ReactElement): { html: string; text: string } {
 
 describe("Ephemerists task detail — the Valley plate", () => {
   it("is what the manifest dispatches for the slug", () => {
-    expect(surfaceMap("taskDetail").ephemerists).toBe(EphemeristsTaskDetail);
+    expect(resolvedArchetype(surfaceMap("taskDetail").ephemerists)).toBe(EphemeristsTaskDetail);
   });
 
   it("speaks only the shared neutral copy", () => {

@@ -9,35 +9,36 @@
  * during module evaluation — see the cycle note in `./manifest.ts`.
  */
 import type { FactionManifest } from './manifest'
+import { lazyArchetype } from './lazyArchetype'
 
-import SingularityAvatar from '../components/avatar/SingularityAvatar'
-import SingularityBackdrop from '../components/backdrop/SingularityBackdrop'
-import SingularityComment from '../components/comments/voices/SingularityComment'
-import SingularityDuelRail from '../pages/praxisDetail/duelRails/SingularityDuelRail'
-import SingularityDuelSealConfirm from '../components/duel/SingularityDuelSealConfirm'
-import SingularityEditPraxis from '../pages/editPraxis/archetypes/SingularityEditPraxis'
-import SingularityFactionBody from '../pages/factionDetail/archetypes/SingularityFactionBody'
-import SingularityFactionHero from '../components/cards/SingularityFactionHero'
-import SingularityFactionPage from '../pages/factionDetail/mobileArchetypes/SingularityFactionPage'
-import SingularityFeedFrame from '../components/feed/SingularityFeedFrame'
-import SingularityHome from '../pages/fieldDesk/mobileArchetypes/SingularityHome'
-import SingularityMobileDuelRail from '../pages/praxisDetail/duelRails/SingularityMobileDuelRail'
-import SingularityMobileDuelSealConfirm from '../components/duel/SingularityMobileDuelSealConfirm'
-import SingularityMobileEditPraxis from '../pages/editPraxis/mobileArchetypes/SingularityComposer'
-import SingularityMobilePraxisCard from '../components/praxisCard/mobile/SingularityMobilePraxisCard'
-import SingularityMobilePraxisDetail from '../pages/praxisDetail/mobileArchetypes/SingularityPraxisDetail'
-import SingularityMobileTaskDetail from '../pages/taskDetail/mobileArchetypes/SingularityTaskDetail'
-import SingularityPraxisDetail from '../pages/praxisDetail/archetypes/SingularityPraxisDetail'
-import SingularityProfileBody from '../pages/characterProfile/archetypes/SingularityProfileBody'
-import SingularityTaskCard from '../components/cards/SingularityTaskCard'
-import SingularityTaskDetail from '../pages/taskDetail/archetypes/SingularityTaskDetail'
-import SingularityVote from '../components/vote/SingularityVote'
-import SingularityPraxisCard from '../components/praxisCard/desktop/SingularityPraxisCard'
-import SingularityScoreStamp from '../components/praxisCard/scoreStamp/SingularityScoreStamp'
-import SingularitySeal from '../components/metaTaskSeal/skins/SingularitySeal'
-import { SingularitySigilAdapter } from '../components/cards/FactionSigil'
-import { SingularityCard } from '../components/cards/FactionCard'
-import { SingularitySelectCard } from '../components/cards/FactionSelectCard'
+const SingularityAvatar = lazyArchetype(() => import('../components/avatar/SingularityAvatar'))
+const SingularityBackdrop = lazyArchetype(() => import('../components/backdrop/SingularityBackdrop'))
+const SingularityComment = lazyArchetype(() => import('../components/comments/voices/SingularityComment'))
+const SingularityDuelRail = lazyArchetype(() => import('../pages/praxisDetail/duelRails/SingularityDuelRail'))
+const SingularityDuelSealConfirm = lazyArchetype(() => import('../components/duel/SingularityDuelSealConfirm'))
+const SingularityEditPraxis = lazyArchetype(() => import('../pages/editPraxis/archetypes/SingularityEditPraxis'))
+const SingularityFactionBody = lazyArchetype(() => import('../pages/factionDetail/archetypes/SingularityFactionBody'))
+const SingularityFactionHero = lazyArchetype(() => import('../components/cards/SingularityFactionHero'))
+const SingularityFactionPage = lazyArchetype(() => import('../pages/factionDetail/mobileArchetypes/SingularityFactionPage'))
+const SingularityFeedFrame = lazyArchetype(() => import('../components/feed/SingularityFeedFrame'))
+const SingularityHome = lazyArchetype(() => import('../pages/fieldDesk/mobileArchetypes/SingularityHome'))
+const SingularityMobileDuelRail = lazyArchetype(() => import('../pages/praxisDetail/duelRails/SingularityMobileDuelRail'))
+const SingularityMobileDuelSealConfirm = lazyArchetype(() => import('../components/duel/SingularityMobileDuelSealConfirm'))
+const SingularityMobileEditPraxis = lazyArchetype(() => import('../pages/editPraxis/mobileArchetypes/SingularityComposer'))
+const SingularityMobilePraxisCard = lazyArchetype(() => import('../components/praxisCard/mobile/SingularityMobilePraxisCard'))
+const SingularityMobilePraxisDetail = lazyArchetype(() => import('../pages/praxisDetail/mobileArchetypes/SingularityPraxisDetail'))
+const SingularityMobileTaskDetail = lazyArchetype(() => import('../pages/taskDetail/mobileArchetypes/SingularityTaskDetail'))
+const SingularityPraxisDetail = lazyArchetype(() => import('../pages/praxisDetail/archetypes/SingularityPraxisDetail'))
+const SingularityProfileBody = lazyArchetype(() => import('../pages/characterProfile/archetypes/SingularityProfileBody'))
+const SingularityTaskCard = lazyArchetype(() => import('../components/cards/SingularityTaskCard'))
+const SingularityTaskDetail = lazyArchetype(() => import('../pages/taskDetail/archetypes/SingularityTaskDetail'))
+const SingularityVote = lazyArchetype(() => import('../components/vote/SingularityVote'))
+const SingularityPraxisCard = lazyArchetype(() => import('../components/praxisCard/desktop/SingularityPraxisCard'))
+const SingularityScoreStamp = lazyArchetype(() => import('../components/praxisCard/scoreStamp/SingularityScoreStamp'))
+const SingularitySeal = lazyArchetype(() => import('../components/metaTaskSeal/skins/SingularitySeal'))
+const SingularitySigilAdapter = lazyArchetype(() => import('../components/cards/FactionSigil').then((m) => ({ default: m.SingularitySigilAdapter })))
+const SingularityCard = lazyArchetype(() => import('../components/cards/FactionCard').then((m) => ({ default: m.SingularityCard })))
+const SingularitySelectCard = lazyArchetype(() => import('../components/cards/FactionSelectCard').then((m) => ({ default: m.SingularitySelectCard })))
 
 export const SINGULARITY_MANIFEST: FactionManifest = {
   slug: 'singularity',
