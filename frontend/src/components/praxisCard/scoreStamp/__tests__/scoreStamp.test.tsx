@@ -13,7 +13,8 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { renderToStaticMarkup } from 'react-dom/server'
 import '../../../../i18n'
-import type { PraxisCardOut } from '../../../../api/praxis'
+import type { PraxisCardOut, PraxisOut } from '../../../../api/praxis'
+import type { ScoreStampProps } from '../ScoreStamp'
 import { pickVariant } from '../../../../utils/factionDispatch'
 import { resolvedArchetype } from '../../../../factions/lazyArchetype'
 import { surfaceMap } from '../../../../factions'
@@ -338,4 +339,89 @@ describe('#842 stamps across the conditional states (ADR-0047)', () => {
       expect(html).not.toMatch(HEX)
     })
   }
+})
+
+/**
+ * The stamp's prop type is structural (#1079). `ScoredPraxis` always claimed to
+ * be satisfied by BOTH payload shapes (ADR-0053), but the component prop was
+ * pinned to `PraxisCardOut`, so the detail/composer payload could only reach a
+ * stamp through a cast — and a cast would have hidden a genuinely missing field
+ * instead of failing the build.
+ *
+ * These cases pin the claim from the other side: a real `PraxisOut` literal,
+ * with no `as` anywhere, both type-checks and renders the SAME markup a card
+ * payload renders. If a skin ever starts reading a card-only field, the literal
+ * below stops compiling — which is the whole point of widening rather than
+ * casting.
+ */
+describe('PraxisOut satisfies the stamp contract without a cast (#1079)', () => {
+  /** A complete detail payload — every field spelled out, nothing asserted. */
+  const detail: PraxisOut = {
+    id: 7,
+    task_id: 3,
+    task_title: 'Walk the long way home',
+    task_point_value: 12,
+    task_level_required: 1,
+    task_faction_slug: null,
+    type: 'solo',
+    status: 'submitted',
+    title: 'The long way',
+    body_text: null,
+    moderation_status: 'visible',
+    admin_note: null,
+    flagged_at: null,
+    submitted_at: '2026-07-28T00:00:00Z',
+    submit_proposed_at: null,
+    created_by_id: 5,
+    created_by_display_name: 'Wanderer',
+    created_by_faction_slug: null,
+    created_at: '2026-07-27T00:00:00Z',
+    updated_at: '2026-07-28T00:00:00Z',
+    members: [],
+    invites: [],
+    media_items: [],
+    score: 13.6,
+    metatask_points: 0,
+    display_multiplier: 0.8,
+    points_from_votes: 4,
+    is_top_for_task: false,
+    duel_id: null,
+    can_flag: true,
+    applied_metatasks: [],
+  }
+
+  it('type-checks as ScoreStampProps — the assertion is the assignment itself', () => {
+    const props: ScoreStampProps = { praxis: detail }
+    expect(props.praxis.score).toBe(13.6)
+  })
+
+  it('renders byte-identically from a detail payload and a card payload', () => {
+    const fromDetail = renderToStaticMarkup(<DefaultScoreStamp praxis={detail} />)
+    const fromCard = renderToStaticMarkup(
+      <DefaultScoreStamp praxis={praxis({ is_top_for_task: false, task_faction_slug: null })} />,
+    )
+    expect(fromDetail).toBe(fromCard)
+  })
+
+  it('carries the crown flag through, so the detail payload can wear a crown', () => {
+    const crowned = renderToStaticMarkup(
+      <DefaultScoreStamp praxis={{ ...detail, is_top_for_task: true }} />,
+    )
+    const bare = renderToStaticMarkup(<DefaultScoreStamp praxis={detail} />)
+    expect(crowned).not.toBe(bare)
+    expect(
+      renderToStaticMarkup(
+        <DefaultScoreStamp praxis={{ ...detail, is_top_for_task: true }} showCrown={false} />,
+      ),
+    ).toBe(bare)
+  })
+
+  it('feeds the dispatcher its slug from a detail payload too', () => {
+    const covenDetail: PraxisOut = { ...detail, task_faction_slug: 'coven' }
+    expect(
+      resolvedArchetype(
+        pickVariant(surfaceMap('scoreStamp'), covenDetail.task_faction_slug, DefaultScoreStamp),
+      ),
+    ).toBe(CovenScoreStamp)
+  })
 })
