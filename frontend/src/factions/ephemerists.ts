@@ -26,8 +26,6 @@ const EphemeristsMobileDuelRail = lazyArchetype(() => import('../pages/praxisDet
 const EphemeristsMobileDuelSealConfirm = lazyArchetype(() => import('../components/duel/EphemeristsMobileDuelSealConfirm'))
 const EphemeristsMobileEditPraxis = lazyArchetype(() => import('../pages/editPraxis/mobileArchetypes/EphemeristsComposer'))
 const EphemeristsMobilePraxisCard = lazyArchetype(() => import('../components/praxisCard/mobile/EphemeristsMobilePraxisCard'))
-const EphemeristsMobilePraxisDetail = lazyArchetype(() => import('../pages/praxisDetail/mobileArchetypes/EphemeristsPraxisDetail'))
-const EphemeristsPraxisDetail = lazyArchetype(() => import('../pages/praxisDetail/archetypes/EphemeristsPraxisDetail'))
 const EphemeristsProfileBody = lazyArchetype(() => import('../pages/characterProfile/archetypes/EphemeristsProfileBody'))
 const EphemeristsTaskCard = lazyArchetype(() => import('../components/cards/EphemeristsTaskCard'))
 const EphemeristsTaskDetail = lazyArchetype(() => import('../pages/taskDetail/archetypes/EphemeristsTaskDetail'))
@@ -55,7 +53,6 @@ export const EPHEMERISTS_MANIFEST: FactionManifest = {
   feedFrame: () => EphemeristsFeedFrame,
   vote: () => EphemeristsVote,
   taskDetail: () => EphemeristsTaskDetail,
-  praxisDetail: () => EphemeristsPraxisDetail,
   editPraxis: () => EphemeristsEditPraxis,
   factionHero: () => EphemeristsFactionHero,
   factionBody: () => EphemeristsFactionBody,
@@ -63,7 +60,6 @@ export const EPHEMERISTS_MANIFEST: FactionManifest = {
   duelSeal: () => EphemeristsDuelSealConfirm,
   duelRail: () => EphemeristsDuelRail,
   mobilePraxisCard: () => EphemeristsMobilePraxisCard,
-  mobilePraxisDetail: () => EphemeristsMobilePraxisDetail,
   mobileEditPraxis: () => EphemeristsMobileEditPraxis,
   mobileFactionPage: () => EphemeristsFactionPage,
   mobileFieldDesk: () => EphemeristsHome,

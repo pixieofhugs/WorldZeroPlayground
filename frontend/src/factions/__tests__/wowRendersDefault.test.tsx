@@ -57,14 +57,15 @@ function Sentinel() {
  * `taskCard`, the `comment` voice and the herald's-dispatch `feedFrame`),
  * #900's four page-level desktop surfaces (`factionHero`, `backdrop`,
  * `profileBody`, `factionSelectCard`), and #895's four DUEL surfaces (the
- * Lists seal and the praxis rail, each on both form factors), and #901's four
+ * Lists seal and the praxis rail, each on both form factors), and #901's three
  * surviving FIELD PAVILION mobile surfaces (`mobileFieldDesk` from the one phone
- * screen the kit drew, plus `mobilePraxisDetail`, `mobileFactionPage` and
- * `mobileProfile` derived from that screen's chrome and the matching desktop
- * archetype — #901 skinned two further surfaces off that screen which no longer
- * exist, its task card and its task detail, because ADR-0056 (#1044) and
- * ADR-0058 (#1068) retired both surfaces outright, so the decree `taskCard` and
- * the parchment `taskDetail` now serve WOW on both form factors), and #931's
+ * screen the kit drew, plus `mobileFactionPage` and `mobileProfile` derived from
+ * that screen's chrome and the matching desktop archetype — #901 skinned three
+ * further surfaces off that screen which no longer exist, its task card, its
+ * task detail and its praxis detail, because ADR-0056 (#1044), ADR-0058 (#1068)
+ * and ADR-0061 (#1089) retired all three surfaces outright, so the decree
+ * `taskCard` and the parchment `taskDetail` now serve WOW on both form factors
+ * and praxis detail is ONE shared page every faction dresses), and #931's
  * `metaTaskSeal` — WOW's court-writ seal, the last faction seal skin, built from
  * the chronicle identity since the kit drew no wow specimen.
  *
@@ -73,7 +74,7 @@ function Sentinel() {
  *
  * SEVEN SURFACES ARE STILL UNCLAIMED, in two groups.
  *
- * `factionBody`, `factionCard` and DESKTOP `praxisDetail` are PENDING DESIGN
+ * `factionBody`, `factionCard` and `praxisDetail` are PENDING DESIGN
  * BUGS, tracked by #951. #899/#900/#840 scoped them out on a
  * design-fidelity argument (the kit drew WOW's cards and hero, not the desktop
  * pages beneath them, so a page skin would be invention), but the owner ruled
@@ -84,6 +85,12 @@ function Sentinel() {
  * shrinks; `surfaceDispatch.test.ts` enforces the same #951 allowlist. #1037 is
  * that shrink happening once: `taskDetail` moved down into WOW_SKINNED and out
  * of both allowlists in the same commit.
+ *
+ * `praxisDetail` is a WEAKER gap than the other two right now, and deliberately
+ * so: ADR-0061/#1089 made praxis detail ONE shared page and de-registered every
+ * faction's skin, so WOW is not alone on the Default there — nobody has dress
+ * yet, and the seven designs land as dress over the same layout (epic #1085).
+ * It stays on this list because the end state is still a WOW skin.
  *
  * `mobileCreateCharacter` and `mobileEditCharacter`, `mobileFactionsDirectory`
  * and `mobilePlayersDirectory`: nothing in the kit describes them, #901 scoped
@@ -113,13 +120,12 @@ const WOW_SKINNED: ReadonlySet<FactionSurface> = new Set([
   'mobileDuelSeal',
   'mobileDuelRail',
   'mobileFieldDesk',
-  'mobilePraxisDetail',
   'mobileFactionPage',
   'mobileProfile',
   'metaTaskSeal',
 ])
 
-describe('wow is partly skinned: twenty-five surfaces claimed, the rest fall back', () => {
+describe('wow is partly skinned: twenty-four surfaces claimed, the rest fall back', () => {
   it('registers a manifest now (#821)', () => {
     expect(FACTION_MANIFESTS.map((manifest) => manifest.slug)).toContain('wow')
   })

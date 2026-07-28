@@ -122,12 +122,12 @@ export interface FactionManifest {
   readonly duelRail?: Lazy<ComponentType<DuelRailSkinProps>>
 
   // ─── Mobile twins (#494 form-factor dispatch) ──────────────────────────────
-  // Neither task cards nor task detail have a mobile twin: ADR-0056 and
-  // ADR-0058 each collapsed their surface to one responsive component per
-  // faction and retired it (#1044, #1068). Both licences are scoped to their
-  // own surface — ADR-0035 still governs every twin below.
+  // Task cards, task detail and praxis detail have no mobile twin: ADR-0056,
+  // ADR-0058 and ADR-0061/#1085 each collapsed their surface to one responsive
+  // component per faction and retired it (#1044, #1068, #1089). All three
+  // licences are scoped to their own surface — ADR-0035 still governs every
+  // twin below.
   readonly mobilePraxisCard?: Lazy<ComponentType<MobilePraxisCardProps>>
-  readonly mobilePraxisDetail?: Lazy<Stateful<PraxisDetailState>>
   readonly mobileEditPraxis?: Lazy<Stateful<EditPraxisState>>
   readonly mobileFactionPage?: Lazy<Stateful<FactionDetailState>>
   readonly mobileFieldDesk?: Lazy<Stateful<FieldDeskHomeState>>
@@ -173,7 +173,6 @@ export const SURFACE_KEYS = [
   'duelSeal',
   'duelRail',
   'mobilePraxisCard',
-  'mobilePraxisDetail',
   'mobileEditPraxis',
   'mobileFactionPage',
   'mobileFieldDesk',

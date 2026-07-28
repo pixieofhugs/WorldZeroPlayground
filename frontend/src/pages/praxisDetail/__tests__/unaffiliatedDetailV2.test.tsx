@@ -144,7 +144,6 @@ function state(overrides: Partial<PraxisDetailState> = {}): PraxisDetailState {
     flagSubmitted: false,
     handleModerate: async () => {},
     handleWithdraw: async () => {},
-    handleResubmit: async () => {},
     handleFlag: async () => {},
     handleKickMember: async () => {},
     ...overrides,

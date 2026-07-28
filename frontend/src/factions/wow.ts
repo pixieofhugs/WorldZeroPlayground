@@ -44,13 +44,14 @@
  * beneath it, so those keep defaulting until they are designed.
  *
  * #901 adds THE FIELD PAVILION — the general MOBILE surfaces. The kit drew
- * exactly one phone screen, which maps to `mobileFieldDesk`;
- * `mobilePraxisDetail`, `mobileFactionPage` and `mobileProfile` are DERIVED from
- * that screen's chrome plus the matching desktop archetype, and each names its
- * source in its own docstring. (#901 drew two more surfaces off that screen
- * which no longer exist: its task card and its task detail. ADR-0056 and
- * ADR-0058 retired both surfaces outright, so `taskCard` and `taskDetail` now
- * serve WOW on both form factors.)
+ * exactly one phone screen, which maps to `mobileFieldDesk`; `mobileFactionPage`
+ * and `mobileProfile` are DERIVED from that screen's chrome plus the matching
+ * desktop archetype, and each names its source in its own docstring. (#901 drew
+ * three more surfaces off that screen which no longer exist: its task card, its
+ * task detail and its praxis detail. ADR-0056, ADR-0058 and ADR-0061 retired all
+ * three surfaces outright, so `taskCard` and `taskDetail` serve WOW on both form
+ * factors and praxis detail is now ONE shared page every faction dresses —
+ * WOW's dress for it is still to be designed.)
  * The shared vocabulary lives in `components/cards/wowMobile.tsx`.
  * `mobileCreateCharacter`, `mobileEditCharacter`, `mobileFactionsDirectory` and
  * `mobilePlayersDirectory` stay unclaimed on purpose — nothing in the kit
@@ -89,7 +90,6 @@ const WowDuelRail = lazyArchetype(() => import('../pages/praxisDetail/duelRails/
 const WowMobileDuelRail = lazyArchetype(() => import('../pages/praxisDetail/duelRails/WowMobileDuelRail'))
 const WowFieldDesk = lazyArchetype(() => import('../pages/fieldDesk/mobileArchetypes/WowFieldDesk'))
 const WowTaskDetail = lazyArchetype(() => import('../pages/taskDetail/archetypes/WowTaskDetail'))
-const WowMobilePraxisDetail = lazyArchetype(() => import('../pages/praxisDetail/mobileArchetypes/WowPraxisDetail'))
 const WowMobileFactionPage = lazyArchetype(() => import('../pages/factionDetail/mobileArchetypes/WowFactionPage'))
 const WowMobileProfile = lazyArchetype(() => import('../pages/characterProfile/mobileArchetypes/WowProfile'))
 
@@ -126,13 +126,13 @@ export const WOW_MANIFEST: FactionManifest = {
   mobileDuelRail: () => WowMobileDuelRail,
 
   // #901 — the field pavilion: WOW's general MOBILE surfaces. The kit drew ONE
-  // phone screen, which is the `mobileFieldDesk`; the other three are derived
+  // phone screen, which is the `mobileFieldDesk`; the other two are derived
   // from that screen's chrome plus the matching desktop archetype, and each says
-  // which in its own docstring. (Two more were derived from it and are gone:
-  // ADR-0056 retired the task-card twin and ADR-0058 the task-detail one, so
-  // `taskCard` and `taskDetail` now serve both form factors.)
+  // which in its own docstring. (Three more were derived from it and are gone:
+  // ADR-0056 retired the task-card twin, ADR-0058 the task-detail one and
+  // ADR-0061 the praxis-detail one, so `taskCard` and `taskDetail` now serve
+  // both form factors and praxis detail is one shared page.)
   mobileFieldDesk: () => WowFieldDesk,
-  mobilePraxisDetail: () => WowMobilePraxisDetail,
   mobileFactionPage: () => WowMobileFactionPage,
   mobileProfile: () => WowMobileProfile,
 }

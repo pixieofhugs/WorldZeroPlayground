@@ -10,9 +10,16 @@
  * ONE ARCHETYPE PER FACTION, NOT TWO (#1088, ADR-0056/0058 terms). The
  * `formFactor === 'mobile'` branch is gone: this always dispatches through the
  * `praxisDetail` surface and the archetype calls `useFormFactor()` itself for
- * its own size set — the shape task cards and task detail already use. The
- * `mobilePraxisDetail` archetypes stay registered but are no longer reachable
- * from here; #1089 deletes them.
+ * its own size set — the shape task cards and task detail already use. #1089
+ * deleted the `mobilePraxisDetail` surface outright, so there is no second
+ * registry left to dispatch to.
+ *
+ * NO FACTION OVERRIDES `praxisDetail` TODAY (#1089, ADR-0061). Every slug falls
+ * through to `DefaultPraxisDetail` — the Unaffiliated page IS the shared page,
+ * and the seven other designs will re-register here as dress over the same
+ * layout and the same API contract. `surfaceMap('praxisDetail')` is therefore
+ * legitimately empty; that is override-only working as documented, not a
+ * missing wire.
  */
 import { useTranslation } from 'react-i18next'
 import { Navigate, useParams } from 'react-router-dom'
@@ -20,7 +27,6 @@ import { usePraxisDetail } from './praxisDetail/usePraxisDetail'
 import { pickVariant } from '../utils/factionDispatch'
 import { surfaceMap } from '../factions'
 import DefaultPraxisDetail from './praxisDetail/archetypes/DefaultPraxisDetail'
-import CommentThread from '../components/comments/CommentThread'
 import DuelCrossLink from './praxisDetail/DuelCrossLink'
 
 export default function PraxisDetail() {
@@ -56,13 +62,12 @@ export default function PraxisDetail() {
     state.praxis.task_faction_slug,
     DefaultPraxisDetail,
   )
-  // ADR-0061 makes comments the page LAYOUT's third region, so the rebuilt
-  // Unaffiliated page mounts its own thread (amending ADR-0006's "neutral chrome
-  // below every archetype"). The six legacy faction archetypes still expect the
-  // dispatcher to mount it; they go with #1089, and this shim goes with them.
-  // The identity test is exact: `pickVariant` hands back this very component for
-  // every faction that registers no praxis-detail archetype of its own.
-  const archetypeOwnsComments = Archetype === DefaultPraxisDetail
+  // No CommentThread here. ADR-0061 made comments the page LAYOUT's third
+  // region — the archetype mounts its own via the shared `PraxisDetailComments`
+  // slot, which carries the `visible` gate so a skin cannot forget it (amending
+  // ADR-0006's "neutral chrome below every archetype"). #1088's shim kept the
+  // dispatcher mounting a second thread for the six legacy archetypes; they are
+  // gone with #1089, and the shim with them.
   return (
     <>
       {/* Duel cross-link is neutral chrome above every archetype (#313); one
@@ -77,11 +82,6 @@ export default function PraxisDetail() {
         />
       )}
       <Archetype state={state} />
-      {!archetypeOwnsComments && state.praxis.moderation_status === 'visible' && (
-        <div className="max-w-2xl">
-          <CommentThread target="praxes" targetId={state.praxis.id} />
-        </div>
-      )}
     </>
   )
 }

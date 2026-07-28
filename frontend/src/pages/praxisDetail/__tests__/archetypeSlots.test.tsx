@@ -1,12 +1,18 @@
 /**
  * Praxis-read content-slot invariant guard (ADR-0017 §2, ADR-0002).
  *
- * Every per-faction praxis-read archetype wears a different skin (gilt salon,
- * ransom dossier, terminal printout, union poster, whimsy.exe, illuminated
- * vellum) but must render the same CONTENT slots — an archetype may *arrange*
- * them freely but may not *drop* one. This walks the real `surfaceMap('praxisDetail')`
- * registry (plus the Default fallback) and asserts every registered archetype
- * still emits the invariant slots, so a new faction that drops one fails here.
+ * Every per-faction praxis-read archetype wears a different skin but must render
+ * the same CONTENT slots — an archetype may *arrange* them freely but may not
+ * *drop* one. This walks the real `surfaceMap('praxisDetail')` registry (plus the
+ * Default fallback) and asserts every registered archetype still emits the
+ * invariant slots, so a new faction that drops one fails here.
+ *
+ * THE REGISTRY IS EMPTY TODAY, and that is the point of keeping this walk rather
+ * than hard-coding the Default. ADR-0061 made praxis detail one shared page and
+ * #1089 de-registered all six faction skins, so `__default__` is currently the
+ * only case that runs. The seven designs of epic #1085 re-register one at a
+ * time, and each one is walked by this guard the moment its manifest line lands
+ * — no test edit required, which is exactly why the loop stays.
  *
  * Rendered to static markup (no DOM); `useAuth` resolves to its default
  * anonymous context, so the vote caster renders its login gate rather than
@@ -110,7 +116,6 @@ function state(): PraxisDetailState {
     flagSubmitted: false,
     handleModerate: async () => {},
     handleWithdraw: async () => {},
-    handleResubmit: async () => {},
     handleFlag: async () => {},
     handleKickMember: async () => {},
   };

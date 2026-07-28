@@ -29,6 +29,12 @@ re-renders as a waiting surface rather than navigating away.
   there is nobody to wait for.
 - The praxis detail page remains the public read view, unchanged. It keeps
   its roster and its duel rails.
+  *(Superseded in part, 2026-07-28: ADR-0062 made detail published-only, so
+  the roster clause no longer holds. `CollabRosterBlock` was gated to
+  `in_progress` / `pending` — the two statuses that now redirect here — and
+  #1089 deleted it. This ADR's argument is unaffected: the waiting surface is
+  the roster's only home, which is what it argued for. The duel rails stand
+  until #1090.)*
 - The waiting surface offers exactly one exit appropriate to the viewer, and
   an authoring re-entry.
 - Re-entry is **not** a raw PUT. On a collab, any praxis PUT hard-resets

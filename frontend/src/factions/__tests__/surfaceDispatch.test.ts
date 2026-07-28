@@ -6,8 +6,8 @@
  * This replaces ~20 per-faction *Dispatch.test files that each re-proved
  * pickVariant's fall-through (now unit-tested in
  * utils/__tests__/factionDispatch.test.ts) while collectively MISSING factions —
- * e.g. coven and snide ship bespoke praxisDetail/taskDetail skins but had no
- * dispatch test at all.
+ * e.g. coven and snide ship bespoke taskDetail skins but had no dispatch test
+ * at all.
  *
  * The BESPOKE lists below are the executable record of who has customised each
  * surface: a de-registration flips a bespoke row red, an accidental
@@ -38,24 +38,31 @@ const CORE_SIX = ['coven', 'snide', 'ephemerists', 'singularity', 'everymen', 'u
 
 // surface → slugs that ship a bespoke skin there. Everything in ALL_SLUGS not
 // listed (plus a junk slug and null) must fall through to the surface Default.
-// wow is Default on desktop praxis detail but bespoke on task detail (#1037)
-// and on every mobile surface.
+// wow is bespoke on task detail (#1037) and on every mobile surface below.
 //
 // albescent appears in only two rows below, and both are WRAPPERS over Default,
 // not bespoke skins (ADR-0048): it is a secret society hiding in plain sight, so
 // an entry here means "Default plus a flourish", never a treatment of its own.
 //
-// TWO MOBILE ROWS ARE ABSENT BY DECISION, not by oversight, and both used to
-// exist. There is no mobile task-card row (ADR-0056, surface retired by #1044)
-// and no mobile task-detail row (ADR-0058, surface retired by #1068): each
-// owner QA verdict accepted one responsive component per faction, so task cards
-// partition on `taskCard` alone and task detail on `taskDetail` alone, for both
-// form factors. Re-adding either row means re-adding the surface, which those
-// ADRs call drift rather than a rollback. Note what that buys albescent: its
-// single `taskDetail` registration now covers the phone too, and it never needs
-// a second row it would have had to stay out of.
+// THREE MOBILE ROWS ARE ABSENT BY DECISION, not by oversight, and all three used
+// to exist. There is no mobile task-card row (ADR-0056, surface retired by
+// #1044), no mobile task-detail row (ADR-0058, #1068) and no mobile
+// praxis-detail row (ADR-0061 + epic #1085, #1089): each verdict accepted one
+// responsive component per faction, so task cards partition on `taskCard` alone,
+// task detail on `taskDetail` alone and praxis detail on `praxisDetail` alone,
+// for both form factors. Re-adding any of the three means re-adding the surface,
+// which those ADRs call drift rather than a rollback. Note what that buys
+// albescent: its single `taskDetail` registration now covers the phone too, and
+// it never needs a second row it would have had to stay out of.
+//
+// THE DESKTOP `praxisDetail` ROW IS ABSENT TOO, which is the newest decision
+// here and the one most likely to look like an omission. ADR-0061 made praxis
+// detail ONE shared page and #1089 de-registered all six CORE_SIX skins, so
+// every slug — wow and albescent included — falls through to
+// `DefaultPraxisDetail`; the Unaffiliated page IS the shared page. The seven
+// remaining designs (epic #1085) re-register here one at a time as dress over
+// the same layout, and the row comes back with the first of them.
 const BESPOKE: Record<string, string[]> = {
-  praxisDetail: CORE_SIX,
   taskDetail: [...CORE_SIX, 'wow', 'albescent'],
   mobileFactionPage: [...CORE_SIX, 'wow'],
   mobileFieldDesk: [...CORE_SIX, 'wow'],
@@ -102,6 +109,11 @@ const REQUIRED = SURFACE_KEYS.filter((surface) =>
 // fails, forcing this allowlist to shrink in lockstep with the fix.
 // `taskDetail` left this set in #1037 — the parchment field, WOW's first
 // desktop task-detail page. Three bullets of #951 remain.
+//
+// `praxisDetail` is a weaker row than the other two since #1089: no faction
+// skins that surface any more (ADR-0061), so WOW is not alone on the Default
+// there. It stays listed because the end state is still a WOW dress over the
+// shared layout — the row asserts absence, which is true either way.
 const WOW_PENDING: ReadonlySet<string> = new Set([
   'praxisDetail',
   'factionCard',

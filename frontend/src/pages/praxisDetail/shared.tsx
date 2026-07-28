@@ -9,22 +9,36 @@
  *   - Admin moderation bar
  *   - Crown hero + failed note (ADR-0062 removed the open-state banners: detail
  *     is published-only, so there is no IN EDITING / PENDING PUBLISH to draw)
- *   - Owner actions (edit / withdraw / resubmit)
+ *   - Owner actions (edit / reopen)
+ *   - Comments region (ADR-0061)
+ *   - Voter breakdown
  *   - Flag block
+ *
+ * EVERY SLOT HERE STARTS FROM A PUBLISHED PRAXIS. ADR-0062 redirects both open
+ * statuses to the composer, so `in_progress` and `pending` are unreachable on
+ * this page; #1089 pruned the branches that only those statuses could reach (the
+ * collab cast roster, the byline's per-member cast markers, and the green CAST
+ * control with its waiting twin). Do not reintroduce a status branch here —
+ * anything about an open praxis belongs to the composer's waiting surface
+ * (#1071).
+ *
+ * The score readout that used to live at the bottom of this module — the LEGACY
+ * `PraxisScoreBreakdown` / `praxisBreakdownParts` pair — is gone too. Its
+ * fourteen callers were exactly the fourteen archetypes #1089 deleted, and the
+ * dispatched `ScoreStamp` over `scoreBreakdown()` (ADR-0053) replaced it on the
+ * rebuilt page in #1091. Mount `ScoreStamp`; do not re-derive points here.
  */
 import type { CSSProperties, ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import { reframeLabel } from '../../components/vote/voteReframes'
 import { TaskCrown } from '../../components/cards/TaskCrown'
-import { CollabRoster } from '../../components/collab/CollabRoster'
 import CommentThread from '../../components/comments/CommentThread'
 import DuelSealConfirm from '../../components/duel/DuelSealConfirm'
 import type { PraxisDetailState } from './usePraxisDetail'
 import type { PraxisMemberOut, PraxisOut } from '../../api/praxis'
 import type { DuelDetailOut } from '../../api/duel'
 import { flagReasonOptions } from '../../utils/flagReasons'
-import { scoreBreakdown } from '../../components/praxisCard/scoreStamp/scoreBreakdown'
 
 // ── Egalitarian byline (#387) ────────────────────────────────────────────────
 //
@@ -67,16 +81,14 @@ export function MemberByline({
   /** Optional wrapper for each display name (e.g. Singularity's `NODE_` prefix). */
   renderName?: (name: string) => ReactNode
 }) {
-  const { t } = useTranslation('praxis')
   const members = orderedMembers(praxis)
   const sepStyle = separatorStyle ?? linkStyle
-  // Per-member submit state only reads meaningfully mid-lifecycle on a collab
-  // (>1 member, still in editing). A solo/duel praxis or a live one stays clean.
-  // `pending` is the mid-consensus state (#590/#591) — exactly when cast status
-  // matters most — so it counts as "still open" alongside in_progress.
-  const showSubmitState =
-    members.length > 1 &&
-    (praxis.status === 'in_progress' || praxis.status === 'pending')
+  // NO PER-MEMBER CAST STATE HERE ANY MORE (#1089). Each name used to carry a
+  // "submitted" / "drafting" marker, gated to a collab still in_progress or
+  // pending. ADR-0062 redirects both statuses to the composer, so a praxis that
+  // reaches this byline is always `submitted` and the marker could never paint.
+  // The live answer to "who still owes their part" is the composer's roster
+  // (#1071); here the byline just credits every co-author (#387).
 
   return (
     <span
@@ -103,21 +115,6 @@ export function MemberByline({
             >
               {renderName ? renderName(name) : name}
             </Link>
-            {showSubmitState && (
-              <span
-                className="eyebrow"
-                style={{
-                  marginLeft: 'var(--space-xs)',
-                  color: member.has_submitted
-                    ? 'var(--color-success)'
-                    : 'var(--color-text-tertiary)',
-                }}
-              >
-                {member.has_submitted
-                  ? t('detail.byline.submitted')
-                  : t('detail.byline.drafting')}
-              </span>
-            )}
           </span>
         )
       })}
@@ -197,38 +194,6 @@ export function PraxisAdminBar({ state }: { state: PraxisDetailState }) {
   )
 }
 
-// ── Collab cast-status roster (#591) ─────────────────────────────────────────
-
-/**
- * The read-only twin of the composer's roster: the same shared `CollabRoster`
- * component with no `action` prop, so it reports the ADR-0012 consensus state
- * without offering a cast/pull-back control.
- *
- * Gated to a still-resolving collab (in_progress / pending), mirroring
- * `MemberByline`'s `showSubmitState`: that is exactly when "who still owes their
- * part" is a live question. Once the praxis is live the byline already credits
- * every co-author and a cast roster would only restate it. The component
- * self-hides on a solo/duel praxis (<2 members).
- */
-export function CollabRosterBlock({ state }: { state: PraxisDetailState }) {
-  const { praxis, user, handleKickMember } = state
-  if (!praxis) return null
-  if (praxis.status !== 'in_progress' && praxis.status !== 'pending') return null
-  return (
-    <div style={{ marginBottom: 'var(--space-md)' }}>
-      <CollabRoster
-        members={praxis.members}
-        currentCharacterId={user?.character?.id ?? null}
-        factionSlug={praxis.task_faction_slug}
-        taskPointValue={praxis.task_point_value}
-        // Any member may kick another from the roster (#959). CollabRoster gates
-        // the control to members and hides it on the viewer's own pill.
-        onKick={handleKickMember}
-      />
-    </div>
-  )
-}
-
 // ── Comments region (ADR-0061, amending ADR-0006) ────────────────────────────
 
 /**
@@ -279,15 +244,12 @@ export function PraxisStatusBanners({ state }: { state: PraxisDetailState }) {
 
   return (
     <>
-      {/* Read-only cast-status roster (#591). The same shared component the
-          composer uses, minus the `action` prop — the detail page is a reading
-          surface, so it shows who has cast and who hasn't but offers no
-          cast/pull-back control (those live in the composer). It self-hides on
-          a solo/duel praxis (<2 members). Rendered here rather than in each
-          archetype because every archetype — desktop and mobile — already
-          renders PraxisStatusBanners, so both form factors pick it up from one
-          place and no faction skin has to re-implement it. */}
-      <CollabRosterBlock state={state} />
+      {/* The read-only cast-status roster (#591) used to lead this block. It
+          was gated to a still-resolving collab (in_progress / pending), which
+          ADR-0062 now redirects to the composer, so it could never paint again
+          and went with #1089. The composer's own roster (#1071) is where "who
+          still owes their part" is answered, and a published praxis has the
+          byline crediting every co-author instead. */}
       {/* Task Crown hero (ADR-0028) — this praxis is the task's top submitted
           entry, computed live. Invariant chrome, so every archetype shows it. */}
       {praxis.is_top_for_task && (
@@ -438,13 +400,19 @@ const UNSUBMIT_COPY = {
  * Extracted from PraxisOwnerActions (#752) so the duel RAIL can render it beside
  * the state it changes; an ordinary praxis keeps it inline in the owner controls.
  * It is rendered in exactly ONE surface per praxis, never both, so the #646
- * double-destructive-control bug cannot recur. Every branch below is unchanged
- * from the owner controls — this is a relocation, not a rewrite. `withdrawError`
- * is rendered by the caller, next to wherever this control lands.
+ * double-destructive-control bug cannot recur. `withdrawError` is rendered by the
+ * caller, next to wherever this control lands.
+ *
+ * IT ONLY EVER REOPENS. The green CAST control that used to lead this component
+ * — plus the "you've submitted, waiting on co-authors" state beside it — went
+ * with #1089: both were gated to `in_progress` or `pending`, and ADR-0062
+ * redirects a praxis in either status to the composer, so neither could paint on
+ * a page this renders on. Casting lives in the composer, on both paths (#1071).
+ * Every branch that survives starts from a PUBLISHED praxis.
  */
 export function PraxisSubmitControls({ state }: { state: PraxisDetailState }) {
   const { t } = useTranslation('praxis')
-  const { praxis, isOwner, user, duel, withdrawing, showWithdrawConfirm, setShowWithdrawConfirm, handleWithdraw, handleResubmit } = state
+  const { praxis, isOwner, user, duel, withdrawing, showWithdrawConfirm, setShowWithdrawConfirm, handleWithdraw } = state
   if (!praxis || !isOwner) return null
 
   // A SETTLED duel side's quiet unsubmit is a permanent forfeit (ADR-0011
@@ -454,44 +422,19 @@ export function PraxisSubmitControls({ state }: { state: PraxisDetailState }) {
   // free neutral reopen with no penalty, and warning about one would be a lie.
   const forfeitsOnUnsubmit = duel?.status === 'settled' && duel.forfeited_by_character_id == null
 
-  // On a collab that hasn't gone live yet, a member who has already submitted
-  // waits on their co-authors — swap their green Submit control for a waiting
-  // state (ADR-0012). Editing stays available via the edit link above.
   const viewerCharacterId = user?.character?.id
-  const viewerMember =
-    viewerCharacterId != null
-      ? praxis.members.find((member) => member.character_id === viewerCharacterId)
-      : undefined
-  const isCollab = praxis.members.length > 1
-  const viewerSubmittedWaiting =
-    isCollab && praxis.status === 'in_progress' && viewerMember?.has_submitted === true
-
-  // A collab goes `pending` once a co-author casts (collab_consensus.on_submit,
-  // ADR-0012). A member who has NOT cast is a holdout: the unsubmit branch below
-  // would 422 for them ("already in editing mode", praxis.py) since they have
-  // nothing of their own to pull back. Show them the CAST control instead —
-  // mirroring the composer footer's gate (deriveCollabGate) — so casting is the
-  // one action offered. A member who HAS cast keeps the unsubmit path (#958).
-  const isPendingHoldout =
-    isCollab && praxis.status === 'pending' && viewerMember?.has_submitted !== true
 
   // What the quiet unsubmit is about to do, in its own words (#1094). The
   // settled-duel forfeit is handled above and never reaches this table.
+  //
+  // `unsubmitCase` still resolves all four rows and is tested against all four.
+  // Only three can be SELECTED from here: `collabOwnPart` needs `status ===
+  // 'pending'`, which ADR-0062 redirects away. The resolver is #1094's pure
+  // statement of what the backend does, not a view of this page, so it keeps its
+  // fourth row rather than being narrowed to whatever renders today.
   const unsubmitCopy = UNSUBMIT_COPY[unsubmitCase(praxis, duel)]
 
-  return praxis.status === 'in_progress' && viewerSubmittedWaiting ? (
-    <span className="eyebrow" style={{ color: 'var(--color-success)', fontWeight: 700 }}>
-      {t('detail.owner.submittedWaiting')}
-    </span>
-  ) : praxis.status === 'in_progress' || isPendingHoldout ? (
-    <button
-      onClick={handleResubmit}
-      disabled={withdrawing}
-      style={{ background: 'var(--color-success)', color: 'var(--color-text-on-accent)', fontFamily: "'Courier Prime', monospace", fontSize: 'var(--text-sm)', textTransform: 'uppercase', letterSpacing: '0.08em', padding: 'var(--space-xs) var(--space-md)', border: 'none', cursor: 'pointer', borderRadius: 0, opacity: withdrawing ? 0.5 : 1 }}
-    >
-      {withdrawing ? t('detail.owner.submitting') : t('detail.owner.submit')}
-    </button>
-  ) : forfeitsOnUnsubmit && duel ? (
+  return forfeitsOnUnsubmit && duel ? (
     /* A forfeit is the one irreversible duel beat, so it gets the same
        dispatched dialog the (reversible) seal confirm got in #718 rather
        than an inline text expand (#751). The trigger stays put and the
@@ -667,106 +610,6 @@ export function PraxisVoterBreakdown({ state }: { state: PraxisDetailState }) {
           </li>
         ))}
       </ul>
-    </div>
-  )
-}
-
-// ── Single earned-points breakdown (#641, ADR-0053) ──────────────────────────
-//
-// LEGACY, AND ON ITS WAY OUT WITH #1089. This is the inline readout the SIX
-// legacy desktop archetypes and the EIGHT mobile ones still render; #1091
-// removed its last non-legacy caller by giving the rebuilt Unaffiliated page the
-// dispatched `ScoreStamp` instead. It cannot be deleted here because every
-// remaining caller is a file #1089 deletes — so it dies with them, along with
-// `detail.score.ptsMultVotes`, rather than being ripped out from under fourteen
-// shipped skins. Do not add a new caller.
-//
-// The arithmetic is NOT done here: `scoreBreakdown()` is the single resolver for
-// cards and detail alike, so the two surfaces cannot disagree. What lives here
-// is the detail page's own PRESENTATION — the inline `{base} × {mult} + {votes}`
-// form and the per-faction accent/muted/font theming each archetype passes in.
-//
-// This used to derive the multiplier as `(score − votePoints) / base`. Against
-// Merit (`base + votes`) that reduced to `base / base` — 1.0 unconditionally —
-// so the `× {mult}` branch was unreachable and a Snide duel loss at ×0.0 read
-// as ×1.0. `score` is now the computed total and the multiplier is a payload
-// field, so the branch is live.
-
-/** Format a multiplier for display: 1.1 → "1.1", 1.10 → "1.1", 1.25 → "1.25". */
-function formatMultiplier(multiplier: number): string {
-  return Number(multiplier.toFixed(2)).toString()
-}
-
-export interface PraxisBreakdownParts {
-  base: number
-  votePoints: number
-  multiplier: number
-  multiplierLabel: string
-  /** True when the multiplier is exactly 1.0 — the `× {mult}` term is omitted. */
-  isPlain: boolean
-}
-
-/**
- * The numbers behind the earned-points breakdown, delegated to the shared
- * `scoreBreakdown()` selector (ADR-0053). Nothing is derived by subtraction.
- */
-export function praxisBreakdownParts(praxis: PraxisOut): PraxisBreakdownParts {
-  const { base, mult, votes } = scoreBreakdown(praxis)
-  const multiplier = mult ?? 1
-  return {
-    base,
-    votePoints: votes,
-    multiplier,
-    multiplierLabel: formatMultiplier(multiplier),
-    isPlain: mult === null,
-  }
-}
-
-/**
- * The single earned-points breakdown for a detail page. Faction-themeable via
- * `accent`/`muted`/`font` so each archetype can render it in its own voice while
- * the arithmetic + copy stay in one place. `align` positions it within its slot.
- */
-export function PraxisScoreBreakdown({
-  state,
-  accent,
-  muted,
-  font,
-  align = 'left',
-}: {
-  state: PraxisDetailState
-  accent?: string
-  muted?: string
-  font?: string
-  align?: 'left' | 'center' | 'right'
-}) {
-  const { t } = useTranslation('praxis')
-  const { praxis } = state
-  if (!praxis) return null
-  const { base, votePoints, isPlain, multiplierLabel } = praxisBreakdownParts(praxis)
-
-  return (
-    <div style={{ textAlign: align, lineHeight: 1 }}>
-      <span
-        className="font-display content-title"
-        style={{ fontWeight: 800, fontFamily: font, color: accent ?? 'var(--color-text-primary)', whiteSpace: 'nowrap' }}
-      >
-        {base}
-        {!isPlain && (
-          <>
-            <span style={{ opacity: 0.55, margin: '0 var(--space-xs)' }}>×</span>
-            {multiplierLabel}
-          </>
-        )}
-        <span style={{ opacity: 0.55, margin: '0 var(--space-xs)' }}>+</span>
-        {votePoints}
-      </span>
-      <span
-        className="eyebrow"
-        style={{ display: 'block', marginTop: 'var(--space-xs)', color: muted }}
-      >
-        {isPlain ? t('card.ptsAndVotes') : t('detail.score.ptsMultVotes')}
-      </span>
     </div>
   )
 }

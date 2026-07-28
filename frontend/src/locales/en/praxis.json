@@ -30,10 +30,6 @@
     "tally_one": "{{points}} pts · {{count}} vote",
     "tally_other": "{{points}} pts · {{count}} votes"
   },
-  "mobileDetail": {
-    "back": "Praxis",
-    "ratePrompt": "Rate this proof"
-  },
   "mobileCard": {
     "taskRef": "Re · {{title}}",
     "untitled": "Untitled praxis",
@@ -43,7 +39,6 @@
     "mediaAudio": "audio"
   },
   "card": {
-    "ptsAndVotes": "pts + votes",
     "level": "L{{level}}",
     "points": "{{points}} pts",
     "solo": "solo",
@@ -126,7 +121,6 @@
       "load": "Couldn't load this praxis.",
       "moderate": "Moderation failed.",
       "withdraw": "Could not withdraw this praxis.",
-      "resubmit": "Could not resubmit.",
       "flag": "Could not flag this praxis.",
       "flagReasonMissing": "Pick a reason first."
     },
@@ -146,15 +140,9 @@
       "failReasonPlaceholder": "Reason for failure (visible to player)...",
       "confirm": "confirm"
     },
-    "byline": {
-      "submitted": "✓ submitted",
-      "drafting": "drafting"
-    },
     "owner": {
       "edit": "edit this praxis",
       "submitting": "...",
-      "submit": "Submit",
-      "submittedWaiting": "You've submitted — waiting on co-authors",
       "unsubmit": "unsubmit",
       "unsubmitDuelLive": "pull my entry back",
       "confirmPrompt": "Sure? Points & votes will pause.",
@@ -188,7 +176,6 @@
       "count_other": "{{count}} votes"
     },
     "score": {
-      "ptsMultVotes": "pts × bonus + votes",
       "heading": "Score"
     },
     "metatasks": {
@@ -199,244 +186,6 @@
       "bonus": "+{{points}} PTS",
       "remove": "Remove metatask",
       "add": "+ Add a metatask"
-    },
-    "default": {
-      "breadcrumbTasks": "Tasks",
-      "breadcrumbPraxis": "Praxis",
-      "votes": "{{count}} votes",
-      "completingTask": "Completing task",
-      "points": "{{points}} pts",
-      "pointsFromVotes": "Points earned from votes",
-      "pts": "pts",
-      "submitted": "Submitted {{date}}",
-      "flagged": "flagged",
-      "praxisEyebrow": "A praxis · unaffiliated · counts for everyone",
-      "basePts": "base pts",
-      "filedRe": "Re: {{task}} · filed {{date}}",
-      "evidence": "Evidence",
-      "plate": "Plate I",
-      "theAccount": "The account",
-      "castHeading": "Cast your vote",
-      "castPrompt": "How much did this move you?",
-      "ledgerAwarded": "pts awarded by votes",
-      "ledgerBacked_one": "person backed it",
-      "ledgerBacked_other": "people backed it",
-      "ledgerBackedBy": "Backed by",
-      "ledgerBackers_one": "{{count}} backer",
-      "ledgerBackers_other": "{{count}} backers",
-      "ledgerTotal": "+{{points}} pts",
-      "ledgerEmpty": "No votes yet — be the first to back it."
-    },
-    "ua": {
-      "status": {
-        "underReview": "Under review",
-        "returned": "Returned",
-        "withdrawn": "Withdrawn from view",
-        "exhibited": "Sealed"
-      },
-      "mode": {
-        "solo": "a mark made alone",
-        "collab": "a mark made together",
-        "duel": "a mark made against another"
-      },
-      "re": "re: {{task}}",
-      "acquisitionGrade": "Sealed work · Level {{grade}}",
-      "returnedToSalon": "sealed {{date}}",
-      "untitled": "Untitled mark",
-      "acquiringHand": "The hand",
-      "ptsAtStake": "pts at stake",
-      "theProcess": "The making",
-      "thePlate_one": "The sheet · {{count}} work",
-      "thePlate_other": "The sheet · {{count}} works",
-      "standing": {
-        "heading": "The Standing",
-        "pointsEarned": "points earned",
-        "appraisal_one": "reading",
-        "appraisal_other": "readings",
-        "appraisedBy": "Read by",
-        "patronsTotal_one": "{{count}} reader · total",
-        "patronsTotal_other": "{{count}} readers · total",
-        "pts": "{{points}} pts"
-      },
-      "patronage": "The readers",
-      "mobile": {
-        "back": "The Practice",
-        "re": "re:",
-        "theAcquisition": "The mark",
-        "plate": "The sheet",
-        "appraise": "Leave a reading"
-      }
-    },
-    "ephemerists": {
-      "motto": "finding · testament · codex",
-      "re": "re: {{task}}",
-      "grade": "Grade {{grade}}",
-      "sealed": "sealed {{date}}",
-      "flagged": "flagged",
-      "untitled": "Untitled filing",
-      "mode": {
-        "solo": "sole filing",
-        "collab": "collaborative filing",
-        "duel": "dueling filing"
-      },
-      "basePts": "BASE PTS",
-      "theAccount": "The account",
-      "evidence_one": "The evidence · {{count}} specimen",
-      "evidence_other": "The evidence · {{count}} specimens",
-      "concordance": "The concordance",
-      "ptsFromVotes": "PTS FROM VOTES",
-      "acquiringHand": "Filed by the hand of",
-      "mobile": {
-        "plate": "The Evidence",
-        "theFinding": "The finding",
-        "re": "re:",
-        "appraise": "Weigh its concordance"
-      }
-    },
-    "everymen": {
-      "mode": {
-        "collab": "COLLAB",
-        "solo": "SOLO"
-      },
-      "workReportFiled": "Work Report · Filed",
-      "re": "re: {{task}}",
-      "lvl": "lvl {{level}}",
-      "sealed": "sealed {{date}}",
-      "flagged": "FLAGGED",
-      "theJobDone": "the job, done",
-      "untitled": "Untitled filing",
-      "hands": {
-        "collab": "all hands",
-        "solo": "one pair of hands"
-      },
-      "basePoints": "base points",
-      "theWork": "The Work",
-      "proofOfWork_one": "Proof of Work · {{count}} plate",
-      "proofOfWork_other": "Proof of Work · {{count}} plates",
-      "crewsMarks": "The Crew's Marks",
-      "ptsFromVotes": "pts from votes",
-      "mobile": {
-        "re": "re:",
-        "filed": "filed the report",
-        "plate": "Proof of Work",
-        "appraise": "Mark the work"
-      }
-    },
-    "singularity": {
-      "instance": {
-        "solo": "SOLO",
-        "collab": "NETWORKED",
-        "duel": "ADVERSARIAL"
-      },
-      "sealedProtocol": "Singularity · generated signal",
-      "signalTrace": "SIGNAL_TRACE // {{date}}",
-      "sealed": "[we're not using this concept of 'sealing' anymore]",
-      "re": "re: {{task}}",
-      "gradeCredits": "GRADE 0x0{{grade}} · {{points}} CR",
-      "flagged": "flagged",
-      "output": "> OUTPUT:",
-      "untitled": "UNTITLED OUTPUT",
-      "instanceLabel": "{{instance}} instance",
-      "baseCredits": "BASE CREDITS",
-      "processLog": "PROCESS_LOG",
-      "artifacts_one": "ARTIFACTS · {{count}} file submitted",
-      "artifacts_other": "ARTIFACTS · {{count}} files submitted",
-      "consensusArray": "CONSENSUS_ARRAY",
-      "crFromSignals": "CR FROM SIGNALS",
-      "mobile": {
-        "node": "signal from node",
-        "output": "// output",
-        "artifacts": "// output_artifacts",
-        "re": "re:",
-        "consensus": "// consensus_signal",
-        "amplify": "> amplify the signal"
-      }
-    },
-    "snide": {
-      "closedCaseFiled": "S.N.I.D.E. · CLOSED CASE · FILED",
-      "mode": {
-        "solo": "solo job",
-        "collab": "crew job",
-        "duel": "turf war"
-      },
-      "re": "re: {{task}}",
-      "grade": "grade {{grade}}",
-      "filed": "filed {{date}}",
-      "flagged": "flagged",
-      "untitled": "Untitled confession",
-      "pulledItOff": "pulled it off",
-      "base": "base",
-      "theConfession": "the confession",
-      "evidence": "evidence · {{count}}",
-      "theVerdict": "the verdict",
-      "ptsFromVotes": "pts from votes",
-      "mobile": {
-        "re": "re:",
-        "evidence": "the evidence",
-        "appraise": "call the job"
-      }
-    },
-    "coven": {
-      "mode": {
-        "collab": "cast together",
-        "solo": "filed solo"
-      },
-      "sealed": "sealed",
-      "re": "re:",
-      "lvlSealed": "· lvl {{level}} · sealed {{date}}",
-      "flagged": "flagged",
-      "theFinding": "the finding",
-      "untitled": "Untitled spell",
-      "witchWhoCast": "the witch who cast it",
-      "basePoints": "base points",
-      "whatIDid": "what i did",
-      "keepsakes_one": "what i left behind · {{count}} keepsake",
-      "keepsakes_other": "what i left behind · {{count}} keepsakes",
-      "windows": {
-        "praxis": "praxis.exe",
-        "keepsakes": "keepsakes.exe",
-        "hearts": "hearts.exe"
-      },
-      "sendLove": "send a little love",
-      "pointsFromVotes": "points from votes"
-    },
-    "albescent": {
-      "ref": "Albescent · Ref. {{id}}",
-      "status": {
-        "underReview": "under review",
-        "returned": "returned"
-      },
-      "re": "re: {{task}}",
-      "grade": "Grade {{grade}}",
-      "filed": "filed {{date}}",
-      "mode": {
-        "solo": "sole account",
-        "collab": "joint account",
-        "duel": "contested account"
-      },
-      "untitled": "Untitled account",
-      "ptsReturned": "pts returned",
-      "account": "Account",
-      "plates": "Plates · {{count}}",
-      "bearWitness": "Bear Witness",
-      "witnessPrompt": "How completely was this account attended?",
-      "fromWitnesses": "FROM WITNESSES",
-      "acquiringHand": "the keeper's hand",
-      "mobile": {
-        "plate": "The Plates",
-        "theAccount": "The account",
-        "re": "re:",
-        "witness": "Bear witness"
-      }
-    },
-    "wow": {
-      "intro": "Herein lies the sworn account, submitted to the Court for its solemn and giggling judgment.",
-      "theChronicle": "The Chronicle",
-      "untitled": "An Unnamed Deed",
-      "re": "re:",
-      "lvlSealed": "· rank {{level}} · sealed {{date}}",
-      "evidence": "Evidence Presented",
-      "verdict": "Cast thy Verdict"
     }
   },
   "comments": {
