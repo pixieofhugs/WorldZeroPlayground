@@ -18,9 +18,11 @@
  *    name; #1036 guessed a different wrong name ('Universal Assembly'). ADR-0050
  *    is the precedent — a stale design label inverted two factions across a whole
  *    wave. The line resolves from the catalog by slug instead.
- *  - **No faction voice.** ADR-0057. The `ua.*` keys the old 681-line archetype
- *    spoke are still in `tasks.json` (the faction pages share those namespaces;
- *    #1039 sweeps them), so nothing but a test stops this file drifting back.
+ *  - **No faction voice.** ADR-0057. The `tasks:ua.*` keys the old 681-line
+ *    archetype spoke outlived #1039's sweep only because the dormant mobile twin
+ *    still read them; #1068 deleted that twin and the whole namespace with it.
+ *    The voice can no longer come back by accident — but the assertion stays,
+ *    because re-adding a key is one line and this is what would catch it.
  *  - **No gold.** #853 deleted the legacy gilt-salon family and UA's gold went to
  *    WOW; the design's `gilt:#A98246` rule-stop has deliberately no token.
  */
@@ -149,8 +151,9 @@ describe("UA task detail — the shared contract in UA's dress", () => {
     expect(text).toContain("Task Description");
     expect(text).toContain("Discussion");
     expect(text).toContain("Sign up");
-    // ADR-0057: the `ua.*` voice keys the old archetype spoke are still in
-    // tasks.json for the faction pages, and must not be reachable from here.
+    // ADR-0057: the `tasks:ua.*` voice keys the old archetype spoke were
+    // deleted by #1068's sweep, so this copy has no catalog to come back from —
+    // it would have to be retyped, and this is what would notice.
     for (const retired of [
       "Sealed work",
       "The finest hand",

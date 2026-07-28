@@ -9,9 +9,10 @@
  *     shared suites while drawing none of its ornament — the ward, the braid,
  *     the wheel and the haze are the whole point of the archetype.
  *  2. **The voice is gone.** ADR-0057: this surface carries the shared neutral
- *     copy only. The retired `tasks:coven.*` detail strings stay in the catalog
- *     for the faction pages (swept in #1039), so nothing but a test stops one
- *     of them creeping back onto this page.
+ *     copy only. #1068's per-key sweep deleted the retired `tasks:coven.*`
+ *     detail strings outright — #1039 had kept them for faction pages that turn
+ *     out to read `factions:` — so creeping back now means retyping the copy.
+ *     This is what would notice.
  *  3. **No colour escapes index.css.** Every pigment on this skin is a token;
  *     a literal hex in a style/fill/stroke is a dark-mode bug that renders fine.
  *  4. **No in-progress roster** (owner ruling 2026-07-28) and **no dead
@@ -130,8 +131,10 @@ describe("Coven task detail — the copy", () => {
     expect(text).toContain("Task Description");
     expect(text).toContain("Discussion");
     expect(text).toContain("Sign up");
-    // The archetype this replaces spoke all of these. They still exist in
-    // tasks.json for the faction pages; none of them belongs here (ADR-0057).
+    // The archetype this replaces spoke all of these. #1068's per-key sweep
+    // found nothing left reading `tasks:coven.*` and deleted the namespace, so
+    // drifting back now means re-adding the copy — which is what this catches
+    // (ADR-0057).
     for (const retired of [
       "spells cast",
       "the party",

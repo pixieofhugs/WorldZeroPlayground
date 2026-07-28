@@ -143,7 +143,10 @@ function initialsOf(name: string): string {
  * - **Copy is the shared neutral `detail.*` set** (ADR-0057). The union voice
  *   this page used to speak — "The Order", "Hands On The Job", "The Hall's
  *   Verdict", "Report for duty ▸", "Best in Hall" — is retired from this
- *   surface. `tasks:everymen.*` still feeds the faction pages, so the keys stay.
+ *   surface. #1039 kept `tasks:everymen.*` alive on the theory that the faction
+ *   pages read it; #1068's per-key sweep found no such reader (the faction pages
+ *   speak `factions:`) once the dormant mobile twin was gone, so the whole
+ *   namespace is deleted and this page's copy is the neutral set only.
  *
  * One responsive component, no mobile twin (ADR-0058): `useFormFactor()` picks
  * the size set and collapses the two-column split. The separate Everymen mobile

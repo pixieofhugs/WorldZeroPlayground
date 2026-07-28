@@ -32,10 +32,11 @@ import type { TaskDetailState } from "../useTaskDetail";
  * WHAT THIS REPLACES: the 681-line "sheet" archetype built on `ua.*` voice keys
  * (`salonWallHeading`, `critiqueHeading`, `commissionHeading`,
  * `matriculatedHeading`, `finestHand`, `stats.anno/honoraria/onView`). Those
- * keys stay in `tasks.json` — the faction pages share those namespaces and the
- * sweep is #1039 — but nothing here reads them. ADR-0057: task detail carries
- * NO faction voice, only the shared neutral `detail.*` copy. Dress is UA's;
- * words are not.
+ * `tasks:ua.*` keys are gone: #1039 kept them on the theory the faction pages
+ * shared the namespace, #1068's per-key sweep found no reader outside the
+ * dormant mobile twin it had just deleted, and the whole namespace went with it.
+ * ADR-0057: task detail carries NO faction voice, only the shared neutral
+ * `detail.*` copy. Dress is UA's; words are not.
  *
  * THREE CONTRACT POINTS WORTH NOT RE-DERIVING:
  * - **No in-progress roster.** The header's "In progress" count is the only

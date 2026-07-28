@@ -5,10 +5,11 @@
  * the comments slot for every registered skin, so this file only pins the things
  * that are specific to THIS rebuild and would otherwise regress silently:
  *
- *  1. The retired union voice is gone. `tasks:everymen.*` still exists (the
- *     faction pages consume it — cleanup is #1039), so nothing stops someone
- *     re-reaching for "The Order" / "Hands On The Job" / "Report for duty".
- *     ADR-0057 says this surface speaks the shared neutral `detail.*` copy.
+ *  1. The retired union voice is gone. #1068's per-key sweep deleted
+ *     `tasks:everymen.*` outright — #1039 had kept it for faction pages that
+ *     turn out to read `factions:` — so "The Order" / "Hands On The Job" /
+ *     "Report for duty" would have to be retyped rather than merely re-reached
+ *     for. ADR-0057: this surface speaks the shared neutral `detail.*` copy.
  *  2. No in-progress roster — owner ruling 2026-07-28. The 785-line predecessor
  *     drew a "Hands On The Job" avatar row off `signups`; this asserts the row
  *     did not survive the rebuild.
@@ -134,8 +135,8 @@ describe("Everymen task detail — the broadsheet", () => {
     expect(text).toContain("Task Description");
     expect(text).toContain("Discussion");
     expect(text).toContain("Sign up");
-    // ADR-0057: `tasks:everymen.*` still exists for the faction pages, so these
-    // are reachable — they must simply not be reached from here.
+    // ADR-0057: `tasks:everymen.*` was deleted by #1068's sweep, so these are no
+    // longer reachable from a catalog — a regression has to retype them.
     expect(text).not.toContain("The Order");
     expect(text).not.toContain("Hands On The Job");
     expect(text).not.toContain("The Hall's Verdict");

@@ -22,8 +22,10 @@ import type { TaskDetailState } from "../useTaskDetail";
  *
  * Replaces the 794-line "case file" archetype (`caseFile`, `jobFile`,
  * `openCase`, `casesClosed`, `accomplices`, `evidence.*`, `topMarks`,
- * `verdict.*`). Those `snide.*` keys stay in tasks.json for now — the namespace
- * is shared with the faction pages, and the sweep is #1039.
+ * `verdict.*`). Those `tasks:snide.*` keys are gone: #1039 kept them on the
+ * theory the faction pages shared the namespace, #1068's per-key sweep found no
+ * reader outside the dormant mobile twin it had just deleted, and the whole
+ * namespace went with it.
  *
  * THE CENSOR REDACTS ORNAMENT, NEVER CONTENT. The design blacks out two words of
  * every brief paragraph (`background: ink, color: transparent`) — over the task's
