@@ -14,6 +14,13 @@ import { describe, expect, it } from "vitest";
  *
  * Sibling of factionTokensDeclared (#806) — same failure class, different half
  * of the stylesheet: a name that looks right and resolves to nothing.
+ *
+ * The reverse direction is a load-time guard rather than a rendering one. That
+ * `<link>` is render-blocking and on a third-party origin, so every family in it
+ * is weight a visitor pays before first paint whether or not anything uses it.
+ * A family outlives the surface that introduced it — delete the last card that
+ * named it and the request stays behind, costing bytes forever and silently.
+ * See docs/agents/load-time.md.
  */
 
 const FRONTEND_DIR = join(fileURLToPath(new URL(".", import.meta.url)), "..", "..", "..");
@@ -115,5 +122,30 @@ describe("font families are loaded (#839)", () => {
       }
     }
     expect([...missing]).toEqual([]);
+  });
+
+  it("requests no family that nothing names", () => {
+    // Deliberately a plain text search, not `namedFamilies`. That helper only
+    // reads `font-family` declarations, but most families reach the page through
+    // a custom property (`--font-faction-engraved: "Cinzel", serif`), which is
+    // not one. For "is this family used at all?", any mention counts — and being
+    // too permissive here only risks keeping a font, never dropping a live one.
+    const sources = collectSourceFiles(SRC_DIR).map((file) =>
+      readFileSync(file, "utf-8").toLowerCase(),
+    );
+    const unused = [...loaded]
+      .filter((family) => !sources.some((source) => source.includes(family)))
+      .sort();
+
+    expect(
+      unused,
+      `index.html requests ${unused.join(", ")}, which no source file names.
+` +
+        `The Google Fonts <link> is render-blocking, so an unused family is weight
+` +
+        `every visitor pays before first paint. Drop it from the URL — if a surface
+` +
+        `needs it later, adding it back is one edit.`,
+    ).toEqual([]);
   });
 });
