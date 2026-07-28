@@ -211,6 +211,13 @@
   --faction-default-border: rgba(0, 0, 0, 0.12);
   --faction-default-rainbow: linear-gradient(90deg, #c1272d 0%, #c2541f 17%, #ca8a04 33%, #16a34a 50%, #1d6e72 67%, #2563eb 83%, #be185d 100%);
   --faction-default-ring: conic-gradient(#c1272d 0 51deg, #c2541f 0 103deg, #ca8a04 0 154deg, #16a34a 0 206deg, #1d6e72 0 257deg, #2563eb 0 309deg, #be185d 0 360deg);
+  /* The same spectrum cut to TILE (#1023). Its last stop is its first, so a
+     surface that scrolls its background-position loops without a seam — which
+     the bar ramp above cannot do: red at 0% meets magenta at 100% and shows a
+     hard edge every cycle. Same argument as the two shorter ramps below; the
+     spectrum comes in ramps cut for their geometry. Only Albescent's drifting
+     card edge reads it today. */
+  --faction-default-rainbow-loop: linear-gradient(90deg, #c1272d 0%, #c2541f 14%, #ca8a04 28%, #16a34a 43%, #1d6e72 57%, #2563eb 72%, #be185d 86%, #c1272d 100%);
   --faction-default-card-bg: #fffdf9;
   --faction-default-card-text: #1a1209;
   --faction-default-card-accent: #1a1209;
@@ -1195,6 +1202,7 @@
   --faction-default-border: rgba(255, 255, 255, 0.12);
   --faction-default-rainbow: linear-gradient(90deg, #e2433f 0%, #e07a3a 17%, #e6b94f 33%, #4ade80 50%, #3aa0a4 67%, #60a5fa 83%, #f472b6 100%);
   --faction-default-ring: conic-gradient(#e2433f 0 51deg, #e07a3a 0 103deg, #e6b94f 0 154deg, #4ade80 0 206deg, #3aa0a4 0 257deg, #60a5fa 0 309deg, #f472b6 0 360deg);
+  --faction-default-rainbow-loop: linear-gradient(90deg, #e2433f 0%, #e07a3a 14%, #e6b94f 28%, #4ade80 43%, #3aa0a4 57%, #60a5fa 72%, #f472b6 86%, #e2433f 100%);
   --faction-default-card-bg: #1c1b24;
   --faction-default-card-text: #f0e6d0;
   --faction-default-card-accent: #f0e6d0;
@@ -2463,6 +2471,88 @@
 [data-theme="dark"] .alb-spark { color: #f2cc72; }
 @media (prefers-reduced-motion: no-preference) {
   .alb-spark { opacity: 0; animation: alb-spark 4.5s ease-in-out infinite; }
+}
+
+/* Albescent — the TASK CARD's tell (#1023, ADR-0048). The second surface to
+   unfreeze, and built to the same rule as the first: the exact spectrum sheet an
+   unaffiliated player sees, plus a flourish that reveals the society to someone
+   already looking. Two of them here — the card's rainbow edge comes ALIVE and
+   drifts, and an aurora blooms and breathes under the vellum. Neither repaints
+   anything: strip both classes and the card is `DefaultTaskCard`, byte for byte.
+
+   Both are drawn as OVERLAYS because the card they dress is a component, not
+   markup this file can reach into. Two consequences, both deliberate:
+
+   • The edge is a masked ring rather than a border — `mask … exclude` punches
+     the middle out of a 3px inset, so only the frame paints. It lands exactly on
+     Default's own static rainbow border, so the effect reads as that border
+     moving. Its radius must track Default's (14px); if that card's corner
+     changes, this follows.
+   • The aurora BLENDS rather than sits behind. `mix-blend-mode: multiply` on the
+     light sheet and `screen` on the dark one is what keeps ink legible through
+     an overlay — the design put the bloom UNDER the copy at `normal`, which is
+     not a position an overlay can take. Same call `.alb-rainbow` already makes. */
+@keyframes alb-task-edge { from { background-position: 0% 50%; } to { background-position: 300% 50%; } }
+@keyframes alb-task-drift {
+  0%, 100% { transform: translate3d(-6%, -4%, 0) scale(1.12) rotate(0deg); }
+  50% { transform: translate3d(6%, 5%, 0) scale(1.24) rotate(8deg); }
+}
+.alb-task-edge,
+.alb-task-aurora {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  border-radius: 14px;
+}
+.alb-task-edge {
+  padding: 3px;
+  background-image: var(--faction-default-rainbow-loop);
+  background-size: 300% 100%;
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask:
+    linear-gradient(#000 0 0) content-box exclude,
+    linear-gradient(#000 0 0);
+}
+.alb-task-aurora {
+  overflow: hidden;
+}
+.alb-task-aurora::before {
+  content: "";
+  position: absolute;
+  inset: 22%;
+  filter: blur(52px) saturate(0.62);
+  mix-blend-mode: multiply;
+  opacity: 0.34;
+  transform: translate3d(-6%, -4%, 0) scale(1.12);
+  background-image:
+    radial-gradient(62% 78% at 8% 16%, #c1272d, transparent 100%),
+    radial-gradient(58% 72% at 34% 4%, #c2541f, transparent 100%),
+    radial-gradient(60% 74% at 56% 18%, #ca8a04, transparent 100%),
+    radial-gradient(64% 78% at 84% 12%, #16a34a, transparent 100%),
+    radial-gradient(66% 80% at 98% 62%, #2563eb, transparent 100%),
+    radial-gradient(64% 78% at 62% 96%, #be185d, transparent 100%),
+    radial-gradient(60% 74% at 22% 92%, #1d6e72, transparent 100%);
+}
+[data-theme="dark"] .alb-task-aurora::before {
+  filter: blur(42px) saturate(0.95);
+  mix-blend-mode: screen;
+  opacity: 0.3;
+  background-image:
+    radial-gradient(62% 78% at 8% 16%, #e2433f, transparent 100%),
+    radial-gradient(58% 72% at 34% 4%, #e07a3a, transparent 100%),
+    radial-gradient(60% 74% at 56% 18%, #e6b94f, transparent 100%),
+    radial-gradient(64% 78% at 84% 12%, #4ade80, transparent 100%),
+    radial-gradient(66% 80% at 98% 62%, #60a5fa, transparent 100%),
+    radial-gradient(64% 78% at 62% 96%, #f472b6, transparent 100%),
+    radial-gradient(60% 74% at 22% 92%, #3aa0a4, transparent 100%);
+}
+@media (prefers-reduced-motion: no-preference) {
+  .alb-task-edge { animation: alb-task-edge 16s linear infinite; }
+  .alb-task-aurora::before { animation: alb-task-drift 52s ease-in-out infinite; }
 }
 
 /* UA — growing mandala: each rank blooms a fuller mandala; the emphasized cell

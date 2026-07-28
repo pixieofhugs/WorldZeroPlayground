@@ -80,6 +80,10 @@ Two traps, both of which have already been sprung:
 
 The one exception is the **reveal surfaces** — the invitation letter, the sealed placeholder, the `/factions` tile — which are only ever shown to an account already revealed to the society. They read the private `--albescent-reveal-*` palette by direct reference, never through `factionCssVar`. That palette is not a theme and must not become one.
 
+**What unfreezing a surface may and may not do (ADR-0048).** "Frozen" now means "frozen *until designed*", and surfaces come off the freeze one at a time — the praxis card first (#821), the task card second (#1023). Everything above still holds: none of them adds a `--faction-albescent-*` token, because the released surfaces are **`Default` plus a flourish**, never a skin of their own. Each renders the exact `Default*` component an unaffiliated player sees and washes MOTION over it (a rainbow drift, a spectrum edge that travels, an aurora that breathes) — the shimmer that reveals the society to someone already looking. `AlbescentTaskCard` is the shape to copy: it forwards its whole prop object to `DefaultTaskCard` and adds two overlay classes, so a change to the na card or to the card contract reaches Albescent with no edit.
+
+The **words** are covered by the same rule as the hues, and it is the easier one to get wrong: an unfrozen surface keeps `na`'s copy, including its sign-up verb. `feed:taskCard.albescent.*` still sits in the catalog, orphaned since #783 deleted the card it belonged to; re-wiring it would print a word no other player's card prints, on a surface every player can see.
+
 ### A faction's SPINE HUE and its SKIN are two different things (#812, #814, #838)
 
 Warriors of Whimsy is the case that proves it, and the case that got it wrong twice.
@@ -144,6 +148,10 @@ All fonts loaded from Google Fonts.
 | UA Masters  | `UnifrakturCook`   | `--faction-ua-masters-card-font`  |
 
 Use `factionCssVar(slug, 'card-font')` in components. Never hardcode the font family string directly.
+
+**A face can belong to a SURFACE rather than to a faction.** `--faction-{slug}-card-font` is read by a dozen surfaces each, so repointing one to satisfy a single redesign restyles eleven others by accident. When a design names a face for one surface only, give it a shared `--font-faction-*` token and reference that token from the one component — the same move `DefaultTaskCard` makes when it takes Lora rather than `--faction-default-card-font`. The v2 task cards (#1023) introduced four such faces: **Quicksand** (`--font-faction-rounded`) and **Grenze Gotisch** (`--font-faction-witch`) for Coven's spell slip, **Poiret One** (`--font-faction-deco`) and **Spectral** (`--font-faction-spectral`) for the Ephemerists plate. Coven's `card-font` is still Caveat and Ephemerists' is still Cinzel, and both still appear on their v2 cards — as the hand-lettering and the small caps respectively.
+
+Whichever route a face takes, **it must also be in the `index.html` loader**, added in the same commit. A family named but never requested renders as its generic fallback, and that fallback *is* the rendering — no check catches it except `fontsLoaded` comparing the two lists (#839).
 
 **Type scale** is defined as CSS variables in `index.css`. Use the variable names, not raw pixel values. It comes in **two tiers**, and the naming convention is the tier boundary made visible: the label tier is a size ramp with t-shirt names, the content tier is a **role vocabulary**.
 
@@ -292,7 +300,9 @@ The sidebar contains: character card, active tasks panel, recent activity panel,
 
 ## 6. Faction Card Archetypes
 
-**Core principle:** Each faction's tasks use a completely different card archetype. The card type IS the faction identity. All cards display: task name, faction name, point value, level requirement (via `LevelGem`).
+**Core principle:** Each faction's tasks use a completely different card archetype. The card type IS the faction identity. All cards display: task name, faction name, point value, level requirement.
+
+**Task cards v2 (ADR-0055 / ADR-0056) draw the level themselves.** The redesigned task cards are the one archetype family that does *not* reach for `LevelGem`: every design in the v2 kit draws the level as a numeral in its own display face — under tally strokes on the Ephemerists plate, over a braid on the Coven slip, beside a dashed rule on the Everymen bill. The gem stays the shared shape everywhere else (rosters, detail pages, praxis surfaces), and the reasoning below is unchanged for those; on this one surface the whole point of the redesign was that the hero row belongs to the faction. Two other v2 rules ride along and apply to every card in the family: it is **one responsive component** (`useFormFactor` picks a size set — never a second file, never a fixed-px grid), and it shows **base points** with a `×multiplier` badge gated on `isNeutralMultiplier`, which is invisible at `era_1` and lights up on its own the day an era ships a non-1.0 modifier.
 
 **The level gem** is the one shape shared across every archetype: a 45°-rotated square, always outlined and never filled, with a faction-coloured numeral and a mandatory tiny "LVL" caption. It is deliberately the exception to "no uniform shapes" — the level is a game-wide fact, not a faction one, and a player should recognise it instantly whether it sits on a ransom note or a roster row. Faction identity enters as stroke colour and glow only. Unaffiliated takes the spectrum on both stroke and numeral (ADR-0039); it never degrades to grey, and it never borrows another faction's hue.
 

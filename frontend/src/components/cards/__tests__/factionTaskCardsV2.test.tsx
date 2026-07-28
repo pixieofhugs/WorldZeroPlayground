@@ -35,6 +35,8 @@ vi.mock('../../../hooks/useFormFactor', () => ({
 import CovenTaskCard from '../CovenTaskCard'
 import EphemeristsTaskCard from '../EphemeristsTaskCard'
 import EverymenTaskCard from '../EverymenTaskCard'
+import AlbescentTaskCard from '../AlbescentTaskCard'
+import DefaultTaskCard from '../DefaultTaskCard'
 import { surfaceMap } from '../../../factions'
 
 const TASK: TaskOut = {
@@ -75,6 +77,17 @@ const SKINS: Skin[] = [
     signup: i18n.t('feed:taskCard.ephemerists.signup'),
   },
   { slug: 'everymen', Card: EverymenTaskCard, signup: i18n.t('feed:taskCard.everymen.signup') },
+  {
+    // Albescent's row reads na's key ON PURPOSE, and it is the one row where
+    // that is not an oversight: the card IS the na card plus a drift
+    // (ADR-0048), and a per-faction WORD is as identifying as a per-faction
+    // hue (WORLD_ZERO_STYLE §3). `feed:taskCard.albescent.signup` still exists
+    // in the catalog, orphaned since #783 deleted the bespoke card it belonged
+    // to; wiring it back would un-hide the society on an ordinary surface.
+    slug: 'albescent',
+    Card: AlbescentTaskCard,
+    signup: i18n.t('feed:taskCard.na.signup'),
+  },
 ]
 
 function markup(element: ReactElement): { html: string; text: string } {
@@ -172,5 +185,36 @@ describe.each(SKINS)('$slug task card v2 — one component, two form factors (AD
 describe.each(SKINS)('$slug renders through the taskCard manifest surface', (skin) => {
   it('is the registered skin for its slug', () => {
     expect(surfaceMap('taskCard')[skin.slug]).toBeDefined()
+  })
+})
+
+/* -------------------------------------------------------------------------- */
+/* Albescent — the one card in this wave that is NOT a bespoke skin            */
+/* -------------------------------------------------------------------------- */
+
+describe('albescent task card is na + drift, never a repaint (ADR-0048)', () => {
+  const props = { basePoints: TASK.point_value, multiplier: 1, inProgressCount: 6 }
+
+  it('contains the na sheet whole, and adds only the two flourish overlays', () => {
+    const albescent = markup(<AlbescentTaskCard task={TASK} {...props} />)
+    const unaffiliated = markup(<DefaultTaskCard task={TASK} {...props} />)
+
+    // The strongest statement of the rule: strip the wrapper and the two
+    // overlays and what is left is the unaffiliated card, byte for byte. A
+    // future edit that "just tweaks" one slot for Albescent fails here.
+    expect(albescent.html).toContain(unaffiliated.html)
+    expect(albescent.html, 'the drifting spectrum edge').toContain('alb-task-edge')
+    expect(albescent.html, 'the breathing aurora').toContain('alb-task-aurora')
+  })
+
+  it('speaks na words — a per-faction verb is as identifying as a per-faction hue', () => {
+    const { text, html } = markup(
+      <AlbescentTaskCard task={TASK} {...props} onSignup={() => {}} />,
+    )
+    expect(text).toContain(i18n.t('feed:taskCard.na.signup'))
+    expect(text, 'the orphaned pre-#783 Albescent verb must stay orphaned')
+      .not.toContain(i18n.t('feed:taskCard.albescent.signup'))
+    expect(html, 'no --faction-albescent-* token may reach a rendered surface')
+      .not.toContain('--faction-albescent')
   })
 })
