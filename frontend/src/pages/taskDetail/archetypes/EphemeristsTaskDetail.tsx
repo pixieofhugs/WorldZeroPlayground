@@ -496,11 +496,19 @@ export default function EphemeristsTaskDetail({
     padding: size.cellPadding,
     boxSizing: "border-box",
   };
+  /**
+   * The page-ground label voice. `-quiet`, not `-caption`: the caption ink was
+   * measured against the PLATE (4.75:1) and only reaches 4.45:1 on the darker
+   * page this surface introduces. Labels that sit on a panel cell take
+   * `plateEyebrow` below, where the caption gold is both legal and better.
+   */
   const eyebrow: CSSProperties = {
     ...SMALL_CAPS,
     fontSize: "var(--text-sm)",
-    color: CAPTION,
+    color: QUIET,
   };
+  /** The same label voice on a panel cell, where the caption gold clears. */
+  const plateEyebrow: CSSProperties = { ...eyebrow, color: CAPTION };
   const quietItalic: CSSProperties = {
     fontFamily: READING,
     fontStyle: "italic",
@@ -860,7 +868,7 @@ export default function EphemeristsTaskDetail({
       }}
     >
       <div style={{ width: "100%", display: "flex", flexDirection: "column", gap: "var(--space-sm)" }}>
-        {ledgerRow(<span style={eyebrow}>{t("detail.points.base")}</span>, basePoints)}
+        {ledgerRow(<span style={plateEyebrow}>{t("detail.points.base")}</span>, basePoints)}
         {/* The modifier row — absent at ×1.00, so invisible under era_1's
             neutralised modifiers and automatic the day one moves (ADR-0055).
             The design labels it "Bonus"; ADR-0057 leaves no shared word for it,
@@ -904,7 +912,7 @@ export default function EphemeristsTaskDetail({
               fontSize: "var(--text-xs)",
               letterSpacing: "0.2em",
               marginTop: "var(--space-xs)",
-              color: QUIET,
+              color: CAPTION,
             }}
           >
             {t("detail.points.total")}
