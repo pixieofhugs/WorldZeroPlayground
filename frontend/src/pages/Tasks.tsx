@@ -8,7 +8,7 @@ import { extractError } from '../utils/errors'
 import { useFormFactor } from '../hooks/useFormFactor'
 import { useTasks, type TasksState } from './tasks/useTasks'
 import DefaultTasks from './tasks/mobileArchetypes/DefaultTasks'
-import MetataskRow from './tasks/MetataskRow'
+import MetaTaskSeal from '../components/metaTaskSeal/MetaTaskSeal'
 import type { TaskType } from '../api/tasks'
 
 export default function Tasks() {
@@ -101,12 +101,11 @@ function DesktopTasks({ state }: { state: TasksState }) {
       ) : (
         <>
           {isMetatask ? (
-            /* Metatasks are informational — a clean issuing-faction row list, no
-               sign-up CTA (they're applied to a praxis via the picker). */
-            <div className="flex flex-col gap-3" style={{ maxWidth: 640 }}>
-              {tasks.map((task) => (
-                <MetataskRow key={task.id} task={task} points={displayPointsFor(task)} />
-              ))}
+            /* Metatasks are informational — the issuing faction's seal look
+               (#928), stacked read-only; no sign-up CTA (they're applied to a
+               praxis via the picker). */
+            <div style={{ maxWidth: 640 }}>
+              <MetaTaskSeal metatasks={tasks} />
             </div>
           ) : (
             /* Flex-wrap container — NOT a grid. Varied card sizes and rotations are intentional (Style Guide §6). */
