@@ -7,7 +7,8 @@
  *
  * Invariant slots owned here:
  *   - Admin moderation bar
- *   - Withdrawn / failed banners (IN EDITING + failed note)
+ *   - Crown hero + failed note (ADR-0062 removed the open-state banners: detail
+ *     is published-only, so there is no IN EDITING / PENDING PUBLISH to draw)
  *   - Owner actions (edit / withdraw / resubmit)
  *   - Flag block
  */
@@ -311,28 +312,11 @@ export function PraxisStatusBanners({ state }: { state: PraxisDetailState }) {
           </div>
         </div>
       )}
-      {/* A collab that has been proposed for publish (submit_proposed_at set)
-          is still in editing, but the neutral "IN EDITING" copy under-reports
-          it — swap in the pending-publish wording (ADR-0012). */}
-      {praxis.status === 'in_progress' && (
-        <div style={{ background: 'rgba(245,158,11,0.1)', border: '2px solid rgba(245,158,11,0.3)', borderRadius: 8, padding: 'var(--space-sm) var(--space-lg)', marginBottom: 'var(--space-md)', display: 'flex', alignItems: 'center', gap: 'var(--space-sm)' }}>
-          {praxis.submit_proposed_at != null ? (
-            <>
-              <span className="eyebrow">{t('detail.banners.pendingPublishLabel')}</span>
-              <span className="font-body content-text" style={{ color: 'var(--color-warning)', fontWeight: 700 }}>
-                {t('detail.banners.pendingPublishBody')}
-              </span>
-            </>
-          ) : (
-            <>
-              <span className="eyebrow">{t('detail.banners.inEditingLabel')}</span>
-              <span className="font-body content-text" style={{ color: 'var(--color-warning)', fontWeight: 700 }}>
-                {t('detail.banners.inEditingBody')}
-              </span>
-            </>
-          )}
-        </div>
-      )}
+      {/* The "IN EDITING" / "PENDING PUBLISH" pair used to sit here. Both are
+          gone with ADR-0062: detail redirects `in_progress` AND `pending` to the
+          composer, so neither banner could ever paint again. An open praxis now
+          has one owner — the composer's waiting surface (#1071) — instead of two
+          that described it differently. */}
       {praxis.moderation_status === 'failed' && praxis.admin_note && (
         <div style={{ background: 'rgba(220,38,38,0.05)', border: '2px solid rgba(220,38,38,0.3)', borderRadius: 8, padding: 'var(--space-sm) var(--space-lg)', marginBottom: 'var(--space-md)', display: 'flex', alignItems: 'center', gap: 'var(--space-sm)' }}>
           {/* Ornament: a ✗ dingbat used as an icon, not readable text. Sized
@@ -689,11 +673,18 @@ export function PraxisVoterBreakdown({ state }: { state: PraxisDetailState }) {
 
 // ── Single earned-points breakdown (#641, ADR-0053) ──────────────────────────
 //
-// The one explicit score readout a detail page shows. The arithmetic is NOT
-// done here: `scoreBreakdown()` is the single resolver for cards and detail
-// alike, so the two surfaces cannot disagree. What lives here is the detail
-// page's own PRESENTATION — the inline `{base} × {mult} + {votes}` form and the
-// per-faction accent/muted/font theming each of the 14 archetypes passes in.
+// LEGACY, AND ON ITS WAY OUT WITH #1089. This is the inline readout the SIX
+// legacy desktop archetypes and the EIGHT mobile ones still render; #1091
+// removed its last non-legacy caller by giving the rebuilt Unaffiliated page the
+// dispatched `ScoreStamp` instead. It cannot be deleted here because every
+// remaining caller is a file #1089 deletes — so it dies with them, along with
+// `detail.score.ptsMultVotes`, rather than being ripped out from under fourteen
+// shipped skins. Do not add a new caller.
+//
+// The arithmetic is NOT done here: `scoreBreakdown()` is the single resolver for
+// cards and detail alike, so the two surfaces cannot disagree. What lives here
+// is the detail page's own PRESENTATION — the inline `{base} × {mult} + {votes}`
+// form and the per-faction accent/muted/font theming each archetype passes in.
 //
 // This used to derive the multiplier as `(score − votePoints) / base`. Against
 // Merit (`base + votes`) that reduced to `base / base` — 1.0 unconditionally —

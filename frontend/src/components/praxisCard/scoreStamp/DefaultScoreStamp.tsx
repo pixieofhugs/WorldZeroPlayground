@@ -4,44 +4,113 @@ import { scoreBreakdown, formatMult } from "./scoreBreakdown";
 import type { ScoreStampProps } from "./ScoreStamp";
 
 /**
- * The Default / `na` score stamp — the unaffiliated SPECTRUM sheet (ADR-0039,
+ * The Default / `na` score stamp — the unaffiliated SPECTRUM stamp (ADR-0039,
  * ADR-0049), and the fall-through every faction renders until its own slice
- * lands (#840 / #841 / #842).
+ * lands.
  *
- * Two objects, as the design specifies: a bordered SCORE BOX (`base 12`, the
- * `×0.80` chip, the italic `+ 4 from votes`) and, under a rainbow hairline, the
- * unaffiliated TOTAL MARK — the total background-clipped to the community
- * rainbow over a `POINTS` label. Unlike UA (whose ensō sits outside the box),
- * the unaffiliated mark is nested inside the box's border; that is how the
- * prototype draws it.
+ * Rebuilt to the Unaffiliated praxis-detail design (#1091, epic #1085). That
+ * skin IS the unaffiliated one, so "restyle the default stamp" and "build the
+ * design's score rail" are the same object: a STRUCK DISC carrying the total
+ * over a `POINTS` caption, then the working out as RULED LEADER-LINE ROWS —
+ * `LABEL … hairline … value` — and, under a rule of its own, the votes tally.
+ * A 2px spectrum bar is pinned across the top edge.
  *
- * The rainbow-band frame #821 wrapped this in is gone — it had no design source.
+ * ## The design's arithmetic is not built
+ *
+ * The design computes `mult = clamp(voteAverage / 3, 0.5, 1.6)` and
+ * `total = 12 * mult + 4`, labels the result "Faction ×1.17", and prints "4
+ * votes" as a COUNT. All three are wrong. The model is
+ * `(base + meta) × faction_mult + votes` (ADR-0014/0047/0053): the multiplier is
+ * `own_task_modifier` / `other_task_modifier` and has nothing to do with how
+ * anyone voted, votes are additive POINTS (`points_from_votes`), and meta sits
+ * INSIDE the multiplier, not beside it. So the presentation is the design's and
+ * every number comes from `scoreBreakdown()`.
+ *
+ * ## Row selection is not ours
+ *
+ * `scoreBreakdown()` is the single row-selection authority (ADR-0053) and every
+ * rule below is its call, not this file's:
+ *   - the MULT row appears only when the multiplier is not ×1.0. `era_1`
+ *     neutralises it to 1.0 for every faction, so the row is dark today and
+ *     lights up on its own if an era ever configures one.
+ *   - the META row appears only when metatask points are > 0.
+ *   - the VOTES tally is drawn ALWAYS, including `+0` — an absent row cannot
+ *     say "nobody has voted yet".
+ * Nothing is derived by subtraction; that was the bug ADR-0053 retired.
+ *
+ * ## Size
+ *
+ * ONE width everywhere (`--text-*`-scaled type, geometry in raw px per §4a).
+ * The stamp is size-agnostic by contract — the same component renders in a
+ * praxis card's gutter, in the mobile card, on the composer's waiting surface
+ * and in the detail page's aside — so it self-constrains rather than reading its
+ * container. The design's two-COLUMN arrangement (disc left, rows right) is the
+ * one thing not carried over: at the ~232px it needs, the stamp starves the
+ * praxis card's title column, so the same pieces stack in one column instead.
+ *
  * Colours are only `--faction-default-*` tokens, so the whole stamp flips
  * through the `[data-theme="dark"]` cascade with no `dark ?` branch.
  */
+
+/** The struck disc — ornament geometry, the design's own 96 (§4a). */
+const DISC = 96;
+/** Inset of the disc's hairline ring from its edge. */
+const RING_INSET = 5;
+/**
+ * One width in every mount. Wide enough for the 96px disc plus the stamp's
+ * padding, narrow enough that a praxis card's title column still reads.
+ */
+const STAMP_WIDTH = 150;
+
 export default function DefaultScoreStamp({ praxis, showCrown }: ScoreStampProps) {
   const { t } = useTranslation("praxis");
   if (praxis.score === null || praxis.score === undefined) return null;
   const { base, mult, meta, votes, total } = scoreBreakdown(praxis);
   const crowned = praxis.is_top_for_task && showCrown !== false;
+
+  /** The working out, in reading order. Selection belongs to scoreBreakdown. */
+  const rows: { key: string; label: string; value: string }[] = [
+    { key: "base", label: t("card.stamp.base"), value: `${base}` },
+  ];
+  if (mult !== null) {
+    rows.push({ key: "mult", label: t("card.stamp.mult"), value: formatMult(mult) });
+  }
+  if (meta !== null) {
+    rows.push({ key: "meta", label: t("card.stamp.meta"), value: `+${meta}` });
+  }
+
   return (
     <div
       style={{
         position: "relative",
-        flexShrink: 0,
-        minWidth: 116,
         boxSizing: "border-box",
+        flexShrink: 0,
+        width: "100%",
+        maxWidth: STAMP_WIDTH,
         border: "1px solid var(--faction-default-card-line)",
-        borderRadius: 8,
+        borderRadius: 10,
         background: "var(--faction-default-stamp-bg)",
         color: "var(--faction-default-card-text)",
         boxShadow: "0 2px 6px rgba(34, 26, 18, 0.1)",
-        // A sheet of scrap tucked into the record, not a printed field.
-        transform: "rotate(-1deg)",
-        padding: "var(--space-sm) var(--space-md) var(--space-md)",
-        lineHeight: 1.1,
+        padding: "var(--space-md)",
       }}
     >
+      {/* The spectrum bar across the top edge — the na tell, and the rainbow's
+          one structural appearance on this object (the total below is the
+          other, clipped to type). */}
+      <span
+        aria-hidden
+        style={{
+          position: "absolute",
+          top: 0,
+          left: 0,
+          right: 0,
+          height: 2,
+          borderRadius: "10px 10px 0 0",
+          background: "var(--faction-default-rainbow)",
+        }}
+      />
+
       {crowned && (
         <TaskCrown
           size={26}
@@ -51,119 +120,131 @@ export default function DefaultScoreStamp({ praxis, showCrown }: ScoreStampProps
         />
       )}
 
-      {/* Score box — base numeral with the multiplier chip pinned right. */}
+      {/* The struck disc: total over its unit caption, tilted off-square so it
+          reads as a mark pressed into the sheet rather than a printed field. */}
       <div
         style={{
           display: "flex",
-          alignItems: "center",
-          gap: "var(--space-sm)",
-          whiteSpace: "nowrap",
+          justifyContent: "center",
+          marginBottom: "var(--space-md)",
         }}
       >
         <span
           style={{
-            fontFamily: "var(--font-body)",
-            fontSize: "var(--text-sm)",
-            letterSpacing: "0.1em",
-            textTransform: "uppercase",
-            color: "var(--faction-default-vote-off)",
+            position: "relative",
+            width: DISC,
+            height: DISC,
+            flexShrink: 0,
+            borderRadius: "50%",
+            border: "2px solid var(--faction-default-card-line)",
+            transform: "rotate(-7deg)",
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            lineHeight: 1,
           }}
         >
-          {t("card.stamp.base")}
-        </span>
-        <span
-          style={{
-            fontFamily: "var(--faction-default-card-font)",
-            fontSize: "var(--text-title)",
-            lineHeight: 0.8,
-          }}
-        >
-          {base}
-        </span>
-        {mult !== null && (
+          {/* The inset hairline ring inside the disc's edge. */}
+          <span
+            aria-hidden
+            style={{
+              position: "absolute",
+              inset: RING_INSET,
+              borderRadius: "50%",
+              border: "1px solid var(--faction-default-card-line)",
+            }}
+          />
           <span
             style={{
-              marginLeft: "auto",
               fontFamily: "var(--faction-default-card-font)",
-              fontSize: "var(--text-lg)",
-              letterSpacing: "0.04em",
-              // Rainbow appearance 2 of 4 is the RULE below; the chip carries
-              // the design's own short green-to-blue ramp, not the spectrum.
-              color: "var(--faction-default-chip-text)",
-              background: "var(--faction-default-chip)",
-              borderRadius: 3,
-              padding: "0 var(--space-xs)",
+              fontSize: "var(--text-heading)",
+              lineHeight: 1,
+              // The total, clipped to the design's warmer four-stop ramp rather
+              // than the full seven-stop spectrum, which smears to mud at four
+              // glyphs wide.
+              background: "var(--faction-default-total-rainbow)",
+              WebkitBackgroundClip: "text",
+              backgroundClip: "text",
+              color: "transparent",
             }}
           >
-            {formatMult(mult)}
+            {total.toFixed(1)}
           </span>
-        )}
+          <span
+            style={{
+              fontFamily: "var(--font-body)",
+              fontSize: "var(--text-base)",
+              textTransform: "uppercase",
+              letterSpacing: "0.16em",
+              color: "var(--faction-default-gold)",
+              marginTop: "var(--space-xs)",
+            }}
+          >
+            {t("card.stamp.points")}
+          </span>
+        </span>
       </div>
 
-      {meta !== null && (
+      {/* Ruled leader-line rows — label, a hairline running out to fill the gap,
+          then the figure. */}
+      {rows.map((row) => (
         <div
+          key={row.key}
           style={{
-            fontFamily: "var(--font-body)",
-            fontStyle: "italic",
-            fontSize: "var(--text-base)",
-            color: "var(--faction-default-card-muted)",
-            marginTop: "var(--space-xs)",
+            display: "flex",
+            alignItems: "baseline",
+            gap: "var(--space-xs)",
+            padding: "var(--space-xs) 0",
           }}
         >
-          {t("card.stamp.meta")} +{meta}
+          <span
+            style={{
+              fontFamily: "var(--font-body)",
+              fontSize: "var(--text-base)",
+              textTransform: "uppercase",
+              letterSpacing: "0.16em",
+              color: "var(--faction-default-card-muted)",
+              whiteSpace: "nowrap",
+            }}
+          >
+            {row.label}
+          </span>
+          <span
+            aria-hidden
+            style={{
+              flex: "1 1 auto",
+              minWidth: 6,
+              height: 1,
+              background: "var(--faction-default-card-line)",
+            }}
+          />
+          <span
+            style={{
+              fontFamily: "var(--faction-default-card-font)",
+              fontSize: "var(--text-lg)",
+              whiteSpace: "nowrap",
+            }}
+          >
+            {row.value}
+          </span>
         </div>
-      )}
+      ))}
 
+      {/* The tally, under a rule of its own. Always drawn: `+ 0 from votes` is a
+          fact about this praxis, not a missing row. */}
       <div
         style={{
-          fontFamily: "var(--font-body)",
-          fontStyle: "italic",
-          fontSize: "var(--text-base)",
-          letterSpacing: "0.04em",
-          color: "var(--faction-default-card-muted)",
+          borderTop: "1px solid var(--faction-default-card-line)",
           marginTop: "var(--space-xs)",
+          paddingTop: "var(--space-sm)",
+          fontFamily: "var(--font-body)",
+          fontSize: "var(--text-base)",
+          letterSpacing: "0.06em",
+          color: "var(--faction-default-card-muted)",
         }}
       >
         {t("card.stamp.fromVotes", { votes })}
-      </div>
-
-      {/* Rainbow hairline, then the total mark. */}
-      <div
-        aria-hidden
-        style={{
-          height: 1,
-          background: "var(--faction-default-rainbow)",
-          margin: "var(--space-sm) 0",
-        }}
-      />
-      <div style={{ display: "flex", alignItems: "baseline", gap: "var(--space-xs)", lineHeight: 1 }}>
-        <span
-          style={{
-            fontFamily: "var(--faction-default-card-font)",
-            fontSize: "var(--text-heading)",
-            lineHeight: 1.15,
-            // Rainbow appearance 3 of 4: the total, clipped to the design's
-            // warmer four-stop ramp rather than the full seven-stop spectrum,
-            // which smears to mud at four glyphs wide.
-            background: "var(--faction-default-total-rainbow)",
-            WebkitBackgroundClip: "text",
-            backgroundClip: "text",
-            color: "transparent",
-          }}
-        >
-          {total.toFixed(1)}
-        </span>
-        <span
-          style={{
-            fontFamily: "var(--faction-default-card-font)",
-            fontSize: "var(--text-base)",
-            letterSpacing: "0.06em",
-            textTransform: "uppercase",
-            color: "var(--faction-default-gold)",
-          }}
-        >
-          {t("card.stamp.points")}
-        </span>
       </div>
     </div>
   );

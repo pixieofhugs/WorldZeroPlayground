@@ -206,13 +206,6 @@ function state(overrides: Partial<PraxisDetailState>): PraxisDetailState {
     handleWithdraw: async () => {},
     handleResubmit: async () => {},
     handleFlag: async () => {},
-    metatasks: [],
-    metataskLoading: false,
-    metataskError: null,
-    applyingMetataskId: null,
-    removingMetataskId: null,
-    handleApplyMetatask: async () => {},
-    handleRemoveMetatask: async () => {},
     ...overrides,
   } as PraxisDetailState
 }

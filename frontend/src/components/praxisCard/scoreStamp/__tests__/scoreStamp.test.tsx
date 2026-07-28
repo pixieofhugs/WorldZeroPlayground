@@ -342,6 +342,74 @@ describe('#842 stamps across the conditional states (ADR-0047)', () => {
 })
 
 /**
+ * The rebuilt unaffiliated stamp (#1091, epic #1085) — the Unaffiliated praxis
+ * detail design's score rail, which is the same object as the `na` card stamp.
+ *
+ * What is pinned here is what a rebuild could quietly lose: the design's own
+ * arithmetic. It computes a multiplier from the VOTE AVERAGE, labels the result
+ * "Faction ×1.17", puts meta OUTSIDE that multiplier, and prints votes as a
+ * COUNT. None of it is built — `scoreBreakdown()` is the resolver and the rows
+ * below are its rules, not this skin's.
+ */
+describe('the rebuilt unaffiliated stamp keeps the real model (#1091)', () => {
+  it('hides the multiplier row under a neutral era and shows it otherwise', () => {
+    // era_1 neutralises own/other_task_modifier to 1.0 for every faction, so
+    // the row is dark today and lights up on its own if an era configures one.
+    const neutral = text(
+      renderToStaticMarkup(<DefaultScoreStamp praxis={praxis({ display_multiplier: 1 })} />),
+    )
+    expect(neutral).not.toContain('mult')
+    expect(neutral).not.toContain('×')
+
+    const live = text(
+      renderToStaticMarkup(<DefaultScoreStamp praxis={praxis({ display_multiplier: 1.1 })} />),
+    )
+    expect(live).toContain('mult')
+    expect(live).toContain('×1.10')
+  })
+
+  it('shows the metatask row only when metatask points are live', () => {
+    const sealed = text(
+      renderToStaticMarkup(<DefaultScoreStamp praxis={praxis({ metatask_points: 4 })} />),
+    )
+    expect(sealed).toContain('meta')
+    expect(sealed).toContain('+4')
+    expect(
+      text(renderToStaticMarkup(<DefaultScoreStamp praxis={praxis({ metatask_points: 0 })} />)),
+    ).not.toContain('meta')
+  })
+
+  it('draws the votes tally even at zero — an absent row cannot say "nobody voted"', () => {
+    const unvoted = text(
+      renderToStaticMarkup(
+        <DefaultScoreStamp praxis={praxis({ points_from_votes: 0, score: 12 })} />,
+      ),
+    )
+    expect(unvoted).toContain('0 from votes')
+  })
+
+  it('states votes as POINTS, never as a count of voters', () => {
+    // `points_from_votes` is a points figure. The design printed "4 votes" as a
+    // tally of people; the payload carries no such number and none is invented.
+    const html = text(
+      renderToStaticMarkup(
+        <DefaultScoreStamp praxis={praxis({ points_from_votes: 7, score: 19 })} />,
+      ),
+    )
+    expect(html).toContain('7 from votes')
+  })
+
+  it('keeps the struck disc and the spectrum bar, both from tokens', () => {
+    const markup = renderToStaticMarkup(<DefaultScoreStamp praxis={praxis({})} />)
+    // The disc is tilted off-square — a mark pressed in, not a printed field.
+    expect(markup).toContain('rotate(-7deg)')
+    // The spectrum is the shared token, never a pasted gradient literal.
+    expect(markup).toContain('var(--faction-default-rainbow)')
+    expect(markup).not.toMatch(HEX)
+  })
+})
+
+/**
  * The stamp's prop type is structural (#1079). `ScoredPraxis` always claimed to
  * be satisfied by BOTH payload shapes (ADR-0053), but the component prop was
  * pinned to `PraxisCardOut`, so the detail/composer payload could only reach a
