@@ -398,6 +398,60 @@ export function DropButton({
   );
 }
 
+/* -------------------------------------------------------------------------- */
+/* SaveDraftButton — the composer's third exit (#1081): keep the draft, leave.  */
+/*                                                                              */
+/* Publish files the praxis and Drop destroys it; until now there was no way to */
+/* simply stop for the night. The click flushes the queued autosave and lands   */
+/* on the player's own profile, where their in_progress praxes are listed.      */
+/*                                                                              */
+/* Deliberately unskinned by default, like the collab Leave link above: this is */
+/* a mechanics affordance, not a faction gesture, and the shared neutral        */
+/* treatment keeps a wide 16-archetype footprint to one line per footer. The    */
+/* optional skin is the escape hatch if a faction later wants its own voice.    */
+/*                                                                              */
+/* Nothing here asks first — saving a draft destroys nothing, so a confirm      */
+/* would be ceremony. (The composer has `askConfirm` for the ones that do.)     */
+/* -------------------------------------------------------------------------- */
+export interface SaveDraftButtonSkin {
+  style?: CSSProperties;
+  label?: string;
+}
+
+export function SaveDraftButton({
+  state,
+  skin,
+}: {
+  state: EditPraxisState;
+  skin?: SaveDraftButtonSkin;
+}) {
+  const { t } = useTranslation("forms");
+  // A cast or moderated praxis has no draft to save — the autosave effect sits
+  // the same states out, and the archetype is read-only in them. Hide rather
+  // than disable, as everywhere else.
+  if (state.controlsLocked) return null;
+  return (
+    <button
+      type="button"
+      onClick={() => void state.saveDraft()}
+      // Not while a publish or a mode switch is in flight: both end up writing
+      // the same fields, and both change where the player should be sent.
+      disabled={state.submitting || state.switchingMode !== null}
+      className="font-body eyebrow hover:underline"
+      style={{
+        background: "none",
+        border: "none",
+        padding: 0,
+        cursor: "pointer",
+        color: "var(--color-text-tertiary)",
+        ...skin?.style,
+      }}
+    >
+      {skin?.label ?? t("editPraxis.saveDraft")}
+    </button>
+  );
+}
+
 /* The editable seal stack (#933) lives in `../MetataskSealStack` — deliberately
  * OUTSIDE this module so `controls.tsx` never imports MetaTaskSeal (and through
  * it the faction registry). See that file's header for why the cycle matters. */
