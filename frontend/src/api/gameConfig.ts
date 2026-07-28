@@ -34,6 +34,7 @@ export interface GameConfigOut {
   level_thresholds: number[]
   duel_level_required: number
   collaboration_level_required: number
+  collab_auto_submit_days: number
   max_task_signups: number
   vote_budget_base: number
   vote_budget_multiplier: number
