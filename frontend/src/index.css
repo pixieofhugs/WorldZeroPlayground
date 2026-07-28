@@ -473,6 +473,24 @@
   --faction-singularity-term-cta-ink: #04120a;
   --faction-singularity-term-shadow: 0 16px 42px -26px rgba(0, 0, 0, 0.7), inset 0 0 0 1px rgba(74, 222, 128, 0.1);
 
+  /* ── Singularity task detail v2 (#1034) — four keys the task card never needed.
+     The detail page is the same terminal at PAGE scale, so it reuses the whole
+     --faction-singularity-term-* family above and adds only what a card-sized
+     surface had no use for: a raised PANEL (the card is one flat chassis; the
+     page stacks boxes on it) and the three PHOSPHOR HALOS.
+
+     Same two-theme contract as the family it extends — both halves near-black,
+     the cascade flips the phosphor, not the chassis. The halos are the one place
+     the two halves genuinely diverge in KIND rather than in value: the design
+     ships them as `none` in its light set and lit in its dark set, because a
+     glow read against the lighter of two blacks turns into a smear rather than a
+     bloom. They are declared as whole shadow values so no component ever writes
+     a `theme === 'dark' ? … : …` around one. */
+  --faction-singularity-term-panel: #0b1b12; /* raised box on the chassis */
+  --faction-singularity-term-halo-green: none; /* title bloom */
+  --faction-singularity-term-halo-blue: none; /* points-numeral bloom */
+  --faction-singularity-term-cta-glow: none; /* the lit JOIN key */
+
   /* ══ Ephemerists illuminated-codex palette (the ephemerists slot) ══
      The card contract above rebinds to these. CONSTANTS (gold/rubric/
      lapis/verdigris/ink) keep their role in both themes; the VELLUM
@@ -1322,6 +1340,14 @@
     rgba(96, 165, 250, 0)
   );
   --faction-singularity-term-shadow: 0 16px 42px -24px rgba(0, 0, 0, 0.85), inset 0 0 0 1px rgba(74, 222, 128, 0.12);
+
+  /* ── Singularity task detail, lights out (#1034) ──
+     The panel sinks with the chassis, and the three halos LIGHT — see the light
+     half for why they are `none` there. Values are the design's own. */
+  --faction-singularity-term-panel: #08150d;
+  --faction-singularity-term-halo-green: 0 0 16px rgba(74, 222, 128, 0.28);
+  --faction-singularity-term-halo-blue: 0 0 14px rgba(96, 165, 250, 0.3);
+  --faction-singularity-term-cta-glow: 0 0 18px rgba(74, 222, 128, 0.18);
 
   /* ── UA · sun-bleached practice, after dark (#788, #848) ──
      The mesa at night, not a parchment held up to a black page. Surfaces sink
