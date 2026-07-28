@@ -1,12 +1,18 @@
 """Integration tests for /tasks endpoints."""
+from contextlib import contextmanager
+from typing import Iterator
+
 import pytest
 from httpx import AsyncClient
+from sqlalchemy import event
+from sqlalchemy.engine import Engine
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from game_config import CURRENT_ERA
 from models.account import Account
 from models.character import Character
 from models.character_stats import CharacterStats
+from models.era import Era
 from models.faction import Faction, FactionStatus
 from models.praxis import Praxis, PraxisMember, PraxisStatus, PraxisType
 from models.task import Task, TaskStatus
@@ -2011,3 +2017,226 @@ async def test_list_tasks_in_progress_count_grouped_per_task(
     counts_by_id = {task["id"]: task["in_progress_count"] for task in resp.json()}
     assert counts_by_id[busy_task.id] == 2
     assert counts_by_id[quiet_task.id] == 1
+
+
+# ---------------------------------------------------------------------------
+# #1029 — the author byline on TaskOut, and the roster's level
+# ---------------------------------------------------------------------------
+
+
+@contextmanager
+def _capture_selects() -> Iterator[list[str]]:
+    """Record every SELECT emitted while the block runs.
+
+    The repo has no query-counting helper, so this listens on SQLAlchemy's
+    ``Engine`` class (events registered on the class fire for every engine,
+    including the async engine behind the test connection) and keeps only
+    SELECTs, so transaction bookkeeping (SAVEPOINT/RELEASE) cannot skew a
+    count.
+    """
+    statements: list[str] = []
+
+    def _record(conn, cursor, statement, parameters, context, executemany) -> None:
+        if statement.lstrip().upper().startswith("SELECT"):
+            statements.append(statement)
+
+    event.listen(Engine, "before_cursor_execute", _record)
+    try:
+        yield statements
+    finally:
+        event.remove(Engine, "before_cursor_execute", _record)
+
+
+async def _make_author_with_task(
+    db_session: AsyncSession,
+    era: Era,
+    *,
+    index: int,
+    level: int,
+    faction_slug: str = "ua",
+) -> tuple[Character, Task]:
+    """Create a distinct account + character at ``level`` and one active task by them."""
+    account = Account(email=f"author{index}@example.com")
+    db_session.add(account)
+    await db_session.flush()
+
+    character = Character(
+        account_id=account.id,
+        username=f"author{index}",
+        display_name=f"Author {index}",
+        avatar_url=f"avatars/author{index}.png",
+        faction_slug=faction_slug,
+    )
+    db_session.add(character)
+    await db_session.flush()
+    db_session.add(
+        CharacterStats(
+            character_id=character.id,
+            era_id=era.id,
+            score=0,
+            all_time_score=0,
+            level=level,
+            votes_spent_this_era=0,
+        )
+    )
+
+    task = Task(
+        title=f"Task by author {index}",
+        description="",
+        point_value=10,
+        level_required=0,
+        status=TaskStatus.active,
+        created_by=character.id,
+        primary_faction_slug="ua",
+    )
+    db_session.add(task)
+    await db_session.commit()
+    await db_session.refresh(character)
+    await db_session.refresh(task)
+    return character, task
+
+
+@pytest.mark.asyncio
+async def test_get_task_carries_author_byline(
+    client: AsyncClient,
+    db_session: AsyncSession,
+    era: Era,
+    character: Character,
+    active_task: Task,
+):
+    """GET /tasks/{id} denormalises the proposer: name, portrait, faction, level."""
+    await _set_character_level(db_session, character.id, era.id, 4)
+    character.avatar_url = "avatars/test.png"
+    await db_session.commit()
+
+    resp = await client.get(f"/tasks/{active_task.id}")
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["created_by"] == character.id
+    assert data["created_by_display_name"] == "Test Character"
+    assert data["created_by_avatar_url"] == "avatars/test.png"
+    assert data["created_by_faction_slug"] == "ua"
+    assert data["created_by_level"] == 4
+
+
+@pytest.mark.asyncio
+async def test_task_author_faction_is_the_authors_not_the_tasks(
+    client: AsyncClient,
+    db_session: AsyncSession,
+    character: Character,
+    faction_ua: Faction,
+):
+    """``created_by_faction_slug`` is the author's MEMBER faction.
+
+    A 'ua' member may propose an unaffiliated ('na') task; the byline must
+    read the person, not the task.
+    """
+    task = Task(
+        title="Cross-faction proposal",
+        description="",
+        point_value=10,
+        level_required=0,
+        status=TaskStatus.active,
+        created_by=character.id,
+        primary_faction_slug=UNAFFILIATED_FACTION_SLUG,
+    )
+    db_session.add(task)
+    await db_session.commit()
+    await db_session.refresh(task)
+
+    resp = await client.get(f"/tasks/{task.id}")
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["primary_faction_slug"] == UNAFFILIATED_FACTION_SLUG
+    assert data["created_by_faction_slug"] == "ua"
+
+
+@pytest.mark.asyncio
+async def test_list_tasks_carries_each_rows_own_author(
+    client: AsyncClient,
+    db_session: AsyncSession,
+    era: Era,
+    faction_ua: Faction,
+):
+    """GET /tasks resolves the byline per row, not once for the page."""
+    first_author, first_task = await _make_author_with_task(
+        db_session, era, index=1, level=2
+    )
+    second_author, second_task = await _make_author_with_task(
+        db_session, era, index=2, level=7
+    )
+
+    resp = await client.get("/tasks")
+    assert resp.status_code == 200
+    by_id = {task["id"]: task for task in resp.json()}
+    assert by_id[first_task.id]["created_by_display_name"] == first_author.display_name
+    assert by_id[first_task.id]["created_by_level"] == 2
+    assert by_id[first_task.id]["created_by_avatar_url"] == "avatars/author1.png"
+    assert by_id[second_task.id]["created_by_display_name"] == second_author.display_name
+    assert by_id[second_task.id]["created_by_level"] == 7
+
+
+@pytest.mark.asyncio
+async def test_list_tasks_author_read_is_not_an_n_plus_1(
+    client: AsyncClient,
+    db_session: AsyncSession,
+    era: Era,
+    faction_ua: Faction,
+    active_task: Task,
+):
+    """A page of many tasks costs the same number of queries as a page of one.
+
+    ``TaskOut`` is what the browse LIST returns, so resolving the author per
+    task would make a 50-task page fire 50 author queries (#1029). Every task
+    here has a DIFFERENT author — the worst case for a per-row lookup, and the
+    case a deduped map cannot fake.
+
+    The request is anonymous on purpose: the viewer-relative flags
+    (``can_submit_praxis`` and friends) do run per task, a pre-existing cost
+    this issue does not touch, and including it would drown the signal.
+    """
+    for index in range(5):
+        await _make_author_with_task(db_session, era, index=index, level=index)
+
+    with _capture_selects() as one_row_selects:
+        small = await client.get("/tasks", params={"limit": 1})
+    with _capture_selects() as many_row_selects:
+        large = await client.get("/tasks", params={"limit": 50})
+
+    assert small.status_code == 200 and large.status_code == 200
+    assert len(small.json()) == 1
+    assert len({task["created_by"] for task in large.json()}) >= 5
+
+    assert len(many_row_selects) == len(one_row_selects), (
+        "GET /tasks query count grew with the page size — the author read is "
+        f"an N+1: {len(one_row_selects)} query(s) for 1 task vs "
+        f"{len(many_row_selects)} for {len(large.json())}"
+    )
+    # And the author read specifically is the ONE join promised by
+    # services.task.authors_for_tasks, however many authors the page has.
+    author_selects = [
+        statement
+        for statement in many_row_selects
+        if "FROM character LEFT OUTER JOIN character_stats" in statement
+    ]
+    assert len(author_selects) == 1
+
+
+@pytest.mark.asyncio
+async def test_task_signups_carry_current_era_level(
+    client: AsyncClient,
+    db_session: AsyncSession,
+    active_task: Task,
+    character2: Character,
+):
+    """The in-progress roster row carries the character's current-era level."""
+    await _add_praxis_member(
+        db_session, active_task.id, character2.id, PraxisStatus.in_progress
+    )
+
+    resp = await client.get(f"/tasks/{active_task.id}/signups")
+    assert resp.status_code == 200
+    rows = resp.json()
+    assert len(rows) == 1
+    assert rows[0]["character_id"] == character2.id
+    assert rows[0]["level"] == 5  # character2 fixture is level 5

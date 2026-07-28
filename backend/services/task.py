@@ -1,15 +1,21 @@
+from dataclasses import dataclass
 from typing import Collection, Optional
 
 from fastapi import HTTPException
-from sqlalchemy import func, or_, select
+from sqlalchemy import and_, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from game_config import CURRENT_ERA, EraConfig
 from models.character import Character
+from models.character_stats import CharacterStats
 from models.praxis import Praxis, PraxisMember, PraxisStatus
 from models.task import Task, TaskStatus, TaskType
 from schemas.task import TaskCreate, TaskOut
-from services.era import get_current_era_row, get_or_create_stats
+from services.era import (
+    get_current_era_row,
+    get_current_era_row_safe,
+    get_or_create_stats,
+)
 from services.faction_service import hidden_faction_slugs
 from services.praxis import (
     active_member_task_ids_subquery,
@@ -107,11 +113,90 @@ async def update_task(
     return task
 
 
+@dataclass(frozen=True)
+class TaskAuthor:
+    """The denormalised proposing character behind ``TaskOut.created_by_*``.
+
+    Assembled by :func:`authors_for_tasks` from the author's ``Character`` row
+    plus their ``CharacterStats`` row for the current era. ``level`` is
+    era-scoped (ADR-0042) and is 0 when no stats row exists for this era.
+    """
+
+    display_name: str
+    avatar_url: str
+    faction_slug: Optional[str]
+    level: int
+
+
+#: Author fields for a task whose proposer could not be resolved (the FK makes
+#: this unreachable in practice; it keeps the builder total).
+UNKNOWN_TASK_AUTHOR = TaskAuthor(
+    display_name="", avatar_url="", faction_slug=None, level=0
+)
+
+
+async def authors_for_tasks(
+    tasks: Collection[Task],
+    session: AsyncSession,
+) -> dict[int, TaskAuthor]:
+    """Author rows for a page of tasks, in ONE join — keyed by CHARACTER id.
+
+    ``TaskOut`` carries the proposer's name, portrait, faction and level for
+    the task-detail author row (#1029), and ``TaskOut`` is what the browse
+    LIST returns, so resolving the author per task would make a 50-task page
+    fire 50 author queries. This is the same precompute shape as
+    :func:`in_progress_counts_for_tasks` (#1021): the route calls it once for
+    the whole page and passes each task's entry into :func:`build_task_out`.
+
+    Keyed by ``Task.created_by`` rather than by task id because authors repeat
+    — ``seed.py`` proposes every era task as one character, so a whole page of
+    seeded tasks collapses to a single map entry.
+
+    ``level`` needs ``CharacterStats`` for the current era, which is why this
+    is a helper and not a ``selectinload`` of a ``Task.author`` relationship:
+    an ORM eager-load of ``Character`` alone still could not supply it. On an
+    unseeded database (no era row) every level falls back to 0 rather than
+    raising, so task reads never depend on era seeding.
+    """
+    creator_ids = {task.created_by for task in tasks}
+    if not creator_ids:
+        return {}
+
+    era_row = await get_current_era_row_safe(session)
+    era_id = era_row.id if era_row is not None else None
+
+    stats_join = CharacterStats.character_id == Character.id
+    if era_id is not None:
+        stats_join = and_(stats_join, CharacterStats.era_id == era_id)
+
+    result = await session.execute(
+        select(
+            Character.id,
+            Character.display_name,
+            Character.avatar_url,
+            Character.faction_slug,
+            CharacterStats.level,
+        )
+        .outerjoin(CharacterStats, stats_join)
+        .where(Character.id.in_(creator_ids))
+    )
+    return {
+        character_id: TaskAuthor(
+            display_name=display_name or "",
+            avatar_url=avatar_url or "",
+            faction_slug=faction_slug,
+            level=int(level or 0),
+        )
+        for character_id, display_name, avatar_url, faction_slug, level in result.all()
+    }
+
+
 async def build_task_out(
     task: Task,
     session: AsyncSession,
     *,
     in_progress_count: Optional[int] = None,
+    author: Optional[TaskAuthor] = None,
 ) -> TaskOut:
     """Convert a Task ORM instance to a TaskOut schema.
 
@@ -125,10 +210,19 @@ async def build_task_out(
     every task on the page and pass the per-task value here to avoid an N+1.
     Single-task routes may leave the default, which self-computes via the
     same helper scoped to just this one task.
+
+    ``author`` is the proposing character (#1029) behind the ``created_by_*``
+    fields, and follows the same rule: list routes precompute the page's
+    authors once via :func:`authors_for_tasks`, single-task routes may leave
+    the default and let this builder resolve the one author itself.
     """
     if in_progress_count is None:
         counts = await in_progress_counts_for_tasks([task.id], session)
         in_progress_count = counts.get(task.id, 0)
+
+    if author is None:
+        authors = await authors_for_tasks([task], session)
+        author = authors.get(task.created_by, UNKNOWN_TASK_AUTHOR)
 
     return TaskOut(
         id=task.id,
@@ -144,6 +238,10 @@ async def build_task_out(
         is_task_vision_eligible=task.is_task_vision_eligible,
         created_at=task.created_at,
         in_progress_count=in_progress_count,
+        created_by_display_name=author.display_name,
+        created_by_avatar_url=author.avatar_url,
+        created_by_faction_slug=author.faction_slug,
+        created_by_level=author.level,
     )
 
 
@@ -154,6 +252,7 @@ async def build_task_out_for_viewer(
     era: EraConfig = CURRENT_ERA,
     *,
     in_progress_count: Optional[int] = None,
+    author: Optional[TaskAuthor] = None,
 ) -> TaskOut:
     """Build a :class:`TaskOut` with viewer-relative capability flags.
 
@@ -162,12 +261,15 @@ async def build_task_out_for_viewer(
     (``None`` for anonymous callers). All three flags default to the same
     safe values as :func:`build_task_out` when ``viewer`` is ``None``.
 
-    ``in_progress_count`` is passed straight through to :func:`build_task_out`
-    — see its docstring. List routes should precompute it once per page via
-    :func:`in_progress_counts_for_tasks`; single-task routes may leave it to
+    ``in_progress_count`` and ``author`` are passed straight through to
+    :func:`build_task_out` — see its docstring. List routes should precompute
+    both once per page (via :func:`in_progress_counts_for_tasks` and
+    :func:`authors_for_tasks`); single-task routes may leave them to
     self-compute.
     """
-    base = await build_task_out(task, session, in_progress_count=in_progress_count)
+    base = await build_task_out(
+        task, session, in_progress_count=in_progress_count, author=author
+    )
 
     if viewer is None:
         return base
@@ -191,8 +293,14 @@ async def build_task_out_for_viewer(
 async def list_signups_for_task(
     task_id: int,
     session: AsyncSession,
-) -> list[tuple[PraxisMember, Character, Praxis]]:
+) -> list[tuple[PraxisMember, Character, Praxis, int]]:
     """List in-progress praxis members for a task (characters currently working on it).
+
+    Each row is ``(member, character, praxis, level)`` where ``level`` is the
+    character's CURRENT-era level (``CharacterStats.level``, ADR-0042) for the
+    roster row's "lvl N" (#1029), 0 when they have no stats row for this era.
+    It comes from an outer join in this same query, so the roster stays one
+    query however many characters are on it.
 
     Raises 404 if the task does not exist.
     """
@@ -200,17 +308,26 @@ async def list_signups_for_task(
     if task is None:
         raise HTTPException(status_code=404, detail="Task not found.")
 
+    era_row = await get_current_era_row_safe(session)
+    stats_join = CharacterStats.character_id == Character.id
+    if era_row is not None:
+        stats_join = and_(stats_join, CharacterStats.era_id == era_row.id)
+
     result = await session.execute(
-        select(PraxisMember, Character, Praxis)
+        select(PraxisMember, Character, Praxis, CharacterStats.level)
         .join(Praxis, PraxisMember.praxis_id == Praxis.id)
         .join(Character, PraxisMember.character_id == Character.id)
+        .outerjoin(CharacterStats, stats_join)
         .where(
             Praxis.task_id == task_id,
             Praxis.status.in_([PraxisStatus.in_progress, PraxisStatus.pending]),
         )
         .order_by(PraxisMember.joined_at.asc())
     )
-    return list(result.all())
+    return [
+        (member, character, praxis, int(level or 0))
+        for member, character, praxis, level in result.all()
+    ]
 
 
 async def in_progress_counts_for_tasks(
