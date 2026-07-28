@@ -216,34 +216,35 @@ describe.each(SKINS)('$slug renders through the taskCard manifest surface', (ski
 })
 
 /* -------------------------------------------------------------------------- */
-/* S.N.I.D.E. — the censor strikes out the brief, but never removes it         */
+/* S.N.I.D.E. — the censor is ornament; it never touches authored text         */
 /* -------------------------------------------------------------------------- */
 
-describe('snide redacts two words of the brief without deleting them', () => {
+describe('snide renders the brief whole and slices only the headline', () => {
   const props = { basePoints: TASK.point_value, multiplier: 1, inProgressCount: 0 }
 
-  it('keeps the whole description in the accessibility tree', () => {
-    const { text } = markup(<SnideTaskCard task={TASK} {...props} />)
-    // The strike is `color: transparent` over an ink block, so the word is still
-    // a text node: screen readers announce it, find-in-page finds it, selecting
-    // the paragraph copies it. If a later edit swaps that for `aria-hidden` or
-    // drops the words outright, this is the row that goes red.
-    expect(text).toContain(TASK.description)
+  it('never redacts the task description', () => {
+    // The design struck two words of the brief out as black bars, seeded off the
+    // task id. Owner ruling (#1023): a skin does not get to mutilate authored
+    // text, however well the joke fits. This is the guard against it coming
+    // back — the strike's tell was a `color: transparent` word on an ink block.
+    const { html, text } = markup(<SnideTaskCard task={TASK} {...props} />)
+    expect(text, 'the brief, unedited').toContain(TASK.description)
+    expect(html, 'no struck-out words').not.toContain('color:transparent')
   })
 
-  it('strikes a deterministic pair, seeded off the task id', () => {
-    const { html } = markup(<SnideTaskCard task={TASK} {...props} />)
-    expect(html, 'two struck words').toContain('color:transparent')
-    expect(html.match(/color:transparent/g), 'exactly two, never a whole sentence')
-      .toHaveLength(2)
-    // Same task, same strike — the brief must not flicker between renders.
-    expect(markup(<SnideTaskCard task={TASK} {...props} />).html).toBe(html)
+  it('keeps the cut-up headline as ONE readable string', () => {
+    // The multi-font slice survives the ruling precisely because it RESTYLES
+    // words instead of destroying them: the cuts are spans inside the <h3>, so
+    // the heading's accessible name is still the unbroken title.
+    const long = { ...TASK, title: 'Name the thing everyone is pretending not to notice' }
+    expect(markup(<SnideTaskCard task={long} {...props} />).text).toContain(long.title)
   })
 
-  it('leaves a short brief alone rather than striking most of it', () => {
-    const short = { ...TASK, description: 'Do one small thing.' }
-    const { html } = markup(<SnideTaskCard task={short} {...props} />)
-    expect(html).not.toContain('color:transparent')
+  it('cannot be pushed past its card width by one unbroken word', () => {
+    const runOn = { ...TASK, title: 'Antidisestablishmentarianismandthensome' }
+    const { html, text } = markup(<SnideTaskCard task={runOn} {...props} />)
+    expect(text).toContain(runOn.title)
+    expect(html, 'every cut wraps rather than overflowing').toContain('overflow-wrap:anywhere')
   })
 })
 

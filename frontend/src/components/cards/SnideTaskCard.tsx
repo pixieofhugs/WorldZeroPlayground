@@ -10,11 +10,19 @@ import { useFormFactor } from "../../hooks/useFormFactor";
  *
  * A photocopied clipping pinned to the wall half a degree off true: a near-black
  * header bar carrying the wordmark and a broken acid rule, a headline cut from
- * four different faces word by word, two words of the brief struck out by the
- * censor, the points circled in pink pen, censor rules ruling off each section,
- * and a full-bleed acid CTA. Anton, Archivo Black and Special Elite all appear
- * in the headline — a ransom note mixes faces by definition, and here that is
- * literal rather than decorative.
+ * four different faces word by word, the points circled in pink pen, censor
+ * rules ruling off each section, and a full-bleed acid CTA. Anton, Archivo Black
+ * and Special Elite all appear in the headline — a ransom note mixes faces by
+ * definition, and here that is literal rather than decorative.
+ *
+ * THE CENSOR REDACTS ORNAMENT, NEVER CONTENT. The design also struck two words
+ * of the task's own brief out as black bars, seeded off the task id. Owner
+ * ruling (#1023): a skin does not get to mutilate user-authored text, however
+ * well the joke fits — so the brief renders whole, like every other card's.
+ * What carries the metaphor instead is the pair of things that redact nothing
+ * real: `.snd-censor`, a decorative strip of redaction blocks used as a rule,
+ * and the cut-up headline, which RESTYLES words rather than destroying them.
+ * Do not reintroduce the word-level strike.
  *
  * This replaces the "Ransom Dispatch" (ADR-0055 / ADR-0056). Same reference,
  * rebuilt on the shared v2 information structure: masthead → LEVEL + POINTS hero
@@ -179,49 +187,6 @@ function PenCircle({ size, points }: { size: number; points: number }) {
   );
 }
 
-/**
- * The brief, with two consecutive words struck out by the censor.
- *
- * A REAL CONTENT DECISION, not decoration: this blacks out part of the author's
- * task description on an ordinary browse surface. It is here because the
- * redaction IS the ransom-note metaphor and the brief is line-clamped anyway,
- * but it is the one thing on this card worth an owner's veto.
- *
- * NOTHING IS REMOVED. The struck word stays a real text node inside the
- * paragraph — `color: transparent` over an ink block hides it from the eye and
- * from nothing else. Screen readers announce the full sentence, find-in-page
- * finds it, and selecting the paragraph copies it intact. The alternative
- * (`aria-hidden` on a decorative block plus the word re-exposed somewhere else)
- * would be strictly worse: two sources of truth for one sentence.
- *
- * Which pair goes is seeded off the task's id, so a task always redacts the same
- * words instead of flickering between renders.
- */
-function RedactedBrief({ brief, seed, style }: { brief: string; seed: number; style?: CSSProperties }) {
-  const words = brief.split(/\s+/);
-  // Never strike inside the last four, so a clamped brief cannot end in a bar.
-  const from = words.length > 6 ? seed % (words.length - 4) : -1;
-  return (
-    <p className="card-description" style={{ fontFamily: TYPE, lineHeight: 1.55, color: MUTED, ...style }}>
-      {words.map((word, index) => {
-        const key = `${index}-${word}`;
-        const trailing = index < words.length - 1 ? " " : "";
-        if (from >= 0 && index >= from && index < from + 2) {
-          return (
-            <span key={key}>
-              <span style={{ background: INK, color: "transparent", boxShadow: `0 0 0 2px ${INK}` }}>
-                {word}
-              </span>
-              {trailing}
-            </span>
-          );
-        }
-        return <span key={key}>{word + trailing}</span>;
-      })}
-    </p>
-  );
-}
-
 export default function SnideTaskCard({
   task,
   basePoints,
@@ -343,38 +308,47 @@ export default function SnideTaskCard({
               <PenCircle size={size.stamp} points={basePoints} />
             </div>
 
-            {/* The headline, cut from four sources word by word. It stays ONE
-                heading for assistive tech — the cuts are spans inside it, so the
-                accessible name is the unbroken title. */}
+            {/* The headline, cut from four sources word by word.
+                IT MUST STAY ONE READABLE STRING. The design lays the cuts out as
+                a wrapping FLEX row and spaces them with `gap`, which is a purely
+                visual space: a flex container discards whitespace-only children,
+                so the heading's text content came out as
+                "Namethethingeveryone…" with nothing between the words. Ordinary
+                inline flow instead — the cuts are `inline-block`, separated by
+                REAL space characters, and they still wrap, still sit on a shared
+                baseline and still carry their own grounds. */}
             <h3
               style={{
-                display: "flex",
-                flexWrap: "wrap",
-                alignItems: "baseline",
-                gap: "var(--space-xs) var(--space-sm)",
                 fontSize: size.titleSize,
                 fontWeight: 400,
-                lineHeight: 1.12,
+                lineHeight: 1.35,
                 margin: "0 0 var(--space-md)",
               }}
             >
               {task.title.split(/\s+/).map((word, index) => (
-                <span
-                  key={`${index}-${word}`}
-                  style={{
-                    display: "inline-block",
-                    maxWidth: "100%",
-                    overflowWrap: "anywhere",
-                    ...CUTS[(index + task.id) % CUTS.length],
-                  }}
-                >
-                  {word}
+                <span key={`${index}-${word}`}>
+                  {index > 0 ? " " : ""}
+                  <span
+                    style={{
+                      display: "inline-block",
+                      maxWidth: "100%",
+                      overflowWrap: "anywhere",
+                      ...CUTS[(index + task.id) % CUTS.length],
+                    }}
+                  >
+                    {word}
+                  </span>
                 </span>
               ))}
             </h3>
 
             {task.description && (
-              <RedactedBrief brief={task.description} seed={task.id} style={{ margin: "0 0 var(--space-md)" }} />
+              <p
+                className="card-description"
+                style={{ fontFamily: TYPE, lineHeight: 1.55, color: MUTED, margin: "0 0 var(--space-md)" }}
+              >
+                {task.description}
+              </p>
             )}
 
             <CensorRule style={{ margin: "0 0 var(--space-md)" }} />
