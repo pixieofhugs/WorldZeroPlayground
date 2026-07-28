@@ -1,6 +1,6 @@
 import type { CSSProperties } from "react";
 import { Link } from "react-router-dom";
-import type { TaskOut } from "../../api/tasks";
+import type { CardProps } from "../TaskCard";
 import i18n from "../../i18n";
 import { factionCssVar } from "../../utils/factions";
 
@@ -12,12 +12,6 @@ import { factionCssVar } from "../../utils/factions";
  * This card uses CSS variables for its colors even though it's always dark,
  * because the Singularity CSS vars are identical in both themes.
  */
-
-interface Props {
-  task: TaskOut;
-  displayPoints: number;
-  onSignup?: (id: number) => void;
-}
 
 // Static style objects, hoisted to module scope (#586) -- none of these close
 // over a prop, so re-allocating them on every render bought nothing.
@@ -173,9 +167,9 @@ function SprocketHoles() {
 
 export default function SingularityTaskCard({
   task,
-  displayPoints,
+  basePoints,
   onSignup,
-}: Props) {
+}: CardProps) {
   return (
     <div style={cardShellStyle}>
       {/* Scanline overlay */}
@@ -212,7 +206,7 @@ export default function SingularityTaskCard({
             {i18n.t("feed:taskCard.singularity.pointsLabel")}{" "}
             {/* Points value — a score, so .content-title per #627's re-cut (§4). */}
             <span className="content-title" style={pointsStyle}>
-              {displayPoints}
+              {basePoints}
             </span>
           </div>
           <div>

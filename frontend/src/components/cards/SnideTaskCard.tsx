@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import type { TaskOut } from "../../api/tasks";
+import type { CardProps } from "../TaskCard";
 import i18n from "../../i18n";
 import LevelGem from "../ui/LevelGem";
 import SnideMasthead from "./SnideMasthead";
@@ -10,12 +10,6 @@ import SnideMasthead from "./SnideMasthead";
  * ransom-letter title, pink scrawl, halftone screen. Loudest card in the grid.
  * Visuals only — same prop contract as the other faction cards.
  */
-
-interface Props {
-  task: TaskOut;
-  displayPoints: number;
-  onSignup?: (id: number) => void;
-}
 
 /** Mismatched cut-out letters — bg/colour/face/tilt picked deterministically per char. */
 const RANSOM_STYLES = [
@@ -100,9 +94,9 @@ function Ransom({ text, size = 22 }: { text: string; size?: number }) {
 
 export default function SnideTaskCard({
   task,
-  displayPoints,
+  basePoints,
   onSignup,
-}: Props) {
+}: CardProps) {
   return (
     <div
       style={{
@@ -212,7 +206,7 @@ export default function SnideTaskCard({
             color: "var(--faction-snide-acid)",
           }}
         >
-          {displayPoints}
+          {basePoints}
           <span style={{ fontSize: "var(--text-sm)", marginLeft: "var(--space-xs)" }}>
             {i18n.t("feed:taskCard.snide.pointsUnit")}
           </span>

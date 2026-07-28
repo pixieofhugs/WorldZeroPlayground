@@ -11,7 +11,7 @@ import {
   UA_TEXT,
   uaShade,
 } from "../../../components/cards/uaAtoms";
-import { computeDisplayPoints } from "../../../utils/points";
+import { computeFactionMultiplier } from "../../../utils/points";
 import { factionName, factionDescription } from "../../../utils/factions";
 import type { CharacterOut } from "../../../api/auth";
 import type { FactionDetailState } from "../useFactionDetail";
@@ -232,8 +232,8 @@ export default function UaFactionBody({ state }: { state: FactionDetailState }) 
                 <TaskCard
                   key={task.id}
                   task={task}
-                  displayPoints={computeDisplayPoints(
-                    task.point_value,
+                  basePoints={task.point_value}
+                  multiplier={computeFactionMultiplier(
                     viewerFactionSlug,
                     task.primary_faction_slug,
                     gameFactions,

@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next'
 import type { TasksState } from '../useTasks'
-import MobileTaskCard from './mobileTaskCard'
+import TaskCard from '../../../components/TaskCard'
 import MetaTaskSeal from '../../../components/metaTaskSeal/MetaTaskSeal'
 import FactionSigilRow from '../../../components/ui/FactionSigilRow'
 import { ChipRow, Chip } from '../../../components/ui/ChipRow'
@@ -11,14 +11,22 @@ import { ChipRow, Chip } from '../../../components/ui/ChipRow'
  * level), NOT the desktop sidebar. Consumes the shared `useTasks()` state so a
  * chip tap updates the same filter state that keys the task read, and the
  * rendered set changes. The page chrome is faction-agnostic; each card in the
- * results list picks its own skin from its task's faction slug via the
- * `MobileTaskCard` dispatcher (#565). Mirrors the DefaultTaskDetail mobile idiom
- * (#496–#500).
+ * results list picks its own skin from its task's faction slug (#565). Mirrors
+ * the DefaultTaskDetail mobile idiom (#496–#500).
+ *
+ * The results list renders the SHARED `<TaskCard>` — the one call site
+ * ADR-0056's reversible experiment turns on. Each faction card sizes itself for
+ * the phone via `useFormFactor()`, and mobile inherits the inline signup CTA
+ * (gated on `can_submit_praxis` exactly as desktop is), the in-progress count
+ * and the multiplier badge, none of which the mobile-only cards had. The
+ * `mobileTaskCard` dispatcher and its nine cards stay in the tree, dormant:
+ * reverting is swapping this import and the two props back.
  */
 export default function DefaultTasks({ state }: { state: TasksState }) {
   const { t } = useTranslation('tasks')
   const { t: tc } = useTranslation('common')
   const {
+    user,
     tasks,
     loading,
     error,
@@ -37,7 +45,9 @@ export default function DefaultTasks({ state }: { state: TasksState }) {
     setQuery,
     hasMore,
     loadMore,
-    displayPointsFor,
+    signupMsg,
+    handleSignup,
+    displayMultiplierFor,
   } = state
 
   const isMetatask = taskType === 'metatask'
@@ -106,6 +116,14 @@ export default function DefaultTasks({ state }: { state: TasksState }) {
         ))}
       </ChipRow>
 
+      {/* Signup outcome — the CTA arrived with the shared card (ADR-0056), so
+          the message that answers it has to arrive too. */}
+      {signupMsg && (
+        <p className={`font-body content-text mt-3 border-2 px-3 py-2 ${signupMsg.ok ? 'border-border text-ink' : 'border-red-300 text-red-600'}`}>
+          {signupMsg.msg}
+        </p>
+      )}
+
       {/* Results */}
       <div className="mt-4">
         {loading && tasks.length === 0 ? (
@@ -122,7 +140,13 @@ export default function DefaultTasks({ state }: { state: TasksState }) {
               <MetaTaskSeal metatasks={tasks} />
             ) : (
               tasks.map((task) => (
-                <MobileTaskCard key={task.id} task={task} points={displayPointsFor(task)} />
+                <TaskCard
+                  key={task.id}
+                  task={task}
+                  basePoints={task.point_value}
+                  multiplier={displayMultiplierFor(task)}
+                  onSignup={user && task.can_submit_praxis ? handleSignup : undefined}
+                />
               ))
             )}
             {hasMore && (

@@ -6,7 +6,7 @@ import { listPraxes, createPraxis, type PraxisCardOut } from '../api/praxis'
 import { listTasks, type TaskOut } from '../api/tasks'
 import { getGameConfig, type FactionConfigOut } from '../api/gameConfig'
 import { loginWithGoogle, devLogin } from '../api/auth'
-import { computeDisplayPoints } from '../utils/points'
+import { computeFactionMultiplier } from '../utils/points'
 import { extractError } from '../utils/errors'
 import PraxisCard from '../components/PraxisCard'
 import TaskCard from '../components/TaskCard'
@@ -199,8 +199,8 @@ export default function Home() {
         {newestTask ? (
           <TaskCard
             task={newestTask}
-            displayPoints={computeDisplayPoints(
-              newestTask.point_value,
+            basePoints={newestTask.point_value}
+            multiplier={computeFactionMultiplier(
               user?.character?.faction_slug,
               newestTask.primary_faction_slug,
               factionConfigs,

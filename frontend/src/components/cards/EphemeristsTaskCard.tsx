@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { Trans } from "react-i18next";
-import type { TaskOut } from "../../api/tasks";
+import type { CardProps } from "../TaskCard";
 import i18n from "../../i18n";
 import { EphEyebrow, LapisLastWord, toRoman } from "./ephemeristsAtoms";
 
@@ -13,13 +13,7 @@ import { EphEyebrow, LapisLastWord, toRoman } from "./ephemeristsAtoms";
  * Colors via the --eph-* / --faction-ephemerists-* tokens (theme-aware).
  */
 
-interface Props {
-  task: TaskOut;
-  displayPoints: number;
-  onSignup?: (id: number) => void;
-}
-
-export default function EphemeristsTaskCard({ task, displayPoints, onSignup }: Props) {
+export default function EphemeristsTaskCard({ task, basePoints, onSignup }: CardProps) {
   return (
     <div
       style={{
@@ -161,7 +155,7 @@ export default function EphemeristsTaskCard({ task, displayPoints, onSignup }: P
           {/* Points woven into the grade legend — a counter/legend accent, so it
               stays label-tier per the role vocabulary (§4), not a plain score. */}
           <span style={{ fontFamily: "var(--eph-display)", fontWeight: 700, fontSize: "var(--text-lg)", color: "var(--eph-rubric)" }}>
-            {i18n.t("feed:taskCard.ephemerists.points", { points: displayPoints })}
+            {i18n.t("feed:taskCard.ephemerists.points", { points: basePoints })}
           </span>
         </div>
         <div style={{ fontSize: "var(--text-xs)", fontStyle: "italic", color: "var(--eph-muted)", marginTop: "var(--space-sm)", lineHeight: 1.35 }}>

@@ -21,7 +21,7 @@ import { getFactions, type FactionOut } from '../../api/factions'
 import { getGameConfig, type FactionConfigOut } from '../../api/gameConfig'
 import { extractError } from '../../utils/errors'
 import { useAuth } from '../../auth/AuthContext'
-import { computeDisplayPoints } from '../../utils/points'
+import { computeDisplayPoints, computeFactionMultiplier } from '../../utils/points'
 import { usePagedResource } from '../../hooks/usePagedResource'
 import { useDebouncedValue } from '../../hooks/useDebouncedValue'
 import { useSearchQueryParam } from '../../hooks/useSearchQueryParam'
@@ -79,8 +79,19 @@ export interface TasksState {
   signupMsg: SignupMessage | null
   handleSignup: (id: number) => Promise<void>
 
-  // Derived helper — the modified point value for a task given the viewer's faction.
+  /**
+   * Derived helper — base × the viewer's faction modifier, as one combined
+   * number. Task cards no longer take it (they take base and the factor apart,
+   * ADR-0055); it stays for any surface that wants the single figure.
+   */
   displayPointsFor: (task: TaskOut) => number
+  /**
+   * Derived helper — the RAW own/other task modifier the viewer earns on a
+   * task. Task cards render this beside base points instead of taking the
+   * product (ADR-0055); it is 1.0 for every faction at `era_1` values, so no
+   * card shows a modifier badge today.
+   */
+  displayMultiplierFor: (task: TaskOut) => number
 }
 
 export function useTasks(): TasksState {
@@ -157,6 +168,13 @@ export function useTasks(): TasksState {
       factionConfigs,
     )
 
+  const displayMultiplierFor = (task: TaskOut): number =>
+    computeFactionMultiplier(
+      user?.character?.faction_slug,
+      task.primary_faction_slug,
+      factionConfigs,
+    )
+
   return {
     user,
 
@@ -187,5 +205,6 @@ export function useTasks(): TasksState {
     handleSignup,
 
     displayPointsFor,
+    displayMultiplierFor,
   }
 }

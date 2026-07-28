@@ -280,7 +280,9 @@ const taskArchetypes = {
 describe("task-card content-slot invariant", () => {
   for (const [slug, Card] of Object.entries(taskArchetypes)) {
     it(`${slug} renders title, task link, and points`, () => {
-      const { html, text } = markup(<Card task={TASK} displayPoints={4242} />);
+      const { html, text } = markup(
+        <Card task={TASK} basePoints={4242} multiplier={1} inProgressCount={0} />,
+      );
       expect(text, "title slot").toContain("Photosynthesis");
       expect(html, "task-link slot").toContain('href="/tasks/7"');
       expect(html, "points slot").toContain("4242");

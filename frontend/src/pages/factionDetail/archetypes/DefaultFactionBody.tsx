@@ -4,7 +4,7 @@ import TaskCard from "../../../components/TaskCard";
 import PraxisCard from "../../../components/PraxisCard";
 import CharacterBadge from "../../../components/CharacterBadge";
 import { factionCssVar } from "../../../utils/factions";
-import { computeDisplayPoints } from "../../../utils/points";
+import { computeFactionMultiplier } from "../../../utils/points";
 import type { FactionDetailState } from "../useFactionDetail";
 
 /** Shared flex-wrap card grid — varied card sizes are intentional, not a CSS grid. */
@@ -80,8 +80,8 @@ export default function DefaultFactionBody({
               <TaskCard
                 key={task.id}
                 task={task}
-                displayPoints={computeDisplayPoints(
-                  task.point_value,
+                basePoints={task.point_value}
+                multiplier={computeFactionMultiplier(
                   viewerFactionSlug,
                   task.primary_faction_slug,
                   gameFactions,

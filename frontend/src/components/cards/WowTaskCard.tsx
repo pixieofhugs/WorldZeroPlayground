@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import type { TaskOut } from "../../api/tasks";
+import type { CardProps } from "../TaskCard";
 import i18n from "../../i18n";
 import LevelGem from "../ui/LevelGem";
 import { WowSigil } from "./WowSigil";
@@ -39,12 +39,6 @@ import { WowSigil } from "./WowSigil";
  * Both themes come from the `[data-theme="dark"]` cascade — the rod tarnishes,
  * the parchment darkens, the struck-metal seal does not repaint.
  */
-
-interface Props {
-  task: TaskOut;
-  displayPoints: number;
-  onSignup?: (id: number) => void;
-}
 
 /** The gold/plum checker band that heads every decree. 11px per square. */
 const CHECKER =
@@ -90,7 +84,7 @@ function DecreeRod() {
   );
 }
 
-export default function WowTaskCard({ task, displayPoints, onSignup }: Props) {
+export default function WowTaskCard({ task, basePoints, onSignup }: CardProps) {
   return (
     <div
       style={{
@@ -169,7 +163,7 @@ export default function WowTaskCard({ task, displayPoints, onSignup }: Props) {
                   color: "var(--faction-wow-stamp-total)",
                 }}
               >
-                {displayPoints}
+                {basePoints}
               </div>
               <div
                 className="eyebrow"

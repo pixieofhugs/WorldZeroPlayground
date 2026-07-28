@@ -8,17 +8,50 @@ import { pickVariant } from '../utils/factionDispatch'
 import { surfaceMap } from '../factions'
 import type { } from 'react'
 
+/**
+ * The contract every faction task-card skin is built against (ADR-0055).
+ *
+ * Points arrive UNMULTIPLIED, with the viewer's faction modifier alongside,
+ * rather than as the pre-multiplied product the pre-v2 `displayPoints` prop
+ * carried. A card renders `basePoints`, and renders a `×multiplier` badge only
+ * when `isNeutralMultiplier(multiplier)` is false — which is never at `era_1`
+ * values, and automatic the day an era ships a non-1.0 modifier.
+ */
 export interface CardProps {
   task: TaskOut
-  displayPoints: number
+  /** `task.point_value` — the unmodified value, never `base × multiplier`. */
+  basePoints: number
+  /** Raw own/other task modifier for the viewer. 1.0 → no badge. */
+  multiplier: number
+  /** Characters actively working this task (#1021). 0 → no in-progress line. */
+  inProgressCount: number
   onSignup?: (id: number) => void
 }
+
+/**
+ * What the dispatcher itself accepts. The two derived props are optional here
+ * and required on {@link CardProps}: a surface with no viewer-faction context
+ * (a character profile's task list) has no multiplier to pass, and
+ * `inProgressCount` is a plain read off the task. Defaulting once here beats
+ * spelling both out at every call site — and keeps the skin contract total.
+ */
+export type TaskCardProps =
+  Omit<CardProps, 'multiplier' | 'inProgressCount'>
+  & Partial<Pick<CardProps, 'multiplier' | 'inProgressCount'>>
 
 // `na` / unaffiliated + any faction without a bespoke card → the spectrum
 // default skin (#418). No longer borrows UA's costume.
 export const DEFAULT_CARD = DefaultTaskCard
 
-export default function TaskCard({ task, displayPoints, onSignup }: CardProps) {
+export default function TaskCard({
+  task,
+  basePoints,
+  multiplier = 1,
+  // `in_progress_count` is optional on TaskOut so pre-#1021 fixtures stay
+  // valid; a live backend always sends it (int, default 0).
+  inProgressCount = task.in_progress_count ?? 0,
+  onSignup,
+}: TaskCardProps) {
   const { user } = useAuth()
   const { adminMode } = useAdminMode()
   const showAdminControls = user?.is_admin && adminMode
@@ -32,7 +65,13 @@ export default function TaskCard({ task, displayPoints, onSignup }: CardProps) {
   const isMetatask = task.task_type === 'metatask'
   return (
     <div style={{ position: 'relative' }}>
-      <Card task={task} displayPoints={displayPoints} onSignup={onSignup} />
+      <Card
+        task={task}
+        basePoints={basePoints}
+        multiplier={multiplier}
+        inProgressCount={inProgressCount}
+        onSignup={onSignup}
+      />
       {isMetatask && (
         <div
           style={{
