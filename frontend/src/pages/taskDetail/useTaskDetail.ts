@@ -231,6 +231,17 @@ export function useTaskDetail(idParam: string | undefined): TaskDetailState {
       setIsInProgress(false);
       setInProgressPraxisId(null);
       setSubmissions((prev) => prev.filter((s) => s.id !== targetPraxisId));
+      // `canSignUp` gates on `task.can_submit_praxis`, which the SERVER computes
+      // and flips to false once you are on the task. Clearing local state alone
+      // leaves that stale `false` in place, so the sign-up button stayed hidden
+      // until a manual reload. Re-read the task — it also refreshes
+      // `in_progress_count`, which just went down by one.
+      try {
+        setTask((await getTask(task.id)) as TaskOut);
+      } catch {
+        // The drop itself succeeded; a failed re-read is not worth an error
+        // banner. The stale flag clears on the next navigation.
+      }
     } catch (err) {
       setSignupError(extractError(err, "Could not drop this task."));
     }
