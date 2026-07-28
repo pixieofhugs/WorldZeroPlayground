@@ -211,6 +211,13 @@
   --faction-default-border: rgba(0, 0, 0, 0.12);
   --faction-default-rainbow: linear-gradient(90deg, #c1272d 0%, #c2541f 17%, #ca8a04 33%, #16a34a 50%, #1d6e72 67%, #2563eb 83%, #be185d 100%);
   --faction-default-ring: conic-gradient(#c1272d 0 51deg, #c2541f 0 103deg, #ca8a04 0 154deg, #16a34a 0 206deg, #1d6e72 0 257deg, #2563eb 0 309deg, #be185d 0 360deg);
+  /* The same spectrum cut to TILE (#1023). Its last stop is its first, so a
+     surface that scrolls its background-position loops without a seam — which
+     the bar ramp above cannot do: red at 0% meets magenta at 100% and shows a
+     hard edge every cycle. Same argument as the two shorter ramps below; the
+     spectrum comes in ramps cut for their geometry. Only Albescent's drifting
+     card edge reads it today. */
+  --faction-default-rainbow-loop: linear-gradient(90deg, #c1272d 0%, #c2541f 14%, #ca8a04 28%, #16a34a 43%, #1d6e72 57%, #2563eb 72%, #be185d 86%, #c1272d 100%);
   --faction-default-card-bg: #fffdf9;
   --faction-default-card-text: #1a1209;
   --faction-default-card-accent: #1a1209;
@@ -583,6 +590,46 @@
   --faction-coven-vote-on: #d63f86;
   --faction-coven-vote-off: #a76389;
 
+  /* ══ Coven — THE CANDLELIT SPELL SLIP (task card v2, #1023) ══
+     The v2 task card retires the lo-fi `coven.exe` window above; a slip of
+     pink-to-lavender paper under a gold twinkle field, with the points held in
+     a glowing arcane sigil. The `-win-*` family stays declared because other
+     surfaces still read it — a card metaphor swap is not a licence to delete a
+     token another archetype paints with.
+
+     THREE VALUES ARE WALKED DOWN FROM THE DESIGN, all for the same reason: the
+     card ground is a GRADIENT, so an ink owes AA against its darkest stop
+     (#fbc4dd, not the near-white the design annotated against).
+       • soft   #b8517f → #973660  (3.11:1 → 4.66:1) — brief + in-progress copy
+       • label  #b06a92 → #83466a  (2.64:1 → 4.61:1) — the small caps
+       • the CTA band's two stops deepen so its white clears both ends
+         (#ec4f92/#c9327a gave 3.44:1 at the top; #d13a80/#b02a69 gives 4.54:1). */
+  --faction-coven-slip-from: #fdd9e8; /* gradient 0% */
+  --faction-coven-slip-mid: #fbc4dd; /* 36% — the darkest stop an ink meets */
+  --faction-coven-slip-lav: #e6dbf7; /* 74% */
+  --faction-coven-slip-vio: #e3d6f6; /* 100% */
+  --faction-coven-slip-border: #f4a9cc;
+  --faction-coven-slip-ink: #8f2557; /* title + level numeral */
+  --faction-coven-slip-deep: #c9327a; /* points numeral, braid strands */
+  --faction-coven-slip-pk: #ec4f92; /* sigil ring, heart, aura — ornament */
+  --faction-coven-slip-soft: #973660; /* brief + in-progress ink */
+  --faction-coven-slip-label: #83466a; /* small-caps captions */
+  --faction-coven-slip-gold: #f4c430; /* twinkles, braid bead, sigil ticks */
+  /* The sigil's two washes, declared as GRADIENTS rather than as a colour plus
+     an opacity the component tunes: the design's light and dark halves ramp at
+     different strengths, and an alpha chosen in TSX is a `dark ? a : b` in
+     numeric clothing. `-halo` is the pink bloom around the disc; `-core` is the
+     candle behind the numeral — it brightens on the light slip and DARKENS on
+     the dark one, staying the numeral's ground either way. */
+  --faction-coven-slip-sigil-halo: radial-gradient(circle, rgba(236, 79, 146, 0.38) 0%, rgba(236, 79, 146, 0.14) 55%, rgba(236, 79, 146, 0) 100%);
+  --faction-coven-slip-sigil-ground: #ffffff;
+  --faction-coven-slip-sigil-core: radial-gradient(circle, color-mix(in srgb, var(--faction-coven-slip-sigil-ground) 98%, transparent) 0%, color-mix(in srgb, var(--faction-coven-slip-sigil-ground) 70%, transparent) 62%, transparent 100%);
+  --faction-coven-slip-cta-from: #d13a80;
+  --faction-coven-slip-cta-to: #b02a69;
+  --faction-coven-slip-cta-ink: #ffffff;
+  --faction-coven-slip-glow: rgba(236, 79, 146, 0.3);
+  --faction-coven-slip-shadow: 0 14px 32px -14px rgba(236, 79, 146, 0.45);
+
   /* WOW — cream/gold/plum chronicle frame (the chronicle is WOW's, ADR-0050) */
   --faction-wow-chronicle-bg: var(--faction-wow-card-bg); /* cream parchment */
   --faction-wow-chronicle-gold: #c8a02a; /* frame + rules; theme-invariant */
@@ -722,6 +769,38 @@
   --faction-ephemerists-vote-core-off: #556374; /* unreached star core */
   --faction-ephemerists-vote-spark: #fff4cf; /* rank-5 corner sparkles */
 
+  /* ══ Ephemerists — THE VALLEY PLATE (task card v2, #1023) ══
+     Deco × Egypt: the deco-space card carried into a field journal out of the
+     Valley. A papyrus plate under a cavetto-cornice masthead holding a winged
+     sun disc between incised glyph registers; the points ride a stepped octagon
+     medallion. This is a full metaphor swap away from THE DISCORDANT MAP, whose
+     `--eph-*` illuminated-codex family stays declared — every other Ephemerists
+     surface still paints with it.
+
+     ONE VALUE IS WALKED DOWN. `-brass` is a FRAME AND RULE colour, never an ink:
+     the design's #9A7A2E measures 2.97:1 on the plate, which is fine for a
+     hairline and wrong for the "Level" caption the design sets in it. That
+     caption takes `-caption` instead (4.75:1, same hue). Same shape as WOW's
+     chronicle gold, which is likewise never painted as text. */
+  --faction-ephemerists-plate-bg: #eadcb6; /* papyrus */
+  --faction-ephemerists-plate-ink: #2a2418;
+  --faction-ephemerists-plate-muted: #6b5f45; /* brief + in-progress */
+  --faction-ephemerists-plate-caption: #765a19; /* small-caps labels */
+  --faction-ephemerists-plate-brass: #9a7a2e; /* rules, borders — never an ink */
+  --faction-ephemerists-plate-brass-light: #c39b3d;
+  --faction-ephemerists-plate-gold: #e3c56a; /* glyphs + the winged disc */
+  --faction-ephemerists-plate-band: #1e2233; /* the cornice masthead */
+  --faction-ephemerists-plate-band-ink: #efe4c4;
+  --faction-ephemerists-plate-disc: #f6eed6; /* the medallion's field */
+  --faction-ephemerists-plate-ochre: #a6432b; /* the fifth tally stroke */
+  --faction-ephemerists-plate-cta-bg: #1e2233;
+  --faction-ephemerists-plate-cta-ink: #e9d79b;
+  /* The gold wash behind the cartouche and the ratio chip. A gradient token
+     rather than a hex + an alpha the component picks: the dark plate takes no
+     wash at all, and "no wash" is not an opacity a TSX ternary should decide. */
+  --faction-ephemerists-plate-wash: linear-gradient(180deg, rgba(227, 197, 106, 0.24), transparent);
+  --faction-ephemerists-plate-shadow: 0 18px 44px -26px rgba(42, 32, 16, 0.45);
+
   /* ══ Everymen — the rainbow's missing red (union/WW2 poster) ══
      Constants (cream/gold/ink) keep their role in both themes; the paper
      surface + its text FLIP in dark; accent red stays vivid; field is the
@@ -759,6 +838,39 @@
   --everymen-stamp-ink: #a3402f; /* typewriter row labels */
   --everymen-stamp-numeral: #7a1f18; /* the filled-in figures */
   --everymen-stamp-mult: #a9741a; /* gold — the multiplier figure only */
+
+  /* ══ Everymen — THE HELP WANTED BILL (task card v2, #1023) ══
+     A WPA union broadsheet: a cog masthead over a sunburst wash, a typewritten
+     dispatch, a rubber-stamp points seal and a full-bleed report-for-duty bar.
+
+     THIS BLOCK IS DELIBERATELY SHORT. The design's whole TOKENS object turned
+     out to BE the `--everymen-*` family already in this file — paper, paperDeep,
+     cream, muted, red, gold, goldDeep and olive match value-for-value in both
+     themes, and its "ink" role is `--everymen-paper-text` (which flips) rather
+     than `--everymen-ink` (which does not). Re-declaring those under a `-bill-`
+     name would have been a second place for one colour to live. What follows is
+     only the roles the family has no home for.
+
+     The masthead is theme-INVARIANT red-on-cream, which is a deliberate
+     divergence from `--everymen-masthead-text`: that token flips to ink in dark
+     because the dark bar is the lifted `#e2433f`, where cream fails. This bar
+     keeps the light red in both themes (cream on it measures 4.95:1 / 4.98:1),
+     so a bill printed at night is the same bill. */
+  --faction-everymen-bill-mast: #c1272d;
+  --faction-everymen-bill-mast-ink: #f4ecd6;
+  --faction-everymen-bill-cta-bg: #221a12;
+  --faction-everymen-bill-cta-ink: #f4ecd6;
+  /* The modifier badge's ink. The design sets it in its goldDeep, which pays
+     3.11:1 on the light paper; walked down the same hue to 4.66:1. In dark
+     `--everymen-gold-deep` already clears (5.14:1), so only light moves. */
+  --faction-everymen-bill-mult-ink: #855a12;
+  /* The three washes behind the sheet: poster rays from the masthead, plus a
+     gold and an olive corner glow. Ornament alphas, so they live here rather
+     than as opacity numbers in the card. */
+  --faction-everymen-bill-ray: rgba(34, 26, 18, 0.05);
+  --faction-everymen-bill-glow-gold: rgba(217, 154, 43, 0.14);
+  --faction-everymen-bill-glow-olive: rgba(91, 98, 56, 0.1);
+  --faction-everymen-bill-shadow: 0 12px 32px -16px rgba(34, 26, 18, 0.5);
 
   /* ── Gearworks vote widget (#821) — reached gears heat a cold→ember ramp with
      pale hubs; unreached gears are edge-only outlines; rank 5 throws sparks. The
@@ -1090,6 +1202,7 @@
   --faction-default-border: rgba(255, 255, 255, 0.12);
   --faction-default-rainbow: linear-gradient(90deg, #e2433f 0%, #e07a3a 17%, #e6b94f 33%, #4ade80 50%, #3aa0a4 67%, #60a5fa 83%, #f472b6 100%);
   --faction-default-ring: conic-gradient(#e2433f 0 51deg, #e07a3a 0 103deg, #e6b94f 0 154deg, #4ade80 0 206deg, #3aa0a4 0 257deg, #60a5fa 0 309deg, #f472b6 0 360deg);
+  --faction-default-rainbow-loop: linear-gradient(90deg, #e2433f 0%, #e07a3a 14%, #e6b94f 28%, #4ade80 43%, #3aa0a4 57%, #60a5fa 72%, #f472b6 86%, #e2433f 100%);
   --faction-default-card-bg: #1c1b24;
   --faction-default-card-text: #f0e6d0;
   --faction-default-card-accent: #f0e6d0;
@@ -1141,6 +1254,30 @@
   --eph-frame: rgba(58, 160, 164, 0.35);
   --eph-stamp-bg: #181208;
 
+  /* ══ Ephemerists — the Valley plate (dark, #1023) ══
+     Read off the design's own dark half. Two inversions worth naming, because
+     neither is what "darken the light values" would produce: the CTA bar swaps
+     ends (a brass BAR carrying dark ink, where light has dark bar / gold ink),
+     and the cartouche's gold wash disappears entirely rather than dimming — on
+     a night plate the wash reads as a smudge. The brass lifts far enough that
+     it clears AA on the plate here (7.22:1), but it stays a rule colour on both
+     sides: one token, one role. */
+  --faction-ephemerists-plate-bg: #171a26;
+  --faction-ephemerists-plate-ink: #f0e6c8;
+  --faction-ephemerists-plate-muted: #a2977a;
+  --faction-ephemerists-plate-caption: #c9a24b;
+  --faction-ephemerists-plate-brass: #c9a24b;
+  --faction-ephemerists-plate-brass-light: #e6c877;
+  --faction-ephemerists-plate-gold: #f2d98a;
+  --faction-ephemerists-plate-band: #0a0c15;
+  --faction-ephemerists-plate-band-ink: #f2d98a;
+  --faction-ephemerists-plate-disc: #12151f;
+  --faction-ephemerists-plate-ochre: #d9744c;
+  --faction-ephemerists-plate-cta-bg: #c9a24b;
+  --faction-ephemerists-plate-cta-ink: #12151f;
+  --faction-ephemerists-plate-wash: none;
+  --faction-ephemerists-plate-shadow: 0 20px 50px -26px rgba(0, 0, 0, 0.8);
+
   /* ── Warriors of Whimsy collage scrap layers (dark) ── */
   --faction-coven-scrap-deep: #091209;
   --faction-coven-scrap-mid: #0d1a10;
@@ -1182,6 +1319,36 @@
   --faction-coven-stamp-chip-text: #3a1228;
   --faction-coven-vote-on: #f472b6;
   --faction-coven-vote-off: #c78aa6;
+
+  /* ══ Coven — the candlelit spell slip (dark, #1023) ══
+     Read off the design's own dark half, not derived by inverting the light
+     one. Two calls the design's annotation does not make:
+       • the CTA ink flips to INK. Its dark band is two LIGHT pinks
+         (#f472b6 → #f9a8d4) and white on them is 2.65:1 — the same call
+         --faction-coven-on-accent already makes for this faction.
+       • the aura darkens instead of brightening: it is a glow BEHIND the disc,
+         so on a night slip it reads as depth, not as a white plate. */
+  --faction-coven-slip-from: #4a2038;
+  --faction-coven-slip-mid: #5e2a46;
+  --faction-coven-slip-lav: #2e2145;
+  --faction-coven-slip-vio: #2b1c42;
+  --faction-coven-slip-border: #7a3358;
+  --faction-coven-slip-ink: #fbcfe4;
+  --faction-coven-slip-deep: #f9a8d4;
+  --faction-coven-slip-pk: #f472b6;
+  --faction-coven-slip-soft: #e58cb6;
+  /* Lifted from the design's #c78aa6, which pays 4.02:1 on the ramp's LIGHTEST
+     dark stop (#5e2a46). Same hue, one step up. */
+  --faction-coven-slip-label: #d29bb4;
+  --faction-coven-slip-gold: #f4d472;
+  --faction-coven-slip-sigil-halo: radial-gradient(circle, rgba(244, 114, 182, 0.55) 0%, rgba(244, 114, 182, 0.2) 55%, rgba(244, 114, 182, 0) 100%);
+  --faction-coven-slip-sigil-ground: #1a0713;
+  --faction-coven-slip-sigil-core: radial-gradient(circle, color-mix(in srgb, var(--faction-coven-slip-sigil-ground) 90%, transparent) 0%, color-mix(in srgb, var(--faction-coven-slip-sigil-ground) 60%, transparent) 62%, transparent 100%);
+  --faction-coven-slip-cta-from: #f472b6;
+  --faction-coven-slip-cta-to: #f9a8d4;
+  --faction-coven-slip-cta-ink: #14110b;
+  --faction-coven-slip-glow: rgba(244, 114, 182, 0.42);
+  --faction-coven-slip-shadow: 0 16px 38px -14px rgba(0, 0, 0, 0.7);
 
   /* WOW — cream/gold/plum chronicle (dark). The gold #c8a02a does NOT lift; the
      plum is what carries the flip (#7a4a9e → #c79be0). */
@@ -1263,6 +1430,17 @@
   --everymen-stamp-ink: #d67b6a;
   --everymen-stamp-numeral: #ece1c6;
   --everymen-stamp-mult: #e6b34a;
+  /* ── The Help Wanted bill (dark, #1023) ── The masthead does NOT flip: see the
+     light block for why a bill printed at night is the same bill. The CTA bar
+     deepens to the design's near-black red-brown, and the modifier badge hands
+     back to the family's own gold, which already clears on the dark paper. */
+  --faction-everymen-bill-cta-bg: #200c0a;
+  --faction-everymen-bill-cta-ink: #f3e7ce;
+  --faction-everymen-bill-mult-ink: var(--everymen-gold-deep);
+  --faction-everymen-bill-ray: rgba(243, 231, 206, 0.045);
+  --faction-everymen-bill-glow-gold: rgba(231, 185, 79, 0.1);
+  --faction-everymen-bill-glow-olive: rgba(138, 149, 90, 0.08);
+  --faction-everymen-bill-shadow: 0 12px 32px -14px rgba(0, 0, 0, 0.8);
   /* Gearworks: cooler edge for cold gears, a brighter single-halo rank-5 glow on
      the dark paper (the light double-drop-shadow would muddy against it). */
   --faction-everymen-vote-edge: #8a7856;
@@ -1433,6 +1611,14 @@
      Ephemerists' private flourish token: a faction reading another faction's
      private token is how a later Ephemerists retype would silently restyle UA. */
   --font-faction-serif: "Cormorant Garamond", Georgia, serif;
+  /* Faces the v2 task cards introduce (#1023). Each is added to the index.html
+     loader in the same commit — a family named here but not requested there
+     renders as its generic fallback and NO check we run can see it (#839), so
+     the two edits are one edit. */
+  --font-faction-rounded: "Quicksand", "Trebuchet MS", sans-serif; /* Coven UI */
+  --font-faction-witch: "Grenze Gotisch", "Cormorant Garamond", Georgia, serif; /* Coven display */
+  --font-faction-deco: "Poiret One", "Cinzel", serif; /* Ephemerists display */
+  --font-faction-spectral: "Spectral", "EB Garamond", Georgia, serif; /* Ephemerists reading */
 
   /* Shared faction-page body grid — main column + right rail; collapses to one
      column on narrow viewports (rule below). Every faction skin reuses this. */
@@ -2182,6 +2368,59 @@
   .ev-gear-spark { animation: ev-gear-spark var(--ev-spark-dur, 1s) ease-out infinite; animation-delay: var(--ev-spark-delay, 0s); }
 }
 
+/* Ephemerists — the Valley plate's incised glyph registers (#1023). Two rows of
+   signs (Egypt, Greece, the middle ages, 1925) surface and recede on a long,
+   staggered cycle behind the masthead. Per-glyph strength and phase arrive as
+   inline custom properties, so no two breathe together.
+
+   Note the inversion against the design, which wrote `opacity:0` as the base and
+   stilled the animation under reduced motion — that leaves every glyph
+   INVISIBLE for a reduced-motion reader. Here the base state IS the stilled
+   state (glyphs present at their own strength) and the motion is added under
+   `no-preference`, which is both the repo's convention and the only ordering
+   that degrades correctly. */
+@keyframes epg-breathe {
+  0%, 100% { opacity: 0; }
+  22%, 72% { opacity: var(--epg-op, 0.3); }
+}
+.epg-glyph { opacity: var(--epg-op, 0.3); }
+@media (prefers-reduced-motion: no-preference) {
+  .epg-glyph {
+    opacity: 0;
+    animation: epg-breathe 19s ease-in-out infinite;
+    animation-delay: var(--epg-delay, 0s);
+  }
+}
+
+/* Coven — the spell slip's braid (#1023): a slender celtic thread with a gold
+   bead at each crossing, tiled horizontally. It lives here rather than in the
+   card because a data-URI SVG is a SEPARATE DOCUMENT — `var(--…)` inside one
+   never resolves, so the only way to keep the two pigments out of the TSX is to
+   let index.css own the whole mark, dark override included. */
+.cvn-braid {
+  display: block;
+  height: 12px;
+  background-repeat: repeat-x;
+  background-position: left center;
+  opacity: 0.85;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='12' viewBox='0 0 40 12'%3E%3Cg fill='none' stroke='%23c9327a' stroke-width='1.2' stroke-linecap='round'%3E%3Cpath d='M0 3 C10 3, 10 9, 20 9 C24 9, 26 8.2, 28 7'/%3E%3Cpath d='M32 5 C34 3.8, 36 3, 40 3'/%3E%3Cpath d='M0 9 C4 9, 6 8.2, 8 7'/%3E%3Cpath d='M12 5 C14 3.8, 16 3, 20 3 C30 3, 30 9, 40 9'/%3E%3C/g%3E%3Ccircle cx='20' cy='6' r='1.2' fill='%23f4c430' opacity='0.9'/%3E%3C/svg%3E");
+}
+[data-theme="dark"] .cvn-braid {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='12' viewBox='0 0 40 12'%3E%3Cg fill='none' stroke='%23f9a8d4' stroke-width='1.2' stroke-linecap='round'%3E%3Cpath d='M0 3 C10 3, 10 9, 20 9 C24 9, 26 8.2, 28 7'/%3E%3Cpath d='M32 5 C34 3.8, 36 3, 40 3'/%3E%3Cpath d='M0 9 C4 9, 6 8.2, 8 7'/%3E%3Cpath d='M12 5 C14 3.8, 16 3, 20 3 C30 3, 30 9, 40 9'/%3E%3C/g%3E%3Ccircle cx='20' cy='6' r='1.2' fill='%23f4d472' opacity='0.9'/%3E%3C/svg%3E");
+}
+
+/* Coven — the spell slip's pentagram watermark turns, once every two minutes
+   (#1023). The design injected this keyframe from the component; #911 retired
+   that whole shape repo-wide, so it lives here and the card carries only the
+   class. Motion is opt-in under `no-preference`, the repo's inverted form of
+   the design's `reduce → none`: stilled, the watermark is simply a static
+   pentagram, which is what it is at any single frame anyway. */
+@keyframes cvn-wheel { to { transform: rotate(360deg); } }
+.cvn-wheel { transform-origin: 50% 50%; }
+@media (prefers-reduced-motion: no-preference) {
+  .cvn-wheel { animation: cvn-wheel 120s linear infinite; }
+}
+
 /* Albescent — the secret-society tell (#821, ADR-0048): the na spectrum card
    with a slow rainbow drift washed over the whole sheet. A skin-fallthrough
    faction, so this is a flourish LAYERED over Default, never a repaint. */
@@ -2232,6 +2471,88 @@
 [data-theme="dark"] .alb-spark { color: #f2cc72; }
 @media (prefers-reduced-motion: no-preference) {
   .alb-spark { opacity: 0; animation: alb-spark 4.5s ease-in-out infinite; }
+}
+
+/* Albescent — the TASK CARD's tell (#1023, ADR-0048). The second surface to
+   unfreeze, and built to the same rule as the first: the exact spectrum sheet an
+   unaffiliated player sees, plus a flourish that reveals the society to someone
+   already looking. Two of them here — the card's rainbow edge comes ALIVE and
+   drifts, and an aurora blooms and breathes under the vellum. Neither repaints
+   anything: strip both classes and the card is `DefaultTaskCard`, byte for byte.
+
+   Both are drawn as OVERLAYS because the card they dress is a component, not
+   markup this file can reach into. Two consequences, both deliberate:
+
+   • The edge is a masked ring rather than a border — `mask … exclude` punches
+     the middle out of a 3px inset, so only the frame paints. It lands exactly on
+     Default's own static rainbow border, so the effect reads as that border
+     moving. Its radius must track Default's (14px); if that card's corner
+     changes, this follows.
+   • The aurora BLENDS rather than sits behind. `mix-blend-mode: multiply` on the
+     light sheet and `screen` on the dark one is what keeps ink legible through
+     an overlay — the design put the bloom UNDER the copy at `normal`, which is
+     not a position an overlay can take. Same call `.alb-rainbow` already makes. */
+@keyframes alb-task-edge { from { background-position: 0% 50%; } to { background-position: 300% 50%; } }
+@keyframes alb-task-drift {
+  0%, 100% { transform: translate3d(-6%, -4%, 0) scale(1.12) rotate(0deg); }
+  50% { transform: translate3d(6%, 5%, 0) scale(1.24) rotate(8deg); }
+}
+.alb-task-edge,
+.alb-task-aurora {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  border-radius: 14px;
+}
+.alb-task-edge {
+  padding: 3px;
+  background-image: var(--faction-default-rainbow-loop);
+  background-size: 300% 100%;
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask:
+    linear-gradient(#000 0 0) content-box exclude,
+    linear-gradient(#000 0 0);
+}
+.alb-task-aurora {
+  overflow: hidden;
+}
+.alb-task-aurora::before {
+  content: "";
+  position: absolute;
+  inset: 22%;
+  filter: blur(52px) saturate(0.62);
+  mix-blend-mode: multiply;
+  opacity: 0.34;
+  transform: translate3d(-6%, -4%, 0) scale(1.12);
+  background-image:
+    radial-gradient(62% 78% at 8% 16%, #c1272d, transparent 100%),
+    radial-gradient(58% 72% at 34% 4%, #c2541f, transparent 100%),
+    radial-gradient(60% 74% at 56% 18%, #ca8a04, transparent 100%),
+    radial-gradient(64% 78% at 84% 12%, #16a34a, transparent 100%),
+    radial-gradient(66% 80% at 98% 62%, #2563eb, transparent 100%),
+    radial-gradient(64% 78% at 62% 96%, #be185d, transparent 100%),
+    radial-gradient(60% 74% at 22% 92%, #1d6e72, transparent 100%);
+}
+[data-theme="dark"] .alb-task-aurora::before {
+  filter: blur(42px) saturate(0.95);
+  mix-blend-mode: screen;
+  opacity: 0.3;
+  background-image:
+    radial-gradient(62% 78% at 8% 16%, #e2433f, transparent 100%),
+    radial-gradient(58% 72% at 34% 4%, #e07a3a, transparent 100%),
+    radial-gradient(60% 74% at 56% 18%, #e6b94f, transparent 100%),
+    radial-gradient(64% 78% at 84% 12%, #4ade80, transparent 100%),
+    radial-gradient(66% 80% at 98% 62%, #60a5fa, transparent 100%),
+    radial-gradient(64% 78% at 62% 96%, #f472b6, transparent 100%),
+    radial-gradient(60% 74% at 22% 92%, #3aa0a4, transparent 100%);
+}
+@media (prefers-reduced-motion: no-preference) {
+  .alb-task-edge { animation: alb-task-edge 16s linear infinite; }
+  .alb-task-aurora::before { animation: alb-task-drift 52s ease-in-out infinite; }
 }
 
 /* UA — growing mandala: each rank blooms a fuller mandala; the emphasized cell

@@ -268,6 +268,72 @@ const ARCHETYPE_PAIRS: Pair[] = [
     text: "--faction-wow-card-accent",
   },
 
+  // Coven — THE CANDLELIT SPELL SLIP (task card v2, #1023). The card ground is
+  // a four-stop GRADIENT, which is what makes this block necessary: the design
+  // annotated its inks against a near-white card, and three of them fail on the
+  // gradient's darkest stop (#fbc4dd), so index.css ships them walked down. The
+  // surface column below is that darkest stop deliberately — measuring the
+  // lightest one would reproduce the design's own mistake.
+  { what: "coven slip, ink", surface: "--faction-coven-slip-mid", text: "--faction-coven-slip-ink" },
+  { what: "coven slip, brief", surface: "--faction-coven-slip-mid", text: "--faction-coven-slip-soft" },
+  { what: "coven slip, caption", surface: "--faction-coven-slip-mid", text: "--faction-coven-slip-label" },
+  // ...and the lavender end of the same ramp, a different hue rather than a
+  // lighter shade of the pink, so the stop above does not cover it.
+  { what: "coven slip lavender, ink", surface: "--faction-coven-slip-vio", text: "--faction-coven-slip-ink" },
+  { what: "coven slip lavender, brief", surface: "--faction-coven-slip-vio", text: "--faction-coven-slip-soft" },
+  { what: "coven slip lavender, caption", surface: "--faction-coven-slip-vio", text: "--faction-coven-slip-label" },
+  // The CTA is a band, so BOTH its stops carry the label. The design's own two
+  // stops gave white 3.44:1 at the top; these are deepened until it clears, and
+  // the dark band takes ink rather than white for the reason
+  // --faction-coven-on-accent already states.
+  { what: "coven slip CTA band top", surface: "--faction-coven-slip-cta-from", text: "--faction-coven-slip-cta-ink" },
+  { what: "coven slip CTA band foot", surface: "--faction-coven-slip-cta-to", text: "--faction-coven-slip-cta-ink" },
+  // The points numeral never sits on the slip: the sigil's core wash puts its
+  // own ground behind it (white on the light slip, near-black on the dark one),
+  // which is exactly why that ground is a scalar token rather than an alpha
+  // chosen in the component.
+  {
+    what: "coven sigil ground, points numeral",
+    surface: "--faction-coven-slip-sigil-ground",
+    text: "--faction-coven-slip-deep",
+  },
+
+  // Everymen — THE HELP WANTED BILL (task card v2, #1023). Short, because the
+  // design's palette IS the `--everymen-*` family measured above; only the roles
+  // that family had no home for are new.
+  { what: "everymen bill masthead", surface: "--faction-everymen-bill-mast", text: "--faction-everymen-bill-mast-ink" },
+  { what: "everymen bill CTA bar", surface: "--faction-everymen-bill-cta-bg", text: "--faction-everymen-bill-cta-ink" },
+  // The modifier badge's ink, walked down off the design's goldDeep (3.11:1).
+  { what: "everymen bill modifier ink", surface: "--everymen-paper", text: "--faction-everymen-bill-mult-ink" },
+  // The "Grade" label. Olive on the paper was never measured before this card
+  // set a label in it.
+  { what: "everymen paper, olive label", surface: "--everymen-paper", text: "--everymen-olive" },
+  {
+    // The seal's points numeral. Red on the paper is 4.49:1 — a hair under the
+    // body floor, which is why nothing on this card sets PROSE in it. The
+    // numeral is 32px/24px Bebas, large display type, so AA_LARGE is its floor
+    // and it clears with room (the same call `ua primary` makes above). The
+    // 8px "POINTS" caption beneath it is stamp text, i.e. ornament (§4).
+    what: "everymen seal numeral, large display type",
+    surface: "--everymen-paper",
+    text: "--everymen-red",
+    floor: AA_LARGE,
+  },
+
+  // Ephemerists — THE VALLEY PLATE (task card v2, #1023). Four surfaces, not
+  // one: the papyrus plate, the cornice's night band, the medallion's disc and
+  // the CTA bar, each carrying its own ink. `-brass` is absent from this list on
+  // purpose and for the same reason as WOW's chronicle gold — it rules and
+  // frames, it is never painted as text. The caption ink that REPLACED it in the
+  // one text slot the design gave it is measured here instead.
+  { what: "ephemerists plate, ink", surface: "--faction-ephemerists-plate-bg", text: "--faction-ephemerists-plate-ink" },
+  { what: "ephemerists plate, brief", surface: "--faction-ephemerists-plate-bg", text: "--faction-ephemerists-plate-muted" },
+  { what: "ephemerists plate, caption", surface: "--faction-ephemerists-plate-bg", text: "--faction-ephemerists-plate-caption" },
+  { what: "ephemerists cornice band, masthead", surface: "--faction-ephemerists-plate-band", text: "--faction-ephemerists-plate-band-ink" },
+  { what: "ephemerists medallion disc, points", surface: "--faction-ephemerists-plate-disc", text: "--faction-ephemerists-plate-ink" },
+  { what: "ephemerists medallion disc, unit", surface: "--faction-ephemerists-plate-disc", text: "--faction-ephemerists-plate-muted" },
+  { what: "ephemerists plate CTA band", surface: "--faction-ephemerists-plate-cta-bg", text: "--faction-ephemerists-plate-cta-ink" },
+
   // Albescent's FACTION tokens are gone (#783) — it renders Default's surfaces,
   // which `default` already covers. What remains is the always-light palette
   // private to the reveal surfaces (invitation letter, secret placeholder). It

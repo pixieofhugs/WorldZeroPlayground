@@ -2,12 +2,16 @@
  * albescent — the faction that overrides nothing (#783).
  *
  * Every other manifest in this directory lists the surfaces its faction dresses
- * up. Albescent's is empty, and that is the whole design: it is a secret society
- * hiding in plain sight, so it must be indistinguishable from an unaffiliated
- * player on every surface. The manifest is override-only, so declaring nothing
- * hands Albescent the `Default*` archetype everywhere — including on surfaces
- * that do not exist yet, which is the property a hand-maintained list of
- * "Albescent renders Default here" wrappers could never keep.
+ * up. Albescent's started empty, and that was the whole design: it is a secret
+ * society hiding in plain sight, so it must be indistinguishable from an
+ * unaffiliated player on every surface. The manifest is override-only, so
+ * declaring nothing hands Albescent the `Default*` archetype everywhere —
+ * including on surfaces that do not exist yet, which is the property a
+ * hand-maintained list of "Albescent renders Default here" wrappers could never
+ * keep. ADR-0048 then made "frozen" mean "frozen UNTIL DESIGNED": the few rows
+ * below are surfaces whose design has landed, and each is `Default` PLUS a
+ * flourish rather than a skin of its own. Everything unlisted still falls
+ * through, and that remains the default state, not the exception.
  *
  * It had 22 bespoke components (#232) and a 35-declaration token block. Both are
  * gone. The wrappers went too rather than being thinned to pass-throughs: an
@@ -28,6 +32,7 @@
 import type { FactionManifest } from './manifest'
 
 import { AlbescentSelectCard } from '../components/cards/FactionSelectCard'
+import AlbescentTaskCard from '../components/cards/AlbescentTaskCard'
 import AlbescentVote from '../components/vote/AlbescentVote'
 import AlbescentPraxisCard from '../components/praxisCard/desktop/AlbescentPraxisCard'
 import AlbescentMobilePraxisCard from '../components/praxisCard/mobile/AlbescentMobilePraxisCard'
@@ -55,6 +60,17 @@ export const ALBESCENT_MANIFEST: FactionManifest = {
    */
   praxisCard: () => AlbescentPraxisCard,
   mobilePraxisCard: () => AlbescentMobilePraxisCard,
+
+  /**
+   * The task-card tell (#1023, ADR-0048) — the second surface to unfreeze, and
+   * the same "NA + drift" shape as the praxis cards above. It renders
+   * `DefaultTaskCard` and washes two flourishes over it (a drifting spectrum
+   * edge, a breathing aurora), so the design's whole delta from unaffiliated is
+   * MOTION. Note there is no `mobileTaskCard` sibling: the v2 task card is one
+   * responsive component (ADR-0056), so this single row covers both form
+   * factors.
+   */
+  taskCard: () => AlbescentTaskCard,
 
   /**
    * The ferrofluid vote widget (#843, the eighth of #821's eight). Same rule as
