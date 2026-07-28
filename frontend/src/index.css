@@ -2627,6 +2627,20 @@
     var(--faction-ephemerists-plate-page);
   transition: background 300ms;
 }
+/* The winged disc crowning the action panel (#1032). The design lifts the gold
+   off the papyrus with a hard night-blue offset plus a soft cast, and drops to a
+   plain soft cast on the dark plate where the hard edge would only smear. That
+   choice arrives here as a cascade rule rather than as the design's
+   `theme === 'dark' ? … : …` ternary in the component. */
+.eph-plate-crown {
+  filter:
+    drop-shadow(0 2px 0 var(--faction-ephemerists-plate-band))
+    drop-shadow(0 6px 14px rgba(30, 34, 51, 0.45));
+}
+[data-theme="dark"] .eph-plate-crown {
+  filter: drop-shadow(0 3px 7px rgba(0, 0, 0, 0.6));
+}
+
 [data-theme="dark"] .eph-plate-backdrop {
   background:
     radial-gradient(58% 40% at 50% 0%, rgba(201, 162, 75, 0.1), transparent 72%),
