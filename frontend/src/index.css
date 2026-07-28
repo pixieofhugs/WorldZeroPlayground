@@ -1047,6 +1047,34 @@
   --faction-everymen-bill-glow-olive: rgba(91, 98, 56, 0.1);
   --faction-everymen-bill-shadow: 0 12px 32px -16px rgba(34, 26, 18, 0.5);
 
+  /* ══ Everymen — THE BROADSHEET SHEET (task detail v2, #1033) ══
+     The task-detail page printed as a union broadsheet: newsprint with
+     rising-sun rays fanning up from the BOTTOM edge, a cog masthead, dashed red
+     rules and a rubber-stamp points seal.
+
+     Short for the same reason the bill block above is short — the design's
+     TOKENS object is the `--everymen-*` family almost value-for-value in BOTH
+     themes (its `ink` is `--everymen-paper-text`, `page` is
+     `--everymen-paper-deep`, `paper`/`red`/`redDeep`/`gold`/`goldDeep`/`olive`/
+     `muted` all match), and its masthead is the bill's theme-invariant red bar,
+     so this surface reuses `--faction-everymen-bill-mast(-ink)` rather than
+     minting a second red. Only the roles with no existing home live here.
+
+     The one that is NOT a duplicate: the design's `cream` is a lighter PANEL
+     surface that flips dark at night (#f4ecd6 → #2c231c), whereas
+     `--everymen-cream` is a constant cream in both themes. Aliasing the two
+     would print cream boxes onto the dark broadsheet. */
+  --faction-everymen-sheet-panel: #f4ecd6;
+  --faction-everymen-sheet-hair: rgba(34, 26, 18, 0.22);
+  /* Red as TEXT, which is a different job from red as a rule or a fill.
+     `--everymen-red` pays 4.95:1 on the light panel but only 3.73:1 on the dark
+     one, so the dark cascade walks the same hue up until it clears (5.45:1).
+     Dashed rules and filled bars keep `--everymen-red`; only ink uses this. */
+  --faction-everymen-sheet-accent: #c1272d;
+  /* Rising-sun ornament alphas — opacity decisions, not component numbers. */
+  --faction-everymen-sheet-ray: rgba(193, 39, 45, 0.1);
+  --faction-everymen-sheet-glow: rgba(193, 39, 45, 0.12);
+
   /* ── Gearworks vote widget (#821) — reached gears heat a cold→ember ramp with
      pale hubs; unreached gears are edge-only outlines; rank 5 throws sparks. The
      edge + rank-5 glow flip in the dark cascade (see the dark block). ── */
@@ -1677,6 +1705,15 @@
   --faction-everymen-bill-glow-gold: rgba(231, 185, 79, 0.1);
   --faction-everymen-bill-glow-olive: rgba(138, 149, 90, 0.08);
   --faction-everymen-bill-shadow: 0 12px 32px -14px rgba(0, 0, 0, 0.8);
+  /* ── The broadsheet sheet (dark, #1033) ── The panel becomes a lifted plate on
+     the near-black newsprint (the design's own dark `cream`), the hairline
+     inverts, and red-as-ink lifts to clear AA on it (5.45:1 on the panel,
+     6.18:1 on the paper; the light #c1272d would pay 3.73:1). */
+  --faction-everymen-sheet-panel: #2c231c;
+  --faction-everymen-sheet-hair: rgba(243, 231, 206, 0.2);
+  --faction-everymen-sheet-accent: #f4726c;
+  --faction-everymen-sheet-ray: rgba(226, 67, 63, 0.13);
+  --faction-everymen-sheet-glow: rgba(226, 67, 63, 0.12);
   /* Gearworks: cooler edge for cold gears, a brighter single-halo rank-5 glow on
      the dark paper (the light double-drop-shadow would muddy against it). */
   --faction-everymen-vote-edge: #8a7856;
@@ -1721,6 +1758,25 @@
   position: absolute;
   inset: 0;
   background: radial-gradient(120% 90% at 50% 8%, transparent 40%, color-mix(in srgb, var(--everymen-paper-deep) 55%, transparent));
+}
+
+/* ══ Everymen broadsheet backdrop (task detail v2, #1033; theme-aware) ══
+   The rising sun the union prints its bills under — rays fanning UP from below
+   the bottom edge, over the newsprint. Distinct from `.em-backdrop` above,
+   whose rays fall from the top: that one dresses the faction-context pages, this
+   one is the sheet the task detail is printed on. Fixed, like every other
+   faction backdrop, so the paper runs to the viewport edge instead of stopping
+   at the 1200 content cap. The two ray alphas are tokens because they differ
+   per theme; the rule itself never branches on the theme. */
+.em-broadsheet {
+  /* Painted on the detail COLUMN, not the viewport — the site background shows
+     around it (owner QA on #1055, applied to every task-detail skin). The
+     archetype supplies position / z-index / radius / padding; this rule owns
+     only the newsprint and its rising-sun rays. */
+  background-color: var(--everymen-paper-deep);
+  background-image:
+    repeating-conic-gradient(from 200deg at 50% 118%, var(--faction-everymen-sheet-ray) 0 2.6deg, transparent 2.6deg 6.4deg),
+    radial-gradient(58% 46% at 50% 116%, var(--faction-everymen-sheet-glow), transparent 72%);
 }
 
 /* ══ Cozy Coven lo-fi desktop backdrop (faction-context pages; theme-aware) ══ */
@@ -3324,6 +3380,137 @@
 [data-theme="dark"] {
   --faction-wow-mobile-header-from: var(--faction-wow-avatar-field);
   --faction-wow-mobile-header-to: var(--faction-wow-card-bg);
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   COVEN — THE CANDLELIT WARD (task detail v2, #1031)
+   ══════════════════════════════════════════════════════════════════════════
+   The detail page is the spell slip opened out: a candlelight haze washing the
+   whole viewport, braided thread rules (`.cvn-braid`, already shipped for the
+   task card), the turning pentagram watermark (`.cvn-wheel`, likewise) and the
+   points held inside a glowing pentagram ward.
+
+   Nearly the whole palette is ALREADY DECLARED as --faction-coven-slip-* by the
+   task card (#1023), and the design's TOKENS map onto it one-for-one — same
+   pinks, same lavenders, same gold. This block adds only what the slip family
+   has no name for: the page ground the haze sits on, the panel ground the
+   copy sits on, the stat hairline, the haze strength, and the gold "you're on
+   it" band.
+
+   THE DESIGN'S `soft` AND `label` INKS ARE NOT RE-INTRODUCED. It states
+   #b8517f / #b06a92; #1023 already measured those and walked them down to
+   #973660 / #83466a for AA. WORLD_ZERO_STYLE §6: when the kit and a shipped
+   token disagree, find out whether the disagreement is already settled. It is.
+
+   MEASURED, against the worst case each ink actually meets — the page ground
+   under the peak of a haze bloom, since the header copy sits directly on it:
+     light, page #fdeef5 under the pink bloom at 22% → #f9c9d9-ish
+       --faction-coven-slip-ink   4.85:1 floor … 5.75:1   (title, section heads)
+       --faction-coven-slip-label 4.85:1                  (eyebrows, captions)
+     dark, page #1d0a15 under the pink bloom at 28%
+       --faction-coven-slip-ink   8.5:1
+       --faction-coven-slip-label 5.05:1
+   The gold bloom is the brightest of the four and is therefore mixed to 55%
+   before it lands: at full strength it drags slip-label to 4.02:1 in dark. */
+:root {
+  /* The page ground the haze washes. Light is the design's #fdeef5 verbatim. */
+  --faction-coven-ward-page: #fdeef5;
+  /* The panel ground — brief, action-plate inner boxes, sort rail. A shade
+     ABOVE the page so a panel reads as paper laid on the wash, not as a hole. */
+  --faction-coven-ward-card: #fff6fb;
+  /* The hairline between the header stats. Ornament — nothing is painted on it. */
+  --faction-coven-ward-hair: rgba(201, 50, 122, 0.18);
+  /* Haze strength. A NUMBER, not a colour, because the two themes want the same
+     four blooms at different weights and an opacity picked in TSX is a
+     `dark ? a : b` in numeric clothing (WORLD_ZERO_STYLE §6). */
+  --faction-coven-ward-haze: 0.22;
+  /* The "you're on this task" band: candle gold instead of the pink CTA, so the
+     two states never read alike. THEME-INVARIANT, on WOW's gold reasoning (§3) —
+     a lit candle does not dim when the room does. Only the band's upper stop
+     flips, and it does so by reading --faction-coven-slip-gold. Ink #5c3a06 on
+     the lower stop #d9a521 measures 4.55:1, and better on the brighter stop. */
+  --faction-coven-ward-hold-to: #d9a521;
+  --faction-coven-ward-hold-ink: #5c3a06;
+  --faction-coven-ward-hold-border: #c08d14;
+}
+[data-theme="dark"] {
+  --faction-coven-ward-page: #1d0a15;
+  --faction-coven-ward-card: #2a0f1e;
+  --faction-coven-ward-hair: rgba(249, 168, 212, 0.2);
+  /* The night slip carries more candle, exactly as the design's own dark half
+     does (.5 → .7 there; both walked down here for the contrast floor above). */
+  --faction-coven-ward-haze: 0.28;
+}
+
+/* The full-viewport candlelight wash. Same markup hook shape as `.na-backdrop`:
+   `<div class="coven-candle-backdrop" aria-hidden />` inside the archetype.
+   The design blurs a floating gradient stack at `blur(70px)` and blends it
+   `screen` in dark; both are replaced by soft-stopped radial gradients over the
+   page ground, which is the repo's established backdrop shape and costs no
+   filter layer. The FLOAT survives — it is the candle, and it lives here rather
+   than in a component-injected <style> (#911). */
+.coven-candle-backdrop {
+  /* Painted on the detail COLUMN, not the viewport — the site background shows
+     around it (owner QA on #1055, applied to every task-detail skin). The
+     archetype supplies position / z-index / radius / padding; this rule owns
+     only the ground and its blooms. `overflow: hidden` stays because the
+     ::before bloom is inset -25% and must be clipped to the column. */
+  overflow: hidden;
+  background: var(--faction-coven-ward-page);
+  transition: background 300ms;
+}
+.coven-candle-backdrop::before {
+  content: "";
+  position: absolute;
+  inset: -25%;
+  opacity: var(--faction-coven-ward-haze);
+  background-image:
+    radial-gradient(50% 40% at 12% 8%, var(--faction-coven-slip-pk), transparent 100%),
+    radial-gradient(46% 38% at 88% 14%, var(--faction-coven-slip-lav), transparent 100%),
+    radial-gradient(42% 34% at 62% 84%, color-mix(in srgb, var(--faction-coven-slip-gold) 55%, transparent), transparent 100%),
+    radial-gradient(46% 36% at 20% 92%, var(--faction-coven-slip-vio), transparent 100%);
+}
+@keyframes cvn-haze {
+  0%,
+  100% {
+    transform: translate3d(-3%, -2%, 0) scale(1.1);
+  }
+  50% {
+    transform: translate3d(3%, 2%, 0) scale(1.18);
+  }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .coven-candle-backdrop::before {
+    animation: cvn-haze 34s ease-in-out infinite;
+  }
+}
+
+/* The ward's aura breathes like a candle. Opt-in under `no-preference`, the
+   repo's inverted form of the design's `reduce → none`: stilled, the aura is
+   simply a steady glow. */
+@keyframes cvn-flicker {
+  0%,
+  100% {
+    opacity: 0.62;
+    transform: scale(1);
+  }
+  38% {
+    opacity: 0.9;
+    transform: scale(1.06);
+  }
+  71% {
+    opacity: 0.7;
+    transform: scale(0.98);
+  }
+}
+.cvn-candle {
+  transform-origin: 50% 50%;
+  opacity: 0.72;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .cvn-candle {
+    animation: cvn-flicker 5.5s ease-in-out infinite;
+  }
 }
 
 /* ══ WOW — TASK DETAIL, the parchment field (#1037) ══
