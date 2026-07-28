@@ -818,48 +818,49 @@ export default function UaTaskDetail({ state }: { state: TaskDetailState }) {
       className="py-8"
       style={{
         position: "relative",
-        overflow: "hidden",
         fontFamily: UA_TEXT,
         color: "var(--faction-ua-page-text)",
       }}
     >
-      {/* The ground — mesa sand, one flat token, both themes. Fixed like the na
-          wash so the leaf reads as the page rather than as a card on the app's
-          rainbow watercolour. */}
-      <span
-        aria-hidden
-        style={{
-          position: "fixed",
-          inset: 0,
-          zIndex: 0,
-          pointerEvents: "none",
-          background: "var(--faction-ua-page)",
-        }}
-      />
-      {/* The lotus, bleeding off the left edge. Ornament geometry stays in raw
-          px (§4a); its opacity is a token, so dark mode lifts it through the
-          cascade rather than through the design's `saturate(1.35)`. */}
-      <Lotus
-        size={size.lotus}
-        color="var(--faction-ua-card-lotus)"
-        style={{
-          position: "absolute",
-          left: size.lotusLeft,
-          top: size.lotusTop,
-          zIndex: 0,
-          opacity: "var(--faction-ua-card-lotus-opacity)",
-          pointerEvents: "none",
-        }}
-      />
-
+      {/* The vellum ground belongs to the DETAIL COMPONENT, not the viewport.
+          This used to be a `position: fixed; inset: 0` span, which painted UA's
+          sand over the whole site — including behind the chrome — and left the
+          column itself unpadded, so every line of copy ran to the edge. The
+          column now carries its own surface, its own padding and its own lotus,
+          and the site background shows around it. */}
       <div
         style={{
           position: "relative",
           zIndex: 1,
           maxWidth: 1200,
           margin: "0 auto",
+          background: "var(--faction-ua-page)",
+          border: "1px solid var(--faction-ua-rule)",
+          borderRadius: 18,
+          padding: desktop ? "var(--space-2xl)" : "var(--space-lg)",
+          overflow: "hidden",
+          boxSizing: "border-box",
         }}
       >
+        {/* The lotus, bleeding off the leaf's own left edge — clipped by the
+            column's `overflow: hidden` rather than by the viewport. `zIndex: -1`
+            paints it above this column's background but beneath its copy: the
+            column is positioned, so it owns the stacking context, and a
+            positioned `zIndex: 0` sibling would have sat ON TOP of the static
+            text. Ornament geometry stays in raw px (§4a); its opacity is a
+            token, so dark mode lifts it through the cascade. */}
+        <Lotus
+          size={size.lotus}
+          color="var(--faction-ua-card-lotus)"
+          style={{
+            position: "absolute",
+            left: size.lotusLeft,
+            top: size.lotusTop,
+            zIndex: -1,
+            opacity: "var(--faction-ua-card-lotus-opacity)",
+            pointerEvents: "none",
+          }}
+        />
         <div
           style={{
             display: "flex",

@@ -760,11 +760,18 @@ export default function DefaultTaskDetail({
           zIndex: 1,
           maxWidth: 1200,
           margin: "0 auto",
-          // The page surface the design puts everything on. This used to be a
-          // `<div className="na-backdrop">` whose rule was never written — the
-          // element rendered and painted nothing, so the whole column sat
-          // directly on the app shell. A class with no CSS behind it type-checks,
-          // lints and builds clean; only looking at it catches that.
+          // The page surface the design puts everything on, carried by the
+          // COLUMN rather than the viewport — the owner's rule for this surface
+          // is that the site background still shows around the component.
+          //
+          // This replaced a `<div className="na-backdrop">` full-page wash.
+          // NOTE, correcting #1056's commit message and PR body: that PR claimed
+          // `.na-backdrop` had no rule behind it. It does — index.css defines it
+          // with a dark-mode variant. The claim came from grepping a stale
+          // worktree that predated #1049. The change itself was still right (a
+          // full-bleed faction wash is not wanted here, and the column needed a
+          // surface and padding), but the stated reason was false; do not cite
+          // it as precedent for "a class with no CSS".
           background: "var(--faction-default-card-bg)",
           color: "var(--faction-default-card-text)",
           border: "1px solid var(--faction-default-border)",
