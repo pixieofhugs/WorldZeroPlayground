@@ -140,8 +140,15 @@
       "submit": "Submit",
       "submittedWaiting": "You've submitted — waiting on co-authors",
       "unsubmit": "unsubmit",
+      "unsubmitDuelLive": "pull my entry back",
       "confirmPrompt": "Sure? Points & votes will pause.",
+      "confirmPromptCollab": "Sure? This reopens the praxis for the whole group — every member's part is uncast, and points & votes pause.",
+      "confirmPromptCollabPart": "Sure? This pulls back only your part — your co-authors' casts stand.",
+      "confirmPromptDuelLive": "Sure? Nothing is forfeited — the duel hasn't settled, so this is a free reopen. Points & votes pause.",
       "confirmUnsubmit": "Yes, unsubmit",
+      "confirmUnsubmitCollab": "Yes, reopen for everyone",
+      "confirmUnsubmitCollabPart": "Yes, pull my part back",
+      "confirmUnsubmitDuelLive": "Yes, pull my entry back",
       "cancel": "Cancel"
     },
     "flag": {
