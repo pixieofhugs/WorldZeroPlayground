@@ -21,6 +21,16 @@ class TaskOut(BaseModel):
     metatask_faction_slug: Optional[str] = None
     is_task_vision_eligible: bool
     created_at: datetime
+    # Derived, read-time count of characters actively working on this task —
+    # active-signup population (Praxis.status in [in_progress, pending]), the
+    # same set GET /tasks/{id}/signups exposes, reduced to a count (#1021).
+    # Populated by services.task.build_task_out(_for_viewer). Defaults to 0
+    # because TaskOut.model_validate() is also used directly on metatask rows
+    # (the praxis seal stack — services/praxis.py's applied_metatasks_for),
+    # which have no such attribute on the Task ORM object; 0 is also the true
+    # value there since metatasks are never signup targets (evaluate_signup
+    # rejects TaskType.metatask before any status check).
+    in_progress_count: int = 0
     # Viewer-relative capability flags — populated by the task router using
     # the authenticated viewer's character. Defaults keep the flags safe for
     # unauthenticated callers (empty modes, cannot submit, not eligible).
