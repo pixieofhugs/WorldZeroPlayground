@@ -762,6 +762,38 @@
   --faction-ephemerists-vote-core-off: #556374; /* unreached star core */
   --faction-ephemerists-vote-spark: #fff4cf; /* rank-5 corner sparkles */
 
+  /* ══ Ephemerists — THE VALLEY PLATE (task card v2, #1023) ══
+     Deco × Egypt: the deco-space card carried into a field journal out of the
+     Valley. A papyrus plate under a cavetto-cornice masthead holding a winged
+     sun disc between incised glyph registers; the points ride a stepped octagon
+     medallion. This is a full metaphor swap away from THE DISCORDANT MAP, whose
+     `--eph-*` illuminated-codex family stays declared — every other Ephemerists
+     surface still paints with it.
+
+     ONE VALUE IS WALKED DOWN. `-brass` is a FRAME AND RULE colour, never an ink:
+     the design's #9A7A2E measures 2.97:1 on the plate, which is fine for a
+     hairline and wrong for the "Level" caption the design sets in it. That
+     caption takes `-caption` instead (4.75:1, same hue). Same shape as WOW's
+     chronicle gold, which is likewise never painted as text. */
+  --faction-ephemerists-plate-bg: #eadcb6; /* papyrus */
+  --faction-ephemerists-plate-ink: #2a2418;
+  --faction-ephemerists-plate-muted: #6b5f45; /* brief + in-progress */
+  --faction-ephemerists-plate-caption: #765a19; /* small-caps labels */
+  --faction-ephemerists-plate-brass: #9a7a2e; /* rules, borders — never an ink */
+  --faction-ephemerists-plate-brass-light: #c39b3d;
+  --faction-ephemerists-plate-gold: #e3c56a; /* glyphs + the winged disc */
+  --faction-ephemerists-plate-band: #1e2233; /* the cornice masthead */
+  --faction-ephemerists-plate-band-ink: #efe4c4;
+  --faction-ephemerists-plate-disc: #f6eed6; /* the medallion's field */
+  --faction-ephemerists-plate-ochre: #a6432b; /* the fifth tally stroke */
+  --faction-ephemerists-plate-cta-bg: #1e2233;
+  --faction-ephemerists-plate-cta-ink: #e9d79b;
+  /* The gold wash behind the cartouche and the ratio chip. A gradient token
+     rather than a hex + an alpha the component picks: the dark plate takes no
+     wash at all, and "no wash" is not an opacity a TSX ternary should decide. */
+  --faction-ephemerists-plate-wash: linear-gradient(180deg, rgba(227, 197, 106, 0.24), transparent);
+  --faction-ephemerists-plate-shadow: 0 18px 44px -26px rgba(42, 32, 16, 0.45);
+
   /* ══ Everymen — the rainbow's missing red (union/WW2 poster) ══
      Constants (cream/gold/ink) keep their role in both themes; the paper
      surface + its text FLIP in dark; accent red stays vivid; field is the
@@ -1180,6 +1212,30 @@
      value. The stamp leaf darkens with the vellum rather than lightening. */
   --eph-frame: rgba(58, 160, 164, 0.35);
   --eph-stamp-bg: #181208;
+
+  /* ══ Ephemerists — the Valley plate (dark, #1023) ══
+     Read off the design's own dark half. Two inversions worth naming, because
+     neither is what "darken the light values" would produce: the CTA bar swaps
+     ends (a brass BAR carrying dark ink, where light has dark bar / gold ink),
+     and the cartouche's gold wash disappears entirely rather than dimming — on
+     a night plate the wash reads as a smudge. The brass lifts far enough that
+     it clears AA on the plate here (7.22:1), but it stays a rule colour on both
+     sides: one token, one role. */
+  --faction-ephemerists-plate-bg: #171a26;
+  --faction-ephemerists-plate-ink: #f0e6c8;
+  --faction-ephemerists-plate-muted: #a2977a;
+  --faction-ephemerists-plate-caption: #c9a24b;
+  --faction-ephemerists-plate-brass: #c9a24b;
+  --faction-ephemerists-plate-brass-light: #e6c877;
+  --faction-ephemerists-plate-gold: #f2d98a;
+  --faction-ephemerists-plate-band: #0a0c15;
+  --faction-ephemerists-plate-band-ink: #f2d98a;
+  --faction-ephemerists-plate-disc: #12151f;
+  --faction-ephemerists-plate-ochre: #d9744c;
+  --faction-ephemerists-plate-cta-bg: #c9a24b;
+  --faction-ephemerists-plate-cta-ink: #12151f;
+  --faction-ephemerists-plate-wash: none;
+  --faction-ephemerists-plate-shadow: 0 20px 50px -26px rgba(0, 0, 0, 0.8);
 
   /* ── Warriors of Whimsy collage scrap layers (dark) ── */
   --faction-coven-scrap-deep: #091209;
@@ -2258,6 +2314,30 @@
   .ev-gear--cw { transform-origin: center; animation: ev-gear-cw var(--ev-gear-dur, 3s) linear infinite; }
   .ev-gear--ccw { transform-origin: center; animation: ev-gear-ccw var(--ev-gear-dur, 3s) linear infinite; }
   .ev-gear-spark { animation: ev-gear-spark var(--ev-spark-dur, 1s) ease-out infinite; animation-delay: var(--ev-spark-delay, 0s); }
+}
+
+/* Ephemerists — the Valley plate's incised glyph registers (#1023). Two rows of
+   signs (Egypt, Greece, the middle ages, 1925) surface and recede on a long,
+   staggered cycle behind the masthead. Per-glyph strength and phase arrive as
+   inline custom properties, so no two breathe together.
+
+   Note the inversion against the design, which wrote `opacity:0` as the base and
+   stilled the animation under reduced motion — that leaves every glyph
+   INVISIBLE for a reduced-motion reader. Here the base state IS the stilled
+   state (glyphs present at their own strength) and the motion is added under
+   `no-preference`, which is both the repo's convention and the only ordering
+   that degrades correctly. */
+@keyframes epg-breathe {
+  0%, 100% { opacity: 0; }
+  22%, 72% { opacity: var(--epg-op, 0.3); }
+}
+.epg-glyph { opacity: var(--epg-op, 0.3); }
+@media (prefers-reduced-motion: no-preference) {
+  .epg-glyph {
+    opacity: 0;
+    animation: epg-breathe 19s ease-in-out infinite;
+    animation-delay: var(--epg-delay, 0s);
+  }
 }
 
 /* Coven — the spell slip's braid (#1023): a slender celtic thread with a gold

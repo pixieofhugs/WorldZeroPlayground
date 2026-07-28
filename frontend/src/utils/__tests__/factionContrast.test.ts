@@ -298,6 +298,20 @@ const ARCHETYPE_PAIRS: Pair[] = [
     text: "--faction-coven-slip-deep",
   },
 
+  // Ephemerists — THE VALLEY PLATE (task card v2, #1023). Four surfaces, not
+  // one: the papyrus plate, the cornice's night band, the medallion's disc and
+  // the CTA bar, each carrying its own ink. `-brass` is absent from this list on
+  // purpose and for the same reason as WOW's chronicle gold — it rules and
+  // frames, it is never painted as text. The caption ink that REPLACED it in the
+  // one text slot the design gave it is measured here instead.
+  { what: "ephemerists plate, ink", surface: "--faction-ephemerists-plate-bg", text: "--faction-ephemerists-plate-ink" },
+  { what: "ephemerists plate, brief", surface: "--faction-ephemerists-plate-bg", text: "--faction-ephemerists-plate-muted" },
+  { what: "ephemerists plate, caption", surface: "--faction-ephemerists-plate-bg", text: "--faction-ephemerists-plate-caption" },
+  { what: "ephemerists cornice band, masthead", surface: "--faction-ephemerists-plate-band", text: "--faction-ephemerists-plate-band-ink" },
+  { what: "ephemerists medallion disc, points", surface: "--faction-ephemerists-plate-disc", text: "--faction-ephemerists-plate-ink" },
+  { what: "ephemerists medallion disc, unit", surface: "--faction-ephemerists-plate-disc", text: "--faction-ephemerists-plate-muted" },
+  { what: "ephemerists plate CTA band", surface: "--faction-ephemerists-plate-cta-bg", text: "--faction-ephemerists-plate-cta-ink" },
+
   // Albescent's FACTION tokens are gone (#783) — it renders Default's surfaces,
   // which `default` already covers. What remains is the always-light palette
   // private to the reveal surfaces (invitation letter, secret placeholder). It

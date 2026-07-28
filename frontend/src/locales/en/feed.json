@@ -160,7 +160,10 @@
       "grade": "grade {{grade}}",
       "points": "{{points}} pvncta",
       "footnote": "† the road does not return you to where you began — <1>see †</1>",
-      "signup": "Triangulate the truth ▸"
+      "signup": "Triangulate the truth ▸",
+      "masthead": "Ephemerists",
+      "levelCaption": "Level",
+      "pointsUnit": "pvncta"
     },
     "everymen": {
       "masthead": "THE EVERYMEN",
