@@ -334,6 +334,75 @@ const ARCHETYPE_PAIRS: Pair[] = [
   { what: "ephemerists medallion disc, unit", surface: "--faction-ephemerists-plate-disc", text: "--faction-ephemerists-plate-muted" },
   { what: "ephemerists plate CTA band", surface: "--faction-ephemerists-plate-cta-bg", text: "--faction-ephemerists-plate-cta-ink" },
 
+  // Singularity — THE TERMINAL SESSION (task card v2, #1023). The one card in
+  // the wave that is DARK IN BOTH THEMES (§6), so every row here is measured
+  // twice against a near-black ground rather than once against a light one. The
+  // light half is the tighter of the two — its chassis is the LIGHTER black —
+  // and the design annotated it as though the reverse held, so `-blue` and
+  // `-dim` ship walked UP. The chrome bar is the binding surface for both,
+  // being lighter than the chassis, so it is what the label rows measure.
+  { what: "singularity terminal chassis, title", surface: "--faction-singularity-term-bg", text: "--faction-singularity-term-bright" },
+  { what: "singularity terminal chassis, brief", surface: "--faction-singularity-term-bg", text: "--faction-singularity-term-dim" },
+  { what: "singularity terminal chassis, boot line", surface: "--faction-singularity-term-bg", text: "--faction-singularity-term-blue" },
+  { what: "singularity window bar, process name", surface: "--faction-singularity-term-chrome", text: "--faction-singularity-term-dim" },
+  { what: "singularity window bar, ordinal", surface: "--faction-singularity-term-chrome", text: "--faction-singularity-term-blue" },
+  // The points well. Its ground is a RESOLVED colour rather than the design's
+  // alpha-over-chassis, precisely so this row can exist at all.
+  { what: "singularity points well, total", surface: "--faction-singularity-term-readout", text: "--faction-singularity-term-blue-bright" },
+  { what: "singularity points well, unit", surface: "--faction-singularity-term-readout", text: "--faction-singularity-term-blue" },
+  { what: "singularity CTA, prompt", surface: "--faction-singularity-term-cta-bg", text: "--faction-singularity-term-cta-ink" },
+
+  // S.N.I.D.E. — THE RANSOM CLIPPING (task card v2, #1023). Unlike the faction's
+  // older ink-dark families, this one FLIPS, so each row genuinely measures two
+  // different grounds rather than one ground twice. Hot zine pink is the whole
+  // story: it is a poster colour, so it survives wherever it is a DRAWN LINE (the
+  // pen circle, the struck-out cross — neither is here, because neither is text)
+  // and is walked down wherever it carries a word.
+  { what: "snide clipping, headline", surface: "--faction-snide-note-paper", text: "--faction-snide-note-ink" },
+  { what: "snide clipping, brief", surface: "--faction-snide-note-paper", text: "--faction-snide-note-muted" },
+  { what: "snide clipping, points caption", surface: "--faction-snide-note-paper", text: "--faction-snide-note-pink-ink" },
+  { what: "snide clipping bar, ordinal", surface: "--faction-snide-note-bar", text: "--faction-snide-note-bar-ink" },
+  { what: "snide clipping bar, wordmark", surface: "--faction-snide-note-bar", text: "--faction-snide-acid" },
+  // Headline cut 2 — a knockout, which is why it names its own pair instead of
+  // reusing paper/ink: those two swap under the cascade and would cancel.
+  { what: "snide headline knockout", surface: "--faction-snide-note-knockout-bg", text: "--faction-snide-note-knockout-ink" },
+  // Headline cut 1 and the CTA bar are the same pairing — ink on acid — and the
+  // acid does not flip, so one row covers both in both themes.
+  { what: "snide acid CTA bar", surface: "--faction-snide-note-cta-bg", text: "--faction-snide-note-cta-ink" },
+  // The modifier chip. The design set its label in PAPER on the pink (3.10:1);
+  // it takes the near-black CTA ink instead, one value for both themes because
+  // `--faction-snide-pink` does not flip either.
+  { what: "snide modifier chip", surface: "--faction-snide-pink", text: "--faction-snide-note-cta-ink" },
+
+  // UA — THE VELLUM LEAF (task card v2, #1023). Shortest block in the wave: the
+  // design's palette turned out to BE the shipped `--faction-ua-*` family
+  // value-for-value, `cardGrad` included (it is `--faction-ua-card-parchment`,
+  // both themes), so this card introduced no token at all. What the rows below
+  // add is the one surface nothing had measured against — the parchment
+  // gradient's DARKEST stop, which is `-panel` by day and `-card-bg` by night.
+  // Measuring the lightest stop instead is the mistake wave A caught on Coven.
+  { what: "ua leaf darkest stop, title", surface: "--faction-ua-panel", text: "--faction-ua-card-text" },
+  { what: "ua leaf darkest stop, brief", surface: "--faction-ua-panel", text: "--faction-ua-card-muted" },
+  // The score numeral. The design paints it in `--faction-ua-glow`, which is
+  // 2.93:1 here and so misses even AA_LARGE — the ONE ink this card walks down,
+  // onto the accent it already owns rather than onto a new token.
+  { what: "ua leaf darkest stop, score numeral", surface: "--faction-ua-panel", text: "--faction-ua-card-accent" },
+  { what: "ua leaf CTA", surface: "--faction-ua-card-chip-bg", text: "--faction-ua-card-chip-ink" },
+
+  // WOW — THE QUEST DECREE (task card v2, #1023). Every pairing on this card
+  // resolves to a family measured somewhere above, which is the whole finding:
+  // the design's palette IS WOW's shipped skin, and where the two disagreed the
+  // repo was already right. Its dark CTA plum (#8a5aae) measures 4.10:1 under
+  // cream — the exact value note 1 beside `--faction-wow-plum-surface` rejected
+  // when it made that token theme-invariant — so the card takes the token and
+  // the two rows below pin the pairing rather than a new hue.
+  { what: "wow decree CTA / modifier chip", surface: "--faction-wow-plum-surface", text: "--faction-wow-on-plum" },
+  // The plaque: a burnt-gold total and a plum unit on the parchment plate. The
+  // ✦ between them is a DINGBAT, not text, which is the only reason it may be
+  // painted in the 2.00:1 chronicle gold — so it is deliberately not a row here.
+  { what: "wow decree plaque, total", surface: "--faction-wow-chronicle-panel", text: "--faction-wow-stamp-total" },
+  { what: "wow decree plaque, unit", surface: "--faction-wow-chronicle-panel", text: "--faction-wow-card-accent" },
+
   // Albescent's FACTION tokens are gone (#783) — it renders Default's surfaces,
   // which `default` already covers. What remains is the always-light palette
   // private to the reveal surfaces (invitation letter, secret placeholder). It

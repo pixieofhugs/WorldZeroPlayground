@@ -26,7 +26,6 @@ import SnideHome from '../pages/fieldDesk/mobileArchetypes/SnideHome'
 import SnideMobileEditPraxis from '../pages/editPraxis/mobileArchetypes/SnideComposer'
 import SnideMobilePraxisCard from '../components/praxisCard/mobile/SnideMobilePraxisCard'
 import SnideMobilePraxisDetail from '../pages/praxisDetail/mobileArchetypes/SnidePraxisDetail'
-import SnideMobileTaskCard from '../pages/tasks/mobileArchetypes/cards/SnideMobileTaskCard'
 import SnideMobileTaskDetail from '../pages/taskDetail/mobileArchetypes/SnideTaskDetail'
 import SnidePraxisDetail from '../pages/praxisDetail/archetypes/SnidePraxisDetail'
 import SnideProfileBody from '../pages/characterProfile/archetypes/SnideProfileBody'
@@ -63,7 +62,6 @@ export const SNIDE_MANIFEST: FactionManifest = {
   profileBody: () => SnideProfileBody,
   duelSeal: () => SnideDuelSealConfirm,
   duelRail: () => SnideDuelRail,
-  mobileTaskCard: () => SnideMobileTaskCard,
   mobilePraxisCard: () => SnideMobilePraxisCard,
   mobileTaskDetail: () => SnideMobileTaskDetail,
   mobilePraxisDetail: () => SnideMobilePraxisDetail,

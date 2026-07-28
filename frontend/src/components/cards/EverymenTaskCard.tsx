@@ -19,8 +19,8 @@ import { useFormFactor } from "../../hooks/useFormFactor";
  * POINTS hero → title → brief → in-progress → CTA.
  *
  * ONE RESPONSIVE COMPONENT (ADR-0056): `useFormFactor` picks the size set, not a
- * different card. The dormant `mobileArchetypes/cards/EverymenMobileTaskCard`
- * stays in the tree for the revert.
+ * different card. There is no mobile twin: ADR-0056 was accepted and the
+ * `mobileTaskCard` surface retired, so this file serves both form factors.
  *
  * Colour comes almost entirely from the existing `--everymen-*` family, which
  * the design's own palette turned out to match value-for-value; only the

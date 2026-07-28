@@ -15,12 +15,13 @@ import { ChipRow, Chip } from '../../../components/ui/ChipRow'
  * the DefaultTaskDetail mobile idiom (#496–#500).
  *
  * The results list renders the SHARED `<TaskCard>` — the one call site
- * ADR-0056's reversible experiment turns on. Each faction card sizes itself for
- * the phone via `useFormFactor()`, and mobile inherits the inline signup CTA
- * (gated on `can_submit_praxis` exactly as desktop is), the in-progress count
- * and the multiplier badge, none of which the mobile-only cards had. The
- * `mobileTaskCard` dispatcher and its nine cards stay in the tree, dormant:
- * reverting is swapping this import and the two props back.
+ * ADR-0056 turned on. Each faction card sizes itself for the phone via
+ * `useFormFactor()`, and mobile inherits the inline signup CTA (gated on
+ * `can_submit_praxis` exactly as desktop is), the in-progress count and the
+ * multiplier badge, none of which the old mobile-only cards had. That was
+ * shipped as a reversible experiment; the owner's hands-on verdict accepted it,
+ * so the `mobileTaskCard` dispatcher and its nine cards are now deleted and
+ * there is no second task-card implementation to revert to.
  */
 export default function DefaultTasks({ state }: { state: TasksState }) {
   const { t } = useTranslation('tasks')
