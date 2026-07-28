@@ -35,6 +35,7 @@ import {
   type DuelDetailOut,
 } from "../../api/duel";
 import { deriveCollabGate } from "../../components/collab/CollabRoster";
+import { collabCopy } from "../../components/collab/collabCopy";
 import { getGameConfig } from "../../api/gameConfig";
 import { listRelationships } from "../../api/relationships";
 import { getTask, type TaskOut } from "../../api/tasks";
@@ -139,9 +140,10 @@ export interface EditPraxisState {
   /** Pull my own cast back on a pending collab (#591). */
   pullBack: () => Promise<void>;
   /**
-   * Leave a collab I was invited into — drop my own membership without the
-   * bank-full drop-to-accept modal (#958). Creator can't leave (they delete/drop
-   * the whole draft via `cancel`); the button is hidden for them.
+   * Drop my own membership from a collab without the bank-full drop-to-accept
+   * modal (#958). Open to every member, the creator included — a collab is
+   * co-owned and `created_by_id` grants no powers (ADR-0013, #1074). Distinct
+   * from `cancel`, which deletes the praxis for everyone.
    */
   leaveCollab: () => Promise<void>;
   cancel: () => Promise<void>;
@@ -608,11 +610,12 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
     }
   }, [idParam, refetch]);
 
-  // Drop my own membership from a collab I was invited into (#958). Distinct from
-  // `cancel` (creator deletes the whole draft) and `pullBack` (retract my cast but
+  // Drop my own membership from a collab (#958). Distinct from `cancel` (deletes
+  // the whole praxis, everyone's part with it) and `pullBack` (retract my cast but
   // stay a member): leaving removes me entirely, so I'm sent back to the task list.
-  // Backend `leave_praxis` re-checks membership and can complete consensus for
-  // whoever stays; the gate on the button already hides it from the creator.
+  // Backend `leave_praxis` re-checks membership — membership is the only condition,
+  // which is how the creator leaves too (ADR-0013, #1074) — and can complete
+  // consensus for whoever stays.
   const leaveCollab = useCallback(async () => {
     if (!praxis) return;
     const confirmed = window.confirm(
@@ -638,8 +641,16 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
 
   const cancel = useCallback(async () => {
     if (!praxis) return;
+    // Deleting a collab is not "dropping my task": it destroys the praxis with
+    // every member's part still in it, which is why it stays the creator's alone
+    // (enforced by the backend's `delete_praxis`). A member who only wants out
+    // has `leaveCollab` — the creator included (ADR-0013). Say which of the two
+    // this is before it happens, in the faction's voice where it has one (#1074).
+    const crewAtStake = praxis.type === "collab" && praxis.members.length > 1;
     const confirmed = window.confirm(
-      i18n.t("forms:editPraxis.confirm.dropTask"),
+      crewAtStake
+        ? collabCopy(praxis.task_faction_slug, "deleteConfirm")
+        : i18n.t("forms:editPraxis.confirm.dropTask"),
     );
     if (!confirmed) return;
     if (autosaveTimerRef.current) {
