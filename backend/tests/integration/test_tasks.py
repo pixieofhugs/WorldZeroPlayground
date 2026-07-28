@@ -8,6 +8,7 @@ from models.account import Account
 from models.character import Character
 from models.character_stats import CharacterStats
 from models.faction import Faction, FactionStatus
+from models.praxis import Praxis, PraxisMember, PraxisStatus, PraxisType
 from models.task import Task, TaskStatus
 from services.faction_service import UNAFFILIATED_FACTION_SLUG
 
@@ -706,6 +707,7 @@ async def test_get_task_response_fields(client: AsyncClient, active_task: Task):
         "id", "title", "description", "point_value",
         "level_required", "status", "created_by",
         "primary_faction_slug", "is_task_vision_eligible", "created_at",
+        "in_progress_count",
     }
     assert required_fields.issubset(data.keys())
     # account_id and email must never be exposed
@@ -1875,3 +1877,137 @@ async def test_list_tasks_absent_or_blank_q_is_no_filter(
     assert baseline.status_code == 200
     assert blank.status_code == 200
     assert [t["id"] for t in blank.json()] == [t["id"] for t in baseline.json()]
+
+
+# ---------------------------------------------------------------------------
+# #1021 — in_progress_count: derived, read-time active-signup count on TaskOut
+# ---------------------------------------------------------------------------
+
+
+async def _add_praxis_member(
+    db_session: AsyncSession,
+    task_id: int,
+    character_id: int,
+    status: PraxisStatus,
+) -> Praxis:
+    """Insert a solo Praxis + its creator's PraxisMember row at a given status.
+
+    Writes directly via ``db_session`` (bypassing the one-active-praxis-per-task
+    API gate) so a single test can park several characters' praxes on the same
+    task at whatever statuses it needs — mirrors ``conftest.py``'s
+    ``praxis_solo``/``praxis_collab`` fixtures.
+    """
+    praxis = Praxis(
+        task_id=task_id,
+        created_by_id=character_id,
+        type=PraxisType.solo,
+        status=status,
+        title="Praxis",
+        body_text="proof",
+    )
+    db_session.add(praxis)
+    await db_session.flush()
+    db_session.add(PraxisMember(praxis_id=praxis.id, character_id=character_id))
+    await db_session.commit()
+    await db_session.refresh(praxis)
+    return praxis
+
+
+@pytest.mark.asyncio
+async def test_get_task_in_progress_count_counts_active_signups_only(
+    client: AsyncClient,
+    db_session: AsyncSession,
+    active_task: Task,
+    character: Character,
+    character2: Character,
+    character3: Character,
+):
+    """in_progress_count sums in_progress + pending members; submitted is excluded.
+
+    These are the only three values PraxisStatus has — there is no separate
+    "approved" status on Praxis (scoring happens via votes on a submitted
+    praxis, not a status transition), so ``submitted`` is the one non-active
+    state to prove excluded.
+    """
+    await _add_praxis_member(
+        db_session, active_task.id, character.id, PraxisStatus.in_progress
+    )
+    await _add_praxis_member(
+        db_session, active_task.id, character2.id, PraxisStatus.pending
+    )
+    await _add_praxis_member(
+        db_session, active_task.id, character3.id, PraxisStatus.submitted
+    )
+
+    resp = await client.get(f"/tasks/{active_task.id}")
+    assert resp.status_code == 200
+    assert resp.json()["in_progress_count"] == 2
+
+
+@pytest.mark.asyncio
+async def test_get_task_in_progress_count_zero_with_no_signups(
+    client: AsyncClient, active_task: Task
+):
+    """A freshly-created task with no praxes reads in_progress_count == 0."""
+    resp = await client.get(f"/tasks/{active_task.id}")
+    assert resp.status_code == 200
+    assert resp.json()["in_progress_count"] == 0
+
+
+@pytest.mark.asyncio
+async def test_list_tasks_in_progress_count_grouped_per_task(
+    client: AsyncClient,
+    db_session: AsyncSession,
+    character: Character,
+    character2: Character,
+    character3: Character,
+):
+    """GET /tasks carries a correct, independent in_progress_count per task.
+
+    Two tasks on one page, each with its own signup mix, prove the list
+    route's count is a grouped/bulk lookup keyed by task id (#1021) — not,
+    say, one query's result reused for every row.
+    """
+    busy_task = Task(
+        title="Busy Task",
+        description="",
+        point_value=10,
+        level_required=0,
+        status=TaskStatus.active,
+        created_by=character.id,
+        primary_faction_slug="ua",
+    )
+    quiet_task = Task(
+        title="Quiet Task",
+        description="",
+        point_value=10,
+        level_required=0,
+        status=TaskStatus.active,
+        created_by=character.id,
+        primary_faction_slug="ua",
+    )
+    db_session.add_all([busy_task, quiet_task])
+    await db_session.commit()
+    await db_session.refresh(busy_task)
+    await db_session.refresh(quiet_task)
+
+    # busy_task: two active signups (in_progress + pending).
+    await _add_praxis_member(
+        db_session, busy_task.id, character.id, PraxisStatus.in_progress
+    )
+    await _add_praxis_member(
+        db_session, busy_task.id, character2.id, PraxisStatus.pending
+    )
+    # quiet_task: one active signup, plus a submitted row that must not count.
+    await _add_praxis_member(
+        db_session, quiet_task.id, character3.id, PraxisStatus.in_progress
+    )
+    await _add_praxis_member(
+        db_session, quiet_task.id, character.id, PraxisStatus.submitted
+    )
+
+    resp = await client.get("/tasks")
+    assert resp.status_code == 200
+    counts_by_id = {task["id"]: task["in_progress_count"] for task in resp.json()}
+    assert counts_by_id[busy_task.id] == 2
+    assert counts_by_id[quiet_task.id] == 1

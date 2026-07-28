@@ -18,6 +18,7 @@ from services.auth import get_current_account
 from services.task import (
     build_task_out,
     build_task_out_for_viewer,
+    in_progress_counts_for_tasks,
     list_signups_for_task,
     list_tasks as service_list_tasks,
     propose_task,
@@ -65,8 +66,18 @@ async def list_tasks(
         viewer=viewer,
         skip_level_check=is_admin,
     )
+    # One grouped query for the whole page (#1021) — never a per-task count.
+    in_progress_counts = await in_progress_counts_for_tasks(
+        [task.id for task in tasks], session
+    )
     return [
-        await build_task_out_for_viewer(task, viewer, session) for task in tasks
+        await build_task_out_for_viewer(
+            task,
+            viewer,
+            session,
+            in_progress_count=in_progress_counts.get(task.id, 0),
+        )
+        for task in tasks
     ]
 
 
@@ -112,7 +123,7 @@ async def propose_task_route(
 ):
     is_admin = await account_has_admin_role(account.id, session)
     task = await propose_task(character, data, session, skip_level_check=is_admin)
-    return build_task_out(task)
+    return await build_task_out(task, session)
 
 
 @router.put("/{task_id}", response_model=TaskOut)
@@ -125,4 +136,4 @@ async def update_task_route(
     task = await session.get(Task, task_id)
     if task is None:
         raise HTTPException(status_code=404, detail="Task not found.")
-    return build_task_out(await update_task(task, data, character, session))
+    return await build_task_out(await update_task(task, data, character, session), session)

@@ -40,7 +40,7 @@ from schemas.comment import CommentModerationIn, CommentOut
 from services.praxis import build_praxis_out, moderate_praxis
 from services.vote_tally import crowned_praxis_ids
 from services.comment import build_comment_out, list_flagged_comments, moderate_comment
-from services.task import build_task_out
+from services.task import build_task_out, in_progress_counts_for_tasks
 from services.admin_service import (
     admin_create_character,
     admin_edit_task,
@@ -242,7 +242,7 @@ async def admin_reactivate_task(
     session: AsyncSession = Depends(get_db),
 ) -> TaskOut:
     task = await reactivate_task(task_id, session)
-    return build_task_out(task)
+    return await build_task_out(task, session)
 
 
 # ---------------------------------------------------------------------------
@@ -383,7 +383,7 @@ async def admin_patch_task(
     session: AsyncSession = Depends(get_db),
 ):
     task = await admin_edit_task(task_id, data, session)
-    return build_task_out(task)
+    return await build_task_out(task, session)
 
 
 @router.put("/tasks/{task_id}/status", response_model=TaskOut)
@@ -395,7 +395,7 @@ async def admin_update_task_status(
 ):
     new_status = TaskStatus(data.status)
     task = await update_task_status(task_id, new_status, session)
-    return build_task_out(task)
+    return await build_task_out(task, session)
 
 
 # ---------------------------------------------------------------------------
@@ -413,6 +413,13 @@ async def list_pending_tasks(
     session: AsyncSession = Depends(get_db),
 ):
     rows = await list_pending_tasks_with_proposer(session)
+    # One grouped query for the whole page (#1021) — never a per-task count.
+    # (Pending tasks are ordinarily signup-free, but era config can carve out
+    # factions allowed to act on a still-pending task — era.allow_praxis_on_-
+    # pending_task_factions — so this reads the real count, not an assumed 0.)
+    in_progress_counts = await in_progress_counts_for_tasks(
+        [task.id for task, _ in rows], session
+    )
     return [
         PendingTaskOut(
             id=task.id,
@@ -427,6 +434,7 @@ async def list_pending_tasks(
             metatask_faction_slug=task.metatask_faction_slug,
             is_task_vision_eligible=task.is_task_vision_eligible,
             created_at=task.created_at,
+            in_progress_count=in_progress_counts.get(task.id, 0),
             created_by_name=display_name or "",
         )
         for task, display_name in rows
@@ -440,7 +448,7 @@ async def approve_task(
     session: AsyncSession = Depends(get_db),
 ):
     task = await update_task_status(task_id, TaskStatus.active, session)
-    return build_task_out(task)
+    return await build_task_out(task, session)
 
 
 @router.put("/tasks/{task_id}/retire", response_model=TaskOut)
@@ -450,7 +458,7 @@ async def retire_task(
     session: AsyncSession = Depends(get_db),
 ):
     task = await update_task_status(task_id, TaskStatus.retired, session)
-    return build_task_out(task)
+    return await build_task_out(task, session)
 
 
 class TaskVisionToggle(BaseModel):
@@ -471,7 +479,7 @@ async def admin_toggle_task_vision(
     task.is_task_vision_eligible = data.is_task_vision_eligible
     await session.flush()
     await session.refresh(task)
-    return build_task_out(task)
+    return await build_task_out(task, session)
 
 
 @router.delete("/praxes/{praxis_id}", status_code=204)
@@ -551,4 +559,4 @@ async def admin_create_task(
     session.add(task)
     await session.flush()
     await session.refresh(task)
-    return build_task_out(task)
+    return await build_task_out(task, session)

@@ -1,7 +1,7 @@
-from typing import Optional
+from typing import Collection, Optional
 
 from fastapi import HTTPException
-from sqlalchemy import or_, select
+from sqlalchemy import func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from game_config import CURRENT_ERA, EraConfig
@@ -107,14 +107,29 @@ async def update_task(
     return task
 
 
-def build_task_out(task: Task) -> TaskOut:
+async def build_task_out(
+    task: Task,
+    session: AsyncSession,
+    *,
+    in_progress_count: Optional[int] = None,
+) -> TaskOut:
     """Convert a Task ORM instance to a TaskOut schema.
 
     This builder does not compute any viewer-relative fields; flags such as
     ``can_submit_praxis``, ``allowed_modes``, and ``eligible_for_current_user``
     are left at their safe defaults. Use :func:`build_task_out_for_viewer`
     from a route that has an authenticated viewer available.
+
+    ``in_progress_count`` is the task's active-signup count (#1021); list
+    routes precompute it once via :func:`in_progress_counts_for_tasks` for
+    every task on the page and pass the per-task value here to avoid an N+1.
+    Single-task routes may leave the default, which self-computes via the
+    same helper scoped to just this one task.
     """
+    if in_progress_count is None:
+        counts = await in_progress_counts_for_tasks([task.id], session)
+        in_progress_count = counts.get(task.id, 0)
+
     return TaskOut(
         id=task.id,
         title=task.title,
@@ -128,6 +143,7 @@ def build_task_out(task: Task) -> TaskOut:
         metatask_faction_slug=task.metatask_faction_slug,
         is_task_vision_eligible=task.is_task_vision_eligible,
         created_at=task.created_at,
+        in_progress_count=in_progress_count,
     )
 
 
@@ -136,6 +152,8 @@ async def build_task_out_for_viewer(
     viewer: Optional[Character],
     session: AsyncSession,
     era: EraConfig = CURRENT_ERA,
+    *,
+    in_progress_count: Optional[int] = None,
 ) -> TaskOut:
     """Build a :class:`TaskOut` with viewer-relative capability flags.
 
@@ -143,8 +161,13 @@ async def build_task_out_for_viewer(
     ``eligible_for_current_user`` using the authenticated viewer's character
     (``None`` for anonymous callers). All three flags default to the same
     safe values as :func:`build_task_out` when ``viewer`` is ``None``.
+
+    ``in_progress_count`` is passed straight through to :func:`build_task_out`
+    — see its docstring. List routes should precompute it once per page via
+    :func:`in_progress_counts_for_tasks`; single-task routes may leave it to
+    self-compute.
     """
-    base = build_task_out(task)
+    base = await build_task_out(task, session, in_progress_count=in_progress_count)
 
     if viewer is None:
         return base
@@ -188,6 +211,37 @@ async def list_signups_for_task(
         .order_by(PraxisMember.joined_at.asc())
     )
     return list(result.all())
+
+
+async def in_progress_counts_for_tasks(
+    task_ids: Collection[int],
+    session: AsyncSession,
+) -> dict[int, int]:
+    """Grouped count of active signups per task, in ONE query.
+
+    An "active signup" is a ``PraxisMember`` row on a ``Praxis`` whose status
+    is ``in_progress`` or ``pending`` — the exact population
+    :func:`list_signups_for_task` lists for a single task, reduced to a count
+    here and grouped across every requested task id (#1021), so populating
+    ``TaskOut.in_progress_count`` for a page of tasks never becomes a
+    per-task query.
+
+    Task ids with no active signups are simply absent from the returned map;
+    callers should treat a missing entry as 0 (see :func:`build_task_out`).
+    """
+    if not task_ids:
+        return {}
+
+    agg_result = await session.execute(
+        select(Praxis.task_id, func.count(PraxisMember.id))
+        .join(PraxisMember, PraxisMember.praxis_id == Praxis.id)
+        .where(
+            Praxis.task_id.in_(task_ids),
+            Praxis.status.in_([PraxisStatus.in_progress, PraxisStatus.pending]),
+        )
+        .group_by(Praxis.task_id)
+    )
+    return {task_id: int(count or 0) for task_id, count in agg_result.all()}
 
 
 #: ``sort`` value that orders the task list by creation time, newest first.
