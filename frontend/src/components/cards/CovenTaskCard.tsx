@@ -1,193 +1,430 @@
+import type { CSSProperties } from "react";
 import { Link } from "react-router-dom";
 import type { CardProps } from "../TaskCard";
 import i18n from "../../i18n";
-import LevelGem from "../ui/LevelGem";
+import { isNeutralMultiplier } from "../../utils/points";
+import { useFormFactor } from "../../hooks/useFormFactor";
 
 /**
- * Cozy Coven — wow.exe.
- * Lo-fi computer-witch window: pastel title bar with window dots, a faint
- * dotted-grid body, and an inner "notepad" panel holding the task in the
- * Caveat headline font. Visuals only — same prop contract as the other cards.
+ * Cozy Coven — THE CANDLELIT SPELL SLIP (task card v2, #1023).
+ *
+ * A slip of paper that fades pink → lavender under a gold twinkle field, headed
+ * by a pentagram badge and the coven's name hand-lettered in Caveat. A celtic
+ * braid, hearts tied off at both ends, rules off each section; the points sit in
+ * a glowing arcane sigil; a slow pentagram watermark turns behind the copy; and
+ * the call to action is a full-bleed pink band. Grenze Gotisch carries the
+ * title, Cormorant Garamond the reading copy, Quicksand the chrome.
+ *
+ * This REPLACES the lo-fi `coven.exe` window archetype wholesale (ADR-0055 /
+ * ADR-0056 — a full metaphor swap, not a tweak). The `--faction-coven-win-*`
+ * tokens stay declared: other surfaces still paint with them.
+ *
+ * ONE RESPONSIVE COMPONENT (ADR-0056): `useFormFactor` picks the size set, not a
+ * different card. The dormant `mobileArchetypes/cards/CovenMobileTaskCard` stays
+ * in the tree for the revert.
+ *
+ * All colour via `--faction-coven-slip-*`; light/dark flips through the
+ * `[data-theme="dark"]` cascade, never a ternary. Three of the design's inks are
+ * walked down for AA against the gradient's darkest stop — see index.css.
  */
 
-/** Tiny four-point sparkle used in the title bar and footer pill accent. */
-function Sparkle({
-  size = 10,
-  color = "currentColor",
-}: {
-  size?: number;
-  color?: string;
-}) {
+const CHROME = "var(--font-faction-rounded)"; /* Quicksand */
+const READING = "var(--font-faction-serif)"; /* Cormorant Garamond */
+const HAND = "var(--font-faction-script)"; /* Caveat */
+const DISPLAY = "var(--font-faction-witch)"; /* Grenze Gotisch */
+
+/** The masthead band the twinkle field is confined to, so no star lands in copy. */
+const MASTHEAD_HEIGHT = 72;
+
+interface SizeSet {
+  /** Card width. Geometry, so a raw px number (WORLD_ZERO_STYLE §4a). */
+  cardWidth: number;
+  bodyPad: string;
+  titleSize: string;
+  levelSize: string;
+  /** Outer box of the arcane sigil. Geometry. */
+  sigil: number;
+}
+
+const SIZES: Record<"desktop" | "mobile", SizeSet> = {
+  desktop: {
+    cardWidth: 384,
+    bodyPad: "0 var(--space-xl) var(--space-lg)",
+    titleSize: "var(--text-heading)",
+    levelSize: "var(--text-heading)",
+    sigil: 100,
+  },
+  mobile: {
+    cardWidth: 340,
+    bodyPad: "0 var(--space-lg) var(--space-lg)",
+    titleSize: "var(--text-title)",
+    levelSize: "var(--text-title)",
+    sigil: 88,
+  },
+};
+
+/** Small-caps caption voice — every label on the slip speaks in it. */
+const CAPTION: CSSProperties = {
+  fontFamily: CHROME,
+  fontWeight: 700,
+  letterSpacing: "0.16em",
+  textTransform: "uppercase",
+  color: "var(--faction-coven-slip-label)",
+};
+
+/** A four-point star, centred on (x, y) with arm length r. */
+function starPath(x: number, y: number, r: number): string {
+  const long = r * 2.6;
+  return `M${x} ${y - long} l${r} ${long} ${long} ${r} -${long} ${r} -${r} ${long} -${r} -${long} -${long} -${r} ${long} -${r} z`;
+}
+
+/** One heart, tied off at an end of the braid. */
+function Heart({ size = 10 }: { size?: number }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 24 24" aria-hidden="true">
+    <svg width={size} height={size} viewBox="0 0 12 12" aria-hidden="true" style={{ display: "block", flex: "0 0 auto" }}>
       <path
-        d="M12 1c.6 5.2 2.8 7.4 8 8-5.2.6-7.4 2.8-8 8-.6-5.2-2.8-7.4-8-8 5.2-.6 7.4-2.8 8-8z"
-        fill={color}
+        d="M6 10.5 C1 7.3, 1.2 3.4, 3.6 2.6 C5 2.1, 5.8 3, 6 3.6 C6.2 3, 7 2.1, 8.4 2.6 C10.8 3.4, 11 7.3, 6 10.5 Z"
+        fill="var(--faction-coven-slip-deep)"
       />
     </svg>
   );
 }
 
-/** One colored window-control dot. */
-function WindowDot({ color }: { color: string }) {
+/** The braid with a heart at each end. `.cvn-braid` owns the thread's pigments. */
+function Thread({ style }: { style?: CSSProperties }) {
   return (
-    <span
+    <span aria-hidden="true" style={{ display: "flex", alignItems: "center", gap: "var(--space-xs)", ...style }}>
+      <Heart />
+      <span className="cvn-braid" style={{ flex: 1, minWidth: 0 }} />
+      <Heart />
+    </span>
+  );
+}
+
+/** The gold twinkle field, clipped to the masthead band. */
+function TwinkleField() {
+  const stars: [number, number, number][] = [
+    [38, 26, 2.6],
+    [296, 34, 2],
+    [120, 18, 1.4],
+    [212, 44, 1.6],
+    [264, 16, 1.2],
+    [74, 48, 1.6],
+  ];
+  return (
+    <svg
+      width="100%"
+      height={MASTHEAD_HEIGHT}
+      viewBox={`0 0 340 ${MASTHEAD_HEIGHT}`}
+      preserveAspectRatio="none"
+      aria-hidden="true"
+      style={{ position: "absolute", left: 0, top: 0, right: 0, zIndex: 0, pointerEvents: "none" }}
+    >
+      {stars.map(([x, y, r]) => (
+        <path key={`${x}-${y}`} d={starPath(x, y, r)} fill="var(--faction-coven-slip-gold)" opacity={0.8} />
+      ))}
+    </svg>
+  );
+}
+
+/** The points, held in a glowing arcane sigil. */
+function Sigil({ size, points }: { size: number; points: number }) {
+  const sparkles: [number, number, number][] = [
+    [50, 4, 3.4],
+    [88, 26, 2.4],
+    [14, 74, 2.8],
+    [84, 78, 1.9],
+    [16, 24, 1.7],
+  ];
+  return (
+    <div
       style={{
-        width: 9,
-        height: 9,
-        borderRadius: "50%",
-        background: color,
-        border: "1.2px solid rgba(255,255,255,0.7)",
+        position: "relative",
+        flex: "0 0 auto",
+        width: size,
+        height: size,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
       }}
-    />
+    >
+      <span
+        aria-hidden="true"
+        style={{ position: "absolute", inset: 0, borderRadius: "50%", background: "var(--faction-coven-slip-sigil-halo)" }}
+      />
+      <span
+        aria-hidden="true"
+        style={{ position: "absolute", inset: "18%", borderRadius: "50%", background: "var(--faction-coven-slip-sigil-core)" }}
+      />
+      <svg
+        width={size}
+        height={size}
+        viewBox="0 0 100 100"
+        aria-hidden="true"
+        style={{ position: "absolute", inset: 0, overflow: "visible" }}
+      >
+        <circle cx="50" cy="50" r="32" fill="none" stroke="var(--faction-coven-slip-pk)" strokeWidth="1.6" opacity="0.9" />
+        <g stroke="var(--faction-coven-slip-gold)" strokeWidth="1.1" strokeLinecap="round" opacity="0.8">
+          <path d="M50 8 v6" />
+          <path d="M50 86 v6" />
+          <path d="M8 50 h6" />
+          <path d="M86 50 h6" />
+        </g>
+        {sparkles.map(([x, y, r]) => (
+          <path key={`${x}-${y}`} d={starPath(x, y, r)} fill="var(--faction-coven-slip-gold)" opacity={0.9} />
+        ))}
+      </svg>
+      <div
+        style={{
+          position: "relative",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          lineHeight: 0.85,
+        }}
+      >
+        <span
+          className="content-title"
+          style={{ fontFamily: READING, fontWeight: 600, color: "var(--faction-coven-slip-deep)" }}
+        >
+          {points}
+        </span>
+        {/* Ornament: the unit caption inside the drawn sigil, sized to the disc
+            rather than to the label ramp (WORLD_ZERO_STYLE §4a). */}
+        {/* eslint-disable-next-line local/no-raw-style-values -- ornament: caption engraved inside the sigil. */}
+        <span style={{ ...CAPTION, fontSize: 8, marginTop: "var(--space-xs)" }}>
+          {i18n.t("feed:taskCard.coven.pointsUnit")}
+        </span>
+      </div>
+    </div>
   );
 }
 
 export default function CovenTaskCard({
   task,
   basePoints,
+  multiplier,
+  inProgressCount,
   onSignup,
 }: CardProps) {
+  const formFactor = useFormFactor();
+  const size = SIZES[formFactor];
+  const showMultiplier = !isNeutralMultiplier(multiplier);
+
   return (
     <div
-      style={{
-        minWidth: 168,
-        maxWidth: 210,
-        flex: "0 1 196px",
-        borderRadius: 12,
-        overflow: "hidden",
-        border: "2px solid var(--faction-coven-win-border)",
-        fontFamily: "var(--font-body)",
-        transition: "border-color 150ms",
-      }}
+      data-form-factor={formFactor}
+      style={{ width: size.cardWidth, maxWidth: "100%", boxSizing: "border-box" }}
     >
-      {/* title bar */}
-      <div
+      <article
         style={{
-          display: "flex",
-          alignItems: "center",
-          gap: "var(--space-sm)",
-          padding: "var(--space-sm) var(--space-sm)",
+          position: "relative",
+          overflow: "hidden",
+          boxSizing: "border-box",
+          width: "100%",
           background:
-            "linear-gradient(180deg, var(--faction-coven-title-from), var(--faction-coven-title-to))",
-          borderBottom: "2px solid var(--faction-coven-win-border)",
+            "linear-gradient(158deg, var(--faction-coven-slip-from), var(--faction-coven-slip-mid) 36%, var(--faction-coven-slip-lav) 74%, var(--faction-coven-slip-vio))",
+          border: "2px solid var(--faction-coven-slip-border)",
+          borderRadius: 18,
+          boxShadow: "var(--faction-coven-slip-shadow)",
+          color: "var(--faction-coven-slip-ink)",
+          fontFamily: CHROME,
         }}
       >
-        <div style={{ display: "flex", gap: "var(--space-xs)" }}>
-          <WindowDot color="#fb7aa8" />
-          <WindowDot color="#f6c75e" />
-          <WindowDot color="#86cfa6" />
-        </div>
-        <span
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: "var(--space-xs)",
-            fontSize: "var(--text-base)",
-            letterSpacing: "0.03em",
-            color: "var(--faction-coven-title-text)",
-          }}
-        >
-          <Sparkle size={9} color="var(--faction-coven-title-text)" />
-          {i18n.t("feed:taskCard.coven.windowTitle")}
-        </span>
-        <span
-          style={{
-            marginLeft: "auto",
-            fontSize: "var(--text-base)",
-            opacity: 0.75,
-            letterSpacing: "1.5px",
-            color: "var(--faction-coven-title-text)",
-          }}
-        >
-          ▭ ✕
-        </span>
-      </div>
+        <TwinkleField />
 
-      {/* dotted-grid body */}
-      <div
-        style={
-          {
-            padding: "var(--space-md) var(--space-md) var(--space-md)",
-            background: "var(--faction-coven-body-bg)",
-            backgroundImage:
-              "radial-gradient(var(--faction-coven-dot) 1.4px, transparent 1.4px)",
-            backgroundSize: "13px 13px",
-          } as React.CSSProperties
-        }
-      >
-        {/* notepad panel */}
-        <div
-          style={{
-            background: "var(--faction-coven-notepad-bg)",
-            border: "1.5px solid var(--faction-coven-notepad-border)",
-            borderRadius: 7,
-            padding: "var(--space-sm) var(--space-md)",
-            marginBottom: "var(--space-md)",
-          }}
+        {/* The turning pentagram watermark. `.cvn-wheel` owns the motion and its
+            reduced-motion guard (#911 — no component-injected <style>). */}
+        <svg
+          className="cvn-wheel"
+          width={420}
+          height={420}
+          viewBox="0 0 100 100"
+          aria-hidden="true"
+          style={{ position: "absolute", right: -118, bottom: -64, zIndex: 0, pointerEvents: "none", opacity: 0.09 }}
         >
-          <div
-            className="card-meta"
-            style={{ color: "var(--faction-coven-card-accent)" }}
-          >
-            {i18n.t("feed:taskCard.coven.questMeta", { points: basePoints })}
+          <path
+            d="M50 12 L73.5 84.3 L11.9 39.7 L88.1 39.7 L26.5 84.3 Z"
+            fill="none"
+            stroke="var(--faction-coven-slip-deep)"
+            strokeWidth="1.2"
+            strokeLinejoin="round"
+          />
+        </svg>
+
+        {/* Masthead — the badge, the hand-lettered name, a braid under both. */}
+        <div style={{ position: "relative", zIndex: 2, textAlign: "center", padding: "var(--space-md) var(--space-lg) var(--space-sm)" }}>
+          <svg width={34} height={34} viewBox="0 0 44 44" aria-hidden="true" style={{ display: "block", margin: "0 auto" }}>
+            <circle cx="22" cy="22" r="19" fill="var(--faction-coven-slip-pk)" opacity="0.18" />
+            <circle cx="22" cy="22" r="15" fill="none" stroke="var(--faction-coven-slip-gold)" strokeWidth="1" strokeDasharray="2 4" />
+            <path
+              d="M22 8 L30.2 33.3 L8.7 17.7 L35.3 17.7 L13.8 33.3 Z"
+              fill="none"
+              stroke="var(--faction-coven-slip-deep)"
+              strokeWidth="1.5"
+              strokeLinejoin="round"
+            />
+            <circle cx="22" cy="22" r="3" fill="var(--faction-coven-slip-gold)" />
+          </svg>
+          {/* eslint-disable-next-line local/no-raw-style-values -- ornament: hand-lettered Caveat masthead, not typeset copy. */}
+          <div style={{ fontFamily: HAND, fontSize: 26, lineHeight: 0.9, marginTop: "var(--space-xs)" }}>
+            {i18n.t("feed:taskCard.coven.masthead")}
           </div>
+          <Thread style={{ marginTop: "var(--space-sm)" }} />
+        </div>
 
-          <Link
-            to={`/tasks/${task.id}`}
-            style={{ textDecoration: "none", color: "inherit" }}
-          >
+        <div style={{ position: "relative", zIndex: 2, padding: size.bodyPad }}>
+          {/* Everything but the CTA reads the full call — a card-sized target
+              that stays valid HTML (no <button> nested in an <a>). */}
+          <Link to={`/tasks/${task.id}`} style={{ display: "block", textDecoration: "none", color: "inherit" }}>
             <div
-              className="content-title"
               style={{
-                fontFamily: "var(--faction-coven-card-font)",
-                fontWeight: 700,
-                lineHeight: 1.05,
-                marginBottom: "var(--space-xs)",
-                color: "var(--faction-coven-card-text)",
+                fontFamily: HAND,
+                // eslint-disable-next-line local/no-raw-style-values -- ornament: the ordinal is pencilled on the slip in Caveat.
+                fontSize: 19,
+                lineHeight: 1,
+                color: "var(--faction-coven-slip-label)",
+                textAlign: "center",
+                padding: "var(--space-md) 0",
+              }}
+            >
+              {i18n.t("feed:taskCard.ordinal", { id: task.id })}
+            </div>
+
+            <div style={{ display: "flex", alignItems: "center", gap: "var(--space-sm)", marginBottom: "var(--space-md)" }}>
+              <div style={{ flex: "0 0 auto", display: "flex", flexDirection: "column", alignItems: "flex-start", gap: "var(--space-xs)" }}>
+                <span style={{ fontFamily: READING, fontWeight: 600, fontSize: size.levelSize, lineHeight: 0.8 }}>
+                  {task.level_required}
+                </span>
+                {/* eslint-disable-next-line local/no-raw-style-values -- ornament: caption set to the numeral beside it, not the label ramp. */}
+                <span style={{ ...CAPTION, fontSize: 8.5 }}>
+                  {i18n.t("feed:taskCard.coven.levelCaption")}
+                </span>
+              </div>
+
+              <Thread style={{ flex: 1, minWidth: 0 }} />
+
+              {/* The faction modifier — hidden at ×1.00, so invisible under
+                  era_1's neutralized modifiers and automatic the day one moves
+                  (ADR-0055). */}
+              {showMultiplier && (
+                <div style={{ flex: "0 0 auto", display: "flex", flexDirection: "column", alignItems: "center", gap: "var(--space-xs)" }}>
+                  <span
+                    style={{
+                      fontFamily: CHROME,
+                      fontWeight: 700,
+                      fontSize: "var(--text-md)",
+                      lineHeight: 1,
+                      color: "var(--faction-coven-slip-cta-ink)",
+                      background:
+                        "linear-gradient(180deg, var(--faction-coven-slip-cta-from), var(--faction-coven-slip-cta-to))",
+                      border: "1.5px solid var(--faction-coven-slip-cta-to)",
+                      borderRadius: 20,
+                      padding: "var(--space-xs) var(--space-sm)",
+                      boxShadow: "0 3px 8px var(--faction-coven-slip-glow)",
+                    }}
+                  >
+                    {i18n.t("feed:taskCard.multiplier", { value: multiplier.toFixed(2) })}
+                  </span>
+                  {/* eslint-disable-next-line local/no-raw-style-values -- ornament: caption tucked under the chip. */}
+                  <span style={{ ...CAPTION, fontSize: 7.5 }}>
+                    {i18n.t("feed:taskCard.modifierCaption")}
+                  </span>
+                </div>
+              )}
+
+              <Sigil size={size.sigil} points={basePoints} />
+            </div>
+
+            <h3
+              style={{
+                fontFamily: DISPLAY,
+                fontWeight: 600,
+                fontSize: size.titleSize,
+                lineHeight: 1.06,
+                letterSpacing: "0.005em",
+                margin: "0 0 var(--space-sm)",
                 overflowWrap: "anywhere",
               }}
             >
               {task.title}
-            </div>
-          </Link>
+            </h3>
 
-          {task.description && (
-            <div
-              className="card-description"
-              style={{ color: "var(--faction-coven-card-muted)" }}
-            >
-              {task.description}
-            </div>
-          )}
+            {task.description && (
+              <p
+                className="card-description"
+                style={{
+                  fontFamily: READING,
+                  fontStyle: "italic",
+                  lineHeight: 1.45,
+                  color: "var(--faction-coven-slip-soft)",
+                  margin: "0 0 var(--space-md)",
+                }}
+              >
+                {task.description}
+              </p>
+            )}
+
+            <Thread style={{ margin: "0 0 var(--space-sm)" }} />
+
+            {inProgressCount > 0 && (
+              <div style={{ display: "flex", alignItems: "center", gap: "var(--space-sm)" }}>
+                <svg width={15} height={15} viewBox="0 0 36 36" aria-hidden="true" style={{ display: "block", flex: "0 0 auto" }}>
+                  <path
+                    d="M18 31C7 23 3 17 6.5 11 9 6.8 14 6.5 16 10c.9 1.5 1.6 2.7 2 3.4.4-.7 1.1-1.9 2-3.4 2-3.5 7-3.2 9.5 1C33 17 29 23 18 31Z"
+                    fill="var(--faction-coven-slip-pk)"
+                  />
+                </svg>
+                <span
+                  style={{
+                    fontFamily: READING,
+                    fontStyle: "italic",
+                    fontSize: "var(--text-xl)",
+                    color: "var(--faction-coven-slip-soft)",
+                  }}
+                >
+                  {i18n.t("feed:taskCard.inProgress", { count: inProgressCount })}
+                </span>
+              </div>
+            )}
+          </Link>
         </div>
 
         {onSignup && (
           <button
             onClick={() => onSignup(task.id)}
-            className="btn-primary"
-            style={{ fontSize: "var(--text-xs)", padding: "var(--space-xs) var(--space-sm)", marginBottom: "var(--space-sm)" }}
+            style={{
+              position: "relative",
+              zIndex: 2,
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: "var(--space-sm)",
+              width: "100%",
+              background:
+                "linear-gradient(180deg, var(--faction-coven-slip-cta-from), var(--faction-coven-slip-cta-to))",
+              color: "var(--faction-coven-slip-cta-ink)",
+              fontFamily: CHROME,
+              fontWeight: 700,
+              fontSize: "var(--text-lg)",
+              letterSpacing: "0.12em",
+              textTransform: "uppercase",
+              padding: "var(--space-md) 0",
+              border: "none",
+              borderTop: "1.5px solid var(--faction-coven-slip-cta-to)",
+            }}
           >
+            <svg width={12} height={12} viewBox="0 0 24 24" aria-hidden="true" style={{ display: "block", flex: "0 0 auto" }}>
+              <path
+                d="M12 0c.9 7 4.1 10.2 11 11-6.9.8-10.1 4-11 11-.9-7-4.1-10.2-11-11C7.9 10.2 11.1 7 12 0Z"
+                fill="currentColor"
+              />
+            </svg>
             {i18n.t("feed:taskCard.coven.signup")}
           </button>
         )}
-
-        {/* status row */}
-        <div className="card-footer">
-          <LevelGem level={task.level_required} factionSlug="coven" />
-          {/* Points shown as a ◆ corner-counter — a badge/counter, so it stays
-              label-tier per the role vocabulary (§4), not a plain score number. */}
-          <span
-            style={{
-              fontSize: "var(--text-sm)",
-              letterSpacing: "0.1em",
-              color: "var(--faction-coven-card-accent)",
-            }}
-          >
-            ◆ {i18n.t("feed:taskCard.coven.points", { points: basePoints })}
-          </span>
-        </div>
-      </div>
+      </article>
     </div>
   );
 }

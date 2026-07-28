@@ -268,6 +268,36 @@ const ARCHETYPE_PAIRS: Pair[] = [
     text: "--faction-wow-card-accent",
   },
 
+  // Coven — THE CANDLELIT SPELL SLIP (task card v2, #1023). The card ground is
+  // a four-stop GRADIENT, which is what makes this block necessary: the design
+  // annotated its inks against a near-white card, and three of them fail on the
+  // gradient's darkest stop (#fbc4dd), so index.css ships them walked down. The
+  // surface column below is that darkest stop deliberately — measuring the
+  // lightest one would reproduce the design's own mistake.
+  { what: "coven slip, ink", surface: "--faction-coven-slip-mid", text: "--faction-coven-slip-ink" },
+  { what: "coven slip, brief", surface: "--faction-coven-slip-mid", text: "--faction-coven-slip-soft" },
+  { what: "coven slip, caption", surface: "--faction-coven-slip-mid", text: "--faction-coven-slip-label" },
+  // ...and the lavender end of the same ramp, a different hue rather than a
+  // lighter shade of the pink, so the stop above does not cover it.
+  { what: "coven slip lavender, ink", surface: "--faction-coven-slip-vio", text: "--faction-coven-slip-ink" },
+  { what: "coven slip lavender, brief", surface: "--faction-coven-slip-vio", text: "--faction-coven-slip-soft" },
+  { what: "coven slip lavender, caption", surface: "--faction-coven-slip-vio", text: "--faction-coven-slip-label" },
+  // The CTA is a band, so BOTH its stops carry the label. The design's own two
+  // stops gave white 3.44:1 at the top; these are deepened until it clears, and
+  // the dark band takes ink rather than white for the reason
+  // --faction-coven-on-accent already states.
+  { what: "coven slip CTA band top", surface: "--faction-coven-slip-cta-from", text: "--faction-coven-slip-cta-ink" },
+  { what: "coven slip CTA band foot", surface: "--faction-coven-slip-cta-to", text: "--faction-coven-slip-cta-ink" },
+  // The points numeral never sits on the slip: the sigil's core wash puts its
+  // own ground behind it (white on the light slip, near-black on the dark one),
+  // which is exactly why that ground is a scalar token rather than an alpha
+  // chosen in the component.
+  {
+    what: "coven sigil ground, points numeral",
+    surface: "--faction-coven-slip-sigil-ground",
+    text: "--faction-coven-slip-deep",
+  },
+
   // Albescent's FACTION tokens are gone (#783) — it renders Default's surfaces,
   // which `default` already covers. What remains is the always-light palette
   // private to the reveal surfaces (invitation letter, secret placeholder). It

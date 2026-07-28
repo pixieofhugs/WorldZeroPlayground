@@ -189,7 +189,10 @@
       "windowTitle": "coven.exe",
       "questMeta": "new quest · {{points}} pts",
       "signup": "sign up",
-      "points": "{{points}} pts"
+      "points": "{{points}} pts",
+      "masthead": "the cozy coven",
+      "levelCaption": "level",
+      "pointsUnit": "points"
     },
     "wow": {
       "signup": "Take Up the Quest",
