@@ -2,9 +2,9 @@
  * #521 — collab submit indicators on the shared praxis-detail slots.
  *
  * Two invariant slots reflect the collab publish lifecycle (ADR-0012):
- *   - PraxisStatusBanners swaps the neutral "IN EDITING" banner for a
- *     "PENDING PUBLISH — waiting on co-authors" banner once submit_proposed_at
- *     is set (still status=in_progress).
+ *   - PraxisStatusBanners USED to swap a neutral "IN EDITING" banner for a
+ *     "PENDING PUBLISH — waiting on co-authors" banner. ADR-0062 deleted both:
+ *     detail is published-only, so the tests below assert their absence.
  *   - PraxisOwnerActions replaces the green Submit control with a
  *     "you've submitted — waiting on co-authors" state for a member who has
  *     already submitted an in-editing collab. The edit affordance stays.
@@ -178,8 +178,16 @@ function state(overrides: Partial<PraxisDetailState>): PraxisDetailState {
 const ADA = () => member(1, "Ada", true);
 const BETH = () => member(2, "Beth", false);
 
-describe("PraxisStatusBanners pending-publish (#521)", () => {
-  it("shows the pending-publish banner when submit_proposed_at is set", () => {
+/**
+ * ADR-0062 (#1092) retired the pair #521 added here. Detail is a published-only
+ * reading surface: the dispatcher redirects `in_progress` AND `pending` to the
+ * composer, so neither banner can paint, and the composer's waiting surface
+ * (#1071) is the one owner of an open praxis. These assertions are inverted on
+ * purpose — the copy keys are deleted, so a re-added banner would render its own
+ * key name and fail here.
+ */
+describe("PraxisStatusBanners open-state banners are gone (ADR-0062)", () => {
+  it("draws no publish-state banner for a collab awaiting its co-authors", () => {
     const t = text(
       <PraxisStatusBanners
         state={state({
@@ -187,12 +195,12 @@ describe("PraxisStatusBanners pending-publish (#521)", () => {
         })}
       />,
     );
-    expect(t).toContain("PENDING PUBLISH");
-    expect(t).toContain("Waiting on co-authors to submit.");
+    expect(t).not.toContain("PENDING PUBLISH");
+    expect(t).not.toContain("pendingPublish");
     expect(t).not.toContain("IN EDITING");
   });
 
-  it("shows the neutral IN EDITING banner when not yet proposed", () => {
+  it("draws no publish-state banner for a collab still drafting", () => {
     const t = text(
       <PraxisStatusBanners
         state={state({
@@ -200,7 +208,8 @@ describe("PraxisStatusBanners pending-publish (#521)", () => {
         })}
       />,
     );
-    expect(t).toContain("IN EDITING");
+    expect(t).not.toContain("IN EDITING");
+    expect(t).not.toContain("inEditing");
     expect(t).not.toContain("PENDING PUBLISH");
   });
 });

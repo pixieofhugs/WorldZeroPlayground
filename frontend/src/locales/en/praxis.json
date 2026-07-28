@@ -136,10 +136,6 @@
     "banners": {
       "crownLabel": "TASK CROWN",
       "crownBody": "The top-scoring praxis for this task — held until another entry out-votes it.",
-      "inEditingLabel": "IN EDITING",
-      "inEditingBody": "This praxis is in editing mode. Points and votes are paused until submitted.",
-      "pendingPublishLabel": "PENDING PUBLISH",
-      "pendingPublishBody": "Waiting on co-authors to submit.",
       "failedTitle": "This praxis was marked as failed.",
       "flaggedLabel": "FLAGGED",
       "flaggedBody": "This praxis is flagged and awaiting admin review."
