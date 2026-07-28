@@ -161,7 +161,7 @@ describe('UA mobile composer — what it draws', () => {
   it('heads the form with the ensō', () => {
     const { html } = render()
     // The one ensō (#908): the vendored brush drawing, painted through a mask.
-    expect(html).toContain('/factionMarks/enso.svg')
+    expect(html).toContain('/factionMarks/enso.webp')
     expect(html).toContain('var(--faction-ua-glow)')
   })
 

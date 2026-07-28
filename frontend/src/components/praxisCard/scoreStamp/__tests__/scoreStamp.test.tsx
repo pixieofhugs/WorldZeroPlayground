@@ -205,7 +205,7 @@ describe('#841 stamps across the conditional states (ADR-0047)', () => {
       expect(html).toContain(fields.score.toFixed(1))
       expect(html).toContain('points')
       // The total mark is the ensō, masked from the asset and tinted by a token.
-      expect(markup).toContain('/factionMarks/enso.svg')
+      expect(markup).toContain('/factionMarks/enso.webp')
       expect(markup).toContain('var(--faction-ua-card-enso)')
       expect(markup).not.toMatch(HEX)
     })

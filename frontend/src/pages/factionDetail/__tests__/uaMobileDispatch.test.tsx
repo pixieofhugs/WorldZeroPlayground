@@ -84,7 +84,7 @@ describe('UA mobile faction page — what it draws', () => {
   it('sets the ensō beside the name as the faction mark', () => {
     const { html } = render(<UaFactionPage state={baseState()} />)
     // The one ensō (#908): the vendored brush drawing, painted through a mask.
-    expect(html).toContain('/factionMarks/enso.svg')
+    expect(html).toContain('/factionMarks/enso.webp')
     expect(html).toContain('var(--faction-ua-glow)')
   })
 
