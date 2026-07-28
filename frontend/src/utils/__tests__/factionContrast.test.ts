@@ -353,6 +353,23 @@ const ARCHETYPE_PAIRS: Pair[] = [
   { what: "ephemerists medallion disc, unit", surface: "--faction-ephemerists-plate-disc", text: "--faction-ephemerists-plate-muted" },
   { what: "ephemerists plate CTA band", surface: "--faction-ephemerists-plate-cta-bg", text: "--faction-ephemerists-plate-cta-ink" },
 
+  // …and the three surfaces task detail (#1032) added, where the plate stops
+  // being one card on the app's ground and becomes the page. `-quiet` exists
+  // precisely because of the first row here: the DARKER page ground drops
+  // `-muted` to 4.31 and `-caption` to 4.45, both of which measure fine on the
+  // plate above. `-nile` was walked for the same reason (4.24 on the page as the
+  // design drew it) and carries every link plus the "level met" yes, so it is
+  // measured on all three grounds it lands on.
+  { what: "ephemerists page ground, quiet ink", surface: "--faction-ephemerists-plate-page", text: "--faction-ephemerists-plate-quiet" },
+  { what: "ephemerists page ground, links", surface: "--faction-ephemerists-plate-page", text: "--faction-ephemerists-plate-nile" },
+  { what: "ephemerists page ground, title", surface: "--faction-ephemerists-plate-page", text: "--faction-ephemerists-plate-ink" },
+  { what: "ephemerists plate, quiet ink", surface: "--faction-ephemerists-plate-bg", text: "--faction-ephemerists-plate-quiet" },
+  { what: "ephemerists panel cell, ink", surface: "--faction-ephemerists-plate-inner", text: "--faction-ephemerists-plate-ink" },
+  { what: "ephemerists panel cell, caption", surface: "--faction-ephemerists-plate-inner", text: "--faction-ephemerists-plate-caption" },
+  { what: "ephemerists panel cell, quiet ink", surface: "--faction-ephemerists-plate-inner", text: "--faction-ephemerists-plate-quiet" },
+  { what: "ephemerists panel cell, links", surface: "--faction-ephemerists-plate-inner", text: "--faction-ephemerists-plate-nile" },
+  { what: "ephemerists medallion disc, caption", surface: "--faction-ephemerists-plate-disc", text: "--faction-ephemerists-plate-caption" },
+
   // Singularity — THE TERMINAL SESSION (task card v2, #1023). The one card in
   // the wave that is DARK IN BOTH THEMES (§6), so every row here is measured
   // twice against a near-black ground rather than once against a light one. The

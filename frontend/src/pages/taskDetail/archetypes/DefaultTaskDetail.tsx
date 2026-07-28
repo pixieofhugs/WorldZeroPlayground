@@ -60,7 +60,8 @@ function initialsOf(name: string): string {
  * Copy is neutral and shared (`detail.*`, ADR-0057) — no na voice, no faction
  * voice. Dress is na's alone: `--faction-default-*` (rainbow, ring, card sheet)
  * reached via the token / `factionFill`, NOT `factionCssVar`, which is neutral
- * grey for na. The full-page `.na-backdrop` wash lives in index.css.
+ * grey for na. The content column carries the page surface itself
+ * (`--faction-default-card-bg`); there is no separate backdrop element.
  */
 export default function DefaultTaskDetail({
   state,
@@ -753,16 +754,30 @@ export default function DefaultTaskDetail({
 
   return (
     <div className="py-8" style={{ position: "relative" }}>
-      {/* Full-page spectrum wash — the na "all paths open" backdrop (index.css,
-          shared with DefaultProfile #969). */}
-      <div className="na-backdrop" aria-hidden />
-
       <div
         style={{
           position: "relative",
           zIndex: 1,
           maxWidth: 1200,
           margin: "0 auto",
+          // The page surface the design puts everything on, carried by the
+          // COLUMN rather than the viewport — the owner's rule for this surface
+          // is that the site background still shows around the component.
+          //
+          // This replaced a `<div className="na-backdrop">` full-page wash.
+          // NOTE, correcting #1056's commit message and PR body: that PR claimed
+          // `.na-backdrop` had no rule behind it. It does — index.css defines it
+          // with a dark-mode variant. The claim came from grepping a stale
+          // worktree that predated #1049. The change itself was still right (a
+          // full-bleed faction wash is not wanted here, and the column needed a
+          // surface and padding), but the stated reason was false; do not cite
+          // it as precedent for "a class with no CSS".
+          background: "var(--faction-default-card-bg)",
+          color: "var(--faction-default-card-text)",
+          border: "1px solid var(--faction-default-border)",
+          borderRadius: 18,
+          padding: desktop ? "var(--space-2xl)" : "var(--space-lg)",
+          boxSizing: "border-box",
         }}
       >
         <div
