@@ -9,35 +9,36 @@
  * during module evaluation — see the cycle note in `./manifest.ts`.
  */
 import type { FactionManifest } from './manifest'
+import { lazyArchetype } from './lazyArchetype'
 
-import EphemeristsAvatar from '../components/avatar/EphemeristsAvatar'
-import EphemeristsBackdrop from '../components/backdrop/EphemeristsBackdrop'
-import EphemeristsComment from '../components/comments/voices/EphemeristsComment'
-import EphemeristsDuelRail from '../pages/praxisDetail/duelRails/EphemeristsDuelRail'
-import EphemeristsDuelSealConfirm from '../components/duel/EphemeristsDuelSealConfirm'
-import EphemeristsEditPraxis from '../pages/editPraxis/archetypes/EphemeristsEditPraxis'
-import EphemeristsFactionBody from '../pages/factionDetail/archetypes/EphemeristsFactionBody'
-import EphemeristsFactionHero from '../components/cards/EphemeristsFactionHero'
-import EphemeristsFactionPage from '../pages/factionDetail/mobileArchetypes/EphemeristsFactionPage'
-import EphemeristsFeedFrame from '../components/feed/EphemeristsFeedFrame'
-import EphemeristsHome from '../pages/fieldDesk/mobileArchetypes/EphemeristsHome'
-import EphemeristsMobileDuelRail from '../pages/praxisDetail/duelRails/EphemeristsMobileDuelRail'
-import EphemeristsMobileDuelSealConfirm from '../components/duel/EphemeristsMobileDuelSealConfirm'
-import EphemeristsMobileEditPraxis from '../pages/editPraxis/mobileArchetypes/EphemeristsComposer'
-import EphemeristsMobilePraxisCard from '../components/praxisCard/mobile/EphemeristsMobilePraxisCard'
-import EphemeristsMobilePraxisDetail from '../pages/praxisDetail/mobileArchetypes/EphemeristsPraxisDetail'
-import EphemeristsMobileTaskDetail from '../pages/taskDetail/mobileArchetypes/EphemeristsTaskDetail'
-import EphemeristsPraxisDetail from '../pages/praxisDetail/archetypes/EphemeristsPraxisDetail'
-import EphemeristsProfileBody from '../pages/characterProfile/archetypes/EphemeristsProfileBody'
-import EphemeristsTaskCard from '../components/cards/EphemeristsTaskCard'
-import EphemeristsTaskDetail from '../pages/taskDetail/archetypes/EphemeristsTaskDetail'
-import EphemeristsVote from '../components/vote/EphemeristsVote'
-import EphemeristsPraxisCard from '../components/praxisCard/desktop/EphemeristsPraxisCard'
-import EphemeristsScoreStamp from '../components/praxisCard/scoreStamp/EphemeristsScoreStamp'
-import EphemeristsSeal from '../components/metaTaskSeal/skins/EphemeristsSeal'
-import { EphemeristsSigil } from '../components/cards/ephemeristsAtoms'
-import { EphemeristsCard } from '../components/cards/FactionCard'
-import { EphemeristsSelectCard } from '../components/cards/FactionSelectCard'
+const EphemeristsAvatar = lazyArchetype(() => import('../components/avatar/EphemeristsAvatar'))
+const EphemeristsBackdrop = lazyArchetype(() => import('../components/backdrop/EphemeristsBackdrop'))
+const EphemeristsComment = lazyArchetype(() => import('../components/comments/voices/EphemeristsComment'))
+const EphemeristsDuelRail = lazyArchetype(() => import('../pages/praxisDetail/duelRails/EphemeristsDuelRail'))
+const EphemeristsDuelSealConfirm = lazyArchetype(() => import('../components/duel/EphemeristsDuelSealConfirm'))
+const EphemeristsEditPraxis = lazyArchetype(() => import('../pages/editPraxis/archetypes/EphemeristsEditPraxis'))
+const EphemeristsFactionBody = lazyArchetype(() => import('../pages/factionDetail/archetypes/EphemeristsFactionBody'))
+const EphemeristsFactionHero = lazyArchetype(() => import('../components/cards/EphemeristsFactionHero'))
+const EphemeristsFactionPage = lazyArchetype(() => import('../pages/factionDetail/mobileArchetypes/EphemeristsFactionPage'))
+const EphemeristsFeedFrame = lazyArchetype(() => import('../components/feed/EphemeristsFeedFrame'))
+const EphemeristsHome = lazyArchetype(() => import('../pages/fieldDesk/mobileArchetypes/EphemeristsHome'))
+const EphemeristsMobileDuelRail = lazyArchetype(() => import('../pages/praxisDetail/duelRails/EphemeristsMobileDuelRail'))
+const EphemeristsMobileDuelSealConfirm = lazyArchetype(() => import('../components/duel/EphemeristsMobileDuelSealConfirm'))
+const EphemeristsMobileEditPraxis = lazyArchetype(() => import('../pages/editPraxis/mobileArchetypes/EphemeristsComposer'))
+const EphemeristsMobilePraxisCard = lazyArchetype(() => import('../components/praxisCard/mobile/EphemeristsMobilePraxisCard'))
+const EphemeristsMobilePraxisDetail = lazyArchetype(() => import('../pages/praxisDetail/mobileArchetypes/EphemeristsPraxisDetail'))
+const EphemeristsMobileTaskDetail = lazyArchetype(() => import('../pages/taskDetail/mobileArchetypes/EphemeristsTaskDetail'))
+const EphemeristsPraxisDetail = lazyArchetype(() => import('../pages/praxisDetail/archetypes/EphemeristsPraxisDetail'))
+const EphemeristsProfileBody = lazyArchetype(() => import('../pages/characterProfile/archetypes/EphemeristsProfileBody'))
+const EphemeristsTaskCard = lazyArchetype(() => import('../components/cards/EphemeristsTaskCard'))
+const EphemeristsTaskDetail = lazyArchetype(() => import('../pages/taskDetail/archetypes/EphemeristsTaskDetail'))
+const EphemeristsVote = lazyArchetype(() => import('../components/vote/EphemeristsVote'))
+const EphemeristsPraxisCard = lazyArchetype(() => import('../components/praxisCard/desktop/EphemeristsPraxisCard'))
+const EphemeristsScoreStamp = lazyArchetype(() => import('../components/praxisCard/scoreStamp/EphemeristsScoreStamp'))
+const EphemeristsSeal = lazyArchetype(() => import('../components/metaTaskSeal/skins/EphemeristsSeal'))
+const EphemeristsSigil = lazyArchetype(() => import('../components/cards/ephemeristsAtoms').then((m) => ({ default: m.EphemeristsSigil })))
+const EphemeristsCard = lazyArchetype(() => import('../components/cards/FactionCard').then((m) => ({ default: m.EphemeristsCard })))
+const EphemeristsSelectCard = lazyArchetype(() => import('../components/cards/FactionSelectCard').then((m) => ({ default: m.EphemeristsSelectCard })))
 
 export const EPHEMERISTS_MANIFEST: FactionManifest = {
   slug: 'ephemerists',

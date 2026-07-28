@@ -33,6 +33,7 @@ import AlbescentVote from '../AlbescentVote'
 import UnaffiliatedVote from '../UnaffiliatedVote'
 import { surfaceMap } from '../../../factions'
 import { pickVariant } from '../../../utils/factionDispatch'
+import { resolvedArchetype } from '../../../factions/lazyArchetype'
 
 function currentUser(): CurrentUser {
   return {
@@ -77,10 +78,8 @@ describe('albescent claims the vote surface', () => {
   it('registers its own widget instead of falling through to UnaffiliatedVote', () => {
     const map = surfaceMap('vote')
     expect(map['albescent']).toBeDefined()
-    const Resolved = pickVariant(
-      map as Record<string, typeof AlbescentVote>,
-      'albescent',
-      UnaffiliatedVote,
+    const Resolved = resolvedArchetype(
+      pickVariant(map as Record<string, typeof AlbescentVote>, 'albescent', UnaffiliatedVote),
     )
     expect(Resolved).toBe(AlbescentVote)
     expect(Resolved).not.toBe(UnaffiliatedVote)

@@ -9,35 +9,36 @@
  * during module evaluation — see the cycle note in `./manifest.ts`.
  */
 import type { FactionManifest } from './manifest'
+import { lazyArchetype } from './lazyArchetype'
 
-import SnideAvatar from '../components/avatar/SnideAvatar'
-import SnideDuelRail from '../pages/praxisDetail/duelRails/SnideDuelRail'
-import SnideDuelSealConfirm from '../components/duel/SnideDuelSealConfirm'
-import SnideMobileDuelRail from '../pages/praxisDetail/duelRails/SnideMobileDuelRail'
-import SnideMobileDuelSealConfirm from '../components/duel/SnideMobileDuelSealConfirm'
-import SnideBackdrop from '../components/backdrop/SnideBackdrop'
-import SnideComment from '../components/comments/voices/SnideComment'
-import SnideEditPraxis from '../pages/editPraxis/archetypes/SnideEditPraxis'
-import SnideFactionBody from '../pages/factionDetail/archetypes/SnideFactionBody'
-import SnideFactionHero from '../components/cards/SnideFactionHero'
-import SnideFactionPage from '../pages/factionDetail/mobileArchetypes/SnideFactionPage'
-import SnideFeedFrame from '../components/feed/SnideFeedFrame'
-import SnideHome from '../pages/fieldDesk/mobileArchetypes/SnideHome'
-import SnideMobileEditPraxis from '../pages/editPraxis/mobileArchetypes/SnideComposer'
-import SnideMobilePraxisCard from '../components/praxisCard/mobile/SnideMobilePraxisCard'
-import SnideMobilePraxisDetail from '../pages/praxisDetail/mobileArchetypes/SnidePraxisDetail'
-import SnideMobileTaskDetail from '../pages/taskDetail/mobileArchetypes/SnideTaskDetail'
-import SnidePraxisDetail from '../pages/praxisDetail/archetypes/SnidePraxisDetail'
-import SnideProfileBody from '../pages/characterProfile/archetypes/SnideProfileBody'
-import SnideTaskCard from '../components/cards/SnideTaskCard'
-import SnideTaskDetail from '../pages/taskDetail/archetypes/SnideTaskDetail'
-import SnideVote from '../components/vote/SnideVote'
-import SnidePraxisCard from '../components/praxisCard/desktop/SnidePraxisCard'
-import SnideScoreStamp from '../components/praxisCard/scoreStamp/SnideScoreStamp'
-import SnideSeal from '../components/metaTaskSeal/skins/SnideSeal'
-import { SnideSigil } from '../components/cards/SnideSigil'
-import { SnideCard } from '../components/cards/FactionCard'
-import { SnideSelectCard } from '../components/cards/FactionSelectCard'
+const SnideAvatar = lazyArchetype(() => import('../components/avatar/SnideAvatar'))
+const SnideDuelRail = lazyArchetype(() => import('../pages/praxisDetail/duelRails/SnideDuelRail'))
+const SnideDuelSealConfirm = lazyArchetype(() => import('../components/duel/SnideDuelSealConfirm'))
+const SnideMobileDuelRail = lazyArchetype(() => import('../pages/praxisDetail/duelRails/SnideMobileDuelRail'))
+const SnideMobileDuelSealConfirm = lazyArchetype(() => import('../components/duel/SnideMobileDuelSealConfirm'))
+const SnideBackdrop = lazyArchetype(() => import('../components/backdrop/SnideBackdrop'))
+const SnideComment = lazyArchetype(() => import('../components/comments/voices/SnideComment'))
+const SnideEditPraxis = lazyArchetype(() => import('../pages/editPraxis/archetypes/SnideEditPraxis'))
+const SnideFactionBody = lazyArchetype(() => import('../pages/factionDetail/archetypes/SnideFactionBody'))
+const SnideFactionHero = lazyArchetype(() => import('../components/cards/SnideFactionHero'))
+const SnideFactionPage = lazyArchetype(() => import('../pages/factionDetail/mobileArchetypes/SnideFactionPage'))
+const SnideFeedFrame = lazyArchetype(() => import('../components/feed/SnideFeedFrame'))
+const SnideHome = lazyArchetype(() => import('../pages/fieldDesk/mobileArchetypes/SnideHome'))
+const SnideMobileEditPraxis = lazyArchetype(() => import('../pages/editPraxis/mobileArchetypes/SnideComposer'))
+const SnideMobilePraxisCard = lazyArchetype(() => import('../components/praxisCard/mobile/SnideMobilePraxisCard'))
+const SnideMobilePraxisDetail = lazyArchetype(() => import('../pages/praxisDetail/mobileArchetypes/SnidePraxisDetail'))
+const SnideMobileTaskDetail = lazyArchetype(() => import('../pages/taskDetail/mobileArchetypes/SnideTaskDetail'))
+const SnidePraxisDetail = lazyArchetype(() => import('../pages/praxisDetail/archetypes/SnidePraxisDetail'))
+const SnideProfileBody = lazyArchetype(() => import('../pages/characterProfile/archetypes/SnideProfileBody'))
+const SnideTaskCard = lazyArchetype(() => import('../components/cards/SnideTaskCard'))
+const SnideTaskDetail = lazyArchetype(() => import('../pages/taskDetail/archetypes/SnideTaskDetail'))
+const SnideVote = lazyArchetype(() => import('../components/vote/SnideVote'))
+const SnidePraxisCard = lazyArchetype(() => import('../components/praxisCard/desktop/SnidePraxisCard'))
+const SnideScoreStamp = lazyArchetype(() => import('../components/praxisCard/scoreStamp/SnideScoreStamp'))
+const SnideSeal = lazyArchetype(() => import('../components/metaTaskSeal/skins/SnideSeal'))
+const SnideSigil = lazyArchetype(() => import('../components/cards/SnideSigil').then((m) => ({ default: m.SnideSigil })))
+const SnideCard = lazyArchetype(() => import('../components/cards/FactionCard').then((m) => ({ default: m.SnideCard })))
+const SnideSelectCard = lazyArchetype(() => import('../components/cards/FactionSelectCard').then((m) => ({ default: m.SnideSelectCard })))
 
 export const SNIDE_MANIFEST: FactionManifest = {
   slug: 'snide',

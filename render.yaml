@@ -47,6 +47,19 @@ services:
       - key: VITE_API_URL
         value: https://api.worldzero.org
     headers:
+      # Vite content-hashes everything under /assets, so a changed file is a
+      # changed URL. These can be cached forever; the blanket no-cache below
+      # was costing every visitor a revalidation round-trip before first paint,
+      # and a full re-download of the bundle on any 200.
+      #
+      # This does NOT affect how fresh votes or points are: those come from the
+      # separate worldzero-backend service at api.worldzero.org, which these
+      # headers do not touch.
+      - path: /assets/*
+        name: Cache-Control
+        value: public, max-age=31536000, immutable
+      # index.html stays uncached so a deploy is picked up immediately — it is
+      # what points at the new hashed bundle.
       - path: /*
         name: Cache-Control
         value: no-cache

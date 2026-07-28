@@ -1,37 +1,49 @@
+import { lazy, Suspense } from 'react'
 import { Routes, Route } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import Layout from './components/Layout'
 import ProtectedRoute from './auth/ProtectedRoute'
 import { useAuth } from './auth/AuthContext'
-import Home from './pages/Home'
-import FieldDesk from './pages/FieldDesk'
-import Tasks from './pages/Tasks'
-import TaskDetail from './pages/TaskDetail'
-import PraxisDetail from './pages/PraxisDetail'
-import EditPraxis from './pages/EditPraxis'
-import CharacterProfile from './pages/CharacterProfile'
-import Leaderboard from './pages/Leaderboard'
-import Factions from './pages/Factions'
-import FactionDetail from './pages/FactionDetail'
-import AlbescentSecretPlaceholder from './pages/AlbescentSecretPlaceholder'
-import Updates from './pages/Updates'
-import Praxes from './pages/Praxes'
-import Settings from './pages/Settings'
-import Admin from './pages/Admin'
-import CreateCharacter from './pages/CreateCharacter'
-import EditCharacter from './pages/EditCharacter'
-import About from './pages/About'
-import Contact from './pages/Contact'
-import ProposeTask from './pages/ProposeTask'
-import Disclaimer from './pages/Disclaimer'
-import Attributions from './pages/Attributions'
-import Donate from './pages/Donate'
+
+/**
+ * Every page is code-split (#1045). The chrome above stays eager — Layout and
+ * the auth guards render on every route, so deferring them would only add a
+ * round trip before the first pixel.
+ */
+const Home = lazy(() => import('./pages/Home'))
+const FieldDesk = lazy(() => import('./pages/FieldDesk'))
+const Tasks = lazy(() => import('./pages/Tasks'))
+const TaskDetail = lazy(() => import('./pages/TaskDetail'))
+const PraxisDetail = lazy(() => import('./pages/PraxisDetail'))
+const EditPraxis = lazy(() => import('./pages/EditPraxis'))
+const CharacterProfile = lazy(() => import('./pages/CharacterProfile'))
+const Leaderboard = lazy(() => import('./pages/Leaderboard'))
+const Factions = lazy(() => import('./pages/Factions'))
+const FactionDetail = lazy(() => import('./pages/FactionDetail'))
+const AlbescentSecretPlaceholder = lazy(() => import('./pages/AlbescentSecretPlaceholder'))
+const Updates = lazy(() => import('./pages/Updates'))
+const Praxes = lazy(() => import('./pages/Praxes'))
+const Settings = lazy(() => import('./pages/Settings'))
+const Admin = lazy(() => import('./pages/Admin'))
+const CreateCharacter = lazy(() => import('./pages/CreateCharacter'))
+const EditCharacter = lazy(() => import('./pages/EditCharacter'))
+const About = lazy(() => import('./pages/About'))
+const Contact = lazy(() => import('./pages/Contact'))
+const ProposeTask = lazy(() => import('./pages/ProposeTask'))
+const Disclaimer = lazy(() => import('./pages/Disclaimer'))
+const Attributions = lazy(() => import('./pages/Attributions'))
+const Donate = lazy(() => import('./pages/Donate'))
+
+/** The one loading surface: route chunk in flight, or the session still resolving. */
+function PageLoading() {
+  const { t } = useTranslation('common')
+  return <div className="page font-body text-muted">{t('loading')}</div>
+}
 
 /** `/` is the FieldDesk for an authenticated account, the marketing Home otherwise. */
 function RootLanding() {
-  const { t } = useTranslation('common')
   const { user, loading } = useAuth()
-  if (loading) return <div className="page font-body text-muted">{t('loading')}</div>
+  if (loading) return <PageLoading />
   return user ? <FieldDesk /> : <Home />
 }
 
@@ -43,94 +55,95 @@ function RootLanding() {
  * visually until #232; here we only route to the existing FactionDetail.
  */
 function AlbescentGate() {
-  const { t } = useTranslation('common')
   const { user, loading } = useAuth()
-  if (loading) return <div className="page font-body text-muted">{t('loading')}</div>
+  if (loading) return <PageLoading />
   return user?.albescent_revealed ? <FactionDetail slug="albescent" /> : <AlbescentSecretPlaceholder />
 }
 
 export default function App() {
   return (
     <Layout>
-      <Routes>
-        <Route path="/" element={<RootLanding />} />
-        <Route path="/tasks" element={<Tasks />} />
-        <Route path="/tasks/:id" element={<TaskDetail />} />
-        <Route path="/praxes" element={<Praxes />} />
-        <Route path="/praxes/:id" element={<PraxisDetail />} />
-        <Route
-          path="/praxes/:id/edit"
-          element={
-            <ProtectedRoute>
-              <EditPraxis />
-            </ProtectedRoute>
-          }
-        />
-        <Route path="/characters/:id" element={<CharacterProfile />} />
-        <Route
-          path="/characters/:id/edit"
-          element={
-            <ProtectedRoute>
-              <EditCharacter />
-            </ProtectedRoute>
-          }
-        />
-        <Route path="/leaderboard" element={<Leaderboard />} />
-        <Route path="/factions" element={<Factions />} />
-        {/* Albescent is sealed until revealed (#390, ADR-0027). Static segment
-            outranks `:slug`, so this intercepts. AlbescentGate shows the real
-            faction page to revealed accounts, the in-world dead end to everyone
-            else. */}
-        <Route path="/factions/albescent" element={<AlbescentGate />} />
-        <Route path="/factions/:slug" element={<FactionDetail />} />
-        <Route
-          path="/updates"
-          element={
-            <ProtectedRoute>
-              <Updates />
-            </ProtectedRoute>
-          }
-        />
-        {/* Mobile-only Settings surface (#520). The page redirects to `/` on
-            desktop, which keeps the desktop NavBar controls the sole path. */}
-        <Route
-          path="/settings"
-          element={
-            <ProtectedRoute>
-              <Settings />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/admin"
-          element={
-            <ProtectedRoute adminOnly>
-              <Admin />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/characters/create"
-          element={
-            <ProtectedRoute>
-              <CreateCharacter />
-            </ProtectedRoute>
-          }
-        />
-        <Route path="/about" element={<About />} />
-        <Route path="/contact" element={<Contact />} />
-        <Route
-          path="/propose-task"
-          element={
-            <ProtectedRoute>
-              <ProposeTask />
-            </ProtectedRoute>
-          }
-        />
-        <Route path="/disclaimer" element={<Disclaimer />} />
-        <Route path="/attributions" element={<Attributions />} />
-        <Route path="/donate" element={<Donate />} />
-      </Routes>
+      <Suspense fallback={<PageLoading />}>
+        <Routes>
+          <Route path="/" element={<RootLanding />} />
+          <Route path="/tasks" element={<Tasks />} />
+          <Route path="/tasks/:id" element={<TaskDetail />} />
+          <Route path="/praxes" element={<Praxes />} />
+          <Route path="/praxes/:id" element={<PraxisDetail />} />
+          <Route
+            path="/praxes/:id/edit"
+            element={
+              <ProtectedRoute>
+                <EditPraxis />
+              </ProtectedRoute>
+            }
+          />
+          <Route path="/characters/:id" element={<CharacterProfile />} />
+          <Route
+            path="/characters/:id/edit"
+            element={
+              <ProtectedRoute>
+                <EditCharacter />
+              </ProtectedRoute>
+            }
+          />
+          <Route path="/leaderboard" element={<Leaderboard />} />
+          <Route path="/factions" element={<Factions />} />
+          {/* Albescent is sealed until revealed (#390, ADR-0027). Static segment
+              outranks `:slug`, so this intercepts. AlbescentGate shows the real
+              faction page to revealed accounts, the in-world dead end to everyone
+              else. */}
+          <Route path="/factions/albescent" element={<AlbescentGate />} />
+          <Route path="/factions/:slug" element={<FactionDetail />} />
+          <Route
+            path="/updates"
+            element={
+              <ProtectedRoute>
+                <Updates />
+              </ProtectedRoute>
+            }
+          />
+          {/* Mobile-only Settings surface (#520). The page redirects to `/` on
+              desktop, which keeps the desktop NavBar controls the sole path. */}
+          <Route
+            path="/settings"
+            element={
+              <ProtectedRoute>
+                <Settings />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin"
+            element={
+              <ProtectedRoute adminOnly>
+                <Admin />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/characters/create"
+            element={
+              <ProtectedRoute>
+                <CreateCharacter />
+              </ProtectedRoute>
+            }
+          />
+          <Route path="/about" element={<About />} />
+          <Route path="/contact" element={<Contact />} />
+          <Route
+            path="/propose-task"
+            element={
+              <ProtectedRoute>
+                <ProposeTask />
+              </ProtectedRoute>
+            }
+          />
+          <Route path="/disclaimer" element={<Disclaimer />} />
+          <Route path="/attributions" element={<Attributions />} />
+          <Route path="/donate" element={<Donate />} />
+        </Routes>
+      </Suspense>
     </Layout>
   )
 }
