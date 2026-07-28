@@ -23,6 +23,18 @@ export interface TaskOut {
   // change's remit) so pre-#1021 mocks stay valid. Consumers should treat
   // an absent value as 0.
   in_progress_count?: number
+  // The proposing character, for the task-detail author row (#1029).
+  // `created_by` above stays the bare id (what a profile link needs); these
+  // four are the denormalised byline. Always present on a live backend
+  // response; optional here for the same reason `in_progress_count` is, so
+  // pre-#1029 mocks stay valid. Treat an absent name/avatar as '' and an
+  // absent level as 0.
+  created_by_display_name?: string
+  created_by_avatar_url?: string
+  // The author's MEMBER faction, not the task's `primary_faction_slug`.
+  created_by_faction_slug?: string | null
+  // The author's level in the current era.
+  created_by_level?: number
   // Server-driven viewer-specific flags. Backend computes these for the
   // authenticated viewer. Default to permissive values when absent (older
   // clients / unauthenticated reads).
@@ -81,6 +93,9 @@ export interface TaskSignupOut {
   display_name: string
   avatar_url: string
   faction_slug: string
+  // Current-era level, for the roster row's "lvl N" (#1029). Always present on
+  // a live backend response; optional here so pre-#1029 mocks stay valid.
+  level?: number
   status: string
   signed_up_at: string
 }
