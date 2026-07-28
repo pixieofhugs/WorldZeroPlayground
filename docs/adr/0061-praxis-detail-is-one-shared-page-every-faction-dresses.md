@@ -7,6 +7,9 @@
 a second surface
 **Tension with:** ADR-0016 (per-faction surfaces share one data contract;
 archetypes own only presentation) — gains a second per-surface exception
+**Amends:** ADR-0006 (comments are neutral chrome below every archetype) — on
+this surface the thread is a layout region the archetype mounts, not chrome the
+dispatcher appends; see "Comments are the third region" below
 
 ## Context
 
@@ -46,6 +49,21 @@ copy.**
   page's — a Snide player's comment reads Snide on a Coven praxis.
   `comments.<faction>.*` and the seven `*Comment` skins are **out of scope**
   and must not be swept later by inference from this ADR.
+
+### Comments are the third region (amending ADR-0006)
+
+ADR-0006 called the comment thread "neutral chrome below every archetype", and
+`PraxisDetail.tsx` mounted it there, outside whatever the archetype drew. The
+layout contract above makes comments a **region of the page**, beneath the main
+column and the aside and inside the page's own surface — so the **archetype**
+mounts the thread and the **layout** draws its section head, passing
+`showHeading={false}` so one list carries one heading (the #1029 trap).
+
+Nothing about ADR-0006's substance changes: the thread is still neutral, still
+never blanket-themed, still gated to a `visible` praxis. Only its mount point
+moves, and the gate moves with it — into the shared `PraxisDetailComments`
+slot — so a faction skin cannot forget it. This is the same move task detail
+made in #1030.
 
 ## Consequences
 

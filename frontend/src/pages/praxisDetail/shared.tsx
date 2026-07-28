@@ -17,6 +17,7 @@ import { Link } from 'react-router-dom'
 import { reframeLabel } from '../../components/vote/voteReframes'
 import { TaskCrown } from '../../components/cards/TaskCrown'
 import { CollabRoster } from '../../components/collab/CollabRoster'
+import CommentThread from '../../components/comments/CommentThread'
 import DuelSealConfirm from '../../components/duel/DuelSealConfirm'
 import type { PraxisDetailState } from './usePraxisDetail'
 import type { PraxisMemberOut, PraxisOut } from '../../api/praxis'
@@ -224,6 +225,47 @@ export function CollabRosterBlock({ state }: { state: PraxisDetailState }) {
         onKick={handleKickMember}
       />
     </div>
+  )
+}
+
+// ── Comments region (ADR-0061, amending ADR-0006) ────────────────────────────
+
+/**
+ * The comments slot a rebuilt praxis-detail archetype mounts itself.
+ *
+ * ADR-0006 put the thread below every archetype as neutral chrome, and the
+ * dispatcher mounted it there. ADR-0061 makes comments the page layout's THIRD
+ * region — beneath the main column and the aside, inside the archetype's own
+ * sheet — so the skin can dress its section head and place the thread. The
+ * `moderation_status === 'visible'` gate lives here rather than in each
+ * archetype: a thread renders on a visible praxis only, and one skin forgetting
+ * that is exactly the drift this prevents (the task-detail lesson, #1030).
+ *
+ * Pass `heading` to supply a dressed section head; the thread's own
+ * `{n} comments` `<h3>` is then suppressed so the page carries ONE heading for
+ * one list (the #1029 trap, warned about on `CommentThread`'s own prop).
+ *
+ * The ROWS stay faction-dispatched on `comment.author.faction_slug` — a Snide
+ * player's comment reads Snide on any page. ADR-0061 draws that boundary
+ * explicitly: the neutral rule covers the page's own slots and stops at the
+ * speaker's voice.
+ */
+export function PraxisDetailComments({
+  state,
+  heading,
+  style,
+}: {
+  state: PraxisDetailState
+  heading?: ReactNode
+  style?: CSSProperties
+}) {
+  const { praxis } = state
+  if (!praxis || praxis.moderation_status !== 'visible') return null
+  return (
+    <section style={style}>
+      {heading}
+      <CommentThread target="praxes" targetId={praxis.id} showHeading={heading === undefined} />
+    </section>
   )
 }
 
