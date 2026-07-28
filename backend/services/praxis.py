@@ -1722,13 +1722,26 @@ async def kick_member(
     requester_id: int,
     session: AsyncSession,
 ) -> None:
-    """Remove a member. Any member may kick another (incl. the creator); not self (ADR-0013)."""
+    """Remove a member. Any member may kick another (incl. the creator); not self (ADR-0013).
+
+    Only while the praxis is still open (``in_progress`` or ``pending``). A kick
+    resets the whole group back to drafting, so allowing it on a published praxis
+    would silently unpublish it and wipe every member's cast — reopen first, then
+    kick. Leaving is deliberately not restricted this way (ADR-0012): a member may
+    walk away from a published collab without dragging it back into editing.
+    """
     praxis = await get_praxis(praxis_id, session)
 
     _require_member(praxis, requester_id, "kick from")
 
     if member_id == requester_id:
         raise HTTPException(status_code=400, detail="Cannot kick yourself.")
+
+    if praxis.status not in (PraxisStatus.in_progress, PraxisStatus.pending):
+        raise HTTPException(
+            status_code=422,
+            detail="Cannot kick from a published praxis. Move it to editing first.",
+        )
 
     member_result = await session.execute(
         select(PraxisMember).where(
