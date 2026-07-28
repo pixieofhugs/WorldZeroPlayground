@@ -37,6 +37,7 @@ import AlbescentVote from '../components/vote/AlbescentVote'
 import AlbescentPraxisCard from '../components/praxisCard/desktop/AlbescentPraxisCard'
 import AlbescentMobilePraxisCard from '../components/praxisCard/mobile/AlbescentMobilePraxisCard'
 import AlbescentSeal from '../components/metaTaskSeal/skins/AlbescentSeal'
+import AlbescentTaskDetail from '../pages/taskDetail/archetypes/AlbescentTaskDetail'
 
 export const ALBESCENT_MANIFEST: FactionManifest = {
   slug: 'albescent',
@@ -71,6 +72,23 @@ export const ALBESCENT_MANIFEST: FactionManifest = {
    * factors.
    */
   taskCard: () => AlbescentTaskCard,
+
+  /**
+   * The task-detail tell (#1038, ADR-0048) — the third surface to unfreeze, and
+   * the same "NA + light" shape as the cards above. `AlbescentTaskDetail` is a
+   * WRAPPER: it renders `DefaultTaskDetail` whole and washes an aurora, a prism
+   * foil and a drifting spectrum edge over it, clipped to the detail component
+   * rather than the page. Its one structural delta — the score readout becoming
+   * a turning prism ring — goes through `DefaultTaskDetail`'s optional
+   * `worthSlot`, so na is untouched and there is no forked copy of the anatomy.
+   *
+   * Every word of the design's voice is cut (ADR-0057 + ADR-0027): the page
+   * speaks the shared neutral `detail.*` copy, because a page that announced
+   * itself as Albescent would un-hide the society. No `mobileTaskDetail`
+   * sibling: task detail is one responsive component (ADR-0058), so this row
+   * covers both form factors.
+   */
+  taskDetail: () => AlbescentTaskDetail,
 
   /**
    * The ferrofluid vote widget (#843, the eighth of #821's eight). Same rule as

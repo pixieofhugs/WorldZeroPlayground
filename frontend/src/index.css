@@ -218,6 +218,11 @@
      spectrum comes in ramps cut for their geometry. Only Albescent's drifting
      card edge reads it today. */
   --faction-default-rainbow-loop: linear-gradient(90deg, #c1272d 0%, #c2541f 14%, #ca8a04 28%, #16a34a 43%, #1d6e72 57%, #2563eb 72%, #be185d 86%, #c1272d 100%);
+  /* The loop bent into a circle (#1038): the same seamless cut, swept as a
+     SMOOTH conic. Deliberately not --faction-default-ring above, which is the
+     vote widget's seven HARD wedges — a pinwheel, not a prism. Anything that
+     turns wants this one; anything that counts wants the wedges. */
+  --faction-default-rainbow-conic: conic-gradient(#c1272d 0%, #c2541f 14%, #ca8a04 28%, #16a34a 43%, #1d6e72 57%, #2563eb 72%, #be185d 86%, #c1272d 100%);
   --faction-default-card-bg: #fffdf9;
   --faction-default-card-text: #1a1209;
   --faction-default-card-accent: #1a1209;
@@ -1454,6 +1459,7 @@
   --faction-default-rainbow: linear-gradient(90deg, #e2433f 0%, #e07a3a 17%, #e6b94f 33%, #4ade80 50%, #3aa0a4 67%, #60a5fa 83%, #f472b6 100%);
   --faction-default-ring: conic-gradient(#e2433f 0 51deg, #e07a3a 0 103deg, #e6b94f 0 154deg, #4ade80 0 206deg, #3aa0a4 0 257deg, #60a5fa 0 309deg, #f472b6 0 360deg);
   --faction-default-rainbow-loop: linear-gradient(90deg, #e2433f 0%, #e07a3a 14%, #e6b94f 28%, #4ade80 43%, #3aa0a4 57%, #60a5fa 72%, #f472b6 86%, #e2433f 100%);
+  --faction-default-rainbow-conic: conic-gradient(#e2433f 0%, #e07a3a 14%, #e6b94f 28%, #4ade80 43%, #3aa0a4 57%, #60a5fa 72%, #f472b6 86%, #e2433f 100%);
   --faction-default-card-bg: #1c1b24;
   --faction-default-card-text: #f0e6d0;
   --faction-default-card-accent: #f0e6d0;
@@ -2931,6 +2937,199 @@
 @media (prefers-reduced-motion: no-preference) {
   .alb-task-edge { animation: alb-task-edge 16s linear infinite; }
   .alb-task-aurora::before { animation: alb-task-drift 52s ease-in-out infinite; }
+}
+
+/* Albescent — the TASK DETAIL's tell (#1038, ADR-0048). The third surface to
+   unfreeze, same rule as the first two: `DefaultTaskDetail` unchanged, with
+   light washed over it. The design's own header states the thesis — "Albescent's
+   difference is the light, not the layout" — so nothing here repaints, moves or
+   renames anything na draws.
+
+   THREE THINGS THIS BLOCK DECIDES, all of which a "make it match the design"
+   edit would undo:
+
+   • THE LIGHT IS CLIPPED TO THE COMPONENT, NOT THE PAGE. The design paints its
+     ground on the viewport; the owner ruled the site background must still show
+     around the detail component (QA on #1055, #1057, #1065 — six skins had to be
+     corrected for `position: fixed; inset: 0`). `.alb-detail` is therefore the
+     1200 column itself, and every layer is inset by --space-2xl top and bottom
+     to land exactly on `DefaultTaskDetail`'s sheet, whose own `py-8` band that
+     is. The 18px radius tracks that sheet's corner; if it changes, this follows.
+
+   • THE LAYERS SIT ON TOP, BLENDED. Default's column paints an OPAQUE sheet, so
+     an ornament behind it is invisible — z-index:-1 is not a position available
+     here. And the column is positioned, so a positioned overlay at z-index:0
+     would paint above the copy anyway with none of the blending that keeps ink
+     legible. Same call `.alb-rainbow` and `.alb-task-aurora` already make:
+     multiply on the light sheet, screen on the dark one, pointer-events:none,
+     and opacities trimmed a notch below the design's (which drew these UNDER the
+     copy, where they could be stronger). `isolation` keeps the blend inside the
+     component so it cannot tint the page around it.
+
+   • MOTION IS OPT-IN. Every animation is gated on `no-preference`, the repo's
+     inverted form of the design's `reduce → none`. Stilled, the page is a static
+     wash and a static prism ring — the tell is dimmer, but nothing about it
+     carries meaning through motion alone. */
+@keyframes alb-detail-drift {
+  0%, 100% { transform: translate3d(-5%, -4%, 0) scale(1.14) rotate(0deg); }
+  50% { transform: translate3d(5%, 4%, 0) scale(1.24) rotate(7deg); }
+}
+@keyframes alb-detail-wheel {
+  from { transform: translate(-50%, -50%) rotate(0deg); }
+  to { transform: translate(-50%, -50%) rotate(360deg); }
+}
+@keyframes alb-detail-sheen {
+  0%, 100% { transform: translateX(-18%); }
+  50% { transform: translateX(18%); }
+}
+@keyframes alb-detail-edge { from { background-position: 0% 50%; } to { background-position: 300% 50%; } }
+@keyframes alb-detail-spin { to { transform: rotate(360deg); } }
+
+.alb-detail {
+  position: relative;
+  max-width: 1200px;
+  margin: 0 auto;
+  isolation: isolate;
+}
+.alb-detail-aurora,
+.alb-detail-foil,
+.alb-detail-edge {
+  position: absolute;
+  /* Default's own py-8 band — the sheet starts here and ends there. */
+  top: var(--space-2xl);
+  right: 0;
+  bottom: var(--space-2xl);
+  left: 0;
+  z-index: 2;
+  pointer-events: none;
+  border-radius: 18px;
+  overflow: hidden;
+}
+
+/* The aurora that breathes under the vellum — seven blooms, blurred past
+   recognition, so it reads as coloured light rather than as shapes. */
+.alb-detail-aurora::before {
+  content: "";
+  position: absolute;
+  inset: -20%;
+  filter: blur(60px) saturate(0.6);
+  mix-blend-mode: multiply;
+  opacity: 0.22;
+  transform: translate3d(-5%, -4%, 0) scale(1.14);
+  background-image:
+    radial-gradient(58% 46% at 10% 10%, #c1272d, transparent 100%),
+    radial-gradient(54% 42% at 38% 2%, #c2541f, transparent 100%),
+    radial-gradient(56% 44% at 62% 14%, #ca8a04, transparent 100%),
+    radial-gradient(58% 46% at 88% 8%, #16a34a, transparent 100%),
+    radial-gradient(60% 48% at 96% 54%, #2563eb, transparent 100%),
+    radial-gradient(58% 46% at 58% 92%, #be185d, transparent 100%),
+    radial-gradient(56% 44% at 16% 88%, #1d6e72, transparent 100%);
+}
+[data-theme="dark"] .alb-detail-aurora::before {
+  filter: blur(52px) saturate(0.95);
+  mix-blend-mode: screen;
+  opacity: 0.24;
+  background-image:
+    radial-gradient(58% 46% at 10% 10%, #e2433f, transparent 100%),
+    radial-gradient(54% 42% at 38% 2%, #e07a3a, transparent 100%),
+    radial-gradient(56% 44% at 62% 14%, #e6b94f, transparent 100%),
+    radial-gradient(58% 46% at 88% 8%, #4ade80, transparent 100%),
+    radial-gradient(60% 48% at 96% 54%, #60a5fa, transparent 100%),
+    radial-gradient(58% 46% at 58% 92%, #f472b6, transparent 100%),
+    radial-gradient(56% 44% at 16% 88%, #3aa0a4, transparent 100%);
+}
+
+/* The holographic foil: a prism wheel turning behind the page (::before) and a
+   diagonal sheen passing across it (::after). Two pseudo-elements rather than
+   two spans — the component may not carry ornament markup it does not need. */
+.alb-detail-foil::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 240%;
+  height: 240%;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  background-image: var(--faction-default-rainbow-conic);
+  filter: blur(56px) saturate(0.75);
+  mix-blend-mode: multiply;
+  opacity: 0.16;
+}
+.alb-detail-foil::after {
+  content: "";
+  position: absolute;
+  inset: -20% -30%;
+  opacity: 0.1;
+  background-image: linear-gradient(104deg, transparent 12%, rgba(255, 255, 255, 0.55) 26%, #ca8a04 34%, #16a34a 42%, #1d6e72 50%, #2563eb 58%, #be185d 66%, rgba(255, 255, 255, 0.55) 74%, transparent 88%);
+}
+[data-theme="dark"] .alb-detail-foil::before {
+  filter: blur(48px) saturate(1.1);
+  mix-blend-mode: screen;
+  opacity: 0.24;
+}
+[data-theme="dark"] .alb-detail-foil::after {
+  mix-blend-mode: screen;
+  opacity: 0.14;
+  background-image: linear-gradient(104deg, transparent 12%, rgba(255, 255, 255, 0.55) 26%, #e6b94f 34%, #4ade80 42%, #3aa0a4 50%, #60a5fa 58%, #f472b6 66%, rgba(255, 255, 255, 0.55) 74%, transparent 88%);
+}
+
+/* The spectrum edge, drifting. A masked ring rather than a border, for the same
+   reason `.alb-task-edge` is one: the sheet it dresses is a component's inline
+   style, not markup this file can reach into. It lands on Default's own hairline
+   so the effect reads as that border coming alive. */
+.alb-detail-edge {
+  padding: 2px;
+  background-image: var(--faction-default-rainbow-loop);
+  background-size: 300% 100%;
+  opacity: 0.75;
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask:
+    linear-gradient(#000 0 0) content-box exclude,
+    linear-gradient(#000 0 0);
+}
+
+/* The prism worth ring — the design's one departure from na's anatomy, reached
+   through `DefaultTaskDetail`'s optional `worthSlot`. The face is the page sheet
+   punched out of a smooth conic spectrum, so the total reads on plain vellum
+   while the rim turns. Size arrives at the call site (92 desktop / 74 mobile).
+   The RIM is a pseudo-element and the face a real child, so only the rim turns:
+   spinning the element itself would rotate the number inside it, which is the
+   one thing on this page that has to stay readable. */
+.alb-detail-ring {
+  position: relative;
+  display: block;
+  flex: 0 0 auto;
+}
+.alb-detail-ring::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background-image: var(--faction-default-rainbow-conic);
+}
+.alb-detail-ring-face {
+  position: absolute;
+  inset: 7px;
+  border-radius: 50%;
+  background: var(--faction-default-card-bg);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  line-height: 0.9;
+  text-align: center;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .alb-detail-aurora::before { animation: alb-detail-drift 30s ease-in-out infinite; }
+  .alb-detail-foil::before { animation: alb-detail-wheel 44s linear infinite; }
+  .alb-detail-foil::after { animation: alb-detail-sheen 13s ease-in-out infinite; }
+  .alb-detail-edge { animation: alb-detail-edge 16s linear infinite; }
+  .alb-detail-ring::before { animation: alb-detail-spin 46s linear infinite; }
 }
 
 /* UA — growing mandala: each rank blooms a fuller mandala; the emphasized cell
