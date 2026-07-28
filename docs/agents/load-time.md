@@ -71,9 +71,13 @@ else — find out where before shipping the split.
 
 **4. A new font family.** `index.html` requests a Google Fonts stylesheet that
 is render-blocking and on a third-party origin. Every family added to that URL
-adds `@font-face` blocks to a file that must download before first paint. At the
-time of writing that request names families nothing in the codebase uses. Before
+adds `@font-face` blocks to a file that must download before first paint. Before
 adding one, check that the one you want isn't already there.
+
+`fontsLoaded.test.ts` guards this in both directions: a family named in source
+but not requested renders as a silent fallback (#839), and a family requested but
+named nowhere is weight nobody uses. The second half matters most when a surface
+is *deleted* — the card goes, the font request stays behind.
 
 ## Assets
 
@@ -130,14 +134,50 @@ Two consequences worth internalising:
   assertion compares a wrapper to a module and fails. This is the one recurring
   edit new faction surfaces need.
 
+## Slow is not always bytes
+
+The most expensive load problem found so far had nothing to do with the bundle.
+An axios interceptor redirected to `/` on **any** 401, and `/auth/me` returns 401
+for a logged-out visitor — so every guest opening any URL other than `/` was
+bounced to the homepage by `window.location.href`, a full document navigation.
+They downloaded the entire app, the fonts and every API response **twice**, and
+landed somewhere they had not asked for.
+
+No bundle work would ever have found that, and no byte budget would have flagged
+it. When a page feels slow, check what it actually *did* — a waterfall showing
+the document requested twice is a different bug from a waterfall that is simply
+wide. `shouldReturnToLanding` in `api/axios.ts` is now unit-tested for it.
+
+## Preloading can make things much worse
+
+Chunks are split so they are not on the critical path. Pulling them down early
+"to have them ready" puts them back on it. Warming all ~180 archetype chunks
+right after mount took every route from ~2.5s to **~8.5s** on Slow 4G: 250
+requests saturated the link and starved the API calls that the page actually
+needed. It was reverted the same hour it was written.
+
+If a cascade genuinely needs collapsing, the fix is fewer chunks, not earlier
+requests — and prove it with a measurement, because this one looked obviously
+correct right up until it was measured.
+
 ## Measuring
 
 - `npm run budget` — bytes on the critical path. Deterministic, runs per-PR,
   warns on growth and fails past a ceiling. Thresholds live in
   `frontend/scripts/bundle-budget.mjs` and are a **ratchet**: when you move
   weight off the entry path, lower the warn line to match so the win is locked in.
-- Real page-load *timing* is measured nightly, not per-PR — a stopwatch in PR CI
-  measures the runner's mood. See the nightly e2e workflow.
+- `npm run measure` — real page-load timing, under emulated throttling. Runs
+  nightly (`scripts/measure-nightly.sh`, wired into `e2e.yml`), not per-PR: a
+  stopwatch on a shared runner flaps, and a check that flaps gets muted.
+  **Throttle or do not bother.** Against localhost every round trip is ~1ms, so a
+  waterfall thirty levels deep still finishes in 150ms and looks perfect.
+  The same build measured across profiles:
+  broadband ~0.2-0.7s, fast 4G ~0.5-1.1s, slow 4G ~1.5-2.9s. Which of those you
+  quote is a decision about who you are building for, so the script takes
+  `--profile` and prints which one it used.
+- It measures **time-to-content**, not LCP. On this app the nav and hero paint
+  almost immediately, so LCP settles on them and reports ~1.5s while the page is
+  still empty.
 - To see what a page actually costs, load the built app (`npm run preview`) and
   read `performance.getEntriesByType('resource')`. That distinguishes the
   blocking payload from chunks fetched afterwards, which the budget number alone
