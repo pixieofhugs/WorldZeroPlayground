@@ -1700,7 +1700,14 @@ async def test_collab_leave_completes_consensus(
     auth_headers: dict,
     auth_headers2: dict,
 ):
-    """If the only un-submitted member leaves, the collab goes Live for those who stayed."""
+    """If the only un-submitted member leaves, the collab goes Live for those who stayed.
+
+    The seal runs BEFORE the ADR-0060 one-member conversion, and that ordering is
+    the point of this test: converting first would cancel the pending-publish
+    window and wipe the survivor's own cast, throwing away the consensus the
+    departure had just completed. Sealing first keeps it Live, then reprices it
+    as a solo praxis.
+    """
     praxis_id = await _two_member_collab(
         client, active_task, auth_headers2, character.id, auth_headers
     )
@@ -1714,6 +1721,8 @@ async def test_collab_leave_completes_consensus(
     assert data["status"] == "submitted"
     remaining = {m["character_id"] for m in data["members"]}
     assert remaining == {character2.id}
+    # One member left standing, so it is no longer a collaboration (ADR-0060).
+    assert data["type"] == "solo"
 
 
 @pytest.mark.asyncio
