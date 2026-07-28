@@ -47,6 +47,7 @@ from services.praxis_scoring import Contribution, compute_contributions
 from services.faction_service import faction_permits
 from services.meta_task import metatask_cap_for_level
 from services.era import get_current_era_row, get_or_create_stats
+from services.nudge import nudged_at_map
 from services.level_jump import available_level_reach, consume_level_jump
 from models.duel import Duel, DuelStatus
 from services.vote_tally import crowned_praxis_ids, get_tally, tally_votes, ViewerVote
@@ -82,7 +83,17 @@ def _require_member(praxis: Praxis, character_id: int, action: str) -> None:
         raise HTTPException(status_code=403, detail=f"Only a member can {action} this praxis.")
 
 
-def _build_member_out(member: PraxisMember) -> PraxisMemberOut:
+def _build_member_out(
+    member: PraxisMember,
+    nudged_at: Optional[datetime] = None,
+) -> PraxisMemberOut:
+    """One roster row.
+
+    ``nudged_at`` is viewer-relative and only the single-praxis
+    :func:`build_praxis_out` supplies it — a card in a list has no nudge button,
+    and threading the lookup through every list route would buy an N+1 for a
+    field nothing there reads.
+    """
     return PraxisMemberOut(
         id=member.id,
         praxis_id=member.praxis_id,
@@ -90,6 +101,7 @@ def _build_member_out(member: PraxisMember) -> PraxisMemberOut:
         character_display_name=member.character.display_name,
         has_submitted=member.has_submitted,
         joined_at=member.joined_at,
+        nudged_at=nudged_at,
     )
 
 
@@ -171,7 +183,16 @@ async def build_praxis_out(
     task_title = praxis.task.title if praxis.task else ""
     task_point_value = praxis.task.point_value if praxis.task else 0
 
-    members = [_build_member_out(m) for m in praxis.members]
+    # Viewer-relative nudge state (#1083): when the viewer last poked each member
+    # about THIS praxis, within the rate-limit window. One map, not one query per
+    # row; empty for an anonymous reader, who can never nudge anyway.
+    nudged_at_by_character = (
+        await nudged_at_map(praxis.id, viewer.id, session) if viewer is not None else {}
+    )
+    members = [
+        _build_member_out(m, nudged_at_by_character.get(m.character_id))
+        for m in praxis.members
+    ]
 
     # Invites only visible to members
     effective_viewer_id = viewer.id if viewer is not None else None

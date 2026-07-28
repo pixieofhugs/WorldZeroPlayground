@@ -28,6 +28,7 @@ from models.praxis import (
 from models.task import Task
 from schemas.duel import DuelDetailOut, DuelOut, DuelSideOut
 from services.character_stats import recalculate_character_stats
+from services.nudge import latest_nudge_at
 from services.vote_tally import get_tally, tally_votes
 from services.era import get_current_era_row, get_or_create_stats
 from services.praxis import (
@@ -104,7 +105,27 @@ async def get_duel_detail(
     ]
     tallies = await tally_votes(praxis_ids, session)
 
-    def _side(character: Optional[Character], praxis: Optional[Praxis], praxis_id: Optional[int]) -> DuelSideOut:
+    # Viewer-relative nudge state (#1083), keyed per side because the rate limit
+    # is (sender, recipient, praxis) and each side is its own praxis. Two point
+    # lookups rather than a map: a duel has exactly two rows.
+    async def _nudged_at(
+        character: Optional[Character], praxis_id: Optional[int]
+    ) -> Optional[datetime]:
+        if viewer is None or character is None or praxis_id is None:
+            return None
+        return await latest_nudge_at(praxis_id, viewer.id, character.id, session)
+
+    challenger_nudged_at = await _nudged_at(
+        challenger_character, duel.challenger_praxis_id
+    )
+    opponent_nudged_at = await _nudged_at(opponent_character, duel.opponent_praxis_id)
+
+    def _side(
+        character: Optional[Character],
+        praxis: Optional[Praxis],
+        praxis_id: Optional[int],
+        nudged_at: Optional[datetime] = None,
+    ) -> DuelSideOut:
         return DuelSideOut(
             praxis_id=praxis_id,
             character_id=character.id if character is not None else 0,
@@ -115,6 +136,7 @@ async def get_duel_detail(
                 get_tally(tallies, praxis_id).points_from_votes if praxis_id is not None else 0
             ),
             is_submitted=praxis is not None and praxis.status == PraxisStatus.submitted,
+            nudged_at=nudged_at,
         )
 
     participant_account_ids = {
@@ -131,8 +153,18 @@ async def get_duel_detail(
         task_id=duel.task_id,
         status=duel.status,
         forfeited_by_character_id=duel.forfeited_by_character_id,
-        challenger=_side(challenger_character, challenger_praxis, duel.challenger_praxis_id),
-        opponent=_side(opponent_character, opponent_praxis, duel.opponent_praxis_id),
+        challenger=_side(
+            challenger_character,
+            challenger_praxis,
+            duel.challenger_praxis_id,
+            challenger_nudged_at,
+        ),
+        opponent=_side(
+            opponent_character,
+            opponent_praxis,
+            duel.opponent_praxis_id,
+            opponent_nudged_at,
+        ),
         viewer_is_participant=viewer_is_participant,
         winner_character_id=duel.winner_character_id,
         challenger_final_points=duel.challenger_final_points,

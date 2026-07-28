@@ -25,7 +25,12 @@ const WINDOW_DAYS = 10;
 const OPENED = "2026-01-01T00:00:00Z";
 const THREE_DAYS_IN = Date.parse(OPENED) + 3 * 24 * 60 * 60 * 1000;
 
-function member(id: number, name: string, hasSubmitted: boolean): PraxisMemberOut {
+function member(
+  id: number,
+  name: string,
+  hasSubmitted: boolean,
+  nudgedAt: string | null = null,
+): PraxisMemberOut {
   return {
     id,
     praxis_id: 1,
@@ -33,6 +38,7 @@ function member(id: number, name: string, hasSubmitted: boolean): PraxisMemberOu
     character_display_name: name,
     has_submitted: hasSubmitted,
     joined_at: OPENED,
+    nudged_at: nudgedAt,
   };
 }
 
@@ -122,6 +128,7 @@ function state(overrides: Partial<EditPraxisState> = {}): EditPraxisState {
     cancel: async () => {},
     reopenForEdit: async () => {},
     kickMember: async () => {},
+    nudge: async () => {},
     ...overrides,
   } as unknown as EditPraxisState;
 }
@@ -180,8 +187,133 @@ describe("collab — my part is in, the crew is not", () => {
     expect(html).toContain("clears every member");
   });
 
-  it("draws no Nudge affordance — it ships on its own issue", () => {
-    expect(html.toLowerCase()).not.toContain("nudge");
+  // #1080 pinned the ABSENCE of this control ("it ships on its own issue").
+  // #1083 is that issue, so the assertion inverts — and gains the conditions
+  // that make this version honest rather than the design's local-state one.
+  it("offers a Nudge on each member who has not cast", () => {
+    expect(html).toContain(collabCopy(SLUG, "nudgeAction"));
+    expect(html).toContain(
+      collabCopy(SLUG, "nudgeAria", { name: "Rax" }),
+    );
+    expect(html).toContain(
+      collabCopy(SLUG, "nudgeAria", { name: "Sable" }),
+    );
+  });
+
+  it("never offers a Nudge on my own row", () => {
+    expect(html).not.toContain(collabCopy(SLUG, "nudgeAria", { name: "Wren" }));
+  });
+});
+
+describe("nudge — the honest version (#1083)", () => {
+  const duelSide = (
+    status: DuelStatus,
+    foeNudgedAt: string | null = null,
+  ): EditPraxisState =>
+    state({
+      praxis: praxis({
+        type: "solo",
+        status: "submitted",
+        duel_id: 7,
+        members: [member(ME, "Wren", true)],
+        submit_proposed_at: null,
+      }),
+      duel: {
+        ...duelDetail(status),
+        opponent: { ...duelDetail(status).opponent, nudged_at: foeNudgedAt },
+      },
+    });
+
+  it("hides the Nudge entirely from a member who has not cast", () => {
+    // The backend rule, drawn: you do not get to hurry people you have not
+    // caught up with. Hidden rather than disabled — the repo shows no control a
+    // viewer could never use.
+    const html = render({
+      state: state({
+        currentCharacterId: THEM,
+        praxis: praxis({
+          members: [
+            member(ME, "Wren", true),
+            member(THEM, "Rax", false),
+            member(A_THIRD, "Sable", false),
+          ],
+        }),
+      }),
+      autoSubmitDays: WINDOW_DAYS,
+    });
+    expect(html).not.toContain(collabCopy(SLUG, "nudgeAria", { name: "Sable" }));
+  });
+
+  it("offers no Nudge on a member who has already cast", () => {
+    const html = render({
+      state: state({
+        praxis: praxis({
+          members: [
+            member(ME, "Wren", true),
+            member(THEM, "Rax", true),
+            member(A_THIRD, "Sable", false),
+          ],
+        }),
+      }),
+      autoSubmitDays: WINDOW_DAYS,
+    });
+    expect(html).not.toContain(collabCopy(SLUG, "nudgeAria", { name: "Rax" }));
+    expect(html).toContain(collabCopy(SLUG, "nudgeAria", { name: "Sable" }));
+  });
+
+  it("reads its spent state off the SERVER, so a reload cannot un-nudge it", () => {
+    // `nudged_at` arrives on the roster row. Nothing here remembers a click —
+    // that is precisely what made the design's `setNudged` version dishonest.
+    const html = render({
+      state: state({
+        praxis: praxis({
+          members: [
+            member(ME, "Wren", true),
+            member(THEM, "Rax", false, "2026-01-02T00:00:00Z"),
+            member(A_THIRD, "Sable", false),
+          ],
+        }),
+      }),
+      autoSubmitDays: WINDOW_DAYS,
+    });
+    expect(html).toContain(collabCopy(SLUG, "nudgeSentAction"));
+    expect(html).toContain(
+      collabCopy(SLUG, "nudgeSentAria", { name: "Rax" }),
+    );
+    expect(html).toContain("disabled");
+  });
+
+  it("offers the rival a Nudge while the duel is active", () => {
+    const html = render({
+      state: duelSide("active"),
+      autoSubmitDays: WINDOW_DAYS,
+    });
+    expect(html).toContain(collabCopy(SLUG, "duelNudgeAria", { name: "Rax" }));
+  });
+
+  it("draws no Nudge on a pending duel — the rival has not accepted yet", () => {
+    const html = render({
+      state: duelSide("pending"),
+      autoSubmitDays: WINDOW_DAYS,
+    });
+    expect(html).not.toContain(collabCopy(SLUG, "duelNudgeAria", { name: "Rax" }));
+  });
+
+  it("never draws a Nudge on my own duel side", () => {
+    const html = render({
+      state: duelSide("active"),
+      autoSubmitDays: WINDOW_DAYS,
+    });
+    expect(html).not.toContain(collabCopy(SLUG, "duelNudgeAria", { name: "Wren" }));
+  });
+
+  it("spends the duel Nudge from the server's nudged_at too", () => {
+    const html = render({
+      state: duelSide("active", "2026-01-02T00:00:00Z"),
+      autoSubmitDays: WINDOW_DAYS,
+    });
+    expect(html).toContain(collabCopy(SLUG, "nudgeSentAction"));
+    expect(html).toContain("disabled");
   });
 });
 

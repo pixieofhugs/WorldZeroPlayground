@@ -28,6 +28,7 @@ from models.contact import ContactMessage
 from models.taunt_message import TauntMessage
 from models.faction_defection_history import FactionDefectionHistory
 from models.invitation_letter import InvitationLetter
+from models.nudge import Nudge
 
 __all__ = [
     "Faction",
@@ -63,4 +64,5 @@ __all__ = [
     "TauntMessage",
     "FactionDefectionHistory",
     "InvitationLetter",
+    "Nudge",
 ]

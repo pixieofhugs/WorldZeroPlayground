@@ -39,6 +39,7 @@ class InviteResponse(BaseModel):
 
 class MetataskApply(BaseModel):
     task_id: int
+from schemas.nudge import NudgeOut
 from schemas.vote import VoteOut
 from services.praxis import (
     _build_invite_out,
@@ -70,6 +71,7 @@ from services.praxis import (
     unsubmit_praxis,
 )
 from services.media import process_and_save_media
+from services.nudge import send_nudge
 from services.vote import cast_vote_on_praxis, viewer_can_vote_map
 from services.vote_tally import crowned_praxis_ids, viewer_votes_for
 
@@ -431,6 +433,32 @@ async def cancel_invite_route(
         session=session,
     )
     return Response(status_code=204)
+
+
+@router.post("/{praxis_id}/nudge/{character_id}", response_model=NudgeOut)
+async def nudge_route(
+    praxis_id: int,
+    character_id: int,
+    character: Character = Depends(get_current_character),
+    session: AsyncSession = Depends(get_db),
+):
+    """Poke the player this praxis is still waiting on (#1083).
+
+    ``praxis_id`` is the praxis the RECIPIENT owes — the shared collab, or the
+    rival's own side of the duel (ADR-0011), never the sender's. That is what
+    the recipient's feed card links to, and what the rate limit is keyed on.
+
+    Every rule (member-who-has-cast for a collab, participant-of-an-active-duel
+    for a duel, one per 24h) lives in ``services.nudge``; this handler is thin on
+    purpose so a second caller cannot acquire a second set of them.
+    """
+    nudge = await send_nudge(
+        praxis_id=praxis_id,
+        from_character_id=character.id,
+        to_character_id=character_id,
+        session=session,
+    )
+    return NudgeOut.model_validate(nudge)
 
 
 @router.post("/{praxis_id}/kick/{member_id}", response_model=PraxisOut)

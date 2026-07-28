@@ -34,6 +34,7 @@ import {
   issueChallenge,
   type DuelDetailOut,
 } from "../../api/duel";
+import { sendNudge } from "../../api/nudge";
 import { deriveCollabGate } from "../../components/collab/CollabRoster";
 import {
   deleteCollabConfirm,
@@ -176,6 +177,14 @@ export interface EditPraxisState {
   cancelInvite: (inviteId: number) => Promise<void>;
   /** Remove another member from the collab (#959) — target is a character id. */
   kickMember: (memberId: number) => Promise<void>;
+  /**
+   * Poke the player this praxis is still waiting on (#1083) — target is a
+   * character id. For a collab that is a member who has not cast; for a duel it
+   * is the rival, and the write is aimed at THEIR side's praxis, not yours.
+   * Refreshes afterwards so the button's disabled state comes back from the
+   * server rather than being remembered here.
+   */
+  nudge: (characterId: number) => Promise<void>;
 
   // Duel challenge (#311) — selecting duel attaches a challenge to this praxis;
   // the praxis stays type='solo' and gains a duel_id.
@@ -1174,6 +1183,46 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
     [praxis],
   );
 
+  // Poke whoever this praxis is waiting on (#1083). Every rule lives on the
+  // server — who may nudge, and the one-per-24h limit — so this fires and then
+  // RE-READS. It deliberately keeps no local "nudged" flag: the design's version
+  // did exactly that, which made the button read as sent when nothing had been,
+  // and let a reload clear it. `nudged_at` on the refreshed roster row / duel
+  // side is the only thing the button believes.
+  const nudge = useCallback(
+    async (characterId: number) => {
+      if (!praxis) return;
+      setError("");
+      // A duel is two linked solo praxes (ADR-0011): the praxis the rival owes
+      // is THEIR side, not the one this composer is holding.
+      const duelSide =
+        duel != null
+          ? [duel.challenger, duel.opponent].find(
+              (side) => side.character_id === characterId,
+            )
+          : undefined;
+      const targetPraxisId = duelSide?.praxis_id ?? praxis.id;
+      const name =
+        duelSide?.display_name ??
+        praxis.members.find((member) => member.character_id === characterId)
+          ?.character_display_name ??
+        "";
+      try {
+        await sendNudge(targetPraxisId, characterId);
+        const refreshed = await getPraxis(praxis.id);
+        setPraxis(refreshed);
+        if (refreshed.duel_id != null) {
+          setDuel(await getDuelDetail(refreshed.duel_id));
+        }
+      } catch (err) {
+        setError(
+          extractError(err, i18n.t("forms:editPraxis.errors.nudge", { name })),
+        );
+      }
+    },
+    [praxis, duel],
+  );
+
   // ---- Duel challenge (#311): pick an opponent, cancel a pending challenge ----
   const sendChallenge = useCallback(
     async (character: CharacterOut) => {
@@ -1403,6 +1452,7 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
     sendInvite,
     cancelInvite,
     kickMember,
+    nudge,
 
     duel,
     sendChallenge,

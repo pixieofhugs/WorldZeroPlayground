@@ -203,6 +203,18 @@ A member removing **their own** `PraxisMember` from a collab. Distinct from **ki
 scoring). Three different removals — keep them named apart.
 _Avoid_: "withdraw" for a member leaving (withdraw is praxis-level, not member-level).
 
+**Nudge** *(`Nudge`; tablename `nudge`)*:
+One player reminding the player a shared praxis is still waiting on. Delivered as an
+**activity-feed item**, never a message — the `Message` model has no player-facing reader
+(admin moderation only), so a nudge posted there arrives nowhere. Stored as its own row
+(`from_character_id`, `to_character_id`, `praxis_id`, `created_at`), and `praxis_id` is
+always **the praxis the recipient owes**: the shared collab, or the *rival's* side of a duel
+— never the sender's. Who may send it: a collab member **who has cast**, or a duel
+participant **while the duel is `active`**. Rate-limited to **one per sender → recipient →
+praxis per 24h**; that limit is a safety control, not a nicety.
+_Avoid_: "poke"/"ping"/"reminder" as the domain term, and "notification" — there is no
+notifications inbox and a nudge does not create one.
+
 **Editing mode**:
 A submitted praxis taken back into editing by its creator. Its votes are **preserved but do
 not count** toward score while in editing mode; resubmitting returns it to `submitted` and

@@ -43,6 +43,10 @@ class DuelSideOut(BaseModel):
     avatar_url: str
     points_from_votes: int
     is_submitted: bool
+    # When the VIEWER last nudged this side's character about this side's praxis
+    # (#1083), NULL once the 24h window lapses — the duel twin of
+    # `PraxisMemberOut.nudged_at`, and the same server-owned disabled state.
+    nudged_at: Optional[datetime] = None
 
 
 class DuelDetailOut(BaseModel):

@@ -15,10 +15,17 @@
  * per-faction masthead; those are a follow-up wave if this reads flat once live,
  * not a debt taken on here.
  *
- * Three things the design draws that are deliberately absent:
- *  - **Nudge.** It ships on its own issue. A `setNudged` local-state stub that
- *    lights up and sends nothing was rejected as dishonest, so there is no
- *    affordance at all.
+ * Nudge (#1083) landed after this surface and is drawn here now — but not as the
+ * design drew it. The design's `setNudged({...})` was local React state: the
+ * button flipped to "Nudged" and nothing left the browser, so it read as sent
+ * when it wasn't, a reload un-nudged it, and you could poke forever. This one
+ * writes, is rate-limited to one per person per praxis per 24h on the server,
+ * lands in the recipient's activity feed, and reads its disabled state from
+ * `nudged_at` on the wire. It appears only where the rule allows: on a collab
+ * member who has not cast (and only once YOU have), and on a duel rival while
+ * the duel is `active`.
+ *
+ * Two things the design draws that are still deliberately absent:
  *  - **A duel countdown.** Nothing backs one (see `waitingClock.ts`). The duel
  *    gets a plain elapsed line; the ring is the collab's.
  *  - **"Forfeit the duel".** The design offers it at `active` and hides it at
@@ -213,14 +220,22 @@ function DuelSidePanel({
   factionSlug,
   title,
   body,
+  onNudge,
 }: {
   side: DuelSideOut;
   mine: boolean;
   factionSlug: string | null | undefined;
   title?: string;
   body?: string;
+  /**
+   * Poke the rival (#1083). Passed only for the rival's panel, and only while
+   * the duel is `active` — the caller owns that condition because it is the one
+   * holding the duel status. Never passed for your own side.
+   */
+  onNudge?: () => void | Promise<void>;
 }) {
   const accent = factionCssVar(factionSlug, "card-accent");
+  const nudged = side.nudged_at != null;
   return (
     <div
       className="flex flex-col gap-2"
@@ -257,6 +272,29 @@ function DuelSidePanel({
             : collabCopy(factionSlug, "duelPillWriting")}
         </span>
       </div>
+      {onNudge && (
+        <button
+          type="button"
+          disabled={nudged}
+          onClick={() => void onNudge()}
+          title={collabCopy(factionSlug, "nudgeDescription")}
+          aria-label={collabCopy(
+            factionSlug,
+            nudged ? "nudgeSentAria" : "duelNudgeAria",
+            { name: side.display_name },
+          )}
+          className="eyebrow self-start px-2 py-1"
+          style={{
+            borderRadius: 4,
+            border: `1px solid ${nudged ? "var(--color-border)" : accent}`,
+            background: "transparent",
+            color: nudged ? "var(--color-text-tertiary)" : accent,
+            cursor: nudged ? "default" : "pointer",
+          }}
+        >
+          {collabCopy(factionSlug, nudged ? "nudgeSentAction" : "nudgeAction")}
+        </button>
+      )}
       {mine ? (
         <>
           <span className="font-body content-title" style={{ fontWeight: 700 }}>
@@ -436,7 +474,20 @@ export default function PraxisWaitingSurface({
               title={state.title}
               body={state.body}
             />
-            <DuelSidePanel side={sides.foe} mine={false} factionSlug={slug} />
+            {/* The rival's nudge, gated on `active` exactly as the backend is:
+                at `pending` they have not accepted yet and the outstanding thing
+                is a decision (already in their requests tab as a challenge), and
+                once the duel settles there is nothing left to hurry. */}
+            <DuelSidePanel
+              side={sides.foe}
+              mine={false}
+              factionSlug={slug}
+              onNudge={
+                duel?.status === "active"
+                  ? () => state.nudge(sides.foe.character_id)
+                  : undefined
+              }
+            />
           </div>
         ) : (
           <CollabRoster
@@ -445,6 +496,7 @@ export default function PraxisWaitingSurface({
             factionSlug={slug}
             taskPointValue={praxis.task_point_value}
             onKick={state.kickMember}
+            onNudge={state.nudge}
           />
         )}
       </section>
