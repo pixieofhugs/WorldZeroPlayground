@@ -1527,6 +1527,69 @@ async def test_collab_non_creator_can_kick_creator(
     assert character.id in remaining
 
 
+@pytest.mark.asyncio
+async def test_kick_refused_on_submitted_collab(
+    client: AsyncClient,
+    character: Character,
+    character2: Character,
+    active_task: Task,
+    auth_headers: dict,
+    auth_headers2: dict,
+):
+    """Kicking is open-praxis only (#1076): a published collab refuses with 422.
+
+    A kick resets the whole group back to drafting, so on a published praxis it
+    would silently unpublish it and wipe every cast. Reopen first.
+    """
+    praxis_id = await _two_member_collab(
+        client, active_task, auth_headers2, character.id, auth_headers
+    )
+    await client.post(f"/praxes/{praxis_id}/submit", headers=auth_headers2)
+    submit2 = await client.post(f"/praxes/{praxis_id}/submit", headers=auth_headers)
+    assert submit2.json()["status"] == "submitted"
+
+    resp = await client.post(
+        f"/praxes/{praxis_id}/kick/{character2.id}", headers=auth_headers
+    )
+    assert resp.status_code == 422
+
+    # Nothing moved: still published, still two members, both still cast.
+    after = await client.get(f"/praxes/{praxis_id}", headers=auth_headers)
+    data = after.json()
+    assert data["status"] == "submitted"
+    assert {m["character_id"] for m in data["members"]} == {character.id, character2.id}
+    assert all(m["has_submitted"] for m in data["members"])
+
+
+@pytest.mark.asyncio
+async def test_kick_on_pending_collab_still_resets_casts(
+    client: AsyncClient,
+    character: Character,
+    character2: Character,
+    active_task: Task,
+    auth_headers: dict,
+    auth_headers2: dict,
+):
+    """The ADR-0013 reset survives the #1076 guard: a pending kick is still allowed
+    and still drops the group back to drafting, clearing the remaining cast."""
+    praxis_id = await _two_member_collab(
+        client, active_task, auth_headers2, character.id, auth_headers
+    )
+    # The kicker casts first, so the collab is pending with their own cast in.
+    opened = await client.post(f"/praxes/{praxis_id}/submit", headers=auth_headers)
+    assert opened.json()["status"] == "pending"
+
+    resp = await client.post(
+        f"/praxes/{praxis_id}/kick/{character2.id}", headers=auth_headers
+    )
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["status"] == "in_progress"
+    assert data["submit_proposed_at"] is None
+    assert {m["character_id"] for m in data["members"]} == {character.id}
+    assert not any(m["has_submitted"] for m in data["members"])
+
+
 # ---------------------------------------------------------------------------
 # Collab lazy-consensus publish (ADR-0012): pending-publish window + timeout + leave
 # ---------------------------------------------------------------------------

@@ -62,3 +62,45 @@ describe('CollabRoster render', () => {
     expect(html).not.toContain('weaving')
   })
 })
+
+// Mirrors the backend `kick_member` guard — see the comment above `canKick`.
+describe('CollabRoster kick × visibility (#959, #1076)', () => {
+  const kick = () => {}
+
+  it('offers the × on another member while the collab is still open', () => {
+    const html = renderToStaticMarkup(
+      <CollabRoster
+        members={[member(1, true), member(2, false)]}
+        currentCharacterId={1}
+        factionSlug={null}
+        onKick={kick}
+      />,
+    )
+    expect(html).toContain('kick M2 from the collab')
+    expect(html).not.toContain('kick M1 from the collab') // never on my own pill
+  })
+
+  it('withholds the × once every member has cast (the praxis is published)', () => {
+    const html = renderToStaticMarkup(
+      <CollabRoster
+        members={[member(1, true), member(2, true)]}
+        currentCharacterId={1}
+        factionSlug={null}
+        onKick={kick}
+      />,
+    )
+    expect(html).not.toContain('kick M2 from the collab')
+  })
+
+  it('withholds the × from a non-member viewer', () => {
+    const html = renderToStaticMarkup(
+      <CollabRoster
+        members={[member(1, false), member(2, false)]}
+        currentCharacterId={99}
+        factionSlug={null}
+        onKick={kick}
+      />,
+    )
+    expect(html).not.toContain('kick M2 from the collab')
+  })
+})
