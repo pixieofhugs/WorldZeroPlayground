@@ -147,13 +147,6 @@ function state(overrides: Partial<PraxisDetailState> = {}): PraxisDetailState {
     handleResubmit: async () => {},
     handleFlag: async () => {},
     handleKickMember: async () => {},
-    metatasks: [],
-    metataskLoading: false,
-    metataskError: null,
-    applyingMetataskId: null,
-    removingMetataskId: null,
-    handleApplyMetatask: async () => {},
-    handleRemoveMetatask: async () => {},
     ...overrides,
   };
 }
@@ -233,22 +226,34 @@ describe("Unaffiliated praxis detail — the state axes", () => {
     expect(text, "total").toContain("16.0");
   });
 
+  // #1091: the rows come from the mounted `ScoreStamp` now, so they speak the
+  // shared `card.stamp.*` vocabulary the praxis cards already use. The page's
+  // own duplicate strip is gone — one readout, one set of words.
   it("shows the multiplier row only when the factor is not 1.0", () => {
-    expect(render(state()).text, "neutral era hides it").not.toContain("Multiplier");
+    expect(render(state()).text, "neutral era hides it").not.toContain("mult");
     const boosted = state({
       praxis: { ...PRAXIS, display_multiplier: 1.1, score: 17.2 },
     });
     const { text } = render(boosted);
-    expect(text).toContain("Multiplier");
+    expect(text).toContain("mult");
     expect(text).toContain("×1.10");
   });
 
   it("names the metatask contribution only when one is applied", () => {
-    expect(render(state()).text).not.toContain("Metatasks");
+    expect(render(state()).text).not.toContain("meta");
     const sealed = state({
       praxis: { ...PRAXIS, metatask_points: 5, score: 21 },
     });
-    expect(render(sealed).text).toContain("Metatasks");
+    expect(render(sealed).text).toContain("meta");
+  });
+
+  // Re-affirmed 2026-07-20 against a design that hid it: an absent row cannot
+  // say "nobody has voted yet", so the tally is drawn at zero too.
+  it("always draws the votes tally, including +0", () => {
+    const unvoted = state({
+      praxis: { ...PRAXIS, points_from_votes: 0, score: 12 },
+    });
+    expect(render(unvoted).text).toContain("from votes");
   });
 
   it("banners flagged, failed-with-note, and the crown", () => {

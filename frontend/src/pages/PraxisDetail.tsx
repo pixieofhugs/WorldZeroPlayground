@@ -39,10 +39,15 @@ export default function PraxisDetail() {
   )
   if (!state.praxis) return <div className="py-8 font-body text-muted">{t('detail.notFound')}</div>
 
-  // ADR-0024: the public detail view never renders a draft. Only members reach
-  // here (the API 404s everyone else) — route them to the editor, the sole
-  // surface for in_progress work.
-  if (state.praxis.status === 'in_progress') {
+  // ADR-0062: detail is a published-only reading surface. State the rule by
+  // INTENT, not by enum — drafting, mid-consensus, or waiting on a rival: all
+  // composer. `in_progress` is the draft (ADR-0024, member-only); `pending` is
+  // a collab mid-consensus and is collab-ONLY — a duel side that has cast is
+  // `submitted` with the duel still active, so never reach for `pending` to
+  // mean "waiting on the other party". Only members can load either status
+  // (praxis_visibility_condition), and #1071's waiting surface gives every one
+  // of them somewhere to land, so this redirect cannot strand a viewer.
+  if (state.praxis.status === 'in_progress' || state.praxis.status === 'pending') {
     return <Navigate to={`/praxes/${state.praxis.id}/edit`} replace />
   }
 

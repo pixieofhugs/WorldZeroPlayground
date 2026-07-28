@@ -16,8 +16,6 @@ import {
   unsubmitPraxis,
   submitPraxis,
   flagPraxis,
-  applyMetatask,
-  removeMetatask,
   kickMember,
   type PraxisOut,
 } from "../../api/praxis";
@@ -29,7 +27,6 @@ import { moderatePraxis } from "../../api/admin";
 import { extractError } from "../../utils/errors";
 import { seedViewerVote, useVoteOverride } from "../../components/vote/voteOverrides";
 import type { CurrentUser } from "../../api/auth";
-import { listTasks, type TaskOut } from "../../api/tasks";
 import { FLAG_REASON_OTHER, type FlagReason } from "../../utils/flagReasons";
 
 export interface PraxisDetailState {
@@ -87,14 +84,15 @@ export interface PraxisDetailState {
   /** Remove another member from the collab (#959) — target is a character id. */
   handleKickMember: (memberId: number) => Promise<void>;
 
-  // Metatasks
-  metatasks: TaskOut[];
-  metataskLoading: boolean;
-  metataskError: string | null;
-  applyingMetataskId: number | null;
-  removingMetataskId: number | null;
-  handleApplyMetatask: (taskId: number) => Promise<void>;
-  handleRemoveMetatask: (taskId: number) => Promise<void>;
+  // Metatasks are READ-ONLY on detail (#1093): the seal stack draws
+  // `praxis.applied_metatasks` and nothing here applies or peels one. The apply
+  // wiring this state used to carry — the metatask catalog fetch plus
+  // apply/remove handlers — is deleted rather than left dormant, because
+  // `apply_metatask` (services/praxis.py) requires `status == in_progress` and
+  // 422s otherwise, so every control it could have fed was already dead.
+  // Letting an owner seal a metatask after publishing reopens scoring on a
+  // praxis that may already hold votes; that is a rule change and needs its own
+  // ADR, not a re-added handler.
 }
 
 /**
@@ -122,11 +120,6 @@ export function usePraxisDetail(idParam: string | undefined): PraxisDetailState 
   const [votes, setVotes] = useState<VoteSummary | null>(null);
   const [voters, setVoters] = useState<VoterDetail[]>([]);
   const [duel, setDuel] = useState<DuelDetailOut | null>(null);
-  const [metatasks, setMetatasks] = useState<TaskOut[]>([]);
-  const [metataskLoading, setMetataskLoading] = useState(false);
-  const [metataskError, setMetataskError] = useState<string | null>(null);
-  const [applyingMetataskId, setApplyingMetataskId] = useState<number | null>(null);
-  const [removingMetataskId, setRemovingMetataskId] = useState<number | null>(null);
 
   const [loading, setLoading] = useState(true);
   const [fetchError, setFetchError] = useState<string | null>(null);
@@ -196,44 +189,6 @@ export function usePraxisDetail(idParam: string | undefined): PraxisDetailState 
       cancelled = true;
     };
   }, [praxis?.duel_id]);
-
-  useEffect(() => {
-    if (!praxis) return;
-    setMetataskLoading(true);
-    listTasks({ task_type: "metatask" })
-      .then(setMetatasks)
-      .catch((err) => setMetataskError(extractError(err, t("detail.errors.metataskLoad"))))
-      .finally(() => setMetataskLoading(false));
-  }, [praxis?.id]);
-
-  const handleApplyMetataskFn = async (taskId: number) => {
-    if (!praxis) return;
-    setApplyingMetataskId(taskId);
-    setMetataskError(null);
-    try {
-      const updated = await applyMetatask(praxis.id, taskId);
-      setPraxis(updated);
-    } catch (err) {
-      setMetataskError(extractError(err, t("detail.errors.metataskApply")));
-    } finally {
-      setApplyingMetataskId(null);
-    }
-  };
-
-  const handleRemoveMetataskFn = async (taskId: number) => {
-    if (!praxis) return;
-    setRemovingMetataskId(taskId);
-    setMetataskError(null);
-    try {
-      await removeMetatask(praxis.id, taskId);
-      const updated = await getPraxis(praxis.id);
-      setPraxis(updated);
-    } catch (err) {
-      setMetataskError(extractError(err, t("detail.errors.metataskRemove")));
-    } finally {
-      setRemovingMetataskId(null);
-    }
-  };
 
   const handleWithdraw = async () => {
     if (!praxis) return;
@@ -367,14 +322,6 @@ export function usePraxisDetail(idParam: string | undefined): PraxisDetailState 
     flagError,
     setFlagError,
     flagSubmitted,
-
-    metatasks,
-    metataskLoading,
-    metataskError,
-    applyingMetataskId,
-    removingMetataskId,
-    handleApplyMetatask: handleApplyMetataskFn,
-    handleRemoveMetatask: handleRemoveMetataskFn,
 
     handleModerate,
     handleWithdraw,
