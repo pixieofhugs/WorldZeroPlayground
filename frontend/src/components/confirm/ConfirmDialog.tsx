@@ -35,6 +35,7 @@
  * (roles, names, rendered copy) is asserted in tests.
  */
 import { useEffect, useId, useRef } from 'react'
+import { createPortal } from 'react-dom'
 import { useTranslation } from 'react-i18next'
 import { useFormFactor } from '../../hooks/useFormFactor'
 import { factionCssVar } from '../../utils/factions'
@@ -114,7 +115,7 @@ export default function ConfirmDialog({
 
   const accent = factionCssVar(factionSlug, 'card-accent')
 
-  return (
+  const dialog = (
     <div
       role="presentation"
       onClick={(event) => {
@@ -220,4 +221,17 @@ export default function ConfirmDialog({
       </div>
     </div>
   )
+
+  // Drawn at the document root, wherever it was mounted from. The kick confirm
+  // renders from inside `CollabRoster`, which faction composers place inside
+  // rotated/transformed panels — and a `position: fixed` overlay inside a
+  // transformed ancestor positions against that ancestor instead of the
+  // viewport, which would leave the dialog clipped or off-screen.
+  //
+  // The guard is for this repo's test harness: `renderToStaticMarkup` runs with
+  // no document and cannot render a portal, so there the tree stays inline and
+  // the markup is still assertable.
+  return typeof document === 'undefined'
+    ? dialog
+    : createPortal(dialog, document.body)
 }

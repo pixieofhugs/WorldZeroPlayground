@@ -116,7 +116,6 @@ export function CollabRoster({
           : null
 
   return (
-    <>
     <div className="flex flex-col gap-2">
       {/* Header: label + cast progress chip */}
       <div className="flex items-center gap-2" style={{ justifyContent: 'space-between' }}>
@@ -206,18 +205,21 @@ export function CollabRoster({
           {banner.text}
         </p>
       )}
+
+      {/* Nested inside the roster, but drawn at the document root — the dialog
+          portals itself out, so a faction panel's transform can't capture its
+          fixed overlay. */}
+      {pendingKick && (
+        <ConfirmDialog
+          request={kickMemberConfirm(
+            factionSlug,
+            pendingKick.character_display_name,
+          )}
+          factionSlug={factionSlug}
+          onConfirm={confirmKick}
+          onDismiss={() => setPendingKick(null)}
+        />
+      )}
     </div>
-    {pendingKick && (
-      <ConfirmDialog
-        request={kickMemberConfirm(
-          factionSlug,
-          pendingKick.character_display_name,
-        )}
-        factionSlug={factionSlug}
-        onConfirm={confirmKick}
-        onDismiss={() => setPendingKick(null)}
-      />
-    )}
-    </>
   )
 }
