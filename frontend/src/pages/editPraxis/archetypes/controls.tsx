@@ -676,11 +676,12 @@ export function ModePicker<O extends { key: PraxisType }>({
 }
 
 /* -------------------------------------------------------------------------- */
-/* PublishButton — renders nothing once published and is disabled while        */
-/* saving / submitting / switching mode. The archetype arranges it inside its   */
-/* bespoke file bar and supplies faction-voiced labels via skin. (The old       */
-/* Save Draft button was removed in #297 — autosave persists title/body and     */
-/* media uploads on pick, so no manual draft-save control is needed.)           */
+/* PublishButton — renders nothing once published (with one duel exception,     */
+/* below) and is disabled while saving / submitting / switching mode. The       */
+/* archetype arranges it inside its bespoke file bar and supplies faction-voiced */
+/* labels via skin. (The old Save Draft button was removed in #297 — autosave    */
+/* persists title/body and media uploads on pick, so no manual draft-save        */
+/* control is needed.)                                                          */
 /* -------------------------------------------------------------------------- */
 export interface PublishButtonSkin {
   style: CSSProperties;
@@ -696,17 +697,33 @@ export function PublishButton({
   state: EditPraxisState;
   skin: PublishButtonSkin;
 }) {
-  if (state.isPublished) return null;
+  const praxis = state.praxis;
+  // The one published state that keeps its footer button (#1077). A duel side
+  // that casts goes straight to `submitted` while the duel stays `active` —
+  // meaning the rival has not answered yet, since a second cast settles it
+  // (`maybe_settle_duel`). Pulling back there is a free, neutral reopen:
+  // `unsubmit_praxis` only marks a forfeit for a *settled* duel (ADR-0011
+  // §Forfeit), so nothing is lost and nobody wins. It is also the promise the
+  // seal dialog already made on the way in (`duelSeal.reopenNote`). Every other
+  // published praxis — solo, collab, or a duel already settled, where forfeit
+  // does begin and lives on the detail page instead — still renders nothing.
+  const duelPullBack =
+    state.isPublished && state.duelMode && state.duel?.status === "active";
+  if (state.isPublished && !duelPullBack) return null;
   // Multi-member collabs cast (and pull back) through this same footer button
   // (#646). The consensus gate decides the action and the faction-voiced idle
   // label; the busy label stays the archetype's mode-agnostic present participle.
-  const praxis = state.praxis;
   const collab =
     praxis?.type === "collab" && praxis.members.length > 1
       ? deriveCollabGate(praxis.members, state.currentCharacterId)
       : null;
-  const idleLabel =
-    collab && praxis
+  // Neutral wording, deliberately: no forfeit language and no consequence
+  // dialog at `active` (#718 rejected that framing once already — see
+  // CovenDuelRail's header). Shared voice for now, like the other mechanics
+  // lines in `SHARED_DEFAULT_COLLAB_KEYS`.
+  const idleLabel = duelPullBack
+    ? collabCopy(praxis?.task_faction_slug, "duelPullBackAction")
+    : collab && praxis
       ? collabCopy(
           praxis.task_faction_slug,
           collab.iCast
@@ -719,13 +736,15 @@ export function PublishButton({
   // A duel side asks before it casts (#718): the button opens the seal
   // confirmation, whose confirm calls this same `publish()`. Only once an
   // opponent is actually attached — duel mode with an empty opponent slot casts
-  // as an ordinary solo praxis, so there is nothing to warn about.
+  // as an ordinary solo praxis, so there is nothing to warn about. Once cast,
+  // the same button reverses it through `pullBack` and asks nothing.
   const sealsADuel = state.duelMode && state.duel != null;
-  const onClick = collab?.iCast
-    ? state.pullBack
-    : sealsADuel
-      ? async () => state.requestDuelSeal()
-      : state.publish;
+  const onClick =
+    duelPullBack || collab?.iCast
+      ? state.pullBack
+      : sealsADuel
+        ? async () => state.requestDuelSeal()
+        : state.publish;
   return (
     <button
       type="button"

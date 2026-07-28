@@ -13,6 +13,12 @@ import i18n from '../../i18n'
  * dev/test missing-key throw before the result could be inspected. A faction
  * with no entry for a key is a normal miss, not a defect.
  *
+ * Despite the name, this is the resolver for the whole *multi-party composer
+ * footer*, not just the roster: the one footer button casts and pulls back for
+ * a collab, and (since #1077) for a duel side too, and it is hookless by
+ * contract, so its words cannot come from `useTranslation`. Duel keys are
+ * prefixed `duel*` and sit in the same shared block.
+ *
  * Keys are runtime-dynamic (the slug comes from the task), so they can't be the
  * typed literals `t()` expects — resolve through a plain-string view of `t`, as
  * the taunt resolver does. The catalog still owns every word; only the
@@ -38,6 +44,7 @@ export type CollabCopyKey =
   | 'castAction'
   | 'castFinalAction'
   | 'pullBackAction'
+  | 'duelPullBackAction'
   | 'successHeading'
   | 'successBody'
   | 'successContinue'
@@ -57,12 +64,20 @@ export type CollabCopyKey =
  * to be clever. A faction may still override any of them; nothing here stops it,
  * and the resolver is unchanged. The list exists so the completeness test knows
  * which keys a silent faction is allowed to leave alone.
+ *
+ * `duelPullBackAction` (#1077) joins them: it is the same composer footer button
+ * in its duel guise, so it resolves through the same hookless resolver, but the
+ * line is a plain statement of a mechanic (at `active` your cast reopens for
+ * free — forfeit begins only at `settled`, ADR-0011 §Forfeit) and a faction
+ * flourish here risks reading as a consequence. Shared voice until a faction
+ * asks for its own.
  */
 export const SHARED_DEFAULT_COLLAB_KEYS: readonly CollabCopyKey[] = [
   'leaveDescription',
   'deleteAction',
   'deleteDescription',
   'deleteConfirm',
+  'duelPullBackAction',
 ]
 
 /**
