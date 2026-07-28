@@ -17,8 +17,9 @@ export default function Tasks() {
 
   // Mobile browse is faction-agnostic page chrome (#565): the page shows every
   // faction's tasks, and each card in the results list picks its own skin from
-  // its task's faction slug (via the MobileTaskCard dispatcher) — mirroring the
-  // desktop TaskCard per-item dispatch. No viewer-faction page skin.
+  // its task's faction slug. Both branches now hand that per-item dispatch to
+  // the same <TaskCard> (ADR-0056) — only the page chrome differs. No
+  // viewer-faction page skin.
   if (formFactor === 'mobile') return <DefaultTasks state={state} />
 
   return <DesktopTasks state={state} />
