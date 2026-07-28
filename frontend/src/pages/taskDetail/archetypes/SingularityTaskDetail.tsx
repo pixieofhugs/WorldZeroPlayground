@@ -42,8 +42,8 @@ import type { TaskDetailState } from "../useTaskDetail";
  *
  * ONE RESPONSIVE COMPONENT (ADR-0058): `useFormFactor()` picks the size set and
  * collapses the two-column split; the chrome bar swaps its lamps for a back
- * arrow. `pages/taskDetail/mobileArchetypes/SingularityTaskDetail.tsx` and the
- * `mobileTaskDetail` manifest row stay registered but DORMANT — not deleted.
+ * arrow. The separate Singularity mobile skin and the manifest surface that held
+ * it were deleted by #1068 when the ADR was accepted.
  *
  * COPY IS NEUTRAL AND SHARED (`detail.*`, ADR-0057). This is the most voiced
  * dress in the set after Albescent, and the dress is all that survives: the

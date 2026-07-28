@@ -53,9 +53,8 @@ import type { TaskDetailState } from "../useTaskDetail";
  *   always dropped the filter and shown the whole feed.
  *
  * ONE RESPONSIVE COMPONENT (ADR-0058): `useFormFactor()` picks the size set and
- * drops the two-column split; `pages/taskDetail/mobileArchetypes/
- * SnideTaskDetail.tsx` and its `mobileTaskDetail` manifest row stay registered
- * but dormant, not deleted.
+ * drops the two-column split. The separate Snide mobile skin and the manifest
+ * surface that held it were deleted by #1068 when the ADR was accepted.
  *
  * All colour via the existing `--faction-snide-note-*` clipping family (which
  * FLIPS under `[data-theme="dark"]` — the dossier is a sheet of paper) plus the

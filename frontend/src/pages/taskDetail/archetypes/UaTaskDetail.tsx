@@ -51,9 +51,9 @@ import type { TaskDetailState } from "../useTaskDetail";
  *   whole feed; it is a show-more/show-fewer toggle now, as on na.
  *
  * ONE RESPONSIVE COMPONENT (ADR-0058): `useFormFactor()` picks the size set and
- * drops the two-column split. `pages/taskDetail/mobileArchetypes/UaTaskDetail`
- * stays registered but dormant — restoring the dispatcher branch is the whole
- * revert, so it is not deleted.
+ * drops the two-column split. The separate UA mobile skin and the manifest
+ * surface that held it were deleted by #1068 when the ADR was accepted;
+ * re-adding a dispatcher branch would be drift, not a revert.
  *
  * TWO MARKS, AND THE RESTRAINT IS THE POINT (WORLD_ZERO_STYLE §6). The design
  * draws the ensō five times — the faction line, the points ring, a seal on the

@@ -7,12 +7,12 @@
  * differs. Mirrors the EditPraxis dispatcher. Surface #10 in
  * docs/spec/SPEC-faction-ui-profile.md.
  *
- * ONE archetype per faction, responsive (ADR-0058, Proposed). There is no
- * `formFactor === "mobile"` branch here any more — each archetype calls
- * `useFormFactor()` itself for its own size set and conditional ornament.
- * `pages/taskDetail/mobileArchetypes/*` and the `mobileTaskDetail` manifest rows
- * stay registered but DORMANT during the evaluation window; restoring the branch
- * below is the whole revert, so do not delete them.
+ * ONE archetype per faction, responsive (ADR-0058, Accepted). There is no
+ * `formFactor === "mobile"` branch here — each archetype calls `useFormFactor()`
+ * itself for its own size set and conditional ornament. The mobile twins that
+ * branch used to reach, and the manifest surface holding them, were deleted by
+ * #1068 once the owner's phone QA accepted the collapse. Re-adding a form-factor
+ * branch here would now be drift, not a rollback.
  *
  * Comments are no longer rendered here either — archetypes mount the shared
  * `TaskDetailComments` slot (archetypes/shared.tsx), which carries the

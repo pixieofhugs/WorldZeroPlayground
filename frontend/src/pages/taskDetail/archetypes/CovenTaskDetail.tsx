@@ -39,8 +39,8 @@ import type { TaskDetailState } from "../useTaskDetail";
  *   its filter on every archetype — `usePraxes` reads no such param.
  *
  * ONE RESPONSIVE COMPONENT (ADR-0058): `useFormFactor()` picks the size set and
- * drops the two-column split. `pages/taskDetail/mobileArchetypes/CovenTaskDetail`
- * and the `mobileTaskDetail` manifest row stay registered but DORMANT.
+ * drops the two-column split. The separate Coven mobile skin and the manifest
+ * surface that held it were deleted by #1068 when the ADR was accepted.
  *
  * All colour via `--faction-coven-slip-*` (shared with the task card) plus the
  * `--faction-coven-ward-*` family this surface adds; the haze, the braid, the

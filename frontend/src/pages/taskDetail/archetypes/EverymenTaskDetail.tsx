@@ -146,9 +146,8 @@ function initialsOf(name: string): string {
  *   surface. `tasks:everymen.*` still feeds the faction pages, so the keys stay.
  *
  * One responsive component, no mobile twin (ADR-0058): `useFormFactor()` picks
- * the size set and collapses the two-column split, and
- * `pages/taskDetail/mobileArchetypes/EverymenTaskDetail.tsx` stays dormant, not
- * deleted.
+ * the size set and collapses the two-column split. The separate Everymen mobile
+ * skin was deleted by #1068 when the ADR was accepted.
  */
 export default function EverymenTaskDetail({
   state,

@@ -23,7 +23,6 @@ const UaHome = lazyArchetype(() => import('../pages/fieldDesk/mobileArchetypes/U
 const UaMobileEditPraxis = lazyArchetype(() => import('../pages/editPraxis/mobileArchetypes/UaComposer'))
 const UaMobilePraxisCard = lazyArchetype(() => import('../components/praxisCard/mobile/UaMobilePraxisCard'))
 const UaMobilePraxisDetail = lazyArchetype(() => import('../pages/praxisDetail/mobileArchetypes/UaPraxisDetail'))
-const UaMobileTaskDetail = lazyArchetype(() => import('../pages/taskDetail/mobileArchetypes/UaTaskDetail'))
 const UaPraxisDetail = lazyArchetype(() => import('../pages/praxisDetail/archetypes/UaPraxisDetail'))
 const UaProfileBody = lazyArchetype(() => import('../pages/characterProfile/archetypes/UaProfileBody'))
 const UaScoreStamp = lazyArchetype(() => import('../components/praxisCard/scoreStamp/UaScoreStamp'))
@@ -58,7 +57,6 @@ export const UA_MANIFEST: FactionManifest = {
   factionBody: () => UaFactionBody,
   profileBody: () => UaProfileBody,
   mobilePraxisCard: () => UaMobilePraxisCard,
-  mobileTaskDetail: () => UaMobileTaskDetail,
   mobilePraxisDetail: () => UaMobilePraxisDetail,
   mobileEditPraxis: () => UaMobileEditPraxis,
   mobileFactionPage: () => UaFactionPage,
