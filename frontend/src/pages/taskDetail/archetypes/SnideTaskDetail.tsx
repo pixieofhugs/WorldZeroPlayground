@@ -941,11 +941,26 @@ export default function SnideTaskDetail({ state }: { state: TaskDetailState }) {
 
   return (
     <div className="py-8" style={{ position: "relative", fontFamily: TYPE, color: INK }}>
-      {/* The flyposted xerox wall — SNIDE's page ground (index.css, shared with
-          every faction-context SNIDE surface). */}
-      <div className="snide-backdrop" aria-hidden="true" />
-
-      <div style={{ position: "relative", zIndex: 1, maxWidth: 1200, margin: "0 auto" }}>
+      {/* The flyposted xerox wall, painted on the detail COLUMN rather than the
+          viewport: the owner's rule for this surface is that the site background
+          still shows around the component (QA on #1055, then #1057). This used
+          to mount `.snide-backdrop`, which is `position: fixed` because the
+          faction-context pages that share it DO want the whole page. index.css
+          now splits that rule — one paint, two mounts — so the wall cannot drift
+          between them. */}
+      <div
+        className="snd-detail-sheet"
+        style={{
+          position: "relative",
+          zIndex: 1,
+          maxWidth: 1200,
+          margin: "0 auto",
+          borderRadius: 18,
+          padding: desktop ? "var(--space-2xl)" : "var(--space-lg)",
+          overflow: "hidden",
+          boxSizing: "border-box",
+        }}
+      >
         <div
           style={{
             display: "flex",

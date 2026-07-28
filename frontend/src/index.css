@@ -1800,11 +1800,15 @@
 }
 
 /* ══ S.N.I.D.E. flyposted-wall backdrop (faction-context pages; theme-aware) ══ */
-.snide-backdrop {
-  position: fixed;
-  inset: 0;
-  z-index: 0;
-  pointer-events: none;
+/* The wall PAINT, shared by two mounts with different geometry:
+     • `.snide-backdrop`   — the full-viewport wall (SnideBackdrop.tsx) on
+       faction-context pages, where covering the page IS the point.
+     • `.snd-detail-sheet` — the task-detail COLUMN's ground. The owner's rule
+       for task detail is that the site background still shows around the
+       component (QA on #1055, then #1057), so this mount must NOT be fixed.
+   One declaration, so the two can never drift apart. */
+.snide-backdrop,
+.snd-detail-sheet {
   background-color: var(--faction-snide-wall);
   background-image:
     radial-gradient(40% 30% at 100% 0%, color-mix(in srgb, var(--faction-snide-acid) 18%, transparent), transparent 70%),
@@ -1815,11 +1819,27 @@
     linear-gradient(180deg, var(--faction-snide-wall), var(--faction-snide-wall-deep));
   background-size: 100% 100%, 100% 100%, 5px 5px, auto, auto, 100% 100%;
 }
-.snide-backdrop::after {
+/* Only the full-page mount is fixed. */
+.snide-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+.snide-backdrop::after,
+.snd-detail-sheet::after {
   content: "";
   position: absolute;
   inset: 0;
   background: radial-gradient(120% 90% at 50% 6%, transparent 42%, color-mix(in srgb, var(--faction-snide-wall-deep) 60%, transparent));
+}
+/* On the column the vignette needs an explicit z-index: the column is
+   positioned, so a positioned ::after would otherwise paint OVER the copy.
+   -1 puts it above the sheet's background and beneath its content. */
+.snd-detail-sheet::after {
+  z-index: -1;
+  border-radius: inherit;
+  pointer-events: none;
 }
 
 /* ══ Default (Unaffiliated / na) spectrum backdrop (faction-context pages; theme-aware) ══
