@@ -39,14 +39,22 @@ const CORE_SIX = ['coven', 'snide', 'ephemerists', 'singularity', 'everymen', 'u
 // surface → slugs that ship a bespoke skin there. Everything in ALL_SLUGS not
 // listed (plus a junk slug and null) must fall through to the surface Default.
 // wow is Default on desktop praxis detail but bespoke on task detail (#1037)
-// and on every mobile surface; albescent is bespoke only on the praxis card.
+// and on every mobile surface.
+//
+// albescent appears in only two rows below, and both are WRAPPERS over Default,
+// not bespoke skins (ADR-0048): it is a secret society hiding in plain sight, so
+// an entry here means "Default plus a flourish", never a treatment of its own.
+// It has no `mobileTaskDetail` row — task detail is one responsive component
+// (ADR-0058), so its single `taskDetail` registration covers both form factors,
+// and that row must stay OUT of `mobileTaskDetail` or the fall-through it relies
+// on breaks.
 //
 // There is no `mobileTaskCard` row: ADR-0056 retired that surface once the
 // owner's QA verdict accepted the unified card, so task cards partition on the
 // `taskCard` surface alone for both form factors.
 const BESPOKE: Record<string, string[]> = {
   praxisDetail: CORE_SIX,
-  taskDetail: [...CORE_SIX, 'wow'],
+  taskDetail: [...CORE_SIX, 'wow', 'albescent'],
   mobileTaskDetail: [...CORE_SIX, 'wow'],
   mobileFactionPage: [...CORE_SIX, 'wow'],
   mobileFieldDesk: [...CORE_SIX, 'wow'],
