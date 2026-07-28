@@ -31,8 +31,8 @@ import { useFormFactor } from "../../hooks/useFormFactor";
  * forty-character title.
  *
  * ONE RESPONSIVE COMPONENT (ADR-0056): `useFormFactor` picks the size set, not a
- * different card. The dormant `mobileArchetypes/cards/SnideMobileTaskCard` stays
- * in the tree for the revert.
+ * different card. There is no mobile twin: ADR-0056 was accepted and the
+ * `mobileTaskCard` surface retired, so this file serves both form factors.
  *
  * All colour via `--faction-snide-note-*`, which unlike the faction's older
  * ink-dark families FLIPS under `[data-theme="dark"]`: the clipping is a sheet

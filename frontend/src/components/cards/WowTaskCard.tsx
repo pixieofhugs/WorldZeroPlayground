@@ -29,8 +29,9 @@ import { useFormFactor } from "../../hooks/useFormFactor";
  *
  * ONE RESPONSIVE COMPONENT (ADR-0056): `useFormFactor` picks the size set, and
  * on mobile the balloons drop — the design's own conditional ornament, and the
- * corner they need is the corner a 340px card does not have. The dormant
- * `mobileArchetypes/cards/WowMobileTaskCard` stays in the tree for the revert.
+ * corner they need is the corner a 340px card does not have. There is no mobile
+ * twin: ADR-0056 was accepted and the `mobileTaskCard` surface retired, so this
+ * file serves both form factors.
  *
  * THE DESIGN'S `ctaGold` A/B PROP IS NOT SHIPPED. It is canvas experimentation
  * rather than part of {@link CardProps}, and the choice it offers is already
