@@ -62,11 +62,28 @@ function initialsOf(name: string): string {
  * reached via the token / `factionFill`, NOT `factionCssVar`, which is neutral
  * grey for na. The content column carries the page surface itself
  * (`--faction-default-card-bg`); there is no separate backdrop element.
+ *
+ * ### `worthSlot` — the one presentation seam (#1038)
+ *
+ * Albescent's task detail is a WRAPPER over this component, not a ninth skin
+ * (ADR-0048: `Default` plus a flourish). Its design's single structural delta is
+ * that the score readout becomes a turning prism ring. A wrapper cannot
+ * restructure what it wraps, so this optional prop lets a caller substitute the
+ * ARRANGEMENT of the score readout while everything else stays inherited.
+ *
+ * It is a slot, not a data channel (ADR-0016): the caller receives no raw slot
+ * values — it builds its node from the SAME `TaskDetailState` it forwards here,
+ * so the two readouts can never disagree about what a task is worth. Absent, na
+ * renders exactly as before; that is why it is optional and why the default
+ * {@link scoreBody} stays the only implementation in this file.
  */
 export default function DefaultTaskDetail({
   state,
+  worthSlot,
 }: {
   state: TaskDetailState;
+  /** Replaces the base/`×mult`/total readout with the caller's arrangement. */
+  worthSlot?: ReactNode;
 }) {
   const { t } = useTranslation("tasks");
   const desktop = useFormFactor() !== "mobile";
@@ -374,7 +391,7 @@ export default function DefaultTaskDetail({
         }}
       >
         <div style={{ ...innerBox, flex: "0 0 auto", minWidth: desktop ? 168 : 122 }}>
-          {scoreBody}
+          {worthSlot ?? scoreBody}
         </div>
         {hasAction && (
           <div
