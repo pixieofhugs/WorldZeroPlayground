@@ -177,18 +177,25 @@
       "dispatchNumber": "dispatch №{{number}}",
       "scrawl": "your assignment, should you ignore it —",
       "signup": "I'M IN ↗",
-      "pointsUnit": "PTS"
+      "pointsUnit": "PTS",
+      "levelCaption": "level"
     },
     "singularity": {
       "pointsLabel": "PTS:",
       "levelLabel": "LVL: {{level}}",
       "signup": "sign up",
-      "levelPill": "lvl {{level}}"
+      "levelPill": "lvl {{level}}",
+      "windowTitle": "task.proc — singularity",
+      "bootPrefix": "> query",
+      "levelCaption": "lvl",
+      "pointsUnit": "pts"
     },
     "ua": {
       "estLine": "A daily practice",
       "pointsLine": "{{points}} marks",
-      "signup": "Sign up"
+      "signup": "Sign up",
+      "levelCaption": "Level",
+      "pointsUnit": "marks"
     },
     "coven": {
       "windowTitle": "coven.exe",
@@ -203,7 +210,8 @@
       "signup": "Take Up the Quest",
       "decree": "By Royal Decree",
       "byOrder": "by order of the Whimsy Court",
-      "pointsUnit": "Points"
+      "pointsUnit": "points",
+      "levelCaption": "level"
     }
   },
   "factionCard": {

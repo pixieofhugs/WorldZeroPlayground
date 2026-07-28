@@ -40,6 +40,10 @@ const CORE_SIX = ['coven', 'snide', 'ephemerists', 'singularity', 'everymen', 'u
 // listed (plus a junk slug and null) must fall through to the surface Default.
 // wow is Default on desktop praxis/task detail but bespoke on every mobile
 // surface; albescent is bespoke only on the praxis card.
+//
+// There is no `mobileTaskCard` row: ADR-0056 retired that surface once the
+// owner's QA verdict accepted the unified card, so task cards partition on the
+// `taskCard` surface alone for both form factors.
 const BESPOKE: Record<string, string[]> = {
   praxisDetail: CORE_SIX,
   taskDetail: CORE_SIX,
@@ -47,7 +51,6 @@ const BESPOKE: Record<string, string[]> = {
   mobileFactionPage: [...CORE_SIX, 'wow'],
   mobileFieldDesk: [...CORE_SIX, 'wow'],
   mobileEditPraxis: [...CORE_SIX, 'wow'],
-  mobileTaskCard: [...CORE_SIX, 'wow'],
   mobilePraxisCard: [...CORE_SIX, 'wow', 'albescent'],
 }
 

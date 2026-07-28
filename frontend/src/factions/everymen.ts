@@ -26,7 +26,6 @@ import EverymenMobileDuelSealConfirm from '../components/duel/EverymenMobileDuel
 import EverymenMobileEditPraxis from '../pages/editPraxis/mobileArchetypes/EverymenComposer'
 import EverymenMobilePraxisCard from '../components/praxisCard/mobile/EverymenMobilePraxisCard'
 import EverymenMobilePraxisDetail from '../pages/praxisDetail/mobileArchetypes/EverymenPraxisDetail'
-import EverymenMobileTaskCard from '../pages/tasks/mobileArchetypes/cards/EverymenMobileTaskCard'
 import EverymenMobileTaskDetail from '../pages/taskDetail/mobileArchetypes/EverymenTaskDetail'
 import EverymenPraxisDetail from '../pages/praxisDetail/archetypes/EverymenPraxisDetail'
 import EverymenProfileBody from '../pages/characterProfile/archetypes/EverymenProfileBody'
@@ -63,7 +62,6 @@ export const EVERYMEN_MANIFEST: FactionManifest = {
   profileBody: () => EverymenProfileBody,
   duelSeal: () => EverymenDuelSealConfirm,
   duelRail: () => EverymenDuelRail,
-  mobileTaskCard: () => EverymenMobileTaskCard,
   mobilePraxisCard: () => EverymenMobilePraxisCard,
   mobileTaskDetail: () => EverymenMobileTaskDetail,
   mobilePraxisDetail: () => EverymenMobilePraxisDetail,

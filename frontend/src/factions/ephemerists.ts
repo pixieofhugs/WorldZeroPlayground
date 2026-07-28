@@ -26,7 +26,6 @@ import EphemeristsMobileDuelSealConfirm from '../components/duel/EphemeristsMobi
 import EphemeristsMobileEditPraxis from '../pages/editPraxis/mobileArchetypes/EphemeristsComposer'
 import EphemeristsMobilePraxisCard from '../components/praxisCard/mobile/EphemeristsMobilePraxisCard'
 import EphemeristsMobilePraxisDetail from '../pages/praxisDetail/mobileArchetypes/EphemeristsPraxisDetail'
-import EphemeristsMobileTaskCard from '../pages/tasks/mobileArchetypes/cards/EphemeristsMobileTaskCard'
 import EphemeristsMobileTaskDetail from '../pages/taskDetail/mobileArchetypes/EphemeristsTaskDetail'
 import EphemeristsPraxisDetail from '../pages/praxisDetail/archetypes/EphemeristsPraxisDetail'
 import EphemeristsProfileBody from '../pages/characterProfile/archetypes/EphemeristsProfileBody'
@@ -63,7 +62,6 @@ export const EPHEMERISTS_MANIFEST: FactionManifest = {
   profileBody: () => EphemeristsProfileBody,
   duelSeal: () => EphemeristsDuelSealConfirm,
   duelRail: () => EphemeristsDuelRail,
-  mobileTaskCard: () => EphemeristsMobileTaskCard,
   mobilePraxisCard: () => EphemeristsMobilePraxisCard,
   mobileTaskDetail: () => EphemeristsMobileTaskDetail,
   mobilePraxisDetail: () => EphemeristsMobilePraxisDetail,

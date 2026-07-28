@@ -44,7 +44,6 @@ import type { CardProps } from '../components/TaskCard'
 import type { SealSkinProps } from '../components/metaTaskSeal/types'
 import type { ArchetypeProps as PraxisCardProps } from '../components/PraxisCard'
 import type { MobilePraxisCardProps } from '../components/praxisCard/mobile/MobilePraxisCard'
-import type { MobileTaskCardProps } from '../pages/tasks/mobileArchetypes/mobileTaskCard'
 import type { FactionAvatarProps } from '../components/avatar/FactionAvatar'
 import type { SigilVariantProps } from '../components/cards/FactionSigil'
 import type { CommentComponent } from '../components/comments/shared'
@@ -79,6 +78,13 @@ export interface FactionManifest {
   readonly slug: string
 
   // ─── Cards & chrome (desktop) ──────────────────────────────────────────────
+  /**
+   * The faction's task card. ONE responsive component per faction (ADR-0056):
+   * it sizes itself for the phone via `useFormFactor()` internally, so there is
+   * no `mobileTaskCard` twin — that surface was retired when the owner's QA
+   * verdict accepted the unified card. "desktop" here names the section, not
+   * the form factor this one serves.
+   */
   readonly taskCard?: Lazy<ComponentType<CardProps>>
   readonly praxisCard?: Lazy<ComponentType<PraxisCardProps>>
   readonly factionCard?: Lazy<ComponentType<FactionCardProps>>
@@ -116,7 +122,9 @@ export interface FactionManifest {
   readonly duelRail?: Lazy<ComponentType<DuelRailSkinProps>>
 
   // ─── Mobile twins (#494 form-factor dispatch) ──────────────────────────────
-  readonly mobileTaskCard?: Lazy<ComponentType<MobileTaskCardProps>>
+  // No `mobileTaskCard`: ADR-0056 collapsed task cards to one responsive
+  // component per faction and retired that surface. The licence is scoped to
+  // task cards — ADR-0035 still governs the twins below.
   readonly mobilePraxisCard?: Lazy<ComponentType<MobilePraxisCardProps>>
   readonly mobileTaskDetail?: Lazy<Stateful<TaskDetailState>>
   readonly mobilePraxisDetail?: Lazy<Stateful<PraxisDetailState>>
@@ -164,7 +172,6 @@ export const SURFACE_KEYS = [
   'profileBody',
   'duelSeal',
   'duelRail',
-  'mobileTaskCard',
   'mobilePraxisCard',
   'mobileTaskDetail',
   'mobilePraxisDetail',

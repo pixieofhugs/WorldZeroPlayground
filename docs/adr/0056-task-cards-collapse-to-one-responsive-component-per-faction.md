@@ -1,66 +1,61 @@
-# ADR-0056 — Task cards (and task detail) collapse to one responsive component per faction
+# ADR-0056 — Task cards collapse to one responsive component per faction
 
-**Status:** Proposed — under evaluation, not settled law
-**Date:** 2026-07-27 (amended 2026-07-27 to cover task detail)
-**Relates to:** #1020 (epic), #1022, #1023; #1028 (epic), #1029
-**Tension with:** ADR-0035 (distinct mobile screens; a responsive squeeze of one
-component was rejected at the time)
+**Status:** Accepted
+**Date:** 2026-07-27 (proposed) · 2026-07-28 (accepted)
+**Relates to:** #1020 (epic), #1022, #1023
+**Supersedes ADR-0035 for task cards** — ADR-0035 stands for every other mobile
+surface; only the task-card surface is unified here.
 
 ## Context
 
-Mobile task cards currently live on a separate `mobileTaskCard` manifest surface — a
+Mobile task cards used to live on a separate `mobileTaskCard` manifest surface — a
 dedicated dispatcher (`mobileArchetypes/mobileTaskCard.tsx`) and 9 bespoke mobile files
 (`DefaultMobileTaskCard` + 8 factions), distinct from the desktop `taskCard` surface's 9
-files. ADR-0035 established that split deliberately.
+files. ADR-0035 established that split deliberately: it held that a phone deserves its
+own screen rather than a responsive squeeze of a desktop component, and it rejected
+unification at the time.
 
 The v2 task-card designs are authored as a single responsive component per faction
-(`theme`/`platform` props switching internally), which reopens the question. The
+(`theme`/`platform` props switching internally), which reopened the question. The
 owner's framing: "won't know if one experience is good across both until I test" — this
-is explicitly an experiment to evaluate, not a considered reversal of ADR-0035.
+was explicitly an experiment to evaluate, not a considered reversal of ADR-0035.
 
 ## Decision
 
 Rewire the mobile task-browse list (`DefaultTasks.tsx`) onto the shared `<TaskCard>`
-component (using `useFormFactor()` internally for the desktop/mobile size set and each
-design's conditional ornament), **as a reversible experiment**.
+component, using `useFormFactor()` internally for the desktop/mobile size set and each
+design's conditional ornament. One responsive component per faction; no mobile twin.
 
-- The `mobileTaskCard` surface, its dispatcher, `DefaultMobileTaskCard`, and all 9
-  mobile card files **stay in place but dormant** — not deleted. Reverting is flipping
-  the one `DefaultTasks.tsx` call site back to the old dispatcher.
-- Deletion of the dormant mobile surface is a separate, deferred cleanup, gated on the
-  owner's hands-on verdict after living with the unified cards — not part of this change.
-- This ADR does not overturn ADR-0035's reasoning; it authorizes one concrete trial of
-  the alternative ADR-0035 rejected, kept cheap to back out of.
+This was originally adopted (2026-07-27) as a **reversible experiment**, with the
+`mobileTaskCard` surface and its 9 files left in the tree, dormant, so that reverting
+would be flipping the one `DefaultTasks.tsx` call site back to the old dispatcher.
+
+## Verdict (2026-07-28)
+
+**Accepted.** After hands-on mobile QA the owner ruled: the new cards are better on
+mobile, and the old ones should go entirely. The unified responsive card wins on its
+merits — it is not merely acceptable on a phone, it is the better phone experience — and
+it carries capabilities the mobile-only cards never had (the inline signup CTA gated on
+`can_submit_praxis`, the in-progress count, the multiplier badge of ADR-0055).
+
+Because the experiment succeeded, the `mobileTaskCard` surface was retired: the
+dispatcher, all 9 mobile card files, their shared helper, the surface's manifest field
+and its `SURFACE_KEYS` entry, and every faction's `mobileTaskCard` registration are
+deleted. There is no revert path left in the tree, which is the point — this is now
+settled law, not a trial.
 
 ## Consequences
 
-- Until the owner accepts or rejects this experiment, the repo carries two parallel
-  task-card implementations per faction (18 files: 9 desktop + 9 dormant mobile) —
-  expected and intentional during the evaluation window, not drift to clean up
-  prematurely.
-- If accepted: a follow-up (not yet filed) retires the dormant `mobileTaskCard` surface
-  and its 9 files.
-- If rejected: `DefaultTasks.tsx`'s call site flips back to `mobileTaskCard`'s
-  dispatcher, and the unified component's mobile-sizing branch goes unused on mobile
-  going forward.
-- Status stays **Proposed** until that verdict — a marker for future readers that the
-  mobile-unification half of task-cards-v2 is provisional, unlike ADR-0055's
-  multiplier-display decision, which is settled.
-
-## Amendment (2026-07-27) — task detail collapses the same way
-
-The v2 **task-detail** designs (#1028, project `0711d3a7-0074-4a60-8907-270f44168261`)
-are authored the same way: one responsive component per faction with a `platform` prop.
-Task detail joins this experiment rather than getting its own ADR — same posture, same
-one-line revert, and if the owner rejects the unified cards, both surfaces flip back
-together.
-
-- The mobile task-detail path is `TaskDetail.tsx`'s `formFactor === "mobile"` branch
-  (which dispatches through the `mobileTaskDetail` surface) exactly as the card path is
-  `DefaultTasks.tsx`'s call site. Rewire that branch to the shared desktop archetype and
-  the revert is putting the branch back.
-- `pages/taskDetail/mobileArchetypes/*` and the `mobileTaskDetail` rows on every faction
-  manifest **stay registered but dormant** — not deleted, for the same reason and on the
-  same deferred-cleanup terms as the card surface.
-- One verdict covers both. There is no separate ADR for the task-detail collapse; if the
-  cards experiment is rejected, this branch is restored alongside `DefaultTasks.tsx`'s.
+- Task cards are one responsive component per faction. Adding or changing a faction's
+  task card is one file under `components/cards/`, not two.
+- The `mobileTaskCard` surface no longer exists. A faction cannot register against it,
+  and `SURFACE_KEYS` no longer advertises a surface nothing dispatches.
+- ADR-0035's reasoning still governs every OTHER mobile surface — task *detail*, praxis
+  detail, edit-praxis, field desk, faction page and the rest keep their distinct mobile
+  archetypes and their `mobile*` manifest surfaces. The unification licence granted here
+  is scoped to task cards and does not generalise; unifying another surface needs its
+  own experiment and its own ADR.
+- The evaluation window is closed. The repo no longer carries two parallel task-card
+  implementations per faction; a second one reappearing is drift, not an experiment.
+- ADR-0055's multiplier-display decision was always settled; both halves of
+  task-cards-v2 are now settled law.

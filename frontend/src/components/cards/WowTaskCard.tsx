@@ -1,264 +1,422 @@
+import type { CSSProperties } from "react";
 import { Link } from "react-router-dom";
 import type { CardProps } from "../TaskCard";
 import i18n from "../../i18n";
-import LevelGem from "../ui/LevelGem";
-import { WowSigil } from "./WowSigil";
+import { isNeutralMultiplier } from "../../utils/points";
+import { useFormFactor } from "../../hooks/useFormFactor";
 
 /**
- * Warriors of Whimsy — THE ROYAL DECREE (kit §04, #899).
+ * Warriors of Whimsy — THE QUEST DECREE (task card v2, #1023).
  *
- * A quest is ISSUED by decree; proof is RECORDED in the chronicle. That split is
- * deliberate (ADR-0050 / #899): this card and `WowPraxisCard` share one palette —
- * cream parchment, gold frame, plum ink, MedievalSharp — and nothing else. #785's
- * "the praxis card mirrors the task card" clause is retired for WOW, so do not
- * reconcile the two chromes.
+ * A gold-framed parchment decree under a gold/plum barber ribbon: the level and
+ * a crowned points plaque lead, wavy gold→plum rules divide the sections, a
+ * sword-and-shield marks the muster, and a bundle of googly balloons is tucked
+ * into the bottom corner at a jaunty four degrees. MedievalSharp carries the
+ * display; Lora italic carries the quiet register.
  *
- * The decree hangs from a knobbed rod, is headed by a gold/plum checker band, is
- * sealed with the crest (`WowSigil`, #897 — drawn once, imported everywhere) and
- * is signed off with the gilt "Take Up the Quest" button whose glisten travels
- * behind `.wow-btn`.
+ * This replaces "The Royal Decree" (ADR-0055 / ADR-0056) — the same instrument,
+ * redrawn. The knobbed rod and the crest seal are gone; the checker band
+ * survives as the ribbon, and the decree/chronicle split with `WowPraxisCard`
+ * survives with it. A quest is ISSUED, proof is RECORDED; do not reconcile the
+ * two chromes (ADR-0050, #899).
  *
- * WHAT THE KIT DRAWS THAT THIS DOES NOT, and why:
+ * NOT THE COVEN CARD. The vendored design's header reads "Warrior of Whimsy
+ * (Cozy Coven)"; that parenthetical is a stale label of exactly the kind
+ * ADR-0050 records, and following one once already gave the chronicle to Coven
+ * and invented a yellow skin for WOW out of its spine hue. Gold, plum,
+ * MedievalSharp, sword-and-shield and balloons are WOW's. Coven is wave A's
+ * pink spell slip.
  *
- *  • the DECKLED SIDES, the TORN RAGGED HEM and the three RULING LINES. All
- *    three live in the expanded reference's single 360x540 `<path>`, keyed to a
- *    fixed card height. A task card's height is set by its title and blurb, so
- *    stretching that path distorts the rag into a wobble and slides the rules
- *    off the text they rule. The kit's own compact task card — the canonical
- *    one — is a plain bordered sheet for exactly this reason, and UX principle 1
- *    (responsive over pixel-perfect) settles it;
- *  • the SECOND SEAL swinging from a ribbon below the hem. The crest is already
- *    the header's wax seal; drawing it twice on one card spends the mark twice
- *    (§6, "a mark spent as decoration stops meaning anything"). It is set at
- *    62px so the Pig-Latin motto still renders — `WowSigil` drops its lettering
- *    below 56px, which is where the ribbon seal's 48px would have landed;
- *  • the "⚔ Rank III · solo · lvl 3" meta line. The level is the one game-wide
- *    fact that never takes a faction shape (§6), so it renders as the shared
- *    `LevelGem`, tinted; the ⚔ survives beside it as ornament.
+ * ONE RESPONSIVE COMPONENT (ADR-0056): `useFormFactor` picks the size set, and
+ * on mobile the balloons drop — the design's own conditional ornament, and the
+ * corner they need is the corner a 340px card does not have. There is no mobile
+ * twin: ADR-0056 was accepted and the `mobileTaskCard` surface retired, so this
+ * file serves both form factors.
  *
- * Both themes come from the `[data-theme="dark"]` cascade — the rod tarnishes,
- * the parchment darkens, the struck-metal seal does not repaint.
+ * THE DESIGN'S `ctaGold` A/B PROP IS NOT SHIPPED. It is canvas experimentation
+ * rather than part of {@link CardProps}, and the choice it offers is already
+ * made: gold measures 2.24:1 on the cream, so nothing legible is ever painted on
+ * it (§3). The CTA is plum, on the theme-invariant `--faction-wow-plum-surface`
+ * (5.16:1 both themes) rather than the design's dark #8a5aae, which index.css
+ * had already measured at 4.10:1 and rejected.
+ *
+ * The design's one remaining ternary — a four-colour `em` map for the emblem,
+ * picked on `theme === 'dark'` — is what a ternary in a skin always is: a token
+ * that had not been declared yet. Three of its four roles resolved onto shipped
+ * tokens and the fourth became `--faction-wow-quest-blade`.
  */
 
-/** The gold/plum checker band that heads every decree. 11px per square. */
-const CHECKER =
-  "repeating-linear-gradient(90deg, var(--faction-wow-chronicle-gold) 0 11px, var(--faction-wow-card-accent) 11px 22px)";
+const MED = "var(--faction-wow-card-font)"; /* MedievalSharp */
+const LORA = "var(--faction-wow-body-font)"; /* Lora */
 
-/** The rod's turned-wood/gilt barrel, shared by the bar and both end knobs. */
-const ROD_FILL =
-  "linear-gradient(180deg, var(--faction-wow-rod-lit), var(--faction-wow-rod-deep))";
+const INK = "var(--faction-wow-card-text)";
+const MUTED = "var(--faction-wow-card-muted)";
+const PLUM = "var(--faction-wow-card-accent)";
+const GOLD = "var(--faction-wow-chronicle-gold)";
+const PLUM_SURFACE = "var(--faction-wow-plum-surface)";
+const GILT = "var(--faction-wow-stamp-total)";
+
+interface SizeSet {
+  /** Card width. Geometry, so a raw px number (WORLD_ZERO_STYLE §4a). */
+  cardWidth: number;
+  pad: string;
+  titleSize: string;
+  levelSize: string;
+  pointsSize: string;
+  /** Minimum width of the crowned plaque. Geometry. */
+  plaque: number;
+  /** The design's conditional ornament: the corner bundle is desktop-only. */
+  balloons: boolean;
+}
+
+const SIZES: Record<"desktop" | "mobile", SizeSet> = {
+  desktop: {
+    cardWidth: 384,
+    pad: "var(--space-lg) var(--space-xl) var(--space-xl)",
+    titleSize: "var(--text-title)",
+    levelSize: "var(--text-heading)",
+    pointsSize: "var(--text-heading)",
+    plaque: 112,
+    balloons: true,
+  },
+  mobile: {
+    cardWidth: 340,
+    pad: "var(--space-lg)",
+    titleSize: "var(--text-title)",
+    levelSize: "var(--text-title)",
+    pointsSize: "var(--text-title)",
+    plaque: 100,
+    balloons: false,
+  },
+};
+
+/** The decree's label voice — MedievalSharp small caps, in plum. */
+const EYEBROW: CSSProperties = {
+  fontFamily: MED,
+  letterSpacing: "0.14em",
+  textTransform: "uppercase",
+  color: PLUM,
+};
 
 /**
- * The knobbed rod the decree hangs from. Built in CSS rather than lifted from
- * the reference SVG: the rod must span whatever width the card lands on, and a
- * `preserveAspectRatio="none"` stretch would fatten the knobs with it.
+ * The wavy rule, stretched to its container.
+ *
+ * Built rather than written out: a `T`-chained quadratic of twenty segments is
+ * not a string anyone should maintain by hand, and `vectorEffect:
+ * non-scaling-stroke` is what keeps the line one weight however far the flex row
+ * stretches it.
  */
-function DecreeRod() {
-  const knob = {
-    position: "absolute" as const,
-    top: 0,
-    width: 24,
-    height: 30,
-    borderRadius: "50%",
-    background: ROD_FILL,
-    border: "2px solid var(--faction-wow-rod-edge)",
-    boxSizing: "border-box" as const,
-  };
+const ZIG_PATH = (() => {
+  let path = "M0,4 Q3,1 6,4";
+  for (let x = 12; x <= 120; x += 6) path += ` T${x},4`;
+  return path;
+})();
+
+function Zig({ id, style }: { id: string; style?: CSSProperties }) {
+  const gradientId = `wow-zig-${id}`;
   return (
-    <div aria-hidden style={{ position: "relative", height: 30 }}>
-      <div
-        style={{
-          position: "absolute",
-          insetBlock: 0,
-          left: 12,
-          right: 12,
-          borderRadius: 15,
-          background: ROD_FILL,
-          border: "2px solid var(--faction-wow-rod-edge)",
-          boxSizing: "border-box",
-        }}
-      />
-      <div style={{ ...knob, left: 0 }} />
-      <div style={{ ...knob, right: 0 }} />
+    <div aria-hidden="true" style={style}>
+      <svg
+        width="100%"
+        height={8}
+        viewBox="0 0 120 8"
+        preserveAspectRatio="none"
+        style={{ display: "block", overflow: "visible" }}
+      >
+        <defs>
+          <linearGradient id={gradientId} x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0" stopColor={GOLD} />
+            <stop offset="1" stopColor={PLUM} />
+          </linearGradient>
+        </defs>
+        <path
+          d={ZIG_PATH}
+          fill="none"
+          stroke={`url(#${gradientId})`}
+          strokeWidth="1.6"
+          vectorEffect="non-scaling-stroke"
+          strokeLinejoin="round"
+          strokeLinecap="round"
+          opacity="0.85"
+        />
+      </svg>
     </div>
   );
 }
 
-export default function WowTaskCard({ task, basePoints, onSignup }: CardProps) {
+/** The sword-and-shield that marks the muster. */
+function SwordAndShield({ size }: { size: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 20 20" aria-hidden="true" style={{ display: "block", flex: "0 0 auto" }}>
+      <path
+        d="M4,5 H16 V11 Q16,16 10,18.5 Q4,16 4,11 Z"
+        fill={PLUM_SURFACE}
+        stroke={GILT}
+        strokeWidth="1.4"
+        strokeLinejoin="round"
+      />
+      <g stroke="var(--faction-wow-quest-blade)" strokeWidth="1.8" strokeLinecap="round">
+        <line x1="3.5" y1="16.8" x2="16.5" y2="3.6" />
+        <line x1="16.5" y1="16.8" x2="3.5" y2="3.6" />
+      </g>
+      <g stroke={GILT} strokeWidth="1.4" strokeLinecap="round">
+        <line x1="2.5" y1="13.5" x2="6.5" y2="16.5" />
+        <line x1="17.5" y1="13.5" x2="13.5" y2="16.5" />
+      </g>
+      <g fill={GILT}>
+        <circle cx="3.2" cy="17.3" r="1.1" />
+        <circle cx="16.8" cy="17.3" r="1.1" />
+      </g>
+    </svg>
+  );
+}
+
+/**
+ * One googly balloon on its string. The pupils travel on `.wow-balloon-eye`,
+ * the faction's existing reduced-motion-guarded wiggle; `--wow-eye-delay` is
+ * the stagger, so no two eyes in the bunch move together.
+ */
+function Balloon({ cx, cy, fill, delay }: { cx: number; cy: number; fill: string; delay: number }) {
+  const eye = (offset: number, eyeDelay: number) => (
+    <>
+      <circle
+        cx={cx + offset}
+        cy={cy - 1}
+        r={2.4}
+        fill="var(--faction-wow-balloon-eye-white)"
+        stroke="var(--faction-wow-balloon-eye-ring)"
+        strokeWidth={0.8}
+      />
+      <circle
+        className="wow-balloon-eye"
+        cx={cx + offset}
+        cy={cy - 0.2}
+        r={1}
+        fill="var(--faction-wow-balloon-eye)"
+        style={{ "--wow-eye-delay": `${eyeDelay}s` } as CSSProperties}
+      />
+    </>
+  );
+  return (
+    <g>
+      <ellipse cx={cx} cy={cy} rx={9} ry={11} fill={fill} stroke="var(--faction-wow-balloon-outline)" strokeWidth={1.2} />
+      <path
+        d={`M${cx - 2},${cy + 10.3} L${cx + 2},${cy + 10.3} L${cx},${cy + 13.3} Z`}
+        fill={fill}
+        stroke="var(--faction-wow-balloon-outline)"
+        strokeWidth={1.1}
+        strokeLinejoin="round"
+      />
+      {eye(-3, delay)}
+      {eye(3, delay + 0.3)}
+    </g>
+  );
+}
+
+/** The cheerful bundle tucked into the decree's bottom corner. */
+function Balloons() {
+  return (
+    <span
+      aria-hidden="true"
+      style={{ position: "absolute", right: 14, bottom: 10, zIndex: 2, transform: "rotate(4deg)", display: "inline-block" }}
+    >
+      <svg width={64} height={80} viewBox="0 0 44 56" style={{ display: "block" }}>
+        <g fill="none" stroke="var(--faction-wow-balloon-string)" strokeWidth={1}>
+          <path d="M12,28 Q16,41 22,51" />
+          <path d="M31,25 Q28,41 22,51" />
+          <path d="M22,36 Q23,44 22,51" />
+        </g>
+        <Balloon cx={12} cy={15} fill="var(--faction-wow-balloon-5)" delay={0} />
+        <Balloon cx={31} cy={12} fill="var(--faction-wow-balloon-5)" delay={0.2} />
+        <Balloon cx={22} cy={27} fill="var(--faction-wow-balloon-1)" delay={0.4} />
+        <circle cx={22} cy={51} r={1.6} fill={GILT} />
+      </svg>
+    </span>
+  );
+}
+
+export default function WowTaskCard({
+  task,
+  basePoints,
+  multiplier,
+  inProgressCount,
+  onSignup,
+}: CardProps) {
+  const formFactor = useFormFactor();
+  const size = SIZES[formFactor];
+  const showMultiplier = !isNeutralMultiplier(multiplier);
+
   return (
     <div
-      style={{
-        minWidth: 264,
-        maxWidth: 348,
-        flex: "0 1 320px",
-        fontFamily: "var(--faction-wow-body-font)",
-      }}
+      data-form-factor={formFactor}
+      style={{ width: size.cardWidth, maxWidth: "100%", boxSizing: "border-box" }}
     >
-      <DecreeRod />
-
       <article
         style={{
-          borderRadius: 10,
+          position: "relative",
           overflow: "hidden",
-          background: "var(--faction-wow-chronicle-bg)",
-          color: "var(--faction-wow-card-text)",
-          border: "2px solid var(--faction-wow-chronicle-border)",
-          boxShadow: "0 12px 30px -16px var(--faction-wow-chronicle-shadow)",
-          transition: "background 150ms, color 150ms",
+          boxSizing: "border-box",
+          width: "100%",
+          background: "var(--faction-wow-card-bg)",
+          border: `2px solid ${GOLD}`,
+          borderRadius: 9,
+          boxShadow: "var(--faction-wow-quest-shadow)",
+          color: INK,
         }}
       >
-        {/* the checker band — the decree's running head, carrying no text */}
-        <div aria-hidden style={{ height: 9, background: CHECKER }} />
+        {/* The barber ribbon. A 6px stripe carrying NO text, which is what lets
+            the undimmed gold/plum ship as drawn (§3, #840). */}
+        <div aria-hidden="true" style={{ height: 6, background: "var(--faction-wow-quest-ribbon)" }} />
 
-        <div style={{ padding: "var(--space-lg) var(--space-xl) var(--space-xl)" }}>
-          {/* seal · issuing authority · the reward */}
-          <div
-            style={{
-              display: "flex",
-              alignItems: "flex-start",
-              gap: "var(--space-md)",
-              marginBottom: "var(--space-md)",
-            }}
-          >
-            <span aria-hidden style={{ flex: "0 0 auto" }}>
-              <WowSigil size={62} />
-            </span>
+        <div style={{ padding: size.pad }}>
+          {/* Everything but the CTA reads the full call — a card-sized target
+              that stays valid HTML (no <button> nested in an <a>). */}
+          <Link to={`/tasks/${task.id}`} style={{ display: "block", textDecoration: "none", color: "inherit" }}>
+            {/* eslint-disable-next-line local/no-raw-style-values -- ornament: decree lettering, set to the ribbon above it rather than the label ramp (§4a). */}
+            <div style={{ ...EYEBROW, fontSize: 10, marginBottom: "var(--space-md)" }}>
+              {i18n.t("feed:taskCard.ordinal", { id: task.id })}
+            </div>
 
-            <div style={{ minWidth: 0 }}>
-              <div
-                className="eyebrow"
-                style={{
-                  fontFamily: "var(--faction-wow-card-font)",
-                  letterSpacing: "0.14em",
-                  color: "var(--faction-wow-card-accent)",
-                }}
-              >
-                {i18n.t("feed:taskCard.wow.decree")}
-              </div>
-              <div
-                style={{
-                  fontStyle: "italic",
-                  fontSize: "var(--text-lg)",
-                  lineHeight: 1.35,
-                  color: "var(--faction-wow-card-muted)",
-                }}
-              >
-                {i18n.t("feed:taskCard.wow.byOrder")}{" "}
+            <div style={{ display: "flex", alignItems: "center", gap: "var(--space-md)", marginBottom: "var(--space-lg)" }}>
+              <div style={{ flex: "0 0 auto", display: "flex", flexDirection: "column", alignItems: "flex-start", lineHeight: 1 }}>
                 <span
-                  className="wow-tw"
-                  aria-hidden
-                  style={{ color: "var(--faction-wow-stamp-total)" }}
+                  style={{
+                    fontFamily: LORA,
+                    fontStyle: "italic",
+                    fontSize: "var(--text-md)",
+                    color: MUTED,
+                    marginBottom: "var(--space-xs)",
+                  }}
                 >
-                  ✦
+                  {i18n.t("feed:taskCard.wow.levelCaption")}
+                </span>
+                <span style={{ fontFamily: MED, fontSize: size.levelSize, lineHeight: 0.85 }}>
+                  {task.level_required}
                 </span>
               </div>
-            </div>
 
-            <div style={{ marginLeft: "auto", textAlign: "right" }}>
+              <Zig id="hero" style={{ flex: 1, minWidth: 0 }} />
+
+              {/* The faction modifier — hidden at ×1.00, so invisible under
+                  era_1's neutralized modifiers and automatic the day one moves
+                  (ADR-0055). */}
+              {showMultiplier && (
+                <div style={{ flex: "0 0 auto", display: "flex", flexDirection: "column", alignItems: "center", gap: "var(--space-xs)" }}>
+                  <span
+                    style={{
+                      fontFamily: MED,
+                      fontSize: "var(--text-lg)",
+                      color: "var(--faction-wow-on-plum)",
+                      background: PLUM_SURFACE,
+                      borderRadius: 4,
+                      padding: "var(--space-xs) var(--space-sm)",
+                      whiteSpace: "nowrap",
+                    }}
+                  >
+                    {i18n.t("feed:taskCard.multiplier", { value: multiplier.toFixed(2) })}
+                  </span>
+                  <span style={{ fontFamily: LORA, fontStyle: "italic", fontSize: "var(--text-xs)", color: MUTED }}>
+                    {i18n.t("feed:taskCard.modifierCaption")}
+                  </span>
+                </div>
+              )}
+
+              {/* The crowned points plaque, struck two degrees off true. */}
               <div
-                className="content-title"
                 style={{
-                  fontFamily: "var(--faction-wow-card-font)",
-                  lineHeight: 0.95,
-                  color: "var(--faction-wow-stamp-total)",
+                  position: "relative",
+                  flex: "0 0 auto",
+                  minWidth: size.plaque,
+                  transform: "rotate(-2deg)",
+                  background: "var(--faction-wow-chronicle-panel)",
+                  border: `2px solid ${GOLD}`,
+                  borderRadius: 6,
+                  boxShadow: "0 2px 3px var(--faction-wow-stamp-shadow)",
+                  padding: "var(--space-sm) var(--space-md)",
+                  textAlign: "center",
                 }}
               >
-                {basePoints}
-              </div>
-              <div
-                className="eyebrow"
-                style={{
-                  letterSpacing: "0.16em",
-                  color: "var(--faction-wow-card-muted)",
-                }}
-              >
-                {i18n.t("feed:taskCard.wow.pointsUnit")}
+                <div style={{ display: "flex", alignItems: "baseline", justifyContent: "center", gap: "var(--space-xs)" }}>
+                  <span style={{ fontFamily: MED, fontSize: size.pointsSize, lineHeight: 0.8, color: GILT }}>
+                    {basePoints}
+                  </span>
+                  {/* The ✦ is a dingbat, not text (§4) — which is the only reason
+                      it may be painted in the gold, at 2.00:1 on the panel. */}
+                  {/* eslint-disable-next-line local/no-raw-style-values -- ornament: the faction glyph, sized to the numeral it trails. */}
+                  <span aria-hidden="true" style={{ fontFamily: MED, fontSize: 13, color: GOLD }}>
+                    ✦
+                  </span>
+                </div>
+                <div style={{ fontFamily: LORA, fontStyle: "italic", fontSize: "var(--text-md)", color: PLUM, marginTop: "var(--space-xs)" }}>
+                  {i18n.t("feed:taskCard.wow.pointsUnit")}
+                </div>
               </div>
             </div>
-          </div>
 
-          <Link to={`/tasks/${task.id}`} style={{ textDecoration: "none", color: "inherit" }}>
             <h3
-              className="content-title"
               style={{
-                fontFamily: "var(--faction-wow-card-font)",
-                lineHeight: 1.12,
+                fontFamily: MED,
+                fontWeight: 400,
+                fontSize: size.titleSize,
+                lineHeight: 1.1,
                 margin: "0 0 var(--space-sm)",
-                color: "var(--faction-wow-card-text)",
                 overflowWrap: "anywhere",
               }}
             >
               {task.title}
             </h3>
+
+            {task.description && (
+              <p
+                className="card-description"
+                style={{
+                  fontFamily: LORA,
+                  fontStyle: "italic",
+                  lineHeight: 1.5,
+                  color: MUTED,
+                  margin: "0 0 var(--space-md)",
+                }}
+              >
+                {task.description}
+              </p>
+            )}
+
+            <Zig id="mid" style={{ margin: "0 0 var(--space-md)" }} />
+
+            {inProgressCount > 0 && (
+              <div style={{ display: "flex", alignItems: "center", gap: "var(--space-sm)" }}>
+                <SwordAndShield size={18} />
+                <span style={{ fontFamily: LORA, fontStyle: "italic", fontSize: "var(--text-xl)", color: MUTED }}>
+                  {i18n.t("feed:taskCard.inProgress", { count: inProgressCount })}
+                </span>
+              </div>
+            )}
           </Link>
 
-          {task.description && (
-            <p
-              className="card-description"
-              style={{
-                fontStyle: "italic",
-                lineHeight: 1.55,
-                color: "var(--faction-wow-card-muted)",
-                margin: "0 0 var(--space-lg)",
-              }}
-            >
-              {task.description}
-            </p>
-          )}
-
-          {/* the illuminated rule: gold, through plum, back to gold */}
-          <div
-            aria-hidden
-            style={{
-              height: 2,
-              opacity: 0.85,
-              background:
-                "linear-gradient(90deg, transparent, var(--faction-wow-chronicle-gold) 20%, var(--faction-wow-card-accent) 50%, var(--faction-wow-chronicle-gold) 80%, transparent)",
-            }}
-          />
-
-          <div
-            className="card-footer"
-            style={{ border: "none", paddingTop: "var(--space-md)" }}
-          >
-            <LevelGem level={task.level_required} factionSlug="wow" />
-            <span
-              aria-hidden
-              style={{
-                fontFamily: "var(--faction-wow-card-font)",
-                fontSize: "var(--text-xl)",
-                color: "var(--faction-wow-card-accent)",
-              }}
-            >
-              ⚔
-            </span>
-          </div>
-
           {onSignup && (
-            <button
-              className="wow-btn"
-              onClick={() => onSignup(task.id)}
-              style={{
-                width: "100%",
-                marginTop: "var(--space-lg)",
-                cursor: "pointer",
-                fontFamily: "var(--faction-wow-card-font)",
-                fontSize: "var(--text-xl)",
-                letterSpacing: "0.06em",
-                color: "var(--faction-wow-quest-text)",
-                background:
-                  "linear-gradient(180deg, var(--faction-wow-quest-from) 0%, var(--faction-wow-quest-mid) 45%, var(--faction-wow-quest-to) 100%)",
-                border: "2px solid var(--faction-wow-quest-border)",
-                borderRadius: 7,
-                padding: "var(--space-md) var(--space-lg)",
-                boxShadow:
-                  "inset 0 1px 0 var(--faction-wow-quest-sheen), 0 2px 4px var(--faction-wow-stamp-shadow)",
-              }}
-            >
-              {i18n.t("feed:taskCard.wow.signup")}
-            </button>
+            <div style={{ display: "flex", justifyContent: "center", marginTop: "var(--space-lg)" }}>
+              <button
+                onClick={() => onSignup(task.id)}
+                style={{
+                  cursor: "pointer",
+                  fontFamily: MED,
+                  fontSize: "var(--text-content)",
+                  letterSpacing: "0.04em",
+                  whiteSpace: "nowrap",
+                  padding: "var(--space-sm) var(--space-xl)",
+                  borderRadius: 7,
+                  color: "var(--faction-wow-on-plum)",
+                  background: PLUM_SURFACE,
+                  border: `2px solid ${PLUM_SURFACE}`,
+                }}
+              >
+                {i18n.t("feed:taskCard.wow.signup")}
+              </button>
+            </div>
           )}
         </div>
+
+        {size.balloons && <Balloons />}
       </article>
     </div>
   );
