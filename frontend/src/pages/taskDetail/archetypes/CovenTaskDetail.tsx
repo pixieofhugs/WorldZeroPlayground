@@ -1,203 +1,285 @@
-import type { CSSProperties } from "react";
+import { useState, type CSSProperties, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import PraxisCard from "../../../components/PraxisCard";
+import { useFormFactor } from "../../../hooks/useFormFactor";
+import { factionCssVar, factionFill, factionName } from "../../../utils/factions";
 import { mediaUrl } from "../../../utils/media";
-import { ErrorBanner, LevelJumpBanner, TaskDetailComments, relationOf } from "./shared";
-import type { TaskSignupOut } from "../../../api/tasks";
-import type { PraxisCardOut } from "../../../api/praxis";
+import { isNeutralMultiplier } from "../../../utils/points";
+import { ErrorBanner, LevelJumpBanner, TaskDetailComments } from "./shared";
 import type { TaskDetailState } from "../useTaskDetail";
 
 /**
- * Cozy Coven task-detail archetype — the job rendered as a
- * "whimsy.exe" desktop window: a pink computer-witch chrome with a
- * traffic-light title bar, a dotted desktop body, Caveat-script headings,
- * sparkle charms, "spells cast" completions (the most-loved one wears a
- * fleur-de-lis), and a playful party-voiced CTA. Ported visually from the
- * WoW design kit (WhimsyTaskDetail.tsx); wired to the real
- * {@link TaskDetailState}. The kit's demo props, FactionPraxisCard /
- * FactionCommentBox, top <nav> and group-chat block are discarded — the real
- * <PraxisCard> and the shared state replace them.
+ * Cozy Coven — THE CANDLELIT WARD (task detail v2, #1031).
+ *
+ * The spell slip opened out to a full page: a candlelight haze washes the
+ * viewport, a pentagram watermark turns slowly behind the copy, braided thread
+ * rules head every section, and the points are held inside a glowing pentagram
+ * ward on a 452px action plate. Grenze Gotisch carries the display, Cormorant
+ * Garamond the numerals and the brief, Caveat the hand, Quicksand the chrome —
+ * the same four faces the v2 task card (#1023) established for this faction.
+ *
+ * This REPLACES the `whimsy.exe` desktop-window archetype wholesale, along with
+ * every word of Coven's own detail vocabulary (`spellsHeading`, `loveHeading`,
+ * `partyHeading`, `sort.mostLoved`, `sparks`, `window`). Per ADR-0057 this
+ * surface carries NO faction voice: all copy comes from the shared `detail.*`
+ * keys, identical to what an unaffiliated player reads. The dress is Coven's;
+ * the words are the game's. The `tasks:coven.*` namespace stays in the catalog —
+ * the faction pages still read it, and it is swept key-by-key in #1039.
+ *
+ * Contract points inherited from the na reference build (#1030), not re-derived:
+ * - **No in-progress roster.** The header's "In progress" count is the only
+ *   place that population appears (owner ruling 2026-07-28, reversing epic
+ *   #1028 decision 3). The design's own header comment says the same.
+ * - **The `×mult` badge renders only off the identity factor.** `era_1`
+ *   neutralises every faction, so it is invisible today — correct, per ADR-0055.
+ *   The factor arrives raw on the state contract; it is never reconstructed as
+ *   `modifiedPoints / basePoints` (ADR-0053's dead-arithmetic trap).
+ * - **The gallery expands in place.** The old `/praxes?task_id=N` link dropped
+ *   its filter on every archetype — `usePraxes` reads no such param.
+ *
+ * ONE RESPONSIVE COMPONENT (ADR-0058): `useFormFactor()` picks the size set and
+ * drops the two-column split. `pages/taskDetail/mobileArchetypes/CovenTaskDetail`
+ * and the `mobileTaskDetail` manifest row stay registered but DORMANT.
+ *
+ * All colour via `--faction-coven-slip-*` (shared with the task card) plus the
+ * `--faction-coven-ward-*` family this surface adds; the haze, the braid, the
+ * wheel and the aura's flicker all live in index.css so the light/dark flip and
+ * the reduced-motion guard run through the cascade, never a ternary.
  */
 
-const PINK = "var(--faction-coven)";
-const TITLE_TEXT = "var(--faction-coven-title-text)";
-const CARD_TEXT = "var(--faction-coven-card-text)";
-const CARD_MUTED = "var(--faction-coven-card-muted)";
-const WIN_BORDER = "var(--faction-coven-win-border)";
-const NOTEPAD_BG = "var(--faction-coven-notepad-bg)";
-const NOTEPAD_BORDER = "var(--faction-coven-notepad-border)";
-const DOT = "var(--faction-coven-dot)";
-const SCRIPT = "var(--faction-coven-card-font)"; // Caveat
-const BODY = "var(--font-body)"; // Courier Prime
-const ACCENT = "var(--font-accent)"; // Bebas Neue
-const ON_ACCENT = "var(--color-text-on-accent)";
+const CHROME = "var(--font-faction-rounded)"; /* Quicksand */
+const READING = "var(--font-faction-serif)"; /* Cormorant Garamond */
+const HAND = "var(--font-faction-script)"; /* Caveat */
+const DISPLAY = "var(--font-faction-witch)"; /* Grenze Gotisch */
 
-/** Sparkle charm — the kit's signature four-point star. */
-function Sparkle({
-  size,
-  color,
-  style,
-}: {
-  size: number;
-  color: string;
-  style?: CSSProperties;
-}) {
+const INK = "var(--faction-coven-slip-ink)";
+const DEEP = "var(--faction-coven-slip-deep)";
+const SOFT = "var(--faction-coven-slip-soft)";
+const LABEL = "var(--faction-coven-slip-label)";
+const GOLD = "var(--faction-coven-slip-gold)";
+const PINK = "var(--faction-coven-slip-pk)";
+const BORDER = "var(--faction-coven-slip-border)";
+const CARD = "var(--faction-coven-ward-card)";
+const PAGE = "var(--faction-coven-ward-page)";
+
+/**
+ * Praxis cards the gallery shows before the in-place expand. `PraxisCard`
+ * carries `flex: 1 1 394px`, so three land in one row at the 1200 cap and the
+ * row reflows itself below that — the design's `repeat(3,1fr)` would squeeze
+ * every card instead of rewrapping.
+ */
+const GALLERY_PREVIEW = 3;
+
+interface SizeSet {
+  /** Action-plate width. Coven's is 452 — dress, not a shared constant. */
+  plate: number;
+  /** The ward disc. Geometry (WORLD_ZERO_STYLE §4a). */
+  ward: number;
+  /** Left cell of the plate, wide enough to hold the ward plus its inset. */
+  worthMin: number;
+  titleSize: string;
+  headingSize: string;
+  statSize: string;
+  substatSize: string;
+  wardSize: string;
+}
+
+const SIZES: Record<"desktop" | "mobile", SizeSet> = {
+  desktop: {
+    plate: 452,
+    ward: 120,
+    worthMin: 182,
+    titleSize: "var(--text-display)",
+    headingSize: "var(--text-title)",
+    statSize: "var(--text-heading)",
+    substatSize: "var(--text-title)",
+    wardSize: "var(--text-heading)",
+  },
+  mobile: {
+    plate: 452,
+    ward: 96,
+    worthMin: 148,
+    titleSize: "var(--text-heading)",
+    headingSize: "var(--text-title)",
+    statSize: "var(--text-title)",
+    substatSize: "var(--text-content)",
+    wardSize: "var(--text-title)",
+  },
+};
+
+/** Small-caps caption voice — every label on the slip speaks in it. */
+const CAPTION: CSSProperties = {
+  fontFamily: CHROME,
+  fontWeight: 700,
+  letterSpacing: "0.16em",
+  textTransform: "uppercase",
+  color: LABEL,
+};
+
+/** A four-point star, centred on (x, y) with arm length r. */
+function starPath(x: number, y: number, r: number): string {
+  const long = r * 2.6;
+  return `M${x} ${y - long} l${r} ${long} ${long} ${r} -${long} ${r} -${r} ${long} -${r} -${long} -${long} -${r} ${long} -${r} z`;
+}
+
+/** Initials fallback for an author with no uploaded avatar. */
+function initialsOf(name: string): string {
+  return name
+    .split(/\s+/)
+    .filter(Boolean)
+    .map((word) => word[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
+}
+
+/** The braided thread rule. `.cvn-braid` owns the strands' pigments (index.css). */
+function Braid({ style }: { style?: CSSProperties }) {
+  return <span aria-hidden className="cvn-braid" style={{ minWidth: 20, ...style }} />;
+}
+
+/** The coven's pentagram badge — dashed gold ring, pink field, lit centre. */
+function SigilMark({ size }: { size: number }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 24 24" style={style}>
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 44 44"
+      aria-hidden="true"
+      style={{ display: "block", flex: "0 0 auto" }}
+    >
+      <circle cx="22" cy="22" r="19" fill={PINK} opacity="0.18" />
+      <circle cx="22" cy="22" r="15" fill="none" stroke={GOLD} strokeWidth="1" strokeDasharray="2 4" />
       <path
-        d="M12 0c.9 7 4.1 10.2 11 11-6.9.8-10.1 4-11 11-.9-7-4.1-10.2-11-11C7.9 10.2 11.1 7 12 0Z"
-        fill={color}
+        d="M22 8 L30.2 33.3 L8.7 17.7 L35.3 17.7 L13.8 33.3 Z"
+        fill="none"
+        stroke={DEEP}
+        strokeWidth="1.5"
+        strokeLinejoin="round"
       />
+      <circle cx="22" cy="22" r="3" fill={GOLD} />
     </svg>
   );
 }
 
-/** Caveat-script section heading with a sparkle and a dashed running rule. */
-function SectionHead({ children }: { children: React.ReactNode }) {
+/**
+ * The ward: the total held inside a glowing pentagram. The aura's flicker and
+ * its reduced-motion guard belong to `.cvn-candle` in index.css.
+ */
+function Ward({
+  size,
+  points,
+  numeralSize,
+  label,
+}: {
+  size: number;
+  points: number;
+  numeralSize: string;
+  label: string;
+}) {
+  const twinkles: [number, number, number][] = [
+    [50, 3, 3.2],
+    [90, 26, 2.3],
+    [12, 74, 2.6],
+    [86, 80, 1.8],
+    [14, 22, 1.6],
+  ];
   return (
     <div
       style={{
+        position: "relative",
+        flex: "0 0 auto",
+        width: size,
+        height: size,
         display: "flex",
         alignItems: "center",
-        gap: "var(--space-md)",
-        marginBottom: "var(--space-lg)",
+        justifyContent: "center",
       }}
     >
-      <Sparkle size={18} color={PINK} />
-      <h2
-        className="content-title"
-        style={{
-          fontFamily: SCRIPT,
-          margin: 0,
-          color: TITLE_TEXT,
-          whiteSpace: "nowrap",
-        }}
-      >
-        {children}
-      </h2>
       <span
+        aria-hidden
+        className="cvn-candle"
         style={{
-          flex: 1,
-          height: 2,
-          background: `repeating-linear-gradient(90deg, ${PINK} 0 8px, transparent 8px 14px)`,
+          position: "absolute",
+          inset: "-8%",
+          borderRadius: "50%",
+          background: "var(--faction-coven-slip-sigil-halo)",
         }}
       />
-    </div>
-  );
-}
-
-/** Real signup avatars as a little coven row, tilted, with friend/foe charms. */
-function PartyRow({
-  signups,
-  friends,
-  foes,
-}: {
-  signups: TaskSignupOut[];
-  friends: Set<number>;
-  foes: Set<number>;
-}) {
-  const { t } = useTranslation("tasks");
-  return (
-    <div
-      style={{ display: "flex", alignItems: "center", gap: "var(--space-sm)", flexWrap: "wrap" }}
-    >
-      {signups.map((m, index) => {
-        const rel = relationOf(m.character_id, friends, foes);
-        const relColor = rel === "friend" ? PINK : "var(--faction-coven-ivy)";
-        return (
-          <Link
-            key={m.character_id}
-            to={`/characters/${m.character_id}`}
-            title={`${m.display_name}${rel ? ` · ${rel}` : ""}`}
-            style={{
-              position: "relative",
-              width: 38,
-              height: 38,
-              flexShrink: 0,
-              transform: `rotate(${index % 2 ? 4 : -3}deg)`,
-            }}
-          >
-            {m.avatar_url ? (
-              <img
-                src={mediaUrl(m.avatar_url)}
-                alt={m.display_name}
-                style={{
-                  width: 38,
-                  height: 38,
-                  borderRadius: "50%",
-                  objectFit: "cover",
-                  border: `2px solid ${PINK}`,
-                }}
-              />
-            ) : (
-              <span
-                style={{
-                  display: "flex",
-                  width: 38,
-                  height: 38,
-                  borderRadius: "50%",
-                  background: `color-mix(in srgb, ${PINK} 22%, transparent)`,
-                  border: `2px solid ${PINK}`,
-                  alignItems: "center",
-                  justifyContent: "center",
-                  color: TITLE_TEXT,
-                  fontFamily: SCRIPT,
-                  fontSize: "var(--text-content)",
-                }}
-              >
-                {m.display_name[0]?.toUpperCase()}
-              </span>
-            )}
-            {rel && (
-              <span
-                title={rel}
-                style={{
-                  position: "absolute",
-                  right: -3,
-                  bottom: -3,
-                  width: 12,
-                  height: 12,
-                  borderRadius: "50%",
-                  background: relColor,
-                  border: `1.5px solid ${NOTEPAD_BG}`,
-                }}
-              />
-            )}
-          </Link>
-        );
-      })}
       <span
+        aria-hidden
         style={{
-          fontFamily: SCRIPT,
-          fontSize: "var(--text-content)",
-          color: PINK,
-          marginLeft: "var(--space-sm)",
+          position: "absolute",
+          inset: "17%",
+          borderRadius: "50%",
+          background: "var(--faction-coven-slip-sigil-core)",
+        }}
+      />
+      <svg
+        width={size}
+        height={size}
+        viewBox="0 0 100 100"
+        aria-hidden="true"
+        style={{ position: "absolute", inset: 0, overflow: "visible" }}
+      >
+        <path
+          d="M50 16 L69.8 78.5 L16.5 40.1 L83.5 40.1 L30.2 78.5 Z"
+          fill="none"
+          stroke={GOLD}
+          strokeWidth="1"
+          strokeLinejoin="round"
+          opacity="0.55"
+        />
+        <circle cx="50" cy="50" r="33" fill="none" stroke={PINK} strokeWidth="1.8" opacity="0.9" />
+        {twinkles.map(([x, y, r]) => (
+          <path key={`${x}-${y}`} d={starPath(x, y, r)} fill={GOLD} opacity="0.9" />
+        ))}
+      </svg>
+      <div
+        style={{
+          position: "relative",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          lineHeight: 0.85,
         }}
       >
-        {t("coven.inTheParty")}
-      </span>
+        <span style={{ fontFamily: READING, fontWeight: 600, fontSize: numeralSize, color: DEEP }}>
+          {points}
+        </span>
+        {/* Ornament: the unit caption engraved inside the drawn ward, sized to
+            the disc rather than to the label ramp (WORLD_ZERO_STYLE §4a). */}
+        {/* eslint-disable-next-line local/no-raw-style-values -- ornament: caption engraved inside the ward. */}
+        <span style={{ ...CAPTION, fontSize: 8, marginTop: "var(--space-xs)" }}>{label}</span>
+      </div>
     </div>
   );
 }
 
 export default function CovenTaskDetail({ state }: { state: TaskDetailState }) {
   const { t } = useTranslation("tasks");
+  const formFactor = useFormFactor();
+  const desktop = formFactor !== "mobile";
+  const size = SIZES[formFactor];
+  // The gallery expands in place. It deliberately does NOT link to
+  // `/praxes?task_id=N`: the praxis feed reads no such param, so that link has
+  // always dropped the filter and shown the whole feed.
+  const [showAllPraxis, setShowAllPraxis] = useState(false);
   const {
     task,
-    signups,
     submissions,
-    friends,
-    foes,
     mySubmission,
     isInProgress,
     inProgressPraxisId,
     canSignUp,
+    levelJumpSignup,
     slotsOpen,
     maxTaskSlots,
+    basePoints,
+    factionMultiplier,
     modifiedPoints,
-    topScore,
-    voteCount,
+    inProgressCount,
     sortedSubmissions,
     submissionSort,
     setSubmissionSort,
@@ -209,535 +291,662 @@ export default function CovenTaskDetail({ state }: { state: TaskDetailState }) {
   // Guarded non-null by the dispatcher.
   if (!task) return null;
 
-  // Top-rated submission gets the "most loved" fleur-de-lis charm.
-  const topId: number | null = submissions.length
-    ? submissions.reduce(
-        (best: PraxisCardOut, candidate: PraxisCardOut) =>
-          (candidate.score ?? 0) > (best.score ?? 0) ? candidate : best,
-      ).id
-    : null;
+  const slug = task.primary_faction_slug;
+  const isMetatask = task.task_type === "metatask";
+  const showMultiplier = !isNeutralMultiplier(factionMultiplier);
+  const authorName = task.created_by_display_name ?? "";
+  const hasAction =
+    canSignUp || !!mySubmission || (isInProgress && inProgressPraxisId !== null);
 
-  /** The pill stat skin used across the hero chrome. */
-  const pill: CSSProperties = {
-    display: "inline-flex",
-    alignItems: "center",
-    gap: "var(--space-sm)",
-    fontSize: "var(--text-md)",
-    letterSpacing: "0.06em",
+  const eyebrow: CSSProperties = { ...CAPTION, fontSize: "var(--text-sm)" };
+  const innerBox: CSSProperties = {
+    background: PAGE,
+    border: `1.5px solid ${BORDER}`,
+    borderRadius: 12,
+    padding: "var(--space-lg)",
+    boxSizing: "border-box",
+  };
+  const panel: CSSProperties = {
+    background: CARD,
+    border: `2px solid ${BORDER}`,
+    borderRadius: 16,
+    boxSizing: "border-box",
+    boxShadow: "var(--faction-coven-slip-shadow)",
+  };
+  /** The pink CTA band — the slip's own call to action, ink already measured. */
+  const pinkButton: CSSProperties = {
+    display: "block",
+    width: "100%",
+    cursor: "pointer",
+    textAlign: "center",
+    textDecoration: "none",
+    fontFamily: CHROME,
+    fontWeight: 700,
+    fontSize: "var(--text-lg)",
+    letterSpacing: "0.12em",
     textTransform: "uppercase",
-    padding: "var(--space-sm) var(--space-lg)",
-    borderRadius: 20,
-    background: "var(--faction-coven-light)",
-    color: CARD_TEXT,
-    border: `1.5px solid var(--faction-coven-border)`,
+    color: "var(--faction-coven-slip-cta-ink)",
+    background:
+      "linear-gradient(180deg, var(--faction-coven-slip-cta-from), var(--faction-coven-slip-cta-to))",
+    border: "1.5px solid var(--faction-coven-slip-cta-to)",
+    borderRadius: 12,
+    padding: "var(--space-md) var(--space-lg)",
+  };
+  /** The candle-gold band: you already hold this task. Never the pink one. */
+  const goldButton: CSSProperties = {
+    ...pinkButton,
+    color: "var(--faction-coven-ward-hold-ink)",
+    background: `linear-gradient(180deg, ${GOLD}, var(--faction-coven-ward-hold-to))`,
+    border: "1.5px solid var(--faction-coven-ward-hold-border)",
   };
 
-  return (
-    <div className="py-8" style={{ fontFamily: BODY, color: CARD_TEXT }}>
-      {/* ── Breadcrumb ── */}
-      <nav
-        className="font-body mb-4"
+  /** Display label, braided rule, optional gloss — the page's only section head. */
+  const sectionHead = (label: ReactNode, gloss?: ReactNode) => (
+    <div
+      style={{
+        display: "flex",
+        alignItems: "center",
+        gap: "var(--space-md)",
+        marginBottom: "var(--space-md)",
+        flexWrap: "wrap",
+      }}
+    >
+      <span
         style={{
-          fontSize: "var(--text-base)",
-          letterSpacing: "0.14em",
-          textTransform: "uppercase",
-          color: CARD_MUTED,
+          fontFamily: DISPLAY,
+          fontWeight: 600,
+          fontSize: size.headingSize,
+          lineHeight: 1.06,
+          letterSpacing: "0.02em",
+          color: INK,
         }}
       >
-        <Link to="/tasks" style={{ color: PINK, textDecoration: "none" }}>
-          {t("coven.breadcrumb")}
-        </Link>
-        <span style={{ opacity: 0.5, margin: "0 var(--space-sm)" }}>›</span>
-        <span style={{ fontFamily: SCRIPT, fontSize: "var(--text-content)" }}>
-          {t("coven.faction")}
-        </span>
-        <span style={{ opacity: 0.5, margin: "0 var(--space-sm)" }}>›</span>
-        <span style={{ color: PINK }}>{task.title}</span>
-      </nav>
+        {label}
+      </span>
+      <Braid style={{ flex: 1 }} />
+      {gloss !== undefined && <span style={{ ...eyebrow, flex: "0 0 auto" }}>{gloss}</span>}
+    </div>
+  );
 
-      <div style={{ maxWidth: 920, display: "flex", flexDirection: "column", gap: "var(--space-2xl)" }}>
-        {/* ── HERO · whimsy.exe window ── */}
+  // ── The worth: base, the (usually absent) ×mult badge, the ward ──
+  const worth = (
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        gap: "var(--space-md)",
+      }}
+    >
+      <div
+        style={{
+          display: "flex",
+          alignItems: "baseline",
+          justifyContent: "center",
+          gap: "var(--space-sm)",
+          flexWrap: "wrap",
+        }}
+      >
+        <span style={eyebrow}>{t("detail.points.base")}</span>
+        <span style={{ fontFamily: READING, fontWeight: 600, fontSize: "var(--text-title)", lineHeight: 1, color: INK }}>
+          {basePoints}
+        </span>
+        {showMultiplier && (
+          <span
+            style={{
+              fontFamily: CHROME,
+              fontWeight: 700,
+              fontSize: "var(--text-md)",
+              lineHeight: 1.2,
+              color: "var(--faction-coven-slip-cta-ink)",
+              background:
+                "linear-gradient(180deg, var(--faction-coven-slip-cta-from), var(--faction-coven-slip-cta-to))",
+              border: "1.5px solid var(--faction-coven-slip-cta-to)",
+              borderRadius: 20,
+              padding: "var(--space-xs) var(--space-sm)",
+              boxShadow: "0 3px 8px var(--faction-coven-slip-glow)",
+              whiteSpace: "nowrap",
+            }}
+          >
+            {t("detail.points.multiplier", { multiplier: factionMultiplier.toFixed(2) })}
+          </span>
+        )}
+      </div>
+      <Ward
+        size={size.ward}
+        points={modifiedPoints}
+        numeralSize={size.wardSize}
+        label={t("detail.points.total")}
+      />
+    </div>
+  );
+
+  // ── The one action slot: sign up / continue / edit. Nothing renders when the
+  //    viewer has no move to make — an unusable control is worse than none.
+  const actionBody = (
+    <>
+      {canSignUp && (
+        <div>
+          <LevelJumpBanner state={state} />
+          <button onClick={handleSignup} style={pinkButton}>
+            {t("detail.signup.cta")}
+          </button>
+          <div
+            style={{
+              fontFamily: READING,
+              fontStyle: "italic",
+              fontSize: "var(--text-content)",
+              lineHeight: 1.5,
+              color: SOFT,
+              marginTop: "var(--space-sm)",
+              textAlign: "center",
+            }}
+          >
+            {t("detail.signup.slots", { open: slotsOpen, max: maxTaskSlots })}
+            {!levelJumpSignup && (
+              <>
+                {" · "}
+                <span style={{ color: DEEP }}>
+                  {t("detail.signup.levelMet", { level: task.level_required })}
+                </span>
+              </>
+            )}
+          </div>
+          <ErrorBanner message={signupError} />
+        </div>
+      )}
+
+      {mySubmission && (
+        <div>
+          <div
+            style={{
+              fontFamily: HAND,
+              fontSize: "var(--text-title)",
+              lineHeight: 1,
+              color: INK,
+              marginBottom: "var(--space-md)",
+            }}
+          >
+            {t("detail.submitted.text")}
+          </div>
+          <Link to={`/praxes/${mySubmission.id}/edit`} style={goldButton}>
+            {t("detail.submitted.edit")}
+          </Link>
+        </div>
+      )}
+
+      {!mySubmission && isInProgress && inProgressPraxisId !== null && (
+        <div>
+          <div
+            style={{
+              fontFamily: HAND,
+              fontSize: "var(--text-title)",
+              lineHeight: 1,
+              color: INK,
+              marginBottom: "var(--space-md)",
+            }}
+          >
+            {t("detail.inProgress.text")}
+          </div>
+          <Link to={`/praxes/${inProgressPraxisId}/edit`} style={goldButton}>
+            {t("detail.inProgress.continue")}
+          </Link>
+          <button
+            onClick={handleDrop}
+            style={{
+              display: "block",
+              width: "100%",
+              marginTop: "var(--space-sm)",
+              padding: 0,
+              background: "none",
+              border: "none",
+              cursor: "pointer",
+              textAlign: "center",
+              fontFamily: READING,
+              fontStyle: "italic",
+              fontSize: "var(--text-content)",
+              color: SOFT,
+            }}
+          >
+            {t("detail.inProgress.drop")}
+          </button>
+          <ErrorBanner message={signupError} />
+        </div>
+      )}
+    </>
+  );
+
+  // The action plate: the slip's gradient, holding two inset boxes. 452px on
+  // desktop (Coven's own value; the family runs 420–520), full width once the
+  // column collapses.
+  const actionPlate = (
+    <div
+      style={{
+        position: "relative",
+        overflow: "hidden",
+        borderRadius: 18,
+        border: `2px solid ${BORDER}`,
+        boxShadow: "var(--faction-coven-slip-shadow)",
+        background:
+          "linear-gradient(158deg, var(--faction-coven-slip-from), var(--faction-coven-slip-mid) 38%, var(--faction-coven-slip-lav) 76%, var(--faction-coven-slip-vio))",
+        padding: "var(--space-sm)",
+        display: "flex",
+        gap: "var(--space-sm)",
+        alignItems: "stretch",
+        boxSizing: "border-box",
+      }}
+    >
+      <div
+        style={{
+          ...innerBox,
+          flex: "0 0 auto",
+          minWidth: size.worthMin,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
+        {worth}
+      </div>
+      {hasAction && (
         <div
           style={{
-            borderRadius: 14,
-            overflow: "hidden",
-            border: `2px solid ${WIN_BORDER}`,
-            boxShadow: `0 10px 26px color-mix(in srgb, ${PINK} 32%, transparent)`,
-            transform: "rotate(-0.5deg)",
+            ...innerBox,
+            flex: 1,
+            minWidth: 0,
+            display: "flex",
+            flexDirection: "column",
+            justifyContent: "center",
           }}
         >
-          {/* title bar — traffic lights + window name */}
-          <div
+          {actionBody}
+        </div>
+      )}
+    </div>
+  );
+
+  // ── Header: breadcrumb, faction line, title, author, stats ──
+  const stat = (label: string, value: ReactNode, valueSize: string) => (
+    <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-xs)" }}>
+      <span style={eyebrow}>{label}</span>
+      <span style={{ fontFamily: READING, fontWeight: 600, fontSize: valueSize, lineHeight: 0.85, color: INK }}>
+        {value}
+      </span>
+    </div>
+  );
+
+  const header = (
+    <div>
+      <nav
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: "var(--space-sm)",
+          marginBottom: "var(--space-md)",
+          flexWrap: "wrap",
+        }}
+      >
+        <Link to="/tasks" style={{ ...eyebrow, color: DEEP, textDecoration: "none" }}>
+          {t("detail.breadcrumb.tasks")}
+        </Link>
+        <span aria-hidden style={eyebrow}>
+          /
+        </span>
+        <span style={eyebrow}>{t("detail.breadcrumb.current", { number: task.id })}</span>
+      </nav>
+
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: "var(--space-sm)",
+          marginBottom: "var(--space-md)",
+          flexWrap: "wrap",
+        }}
+      >
+        <SigilMark size={30} />
+        <span style={{ ...eyebrow, fontSize: "var(--text-base)" }}>{factionName(slug)}</span>
+        {isMetatask && (
+          <span
+            style={{
+              fontFamily: CHROME,
+              fontWeight: 700,
+              fontSize: "var(--text-xs)",
+              textTransform: "uppercase",
+              letterSpacing: "0.15em",
+              padding: "var(--space-xs) var(--space-sm)",
+              borderRadius: 20,
+              // na → rainbow frame; a real faction → solid hue + on-fill ink.
+              ...factionFill(task.metatask_faction_slug, "pill"),
+            }}
+          >
+            {t("detail.meta")}
+          </span>
+        )}
+      </div>
+
+      <h1
+        style={{
+          fontFamily: DISPLAY,
+          fontWeight: 600,
+          fontSize: size.titleSize,
+          lineHeight: 1.06,
+          letterSpacing: "0.005em",
+          margin: 0,
+          marginBottom: "var(--space-lg)",
+          color: INK,
+          overflowWrap: "anywhere",
+        }}
+      >
+        {task.title}
+      </h1>
+
+      {isMetatask && (
+        <p
+          style={{
+            ...eyebrow,
+            marginTop: 0,
+            marginBottom: "var(--space-md)",
+            color: factionCssVar(task.metatask_faction_slug),
+          }}
+        >
+          {t("detail.metataskFor", { faction: factionName(task.metatask_faction_slug) })}
+        </p>
+      )}
+
+      {/* Author row — the proposing character's byline (#1029). */}
+      {authorName && (
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "var(--space-sm)",
+            marginBottom: "var(--space-lg)",
+            flexWrap: "wrap",
+          }}
+        >
+          <Link
+            to={`/characters/${task.created_by}`}
             style={{
               display: "flex",
               alignItems: "center",
               gap: "var(--space-sm)",
-              padding: "var(--space-sm) var(--space-lg)",
-              background: `linear-gradient(180deg, var(--faction-coven-title-from), var(--faction-coven-title-to))`,
-              borderBottom: `2px solid ${WIN_BORDER}`,
+              textDecoration: "none",
             }}
           >
-            {["var(--faction-coven-scrap-deep)", "var(--faction-coven-tape)", "var(--faction-coven-ivy-leaf)"].map(
-              (lightColor) => (
-                <span
-                  key={lightColor}
-                  style={{
-                    width: 11,
-                    height: 11,
-                    borderRadius: "50%",
-                    background: lightColor,
-                    border: "1.2px solid rgba(255,255,255,0.7)",
-                  }}
-                />
-              ),
-            )}
-            <span
-              className="content-text"
-              style={{
-                marginLeft: "auto",
-                fontFamily: SCRIPT,
-                color: ON_ACCENT,
-                textShadow: `1px 1px 0 ${TITLE_TEXT}`,
-              }}
-            >
-              {t("coven.window")}
-            </span>
-          </div>
-
-          {/* desktop body */}
-          <div
-            style={{
-              position: "relative",
-              padding: "var(--space-2xl) var(--space-2xl) var(--space-2xl)",
-              background: NOTEPAD_BG,
-              backgroundImage: `radial-gradient(${DOT} 1.3px, transparent 1.3px)`,
-              backgroundSize: "14px 14px",
-            }}
-          >
-            <Sparkle
-              size={22}
-              color="var(--faction-coven-tape)"
-              style={{
-                position: "absolute",
-                top: 18,
-                right: 22,
-                transform: "rotate(10deg)",
-              }}
-            />
-            <Sparkle
-              size={14}
-              color={PINK}
-              style={{
-                position: "absolute",
-                top: 64,
-                right: 70,
-                transform: "rotate(-12deg)",
-              }}
-            />
-            <div
-              style={{
-                fontSize: "var(--text-sm)",
-                textTransform: "uppercase",
-                letterSpacing: "0.16em",
-                color: CARD_MUTED,
-                marginBottom: "var(--space-sm)",
-              }}
-            >
-              {task.status === "active" ? t("coven.statusOpen") : task.status}
-            </div>
-            <div
-              className="content-title"
-              style={{
-                fontFamily: SCRIPT,
-                lineHeight: 0.92,
-                color: TITLE_TEXT,
-                marginBottom: "var(--space-lg)",
-                overflowWrap: "anywhere",
-              }}
-            >
-              {task.title}
-            </div>
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "var(--space-md)",
-                flexWrap: "wrap",
-              }}
-            >
-              <span style={pill}>
-                <Sparkle size={11} color={PINK} />{" "}
-                {t("coven.level", { level: task.level_required })}
-              </span>
+            {task.created_by_avatar_url ? (
+              <img
+                src={mediaUrl(task.created_by_avatar_url)}
+                alt={authorName}
+                style={{
+                  width: 30,
+                  height: 30,
+                  borderRadius: "50%",
+                  objectFit: "cover",
+                  flex: "none",
+                  border: `2px solid ${BORDER}`,
+                }}
+              />
+            ) : (
               <span
-                className="content-title"
+                aria-hidden
                 style={{
                   display: "inline-flex",
                   alignItems: "center",
-                  gap: "var(--space-sm)",
-                  fontFamily: SCRIPT,
-                  color: PINK,
-                }}
-              >
-                <svg width="22" height="22" viewBox="0 0 36 36">
-                  <path
-                    d="M18 31C7 23 3 17 6.5 11 9 6.8 14 6.5 16 10c.9 1.5 1.6 2.7 2 3.4.4-.7 1.1-1.9 2-3.4 2-3.5 7-3.2 9.5 1C33 17 29 23 18 31Z"
-                    fill={PINK}
-                    stroke={NOTEPAD_BG}
-                    strokeWidth="2.2"
-                    strokeLinejoin="round"
-                  />
-                </svg>
-                {t("coven.sparks", { points: modifiedPoints })}
-              </span>
-              <span style={pill}>
-                {t("coven.onView", {
-                  signups: signups.length,
-                  completed: submissions.length,
-                })}
-              </span>
-            </div>
-          </div>
-        </div>
-
-        {/* ── Signup CTA bar (only when sign-up is possible) ── */}
-        <LevelJumpBanner state={state} />
-        {canSignUp && (
-          <div>
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "var(--space-lg)",
-                flexWrap: "wrap",
-                border: `2px solid ${WIN_BORDER}`,
-                borderRadius: 12,
-                background: NOTEPAD_BG,
-                padding: "var(--space-lg) var(--space-xl)",
-                boxShadow: `4px 4px 0 var(--faction-coven-scrap-deep)`,
-              }}
-            >
-              <button
-                onClick={handleSignup}
-                style={{
-                  cursor: "pointer",
-                  fontFamily: BODY,
+                  justifyContent: "center",
+                  width: 30,
+                  height: 30,
+                  flex: "none",
+                  borderRadius: "50%",
+                  overflow: "hidden",
+                  fontFamily: CHROME,
+                  fontWeight: 700,
                   fontSize: "var(--text-md)",
-                  textTransform: "uppercase",
-                  letterSpacing: "0.12em",
-                  color: ON_ACCENT,
-                  padding: "var(--space-md) var(--space-xl)",
-                  border: `1.5px solid ${WIN_BORDER}`,
-                  borderRadius: 10,
-                  background: `linear-gradient(180deg, ${PINK}, var(--faction-coven-card-muted))`,
-                  boxShadow: `0 4px 10px color-mix(in srgb, ${PINK} 35%, transparent)`,
+                  background: CARD,
+                  border: `2px solid ${BORDER}`,
+                  color: LABEL,
                 }}
               >
-                {t("coven.signup.cta", { points: modifiedPoints })}
-              </button>
-              <div className="content-text" style={{ fontFamily: SCRIPT, color: PINK }}>
-                {t("coven.signup.note")}
-              </div>
-              <div
+                {initialsOf(authorName)}
+              </span>
+            )}
+            <span
+              style={{
+                fontFamily: HAND,
+                fontSize: "var(--text-content)",
+                lineHeight: 1,
+                color: INK,
+                borderBottom: `2px solid ${BORDER}`,
+              }}
+            >
+              {authorName}
+            </span>
+          </Link>
+          <span style={eyebrow}>{t("detail.author", { level: task.created_by_level ?? 0 })}</span>
+        </div>
+      )}
+
+      {/* Header stats. Exactly two — and deliberately no roster: this count is
+          the only place the in-progress population appears. */}
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: desktop ? "var(--space-xl)" : "var(--space-lg)",
+          flexWrap: "wrap",
+        }}
+      >
+        {stat(t("detail.stats.level"), task.level_required, size.statSize)}
+        <span
+          aria-hidden
+          style={{
+            width: 1,
+            alignSelf: "stretch",
+            minHeight: 34,
+            background: "var(--faction-coven-ward-hair)",
+          }}
+        />
+        {stat(t("detail.stats.inProgress"), inProgressCount, size.substatSize)}
+      </div>
+    </div>
+  );
+
+  // ── The brief, in full. No clamp, no "read more". ──
+  const brief = (
+    <section style={{ marginBottom: desktop ? "var(--space-2xl)" : "var(--space-xl)" }}>
+      {sectionHead(t("detail.brief.heading"))}
+      <div style={{ ...panel, padding: desktop ? "var(--space-xl)" : "var(--space-lg)" }}>
+        {task.description && (
+          <p
+            className="content-text"
+            style={{
+              fontFamily: READING,
+              fontStyle: "italic",
+              lineHeight: 1.6,
+              color: SOFT,
+              whiteSpace: "pre-wrap",
+              margin: 0,
+              textWrap: "pretty",
+            }}
+          >
+            {task.description}
+          </p>
+        )}
+        <Braid style={{ marginTop: "var(--space-lg)" }} />
+      </div>
+    </section>
+  );
+
+  // ── Praxis gallery ──
+  const gallery = (
+    <section style={{ marginBottom: desktop ? "var(--space-2xl)" : "var(--space-xl)" }}>
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: "var(--space-md)",
+          marginBottom: "var(--space-md)",
+          flexWrap: "wrap",
+        }}
+      >
+        <span
+          style={{
+            fontFamily: DISPLAY,
+            fontWeight: 600,
+            fontSize: size.headingSize,
+            lineHeight: 1.06,
+            letterSpacing: "0.02em",
+            color: INK,
+          }}
+        >
+          {t("detail.gallery.heading", { count: submissions.length })}
+        </span>
+        <Braid style={{ flex: 1 }} />
+        <span
+          style={{
+            display: "flex",
+            gap: "var(--space-xs)",
+            padding: "var(--space-xs)",
+            border: `1.5px solid ${BORDER}`,
+            borderRadius: 10,
+            background: CARD,
+          }}
+        >
+          {(["score", "recent"] as const).map((sort) => {
+            const on = submissionSort === sort;
+            return (
+              <button
+                key={sort}
+                onClick={() => setSubmissionSort(sort)}
                 style={{
-                  marginLeft: "auto",
-                  fontSize: "var(--text-base)",
-                  letterSpacing: "0.06em",
-                  color: CARD_MUTED,
-                  textAlign: "right",
+                  ...CAPTION,
+                  fontSize: "var(--text-sm)",
+                  letterSpacing: "0.14em",
+                  cursor: "pointer",
+                  border: "none",
+                  borderRadius: 8,
+                  padding: "var(--space-xs) var(--space-sm)",
+                  color: on ? "var(--faction-coven-slip-cta-ink)" : LABEL,
+                  background: on
+                    ? "linear-gradient(180deg, var(--faction-coven-slip-cta-from), var(--faction-coven-slip-cta-to))"
+                    : "transparent",
                 }}
               >
-                <div>
-                  {t("coven.signup.slots", { open: slotsOpen, max: maxTaskSlots })}
-                </div>
-                <div>
-                  {t("coven.signup.levelRequired", { level: task.level_required })}
-                </div>
-              </div>
-            </div>
-            <ErrorBanner message={signupError} />
-          </div>
-        )}
+                {sort === "score"
+                  ? t("detail.gallery.sort.top")
+                  : t("detail.gallery.sort.recent")}
+              </button>
+            );
+          })}
+        </span>
+      </div>
 
-        {/* ── My submission — edit the spell ── */}
-        {mySubmission && (
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "var(--space-lg)",
-              flexWrap: "wrap",
-              border: `2px solid ${NOTEPAD_BORDER}`,
-              borderRadius: 12,
-              background: NOTEPAD_BG,
-              padding: "var(--space-lg) var(--space-xl)",
-            }}
-          >
-            <span className="content-text" style={{ fontFamily: SCRIPT, color: TITLE_TEXT }}>
-              {t("coven.submitted.text")}
-            </span>
-            <Link
-              to={`/praxes/${mySubmission.id}/edit`}
-              style={{
-                fontFamily: BODY,
-                fontSize: "var(--text-md)",
-                textTransform: "uppercase",
-                letterSpacing: "0.12em",
-                color: ON_ACCENT,
-                padding: "var(--space-md) var(--space-xl)",
-                border: `1.5px solid ${WIN_BORDER}`,
-                borderRadius: 10,
-                background: `linear-gradient(180deg, ${PINK}, var(--faction-coven-card-muted))`,
-                textDecoration: "none",
-              }}
-            >
-              {t("coven.submitted.edit")}
-            </Link>
+      {sortedSubmissions.length === 0 ? (
+        <p
+          className="content-text"
+          style={{ fontFamily: READING, fontStyle: "italic", color: SOFT, margin: 0 }}
+        >
+          {t("detail.gallery.empty")}
+        </p>
+      ) : (
+        <>
+          <div className="flex flex-wrap gap-4 items-start">
+            {(showAllPraxis
+              ? sortedSubmissions
+              : sortedSubmissions.slice(0, GALLERY_PREVIEW)
+            ).map((praxis) => (
+              <PraxisCard key={praxis.id} praxis={praxis} />
+            ))}
           </div>
-        )}
-
-        {/* ── In progress — continue / drop ── */}
-        {!mySubmission && isInProgress && inProgressPraxisId !== null && (
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "var(--space-lg)",
-              flexWrap: "wrap",
-              border: `2px solid ${NOTEPAD_BORDER}`,
-              borderRadius: 12,
-              background: NOTEPAD_BG,
-              padding: "var(--space-lg) var(--space-xl)",
-            }}
-          >
-            <span className="content-text" style={{ fontFamily: SCRIPT, color: TITLE_TEXT }}>
-              {t("coven.inProgress.text")}
-            </span>
-            <Link
-              to={`/praxes/${inProgressPraxisId}/edit`}
-              style={{
-                fontFamily: BODY,
-                fontSize: "var(--text-md)",
-                textTransform: "uppercase",
-                letterSpacing: "0.12em",
-                color: ON_ACCENT,
-                padding: "var(--space-md) var(--space-xl)",
-                border: `1.5px solid ${WIN_BORDER}`,
-                borderRadius: 10,
-                background: `linear-gradient(180deg, ${PINK}, var(--faction-coven-card-muted))`,
-                textDecoration: "none",
-              }}
-            >
-              {t("coven.inProgress.continue")}
-            </Link>
+          {submissions.length > GALLERY_PREVIEW && (
             <button
-              onClick={handleDrop}
+              onClick={() => setShowAllPraxis((shown) => !shown)}
               style={{
+                display: "inline-block",
+                marginTop: "var(--space-md)",
+                padding: 0,
                 background: "none",
                 border: "none",
                 cursor: "pointer",
-                fontFamily: SCRIPT,
+                fontFamily: DISPLAY,
+                fontWeight: 600,
                 fontSize: "var(--text-content)",
-                color: CARD_MUTED,
+                color: DEEP,
               }}
             >
-              {t("coven.inProgress.drop")}
+              {showAllPraxis
+                ? t("detail.gallery.showFewer")
+                : t("detail.gallery.viewAll", { count: submissions.length })}
             </button>
-          </div>
-        )}
+          )}
+        </>
+      )}
+    </section>
+  );
 
-        {/* ── The party so far (signups) ── */}
-        {signups.length > 0 && (
-          <section>
-            <SectionHead>{t("coven.partyHeading")}</SectionHead>
-            <PartyRow signups={signups} friends={friends} foes={foes} />
-          </section>
-        )}
+  return (
+    <div className="py-8" style={{ position: "relative", color: INK, fontFamily: CHROME }}>
+      {/* The candlelight wash — full-viewport, index.css owns its blooms, its
+          drift and the light/dark flip. */}
+      <div className="coven-candle-backdrop" aria-hidden />
 
-        {/* ── What we're asking (description) ── */}
-        <section>
-          <SectionHead>{t("coven.askingHeading")}</SectionHead>
+      <div style={{ position: "relative", zIndex: 1, maxWidth: 1200, margin: "0 auto" }}>
+        {/* The pentagram watermark, turning once every two minutes. `.cvn-wheel`
+            carries the motion and its reduced-motion guard (#911/#1023). */}
+        <svg
+          className="cvn-wheel"
+          width={640}
+          height={640}
+          viewBox="0 0 100 100"
+          aria-hidden="true"
+          style={{
+            position: "absolute",
+            right: -180,
+            top: 120,
+            zIndex: 0,
+            pointerEvents: "none",
+            opacity: 0.09,
+          }}
+        >
+          <circle cx="50" cy="50" r="44" fill="none" stroke={DEEP} strokeWidth="0.8" />
+          <path
+            d="M50 12 L73.5 84.3 L11.9 39.7 L88.1 39.7 L26.5 84.3 Z"
+            fill="none"
+            stroke={DEEP}
+            strokeWidth="1.1"
+            strokeLinejoin="round"
+          />
+        </svg>
+
+        <div
+          style={{
+            position: "relative",
+            zIndex: 1,
+            display: "flex",
+            flexDirection: desktop ? "row" : "column",
+            alignItems: desktop ? "flex-start" : "stretch",
+            gap: "var(--space-xl)",
+            marginBottom: desktop ? "var(--space-2xl)" : "var(--space-xl)",
+          }}
+        >
+          <div style={{ flex: 1, minWidth: 0 }}>{header}</div>
           <div
             style={{
-              border: `2px solid ${NOTEPAD_BORDER}`,
-              borderRadius: 12,
-              background: NOTEPAD_BG,
-              padding: "var(--space-xl) var(--space-2xl)",
-              maxWidth: 640,
+              flex: desktop ? `0 0 ${size.plate}px` : "1 1 auto",
+              width: desktop ? size.plate : "100%",
+              maxWidth: "100%",
+              marginTop: desktop ? "var(--space-sm)" : 0,
             }}
           >
-            <p
-              className="content-text"
-              style={{
-                fontFamily: BODY,
-                lineHeight: 1.75,
-                color: CARD_TEXT,
-                margin: 0,
-                whiteSpace: "pre-wrap",
-              }}
-            >
-              {task.description || t("coven.askingEmpty")}
-            </p>
+            {actionPlate}
           </div>
-        </section>
+        </div>
 
-        {/* ── The love so far (vote aggregate) ── */}
-        <section>
-          <SectionHead>{t("coven.loveHeading")}</SectionHead>
-          {voteCount > 0 ? (
-            <div style={{ display: "flex", alignItems: "flex-end", gap: "var(--space-md)" }}>
-              <span
-                className="content-title"
-                style={{
-                  fontFamily: ACCENT,
-                  lineHeight: 0.8,
-                  color: PINK,
-                }}
-              >
-                {topScore}
-              </span>
-              <div style={{ paddingBottom: "var(--space-sm)" }}>
-                <div
-                  className="content-text"
-                  style={{
-                    fontFamily: SCRIPT,
-                    color: TITLE_TEXT,
-                  }}
-                >
-                  {t("coven.love.top")}
-                </div>
-                <div style={{ fontSize: "var(--text-base)", color: CARD_MUTED }}>
-                  {t("coven.love.adored", { count: voteCount })}
-                </div>
-              </div>
-            </div>
-          ) : (
-            <p className="content-text" style={{ fontFamily: SCRIPT, color: PINK }}>
-              {t("coven.love.none")}
-            </p>
-          )}
-        </section>
-
-        {/* ── Spells cast (completed praxis) ── */}
-        <section>
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              flexWrap: "wrap",
-              gap: "var(--space-md)",
-              marginBottom: "var(--space-lg)",
-            }}
-          >
-            <div style={{ display: "flex", alignItems: "center", gap: "var(--space-md)", flex: 1 }}>
-              <Sparkle size={18} color={PINK} />
-              <h2
-                className="content-title"
-                style={{
-                  fontFamily: SCRIPT,
-                  margin: 0,
-                  color: TITLE_TEXT,
-                  whiteSpace: "nowrap",
-                }}
-              >
-                {t("coven.spellsHeading", { count: submissions.length })}
-              </h2>
-            </div>
-            <div style={{ display: "flex", gap: 0 }}>
-              {(["score", "recent"] as const).map((sort) => {
-                const on = submissionSort === sort;
-                return (
-                  <button
-                    key={sort}
-                    onClick={() => setSubmissionSort(sort)}
-                    style={{
-                      fontFamily: BODY,
-                      fontSize: "var(--text-sm)",
-                      textTransform: "uppercase",
-                      letterSpacing: "0.1em",
-                      padding: "var(--space-xs) var(--space-md)",
-                      borderRadius: on ? 8 : 0,
-                      background: on ? PINK : "transparent",
-                      color: on ? ON_ACCENT : CARD_MUTED,
-                      border: `1.5px solid ${on ? PINK : NOTEPAD_BORDER}`,
-                      cursor: "pointer",
-                    }}
-                  >
-                    {sort === "score"
-                      ? t("coven.sort.mostLoved")
-                      : t("coven.sort.recent")}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-          {sortedSubmissions.length === 0 ? (
-            <p className="content-text" style={{ fontFamily: SCRIPT, color: PINK }}>
-              {t("coven.empty")}
-            </p>
-          ) : (
-            <>
-              <div
-                style={{
-                  display: "flex",
-                  flexWrap: "wrap",
-                  gap: "var(--space-2xl) var(--space-xl)",
-                  alignItems: "flex-start",
-                }}
-              >
-                {sortedSubmissions.slice(0, 4).map((s) => (
-                  <div key={s.id} style={{ position: "relative", paddingTop: "var(--space-xl)" }}>
-                    {s.id === topId && (
-                      <div
-                        style={{
-                          position: "absolute",
-                          top: -2,
-                          left: "50%",
-                          transform: "translateX(-50%) rotate(-2deg)",
-                          zIndex: 3,
-                          display: "inline-flex",
-                          alignItems: "center",
-                          gap: "var(--space-xs)",
-                          whiteSpace: "nowrap",
-                          background: PINK,
-                          color: ON_ACCENT,
-                          fontFamily: SCRIPT,
-                          fontSize: "var(--text-content)",
-                          padding: "var(--space-xs) var(--space-lg)",
-                          borderRadius: 14,
-                          boxShadow: `2px 3px 0 var(--faction-coven-scrap-deep)`,
-                        }}
-                      >
-                        <span style={{ fontSize: "var(--text-lg)", lineHeight: 1 }}>⚜</span>{" "}
-                        {t("coven.mostLoved")}
-                      </div>
-                    )}
-                    <PraxisCard praxis={s} />
-                  </div>
-                ))}
-              </div>
-              {submissions.length > 4 && (
-                <div style={{ marginTop: "var(--space-lg)" }}>
-                  <Link
-                    to={`/praxes?task_id=${task.id}`}
-                    className="content-text"
-                    style={{
-                      fontFamily: SCRIPT,
-                      color: PINK,
-                      textDecoration: "none",
-                    }}
-                  >
-                    {t("coven.viewAll", { count: submissions.length })}
-                  </Link>
-                </div>
-              )}
-            </>
-          )}
-        </section>
-        {/* Comments — shared slot, active-task gated (ADR-0006 + #1030). */}
-        <TaskDetailComments state={state} />
+        <div style={{ position: "relative", zIndex: 1, minWidth: 0 }}>
+          {brief}
+          {gallery}
+          <TaskDetailComments state={state} heading={sectionHead(t("detail.comments.heading"))} />
+        </div>
       </div>
     </div>
   );
