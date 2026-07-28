@@ -32,6 +32,7 @@ import {
   FilePicker,
   InviteSearch,
   PublishButton,
+  SaveDraftButton,
   TitleField,
 } from "../archetypes/controls";
 import { MetataskSealStack } from "../MetataskSealStack";
@@ -436,6 +437,7 @@ export default function WowEditPraxis({ state }: { state: EditPraxisState }) {
           borderTop: `1.5px solid ${GOLD}`,
         }}
       >
+        <SaveDraftButton state={state} />
         {!state.isPublished && (
           <DropButton
             state={state}

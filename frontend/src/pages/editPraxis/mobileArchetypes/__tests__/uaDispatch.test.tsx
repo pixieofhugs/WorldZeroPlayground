@@ -126,6 +126,7 @@ function baseState(): EditPraxisState {
     cancelRemoveMetatask: () => {},
     submitting: false,
     publish: async () => {},
+    saveDraft: async () => {},
     pullBack: async () => {},
     reopenForEdit: async () => {},
     leaveCollab: async () => {},

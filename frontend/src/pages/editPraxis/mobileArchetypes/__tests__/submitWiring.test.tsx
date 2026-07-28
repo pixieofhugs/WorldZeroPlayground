@@ -117,6 +117,7 @@ function stateWith(publish: () => Promise<void>): EditPraxisState {
     cancelRemoveMetatask: () => {},
     submitting: false,
     publish,
+    saveDraft: async () => {},
     pullBack: async () => {},
     reopenForEdit: async () => {},
     leaveCollab: async () => {},

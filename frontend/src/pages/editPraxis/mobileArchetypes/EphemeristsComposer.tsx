@@ -13,6 +13,7 @@ import {
   FilePicker,
   InviteSearch,
   PublishButton,
+  SaveDraftButton,
   TitleField,
 } from '../archetypes/controls'
 import { MetataskSealStack } from '../MetataskSealStack'
@@ -233,6 +234,7 @@ export default function EphemeristsComposer({ state }: { state: EditPraxisState 
           borderTop: `1px solid ${GOLD}`,
         }}
       >
+        <SaveDraftButton state={state} />
         {!state.isPublished && (
           <DropButton
             state={state}
