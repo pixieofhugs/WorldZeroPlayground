@@ -1,4 +1,4 @@
-import type { CSSProperties, ReactNode } from "react";
+import { useState, type CSSProperties, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import PraxisCard from "../../../components/PraxisCard";
@@ -69,6 +69,11 @@ export default function DefaultTaskDetail({
 }) {
   const { t } = useTranslation("tasks");
   const desktop = useFormFactor() !== "mobile";
+  // The gallery expands in place (the design's own "View all N praxis →" /
+  // "Show fewer ↑"). It deliberately does NOT link to `/praxes?task_id=N`: the
+  // praxis feed reads no such param, so that link has always dropped the filter
+  // and shown the whole feed.
+  const [showAllPraxis, setShowAllPraxis] = useState(false);
   const {
     task,
     submissions,
@@ -714,24 +719,32 @@ export default function DefaultTaskDetail({
       ) : (
         <>
           <div className="flex flex-wrap gap-4 items-start">
-            {sortedSubmissions.slice(0, GALLERY_PREVIEW).map((praxis) => (
+            {(showAllPraxis
+              ? sortedSubmissions
+              : sortedSubmissions.slice(0, GALLERY_PREVIEW)
+            ).map((praxis) => (
               <PraxisCard key={praxis.id} praxis={praxis} />
             ))}
           </div>
           {submissions.length > GALLERY_PREVIEW && (
-            <Link
-              to={`/praxes?task_id=${task.id}`}
+            <button
+              onClick={() => setShowAllPraxis((shown) => !shown)}
               className="font-body"
               style={{
                 display: "inline-block",
                 marginTop: "var(--space-md)",
+                padding: 0,
                 fontSize: "var(--text-lg)",
+                background: "none",
+                border: "none",
+                cursor: "pointer",
                 color: "var(--faction-default-card-accent)",
-                textDecoration: "none",
               }}
             >
-              {t("detail.gallery.viewAll", { count: submissions.length })}
-            </Link>
+              {showAllPraxis
+                ? t("detail.gallery.showFewer")
+                : t("detail.gallery.viewAll", { count: submissions.length })}
+            </button>
           )}
         </>
       )}
