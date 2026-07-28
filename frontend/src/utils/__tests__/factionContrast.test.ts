@@ -352,6 +352,28 @@ const ARCHETYPE_PAIRS: Pair[] = [
   { what: "singularity points well, unit", surface: "--faction-singularity-term-readout", text: "--faction-singularity-term-blue" },
   { what: "singularity CTA, prompt", surface: "--faction-singularity-term-cta-bg", text: "--faction-singularity-term-cta-ink" },
 
+  // S.N.I.D.E. — THE RANSOM CLIPPING (task card v2, #1023). Unlike the faction's
+  // older ink-dark families, this one FLIPS, so each row genuinely measures two
+  // different grounds rather than one ground twice. Hot zine pink is the whole
+  // story: it is a poster colour, so it survives wherever it is a DRAWN LINE (the
+  // pen circle, the struck-out cross — neither is here, because neither is text)
+  // and is walked down wherever it carries a word.
+  { what: "snide clipping, headline", surface: "--faction-snide-note-paper", text: "--faction-snide-note-ink" },
+  { what: "snide clipping, brief", surface: "--faction-snide-note-paper", text: "--faction-snide-note-muted" },
+  { what: "snide clipping, points caption", surface: "--faction-snide-note-paper", text: "--faction-snide-note-pink-ink" },
+  { what: "snide clipping bar, ordinal", surface: "--faction-snide-note-bar", text: "--faction-snide-note-bar-ink" },
+  { what: "snide clipping bar, wordmark", surface: "--faction-snide-note-bar", text: "--faction-snide-acid" },
+  // Headline cut 2 — a knockout, which is why it names its own pair instead of
+  // reusing paper/ink: those two swap under the cascade and would cancel.
+  { what: "snide headline knockout", surface: "--faction-snide-note-knockout-bg", text: "--faction-snide-note-knockout-ink" },
+  // Headline cut 1 and the CTA bar are the same pairing — ink on acid — and the
+  // acid does not flip, so one row covers both in both themes.
+  { what: "snide acid CTA bar", surface: "--faction-snide-note-cta-bg", text: "--faction-snide-note-cta-ink" },
+  // The modifier chip. The design set its label in PAPER on the pink (3.10:1);
+  // it takes the near-black CTA ink instead, one value for both themes because
+  // `--faction-snide-pink` does not flip either.
+  { what: "snide modifier chip", surface: "--faction-snide-pink", text: "--faction-snide-note-cta-ink" },
+
   // Albescent's FACTION tokens are gone (#783) — it renders Default's surfaces,
   // which `default` already covers. What remains is the always-light palette
   // private to the reveal surfaces (invitation letter, secret placeholder). It

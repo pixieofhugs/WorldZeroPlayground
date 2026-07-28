@@ -37,6 +37,7 @@ import EphemeristsTaskCard from '../EphemeristsTaskCard'
 import EverymenTaskCard from '../EverymenTaskCard'
 import AlbescentTaskCard from '../AlbescentTaskCard'
 import SingularityTaskCard from '../SingularityTaskCard'
+import SnideTaskCard from '../SnideTaskCard'
 import DefaultTaskCard from '../DefaultTaskCard'
 import { surfaceMap } from '../../../factions'
 
@@ -90,11 +91,31 @@ const SKINS: Skin[] = [
     signup: i18n.t('feed:taskCard.na.signup'),
   },
   { slug: 'singularity', Card: SingularityTaskCard, signup: i18n.t('feed:taskCard.singularity.signup') },
+  { slug: 'snide', Card: SnideTaskCard, signup: i18n.t('feed:taskCard.snide.signup') },
 ]
+
+/**
+ * The five entities React escapes on the way out. They have to come back before
+ * the text is compared to a catalog string, or a perfectly correct card fails
+ * for having an apostrophe in its CTA — which is exactly what S.N.I.D.E.'s
+ * "I'M IN" did. Decoding can only ever make a `toContain` pass, so it cannot
+ * mask a regression in the rows above; what it removes is a false negative that
+ * scaled with how punctuated a faction's voice happens to be.
+ */
+const ENTITIES: Record<string, string> = {
+  '&amp;': '&',
+  '&lt;': '<',
+  '&gt;': '>',
+  '&quot;': '"',
+  '&#x27;': "'",
+}
 
 function markup(element: ReactElement): { html: string; text: string } {
   const html = renderToStaticMarkup(<MemoryRouter>{element}</MemoryRouter>)
-  return { html, text: html.replace(/<[^>]*>/g, '') }
+  const text = html
+    .replace(/<[^>]*>/g, '')
+    .replace(/&(?:amp|lt|gt|quot|#x27);/g, (entity) => ENTITIES[entity])
+  return { html, text }
 }
 
 function render(
@@ -187,6 +208,38 @@ describe.each(SKINS)('$slug task card v2 — one component, two form factors (AD
 describe.each(SKINS)('$slug renders through the taskCard manifest surface', (skin) => {
   it('is the registered skin for its slug', () => {
     expect(surfaceMap('taskCard')[skin.slug]).toBeDefined()
+  })
+})
+
+/* -------------------------------------------------------------------------- */
+/* S.N.I.D.E. — the censor strikes out the brief, but never removes it         */
+/* -------------------------------------------------------------------------- */
+
+describe('snide redacts two words of the brief without deleting them', () => {
+  const props = { basePoints: TASK.point_value, multiplier: 1, inProgressCount: 0 }
+
+  it('keeps the whole description in the accessibility tree', () => {
+    const { text } = markup(<SnideTaskCard task={TASK} {...props} />)
+    // The strike is `color: transparent` over an ink block, so the word is still
+    // a text node: screen readers announce it, find-in-page finds it, selecting
+    // the paragraph copies it. If a later edit swaps that for `aria-hidden` or
+    // drops the words outright, this is the row that goes red.
+    expect(text).toContain(TASK.description)
+  })
+
+  it('strikes a deterministic pair, seeded off the task id', () => {
+    const { html } = markup(<SnideTaskCard task={TASK} {...props} />)
+    expect(html, 'two struck words').toContain('color:transparent')
+    expect(html.match(/color:transparent/g), 'exactly two, never a whole sentence')
+      .toHaveLength(2)
+    // Same task, same strike — the brief must not flicker between renders.
+    expect(markup(<SnideTaskCard task={TASK} {...props} />).html).toBe(html)
+  })
+
+  it('leaves a short brief alone rather than striking most of it', () => {
+    const short = { ...TASK, description: 'Do one small thing.' }
+    const { html } = markup(<SnideTaskCard task={short} {...props} />)
+    expect(html).not.toContain('color:transparent')
   })
 })
 

@@ -177,7 +177,8 @@
       "dispatchNumber": "dispatch №{{number}}",
       "scrawl": "your assignment, should you ignore it —",
       "signup": "I'M IN ↗",
-      "pointsUnit": "PTS"
+      "pointsUnit": "PTS",
+      "levelCaption": "level"
     },
     "singularity": {
       "pointsLabel": "PTS:",
