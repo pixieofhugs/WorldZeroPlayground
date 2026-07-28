@@ -169,7 +169,9 @@
       "masthead": "THE EVERYMEN",
       "sealUnit": "POINTS",
       "points": "{{points}} PTS",
-      "signup": "Report for duty"
+      "signup": "Report for duty",
+      "billMasthead": "Help Wanted!",
+      "levelCaption": "Grade"
     },
     "snide": {
       "dispatchNumber": "dispatch №{{number}}",

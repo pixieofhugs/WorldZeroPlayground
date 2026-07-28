@@ -34,6 +34,7 @@ vi.mock('../../../hooks/useFormFactor', () => ({
 // Imported after the mock is registered.
 import CovenTaskCard from '../CovenTaskCard'
 import EphemeristsTaskCard from '../EphemeristsTaskCard'
+import EverymenTaskCard from '../EverymenTaskCard'
 import { surfaceMap } from '../../../factions'
 
 const TASK: TaskOut = {
@@ -73,6 +74,7 @@ const SKINS: Skin[] = [
     Card: EphemeristsTaskCard,
     signup: i18n.t('feed:taskCard.ephemerists.signup'),
   },
+  { slug: 'everymen', Card: EverymenTaskCard, signup: i18n.t('feed:taskCard.everymen.signup') },
 ]
 
 function markup(element: ReactElement): { html: string; text: string } {

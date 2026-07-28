@@ -832,6 +832,39 @@
   --everymen-stamp-numeral: #7a1f18; /* the filled-in figures */
   --everymen-stamp-mult: #a9741a; /* gold — the multiplier figure only */
 
+  /* ══ Everymen — THE HELP WANTED BILL (task card v2, #1023) ══
+     A WPA union broadsheet: a cog masthead over a sunburst wash, a typewritten
+     dispatch, a rubber-stamp points seal and a full-bleed report-for-duty bar.
+
+     THIS BLOCK IS DELIBERATELY SHORT. The design's whole TOKENS object turned
+     out to BE the `--everymen-*` family already in this file — paper, paperDeep,
+     cream, muted, red, gold, goldDeep and olive match value-for-value in both
+     themes, and its "ink" role is `--everymen-paper-text` (which flips) rather
+     than `--everymen-ink` (which does not). Re-declaring those under a `-bill-`
+     name would have been a second place for one colour to live. What follows is
+     only the roles the family has no home for.
+
+     The masthead is theme-INVARIANT red-on-cream, which is a deliberate
+     divergence from `--everymen-masthead-text`: that token flips to ink in dark
+     because the dark bar is the lifted `#e2433f`, where cream fails. This bar
+     keeps the light red in both themes (cream on it measures 4.95:1 / 4.98:1),
+     so a bill printed at night is the same bill. */
+  --faction-everymen-bill-mast: #c1272d;
+  --faction-everymen-bill-mast-ink: #f4ecd6;
+  --faction-everymen-bill-cta-bg: #221a12;
+  --faction-everymen-bill-cta-ink: #f4ecd6;
+  /* The modifier badge's ink. The design sets it in its goldDeep, which pays
+     3.11:1 on the light paper; walked down the same hue to 4.66:1. In dark
+     `--everymen-gold-deep` already clears (5.14:1), so only light moves. */
+  --faction-everymen-bill-mult-ink: #855a12;
+  /* The three washes behind the sheet: poster rays from the masthead, plus a
+     gold and an olive corner glow. Ornament alphas, so they live here rather
+     than as opacity numbers in the card. */
+  --faction-everymen-bill-ray: rgba(34, 26, 18, 0.05);
+  --faction-everymen-bill-glow-gold: rgba(217, 154, 43, 0.14);
+  --faction-everymen-bill-glow-olive: rgba(91, 98, 56, 0.1);
+  --faction-everymen-bill-shadow: 0 12px 32px -16px rgba(34, 26, 18, 0.5);
+
   /* ── Gearworks vote widget (#821) — reached gears heat a cold→ember ramp with
      pale hubs; unreached gears are edge-only outlines; rank 5 throws sparks. The
      edge + rank-5 glow flip in the dark cascade (see the dark block). ── */
@@ -1389,6 +1422,17 @@
   --everymen-stamp-ink: #d67b6a;
   --everymen-stamp-numeral: #ece1c6;
   --everymen-stamp-mult: #e6b34a;
+  /* ── The Help Wanted bill (dark, #1023) ── The masthead does NOT flip: see the
+     light block for why a bill printed at night is the same bill. The CTA bar
+     deepens to the design's near-black red-brown, and the modifier badge hands
+     back to the family's own gold, which already clears on the dark paper. */
+  --faction-everymen-bill-cta-bg: #200c0a;
+  --faction-everymen-bill-cta-ink: #f3e7ce;
+  --faction-everymen-bill-mult-ink: var(--everymen-gold-deep);
+  --faction-everymen-bill-ray: rgba(243, 231, 206, 0.045);
+  --faction-everymen-bill-glow-gold: rgba(231, 185, 79, 0.1);
+  --faction-everymen-bill-glow-olive: rgba(138, 149, 90, 0.08);
+  --faction-everymen-bill-shadow: 0 12px 32px -14px rgba(0, 0, 0, 0.8);
   /* Gearworks: cooler edge for cold gears, a brighter single-halo rank-5 glow on
      the dark paper (the light double-drop-shadow would muddy against it). */
   --faction-everymen-vote-edge: #8a7856;

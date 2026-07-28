@@ -298,6 +298,28 @@ const ARCHETYPE_PAIRS: Pair[] = [
     text: "--faction-coven-slip-deep",
   },
 
+  // Everymen — THE HELP WANTED BILL (task card v2, #1023). Short, because the
+  // design's palette IS the `--everymen-*` family measured above; only the roles
+  // that family had no home for are new.
+  { what: "everymen bill masthead", surface: "--faction-everymen-bill-mast", text: "--faction-everymen-bill-mast-ink" },
+  { what: "everymen bill CTA bar", surface: "--faction-everymen-bill-cta-bg", text: "--faction-everymen-bill-cta-ink" },
+  // The modifier badge's ink, walked down off the design's goldDeep (3.11:1).
+  { what: "everymen bill modifier ink", surface: "--everymen-paper", text: "--faction-everymen-bill-mult-ink" },
+  // The "Grade" label. Olive on the paper was never measured before this card
+  // set a label in it.
+  { what: "everymen paper, olive label", surface: "--everymen-paper", text: "--everymen-olive" },
+  {
+    // The seal's points numeral. Red on the paper is 4.49:1 — a hair under the
+    // body floor, which is why nothing on this card sets PROSE in it. The
+    // numeral is 32px/24px Bebas, large display type, so AA_LARGE is its floor
+    // and it clears with room (the same call `ua primary` makes above). The
+    // 8px "POINTS" caption beneath it is stamp text, i.e. ornament (§4).
+    what: "everymen seal numeral, large display type",
+    surface: "--everymen-paper",
+    text: "--everymen-red",
+    floor: AA_LARGE,
+  },
+
   // Ephemerists — THE VALLEY PLATE (task card v2, #1023). Four surfaces, not
   // one: the papyrus plate, the cornice's night band, the medallion's disc and
   // the CTA bar, each carrying its own ink. `-brass` is absent from this list on

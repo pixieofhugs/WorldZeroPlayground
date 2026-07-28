@@ -1,273 +1,366 @@
+import type { CSSProperties } from "react";
 import { Link } from "react-router-dom";
 import type { CardProps } from "../TaskCard";
 import i18n from "../../i18n";
-import LevelGem from "../ui/LevelGem";
-import { EverymenSigil } from "./EverymenSigil";
+import { isNeutralMultiplier } from "../../utils/points";
+import { useFormFactor } from "../../hooks/useFormFactor";
 
 /**
- * Everymen — "The Rally Bill".
- * Union / WW2 victory-poster: red masthead with cog sigils, cream poster body,
- * faint sunburst + halftone wash, rubber-stamped points seal, "Report for duty"
- * call to action wired to onSignup.
+ * Everymen — THE HELP WANTED BILL (task card v2, #1023).
+ *
+ * A WPA union broadsheet posted on a wall: a double-ruled red masthead flanked
+ * by toothed cogs, poster rays fanning out from behind it, a typewritten
+ * dispatch in Courier Prime, a rubber-stamp points seal struck a few degrees off
+ * true, a red dashed rule, and a full-bleed report-for-duty bar. Bebas Neue
+ * carries every headline and label; Courier Prime carries everything read.
+ *
+ * This replaces "The Rally Bill" (ADR-0055 / ADR-0056). Same family of
+ * references, rebuilt on the shared v2 information structure: eyebrow → LEVEL +
+ * POINTS hero → title → brief → in-progress → CTA.
+ *
+ * ONE RESPONSIVE COMPONENT (ADR-0056): `useFormFactor` picks the size set, not a
+ * different card. The dormant `mobileArchetypes/cards/EverymenMobileTaskCard`
+ * stays in the tree for the revert.
+ *
+ * Colour comes almost entirely from the existing `--everymen-*` family, which
+ * the design's own palette turned out to match value-for-value; only the
+ * masthead, the CTA bar, the modifier ink and the three washes needed new
+ * `--faction-everymen-bill-*` tokens. Light/dark flips through the
+ * `[data-theme="dark"]` cascade, never a ternary.
  */
 
-/* ── poster atoms (self-contained) ─────────────────────────────── */
+const POSTER = "var(--faction-everymen-card-font)"; /* Bebas Neue */
+const TYPED = "var(--font-body)"; /* Courier Prime */
 
-// faint screen-print halftone wash.
-function Halftone({
-  color = "var(--everymen-ink)",
-  opacity = 0.07,
-  size = 4,
-}: {
-  color?: string;
-  opacity?: number;
-  size?: number;
-}) {
-  return (
-    <div
-      style={{
-        position: "absolute",
-        inset: 0,
-        pointerEvents: "none",
-        opacity,
-        backgroundImage: `radial-gradient(${color} 0.6px, transparent 0.7px)`,
-        backgroundSize: `${size}px ${size}px`,
-        zIndex: 1,
-      }}
-    />
-  );
+/**
+ * The sheet's ink — the paper's own text colour, which FLIPS with the paper.
+ * Deliberately not `--everymen-ink`, which is a near-black structure colour in
+ * dark and would vanish on a dark bill.
+ */
+const INK = "var(--everymen-paper-text)";
+
+interface SizeSet {
+  /** Card width. Geometry, so a raw px number (WORLD_ZERO_STYLE §4a). */
+  cardWidth: number;
+  mastPad: string;
+  bodyPad: string;
+  titleSize: string;
+  levelSize: string;
+  pointsSize: string;
+  /** Diameter of the rubber-stamp seal. Geometry. */
+  seal: number;
 }
 
-// radiating poster rays from an origin point.
-function Sunburst({
-  color = "var(--everymen-red)",
-  from = "50% 0%",
-  opacity = 0.1,
-  step = 7,
-}: {
-  color?: string;
-  from?: string;
-  opacity?: number;
-  step?: number;
-}) {
-  return (
-    <div
-      style={{
-        position: "absolute",
-        inset: 0,
-        pointerEvents: "none",
-        opacity,
-        zIndex: 0,
-        background: `repeating-conic-gradient(from 0deg at ${from}, ${color} 0deg ${step}deg, transparent ${step}deg ${step * 2}deg)`,
-      }}
-    />
-  );
+const SIZES: Record<"desktop" | "mobile", SizeSet> = {
+  desktop: {
+    cardWidth: 384,
+    mastPad: "var(--space-md) var(--space-lg)",
+    bodyPad: "var(--space-lg) var(--space-xl) var(--space-xl)",
+    titleSize: "var(--text-heading)",
+    levelSize: "var(--text-display)",
+    pointsSize: "var(--text-heading)",
+    seal: 70,
+  },
+  mobile: {
+    cardWidth: 340,
+    mastPad: "var(--space-sm) var(--space-lg)",
+    bodyPad: "var(--space-lg) var(--space-lg) var(--space-lg)",
+    titleSize: "var(--text-title)",
+    levelSize: "var(--text-heading)",
+    pointsSize: "var(--text-title)",
+    seal: 62,
+  },
+};
+
+/** Poster label voice — condensed caps, the bill's whole chrome. */
+const LABEL: CSSProperties = {
+  fontFamily: POSTER,
+  letterSpacing: "0.16em",
+  textTransform: "uppercase",
+};
+
+/**
+ * A toothed gear on a 24-unit square, built rather than drawn: eight long teeth
+ * on a hub, which no hand-written path holds legibly at three different sizes.
+ */
+function gearPath(): string {
+  const teeth = 8;
+  const radius = 9.5;
+  const tipLength = 5;
+  const tipHalf = 1.6;
+  const rootHalf = 2.6;
+  const point = (r: number, angle: number): [number, number] =>
+    [12 + r * Math.cos(angle), 12 + r * Math.sin(angle)];
+
+  let path = "";
+  for (let n = 0; n < teeth; n += 1) {
+    const start = (n / teeth) * Math.PI * 2;
+    const step = (Math.PI * 2) / teeth;
+    const rootA = point(radius, start - rootHalf / radius);
+    const tipA = point(radius + tipLength, start - tipHalf / (radius + tipLength));
+    const tipB = point(radius + tipLength, start + tipHalf / (radius + tipLength));
+    const rootB = point(radius, start + rootHalf / radius);
+    const nextRoot = point(radius, start + step - rootHalf / radius);
+    path += `${n === 0 ? "M" : "L"}${rootA[0]},${rootA[1]}`
+      + `L${tipA[0]},${tipA[1]}L${tipB[0]},${tipB[1]}L${rootB[0]},${rootB[1]}`
+      + `A${radius},${radius} 0 0 1 ${nextRoot[0]},${nextRoot[1]}`;
+  }
+  return `${path}Z`;
 }
 
-// little center ornament rule.
-function RuleDiamond({ color = "var(--everymen-red)" }: { color?: string }) {
+const GEAR_PATH = gearPath();
+
+function Gear({ size, fill, hub, opacity }: {
+  size: number
+  fill: string
+  hub: string
+  opacity?: number
+}) {
   return (
-    <div
-      style={{
-        display: "flex",
-        alignItems: "center",
-        gap: "var(--space-xs)",
-        justifyContent: "center",
-        margin: "var(--space-sm) 0",
-      }}
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      aria-hidden="true"
+      style={{ display: "block", flex: "0 0 auto", opacity }}
     >
-      <div style={{ height: 1.5, flex: 1, background: color }} />
-      <div style={{ width: 5, height: 5, background: color, transform: "rotate(45deg)" }} />
-      <div style={{ height: 1.5, flex: 1, background: color }} />
-    </div>
+      <path d={GEAR_PATH} fill={fill} />
+      <circle cx="12" cy="12" r="3" fill={hub} />
+    </svg>
   );
 }
 
-// rubber-stamped circular points seal.
-function PointsSeal({
-  points,
-  color = "var(--everymen-red)",
-  rotate = -9,
-  size = 52,
-}: {
-  points: number;
-  color?: string;
-  rotate?: number;
-  size?: number;
-}) {
+export default function EverymenTaskCard({
+  task,
+  basePoints,
+  multiplier,
+  inProgressCount,
+  onSignup,
+}: CardProps) {
+  const formFactor = useFormFactor();
+  const size = SIZES[formFactor];
+  const showMultiplier = !isNeutralMultiplier(multiplier);
+
   return (
     <div
-      style={{
-        width: size,
-        height: size,
-        borderRadius: "50%",
-        border: `2px solid ${color}`,
-        boxShadow: `inset 0 0 0 2px ${color}`,
-        color,
-        transform: `rotate(${rotate}deg)`,
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "center",
-        lineHeight: 1,
-        opacity: 0.92,
-        mixBlendMode: "multiply",
-      }}
+      data-form-factor={formFactor}
+      style={{ width: size.cardWidth, maxWidth: "100%", boxSizing: "border-box" }}
     >
-      <span style={{ fontFamily: "var(--faction-everymen-card-font)", fontSize: size * 0.42 }}>
-        {points}
-      </span>
-      <span
+      <article
         style={{
-          fontFamily: "var(--font-body)",
-          fontSize: "var(--text-xs)",
-          letterSpacing: "0.18em",
-          marginTop: "var(--space-xs)",
+          position: "relative",
+          overflow: "hidden",
+          boxSizing: "border-box",
+          width: "100%",
+          background: "var(--everymen-paper)",
+          color: INK,
+          border: `2px solid ${INK}`,
+          borderRadius: 2,
+          padding: "var(--space-xs)",
+          boxShadow: "var(--faction-everymen-bill-shadow)",
         }}
       >
-        {i18n.t("feed:taskCard.everymen.sealUnit")}
-      </span>
-    </div>
-  );
-}
-
-/* ── card ───────────────────────────────────────────────────────── */
-
-export default function EverymenTaskCard({ task, basePoints, onSignup }: CardProps) {
-  return (
-    <div
-      style={{
-        maxWidth: 206,
-        flex: "0 1 206px",
-        background: "var(--everymen-paper)",
-        color: "var(--faction-everymen-card-text)",
-        border: "1.5px solid var(--everymen-ink)",
-        boxShadow:
-          "0 0 0 3px var(--everymen-paper), 0 0 0 4px var(--everymen-ink)",
-        position: "relative",
-        fontFamily: "var(--font-body)",
-      }}
-    >
-      {/* masthead */}
-      <div
-        style={{
-          background: "var(--everymen-red)",
-          borderBottom: "2px solid var(--everymen-gold)",
-          padding: "var(--space-sm) var(--space-sm) var(--space-sm)",
-          textAlign: "center",
-        }}
-      >
-        <div
-          className="card-meta"
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            gap: "var(--space-xs)",
-            color: "var(--everymen-cream)",
-            whiteSpace: "nowrap",
-            fontFamily: "var(--font-body)",
-          }}
-        >
-          <EverymenSigil size={11} color="var(--everymen-cream)" />
-          <span
+        <div style={{ position: "relative", overflow: "hidden", border: `1px solid ${INK}`, borderRadius: 1 }}>
+          {/* Poster rays and two corner glows, masked away from the copy. */}
+          <div
+            aria-hidden="true"
             style={{
-              fontFamily: "var(--faction-everymen-card-font)",
-              fontSize: "var(--text-xl)",
-              letterSpacing: "0.07em",
+              position: "absolute",
+              inset: 0,
+              pointerEvents: "none",
+              zIndex: 0,
+              backgroundImage:
+                "radial-gradient(40% 32% at 100% 0, var(--faction-everymen-bill-glow-gold), transparent 70%),"
+                + " radial-gradient(44% 38% at 0 100%, var(--faction-everymen-bill-glow-olive), transparent 70%),"
+                + " repeating-conic-gradient(from 0deg at 50% 16%, var(--faction-everymen-bill-ray) 0 5.2deg, transparent 5.2deg 10.4deg)",
+              WebkitMaskImage: "radial-gradient(130% 100% at 50% 16%, #000 40%, transparent 96%)",
+              maskImage: "radial-gradient(130% 100% at 50% 16%, #000 40%, transparent 96%)",
+            }}
+          />
+
+          {/* Masthead — cogs either side of the call, on the union's red bar. */}
+          <div
+            style={{
+              position: "relative",
+              zIndex: 2,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: "var(--space-sm)",
+              padding: size.mastPad,
+              background: "var(--faction-everymen-bill-mast)",
+              color: "var(--faction-everymen-bill-mast-ink)",
+              borderBottom: "3px double var(--faction-everymen-bill-cta-bg)",
+              boxShadow: "inset 0 -6px 0 -4px var(--everymen-paper-deep)",
             }}
           >
-            {i18n.t("feed:taskCard.everymen.masthead")}
-          </span>
-          <EverymenSigil size={11} color="var(--everymen-cream)" />
-        </div>
-      </div>
+            <Gear size={15} fill="currentColor" hub="var(--faction-everymen-bill-mast)" opacity={0.95} />
+            {/* eslint-disable-next-line local/no-raw-style-values -- ornament: poster lettering; Bebas at label-ramp sizes stops reading as a masthead. */}
+            <span style={{ ...LABEL, fontSize: 17, letterSpacing: "0.18em" }}>
+              {i18n.t("feed:taskCard.everymen.billMasthead")}
+            </span>
+            <Gear size={15} fill="currentColor" hub="var(--faction-everymen-bill-mast)" opacity={0.95} />
+          </div>
 
-      {/* body */}
-      <div style={{ position: "relative", padding: "var(--space-md) var(--space-lg) var(--space-md)", overflow: "hidden" }}>
-        <Sunburst opacity={0.08} step={6} />
-        <Halftone />
-        <div style={{ position: "relative", zIndex: 2 }}>
-          <Link to={`/tasks/${task.id}`} style={{ textDecoration: "none", color: "inherit" }}>
-            <div
-              className="content-title"
+          <div style={{ position: "relative", zIndex: 2, padding: size.bodyPad }}>
+            {/* Everything but the CTA reads the full call — a card-sized target
+                that stays valid HTML (no <button> nested in an <a>). */}
+            <Link to={`/tasks/${task.id}`} style={{ display: "block", textDecoration: "none", color: "inherit" }}>
+              {/* Dateline — the uniform ordinal every faction card carries. */}
+              <div
+                style={{
+                  fontFamily: TYPED,
+                  fontSize: "var(--text-sm)",
+                  letterSpacing: "0.2em",
+                  textTransform: "uppercase",
+                  color: "var(--everymen-muted)",
+                  marginBottom: "var(--space-md)",
+                }}
+              >
+                {i18n.t("feed:taskCard.ordinal", { id: task.id })}
+              </div>
+
+              <div style={{ display: "flex", alignItems: "center", gap: "var(--space-md)", marginBottom: "var(--space-md)" }}>
+                <div style={{ flex: "0 0 auto", display: "flex", flexDirection: "column", alignItems: "flex-start", lineHeight: 1 }}>
+                  <span style={{ ...LABEL, fontSize: "var(--text-base)", color: "var(--everymen-olive)", marginBottom: "var(--space-xs)" }}>
+                    {i18n.t("feed:taskCard.everymen.levelCaption")}
+                  </span>
+                  <span style={{ fontFamily: POSTER, fontSize: size.levelSize, lineHeight: 0.82 }}>
+                    {task.level_required}
+                  </span>
+                </div>
+
+                <div aria-hidden="true" style={{ flex: 1, display: "flex", alignItems: "center", gap: "var(--space-sm)" }}>
+                  <span style={{ flex: 1, height: 0, borderTop: "2px dashed var(--everymen-red)" }} />
+                  <Gear size={15} fill="var(--everymen-red)" hub="var(--everymen-paper)" />
+                  <span style={{ flex: 1, height: 0, borderTop: "2px dashed var(--everymen-red)" }} />
+                </div>
+
+                {/* The faction modifier — hidden at ×1.00, so invisible under
+                    era_1's neutralized modifiers and automatic the day one moves
+                    (ADR-0055). */}
+                {showMultiplier && (
+                  <div style={{ flex: "0 0 auto", display: "flex", flexDirection: "column", alignItems: "center", gap: "var(--space-xs)" }}>
+                    <span
+                      style={{
+                        ...LABEL,
+                        fontSize: "var(--text-lg)",
+                        letterSpacing: "0.04em",
+                        color: "var(--faction-everymen-bill-mult-ink)",
+                        border: "1.5px solid var(--everymen-gold)",
+                        borderRadius: 2,
+                        padding: "var(--space-xs) var(--space-sm)",
+                      }}
+                    >
+                      {i18n.t("feed:taskCard.multiplier", { value: multiplier.toFixed(2) })}
+                    </span>
+                    <span style={{ ...LABEL, fontSize: "var(--text-xs)", color: "var(--everymen-muted)" }}>
+                      {i18n.t("feed:taskCard.modifierCaption")}
+                    </span>
+                  </div>
+                )}
+
+                {/* The rubber-stamp points seal, struck a few degrees off true. */}
+                <div
+                  style={{
+                    position: "relative",
+                    flex: "0 0 auto",
+                    width: size.seal,
+                    height: size.seal,
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    transform: "rotate(-4deg)",
+                    color: "var(--everymen-red)",
+                  }}
+                >
+                  <span
+                    aria-hidden="true"
+                    style={{
+                      position: "absolute",
+                      inset: 0,
+                      borderRadius: "50%",
+                      border: "2px solid var(--everymen-red)",
+                      boxShadow: "inset 0 0 0 3px var(--everymen-paper), inset 0 0 0 4px var(--everymen-red)",
+                    }}
+                  />
+                  <span style={{ fontFamily: POSTER, fontSize: size.pointsSize, lineHeight: 0.8 }}>
+                    {basePoints}
+                  </span>
+                  {/* eslint-disable-next-line local/no-raw-style-values -- ornament: stamp text, sized to the struck seal rather than the label ramp (§4a). */}
+                  <span style={{ ...LABEL, fontSize: 8, letterSpacing: "0.22em", marginTop: "var(--space-xs)" }}>
+                    {i18n.t("feed:taskCard.everymen.sealUnit")}
+                  </span>
+                </div>
+              </div>
+
+              <h3
+                style={{
+                  fontFamily: POSTER,
+                  fontSize: size.titleSize,
+                  lineHeight: 0.96,
+                  letterSpacing: "0.01em",
+                  textTransform: "uppercase",
+                  margin: "0 0 var(--space-sm)",
+                  overflowWrap: "anywhere",
+                }}
+              >
+                {task.title}
+              </h3>
+
+              {task.description && (
+                <p
+                  className="card-description"
+                  style={{
+                    fontFamily: TYPED,
+                    lineHeight: 1.55,
+                    color: "var(--everymen-muted)",
+                    margin: "0 0 var(--space-md)",
+                  }}
+                >
+                  {task.description}
+                </p>
+              )}
+
+              <div aria-hidden="true" style={{ borderTop: "2px dashed var(--everymen-red)", margin: "0 0 var(--space-md)" }} />
+
+              {inProgressCount > 0 && (
+                <div style={{ display: "flex", alignItems: "center", gap: "var(--space-sm)" }}>
+                  <Gear size={15} fill="var(--everymen-red)" hub="var(--everymen-paper)" />
+                  <span style={{ fontFamily: TYPED, fontSize: "var(--text-lg)", color: "var(--everymen-muted)" }}>
+                    {i18n.t("feed:taskCard.inProgress", { count: inProgressCount })}
+                  </span>
+                </div>
+              )}
+            </Link>
+          </div>
+
+          {onSignup && (
+            <button
+              onClick={() => onSignup(task.id)}
               style={{
-                fontFamily: "var(--faction-everymen-card-font)",
-                lineHeight: 0.98,
+                position: "relative",
+                zIndex: 2,
+                cursor: "pointer",
+                width: "100%",
+                background: "var(--faction-everymen-bill-cta-bg)",
+                color: "var(--faction-everymen-bill-cta-ink)",
+                fontFamily: POSTER,
+                fontSize: "var(--text-xl)",
+                letterSpacing: "0.22em",
+                textTransform: "uppercase",
                 textAlign: "center",
-                letterSpacing: "0.01em",
-                overflowWrap: "anywhere",
+                padding: "var(--space-md) 0",
+                border: "none",
+                borderTop: `2px solid ${INK}`,
               }}
             >
-              {task.title}
-            </div>
-          </Link>
-          <RuleDiamond />
-          {task.description && (
-            <div
-              className="card-description"
-              style={{
-                lineHeight: 1.55,
-                textAlign: "center",
-                color: "var(--everymen-muted)",
-                display: "-webkit-box",
-                WebkitLineClamp: 3,
-                WebkitBoxOrient: "vertical",
-                overflow: "hidden",
-              }}
-            >
-              {task.description}
-            </div>
+              {i18n.t("feed:taskCard.everymen.signup")}
+            </button>
           )}
         </div>
-      </div>
-
-      {/* dispatch strip */}
-      <div
-        className="card-footer"
-        style={{
-          alignItems: "center",
-          justifyContent: "space-between",
-          gap: "var(--space-sm)",
-          padding: "0 var(--space-lg) var(--space-md)",
-        }}
-      >
-        <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-xs)" }}>
-          <LevelGem level={task.level_required} factionSlug="everymen" />
-          {/* Secondary points caption — the rubber-stamp PointsSeal is the score
-              display; this stays label-tier so it doesn't outshout the seal (§4). */}
-          <span
-            style={{
-              fontFamily: "var(--faction-everymen-card-font)",
-              fontSize: "var(--text-lg)",
-              color: "var(--everymen-red)",
-            }}
-          >
-            {i18n.t("feed:taskCard.everymen.points", { points: basePoints })}
-          </span>
-        </div>
-        <PointsSeal points={basePoints} />
-      </div>
-
-      {onSignup && (
-        <button
-          onClick={() => onSignup(task.id)}
-          style={{
-            fontFamily: "var(--font-body)",
-            fontSize: "var(--text-xs)",
-            textTransform: "uppercase",
-            letterSpacing: "0.14em",
-            padding: "var(--space-sm) var(--space-md)",
-            border: "none",
-            cursor: "pointer",
-            background: "var(--everymen-ink)",
-            color: "var(--everymen-paper)",
-            width: "100%",
-          }}
-        >
-          {i18n.t("feed:taskCard.everymen.signup")}
-        </button>
-      )}
+      </article>
     </div>
   );
 }
