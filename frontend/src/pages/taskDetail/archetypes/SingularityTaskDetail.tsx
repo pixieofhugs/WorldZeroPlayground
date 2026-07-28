@@ -18,7 +18,7 @@ import type { TaskDetailState } from "../useTaskDetail";
  * cursor blinking on the prompt. Share Tech Mono for everything — the faction
  * has one face and this surface uses it for chrome and copy alike.
  *
- * Ported from `.design-sync/task-details-v2/singularity-task-detail.jsx`. It
+ * Ported from the v2 design (#1034; project 0711d3a7, unvendored by #1039). It
  * replaces the 697-line "terminal printout" archetype wholesale: the boot-line
  * stat vocabulary (`stats.arrays` / `stats.credits` / `stats.sealed`), the
  * consensus block, the circuit corners, the fleur-de-lis "highest signal" crown

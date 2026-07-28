@@ -20,7 +20,7 @@ import type { TaskDetailState } from "../useTaskDetail";
 
 /**
  * UA (University of Asthmatics) task detail — THE VELLUM LEAF, page-sized
- * (design `.design-sync/task-details-v2/ua-task-detail.jsx`, #1036).
+ * (#1036; design project 0711d3a7, unvendored by #1039).
  *
  * The shared v2 anatomy (#1030) in UA's language: a sheet of mesa-sand vellum
  * with a lotus bleeding off the left edge, sienna rules running out from every
