@@ -3,9 +3,9 @@
  * legacy PraxisDetail.tsx so that per-faction archetypes can each own their
  * visual treatment without re-implementing the data plumbing.
  *
- * Behaviour preserved 1:1 from the original page (praxis+votes fetch, withdraw /
- * resubmit / flag / moderate handlers, admin-bar visibility, isOwner). The
- * returned {@link PraxisDetailState} is the stable contract every praxis-detail
+ * Behaviour preserved 1:1 from the original page (praxis+votes fetch, reopen /
+ * flag / moderate handlers, admin-bar visibility, isOwner). The returned
+ * {@link PraxisDetailState} is the stable contract every praxis-detail
  * archetype consumes. Voting still routes through <VoteUI factionSlug=…>, so
  * faction vote UIs keep working through any archetype.
  */
@@ -14,7 +14,6 @@ import { useTranslation } from "react-i18next";
 import {
   getPraxis,
   unsubmitPraxis,
-  submitPraxis,
   flagPraxis,
   kickMember,
   type PraxisOut,
@@ -49,7 +48,7 @@ export interface PraxisDetailState {
   // Authenticated viewer character (null when anonymous)
   user: CurrentUser | null;
 
-  // Withdraw / resubmit
+  // Reopen (unsubmit)
   withdrawing: boolean;
   showWithdrawConfirm: boolean;
   setShowWithdrawConfirm: (value: boolean) => void;
@@ -78,8 +77,17 @@ export interface PraxisDetailState {
 
   // Handlers
   handleModerate: (status: string, note?: string) => Promise<void>;
+  /**
+   * Reopen a published praxis — the one direction this page moves it.
+   *
+   * THERE IS NO `handleResubmit` TWIN (#1089). Detail used to carry a submit
+   * handler for the green CAST control, which was gated to `in_progress` /
+   * `pending`; ADR-0062 redirects both statuses to the composer, so the control
+   * and its handler were dead on arrival. Deleted rather than left dormant, for
+   * the same reason as the metatask-apply wiring below. Casting is the
+   * composer's, on both paths (#1071).
+   */
   handleWithdraw: () => Promise<void>;
-  handleResubmit: () => Promise<void>;
   handleFlag: () => Promise<void>;
   /** Remove another member from the collab (#959) — target is a character id. */
   handleKickMember: (memberId: number) => Promise<void>;
@@ -206,21 +214,6 @@ export function usePraxisDetail(idParam: string | undefined): PraxisDetailState 
     }
   };
 
-  const handleResubmit = async () => {
-    if (!praxis) return;
-    setWithdrawing(true);
-    setWithdrawError(null);
-    try {
-      const updated = await submitPraxis(praxis.id);
-      setPraxis(updated);
-      void refetch();
-    } catch (err) {
-      setWithdrawError(extractError(err, t("detail.errors.resubmit")));
-    } finally {
-      setWithdrawing(false);
-    }
-  };
-
   // Kick another member from the roster (#959). Any member may kick any other
   // (mirrors the backend guard); the confirm step lives in CollabRoster. A kick
   // resets the group to editing (ADR-0013), so the response carries the fresh
@@ -325,7 +318,6 @@ export function usePraxisDetail(idParam: string | undefined): PraxisDetailState 
 
     handleModerate,
     handleWithdraw,
-    handleResubmit,
     handleFlag,
     handleKickMember,
   };

@@ -126,28 +126,40 @@ describe("MemberByline join format (#387)", () => {
   });
 });
 
-// ─── Collab submit indicators (#521) ─────────────────────────────────────────
-// On an in-editing collab, each member reads "✓ submitted" or "drafting" from
-// has_submitted. A live (submitted) collab and solo/duel praxes stay clean.
+// ─── The #521 submit markers are gone (#1089) ────────────────────────────────
+// Each name used to carry "✓ submitted" or "drafting" from has_submitted, gated
+// to an in_progress / pending collab. ADR-0062 redirects both statuses to the
+// composer, so the marker could never paint on a page this byline renders on,
+// and #1089 removed it. The byline now does exactly one job: credit every
+// co-author (#387). Cast state belongs to the composer's roster (#1071).
+//
+// The statuses below are the ones that USED to mark, fed in deliberately, so a
+// reintroduced marker fails here rather than shipping a second answer to "who
+// still owes their part".
 
-describe("MemberByline submit state (#521)", () => {
+describe("MemberByline carries no cast markers (#521 → #1089)", () => {
   const ADA_SUBMITTED = member(1, "Ada", "2026-01-03T00:00:00Z", true);
   const BETH_DRAFTING = member(2, "Beth", "2026-01-01T00:00:00Z", false);
 
-  it("marks each member submitted / drafting from has_submitted while in editing", () => {
+  it("names only, on a collab still in editing", () => {
     expect(bylineText([ADA_SUBMITTED, BETH_DRAFTING], "in_progress")).toBe(
-      "Ada✓ submitted & Bethdrafting",
+      "Ada & Beth",
     );
   });
 
-  it("renders no submit markers once the collab is live (submitted)", () => {
+  it("names only, on a collab mid-consensus", () => {
+    expect(bylineText([ADA_SUBMITTED, BETH_DRAFTING], "pending")).toBe(
+      "Ada & Beth",
+    );
+  });
+
+  it("names only, on the published collab this page actually renders", () => {
     const text = bylineText([ADA_SUBMITTED, BETH_DRAFTING], "submitted");
-    expect(text).not.toContain("submitted");
+    expect(text).toBe("Ada & Beth");
     expect(text).not.toContain("drafting");
   });
 
-  it("leaves a solo (single-member) praxis unmarked even while in editing", () => {
-    const text = bylineText([ADA_SUBMITTED], "in_progress");
-    expect(text).toBe("Ada");
+  it("leaves a solo (single-member) praxis unmarked", () => {
+    expect(bylineText([ADA_SUBMITTED], "in_progress")).toBe("Ada");
   });
 });
