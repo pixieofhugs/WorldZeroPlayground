@@ -52,6 +52,32 @@ export type CollabCopyKey =
   | 'deleteAction'
   | 'deleteDescription'
   | 'deleteConfirm'
+  // The post-cast waiting surface (#1080, ADR-0059). Collab first, then the
+  // duel guise of the same surface.
+  | 'awaitingStatusMeta'
+  | 'awaitingHeading'
+  | 'awaitingBody'
+  | 'awaitingTaskLabel'
+  | 'awaitingWriteUpLabel'
+  | 'awaitingWriteUpEmpty'
+  | 'awaitingEditAction'
+  | 'awaitingEditDescription'
+  | 'awaitingEditConfirm'
+  | 'awaitingClockLabel'
+  | 'awaitingClockDays'
+  | 'awaitingClockHours'
+  | 'awaitingClockCaption'
+  | 'awaitingClockAria'
+  | 'awaitingClockLapsed'
+  | 'duelAwaitingHeading'
+  | 'duelAwaitingTaskLabel'
+  | 'duelAwaitingWriteUpLabel'
+  | 'duelSealedPlaceholder'
+  | 'duelElapsedLine'
+  | 'duelPendingLine'
+  | 'duelPillSealed'
+  | 'duelPillWriting'
+  | 'duelPullBackDescription'
 
 /**
  * Keys that are content to speak in the shared voice (#1074).
@@ -71,6 +97,16 @@ export type CollabCopyKey =
  * free — forfeit begins only at `settled`, ADR-0011 §Forfeit) and a faction
  * flourish here risks reading as a consequence. Shared voice until a faction
  * asks for its own.
+ *
+ * The whole `awaiting*` / `duelAwaiting*` block (#1080) joins them for the same
+ * reason, plus one of its own: the waiting surface is **one shared, token-themed
+ * screen** for every faction and both form factors (epic #1071, decision 7), the
+ * way `CollabSuccess` already is. Its lines are mechanics — what a countdown
+ * does, why a rival's entry is not readable, what re-opening your part costs
+ * everyone else — and a per-faction voice over a warning about destroying other
+ * people's cast is the same poor idea it was for `deleteConfirm`. A faction may
+ * still override any of them; per-faction frames for this surface are a
+ * follow-up wave, not a debt this one incurs.
  */
 export const SHARED_DEFAULT_COLLAB_KEYS: readonly CollabCopyKey[] = [
   'leaveDescription',
@@ -78,6 +114,30 @@ export const SHARED_DEFAULT_COLLAB_KEYS: readonly CollabCopyKey[] = [
   'deleteDescription',
   'deleteConfirm',
   'duelPullBackAction',
+  'awaitingStatusMeta',
+  'awaitingHeading',
+  'awaitingBody',
+  'awaitingTaskLabel',
+  'awaitingWriteUpLabel',
+  'awaitingWriteUpEmpty',
+  'awaitingEditAction',
+  'awaitingEditDescription',
+  'awaitingEditConfirm',
+  'awaitingClockLabel',
+  'awaitingClockDays',
+  'awaitingClockHours',
+  'awaitingClockCaption',
+  'awaitingClockAria',
+  'awaitingClockLapsed',
+  'duelAwaitingHeading',
+  'duelAwaitingTaskLabel',
+  'duelAwaitingWriteUpLabel',
+  'duelSealedPlaceholder',
+  'duelElapsedLine',
+  'duelPendingLine',
+  'duelPillSealed',
+  'duelPillWriting',
+  'duelPullBackDescription',
 ]
 
 /**

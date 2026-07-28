@@ -53,9 +53,80 @@ export const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50 MB
 
 export type SaveStatus = "idle" | "saving" | "saved" | "error";
 
+/**
+ * Which face the composer is wearing (ADR-0059).
+ *
+ *  - `composing` — the faction archetype: the editor proper.
+ *  - `waiting`   — the shared waiting surface: my part is filed and the praxis
+ *    is held open on somebody else.
+ *
+ * Only multi-party praxes ever reach `waiting`. A solo cast has nobody to wait
+ * for and keeps the redirect it always had.
+ */
+export type EditPraxisPhase = "composing" | "waiting";
+
+/**
+ * The phase, derived from data alone — no transient flag (ADR-0059).
+ *
+ * Deriving rather than latching means re-entry behaves the same as the cast
+ * itself: re-opening `/edit` on a part you already filed shows the waiting
+ * surface, which is the only place that offers a way back into your own text.
+ * Latching a boolean at publish time would have left that re-entry on the
+ * locked composer — the dead end #1077 patched with a single footer button.
+ *
+ * The four `composing` fall-throughs are deliberate, not defaults:
+ *  - **The holdout case.** Others cast and I have not: `deriveCollabGate` calls
+ *    that `holdout`, and it keeps the normal composer, because what it needs is
+ *    an editor, not a status page (#1080).
+ *  - **A settled/resolved duel.** Stage 3 belongs to `/praxes/:id` and the
+ *    twelve `*DuelRail` skins; forfeit begins at `settled` (ADR-0011 §Forfeit).
+ *  - **A forfeited duel.** Same: the outcome is the read page's to tell.
+ *  - **A moderated praxis.** Hidden/failed is the archetype's own locked state,
+ *    and a cheerful "your part is submitted" over it would be a lie.
+ *
+ * `duel == null` (the detail fetch is still in flight) also reads as
+ * `composing`: the surface names the rival, so it renders nothing at all rather
+ * than a panel with a hole where the opponent goes.
+ */
+export function deriveEditPraxisPhase(
+  praxis: PraxisOut | null,
+  duel: DuelDetailOut | null,
+  currentCharacterId: number | null | undefined,
+): EditPraxisPhase {
+  if (!praxis) return "composing";
+  if (
+    praxis.moderation_status === "hidden" ||
+    praxis.moderation_status === "failed"
+  ) {
+    return "composing";
+  }
+  // A duel side is `type='solo'` + a duel_id (ADR-0011), so it must be tested
+  // before the collab branch and never by `type`.
+  if (praxis.duel_id != null) {
+    if (praxis.status !== "submitted") return "composing";
+    if (duel == null) return "composing";
+    if (duel.forfeited_by_character_id != null) return "composing";
+    return duel.status === "active" || duel.status === "pending"
+      ? "waiting"
+      : "composing";
+  }
+  if (praxis.type === "collab" && praxis.members.length > 1) {
+    return deriveCollabGate(praxis.members, currentCharacterId).state ===
+      "waiting"
+      ? "waiting"
+      : "composing";
+  }
+  return "composing";
+}
+
 export interface EditPraxisState {
   // Routing / loading
   loading: boolean;
+  /**
+   * Which face the composer wears (ADR-0059). `EditPraxis.tsx` renders the
+   * shared waiting surface in place of the faction archetype at `waiting`.
+   */
+  phase: EditPraxisPhase;
   praxis: PraxisOut | null;
   task: TaskOut | null;
   error: string;
@@ -139,6 +210,16 @@ export interface EditPraxisState {
   publish: () => Promise<void>;
   /** Pull my own cast back on a pending collab (#591). */
   pullBack: () => Promise<void>;
+  /**
+   * The waiting surface's authoring re-entry (ADR-0059) — "edit my write-up".
+   *
+   * Routes through `pullBack`, never a PUT: on a collab any praxis PUT hard-
+   * resets every member's `has_submitted` (ADR-0012), whereas unsubmit re-opens
+   * only the caller's membership (#590). On a collab it asks first, because the
+   * edit this exists for *will* cancel the pending-publish window the surface
+   * was showing a countdown for.
+   */
+  reopenForEdit: () => Promise<void>;
   /**
    * Drop my own membership from a collab without the bank-full drop-to-accept
    * modal (#958). Open to every member, the creator included — a collab is
@@ -561,6 +642,7 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
       await persistEdits(praxisId);
       await submitPraxis(praxisId);
       let refreshed: PraxisOut | null = null;
+      let refreshedDuel: DuelDetailOut | null = duel;
       try {
         await refetch();
         // Reload the praxis too: `refetch` is the AUTH refetch (points/level),
@@ -568,17 +650,37 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
         // what decides between the success screen and the redirect below.
         refreshed = await getPraxis(praxisId);
         setPraxis(refreshed);
+        // And reload the duel, because my own cast can change its status: a
+        // cast against a rival who has already cast SETTLES the duel
+        // (`maybe_settle_duel`). The praxis reload alone can't see that — the
+        // `duel_id` is unchanged, so the detail effect never re-fires — and a
+        // stale `active` would hold the composer on a duel that is over and
+        // belongs to the read page (ADR-0059, epic decision 2).
+        if (refreshed.duel_id != null) {
+          refreshedDuel = await getDuelDetail(refreshed.duel_id);
+          setDuel(refreshedDuel);
+        }
       } catch {
         // best-effort; praxis was submitted successfully
       }
       // If my cast is the one that closed the gate on a multi-member collab,
-      // hold the composer and show the success beat (#591). Every other case —
-      // solo, duel, or a cast that still leaves co-authors weaving — keeps the
-      // existing redirect.
+      // hold the composer and show the success beat (#591).
       if (refreshed) {
         const gate = deriveCollabGate(refreshed.members, user?.character?.id);
         if (gate.memberCount > 1 && gate.state === "published") {
           setCollabSuccess(true);
+          return;
+        }
+        // Otherwise a multi-party cast holds the composer on the waiting
+        // surface (ADR-0059) instead of dropping the player on the public read
+        // view, which offers no authoring exit. Nothing to set: the phase is
+        // derived from the praxis + duel just refreshed above, so returning
+        // early is the whole hold. **Solo keeps the redirect** — there is
+        // nobody to wait for, and `deriveEditPraxisPhase` says so.
+        if (
+          deriveEditPraxisPhase(refreshed, refreshedDuel, user?.character?.id) ===
+          "waiting"
+        ) {
           return;
         }
       }
@@ -588,7 +690,7 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
     } finally {
       setSubmitting(false);
     }
-  }, [idParam, title, persistEdits, navigate, refetch, user?.character?.id]);
+  }, [idParam, title, persistEdits, navigate, refetch, user?.character?.id, duel]);
 
   // Pull my own part back out of a pending collab (#591) — clears my cast so the
   // composer unlocks for editing. Backend re-opens only my membership (#590).
@@ -613,6 +715,29 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
       setSubmitting(false);
     }
   }, [idParam, refetch]);
+
+  // The waiting surface's "edit my write-up" (ADR-0059). Re-entry is NOT a PUT:
+  // on a collab any praxis PUT hard-resets every member's `has_submitted`
+  // (ADR-0012 — "an edit means we're not done"), so the way back into your own
+  // text is `pullBack`, which re-opens only the caller's membership (#590).
+  //
+  // On a collab it asks first. Pulling back is itself scoped to me, but the edit
+  // it exists for is not: `cancel_pending_publish_on_edit` cancels the
+  // pending-publish window and clears everyone's cast, silently resetting the
+  // very countdown the surface was drawing. A player who is told that after the
+  // fact was not told. A duel side needs no confirm — before the duel settles,
+  // unsubmitting is a free neutral reopen with no forfeit (ADR-0011 §Forfeit),
+  // which is exactly what the seal dialog promised on the way in.
+  const reopenForEdit = useCallback(async () => {
+    if (!praxis) return;
+    if (praxis.type === "collab" && praxis.members.length > 1) {
+      const confirmed = window.confirm(
+        collabCopy(praxis.task_faction_slug, "awaitingEditConfirm"),
+      );
+      if (!confirmed) return;
+    }
+    await pullBack();
+  }, [praxis, pullBack]);
 
   // Drop my own membership from a collab (#958). Distinct from `cancel` (deletes
   // the whole praxis, everyone's part with it) and `pullBack` (retract my cast but
@@ -1074,8 +1199,13 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
 
   const wordCount = body.trim() ? body.trim().split(/\s+/).length : 0;
 
+  // Derived every render from the praxis + duel already in hand (ADR-0059), so
+  // a cast, a pull-back and a cold re-entry all land on the same answer.
+  const phase = deriveEditPraxisPhase(praxis, duel, user?.character?.id);
+
   return {
     loading,
+    phase,
     praxis,
     task,
     error,
@@ -1133,6 +1263,7 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
     submitting,
     publish,
     pullBack,
+    reopenForEdit,
     leaveCollab,
     cancel,
     collabSuccess,

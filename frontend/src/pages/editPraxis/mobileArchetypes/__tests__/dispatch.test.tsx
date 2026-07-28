@@ -69,6 +69,7 @@ const praxis = {
 function baseState(slug: string | null): EditPraxisState {
   return {
     loading: false,
+    phase: "composing",
     praxis,
     task: task(slug),
     error: "",
@@ -116,6 +117,7 @@ function baseState(slug: string | null): EditPraxisState {
     submitting: false,
     publish: async () => {},
     pullBack: async () => {},
+    reopenForEdit: async () => {},
     leaveCollab: async () => {},
     collabSuccess: false,
     continueFromCollabSuccess: () => {},

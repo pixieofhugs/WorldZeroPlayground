@@ -70,6 +70,7 @@ const task: TaskOut = {
 function stateWith(publish: () => Promise<void>): EditPraxisState {
   return {
     loading: false,
+    phase: "composing",
     praxis,
     task,
     error: "",
@@ -117,6 +118,7 @@ function stateWith(publish: () => Promise<void>): EditPraxisState {
     submitting: false,
     publish,
     pullBack: async () => {},
+    reopenForEdit: async () => {},
     leaveCollab: async () => {},
     collabSuccess: false,
     continueFromCollabSuccess: () => {},
