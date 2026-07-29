@@ -69,6 +69,10 @@
  * not re-narrated here · `CommentThread` via `PraxisDetailComments` with the
  * layout's own heading, so one list carries one heading (the #1029 trap).
  *
+ * The duel card and the comment thread are LAYOUT SLOTS of this page rather than
+ * chrome the dispatcher appends (ADR-0064) — which is why a skin mounts them at
+ * all, and why both take this file's panel and section head.
+ *
  * The score ARITHMETIC is not built either: the design invents its own, and
  * `scoreBreakdown()` (ADR-0053) is the single authority the mounted stamp reads.
  */
