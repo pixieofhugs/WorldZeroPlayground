@@ -91,6 +91,7 @@ const WowDuelSealConfirm = lazyArchetype(() => import('../components/duel/WowDue
 const WowMobileDuelSealConfirm = lazyArchetype(() => import('../components/duel/WowMobileDuelSealConfirm'))
 const WowFieldDesk = lazyArchetype(() => import('../pages/fieldDesk/mobileArchetypes/WowFieldDesk'))
 const WowTaskDetail = lazyArchetype(() => import('../pages/taskDetail/archetypes/WowTaskDetail'))
+const WowPraxisDetail = lazyArchetype(() => import('../pages/praxisDetail/archetypes/WowPraxisDetail'))
 const WowMobileFactionPage = lazyArchetype(() => import('../pages/factionDetail/mobileArchetypes/WowFactionPage'))
 const WowMobileProfile = lazyArchetype(() => import('../pages/characterProfile/mobileArchetypes/WowProfile'))
 
@@ -104,6 +105,12 @@ export const WOW_MANIFEST: FactionManifest = {
   // this row a WOW task rendered the na dossier on desktop (one of #951's four
   // bullets; praxisDetail, factionCard and factionBody are still open).
   taskDetail: () => WowTaskDetail,
+  // #1121 — the chronicle entry: WOW's dress over the ONE shared praxis-detail
+  // page (ADR-0061). The second of #951's four bullets to close; `factionCard`
+  // and `factionBody` are still unclaimed. One responsive component, no mobile
+  // twin: #1089 deleted the `mobilePraxisDetail` surface outright on ADR-0056 /
+  // ADR-0058 terms, so this archetype serves both form factors.
+  praxisDetail: () => WowPraxisDetail,
   comment: () => WowComment,
   feedFrame: () => WowFeedFrame,
   praxisCard: () => WowPraxisCard,

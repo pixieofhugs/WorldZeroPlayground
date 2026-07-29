@@ -197,6 +197,14 @@
       "metatasks": "Charms added",
       "duel": "A friendly duel",
       "comments": "Comments"
+    },
+    "wow": {
+      "proof": "The proof",
+      "members": "Sworn together by",
+      "metatasks": "Charms claimed",
+      "vote": "Your cheer",
+      "voters": "The court says",
+      "comments": "The gallery"
     }
   },
   "comments": {
