@@ -20,11 +20,13 @@
  * ## The contract this dresses (verified in code, #1129 — not re-derived)
  *
  * - Desktop: main column + a **330px** aside, comments spanning beneath both.
+ *   The duel panel (aside) and the comments region are the page's own slots,
+ *   not dispatcher mounts (ADR-0064).
  * - Mobile: one stacked column, with score and duel moved above the proof. ONE
  *   responsive component — `useFormFactor()` internally, no mobile twin
- *   (ADR-0056/0058; `mobilePraxisDetail` was retired outright by #1089). Score
- *   and duel are built ONCE and moved by where they are mounted, never drawn
- *   twice and hidden.
+ *   (ADR-0063; `mobilePraxisDetail` was retired outright by #1089). Score and
+ *   duel are built ONCE and moved by where they are mounted, never drawn twice
+ *   and hidden.
  * - **The crown renders at both form factors.** It is never form-factor gated —
  *   it comes from the shared `PraxisStatusBanners`, keyed on `is_top_for_task`.
  * - **The report card and the steward bar are NOT dressed.** `PraxisFlagBlock`
