@@ -12,10 +12,13 @@
  * imports — and its first consumer, the `avatar`: the crest set in a gilt rope
  * ring with the rank pill riding the hem.
  *
- * #895 adds THE LISTS — the duel seal and the duel rail, on both form factors:
- * WOW's four duel surfaces, dressed as a tourney joust (gold-framed enclosure,
- * checkered barrier, the opponent held as a rosette ring, a ribbon for the
- * loser). The shared vocabulary lives in `components/duel/wowLists.tsx`.
+ * #895 adds THE LISTS — the duel seal on both form factors, dressed as a tourney
+ * joust (gold-framed enclosure, checkered barrier, the opponent held as a
+ * rosette ring, a ribbon for the loser). The shared vocabulary lives in
+ * `components/duel/wowLists.tsx`. It shipped as FOUR surfaces; the two rail
+ * skins went with the `duelRail` / `mobileDuelRail` surfaces themselves in
+ * #1090, when the duel became a card inside praxis detail rather than a
+ * dispatched surface of its own.
  *
  * #835 adds the DESKTOP edit-praxis composer — "The Squire's Writ", the kit's
  * one form surface — and #836 its phone twin: the same writ dress on the settled
@@ -117,7 +120,8 @@ export const WOW_MANIFEST: FactionManifest = {
   profileBody: () => WowProfileBody,
   factionSelectCard: () => WOWSelectCard,
 
-  // #895 — the lists: the duel seal and the praxis rail, both form factors.
+  // #895 — the lists: the duel seal, both form factors. Its rail skins went with
+  // the `duelRail` / `mobileDuelRail` SURFACES in #1090, not with WOW.
   duelSeal: () => WowDuelSealConfirm,
   mobileDuelSeal: () => WowMobileDuelSealConfirm,
 
