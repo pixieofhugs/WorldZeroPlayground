@@ -37,9 +37,10 @@ import FeedCardInvitationLetter from './FeedCardInvitationLetter'
  * exactly backwards. It keeps its own neutral always-dark chrome, is NOT wrapped
  * in a chassis, and gains only the ✕.
  *
- * `comment_mention` is #1196's job. It reaches this router already: give it a
- * body in `normalizeFeedItem` and it inherits the chassis, the kicker and the
- * archive with no change here.
+ * `comment_mention` was the seam's first customer and its proof: #1196 gave it a
+ * body in `normalizeFeedItem` and it picked up the chassis, the kicker, the
+ * timestamp, the ✕ and the swipe with NOT ONE LINE changed here. All fifteen
+ * backend types now render.
  */
 
 /** The three interactive companions — payload BODIES inside the chassis since
@@ -65,8 +66,10 @@ export default function FeedCardRouter({ item, archivedView = false, onArchiveCh
   const Companion = COMPANION_BODIES[item.type]
   const isEraAnnouncement = item.type === 'era_announcement'
 
-  // A type with no body yet (today: comment_mention, until #1196) renders
-  // nothing rather than an empty chassis.
+  // A type with no body renders nothing rather than an empty chassis. Every one
+  // of the fifteen the backend emits has a body as of #1196, so this guards a
+  // type added to the backend registry ahead of its frontend case — the exact
+  // fault that hid every @mention ever sent.
   if (!row && !Companion && !isEraAnnouncement) return null
 
   // "Still waiting" only in the archive, and only where there is something to
