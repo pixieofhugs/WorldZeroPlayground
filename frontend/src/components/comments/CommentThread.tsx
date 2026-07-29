@@ -128,9 +128,11 @@ export function DefaultComment(props: CommentProps) {
             // slugs reach this voice (every themed faction has one of its own).
             bg="var(--faction-default-composer-field)"
             text={factionCssVar(slug, 'card-text')}
+            // The shared string in the na sheet's own caption voice — an
+            // OVERRIDE of ComposerControls' neutral default, not a new hint.
             hint={
               <span style={{ ...CAPTION, color: factionCssVar(slug, 'card-muted') }}>
-                {t('comments.na.mentionHint')}
+                {t('comments.mentionHint')}
               </span>
             }
           />

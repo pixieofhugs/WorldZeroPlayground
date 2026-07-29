@@ -198,6 +198,7 @@
     "loading": "Loading…",
     "loadError": "Could not load comments.",
     "composerPlaceholder": "Say something worth keeping…",
+    "mentionHint": "@ to mention",
     "post": "Post comment",
     "posting": "…",
     "edited": "edited",
@@ -211,9 +212,6 @@
     "charCount": "{{count}}/{{max}}",
     "editError": "Could not save the edit.",
     "withdrawError": "Could not withdraw the comment.",
-    "na": {
-      "mentionHint": "@ to mention"
-    },
     "ua": {
       "house": "University of Asthmatics",
       "edited": "edited",
