@@ -351,6 +351,28 @@ describe("Everymen praxis detail — the state axes", () => {
     expect(text, "the domain noun, not the design's crew").toContain("Members");
   });
 
+  it("draws the roster off the payload, not the design's invented column", () => {
+    // `PraxisMemberOut` carries no per-member contribution label, so the
+    // design's "inventory" / "shelving" / "the hours" third column is invented
+    // data (owner ruling on #1123). `CollabRoster` fills that slot with the fact
+    // the payload DOES have: whether each member has filed their part.
+    const collab = state({
+      praxis: {
+        ...PRAXIS,
+        type: "collab",
+        members: [MEMBER, { ...CO_MEMBER, has_submitted: false }],
+      },
+    });
+    // The words are `collabCopy`'s, which the Everymen already override for
+    // every roster on the site — not copy this page mints.
+    const { text } = render(collab);
+    expect(text, "filed").toContain("signed off");
+    expect(text, "not filed").toContain("still on the clock");
+    for (const invented of ["inventory", "shelving", "the hours"]) {
+      expect(text, `invented column not built: ${invented}`).not.toContain(invented);
+    }
+  });
+
   it("shows owner controls to a member and nothing to a visitor", () => {
     expect(render(state()).html, "a visitor gets no edit link").not.toContain(
       'href="/praxes/1/edit"',

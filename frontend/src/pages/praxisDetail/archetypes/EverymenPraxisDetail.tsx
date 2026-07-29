@@ -740,6 +740,11 @@ export default function EverymenPraxisDetail({
     </section>
   );
 
+  // The design draws a third roster column of per-member contribution labels —
+  // "inventory" / "shelving" / "the hours". `PraxisMemberOut` carries no such
+  // field, so that column is invented data and is not built (owner ruling on
+  // #1123). `CollabRoster` already prints the ruled replacement in that slot:
+  // each member's FILED / NOT FILED pill, off `has_submitted`.
   const crew = isCollab && !rosterInBanners && (
     <section
       style={{ marginBottom: desktop ? "var(--space-2xl)" : "var(--space-xl)" }}

@@ -59,13 +59,13 @@ const CORE_SIX = ['coven', 'snide', 'ephemerists', 'singularity', 'everymen', 'u
 // made praxis detail ONE shared page and #1089 de-registered all six CORE_SIX
 // skins, so for a while every slug — wow and albescent included — fell through
 // to `DefaultPraxisDetail`; the Unaffiliated page IS the shared page. Epic
-// #1085's designs re-register one at a time as DRESS over that same layout, and
-// `everymen` (#1123) is the first, so the row returns holding a single slug.
-// Each sibling skin appends its own slug as it lands — a slug still absent here
-// is a skin not yet built, not a decision that it renders the Default forever.
+// #1085's designs re-register one at a time as DRESS over that same layout, so
+// the row is back but short: `coven` (#1117) and `everymen` (#1123) so far. Each
+// sibling skin appends its own slug as it lands — a slug still absent here is a
+// skin not yet built, not a decision that it renders the Default forever.
 const BESPOKE: Record<string, string[]> = {
   taskDetail: [...CORE_SIX, 'wow', 'albescent'],
-  praxisDetail: ['everymen'],
+  praxisDetail: ['coven', 'everymen'],
   mobileFactionPage: [...CORE_SIX, 'wow'],
   mobileFieldDesk: [...CORE_SIX, 'wow'],
   mobileEditPraxis: [...CORE_SIX, 'wow'],
