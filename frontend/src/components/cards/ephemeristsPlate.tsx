@@ -218,7 +218,12 @@ export function WingedDisc({ width, height, className }: {
  */
 export function Cornice({ glow }: { glow?: boolean }) {
   return (
-    <div aria-hidden="true" style={{ position: "relative", zIndex: 3, background: BAND }}>
+    // `overflow: hidden` is load-bearing when `glow` is on: the bloom drifts on
+    // a translate, so an unclipped band would wash gold past the sheet's edges.
+    <div
+      aria-hidden="true"
+      style={{ position: "relative", zIndex: 3, overflow: "hidden", background: BAND }}
+    >
       {glow && <span className="eph-cornice-glow" />}
       {/* eslint-disable-next-line local/no-raw-style-values -- ornament: the lead between cornice flutes; rounding it to a rung reflows the fluting. */}
       <div style={{ position: "relative", display: "flex", height: 7, alignItems: "flex-end", gap: 3, padding: "0 var(--space-sm)", overflow: "hidden" }}>

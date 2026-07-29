@@ -122,7 +122,6 @@ import {
 import { DuelCard } from "../DuelCard";
 import { useFormFactor } from "../../../hooks/useFormFactor";
 import { formatTimestamp } from "../../../utils/dates";
-import { mediaUrl } from "../../../utils/media";
 import { factionName } from "../../../utils/factions";
 import {
   PraxisAdminBar,
@@ -138,14 +137,6 @@ import type { PraxisDetailState } from "../usePraxisDetail";
 /** The page cap the epic settled on, and the aside track. Geometry. */
 const PAGE_WIDTH = 1200;
 const ASIDE_WIDTH = 330;
-
-/**
- * The octagon the {@link Octagon} path draws, as a clip for a raster avatar.
- * The two must agree — a circular photo inside a stepped frame is the one place
- * this skin would read as a stock component wearing a costume.
- */
-const OCTAGON_CLIP =
-  "polygon(30% 4%, 70% 4%, 96% 30%, 96% 70%, 70% 96%, 30% 96%, 4% 70%, 4% 30%)";
 
 interface SizeSet {
   /** Masthead band height, and the width its registers are drawn to fill. */
@@ -204,18 +195,11 @@ function initialsOf(name: string): string {
 }
 
 /**
- * One author, struck in a stepped octagon cartouche. Collab bylines set these in
- * a row, so a shared record reads as shared before a single name is parsed.
+ * One author's monogram, struck in a stepped octagon cartouche. Collab bylines
+ * set these in a row, so a shared record reads as shared before a single name is
+ * parsed.
  */
-function AuthorOctagon({
-  name,
-  avatarUrl,
-  size,
-}: {
-  name: string
-  avatarUrl?: string | null
-  size: number
-}) {
+function AuthorOctagon({ name, size }: { name: string; size: number }) {
   return (
     <span
       aria-hidden
@@ -237,37 +221,22 @@ function AuthorOctagon({
         <Octagon inset={0} stroke={BRASS} width={2} fill={DISC} />
         <Octagon inset={7} stroke={BRASS_LIGHT} width={0.8} />
       </svg>
-      {avatarUrl ? (
-        <img
-          src={mediaUrl(avatarUrl)}
-          alt=""
-          style={{
-            position: "absolute",
-            inset: 0,
-            width: "100%",
-            height: "100%",
-            objectFit: "cover",
-            clipPath: OCTAGON_CLIP,
-          }}
-        />
-      ) : (
-        <span
-          style={{
-            position: "absolute",
-            inset: 0,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            fontFamily: CAPS,
-            fontWeight: 500,
-            fontSize: "var(--text-md)",
-            letterSpacing: "0.08em",
-            color: INK,
-          }}
-        >
-          {initialsOf(name)}
-        </span>
-      )}
+      <span
+        style={{
+          position: "absolute",
+          inset: 0,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          fontFamily: CAPS,
+          fontWeight: 500,
+          fontSize: "var(--text-md)",
+          letterSpacing: "0.08em",
+          color: INK,
+        }}
+      >
+        {initialsOf(name)}
+      </span>
     </span>
   );
 }
@@ -285,24 +254,17 @@ export default function EphemeristsPraxisDetail({ state }: { state: PraxisDetail
   const isCollab = members.length > 1;
 
   // A payload with no member rows still credits its creator, so the byline is
-  // never empty and the author is always reachable from it.
+  // never empty and the author is always reachable from it. Initials only:
+  // `PraxisOut` carries no avatar for either a member or the creator (that field
+  // is the CARD payload's, `PraxisCardOut.created_by_avatar_url`), and a
+  // monogram cut into a cartouche is the plate's own answer anyway.
   const authors =
     members.length > 0
       ? members.map((member) => ({
           id: member.character_id,
           name: member.character_display_name || `#${member.character_id}`,
-          avatarUrl:
-            member.character_id === praxis.created_by_id
-              ? praxis.created_by_avatar_url
-              : null,
         }))
-      : [
-          {
-            id: praxis.created_by_id,
-            name: praxis.created_by_display_name,
-            avatarUrl: praxis.created_by_avatar_url,
-          },
-        ];
+      : [{ id: praxis.created_by_id, name: praxis.created_by_display_name }];
 
   /** The page-ground label voice. `-quiet`: the caption gold is measured on the
    *  PLATE and does not clear on the darker page this surface introduces. */
@@ -544,7 +506,7 @@ export default function EphemeristsPraxisDetail({ state }: { state: PraxisDetail
         <span style={{ display: "flex", alignItems: "center", gap: "var(--space-sm)" }}>
           {authors.map((author) => (
             <Link key={author.id} to={`/characters/${author.id}`} style={{ display: "block" }}>
-              <AuthorOctagon name={author.name} avatarUrl={author.avatarUrl} size={size.disc} />
+              <AuthorOctagon name={author.name} size={size.disc} />
             </Link>
           ))}
         </span>
@@ -810,6 +772,10 @@ export default function EphemeristsPraxisDetail({ state }: { state: PraxisDetail
     </section>
   );
 
+  // No status guard on the roster. `DefaultPraxisDetail` still complements a
+  // banner roster that #1089 deleted — the shared banners only drew one for
+  // `in_progress` / `pending`, both of which ADR-0062 redirects to the composer,
+  // so the condition is dead on a page that renders at all. One roster, always.
   const crew = isCollab && (
     <section style={{ marginBottom: size.sectionGap }}>
       {sectionHead(t("detail.sections.members"))}
