@@ -116,7 +116,7 @@
       "level": "Level {{level}}",
       "points": "{{points}} pts"
     },
-    "filed": "Filed {{date}}",
+    "filed": "Submitted {{date}}",
     "vote": {
       "heading": "Cast your vote",
       "prompt": "How much did this move you?"
