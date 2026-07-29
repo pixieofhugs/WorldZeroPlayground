@@ -55,15 +55,17 @@ const CORE_SIX = ['coven', 'snide', 'ephemerists', 'singularity', 'everymen', 'u
 // albescent: its single `taskDetail` registration now covers the phone too, and
 // it never needs a second row it would have had to stay out of.
 //
-// THE DESKTOP `praxisDetail` ROW IS ABSENT TOO, which is the newest decision
-// here and the one most likely to look like an omission. ADR-0061 made praxis
-// detail ONE shared page and #1089 de-registered all six CORE_SIX skins, so
-// every slug — wow and albescent included — falls through to
-// `DefaultPraxisDetail`; the Unaffiliated page IS the shared page. The seven
-// remaining designs (epic #1085) re-register here one at a time as dress over
-// the same layout, and the row comes back with the first of them.
+// THE DESKTOP `praxisDetail` ROW IS BACK, and it is deliberately short. ADR-0061
+// made praxis detail ONE shared page and #1089 de-registered all six CORE_SIX
+// skins, so for a while every slug — wow and albescent included — fell through
+// to `DefaultPraxisDetail`; the Unaffiliated page IS the shared page. Epic
+// #1085's designs re-register one at a time as DRESS over that same layout, and
+// `everymen` (#1123) is the first, so the row returns holding a single slug.
+// Each sibling skin appends its own slug as it lands — a slug still absent here
+// is a skin not yet built, not a decision that it renders the Default forever.
 const BESPOKE: Record<string, string[]> = {
   taskDetail: [...CORE_SIX, 'wow', 'albescent'],
+  praxisDetail: ['everymen'],
   mobileFactionPage: [...CORE_SIX, 'wow'],
   mobileFieldDesk: [...CORE_SIX, 'wow'],
   mobileEditPraxis: [...CORE_SIX, 'wow'],
