@@ -46,16 +46,26 @@ const CORE_SIX = ['coven', 'snide', 'ephemerists', 'singularity', 'everymen', 'u
 // registration freeze was reversed with the praxis-detail epic (#1151), which
 // changes whether a row may exist, not what shape it takes.
 //
-// THREE MOBILE ROWS ARE ABSENT BY DECISION, not by oversight, and all three used
+// FOUR MOBILE ROWS ARE ABSENT BY DECISION, not by oversight, and all four used
 // to exist. There is no mobile task-card row (ADR-0056, surface retired by
-// #1044), no mobile task-detail row (ADR-0058, #1068) and no mobile
-// praxis-detail row (ADR-0061 + epic #1085, #1089): each verdict accepted one
-// responsive component per faction, so task cards partition on `taskCard` alone,
-// task detail on `taskDetail` alone and praxis detail on `praxisDetail` alone,
-// for both form factors. Re-adding any of the three means re-adding the surface,
+// #1044), no mobile task-detail row (ADR-0058, #1068), no mobile praxis-detail
+// row (ADR-0061 + epic #1085, #1089) and, since #1181, no `mobileEditPraxis` row
+// (ADR-0065): each verdict accepted one responsive component per faction, so
+// task cards partition on `taskCard` alone, task detail on `taskDetail` alone,
+// praxis detail on `praxisDetail` alone and the composer on `editPraxis` alone,
+// for both form factors. Re-adding any of the four means re-adding the surface,
 // which those ADRs call drift rather than a rollback. Note what that buys
 // albescent: its single `taskDetail` registration now covers the phone too, and
 // it never needs a second row it would have had to stay out of.
+//
+// THE `editPraxis` ROW IS NEW (#1181) and, like `praxisDetail` above, it grows
+// no further — all seven skins are already registered and epic #1179 rebuilds
+// them in place rather than adding or dropping registrations. It exists because
+// retiring `mobileEditPraxis` also retired the only test that proved composer
+// dispatch at all (`mobileArchetypes/__tests__/dispatch.test.tsx`), and the
+// composer should not be the one big surface with no row here. `albescent` and
+// `na` are absent deliberately: ADR-0065 §4 says Albescent registers nothing on
+// this surface and falls through to `DefaultEditPraxis`, WHICH IS the na kit.
 //
 // THE `praxisDetail` ROW IS BACK, and it grows one slug per landed skin. ADR-0061
 // made praxis detail ONE shared page and #1089 de-registered all six CORE_SIX
@@ -78,9 +88,9 @@ const CORE_SIX = ['coven', 'snide', 'ephemerists', 'singularity', 'everymen', 'u
 const BESPOKE: Record<string, string[]> = {
   taskDetail: [...CORE_SIX, 'wow', 'albescent'],
   praxisDetail: ['coven', 'ephemerists', 'singularity', 'albescent', 'everymen', 'snide', 'wow', 'ua'],
+  editPraxis: [...CORE_SIX, 'wow'],
   mobileFactionPage: [...CORE_SIX, 'wow'],
   mobileFieldDesk: [...CORE_SIX, 'wow'],
-  mobileEditPraxis: [...CORE_SIX, 'wow'],
   mobilePraxisCard: [...CORE_SIX, 'wow', 'albescent'],
 }
 

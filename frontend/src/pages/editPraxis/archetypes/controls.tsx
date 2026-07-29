@@ -31,6 +31,18 @@ export interface InviteSearchSkin {
   pendingBg?: string;
   pendingColor?: string;
   placeholder?: string;
+  /* ── Widened for the v2 layout (#1181) ──
+   * The mode block is the one region whose contents a skin cannot reach at all
+   * through the fields above: the roster, the dropdown rows and the leave link
+   * are drawn inside this control, and before these three every faction that
+   * wanted them dressed would have had to fork it. Additive and optional, so
+   * every existing caller is unchanged. */
+  /** The block wrapping the chips/roster, the search box and the leave link. */
+  containerStyle?: CSSProperties;
+  /** Each row inside the invite/challenge dropdown. */
+  dropdownItemStyle?: CSSProperties;
+  /** The "leave collab" link at the foot of the block. */
+  leaveStyle?: CSSProperties;
 }
 
 export function InviteSearch({
@@ -64,7 +76,7 @@ export function InviteSearch({
     praxis.type === "collab" &&
     praxis.members.some((member) => member.character_id === state.currentCharacterId);
   return (
-    <div>
+    <div style={skin.containerStyle}>
       <div
         style={{ display: "flex", gap: "var(--space-sm)", flexWrap: "wrap", marginBottom: "var(--space-sm)" }}
       >
@@ -268,6 +280,7 @@ export function InviteSearch({
                   fontFamily: skin.fontFamily,
                   fontSize: "var(--text-lg)",
                   color: skin.inputColor ?? "inherit",
+                  ...skin.dropdownItemStyle,
                 }}
               >
                 <span
@@ -308,6 +321,7 @@ export function InviteSearch({
             padding: 0,
             cursor: "pointer",
             color: "var(--color-text-tertiary)",
+            ...skin.leaveStyle,
           }}
         >
           {t("editPraxis.leaveAction")}
@@ -323,6 +337,8 @@ export interface FilePickerSkin {
   errorColor?: string;
   helperText?: string;
   helperStyle?: CSSProperties;
+  /** The wrapper around button + helper + error (#1181). */
+  containerStyle?: CSSProperties;
 }
 
 export function FilePicker({
@@ -334,7 +350,7 @@ export function FilePicker({
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
   return (
-    <div>
+    <div style={skin.containerStyle}>
       <button
         type="button"
         onClick={() => inputRef.current?.click()}
@@ -369,6 +385,7 @@ export function FilePicker({
 export interface DropButtonSkin {
   style?: CSSProperties;
   label?: string;
+  className?: string;
 }
 
 export function DropButton({
@@ -404,6 +421,7 @@ export function DropButton({
           ? collabCopy(praxis.task_faction_slug, "deleteDescription")
           : undefined
       }
+      className={skin?.className}
       style={skin?.style}
     >
       {label}
@@ -429,6 +447,8 @@ export function DropButton({
 export interface SaveDraftButtonSkin {
   style?: CSSProperties;
   label?: string;
+  /** Replaces the shared classes rather than adding to them (#1181). */
+  className?: string;
 }
 
 export function SaveDraftButton({
@@ -450,7 +470,7 @@ export function SaveDraftButton({
       // Not while a publish or a mode switch is in flight: both end up writing
       // the same fields, and both change where the player should be sent.
       disabled={state.submitting || state.switchingMode !== null}
-      className="font-body eyebrow hover:underline"
+      className={skin?.className ?? "font-body eyebrow hover:underline"}
       style={{
         background: "none",
         border: "none",
@@ -478,6 +498,15 @@ export function SaveDraftButton({
 export interface TitleFieldSkin {
   inputStyle: CSSProperties;
   placeholder?: string;
+  /**
+   * Wire the section's label to this input (#1181). The v2 layout draws its
+   * labels as `ComposerSection` headings rather than as `<label>`s wrapping the
+   * control, so the field needs an id for `htmlFor` to point at — pass the same
+   * string to both and the input gets a real accessible name.
+   */
+  id?: string;
+  /** For a skin whose label is a drawn mark rather than words. */
+  ariaLabel?: string;
 }
 
 export function TitleField({
@@ -494,6 +523,8 @@ export function TitleField({
     <input
       type="text"
       maxLength={200}
+      id={skin.id}
+      aria-label={skin.ariaLabel}
       className="content-text"
       value={state.title}
       onChange={(event) => state.setTitle(event.target.value)}
@@ -517,6 +548,19 @@ export interface BodyTextareaSkin {
   toolbarStyle?: CSSProperties;
   /** Optional override for each toolbar button. */
   toolbarButtonStyle?: CSSProperties;
+  /** Same seam as TitleFieldSkin.id — pairs with ComposerSection's `htmlFor`. */
+  id?: string;
+  ariaLabel?: string;
+  /**
+   * Draw the textarea without the markdown toolbar (#1181).
+   *
+   * For a skin whose write-up region is tight — a phone at the narrow end, a
+   * design that puts the formatting affordances somewhere else. It costs the
+   * player no capability: every toolbar command is also typeable as plain
+   * markdown, which is the same argument #693 made when it took the buttons out
+   * of the tab order.
+   */
+  hideToolbar?: boolean;
 }
 
 // Toolbar buttons in render order. Each glyph is referenced through
@@ -597,6 +641,7 @@ export function BodyTextarea({
 
   return (
     <div>
+      {skin.hideToolbar ? null : (
       <div
         role="toolbar"
         aria-label={t("editPraxis.toolbar.label")}
@@ -626,9 +671,12 @@ export function BodyTextarea({
           </button>
         ))}
       </div>
+      )}
       {/* Role class owns the size; the skin gives up only fontSize (§4a). */}
       <textarea
         ref={textareaRef}
+        id={skin.id}
+        aria-label={skin.ariaLabel}
         className="content-text"
         value={state.body}
         onChange={(event) => state.setBody(event.target.value)}
@@ -636,6 +684,68 @@ export function BodyTextarea({
         placeholder={skin.placeholder}
         style={skin.textareaStyle}
       />
+    </div>
+  );
+}
+
+/* -------------------------------------------------------------------------- */
+/* WriteUpTabs — the Write / Preview segmented control (#1181).                */
+/*                                                                            */
+/* Promoted from the retired `mobileArchetypes/shared.tsx`, where it was the   */
+/* phone's answer to a textarea and a preview competing for one narrow column. */
+/* The v2 designs draw it at BOTH widths, and there is one component now, so   */
+/* it belongs beside the two controls it switches between.                     */
+/*                                                                            */
+/* It owns the a11y wiring — tablist / tab / aria-selected — and nothing else; */
+/* each skin paints the pill through `buttonStyle`. Its copy is the neutral    */
+/* shared set (ADR-0065 §3), which is what the old `editPraxis.mobile.*` block */
+/* became.                                                                     */
+/* -------------------------------------------------------------------------- */
+export type ComposerTab = "write" | "preview";
+
+export interface WriteUpTabsSkin {
+  containerStyle?: CSSProperties;
+  buttonStyle?: (active: boolean) => CSSProperties;
+}
+
+export function WriteUpTabs({
+  tab,
+  setTab,
+  skin,
+}: {
+  tab: ComposerTab;
+  setTab: (next: ComposerTab) => void;
+  skin: WriteUpTabsSkin;
+}) {
+  const { t } = useTranslation("forms");
+  const options: { key: ComposerTab; label: string }[] = [
+    { key: "write", label: t("editPraxis.composer.tabWrite") },
+    { key: "preview", label: t("editPraxis.composer.tabPreview") },
+  ];
+  return (
+    <div
+      role="tablist"
+      aria-label={t("editPraxis.composer.tabsAria")}
+      style={{ display: "flex", ...skin.containerStyle }}
+    >
+      {options.map((option) => {
+        const active = tab === option.key;
+        return (
+          <button
+            key={option.key}
+            type="button"
+            role="tab"
+            aria-selected={active}
+            onClick={() => setTab(option.key)}
+            style={{
+              cursor: "pointer",
+              ...(skin.buttonStyle ? skin.buttonStyle(active) : {}),
+            }}
+          >
+            {option.label}
+          </button>
+        );
+      })}
     </div>
   );
 }
@@ -651,6 +761,17 @@ export interface BodyPreviewSkin {
   label?: ReactNode;
   markdownClassName?: string;
   markdownStyle?: CSSProperties;
+  /**
+   * What to draw when the body is still empty (#1181).
+   *
+   * Historically this control rendered nothing at all on an empty body, which is
+   * right when the preview sits BELOW the textarea — there is nothing to say and
+   * the editor is right there. The v2 layout puts preview behind a TAB, and a
+   * tab that renders an empty panel reads as broken rather than as empty. A skin
+   * that draws the preview inline still passes nothing and keeps the old
+   * behaviour.
+   */
+  emptyState?: ReactNode;
 }
 
 export function BodyPreview({
@@ -660,7 +781,14 @@ export function BodyPreview({
   state: EditPraxisState;
   skin: BodyPreviewSkin;
 }) {
-  if (!state.body.trim()) return null;
+  if (!state.body.trim()) {
+    return skin.emptyState == null ? null : (
+      <div style={skin.wrapperStyle}>
+        {skin.label}
+        {skin.emptyState}
+      </div>
+    );
+  }
   return (
     <div style={skin.wrapperStyle}>
       {skin.label}
@@ -752,6 +880,8 @@ export function ModePicker<O extends { key: PraxisType }>({
 /* -------------------------------------------------------------------------- */
 export interface PublishButtonSkin {
   style: CSSProperties;
+  /** For reaching a CSS class — an ep-* motion, a shared utility (#1181). */
+  className?: string;
   idleLabel: ReactNode;
   busyLabel: ReactNode;
   ornament?: ReactNode;
@@ -825,6 +955,7 @@ export function PublishButton({
       type="button"
       onClick={() => void onClick()}
       disabled={state.submitting || state.switchingMode !== null}
+      className={skin.className}
       style={skin.style}
     >
       {skin.ornament}

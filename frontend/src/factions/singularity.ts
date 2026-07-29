@@ -22,7 +22,6 @@ const SingularityFactionPage = lazyArchetype(() => import('../pages/factionDetai
 const SingularityFeedFrame = lazyArchetype(() => import('../components/feed/SingularityFeedFrame'))
 const SingularityHome = lazyArchetype(() => import('../pages/fieldDesk/mobileArchetypes/SingularityHome'))
 const SingularityMobileDuelSealConfirm = lazyArchetype(() => import('../components/duel/SingularityMobileDuelSealConfirm'))
-const SingularityMobileEditPraxis = lazyArchetype(() => import('../pages/editPraxis/mobileArchetypes/SingularityComposer'))
 const SingularityMobilePraxisCard = lazyArchetype(() => import('../components/praxisCard/mobile/SingularityMobilePraxisCard'))
 const SingularityProfileBody = lazyArchetype(() => import('../pages/characterProfile/archetypes/SingularityProfileBody'))
 const SingularityTaskCard = lazyArchetype(() => import('../components/cards/SingularityTaskCard'))
@@ -59,7 +58,6 @@ export const SINGULARITY_MANIFEST: FactionManifest = {
   profileBody: () => SingularityProfileBody,
   duelSeal: () => SingularityDuelSealConfirm,
   mobilePraxisCard: () => SingularityMobilePraxisCard,
-  mobileEditPraxis: () => SingularityMobileEditPraxis,
   mobileFactionPage: () => SingularityFactionPage,
   mobileFieldDesk: () => SingularityHome,
   mobileDuelSeal: () => SingularityMobileDuelSealConfirm,

@@ -48,9 +48,10 @@ export { SURFACE_KEYS } from './manifest'
  * `wow` (Warriors of Whimsy) began with no manifest (#784 moved its old pink
  * identity to Cozy Coven) and then only a yellow THEME (#812). #821 gave it its
  * FIRST bespoke surfaces: the praxis card (the cream/gold/plum chronicle), its
- * mobile twin and the balloon vote widget; #840 added the score stamp, #835 the
- * desktop edit-praxis composer ("The Squire's Writ") and #836 its
- * `mobileEditPraxis` twin. It is still override-only — every OTHER surface hands
+ * mobile twin and the balloon vote widget; #840 added the score stamp and #835
+ * the edit-praxis composer ("The Squire's Writ") — which #836 gave a mobile twin
+ * and #1181 collapsed back to one responsive component when ADR-0065 retired the
+ * `mobileEditPraxis` surface. It is still override-only — every OTHER surface hands
  * `wow` its `Default*` archetype, so WOW is themed-and-partly-skinned, not fully
  * dressed. `wowRendersDefault.test.tsx` pins which six surfaces are claimed and
  * that the rest fall back.

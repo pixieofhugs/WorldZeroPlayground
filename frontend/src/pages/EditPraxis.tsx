@@ -14,13 +14,11 @@ import ConfirmDialog from "../components/confirm/ConfirmDialog";
 import DuelSealConfirm from "../components/duel/DuelSealConfirm";
 import { pickVariant } from "../utils/factionDispatch";
 import { surfaceMap } from "../factions";
-import { useFormFactor } from "../hooks/useFormFactor";
 import {
   useEditPraxis,
 } from "./editPraxis/useEditPraxis";
 import DefaultEditPraxis from "./editPraxis/archetypes/DefaultEditPraxis";
 import { Breadcrumb } from "./editPraxis/archetypes/shared";
-import DefaultMobileEditPraxis from "./editPraxis/mobileArchetypes/DefaultEditPraxis";
 import MetataskPicker from "./editPraxis/MetataskPicker";
 import MetataskRemoveConfirm from "./editPraxis/MetataskRemoveConfirm";
 import PraxisWaitingSurface from "./editPraxis/waiting/PraxisWaitingSurface";
@@ -29,7 +27,6 @@ export default function EditPraxis() {
   const { t } = useTranslation("forms");
   const { id } = useParams<{ id: string }>();
   const state = useEditPraxis(id);
-  const formFactor = useFormFactor();
 
   if (state.loading) {
     return (
@@ -62,10 +59,11 @@ export default function EditPraxis() {
   }
 
   const slug = state.task?.primary_faction_slug ?? null;
-  const Archetype =
-    formFactor === "mobile"
-      ? pickVariant(surfaceMap('mobileEditPraxis'), slug, DefaultMobileEditPraxis)
-      : pickVariant(surfaceMap('editPraxis'), slug, DefaultEditPraxis);
+  // One archetype at both widths (ADR-0065 §2). The `mobileEditPraxis` surface
+  // and its eight files were retired in #1181: each archetype calls
+  // `useFormFactor()` internally for its own size set, so the dispatcher has no
+  // form factor to branch on.
+  const Archetype = pickVariant(surfaceMap('editPraxis'), slug, DefaultEditPraxis);
   // Once your part of a multi-party praxis is submitted, the composer stops
   // being a composer (ADR-0059) and this one shared surface takes the
   // archetype's place — first while the praxis waits on somebody else, and then
@@ -76,15 +74,17 @@ export default function EditPraxis() {
   return (
     <>
       <PageTitle title="Edit Praxis" />
-      {/* Mobile skins paint no breadcrumb of their own, so after publish the
-          phone composer is a dead end (#567). Render the shared desktop
-          breadcrumb once here for the mobile path — present for every skin and
-          every state, including the published state. Desktop archetypes render
-          their own breadcrumb, so gate this to mobile to avoid doubling up.
-          The waiting surface is faction-neutral and paints none either, so it
-          takes the same shared breadcrumb at BOTH widths — the condition stays
-          an either/or so no combination draws two. */}
-      {(formFactor === "mobile" || waiting) && (
+      {/* The waiting surface paints no breadcrumb of its own, so it takes the
+          shared one — otherwise the post-cast screen is a dead end (#567).
+          Every ARCHETYPE paints its own, at both widths since #1181 collapsed
+          the form-factor split, so this is gated to the waiting surface alone.
+          The gate used to read `formFactor === "mobile" || waiting`, which was
+          the phone half of the same #567 argument: mobile skins painted none.
+          Those skins are gone and the desktop archetype now serves the phone,
+          so the phone half is already covered and keeping it would draw a
+          SECOND breadcrumb above every mobile composer. Exactly one of the two
+          paths draws one, in every state and at every width. */}
+      {waiting && (
         <Breadcrumb
           praxisId={state.praxis.id}
           taskId={state.praxis.task_id}

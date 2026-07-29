@@ -251,10 +251,34 @@
     },
     "dropTask": "drop task",
     "saveDraft": "save draft",
-    "mobile": {
-      "write": "Write",
-      "preview": "Preview",
-      "viewToggleAria": "Switch between write and preview"
+    "composer": {
+      "statusDraft": "Draft",
+      "statusSaved": "Saved {{ago}}",
+      "statusUnsaved": "Not saved yet",
+      "taskLabel": "The task",
+      "pointsUnit": "pts",
+      "levelLabel": "Level {{level}}",
+      "titleLabel": "Title",
+      "titlePlaceholder": "Name what you did",
+      "modeLabel": "How it was done",
+      "modeSolo": "Solo",
+      "modeCollab": "Collab",
+      "modeDuel": "Duel",
+      "collaboratorsLabel": "Collaborators · {{count}}",
+      "opponentLabel": "Opponent",
+      "invitePlaceholder": "Search by name",
+      "sealsLabel": "Seals",
+      "writeUpLabel": "Write-up",
+      "tabWrite": "Write",
+      "tabPreview": "Preview",
+      "tabsAria": "Switch between write and preview",
+      "bodyPlaceholder": "Say what you did and how it went.",
+      "wordCount": "{{words}} words · markdown ok",
+      "proofLabel": "Proof",
+      "proofButton": "Drop a photo of the work",
+      "proofHelper": "Photos, clips or receipts — max 50 MB each.",
+      "submit": "Submit",
+      "submitBusy": "Submitting…"
     },
     "na": {
       "collab": {
@@ -272,40 +296,7 @@
         "successHeading": "it's up",
         "successBody": "everyone's part is in. small thing, done together.",
         "successContinue": "go look at it"
-      },
-      "eyebrow": "Unaffiliated · all paths",
-      "pageTitle": "File a praxis",
-      "intro": "Log what you did for this task. You haven't picked a faction yet — that's fine, this counts for everyone.",
-      "autosaveSaved": "saved {{ago}}",
-      "autosaveUnsaved": "unsaved",
-      "taskRefLabel": "Filing a return for —",
-      "ptsLabel": "pts",
-      "lvlLabel": "lvl {{level}}",
-      "modeLabel": "How did you work?",
-      "mode": {
-        "solo": { "label": "On my own", "desc": "no collaborators" },
-        "collab": { "label": "With others", "desc": "credit a group" },
-        "duel": { "label": "Head-to-head", "desc": "answering a challenge" }
-      },
-      "inviteLabel": "Who else worked on this?",
-      "inviteLabelDuel": "Your opponent",
-      "invitePlaceholder": "name or @handle",
-      "titleLabel": "Give it a headline",
-      "titlePlaceholder": "What did you find?",
-      "accountLabel": "Your account",
-      "accountMeta": "{{words}} words · markdown ok",
-      "bodyLabel": "Your account — {{words}} words · markdown ok",
-      "bodyPlaceholder": "Tell us how it went…",
-      "previewLabel": "Preview",
-      "filesLabel": "Evidence",
-      "filesOptional": "· optional",
-      "fileButton": "+ Add a photo or clip",
-      "fileHelper": "Photos, clips or receipts — max 50 MB each.",
-      "metatasksLabel": "Add a bonus condition",
-      "publishIdle": "File praxis",
-      "publishBusy": "Filing…",
-      "dropLabel": "Discard draft",
-      "footer": "You can edit it until it's voted on."
+      }
     },
     "ephemerists": {
       "collab": {
@@ -525,20 +516,7 @@
       "removeButton": "rm",
       "publishIdle": "TRANSMIT SIGNAL",
       "publishBusy": "$ transmitting...",
-      "dropLabel": "[esc] :q",
-      "mobile": {
-        "pageTitle": "> praxis --edit",
-        "autosaveSaved": "[saved {{ago}}]",
-        "autosaveUnsaved": "unsaved",
-        "taskRefLabel": "// function",
-        "titleLabel": "// title",
-        "bodyLabel": "// process_log · {{words}} W",
-        "inviteLabel": "// network",
-        "inviteLabelDuel": "// adversary",
-        "filesLabel": "// artifacts",
-        "metatasksLabel": "// optional_subroutines",
-        "previewLabel": "// render"
-      }
+      "dropLabel": "[esc] :q"
     },
     "ua": {
       "collab": {

@@ -97,7 +97,6 @@ const WowPraxisCard = lazyArchetype(() => import('../components/praxisCard/deskt
 const WowScoreStamp = lazyArchetype(() => import('../components/praxisCard/scoreStamp/WowScoreStamp'))
 const WowSeal = lazyArchetype(() => import('../components/metaTaskSeal/skins/WowSeal'))
 const WowEditPraxis = lazyArchetype(() => import('../pages/editPraxis/archetypes/WowEditPraxis'))
-const WowMobileEditPraxis = lazyArchetype(() => import('../pages/editPraxis/mobileArchetypes/WowEditPraxis'))
 const WowDuelSealConfirm = lazyArchetype(() => import('../components/duel/WowDuelSealConfirm'))
 const WowMobileDuelSealConfirm = lazyArchetype(() => import('../components/duel/WowMobileDuelSealConfirm'))
 const WowFieldDesk = lazyArchetype(() => import('../pages/fieldDesk/mobileArchetypes/WowFieldDesk'))
@@ -130,7 +129,6 @@ export const WOW_MANIFEST: FactionManifest = {
   mobilePraxisCard: () => WowMobilePraxisCard,
   vote: () => WowVote,
   editPraxis: () => WowEditPraxis,
-  mobileEditPraxis: () => WowMobileEditPraxis,
 
   // #900 — the page-level desktop surfaces.
   factionHero: () => WowFactionHero,
