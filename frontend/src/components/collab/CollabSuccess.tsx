@@ -97,7 +97,12 @@ export function CollabSuccess({
               style={{
                 borderRadius: 4,
                 border: `1.5px solid ${accent}`,
-                background: factionCssVar(factionSlug, 'card-muted'),
+                // The same ink-painted-as-a-fill the roster carried (#694):
+                // `card-muted` is the faction's muted TEXT ink, so this row came
+                // out as a slab of ink with the credit printed on it. `card-bg`
+                // is the sheet that whole ink family is measured against.
+                background: factionCssVar(factionSlug, 'card-bg'),
+                color: factionCssVar(factionSlug, 'card-text'),
               }}
             >
               <span
@@ -115,7 +120,9 @@ export function CollabSuccess({
                   style={{
                     fontSize: 'var(--text-xs)',
                     fontWeight: 700,
-                    color: 'var(--color-success)',
+                    // Not --color-success: the global green is 2.07:1 on
+                    // S.N.I.D.E.'s sheet and 2.14:1 on Singularity's (#694).
+                    color: factionCssVar(factionSlug, 'card-credit'),
                   }}
                 >
                   +{taskPointValue}

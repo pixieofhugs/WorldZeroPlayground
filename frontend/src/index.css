@@ -1966,6 +1966,91 @@
   --fdl-glyph: #f0e6d0;
 }
 
+/* ── Functional inks re-cut for the faction card sheet (#694) ──────────────
+   Two more members of the standard `--faction-{key}-card-*` ink family, and
+   they exist for the reason §3 already states about `--faction-everymen-sheet-
+   accent`: a colour that clears AA on the APP's surfaces can fail as ink the
+   moment it is painted on a faction's paper, and "remember not to use the
+   global one here" is a rule an editor has to keep, whereas a second token is
+   a rule the cascade keeps.
+
+   The collab roster (`components/collab/CollabRoster.tsx`) is one shared,
+   faction-themed block mounted on eight different sheets, and it was painting
+   two GLOBAL functional inks on all of them:
+
+     --color-warning  #b45309  on UA's cream card  = 4.14:1   (#694, the report)
+                               on UA's inset panel = 3.90:1
+                               on UA's page ground = 3.70:1
+     --color-success  #14532d  on S.N.I.D.E.'s card = 2.07:1
+                               on Singularity's card = 2.14:1
+
+   Neither is a bad colour; each was measured against the app's near-white
+   surface and never against a warm cream or a near-black one. The failure is
+   the PAIRING, so the fix is a per-sheet ink rather than a repoint of
+   `--color-warning` / `--color-success`, which stay exactly as they are for
+   every surface that reads them as a fill, a rule or an ink on app chrome.
+
+   Polarity, not theme, is what these flip on. Six sheets are light by day and
+   dark by night, so their inks flip with the cascade as usual; S.N.I.D.E. and
+   Singularity are dark in BOTH themes (§6), so their light-theme values are
+   the bright pair. That is the whole reason a global token could not do this
+   job: one light-theme value cannot clear both #f7e7d2 and #14110b.
+
+   Measured against `--faction-{key}-card-bg` in both themes by
+   `utils/__tests__/factionContrast.test.ts` (ROSTER_PAIRS), which also
+   measures the notice ink under the holdout banner's amber veil — the
+   composited worst case, and the tighter of the two. Declared as one block
+   rather than spliced into eight card blocks so the eight values can be
+   compared at a glance; the cascade merges `:root` either way. */
+:root {
+  /* Attention / not-yet-done. Amber walked down off #b45309, which misses AA
+     on every warm faction paper. Worst light-sheet reading is Ephemerists at
+     5.06:1 under the veil. */
+  --faction-ua-card-notice: #92400e;
+  --faction-everymen-card-notice: #92400e;
+  --faction-coven-card-notice: #92400e;
+  --faction-wow-card-notice: #92400e;
+  --faction-ephemerists-card-notice: #92400e;
+  --faction-default-card-notice: #92400e;
+  /* ...and the two always-dark sheets take the bright amber in LIGHT theme. */
+  --faction-snide-card-notice: #fbbf24;
+  --faction-singularity-card-notice: #fbbf24;
+
+  /* Points credited. The global success green, kept as-is where the sheet is
+     light, and flipped on the two dark sheets for the same reason. */
+  --faction-ua-card-credit: #14532d;
+  --faction-everymen-card-credit: #14532d;
+  --faction-coven-card-credit: #14532d;
+  --faction-wow-card-credit: #14532d;
+  --faction-ephemerists-card-credit: #14532d;
+  --faction-default-card-credit: #14532d;
+  --faction-snide-card-credit: #4ade80;
+  --faction-singularity-card-credit: #4ade80;
+}
+
+/* Every card sheet is dark here, so both inks are the bright pair across the
+   board — the two always-dark factions simply keep the values they already
+   carried in light. */
+[data-theme="dark"] {
+  --faction-ua-card-notice: #fbbf24;
+  --faction-everymen-card-notice: #fbbf24;
+  --faction-coven-card-notice: #fbbf24;
+  --faction-wow-card-notice: #fbbf24;
+  --faction-ephemerists-card-notice: #fbbf24;
+  --faction-default-card-notice: #fbbf24;
+  --faction-snide-card-notice: #fbbf24;
+  --faction-singularity-card-notice: #fbbf24;
+
+  --faction-ua-card-credit: #4ade80;
+  --faction-everymen-card-credit: #4ade80;
+  --faction-coven-card-credit: #4ade80;
+  --faction-wow-card-credit: #4ade80;
+  --faction-ephemerists-card-credit: #4ade80;
+  --faction-default-card-credit: #4ade80;
+  --faction-snide-card-credit: #4ade80;
+  --faction-singularity-card-credit: #4ade80;
+}
+
 /* Faction-page body: main column + fixed right rail, collapsing to one column
    on narrow viewports. Shared by every faction skin (see factionDetail bodies). */
 .wz-faction-grid {
