@@ -885,6 +885,15 @@ export interface PublishButtonSkin {
   idleLabel: ReactNode;
   busyLabel: ReactNode;
   ornament?: ReactNode;
+  /**
+   * A mark drawn AFTER the label (#1185). `ornament` leads; several v2 designs
+   * put their sign on the trailing edge instead — the Ephemerists' open eye
+   * follows the word rather than announcing it. Additive and optional, so every
+   * existing caller is byte-identical; drawing it with `flex-direction:
+   * row-reverse` off the leading slot would put the mark first in the DOM and
+   * launder a layout decision through a style, which is why this is a prop.
+   */
+  trailingOrnament?: ReactNode;
 }
 
 export function PublishButton({
@@ -960,6 +969,7 @@ export function PublishButton({
     >
       {skin.ornament}
       {state.submitting ? skin.busyLabel : idleLabel}
+      {skin.trailingOrnament}
     </button>
   );
 }
