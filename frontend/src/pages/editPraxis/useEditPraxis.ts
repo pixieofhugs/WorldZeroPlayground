@@ -88,6 +88,20 @@ export type SaveStatus = "idle" | "saving" | "saved" | "error";
 export type EditPraxisPhase = "composing" | "waiting" | "completed" | "handoff";
 
 /**
+ * The two phases that draw `PraxisWaitingSurface` instead of the composer's own
+ * regions — while the praxis waits on somebody else, and (#1164) once everybody
+ * is in.
+ *
+ * Every archetype asks this, because since #1189 the stage swap is the
+ * archetype's: it is the one that holds the faction's dress, and the dispatcher
+ * could only hand the shared surface an undressed one. One predicate so eight
+ * skins cannot disagree about when the composer stops being a composer.
+ */
+export function isWaitingStage(phase: EditPraxisPhase): boolean {
+  return phase === "waiting" || phase === "completed";
+}
+
+/**
  * The phase, derived from data alone — no transient flag (ADR-0059).
  *
  * Deriving rather than latching means re-entry behaves the same as the cast

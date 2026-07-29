@@ -3,17 +3,48 @@
  * have filed your part of a multi-party praxis.
  *
  * Submitting a collab part or a duel side no longer navigates. `publish()`
- * holds, `EditPraxis.tsx` swaps this in for the faction archetype, and the
- * player stays somewhere that can still let them back into their own text. The
- * public read view could show roster state but offers no authoring exit, and
+ * holds, the faction's archetype swaps this in for its own composer regions, and
+ * the player stays somewhere that can still let them back into their own text.
+ * The public read view could show roster state but offers no authoring exit, and
  * putting author-only controls on a public page is exactly what #646 undid.
  *
- * ONE shared, responsive, token-themed surface (epic #1071, decisions 7 and 8),
- * the way `CollabSuccess` is one screen for every faction and both form factors.
- * No mobile twin: a single stacked column at both widths, and `ScoreStamp` is
- * already size-agnostic. The design draws a per-faction device in the hero and a
- * per-faction masthead; those are a follow-up wave if this reads flat once live,
- * not a debt taken on here.
+ * ## Dressed, not neutral (#1189, closing #1071 decision 7)
+ *
+ * #1071 shipped this as one shared TOKEN-THEMED surface and deferred the frames
+ * by name — "per-faction frames are a follow-up wave if it reads flat once
+ * live". It read flat. This is the wave, and the seam it takes is the one
+ * ADR-0065 §2 describes for the whole composer: **one shared layout, dressed per
+ * faction.**
+ *
+ * So the LOGIC below is still one file for every faction — which reading to
+ * draw, which exits apply, who may be nudged, whether a clock has anything to
+ * count. What changed is that the ORNAMENT arrives as a {@link ComposerDress}
+ * from the archetype that is already mounted, and the surface assembles itself
+ * from the same `shared.tsx` blocks the composer does: the same page, the same
+ * sheet, the same masthead, the same ground, the same section rule, the same
+ * status mark. The design draws this as `edit-praxis.jsx` with `stage="awaiting"`
+ * for exactly this reason — pressing Submit must not change the page's dress.
+ *
+ * The `masthead`, `ground` and `rule` in a dress are the SAME ELEMENTS the
+ * composer mounts, named once in the archetype and handed to both, so there is
+ * no second copy of a faction's ornament to drift. See the dress's own note in
+ * `archetypes/shared.tsx` for why this is a prop rather than a registry.
+ *
+ * The breadcrumb comes with the dress too. It used to be drawn by
+ * `EditPraxis.tsx`, gated on `waiting`, because this surface painted none of its
+ * own; now it draws one exactly as every archetype does, and the dispatcher
+ * draws none. Exactly one, in every state and at every width.
+ *
+ * ## Copy is neutral, and already was
+ *
+ * Every key this surface reads resolves to the shared `editPraxis.collab.*`
+ * block: no faction overrides a single `awaiting*`, `completed*` or `duel*` key.
+ * `collabCopy(slug, …)` is kept rather than swapped for a bare `t()` because the
+ * resolver is the contract the roster and the footer share — the neutrality is a
+ * fact about the catalog, not a thing this file enforces. ADR-0065 §3 is
+ * therefore already satisfied here, and the stage words the status row gained
+ * (`Submitted` / `Sealed`) are neutral `editPraxis.composer.*` keys, sitting
+ * beside `Draft` in the same slot the composer's status row uses.
  *
  * Nudge (#1083) landed after this surface and is drawn here now — but not as the
  * design drew it. The design's `setNudged({...})` was local React state: the
@@ -48,9 +79,6 @@
  * refused by the backend once the praxis is `submitted`, and the one thing left
  * to do with a published praxis is read it.
  *
- * Copy resolves through `collabCopy(slug, key)` — shared `editPraxis.collab.*`
- * defaults with faction overrides where a faction has authored them.
- *
  * TESTABILITY. The harness is `renderToStaticMarkup`: no DOM, no effects, so a
  * component that fetches its own data cannot be asserted on. Everything here
  * renders from `EditPraxisState` plus two injectable scalars (`autoSubmitDays`,
@@ -58,6 +86,7 @@
  * function. `useGameConfig` is still the production source of the window
  * length; the prop only overrides it.
  */
+import type { CSSProperties, ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import type { DuelSideOut } from "../../../api/duel";
@@ -69,7 +98,20 @@ import { useGameConfig } from "../../../hooks/useGameConfig";
 import { factionCssVar } from "../../../utils/factions";
 import { relativeTime } from "../../../utils/dates";
 import MarkdownPreview from "../blocks/MarkdownPreview";
-import { ArchetypeFrame, ErrorBanner, TaskMetaInline } from "../archetypes/shared";
+import {
+  Breadcrumb,
+  ComposerFooter,
+  ComposerPage,
+  ComposerRule,
+  ComposerSection,
+  ComposerSheet,
+  ComposerStatusRow,
+  ErrorBanner,
+  TaskSlip,
+  composerLabelStyle,
+  useComposerSizes,
+  type ComposerDress,
+} from "../archetypes/shared";
 import type { EditPraxisState } from "../useEditPraxis";
 import { collabPublishWindow } from "./waitingClock";
 
@@ -90,21 +132,33 @@ const RING_CIRCUMFERENCE = 2 * Math.PI * RING_RADIUS;
  * Renders nothing at all when the window is unknowable — no `submit_proposed_at`
  * on the praxis, or `/game-config` not yet in hand. The duration is an
  * `EraConfig` value and is never assumed; a blank slot beats a wrong number.
+ *
+ * The dial is the one countdown on this surface with real data behind it, so it
+ * takes the skin's accent and panel rather than the page's neutral chrome. Both
+ * fall back to the token defaults when a dress leaves them out.
  */
 export function CollabPublishClock({
   submitProposedAt,
   autoSubmitDays,
   factionSlug,
   now,
+  accent,
+  panelStyle,
+  labelStyle,
+  bodyStyle,
 }: {
   submitProposedAt: string | null | undefined;
   autoSubmitDays: number | null | undefined;
   factionSlug: string | null | undefined;
   now?: number;
+  accent?: string;
+  panelStyle?: CSSProperties;
+  labelStyle?: CSSProperties;
+  bodyStyle?: CSSProperties;
 }) {
   const publishWindow = collabPublishWindow(submitProposedAt, autoSubmitDays, now);
   if (!publishWindow) return null;
-  const accent = factionCssVar(factionSlug, "card-accent");
+  const ink = accent ?? factionCssVar(factionSlug, "card-accent");
 
   return (
     <section
@@ -114,6 +168,7 @@ export function CollabPublishClock({
         borderRadius: 8,
         padding: "var(--space-md) var(--space-lg)",
         background: "var(--color-bg-surface)",
+        ...panelStyle,
       }}
     >
       <div
@@ -152,7 +207,7 @@ export function CollabPublishClock({
             strokeLinecap="round"
             strokeDasharray={RING_CIRCUMFERENCE}
             strokeDashoffset={RING_CIRCUMFERENCE * (1 - publishWindow.fraction)}
-            style={{ stroke: accent }}
+            style={{ stroke: ink }}
           />
         </svg>
         <span
@@ -160,8 +215,12 @@ export function CollabPublishClock({
           style={{ position: "absolute", inset: 0, lineHeight: 1.1 }}
         >
           <span
-            className="font-body"
-            style={{ fontSize: "var(--text-xl)", fontWeight: 700, color: accent }}
+            style={{
+              fontSize: "var(--text-xl)",
+              fontWeight: 700,
+              color: ink,
+              ...bodyStyle,
+            }}
           >
             {publishWindow.lapsed
               ? collabCopy(factionSlug, "awaitingClockLapsed")
@@ -170,7 +229,7 @@ export function CollabPublishClock({
                 })}
           </span>
           {!publishWindow.lapsed && (
-            <span className="eyebrow">
+            <span style={composerLabelStyle(labelStyle)}>
               {collabCopy(factionSlug, "awaitingClockHours", {
                 hours: publishWindow.hoursLeft,
               })}
@@ -179,14 +238,14 @@ export function CollabPublishClock({
         </span>
       </div>
       <div className="flex flex-col gap-1">
-        <span className="eyebrow" style={{ color: accent }}>
+        <span style={composerLabelStyle({ color: ink, ...labelStyle })}>
           {collabCopy(factionSlug, "awaitingClockLabel")}
         </span>
         {/* The rule the dial is counting down to, said in words — a ring alone
             never explains that nobody has to do anything for it to fire. */}
         <p
-          className="font-body content-text"
-          style={{ color: "var(--color-text-secondary)" }}
+          className="content-text"
+          style={{ color: "var(--color-text-secondary)", ...bodyStyle }}
         >
           {collabCopy(factionSlug, "awaitingClockCaption", {
             days: autoSubmitDays ?? 0,
@@ -210,6 +269,8 @@ function SideAvatar({ side }: { side: DuelSideOut }) {
         height: 28,
         borderRadius: "50%",
         flexShrink: 0,
+        // The SIDE's own faction, never the page's: a duel is the one place two
+        // factions share a surface, and the avatar is who is speaking.
         background: factionCssVar(side.faction_slug, "light"),
         border: `1px solid ${factionCssVar(side.faction_slug, "border")}`,
         fontSize: "var(--text-md)",
@@ -234,6 +295,7 @@ function DuelSidePanel({
   side,
   mine,
   factionSlug,
+  dress,
   title,
   body,
   completed,
@@ -242,6 +304,7 @@ function DuelSidePanel({
   side: DuelSideOut;
   mine: boolean;
   factionSlug: string | null | undefined;
+  dress: ComposerDress;
   title?: string;
   body?: string;
   /**
@@ -258,7 +321,7 @@ function DuelSidePanel({
    */
   onNudge?: () => void | Promise<void>;
 }) {
-  const accent = factionCssVar(factionSlug, "card-accent");
+  const accent = dress.accent;
   const nudged = side.nudged_at != null;
   return (
     <div
@@ -267,29 +330,34 @@ function DuelSidePanel({
         flex: "1 1 260px",
         minWidth: 0,
         borderRadius: 8,
+        background: "var(--color-bg-surface)",
+        ...dress.panelStyle,
+        // Your own side is the one the skin's accent claims; the rival's stays
+        // dashed and un-owned, which is the whole read of a sealed duel.
         border: mine
           ? `1.5px solid ${accent}`
           : "1.5px dashed var(--color-border-strong)",
         padding: "var(--space-md)",
-        background: "var(--color-bg-surface)",
       }}
     >
       <div className="flex items-center gap-2">
         <SideAvatar side={side} />
-        <span className="font-body content-text" style={{ flex: 1, minWidth: 0 }}>
+        <span className="content-text" style={{ flex: 1, minWidth: 0 }}>
           {side.display_name}
           {mine && (
-            <span style={{ color: "var(--color-text-tertiary)" }}>
+            <span style={dress.quietStyle ?? { color: "var(--color-text-tertiary)" }}>
               {" · "}
               {collabCopy(factionSlug, "you")}
             </span>
           )}
         </span>
         <span
-          className="eyebrow"
-          style={{
-            color: side.is_submitted ? accent : "var(--color-text-tertiary)",
-          }}
+          style={composerLabelStyle({
+            ...dress.labelStyle,
+            color: side.is_submitted
+              ? accent
+              : (dress.quietStyle?.color ?? "var(--color-text-tertiary)"),
+          })}
         >
           {side.is_submitted
             ? collabCopy(factionSlug, "duelPillSealed")
@@ -307,21 +375,27 @@ function DuelSidePanel({
             nudged ? "nudgeSentAria" : "duelNudgeAria",
             { name: side.display_name },
           )}
-          className="eyebrow self-start px-2 py-1"
-          style={{
+          className="self-start px-2 py-1"
+          style={composerLabelStyle({
+            ...dress.quietButtonStyle,
             borderRadius: 4,
             border: `1px solid ${nudged ? "var(--color-border)" : accent}`,
             background: "transparent",
-            color: nudged ? "var(--color-text-tertiary)" : accent,
+            color: nudged
+              ? (dress.quietStyle?.color ?? "var(--color-text-tertiary)")
+              : accent,
             cursor: nudged ? "default" : "pointer",
-          }}
+          })}
         >
           {collabCopy(factionSlug, nudged ? "nudgeSentAction" : "nudgeAction")}
         </button>
       )}
       {mine ? (
         <>
-          <span className="font-body content-title" style={{ fontWeight: 700 }}>
+          <span
+            className="content-title"
+            style={{ fontWeight: 700, ...dress.headingStyle }}
+          >
             {title}
           </span>
           {body?.trim() ? (
@@ -330,18 +404,15 @@ function DuelSidePanel({
               className="content-text markdown-preview"
             />
           ) : (
-            <p
-              className="font-body content-text"
-              style={{ color: "var(--color-text-tertiary)" }}
-            >
+            <p className="content-text" style={dress.quietStyle}>
               {collabCopy(factionSlug, "awaitingWriteUpEmpty")}
             </p>
           )}
         </>
       ) : (
         <p
-          className="font-body content-text"
-          style={{ color: "var(--color-text-tertiary)", fontStyle: "italic" }}
+          className="content-text"
+          style={{ fontStyle: "italic", ...dress.quietStyle }}
         >
           {collabCopy(
             factionSlug,
@@ -360,6 +431,12 @@ function DuelSidePanel({
 export interface PraxisWaitingSurfaceProps {
   state: EditPraxisState;
   /**
+   * The mounted archetype's ornament. Required: there is no undressed caller —
+   * every path here goes through a faction's own composer, which is what stops
+   * the page changing dress at the moment you submit.
+   */
+  dress: ComposerDress;
+  /**
    * The ADR-0012 window length, in days. Production leaves this undefined and
    * the game config supplies it; the prop exists so the clock is renderable in
    * a harness where effects never run.
@@ -371,17 +448,19 @@ export interface PraxisWaitingSurfaceProps {
 
 export default function PraxisWaitingSurface({
   state,
+  dress,
   autoSubmitDays,
   now,
 }: PraxisWaitingSurfaceProps) {
   const { t } = useTranslation("forms");
+  const sizes = useComposerSizes();
   const config = useGameConfig();
   const praxis = state.praxis;
   const duel = state.duel;
   if (!praxis) return null;
 
   const slug = praxis.task_faction_slug;
-  const accent = factionCssVar(slug, "card-accent");
+  const accent = dress.accent;
   // A duel side is `type='solo'` + a duel_id (ADR-0011) — never `type`.
   const isDuel = praxis.duel_id != null && duel != null;
   const sides = isDuel && duel ? duelSides(duel, state.currentCharacterId) : null;
@@ -403,306 +482,348 @@ export default function PraxisWaitingSurface({
   // everyone's, the creator included (ADR-0013, #1074).
   const isCreator = praxis.created_by_id === state.currentCharacterId;
   const busy = state.submitting;
+  const rule: ReactNode = dress.rule ?? <ComposerRule />;
+
+  /* The stage word, in the slot the composer's `Draft` occupies. Neutral keys
+     (ADR-0065 §3): a duel side is SEALED, everything else is SUBMITTED. On the
+     completed reading the word is the collab block's own, which says `Submitted`
+     rather than `Submitted by you` — a lapsed window publishes over a holdout,
+     and that holdout opens this same surface. */
+  const statusWord = completed
+    ? collabCopy(slug, "completedStatusMeta")
+    : isDuel
+      ? t("editPraxis.composer.statusSealed")
+      : t("editPraxis.composer.statusSubmitted");
+
+  const stamped = relativeTime(praxis.submitted_at ?? praxis.updated_at);
+  const statusMeta: ReactNode = completed ? (
+    stamped
+  ) : (
+    <>
+      {collabCopy(slug, "awaitingStatusMeta")}
+      {" · "}
+      {stamped}
+    </>
+  );
+
+  const primaryClass = dress.primaryStyle ? undefined : "btn-primary";
+  const quietButton = composerLabelStyle({
+    background: "none",
+    border: "none",
+    padding: 0,
+    cursor: "pointer",
+    color: "var(--color-text-tertiary)",
+    ...dress.quietButtonStyle,
+  });
 
   return (
-    <ArchetypeFrame>
-      {/* Status row — what is submitted, in the surface's own quiet voice. On
-          the completed reading it drops the "by you": a lapsed window publishes
-          a collab with a holdout still outstanding (ADR-0012), and that holdout
-          opens this same surface. */}
-      <div className="flex items-center justify-between gap-2 mb-4">
-        <span className="eyebrow" style={{ color: accent }}>
-          {collabCopy(slug, completed ? "completedStatusMeta" : "awaitingStatusMeta")}
-        </span>
-        <span className="eyebrow">
-          {relativeTime(praxis.submitted_at ?? praxis.updated_at)}
-        </span>
-      </div>
-
-      {/* The task this is all for. The design draws it and the issue's block
-          list omits it; without it the surface never says what was proven.
-          Reuses the composer's own `TaskMetaInline` rather than inventing a
-          second task-context component. */}
-      <section
-        className="flex flex-wrap items-start gap-4 mb-6"
-        style={{
-          borderLeft: `3px solid ${accent}`,
-          paddingLeft: "var(--space-lg)",
-        }}
+    <ComposerPage
+      sizes={sizes}
+      style={dress.pageStyle}
+      breadcrumb={
+        <Breadcrumb
+          praxisId={praxis.id}
+          taskId={praxis.task_id}
+          taskTitle={praxis.task_title}
+          inkColor={dress.breadcrumbInk}
+        />
+      }
+    >
+      <ComposerSheet
+        sizes={sizes}
+        style={dress.sheetStyle}
+        contentStyle={dress.contentStyle}
+        masthead={dress.masthead}
+        ground={dress.ground}
       >
-        <div className="flex flex-col gap-2" style={{ flex: "1 1 320px", minWidth: 0 }}>
-          <span className="eyebrow" style={{ color: accent }}>
-            {collabCopy(slug, isDuel ? "duelAwaitingTaskLabel" : "awaitingTaskLabel")}
-          </span>
-          <span className="font-display content-title">{praxis.task_title}</span>
-          <TaskMetaInline praxis={praxis} task={state.task} />
-          {state.task?.description && (
-            <p
-              className="font-body content-text"
-              style={{ color: "var(--color-text-secondary)" }}
-            >
-              {state.task.description}
-            </p>
-          )}
-        </div>
-        {/* The points, mounted rather than hand-drawn: `scoreBreakdown()` is the
-            single row-selection authority (ADR-0053) and already applies the
-            conditional rules the design's inline strip spelled out by hand — a
-            multiplier row only when it is not ×1.0, a votes row always. Both are
-            genuinely reachable here: unsubmitting preserves votes, and a duel
-            side carries a live, provisional modifier (ADR-0052). */}
-        <ScoreStamp praxis={praxis} />
-      </section>
+        {/* The status row, in the composer's own slot and carrying the skin's
+            own mark — the pentacle, the ankh, the gear, `[ok]`. The mark does
+            not move or change size when you submit; the WORD beside it does,
+            and that is the whole confirmation beat. */}
+        <ComposerStatusRow
+          status={statusWord}
+          meta={statusMeta}
+          mark={dress.mark}
+          statusStyle={dress.statusStyle}
+          metaStyle={dress.metaStyle}
+        />
 
-      {/* The confirmation beat. Shared and token-themed: the design's
-          per-faction device (pentacle, ensō, gear, ✦, swoosh, [ok], spectrum
-          ring) is a later wave, not this one. */}
-      <section
-        className="flex flex-col gap-2 mb-6"
-        style={{
-          border: `1.5px solid ${accent}`,
-          borderRadius: 8,
-          padding: "var(--space-lg)",
-          background: "var(--color-bg-surface)",
-        }}
-      >
-        <h2 className="font-display content-title" style={{ color: accent }}>
-          {collabCopy(
-            slug,
-            completed
-              ? isDuel
-                ? "duelCompletedHeading"
-                : "completedHeading"
-              : isDuel
-                ? "duelAwaitingHeading"
-                : "awaitingHeading",
-          )}
-        </h2>
-        {completed ? (
-          /* Nothing is outstanding, so neither clock has anything to say — not
-             the collab's countdown and not the duel's elapsed line. */
-          <p
-            className="font-body content-text"
-            style={{ color: "var(--color-text-secondary)" }}
-          >
-            {collabCopy(slug, isDuel ? "duelCompletedBody" : "completedBody")}
-          </p>
-        ) : isDuel && sides ? (
-          /* The duel's clock is an ELAPSED line, not a countdown. No deadline
-             exists to count down to: `Duel` has no expiry, `EraConfig` has no
-             duel duration, there is no scheduler, and ADR-0011 rejects per-duel
-             windows by name (epic #1071, decision 4). */
-          <p
-            className="font-body content-text"
-            style={{ color: "var(--color-text-secondary)" }}
-          >
+        {/* The task this is all for, on the composer's own reference slip.
+            Without it the surface never says what was proven.
+
+            The mark is `ScoreStamp` rather than the composer's points ring:
+            `scoreBreakdown()` is the single row-selection authority (ADR-0053),
+            it is already dressed per faction, and it applies the conditional
+            rules the design's inline strip spelled out by hand — a multiplier
+            row only when it is not ×1.0, a votes row always. Both are genuinely
+            reachable here: unsubmitting preserves votes, and a duel side carries
+            a live, provisional modifier (ADR-0052). A static task point value
+            would be the less true number in the same place. */}
+        <TaskSlip
+          praxis={praxis}
+          task={state.task}
+          label={collabCopy(slug, isDuel ? "duelAwaitingTaskLabel" : "awaitingTaskLabel")}
+          {...dress.slip}
+          mark={<ScoreStamp praxis={praxis} />}
+        />
+
+        {/* The confirmation beat. */}
+        <section
+          className="flex flex-col gap-2"
+          style={{
+            border: `1.5px solid ${accent}`,
+            borderRadius: 8,
+            padding: "var(--space-lg)",
+            background: "var(--color-bg-surface)",
+            ...dress.panelStyle,
+          }}
+        >
+          <h2 className="content-title" style={{ color: accent, ...dress.headingStyle }}>
             {collabCopy(
               slug,
-              duel?.status === "pending" ? "duelPendingLine" : "duelElapsedLine",
-              {
-                elapsed: relativeTime(praxis.submitted_at ?? praxis.updated_at),
-                name: sides.foe.display_name,
-              },
+              completed
+                ? isDuel
+                  ? "duelCompletedHeading"
+                  : "completedHeading"
+                : isDuel
+                  ? "duelAwaitingHeading"
+                  : "awaitingHeading",
             )}
-          </p>
-        ) : (
-          <p
-            className="font-body content-text"
-            style={{ color: "var(--color-text-secondary)" }}
-          >
-            {collabCopy(slug, "awaitingBody")}
-          </p>
-        )}
-      </section>
+          </h2>
+          {completed ? (
+            /* Nothing is outstanding, so neither clock has anything to say — not
+               the collab's countdown and not the duel's elapsed line. */
+            <p className="content-text" style={dress.bodyStyle}>
+              {collabCopy(slug, isDuel ? "duelCompletedBody" : "completedBody")}
+            </p>
+          ) : isDuel && sides ? (
+            /* The duel's clock is an ELAPSED line, not a countdown. No deadline
+               exists to count down to: `Duel` has no expiry, `EraConfig` has no
+               duel duration, there is no scheduler, and ADR-0011 rejects per-duel
+               windows by name (epic #1071, decision 4). */
+            <p className="content-text" style={dress.bodyStyle}>
+              {collabCopy(
+                slug,
+                duel?.status === "pending" ? "duelPendingLine" : "duelElapsedLine",
+                {
+                  elapsed: stamped,
+                  name: sides.foe.display_name,
+                },
+              )}
+            </p>
+          ) : (
+            <p className="content-text" style={dress.bodyStyle}>
+              {collabCopy(slug, "awaitingBody")}
+            </p>
+          )}
+        </section>
 
-      {/* Who else is outstanding. The collab reuses the roster unchanged — the
-          same component the composer and the read page already mount. */}
-      <section className="mb-6">
-        {isDuel && sides ? (
-          <div className="flex flex-wrap gap-4">
-            <DuelSidePanel
-              side={sides.me}
-              mine
+        {/* Who else is outstanding, under the composer's own section label —
+            `Collaborators · N` or `Opponent`, the same words the composer used
+            for the same block a moment ago. The collab reuses the roster
+            unchanged: it is the same component the composer and the read page
+            already mount, and it takes the faction slug itself. */}
+        <ComposerSection
+          label={
+            isDuel
+              ? t("editPraxis.composer.opponentLabel")
+              : t("editPraxis.composer.collaboratorsLabel", {
+                  count: praxis.members.length,
+                })
+          }
+          rule={rule}
+          labelStyle={dress.labelStyle}
+        >
+          {isDuel && sides ? (
+            <div className="flex flex-wrap gap-4">
+              <DuelSidePanel
+                side={sides.me}
+                mine
+                factionSlug={slug}
+                dress={dress}
+                title={state.title}
+                body={state.body}
+                completed={completed}
+              />
+              {/* The rival's nudge, gated on `active` exactly as the backend is:
+                  at `pending` they have not accepted yet and the outstanding
+                  thing is a decision (already in their requests tab as a
+                  challenge), and once the duel settles there is nothing left to
+                  hurry. */}
+              <DuelSidePanel
+                side={sides.foe}
+                mine={false}
+                factionSlug={slug}
+                dress={dress}
+                completed={completed}
+                onNudge={
+                  duel?.status === "active"
+                    ? () => state.nudge(sides.foe.character_id)
+                    : undefined
+                }
+              />
+            </div>
+          ) : (
+            /* Completed drops both author controls rather than drawing them to
+               be refused. The backend allows a kick only while the praxis is
+               still open, and there is nobody left to nudge — except after a
+               lapsed window, where the roster would otherwise offer to hurry a
+               member whose part is no longer wanted. */
+            <CollabRoster
+              members={praxis.members}
+              currentCharacterId={state.currentCharacterId}
               factionSlug={slug}
-              title={state.title}
-              body={state.body}
-              completed={completed}
+              taskPointValue={praxis.task_point_value}
+              onKick={completed ? undefined : state.kickMember}
+              onNudge={completed ? undefined : state.nudge}
             />
-            {/* The rival's nudge, gated on `active` exactly as the backend is:
-                at `pending` they have not accepted yet and the outstanding thing
-                is a decision (already in their requests tab as a challenge), and
-                once the duel settles there is nothing left to hurry. */}
-            <DuelSidePanel
-              side={sides.foe}
-              mine={false}
-              factionSlug={slug}
-              completed={completed}
-              onNudge={
-                duel?.status === "active"
-                  ? () => state.nudge(sides.foe.character_id)
-                  : undefined
-              }
-            />
-          </div>
-        ) : (
-          /* Completed drops both author controls rather than drawing them to be
-             refused. The backend allows a kick only while the praxis is still
-             open, and there is nobody left to nudge — except after a lapsed
-             window, where the roster would otherwise offer to hurry a member
-             whose part is no longer wanted. */
-          <CollabRoster
-            members={praxis.members}
-            currentCharacterId={state.currentCharacterId}
-            factionSlug={slug}
-            taskPointValue={praxis.task_point_value}
-            onKick={completed ? undefined : state.kickMember}
-            onNudge={completed ? undefined : state.nudge}
-          />
-        )}
-      </section>
+          )}
+        </ComposerSection>
 
-      {/* The clock — collab only, and only while there is still a window to
-          count. See the elapsed line above for the duel. */}
-      {isCollab && !completed && (
-        <div className="mb-6">
+        {/* The clock — collab only, and only while there is still a window to
+            count. See the elapsed line above for the duel. */}
+        {isCollab && !completed && (
           <CollabPublishClock
             submitProposedAt={praxis.submit_proposed_at}
             autoSubmitDays={windowDays}
             factionSlug={slug}
             now={now}
+            accent={accent}
+            panelStyle={dress.panelStyle}
+            labelStyle={dress.labelStyle}
+            bodyStyle={dress.bodyStyle}
           />
-        </div>
-      )}
+        )}
 
-      {/* Your write-up, read-only. The duel already showed it inside your own
-          side panel, so it is not repeated here. */}
-      {isCollab && (
-        <section className="flex flex-col gap-2 mb-6">
-          <span className="eyebrow" style={{ color: accent }}>
-            {collabCopy(slug, "awaitingWriteUpLabel")}
-          </span>
-          <div
-            style={{
-              border: "1px solid var(--color-border-strong)",
-              borderRadius: 8,
-              padding: "var(--space-lg)",
-              background: "var(--color-bg-surface)",
-            }}
+        {/* Your write-up, read-only. The duel already showed it inside your own
+            side panel, so it is not repeated here. */}
+        {isCollab && (
+          <ComposerSection
+            label={collabCopy(slug, "awaitingWriteUpLabel")}
+            rule={rule}
+            labelStyle={dress.labelStyle}
           >
-            <span className="font-display content-title" style={{ fontWeight: 700 }}>
-              {state.title}
-            </span>
-            {state.body.trim() ? (
-              <MarkdownPreview
-                source={state.body}
-                className="content-text markdown-preview mt-2"
-              />
-            ) : (
-              <p
-                className="font-body content-text mt-2"
-                style={{ color: "var(--color-text-tertiary)" }}
+            <div
+              style={{
+                border: "1px solid var(--color-border-strong)",
+                borderRadius: 8,
+                padding: "var(--space-lg)",
+                background: "var(--color-bg-surface)",
+                ...dress.panelStyle,
+              }}
+            >
+              <span
+                className="content-title"
+                style={{ fontWeight: 700, ...dress.headingStyle }}
               >
-                {collabCopy(slug, "awaitingWriteUpEmpty")}
-              </p>
-            )}
-          </div>
-        </section>
-      )}
+                {state.title}
+              </span>
+              {state.body.trim() ? (
+                <MarkdownPreview
+                  source={state.body}
+                  className="content-text markdown-preview mt-2"
+                />
+              ) : (
+                <p className="content-text mt-2" style={dress.quietStyle}>
+                  {collabCopy(slug, "awaitingWriteUpEmpty")}
+                </p>
+              )}
+            </div>
+          </ComposerSection>
+        )}
 
-      <ErrorBanner message={state.error} />
+        <ErrorBanner message={state.error} />
 
-      {/* Footer. Global order is [destructive/neutral] … [affirmative] (#646),
-          so the way back into your own text sits on the right on every surface.
-          Exactly one exit is drawn, the one that applies to this viewer.
+        {rule}
 
-          The completed reading keeps the position and changes the act: the one
-          thing left to do with a published praxis is read it, and the link is
-          the whole reason this beats the redirect the ruling turned down. */}
-      {completed ? (
-        <div
-          className="flex flex-wrap items-center justify-end gap-4 pt-4"
-          style={{ borderTop: "1px dashed var(--color-border-strong)" }}
-        >
-          <Link to={`/praxes/${praxis.id}`} className="btn-primary">
-            {collabCopy(slug, "completedReadAction")}
-          </Link>
-        </div>
-      ) : (
-      <div
-        className="flex flex-wrap items-center justify-between gap-4 pt-4"
-        style={{ borderTop: "1px dashed var(--color-border-strong)" }}
-      >
-        <div className="flex flex-wrap items-center gap-4">
-          {isCollab && (
-            <button
-              type="button"
-              disabled={busy}
-              onClick={() => void state.leaveCollab()}
-              title={collabCopy(slug, "leaveDescription")}
-              className="font-body eyebrow hover:underline"
-              style={{
-                background: "none",
-                border: "none",
-                padding: 0,
-                cursor: "pointer",
-                color: "var(--color-text-tertiary)",
-              }}
-            >
-              {t("editPraxis.leaveAction")}
-            </button>
-          )}
-          {isCollab && isCreator && (
-            <button
-              type="button"
-              disabled={busy}
-              onClick={() => void state.cancel()}
-              title={collabCopy(slug, "deleteDescription")}
-              className="font-body eyebrow hover:underline"
-              style={{
-                background: "none",
-                border: "none",
-                padding: 0,
-                cursor: "pointer",
-                color: "var(--color-danger)",
-              }}
-            >
-              {collabCopy(slug, "deleteAction")}
-            </button>
-          )}
-        </div>
+        {/* Footer. Global order is [destructive/neutral] … [affirmative] (#646),
+            so the way back into your own text sits on the right on every
+            surface. Exactly one exit is drawn, the one that applies to this
+            viewer.
 
-        <div className="flex flex-col items-end gap-1">
-          <button
-            type="button"
-            disabled={busy}
-            onClick={() => void state.reopenForEdit()}
-            className="btn-primary"
-          >
-            {/* One button, not two. For a duel, "edit my entry" and "pull my
-                entry back" are the same call — `unsubmit` re-opens the praxis
-                for editing — so drawing both would be two labels for one act.
-                The neutral pull-back wording is the honest one (#1077). */}
-            {collabCopy(
-              slug,
-              isDuel ? "duelPullBackAction" : "awaitingEditAction",
-            )}
-          </button>
-          {/* The cost, before the click, not after it. On a collab the edit this
-              re-entry exists for cancels the pending-publish window and clears
-              every member's cast (`cancel_pending_publish_on_edit`, ADR-0012) —
-              the countdown drawn a few blocks up. */}
-          <span
-            className="font-body eyebrow-sentence"
-            style={{ textAlign: "right", maxWidth: 420 }}
-          >
-            {collabCopy(
-              slug,
-              isDuel ? "duelPullBackDescription" : "awaitingEditDescription",
-            )}
-          </span>
-        </div>
-      </div>
-      )}
-    </ArchetypeFrame>
+            The completed reading keeps the position and changes the act: the one
+            thing left to do with a published praxis is read it, and the link is
+            the whole reason this beats the redirect the ruling turned down. */}
+        {completed ? (
+          <ComposerFooter
+            end={
+              <Link
+                to={`/praxes/${praxis.id}`}
+                className={primaryClass}
+                style={dress.primaryStyle}
+              >
+                {collabCopy(slug, "completedReadAction")}
+              </Link>
+            }
+          />
+        ) : (
+          <ComposerFooter
+            start={
+              <>
+                {isCollab && (
+                  <button
+                    type="button"
+                    disabled={busy}
+                    onClick={() => void state.leaveCollab()}
+                    title={collabCopy(slug, "leaveDescription")}
+                    className="hover:underline"
+                    style={quietButton}
+                  >
+                    {t("editPraxis.leaveAction")}
+                  </button>
+                )}
+                {isCollab && isCreator && (
+                  <button
+                    type="button"
+                    disabled={busy}
+                    onClick={() => void state.cancel()}
+                    title={collabCopy(slug, "deleteDescription")}
+                    className="hover:underline"
+                    style={{ ...quietButton, color: "var(--color-danger)" }}
+                  >
+                    {collabCopy(slug, "deleteAction")}
+                  </button>
+                )}
+              </>
+            }
+            end={
+              <div className="flex flex-col items-end gap-1">
+                <button
+                  type="button"
+                  disabled={busy}
+                  onClick={() => void state.reopenForEdit()}
+                  className={primaryClass}
+                  style={dress.primaryStyle}
+                >
+                  {/* One button, not two. For a duel, "edit my entry" and "pull
+                      my entry back" are the same call — `unsubmit` re-opens the
+                      praxis for editing — so drawing both would be two labels
+                      for one act. The neutral pull-back wording is the honest
+                      one (#1077). */}
+                  {collabCopy(
+                    slug,
+                    isDuel ? "duelPullBackAction" : "awaitingEditAction",
+                  )}
+                </button>
+                {/* The cost, before the click, not after it. On a collab the
+                    edit this re-entry exists for cancels the pending-publish
+                    window and clears every member's cast
+                    (`cancel_pending_publish_on_edit`, ADR-0012) — the countdown
+                    drawn a few blocks up. */}
+                <span
+                  className="eyebrow-sentence"
+                  style={{ textAlign: "right", maxWidth: 420, ...dress.quietStyle }}
+                >
+                  {collabCopy(
+                    slug,
+                    isDuel ? "duelPullBackDescription" : "awaitingEditDescription",
+                  )}
+                </span>
+              </div>
+            }
+          />
+        )}
+      </ComposerSheet>
+    </ComposerPage>
   );
 }

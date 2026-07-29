@@ -255,6 +255,8 @@
       "statusDraft": "Draft",
       "statusSaved": "Saved {{ago}}",
       "statusUnsaved": "Not saved yet",
+      "statusSubmitted": "Submitted",
+      "statusSealed": "Sealed",
       "taskLabel": "The task",
       "pointsUnit": "pts",
       "levelLabel": "Level {{level}}",

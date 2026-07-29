@@ -78,6 +78,7 @@ import {
   ComposerFooter,
   ComposerGround,
   ComposerMasthead,
+  ComposerPage,
   ComposerRule,
   ComposerSection,
   ComposerSheet,
@@ -89,7 +90,9 @@ import {
   composerLabelStyle,
   formatAutosave,
   useComposerSizes,
+  type ComposerDress,
 } from "./shared";
+import PraxisWaitingSurface from "../waiting/PraxisWaitingSurface";
 import {
   BodyPreview,
   BodyTextarea,
@@ -104,7 +107,7 @@ import {
   type ComposerTab,
 } from "./controls";
 import { MetataskSealStack } from "../MetataskSealStack";
-import type { EditPraxisState } from "../useEditPraxis";
+import { isWaitingStage, type EditPraxisState } from "../useEditPraxis";
 
 interface Props {
   state: EditPraxisState;
@@ -137,6 +140,83 @@ const BAND = "var(--faction-default-rainbow-loop)";
  * --font-body is the site's Courier Prime. */
 const TITLE_FACE = "var(--font-display)";
 
+const labelStyle = { color: MUTED };
+const panelStyle = {
+  background: FIELD,
+  border: `1px solid ${BORDER}`,
+  borderRadius: 10,
+};
+/* The submit button's paint, minus the busy cursor the composer adds. */
+const primaryStyle = composerLabelStyle({
+  border: "none",
+  borderRadius: 10,
+  padding: "var(--space-md) var(--space-xl)",
+  color: ON_ACCENT,
+  background: INK,
+  fontWeight: 700,
+});
+
+/* The chrome, named once and mounted twice: the composer below, and the
+   waiting surface once your part is in (#1189). These are the same ELEMENTS
+   both times, not two constructions of the same idea, so na's spectrum band
+   and drifting aurora cannot drift apart between the two stages. */
+const masthead = <ComposerMasthead background={BAND} animated />;
+const ground = (
+  <ComposerGround
+    background="var(--faction-default-aurora)"
+    opacity="var(--faction-default-aurora-opacity)"
+    filter="var(--faction-default-aurora-filter)"
+    mixBlendMode="var(--faction-default-aurora-blend)"
+    animated
+  />
+);
+const sheetStyle = {
+  background: SHEET,
+  border: `1px solid ${BORDER}`,
+  boxShadow: "0 16px 40px -24px rgba(0,0,0,0.5)",
+};
+const statusMark = (
+  <RingMark size={44} inset={5} ring={RING} inner={FIELD} spin />
+);
+const slip = {
+  style: {
+    background: FIELD,
+    border: `1px solid ${BORDER}`,
+    borderRadius: 10,
+    padding: "var(--space-lg)",
+  },
+  labelStyle: { color: FAINT },
+  titleStyle: { fontFamily: TITLE_FACE, fontStyle: "italic", color: INK },
+  descriptionStyle: { color: MUTED },
+  pillStyle: { color: MUTED },
+} as const;
+
+/**
+ * The na kit's dress, handed to `PraxisWaitingSurface` once your part is in
+ * (#1189). Exported because it is also the fall-through every unregistered slug
+ * renders, so a test that asserts on the shared surface asserts on a REAL dress
+ * rather than a fixture invented for the occasion.
+ */
+export const DEFAULT_COMPOSER_DRESS: ComposerDress = {
+  accent: INK,
+  pageStyle: { fontFamily: TITLE_FACE, color: INK },
+  sheetStyle,
+  masthead,
+  ground,
+  rule: <ComposerRule style={{ background: HAIR }} />,
+  mark: statusMark,
+  statusStyle: { color: INK, fontWeight: 700 },
+  metaStyle: { color: FAINT },
+  labelStyle,
+  slip,
+  panelStyle,
+  headingStyle: { fontFamily: TITLE_FACE, color: INK },
+  bodyStyle: { color: MUTED },
+  quietStyle: { color: FAINT },
+  primaryStyle,
+  quietButtonStyle: { color: FAINT },
+};
+
 export default function DefaultEditPraxis({ state }: Props) {
   const { t } = useTranslation("forms");
   const sizes = useComposerSizes();
@@ -161,40 +241,29 @@ export default function DefaultEditPraxis({ state }: Props) {
     outline: "none",
     boxSizing: "border-box",
   } as const;
+  /* Your part is in, so the composer is not a composer any more (ADR-0059).
+     Same page, same sheet, same ornament — a different stage. */
+  if (isWaitingStage(state.phase)) {
+    return <PraxisWaitingSurface state={state} dress={DEFAULT_COMPOSER_DRESS} />;
+  }
 
   return (
-    <div style={{ fontFamily: TITLE_FACE, color: INK }}>
-      <div
-        style={{
-          maxWidth: sizes.maxWidth,
-          margin: "0 auto",
-          padding: "var(--space-lg) var(--space-lg) 0",
-        }}
-      >
+    <ComposerPage
+      sizes={sizes}
+      style={DEFAULT_COMPOSER_DRESS.pageStyle}
+      breadcrumb={
         <Breadcrumb
           praxisId={praxis.id}
           taskId={praxis.task_id}
           taskTitle={praxis.task_title}
         />
-      </div>
-
+      }
+    >
       <ComposerSheet
         sizes={sizes}
-        style={{
-          background: SHEET,
-          border: `1px solid ${BORDER}`,
-          boxShadow: "0 16px 40px -24px rgba(0,0,0,0.5)",
-        }}
-        masthead={<ComposerMasthead background={BAND} animated />}
-        ground={
-          <ComposerGround
-            background="var(--faction-default-aurora)"
-            opacity="var(--faction-default-aurora-opacity)"
-            filter="var(--faction-default-aurora-filter)"
-            mixBlendMode="var(--faction-default-aurora-blend)"
-            animated
-          />
-        }
+        style={sheetStyle}
+        masthead={masthead}
+        ground={ground}
       >
         {/* Draft · Saved just now, with the spectrum status mark. */}
         <ComposerStatusRow
@@ -206,25 +275,16 @@ export default function DefaultEditPraxis({ state }: Props) {
                 })
               : t("editPraxis.composer.statusUnsaved")
           }
-          statusStyle={{ color: INK, fontWeight: 700 }}
-          metaStyle={{ color: FAINT }}
-          mark={<RingMark size={44} inset={5} ring={RING} inner={FIELD} spin />}
+          statusStyle={DEFAULT_COMPOSER_DRESS.statusStyle}
+          metaStyle={DEFAULT_COMPOSER_DRESS.metaStyle}
+          mark={statusMark}
         />
 
         {/* The task reference slip, on the field ground with the points mark. */}
         <TaskSlip
           praxis={praxis}
           task={task}
-          style={{
-            background: FIELD,
-            border: `1px solid ${BORDER}`,
-            borderRadius: 10,
-            padding: "var(--space-lg)",
-          }}
-          labelStyle={{ color: FAINT }}
-          titleStyle={{ fontFamily: TITLE_FACE, fontStyle: "italic", color: INK }}
-          descriptionStyle={{ color: MUTED }}
-          pillStyle={{ color: MUTED }}
+          {...slip}
           mark={
             <RingMark
               size={84}
@@ -252,7 +312,7 @@ export default function DefaultEditPraxis({ state }: Props) {
           label={t("editPraxis.composer.titleLabel")}
           htmlFor="composer-title"
           meta={<TitleCounter length={state.title.length} color={FAINT} />}
-          labelStyle={{ color: MUTED }}
+          labelStyle={labelStyle}
         >
           <TitleField
             state={state}
@@ -273,7 +333,7 @@ export default function DefaultEditPraxis({ state }: Props) {
         {!state.controlsLocked && (
           <ComposerSection
             label={t("editPraxis.composer.modeLabel")}
-            labelStyle={{ color: MUTED }}
+            labelStyle={labelStyle}
           >
             <ModePicker
               state={state}
@@ -320,7 +380,7 @@ export default function DefaultEditPraxis({ state }: Props) {
                     count: praxis.members.length,
                   })
             }
-            labelStyle={{ color: MUTED }}
+            labelStyle={labelStyle}
           >
             <InviteSearch
               state={state}
@@ -343,7 +403,7 @@ export default function DefaultEditPraxis({ state }: Props) {
         {state.showSealStack && (
           <ComposerSection
             label={t("editPraxis.composer.sealsLabel")}
-            labelStyle={{ color: MUTED }}
+            labelStyle={labelStyle}
           >
             <MetataskSealStack state={state} />
           </ComposerSection>
@@ -354,7 +414,7 @@ export default function DefaultEditPraxis({ state }: Props) {
         <ComposerSection
           label={t("editPraxis.composer.writeUpLabel")}
           htmlFor="composer-body"
-          labelStyle={{ color: MUTED }}
+          labelStyle={labelStyle}
           meta={
             <WriteUpTabs
               tab={tab}
@@ -432,7 +492,7 @@ export default function DefaultEditPraxis({ state }: Props) {
 
         <ComposerSection
           label={t("editPraxis.composer.proofLabel")}
-          labelStyle={{ color: MUTED }}
+          labelStyle={labelStyle}
         >
           <div
             style={{
@@ -533,21 +593,16 @@ export default function DefaultEditPraxis({ state }: Props) {
               skin={{
                 idleLabel: t("editPraxis.composer.submit"),
                 busyLabel: t("editPraxis.composer.submitBusy"),
-                style: composerLabelStyle({
+                style: {
+                  ...primaryStyle,
                   cursor: state.submitting ? "wait" : "pointer",
-                  border: "none",
-                  borderRadius: 10,
-                  padding: "var(--space-md) var(--space-xl)",
-                  color: ON_ACCENT,
-                  background: INK,
-                  fontWeight: 700,
-                }),
+                },
               }}
             />
           }
         />
       </ComposerSheet>
-    </div>
+    </ComposerPage>
   );
 }
 

@@ -16,7 +16,10 @@ import type { PraxisMemberOut, PraxisOut } from "../../../../api/praxis";
 import type { TaskOut } from "../../../../api/tasks";
 import { collabCopy } from "../../../../components/collab/collabCopy";
 import type { EditPraxisState } from "../../useEditPraxis";
-import PraxisWaitingSurface from "../PraxisWaitingSurface";
+import { DEFAULT_COMPOSER_DRESS } from "../../archetypes/DefaultEditPraxis";
+import PraxisWaitingSurface, {
+  type PraxisWaitingSurfaceProps,
+} from "../PraxisWaitingSurface";
 
 const ME = 1;
 const THEM = 2;
@@ -133,10 +136,19 @@ function state(overrides: Partial<EditPraxisState> = {}): EditPraxisState {
   } as unknown as EditPraxisState;
 }
 
-function render(props: Parameters<typeof PraxisWaitingSurface>[0]) {
+/**
+ * Rendered in na's REAL dress (#1189), not a fixture invented here.
+ *
+ * The surface no longer dresses itself — an archetype hands it that faction's
+ * masthead, ground, rule and status mark, and `DEFAULT_COMPOSER_DRESS` is the
+ * one every unregistered slug falls through to. Using it keeps these assertions
+ * about the surface's READING (which control applies to whom) while still
+ * putting the dress seam every skin passes through in the path.
+ */
+function render(props: Omit<PraxisWaitingSurfaceProps, "dress">) {
   return renderToStaticMarkup(
     <MemoryRouter>
-      <PraxisWaitingSurface {...props} />
+      <PraxisWaitingSurface {...props} dress={DEFAULT_COMPOSER_DRESS} />
     </MemoryRouter>,
   );
 }

@@ -36,7 +36,11 @@ const mocks = vi.hoisted(() => ({
 vi.mock("../../../../hooks/useFormFactor", () => ({
   useFormFactor: () => mocks.formFactor,
 }));
-vi.mock("../../useEditPraxis", () => ({
+// Partial: `isWaitingStage` stays REAL. It is the predicate every archetype
+// asks before swapping in the waiting surface (#1189), and a stubbed one would
+// let the dispatcher assertions below pass against a stage that never happens.
+vi.mock("../../useEditPraxis", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("../../useEditPraxis")>()),
   useEditPraxis: () => mocks.state,
 }));
 
