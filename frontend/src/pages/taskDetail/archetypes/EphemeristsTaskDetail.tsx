@@ -6,7 +6,12 @@ import { useFormFactor } from "../../../hooks/useFormFactor";
 import { factionCssVar, factionFill, factionName } from "../../../utils/factions";
 import { mediaUrl } from "../../../utils/media";
 import { isNeutralMultiplier } from "../../../utils/points";
-import { ErrorBanner, LevelJumpBanner, TaskDetailComments } from "./shared";
+import {
+  actionColumnSize,
+  ErrorBanner,
+  LevelJumpBanner,
+  TaskDetailComments,
+} from "./shared";
 import type { TaskDetailState } from "../useTaskDetail";
 
 /**
@@ -427,7 +432,11 @@ const SIZES: Record<"desktop" | "mobile", SizeSet> = {
 
 /** The page cap the epic settled on. Geometry. */
 const PAGE_WIDTH = 1200;
-/** The action panel — 420, the narrowest in the set. Dress, and deliberate. */
+/**
+ * The action panel — 420, the narrowest in the set. Dress, and deliberate. It is
+ * the width of a plate that HAS a summons on it; with no move to make the column
+ * collapses to the crown (#1138).
+ */
 const PANEL_WIDTH = 420;
 
 /** Initials fallback for an author with no uploaded avatar. */
@@ -859,8 +868,13 @@ export default function EphemeristsTaskDetail({
     <div
       style={{
         ...cell,
-        flex: "0 0 auto",
-        width: size.ledgerWidth,
+        // Alone on the plate — no move for this viewer (#1138) — the ledger
+        // takes the width the crown reserves rather than sitting in one corner
+        // of it. The crown cannot narrow with the plate: it is absolutely
+        // positioned, so it adds nothing to a shrink-to-fit width and would
+        // overhang both edges. Hence `collapsedMinWidth` at the column below.
+        flex: hasAction ? "0 0 auto" : "1 1 auto",
+        width: hasAction ? size.ledgerWidth : "auto",
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
@@ -1189,8 +1203,16 @@ export default function EphemeristsTaskDetail({
             <div style={{ flex: 1, minWidth: 0 }}>{header}</div>
             <div
               style={{
-                flex: desktop ? `0 0 ${PANEL_WIDTH}px` : "1 1 auto",
-                width: desktop ? PANEL_WIDTH : "100%",
+                // 420 with a summons to answer; with none, the plate narrows to
+                // its crown (#1138) — the only skin in the set that cannot go to
+                // its contents' intrinsic width, because the winged disc is
+                // drawn 400 wide and does not participate in the layout.
+                ...actionColumnSize({
+                  desktop,
+                  hasAction,
+                  width: PANEL_WIDTH,
+                  collapsedMinWidth: size.crownWidth,
+                }),
                 maxWidth: "100%",
               }}
             >

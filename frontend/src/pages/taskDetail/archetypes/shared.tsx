@@ -104,6 +104,47 @@ export function TaskDetailComments({
   );
 }
 
+/**
+ * actionColumnSize — the header's action-column geometry, one expression for all
+ * nine skins (#1138).
+ *
+ * The panel holds two cells: the worth readout, always drawn, and the ONE action
+ * slot (sign up / continue / edit), which every skin already gates behind
+ * `hasAction`. What none of them gated was the column AROUND them: the width was
+ * pinned to the skin's panel value unconditionally, so a viewer with no move —
+ * every logged-out visitor — got a 420–520px frame around a ~168px score box.
+ * WORLD_ZERO_STYLE §1.4 hides controls a viewer cannot use; a frame sized for a
+ * control that is not there re-states the absence as a hole.
+ *
+ * `width` stays the caller's — the panel band runs 420 (Ephemerists) to 520
+ * (Everymen) and that spread is dress, not drift, so this helper takes the number
+ * rather than owning it. What is shared is the SHAPE of the expression, which is
+ * the part that was identical in eight files and wrong in all eight.
+ *
+ * `collapsedMinWidth` is for a panel carrying ornament wider than its flow
+ * content: an absolutely-positioned mark contributes nothing to a
+ * shrink-to-fit width, so the Ephemerists crown (400px) would hang off both
+ * edges of a collapsed plate. Only that skin passes it.
+ */
+export function actionColumnSize({
+  desktop,
+  hasAction,
+  width,
+  collapsedMinWidth,
+}: {
+  desktop: boolean;
+  hasAction: boolean;
+  width: number;
+  collapsedMinWidth?: number;
+}): CSSProperties {
+  // The column has collapsed; the panel is the column, whatever it holds.
+  if (!desktop) return { flex: "1 1 auto", width: "100%" };
+  if (!hasAction) {
+    return { flex: "0 0 auto", width: "auto", minWidth: collapsedMinWidth };
+  }
+  return { flex: `0 0 ${width}px`, width };
+}
+
 export function ErrorBanner({ message, style }: ErrorBannerProps) {
   if (!message) return null;
   return (

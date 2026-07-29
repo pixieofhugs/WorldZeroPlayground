@@ -120,6 +120,45 @@ describe("task-detail comments slot", () => {
   }
 });
 
+/**
+ * The action column's width follows `hasAction` (#1138).
+ *
+ * Each skin pins its own panel width on desktop — 420 (Ephemerists) to 520
+ * (Everymen) — and every one of the nine pinned it *unconditionally*, while the
+ * action cell inside was correctly gated. A logged-out viewer therefore got a
+ * frame sized for a control that was not rendered.
+ *
+ * The assertion is deliberately derived rather than hardcoded: whatever
+ * three-digit width a skin pins when there IS a move must be gone when there is
+ * not. That way a tenth skin, or a re-dressed panel width, is covered without
+ * this file learning any faction's number. The band floor keeps the check off
+ * the skins' small ornament widths (medallions, ledgers, avatar discs).
+ */
+const PANEL_BAND_FLOOR = 400;
+
+/** Inline `width:` declarations only — `min-width` is a floor, not a pin. */
+function pinnedWidths(html: string): number[] {
+  return [...html.matchAll(/[;"]width:(\d{3})px/g)]
+    .map(([, value]) => Number(value))
+    .filter((value) => value >= PANEL_BAND_FLOOR);
+}
+
+describe("task-detail action column", () => {
+  const noMove = { canSignUp: false, isInProgress: false, inProgressPraxisId: null };
+
+  for (const [slug, Archetype] of Object.entries(archetypes)) {
+    it(`${slug} pins its panel width while the viewer has a move`, () => {
+      const { html } = render(<Archetype state={baseState()} />);
+      expect(pinnedWidths(html).length).toBeGreaterThan(0);
+    });
+
+    it(`${slug} drops the pinned width once there is no action to hold`, () => {
+      const { html } = render(<Archetype state={baseState(noMove)} />);
+      expect(pinnedWidths(html)).toEqual([]);
+    });
+  }
+});
+
 describe("na / Default task detail — the reference anatomy", () => {
   it("hides the multiplier badge at the identity factor", () => {
     const { text } = render(<DefaultTaskDetail state={baseState()} />);

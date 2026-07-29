@@ -6,7 +6,12 @@ import { useFormFactor } from "../../../hooks/useFormFactor";
 import { factionCssVar, factionFill, factionName } from "../../../utils/factions";
 import { mediaUrl } from "../../../utils/media";
 import { isNeutralMultiplier } from "../../../utils/points";
-import { ErrorBanner, LevelJumpBanner, TaskDetailComments } from "./shared";
+import {
+  actionColumnSize,
+  ErrorBanner,
+  LevelJumpBanner,
+  TaskDetailComments,
+} from "./shared";
 import type { TaskDetailState } from "../useTaskDetail";
 
 /**
@@ -755,7 +760,9 @@ export default function EverymenTaskDetail({
 
   // The action plate — a sheet pasted onto the newsprint, holding the wage box
   // and the CTA side by side. 520 on desktop: the widest panel in the set, which
-  // is dress (the others run 420–460).
+  // is dress (the others run 420–460) — and it is only that wide when there IS a
+  // CTA beside the wage; see `actionColumnSize` (#1138). Alone, the wage box
+  // takes the sheet, which is also what it already did on the phone.
   const actionPlate = (
     <div
       style={{
@@ -778,7 +785,7 @@ export default function EverymenTaskDetail({
         <div
           style={{
             ...plateBox,
-            flex: desktop ? "0 0 auto" : "1 1 auto",
+            flex: desktop && hasAction ? "0 0 auto" : "1 1 auto",
             minWidth: desktop ? 156 : 0,
           }}
         >
@@ -944,8 +951,7 @@ export default function EverymenTaskDetail({
           <div style={{ flex: 1, minWidth: 0 }}>{header}</div>
           <div
             style={{
-              flex: desktop ? "0 0 520px" : "1 1 auto",
-              width: desktop ? 520 : "100%",
+              ...actionColumnSize({ desktop, hasAction, width: 520 }),
               marginTop: desktop ? "var(--space-2xl)" : 0,
             }}
           >
