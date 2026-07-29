@@ -31,6 +31,17 @@
  * one thing light mode changes is what surrounds it, and the overlay below is
  * an explicit near-black scrim rather than the theme's, so the panel never
  * floats on a white page.
+ *
+ * WHICH IS EXACTLY WHY THE GLOBAL FUNCTIONAL INKS FAILED HERE (#1168). They
+ * flip on the THEME; this chassis does not flip at all, so the LIGHT halves of
+ * `--color-success` (#14532d) and `--color-danger` (#dc2626) — chosen against
+ * the app's near-white page — land on near-black. Measured with
+ * `utils/contrast.ts`: the reopen note 2.14:1, the win figure and the roster's
+ * "sealed" mark 1.99:1 on the glass, the forfeit body 4.03:1. All three take
+ * `--faction-singularity-card-credit` / `-card-notice`, which are invariant like
+ * the chassis (11.18 / 10.40 / 11.67). Two pairings clear as shipped and are
+ * left alone: the 24px heading in `--color-danger` at 4.03 (a 3:1 floor) and the
+ * Snide zero figure at 3.75 on the glass, also 24px bold.
  */
 import { factionCssVar } from '../../utils/factions'
 import {
@@ -48,6 +59,15 @@ const PHOSPHOR = 'var(--faction-singularity-card-accent)'
 const PHOSPHOR_DIM = 'var(--faction-singularity-phosphor-dim)'
 const BRAND_BLUE = 'var(--faction-singularity-card-muted)'
 const TERMINAL = 'var(--faction-singularity-card-font)'
+/**
+ * The two sheet-measured functional inks (#694). This chassis is near-black in
+ * BOTH themes while `--color-success` / `--color-danger` flip with the viewer,
+ * so the light-theme halves of those tokens land on a ground they were never
+ * chosen for: the green reads 2.14:1 here and 1.99:1 on the glass (#1168).
+ * These two are amber and phosphor-green, invariant like the chassis.
+ */
+const NOTICE = 'var(--faction-singularity-card-notice)'
+const CREDIT = 'var(--faction-singularity-card-credit)'
 
 /** Hairline rules and panel edges: the accent at low opacity, never a solid. */
 const HAIRLINE = `color-mix(in srgb, ${PHOSPHOR} 22%, transparent)`
@@ -105,7 +125,16 @@ export default function SingularityDuelSealConfirm({
   // the foreign duelist's colour is the one variable that isn't phosphor, which
   // is precisely why it gets the left edge and the cast glow.
   const accent = factionCssVar(foe.faction_slug, 'card-accent')
-  const theme: DuelSlotTheme = { accent, muted: PHOSPHOR_DIM, bodyFont: TERMINAL }
+  // `credit` is the #1168 seam: the shared slots' default `--color-success` is
+  // 1.99:1 on the green glass in light. `alarm` is deliberately NOT passed —
+  // `--color-danger` measures 3.75:1 there and the zero figure is 24px bold, so
+  // it clears its 3:1 floor and keeps the red the design wants.
+  const theme: DuelSlotTheme = {
+    accent,
+    muted: PHOSPHOR_DIM,
+    bodyFont: TERMINAL,
+    credit: CREDIT,
+  }
 
   return (
     <div
@@ -153,11 +182,21 @@ export default function SingularityDuelSealConfirm({
             style={{ height: 1, background: HAIRLINE, margin: 'var(--space-md) 0' }}
           />
 
+          {/* NOTICE, not the global red: `--color-danger` reads 4.03:1 on this
+              always-dark chassis in light and this is 18px body copy (#1168).
+              The red survives as the rule beside it, carrying no text — and it
+              stays on the 24px heading above, where a 3:1 floor applies. */}
           <p
             className="content-text"
             style={{
               lineHeight: 1.55,
-              color: copy.danger ? 'var(--color-danger)' : PHOSPHOR_DIM,
+              color: copy.danger ? NOTICE : PHOSPHOR_DIM,
+              ...(copy.danger
+                ? {
+                    paddingLeft: 'var(--space-md)',
+                    borderLeft: '3px solid var(--color-danger)',
+                  }
+                : {}),
             }}
           >
             {copy.body}
@@ -170,7 +209,7 @@ export default function SingularityDuelSealConfirm({
           {copy.note && (
             <p
               className="content-text"
-              style={{ marginTop: 'var(--space-sm)', color: 'var(--color-success)' }}
+              style={{ marginTop: 'var(--space-sm)', color: CREDIT }}
             >
               <span aria-hidden>{'// '}</span>
               {copy.note}

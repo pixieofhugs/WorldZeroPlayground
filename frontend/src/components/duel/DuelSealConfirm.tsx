@@ -38,6 +38,17 @@
  * faction therefore stays TWO files that each handle two modes, instead of four
  * files — which is the whole reason this landed before the six skin issues
  * (#721–#726).
+ *
+ * CONTRAST (#1168), measured with `utils/contrast.ts` in both themes against
+ * this dialog's one ground, `--color-bg-page`. `--color-danger` reads 4.40:1
+ * there in light, so the forfeit body takes `--faction-default-card-notice`
+ * (6.46 / 11.14) — see the comment at the call site. Everything else on this
+ * sheet clears as shipped and is deliberately untouched: the reopen note in
+ * `--color-success` at 8.30 / 10.67, the stakes win figure and the roster's
+ * "sealed" mark in the same green, and the Snide zero figure in
+ * `--color-danger` at 4.40 / 6.72 (24px bold, so a 3:1 floor). The pairings are
+ * rows in `utils/__tests__/factionContrast.test.ts`, not just in a PR body —
+ * the nightly sweep walks read routes and can never reach a composer state.
  */
 import type { } from 'react'
 import type { DuelDetailOut } from '../../api/duel'
@@ -119,10 +130,21 @@ export function DefaultDuelSealConfirm({
           {copy.heading}
         </h2>
 
+        {/* The forfeit body is NOT painted in `--color-danger`: it measures
+            4.40:1 on `--color-bg-page` in light, under the 4.5:1 this 18px copy
+            owes (#1168). It takes the na kit's notice ink (6.46 / 11.14) and the
+            red survives as the rule beside it, where it carries no text — the
+            shape `UaDuelSealConfirm` established in #1167. */}
         <p
           className="font-body content-text"
           style={{
-            color: copy.danger ? 'var(--color-danger)' : 'var(--color-text-secondary)',
+            color: copy.danger ? 'var(--faction-default-card-notice)' : 'var(--color-text-secondary)',
+            ...(copy.danger
+              ? {
+                  paddingLeft: 'var(--space-md)',
+                  borderLeft: '3px solid var(--color-danger)',
+                }
+              : {}),
           }}
         >
           {copy.body}

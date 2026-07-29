@@ -54,6 +54,13 @@ export const SHADOW = 'var(--faction-wow-chronicle-shadow)'
  * card ink) — what the plum ribbon band carries. 6.34:1 light, 7.39:1 dark.
  */
 export const ON_RIBBON = 'var(--faction-wow-stamp-chip-text)'
+/**
+ * The sheet-measured warning ink (#694), which `--color-danger` is not: the
+ * global red reads 4.40:1 on `LISTS_BG` in light, under the 4.5:1 an 18px
+ * forfeit body owes, while this reads 6.45 / 10.30 (#1168). The red survives on
+ * these surfaces only as a RULE beside the paragraph, carrying no text.
+ */
+export const NOTICE = 'var(--faction-wow-card-notice)'
 
 export const DISPLAY_FONT = 'var(--faction-wow-card-font)' // MedievalSharp
 export const BODY_FONT = 'var(--faction-wow-body-font)' // Lora

@@ -21,6 +21,16 @@
  *
  * Copy is faction-neutral by decision (#718): Snide's voice is visual only. No
  * new locale keys, and no string in this file.
+ *
+ * CONTRAST (#1168), measured with `utils/contrast.ts` in both themes. This skin
+ * had already routed its own body ink — the redaction bar sets PINK on INK at
+ * 5.38:1 and the reopen note ACID at 15.55:1, so neither moves. What it could
+ * NOT route were the shared slots' hardcoded figures: `--color-success` reads
+ * **2.07:1** on the halftone ground in the light theme, which sank both the win
+ * tile and the roster's 18px "sealed" mark. That is what the `credit` seam on
+ * `DuelSlotTheme` exists for. Left alone as measured: the zero figure in
+ * `--color-danger` (3.90 / 6.81, 24px bold, a 3:1 floor) and the roster's
+ * "walking" muted at 12.89 / 11.79.
  */
 import type { CSSProperties } from 'react'
 import { factionCssVar } from '../../utils/factions'
@@ -39,6 +49,14 @@ const ACID = 'var(--faction-snide-acid)'
 const PINK = 'var(--faction-snide-pink)'
 const PAPER = 'var(--faction-snide-paper)'
 const MUTED = 'var(--faction-snide-card-muted)'
+/**
+ * The sheet-measured "sealed / positive" ink (#694). `--color-success` is the
+ * shared slots' default and reads **2.07:1** on this photocopier ink in the
+ * light theme — the ground is dark in BOTH themes while the token flips with
+ * the viewer, so light mode hands it a near-black page it was never chosen for
+ * (#1168). This one is the phosphor green in both, at 10.81:1.
+ */
+const CREDIT = 'var(--faction-snide-card-credit)'
 const MARKER = 'var(--faction-snide-font-marker)'
 
 /** The xerox screen: a 1px dot on a 5px grid, barely there. */
@@ -85,7 +103,15 @@ export default function SnideDuelSealConfirm({
   // Opponent tokens, same rule as the Default dialog and the rail: the foreign
   // duelist looks foreign even on Snide's own paper.
   const accent = factionCssVar(foe.faction_slug, 'card-accent')
-  const theme: DuelSlotTheme = { accent, muted: MUTED, bodyFont: 'var(--font-body)' }
+  // `credit` is the #1168 seam. `alarm` is deliberately NOT passed: the zero
+  // figure in `--color-danger` measures 3.90:1 on this ink and is 24px bold, so
+  // it clears its 3:1 floor — and a Snide duelist's literal 0 should stay red.
+  const theme: DuelSlotTheme = {
+    accent,
+    muted: MUTED,
+    bodyFont: 'var(--font-body)',
+    credit: CREDIT,
+  }
 
   return (
     <div

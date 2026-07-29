@@ -15,6 +15,10 @@
  * Pure frame, same contract as the desktop skin: `StakesTiles` / `RaceRoster`
  * own every figure and `useDuelSealCopy` owns the whole submit/forfeit branch
  * (#751). Copy is `praxis.json` only — faction-neutral by decision (#718).
+ *
+ * The contrast readings are the desktop skin's verbatim — same always-dark
+ * ground, same glass panel — so the same three routings to
+ * `--faction-singularity-card-notice` / `-card-credit` apply here (#1168).
  */
 import { factionCssVar } from '../../utils/factions'
 import {
@@ -32,6 +36,9 @@ const PHOSPHOR = 'var(--faction-singularity-card-accent)'
 const PHOSPHOR_DIM = 'var(--faction-singularity-phosphor-dim)'
 const BRAND_BLUE = 'var(--faction-singularity-card-muted)'
 const TERMINAL = 'var(--faction-singularity-card-font)'
+/** The sheet-measured functional inks — see `SingularityDuelSealConfirm` (#1168). */
+const NOTICE = 'var(--faction-singularity-card-notice)'
+const CREDIT = 'var(--faction-singularity-card-credit)'
 
 const HAIRLINE = `color-mix(in srgb, ${PHOSPHOR} 22%, transparent)`
 const GLASS = `color-mix(in srgb, ${PHOSPHOR} 5%, transparent)`
@@ -77,7 +84,13 @@ export default function SingularityMobileDuelSealConfirm({
   const copy = useDuelSealCopy(mode, duel, viewerCharacterId, taskPointValue)
 
   const accent = factionCssVar(foe.faction_slug, 'card-accent')
-  const theme: DuelSlotTheme = { accent, muted: PHOSPHOR_DIM, bodyFont: TERMINAL }
+  // `credit` per #1168; `alarm` deliberately unset — see the desktop skin.
+  const theme: DuelSlotTheme = {
+    accent,
+    muted: PHOSPHOR_DIM,
+    bodyFont: TERMINAL,
+    credit: CREDIT,
+  }
 
   return (
     <div
@@ -111,11 +124,19 @@ export default function SingularityMobileDuelSealConfirm({
           style={{ height: 1, background: HAIRLINE, margin: 'var(--space-md) 0' }}
         />
 
+        {/* NOTICE ink and a red rule on the forfeit face — #1168, measurements
+            in the desktop skin's docblock. */}
         <p
           className="content-text"
           style={{
             lineHeight: 1.55,
-            color: copy.danger ? 'var(--color-danger)' : PHOSPHOR_DIM,
+            color: copy.danger ? NOTICE : PHOSPHOR_DIM,
+            ...(copy.danger
+              ? {
+                  paddingLeft: 'var(--space-md)',
+                  borderLeft: '3px solid var(--color-danger)',
+                }
+              : {}),
           }}
         >
           {copy.body}
@@ -124,7 +145,7 @@ export default function SingularityMobileDuelSealConfirm({
         {copy.note && (
           <p
             className="content-text"
-            style={{ marginTop: 'var(--space-sm)', color: 'var(--color-success)' }}
+            style={{ marginTop: 'var(--space-sm)', color: CREDIT }}
           >
             <span aria-hidden>{'// '}</span>
             {copy.note}

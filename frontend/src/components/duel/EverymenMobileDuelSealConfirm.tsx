@@ -12,6 +12,11 @@
  * string that differs and the forfeit dialog re-dresses the stakes panel in ink
  * rather than dropping it. `StakesTiles`, `RaceRoster` and `SealActions` are all
  * present in both modes — none of the duel's arithmetic lives here.
+ *
+ * The contrast readings are the desktop form's verbatim — same paper, same
+ * inverting stakes panel — so the same two routings apply (#1168): NOTICE for
+ * the forfeit body with the red as its rule, and GOLD for the shared slots'
+ * `credit` while the panel is ink. See `EverymenDuelSealConfirm.tsx`.
  */
 import { factionCssVar } from '../../utils/factions'
 import {
@@ -32,6 +37,8 @@ const PAPER_TEXT = 'var(--everymen-paper-text)'
 const MUTED = 'var(--everymen-muted)'
 const RED = 'var(--everymen-red)'
 const GOLD = 'var(--everymen-gold)'
+/** The sheet-measured warning ink — see `EverymenDuelSealConfirm` (#1168). */
+const NOTICE = 'var(--faction-everymen-card-notice)'
 const POSTER = 'var(--font-accent)'
 const BODY = 'var(--font-body)'
 
@@ -52,7 +59,13 @@ export default function EverymenMobileDuelSealConfirm({
 
   const accent = factionCssVar(foe.faction_slug, 'card-accent')
   const onInk = copy.danger
-  const theme: DuelSlotTheme = { accent, muted: onInk ? CREAM : MUTED, bodyFont: BODY }
+  // The panel's polarity decides the slots' inks — see the desktop skin (#1168).
+  const theme: DuelSlotTheme = {
+    accent,
+    muted: onInk ? CREAM : MUTED,
+    bodyFont: BODY,
+    credit: onInk ? GOLD : undefined,
+  }
 
   return (
     <div
@@ -155,12 +168,20 @@ export default function EverymenMobileDuelSealConfirm({
           </span>
         </div>
 
+        {/* NOTICE, with the red as the rule — see the desktop form (#1168). */}
         <p
           className="content-text"
           style={{
             marginTop: 'var(--space-lg)',
             lineHeight: 1.6,
-            ...(copy.danger ? { color: RED, fontWeight: 700 } : {}),
+            ...(copy.danger
+              ? {
+                  color: NOTICE,
+                  fontWeight: 700,
+                  paddingLeft: 'var(--space-md)',
+                  borderLeft: `3px solid ${RED}`,
+                }
+              : {}),
           }}
         >
           {copy.body}

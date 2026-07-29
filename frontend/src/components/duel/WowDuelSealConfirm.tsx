@@ -33,6 +33,16 @@
  *    slot owns them: a S.N.I.D.E. viewer on a WOW task keeps 0.0×, and this
  *    composer skin is chosen by the TASK's faction, not the viewer's. Same
  *    deletion `CovenDuelSealConfirm` made of the design's "+90 / +30".
+ *
+ * CONTRAST (#1168), measured with `utils/contrast.ts` in both themes. One
+ * pairing failed: `--color-danger` reads **4.40:1** on the cream lists ground in
+ * light, under the 4.5:1 an 18px forfeit body owes, so the body takes `NOTICE`
+ * (6.45 / 10.30) and the red becomes the rule beside it. Everything else clears
+ * as shipped and is untouched: the reopen note in `--color-success` at 8.29 /
+ * 9.87 on the ground, and on the parchment plate the win figure and the roster's
+ * "sealed" mark at 7.39 / 9.03 plus the Snide zero figure in `--color-danger` at
+ * 3.92 / 5.69 (24px bold, a 3:1 floor). All are rows in
+ * `utils/__tests__/factionContrast.test.ts`.
  */
 import { factionCssVar } from '../../utils/factions'
 import { WowSigil } from '../cards/WowSigil'
@@ -57,6 +67,7 @@ import {
   ListsSpark,
   listsEyebrow,
   MUTED,
+  NOTICE,
   ON_RIBBON,
   PANEL,
   PANEL_BORDER,
@@ -147,13 +158,22 @@ export default function WowDuelSealConfirm({
             </div>
           </div>
 
-          {/* ── the shared, figure-bearing copy ── */}
+          {/* ── the shared, figure-bearing copy ── the forfeit face takes the
+              sheet-measured NOTICE ink rather than the global red (#1168); the
+              red is the rule beside it, where it carries no text. */}
           <p
             className="content-text"
             style={{
               fontFamily: BODY_FONT,
               lineHeight: 1.55,
-              ...(copy.danger ? { color: 'var(--color-danger)', fontWeight: 700 } : {}),
+              ...(copy.danger
+                ? {
+                    color: NOTICE,
+                    fontWeight: 700,
+                    paddingLeft: 'var(--space-md)',
+                    borderLeft: `3px solid var(--color-danger)`,
+                  }
+                : {}),
             }}
           >
             {copy.body}

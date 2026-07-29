@@ -26,6 +26,22 @@
  * hairlines mix from `--eph-vellum-text` (which flips to parchment in dark)
  * rather than `--eph-ink` (which stays dark), so a rule stays visible on the
  * dark-theme tobacco vellum.
+ *
+ * CONTRAST (#1168): this is the ONE seal skin that needed no change. Measured
+ * with `utils/contrast.ts` in both themes — the forfeit body is `--eph-parchment`
+ * on the inked cost panel at 13.39 / 15.52 (the skin had already routed around
+ * the global red, and the note above records why); the marginal gloss is
+ * `--eph-muted` on the vellum at 4.72 / 6.80; and on the ledger band the win
+ * figure and the roster's 18px "sealed" mark clear at 5.69 / 10.68 with the zero
+ * figure at 3.01 / 6.73 (24px bold, a 3:1 floor, and the tightest reading in the
+ * whole family — a row exists for it precisely because of that). Nothing is
+ * repainted; the pairings are rows in `utils/__tests__/factionContrast.test.ts`
+ * so a later repaint of the vellum cannot silently sink them.
+ *
+ * One pairing on this surface IS below threshold and is deliberately left:
+ * `--eph-muted` reads 4.00:1 on `--eph-vellum-deep`, which is a faction ink on a
+ * faction sub-sheet rather than a global ink on faction paper. Different bug,
+ * filed separately.
  */
 import type { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'

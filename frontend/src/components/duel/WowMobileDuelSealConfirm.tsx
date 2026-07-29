@@ -42,6 +42,7 @@ import {
   ListsSpark,
   listsEyebrow,
   MUTED,
+  NOTICE,
   ON_RIBBON,
   PANEL,
   PANEL_BORDER,
@@ -113,12 +114,21 @@ export default function WowMobileDuelSealConfirm({
 
       {/* ── the scrolling middle ── */}
       <div style={{ flex: 1, overflowY: 'auto', padding: 'var(--space-lg)' }}>
+        {/* NOTICE ink on the forfeit face, the red as a rule — #1168, and the
+            desktop skin's docblock carries the measurements. */}
         <p
           className="content-text"
           style={{
             fontFamily: BODY_FONT,
             lineHeight: 1.55,
-            ...(copy.danger ? { color: 'var(--color-danger)', fontWeight: 700 } : {}),
+            ...(copy.danger
+              ? {
+                  color: NOTICE,
+                  fontWeight: 700,
+                  paddingLeft: 'var(--space-md)',
+                  borderLeft: `3px solid var(--color-danger)`,
+                }
+              : {}),
           }}
         >
           {copy.body}

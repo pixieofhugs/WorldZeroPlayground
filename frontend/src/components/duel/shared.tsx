@@ -54,7 +54,25 @@ import { useTranslation } from 'react-i18next'
 import type { DuelDetailOut, DuelSideOut, DuelStatus } from '../../api/duel'
 import { useGameConfig } from '../../hooks/useGameConfig'
 
-/** The per-faction voice each slot dresses itself in. Every value is a CSS var. */
+/**
+ * The per-faction voice each slot dresses itself in. Every value is a CSS var.
+ *
+ * `credit` and `alarm` are the #1168 seam. They used to be hardcoded here as
+ * `--color-success` / `--color-danger`, which meant NO skin could route them:
+ * a global functional ink chosen against the app's near-white surface, painted
+ * on eight different faction sheets (WORLD_ZERO_STYLE §3, the #694 shape). The
+ * measurements that forced it are on `--color-success`, which reads **2.07:1**
+ * on S.N.I.D.E.'s photocopier ink, **1.99:1** on Singularity's terminal glass
+ * and **1.88:1** on Everymen's inked forfeit panel — all in the LIGHT theme,
+ * because those three grounds are dark in both themes while the token flips
+ * with the viewer.
+ *
+ * Both default to exactly what this file painted before, so a skin that passes
+ * neither is byte-identical. Pass an ink the skin has MEASURED on the ground it
+ * mounts these slots over; this seam is a place to repoint an existing token
+ * (`--faction-{slug}-card-credit` / `-card-notice` exist for all eight), never
+ * a reason to mint one.
+ */
 export interface DuelSlotTheme {
   /** Faction accent — figures, emphasis, rules. */
   accent: string
@@ -62,11 +80,36 @@ export interface DuelSlotTheme {
   muted?: string
   /** Body font for the prose. */
   bodyFont?: string
+  /**
+   * A positive figure and a sealed side: the win tile's number and the
+   * roster's "sealed" mark. Default `--color-success`.
+   */
+  credit?: string
+  /**
+   * A zero / destructive figure: the lose tile when it pays nothing (Snide's
+   * 0.0×). Default `--color-danger`.
+   */
+  alarm?: string
 }
 
-const DEFAULT_THEME: Required<Pick<DuelSlotTheme, 'muted' | 'bodyFont'>> = {
+const DEFAULT_THEME: Required<Pick<DuelSlotTheme, 'muted' | 'bodyFont' | 'credit' | 'alarm'>> = {
   muted: 'var(--color-text-secondary)',
   bodyFont: 'var(--font-body)',
+  credit: 'var(--color-success)',
+  alarm: 'var(--color-danger)',
+}
+
+/**
+ * Field-by-field rather than a spread: `{...DEFAULT_THEME, ...theme}` would let
+ * an explicit `undefined` in a partially-filled object erase a default — the
+ * detail `DuelCardInk` (#1153) records for the same reason. Everymen relies on
+ * it directly, handing `credit` only in forfeit mode and `undefined` otherwise.
+ */
+function slotInk(theme: DuelSlotTheme): { credit: string; alarm: string } {
+  return {
+    credit: theme.credit ?? DEFAULT_THEME.credit,
+    alarm: theme.alarm ?? DEFAULT_THEME.alarm,
+  }
 }
 
 /* -------------------------------------------------------------------------- */
@@ -217,6 +260,7 @@ export function StakesTiles({
 
   const font = theme.bodyFont ?? DEFAULT_THEME.bodyFont
   const muted = theme.muted ?? DEFAULT_THEME.muted
+  const { credit, alarm } = slotInk(theme)
 
   // pending: the challenge is unanswered, so there is no head-to-head yet.
   if (status === 'pending') {
@@ -239,13 +283,13 @@ export function StakesTiles({
         <Tile
           label={t('duelStakes.winLabel')}
           value={formatPoints(stakes.win)}
-          color="var(--color-success)"
+          color={credit}
           theme={theme}
         />
         <Tile
           label={t('duelStakes.loseLabel')}
           value={formatPoints(stakes.lose)}
-          color={stakes.lose === 0 ? 'var(--color-danger)' : muted}
+          color={stakes.lose === 0 ? alarm : muted}
           theme={theme}
         />
       </div>
@@ -284,7 +328,10 @@ function RosterRow({
       <span style={{ fontWeight: 700 }}>{name}</span>
       <span
         style={{
-          color: cast ? 'var(--color-success)' : theme.muted ?? DEFAULT_THEME.muted,
+          // 18px regular, so this mark owes the FULL 4.5:1 — it is the tightest
+          // consumer of `credit` (the win figure beside it is 24px bold and owes
+          // only 3:1), and it is what the #1168 routings are measured against.
+          color: cast ? slotInk(theme).credit : theme.muted ?? DEFAULT_THEME.muted,
         }}
       >
         {cast ? t('duelRoster.sealed') : t('duelRoster.walking')}
