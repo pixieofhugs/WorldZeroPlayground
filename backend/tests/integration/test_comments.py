@@ -12,6 +12,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from models.character import Character
 from models.character_stats import CharacterStats
+from models.comment import MAX_COMMENT_BODY, Comment
 from models.era import Era
 from models.praxis import Praxis
 from models.task import Task
@@ -310,3 +311,65 @@ async def test_service_requires_a_target(
             session=db_session,
         )
     assert exc.value.status_code == 422
+
+
+# ── The body cap (#1205) ──────────────────────────────────────────────────────
+#
+# 500 is the number every design sheet shows. The cap was 2000 here and absent
+# from the composer entirely. These pin the trust boundary (ADR-0006): the client
+# `maxLength` is a courtesy, this is the enforcement.
+
+
+@pytest.mark.asyncio
+async def test_body_cap_is_500(
+    client: AsyncClient,
+    character2: Character,
+    praxis_solo: Praxis,
+    auth_headers2: dict,
+):
+    """The cap admits exactly 500 and rejects 501 at the API edge."""
+    assert MAX_COMMENT_BODY == 500
+
+    at_cap = await client.post(
+        f"/praxes/{praxis_solo.id}/comments",
+        json={"body_text": "x" * MAX_COMMENT_BODY},
+        headers=auth_headers2,
+    )
+    assert at_cap.status_code == 201, at_cap.text
+
+    over_cap = await client.post(
+        f"/praxes/{praxis_solo.id}/comments",
+        json={"body_text": "x" * (MAX_COMMENT_BODY + 1)},
+        headers=auth_headers2,
+    )
+    assert over_cap.status_code == 422
+
+
+@pytest.mark.asyncio
+async def test_body_stored_over_the_cap_still_reads_in_full(
+    client: AsyncClient,
+    character2: Character,
+    praxis_solo: Praxis,
+    db_session: AsyncSession,
+):
+    """A body written before the cap dropped stays readable at its full length.
+
+    Nothing capped a comment below 2000 until #1205, so production can hold
+    bodies longer than 500. Lowering the cap must not make them unreadable:
+    `body_text` is Text (no column width) and `CommentOut.body_text` is an
+    uncapped `str`, so the cap governs WRITES only. Seeded past the API on
+    purpose — the point is a row the current cap would refuse.
+    """
+    legacy_length = 1500
+    db_session.add(
+        Comment(
+            praxis_id=praxis_solo.id,
+            created_by_id=character2.id,
+            body_text="x" * legacy_length,
+        )
+    )
+    await db_session.commit()
+
+    resp = await client.get(f"/praxes/{praxis_solo.id}/comments")
+    assert resp.status_code == 200, resp.text
+    assert [len(c["body_text"]) for c in resp.json()] == [legacy_length]
