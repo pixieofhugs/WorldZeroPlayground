@@ -190,6 +190,13 @@
       "bonus": "+{{points}} PTS",
       "remove": "Remove metatask",
       "add": "+ Add a metatask"
+    },
+    "coven": {
+      "writeUp": "What it looked like",
+      "members": "Cast together by",
+      "metatasks": "Charms added",
+      "duel": "A friendly duel",
+      "comments": "Comments"
     }
   },
   "comments": {

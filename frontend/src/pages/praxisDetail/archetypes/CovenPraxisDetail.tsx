@@ -1,0 +1,790 @@
+/**
+ * Cozy Coven — THE CANDLELIT WARD, praxis detail (#1117, epic #1085; design
+ * project bebdf7c7, `Coven Praxis Detail.dc.html`).
+ *
+ * The first faction skin over the shared praxis-detail layout. It is the same
+ * page `DefaultPraxisDetail` draws — same regions, same slots, same API
+ * contract (ADR-0061) — wearing the ward the task detail (#1031) and the spell
+ * slip (#1023) already established for this faction: a candlelight haze
+ * drifting over the column, a pentagram watermark turning behind the copy,
+ * braided thread rules heading every section, and a candle flicker under the
+ * score. Grenze Gotisch carries the display, Cormorant Garamond the reading
+ * voice, Caveat the hand, Quicksand the chrome.
+ *
+ * ## Nothing here is new dress
+ *
+ * Every colour is a shipped `--faction-coven-slip-*` / `--faction-coven-ward-*`
+ * token, and all four motions (`cvn-haze` on `.coven-candle-backdrop`,
+ * `.cvn-candle`, `.cvn-wheel`, `.cvn-braid`) are index.css rules this file only
+ * names. So the light/dark flip and the `prefers-reduced-motion` guard run
+ * through the cascade, never a `dark ?` branch and never an inline `animation:`
+ * that would bypass the guard. **This skin adds no CSS at all** — the ward was
+ * measured for these exact two grounds in #1031 and the inks are reused on the
+ * same pair (page under the haze, panel a shade above it).
+ *
+ * ## The layout contract, inherited not re-derived (#1129)
+ *
+ * - Desktop: main column + a **330px** aside, comments beneath both.
+ * - Mobile: one stacked column; the score and duel blocks move ABOVE the proof.
+ *   ONE responsive component (ADR-0063) — `useFormFactor()` picks the size set;
+ *   there is no mobile twin, and no block is drawn twice and hidden.
+ * - The crown renders at **both** form factors. It is not this file's decision:
+ *   `PraxisStatusBanners` draws it off `is_top_for_task`, mounted above the
+ *   split so both layouts get it.
+ * - The **report card and the steward bar are NOT dressed** (ADR-0061 as
+ *   amended, 2026-07-28). `PraxisFlagBlock` / `PraxisAdminBar` are mounted bare,
+ *   wearing none of the panel dress every block beside them wears, and they take
+ *   no style prop to make dressing them possible. Same for the moderation
+ *   banners and the errors: content slots carry Coven's voice, the platform's
+ *   own words stay neutral in every faction's dress.
+ *
+ * ## The voice, and where it stops
+ *
+ * Five content slots read `detail.coven.*` — the write-up ("What it looked
+ * like"), the crew ("Cast together by"), the metatasks ("Charms added"), the
+ * duel ("A friendly duel") and the comments ("Comments"). Everything else reads
+ * the shared neutral `detail.*` keys, including the proof, score, vote and
+ * voters heads, which the design leaves in the game's words.
+ *
+ * The design's sixth voiced string, the comment composer's **"post"**, is
+ * deliberately NOT built. That button lives inside `CommentThread`'s composer,
+ * which dispatches on the VIEWER's faction, not the page's — a Snide player
+ * commenting here posts in Snide. ADR-0061 protects that boundary explicitly
+ * ("the neutral rule stops at the speaker's voice") and puts `comments.*` and
+ * the seven `*Comment` skins out of scope, so voicing it would have to be done
+ * on `CovenComment`, where it would follow a Coven viewer onto every other
+ * faction's page.
+ *
+ * ## Reused, not rebuilt
+ *
+ * `ScoreStamp`, which since #1091 carries the whole score rail and dispatches to
+ * `CovenScoreStamp` on a Coven task · `VoteUI`, which resolves this faction's
+ * own `CovenVote` (the design's `WowVote` import is a bug) and additionally owns
+ * the `viewer_can_vote` gate and the `VoteFactionContext` the logged-out gate
+ * reads, neither of which the widget carries itself · `CollabRoster` ·
+ * `MediaGallery` · `MetaTaskSeal`, read-only: `apply_metatask` requires
+ * `in_progress`, so an add chip would 422 on a published praxis · `DuelCard`,
+ * which narrates all three readings (live / won by default / final) and draws
+ * nothing on a declined challenge — the design draws only the live one, and is
+ * not re-narrated here · `CommentThread` via `PraxisDetailComments` with the
+ * layout's own heading, so one list carries one heading (the #1029 trap).
+ *
+ * The duel card and the comment thread are LAYOUT SLOTS of this page rather than
+ * chrome the dispatcher appends (ADR-0064) — which is why a skin mounts them at
+ * all, and why both take this file's panel and section head.
+ *
+ * The score ARITHMETIC is not built either: the design invents its own, and
+ * `scoreBreakdown()` (ADR-0053) is the single authority the mounted stamp reads.
+ */
+import type { CSSProperties, ReactNode } from 'react'
+import { Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
+import MediaGallery from '../../../components/MediaGallery'
+import MarkdownPreview from '../../editPraxis/blocks/MarkdownPreview'
+import VoteUI from '../../../components/vote/VoteUI'
+import ScoreStamp from '../../../components/praxisCard/scoreStamp/ScoreStamp'
+import MetaTaskSeal from '../../../components/metaTaskSeal/MetaTaskSeal'
+import { CollabRoster } from '../../../components/collab/CollabRoster'
+import { DuelCard } from '../DuelCard'
+import { useFormFactor } from '../../../hooks/useFormFactor'
+import { formatTimestamp } from '../../../utils/dates'
+import {
+  PraxisAdminBar,
+  PraxisStatusBanners,
+  PraxisOwnerActions,
+  PraxisFlagBlock,
+  PraxisDetailComments,
+  MemberByline,
+  orderedMembers,
+} from '../shared'
+import type { PraxisDetailState } from '../usePraxisDetail'
+
+/* The four faces, exactly as the spell slip and the ward page name them. */
+const CHROME = 'var(--font-faction-rounded)' /* Quicksand */
+const READING = 'var(--font-faction-serif)' /* Cormorant Garamond */
+const HAND = 'var(--font-faction-script)' /* Caveat */
+const DISPLAY = 'var(--font-faction-witch)' /* Grenze Gotisch */
+
+const INK = 'var(--faction-coven-slip-ink)'
+const DEEP = 'var(--faction-coven-slip-deep)'
+const SOFT = 'var(--faction-coven-slip-soft)'
+const LABEL = 'var(--faction-coven-slip-label)'
+const GOLD = 'var(--faction-coven-slip-gold)'
+const PINK = 'var(--faction-coven-slip-pk)'
+const BORDER = 'var(--faction-coven-slip-border)'
+const CARD = 'var(--faction-coven-ward-card)'
+const PAGE = 'var(--faction-coven-ward-page)'
+
+/** The aside track, from the eight faction designs (#1129). Layout, not dress. */
+const ASIDE_TRACK = 330
+
+interface SizeSet {
+  /** The byline's ringed disc. Ornament geometry (WORLD_ZERO_STYLE §4a). */
+  disc: number
+  /** The turning pentagram watermark. Ornament geometry. */
+  wheel: number
+  titleSize: string
+  headingSize: string
+}
+
+const SIZES: Record<'desktop' | 'mobile', SizeSet> = {
+  desktop: {
+    disc: 46,
+    wheel: 620,
+    titleSize: 'var(--text-display)',
+    headingSize: 'var(--text-title)',
+  },
+  mobile: {
+    disc: 38,
+    wheel: 420,
+    titleSize: 'var(--text-heading)',
+    headingSize: 'var(--text-title)',
+  },
+}
+
+/** Small-caps caption voice — every label on the ward speaks in it. */
+const CAPTION: CSSProperties = {
+  fontFamily: CHROME,
+  fontWeight: 700,
+  fontSize: 'var(--text-sm)',
+  letterSpacing: '0.16em',
+  textTransform: 'uppercase',
+  color: LABEL,
+}
+
+/** The braided thread rule. `.cvn-braid` owns the strands' pigments (index.css). */
+function Braid({ style }: { style?: CSSProperties }) {
+  return <span aria-hidden className="cvn-braid" style={{ minWidth: 20, ...style }} />
+}
+
+/** Initials fallback for a member with no uploaded avatar. */
+function initials(name: string): string {
+  return (
+    name
+      .trim()
+      .split(/\s+/)
+      .filter(Boolean)
+      .map((word) => word[0])
+      .slice(0, 2)
+      .join('')
+      .toUpperCase() || '·'
+  )
+}
+
+/**
+ * One member's disc: a pink ring round a candle-lit field, the initials
+ * hand-lettered inside. Collab bylines stack these, overlapping, so a shared
+ * praxis reads as shared before a single name is parsed.
+ */
+function MemberDisc({ name, size }: { name: string; size: number }) {
+  return (
+    <span
+      aria-hidden
+      style={{
+        display: 'block',
+        width: size,
+        height: size,
+        borderRadius: '50%',
+        // Ring-stroke inset: the padding IS the drawn band (WORLD_ZERO_STYLE §4a).
+        // eslint-disable-next-line local/no-raw-style-values -- ornament: the drawn ring's stroke width.
+        padding: 2,
+        background: `linear-gradient(150deg, ${PINK}, ${GOLD})`,
+        flexShrink: 0,
+        boxShadow: '0 3px 10px var(--faction-coven-slip-glow)',
+      }}
+    >
+      <span
+        className="flex items-center justify-center"
+        style={{
+          width: '100%',
+          height: '100%',
+          borderRadius: '50%',
+          background: CARD,
+          fontFamily: HAND,
+          fontSize: 'var(--text-content)',
+          fontWeight: 700,
+          color: DEEP,
+        }}
+      >
+        {initials(name)}
+      </span>
+    </span>
+  )
+}
+
+export default function CovenPraxisDetail({ state }: { state: PraxisDetailState }) {
+  const { t } = useTranslation('praxis')
+  const formFactor = useFormFactor()
+  const desktop = formFactor !== 'mobile'
+  const size = SIZES[formFactor]
+  const { praxis, voters } = state
+
+  // Guarded non-null by the dispatcher.
+  if (!praxis) return null
+
+  const members = orderedMembers(praxis)
+  const isCollab = members.length > 1
+
+  /** Display label, braided rule, optional gloss — the page's only section head. */
+  const sectionHead = (label: ReactNode, gloss?: ReactNode) => (
+    <div
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: 'var(--space-md)',
+        marginBottom: 'var(--space-md)',
+        flexWrap: 'wrap',
+      }}
+    >
+      <span
+        style={{
+          fontFamily: DISPLAY,
+          fontWeight: 600,
+          fontSize: size.headingSize,
+          lineHeight: 1.06,
+          letterSpacing: '0.02em',
+          color: INK,
+        }}
+      >
+        {label}
+      </span>
+      <Braid style={{ flex: 1 }} />
+      {gloss !== undefined && <span style={{ ...CAPTION, flex: '0 0 auto' }}>{gloss}</span>}
+    </div>
+  )
+
+  /** Aside / rail panel chrome — paper laid on the wash, shared by every block. */
+  const panel: CSSProperties = {
+    background: CARD,
+    border: `2px solid ${BORDER}`,
+    borderRadius: 16,
+    boxSizing: 'border-box',
+    boxShadow: 'var(--faction-coven-slip-shadow)',
+    padding: 'var(--space-lg)',
+  }
+
+  const sectionGap = desktop ? 'var(--space-2xl)' : 'var(--space-xl)'
+
+  // ── Navigation: breadcrumb on desktop, back link + label on mobile ─────────
+  const crumbLink: CSSProperties = {
+    ...CAPTION,
+    color: DEEP,
+    textDecoration: 'none',
+  }
+
+  const breadcrumb = (
+    <nav
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: 'var(--space-sm)',
+        marginBottom: 'var(--space-md)',
+        flexWrap: 'wrap',
+      }}
+    >
+      <Link to="/tasks" style={crumbLink}>
+        {t('detail.breadcrumb.tasks')}
+      </Link>
+      <span aria-hidden style={{ ...CAPTION, color: SOFT }}>
+        ·
+      </span>
+      <Link to={`/tasks/${praxis.task_id}`} style={crumbLink}>
+        {praxis.task_title}
+      </Link>
+      <span aria-hidden style={{ ...CAPTION, color: SOFT }}>
+        ·
+      </span>
+      <span style={CAPTION}>{t('detail.breadcrumb.current')}</span>
+    </nav>
+  )
+
+  // The phone affordance the design draws instead of the breadcrumb. Not sticky:
+  // the mobile shell already owns a sticky top bar.
+  const mobileBar = (
+    <nav
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: 'var(--space-sm)',
+        marginBottom: 'var(--space-md)',
+      }}
+    >
+      <Link to="/praxes" style={crumbLink}>
+        <span aria-hidden>‹ </span>
+        {t('detail.back')}
+      </Link>
+      <span style={{ ...CAPTION, flex: 1, textAlign: 'center' }}>
+        {t('detail.breadcrumb.current')}
+      </span>
+      {/* Balances the centred label against the back link's width. */}
+      <span aria-hidden style={{ width: 44 }} />
+    </nav>
+  )
+
+  // ── Moderation banners — NEUTRAL, in Coven's dress (ADR-0061 as amended) ───
+  // The crown hero and the failed note are the shared banners; the flagged
+  // notice has no shared slot, so it renders here — on the same `--color-*`
+  // warning tokens `DefaultPraxisDetail` uses, deliberately not on the ward's
+  // pinks. `PraxisAdminBar` is the steward bar, mounted bare for the same
+  // reason as the report card.
+  const banners = (
+    <>
+      <PraxisStatusBanners state={state} />
+      {praxis.moderation_status === 'flagged' && (
+        <div
+          style={{
+            border: '2px solid var(--color-warning)',
+            borderRadius: 8,
+            padding: 'var(--space-sm) var(--space-lg)',
+            marginBottom: 'var(--space-md)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 'var(--space-sm)',
+            flexWrap: 'wrap',
+          }}
+        >
+          <span className="eyebrow" style={{ color: 'var(--color-warning)' }}>
+            {t('detail.banners.flaggedLabel')}
+          </span>
+          <span className="font-body content-text" style={{ color: 'var(--color-text-secondary)' }}>
+            {t('detail.banners.flaggedBody')}
+          </span>
+        </div>
+      )}
+      <PraxisAdminBar state={state} />
+    </>
+  )
+
+  // ── Byline · title · owner actions · task reference ───────────────────────
+  const header = (
+    <>
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 'var(--space-md)',
+          marginBottom: 'var(--space-md)',
+        }}
+      >
+        {/* Stacked discs, one per member. A payload with no member rows still
+            credits its creator, so the author is always reachable here. */}
+        <span style={{ display: 'flex', alignItems: 'center' }}>
+          {(members.length > 0
+            ? members.map((member) => ({
+                id: member.character_id,
+                name: member.character_display_name || `#${member.character_id}`,
+              }))
+            : [{ id: praxis.created_by_id, name: praxis.created_by_display_name }]
+          ).map((author, index) => (
+            <Link
+              key={author.id}
+              to={`/characters/${author.id}`}
+              style={{
+                display: 'block',
+                // Each disc after the first laps the one before it — a spacing
+                // step off the scale, negated, not a loose pixel.
+                marginLeft: index === 0 ? 0 : 'calc(-1 * var(--space-lg))',
+                zIndex: index,
+              }}
+            >
+              <MemberDisc name={author.name} size={size.disc} />
+            </Link>
+          ))}
+        </span>
+        <div style={{ minWidth: 0, flex: 1 }}>
+          <MemberByline
+            praxis={praxis}
+            linkStyle={{
+              fontFamily: READING,
+              fontWeight: 600,
+              fontSize: desktop ? 'var(--text-title)' : 'var(--text-content)',
+              color: INK,
+              textDecoration: 'none',
+            }}
+          />
+          <div style={CAPTION}>
+            {t('detail.filed', {
+              date: formatTimestamp(praxis.submitted_at ?? praxis.created_at),
+            })}
+          </div>
+        </div>
+      </div>
+
+      <h1
+        style={{
+          fontFamily: DISPLAY,
+          fontWeight: 600,
+          fontSize: size.titleSize,
+          lineHeight: 1.04,
+          margin: '0 0 var(--space-md)',
+          color: INK,
+          overflowWrap: 'anywhere',
+        }}
+      >
+        {praxis.title || praxis.task_title}
+      </h1>
+
+      <PraxisOwnerActions state={state} />
+
+      {/* Task reference — what this praxis is a doing OF. Braid above and below,
+          the ward's version of a ruled band. */}
+      <div style={{ marginBottom: sectionGap }}>
+        <Braid />
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'baseline',
+            gap: 'var(--space-sm)',
+            flexWrap: 'wrap',
+            padding: 'var(--space-md) 0',
+          }}
+        >
+          <span style={CAPTION}>{t('detail.taskRef.label')}</span>
+          <Link
+            to={`/tasks/${praxis.task_id}`}
+            className="content-text"
+            style={{ fontFamily: READING, fontWeight: 600, color: DEEP, textDecoration: 'none' }}
+          >
+            {praxis.task_title}
+          </Link>
+          <span style={{ ...CAPTION, marginLeft: 'auto' }}>
+            {t('detail.taskRef.level', { level: praxis.task_level_required })}
+            {' · '}
+            {t('detail.taskRef.points', { points: praxis.task_point_value })}
+          </span>
+        </div>
+        <Braid />
+      </div>
+    </>
+  )
+
+  // ── Score (built once; aside on desktop, above the proof on mobile) ────────
+  //
+  // ONE readout, and it is not this file's (#1091). `ScoreStamp` carries the
+  // whole rail — the sticker, its dashed rule, the highlighter multiplier chip
+  // and the votes tally — and dispatches to `CovenScoreStamp` on a Coven task.
+  // The design's own arithmetic (its own fudge factor over the vote average) is
+  // NOT built: `scoreBreakdown()` is the single authority (ADR-0053).
+  //
+  // The candle sits behind it: `.cvn-candle` carries the flicker and its
+  // reduced-motion guard, so stilled it is simply a steady glow.
+  const scoreBlock = (
+    <section style={{ ...panel, position: 'relative', overflow: 'hidden' }}>
+      {sectionHead(t('detail.score.heading'))}
+      <span
+        aria-hidden
+        className="cvn-candle"
+        style={{
+          position: 'absolute',
+          left: '50%',
+          top: '55%',
+          width: 200,
+          height: 200,
+          marginLeft: -100,
+          marginTop: -100,
+          borderRadius: '50%',
+          background: 'var(--faction-coven-slip-sigil-halo)',
+          pointerEvents: 'none',
+        }}
+      />
+      <div style={{ position: 'relative', display: 'flex', justifyContent: 'center' }}>
+        {/* The crown already has its own hero banner above; one mark per page. */}
+        <ScoreStamp praxis={praxis} showCrown={false} />
+      </div>
+    </section>
+  )
+
+  // ── Duel (built once; aside on desktop, above the proof on mobile) ─────────
+  //
+  // Panel chrome and section head are handed in, so the card wears the ward
+  // rather than its own dress. It self-hides for a praxis with no duel, for a
+  // DECLINED challenge, and for the run-up the composer owns (#1071/ADR-0059).
+  const duelBlock: ReactNode = (
+    <DuelCard state={state} style={panel} heading={sectionHead(t('detail.coven.duel'))} />
+  )
+
+  const rail = (
+    <>
+      {scoreBlock}
+      {duelBlock}
+    </>
+  )
+
+  // ── Vote · voters · flag ──────────────────────────────────────────────────
+  const voteBlock = (
+    <section style={panel}>
+      {sectionHead(t('detail.vote.heading'))}
+      <p
+        className="content-text"
+        style={{ fontFamily: HAND, margin: '0 0 var(--space-md)', color: SOFT }}
+      >
+        {t('detail.vote.prompt')}
+      </p>
+      {/* Dispatched on the TASK's faction — this page's own `CovenVote` moon
+          plate. `VoteUI` also owns the `viewer_can_vote` gate and publishes the
+          slug the widget's logged-out gate reads, so the widget is never
+          mounted bare (the design's `WowVote` import is a bug either way). */}
+      <VoteUI
+        factionSlug={praxis.task_faction_slug}
+        praxisId={praxis.id}
+        viewerCanVote={praxis.viewer_can_vote}
+      />
+    </section>
+  )
+
+  // Per-voter values come straight off `GET /praxes/{id}/voters`, already
+  // fetched by `usePraxisDetail`. NO AVERAGE anywhere (ADR-0014): the standing
+  // is the sum and the count, never the mean — and there is no per-voter points
+  // figure in the payload, so none is invented. Each voter's rung is a candle
+  // burning from pink into gold.
+  const votersBlock = voters.length > 0 && (
+    <section style={panel}>
+      {sectionHead(
+        t('detail.voters.heading'),
+        t('detail.voters.count', { count: voters.length }),
+      )}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-md)' }}>
+        {voters.map((voter) => (
+          <div
+            key={voter.character_id}
+            style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-md)' }}
+          >
+            <Link
+              to={`/characters/${voter.character_id}`}
+              style={{
+                flex: '1 1 auto',
+                minWidth: 0,
+                whiteSpace: 'nowrap',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                fontFamily: READING,
+                fontWeight: 600,
+                fontSize: 'var(--text-content)',
+                color: INK,
+                textDecoration: 'none',
+              }}
+            >
+              {voter.display_name}
+            </Link>
+            <span
+              aria-hidden
+              style={{
+                width: 84,
+                height: 9,
+                borderRadius: 5,
+                background: PAGE,
+                border: `1px solid ${BORDER}`,
+                position: 'relative',
+                overflow: 'hidden',
+                flexShrink: 0,
+              }}
+            >
+              <span
+                style={{
+                  position: 'absolute',
+                  inset: 0,
+                  width: `${(voter.value / 5) * 100}%`,
+                  background: `linear-gradient(90deg, ${PINK}, ${GOLD})`,
+                }}
+              />
+            </span>
+            <span
+              style={{
+                width: 20,
+                textAlign: 'right',
+                fontFamily: READING,
+                fontWeight: 600,
+                fontSize: 'var(--text-content)',
+                color: DEEP,
+              }}
+            >
+              {voter.value}
+            </span>
+          </div>
+        ))}
+      </div>
+    </section>
+  )
+
+  const asideRest = (
+    <>
+      {voteBlock}
+      {votersBlock}
+      {/* NOT dressed, by contract: the report card is the platform speaking. */}
+      <PraxisFlagBlock state={state} />
+    </>
+  )
+
+  // ── Proof · write-up · crew · charms ──────────────────────────────────────
+  const proof = praxis.media_items.length > 0 && (
+    <section style={{ marginBottom: sectionGap }}>
+      {sectionHead(t('detail.sections.proof'))}
+      {/* The slip's own gradient as a mat, the proof pressed onto it. */}
+      <div
+        style={{
+          borderRadius: 16,
+          padding: 'var(--space-sm)',
+          border: `2px solid ${BORDER}`,
+          background:
+            'linear-gradient(158deg, var(--faction-coven-slip-from), var(--faction-coven-slip-mid) 38%, var(--faction-coven-slip-lav) 76%, var(--faction-coven-slip-vio))',
+          boxShadow: 'var(--faction-coven-slip-shadow)',
+        }}
+      >
+        <div style={{ borderRadius: 10, background: CARD, padding: 'var(--space-md)' }}>
+          <MediaGallery media={praxis.media_items} layout={desktop ? 'grid' : 'column'} />
+        </div>
+      </div>
+    </section>
+  )
+
+  const writeUp = praxis.body_text && (
+    <section style={{ marginBottom: sectionGap }}>
+      {sectionHead(t('detail.coven.writeUp'))}
+      <MarkdownPreview
+        source={praxis.body_text}
+        className="markdown-preview content-text"
+        style={{ fontFamily: READING, lineHeight: 1.75, color: INK }}
+      />
+    </section>
+  )
+
+  const crew = isCollab && (
+    <section style={{ marginBottom: sectionGap }}>
+      {sectionHead(t('detail.coven.members'))}
+      <CollabRoster
+        members={praxis.members}
+        currentCharacterId={state.user?.character?.id ?? null}
+        factionSlug={praxis.task_faction_slug}
+        taskPointValue={praxis.task_point_value}
+        onKick={state.handleKickMember}
+      />
+    </section>
+  )
+
+  // READ-ONLY, by construction (#1093). `MetaTaskSeal` omits the peel control
+  // and the add slot when it gets neither `removable` nor `onAdd`, and each seal
+  // wears its ISSUING faction's dress (#927/#933). The design's add chips are
+  // deliberately absent: `apply_metatask` requires `status == in_progress`, so
+  // every chip would 422 on tap.
+  const metatasks = praxis.applied_metatasks.length > 0 && (
+    <section style={{ marginBottom: sectionGap }}>
+      {sectionHead(t('detail.coven.metatasks'))}
+      <MetaTaskSeal metatasks={praxis.applied_metatasks} />
+    </section>
+  )
+
+  return (
+    <div className="py-8" style={{ position: 'relative', color: INK, fontFamily: CHROME }}>
+      {desktop ? breadcrumb : mobileBar}
+
+      {/* The candlelight wash belongs to the COLUMN, not the viewport: the site
+          background still shows around the page (WORLD_ZERO_STYLE §5, the #1028
+          ruling). index.css owns the ground, its four blooms, their drift and
+          the light/dark flip; this only places and clips them. */}
+      <div
+        className="coven-candle-backdrop"
+        style={{
+          position: 'relative',
+          zIndex: 1,
+          maxWidth: 1200,
+          margin: '0 auto',
+          border: `2px solid ${BORDER}`,
+          borderRadius: 18,
+          padding: desktop ? 'var(--space-2xl)' : 'var(--space-lg)',
+          boxSizing: 'border-box',
+        }}
+      >
+        {/* The pentagram watermark, turning once every two minutes. `.cvn-wheel`
+            carries the motion and its reduced-motion guard (#911/#1023). */}
+        <svg
+          className="cvn-wheel"
+          width={size.wheel}
+          height={size.wheel}
+          viewBox="0 0 100 100"
+          aria-hidden="true"
+          style={{
+            position: 'absolute',
+            right: desktop ? -170 : -140,
+            top: 140,
+            zIndex: 0,
+            pointerEvents: 'none',
+            opacity: 0.09,
+          }}
+        >
+          <circle cx="50" cy="50" r="44" fill="none" stroke={DEEP} strokeWidth="0.8" />
+          <path
+            d="M50 12 L73.5 84.3 L11.9 39.7 L88.1 39.7 L26.5 84.3 Z"
+            fill="none"
+            stroke={DEEP}
+            strokeWidth="1.1"
+            strokeLinejoin="round"
+          />
+        </svg>
+
+        <div style={{ position: 'relative', zIndex: 1 }}>
+          {banners}
+
+          <div
+            style={{
+              display: 'flex',
+              flexDirection: desktop ? 'row' : 'column',
+              alignItems: 'stretch',
+              gap: desktop ? 'var(--space-2xl)' : 'var(--space-xl)',
+            }}
+          >
+            <div style={{ flex: '1 1 auto', minWidth: 0 }}>
+              {header}
+              {/* Mobile stacks the rail above the proof — one block each, moved,
+                  never a second copy hidden at the other breakpoint. */}
+              {!desktop && (
+                <div
+                  style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: 'var(--space-lg)',
+                    marginBottom: 'var(--space-xl)',
+                  }}
+                >
+                  {rail}
+                </div>
+              )}
+              {proof}
+              {writeUp}
+              {crew}
+              {metatasks}
+              {!desktop && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-lg)' }}>
+                  {asideRest}
+                </div>
+              )}
+            </div>
+
+            {desktop && (
+              <aside
+                style={{
+                  flex: `0 0 ${ASIDE_TRACK}px`,
+                  width: ASIDE_TRACK,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: 'var(--space-lg)',
+                }}
+              >
+                {rail}
+                {asideRest}
+              </aside>
+            )}
+          </div>
+
+          {/* The third layout region (ADR-0061, amending ADR-0006): comments sit
+              beneath both columns, inside the page's own sheet, and the layout
+              draws the heading so the thread does not draw a second one. */}
+          <PraxisDetailComments
+            state={state}
+            heading={sectionHead(t('detail.coven.comments'))}
+            style={{ marginTop: sectionGap }}
+          />
+        </div>
+      </div>
+    </div>
+  )
+}

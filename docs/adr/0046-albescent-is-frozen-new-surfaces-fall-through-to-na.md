@@ -1,6 +1,6 @@
 # ADR-0046 — Albescent is frozen: new surfaces fall through to NA
 
-**Status:** Accepted
+**Status:** Reversed
 **Date:** 2026-07-18
 **Relates to:** #726 (the duel skin this decision parks), #718 (the duel-skin
 epic whose per-faction issues this halts one of), ADR-0027 + #390 (Albescent as
@@ -45,6 +45,17 @@ The forces:
    immediately and have to be undone in full when the reskin lands.
 
 ## Decision
+
+> **Reversed (2026-07-28).** The hold was conditional on Albescent's visual
+> direction being unsettled. That direction landed with the praxis-detail v2
+> designs (project `bebdf7c7-6a54-42ea-b3b4-6d908a506f84`), so the freeze no
+> longer applies. Albescent registers surfaces like any other faction. See
+> #1085.
+>
+> **One consequence recorded here:** #726 (Albescent duel rail skins, closed
+> `wontfix`) **stays closed.** It targeted the duel rail, and ADR-0064 deletes
+> all twelve rails — the surface it would have skinned no longer exists. It
+> was closed for the freeze; it stays closed for a better reason.
 
 **Albescent is frozen. No new Albescent skins until further notice.**
 
