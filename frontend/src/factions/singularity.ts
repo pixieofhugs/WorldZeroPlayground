@@ -14,7 +14,6 @@ import { lazyArchetype } from './lazyArchetype'
 const SingularityAvatar = lazyArchetype(() => import('../components/avatar/SingularityAvatar'))
 const SingularityBackdrop = lazyArchetype(() => import('../components/backdrop/SingularityBackdrop'))
 const SingularityComment = lazyArchetype(() => import('../components/comments/voices/SingularityComment'))
-const SingularityDuelRail = lazyArchetype(() => import('../pages/praxisDetail/duelRails/SingularityDuelRail'))
 const SingularityDuelSealConfirm = lazyArchetype(() => import('../components/duel/SingularityDuelSealConfirm'))
 const SingularityEditPraxis = lazyArchetype(() => import('../pages/editPraxis/archetypes/SingularityEditPraxis'))
 const SingularityFactionBody = lazyArchetype(() => import('../pages/factionDetail/archetypes/SingularityFactionBody'))
@@ -22,7 +21,6 @@ const SingularityFactionHero = lazyArchetype(() => import('../components/cards/S
 const SingularityFactionPage = lazyArchetype(() => import('../pages/factionDetail/mobileArchetypes/SingularityFactionPage'))
 const SingularityFeedFrame = lazyArchetype(() => import('../components/feed/SingularityFeedFrame'))
 const SingularityHome = lazyArchetype(() => import('../pages/fieldDesk/mobileArchetypes/SingularityHome'))
-const SingularityMobileDuelRail = lazyArchetype(() => import('../pages/praxisDetail/duelRails/SingularityMobileDuelRail'))
 const SingularityMobileDuelSealConfirm = lazyArchetype(() => import('../components/duel/SingularityMobileDuelSealConfirm'))
 const SingularityMobileEditPraxis = lazyArchetype(() => import('../pages/editPraxis/mobileArchetypes/SingularityComposer'))
 const SingularityMobilePraxisCard = lazyArchetype(() => import('../components/praxisCard/mobile/SingularityMobilePraxisCard'))
@@ -58,11 +56,9 @@ export const SINGULARITY_MANIFEST: FactionManifest = {
   factionBody: () => SingularityFactionBody,
   profileBody: () => SingularityProfileBody,
   duelSeal: () => SingularityDuelSealConfirm,
-  duelRail: () => SingularityDuelRail,
   mobilePraxisCard: () => SingularityMobilePraxisCard,
   mobileEditPraxis: () => SingularityMobileEditPraxis,
   mobileFactionPage: () => SingularityFactionPage,
   mobileFieldDesk: () => SingularityHome,
   mobileDuelSeal: () => SingularityMobileDuelSealConfirm,
-  mobileDuelRail: () => SingularityMobileDuelRail,
 }

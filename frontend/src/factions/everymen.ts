@@ -14,7 +14,6 @@ import { lazyArchetype } from './lazyArchetype'
 const EverymenAvatar = lazyArchetype(() => import('../components/avatar/EverymenAvatar'))
 const EverymenBackdrop = lazyArchetype(() => import('../components/backdrop/EverymenBackdrop'))
 const EverymenComment = lazyArchetype(() => import('../components/comments/voices/EverymenComment'))
-const EverymenDuelRail = lazyArchetype(() => import('../pages/praxisDetail/duelRails/EverymenDuelRail'))
 const EverymenDuelSealConfirm = lazyArchetype(() => import('../components/duel/EverymenDuelSealConfirm'))
 const EverymenEditPraxis = lazyArchetype(() => import('../pages/editPraxis/archetypes/EverymenEditPraxis'))
 const EverymenFactionBody = lazyArchetype(() => import('../pages/factionDetail/archetypes/EverymenFactionBody'))
@@ -22,7 +21,6 @@ const EverymenFactionHero = lazyArchetype(() => import('../components/cards/Ever
 const EverymenFactionPage = lazyArchetype(() => import('../pages/factionDetail/mobileArchetypes/EverymenFactionPage'))
 const EverymenFeedFrame = lazyArchetype(() => import('../components/feed/EverymenFeedFrame'))
 const EverymenHome = lazyArchetype(() => import('../pages/fieldDesk/mobileArchetypes/EverymenHome'))
-const EverymenMobileDuelRail = lazyArchetype(() => import('../pages/praxisDetail/duelRails/EverymenMobileDuelRail'))
 const EverymenMobileDuelSealConfirm = lazyArchetype(() => import('../components/duel/EverymenMobileDuelSealConfirm'))
 const EverymenMobileEditPraxis = lazyArchetype(() => import('../pages/editPraxis/mobileArchetypes/EverymenComposer'))
 const EverymenMobilePraxisCard = lazyArchetype(() => import('../components/praxisCard/mobile/EverymenMobilePraxisCard'))
@@ -58,11 +56,9 @@ export const EVERYMEN_MANIFEST: FactionManifest = {
   factionBody: () => EverymenFactionBody,
   profileBody: () => EverymenProfileBody,
   duelSeal: () => EverymenDuelSealConfirm,
-  duelRail: () => EverymenDuelRail,
   mobilePraxisCard: () => EverymenMobilePraxisCard,
   mobileEditPraxis: () => EverymenMobileEditPraxis,
   mobileFactionPage: () => EverymenFactionPage,
   mobileFieldDesk: () => EverymenHome,
   mobileDuelSeal: () => EverymenMobileDuelSealConfirm,
-  mobileDuelRail: () => EverymenMobileDuelRail,
 }

@@ -14,7 +14,6 @@ import { lazyArchetype } from './lazyArchetype'
 const CovenAvatar = lazyArchetype(() => import('../components/avatar/CovenAvatar'))
 const CovenBackdrop = lazyArchetype(() => import('../components/backdrop/CovenBackdrop'))
 const CovenComment = lazyArchetype(() => import('../components/comments/voices/CovenComment'))
-const CovenDuelRail = lazyArchetype(() => import('../pages/praxisDetail/duelRails/CovenDuelRail'))
 const CovenDuelSealConfirm = lazyArchetype(() => import('../components/duel/CovenDuelSealConfirm'))
 const CovenEditPraxis = lazyArchetype(() => import('../pages/editPraxis/archetypes/CovenEditPraxis'))
 const CovenFactionBody = lazyArchetype(() => import('../pages/factionDetail/archetypes/CovenFactionBody'))
@@ -22,7 +21,6 @@ const CovenFactionHero = lazyArchetype(() => import('../components/cards/CovenFa
 const CovenFactionPage = lazyArchetype(() => import('../pages/factionDetail/mobileArchetypes/CovenFactionPage'))
 const CovenFeedFrame = lazyArchetype(() => import('../components/feed/CovenFeedFrame'))
 const CovenFieldDesk = lazyArchetype(() => import('../pages/fieldDesk/mobileArchetypes/CovenFieldDesk'))
-const CovenMobileDuelRail = lazyArchetype(() => import('../pages/praxisDetail/duelRails/CovenMobileDuelRail'))
 const CovenMobileDuelSealConfirm = lazyArchetype(() => import('../components/duel/CovenMobileDuelSealConfirm'))
 const CovenMobileEditPraxis = lazyArchetype(() => import('../pages/editPraxis/mobileArchetypes/CovenEditPraxis'))
 const CovenMobilePraxisCard = lazyArchetype(() => import('../components/praxisCard/mobile/CovenMobilePraxisCard'))
@@ -58,11 +56,9 @@ export const COVEN_MANIFEST: FactionManifest = {
   factionBody: () => CovenFactionBody,
   profileBody: () => CovenProfileBody,
   duelSeal: () => CovenDuelSealConfirm,
-  duelRail: () => CovenDuelRail,
   mobilePraxisCard: () => CovenMobilePraxisCard,
   mobileEditPraxis: () => CovenMobileEditPraxis,
   mobileFactionPage: () => CovenFactionPage,
   mobileFieldDesk: () => CovenFieldDesk,
   mobileDuelSeal: () => CovenMobileDuelSealConfirm,
-  mobileDuelRail: () => CovenMobileDuelRail,
 }

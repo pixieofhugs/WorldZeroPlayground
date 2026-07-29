@@ -86,8 +86,6 @@ const WowEditPraxis = lazyArchetype(() => import('../pages/editPraxis/archetypes
 const WowMobileEditPraxis = lazyArchetype(() => import('../pages/editPraxis/mobileArchetypes/WowEditPraxis'))
 const WowDuelSealConfirm = lazyArchetype(() => import('../components/duel/WowDuelSealConfirm'))
 const WowMobileDuelSealConfirm = lazyArchetype(() => import('../components/duel/WowMobileDuelSealConfirm'))
-const WowDuelRail = lazyArchetype(() => import('../pages/praxisDetail/duelRails/WowDuelRail'))
-const WowMobileDuelRail = lazyArchetype(() => import('../pages/praxisDetail/duelRails/WowMobileDuelRail'))
 const WowFieldDesk = lazyArchetype(() => import('../pages/fieldDesk/mobileArchetypes/WowFieldDesk'))
 const WowTaskDetail = lazyArchetype(() => import('../pages/taskDetail/archetypes/WowTaskDetail'))
 const WowMobileFactionPage = lazyArchetype(() => import('../pages/factionDetail/mobileArchetypes/WowFactionPage'))
@@ -121,9 +119,7 @@ export const WOW_MANIFEST: FactionManifest = {
 
   // #895 — the lists: the duel seal and the praxis rail, both form factors.
   duelSeal: () => WowDuelSealConfirm,
-  duelRail: () => WowDuelRail,
   mobileDuelSeal: () => WowMobileDuelSealConfirm,
-  mobileDuelRail: () => WowMobileDuelRail,
 
   // #901 — the field pavilion: WOW's general MOBILE surfaces. The kit drew ONE
   // phone screen, which is the `mobileFieldDesk`; the other two are derived

@@ -52,7 +52,6 @@ import type { ScoreStampProps } from '../components/praxisCard/scoreStamp/ScoreS
 import type { FactionCardProps } from '../components/cards/FactionCard'
 import type { FactionSelectCardProps } from '../components/cards/FactionSelectCard'
 import type { DuelSealConfirmProps } from '../components/duel/DuelSealConfirm'
-import type { DuelRailSkinProps } from '../pages/praxisDetail/DuelCrossLink'
 import type { FactionHeroProps } from '../pages/FactionDetail'
 import type { ProfileBodyProps } from '../pages/characterProfile/FactionProfileBody'
 import type { PlayersDirectoryProps } from '../pages/players/mobileArchetypes/DefaultPlayers'
@@ -118,8 +117,17 @@ export interface FactionManifest {
   readonly profileBody?: Lazy<ComponentType<ProfileBodyProps>>
 
   // ─── Duel surfaces (desktop) ───────────────────────────────────────────────
+  // The duel SEAL is the only dispatched duel surface. `duelRail` /
+  // `mobileDuelRail` were retired outright in #1090: the duel stopped being a
+  // dispatched surface at all. It is now a card INSIDE the praxis-detail
+  // archetype (`pages/praxisDetail/DuelCard.tsx`), so a faction dresses it by
+  // dressing its `praxisDetail` — there is no second dispatcher left to feed.
+  //
+  // This is deliberately NOT the `praxisDetail` move (#1089), which kept its
+  // field with zero registrations because seven designs re-register there. A
+  // surface with no dispatcher is not "empty"; it is gone, and keeping the field
+  // would mean keeping a dead `DuelRailSkinProps` alive to type it.
   readonly duelSeal?: Lazy<ComponentType<DuelSealConfirmProps>>
-  readonly duelRail?: Lazy<ComponentType<DuelRailSkinProps>>
 
   // ─── Mobile twins (#494 form-factor dispatch) ──────────────────────────────
   // Task cards, task detail and praxis detail have no mobile twin: ADR-0056,
@@ -137,7 +145,6 @@ export interface FactionManifest {
   readonly mobileFactionsDirectory?: Lazy<ComponentType>
   readonly mobilePlayersDirectory?: Lazy<ComponentType<PlayersDirectoryProps>>
   readonly mobileDuelSeal?: Lazy<ComponentType<DuelSealConfirmProps>>
-  readonly mobileDuelRail?: Lazy<ComponentType<DuelRailSkinProps>>
 }
 
 /** Every surface key except `slug`. */
@@ -171,7 +178,6 @@ export const SURFACE_KEYS = [
   'factionBody',
   'profileBody',
   'duelSeal',
-  'duelRail',
   'mobilePraxisCard',
   'mobileEditPraxis',
   'mobileFactionPage',
@@ -182,7 +188,6 @@ export const SURFACE_KEYS = [
   'mobileFactionsDirectory',
   'mobilePlayersDirectory',
   'mobileDuelSeal',
-  'mobileDuelRail',
 ] as const satisfies readonly FactionSurface[]
 
 /**

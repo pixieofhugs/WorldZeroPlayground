@@ -14,7 +14,6 @@ import { lazyArchetype } from './lazyArchetype'
 const EphemeristsAvatar = lazyArchetype(() => import('../components/avatar/EphemeristsAvatar'))
 const EphemeristsBackdrop = lazyArchetype(() => import('../components/backdrop/EphemeristsBackdrop'))
 const EphemeristsComment = lazyArchetype(() => import('../components/comments/voices/EphemeristsComment'))
-const EphemeristsDuelRail = lazyArchetype(() => import('../pages/praxisDetail/duelRails/EphemeristsDuelRail'))
 const EphemeristsDuelSealConfirm = lazyArchetype(() => import('../components/duel/EphemeristsDuelSealConfirm'))
 const EphemeristsEditPraxis = lazyArchetype(() => import('../pages/editPraxis/archetypes/EphemeristsEditPraxis'))
 const EphemeristsFactionBody = lazyArchetype(() => import('../pages/factionDetail/archetypes/EphemeristsFactionBody'))
@@ -22,7 +21,6 @@ const EphemeristsFactionHero = lazyArchetype(() => import('../components/cards/E
 const EphemeristsFactionPage = lazyArchetype(() => import('../pages/factionDetail/mobileArchetypes/EphemeristsFactionPage'))
 const EphemeristsFeedFrame = lazyArchetype(() => import('../components/feed/EphemeristsFeedFrame'))
 const EphemeristsHome = lazyArchetype(() => import('../pages/fieldDesk/mobileArchetypes/EphemeristsHome'))
-const EphemeristsMobileDuelRail = lazyArchetype(() => import('../pages/praxisDetail/duelRails/EphemeristsMobileDuelRail'))
 const EphemeristsMobileDuelSealConfirm = lazyArchetype(() => import('../components/duel/EphemeristsMobileDuelSealConfirm'))
 const EphemeristsMobileEditPraxis = lazyArchetype(() => import('../pages/editPraxis/mobileArchetypes/EphemeristsComposer'))
 const EphemeristsMobilePraxisCard = lazyArchetype(() => import('../components/praxisCard/mobile/EphemeristsMobilePraxisCard'))
@@ -58,11 +56,9 @@ export const EPHEMERISTS_MANIFEST: FactionManifest = {
   factionBody: () => EphemeristsFactionBody,
   profileBody: () => EphemeristsProfileBody,
   duelSeal: () => EphemeristsDuelSealConfirm,
-  duelRail: () => EphemeristsDuelRail,
   mobilePraxisCard: () => EphemeristsMobilePraxisCard,
   mobileEditPraxis: () => EphemeristsMobileEditPraxis,
   mobileFactionPage: () => EphemeristsFactionPage,
   mobileFieldDesk: () => EphemeristsHome,
   mobileDuelSeal: () => EphemeristsMobileDuelSealConfirm,
-  mobileDuelRail: () => EphemeristsMobileDuelRail,
 }
