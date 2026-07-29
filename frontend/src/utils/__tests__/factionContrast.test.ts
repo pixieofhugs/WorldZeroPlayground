@@ -178,6 +178,14 @@ const ROSTER_PAIRS: Pair[] = CARD_KEYS.flatMap((key) => [
 ]);
 
 /**
+ * The Singularity seal's inner panel — the accent phosphor at 5% over the
+ * always-dark chassis (`GLASS` in `SingularityDuelSealConfirm`). Theme-invariant,
+ * like everything else in that skin. Written as a literal for the reason `Pair.veil`
+ * states: it is a component's own wash, not a declared token.
+ */
+const SEAL_GLASS_VEIL = "rgba(74,222,128,0.05)";
+
+/**
  * Archetype-private primitives. Each entry is a role index.css states in
  * words; nothing here is inferred from how a component happens to use a token.
  */
@@ -501,6 +509,171 @@ const ARCHETYPE_PAIRS: Pair[] = [
   // painted in the 2.00:1 chronicle gold — so it is deliberately not a row here.
   { what: "wow decree plaque, total", surface: "--faction-wow-chronicle-panel", text: "--faction-wow-stamp-total" },
   { what: "wow decree plaque, unit", surface: "--faction-wow-chronicle-panel", text: "--faction-wow-card-accent" },
+
+  // ── THE DUEL SEAL / FORFEIT DIALOGS (#1168) ──────────────────────────────
+  //
+  // WHY THIS BLOCK EXISTS, and why it is the only guard that can. These sixteen
+  // components (`components/duel/*DuelSealConfirm.tsx`) are the second instance
+  // of the #694 shape: a GLOBAL FUNCTIONAL INK on faction paper. `--color-danger`
+  // and `--color-success` were chosen against the app's near-white surface, and
+  // the seal dialogs paint them on eight different sheets — three of which are
+  // dark in BOTH themes while the tokens flip with the viewer, so the light
+  // halves land on grounds they were never chosen for.
+  //
+  // Neither existing guard could see it, for the two reasons #694 already
+  // records and one new one:
+  //   - This test measures a token against the surface its DOCUMENTATION names,
+  //     and `--color-danger` documents no faction surface. The pairing was not
+  //     missing from the manifest, it was unrepresentable in it.
+  //   - `e2e/contrast.spec.ts` walks READ ROUTES. A seal dialog exists only in a
+  //     composer STATE (a duel side, mid-cast, before confirm), which no route
+  //     walk produces. "The surface is skinned by a faction" is not the same
+  //     claim as "the sweep has been there".
+  //   - Two of the failing inks were not reachable from a skin AT ALL until this
+  //     issue: `StakesTiles` and `RaceRoster` hardcoded them, so no amount of
+  //     per-skin care could have fixed them. `DuelSlotTheme` now takes
+  //     `credit` / `alarm`, which is what makes the routed rows below possible.
+  //
+  // WHAT IS DELIBERATELY NOT REPEATED HERE. Four of the sixteen pairings resolve
+  // to a pair some row above already measures, and a second name for one
+  // measurement is what the WOW block warns against:
+  //   ua seal body / note              = `ua roster notice ink` / `credit ink`
+  //   singularity seal body / note     = `singularity roster notice / credit ink`
+  //   ephemerists forfeit cost panel   = `ephemerists parchment element, ink`
+  //                                      (the same two colours; the ratio is
+  //                                      symmetric, so swapping which is the
+  //                                      ground measures nothing new)
+  //   ephemerists seal note            = `ephemerists vellum, muted`
+  //   default stakes panel             = `default seal note` (one ground)
+  //
+  // The BODY LINE and the reopen NOTE are 18px content copy and owe 4.5:1. The
+  // roster's "sealed" mark is 18px regular and owes 4.5:1 too — it is the
+  // TIGHTEST consumer of `credit`, which is why the stakes-panel rows below are
+  // written at the normal floor even though the win figure beside them is 24px
+  // bold. Only the ZERO figure takes AA_LARGE, and it is 24px/700 by inspection.
+  //
+  // The 3px `--color-danger` RULE each routed skin now draws beside its forfeit
+  // paragraph is deliberately absent from this list, on the same reasoning the
+  // WOW block gives for the opponent accent: it is a drawn mark carrying no
+  // text, so it has no pair to measure. If a later edit paints a string in it,
+  // THAT is what needs a row.
+  {
+    what: "default seal body, notice ink",
+    surface: "--color-bg-page",
+    text: "--faction-default-card-notice",
+  },
+  { what: "coven seal body, notice ink", surface: "--faction-coven-body-bg", text: "--faction-coven-card-notice" },
+  { what: "wow seal body, notice ink", surface: "--faction-wow-duel-lists-bg", text: "--faction-wow-card-notice" },
+  { what: "everymen seal body, notice ink", surface: "--everymen-paper", text: "--faction-everymen-card-notice" },
+  // Snide had already routed its own body ink: the forfeit copy sits in a
+  // redaction bar, hot pink on the photocopier black.
+  { what: "snide seal body, pink on the redaction bar", surface: "--faction-snide-ink", text: "--faction-snide-pink" },
+
+  // The reopen note. Five sheets keep `--color-success` because they MEASURE —
+  // they are light by day and dark by night, so the token flips with them.
+  { what: "default seal note, success on the page", surface: "--color-bg-page", text: "--color-success" },
+  { what: "coven seal note, success on the board", surface: "--faction-coven-body-bg", text: "--color-success" },
+  { what: "wow seal note, success on the lists ground", surface: "--faction-wow-duel-lists-bg", text: "--color-success" },
+  { what: "everymen seal note, success on the paper", surface: "--everymen-paper", text: "--color-success" },
+  { what: "snide seal note, acid on the halftone", surface: "--faction-snide-ink", text: "--faction-snide-acid" },
+
+  // The stakes panel — a SECOND sheet on every skin, and the one the shared
+  // slots actually land on. `--faction-*-card-*` inks are measured against
+  // `card-bg`, so a skin mounting the slots on a deeper stock has to re-measure
+  // (WORLD_ZERO_STYLE §3: "when a surface gains a sheet, re-measure the inks it
+  // already had"). Gates the roster's 18px "sealed" mark and the win figure.
+  { what: "coven seal stakes scrap, credit ink", surface: "--faction-coven-notepad-bg", text: "--color-success" },
+  { what: "wow seal stakes plate, credit ink", surface: "--faction-wow-chronicle-panel", text: "--color-success" },
+  {
+    // The terminal's green glass, laid over the always-dark chassis before any
+    // ink lands — a veil in exactly #694's sense.
+    what: "singularity seal glass panel, credit ink",
+    surface: "--faction-singularity-card-bg",
+    veil: SEAL_GLASS_VEIL,
+    text: "--faction-singularity-card-credit",
+  },
+  { what: "everymen seal stakes panel, credit ink", surface: "--everymen-paper-deep", text: "--color-success" },
+  {
+    // The same panel in FORFEIT mode, where Everymen inverts it to ink. The
+    // green is 1.88:1 there, so the skin hands `credit` its own gold instead.
+    what: "everymen seal stakes panel inverted, gold credit",
+    surface: "--everymen-ink",
+    text: "--everymen-gold",
+  },
+  { what: "snide seal stakes scrap, credit ink", surface: "--faction-snide-ink", text: "--faction-snide-card-credit" },
+  { what: "ephemerists seal ledger band, credit ink", surface: "--eph-vellum-deep", text: "--color-success" },
+  { what: "ua seal stakes well, credit ink", surface: "--faction-ua-panel", text: "--color-success" },
+
+  // The ZERO figure — `--color-danger` on every stakes panel, which is what a
+  // S.N.I.D.E. duelist sees in the lose tile (0.0×, `eras/era_1.py`). 24px/700,
+  // so AA_LARGE genuinely applies; every one of these clears it as shipped and
+  // none is repainted. They are rows so that a later repaint of any panel is
+  // caught — `ephemerists seal zero figure` measures 3.01:1, the narrowest
+  // margin in the family, and would go red on almost any darkening of the band.
+  {
+    what: "default seal zero figure, large display type",
+    surface: "--color-bg-page",
+    text: "--color-danger",
+    floor: AA_LARGE,
+  },
+  {
+    what: "coven seal zero figure, large display type",
+    surface: "--faction-coven-notepad-bg",
+    text: "--color-danger",
+    floor: AA_LARGE,
+  },
+  {
+    what: "wow seal zero figure, large display type",
+    surface: "--faction-wow-chronicle-panel",
+    text: "--color-danger",
+    floor: AA_LARGE,
+  },
+  {
+    what: "singularity seal zero figure, large display type",
+    surface: "--faction-singularity-card-bg",
+    veil: SEAL_GLASS_VEIL,
+    text: "--color-danger",
+    floor: AA_LARGE,
+  },
+  {
+    what: "everymen seal zero figure, large display type",
+    surface: "--everymen-paper-deep",
+    text: "--color-danger",
+    floor: AA_LARGE,
+  },
+  {
+    what: "everymen seal zero figure inverted, large display type",
+    surface: "--everymen-ink",
+    text: "--color-danger",
+    floor: AA_LARGE,
+  },
+  {
+    what: "snide seal zero figure, large display type",
+    surface: "--faction-snide-ink",
+    text: "--color-danger",
+    floor: AA_LARGE,
+  },
+  {
+    what: "ephemerists seal zero figure, large display type",
+    surface: "--eph-vellum-deep",
+    text: "--color-danger",
+    floor: AA_LARGE,
+  },
+  {
+    what: "ua seal zero figure, large display type",
+    surface: "--faction-ua-panel",
+    text: "--color-danger",
+    floor: AA_LARGE,
+  },
+  {
+    // Singularity is the one skin that keeps `--color-danger` as TEXT: its
+    // forfeit heading is 24px, so the 3:1 floor applies and 4.03:1 clears it.
+    // The 18px body under it did not, and took the notice ink.
+    what: "singularity seal forfeit heading, large display type",
+    surface: "--faction-singularity-card-bg",
+    text: "--color-danger",
+    floor: AA_LARGE,
+  },
 
   // Albescent's FACTION tokens are gone (#783) — it renders Default's surfaces,
   // which `default` already covers. What remains is the always-light palette
