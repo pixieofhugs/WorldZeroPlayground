@@ -197,6 +197,13 @@
       "metatasks": "Charms added",
       "duel": "A friendly duel",
       "comments": "Comments"
+    },
+    "snide": {
+      "proof": "Receipts",
+      "members": "Posted together by",
+      "metatasks": "Extras taken",
+      "vote": "Your call",
+      "voters": "Who called it"
     }
   },
   "comments": {
