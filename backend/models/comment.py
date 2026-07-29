@@ -12,7 +12,18 @@ if TYPE_CHECKING:
 
 # API trust-boundary cap on comment length (ADR-0006). Enforced in the service,
 # not the DB — a CHECK on a Text column buys nothing the service doesn't.
-MAX_COMMENT_BODY = 2000
+#
+# 500 is the number every design sheet shows, and #1205 made it the single cap
+# governing composer / editor / API alike (it was 2000 here and unset in the
+# composer). Lowering it needs NO migration: `body_text` is Text, so the cap is
+# a validation rule on writes, never a column width.
+#
+# It constrains WRITES only — `CommentOut.body_text` is an uncapped `str`, so a
+# comment stored before this cap existed stays fully readable at any length. An
+# over-length body also stays editable: the client seeds the editor with it and
+# blocks saving until it is trimmed under the cap, so the author trims their own
+# words rather than having them truncated for them.
+MAX_COMMENT_BODY = 500
 
 
 class Comment(TimestampMixin, Base):
