@@ -52,13 +52,24 @@ def upgrade() -> None:
     )
 
     # Doubles as the read index: every query is "this character's archive".
+    #
+    # Not the `EXCEPTION WHEN duplicate_object` shape the FK above uses: adding
+    # a UNIQUE constraint also builds an index, and a pre-existing one raises
+    # `duplicate_table`, which that handler does not catch. On a fresh DB
+    # `0001_squashed` has already built both from the model, so this ran
+    # straight into an unhandled error. Ask pg_constraint instead.
     op.execute(
         """
         DO $$ BEGIN
-            ALTER TABLE feed_dismissal
-                ADD CONSTRAINT uq_feed_dismissal_character_item_key
-                UNIQUE (character_id, item_key);
-        EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+            IF NOT EXISTS (
+                SELECT 1 FROM pg_constraint
+                WHERE conname = 'uq_feed_dismissal_character_item_key'
+            ) THEN
+                ALTER TABLE feed_dismissal
+                    ADD CONSTRAINT uq_feed_dismissal_character_item_key
+                    UNIQUE (character_id, item_key);
+            END IF;
+        END $$;
         """
     )
 
