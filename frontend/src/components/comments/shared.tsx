@@ -7,7 +7,7 @@
  * timestamp+edited — and the composer mechanics out of every voice so each voice
  * only owns its chrome.
  */
-import type { ComponentType } from 'react'
+import type { ComponentType, ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import type { CharacterOut } from '../../api/auth'
@@ -127,6 +127,7 @@ export function ComposerControls({
   submitLabel,
   submittingLabel,
   onCancel,
+  hint,
 }: {
   value: string
   onChange: (value: string) => void
@@ -148,6 +149,21 @@ export function ComposerControls({
   submittingLabel?: string
   /** When set, renders a neutral Cancel affordance beside submit (edit mode). */
   onCancel?: () => void
+  /**
+   * Caption for the foot's left slot — the composer's "@ to mention" hint
+   * (#1195). A ReactNode rather than a string, because the slot is shared and
+   * the dress is the voice's: a voice OVERRIDES this to speak in its own ink.
+   *
+   * It defaults to the neutral caption below rather than to nothing, so the
+   * affordance is opt-OUT. The placeholder used to carry "type @ to mention
+   * someone" for all eight voices; the design moves that job here, and a
+   * default is what keeps the seven voices that have not been redressed yet
+   * (#1196–#1202) from silently losing it in the meantime.
+   *
+   * It yields to the live character count, because `maxLength` is only set
+   * while EDITING, and the two states are mutually exclusive on the sheet.
+   */
+  hint?: ReactNode
 }) {
   const { t } = useTranslation('praxis')
   const disabled = submitting || value.trim().length === 0
@@ -205,7 +221,14 @@ export function ComposerControls({
             {t('comments.charCount', { count: value.length, max: maxLength })}
           </span>
         ) : (
-          <span />
+          (hint ?? (
+            // Same tier as the character count it shares this slot with, so a
+            // voice that never overrides it inherits whatever legibility that
+            // count already has on its ground.
+            <span style={{ fontSize: 'var(--text-md)', color: 'var(--color-text-tertiary)' }}>
+              {t('comments.mentionHint')}
+            </span>
+          ))
         )}
         <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-sm)' }}>
           {onCancel && (

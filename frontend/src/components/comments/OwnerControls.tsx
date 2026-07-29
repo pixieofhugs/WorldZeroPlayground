@@ -6,8 +6,12 @@
  * here (in `useOwnerEdit`); each voice opts in by calling the hook and dropping
  * `<OwnerControls>` in its meta cluster + swapping its body slot for
  * `<CommentEditor>` while editing. No voice re-implements the state machine.
+ *
+ * #1195 adds the second shared behaviour beside it: `useOwnerReveal`, the
+ * hover/focus gate the row now sits behind. Same deal — the gate lives here
+ * once, a voice opts in with two lines, and nobody re-implements it either.
  */
-import { useState } from 'react'
+import { type CSSProperties, type FocusEvent, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { type CommentOut, deleteComment, editComment } from '../../api/comments'
 import { useAuth } from '../../auth/AuthContext'
@@ -132,6 +136,102 @@ export function useOwnerEdit({
   }
 }
 
+// ── Hover / focus reveal of the owner row (#1195) ─────────────────────────────
+
+/**
+ * Does the viewer's primary input hover at all? A touch-only device answers no,
+ * and there the owner row is ALWAYS shown — a hover-gate with no hover is a
+ * control that does not exist.
+ */
+const HOVER_CAPABLE_QUERY = '(hover: hover)'
+
+function detectHoverCapable(): boolean {
+  if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') {
+    // Static render (the comment tests render to markup, no DOM). Assume a
+    // pointer: the gate is opacity-only, so the controls are still in the
+    // markup and still focusable either way.
+    return true
+  }
+  return window.matchMedia(HOVER_CAPABLE_QUERY).matches
+}
+
+/**
+ * The reveal state + the handlers that drive it. Spread `containerProps` on the
+ * comment's OUTERMOST element (the card/bubble root) and hand the whole object
+ * to `<OwnerControls reveal={…}>`.
+ */
+export interface OwnerReveal {
+  /** True when the owner row should be visible. */
+  revealed: boolean
+  /** Spread onto the card root — the pointer + focus sources of the reveal. */
+  containerProps: {
+    onMouseEnter: () => void
+    onMouseLeave: () => void
+    onFocus: () => void
+    onBlur: (event: FocusEvent<HTMLElement>) => void
+  }
+}
+
+/**
+ * Progressive reveal for the author's edit/withdraw row (#1195, design: the
+ * Unaffiliated sheet's "Row · yours (hover)").
+ *
+ * Three routes to the control, because hover alone would make it mouse-only:
+ *   1. pointer — `onMouseEnter` / `onMouseLeave` on the card root;
+ *   2. keyboard — `onFocus` / `onBlur` on the same root, which is React's
+ *      bubbling focus pair, i.e. `:focus-within` without a stylesheet. The
+ *      buttons stay MOUNTED and merely transparent, so Tab reaches them and the
+ *      first stop reveals the row;
+ *   3. touch — a device that reports no hover capability never gates at all.
+ *
+ * Lives here, once, so the eight faction voices wire two lines (this hook + the
+ * spread) instead of re-implementing a gate each. `revealed` deliberately does
+ * NOT know about the withdraw-confirm strip; `<OwnerControls>` pins that open
+ * itself, so a voice cannot forget to.
+ */
+export function useOwnerReveal(): OwnerReveal {
+  const [hovered, setHovered] = useState(false)
+  const [focused, setFocused] = useState(false)
+  const [hoverCapable, setHoverCapable] = useState(detectHoverCapable)
+
+  useEffect(() => {
+    if (typeof window.matchMedia !== 'function') {
+      setHoverCapable(false)
+      return
+    }
+    const query = window.matchMedia(HOVER_CAPABLE_QUERY)
+    const sync = () => setHoverCapable(query.matches)
+    sync()
+    query.addEventListener('change', sync)
+    return () => query.removeEventListener('change', sync)
+  }, [])
+
+  return {
+    revealed: !hoverCapable || hovered || focused,
+    containerProps: {
+      onMouseEnter: () => setHovered(true),
+      onMouseLeave: () => setHovered(false),
+      onFocus: () => setFocused(true),
+      onBlur: (event: FocusEvent<HTMLElement>) => {
+        // Only a focus leaving the card counts — moving between the row's own
+        // buttons must not flicker it away mid-Tab.
+        if (!event.currentTarget.contains(event.relatedTarget as Node | null)) {
+          setFocused(false)
+        }
+      },
+    },
+  }
+}
+
+/**
+ * The gate itself: OPACITY, never `display`/`visibility`/unmounting. A removed
+ * control is unreachable by keyboard, which is the whole failure mode this
+ * issue exists to avoid.
+ */
+export function ownerRevealStyle(revealed: boolean): CSSProperties {
+  return { opacity: revealed ? 1 : 0, transition: 'opacity 120ms ease-out' }
+}
+
 // ── Meta-cluster affordance (edit · delete / withdraw-confirm) ────────────────
 
 const linkStyle = {
@@ -146,10 +246,26 @@ const linkStyle = {
  * Neutral text affordance for the meta cluster — mirrors the praxis owner "edit"
  * link (tertiary `.eyebrow`). Self-hides for non-authors and while editing (the
  * inline editor owns Save/Cancel then).
+ *
+ * Pass `reveal` (from {@link useOwnerReveal}) to hover-gate it: the row then
+ * fades in on pointer-hover or keyboard focus anywhere in the card, and is
+ * always on for a device that cannot hover. Omit it and the row is always
+ * visible — which is what the seven faction voices still do until each one
+ * wires the two lines (#1196–#1202).
  */
-export function OwnerControls({ owner }: { owner: OwnerEdit }) {
+export function OwnerControls({
+  owner,
+  reveal,
+}: {
+  owner: OwnerEdit
+  reveal?: OwnerReveal
+}) {
   const { t } = useTranslation('praxis')
   if (!owner.isOwner || owner.editing) return null
+
+  // The confirm strip pins itself open: it is a question already asked, and a
+  // pointer wandering off must not swallow it mid-answer.
+  const gate = reveal == null ? null : ownerRevealStyle(reveal.revealed || owner.confirming)
 
   if (owner.confirming) {
     return (
@@ -160,6 +276,7 @@ export function OwnerControls({ owner }: { owner: OwnerEdit }) {
           flexWrap: 'wrap',
           gap: 'var(--space-sm)',
           fontSize: 'var(--text-content)',
+          ...gate,
         }}
       >
         <span style={{ color: 'var(--color-text-tertiary)' }}>
@@ -191,7 +308,9 @@ export function OwnerControls({ owner }: { owner: OwnerEdit }) {
   }
 
   return (
-    <span style={{ display: 'inline-flex', alignItems: 'baseline', gap: 'var(--space-sm)' }}>
+    <span
+      style={{ display: 'inline-flex', alignItems: 'baseline', gap: 'var(--space-sm)', ...gate }}
+    >
       <button
         onClick={owner.startEdit}
         aria-label={t('comments.edit')}

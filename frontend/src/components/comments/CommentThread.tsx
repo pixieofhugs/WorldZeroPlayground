@@ -20,36 +20,124 @@ import {
   ComposerControls,
   MentionText,
 } from './shared'
-import { CommentEditor, OwnerControls, useOwnerEdit } from './OwnerControls'
+import {
+  CommentEditor,
+  OwnerControls,
+  useOwnerEdit,
+  useOwnerReveal,
+  ownerRevealStyle,
+} from './OwnerControls'
 import { CommentFlagControl, canFlagComment } from './FlagControl'
 
 /**
- * Neutral fallback voice — invariant slots themed only by the faction CSS vars +
- * FactionAvatar + the timestamp dialect. Any unregistered faction renders this,
- * which is also the na / Unaffiliated identity (ADR-0039): so the row wears the
- * spectrum-band na tells — a rainbow hairline across the bubble top and
- * gradient-clipped @mentions (#970), reached via factionFill/`--faction-default-rainbow`
- * (NOT factionCssVar, which is neutral grey for na).
+ * THE SPECTRUM BUBBLE — the comment voice of the UNAFFILIATED (`na`) identity,
+ * and the fallback for any slug with no voice of its own. `default ≡ na ≡
+ * Unaffiliated` is one identity (ADR-0039 / 0046 / 0048): this IS the
+ * unaffiliated kit, not a generic neutral. Albescent renders through it too and
+ * stays that way — `albescent ≡ na + drift` (ADR-0048), its card carries the
+ * difference — so nothing here may narrow to `na`.
+ *
+ * The na tells, and only these: a spectrum hairline across the top of every
+ * sheet, and gradient-clipped @mentions (#970). Both reached through
+ * `factionFill` / `--faction-default-rainbow`, NEVER `factionCssVar`, which is
+ * neutral grey for na. Everything else is the quiet cream sheet the rest of the
+ * na kit uses — Lora italic for the name, Courier Prime for every label,
+ * `.content-text` for the body, because a comment IS content (§4 role floor).
+ *
+ * Six states, one component (ADR-0056 / 0058 / 0063 — no mobile twin):
+ *   row · default | row · mention + edited | row · yours (hover) |
+ *   row · editing | composer · empty | composer · submitting
+ *
+ * The owner's edit/withdraw row is the only behavioural change (#1195): it now
+ * reveals on hover OR keyboard focus, and never gates at all on a device that
+ * cannot hover. See `useOwnerReveal`.
  */
+
+/** Label-tier caption voice, shared by every small mark on the sheet. */
+const CAPTION = {
+  fontFamily: 'var(--font-body)',
+  fontSize: 'var(--text-base)',
+  letterSpacing: '0.18em',
+  textTransform: 'uppercase',
+} as const
+
+/**
+ * The sheet both modes sit on: avatar in the margin, a cream card carrying the
+ * spectrum hairline. One shape for a row and for the composer, so the thread
+ * reads as one stack rather than a list plus a form.
+ */
+function Sheet({
+  slug,
+  avatar,
+  children,
+  containerProps,
+}: {
+  slug: string | null | undefined
+  avatar: React.ReactNode
+  children: React.ReactNode
+  containerProps?: React.ComponentPropsWithoutRef<'div'>
+}) {
+  return (
+    <div style={{ display: 'flex', gap: 'var(--space-md)', alignItems: 'flex-start' }}>
+      {avatar}
+      <div
+        {...containerProps}
+        style={{
+          flex: 1,
+          minWidth: 0,
+          background: factionCssVar(slug, 'card-bg'),
+          border: `1px solid ${factionCssVar(slug, 'border')}`,
+          borderRadius: 10,
+          overflow: 'hidden',
+          boxShadow: '0 4px 14px -10px rgba(0,0,0,0.4)',
+        }}
+      >
+        {/* The spectrum hairline — the na tell. A rainbow for default/na via
+            factionFill; a themed slug would land here only if it registered no
+            voice, and then it gets its own solid hue, not a borrowed one. */}
+        <div style={{ height: 3, ...factionFill(slug, 'bar') }} />
+        <div style={{ padding: 'var(--space-md) var(--space-lg)' }}>{children}</div>
+      </div>
+    </div>
+  )
+}
+
 export function DefaultComment(props: CommentProps) {
   const { t } = useTranslation('praxis')
   const { user } = useAuth()
+  const reveal = useOwnerReveal()
   if (props.mode === 'composer') {
     const { character, value, onChange, onSubmit, submitting } = props
+    const slug = character.faction_slug
     return (
-      <div style={{ display: 'flex', gap: 'var(--space-md)' }}>
-        <FactionAvatar character={character} size="sm" />
-        <div style={{ flex: 1 }}>
+      <Sheet slug={slug} avatar={<FactionAvatar character={character} size="sm" />}>
+        {/* `.content-text` rides the wrapper on purpose: the ONE slot inside
+            without a size of its own is the textarea (`font: inherit`), and a
+            comment draft is content-tier text (§4). Every other slot — count,
+            hint, Cancel, Post — names its own size. */}
+        <div className="content-text" aria-busy={submitting}>
           <ComposerControls
             value={value}
             onChange={onChange}
             onSubmit={onSubmit}
             submitting={submitting}
-            accent={factionCssVar(character.faction_slug, 'card-accent')}
-            onAccent={factionCssVar(character.faction_slug, 'on-accent')}
+            accent={factionCssVar(slug, 'card-accent')}
+            onAccent={factionCssVar(slug, 'on-accent')}
+            // The field tier, not the sheet: an input reads as inset rather
+            // than painted on. Default-only tokens, and only default-keyed
+            // slugs reach this voice (every themed faction has one of its own).
+            bg="var(--faction-default-composer-field)"
+            text={factionCssVar(slug, 'card-text')}
+            // The shared string in the na sheet's own caption voice — an
+            // OVERRIDE of ComposerControls' neutral default, not a new hint.
+            hint={
+              <span style={{ ...CAPTION, color: factionCssVar(slug, 'card-muted') }}>
+                {t('comments.mentionHint')}
+              </span>
+            }
           />
         </div>
-      </div>
+      </Sheet>
     )
   }
   const { comment, onEdited, onWithdrawn } = props
@@ -57,74 +145,99 @@ export function DefaultComment(props: CommentProps) {
   const accent = factionCssVar(slug, 'card-accent')
   const onAccent = factionCssVar(slug, 'on-accent')
   const owner = useOwnerEdit({ comment, onEdited, onWithdrawn })
-  // A quiet control row lives at the bubble foot (design intent) — but only when
-  // there is something to show: the author's edit/withdraw or a flag affordance.
-  // Hidden while editing, since the inline editor owns Save/Cancel then.
-  const showControls =
-    !owner.editing && (owner.isOwner || canFlagComment(comment, user?.character?.id))
+  const canFlag = canFlagComment(comment, user?.character?.id)
+  // A quiet control row lives at the sheet's foot — but only when there is
+  // something to show: the author's edit/withdraw or a flag affordance. Hidden
+  // while editing, since the inline editor owns Save/Cancel then.
+  const showControls = !owner.editing && (owner.isOwner || canFlag)
+  // On your OWN comment the foot holds nothing but the gated owner row, so the
+  // rule above it fades with the row — a hairline over empty space is a state
+  // the sheet never draws. A flaggable (someone else's) comment keeps its foot.
+  const footGate = owner.isOwner && !canFlag ? ownerRevealStyle(reveal.revealed) : null
   return (
-    <div style={{ display: 'flex', gap: 'var(--space-md)', alignItems: 'flex-start' }}>
-      <FactionAvatar character={authorToCharacter(comment.author)} size="sm" />
+    <Sheet
+      slug={slug}
+      avatar={<FactionAvatar character={authorToCharacter(comment.author)} size="sm" />}
+      containerProps={reveal.containerProps}
+    >
       <div
         style={{
-          flex: 1,
-          minWidth: 0,
-          background: factionCssVar(slug, 'card-bg'),
-          border: `1px solid ${factionCssVar(slug, 'border')}`,
-          borderRadius: 8,
-          overflow: 'hidden',
-          boxShadow: '0 4px 14px -10px rgba(0,0,0,0.4)',
+          display: 'flex',
+          alignItems: 'baseline',
+          gap: 'var(--space-sm)',
+          flexWrap: 'wrap',
         }}
       >
-        {/* spectrum hairline — the na tell; a rainbow for default/na, a solid
-            hue would never appear here because only default slugs reach this
-            voice. Reached via factionFill (rainbow), not factionCssVar (grey). */}
-        <div style={{ height: 3, ...factionFill(slug, 'bar') }} />
-        <div style={{ padding: 'var(--space-md) var(--space-lg)' }}>
-          <div style={{ display: 'flex', alignItems: 'baseline', gap: 'var(--space-sm)', flexWrap: 'wrap' }}>
-            <Link
-              to={`/characters/${comment.author.id}`}
-              style={{
-                fontFamily: 'var(--font-display)',
-                fontStyle: 'italic',
-                fontWeight: 700,
-                color: factionCssVar(slug, 'card-text'),
-                textDecoration: 'none',
-              }}
-            >
-              {comment.author.display_name}
-            </Link>
-            <span style={{ fontSize: 'var(--text-md)', color: factionCssVar(slug, 'card-muted') }}>
-              {formatCommentTime(slug, comment.created_at)}
-              {comment.is_edited ? ` · ${t('comments.edited')}` : ''}
-            </span>
-          </div>
-          <div style={{ marginTop: 'var(--space-xs)', color: factionCssVar(slug, 'card-text'), lineHeight: 1.5 }}>
-            {owner.editing ? (
-              <CommentEditor owner={owner} accent={accent} onAccent={onAccent} />
-            ) : (
-              <MentionText body={comment.body_text} mentions={comment.mentions} accent={accent} rainbow />
-            )}
-          </div>
-          {showControls && (
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'baseline',
-                flexWrap: 'wrap',
-                gap: 'var(--space-md)',
-                marginTop: 'var(--space-sm)',
-                paddingTop: 'var(--space-sm)',
-                borderTop: `1px solid ${factionCssVar(slug, 'border')}`,
-              }}
-            >
-              <OwnerControls owner={owner} />
-              <CommentFlagControl comment={comment} />
-            </div>
-          )}
-        </div>
+        <Link
+          to={`/characters/${comment.author.id}`}
+          style={{
+            fontFamily: 'var(--font-display)',
+            fontStyle: 'italic',
+            fontWeight: 700,
+            color: factionCssVar(slug, 'card-text'),
+            textDecoration: 'none',
+          }}
+        >
+          {comment.author.display_name}
+        </Link>
+        <span style={{ ...CAPTION, color: factionCssVar(slug, 'card-muted') }}>
+          {formatCommentTime(slug, comment.created_at)}
+        </span>
+        {comment.is_edited && (
+          <span style={{ ...CAPTION, color: factionCssVar(slug, 'card-muted') }}>
+            <span aria-hidden="true">· </span>
+            {t('comments.edited')}
+          </span>
+        )}
       </div>
-    </div>
+      {/* The body is user-authored free text — the content floor, in both the
+          resting and the editing state (the editor's textarea inherits it). */}
+      <div
+        className="content-text"
+        style={{
+          marginTop: 'var(--space-sm)',
+          fontFamily: 'var(--font-body)',
+          color: factionCssVar(slug, 'card-text'),
+          lineHeight: 1.55,
+          overflowWrap: 'anywhere',
+        }}
+      >
+        {owner.editing ? (
+          <CommentEditor
+            owner={owner}
+            accent={accent}
+            onAccent={onAccent}
+            bg="var(--faction-default-composer-field)"
+            text={factionCssVar(slug, 'card-text')}
+          />
+        ) : (
+          <MentionText
+            body={comment.body_text}
+            mentions={comment.mentions}
+            accent={accent}
+            rainbow
+          />
+        )}
+      </div>
+      {showControls && (
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'baseline',
+            flexWrap: 'wrap',
+            gap: 'var(--space-md)',
+            marginTop: 'var(--space-md)',
+            paddingTop: 'var(--space-sm)',
+            // A divider INSIDE the sheet is quieter than the sheet's own edge.
+            borderTop: '1px solid var(--faction-default-composer-hair)',
+            ...footGate,
+          }}
+        >
+          <OwnerControls owner={owner} reveal={reveal} />
+          <CommentFlagControl comment={comment} />
+        </div>
+      )}
+    </Sheet>
   )
 }
 
