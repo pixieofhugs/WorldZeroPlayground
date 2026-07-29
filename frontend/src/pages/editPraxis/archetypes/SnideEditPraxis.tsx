@@ -1,22 +1,90 @@
 /**
- * Punk Zine — S.N.I.D.E. faction.
- * Photocopier ink stock, ransom-note title, two-column markdown preview, xerox
- * photo tiles. Colours read from the faction tokens, so it tracks the punk palette.
+ * S.N.I.D.E. edit praxis — composer v2 (#1184, epic #1179; design project
+ * c491945e, `Snide Edit Praxis.dc.html`, the `snide` row of `SKINS`).
+ *
+ * The same page `DefaultEditPraxis` draws, wearing SNIDE's dress: a xerox sheet
+ * flyposted to the wall. Every region, every control and every word is shared
+ * (ADR-0065); what belongs to this file is the frame, the type, the ornament and
+ * the marks.
+ *
+ * ## The dress
+ *
+ * **Geometry — radius 0, borderW 0.** SNIDE is the one skin that draws no card
+ * border at all, so the sheet is a hard-cornered rectangle with nothing around
+ * it: what separates it from the page is the stock, the grain and the tape. The
+ * shared sheet's default 10px radius is overridden here rather than inherited.
+ *
+ * **Masthead** — a near-black bar carrying the wordmark in acid, a dashed acid
+ * rule that flexes to fill, and the stage word. All three are ornament: the bar
+ * is `aria-hidden`, because the stage is announced once, by the status row
+ * underneath it. The zine says DRAFT twice on purpose; a screen reader hears it
+ * once.
+ *
+ * **Ground** — the photocopier raster plus two tape strips, both running off the
+ * sheet's edge. They can only do that because `ComposerSheet` owns the
+ * `overflow: hidden` clip: the ground is the COLUMN's, never the viewport's
+ * (#1028, the trap six of eight task-detail skins fell into).
+ *
+ * **Section rule** — the censor stripe, a solid redaction bar rather than a
+ * hairline.
+ *
+ * **The two marks** are one hand-drawn blob at two sizes: the points blob with
+ * its numeral and `PTS` caption, and the status blob with a check struck through
+ * in pen. They are NOT `RingMark` — that block is a ring with its middle punched
+ * out, and this design's mark is a splat. They are passed through the same two
+ * mark SLOTS (`TaskSlip.mark`, `ComposerStatusRow.mark`), which is the seam that
+ * matters.
+ *
+ * **Submit** — a full-bleed acid bar, not an inline button. The shared
+ * `ComposerFooter` already expressed it: its `style` prop turns the row into a
+ * stretched column, and the sheet's bottom padding is dropped so the bar can
+ * land flush on the sheet's edge. No footer was forked and no bar helper added.
+ *
+ * ## Colour
+ *
+ * Every value is a `--faction-snide-*` token, so the sheet flips through the
+ * `[data-theme="dark"]` cascade with no `dark ?` branch anywhere below. Two
+ * families are deliberately kept apart: `-composer-*` is the SHEET (it flips),
+ * and `-acid`/`-ink`/`-pink` are the PRESS (they do not). Type printed on an
+ * acid ground reads the press's ink in both themes — paper-white on acid green
+ * measures 1.2:1.
+ *
+ * ## Type
+ *
+ * Anton for the title tier, Special Elite for body and labels, both read from
+ * the faction's font tokens. The label geometry (uppercase, 0.14em, the label
+ * tier) comes from `composerLabelStyle`; this file supplies only the face.
+ *
+ * ## Motion
+ *
+ * One: `ep-pulse`, slowed, on the masthead's dashed rule — the flicker of a
+ * tube light over the flyposting. The keyframe is in `index.css` behind the
+ * shared reduced-motion guard, reached by class; an inline `animation:` would
+ * bypass that guard (#1003).
  */
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { factionCssVar } from "../../../utils/factions";
+import type { CSSProperties, ReactNode } from "react";
 import { mediaUrl } from "../../../utils/media";
+import { factionName } from "../../../utils/factions";
 import { type PraxisType } from "../../../api/praxis";
 import MediaArt from "../blocks/MediaArt";
 import { pickArtKey } from "../blocks/useMediaArt";
 import {
   Breadcrumb,
+  ComposerFooter,
+  ComposerGround,
+  ComposerMasthead,
+  ComposerRule,
+  ComposerSection,
+  ComposerSheet,
+  ComposerStatusRow,
   ErrorBanner,
-  RainbowTitle,
-  RainbowUnderline,
-  TaskMetaInline,
+  TaskSlip,
   TitleCounter,
+  composerLabelStyle,
   formatAutosave,
+  useComposerSizes,
 } from "./shared";
 import {
   BodyPreview,
@@ -28,6 +96,8 @@ import {
   PublishButton,
   SaveDraftButton,
   TitleField,
+  WriteUpTabs,
+  type ComposerTab,
 } from "./controls";
 import { MetataskSealStack } from "../MetataskSealStack";
 import type { EditPraxisState } from "../useEditPraxis";
@@ -36,622 +106,674 @@ interface Props {
   state: EditPraxisState;
 }
 
-const cutoutFonts = [
-  "'Permanent Marker', cursive",
-  "'Special Elite', serif",
-  "'Anton', sans-serif",
-  "'Archivo Black', sans-serif",
-  "'Lora', serif",
-  "'Courier Prime', monospace",
-  "'Bebas Neue', sans-serif",
-  "'IM Fell English', serif",
-];
+/* THE SHEET — flips with the theme (xerox stock by day, photocopier black by
+ * night), so nothing below branches on it. */
+const SHEET = "var(--faction-snide-composer-sheet)";
+const INK = "var(--faction-snide-composer-ink)";
+const MUTED = "var(--faction-snide-composer-muted)";
+const FAINT = "var(--faction-snide-composer-faint)";
+const FIELD = "var(--faction-snide-composer-field)";
+const RULE = "var(--faction-snide-composer-rule)";
+const BAR = "var(--faction-snide-composer-bar)";
+const GRAIN = "var(--faction-snide-composer-grain)";
+/* Acid as TEXT: deep in the light half, bright on the dark stock. */
+const ACID_INK = "var(--faction-snide-composer-acid-ink)";
 
-const MODE_FONTS: Record<PraxisType, string> = {
-  solo: "'Permanent Marker', cursive",
-  collab: "'UnifrakturCook', serif",
-  duel: "'Bebas Neue', sans-serif",
-};
+/* THE PRESS — theme-invariant pigments. `ACID` is acid as a DRAWN THING (the
+ * masthead rule, the blobs, the submit bar), and `PRESS_INK` is the near-black
+ * that prints on it in either theme. Pairing acid with the sheet's ink instead
+ * would put paper-white type on acid green under [data-theme="dark"]. */
+const ACID = "var(--faction-snide-acid)";
+const PRESS_INK = "var(--faction-snide-ink)";
+const PRESS_PAPER = "var(--faction-snide-paper)";
+const HOT_PINK = "var(--faction-snide-pink)";
 
-function RansomChar({ ch, index }: { ch: string; index: number }) {
-  if (ch === " ")
-    return <span style={{ display: "inline-block", width: "0.4em" }} />;
-  const palette = [
-    factionCssVar("snide"),
-    factionCssVar("snide", "card-accent"),
-    factionCssVar("snide", "card-bg"),
-    "var(--color-text-primary)",
-  ];
-  const bg = palette[(index * 3) % palette.length];
-  const font = cutoutFonts[(index * 2 + 1) % cutoutFonts.length];
-  const rot = ((index * 17) % 12) - 6;
-  const sz = 26 + ((index * 5) % 12);
+const TITLE_FACE = "var(--faction-snide-font-impact)"; /* Anton */
+const BODY_FACE = "var(--faction-snide-font-type)"; /* Special Elite */
+
+/** The label tier with SNIDE's face on it — geometry shared, face local. */
+function punkLabel(overrides: CSSProperties = {}): CSSProperties {
+  return composerLabelStyle({ fontFamily: BODY_FACE, ...overrides });
+}
+
+/** One spray-can splat, drawn once and cut at two sizes. */
+const BLOB_PATH =
+  "M6 28 C4 13 20 4 42 3 C62 2 88 6 89 24 C90 40 86 63 54 69 C28 74 9 52 6 28 Z";
+
+interface BlobProps {
+  width: number;
+  height: number;
+  /** Strike the blob through — the draft's unfinished check. */
+  struck?: boolean;
+  children?: ReactNode;
+}
+
+/**
+ * The blob behind both marks. The design draws it at 94×72 for the points and
+ * smaller for the status; the aspect is the same, so one path serves both.
+ */
+function SnideBlob({ width, height, struck = false, children }: BlobProps) {
   return (
     <span
       style={{
-        display: "inline-block",
-        background: bg,
-        color: "var(--color-text-on-accent)",
-        fontFamily: font,
-        fontSize: sz,
-        lineHeight: 1,
-        fontWeight: 700,
-        // eslint-disable-next-line local/no-raw-style-values -- ornament: ransom-note letter tile; the mat is cut tight around one glyph.
-        padding: "2px 6px",
-        // eslint-disable-next-line local/no-raw-style-values -- ornament: the scraps overlap into a word; a 4px gutter would space them out into a row of chips.
-        margin: "2px 1px",
-        transform: `rotate(${rot}deg)`,
-        boxShadow: "1px 1px 0 rgba(0,0,0,.2)",
-        textTransform: index % 2 ? "uppercase" : "none",
+        position: "relative",
+        display: "inline-flex",
+        alignItems: "center",
+        justifyContent: "center",
+        width,
+        height,
+        flexShrink: 0,
+        transform: "rotate(-5deg)",
       }}
     >
-      {ch}
+      <svg
+        aria-hidden
+        viewBox="0 0 94 72"
+        preserveAspectRatio="none"
+        style={{ position: "absolute", inset: 0, width: "100%", height: "100%" }}
+      >
+        <path d={BLOB_PATH} fill={ACID} />
+        {struck && (
+          <>
+            <polyline
+              points="28,36 41,50 66,22"
+              fill="none"
+              stroke={PRESS_INK}
+              strokeWidth={8}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+            <line
+              x1="10"
+              y1="58"
+              x2="84"
+              y2="15"
+              stroke={HOT_PINK}
+              strokeWidth={6}
+              strokeLinecap="round"
+            />
+          </>
+        )}
+      </svg>
+      {children}
     </span>
   );
 }
 
 export default function SnideEditPraxis({ state }: Props) {
   const { t } = useTranslation("forms");
+  const sizes = useComposerSizes();
+  const [tab, setTab] = useState<ComposerTab>("write");
   const praxis = state.praxis!;
   const task = state.task;
 
-  const modeOptions: Array<{
-    key: PraxisType;
-    label: string;
-    desc: string;
-    font: string;
-  }> = (["solo", "collab", "duel"] as const).map((key) => ({
-    key,
-    label: t(`editPraxis.snide.mode.${key}.label`),
-    desc: t(`editPraxis.snide.mode.${key}.desc`),
-    font: MODE_FONTS[key],
-  }));
-
-  const accent = factionCssVar("snide");
-  const accentDeep = factionCssVar("snide", "card-accent");
-  const surface = factionCssVar("snide", "card-bg");
-  const ink = factionCssVar("snide", "card-text");
-  const muted = factionCssVar("snide", "card-muted");
-  const lightBg = factionCssVar("snide", "light");
-  const hot = "var(--faction-snide-pink)";
-
   const allowedModes = task?.allowed_modes ?? ["solo", "collab", "duel"];
+  const modeOptions: Array<{ key: PraxisType; label: string }> = [
+    { key: "solo", label: t("editPraxis.composer.modeSolo") },
+    { key: "collab", label: t("editPraxis.composer.modeCollab") },
+    { key: "duel", label: t("editPraxis.composer.modeDuel") },
+  ];
+
+  /* Every field is a block cut from the sheet: square corners, a drawn hairline,
+   * one shade off the stock so it reads inset rather than painted on. */
+  const fieldBox = {
+    width: "100%",
+    background: FIELD,
+    color: INK,
+    border: `1px solid ${RULE}`,
+    borderRadius: 0,
+    padding: "var(--space-md)",
+    outline: "none",
+    boxSizing: "border-box",
+  } as const;
+
+  /* The censor stripe, this skin's section divider. Every section gets its own
+   * (the shared block draws a hairline otherwise). */
+  const censorStripe = <ComposerRule style={{ height: 10, background: BAR }} />;
+
+  /* The submit bar's bleed: the sheet's own side padding, negated. Not a value
+   * off the scale — the same token, running the other way, which is the only
+   * way a child of a padded column reaches its parent's edge. */
+  const sidePad = sizes.isMobile ? "var(--space-lg)" : "var(--space-2xl)";
 
   return (
-    <div
-      style={{
-        background: surface,
-        color: ink,
-        fontFamily: "'Courier Prime', monospace",
-        position: "relative",
-        padding: "var(--space-3xl) var(--space-xl) var(--space-4xl)",
-        minHeight: "100vh",
-        backgroundImage: `repeating-linear-gradient(7deg, ${lightBg} 0, ${lightBg} 1px, transparent 1px, transparent 4px), repeating-linear-gradient(-93deg, rgba(0,0,0,.015) 0, rgba(0,0,0,.015) 1px, transparent 1px, transparent 5px)`,
-      }}
-    >
-      <div style={{ maxWidth: 760, margin: "0 auto" }}>
+    <div style={{ fontFamily: BODY_FACE, color: INK }}>
+      <div
+        style={{
+          maxWidth: sizes.maxWidth,
+          margin: "0 auto",
+          padding: "var(--space-lg) var(--space-lg) 0",
+        }}
+      >
         <Breadcrumb
           praxisId={praxis.id}
           taskId={praxis.task_id}
           taskTitle={praxis.task_title}
-          inkColor={muted}
         />
+      </div>
 
-        {/* Top punk header */}
-        <div style={{ marginBottom: "var(--space-lg)", position: "relative" }}>
-          <div
-            style={{
-              background: accentDeep,
-              color: "var(--color-text-on-accent)",
-              padding: "var(--space-sm) var(--space-md)",
-              transform: "rotate(-1.2deg)",
-              fontFamily: "'Bebas Neue', sans-serif",
-              letterSpacing: "0.2em",
-              fontSize: "var(--text-content)",
-              display: "inline-block",
-              boxShadow: `3px 3px 0 ${hot}`,
-            }}
+      <ComposerSheet
+        sizes={sizes}
+        /* radius 0, borderW 0 — the sheet has no edge but its own stock. */
+        style={{ background: SHEET, borderRadius: 0 }}
+        /* Bottom padding goes to the full-bleed submit bar below. */
+        contentStyle={{ paddingBottom: 0 }}
+        masthead={
+          <ComposerMasthead
+            background={BAR}
+            style={{ height: "auto", padding: "var(--space-sm) var(--space-lg)" }}
           >
-            {t("editPraxis.snide.masthead")}
-          </div>
-        </div>
-
-        <div style={{ marginBottom: "var(--space-lg)" }}>
-          <RainbowTitle
-            text={t("editPraxis.snide.pageTitle")}
-            size={40}
-            color={ink}
-          />
-        </div>
-
-        {/* Task slip */}
-        <div
-          style={{
-            position: "relative",
-            marginBottom: "var(--space-xl)",
-            background: surface,
-            color: ink,
-            padding: "var(--space-md) var(--space-lg)",
-            transform: "rotate(-1deg)",
-            fontFamily: "'Special Elite', serif",
-            borderTop: `3px solid ${accent}`,
-            borderBottom: `3px solid ${accent}`,
-          }}
-        >
-          <span
-            className="eyebrow"
-            style={{ color: accentDeep, display: "block" }}
-          >
-            {t("editPraxis.snide.taskRefLabel")}
-          </span>
-          <div style={{ fontSize: "var(--text-content)", lineHeight: 1.25, marginTop: "var(--space-xs)" }}>
-            {praxis.task_title}
-          </div>
-          {task?.description && (
-            <div style={{ fontSize: "var(--text-content)", lineHeight: 1.45, color: muted, marginTop: "var(--space-xs)" }}>
-              {task.description}
-            </div>
-          )}
-          <div style={{ marginTop: "var(--space-sm)" }}>
-            <TaskMetaInline
-              praxis={praxis}
-              task={task}
-              textColor={accentDeep}
-            />
-          </div>
-        </div>
-
-        {/* Mode */}
-        {!state.controlsLocked && (
-          <div style={{ marginBottom: "var(--space-xl)" }}>
-            <div
+            {/* Ornament, and hidden as such: the stage word is announced by the
+                status row, and a masthead that announced itself would put the
+                faction's chrome ahead of the page's first real content. */}
+            <span
+              aria-hidden
               style={{
-                display: "inline-block",
-                background: lightBg,
-                color: ink,
-                fontFamily: "'Permanent Marker', cursive",
-                fontSize: "var(--text-lg)",
-                padding: "var(--space-xs) var(--space-md)",
-                marginBottom: "var(--space-sm)",
-                transform: "rotate(-1.5deg)",
-              }}
-            >
-              {t("editPraxis.snide.modeLabel")}
-            </div>
-            <ModePicker
-              state={state}
-              skin={{
-                containerStyle: { display: "flex", gap: "var(--space-md)", flexWrap: "wrap" },
-                options: modeOptions,
-                allowedModes,
-                renderOption: (opt, { active, disabled, onSelect, index }) => {
-                  const bg = active
-                    ? opt.key === "duel"
-                      ? hot
-                      : accentDeep
-                    : surface;
-                  const fg = active ? "var(--color-text-on-accent)" : ink;
-                  return (
-                    <button
-                      key={opt.key}
-                      type="button"
-                      aria-pressed={active}
-                      onClick={onSelect}
-                      disabled={disabled && !active}
-                      style={{
-                        cursor: disabled ? "not-allowed" : "pointer",
-                        textAlign: "left",
-                        background: bg,
-                        color: fg,
-                        border: active
-                          ? `2.5px solid ${accentDeep}`
-                          : `2px dashed ${accentDeep}`,
-                        padding: "var(--space-md) var(--space-lg)",
-                        position: "relative",
-                        fontFamily: opt.font,
-                        transform: `rotate(${active ? (index % 2 ? 1.5 : -1.8) : index % 2 ? -0.5 : 0.5}deg)`,
-                        boxShadow: active ? `3px 3px 0 ${accentDeep}` : "none",
-                        minWidth: 130,
-                      }}
-                    >
-                      <div
-                        style={{ fontSize: "var(--text-title)", lineHeight: 1, marginBottom: "var(--space-xs)" }}
-                      >
-                        {opt.label}
-                      </div>
-                      <div
-                        style={{
-                          fontSize: "var(--text-base)",
-                          fontFamily: "'Courier Prime', monospace",
-                          opacity: 0.85,
-                        }}
-                      >
-                        {opt.desc}
-                      </div>
-                    </button>
-                  );
-                },
-              }}
-            />
-          </div>
-        )}
-
-        {/* Invite */}
-        {state.showInviteBox && (
-            <div
-              style={{
-                marginBottom: "var(--space-xl)",
-                padding: "var(--space-md) var(--space-lg)",
-                border: `2px solid ${accentDeep}`,
-                background: `repeating-linear-gradient(135deg, ${surface} 0, ${surface} 16px, ${lightBg} 16px, ${lightBg} 32px)`,
+                display: "flex",
+                alignItems: "center",
+                gap: "var(--space-md)",
               }}
             >
               <span
-                className="eyebrow"
-                style={{ color: hot, display: "block", marginBottom: "var(--space-sm)" }}
+                style={{
+                  fontFamily: TITLE_FACE,
+                  // eslint-disable-next-line local/no-raw-style-values -- ornament: the wordmark is a poster face at its drawn optical size, not a tier of the text scale (§4a).
+                  fontSize: 20,
+                  lineHeight: 1,
+                  letterSpacing: "0.06em",
+                  color: ACID,
+                  whiteSpace: "nowrap",
+                }}
               >
-                {state.duelMode
-                  ? t("editPraxis.snide.inviteLabelDuel")
-                  : t("editPraxis.snide.inviteLabel")}
+                {factionName("snide")}
               </span>
-              <InviteSearch
-                state={state}
-                skin={{
-                  fontFamily: "'Special Elite', serif",
-                  inputBg: surface,
-                  inputColor: ink,
-                  inputBorder: `2px dashed ${accentDeep}`,
-                  placeholder: state.duelMode
-                    ? t("editPraxis.snide.invitePlaceholderDuel")
-                    : t("editPraxis.snide.invitePlaceholder"),
-                  pillBg: lightBg,
-                  acceptedBg: accentDeep,
-                  acceptedColor: "var(--color-text-on-accent)",
+              <span
+                className="ep-pulse"
+                style={{
+                  flex: 1,
+                  height: 6,
+                  background: `repeating-linear-gradient(90deg, ${ACID} 0 6px, transparent 6px 10px)`,
+                  ...({ "--ep-pulse-dur": "3.6s" } as CSSProperties),
                 }}
               />
-            </div>
-          )}
-
-        {/* Metatasks */}
-        {state.showSealStack && (
-          <div
-            style={{
-              marginBottom: "var(--space-xl)",
-              padding: "var(--space-md) var(--space-lg)",
-              border: `2px dashed ${accentDeep}`,
-              background: lightBg,
-            }}
+              <span
+                style={punkLabel({
+                  color: PRESS_PAPER,
+                  letterSpacing: "0.2em",
+                  whiteSpace: "nowrap",
+                })}
+              >
+                {t("editPraxis.composer.statusDraft")}
+              </span>
+            </span>
+          </ComposerMasthead>
+        }
+        ground={
+          <ComposerGround
+            background={`repeating-linear-gradient(0deg, ${GRAIN} 0 1px, transparent 1px 3px)`}
+            /* Flush, not overhanging: the raster is printed on the sheet, and
+               only the tape is allowed to run off it. */
+            inset={0}
           >
             <span
-              className="eyebrow"
-              style={{ display: "block", marginBottom: "var(--space-sm)", color: accentDeep }}
+              className="snide-tape"
+              style={{
+                width: 110,
+                height: 26,
+                right: -26,
+                top: 64,
+                transform: "rotate(-38deg)",
+                opacity: 0.75,
+              }}
+            />
+            <span
+              className="snide-tape"
+              style={{
+                width: 96,
+                height: 22,
+                left: -30,
+                bottom: 96,
+                transform: "rotate(34deg)",
+                opacity: 0.6,
+              }}
+            />
+          </ComposerGround>
+        }
+      >
+        <ComposerStatusRow
+          status={t("editPraxis.composer.statusDraft")}
+          meta={
+            state.autosaveAt
+              ? t("editPraxis.composer.statusSaved", {
+                  ago: formatAutosave(state.autosaveAt),
+                })
+              : t("editPraxis.composer.statusUnsaved")
+          }
+          statusStyle={{ color: INK, fontWeight: 700, letterSpacing: "0.2em" }}
+          metaStyle={{ color: FAINT }}
+          mark={<SnideBlob width={52} height={40} struck />}
+        />
+
+        <TaskSlip
+          praxis={praxis}
+          task={task}
+          style={{
+            background: FIELD,
+            border: `1px solid ${RULE}`,
+            borderRadius: 0,
+            padding: "var(--space-lg)",
+          }}
+          labelStyle={{ color: MUTED }}
+          titleStyle={{
+            fontFamily: TITLE_FACE,
+            color: INK,
+            letterSpacing: "0.02em",
+          }}
+          descriptionStyle={{ color: MUTED }}
+          pillStyle={{ color: MUTED, borderRadius: 0 }}
+          mark={
+            <span
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                gap: "var(--space-xs)",
+                flexShrink: 0,
+              }}
             >
-              {t("editPraxis.snide.metatasksLabel")}
+              <SnideBlob width={94} height={72}>
+                <span
+                  style={{
+                    position: "relative",
+                    fontFamily: TITLE_FACE,
+                    fontSize: "var(--text-title)",
+                    lineHeight: 1,
+                    color: PRESS_INK,
+                  }}
+                >
+                  {task?.point_value ?? 0}
+                </span>
+              </SnideBlob>
+              <span style={punkLabel({ color: ACID_INK, letterSpacing: "0.2em" })}>
+                {t("editPraxis.composer.pointsUnit")}
+              </span>
             </span>
-            <MetataskSealStack state={state} />
-          </div>
+          }
+        />
+
+        <ComposerSection
+          label={t("editPraxis.composer.titleLabel")}
+          htmlFor="composer-title"
+          rule={censorStripe}
+          meta={<TitleCounter length={state.title.length} color={FAINT} />}
+          labelStyle={{ color: MUTED }}
+        >
+          <TitleField
+            state={state}
+            skin={{
+              id: "composer-title",
+              placeholder: t("editPraxis.composer.titlePlaceholder"),
+              inputStyle: { ...fieldBox, fontFamily: TITLE_FACE },
+            }}
+          />
+        </ComposerSection>
+
+        {/* Hidden once the mode can no longer change — an unusable control is
+            not drawn disabled. */}
+        {!state.controlsLocked && (
+          <ComposerSection
+            label={t("editPraxis.composer.modeLabel")}
+            rule={censorStripe}
+            labelStyle={{ color: MUTED }}
+          >
+            <ModePicker
+              state={state}
+              skin={{
+                containerStyle: {
+                  display: "flex",
+                  gap: "var(--space-sm)",
+                  flexWrap: "wrap",
+                },
+                options: modeOptions,
+                allowedModes,
+                renderOption: (option, { active, disabled, onSelect }) => (
+                  <button
+                    key={option.key}
+                    type="button"
+                    aria-pressed={active}
+                    onClick={onSelect}
+                    disabled={disabled && !active}
+                    style={punkLabel({
+                      cursor: disabled ? "not-allowed" : "pointer",
+                      padding: "var(--space-sm) var(--space-lg)",
+                      borderRadius: 0,
+                      background: active ? ACID : FIELD,
+                      color: active ? PRESS_INK : MUTED,
+                      border: `1px solid ${active ? ACID : RULE}`,
+                      fontWeight: active ? 700 : 400,
+                    })}
+                  >
+                    {option.label}
+                  </button>
+                ),
+              }}
+            />
+          </ComposerSection>
         )}
 
-        {/* Title — ransom note + editable input */}
-        <div
-          style={{
-            marginBottom: "var(--space-xl)",
-            padding: "var(--space-lg) var(--space-md)",
-            background: lightBg,
-            border: `2px dashed ${accentDeep}`,
-          }}
+        {/* The mode block: the collaborator roster, or the duel pair. */}
+        {state.showInviteBox && (
+          <ComposerSection
+            rule={censorStripe}
+            label={
+              state.duelMode
+                ? t("editPraxis.composer.opponentLabel")
+                : t("editPraxis.composer.collaboratorsLabel", {
+                    count: praxis.members.length,
+                  })
+            }
+            labelStyle={{ color: MUTED }}
+          >
+            <InviteSearch
+              state={state}
+              skin={{
+                fontFamily: BODY_FACE,
+                inputBg: FIELD,
+                inputColor: INK,
+                inputBorder: `1px solid ${RULE}`,
+                dropdownBg: SHEET,
+                dropdownBorder: `1px solid ${RULE}`,
+                acceptedBg: ACID,
+                acceptedColor: PRESS_INK,
+                placeholder: t("editPraxis.composer.invitePlaceholder"),
+                leaveStyle: { color: FAINT, fontFamily: BODY_FACE },
+              }}
+            />
+          </ComposerSection>
+        )}
+
+        {state.showSealStack && (
+          <ComposerSection
+            label={t("editPraxis.composer.sealsLabel")}
+            rule={censorStripe}
+            labelStyle={{ color: MUTED }}
+          >
+            <MetataskSealStack state={state} />
+          </ComposerSection>
+        )}
+
+        <ComposerSection
+          label={t("editPraxis.composer.writeUpLabel")}
+          htmlFor="composer-body"
+          rule={censorStripe}
+          labelStyle={{ color: MUTED }}
+          meta={
+            <WriteUpTabs
+              tab={tab}
+              setTab={setTab}
+              skin={{
+                containerStyle: { gap: "var(--space-xs)" },
+                buttonStyle: (active) =>
+                  punkLabel({
+                    padding: "var(--space-xs) var(--space-sm)",
+                    borderRadius: 0,
+                    border: `1px solid ${active ? RULE : "transparent"}`,
+                    background: active ? FIELD : "transparent",
+                    color: active ? INK : FAINT,
+                  }),
+              }}
+            />
+          }
+        >
+          {/* One panel at a time: a hidden textarea is still a tab stop and
+              still submits, and drawing both puts the body in the DOM twice. */}
+          {tab === "write" ? (
+            <>
+              <BodyTextarea
+                state={state}
+                skin={{
+                  id: "composer-body",
+                  rows: 8,
+                  placeholder: t("editPraxis.composer.bodyPlaceholder"),
+                  toolbarButtonStyle: {
+                    background: FIELD,
+                    color: INK,
+                    border: `1px solid ${RULE}`,
+                    borderRadius: 0,
+                  },
+                  textareaStyle: {
+                    ...fieldBox,
+                    resize: "vertical",
+                    minHeight: 180,
+                    lineHeight: 1.7,
+                    fontFamily: BODY_FACE,
+                  },
+                }}
+              />
+              <div
+                style={punkLabel({
+                  color: FAINT,
+                  marginTop: "var(--space-sm)",
+                  letterSpacing: "0.06em",
+                })}
+              >
+                {t("editPraxis.composer.wordCount", { words: state.wordCount })}
+              </div>
+            </>
+          ) : (
+            <BodyPreview
+              state={state}
+              skin={{
+                wrapperStyle: { ...fieldBox, minHeight: 180 },
+                markdownStyle: {
+                  fontFamily: BODY_FACE,
+                  lineHeight: 1.7,
+                  color: INK,
+                },
+                emptyState: (
+                  <p
+                    style={{
+                      fontFamily: BODY_FACE,
+                      fontSize: "var(--text-content)",
+                      color: FAINT,
+                      margin: 0,
+                    }}
+                  >
+                    {t("editPraxis.composer.bodyPlaceholder")}
+                  </p>
+                ),
+              }}
+            />
+          )}
+        </ComposerSection>
+
+        <ComposerSection
+          label={t("editPraxis.composer.proofLabel")}
+          rule={censorStripe}
+          labelStyle={{ color: MUTED }}
         >
           <div
             style={{
               display: "flex",
-              justifyContent: "space-between",
-              marginBottom: "var(--space-sm)",
+              gap: "var(--space-lg)",
+              alignItems: "center",
+              flexWrap: "wrap",
             }}
           >
-            <span className="eyebrow" style={{ color: accentDeep }}>
-              {t("editPraxis.snide.titleLabel")}
-            </span>
-            <TitleCounter length={state.title.length} color={accentDeep} />
-          </div>
-          <div style={{ minHeight: 60, lineHeight: 1.4, marginBottom: "var(--space-sm)" }}>
-            {state.title.split("").map((ch, index) => (
-              <RansomChar key={index} ch={ch} index={index} />
-            ))}
-            {!state.title && (
-              <span style={{ color: muted, fontStyle: "italic", fontSize: "var(--text-xl)" }}>
-                {t("editPraxis.snide.titleEmptyHint")}
-              </span>
+            {state.media.map((item) => {
+              const filename = item.file_path.split("/").pop() ?? item.file_path;
+              const src = mediaUrl(item.file_path);
+              return (
+                <MediaTile
+                  key={item.id}
+                  caption={filename}
+                  onRemove={() => void state.removeMedia(item)}
+                >
+                  {item.type === "image" ? (
+                    <img
+                      src={src}
+                      alt=""
+                      style={{ width: 120, height: 120, objectFit: "cover" }}
+                    />
+                  ) : item.type === "video" ? (
+                    <video
+                      src={src}
+                      style={{ width: 120, height: 120, objectFit: "cover" }}
+                    />
+                  ) : (
+                    <MediaArt
+                      art={pickArtKey(filename, "audio")}
+                      width={120}
+                      height={120}
+                    />
+                  )}
+                </MediaTile>
+              );
+            })}
+            {!state.controlsLocked && (
+              <FilePicker
+                state={state}
+                skin={{
+                  buttonStyle: punkLabel({
+                    cursor: "pointer",
+                    background: "transparent",
+                    border: `1px dashed ${RULE}`,
+                    borderRadius: 0,
+                    padding: "var(--space-lg) var(--space-xl)",
+                    color: MUTED,
+                  }),
+                  buttonLabel: t("editPraxis.composer.proofButton"),
+                  helperText: t("editPraxis.composer.proofHelper"),
+                  helperStyle: {
+                    fontFamily: BODY_FACE,
+                    fontSize: "var(--text-content)",
+                    color: FAINT,
+                    maxWidth: 260,
+                    lineHeight: 1.5,
+                    marginTop: "var(--space-sm)",
+                  },
+                }}
+              />
             )}
           </div>
-          <TitleField
-            state={state}
-            skin={{
-              placeholder: t("editPraxis.snide.titlePlaceholder"),
-              inputStyle: {
-                width: "100%",
-                fontFamily: "'Courier Prime', monospace",
-                padding: "var(--space-xs) var(--space-sm)",
-                background: surface,
-                color: ink,
-                border: `1.5px dashed ${accentDeep}`,
-                outline: "none",
-              },
-            }}
-          />
-          <RainbowUnderline opacity={0.5} />
-        </div>
-
-        {/* Body */}
-        <div style={{ marginBottom: "var(--space-xl)" }}>
-          <span
-            className="eyebrow"
-            style={{ display: "block", marginBottom: "var(--space-sm)", color: accentDeep }}
-          >
-            {t("editPraxis.snide.bodyLabel", { words: state.wordCount })}
-          </span>
-          <div style={{ position: "relative", transform: "rotate(0.3deg)" }}>
-            <BodyTextarea
-              state={state}
-              skin={{
-                rows: 12,
-                placeholder: t("editPraxis.snide.bodyPlaceholder"),
-                textareaStyle: {
-                  width: "100%",
-                  fontFamily: "'Special Elite', serif",
-                  lineHeight: 1.7,
-                  color: ink,
-                  background: surface,
-                  border: `2px solid ${accentDeep}`,
-                  padding: "var(--space-lg) var(--space-xl)",
-                  outline: "none",
-                  resize: "vertical",
-                  minHeight: 220,
-                  boxShadow: `4px 4px 0 ${accentDeep}`,
-                },
-              }}
-            />
-          </div>
-          <BodyPreview
-            state={state}
-            skin={{
-              wrapperStyle: {
-                marginTop: "var(--space-md)",
-                background: surface,
-                border: `2px solid ${accentDeep}`,
-                padding: "var(--space-lg) var(--space-xl)",
-                columnCount: 2,
-                columnGap: "var(--space-xl)",
-                columnRule: `0.5px solid ${accentDeep}`,
-                boxShadow: `4px 4px 0 ${accentDeep}`,
-              },
-              label: (
-                <span
-                  className="eyebrow"
-                  style={{ color: accentDeep, display: "block", marginBottom: "var(--space-xs)" }}
-                >
-                  {t("editPraxis.snide.previewLabel")}
-                </span>
-              ),
-              markdownStyle: {
-                fontFamily: "'Special Elite', serif",
-                lineHeight: 1.6,
-                color: ink,
-              },
-            }}
-          />
-        </div>
-
-        {/* Existing media */}
-        {state.media.length > 0 && (
-          <div style={{ marginBottom: "var(--space-xl)" }}>
-            <span
-              className="eyebrow"
-              style={{ display: "block", marginBottom: "var(--space-sm)", color: accentDeep }}
-            >
-              {t("editPraxis.snide.mediaOnPageLabel")}
-            </span>
-            <div style={{ display: "flex", gap: "var(--space-md)", flexWrap: "wrap" }}>
-              {state.media.map((item, index) => {
-                const src = mediaUrl(item.file_path);
-                const filename =
-                  item.file_path.split("/").pop() ?? item.file_path;
-                return (
-                  <div
-                    key={item.id}
-                    style={{
-                      position: "relative",
-                      border: `2px solid ${accentDeep}`,
-                      padding: "var(--space-xs)",
-                      background: surface,
-                      transform: `rotate(${index % 2 ? 2 : -2.4}deg)`,
-                      boxShadow: `2px 2px 0 ${accentDeep}`,
-                    }}
-                  >
-                    <div
-                      style={{
-                        width: 140,
-                        height: 100,
-                        overflow: "hidden",
-                        filter: "contrast(1.15) saturate(0.9)",
-                      }}
-                    >
-                      {item.type === "image" ? (
-                        <img
-                          src={src}
-                          alt=""
-                          style={{
-                            width: 140,
-                            height: 100,
-                            objectFit: "cover",
-                          }}
-                        />
-                      ) : item.type === "video" ? (
-                        <video
-                          src={src}
-                          style={{
-                            width: 140,
-                            height: 100,
-                            objectFit: "cover",
-                          }}
-                        />
-                      ) : (
-                        <MediaArt art={pickArtKey(filename, "audio")} />
-                      )}
-                    </div>
-                    <div
-                      style={{
-                        fontSize: "var(--text-sm)",
-                        marginTop: "var(--space-xs)",
-                        fontStyle: "italic",
-                        fontFamily: "'Special Elite', serif",
-                        color: accentDeep,
-                      }}
-                    >
-                      {t("editPraxis.snide.figureCaption", { number: index + 1, name: filename })}
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => void state.removeMedia(item)}
-                      aria-label={`Remove ${filename}`}
-                      style={{
-                        position: "absolute",
-                        top: -8,
-                        right: -8,
-                        width: 22,
-                        height: 22,
-                        background: lightBg,
-                        border: `2px solid ${ink}`,
-                        color: ink,
-                        fontSize: "var(--text-lg)",
-                        fontWeight: 700,
-                        cursor: "pointer",
-                        lineHeight: 1,
-                        padding: 0,
-                        borderRadius: "50%",
-                      }}
-                    >
-                      ×
-                    </button>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        )}
-
-        {/* New files */}
-        <div style={{ marginBottom: "var(--space-xl)" }}>
-          <span
-            className="eyebrow"
-            style={{ display: "block", marginBottom: "var(--space-sm)", color: accentDeep }}
-          >
-            {t("editPraxis.snide.filesLabel")}
-          </span>
-          <FilePicker
-            state={state}
-            skin={{
-              buttonStyle: {
-                background: accentDeep,
-                color: "var(--color-text-on-accent)",
-                fontFamily: "'Permanent Marker', cursive",
-                fontSize: "var(--text-xl)",
-                padding: "var(--space-sm) var(--space-lg)",
-                border: `2px solid ${accentDeep}`,
-                cursor: "pointer",
-                transform: "rotate(-1deg)",
-              },
-              buttonLabel: "+ paste it in",
-              helperText: "images · video · audio · max 50mb each",
-              helperStyle: {
-                fontSize: "var(--text-sm)",
-                color: muted,
-                marginTop: "var(--space-xs)",
-                fontStyle: "italic",
-              },
-            }}
-          />
-        </div>
+        </ComposerSection>
 
         <ErrorBanner message={state.error} />
 
-        {/* CTAs */}
-        <div
+        {/* [Cancel] … [Submit] — the global order from #646, stacked rather than
+            ranged because SNIDE's cast is a bar and not a button. The exits keep
+            the start, the cast keeps the end. */}
+        <ComposerFooter
           style={{
-            display: "flex",
+            flexDirection: "column",
+            alignItems: "stretch",
             gap: "var(--space-lg)",
-            alignItems: "center",
-            marginTop: "var(--space-xl)",
-            paddingTop: "var(--space-lg)",
-            borderTop: `2px dashed ${accentDeep}`,
-            flexWrap: "wrap",
           }}
-        >
-          <SaveDraftButton state={state} />
-          <DropButton
-            state={state}
-            skin={{
-              label: t("editPraxis.snide.dropLabel"),
-              style: {
-                background: "transparent",
-                color: muted,
-                fontFamily: "'Special Elite', serif",
-                fontSize: "var(--text-md)",
-                border: "none",
-                cursor: "pointer",
-                textDecoration: "underline",
-              },
-            }}
-          />
-          <div style={{ flex: 1 }} />
-          <PublishButton
-            state={state}
-            skin={{
-              idleLabel: t("editPraxis.snide.publishIdle"),
-              busyLabel: t("editPraxis.snide.publishBusy"),
-              ornament: (
-                <span
-                  aria-hidden
-                  style={{
-                    position: "absolute",
-                    inset: 4,
-                    border: `1.5px dashed rgba(255,255,255,.6)`,
-                    pointerEvents: "none",
-                  }}
-                />
-              ),
-              style: {
-                background: accent,
-                color: "var(--color-text-on-accent)",
-                fontFamily: "'Permanent Marker', cursive",
-                fontSize: "var(--text-title)",
-                padding: "var(--space-md) var(--space-xl)",
-                border: `3px solid ${accentDeep}`,
-                borderRadius: 0,
-                cursor: state.submitting ? "wait" : "pointer",
-                position: "relative",
-                transform: "rotate(-1.8deg)",
-                boxShadow: `4px 4px 0 ${ink}`,
-              },
-            }}
-          />
-        </div>
+          start={
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "var(--space-lg)",
+                flexWrap: "wrap",
+              }}
+            >
+              <SaveDraftButton
+                state={state}
+                skin={{ style: { color: FAINT, fontFamily: BODY_FACE } }}
+              />
+              <DropButton
+                state={state}
+                skin={{
+                  style: punkLabel({
+                    background: "transparent",
+                    border: "none",
+                    padding: 0,
+                    color: FAINT,
+                    textDecoration: "underline",
+                    cursor: "pointer",
+                  }),
+                }}
+              />
+            </div>
+          }
+          end={
+            <PublishButton
+              state={state}
+              skin={{
+                idleLabel: t("editPraxis.composer.submit"),
+                busyLabel: t("editPraxis.composer.submitBusy"),
+                style: punkLabel({
+                  display: "block",
+                  width: "auto",
+                  /* The bleed: the sheet's own side padding, negated, so the bar
+                     reaches both edges of a padded column. */
+                  marginLeft: `calc(-1 * ${sidePad})`,
+                  marginRight: `calc(-1 * ${sidePad})`,
+                  padding: "var(--space-lg) var(--space-xl)",
+                  border: "none",
+                  borderRadius: 0,
+                  background: ACID,
+                  color: PRESS_INK,
+                  fontFamily: TITLE_FACE,
+                  /* A bar the width of the sheet set at the label tier reads as
+                     a rule rather than as the page's one irreversible action. */
+                  fontSize: "var(--text-content)",
+                  letterSpacing: "0.24em",
+                  cursor: state.submitting ? "wait" : "pointer",
+                }),
+              }}
+            />
+          }
+        />
+      </ComposerSheet>
+    </div>
+  );
+}
 
-        <div
-          style={{
-            marginTop: "var(--space-md)",
-            fontSize: "var(--text-base)",
-            color: muted,
-            fontFamily: "'Special Elite', serif",
-            fontStyle: "italic",
-          }}
-        >
-          {state.autosaveAt
-            ? t("editPraxis.snide.autosaveSaved", {
-                ago: formatAutosave(state.autosaveAt),
-              })
-            : t("editPraxis.snide.autosaveUnsaved")}
-        </div>
-      </div>
+interface MediaTileProps {
+  children: ReactNode;
+  caption: string;
+  onRemove: () => void;
+}
+
+/** One already-uploaded proof item, glued to the sheet square-cornered. */
+function MediaTile({ children, caption, onRemove }: MediaTileProps) {
+  const { t } = useTranslation("forms");
+  return (
+    <div
+      style={{
+        position: "relative",
+        background: FIELD,
+        border: `1px solid ${RULE}`,
+        borderRadius: 0,
+        overflow: "hidden",
+      }}
+    >
+      <div style={{ width: 120, height: 120, overflow: "hidden" }}>{children}</div>
+      <button
+        type="button"
+        onClick={onRemove}
+        aria-label={t("media.removeAria", { name: caption })}
+        style={{
+          position: "absolute",
+          top: 4,
+          right: 4,
+          width: 22,
+          height: 22,
+          borderRadius: 0,
+          background: ACID,
+          border: "none",
+          color: PRESS_INK,
+          fontSize: "var(--text-md)",
+          fontWeight: 700,
+          cursor: "pointer",
+          lineHeight: 1,
+          padding: 0,
+        }}
+      >
+        ×
+      </button>
     </div>
   );
 }
