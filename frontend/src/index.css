@@ -1180,6 +1180,18 @@
      for text. */
   --faction-everymen-dispatch-rule: rgba(100, 140, 200, 0.12);
 
+  /* ══ Everymen — THE WORK ORDER (edit-praxis composer, #1187) ══
+     One token, for the reason the two blocks above are short: the composer is
+     the bill's ray burst and the broadsheet's plates printed on the faction's
+     own card ground, and every colour it needs already has a home here. The
+     exception is the SHEET's frame, which the design's skin row takes from gold
+     by day and the deep accent by night — a poster frame rather than a printed
+     rule, so it is neither `--everymen-frame` (which is ink) nor a live accent.
+     It carries no text and never bounds a control: a 2px band at 1.87:1 on the
+     paper is a frame in the same sense WOW's gilt is (§3), so every field inside
+     the sheet keeps `--everymen-frame` and no form boundary rests on this. */
+  --faction-everymen-composer-frame: var(--everymen-gold);
+
   /* ── Gearworks vote widget (#821) — reached gears heat a cold→ember ramp with
      pale hubs; unreached gears are edge-only outlines; rank 5 throws sparks. The
      edge + rank-5 glow flip in the dark cascade (see the dark block). ── */
@@ -1863,6 +1875,10 @@
   /* The ledger rule inverts with the paper: a pale blue line ON the near-black
      newsprint instead of a dark one in it (#1123). */
   --faction-everymen-dispatch-rule: rgba(150, 185, 230, 0.09);
+  /* The work order's frame at night: the design's skin row swaps gold for the
+     deep accent, which is the one edge on the sheet that does NOT lift with the
+     paper — a printed poster frame stays the colour it was printed in (#1187). */
+  --faction-everymen-composer-frame: var(--everymen-red-deep);
   /* Gearworks: cooler edge for cold gears, a brighter single-halo rank-5 glow on
      the dark paper (the light double-drop-shadow would muddy against it). */
   --faction-everymen-vote-edge: #8a7856;
