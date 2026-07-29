@@ -15,10 +15,18 @@ import { type CSSProperties, type FocusEvent, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { type CommentOut, deleteComment, editComment } from '../../api/comments'
 import { useAuth } from '../../auth/AuthContext'
-import { ComposerControls } from './shared'
+import { ComposerControls, MAX_COMMENT_BODY } from './shared'
 
-/** The real body cap the backend enforces (NOT the 500 of the composer draft). */
-export const MAX_COMMENT_BODY = 2000
+/**
+ * Re-exported for the callers that already read the cap from here.
+ *
+ * It used to be declared in this file at 2000, described as "the real body cap
+ * the backend enforces (NOT the 500 of the composer draft)". Both halves of that
+ * were wrong: the composer had no cap at all, and 500 -- the number on every
+ * design sheet -- is now the one cap for composer, editor and API alike (#1205).
+ * It lives in `shared.tsx` beside the control that defaults to it.
+ */
+export { MAX_COMMENT_BODY }
 
 // ── Pure decisions (unit-testable without a DOM) ─────────────────────────────
 
@@ -338,9 +346,13 @@ export function OwnerControls({
 
 /**
  * Drop-in replacement for the resting body while editing — the SAME
- * ComposerControls the voice uses to compose, seeded with the current body,
- * capped at MAX_COMMENT_BODY, with Save/Cancel. Each voice passes its own
- * accent/bg/text so the editor keeps the voice's skin.
+ * ComposerControls the voice uses to compose, seeded with the current body, with
+ * Save/Cancel. Each voice passes its own accent/bg/text so the editor keeps the
+ * voice's skin.
+ *
+ * It no longer passes `maxLength`: ComposerControls defaults to MAX_COMMENT_BODY
+ * for composing and editing alike (#1205), so the editor cannot drift from the
+ * composer's cap.
  */
 export function CommentEditor({
   owner,
@@ -368,7 +380,6 @@ export function CommentEditor({
         onAccent={onAccent}
         bg={bg}
         text={text}
-        maxLength={MAX_COMMENT_BODY}
         submitLabel={t('comments.save')}
         onCancel={owner.cancelEdit}
       />
