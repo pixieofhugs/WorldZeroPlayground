@@ -194,4 +194,44 @@ describe('FeedRowContent', () => {
     const covenHtml = renderToStaticMarkup(<MemoryRouter><FeedRowContent row={covenRow} avatarUrl={null} /></MemoryRouter>)
     expect(covenHtml).not.toContain('--faction-default-ring')
   })
+
+  // #983: the headline rule read grey for `na` only because it was written as a
+  // `border`, which is a scalar and so can never hold a gradient. Drawn as a
+  // filled bar it is a fill, and ADR-0039 gives it the spectrum unamended.
+  it('draws the headline rule as a filled bar, never a border', () => {
+    const row = completionRow('coven')
+    const html = renderToStaticMarkup(<MemoryRouter><FeedRowContent row={row} avatarUrl={null} /></MemoryRouter>)
+    expect(html).not.toContain('border-left')
+    expect(html).toContain('background:var(--faction-coven)')
+  })
+
+  it('gives an na headline rule the VERTICAL rainbow, not the horizontal one', () => {
+    // The cut matters as much as the spectrum: the bar's 90deg ramp across a 3px
+    // rule is seven stops in three pixels, i.e. mud.
+    const html = renderToStaticMarkup(<MemoryRouter><FeedRowContent row={completionRow('na')} avatarUrl={null} /></MemoryRouter>)
+    expect(html).toContain('--faction-default-rainbow-vertical')
+  })
+
+  it('hands albescent exactly what na gets, rule included (#783)', () => {
+    const naHtml = renderToStaticMarkup(<MemoryRouter><FeedRowContent row={completionRow('na')} avatarUrl={null} /></MemoryRouter>)
+    const albHtml = renderToStaticMarkup(<MemoryRouter><FeedRowContent row={completionRow('albescent')} avatarUrl={null} /></MemoryRouter>)
+    expect(albHtml).toBe(naHtml)
+  })
+
+  // The other half of ADR-0039, and the half that looks like a bug: an actor's
+  // NAME is single-ink text, no stop of a seven-stop ramp is legible as one
+  // (#649), so `na` keeps the neutral grey. Deliberate, not a fallback.
+  it('leaves an na actor name neutral grey', () => {
+    const html = renderToStaticMarkup(<MemoryRouter><FeedRowContent row={completionRow('na')} avatarUrl={null} /></MemoryRouter>)
+    expect(html).toContain('color:#6b6a7a')
+    expect(html).not.toContain('background-clip:text')
+  })
 })
+
+/** A friend-completion row (actor + headline + points) in a given faction. */
+function completionRow(slug: string) {
+  return normalizeFeedItem({
+    ...item('friend_completion', { character_id: 3, praxis_id: 7, task_title: 'Reforest', task_point_value: 40 }),
+    context_faction_slug: slug,
+  })!
+}

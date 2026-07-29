@@ -153,8 +153,15 @@ export function factionCssVar(
  * `"frame"` is the border-only case (#794): a rainbow *ring* for a surface that
  * needs a scalar accent (a selection ring, a card edge) rather than a fill, so
  * na stops falling back to grey there too.
+ *
+ * `"rule"` is `"bar"` stood on end (#983): the vertical left-edge accent a feed
+ * row or a quoted block draws. It is its own shape rather than a caller's
+ * problem because the bar's ramp runs 90deg — spend that across a 3px-wide rule
+ * and the spectrum lands ~0.4px a stop, which is the same mud `"dot"` exists to
+ * avoid. Every faction returns the identical value for `"bar"` and `"rule"`;
+ * only na's ramp turns.
  */
-export type FactionFillShape = "bar" | "dot" | "pill" | "frame";
+export type FactionFillShape = "bar" | "dot" | "pill" | "frame" | "rule";
 
 /**
  * A faction FILL as a style object to spread onto the filled element.
@@ -164,6 +171,9 @@ export type FactionFillShape = "bar" | "dot" | "pill" | "frame";
  * slugs are shape-dependent, because their identity is a gradient, not a hue
  * (ADR-0039):
  *   - `"bar"`  → the linear rainbow (`--faction-default-rainbow`)
+ *   - `"rule"` → the same ramp turned 180deg (`--faction-default-rainbow-vertical`)
+ *                for a vertical rule, where the horizontal ramp would compress
+ *                seven stops into the rule's ~3px width
  *   - `"dot"`  → the conic rainbow (`--faction-default-ring`; a 7-stop linear is
  *                mud at 10–12px)
  *   - `"pill"` → the rainbow as a *frame* (border-box) around a neutral paper
@@ -231,12 +241,13 @@ export function factionFill(
   }
 
   if (isDefault) {
-    return {
-      background:
-        shape === "dot"
-          ? "var(--faction-default-ring)"
-          : "var(--faction-default-rainbow)",
-    };
+    // bar / rule / dot: one spectrum, three cuts, picked by the geometry the
+    // fill lands on rather than by the caller remembering to rotate it.
+    if (shape === "dot") return { background: "var(--faction-default-ring)" };
+    if (shape === "rule") {
+      return { background: "var(--faction-default-rainbow-vertical)" };
+    }
+    return { background: "var(--faction-default-rainbow)" };
   }
   return { background: `var(--faction-${key})` };
 }
@@ -279,13 +290,19 @@ export function isKnownFaction(slug: string | null | undefined): boolean {
  * indistinguishable at every call site. `factionAlbescentHidesInPlainSight`
  * asserts that equality directly.
  *
- * The four call sites are all feed cards (`FeedRowContent`,
- * `FeedCardInvitationLetter`, `FeedCardCollabInvite`, `FeedCardDuelChallenge`).
- * None of them branches on `isKnownFaction`, so the whole feed renders `na` as
- * flat grey rather than the spectrum. That is pre-existing ADR-0039 debt owed to
- * *unaffiliated* players, not something Albescent introduces — and it must be
- * paid for both slugs at once, or the two stop matching and Albescent becomes
- * conspicuous again.
+ * The remaining call sites are all feed cards (`FeedRowContent`,
+ * `FeedCardInvitationLetter`, `FeedCardCollabInvite`, `FeedCardDuelChallenge`),
+ * and what survives there is deliberate rather than debt (#983). Every FILL in
+ * those cards — the monogram disc, the actor disc, the task dot, the headline
+ * rule — now goes through `factionFill`, so `na` and `albescent` carry the
+ * spectrum. What still reads this function is genuine SCALAR ink: the actor's
+ * name, the invitation letter's kicker and link. ADR-0039 §2 keeps those grey,
+ * because no single stop is legible across seven (#649), and a
+ * `background-clip: text` rainbow would cost text selection and high-contrast
+ * modes. **Grey unaffiliated actor text is the decision, not a fallback.**
+ *
+ * Whatever changes here must change for both slugs at once, or the two stop
+ * matching and Albescent becomes conspicuous again.
  *
  * Prefer {@link factionFill} for any `background:` that renders a dynamic slug.
  * This function survives for raw-hex contexts (canvas, SVG, `${hex}88` alpha
