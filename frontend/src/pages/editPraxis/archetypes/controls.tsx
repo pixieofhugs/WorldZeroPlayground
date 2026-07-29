@@ -912,20 +912,41 @@ export function PublishButton({
   skin: PublishButtonSkin;
 }) {
   const praxis = state.praxis;
-  // The one published state that keeps its footer button (#1077). A duel side
-  // that casts goes straight to `submitted` while the duel is still unsettled —
-  // `active` (accepted, and the rival has not answered, because a second cast
-  // settles it: `maybe_settle_duel`) or `pending` (cast before the rival even
-  // accepted). Both are the same trap: the entry is author-only until the duel
-  // completes (#999), the composer is locked, and there is no way back into it.
+  // The one published state that keeps its footer button (#1077) — but NOT for
+  // the reason #1077 wrote it, and #1177 is the record of that. DO NOT DELETE
+  // THIS BRANCH as unreachable; read the next three paragraphs first.
   //
-  // Pulling back from either is a free, neutral reopen. `unsubmit_praxis` marks
-  // a forfeit only for a *settled* duel (ADR-0011 §Forfeit), so the praxis just
-  // returns to `in_progress` with `forfeited_by_character_id` still NULL and the
-  // duel untouched — the promise the seal dialog already made on the way in
-  // (`duelSeal.reopenNote`). Listed, not negated: `settled`/`resolved` are where
-  // forfeit begins and belong to the detail page, and a `declined` challenge
-  // leaves an ordinary published solo praxis, which stays unpublishable-back.
+  // What no longer reaches here: the ORDINARY cast. A duel side that casts goes
+  // to `submitted` while the duel is still unsettled, and since #1080/ADR-0059
+  // that derives `waiting`, so every archetype swaps in `PraxisWaitingSurface`
+  // (#1189 moved that swap into the archetypes) before this footer is built. The
+  // waiting surface carries the pull-back itself, through the same
+  // `duelPullBackAction` key and the same `pullBack()`.
+  //
+  // What DOES reach here: the MODERATED composer. `deriveEditPraxisPhase` tests
+  // `moderation_status` BEFORE its duel and collab branches and returns
+  // `composing` for `hidden`/`failed` — deliberately, because a cheerful "your
+  // part is submitted" over a failed praxis would be a lie. Moderation never
+  // touches `status` (`update_praxis_moderation` sets only the moderation
+  // fields), so such a praxis is still `submitted` and `isPublished` is still
+  // true. `hidden` never mounts at all — `can_view_praxis` 404s it for everyone
+  // including the author — which leaves `failed` as the live case: a duel side
+  // whose entry a moderator failed while the duel is `active` or `pending`.
+  //
+  // That is the case most worth serving, not least. The waiting surface refuses
+  // to render, the composer is locked, and this button is the way back into the
+  // text the author was just told to fix. Pulling back stays free and neutral:
+  // `unsubmit_praxis` marks a forfeit only for a *settled* duel (ADR-0011
+  // §Forfeit), so the praxis returns to `in_progress` with
+  // `forfeited_by_character_id` still NULL and the duel untouched — the promise
+  // the seal dialog made on the way in (`duelSeal.reopenNote`). Listed, not
+  // negated: `settled`/`resolved` are where forfeit begins and belong to the
+  // detail page, and a `declined` challenge leaves an ordinary published solo
+  // praxis, which stays unpublishable-back.
+  //
+  // The `collab?.iCast` route below survives by the identical mechanism — a
+  // `failed` multi-member collab also short-circuits to `composing` — so the two
+  // halves live or die together. Both are covered in `PublishButton.test.tsx`.
   const duelPullBack =
     state.isPublished &&
     state.duelMode &&
