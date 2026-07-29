@@ -6,7 +6,12 @@ import { useFormFactor } from "../../../hooks/useFormFactor";
 import { factionCssVar, factionFill, factionName } from "../../../utils/factions";
 import { mediaUrl } from "../../../utils/media";
 import { isNeutralMultiplier } from "../../../utils/points";
-import { ErrorBanner, LevelJumpBanner, TaskDetailComments } from "./shared";
+import {
+  actionColumnSize,
+  ErrorBanner,
+  LevelJumpBanner,
+  TaskDetailComments,
+} from "./shared";
 import type { TaskDetailState } from "../useTaskDetail";
 
 /**
@@ -695,7 +700,9 @@ export default function SingularityTaskDetail({
   );
 
   // Readout + action, two wells in one panel. 440px on desktop (dress; the other
-  // designs run 420–520), full width once the column collapses.
+  // designs run 420–520), full width once the column collapses — and that wide
+  // only when there IS an action; see `actionColumnSize` (#1138). Alone, the
+  // readout well takes the panel rather than leaving a lit-up empty half.
   const actionPanel = (
     <div
       style={{
@@ -710,7 +717,7 @@ export default function SingularityTaskDetail({
       <div
         style={{
           ...innerBox,
-          flex: "0 0 auto",
+          flex: hasAction ? "0 0 auto" : "1 1 auto",
           minWidth: desktop ? 160 : 118,
           display: "flex",
           flexDirection: "column",
@@ -929,8 +936,7 @@ export default function SingularityTaskDetail({
             <div style={{ flex: 1, minWidth: 0 }}>{header}</div>
             <div
               style={{
-                flex: desktop ? "0 0 440px" : "1 1 auto",
-                width: desktop ? 440 : "100%",
+                ...actionColumnSize({ desktop, hasAction, width: 440 }),
                 marginTop: desktop ? "var(--space-sm)" : 0,
               }}
             >

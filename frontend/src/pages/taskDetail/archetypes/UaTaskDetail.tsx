@@ -15,7 +15,12 @@ import { useFormFactor } from "../../../hooks/useFormFactor";
 import { factionCssVar, factionFill, factionName } from "../../../utils/factions";
 import { mediaUrl } from "../../../utils/media";
 import { isNeutralMultiplier } from "../../../utils/points";
-import { ErrorBanner, LevelJumpBanner, TaskDetailComments } from "./shared";
+import {
+  actionColumnSize,
+  ErrorBanner,
+  LevelJumpBanner,
+  TaskDetailComments,
+} from "./shared";
 import type { TaskDetailState } from "../useTaskDetail";
 
 /**
@@ -405,7 +410,9 @@ export default function UaTaskDetail({ state }: { state: TaskDetailState }) {
     </>
   );
 
-  // The bar: worth + action inside one sienna-bound leaf.
+  // The bar: worth + action inside one sienna-bound leaf. 460px on desktop
+  // (UA's own value; the family runs 420–520) and only when the viewer has a
+  // move — see `actionColumnSize` (#1138). The leaf binds what is there.
   const actionPanel = (
     <div
       style={{
@@ -430,7 +437,7 @@ export default function UaTaskDetail({ state }: { state: TaskDetailState }) {
         <div
           style={{
             ...innerBox,
-            flex: "0 0 auto",
+            flex: hasAction ? "0 0 auto" : "1 1 auto",
             display: "flex",
             flexDirection: "column",
             alignItems: "center",
@@ -875,8 +882,7 @@ export default function UaTaskDetail({ state }: { state: TaskDetailState }) {
           <div style={{ flex: 1, minWidth: 0 }}>{header}</div>
           <div
             style={{
-              flex: desktop ? `0 0 ${size.panel}px` : "1 1 auto",
-              width: desktop ? size.panel : "100%",
+              ...actionColumnSize({ desktop, hasAction, width: size.panel }),
               marginTop: desktop ? "var(--space-sm)" : 0,
             }}
           >
