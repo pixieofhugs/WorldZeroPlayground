@@ -43,6 +43,8 @@ function DesktopPraxes({ state }: { state: PraxesFeedState }) {
     setSort,
     query,
     setQuery,
+    taskId,
+    clearTaskFilter,
     hasMore,
     loadMore,
   } = state
@@ -50,7 +52,19 @@ function DesktopPraxes({ state }: { state: PraxesFeedState }) {
   return (
     <div className="py-8">
       <PageTitle title={t('listPage.title')} eyebrow={t('listPage.count', { count: items.length })} />
-      <p className="font-body content-text text-muted mb-6">{t('listPage.intro')}</p>
+      {/* A `?task_id=` feed is a subset, so it must not keep claiming to be
+          "all praxes from across World Zero" (#1050) — it says what it is and
+          offers the way out. */}
+      {taskId === null ? (
+        <p className="font-body content-text text-muted mb-6">{t('listPage.intro')}</p>
+      ) : (
+        <p className="font-body content-text text-muted mb-6">
+          {t('listPage.taskFilter.notice')}{' '}
+          <button type="button" onClick={clearTaskFilter} className="underline">
+            {t('listPage.taskFilter.clear')}
+          </button>
+        </p>
+      )}
 
       {/* Filters (Style Guide §5.3) — bare stack, reusing the shared filter chips. */}
       <div className="flex flex-col gap-2.5 mb-6">

@@ -12,13 +12,26 @@
  * `usePagedResource` hook (#645); filter setters call its `resetWindow`. Filter
  * values + setters ride on the returned state so `MobilePraxisFeed` and the
  * desktop page stay presentation-only.
+ *
+ * The second URL-borne axis is `?task_id=` (#1050): task surfaces have always
+ * linked "view all praxis" here with it, and the API has always accepted it, but
+ * this hook read no params so the filter was dropped on arrival. It is optional
+ * — a bare `/praxes` is still the whole feed — and the pages announce it when
+ * set, so a narrowed feed never looks like the whole register. See
+ * `./taskFilterParam.ts`.
  */
 import { useEffect, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { listPraxes, type PraxisCardOut, type PraxisType } from '../../api/praxis'
 import { getFactions, type FactionOut } from '../../api/factions'
 import { usePagedResource } from '../../hooks/usePagedResource'
 import { useDebouncedValue } from '../../hooks/useDebouncedValue'
 import { useSearchQueryParam } from '../../hooks/useSearchQueryParam'
+import {
+  readTaskIdParam,
+  withoutTaskIdParam,
+  TASK_FILTER_NAV_OPTIONS,
+} from './taskFilterParam'
 
 /** How many rows a page fetches; "load more" grows the window by this step. */
 const PAGE_LIMIT = 50
@@ -54,6 +67,16 @@ export interface PraxesFeedState {
   query: string
   setQuery: (query: string) => void
 
+  /**
+   * The task the feed is narrowed to, from `?task_id=` (#1050); `null` for the
+   * whole feed, including when the param is junk. Pages render a notice when
+   * it's set — a filtered feed that looks identical to the unfiltered one is the
+   * bug this fixes.
+   */
+  taskId: number | null
+  /** Drop the task filter (keeps every other param, including `?q=`). */
+  clearTaskFilter: () => void
+
   // Growing window (§8).
   hasMore: boolean
   loadMore: () => void
@@ -66,6 +89,10 @@ export function usePraxes(): PraxesFeedState {
   const [voted, setVotedState] = useState<VotedFilter>('')
   const [sort, setSortState] = useState<SortOrder>('newest')
   const [query, setQueryState] = useSearchQueryParam()
+  const [searchParams, setSearchParams] = useSearchParams()
+
+  // The URL owns the task filter, so a shared or refreshed link keeps it.
+  const taskId = readTaskIdParam(searchParams)
 
   const debouncedQuery = useDebouncedValue(query, 200)
 
@@ -78,6 +105,8 @@ export function usePraxes(): PraxesFeedState {
     (limit) =>
       listPraxes({
         status: 'submitted',
+        // Optional by design (#1050): absent → the whole feed, exactly as before.
+        task_id: taskId ?? undefined,
         type: type === 'all' ? undefined : type,
         faction: faction || undefined,
         voted: voted || undefined,
@@ -85,7 +114,7 @@ export function usePraxes(): PraxesFeedState {
         q: trimmedQuery || undefined,
         limit,
       }),
-    [type, faction, voted, sort, trimmedQuery],
+    [taskId, type, faction, voted, sort, trimmedQuery],
     PAGE_LIMIT,
   )
 
@@ -96,10 +125,16 @@ export function usePraxes(): PraxesFeedState {
   const setVoted = (next: VotedFilter) => { setVotedState(next); resetWindow() }
   const setSort = (next: SortOrder) => { setSortState(next); resetWindow() }
   const setQuery = (next: string) => { setQueryState(next); resetWindow() }
+  const clearTaskFilter = () => {
+    setSearchParams(withoutTaskIdParam, TASK_FILTER_NAV_OPTIONS)
+    resetWindow()
+  }
 
   const items = data ?? []
+  // The task filter counts: without it, a task with no proof yet would read as
+  // "no praxes yet. Be the first." for the whole register.
   const hasActiveFilters =
-    type !== 'all' || faction !== '' || voted !== '' || trimmedQuery !== ''
+    taskId !== null || type !== 'all' || faction !== '' || voted !== '' || trimmedQuery !== ''
 
   return {
     items,
@@ -120,6 +155,8 @@ export function usePraxes(): PraxesFeedState {
     setSort,
     query,
     setQuery,
+    taskId,
+    clearTaskFilter,
 
     // A full page implies there may be more (§8) — via the shared usePagedResource.
     hasMore,
