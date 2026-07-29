@@ -33,6 +33,8 @@ const ACID = 'var(--faction-snide-acid)'
 const PINK = 'var(--faction-snide-pink)'
 const PAPER = 'var(--faction-snide-paper)'
 const MUTED = 'var(--faction-snide-card-muted)'
+/** The sheet-measured "sealed" ink — see `SnideDuelSealConfirm` (#1168). */
+const CREDIT = 'var(--faction-snide-card-credit)'
 const MARKER = 'var(--faction-snide-font-marker)'
 
 const HALFTONE: CSSProperties = {
@@ -54,7 +56,13 @@ export default function SnideMobileDuelSealConfirm({
   const copy = useDuelSealCopy(mode, duel, viewerCharacterId, taskPointValue)
 
   const accent = factionCssVar(foe.faction_slug, 'card-accent')
-  const theme: DuelSlotTheme = { accent, muted: MUTED, bodyFont: 'var(--font-body)' }
+  // `credit` per #1168; `alarm` deliberately unset — see the desktop skin.
+  const theme: DuelSlotTheme = {
+    accent,
+    muted: MUTED,
+    bodyFont: 'var(--font-body)',
+    credit: CREDIT,
+  }
 
   return (
     <div

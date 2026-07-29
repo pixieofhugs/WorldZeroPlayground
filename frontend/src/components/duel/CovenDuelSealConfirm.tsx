@@ -16,6 +16,17 @@
  *
  * Copy is faction-neutral by decision (#718): the design's witch voice is tone
  * reference, not strings. No new locale keys.
+ *
+ * CONTRAST (#1168), measured with `utils/contrast.ts` in both themes. The dotted
+ * board is a warm pink sheet and `--color-danger` reads **4.31:1** on it in
+ * light — under the 4.5:1 this 18px body owes — so the forfeit body takes
+ * `--faction-coven-card-notice` (6.33 / 10.73) and the red stays as the rule
+ * beside it, carrying no text. That is `UaDuelSealConfirm`'s shape from #1167.
+ * Everything else clears as shipped and is left alone: the reopen note in
+ * `--color-success` at 8.13 / 10.28 on the board, and on the notepad scrap the
+ * win figure plus the roster's "sealed" mark at 8.97 / 9.17 and the Snide zero
+ * figure in `--color-danger` at 4.76 / 5.77 (24px bold, a 3:1 floor). Both
+ * grounds are rows in `utils/__tests__/factionContrast.test.ts`.
  */
 import { factionCssVar } from '../../utils/factions'
 import {
@@ -38,6 +49,8 @@ const NOTEPAD_BORDER = 'var(--faction-coven-notepad-border)'
 const DOT = 'var(--faction-coven-dot)'
 const CARD_TEXT = 'var(--faction-coven-card-text)'
 const CARD_MUTED = 'var(--faction-coven-card-muted)'
+/** The sheet-measured warning ink (#694), which the global red is not (#1168). */
+const NOTICE = 'var(--faction-coven-card-notice)'
 const SCRIPT = 'var(--faction-coven-card-font)'
 
 function Sparkle({ size, color }: { size: number; color: string }) {
@@ -118,11 +131,19 @@ export default function CovenDuelSealConfirm({
             backgroundSize: '13px 13px',
           }}
         >
+          {/* Notice ink, not the global red — see the contrast note above. */}
           <p
             style={{
               fontSize: 'var(--text-content)',
               lineHeight: 1.5,
-              ...(copy.danger ? { color: 'var(--color-danger)', fontWeight: 700 } : {}),
+              ...(copy.danger
+                ? {
+                    color: NOTICE,
+                    fontWeight: 700,
+                    paddingLeft: 'var(--space-md)',
+                    borderLeft: '3px solid var(--color-danger)',
+                  }
+                : {}),
             }}
           >
             {copy.body}

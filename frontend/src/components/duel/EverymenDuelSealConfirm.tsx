@@ -27,6 +27,27 @@
  * NOT transcribed: they are invented copy with no `praxis.json` key, and copy is
  * faction-neutral by decision (#718). Their ornament — the gold letterspaced
  * rule and the dashed divider — is kept; their words are not.
+ *
+ * CONTRAST (#1168), measured with `utils/contrast.ts` in both themes. Two
+ * failures, and the second is the reason the mode branch above is not merely
+ * cosmetic:
+ *
+ *  - The forfeit body was `--everymen-red` on the paper: **4.49:1 light, 4.16:1
+ *    dark**, the only body pairing in the family that failed in BOTH themes.
+ *    WORLD_ZERO_STYLE §3 records the light figure and adds "nothing on this card
+ *    sets PROSE in it" — this dialog did. It takes `NOTICE` now (5.45 / 10.25)
+ *    and the red keeps the rule beside it, which is a fill role, not an ink one.
+ *  - The stakes panel INVERTS in forfeit mode, and the shared slots' inks did
+ *    not invert with it: `--color-success` is 5.86:1 on the tan stock and
+ *    **1.88:1** on the ink. Hence `credit: onInk ? GOLD : undefined`.
+ *
+ * Left alone as measured: the reopen note in `--color-success` on the paper
+ * (7.01 / 9.82), the zero figure in `--color-danger` on both panel stocks (3.10
+ * tan / 3.55 ink, 24px bold at a 3:1 floor), and the roster's "walking" in CREAM
+ * on the ink (14.55). One pairing on this surface is BELOW threshold and is NOT
+ * fixed here because it is a different bug — `--everymen-muted` reads 4.25:1 on
+ * `--everymen-paper-deep`, a faction ink on a faction sub-sheet rather than a
+ * global ink on faction paper; it is filed separately.
  */
 import { factionCssVar } from '../../utils/factions'
 import {
@@ -47,6 +68,14 @@ const PAPER_TEXT = 'var(--everymen-paper-text)'
 const MUTED = 'var(--everymen-muted)'
 const RED = 'var(--everymen-red)'
 const GOLD = 'var(--everymen-gold)'
+/**
+ * The sheet-measured warning ink (#694). `--everymen-red` is 4.49:1 on the
+ * paper and 4.16:1 on the dark-theme paper — WORLD_ZERO_STYLE §3 already records
+ * the light figure and says "nothing on this card sets PROSE in it", and this
+ * dialog was setting its 18px forfeit body in it (#1168). The red keeps its rule
+ * and fill roles; this ink carries the words, at 5.45 / 10.25.
+ */
+const NOTICE = 'var(--faction-everymen-card-notice)'
 const POSTER = 'var(--font-accent)' // Bebas Neue
 const BODY = 'var(--font-body)'
 
@@ -74,7 +103,18 @@ export default function EverymenDuelSealConfirm({
   // the light muted tone to stay legible. This is a MODE branch, not a theme
   // branch — dark mode is handled entirely by the token cascade.
   const onInk = copy.danger
-  const theme: DuelSlotTheme = { accent, muted: onInk ? CREAM : MUTED, bodyFont: BODY }
+  // The panel's polarity decides the slots' inks, not the theme's. On the tan
+  // stock the shared defaults clear (`--color-success` 5.86:1); the moment the
+  // panel flips to INK the same green is 1.88:1, so the win figure and the
+  // roster's "sealed" mark take the gold this faction already values things in
+  // (7.03 / 10.81). Passing `undefined` off the ink branch is why `DuelSlotTheme`
+  // resolves field-by-field rather than by spread (#1168).
+  const theme: DuelSlotTheme = {
+    accent,
+    muted: onInk ? CREAM : MUTED,
+    bodyFont: BODY,
+    credit: onInk ? GOLD : undefined,
+  }
 
   return (
     <div
@@ -194,13 +234,22 @@ export default function EverymenDuelSealConfirm({
             </span>
           </div>
 
-          {/* ── The body line. Forfeit mode is the destructive one and says so. ── */}
+          {/* ── The body line. Forfeit mode is the destructive one and says so —
+              in NOTICE, with the red as the rule beside it. Red-as-prose was
+              4.49 / 4.16 here, which is the pairing §3 already warned about. ── */}
           <p
             className="content-text"
             style={{
               marginTop: 'var(--space-lg)',
               lineHeight: 1.6,
-              ...(copy.danger ? { color: RED, fontWeight: 700 } : {}),
+              ...(copy.danger
+                ? {
+                    color: NOTICE,
+                    fontWeight: 700,
+                    paddingLeft: 'var(--space-md)',
+                    borderLeft: `3px solid ${RED}`,
+                  }
+                : {}),
             }}
           >
             {copy.body}

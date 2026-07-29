@@ -9,6 +9,10 @@
  * Pure frame, same as the desktop skin: `StakesTiles` and `RaceRoster` own every
  * figure and the `pending`/`active` copy branch is the shared one. No new locale
  * keys — per-faction voice was declined for this epic (#718).
+ *
+ * The contrast readings are the desktop skin's verbatim — same two grounds, same
+ * inks — so the forfeit body takes `--faction-coven-card-notice` here too and
+ * the red survives as the rule (#1168). See `CovenDuelSealConfirm.tsx`.
  */
 import { factionCssVar } from '../../utils/factions'
 import {
@@ -31,6 +35,8 @@ const NOTEPAD_BORDER = 'var(--faction-coven-notepad-border)'
 const DOT = 'var(--faction-coven-dot)'
 const CARD_TEXT = 'var(--faction-coven-card-text)'
 const CARD_MUTED = 'var(--faction-coven-card-muted)'
+/** The sheet-measured warning ink (#694), which the global red is not (#1168). */
+const NOTICE = 'var(--faction-coven-card-notice)'
 const SCRIPT = 'var(--faction-coven-card-font)'
 
 /** The sheet's grab handle, standing in for the desktop window's traffic lights. */
@@ -116,11 +122,19 @@ export default function CovenMobileDuelSealConfirm({
             backgroundSize: '13px 13px',
           }}
         >
+          {/* Notice ink, not the global red — see the desktop skin's note. */}
           <p
             style={{
               fontSize: 'var(--text-content)',
               lineHeight: 1.5,
-              ...(copy.danger ? { color: 'var(--color-danger)', fontWeight: 700 } : {}),
+              ...(copy.danger
+                ? {
+                    color: NOTICE,
+                    fontWeight: 700,
+                    paddingLeft: 'var(--space-md)',
+                    borderLeft: '3px solid var(--color-danger)',
+                  }
+                : {}),
             }}
           >
             {copy.body}
