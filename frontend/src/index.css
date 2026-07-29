@@ -4120,11 +4120,31 @@
   --faction-coven-ward-hold-to: #d9a521;
   --faction-coven-ward-hold-ink: #5c3a06;
   --faction-coven-ward-hold-border: #c08d14;
+
+  /* ── The composer's cast band (#1188) ──
+     The edit-praxis submit bar runs pink while you are still composing and
+     flips GREEN once your part is in. The green had to be its own pair rather
+     than `--color-success` or `--faction-coven-card-credit`: both of those are
+     INKS measured as text on a sheet, and reading an ink as a fill is the "var()
+     at the wrong tier" failure — it passes every lint gate and still ends up
+     with a colour nobody measured for the job it is doing.
+     Polarity follows --faction-coven-slip-cta-*: a dark band under white by day,
+     a bright band under near-black by night. Measured against
+     --faction-coven-cast-ink at BOTH gradient stops (the lower stop is the
+     tighter reading in light, the upper in dark):
+       light  #ffffff on #2f7d4f  5.04:1  ·  on #1c5a37  7.4:1
+       dark   #14110b on #4ade80 10.69:1  ·  on #22c55e  8.27:1 */
+  --faction-coven-cast-from: #2f7d4f;
+  --faction-coven-cast-to: #1c5a37;
+  --faction-coven-cast-ink: #ffffff;
 }
 [data-theme="dark"] {
   --faction-coven-ward-page: #1d0a15;
   --faction-coven-ward-card: #2a0f1e;
   --faction-coven-ward-hair: rgba(249, 168, 212, 0.2);
+  --faction-coven-cast-from: #4ade80;
+  --faction-coven-cast-to: #22c55e;
+  --faction-coven-cast-ink: #14110b;
   /* The night slip carries more candle, exactly as the design's own dark half
      does (.5 → .7 there; both walked down here for the contrast floor above). */
   --faction-coven-ward-haze: 0.28;

@@ -404,33 +404,7 @@
         "successHeading": "The circle is closed",
         "successBody": "Every part is cast. It's out in the world now.",
         "successContinue": "See where it landed"
-      },
-      "windowTitle": "wow.exe — edit praxis",
-      "pageTitle": "edit praxis",
-      "taskRefLabel": "re: completion of",
-      "modeLabel": "how are you walking?",
-      "mode": {
-        "solo": { "label": "solo", "desc": "one set of footprints" },
-        "collab": { "label": "w/ friends", "desc": "in step with others" },
-        "duel": { "label": "witch duel", "desc": "two paths, one prize" }
-      },
-      "inviteLabel": "↳ walking together",
-      "inviteLabelDuel": "↳ racing",
-      "invitePlaceholder": "@ invite another walker…",
-      "titleLabel": "title · what whimsy arose?",
-      "titlePlaceholder": "What whimsy arose?",
-      "autosaveSaved": "saved {{ago}}",
-      "autosaveUnsaved": "unsaved",
-      "bodyLabel": "field notes · {{words}} words · markdown ok",
-      "bodyPlaceholder": "Tonight I walked...",
-      "previewLabel": "preview",
-      "filesLabel": "scraps & specimens · {{pasted}} pasted",
-      "fileButton": "+ paste in a scrap",
-      "fileHelper": "images · video · audio · max 50mb each",
-      "metatasksLabel": "★ optional bonus",
-      "publishIdle": "cast it into the world",
-      "publishBusy": "casting...",
-      "dropLabel": "let it go"
+      }
     },
     "albescent": {
       "collab": {
