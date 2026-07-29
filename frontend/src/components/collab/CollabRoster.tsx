@@ -93,6 +93,17 @@ export function CollabRoster({
   if (gate.memberCount < 2) return null // solo/duel render nothing
 
   const accent = factionCssVar(factionSlug, 'card-accent')
+  // The roster is one block mounted on eight different faction sheets, so every
+  // ink it paints has to be legible on all of them (#694). Three of the four it
+  // used were global: --color-warning as the "not cast" pill and the holdout
+  // banner (4.14:1 on UA's cream, 3.70:1 on UA's page ground), --color-success
+  // as the credit (2.07:1 on S.N.I.D.E.'s near-black card), and
+  // --color-text-tertiary as the "· you" byline. They now read the faction's own
+  // card-ink family, whose members index.css measures against that faction's
+  // sheet in both themes.
+  const notice = factionCssVar(factionSlug, 'card-notice')
+  const credit = factionCssVar(factionSlug, 'card-credit')
+  const quiet = factionCssVar(factionSlug, 'card-muted')
   const pct = Math.round((gate.castCount / gate.memberCount) * 100)
 
   // Mirror the backend: only a member may kick, never themselves, and only
@@ -125,9 +136,9 @@ export function CollabRoster({
     gate.state === 'waiting'
       ? { text: collabCopy(factionSlug, 'bannerWaiting'), tone: accent, warn: false }
       : gate.state === 'holdout'
-        ? { text: collabCopy(factionSlug, 'bannerHoldout'), tone: 'var(--color-warning)', warn: true }
+        ? { text: collabCopy(factionSlug, 'bannerHoldout'), tone: notice, warn: true }
         : gate.state === 'published'
-          ? { text: collabCopy(factionSlug, 'bannerPublished'), tone: 'var(--color-success)', warn: false }
+          ? { text: collabCopy(factionSlug, 'bannerPublished'), tone: credit, warn: false }
           : null
 
   return (
@@ -163,19 +174,32 @@ export function CollabRoster({
               style={{
                 borderRadius: 4,
                 border: cast ? `1.5px solid ${accent}` : '1.5px dashed var(--color-border)',
-                background: cast ? factionCssVar(factionSlug, 'card-muted') : 'transparent',
+                // A cast row is a filled row, and the fill has to be a SURFACE.
+                // It used to be `card-muted`, which is the faction's muted TEXT
+                // ink — every other caller in the app reads it as `color:` — so
+                // the row came out as a slab of ink with the accent pill printed
+                // on it at 1.05:1 light / 1.17:1 dark (#694). `card-bg` is the
+                // faction's own sheet, and it is the surface the whole
+                // `card-{text,muted,accent}` family is already measured against,
+                // so filling with it makes the rendered pairing identical to one
+                // the token test has gated since #651.
+                background: cast ? factionCssVar(factionSlug, 'card-bg') : 'transparent',
+                // ...and once the row paints its own ground, it must paint its
+                // own ink: an inherited colour is whatever the MOUNT set, and
+                // this component has three mounts on eight sheets.
+                color: cast ? factionCssVar(factionSlug, 'card-text') : undefined,
               }}
             >
               <span className="font-body text-[12px]" style={{ fontWeight: cast ? 700 : 400, flex: 1 }}>
                 {member.character_display_name}
                 {isMe && (
-                  <span style={{ color: 'var(--color-text-tertiary)' }}> · {collabCopy(factionSlug, 'you')}</span>
+                  <span style={{ color: cast ? quiet : 'var(--color-text-tertiary)' }}> · {collabCopy(factionSlug, 'you')}</span>
                 )}
                 {gate.state === 'published' && taskPointValue != null && (
-                  <span style={{ color: 'var(--color-success)', fontWeight: 700 }}> +{taskPointValue}</span>
+                  <span style={{ color: credit, fontWeight: 700 }}> +{taskPointValue}</span>
                 )}
               </span>
-              <span className="eyebrow text-[9px]" style={{ color: cast ? accent : 'var(--color-warning)' }}>
+              <span className="eyebrow text-[9px]" style={{ color: cast ? accent : notice }}>
                 {cast ? `✓ ${collabCopy(factionSlug, 'pillCast')}` : collabCopy(factionSlug, 'pillWeaving')}
               </span>
               {/* Nudge — only on a member who is still weaving, never my own row
@@ -226,7 +250,9 @@ export function CollabRoster({
                   style={{
                     background: 'transparent',
                     border: 'none',
-                    color: 'var(--color-text-tertiary)',
+                    // Follows the row: on a filled row the ground is the faction
+                    // sheet, so the glyph takes that sheet's muted ink.
+                    color: cast ? quiet : 'var(--color-text-tertiary)',
                     cursor: 'pointer',
                     fontSize: 'var(--text-md)',
                     lineHeight: 1,
