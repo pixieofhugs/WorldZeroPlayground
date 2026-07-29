@@ -306,7 +306,9 @@ export function DuelCard({
               textDecoration: 'none',
             }}
           >
-            <span style={{ flex: '1 1 auto', minWidth: 0 }}>{rivalRow}</span>
+            {/* A div, not a span: `DuelRow` is flow content and a span may not
+                wrap it. `<a>` takes transparent content, so the row nests fine. */}
+            <div style={{ flex: '1 1 auto', minWidth: 0 }}>{rivalRow}</div>
             <span
               aria-hidden
               className="content-text"
