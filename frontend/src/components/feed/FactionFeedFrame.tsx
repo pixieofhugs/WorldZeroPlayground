@@ -15,6 +15,7 @@
 import { pickVariant } from '../../utils/factionDispatch'
 import { surfaceMap } from '../../factions'
 import { factionCssVar } from '../../utils/factions'
+import FeedChassisBand from './FeedChassisBand'
 import type { FeedFrameProps } from './feedFrameProps'
 
 /**
@@ -49,33 +50,12 @@ function DefaultFeedFrame({ slug, kicker, time, tag, archive, children }: FeedFr
     >
       <div
         style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: 'var(--space-sm)',
           padding: 'var(--space-xs) var(--space-md) var(--space-xs) var(--space-lg)',
           borderBottom: '1px solid var(--color-border)',
-          color: 'var(--color-text-tertiary)',
+          color: 'var(--color-text-secondary)',
         }}
       >
-        <span className="eyebrow" style={{ color: 'var(--color-text-secondary)' }}>
-          {kicker}
-        </span>
-        {tag && (
-          <span
-            className="eyebrow"
-            style={{
-              color: 'var(--color-text-tertiary)',
-              border: '1px solid var(--color-border-strong)',
-              padding: '0 var(--space-xs)',
-            }}
-          >
-            {tag}
-          </span>
-        )}
-        <span className="eyebrow" style={{ marginLeft: 'auto', color: 'var(--color-text-tertiary)' }}>
-          {time}
-        </span>
-        {archive}
+        <FeedChassisBand kicker={kicker} time={time} tag={tag} archive={archive} />
       </div>
       {children}
     </div>
