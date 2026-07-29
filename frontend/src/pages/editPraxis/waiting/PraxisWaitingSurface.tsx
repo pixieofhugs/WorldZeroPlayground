@@ -33,6 +33,21 @@
  *    (ADR-0011 §Forfeit). Before that, taking your entry back costs nothing, so
  *    that is what the footer says.
  *
+ * COMPLETED READING (#1164). Once everybody is in, this same surface takes the
+ * `phase === "completed"` reading instead: the roster with every member
+ * submitted, a confirmation beat that says so, the write-up still read-only, and
+ * a **Read the praxis** link out. It replaces what `/edit` used to draw for a
+ * published multi-party praxis — a LOCKED COMPOSER, a third read-only rendering
+ * of a praxis beside the detail page and this one. Owner ruling: no locked
+ * composer, and no redirect either, because a crew is worth confirming to. A
+ * published *solo* praxis has no roster and nothing to confirm, so that one does
+ * redirect; `deriveEditPraxisPhase` calls it `handoff`.
+ *
+ * The completed reading draws no exits. Every control the waiting reading offers
+ * — re-open my part, leave, delete, nudge, kick — either no longer applies or is
+ * refused by the backend once the praxis is `submitted`, and the one thing left
+ * to do with a published praxis is read it.
+ *
  * Copy resolves through `collabCopy(slug, key)` — shared `editPraxis.collab.*`
  * defaults with faction overrides where a faction has authored them.
  *
@@ -44,6 +59,7 @@
  * length; the prop only overrides it.
  */
 import { useTranslation } from "react-i18next";
+import { Link } from "react-router-dom";
 import type { DuelSideOut } from "../../../api/duel";
 import { CollabRoster } from "../../../components/collab/CollabRoster";
 import { collabCopy } from "../../../components/collab/collabCopy";
@@ -220,6 +236,7 @@ function DuelSidePanel({
   factionSlug,
   title,
   body,
+  completed,
   onNudge,
 }: {
   side: DuelSideOut;
@@ -227,6 +244,13 @@ function DuelSidePanel({
   factionSlug: string | null | undefined;
   title?: string;
   body?: string;
+  /**
+   * The duel is over (#1164), so "sealed until they submit" is no longer the
+   * reason the rival's entry is missing. It is still missing — reading the two
+   * entries side by side was deliberately cut from the composer and lives on
+   * #1084 — so the placeholder points at the page that does hold both.
+   */
+  completed?: boolean;
   /**
    * Poke the rival (#1083). Passed only for the rival's panel, and only while
    * the duel is `active` — the caller owns that condition because it is the one
@@ -319,7 +343,10 @@ function DuelSidePanel({
           className="font-body content-text"
           style={{ color: "var(--color-text-tertiary)", fontStyle: "italic" }}
         >
-          {collabCopy(factionSlug, "duelSealedPlaceholder")}
+          {collabCopy(
+            factionSlug,
+            completed ? "duelCompletedPlaceholder" : "duelSealedPlaceholder",
+          )}
         </p>
       )}
     </div>
@@ -364,6 +391,11 @@ export default function PraxisWaitingSurface({
   // did arrive here.
   const isCollab = !isDuel && praxis.type === "collab";
   const windowDays = autoSubmitDays ?? config?.collab_auto_submit_days ?? null;
+  // The completed reading (#1164): everybody is in. Read off the phase rather
+  // than off `status === 'submitted'` so the one authority on "which face is
+  // this" stays `deriveEditPraxisPhase` — a submitted DUEL side is the waiting
+  // reading, not this one, for as long as the duel is still live.
+  const completed = state.phase === "completed";
 
   // Deleting destroys the praxis with every member's part in it, so it stays the
   // creator's alone — the backend's `delete_praxis` is the authority and this
@@ -374,10 +406,13 @@ export default function PraxisWaitingSurface({
 
   return (
     <ArchetypeFrame>
-      {/* Status row — who filed, in the surface's own quiet voice. */}
+      {/* Status row — what is submitted, in the surface's own quiet voice. On
+          the completed reading it drops the "by you": a lapsed window publishes
+          a collab with a holdout still outstanding (ADR-0012), and that holdout
+          opens this same surface. */}
       <div className="flex items-center justify-between gap-2 mb-4">
         <span className="eyebrow" style={{ color: accent }}>
-          {collabCopy(slug, "awaitingStatusMeta")}
+          {collabCopy(slug, completed ? "completedStatusMeta" : "awaitingStatusMeta")}
         </span>
         <span className="eyebrow">
           {relativeTime(praxis.submitted_at ?? praxis.updated_at)}
@@ -432,9 +467,27 @@ export default function PraxisWaitingSurface({
         }}
       >
         <h2 className="font-display content-title" style={{ color: accent }}>
-          {collabCopy(slug, isDuel ? "duelAwaitingHeading" : "awaitingHeading")}
+          {collabCopy(
+            slug,
+            completed
+              ? isDuel
+                ? "duelCompletedHeading"
+                : "completedHeading"
+              : isDuel
+                ? "duelAwaitingHeading"
+                : "awaitingHeading",
+          )}
         </h2>
-        {isDuel && sides ? (
+        {completed ? (
+          /* Nothing is outstanding, so neither clock has anything to say — not
+             the collab's countdown and not the duel's elapsed line. */
+          <p
+            className="font-body content-text"
+            style={{ color: "var(--color-text-secondary)" }}
+          >
+            {collabCopy(slug, isDuel ? "duelCompletedBody" : "completedBody")}
+          </p>
+        ) : isDuel && sides ? (
           /* The duel's clock is an ELAPSED line, not a countdown. No deadline
              exists to count down to: `Duel` has no expiry, `EraConfig` has no
              duel duration, there is no scheduler, and ADR-0011 rejects per-duel
@@ -473,6 +526,7 @@ export default function PraxisWaitingSurface({
               factionSlug={slug}
               title={state.title}
               body={state.body}
+              completed={completed}
             />
             {/* The rival's nudge, gated on `active` exactly as the backend is:
                 at `pending` they have not accepted yet and the outstanding thing
@@ -482,6 +536,7 @@ export default function PraxisWaitingSurface({
               side={sides.foe}
               mine={false}
               factionSlug={slug}
+              completed={completed}
               onNudge={
                 duel?.status === "active"
                   ? () => state.nudge(sides.foe.character_id)
@@ -490,19 +545,25 @@ export default function PraxisWaitingSurface({
             />
           </div>
         ) : (
+          /* Completed drops both author controls rather than drawing them to be
+             refused. The backend allows a kick only while the praxis is still
+             open, and there is nobody left to nudge — except after a lapsed
+             window, where the roster would otherwise offer to hurry a member
+             whose part is no longer wanted. */
           <CollabRoster
             members={praxis.members}
             currentCharacterId={state.currentCharacterId}
             factionSlug={slug}
             taskPointValue={praxis.task_point_value}
-            onKick={state.kickMember}
-            onNudge={state.nudge}
+            onKick={completed ? undefined : state.kickMember}
+            onNudge={completed ? undefined : state.nudge}
           />
         )}
       </section>
 
-      {/* The clock — collab only; see the elapsed line above for the duel. */}
-      {isCollab && (
+      {/* The clock — collab only, and only while there is still a window to
+          count. See the elapsed line above for the duel. */}
+      {isCollab && !completed && (
         <div className="mb-6">
           <CollabPublishClock
             submitProposedAt={praxis.submit_proposed_at}
@@ -552,7 +613,21 @@ export default function PraxisWaitingSurface({
 
       {/* Footer. Global order is [destructive/neutral] … [affirmative] (#646),
           so the way back into your own text sits on the right on every surface.
-          Exactly one exit is drawn, the one that applies to this viewer. */}
+          Exactly one exit is drawn, the one that applies to this viewer.
+
+          The completed reading keeps the position and changes the act: the one
+          thing left to do with a published praxis is read it, and the link is
+          the whole reason this beats the redirect the ruling turned down. */}
+      {completed ? (
+        <div
+          className="flex flex-wrap items-center justify-end gap-4 pt-4"
+          style={{ borderTop: "1px dashed var(--color-border-strong)" }}
+        >
+          <Link to={`/praxes/${praxis.id}`} className="btn-primary">
+            {collabCopy(slug, "completedReadAction")}
+          </Link>
+        </div>
+      ) : (
       <div
         className="flex flex-wrap items-center justify-between gap-4 pt-4"
         style={{ borderTop: "1px dashed var(--color-border-strong)" }}
@@ -627,6 +702,7 @@ export default function PraxisWaitingSurface({
           </span>
         </div>
       </div>
+      )}
     </ArchetypeFrame>
   );
 }

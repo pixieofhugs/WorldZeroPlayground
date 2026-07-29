@@ -76,9 +76,53 @@ describe("deriveEditPraxisPhase — collab", () => {
     expect(deriveEditPraxisPhase(collab, null, ME)).toBe("composing");
   });
 
-  it("keeps the solo redirect", () => {
+  it("hands off a published solo — no roster, nothing to wait for (#1164)", () => {
+    // Was `composing`, i.e. a LOCKED COMPOSER. The owner ruling on #1164 sends
+    // this one to the read page instead; the completed reading is for praxes
+    // with a crew to confirm.
     const solo = praxis({ status: "submitted", members: [member(ME, true)] });
-    expect(deriveEditPraxisPhase(solo, null, ME)).toBe("composing");
+    expect(deriveEditPraxisPhase(solo, null, ME)).toBe("handoff");
+  });
+
+  it("hands off a published ONE-member collab too — same emptiness", () => {
+    const collab = praxis({
+      type: "collab",
+      status: "submitted",
+      members: [member(ME, true)],
+    });
+    expect(deriveEditPraxisPhase(collab, null, ME)).toBe("handoff");
+  });
+});
+
+describe("deriveEditPraxisPhase — the collab is published (#1164)", () => {
+  it("shows the completed reading rather than a locked composer", () => {
+    const collab = praxis({
+      type: "collab",
+      status: "submitted",
+      members: [member(ME, true), member(THEM, true)],
+    });
+    expect(deriveEditPraxisPhase(collab, null, ME)).toBe("completed");
+  });
+
+  it("reads `submitted` off the STATUS, not off the consensus gate", () => {
+    // A lapsed window auto-publishes with a holdout still outstanding
+    // (ADR-0012), so the gate says `holdout` while the praxis is already
+    // published. The status is the fact; the gate is not.
+    const autoPublished = praxis({
+      type: "collab",
+      status: "submitted",
+      members: [member(ME, false), member(THEM, true)],
+    });
+    expect(deriveEditPraxisPhase(autoPublished, null, ME)).toBe("completed");
+  });
+
+  it("still holds the WAITING reading while the collab is mid-consensus", () => {
+    const pending = praxis({
+      type: "collab",
+      status: "pending",
+      members: [member(ME, true), member(THEM, false)],
+    });
+    expect(deriveEditPraxisPhase(pending, null, ME)).toBe("waiting");
   });
 });
 
@@ -93,14 +137,32 @@ describe("deriveEditPraxisPhase — duel", () => {
     expect(deriveEditPraxisPhase(praxis(cast), duel("pending"), ME)).toBe("waiting");
   });
 
-  it("does not hold a settled or resolved duel — stage 3 is the read page's", () => {
-    expect(deriveEditPraxisPhase(praxis(cast), duel("settled"), ME)).toBe("composing");
-    expect(deriveEditPraxisPhase(praxis(cast), duel("resolved"), ME)).toBe("composing");
-    expect(deriveEditPraxisPhase(praxis(cast), duel("declined"), ME)).toBe("composing");
+  it("gives a settled or resolved duel the completed reading (#1164)", () => {
+    // Both were `composing` — a locked composer. The OUTCOME still belongs to
+    // the read page (ADR-0059); what changes is that `/edit` no longer answers
+    // with a disabled form, it answers with a link.
+    expect(deriveEditPraxisPhase(praxis(cast), duel("settled"), ME)).toBe(
+      "completed",
+    );
+    expect(deriveEditPraxisPhase(praxis(cast), duel("resolved"), ME)).toBe(
+      "completed",
+    );
+  });
+
+  it("hands off a DECLINED challenge — it never became a duel", () => {
+    // What is left is an ordinary published solo praxis, so it leaves like one.
+    expect(deriveEditPraxisPhase(praxis(cast), duel("declined"), ME)).toBe(
+      "handoff",
+    );
   });
 
   it("does not hold a forfeited duel", () => {
+    // Deliberately untouched by #1164: a forfeit is an unsubmit, so the
+    // forfeiter's own side is back OUT and "both sides are in" would be false.
     expect(deriveEditPraxisPhase(praxis(cast), duel("active", THEM), ME)).toBe(
+      "composing",
+    );
+    expect(deriveEditPraxisPhase(praxis(cast), duel("settled", THEM), ME)).toBe(
       "composing",
     );
   });
