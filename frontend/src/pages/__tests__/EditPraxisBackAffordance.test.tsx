@@ -1,33 +1,34 @@
 /**
- * The edit-praxis back affordance (#567, reworked by #1181).
+ * The edit-praxis back affordance (#567, reworked by #1181 and again by #1189).
  *
  * #567's defect: after publish the phone composer was a dead end, because the
  * mobile skins painted no breadcrumb. The fix was a breadcrumb rendered by the
  * DISPATCHER on the mobile path, and this file pinned it — present on mobile in
  * every state, absent on desktop so the archetype's own was not doubled.
  *
- * ADR-0065 retired the mobile twin, and the desktop archetype now serves the
- * phone and paints its own breadcrumb at both widths. So the mobile half of that
- * gate is not merely unnecessary, it is WRONG: keeping it would draw two
- * breadcrumbs above every phone composer. The gate is now `waiting` alone.
+ * ADR-0065 retired the mobile twin, so #1181 narrowed that gate to the waiting
+ * surface, which was faction-neutral chrome and painted none of its own. #1189
+ * dressed that surface: the archetype draws it now, through the same
+ * `ComposerPage` the composer uses, so it paints its own breadcrumb like every
+ * other stage. The dispatcher draws NONE.
  *
- * The invariant #567 actually bought is unchanged, and is what this file pins
- * now: **from every state of `/praxes/:id/edit`, at every width, there is
- * exactly one way back and never zero.** Three states, three owners:
+ * The invariant #567 actually bought is unchanged, and is what this file pins:
+ * **from every state of `/praxes/:id/edit`, at every width, there is exactly one
+ * way back and never zero.** Two halves, two files:
  *
- *   composing → the ARCHETYPE draws it. Proved with the real archetype mounted,
- *               and COUNTED, in `editPraxis/archetypes/__tests__/
- *               composerDispatch.test.tsx`; the skins are mocked to null here,
- *               so this file proves only that the dispatcher adds none.
- *   waiting /
- *   completed → the DISPATCHER draws it — `PraxisWaitingSurface` is faction-
- *               neutral and paints none of its own.
- *   handoff   → neither: a published solo praxis has nothing left to compose and
- *               redirects to the read page (#1164), which is a way out by
- *               construction rather than a dead end.
+ *   never TWO  → this file. Every skin is mocked to null, so a breadcrumb in the
+ *                markup could only be the dispatcher's own. There is none, in
+ *                any state, at either width.
+ *   never ZERO → `editPraxis/archetypes/__tests__/composerDispatch.test.tsx`,
+ *                which mounts the REAL archetype and COUNTS `<nav>` at both
+ *                widths, while composing and while waiting.
+ *
+ * `handoff` is the one state with neither: a published solo praxis has nothing
+ * left to compose and redirects to the read page (#1164), which is a way out by
+ * construction rather than a dead end.
  *
  * Runs headless (node env): renderToStaticMarkup, skins mocked to null so the
- * test isolates the dispatcher's own breadcrumb.
+ * test isolates the dispatcher's own output.
  */
 import { renderToStaticMarkup } from "react-dom/server";
 import { MemoryRouter } from "react-router-dom";
@@ -88,29 +89,23 @@ function render(
 const WIDTHS = ["mobile", "desktop"] as const;
 const BACK_LINK = 'href="/praxes/55"';
 
+const DRAWN_STATES = ["composing", "waiting", "completed"] as const;
+
 describe("EditPraxis back affordance (#567)", () => {
-  it.each(WIDTHS)(
-    "draws the shared breadcrumb over the waiting surface on %s",
-    (width) => {
-      expect(render(width, "waiting")).toContain(BACK_LINK);
-    },
-  );
-
-  it.each(WIDTHS)(
-    "draws it over the completed reading on %s too (#1164)",
-    (width) => {
-      expect(render(width, "completed")).toContain(BACK_LINK);
-    },
-  );
-
-  it.each(WIDTHS)(
-    "adds none of its own while composing on %s — the archetype owns it",
-    (width) => {
+  it.each(
+    WIDTHS.flatMap((width) =>
+      DRAWN_STATES.map((phase) => [width, phase] as const),
+    ),
+  )(
+    "adds no breadcrumb of its own on %s while %s — the archetype owns it",
+    (width, phase) => {
       // Before #1181 this passed on desktop and failed on mobile BY DESIGN: the
       // dispatcher drew the phone's breadcrumb because the mobile skins drew
-      // none. One archetype now serves both widths and draws its own, so a
-      // dispatcher breadcrumb here would be the second one.
-      expect(render(width, "composing")).not.toContain(BACK_LINK);
+      // none. Before #1189 it drew the waiting surface's, because that surface
+      // was undressed chrome. One archetype now serves both widths AND both
+      // stages and draws its own, so a dispatcher breadcrumb here would be the
+      // second one.
+      expect(render(width, phase)).not.toContain(BACK_LINK);
     },
   );
 

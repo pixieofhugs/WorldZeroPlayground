@@ -88,6 +88,7 @@ import {
   ComposerFooter,
   ComposerGround,
   ComposerMasthead,
+  ComposerPage,
   ComposerRule,
   ComposerSection,
   ComposerSheet,
@@ -98,7 +99,9 @@ import {
   composerLabelStyle,
   formatAutosave,
   useComposerSizes,
+  type ComposerDress,
 } from "./shared";
+import PraxisWaitingSurface from "../waiting/PraxisWaitingSurface";
 import {
   BodyPreview,
   BodyTextarea,
@@ -138,7 +141,7 @@ import {
   Sign,
   WingedDisc,
 } from "../../../components/cards/ephemeristsPlate";
-import type { EditPraxisState } from "../useEditPraxis";
+import { isWaitingStage, type EditPraxisState } from "../useEditPraxis";
 
 interface Props {
   state: EditPraxisState;
@@ -322,32 +325,41 @@ export default function EphemeristsEditPraxis({ state }: Props) {
     boxSizing: "border-box",
   } as const;
 
-  return (
-    <div style={{ fontFamily: DECO, color: INK }}>
-      <div
-        style={{
-          maxWidth: sizes.maxWidth,
-          margin: "0 auto",
-          padding: "var(--space-lg) var(--space-lg) 0",
-        }}
-      >
-        <Breadcrumb
-          praxisId={praxis.id}
-          taskId={praxis.task_id}
-          taskTitle={praxis.task_title}
-          inkColor={QUIET}
-        />
-      </div>
-
-      <ComposerSheet
-        sizes={sizes}
-        style={{
-          background: PLATE,
-          border: `1.5px solid ${LINE}`,
-          borderRadius: 0,
-          boxShadow: SHADOW,
-        }}
-        masthead={
+  /* The chrome, named once and mounted twice: the composer below, and the
+     waiting surface once your part is in (#1189). The same ELEMENTS both
+     times, so the sky band, the cornice and the ruled ground cannot drift
+     between the two stages. */
+  const sheetStyle = {
+    background: PLATE,
+    border: `1.5px solid ${LINE}`,
+    borderRadius: 0,
+    boxShadow: SHADOW,
+  };
+  const statusMark = <StatusMark />;
+  const slip = {
+    style: {
+      background: INNER,
+      border: `1.5px solid ${LINE}`,
+      borderRadius: 0,
+      padding: "var(--space-lg)",
+    },
+    labelStyle: { ...label, color: QUIET },
+    titleStyle: { fontFamily: CAPS, color: INK, lineHeight: 1.2 },
+    descriptionStyle: { fontFamily: READING, color: QUIET },
+    pillStyle: { ...label, color: QUIET, borderRadius: 0 },
+  } as const;
+  const primaryStyle = composerLabelStyle({
+    ...label,
+    display: "inline-flex",
+    alignItems: "center",
+    gap: "var(--space-sm)",
+    border: `1.5px solid ${BRASS}`,
+    borderRadius: 0,
+    padding: "var(--space-md) var(--space-xl)",
+    color: CTA_INK,
+    background: CTA,
+  });
+  const masthead = (
           <>
             {/* The sky band. A wash rather than a flat fill: the night blue
                 lifts toward the nile at the horizon and settles back into the
@@ -391,8 +403,8 @@ export default function EphemeristsEditPraxis({ state }: Props) {
             {/* The cavetto cornice, beneath the band, carrying the one motion. */}
             <Cornice glow />
           </>
-        }
-        ground={
+  );
+  const ground = (
           <ComposerGround
             inset={0}
             background={`repeating-linear-gradient(0deg, transparent 0 ${RULING}px, ${RULE} ${RULING}px ${RULING + 1}px)`}
@@ -411,7 +423,57 @@ export default function EphemeristsEditPraxis({ state }: Props) {
               }}
             />
           </ComposerGround>
-        }
+  );
+
+  const dress: ComposerDress = {
+    accent: BRASS,
+    pageStyle: { fontFamily: DECO, color: INK },
+    breadcrumbInk: QUIET,
+    sheetStyle,
+    masthead,
+    ground,
+    rule: () => flute,
+    mark: statusMark,
+    statusStyle: { ...label, color: INK },
+    metaStyle: { fontFamily: READING, color: QUIET },
+    labelStyle: sectionLabel,
+    slip,
+    panelStyle: {
+      background: INNER,
+      border: `1.5px solid ${LINE}`,
+      borderRadius: 0,
+    },
+    headingStyle: { fontFamily: CAPS, color: INK, lineHeight: 1.2 },
+    bodyStyle: { fontFamily: READING, color: QUIET },
+    quietStyle: { fontFamily: READING, color: QUIET },
+    primaryStyle,
+    quietButtonStyle: { ...label, color: QUIET },
+  };
+
+  /* Your part is in, so the composer is not a composer any more (ADR-0059).
+     Same page, same sheet, same ornament — a different stage. */
+  if (isWaitingStage(state.phase)) {
+    return <PraxisWaitingSurface state={state} dress={dress} />;
+  }
+
+  return (
+    <ComposerPage
+      sizes={sizes}
+      style={dress.pageStyle}
+      breadcrumb={
+        <Breadcrumb
+          praxisId={praxis.id}
+          taskId={praxis.task_id}
+          taskTitle={praxis.task_title}
+          inkColor={QUIET}
+        />
+      }
+    >
+      <ComposerSheet
+        sizes={sizes}
+        style={sheetStyle}
+        masthead={masthead}
+        ground={ground}
       >
         {/* Draft · Saved just now, with the ankh cartouche at the row's end. */}
         <ComposerStatusRow
@@ -423,25 +485,16 @@ export default function EphemeristsEditPraxis({ state }: Props) {
                 })
               : t("editPraxis.composer.statusUnsaved")
           }
-          statusStyle={{ ...label, color: INK }}
-          metaStyle={{ fontFamily: READING, color: QUIET }}
-          mark={<StatusMark />}
+          statusStyle={dress.statusStyle}
+          metaStyle={dress.metaStyle}
+          mark={statusMark}
         />
 
         {/* The task reference slip, on an inner cell with the points mark. */}
         <TaskSlip
           praxis={praxis}
           task={task}
-          style={{
-            background: INNER,
-            border: `1.5px solid ${LINE}`,
-            borderRadius: 0,
-            padding: "var(--space-lg)",
-          }}
-          labelStyle={{ ...label, color: QUIET }}
-          titleStyle={{ fontFamily: CAPS, color: INK, lineHeight: 1.2 }}
-          descriptionStyle={{ fontFamily: READING, color: QUIET }}
-          pillStyle={{ ...label, color: QUIET, borderRadius: 0 }}
+          {...slip}
           mark={
             <PointsMark
               points={task?.point_value ?? praxis.task_point_value ?? 0}
@@ -765,24 +818,16 @@ export default function EphemeristsEditPraxis({ state }: Props) {
                     weight={1.4}
                   />
                 ),
-                style: composerLabelStyle({
-                  ...label,
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: "var(--space-sm)",
+                style: {
+                  ...primaryStyle,
                   cursor: state.submitting ? "wait" : "pointer",
-                  border: `1.5px solid ${BRASS}`,
-                  borderRadius: 0,
-                  padding: "var(--space-md) var(--space-xl)",
-                  color: CTA_INK,
-                  background: CTA,
-                }),
+                },
               }}
             />
           }
         />
       </ComposerSheet>
-    </div>
+    </ComposerPage>
   );
 }
 

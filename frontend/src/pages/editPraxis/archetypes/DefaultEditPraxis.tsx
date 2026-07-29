@@ -203,7 +203,7 @@ export const DEFAULT_COMPOSER_DRESS: ComposerDress = {
   sheetStyle,
   masthead,
   ground,
-  rule: <ComposerRule style={{ background: HAIR }} />,
+  rule: () => <ComposerRule style={{ background: HAIR }} />,
   mark: statusMark,
   statusStyle: { color: INK, fontWeight: 700 },
   metaStyle: { color: FAINT },

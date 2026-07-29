@@ -115,6 +115,7 @@ import {
   ComposerFooter,
   ComposerGround,
   ComposerMasthead,
+  ComposerPage,
   ComposerSection,
   ComposerSheet,
   ComposerStatusRow,
@@ -124,7 +125,9 @@ import {
   composerLabelStyle,
   formatAutosave,
   useComposerSizes,
+  type ComposerDress,
 } from "./shared";
+import PraxisWaitingSurface from "../waiting/PraxisWaitingSurface";
 import {
   BodyPreview,
   BodyTextarea,
@@ -139,7 +142,7 @@ import {
   type ComposerTab,
 } from "./controls";
 import { MetataskSealStack } from "../MetataskSealStack";
-import type { EditPraxisState } from "../useEditPraxis";
+import { isWaitingStage, type EditPraxisState } from "../useEditPraxis";
 
 interface Props {
   state: EditPraxisState;
@@ -233,33 +236,59 @@ export default function WowEditPraxis({ state }: Props) {
     boxSizing: "border-box",
   } as const;
 
-  return (
-    <div style={{ fontFamily: LORA, color: INK }}>
-      <div
-        style={{
-          maxWidth: sizes.maxWidth,
-          margin: "0 auto",
-          padding: "var(--space-lg) var(--space-lg) 0",
-        }}
-      >
-        <Breadcrumb
-          praxisId={praxis.id}
-          taskId={praxis.task_id}
-          taskTitle={praxis.task_title}
-          inkColor={LABEL}
-        />
-      </div>
-
-      <ComposerSheet
-        sizes={sizes}
-        style={{
-          background: SHEET,
-          border: `1.5px solid ${GOLD}`,
-          borderRadius: 6,
-          boxShadow: SHEET_SHADOW,
-        }}
-        masthead={<ComposerMasthead background={RIBBON} height={7} />}
-        ground={
+  /* The chrome, named once and mounted twice: the composer below, and the
+     waiting surface once your part is in (#1189). The same ELEMENTS both
+     times, so the ribbon, the turning ring and the balloons cannot drift
+     between the two stages. */
+  const sheetStyle = {
+    background: SHEET,
+    border: `1.5px solid ${GOLD}`,
+    borderRadius: 6,
+    boxShadow: SHEET_SHADOW,
+  };
+  const masthead = <ComposerMasthead background={RIBBON} height={7} />;
+  const statusMark = (
+    <span
+      aria-hidden
+      style={{
+        fontFamily: MED,
+        // eslint-disable-next-line local/no-raw-style-values -- ornament: the writ's ✦ device at the design's own optical size, not a type tier (§4a).
+        fontSize: 34,
+        lineHeight: 1,
+        color: GOLD,
+      }}
+    >
+      ✦
+    </span>
+  );
+  const slip = {
+    style: {
+      background: SHEET,
+      border: `1.5px solid ${GOLD}`,
+      borderRadius: 6,
+      padding: "var(--space-lg)",
+    },
+    labelStyle: LABEL_STYLE,
+    titleStyle: { fontFamily: MED, color: INK },
+    descriptionStyle: {
+      fontFamily: LORA,
+      fontStyle: "italic",
+      color: MUTED,
+    },
+    pillStyle: LABEL_STYLE,
+  } as const;
+  const primaryStyle = composerLabelStyle({
+    display: "inline-flex",
+    alignItems: "center",
+    gap: "var(--space-sm)",
+    fontFamily: MED,
+    border: `1.5px solid ${GOLD_INK}`,
+    borderRadius: 6,
+    padding: "var(--space-md) var(--space-xl)",
+    color: ON_GOLD,
+    background: GOLD,
+  });
+  const ground = (
           <ComposerGround inset={0}>
             {/* The turning ring. `.ep-spin` reads --ep-spin-dur, whose default
                 is the design's own 90s, so no re-time is needed. */}
@@ -288,7 +317,57 @@ export default function WowEditPraxis({ state }: Props) {
               }}
             />
           </ComposerGround>
-        }
+  );
+
+  const dress: ComposerDress = {
+    accent: PLUM,
+    pageStyle: { fontFamily: LORA, color: INK },
+    breadcrumbInk: LABEL,
+    sheetStyle,
+    masthead,
+    ground,
+    rule: (key) => <Zig id={key} />,
+    mark: statusMark,
+    statusStyle: { fontFamily: MED, color: INK },
+    metaStyle: QUIET_STYLE,
+    labelStyle: LABEL_STYLE,
+    slip,
+    panelStyle: {
+      background: FIELD,
+      border: `1.5px solid ${GOLD}`,
+      borderRadius: 6,
+    },
+    headingStyle: { fontFamily: MED, color: INK },
+    bodyStyle: { fontFamily: LORA, color: MUTED },
+    quietStyle: QUIET_STYLE,
+    primaryStyle,
+    quietButtonStyle: QUIET_STYLE,
+  };
+
+  /* Your part is in, so the composer is not a composer any more (ADR-0059).
+     Same page, same sheet, same ornament — a different stage. */
+  if (isWaitingStage(state.phase)) {
+    return <PraxisWaitingSurface state={state} dress={dress} />;
+  }
+
+  return (
+    <ComposerPage
+      sizes={sizes}
+      style={dress.pageStyle}
+      breadcrumb={
+        <Breadcrumb
+          praxisId={praxis.id}
+          taskId={praxis.task_id}
+          taskTitle={praxis.task_title}
+          inkColor={LABEL}
+        />
+      }
+    >
+      <ComposerSheet
+        sizes={sizes}
+        style={sheetStyle}
+        masthead={masthead}
+        ground={ground}
       >
         <ComposerStatusRow
           status={t("editPraxis.composer.statusDraft")}
@@ -299,22 +378,9 @@ export default function WowEditPraxis({ state }: Props) {
                 })
               : t("editPraxis.composer.statusUnsaved")
           }
-          statusStyle={{ fontFamily: MED, color: INK }}
-          metaStyle={QUIET_STYLE}
-          mark={
-            <span
-              aria-hidden
-              style={{
-                fontFamily: MED,
-                // eslint-disable-next-line local/no-raw-style-values -- ornament: the writ's ✦ device at the design's own optical size, not a type tier (§4a).
-                fontSize: 34,
-                lineHeight: 1,
-                color: GOLD,
-              }}
-            >
-              ✦
-            </span>
-          }
+          statusStyle={dress.statusStyle}
+          metaStyle={dress.metaStyle}
+          mark={statusMark}
         />
 
         {/* The task slip, on the sheet's cream inside a gold frame — the ground
@@ -322,20 +388,7 @@ export default function WowEditPraxis({ state }: Props) {
         <TaskSlip
           praxis={praxis}
           task={task}
-          style={{
-            background: SHEET,
-            border: `1.5px solid ${GOLD}`,
-            borderRadius: 6,
-            padding: "var(--space-lg)",
-          }}
-          labelStyle={LABEL_STYLE}
-          titleStyle={{ fontFamily: MED, color: INK }}
-          descriptionStyle={{
-            fontFamily: LORA,
-            fontStyle: "italic",
-            color: MUTED,
-          }}
-          pillStyle={LABEL_STYLE}
+          {...slip}
           mark={<PointsPlaque points={task?.point_value ?? 0} />}
         />
 
@@ -649,24 +702,16 @@ export default function WowEditPraxis({ state }: Props) {
                 idleLabel: t("editPraxis.composer.submit"),
                 busyLabel: t("editPraxis.composer.submitBusy"),
                 trailingOrnament: <span aria-hidden>✦</span>,
-                style: composerLabelStyle({
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: "var(--space-sm)",
-                  fontFamily: MED,
+                style: {
+                  ...primaryStyle,
                   cursor: state.submitting ? "wait" : "pointer",
-                  border: `1.5px solid ${GOLD_INK}`,
-                  borderRadius: 6,
-                  padding: "var(--space-md) var(--space-xl)",
-                  color: ON_GOLD,
-                  background: GOLD,
-                }),
+                },
               }}
             />
           }
         />
       </ComposerSheet>
-    </div>
+    </ComposerPage>
   );
 }
 

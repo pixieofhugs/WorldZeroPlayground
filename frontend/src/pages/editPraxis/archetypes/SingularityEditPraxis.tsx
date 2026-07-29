@@ -113,6 +113,7 @@ import {
   ComposerFooter,
   ComposerGround,
   ComposerMasthead,
+  ComposerPage,
   ComposerRule,
   ComposerSection,
   ComposerSheet,
@@ -123,7 +124,9 @@ import {
   composerLabelStyle,
   formatAutosave,
   useComposerSizes,
+  type ComposerDress,
 } from "./shared";
+import PraxisWaitingSurface from "../waiting/PraxisWaitingSurface";
 import {
   BodyPreview,
   BodyTextarea,
@@ -138,7 +141,7 @@ import {
   type ComposerTab,
 } from "./controls";
 import { MetataskSealStack } from "../MetataskSealStack";
-import type { EditPraxisState } from "../useEditPraxis";
+import { isWaitingStage, type EditPraxisState } from "../useEditPraxis";
 
 interface Props {
   state: EditPraxisState;
@@ -230,33 +233,59 @@ export default function SingularityEditPraxis({ state }: Props) {
     />
   );
 
-  return (
-    <div style={{ fontFamily: FACE, color: INK }}>
-      <div
-        style={{
-          maxWidth: sizes.maxWidth,
-          margin: "0 auto",
-          padding: "var(--space-lg) var(--space-lg) 0",
-        }}
-      >
-        {/* No inkColor: the breadcrumb is on the page's ground, not the
-            terminal's, so it keeps the ink that ground was measured with. */}
-        <Breadcrumb
-          praxisId={praxis.id}
-          taskId={praxis.task_id}
-          taskTitle={praxis.task_title}
-        />
-      </div>
-
-      <ComposerSheet
-        sizes={sizes}
-        style={{
-          background: CHASSIS,
-          border: `1px solid ${BORDER}`,
-          borderRadius: RADIUS,
-          boxShadow: SHADOW,
-        }}
-        masthead={
+  /* The chrome, named once and mounted twice: the composer below, and the
+     waiting surface once your part is in (#1189). The same ELEMENTS both
+     times, so the window bar, its breathing lamp and the travelling scanline
+     cannot drift between the two stages. */
+  const sheetStyle = {
+    background: CHASSIS,
+    border: `1px solid ${BORDER}`,
+    borderRadius: RADIUS,
+    boxShadow: SHADOW,
+  };
+  const statusMark = (
+    <span
+      aria-hidden
+      style={{
+        fontFamily: FACE,
+        // 19 in the design → the 18px content rung (§4a).
+        fontSize: "var(--text-content)",
+        lineHeight: 1,
+        color: ACCENT,
+      }}
+    >
+      {STATUS_MARK}
+    </span>
+  );
+  const slip = {
+    style: {
+      background: PANEL,
+      border: `1px solid ${BORDER}`,
+      borderRadius: RADIUS,
+      padding: "var(--space-lg)",
+      flexDirection: sizes.isMobile ? ("column" as const) : ("row" as const),
+    },
+    labelStyle: { fontFamily: FACE, color: MUTED },
+    titleStyle: {
+      fontFamily: FACE,
+      color: ACCENT,
+      textShadow: HALO_GREEN,
+    },
+    descriptionStyle: { fontFamily: FACE, color: INK },
+    pillStyle: { fontFamily: FACE, color: BLUE, borderRadius: RADIUS },
+  };
+  const primaryStyle = termLabel({
+    display: "inline-flex",
+    alignItems: "center",
+    border: `1px solid ${CTA_BG}`,
+    borderRadius: RADIUS,
+    padding: "var(--space-md) var(--space-xl)",
+    color: CTA_INK,
+    background: CTA_BG,
+    boxShadow: CTA_GLOW,
+    letterSpacing: "0.1em",
+  });
+  const masthead = (
           /* The window bar. `ComposerMasthead` is a 3px band by default; the
              skin gives it its own height and padding through `style`, which is
              spread last. Its whole content is aria-hidden chrome. */
@@ -315,8 +344,8 @@ export default function SingularityEditPraxis({ state }: Props) {
               />
             </div>
           </ComposerMasthead>
-        }
-        ground={
+  );
+  const ground = (
           /* The standing raster, at inset 0 — a fixed scrim, so unlike the
              spectrum's aurora it neither drifts nor overhangs. The travelling
              band rides inside it and overhangs horizontally instead, so its
@@ -337,7 +366,57 @@ export default function SingularityEditPraxis({ state }: Props) {
               }}
             />
           </ComposerGround>
-        }
+  );
+
+  const dress: ComposerDress = {
+    accent: ACCENT,
+    pageStyle: { fontFamily: FACE, color: INK },
+    sheetStyle,
+    masthead,
+    ground,
+    rule: () => hairRule,
+    mark: statusMark,
+    statusStyle: { fontFamily: FACE, color: ACCENT },
+    metaStyle: { fontFamily: FACE, color: MUTED },
+    labelStyle: { fontFamily: FACE, color: MUTED },
+    slip,
+    panelStyle: {
+      background: PANEL,
+      border: `1px solid ${BORDER}`,
+      borderRadius: RADIUS,
+    },
+    headingStyle: { fontFamily: FACE, color: ACCENT, textShadow: HALO_GREEN },
+    bodyStyle: { fontFamily: FACE, color: INK },
+    quietStyle: { fontFamily: FACE, color: MUTED },
+    primaryStyle,
+    quietButtonStyle: { fontFamily: FACE, color: MUTED },
+  };
+
+  /* Your part is in, so the composer is not a composer any more (ADR-0059).
+     Same page, same sheet, same ornament — a different stage. */
+  if (isWaitingStage(state.phase)) {
+    return <PraxisWaitingSurface state={state} dress={dress} />;
+  }
+
+  return (
+    <ComposerPage
+      sizes={sizes}
+      style={dress.pageStyle}
+      breadcrumb={
+        /* No inkColor: the breadcrumb is on the page's ground, not the
+           terminal's, so it keeps the ink that ground was measured with. */
+        <Breadcrumb
+          praxisId={praxis.id}
+          taskId={praxis.task_id}
+          taskTitle={praxis.task_title}
+        />
+      }
+    >
+      <ComposerSheet
+        sizes={sizes}
+        style={sheetStyle}
+        masthead={masthead}
+        ground={ground}
       >
         <ComposerStatusRow
           status={t("editPraxis.composer.statusDraft")}
@@ -348,22 +427,9 @@ export default function SingularityEditPraxis({ state }: Props) {
                 })
               : t("editPraxis.composer.statusUnsaved")
           }
-          statusStyle={{ fontFamily: FACE, color: ACCENT }}
-          metaStyle={{ fontFamily: FACE, color: MUTED }}
-          mark={
-            <span
-              aria-hidden
-              style={{
-                fontFamily: FACE,
-                // 19 in the design → the 18px content rung (§4a).
-                fontSize: "var(--text-content)",
-                lineHeight: 1,
-                color: ACCENT,
-              }}
-            >
-              {STATUS_MARK}
-            </span>
-          }
+          statusStyle={dress.statusStyle}
+          metaStyle={dress.metaStyle}
+          mark={statusMark}
         />
 
         {/* The task reference slip, on a raised panel, with the points readout
@@ -372,21 +438,7 @@ export default function SingularityEditPraxis({ state }: Props) {
         <TaskSlip
           praxis={praxis}
           task={task}
-          style={{
-            background: PANEL,
-            border: `1px solid ${BORDER}`,
-            borderRadius: RADIUS,
-            padding: "var(--space-lg)",
-            flexDirection: sizes.isMobile ? "column" : "row",
-          }}
-          labelStyle={{ fontFamily: FACE, color: MUTED }}
-          titleStyle={{
-            fontFamily: FACE,
-            color: ACCENT,
-            textShadow: HALO_GREEN,
-          }}
-          descriptionStyle={{ fontFamily: FACE, color: INK }}
-          pillStyle={{ fontFamily: FACE, color: BLUE, borderRadius: RADIUS }}
+          {...slip}
           mark={
             <div
               style={{
@@ -742,24 +794,16 @@ export default function SingularityEditPraxis({ state }: Props) {
                     }}
                   />
                 ),
-                style: termLabel({
-                  display: "inline-flex",
-                  alignItems: "center",
+                style: {
+                  ...primaryStyle,
                   cursor: state.submitting ? "wait" : "pointer",
-                  border: `1px solid ${CTA_BG}`,
-                  borderRadius: RADIUS,
-                  padding: "var(--space-md) var(--space-xl)",
-                  color: CTA_INK,
-                  background: CTA_BG,
-                  boxShadow: CTA_GLOW,
-                  letterSpacing: "0.1em",
-                }),
+                },
               }}
             />
           }
         />
       </ComposerSheet>
-    </div>
+    </ComposerPage>
   );
 }
 

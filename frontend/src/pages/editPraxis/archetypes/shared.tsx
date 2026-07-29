@@ -17,8 +17,10 @@ import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import i18n from "../../../i18n";
 import { useFormFactor } from "../../../hooks/useFormFactor";
+import { collabCopy } from "../../../components/collab/collabCopy";
 import type { TaskOut } from "../../../api/tasks";
 import type { PraxisOut } from "../../../api/praxis";
+import { isWaitingStage, type EditPraxisState } from "../useEditPraxis";
 
 interface BreadcrumbProps {
   praxisId: number | string;
@@ -125,6 +127,35 @@ export function formatAutosave(date: Date | null): string {
   if (ago < 60) return i18n.t("forms:autosaveAgo.seconds", { seconds: ago });
   const minutes = Math.round(ago / 60);
   return i18n.t("forms:autosaveAgo.minutes", { minutes });
+}
+
+/**
+ * The stage word in the status row's first slot.
+ *
+ * `Draft` while you are writing; `Sealed` on a duel side you have filed;
+ * `Submitted` on anything else that is in. Shared rather than inlined at the one
+ * call site because SNIDE draws the same word in its MASTHEAD, and a masthead
+ * still shouting DRAFT over a submitted praxis would be the page contradicting
+ * itself — the exact failure the dress exists to prevent.
+ *
+ * The completed reading takes the collab block's own word, which says
+ * `Submitted` rather than `Submitted by you`: a lapsed window publishes over a
+ * holdout (ADR-0012), and that holdout reads this same line.
+ */
+export function composerStageWord(state: EditPraxisState): string {
+  if (!isWaitingStage(state.phase)) {
+    return i18n.t("forms:editPraxis.composer.statusDraft");
+  }
+  if (state.phase === "completed") {
+    return collabCopy(state.praxis?.task_faction_slug, "completedStatusMeta");
+  }
+  // A duel side is `type='solo'` + a duel_id (ADR-0011) — never `type`.
+  const isDuel = state.praxis?.duel_id != null && state.duel != null;
+  return i18n.t(
+    isDuel
+      ? "forms:editPraxis.composer.statusSealed"
+      : "forms:editPraxis.composer.statusSubmitted",
+  );
 }
 
 /* ========================================================================== *
@@ -884,8 +915,14 @@ export interface ComposerDress {
   masthead?: ReactNode;
   /** The ground ELEMENT the composer mounts, not a copy of it. */
   ground?: ReactNode;
-  /** The section divider, as this skin draws it. */
-  rule?: ReactNode;
+  /**
+   * The section divider, as this skin draws it.
+   *
+   * A factory rather than an element because a divider can be a drawn thing
+   * with its own SVG defs — WOW's zigzag carries a per-instance gradient id —
+   * and the surface draws three of them. The `key` is that instance name.
+   */
+  rule?: (key: string) => ReactNode;
   /** The status mark, exactly as the composer draws it in its status row. */
   mark?: ReactNode;
   /** The status row's stage word. */

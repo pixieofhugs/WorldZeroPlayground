@@ -75,6 +75,7 @@ import {
   ComposerFooter,
   ComposerGround,
   ComposerMasthead,
+  ComposerPage,
   ComposerRule,
   ComposerSection,
   ComposerSheet,
@@ -85,7 +86,10 @@ import {
   composerLabelStyle,
   formatAutosave,
   useComposerSizes,
+  composerStageWord,
+  type ComposerDress,
 } from "./shared";
+import PraxisWaitingSurface from "../waiting/PraxisWaitingSurface";
 import {
   BodyPreview,
   BodyTextarea,
@@ -100,7 +104,7 @@ import {
   type ComposerTab,
 } from "./controls";
 import { MetataskSealStack } from "../MetataskSealStack";
-import type { EditPraxisState } from "../useEditPraxis";
+import { isWaitingStage, type EditPraxisState } from "../useEditPraxis";
 
 interface Props {
   state: EditPraxisState;
@@ -236,29 +240,43 @@ export default function SnideEditPraxis({ state }: Props) {
    * way a child of a padded column reaches its parent's edge. */
   const sidePad = sizes.isMobile ? "var(--space-lg)" : "var(--space-2xl)";
 
-  return (
-    <div style={{ fontFamily: BODY_FACE, color: INK }}>
-      <div
-        style={{
-          maxWidth: sizes.maxWidth,
-          margin: "0 auto",
-          padding: "var(--space-lg) var(--space-lg) 0",
-        }}
-      >
-        <Breadcrumb
-          praxisId={praxis.id}
-          taskId={praxis.task_id}
-          taskTitle={praxis.task_title}
-        />
-      </div>
-
-      <ComposerSheet
-        sizes={sizes}
-        /* radius 0, borderW 0 — the sheet has no edge but its own stock. */
-        style={{ background: SHEET, borderRadius: 0 }}
-        /* Bottom padding goes to the full-bleed submit bar below. */
-        contentStyle={{ paddingBottom: 0 }}
-        masthead={
+  /* The chrome, named once and mounted twice: the composer below, and the
+     waiting surface once your part is in (#1189). The same ELEMENTS both
+     times, so the acid bar, the raster and the tape cannot drift between the
+     two stages. The masthead's stage word travels with them — it reads
+     SUBMITTED, not DRAFT, once your part is filed. */
+  /* radius 0, borderW 0 — the sheet has no edge but its own stock. */
+  const sheetStyle = { background: SHEET, borderRadius: 0 };
+  const statusMark = <SnideBlob width={52} height={40} struck />;
+  const slip = {
+    style: {
+      background: FIELD,
+      border: `1px solid ${RULE}`,
+      borderRadius: 0,
+      padding: "var(--space-lg)",
+    },
+    labelStyle: { color: MUTED },
+    titleStyle: {
+      fontFamily: TITLE_FACE,
+      color: INK,
+      letterSpacing: "0.02em",
+    },
+    descriptionStyle: { color: MUTED },
+    pillStyle: { color: MUTED, borderRadius: 0 },
+  } as const;
+  /* The waiting footer's affirmative control is a BUTTON, not the composer's
+     full-bleed bar: the bar is the sheet's one irreversible act, and taking
+     your own part back out is neither irreversible nor the page's subject. */
+  const primaryStyle = punkLabel({
+    padding: "var(--space-md) var(--space-xl)",
+    border: "none",
+    borderRadius: 0,
+    background: ACID,
+    color: PRESS_INK,
+    fontFamily: TITLE_FACE,
+    letterSpacing: "0.2em",
+  });
+  const masthead = (
           <ComposerMasthead
             background={BAR}
             style={{ height: "auto", padding: "var(--space-sm) var(--space-lg)" }}
@@ -303,12 +321,12 @@ export default function SnideEditPraxis({ state }: Props) {
                   whiteSpace: "nowrap",
                 })}
               >
-                {t("editPraxis.composer.statusDraft")}
+                {composerStageWord(state)}
               </span>
             </span>
           </ComposerMasthead>
-        }
-        ground={
+  );
+  const ground = (
           <ComposerGround
             background={`repeating-linear-gradient(0deg, ${GRAIN} 0 1px, transparent 1px 3px)`}
             /* Flush, not overhanging: the raster is printed on the sheet, and
@@ -338,10 +356,60 @@ export default function SnideEditPraxis({ state }: Props) {
               }}
             />
           </ComposerGround>
-        }
+  );
+
+  const dress: ComposerDress = {
+    accent: ACID_INK,
+    pageStyle: { fontFamily: BODY_FACE, color: INK },
+    sheetStyle,
+    masthead,
+    ground,
+    rule: () => censorStripe,
+    mark: statusMark,
+    statusStyle: { color: INK, fontWeight: 700, letterSpacing: "0.2em" },
+    metaStyle: { color: FAINT },
+    labelStyle: { color: MUTED },
+    slip,
+    panelStyle: {
+      background: FIELD,
+      border: `1px solid ${RULE}`,
+      borderRadius: 0,
+    },
+    headingStyle: { fontFamily: TITLE_FACE, color: INK, letterSpacing: "0.02em" },
+    bodyStyle: { color: MUTED },
+    quietStyle: { color: FAINT },
+    primaryStyle,
+    quietButtonStyle: { color: FAINT },
+  };
+
+  /* Your part is in, so the composer is not a composer any more (ADR-0059).
+     Same page, same sheet, same ornament — a different stage. */
+  if (isWaitingStage(state.phase)) {
+    return <PraxisWaitingSurface state={state} dress={dress} />;
+  }
+
+  return (
+    <ComposerPage
+      sizes={sizes}
+      style={dress.pageStyle}
+      breadcrumb={
+        <Breadcrumb
+          praxisId={praxis.id}
+          taskId={praxis.task_id}
+          taskTitle={praxis.task_title}
+        />
+      }
+    >
+      <ComposerSheet
+        sizes={sizes}
+        style={sheetStyle}
+        /* Bottom padding goes to the full-bleed submit bar below. */
+        contentStyle={{ paddingBottom: 0 }}
+        masthead={masthead}
+        ground={ground}
       >
         <ComposerStatusRow
-          status={t("editPraxis.composer.statusDraft")}
+          status={composerStageWord(state)}
           meta={
             state.autosaveAt
               ? t("editPraxis.composer.statusSaved", {
@@ -349,28 +417,15 @@ export default function SnideEditPraxis({ state }: Props) {
                 })
               : t("editPraxis.composer.statusUnsaved")
           }
-          statusStyle={{ color: INK, fontWeight: 700, letterSpacing: "0.2em" }}
-          metaStyle={{ color: FAINT }}
-          mark={<SnideBlob width={52} height={40} struck />}
+          statusStyle={dress.statusStyle}
+          metaStyle={dress.metaStyle}
+          mark={statusMark}
         />
 
         <TaskSlip
           praxis={praxis}
           task={task}
-          style={{
-            background: FIELD,
-            border: `1px solid ${RULE}`,
-            borderRadius: 0,
-            padding: "var(--space-lg)",
-          }}
-          labelStyle={{ color: MUTED }}
-          titleStyle={{
-            fontFamily: TITLE_FACE,
-            color: INK,
-            letterSpacing: "0.02em",
-          }}
-          descriptionStyle={{ color: MUTED }}
-          pillStyle={{ color: MUTED, borderRadius: 0 }}
+          {...slip}
           mark={
             <span
               style={{
@@ -727,7 +782,7 @@ export default function SnideEditPraxis({ state }: Props) {
           }
         />
       </ComposerSheet>
-    </div>
+    </ComposerPage>
   );
 }
 

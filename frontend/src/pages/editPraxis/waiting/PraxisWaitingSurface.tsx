@@ -109,6 +109,7 @@ import {
   ErrorBanner,
   TaskSlip,
   composerLabelStyle,
+  composerStageWord,
   useComposerSizes,
   type ComposerDress,
 } from "../archetypes/shared";
@@ -482,18 +483,8 @@ export default function PraxisWaitingSurface({
   // everyone's, the creator included (ADR-0013, #1074).
   const isCreator = praxis.created_by_id === state.currentCharacterId;
   const busy = state.submitting;
-  const rule: ReactNode = dress.rule ?? <ComposerRule />;
-
-  /* The stage word, in the slot the composer's `Draft` occupies. Neutral keys
-     (ADR-0065 §3): a duel side is SEALED, everything else is SUBMITTED. On the
-     completed reading the word is the collab block's own, which says `Submitted`
-     rather than `Submitted by you` — a lapsed window publishes over a holdout,
-     and that holdout opens this same surface. */
-  const statusWord = completed
-    ? collabCopy(slug, "completedStatusMeta")
-    : isDuel
-      ? t("editPraxis.composer.statusSealed")
-      : t("editPraxis.composer.statusSubmitted");
+  /** The skin's divider, one instance per place it is drawn. */
+  const rule = (key: string): ReactNode => dress.rule?.(key) ?? <ComposerRule />;
 
   const stamped = relativeTime(praxis.submitted_at ?? praxis.updated_at);
   const statusMeta: ReactNode = completed ? (
@@ -541,7 +532,7 @@ export default function PraxisWaitingSurface({
             not move or change size when you submit; the WORD beside it does,
             and that is the whole confirmation beat. */}
         <ComposerStatusRow
-          status={statusWord}
+          status={composerStageWord(state)}
           meta={statusMeta}
           mark={dress.mark}
           statusStyle={dress.statusStyle}
@@ -631,7 +622,7 @@ export default function PraxisWaitingSurface({
                   count: praxis.members.length,
                 })
           }
-          rule={rule}
+          rule={rule("roster")}
           labelStyle={dress.labelStyle}
         >
           {isDuel && sides ? (
@@ -700,7 +691,7 @@ export default function PraxisWaitingSurface({
         {isCollab && (
           <ComposerSection
             label={collabCopy(slug, "awaitingWriteUpLabel")}
-            rule={rule}
+            rule={rule("writeup")}
             labelStyle={dress.labelStyle}
           >
             <div
@@ -734,7 +725,7 @@ export default function PraxisWaitingSurface({
 
         <ErrorBanner message={state.error} />
 
-        {rule}
+        {rule("footer")}
 
         {/* Footer. Global order is [destructive/neutral] … [affirmative] (#646),
             so the way back into your own text sits on the right on every
