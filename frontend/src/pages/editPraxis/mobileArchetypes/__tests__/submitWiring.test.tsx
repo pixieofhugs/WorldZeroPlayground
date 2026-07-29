@@ -133,6 +133,7 @@ function stateWith(publish: () => Promise<void>): EditPraxisState {
     cancel: async () => {},
     autosaveAt: null,
     saveStatus: "idle",
+    autoSubmitDays: 10,
     isPublished: false,
     controlsLocked: false,
     modeIsLocked: false,
