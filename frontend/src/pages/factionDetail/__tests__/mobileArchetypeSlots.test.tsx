@@ -127,7 +127,13 @@ describe('mobile faction directory dispatch', () => {
   })
 
   it('Default directory skin renders the heading + unaffiliated banner', () => {
-    const { text } = render(<DefaultFactionsDirectory />)
+    // The directory fetch lives in the page dispatcher now (#1116), so the skin
+    // takes the same still-loading state it used to produce for itself.
+    const { text } = render(
+      <DefaultFactionsDirectory
+        state={{ factions: [], factionPage: null, invitations: [], loading: true, error: null }}
+      />,
+    )
     expect(text).toContain('Factions')
     expect(text).toContain('Unaffiliated')
   })

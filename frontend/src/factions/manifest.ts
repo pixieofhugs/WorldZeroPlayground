@@ -59,6 +59,7 @@ import type { TaskDetailState } from '../pages/taskDetail/useTaskDetail'
 import type { PraxisDetailState } from '../pages/praxisDetail/usePraxisDetail'
 import type { EditPraxisState } from '../pages/editPraxis/useEditPraxis'
 import type { FactionDetailState } from '../pages/factionDetail/useFactionDetail'
+import type { FactionsDirectoryState } from '../pages/factions/useFactionsDirectory'
 import type { FieldDeskHomeState } from '../pages/fieldDesk/useFieldDeskHome'
 import type { CreateCharacterState } from '../pages/characterPaths/useCreateCharacter'
 import type { EditCharacterState } from '../pages/characterPaths/useEditCharacter'
@@ -142,7 +143,7 @@ export interface FactionManifest {
   readonly mobileCreateCharacter?: Lazy<Stateful<CreateCharacterState>>
   readonly mobileEditCharacter?: Lazy<Stateful<EditCharacterState>>
   readonly mobileProfile?: Lazy<ComponentType<ProfileBodyProps>>
-  readonly mobileFactionsDirectory?: Lazy<ComponentType>
+  readonly mobileFactionsDirectory?: Lazy<Stateful<FactionsDirectoryState>>
   readonly mobilePlayersDirectory?: Lazy<ComponentType<PlayersDirectoryProps>>
   readonly mobileDuelSeal?: Lazy<ComponentType<DuelSealConfirmProps>>
 }
