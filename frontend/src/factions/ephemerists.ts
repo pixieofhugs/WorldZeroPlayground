@@ -29,6 +29,7 @@ const EphemeristsTaskCard = lazyArchetype(() => import('../components/cards/Ephe
 const EphemeristsTaskDetail = lazyArchetype(() => import('../pages/taskDetail/archetypes/EphemeristsTaskDetail'))
 const EphemeristsVote = lazyArchetype(() => import('../components/vote/EphemeristsVote'))
 const EphemeristsPraxisCard = lazyArchetype(() => import('../components/praxisCard/desktop/EphemeristsPraxisCard'))
+const EphemeristsPraxisDetail = lazyArchetype(() => import('../pages/praxisDetail/archetypes/EphemeristsPraxisDetail'))
 const EphemeristsScoreStamp = lazyArchetype(() => import('../components/praxisCard/scoreStamp/EphemeristsScoreStamp'))
 const EphemeristsSeal = lazyArchetype(() => import('../components/metaTaskSeal/skins/EphemeristsSeal'))
 const EphemeristsSigil = lazyArchetype(() => import('../components/cards/ephemeristsAtoms').then((m) => ({ default: m.EphemeristsSigil })))
@@ -42,6 +43,10 @@ export const EPHEMERISTS_MANIFEST: FactionManifest = {
   factionSelectCard: () => EphemeristsSelectCard,
   taskCard: () => EphemeristsTaskCard,
   praxisCard: () => EphemeristsPraxisCard,
+  // Dress over the ONE shared praxis-detail layout (#1120, epic #1085,
+  // ADR-0061). Not a layout of its own: `DefaultPraxisDetail` remains the
+  // contract, and dropping this line hands the surface straight back to it.
+  praxisDetail: () => EphemeristsPraxisDetail,
   scoreStamp: () => EphemeristsScoreStamp,
   metaTaskSeal: () => EphemeristsSeal,
   avatar: () => EphemeristsAvatar,

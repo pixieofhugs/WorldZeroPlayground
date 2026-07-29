@@ -135,6 +135,23 @@ function resolveCssKey(slug: string | null | undefined): string {
  *   'card-text'   — card text
  *   'card-accent' — card accent (meta text, decorations)
  *   'card-muted'  — card secondary/description text
+ *   'card-notice' — attention / not-yet-done ink ON the card sheet (#694)
+ *   'card-credit' — points-earned ink ON the card sheet (#694)
+ *
+ * Exactly one of those is a SURFACE. `card-bg` is the sheet; `light` is a tint
+ * wash; everything else is ink meant for `color:`. Reaching for `card-muted` as
+ * a `background:` is what #694 was — it filled the collab roster's cast row
+ * with the faction's muted TEXT ink and printed the accent pill on it at
+ * 1.05:1.
+ *
+ * `card-notice` / `card-credit` exist because a shared, faction-themed
+ * component paints state colours on eight different sheets, and the global
+ * `--color-warning` / `--color-success` were measured against the app's
+ * near-white surface, never against a warm cream (4.14:1 on UA) or a near-black
+ * one (2.07:1 on S.N.I.D.E.). They flip on the SHEET's polarity rather than on
+ * the theme, which is exactly why a global token could not cover it. Both are
+ * measured against `--faction-{key}-card-bg` in both themes by
+ * `utils/__tests__/factionContrast.test.ts`.
  */
 export function factionCssVar(
   slug: string | null | undefined,
