@@ -1,8 +1,7 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Trans, useTranslation } from 'react-i18next'
-import { getFactions, getFactionStatus, getInvitations } from '../api/factions'
-import type { FactionOut, FactionPageOut, InvitationLetterOut } from '../api/factions'
+import type { InvitationLetterOut } from '../api/factions'
 import PageTitle from '../components/ui/PageTitle'
 import FactionSelectCard from '../components/cards/FactionSelectCard'
 import type { SelectState } from '../components/cards/FactionSelectCard'
@@ -14,6 +13,7 @@ import { useFormFactor } from '../hooks/useFormFactor'
 import { pickVariant } from '../utils/factionDispatch'
 import { surfaceMap } from '../factions'
 import DefaultFactionsDirectory from './factions/mobileArchetypes/DefaultFactionsDirectory'
+import { useFactionsDirectory, type FactionsDirectoryState } from './factions/useFactionsDirectory'
 
 const NA_SLUG = 'na'
 
@@ -37,53 +37,29 @@ const HIDDEN_SLUGS = new Set([NA_SLUG])
  */
 export default function Factions() {
   const formFactor = useFormFactor()
+  // Fetched ABOVE the switch (#1116) so crossing 767px re-dresses the directory
+  // instead of re-requesting it. Both surfaces read this one state.
+  const state = useFactionsDirectory()
 
   if (formFactor === 'mobile') {
     const Mobile = pickVariant(surfaceMap('mobileFactionsDirectory'), null, DefaultFactionsDirectory)
-    return <Mobile />
+    return <Mobile state={state} />
   }
 
-  return <DesktopFactions />
+  return <DesktopFactions state={state} />
 }
 
-function DesktopFactions() {
+function DesktopFactions({ state }: { state: FactionsDirectoryState }) {
   const { t } = useTranslation('factions')
   const { user } = useAuth()
   const character = user?.character ?? null
   const navigate = useNavigate()
 
-  const [factions, setFactions] = useState<FactionOut[]>([])
-  const [factionPage, setFactionPage] = useState<FactionPageOut | null>(null)
-  const [invitations, setInvitations] = useState<InvitationLetterOut[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const { factions, factionPage, invitations, loading } = state
+  const error = state.error ? extractError(state.error, 'Could not load factions.') : null
 
   // Invitations panel (collapsed by default once each card surfaces its own status)
   const [invitationsExpanded, setInvitationsExpanded] = useState(false)
-
-  const fetchAll = async () => {
-    setLoading(true)
-    setError(null)
-    try {
-      const factionsData = await getFactions()
-      setFactions(factionsData)
-
-      if (character) {
-        const [statusData, invitesData] = await Promise.all([
-          getFactionStatus(),
-          getInvitations(),
-        ])
-        setFactionPage(statusData)
-        setInvitations(invitesData)
-      }
-    } catch (err) {
-      setError(extractError(err, 'Could not load factions.'))
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  useEffect(() => { void fetchAll() }, [character?.id])
 
   const statusFor = (slug: string): string => {
     if (!factionPage) return STATUS_NOT_INVITED
