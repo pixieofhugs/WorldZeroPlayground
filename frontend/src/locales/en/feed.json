@@ -436,6 +436,19 @@
       "members_one": "{{count}} named",
       "members_other": "{{count}} named",
       "cta": "Request an audience →"
+    },
+    "na": {
+      "eyebrow": "World Zero · no colours yet",
+      "name": "Unaffiliated",
+      "blurb": "Every path is still open. Unaffiliated players take any task on the board and answer to no banner — pick a side when one of them earns it.",
+      "status": {
+        "locked": "No faction has claimed you.",
+        "eligible": "Every door is still open.",
+        "member": "Standing apart — all paths open."
+      },
+      "members_one": "{{count}} unaffiliated",
+      "members_other": "{{count}} unaffiliated",
+      "cta": "Take a closer look →"
     }
   }
 }

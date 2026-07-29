@@ -11,6 +11,7 @@ import { SingularitySigil } from "./SingularitySigil";
 import { EverymenSigil } from "./EverymenSigil";
 import { WowSigil } from "./WowSigil";
 import AlbescentSigil from "./AlbescentSigil";
+import DefaultSelectCard from "./DefaultSelectCard";
 
 /**
  * FactionSelectCard — the faction-DIRECTORY tile, one per faction. The compact
@@ -30,6 +31,10 @@ import AlbescentSigil from "./AlbescentSigil";
  * Mirrors FactionCard.tsx's structure: dispatcher + per-faction archetypes. The
  * per-faction sigils are the shared canonical *Sigil components (one dedicated
  * file each), imported here — never re-drawn inline.
+ *
+ * The neutral tile lives in its own file, `DefaultSelectCard.tsx`, next to the
+ * rest of the na kit (`DefaultTaskCard`, `DefaultSigil`): it is the archetype
+ * for the UNAFFILIATED state, and it is what the dispatcher falls back to.
  */
 
 export type SelectState = "locked" | "eligible" | "member";
@@ -435,10 +440,13 @@ export function WOWSelectCard({ state = "locked", members, onVisit }: Omit<Facti
  * `--albescent-reveal-*`, never `factionCssVar('albescent', …)`, which resolves
  * to the neutral default.
  *
- * It is also load-bearing for the hiding itself, which is the less obvious part.
- * The dispatcher below falls back to UA's costume rather than a neutral card
- * (#796 — there is no DefaultSelectCard to fall back to). Delete this component
- * and an Albescent tile does not go quietly grey; it goes UA orange.
+ * Deleting this component is now safe for the hiding, which it was not before
+ * #796: the dispatcher below used to fall back to UA's costume, so an Albescent
+ * tile without this card went UA orange rather than quiet. It falls back to
+ * `DefaultSelectCard` instead, and per #783/#794 Albescent resolves to the
+ * default/na path anyway — so an unregistered Albescent would get the na
+ * rainbow, which is exactly "hiding by looking unaffiliated". No branch here
+ * says so; the value test in `resolveCssKey` does.
  */
 export function AlbescentSelectCard({ state = "locked", members, onVisit }: Omit<FactionSelectCardProps, "faction">) {
   const status = i18n.t(`feed:factionSelect.albescent.status.${state}` as const);
@@ -492,11 +500,13 @@ const LEGACY_SLUG: Record<string, string> = {
 export default function FactionSelectCard({ faction, ...rest }: FactionSelectCardProps) {
   const cards = surfaceMap("factionSelectCard");
   const key = cards[faction] ? faction : LEGACY_SLUG[faction] ?? faction;
-  // NOTE: the fallback is UA's card, not a neutral default — an unknown or `na`
-  // slug renders UA's costume. That predates #782 and is preserved here
-  // verbatim to keep this refactor a visual no-op, but it is the same class of
-  // bug as #418/#636 (na must never borrow UA's identity) and wants its own
-  // issue.
-  const Card = pickVariant(cards, key, UaSelectCard);
+  // The fallback IS the `na` registration. A manifest is override-only and
+  // `na` deliberately has none (`factions/index.ts`: unaffiliated is a state,
+  // not a faction, and falls through to the `Default*` skins everywhere), so
+  // "register the Default archetype" means naming it here — exactly as
+  // TaskCard names DefaultTaskCard and FactionCard names DefaultFactionCard.
+  // It used to be UaSelectCard, which dressed every unaffiliated and unknown
+  // slug in UA's costume (#796, the third instance of #418/#636).
+  const Card = pickVariant(cards, key, DefaultSelectCard);
   return <Card {...rest} />;
 }
