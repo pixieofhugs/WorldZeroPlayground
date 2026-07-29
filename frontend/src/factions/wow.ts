@@ -35,10 +35,23 @@
  * #1037 adds the desktop `taskDetail` — THE PARCHMENT FIELD: gold-and-plum
  * parchment under a dot texture, bunting across the head, a struck points
  * plaque, wavy gold→plum rules and a bunch of googly balloons. It is the first
- * of #951's four missing desktop surfaces to ship; `praxisDetail`, `factionCard`
- * and `factionBody` are still unclaimed. There is no mobile twin row beneath it:
- * ADR-0058 collapsed task detail to one responsive component per faction, so
- * this archetype serves both form factors.
+ * of #951's four missing desktop surfaces to ship. There is no mobile twin row
+ * beneath it: ADR-0058 collapsed task detail to one responsive component per
+ * faction, so this archetype serves both form factors.
+ *
+ * #1121 adds `praxisDetail` — THE CHRONICLE ENTRY, the second of those four. A
+ * quest is ISSUED by decree and proof is RECORDED in the chronicle (ADR-0050),
+ * so this is the same parchment ground with the volume open at somebody's entry:
+ * bunting, cream plates in gold frames, wavy rules, and one bobbing bunch of
+ * balloons beside the comments. It is dress over the ONE shared praxis-detail
+ * page (ADR-0061) rather than a page of its own — the layout, the API contract
+ * and every word of the moderation chrome are the shared ones, and only the six
+ * content slots in `detail.wow.*` speak WOW. `factionCard` and `factionBody`
+ * remain unclaimed on #951.
+ *
+ * The three ornaments those two pages share — the wavy rule, the balloon bunch
+ * and the bunting — live in `components/cards/wowOrnament.tsx`, drawn once for
+ * the whole faction (§6/#849).
  *
  * #900 adds the PAGE-LEVEL desktop surfaces: the recruiting `factionHero`, the
  * `backdrop` wallpaper every WOW-context page sits on, the crested `profileBody`
@@ -52,9 +65,8 @@
  * desktop archetype, and each names its source in its own docstring. (#901 drew
  * three more surfaces off that screen which no longer exist: its task card, its
  * task detail and its praxis detail. ADR-0056, ADR-0058 and ADR-0061 retired all
- * three surfaces outright, so `taskCard` and `taskDetail` serve WOW on both form
- * factors and praxis detail is now ONE shared page every faction dresses —
- * WOW's dress for it is still to be designed.)
+ * three surfaces outright, so `taskCard`, `taskDetail` and — since #1121 —
+ * `praxisDetail` each serve WOW on both form factors.)
  * The shared vocabulary lives in `components/cards/wowMobile.tsx`.
  * `mobileCreateCharacter`, `mobileEditCharacter`, `mobileFactionsDirectory` and
  * `mobilePlayersDirectory` stay unclaimed on purpose — nothing in the kit
