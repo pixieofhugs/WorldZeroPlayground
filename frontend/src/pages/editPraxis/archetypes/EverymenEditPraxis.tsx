@@ -1,632 +1,799 @@
 /**
- * The Everymen — Edit Praxis form.
- * The praxis-filing form takes the task's faction treatment; the Everymen
- * frame it as a union WORK REPORT filed at the hall: a stamped red masthead,
- * a job-reference slip, the crew (mode) selector, the job headline, the
- * report body, proof-of-work attachments, and a "STAMP & FILE" action bar.
- * Theme-aware through the --everymen* / --faction-everymen* token cascade.
+ * The Everymen — edit praxis, composer v2 (#1187, epic #1179; design project
+ * c491945e, `Everymen Edit Praxis.dc.html`, the `everymen` row of `SKINS`).
+ *
+ * The union's WORK ORDER: a red masthead plate flanked by two counter-rotating
+ * cogs, poster rays fanning from behind it over a gold and an olive corner glow,
+ * dashed red rules between every region, a rubber-stamp points seal, and a
+ * full-width report bar for the cast. Bebas Neue carries every headline and
+ * label; Courier Prime carries everything read.
+ *
+ * ## The layout is not this file's (ADR-0065 §1)
+ *
+ * masthead → status row → the task slip → title → how it was done → the mode
+ * block → write-up → proof → footer, in that order, every region from
+ * `shared.tsx`, every control from `controls.tsx` through its `*Skin` prop. This
+ * file brings frame, type, ornament and motion and nothing else — no forked
+ * control, no re-ordered region, no word of its own.
+ *
+ * ## One responsive component, no mobile twin (ADR-0065 §2)
+ *
+ * `useComposerSizes()` picks the size set; there is one tree at two widths, and
+ * `pages/editPraxis/mobileArchetypes/EverymenEditPraxis` went with the
+ * `mobileEditPraxis` surface in #1181. Mobile stacks with flow — no fixed-px
+ * grid anywhere below (SPEC-faction-ui-profile §1a).
+ *
+ * ## Copy is the shared neutral set (ADR-0065 §3)
+ *
+ * The union voice this composer used to speak — `WORK REPORT №0055`, `THE CREW`,
+ * `THE JOB`, `PROOF OF WORK`, `★ STAMP & FILE ★`, `VOID THE REPORT` — is
+ * deleted with this issue, and the archetype reads `editPraxis.composer.*` like
+ * every other skin. `editPraxis.everymen.collab` SURVIVES: that block is
+ * `collabCopy`'s override table, a different resolver that also feeds
+ * `CollabRoster` on `/praxes/:id`, and it is pinned by `collabCopy.test.ts`.
+ *
+ * The masthead plate is the one place the design puts words on the dress, and
+ * the design's own word there is faction voice (`FILE YOUR REPORT`), which
+ * ADR-0065's rejected alternative names outright — "a deliberately designed set
+ * of near-synonyms is still the catalog the neutral rule exists to delete". So
+ * the plate carries what `EverymenTaskDetail`'s masthead carries under the
+ * identical neutral-copy rule (ADR-0057): the faction's NAME, a shared datum out
+ * of `factions:names.*` rather than a per-surface vocabulary. Dress kept, voice
+ * dropped.
+ *
+ * ## Colour
+ *
+ * Almost all of it is the `--everymen-*` family and the `-bill-` / `-sheet-`
+ * roles the v2 task card and task detail already minted; only the sheet's frame
+ * needed a name (`--faction-everymen-composer-frame`). Two pairings decide where
+ * red may be ink:
+ *
+ * - The SHEET is `--everymen-paper`, on which `--faction-everymen-sheet-accent`
+ *   pays only 4.49:1 (index.css says so where it is declared). So on the paper,
+ *   red is a rule, a fill and a stamp — never a label.
+ * - Every plate — the task slip, the fields, the tiles — is
+ *   `--faction-everymen-sheet-panel`, the stock that accent was MEASURED on
+ *   (4.95:1 light / 5.45:1 dark). The red labels and the stamped `pts` live
+ *   there and nowhere else (WORLD_ZERO_STYLE §3, "a new ground invalidates every
+ *   contrast claim").
+ *
+ * Light/dark flips through the `[data-theme="dark"]` cascade; there is no
+ * `dark ?` branch in this file.
+ *
+ * ## Motion
+ *
+ * Two cogs on the masthead, `ep-spin` against `ep-spin-rev` — the counter-turn
+ * is the whole gag, and it is the only motion here. Both are CLASSES: the
+ * keyframes live in `index.css` behind the shared `prefers-reduced-motion`
+ * guard, and an inline `animation:` would bypass it (#1003). `index.css` needed
+ * no motion edit for this skin.
+ *
+ * ## Not drawn as designed
+ *
+ * The design offers "Forfeit the duel" at the awaiting stage. It is not drawn
+ * here or anywhere: #1071 decision 3 rejected that framing against ADR-0011
+ * §Forfeit, and #718 had rejected it once before — at `active` (you cast, the
+ * rival has not) unsubmitting is a free neutral reopen. The duel CLOCK is cut on
+ * the same decision (#1071 §4: no expiry field exists to read). The awaiting
+ * stage itself belongs to `PraxisWaitingSurface` and to #1189.
  */
-import { useRef } from "react";
+import { useState, type CSSProperties, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { mediaUrl } from "../../../utils/media";
 import { type PraxisType } from "../../../api/praxis";
-import type { MediaItemOut } from "../../../api/praxis";
+import { factionName } from "../../../utils/factions";
 import MediaArt from "../blocks/MediaArt";
 import { pickArtKey } from "../blocks/useMediaArt";
 import {
   Breadcrumb,
+  ComposerFooter,
+  ComposerGround,
+  ComposerMasthead,
+  ComposerRule,
+  ComposerSection,
+  ComposerSheet,
+  ComposerStatusRow,
   ErrorBanner,
-  TaskMetaInline,
+  RingMark,
+  TaskSlip,
+  TitleCounter,
+  composerLabelStyle,
   formatAutosave,
+  useComposerSizes,
 } from "./shared";
 import {
   BodyPreview,
   BodyTextarea,
   DropButton,
+  FilePicker,
   InviteSearch,
   ModePicker,
   PublishButton,
   SaveDraftButton,
   TitleField,
+  WriteUpTabs,
+  type ComposerTab,
 } from "./controls";
 import { MetataskSealStack } from "../MetataskSealStack";
 import type { EditPraxisState } from "../useEditPraxis";
-import { EverymenSigil } from "../../../components/cards/EverymenSigil";
 
 interface Props {
   state: EditPraxisState;
 }
 
-const INK = "var(--everymen-ink)";
-const RED = "var(--everymen-red)";
-const GOLD = "var(--everymen-gold)";
-const CREAM = "var(--everymen-cream)";
+/* ── The sheet's palette. Named for the ROLE each plays in the design's skin row.
+ *    See the header for which reds may be ink and on what. ── */
+/** The newsprint the order is printed on — the faction's own card ground. */
 const PAPER = "var(--everymen-paper)";
-const PAPER_TEXT = "var(--everymen-paper-text)";
+/** The pasted-on plate: the task slip, every field, every proof tile. */
+const PANEL = "var(--faction-everymen-sheet-panel)";
+/** Text ink. FLIPS with the paper — deliberately not `--everymen-ink`. */
+const INK = "var(--everymen-paper-text)";
 const MUTED = "var(--everymen-muted)";
-const OLIVE = "var(--everymen-olive)";
-const ACCENT_FONT = "var(--faction-everymen-card-font)";
-const BODY_FONT = "var(--font-body)";
+/** Red as a RULE or a FILL. For red as text see {@link ACCENT}. */
+const RED = "var(--everymen-red)";
+/** Red as INK. Only clears AA on {@link PANEL} — never set it on {@link PAPER}. */
+const ACCENT = "var(--faction-everymen-sheet-accent)";
+/** What is legible printed ON a red fill. */
+const ON_ACCENT = "var(--faction-everymen-on-accent)";
+/** The printed rule around a plate. NOT `--everymen-ink`, which vanishes dark. */
+const FRAME = "var(--everymen-frame)";
+/** The sheet's own frame: the design's `border`, gold by day, deep red by night. */
+const SHEET_FRAME = "var(--faction-everymen-composer-frame)";
+/** The masthead bar, theme-INVARIANT: an order filed at night is the same order. */
+const MAST = "var(--faction-everymen-bill-mast)";
+const MAST_INK = "var(--faction-everymen-bill-mast-ink)";
+/** The full-width report bar at the foot of the sheet. */
+const BAR = "var(--faction-everymen-bill-cta-bg)";
+const BAR_INK = "var(--faction-everymen-bill-cta-ink)";
+const PAPER_DEEP = "var(--everymen-paper-deep)";
+const SHADOW = "var(--faction-everymen-bill-shadow)";
 
-const RED_GOLD_RULE =
-  "repeating-linear-gradient(90deg, var(--everymen-red) 0 16px, var(--everymen-gold) 16px 26px)";
+const BEBAS = "var(--faction-everymen-card-font)"; /* Bebas Neue */
+const COURIER = "var(--font-body)"; /* Courier Prime */
 
-/** Union stencil field label with a red/gold tape underline. */
-function FieldLabel({
-  children,
-  meta,
+/* ── The cog, the union's one glyph on this surface. Eight teeth around a hub,
+ *    generated once at module load: the arithmetic is the design's own and a
+ *    hand-written path would drift from it silently. The same construction the
+ *    v2 task card and task detail draw — a THIRD caller now, which by
+ *    WORLD_ZERO_STYLE §6 ("the module is the enforcement") is the point at which
+ *    the three should collapse into one `everymenOrnament` module. That
+ *    extraction touches two shipped Everymen surfaces and is outside this
+ *    issue's footprint; it is raised in the PR rather than done here. ── */
+const GEAR_TEETH = 8;
+const GEAR_RADIUS = 9.5;
+const GEAR_TIP_LENGTH = 5;
+const GEAR_TIP_HALF = 1.6;
+const GEAR_ROOT_HALF = 2.6;
+
+function buildGearPath(): string {
+  const point = (radius: number, angle: number): string =>
+    `${12 + radius * Math.cos(angle)},${12 + radius * Math.sin(angle)}`;
+  const step = (Math.PI * 2) / GEAR_TEETH;
+  const tipRadius = GEAR_RADIUS + GEAR_TIP_LENGTH;
+  let path = "";
+  for (let tooth = 0; tooth < GEAR_TEETH; tooth++) {
+    const start = tooth * step;
+    const rootBefore = point(GEAR_RADIUS, start - GEAR_ROOT_HALF / GEAR_RADIUS);
+    const tipBefore = point(tipRadius, start - GEAR_TIP_HALF / tipRadius);
+    const tipAfter = point(tipRadius, start + GEAR_TIP_HALF / tipRadius);
+    const rootAfter = point(GEAR_RADIUS, start + GEAR_ROOT_HALF / GEAR_RADIUS);
+    const nextRoot = point(
+      GEAR_RADIUS,
+      start + step - GEAR_ROOT_HALF / GEAR_RADIUS,
+    );
+    path += `${tooth === 0 ? "M" : "L"}${rootBefore}L${tipBefore}L${tipAfter}L${rootAfter}`;
+    path += `A${GEAR_RADIUS},${GEAR_RADIUS} 0 0 1 ${nextRoot}`;
+  }
+  return `${path}Z`;
+}
+
+const GEAR_PATH = buildGearPath();
+
+/**
+ * The union cog. Ornament only — aria-hidden at every call site.
+ *
+ * `spin` reaches the shared `ep-spin` / `ep-spin-rev` classes rather than an
+ * inline `animation:`, so the pair stills itself under `prefers-reduced-motion`
+ * (#1003). `--ep-spin-dur` re-times both without a second keyframe.
+ */
+function Gear({
+  size,
+  fill,
+  hole,
+  spin,
+  duration,
 }: {
-  children: React.ReactNode;
-  meta?: string;
+  size: number;
+  fill: string;
+  hole: string;
+  spin?: "forward" | "reverse";
+  duration?: string;
 }) {
   return (
-    <div
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      aria-hidden
+      className={
+        spin === "forward" ? "ep-spin" : spin === "reverse" ? "ep-spin-rev" : undefined
+      }
       style={{
-        display: "flex",
-        alignItems: "baseline",
-        gap: "var(--space-lg)",
-        marginBottom: "var(--space-sm)",
+        display: "block",
+        flex: "0 0 auto",
+        ...(duration ? ({ "--ep-spin-dur": duration } as CSSProperties) : {}),
       }}
     >
-      <span
-        style={{
-          fontFamily: ACCENT_FONT,
-          fontSize: "var(--text-xl)",
-          letterSpacing: "0.12em",
-          color: RED,
-          whiteSpace: "nowrap",
-        }}
-      >
-        {children}
-      </span>
-      {meta && (
-        <span
-          style={{
-            fontFamily: BODY_FONT,
-            fontSize: "var(--text-sm)",
-            letterSpacing: "0.14em",
-            textTransform: "uppercase",
-            color: MUTED,
-            whiteSpace: "nowrap",
-          }}
-        >
-          {meta}
-        </span>
-      )}
-      <span
-        aria-hidden
-        style={{
-          flex: 1,
-          height: 2,
-          background:
-            "repeating-linear-gradient(90deg, var(--everymen-red) 0 12px, var(--everymen-gold) 12px 20px)",
-          opacity: 0.5,
-        }}
-      />
-    </div>
+      <path d={GEAR_PATH} fill={fill} />
+      <circle cx="12" cy="12" r="3" fill={hole} />
+    </svg>
   );
 }
 
 export default function EverymenEditPraxis({ state }: Props) {
   const { t } = useTranslation("forms");
-  const fileRef = useRef<HTMLInputElement>(null);
+  const sizes = useComposerSizes();
+  const [tab, setTab] = useState<ComposerTab>("write");
   const praxis = state.praxis!;
   const task = state.task;
+  const slug = task?.primary_faction_slug ?? praxis.task_faction_slug;
 
   const allowedModes = task?.allowed_modes ?? ["solo", "collab", "duel"];
+  const modeOptions: Array<{ key: PraxisType; label: string }> = [
+    { key: "solo", label: t("editPraxis.composer.modeSolo") },
+    { key: "collab", label: t("editPraxis.composer.modeCollab") },
+    { key: "duel", label: t("editPraxis.composer.modeDuel") },
+  ];
 
-  const modeOptions: Array<{ key: PraxisType; name: string; sub: string }> = (
-    ["solo", "collab", "duel"] as const
-  ).map((key) => ({
-    key,
-    name: t(`editPraxis.everymen.mode.${key}.label`),
-    sub: t(`editPraxis.everymen.mode.${key}.desc`),
-  }));
-  const reportNo = String(praxis.id).padStart(4, "0");
-  const totalProof = state.media.length;
+  /** Bebas, struck in tracked caps — every label and headline on the order. */
+  const stencil = (overrides: CSSProperties = {}): CSSProperties =>
+    composerLabelStyle({
+      fontFamily: BEBAS,
+      letterSpacing: "0.16em",
+      ...overrides,
+    });
+
+  /** A plate: panel stock inside the printed frame rule. Radius 0 throughout. */
+  const fieldBox = {
+    width: "100%",
+    background: PANEL,
+    color: INK,
+    border: `2px solid ${FRAME}`,
+    borderRadius: 0,
+    padding: "var(--space-md)",
+    outline: "none",
+    boxSizing: "border-box",
+  } as const;
+
+  /** The broadsheet's divider — one element, drawn between every region. */
+  const dashRule = (
+    <ComposerRule
+      style={{ height: 0, background: "transparent", borderTop: `2px dashed ${RED}` }}
+    />
+  );
 
   return (
-    <div
-      style={
-        {
-          fontFamily: BODY_FONT,
-          color: PAPER_TEXT,
-          background: "var(--everymen-paper-deep)",
-          minHeight: "100vh",
-          padding: "var(--space-2xl) var(--space-xl) var(--space-5xl)",
-        } as React.CSSProperties
-      }
-    >
-      <div style={{ maxWidth: 720, margin: "0 auto" }}>
+    <div style={{ fontFamily: COURIER, color: INK }}>
+      <div
+        style={{
+          maxWidth: sizes.maxWidth,
+          margin: "0 auto",
+          padding: "var(--space-lg) var(--space-lg) 0",
+        }}
+      >
         <Breadcrumb
           praxisId={praxis.id}
           taskId={praxis.task_id}
           taskTitle={praxis.task_title}
           inkColor={MUTED}
         />
+      </div>
 
-        {/* Masthead ribbon */}
-        <div
-          style={{
-            position: "relative",
-            display: "inline-flex",
-            alignItems: "center",
-            gap: "var(--space-sm)",
-            background: RED,
-            color: CREAM,
-            padding: "var(--space-sm) var(--space-lg)",
-            boxShadow: `5px 5px 0 ${INK}`,
-          }}
-        >
-          <EverymenSigil size={17} color={CREAM} />
-          <span
+      <ComposerSheet
+        sizes={sizes}
+        style={{
+          background: PAPER,
+          border: `2px solid ${SHEET_FRAME}`,
+          borderRadius: 0,
+          boxShadow: SHADOW,
+        }}
+        masthead={
+          /* The nameplate: cog · the paper's name · cog, on the union's red bar,
+             under a 3px double rule and the printed-in shadow of its own ink. */
+          <ComposerMasthead
+            background={MAST}
             style={{
-              fontFamily: ACCENT_FONT,
-              fontSize: "var(--text-content)",
-              letterSpacing: "0.16em",
-              whiteSpace: "nowrap",
+              height: "auto",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: "var(--space-sm)",
+              padding: sizes.isMobile
+                ? "var(--space-sm) var(--space-lg)"
+                : "var(--space-md) var(--space-lg)",
+              borderBottom: `3px double ${BAR}`,
+              boxShadow: `inset 0 -6px 0 -4px ${PAPER_DEEP}`,
             }}
           >
-            {t("editPraxis.everymen.masthead", { number: reportNo })}
-          </span>
-        </div>
-
-        {/* Big title */}
-        <div
-          style={{
-            display: "flex",
-            alignItems: "flex-end",
-            justifyContent: "space-between",
-            gap: "var(--space-lg)",
-            margin: "var(--space-lg) 0 var(--space-xs)",
-          }}
-        >
-          <div
+            <Gear size={16} fill={MAST_INK} hole={MAST} spin="forward" duration="26s" />
+            <span
+              style={{
+                fontFamily: BEBAS,
+                fontSize: "var(--text-content)",
+                letterSpacing: "0.16em",
+                textTransform: "uppercase",
+                lineHeight: 1,
+                color: MAST_INK,
+              }}
+            >
+              {factionName(slug)}
+            </span>
+            <Gear size={16} fill={MAST_INK} hole={MAST} spin="reverse" duration="26s" />
+          </ComposerMasthead>
+        }
+        ground={
+          /* Poster rays fanning from behind the masthead, a gold glow in one
+             corner and an olive one in the other, all masked away from the copy.
+             Anchored (inset 0, unanimated): the burst's origin is the masthead,
+             and a drifting layer would walk it off the plate. */
+          <ComposerGround
+            inset={0}
+            background={
+              "radial-gradient(40% 32% at 100% 0, var(--faction-everymen-bill-glow-gold), transparent 70%),"
+              + " radial-gradient(44% 38% at 0 100%, var(--faction-everymen-bill-glow-olive), transparent 70%),"
+              + " repeating-conic-gradient(from 0deg at 50% 8%, var(--faction-everymen-bill-ray) 0 5.2deg, transparent 5.2deg 10.4deg)"
+            }
             style={{
-              fontFamily: ACCENT_FONT,
-              fontSize: "var(--text-display)",
-              lineHeight: 0.9,
-              letterSpacing: "0.02em",
-              color: PAPER_TEXT,
+              /* Alpha, not colour: a mask reads only the channel, so black here
+                 is "keep" and transparent is "drop" (the same literal the v2
+                 task card's mask carries). */
+              WebkitMaskImage:
+                "radial-gradient(130% 70% at 50% 8%, #000 40%, transparent 92%)",
+              maskImage:
+                "radial-gradient(130% 70% at 50% 8%, #000 40%, transparent 92%)",
             }}
-          >
-            {t("editPraxis.everymen.pageTitle")}
-          </div>
-          <div
-            style={{
-              textAlign: "right",
-              fontFamily: BODY_FONT,
-              fontSize: "var(--text-sm)",
-              letterSpacing: "0.12em",
-              textTransform: "uppercase",
-              color: MUTED,
-              lineHeight: 1.4,
-              paddingBottom: "var(--space-xs)",
-            }}
-          >
-            <div>
-              {state.saveStatus === "saving"
-                ? t("editPraxis.everymen.savingStatus")
-                : ""}
-            </div>
-            <div>
-              {state.autosaveAt
-                ? t("editPraxis.everymen.autosaveSaved", {
-                    ago: formatAutosave(state.autosaveAt),
-                  })
-                : t("editPraxis.everymen.autosaveUnsaved")}
-            </div>
-          </div>
-        </div>
-        <div
-          style={{
-            height: 4,
-            width: 180,
-            background: RED_GOLD_RULE,
-            marginBottom: "var(--space-xl)",
-          }}
+          />
+        }
+      >
+        {/* Draft · saved just now, with a cog turning at the end of the row. */}
+        <ComposerStatusRow
+          status={t("editPraxis.composer.statusDraft")}
+          meta={
+            state.autosaveAt
+              ? t("editPraxis.composer.statusSaved", {
+                  ago: formatAutosave(state.autosaveAt),
+                })
+              : t("editPraxis.composer.statusUnsaved")
+          }
+          statusStyle={stencil({ color: INK, letterSpacing: "0.2em" })}
+          metaStyle={{ color: MUTED }}
+          mark={<Gear size={40} fill={RED} hole={PANEL} />}
         />
 
-        {/* Job reference slip */}
-        <div
+        {/* The job reference slip, on plate stock with the stamped points seal. */}
+        <TaskSlip
+          praxis={praxis}
+          task={task}
           style={{
-            position: "relative",
-            overflow: "hidden",
-            border: `1.5px solid ${INK}`,
-            background: PAPER,
-            marginBottom: "var(--space-2xl)",
-            display: "flex",
+            background: PANEL,
+            border: `2px solid ${FRAME}`,
+            borderRadius: 0,
+            padding: "var(--space-lg)",
           }}
-        >
-          <div
-            style={{
-              width: 8,
-              background: RED,
-              flexShrink: 0,
-              backgroundImage:
-                "repeating-linear-gradient(180deg, transparent 0 13px, color-mix(in srgb, var(--everymen-cream) 55%, transparent) 13px 15px)",
-            }}
-          />
-          <div style={{ flex: 1, padding: "var(--space-lg)" }}>
-            <div
+          labelStyle={stencil({ color: ACCENT, letterSpacing: "0.2em" })}
+          titleStyle={{
+            fontFamily: BEBAS,
+            textTransform: "uppercase",
+            letterSpacing: "0.01em",
+            lineHeight: 0.96,
+            color: INK,
+          }}
+          descriptionStyle={{ fontFamily: COURIER, color: MUTED }}
+          pillStyle={stencil({ color: ACCENT, borderRadius: 0 })}
+          mark={
+            <RingMark
+              size={76}
+              inset={4}
+              ring="transparent"
+              inner="transparent"
               style={{
-                fontFamily: BODY_FONT,
-                fontSize: "var(--text-xs)",
-                letterSpacing: "0.2em",
-                textTransform: "uppercase",
-                color: MUTED,
-                marginBottom: "var(--space-xs)",
-              }}
-            >
-              {t("editPraxis.everymen.taskRefLabel")}
-            </div>
-            <div
-              style={{
-                fontFamily: ACCENT_FONT,
-                fontSize: "var(--text-heading)",
-                lineHeight: 0.96,
-                color: PAPER_TEXT,
-                marginBottom: "var(--space-sm)",
-              }}
-            >
-              {praxis.task_title}
-            </div>
-            {task?.description && (
-              <div style={{ fontFamily: ACCENT_FONT, fontSize: "var(--text-content)", lineHeight: 1.5, color: MUTED, marginBottom: "var(--space-sm)" }}>
-                {task.description}
-              </div>
-            )}
-            <TaskMetaInline praxis={praxis} task={task} textColor={RED} />
-          </div>
-        </div>
-
-        {/* The crew (mode selector) */}
-        {!state.controlsLocked && (
-          <div style={{ marginBottom: "var(--space-xl)" }}>
-            <FieldLabel>{t("editPraxis.everymen.modeLabel")}</FieldLabel>
-            <ModePicker
-              state={state}
-              skin={{
-                containerStyle: {
-                  display: "grid",
-                  gridTemplateColumns: "repeat(3, 1fr)",
-                  gap: "var(--space-md)",
-                },
-                options: modeOptions,
-                allowedModes,
-                renderOption: (opt, { active, disabled, onSelect }) => (
-                  <button
-                    key={opt.key}
-                    type="button"
-                    aria-pressed={active}
-                    onClick={onSelect}
-                    disabled={disabled && !active}
-                    style={{
-                      position: "relative",
-                      cursor: disabled ? "not-allowed" : "pointer",
-                      textAlign: "left",
-                      padding: "var(--space-md) var(--space-lg)",
-                      background: active ? RED : PAPER,
-                      color: active ? CREAM : PAPER_TEXT,
-                      border: `2px solid ${INK}`,
-                      fontFamily: BODY_FONT,
-                      boxShadow: active ? `4px 4px 0 ${INK}` : "none",
-                      transform: active ? "translate(-1px,-1px)" : "none",
-                      transition: "all 110ms",
-                    }}
-                  >
-                    <div
-                      style={{
-                        fontFamily: ACCENT_FONT,
-                        fontSize: "var(--text-title)",
-                        lineHeight: 1,
-                        letterSpacing: "0.04em",
-                      }}
-                    >
-                      {opt.name}
-                    </div>
-                    <div
-                      style={{
-                        fontSize: "var(--text-sm)",
-                        letterSpacing: "0.04em",
-                        marginTop: "var(--space-xs)",
-                        opacity: active ? 0.9 : 0.7,
-                      }}
-                    >
-                      {opt.sub}
-                    </div>
-                    {active && (
-                      <div
-                        aria-hidden
-                        style={{
-                          position: "absolute",
-                          top: 8,
-                          right: 9,
-                          width: 9,
-                          height: 9,
-                          borderRadius: "50%",
-                          background: GOLD,
-                          boxShadow: `0 0 0 2px ${INK}`,
-                        }}
-                      />
-                    )}
-                  </button>
-                ),
-              }}
-            />
-          </div>
-        )}
-
-        {/* Collab invite / duel challenge */}
-        {state.showInviteBox && <InviteBlock state={state} />}
-
-        {/* Metatasks */}
-        {state.showSealStack && <MetatasksBlock state={state} />}
-
-        {/* The job (headline) */}
-        <div style={{ marginBottom: "var(--space-xl)" }}>
-          <FieldLabel
-            meta={t("editPraxis.everymen.titleMeta", {
-              length: state.title.length,
-            })}
-          >
-            {t("editPraxis.everymen.titleLabel")}
-          </FieldLabel>
-          <TitleField
-            state={state}
-            skin={{
-              placeholder: t("editPraxis.everymen.titlePlaceholder"),
-              inputStyle: {
-                width: "100%",
-                border: "none",
-                borderBottom: `2px solid ${INK}`,
-                background: "transparent",
-                fontFamily: ACCENT_FONT,
-                letterSpacing: "0.01em",
-                color: PAPER_TEXT,
-                padding: "var(--space-xs) var(--space-xs) var(--space-sm)",
-                outline: "none",
-              },
-            }}
-          />
-          <div
-            style={{
-              fontFamily: BODY_FONT,
-              fontSize: "var(--text-sm)",
-              letterSpacing: "0.12em",
-              textTransform: "uppercase",
-              color: MUTED,
-              marginTop: "var(--space-xs)",
-            }}
-          >
-            {state.saveStatus === "saved"
-              ? t("editPraxis.everymen.saveState.saved")
-              : state.saveStatus === "saving"
-                ? t("editPraxis.everymen.saveState.saving")
-                : t("editPraxis.everymen.saveState.idle")}
-          </div>
-        </div>
-
-        {/* The report (body) */}
-        <div style={{ marginBottom: "var(--space-xl)" }}>
-          <FieldLabel
-            meta={t("editPraxis.everymen.bodyMeta", {
-              words: state.wordCount,
-            })}
-          >
-            {t("editPraxis.everymen.bodyLabel")}
-          </FieldLabel>
-          <BodyTextarea
-            state={state}
-            skin={{
-              rows: 9,
-              placeholder: t("editPraxis.everymen.bodyPlaceholder"),
-              textareaStyle: {
-                width: "100%",
-                resize: "vertical",
-                border: `1.5px solid ${INK}`,
-                background: PAPER,
-                fontFamily: BODY_FONT,
-                lineHeight: 1.6,
-                color: PAPER_TEXT,
-                padding: "var(--space-md) var(--space-lg)",
-                outline: "none",
-                minHeight: 200,
-              },
-            }}
-          />
-          <BodyPreview
-            state={state}
-            skin={{
-              wrapperStyle: {
-                marginTop: "var(--space-md)",
-                borderLeft: `4px solid ${RED}`,
-                paddingLeft: "var(--space-md)",
-              },
-              label: (
-                <div
-                  style={{
-                    fontFamily: BODY_FONT,
-                    fontSize: "var(--text-sm)",
-                    letterSpacing: "0.2em",
-                    textTransform: "uppercase",
-                    color: MUTED,
-                    marginBottom: "var(--space-xs)",
-                  }}
-                >
-                  {t("editPraxis.everymen.previewLabel")}
-                </div>
-              ),
-              markdownStyle: {
-                fontFamily: BODY_FONT,
-                lineHeight: 1.6,
-                color: PAPER_TEXT,
-              },
-            }}
-          />
-        </div>
-
-        {/* Already pinned proof */}
-        {state.media.length > 0 && (
-          <ExistingProof state={state} />
-        )}
-
-        {/* Proof of work */}
-        <div style={{ marginBottom: "var(--space-2xl)" }}>
-          <FieldLabel
-            meta={t("editPraxis.everymen.filesMeta", { pinned: totalProof })}
-          >
-            {t("editPraxis.everymen.filesLabel")}
-          </FieldLabel>
-          <div
-            style={{
-              display: "flex",
-              flexWrap: "wrap",
-              gap: "var(--space-md)",
-              alignItems: "flex-start",
-            }}
-          >
-            <button
-              type="button"
-              onClick={() => fileRef.current?.click()}
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: "var(--space-sm)",
-                cursor: "pointer",
-                border: `2px dashed ${INK}`,
-                background: "transparent",
-                color: PAPER_TEXT,
-                fontFamily: BODY_FONT,
-                fontSize: "var(--text-md)",
-                fontWeight: 700,
-                letterSpacing: "0.12em",
-                textTransform: "uppercase",
-                padding: "var(--space-md) var(--space-lg)",
+                boxSizing: "border-box",
+                borderRadius: "50%",
+                border: `2px solid ${RED}`,
+                boxShadow: `inset 0 0 0 3px ${PANEL}, inset 0 0 0 4px ${RED}`,
               }}
             >
               <span
                 style={{
-                  fontFamily: ACCENT_FONT,
-                  fontSize: "var(--text-content)",
-                  color: RED,
-                  lineHeight: 0.6,
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  gap: "var(--space-xs)",
                 }}
               >
-                +
-              </span>{" "}
-              {t("editPraxis.everymen.fileButton")}
-            </button>
-            <input
-              ref={fileRef}
-              type="file"
-              multiple
-              accept="image/*,video/*,audio/*"
-              onChange={state.handleFileChange}
-              style={{ display: "none" }}
-            />
-          </div>
-          {state.fileError && (
-            <p
-              style={{
-                fontSize: "var(--text-md)",
-                color: "var(--color-danger)",
-                marginTop: "var(--space-sm)",
+                <span
+                  style={{
+                    fontFamily: BEBAS,
+                    fontSize: "var(--text-title)",
+                    lineHeight: 0.8,
+                    color: ACCENT,
+                  }}
+                >
+                  {task?.point_value ?? 0}
+                </span>
+                <span style={stencil({ color: ACCENT, letterSpacing: "0.22em" })}>
+                  {t("editPraxis.composer.pointsUnit")}
+                </span>
+              </span>
+            </RingMark>
+          }
+        />
+
+        <ComposerSection
+          label={t("editPraxis.composer.titleLabel")}
+          htmlFor="composer-title"
+          rule={dashRule}
+          meta={<TitleCounter length={state.title.length} color={MUTED} />}
+          labelStyle={stencil({ color: INK, letterSpacing: "0.2em" })}
+        >
+          <TitleField
+            state={state}
+            skin={{
+              id: "composer-title",
+              placeholder: t("editPraxis.composer.titlePlaceholder"),
+              inputStyle: {
+                ...fieldBox,
+                fontFamily: BEBAS,
+                letterSpacing: "0.02em",
+              },
+            }}
+          />
+        </ComposerSection>
+
+        {/* How it was done — hidden once the mode can no longer change, per the
+            house rule that an unusable control is not drawn disabled. */}
+        {!state.controlsLocked && (
+          <ComposerSection
+            label={t("editPraxis.composer.modeLabel")}
+            rule={dashRule}
+            labelStyle={stencil({ color: INK, letterSpacing: "0.2em" })}
+          >
+            <ModePicker
+              state={state}
+              skin={{
+                containerStyle: {
+                  display: "flex",
+                  gap: "var(--space-sm)",
+                  flexWrap: "wrap",
+                },
+                options: modeOptions,
+                allowedModes,
+                renderOption: (option, { active, disabled, onSelect }) => (
+                  <button
+                    key={option.key}
+                    type="button"
+                    aria-pressed={active}
+                    onClick={onSelect}
+                    disabled={disabled && !active}
+                    style={stencil({
+                      cursor: disabled ? "not-allowed" : "pointer",
+                      padding: "var(--space-sm) var(--space-lg)",
+                      borderRadius: 0,
+                      background: active ? RED : PANEL,
+                      color: active ? ON_ACCENT : INK,
+                      border: `2px solid ${FRAME}`,
+                      boxShadow: active ? `4px 4px 0 ${FRAME}` : "none",
+                    })}
+                  >
+                    {option.label}
+                  </button>
+                ),
               }}
-            >
-              {state.fileError}
-            </p>
+            />
+          </ComposerSection>
+        )}
+
+        {/* The mode block: the crew roster, or the duel pair. One control draws
+            both — `InviteSearch` switches on `state.duelMode`. */}
+        {state.showInviteBox && (
+          <ComposerSection
+            label={
+              state.duelMode
+                ? t("editPraxis.composer.opponentLabel")
+                : t("editPraxis.composer.collaboratorsLabel", {
+                    count: praxis.members.length,
+                  })
+            }
+            rule={dashRule}
+            labelStyle={stencil({ color: INK, letterSpacing: "0.2em" })}
+          >
+            <InviteSearch
+              state={state}
+              skin={{
+                fontFamily: COURIER,
+                inputBg: PANEL,
+                inputColor: INK,
+                inputBorder: `2px solid ${FRAME}`,
+                dropdownBg: PANEL,
+                dropdownBorder: `2px solid ${FRAME}`,
+                acceptedBg: RED,
+                acceptedColor: ON_ACCENT,
+                pendingColor: INK,
+                placeholder: t("editPraxis.composer.invitePlaceholder"),
+                leaveStyle: { color: MUTED },
+              }}
+            />
+          </ComposerSection>
+        )}
+
+        {state.showSealStack && (
+          <ComposerSection
+            label={t("editPraxis.composer.sealsLabel")}
+            rule={dashRule}
+            labelStyle={stencil({ color: INK, letterSpacing: "0.2em" })}
+          >
+            <MetataskSealStack state={state} />
+          </ComposerSection>
+        )}
+
+        {/* Write-up — the tabs sit in the section's meta slot, so the label row
+            reads `Write-up … [Write|Preview]` as the design draws it. */}
+        <ComposerSection
+          label={t("editPraxis.composer.writeUpLabel")}
+          htmlFor="composer-body"
+          rule={dashRule}
+          labelStyle={stencil({ color: INK, letterSpacing: "0.2em" })}
+          meta={
+            <WriteUpTabs
+              tab={tab}
+              setTab={setTab}
+              skin={{
+                containerStyle: { gap: "var(--space-xs)" },
+                buttonStyle: (active) =>
+                  stencil({
+                    padding: "var(--space-xs) var(--space-sm)",
+                    borderRadius: 0,
+                    border: `2px solid ${active ? FRAME : "transparent"}`,
+                    background: active ? PANEL : "transparent",
+                    color: active ? INK : MUTED,
+                  }),
+              }}
+            />
+          }
+        >
+          {/* Mounted one at a time: a hidden textarea is still a tab stop and
+              would put the body in the DOM twice. */}
+          {tab === "write" ? (
+            <>
+              <BodyTextarea
+                state={state}
+                skin={{
+                  id: "composer-body",
+                  rows: 9,
+                  placeholder: t("editPraxis.composer.bodyPlaceholder"),
+                  toolbarButtonStyle: {
+                    background: PANEL,
+                    color: INK,
+                    border: `2px solid ${FRAME}`,
+                    borderRadius: 0,
+                    fontFamily: BEBAS,
+                  },
+                  textareaStyle: {
+                    ...fieldBox,
+                    resize: "vertical",
+                    minHeight: 200,
+                    lineHeight: 1.6,
+                    fontFamily: COURIER,
+                    padding: "var(--space-md) var(--space-lg)",
+                  },
+                }}
+              />
+              <div
+                style={stencil({
+                  color: MUTED,
+                  fontFamily: COURIER,
+                  letterSpacing: "0.12em",
+                  marginTop: "var(--space-sm)",
+                })}
+              >
+                {t("editPraxis.composer.wordCount", { words: state.wordCount })}
+              </div>
+            </>
+          ) : (
+            <BodyPreview
+              state={state}
+              skin={{
+                wrapperStyle: {
+                  ...fieldBox,
+                  minHeight: 200,
+                  padding: "var(--space-md) var(--space-lg)",
+                },
+                markdownStyle: { fontFamily: COURIER, lineHeight: 1.6, color: INK },
+                emptyState: (
+                  <p
+                    style={{
+                      fontFamily: COURIER,
+                      fontSize: "var(--text-content)",
+                      color: MUTED,
+                      margin: 0,
+                    }}
+                  >
+                    {t("editPraxis.composer.bodyPlaceholder")}
+                  </p>
+                ),
+              }}
+            />
           )}
-        </div>
+        </ComposerSection>
+
+        <ComposerSection
+          label={t("editPraxis.composer.proofLabel")}
+          rule={dashRule}
+          labelStyle={stencil({ color: INK, letterSpacing: "0.2em" })}
+        >
+          <div
+            style={{
+              display: "flex",
+              gap: "var(--space-lg)",
+              alignItems: "flex-start",
+              flexWrap: "wrap",
+            }}
+          >
+            {state.media.map((item) => {
+              const filename = item.file_path.split("/").pop() ?? item.file_path;
+              const src = mediaUrl(item.file_path);
+              return (
+                <ProofSlip
+                  key={item.id}
+                  caption={filename}
+                  onRemove={() => void state.removeMedia(item)}
+                >
+                  {item.type === "image" ? (
+                    <img
+                      src={src}
+                      alt=""
+                      style={{ width: "100%", height: 104, objectFit: "cover" }}
+                    />
+                  ) : item.type === "video" ? (
+                    <video
+                      src={src}
+                      style={{ width: "100%", height: 104, objectFit: "cover" }}
+                    />
+                  ) : (
+                    <MediaArt
+                      art={pickArtKey(filename, "audio")}
+                      width={128}
+                      height={104}
+                    />
+                  )}
+                </ProofSlip>
+              );
+            })}
+            {!state.controlsLocked && (
+              <FilePicker
+                state={state}
+                skin={{
+                  buttonStyle: stencil({
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: "var(--space-sm)",
+                    cursor: "pointer",
+                    background: "transparent",
+                    border: `2px dashed ${RED}`,
+                    borderRadius: 0,
+                    padding: "var(--space-lg) var(--space-xl)",
+                    color: INK,
+                  }),
+                  buttonLabel: t("editPraxis.composer.proofButton"),
+                  helperText: t("editPraxis.composer.proofHelper"),
+                  helperStyle: {
+                    fontFamily: COURIER,
+                    fontSize: "var(--text-content)",
+                    color: MUTED,
+                    maxWidth: 280,
+                    lineHeight: 1.5,
+                    marginTop: "var(--space-sm)",
+                  },
+                }}
+              />
+            )}
+          </div>
+        </ComposerSection>
 
         <ErrorBanner message={state.error} />
 
-        {/* File bar */}
-        <div
+        {dashRule}
+
+        {/* [Cancel] … [Submit] — the global order from #646, stacked so the cast
+            reads as a BAR rather than an inline button (the design's
+            `barSubmit`). The exits keep their own row above it. */}
+        <ComposerFooter
           style={{
-            borderTop:
-              "1px solid color-mix(in srgb, var(--everymen-paper-text) 22%, transparent)",
-            paddingTop: "var(--space-xl)",
-            marginTop: "var(--space-xl)",
-            display: "flex",
-            alignItems: "center",
+            flexDirection: "column",
+            alignItems: "stretch",
             gap: "var(--space-lg)",
-            flexWrap: "wrap",
           }}
-        >
-          <SaveDraftButton state={state} />
-          <DropButton
-            state={state}
-            skin={{
-              label: t("editPraxis.everymen.dropLabel"),
-              style: {
-                background: "transparent",
-                border: "none",
-                color: MUTED,
-                fontFamily: BODY_FONT,
-                fontSize: "var(--text-md)",
-                fontStyle: "italic",
-                textDecoration: "underline",
-                cursor: "pointer",
-              },
-            }}
-          />
-          <PublishButton
-            state={state}
-            skin={{
-              idleLabel: t("editPraxis.everymen.publishIdle"),
-              busyLabel: t("editPraxis.everymen.publishBusy"),
-              style: {
-                marginLeft: "auto",
-                cursor: state.submitting ? "wait" : "pointer",
-                border: `2px solid ${INK}`,
-                background: state.submitting ? OLIVE : RED,
-                color: CREAM,
-                fontFamily: ACCENT_FONT,
-                fontSize: "var(--text-title)",
-                letterSpacing: "0.1em",
-                padding: "var(--space-md) var(--space-2xl)",
-                whiteSpace: "nowrap",
-                boxShadow: `5px 5px 0 ${INK}`,
-                transition: "background 150ms",
-              },
-            }}
-          />
-        </div>
-      </div>
+          start={
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "var(--space-lg)",
+                flexWrap: "wrap",
+              }}
+            >
+              <SaveDraftButton state={state} skin={{ style: { color: MUTED } }} />
+              <DropButton
+                state={state}
+                skin={{
+                  style: stencil({
+                    background: "transparent",
+                    border: "none",
+                    padding: 0,
+                    color: MUTED,
+                    textDecoration: "underline",
+                    cursor: "pointer",
+                  }),
+                }}
+              />
+            </div>
+          }
+          end={
+            <PublishButton
+              state={state}
+              skin={{
+                idleLabel: t("editPraxis.composer.submit"),
+                busyLabel: t("editPraxis.composer.submitBusy"),
+                style: stencil({
+                  width: "100%",
+                  cursor: state.submitting ? "wait" : "pointer",
+                  background: BAR,
+                  color: BAR_INK,
+                  border: "none",
+                  borderTop: `2px solid ${FRAME}`,
+                  borderRadius: 0,
+                  padding: "var(--space-md) var(--space-lg)",
+                  letterSpacing: "0.22em",
+                  textAlign: "center",
+                }),
+              }}
+            />
+          }
+        />
+      </ComposerSheet>
     </div>
   );
 }
 
 interface ProofSlipProps {
-  children: React.ReactNode;
+  children: ReactNode;
   caption: string;
   onRemove: () => void;
 }
 
-/** A stamped proof slip — the Everymen take on a pinned attachment. */
+/** One filed proof, stamped onto a plate and pinned to the order. */
 function ProofSlip({ children, caption, onRemove }: ProofSlipProps) {
   const { t } = useTranslation("forms");
   return (
     <div
       style={{
         position: "relative",
-        width: 152,
-        background: PAPER,
-        border: `1.5px solid ${INK}`,
-        boxShadow: `3px 3px 0 ${INK}`,
+        width: 140,
+        background: PANEL,
+        border: `2px solid ${FRAME}`,
+        borderRadius: 0,
+        boxShadow: `3px 3px 0 ${FRAME}`,
         padding: "var(--space-xs)",
+        boxSizing: "border-box",
       }}
     >
-      <div style={{ width: "100%", height: 100, overflow: "hidden" }}>
-        {children}
-      </div>
+      <div style={{ width: "100%", height: 104, overflow: "hidden" }}>{children}</div>
       <div
         style={{
-          fontFamily: BODY_FONT,
-          fontSize: "var(--text-sm)",
-          letterSpacing: "0.04em",
-          color: PAPER_TEXT,
+          fontFamily: COURIER,
+          fontSize: "var(--text-md)",
+          color: INK,
           marginTop: "var(--space-xs)",
           overflow: "hidden",
           textOverflow: "ellipsis",
@@ -641,13 +808,14 @@ function ProofSlip({ children, caption, onRemove }: ProofSlipProps) {
         aria-label={t("media.removeAria", { name: caption })}
         style={{
           position: "absolute",
-          top: -8,
-          right: -8,
+          top: -9,
+          right: -9,
           width: 22,
           height: 22,
           background: RED,
-          border: `2px solid ${INK}`,
-          color: CREAM,
+          border: `2px solid ${FRAME}`,
+          borderRadius: 0,
+          color: ON_ACCENT,
           fontSize: "var(--text-lg)",
           fontWeight: 700,
           cursor: "pointer",
@@ -657,104 +825,6 @@ function ProofSlip({ children, caption, onRemove }: ProofSlipProps) {
       >
         ×
       </button>
-    </div>
-  );
-}
-
-function ExistingProof({ state }: { state: EditPraxisState }) {
-  const { t } = useTranslation("forms");
-  return (
-    <div style={{ marginBottom: "var(--space-xl)" }}>
-      <FieldLabel>{t("editPraxis.everymen.onFileLabel")}</FieldLabel>
-      <div style={{ display: "flex", flexWrap: "wrap", gap: "var(--space-md)" }}>
-        {state.media.map((item: MediaItemOut) => {
-          const src = mediaUrl(item.file_path);
-          const filename =
-            item.file_path.split("/").pop() ?? item.file_path;
-          return (
-            <ProofSlip
-              key={item.id}
-              caption={filename}
-              onRemove={() => void state.removeMedia(item)}
-            >
-              {item.type === "image" ? (
-                <img
-                  src={src}
-                  alt=""
-                  style={{ width: "100%", height: 100, objectFit: "cover" }}
-                />
-              ) : item.type === "video" ? (
-                <video
-                  src={src}
-                  style={{ width: "100%", height: 100, objectFit: "cover" }}
-                />
-              ) : (
-                <div style={{ width: "100%", height: 100 }}>
-                  <MediaArt art={pickArtKey(filename, "audio")} />
-                </div>
-              )}
-            </ProofSlip>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
-
-function InviteBlock({ state }: { state: EditPraxisState }) {
-  const { t } = useTranslation("forms");
-  // Delegates to the shared InviteSearch so collab-invite and duel-challenge (#311)
-  // behaviour stay identical across archetypes; the crew-frame chrome stays bespoke.
-  return (
-    <div
-      style={{
-        marginBottom: "var(--space-xl)",
-        padding: "var(--space-md) var(--space-lg)",
-        background: PAPER,
-        border: `1.5px dashed ${INK}`,
-      }}
-    >
-      <FieldLabel>
-        {state.duelMode
-          ? t("editPraxis.everymen.inviteLabelDuel")
-          : t("editPraxis.everymen.inviteLabel")}
-      </FieldLabel>
-      <InviteSearch
-        state={state}
-        skin={{
-          fontFamily: BODY_FONT,
-          inputBg: CREAM,
-          inputColor: INK,
-          inputBorder: `1.5px solid ${INK}`,
-          dropdownBg: PAPER,
-          dropdownBorder: `1.5px solid ${INK}`,
-          acceptedBg: OLIVE,
-          acceptedColor: CREAM,
-          pendingColor: PAPER_TEXT,
-          placeholder: t("editPraxis.everymen.invitePlaceholder"),
-        }}
-      />
-    </div>
-  );
-}
-
-function MetatasksBlock({ state }: { state: EditPraxisState }) {
-  const { t } = useTranslation("forms");
-  return (
-    <div
-      style={{
-        marginBottom: "var(--space-xl)",
-        padding: "var(--space-lg)",
-        background: PAPER,
-        border: `1.5px solid ${INK}`,
-      }}
-    >
-      <FieldLabel meta={t("editPraxis.everymen.metatasksMeta")}>
-        {t("editPraxis.everymen.metatasksLabel")}
-      </FieldLabel>
-      {/* The seal stack + neutral picker (#933) replace the old hand-rolled
-          checklist; the Everymen paper-and-ink frame and label stay. */}
-      <MetataskSealStack state={state} />
     </div>
   );
 }
