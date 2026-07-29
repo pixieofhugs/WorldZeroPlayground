@@ -886,16 +886,18 @@ export interface PublishButtonSkin {
   busyLabel: ReactNode;
   ornament?: ReactNode;
   /**
-   * A mark drawn AFTER the label (#1185, #1183). `ornament` leads; several v2
-   * designs put their sign on the trailing edge instead — the Ephemerists' open
-   * eye follows the word rather than announcing it, as does WOW's star.
+   * A mark drawn AFTER the label (#1185, #1183, #1186). `ornament` leads; several
+   * v2 designs put their sign on the trailing edge instead — the Ephemerists'
+   * open eye follows the word rather than announcing it, as does WOW's star and
+   * the Singularity's block cursor.
    *
    * Two reasons this is a prop and not a style. Drawing it with
    * `flex-direction: row-reverse` off the leading slot would put the mark first
    * in the DOM and launder a layout decision through a style. And the label is
-   * not a place to put one either: a collab or duel cast resolves its words
-   * through `collabCopy` below, so a skin folding the glyph into `idleLabel`
-   * would lose it in exactly the two modes that matter most.
+   * not a place to put one either: this control relabels itself in three states
+   * — the collab consensus gate and the duel pull-back both replace `idleLabel`
+   * via `collabCopy` below, and the busy state replaces it again — while a
+   * trailing mark is chrome that belongs to the button in all of them.
    *
    * Additive and optional — a skin passing nothing renders byte-identically.
    */

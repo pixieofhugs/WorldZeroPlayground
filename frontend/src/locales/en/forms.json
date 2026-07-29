@@ -435,49 +435,7 @@
         "successHeading": "> merge complete",
         "successBody": "// all nodes committed · signal is live",
         "successContinue": "$ open ./praxis"
-      },
-      "terminal": {
-        "sessionPath": "singularity://praxis/draft.md · session 0x{{session}}",
-        "whoami": "$ wz auth --whoami",
-        "whoamiResult": "> @{{name}} · faction:singularity",
-        "editCommand": "$ wz praxis edit ./draft-{{id}}.md --live --rainbow=on",
-        "factionLabel": "FACTION:",
-        "factionValue": "singularity",
-        "ptsLabel": "PTS:",
-        "lvlLabel": "LVL:",
-        "modeLabel": "MODE:",
-        "setModeCommand": "wz praxis set-mode --select",
-        "inviteCommand": "wz praxis invite [...handles]",
-        "titleCommand": "echo \"title\" >> ./draft.md ·",
-        "bodyCommand": "vim ./draft.md ·",
-        "insertMode": "-- INSERT --",
-        "statusLine": "{{words}} W · {{chars}} CH · UTF-8",
-        "renderCommand": "render --markdown",
-        "attachCommand": "wz praxis attach ./media/*",
-        "metataskCommand": "wz praxis apply-metatask --opt"
-      },
-      "taskRefLabel": "▸ proving completion of",
-      "mode": {
-        "solo": { "label": "--solo", "desc": "one author. all credit accrues." },
-        "collab": { "label": "--networked", "desc": "fork. multiple authors. all earn full pts." },
-        "duel": { "label": "--adversarial", "desc": "pvp. winner-take-all on vote median." }
-      },
-      "invitePlaceholder": "search handle...",
-      "titlePlaceholder": "title_goes_here.md",
-      "bodyMeta": "{{words}} words · {{lines}} lines",
-      "bodyPlaceholder": "# Cycles Spent\n\n# Data Generated\n\nSupports Markdown Syntax for optimal signal generation\n\n--INSERT--",
-      "saveState": {
-        "saving": "saving...",
-        "saved": "[saved {{time}}]",
-        "unsaved": "unsaved"
-      },
-      "mediaEmpty": "// 0 files attached · drop zone empty",
-      "mediaHelper": "// max 50mb/file · accepts: image/* video/* audio/*",
-      "fileButton": "+ attach",
-      "removeButton": "rm",
-      "publishIdle": "TRANSMIT SIGNAL",
-      "publishBusy": "$ transmitting...",
-      "dropLabel": "[esc] :q"
+      }
     },
     "ua": {
       "collab": {
