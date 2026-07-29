@@ -6,7 +6,9 @@ Status: Accepted (2026-07-14)
 
 World Zero is desktop-first. The #494 foundation added a **form-factor axis** to the
 existing per-faction surface seam: `useFormFactor()` reports `mobile` vs `desktop`, `Layout`
-picks a shell (desktop grid vs a bottom-tab `MobileLayout`), and page dispatchers select
+picks a shell (desktop grid vs a bottom-tab mobile chrome — named `MobileLayout` at the
+time; both shell components were deleted in #1116, which made the chromes siblings of one
+shared page slot so a breakpoint crossing no longer remounts the tree), and page dispatchers select
 from a parallel `MOBILE_ARCHETYPE_BY_SLUG` registry with a `Default*` fallback — exactly
 mirroring the desktop `ARCHETYPE_BY_SLUG` / `pickVariant` model (ADR-0016).
 
