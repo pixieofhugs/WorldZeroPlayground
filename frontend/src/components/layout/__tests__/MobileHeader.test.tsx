@@ -19,14 +19,12 @@ vi.mock('../../../hooks/usePendingRequests', () => ({
   usePendingRequests: () => pendingMock(),
 }))
 
-import MobileLayout from '../MobileLayout'
+import MobileHeader from '../MobileHeader'
 
 function render(): string {
   return renderToStaticMarkup(
     <MemoryRouter initialEntries={['/']}>
-      <MobileLayout>
-        <div>content</div>
-      </MobileLayout>
+      <MobileHeader />
     </MemoryRouter>,
   )
 }
@@ -38,7 +36,7 @@ beforeEach(() => {
   pendingMock.mockReturnValue({ pendingRequests: [], refetch: vi.fn(), loading: false })
 })
 
-describe('MobileLayout header bell', () => {
+describe('MobileHeader bell', () => {
   it('links the bell to /updates when signed in', () => {
     authMock.mockReturnValue(signedIn)
     const html = render()
