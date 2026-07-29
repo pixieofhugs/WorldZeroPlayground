@@ -505,7 +505,13 @@ interface ComposerGroundProps {
   background?: string;
   opacity?: number | string;
   filter?: string;
-  mixBlendMode?: CSSProperties["mixBlendMode"];
+  /**
+   * Typed `string`, not CSSProperties["mixBlendMode"], on purpose: the blend
+   * mode flips with the theme, so it arrives as a `var()` and React's union of
+   * literal keywords rejects one. Applied through a cast below — the value still
+   * comes from a token, which is the rule that matters (WORLD_ZERO_STYLE §2).
+   */
+  mixBlendMode?: string;
   /**
    * How far the layer overhangs the sheet. Negative by design: a drifting layer
    * that stopped at the sheet's edge would expose unpainted corners mid-cycle.
@@ -547,7 +553,7 @@ export function ComposerGround({
         background,
         opacity,
         filter,
-        mixBlendMode,
+        ...({ mixBlendMode } as CSSProperties),
         ...style,
       }}
     >

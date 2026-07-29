@@ -1,22 +1,94 @@
 /**
- * Default / na / Albescent / fallback — the UNAFFILIATED reference-slip kit.
- * `default` ≡ `na` ≡ Unaffiliated is ONE identity (ADR-0039/0046/0048): a clean
- * editorial "reference slip" on the global --faction-default-* tokens (flips
- * light/dark), with the spectrum rainbow used only as accent — the top band, the
- * frame around the task reference, and the active-mode border. No bespoke
- * metaphor, no faction fonts: body/display/accent are the system token faces.
+ * Unaffiliated (`default` ≡ `na` ≡ Albescent) edit praxis — composer v2 (#1181,
+ * epic #1179; design project c491945e, `Unaffiliated Edit Praxis.dc.html`,
+ * `faction="default"`).
+ *
+ * This is the REFERENCE implementation of the layout contract the seven faction
+ * skins inherit (ADR-0065). It is not a placeholder: `default` ≡ `na` ≡
+ * Unaffiliated is one visual identity (ADR-0039/0046/0048), so this IS the
+ * Unaffiliated composer and the fall-through every undressed faction renders.
+ * **Albescent registers nothing here and falls through to it** — in the design's
+ * `SKINS` table the two rows are the same `chrome: 'spectrum', aurora: true`
+ * with identical fonts, differing only in a card ground; that is not a skin.
+ *
+ * ## The layout, in order
+ *
+ * masthead → status row (`Draft` · `Saved just now`) → the task slip (title,
+ * level pill, description, points mark) → `Title` → `How it was done` → the mode
+ * block (the collaborator roster, or the duel pair) → `Write-up` (Write /
+ * Preview) → `Proof` → footer (`Save draft` … `Submit`).
+ *
+ * Every region comes from `shared.tsx`, and the footer keeps the global
+ * `[Cancel] … [Submit]` order settled in #646. A skin varies neither the order
+ * nor the presence of a region — only its dress.
+ *
+ * ## One responsive component, no mobile twin (ADR-0065 §2)
+ *
+ * `useComposerSizes()` picks the size set; there is one tree at two widths.
+ * `pages/editPraxis/mobileArchetypes/` and the `mobileEditPraxis` manifest
+ * surface were retired outright with this issue — superseded by a committed
+ * design, not held dormant (ADR-0063's terms, which §2 adopts over
+ * ADR-0056/0058's). Mobile stacks with flow; there is no fixed-px grid anywhere
+ * below (SPEC-faction-ui-profile §1a).
+ *
+ * ## Copy and dress
+ *
+ * Copy is the one neutral shared `editPraxis.composer.*` set (ADR-0065 §3) —
+ * the design's own header states the rule outright, and this page is doubly
+ * neutral because `na` IS the unaffiliated identity, so the shared set is
+ * already its voice. Every faction skin reads these same keys and introduces
+ * none of its own.
+ *
+ * Dress is na's alone and lives entirely in `--faction-default-*` tokens, so it
+ * flips light/dark through the `[data-theme="dark"]` cascade with no `dark ?`
+ * branch anywhere in the file. Every hex in `edit-praxis.jsx` is a design-side
+ * literal; none of them appear here.
+ *
+ * ## The two motions
+ *
+ * `ep-edge` walks the masthead's spectrum band, `ep-drift` wanders the aurora.
+ * Both are CLASSES: the keyframes live in `index.css` behind the shared
+ * `prefers-reduced-motion` guard, and an inline `animation:` would bypass that
+ * guard (#1003). The other five `ep*` keyframes ship unused, for the skins.
+ *
+ * ## Reused, not rebuilt
+ *
+ * `useEditPraxis` and its whole state surface · every control in `controls.tsx`
+ * · `MetataskSealStack` · `CollabRoster` (inside `InviteSearch`) ·
+ * `MarkdownPreview` · `Breadcrumb` · save-draft (#1081). This issue changed the
+ * dress and the layout, not the behaviour.
+ *
+ * ## Not drawn as designed
+ *
+ * The design offers "Forfeit the duel" at the awaiting stage. It is not drawn,
+ * here or anywhere: #1071 decision 3 rejected that framing against ADR-0011
+ * §Forfeit — at `active` (you cast, the rival has not) unsubmitting is a free
+ * neutral reopen, and #718 had already rejected it once. The duel CLOCK is cut
+ * for the same reason (#1071 decision 4: no expiry field exists to read). The
+ * awaiting stage itself belongs to `PraxisWaitingSurface` and to #1189.
  */
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { mediaUrl } from "../../../utils/media";
 import { type PraxisType } from "../../../api/praxis";
-import DefaultSigil from "../../../components/cards/DefaultSigil";
 import MediaArt from "../blocks/MediaArt";
 import { pickArtKey } from "../blocks/useMediaArt";
 import {
   Breadcrumb,
+  ComposerFooter,
+  ComposerGround,
+  ComposerMasthead,
+  ComposerRule,
+  ComposerSection,
+  ComposerSheet,
+  ComposerStatusRow,
   ErrorBanner,
+  RingMark,
+  TaskSlip,
   TitleCounter,
+  composerLabelStyle,
   formatAutosave,
+  useComposerSizes,
 } from "./shared";
 import {
   BodyPreview,
@@ -28,6 +100,8 @@ import {
   PublishButton,
   SaveDraftButton,
   TitleField,
+  WriteUpTabs,
+  type ComposerTab,
 } from "./controls";
 import { MetataskSealStack } from "../MetataskSealStack";
 import type { EditPraxisState } from "../useEditPraxis";
@@ -36,549 +110,443 @@ interface Props {
   state: EditPraxisState;
 }
 
-// The na kit runs entirely on the global --faction-default-* tokens so it flips
-// light/dark through the cascade; the rainbow appears only as an accent.
-const SURFACE = "var(--faction-default-card-bg)";
-const TEXT = "var(--faction-default-card-text)";
+/* The na kit runs entirely on the global --faction-default-* tokens, so it flips
+ * light/dark through the cascade. Named for the ROLE each plays in the design's
+ * skin row rather than for its colour — `ink` is the design's `ink` and its
+ * `accent`, which are the same value in both themes. */
+const SHEET = "var(--faction-default-card-bg)";
+const FIELD = "var(--faction-default-composer-field)";
+const INK = "var(--faction-default-card-text)";
 const MUTED = "var(--faction-default-card-muted)";
+const FAINT = "var(--faction-default-composer-faint)";
 const BORDER = "var(--faction-default-border)";
-const RAINBOW = "var(--faction-default-rainbow)";
+const HAIR = "var(--faction-default-composer-hair)";
+const ON_ACCENT = "var(--faction-default-on-accent)";
+/* The seven wedges, for both marks. */
+const RING = "var(--faction-default-ring)";
+/* The masthead band is the LOOP cut, not the seven-stop bar ramp the design
+ * literal shows. `ep-edge` walks background-position across a 300%-wide band, so
+ * the paint has to tile: the bar ramp's red-at-0% meets magenta-at-100% and
+ * shows a hard seam every cycle, which is the exact failure the `-loop` token's
+ * own docstring exists to describe. Same spectrum, cut for this geometry. */
+const BAND = "var(--faction-default-rainbow-loop)";
 
-// Section micro-label ("How did you work?", "Give it a headline"…). Label tier:
-// uppercase, letter-spaced, scanned not read (§4).
-const cap: React.CSSProperties = {
-  fontFamily: "var(--font-body)",
-  fontSize: "var(--text-base)",
-  letterSpacing: "0.18em",
-  textTransform: "uppercase",
-  color: MUTED,
-  marginBottom: "var(--space-md)",
-};
+/* The design's title + body face is Lora (--font-display); its label face is
+ * Courier Prime (--font-body), which is what composerLabelStyle already
+ * defaults to. The token names read backwards here and that is not a mistake —
+ * --font-body is the site's Courier Prime. */
+const TITLE_FACE = "var(--font-display)";
 
 export default function DefaultEditPraxis({ state }: Props) {
   const { t } = useTranslation("forms");
+  const sizes = useComposerSizes();
+  const [tab, setTab] = useState<ComposerTab>("write");
   const praxis = state.praxis!;
   const task = state.task;
 
   const allowedModes = task?.allowed_modes ?? ["solo", "collab", "duel"];
+  const modeOptions: Array<{ key: PraxisType; label: string }> = [
+    { key: "solo", label: t("editPraxis.composer.modeSolo") },
+    { key: "collab", label: t("editPraxis.composer.modeCollab") },
+    { key: "duel", label: t("editPraxis.composer.modeDuel") },
+  ];
 
-  const modeOptions: Array<{ key: PraxisType; label: string; desc: string }> = (
-    ["solo", "collab", "duel"] as const
-  ).map((key) => ({
-    key,
-    label: t(`editPraxis.na.mode.${key}.label`),
-    desc: t(`editPraxis.na.mode.${key}.desc`),
-  }));
+  const fieldBox = {
+    width: "100%",
+    background: FIELD,
+    color: INK,
+    border: `1px solid ${BORDER}`,
+    borderRadius: 10,
+    padding: "var(--space-md)",
+    outline: "none",
+    boxSizing: "border-box",
+  } as const;
 
   return (
-    <div
-      style={{
-        padding: "var(--space-2xl) var(--space-lg) var(--space-4xl)",
-        fontFamily: "var(--font-body)",
-        color: TEXT,
-      }}
-    >
-      <div style={{ maxWidth: 620, margin: "0 auto" }}>
+    <div style={{ fontFamily: TITLE_FACE, color: INK }}>
+      <div
+        style={{
+          maxWidth: sizes.maxWidth,
+          margin: "0 auto",
+          padding: "var(--space-lg) var(--space-lg) 0",
+        }}
+      >
         <Breadcrumb
           praxisId={praxis.id}
           taskId={praxis.task_id}
           taskTitle={praxis.task_title}
         />
+      </div>
 
-        {/* Reference-slip card: rainbow band → header → intro → task ref. */}
-        <div
+      <ComposerSheet
+        sizes={sizes}
+        style={{
+          background: SHEET,
+          border: `1px solid ${BORDER}`,
+          boxShadow: "0 16px 40px -24px rgba(0,0,0,0.5)",
+        }}
+        masthead={<ComposerMasthead background={BAND} animated />}
+        ground={
+          <ComposerGround
+            background="var(--faction-default-aurora)"
+            opacity="var(--faction-default-aurora-opacity)"
+            filter="var(--faction-default-aurora-filter)"
+            mixBlendMode="var(--faction-default-aurora-blend)"
+            animated
+          />
+        }
+      >
+        {/* Draft · Saved just now, with the spectrum status mark. */}
+        <ComposerStatusRow
+          status={t("editPraxis.composer.statusDraft")}
+          meta={
+            state.autosaveAt
+              ? t("editPraxis.composer.statusSaved", {
+                  ago: formatAutosave(state.autosaveAt),
+                })
+              : t("editPraxis.composer.statusUnsaved")
+          }
+          statusStyle={{ color: INK, fontWeight: 700 }}
+          metaStyle={{ color: FAINT }}
+          mark={<RingMark size={44} inset={5} ring={RING} inner={FIELD} spin />}
+        />
+
+        {/* The task reference slip, on the field ground with the points mark. */}
+        <TaskSlip
+          praxis={praxis}
+          task={task}
           style={{
-            background: SURFACE,
+            background: FIELD,
             border: `1px solid ${BORDER}`,
             borderRadius: 10,
-            overflow: "hidden",
-            boxShadow: "0 16px 40px -24px rgba(0,0,0,0.5)",
+            padding: "var(--space-lg)",
           }}
-        >
-          {/* 6px spectrum band across the top — the "all paths open" accent. */}
-          <div style={{ height: 6, background: RAINBOW }} />
-
-          <div style={{ padding: "var(--space-xl) var(--space-2xl) var(--space-2xl)" }}>
-            {/* Header: sigil + eyebrow + display H2, autosave to the right. */}
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "var(--space-md)",
-                marginBottom: "var(--space-sm)",
-              }}
+          labelStyle={{ color: FAINT }}
+          titleStyle={{ fontFamily: TITLE_FACE, fontStyle: "italic", color: INK }}
+          descriptionStyle={{ color: MUTED }}
+          pillStyle={{ color: MUTED }}
+          mark={
+            <RingMark
+              size={84}
+              inset={4}
+              ring={RING}
+              inner={SHEET}
+              ringOpacity={0.9}
+              spin
             >
-              <DefaultSigil size={30} />
-              <div>
-                <div
-                  style={{
-                    fontSize: "var(--text-sm)",
-                    letterSpacing: "0.2em",
-                    textTransform: "uppercase",
-                    color: MUTED,
-                  }}
-                >
-                  {t("editPraxis.na.eyebrow")}
-                </div>
-                <h2
-                  style={{
-                    fontFamily: "var(--font-display)",
-                    fontStyle: "italic",
-                    fontWeight: 700,
-                    fontSize: "var(--text-heading)",
-                    lineHeight: 1,
-                    margin: "var(--space-xs) 0 0",
-                    color: TEXT,
-                  }}
-                >
-                  {t("editPraxis.na.pageTitle")}
-                </h2>
-              </div>
               <span
                 style={{
-                  marginLeft: "auto",
-                  alignSelf: "flex-start",
-                  fontSize: "var(--text-sm)",
-                  letterSpacing: "0.12em",
-                  textTransform: "uppercase",
-                  color: MUTED,
+                  fontFamily: TITLE_FACE,
+                  fontSize: "var(--text-title)",
+                  lineHeight: 1,
+                  color: INK,
                 }}
               >
-                {state.autosaveAt
-                  ? t("editPraxis.na.autosaveSaved", {
-                      ago: formatAutosave(state.autosaveAt),
-                    })
-                  : t("editPraxis.na.autosaveUnsaved")}
+                {task?.point_value ?? 0}
               </span>
-            </div>
+            </RingMark>
+          }
+        />
 
-            {/* Neutral intro — a full sentence, so it reads at the content floor. */}
-            <p
-              style={{
-                // design: 11.5px → var(--text-content) (18px) because the
-                // content-text floor governs readable sentences (§4).
-                fontSize: "var(--text-content)",
-                lineHeight: 1.55,
-                color: MUTED,
-                margin: "0 0 var(--space-xl)",
-                maxWidth: 460,
-              }}
-            >
-              {t("editPraxis.na.intro")}
-            </p>
+        <ComposerSection
+          label={t("editPraxis.composer.titleLabel")}
+          htmlFor="composer-title"
+          meta={<TitleCounter length={state.title.length} color={FAINT} />}
+          labelStyle={{ color: MUTED }}
+        >
+          <TitleField
+            state={state}
+            skin={{
+              id: "composer-title",
+              placeholder: t("editPraxis.composer.titlePlaceholder"),
+              inputStyle: {
+                ...fieldBox,
+                fontFamily: TITLE_FACE,
+                fontStyle: "italic",
+              },
+            }}
+          />
+        </ComposerSection>
 
-            {/* Reference slip — rainbow-framed task context (padding/border trick). */}
-            <div
-              style={{
-                borderRadius: 8,
-                padding: "var(--space-xs)",
-                background: RAINBOW,
-                marginBottom: "var(--space-xl)",
-              }}
-            >
-              <div
-                style={{
-                  background: SURFACE,
-                  borderRadius: 5,
-                  padding: "var(--space-lg)",
+        {/* How it was done — hidden once the mode can no longer change, per the
+            house rule that an unusable control is not drawn disabled. */}
+        {!state.controlsLocked && (
+          <ComposerSection
+            label={t("editPraxis.composer.modeLabel")}
+            labelStyle={{ color: MUTED }}
+          >
+            <ModePicker
+              state={state}
+              skin={{
+                containerStyle: {
                   display: "flex",
-                  gap: "var(--space-md)",
-                  alignItems: "flex-start",
-                }}
-              >
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div
-                    style={{
-                      fontSize: "var(--text-xs)",
-                      letterSpacing: "0.18em",
-                      textTransform: "uppercase",
-                      color: MUTED,
-                      marginBottom: "var(--space-xs)",
-                    }}
+                  gap: "var(--space-sm)",
+                  flexWrap: "wrap",
+                },
+                options: modeOptions,
+                allowedModes,
+                renderOption: (option, { active, disabled, onSelect }) => (
+                  <button
+                    key={option.key}
+                    type="button"
+                    aria-pressed={active}
+                    onClick={onSelect}
+                    disabled={disabled && !active}
+                    style={composerLabelStyle({
+                      cursor: disabled ? "not-allowed" : "pointer",
+                      padding: "var(--space-sm) var(--space-lg)",
+                      borderRadius: 999,
+                      background: active ? INK : FIELD,
+                      color: active ? ON_ACCENT : MUTED,
+                      border: `1px solid ${active ? INK : BORDER}`,
+                    })}
                   >
-                    {t("editPraxis.na.taskRefLabel")}
-                  </div>
-                  <div
-                    style={{
-                      fontFamily: "var(--font-display)",
-                      fontStyle: "italic",
-                      fontSize: "var(--text-content)",
-                      lineHeight: 1.1,
-                      color: TEXT,
-                      overflowWrap: "anywhere",
-                    }}
-                  >
-                    {praxis.task_title}
-                  </div>
-                  {task?.description && (
-                    <div
-                      style={{
-                        // design: 11px → var(--text-content) (18px) because
-                        // task.description is content, below the floor (§4).
-                        fontSize: "var(--text-content)",
-                        lineHeight: 1.5,
-                        color: MUTED,
-                        marginTop: "var(--space-sm)",
-                      }}
-                    >
-                      {task.description}
-                    </div>
-                  )}
-                </div>
-                <div style={{ flexShrink: 0, textAlign: "right" }}>
-                  <div
-                    style={{
-                      fontFamily: "var(--font-accent)",
-                      fontSize: "var(--text-title)",
-                      lineHeight: 1,
-                      color: TEXT,
-                    }}
-                  >
-                    {task?.point_value ?? 0}
-                    <span
-                      style={{
-                        fontSize: "var(--text-base)",
-                        marginLeft: "var(--space-xs)",
-                        color: MUTED,
-                      }}
-                    >
-                      {t("editPraxis.na.ptsLabel")}
-                    </span>
-                  </div>
-                  {task && (
-                    <div
-                      style={{
-                        fontSize: "var(--text-sm)",
-                        letterSpacing: "0.1em",
-                        textTransform: "uppercase",
-                        color: MUTED,
-                        marginTop: "var(--space-xs)",
-                      }}
-                    >
-                      {t("editPraxis.na.lvlLabel", { level: task.level_required })}
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
+                    {option.label}
+                  </button>
+                ),
+              }}
+            />
+          </ComposerSection>
+        )}
 
-            {/* Mode selector — active option wears a rainbow border. */}
-            {!state.controlsLocked && (
-              <div style={{ marginBottom: "var(--space-xl)" }}>
-                <div style={cap}>{t("editPraxis.na.modeLabel")}</div>
-                <ModePicker
-                  state={state}
-                  skin={{
-                    containerStyle: {
-                      display: "flex",
-                      gap: "var(--space-sm)",
-                      flexWrap: "wrap",
-                    },
-                    options: modeOptions,
-                    allowedModes,
-                    renderOption: (opt, { active, disabled, onSelect }) => (
-                      <button
-                        key={opt.key}
-                        type="button"
-                        aria-pressed={active}
-                        onClick={onSelect}
-                        disabled={disabled && !active}
-                        style={{
-                          cursor: disabled ? "not-allowed" : "pointer",
-                          textAlign: "left",
-                          minWidth: 150,
-                          padding: "var(--space-md) var(--space-lg)",
-                          borderRadius: 7,
-                          background: SURFACE,
-                          color: TEXT,
-                          border: active
-                            ? "1.5px solid transparent"
-                            : `1.5px solid ${BORDER}`,
-                          backgroundImage: active
-                            ? `linear-gradient(${SURFACE},${SURFACE}), ${RAINBOW}`
-                            : "none",
-                          backgroundOrigin: "border-box",
-                          backgroundClip: active
-                            ? "padding-box, border-box"
-                            : "border-box",
-                        }}
-                      >
-                        <div
-                          style={{
-                            fontFamily: "var(--font-display)",
-                            fontStyle: "italic",
-                            fontWeight: 600,
-                            fontSize: "var(--text-xl)",
-                            lineHeight: 1,
-                          }}
-                        >
-                          {opt.label}
-                        </div>
-                        <div
-                          style={{
-                            fontSize: "var(--text-sm)",
-                            color: MUTED,
-                            marginTop: "var(--space-xs)",
-                          }}
-                        >
-                          {opt.desc}
-                        </div>
-                      </button>
-                    ),
-                  }}
-                />
-              </div>
-            )}
+        {/* The mode block: the collaborator roster, or the duel pair. One
+            control draws both — `InviteSearch` switches on `state.duelMode`. */}
+        {state.showInviteBox && (
+          <ComposerSection
+            label={
+              state.duelMode
+                ? t("editPraxis.composer.opponentLabel")
+                : t("editPraxis.composer.collaboratorsLabel", {
+                    count: praxis.members.length,
+                  })
+            }
+            labelStyle={{ color: MUTED }}
+          >
+            <InviteSearch
+              state={state}
+              skin={{
+                fontFamily: TITLE_FACE,
+                inputBg: FIELD,
+                inputColor: INK,
+                inputBorder: `1px solid ${BORDER}`,
+                dropdownBg: SHEET,
+                dropdownBorder: `1px solid ${BORDER}`,
+                acceptedBg: INK,
+                acceptedColor: ON_ACCENT,
+                placeholder: t("editPraxis.composer.invitePlaceholder"),
+                leaveStyle: { color: FAINT },
+              }}
+            />
+          </ComposerSection>
+        )}
 
-            {/* Invite / opponent picker (collab + duel). */}
-            {state.showInviteBox && (
-              <div style={{ marginBottom: "var(--space-xl)" }}>
-                <div style={cap}>
-                  {state.duelMode
-                    ? t("editPraxis.na.inviteLabelDuel")
-                    : t("editPraxis.na.inviteLabel")}
-                </div>
-                <InviteSearch
-                  state={state}
-                  skin={{
-                    fontFamily: "var(--font-body)",
-                    inputBg: SURFACE,
-                    inputColor: TEXT,
-                    inputBorder: `1px solid ${BORDER}`,
-                    acceptedBg: "var(--faction-default)",
-                    acceptedColor: "var(--color-text-on-accent)",
-                    placeholder: t("editPraxis.na.invitePlaceholder"),
-                  }}
-                />
-              </div>
-            )}
+        {state.showSealStack && (
+          <ComposerSection
+            label={t("editPraxis.composer.sealsLabel")}
+            labelStyle={{ color: MUTED }}
+          >
+            <MetataskSealStack state={state} />
+          </ComposerSection>
+        )}
 
-            {/* Metatask seals. */}
-            {state.showSealStack && (
-              <div style={{ marginBottom: "var(--space-xl)" }}>
-                <div style={cap}>{t("editPraxis.na.metatasksLabel")}</div>
-                <MetataskSealStack state={state} />
-              </div>
-            )}
-
-            {/* Headline. */}
-            <div style={{ marginBottom: "var(--space-xl)" }}>
-              <div style={{ ...cap, display: "flex", justifyContent: "space-between" }}>
-                <span>{t("editPraxis.na.titleLabel")}</span>
-                <span style={{ letterSpacing: 0 }}>
-                  <TitleCounter length={state.title.length} color={MUTED} />
-                </span>
-              </div>
-              <TitleField
-                state={state}
-                skin={{
-                  placeholder: t("editPraxis.na.titlePlaceholder"),
-                  inputStyle: {
-                    width: "100%",
-                    border: "none",
-                    borderBottom: `2px solid ${BORDER}`,
-                    background: "transparent",
-                    fontFamily: "var(--font-display)",
-                    fontStyle: "italic",
-                    color: TEXT,
-                    padding: "var(--space-xs) var(--space-xs) var(--space-sm)",
-                    outline: "none",
-                  },
-                }}
-              />
-            </div>
-
-            {/* Account (body). */}
-            <div style={{ marginBottom: "var(--space-xl)" }}>
-              <div style={{ ...cap, display: "flex", justifyContent: "space-between" }}>
-                <span>{t("editPraxis.na.accountLabel")}</span>
-                <span style={{ letterSpacing: 0 }}>
-                  {t("editPraxis.na.accountMeta", { words: state.wordCount })}
-                </span>
-              </div>
+        {/* Write-up — the tabs sit in the section's meta slot, so the label row
+            reads `Write-up … [Write|Preview]` exactly as the design draws it. */}
+        <ComposerSection
+          label={t("editPraxis.composer.writeUpLabel")}
+          htmlFor="composer-body"
+          labelStyle={{ color: MUTED }}
+          meta={
+            <WriteUpTabs
+              tab={tab}
+              setTab={setTab}
+              skin={{
+                containerStyle: { gap: "var(--space-xs)" },
+                buttonStyle: (active) =>
+                  composerLabelStyle({
+                    padding: "var(--space-xs) var(--space-sm)",
+                    borderRadius: 999,
+                    border: `1px solid ${active ? BORDER : "transparent"}`,
+                    background: active ? FIELD : "transparent",
+                    color: active ? INK : FAINT,
+                  }),
+              }}
+            />
+          }
+        >
+          {/* Both panels are mounted only one at a time: a hidden textarea would
+              still be a tab stop and still be submitted by a form, and drawing
+              both would put the body in the DOM twice. */}
+          {tab === "write" ? (
+            <>
               <BodyTextarea
                 state={state}
                 skin={{
-                  rows: 6,
-                  placeholder: t("editPraxis.na.bodyPlaceholder"),
+                  id: "composer-body",
+                  rows: 8,
+                  placeholder: t("editPraxis.composer.bodyPlaceholder"),
                   textareaStyle: {
-                    width: "100%",
+                    ...fieldBox,
                     resize: "vertical",
-                    borderRadius: 7,
-                    border: `1px solid ${BORDER}`,
-                    background: "transparent",
-                    fontFamily: "var(--font-body)",
+                    minHeight: 180,
                     lineHeight: 1.7,
-                    color: TEXT,
-                    padding: "var(--space-md)",
-                    outline: "none",
-                    boxSizing: "border-box",
-                    minHeight: 140,
+                    fontFamily: TITLE_FACE,
                   },
                 }}
               />
-              <BodyPreview
-                state={state}
-                skin={{
-                  wrapperStyle: {
-                    borderTop: `1px solid ${BORDER}`,
-                    marginTop: "var(--space-md)",
-                    paddingTop: "var(--space-sm)",
-                  },
-                  label: <div style={cap}>{t("editPraxis.na.previewLabel")}</div>,
-                  markdownStyle: {
-                    fontFamily: "var(--font-body)",
-                    lineHeight: 1.7,
-                    color: TEXT,
-                  },
-                }}
-              />
-            </div>
-
-            {/* Evidence — existing media + dashed dropzone. */}
-            <div style={{ marginBottom: "var(--space-xl)" }}>
-              <div style={cap}>
-                {t("editPraxis.na.filesLabel")}{" "}
-                <span style={{ letterSpacing: 0, textTransform: "none", color: MUTED }}>
-                  {t("editPraxis.na.filesOptional")}
-                </span>
-              </div>
               <div
-                style={{
-                  display: "flex",
-                  gap: "var(--space-lg)",
-                  alignItems: "center",
-                  flexWrap: "wrap",
-                }}
-              >
-                {state.media.map((item) => {
-                  const filename =
-                    item.file_path.split("/").pop() ?? item.file_path;
-                  const src = mediaUrl(item.file_path);
-                  return (
-                    <MediaTile
-                      key={item.id}
-                      caption={filename}
-                      onRemove={() => void state.removeMedia(item)}
-                    >
-                      {item.type === "image" ? (
-                        <img
-                          src={src}
-                          alt=""
-                          style={{ width: 120, height: 120, objectFit: "cover" }}
-                        />
-                      ) : item.type === "video" ? (
-                        <video
-                          src={src}
-                          style={{ width: 120, height: 120, objectFit: "cover" }}
-                        />
-                      ) : (
-                        <MediaArt
-                          art={pickArtKey(filename, "audio")}
-                          width={120}
-                          height={120}
-                        />
-                      )}
-                    </MediaTile>
-                  );
+                style={composerLabelStyle({
+                  color: FAINT,
+                  marginTop: "var(--space-sm)",
+                  letterSpacing: "0.06em",
                 })}
-                <FilePicker
-                  state={state}
-                  skin={{
-                    buttonStyle: {
-                      cursor: "pointer",
-                      background: "transparent",
-                      border: `1.5px dashed ${BORDER}`,
-                      borderRadius: 8,
-                      padding: "var(--space-lg) var(--space-xl)",
-                      display: "flex",
-                      flexDirection: "column",
-                      alignItems: "center",
-                      gap: "var(--space-sm)",
-                      color: MUTED,
-                      fontFamily: "var(--font-accent)",
-                      fontSize: "var(--text-base)",
-                      letterSpacing: "0.06em",
-                    },
-                    buttonLabel: t("editPraxis.na.fileButton"),
-                    helperText: t("editPraxis.na.fileHelper"),
-                    helperStyle: {
-                      fontSize: "var(--text-base)",
-                      fontStyle: "italic",
-                      color: MUTED,
-                      maxWidth: 200,
-                      lineHeight: 1.5,
-                      fontFamily: "var(--font-display)",
-                      marginTop: "var(--space-xs)",
-                    },
-                  }}
-                />
+              >
+                {t("editPraxis.composer.wordCount", { words: state.wordCount })}
               </div>
-            </div>
-
-            <ErrorBanner message={state.error} />
-
-            {/* Footer CTAs. */}
-            <div
-              style={{
-                borderTop: `1px solid ${BORDER}`,
-                paddingTop: "var(--space-xl)",
-                marginTop: "var(--space-xl)",
-                display: "flex",
-                alignItems: "center",
-                gap: "var(--space-lg)",
-                flexWrap: "wrap",
+            </>
+          ) : (
+            <BodyPreview
+              state={state}
+              skin={{
+                wrapperStyle: {
+                  ...fieldBox,
+                  minHeight: 180,
+                },
+                markdownStyle: { fontFamily: TITLE_FACE, lineHeight: 1.7, color: INK },
+                emptyState: (
+                  <p
+                    style={{
+                      fontFamily: TITLE_FACE,
+                      fontStyle: "italic",
+                      fontSize: "var(--text-content)",
+                      color: FAINT,
+                      margin: 0,
+                    }}
+                  >
+                    {t("editPraxis.composer.bodyPlaceholder")}
+                  </p>
+                ),
               }}
-            >
-              <PublishButton
+            />
+          )}
+        </ComposerSection>
+
+        <ComposerSection
+          label={t("editPraxis.composer.proofLabel")}
+          labelStyle={{ color: MUTED }}
+        >
+          <div
+            style={{
+              display: "flex",
+              gap: "var(--space-lg)",
+              alignItems: "center",
+              flexWrap: "wrap",
+            }}
+          >
+            {state.media.map((item) => {
+              const filename = item.file_path.split("/").pop() ?? item.file_path;
+              const src = mediaUrl(item.file_path);
+              return (
+                <MediaTile
+                  key={item.id}
+                  caption={filename}
+                  onRemove={() => void state.removeMedia(item)}
+                >
+                  {item.type === "image" ? (
+                    <img
+                      src={src}
+                      alt=""
+                      style={{ width: 120, height: 120, objectFit: "cover" }}
+                    />
+                  ) : item.type === "video" ? (
+                    <video
+                      src={src}
+                      style={{ width: 120, height: 120, objectFit: "cover" }}
+                    />
+                  ) : (
+                    <MediaArt
+                      art={pickArtKey(filename, "audio")}
+                      width={120}
+                      height={120}
+                    />
+                  )}
+                </MediaTile>
+              );
+            })}
+            {!state.controlsLocked && (
+              <FilePicker
                 state={state}
                 skin={{
-                  idleLabel: t("editPraxis.na.publishIdle"),
-                  busyLabel: t("editPraxis.na.publishBusy"),
-                  style: {
-                    cursor: state.submitting ? "wait" : "pointer",
-                    border: "none",
-                    borderRadius: 6,
-                    padding: "var(--space-md) var(--space-xl)",
-                    fontFamily: "var(--font-accent)",
-                    fontSize: "var(--text-xl)",
-                    letterSpacing: "0.04em",
-                    color: SURFACE,
-                    background: TEXT,
+                  buttonStyle: composerLabelStyle({
+                    cursor: "pointer",
+                    background: "transparent",
+                    border: `1px dashed ${BORDER}`,
+                    borderRadius: 10,
+                    padding: "var(--space-lg) var(--space-xl)",
+                    color: MUTED,
+                  }),
+                  buttonLabel: t("editPraxis.composer.proofButton"),
+                  helperText: t("editPraxis.composer.proofHelper"),
+                  helperStyle: {
+                    fontFamily: TITLE_FACE,
+                    fontStyle: "italic",
+                    fontSize: "var(--text-content)",
+                    color: FAINT,
+                    maxWidth: 260,
+                    lineHeight: 1.5,
+                    marginTop: "var(--space-sm)",
                   },
                 }}
               />
-              <SaveDraftButton state={state} />
+            )}
+          </div>
+        </ComposerSection>
+
+        <ErrorBanner message={state.error} />
+
+        <ComposerRule style={{ background: HAIR }} />
+
+        {/* [Cancel] … [Submit] — the global order from #646. Submit is an inline
+            button with no ornament; the bar treatments belong to the skins that
+            draw one. */}
+        <ComposerFooter
+          start={
+            <>
+              <SaveDraftButton state={state} skin={{ style: { color: FAINT } }} />
               <DropButton
                 state={state}
                 skin={{
-                  label: t("editPraxis.na.dropLabel"),
-                  style: {
+                  style: composerLabelStyle({
                     background: "transparent",
                     border: "none",
-                    color: MUTED,
-                    fontFamily: "var(--font-body)",
-                    fontSize: "var(--text-lg)",
+                    padding: 0,
+                    color: FAINT,
                     textDecoration: "underline",
                     cursor: "pointer",
-                  },
+                  }),
                 }}
               />
-              <div style={{ flex: 1 }} />
-              <span
-                style={{
-                  fontFamily: "var(--font-display)",
-                  fontStyle: "italic",
-                  fontSize: "var(--text-lg)",
-                  color: MUTED,
-                }}
-              >
-                {t("editPraxis.na.footer")}
-              </span>
-            </div>
-          </div>
-        </div>
-      </div>
+            </>
+          }
+          end={
+            <PublishButton
+              state={state}
+              skin={{
+                idleLabel: t("editPraxis.composer.submit"),
+                busyLabel: t("editPraxis.composer.submitBusy"),
+                style: composerLabelStyle({
+                  cursor: state.submitting ? "wait" : "pointer",
+                  border: "none",
+                  borderRadius: 10,
+                  padding: "var(--space-md) var(--space-xl)",
+                  color: ON_ACCENT,
+                  background: INK,
+                  fontWeight: 700,
+                }),
+              }}
+            />
+          }
+        />
+      </ComposerSheet>
     </div>
   );
 }
@@ -589,16 +557,16 @@ interface MediaTileProps {
   onRemove: () => void;
 }
 
-/** Neutral reference-slip thumbnail for an already-uploaded media item. */
+/** One already-uploaded proof item, on the composer's field ground. */
 function MediaTile({ children, caption, onRemove }: MediaTileProps) {
   const { t } = useTranslation("forms");
   return (
     <div
       style={{
         position: "relative",
-        background: SURFACE,
+        background: FIELD,
         border: `1px solid ${BORDER}`,
-        borderRadius: 8,
+        borderRadius: 10,
         overflow: "hidden",
       }}
     >
@@ -614,9 +582,9 @@ function MediaTile({ children, caption, onRemove }: MediaTileProps) {
           width: 22,
           height: 22,
           borderRadius: "50%",
-          background: "var(--faction-default-card-bg)",
+          background: SHEET,
           border: `1px solid ${BORDER}`,
-          color: TEXT,
+          color: INK,
           fontSize: "var(--text-md)",
           fontWeight: 700,
           cursor: "pointer",
