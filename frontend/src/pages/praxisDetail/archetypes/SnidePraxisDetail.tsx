@@ -22,9 +22,14 @@
  * - **The crown renders at both form factors.** It is never form-factor gated —
  *   it comes from the shared `PraxisStatusBanners`, keyed on `is_top_for_task`,
  *   mounted above the split so both layouts get it.
- * - **ONE responsive component** (ADR-0056/0058): `useFormFactor()` picks the
- *   size set and collapses the split. The score and duel blocks are built once
- *   and MOVED by where they are mounted, never drawn twice and hidden.
+ * - **ONE responsive component** (ADR-0063 — this surface's own; ADR-0056/0058
+ *   are the same collapse on task cards and task detail): `useFormFactor()`
+ *   picks the size set and collapses the split. The score and duel blocks are
+ *   built once and MOVED by where they are mounted, never drawn twice and
+ *   hidden.
+ * - **The duel panel and the comment thread are LAYOUT SLOTS this archetype
+ *   mounts** (ADR-0064), not dispatcher chrome. Nothing is mounted around the
+ *   page any more, so forgetting either drops it entirely.
  *
  * ## Voice (ADR-0061 as amended, 2026-07-28)
  *
@@ -851,7 +856,7 @@ export default function SnidePraxisDetail({ state }: { state: PraxisDetailState 
           )}
         </div>
 
-        {/* The third layout region (ADR-0061, amending ADR-0006): comments sit
+        {/* The third layout region (ADR-0064, amending ADR-0006): comments sit
             beneath both columns, inside the page's own sheet, and the layout
             draws the heading so the thread does not draw a second one. The ROWS
             stay dispatched on each author's own faction. */}
