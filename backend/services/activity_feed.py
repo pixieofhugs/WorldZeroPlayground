@@ -14,18 +14,20 @@ counts are ``COUNT`` over the *same* windowed query, so a source's ``WHERE`` is
 authored exactly once and the counts can never drift from the fan-out.
 """
 import asyncio
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime import datetime
 from typing import Any, Callable, Coroutine, Optional
 
-from sqlalchemy import Select, func, select
+from fastapi import HTTPException
+from sqlalchemy import Select, delete, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import aliased
+from sqlalchemy.orm import InstrumentedAttribute, aliased
 
 from models.character import Character
 from models.comment import Comment, CommentMention
 from models.era import Era
 from models.faction_defection_history import FactionDefectionHistory
+from models.feed_dismissal import FeedDismissal
 from models.invitation_letter import InvitationLetter
 from models.nudge import Nudge
 from models.relationship import Relationship, RelationshipStatus, RelationshipType
@@ -39,8 +41,12 @@ from services.era import get_current_era_row
 
 @dataclass(frozen=True)
 class ActivityFeedItemDC:
-    """Frozen dataclass mirror of schemas.activity_feed.ActivityFeedItem."""
+    """Frozen dataclass mirror of schemas.activity_feed.ActivityFeedItem.
+
+    ``item_key`` is the item's stable identity — see ``build_item_key``.
+    """
     type: str
+    item_key: str
     timestamp: datetime
     payload: dict[str, Any]
     actor_display_name: Optional[str] = None
@@ -83,6 +89,34 @@ FEED_ITEM_TYPE_COMMENT_MENTION = "comment_mention"
 FEED_ITEM_TYPE_COLLABORATOR_SUBMITTED = "collaborator_submitted"
 FEED_ITEM_TYPE_AWAITING_SUBMISSION = "awaiting_submission"
 FEED_ITEM_TYPE_NUDGE = "nudge"
+
+# --- Item identity ----------------------------------------------------------
+# A feed item is derived, never stored: the feed is a UNION read-model over 15
+# source tables and owns no rows. Its identity is therefore borrowed from the
+# row it was built out of — ``"{feed type}:{source row PK}"``.
+#
+# The type prefix is load-bearing, not decoration. Three types are built from
+# ``praxis_member`` rows (friend_signup / collaborator_submitted /
+# awaiting_submission) and two from ``praxis`` rows (friend_completion /
+# foe_completion), so a bare PK is not unique across the feed.
+#
+# Every source's ``to_item`` reads that PK out of a column its query already
+# selects — nothing here is derived from row position, offset, or timestamp,
+# so the key of a given item is identical on every request until the source row
+# is deleted. A dismissal keyed on it can never drift onto a different item.
+ITEM_KEY_SEPARATOR = ":"
+
+
+def build_item_key(item_type: str, source_id: int) -> str:
+    """The stable identity of one feed item: its type plus its source row's PK."""
+    return f"{item_type}{ITEM_KEY_SEPARATOR}{source_id}"
+
+
+# ``awaiting_submission`` is *state*, not an event: it exists exactly while the
+# viewer's ``PraxisMember.has_submitted`` is false, and clears itself the moment
+# they file. A dismissal row would therefore silence a standing obligation
+# permanently, so this one type is refused (epic #1192, decision 3).
+NON_ARCHIVABLE_ITEM_TYPES: frozenset[str] = frozenset({FEED_ITEM_TYPE_AWAITING_SUBMISSION})
 
 # --- Filter tabs ------------------------------------------------------------
 FILTER_ALL = "all"
@@ -129,12 +163,41 @@ class FeedSource:
     The fan-out runs it and maps rows via ``to_item``; the badge count is
     ``COUNT`` over the very same (windowed) query. Adding a feed type is one
     entry in ``FEED_SOURCES`` — not six scattered edits.
+
+    ``source_id_column`` is the PK column ``to_item`` builds the item key from.
+    Naming it on the registry lets the archive filter be applied *in SQL*, once,
+    for every source — so a dismissed row never eats a slot in the
+    ``SUB_QUERY_LIMIT`` window (filtering after the fetch would silently shrink
+    the page) and the badge count, which wraps the same query, drops with it.
     """
     item_type: str
     filters: frozenset[str]
     needs: frozenset[str]
     query: Callable[[FeedContext], Select]
     to_item: Callable[[Any], ActivityFeedItemDC]
+    source_id_column: InstrumentedAttribute[int]
+
+
+@dataclass(frozen=True, eq=False)
+class FeedArchiveView:
+    """The viewer's archive, resolved once per request.
+
+    ``dismissed_source_ids`` maps a feed type to the source-row PKs this
+    character has archived, pre-split by type so each source's query can filter
+    on its own integer PK rather than on a string key.
+
+    ``archived_only`` flips the whole feed over: ``False`` hides archived items
+    (the live feed), ``True`` shows *only* them (the Archived tab). It is state,
+    not a type-set, which is why it cannot ride ``FILTER_QUERIES``.
+
+    ``eq=False`` so the dict field doesn't have to be hashable; this is a
+    per-request carrier, never a key.
+    """
+    dismissed_source_ids: dict[str, frozenset[int]]
+    archived_only: bool = False
+
+
+EMPTY_ARCHIVE_VIEW = FeedArchiveView(dismissed_source_ids={}, archived_only=False)
 
 
 # ---------------------------------------------------------------------------
@@ -209,6 +272,7 @@ def _vote_on_mine_query(ctx: FeedContext) -> Select:
 def _vote_on_mine_item(row: Any) -> ActivityFeedItemDC:
     return ActivityFeedItemDC(
         type=FEED_ITEM_TYPE_VOTE_ON_MINE,
+        item_key=build_item_key(FEED_ITEM_TYPE_VOTE_ON_MINE, row.id),
         timestamp=row.created_at,
         actor_display_name=row.voter_display_name,
         actor_faction_slug=row.voter_faction_slug,
@@ -258,6 +322,7 @@ def _completion_item_factory(item_type: str) -> Callable[[Any], ActivityFeedItem
     def to_item(row: Any) -> ActivityFeedItemDC:
         return ActivityFeedItemDC(
             type=item_type,
+            item_key=build_item_key(item_type, row.id),
             timestamp=row.created_at,
             actor_display_name=row.author_display_name,
             actor_faction_slug=row.author_faction_slug,
@@ -303,6 +368,7 @@ def _foe_taunt_item(row: Any) -> ActivityFeedItemDC:
     taunt: TauntMessage = row[0]
     return ActivityFeedItemDC(
         type=FEED_ITEM_TYPE_FOE_TAUNT,
+        item_key=build_item_key(FEED_ITEM_TYPE_FOE_TAUNT, taunt.id),
         timestamp=taunt.created_at,
         actor_display_name=row.from_display_name,
         actor_faction_slug=row.from_faction_slug,
@@ -336,6 +402,7 @@ def _global_tasks_query(ctx: FeedContext) -> Select:
 def _global_task_item(row: Any) -> ActivityFeedItemDC:
     return ActivityFeedItemDC(
         type=FEED_ITEM_TYPE_GLOBAL_TASK,
+        item_key=build_item_key(FEED_ITEM_TYPE_GLOBAL_TASK, row.id),
         timestamp=row.created_at,
         actor_display_name=ADMIN_ACTOR_NAME,
         actor_faction_slug=None,
@@ -362,6 +429,7 @@ def _era_announcement_item(row: Any) -> ActivityFeedItemDC:
     era: Era = row[0]
     return ActivityFeedItemDC(
         type=FEED_ITEM_TYPE_ERA_ANNOUNCEMENT,
+        item_key=build_item_key(FEED_ITEM_TYPE_ERA_ANNOUNCEMENT, era.id),
         timestamp=era.started_at,
         actor_display_name=ADMIN_ACTOR_NAME,
         actor_faction_slug=None,
@@ -410,6 +478,7 @@ def _collab_invites_query(ctx: FeedContext) -> Select:
 def _collab_invite_item(row: Any) -> ActivityFeedItemDC:
     return ActivityFeedItemDC(
         type=FEED_ITEM_TYPE_COLLAB_INVITE,
+        item_key=build_item_key(FEED_ITEM_TYPE_COLLAB_INVITE, row.id),
         timestamp=row.created_at,
         actor_display_name=row.actor_display_name,
         actor_faction_slug=row.actor_faction_slug,
@@ -459,6 +528,7 @@ def _duel_challenges_query(ctx: FeedContext) -> Select:
 def _duel_challenge_item(row: Any) -> ActivityFeedItemDC:
     return ActivityFeedItemDC(
         type=FEED_ITEM_TYPE_DUEL_CHALLENGE,
+        item_key=build_item_key(FEED_ITEM_TYPE_DUEL_CHALLENGE, row.id),
         timestamp=row.created_at,
         actor_display_name=row.actor_display_name,
         actor_faction_slug=row.actor_faction_slug,
@@ -506,6 +576,7 @@ def _friend_signups_query(ctx: FeedContext) -> Select:
 def _friend_signup_item(row: Any) -> ActivityFeedItemDC:
     return ActivityFeedItemDC(
         type=FEED_ITEM_TYPE_FRIEND_SIGNUP,
+        item_key=build_item_key(FEED_ITEM_TYPE_FRIEND_SIGNUP, row.id),
         timestamp=row.joined_at,
         actor_display_name=row.display_name,
         actor_faction_slug=row.faction_slug,
@@ -538,6 +609,7 @@ def _invitation_letter_item(row: Any) -> ActivityFeedItemDC:
     letter: InvitationLetter = row[0]
     return ActivityFeedItemDC(
         type=FEED_ITEM_TYPE_INVITATION_LETTER,
+        item_key=build_item_key(FEED_ITEM_TYPE_INVITATION_LETTER, letter.id),
         timestamp=letter.delivered_at,
         actor_display_name=letter.faction_slug,
         actor_faction_slug=letter.faction_slug,
@@ -577,6 +649,9 @@ def _friend_defection_item(row: Any) -> ActivityFeedItemDC:
     # names from factions.json (factionName(<slug>)).
     return ActivityFeedItemDC(
         type=FEED_ITEM_TYPE_FRIEND_DEFECTION,
+        # The only source whose PK the payload does not already carry — the
+        # query selects it, so the key is as stable as the other fourteen.
+        item_key=build_item_key(FEED_ITEM_TYPE_FRIEND_DEFECTION, row.id),
         timestamp=row.defected_at,
         actor_display_name=row.display_name,
         actor_faction_slug=row.current_faction_slug,
@@ -618,6 +693,7 @@ def _comment_mentions_query(ctx: FeedContext) -> Select:
 def _comment_mention_item(row: Any) -> ActivityFeedItemDC:
     return ActivityFeedItemDC(
         type=FEED_ITEM_TYPE_COMMENT_MENTION,
+        item_key=build_item_key(FEED_ITEM_TYPE_COMMENT_MENTION, row.id),
         timestamp=row.created_at,
         actor_display_name=row.author_display_name,
         actor_faction_slug=row.author_faction_slug,
@@ -675,6 +751,7 @@ def _collaborator_submitted_query(ctx: FeedContext) -> Select:
 def _collaborator_submitted_item(row: Any) -> ActivityFeedItemDC:
     return ActivityFeedItemDC(
         type=FEED_ITEM_TYPE_COLLABORATOR_SUBMITTED,
+        item_key=build_item_key(FEED_ITEM_TYPE_COLLABORATOR_SUBMITTED, row.id),
         timestamp=row.submitted_at,
         actor_display_name=row.display_name,
         actor_faction_slug=row.faction_slug,
@@ -731,6 +808,9 @@ def _awaiting_submission_item(row: Any) -> ActivityFeedItemDC:
     # the card frames to the task's faction (schema context_faction_slug fallback).
     return ActivityFeedItemDC(
         type=FEED_ITEM_TYPE_AWAITING_SUBMISSION,
+        # Carries a key like every other type — the refusal to archive it is a
+        # rule (NON_ARCHIVABLE_ITEM_TYPES), not an absence of identity.
+        item_key=build_item_key(FEED_ITEM_TYPE_AWAITING_SUBMISSION, row.id),
         timestamp=row.joined_at,
         actor_display_name=None,
         actor_faction_slug=None,
@@ -788,6 +868,7 @@ def _nudge_query(ctx: FeedContext) -> Select:
 def _nudge_item(row: Any) -> ActivityFeedItemDC:
     return ActivityFeedItemDC(
         type=FEED_ITEM_TYPE_NUDGE,
+        item_key=build_item_key(FEED_ITEM_TYPE_NUDGE, row.id),
         timestamp=row.created_at,
         actor_display_name=row.from_display_name,
         actor_faction_slug=row.from_faction_slug,
@@ -820,6 +901,7 @@ FEED_SOURCES: tuple[FeedSource, ...] = (
         needs=frozenset(),
         query=_vote_on_mine_query,
         to_item=_vote_on_mine_item,
+        source_id_column=Vote.id,
     ),
     FeedSource(
         item_type=FEED_ITEM_TYPE_FRIEND_COMPLETION,
@@ -827,6 +909,7 @@ FEED_SOURCES: tuple[FeedSource, ...] = (
         needs=frozenset({NEEDS_FRIEND_IDS}),
         query=_completions_query_factory(NEEDS_FRIEND_IDS),
         to_item=_completion_item_factory(FEED_ITEM_TYPE_FRIEND_COMPLETION),
+        source_id_column=Praxis.id,
     ),
     FeedSource(
         item_type=FEED_ITEM_TYPE_FOE_TAUNT,
@@ -834,6 +917,7 @@ FEED_SOURCES: tuple[FeedSource, ...] = (
         needs=frozenset(),
         query=_foe_taunts_query,
         to_item=_foe_taunt_item,
+        source_id_column=TauntMessage.id,
     ),
     FeedSource(
         item_type=FEED_ITEM_TYPE_GLOBAL_TASK,
@@ -841,6 +925,7 @@ FEED_SOURCES: tuple[FeedSource, ...] = (
         needs=frozenset(),
         query=_global_tasks_query,
         to_item=_global_task_item,
+        source_id_column=Task.id,
     ),
     FeedSource(
         item_type=FEED_ITEM_TYPE_ERA_ANNOUNCEMENT,
@@ -848,6 +933,7 @@ FEED_SOURCES: tuple[FeedSource, ...] = (
         needs=frozenset(),
         query=_era_announcements_query,
         to_item=_era_announcement_item,
+        source_id_column=Era.id,
     ),
     FeedSource(
         item_type=FEED_ITEM_TYPE_COLLAB_INVITE,
@@ -855,6 +941,7 @@ FEED_SOURCES: tuple[FeedSource, ...] = (
         needs=frozenset(),
         query=_collab_invites_query,
         to_item=_collab_invite_item,
+        source_id_column=PraxisInvite.id,
     ),
     FeedSource(
         item_type=FEED_ITEM_TYPE_DUEL_CHALLENGE,
@@ -862,6 +949,7 @@ FEED_SOURCES: tuple[FeedSource, ...] = (
         needs=frozenset(),
         query=_duel_challenges_query,
         to_item=_duel_challenge_item,
+        source_id_column=Duel.id,
     ),
     FeedSource(
         item_type=FEED_ITEM_TYPE_FRIEND_SIGNUP,
@@ -869,6 +957,7 @@ FEED_SOURCES: tuple[FeedSource, ...] = (
         needs=frozenset({NEEDS_FRIEND_IDS, NEEDS_MY_TASK_IDS}),
         query=_friend_signups_query,
         to_item=_friend_signup_item,
+        source_id_column=PraxisMember.id,
     ),
     FeedSource(
         item_type=FEED_ITEM_TYPE_COLLABORATOR_SUBMITTED,
@@ -876,6 +965,7 @@ FEED_SOURCES: tuple[FeedSource, ...] = (
         needs=frozenset(),
         query=_collaborator_submitted_query,
         to_item=_collaborator_submitted_item,
+        source_id_column=PraxisMember.id,
     ),
     FeedSource(
         # "Waiting on you to submit" — collab/duel praxes in the viewer's court.
@@ -886,6 +976,7 @@ FEED_SOURCES: tuple[FeedSource, ...] = (
         needs=frozenset(),
         query=_awaiting_submission_query,
         to_item=_awaiting_submission_item,
+        source_id_column=PraxisMember.id,
     ),
     FeedSource(
         # A nudge received (#1083). ALL + YOUR_STUFF, deliberately NOT REQUESTS:
@@ -899,6 +990,7 @@ FEED_SOURCES: tuple[FeedSource, ...] = (
         needs=frozenset(),
         query=_nudge_query,
         to_item=_nudge_item,
+        source_id_column=Nudge.id,
     ),
     FeedSource(
         item_type=FEED_ITEM_TYPE_INVITATION_LETTER,
@@ -906,6 +998,7 @@ FEED_SOURCES: tuple[FeedSource, ...] = (
         needs=frozenset(),
         query=_invitation_letters_query,
         to_item=_invitation_letter_item,
+        source_id_column=InvitationLetter.id,
     ),
     FeedSource(
         item_type=FEED_ITEM_TYPE_FRIEND_DEFECTION,
@@ -913,6 +1006,7 @@ FEED_SOURCES: tuple[FeedSource, ...] = (
         needs=frozenset({NEEDS_FRIEND_IDS}),
         query=_friend_defections_query,
         to_item=_friend_defection_item,
+        source_id_column=FactionDefectionHistory.id,
     ),
     FeedSource(
         item_type=FEED_ITEM_TYPE_FOE_COMPLETION,
@@ -920,6 +1014,7 @@ FEED_SOURCES: tuple[FeedSource, ...] = (
         needs=frozenset({NEEDS_FOE_IDS}),
         query=_completions_query_factory(NEEDS_FOE_IDS),
         to_item=_completion_item_factory(FEED_ITEM_TYPE_FOE_COMPLETION),
+        source_id_column=Praxis.id,
     ),
     FeedSource(
         item_type=FEED_ITEM_TYPE_COMMENT_MENTION,
@@ -927,6 +1022,7 @@ FEED_SOURCES: tuple[FeedSource, ...] = (
         needs=frozenset(),
         query=_comment_mentions_query,
         to_item=_comment_mention_item,
+        source_id_column=Comment.id,
     ),
 )
 
@@ -945,6 +1041,49 @@ FILTER_QUERIES: dict[str, set[str]] = {
     )
 }
 
+# Every feed type the registry knows, and the subset a player may archive.
+# Derived from FEED_SOURCES so neither can drift from the registry.
+FEED_ITEM_TYPES: frozenset[str] = frozenset(source.item_type for source in FEED_SOURCES)
+ARCHIVABLE_ITEM_TYPES: frozenset[str] = FEED_ITEM_TYPES - NON_ARCHIVABLE_ITEM_TYPES
+
+
+def parse_item_key(item_key: str) -> tuple[str, int]:
+    """Split an item key into ``(feed type, source row PK)``.
+
+    Raises ``HTTPException(400)`` on anything the registry does not recognise —
+    a malformed key, an unknown type, or a non-integer id. Callers that need the
+    "may this be archived?" rule as well should use ``parse_archivable_item_key``.
+    """
+    item_type, separator, raw_id = item_key.partition(ITEM_KEY_SEPARATOR)
+    if not separator or item_type not in FEED_ITEM_TYPES:
+        raise HTTPException(status_code=400, detail=f"Unknown feed item key: {item_key}")
+    try:
+        source_id = int(raw_id)
+    except ValueError:
+        raise HTTPException(status_code=400, detail=f"Malformed feed item key: {item_key}")
+    return item_type, source_id
+
+
+def parse_archivable_item_key(item_key: str) -> tuple[str, int]:
+    """``parse_item_key`` plus the one type that may never be archived.
+
+    ``awaiting_submission`` is refused rather than silently accepted: it is the
+    viewer's own standing obligation and it clears itself the moment they file,
+    so a dismissal row would hide it forever (epic #1192, decision 3). 400 —
+    the key names a thing that exists, but archiving it is not a request the
+    domain accepts.
+    """
+    item_type, source_id = parse_item_key(item_key)
+    if item_type in NON_ARCHIVABLE_ITEM_TYPES:
+        raise HTTPException(
+            status_code=400,
+            detail=(
+                f"Feed items of type '{item_type}' cannot be archived: they track "
+                "work still waiting on you and clear themselves once you file."
+            ),
+        )
+    return item_type, source_id
+
 
 # ---------------------------------------------------------------------------
 # Registry runner — one own-session-per-source pattern for fetch and count
@@ -961,34 +1100,69 @@ def _needs_satisfied(source: FeedSource, ctx: FeedContext) -> bool:
     return True
 
 
+def _scoped_query(
+    source: FeedSource,
+    ctx: FeedContext,
+    archive_view: FeedArchiveView,
+) -> Optional[Select]:
+    """The source's own query, narrowed to one side of the archive.
+
+    ``None`` means "this source cannot contribute anything" — either its
+    pre-fetch context is empty, or the Archived view is asking for a type this
+    character has archived nothing of. Both are answered without a round trip.
+
+    The archive predicate is applied *inside* the source's Select, before its
+    ``LIMIT``: filtering the mapped items afterwards would let dismissed rows
+    consume slots in the ``SUB_QUERY_LIMIT`` window, and would leave the badge
+    counts — which wrap this same Select in a COUNT — reading the unfiltered
+    number.
+    """
+    if not _needs_satisfied(source, ctx):
+        return None
+    dismissed_ids = archive_view.dismissed_source_ids.get(source.item_type, frozenset())
+    query = source.query(ctx)
+    if archive_view.archived_only:
+        if not dismissed_ids:
+            return None
+        return query.where(source.source_id_column.in_(dismissed_ids))
+    if not dismissed_ids:
+        return query
+    return query.where(source.source_id_column.notin_(dismissed_ids))
+
+
 async def _run_source_fetch(
     source: FeedSource,
     ctx: FeedContext,
+    archive_view: FeedArchiveView,
     session_factory: Callable,
 ) -> list[ActivityFeedItemDC]:
     """Run a source's query in its own session and map rows → items."""
-    if not _needs_satisfied(source, ctx):
+    query = _scoped_query(source, ctx, archive_view)
+    if query is None:
         return []
     async with session_factory() as session:
-        result = await session.execute(source.query(ctx))
+        result = await session.execute(query)
         return [source.to_item(row) for row in result.all()]
 
 
 async def _run_source_count(
     source: FeedSource,
     ctx: FeedContext,
+    archive_view: FeedArchiveView,
     session_factory: Callable,
 ) -> int:
     """COUNT over the source's OWN windowed query (ADR-0036).
 
     The count wraps the identical Select in a subquery, so it respects the same
-    WHERE, the ``before`` cursor, and the SUB_QUERY_LIMIT window as the fetch —
-    the badge can never disagree with what the fan-out would return.
+    WHERE, the ``before`` cursor, the ``SUB_QUERY_LIMIT`` window *and the
+    archive filter* as the fetch — the badge can never disagree with what the
+    fan-out would return. An archive that doesn't move the numbers is a bug.
     """
-    if not _needs_satisfied(source, ctx):
+    query = _scoped_query(source, ctx, archive_view)
+    if query is None:
         return 0
     async with session_factory() as session:
-        windowed = source.query(ctx).subquery()
+        windowed = query.subquery()
         result = await session.execute(select(func.count()).select_from(windowed))
         return int(result.scalar_one())
 
@@ -1005,6 +1179,7 @@ def _sum_counts_for_tab(tab: str, counts_by_type: dict[str, int]) -> int:
 async def _compute_counts(
     count_ctx: FeedContext,
     count_ctx_requests: FeedContext,
+    archive_view: FeedArchiveView,
     session_factory: Callable,
 ) -> FeedCountsDC:
     """Badge counts, each derived from its source's own query (ADR-0036).
@@ -1012,16 +1187,23 @@ async def _compute_counts(
     Every tab but ``requests`` sees all statuses (``count_ctx``); the
     ``requests`` tab windows collab invites / duel challenges to pending only
     (``count_ctx_requests``) — matching what that tab's fan-out returns.
+
+    The six badges always count the **live** feed, never the archive: they are
+    the sidebar's "what's waiting for you" numbers, and they stay truthful while
+    the player is reading the Archived tab. Hence the forced
+    ``archived_only=False`` — the caller's view flips the item fan-out, not the
+    badges.
     """
+    live_view = replace(archive_view, archived_only=False)
     requests_sources = [s for s in FEED_SOURCES if FILTER_REQUESTS in s.filters]
 
     normal_results, requests_results = await asyncio.gather(
         asyncio.gather(*(
-            _run_source_count(source, count_ctx, session_factory)
+            _run_source_count(source, count_ctx, live_view, session_factory)
             for source in FEED_SOURCES
         )),
         asyncio.gather(*(
-            _run_source_count(source, count_ctx_requests, session_factory)
+            _run_source_count(source, count_ctx_requests, live_view, session_factory)
             for source in requests_sources
         )),
     )
@@ -1052,6 +1234,7 @@ async def get_activity_feed(
     feed_filter: Optional[str] = None,
     before_cursor: Optional[datetime] = None,
     limit: int = 20,
+    archived: bool = False,
 ) -> ActivityFeedResponseDC:
     """Fetch a unified activity feed for the given character.
 
@@ -1066,13 +1249,27 @@ async def get_activity_feed(
         feed_filter: One of "all", "friends", "foes", "your_stuff", "global", "requests".
         before_cursor: ISO datetime cursor for pagination (items before this time).
         limit: Max items to return.
+        archived: Return the character's archive instead of their live feed.
+            Archived-ness is *state*, not type, so it cannot ride
+            ``FILTER_QUERIES`` — it is a separate axis crossed with the filter.
+            The archive deliberately ignores the friend/foe/global type slicing
+            and returns everything archived: a player looking for something they
+            put away should not have to remember which tab they put it away from.
     """
     active_filter = feed_filter or FILTER_ALL
-    allowed_types = FILTER_QUERIES.get(active_filter, FILTER_QUERIES[FILTER_ALL])
-    is_requests_filter = active_filter == FILTER_REQUESTS
+    allowed_types = (
+        FILTER_QUERIES[FILTER_ALL]
+        if archived
+        else FILTER_QUERIES.get(active_filter, FILTER_QUERIES[FILTER_ALL])
+    )
+    # The ``requests`` window (pending invites/duels only) is a live-feed rule.
+    # An archived invite that was since declined is still archived, and hiding it
+    # would strand it: nothing else lists it.
+    is_requests_filter = active_filter == FILTER_REQUESTS and not archived
 
     # Pre-fetch relationship / task / era context. Badge counts span every tab
     # regardless of the active filter, so all context is loaded up front.
+    archive_view = await get_archive_view(character_id, session, archived_only=archived)
     friend_ids = tuple(await _get_related_ids(character_id, RelationshipType.friend, session))
     foe_ids = tuple(await _get_related_ids(character_id, RelationshipType.foe, session))
     my_task_ids = tuple(await _get_my_task_ids(character_id, session))
@@ -1112,12 +1309,12 @@ async def get_activity_feed(
 
     # Run fan-out and badge counts concurrently; each sub-query owns its session.
     fetch_coros: list[Coroutine[Any, Any, list[ActivityFeedItemDC]]] = [
-        _run_source_fetch(source, fetch_ctx, session_factory)
+        _run_source_fetch(source, fetch_ctx, archive_view, session_factory)
         for source in allowed_sources
     ]
     gather_results = await asyncio.gather(
         *fetch_coros,
-        _compute_counts(count_ctx, count_ctx_requests, session_factory),
+        _compute_counts(count_ctx, count_ctx_requests, archive_view, session_factory),
     )
     counts: FeedCountsDC = gather_results[-1]
 
@@ -1139,3 +1336,182 @@ async def get_activity_feed(
         counts=counts,
         next_cursor=next_cursor,
     )
+
+
+# ---------------------------------------------------------------------------
+# The archive — reading and writing dismissals
+#
+# ADR-0065 / epic #1192: archiving is a *view state* and never a decision. Every
+# function below writes exactly one thing, ``feed_dismissal``. An archived duel
+# challenge is still open; an archived collab invite is still unanswered. If a
+# change here ever needs to touch ``Duel.status`` or ``PraxisInvite.status``,
+# the change is wrong.
+# ---------------------------------------------------------------------------
+
+# One "Archive all" covers everything the current filter would return, which is
+# bounded by the same window the feed itself reads: SUB_QUERY_LIMIT rows per
+# source. Beyond that window the tab's own badge count is already capped, so
+# archiving exactly the window is what makes the tab read empty and the badge
+# read zero.
+ARCHIVE_ALL_LIMIT = len(FEED_SOURCES) * SUB_QUERY_LIMIT
+
+
+async def get_archive_view(
+    character_id: int,
+    session: AsyncSession,
+    archived_only: bool = False,
+) -> FeedArchiveView:
+    """Load this character's dismissals, pre-split by feed type.
+
+    Keys that no longer parse — a type retired from the registry, or a row from
+    an older key format — are skipped rather than raised on. A stale dismissal
+    must never be able to break somebody's feed.
+    """
+    result = await session.execute(
+        select(FeedDismissal.item_key).where(
+            FeedDismissal.character_id == character_id
+        )
+    )
+    source_ids_by_type: dict[str, set[int]] = {}
+    for item_key in result.scalars():
+        item_type, separator, raw_id = item_key.partition(ITEM_KEY_SEPARATOR)
+        if not separator or item_type not in FEED_ITEM_TYPES:
+            continue
+        try:
+            source_id = int(raw_id)
+        except ValueError:
+            continue
+        source_ids_by_type.setdefault(item_type, set()).add(source_id)
+
+    return FeedArchiveView(
+        dismissed_source_ids={
+            item_type: frozenset(source_ids)
+            for item_type, source_ids in source_ids_by_type.items()
+        },
+        archived_only=archived_only,
+    )
+
+
+async def _existing_dismissed_keys(
+    character_id: int,
+    item_keys: list[str],
+    session: AsyncSession,
+) -> set[str]:
+    """Which of ``item_keys`` this character has already archived."""
+    if not item_keys:
+        return set()
+    result = await session.execute(
+        select(FeedDismissal.item_key).where(
+            FeedDismissal.character_id == character_id,
+            FeedDismissal.item_key.in_(item_keys),
+        )
+    )
+    return set(result.scalars())
+
+
+async def dismiss_feed_item(
+    character_id: int,
+    item_key: str,
+    session: AsyncSession,
+) -> bool:
+    """Archive one feed item. Returns True if this call is what archived it.
+
+    Idempotent: archiving an already-archived item is a no-op returning False,
+    not a 409. The client's undo strip can fire twice without consequence.
+    """
+    parse_archivable_item_key(item_key)
+    already = await _existing_dismissed_keys(character_id, [item_key], session)
+    if already:
+        return False
+    session.add(FeedDismissal(character_id=character_id, item_key=item_key))
+    await session.flush()
+    return True
+
+
+async def restore_feed_item(
+    character_id: int,
+    item_key: str,
+    session: AsyncSession,
+) -> bool:
+    """Take one feed item back out of the archive.
+
+    Returns True if a dismissal row was actually removed. Restoring puts the
+    item back at its own position in the ordering for free: position comes from
+    the source row's timestamp, which archiving never touched.
+    """
+    parse_item_key(item_key)
+    result = await session.execute(
+        delete(FeedDismissal)
+        .where(
+            FeedDismissal.character_id == character_id,
+            FeedDismissal.item_key == item_key,
+        )
+        .execution_options(synchronize_session=False)
+    )
+    await session.flush()
+    return bool(result.rowcount)
+
+
+async def dismiss_feed_items_for_filter(
+    character_id: int,
+    session: AsyncSession,
+    session_factory: Callable,
+    feed_filter: Optional[str] = None,
+) -> int:
+    """Archive everything the given filter would currently return. One call.
+
+    Scope is defined by re-running the very feed the player is looking at, so
+    "Archive all" can never drift from what the tab shows. ``awaiting_submission``
+    rows are skipped, not refused: a bulk action that 400s because one
+    unarchivable row happened to be on screen would be unusable.
+    """
+    feed = await get_activity_feed(
+        character_id=character_id,
+        session=session,
+        session_factory=session_factory,
+        feed_filter=feed_filter,
+        limit=ARCHIVE_ALL_LIMIT,
+    )
+    item_keys = [
+        item.item_key for item in feed.items if item.type in ARCHIVABLE_ITEM_TYPES
+    ]
+    already = await _existing_dismissed_keys(character_id, item_keys, session)
+    new_keys = [item_key for item_key in item_keys if item_key not in already]
+    for item_key in new_keys:
+        session.add(FeedDismissal(character_id=character_id, item_key=item_key))
+    await session.flush()
+    return len(new_keys)
+
+
+async def restore_feed_items_for_filter(
+    character_id: int,
+    session: AsyncSession,
+    feed_filter: Optional[str] = None,
+) -> int:
+    """Empty the archive, or the part of it belonging to one filter. One call.
+
+    No filter restores everything, which is what the Archived tab wants: that
+    tab ignores type slicing, so "Restore all" there means all of it.
+    """
+    allowed_types = FILTER_QUERIES.get(
+        feed_filter or FILTER_ALL, FILTER_QUERIES[FILTER_ALL]
+    )
+    statement = delete(FeedDismissal).where(FeedDismissal.character_id == character_id)
+
+    if allowed_types != FILTER_QUERIES[FILTER_ALL]:
+        archive_view = await get_archive_view(character_id, session)
+        item_keys = [
+            build_item_key(item_type, source_id)
+            for item_type, source_ids in archive_view.dismissed_source_ids.items()
+            if item_type in allowed_types
+            for source_id in source_ids
+        ]
+        if not item_keys:
+            return 0
+        statement = statement.where(FeedDismissal.item_key.in_(item_keys))
+
+    result = await session.execute(
+        statement.execution_options(synchronize_session=False)
+    )
+    await session.flush()
+    return int(result.rowcount or 0)
