@@ -25,6 +25,10 @@ import { useAdminMode } from "../../auth/AdminModeContext";
 import { moderatePraxis } from "../../api/admin";
 import { extractError } from "../../utils/errors";
 import { seedViewerVote, useVoteOverride } from "../../components/vote/voteOverrides";
+import {
+  applyVoteDelta,
+  applyVoteSummaryDelta,
+} from "../../components/vote/useVotedPraxis";
 import type { CurrentUser } from "../../api/auth";
 import { FLAG_REASON_OTHER, type FlagReason } from "../../utils/flagReasons";
 
@@ -265,23 +269,22 @@ export function usePraxisDetail(idParam: string | undefined): PraxisDetailState 
     if (own) seedViewerVote(praxis.id, own.value);
   }, [voters, viewerCharacterId, praxis?.id]);
 
-  // Merge the viewer's own just-cast vote into the tally the archetypes render
-  // (#626) — every bespoke "standing" panel reads this, not just the vote line.
+  // Merge the viewer's own just-cast vote into everything this page renders
+  // (#626). It has to land on the PRAXIS, not only on the vote summary (#1142):
+  // every archetype's score panel is the mounted `ScoreStamp`, which resolves
+  // its rows from `scoreBreakdown(praxis)` (ADR-0053) — so a delta that stops at
+  // `votes` leaves the panel reading "+ 0 from votes" until a refresh, which is
+  // exactly the bug. `votes` gets the same delta through its own sibling helper;
+  // both are one `VoteDelta`, and neither recomputes a total here.
   const voteDelta = useVoteOverride(praxis?.id ?? -1);
-  const displayVotes =
-    votes && voteDelta
-      ? {
-          ...votes,
-          total_score: votes.total_score + voteDelta.score,
-          total_votes: votes.total_votes + voteDelta.voters,
-        }
-      : votes;
+  const displayPraxis = praxis && voteDelta ? applyVoteDelta(praxis, voteDelta) : praxis;
+  const displayVotes = votes && voteDelta ? applyVoteSummaryDelta(votes, voteDelta) : votes;
 
   const isOwner = isViewerMember(praxis, user?.character?.id);
 
   return {
     loading,
-    praxis,
+    praxis: displayPraxis,
     fetchError,
 
     votes: displayVotes,
