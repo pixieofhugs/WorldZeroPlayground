@@ -77,6 +77,16 @@ A measurement belongs to a **hue on a ground**. It survives exactly as long as b
 
 The third variant of this — a design kit's own annotations measured against the kit's plate rather than ours — is §6's, under "Reading a design kit".
 
+### Unaffiliated grey is usually a FILL written as a border (#983, #805)
+
+ADR-0039 draws one line: an unaffiliated player's identity is a gradient, so it appears wherever a gradient is expressible (`background:`, an SVG `fill=`) and stays neutral grey where one is not (`color:`, `border: Npx solid`). The line holds. What keeps going wrong is which side a given accent is actually on — and the answer is usually decided by how somebody happened to type it, not by what it is.
+
+**A rule drawn as a `border` is a fill that lost an argument with the shorthand.** The feed's headline accent read grey for every `na` row purely because it was written `borderLeft: 3px solid ${accent}`; drawn instead as a 3px element it is a fill, and the spectrum arrives with no ADR amendment and no change for the seven themed factions. Same story in the Meadow: an SVG `fill` takes `url(#…)`, so the bloom's soft wash was never a scalar — it had simply been switched off (`fill="none"`) for unaffiliated players, which cost them the flower shape and left a scatter of hard dots. **Before accepting that a surface owes `na` grey, check whether it is genuinely ink or merely a fill in a scalar's clothing.**
+
+**The spectrum comes in ramps cut for their geometry, and the cut is `factionFill`'s job, not the caller's.** `bar` is a 90deg ramp, `dot` a conic (a 7-stop linear at 10–12px is mud), and `rule` — `bar` stood on end — a 180deg one, because seven stops across a 3px-wide vertical rule is the same mud in the other axis. A themed faction returns the identical solid hue for all of them; only `na` is shape-dependent, which is what lets a call site swap `factionCssVar` for `factionFill` without restyling anybody else.
+
+**What stays grey stays grey, and it is a decision.** Actor names, kickers and links in the feed are single-ink text: no stop of a seven-stop ramp is legible as one (#649), and `background-clip: text` buys the spectrum at the price of text selection and high-contrast modes. Unaffiliated actor text is grey on purpose. Reporting it as a bug is how the wrong fix gets built.
+
 ### Albescent has no theme, on purpose (#783)
 
 Albescent is a secret society hiding in plain sight, so it is the one faction with **no `--faction-albescent-*` block and no slot in `FACTION_RAINBOW_ORDER`**. It maps to `default` in `CSS_KEY`, exactly as `na` does, which makes `isKnownFaction('albescent')` **false**. That is the intended outcome, not a gap: every surface that branches on that predicate hands Albescent the unaffiliated treatment automatically, including surfaces built later.

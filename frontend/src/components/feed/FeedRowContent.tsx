@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom'
 import i18n from '../../i18n'
-import { factionColor, isKnownFaction } from '../../utils/factions'
+import { factionColor, factionFill, isKnownFaction } from '../../utils/factions'
 import { mediaUrl } from '../../utils/media'
 import FeedBadge from './FeedBadge'
 import type { FeedRow } from './normalizeFeedItem'
@@ -11,6 +11,12 @@ import type { FeedRow } from './normalizeFeedItem'
  * inside the faction's frame (FactionFeedFrame). The faction's accent colors the
  * actor, avatar, and headline rule so the row reads in the faction's voice; the
  * frame supplies the physical chrome. No per-event-type card.
+ *
+ * Two of those three accents are FILLS and one is ink, which is the whole of
+ * ADR-0039 on this surface (#983). The monogram disc and the headline rule are
+ * painted elements, so they ask `factionFill` and an unaffiliated actor gets the
+ * spectrum. The actor's NAME is a single-ink `color:` — no stop of a seven-stop
+ * ramp is legible as text (#649) — so `na` stays neutral grey there on purpose.
  */
 export default function FeedRowContent({
   row,
@@ -19,6 +25,8 @@ export default function FeedRowContent({
   row: FeedRow
   avatarUrl: string | null
 }) {
+  // Scalar ink only — the actor's name and the real-faction monogram gradient.
+  // Never a fill: those go through factionFill so `na` reaches the spectrum.
   const accent = factionColor(row.slug)
   const known = isKnownFaction(row.slug)
   const initial = row.actor?.[0]?.toUpperCase() ?? '·'
@@ -133,37 +141,51 @@ export default function FeedRowContent({
             // Aligns the headline rule with the text column: --space-3xl (40px) is
             // the 28px avatar plus the --space-md row gap.
             marginLeft: row.actor ? 'var(--space-3xl)' : 0,
-            borderLeft: `3px solid ${accent}`,
-            paddingLeft: 'var(--space-md)',
+            display: 'flex',
+            gap: 'var(--space-md)',
           }}
         >
-          {row.headlineQuoted ? (
-            <p
-              className="font-body"
-              style={{ margin: 0, fontSize: 'var(--text-content)', fontStyle: 'italic', color: 'var(--color-text-primary)', lineHeight: 1.4 }}
-            >
-              {i18n.t('feed:row.quotedHeadline', { headline: row.headline })}
-            </p>
-          ) : row.headlineHref ? (
-            <Link
-              to={row.headlineHref}
-              className="font-body"
-              style={{ fontSize: 'var(--text-content)', fontWeight: 700, color: 'var(--color-text-primary)', textDecoration: 'none', display: 'block', lineHeight: 1.3 }}
-            >
-              {row.headline}
-            </Link>
-          ) : (
-            <span className="font-body" style={{ fontSize: 'var(--text-content)', fontWeight: 700, color: 'var(--color-text-primary)', display: 'block', lineHeight: 1.3 }}>
-              {row.headline}
-            </span>
-          )}
-          {(row.points || row.level != null) && (
-            <span className="eyebrow" style={{ color: 'var(--color-text-tertiary)' }}>
-              {row.points}
-              {row.points && row.level != null ? ' · ' : ''}
-              {row.level != null ? i18n.t('feed:row.level', { level: row.level }) : ''}
-            </span>
-          )}
+          {/* The headline rule is a FILLED BAR, not a border (#983). It was only
+              ever a border by accident of how it was written, and `border: 3px
+              solid X` is a scalar — the one place a gradient cannot go — so an
+              unaffiliated row could never be anything but grey there. Drawn as an
+              element it is a fill, and ADR-0039 hands it the spectrum with no
+              amendment. `rule` rather than `bar`: the ramp has to run DOWN a 3px
+              column. Ornament geometry — the 3px width is the drawn rule itself,
+              not layout spacing. */}
+          <span
+            aria-hidden
+            style={{ width: 3, flexShrink: 0, alignSelf: 'stretch', ...factionFill(row.slug, 'rule') }}
+          />
+          <div style={{ flex: 1, minWidth: 0 }}>
+            {row.headlineQuoted ? (
+              <p
+                className="font-body"
+                style={{ margin: 0, fontSize: 'var(--text-content)', fontStyle: 'italic', color: 'var(--color-text-primary)', lineHeight: 1.4 }}
+              >
+                {i18n.t('feed:row.quotedHeadline', { headline: row.headline })}
+              </p>
+            ) : row.headlineHref ? (
+              <Link
+                to={row.headlineHref}
+                className="font-body"
+                style={{ fontSize: 'var(--text-content)', fontWeight: 700, color: 'var(--color-text-primary)', textDecoration: 'none', display: 'block', lineHeight: 1.3 }}
+              >
+                {row.headline}
+              </Link>
+            ) : (
+              <span className="font-body" style={{ fontSize: 'var(--text-content)', fontWeight: 700, color: 'var(--color-text-primary)', display: 'block', lineHeight: 1.3 }}>
+                {row.headline}
+              </span>
+            )}
+            {(row.points || row.level != null) && (
+              <span className="eyebrow" style={{ color: 'var(--color-text-tertiary)' }}>
+                {row.points}
+                {row.points && row.level != null ? ' · ' : ''}
+                {row.level != null ? i18n.t('feed:row.level', { level: row.level }) : ''}
+              </span>
+            )}
+          </div>
         </div>
       )}
     </div>
