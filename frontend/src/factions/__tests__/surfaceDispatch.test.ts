@@ -72,7 +72,7 @@ const CORE_SIX = ['coven', 'snide', 'ephemerists', 'singularity', 'everymen', 'u
 // neutral copy. Both are "registered"; only one is a skin.
 const BESPOKE: Record<string, string[]> = {
   taskDetail: [...CORE_SIX, 'wow', 'albescent'],
-  praxisDetail: ['coven', 'albescent'],
+  praxisDetail: ['coven', 'ephemerists', 'singularity', 'albescent'],
   mobileFactionPage: [...CORE_SIX, 'wow'],
   mobileFieldDesk: [...CORE_SIX, 'wow'],
   mobileEditPraxis: [...CORE_SIX, 'wow'],
