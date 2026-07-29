@@ -29,6 +29,7 @@ from models.taunt_message import TauntMessage
 from models.faction_defection_history import FactionDefectionHistory
 from models.invitation_letter import InvitationLetter
 from models.nudge import Nudge
+from models.feed_dismissal import FeedDismissal
 
 __all__ = [
     "Faction",
@@ -65,4 +66,5 @@ __all__ = [
     "FactionDefectionHistory",
     "InvitationLetter",
     "Nudge",
+    "FeedDismissal",
 ]
