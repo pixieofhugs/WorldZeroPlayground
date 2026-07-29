@@ -1,8 +1,7 @@
 {
   "page": {
     "show": "show",
-    "loading": "Loading...",
-    "empty": "No updates yet. Activity from friends, foes, and the community will appear here."
+    "loading": "Loading..."
   },
   "mobile": {
     "title": "Updates",
@@ -16,8 +15,52 @@
       "foes": "Foes",
       "yourStuff": "Yours",
       "global": "Global",
-      "requests": "Requests"
+      "requests": "Requests",
+      "archived": "Archived"
     }
+  },
+  "kicker": {
+    "friend_completion": "Task completed",
+    "foe_completion": "Task completed",
+    "vote_on_mine": "Vote",
+    "foe_taunt": "Taunt",
+    "friend_signup": "Signup",
+    "friend_defection": "Defection",
+    "global_task": "New task",
+    "collaborator_submitted": "Collaborator filed",
+    "awaiting_submission": "Your turn",
+    "nudge": "Nudge",
+    "era_announcement": "Era",
+    "invitation_letter": "Faction invitation",
+    "duel_challenge": "Duel challenge",
+    "collab_invite": "Collaboration invite",
+    "comment_mention": "Mention",
+    "fallback": "Update"
+  },
+  "archive": {
+    "dismiss": "Archive",
+    "dismissLabel": "Archive this update",
+    "undo": "Undo",
+    "restore": "Restore",
+    "restoreLabel": "Restore this update",
+    "archived": "Archived “{{title}}”",
+    "restored": "Restored “{{title}}”",
+    "archiveAll": "Archive all",
+    "restoreAll": "Restore all",
+    "stillWaiting": "Still waiting",
+    "error": "Couldn't archive that update.",
+    "restoreError": "Couldn't restore that update.",
+    "emptyTitle": "The archive is empty.",
+    "emptyBody": "Dismissed updates rest here",
+    "feedEmptyTitle": "Nothing left to read.",
+    "feedEmptyBody": "The city is quiet. Go do something."
+  },
+  "rowAction": {
+    "fileIt": "File it",
+    "dropOut": "Drop out",
+    "answer": "Answer",
+    "fileYours": "File yours",
+    "failed": "That didn't go through."
   },
   "badge": {
     "friend": "Friend",

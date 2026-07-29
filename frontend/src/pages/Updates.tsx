@@ -2,6 +2,8 @@ import { useTranslation } from 'react-i18next'
 import PageTitle from '../components/ui/PageTitle'
 import FeedCardRouter from '../components/feed/FeedCardRouter'
 import FeedDateDivider, { getDateLabel } from '../components/feed/FeedDateDivider'
+import FeedEmptyState from '../components/feed/FeedEmptyState'
+import FeedBulkArchiveButton from '../components/feed/FeedBulkArchiveButton'
 import { useFormFactor } from '../hooks/useFormFactor'
 import {
   useUpdates,
@@ -43,6 +45,12 @@ function DesktopUpdates({ state }: { state: UpdatesState }) {
     fetchError,
     loadMoreError,
     loadMore,
+    archivedView,
+    refreshCounts,
+    archiveAll,
+    restoreAll,
+    bulkPending,
+    bulkError,
   } = state
 
   /** Insert date dividers between items when the date changes. */
@@ -50,16 +58,25 @@ function DesktopUpdates({ state }: { state: UpdatesState }) {
     const elements: React.ReactNode[] = []
     let lastDateLabel = ''
 
-    for (let index = 0; index < items.length; index++) {
-      const item = items[index]
+    for (const item of items) {
       const dateLabel = getDateLabel(item.timestamp)
 
       if (dateLabel !== lastDateLabel) {
-        elements.push(<FeedDateDivider key={`divider-${dateLabel}-${index}`} label={dateLabel} />)
+        elements.push(<FeedDateDivider key={`divider-${dateLabel}-${item.item_key}`} label={dateLabel} />)
         lastDateLabel = dateLabel
       }
 
-      elements.push(<FeedCardRouter key={`${item.type}-${item.timestamp}-${index}`} item={item} />)
+      // Keyed on `item_key` since #1194: it is stable for the life of the source
+      // row, so a slot showing an undo strip is not remounted (and its six-second
+      // window not restarted) by anything happening around it.
+      elements.push(
+        <FeedCardRouter
+          key={item.item_key}
+          item={item}
+          archivedView={archivedView}
+          onArchiveChange={refreshCounts}
+        />,
+      )
     }
 
     return elements
@@ -114,10 +131,26 @@ function DesktopUpdates({ state }: { state: UpdatesState }) {
           <span className="eyebrow">{t('page.show')}</span>
           {ROW_1_FILTERS.map(renderFilterButton)}
         </div>
-        {/* Row 2 */}
+        {/* Row 2 — Global · Requests · Archived (#1194) */}
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-sm)', alignItems: 'center', paddingLeft: 'var(--space-3xl)' }}>
           {ROW_2_FILTERS.map(renderFilterButton)}
+          {/* Bulk archive lives with the tabs, and only when it has something to
+              act on — hide an unusable control, never draw it disabled. */}
+          {items.length > 0 && !loading && !fetchError && (
+            <span style={{ marginLeft: 'auto' }}>
+              <FeedBulkArchiveButton
+                archivedView={archivedView}
+                onAct={archivedView ? restoreAll : archiveAll}
+                pending={bulkPending}
+              />
+            </span>
+          )}
         </div>
+        {bulkError && (
+          <p className="font-body content-text" style={{ color: 'var(--color-danger)', marginTop: 'var(--space-sm)' }}>
+            {bulkError}
+          </p>
+        )}
       </div>
 
       {/* ── Feed ── */}
@@ -129,11 +162,7 @@ function DesktopUpdates({ state }: { state: UpdatesState }) {
           <button onClick={() => window.location.reload()} className="underline">{tc('states.tryRefreshing')}</button>
         </p>
       ) : items.length === 0 ? (
-        <div className="sidebar-card" style={{ padding: 'var(--space-xl)', textAlign: 'center' }}>
-          <p className="font-body content-text" style={{ color: 'var(--color-text-tertiary)' }}>
-            {t('page.empty')}
-          </p>
-        </div>
+        <FeedEmptyState archivedView={archivedView} />
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-sm)' }}>
           {renderFeedWithDividers()}

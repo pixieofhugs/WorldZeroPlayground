@@ -47,6 +47,7 @@ import type { MobilePraxisCardProps } from '../components/praxisCard/mobile/Mobi
 import type { FactionAvatarProps } from '../components/avatar/FactionAvatar'
 import type { SigilVariantProps } from '../components/cards/FactionSigil'
 import type { CommentComponent } from '../components/comments/shared'
+import type { FeedFrameProps } from '../components/feed/feedFrameProps'
 import type { VoteUIProps } from '../components/vote/VoteUI'
 import type { ScoreStampProps } from '../components/praxisCard/scoreStamp/ScoreStamp'
 import type { FactionCardProps } from '../components/cards/FactionCard'
@@ -95,7 +96,15 @@ export interface FactionManifest {
   readonly backdrop?: Lazy<ComponentType>
   readonly sigil?: Lazy<ComponentType<SigilVariantProps>>
   readonly comment?: Lazy<CommentComponent>
-  readonly feedFrame?: Lazy<ComponentType<{ children: React.ReactNode }>>
+  /**
+   * The faction's activity-feed CHASSIS (surface #12). #1194 widened this from
+   * `{ children }` to {@link FeedFrameProps}: a frame that owned only children
+   * could not draw the kicker band, the timestamp or the archive control, all
+   * three of which every design sheet puts on the chassis. Read that interface's
+   * docblock before writing a faction skin — nothing may be written against the
+   * old shape.
+   */
+  readonly feedFrame?: Lazy<ComponentType<FeedFrameProps>>
   readonly vote?: Lazy<ComponentType<VoteUIProps>>
   /**
    * The praxis-card score stamp (ADR-0049). Size-agnostic — the same component

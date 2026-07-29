@@ -1,6 +1,6 @@
-import type { ReactNode } from 'react'
-
 import i18n from '../../i18n'
+import FeedChassisBand from './FeedChassisBand'
+import type { FeedFrameProps } from './feedFrameProps'
 
 /**
  * Singularity per-faction feed frame (surface #12, SPEC-faction-ui-profile.md).
@@ -10,6 +10,13 @@ import i18n from '../../i18n'
  * terminal-black slab with a signal-blue inset border, scanline overlay, and a
  * `>` boot/prompt strip header — and renders the unchanged card as the printout
  * body. It must NOT reimplement the card internals; those arrive via `children`.
+ *
+ * #1194: the boot strip is now also the CHASSIS BAND. It used to be
+ * `aria-hidden` in one piece, which cannot hold the dismiss control — the
+ * keyboard and screen-reader route to the archive is the whole reason that
+ * control exists (swipe alone would not provide one). The two ornamental spans
+ * carry `aria-hidden` individually instead, so the strip's chrome stays silent
+ * while the kicker, the time and the ✕ are announced.
  *
  * Singularity is ALWAYS DARK: its --faction-singularity-* tokens are identical in
  * both themes, so the container styles itself with them and reads as a terminal
@@ -27,7 +34,13 @@ const FONT = 'var(--font-faction-terminal)'
 const signal = (pct: number): string =>
   `color-mix(in srgb, ${SIGNAL} ${pct}%, transparent)`
 
-export default function SingularityFeedFrame({ children }: { children: ReactNode }) {
+export default function SingularityFeedFrame({
+  kicker,
+  time,
+  tag,
+  archive,
+  children,
+}: FeedFrameProps) {
   return (
     <div
       style={{
@@ -63,9 +76,8 @@ export default function SingularityFeedFrame({ children }: { children: ReactNode
         }}
       />
 
-      {/* boot/prompt strip header */}
+      {/* boot/prompt strip header — also the chassis band */}
       <div
-        aria-hidden="true"
         style={{
           position: 'relative',
           zIndex: 2,
@@ -82,8 +94,15 @@ export default function SingularityFeedFrame({ children }: { children: ReactNode
           textTransform: 'uppercase',
         }}
       >
-        <span style={{ color: PHOSPHOR }}>{'>'}</span>
-        <span>{i18n.t('feed:frame.singularity.masthead')}</span>
+        <span aria-hidden="true" style={{ color: PHOSPHOR, flexShrink: 0 }}>
+          {'>'}
+        </span>
+        <span aria-hidden="true" style={{ flexShrink: 0 }}>
+          {i18n.t('feed:frame.singularity.masthead')}
+        </span>
+        <div style={{ flex: 1, minWidth: 0, color: signal(75) }}>
+          <FeedChassisBand kicker={kicker} time={time} tag={tag} archive={archive} />
+        </div>
       </div>
 
       {/* printout body — the neutral card, unchanged */}

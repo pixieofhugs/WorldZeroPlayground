@@ -3,13 +3,20 @@ import { Trans } from "react-i18next";
 import type { ActivityFeedItem } from "../../api/activityFeed";
 import i18n from "../../i18n";
 import { factionColor, factionName } from "../../utils/factions";
-import { relativeTime } from "../../utils/dates";
 import FeedBadge from "./FeedBadge";
 
 interface Props {
   item: ActivityFeedItem;
 }
 
+/**
+ * The faction invitation letter — a PAYLOAD BODY inside the faction chassis as of
+ * #1194 (epic #1192 decision 9), not a card that brings its own chrome.
+ *
+ * It lost its own kicker and its own timestamp: the chassis band draws both for
+ * every card now, and a body that drew them too printed each twice. Its content
+ * and its link are untouched.
+ */
 export default function FeedCardInvitationLetter({ item }: Props) {
   const { faction_slug } = item.payload;
   const color = factionColor(faction_slug);
@@ -26,19 +33,7 @@ export default function FeedCardInvitationLetter({ item }: Props) {
       >
         {/* eslint-disable-next-line local/no-raw-style-values -- ornament: envelope emoji used as an icon */}
         <span style={{ fontSize: 16 }}>&#x2709;&#xFE0F;</span>
-        <span className="eyebrow" style={{ color }}>
-          {i18n.t("feed:invitationLetter.kicker")}
-        </span>
         <FeedBadge type="your_stuff" label={i18n.t("feed:badge.yourStuff")} />
-        <span
-          className="eyebrow"
-          style={{
-            marginLeft: "auto",
-            color: "var(--color-text-tertiary)",
-          }}
-        >
-          {relativeTime(item.timestamp)}
-        </span>
       </div>
 
       <p

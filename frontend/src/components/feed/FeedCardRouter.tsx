@@ -1,22 +1,50 @@
+import type { ReactNode } from 'react'
 import type { ActivityFeedItem } from '../../api/activityFeed'
+import i18n from '../../i18n'
+import { relativeTime } from '../../utils/dates'
 import FactionFeedFrame from './FactionFeedFrame'
+import FeedItemSlot from './FeedItemSlot'
 import FeedRowContent from './FeedRowContent'
 import { normalizeFeedItem } from './normalizeFeedItem'
+import { feedKicker, STILL_WAITING_TYPES } from './feedItemLabels'
 import FeedCardEraAnnouncement from './FeedCardEraAnnouncement'
 import FeedCardCollabInvite from './FeedCardCollabInvite'
 import FeedCardDuelChallenge from './FeedCardDuelChallenge'
 import FeedCardInvitationLetter from './FeedCardInvitationLetter'
 
 /**
- * Full adoption (#376): the faction owns every "someone did X" row. Those types
- * normalize into one slot-driven `FeedRowContent` inside the faction frame — no
- * per-event-type card. The remaining four are structural / interactive and keep
- * their bespoke companion cards (the design's factionless announcement + the
- * interactive challenge cards); the interactive ones own real accept/decline
- * handlers that must NOT collapse into slots.
+ * THE CHASSIS SEAM, assembled. Read this and {@link FeedFrameProps} before
+ * building a faction feed skin (#1194).
+ *
+ * Every feed item is three layers, and each one owns exactly one thing:
+ *
+ *   FeedItemSlot   the archive — the control, the swipe, the write, the undo
+ *                  strip that stands in the slot. Faction-blind. Nothing in a
+ *                  skin touches this.
+ *   FactionFeedFrame  the CHASSIS — one per faction, dispatched on
+ *                  `context_faction_slug`. It draws the kicker band, the tag,
+ *                  the time and places the archive node. THIS is what a dress
+ *                  issue rewrites.
+ *   the body       shared payload — either the slot-driven `FeedRowContent` or
+ *                  one of the three interactive companions. Faction-blind.
+ *
+ * So the whole of "give this faction its own feed card" is: claim `feedFrame` in
+ * the faction's manifest. Nothing else changes, and no body needs touching.
+ *
+ * THE ONE EXCEPTION is `era_announcement` (epic #1192 decision 6). It is the
+ * single factionless type and must stay that way — an era turn can strip a
+ * player of their faction, so speaking that card in their faction's voice is
+ * exactly backwards. It keeps its own neutral always-dark chrome, is NOT wrapped
+ * in a chassis, and gains only the ✕.
+ *
+ * `comment_mention` is #1196's job. It reaches this router already: give it a
+ * body in `normalizeFeedItem` and it inherits the chassis, the kicker and the
+ * archive with no change here.
  */
-const COMPANION_MAP: Record<string, React.ComponentType<{ item: ActivityFeedItem }>> = {
-  era_announcement: FeedCardEraAnnouncement,
+
+/** The three interactive companions — payload BODIES inside the chassis since
+ *  #1194, keeping their own accept/decline handlers (epic decision 9). */
+const COMPANION_BODIES: Record<string, React.ComponentType<{ item: ActivityFeedItem }>> = {
   invitation_letter: FeedCardInvitationLetter,
   duel_challenge: FeedCardDuelChallenge,
   collab_invite: FeedCardCollabInvite,
@@ -24,25 +52,54 @@ const COMPANION_MAP: Record<string, React.ComponentType<{ item: ActivityFeedItem
 
 interface Props {
   item: ActivityFeedItem
+  /** Drawn in the Archived tab: the control restores instead of archiving, and
+   *  an unanswered challenge or invite carries the "still waiting" tag. */
+  archivedView?: boolean
+  /** Fired after a successful archive write so the surrounding feed can refresh
+   *  its counts. */
+  onArchiveChange?: () => void
 }
 
-export default function FeedCardRouter({ item }: Props) {
+export default function FeedCardRouter({ item, archivedView = false, onArchiveChange }: Props) {
   const row = normalizeFeedItem(item)
-  if (row) {
-    return (
-      <FactionFeedFrame slug={row.slug}>
-        <FeedRowContent row={row} avatarUrl={item.actor_avatar_url} />
-      </FactionFeedFrame>
-    )
+  const Companion = COMPANION_BODIES[item.type]
+  const isEraAnnouncement = item.type === 'era_announcement'
+
+  // A type with no body yet (today: comment_mention, until #1196) renders
+  // nothing rather than an empty chassis.
+  if (!row && !Companion && !isEraAnnouncement) return null
+
+  // "Still waiting" only in the archive, and only where there is something to
+  // wait for: archiving never answers anything (ADR-0066), so an archived duel
+  // challenge or collab invite is still open and says so. In the live feed the
+  // card's own buttons already make that plain.
+  const tag =
+    archivedView && STILL_WAITING_TYPES.has(item.type)
+      ? i18n.t('feed:archive.stillWaiting')
+      : null
+
+  const renderBody = (): ReactNode => {
+    if (row) return <FeedRowContent row={row} avatarUrl={item.actor_avatar_url} />
+    return <Companion item={item} />
   }
 
-  const Companion = COMPANION_MAP[item.type]
-  if (!Companion) return null
-  // Companions bring their own chrome (announcement is dark; the interactive
-  // cards are neutral) — still framed by faction context where one exists.
   return (
-    <FactionFeedFrame slug={item.context_faction_slug}>
-      <Companion item={item} />
-    </FactionFeedFrame>
+    <FeedItemSlot item={item} archivedView={archivedView} onArchiveChange={onArchiveChange}>
+      {(archive) =>
+        isEraAnnouncement ? (
+          <FeedCardEraAnnouncement item={item} archive={archive} />
+        ) : (
+          <FactionFeedFrame
+            slug={row ? row.slug : item.context_faction_slug}
+            kicker={feedKicker(item.type)}
+            time={relativeTime(item.timestamp)}
+            tag={tag}
+            archive={archive}
+          >
+            {renderBody()}
+          </FactionFeedFrame>
+        )
+      }
+    </FeedItemSlot>
   )
 }

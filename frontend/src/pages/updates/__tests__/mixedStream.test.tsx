@@ -16,6 +16,7 @@ import type { ActivityFeedItem } from '../../../api/activityFeed'
 function completion(slug: string, id: number, title: string): ActivityFeedItem {
   return {
     type: 'friend_completion',
+    item_key: `friend_completion:${id}`,
     timestamp: '2026-01-01T00:00:00Z',
     actor_display_name: 'Ada',
     actor_faction_slug: slug,
@@ -37,6 +38,12 @@ function baseState(overrides: Partial<UpdatesState>): UpdatesState {
     fetchError: null,
     loadMoreError: null,
     loadMore: async () => {},
+    archivedView: false,
+    refreshCounts: () => {},
+    archiveAll: async () => {},
+    restoreAll: async () => {},
+    bulkPending: false,
+    bulkError: null,
     ...overrides,
   }
 }
@@ -81,8 +88,20 @@ describe('mobile Updates mixed multi-faction stream', () => {
     expect(text).toContain('Map the boring')
   })
 
-  it('shows the empty state when the stream is empty', () => {
+  it('shows the FEED empty state when the stream is empty (#1194)', () => {
     const { text } = render(baseState({ items: [] }))
-    expect(text).toContain('No updates yet')
+    expect(text).toContain('Nothing left to read.')
+    expect(text).toContain('The city is quiet.')
+  })
+
+  it('shows the ARCHIVE empty state on the Archived tab, never the feed one', () => {
+    // Two empty states, never collapsed into one: an empty feed is an invitation
+    // to go and do something, an empty archive is a statement that you have
+    // thrown nothing away.
+    const { text } = render(
+      baseState({ items: [], filter: 'Archived', archivedView: true }),
+    )
+    expect(text).toContain('The archive is empty.')
+    expect(text).not.toContain('Nothing left to read.')
   })
 })

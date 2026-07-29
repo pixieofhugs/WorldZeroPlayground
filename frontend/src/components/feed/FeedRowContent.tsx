@@ -3,14 +3,20 @@ import i18n from '../../i18n'
 import { factionColor, factionFill, isKnownFaction } from '../../utils/factions'
 import { mediaUrl } from '../../utils/media'
 import FeedBadge from './FeedBadge'
+import FeedRowActions from './FeedRowActions'
 import type { FeedRow } from './normalizeFeedItem'
 
 /**
  * The faction-owned activity row (#376 full adoption). One slot-driven body —
- * avatar · actor + action + badge · time · headline · points/level — rendered
- * inside the faction's frame (FactionFeedFrame). The faction's accent colors the
- * actor, avatar, and headline rule so the row reads in the faction's voice; the
- * frame supplies the physical chrome. No per-event-type card.
+ * avatar · actor + action + badge · headline · points/level · actions — rendered
+ * inside the faction's chassis (FactionFeedFrame). The faction's accent colors
+ * the actor, avatar, and headline rule so the row reads in the faction's voice;
+ * the chassis supplies the physical chrome. No per-event-type card.
+ *
+ * #1194 changed the slot bag twice. It LOST `time`: the chassis draws the
+ * timestamp for every card now, so a row that also drew one printed it twice.
+ * It GAINED `actions`, because the rewritten sheets put CTAs on ordinary rows
+ * and not only on the three interactive companions (epic #1192 §2b).
  *
  * Two of those three accents are FILLS and one is ink, which is the whole of
  * ADR-0039 on this surface (#983). The monogram disc and the headline rule are
@@ -128,9 +134,6 @@ export default function FeedRowContent({
             </span>
             {row.badge && <FeedBadge type={row.badge.type} label={row.badge.label} />}
           </div>
-          <span className="eyebrow" style={{ color: 'var(--color-text-tertiary)', display: 'block', marginTop: 'var(--space-xs)' }}>
-            {row.time}
-          </span>
         </div>
       </div>
 
@@ -186,6 +189,14 @@ export default function FeedRowContent({
               </span>
             )}
           </div>
+        </div>
+      )}
+
+      {/* The action slot. Indented to the text column exactly as the headline
+          is, so a row with an avatar reads as one block rather than two. */}
+      {row.actions.length > 0 && (
+        <div style={{ marginLeft: row.actor ? 'var(--space-3xl)' : 0 }}>
+          <FeedRowActions actions={row.actions} />
         </div>
       )}
     </div>

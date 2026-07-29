@@ -16,6 +16,8 @@ import { collabCopy } from '../collab/collabCopy'
 function item(type: string, payload: Record<string, unknown>): ActivityFeedItem {
   return {
     type,
+    // `"{type}:{source row PK}"` (#1193) — the archive's only handle on an item.
+    item_key: `${type}:1`,
     timestamp: '2026-01-01T00:00:00Z',
     actor_display_name: 'Ada',
     actor_faction_slug: 'coven',

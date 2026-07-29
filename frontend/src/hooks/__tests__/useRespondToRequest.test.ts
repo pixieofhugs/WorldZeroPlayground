@@ -19,6 +19,7 @@ vi.mock('../../api/duel', () => ({ respondToChallenge: vi.fn() }))
 
 const feedItem = (type: string, payload: Record<string, unknown>): ActivityFeedItem => ({
   type,
+  item_key: `${type}:1`,
   timestamp: '2026-07-03T00:00:00Z',
   actor_display_name: 'Rival',
   actor_faction_slug: 'snide',

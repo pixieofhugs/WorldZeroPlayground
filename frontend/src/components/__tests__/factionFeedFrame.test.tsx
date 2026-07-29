@@ -28,9 +28,18 @@ const DESIGNED_FACTIONS = [
   "ua",
 ];
 
-function frameFor(slug: string | null): string {
+/** The widened chassis contract (#1194): every frame draws these four. */
+function frameFor(slug: string | null, tag: string | null = null): string {
   return renderToStaticMarkup(
-    <FactionFeedFrame slug={slug}>{CARD}</FactionFeedFrame>,
+    <FactionFeedFrame
+      slug={slug}
+      kicker="Task completed"
+      time="2h ago"
+      tag={tag}
+      archive={<button type="button">archive-node</button>}
+    >
+      {CARD}
+    </FactionFeedFrame>,
   );
 }
 
@@ -58,10 +67,16 @@ describe("FactionFeedFrame dispatch", () => {
     expect(frameFor("albescent")).toBe(frameFor("no-such-faction"));
   });
 
-  it("passes a null/neutral slug straight through", () => {
-    // era_announcement and friends bring their own chrome — a null slug must be
-    // a true passthrough, adding no wrapper at all.
-    expect(frameFor(null)).toBe("<span>card-body</span>");
+  it("gives a null/neutral slug the Unaffiliated chassis, NOT a passthrough (#1194)", () => {
+    // The reverse of what this used to assert, deliberately. A null slug used to
+    // pass straight through because the only card carrying one was
+    // era_announcement, which brings its own chrome — and that card no longer
+    // routes through here at all (epic #1192 decision 6). A passthrough now would
+    // mean a card with no kicker, no time and no way to be dismissed.
+    const html = frameFor(null);
+    expect(html).not.toBe("<span>card-body</span>");
+    expect(html).toContain("<span>card-body</span>");
+    expect(html).toContain("card-bg");
   });
 
   it("tints an unregistered slug with the default frame, keeping the card", () => {
@@ -71,5 +86,19 @@ describe("FactionFeedFrame dispatch", () => {
     expect(html).not.toBe("<span>card-body</span>");
     expect(html).toContain("<span>card-body</span>");
     expect(html).toContain("card-bg");
+  });
+
+  it("draws all four chrome slots on EVERY frame, default included (#1194)", () => {
+    // A frame that swallows one of these loses a feature, not a decoration: the
+    // kicker is the card's only kind label, the time is its only timestamp (the
+    // row stopped drawing one), and the archive node is the entire keyboard and
+    // screen-reader route to the archive.
+    for (const slug of [...DESIGNED_FACTIONS, "wow", "albescent", null]) {
+      const html = frameFor(slug, "Still waiting");
+      expect(html, `${slug} draws the kicker`).toContain("Task completed");
+      expect(html, `${slug} draws the time`).toContain("2h ago");
+      expect(html, `${slug} draws the tag`).toContain("Still waiting");
+      expect(html, `${slug} places the archive node`).toContain("archive-node");
+    }
   });
 });

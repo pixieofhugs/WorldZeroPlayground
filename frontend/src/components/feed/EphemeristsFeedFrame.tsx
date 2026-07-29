@@ -1,6 +1,6 @@
-import type { ReactNode } from 'react'
-
 import { EphemeristsSigil, Foxing } from '../cards/ephemeristsAtoms'
+import FeedChassisBand from './FeedChassisBand'
+import type { FeedFrameProps } from './feedFrameProps'
 
 /**
  * Ephemerists feed-card FRAME (surface #12, SPEC-faction-ui-profile.md).
@@ -8,12 +8,22 @@ import { EphemeristsSigil, Foxing } from '../cards/ephemeristsAtoms'
  * A thin presentational wrapper that dresses the neutral feed card (`children`)
  * as a leaf torn from the faction's ephemeris: foxed-vellum stock, an iron-gall
  * ink hairline, a gold-ruled running edge, and a rubric marginal sigil. The card
- * internals (avatar / actor / badge / time) are untouched — they arrive via
+ * internals (avatar / actor / badge) are untouched — they arrive via
  * `{children}` and render in the content area.
+ *
+ * #1194: the leaf gains a CHASSIS BAND above the content — a ruled running head
+ * carrying the kicker, the tag, the time and the dismiss control in iron-gall
+ * ink. The stock is otherwise unchanged; Ephemerists' dress issue restyles it.
  *
  * Theme-aware through the --eph-* cascade; no document-theme mutation, no hex.
  */
-export default function EphemeristsFeedFrame({ children }: { children: ReactNode }) {
+export default function EphemeristsFeedFrame({
+  kicker,
+  time,
+  tag,
+  archive,
+  children,
+}: FeedFrameProps) {
   return (
     <div
       style={{
@@ -45,6 +55,21 @@ export default function EphemeristsFeedFrame({ children }: { children: ReactNode
         }}
       >
         <EphemeristsSigil size={12} color="var(--eph-rubric)" stroke={1.2} />
+      </div>
+
+      {/* chassis band — the leaf's running head, ruled off the content */}
+      <div
+        style={{
+          position: 'relative',
+          zIndex: 2,
+          color: 'var(--eph-vellum-text)',
+          borderBottom:
+            '1px solid color-mix(in srgb, var(--eph-vellum-text) 22%, transparent)',
+          paddingBottom: 'var(--space-xs)',
+          marginBottom: 'var(--space-sm)',
+        }}
+      >
+        <FeedChassisBand kicker={kicker} time={time} tag={tag} archive={archive} />
       </div>
 
       {/* the neutral feed card, rendered in the content area */}

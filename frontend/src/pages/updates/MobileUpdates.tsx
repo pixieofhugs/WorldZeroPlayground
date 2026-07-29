@@ -1,6 +1,8 @@
 import { useTranslation } from 'react-i18next'
 import FeedCardRouter from '../../components/feed/FeedCardRouter'
 import FeedDateDivider, { getDateLabel } from '../../components/feed/FeedDateDivider'
+import FeedEmptyState from '../../components/feed/FeedEmptyState'
+import FeedBulkArchiveButton from '../../components/feed/FeedBulkArchiveButton'
 import {
   ALL_FILTERS,
   getCount,
@@ -15,6 +17,11 @@ import {
  * reuses the shared `useUpdates()` fetch and the per-item FeedCardRouter (which
  * already wraps every row in the acting faction's frame via
  * `context_faction_slug`), touch-tuned for a 375px viewport.
+ *
+ * #1194 reaches the phone for free, exactly as that split intends: the Archived
+ * tab is one more chip, and swipe-left-to-archive and the undo strip live in
+ * `FeedItemSlot`, inside the shared `FeedCardRouter`. Nothing about the archive
+ * is implemented twice.
  */
 
 /** Full `feed` catalog key for each filter's chip label (spaces aren't keys). */
@@ -25,6 +32,7 @@ const FILTER_LABEL_KEY = {
   'Your Stuff': 'mobile.filter.yourStuff',
   'Global': 'mobile.filter.global',
   'Requests': 'mobile.filter.requests',
+  'Archived': 'mobile.filter.archived',
 } as const satisfies Record<FeedFilter, string>
 
 export default function MobileUpdates({ state }: { state: UpdatesState }) {
@@ -41,6 +49,12 @@ export default function MobileUpdates({ state }: { state: UpdatesState }) {
     fetchError,
     loadMoreError,
     loadMore,
+    archivedView,
+    refreshCounts,
+    archiveAll,
+    restoreAll,
+    bulkPending,
+    bulkError,
   } = state
 
   return (
@@ -114,6 +128,22 @@ export default function MobileUpdates({ state }: { state: UpdatesState }) {
         })}
       </div>
 
+      {/* Bulk archive — only when there is something to act on. */}
+      {items.length > 0 && !loading && !fetchError && (
+        <div className="mb-3" style={{ display: 'flex', justifyContent: 'flex-end' }}>
+          <FeedBulkArchiveButton
+            archivedView={archivedView}
+            onAct={archivedView ? restoreAll : archiveAll}
+            pending={bulkPending}
+          />
+        </div>
+      )}
+      {bulkError && (
+        <p className="font-body content-text mb-3" style={{ color: 'var(--color-danger)' }}>
+          {bulkError}
+        </p>
+      )}
+
       {/* Stream — single column; every card keeps its own faction frame. */}
       {loading ? (
         <p className="font-body text-muted">{t('page.loading')}</p>
@@ -125,14 +155,10 @@ export default function MobileUpdates({ state }: { state: UpdatesState }) {
           </button>
         </p>
       ) : items.length === 0 ? (
-        <div className="sidebar-card" style={{ padding: 'var(--space-xl)', textAlign: 'center' }}>
-          <p className="font-body content-text" style={{ color: 'var(--color-text-tertiary)' }}>
-            {t('page.empty')}
-          </p>
-        </div>
+        <FeedEmptyState archivedView={archivedView} />
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-md)' }}>
-          {renderStream(items)}
+          {renderStream(items, archivedView, refreshCounts)}
         </div>
       )}
 
@@ -172,21 +198,32 @@ export default function MobileUpdates({ state }: { state: UpdatesState }) {
   )
 }
 
-/** Single-column list with date dividers, one FeedCardRouter per item. */
-function renderStream(items: UpdatesState['items']): React.ReactNode[] {
+/** Single-column list with date dividers, one FeedCardRouter per item. Keyed on
+ *  `item_key` since #1194 so a slot mid-undo is never remounted. */
+function renderStream(
+  items: UpdatesState['items'],
+  archivedView: boolean,
+  onArchiveChange: () => void,
+): React.ReactNode[] {
   const elements: React.ReactNode[] = []
   let lastDateLabel = ''
 
-  for (let index = 0; index < items.length; index++) {
-    const item = items[index]
+  for (const item of items) {
     const dateLabel = getDateLabel(item.timestamp)
 
     if (dateLabel !== lastDateLabel) {
-      elements.push(<FeedDateDivider key={`divider-${dateLabel}-${index}`} label={dateLabel} />)
+      elements.push(<FeedDateDivider key={`divider-${dateLabel}-${item.item_key}`} label={dateLabel} />)
       lastDateLabel = dateLabel
     }
 
-    elements.push(<FeedCardRouter key={`${item.type}-${item.timestamp}-${index}`} item={item} />)
+    elements.push(
+      <FeedCardRouter
+        key={item.item_key}
+        item={item}
+        archivedView={archivedView}
+        onArchiveChange={onArchiveChange}
+      />,
+    )
   }
 
   return elements
