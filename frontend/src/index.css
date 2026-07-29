@@ -4131,3 +4131,35 @@
 @media (prefers-reduced-motion: no-preference) {
   .wow-balloon-bunch { animation: wow-balloon-bob 6s ease-in-out infinite; }
 }
+
+/* ══ UA — PRAXIS DETAIL, the toothed leaf (#1119) ══
+   UA's praxis-detail ground. `UaTaskDetail` (#1036) is the vellum leaf a brief
+   is drawn on and paints `--faction-ua-page` flat; this is the leaf a finished
+   piece of work is PRESSED INTO, and the difference between the two pages is the
+   paper's tooth — a fine dot field, 1px on a 6px grid. Same practice, two
+   stocks, so a reader can tell a record from a brief before reading a word.
+
+   Painted on the detail COLUMN, not the viewport (WORLD_ZERO_STYLE §5 / #1028):
+   the archetype supplies position / z-index / border / radius / padding, and
+   this rule owns only the paper.
+
+   NO NEW TOKENS, which is the whole reason the tooth is a `color-mix` rather
+   than a declared `--faction-ua-*-dot` pair. The speck is mixed FROM the ink
+   token, so it inverts with the theme for free — dark tooth on mesa sand by day,
+   warm specks on the night ground after dark — and there is no second value to
+   keep in step. `uaShade()` makes the identical move for UA's drop shadows.
+
+   The tooth is a texture, not a veil: a 1px dot on a 6px grid covers ~2% of the
+   area at 4% opacity, so it moves the ground by a fraction of a percent and
+   every `--faction-ua-page` pairing gated by factionContrast.test.ts still
+   holds. A wash laid over the whole sheet would NOT be free that way — see §3's
+   "a veil is part of the pairing". */
+.ua-praxis-leaf {
+  background-color: var(--faction-ua-page);
+  background-image: radial-gradient(
+    color-mix(in srgb, var(--faction-ua-card-text) 4%, transparent) 1px,
+    transparent 1px
+  );
+  background-size: 6px 6px;
+  transition: background-color 300ms;
+}
