@@ -20,6 +20,7 @@ from typing import Any, Callable, Coroutine, Optional
 
 from fastapi import HTTPException
 from sqlalchemy import Select, delete, func, select
+from sqlalchemy.dialects.postgresql import insert as postgres_insert
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import InstrumentedAttribute, aliased
 
@@ -1392,21 +1393,33 @@ async def get_archive_view(
     )
 
 
-async def _existing_dismissed_keys(
+async def _insert_dismissals(
     character_id: int,
     item_keys: list[str],
     session: AsyncSession,
-) -> set[str]:
-    """Which of ``item_keys`` this character has already archived."""
+) -> int:
+    """Archive these keys; return how many rows were actually new.
+
+    ``ON CONFLICT DO NOTHING`` rather than read-then-write. Archiving is
+    idempotent by contract — the undo strip can fire twice — and a check-then-
+    insert leaves a window where two clicks race the unique constraint into a
+    500. This is Postgres-specific, which the rest of the schema already is.
+    """
     if not item_keys:
-        return set()
-    result = await session.execute(
-        select(FeedDismissal.item_key).where(
-            FeedDismissal.character_id == character_id,
-            FeedDismissal.item_key.in_(item_keys),
+        return 0
+    statement = (
+        postgres_insert(FeedDismissal)
+        .values(
+            [
+                {"character_id": character_id, "item_key": item_key}
+                for item_key in item_keys
+            ]
         )
+        .on_conflict_do_nothing(index_elements=["character_id", "item_key"])
     )
-    return set(result.scalars())
+    result = await session.execute(statement)
+    await session.flush()
+    return int(result.rowcount or 0)
 
 
 async def dismiss_feed_item(
@@ -1417,15 +1430,10 @@ async def dismiss_feed_item(
     """Archive one feed item. Returns True if this call is what archived it.
 
     Idempotent: archiving an already-archived item is a no-op returning False,
-    not a 409. The client's undo strip can fire twice without consequence.
+    not a 409.
     """
     parse_archivable_item_key(item_key)
-    already = await _existing_dismissed_keys(character_id, [item_key], session)
-    if already:
-        return False
-    session.add(FeedDismissal(character_id=character_id, item_key=item_key))
-    await session.flush()
-    return True
+    return await _insert_dismissals(character_id, [item_key], session) > 0
 
 
 async def restore_feed_item(
@@ -1475,12 +1483,7 @@ async def dismiss_feed_items_for_filter(
     item_keys = [
         item.item_key for item in feed.items if item.type in ARCHIVABLE_ITEM_TYPES
     ]
-    already = await _existing_dismissed_keys(character_id, item_keys, session)
-    new_keys = [item_key for item_key in item_keys if item_key not in already]
-    for item_key in new_keys:
-        session.add(FeedDismissal(character_id=character_id, item_key=item_key))
-    await session.flush()
-    return len(new_keys)
+    return await _insert_dismissals(character_id, item_keys, session)
 
 
 async def restore_feed_items_for_filter(
