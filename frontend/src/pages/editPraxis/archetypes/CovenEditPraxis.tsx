@@ -74,6 +74,7 @@ import {
   ComposerFooter,
   ComposerGround,
   ComposerMasthead,
+  ComposerPage,
   ComposerRule,
   ComposerSection,
   ComposerSheet,
@@ -85,7 +86,9 @@ import {
   composerLabelStyle,
   formatAutosave,
   useComposerSizes,
+  type ComposerDress,
 } from "./shared";
+import PraxisWaitingSurface from "../waiting/PraxisWaitingSurface";
 import {
   BodyPreview,
   BodyTextarea,
@@ -100,7 +103,7 @@ import {
   type ComposerTab,
 } from "./controls";
 import { MetataskSealStack } from "../MetataskSealStack";
-import type { EditPraxisState } from "../useEditPraxis";
+import { isWaitingStage, type EditPraxisState } from "../useEditPraxis";
 
 interface Props {
   state: EditPraxisState;
@@ -471,33 +474,44 @@ export default function CovenEditPraxis({ state }: Props) {
     </ComposerRule>
   );
 
-  return (
-    <div style={{ fontFamily: CHROME, color: INK }}>
-      <div
-        style={{
-          maxWidth: sizes.maxWidth,
-          margin: "0 auto",
-          padding: "var(--space-lg) var(--space-lg) 0",
-        }}
-      >
-        <Breadcrumb
-          praxisId={praxis.id}
-          taskId={praxis.task_id}
-          taskTitle={praxis.task_title}
-          inkColor={LABEL}
-        />
-      </div>
-
-      <ComposerSheet
-        sizes={sizes}
-        style={{
-          background: SHEET,
-          border: EDGE,
-          borderRadius: RADIUS,
-          boxShadow: "var(--faction-coven-slip-shadow)",
-        }}
-        contentStyle={{ padding: `${padTop} ${padX} ${padBottom}` }}
-        masthead={
+  /* The chrome, named once and mounted twice: the composer below, and the
+     waiting surface once your part is in (#1189). The same ELEMENTS both
+     times, so the twinkling wordmark, the braid, the wheel and the glyph
+     scatter cannot drift between the two stages. */
+  const sheetStyle = {
+    background: SHEET,
+    border: EDGE,
+    borderRadius: RADIUS,
+    boxShadow: "var(--faction-coven-slip-shadow)",
+  };
+  const contentStyle = { padding: `${padTop} ${padX} ${padBottom}` };
+  const statusMark = <Pentacle size={40} color={DEEP} />;
+  const slip = {
+    style: {
+      background: FIELD,
+      border: RULE,
+      borderRadius: FIELD_RADIUS,
+      padding: "var(--space-lg)",
+    },
+    labelStyle,
+    titleStyle: { fontFamily: DISPLAY, color: INK },
+    descriptionStyle: { fontFamily: CHROME, color: SOFT },
+    pillStyle: { fontFamily: CHROME, color: LABEL },
+  } as const;
+  /* The waiting footer's affirmative control is a BUTTON, not the composer's
+     full-bleed band: the band is the slip's one irreversible act, and taking
+     your own part back out is neither irreversible nor the page's subject. */
+  const primaryStyle = composerLabelStyle({
+    fontFamily: CHROME,
+    fontSize: "var(--text-xl)",
+    fontWeight: 700,
+    border: "none",
+    borderRadius: FIELD_RADIUS,
+    padding: "var(--space-md) var(--space-xl)",
+    color: CTA_INK,
+    background: CTA_BAND,
+  });
+  const masthead = (
           <ComposerMasthead
             style={{
               height: "auto",
@@ -534,8 +548,8 @@ export default function CovenEditPraxis({ state }: Props) {
               <Braid style={{ marginTop: "var(--space-sm)" }} />
             </div>
           </ComposerMasthead>
-        }
-        ground={
+  );
+  const ground = (
           <>
             {/* The glow and the lavender wash, at the design's two anchors. */}
             <ComposerGround
@@ -570,7 +584,59 @@ export default function CovenEditPraxis({ state }: Props) {
               <GlyphScatter />
             </ComposerGround>
           </>
-        }
+  );
+
+  const dress: ComposerDress = {
+    accent: DEEP,
+    pageStyle: { fontFamily: CHROME, color: INK },
+    breadcrumbInk: LABEL,
+    sheetStyle,
+    contentStyle,
+    masthead,
+    ground,
+    rule: () => braidRule,
+    mark: statusMark,
+    statusStyle: { fontFamily: CHROME, color: INK, fontWeight: 700 },
+    metaStyle: { fontFamily: CHROME, color: LABEL },
+    labelStyle,
+    slip,
+    panelStyle: {
+      background: FIELD,
+      border: RULE,
+      borderRadius: FIELD_RADIUS,
+    },
+    headingStyle: { fontFamily: DISPLAY, color: INK },
+    bodyStyle: { fontFamily: CHROME, color: SOFT },
+    quietStyle: { fontFamily: CHROME, color: LABEL },
+    primaryStyle,
+    quietButtonStyle: { fontFamily: CHROME, color: LABEL },
+  };
+
+  /* Your part is in, so the composer is not a composer any more (ADR-0059).
+     Same page, same sheet, same ornament — a different stage. */
+  if (isWaitingStage(state.phase)) {
+    return <PraxisWaitingSurface state={state} dress={dress} />;
+  }
+
+  return (
+    <ComposerPage
+      sizes={sizes}
+      style={dress.pageStyle}
+      breadcrumb={
+        <Breadcrumb
+          praxisId={praxis.id}
+          taskId={praxis.task_id}
+          taskTitle={praxis.task_title}
+          inkColor={LABEL}
+        />
+      }
+    >
+      <ComposerSheet
+        sizes={sizes}
+        style={sheetStyle}
+        contentStyle={contentStyle}
+        masthead={masthead}
+        ground={ground}
       >
         {/* Draft · Saved just now, closed by the pentacle. */}
         <ComposerStatusRow
@@ -582,25 +648,16 @@ export default function CovenEditPraxis({ state }: Props) {
                 })
               : t("editPraxis.composer.statusUnsaved")
           }
-          statusStyle={{ fontFamily: CHROME, color: INK, fontWeight: 700 }}
-          metaStyle={{ fontFamily: CHROME, color: LABEL }}
-          mark={<Pentacle size={40} color={DEEP} />}
+          statusStyle={dress.statusStyle}
+          metaStyle={dress.metaStyle}
+          mark={statusMark}
         />
 
         {/* The task reference slip, with the ward. */}
         <TaskSlip
           praxis={praxis}
           task={task}
-          style={{
-            background: FIELD,
-            border: RULE,
-            borderRadius: FIELD_RADIUS,
-            padding: "var(--space-lg)",
-          }}
-          labelStyle={labelStyle}
-          titleStyle={{ fontFamily: DISPLAY, color: INK }}
-          descriptionStyle={{ fontFamily: CHROME, color: SOFT }}
-          pillStyle={{ fontFamily: CHROME, color: LABEL }}
+          {...slip}
           mark={<PointsWard size={88} points={task?.point_value ?? 0} />}
         />
 
@@ -952,7 +1009,7 @@ export default function CovenEditPraxis({ state }: Props) {
           }
         />
       </ComposerSheet>
-    </div>
+    </ComposerPage>
   );
 }
 

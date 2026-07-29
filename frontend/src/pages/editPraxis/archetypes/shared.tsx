@@ -1,82 +1,26 @@
 /**
  * The composer's shared presentational layer.
  *
- * Two generations live here. The helpers at the top predate the v2 composer and
- * are still read by the seven archetypes that have not been rebuilt yet. Below
- * the banner comment sits THE COMPOSER LAYOUT CONTRACT (#1181, ADR-0065) — the
- * blocks every v2 skin assembles, factored out so a skin brings dress and
- * nothing else.
+ * One generation now. A pre-v2 set (`RainbowTitle`, `RainbowUnderline`,
+ * `TaskMetaInline`, `ArchetypeFrame`, `formatClock`) lived above the banner
+ * comment for as long as an un-rebuilt archetype still read it; the last reader
+ * was the undressed waiting surface, and #1189 dressed it. They are deleted
+ * rather than kept warm — a helper with no caller is paid for by every sweep
+ * that has to decide whether it is load-bearing.
+ *
+ * What is left is THE COMPOSER LAYOUT CONTRACT (#1181, ADR-0065) — the blocks
+ * every v2 skin assembles, plus the {@link ComposerDress} that hands a skin's
+ * ornament to the one surface that is shared rather than per-faction (#1189).
  */
 import type { CSSProperties, ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import i18n from "../../../i18n";
-import LevelGem from "../../../components/ui/LevelGem";
-import { factionCssVar, factionName } from "../../../utils/factions";
 import { useFormFactor } from "../../../hooks/useFormFactor";
+import { collabCopy } from "../../../components/collab/collabCopy";
 import type { TaskOut } from "../../../api/tasks";
 import type { PraxisOut } from "../../../api/praxis";
-
-const RAINBOW_VARS = [
-  "var(--underline-1)",
-  "var(--underline-2)",
-  "var(--underline-3)",
-  "var(--underline-4)",
-  "var(--underline-5)",
-  "var(--underline-6)",
-];
-
-interface RainbowTitleProps {
-  text: string;
-  size?: number;
-  fontFamily?: string;
-  color?: string;
-}
-
-/**
- * The page title rendered as the brand's signature six-color underline. Each
- * character gets its own underline tile so the cycle works regardless of
- * justification or wrapping. Callers pass the (localized) text.
- */
-export function RainbowTitle({
-  text,
-  size = 38,
-  fontFamily = "'Lora', serif",
-  color = "var(--color-text-primary)",
-}: RainbowTitleProps) {
-  return (
-    <span
-      style={{
-        fontFamily,
-        fontStyle: "italic",
-        fontWeight: 500,
-        fontSize: size,
-        lineHeight: 1.05,
-        color,
-        display: "inline-block",
-      }}
-    >
-      {text.split("").map((character, index) =>
-        character === " " ? (
-          <span
-            key={index}
-            style={{ display: "inline-block", width: "0.3em" }}
-          />
-        ) : (
-          <span
-            key={index}
-            style={{
-              borderBottom: `4px solid ${RAINBOW_VARS[index % RAINBOW_VARS.length]}`,
-              paddingBottom: "var(--space-xs)",
-            }}
-          >
-            {character}
-          </span>
-        ),
-      )}
-    </span>
-  );
-}
+import { isWaitingStage, type EditPraxisState } from "../useEditPraxis";
 
 interface BreadcrumbProps {
   praxisId: number | string;
@@ -131,54 +75,6 @@ export function Breadcrumb({
   );
 }
 
-interface TaskHeaderInfoProps {
-  praxis: PraxisOut;
-  task: TaskOut | null;
-  textColor?: string;
-}
-
-/**
- * Re-usable inline meta line for any archetype that wants a compact
- * faction · pts · level summary next to the proven task title.
- */
-export function TaskMetaInline({
-  praxis,
-  task,
-  textColor,
-}: TaskHeaderInfoProps) {
-  const { t } = useTranslation("forms");
-  const slug = task?.primary_faction_slug ?? null;
-  return (
-    <span
-      style={{
-        display: "inline-flex",
-        gap: "var(--space-md)",
-        alignItems: "center",
-        flexWrap: "wrap",
-        fontFamily: "'Courier Prime', monospace",
-        fontSize: "var(--text-sm)",
-        textTransform: "uppercase",
-        letterSpacing: "0.12em",
-        color: textColor ?? factionCssVar(slug),
-      }}
-    >
-      <span>{factionName(slug)}</span>
-      {task && (
-        <span>· {t("taskMeta.points", { points: task.point_value })}</span>
-      )}
-      {task && <LevelGem level={task.level_required} factionSlug={slug} />}
-      {(praxis.type === "collab" || praxis.duel_id != null) && (
-        <span>
-          ·{" "}
-          {praxis.duel_id != null
-            ? t("taskMeta.duel")
-            : t("taskMeta.collab")}
-        </span>
-      )}
-    </span>
-  );
-}
-
 interface TitleCounterProps {
   length: number;
   color?: string;
@@ -197,24 +93,6 @@ export function TitleCounter({ length, color }: TitleCounterProps) {
     >
       {length}/200
     </span>
-  );
-}
-
-interface RainbowUnderlineProps {
-  height?: number;
-  opacity?: number;
-}
-
-export function RainbowUnderline({
-  height = 3,
-  opacity = 0.6,
-}: RainbowUnderlineProps) {
-  return (
-    <div style={{ display: "flex", height, marginTop: "var(--space-xs)", opacity }}>
-      {RAINBOW_VARS.map((color, index) => (
-        <div key={index} style={{ flex: 1, background: color }} />
-      ))}
-    </div>
   );
 }
 
@@ -241,26 +119,6 @@ export function ErrorBanner({ message }: ErrorBannerProps) {
   );
 }
 
-interface SectionProps {
-  children: ReactNode;
-  style?: CSSProperties;
-}
-
-export function ArchetypeFrame({ children, style }: SectionProps) {
-  return (
-    <div
-      style={{
-        maxWidth: 760,
-        margin: "0 auto",
-        padding: "var(--space-xl) var(--space-lg)",
-        ...style,
-      }}
-    >
-      {children}
-    </div>
-  );
-}
-
 export function formatAutosave(date: Date | null): string {
   if (!date) return "";
   const now = Date.now();
@@ -271,22 +129,41 @@ export function formatAutosave(date: Date | null): string {
   return i18n.t("forms:autosaveAgo.minutes", { minutes });
 }
 
-export function formatClock(date: Date | null): string {
-  if (!date) return "--:--:--";
-  const hh = String(date.getHours()).padStart(2, "0");
-  const mm = String(date.getMinutes()).padStart(2, "0");
-  const ss = String(date.getSeconds()).padStart(2, "0");
-  return `${hh}:${mm}:${ss}`;
+/**
+ * The stage word in the status row's first slot.
+ *
+ * `Draft` while you are writing; `Sealed` on a duel side you have filed;
+ * `Submitted` on anything else that is in. Shared rather than inlined at the one
+ * call site because SNIDE draws the same word in its MASTHEAD, and a masthead
+ * still shouting DRAFT over a submitted praxis would be the page contradicting
+ * itself — the exact failure the dress exists to prevent.
+ *
+ * The completed reading takes the collab block's own word, which says
+ * `Submitted` rather than `Submitted by you`: a lapsed window publishes over a
+ * holdout (ADR-0012), and that holdout reads this same line.
+ */
+export function composerStageWord(state: EditPraxisState): string {
+  if (!isWaitingStage(state.phase)) {
+    return i18n.t("forms:editPraxis.composer.statusDraft");
+  }
+  if (state.phase === "completed") {
+    return collabCopy(state.praxis?.task_faction_slug, "completedStatusMeta");
+  }
+  // A duel side is `type='solo'` + a duel_id (ADR-0011) — never `type`.
+  const isDuel = state.praxis?.duel_id != null && state.duel != null;
+  return i18n.t(
+    isDuel
+      ? "forms:editPraxis.composer.statusSealed"
+      : "forms:editPraxis.composer.statusSubmitted",
+  );
 }
 
 /* ========================================================================== *
  * THE COMPOSER LAYOUT CONTRACT (#1181, epic #1179, ADR-0065)
  *
- * Everything above this line predates the v2 composer and is still read by the
- * seven archetypes that have not been rebuilt yet. Everything below is the
- * shared layout the v2 designs draw, factored out ONCE so the seven skin issues
- * (#1182-#1188) inherit it instead of each re-deriving it — and so a change to
- * the layout is one edit rather than eight.
+ * The shared layout the v2 designs draw, factored out ONCE so the seven skin
+ * issues (#1182-#1188) inherit it instead of each re-deriving it — and so a
+ * change to the layout is one edit rather than eight.
  *
  * The split of responsibilities is ADR-0065's: the LAYOUT and the API are
  * shared; only DRESS changes. A skin brings frame, type, ornament and motion. It
@@ -787,11 +664,17 @@ export function RingMark({
   );
 }
 
-interface TaskSlipProps {
+export interface TaskSlipProps {
   praxis: PraxisOut;
   task: TaskOut | null;
   /** The faction's points mark, drawn at the slip's end. */
   mark?: ReactNode;
+  /**
+   * The slip's eyebrow. Defaults to the composer's neutral `The task`; the
+   * waiting surface passes `The duel` when the slip is fronting a duel, which
+   * is the one place the same slip refers to something other than a task.
+   */
+  label?: ReactNode;
   style?: CSSProperties;
   labelStyle?: CSSProperties;
   titleStyle?: CSSProperties;
@@ -811,6 +694,7 @@ export function TaskSlip({
   praxis,
   task,
   mark,
+  label,
   style,
   labelStyle,
   titleStyle,
@@ -829,7 +713,7 @@ export function TaskSlip({
     >
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={composerLabelStyle(labelStyle)}>
-          {t("editPraxis.composer.taskLabel")}
+          {label ?? t("editPraxis.composer.taskLabel")}
         </div>
         <div
           style={{
@@ -942,4 +826,123 @@ export function ComposerStickyFooter({
       {children}
     </div>
   );
+}
+
+interface ComposerPageProps {
+  sizes: ComposerSizes;
+  /** The skin's root: its body face and its ink. */
+  style?: CSSProperties;
+  /** Drawn in a column of the sheet's own width, above the sheet. */
+  breadcrumb?: ReactNode;
+  children: ReactNode;
+}
+
+/**
+ * The page around the sheet: the skin's face and ink, and a breadcrumb sitting
+ * in the sheet's own column above it.
+ *
+ * All eight archetypes had spelled this block out identically, and #1189 needed
+ * a ninth copy for the waiting surface — so it is one block now. The geometry is
+ * shared and the paint is the skin's, which is the same split every other block
+ * on this page makes.
+ *
+ * The breadcrumb belongs to the PAGE rather than to a stage: the composer and
+ * the waiting surface each draw exactly one, which is what keeps the dispatcher
+ * out of the business of drawing a second (#567, #1181).
+ */
+export function ComposerPage({
+  sizes,
+  style,
+  breadcrumb,
+  children,
+}: ComposerPageProps) {
+  return (
+    <div style={style}>
+      {breadcrumb != null && (
+        <div
+          style={{
+            maxWidth: sizes.maxWidth,
+            margin: "0 auto",
+            padding: "var(--space-lg) var(--space-lg) 0",
+          }}
+        >
+          {breadcrumb}
+        </div>
+      )}
+      {children}
+    </div>
+  );
+}
+
+/* ========================================================================== *
+ * THE DRESS (#1189, epic #1179, ADR-0065)
+ *
+ * The composer holds after you submit (ADR-0059), and what it becomes is
+ * `PraxisWaitingSurface` — ONE shared surface holding all of the post-cast
+ * logic. #1071 shipped it faction-neutral and deferred the frames by name; this
+ * is the seam that closes that.
+ *
+ * A dress is the faction's own ornament, handed to that shared surface by the
+ * archetype that is already mounted. It is deliberately NOT a registry:
+ *
+ *  - Nothing new dispatches. `EditPraxis.tsx` resolves ONE component per slug
+ *    (`surfaceMap('editPraxis')`), and that component decides which stage it is
+ *    drawing — which is exactly how the design is authored, as one component
+ *    taking a `stage` prop.
+ *  - Nothing new is imported eagerly. Archetypes are lazy (#1045); a slug-keyed
+ *    map of eight dresses would be a barrel, and a barrel over the archetypes is
+ *    the 420 KB entry chunk that issue existed to delete.
+ *  - Nothing can drift. The `masthead`, `ground` and `rule` a dress carries are
+ *    the SAME ELEMENTS the archetype mounts in its composer — named once and
+ *    passed to both — so the page cannot change dress the moment you submit.
+ *
+ * Every field is optional except the accent, and the surface degrades to the
+ * page's own tokens for anything a skin leaves out.
+ * ========================================================================== */
+
+export interface ComposerDress {
+  /** The one colour the surface leans on for marks, rings and headings. */
+  accent: string;
+  /** The skin's root style — its body face and ink. */
+  pageStyle?: CSSProperties;
+  /** The breadcrumb's ink, where the skin tints it. */
+  breadcrumbInk?: string;
+  /** The sheet's paint, border, radius and shadow. */
+  sheetStyle?: CSSProperties;
+  /** The sheet's content column, where a skin overrides its inset. */
+  contentStyle?: CSSProperties;
+  /** The masthead ELEMENT the composer mounts, not a copy of it. */
+  masthead?: ReactNode;
+  /** The ground ELEMENT the composer mounts, not a copy of it. */
+  ground?: ReactNode;
+  /**
+   * The section divider, as this skin draws it.
+   *
+   * A factory rather than an element because a divider can be a drawn thing
+   * with its own SVG defs — WOW's zigzag carries a per-instance gradient id —
+   * and the surface draws three of them. The `key` is that instance name.
+   */
+  rule?: (key: string) => ReactNode;
+  /** The status mark, exactly as the composer draws it in its status row. */
+  mark?: ReactNode;
+  /** The status row's stage word. */
+  statusStyle?: CSSProperties;
+  /** The status row's second line. */
+  metaStyle?: CSSProperties;
+  /** Section labels. */
+  labelStyle?: CSSProperties;
+  /** The task slip's dress, minus what the slip is about. */
+  slip?: Omit<TaskSlipProps, "praxis" | "task" | "mark" | "label">;
+  /** An inset panel: the skin's field ground, border and radius. */
+  panelStyle?: CSSProperties;
+  /** The confirmation beat's heading. */
+  headingStyle?: CSSProperties;
+  /** The surface's own sentences. */
+  bodyStyle?: CSSProperties;
+  /** Captions and the quieter half of a line. */
+  quietStyle?: CSSProperties;
+  /** The affirmative control — the way back into your own text. */
+  primaryStyle?: CSSProperties;
+  /** A quiet text button: leave, and the nudge. */
+  quietButtonStyle?: CSSProperties;
 }

@@ -18,10 +18,8 @@ import {
   useEditPraxis,
 } from "./editPraxis/useEditPraxis";
 import DefaultEditPraxis from "./editPraxis/archetypes/DefaultEditPraxis";
-import { Breadcrumb } from "./editPraxis/archetypes/shared";
 import MetataskPicker from "./editPraxis/MetataskPicker";
 import MetataskRemoveConfirm from "./editPraxis/MetataskRemoveConfirm";
-import PraxisWaitingSurface from "./editPraxis/waiting/PraxisWaitingSurface";
 
 export default function EditPraxis() {
   const { t } = useTranslation("forms");
@@ -63,39 +61,27 @@ export default function EditPraxis() {
   // and its eight files were retired in #1181: each archetype calls
   // `useFormFactor()` internally for its own size set, so the dispatcher has no
   // form factor to branch on.
+  // ONE component per slug, drawing whichever stage the praxis is in.
+  //
+  // Once your part of a multi-party praxis is submitted the composer stops being
+  // a composer (ADR-0059) and becomes `PraxisWaitingSurface` — but that swap is
+  // the ARCHETYPE's to make, not the dispatcher's (#1189). The archetype hands
+  // that shared surface its own `ComposerDress`, so the page keeps its faction's
+  // masthead, ground, rule and status mark at the moment you press Submit; a
+  // dispatcher-level swap could only ever hand over an undressed one, which is
+  // what #1071 shipped and deferred. It is also how the design is authored: one
+  // component taking a `stage` prop, not two components taking turns.
+  //
+  // The breadcrumb went with it. It used to be drawn here, gated on the waiting
+  // phase, because that surface painted none of its own; now every path draws
+  // exactly one — the archetype's, at both widths — and this dispatcher draws
+  // none. Nothing may draw two and nothing may draw zero (#567, #1181).
   const Archetype = pickVariant(surfaceMap('editPraxis'), slug, DefaultEditPraxis);
-  // Once your part of a multi-party praxis is submitted, the composer stops
-  // being a composer (ADR-0059) and this one shared surface takes the
-  // archetype's place — first while the praxis waits on somebody else, and then
-  // (#1164) in its completed reading once everybody is in. The second case is
-  // what used to be a locked composer.
-  const waiting = state.phase === "waiting" || state.phase === "completed";
 
   return (
     <>
       <PageTitle title="Edit Praxis" />
-      {/* The waiting surface paints no breadcrumb of its own, so it takes the
-          shared one — otherwise the post-cast screen is a dead end (#567).
-          Every ARCHETYPE paints its own, at both widths since #1181 collapsed
-          the form-factor split, so this is gated to the waiting surface alone.
-          The gate used to read `formFactor === "mobile" || waiting`, which was
-          the phone half of the same #567 argument: mobile skins painted none.
-          Those skins are gone and the desktop archetype now serves the phone,
-          so the phone half is already covered and keeping it would draw a
-          SECOND breadcrumb above every mobile composer. Exactly one of the two
-          paths draws one, in every state and at every width. */}
-      {waiting && (
-        <Breadcrumb
-          praxisId={state.praxis.id}
-          taskId={state.praxis.task_id}
-          taskTitle={state.praxis.task_title}
-        />
-      )}
-      {waiting ? (
-        <PraxisWaitingSurface state={state} />
-      ) : (
-        <Archetype state={state} />
-      )}
+      <Archetype state={state} />
       {/* The cast that closes a collab's consensus gate earns a standalone beat
           rather than a silent redirect (#591). Rendered here, over whichever
           archetype is mounted, so it's one shared screen for every faction and

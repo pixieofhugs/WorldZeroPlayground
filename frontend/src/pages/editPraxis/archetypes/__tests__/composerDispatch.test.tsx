@@ -36,7 +36,11 @@ const mocks = vi.hoisted(() => ({
 vi.mock("../../../../hooks/useFormFactor", () => ({
   useFormFactor: () => mocks.formFactor,
 }));
-vi.mock("../../useEditPraxis", () => ({
+// Partial: `isWaitingStage` stays REAL. It is the predicate every archetype
+// asks before swapping in the waiting surface (#1189), and a stubbed one would
+// let the dispatcher assertions below pass against a stage that never happens.
+vi.mock("../../useEditPraxis", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("../../useEditPraxis")>()),
   useEditPraxis: () => mocks.state,
 }));
 
@@ -46,6 +50,7 @@ import DefaultEditPraxis from "../DefaultEditPraxis";
 import { surfaceMap } from "../../../../factions";
 import { pickVariant } from "../../../../utils/factionDispatch";
 import { resolvedArchetype } from "../../../../factions/lazyArchetype";
+import { collabCopy } from "../../../../components/collab/collabCopy";
 
 const SOLO = i18n.t("forms:editPraxis.composer.modeSolo");
 const COLLAB = i18n.t("forms:editPraxis.composer.modeCollab");
@@ -221,6 +226,130 @@ describe("editPraxis dispatch (ADR-0065: one component, both widths)", () => {
     const markup = render(width, baseState());
     expect((markup.match(/<nav/g) ?? []).length).toBe(1);
   });
+});
+
+/**
+ * The stage swap (#1189).
+ *
+ * Once your part is in, the composer stops being a composer (ADR-0059) and the
+ * archetype hands `PraxisWaitingSurface` its own dress. That swap is the
+ * ARCHETYPE's, not the dispatcher's, so it has to hold for every skin — a
+ * faction that forgot the branch would draw a live composer over a submitted
+ * praxis, and a faction that forgot the breadcrumb would strand the player.
+ *
+ * Rendered per skin rather than through `<EditPraxis />` so the slug under test
+ * is the one being asserted on, and unwrapped through `resolvedArchetype`
+ * because a manifest entry is a lazy loader (#1045).
+ */
+describe("every skin swaps in the waiting surface (#1189)", () => {
+  const SUBMITTED = "2026-02-01T00:00:00Z";
+  const waitingState = (slug: string | null) =>
+    baseState({
+      phase: "waiting",
+      task: task(["solo", "collab", "duel"], slug),
+      praxis: {
+        ...praxis,
+        type: "collab",
+        task_faction_slug: slug,
+        task_point_value: 20,
+        created_by_id: 3,
+        submitted_at: SUBMITTED,
+        updated_at: SUBMITTED,
+        submit_proposed_at: SUBMITTED,
+        members: [],
+        score: 20,
+        metatask_points: 0,
+        display_multiplier: 1,
+        points_from_votes: 0,
+      } as unknown as PraxisOut,
+    });
+
+  // Every slug that registers `editPraxis`, plus the two that fall through to
+  // the na kit (ADR-0065 §4).
+  const SLUGS = [
+    null,
+    "albescent",
+    "coven",
+    "ephemerists",
+    "everymen",
+    "singularity",
+    "snide",
+    "ua",
+    "wow",
+  ];
+
+  it.each(SLUGS)("%s draws the waiting reading, not its composer", (slug) => {
+    const Archetype = resolvedArchetype(
+      pickVariant(surfaceMap("editPraxis"), slug, DefaultEditPraxis),
+    )!;
+    const markup = renderToStaticMarkup(
+      <MemoryRouter>
+        <Archetype state={waitingState(slug)} />
+      </MemoryRouter>,
+    );
+    expect(markup).toContain(collabCopy(slug, "awaitingHeading"));
+    // `Proof` is a composer-only region, and unlike `Submit` it is not a
+    // prefix of anything the waiting surface says.
+    expect(markup).not.toContain(i18n.t("forms:editPraxis.composer.proofLabel"));
+  });
+
+  /**
+   * One token per skin, taken from its MASTHEAD or its GROUND — the two parts
+   * #1071 left neutral. If the surface were still drawing the page's own chrome
+   * these would all be absent, and the test would still find the heading above,
+   * which is exactly the flat reading this issue was filed to end.
+   */
+  const ORNAMENT: Record<string, string> = {
+    coven: "--faction-coven-slip-shadow",
+    ephemerists: "--faction-ephemerists-plate-band",
+    everymen: "--faction-everymen-bill-mast",
+    singularity: "--faction-singularity-term-chrome",
+    snide: "--faction-snide-composer-bar",
+    ua: "--faction-ua-card-lotus",
+    wow: "--faction-wow-quest-ribbon",
+  };
+
+  it.each(Object.keys(ORNAMENT))(
+    "%s wears its own ornament on the waiting surface, not the page's chrome",
+    (slug) => {
+      const Archetype = resolvedArchetype(
+        pickVariant(surfaceMap("editPraxis"), slug, DefaultEditPraxis),
+      )!;
+      const markup = renderToStaticMarkup(
+        <MemoryRouter>
+          <Archetype state={waitingState(slug)} />
+        </MemoryRouter>,
+      );
+      expect(markup).toContain(ORNAMENT[slug]);
+    },
+  );
+
+  it("na falls through to the spectrum kit's own band (ADR-0065 §4)", () => {
+    const markup = renderToStaticMarkup(
+      <MemoryRouter>
+        <DefaultEditPraxis state={waitingState(null)} />
+      </MemoryRouter>,
+    );
+    expect(markup).toContain("--faction-default-rainbow-loop");
+  });
+
+  it.each(
+    WIDTHS.flatMap((width) => SLUGS.map((slug) => [width, slug] as const)),
+  )(
+    "draws exactly one breadcrumb on %s while %s waits",
+    (width, slug) => {
+      mocks.formFactor = width;
+      const Archetype = resolvedArchetype(
+        pickVariant(surfaceMap("editPraxis"), slug, DefaultEditPraxis),
+      )!;
+      const markup = renderToStaticMarkup(
+        <MemoryRouter>
+          <Archetype state={waitingState(slug)} />
+        </MemoryRouter>,
+      );
+      expect((markup.match(/<nav/g) ?? []).length).toBe(1);
+    },
+  );
 });
 
 describe("mode picker gates, unchanged by the collapse (#311, #877)", () => {

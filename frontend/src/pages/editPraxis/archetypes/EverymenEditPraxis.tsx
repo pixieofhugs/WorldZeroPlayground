@@ -89,6 +89,7 @@ import {
   ComposerFooter,
   ComposerGround,
   ComposerMasthead,
+  ComposerPage,
   ComposerRule,
   ComposerSection,
   ComposerSheet,
@@ -100,7 +101,9 @@ import {
   composerLabelStyle,
   formatAutosave,
   useComposerSizes,
+  type ComposerDress,
 } from "./shared";
+import PraxisWaitingSurface from "../waiting/PraxisWaitingSurface";
 import {
   BodyPreview,
   BodyTextarea,
@@ -115,7 +118,7 @@ import {
   type ComposerTab,
 } from "./controls";
 import { MetataskSealStack } from "../MetataskSealStack";
-import type { EditPraxisState } from "../useEditPraxis";
+import { isWaitingStage, type EditPraxisState } from "../useEditPraxis";
 
 interface Props {
   state: EditPraxisState;
@@ -273,32 +276,48 @@ export default function EverymenEditPraxis({ state }: Props) {
     />
   );
 
-  return (
-    <div style={{ fontFamily: COURIER, color: INK }}>
-      <div
-        style={{
-          maxWidth: sizes.maxWidth,
-          margin: "0 auto",
-          padding: "var(--space-lg) var(--space-lg) 0",
-        }}
-      >
-        <Breadcrumb
-          praxisId={praxis.id}
-          taskId={praxis.task_id}
-          taskTitle={praxis.task_title}
-          inkColor={MUTED}
-        />
-      </div>
-
-      <ComposerSheet
-        sizes={sizes}
-        style={{
-          background: PAPER,
-          border: `2px solid ${SHEET_FRAME}`,
-          borderRadius: 0,
-          boxShadow: SHADOW,
-        }}
-        masthead={
+  /* The chrome, named once and mounted twice: the composer below, and the
+     waiting surface once your part is in (#1189). The same ELEMENTS both
+     times, so the nameplate's counter-turning cogs and the ray burst cannot
+     drift between the two stages. */
+  const sheetStyle = {
+    background: PAPER,
+    border: `2px solid ${SHEET_FRAME}`,
+    borderRadius: 0,
+    boxShadow: SHADOW,
+  };
+  const statusMark = <Gear size={40} fill={RED} hole={PANEL} />;
+  const slip = {
+    style: {
+      background: PANEL,
+      border: `2px solid ${FRAME}`,
+      borderRadius: 0,
+      padding: "var(--space-lg)",
+    },
+    labelStyle: stencil({ color: ACCENT, letterSpacing: "0.2em" }),
+    titleStyle: {
+      fontFamily: BEBAS,
+      textTransform: "uppercase" as const,
+      letterSpacing: "0.01em",
+      lineHeight: 0.96,
+      color: INK,
+    },
+    descriptionStyle: { fontFamily: COURIER, color: MUTED },
+    pillStyle: stencil({ color: ACCENT, borderRadius: 0 }),
+  };
+  /* The waiting footer's affirmative control is a BUTTON, not the composer's
+     full-bleed bar: the bar is the order's one irreversible act, and taking
+     your own part back out is neither irreversible nor the page's subject. */
+  const primaryStyle = stencil({
+    background: BAR,
+    color: BAR_INK,
+    border: "none",
+    borderRadius: 0,
+    padding: "var(--space-md) var(--space-xl)",
+    letterSpacing: "0.22em",
+    textAlign: "center",
+  });
+  const masthead = (
           /* The nameplate: cog · the paper's name · cog, on the union's red bar,
              under a 3px double rule and the printed-in shadow of its own ink. */
           <ComposerMasthead
@@ -331,8 +350,8 @@ export default function EverymenEditPraxis({ state }: Props) {
             </span>
             <Gear size={16} fill={MAST_INK} hole={MAST} spin="reverse" duration="26s" />
           </ComposerMasthead>
-        }
-        ground={
+  );
+  const ground = (
           /* Poster rays fanning from behind the masthead, a gold glow in one
              corner and an olive one in the other, all masked away from the copy.
              Anchored (inset 0, unanimated): the burst's origin is the masthead,
@@ -354,7 +373,62 @@ export default function EverymenEditPraxis({ state }: Props) {
                 "radial-gradient(130% 70% at 50% 8%, #000 40%, transparent 92%)",
             }}
           />
-        }
+  );
+
+  const dress: ComposerDress = {
+    accent: ACCENT,
+    pageStyle: { fontFamily: COURIER, color: INK },
+    breadcrumbInk: MUTED,
+    sheetStyle,
+    masthead,
+    ground,
+    rule: () => dashRule,
+    mark: statusMark,
+    statusStyle: stencil({ color: INK, letterSpacing: "0.2em" }),
+    metaStyle: { color: MUTED },
+    labelStyle: stencil({ color: INK, letterSpacing: "0.2em" }),
+    slip,
+    panelStyle: {
+      background: PANEL,
+      border: `2px solid ${FRAME}`,
+      borderRadius: 0,
+    },
+    headingStyle: {
+      fontFamily: BEBAS,
+      textTransform: "uppercase",
+      letterSpacing: "0.01em",
+      color: INK,
+    },
+    bodyStyle: { fontFamily: COURIER, color: MUTED },
+    quietStyle: { fontFamily: COURIER, color: MUTED },
+    primaryStyle,
+    quietButtonStyle: stencil({ color: MUTED }),
+  };
+
+  /* Your part is in, so the composer is not a composer any more (ADR-0059).
+     Same page, same sheet, same ornament — a different stage. */
+  if (isWaitingStage(state.phase)) {
+    return <PraxisWaitingSurface state={state} dress={dress} />;
+  }
+
+  return (
+    <ComposerPage
+      sizes={sizes}
+      style={dress.pageStyle}
+      breadcrumb={
+        <Breadcrumb
+          praxisId={praxis.id}
+          taskId={praxis.task_id}
+          taskTitle={praxis.task_title}
+          inkColor={MUTED}
+        />
+      }
+    >
+      <ComposerSheet
+        sizes={sizes}
+        style={sheetStyle}
+        masthead={masthead}
+        ground={ground}
       >
         {/* Draft · saved just now, with a cog turning at the end of the row. */}
         <ComposerStatusRow
@@ -366,31 +440,16 @@ export default function EverymenEditPraxis({ state }: Props) {
                 })
               : t("editPraxis.composer.statusUnsaved")
           }
-          statusStyle={stencil({ color: INK, letterSpacing: "0.2em" })}
-          metaStyle={{ color: MUTED }}
-          mark={<Gear size={40} fill={RED} hole={PANEL} />}
+          statusStyle={dress.statusStyle}
+          metaStyle={dress.metaStyle}
+          mark={statusMark}
         />
 
         {/* The job reference slip, on plate stock with the stamped points seal. */}
         <TaskSlip
           praxis={praxis}
           task={task}
-          style={{
-            background: PANEL,
-            border: `2px solid ${FRAME}`,
-            borderRadius: 0,
-            padding: "var(--space-lg)",
-          }}
-          labelStyle={stencil({ color: ACCENT, letterSpacing: "0.2em" })}
-          titleStyle={{
-            fontFamily: BEBAS,
-            textTransform: "uppercase",
-            letterSpacing: "0.01em",
-            lineHeight: 0.96,
-            color: INK,
-          }}
-          descriptionStyle={{ fontFamily: COURIER, color: MUTED }}
-          pillStyle={stencil({ color: ACCENT, borderRadius: 0 })}
+          {...slip}
           mark={
             <RingMark
               size={76}
@@ -745,24 +804,19 @@ export default function EverymenEditPraxis({ state }: Props) {
               skin={{
                 idleLabel: t("editPraxis.composer.submit"),
                 busyLabel: t("editPraxis.composer.submitBusy"),
-                style: stencil({
+                style: {
+                  ...primaryStyle,
                   width: "100%",
                   cursor: state.submitting ? "wait" : "pointer",
-                  background: BAR,
-                  color: BAR_INK,
-                  border: "none",
                   borderTop: `2px solid ${FRAME}`,
-                  borderRadius: 0,
                   padding: "var(--space-md) var(--space-lg)",
-                  letterSpacing: "0.22em",
-                  textAlign: "center",
-                }),
+                },
               }}
             />
           }
         />
       </ComposerSheet>
-    </div>
+    </ComposerPage>
   );
 }
 

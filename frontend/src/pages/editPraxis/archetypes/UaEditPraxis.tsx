@@ -97,6 +97,7 @@ import {
   Breadcrumb,
   ComposerFooter,
   ComposerGround,
+  ComposerPage,
   ComposerRule,
   ComposerSection,
   ComposerSheet,
@@ -107,7 +108,9 @@ import {
   composerLabelStyle,
   formatAutosave,
   useComposerSizes,
+  type ComposerDress,
 } from "./shared";
+import PraxisWaitingSurface from "../waiting/PraxisWaitingSurface";
 import {
   BodyPreview,
   BodyTextarea,
@@ -125,7 +128,7 @@ import { Lotus } from "../../../components/factionMarks";
 import { UaSigil } from "../../../components/cards/UaSigil";
 import { UA_DISPLAY, UA_TEXT, UaEnsoScore } from "../../../components/cards/uaAtoms";
 import { MetataskSealStack } from "../MetataskSealStack";
-import type { EditPraxisState } from "../useEditPraxis";
+import { isWaitingStage, type EditPraxisState } from "../useEditPraxis";
 
 interface Props {
   state: EditPraxisState;
@@ -168,7 +171,7 @@ export default function UaEditPraxis({ state }: Props) {
   /* Ornament geometry, in raw px because a drawn figure is neither type nor
    * spacing (WORLD_ZERO_STYLE §4a). The phone gets the same two marks, smaller
    * and pulled in — conditional ornament, not a second layout. */
-  const ground = sizes.isMobile
+  const groundGeometry = sizes.isMobile
     ? { lotus: 300, lotusLeft: -122, lotusTop: -94, enso: 208, ensoRight: -66, ensoBottom: -58 }
     : { lotus: 420, lotusLeft: -170, lotusTop: -130, enso: 300, ensoRight: -96, ensoBottom: -84 };
 
@@ -192,43 +195,45 @@ export default function UaEditPraxis({ state }: Props) {
     boxSizing: "border-box",
   } as const;
 
-  return (
-    <div style={{ fontFamily: UA_TEXT, color: INK }}>
-      <div
-        style={{
-          maxWidth: sizes.maxWidth,
-          margin: "0 auto",
-          padding: "var(--space-lg) var(--space-lg) 0",
-        }}
-      >
-        {/* No `inkColor`: the breadcrumb sits ABOVE the sheet, on the site
-            background, so it takes the global tertiary ink like every other
-            page's. A `--faction-ua-*` ink here would be a colour measured on
-            UA's paper and then painted on the app's (#651, #694). */}
-        <Breadcrumb
-          praxisId={praxis.id}
-          taskId={praxis.task_id}
-          taskTitle={praxis.task_title}
-        />
-      </div>
-
-      <ComposerSheet
-        sizes={sizes}
-        style={{
-          background: SHEET,
-          border: `${BORDER_WIDTH}px solid ${ACCENT}`,
-          borderRadius: RADIUS,
-        }}
-        /* NO masthead. UA is the one faction that draws no top band. */
-        ground={
+  /* The chrome, named once and mounted twice: the composer below, and the
+     waiting surface once your part is in (#1189). The same ELEMENTS both
+     times, so the lotus and the turning ensō cannot drift between stages. */
+  const sheetStyle = {
+    background: SHEET,
+    border: `${BORDER_WIDTH}px solid ${ACCENT}`,
+    borderRadius: RADIUS,
+  };
+  const statusMark = <UaSigil width={44} height={44} />;
+  const slip = {
+    style: {
+      background: FIELD,
+      border: `1px solid ${RULE}`,
+      borderRadius: RADIUS,
+      padding: "var(--space-lg)",
+    },
+    labelStyle,
+    titleStyle: { fontFamily: UA_DISPLAY, fontWeight: 600, color: INK },
+    descriptionStyle: { color: BODY },
+    pillStyle: { fontFamily: UA_TEXT, color: MUTED },
+  } as const;
+  const primaryStyle = composerLabelStyle({
+    fontFamily: UA_TEXT,
+    border: "none",
+    borderRadius: RADIUS,
+    padding: "var(--space-md) var(--space-xl)",
+    color: ON_FILL,
+    background: FILL,
+  });
+  /* NO masthead. UA is the one faction that draws no top band. */
+  const groundLayer = (
           <ComposerGround inset={0} opacity="var(--faction-ua-card-lotus-opacity)">
             <Lotus
-              size={ground.lotus}
+              size={groundGeometry.lotus}
               color="var(--faction-ua-card-lotus)"
               style={{
                 position: "absolute",
-                left: ground.lotusLeft,
-                top: ground.lotusTop,
+                left: groundGeometry.lotusLeft,
+                top: groundGeometry.lotusTop,
               }}
             />
             {/* The ensō turns once every 200s — re-timed through the shared
@@ -238,17 +243,63 @@ export default function UaEditPraxis({ state }: Props) {
               style={
                 {
                   position: "absolute",
-                  right: ground.ensoRight,
-                  bottom: ground.ensoBottom,
+                  right: groundGeometry.ensoRight,
+                  bottom: groundGeometry.ensoBottom,
                   "--ep-spin-dur": GROUND_SPIN,
                 } as CSSProperties
               }
             >
-              <UaSigil width={ground.enso} height={ground.enso} />
+              <UaSigil width={groundGeometry.enso} height={groundGeometry.enso} />
             </span>
           </ComposerGround>
-        }
-      >
+  );
+
+  const dress: ComposerDress = {
+    accent: ACCENT,
+    pageStyle: { fontFamily: UA_TEXT, color: INK },
+    sheetStyle,
+    ground: groundLayer,
+    rule: () => rule,
+    mark: statusMark,
+    statusStyle: { fontFamily: UA_TEXT, color: INK, fontWeight: 600 },
+    metaStyle: { fontFamily: UA_TEXT, color: MUTED },
+    labelStyle,
+    slip,
+    panelStyle: {
+      background: FIELD,
+      border: `1px solid ${RULE}`,
+      borderRadius: RADIUS,
+    },
+    headingStyle: { fontFamily: UA_DISPLAY, fontWeight: 600, color: INK },
+    bodyStyle: { color: BODY },
+    quietStyle: { fontFamily: UA_TEXT, color: MUTED },
+    primaryStyle,
+    quietButtonStyle: { fontFamily: UA_TEXT, color: MUTED },
+  };
+
+  /* Your part is in, so the composer is not a composer any more (ADR-0059).
+     Same page, same sheet, same ornament — a different stage. */
+  if (isWaitingStage(state.phase)) {
+    return <PraxisWaitingSurface state={state} dress={dress} />;
+  }
+
+  return (
+    <ComposerPage
+      sizes={sizes}
+      style={dress.pageStyle}
+      breadcrumb={
+        /* No `inkColor`: the breadcrumb sits ABOVE the sheet, on the site
+           background, so it takes the global tertiary ink like every other
+           page's. A `--faction-ua-*` ink here would be a colour measured on
+           UA's paper and then painted on the app's (#651, #694). */
+        <Breadcrumb
+          praxisId={praxis.id}
+          taskId={praxis.task_id}
+          taskTitle={praxis.task_title}
+        />
+      }
+    >
+      <ComposerSheet sizes={sizes} style={sheetStyle} ground={groundLayer}>
         {/* Draft · Saved just now, with the ensō as the status mark. */}
         <ComposerStatusRow
           status={t("editPraxis.composer.statusDraft")}
@@ -259,25 +310,16 @@ export default function UaEditPraxis({ state }: Props) {
                 })
               : t("editPraxis.composer.statusUnsaved")
           }
-          statusStyle={{ fontFamily: UA_TEXT, color: INK, fontWeight: 600 }}
-          metaStyle={{ fontFamily: UA_TEXT, color: MUTED }}
-          mark={<UaSigil width={44} height={44} />}
+          statusStyle={dress.statusStyle}
+          metaStyle={dress.metaStyle}
+          mark={statusMark}
         />
 
         {/* The task reference slip, on the inset panel with the points mark. */}
         <TaskSlip
           praxis={praxis}
           task={task}
-          style={{
-            background: FIELD,
-            border: `1px solid ${RULE}`,
-            borderRadius: RADIUS,
-            padding: "var(--space-lg)",
-          }}
-          labelStyle={labelStyle}
-          titleStyle={{ fontFamily: UA_DISPLAY, fontWeight: 600, color: INK }}
-          descriptionStyle={{ color: BODY }}
-          pillStyle={{ fontFamily: UA_TEXT, color: MUTED }}
+          {...slip}
           mark={
             <UaEnsoScore
               size={88}
@@ -594,21 +636,16 @@ export default function UaEditPraxis({ state }: Props) {
               skin={{
                 idleLabel: t("editPraxis.composer.submit"),
                 busyLabel: t("editPraxis.composer.submitBusy"),
-                style: composerLabelStyle({
-                  fontFamily: UA_TEXT,
+                style: {
+                  ...primaryStyle,
                   cursor: state.submitting ? "wait" : "pointer",
-                  border: "none",
-                  borderRadius: RADIUS,
-                  padding: "var(--space-md) var(--space-xl)",
-                  color: ON_FILL,
-                  background: FILL,
-                }),
+                },
               }}
             />
           }
         />
       </ComposerSheet>
-    </div>
+    </ComposerPage>
   );
 }
 
