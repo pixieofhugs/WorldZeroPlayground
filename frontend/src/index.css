@@ -264,6 +264,51 @@
   --faction-default-chip-text: #ffffff;
   --faction-default-total-rainbow: linear-gradient(90deg, #c1272d, #ca8a04 40%, #16a34a 60%, #2563eb);
   --faction-default-eyebrow-rainbow: linear-gradient(90deg, #16a34a, #2563eb, #be185d);
+  /* ── The edit-praxis COMPOSER's own tiers (#1181, epic #1179, ADR-0065) ──
+     The card set above gives the composer its SHEET (--faction-default-card-bg),
+     its ink and its muted ink. Three tiers it does not give, all of which the v2
+     composer design names outright, are declared here rather than borrowed from
+     a neighbouring token whose name means something else:
+
+     `field`  the ground an INPUT or the task slip sits on — a shade off the
+              sheet, so a control reads as inset rather than painted on. The
+              obvious borrow, --faction-default-stamp-bg, is the SCORE PLATE:
+              same idea, wrong tier, and reading it here is exactly the
+              "tokenized-looking, not tokenized" failure — a var() that passes
+              every lint gate while naming the wrong thing.
+     `faint`  the lightest still-legible ink — a character counter, a level
+              pill's rule. A tier below --faction-default-card-muted, which is
+              prose and answers to the content floor.
+     `hair`   the section RULE. Half the weight of --faction-default-border,
+              which is a card EDGE: a divider inside the sheet is quieter than
+              the sheet's own outline, and collapsing the two flattens the
+              composer's whole vertical rhythm. */
+  --faction-default-composer-field: #fffdf9;
+  --faction-default-composer-faint: #b8b2a4;
+  --faction-default-composer-hair: rgba(0, 0, 0, 0.06);
+  /* The AURORA — the na composer's ground: the seven-stop spectrum as soft
+     radial washes rather than a ramp. Deliberately not any of the four rainbow
+     tokens above; every one of those is cut for an EDGE (a bar, a rule, a seam-
+     less loop, a conic) and this one has to fill a sheet without ever resolving
+     into a stripe. Same argument the existing ramps already make among
+     themselves — the spectrum comes cut for its geometry.
+
+     The three properties beneath it are the wash's COMPOSITING, and they flip
+     with the theme: over a light sheet it sits `normal` and is desaturated hard,
+     over a dark one it `screen`s so the colour lifts instead of muddying. They
+     are tokens for the same reason the hues are — so the component reads a
+     var() and never branches on a `dark` boolean (WORLD_ZERO_STYLE §2). */
+  --faction-default-aurora:
+    radial-gradient(62% 78% at 8% 16%, #c1272d, transparent 70%),
+    radial-gradient(58% 72% at 34% 4%, #c2541f, transparent 70%),
+    radial-gradient(60% 74% at 56% 18%, #ca8a04, transparent 70%),
+    radial-gradient(64% 78% at 84% 12%, #16a34a, transparent 70%),
+    radial-gradient(66% 80% at 98% 62%, #2563eb, transparent 70%),
+    radial-gradient(64% 78% at 62% 96%, #be185d, transparent 70%),
+    radial-gradient(60% 74% at 22% 92%, #1d6e72, transparent 70%);
+  --faction-default-aurora-opacity: 0.2;
+  --faction-default-aurora-filter: blur(56px) saturate(0.5);
+  --faction-default-aurora-blend: normal;
   --spectrum-glow-1: #c1352a;
   --spectrum-glow-2: #cf861a;
   --spectrum-glow-3: #16a34a;
@@ -1495,6 +1540,27 @@
   --faction-default-gold: #e6b34a;
   --faction-default-total-rainbow: linear-gradient(90deg, #e2433f, #e6b34a 40%, #4ade80 60%, #60a5fa);
   --faction-default-eyebrow-rainbow: linear-gradient(90deg, #4ade80, #60a5fa, #f472b6);
+  /* The composer's three tiers, lights out (#1181). The field LIFTS off the
+     sheet here rather than sinking into it — the same inversion --faction-
+     default-stamp-bg already makes one block up — and both hairlines become
+     white scrims. */
+  --faction-default-composer-field: #1f1e2b;
+  --faction-default-composer-faint: #4a4860;
+  --faction-default-composer-hair: rgba(255, 255, 255, 0.06);
+  /* The aurora on the brightened spectrum, screen-blended so it lifts off the
+     dark sheet instead of muddying into it, and blurred less hard because a lit
+     wash spreads further on a dark ground than a dark one does on a light. */
+  --faction-default-aurora:
+    radial-gradient(62% 78% at 8% 16%, #e2433f, transparent 70%),
+    radial-gradient(58% 72% at 34% 4%, #e07a3a, transparent 70%),
+    radial-gradient(60% 74% at 56% 18%, #e6b94f, transparent 70%),
+    radial-gradient(64% 78% at 84% 12%, #4ade80, transparent 70%),
+    radial-gradient(66% 80% at 98% 62%, #60a5fa, transparent 70%),
+    radial-gradient(64% 78% at 62% 96%, #f472b6, transparent 70%),
+    radial-gradient(60% 74% at 22% 92%, #3aa0a4, transparent 70%);
+  --faction-default-aurora-opacity: 0.22;
+  --faction-default-aurora-filter: blur(48px) saturate(0.8);
+  --faction-default-aurora-blend: screen;
   --glow-neutral: rgba(255, 255, 255, 0.75);
 
   /* Duel Victor seal, lights out (#823): the design's 2b. Only the frame
@@ -4162,4 +4228,54 @@
   );
   background-size: 6px 6px;
   transition: background-color 300ms;
+}
+
+/* ══ Edit-praxis composer ornament (#1181, epic #1179, ADR-0065) ══
+   The composer is ONE shared layout every faction dresses, and its dress is
+   ornament plus AMBIENT MOTION lifted from each faction's task-card archetype.
+   All seven motions live here, declared once, so that the seven skin issues
+   that follow this foundation never touch this file: a keyframe added per skin
+   is seven chances to land a component-injected <style> instead, and an inline
+   `animation:` bypasses the reduced-motion guard outright (#1003 retired that
+   pattern). Only two of the seven are read by the Unaffiliated composer that
+   ships with them — `.ep-edge` on the masthead band and `.ep-drift` on the
+   aurora. The other five are declared UNUSED on purpose; that is the point.
+
+   Every one is class-gated, and every one is decoration: the composer reads
+   correctly stilled, because nothing here carries state a player needs.
+
+   Durations that a skin will plausibly want to re-time are read from a custom
+   property with the design's own value as the fallback, so a faction re-times a
+   motion from its own file without a second keyframe. `epEdge` and `epDrift`
+   take fixed durations — they are the spectrum's own two motions and the design
+   pins both (14s and 46s). */
+@keyframes epEdge { to { background-position: 300% 0; } }
+@keyframes epSpin { to { transform: rotate(360deg); } }
+@keyframes epDrift {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+  50% { transform: translate3d(3%, -3%, 0) scale(1.08); }
+}
+@keyframes epPulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.45; } }
+@keyframes epSweep { 0% { transform: translateY(-120%); } 100% { transform: translateY(220%); } }
+@keyframes epTwinkle {
+  0%, 100% { opacity: 0.25; transform: scale(0.7); }
+  50% { opacity: 1; transform: scale(1.1); }
+}
+@keyframes epBlink { 50% { opacity: 0; } }
+@media (prefers-reduced-motion: no-preference) {
+  /* The masthead band: a 300%-wide spectrum walked one full width. The element
+     must set `background-size: 300% 100%` for the travel to land seamlessly. */
+  .ep-edge { animation: epEdge 14s linear infinite; }
+  .ep-spin { animation: epSpin var(--ep-spin-dur, 90s) linear infinite; }
+  .ep-spin-rev { animation: epSpin var(--ep-spin-dur, 90s) linear infinite reverse; }
+  /* The ground. Paired with a layer at a negative inset, so the drift never
+     exposes an unpainted edge of the sheet. */
+  .ep-drift { animation: epDrift 46s ease-in-out infinite; }
+  .ep-pulse { animation: epPulse var(--ep-pulse-dur, 2.4s) ease-in-out infinite; }
+  .ep-sweep { animation: epSweep var(--ep-sweep-dur, 6s) linear infinite; }
+  .ep-twinkle {
+    animation: epTwinkle var(--ep-twinkle-dur, 1.6s) ease-in-out infinite;
+    animation-delay: var(--ep-delay, 0s);
+  }
+  .ep-blink { animation: epBlink 1s step-end infinite; }
 }
