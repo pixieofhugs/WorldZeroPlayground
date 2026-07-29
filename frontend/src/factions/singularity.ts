@@ -29,6 +29,7 @@ const SingularityTaskCard = lazyArchetype(() => import('../components/cards/Sing
 const SingularityTaskDetail = lazyArchetype(() => import('../pages/taskDetail/archetypes/SingularityTaskDetail'))
 const SingularityVote = lazyArchetype(() => import('../components/vote/SingularityVote'))
 const SingularityPraxisCard = lazyArchetype(() => import('../components/praxisCard/desktop/SingularityPraxisCard'))
+const SingularityPraxisDetail = lazyArchetype(() => import('../pages/praxisDetail/archetypes/SingularityPraxisDetail'))
 const SingularityScoreStamp = lazyArchetype(() => import('../components/praxisCard/scoreStamp/SingularityScoreStamp'))
 const SingularitySeal = lazyArchetype(() => import('../components/metaTaskSeal/skins/SingularitySeal'))
 const SingularitySigilAdapter = lazyArchetype(() => import('../components/cards/FactionSigil').then((m) => ({ default: m.SingularitySigilAdapter })))
@@ -51,6 +52,7 @@ export const SINGULARITY_MANIFEST: FactionManifest = {
   feedFrame: () => SingularityFeedFrame,
   vote: () => SingularityVote,
   taskDetail: () => SingularityTaskDetail,
+  praxisDetail: () => SingularityPraxisDetail,
   editPraxis: () => SingularityEditPraxis,
   factionHero: () => SingularityFactionHero,
   factionBody: () => SingularityFactionBody,
