@@ -26,6 +26,7 @@ const UaProfileBody = lazyArchetype(() => import('../pages/characterProfile/arch
 const UaScoreStamp = lazyArchetype(() => import('../components/praxisCard/scoreStamp/UaScoreStamp'))
 const UaSeal = lazyArchetype(() => import('../components/metaTaskSeal/skins/UaSeal'))
 const UaTaskCard = lazyArchetype(() => import('../components/cards/UaTaskCard'))
+const UaPraxisDetail = lazyArchetype(() => import('../pages/praxisDetail/archetypes/UaPraxisDetail'))
 const UaTaskDetail = lazyArchetype(() => import('../pages/taskDetail/archetypes/UaTaskDetail'))
 const UaVote = lazyArchetype(() => import('../components/vote/UaVote'))
 const UaPraxisCard = lazyArchetype(() => import('../components/praxisCard/desktop/UaPraxisCard'))
@@ -49,6 +50,7 @@ export const UA_MANIFEST: FactionManifest = {
   feedFrame: () => UaFeedFrame,
   vote: () => UaVote,
   taskDetail: () => UaTaskDetail,
+  praxisDetail: () => UaPraxisDetail,
   editPraxis: () => UaEditPraxis,
   factionHero: () => UaFactionHero,
   factionBody: () => UaFactionBody,
