@@ -46,6 +46,21 @@ type ViewportName = keyof typeof VIEWPORTS
 /**
  * Routes whose chrome is skinned by the viewer's faction. `/factions/${slug}`
  * is added per-faction — it is the faction's own bespoke surface.
+ *
+ * WHAT THIS LIST CANNOT REACH, and why it matters (#694). Every route here is
+ * a READ surface reachable from a fresh login. The composer, the collab
+ * waiting surface and the praxis detail page are not, because each needs a
+ * praxis the bot owns; and some of the worst pairings in the app only exist in
+ * a STATE rather than on a route. #694's was one: the collab roster renders
+ * nothing below two members, and its filled row only appears once some — not
+ * all — of them have cast. No route walk produces that, so a 1.05:1 pairing
+ * sat on a faction surface without either guard seeing it.
+ *
+ * Adding routes is not the fix; the fix is a fixture that puts a praxis into
+ * each interesting state before the scan. Until then the token test
+ * (`src/utils/__tests__/factionContrast.test.ts`) carries these surfaces, which
+ * is why its ROSTER_PAIRS block measures a pairing rather than a documented
+ * role — read that block's header before assuming a token is covered here.
  */
 const SHARED_ROUTES = ['/', '/tasks', '/praxes', '/leaderboard', '/factions']
 
