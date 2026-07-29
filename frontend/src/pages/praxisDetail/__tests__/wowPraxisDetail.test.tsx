@@ -9,8 +9,9 @@
  *  - the registry row that makes the page reachable at all — one of #951's four
  *    bullets was that WOW *rendered the generic Default here*, and a green
  *    render proves nothing about which component produced it;
- *  - the amended ADR-0061 split: the six CONTENT slots speak WOW, and the
- *    moderation chrome does not;
+ *  - ADR-0061's copy rule: every word on the page is the shared neutral one,
+ *    including the six slots the design names — WOW's chronicle vocabulary is
+ *    recorded on #1121 and deliberately not built;
  *  - the layout facts #1129 reconciled against the eight faction designs — the
  *    330px aside, the crown at BOTH form factors, the undressed report card;
  *  - the dress itself, which is the only thing a skin is allowed to bring.
@@ -231,8 +232,8 @@ describe("WOW claims the praxis-detail surface (#951)", () => {
   });
 });
 
-describe("WOW praxis detail — the voice split (ADR-0061 as amended)", () => {
-  it("speaks WOW in the six content slots", () => {
+describe("WOW praxis detail — copy is neutral (ADR-0061)", () => {
+  it("reads the shared neutral words in every content slot", () => {
     const { text } = render(
       state({
         praxis: {
@@ -260,12 +261,29 @@ describe("WOW praxis detail — the voice split (ADR-0061 as amended)", () => {
         },
       }),
     );
-    expect(text, "media").toContain("The proof");
-    expect(text, "crew").toContain("Sworn together by");
-    expect(text, "metatasks").toContain("Charms claimed");
-    expect(text, "vote").toContain("Your cheer");
-    expect(text, "voters").toContain("The court says");
-    expect(text, "comments").toContain("The gallery");
+    for (const neutral of [
+      "Proof",
+      "Members",
+      "Metatasks",
+      "Cast your vote",
+      "Who voted",
+      "Discussion",
+    ]) {
+      expect(text, `the shared word for ${neutral}`).toContain(neutral);
+    }
+
+    // The six words this skin shipped for a day (#1160) and gave back when the
+    // amendment that allowed them was withdrawn. They live on #1121 now.
+    for (const voiced of [
+      "The proof",
+      "Sworn together by",
+      "Charms claimed",
+      "Your cheer",
+      "The court says",
+      "The gallery",
+    ]) {
+      expect(text, `no voiced copy: ${voiced}`).not.toContain(voiced);
+    }
   });
 
   it("keeps the moderation chrome in the shared neutral words", () => {
@@ -320,14 +338,14 @@ describe("WOW praxis detail — the layout contract (#1129)", () => {
   it("moves the score above the proof on mobile, and draws it exactly once", () => {
     const wide = render(state());
     expect(wide.text.match(/Score/g)?.length, "one score block on desktop").toBe(1);
-    expect(indexOf(wide.html, "The proof"), "proof precedes the aside rail").toBeLessThan(
+    expect(indexOf(wide.html, "Proof"), "proof precedes the aside rail").toBeLessThan(
       indexOf(wide.html, "Score"),
     );
 
     const phone = render(state(), "mobile");
     expect(phone.text.match(/Score/g)?.length, "one score block on mobile").toBe(1);
     expect(indexOf(phone.html, "Score"), "rail rides above the proof").toBeLessThan(
-      indexOf(phone.html, "The proof"),
+      indexOf(phone.html, "Proof"),
     );
   });
 
@@ -373,13 +391,13 @@ describe("WOW praxis detail — the dress", () => {
 describe("WOW praxis detail — the state axes", () => {
   it("renders solo, collab and duel", () => {
     const solo = render(state());
-    expect(solo.text, "no roster for a solo").not.toContain("Sworn together by");
+    expect(solo.text, "no roster for a solo").not.toContain("Members");
 
     const collab = render(
       state({ praxis: { ...PRAXIS, type: "collab", members: [MEMBER, CO_MEMBER] } }),
     );
     expect(collab.text, "both co-authors in the byline").toContain("Bram Quilling");
-    expect(collab.text, "and the roster").toContain("Sworn together by");
+    expect(collab.text, "and the roster").toContain("Members");
 
     // A declined challenge draws NO card at all (ADR-0011) — the duel block
     // self-hides, and this page must not invent a line about it.

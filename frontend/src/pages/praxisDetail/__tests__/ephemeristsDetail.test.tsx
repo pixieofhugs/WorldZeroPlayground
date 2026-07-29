@@ -1,12 +1,13 @@
 /**
- * The Ephemerists praxis-detail skin (#1120, epic #1085, ADR-0061 as amended).
+ * The Ephemerists praxis-detail skin (#1120, epic #1085, ADR-0061).
  *
  * `archetypeSlots.test.tsx` already walks this archetype for the slots EVERY
  * praxis-detail skin must emit — it picks it up from the manifest the moment the
  * registration lands, with no edit here. This file guards what is specific to
  * the SKIN: the three contract facts the eight faction designs settled (330px
- * aside, crown at both form factors, an undressed report card), the voiced copy
- * the amendment allows, and the chrome it forbids voicing.
+ * aside, crown at both form factors, an undressed report card), and the fact
+ * that the page speaks entirely in the shared neutral words — the Ephemerists'
+ * own vocabulary is recorded on #1120 and deliberately not built.
  *
  * Harness note: `renderToStaticMarkup`, no DOM, no effects (SPEC-testing.md).
  * `useFormFactor` is MOCKED rather than driven off `matchMedia` — the mobile
@@ -241,23 +242,26 @@ describe("Ephemerists praxis detail — the inherited layout contract", () => {
   });
 });
 
-describe("Ephemerists praxis detail — voice and chrome (ADR-0061 as amended)", () => {
-  it("speaks the faction's words in the content slots", () => {
+describe("Ephemerists praxis detail — copy is neutral (ADR-0061)", () => {
+  it("reads the shared neutral words, not the design's", () => {
     const { text } = render(state());
-    expect(text, "the body heading").toContain("Canonical record");
-    // The metatasks heading reads the SHARED neutral key on purpose: its word is
-    // already the design's word, so a second key would re-grow the near-synonym
-    // catalog ADR-0061 exists to delete.
+    expect(text, "the body heading").toContain("Write-up");
+    // The words this skin shipped for a day (#1156) and gave back with the
+    // withdrawn amendment. They live on #1120 now, recorded and unbuilt.
+    for (const voiced of ["Canonical record", "The disputation", "Amend the record"]) {
+      expect(text, `no voiced copy: ${voiced}`).not.toContain(voiced);
+    }
+    // A heading only when there is something under it.
     expect(render(state({ praxis: { ...PRAXIS, applied_metatasks: [] } })).text).not.toContain(
       "Metatasks",
     );
   });
 
-  it("names the duel block in the faction's voice, and only when there is a duel", () => {
-    expect(render(state()).text, "no duel, no heading").not.toContain("The disputation");
+  it("names the duel block only when there is a duel", () => {
+    expect(render(state()).text, "no duel, no heading").not.toContain("The duel");
 
     const live = render(state({ praxis: { ...PRAXIS, duel_id: 5 }, duel: DUEL }));
-    expect(live.text, "the faction's word for it").toContain("The disputation");
+    expect(live.text, "the shared word for it").toContain("The duel");
     // The card is MOUNTED, not re-narrated: it already implements three
     // readings (live / won by default / final) and none at all on `declined`.
     // Only the live reading is checked here — `duelCard.test.tsx` owns the rest.
@@ -267,16 +271,19 @@ describe("Ephemerists praxis detail — voice and chrome (ADR-0061 as amended)",
     const declined = render(
       state({ praxis: { ...PRAXIS, duel_id: 5 }, duel: { ...DUEL, status: "declined" } }),
     );
-    expect(declined.text).not.toContain("The disputation");
+    expect(declined.text).not.toContain("The duel");
   });
 
-  it("labels the owner's own actions, and shows neither to a visitor", () => {
-    expect(render(state()).text, "visitor sees no owner block").not.toContain(
-      "Amend the record",
+  it("mounts the owner's controls bare, and shows none to a visitor", () => {
+    // The design labels this cluster ("Amend the record"). That label was the
+    // one voiced slot with no neutral twin, so it is gone rather than restated
+    // — the other seven skins mount the cluster unlabelled too.
+    expect(render(state()).html, "visitor gets no owner controls").not.toContain(
+      "/praxes/1/edit",
     );
     const owner = render(state({ isOwner: true }));
-    expect(owner.text, "owner gets the faction's label").toContain("Amend the record");
-    expect(owner.html, "over the shared invariant controls").toContain("/praxes/1/edit");
+    expect(owner.html, "the shared invariant controls").toContain("/praxes/1/edit");
+    expect(owner.text, "and no label over them").not.toContain("Amend the record");
   });
 
   it("keeps moderation and system chrome on the shared neutral words", () => {
@@ -334,6 +341,6 @@ describe("Ephemerists praxis detail — the state axes", () => {
   it("draws the proof and the write-up only when there is something to draw", () => {
     const bare = render(state({ praxis: { ...PRAXIS, media_items: [], body_text: "" } }));
     expect(bare.text).not.toContain("Proof");
-    expect(bare.text).not.toContain("Canonical record");
+    expect(bare.text).not.toContain("Write-up");
   });
 });

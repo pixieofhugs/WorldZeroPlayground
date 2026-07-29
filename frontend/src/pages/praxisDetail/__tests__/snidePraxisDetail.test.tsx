@@ -9,8 +9,9 @@
  *  - the layout contract it inherits and must not re-derive (330px aside, the
  *    responsive move of the rail, the crown at both form factors, one comments
  *    heading);
- *  - the ADR-0061 amendment's voice boundary — the content slots speak
- *    S.N.I.D.E., the moderation and system chrome does not;
+ *  - ADR-0061's copy rule — the page speaks entirely in the shared neutral
+ *    words, and the S.N.I.D.E. vocabulary the design names is recorded on
+ *    #1119 rather than built;
  *  - and the two S.N.I.D.E.-specific traps: the ransom headline that must stay
  *    one readable string, and the ground that belongs to the column.
  *
@@ -236,14 +237,14 @@ describe("S.N.I.D.E. praxis detail — the inherited layout contract", () => {
   it("moves the rail above the proof on mobile, and builds it once either way", () => {
     const wide = render(state());
     expect(wide.text.match(/Score/g)?.length, "one score block on desktop").toBe(1);
-    expect(indexOf(wide.html, "Receipts"), "proof precedes the aside rail").toBeLessThan(
+    expect(indexOf(wide.html, "Proof"), "proof precedes the aside rail").toBeLessThan(
       indexOf(wide.html, "Score"),
     );
 
     const phone = render(state(), "mobile");
     expect(phone.text.match(/Score/g)?.length, "one score block on mobile").toBe(1);
     expect(indexOf(phone.html, "Score"), "the rail rides above the proof").toBeLessThan(
-      indexOf(phone.html, "Receipts"),
+      indexOf(phone.html, "Proof"),
     );
   });
 
@@ -277,8 +278,8 @@ describe("S.N.I.D.E. praxis detail — the inherited layout contract", () => {
   });
 });
 
-describe("S.N.I.D.E. praxis detail — the voice boundary (ADR-0061 as amended)", () => {
-  it("speaks S.N.I.D.E. in the content slots", () => {
+describe("S.N.I.D.E. praxis detail — copy is neutral (ADR-0061)", () => {
+  it("reads the shared neutral words in every content slot", () => {
     const collab = state({
       praxis: {
         ...PRAXIS,
@@ -306,21 +307,31 @@ describe("S.N.I.D.E. praxis detail — the voice boundary (ADR-0061 as amended)"
       },
     });
     const { text } = render(collab);
-    expect(text, "media").toContain("Receipts");
-    expect(text, "crew").toContain("Posted together by");
-    expect(text, "metatasks").toContain("Extras taken");
-    expect(text, "vote").toContain("Your call");
-    expect(text, "voters").toContain("Who called it");
+    for (const neutral of [
+      "Proof",
+      "Members",
+      "Metatasks",
+      "Cast your vote",
+      "Who voted",
+    ]) {
+      expect(text, `the shared word for ${neutral}`).toContain(neutral);
+    }
 
-    // The shared neutral words those five replace must be gone from this page.
-    expect(text, "not the neutral proof heading").not.toContain("Proof");
-    expect(text, "not the neutral members heading").not.toContain("Members");
-    expect(text, "not the neutral vote heading").not.toContain("Cast your vote");
-    expect(text, "not the neutral voters heading").not.toContain("Who voted");
+    // The five words this skin shipped for a day (#1159) and gave back when the
+    // amendment that allowed them was withdrawn. They live on #1119 now.
+    for (const voiced of [
+      "Receipts",
+      "Posted together by",
+      "Extras taken",
+      "Your call",
+      "Who called it",
+    ]) {
+      expect(text, `no voiced copy: ${voiced}`).not.toContain(voiced);
+    }
   });
 
   it("leaves moderation and system chrome in the shared neutral words", () => {
-    // The design voices these three; the owner's caveat on #1118 rules that
+    // The design voices these three too; the owner's caveat on #1118 rules that
     // moderation chrome sits outside the costume. "Pulled for review" / "Kicked
     // back" / "Ratchet" are dress notes, not authority.
     const flagged = state({ praxis: { ...PRAXIS, moderation_status: "flagged" } });
@@ -400,7 +411,7 @@ describe("S.N.I.D.E. praxis detail — the state axes", () => {
   it("credits every co-author and shows the crew only on a collab", () => {
     const solo = render(state());
     expect(solo.html, "solo links one poster").toContain('href="/characters/3"');
-    expect(solo.text, "and draws no crew section").not.toContain("Posted together by");
+    expect(solo.text, "and draws no members section").not.toContain("Members");
 
     const collab = state({
       praxis: { ...PRAXIS, type: "collab", members: [MEMBER, CO_MEMBER] },
@@ -408,6 +419,7 @@ describe("S.N.I.D.E. praxis detail — the state axes", () => {
     const { html, text } = render(collab);
     expect(html, "each co-author is reachable").toContain('href="/characters/4"');
     expect(text).toContain("Beth");
+    expect(text, "the crew reads as Members, the domain noun").toContain("Members");
   });
 
   it("shows owner controls to a member and nothing to a visitor", () => {
@@ -420,12 +432,12 @@ describe("S.N.I.D.E. praxis detail — the state axes", () => {
 
   it("lists who voted and each voter's own rung, never an average", () => {
     const { html, text } = render(state());
-    expect(text).toContain("Who called it");
+    expect(text).toContain("Who voted");
     expect(html).toContain('href="/characters/11"');
     expect(text, "the count, not the mean").toContain("2 votes");
 
     expect(render(state({ voters: [] })).text, "no empty voter panel").not.toContain(
-      "Who called it",
+      "Who voted",
     );
   });
 
