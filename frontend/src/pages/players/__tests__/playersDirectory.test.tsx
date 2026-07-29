@@ -211,6 +211,39 @@ describe('light-theme meadow (#684)', () => {
     // sees, and a near-black petal would announce the society exists.
     expect(html).not.toContain('--faction-albescent')
   })
+
+  // #805: the bloom is TWO petal layers — a large soft wash under a smaller
+  // solid petal. The wash used to be suppressed outright for an unaffiliated
+  // player (`fill="none"`), so their bloom lost its flower shape and read as a
+  // scatter of dots beside everyone else's. An SVG `fill` takes a gradient, so
+  // this was never one of ADR-0039's scalar contexts: it walks the spectrum.
+  it('gives the unaffiliated bloom its soft wash, in the spectrum light tints', () => {
+    const { html } = render(
+      <Meadow players={ranked(PLAYERS)} maxScore={2140} myCharId={null} {...STAGE} />,
+    )
+    for (const slug of FACTION_RAINBOW_ORDER) {
+      expect(html, `${slug} wash petal`).toContain(`--faction-${slug}-light)`)
+    }
+    // The wash layer is the rx 17 / ry 26 ellipse; none of them may be blank.
+    expect(html, 'no wash petal is suppressed').not.toContain('rx="17" ry="26" fill="none"')
+  })
+
+  it('still washes a themed bloom in its own single hue', () => {
+    // The other half: only the unaffiliated bloom is shape-dependent. Reza is
+    // Ephemerists and Wren is Everymen, so each wash is one tint, not seven.
+    // (Neither may be the champion — the champion's own gilt overrides both
+    // petal layers before the faction is consulted.)
+    const { html } = render(
+      <Meadow
+        players={ranked([PLAYERS[1], player({ id: 44, display_name: 'Wren', faction_slug: 'everymen', score: 100 })])}
+        maxScore={2140}
+        myCharId={null}
+        {...STAGE}
+      />,
+    )
+    expect(html).toContain('--faction-everymen-light)')
+    expect(html).not.toContain('--faction-coven-light)')
+  })
 })
 
 // §3's load-bearing invariant. Asserted on the placement function, not the DOM —

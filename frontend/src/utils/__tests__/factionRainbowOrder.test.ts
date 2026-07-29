@@ -157,6 +157,34 @@ describe("factionFill (#636 / ADR-0039)", () => {
     });
   });
 
+  // ── rule: the bar stood on end (#983) ──
+
+  it("turns na's ramp 180deg for a vertical rule", () => {
+    // A rule is ~3px wide and tens of px tall. The bar's 90deg ramp would spend
+    // all seven stops across those 3px, which is the same mud `dot` exists to
+    // avoid — so the vertical cut is the shape's whole reason to exist.
+    expect(factionFill("na", "rule")).toEqual({
+      background: "var(--faction-default-rainbow-vertical)",
+    });
+    expect(factionFill("na", "rule")).not.toEqual(factionFill("na", "bar"));
+  });
+
+  it("gives a real faction the same solid hue for rule as for bar", () => {
+    // Only na's fill is shape-dependent (ADR-0039): a themed faction's vertical
+    // rule and horizontal bar are one colour, so converting a border to a rule
+    // must not perturb how seven of the eight surfaces look.
+    for (const slug of ["everymen", "coven", "wow"]) {
+      expect(factionFill(slug, "rule")).toEqual(factionFill(slug, "bar"));
+    }
+  });
+
+  it("unregistered / null slugs rule like na (default), not ua", () => {
+    expect(factionFill("not_a_faction", "rule")).toEqual(
+      factionFill("na", "rule"),
+    );
+    expect(factionFill(null, "rule")).toEqual(factionFill("na", "rule"));
+  });
+
   it("keeps bar / dot / pill byte-identical after adding frame", () => {
     // Guards the refactor: the new shape must not perturb the existing three.
     expect(factionFill("na", "bar")).toEqual({
