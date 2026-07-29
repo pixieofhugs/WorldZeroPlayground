@@ -173,8 +173,6 @@ const GOLD = "var(--faction-wow-chronicle-gold)";
 const GOLD_INK = "var(--faction-wow-stamp-total)";
 /** The AA ink for anything printed ON the gold. */
 const ON_GOLD = "var(--faction-wow-on-fill)";
-/** The plum chip a pending invite / attached challenger wears. */
-const CHIP = "var(--faction-wow-stamp-chip-bg)";
 
 /** The band along the head of the writ: gold 0-11px, plum 11-22px. */
 const RIBBON = "var(--faction-wow-quest-ribbon)";
@@ -424,8 +422,13 @@ export default function WowEditPraxis({ state }: Props) {
                 inputBorder: `1.5px solid ${GOLD}`,
                 dropdownBg: SHEET,
                 dropdownBorder: `1.5px solid ${GOLD}`,
-                pendingBg: CHIP,
-                pendingColor: "var(--faction-wow-stamp-chip-text)",
+                // The invite / challenge chip takes the SAME measured pair as
+                // the mode chip and the tile's remove button — the theme-
+                // invariant plum at 5.16:1. Not `-stamp-chip-bg`/`-text`: that
+                // pair is measured against the duel ribbon, and against each
+                // other it is 4.14:1 in dark, under AA at this size (§3).
+                pendingBg: PLUM_FILL,
+                pendingColor: ON_PLUM,
                 placeholder: t("editPraxis.composer.invitePlaceholder"),
                 leaveStyle: { fontFamily: LORA, color: LABEL },
               }}
