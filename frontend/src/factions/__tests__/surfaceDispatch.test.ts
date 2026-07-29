@@ -62,11 +62,17 @@ const CORE_SIX = ['coven', 'snide', 'ephemerists', 'singularity', 'everymen', 'u
 // skins, so every slug fell through to `DefaultPraxisDetail`; the Unaffiliated
 // page IS the shared page. The seven remaining designs (epic #1085) re-register
 // here one at a time as dress over the same layout, and this row came back with
-// the first of them (#1140, albescent). Each subsequent skin adds ONE slug here
-// and its own name leaves the defaulted half automatically.
+// the first of them. Each subsequent skin adds ONE slug here and its own name
+// leaves the defaulted half automatically.
+//
+// The two entries are NOT the same kind of thing, which is the row's other
+// reason to exist: `coven` (#1117) is a bespoke dress with its own
+// `detail.coven.*` voice, while `albescent` (#1140) is a WRAPPER that renders
+// `DefaultPraxisDetail` whole and washes light over it, speaking the shared
+// neutral copy. Both are "registered"; only one is a skin.
 const BESPOKE: Record<string, string[]> = {
   taskDetail: [...CORE_SIX, 'wow', 'albescent'],
-  praxisDetail: ['albescent'],
+  praxisDetail: ['coven', 'albescent'],
   mobileFactionPage: [...CORE_SIX, 'wow'],
   mobileFieldDesk: [...CORE_SIX, 'wow'],
   mobileEditPraxis: [...CORE_SIX, 'wow'],
