@@ -30,7 +30,7 @@ import { fileURLToPath } from "node:url";
 
 import { describe, expect, it } from "vitest";
 
-import { AA_LARGE, AA_NORMAL, contrastRatio, formatRatio, parseColor } from "../contrast";
+import { AA_LARGE, AA_NORMAL, compositeOver, contrastRatio, formatRatio, parseColor } from "../contrast";
 import { readThemes, resolveVar, type Theme } from "./cssVars";
 
 const CSS_PATH = fileURLToPath(new URL("../../index.css", import.meta.url));
@@ -66,6 +66,18 @@ type Pair = {
   what: string;
   surface: string;
   text: string;
+  /**
+   * A translucent layer sitting BETWEEN the surface and the text — a banner
+   * wash, a scrim, a tint (#694). Given as a literal CSS colour rather than a
+   * var name because it is a component's own wash, not a declared token; if it
+   * ever becomes a token, name the token here instead.
+   *
+   * Without this the manifest can only ask "is this ink legible on that sheet",
+   * which is the wrong question the moment anything is laid over the sheet —
+   * and "the pair measured is not the pair on screen" is precisely the shape of
+   * bug that got past both guards in #694.
+   */
+  veil?: string;
   /** AA floor. Defaults to 4.5; set AA_LARGE only where the role is large display type. */
   floor?: number;
 };
@@ -113,6 +125,57 @@ const ACCENT_PAIRS: Pair[] = [
   surface: accent,
   text: `--faction-${key}-on-accent`,
 }));
+
+/**
+ * #694 — the COLLAB ROSTER's functional inks, on every faction sheet.
+ *
+ * WHY THIS BLOCK IS DIFFERENT FROM THE ONES BELOW. Everything else in
+ * ARCHETYPE_PAIRS is a role index.css states in words. These two tokens exist
+ * because a *shared* component paints its state colours on eight different
+ * faction sheets, and neither guard could see that:
+ *
+ *   - This test measures a token against the surface its DOCUMENTATION names.
+ *     `--color-warning` documents no faction surface at all, so no row of this
+ *     file could ever have named the pairing. The manifest is authored from
+ *     index.css's stated roles, and "the collab roster paints this on UA's
+ *     cream" was not one.
+ *   - `e2e/contrast.spec.ts` walks `/`, `/tasks`, `/praxes`, `/leaderboard`,
+ *     `/factions` and `/factions/{slug}`. The composer is on none of them, and
+ *     the roster only renders at >= 2 members with a MIXED cast state — a
+ *     fixture no route walk reaches. So the sweep never rendered the surface.
+ *
+ * The rows are generated over CARD_KEYS rather than typed out because the
+ * whole point is that the ink has to clear on ALL eight, not on the one that
+ * got reported. `default` is included: `factionCssVar` maps na and albescent
+ * to it, and the read-only roster on the praxis detail page is where they land.
+ *
+ * The notice ink is measured twice. The holdout banner lays it over an amber
+ * veil (`rgba(234,179,8,0.08)`), which moves the ground toward the ink on a
+ * light sheet and away from it on a dark one — either way the veiled reading
+ * is the tighter of the two, so it is the one that gates.
+ */
+const ROSTER_VEIL = "rgba(234,179,8,0.08)";
+
+const ROSTER_PAIRS: Pair[] = CARD_KEYS.flatMap((key) => [
+  // The "still weaving" pill and the holdout banner.
+  { what: `${key} roster notice ink`, surface: `--faction-${key}-card-bg`, text: `--faction-${key}-card-notice` },
+  {
+    what: `${key} roster notice ink, under the holdout veil`,
+    surface: `--faction-${key}-card-bg`,
+    veil: ROSTER_VEIL,
+    text: `--faction-${key}-card-notice`,
+  },
+  // The "+N" credit on a published row, and the published banner.
+  { what: `${key} roster credit ink`, surface: `--faction-${key}-card-bg`, text: `--faction-${key}-card-credit` },
+  // A CAST row fills with the faction's own sheet and sets its own ink, so the
+  // name and the "· you" byline are `card-text` / `card-muted` on `card-bg` —
+  // pairings CARD_PAIRS has gated since #651. They are deliberately not
+  // repeated here; a second name for one measurement is what the WOW block
+  // below warns about. The cast pill is `card-accent` on the same sheet, which
+  // is `{key} card accent` up there — and for everymen / coven / ephemerists
+  // that pair is BASELINE debt owned by #651. #694 does not make it worse (the
+  // fill it replaced measured 1.05:1) and does not fix it either.
+]);
 
 /**
  * Archetype-private primitives. Each entry is a role index.css states in
@@ -462,7 +525,7 @@ const ARCHETYPE_PAIRS: Pair[] = [
   },
 ];
 
-const PAIRS: Pair[] = [...CARD_PAIRS, ...FILL_PAIRS, ...ACCENT_PAIRS, ...ARCHETYPE_PAIRS];
+const PAIRS: Pair[] = [...CARD_PAIRS, ...FILL_PAIRS, ...ACCENT_PAIRS, ...ROSTER_PAIRS, ...ARCHETYPE_PAIRS];
 
 /**
  * Part C — the baseline allowlist (the ratchet).
@@ -525,8 +588,17 @@ describe("faction token contrast (WCAG AA)", () => {
           expect(text.color, `${pair.text} (${theme}) resolved to "${text.raw}" — not a solid color`).not.toBeNull();
           expect(surface.color!.a, `${pair.surface} is a surface — it must be opaque`).toBe(1);
 
+          // A veil is composited onto the surface before the text is, so what
+          // the ink is measured against is what a viewer actually sees.
+          let ground = surface.color!;
+          if (pair.veil) {
+            const veil = parseColor(pair.veil);
+            expect(veil, `veil "${pair.veil}" (${pair.what}) is not a solid color`).not.toBeNull();
+            ground = compositeOver(veil!, ground);
+          }
+
           const floor = pair.floor ?? AA_NORMAL;
-          const ratio = contrastRatio(text.color!, surface.color!);
+          const ratio = contrastRatio(text.color!, ground);
           const allowed = BASELINE[key(theme, pair)];
 
           if (allowed) {

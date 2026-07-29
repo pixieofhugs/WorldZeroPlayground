@@ -75,6 +75,24 @@
  * successor to the dispatcher-mounted `DuelCrossLink` rail and narrates OUTCOMES
  * only: settled, won-by-default, final. A declined challenge draws no card at
  * all, and the run-up belongs to the composer (#1071).
+ *
+ * ## The `ornament` slot
+ *
+ * One optional slot, mounted inside the sheet and nowhere else (#1140). It
+ * exists because Albescent's praxis detail is a WRAPPER over this file rather
+ * than a skin of its own (ADR-0048), and a wrapper cannot reach the sheet from
+ * outside: the breadcrumb above it is variable-height, so no fixed inset lands
+ * on the sheet's top edge. WORLD_ZERO_STYLE §3 names the remedy — structure a
+ * wrapper cannot reach goes through an optional slot on the `Default*`
+ * component, never a fork — and this is the praxis-detail twin of
+ * `DefaultTaskDetail`'s `worthSlot`.
+ *
+ * It is ORNAMENT ONLY and deliberately carries no data: it mounts after the
+ * spectrum band, inside a sheet that is already `position: relative` with
+ * `overflow: hidden` and an 18px radius, so a layer at `inset: 0` is clipped to
+ * the COMPONENT and cannot paint the viewport (the #1028 ruling, §5). na passes
+ * nothing and is unchanged. A faction that wants its own STRUCTURE writes its
+ * own archetype; this slot is not the seam for that.
  */
 import type { CSSProperties, ReactNode } from 'react'
 import { Link } from 'react-router-dom'
@@ -151,7 +169,14 @@ function MemberDisc({ name, size }: { name: string; size: number }) {
   )
 }
 
-export default function DefaultPraxisDetail({ state }: { state: PraxisDetailState }) {
+export default function DefaultPraxisDetail({
+  state,
+  ornament,
+}: {
+  state: PraxisDetailState
+  /** Decorative layers mounted inside the sheet. See "The `ornament` slot". */
+  ornament?: ReactNode
+}) {
   const { t } = useTranslation('praxis')
   const desktop = useFormFactor() !== 'mobile'
   const { praxis, voters } = state
@@ -647,6 +672,10 @@ export default function DefaultPraxisDetail({ state }: { state: PraxisDetailStat
           aria-hidden
           style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 4, background: SPECTRUM }}
         />
+
+        {/* Ornament only, clipped by this sheet's own overflow (see the slot's
+            note in the docstring). Absent for na. */}
+        {ornament}
 
         {banners}
 
