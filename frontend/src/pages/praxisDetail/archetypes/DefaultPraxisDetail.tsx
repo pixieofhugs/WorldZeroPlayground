@@ -9,13 +9,29 @@
  *
  * ## The contract
  *
- * - **Desktop** — breadcrumb, then main column + a 340px aside, then a comments
+ * Reconciled to the EIGHT faction designs, not to this one (#1117–#1123). Where
+ * the Unaffiliated design differs it is the outlier and the eight win — the
+ * seven skins inherit this file, so a fact that is wrong here would be worked
+ * around seven times.
+ *
+ * - **Desktop** — breadcrumb, then main column + a 330px aside, then a comments
  *   region beneath both.
  * - **Mobile** — one stacked column (a back link and a centred label instead of
  *   the breadcrumb), with the score and duel blocks moved above the proof.
  * - **Main** — moderation banners · byline · title · owner actions · task
  *   reference · proof · write-up · members · metatasks.
  * - **Aside** — score · duel · vote · voters · flag.
+ * - **The crown renders at BOTH form factors.** It is never form-factor gated:
+ *   it comes from the shared `PraxisStatusBanners`, keyed only on
+ *   `is_top_for_task`, mounted above the split so both layouts get it. One
+ *   design (Everymen) draws `showCrownMobile: false`; that is the outlier too.
+ * - **The report/flag card and the steward bar are NOT skinned.** All eight
+ *   faction designs leave them outside the costume, on their own neutral token
+ *   set — so `PraxisFlagBlock` / `PraxisAdminBar` are mounted bare here, taking
+ *   none of the `panel` dress the score, vote and voters blocks wear, and they
+ *   accept no style prop to make skinning them the easy path. Their copy is
+ *   neutral and shared for the same reason (ADR-0061 as amended, 2026-07-28:
+ *   content slots carry a skin's voice, moderation and system chrome do not).
  *
  * ## One responsive component, no mobile twin (ADR-0056/0058)
  *
@@ -24,13 +40,18 @@
  * where they are mounted — never drawn twice and hidden, which would duplicate
  * the DOM and is what the design doc's twin markup would have produced. Mobile
  * stacks with flow, never a fixed-px grid (SPEC-faction-ui-profile §1a); the
- * 340px aside track is desktop-only.
+ * 330px aside TRACK is desktop-only, which is a different claim from the crown
+ * above — the track disappears on mobile, its contents do not.
  *
  * ## Copy and dress
  *
  * Copy is one neutral shared `detail.*` set (ADR-0061) — no na voice, no faction
  * voice; where the design's word differed from the domain noun in CONTEXT.md the
- * domain noun won ("Members", not "the crew"). Dress is na's alone: the spectrum
+ * domain noun won ("Members", not "the crew"). THIS page stays wholly neutral
+ * even under the 2026-07-28 amendment: `default` ≡ `na` is the unaffiliated
+ * identity, so the shared neutral set is already its voice. A faction skin may
+ * register its own copy for the CONTENT slots above; the chrome slots keep
+ * reading these same keys. Dress is na's alone: the spectrum
  * via `--faction-default-*` tokens plus `--color-*`, flipping light/dark through
  * the `[data-theme="dark"]` cascade with no `dark ?` branch. The page surface is
  * carried by the COLUMN, not the viewport — the site background still shows
@@ -667,8 +688,8 @@ export default function DefaultPraxisDetail({ state }: { state: PraxisDetailStat
           {desktop && (
             <aside
               style={{
-                flex: '0 0 340px',
-                width: 340,
+                flex: '0 0 330px',
+                width: 330,
                 display: 'flex',
                 flexDirection: 'column',
                 gap: 'var(--space-lg)',

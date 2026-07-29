@@ -21,6 +21,7 @@ import type { PraxisDetailState } from "../usePraxisDetail";
 import type { PraxisOut, PraxisMemberOut } from "../../../api/praxis";
 import type { DuelDetailOut } from "../../../api/duel";
 import type { CurrentUser } from "../../../api/auth";
+import { PraxisFlagBlock } from "../shared";
 
 const mocks = vi.hoisted(() => ({ formFactor: "desktop" as "desktop" | "mobile" }));
 vi.mock("../../../hooks/useFormFactor", () => ({
@@ -203,6 +204,51 @@ describe("Unaffiliated praxis detail — layout contract", () => {
     // WORLD_ZERO_STYLE §5 / #1028: the site background must still show around
     // the page. `.na-backdrop` is `position: fixed; inset: 0`.
     expect(render(state()).html).not.toContain("na-backdrop");
+  });
+
+  // ─── The eight-design contract (#1117–#1123) ──────────────────────────────
+  //
+  // This page is the foundation the seven faction skins dress, so where the
+  // Unaffiliated design differs from the other eight, the eight win. These are
+  // the three facts that differed; guarded here so each skin inherits them
+  // instead of working around them seven times.
+
+  it("gives the desktop aside a 330px track, not the Unaffiliated design's 340", () => {
+    const wide = render(state());
+    expect(wide.html, "the eight designs' aside track").toContain("0 0 330px");
+    expect(wide.html, "the outlier width is gone").not.toContain("340px");
+
+    // Mobile drops the TRACK, not its contents — the rail stacks into flow.
+    expect(render(state(), "mobile").html, "no fixed track on mobile").not.toContain(
+      "0 0 330px",
+    );
+  });
+
+  it("shows the crown at BOTH form factors on a crowned praxis", () => {
+    // Never form-factor gated: it comes from the shared banners, keyed only on
+    // `is_top_for_task` and mounted above the split. One design (Everymen)
+    // draws `showCrownMobile: false`; that is the outlier.
+    const crowned = state({ praxis: { ...PRAXIS, is_top_for_task: true } });
+    expect(render(crowned, "desktop").text, "crown on desktop").toContain("TASK CROWN");
+    expect(render(crowned, "mobile").text, "crown on mobile too").toContain("TASK CROWN");
+    expect(render(state(), "mobile").text, "and only when crowned").not.toContain(
+      "TASK CROWN",
+    );
+  });
+
+  it("leaves the report card outside the costume", () => {
+    // ADR-0061 as amended (2026-07-28): moderation and system chrome stay
+    // neutral in every faction's dress. The card must not pick up the page's
+    // faction tokens — including by INHERITING the sheet's text colour, which
+    // is why every text node inside it carries its own neutral token.
+    const html = renderToStaticMarkup(
+      <MemoryRouter>
+        <PraxisFlagBlock state={state()} />
+      </MemoryRouter>,
+    );
+    expect(html, "renders at all").toContain("Flag this praxis");
+    expect(html, "neutral card chrome").toContain("sidebar-card");
+    expect(html, "no faction dress anywhere inside").not.toContain("--faction-");
   });
 
   it("mounts the comments region with the layout's heading, not the thread's", () => {
