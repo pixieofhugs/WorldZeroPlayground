@@ -101,7 +101,14 @@ const taskCard = () =>
       onSignup={() => {}}
     />,
   )
-const feedRow = () => routed(<UaFeedFrame><span>card-body</span></UaFeedFrame>)
+// #1194 widened the chassis contract: a frame carries the kicker, the time, an
+// optional tag and the archive node alongside its children.
+const feedRow = () =>
+  routed(
+    <UaFeedFrame kicker="Task completed" time="2h ago" tag={null} archive={null}>
+      <span>card-body</span>
+    </UaFeedFrame>,
+  )
 const comment = () =>
   routed(<UaComment mode="row" comment={COMMENT} />)
 const composer = () =>
