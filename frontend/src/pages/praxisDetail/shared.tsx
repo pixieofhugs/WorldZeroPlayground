@@ -306,23 +306,26 @@ export function PraxisOwnerActions({ state }: { state: PraxisDetailState }) {
   const { praxis, isOwner, withdrawError } = state
   if (!praxis || !isOwner) return null
 
-  // A duel praxis surfaces its submit / pull-back / forfeit control in the duel
-  // RAIL now (#752), where the state that control changes already reads — one
-  // place, and never two rows of the same destructive control (the #646 bug).
-  // So the owner controls drop the cluster (and its error) for a duel and keep
-  // only the edit link; the rail renders `PraxisSubmitControls` instead. An
-  // ordinary praxis has no rail, so it keeps the cluster inline exactly as before.
-  const hasDuel = praxis.duel_id != null
-
+  // EVERY praxis keeps the cluster here, duel or not (#1090). #752 had moved it
+  // into the duel RAIL — "the state and the control that changes it share a
+  // surface" — and this component suppressed it for `duel_id != null` so the
+  // #646 double-destructive-control bug could not recur. The rail is gone: the
+  // duel is now a compact reading card in the aside (`DuelCard`), and epic
+  // #1085's layout contract puts OWNER ACTIONS in the main column, so the card
+  // stays the same height in every state and carries no button. That leaves
+  // exactly one mount site again, which is all #646 ever asked for.
+  //
+  // The forfeit escalation is untouched: `PraxisSubmitControls` still swaps to
+  // the forfeit dialog on a settled duel, wherever it renders.
   return (
     <div>
       <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-md)', marginBottom: 'var(--space-lg)' }}>
         <Link to={`/praxes/${praxis.id}/edit`} className="font-body eyebrow hover:underline" style={{ color: 'var(--color-text-tertiary)' }}>
           {t('detail.owner.edit')}
         </Link>
-        {!hasDuel && <PraxisSubmitControls state={state} />}
+        <PraxisSubmitControls state={state} />
       </div>
-      {!hasDuel && withdrawError && <p className="font-body content-text mb-3" style={{ color: 'var(--color-danger)' }}>{withdrawError}</p>}
+      {withdrawError && <p className="font-body content-text mb-3" style={{ color: 'var(--color-danger)' }}>{withdrawError}</p>}
     </div>
   )
 }
@@ -397,11 +400,11 @@ const UNSUBMIT_COPY = {
 /**
  * The submit / pull-back / forfeit control for a praxis you own — the one
  * mutation seam that changes its cast state (and, for a duel side, the duel's).
- * Extracted from PraxisOwnerActions (#752) so the duel RAIL can render it beside
- * the state it changes; an ordinary praxis keeps it inline in the owner controls.
- * It is rendered in exactly ONE surface per praxis, never both, so the #646
- * double-destructive-control bug cannot recur. `withdrawError` is rendered by the
- * caller, next to wherever this control lands.
+ * Extracted from PraxisOwnerActions (#752) so the duel RAIL could render it
+ * beside the state it changes; #1090 deleted the rail and every praxis, duel or
+ * not, takes it back inline in the owner controls. Still exactly ONE mount site
+ * per praxis, which is what stops the #646 double-destructive-control bug.
+ * `withdrawError` is rendered by the caller, next to wherever this control lands.
  *
  * IT ONLY EVER REOPENS. The green CAST control that used to lead this component
  * — plus the "you've submitted, waiting on co-authors" state beside it — went

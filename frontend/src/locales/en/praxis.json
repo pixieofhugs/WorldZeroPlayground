@@ -244,42 +244,20 @@
     }
   },
   "duelCrossLink": {
-    "pending": "⚔ Challenge sent — waiting for {{name}} to accept.",
-    "declined": "⚔ {{name}} declined the challenge — this scores as an ordinary praxis.",
-    "dueling": "⚔ Dueling {{name}}",
-    "youForfeited": "You forfeited this duel.",
-    "wonByDefault": "⚔ Won by default",
-    "wonByDefaultSuffix": " — {{name}} forfeited",
-    "theirEntry": "their entry",
-    "duel": "⚔ Duel",
-    "vs": "vs",
+    "label": "The duel",
+    "readTheirPraxis": "Read their praxis",
+    "wonByDefault": "Won by default",
     "standing": {
       "tied": "Tied",
-      "ahead": "You're ahead",
-      "behind": "You're behind"
+      "leads": "{{name}} leads by {{margin}}"
     },
     "live": "{{standing}} · live — the winner floats with the votes until era reset.",
     "finalStanding": {
-      "won": "You won",
-      "lost": "You lost",
+      "won": "{{name}} won",
       "tied": "Tied"
     },
     "final": "{{standing}} · final — frozen at era close.",
-    "finalNoContest": "No contest — this duel never became votable before era close.",
-    "factionSuffix": " · {{faction}}",
-    "spectatorPending": "⚔ {{challenger}} challenged {{opponent}} — awaiting a response.",
-    "spectatorDueling": "⚔ {{challenger}} vs {{opponent}} — dueling",
-    "spectatorWonByDefault": "⚔ {{winner}} won by default — {{loser}} forfeited.",
-    "spectatorStanding": {
-      "tied": "Tied",
-      "leads": "{{name}} leads"
-    },
-    "spectatorLive": "{{standing}} · live — the winner floats with the votes until era reset.",
-    "spectatorFinalStanding": {
-      "tied": "Tied",
-      "won": "{{name}} won"
-    },
-    "spectatorFinal": "{{standing}} · final — frozen at era close."
+    "finalNoContest": "No contest — this duel never became votable before era close."
   },
   "duelStakes": {
     "heading": "What's at stake",
@@ -293,27 +271,6 @@
     "you": "You",
     "sealed": "sealed ✓",
     "walking": "still walking…"
-  },
-  "duelNextStep": {
-    "pending": "Waiting for {{name}} to accept the challenge.",
-    "declined": "{{name}} declined — no duel, no multiplier.",
-    "activeWaitingOnYou": "{{name}} accepted. Cast your praxis to seal the duel.",
-    "activeWaitingOnThem": "You've cast. Waiting for {{name}} — the duel seals when they do.",
-    "settled": "Both sides are in. The winner floats with the votes until era reset.",
-    "resolvedYouWon": "The era closed — you won this duel against {{name}}.",
-    "resolvedYouLost": "The era closed — {{name}} won this duel.",
-    "resolvedNoWinner": "The era closed — this duel resolved with no winner.",
-    "youForfeited": "You forfeited this duel.",
-    "wonByDefault": "{{name}} forfeited — you won by default.",
-    "spectator": {
-      "pending": "{{challenger}} challenged {{opponent}} — awaiting a response.",
-      "declined": "{{opponent}} declined — no duel.",
-      "active": "The duel is underway — one side still to cast.",
-      "settled": "Both sides are in. The winner floats with the votes until era reset.",
-      "resolvedWon": "The era closed — {{name}} won this duel.",
-      "resolvedNoWinner": "The era closed — this duel resolved with no winner.",
-      "wonByDefault": "{{loser}} forfeited — {{winner}} won by default."
-    }
   },
   "duelSeal": {
     "heading": "Seal the duel?",
