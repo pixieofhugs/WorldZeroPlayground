@@ -1,11 +1,9 @@
-import i18n from '../../i18n'
-
-/** How long the strip offers UNDO before it degrades to RESTORE (design §2a:
- *  the sheet's own `setTimeout(..., 6000)`). */
+/** How long the strip offers UNDO before it degrades to the plain reverse verb
+ *  (design §2a: the sheet's own `setTimeout(..., 6000)`). */
 export const UNDO_WINDOW_MS = 6000
 
-/** Which word the strip's action currently carries. */
-export type FeedArchivePhase = 'undo' | 'restore'
+/** Whether the strip is still inside its window. */
+export type FeedUndoPhase = 'undo' | 'expired'
 
 /**
  * The undo strip (Unaffiliated sheet §2a).
@@ -18,19 +16,26 @@ export type FeedArchivePhase = 'undo' | 'restore'
  * write for six seconds would lose it the moment the player navigates away, so
  * the strip's job is to offer the reversal, not to delay the action.
  *
- * When the window expires the action becomes **Restore** rather than the strip
- * vanishing — the sheet degrades the slot instead of collapsing it, which keeps
- * the list stable for a reader who looked away. The slot clears on the next
- * fetch, when the server no longer returns the item.
+ * When the window expires the action becomes the plain reverse verb — **Restore**
+ * in the feed, **Archive** in the archive — rather than the strip vanishing. The
+ * sheet degrades the slot instead of collapsing it, which keeps the list stable
+ * for a reader who looked away. The slot clears on the next fetch, when the
+ * server no longer returns the item.
+ *
+ * It takes finished strings rather than a direction: both directions of the
+ * archive use one strip, and the vocabulary decision belongs to `FeedItemSlot`,
+ * which knows whether it is looking at the feed or the archive.
  */
 export default function FeedUndoStrip({
-  title,
+  message,
+  actionLabel,
   phase,
   onAct,
   error,
 }: {
-  title: string
-  phase: FeedArchivePhase
+  message: string
+  actionLabel: string
+  phase: FeedUndoPhase
   onAct: () => void
   error: string | null
 }) {
@@ -53,13 +58,13 @@ export default function FeedUndoStrip({
           flex: 1,
           minWidth: 0,
           fontSize: 'var(--text-content)',
-          color: 'var(--color-text-secondary)',
+          color: error ? 'var(--color-danger)' : 'var(--color-text-secondary)',
           overflow: 'hidden',
           textOverflow: 'ellipsis',
           whiteSpace: 'nowrap',
         }}
       >
-        {error ?? i18n.t('feed:archive.archived', { title })}
+        {error ?? message}
       </span>
       <button
         type="button"
@@ -75,7 +80,7 @@ export default function FeedUndoStrip({
           textDecoration: 'underline',
         }}
       >
-        {i18n.t(phase === 'undo' ? 'feed:archive.undo' : 'feed:archive.restore')}
+        {actionLabel}
       </button>
     </div>
   )

@@ -48,6 +48,7 @@
     "restore": "Restore",
     "restoreLabel": "Restore this update",
     "archived": "Archived “{{title}}”",
+    "restored": "Restored “{{title}}”",
     "archiveAll": "Archive all",
     "restoreAll": "Restore all",
     "stillWaiting": "Still waiting",
