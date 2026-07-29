@@ -1086,6 +1086,16 @@
   /* Rising-sun ornament alphas — opacity decisions, not component numbers. */
   --faction-everymen-sheet-ray: rgba(193, 39, 45, 0.1);
   --faction-everymen-sheet-glow: rgba(193, 39, 45, 0.12);
+  /* ── The dispatch sheet (praxis detail v2, #1123) ── The ruled newsprint a
+     filed report is printed on: one ledger-blue line every 24px. Only the rule
+     colour is new; the sheet's STOCK is `--faction-everymen-sheet-panel` above,
+     reused deliberately rather than repainted, because that is the ground every
+     ink on this page was measured against (§3, "a new ground invalidates every
+     contrast claim"). `--faction-everymen-sheet-accent` pays 4.95:1 on that
+     stock and only 4.49:1 on `--everymen-paper`, so on this page
+     `--everymen-paper` is a FILL — the voter bars' track — and never a ground
+     for text. */
+  --faction-everymen-dispatch-rule: rgba(100, 140, 200, 0.12);
 
   /* ── Gearworks vote widget (#821) — reached gears heat a cold→ember ramp with
      pale hubs; unreached gears are edge-only outlines; rank 5 throws sparks. The
@@ -1728,6 +1738,9 @@
   --faction-everymen-sheet-accent: #f4726c;
   --faction-everymen-sheet-ray: rgba(226, 67, 63, 0.13);
   --faction-everymen-sheet-glow: rgba(226, 67, 63, 0.12);
+  /* The ledger rule inverts with the paper: a pale blue line ON the near-black
+     newsprint instead of a dark one in it (#1123). */
+  --faction-everymen-dispatch-rule: rgba(150, 185, 230, 0.09);
   /* Gearworks: cooler edge for cold gears, a brighter single-halo rank-5 glow on
      the dark paper (the light double-drop-shadow would muddy against it). */
   --faction-everymen-vote-edge: #8a7856;
@@ -1791,6 +1804,29 @@
   background-image:
     repeating-conic-gradient(from 200deg at 50% 118%, var(--faction-everymen-sheet-ray) 0 2.6deg, transparent 2.6deg 6.4deg),
     radial-gradient(58% 46% at 50% 116%, var(--faction-everymen-sheet-glow), transparent 72%);
+}
+
+/* ══ Everymen dispatch sheet (praxis detail v2, #1123; theme-aware) ══
+   The report as it was FILED: ruled newsprint with a red margin rule down the
+   left edge, printed on the same panel stock the broadsheet's plates use. The
+   sibling of `.em-broadsheet` above — that one is the sheet a JOB is posted on
+   (rising-sun rays, no rules); this one is the sheet a job's PROOF is typed on,
+   which is why it is ruled and margined instead.
+
+   Painted on the detail COLUMN, not the viewport (WORLD_ZERO_STYLE §5 / #1028):
+   the archetype supplies position / border / radius / padding, this rule owns
+   only the paper. The margin rule is a background LAYER rather than a positioned
+   ornament on purpose — a positioned span would paint above the static copy at
+   `z-index: 0`, and `-1` would put it behind this opaque paint, i.e. nowhere
+   (§5's stacking half). It sits at 21–23px, inside the archetype's smallest
+   inset (`--space-xl`, 24px on mobile), so copy never runs into it. */
+.em-dispatch {
+  background-color: var(--faction-everymen-sheet-panel);
+  background-image:
+    linear-gradient(to right, transparent 0 21px, color-mix(in srgb, var(--everymen-red) 34%, transparent) 21px 23px, transparent 23px),
+    repeating-linear-gradient(to bottom, transparent 0 23px, var(--faction-everymen-dispatch-rule) 23px 24px),
+    radial-gradient(color-mix(in srgb, var(--everymen-paper-text) 5%, transparent) 0.6px, transparent 0.9px);
+  background-size: auto, auto, 6px 6px;
 }
 
 /* ══ Cozy Coven lo-fi desktop backdrop (faction-context pages; theme-aware) ══ */

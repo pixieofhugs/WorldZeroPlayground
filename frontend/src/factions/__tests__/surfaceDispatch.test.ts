@@ -57,22 +57,27 @@ const CORE_SIX = ['coven', 'snide', 'ephemerists', 'singularity', 'everymen', 'u
 // albescent: its single `taskDetail` registration now covers the phone too, and
 // it never needs a second row it would have had to stay out of.
 //
-// THE `praxisDetail` ROW IS BACK, and it is deliberately near-empty. ADR-0061
+// THE `praxisDetail` ROW IS BACK, and it grows one slug per landed skin. ADR-0061
 // made praxis detail ONE shared page and #1089 de-registered all six CORE_SIX
-// skins, so every slug fell through to `DefaultPraxisDetail`; the Unaffiliated
-// page IS the shared page. The seven remaining designs (epic #1085) re-register
-// here one at a time as dress over the same layout, and this row came back with
-// the first of them. Each subsequent skin adds ONE slug here and its own name
-// leaves the defaulted half automatically.
+// skins, so for a while every slug fell through to `DefaultPraxisDetail`; the
+// Unaffiliated page IS the shared page. Epic #1085's designs re-register one at
+// a time as DRESS over that same layout. A slug still absent here is a skin not
+// yet built, not a decision that it renders the Default forever.
 //
-// The two entries are NOT the same kind of thing, which is the row's other
-// reason to exist: `coven` (#1117) is a bespoke dress with its own
-// `detail.coven.*` voice, while `albescent` (#1140) is a WRAPPER that renders
-// `DefaultPraxisDetail` whole and washes light over it, speaking the shared
-// neutral copy. Both are "registered"; only one is a skin.
+// The entries are NOT all the same kind of thing, which is the row's other
+// reason to exist: most are bespoke dress, while `albescent` (#1140) is a
+// WRAPPER that renders `DefaultPraxisDetail` whole and washes light over it.
+// Both are "registered"; only one is a skin.
+//
+// THIS ROW IS A SHARED REGISTRY AND IT RED-MAINED TWICE (#1162). The assertions
+// below run BOTH ways — a listed slug must be registered, and an UNLISTED slug
+// must resolve to the Default — so a PR that rewrites this line instead of
+// appending to it drops whichever siblings merged while it was in flight. Each
+// PR was green on its own branch; the breakage only appears after the squash.
+// Append your slug; never restate the list from memory.
 const BESPOKE: Record<string, string[]> = {
   taskDetail: [...CORE_SIX, 'wow', 'albescent'],
-  praxisDetail: ['coven', 'ephemerists', 'singularity', 'albescent'],
+  praxisDetail: ['coven', 'ephemerists', 'singularity', 'albescent', 'everymen'],
   mobileFactionPage: [...CORE_SIX, 'wow'],
   mobileFieldDesk: [...CORE_SIX, 'wow'],
   mobileEditPraxis: [...CORE_SIX, 'wow'],
