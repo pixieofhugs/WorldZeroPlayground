@@ -1999,6 +1999,23 @@
   color: #f5dfa8;
 }
 
+/* ── Edit-praxis composer motion knobs (#1181) ──
+   The re-timing hooks the ep* animation classes read. Declared here with the
+   design's own values rather than left to a `var(--x, 1.6s)` fallback, because
+   `factionTokensDeclared.test.ts` (#806/#879) polices every var() against a
+   declaration — and it is right to: a fallback-only property is a token nobody
+   can find, and a typo in one reads as "the default is fine" rather than as a
+   defect. A skin re-times a motion by setting the property on its own element;
+   `--ep-spin-dur` is the one already read that way, by RingMark.
+   Theme-independent — a duration has no light and dark. */
+:root {
+  --ep-spin-dur: 90s;
+  --ep-pulse-dur: 2.4s;
+  --ep-sweep-dur: 6s;
+  --ep-twinkle-dur: 1.6s;
+  --ep-delay: 0s;
+}
+
 /* ── Type Scale + Font Families ── */
 :root {
   /* ── Label tier (issue #627) ──
