@@ -534,36 +534,7 @@
         "successHeading": "Sealed",
         "successBody": "Every hand has signed. The mark stands.",
         "successContinue": "View the work"
-      },
-      "masthead": "University of Asthmatics · Praxis №{{number}}",
-      "autosaveSaved": "sketched {{ago}}",
-      "autosaveUnsaved": "unsaved",
-      "pageTitle": "Seal a praxis",
-      "commissionLabel": "Mark · Anno III",
-      "pointsLabel": "{{points}} pts",
-      "modeLabel": "Mode",
-      "mode": {
-        "solo": { "label": "Solo", "desc": "a mark made alone" },
-        "collab": { "label": "Crew", "desc": "a mark made together" },
-        "duel": { "label": "Duel", "desc": "a mark made against another" }
-      },
-      "taskRefLabel": "For the task",
-      "inviteLabel": "The other hands",
-      "inviteLabelDuel": "The challenger",
-      "invitePlaceholder": "name or @handle",
-      "titleLabel": "Title",
-      "titlePlaceholder": "name this mark",
-      "bodyLabel": "A note on the mark · {{words}} words · markdown",
-      "bodyPlaceholder": "an account of the work…",
-      "previewLabel": "As it will read",
-      "filesLabel": "The work",
-      "fileButton": "+ add the work",
-      "fileHelper": "images · video · audio · max 50mb",
-      "metatasksLabel": "Further merit",
-      "publishIdle": "Seal it",
-      "publishBusy": "sealing…",
-      "publishHelper": "Once sealed, the mark stands.",
-      "dropLabel": "Withdraw Work"
+      }
     },
     "coven": {
       "collab": {
