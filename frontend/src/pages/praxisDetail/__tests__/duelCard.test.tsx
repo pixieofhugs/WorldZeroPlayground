@@ -33,6 +33,7 @@ vi.mock('../../../hooks/useFormFactor', () => ({
 }))
 
 const { default: DefaultPraxisDetail } = await import('../archetypes/DefaultPraxisDetail')
+const { DuelCard } = await import('../DuelCard')
 
 const MEMBER: PraxisMemberOut = {
   id: 101,
@@ -291,6 +292,101 @@ describe('duel card — the states that draw nothing', () => {
   it('no duel: no card', () => {
     const { text } = render(state({ duel: null, praxis: { ...PRAXIS, duel_id: null } }))
     expect(text).not.toContain('The duel')
+  })
+})
+
+/**
+ * The third dress seam (#1153). `style` and `heading` let a skin set the frame
+ * and the label; `ink` is what lets it reach the rows the card draws itself —
+ * the duellist names, their totals, the cross-link and the verdict — which
+ * stayed `--faction-default-*` inside a fully dressed faction page until now.
+ *
+ * The card is mounted DIRECTLY here rather than through an archetype, because
+ * the thing under test is the prop contract and every archetype passes its own
+ * values. `plate` is exercised through a side with no avatar, which is the only
+ * state that draws it.
+ */
+describe('duel card — the ink seam', () => {
+  const dressed = () =>
+    renderToStaticMarkup(
+      <MemoryRouter>
+        <DuelCard
+          state={state()}
+          ink={{
+            name: 'var(--test-name)',
+            total: 'var(--test-total)',
+            muted: 'var(--test-muted)',
+            line: 'var(--test-line)',
+            plate: 'var(--test-plate)',
+          }}
+        />
+      </MemoryRouter>,
+    )
+
+  it('paints every slot a skin hands in', () => {
+    const html = dressed()
+    expect(html, 'the duellist names').toContain('color:var(--test-name)')
+    expect(html, 'the totals').toContain('color:var(--test-total)')
+    expect(html, 'the cross-link, the chevron and the verdict').toContain(
+      'color:var(--test-muted)',
+    )
+    expect(html, 'the two hairlines and the rival disc outline').toContain(
+      '1px solid var(--test-line)',
+    )
+    expect(html, 'the fill behind an avatarless duellist').toContain(
+      'background:var(--test-plate)',
+    )
+    // Not a slot, and deliberately so: the ring on the side this page IS is the
+    // spectrum "you are here" mark (ADR-0039), not a faction hue.
+    expect(html, 'the spectrum ring is not dressable').toContain('--faction-default-rainbow')
+  })
+
+  it('falls back to the na kit when a skin hands in nothing', () => {
+    // The regression this seam must not cause: an unregistered faction, and any
+    // skin that passes no `ink`, renders exactly what shipped before #1153.
+    const bare = renderToStaticMarkup(
+      <MemoryRouter>
+        <DuelCard state={state()} />
+      </MemoryRouter>,
+    )
+    expect(bare, 'names and totals').toContain('color:var(--faction-default-card-text)')
+    expect(bare, 'cross-link and verdict').toContain('color:var(--faction-default-card-muted)')
+    expect(bare, 'hairlines').toContain('1px solid var(--faction-default-card-line)')
+    expect(bare, 'the avatarless disc').toContain('background:var(--faction-default-stamp-bg)')
+  })
+
+  it('a partially-filled ink object keeps the defaults it omits', () => {
+    // `{...DEFAULT_INK, ...ink}` would let an explicit `undefined` erase a
+    // default; the card resolves field by field instead.
+    const partial = renderToStaticMarkup(
+      <MemoryRouter>
+        <DuelCard state={state()} ink={{ name: 'var(--test-name)', total: undefined }} />
+      </MemoryRouter>,
+    )
+    expect(partial).toContain('color:var(--test-name)')
+    expect(partial, 'the omitted slots are still the na kit').toContain(
+      'color:var(--faction-default-card-text)',
+    )
+    expect(partial).toContain('color:var(--faction-default-card-muted)')
+  })
+
+  it('dressing the card changes nothing about the readings', () => {
+    // The seam is theming ONLY (ADR-0064): live / won by default / final, and no
+    // card at all on `declined`, are the card's own and are not reachable here.
+    const html = dressed()
+    const text = html.replace(/<[^>]*>/g, '')
+    expect(text, 'the live reading, whole').toContain('Ada leads by 2.6')
+    expect(text).toContain('18.0')
+    expect(text).toContain('15.4')
+    const declined = renderToStaticMarkup(
+      <MemoryRouter>
+        <DuelCard
+          state={state({ duel: duel({ status: 'declined' }) })}
+          ink={{ name: 'var(--test-name)' }}
+        />
+      </MemoryRouter>,
+    )
+    expect(declined, 'a declined challenge draws no card, dressed or not').toBe('')
   })
 })
 
