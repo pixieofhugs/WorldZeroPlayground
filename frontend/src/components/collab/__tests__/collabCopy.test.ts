@@ -57,7 +57,9 @@ describe('collabCopy — faction override resolution', () => {
     expect(collabCopy('singularity', 'castStatus', { cast: 1, total: 3 })).toBe(
       '1/3 committed',
     )
-    expect(collabCopy(null, 'castStatus', { cast: 1, total: 3 })).toBe('1 of 3 cast')
+    expect(collabCopy(null, 'castStatus', { cast: 1, total: 3 })).toBe(
+      '1 of 3 submitted',
+    )
   })
 })
 
@@ -97,4 +99,48 @@ describe('collabCopy — catalog completeness', () => {
       expect(new Set(lines).size).toBe(FACTION_SLUGS.length)
     },
   )
+})
+
+/**
+ * The shared block is the tier with no voice, so it may only use the domain's
+ * own words (#1154). It shipped in one faction's register — cast / weaving /
+ * woven — which meant the fallback every un-overriding faction inherits (today,
+ * Warriors of Whimsy) read as somebody else's diction. The nouns come from
+ * CONTEXT.md: **Submitted** (`status = submitted`), and "filed"/"cast" are the
+ * words it tells you to avoid for it.
+ *
+ * The key NAMES are deliberately exempt: `castAction`/`pillWeaving` stay put,
+ * because the eight faction blocks that override them genuinely do mean cast,
+ * and a rename would touch nine catalogs and every call site for nothing a
+ * player sees. This guard is about the values only.
+ */
+describe('collabCopy — the shared tier speaks the domain noun (#1154)', () => {
+  const FACTION_VERBS =
+    /\b(cast|casts|casting|weave|weaves|weaving|woven|file|files|filed|filing)\b/i
+
+  it.each(SHARED_KEYS)('shared %s borrows no faction verb', (key) => {
+    // Interpolation NAMES are key names by another route — `{{cast}}` is the
+    // count the roster passes in, not a word anyone reads. Only the prose is
+    // under test.
+    const line = (forms.editPraxis.collab as Record<string, string>)[key].replace(
+      /\{\{[^}]*\}\}/g,
+      '…',
+    )
+    expect(line).not.toMatch(FACTION_VERBS)
+  })
+
+  it('says submitted / not submitted on the roster pills', () => {
+    expect(collabCopy(null, 'pillCast')).toBe('submitted')
+    expect(collabCopy(null, 'pillWeaving')).toBe('not submitted')
+  })
+
+  // WoW is the ninth faction and the only one with no collab block of its own,
+  // so it reads the shared tier for every key — it is what this issue changes.
+  it('resolves the shared tier for Warriors of Whimsy', () => {
+    for (const key of SHARED_KEYS) {
+      expect(collabCopy('wow', key, { cast: 1, total: 2 })).toBe(
+        collabCopy(null, key, { cast: 1, total: 2 }),
+      )
+    }
+  })
 })

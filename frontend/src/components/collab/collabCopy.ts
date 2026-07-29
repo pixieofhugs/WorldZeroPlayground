@@ -13,6 +13,18 @@ import i18n from '../../i18n'
  * dev/test missing-key throw before the result could be inspected. A faction
  * with no entry for a key is a normal miss, not a defect.
  *
+ * The shared block is the tier with **no voice**, so it speaks the domain's own
+ * words (#1154): *submitted* / *not submitted*, per CONTEXT.md ("Submitted",
+ * `status = submitted`, with `submitted_at` as the seal date). It used to be
+ * written in a witchy register — cast, weaving, woven — which read as a voice
+ * nobody owned: eight factions override the voiced keys, so the only faction
+ * actually reading it is Warriors of Whimsy, and it is also what a *new* faction
+ * inherits and what any un-overridden key falls back to. A faction that wants to
+ * cast, sign off or file still does, in its own block; the fallback does not.
+ * The key names are the one exception and stay as they are — they are named for
+ * the mechanic, not the wording (see the verb-neutrality note above), and eight
+ * of the nine blocks they front genuinely do still mean "cast".
+ *
  * Despite the name, this is the resolver for the whole *multi-party composer
  * footer*, not just the roster: the one footer button casts and pulls back for
  * a collab, and (since #1077) for a duel side too, and it is hookless by

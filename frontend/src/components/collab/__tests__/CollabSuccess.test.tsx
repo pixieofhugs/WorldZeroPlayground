@@ -75,8 +75,8 @@ describe('CollabSuccess render', () => {
     expect(html).toContain('Beth')
     // A collab pays every member in full — not a split.
     expect(html.match(/\+30/g)).toHaveLength(2)
-    expect(html).toContain('The proof is woven')
-    expect(html).toContain('2 of 2 cast')
+    expect(html).toContain('The praxis is submitted')
+    expect(html).toContain('2 of 2 submitted')
   })
 
   it('speaks the task faction voice', () => {
@@ -92,7 +92,7 @@ describe('CollabSuccess render', () => {
     expect(html).toContain('Sealed')
     expect(html).toContain('Every hand has signed.')
     expect(html).toContain('View the work')
-    expect(html).not.toContain('The proof is woven')
+    expect(html).not.toContain('The praxis is submitted')
   })
 
   it('offers a manual continue action, not an auto-redirect', () => {
