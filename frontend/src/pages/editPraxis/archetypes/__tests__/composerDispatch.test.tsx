@@ -293,6 +293,46 @@ describe("every skin swaps in the waiting surface (#1189)", () => {
     expect(markup).not.toContain(i18n.t("forms:editPraxis.composer.proofLabel"));
   });
 
+  /**
+   * One token per skin, taken from its MASTHEAD or its GROUND — the two parts
+   * #1071 left neutral. If the surface were still drawing the page's own chrome
+   * these would all be absent, and the test would still find the heading above,
+   * which is exactly the flat reading this issue was filed to end.
+   */
+  const ORNAMENT: Record<string, string> = {
+    coven: "--faction-coven-slip-shadow",
+    ephemerists: "--faction-ephemerists-plate-band",
+    everymen: "--faction-everymen-bill-mast",
+    singularity: "--faction-singularity-term-chrome",
+    snide: "--faction-snide-composer-bar",
+    ua: "--faction-ua-card-lotus",
+    wow: "--faction-wow-quest-ribbon",
+  };
+
+  it.each(Object.keys(ORNAMENT))(
+    "%s wears its own ornament on the waiting surface, not the page's chrome",
+    (slug) => {
+      const Archetype = resolvedArchetype(
+        pickVariant(surfaceMap("editPraxis"), slug, DefaultEditPraxis),
+      )!;
+      const markup = renderToStaticMarkup(
+        <MemoryRouter>
+          <Archetype state={waitingState(slug)} />
+        </MemoryRouter>,
+      );
+      expect(markup).toContain(ORNAMENT[slug]);
+    },
+  );
+
+  it("na falls through to the spectrum kit's own band (ADR-0065 §4)", () => {
+    const markup = renderToStaticMarkup(
+      <MemoryRouter>
+        <DefaultEditPraxis state={waitingState(null)} />
+      </MemoryRouter>,
+    );
+    expect(markup).toContain("--faction-default-rainbow-loop");
+  });
+
   it.each(
     WIDTHS.flatMap((width) => SLUGS.map((slug) => [width, slug] as const)),
   )(
