@@ -71,12 +71,23 @@ export function UaEnsoScore({
   value,
   unit,
   valueColor = "var(--faction-ua-card-text)",
+  valueSize = "var(--text-heading)",
+  valueWeight = 600,
 }: {
   size: number;
   value: ReactNode;
   /** The unit word under the numeral. Omit for a bare mark. */
   unit?: string;
   valueColor?: string;
+  /**
+   * The numeral's tier (#1182). Defaults to the score tier every existing
+   * caller draws. The composer's points mark sits a rung down on a smaller
+   * circle, because there it is a REFERENCE to what the task is worth rather
+   * than a result. A --text-* token, never a raw px: the numeral is type.
+   */
+  valueSize?: string;
+  /** The numeral's weight (#1182). Cormorant Garamond ships 500/600/700. */
+  valueWeight?: number;
 }) {
   return (
     <span
@@ -103,8 +114,8 @@ export function UaEnsoScore({
         <span
           style={{
             fontFamily: UA_DISPLAY,
-            fontWeight: 600,
-            fontSize: "var(--text-heading)",
+            fontWeight: valueWeight,
+            fontSize: valueSize,
             lineHeight: 0.9,
             color: valueColor,
           }}
