@@ -218,9 +218,9 @@ describe("UA task detail — the shared contract in UA's dress", () => {
     expect(text).toContain(long);
   });
 
-  it("expands the gallery in place instead of the dead task_id feed link", () => {
+  it("expands the gallery in place instead of linking out to the feed", () => {
     const { html } = render(<UaTaskDetail state={baseState()} />);
-    // `/praxes?task_id=N` drops the filter — usePraxes reads no such param.
+    // The reader stays on the task, even now that the URL filters (#1050).
     expect(html).not.toContain("task_id=");
   });
 });

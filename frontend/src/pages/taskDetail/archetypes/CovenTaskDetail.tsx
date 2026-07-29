@@ -37,8 +37,10 @@ import type { TaskDetailState } from "../useTaskDetail";
  *   neutralises every faction, so it is invisible today — correct, per ADR-0055.
  *   The factor arrives raw on the state contract; it is never reconstructed as
  *   `modifiedPoints / basePoints` (ADR-0053's dead-arithmetic trap).
- * - **The gallery expands in place.** The old `/praxes?task_id=N` link dropped
- *   its filter on every archetype — `usePraxes` reads no such param.
+ * - **The gallery expands in place.** Reading a task's proof shouldn't bounce
+ *   you to the feed. (`/praxes?task_id=N` dropped its filter entirely until
+ *   #1050 taught `usePraxes` to read the param; the in-place expand is the
+ *   ruling either way.)
  *
  * ONE RESPONSIVE COMPONENT (ADR-0058): `useFormFactor()` picks the size set and
  * drops the two-column split. The separate Coven mobile skin and the manifest
@@ -264,9 +266,9 @@ export default function CovenTaskDetail({ state }: { state: TaskDetailState }) {
   const formFactor = useFormFactor();
   const desktop = formFactor !== "mobile";
   const size = SIZES[formFactor];
-  // The gallery expands in place. It deliberately does NOT link to
-  // `/praxes?task_id=N`: the praxis feed reads no such param, so that link has
-  // always dropped the filter and shown the whole feed.
+  // The gallery expands in place. It deliberately does NOT link out to
+  // `/praxes?task_id=N` — the reader stays on the task. That URL does filter
+  // properly since #1050; before it, it silently showed the whole feed.
   const [showAllPraxis, setShowAllPraxis] = useState(false);
   const {
     task,

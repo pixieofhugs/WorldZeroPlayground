@@ -383,10 +383,10 @@ export default function WowTaskDetail({ state }: { state: TaskDetailState }) {
   const formFactor = useFormFactor();
   const desktop = formFactor !== "mobile";
   const size = SIZES[desktop ? "desktop" : "mobile"];
-  // The gallery expands IN PLACE. It deliberately does not link to
-  // `/praxes?task_id=N`: the praxis feed reads no such param, so that link has
-  // always dropped the filter and shown the whole feed (#1030 found it dead on
-  // every archetype).
+  // The gallery expands IN PLACE. It deliberately does not link out to
+  // `/praxes?task_id=N` — the reader stays on the task. #1030 found that link
+  // dead on every archetype (the feed read no such param and showed everything);
+  // #1050 made the URL filter, and the in-place expand still stands.
   const [showAllPraxis, setShowAllPraxis] = useState(false);
   const {
     task,

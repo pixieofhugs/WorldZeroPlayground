@@ -187,9 +187,9 @@ describe("wow task detail — the contract points it inherits", () => {
     expect(text).toContain("Metatask for Cozy Coven");
   });
 
-  it("expands the gallery in place instead of the dead ?task_id= link", () => {
-    // `/praxes?task_id=N` has never filtered — `usePraxes` reads no such param —
-    // so every archetype's "view all" silently showed the whole feed (#1030).
+  it("expands the gallery in place instead of linking out to ?task_id=", () => {
+    // Every archetype's "view all" used to show the whole feed (#1030 found it;
+    // #1050 fixed the URL). The reader stays on the task regardless.
     const { html } = render(<WowTaskDetail state={baseState()} />);
     expect(html).not.toContain("task_id=");
   });
