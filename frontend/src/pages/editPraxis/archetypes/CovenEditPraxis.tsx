@@ -123,7 +123,6 @@ const DEEP = "var(--faction-coven-slip-deep)"; /* the design's accentDeep */
 const PINK = "var(--faction-coven-slip-pk)"; /* the design's accent */
 const GOLD = "var(--faction-coven-slip-gold)";
 const BORDER = "var(--faction-coven-slip-border)";
-const HAIR = "var(--faction-coven-ward-hair)";
 const CTA_INK = "var(--faction-coven-slip-cta-ink)";
 const CTA_BAND =
   "linear-gradient(180deg, var(--faction-coven-slip-cta-from), var(--faction-coven-slip-cta-to))";
@@ -374,25 +373,35 @@ function PointsWard({ size, points }: { size: number; points: number }) {
         </g>
       </svg>
       {WARD_STARS.map(([x, y, delay]) => (
+        // Two nodes, not one: the outer span is CENTRED on the point by
+        // transform (a negative half-pixel margin would be spacing wearing
+        // ornament's clothes, and the ratchet's Literal-only check waves a
+        // unary minus through), and `epTwinkle` animates `transform` — so the
+        // keyframe would overwrite that centring if they shared an element.
         <span
           key={`${x}-${y}`}
           aria-hidden
-          className="ep-twinkle"
-          style={
-            {
-              position: "absolute",
-              left: `${x}%`,
-              top: `${y}%`,
-              width: 7,
-              height: 7,
-              marginLeft: -3.5,
-              marginTop: -3.5,
-              borderRadius: "50%",
-              background: GOLD,
-              "--ep-delay": delay,
-            } as CSSProperties
-          }
-        />
+          style={{
+            position: "absolute",
+            left: `${x}%`,
+            top: `${y}%`,
+            transform: "translate(-50%, -50%)",
+          }}
+        >
+          <span
+            className="ep-twinkle"
+            style={
+              {
+                display: "block",
+                width: 7,
+                height: 7,
+                borderRadius: "50%",
+                background: GOLD,
+                "--ep-delay": delay,
+              } as CSSProperties
+            }
+          />
+        </span>
       ))}
       <span
         style={{
