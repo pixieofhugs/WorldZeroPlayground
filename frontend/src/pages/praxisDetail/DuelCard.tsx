@@ -57,10 +57,19 @@
  * ## Dress
  *
  * Chrome (`style`) and section head (`heading`) are handed in by the archetype,
- * the way `PraxisDetailComments` takes its heading — so the seven faction
- * designs of epic #1085 mount the same card inside their own panel. Everything
- * this file paints itself is a `--faction-default-*` token, flipping light/dark
- * through the `[data-theme="dark"]` cascade with no `dark ?` branch.
+ * the way `PraxisDetailComments` takes its heading — so the eight faction
+ * designs of epic #1085 mount the same card inside their own panel.
+ *
+ * Those two seams were not enough (#1153). A skin could set the frame and the
+ * label and could not reach the duellist names, their totals or the verdict
+ * line, so a fully dressed faction page carried a patch of Default furniture in
+ * the slot the v2 designs place most prominently in the aside — reported
+ * independently by the Coven, S.N.I.D.E., Singularity and UA builds. `ink` is
+ * the third seam: see {@link DuelCardInk}. Every field defaults to the
+ * `--faction-default-*` token this file used to hardcode, so a faction that
+ * passes nothing renders exactly as before, and every value on both sides of
+ * that default flips light/dark through the `[data-theme="dark"]` cascade with
+ * no `dark ?` branch.
  */
 import type { CSSProperties, ReactNode } from 'react'
 import { Link } from 'react-router-dom'
@@ -71,6 +80,64 @@ import type { PraxisDetailState } from './usePraxisDetail'
 
 /** Ornament geometry — the drawn diameter of one duellist's disc. */
 const AVATAR_SIZE = 30
+
+/**
+ * The card's paint slots, so a faction skin dresses the rows it mounts (#1153).
+ *
+ * Every field is optional and every one falls back to the `--faction-default-*`
+ * token this file used to hardcode, so an unregistered faction — and any skin
+ * that passes no `ink` — is byte-identical to the shipped card. Pass tokens the
+ * skin already owns; this seam is a place to REPOINT existing inks, never a
+ * reason to mint one.
+ *
+ * ## Nothing here may carry an opponent's faction hue
+ *
+ * The rival's faction colour can be ANY hue in the palette, so WOW's standing
+ * rule (WORLD_ZERO_STYLE §3/§6, #895) holds it as a **rosette ring, a plate edge
+ * or a bar — never as an ink and never behind text**, which is what lets a
+ * hostile hue sit inside cream-and-gold chrome with no contrast fix. `name`,
+ * `total` and `muted` are all `color:`, and `plate` sits directly behind a
+ * duellist's disc; none of them is a legal home for `accent`/`soft` off a duel
+ * payload, or for `factionCssVar(rival.faction_slug, …)`. The structural guard
+ * that used to assert this died with the duel rail (#1090/#1115), so this
+ * comment is the whole of it — a call site that passes a foreign hue here will
+ * fail nothing.
+ */
+export interface DuelCardInk {
+  /** The duellist's name. Default `--faction-default-card-text`. */
+  name?: string
+  /** A side's total, and the em-dash standing in for an absent one. Default `--faction-default-card-text`. */
+  total?: string
+  /** The cross-link subtitle, its chevron and the verdict line. Default `--faction-default-card-muted`. */
+  muted?: string
+  /** The two hairline rules and the rival disc's outline. Default `--faction-default-card-line`. */
+  line?: string
+  /** The fill behind a duellist with no avatar. Default `--faction-default-stamp-bg`. */
+  plate?: string
+}
+
+/** What the card paints when a skin hands in nothing — the `na` kit, unchanged. */
+const DEFAULT_INK: Required<DuelCardInk> = {
+  name: 'var(--faction-default-card-text)',
+  total: 'var(--faction-default-card-text)',
+  muted: 'var(--faction-default-card-muted)',
+  line: 'var(--faction-default-card-line)',
+  plate: 'var(--faction-default-stamp-bg)',
+}
+
+/**
+ * Field-by-field rather than a spread: `{...DEFAULT_INK, ...ink}` would let an
+ * explicit `undefined` in a partially-filled object erase a default.
+ */
+function resolveInk(ink?: DuelCardInk): Required<DuelCardInk> {
+  return {
+    name: ink?.name ?? DEFAULT_INK.name,
+    total: ink?.total ?? DEFAULT_INK.total,
+    muted: ink?.muted ?? DEFAULT_INK.muted,
+    line: ink?.line ?? DEFAULT_INK.line,
+    plate: ink?.plate ?? DEFAULT_INK.plate,
+  }
+}
 
 /**
  * Scores render to one decimal, matching `ScoreStamp`'s total on the same page
@@ -89,7 +156,15 @@ const NO_SCORE = '—'
  * tell; the rival is outlined instead, so the foreign side reads as foreign the
  * way the rail's opponent tokens used to.
  */
-function SideAvatar({ side, ringed }: { side: DuelSideOut; ringed: boolean }) {
+function SideAvatar({
+  side,
+  ringed,
+  ink,
+}: {
+  side: DuelSideOut
+  ringed: boolean
+  ink: Required<DuelCardInk>
+}) {
   const shell: CSSProperties = {
     display: 'block',
     width: AVATAR_SIZE,
@@ -97,8 +172,11 @@ function SideAvatar({ side, ringed }: { side: DuelSideOut; ringed: boolean }) {
     borderRadius: '50%',
     flexShrink: 0,
     overflow: 'hidden',
-    background: ringed ? 'var(--faction-default-rainbow)' : 'var(--faction-default-stamp-bg)',
-    border: ringed ? 'none' : '1px solid var(--faction-default-card-line)',
+    // The ring is NOT an ink slot. It is the spectrum — the na "you are here"
+    // tell (ADR-0039), which reads on every one of the nine grounds and is not
+    // the page faction's colour, let alone the rival's.
+    background: ringed ? 'var(--faction-default-rainbow)' : ink.plate,
+    border: ringed ? 'none' : `1px solid ${ink.line}`,
     boxSizing: 'border-box',
   }
   if (!side.avatar_url) return <span aria-hidden style={shell} />
@@ -126,12 +204,14 @@ function DuelRow({
   ringed,
   dimmed,
   subtitle,
+  ink,
 }: {
   side: DuelSideOut
   score: string
   ringed: boolean
   dimmed: boolean
   subtitle?: ReactNode
+  ink: Required<DuelCardInk>
 }) {
   return (
     <div
@@ -142,12 +222,12 @@ function DuelRow({
         opacity: dimmed ? 0.55 : 1,
       }}
     >
-      <SideAvatar side={side} ringed={ringed} />
+      <SideAvatar side={side} ringed={ringed} ink={ink} />
       <div style={{ flex: '1 1 auto', minWidth: 0 }}>
         <div
           className="font-display italic content-text"
           style={{
-            color: 'var(--faction-default-card-text)',
+            color: ink.name,
             whiteSpace: 'nowrap',
             overflow: 'hidden',
             textOverflow: 'ellipsis',
@@ -159,7 +239,7 @@ function DuelRow({
       </div>
       <span
         className="content-title font-body"
-        style={{ fontWeight: 700, color: 'var(--faction-default-card-text)', flexShrink: 0 }}
+        style={{ fontWeight: 700, color: ink.total, flexShrink: 0 }}
       >
         {score}
       </span>
@@ -185,18 +265,23 @@ function sidesForPraxis(
     : { mine: duel.challenger, rival: duel.opponent }
 }
 
-export function DuelCard({
-  state,
-  style,
-  heading,
-}: {
+export interface DuelCardProps {
   state: PraxisDetailState
   /** The archetype's panel chrome, so a faction skin dresses the card as its own. */
   style?: CSSProperties
   /** The archetype's section head, mounted inside the card as its label. */
   heading?: ReactNode
-}) {
+  /**
+   * The archetype's inks for the rows the card draws itself — names, totals,
+   * verdict, hairlines. Omit it and the card paints the `na` kit exactly as it
+   * always has. **Never an opponent's faction hue**: see {@link DuelCardInk}.
+   */
+  ink?: DuelCardInk
+}
+
+export function DuelCard({ state, style, heading, ink }: DuelCardProps) {
   const { t } = useTranslation('praxis')
+  const paint = resolveInk(ink)
   const { praxis, duel } = state
   if (!praxis || !duel) return null
 
@@ -263,7 +348,7 @@ export function DuelCard({
     })
   }
 
-  const hairline = '1px solid var(--faction-default-card-line)'
+  const hairline = `1px solid ${paint.line}`
 
   // The rival's row is the cross-link. A forfeiter's thrown side is back to
   // `in_progress`, so this 404s — deliberately left as a plain <Link>, which
@@ -274,9 +359,10 @@ export function DuelCard({
       score={scoreFor(rival, rivalFinal)}
       ringed={false}
       dimmed={forfeitedBy != null && rival.character_id === forfeitedBy}
+      ink={paint}
       subtitle={
         rival.praxis_id != null ? (
-          <span className="eyebrow" style={{ color: 'var(--faction-default-card-muted)' }}>
+          <span className="eyebrow" style={{ color: paint.muted }}>
             {t('duelCrossLink.readTheirPraxis')}
           </span>
         ) : undefined
@@ -293,6 +379,7 @@ export function DuelCard({
         score={scoreFor(mine, mineFinal)}
         ringed
         dimmed={forfeitedBy != null && mine.character_id === forfeitedBy}
+        ink={paint}
       />
 
       <div style={{ borderTop: hairline, marginTop: 'var(--space-md)', paddingTop: 'var(--space-md)' }}>
@@ -312,7 +399,7 @@ export function DuelCard({
             <span
               aria-hidden
               className="content-text"
-              style={{ color: 'var(--faction-default-card-muted)', flexShrink: 0 }}
+              style={{ color: paint.muted, flexShrink: 0 }}
             >
               ›
             </span>
@@ -325,7 +412,7 @@ export function DuelCard({
       <div style={{ borderTop: hairline, marginTop: 'var(--space-md)', paddingTop: 'var(--space-md)' }}>
         <p
           className="font-body content-text"
-          style={{ margin: 0, color: 'var(--faction-default-card-muted)' }}
+          style={{ margin: 0, color: paint.muted }}
         >
           {verdict}
         </p>
