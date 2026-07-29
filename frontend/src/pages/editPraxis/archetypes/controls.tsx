@@ -885,6 +885,15 @@ export interface PublishButtonSkin {
   idleLabel: ReactNode;
   busyLabel: ReactNode;
   ornament?: ReactNode;
+  /**
+   * A mark drawn AFTER the label (#1183). `ornament` leads; several v2 designs
+   * draw their submit ornament trailing instead, and the label itself is not a
+   * place to put one — a collab or duel cast resolves its words through
+   * `collabCopy` below, so a skin that folded the glyph into `idleLabel` would
+   * lose it in exactly the two modes that matter most. Additive and optional: a
+   * skin passing nothing renders byte-identically.
+   */
+  trailingOrnament?: ReactNode;
 }
 
 export function PublishButton({
@@ -960,6 +969,7 @@ export function PublishButton({
     >
       {skin.ornament}
       {state.submitting ? skin.busyLabel : idleLabel}
+      {skin.trailingOrnament}
     </button>
   );
 }
