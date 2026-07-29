@@ -120,8 +120,8 @@ export const WOW_MANIFEST: FactionManifest = {
   // #1121 — the chronicle entry: WOW's dress over the ONE shared praxis-detail
   // page (ADR-0061). The second of #951's four bullets to close; `factionCard`
   // and `factionBody` are still unclaimed. One responsive component, no mobile
-  // twin: #1089 deleted the `mobilePraxisDetail` surface outright on ADR-0056 /
-  // ADR-0058 terms, so this archetype serves both form factors.
+  // twin (ADR-0063): #1089 retired the `mobilePraxisDetail` surface outright, so
+  // this archetype serves both form factors.
   praxisDetail: () => WowPraxisDetail,
   comment: () => WowComment,
   feedFrame: () => WowFeedFrame,

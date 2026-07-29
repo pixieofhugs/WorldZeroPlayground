@@ -73,14 +73,18 @@ import type { PraxisDetailState } from '../usePraxisDetail'
  *
  * - Desktop is main column + a **330px** aside, comments beneath both; mobile is
  *   one stacked column with score and duel moved above the proof. ONE responsive
- *   component — `useFormFactor()` internally, no mobile twin: #1089 deleted the
- *   `mobilePraxisDetail` surface outright on ADR-0056 / ADR-0058 terms, so there
- *   is no second registry left to dispatch to.
+ *   component — `useFormFactor()` internally, no mobile twin (ADR-0063). Unlike
+ *   ADR-0056/0058, that collapse was NOT taken as a reversible experiment:
+ *   #1089 retired the `mobilePraxisDetail` surface outright, so there is no
+ *   second registry left to dispatch to and no dormant twin to keep in step.
  * - Score and duel are built ONCE and MOVED by where they are mounted, never
  *   drawn twice and hidden at the other breakpoint.
  * - **The crown renders at both form factors.** It is not form-factor gated: it
  *   comes from the shared `PraxisStatusBanners`, keyed only on
  *   `is_top_for_task`.
+ * - The duel panel and the comment thread are SLOTS THIS PAGE OWNS, not
+ *   dispatcher mounts (ADR-0064). Nothing is rendered around the archetype any
+ *   more, so a skin that forgets one simply loses it.
  * - **The report card and the steward bar are NOT dressed.** `PraxisFlagBlock`
  *   and `PraxisAdminBar` take `state` and nothing else and are mounted bare,
  *   wearing none of the plate chrome the score, vote and voters blocks wear.
