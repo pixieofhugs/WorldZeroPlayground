@@ -6,7 +6,12 @@ import { useFormFactor } from "../../../hooks/useFormFactor";
 import { factionCssVar, factionFill, factionName } from "../../../utils/factions";
 import { mediaUrl } from "../../../utils/media";
 import { isNeutralMultiplier } from "../../../utils/points";
-import { ErrorBanner, LevelJumpBanner, TaskDetailComments } from "./shared";
+import {
+  actionColumnSize,
+  ErrorBanner,
+  LevelJumpBanner,
+  TaskDetailComments,
+} from "./shared";
 import type { TaskDetailState } from "../useTaskDetail";
 
 /**

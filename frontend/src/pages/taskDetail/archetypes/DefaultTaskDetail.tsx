@@ -6,7 +6,12 @@ import { useFormFactor } from "../../../hooks/useFormFactor";
 import { factionCssVar, factionFill, factionName } from "../../../utils/factions";
 import { mediaUrl } from "../../../utils/media";
 import { isNeutralMultiplier } from "../../../utils/points";
-import { ErrorBanner, LevelJumpBanner, TaskDetailComments } from "./shared";
+import {
+  actionColumnSize,
+  ErrorBanner,
+  LevelJumpBanner,
+  TaskDetailComments,
+} from "./shared";
 import type { TaskDetailState } from "../useTaskDetail";
 
 /**
@@ -369,7 +374,11 @@ export default function DefaultTaskDetail({
   );
 
   // Score + action, one spectrum-framed panel. 440px on desktop (dress; other
-  // factions run 420–520), full width once the column collapses.
+  // factions run 420–520), full width once the column collapses — and only that
+  // wide when there IS an action; see `actionColumnSize` (#1138). With the action
+  // cell absent the worth cell takes the panel, so the frame never surrounds a
+  // hole: on desktop the column has already shrunk to it, on the phone the panel
+  // is still the column's width and the cell fills it.
   const actionPanel = (
     <div
       style={{
@@ -391,7 +400,13 @@ export default function DefaultTaskDetail({
           alignItems: "stretch",
         }}
       >
-        <div style={{ ...innerBox, flex: "0 0 auto", minWidth: desktop ? 168 : 122 }}>
+        <div
+          style={{
+            ...innerBox,
+            flex: hasAction ? "0 0 auto" : "1 1 auto",
+            minWidth: desktop ? 168 : 122,
+          }}
+        >
           {worthSlot ?? scoreBody}
         </div>
         {hasAction && (
@@ -810,8 +825,7 @@ export default function DefaultTaskDetail({
           <div style={{ flex: 1, minWidth: 0 }}>{header}</div>
           <div
             style={{
-              flex: desktop ? "0 0 440px" : "1 1 auto",
-              width: desktop ? 440 : "100%",
+              ...actionColumnSize({ desktop, hasAction, width: 440 }),
               marginTop: desktop ? "var(--space-sm)" : 0,
             }}
           >
