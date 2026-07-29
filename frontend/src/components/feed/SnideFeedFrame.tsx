@@ -1,4 +1,5 @@
-import type { ReactNode } from 'react'
+import FeedChassisBand from './FeedChassisBand'
+import type { FeedFrameProps } from './feedFrameProps'
 
 /**
  * S.N.I.D.E. activity-feed FRAME (surface #12, SPEC-faction-ui-profile.md).
@@ -10,12 +11,22 @@ import type { ReactNode } from 'react'
  * stripe running its left edge. The card body itself stays exactly as passed in
  * — this only adds the skin around `{children}`.
  *
+ * #1194: the slip gains a CHASSIS BAND above the body — a typed intake line
+ * carrying the kicker, the tag, the time and the dismiss control in photocopier
+ * ink. The skin is otherwise unchanged; SNIDE's dress issue restyles it.
+ *
  * Always-dark by intent: SNIDE is the ransom/xerox dossier. We scope the
  * theme-stable --faction-snide-card-* / -paper / -ink / -acid tokens to this
  * frame's own container only; we never mutate the document theme, and we avoid
  * the --faction-snide-*-wall-text tokens that flip between light/dark.
  */
-export default function SnideFeedFrame({ children }: { children: ReactNode }) {
+export default function SnideFeedFrame({
+  kicker,
+  time,
+  tag,
+  archive,
+  children,
+}: FeedFrameProps) {
   const ink = 'var(--faction-snide-ink)'
   const paper = 'var(--faction-snide-paper)'
   const acid = 'var(--faction-snide-acid)'
@@ -59,6 +70,19 @@ export default function SnideFeedFrame({ children }: { children: ReactNode }) {
         aria-hidden="true"
         style={{ top: -9, right: 40, width: 64, height: 20, transform: 'rotate(5deg)' }}
       />
+      {/* chassis band — the intake line typed across the head of the slip */}
+      <div
+        style={{
+          position: 'relative',
+          color: ink,
+          borderBottom: `1px solid color-mix(in srgb, ${ink} 35%, transparent)`,
+          paddingBottom: 'var(--space-xs)',
+          marginBottom: 'var(--space-sm)',
+        }}
+      >
+        <FeedChassisBand kicker={kicker} time={time} tag={tag} archive={archive} />
+      </div>
+
       {/* the slip body — the neutral feed card, untouched */}
       <div style={{ position: 'relative' }}>{children}</div>
     </div>

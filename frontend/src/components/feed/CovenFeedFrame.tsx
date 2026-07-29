@@ -1,6 +1,6 @@
-import type { ReactNode } from 'react'
-
 import i18n from '../../i18n'
+import FeedChassisBand from './FeedChassisBand'
+import type { FeedFrameProps } from './feedFrameProps'
 
 /**
  * Cozy Coven feed frame — the neutral feed card dressed as a tiny
@@ -8,6 +8,11 @@ import i18n from '../../i18n'
  * window name + a sparkle charm) sits above a notepad/paper body that holds the
  * untouched card `{children}`. Frame-level chrome only: this is a thin wrapper,
  * not a reimplementation of the card. Flips with the theme via the Coven tokens.
+ *
+ * #1194: the title bar is now also the CHASSIS BAND — the window name keeps its
+ * place and the kicker, the tag, the time and the dismiss control ride the same
+ * strip, tinted by the bar's own title ink. The look is unchanged otherwise;
+ * Coven's dress issue restyles it.
  */
 
 const WIN_BORDER = 'var(--faction-coven-win-border)'
@@ -31,7 +36,7 @@ function Sparkle({ size }: { size: number }) {
   )
 }
 
-export default function CovenFeedFrame({ children }: { children: ReactNode }) {
+export default function CovenFeedFrame({ kicker, time, tag, archive, children }: FeedFrameProps) {
   return (
     <div
       style={{
@@ -72,9 +77,9 @@ export default function CovenFeedFrame({ children }: { children: ReactNode }) {
         ))}
         <span
           style={{
-            marginLeft: 'auto',
             display: 'inline-flex',
             alignItems: 'center',
+            flexShrink: 0,
             // eslint-disable-next-line local/no-raw-style-values -- ornament: lead between the hand-lettered window title and its sparkle.
             gap: 6,
             fontFamily: SCRIPT,
@@ -86,6 +91,11 @@ export default function CovenFeedFrame({ children }: { children: ReactNode }) {
           {i18n.t('feed:identity.coven.windowTitle')}
           <Sparkle size={12} />
         </span>
+
+        {/* chassis band — rides the title bar, inked with the window title */}
+        <div style={{ flex: 1, minWidth: 0, color: TITLE_TEXT }}>
+          <FeedChassisBand kicker={kicker} time={time} tag={tag} archive={archive} />
+        </div>
       </div>
 
       {/* notepad/paper body — holds the neutral card, untouched */}

@@ -5,15 +5,26 @@
  * skins the neutral feed card (`children`) in the Everymen physical archetype —
  * a red masthead spine on the left edge, manila paper stock with a screen-print
  * halftone wash, and an inked border with gold trim. It does NOT reimplement the
- * card internals (avatar/actor/badge/time/task-ref) — those arrive via
- * `{children}` and render untouched in the content area.
+ * card internals (avatar/actor/badge/task-ref) — those arrive via `{children}`
+ * and render untouched in the content area.
+ *
+ * #1194: the slip gains a CHASSIS BAND at the head of the content area — a ruled
+ * dispatch line carrying the kicker, the tag, the time and the dismiss control in
+ * paper ink. The stock is otherwise unchanged; Everymen's dress issue restyles it.
  *
  * Theme-aware via everymen.css tokens (light + dark both defined); no document
  * theme mutation. Visual intent from design-system/templates/everymen.
  */
-import type { ReactNode } from 'react'
+import FeedChassisBand from './FeedChassisBand'
+import type { FeedFrameProps } from './feedFrameProps'
 
-export default function EverymenFeedFrame({ children }: { children: ReactNode }) {
+export default function EverymenFeedFrame({
+  kicker,
+  time,
+  tag,
+  archive,
+  children,
+}: FeedFrameProps) {
   return (
     <article
       style={{
@@ -91,6 +102,20 @@ export default function EverymenFeedFrame({ children }: { children: ReactNode })
             backgroundSize: '5px 5px',
           }}
         />
+
+        {/* chassis band — the dispatch line at the head of the slip */}
+        <div
+          style={{
+            position: 'relative',
+            zIndex: 2,
+            color: 'var(--everymen-paper-text)',
+            padding: 'var(--space-xs) var(--space-md) var(--space-xs) var(--space-lg)',
+            borderBottom:
+              '1px solid color-mix(in srgb, var(--everymen-paper-text) 22%, transparent)',
+          }}
+        >
+          <FeedChassisBand kicker={kicker} time={time} tag={tag} archive={archive} />
+        </div>
 
         {/* the neutral feed card, rendered above the chrome */}
         <div style={{ position: 'relative', zIndex: 2 }}>{children}</div>
