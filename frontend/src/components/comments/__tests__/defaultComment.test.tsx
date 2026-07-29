@@ -123,6 +123,12 @@ describe('DefaultComment — composer states', () => {
     expect(composer(false)).toContain('@ to mention')
   })
 
+  it('states the @ affordance exactly ONCE — the hint slot owns it, the placeholder does not', () => {
+    const html = composer(false)
+    expect(html).toContain('Say something worth keeping')
+    expect(html.match(/to mention/g)).toHaveLength(1)
+  })
+
   it('composer · submitting: marks itself busy and disables the field', () => {
     const html = composer(true)
     expect(html).toContain('aria-busy="true"')
