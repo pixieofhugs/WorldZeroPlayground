@@ -1853,10 +1853,12 @@
 /* The wall PAINT, shared by two mounts with different geometry:
      • `.snide-backdrop`   — the full-viewport wall (SnideBackdrop.tsx) on
        faction-context pages, where covering the page IS the point.
-     • `.snd-detail-sheet` — the task-detail COLUMN's ground. The owner's rule
-       for task detail is that the site background still shows around the
-       component (QA on #1055, then #1057), so this mount must NOT be fixed.
-   One declaration, so the two can never drift apart. */
+     • `.snd-detail-sheet` — a detail COLUMN's ground, worn by BOTH task detail
+       (#1035) and praxis detail (#1118) so the two pages cannot drift. The
+       owner's rule for a detail page is that the site background still shows
+       around the component (QA on #1055, then #1057), so this mount must NOT
+       be fixed.
+   One declaration, so the mounts can never drift apart. */
 .snide-backdrop,
 .snd-detail-sheet {
   background-color: var(--faction-snide-wall);

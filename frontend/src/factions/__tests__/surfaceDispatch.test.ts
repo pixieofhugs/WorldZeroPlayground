@@ -77,7 +77,7 @@ const CORE_SIX = ['coven', 'snide', 'ephemerists', 'singularity', 'everymen', 'u
 // Append your slug; never restate the list from memory.
 const BESPOKE: Record<string, string[]> = {
   taskDetail: [...CORE_SIX, 'wow', 'albescent'],
-  praxisDetail: ['coven', 'ephemerists', 'singularity', 'albescent', 'everymen'],
+  praxisDetail: ['coven', 'ephemerists', 'singularity', 'albescent', 'everymen', 'snide'],
   mobileFactionPage: [...CORE_SIX, 'wow'],
   mobileFieldDesk: [...CORE_SIX, 'wow'],
   mobileEditPraxis: [...CORE_SIX, 'wow'],
