@@ -1,18 +1,20 @@
 import type { ActivityFeedItem } from '../../api/activityFeed'
 import i18n from '../../i18n'
 import { factionName } from '../../utils/factions'
-import { relativeTime } from '../../utils/dates'
 import { resolveTaunt } from '../../utils/taunts'
 import { collabCopy } from '../collab/collabCopy'
 
 /**
  * Full-adoption activity feed (#376): the faction owns the whole "someone did X"
  * row. Every faction-owned event type is normalized into ONE slot bag rendered by
- * `FeedRowContent` inside the faction's frame — there is no per-event-type card.
- * The four structural / interactive events (era announcement, invitation letter,
- * duel challenge, collab invite) keep their bespoke companion cards (the design's
- * factionless announcement + interactive challenge cards), routed in
- * FeedCardRouter — so accept/decline handlers are never collapsed into slots.
+ * `FeedRowContent` inside the faction's chassis — there is no per-event-type
+ * card. The three interactive companions (invitation letter, duel challenge,
+ * collab invite) moved INSIDE the chassis in #1194 as payload bodies, keeping
+ * their own accept/decline handlers; `era_announcement` stays outside it
+ * deliberately (epic #1192 decision 6).
+ *
+ * The row no longer carries a `time` slot: the chassis draws the timestamp for
+ * every card, so a row that also drew one printed it twice.
  *
  * Copy comes from the `feed` catalog (#447). This module is plain TS (no hook
  * context), so it reads the singleton `i18n.t` directly — importing the
@@ -34,8 +36,32 @@ export const FACTION_ROW_TYPES = new Set([
   'nudge',
 ])
 
+/**
+ * A mutating CTA on an ordinary row. Only endpoints that ALREADY exist appear
+ * here — a state drawn on a sheet with no API behind it is not built (epic
+ * #1192 amendment, owner ruling 2026-07-29).
+ */
+export type FeedRowCall = { endpoint: 'leavePraxis'; praxisId: number }
+
+/**
+ * A CTA in the row's action slot (epic #1192 amendment §3). The slot is a
+ * GENERAL payload affordance, not a companion-only one: the rewritten sheets
+ * put buttons on ordinary rows too.
+ *
+ * An action is either a navigation to a route that already exists (`href`) or a
+ * call to an endpoint that already exists (`call`). Never both.
+ */
+export interface FeedRowAction {
+  /** Stable id — also the `feed:rowAction.<id>` copy key. */
+  id: string
+  label: string
+  tone: 'primary' | 'quiet'
+  href?: string
+  call?: FeedRowCall
+}
+
 export interface FeedRow {
-  /** Faction whose voice styles the row (frame + accent). */
+  /** Faction whose voice styles the row (chassis + accent). */
   slug: string | null
   actor: string | null
   actorHref: string | null
@@ -48,16 +74,59 @@ export interface FeedRow {
   /** Pre-formatted points string, e.g. "40 pts" / "+12 pts", or null. */
   points: string | null
   level: number | null
-  time: string
+  /** CTAs for the row's action slot. Empty for most types. */
+  actions: FeedRowAction[]
+}
+
+/**
+ * The `awaiting_submission` row's CTAs: "File it" always, "Drop out" on a
+ * collab only.
+ *
+ * `leave_praxis` opens with `if praxis.type != PraxisType.collab: 400 "Only
+ * collab memberships can be left."` — so on a duel side the control could only
+ * ever fail. Repo convention: hide a control the player cannot use rather than
+ * render it disabled (or, worse, render it live and let it 400).
+ *
+ * WHAT IS DELIBERATELY NOT HERE: **"Nudge back"**. The endpoint
+ * (`POST /praxes/{id}/nudge/{character_id}`) exists, but nothing on either the
+ * `nudge` or the `awaiting_submission` payload can satisfy its authorization:
+ *
+ *  - on a **collab**, `services/nudge.py` rule 1 requires the SENDER to have
+ *    already filed. The recipient of a nudge is by construction someone who has
+ *    not — that is why they were nudged — so the call 403s;
+ *  - on a **duel**, `praxis_id` is the side the VIEWER owes (ADR-0011: a duel is
+ *    two linked solo praxes). The rival's own praxis id, which is what the
+ *    endpoint wants, is not in the payload and must not be invented.
+ *
+ * Per the epic's owner ruling: a drawn state with no API behind it is not built.
+ */
+function buildAwaitingActions(payload: Record<string, any>): FeedRowAction[] {
+  if (payload.praxis_id == null) return []
+  const actions: FeedRowAction[] = [
+    {
+      id: 'fileIt',
+      label: i18n.t('feed:rowAction.fileIt'),
+      tone: 'primary',
+      href: `/praxes/${payload.praxis_id}/edit`,
+    },
+  ]
+  if (payload.praxis_type === 'collab') {
+    actions.push({
+      id: 'dropOut',
+      label: i18n.t('feed:rowAction.dropOut'),
+      tone: 'quiet',
+      call: { endpoint: 'leavePraxis', praxisId: payload.praxis_id },
+    })
+  }
+  return actions
 }
 
 /** Map a faction-owned feed item to its row slots. Returns null for the
- *  structural/interactive types that keep bespoke companion cards. */
+ *  structural/interactive types that render a companion body instead. */
 export function normalizeFeedItem(item: ActivityFeedItem): FeedRow | null {
   if (!FACTION_ROW_TYPES.has(item.type)) return null
   const p = item.payload ?? {}
   const actor = item.actor_display_name
-  const time = relativeTime(item.timestamp)
   const slug = item.context_faction_slug
 
   switch (item.type) {
@@ -80,7 +149,7 @@ export function normalizeFeedItem(item: ActivityFeedItem): FeedRow | null {
             ? i18n.t('feed:row.points', { points: p.task_point_value })
             : null,
         level: null,
-        time,
+        actions: [],
       }
     }
     case 'friend_signup':
@@ -98,7 +167,7 @@ export function normalizeFeedItem(item: ActivityFeedItem): FeedRow | null {
             ? i18n.t('feed:row.points', { points: p.task_point_value })
             : null,
         level: p.task_level_required ?? null,
-        time,
+        actions: [],
       }
     case 'collaborator_submitted':
       // A co-member submitted their part of a collab you're in (#571). Reuses the
@@ -117,7 +186,19 @@ export function normalizeFeedItem(item: ActivityFeedItem): FeedRow | null {
             ? i18n.t('feed:row.points', { points: p.task_point_value })
             : null,
         level: null,
-        time,
+        // "File yours" — a plain navigation to the shared editor, which every
+        // member of the collab can already open. No new endpoint.
+        actions:
+          p.praxis_id != null
+            ? [
+                {
+                  id: 'fileYours',
+                  label: i18n.t('feed:rowAction.fileYours'),
+                  tone: 'primary',
+                  href: `/praxes/${p.praxis_id}/edit`,
+                },
+              ]
+            : [],
       }
     case 'awaiting_submission':
       // Your turn: a collab/duel praxis waiting on your submission (#updates-
@@ -140,7 +221,12 @@ export function normalizeFeedItem(item: ActivityFeedItem): FeedRow | null {
             ? i18n.t('feed:row.points', { points: p.task_point_value })
             : null,
         level: p.task_level_required ?? null,
-        time,
+        // "File it" is a navigation to the editor. "Drop out" is `leavePraxis`
+        // — and it is offered ONLY on a collab: the service refuses any other
+        // praxis type outright ("Only collab memberships can be left."), so on
+        // a duel side the control would 400 every time. Hide it there rather
+        // than draw one that cannot work.
+        actions: buildAwaitingActions(p),
       }
     case 'nudge':
       // Someone poked you to file (#1083). It lands BESIDE the
@@ -171,7 +257,20 @@ export function normalizeFeedItem(item: ActivityFeedItem): FeedRow | null {
             ? i18n.t('feed:row.points', { points: p.task_point_value })
             : null,
         level: null,
-        time,
+        // "Answer" — the nudge's whole point, a navigation into your own
+        // editor. The sheet also draws "Nudge back"; it is NOT built. See the
+        // note on `buildAwaitingActions` below.
+        actions:
+          p.praxis_id != null
+            ? [
+                {
+                  id: 'answer',
+                  label: i18n.t('feed:rowAction.answer'),
+                  tone: 'primary',
+                  href: `/praxes/${p.praxis_id}/edit`,
+                },
+              ]
+            : [],
       }
     case 'vote_on_mine':
       return {
@@ -188,7 +287,7 @@ export function normalizeFeedItem(item: ActivityFeedItem): FeedRow | null {
             ? i18n.t('feed:row.pointsEarned', { points: p.points_earned })
             : null,
         level: null,
-        time,
+        actions: [],
       }
     case 'foe_taunt': {
       // ADR-0031: the payload is a structured reference; resolve the copy from
@@ -214,7 +313,7 @@ export function normalizeFeedItem(item: ActivityFeedItem): FeedRow | null {
         headlineQuoted: true,
         points: null,
         level: null,
-        time,
+        actions: [],
       }
     }
     case 'friend_defection':
@@ -232,7 +331,7 @@ export function normalizeFeedItem(item: ActivityFeedItem): FeedRow | null {
         headlineQuoted: false,
         points: null,
         level: null,
-        time,
+        actions: [],
       }
     case 'global_task':
       return {
@@ -249,7 +348,7 @@ export function normalizeFeedItem(item: ActivityFeedItem): FeedRow | null {
             ? i18n.t('feed:row.points', { points: p.task_point_value })
             : null,
         level: p.task_level_required ?? null,
-        time,
+        actions: [],
       }
     default:
       return null
