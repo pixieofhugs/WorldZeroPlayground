@@ -14,12 +14,14 @@ import { lazyArchetype } from './lazyArchetype'
 const UaAvatar = lazyArchetype(() => import('../components/avatar/UaAvatar'))
 const UaBackdrop = lazyArchetype(() => import('../components/backdrop/UaBackdrop'))
 const UaComment = lazyArchetype(() => import('../components/comments/voices/UaComment'))
+const UaDuelSealConfirm = lazyArchetype(() => import('../components/duel/UaDuelSealConfirm'))
 const UaEditPraxis = lazyArchetype(() => import('../pages/editPraxis/archetypes/UaEditPraxis'))
 const UaFactionBody = lazyArchetype(() => import('../pages/factionDetail/archetypes/UaFactionBody'))
 const UaFactionHero = lazyArchetype(() => import('../components/cards/UaFactionHero'))
 const UaFactionPage = lazyArchetype(() => import('../pages/factionDetail/mobileArchetypes/UaFactionPage'))
 const UaFeedFrame = lazyArchetype(() => import('../components/feed/UaFeedFrame'))
 const UaHome = lazyArchetype(() => import('../pages/fieldDesk/mobileArchetypes/UaHome'))
+const UaMobileDuelSealConfirm = lazyArchetype(() => import('../components/duel/UaMobileDuelSealConfirm'))
 const UaMobileEditPraxis = lazyArchetype(() => import('../pages/editPraxis/mobileArchetypes/UaComposer'))
 const UaMobilePraxisCard = lazyArchetype(() => import('../components/praxisCard/mobile/UaMobilePraxisCard'))
 const UaProfileBody = lazyArchetype(() => import('../pages/characterProfile/archetypes/UaProfileBody'))
@@ -49,6 +51,8 @@ export const UA_MANIFEST: FactionManifest = {
   comment: () => UaComment,
   feedFrame: () => UaFeedFrame,
   vote: () => UaVote,
+  duelSeal: () => UaDuelSealConfirm,
+  mobileDuelSeal: () => UaMobileDuelSealConfirm,
   taskDetail: () => UaTaskDetail,
   praxisDetail: () => UaPraxisDetail,
   editPraxis: () => UaEditPraxis,
