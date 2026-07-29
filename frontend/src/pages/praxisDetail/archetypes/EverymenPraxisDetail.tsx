@@ -570,13 +570,21 @@ export default function EverymenPraxisDetail({
   // ── Duel (built once; aside on desktop, above the proof on mobile) ─────────
   //
   // Self-hides for a praxis with no duel, for a DECLINED challenge and for the
-  // run-up, which the composer's waiting surface owns. Panel chrome and section
-  // head are handed in, so the card wears this sheet's dress rather than its own.
+  // run-up, which the composer's waiting surface owns. Panel chrome, section
+  // head AND inks are handed in, so the card wears this sheet's dress rather
+  // than its own.
+  //
+  // The inks are the sheet's own (#1153): `--everymen-paper-text` and
+  // `--everymen-muted`, the pair `factionContrast.test.ts` measures on this
+  // stock, over the printed hairline. `TRACK` is legal as `plate` and ONLY as
+  // `plate` — there it is a fill behind a duellist's disc, never a ground for
+  // text. No rival faction hue enters: red stays a rule and a fill here.
   const duelBlock: ReactNode = (
     <DuelCard
       state={state}
       style={panel}
       heading={sectionHead(t("duelCrossLink.label"))}
+      ink={{ name: INK, total: INK, muted: MUTED, line: HAIR, plate: TRACK }}
     />
   );
 

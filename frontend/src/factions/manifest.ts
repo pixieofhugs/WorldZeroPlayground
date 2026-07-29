@@ -123,9 +123,12 @@ export interface FactionManifest {
   // dispatched surface at all. It is now a card INSIDE the praxis-detail
   // archetype (`pages/praxisDetail/DuelCard.tsx`), so a faction dresses it by
   // dressing its `praxisDetail` — there is no second dispatcher left to feed.
+  // #1153 finished that thought: the card takes `style`, `heading` AND `ink`, so
+  // an archetype can reach every part of it a rail skin used to own.
   //
   // This is deliberately NOT the `praxisDetail` move (#1089), which kept its
-  // field with zero registrations because seven designs re-register there. A
+  // field with zero registrations because the epic-#1085 designs were about to
+  // re-register there — as all eight since have. A
   // surface with no dispatcher is not "empty"; it is gone, and keeping the field
   // would mean keeping a dead `DuelRailSkinProps` alive to type it.
   readonly duelSeal?: Lazy<ComponentType<DuelSealConfirmProps>>

@@ -7,12 +7,15 @@
  * Default fallback) and asserts every registered archetype still emits the
  * invariant slots, so a new faction that drops one fails here.
  *
- * THE REGISTRY IS EMPTY TODAY, and that is the point of keeping this walk rather
- * than hard-coding the Default. ADR-0061 made praxis detail one shared page and
- * #1089 de-registered all six faction skins, so `__default__` is currently the
- * only case that runs. The seven designs of epic #1085 re-register one at a
- * time, and each one is walked by this guard the moment its manifest line lands
- * — no test edit required, which is exactly why the loop stays.
+ * THE REGISTRY IS FULL NOW, and getting there is what the walk was for. ADR-0061
+ * made praxis detail one shared page and #1089 de-registered all six faction
+ * skins, leaving `__default__` as the only case that ran — which is what this
+ * header used to say. Epic #1085 then re-registered the lot (Coven, S.N.I.D.E.,
+ * UA, Ephemerists, WOW, Singularity, Everymen, Albescent), and every one of them
+ * was picked up and walked by this loop the moment its manifest line landed,
+ * **with no edit to this file**. That is the property worth keeping: the guard
+ * reads `surfaceMap('praxisDetail')` rather than a hard-coded list, so the next
+ * faction to register — or to drop back to Default — needs nothing here either.
  *
  * Rendered to static markup (no DOM); `useAuth` resolves to its default
  * anonymous context, so the vote caster renders its login gate rather than

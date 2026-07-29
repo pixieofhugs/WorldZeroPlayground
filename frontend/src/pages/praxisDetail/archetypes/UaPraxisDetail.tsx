@@ -580,13 +580,28 @@ export default function UaPraxisDetail({ state }: { state: PraxisDetailState }) 
   //
   // Outcomes only. `DuelCard` self-hides for a praxis with no duel, for a
   // DECLINED challenge, and for the run-up the composer's waiting surface owns
-  // (#1071 / ADR-0059). Sheet chrome and section head are handed in, so the card
-  // wears the leaf's dress rather than its own.
+  // (#1071 / ADR-0059). Sheet chrome, section head AND inks are handed in, so
+  // the card wears the leaf's dress rather than its own.
+  //
+  // The inks are the sheet's own set (#1153): `card-text` on the names and the
+  // totals, `card-muted` on the cross-link and the verdict — the same two this
+  // file already sets on every other block laid on `--faction-ua-card-bg` — with
+  // `rule` for the hairlines and the sunken `panel` behind a duellist with no
+  // avatar. No sienna on the numerals: `card-accent` is this page's LINK ink and
+  // a duel total is not a link. And no rival faction hue anywhere — the foreign
+  // side reads as foreign through its outline, not through a colour.
   const duelBlock: ReactNode = (
     <DuelCard
       state={state}
       style={panel}
       heading={panelHead(t("duelCrossLink.label"))}
+      ink={{
+        name: "var(--faction-ua-card-text)",
+        total: "var(--faction-ua-card-text)",
+        muted: "var(--faction-ua-card-muted)",
+        line: "var(--faction-ua-rule)",
+        plate: "var(--faction-ua-panel)",
+      }}
     />
   );
 
