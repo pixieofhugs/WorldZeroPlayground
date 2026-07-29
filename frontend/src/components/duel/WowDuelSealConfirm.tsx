@@ -153,7 +153,10 @@ export default function WowDuelSealConfirm({
             style={{
               fontFamily: BODY_FONT,
               lineHeight: 1.55,
-              ...(copy.danger ? { color: 'var(--color-danger)', fontWeight: 700 } : {}),
+              // `--color-danger` measures 4.40:1 on `--faction-wow-duel-lists-bg`
+              // — below the 4.5:1 this 18px copy owes (#1168). `-card-notice`
+              // clears at 6.45 / 10.30.
+              ...(copy.danger ? { color: 'var(--faction-wow-card-notice)', fontWeight: 700 } : {}),
             }}
           >
             {copy.body}

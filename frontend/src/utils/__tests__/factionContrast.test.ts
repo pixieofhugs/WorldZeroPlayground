@@ -178,6 +178,72 @@ const ROSTER_PAIRS: Pair[] = CARD_KEYS.flatMap((key) => [
 ]);
 
 /**
+ * #1168 — the DUEL SEAL dialog's functional inks, on each skin's own ground.
+ *
+ * `copy.danger` paints the confirm body in the global `--color-danger`; the
+ * free-reopen note and the StakesTiles win figure paint in `--color-success`.
+ * Both are chosen against the app's near-white page and are correct there,
+ * but four skins measured below AA on their own sheet — the same "global
+ * functional ink on faction paper" shape #694 found in the collab roster,
+ * just never checked here (the composer's confirm dialog is a modal, not a
+ * route, so `e2e/contrast.spec.ts`'s walk never renders it either).
+ *
+ * Coven, Default, WOW and Singularity route their body/heading copy to their
+ * own `-card-notice`. Singularity and S.N.I.D.E. additionally route
+ * StakesTiles' win figure to their own `-card-credit`, via the new
+ * `DuelSlotTheme.credit` seam (`duel/shared.tsx`) — both are dark-in-both-
+ * themes sheets, so the light-theme `--color-success` never clears them
+ * (2.14:1 / 2.07:1). Every other skin's danger/success pairing already
+ * clears and is left untouched; the raw-token rows below pin those passing
+ * measurements so a future edit to the global tokens can't regress them
+ * unnoticed.
+ */
+const DUEL_SEAL_PAIRS: Pair[] = [
+  { what: "coven duel seal body, danger", surface: "--faction-coven-body-bg", text: "--faction-coven-card-notice" },
+  { what: "default duel seal body, danger", surface: "--color-bg-page", text: "--faction-default-card-notice" },
+  {
+    what: "wow duel seal body, danger",
+    surface: "--faction-wow-duel-lists-bg",
+    text: "--faction-wow-card-notice",
+  },
+  {
+    what: "singularity duel seal chassis, danger",
+    surface: "--faction-singularity-card-bg",
+    text: "--faction-singularity-card-notice",
+  },
+  // The StakesTiles win/lose figures sit behind Singularity's translucent
+  // glass panel (`color-mix(in srgb, var(--faction-singularity-card-accent)
+  // 5%, transparent)`) — the veil below is that wash's literal composited
+  // equivalent, since `parseColor` doesn't parse `color-mix()`.
+  {
+    what: "singularity duel seal glass panel, win figure, large display type",
+    surface: "--faction-singularity-card-bg",
+    veil: "rgba(74,222,128,0.05)",
+    text: "--faction-singularity-card-credit",
+    floor: AA_LARGE,
+  },
+  {
+    what: "singularity duel seal glass panel, lose-zero figure, large display type",
+    surface: "--faction-singularity-card-bg",
+    veil: "rgba(74,222,128,0.05)",
+    text: "--color-danger",
+    floor: AA_LARGE,
+  },
+  {
+    what: "snide duel seal panel, win figure, large display type",
+    surface: "--faction-snide-card-bg",
+    text: "--faction-snide-card-credit",
+    floor: AA_LARGE,
+  },
+  {
+    what: "snide duel seal panel, lose-zero figure, large display type",
+    surface: "--faction-snide-card-bg",
+    text: "--color-danger",
+    floor: AA_LARGE,
+  },
+];
+
+/**
  * Archetype-private primitives. Each entry is a role index.css states in
  * words; nothing here is inferred from how a component happens to use a token.
  */
@@ -525,7 +591,14 @@ const ARCHETYPE_PAIRS: Pair[] = [
   },
 ];
 
-const PAIRS: Pair[] = [...CARD_PAIRS, ...FILL_PAIRS, ...ACCENT_PAIRS, ...ROSTER_PAIRS, ...ARCHETYPE_PAIRS];
+const PAIRS: Pair[] = [
+  ...CARD_PAIRS,
+  ...FILL_PAIRS,
+  ...ACCENT_PAIRS,
+  ...ROSTER_PAIRS,
+  ...DUEL_SEAL_PAIRS,
+  ...ARCHETYPE_PAIRS,
+];
 
 /**
  * Part C — the baseline allowlist (the ratchet).

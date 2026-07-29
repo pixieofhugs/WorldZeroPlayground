@@ -54,7 +54,15 @@ export default function SnideMobileDuelSealConfirm({
   const copy = useDuelSealCopy(mode, duel, viewerCharacterId, taskPointValue)
 
   const accent = factionCssVar(foe.faction_slug, 'card-accent')
-  const theme: DuelSlotTheme = { accent, muted: MUTED, bodyFont: 'var(--font-body)' }
+  // The global `--color-success` measures 2.07:1 on Snide's ink in light theme
+  // — the sheet is dark in both themes, so the light-mode token never clears
+  // it (#1168). `-card-credit` is theme-invariant here and clears at 10.81.
+  const theme: DuelSlotTheme = {
+    accent,
+    muted: MUTED,
+    bodyFont: 'var(--font-body)',
+    credit: 'var(--faction-snide-card-credit)',
+  }
 
   return (
     <div

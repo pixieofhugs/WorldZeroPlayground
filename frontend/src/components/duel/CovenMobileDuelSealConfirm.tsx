@@ -120,7 +120,10 @@ export default function CovenMobileDuelSealConfirm({
             style={{
               fontSize: 'var(--text-content)',
               lineHeight: 1.5,
-              ...(copy.danger ? { color: 'var(--color-danger)', fontWeight: 700 } : {}),
+              // `--color-danger` measures 4.31:1 on this pink sheet — below the
+              // 4.5:1 this 18px copy owes (#1168). `-card-notice` clears at
+              // 6.33 / 10.73.
+              ...(copy.danger ? { color: 'var(--faction-coven-card-notice)', fontWeight: 700 } : {}),
             }}
           >
             {copy.body}

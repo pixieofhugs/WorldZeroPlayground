@@ -62,11 +62,22 @@ export interface DuelSlotTheme {
   muted?: string
   /** Body font for the prose. */
   bodyFont?: string
+  /**
+   * Ink for the WIN tile's figure (#1168). Defaults to the global
+   * `--color-success`, chosen against the app's near-white page and correct
+   * there — but wrong on a skin whose sheet is dark in *both* themes: it
+   * measured 2.07:1 on S.N.I.D.E.'s ink and 1.99:1 on Singularity's glass
+   * panel in light theme. Those two skins pass their own `-card-credit`
+   * token instead; every other skin's sheet flips polarity with the theme,
+   * so the global token already clears there and is left alone.
+   */
+  credit?: string
 }
 
-const DEFAULT_THEME: Required<Pick<DuelSlotTheme, 'muted' | 'bodyFont'>> = {
+const DEFAULT_THEME: Required<Pick<DuelSlotTheme, 'muted' | 'bodyFont' | 'credit'>> = {
   muted: 'var(--color-text-secondary)',
   bodyFont: 'var(--font-body)',
+  credit: 'var(--color-success)',
 }
 
 /* -------------------------------------------------------------------------- */
@@ -239,7 +250,7 @@ export function StakesTiles({
         <Tile
           label={t('duelStakes.winLabel')}
           value={formatPoints(stakes.win)}
-          color="var(--color-success)"
+          color={theme.credit ?? DEFAULT_THEME.credit}
           theme={theme}
         />
         <Tile

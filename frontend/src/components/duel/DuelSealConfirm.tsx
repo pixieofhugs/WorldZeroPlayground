@@ -122,7 +122,10 @@ export function DefaultDuelSealConfirm({
         <p
           className="font-body content-text"
           style={{
-            color: copy.danger ? 'var(--color-danger)' : 'var(--color-text-secondary)',
+            // `--color-danger` measures 4.40:1 on `--color-bg-page` — below the
+            // 4.5:1 this 18px copy owes (#1168). `-card-notice` clears at
+            // 6.46 / 11.14.
+            color: copy.danger ? 'var(--faction-default-card-notice)' : 'var(--color-text-secondary)',
           }}
         >
           {copy.body}

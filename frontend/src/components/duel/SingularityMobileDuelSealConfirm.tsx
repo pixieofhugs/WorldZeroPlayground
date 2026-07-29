@@ -77,7 +77,16 @@ export default function SingularityMobileDuelSealConfirm({
   const copy = useDuelSealCopy(mode, duel, viewerCharacterId, taskPointValue)
 
   const accent = factionCssVar(foe.faction_slug, 'card-accent')
-  const theme: DuelSlotTheme = { accent, muted: PHOSPHOR_DIM, bodyFont: TERMINAL }
+  // The global `--color-success` measures 1.99:1 on this glass-over-terminal
+  // ground in light theme — the chassis is dark in both themes, so the
+  // light-mode token never clears it (#1168). `-card-credit` is theme-invariant
+  // here and clears at 10.40 either way.
+  const theme: DuelSlotTheme = {
+    accent,
+    muted: PHOSPHOR_DIM,
+    bodyFont: TERMINAL,
+    credit: 'var(--faction-singularity-card-credit)',
+  }
 
   return (
     <div
@@ -97,7 +106,9 @@ export default function SingularityMobileDuelSealConfirm({
         <h2
           style={{
             fontSize: 'var(--text-title)',
-            color: copy.danger ? 'var(--color-danger)' : PHOSPHOR,
+            // Same ground as the body paragraph below — kept in the same ink
+            // so a forfeit doesn't show two different reds (#1168).
+            color: copy.danger ? 'var(--faction-singularity-card-notice)' : PHOSPHOR,
             letterSpacing: '0.02em',
           }}
         >
@@ -115,7 +126,10 @@ export default function SingularityMobileDuelSealConfirm({
           className="content-text"
           style={{
             lineHeight: 1.55,
-            color: copy.danger ? 'var(--color-danger)' : PHOSPHOR_DIM,
+            // `--color-danger` measures 4.03:1 on this always-dark chassis —
+            // below the 4.5:1 this 18px copy owes (#1168). `-card-notice`
+            // clears at 11.67 either theme.
+            color: copy.danger ? 'var(--faction-singularity-card-notice)' : PHOSPHOR_DIM,
           }}
         >
           {copy.body}
@@ -124,7 +138,9 @@ export default function SingularityMobileDuelSealConfirm({
         {copy.note && (
           <p
             className="content-text"
-            style={{ marginTop: 'var(--space-sm)', color: 'var(--color-success)' }}
+            // `--color-success` measures 2.14:1 here — see the theme's `credit`
+            // comment (#1168).
+            style={{ marginTop: 'var(--space-sm)', color: 'var(--faction-singularity-card-credit)' }}
           >
             <span aria-hidden>{'// '}</span>
             {copy.note}
