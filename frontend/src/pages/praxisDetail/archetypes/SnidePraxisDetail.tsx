@@ -31,20 +31,21 @@
  *   mounts** (ADR-0064), not dispatcher chrome. Nothing is mounted around the
  *   page any more, so forgetting either drops it entirely.
  *
- * ## Voice (ADR-0061 as amended, 2026-07-28)
+ * ## No voice — dress only (ADR-0061)
  *
- * Content slots carry this faction's words — `detail.snide.*`: "Receipts" over
- * the proof, "Posted together by" over the crew, "Extras taken" over the seals,
- * "Your call" / "Who called it" on the vote pair. Slots the issue named no word
- * for (the write-up, the duel, the comments, the vote prompt) read the shared
- * neutral keys: a skin MAY register copy for a content slot, it is not obliged
- * to invent one.
+ * EVERY string on this page reads the shared neutral `detail.*` block. This
+ * faction's words — "Receipts" over the proof, "Posted together by" over the
+ * crew, "Extras taken" over the seals, "Your call" / "Who called it" on the
+ * vote pair — are **recorded on #1119, not built**: the amendment that would
+ * have voiced them was written and withdrawn the same day (2026-07-28), and
+ * this skin was corrected back. S.N.I.D.E. brings the paste-up, the type, the
+ * tape and the tilt; not a word.
  *
- * **Moderation and system chrome do not take the costume.** The crown, flagged
- * and failed banners, the steward bar, the report card and the errors read the
- * shared neutral block and wear neutral `--color-*` tokens — the platform
- * speaking, which has to read identically on all nine pages. `PraxisFlagBlock`
- * and `PraxisAdminBar` are mounted BARE for that reason: they take `state` and
+ * **Nothing takes the costume's words, and moderation does not take its dress
+ * either.** The crown, flagged and failed banners, the steward bar, the report
+ * card and the errors wear neutral `--color-*` tokens — the platform speaking,
+ * which has to read identically on all nine pages. `PraxisFlagBlock` and
+ * `PraxisAdminBar` are mounted BARE for that reason: they take `state` and
  * nothing else, so there is no seam to dress them through, and the design draws
  * them outside the costume exactly as the other seven do. The design's own
  * moderation words ("Pulled for review", "Kicked back", "Ratchet") are dress
@@ -615,7 +616,7 @@ export default function SnidePraxisDetail({ state }: { state: PraxisDetailState 
   // captions that measure 2.6:1 on cream and 15.7:1 on ink.
   const voteBlock = (
     <section style={plate}>
-      {sectionHead(t("detail.snide.vote"), { onPlate: true })}
+      {sectionHead(t("detail.vote.heading"), { onPlate: true })}
       <p
         className="content-text"
         style={{ fontFamily: MARK, margin: "0 0 var(--space-md)", color: PLATE_MUTED }}
@@ -640,7 +641,7 @@ export default function SnidePraxisDetail({ state }: { state: PraxisDetailState 
   const votersBlock = voters.length > 0 && (
     <section style={clipping}>
       {sectionHead(
-        t("detail.snide.voters"),
+        t("detail.voters.heading"),
         {
           trailing: (
             <span style={eyebrow}>{t("detail.voters.count", { count: voters.length })}</span>
@@ -721,7 +722,7 @@ export default function SnidePraxisDetail({ state }: { state: PraxisDetailState 
   // ── Proof · write-up · crew · metatasks ───────────────────────────────────
   const proof = praxis.media_items.length > 0 && (
     <section style={{ marginBottom: desktop ? "var(--space-2xl)" : "var(--space-xl)" }}>
-      {sectionHead(t("detail.snide.proof"), { big: true })}
+      {sectionHead(t("detail.sections.proof"), { big: true })}
       <div style={clipping}>
         <MediaGallery media={praxis.media_items} layout={desktop ? "grid" : "column"} />
       </div>
@@ -730,9 +731,6 @@ export default function SnidePraxisDetail({ state }: { state: PraxisDetailState 
 
   const writeUp = praxis.body_text && (
     <section style={{ marginBottom: desktop ? "var(--space-2xl)" : "var(--space-xl)" }}>
-      {/* No word from the design for this slot, so it reads the shared neutral
-          key rather than inventing one (ADR-0061 as amended: a skin MAY voice a
-          content slot). */}
       {sectionHead(t("detail.sections.writeUp"), { big: true })}
       <div style={clipping}>
         <MarkdownPreview
@@ -752,7 +750,7 @@ export default function SnidePraxisDetail({ state }: { state: PraxisDetailState 
   // fill in either theme.
   const crew = isCollab && (
     <section style={{ marginBottom: desktop ? "var(--space-2xl)" : "var(--space-xl)" }}>
-      {sectionHead(t("detail.snide.members"), { big: true })}
+      {sectionHead(t("detail.sections.members"), { big: true })}
       <div
         style={{
           background: STOCK,
@@ -781,7 +779,7 @@ export default function SnidePraxisDetail({ state }: { state: PraxisDetailState 
   // every chip would 422 on tap.
   const metatasks = praxis.applied_metatasks.length > 0 && (
     <section style={{ marginBottom: desktop ? "var(--space-2xl)" : "var(--space-xl)" }}>
-      {sectionHead(t("detail.snide.metatasks"), { big: true })}
+      {sectionHead(t("detail.metatasks.heading"), { big: true })}
       <MetaTaskSeal metatasks={praxis.applied_metatasks} />
     </section>
   );

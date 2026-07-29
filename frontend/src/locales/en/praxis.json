@@ -190,33 +190,6 @@
       "bonus": "+{{points}} PTS",
       "remove": "Remove metatask",
       "add": "+ Add a metatask"
-    },
-    "coven": {
-      "writeUp": "What it looked like",
-      "members": "Cast together by",
-      "metatasks": "Charms added",
-      "duel": "A friendly duel",
-      "comments": "Comments"
-    },
-    "ephemerists": {
-      "writeUp": "Canonical record",
-      "duel": "The disputation",
-      "owner": "Amend the record"
-    },
-    "snide": {
-      "proof": "Receipts",
-      "members": "Posted together by",
-      "metatasks": "Extras taken",
-      "vote": "Your call",
-      "voters": "Who called it"
-    },
-    "wow": {
-      "proof": "The proof",
-      "members": "Sworn together by",
-      "metatasks": "Charms claimed",
-      "vote": "Your cheer",
-      "voters": "The court says",
-      "comments": "The gallery"
     }
   },
   "comments": {

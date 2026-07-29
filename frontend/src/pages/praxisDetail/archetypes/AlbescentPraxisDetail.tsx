@@ -37,8 +37,9 @@ import type { PraxisDetailState } from '../usePraxisDetail'
  * has read it", "said quietly", "enter it", "revise the account". **None of it
  * is built** (owner ruling on #1140, 2026-07-28): this skin is dress only and
  * registers no `detail.albescent.*` block, so the page speaks the shared neutral
- * `detail.*` copy. ADR-0061's amendment lets a faction voice the content slots;
- * ADR-0027 is why Albescent declines the offer. A per-faction WORD is as
+ * `detail.*` copy — ADR-0061's standing rule for every skin. An amendment that
+ * would have let a faction voice the content slots was written and withdrawn the
+ * same day (2026-07-28); ADR-0027 is why Albescent would have declined it anyway. A per-faction WORD is as
  * identifying as a per-faction hue, and it renders to every viewer — the same
  * ruling the task detail took (#1038) and the same one that deleted Albescent's
  * vote vocabulary and comment dialect in #783.

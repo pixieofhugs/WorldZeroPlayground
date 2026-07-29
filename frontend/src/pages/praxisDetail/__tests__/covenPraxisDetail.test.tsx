@@ -8,9 +8,10 @@
  *  - the layout contract it inherits from the eight faction designs (#1129) —
  *    the 330px aside track, the responsive move of the score/duel rail, and the
  *    crown at BOTH form factors;
- *  - the five voiced content slots (ADR-0061 as amended, 2026-07-28);
- *  - and the chrome the voice must NOT reach: the report card, the steward bar
- *    and the moderation banners keep the shared neutral words.
+ *  - that the page carries NO copy of its own (ADR-0061): every heading is the
+ *    shared neutral word, including the ones the design named. The voiced block
+ *    this skin briefly shipped was withdrawn with the amendment that allowed it;
+ *    the Coven vocabulary lives on #1117, recorded and unbuilt.
  *
  * Harness note: `renderToStaticMarkup`, no DOM, no effects (SPEC-testing.md), so
  * `useFormFactor` is MOCKED rather than driven off `matchMedia`. Light vs dark
@@ -289,8 +290,8 @@ describe('Coven praxis detail — the shared layout contract', () => {
   })
 })
 
-describe('Coven praxis detail — the faction voice', () => {
-  it('speaks Coven in the five content slots', () => {
+describe('Coven praxis detail — copy is neutral, dress is Coven', () => {
+  it('reads the shared neutral words in every content slot', () => {
     const collab = state({
       praxis: {
         ...PRAXIS,
@@ -301,21 +302,25 @@ describe('Coven praxis detail — the faction voice', () => {
       duel: duel(),
     })
     const { text } = render(collab)
-    expect(text, 'the write-up').toContain('What it looked like')
-    expect(text, 'the crew').toContain('Cast together by')
-    expect(text, 'the metatasks').toContain('Charms added')
-    expect(text, 'the duel').toContain('A friendly duel')
-    expect(text, 'the comments region').toContain('Comments')
+    for (const neutral of ['Proof', 'Write-up', 'Members', 'Metatasks', 'The duel', 'Discussion']) {
+      expect(text, `the shared word for ${neutral}`).toContain(neutral)
+    }
 
-    // …and the shared neutral headings the design leaves in the game's words.
-    expect(text, 'the proof heading stays shared').toContain('Proof')
-    expect(text, 'the duel head replaces the shared one').not.toContain('The duel')
-    expect(text, 'the crew head replaces the shared one').not.toContain('Members')
+    // …and none of the words the design asked for. Each of these shipped in
+    // `detail.coven.*` for a day (#1152) and was withdrawn with the amendment.
+    for (const voiced of [
+      'What it looked like',
+      'Cast together by',
+      'Charms added',
+      'A friendly duel',
+    ]) {
+      expect(text, `no voiced copy: ${voiced}`).not.toContain(voiced)
+    }
   })
 
   it('leaves moderation and system chrome in the shared neutral words', () => {
-    // ADR-0061 as amended (2026-07-28): content slots carry the skin's voice,
-    // the platform's own words do not.
+    // These were neutral under the withdrawn amendment too — the platform's own
+    // words never took the costume on any skin.
     const flagged = state({ praxis: { ...PRAXIS, moderation_status: 'flagged' } })
     expect(render(flagged).text, 'the flagged banner').toContain('FLAGGED')
 
@@ -349,7 +354,7 @@ describe('Coven praxis detail — the faction voice', () => {
 
   it('hides the comment region on a praxis that is not visible', () => {
     const hidden = state({ praxis: { ...PRAXIS, moderation_status: 'hidden' } })
-    expect(render(hidden).text).not.toContain('Comments')
+    expect(render(hidden).text).not.toContain('Discussion')
   })
 })
 
@@ -364,7 +369,7 @@ describe('Coven praxis detail — the state axes', () => {
   it('credits every co-author and reaches each one', () => {
     const solo = render(state())
     expect(solo.html, 'solo links one author').toContain('href="/characters/3"')
-    expect(solo.text, 'and draws no crew section').not.toContain('Cast together by')
+    expect(solo.text, 'and draws no members section').not.toContain('Members')
 
     const collab = state({
       praxis: { ...PRAXIS, type: 'collab', members: [MEMBER, CO_MEMBER] },
@@ -372,6 +377,7 @@ describe('Coven praxis detail — the state axes', () => {
     const { html, text } = render(collab)
     expect(html, 'each co-author is reachable').toContain('href="/characters/4"')
     expect(text).toContain('Beth')
+    expect(text, 'the crew reads as Members, the domain noun').toContain('Members')
   })
 
   it('shows owner controls to a member and nothing to a visitor', () => {
@@ -404,10 +410,10 @@ describe('Coven praxis detail — the state axes', () => {
       praxis: { ...PRAXIS, type: 'duel', duel_id: 5 },
     })
     expect(render(declined).text, 'a declined challenge draws no card').not.toContain(
-      'A friendly duel',
+      'The duel',
     )
     expect(render(state()).text, 'and a solo praxis has none either').not.toContain(
-      'A friendly duel',
+      'The duel',
     )
   })
 })

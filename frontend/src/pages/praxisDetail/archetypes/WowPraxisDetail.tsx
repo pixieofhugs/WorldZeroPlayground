@@ -88,18 +88,16 @@ import type { PraxisDetailState } from '../usePraxisDetail'
  * - **The report card and the steward bar are NOT dressed.** `PraxisFlagBlock`
  *   and `PraxisAdminBar` take `state` and nothing else and are mounted bare,
  *   wearing none of the plate chrome the score, vote and voters blocks wear.
- *   That is deliberate in all eight faction designs and it is the amended
- *   ADR-0061 rule: content slots carry the faction's voice, moderation and
- *   system chrome do not.
+ *   That is deliberate in all eight faction designs.
  *
- * ## Copy (ADR-0061 as amended, 2026-07-28)
+ * ## Copy — none. ADR-0061, unamended
  *
- * The six content slots the design names take WOW's voice from `detail.wow.*` —
- * *The proof · Sworn together by · Charms claimed · Your cheer · The court
- * says · The gallery*. Everything else reads the shared neutral `detail.*`
- * block: the breadcrumb, the write-up head, the task reference, the score head,
- * the duel head, and every word of the banners, the steward bar, the report card
- * and the errors.
+ * EVERY string on this page comes from the shared neutral `detail.*` block.
+ * The six words the design names — *The proof · Sworn together by · Charms
+ * claimed · Your cheer · The court says · The gallery* — are **recorded on
+ * #1121, not built**: the amendment that would have voiced them was written and
+ * withdrawn the same day (2026-07-28), and this skin was corrected back. WOW's
+ * chronicle is carried entirely by frame, type, ornament and motion.
  *
  * The design's seventh string — the comment composer's **"proclaim"** — is
  * already shipped, and not by this page: it is `comments.wow.post`, read by
@@ -370,7 +368,7 @@ export default function WowPraxisDetail({ state }: { state: PraxisDetailState })
     </nav>
   )
 
-  // ── Moderation banners — NOT dressed (ADR-0061 as amended) ────────────────
+  // ── Moderation banners — NOT dressed (ADR-0061) ───────────────────────────
   //
   // The crown hero and the failed note come from the shared `PraxisStatusBanners`
   // on their own neutral `--color-*` tokens; the flagged notice has no shared
@@ -554,7 +552,7 @@ export default function WowPraxisDetail({ state }: { state: PraxisDetailState })
   // the scribe's hand rather than a second archaic call.
   const voteBlock = (
     <section style={panel}>
-      {panelHead('vote', t('detail.wow.vote'))}
+      {panelHead('vote', t('detail.vote.heading'))}
       <p
         className="content-text"
         style={{ ...MARGINALIA, margin: '0 0 var(--space-md)', color: MUTED }}
@@ -579,7 +577,7 @@ export default function WowPraxisDetail({ state }: { state: PraxisDetailState })
     <section style={panel}>
       {panelHead(
         'voters',
-        t('detail.wow.voters'),
+        t('detail.voters.heading'),
         <span style={{ ...MARGINALIA, fontSize: 'var(--text-xl)', color: MUTED }}>
           {t('detail.voters.count', { count: voters.length })}
         </span>,
@@ -646,8 +644,8 @@ export default function WowPraxisDetail({ state }: { state: PraxisDetailState })
 
   // The report card wears NO chronicle dress: `PraxisFlagBlock` takes `state`
   // and nothing else, on its own neutral `.sidebar-card` + `--color-*` tokens.
-  // That is the amended ADR-0061 rule and all eight faction designs draw it, so
-  // it is mounted bare beside plates it deliberately does not match.
+  // That is the ADR-0061 rule and all eight faction designs draw it, so it is
+  // mounted bare beside plates it deliberately does not match.
   const asideRest = (
     <>
       {voteBlock}
@@ -659,7 +657,7 @@ export default function WowPraxisDetail({ state }: { state: PraxisDetailState })
   // ── Proof · write-up · members · charms ───────────────────────────────────
   const proof = praxis.media_items.length > 0 && (
     <section style={{ marginBottom: size.sectionGap }}>
-      {sectionHead('proof', t('detail.wow.proof'))}
+      {sectionHead('proof', t('detail.sections.proof'))}
       <div style={{ ...plate, padding: 'var(--space-md)' }}>
         <div
           style={{
@@ -696,7 +694,7 @@ export default function WowPraxisDetail({ state }: { state: PraxisDetailState })
   // and it is this one.
   const crew = isCollab && (
     <section style={{ marginBottom: size.sectionGap }}>
-      {sectionHead('crew', t('detail.wow.members'))}
+      {sectionHead('crew', t('detail.sections.members'))}
       <CollabRoster
         members={praxis.members}
         currentCharacterId={state.user?.character?.id ?? null}
@@ -713,7 +711,7 @@ export default function WowPraxisDetail({ state }: { state: PraxisDetailState })
   // `apply_metatask` requires `status == in_progress`, so every one would 422.
   const metatasks = praxis.applied_metatasks.length > 0 && (
     <section style={{ marginBottom: size.sectionGap }}>
-      {sectionHead('charms', t('detail.wow.metatasks'))}
+      {sectionHead('charms', t('detail.metatasks.heading'))}
       <MetaTaskSeal metatasks={praxis.applied_metatasks} />
     </section>
   )
@@ -803,7 +801,7 @@ export default function WowPraxisDetail({ state }: { state: PraxisDetailState })
           state={state}
           heading={sectionHead(
             'gallery',
-            t('detail.wow.comments'),
+            t('detail.sections.comments'),
             <BalloonBunch size={34} />,
           )}
           style={{ marginTop: size.sectionGap }}

@@ -32,7 +32,7 @@
  *   `PraxisFlagBlock` / `PraxisAdminBar` take `state` and nothing else — there is
  *   no seam to dress them through, by construction — and the flagged/failed
  *   banners keep their neutral `--color-*` tokens and neutral copy here for the
- *   same reason (ADR-0061 as amended, 2026-07-28: content slots carry a skin's
+ *   same reason (ADR-0061: content slots carry a skin's
  *   voice, moderation and system chrome do not).
  *
  * ## Copy is the shared neutral `detail.*` set
@@ -397,7 +397,7 @@ export default function EverymenPraxisDetail({
   );
 
   // ── Moderation banners — NEUTRAL, deliberately outside the costume ─────────
-  // ADR-0061 as amended: the crown hero, the failed note, the flagged notice and
+  // ADR-0061: the crown hero, the failed note, the flagged notice and
   // the steward bar read the shared neutral block in every faction's dress. The
   // design voices all four ("UNDER GRIEVANCE", "SENT BACK BY THE STEWARD"); that
   // vocabulary is recorded on the issue and not built.
@@ -698,7 +698,7 @@ export default function EverymenPraxisDetail({
       {voteBlock}
       {votersBlock}
       {/* Mounted BARE. The report card is neutral chrome and takes no dress —
-          it accepts no style prop, by construction (ADR-0061 as amended). */}
+          it accepts no style prop, by construction (ADR-0061). */}
       <PraxisFlagBlock state={state} />
     </>
   );

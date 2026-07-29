@@ -113,8 +113,8 @@ export const ALBESCENT_MANIFEST: FactionManifest = {
    * Every word of the design's voice is cut (owner ruling on #1140, ADR-0027):
    * the page speaks the shared neutral `detail.*` copy and there is no
    * `detail.albescent.*` block, because a page announcing itself as Albescent
-   * would un-hide the society. ADR-0061's amendment permits a faction voice on
-   * the content slots; this faction declines it. No mobile sibling — praxis
+   * would un-hide the society. ADR-0061 allows a skin DRESS and no copy, so this
+   * faction is doubly clear of it: nothing here voices a slot, and nothing may. No mobile sibling — praxis
    * detail is one responsive component (ADR-0063), so this row covers both form
    * factors.
    */

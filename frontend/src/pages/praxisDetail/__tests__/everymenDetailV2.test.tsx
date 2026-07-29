@@ -12,7 +12,7 @@
  *    responsive move of the rail, and the crown at BOTH form factors (the design
  *    draws `showCrownMobile: false`);
  *  - the costume's boundary — moderation and system chrome stay neutral
- *    (ADR-0061 as amended, 2026-07-28), so the design's voiced moderation words
+ *    (ADR-0061), so the design's voiced moderation words
  *    must not appear;
  *  - copy stays the shared neutral `detail.*` set, so none of the union
  *    vocabulary recorded on the issue is built.
@@ -252,7 +252,7 @@ describe("Everymen praxis detail — the layout contract it may not restyle", ()
 
 describe("Everymen praxis detail — the costume's boundary", () => {
   it("keeps moderation chrome neutral, in the shared words", () => {
-    // ADR-0061 as amended: content slots carry the voice, moderation does not.
+    // ADR-0061: content slots carry the voice, moderation does not.
     // The design voices all of these; the vocabulary is recorded on #1123 and
     // deliberately not built.
     const flagged = state({ praxis: { ...PRAXIS, moderation_status: "flagged" } });

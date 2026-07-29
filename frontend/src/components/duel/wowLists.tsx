@@ -193,9 +193,11 @@ export interface WowSealVoice {
  *
  * What is left, and what WOW takes: the KICKER above the heading, the two
  * section headings the kit draws, the ribbon line, and the two button labels.
- * That is the same faction-scoped-key pattern `praxis.json`'s `card.wow` /
- * `detail.wow` blocks already use, so the shared resolver stays neutral and only
- * this skin reads the WOW keys.
+ * That is the same faction-scoped-key pattern `praxis.json`'s `card.wow` block
+ * already uses, so the shared resolver stays neutral and only this skin reads
+ * the WOW keys. (Praxis DETAIL is the counter-example, not a sibling: ADR-0061
+ * keeps that page on one neutral block, and its per-faction WOW block was
+ * deleted when the voiced amendment was withdrawn.)
  *
  * The single branch here is on `mode`, which arrives as a prop — no duel fact is
  * re-derived.
