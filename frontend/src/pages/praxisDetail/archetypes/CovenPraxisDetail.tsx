@@ -282,13 +282,13 @@ export default function CovenPraxisDetail({ state }: { state: PraxisDetailState 
         {t('detail.breadcrumb.tasks')}
       </Link>
       <span aria-hidden style={{ ...CAPTION, color: SOFT }}>
-        ✿
+        ·
       </span>
       <Link to={`/tasks/${praxis.task_id}`} style={crumbLink}>
         {praxis.task_title}
       </Link>
       <span aria-hidden style={{ ...CAPTION, color: SOFT }}>
-        ✿
+        ·
       </span>
       <span style={CAPTION}>{t('detail.breadcrumb.current')}</span>
     </nav>
