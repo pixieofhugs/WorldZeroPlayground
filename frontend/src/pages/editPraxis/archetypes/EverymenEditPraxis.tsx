@@ -663,7 +663,7 @@ export default function EverymenEditPraxis({ state }: Props) {
                   ) : (
                     <MediaArt
                       art={pickArtKey(filename, "audio")}
-                      width={132}
+                      width={128}
                       height={104}
                     />
                   )}
