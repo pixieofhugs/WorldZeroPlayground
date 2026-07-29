@@ -481,6 +481,24 @@ export function PraxisSubmitControls({ state }: { state: PraxisDetailState }) {
 
 // ── Flag block ────────────────────────────────────────────────────────────────
 
+/**
+ * The report card — NEUTRAL CHROME, deliberately outside the costume.
+ *
+ * All eight faction praxis-detail designs draw this card the same way: shared
+ * neutral copy on its own neutral token set, wearing none of the skin's dress
+ * while every panel around it does. Only the Unaffiliated design skinned it, and
+ * it is the outlier (#1117–#1123). ADR-0061 as amended (2026-07-28) states the
+ * rule the designs were drawing: content slots carry a skin's voice, moderation
+ * and system chrome do not — the report card, the steward bar, the banners and
+ * the errors read one shared neutral block in every faction's dress.
+ *
+ * That is enforced structurally rather than by convention: this component takes
+ * `state` and nothing else, so there is no `style` seam to dress it through, and
+ * every text node inside carries an explicit `--color-*` token or `.eyebrow`'s
+ * own neutral colour — so it cannot inherit a skin's sheet colour by accident.
+ * `PraxisAdminBar` above is built the same way for the same reason. If a skin
+ * ever needs this card to look different, that is an ADR change, not a prop.
+ */
 export function PraxisFlagBlock({ state }: { state: PraxisDetailState }) {
   const { t } = useTranslation('praxis')
   const { praxis, showFlagForm, setShowFlagForm, flagReason, setFlagReason, flagDetail, setFlagDetail, flagging, flagError, setFlagError, flagSubmitted, handleFlag } = state
