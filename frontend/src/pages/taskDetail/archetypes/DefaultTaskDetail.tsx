@@ -89,9 +89,9 @@ export default function DefaultTaskDetail({
   const { t } = useTranslation("tasks");
   const desktop = useFormFactor() !== "mobile";
   // The gallery expands in place (the design's own "View all N praxis →" /
-  // "Show fewer ↑"). It deliberately does NOT link to `/praxes?task_id=N`: the
-  // praxis feed reads no such param, so that link has always dropped the filter
-  // and shown the whole feed.
+  // "Show fewer ↑"). It deliberately does NOT link out to `/praxes?task_id=N`:
+  // the reader stays on the task. That URL does filter properly since #1050;
+  // before it, the feed read no such param and showed everything.
   const [showAllPraxis, setShowAllPraxis] = useState(false);
   const {
     task,

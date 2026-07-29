@@ -16,9 +16,9 @@
  *  3. The `×mult` badge exists only off a non-identity factor (ADR-0055), and
  *     base and total stay separately legible either way (ADR-0053's
  *     dead-arithmetic trap is reconstructing one from the other).
- *  4. The gallery's "view all" expands IN PLACE. The old build linked to
- *     `/praxes?task_id=N`, which the praxis feed reads no param for — the filter
- *     was silently dropped and the whole feed shown.
+ *  4. The gallery's "view all" expands IN PLACE. The old build linked out to
+ *     `/praxes?task_id=N`, which showed the whole feed — the praxis feed read no
+ *     such param until #1050.
  *  5. The dress is actually mounted: the broadsheet backdrop class and the
  *     masthead's faction line.
  *
@@ -181,7 +181,7 @@ describe("Everymen task detail — the broadsheet", () => {
     );
     expect(text).toContain("4 completed praxis");
     expect(text).toContain("View all 4 praxis");
-    // `usePraxes` reads no `task_id` param — the old link dropped the filter.
+    // The reader stays on the task; the old link went out to the feed.
     expect(html).not.toContain("task_id=");
   });
 

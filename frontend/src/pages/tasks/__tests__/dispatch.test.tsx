@@ -72,7 +72,8 @@ const CANNED: TasksState = {
   error: null,
   factions: [{ slug: 'everymen' }],
   factionConfigs: [],
-  levelFilters: [0, 1, 2, 3, 4, 5],
+  // Derived from the era ladder at runtime (#1046) — era_1 has nine levels.
+  levelFilters: [0, 1, 2, 3, 4, 5, 6, 7, 8],
   statusFilters: ['All', 'active'],
   taskType: 'standard',
   setTaskType: () => {},
@@ -97,7 +98,6 @@ const state: { current: TasksState } = { current: CANNED }
 
 vi.mock('../useTasks', () => ({
   useTasks: () => state.current,
-  LEVEL_FILTERS: [0, 1, 2, 3, 4, 5],
 }))
 
 import Tasks from '../../Tasks'

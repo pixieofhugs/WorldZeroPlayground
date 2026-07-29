@@ -11,6 +11,10 @@
     "emptyFiltered": "Nothing filed under those terms. Clear the search or pick a different faction.",
     "count": "{{count}} shown",
     "loadMore": "Load more",
+    "taskFilter": {
+      "notice": "Proof of action, narrowed to a single task.",
+      "clear": "Show all praxes"
+    },
     "filter": {
       "typeLabel": "type:",
       "showLabel": "show:",

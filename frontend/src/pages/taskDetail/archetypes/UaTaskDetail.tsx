@@ -47,9 +47,10 @@ import type { TaskDetailState } from "../useTaskDetail";
  *   neutralises every faction, so it is invisible today (ADR-0055), and the
  *   factor comes raw off the state contract — never `modifiedPoints /
  *   basePoints` (ADR-0053's dead arithmetic).
- * - **The gallery expands in place.** `/praxes?task_id=N` has always dropped the
- *   filter (the feed reads no such param), so the old "view all" link showed the
- *   whole feed; it is a show-more/show-fewer toggle now, as on na.
+ * - **The gallery expands in place.** "View all" is a show-more/show-fewer
+ *   toggle, as on na — the reader stays on the task. The old link went to
+ *   `/praxes?task_id=N`, which showed the whole feed until #1050 taught it to
+ *   filter.
  *
  * ONE RESPONSIVE COMPONENT (ADR-0058): `useFormFactor()` picks the size set and
  * drops the two-column split. The separate UA mobile skin and the manifest

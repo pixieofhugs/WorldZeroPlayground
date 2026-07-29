@@ -42,8 +42,8 @@ import type { TaskDetailState } from "../useTaskDetail";
  *   skin's badge (ADR-0055).
  * - **Copy is the shared neutral `detail.*` set** (ADR-0057). None of the
  *   design's words survive, and none of the retired faction voice does either.
- * - **The gallery expands in place.** `/praxes?task_id=N` has never filtered —
- *   `usePraxes` reads no such param — so "view all" is a local expand.
+ * - **The gallery expands in place.** "View all" is a local expand: the reader
+ *   stays on the task. (`/praxes?task_id=N` did not filter at all until #1050.)
  *
  * ONE RESPONSIVE COMPONENT (ADR-0058): `useFormFactor()` picks the size set and
  * collapses the two-column split. The separate Ephemerists mobile skin and the
@@ -449,9 +449,9 @@ export default function EphemeristsTaskDetail({
   const { t } = useTranslation("tasks");
   const desktop = useFormFactor() !== "mobile";
   const size = SIZES[desktop ? "desktop" : "mobile"];
-  // The gallery expands in place. It deliberately does NOT link to
-  // `/praxes?task_id=N`: the praxis feed reads no such param, so that link has
-  // always dropped the filter and shown the whole feed.
+  // The gallery expands in place. It deliberately does NOT link out to
+  // `/praxes?task_id=N` — the reader stays on the task. That URL does filter
+  // properly since #1050; before it, it silently showed the whole feed.
   const [showAllPraxis, setShowAllPraxis] = useState(false);
   const {
     task,

@@ -181,9 +181,9 @@ describe("Ephemerists task detail — the Valley plate", () => {
     expect(text).toContain(long);
   });
 
-  it("never links the gallery at the dead task_id filter", () => {
-    // `/praxes?task_id=N` drops the filter — `usePraxes` reads no such param —
-    // so the gallery expands in place instead (#1030's fix, inherited here).
+  it("never links the gallery out at the task_id feed filter", () => {
+    // The gallery expands in place instead (#1030's fix, inherited here) — the
+    // reader stays on the task, even now that the URL filters (#1050).
     const { html } = render(<EphemeristsTaskDetail state={baseState()} />);
     expect(html).not.toContain("task_id=");
   });

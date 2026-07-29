@@ -64,7 +64,12 @@ function DesktopTasks({ state }: { state: TasksState }) {
         <TaskTypeToggle value={taskType} onChange={setTaskType} />
         <FilterStamps options={statusFilters} value={status} onChange={setStatus} />
         <FilterFactionTabs factions={factions} value={faction} onChange={setFaction} />
-        <FilterLevelNodes levels={levelFilters} value={level} onChange={setLevel} />
+        {/* Options come from the era's level ladder (#1046); until /game-config
+            lands there is no range to offer, so the control stays hidden rather
+            than rendering an empty or wrongly-bounded row. */}
+        {levelFilters.length > 0 && (
+          <FilterLevelNodes levels={levelFilters} value={level} onChange={setLevel} />
+        )}
         <input
           type="search"
           value={query}

@@ -150,9 +150,10 @@ export default function SingularityTaskDetail({
 }) {
   const { t } = useTranslation("tasks");
   const desktop = useFormFactor() !== "mobile";
-  // The gallery expands in place. It deliberately does NOT link to
-  // `/praxes?task_id=N`: the praxis feed reads no such param, so that link has
-  // always dropped the filter and shown the whole feed (#1030 replaced it on na).
+  // The gallery expands in place. It deliberately does NOT link out to
+  // `/praxes?task_id=N` — the reader stays on the task (#1030 replaced the link
+  // on na). That URL does filter properly since #1050; before it, it silently
+  // showed the whole feed.
   const [showAllPraxis, setShowAllPraxis] = useState(false);
   const {
     task,

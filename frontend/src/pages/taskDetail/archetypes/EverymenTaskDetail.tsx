@@ -137,9 +137,10 @@ function initialsOf(name: string): string {
  *   taken raw from the state contract — never reconstructed as
  *   `modifiedPoints / basePoints`, which is ADR-0053's dead-arithmetic trap.
  *   `era_1` neutralises every faction, so it is invisible today.
- * - **The gallery expands in place.** It does NOT link to `/praxes?task_id=N`:
- *   the praxis feed reads no such param, so that link has always dropped the
- *   filter and shown the whole feed. The old Everymen build carried it.
+ * - **The gallery expands in place.** It does NOT link out to
+ *   `/praxes?task_id=N` — the reader stays on the task. The old Everymen build
+ *   carried that link back when the feed read no such param and silently showed
+ *   everything; the URL filters properly since #1050.
  * - **Copy is the shared neutral `detail.*` set** (ADR-0057). The union voice
  *   this page used to speak — "The Order", "Hands On The Job", "The Hall's
  *   Verdict", "Report for duty ▸", "Best in Hall" — is retired from this

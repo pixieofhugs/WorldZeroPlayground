@@ -50,9 +50,9 @@ import type { TaskDetailState } from "../useTaskDetail";
  * - **Comments mount the shared `TaskDetailComments` slot**, which owns the
  *   `status === "active"` gate and suppresses the thread's own heading so this
  *   page carries one dressed section head, not two (ADR-0006).
- * - The gallery expands **in place**. It deliberately does not link to
- *   `/praxes?task_id=N`: the praxis feed reads no such param, so that link has
- *   always dropped the filter and shown the whole feed.
+ * - The gallery expands **in place**. It deliberately does not link out to
+ *   `/praxes?task_id=N` — the reader stays on the task. That URL does filter
+ *   properly since #1050; before it, it silently showed the whole feed.
  *
  * ONE RESPONSIVE COMPONENT (ADR-0058): `useFormFactor()` picks the size set and
  * drops the two-column split. The separate Snide mobile skin and the manifest

@@ -36,6 +36,8 @@ export default function MobilePraxisFeed({ state }: { state: PraxesFeedState }) 
     setSort,
     query,
     setQuery,
+    taskId,
+    clearTaskFilter,
     hasMore,
     loadMore,
   } = state
@@ -58,6 +60,16 @@ export default function MobilePraxisFeed({ state }: { state: PraxesFeedState }) 
         <p className="eyebrow" style={{ marginTop: 'var(--space-xs)' }}>
           {t('listPage.count', { count: items.length })}
         </p>
+        {/* A `?task_id=` feed is a subset (#1050) — say so, and offer the way
+            out, so a narrowed stream can't read as the whole register. */}
+        {taskId !== null && (
+          <p className="font-body content-text text-muted" style={{ marginTop: 'var(--space-xs)' }}>
+            {t('listPage.taskFilter.notice')}{' '}
+            <button type="button" onClick={clearTaskFilter} className="underline">
+              {t('listPage.taskFilter.clear')}
+            </button>
+          </p>
+        )}
       </header>
 
       {/* Search */}

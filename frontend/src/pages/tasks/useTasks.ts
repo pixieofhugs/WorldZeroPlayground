@@ -12,6 +12,10 @@
  * link restores it. The read runs through the shared `usePagedResource` growing
  * window (#645): filter setters (search included) reset the window and a full
  * page exposes "load more".
+ *
+ * The level filter's OPTIONS are not state — they are derived from the live
+ * era's `level_thresholds` off the same `/game-config` payload the faction
+ * modifiers ride on (#1046), never a hardcoded range. See `./levelFilters.ts`.
  */
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
@@ -25,9 +29,8 @@ import { computeDisplayPoints, computeFactionMultiplier } from '../../utils/poin
 import { usePagedResource } from '../../hooks/usePagedResource'
 import { useDebouncedValue } from '../../hooks/useDebouncedValue'
 import { useSearchQueryParam } from '../../hooks/useSearchQueryParam'
+import { levelFiltersFromThresholds } from './levelFilters'
 import type { CurrentUser } from '../../api/auth'
-
-export const LEVEL_FILTERS = [0, 1, 2, 3, 4, 5]
 
 /** How many rows a page fetches; "load more" grows the window by this step. */
 const PAGE_LIMIT = 50
@@ -50,6 +53,11 @@ export interface TasksState {
   // Reference data
   factions: FactionOut[]
   factionConfigs: FactionConfigOut[]
+  /**
+   * The level values the filter offers, derived from the live era's
+   * `level_thresholds` rather than a literal (#1046). Empty until
+   * `/game-config` lands — callers hide the control while it is.
+   */
   levelFilters: number[]
   statusFilters: string[]
 
@@ -101,6 +109,7 @@ export function useTasks(): TasksState {
 
   const [factions, setFactions] = useState<FactionOut[]>([])
   const [factionConfigs, setFactionConfigs] = useState<FactionConfigOut[]>([])
+  const [levelThresholds, setLevelThresholds] = useState<number[]>([])
   const [taskType, setTaskTypeState] = useState<TaskType>('standard')
   const [status, setStatusState] = useState('All')
   const [faction, setFactionState] = useState('')
@@ -115,7 +124,12 @@ export function useTasks(): TasksState {
   useEffect(() => {
     getFactions().then(setFactions).catch(() => {})
     getGameConfig()
-      .then((config) => setFactionConfigs(config.factions))
+      .then((config) => {
+        setFactionConfigs(config.factions)
+        // The level filter is bounded by the era's own ladder (#1046), which
+        // arrives on the same payload the faction modifiers do — no second call.
+        setLevelThresholds(config.level_thresholds ?? [])
+      })
       .catch(() => {})
   }, [])
 
@@ -184,7 +198,7 @@ export function useTasks(): TasksState {
 
     factions,
     factionConfigs,
-    levelFilters: LEVEL_FILTERS,
+    levelFilters: levelFiltersFromThresholds(levelThresholds),
     statusFilters,
 
     taskType,
