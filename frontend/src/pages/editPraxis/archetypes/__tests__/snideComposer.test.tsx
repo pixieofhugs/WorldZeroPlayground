@@ -105,11 +105,21 @@ function render(formFactor: "mobile" | "desktop"): string {
 
 const WIDTHS = ["desktop", "mobile"] as const;
 
+/* Spelled out rather than built from a suffix: the catalog's key type is a
+ * literal union, so an interpolated key is not a key at all to tsc. */
+const NEUTRAL_KEYS = [
+  "forms:editPraxis.composer.taskLabel",
+  "forms:editPraxis.composer.titleLabel",
+  "forms:editPraxis.composer.writeUpLabel",
+  "forms:editPraxis.composer.proofLabel",
+  "forms:editPraxis.composer.submit",
+] as const;
+
 describe("SNIDE composer copy is the shared neutral set (ADR-0065 §3)", () => {
   it.each(WIDTHS)("reads the composer.* keys on %s", (width) => {
     const markup = render(width);
-    for (const key of ["taskLabel", "titleLabel", "writeUpLabel", "proofLabel", "submit"]) {
-      expect(markup).toContain(i18n.t(`forms:editPraxis.composer.${key}`));
+    for (const key of NEUTRAL_KEYS) {
+      expect(markup).toContain(i18n.t(key));
     }
   });
 
