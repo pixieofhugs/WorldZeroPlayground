@@ -14,12 +14,19 @@
  * deleted the `mobilePraxisDetail` surface outright, so there is no second
  * registry left to dispatch to.
  *
- * NO FACTION OVERRIDES `praxisDetail` TODAY (#1089, ADR-0061). Every slug falls
- * through to `DefaultPraxisDetail` — the Unaffiliated page IS the shared page,
- * and the seven other designs will re-register here as dress over the same
- * layout and the same API contract. `surfaceMap('praxisDetail')` is therefore
- * legitimately empty; that is override-only working as documented, not a
- * missing wire.
+ * ALL EIGHT FACTIONS NOW OVERRIDE `praxisDetail` (epic #1085, closed 2026-07-28).
+ * #1089 de-registered every skin and this docstring recorded an empty registry;
+ * the nine designs then landed one at a time — #1117 Coven, #1118 S.N.I.D.E.,
+ * #1119 UA, #1120 Ephemerists, #1121 WOW, #1122 Singularity, #1123 Everymen,
+ * #1140 Albescent — over #1090's shared page. So `surfaceMap('praxisDetail')`
+ * carries a row per registered slug, and the fallback below is what `na` and any
+ * unregistered slug get: `DefaultPraxisDetail`, which IS the Unaffiliated page.
+ *
+ * Every skin is dress over the SAME layout and the same API contract (ADR-0061),
+ * which is what makes the registry uninteresting to read: nothing here branches
+ * on who registered. `AlbescentPraxisDetail` is the far end of that — a wrapper
+ * that forwards `DefaultPraxisDetail` whole and washes light over it, since
+ * Albescent is hiding and has no palette of its own.
  */
 import { useTranslation } from 'react-i18next'
 import { Navigate, useParams } from 'react-router-dom'
