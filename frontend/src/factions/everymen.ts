@@ -29,6 +29,7 @@ const EverymenTaskCard = lazyArchetype(() => import('../components/cards/Everyme
 const EverymenTaskDetail = lazyArchetype(() => import('../pages/taskDetail/archetypes/EverymenTaskDetail'))
 const EverymenVote = lazyArchetype(() => import('../components/vote/EverymenVote'))
 const EverymenPraxisCard = lazyArchetype(() => import('../components/praxisCard/desktop/EverymenPraxisCard'))
+const EverymenPraxisDetail = lazyArchetype(() => import('../pages/praxisDetail/archetypes/EverymenPraxisDetail'))
 const EverymenScoreStamp = lazyArchetype(() => import('../components/praxisCard/scoreStamp/EverymenScoreStamp'))
 const EverymenSeal = lazyArchetype(() => import('../components/metaTaskSeal/skins/EverymenSeal'))
 const EverymenSigil = lazyArchetype(() => import('../components/cards/EverymenSigil').then((m) => ({ default: m.EverymenSigil })))
@@ -51,6 +52,7 @@ export const EVERYMEN_MANIFEST: FactionManifest = {
   feedFrame: () => EverymenFeedFrame,
   vote: () => EverymenVote,
   taskDetail: () => EverymenTaskDetail,
+  praxisDetail: () => EverymenPraxisDetail,
   editPraxis: () => EverymenEditPraxis,
   factionHero: () => EverymenFactionHero,
   factionBody: () => EverymenFactionBody,

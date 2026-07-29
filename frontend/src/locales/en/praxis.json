@@ -198,6 +198,11 @@
       "duel": "A friendly duel",
       "comments": "Comments"
     },
+    "ephemerists": {
+      "writeUp": "Canonical record",
+      "duel": "The disputation",
+      "owner": "Amend the record"
+    },
     "snide": {
       "proof": "Receipts",
       "members": "Posted together by",
