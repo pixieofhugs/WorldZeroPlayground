@@ -69,12 +69,13 @@ import type { PraxisDetailState } from "../usePraxisDetail";
  *   belongs to. It is never a container border and never a section bullet.
  * - **The lotus is a different device with its own scope** — a ground wash — so
  *   it is drawn as UA draws it everywhere else, bleeding off the left edge at
- *   `--faction-ua-card-lotus-opacity`. The mandala is `absent` here by its own
- *   API: this is a dense, text-heavy surface, and the one place UA shows the
- *   mandala at full strength is the vote widget mounted in the rail.
+ *   `--faction-ua-card-lotus-opacity`. The mandala is not drawn at all — its
+ *   `strength` API encodes `absent` for exactly this case (dense, text-heavy
+ *   surfaces), and the one place UA shows it at full strength is the vote widget
+ *   mounted in the rail.
  *
  * The ink column (`UaInkColumn`) runs down the write-up — the faction's hairline
- * on a surface too dense for anything louder. It clears the copy by 18px and
+ * on a surface too dense for anything louder. It clears the copy by 16px and
  * never sits under it, which is why its `position: absolute` (painting above
  * static siblings) costs nothing here; see §5's stacking half for what happens
  * when an ornament and copy do overlap.
@@ -756,7 +757,7 @@ export default function UaPraxisDetail({ state }: { state: PraxisDetailState }) 
         }}
       >
         {/* UA's hairline down the margin. It sits at 14px inside a 32px inset,
-            so it clears the copy by 18 and never paints over a word — which is
+            so it clears the copy by 16 and never paints over a word — which is
             what makes its `position: absolute` harmless here (§5). */}
         <UaInkColumn style={{ left: 14, top: 14, bottom: 14 }} />
         <MarkdownPreview
