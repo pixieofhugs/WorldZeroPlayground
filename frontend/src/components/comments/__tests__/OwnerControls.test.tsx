@@ -18,7 +18,10 @@ import {
   OwnerControls,
   editSaveDisabled,
   isCommentOwner,
+  ownerRevealStyle,
+  useOwnerReveal,
   type OwnerEdit,
+  type OwnerReveal,
 } from '../OwnerControls'
 
 // Mock the axios instance so the comments client can be exercised without a network.
@@ -110,6 +113,81 @@ describe('OwnerControls', () => {
     expect(html).toContain('Withdraw this comment?')
     expect(html).toContain('Withdraw')
     expect(html).toContain('Keep')
+  })
+})
+
+// ── Hover / focus gate (#1195) ─────────────────────────────────────────────────
+
+function makeReveal(revealed: boolean): OwnerReveal {
+  return {
+    revealed,
+    containerProps: {
+      onMouseEnter: () => {},
+      onMouseLeave: () => {},
+      onFocus: () => {},
+      onBlur: () => {},
+    },
+  }
+}
+
+describe('ownerRevealStyle', () => {
+  it('gates with OPACITY only — never display/visibility, which would drop the row out of the tab order', () => {
+    expect(ownerRevealStyle(false).opacity).toBe(0)
+    expect(ownerRevealStyle(true).opacity).toBe(1)
+    expect(ownerRevealStyle(false).display).toBeUndefined()
+    expect(ownerRevealStyle(false).visibility).toBeUndefined()
+  })
+})
+
+describe('OwnerControls hover gate', () => {
+  it('keeps edit + delete MOUNTED while hidden, so Tab can still reach (and reveal) them', () => {
+    const html = renderToStaticMarkup(
+      <OwnerControls owner={makeOwner()} reveal={makeReveal(false)} />,
+    )
+    expect(html).toContain('edit')
+    expect(html).toContain('delete')
+    expect(html).toContain('opacity:0')
+  })
+
+  it('shows the row at full strength once revealed', () => {
+    const html = renderToStaticMarkup(
+      <OwnerControls owner={makeOwner()} reveal={makeReveal(true)} />,
+    )
+    expect(html).toContain('opacity:1')
+  })
+
+  it('pins the withdraw-confirm strip open even when unrevealed', () => {
+    const html = renderToStaticMarkup(
+      <OwnerControls owner={makeOwner({ confirming: true })} reveal={makeReveal(false)} />,
+    )
+    expect(html).toContain('Withdraw this comment?')
+    expect(html).toContain('opacity:1')
+  })
+
+  it('is ungated when no reveal is passed — the seven faction voices are untouched by #1195', () => {
+    const html = renderToStaticMarkup(<OwnerControls owner={makeOwner()} />)
+    expect(html).not.toContain('opacity')
+  })
+})
+
+describe('useOwnerReveal', () => {
+  it('exposes the pointer AND focus sources of the reveal', () => {
+    const captured: OwnerReveal[] = []
+    function Probe() {
+      captured.push(useOwnerReveal())
+      return null
+    }
+    renderToStaticMarkup(<Probe />)
+    expect(Object.keys(captured[0].containerProps).sort()).toEqual([
+      'onBlur',
+      'onFocus',
+      'onMouseEnter',
+      'onMouseLeave',
+    ])
+    // No `window` in the test environment, so hover capability is assumed and
+    // the row starts hidden. The gate is opacity-only, so the controls are in
+    // the markup either way — which is exactly what makes that assumption safe.
+    expect(captured[0].revealed).toBe(false)
   })
 })
 
