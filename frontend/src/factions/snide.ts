@@ -12,9 +12,7 @@ import type { FactionManifest } from './manifest'
 import { lazyArchetype } from './lazyArchetype'
 
 const SnideAvatar = lazyArchetype(() => import('../components/avatar/SnideAvatar'))
-const SnideDuelRail = lazyArchetype(() => import('../pages/praxisDetail/duelRails/SnideDuelRail'))
 const SnideDuelSealConfirm = lazyArchetype(() => import('../components/duel/SnideDuelSealConfirm'))
-const SnideMobileDuelRail = lazyArchetype(() => import('../pages/praxisDetail/duelRails/SnideMobileDuelRail'))
 const SnideMobileDuelSealConfirm = lazyArchetype(() => import('../components/duel/SnideMobileDuelSealConfirm'))
 const SnideBackdrop = lazyArchetype(() => import('../components/backdrop/SnideBackdrop'))
 const SnideComment = lazyArchetype(() => import('../components/comments/voices/SnideComment'))
@@ -58,11 +56,9 @@ export const SNIDE_MANIFEST: FactionManifest = {
   factionBody: () => SnideFactionBody,
   profileBody: () => SnideProfileBody,
   duelSeal: () => SnideDuelSealConfirm,
-  duelRail: () => SnideDuelRail,
   mobilePraxisCard: () => SnideMobilePraxisCard,
   mobileEditPraxis: () => SnideMobileEditPraxis,
   mobileFactionPage: () => SnideFactionPage,
   mobileFieldDesk: () => SnideHome,
   mobileDuelSeal: () => SnideMobileDuelSealConfirm,
-  mobileDuelRail: () => SnideMobileDuelRail,
 }

@@ -27,7 +27,6 @@ import { usePraxisDetail } from './praxisDetail/usePraxisDetail'
 import { pickVariant } from '../utils/factionDispatch'
 import { surfaceMap } from '../factions'
 import DefaultPraxisDetail from './praxisDetail/archetypes/DefaultPraxisDetail'
-import DuelCrossLink from './praxisDetail/DuelCrossLink'
 
 export default function PraxisDetail() {
   const { t } = useTranslation('praxis')
@@ -62,26 +61,16 @@ export default function PraxisDetail() {
     state.praxis.task_faction_slug,
     DefaultPraxisDetail,
   )
-  // No CommentThread here. ADR-0061 made comments the page LAYOUT's third
-  // region — the archetype mounts its own via the shared `PraxisDetailComments`
-  // slot, which carries the `visible` gate so a skin cannot forget it (amending
-  // ADR-0006's "neutral chrome below every archetype"). #1088's shim kept the
-  // dispatcher mounting a second thread for the six legacy archetypes; they are
-  // gone with #1089, and the shim with them.
-  return (
-    <>
-      {/* Duel cross-link is neutral chrome above every archetype (#313); one
-          shared faction-tokened widget, per the grilled #310 decision. #1090
-          replaces it with the design's duel card, inside the page layout. */}
-      {state.duel && (
-        <DuelCrossLink
-          praxis={state.praxis}
-          duel={state.duel}
-          state={state}
-          viewerCharacterId={state.user?.character?.id ?? null}
-        />
-      )}
-      <Archetype state={state} />
-    </>
-  )
+  // NOTHING IS MOUNTED AROUND THE ARCHETYPE ANY MORE. Two pieces of chrome used
+  // to sit here and both moved INTO the page layout:
+  //
+  //  - The comment thread. ADR-0061 made comments the page's third region — the
+  //    archetype mounts its own via the shared `PraxisDetailComments` slot,
+  //    which carries the `visible` gate so a skin cannot forget it (amending
+  //    ADR-0006's "neutral chrome below every archetype").
+  //  - The duel cross-link rail (#313/#718). #1090 replaced it with the design's
+  //    duel card in the archetype's aside, and retired the `duelRail` /
+  //    `mobileDuelRail` surfaces with it. A faction now dresses the duel by
+  //    dressing its `praxisDetail`, not by registering a second skin.
+  return <Archetype state={state} />
 }

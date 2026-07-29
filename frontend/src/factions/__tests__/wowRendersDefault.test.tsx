@@ -56,8 +56,11 @@ function Sentinel() {
  * that mounts it, #899's three repeating desktop surfaces (the decree
  * `taskCard`, the `comment` voice and the herald's-dispatch `feedFrame`),
  * #900's four page-level desktop surfaces (`factionHero`, `backdrop`,
- * `profileBody`, `factionSelectCard`), and #895's four DUEL surfaces (the
- * Lists seal and the praxis rail, each on both form factors), and #901's three
+ * `profileBody`, `factionSelectCard`), and what is left of #895's four DUEL
+ * surfaces — the Lists seal on both form factors. Its two rail skins went with
+ * the `duelRail` / `mobileDuelRail` SURFACES themselves in #1090, which folded
+ * the duel into a card inside praxis detail; that is a surface retirement, not
+ * a WOW gap, so neither name appears above or below. And #901's three
  * surviving FIELD PAVILION mobile surfaces (`mobileFieldDesk` from the one phone
  * screen the kit drew, plus `mobileFactionPage` and `mobileProfile` derived from
  * that screen's chrome and the matching desktop archetype — #901 skinned three
@@ -116,16 +119,14 @@ const WOW_SKINNED: ReadonlySet<FactionSurface> = new Set([
   'profileBody',
   'factionSelectCard',
   'duelSeal',
-  'duelRail',
   'mobileDuelSeal',
-  'mobileDuelRail',
   'mobileFieldDesk',
   'mobileFactionPage',
   'mobileProfile',
   'metaTaskSeal',
 ])
 
-describe('wow is partly skinned: twenty-four surfaces claimed, the rest fall back', () => {
+describe('wow is partly skinned: twenty-two surfaces claimed, the rest fall back', () => {
   it('registers a manifest now (#821)', () => {
     expect(FACTION_MANIFESTS.map((manifest) => manifest.slug)).toContain('wow')
   })

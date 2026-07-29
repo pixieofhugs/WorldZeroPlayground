@@ -49,10 +49,11 @@
  *
  * ## The duel slot
  *
- * The rail is still mounted by the dispatcher above the archetype
- * (`DuelCrossLink`), where every faction archetype picks it up. #1090 replaces
- * it with the design's duel card and lands it in the slots marked below — one
- * block, in the aside on desktop and above the proof on mobile.
+ * `DuelCard` (#1090) — one block, in the aside on desktop and above the proof on
+ * mobile, moved by where it is mounted like the score block above it. It is the
+ * successor to the dispatcher-mounted `DuelCrossLink` rail and narrates OUTCOMES
+ * only: settled, won-by-default, final. A declined challenge draws no card at
+ * all, and the run-up belongs to the composer (#1071).
  */
 import type { CSSProperties, ReactNode } from 'react'
 import { Link } from 'react-router-dom'
@@ -63,6 +64,7 @@ import VoteUI from '../../../components/vote/VoteUI'
 import ScoreStamp from '../../../components/praxisCard/scoreStamp/ScoreStamp'
 import MetaTaskSeal from '../../../components/metaTaskSeal/MetaTaskSeal'
 import { CollabRoster } from '../../../components/collab/CollabRoster'
+import { DuelCard } from '../DuelCard'
 import { useFormFactor } from '../../../hooks/useFormFactor'
 import { formatTimestamp } from '../../../utils/dates'
 import {
@@ -424,10 +426,16 @@ export default function DefaultPraxisDetail({ state }: { state: PraxisDetailStat
   )
 
   // ── Duel (built once; aside on desktop, above the proof on mobile) ─────────
-  // #1090 lands the design's duel card here. Until it does, the duel rail stays
-  // where every archetype already picks it up — mounted by the dispatcher above
-  // the page — so nothing is drawn twice and no faction loses its rail.
-  const duelBlock: ReactNode = null
+  //
+  // The design's compact duel card (#1090), which replaced `DuelCrossLink` and
+  // the twelve rail skins. It self-hides for a praxis with no duel, for a
+  // DECLINED challenge — where there is no duel to read out and the praxis
+  // scores as an ordinary solo (ADR-0011) — and for the run-up, which the
+  // composer's waiting surface owns (#1071/ADR-0059). Panel chrome and section
+  // head are handed in, so the card wears this page's dress rather than its own.
+  const duelBlock: ReactNode = (
+    <DuelCard state={state} style={panel} heading={sectionHead(t('duelCrossLink.label'))} />
+  )
 
   const rail = (
     <>

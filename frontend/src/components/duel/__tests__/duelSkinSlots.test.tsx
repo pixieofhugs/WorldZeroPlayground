@@ -1,19 +1,23 @@
 /**
  * Duel skin slot-invariant guard (#720), the `archetypeSlots.test.tsx` shape
- * applied to the two duel registries.
+ * applied to the duel SEAL registries.
  *
  * A skin owns the FRAME and may arrange the slots however its faction likes; it
- * may never DROP one and may never recompute one. Both registries are walked
- * (plus their Default fallback), so the faction skins that follow Coven fail here
- * the moment one of them loses a slot.
+ * may never DROP one and may never recompute one. Both seal registries are
+ * walked (plus their Default fallback), so the faction skins that follow Coven
+ * fail here the moment one of them loses a slot.
  *
- * Two registries, two techniques:
- *  - The RAIL skins receive their slots as already-rendered `ReactNode` props,
- *    so sentinel nodes prove passthrough directly — and prove, by construction,
- *    that the skin could not have recomputed anything.
- *  - The SEAL skins mount the real `StakesTiles` / `RaceRoster` / `SealActions`,
- *    so the assertion is on the anchors those slots leave behind. The game
- *    config is mocked; this is about composition, not transport.
+ * The seal skins mount the real `StakesTiles` / `RaceRoster` / `SealActions`, so
+ * the assertion is on the anchors those slots leave behind. The game config is
+ * mocked; this is about composition, not transport.
+ *
+ * THE RAIL HALF OF THIS FILE IS GONE (#1090). `duelRail` / `mobileDuelRail` were
+ * not merely de-registered like `praxisDetail` was — the surfaces themselves
+ * were retired, because the duel is no longer dispatched at all: it is a card
+ * inside the praxis-detail archetype (`pages/praxisDetail/DuelCard.tsx`), and
+ * its readings are guarded by `praxisDetail/__tests__/duelCard.test.tsx`. There
+ * is no registry left to walk, which is why this is a deletion and not a
+ * zero-entry loop.
  */
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, it, expect, vi } from 'vitest'
@@ -24,7 +28,6 @@ import type { DuelDetailOut, DuelSideOut } from '../../../api/duel'
 // Type-only, so these are erased before the vi.mock hoist and can't defeat the
 // dynamic imports below.
 import type { DuelSealConfirmProps } from '../DuelSealConfirm'
-import type { DuelRailSkinProps } from '../../../pages/praxisDetail/DuelCrossLink'
 
 function faction(slug: string, win: number, lose: number): FactionConfigOut {
   return {
@@ -48,7 +51,6 @@ vi.mock('../../../hooks/useGameConfig', () => ({
 }))
 
 const { DefaultDuelSealConfirm } = await import('../DuelSealConfirm')
-const { DefaultDuelRail } = await import('../../../pages/praxisDetail/DuelCrossLink')
 // Loaded after the mock, like the dispatchers above. surfaceMap resolves the
 // faction skins lazily, so the manifests are the only registration seam.
 const { surfaceMap } = await import('../../../factions')
@@ -219,88 +221,5 @@ describe('duel seal skins render every slot', () => {
       />,
     )
     expect(html.replace(/<[^>]*>/g, ' ')).toContain('Seal the duel?')
-  })
-})
-
-describe('duel rail skins render every slot', () => {
-  const skins: [string, ComponentType<DuelRailSkinProps>][] = [
-    ['default', DefaultDuelRail],
-    ...Object.entries(surfaceMap('duelRail')),
-    ...Object.entries(surfaceMap('mobileDuelRail')).map(
-      ([slug, skin]) => [`${slug} (mobile)`, skin] as [string, ComponentType<DuelRailSkinProps>],
-    ),
-  ]
-
-  it.each(skins)('%s passes headline, tally, note, body and actions through', (_name, Skin) => {
-    const html = renderToStaticMarkup(
-      <Skin
-        accent="var(--faction-snide)"
-        soft="var(--faction-snide-light)"
-        maxWidth="42rem"
-        headline={<span>SLOT_HEADLINE</span>}
-        tally={<span>SLOT_TALLY</span>}
-        note={<span>SLOT_NOTE</span>}
-        body={<span>SLOT_BODY</span>}
-        actions={<span>SLOT_ACTIONS</span>}
-      />,
-    )
-    expect(html).toContain('SLOT_HEADLINE')
-    expect(html).toContain('SLOT_TALLY')
-    expect(html).toContain('SLOT_NOTE')
-    expect(html).toContain('SLOT_BODY')
-    // #752: the owner's action row is a seventh slot every skin must place. A
-    // skin that forgot to render it — leaving the submit/pull-back/forfeit
-    // control stranded off-screen — fails here, in every registered face.
-    expect(html).toContain('SLOT_ACTIONS')
-  })
-
-  /**
-   * #769: every rail skin set `fontSize: var(--text-sm)` (9px) on its wrapper,
-   * so the roster, next-step line and stakes copy inherited half the 18px
-   * content floor — functional text, at Label size, with no line of that text
-   * naming a size anywhere. The slots now own their size and a frame owns none.
-   *
-   * The assertion is on the frame, not on the slots: the sentinels passed in
-   * carry no styling, so ANY Label-tier font-size in the output came from the
-   * skin's own chrome. A skin needing a small size for genuine ornament should
-   * put it on that ornament's element with a raw value and an ornament comment
-   * (WORLD_ZERO_STYLE §4a) — not on a container the slots sit inside.
-   */
-  const LABEL_TIER = ['--text-xs', '--text-sm', '--text-base', '--text-md', '--text-lg']
-
-  it.each(skins)('%s does not impose a Label-tier size on its slots', (_name, Skin) => {
-    const html = renderToStaticMarkup(
-      <Skin
-        accent="var(--faction-snide)"
-        soft="var(--faction-snide-light)"
-        maxWidth="42rem"
-        headline={<span>SLOT_HEADLINE</span>}
-        tally={<span>SLOT_TALLY</span>}
-        note={<span>SLOT_NOTE</span>}
-        body={<span>SLOT_BODY</span>}
-        actions={<span>SLOT_ACTIONS</span>}
-      />,
-    )
-    const sizes = html.match(/font-size:\s*var\((--text-[a-z]+)\)/g) ?? []
-    const offenders = sizes.filter((decl) => LABEL_TIER.some((token) => decl.includes(token)))
-    expect(offenders).toEqual([])
-  })
-
-  // declined / forfeited legitimately arrive with no race left AND no action row
-  // (#752: `actions` is null there too); a skin must not crash or invent either.
-  it.each(skins)('%s survives the empty-body states', (_name, Skin) => {
-    const html = renderToStaticMarkup(
-      <Skin
-        accent="var(--faction-snide)"
-        soft="var(--faction-snide-light)"
-        maxWidth="42rem"
-        headline={<span>SLOT_HEADLINE</span>}
-        tally={null}
-        note={null}
-        body={null}
-        actions={null}
-      />,
-    )
-    expect(html).toContain('SLOT_HEADLINE')
   })
 })

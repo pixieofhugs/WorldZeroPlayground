@@ -3,10 +3,17 @@
  * `praxisCard/mobile/shared.tsx` uses.
  *
  * Skins own the FRAME (chrome, fonts, ornament). These slots own the LOGIC —
- * the stakes arithmetic, the per-side cast status, and the per-`DuelStatus`
- * branching — so it is written once and every faction inherits the same
- * (correct) rules. A skin may rearrange these slots; it must never drop one and
- * must never re-implement one.
+ * the stakes arithmetic and the per-side cast status — so it is written once and
+ * every faction inherits the same (correct) rules. A skin may rearrange these
+ * slots; it must never drop one and must never re-implement one.
+ *
+ * THE CONSUMERS ARE THE DUEL SEAL / FORFEIT DIALOGS (#1090). This file used to
+ * serve the praxis-detail duel rail as well, which is why `NextStepLine` — one
+ * line of narration per `DuelStatus` — lived here. The rail is gone and detail
+ * narrates outcomes only, so that slot went with it; every export below is still
+ * mounted by the seal skins (`components/duel/*DuelSealConfirm.tsx`) or, for
+ * `duelSides`, by the composer's waiting surface. Checked per export, not per
+ * folder — the #1068 trap.
  *
  * The rules these encode, all verified against the backend:
  *  - Stakes are per-faction, not a fixed 1.5×/0.5×: `duel_win_modifier` /
@@ -33,17 +40,16 @@
  * `collabCopy`-style dynamic resolver. Per-faction identity lives in the skins.
  *
  * TYPE SIZE (#769). Every slot here sets its OWN size, via a `.content-*` role
- * class, and no rail skin may set `fontSize` on its wrapper. That inversion is
- * the fix for #769: the rail wrappers each carried `fontSize: var(--text-sm)`
- * (9px, Label tier), and because these slots inherited it, the roster, the
- * next-step line and the stakes copy — all functional text a player reads — sat
- * at half the 18px content floor. `DuelSlotTheme` deliberately carries no size
- * field: a skin owns font, colour and ornament, never type size
- * (WORLD_ZERO_STYLE §4a). Genuine Label-tier bits keep their own token
- * explicitly — the tile captions stay on `.eyebrow`, the seal buttons on
- * `--text-sm` as button chrome.
+ * class, and no skin may set `fontSize` on its wrapper. That inversion is the
+ * fix for #769: the rail wrappers each carried `fontSize: var(--text-sm)` (9px,
+ * Label tier), and because these slots inherited it, the roster, the next-step
+ * line and the stakes copy — all functional text a player reads — sat at half
+ * the 18px content floor. `DuelSlotTheme` deliberately carries no size field: a
+ * skin owns font, colour and ornament, never type size (WORLD_ZERO_STYLE §4a).
+ * Genuine Label-tier bits keep their own token explicitly — the tile captions
+ * stay on `.eyebrow`, the seal buttons on `--text-sm` as button chrome.
  */
-import type { CSSProperties, ReactNode } from 'react'
+import type { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { DuelDetailOut, DuelSideOut, DuelStatus } from '../../api/duel'
 import { useGameConfig } from '../../hooks/useGameConfig'
@@ -316,130 +322,6 @@ export function RaceRoster({
       />
       <RosterRow name={foe.display_name} cast={foe.is_submitted} theme={theme} />
     </ul>
-  )
-}
-
-/* -------------------------------------------------------------------------- */
-/* NextStepLine — what you are waiting for                                    */
-/* -------------------------------------------------------------------------- */
-
-/**
- * One line per `DuelStatus`, explicit — never a fallthrough (#717 shipped a
- * settled tally to `pending` and `declined` precisely because the old component
- * had one). The forfeited case pre-empts the status, since a forfeit can land
- * on any live duel.
- */
-export function NextStepLine({
-  duel,
-  me,
-  foe,
-  theme,
-  spectator = false,
-}: {
-  duel: DuelDetailOut
-  me: DuelSideOut
-  foe: DuelSideOut
-  theme: DuelSlotTheme
-  /**
-   * A viewer who is not a party to the duel (#999): every line is neutral
-   * third-person, keyed off the two sides' names, never "You". `me` is the
-   * challenger side under a spectator (the `duelSides` fallback), `foe` the
-   * opponent — so the names read correctly regardless of which page it renders on.
-   */
-  spectator?: boolean
-}) {
-  const { t } = useTranslation('praxis')
-  const style: CSSProperties = {
-    fontFamily: theme.bodyFont ?? DEFAULT_THEME.bodyFont,
-    color: theme.muted ?? DEFAULT_THEME.muted,
-  }
-
-  if (duel.forfeited_by_character_id != null) {
-    const meForfeited = duel.forfeited_by_character_id === me.character_id
-    if (spectator) {
-      return (
-        <p style={style} className="mt-2 content-text">
-          {t('duelNextStep.spectator.wonByDefault', {
-            loser: meForfeited ? me.display_name : foe.display_name,
-            winner: meForfeited ? foe.display_name : me.display_name,
-          })}
-        </p>
-      )
-    }
-    return (
-      <p style={style} className="mt-2 content-text">
-        {meForfeited
-          ? t('duelNextStep.youForfeited')
-          : t('duelNextStep.wonByDefault', { name: foe.display_name })}
-      </p>
-    )
-  }
-
-  let line: string
-  if (spectator) {
-    switch (duel.status) {
-      case 'pending':
-        line = t('duelNextStep.spectator.pending', {
-          challenger: me.display_name,
-          opponent: foe.display_name,
-        })
-        break
-      case 'declined':
-        line = t('duelNextStep.spectator.declined', { opponent: foe.display_name })
-        break
-      case 'active':
-        line = t('duelNextStep.spectator.active')
-        break
-      case 'settled':
-        line = t('duelNextStep.spectator.settled')
-        break
-      case 'resolved':
-        line =
-          duel.winner_character_id == null
-            ? t('duelNextStep.spectator.resolvedNoWinner')
-            : t('duelNextStep.spectator.resolvedWon', {
-                name:
-                  duel.winner_character_id === me.character_id
-                    ? me.display_name
-                    : foe.display_name,
-              })
-        break
-    }
-  } else {
-    switch (duel.status) {
-      case 'pending':
-        line = t('duelNextStep.pending', { name: foe.display_name })
-        break
-      case 'declined':
-        line = t('duelNextStep.declined', { name: foe.display_name })
-        break
-      case 'active':
-        // Both sides having cast is what SETTLES a duel, so inside `active` at
-        // most one side is submitted. Either they owe a cast, or you do.
-        line = me.is_submitted
-          ? t('duelNextStep.activeWaitingOnThem', { name: foe.display_name })
-          : t('duelNextStep.activeWaitingOnYou', { name: foe.display_name })
-        break
-      case 'settled':
-        line = t('duelNextStep.settled')
-        break
-      case 'resolved':
-        // The era closed and the outcome is frozen (ADR-0052). A null winner is a
-        // tie or a no-contest (an `active` duel that never became votable).
-        line =
-          duel.winner_character_id == null
-            ? t('duelNextStep.resolvedNoWinner')
-            : duel.winner_character_id === me.character_id
-              ? t('duelNextStep.resolvedYouWon', { name: foe.display_name })
-              : t('duelNextStep.resolvedYouLost', { name: foe.display_name })
-        break
-    }
-  }
-
-  return (
-    <p style={style} className="mt-2 content-text">
-      {line}
-    </p>
   )
 }
 

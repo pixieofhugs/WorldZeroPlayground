@@ -779,9 +779,10 @@ export function PublishButton({
       ? deriveCollabGate(praxis.members, state.currentCharacterId)
       : null;
   // Neutral wording, deliberately: no forfeit language and no consequence
-  // dialog before the duel settles (#718 rejected that framing once already —
-  // see CovenDuelRail's header). Shared voice for now, like the other mechanics
-  // lines in `SHARED_DEFAULT_COLLAB_KEYS`.
+  // dialog before the duel settles (#718 rejected that framing once already;
+  // `praxisDetail/__tests__/duelForfeitWarning.test.tsx` is the standing guard).
+  // Shared voice for now, like the other mechanics lines in
+  // `SHARED_DEFAULT_COLLAB_KEYS`.
   const idleLabel = duelPullBack
     ? collabCopy(praxis?.task_faction_slug, "duelPullBackAction")
     : collab && praxis
