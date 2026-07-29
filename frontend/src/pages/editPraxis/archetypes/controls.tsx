@@ -885,6 +885,18 @@ export interface PublishButtonSkin {
   idleLabel: ReactNode;
   busyLabel: ReactNode;
   ornament?: ReactNode;
+  /**
+   * Drawn AFTER the label; `ornament` is drawn before it (#1186).
+   *
+   * The Singularity composer's submit is a terminal prompt, so its block cursor
+   * has to trail the word rather than lead it. Folding it into `idleLabel`
+   * would have lost it in every state this control relabels for itself — the
+   * collab consensus gate and the duel pull-back both replace `idleLabel` with
+   * `collabCopy`, and the busy state replaces it too, while the cursor is
+   * chrome that belongs to the button in all of them. Additive and optional, so
+   * every existing caller is byte-identical.
+   */
+  trailingOrnament?: ReactNode;
 }
 
 export function PublishButton({
@@ -960,6 +972,7 @@ export function PublishButton({
     >
       {skin.ornament}
       {state.submitting ? skin.busyLabel : idleLabel}
+      {skin.trailingOrnament}
     </button>
   );
 }
