@@ -43,7 +43,9 @@ const GOLDEN_ANGLE_DEG = 137.5
  * `FACTION_RAINBOW_ORDER[i % length]`: any mismatch wraps the cycle and lands
  * the same hue on two ADJACENT petals (petal 0 and the last petal are
  * neighbours on the circle), which reads as one fat blob rather than a
- * spectrum. Albescent leaving the order (#783) took this from 7 to 6.
+ * spectrum. Both petal layers read it, so the count moves with the array and
+ * never with a literal: Albescent leaving the order (#783) took it to 6, and
+ * WOW rejoining with a yellow (#812) took it back to 7.
  */
 const PETAL_COUNT = FACTION_RAINBOW_ORDER.length
 // Bloom diameters (px). Deliberately the same ramp as the sky's orbs so the two
@@ -269,7 +271,10 @@ export default function Meadow({
   )
 }
 
-/** A single flower: petals in the faction hue, avatar as the centre disc.
+/** A single flower: two petal layers in the faction hue — a large soft wash
+ *  beneath a smaller solid petal — with the avatar as the centre disc. Both
+ *  layers walk the spectrum for an unaffiliated player; a bloom missing its wash
+ *  reads as a ring of dots rather than a flower (#805).
  *  Exported so the legend can draw the same glyph rather than a second flower. */
 export function MeadowBloom({
   size,
@@ -285,14 +290,25 @@ export function MeadowBloom({
   // slug has one hue or seven before asking for a colour (ADR-0039). See the
   // isKnownFaction docblock in utils/factions for why `na` is not known (#749).
   const known = isKnownFaction(slug)
-  const petalColor = (index: number): string => {
-    if (champion) return 'var(--meadow-champion-petal)'
-    // Unaffiliated wears the whole spectrum — one faction per petal, canonical
-    // order — rather than borrowing any single faction's hue (ADR-0039).
-    if (!known) return factionCssVar(FACTION_RAINBOW_ORDER[index % FACTION_RAINBOW_ORDER.length])
-    return factionCssVar(slug)
-  }
-  const washColor = champion ? 'var(--meadow-champion-petal)' : factionCssVar(slug, 'light')
+  /** Which slug paints petal `index`. Unaffiliated wears the whole spectrum —
+   *  one faction per petal, canonical order — rather than borrowing any single
+   *  faction's hue (ADR-0039). */
+  const petalSlug = (index: number): string | null =>
+    known ? slug : FACTION_RAINBOW_ORDER[index % FACTION_RAINBOW_ORDER.length]
+  const petalColor = (index: number): string =>
+    champion ? 'var(--meadow-champion-petal)' : factionCssVar(petalSlug(index))
+  /**
+   * The soft outer petal, a half-step off the solid one. It walks the SAME
+   * spectrum (#805): an SVG `fill` accepts a gradient, so this is a fill and not
+   * one of ADR-0039's scalar contexts — nothing here was ever owed grey. It used
+   * to be suppressed outright for unaffiliated players (`fill="none"`), which
+   * left them with only the hard inner petals and made four of the twelve blooms
+   * read as a scatter of dots beside everyone else's flowers.
+   */
+  const washColor = (index: number): string =>
+    champion
+      ? 'var(--meadow-champion-petal)'
+      : factionCssVar(petalSlug(index), 'light')
 
   return (
     <span style={{ position: 'relative', display: 'block', width: size, height: size }}>
@@ -305,7 +321,7 @@ export function MeadowBloom({
             cy={28}
             rx={17}
             ry={26}
-            fill={known || champion ? washColor : 'none'}
+            fill={washColor(index)}
             transform={`rotate(${(index * 360) / PETAL_COUNT + 180 / PETAL_COUNT} 50 50)`}
           />
         ))}
