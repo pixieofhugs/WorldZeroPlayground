@@ -22,7 +22,6 @@ const UaFactionPage = lazyArchetype(() => import('../pages/factionDetail/mobileA
 const UaFeedFrame = lazyArchetype(() => import('../components/feed/UaFeedFrame'))
 const UaHome = lazyArchetype(() => import('../pages/fieldDesk/mobileArchetypes/UaHome'))
 const UaMobileDuelSealConfirm = lazyArchetype(() => import('../components/duel/UaMobileDuelSealConfirm'))
-const UaMobileEditPraxis = lazyArchetype(() => import('../pages/editPraxis/mobileArchetypes/UaComposer'))
 const UaMobilePraxisCard = lazyArchetype(() => import('../components/praxisCard/mobile/UaMobilePraxisCard'))
 const UaProfileBody = lazyArchetype(() => import('../pages/characterProfile/archetypes/UaProfileBody'))
 const UaScoreStamp = lazyArchetype(() => import('../components/praxisCard/scoreStamp/UaScoreStamp'))
@@ -60,7 +59,6 @@ export const UA_MANIFEST: FactionManifest = {
   factionBody: () => UaFactionBody,
   profileBody: () => UaProfileBody,
   mobilePraxisCard: () => UaMobilePraxisCard,
-  mobileEditPraxis: () => UaMobileEditPraxis,
   mobileFactionPage: () => UaFactionPage,
   mobileFieldDesk: () => UaHome,
 }

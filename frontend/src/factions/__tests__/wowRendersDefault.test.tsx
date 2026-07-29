@@ -50,9 +50,10 @@ function Sentinel() {
 
 /**
  * The surfaces WOW has skinned: #821's three, the `scoreStamp` its own chronicle
- * plate claims in #840 (ADR-0049), #835's DESKTOP edit-praxis composer and, as
- * of #836, its `mobileEditPraxis` twin — the composer is the one surface WOW
- * dresses on BOTH form factors — #897's `sigil` (the crest) and the `avatar`
+ * plate claims in #840 (ADR-0049), #835's edit-praxis composer — which #836 gave
+ * a mobile twin and #1181 collapsed back into one responsive component when
+ * ADR-0065 retired the `mobileEditPraxis` SURFACE, so the single `editPraxis`
+ * row below now serves WOW at both widths — #897's `sigil` (the crest) and the `avatar`
  * that mounts it, #899's three repeating desktop surfaces (the decree
  * `taskCard`, the `comment` voice and the herald's-dispatch `feedFrame`),
  * #900's four page-level desktop surfaces (`factionHero`, `backdrop`,
@@ -111,7 +112,6 @@ const WOW_SKINNED: ReadonlySet<FactionSurface> = new Set([
   'scoreStamp',
   'vote',
   'editPraxis',
-  'mobileEditPraxis',
   'factionHero',
   'backdrop',
   'profileBody',
@@ -124,7 +124,7 @@ const WOW_SKINNED: ReadonlySet<FactionSurface> = new Set([
   'metaTaskSeal',
 ])
 
-describe('wow is partly skinned: twenty-three surfaces claimed, the rest fall back', () => {
+describe('wow is partly skinned: twenty-two surfaces claimed, the rest fall back', () => {
   it('registers a manifest now (#821)', () => {
     expect(FACTION_MANIFESTS.map((manifest) => manifest.slug)).toContain('wow')
   })

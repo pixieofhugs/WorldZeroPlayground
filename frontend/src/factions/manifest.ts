@@ -134,13 +134,23 @@ export interface FactionManifest {
   readonly duelSeal?: Lazy<ComponentType<DuelSealConfirmProps>>
 
   // ─── Mobile twins (#494 form-factor dispatch) ──────────────────────────────
-  // Task cards, task detail and praxis detail have no mobile twin: ADR-0056,
-  // ADR-0058 and ADR-0061/#1085 each collapsed their surface to one responsive
-  // component per faction and retired it (#1044, #1068, #1089). All three
-  // licences are scoped to their own surface — ADR-0035 still governs every
-  // twin below.
+  // Task cards, task detail, praxis detail and the EDIT-PRAXIS COMPOSER have no
+  // mobile twin: ADR-0056, ADR-0058, ADR-0061/#1085 and ADR-0065/#1181 each
+  // collapsed their surface to one responsive component per faction and retired
+  // it (#1044, #1068, #1089, #1181). All four licences are scoped to their own
+  // surface — ADR-0035 still governs every twin below, and ADR-0065 says in
+  // terms that it licenses no further collapse: the next surface needs its own
+  // record, the same way.
+  //
+  // `mobileEditPraxis` is gone rather than kept empty, which is the same choice
+  // `duelRail` made and the OPPOSITE of what `praxisDetail` did (#1089 kept its
+  // field with zero registrations because the epic-#1085 designs were about to
+  // re-register there). ADR-0065 §2 picks the retirement deliberately: all nine
+  // composer designs were committed before a single archetype was rebuilt, so
+  // the mobile skins are superseded by a committed design rather than held open
+  // pending one. There is no partial-registration story for a surface that no
+  // longer exists, and no future issue should try to re-register it.
   readonly mobilePraxisCard?: Lazy<ComponentType<MobilePraxisCardProps>>
-  readonly mobileEditPraxis?: Lazy<Stateful<EditPraxisState>>
   readonly mobileFactionPage?: Lazy<Stateful<FactionDetailState>>
   readonly mobileFieldDesk?: Lazy<Stateful<FieldDeskHomeState>>
   readonly mobileCreateCharacter?: Lazy<Stateful<CreateCharacterState>>
@@ -183,7 +193,6 @@ export const SURFACE_KEYS = [
   'profileBody',
   'duelSeal',
   'mobilePraxisCard',
-  'mobileEditPraxis',
   'mobileFactionPage',
   'mobileFieldDesk',
   'mobileCreateCharacter',
