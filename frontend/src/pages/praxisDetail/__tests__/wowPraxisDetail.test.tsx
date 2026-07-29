@@ -161,6 +161,31 @@ function state(overrides: Partial<PraxisDetailState> = {}): PraxisDetailState {
   };
 }
 
+/** A two-sided duel at a given status; this praxis is the challenger's. */
+function duel(status: DuelDetailOut["status"]): DuelDetailOut {
+  const side = (praxisId: number | null, id: number, name: string, votes: number) => ({
+    praxis_id: praxisId,
+    character_id: id,
+    display_name: name,
+    faction_slug: "wow",
+    avatar_url: "",
+    points_from_votes: votes,
+    is_submitted: true,
+  });
+  return {
+    id: 5,
+    task_id: 7,
+    status,
+    forfeited_by_character_id: null,
+    challenger: side(1, 3, "Wren Abalone", 18),
+    opponent: side(2, 4, "Bram Quilling", 15.4),
+    viewer_is_participant: false,
+    winner_character_id: null,
+    challenger_final_points: null,
+    opponent_final_points: null,
+  };
+}
+
 function render(
   next: PraxisDetailState,
   formFactor: "desktop" | "mobile" = "desktop",
@@ -361,15 +386,21 @@ describe("WOW praxis detail — the state axes", () => {
     const declined = render(
       state({
         praxis: { ...PRAXIS, type: "duel", duel_id: 5 },
-        duel: {
-          id: 5,
-          status: "declined",
-          forfeited_by_character_id: null,
-          sides: [],
-        } as unknown as DuelDetailOut,
+        duel: duel("declined"),
       }),
     );
-    expect(declined.text, "nothing about a duel that never happened").not.toContain("Duel");
+    expect(declined.text, "nothing about a duel that never happened").not.toContain("The duel");
+
+    // A settled duel DOES draw one, wearing this page's plate chrome and its
+    // section head rather than the card's own.
+    const settled = render(
+      state({
+        praxis: { ...PRAXIS, type: "duel", duel_id: 5 },
+        duel: duel("settled"),
+      }),
+    );
+    expect(settled.text, "the duel card is mounted").toContain("The duel");
+    expect(settled.text, "and reads the live standing, never a verdict").toContain("live");
   });
 
   it("renders as visitor, owner and steward", () => {
