@@ -10,9 +10,37 @@ import i18n from '../../i18n'
  * not the words. Faction issues must not append to or edit these keys.
  */
 
+/**
+ * The kicker key for each of the 15 backend feed types, written out rather than
+ * interpolated. The catalog is a TYPED resource here, so `` i18n.t(`feed:kicker.
+ * ${type}`) `` on an unconstrained string does not compile — and a literal map
+ * is the better shape anyway: it is the checklist of the 15, and an unnamed type
+ * lands on the fallback instead of printing a raw key at the player.
+ */
+const KICKER_KEY = {
+  friend_completion: 'feed:kicker.friend_completion',
+  foe_completion: 'feed:kicker.foe_completion',
+  vote_on_mine: 'feed:kicker.vote_on_mine',
+  foe_taunt: 'feed:kicker.foe_taunt',
+  friend_signup: 'feed:kicker.friend_signup',
+  friend_defection: 'feed:kicker.friend_defection',
+  global_task: 'feed:kicker.global_task',
+  collaborator_submitted: 'feed:kicker.collaborator_submitted',
+  awaiting_submission: 'feed:kicker.awaiting_submission',
+  nudge: 'feed:kicker.nudge',
+  era_announcement: 'feed:kicker.era_announcement',
+  invitation_letter: 'feed:kicker.invitation_letter',
+  duel_challenge: 'feed:kicker.duel_challenge',
+  collab_invite: 'feed:kicker.collab_invite',
+  comment_mention: 'feed:kicker.comment_mention',
+} as const
+
 /** Feed types the archive tags "still waiting" — archiving never answers
  *  anything, so an archived challenge or invite is still open (ADR-0066). */
-export const STILL_WAITING_TYPES = new Set(['duel_challenge', 'collab_invite'])
+export const STILL_WAITING_TYPES: ReadonlySet<string> = new Set([
+  'duel_challenge',
+  'collab_invite',
+])
 
 /**
  * The one feed type that cannot be archived. It is *state*, not an event: it
@@ -21,7 +49,9 @@ export const STILL_WAITING_TYPES = new Set(['duel_challenge', 'collab_invite'])
  * forever. The backend refuses it with a 400; the UI must not offer the control
  * at all rather than render it disabled.
  */
-export const NON_ARCHIVABLE_TYPES = new Set(['awaiting_submission'])
+export const NON_ARCHIVABLE_TYPES: ReadonlySet<string> = new Set([
+  'awaiting_submission',
+])
 
 export function isArchivable(item: ActivityFeedItem): boolean {
   return !NON_ARCHIVABLE_TYPES.has(item.type)
@@ -29,11 +59,8 @@ export function isArchivable(item: ActivityFeedItem): boolean {
 
 /** The neutral name for a card's kind — the chassis kicker band's label. */
 export function feedKicker(type: string): string {
-  const key = `feed:kicker.${type}`
-  const label = i18n.t(key)
-  // i18next returns the key itself when it is missing; a type we have not named
-  // must still draw a band rather than print a raw key at the player.
-  return label === key ? i18n.t('feed:kicker.fallback') : label
+  const key = KICKER_KEY[type as keyof typeof KICKER_KEY]
+  return i18n.t(key ?? 'feed:kicker.fallback')
 }
 
 /**
