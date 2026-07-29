@@ -39,10 +39,6 @@ layout and API contract (epic #1085).
 **Praxis detail is one shared page. A faction skin brings dress and no
 copy.**
 
-*(Narrowed by the Amendment below, 2026-07-28: "and no copy" now binds only
-the page's moderation and system chrome. Content slots carry the skin's
-voice. Everything else in this Decision stands unchanged.)*
-
 - A single neutral `detail.*` block; every archetype reads the same keys.
   Where a design's word differs from the domain noun in `CONTEXT.md`, the
   domain noun wins.
@@ -76,8 +72,6 @@ made in #1030.
 - The per-faction `detail.<faction>.*` blocks are deleted as each archetype
   goes.
 - A future faction skin cannot introduce copy on this surface, only dress.
-  *(Narrowed 2026-07-28 — see the Amendment. A skin may introduce copy in the
-  page's content slots; it still cannot touch the chrome.)*
 - Extends ADR-0057's doctrine to a second surface. ADR-0016's
   presentation/voice boundary now carries two per-surface exceptions.
 
@@ -91,69 +85,55 @@ leaving copy free re-grows the catalog being deleted, and the nine
 task-detail designs proved that per-design "neutral" wording fragments even
 when nobody intends voice.
 
-## Amendment (2026-07-28) — voice returns to the content slots; chrome stays neutral
+## Amendment (2026-07-28) — written, then withdrawn the same day
 
-Raised by the seven skin issues (#1117–#1123), each of which specifies its
-faction's words for the same six or so slots. This amendment is additive:
-nothing above is deleted, and the two statements it narrows carry a dated
-pointer to here.
+An amendment titled *"voice returns to the content slots; chrome stays
+neutral"* was written into this ADR on 2026-07-28 and **withdrawn the same
+day by owner ruling**, before any voiced pass shipped. It is recorded here
+rather than silently deleted so the record stays honest.
 
-### The rule
+**What it said.** Raised by the eight skin issues (#1117–#1123, #1140), each
+of which specifies its faction's words for the same six or so slots: content
+slots (write-up, proof, members, metatasks, duel, comments, vote, voters)
+would carry the skin's voice, while the report card, steward bar, moderation
+banners and errors stayed neutral and shared.
 
-**Content slots carry the skin's voice. Moderation and system chrome do
-not.**
+**Why it was withdrawn.** The amendment conceded its own cost in writing —
+that the near-synonym headings this ADR's Context enumerates would re-grow,
+"this time as a deliberate, designed set rather than accreted drift". The
+owner ruled that the Alternative rejected above stays rejected: a designed
+set of near-synonyms is still the catalog this ADR exists to delete. The
+Decision and Consequences above are restored to their unnarrowed wording.
 
-- **Voiced** — the page's content slots: the body/write-up heading, the media
-  or proof heading, the crew/members heading, the metatasks heading, the duel
-  heading, the comments heading, the post button, and the vote/voters labels.
-  A skin registers its own block for these.
-- **Neutral, shared, unchanged** — the **report/flag card**, the **steward
-  bar**, the **moderation banners** (crown, flagged, failed) and the
-  **errors**. In the catalog these are `detail.flag.*`, `detail.admin.*`,
-  `detail.banners.*` and `detail.errors.*`: one set of words, read by every
-  skin, in every faction's dress. All eight faction designs draw them this
-  way — the report card is deliberately outside the costume, with its own
-  neutral token set.
+### The standing rule
 
-### What this narrows
+**One shared neutral `detail.*` block. A faction skin brings dress and no
+copy — frame, type, ornament, motion.** No `detail.<faction>.*` block on this
+surface, for any faction, including the eight skins built under epic #1085.
 
-Only the blanket "no copy". The Decision's "a faction skin brings dress and no
-copy" and the Consequence "a future faction skin cannot introduce copy on this
-surface" now apply to **system chrome alone**. The layout contract, the single
-shared API contract, and the comments boundary are untouched.
+### What is kept
 
-### Why — and what the original argument keeps
+The per-faction vocabularies are **recorded, not built**. Each skin issue
+(#1117–#1123, #1140) keeps its faction's words verbatim under its *Voice*
+heading, so a later voiced pass — should one ever be ruled — has the words
+already, without re-deriving them from the designs.
 
-The rejected alternative above ("Voice returns with each design") was rejected
-because free copy re-grows the deleted catalog and because per-design
-"neutral" wording fragments. **That argument is not overturned; it is where
-the line is now drawn.** It is exactly true of chrome, and chrome is where it
-matters most: a report card, a steward action or a failure notice is the
-*platform* speaking, and it has to read identically everywhere or it stops
-reading as the system at all. Fragmenting those words costs trust, not
-flavour.
+### The correction that followed
 
-What the amendment accepts instead is the rejected alternative's *premise*,
-limited to content: a praxis is somebody's account of a thing they did, so
-naming that account is the faction's line to speak. This is the same boundary
-this ADR already drew for comment rows — **the neutral rule stops at the
-speaker's voice** — applied one step out. A comment row is the author
-speaking; a content slot is the faction's page speaking about a member's
-work; the chrome is the platform speaking. One question ("whose voice is
-this?"), three consistent answers.
-
-The cost is taken knowingly: the near-synonym body and media headings this
-ADR's Context complains about will re-grow, this time as a deliberate,
-designed set rather than accreted drift. That set is the deliverable of
-#1117–#1123, not a side effect.
+The ruling landed as a comment on each skin issue after four skins had
+already merged against the withdrawn amendment: `detail.coven.*` (#1152),
+`detail.ephemerists.*` (#1156), `detail.snide.*` (#1159) and `detail.wow.*`
+(#1160). Those four blocks were deleted and their archetypes repointed to the
+shared neutral keys; no neutral key needed adding, because every voiced slot
+already had a neutral twin that `DefaultPraxisDetail` reads. Albescent,
+Singularity and Everymen were built neutral and were untouched.
 
 ### Relations, restated
 
-- **ADR-0057** (task detail carries no faction voice) is still extended, but
-  now only for chrome. The two surfaces legitimately differ: a task is the
-  system's posted assignment, a praxis is a member's account of doing it.
+- **ADR-0057** (task detail carries no faction voice) is extended without
+  qualification: both surfaces carry neutral copy and faction dress.
 - **The comments boundary is unchanged and still out of scope.** Rows
   dispatch on `comment.author.faction_slug`; `comments.<faction>.*` and the
-  seven `*Comment` skins are not touched by this amendment any more than they
-  were by the original Decision, and must not be swept by inference from
-  either.
+  seven `*Comment` skins are not touched by this ADR, by the withdrawn
+  amendment, or by the correction that undid it, and must not be swept by
+  inference from any of the three.
