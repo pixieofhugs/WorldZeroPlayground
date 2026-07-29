@@ -460,9 +460,11 @@
      ONE INK IS WALKED DOWN from the design, the same way the clipping walked its
      pink: the `PTS` caption under the points blob is drawn in acid, and acid is a
      poster colour, not an ink — #b6ff2e measures 1.35:1 on the stock. It takes a
-     deep acid in the light half (4.8:1) and the bright one only where the ground
-     is dark. Acid stays bright everywhere it is a DRAWN THING: the masthead
-     rule, the blobs, the submit bar. */
+     deep acid in the light half and the bright one only where the ground is
+     dark. Measured against the ground it actually sits on, which is the task
+     slip's field rather than the sheet (#1028: contrast is a pairing): 4.7:1 on
+     the field, 5.2:1 on the stock. Acid stays bright everywhere it is a DRAWN
+     THING: the masthead rule, the blobs, the submit bar. */
   --faction-snide-composer-sheet: #f4f1e8; /* the xerox stock (FLIPS) */
   --faction-snide-composer-ink: #14110b; /* type on that stock (FLIPS) */
   --faction-snide-composer-muted: #5f5c50; /* the task's prose, the pill */
@@ -471,7 +473,7 @@
   --faction-snide-composer-rule: rgba(20, 17, 11, 0.5); /* a drawn hairline */
   --faction-snide-composer-bar: #14110b; /* masthead bar + the censor stripe */
   --faction-snide-composer-grain: rgba(20, 17, 11, 0.09); /* the raster */
-  --faction-snide-composer-acid-ink: #4a7500; /* acid that is TEXT, not a line */
+  --faction-snide-composer-acid-ink: #457000; /* acid that is TEXT, not a line */
 
   /* ── Singularity terminal border (blue brand) ── */
   --faction-singularity-border-hard: #2563eb;
