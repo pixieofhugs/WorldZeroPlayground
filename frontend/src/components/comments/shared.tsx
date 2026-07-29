@@ -111,6 +111,17 @@ export function MentionText({
 }
 
 /**
+ * Courtesy mirror of the backend's `MAX_COMMENT_BODY` (`backend/models/comment.py`).
+ *
+ * The backend is the real enforcement — the trust boundary (ADR-0006) — and it
+ * rejects an over-length body whatever the client does. This constant only buys
+ * the author a cap and a live count BEFORE they hit send. There is no endpoint
+ * that publishes server limits to the client, so the two literals are kept in
+ * step by hand; change one and change the other.
+ */
+export const MAX_COMMENT_BODY = 500
+
+/**
  * Shared composer body: textarea + post button. Each voice wraps this in its own
  * chrome and passes its accent (and optional surface/text colors for dark frames).
  */
@@ -123,7 +134,7 @@ export function ComposerControls({
   onAccent,
   bg = 'transparent',
   text = 'inherit',
-  maxLength,
+  maxLength = MAX_COMMENT_BODY,
   submitLabel,
   submittingLabel,
   onCancel,
@@ -142,7 +153,13 @@ export function ComposerControls({
   onAccent: string
   bg?: string
   text?: string
-  /** Cap the body length (edit mode passes MAX_COMMENT_BODY) + light a live count. */
+  /**
+   * Cap the body length + light a live count. DEFAULTS to `MAX_COMMENT_BODY`
+   * (#1205), so the cap is opt-out rather than opt-in: composing and editing are
+   * capped alike, and none of the nine voices can drop the cap by forgetting to
+   * pass it. It used to be edit-only, which is exactly how the composer ended up
+   * with no cap and no counter at all.
+   */
   maxLength?: number
   /** Override the default "Post" affordance (edit mode → "Save"). */
   submitLabel?: string
@@ -160,13 +177,23 @@ export function ComposerControls({
    * default is what keeps the seven voices that have not been redressed yet
    * (#1196–#1202) from silently losing it in the meantime.
    *
-   * It yields to the live character count, because `maxLength` is only set
-   * while EDITING, and the two states are mutually exclusive on the sheet.
+   * It no longer yields to the live character count: #1205 caps the composer
+   * too, so the count is always lit and "mutually exclusive" would have meant
+   * this affordance never showing again. The count sits beside the submit
+   * cluster instead, and this slot stays the hint's.
    */
   hint?: ReactNode
 }) {
   const { t } = useTranslation('praxis')
-  const disabled = submitting || value.trim().length === 0
+  /**
+   * A body already longer than the cap is the legacy case (#1205): nothing capped
+   * a comment below 2000 before, so a stored body can exceed 500. `maxLength` on
+   * a textarea blocks fresh typing but does NOT truncate a seeded value, so such
+   * a body loads intact and the author can delete their way under the cap. Block
+   * the save while it is over rather than letting the API answer with a 422.
+   */
+  const overLimit = value.length > maxLength
+  const disabled = submitting || value.trim().length === 0 || overLimit
   const mention = useMentionAutocomplete(value, onChange)
   return (
     <div>
@@ -216,21 +243,25 @@ export function ComposerControls({
           marginTop: 'var(--space-sm)',
         }}
       >
-        {maxLength != null ? (
+        {hint ?? (
+          // Same tier as the character count across the row, so a voice that
+          // never overrides it inherits whatever legibility that count already
+          // has on its ground.
           <span style={{ fontSize: 'var(--text-md)', color: 'var(--color-text-tertiary)' }}>
-            {t('comments.charCount', { count: value.length, max: maxLength })}
+            {t('comments.mentionHint')}
           </span>
-        ) : (
-          (hint ?? (
-            // Same tier as the character count it shares this slot with, so a
-            // voice that never overrides it inherits whatever legibility that
-            // count already has on its ground.
-            <span style={{ fontSize: 'var(--text-md)', color: 'var(--color-text-tertiary)' }}>
-              {t('comments.mentionHint')}
-            </span>
-          ))
         )}
         <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-sm)' }}>
+          <span
+            style={{
+              fontSize: 'var(--text-md)',
+              // Danger ink is the only signal that the save is blocked, so it
+              // carries the over-limit state rather than decorating it.
+              color: overLimit ? 'var(--color-danger)' : 'var(--color-text-tertiary)',
+            }}
+          >
+            {t('comments.charCount', { count: value.length, max: maxLength })}
+          </span>
           {onCancel && (
             <button
               onClick={onCancel}
