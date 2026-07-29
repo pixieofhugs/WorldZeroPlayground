@@ -2851,6 +2851,40 @@
   filter: drop-shadow(0 3px 7px rgba(0, 0, 0, 0.6));
 }
 
+/* Ephemerists — THE SLOW GLOW ON THE CORNICE (praxis detail v2, #1120). A gold
+   bloom drifts along the cavetto band at the head of the record: the one piece
+   of motion on a page whose whole subject is a thing already done.
+
+   All the pigment is here rather than in the archetype, which reserves the layer
+   and nothing else. The gold token already flips in the dark cascade, so this
+   needs no `[data-theme="dark"]` twin — the bloom follows the band it sits on.
+
+   Motion is opt-in under `no-preference`, the repo's inversion of the design's
+   `reduce → none`: the BASE state is the stilled one (a bloom at rest, centred),
+   so a reduced-motion reader gets the ornament rather than a blank band. Same
+   ordering as `.epg-glyph` above it. */
+@keyframes eph-cornice-glow {
+  0%, 100% { opacity: 0.3; transform: translateX(-9%); }
+  50% { opacity: 0.85; transform: translateX(9%); }
+}
+.eph-cornice-glow {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  opacity: 0.45;
+  background: radial-gradient(
+    38% 150% at 50% 100%,
+    color-mix(in srgb, var(--faction-ephemerists-plate-gold) 45%, transparent),
+    transparent 72%
+  );
+}
+@media (prefers-reduced-motion: no-preference) {
+  .eph-cornice-glow {
+    animation: eph-cornice-glow 16s ease-in-out infinite;
+  }
+}
+
 /* Coven — the spell slip's braid (#1023): a slender celtic thread with a gold
    bead at each crossing, tiled horizontally. It lives here rather than in the
    card because a data-URI SVG is a SEPARATE DOCUMENT — `var(--…)` inside one
