@@ -45,10 +45,25 @@ copy.**
 - The layout is the contract: main column + aside + comments region,
   collapsing to one stacked column on mobile.
 - **The neutral rule covers the page's own slots and stops at the speaker's
-  voice.** Comment rows dispatch on `comment.author.faction_slug`, not the
-  page's — a Snide player's comment reads Snide on a Coven praxis.
-  `comments.<faction>.*` and the seven `*Comment` skins are **out of scope**
-  and must not be swept later by inference from this ADR.
+  voice and the vote's vocabulary.** Comment rows dispatch on
+  `comment.author.faction_slug`, not the page's — a Snide player's comment
+  reads Snide on a Coven praxis. `comments.<faction>.*` and the seven
+  `*Comment` skins are **out of scope** and must not be swept later by
+  inference from this ADR.
+- The same test applies to vote tiers. `frontend/src/components/vote/voteReframes.ts`
+  defines a per-faction `VoteReframe` — Ephemerists' `apocryphal → canonical`,
+  rendered in roman numerals, the Everymen's `Fair → Legendary`, and five
+  more archetypes' own ladders — and a reframe is the **vote surface's**
+  vocabulary, not the page's: the same "whose voice is this?" test the
+  comment carve-out passes. A bare numeral tells the reader strictly less
+  than the tier word does, so flattening one to the other would be a loss of
+  meaning, not a gain in consistency. `voteReframes.ts` and the
+  `votes:<faction>.*` labels it resolves are **out of scope** and must not
+  be swept later by inference from this ADR. (This is a clarification of
+  the standing neutral rule, not a reopening of the amendment below — that
+  amendment proposed voice on content slots; this documents a boundary that
+  was always meant to sit outside the neutral rule, the way comments always
+  did.)
 
 ### Comments are the third region (amending ADR-0006)
 
@@ -137,3 +152,8 @@ Singularity and Everymen were built neutral and were untouched.
   seven `*Comment` skins are not touched by this ADR, by the withdrawn
   amendment, or by the correction that undid it, and must not be swept by
   inference from any of the three.
+- **The vote-tier boundary is the same shape and out of scope for the same
+  reason.** `voteReframes.ts` and the `votes:<faction>.*` labels it resolves
+  are not touched by this ADR, by the withdrawn amendment, or by the
+  correction that undid it, and must not be swept by inference from any of
+  the three.
