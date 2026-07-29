@@ -34,21 +34,21 @@
  *   wearing none of the plate dress every panel beside them wears. All eight
  *   faction designs draw them that way, deliberately outside the costume.
  *
- * ## Copy — ADR-0061 as amended (2026-07-28)
+ * ## Copy — none. ADR-0061, unamended
  *
- * Content slots carry this faction's voice; moderation and system chrome do not.
- * The voiced block is `detail.ephemerists.*` and it is **three keys**, because
- * the design only names three: the write-up ("Canonical record"), the duel
- * ("The disputation") and the owner's own actions ("Amend the record"). Every
- * other slot reads the shared neutral `detail.*` set — including
- * `detail.metatasks.heading`, whose neutral word ("Metatasks") is already the
- * design's word, so registering a second key for the same string would re-grow
- * exactly the near-synonym catalog ADR-0061 was written to delete. The banners,
- * the steward bar, the report card and the errors are the platform speaking and
- * stay wholly neutral.
+ * EVERY string on this page comes from the shared neutral `detail.*` block. The
+ * design's words — the write-up ("Canonical record"), the duel ("The
+ * disputation") and the owner cluster ("Amend the record") — are **recorded on
+ * #1118, not built**: the amendment that would have voiced them was written and
+ * withdrawn the same day (2026-07-28), and this skin was corrected back. What
+ * the Ephemerists bring here is frame, type, ornament and motion.
  *
- * Two of the design's voice strings are deliberately NOT built here, and neither
- * is an omission:
+ * Three further design strings were never built, and none is an omission:
+ *
+ * - **The owner label ("Amend the record").** It is the only slot with no
+ *   neutral twin, and a neutral heading there would restate the "edit this
+ *   praxis" link directly beneath it. The label is dropped and the cluster is
+ *   mounted bare, as on the other seven skins.
  *
  * - **The score rows ("Base" / "Concord").** `ScoreStamp` has carried the whole
  *   score rail since #1091 — disc, ruled rows, votes tally — dispatched on the
@@ -61,9 +61,8 @@
  *   `VOTE_REFRAMES` already specifies for this faction.
  * - **The comment composer's post button ("Inscribe").** The composer dispatches
  *   on the VIEWER's faction, not the page's — it is the author speaking, which
- *   ADR-0061 keeps out of scope for a page skin in both its original Decision
- *   and its amendment. `EphemeristsComment` already prompts "inscribe a note in
- *   the margin"; a page skin may not reach into it.
+ *   ADR-0061 keeps out of scope for a page skin. `EphemeristsComment` already
+ *   prompts "inscribe a note in the margin"; a page skin may not reach into it.
  *
  * ## Reused, not rebuilt
  *
@@ -559,17 +558,14 @@ export default function EphemeristsPraxisDetail({ state }: { state: PraxisDetail
         {praxis.title || praxis.task_title}
       </h1>
 
-      {/* The author's own hand on their own record. Labelled in the faction's
-          voice; the controls inside are the shared invariant ones, and they
-          render nothing at all for anyone but the owner. */}
-      {state.isOwner && (
-        <div style={{ marginBottom: "var(--space-md)" }}>
-          <div style={{ ...eyebrow, marginBottom: "var(--space-sm)" }}>
-            {t("detail.ephemerists.owner")}
-          </div>
-          <PraxisOwnerActions state={state} />
-        </div>
-      )}
+      {/* The author's own hand on their own record. The design labels this
+          cluster ("Amend the record"); that label was the ONE slot with no
+          neutral twin, and a neutral heading here would only restate the
+          "edit this praxis" link an inch below it — the near-synonym growth
+          ADR-0061 exists to prevent. So the label is gone and the cluster is
+          mounted bare, as it is on the other seven skins. The controls inside
+          are the shared invariant ones and render nothing for a non-owner. */}
+      <PraxisOwnerActions state={state} />
 
       {/* Task reference — what this record is a record OF. */}
       <div
@@ -630,7 +626,7 @@ export default function EphemeristsPraxisDetail({ state }: { state: PraxisDetail
     <DuelCard
       state={state}
       style={panel}
-      heading={sectionHead(t("detail.ephemerists.duel"))}
+      heading={sectionHead(t("duelCrossLink.label"))}
     />
   );
 
@@ -744,7 +740,7 @@ export default function EphemeristsPraxisDetail({ state }: { state: PraxisDetail
   // printing fault rather than as stationery.
   const writeUp = praxis.body_text && (
     <section style={{ marginBottom: size.sectionGap }}>
-      {sectionHead(t("detail.ephemerists.writeUp"))}
+      {sectionHead(t("detail.sections.writeUp"))}
       <div
         style={{
           position: "relative",

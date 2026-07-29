@@ -31,29 +31,24 @@
  * - The crown renders at **both** form factors. It is not this file's decision:
  *   `PraxisStatusBanners` draws it off `is_top_for_task`, mounted above the
  *   split so both layouts get it.
- * - The **report card and the steward bar are NOT dressed** (ADR-0061 as
- *   amended, 2026-07-28). `PraxisFlagBlock` / `PraxisAdminBar` are mounted bare,
- *   wearing none of the panel dress every block beside them wears, and they take
- *   no style prop to make dressing them possible. Same for the moderation
- *   banners and the errors: content slots carry Coven's voice, the platform's
- *   own words stay neutral in every faction's dress.
+ * - The **report card and the steward bar are NOT dressed** (ADR-0061).
+ *   `PraxisFlagBlock` / `PraxisAdminBar` are mounted bare, wearing none of the
+ *   panel dress every block beside them wears, and they take no style prop to
+ *   make dressing them possible.
  *
- * ## The voice, and where it stops
+ * ## No voice — dress only
  *
- * Five content slots read `detail.coven.*` — the write-up ("What it looked
- * like"), the crew ("Cast together by"), the metatasks ("Charms added"), the
- * duel ("A friendly duel") and the comments ("Comments"). Everything else reads
- * the shared neutral `detail.*` keys, including the proof, score, vote and
- * voters heads, which the design leaves in the game's words.
+ * EVERY string on this page comes from the shared neutral `detail.*` block
+ * (ADR-0061). The design's words for the write-up, crew, metatasks, duel and
+ * comments — and its "post" button — are **recorded on #1117, not built**: the
+ * amendment that would have voiced them was written and withdrawn the same day
+ * (2026-07-28), and the four skins that had already merged against it were
+ * corrected back. What Coven brings here is frame, type, ornament and motion.
  *
- * The design's sixth voiced string, the comment composer's **"post"**, is
- * deliberately NOT built. That button lives inside `CommentThread`'s composer,
- * which dispatches on the VIEWER's faction, not the page's — a Snide player
- * commenting here posts in Snide. ADR-0061 protects that boundary explicitly
- * ("the neutral rule stops at the speaker's voice") and puts `comments.*` and
- * the seven `*Comment` skins out of scope, so voicing it would have to be done
- * on `CovenComment`, where it would follow a Coven viewer onto every other
- * faction's page.
+ * The comment ROWS are a different question and are untouched: they dispatch on
+ * the comment author's faction, not the page's — a Snide player commenting here
+ * reads Snide — and ADR-0061 puts `comments.*` and the seven `*Comment` skins
+ * explicitly out of scope.
  *
  * ## Reused, not rebuilt
  *
@@ -500,7 +495,7 @@ export default function CovenPraxisDetail({ state }: { state: PraxisDetailState 
   // rather than its own dress. It self-hides for a praxis with no duel, for a
   // DECLINED challenge, and for the run-up the composer owns (#1071/ADR-0059).
   const duelBlock: ReactNode = (
-    <DuelCard state={state} style={panel} heading={sectionHead(t('detail.coven.duel'))} />
+    <DuelCard state={state} style={panel} heading={sectionHead(t('duelCrossLink.label'))} />
   )
 
   const rail = (
@@ -639,7 +634,7 @@ export default function CovenPraxisDetail({ state }: { state: PraxisDetailState 
 
   const writeUp = praxis.body_text && (
     <section style={{ marginBottom: sectionGap }}>
-      {sectionHead(t('detail.coven.writeUp'))}
+      {sectionHead(t('detail.sections.writeUp'))}
       <MarkdownPreview
         source={praxis.body_text}
         className="markdown-preview content-text"
@@ -650,7 +645,7 @@ export default function CovenPraxisDetail({ state }: { state: PraxisDetailState 
 
   const crew = isCollab && (
     <section style={{ marginBottom: sectionGap }}>
-      {sectionHead(t('detail.coven.members'))}
+      {sectionHead(t('detail.sections.members'))}
       <CollabRoster
         members={praxis.members}
         currentCharacterId={state.user?.character?.id ?? null}
@@ -668,7 +663,7 @@ export default function CovenPraxisDetail({ state }: { state: PraxisDetailState 
   // every chip would 422 on tap.
   const metatasks = praxis.applied_metatasks.length > 0 && (
     <section style={{ marginBottom: sectionGap }}>
-      {sectionHead(t('detail.coven.metatasks'))}
+      {sectionHead(t('detail.metatasks.heading'))}
       <MetaTaskSeal metatasks={praxis.applied_metatasks} />
     </section>
   )
@@ -780,7 +775,7 @@ export default function CovenPraxisDetail({ state }: { state: PraxisDetailState 
               draws the heading so the thread does not draw a second one. */}
           <PraxisDetailComments
             state={state}
-            heading={sectionHead(t('detail.coven.comments'))}
+            heading={sectionHead(t('detail.sections.comments'))}
             style={{ marginTop: sectionGap }}
           />
         </div>

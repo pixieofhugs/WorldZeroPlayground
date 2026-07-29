@@ -45,9 +45,8 @@
  * bunting, cream plates in gold frames, wavy rules, and one bobbing bunch of
  * balloons beside the comments. It is dress over the ONE shared praxis-detail
  * page (ADR-0061) rather than a page of its own — the layout, the API contract
- * and every word of the moderation chrome are the shared ones, and only the six
- * content slots in `detail.wow.*` speak WOW. `factionCard` and `factionBody`
- * remain unclaimed on #951.
+ * and every word on it are the shared ones; WOW speaks here only in dress.
+ * `factionCard` and `factionBody` remain unclaimed on #951.
  *
  * The three ornaments those two pages share — the wavy rule, the balloon bunch
  * and the bunting — live in `components/cards/wowOrnament.tsx`, drawn once for
