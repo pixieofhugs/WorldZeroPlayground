@@ -105,17 +105,21 @@ export default function DefaultTasks({ state }: { state: TasksState }) {
         <FactionSigilRow factions={factions} value={faction} onChange={setFaction} />
       </div>
 
-      {/* Level chips */}
-      <ChipRow label={tc('filters.level')}>
-        <Chip on={level === ''} onClick={() => setLevel('')}>
-          {t('mobile.anyLevel')}
-        </Chip>
-        {levelFilters.map((lvl) => (
-          <Chip key={lvl} on={level === lvl} onClick={() => setLevel(level === lvl ? '' : lvl)}>
-            {tc('filters.levelAtLeast', { level: lvl })}
+      {/* Level chips — the range comes from the era's level ladder (#1046), so
+          the row is hidden until /game-config lands rather than showing a lone
+          "any level" chip with nothing to narrow to. */}
+      {levelFilters.length > 0 && (
+        <ChipRow label={tc('filters.level')}>
+          <Chip on={level === ''} onClick={() => setLevel('')}>
+            {t('mobile.anyLevel')}
           </Chip>
-        ))}
-      </ChipRow>
+          {levelFilters.map((lvl) => (
+            <Chip key={lvl} on={level === lvl} onClick={() => setLevel(level === lvl ? '' : lvl)}>
+              {tc('filters.levelAtLeast', { level: lvl })}
+            </Chip>
+          ))}
+        </ChipRow>
+      )}
 
       {/* Signup outcome — the CTA arrived with the shared card (ADR-0056), so
           the message that answers it has to arrive too. */}
