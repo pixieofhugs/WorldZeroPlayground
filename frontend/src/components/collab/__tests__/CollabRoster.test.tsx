@@ -38,15 +38,16 @@ describe('CollabRoster render', () => {
     )).toBe('')
   })
 
-  // A null slug takes the shared fallback voice — the faction-voiced wording is
+  // A null slug takes the shared fallback tier, which speaks the domain noun
+  // rather than any faction's verb (#1154) — the faction-voiced wording is
   // covered in collabCopy.test.ts (#591).
-  it('shows a cast pill for cast members and a weaving pill otherwise', () => {
+  it('shows a submitted pill for cast members and a not-submitted pill otherwise', () => {
     const html = renderToStaticMarkup(
       <CollabRoster members={[member(1, true), member(2, false)]} currentCharacterId={1} factionSlug={null} />,
     )
-    expect(html).toContain('cast')
-    expect(html).toContain('weaving')
-    expect(html).toContain('1 of 2 cast')
+    expect(html).toContain('✓ submitted')
+    expect(html).toContain('not submitted')
+    expect(html).toContain('1 of 2 submitted')
   })
 
   // The cast / pull-back action moved to the footer's PublishButton (#646); the
@@ -59,7 +60,7 @@ describe('CollabRoster render', () => {
     expect(html).toContain('signed off')
     expect(html).toContain('still on the clock')
     expect(html).toContain('Waiting on the rest of the crew.')
-    expect(html).not.toContain('weaving')
+    expect(html).not.toContain('not submitted')
   })
 })
 
