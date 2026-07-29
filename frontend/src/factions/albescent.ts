@@ -42,6 +42,8 @@ const AlbescentSeal = lazyArchetype(() => import('../components/metaTaskSeal/ski
 // that pulls in the whole na anatomy is exactly the weight route-splitting exists
 // to keep off the initial load.
 const AlbescentTaskDetail = lazyArchetype(() => import('../pages/taskDetail/archetypes/AlbescentTaskDetail'))
+// #1140 — the praxis-detail unfreeze, lazy for the same reason as its sibling.
+const AlbescentPraxisDetail = lazyArchetype(() => import('../pages/praxisDetail/archetypes/AlbescentPraxisDetail'))
 
 export const ALBESCENT_MANIFEST: FactionManifest = {
   slug: 'albescent',
@@ -93,6 +95,30 @@ export const ALBESCENT_MANIFEST: FactionManifest = {
    * factors.
    */
   taskDetail: () => AlbescentTaskDetail,
+
+  /**
+   * The praxis-detail tell (#1140, epic #1085) — the FOURTH surface to unfreeze
+   * and the same "Default + light" shape as the three above.
+   * `AlbescentPraxisDetail` is a WRAPPER: it renders the shared
+   * `DefaultPraxisDetail` whole and hands three ornament layers — a drifting
+   * aurora, a slowly turning prism ring and a spectrum edge that travels — to
+   * that component's optional `ornament` slot, so the light is clipped to the
+   * sheet rather than painted over the page. It has NO structural delta at all;
+   * the score rail stays `ScoreStamp`'s (ADR-0053) and nothing is forked.
+   *
+   * The registration freeze is what changed here, not the shape: ADR-0046 was
+   * reversed for this epic (#1151), so Albescent registers surfaces like any
+   * other faction — as `Default` plus a flourish, per ADR-0048.
+   *
+   * Every word of the design's voice is cut (owner ruling on #1140, ADR-0027):
+   * the page speaks the shared neutral `detail.*` copy and there is no
+   * `detail.albescent.*` block, because a page announcing itself as Albescent
+   * would un-hide the society. ADR-0061's amendment permits a faction voice on
+   * the content slots; this faction declines it. No mobile sibling — praxis
+   * detail is one responsive component (ADR-0063), so this row covers both form
+   * factors.
+   */
+  praxisDetail: () => AlbescentPraxisDetail,
 
   /**
    * The ferrofluid vote widget (#843, the eighth of #821's eight). Same rule as

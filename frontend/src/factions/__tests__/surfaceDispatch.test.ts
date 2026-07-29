@@ -40,9 +40,11 @@ const CORE_SIX = ['coven', 'snide', 'ephemerists', 'singularity', 'everymen', 'u
 // listed (plus a junk slug and null) must fall through to the surface Default.
 // wow is bespoke on task detail (#1037) and on every mobile surface below.
 //
-// albescent appears in only two rows below, and both are WRAPPERS over Default,
-// not bespoke skins (ADR-0048): it is a secret society hiding in plain sight, so
-// an entry here means "Default plus a flourish", never a treatment of its own.
+// albescent's rows below are WRAPPERS over Default, not bespoke skins
+// (ADR-0048): it is a secret society hiding in plain sight, so an entry here
+// means "Default plus a flourish", never a treatment of its own. ADR-0046's
+// registration freeze was reversed with the praxis-detail epic (#1151), which
+// changes whether a row may exist, not what shape it takes.
 //
 // THREE MOBILE ROWS ARE ABSENT BY DECISION, not by oversight, and all three used
 // to exist. There is no mobile task-card row (ADR-0056, surface retired by
@@ -55,15 +57,22 @@ const CORE_SIX = ['coven', 'snide', 'ephemerists', 'singularity', 'everymen', 'u
 // albescent: its single `taskDetail` registration now covers the phone too, and
 // it never needs a second row it would have had to stay out of.
 //
-// THE DESKTOP `praxisDetail` ROW IS ABSENT TOO, which is the newest decision
-// here and the one most likely to look like an omission. ADR-0061 made praxis
-// detail ONE shared page and #1089 de-registered all six CORE_SIX skins, so
-// every slug — wow and albescent included — falls through to
-// `DefaultPraxisDetail`; the Unaffiliated page IS the shared page. The seven
-// remaining designs (epic #1085) re-register here one at a time as dress over
-// the same layout, and the row comes back with the first of them.
+// THE `praxisDetail` ROW IS BACK, and it is deliberately near-empty. ADR-0061
+// made praxis detail ONE shared page and #1089 de-registered all six CORE_SIX
+// skins, so every slug fell through to `DefaultPraxisDetail`; the Unaffiliated
+// page IS the shared page. The seven remaining designs (epic #1085) re-register
+// here one at a time as dress over the same layout, and this row came back with
+// the first of them. Each subsequent skin adds ONE slug here and its own name
+// leaves the defaulted half automatically.
+//
+// The two entries are NOT the same kind of thing, which is the row's other
+// reason to exist: `coven` (#1117) is a bespoke dress with its own
+// `detail.coven.*` voice, while `albescent` (#1140) is a WRAPPER that renders
+// `DefaultPraxisDetail` whole and washes light over it, speaking the shared
+// neutral copy. Both are "registered"; only one is a skin.
 const BESPOKE: Record<string, string[]> = {
   taskDetail: [...CORE_SIX, 'wow', 'albescent'],
+  praxisDetail: ['coven', 'albescent'],
   mobileFactionPage: [...CORE_SIX, 'wow'],
   mobileFieldDesk: [...CORE_SIX, 'wow'],
   mobileEditPraxis: [...CORE_SIX, 'wow'],

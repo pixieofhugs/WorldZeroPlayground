@@ -3259,6 +3259,155 @@
   .alb-detail-ring::before { animation: alb-detail-spin 46s linear infinite; }
 }
 
+/* Albescent — the PRAXIS DETAIL's tell (#1140, epic #1085, ADR-0048). The fourth
+   surface to unfreeze, and the same rule as the three before it: the shared
+   `DefaultPraxisDetail` page unchanged, with light washed over it. The design's
+   dress is Lora + Courier Prime + Bebas Neue — the site's own three faces, not a
+   faction face — on na's spectrum palette, so every delta here is MOTION: a
+   drifting aurora, a slowly turning prism ring, an edge that comes alive.
+
+   WHAT THIS BLOCK DECIDES, each of which a "make it match the design" edit
+   would undo:
+
+   • THE LIGHT IS MOUNTED INSIDE THE SHEET, not wrapped around the page. The
+     praxis page puts a variable-height breadcrumb above its 1200 column, so —
+     unlike `.alb-detail`, which could inset by Default's own py-8 band — no
+     fixed inset from outside lands on the sheet's top edge. The layers arrive
+     through `DefaultPraxisDetail`'s optional `ornament` slot and sit at
+     `inset: 0` inside a sheet that already clips (`overflow: hidden`, 18px
+     radius). That makes the #1028 ruling structural rather than arithmetic: the
+     light CANNOT paint the viewport, so the site background still shows around
+     the component.
+
+   • THE LAYERS SIT ON TOP, BLENDED. Default's column paints an opaque sheet, so
+     an ornament behind it is invisible and `z-index: -1` is not a position
+     available here; and the sheet is positioned, so a positioned overlay at
+     `z-index: 0` would paint above the copy with none of the blending that keeps
+     ink legible (§5). Same call `.alb-rainbow`, `.alb-task-aurora` and
+     `.alb-detail-aurora` already make: multiply on the light sheet, screen on
+     the dark one, `pointer-events: none`, opacities trimmed a notch below the
+     design's. `isolation` on `.alb-praxis` keeps the blend inside the component
+     so it cannot tint the page around it.
+
+   • MOTION IS OPT-IN. Every animation is gated on `no-preference`, the repo's
+     inverted form of the design's `reduce → none`. Stilled, the page is a static
+     wash, a static ring and a static edge; nothing carries meaning through
+     motion alone.
+
+   The 18px radius tracks `DefaultPraxisDetail`'s own sheet corner. If that
+   changes, this follows. */
+@keyframes alb-praxis-drift {
+  0%, 100% { transform: translate3d(-4%, -5%, 0) scale(1.16) rotate(0deg); }
+  50% { transform: translate3d(4%, 5%, 0) scale(1.26) rotate(-6deg); }
+}
+@keyframes alb-praxis-wheel {
+  from { transform: translate(-50%, -50%) rotate(0deg); }
+  to { transform: translate(-50%, -50%) rotate(360deg); }
+}
+@keyframes alb-praxis-edge { from { background-position: 0% 50%; } to { background-position: 300% 50%; } }
+
+.alb-praxis {
+  isolation: isolate;
+}
+.alb-praxis-aurora,
+.alb-praxis-ring,
+.alb-praxis-edge {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  border-radius: 18px;
+  overflow: hidden;
+}
+
+/* The aurora that breathes under the vellum — seven blooms, blurred past
+   recognition, so it reads as coloured light rather than as shapes. */
+.alb-praxis-aurora::before {
+  content: "";
+  position: absolute;
+  inset: -22%;
+  filter: blur(64px) saturate(0.6);
+  mix-blend-mode: multiply;
+  opacity: 0.2;
+  transform: translate3d(-4%, -5%, 0) scale(1.16);
+  background-image:
+    radial-gradient(56% 40% at 8% 6%, #c1272d, transparent 100%),
+    radial-gradient(52% 38% at 34% 0%, #c2541f, transparent 100%),
+    radial-gradient(54% 40% at 64% 10%, #ca8a04, transparent 100%),
+    radial-gradient(56% 42% at 92% 6%, #16a34a, transparent 100%),
+    radial-gradient(58% 44% at 98% 58%, #2563eb, transparent 100%),
+    radial-gradient(56% 42% at 54% 96%, #be185d, transparent 100%),
+    radial-gradient(54% 40% at 12% 90%, #1d6e72, transparent 100%);
+}
+[data-theme="dark"] .alb-praxis-aurora::before {
+  filter: blur(56px) saturate(0.95);
+  mix-blend-mode: screen;
+  opacity: 0.22;
+  background-image:
+    radial-gradient(56% 40% at 8% 6%, #e2433f, transparent 100%),
+    radial-gradient(52% 38% at 34% 0%, #e07a3a, transparent 100%),
+    radial-gradient(54% 40% at 64% 10%, #e6b94f, transparent 100%),
+    radial-gradient(56% 42% at 92% 6%, #4ade80, transparent 100%),
+    radial-gradient(58% 44% at 98% 58%, #60a5fa, transparent 100%),
+    radial-gradient(56% 42% at 54% 96%, #f472b6, transparent 100%),
+    radial-gradient(54% 40% at 12% 90%, #3aa0a4, transparent 100%);
+}
+
+/* The prism RING, turning. A conic spectrum disc masked back to an annulus —
+   the design's "slow ring spin", and the reason it is a ring rather than
+   `.alb-detail-foil`'s filled wheel: a praxis page is one long reading column,
+   and a filled wheel at this size tints its middle band more than its edges.
+   The mask keeps the light off the copy in the centre of the page.
+
+   Square by `aspect-ratio`, not by matching percentages: the sheet's height is
+   the write-up's, so a `height: 132%` would be an ellipse on a long praxis and a
+   circle on a short one. */
+.alb-praxis-ring::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 132%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  background-image: var(--faction-default-rainbow-conic);
+  filter: blur(40px) saturate(0.7);
+  mix-blend-mode: multiply;
+  opacity: 0.15;
+  -webkit-mask: radial-gradient(closest-side, transparent 50%, #000 62%, #000 84%, transparent 96%);
+  mask: radial-gradient(closest-side, transparent 50%, #000 62%, #000 84%, transparent 96%);
+}
+[data-theme="dark"] .alb-praxis-ring::before {
+  filter: blur(34px) saturate(1.1);
+  mix-blend-mode: screen;
+  opacity: 0.22;
+}
+
+/* The spectrum edge, drifting. A masked ring rather than a border, for the same
+   reason `.alb-task-edge` and `.alb-detail-edge` are: the sheet it dresses is a
+   component's inline style, not markup this file can reach into. It lands on
+   Default's own hairline so the effect reads as that border coming alive. */
+.alb-praxis-edge {
+  padding: 2px;
+  background-image: var(--faction-default-rainbow-loop);
+  background-size: 300% 100%;
+  opacity: 0.72;
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask:
+    linear-gradient(#000 0 0) content-box exclude,
+    linear-gradient(#000 0 0);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .alb-praxis-aurora::before { animation: alb-praxis-drift 34s ease-in-out infinite; }
+  .alb-praxis-ring::before { animation: alb-praxis-wheel 58s linear infinite; }
+  .alb-praxis-edge { animation: alb-praxis-edge 16s linear infinite; }
+}
+
 /* UA — growing mandala: each rank blooms a fuller mandala; the emphasized cell
    pops (bloom), rank-5 breathes (twist), rings turn (spin) and a halo pulses out
    on selection. Every motion is class-gated on reduced-motion so the widget
