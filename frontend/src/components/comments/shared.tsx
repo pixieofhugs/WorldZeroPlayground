@@ -7,7 +7,7 @@
  * timestamp+edited — and the composer mechanics out of every voice so each voice
  * only owns its chrome.
  */
-import type { ComponentType } from 'react'
+import type { ComponentType, ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import type { CharacterOut } from '../../api/auth'
@@ -127,6 +127,7 @@ export function ComposerControls({
   submitLabel,
   submittingLabel,
   onCancel,
+  hint,
 }: {
   value: string
   onChange: (value: string) => void
@@ -148,6 +149,14 @@ export function ComposerControls({
   submittingLabel?: string
   /** When set, renders a neutral Cancel affordance beside submit (edit mode). */
   onCancel?: () => void
+  /**
+   * Voice-dressed caption for the foot's left slot — the composer's "@ to
+   * mention" hint (#1195). Deliberately a ReactNode rather than a string: the
+   * slot is shared, the dress is the voice's. It yields to the live character
+   * count, because `maxLength` is only set while EDITING, and the two states
+   * are mutually exclusive on the sheet.
+   */
+  hint?: ReactNode
 }) {
   const { t } = useTranslation('praxis')
   const disabled = submitting || value.trim().length === 0
@@ -205,7 +214,7 @@ export function ComposerControls({
             {t('comments.charCount', { count: value.length, max: maxLength })}
           </span>
         ) : (
-          <span />
+          (hint ?? <span />)
         )}
         <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-sm)' }}>
           {onCancel && (

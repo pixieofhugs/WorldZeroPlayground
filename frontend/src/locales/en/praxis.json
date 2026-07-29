@@ -211,6 +211,9 @@
     "charCount": "{{count}}/{{max}}",
     "editError": "Could not save the edit.",
     "withdrawError": "Could not withdraw the comment.",
+    "na": {
+      "mentionHint": "@ to mention"
+    },
     "ua": {
       "house": "University of Asthmatics",
       "edited": "edited",
