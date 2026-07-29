@@ -498,7 +498,9 @@ export default function WowTaskDetail({ state }: { state: TaskDetailState }) {
   );
 
   // The action plate: 452px on desktop (WOW's own value; the set runs 420–520),
-  // full width once the column collapses.
+  // full width once the column collapses — and 452 only when there IS a move to
+  // make; see `actionColumnSize` (#1138). With the summons cell absent the worth
+  // cell takes the plate, so the gold frame never encloses empty parchment.
   const actionPlate = (
     <div style={{ ...framed, position: "relative", overflow: "hidden", borderRadius: 11 }}>
       <div aria-hidden style={{ height: 6, background: "var(--faction-wow-quest-ribbon)" }} />
@@ -513,7 +515,7 @@ export default function WowTaskDetail({ state }: { state: TaskDetailState }) {
         <div
           style={{
             ...innerBox,
-            flex: "0 0 auto",
+            flex: hasAction ? "0 0 auto" : "1 1 auto",
             minWidth: desktop ? 176 : 132,
             display: "flex",
             alignItems: "center",
@@ -881,8 +883,7 @@ export default function WowTaskDetail({ state }: { state: TaskDetailState }) {
           <div style={{ flex: 1, minWidth: 0 }}>{header}</div>
           <div
             style={{
-              flex: desktop ? `0 0 ${size.plate}px` : "1 1 auto",
-              width: desktop ? size.plate : "100%",
+              ...actionColumnSize({ desktop, hasAction, width: size.plate }),
               marginTop: desktop ? "var(--space-sm)" : 0,
             }}
           >

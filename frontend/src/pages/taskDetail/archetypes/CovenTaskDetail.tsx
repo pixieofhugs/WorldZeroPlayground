@@ -527,7 +527,9 @@ export default function CovenTaskDetail({ state }: { state: TaskDetailState }) {
 
   // The action plate: the slip's gradient, holding two inset boxes. 452px on
   // desktop (Coven's own value; the family runs 420–520), full width once the
-  // column collapses.
+  // column collapses — and 452 only when the viewer has a move; see
+  // `actionColumnSize` (#1138). Alone, the worth box takes the slip, so the
+  // gradient is never a wide sticker with one small box on it.
   const actionPlate = (
     <div
       style={{
@@ -548,7 +550,7 @@ export default function CovenTaskDetail({ state }: { state: TaskDetailState }) {
       <div
         style={{
           ...innerBox,
-          flex: "0 0 auto",
+          flex: hasAction ? "0 0 auto" : "1 1 auto",
           minWidth: size.worthMin,
           display: "flex",
           alignItems: "center",
@@ -954,8 +956,7 @@ export default function CovenTaskDetail({ state }: { state: TaskDetailState }) {
           <div style={{ flex: 1, minWidth: 0 }}>{header}</div>
           <div
             style={{
-              flex: desktop ? `0 0 ${size.plate}px` : "1 1 auto",
-              width: desktop ? size.plate : "100%",
+              ...actionColumnSize({ desktop, hasAction, width: size.plate }),
               maxWidth: "100%",
               marginTop: desktop ? "var(--space-sm)" : 0,
             }}

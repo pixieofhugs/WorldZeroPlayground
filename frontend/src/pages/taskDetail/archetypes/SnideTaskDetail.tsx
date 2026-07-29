@@ -553,7 +553,9 @@ export default function SnideTaskDetail({ state }: { state: TaskDetailState }) {
         <div
           style={{
             ...innerBox,
-            flex: "0 0 auto",
+            // Alone in the plate (no move for this viewer, #1138) the worth
+            // sheet takes the whole width rather than sitting beside a gap.
+            flex: hasAction ? "0 0 auto" : "1 1 auto",
             minWidth: desktop ? 178 : 132,
             position: "relative",
             display: "flex",
@@ -979,8 +981,7 @@ export default function SnideTaskDetail({ state }: { state: TaskDetailState }) {
           <div style={{ flex: 1, minWidth: 0 }}>{header}</div>
           <div
             style={{
-              flex: desktop ? "0 0 452px" : "1 1 auto",
-              width: desktop ? 452 : "100%",
+              ...actionColumnSize({ desktop, hasAction, width: 452 }),
               marginTop: desktop ? "var(--space-xl)" : 0,
             }}
           >
