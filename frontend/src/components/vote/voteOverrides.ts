@@ -3,13 +3,18 @@ import { useSyncExternalStore } from 'react'
 /**
  * Client-side vote overrides (#626) — "the tally moved because I just voted".
  *
- * A card renders its tally in three sibling components (VoteSummary, the
- * faction score stamp, PraxisFooterMeta) that all read the praxis object, which
- * useVote has no way to reach. Rather than drill an onVoted callback through
- * eight faction variants that only draw stamps and hearts, a cast publishes
- * here and the two card dispatchers + usePraxisDetail merge it back in.
+ * A surface renders its tally in sibling components (the faction score stamp,
+ * the vote line) that all read the praxis object, which useVote has no way to
+ * reach. Rather than drill an onVoted callback through eight faction variants
+ * that only draw stamps and hearts, a cast publishes here and the two card
+ * dispatchers + usePraxisDetail merge it back in.
  *
- * One writer (useVote), three read points. Keep it that way.
+ * ONE writer (useVote), and every reader merges through useVotedPraxis.ts —
+ * `applyVoteDelta` for a praxis payload, `applyVoteSummaryDelta` for a
+ * VoteSummary. Keep it that way. This docblock used to enumerate the three
+ * COMPONENTS that read a tally, and #1142 was that list going stale: one of them
+ * had been replaced by a panel reading the praxis object, which the detail page
+ * merged nothing into. Name the merge points, not what renders below them.
  *
  * An override lives only until the server catches up: every fetch that returns
  * fresh truth for a praxis clears it (see clearVoteOverrides' callers in the
