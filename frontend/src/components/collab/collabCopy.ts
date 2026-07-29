@@ -91,6 +91,26 @@ export type CollabCopyKey =
   | 'awaitingClockCaption'
   | 'awaitingClockAria'
   | 'awaitingClockLapsed'
+  // The same ADR-0012 window, read by the one player it threatens: the HOLDOUT,
+  // who keeps the ordinary composer and never saw the ring (#1164). Days and
+  // hours are drawn as `{{days}}d {{hours}}h`, matching the ring's own idiom
+  // above and sidestepping a plural rule the resolver cannot express (its keys
+  // are runtime-dynamic strings, so `count`-suffixed variants would have to be
+  // members of this union).
+  | 'holdoutClockLine'
+  | 'holdoutClockLineHours'
+  | 'holdoutClockLineLapsed'
+  | 'holdoutClockCaption'
+  // The completed reading of the waiting surface (#1164): everybody is in, so
+  // there is nothing to wait for and nothing to author — only a way through to
+  // the read page.
+  | 'completedStatusMeta'
+  | 'completedHeading'
+  | 'completedBody'
+  | 'completedReadAction'
+  | 'duelCompletedHeading'
+  | 'duelCompletedBody'
+  | 'duelCompletedPlaceholder'
   | 'duelAwaitingHeading'
   | 'duelAwaitingTaskLabel'
   | 'duelAwaitingWriteUpLabel'
@@ -152,6 +172,13 @@ export type CollabCopyKey =
  * people's cast is the same poor idea it was for `deleteConfirm`. A faction may
  * still override any of them; per-faction frames for this surface are a
  * follow-up wave, not a debt this one incurs.
+ *
+ * The `holdout*` and `completed*` blocks (#1164) are the same block finished.
+ * The first says what the ADR-0012 window does to the member who has not
+ * submitted — a deadline and its escape, stated once; the second is the reading
+ * that replaced the locked composer, and it is read by whoever opens `/edit`
+ * after the fact, holdout included. Both are mechanics in the domain's own noun
+ * (CONTEXT.md: *submitted*), which is exactly the tier this list is for.
  */
 export const SHARED_DEFAULT_COLLAB_KEYS: readonly CollabCopyKey[] = [
   'leaveDescription',
@@ -183,6 +210,17 @@ export const SHARED_DEFAULT_COLLAB_KEYS: readonly CollabCopyKey[] = [
   'awaitingClockCaption',
   'awaitingClockAria',
   'awaitingClockLapsed',
+  'holdoutClockLine',
+  'holdoutClockLineHours',
+  'holdoutClockLineLapsed',
+  'holdoutClockCaption',
+  'completedStatusMeta',
+  'completedHeading',
+  'completedBody',
+  'completedReadAction',
+  'duelCompletedHeading',
+  'duelCompletedBody',
+  'duelCompletedPlaceholder',
   'duelAwaitingHeading',
   'duelAwaitingTaskLabel',
   'duelAwaitingWriteUpLabel',

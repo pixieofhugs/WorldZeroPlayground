@@ -15,6 +15,7 @@ import type { MarkdownCommand } from "../blocks/markdownToolbar";
 import type { EditPraxisState } from "../useEditPraxis";
 import { CollabRoster, deriveCollabGate } from "../../../components/collab/CollabRoster";
 import { collabCopy } from "../../../components/collab/collabCopy";
+import HoldoutPublishNotice from "../blocks/HoldoutPublishNotice";
 
 export interface InviteSearchSkin {
   inputBg?: string;
@@ -146,6 +147,18 @@ export function InviteSearch({
                   factionSlug={praxis.task_faction_slug}
                   taskPointValue={praxis.task_point_value}
                   onKick={state.kickMember}
+                />
+                {/* The ADR-0012 countdown, for the holdout only (#1164). It
+                    renders itself to nothing for every other viewer and for a
+                    collab nobody has submitted into, so it is mounted
+                    unconditionally here — one mount covers all sixteen composer
+                    skins, which is the same reason the roster sits here. */}
+                <HoldoutPublishNotice
+                  members={praxis.members}
+                  currentCharacterId={state.currentCharacterId}
+                  factionSlug={praxis.task_faction_slug}
+                  submitProposedAt={praxis.submit_proposed_at}
+                  autoSubmitDays={state.autoSubmitDays}
                 />
               </div>,
               ...praxis.invites

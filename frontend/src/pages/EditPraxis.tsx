@@ -5,7 +5,7 @@
  * faction-archetype editor based on `task.primary_faction_slug`. The seven
  * archetypes share identical behaviour but each owns its own visual metaphor.
  */
-import { useParams } from "react-router-dom";
+import { Navigate, useParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import PageTitle from "../components/ui/PageTitle";
 import ImageEditModal from "../components/imageEdit/ImageEditModal";
@@ -52,14 +52,26 @@ export default function EditPraxis() {
     );
   }
 
+  // A published solo praxis has no roster and nobody to wait for, so `/edit` has
+  // nothing left to draw and hands off to the read page (#1164). Before this it
+  // rendered a LOCKED COMPOSER — a form with every control hidden. Replace
+  // rather than push: the composer is not a step in the history of reading a
+  // praxis, and Back should leave the way it came.
+  if (state.phase === "handoff") {
+    return <Navigate to={`/praxes/${state.praxis.id}`} replace />;
+  }
+
   const slug = state.task?.primary_faction_slug ?? null;
   const Archetype =
     formFactor === "mobile"
       ? pickVariant(surfaceMap('mobileEditPraxis'), slug, DefaultMobileEditPraxis)
       : pickVariant(surfaceMap('editPraxis'), slug, DefaultEditPraxis);
-  // Once your part of a multi-party praxis is filed, the composer stops being a
-  // composer (ADR-0059) and this one shared surface takes the archetype's place.
-  const waiting = state.phase === "waiting";
+  // Once your part of a multi-party praxis is submitted, the composer stops
+  // being a composer (ADR-0059) and this one shared surface takes the
+  // archetype's place — first while the praxis waits on somebody else, and then
+  // (#1164) in its completed reading once everybody is in. The second case is
+  // what used to be a locked composer.
+  const waiting = state.phase === "waiting" || state.phase === "completed";
 
   return (
     <>

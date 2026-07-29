@@ -416,3 +416,124 @@ describe("the clock is config-driven, not assumed", () => {
     expect(html).not.toContain(collabCopy(SLUG, "awaitingClockLabel"));
   });
 });
+
+/**
+ * The completed reading (#1164). What `/edit` drew here before was a LOCKED
+ * COMPOSER — a form with every control hidden, and a third read-only rendering
+ * of a praxis beside the detail page and this surface. Owner ruling: this
+ * surface, in a reading that says everybody is in and offers the way out to
+ * `/praxes/:id`.
+ */
+describe("collab — everybody is in (#1164)", () => {
+  const published = state({
+    phase: "completed",
+    praxis: praxis({
+      status: "submitted",
+      members: [
+        member(ME, "Wren", true),
+        member(THEM, "Rax", true),
+        member(A_THIRD, "Sable", true),
+      ],
+    }),
+  });
+  const html = render({ state: published, autoSubmitDays: WINDOW_DAYS });
+
+  it("confirms it in the surface's own words rather than falling silent", () => {
+    expect(html).toContain(collabCopy(SLUG, "completedHeading"));
+    expect(html).toContain(collabCopy(SLUG, "completedBody"));
+    expect(html).not.toContain(collabCopy(SLUG, "awaitingHeading"));
+  });
+
+  it("keeps the roster, with every member submitted", () => {
+    expect(html).toContain("Wren");
+    expect(html).toContain("Rax");
+    expect(html).toContain("Sable");
+    expect(html).toContain(collabCopy(SLUG, "bannerPublished"));
+  });
+
+  it("links out to the praxis — the whole reason this beats a redirect", () => {
+    expect(html).toContain(collabCopy(SLUG, "completedReadAction"));
+    expect(html).toContain('href="/praxes/1"');
+  });
+
+  it("keeps the write-up read-only, and offers no way back into it", () => {
+    expect(html).toContain("I took the road east.");
+    expect(html).not.toContain("<textarea");
+    expect(html).not.toContain(collabCopy(SLUG, "awaitingEditAction"));
+  });
+
+  it("draws no countdown — there is no window left to run", () => {
+    expect(html).not.toContain(collabCopy(SLUG, "awaitingClockLabel"));
+  });
+
+  it("drops the exits the backend would refuse anyway", () => {
+    expect(html).not.toContain(i18n.t("forms:editPraxis.leaveAction"));
+    expect(html).not.toContain(collabCopy(SLUG, "deleteAction"));
+  });
+
+  it("nudges nobody once a lapsed window published it over a holdout", () => {
+    // ADR-0012 publishes on silence, so a member can still read `not submitted`
+    // on a published collab. Hurrying them would be asking for a part the
+    // praxis no longer wants.
+    const overHoldout = render({
+      state: state({
+        phase: "completed",
+        praxis: praxis({
+          status: "submitted",
+          members: [
+            member(ME, "Wren", true),
+            member(THEM, "Rax", false),
+            member(A_THIRD, "Sable", true),
+          ],
+        }),
+      }),
+      autoSubmitDays: WINDOW_DAYS,
+    });
+    expect(overHoldout).toContain(collabCopy(SLUG, "completedHeading"));
+    expect(overHoldout).not.toContain(collabCopy(SLUG, "nudgeAction"));
+  });
+
+  it("says `Submitted`, not `Submitted by you` — the holdout reads this too", () => {
+    expect(html).toContain(collabCopy(SLUG, "completedStatusMeta"));
+    expect(html).not.toContain(collabCopy(SLUG, "awaitingStatusMeta"));
+  });
+});
+
+describe("duel — both sides are in (#1164)", () => {
+  const settled = duelDetail("settled");
+  const html = render({
+    state: state({
+      phase: "completed",
+      praxis: praxis({
+        type: "solo",
+        status: "submitted",
+        duel_id: 7,
+        members: [member(ME, "Wren", true)],
+        submit_proposed_at: null,
+      }),
+      duel: {
+        ...settled,
+        opponent: { ...settled.opponent, is_submitted: true },
+      },
+    }),
+    autoSubmitDays: WINDOW_DAYS,
+  });
+
+  it("says both entries are in, in the duel's own words", () => {
+    expect(html).toContain(collabCopy(SLUG, "duelCompletedHeading"));
+    expect(html).toContain(collabCopy(SLUG, "duelCompletedBody"));
+  });
+
+  it("links out rather than drawing the two entries side by side (#1084)", () => {
+    // That view was deliberately cut from the composer. The placeholder names
+    // where it lives instead of pretending the rival's text is here.
+    expect(html).toContain(collabCopy(SLUG, "duelCompletedPlaceholder"));
+    expect(html).not.toContain(collabCopy(SLUG, "duelSealedPlaceholder"));
+    expect(html).toContain('href="/praxes/1"');
+  });
+
+  it("offers no pull-back — after settlement that would be a forfeit", () => {
+    expect(html).not.toContain(collabCopy(SLUG, "duelPullBackAction"));
+    expect(html.toLowerCase()).not.toContain("forfeit");
+  });
+});

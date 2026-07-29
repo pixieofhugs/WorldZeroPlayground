@@ -67,13 +67,25 @@ export type SaveStatus = "idle" | "saving" | "saved" | "error";
  * Which face the composer is wearing (ADR-0059).
  *
  *  - `composing` — the faction archetype: the editor proper.
- *  - `waiting`   — the shared waiting surface: my part is filed and the praxis
- *    is held open on somebody else.
+ *  - `waiting`   — the shared waiting surface: my part is submitted and the
+ *    praxis is held open on somebody else.
+ *  - `completed` — the same surface in its completed reading: everybody is in,
+ *    so there is nothing left to wait for and nothing left to author (#1164).
+ *  - `handoff`   — nothing for `/edit` to draw at all; the read page owns it
+ *    from here, so the route redirects (#1164).
  *
- * Only multi-party praxes ever reach `waiting`. A solo cast has nobody to wait
- * for and keeps the redirect it always had.
+ * The last two are what a published praxis used to get instead: a **locked
+ * composer**, i.e. a third read-only rendering of a praxis beside the detail
+ * page and this surface. Owner ruling on #1164: a multi-party praxis shows the
+ * completed reading with a way through to `/praxes/:id`, and a solo one — which
+ * has no roster and never had anyone to wait for — simply hands off.
+ *
+ * `controlsLocked` therefore stops meaning "render the composer, disabled" and
+ * starts meaning "hand off". It still guards the one composer that legitimately
+ * renders locked: a **moderated** (hidden/failed) praxis, which is the
+ * archetype's own state to tell and never reaches this dispatch.
  */
-export type EditPraxisPhase = "composing" | "waiting";
+export type EditPraxisPhase = "composing" | "waiting" | "completed" | "handoff";
 
 /**
  * The phase, derived from data alone — no transient flag (ADR-0059).
@@ -84,20 +96,32 @@ export type EditPraxisPhase = "composing" | "waiting";
  * Latching a boolean at publish time would have left that re-entry on the
  * locked composer — the dead end #1077 patched with a single footer button.
  *
- * The four `composing` fall-throughs are deliberate, not defaults:
- *  - **The holdout case.** Others cast and I have not: `deriveCollabGate` calls
- *    that `holdout`, and it keeps the normal composer, because what it needs is
- *    an editor, not a status page (#1080).
- *  - **A settled/resolved duel.** Stage 3 belongs to `/praxes/:id` and its duel
- *    CARD (#1090, which deleted the twelve `*DuelRail` skins); forfeit begins at
- *    `settled` (ADR-0011 §Forfeit).
- *  - **A forfeited duel.** Same: the outcome is the read page's to tell.
+ * The `composing` fall-throughs are deliberate, not defaults:
+ *  - **The holdout case.** Others submitted and I have not: `deriveCollabGate`
+ *    calls that `holdout`, and it keeps the normal composer, because what it
+ *    needs is an editor, not a status page (#1080). What it gains in #1164 is
+ *    the ADR-0012 countdown, drawn beside the roster in the composer — it is the
+ *    only player the deadline actually threatens.
+ *  - **A forfeited duel.** The outcome is the read page's to tell (ADR-0059),
+ *    and the completed reading's "both sides are in" would be a lie: a forfeit
+ *    is an unsubmit, so the forfeiter's own side is back out (`unsubmit_praxis`
+ *    returns it to `in_progress`). Left exactly as ADR-0059 set it.
  *  - **A moderated praxis.** Hidden/failed is the archetype's own locked state,
  *    and a cheerful "your part is submitted" over it would be a lie.
  *
  * `duel == null` (the detail fetch is still in flight) also reads as
  * `composing`: the surface names the rival, so it renders nothing at all rather
  * than a panel with a hole where the opponent goes.
+ *
+ * **Once everybody is in** (#1164) the answer is `completed`, not `composing`:
+ *  - A collab is tested on `status === 'submitted'` rather than on the gate,
+ *    because a window that lapses auto-publishes the collab with a holdout still
+ *    outstanding (ADR-0012) — `submitted` is the fact, the gate is not.
+ *  - A `settled`/`resolved` duel joins it. ADR-0059 sent those to the read page
+ *    on the grounds that stage 3 is its business; the ruling on #1164 keeps that
+ *    true of the *outcome* and still refuses `/edit` a locked composer.
+ *  - A `declined` challenge never became a duel. What is left is an ordinary
+ *    published solo praxis, so it hands off like one.
  */
 export function deriveEditPraxisPhase(
   praxis: PraxisOut | null,
@@ -117,17 +141,19 @@ export function deriveEditPraxisPhase(
     if (praxis.status !== "submitted") return "composing";
     if (duel == null) return "composing";
     if (duel.forfeited_by_character_id != null) return "composing";
-    return duel.status === "active" || duel.status === "pending"
-      ? "waiting"
-      : "composing";
+    if (duel.status === "active" || duel.status === "pending") return "waiting";
+    if (duel.status === "declined") return "handoff";
+    return "completed";
   }
   if (praxis.type === "collab" && praxis.members.length > 1) {
+    if (praxis.status === "submitted") return "completed";
     return deriveCollabGate(praxis.members, currentCharacterId).state ===
       "waiting"
       ? "waiting"
       : "composing";
   }
-  return "composing";
+  // Solo — including a one-member collab, which has nobody to wait for either.
+  return praxis.status === "submitted" ? "handoff" : "composing";
 }
 
 export interface EditPraxisState {
@@ -296,8 +322,27 @@ export interface EditPraxisState {
   autosaveAt: Date | null;
   saveStatus: SaveStatus;
 
+  /**
+   * The ADR-0012 pending-publish window length, in days, from `/game-config`
+   * (`collab_auto_submit_days`). `null` until it lands — it is an `EraConfig`
+   * value a future era may change, so nothing may assume today's number.
+   *
+   * The composer needs it for exactly one player: the **holdout**, the member
+   * who has not submitted and the only one the deadline threatens (#1164). The
+   * waiting surface reads the same field through `useGameConfig`.
+   */
+  autoSubmitDays: number | null;
+
   // Derived locked-state flags
   isPublished: boolean;
+  /**
+   * The composer is read-only. Since #1164 this means **"hand off"** rather than
+   * "render the composer, disabled": a published praxis no longer reaches an
+   * archetype at all (`phase` is `completed` or `handoff`), so the one state
+   * that still renders a locked composer is a moderated (hidden/failed) one.
+   * Every `!controlsLocked` gate below and in the archetypes is what keeps that
+   * one honest.
+   */
   controlsLocked: boolean;
   modeIsLocked: boolean;
   /** Show the invite/challenge box: collab members, or an open duel pane. */
@@ -450,6 +495,9 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
   const [duelPaneOpen, setDuelPaneOpen] = useState(false);
   const [duel, setDuel] = useState<DuelDetailOut | null>(null);
   const [duelLevelRequired, setDuelLevelRequired] = useState<number | null>(null);
+  // The ADR-0012 window length (#1164). Same fetch as the duel gate — one
+  // `/game-config` read already in flight, two era values off it.
+  const [autoSubmitDays, setAutoSubmitDays] = useState<number | null>(null);
   const [foeIds, setFoeIds] = useState<Set<number>>(new Set());
   // Seal confirmation (#718) — opened by PublishButton in duel mode.
   const [duelSealOpen, setDuelSealOpen] = useState(false);
@@ -548,10 +596,16 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
       .finally(() => setLoading(false));
   }, [idParam, user, authLoading, navigate]);
 
-  // ---- Duel gating: level required + the viewer's foes (surfaced first) ----
+  // ---- Era values the composer needs: the duel gate + the publish window ----
+  // Both are `EraConfig` fields and neither is ever assumed. A failed read
+  // leaves the duel chip hidden and the holdout's countdown undrawn — a blank
+  // slot beats a confidently wrong number.
   useEffect(() => {
     getGameConfig()
-      .then((cfg) => setDuelLevelRequired(cfg.duel_level_required))
+      .then((cfg) => {
+        setDuelLevelRequired(cfg.duel_level_required);
+        setAutoSubmitDays(cfg.collab_auto_submit_days);
+      })
       .catch(() => {
         /* non-fatal; chip stays hidden until known */
       });
@@ -608,12 +662,25 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
       void (async () => {
         setSaveStatus("saving");
         try {
-          await updatePraxis(praxis.id, {
+          const updated = await updatePraxis(praxis.id, {
             title,
             body_text: body || undefined,
           });
           lastSavedTitleRef.current = title;
           lastSavedBodyRef.current = body;
+          // Take the payload, don't discard it (#1164). A PUT is exactly what
+          // `cancel_pending_publish_on_edit` reacts to: the pending-publish
+          // window is cancelled and every member's submission cleared
+          // (ADR-0012), so the `submit_proposed_at` this hook is holding is
+          // stale the instant a save lands. The holdout's countdown reads that
+          // field, and a countdown still ticking against a window that no
+          // longer exists is worse than no countdown at all. Costs nothing:
+          // `updatePraxis` already returns the fresh praxis.
+          //
+          // Safe against a loop — the effect's first act is to compare title
+          // and body against the refs just written, so the re-render it causes
+          // returns immediately.
+          setPraxis(updated);
           setAutosaveAt(new Date());
           setSaveStatus("saved");
         } catch {
@@ -1377,6 +1444,11 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
   const isModerated =
     praxis?.moderation_status === "hidden" ||
     praxis?.moderation_status === "failed";
+  // Read the interface docstring before touching this: since #1164 the only
+  // composer that renders with it true is a MODERATED one. `isPublished` is
+  // kept in the expression because the two disagree for a beat — a published
+  // praxis whose duel detail is still in flight derives `composing` — and
+  // because every consumer below wants "read-only", not "hidden or failed".
   const controlsLocked = !!(isPublished || isModerated);
   // Locked only once sealed/moderated — co-authors no longer lock the picker;
   // switching with members joined confirms-then-drops instead (#155).
@@ -1497,6 +1569,7 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
     autosaveAt,
     saveStatus,
 
+    autoSubmitDays,
     isPublished: !!isPublished,
     controlsLocked,
     modeIsLocked,
