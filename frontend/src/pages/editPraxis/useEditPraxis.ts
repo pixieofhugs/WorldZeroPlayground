@@ -88,8 +88,9 @@ export type EditPraxisPhase = "composing" | "waiting";
  *  - **The holdout case.** Others cast and I have not: `deriveCollabGate` calls
  *    that `holdout`, and it keeps the normal composer, because what it needs is
  *    an editor, not a status page (#1080).
- *  - **A settled/resolved duel.** Stage 3 belongs to `/praxes/:id` and the
- *    twelve `*DuelRail` skins; forfeit begins at `settled` (ADR-0011 §Forfeit).
+ *  - **A settled/resolved duel.** Stage 3 belongs to `/praxes/:id` and its duel
+ *    CARD (#1090, which deleted the twelve `*DuelRail` skins); forfeit begins at
+ *    `settled` (ADR-0011 §Forfeit).
  *  - **A forfeited duel.** Same: the outcome is the read page's to tell.
  *  - **A moderated praxis.** Hidden/failed is the archetype's own locked state,
  *    and a cheerful "your part is submitted" over it would be a lie.

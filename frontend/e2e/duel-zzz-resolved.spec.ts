@@ -85,9 +85,10 @@ test.describe('duel resolved rail (isolated — triggers a destructive era reset
           'era reset needs admin — see HAZARD 2 in this file; #957 must add a dev admin seam',
         ).toBeTruthy()
 
-        // The resolved rail must show the FROZEN result, not the live "floats with
-        // the votes" tally the settled branch renders. Today DuelCrossLink has no
-        // `resolved` branch (falls through to settled), so both assertions fail.
+        // The resolved duel card must show the FROZEN result, not the live "floats
+        // with the votes" tally the settled reading renders. `DuelCard` (#1090)
+        // has an explicit `resolved` reading, so this is a live contract now — it
+        // stays fixme only because the era reset above needs admin auth.
         await alicePage.goto(`/praxes/${alicePraxisId}`)
         const main = alicePage.getByRole('main')
         await expect(main.getByText(/floats with the votes/i)).toBeHidden()

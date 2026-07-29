@@ -1,0 +1,311 @@
+/**
+ * The praxis-detail duel card — one test per reading (#1090, epic #1085).
+ *
+ * Successor to `DuelCrossLink.test.tsx`, which walked a branch per `DuelStatus`.
+ * The card narrates OUTCOMES only, so the interesting surface is now much
+ * smaller and the deletions are as much of the contract as the renders:
+ *
+ *  - three readings — live (`settled`), won by default (forfeited), final
+ *    (`resolved`, with its no-contest variant);
+ *  - a forfeit from EITHER side, since the thrown side can re-cast and land back
+ *    on this page as the dimmed row;
+ *  - and four states that draw nothing: `declined`, `pending`, `active`, and a
+ *    praxis with no duel at all. The declined one is the deliberate change — the
+ *    shipped rail drew a declined state and this deletes it.
+ *
+ * Rendered through the whole archetype rather than the card alone, so the
+ * responsive MOUNT (aside on desktop, above the proof on mobile) is guarded by
+ * the same file as the copy. Harness note: `renderToStaticMarkup`, no DOM, no
+ * effects (SPEC-testing.md), so `useFormFactor` is mocked rather than driven off
+ * a viewport.
+ */
+import { renderToStaticMarkup } from 'react-dom/server'
+import { MemoryRouter } from 'react-router-dom'
+import { describe, it, expect, vi } from 'vitest'
+import '../../../i18n'
+import type { PraxisDetailState } from '../usePraxisDetail'
+import type { PraxisOut, PraxisMemberOut } from '../../../api/praxis'
+import type { DuelDetailOut, DuelSideOut, DuelStatus } from '../../../api/duel'
+
+const mocks = vi.hoisted(() => ({ formFactor: 'desktop' as 'desktop' | 'mobile' }))
+vi.mock('../../../hooks/useFormFactor', () => ({
+  useFormFactor: () => mocks.formFactor,
+}))
+
+const { default: DefaultPraxisDetail } = await import('../archetypes/DefaultPraxisDetail')
+
+const MEMBER: PraxisMemberOut = {
+  id: 101,
+  praxis_id: 1,
+  character_id: 3,
+  character_display_name: 'Ada',
+  has_submitted: true,
+  joined_at: '2026-01-01T00:00:00Z',
+}
+
+const PRAXIS: PraxisOut = {
+  id: 1,
+  task_id: 7,
+  task_title: 'A Chore Nobody Logged',
+  task_point_value: 12,
+  task_level_required: 2,
+  task_faction_slug: null,
+  type: 'duel',
+  status: 'submitted',
+  title: 'The Long Way Round',
+  body_text: 'Walked the whole ridge before dark.',
+  moderation_status: 'visible',
+  admin_note: null,
+  flagged_at: null,
+  submitted_at: '2026-01-03T00:00:00Z',
+  submit_proposed_at: null,
+  created_by_id: 3,
+  created_by_display_name: 'Ada',
+  created_by_faction_slug: null,
+  created_at: '2026-01-01T00:00:00Z',
+  updated_at: '2026-01-03T00:00:00Z',
+  members: [MEMBER],
+  invites: [],
+  media_items: [
+    {
+      id: 9,
+      praxis_id: 1,
+      type: 'image',
+      file_path: 'proof.png',
+      display_order: 0,
+      created_at: '2026-01-03T00:00:00Z',
+    },
+  ],
+  score: 30,
+  metatask_points: 0,
+  display_multiplier: 1.0,
+  points_from_votes: 18,
+  is_top_for_task: false,
+  duel_id: 5,
+  can_flag: true,
+  applied_metatasks: [],
+}
+
+/** This page's side. Its `praxis_id` is what makes it "mine" rather than the rival. */
+const MINE: DuelSideOut = {
+  praxis_id: 1,
+  character_id: 3,
+  display_name: 'Ada',
+  faction_slug: 'coven',
+  avatar_url: '',
+  points_from_votes: 18,
+  is_submitted: true,
+}
+
+const RIVAL: DuelSideOut = {
+  praxis_id: 2,
+  character_id: 4,
+  display_name: 'Rax',
+  faction_slug: 'snide',
+  avatar_url: '',
+  points_from_votes: 15.4,
+  is_submitted: true,
+}
+
+function duel(overrides: Partial<DuelDetailOut> = {}): DuelDetailOut {
+  return {
+    id: 5,
+    task_id: 7,
+    status: 'settled' as DuelStatus,
+    forfeited_by_character_id: null,
+    challenger: MINE,
+    opponent: RIVAL,
+    viewer_is_participant: false,
+    winner_character_id: null,
+    challenger_final_points: null,
+    opponent_final_points: null,
+    ...overrides,
+  }
+}
+
+function state(overrides: Partial<PraxisDetailState> = {}): PraxisDetailState {
+  return {
+    loading: false,
+    praxis: PRAXIS,
+    fetchError: null,
+    votes: { praxis_id: 1, total_votes: 2, total_score: 18 },
+    voters: [],
+    duel: duel(),
+    isOwner: false,
+    showAdminBar: false,
+    user: null,
+    withdrawing: false,
+    showWithdrawConfirm: false,
+    setShowWithdrawConfirm: () => {},
+    withdrawError: null,
+    adminFailNote: '',
+    setAdminFailNote: () => {},
+    showFailInput: false,
+    setShowFailInput: () => {},
+    moderating: false,
+    moderateError: null,
+    showFlagForm: false,
+    setShowFlagForm: () => {},
+    flagReason: null,
+    setFlagReason: () => {},
+    flagDetail: '',
+    setFlagDetail: () => {},
+    flagging: false,
+    flagError: null,
+    setFlagError: () => {},
+    flagSubmitted: false,
+    handleModerate: async () => {},
+    handleWithdraw: async () => {},
+    handleFlag: async () => {},
+    handleKickMember: async () => {},
+    ...overrides,
+  }
+}
+
+function render(
+  next: PraxisDetailState,
+  formFactor: 'desktop' | 'mobile' = 'desktop',
+): { html: string; text: string } {
+  mocks.formFactor = formFactor
+  const html = renderToStaticMarkup(
+    <MemoryRouter>
+      <DefaultPraxisDetail state={next} />
+    </MemoryRouter>,
+  )
+  return { html, text: html.replace(/<[^>]*>/g, '') }
+}
+
+/** Where a marker sits in the markup — the seam the responsive move is about. */
+function indexOf(html: string, needle: string): number {
+  const at = html.indexOf(needle)
+  expect(at, `marker missing: ${needle}`).toBeGreaterThan(-1)
+  return at
+}
+
+describe('duel card — the three readings', () => {
+  it('settled: both totals, the margin, and never a decided verdict', () => {
+    const { text, html } = render(state())
+    expect(text, 'the card label').toContain('The duel')
+    expect(text, "this side's total").toContain('18.0')
+    expect(text, "the rival's total").toContain('15.4')
+    expect(text, 'the leader and the margin').toContain('Ada leads by 2.6')
+    expect(text, 'live, not decided').toContain('live')
+    expect(text, 'the winner floats until era close (ADR-0011/0052)').toContain(
+      'floats with the votes',
+    )
+    expect(text, 'nothing is final yet').not.toContain('frozen at era close')
+    // The rival's row is the cross-link, and it points AWAY from this page.
+    expect(html).toContain('href="/praxes/2"')
+    expect(text).toContain('Read their praxis')
+  })
+
+  it('settled and level: no leader is named', () => {
+    const level = state({
+      duel: duel({ opponent: { ...RIVAL, points_from_votes: 18 } }),
+    })
+    const { text } = render(level)
+    expect(text).toContain('Tied')
+    expect(text).not.toContain('leads by')
+  })
+
+  it('forfeited by the rival: their total is absent, not losing', () => {
+    const { text, html } = render(
+      state({ duel: duel({ forfeited_by_character_id: RIVAL.character_id }) }),
+    )
+    expect(text, 'the verdict').toContain('Won by default')
+    expect(text, 'this side still stands').toContain('18.0')
+    // Absent, not losing: the tally stopped deciding this duel the moment they
+    // threw it, so their real figure is gone rather than shown as a loss.
+    expect(text, "the forfeiter's total is gone").not.toContain('15.4')
+    // The thrown side is back to `in_progress`, so this 404s. It stays a plain
+    // link on purpose — it degrades, it does not break the page.
+    expect(html).toContain('href="/praxes/2"')
+  })
+
+  it('forfeited by THIS side: the dimmed row is whoever threw it', () => {
+    const { text } = render(
+      state({ duel: duel({ forfeited_by_character_id: MINE.character_id }) }),
+    )
+    expect(text).toContain('Won by default')
+    expect(text, 'the rival keeps their total').toContain('15.4')
+    expect(text, 'this side has none').not.toContain('18.0')
+  })
+
+  it('resolved: the frozen pair and the named winner', () => {
+    const { text } = render(
+      state({
+        duel: duel({
+          status: 'resolved',
+          winner_character_id: RIVAL.character_id,
+          challenger_final_points: 21,
+          opponent_final_points: 24.5,
+        }),
+      }),
+    )
+    expect(text, 'the frozen figures, not the live ones').toContain('21.0')
+    expect(text).toContain('24.5')
+    expect(text).toContain('Rax won')
+    expect(text).toContain('frozen at era close')
+    expect(text, 'the contest is over — nothing floats').not.toContain('floats with the votes')
+  })
+
+  it('resolved as a no-contest: no pair, and the line that says why', () => {
+    const { text } = render(
+      state({
+        duel: duel({
+          status: 'resolved',
+          winner_character_id: null,
+          challenger_final_points: null,
+          opponent_final_points: null,
+        }),
+      }),
+    )
+    expect(text).toContain('No contest')
+    expect(text).toContain('never became votable')
+    expect(text, 'no frozen figures exist to print').not.toContain('18.0')
+  })
+})
+
+describe('duel card — the states that draw nothing', () => {
+  // THE DELIBERATE CHANGE. The shipped rail drew a declined state ("X declined
+  // the challenge — this scores as an ordinary praxis"). A declined challenge is
+  // no duel at all (ADR-0011): the praxis is an ordinary `type=solo` and takes no
+  // duel multiplier, so the page says nothing about one.
+  it('declined: no card at all', () => {
+    const { text } = render(state({ duel: duel({ status: 'declined' }) }))
+    expect(text).not.toContain('The duel')
+    expect(text).not.toContain('Rax')
+    expect(text, 'and no leftover declined narration').not.toContain('declined')
+  })
+
+  // The run-up belongs to the composer's waiting surface (#1071/ADR-0059). It is
+  // still reachable here by the AUTHOR — a cast duel side is `submitted`, so
+  // ADR-0062's redirect does not catch it — and detail deliberately stays quiet
+  // rather than telling the same story a second, thinner way.
+  it.each(['pending', 'active'] as const)('%s: no card — the composer owns the run-up', (status) => {
+    const { text } = render(state({ duel: duel({ status }) }))
+    expect(text).not.toContain('The duel')
+    expect(text).not.toContain('Rax')
+  })
+
+  it('no duel: no card', () => {
+    const { text } = render(state({ duel: null, praxis: { ...PRAXIS, duel_id: null } }))
+    expect(text).not.toContain('The duel')
+  })
+})
+
+describe('duel card — one card, moved', () => {
+  it('rides in the aside on desktop and above the proof on mobile', () => {
+    const wide = render(state())
+    expect(wide.text.match(/The duel/g)?.length, 'one card on desktop').toBe(1)
+    expect(indexOf(wide.html, 'Proof'), 'the aside follows the main column').toBeLessThan(
+      indexOf(wide.html, 'The duel'),
+    )
+
+    const phone = render(state(), 'mobile')
+    expect(phone.text.match(/The duel/g)?.length, 'one card on mobile — not a hidden twin').toBe(1)
+    expect(indexOf(phone.html, 'The duel'), 'stacked above the proof').toBeLessThan(
+      indexOf(phone.html, 'Proof'),
+    )
+  })
+})

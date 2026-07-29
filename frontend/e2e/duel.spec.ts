@@ -81,12 +81,14 @@ test.describe('duel lifecycle', () => {
       await waitForDuelAttached(alicePage, bob.name)
       await sealViaUi(alicePage)
 
-      // 4. Rail (praxisDetail/DuelCrossLink, settled branch): both sides + a live
-      //    tally. Backend analogue: test_duel_detail_returns_both_sides_with_tallies.
+      // 4. The duel card (praxisDetail/DuelCard, settled reading): both sides + a
+      //    live tally. Backend analogue: test_duel_detail_returns_both_sides_with_tallies.
+      //    #1090 replaced the "⚔ Duel vs …" rail headline with the card's own
+      //    label, so the anchor is the label rather than the old glyph.
       await alicePage.goto(`/praxes/${alicePraxisId}`)
       const main = alicePage.getByRole('main')
-      await expect(main.getByText(/⚔ Duel/)).toBeVisible()
-      await expect(main.getByText(bob.name)).toBeVisible()
+      await expect(main.getByText(/The duel/i).first()).toBeVisible()
+      await expect(main.getByText(bob.name).first()).toBeVisible()
       // The settled tally is deliberately LIVE (floats with the votes until era
       // reset) — this is exactly what D3 asserts should FREEZE once resolved.
       await expect(main.getByText(/floats with the votes/i)).toBeVisible()

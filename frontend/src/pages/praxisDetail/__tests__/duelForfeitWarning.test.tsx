@@ -15,9 +15,11 @@
  * keeps 0 rather than an invented "half".
  *
  * #752 relocated this control from the owner controls into the duel RAIL, so the
- * duel cases below mount `PraxisSubmitControls` (its new home) directly. The
- * last two cases pin the relocation itself: the owner controls suppress the
- * cluster for a duel, and keep it for an ordinary praxis.
+ * duel cases below mount `PraxisSubmitControls` directly. #1090 deleted the rail
+ * — the duel is a reading card now and owner actions live in the main column
+ * (epic #1085) — so the control came BACK inline, and the last two cases pin the
+ * un-relocation: the owner controls render it for a duel praxis and an ordinary
+ * one alike, which is still exactly one mount site (the #646 rule).
  */
 import { renderToStaticMarkup } from 'react-dom/server'
 import { MemoryRouter } from 'react-router-dom'
@@ -243,25 +245,26 @@ describe('forfeit escalation (#718)', () => {
   })
 })
 
-// #752: the control was relocated into the duel rail, so the owner controls must
-// no longer render it for a duel praxis — otherwise a settled-duel Forfeit would
-// sit in the rail AND an unsubmit in the owner controls, the #646 double control.
-describe('owner controls suppress the duel action cluster (#752)', () => {
-  it('settled duel: the owner controls render no submit/forfeit — the rail owns it', () => {
+// #1090: the rail that #752 moved this control into is gone, so the owner
+// controls own it again for EVERY praxis. The invariant that matters is
+// unchanged and is what these two cases pin — one mount site, never two rows of
+// the same destructive control (#646). The duel card in the aside is a reading
+// card: it draws no button in any state, which is why there is nowhere else for
+// a second one to appear.
+describe('owner controls carry the action cluster for every praxis (#1090)', () => {
+  it('settled duel: the escalated forfeit confirm renders inline, not in a rail', () => {
     const t = text(
       <PraxisOwnerActions
         state={state({ duel: duel('settled', true), showWithdrawConfirm: true })}
       />,
     )
-    expect(t).not.toMatch(/FORFEIT/i)
-    expect(t).not.toMatch(/wins by default/i)
-    // the edit link is the only owner control left for a duel praxis.
     expect(t).toMatch(/Edit/i)
+    // The forfeit escalation reaches the player through the owner controls now.
+    expect(t).toMatch(/FORFEITS the duel/i)
+    expect(t).toMatch(/Rax wins by default/i)
   })
 
-  it('ordinary praxis: the owner controls still render the cluster inline', () => {
-    // No duel_id, so `hasDuel` is false and the cluster stays in the owner
-    // controls (there is no rail to move it to).
+  it('ordinary praxis: the cluster is unchanged', () => {
     const ordinary = { ...praxis(), duel_id: null }
     const t = text(
       <PraxisOwnerActions state={state({ praxis: ordinary, showWithdrawConfirm: true })} />,
