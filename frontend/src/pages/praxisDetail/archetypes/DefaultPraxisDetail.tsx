@@ -30,8 +30,8 @@
  *   set — so `PraxisFlagBlock` / `PraxisAdminBar` are mounted bare here, taking
  *   none of the `panel` dress the score, vote and voters blocks wear, and they
  *   accept no style prop to make skinning them the easy path. Their copy is
- *   neutral and shared for the same reason (ADR-0061 as amended, 2026-07-28:
- *   content slots carry a skin's voice, moderation and system chrome do not).
+ *   neutral and shared for the same reason — ADR-0061: one shared neutral
+ *   `detail.*` set; a skin brings dress and no copy.
  *
  * ## One responsive component, no mobile twin (ADR-0056/0058)
  *
@@ -47,11 +47,10 @@
  *
  * Copy is one neutral shared `detail.*` set (ADR-0061) — no na voice, no faction
  * voice; where the design's word differed from the domain noun in CONTEXT.md the
- * domain noun won ("Members", not "the crew"). THIS page stays wholly neutral
- * even under the 2026-07-28 amendment: `default` ≡ `na` is the unaffiliated
- * identity, so the shared neutral set is already its voice. A faction skin may
- * register its own copy for the CONTENT slots above; the chrome slots keep
- * reading these same keys. Dress is na's alone: the spectrum
+ * domain noun won ("Members", not "the crew"). THIS page is doubly neutral:
+ * `default` ≡ `na` is the unaffiliated identity, so the shared set is already its
+ * voice. Every faction skin reads these same keys — an amendment that would have
+ * let skins voice the CONTENT slots was written and withdrawn on 2026-07-28. Dress is na's alone: the spectrum
  * via `--faction-default-*` tokens plus `--color-*`, flipping light/dark through
  * the `[data-theme="dark"]` cascade with no `dark ?` branch. The page surface is
  * carried by the COLUMN, not the viewport — the site background still shows

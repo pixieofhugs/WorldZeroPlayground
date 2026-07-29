@@ -19,7 +19,7 @@
  * was attended", "bear witness", …) and the owner ruled on 2026-07-28 that none
  * of it is built: a per-faction WORD is as identifying as a per-faction hue
  * (ADR-0027, WORLD_ZERO_STYLE §3), and it renders to every viewer. ADR-0061's
- * amendment permits a faction voice in the content slots; this faction declines
+ * standing rule is dress and no copy; this faction is doubly clear of it, declining
  * it. The byte-for-byte assertion covers that structurally — a voiced string
  * would break equality — and the vocabulary is spelled out below anyway so the
  * ruling survives as a readable test rather than as an implication.

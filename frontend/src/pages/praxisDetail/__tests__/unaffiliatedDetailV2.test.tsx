@@ -237,7 +237,7 @@ describe("Unaffiliated praxis detail — layout contract", () => {
   });
 
   it("leaves the report card outside the costume", () => {
-    // ADR-0061 as amended (2026-07-28): moderation and system chrome stay
+    // ADR-0061: moderation and system chrome stay
     // neutral in every faction's dress. The card must not pick up the page's
     // faction tokens — including by INHERITING the sheet's text colour, which
     // is why every text node inside it carries its own neutral token.

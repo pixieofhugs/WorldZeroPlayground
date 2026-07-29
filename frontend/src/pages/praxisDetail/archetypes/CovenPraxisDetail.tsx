@@ -316,7 +316,7 @@ export default function CovenPraxisDetail({ state }: { state: PraxisDetailState 
     </nav>
   )
 
-  // ── Moderation banners — NEUTRAL, in Coven's dress (ADR-0061 as amended) ───
+  // ── Moderation banners — NEUTRAL, in Coven's dress (ADR-0061) ───
   // The crown hero and the failed note are the shared banners; the flagged
   // notice has no shared slot, so it renders here — on the same `--color-*`
   // warning tokens `DefaultPraxisDetail` uses, deliberately not on the ward's

@@ -8,7 +8,7 @@
  *  - the inherited layout contract it must not "fix" — the 330px aside track,
  *    the crown at BOTH form factors, the responsive move of score + duel, and
  *    the comments region carrying exactly one heading;
- *  - the un-skinned moderation chrome (ADR-0061 as amended, 2026-07-28);
+ *  - the un-skinned moderation chrome (ADR-0061);
  *  - dress-only copy — every string is the shared neutral `detail.*` block, so
  *    the issue's recorded vocabulary must NOT appear;
  *  - and the terminal dress itself: one face, no raw hex, and the three motion
@@ -288,7 +288,7 @@ describe("Singularity praxis detail — the inherited layout contract", () => {
 
 describe("Singularity praxis detail — chrome stays outside the costume", () => {
   it("mounts the report card bare, on its own neutral surface", () => {
-    // ADR-0061 as amended: moderation and system chrome are neutral in every
+    // ADR-0061: moderation and system chrome are neutral in every
     // faction's dress. `PraxisFlagBlock` takes `state` only — there is no style
     // seam to dress it through — and it must still arrive on `.sidebar-card`.
     const { html } = render(state());

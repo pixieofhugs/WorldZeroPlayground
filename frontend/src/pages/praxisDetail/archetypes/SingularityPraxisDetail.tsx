@@ -46,7 +46,7 @@ import type { PraxisDetailState } from "../usePraxisDetail";
  * - **The report card and the steward bar are NOT skinned.** `PraxisFlagBlock`
  *   and `PraxisAdminBar` are mounted bare, wearing none of the panel dress the
  *   score / vote / voters blocks wear, on their own neutral `.sidebar-card`
- *   surface. ADR-0061 as amended (2026-07-28): content slots carry a skin's
+ *   surface. ADR-0061: content slots carry a skin's
  *   voice, moderation and system chrome do not.
  *
  * ## Dress only — the voice is recorded, not built
@@ -378,7 +378,7 @@ export default function SingularityPraxisDetail({ state }: { state: PraxisDetail
   // Neutral by rule, mounted bare: the crown hero and the failed note come from
   // the shared banners, the flagged notice has no shared slot so it renders
   // here on the shared `--color-warning`, and `PraxisAdminBar` is the steward
-  // bar. Nothing in this block wears the costume (ADR-0061 as amended).
+  // bar. Nothing in this block wears the costume (ADR-0061).
   const banners = (
     <>
       <PraxisStatusBanners state={state} />

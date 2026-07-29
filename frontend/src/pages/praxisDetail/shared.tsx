@@ -487,7 +487,7 @@ export function PraxisSubmitControls({ state }: { state: PraxisDetailState }) {
  * All eight faction praxis-detail designs draw this card the same way: shared
  * neutral copy on its own neutral token set, wearing none of the skin's dress
  * while every panel around it does. Only the Unaffiliated design skinned it, and
- * it is the outlier (#1117–#1123). ADR-0061 as amended (2026-07-28) states the
+ * it is the outlier (#1117–#1123). ADR-0061 states the
  * rule the designs were drawing: content slots carry a skin's voice, moderation
  * and system chrome do not — the report card, the steward bar, the banners and
  * the errors read one shared neutral block in every faction's dress.
