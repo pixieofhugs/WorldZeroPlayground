@@ -2,6 +2,7 @@ import { useState, type CSSProperties, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import PraxisCard from "../../../components/PraxisCard";
+import { BalloonBunch, Bunting, Zig } from "../../../components/cards/wowOrnament";
 import { useFormFactor } from "../../../hooks/useFormFactor";
 import { factionCssVar, factionFill, factionName } from "../../../utils/factions";
 import { mediaUrl } from "../../../utils/media";
@@ -56,6 +57,12 @@ import type { TaskDetailState } from "../useTaskDetail";
  * five it adds (the page field, its dot, the inner plate, the plum's edge and
  * the page shadow) are delimited in `index.css` under the same heading as this
  * file.
+ *
+ * The wavy rule, the balloon bunch and the bunting moved OUT of this file into
+ * `components/cards/wowOrnament.tsx` (#1121), where the praxis-detail skin reads
+ * the same three primitives. They were drawn here and, separately, in
+ * `WowTaskCard`; a third hand-drawn copy is what WORLD_ZERO_STYLE §6 (#849)
+ * forbids. Nothing about how they render changed.
  */
 
 const MED = "var(--faction-wow-card-font)"; /* MedievalSharp */
@@ -88,9 +95,6 @@ const HAIR = "var(--faction-wow-chronicle-rule)";
  * on its own below that.
  */
 const GALLERY_PREVIEW = 3;
-
-/** Pennants in the bunting strung across the head of the page. */
-const BUNTING_PENNANTS = 30;
 
 interface SizeSet {
   /** The action plate's width. WOW's is 452 — dress, and deliberate. */
@@ -155,50 +159,6 @@ const QUIET: CSSProperties = {
   lineHeight: 1.55,
 };
 
-/**
- * The wavy gold→plum rule, stretched to whatever the flex row gives it. Built
- * rather than written out: a `T`-chained quadratic of twenty segments is not a
- * string anyone should maintain by hand, and `vectorEffect: non-scaling-stroke`
- * is what keeps the line one weight however far it is stretched.
- */
-const ZIG_PATH = (() => {
-  let path = "M0,4 Q3,1 6,4";
-  for (let x = 12; x <= 120; x += 6) path += ` T${x},4`;
-  return path;
-})();
-
-function Zig({ id, style }: { id: string; style?: CSSProperties }) {
-  const gradientId = `wow-detail-zig-${id}`;
-  return (
-    <span aria-hidden="true" style={{ display: "block", minWidth: 24, ...style }}>
-      <svg
-        width="100%"
-        height={8}
-        viewBox="0 0 120 8"
-        preserveAspectRatio="none"
-        style={{ display: "block", overflow: "visible" }}
-      >
-        <defs>
-          <linearGradient id={gradientId} x1="0" y1="0" x2="1" y2="0">
-            <stop offset="0" stopColor={GOLD} />
-            <stop offset="1" stopColor={PLUM} />
-          </linearGradient>
-        </defs>
-        <path
-          d={ZIG_PATH}
-          fill="none"
-          stroke={`url(#${gradientId})`}
-          strokeWidth="1.6"
-          vectorEffect="non-scaling-stroke"
-          strokeLinejoin="round"
-          strokeLinecap="round"
-          opacity="0.85"
-        />
-      </svg>
-    </span>
-  );
-}
-
 /** The star that leads every call to action. */
 function Star({ size, color }: { size: number; color: string }) {
   return (
@@ -243,127 +203,6 @@ function ShieldGlyph({ size }: { size: number }) {
         <circle cx="16.8" cy="17.3" r="1.1" />
       </g>
     </svg>
-  );
-}
-
-/**
- * One googly balloon on its string. The pupils travel on `.wow-balloon-eye`,
- * the faction's existing reduced-motion-guarded wiggle, staggered per eye via
- * `--wow-eye-delay` so no two in the bunch move together.
- */
-function Balloon({
-  cx,
-  cy,
-  fill,
-  delay,
-}: {
-  cx: number;
-  cy: number;
-  fill: string;
-  delay: number;
-}) {
-  const eye = (offset: number, eyeDelay: number) => (
-    <>
-      <circle
-        cx={cx + offset}
-        cy={cy - 1}
-        r={2.4}
-        fill="var(--faction-wow-balloon-eye-white)"
-        stroke="var(--faction-wow-balloon-eye-ring)"
-        strokeWidth={0.8}
-      />
-      <circle
-        className="wow-balloon-eye"
-        cx={cx + offset}
-        cy={cy - 0.2}
-        r={1}
-        fill="var(--faction-wow-balloon-eye)"
-        style={{ "--wow-eye-delay": `${eyeDelay}s` } as CSSProperties}
-      />
-    </>
-  );
-  return (
-    <g>
-      <ellipse
-        cx={cx}
-        cy={cy}
-        rx={9}
-        ry={11}
-        fill={fill}
-        stroke="var(--faction-wow-balloon-outline)"
-        strokeWidth={1.2}
-      />
-      <path
-        d={`M${cx - 2},${cy + 10.3} L${cx + 2},${cy + 10.3} L${cx},${cy + 13.3} Z`}
-        fill={fill}
-        stroke="var(--faction-wow-balloon-outline)"
-        strokeWidth={1.1}
-        strokeLinejoin="round"
-      />
-      {eye(-3, delay)}
-      {eye(3, delay + 0.3)}
-    </g>
-  );
-}
-
-/**
- * The bunch. The whole span bobs on `.wow-balloon-bunch`, which — like every
- * other faction motion in the house — is a CLASS gated on
- * `prefers-reduced-motion: no-preference`, never an inline `animation:` that
- * would bypass the gate.
- */
-function Balloons({ size }: { size: number }) {
-  return (
-    <span
-      className="wow-balloon-bunch"
-      aria-hidden="true"
-      style={{ display: "inline-block", flex: "0 0 auto", width: size, height: size * 1.25 }}
-    >
-      <svg width={size} height={size * 1.25} viewBox="0 0 44 56" style={{ display: "block" }}>
-        <g fill="none" stroke="var(--faction-wow-balloon-string)" strokeWidth={1}>
-          <path d="M12,28 Q16,41 22,51" />
-          <path d="M31,25 Q28,41 22,51" />
-          <path d="M22,36 Q23,44 22,51" />
-        </g>
-        <Balloon cx={12} cy={15} fill="var(--faction-wow-balloon-5)" delay={0} />
-        <Balloon cx={31} cy={12} fill="var(--faction-wow-balloon-5)" delay={0.2} />
-        <Balloon cx={22} cy={27} fill="var(--faction-wow-balloon-1)" delay={0.4} />
-        <circle cx={22} cy={51} r={1.6} fill={GILT} />
-      </svg>
-    </span>
-  );
-}
-
-/** Bunting strung across the head of the page. */
-function Bunting({ gap }: { gap: string }) {
-  return (
-    <div
-      aria-hidden="true"
-      style={{
-        display: "flex",
-        alignItems: "flex-start",
-        gap: "var(--space-xs)",
-        height: 22,
-        overflow: "hidden",
-        opacity: 0.9,
-        marginBottom: gap,
-      }}
-    >
-      {Array.from({ length: BUNTING_PENNANTS }).map((_, index) => (
-        <span
-          key={index}
-          style={{
-            flex: 1,
-            minWidth: 0,
-            height: 0,
-            borderLeft: "7px solid transparent",
-            borderRight: "7px solid transparent",
-            borderTop: `18px solid ${index % 2 ? PLUM : GOLD}`,
-            transform: `translateY(${index % 2 ? 2 : 0}px)`,
-          }}
-        />
-      ))}
-    </div>
   );
 }
 
@@ -919,7 +758,7 @@ export default function WowTaskDetail({ state }: { state: TaskDetailState }) {
         >
           {t("detail.gallery.heading", { count: submissions.length })}
         </span>
-        <Balloons size={34} />
+        <BalloonBunch size={34} />
         <Zig id="gallery" style={{ flex: 1 }} />
         <span
           style={{
@@ -964,7 +803,7 @@ export default function WowTaskDetail({ state }: { state: TaskDetailState }) {
             gap: "var(--space-lg)",
           }}
         >
-          <Balloons size={56} />
+          <BalloonBunch size={56} />
           <p className="content-text" style={{ ...QUIET, color: MUTED, margin: 0 }}>
             {t("detail.gallery.empty")}
           </p>
@@ -1023,7 +862,7 @@ export default function WowTaskDetail({ state }: { state: TaskDetailState }) {
           boxSizing: "border-box",
         }}
       >
-        <Bunting gap={size.buntingGap} />
+        <Bunting style={{ marginBottom: size.buntingGap }} />
 
         <div
           style={{

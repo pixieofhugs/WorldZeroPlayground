@@ -209,6 +209,14 @@
       "metatasks": "Extras taken",
       "vote": "Your call",
       "voters": "Who called it"
+    },
+    "wow": {
+      "proof": "The proof",
+      "members": "Sworn together by",
+      "metatasks": "Charms claimed",
+      "vote": "Your cheer",
+      "voters": "The court says",
+      "comments": "The gallery"
     }
   },
   "comments": {

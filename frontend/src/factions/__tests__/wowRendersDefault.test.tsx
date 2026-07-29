@@ -73,27 +73,24 @@ function Sentinel() {
  * the chronicle identity since the kit drew no wow specimen.
  *
  * and #1037's desktop `taskDetail` — THE PARCHMENT FIELD, the first of #951's
- * four missing desktop surfaces to ship.
+ * four missing desktop surfaces to ship — and #1121's `praxisDetail`, THE
+ * CHRONICLE ENTRY: WOW's dress over the one shared praxis-detail page every
+ * faction dresses (ADR-0061). One responsive component, so it serves both form
+ * factors and there is no mobile row to add beside it.
  *
- * SEVEN SURFACES ARE STILL UNCLAIMED, in two groups.
+ * SIX SURFACES ARE STILL UNCLAIMED, in two groups.
  *
- * `factionBody`, `factionCard` and `praxisDetail` are PENDING DESIGN
- * BUGS, tracked by #951. #899/#900/#840 scoped them out on a
- * design-fidelity argument (the kit drew WOW's cards and hero, not the desktop
- * pages beneath them, so a page skin would be invention), but the owner ruled
- * (2026-07-23) that a faction missing a custom experience is a bug regardless:
- * WOW players get the generic Default on those pages. They fall to the neutral
- * Default (N/A), never to Coven — which is the point of pinning the set here.
- * When #951 ships a skin, move that surface into WOW_SKINNED and this list
- * shrinks; `surfaceDispatch.test.ts` enforces the same #951 allowlist. #1037 is
- * that shrink happening once: `taskDetail` moved down into WOW_SKINNED and out
- * of both allowlists in the same commit.
- *
- * `praxisDetail` is a WEAKER gap than the other two right now, and deliberately
- * so: ADR-0061/#1089 made praxis detail ONE shared page and de-registered every
- * faction's skin, so WOW is not alone on the Default there — nobody has dress
- * yet, and the seven designs land as dress over the same layout (epic #1085).
- * It stays on this list because the end state is still a WOW skin.
+ * `factionBody` and `factionCard` are PENDING DESIGN BUGS, tracked by #951.
+ * #899/#900/#840 scoped them out on a design-fidelity argument (the kit drew
+ * WOW's cards and hero, not the desktop pages beneath them, so a page skin would
+ * be invention), but the owner ruled (2026-07-23) that a faction missing a
+ * custom experience is a bug regardless: WOW players get the generic Default on
+ * those pages. They fall to the neutral Default (N/A), never to Coven — which is
+ * the point of pinning the set here. When #951 ships a skin, move that surface
+ * into WOW_SKINNED and this list shrinks; `surfaceDispatch.test.ts` enforces the
+ * same #951 allowlist. That shrink has now happened twice: `taskDetail` moved
+ * down into WOW_SKINNED in #1037, and `praxisDetail` in #1121 — each out of both
+ * allowlists in the same commit as its skin.
  *
  * `mobileCreateCharacter` and `mobileEditCharacter`, `mobileFactionsDirectory`
  * and `mobilePlayersDirectory`: nothing in the kit describes them, #901 scoped
@@ -106,6 +103,7 @@ const WOW_SKINNED: ReadonlySet<FactionSurface> = new Set([
   'avatar',
   'taskCard',
   'taskDetail',
+  'praxisDetail',
   'comment',
   'feedFrame',
   'praxisCard',
@@ -126,7 +124,7 @@ const WOW_SKINNED: ReadonlySet<FactionSurface> = new Set([
   'metaTaskSeal',
 ])
 
-describe('wow is partly skinned: twenty-two surfaces claimed, the rest fall back', () => {
+describe('wow is partly skinned: twenty-three surfaces claimed, the rest fall back', () => {
   it('registers a manifest now (#821)', () => {
     expect(FACTION_MANIFESTS.map((manifest) => manifest.slug)).toContain('wow')
   })

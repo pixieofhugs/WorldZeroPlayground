@@ -77,7 +77,7 @@ const CORE_SIX = ['coven', 'snide', 'ephemerists', 'singularity', 'everymen', 'u
 // Append your slug; never restate the list from memory.
 const BESPOKE: Record<string, string[]> = {
   taskDetail: [...CORE_SIX, 'wow', 'albescent'],
-  praxisDetail: ['coven', 'ephemerists', 'singularity', 'albescent', 'everymen', 'snide'],
+  praxisDetail: ['coven', 'ephemerists', 'singularity', 'albescent', 'everymen', 'snide', 'wow'],
   mobileFactionPage: [...CORE_SIX, 'wow'],
   mobileFieldDesk: [...CORE_SIX, 'wow'],
   mobileEditPraxis: [...CORE_SIX, 'wow'],
@@ -122,14 +122,10 @@ const REQUIRED = SURFACE_KEYS.filter((surface) =>
 // When a skin ships, drop the surface here and the "still pending" guard below
 // fails, forcing this allowlist to shrink in lockstep with the fix.
 // `taskDetail` left this set in #1037 — the parchment field, WOW's first
-// desktop task-detail page. Three bullets of #951 remain.
-//
-// `praxisDetail` is a weaker row than the other two since #1089: no faction
-// skins that surface any more (ADR-0061), so WOW is not alone on the Default
-// there. It stays listed because the end state is still a WOW dress over the
-// shared layout — the row asserts absence, which is true either way.
+// desktop task-detail page — and `praxisDetail` left it in #1121, the chronicle
+// entry: WOW's dress over the one shared praxis-detail page (ADR-0061). Two
+// bullets of #951 remain, and neither is a page the kit ever drew.
 const WOW_PENDING: ReadonlySet<string> = new Set([
-  'praxisDetail',
   'factionCard',
   'factionBody',
 ])

@@ -4,6 +4,7 @@ import type { CardProps } from "../TaskCard";
 import i18n from "../../i18n";
 import { isNeutralMultiplier } from "../../utils/points";
 import { useFormFactor } from "../../hooks/useFormFactor";
+import { BalloonBunch, Zig } from "./wowOrnament";
 
 /**
  * Warriors of Whimsy — THE QUEST DECREE (task card v2, #1023).
@@ -98,52 +99,6 @@ const EYEBROW: CSSProperties = {
   color: PLUM,
 };
 
-/**
- * The wavy rule, stretched to its container.
- *
- * Built rather than written out: a `T`-chained quadratic of twenty segments is
- * not a string anyone should maintain by hand, and `vectorEffect:
- * non-scaling-stroke` is what keeps the line one weight however far the flex row
- * stretches it.
- */
-const ZIG_PATH = (() => {
-  let path = "M0,4 Q3,1 6,4";
-  for (let x = 12; x <= 120; x += 6) path += ` T${x},4`;
-  return path;
-})();
-
-function Zig({ id, style }: { id: string; style?: CSSProperties }) {
-  const gradientId = `wow-zig-${id}`;
-  return (
-    <div aria-hidden="true" style={style}>
-      <svg
-        width="100%"
-        height={8}
-        viewBox="0 0 120 8"
-        preserveAspectRatio="none"
-        style={{ display: "block", overflow: "visible" }}
-      >
-        <defs>
-          <linearGradient id={gradientId} x1="0" y1="0" x2="1" y2="0">
-            <stop offset="0" stopColor={GOLD} />
-            <stop offset="1" stopColor={PLUM} />
-          </linearGradient>
-        </defs>
-        <path
-          d={ZIG_PATH}
-          fill="none"
-          stroke={`url(#${gradientId})`}
-          strokeWidth="1.6"
-          vectorEffect="non-scaling-stroke"
-          strokeLinejoin="round"
-          strokeLinecap="round"
-          opacity="0.85"
-        />
-      </svg>
-    </div>
-  );
-}
-
 /** The sword-and-shield that marks the muster. */
 function SwordAndShield({ size }: { size: number }) {
   return (
@@ -168,70 +123,6 @@ function SwordAndShield({ size }: { size: number }) {
         <circle cx="16.8" cy="17.3" r="1.1" />
       </g>
     </svg>
-  );
-}
-
-/**
- * One googly balloon on its string. The pupils travel on `.wow-balloon-eye`,
- * the faction's existing reduced-motion-guarded wiggle; `--wow-eye-delay` is
- * the stagger, so no two eyes in the bunch move together.
- */
-function Balloon({ cx, cy, fill, delay }: { cx: number; cy: number; fill: string; delay: number }) {
-  const eye = (offset: number, eyeDelay: number) => (
-    <>
-      <circle
-        cx={cx + offset}
-        cy={cy - 1}
-        r={2.4}
-        fill="var(--faction-wow-balloon-eye-white)"
-        stroke="var(--faction-wow-balloon-eye-ring)"
-        strokeWidth={0.8}
-      />
-      <circle
-        className="wow-balloon-eye"
-        cx={cx + offset}
-        cy={cy - 0.2}
-        r={1}
-        fill="var(--faction-wow-balloon-eye)"
-        style={{ "--wow-eye-delay": `${eyeDelay}s` } as CSSProperties}
-      />
-    </>
-  );
-  return (
-    <g>
-      <ellipse cx={cx} cy={cy} rx={9} ry={11} fill={fill} stroke="var(--faction-wow-balloon-outline)" strokeWidth={1.2} />
-      <path
-        d={`M${cx - 2},${cy + 10.3} L${cx + 2},${cy + 10.3} L${cx},${cy + 13.3} Z`}
-        fill={fill}
-        stroke="var(--faction-wow-balloon-outline)"
-        strokeWidth={1.1}
-        strokeLinejoin="round"
-      />
-      {eye(-3, delay)}
-      {eye(3, delay + 0.3)}
-    </g>
-  );
-}
-
-/** The cheerful bundle tucked into the decree's bottom corner. */
-function Balloons() {
-  return (
-    <span
-      aria-hidden="true"
-      style={{ position: "absolute", right: 14, bottom: 10, zIndex: 2, transform: "rotate(4deg)", display: "inline-block" }}
-    >
-      <svg width={64} height={80} viewBox="0 0 44 56" style={{ display: "block" }}>
-        <g fill="none" stroke="var(--faction-wow-balloon-string)" strokeWidth={1}>
-          <path d="M12,28 Q16,41 22,51" />
-          <path d="M31,25 Q28,41 22,51" />
-          <path d="M22,36 Q23,44 22,51" />
-        </g>
-        <Balloon cx={12} cy={15} fill="var(--faction-wow-balloon-5)" delay={0} />
-        <Balloon cx={31} cy={12} fill="var(--faction-wow-balloon-5)" delay={0.2} />
-        <Balloon cx={22} cy={27} fill="var(--faction-wow-balloon-1)" delay={0.4} />
-        <circle cx={22} cy={51} r={1.6} fill={GILT} />
-      </svg>
-    </span>
   );
 }
 
@@ -416,7 +307,15 @@ export default function WowTaskCard({
           )}
         </div>
 
-        {size.balloons && <Balloons />}
+        {size.balloons && (
+          <BalloonBunch
+            size={64}
+            /* Still, not bobbing: a flex-wrap grid of forty cards is not a place
+               to run forty infinite animations. The eyes still wiggle. */
+            bob={false}
+            style={{ position: "absolute", right: 14, bottom: 10, zIndex: 2, transform: "rotate(4deg)" }}
+          />
+        )}
       </article>
     </div>
   );

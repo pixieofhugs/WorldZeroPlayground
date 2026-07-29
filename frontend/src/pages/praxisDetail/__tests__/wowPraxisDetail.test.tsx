@@ -1,0 +1,419 @@
+/**
+ * WOW praxis detail — THE CHRONICLE ENTRY (#1121).
+ *
+ * `archetypeSlots.test.tsx` already walks this archetype for the content slots
+ * every praxis-detail skin must emit (finding, task link, byline, crown, seal,
+ * score breakdown), so none of that is repeated here. What is left is what only
+ * WOW can get wrong:
+ *
+ *  - the registry row that makes the page reachable at all — one of #951's four
+ *    bullets was that WOW *rendered the generic Default here*, and a green
+ *    render proves nothing about which component produced it;
+ *  - the amended ADR-0061 split: the six CONTENT slots speak WOW, and the
+ *    moderation chrome does not;
+ *  - the layout facts #1129 reconciled against the eight faction designs — the
+ *    330px aside, the crown at BOTH form factors, the undressed report card;
+ *  - the dress itself, which is the only thing a skin is allowed to bring.
+ *
+ * Harness note: `renderToStaticMarkup`, no DOM, no effects (SPEC-testing.md).
+ * `useFormFactor` is MOCKED rather than driven off `matchMedia` — the mobile
+ * assertions are about the form factor reaching the page. Light vs dark is a
+ * pure `[data-theme]` cascade with no branch in the component, so there is
+ * nothing here to assert about it; it is an eyeball check.
+ */
+import { renderToStaticMarkup } from "react-dom/server";
+import { MemoryRouter } from "react-router-dom";
+import { describe, it, expect, vi } from "vitest";
+import "../../../i18n";
+import { surfaceMap } from "../../../factions";
+import { resolvedArchetype } from "../../../factions/lazyArchetype";
+import type { PraxisDetailState } from "../usePraxisDetail";
+import type { PraxisOut, PraxisMemberOut } from "../../../api/praxis";
+import type { DuelDetailOut } from "../../../api/duel";
+import type { CurrentUser } from "../../../api/auth";
+
+const mocks = vi.hoisted(() => ({ formFactor: "desktop" as "desktop" | "mobile" }));
+vi.mock("../../../hooks/useFormFactor", () => ({
+  useFormFactor: () => mocks.formFactor,
+}));
+
+// Imported after the mock so the archetype picks it up.
+const { default: WowPraxisDetail } = await import("../archetypes/WowPraxisDetail");
+const { default: DefaultPraxisDetail } = await import("../archetypes/DefaultPraxisDetail");
+
+const MEMBER: PraxisMemberOut = {
+  id: 101,
+  praxis_id: 1,
+  character_id: 3,
+  character_display_name: "Wren Abalone",
+  has_submitted: true,
+  joined_at: "2026-01-01T00:00:00Z",
+};
+
+const CO_MEMBER: PraxisMemberOut = {
+  id: 102,
+  praxis_id: 1,
+  character_id: 4,
+  character_display_name: "Bram Quilling",
+  has_submitted: true,
+  joined_at: "2026-01-02T00:00:00Z",
+};
+
+// No apostrophes in the fixtures: `renderToStaticMarkup` escapes them to
+// `&#x27;`, which survives the tag-strip and breaks a plain substring check.
+const PRAXIS: PraxisOut = {
+  id: 1,
+  task_id: 7,
+  task_title: "Hauled the recycling to the depot",
+  task_point_value: 12,
+  task_level_required: 2,
+  task_faction_slug: "wow",
+  type: "solo",
+  status: "submitted",
+  title: "The Long Way Round",
+  body_text: "Walked the whole ridge before dark.",
+  moderation_status: "visible",
+  admin_note: null,
+  flagged_at: null,
+  submitted_at: "2026-01-03T00:00:00Z",
+  submit_proposed_at: null,
+  created_by_id: 3,
+  created_by_display_name: "Wren Abalone",
+  created_by_faction_slug: "wow",
+  created_at: "2026-01-01T00:00:00Z",
+  updated_at: "2026-01-03T00:00:00Z",
+  members: [MEMBER],
+  invites: [],
+  media_items: [
+    {
+      id: 9,
+      praxis_id: 1,
+      type: "image",
+      file_path: "proof.png",
+      display_order: 0,
+      created_at: "2026-01-03T00:00:00Z",
+    },
+  ],
+  // (base 12 + meta 0) × 1.0 + 4 from votes.
+  score: 16,
+  metatask_points: 0,
+  display_multiplier: 1.0,
+  points_from_votes: 4,
+  is_top_for_task: false,
+  duel_id: null,
+  can_flag: true,
+  applied_metatasks: [],
+};
+
+const VIEWER: CurrentUser = {
+  id: 50,
+  display_name: "Wren Abalone",
+  is_admin: false,
+  character: {
+    id: 3,
+    display_name: "Wren Abalone",
+    faction_slug: "wow",
+    level: 4,
+    points: 120,
+    avatar_url: null,
+  },
+} as unknown as CurrentUser;
+
+function state(overrides: Partial<PraxisDetailState> = {}): PraxisDetailState {
+  return {
+    loading: false,
+    praxis: PRAXIS,
+    fetchError: null,
+    votes: { praxis_id: 1, total_votes: 2, total_score: 4 },
+    voters: [
+      { character_id: 11, display_name: "Cy", avatar_url: "", faction_slug: "", value: 5 },
+      { character_id: 12, display_name: "Dov", avatar_url: "", faction_slug: "", value: 3 },
+    ],
+    duel: null as DuelDetailOut | null,
+    isOwner: false,
+    showAdminBar: false,
+    user: null,
+    withdrawing: false,
+    showWithdrawConfirm: false,
+    setShowWithdrawConfirm: () => {},
+    withdrawError: null,
+    adminFailNote: "",
+    setAdminFailNote: () => {},
+    showFailInput: false,
+    setShowFailInput: () => {},
+    moderating: false,
+    moderateError: null,
+    showFlagForm: false,
+    setShowFlagForm: () => {},
+    flagReason: null,
+    setFlagReason: () => {},
+    flagDetail: "",
+    setFlagDetail: () => {},
+    flagging: false,
+    flagError: null,
+    setFlagError: () => {},
+    flagSubmitted: false,
+    handleModerate: async () => {},
+    handleWithdraw: async () => {},
+    handleFlag: async () => {},
+    handleKickMember: async () => {},
+    ...overrides,
+  };
+}
+
+/** A two-sided duel at a given status; this praxis is the challenger's. */
+function duel(status: DuelDetailOut["status"]): DuelDetailOut {
+  const side = (praxisId: number | null, id: number, name: string, votes: number) => ({
+    praxis_id: praxisId,
+    character_id: id,
+    display_name: name,
+    faction_slug: "wow",
+    avatar_url: "",
+    points_from_votes: votes,
+    is_submitted: true,
+  });
+  return {
+    id: 5,
+    task_id: 7,
+    status,
+    forfeited_by_character_id: null,
+    challenger: side(1, 3, "Wren Abalone", 18),
+    opponent: side(2, 4, "Bram Quilling", 15.4),
+    viewer_is_participant: false,
+    winner_character_id: null,
+    challenger_final_points: null,
+    opponent_final_points: null,
+  };
+}
+
+function render(
+  next: PraxisDetailState,
+  formFactor: "desktop" | "mobile" = "desktop",
+): { html: string; text: string } {
+  mocks.formFactor = formFactor;
+  const html = renderToStaticMarkup(
+    <MemoryRouter>
+      <WowPraxisDetail state={next} />
+    </MemoryRouter>,
+  );
+  return { html, text: html.replace(/<[^>]*>/g, "") };
+}
+
+/** Where a marker sits in the markup — the seam the responsive move is about. */
+function indexOf(html: string, needle: string): number {
+  const at = html.indexOf(needle);
+  expect(at, `marker missing: ${needle}`).toBeGreaterThan(-1);
+  return at;
+}
+
+describe("WOW claims the praxis-detail surface (#951)", () => {
+  it("registers a praxisDetail archetype", () => {
+    expect(surfaceMap("praxisDetail")["wow"]).toBeDefined();
+  });
+
+  it("is the WOW skin and not the na fallback still wearing its name", () => {
+    // The bug this closes was invisible: WOW *rendered*, it just rendered the
+    // generic Default. Two different components, so the tell is the dress.
+    const wow = render(state());
+    const na = renderToStaticMarkup(
+      <MemoryRouter>
+        <DefaultPraxisDetail state={state()} />
+      </MemoryRouter>,
+    );
+    expect(wow.html, "the parchment field").toContain("wow-detail-field");
+    expect(na, "which the na page has no notion of").not.toContain("wow-detail-field");
+    expect(na, "na's page is the spectrum").toContain("--faction-default-rainbow");
+  });
+
+  it("resolves through the manifest thunk to the same component", async () => {
+    const Resolved = await resolvedArchetype(surfaceMap("praxisDetail")["wow"]);
+    expect(Resolved).toBe(WowPraxisDetail);
+  });
+});
+
+describe("WOW praxis detail — the voice split (ADR-0061 as amended)", () => {
+  it("speaks WOW in the six content slots", () => {
+    const { text } = render(
+      state({
+        praxis: {
+          ...PRAXIS,
+          members: [MEMBER, CO_MEMBER],
+          applied_metatasks: [
+            {
+              id: 501,
+              title: "Composting",
+              description: null,
+              point_value: 6,
+              level_required: 0,
+              status: "active",
+              task_type: "metatask",
+              created_by: 9,
+              primary_faction_slug: null,
+              metatask_faction_slug: "wow",
+              is_task_vision_eligible: false,
+              created_at: "2026-01-01T00:00:00Z",
+              can_submit_praxis: false,
+              allowed_modes: [],
+              eligible_for_current_user: false,
+            },
+          ],
+        },
+      }),
+    );
+    expect(text, "media").toContain("The proof");
+    expect(text, "crew").toContain("Sworn together by");
+    expect(text, "metatasks").toContain("Charms claimed");
+    expect(text, "vote").toContain("Your cheer");
+    expect(text, "voters").toContain("The court says");
+    expect(text, "comments").toContain("The gallery");
+  });
+
+  it("keeps the moderation chrome in the shared neutral words", () => {
+    const flagged = render(
+      state({ praxis: { ...PRAXIS, moderation_status: "flagged" }, showAdminBar: true }),
+    );
+    expect(flagged.text, "the shared flagged banner").toContain("FLAGGED");
+    expect(flagged.text, "and its shared sentence").toContain("awaiting admin review");
+    expect(flagged.text, "the shared steward bar").toContain("ADMIN");
+
+    const failed = render(
+      state({
+        praxis: {
+          ...PRAXIS,
+          moderation_status: "failed",
+          admin_note: "Proof shows a different depot.",
+        },
+      }),
+    );
+    expect(failed.text, "the shared failure notice").toContain("marked as failed");
+    expect(failed.text, "with the steward note").toContain("different depot");
+  });
+
+  it("leaves the report card outside the costume", () => {
+    // `PraxisFlagBlock` takes `state` and nothing else — there is no seam to
+    // dress it through — so the guard is that the neutral card is present and
+    // wearing neutral tokens, not WOW plate chrome.
+    const { html } = render(state());
+    // Bounded at the aside's close — the flag card is its last child, so an
+    // unbounded slice would swallow the comments region and its dress.
+    const card = html.slice(indexOf(html, "sidebar-card"), indexOf(html, "</aside>"));
+    expect(card, "the report card is bare").not.toContain("--faction-wow");
+    expect(html, "and reads the shared words").toContain("Flag this praxis");
+  });
+});
+
+describe("WOW praxis detail — the layout contract (#1129)", () => {
+  it("holds the 330px aside on desktop and drops the track on mobile", () => {
+    expect(render(state()).html, "the corrected track, not 340").toContain("330px");
+    expect(render(state(), "mobile").html, "no aside track on a phone").not.toContain("330px");
+  });
+
+  it("shows the crown at BOTH form factors", () => {
+    const crowned = state({ praxis: { ...PRAXIS, is_top_for_task: true } });
+    expect(render(crowned).text, "desktop").toContain("TASK CROWN");
+    expect(render(crowned, "mobile").text, "mobile — never form-factor gated").toContain(
+      "TASK CROWN",
+    );
+    expect(render(state(), "mobile").text, "and only when crowned").not.toContain("TASK CROWN");
+  });
+
+  it("moves the score above the proof on mobile, and draws it exactly once", () => {
+    const wide = render(state());
+    expect(wide.text.match(/Score/g)?.length, "one score block on desktop").toBe(1);
+    expect(indexOf(wide.html, "The proof"), "proof precedes the aside rail").toBeLessThan(
+      indexOf(wide.html, "Score"),
+    );
+
+    const phone = render(state(), "mobile");
+    expect(phone.text.match(/Score/g)?.length, "one score block on mobile").toBe(1);
+    expect(indexOf(phone.html, "Score"), "rail rides above the proof").toBeLessThan(
+      indexOf(phone.html, "The proof"),
+    );
+  });
+
+  it("draws the breadcrumb on desktop and the back link on mobile", () => {
+    const wide = render(state());
+    expect(wide.html, "to the task bank").toContain('href="/tasks"');
+    expect(wide.html, "to the task").toContain('href="/tasks/7"');
+    expect(wide.html, "no phone back link on desktop").not.toContain('href="/praxes"');
+
+    const phone = render(state(), "mobile");
+    expect(phone.html, "phone back link").toContain('href="/praxes"');
+  });
+});
+
+describe("WOW praxis detail — the dress", () => {
+  it("wears the chronicle palette and all three faces", () => {
+    const { html } = render(state());
+    expect(html, "the parchment field").toContain("wow-detail-field");
+    expect(html, "the gold frame").toContain("--faction-wow-chronicle-gold");
+    expect(html, "MedievalSharp").toContain("--faction-wow-card-font");
+    expect(html, "Lora italic").toContain("--faction-wow-body-font");
+    // Caveat arrives as the shared SURFACE token, never Coven's card font (§4).
+    expect(html, "Caveat, the marginal hand").toContain("--font-faction-script");
+    expect(html, "not by repointing Coven").not.toContain("--faction-coven-card-font");
+  });
+
+  it("strings the bunting and bobs exactly one bunch of balloons", () => {
+    const { html } = render(state());
+    // The bunting pennants alternate gold and plum; the bunch is the page's one
+    // bobbing ornament, and its motion is CLASS-gated, never inline.
+    expect(html, "bunting is drawn").toContain("18px solid var(--faction-wow-card-accent)");
+    expect(html.match(/wow-balloon-bunch/g)?.length, "one bunch, not a soup").toBe(1);
+    expect(html, "motion is never inline").not.toContain("animation:");
+  });
+
+  it("carries no unaffiliated spectrum of its own", () => {
+    // The na tell is `--faction-default-rainbow`. A WOW page that leaks one is
+    // a Default that has not actually been replaced.
+    expect(render(state()).html).not.toContain("--faction-default-rainbow");
+  });
+});
+
+describe("WOW praxis detail — the state axes", () => {
+  it("renders solo, collab and duel", () => {
+    const solo = render(state());
+    expect(solo.text, "no roster for a solo").not.toContain("Sworn together by");
+
+    const collab = render(
+      state({ praxis: { ...PRAXIS, type: "collab", members: [MEMBER, CO_MEMBER] } }),
+    );
+    expect(collab.text, "both co-authors in the byline").toContain("Bram Quilling");
+    expect(collab.text, "and the roster").toContain("Sworn together by");
+
+    // A declined challenge draws NO card at all (ADR-0011) — the duel block
+    // self-hides, and this page must not invent a line about it.
+    const declined = render(
+      state({
+        praxis: { ...PRAXIS, type: "duel", duel_id: 5 },
+        duel: duel("declined"),
+      }),
+    );
+    expect(declined.text, "nothing about a duel that never happened").not.toContain("The duel");
+
+    // A settled duel DOES draw one, wearing this page's plate chrome and its
+    // section head rather than the card's own.
+    const settled = render(
+      state({
+        praxis: { ...PRAXIS, type: "duel", duel_id: 5 },
+        duel: duel("settled"),
+      }),
+    );
+    expect(settled.text, "the duel card is mounted").toContain("The duel");
+    expect(settled.text, "and reads the live standing, never a verdict").toContain("live");
+  });
+
+  it("renders as visitor, owner and steward", () => {
+    expect(render(state()).text, "a visitor gets no owner controls").not.toContain(
+      "edit this praxis",
+    );
+    expect(
+      render(state({ isOwner: true, user: VIEWER })).text,
+      "the owner does",
+    ).toContain("edit this praxis");
+    expect(
+      render(state({ showAdminBar: true })).text,
+      "a steward gets the bar",
+    ).toContain("ADMIN");
+  });
+});
