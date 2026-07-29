@@ -75,9 +75,12 @@
  * `[data-theme="dark"]`. The black plate does not. The rule:
  *
  * - **A block whose ink this file does not control gets the stock that ink was
- *   measured on.** `DuelCard` paints `--faction-default-*` (near-black in light,
- *   cream in dark) and the vote summary paints `--color-text-secondary`; both
- *   need a ground that flips with them, so they sit on paper clippings.
+ *   measured on.** The vote summary paints `--color-text-secondary`, which flips
+ *   with the theme and so needs a ground that flips with it: a paper clipping.
+ *   `DuelCard` was the same case until #1153 gave it an `ink` seam — this file
+ *   now hands it `--faction-snide-note-*`, and the clipping is the stock THAT
+ *   family was measured on, so the block lands on the same ground for the
+ *   stronger reason. The rule is unchanged; only who owns the ink is.
  * - **S.N.I.D.E.'s own always-dark widgets keep their ink stock.** The evidence
  *   tag (`SnideScoreStamp`) is acid on a `rgba(0,0,0,0.4)` well and the amp face
  *   is a black chassis with acid/vote-off captions; on cream paper the acid
@@ -593,13 +596,23 @@ export default function SnidePraxisDetail({ state }: { state: PraxisDetailState 
   //
   // Mounted, not re-narrated. It self-hides for a praxis with no duel, for a
   // DECLINED challenge, and for the run-up the composer owns (#1071/ADR-0059).
-  // It sits on a paper clipping because its inks are `--faction-default-*`,
-  // which flip with the theme — see the ground rule in the header.
+  //
+  // Still a paper clipping, and now for a stronger reason than before. The card
+  // used to arrive painting `--faction-default-*`, so it needed a ground that
+  // flipped the way those inks do; since #1153 it takes THIS file's inks, and
+  // the clipping is the stock `--faction-snide-note-*` was measured on. The
+  // ground rule in the header is unchanged — the block still gets the stock its
+  // ink was measured on; the ink is simply ours now.
+  //
+  // Acid and pink stay off it, per the faction's standing rule: they are a ring,
+  // a rule or a bar on paper, never ink. And the rival's own faction hue never
+  // reaches the card at all — the foreign side is a disc and an outline.
   const duelBlock: ReactNode = (
     <DuelCard
       state={state}
       style={clipping}
       heading={sectionHead(t("duelCrossLink.label"))}
+      ink={{ name: INK, total: INK, muted: MUTED, line: RULE, plate: PAPER }}
     />
   );
 

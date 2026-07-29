@@ -62,12 +62,15 @@ import type { PraxisDetailState } from '../usePraxisDetail'
  *   go out. What flips is the parchment under it. There is no `dark ?` anywhere
  *   in this file; the flip is the `[data-theme="dark"]` cascade's.
  * - **An opponent's faction colour is never an ink and never sits behind text.**
- *   This page surfaces no opponent accent at all — the duel is `DuelCard`, which
- *   paints its own two discs and neither is tinted by the rival's faction. So
- *   the rule is honoured vacuously here; if a later edit ever brings a foreign
- *   hue onto this page it must arrive as a rosette ring, a plate edge or a bar.
- *   The rail that used to guard this structurally died with #1090 (see #1115),
- *   so nothing will catch a violation automatically.
+ *   This page still surfaces no opponent accent — the duel is `DuelCard`, which
+ *   paints its own two discs and neither is tinted by the rival's faction. What
+ *   changed with #1153 is that the rule stopped being VACUOUS here: the card now
+ *   takes an `ink` seam, and `name` / `total` / `muted` are `color:` while
+ *   `plate` sits directly behind a disc, so a foreign hue is one careless prop
+ *   away. Every value this file passes is a WOW token. If a later edit ever
+ *   brings a rival's colour onto this page it must arrive as a rosette ring, a
+ *   plate edge or a bar. The rail that used to guard this structurally died with
+ *   #1090 (see #1115), so nothing will catch a violation automatically.
  *
  * ## The contract this skin does NOT get to re-decide (ADR-0061, #1129)
  *
@@ -530,10 +533,25 @@ export default function WowPraxisDetail({ state }: { state: PraxisDetailState })
   //
   // Outcomes only. `DuelCard` self-hides for a praxis with no duel, for a
   // DECLINED challenge, and for the run-up the composer's waiting surface owns
-  // (#1071/ADR-0059). Plate chrome and section head are handed in, so the card
-  // wears the chronicle's dress rather than its own.
+  // (#1071/ADR-0059). Plate chrome, section head AND inks are handed in, so the
+  // card wears the chronicle's dress rather than its own.
+  //
+  // THE OPPONENT-ACCENT RULE BINDS HERE (#1153, and read the header's second
+  // bullet). `ink` is the first seam on this page that could carry a foreign
+  // hue into `color:`, and it must not: the rival's faction colour may be any
+  // hue in the palette, so it is held as a rosette ring, a plate edge or a bar,
+  // never as an ink and never behind text. Every value below is a WOW token off
+  // this plate — `card-text` on names and totals, `card-muted` on the cross-link
+  // and the verdict, the chronicle rule on the hairlines, the media inset behind
+  // an avatarless disc. The gilt is absent by the same standing rule: it
+  // measures 2.24:1 on the cream and nothing legible is painted in it.
   const duelBlock: ReactNode = (
-    <DuelCard state={state} style={panel} heading={panelHead('duel', t('duelCrossLink.label'))} />
+    <DuelCard
+      state={state}
+      style={panel}
+      heading={panelHead('duel', t('duelCrossLink.label'))}
+      ink={{ name: INK, total: INK, muted: MUTED, line: HAIR, plate: INSET }}
+    />
   )
 
   const rail = (

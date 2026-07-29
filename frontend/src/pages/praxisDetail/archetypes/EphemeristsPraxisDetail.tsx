@@ -620,13 +620,19 @@ export default function EphemeristsPraxisDetail({ state }: { state: PraxisDetail
   // `DuelCard` self-hides for a praxis with no duel, for a DECLINED challenge —
   // where there is no duel to read out and the praxis scores as an ordinary solo
   // (ADR-0011) — and for the run-up, which the composer's waiting surface owns
-  // (#1071/ADR-0059). Panel chrome and section head are handed in, so the card
-  // wears the plate rather than its own dress.
+  // (#1071/ADR-0059). Panel chrome, section head AND inks are handed in, so the
+  // card wears the plate rather than its own dress.
+  //
+  // The inks are the plate's own family (#1153) — `INK` and `QUIET`, the pair
+  // every other block on this surface reads, with `QUIET` already walked down
+  // until it clears on all three of this page's grounds (#1028). Nothing takes
+  // the rival's faction hue: brass and lapis are structure here, not ink.
   const duelBlock = (
     <DuelCard
       state={state}
       style={panel}
       heading={sectionHead(t("duelCrossLink.label"))}
+      ink={{ name: INK, total: INK, muted: QUIET, line: LINE, plate: INNER }}
     />
   );
 

@@ -118,23 +118,34 @@ const HAIR = "var(--faction-singularity-term-hair)";
 
 /**
  * The re-point every SHARED CONTENT component mounted straight onto the chassis
- * gets. `DuelCard` paints its rows from `--faction-default-*`, and the owner
- * controls / gallery chrome paint from the neutral `--color-*` set; both
- * families assume a sheet that is LIGHT in light theme, so on this chassis their
- * ink lands at roughly 1:1. Repointing the tokens for the subtree is the fix
- * rather than forking the component — every value here is an existing
- * Singularity token, so the `[data-theme="dark"]` cascade still flips the
- * phosphor underneath and no `dark ?` branch appears anywhere.
+ * gets. The owner controls and the gallery chrome paint from the neutral
+ * `--color-*` set, and `CollabRoster` from `--faction-default-*`; both families
+ * assume a sheet that is LIGHT in light theme, so on this chassis their ink
+ * lands at roughly 1:1. Repointing the tokens for the subtree is the fix rather
+ * than forking the component — every value here is an existing Singularity
+ * token, so the `[data-theme="dark"]` cascade still flips the phosphor
+ * underneath and no `dark ?` branch appears anywhere.
  *
- * It is applied to the duel panel, the owner-action cluster and the proof frame
- * — never to the column, and never to the comments region: a comment row
- * dispatches on ITS AUTHOR's faction (ADR-0061), so an unaffiliated commenter's
- * `--faction-default-*` card must reach them unrepainted.
+ * It is applied to the owner-action cluster, the proof frame and (through
+ * {@link CREW_INK}) the roster — never to the column, and never to the comments
+ * region: a comment row dispatches on ITS AUTHOR's faction (ADR-0061), so an
+ * unaffiliated commenter's `--faction-default-*` card must reach them
+ * unrepainted.
  *
- * `--faction-default-rainbow` is deliberately NOT repointed. `DuelCard` uses it
- * for the ring on the side this page IS, which is a "you are here" mark rather
- * than a faction hue (ADR-0039) — and a bright spectrum ring reads cleanly on
- * near-black in both halves of the cascade.
+ * **The duel panel came off this list with #1153.** It was the sharpest case —
+ * `DuelCard` painted `--faction-default-*` rows and this is the always-dark
+ * faction, so a shared component's light-in-light-theme assumption failed
+ * hardest here — and it is now the case this workaround no longer has to cover:
+ * the card takes an `ink` seam and this file hands it the same four values by
+ * name. A prop beats a token re-point wherever the component offers one, because
+ * the re-point is invisible from the component's side and reaches everything in
+ * the subtree rather than the four slots that were meant.
+ *
+ * `--faction-default-rainbow` is deliberately NOT repointed, and there is no ink
+ * slot for it either. `DuelCard` uses it for the ring on the side this page IS,
+ * which is a "you are here" mark rather than a faction hue (ADR-0039) — and a
+ * bright spectrum ring reads cleanly on near-black in both halves of the
+ * cascade.
  */
 const ON_CHASSIS_INK = {
   "--faction-default-card-text": BRIGHT,
@@ -528,12 +539,20 @@ export default function SingularityPraxisDetail({ state }: { state: PraxisDetail
   //
   // `DuelCard` (#1090) self-hides for a praxis with no duel, for a DECLINED
   // challenge, and for the run-up, which the composer's waiting surface owns.
-  // Panel chrome and section head are handed in so it wears this page's dress.
+  // Panel chrome, section head AND inks are handed in so it wears this page's
+  // dress.
+  //
+  // The `ON_CHASSIS_INK` re-point that used to ride on `style` here is GONE
+  // (#1153): the four tokens it existed to override on this mount — card-text,
+  // card-muted, card-line, stamp-bg — are now named props, so the phosphor
+  // arrives by contract instead of by cascade. Same four values, and the
+  // `--color-*` half of that object was never read by this component anyway.
   const duelBlock: ReactNode = (
     <DuelCard
       state={state}
-      style={{ ...panel, ...ON_CHASSIS_INK }}
+      style={panel}
       heading={sectionHead(t("duelCrossLink.label"))}
+      ink={{ name: BRIGHT, total: BRIGHT, muted: DIM, line: HAIR, plate: PANEL }}
     />
   );
 

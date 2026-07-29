@@ -491,11 +491,21 @@ export default function CovenPraxisDetail({ state }: { state: PraxisDetailState 
 
   // ── Duel (built once; aside on desktop, above the proof on mobile) ─────────
   //
-  // Panel chrome and section head are handed in, so the card wears the ward
+  // Panel chrome, section head AND inks are handed in, so the card wears the ward
   // rather than its own dress. It self-hides for a praxis with no duel, for a
   // DECLINED challenge, and for the run-up the composer owns (#1071/ADR-0059).
+  //
+  // The inks are the ward panel's own measured set (#1153) — `slip-ink` and
+  // `slip-soft` are both gated on `--faction-coven-ward-card` in
+  // `factionContrast.test.ts`. Nothing here carries the RIVAL's faction hue: the
+  // duel's foreign side is a disc and an outline, never a colour.
   const duelBlock: ReactNode = (
-    <DuelCard state={state} style={panel} heading={sectionHead(t('duelCrossLink.label'))} />
+    <DuelCard
+      state={state}
+      style={panel}
+      heading={sectionHead(t('duelCrossLink.label'))}
+      ink={{ name: INK, total: INK, muted: SOFT, line: BORDER, plate: PAGE }}
+    />
   )
 
   const rail = (

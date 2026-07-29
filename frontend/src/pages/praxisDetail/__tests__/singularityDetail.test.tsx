@@ -374,14 +374,34 @@ describe("Singularity praxis detail — the terminal dress", () => {
     expect(hex, `raw hex in the markup: ${hex.join(", ")}`).toHaveLength(0);
   });
 
-  it("repoints the shared duel card's inks for the near-black chassis", () => {
-    // `DuelCard` paints its rows from `--faction-default-*`, which assumes a
-    // sheet that is light in light theme. The chassis is near-black in BOTH, so
-    // the tokens are repointed for that subtree — to Singularity tokens, never
-    // to a literal, and never across the whole column.
+  it("paints the shared duel card in phosphor, through the seam and not a re-point", () => {
+    // `DuelCard` used to paint its rows from `--faction-default-*`, which assumes
+    // a sheet that is light in light theme; this chassis is near-black in BOTH,
+    // so those inks landed at roughly 1:1 and the file overrode the tokens for
+    // the subtree. #1153 gave the card an `ink` prop and the workaround came off
+    // THIS mount: the same four phosphor values now arrive by contract.
     const dueling = state({ duel: duel(), praxis: { ...PRAXIS, duel_id: 5 } });
     const { html } = render(dueling);
-    expect(html).toContain("--faction-default-card-text:var(--faction-singularity-term-bright)");
+    // The duellist's name and the side's total, in the bright phosphor.
+    expect(html, "the rows are painted, not inherited").toContain(
+      "color:var(--faction-singularity-term-bright)",
+    );
+    // The cross-link subtitle, the chevron and the verdict line.
+    expect(html, "the quiet copy").toContain("color:var(--faction-singularity-term-dim)");
+    // The hairlines between the rows and the verdict.
+    expect(html, "the rules").toContain("1px solid var(--faction-singularity-term-hair)");
+    // The seam replaced the re-point on THIS mount — the duel panel no longer
+    // carries a `--faction-default-card-*` override. (`ON_CHASSIS_INK` survives
+    // on the owner controls, the proof frame and the roster, which have no such
+    // seam, so the token name is still elsewhere on the page.) Sliced from the
+    // card's own `<section>` opener, not from its heading text, so the panel's
+    // `style` attribute is inside the window being asserted on.
+    const label = html.indexOf("The duel");
+    expect(label, "the duel card rendered").toBeGreaterThan(-1);
+    const card = html.slice(html.lastIndexOf("<section", label));
+    expect(card, "the card itself carries no token re-point").not.toContain(
+      "--faction-default-card-text:",
+    );
     expect(html, "the spectrum ring is a you-are-here mark, left alone").not.toContain(
       "--faction-default-rainbow:",
     );
